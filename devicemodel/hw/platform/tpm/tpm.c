@@ -73,6 +73,7 @@ int acrn_parse_vtpm2(char *arg)
 			return -1;
 		strncpy(sock_path, value, len + 1);
 	}
+	vtpm2 = true;
 
 	return 0;
 }

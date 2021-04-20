@@ -92,6 +92,7 @@ bool lapic_pt;
 bool is_rtvm;
 bool pt_tpm2;
 bool pt_rtct;
+bool vtpm2;
 bool is_winvm;
 bool skip_pci_mem64bar_workaround = false;
 
@@ -945,7 +946,8 @@ main(int argc, char *argv[])
 			pt_rtct = true;
 			break;
 		case CMD_OPT_ACPIDEV_PT:
-			if (parse_pt_acpidev(optarg) != 0)
+			/* FIXME: check acpi TPM device rules in acpi device famework init functions */
+			if (vtpm2 || parse_pt_acpidev(optarg) != 0)
 				errx(EX_USAGE, "invalid pt acpi dev param %s", optarg);
 			break;
 		case CMD_OPT_MMIODEV_PT:
