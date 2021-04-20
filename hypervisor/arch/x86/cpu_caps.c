@@ -462,6 +462,11 @@ int32_t detect_hardware_support(void)
 		printf("%s, physical-address width (%d) over maximum physical-address width (%d)\n",
 			__func__, boot_cpu_data.phys_bits, MAXIMUM_PA_WIDTH);
 		ret = -ENODEV;
+	} else if ((boot_cpu_data.phys_bits > 39U) && (!pcpu_has_cap(X86_FEATURE_PAGE1GB) ||
+			!pcpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE))) {
+		printf("%s, physical-address width %d over 39 bits must support 1GB large page\n",
+			__func__, boot_cpu_data.phys_bits);
+		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_INVA_TSC)) {
 		/* check invariant TSC */
 		printf("%s, invariant TSC not supported\n", __func__);
