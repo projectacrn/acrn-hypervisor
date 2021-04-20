@@ -272,7 +272,15 @@ htmlhelp_basename = 'ACRN Project Help'
 
 # -- Options for LaTeX output ---------------------------------------------
 
+latex_engine = "xelatex"
+
 latex_elements = {
+    'fontpkg': r'''
+\setmainfont{DejaVu Serif}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}
+''',
+
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
@@ -283,7 +291,9 @@ latex_elements = {
 
     # Additional stuff for the LaTeX preamble.
     #
-    # 'preamble': '',
+    'preamble': r'''
+\setcounter{tocdepth}{3}
+''',
 
     # Latex figure (float) alignment
     #
