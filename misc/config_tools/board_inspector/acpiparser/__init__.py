@@ -8,6 +8,7 @@ import sys
 from acpiparser.apic import APIC
 from acpiparser.asf import ASF
 from acpiparser.dmar import DMAR
+from acpiparser.dsdt import DSDT
 from acpiparser.facp import FACP
 from acpiparser.rtct import RTCT
 
@@ -25,6 +26,7 @@ def make_parser(signature):
 
 parse_apic = make_parser('APIC')
 parse_asf = make_parser('ASF!')
+parse_dsdt = make_parser('DSDT')
 parse_dmar = make_parser('DMAR')
 parse_facp = make_parser('FACP')
 parse_rtct = make_parser('RTCT')

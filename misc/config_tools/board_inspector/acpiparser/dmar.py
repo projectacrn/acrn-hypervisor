@@ -6,7 +6,7 @@
 import ctypes
 import copy
 
-import acpiparser.cdata as cdata
+import lib.cdata as cdata
 from acpiparser._utils import TableHeader
 
 class DMARSubtable(cdata.Struct):
