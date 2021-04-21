@@ -43,6 +43,8 @@ Virtio-BLK BE Design
    :width: 900px
    :name: virtio-blk-be
 
+   Virtio-BLK BE Design
+
 The virtio-blk BE device is implemented as a legacy virtio device. Its
 backend media could be a file or a partition. The virtio-blk device
 supports writeback and writethrough cache mode. In writeback mode,
