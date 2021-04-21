@@ -140,6 +140,7 @@ details in this `Android keymaster functions document
    :width: 600px
    :name: keymaster-app
 
+   Keystore service and Keymaster HAL
 
 As shown in :numref:`keymaster-app` above, the Keymaster HAL is a
 dynamically-loadable library used by the Keystore service to provide
@@ -191,6 +192,8 @@ forwards RPMB data frame to physical RPMB partition in eMMC.
    :width: 600px
    :name: trusty-ss-ta
 
+   Trusty Secure Storage Trusted App
+
 As shown in :numref:`trusty-ss-ta` above, Trusty SS TA provides two different services
 simultaneously:
 
@@ -226,6 +229,8 @@ open/creation/deletion/read/write operations.
    :align: center
    :width: 600px
    :name: trusty-ss-ta-storage
+
+   Trusty Secure Storage Trusted App Storage
 
 Here is a simple example showing data signing:
 
@@ -268,6 +273,8 @@ secure monitor to schedule in/out Trusty secure world.
    :width: 600px
    :name: trusty-isolated
 
+   Trusty Secure World Isolated User VM
+
 As shown in :numref:`trusty-isolated` above, the hypervisor creates an
 isolated secure world User VM to support a Trusty OS running in a User VM on
 ACRN.
@@ -281,6 +288,8 @@ Linux-based system (e.g. Android) runs.
    :align: center
    :width: 600px
    :name: trusty-lhs-rhs
+
+   Trusty Secure World Isolation Details
 
 The secure world is configured by the hypervisor so it has read/write
 access to a non-secure world's memory space. But non-secure worlds do
@@ -325,6 +334,7 @@ high-level architecture.
    :width: 600px
    :name: trusty-rpmb
 
+   Virtualized Secure Storage Architecture
 
 In :numref:`trusty-rpmb`, the rKey (RPMB AuthKey) is the physical RPMB
 authentication key used for data authenticated read/write access between

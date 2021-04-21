@@ -78,6 +78,8 @@ events in chronological order.
    :align: center
    :name: partBSPsetup
 
+   Event Order for Processor Set Up
+
 Memory
 ======
 
