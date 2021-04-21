@@ -6,8 +6,8 @@
 import ctypes
 import copy
 
-import acpiparser.cdata as cdata
-import acpiparser.unpack as unpack
+import lib.cdata as cdata
+import lib.unpack as unpack
 from acpiparser._utils import TableHeader, GAS
 
 _preferred_pm_profile = {

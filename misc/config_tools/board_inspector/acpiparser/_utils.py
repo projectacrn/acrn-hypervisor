@@ -5,8 +5,8 @@
 
 import ctypes
 
-import acpiparser.cdata as cdata
-import acpiparser.unpack as unpack
+import lib.cdata as cdata
+import lib.unpack as unpack
 
 class TableHeader(cdata.Struct):
     _pack_ = 1
