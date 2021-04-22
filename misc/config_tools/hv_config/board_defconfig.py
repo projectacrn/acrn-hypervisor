@@ -81,7 +81,7 @@ def get_memory(hv_info, config):
                 except Exception as e:
                     print(e)
 
-    hv_ram_size += total_shm_size
+    hv_ram_size += 2 * max(total_shm_size, 0x200000)
     if hv_ram_size > HV_RAM_SIZE_MAX:
         common.print_red("requested RAM size should be smaller then {}".format(HV_RAM_SIZE_MAX), err=True)
         err_dic["board config: total vm number error"] = \
