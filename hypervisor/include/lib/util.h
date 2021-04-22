@@ -18,9 +18,9 @@
 /** Roundup (x) to (y) aligned **/
 #define roundup(x, y)  (((x) + ((y) - 1UL)) & (~((y) - 1UL)))
 
-#define min(x, y)	((x) < (y)) ? (x) : (y)
+#define min(x, y)	(((x) < (y)) ? (x) : (y))
 
-#define max(x, y)	((x) < (y)) ? (y) : (x)
+#define max(x, y)	(((x) < (y)) ? (y) : (x))
 
 /** Replaces 'x' by the string "x". */
 #define STRINGIFY(x) #x
