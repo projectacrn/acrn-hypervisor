@@ -40,7 +40,7 @@ def fn(board_etree, scenario_etree, allocation_etree):
                     total_shm_size += int_size
                 except Exception as e:
                     print(e)
-    hv_ram_size += total_shm_size
+    hv_ram_size += 2 * max(total_shm_size, 0x200000)
     assert(hv_ram_size <= HV_RAM_SIZE_MAX)
 
     # reseve 16M memory for hv sbuf, ramoops, etc.
