@@ -5,7 +5,7 @@
  */
 
 #include <types.h>
-#include <irq.h>
+#include <x86/cpu.h>
 
 void dump_intr_excp_frame(__unused const struct intr_excp_ctx *ctx) {}
 void dump_exception(__unused struct intr_excp_ctx *ctx, __unused uint16_t pcpu_id) {}
