@@ -213,7 +213,22 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		}
 
 		/* update physical delivery mode, dest mode(logical) & vector */
-		vector = irq_to_vector(phys_irq);
+		if (is_lapic_pt_configured(vm)) {
+			/*
+			 * In local APIC passthrough case, when devices triggered a INTx interrupt, this interrupt
+			 * would be delivered to vCPU directly. For this case, need to set the virtual vector in
+			 * the 'Interrupt Vector' field of physical IOxAPIC I/O REDIRECTION TABLE REGISTER (bits 7:0)
+			 * and 'Vector' field of vt-d Interrupt Remapping Table Entry (IRTE) for Remapped Interrupts.
+			 *
+			 * Assumption:
+			 * (a) IOAPIC pins won't be shared between LAPIC PT guest and other guests;
+			 * (b) The guest would not trigger this IRQ before it switched to x2 APIC mode.
+			 */
+			vector = rte.bits.vector;
+		} else {
+			vector = irq_to_vector(phys_irq);
+		}
+
 		dest_mask = calculate_logical_dest_mask(pdmask);
 
 		irte.value.lo_64 = 0UL;
@@ -638,7 +653,7 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 	return ret;
 }
 
-static void activate_physical_ioapic(struct acrn_vm *vm,
+static void activate_ioapic_rte(struct acrn_vm *vm,
 		struct ptirq_remapping_info *entry)
 {
 	union ioapic_rte rte;
@@ -759,7 +774,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 	}
 
 	if (status == 0) {
-		activate_physical_ioapic(vm, entry);
+		activate_ioapic_rte(vm, entry);
 	}
 
 	return status;
