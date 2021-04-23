@@ -7,7 +7,7 @@
 #ifndef ARCH_X86_IOAPIC_H
 #define ARCH_X86_IOAPIC_H
 
-#include <x86/apicreg.h>
+#include <asm/apicreg.h>
 
 #define NR_LEGACY_IRQ		16U
 #define NR_LEGACY_PIN		NR_LEGACY_IRQ

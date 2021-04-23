@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <arch/x86/irq.h>
-#include <arch/x86/vmx.h>
+#include <asm/irq.h>
+#include <asm/vmx.h>
 
 void handle_nmi(__unused struct intr_excp_ctx *ctx)
 {

@@ -6,13 +6,13 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/vmx.h>
-#include <x86/guest/guest_memory.h>
-#include <x86/guest/vcpu.h>
-#include <x86/guest/vm.h>
-#include <x86/guest/vmcs.h>
-#include <x86/mmu.h>
-#include <x86/guest/ept.h>
+#include <asm/vmx.h>
+#include <asm/guest/guest_memory.h>
+#include <asm/guest/vcpu.h>
+#include <asm/guest/vm.h>
+#include <asm/guest/vmcs.h>
+#include <asm/mmu.h>
+#include <asm/guest/ept.h>
 #include <logmsg.h>
 
 struct page_walk_info {

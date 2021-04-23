@@ -10,7 +10,7 @@
 #include <types.h>
 
 /**
- * @file arch/x86/irq.h
+ * @file arch/x86/asm/irq.h
  *
  * @brief public APIs for x86 IRQ handling
  */

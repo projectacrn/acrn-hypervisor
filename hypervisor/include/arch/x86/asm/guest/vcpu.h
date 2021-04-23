@@ -17,17 +17,17 @@
 #ifndef ASSEMBLER
 
 #include <acrn_common.h>
-#include <x86/guest/guest_memory.h>
-#include <x86/guest/virtual_cr.h>
-#include <x86/guest/vlapic.h>
-#include <x86/guest/vmtrr.h>
+#include <asm/guest/guest_memory.h>
+#include <asm/guest/virtual_cr.h>
+#include <asm/guest/vlapic.h>
+#include <asm/guest/vmtrr.h>
 #include <schedule.h>
 #include <event.h>
 #include <io_req.h>
-#include <x86/msr.h>
-#include <x86/cpu.h>
-#include <x86/guest/instr_emul.h>
-#include <x86/vmx.h>
+#include <asm/msr.h>
+#include <asm/cpu.h>
+#include <asm/guest/instr_emul.h>
+#include <asm/vmx.h>
 
 /**
  * @brief vcpu

@@ -7,12 +7,12 @@
 #include <types.h>
 #include <errno.h>
 #include <irq.h>
-#include <x86/lib/spinlock.h>
-#include <x86/ioapic.h>
-#include <x86/irq.h>
-#include <x86/pgtable.h>
-#include <x86/io.h>
-#include <x86/mmu.h>
+#include <asm/lib/spinlock.h>
+#include <asm/ioapic.h>
+#include <asm/irq.h>
+#include <asm/pgtable.h>
+#include <asm/io.h>
+#include <asm/mmu.h>
 #include <acpi.h>
 #include <logmsg.h>
 

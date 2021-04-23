@@ -5,12 +5,12 @@
  */
 
 #include <types.h>
-#include <x86/mmu.h>
-#include <x86/per_cpu.h>
-#include <x86/trampoline.h>
+#include <asm/mmu.h>
+#include <asm/per_cpu.h>
+#include <asm/trampoline.h>
 #include <reloc.h>
-#include <x86/boot/ld_sym.h>
-#include <x86/e820.h>
+#include <asm/boot/ld_sym.h>
+#include <asm/e820.h>
 
 static uint64_t trampoline_start16_paddr;
 

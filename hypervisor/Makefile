@@ -137,13 +137,17 @@ REL_INCLUDE_PATH += include
 REL_INCLUDE_PATH += include/lib
 REL_INCLUDE_PATH += include/lib/crypto
 REL_INCLUDE_PATH += include/common
-REL_INCLUDE_PATH += include/arch
 REL_INCLUDE_PATH += include/debug
 REL_INCLUDE_PATH += include/public
 REL_INCLUDE_PATH += include/dm
 REL_INCLUDE_PATH += include/hw
 REL_INCLUDE_PATH += boot/include
 REL_INCLUDE_PATH += boot/include/guest
+
+# TODO: ARCH name should come from generated config.mk.
+# Fixed to x86 for now.
+ARCH := x86
+REL_INCLUDE_PATH += include/arch/$(ARCH)
 
 INCLUDE_PATH := $(realpath $(REL_INCLUDE_PATH))
 INCLUDE_PATH += $(HV_OBJDIR)/include

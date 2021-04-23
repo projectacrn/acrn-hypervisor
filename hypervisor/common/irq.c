@@ -5,11 +5,11 @@
  */
 
 #include <errno.h>
-#include <x86/lib/bits.h>
+#include <asm/lib/bits.h>
 #include <irq.h>
 #include <common/softirq.h>
-#include <x86/irq.h>
-#include <x86/per_cpu.h>
+#include <asm/irq.h>
+#include <asm/per_cpu.h>
 
 static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };
 

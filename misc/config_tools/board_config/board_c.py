@@ -15,9 +15,9 @@ class RDT(enum.Enum):
     MBA = 2
 
 INCLUDE_HEADER = """
-#include <x86/board.h>
-#include <x86/vtd.h>
-#include <x86/msr.h>
+#include <asm/board.h>
+#include <asm/vtd.h>
+#include <asm/msr.h>
 #include <pci.h>
 #include <misc_cfg.h>
 """

@@ -6,9 +6,9 @@
 
 #include <util.h>
 #include <acrn_common.h>
-#include <x86/guest/vcpu.h>
-#include <x86/mmu.h>
-#include <x86/guest/trusty.h>
+#include <asm/guest/vcpu.h>
+#include <asm/mmu.h>
+#include <asm/guest/trusty.h>
 
 #define CAT__(A,B) A ## B
 #define CAT_(A,B) CAT__(A,B)

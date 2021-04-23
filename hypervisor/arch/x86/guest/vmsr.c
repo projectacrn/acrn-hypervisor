@@ -6,17 +6,17 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/pgtable.h>
-#include <x86/msr.h>
-#include <x86/cpuid.h>
-#include <x86/guest/vcpu.h>
-#include <x86/guest/virq.h>
-#include <x86/guest/vm.h>
-#include <x86/vmx.h>
-#include <x86/sgx.h>
-#include <x86/guest/guest_pm.h>
-#include <x86/guest/ucode.h>
-#include <x86/rdt.h>
+#include <asm/pgtable.h>
+#include <asm/msr.h>
+#include <asm/cpuid.h>
+#include <asm/guest/vcpu.h>
+#include <asm/guest/virq.h>
+#include <asm/guest/vm.h>
+#include <asm/vmx.h>
+#include <asm/sgx.h>
+#include <asm/guest/guest_pm.h>
+#include <asm/guest/ucode.h>
+#include <asm/rdt.h>
 #include <trace.h>
 #include <logmsg.h>
 

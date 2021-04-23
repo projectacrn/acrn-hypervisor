@@ -6,12 +6,12 @@
 
 #include <types.h>
 #include <acrn_hv_defs.h>
-#include <x86/page.h>
-#include <x86/e820.h>
-#include <x86/mmu.h>
+#include <asm/page.h>
+#include <asm/e820.h>
+#include <asm/mmu.h>
 #include <multiboot.h>
 #include <logmsg.h>
-#include <x86/guest/ept.h>
+#include <asm/guest/ept.h>
 
 /*
  * e820.c contains the related e820 operations; like HV to get memory info for its MMU setup;

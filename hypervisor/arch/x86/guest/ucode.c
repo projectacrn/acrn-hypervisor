@@ -6,13 +6,13 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/lib/spinlock.h>
-#include <x86/cpu.h>
-#include <x86/msr.h>
-#include <x86/cpuid.h>
-#include <x86/guest/ucode.h>
-#include <x86/guest/guest_memory.h>
-#include <x86/guest/virq.h>
+#include <asm/lib/spinlock.h>
+#include <asm/cpu.h>
+#include <asm/msr.h>
+#include <asm/cpuid.h>
+#include <asm/guest/ucode.h>
+#include <asm/guest/guest_memory.h>
+#include <asm/guest/virq.h>
 #include <logmsg.h>
 
 #define MICRO_CODE_SIZE_MAX    0x40000U

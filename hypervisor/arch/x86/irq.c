@@ -5,17 +5,17 @@
  */
 
 #include <types.h>
-#include <x86/lib/bits.h>
-#include <x86/lib/spinlock.h>
-#include <x86/per_cpu.h>
-#include <x86/io.h>
-#include <x86/irq.h>
-#include <x86/idt.h>
-#include <x86/ioapic.h>
-#include <x86/lapic.h>
+#include <asm/lib/bits.h>
+#include <asm/lib/spinlock.h>
+#include <asm/per_cpu.h>
+#include <asm/io.h>
+#include <asm/irq.h>
+#include <asm/idt.h>
+#include <asm/ioapic.h>
+#include <asm/lapic.h>
 #include <dump.h>
 #include <logmsg.h>
-#include <x86/vmx.h>
+#include <asm/vmx.h>
 
 static spinlock_t x86_irq_spinlock = { .head = 0U, .tail = 0U, };
 

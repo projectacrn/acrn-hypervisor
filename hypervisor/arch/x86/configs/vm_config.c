@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <x86/vm_config.h>
+#include <asm/vm_config.h>
 
 /*
  * @pre vm_id < CONFIG_MAX_VM_NUM

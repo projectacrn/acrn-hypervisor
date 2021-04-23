@@ -4,11 +4,11 @@
  */
 
 #include <types.h>
-#include <x86/lib/atomic.h>
+#include <asm/lib/atomic.h>
 #include <acrn_hv_defs.h>
-#include <x86/io.h>
-#include <x86/per_cpu.h>
-#include <x86/mmu.h>
+#include <asm/io.h>
+#include <asm/per_cpu.h>
+#include <asm/mmu.h>
 #include <logmsg.h>
 #include <npk_log.h>
 

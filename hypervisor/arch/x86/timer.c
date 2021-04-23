@@ -6,14 +6,14 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/io.h>
-#include <x86/msr.h>
-#include <x86/apicreg.h>
-#include <x86/cpuid.h>
-#include <x86/cpu_caps.h>
+#include <asm/io.h>
+#include <asm/msr.h>
+#include <asm/apicreg.h>
+#include <asm/cpuid.h>
+#include <asm/cpu_caps.h>
 #include <softirq.h>
 #include <trace.h>
-#include <x86/irq.h>
+#include <asm/irq.h>
 
 #define MAX_TIMER_ACTIONS	32U
 #define CAL_MS			10U

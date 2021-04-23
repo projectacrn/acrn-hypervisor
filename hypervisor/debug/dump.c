@@ -5,12 +5,12 @@
  */
 
 #include <types.h>
-#include <x86/per_cpu.h>
-#include <x86/mmu.h>
-#include <x86/guest/vcpu.h>
-#include <x86/vmx.h>
-#include <x86/guest/vm.h>
-#include <x86/init.h>
+#include <asm/per_cpu.h>
+#include <asm/mmu.h>
+#include <asm/guest/vcpu.h>
+#include <asm/vmx.h>
+#include <asm/guest/vm.h>
+#include <asm/init.h>
 #include <logmsg.h>
 #include <dump.h>
 #include <reloc.h>

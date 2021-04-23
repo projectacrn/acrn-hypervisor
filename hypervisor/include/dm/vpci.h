@@ -30,7 +30,7 @@
 #ifndef VPCI_H_
 #define VPCI_H_
 
-#include <x86/lib/spinlock.h>
+#include <asm/lib/spinlock.h>
 #include <pci.h>
 #include <list.h>
 

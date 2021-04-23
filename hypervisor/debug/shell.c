@@ -6,22 +6,22 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/lib/bits.h>
+#include <asm/lib/bits.h>
 #include "shell_priv.h"
-#include <x86/irq.h>
+#include <asm/irq.h>
 #include <console.h>
-#include <x86/per_cpu.h>
-#include <x86/vmx.h>
-#include <x86/cpuid.h>
-#include <x86/ioapic.h>
+#include <asm/per_cpu.h>
+#include <asm/vmx.h>
+#include <asm/cpuid.h>
+#include <asm/ioapic.h>
 #include <ptdev.h>
-#include <x86/guest/vm.h>
+#include <asm/guest/vm.h>
 #include <sprintf.h>
 #include <logmsg.h>
 #include <version.h>
 #include <shell.h>
-#include <x86/guest/vmcs.h>
-#include <x86/host_pm.h>
+#include <asm/guest/vmcs.h>
+#include <asm/host_pm.h>
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U

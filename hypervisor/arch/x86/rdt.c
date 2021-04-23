@@ -5,17 +5,17 @@
  */
 
 #include <types.h>
-#include <x86/cpu.h>
-#include <x86/cpu_caps.h>
-#include <x86/cpufeatures.h>
-#include <x86/cpuid.h>
+#include <asm/cpu.h>
+#include <asm/cpu_caps.h>
+#include <asm/cpufeatures.h>
+#include <asm/cpuid.h>
 #include <errno.h>
 #include <logmsg.h>
-#include <x86/rdt.h>
-#include <x86/lib/bits.h>
-#include <x86/board.h>
-#include <x86/vm_config.h>
-#include <x86/msr.h>
+#include <asm/rdt.h>
+#include <asm/lib/bits.h>
+#include <asm/board.h>
+#include <asm/vm_config.h>
+#include <asm/msr.h>
 
 const uint16_t hv_clos = 0U;
 /* RDT features can support different numbers of CLOS. Set the lowers numerical

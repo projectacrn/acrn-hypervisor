@@ -29,7 +29,7 @@
     <xsl:if test="./hv/FEATURES/IVSHMEM/IVSHMEM_ENABLED = 'y'">
       <!-- Included headers -->
       <xsl:value-of select="acrn:include('ivshmem.h')" />
-      <xsl:value-of select="acrn:include('x86/pgtable.h')" />
+      <xsl:value-of select="acrn:include('asm/pgtable.h')" />
 
       <xsl:call-template name="ivshmem_shm_region_name" />
       <xsl:call-template name="ivshmem_shm_mem" />

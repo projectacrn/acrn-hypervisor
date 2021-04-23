@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/pgtable.h>
+#include <asm/pgtable.h>
 #include <multiboot.h>
 #include <rtl.h>
 #include <logmsg.h>

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <x86/guest/vm.h>
-#include <x86/guest/vm_reset.h>
-#include <x86/guest/vmcs.h>
-#include <x86/guest/vmexit.h>
-#include <x86/guest/virq.h>
+#include <asm/guest/vm.h>
+#include <asm/guest/vm_reset.h>
+#include <asm/guest/vmcs.h>
+#include <asm/guest/vmexit.h>
+#include <asm/guest/virq.h>
 #include <schedule.h>
 #include <profiling.h>
 #include <sprintf.h>

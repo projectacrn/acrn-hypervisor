@@ -6,13 +6,13 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/lib/bits.h>
-#include <x86/lib/atomic.h>
-#include <x86/irq.h>
-#include <x86/cpu.h>
-#include <x86/per_cpu.h>
-#include <x86/lapic.h>
-#include <x86/guest/vm.h>
+#include <asm/lib/bits.h>
+#include <asm/lib/atomic.h>
+#include <asm/irq.h>
+#include <asm/cpu.h>
+#include <asm/per_cpu.h>
+#include <asm/lapic.h>
+#include <asm/guest/vm.h>
 
 static uint32_t notification_irq = IRQ_INVALID;
 
