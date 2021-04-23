@@ -673,29 +673,36 @@ vm_irqfd(struct vmctx *ctx, struct acrn_irqfd *args)
 int
 vm_get_config(struct vmctx *ctx, struct acrn_vm_config_header *vm_cfg, struct acrn_platform_info *plat_info)
 {
-#define VM_CFG_BUFF_SIZE 0x8000
 	int i, err = 0;
-	uint8_t *configs_buff;
+	int configs_size;
+	uint8_t *configs_buff = NULL;
 	struct acrn_vm_config_header *pcfg;
 	struct acrn_platform_info platform_info;
 
 	if ((ctx == NULL) || (vm_cfg == NULL))
 		return -1;
 
-	configs_buff = calloc(1, VM_CFG_BUFF_SIZE);
+	/* The first IOCTL to get max_vm and vm_config size of a VM */
+	bzero(&platform_info, sizeof(platform_info));
+	err = ioctl(ctx->fd, ACRN_IOCTL_GET_PLATFORM_INFO, &platform_info);
+	if (err) {
+		pr_err("%s: IOCTL first time failed!\n", __func__);
+		goto exit;
+	}
+
+	configs_size = platform_info.sw.max_vms * platform_info.sw.vm_config_size;
+	configs_buff = calloc(1, configs_size);
 	if (configs_buff == NULL) {
 		pr_err("%s, Allocate memory fail.\n", __func__);
 		return -1;
 	}
 
-	bzero(&platform_info, sizeof(platform_info));
 	platform_info.sw.vm_configs_addr = configs_buff;
 	err = ioctl(ctx->fd, ACRN_IOCTL_GET_PLATFORM_INFO, &platform_info);
 	if (err) {
-		pr_err("%s, failed: get platform info.\n", __func__);
+		pr_err("%s: IOCTL second time failed!\n", __func__);
 		goto exit;
 	}
-	assert(VM_CFG_BUFF_SIZE > (platform_info.sw.max_vms * platform_info.sw.vm_config_size));
 
 	for (i = 0; i < platform_info.sw.max_vms; i++) {
 		pcfg = (struct acrn_vm_config_header *)(configs_buff + (i * platform_info.sw.vm_config_size));
