@@ -301,19 +301,6 @@ void init_paging(void)
 	enable_paging();
 }
 
-/*
- * @pre: addr != NULL  && size != 0
- */
-void flush_address_space(void *addr, uint64_t size)
-{
-	uint64_t n = 0UL;
-
-	while (n < size) {
-		clflushopt((char *)addr + n);
-		n += CACHE_LINE_SIZE;
-	}
-}
-
 void flush_tlb(uint64_t addr)
 {
 	invlpg(addr);
@@ -325,5 +312,24 @@ void flush_tlb_range(uint64_t addr, uint64_t size)
 
 	for (linear_addr = addr; linear_addr < (addr + size); linear_addr += PAGE_SIZE) {
 		invlpg(linear_addr);
+	}
+}
+
+void flush_invalidate_all_cache(void)
+{
+	wbinvd();
+}
+
+void flush_cacheline(const volatile void *p)
+{
+	clflush(p);
+}
+
+void flush_cache_range(const volatile void *p, uint64_t size)
+{
+	uint64_t i;
+
+	for (i = 0UL; i < size; i += CACHE_LINE_SIZE) {
+		clflushopt(p + i);
 	}
 }

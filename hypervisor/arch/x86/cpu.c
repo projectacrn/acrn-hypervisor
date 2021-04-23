@@ -31,6 +31,7 @@
 #include <vpci.h>
 #include <ivshmem.h>
 #include <asm/rtcm.h>
+#include <reloc.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
@@ -445,8 +446,8 @@ void cpu_dead(void)
 	if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */
 		vmx_off();
-		/* TODO: a cpu dead can't effect the RTVM which use Software SRAM */
-		cache_flush_invalidate_all();
+
+		flush_cache_range((void *)get_hv_image_base(), CONFIG_HV_RAM_SIZE);
 
 		/* Set state to show CPU is dead */
 		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);

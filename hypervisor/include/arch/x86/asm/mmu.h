@@ -175,17 +175,6 @@ void flush_vpid_single(uint16_t vpid);
 void flush_vpid_global(void);
 
 /**
- * @brief Flush address space
- *
- * @param[in] addr the specified virtual address
- *
- * @param[in] size the specified size to flush
- *
- * @return None
- */
-void flush_address_space(void *addr, uint64_t size);
-
-/**
  * @brief Guest-physical mappings and combined mappings invalidation
  *
  * @param[in] eptp the pointer that points the eptp
@@ -205,6 +194,10 @@ static inline uint64_t get_pae_pdpt_addr(uint64_t cr3)
  */
 void flush_tlb(uint64_t addr);
 void flush_tlb_range(uint64_t addr, uint64_t size);
+
+void flush_invalidate_all_cache(void);
+void flush_cacheline(const volatile void *p);
+void flush_cache_range(const volatile void *p, uint64_t size);
 
 /**
  * @}

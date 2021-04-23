@@ -551,7 +551,7 @@ static inline void invlpg(unsigned long addr)
 	asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
 }
 
-static inline void cache_flush_invalidate_all(void)
+static inline void wbinvd(void)
 {
 	asm volatile ("   wbinvd\n" : : : "memory");
 }
