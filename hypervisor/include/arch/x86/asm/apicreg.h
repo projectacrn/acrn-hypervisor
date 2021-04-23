@@ -29,7 +29,7 @@
 #ifndef APICREG_H
 #define APICREG_H
 
-#include <x86/page.h>
+#include <asm/page.h>
 
 /*
  * Local && I/O APIC definitions.

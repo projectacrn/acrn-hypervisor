@@ -7,9 +7,9 @@
 #include <errno.h>
 #include <util.h>
 #include <acrn_hv_defs.h>
-#include <x86/pgtable.h>
-#include <x86/guest/vm.h>
-#include <x86/guest/ept.h>
+#include <asm/pgtable.h>
+#include <asm/guest/vm.h>
+#include <asm/guest/ept.h>
 
 int32_t assign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev)
 {

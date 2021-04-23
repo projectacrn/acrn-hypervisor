@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <x86/guest/vm.h>
-#include <x86/vmx.h>
+#include <asm/guest/vm.h>
+#include <asm/vmx.h>
 #include <schedule.h>
 #include <version.h>
 #include <reloc.h>
-#include <x86/vtd.h>
-#include <x86/per_cpu.h>
-#include <x86/lapic.h>
-#include <x86/guest/assign.h>
-#include <x86/guest/ept.h>
-#include <x86/mmu.h>
+#include <asm/vtd.h>
+#include <asm/per_cpu.h>
+#include <asm/lapic.h>
+#include <asm/guest/assign.h>
+#include <asm/guest/ept.h>
+#include <asm/mmu.h>
 #include <hypercall.h>
 #include <errno.h>
 #include <logmsg.h>
-#include <x86/ioapic.h>
+#include <asm/ioapic.h>
 #include <mmio_dev.h>
 #include <ivshmem.h>
 #include <vmcs9900.h>
-#include <x86/rtcm.h>
-#include <x86/irq.h>
+#include <asm/rtcm.h>
+#include <asm/irq.h>
 
 #define DBG_LEVEL_HYCALL	6U
 

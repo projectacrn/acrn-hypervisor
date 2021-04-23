@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <x86/guest/vm.h>
-#include <x86/e820.h>
-#include <x86/zeropage.h>
-#include <x86/guest/ept.h>
-#include <x86/mmu.h>
+#include <asm/guest/vm.h>
+#include <asm/e820.h>
+#include <asm/zeropage.h>
+#include <asm/guest/ept.h>
+#include <asm/mmu.h>
 #include <multiboot.h>
 #include <errno.h>
 #include <sprintf.h>

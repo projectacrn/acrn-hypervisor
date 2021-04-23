@@ -28,14 +28,14 @@
  */
 
 #include <types.h>
-#include <x86/lib/atomic.h>
-#include <x86/pgtable.h>
-#include <x86/cpu_caps.h>
-#include <x86/mmu.h>
-#include <x86/vmx.h>
+#include <asm/lib/atomic.h>
+#include <asm/pgtable.h>
+#include <asm/cpu_caps.h>
+#include <asm/mmu.h>
+#include <asm/vmx.h>
 #include <reloc.h>
-#include <x86/guest/vm.h>
-#include <x86/boot/ld_sym.h>
+#include <asm/guest/vm.h>
+#include <asm/boot/ld_sym.h>
 #include <logmsg.h>
 #include <misc_cfg.h>
 

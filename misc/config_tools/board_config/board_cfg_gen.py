@@ -19,7 +19,7 @@ import vbar_base_h
 ACRN_PATH = common.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + "misc/config_tools/data/"
 
-ACRN_DEFAULT_ACPI = ACRN_PATH + "hypervisor/include/arch/x86/default_acpi_info.h"
+ACRN_DEFAULT_ACPI = ACRN_PATH + "hypervisor/include/arch/x86/asm/default_acpi_info.h"
 GEN_FILE = ["pci_devices.h", "board.c", "platform_acpi_info.h", "misc_cfg.h",
             "board_info.h", "vbar_base.h"]
 

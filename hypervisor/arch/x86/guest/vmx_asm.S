@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <x86/guest/vmcs.h>
-#include <x86/guest/vm.h>
-#include <x86/security.h>
+#include <asm/guest/vmcs.h>
+#include <asm/guest/vm.h>
+#include <asm/security.h>
 
 /* NOTE:
  *

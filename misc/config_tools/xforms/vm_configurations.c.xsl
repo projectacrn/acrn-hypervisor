@@ -14,9 +14,9 @@
     <xsl:value-of select="$license" />
 
     <!-- Included headers -->
-    <xsl:value-of select="acrn:include('x86/vm_config.h')" />
+    <xsl:value-of select="acrn:include('asm/vm_config.h')" />
     <xsl:value-of select="acrn:include('vuart.h')" />
-    <xsl:value-of select="acrn:include('x86/pci_dev.h')" />
+    <xsl:value-of select="acrn:include('asm/pci_dev.h')" />
 
     <xsl:apply-templates select="config-data/acrn-config" />
   </xsl:template>

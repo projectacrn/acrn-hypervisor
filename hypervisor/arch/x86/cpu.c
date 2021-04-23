@@ -5,32 +5,32 @@
  */
 
 #include <types.h>
-#include <x86/lib/bits.h>
-#include <x86/page.h>
-#include <x86/e820.h>
-#include <x86/mmu.h>
-#include <x86/guest/ept.h>
-#include <x86/vtd.h>
-#include <x86/lapic.h>
-#include <x86/irq.h>
-#include <x86/per_cpu.h>
-#include <x86/cpufeatures.h>
-#include <x86/cpu_caps.h>
+#include <asm/lib/bits.h>
+#include <asm/page.h>
+#include <asm/e820.h>
+#include <asm/mmu.h>
+#include <asm/guest/ept.h>
+#include <asm/vtd.h>
+#include <asm/lapic.h>
+#include <asm/irq.h>
+#include <asm/per_cpu.h>
+#include <asm/cpufeatures.h>
+#include <asm/cpu_caps.h>
 #include <acpi.h>
-#include <x86/ioapic.h>
-#include <x86/trampoline.h>
-#include <x86/cpuid.h>
+#include <asm/ioapic.h>
+#include <asm/trampoline.h>
+#include <asm/cpuid.h>
 #include <version.h>
-#include <x86/vmx.h>
-#include <x86/msr.h>
+#include <asm/vmx.h>
+#include <asm/msr.h>
 #include <ptdev.h>
 #include <logmsg.h>
-#include <x86/rdt.h>
-#include <x86/sgx.h>
+#include <asm/rdt.h>
+#include <asm/sgx.h>
 #include <uart16550.h>
 #include <vpci.h>
 #include <ivshmem.h>
-#include <x86/rtcm.h>
+#include <asm/rtcm.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */

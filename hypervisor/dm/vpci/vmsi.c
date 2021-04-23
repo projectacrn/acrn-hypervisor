@@ -27,11 +27,11 @@
  * $FreeBSD$
  */
 
-#include <x86/guest/vm.h>
+#include <asm/guest/vm.h>
 #include <ptdev.h>
-#include <x86/guest/assign.h>
+#include <asm/guest/assign.h>
 #include <vpci.h>
-#include <x86/vtd.h>
+#include <asm/vtd.h>
 #include "vpci_priv.h"
 
 

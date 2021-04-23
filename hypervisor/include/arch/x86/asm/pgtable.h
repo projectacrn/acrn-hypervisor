@@ -11,7 +11,7 @@
 #ifndef PGTABLE_H
 #define PGTABLE_H
 
-#include <x86/page.h>
+#include <asm/page.h>
 
 #define PAGE_PRESENT		(1UL << 0U)
 #define PAGE_RW			(1UL << 1U)

@@ -7,16 +7,16 @@
  */
 
 #include <types.h>
-#include <x86/guest/vmcs.h>
-#include <x86/guest/vcpu.h>
-#include <x86/guest/vm.h>
-#include <x86/vmx.h>
-#include <x86/gdt.h>
-#include <x86/pgtable.h>
-#include <x86/per_cpu.h>
-#include <x86/cpu_caps.h>
-#include <x86/cpufeatures.h>
-#include <x86/guest/vmexit.h>
+#include <asm/guest/vmcs.h>
+#include <asm/guest/vcpu.h>
+#include <asm/guest/vm.h>
+#include <asm/vmx.h>
+#include <asm/gdt.h>
+#include <asm/pgtable.h>
+#include <asm/per_cpu.h>
+#include <asm/cpu_caps.h>
+#include <asm/cpufeatures.h>
+#include <asm/guest/vmexit.h>
 #include <logmsg.h>
 
 /* rip, rsp, ia32_efer and rflags are written to VMCS in start_vcpu */

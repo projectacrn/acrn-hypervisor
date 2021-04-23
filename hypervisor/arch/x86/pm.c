@@ -4,19 +4,19 @@
  */
 
 #include <acrn_common.h>
-#include <x86/default_acpi_info.h>
+#include <asm/default_acpi_info.h>
 #include <platform_acpi_info.h>
-#include <x86/per_cpu.h>
-#include <x86/io.h>
-#include <x86/msr.h>
-#include <x86/pgtable.h>
-#include <x86/host_pm.h>
-#include <x86/trampoline.h>
-#include <x86/vmx.h>
+#include <asm/per_cpu.h>
+#include <asm/io.h>
+#include <asm/msr.h>
+#include <asm/pgtable.h>
+#include <asm/host_pm.h>
+#include <asm/trampoline.h>
+#include <asm/vmx.h>
 #include <console.h>
-#include <x86/ioapic.h>
-#include <x86/vtd.h>
-#include <x86/lapic.h>
+#include <asm/ioapic.h>
+#include <asm/vtd.h>
+#include <asm/lapic.h>
 
 struct cpu_context cpu_ctx;
 

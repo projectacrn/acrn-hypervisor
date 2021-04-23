@@ -7,7 +7,7 @@
 #ifndef RTCM_H
 #define RTCM_H
 
-#include <x86/rtct.h>
+#include <asm/rtct.h>
 
 #define MSABI __attribute__((ms_abi))
 

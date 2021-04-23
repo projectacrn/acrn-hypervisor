@@ -6,15 +6,15 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/lib/atomic.h>
+#include <asm/lib/atomic.h>
 #include <io_req.h>
-#include <x86/guest/vcpu.h>
-#include <x86/guest/vm.h>
-#include <x86/guest/instr_emul.h>
-#include <x86/guest/vmexit.h>
-#include <x86/vmx.h>
-#include <x86/guest/ept.h>
-#include <x86/pgtable.h>
+#include <asm/guest/vcpu.h>
+#include <asm/guest/vm.h>
+#include <asm/guest/instr_emul.h>
+#include <asm/guest/vmexit.h>
+#include <asm/vmx.h>
+#include <asm/guest/ept.h>
+#include <asm/pgtable.h>
 #include <trace.h>
 #include <logmsg.h>
 

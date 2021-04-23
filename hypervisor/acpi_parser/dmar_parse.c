@@ -6,11 +6,11 @@
 
 #include <types.h>
 #include <logmsg.h>
-#include <x86/io.h>
-#include <x86/lib/spinlock.h>
-#include <x86/cpu_caps.h>
+#include <asm/io.h>
+#include <asm/lib/spinlock.h>
+#include <asm/cpu_caps.h>
 #include <pci.h>
-#include <x86/vtd.h>
+#include <asm/vtd.h>
 #include <acpi.h>
 
 static uint32_t dmar_unit_cnt;

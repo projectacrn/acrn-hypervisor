@@ -5,12 +5,12 @@
  */
 
 #include <types.h>
-#include <x86/lib/spinlock.h>
+#include <asm/lib/spinlock.h>
 #include <pci.h>
-#include <x86/pgtable.h>
+#include <asm/pgtable.h>
 #include <uart16550.h>
-#include <x86/io.h>
-#include <x86/mmu.h>
+#include <asm/io.h>
+#include <asm/mmu.h>
 
 #define MAX_BDF_LEN 8
 

@@ -7,12 +7,12 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/irq.h>
-#include <x86/per_cpu.h>
-#include <x86/pgtable.h>
-#include <x86/vmx.h>
-#include <x86/cpuid.h>
-#include <x86/guest/vm.h>
+#include <asm/irq.h>
+#include <asm/per_cpu.h>
+#include <asm/pgtable.h>
+#include <asm/vmx.h>
+#include <asm/cpuid.h>
+#include <asm/guest/vm.h>
 #include <sprintf.h>
 #include <logmsg.h>
 

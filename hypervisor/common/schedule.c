@@ -6,13 +6,13 @@
 
 #include <rtl.h>
 #include <list.h>
-#include <x86/lib/bits.h>
-#include <x86/cpu.h>
-#include <x86/per_cpu.h>
-#include <x86/lapic.h>
+#include <asm/lib/bits.h>
+#include <asm/cpu.h>
+#include <asm/per_cpu.h>
+#include <asm/lapic.h>
 #include <schedule.h>
 #include <sprintf.h>
-#include <x86/irq.h>
+#include <asm/irq.h>
 
 bool is_idle_thread(const struct thread_object *obj)
 {

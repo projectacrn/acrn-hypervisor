@@ -6,13 +6,13 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/lib/bits.h>
-#include <x86/guest/vcpu.h>
-#include <x86/guest/vm.h>
-#include <x86/cpuid.h>
-#include <x86/cpufeatures.h>
-#include <x86/vmx.h>
-#include <x86/sgx.h>
+#include <asm/lib/bits.h>
+#include <asm/guest/vcpu.h>
+#include <asm/guest/vm.h>
+#include <asm/cpuid.h>
+#include <asm/cpufeatures.h>
+#include <asm/vmx.h>
+#include <asm/sgx.h>
 #include <logmsg.h>
 
 static inline const struct vcpuid_entry *local_find_vcpuid_entry(const struct acrn_vcpu *vcpu,

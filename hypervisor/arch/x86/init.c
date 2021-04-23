@@ -5,15 +5,15 @@
  */
 
 #include <types.h>
-#include <x86/init.h>
+#include <asm/init.h>
 #include <console.h>
-#include <x86/per_cpu.h>
+#include <asm/per_cpu.h>
 #include <shell.h>
-#include <x86/vmx.h>
-#include <x86/guest/vm.h>
+#include <asm/vmx.h>
+#include <asm/guest/vm.h>
 #include <logmsg.h>
-#include <x86/seed.h>
-#include <x86/boot/ld_sym.h>
+#include <asm/seed.h>
+#include <asm/boot/ld_sym.h>
 #include <multiboot.h>
 
 /* boot_regs store the multiboot info magic and address, defined in

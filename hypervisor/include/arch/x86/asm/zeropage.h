@@ -6,7 +6,7 @@
 
 #ifndef ZEROPAGE_H
 #define ZEROPAGE_H
-#include <x86/e820.h>
+#include <asm/e820.h>
 #include <efi.h>
 
 struct zero_page {

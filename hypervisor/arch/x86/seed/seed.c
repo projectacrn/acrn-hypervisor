@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <types.h>
-#include <x86/cpu.h>
-#include <x86/pgtable.h>
+#include <asm/cpu.h>
+#include <asm/pgtable.h>
 #include <rtl.h>
-#include <x86/mmu.h>
+#include <asm/mmu.h>
 #include <sprintf.h>
-#include <x86/guest/ept.h>
+#include <asm/guest/ept.h>
 #include <logmsg.h>
 #include <multiboot.h>
 #include <crypto_api.h>
-#include <x86/seed.h>
+#include <asm/seed.h>
 #include "seed_abl.h"
 #include "seed_sbl.h"
 

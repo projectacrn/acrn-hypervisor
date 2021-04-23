@@ -6,14 +6,14 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/lib/bits.h>
-#include <x86/guest/vm.h>
-#include <x86/vtd.h>
+#include <asm/lib/bits.h>
+#include <asm/guest/vm.h>
+#include <asm/vtd.h>
 #include <ptdev.h>
-#include <x86/per_cpu.h>
-#include <x86/ioapic.h>
-#include <x86/pgtable.h>
-#include <x86/irq.h>
+#include <asm/per_cpu.h>
+#include <asm/ioapic.h>
+#include <asm/pgtable.h>
+#include <asm/irq.h>
 
 /*
  * Check if the IRQ is single-destination and return the destination vCPU if so.

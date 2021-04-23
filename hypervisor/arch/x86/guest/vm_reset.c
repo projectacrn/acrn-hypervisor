@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <x86/guest/vm.h>
-#include <x86/io.h>
-#include <x86/host_pm.h>
+#include <asm/guest/vm.h>
+#include <asm/io.h>
+#include <asm/host_pm.h>
 #include <logmsg.h>
-#include <x86/per_cpu.h>
-#include <x86/guest/vm_reset.h>
+#include <asm/per_cpu.h>
+#include <asm/guest/vm_reset.h>
 
 /**
  * @pre vm != NULL

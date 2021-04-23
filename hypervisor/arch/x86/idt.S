@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <x86/idt.h>
+#include <asm/idt.h>
 
 .altmacro
 

@@ -7,8 +7,8 @@
 #ifndef PTDEV_H
 #define PTDEV_H
 #include <list.h>
-#include <x86/lib/spinlock.h>
-#include <x86/timer.h>
+#include <asm/lib/spinlock.h>
+#include <asm/timer.h>
 
 
 enum intx_ctlr {

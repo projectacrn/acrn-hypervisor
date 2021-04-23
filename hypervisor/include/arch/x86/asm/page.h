@@ -7,7 +7,7 @@
 #ifndef PAGE_H
 #define PAGE_H
 
-#include <x86/lib/spinlock.h>
+#include <asm/lib/spinlock.h>
 
 #define PAGE_SHIFT	12U
 #define PAGE_SIZE	(1U << PAGE_SHIFT)

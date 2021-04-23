@@ -6,18 +6,18 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/lib/bits.h>
-#include <x86/guest/virq.h>
-#include <x86/lapic.h>
-#include <x86/mmu.h>
-#include <x86/vmx.h>
-#include <x86/guest/vcpu.h>
-#include <x86/guest/vmcs.h>
-#include <x86/guest/vm.h>
-#include <x86/guest/splitlock.h>
+#include <asm/lib/bits.h>
+#include <asm/guest/virq.h>
+#include <asm/lapic.h>
+#include <asm/mmu.h>
+#include <asm/vmx.h>
+#include <asm/guest/vcpu.h>
+#include <asm/guest/vmcs.h>
+#include <asm/guest/vm.h>
+#include <asm/guest/splitlock.h>
 #include <trace.h>
 #include <logmsg.h>
-#include <x86/irq.h>
+#include <asm/irq.h>
 
 #define EXCEPTION_ERROR_CODE_VALID  8U
 

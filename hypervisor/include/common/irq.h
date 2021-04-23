@@ -8,7 +8,7 @@
 #define COMMON_IRQ_H
 
 #include <lib/util.h>
-#include <x86/lib/spinlock.h>
+#include <asm/lib/spinlock.h>
 
 /**
  * @file common/irq.h

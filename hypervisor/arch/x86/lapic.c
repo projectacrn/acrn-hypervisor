@@ -5,13 +5,13 @@
  */
 
 #include <types.h>
-#include <x86/lib/bits.h>
-#include <x86/msr.h>
-#include <x86/cpu.h>
-#include <x86/per_cpu.h>
-#include <x86/cpu_caps.h>
-#include <x86/lapic.h>
-#include <x86/apicreg.h>
+#include <asm/lib/bits.h>
+#include <asm/msr.h>
+#include <asm/cpu.h>
+#include <asm/per_cpu.h>
+#include <asm/cpu_caps.h>
+#include <asm/lapic.h>
+#include <asm/apicreg.h>
 
 /* intr_lapic_icr_delivery_mode */
 #define INTR_LAPIC_ICR_FIXED           0x0U

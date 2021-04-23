@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <x86/e820.h>
-#include <x86/mmu.h>
-#include <x86/guest/vm.h>
+#include <asm/e820.h>
+#include <asm/mmu.h>
+#include <asm/guest/vm.h>
 #include <reloc.h>
 #include <vacpi.h>
 #include <logmsg.h>
-#include <x86/rtcm.h>
+#include <asm/rtcm.h>
 
 #define ENTRY_HPA1_LOW_PART1	2U
 #define ENTRY_HPA1_LOW_PART2	4U

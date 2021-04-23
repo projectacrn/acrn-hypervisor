@@ -31,21 +31,21 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/lib/bits.h>
-#include <x86/lib/atomic.h>
-#include <x86/per_cpu.h>
-#include <x86/pgtable.h>
-#include <x86/lapic.h>
-#include <x86/guest/vmcs.h>
-#include <x86/guest/vlapic.h>
-#include <x86/guest/virq.h>
+#include <asm/lib/bits.h>
+#include <asm/lib/atomic.h>
+#include <asm/per_cpu.h>
+#include <asm/pgtable.h>
+#include <asm/lapic.h>
+#include <asm/guest/vmcs.h>
+#include <asm/guest/vlapic.h>
+#include <asm/guest/virq.h>
 #include <ptdev.h>
-#include <x86/vmx.h>
-#include <x86/guest/vm.h>
-#include <x86/guest/ept.h>
+#include <asm/vmx.h>
+#include <asm/guest/vm.h>
+#include <asm/guest/ept.h>
 #include <trace.h>
 #include <logmsg.h>
-#include <x86/irq.h>
+#include <asm/irq.h>
 #include "vlapic_priv.h"
 
 #define VLAPIC_VERBOS 0

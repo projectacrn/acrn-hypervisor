@@ -5,6 +5,6 @@
  */
 
 #include <types.h>
-#include <x86/platform_caps.h>
+#include <asm/platform_caps.h>
 
 struct platform_caps_x86 platform_caps = {.pi = true};

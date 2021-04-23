@@ -7,9 +7,9 @@
 #include <types.h>
 #include <rtl.h>
 #include <acrn_common.h>
-#include <x86/host_pm.h>
-#include <x86/cpu_caps.h>
-#include <x86/board.h>
+#include <asm/host_pm.h>
+#include <asm/cpu_caps.h>
+#include <asm/board.h>
 
 /* The table includes cpu px info of Intel A3960 SoC */
 static const struct cpu_px_data px_a3960[17] = {

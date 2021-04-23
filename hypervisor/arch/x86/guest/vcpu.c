@@ -6,21 +6,21 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/guest/vcpu.h>
-#include <x86/guest/virq.h>
-#include <x86/lib/bits.h>
-#include <x86/vmx.h>
+#include <asm/guest/vcpu.h>
+#include <asm/guest/virq.h>
+#include <asm/lib/bits.h>
+#include <asm/vmx.h>
 #include <logmsg.h>
-#include <x86/cpufeatures.h>
-#include <x86/cpu_caps.h>
-#include <x86/per_cpu.h>
-#include <x86/init.h>
-#include <x86/guest/vm.h>
-#include <x86/guest/vmcs.h>
-#include <x86/mmu.h>
+#include <asm/cpufeatures.h>
+#include <asm/cpu_caps.h>
+#include <asm/per_cpu.h>
+#include <asm/init.h>
+#include <asm/guest/vm.h>
+#include <asm/guest/vmcs.h>
+#include <asm/mmu.h>
 #include <lib/sprintf.h>
-#include <x86/lapic.h>
-#include <x86/irq.h>
+#include <asm/lapic.h>
+#include <asm/irq.h>
 
 /* stack_frame is linked with the sequence of stack operation in arch_switch_to() */
 struct stack_frame {

@@ -5,10 +5,10 @@
  */
 
 #include <types.h>
-#include <x86/cpu.h>
-#include <x86/pgtable.h>
+#include <asm/cpu.h>
+#include <asm/pgtable.h>
 #include <rtl.h>
-#include <x86/seed.h>
+#include <asm/seed.h>
 #include "seed_abl.h"
 
 #define ABL_SEED_LEN 32U

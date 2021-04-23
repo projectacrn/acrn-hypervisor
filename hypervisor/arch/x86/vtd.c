@@ -8,22 +8,22 @@
 
 #include <types.h>
 #include <errno.h>
-#include <x86/lib/bits.h>
-#include <x86/lib/spinlock.h>
-#include <x86/page.h>
-#include <x86/pgtable.h>
+#include <asm/lib/bits.h>
+#include <asm/lib/spinlock.h>
+#include <asm/page.h>
+#include <asm/pgtable.h>
 #include <irq.h>
-#include <x86/irq.h>
-#include <x86/io.h>
-#include <x86/mmu.h>
-#include <x86/lapic.h>
-#include <x86/vtd.h>
-#include <x86/timer.h>
+#include <asm/irq.h>
+#include <asm/io.h>
+#include <asm/mmu.h>
+#include <asm/lapic.h>
+#include <asm/vtd.h>
+#include <asm/timer.h>
 #include <logmsg.h>
-#include <x86/board.h>
-#include <x86/vm_config.h>
+#include <asm/board.h>
+#include <asm/vm_config.h>
 #include <pci.h>
-#include <x86/platform_caps.h>
+#include <asm/platform_caps.h>
 
 #define DBG_IOMMU 0
 

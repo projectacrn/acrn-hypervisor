@@ -32,17 +32,17 @@
  *
  */
 #include <types.h>
-#include <x86/lib/spinlock.h>
-#include <x86/io.h>
-#include <x86/pgtable.h>
-#include <x86/mmu.h>
+#include <asm/lib/spinlock.h>
+#include <asm/io.h>
+#include <asm/pgtable.h>
+#include <asm/mmu.h>
 #include <pci.h>
 #include <uart16550.h>
 #include <logmsg.h>
-#include <x86/pci_dev.h>
-#include <x86/vtd.h>
-#include <x86/lib/bits.h>
-#include <x86/board.h>
+#include <asm/pci_dev.h>
+#include <asm/vtd.h>
+#include <asm/lib/bits.h>
+#include <asm/board.h>
 #include <platform_acpi_info.h>
 #include <hash.h>
 #include <util.h>

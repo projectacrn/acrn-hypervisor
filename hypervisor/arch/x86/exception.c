@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <arch/x86/cpu.h>
-#include <arch/x86/irq.h>
+#include <asm/cpu.h>
+#include <asm/irq.h>
 #include <debug/dump.h>
 
 void dispatch_exception(struct intr_excp_ctx *ctx)

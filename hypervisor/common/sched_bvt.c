@@ -5,7 +5,7 @@
  */
 
 #include <list.h>
-#include <x86/per_cpu.h>
+#include <asm/per_cpu.h>
 #include <schedule.h>
 
 #define BVT_MCU_MS	1U
