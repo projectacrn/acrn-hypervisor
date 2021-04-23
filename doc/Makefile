@@ -12,7 +12,8 @@ SPHINXOPTS    ?= -q
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = "Project ACRN"
 BUILDDIR      ?= _build
-SOURCEDIR     = $(BUILDDIR)/rst/
+SOURCEDIR     = $(BUILDDIR)/rst
+LATEXMKOPTS   = -silent
 
 # document publication assumes the folder structure is setup
 # with the acrn-hypervisor and projectacrn.github.io repos as
@@ -37,31 +38,44 @@ help:
 
 # Generate the doxygen xml (for Sphinx) and copy the doxygen html to the
 # api folder for publishing along with the Sphinx-generated API docs.
-
-copy-to-sourcedir:
-	$(Q)mkdir -p $(SOURCEDIR)
-	$(Q)rsync -rt --exclude=$(BUILDDIR) . $(SOURCEDIR)
-
-doxy: copy-to-sourcedir
+# This is where we tweak the "pre" API comments into "preconditions"
+# Note that this step starts with an empty doc.log while the others append
+doxy:
 	$(Q)(cat acrn.doxyfile ; echo "OUTPUT_DIRECTORY=$(SOURCEDIR)/doxygen" ) | doxygen - > $(BUILDDIR)/doc.log 2>&1
 	$(Q)find $(SOURCEDIR)/doxygen/xml/* | xargs sed -i 's/simplesect kind="pre"/simplesect kind="preconditions"/'
 
-content: copy-to-sourcedir
+# Copy all the rst content (and images, etc) into the _build/rst folder
+# including rst content and xsd files from the /misc folder that we'll
+# use to generate config option documentation
+
+content:
+	$(Q)mkdir -p $(SOURCEDIR)
+	$(Q)rsync -rt --exclude=$(BUILDDIR) . $(SOURCEDIR)
 	$(Q)scripts/extract_content.py $(SOURCEDIR) misc
 	$(Q)mkdir -p $(SOURCEDIR)/misc/config_tools/schema
 	$(Q)rsync -rt ../misc/config_tools/schema/*.xsd $(SOURCEDIR)/misc/config_tools/schema
 	$(Q)xsltproc -xinclude ./scripts/configdoc.xsl $(SOURCEDIR)/misc/config_tools/schema/config.xsd > $(SOURCEDIR)/reference/configdoc.txt
 
+# Used to pull the acrn kernel source (for API docs)
+
 pullsource:
 	$(Q)scripts/pullsource.sh
 
-html: copy-to-sourcedir doxy content
-	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
+html: content doxy
+	@echo making HTML content
+	$(Q)./scripts/show-versions.py
+	$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
 
-singlehtml: doxy content
-	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b singlehtml -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
+singlehtml: content doxy
+	$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b singlehtml -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
+
+pdf: html
+	@echo now making $(BUILDDIR)/latex/acrn.pdf
+	$(Q)make -silent latexpdf LATEXMKOPTS=$(LATEXMKOPTS) >> $(BUILDDIR)/doc.log 2>&1
+	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
+
 
 # Remove generated content (Sphinx and doxygen)
 
@@ -72,7 +86,10 @@ clean:
 
 
 # Copy material over to the GitHub pages staging repo
-# along with a README
+# along with a README, index.html redirect to latest/index.html, robots.txt (for
+# search exclusions), and tweak the Sphinx-generated 404.html to work as the
+# site-wide 404 response page.  (We generate the 404.html with Sphinx so it has
+# the current left navigation contents and overall style.)
 
 publish:
 	mkdir -p $(PUBLISHDIR)

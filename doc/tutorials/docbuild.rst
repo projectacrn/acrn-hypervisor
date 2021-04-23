@@ -139,10 +139,10 @@ different (newer) version of doxygen noted above that may also work.
 
 For Ubuntu use:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     sudo apt install doxygen python3-pip \
-       python3-wheel make graphviz xsltproc
+   sudo apt install doxygen python3-pip \
+     python3-wheel make graphviz xsltproc
 
 Then use ``pip3`` to install the remaining Python-based tools:
 
@@ -174,10 +174,24 @@ And with that you're ready to generate the documentation.
 
       doc/scripts/show-versions.py
 
+
+Extra Tools for Generating PDF
+==============================
+
+While the primary output for ACRN documentation is for an HTML website, you can
+also generate a PDF version of the documentation.  A few extra tools are needed
+only if you want to create PDF output.  For Ubuntu users add these additional
+packages:
+
+.. code-block:: bash
+
+   sudo apt install texlive-latex-recommended texlive-fonts-recommended \
+     texlive-latex-extra latexmk texlive-xetex xindy
+
 Documentation Presentation Theme
 ********************************
 
-Sphinx supports easy customization of the generated documentation
+Sphinx supports easy customization of the generated HTML documentation
 appearance through the use of themes.  Replace the theme files and do
 another ``make html`` and the output layout and style is changed. The
 sphinx build system creates document cache information that attempts to
@@ -196,11 +210,13 @@ Run the Documentation Processors
 
 The ``acrn-hypervisor/doc`` directory has all the ``.rst`` source files, extra
 tools, and ``Makefile`` for generating a local copy of the ACRN technical
-documentation.  For generating all the API documentation, there is a
+documentation. (Some additional ``.rst`` files and other material is extracted
+or generated from the ``/misc`` folder as part of the ``Makefile``.)
+For generating all the API documentation, there is a
 dependency on having the ``acrn-kernel`` repo's contents available too
 (as described previously).  You'll get a sphinx warning if that repo is
 not set up as described, but you can ignore that warning if you're
-not planning to publish.
+not planning to publish or show the API documentation.
 
 .. code-block:: bash
 
@@ -220,6 +236,36 @@ with the command:
    python3 -m http.server
 
 and use your web browser to open the URL:  ``http://localhost:8000``.
+
+Generate PDF Output
+===================
+
+After the HTML content is generated, it leaves artifacts behind that you can
+use to generate PDF output using the Sphinx ``latex`` builder.  This
+builder initially creates LaTeX output in the ``_build/latex`` folder and then
+uses the ``latexmk`` tool to create the final ``acrn.pdf`` file in the same
+folder.  This process automatically makes a few passes over the content to create the index
+and resolve intra-document hyperlinks, and produces plenty of progress messages along the
+way.  The Sphinx-generated output for tables and code blocks also yields many "underfill"
+and "overfill" messages from the ``latex`` builder that can't be easily
+suppressed or fixed.  Because of that, we recommend running this PDF generation
+with the ``-silent`` options, like this (after you've run ``make html``:
+
+.. code-block:: bash
+
+   make latexpdf LATEXMKOPTS="-silent"
+
+For convenience, we've also created a make target called ``pdf`` that will first
+generate the HTML content and then make the PDF file in one step:
+
+.. code-block:: bash
+
+   make pdf
+
+This make target runs quietly, and then verifies that no unexpected message from
+the build process are produced (using the :ref:`message filtering process
+<filter_expected>` explained below.  Either way, when the build completes, the
+generated PDF file is in ``_build/latex/acrn.pdf``.
 
 Publish Content
 ***************
@@ -298,6 +344,8 @@ of the repo, and add some extra flags to the ``make`` commands:
    make clean
    make DOC_TAG=release RELEASE=2.3 html
    make DOC_TAG=release RELEASE=2.3 publish
+
+.. _filter_expected:
 
 Filter Expected Warnings
 ************************

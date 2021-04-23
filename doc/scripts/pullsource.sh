@@ -2,7 +2,8 @@
 # Copyright (C) 2019 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
 
-q="--quiet"
+#q="--quiet"
+q=""
 
 # get the latest acrn-kernel sources for the kernel-doc API processing
 
