@@ -200,6 +200,12 @@ static inline uint64_t get_pae_pdpt_addr(uint64_t cr3)
 	return (cr3 & 0xFFFFFFE0UL);
 }
 
+/*
+ * flush TLB only for the specified page with the address
+ */
+void flush_tlb(uint64_t addr);
+void flush_tlb_range(uint64_t addr, uint64_t size);
+
 /**
  * @}
  */

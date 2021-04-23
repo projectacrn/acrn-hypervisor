@@ -313,3 +313,17 @@ void flush_address_space(void *addr, uint64_t size)
 		n += CACHE_LINE_SIZE;
 	}
 }
+
+void flush_tlb(uint64_t addr)
+{
+	invlpg(addr);
+}
+
+void flush_tlb_range(uint64_t addr, uint64_t size)
+{
+	uint64_t linear_addr;
+
+	for (linear_addr = addr; linear_addr < (addr + size); linear_addr += PAGE_SIZE) {
+		invlpg(linear_addr);
+	}
+}
