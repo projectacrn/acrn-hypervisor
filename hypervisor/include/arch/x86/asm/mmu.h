@@ -55,6 +55,51 @@
 
 /* IA32E Paging constants */
 #define IA32E_REF_MASK	((get_pcpu_info())->physical_address_mask)
+#define INVEPT_TYPE_SINGLE_CONTEXT      1UL
+#define INVEPT_TYPE_ALL_CONTEXTS        2UL
+#define VMFAIL_INVALID_EPT_VPID				\
+	"       jnc 1f\n"				\
+	"       mov $1, %0\n"    /* CF: error = 1 */	\
+	"       jmp 3f\n"				\
+	"1:     jnz 2f\n"				\
+	"       mov $2, %0\n"    /* ZF: error = 2 */	\
+	"       jmp 3f\n"				\
+	"2:     mov $0, %0\n"				\
+	"3:"
+
+struct invvpid_operand {
+	uint32_t vpid : 16;
+	uint32_t rsvd1 : 16;
+	uint32_t rsvd2 : 32;
+	uint64_t gva;
+};
+
+static inline int32_t asm_invvpid(const struct invvpid_operand operand, uint64_t type)
+{
+	int32_t error;
+	asm volatile ("invvpid %1, %2\n"
+			VMFAIL_INVALID_EPT_VPID
+			: "=r" (error)
+			: "m" (operand), "r" (type)
+			: "memory");
+	return error;
+}
+
+struct invept_desc {
+	uint64_t eptp;
+	uint64_t res;
+};
+
+static inline int32_t asm_invept(uint64_t type, struct invept_desc desc)
+{
+	int32_t error;
+	asm volatile ("invept %1, %2\n"
+			VMFAIL_INVALID_EPT_VPID
+			: "=r" (error)
+			: "m" (desc), "r" (type)
+			: "memory");
+	return error;
+}
 
 struct acrn_vcpu;
 static inline uint64_t round_page_up(uint64_t addr)
