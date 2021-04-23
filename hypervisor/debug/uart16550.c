@@ -18,16 +18,9 @@ struct console_uart {
 	bool enabled;
 
 	enum serial_dev_type type;
-	union {
-		uint16_t port_address;
-		union {
-			struct {
-				union pci_bdf bdf;
-				void *cached_mmio_base_va;
-			} pci;
-			void *mmio_base_vaddr;
-		} mmio;
-	};
+	uint16_t port_address;
+	void *mmio_base_vaddr;
+	union pci_bdf bdf;
 
 	spinlock_t rx_lock;
 	spinlock_t tx_lock;
@@ -46,14 +39,14 @@ static struct console_uart uart = {
 static struct console_uart uart = {
 	.enabled = true,
 	.type = PCI,
-	.mmio.pci.bdf.value = CONFIG_SERIAL_PCI_BDF,
+	.bdf.value = CONFIG_SERIAL_PCI_BDF,
 	.reg_width = 4,
 };
 #elif defined(CONFIG_SERIAL_MMIO_BASE)
 static struct console_uart uart = {
 	.enabled = true,
 	.type = MMIO,
-	.mmio.mmio_base_vaddr = (void *)CONFIG_SERIAL_MMIO_BASE,
+	.mmio_base_vaddr = (void *)CONFIG_SERIAL_MMIO_BASE,
 	.reg_width = 1,
 };
 #endif
@@ -67,10 +60,12 @@ static inline uint32_t uart16550_read_reg(struct console_uart uart, uint16_t reg
 {
 	if (uart.type == PIO) {
 		return pio_read8(uart.port_address + (reg_idx * uart.reg_width));
-	} else if (uart.type == PCI) {
-		return mmio_read32(uart.mmio.pci.cached_mmio_base_va + (reg_idx * uart.reg_width));
 	} else {
-		return mmio_read8(uart.mmio.mmio_base_vaddr + (reg_idx * uart.reg_width));
+		if (uart.reg_width == 4U) {
+			return mmio_read32(uart.mmio_base_vaddr + (reg_idx * uart.reg_width));
+		} else {
+			return mmio_read8(uart.mmio_base_vaddr + (reg_idx * uart.reg_width));
+		}
 	}
 }
 
@@ -81,10 +76,12 @@ static inline void uart16550_write_reg(struct console_uart uart, uint32_t val, u
 {
 	if (uart.type == PIO) {
 		pio_write8(val, uart.port_address + (reg_idx * uart.reg_width));
-	} else if (uart.type == PCI) {
-		mmio_write32(val, uart.mmio.pci.cached_mmio_base_va + (reg_idx * uart.reg_width));
 	} else {
-		mmio_write8(val, uart.mmio.mmio_base_vaddr + (reg_idx * uart.reg_width));
+		if (uart.reg_width == 4U) {
+			mmio_write32(val, uart.mmio_base_vaddr + (reg_idx * uart.reg_width));
+		} else {
+			mmio_write8(val, uart.mmio_base_vaddr + (reg_idx * uart.reg_width));
+		}
 	}
 }
 
@@ -134,28 +131,45 @@ void uart16550_init(bool early_boot)
 
 	if (!early_boot) {
 		if (uart.type == MMIO) {
-			mmio_base_va = hpa2hva(hva2hpa_early(uart.mmio.mmio_base_vaddr));
-		} else if (uart.type == PCI) {
-			mmio_base_va = hpa2hva(hva2hpa_early(uart.mmio.pci.cached_mmio_base_va));
-		}
-		if (mmio_base_va != NULL) {
-			ppt_clear_user_bit((uint64_t)mmio_base_va, PDE_SIZE);
+			mmio_base_va = hpa2hva(hva2hpa_early(uart.mmio_base_vaddr));
+			if (mmio_base_va != NULL) {
+				ppt_clear_user_bit((uint64_t)mmio_base_va, PDE_SIZE);
+			}
 		}
 		return;
 	}
 
 	/* if configure serial PCI BDF, get its base MMIO address */
 	if (uart.type == PCI) {
-		uart.mmio.pci.cached_mmio_base_va =
-			hpa2hva_early(pci_pdev_read_cfg(uart.mmio.pci.bdf, pci_bar_offset(0), 4U) & PCIM_BAR_MEM_BASE);
-		if (uart.mmio.pci.cached_mmio_base_va == NULL) {
+		uint32_t bar0 = pci_pdev_read_cfg(uart.bdf, pci_bar_offset(0), 4U);
+
+		if ((bar0 & ~0xfU) == 0U) {
 			/* in case the PCI UART BAR is reset to 0 after boot */
 			uart.enabled = false;
 			return;
+		} else {
+			uint16_t cmd = (uint16_t)pci_pdev_read_cfg(uart.bdf, PCIR_COMMAND, 2U);
+			if ((bar0 & 0x3U) == PCIM_BAR_IO_SPACE) { /* IO Space */
+				uart.type = PIO;
+				uart.port_address = (uint16_t)(bar0 & PCI_BASE_ADDRESS_IO_MASK);
+				uart.reg_width = 1;
+				pci_pdev_write_cfg(uart.bdf, PCIR_COMMAND, 2U, cmd | PCIM_CMD_PORTEN);
+			} else {
+				if ((bar0 & 0xfU) == 0U) { /* 32 bits MMIO Space */
+					uart.type = MMIO;
+					uart.mmio_base_vaddr = hpa2hva_early((bar0 & PCI_BASE_ADDRESS_MEM_MASK));
+					pci_pdev_write_cfg(uart.bdf, PCIR_COMMAND, 2U, cmd | PCIM_CMD_MEMEN);
+				} else {
+					uart.enabled = false;
+					return;
+				}
+			}
 		}
 	}
+
 	spinlock_init(&uart.rx_lock);
 	spinlock_init(&uart.tx_lock);
+
 	/* Enable TX and RX FIFOs */
 	uart16550_write_reg(uart, FCR_FIFOE | FCR_RFR | FCR_TFR, UART16550_FCR);
 
@@ -237,14 +251,15 @@ void uart16550_set_property(bool enabled, enum serial_dev_type uart_type, uint64
 {
 	uart.enabled = enabled;
 	uart.type = uart_type;
+	uart.bdf.value = 0U;
 
 	if (uart_type == PIO) {
 		uart.port_address = data;
 	} else if (uart_type == PCI) {
-		uart.mmio.pci.bdf.value = data;
+		uart.bdf.value = data;
 		uart.reg_width = 4;
 	} else if (uart_type == MMIO) {
-		uart.mmio.mmio_base_vaddr = (void *)data;
+		uart.mmio_base_vaddr = (void *)data;
 		uart.reg_width = 1;
 	}
 }
@@ -253,8 +268,8 @@ bool is_pci_dbg_uart(union pci_bdf bdf_value)
 {
 	bool ret = false;
 
-	if (uart.enabled && (uart.type == PCI)) {
-		if (bdf_value.value == uart.mmio.pci.bdf.value) {
+	if (uart.enabled && (uart.bdf.value != 0)) {
+		if (bdf_value.value == uart.bdf.value) {
 			ret = true;
 		}
 	}
