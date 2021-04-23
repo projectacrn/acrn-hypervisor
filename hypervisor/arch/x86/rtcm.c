@@ -24,17 +24,6 @@ static struct rtct_entry_data_rtcm_binary *rtcm_binary = NULL;
 
 static struct acpi_table_header *acpi_rtct_tbl = NULL;
 
-static inline void rtcm_flush_binary_tlb(void)
-{
-	uint64_t linear_addr, start_addr = (uint64_t)hpa2hva(rtcm_binary->address);
-	uint64_t end_addr = start_addr + rtcm_binary->size;
-
-	for (linear_addr = start_addr; linear_addr < end_addr; linear_addr += PAGE_SIZE) {
-		invlpg(linear_addr);
-	}
-
-}
-
 static inline void *get_rtct_entry_base()
 {
 	return (void *)acpi_rtct_tbl + sizeof(*acpi_rtct_tbl);
@@ -133,7 +122,7 @@ bool init_software_sram(bool is_bsp)
 			ASSERT(header->magic == RTCM_MAGIC, "Incorrect RTCM magic!");
 
 			/* Flush the TLB, so that BSP/AP can execute the RTCM ABI */
-			rtcm_flush_binary_tlb();
+			flush_tlb_range((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size);
 			rtcm_command_func = (rtcm_abi_func)(hpa2hva(rtcm_binary->address) + header->command_offset);
 			pr_info("rtcm command function is found at %llx", rtcm_command_func);
 			rtcm_ret_code = rtcm_command_func(RTCM_CMD_INIT_SOFTWARE_SRAM, get_rtct_entry_base());
@@ -149,7 +138,7 @@ bool init_software_sram(bool is_bsp)
 			bitmap_set_lock(get_pcpu_id(), &init_sw_sram_cpus_mask);
 			wait_sync_change(&init_sw_sram_cpus_mask, ALL_CPUS_MASK);
 			/* Flush the TLB on BSP and all APs to restore the NX for Software SRAM area */
-			rtcm_flush_binary_tlb();
+			flush_tlb_range((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size);
 
 			if (is_bsp) {
 				is_sw_sram_initialized = true;
