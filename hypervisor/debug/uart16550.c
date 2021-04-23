@@ -7,9 +7,9 @@
 #include <types.h>
 #include <asm/lib/spinlock.h>
 #include <pci.h>
-#include <asm/pgtable.h>
 #include <uart16550.h>
 #include <asm/io.h>
+#include <asm/cpu.h>
 #include <asm/mmu.h>
 
 #define MAX_BDF_LEN 8
