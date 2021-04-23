@@ -24,11 +24,6 @@ static struct rtct_entry_data_rtcm_binary *rtcm_binary = NULL;
 
 static struct acpi_table_header *acpi_rtct_tbl = NULL;
 
-static inline void rtcm_set_nx(bool add)
-{
-	ppt_set_nx_bit((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size, add);
-}
-
 static inline void rtcm_flush_binary_tlb(void)
 {
 	uint64_t linear_addr, start_addr = (uint64_t)hpa2hva(rtcm_binary->address);
@@ -125,7 +120,7 @@ bool init_software_sram(bool is_bsp)
 			parse_rtct();
 			if (rtcm_binary != NULL) {
 				/* Clear the NX bit of PTCM area */
-				rtcm_set_nx(false);
+				set_paging_x((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size);
 			}
 			bitmap_clear_lock(get_pcpu_id(), &init_sw_sram_cpus_mask);
 		}
@@ -148,7 +143,7 @@ bool init_software_sram(bool is_bsp)
 
 			if (is_bsp) {
 				/* Restore the NX bit of RTCM area in page table */
-				rtcm_set_nx(true);
+				set_paging_nx((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size);
 			}
 
 			bitmap_set_lock(get_pcpu_id(), &init_sw_sram_cpus_mask);

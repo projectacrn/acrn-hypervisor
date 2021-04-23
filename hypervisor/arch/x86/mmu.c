@@ -55,7 +55,7 @@ static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
 static struct page ppt_pages[PPT_PAGE_NUM];
 static uint64_t ppt_page_bitmap[PPT_PAGE_NUM / 64];
 
-/* ppt: pripary page pool */
+/* ppt: primary page pool */
 static struct page_pool ppt_page_pool = {
 	.start_page = ppt_pages,
 	.bitmap_size = PPT_PAGE_NUM / 64,
@@ -191,7 +191,7 @@ void enable_smap(void)
 /*
  * Clean USER bit in page table to update memory pages to be owned by hypervisor.
  */
-void ppt_clear_user_bit(uint64_t base, uint64_t size)
+void set_paging_supervisor(uint64_t base, uint64_t size)
 {
 	uint64_t base_aligned;
 	uint64_t size_aligned;
@@ -205,19 +205,24 @@ void ppt_clear_user_bit(uint64_t base, uint64_t size)
 		round_pde_up(size_aligned), 0UL, PAGE_USER, &ppt_pgtable, MR_MODIFY);
 }
 
-void ppt_set_nx_bit(uint64_t base, uint64_t size, bool add)
+void set_paging_nx(uint64_t base, uint64_t size)
 {
 	uint64_t region_end = base + size;
 	uint64_t base_aligned = round_pde_down(base);
 	uint64_t size_aligned = round_pde_up(region_end - base_aligned);
 
-	if (add) {
-		pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr,
-			base_aligned, size_aligned, PAGE_NX, 0UL, &ppt_pgtable, MR_MODIFY);
-	} else {
-		pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr,
-			base_aligned, size_aligned, 0UL, PAGE_NX, &ppt_pgtable, MR_MODIFY);
-	}
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr,
+		base_aligned, size_aligned, PAGE_NX, 0UL, &ppt_pgtable, MR_MODIFY);
+}
+
+void set_paging_x(uint64_t base, uint64_t size)
+{
+	uint64_t region_end = base + size;
+	uint64_t base_aligned = round_pde_down(base);
+	uint64_t size_aligned = round_pde_up(region_end - base_aligned);
+
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr,
+		base_aligned, size_aligned, 0UL, PAGE_NX, &ppt_pgtable, MR_MODIFY);
 }
 
 void init_paging(void)

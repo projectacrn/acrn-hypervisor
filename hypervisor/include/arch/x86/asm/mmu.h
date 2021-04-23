@@ -153,8 +153,13 @@ void enable_smap(void);
  * @return None
  */
 void init_paging(void);
-void ppt_clear_user_bit(uint64_t base, uint64_t size);
-void ppt_set_nx_bit(uint64_t base, uint64_t size, bool add);
+
+/*
+ * set paging attribute for primary page tables
+ */
+void set_paging_supervisor(uint64_t base, uint64_t size);
+void set_paging_x(uint64_t base, uint64_t size);
+void set_paging_nx(uint64_t base, uint64_t size);
 
 /**
  * @brief Specified signle VPID flush
