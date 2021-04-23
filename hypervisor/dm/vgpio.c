@@ -142,7 +142,7 @@ void register_vgpio_handler(struct acrn_vm *vm, const struct acrn_mmiodev *mmiod
 	base_hpa    = mmiodev->base_hpa + (P2SB_BASE_GPIO_PORT_ID << P2SB_PORTID_SHIFT);
 
 	/* emulate MMIO access to the GPIO private configuration space registers */
-	ppt_clear_user_bit((uint64_t)hpa2hva(base_hpa), gpio_pcr_sz);
+	set_paging_supervisor((uint64_t)hpa2hva(base_hpa), gpio_pcr_sz);
 	register_mmio_emulation_handler(vm, vgpio_mmio_handler, gpa_start, gpa_end, (void *)vm, false);
 	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, gpa_start, gpio_pcr_sz);
 }

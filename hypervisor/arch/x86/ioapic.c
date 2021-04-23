@@ -406,7 +406,7 @@ int32_t init_ioapic_id_info(void)
 		gsi = 0U;
 		for (ioapic_id = 0U; ioapic_id < ioapic_num; ioapic_id++) {
 			addr = map_ioapic(ioapic_array[ioapic_id].addr);
-			ppt_clear_user_bit((uint64_t)addr, PAGE_SIZE);
+			set_paging_supervisor((uint64_t)addr, PAGE_SIZE);
 
 			nr_pins = ioapic_nr_pins(addr);
 			if (nr_pins <= (uint32_t) CONFIG_MAX_IOAPIC_LINES) {

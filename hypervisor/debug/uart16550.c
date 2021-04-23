@@ -133,7 +133,7 @@ void uart16550_init(bool early_boot)
 		if (uart.type == MMIO) {
 			mmio_base_va = hpa2hva(hva2hpa_early(uart.mmio_base_vaddr));
 			if (mmio_base_va != NULL) {
-				ppt_clear_user_bit((uint64_t)mmio_base_va, PDE_SIZE);
+				set_paging_supervisor((uint64_t)mmio_base_va, PDE_SIZE);
 			}
 		}
 		return;

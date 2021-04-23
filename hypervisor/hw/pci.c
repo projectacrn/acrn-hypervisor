@@ -652,7 +652,7 @@ void init_pci_pdev_list(void)
 	uint16_t bus;
 	bool was_visited = false;
 
-	ppt_clear_user_bit(phys_pci_mmcfg.address, get_pci_mmcfg_size(&phys_pci_mmcfg));
+	set_paging_supervisor(phys_pci_mmcfg.address, get_pci_mmcfg_size(&phys_pci_mmcfg));
 
 	pci_parse_iommu_devscopes(&bdfs_from_drhds, &drhd_idx_pci_all);
 

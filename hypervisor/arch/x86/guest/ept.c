@@ -84,7 +84,7 @@ void reserve_buffer_for_ept_pages(void)
 	uint32_t offset = 0U;
 
 	page_base = e820_alloc_memory(TOTAL_EPT_4K_PAGES_SIZE, ~0UL);
-	ppt_clear_user_bit(page_base, TOTAL_EPT_4K_PAGES_SIZE);
+	set_paging_supervisor(page_base, TOTAL_EPT_4K_PAGES_SIZE);
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		ept_pages[vm_id] = (struct page *)(void *)(page_base + offset);
 		/* assume each VM has same amount of EPT pages */
