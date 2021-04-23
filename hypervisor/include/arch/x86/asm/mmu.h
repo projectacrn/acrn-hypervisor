@@ -45,10 +45,8 @@
 
 #ifndef ASSEMBLER
 
-#include <asm/cpu.h>
 #include <asm/page.h>
 #include <asm/pgtable.h>
-#include <asm/cpu_caps.h>
 
 /* Define cache line size (in bytes) */
 #define CACHE_LINE_SIZE		64U
@@ -195,26 +193,6 @@ void flush_address_space(void *addr, uint64_t size);
  * @return None
  */
 void invept(const void *eptp);
-
-static inline void invlpg(unsigned long addr)
-{
-	asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
-}
-
-static inline void cache_flush_invalidate_all(void)
-{
-	asm volatile ("   wbinvd\n" : : : "memory");
-}
-
-static inline void clflush(const volatile void *p)
-{
-	asm volatile ("clflush (%0)" :: "r"(p));
-}
-
-static inline void clflushopt(const volatile void *p)
-{
-	asm volatile ("clflushopt (%0)" :: "r"(p));
-}
 
 /* get PDPT address from CR3 vaule in PAE mode */
 static inline uint64_t get_pae_pdpt_addr(uint64_t cr3)

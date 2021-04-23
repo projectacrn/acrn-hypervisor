@@ -10,8 +10,7 @@
 #include <errno.h>
 #include <asm/lib/bits.h>
 #include <asm/lib/spinlock.h>
-#include <asm/page.h>
-#include <asm/pgtable.h>
+#include <asm/cpu_caps.h>
 #include <irq.h>
 #include <asm/irq.h>
 #include <asm/io.h>

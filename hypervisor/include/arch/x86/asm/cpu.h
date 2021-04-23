@@ -546,6 +546,26 @@ static inline void cpu_memory_barrier(void)
 	asm volatile ("mfence\n" : : : "memory");
 }
 
+static inline void invlpg(unsigned long addr)
+{
+	asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+}
+
+static inline void cache_flush_invalidate_all(void)
+{
+	asm volatile ("   wbinvd\n" : : : "memory");
+}
+
+static inline void clflush(const volatile void *p)
+{
+	asm volatile ("clflush (%0)" :: "r"(p));
+}
+
+static inline void clflushopt(const volatile void *p)
+{
+	asm volatile ("clflushopt (%0)" :: "r"(p));
+}
+
 /* Write the task register */
 #define CPU_LTR_EXECUTE(ltr_ptr)                            \
 {                                                           \
