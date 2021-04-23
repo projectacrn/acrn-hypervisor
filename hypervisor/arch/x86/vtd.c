@@ -264,13 +264,9 @@ static inline void dmar_wait_completion(const struct dmar_drhd_rt *dmar_unit, ui
  */
 void iommu_flush_cache(const void *p, uint32_t size)
 {
-	uint32_t i;
-
 	/* if vtd support page-walk coherency, no need to flush cacheline */
 	if (!iommu_page_walk_coherent) {
-		for (i = 0U; i < size; i += CACHE_LINE_SIZE) {
-			clflush((const char *)p + i);
-		}
+		flush_cache_range(p, size);
 	}
 }
 

@@ -371,7 +371,7 @@ void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
 			 *                            flush [sw_sram_top, end_hpa) in the next if condition
 			 */
 			stac();
-			flush_address_space(hpa2hva(base_hpa), min(end_hpa, sw_sram_bottom) - base_hpa);
+			flush_cache_range(hpa2hva(base_hpa), min(end_hpa, sw_sram_bottom) - base_hpa);
 			clac();
 		}
 
@@ -383,7 +383,7 @@ void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
 			 *                            flush [base_hpa, sw_sram_bottom) in the below if condition
 			 */
 			stac();
-			flush_address_space(hpa2hva(max(base_hpa, sw_sram_top)), end_hpa - max(base_hpa, sw_sram_top));
+			flush_cache_range(hpa2hva(max(base_hpa, sw_sram_top)), end_hpa - max(base_hpa, sw_sram_top));
 			clac();
 		}
 	}

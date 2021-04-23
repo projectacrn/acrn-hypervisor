@@ -107,7 +107,7 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 
 uint64_t prepare_trampoline(void)
 {
-	uint64_t size, dest_pa, i;
+	uint64_t size, dest_pa;
 
 	size = (uint64_t)(&ld_trampoline_end - &ld_trampoline_start);
 	dest_pa = e820_alloc_memory(CONFIG_LOW_RAM_SIZE, MEM_1M);
@@ -120,9 +120,7 @@ uint64_t prepare_trampoline(void)
 	update_trampoline_code_refs(dest_pa);
 
 	cpu_memory_barrier();
-	for (i = 0UL; i < size; i = i + CACHE_LINE_SIZE) {
-		clflush(hpa2hva(dest_pa + i));
-	}
+	flush_cache_range(hpa2hva(dest_pa), size);
 
 	trampoline_start16_paddr = dest_pa;
 

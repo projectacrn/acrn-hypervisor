@@ -409,7 +409,7 @@ static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	/* GUEST_FLAG_RT has not set in post-launched RTVM before it has been created */
 	if ((!is_software_sram_enabled()) && (!has_rt_vm())) {
-		cache_flush_invalidate_all();
+		flush_invalidate_all_cache();
 	} else {
 		if (is_rt_vm(vcpu->vm)) {
 			walk_ept_table(vcpu->vm, ept_flush_leaf_page);
