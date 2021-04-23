@@ -24,7 +24,7 @@ class color:
    END = '\033[0m'
 
 # Check all requirements listed in requirements.txt and print out version installed (if any)
-print ("Listing versions of doc build dependencies found on your system...\n")
+print ("doc build tool versions found on your system...\n")
 
 rf = open(os.path.join(sys.path[0], "requirements.txt"),"r")
 
@@ -35,7 +35,7 @@ for reqs in pkg_resources.parse_requirements(rf):
     except:
         print (color.RED + color.BOLD + reqs.project_name + " is missing." + color.END +
                 " (Hint: install all dependencies with " + color.YELLOW +
-                "\"pip3 install --user -r requirements.txt\"" + color.END + ")")
+                "\"pip3 install --user -r scripts/requirements.txt\"" + color.END + ")")
 
 rf.close()
 
