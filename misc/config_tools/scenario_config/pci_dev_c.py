@@ -262,12 +262,12 @@ def generate_file(vm_info, config):
                     if shm_name == shm_splited[0].strip():
                         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
                             print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(region), file=config)
-                            print("\t\tIVSHMEM_DEVICE_{}_VBAR".format(index), file=config)
+                            print("\t\tIVSHMEM_DEVICE_{}_VBAR,".format(index), file=config)
                         elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
                             print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(region), file=config)
-                            print("\t\tSOS_IVSHMEM_DEVICE_{}_VBAR".format(index), file=config)
+                            print("\t\tSOS_IVSHMEM_DEVICE_{}_VBAR,".format(index), file=config)
                         else:
-                            print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{}".format(region), file=config)
+                            print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(region), file=config)
                 pci_cnt += 1
                 index += 1
                 print("\t},", file=config)
