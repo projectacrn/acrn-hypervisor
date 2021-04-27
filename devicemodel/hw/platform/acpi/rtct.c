@@ -283,16 +283,25 @@ static int passthru_rtct_to_guest(struct acpi_table_hdr *vrtct, struct acpi_tabl
 	return  rc;
 }
 
+/*
+ * @pre buid_vrtct(ctx, cfg) != NULL
+ */
 uint64_t get_software_sram_base_hpa(void)
 {
 	return software_sram_base_hpa;
 }
 
+/*
+ * @pre buid_vrtct(ctx, cfg) != NULL
+ */
 uint64_t get_software_sram_base_gpa(void)
 {
 	return software_sram_base_gpa;
 }
 
+/*
+ * @pre buid_vrtct(ctx, cfg) != NULL
+ */
 uint64_t get_software_sram_size(void)
 {
 	return software_sram_size;

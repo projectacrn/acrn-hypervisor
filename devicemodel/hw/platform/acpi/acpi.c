@@ -1101,7 +1101,6 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 		.prot = PROT_ALL
 	};
 
-	memmap.gpa = get_software_sram_base_gpa();
 	native_rtct_fd = open(RTCT_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
 	if (native_rtct_fd < 0) {
 		pr_err("failed to open /sys/firmware/acpi/tables/PTCT !!!!! errno:%d\n", errno);
@@ -1133,6 +1132,7 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	free(vrtct);
 
 	memmap.hpa = get_software_sram_base_hpa();
+	memmap.gpa = get_software_sram_base_gpa();
 	memmap.len = get_software_sram_size();
 	ioctl(ctx->fd, IC_UNSET_MEMSEG, &memmap);
 	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
