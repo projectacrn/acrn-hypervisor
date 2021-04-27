@@ -307,8 +307,8 @@ void init_paging(void)
 			high64_max_ram - MEM_4G, PAGE_ATTR_USER | PAGE_CACHE_WB, &ppt_pgtable);
 
 	/* Map [low32_max_ram, 4G) and [HI_MMIO_START, HI_MMIO_END) MMIO regions as UC attribute */
-	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, low32_max_ram, low32_max_ram, MEM_4G,
-				PAGE_ATTR_USER | PAGE_CACHE_UC, &ppt_pgtable);
+	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, low32_max_ram, low32_max_ram,
+		MEM_4G - low32_max_ram, PAGE_ATTR_USER | PAGE_CACHE_UC, &ppt_pgtable);
 	if ((HI_MMIO_START != ~0UL) && (HI_MMIO_END != 0UL)) {
 		pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, HI_MMIO_START, HI_MMIO_START,
 			(HI_MMIO_END - HI_MMIO_START), PAGE_ATTR_USER | PAGE_CACHE_UC, &ppt_pgtable);
