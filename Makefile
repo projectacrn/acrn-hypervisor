@@ -66,6 +66,7 @@ endif
 O ?= build
 ROOT_OUT := $(shell mkdir -p $(O);cd $(O);pwd)
 HV_OUT := $(ROOT_OUT)/hypervisor
+EFI_OUT := misc/efi-stub
 DM_OUT := $(ROOT_OUT)/devicemodel
 TOOLS_OUT := $(ROOT_OUT)/misc
 DOC_OUT := $(ROOT_OUT)/doc
@@ -100,6 +101,8 @@ hypervisor: hvdefconfig
 	@echo -e "ACRN Configuration Summary:" > $(HV_CFG_LOG)
 	@$(MAKE) showconfig $(HV_MAKEOPTS) -s >> $(HV_CFG_LOG)
 	@cat $(HV_CFG_LOG)
+	@echo "building hypervisor as EFI executable..."
+	@$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) EFI_OBJDIR=$(HV_OUT)/$(EFI_OUT)
 
 # Targets that manipulate hypervisor configurations
 hvdefconfig:
