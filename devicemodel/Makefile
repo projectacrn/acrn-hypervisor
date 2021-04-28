@@ -130,6 +130,7 @@ SRCS += hw/pci/hostbridge.c
 SRCS += hw/pci/platform_gsi_info.c
 SRCS += hw/pci/gsi_sharing.c
 SRCS += hw/pci/passthrough.c
+SRCS += hw/pci/pci_util.c
 SRCS += hw/pci/virtio/virtio_audio.c
 SRCS += hw/pci/virtio/virtio_net.c
 SRCS += hw/pci/virtio/virtio_rnd.c
