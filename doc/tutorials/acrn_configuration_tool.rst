@@ -382,15 +382,15 @@ Prerequisites
 .. _get acrn repo guide:
    https://projectacrn.github.io/latest/getting-started/building-from-source.html#get-the-acrn-hypervisor-source-code
 
-- Clone the ACRN hypervisor repo::
+- Clone the ACRN hypervisor repo
 
-  .. code-block:: none
+  .. code-block:: bash
 
      $ git clone https://github.com/projectacrn/acrn-hypervisor
 
 - Install ACRN configuration editor dependencies:
 
-  .. code-block:: none
+  .. code-block:: bash
 
      $ cd ~/acrn-hypervisor/misc/config_tools/config_app
      $ sudo pip3 install -r requirements
@@ -401,7 +401,7 @@ Instructions
 
 #. Launch the ACRN configuration editor:
 
-   .. code-block:: none
+   .. code-block:: bash
 
       $ python3 app.py
 
