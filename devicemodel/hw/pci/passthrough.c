@@ -46,7 +46,7 @@
 #include "pci_core.h"
 #include "acpi.h"
 #include "dm.h"
-
+#include "passthru.h"
 
 /* Some audio drivers get topology data from ACPI NHLT table.
  * For such drivers, we need to copy the host NHLT table to make it
@@ -69,32 +69,6 @@ uint32_t gpu_opregion_gpa = 0;
 /* reference count for libpciaccess init/deinit */
 static int pciaccess_ref_cnt;
 static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
-
-
-struct passthru_dev {
-	struct pci_vdev *dev;
-	struct pcibar bar[PCI_BARMAX + 1];
-	struct {
-		int		capoff;
-	} msi;
-	struct {
-		int		capoff;
-	} msix;
-	struct {
-		int 		capoff;
-	} pmcap;
-	bool pcie_cap;
-	struct pcisel sel;
-	int phys_pin;
-	uint16_t phys_bdf;
-	struct pci_device *phys_dev;
-	/* Options for passthrough device:
-	 *   need_reset - reset dev before passthrough
-	 */
-	bool need_reset;
-	bool d3hot_reset;
-	bool (*has_virt_pcicfg_regs)(int offset);
-};
 
 static uint32_t
 read_config(struct pci_device *phys_dev, long reg, int width)
