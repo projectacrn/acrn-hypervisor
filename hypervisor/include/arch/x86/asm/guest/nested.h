@@ -83,6 +83,7 @@ union value_64 {
 #define VMCS_SHADOW_BIT_INDICATOR		(1U << 31U)
 
 /* refer to ISDM: Table 30-1. VM-Instruction Error Numbers */
+#define VMXERR_VMCLEAR_VMXON_POINTER		(3)
 #define VMXERR_VMPTRLD_INVALID_ADDRESS		(9)
 #define VMXERR_VMPTRLD_INCORRECT_VMCS_REVISION_ID (10)
 #define VMXERR_VMPTRLD_VMXON_POINTER		(11)
@@ -93,6 +94,9 @@ union value_64 {
  * The emulated MSR_IA32_VMX_BASIC returns this ID in bits 30:0.
  */
 #define VMCS12_REVISION_ID		0x15407E12U
+
+#define VMCS12_LAUNCH_STATE_CLEAR		(0U)
+#define VMCS12_LAUNCH_STATE_LAUNCHED		(1U)
 
 /*
  * struct acrn_vmcs12 describes the emulated VMCS for the nested guest (L2).
@@ -308,6 +312,7 @@ void nested_vmx_result(enum VMXResult, int error_number);
 int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu);
 
 #ifdef CONFIG_NVMX_ENABLED
 struct acrn_nested {

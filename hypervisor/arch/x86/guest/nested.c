@@ -984,6 +984,77 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 	return 0;
 }
 
+/*
+ * @pre vcpu != NULL
+ */
+int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	struct acrn_nested *nested = &vcpu->arch.nested;
+	uint64_t vmcs12_gpa;
+
+	if (check_vmx_permission(vcpu)) {
+		vmcs12_gpa = get_vmptr_gpa(vcpu);
+
+		if (!validate_vmptr_gpa(vmcs12_gpa)) {
+			nested_vmx_result(VMfailValid, VMXERR_VMPTRLD_INVALID_ADDRESS);
+		} else if (vmcs12_gpa == nested->vmxon_ptr) {
+			nested_vmx_result(VMfailValid, VMXERR_VMCLEAR_VMXON_POINTER);
+		} else {
+			if (vcpu->arch.nested.current_vmcs12_ptr == vmcs12_gpa) {
+				/*
+				 * The target VMCS12 is active and current.
+				 * VMCS02 is active and being used as a shadow VMCS.
+				 */
+
+				nested->vmcs12.launch_state = VMCS12_LAUNCH_STATE_CLEAR;
+
+				/*
+				 * Disable VMCS shadowing to avoid VMCS02 will be loaded by VMPTRLD
+				 * and referenced by VMCS01 as a shadow VMCS simultaneously.
+				 *
+				 * After this VMCLEAR, there is no active VMCS12 on this vCPU, so the
+				 * "VMCS shadowing" VM-execution control must be 0.
+				 */
+				disable_vmcs_shadowing();
+
+				/* Flush shadow VMCS to memory */
+				clear_va_vmcs(nested->vmcs02);
+
+				/*
+				 * upon VMCLEAR vmcs12, need to sync the cache VMCS12 back to guest memory.
+				 * VMPTRLD the shadow VMCS so that we are able to sync it to VMCS12.
+				 */
+				load_va_vmcs(nested->vmcs02);
+
+				/* Sync shadow VMCS to cache VMCS12, and copy cache VMCS12 to L1 guest */
+				flush_current_vmcs12(vcpu);
+
+				/* VMCLEAR VMCS02 */
+				clear_va_vmcs(nested->vmcs02);
+
+				/* Switch back to vmcs01 (no VMCS shadowing) */
+				load_va_vmcs(vcpu->arch.vmcs);
+
+				/* no current VMCS12 */
+				nested->current_vmcs12_ptr = INVALID_GPA;
+			} else {
+				 /*
+				  * we need to update the VMCS12 launch state in L1 memory in these two cases:
+				  * - L1 hypervisor VMCLEAR a VMCS12 that is already flushed by ACRN to L1 guest
+				  * - L1 hypervisor VMCLEAR a never VMPTRLDed VMCS12.
+				  */
+				uint32_t launch_state = VMCS12_LAUNCH_STATE_CLEAR;
+				(void)copy_to_gpa(vcpu->vm, &launch_state, vmcs12_gpa +
+					offsetof(struct acrn_vmcs12, launch_state), sizeof(launch_state));
+			}
+
+			nested_vmx_result(VMsucceed, 0);
+		}
+	}
+
+	return 0;
+}
+
 void init_nested_vmx(__unused struct acrn_vm *vm)
 {
 	static bool initialized = false;
