@@ -219,6 +219,9 @@ struct acrn_vcpu_arch {
 	/* vmcs region for this vcpu, MUST be 4KB-aligned */
 	uint8_t vmcs[PAGE_SIZE];
 
+	/* context for nested virtualization, 4KB-aligned */
+	struct acrn_nested nested;
+
 	/* MSR bitmap region for this vcpu, MUST be 4-Kbyte aligned */
 	uint8_t msr_bitmap[PAGE_SIZE];
 

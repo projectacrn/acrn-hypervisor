@@ -6,6 +6,7 @@
 
 #include <types.h>
 #include <logmsg.h>
+#include <asm/guest/virq.h>
 #include <asm/guest/vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/nested.h>
@@ -219,4 +220,44 @@ int32_t read_vmx_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 
 	*val = v;
 	return err;
+}
+
+void nested_vmx_result(enum VMXResult result, int error_number)
+{
+	uint64_t rflags = exec_vmread(VMX_GUEST_RFLAGS);
+
+	/* ISDM: section 30.2 CONVENTIONS */
+	rflags &= ~(RFLAGS_C | RFLAGS_P | RFLAGS_A | RFLAGS_Z | RFLAGS_S | RFLAGS_O);
+
+	if (result == VMfailValid) {
+		rflags |= RFLAGS_Z;
+		exec_vmwrite(VMX_INSTR_ERROR, error_number);
+	} else if (result == VMfailInvalid) {
+		rflags |= RFLAGS_C;
+	} else {
+		/* VMsucceed, do nothing */
+	}
+
+	if (result != VMsucceed) {
+		pr_err("VMX failed: %d/%d", result, error_number);
+	}
+
+	exec_vmwrite(VMX_GUEST_RFLAGS, rflags);
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	/* Will do permission check in next patch */
+	if (is_nvmx_configured(vcpu->vm)) {
+		vcpu->arch.nested.vmxon = true;
+
+		nested_vmx_result(VMsucceed, 0);
+	} else {
+		vcpu_inject_ud(vcpu);
+	}
+
+	return 0;
 }
