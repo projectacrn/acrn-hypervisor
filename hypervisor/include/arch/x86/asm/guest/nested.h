@@ -51,11 +51,25 @@ union value_64 {
  */
 #define VMCS12_REVISION_ID		0x15407E12U
 
+enum VMXResult {
+	VMsucceed,
+	VMfailValid,
+	VMfailInvalid,
+};
+void nested_vmx_result(enum VMXResult, int error_number);
+int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu);
+
 #ifdef CONFIG_NVMX_ENABLED
+struct acrn_nested {
+	bool vmxon;		/* To indicate if vCPU entered VMX operation */
+} __aligned(PAGE_SIZE);
+
 bool is_vmx_msr(uint32_t msr);
 void init_vmx_msrs(struct acrn_vcpu *vcpu);
 int32_t read_vmx_msr(__unused struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val);
 #else
+struct acrn_nested {};
+
 static inline bool is_vmx_msr(__unused uint32_t msr)
 {
 	/*
