@@ -216,6 +216,8 @@ int32_t vmexit_handler(struct acrn_vcpu *vcpu)
 	if (get_pcpu_id() != pcpuid_from_vcpu(vcpu)) {
 		pr_fatal("vcpu is not running on its pcpu!");
 		ret = -EINVAL;
+	} else if (is_vcpu_in_l2_guest(vcpu)) {
+		ret = nested_vmexit_handler(vcpu);
 	} else {
 		/* Obtain interrupt info */
 		vcpu->arch.idt_vectoring_info = exec_vmread32(VMX_IDT_VEC_INFO_FIELD);

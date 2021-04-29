@@ -1209,6 +1209,164 @@ int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 
 /*
  * @pre vcpu != NULL
+ */
+bool is_vcpu_in_l2_guest(struct acrn_vcpu *vcpu)
+{
+	return vcpu->arch.nested.in_l2_guest;
+}
+
+/*
+ * @pre seg != NULL
+ */
+static void set_segment(struct segment_sel *seg, uint16_t sel, uint64_t b, uint32_t l, uint32_t a)
+{
+	seg->selector = sel;
+	seg->base = b;
+	seg->limit = l;
+	seg->attr = a;
+}
+
+/*
+ * @pre vcpu != NULL
+ * @pre vmcs01 is current
+ */
+static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
+{
+	/*
+	 * All host fields are not shadowing, and all VMWRITE to these fields
+	 * are saved in vmcs12.
+	 *
+	 * Load host state from vmcs12 to vmcs01 guest state before entering
+	 * L1 to emulate VMExit from L2 to L1.
+	 *
+	 * We assume host only change these host-state fields in run time.
+	 *
+	 * Section 27.5 Loading Host State
+	 * 1. Load Control Registers, Debug Registers, MSRs
+	 * 2. Load RSP/RIP/RFLAGS
+	 * 3. Load Segmentation State
+	 * 4. Non-Register state
+	 */
+	struct acrn_vmcs12 *vmcs12 = &vcpu->arch.nested.vmcs12;
+	struct segment_sel seg;
+
+	if (vcpu->arch.nested.host_state_dirty == true) {
+		vcpu->arch.nested.host_state_dirty = false;
+
+		/*
+		 * We want vcpu_get_cr0/4() can get the up-to-date values, but we don't
+		 * want to call vcpu_set_cr0/4() to handle the CR0/4 write.
+		 */
+		exec_vmwrite(VMX_GUEST_CR0, vmcs12->host_cr0);
+		exec_vmwrite(VMX_GUEST_CR4, vmcs12->host_cr4);
+		bitmap_clear_lock(CPU_REG_CR0, &vcpu->reg_cached);
+		bitmap_clear_lock(CPU_REG_CR4, &vcpu->reg_cached);
+
+		exec_vmwrite(VMX_GUEST_CR3, vmcs12->host_cr3);
+		exec_vmwrite(VMX_GUEST_DR7, DR7_INIT_VALUE);
+		exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, 0UL);
+		exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, vmcs12->host_ia32_sysenter_cs);
+		exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, vmcs12->host_ia32_sysenter_esp);
+		exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, vmcs12->host_ia32_sysenter_eip);
+
+		exec_vmwrite(VMX_GUEST_IA32_EFER_FULL, vmcs12->host_ia32_efer);
+
+		/*
+		 * type: 11 (Execute/Read, accessed)
+		 * l: 64-bit mode active
+		 */
+		set_segment(&seg, vmcs12->host_cs, 0UL, 0xFFFFFFFFU, 0xa09bU);
+		load_segment(seg, VMX_GUEST_CS);
+
+		/*
+		 * type: 3 (Read/Write, accessed)
+		 * D/B: 1 (32-bit segment)
+		 */
+		set_segment(&seg, vmcs12->host_ds, 0UL, 0xFFFFFFFFU, 0xc093);
+		load_segment(seg, VMX_GUEST_DS);
+
+		seg.selector = vmcs12->host_ss;
+		load_segment(seg, VMX_GUEST_SS);
+
+		seg.selector = vmcs12->host_es;
+		load_segment(seg, VMX_GUEST_ES);
+
+		seg.selector = vmcs12->host_fs;
+		seg.base = vmcs12->host_fs_base;
+		load_segment(seg, VMX_GUEST_FS);
+
+		seg.selector = vmcs12->host_gs;
+		seg.base = vmcs12->host_gs_base;
+		load_segment(seg, VMX_GUEST_GS);
+
+		/*
+		 * ISDM 27.5.2: segment limit for TR is set to 67H
+		 * Type set to 11 and S set to 0 (busy 32-bit task-state segment).
+		 */
+		set_segment(&seg, vmcs12->host_tr, vmcs12->host_tr_base, 0x67U, TR_AR);
+		load_segment(seg, VMX_GUEST_TR);
+
+		/*
+		 * ISDM 27.5.2: LDTR is established as follows on all VM exits:
+		 * the selector is cleared to 0000H, the segment is marked unusable
+		 * and is otherwise undefined (although the base address is always canonical).
+		 */
+		exec_vmwrite16(VMX_GUEST_LDTR_SEL, 0U);
+		exec_vmwrite32(VMX_GUEST_LDTR_ATTR, 0x10000U);
+	}
+
+	/*
+	 * For those registers that are managed by the vcpu->reg_updated flag,
+	 * need to write with vcpu_set_xxx() so that vcpu_get_xxx() can get the
+	 * correct values.
+	 */
+	vcpu_set_rip(vcpu, vmcs12->host_rip);
+	vcpu_set_rsp(vcpu, vmcs12->host_rsp);
+	vcpu_set_rflags(vcpu, 0x2U);
+}
+
+/**
+ * @brief handler for all VMEXITs from nested guests
+ *
+ * @pre vcpu != NULL
+ * @pre VMCS02 (as an ordinary VMCS) is current
+ */
+int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	struct acrn_vmcs12 *vmcs12 = (struct acrn_vmcs12 *)&vcpu->arch.nested.vmcs12;
+	bool reflect_to_l1 = true;
+	if (reflect_to_l1) {
+		/*
+		 * Currerntly VMX_VPID is shadowing to L1, so we flush L2 VPID before
+		 * L1 VM entry to avoid conflicting with L1 VPID.
+		 *
+		 * TODO: emulate VPID for L2 so that we can save this VPID flush
+		 */
+		flush_vpid_single(vmcs12->vpid);
+
+		/*
+		 * Clear VMCS02 because: ISDM: Before modifying the shadow-VMCS indicator,
+		 * software should execute VMCLEAR for the VMCS to ensure that it is not active.
+		 */
+		clear_va_vmcs(vcpu->arch.nested.vmcs02);
+		set_vmcs02_shadow_indicator(vcpu);
+
+		/* Switch to VMCS01, and VMCS02 is referenced as a shadow VMCS */
+		load_va_vmcs(vcpu->arch.vmcs);
+
+		/* Load host state from VMCS12 host area to Guest state of VMCS01 */
+		set_vmcs01_guest_state(vcpu);
+
+		/* vCPU is NOT in guest mode from this point */
+		vcpu->arch.nested.in_l2_guest = false;
+	}
+
+	vcpu_retain_rip(vcpu);
+	return 0;
+}
+
+/*
+ * @pre vcpu != NULL
  * @pre VMCS02 (as an ordinary VMCS) is current
  */
 static void merge_and_sync_control_fields(struct acrn_vcpu *vcpu)
