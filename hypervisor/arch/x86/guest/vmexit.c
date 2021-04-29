@@ -78,8 +78,6 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMCALL] = {
 		.handler = vmcall_vmexit_handler},
-	[VMX_EXIT_REASON_VMCLEAR] = {
-		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMLAUNCH] = {
 		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMPTRST] = {
@@ -91,6 +89,8 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_VMWRITE] = {
 		.handler = undefined_vmexit_handler},
 #ifndef CONFIG_NVMX_ENABLED
+	[VMX_EXIT_REASON_VMCLEAR] = {
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMPTRLD] = {
 		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMXOFF] = {
@@ -98,6 +98,9 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_VMXON] = {
 		.handler = undefined_vmexit_handler},
 #else
+	[VMX_EXIT_REASON_VMCLEAR] = {
+		.handler = vmclear_vmexit_handler,
+		.need_exit_qualification = 1},
 	[VMX_EXIT_REASON_VMPTRLD] = {
 		.handler = vmptrld_vmexit_handler,
 		.need_exit_qualification = 1},
