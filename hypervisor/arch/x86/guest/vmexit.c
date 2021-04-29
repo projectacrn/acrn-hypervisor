@@ -94,8 +94,14 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMXOFF] = {
 		.handler = undefined_vmexit_handler},
+#ifndef CONFIG_NVMX_ENABLED
 	[VMX_EXIT_REASON_VMXON] = {
 		.handler = undefined_vmexit_handler},
+#else
+	[VMX_EXIT_REASON_VMXON] = {
+		.handler = vmxon_vmexit_handler,
+		.need_exit_qualification = 1},
+#endif
 	[VMX_EXIT_REASON_CR_ACCESS] = {
 		.handler = cr_access_vmexit_handler,
 		.need_exit_qualification = 1},
@@ -460,10 +466,8 @@ static int32_t loadiwkey_vmexit_handler(struct acrn_vcpu *vcpu)
 	return 0;
 }
 
-/* vmexit handler for just injecting a #UD exception
- *
- * ACRN doesn't support nested virtualization, the following VMExit will inject #UD
- * VMCLEAR/VMLAUNCH/VMPTRST/VMREAD/VMRESUME/VMWRITE/VMXOFF/VMXON.
+/*
+ * vmexit handler for just injecting a #UD exception
  * ACRN doesn't enable VMFUNC, VMFUNC treated as undefined.
  */
 static int32_t undefined_vmexit_handler(struct acrn_vcpu *vcpu)
