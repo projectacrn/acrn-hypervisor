@@ -127,7 +127,7 @@ class Struct(object):
         if hasattr(self, name):
             raise StructError("Internal error: Duplicate Struct field name {}".format(name))
         if fmt is None:
-            if isinstance(value, (int, long)) and not isinstance(value, bool):
+            if isinstance(value, int) and not isinstance(value, bool):
                 fmt = "{:#x}".format
             else:
                 fmt = "{!r}".format
@@ -142,21 +142,21 @@ class Struct(object):
         return self.fields[name](getattr(self, name))
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, ", ".join("{}={}".format(k, self.format_field(k)) for k in self.fields.iterkeys()))
+        return "{}({})".format(self.__class__.__name__, ", ".join("{}={}".format(k, self.format_field(k)) for k in self.fields.keys()))
 
     def __iter__(self):
-        return (getattr(self, k) for k in self.fields.iterkeys())
+        return (getattr(self, k) for k in self.fields.keys())
 
     def __eq__(self, other):
         if type(self) is not type(other):
             return NotImplemented
-        return self.fields.keys() == other.fields.keys() and all(getattr(self, name) == getattr(other, name) for name in self.fields.iterkeys())
+        return self.fields.keys() == other.fields.keys() and all(getattr(self, name) == getattr(other, name) for name in self.fields.keys())
 
     def __ne__(self, other):
         return not self == other
 
     def __hash__(self):
-        return hash(tuple((name, getattr(self, name)) for name in self.fields.iterkeys()))
+        return hash(tuple((name, getattr(self, name)) for name in self.fields.keys()))
 
 def format_each(fmt_one):
     def f(it):
