@@ -215,9 +215,9 @@ When you see the UEFI shell, input **exit**.
 Boot Windows on ACRN With a Default Configuration
 =================================================
 
-#. Prepare WaaG launch script
+#. Prepare WaaG launch script::
 
-   cp /home/acrn/work/install_win.sh  /home/acrn/work/launch_win.sh
+      cp /home/acrn/work/install_win.sh  /home/acrn/work/launch_win.sh
 
    Remove following lines in launch_win.sh
 
