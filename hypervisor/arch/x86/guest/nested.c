@@ -1315,6 +1315,78 @@ int32_t vmlaunch_vmexit_handler(struct acrn_vcpu *vcpu)
 	return 0;
 }
 
+/*
+ * @pre vcpu != NULL
+ * @pre desc != NULL
+ */
+int64_t get_invvpid_ept_operands(struct acrn_vcpu *vcpu, void *desc, size_t size)
+{
+	const uint32_t info = exec_vmread(VMX_INSTR_INFO);
+	uint64_t gpa;
+
+	gpa = get_vmx_memory_operand(vcpu, info);
+	(void)copy_from_gpa(vcpu->vm, desc, gpa, size);
+
+	return vcpu_get_gpreg(vcpu, VMX_II_REG2(info));
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+static bool validate_canonical_addr(struct acrn_vcpu *vcpu, uint64_t va)
+{
+	uint32_t addr_width = 48U; /* linear address width */
+	uint64_t msb_mask;
+
+	if (vcpu_get_cr4(vcpu) & CR4_LA57) {
+		addr_width = 57U;
+	}
+
+	/*
+	 * In 64-bit mode, an address is considered to be in canonical form if address
+	 * bits 63 through to the most-significant implemented bit by the microarchitecture
+	 * are set to either all ones or all zeros.
+	 */
+
+	msb_mask = ~((1UL << addr_width) - 1UL);
+	return ((msb_mask & va) == 0UL) || ((msb_mask & va) == msb_mask);
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+int32_t invvpid_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	uint32_t supported_types = (vcpu_get_guest_msr(vcpu, MSR_IA32_VMX_EPT_VPID_CAP) >> 40U) & 0xfU;
+	struct invvpid_operand desc;
+	uint64_t type;
+
+	if (check_vmx_permission(vcpu)) {
+		type = get_invvpid_ept_operands(vcpu, (void *)&desc, sizeof(desc));
+
+		if ((type > VMX_VPID_TYPE_SINGLE_NON_GLOBAL) || ((supported_types & (1U << type)) == 0)) {
+			nested_vmx_result(VMfailValid, VMXERR_INVEPT_INVVPID_INVALID_OPERAND);
+		} else if ((desc.rsvd1 != 0U) || (desc.rsvd2 != 0U)) {
+			nested_vmx_result(VMfailValid, VMXERR_INVEPT_INVVPID_INVALID_OPERAND);
+		} else if ((type != VMX_VPID_TYPE_ALL_CONTEXT) && (desc.vpid == 0U)) {
+			/* check VPID for type 0, 1, 3 */
+			nested_vmx_result(VMfailValid, VMXERR_INVEPT_INVVPID_INVALID_OPERAND);
+		} else if ((type == VMX_VPID_TYPE_INDIVIDUAL_ADDR) && !validate_canonical_addr(vcpu, desc.gva)) {
+			nested_vmx_result(VMfailValid, VMXERR_INVEPT_INVVPID_INVALID_OPERAND);
+		} else {
+			/*
+			 * VPIDs are pass-thru. Values programmed by L1 are used by L0.
+			 * INVVPID type, VPID and GLA, operands of INVVPID instruction, are
+			 * passed as is to the pCPU.
+			 */
+			asm_invvpid(desc, type);
+			nested_vmx_result(VMsucceed, 0);
+		}
+	}
+
+	return 0;
+}
+
 void init_nested_vmx(__unused struct acrn_vm *vm)
 {
 	static bool initialized = false;
