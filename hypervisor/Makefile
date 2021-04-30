@@ -281,6 +281,7 @@ VP_BASE_C_SRCS += arch/x86/guest/hyperv.c
 endif
 ifeq ($(CONFIG_NVMX_ENABLED),y)
 VP_BASE_C_SRCS += arch/x86/guest/nested.c
+VP_BASE_C_SRCS += arch/x86/guest/vept.c
 endif
 VP_BASE_C_SRCS += boot/guest/vboot_info.c
 VP_BASE_C_SRCS += common/hv_main.c
