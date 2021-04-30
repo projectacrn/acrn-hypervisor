@@ -93,6 +93,7 @@ union value_64 {
 #define VMXERR_UNSUPPORTED_COMPONENT		(12)
 #define VMXERR_VMWRITE_RO_COMPONENT		(13)
 #define VMXERR_VMXON_IN_VMX_ROOT_OPERATION	(15)
+#define VMXERR_INVEPT_INVVPID_INVALID_OPERAND	(28)
 
 /*
  * This VMCS12 revision id is chosen arbitrarily.
@@ -314,6 +315,8 @@ enum VMXResult {
 	VMfailInvalid,
 };
 void nested_vmx_result(enum VMXResult, int error_number);
+int64_t get_invvpid_ept_operands(struct acrn_vcpu *vcpu, void *desc, size_t size);
+bool check_vmx_permission(struct acrn_vcpu *vcpu);
 int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu);
@@ -322,6 +325,7 @@ int32_t vmread_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmresume_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmlaunch_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t invvpid_vmexit_handler(struct acrn_vcpu *vcpu);
 
 #ifdef CONFIG_NVMX_ENABLED
 struct acrn_nested {
