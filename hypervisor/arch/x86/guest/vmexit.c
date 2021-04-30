@@ -16,6 +16,7 @@
 #include <asm/guest/vmx_io.h>
 #include <asm/guest/splitlock.h>
 #include <asm/guest/ept.h>
+#include <asm/guest/vept.h>
 #include <asm/vtd.h>
 #include <asm/cpuid.h>
 #include <asm/guest/vcpuid.h>
@@ -97,6 +98,10 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMXON] = {
 		.handler = undefined_vmexit_handler},
+	[VMX_EXIT_REASON_INVEPT] = {
+		.handler = undefined_vmexit_handler},
+	[VMX_EXIT_REASON_INVVPID] = {
+		.handler = undefined_vmexit_handler},
 #else
 	[VMX_EXIT_REASON_VMLAUNCH] = {
 		.handler = vmlaunch_vmexit_handler},
@@ -118,6 +123,12 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 		.handler = vmxoff_vmexit_handler},
 	[VMX_EXIT_REASON_VMXON] = {
 		.handler = vmxon_vmexit_handler,
+		.need_exit_qualification = 1},
+	[VMX_EXIT_REASON_INVEPT] = {
+		.handler = invept_vmexit_handler,
+		.need_exit_qualification = 1},
+	[VMX_EXIT_REASON_INVVPID] = {
+		.handler = invvpid_vmexit_handler,
 		.need_exit_qualification = 1},
 #endif
 	[VMX_EXIT_REASON_CR_ACCESS] = {
@@ -165,14 +176,10 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_EPT_MISCONFIGURATION] = {
 		.handler = ept_misconfig_vmexit_handler,
 		.need_exit_qualification = 1},
-	[VMX_EXIT_REASON_INVEPT] = {
-		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_RDTSCP] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMX_PREEMPTION_TIMER_EXPIRED] = {
 		.handler = unhandled_vmexit_handler},
-	[VMX_EXIT_REASON_INVVPID] = {
-		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_WBINVD] = {
 		.handler = wbinvd_vmexit_handler},
 	[VMX_EXIT_REASON_XSETBV] = {
