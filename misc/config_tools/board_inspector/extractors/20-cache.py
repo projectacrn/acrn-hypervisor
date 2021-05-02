@@ -1,0 +1,71 @@
+# Copyright (C) 2021 Intel Corporation. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+
+import logging
+import lxml.etree
+from extractors.helpers import add_child, get_node
+
+from cpuparser import parse_cpuid
+
+def extract_topology(root_node, caches_node):
+    threads = root_node.xpath("//processors//*[cpu_id]")
+    for thread in threads:
+        subleaf = 0
+        while True:
+            cpu_id = int(get_node(thread, "cpu_id/text()"), base=16)
+            leaf_4 = parse_cpuid(4, subleaf, cpu_id)
+            cache_type = leaf_4.cache_type
+            if cache_type == 0:
+                break
+
+            cache_level = leaf_4.cache_level
+            shift_width = leaf_4.max_logical_processors_sharing_cache.bit_length() - 1
+            cache_id = hex(int(get_node(thread, "apic_id/text()"), base=16) >> shift_width)
+
+            n = get_node(caches_node, f"cache[@id='{cache_id}' and @type='{cache_type}' and @level='{cache_level}']")
+            if n is None:
+                n = add_child(caches_node, "cache", None, level=str(cache_level), id=cache_id, type=str(cache_type))
+                add_child(n, "cache_size", str(leaf_4.cache_size))
+                add_child(n, "line_size", str(leaf_4.line_size))
+                add_child(n, "ways", str(leaf_4.ways))
+                add_child(n, "sets", str(leaf_4.sets))
+                add_child(n, "partitions", str(leaf_4.partitions))
+                add_child(n, "self_initializing", str(leaf_4.self_initializing))
+                add_child(n, "fully_associative", str(leaf_4.fully_associative))
+                add_child(n, "write_back_invalidate", str(leaf_4.write_back_invalidate))
+                add_child(n, "cache_inclusiveness", str(leaf_4.cache_inclusiveness))
+                add_child(n, "complex_cache_indexing", str(leaf_4.complex_cache_indexing))
+                add_child(n, "processors")
+
+                # Check support of Cache Allocation Technology
+                leaf_10 = parse_cpuid(0x10, 0, cpu_id)
+                if cache_level == 2:
+                    leaf_10 = parse_cpuid(0x10, 2, cpu_id) if leaf_10.l2_cache_allocation == 1 else None
+                elif cache_level == 3:
+                    leaf_10 = parse_cpuid(0x10, 1, cpu_id) if leaf_10.l3_cache_allocation == 1 else None
+                else:
+                    leaf_10 = None
+                if leaf_10 is not None:
+                    cap = add_child(n, "capability", None, kind="cat")
+                    add_child(cap, "capacity_mask_length", str(leaf_10.capacity_mask_length))
+                    add_child(cap, "clos_number", str(leaf_10.clos_number))
+                    if leaf_10.code_and_data_prioritization == 1:
+                        add_child(n, "capability", None, kind="cdp")
+
+            add_child(get_node(n, "processors"), "processor", get_node(thread, "apic_id/text()"))
+
+            subleaf += 1
+
+    def getkey(n):
+        level = int(n.get("level"))
+        id = int(n.get("id"), base=16)
+        type = int(n.get("type"))
+        return (level, id, type)
+    caches_node[:] = sorted(caches_node, key=getkey)
+
+def extract(board_etree):
+    root_node = board_etree.getroot()
+    caches_node = get_node(board_etree, "//caches")
+    extract_topology(root_node, caches_node)
