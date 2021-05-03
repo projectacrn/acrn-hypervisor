@@ -15,7 +15,7 @@ from importlib import import_module
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir))
 
-def main(board_name, board_xml):
+def main(board_name, board_xml, args):
     try:
         # First invoke the legacy board parser to create the board XML ...
         legacy_parser = os.path.join(script_dir, "legacy", "board_parser.py")
@@ -24,11 +24,27 @@ def main(board_name, board_xml):
 
         # ... then load the created board XML and append it with additional data by invoking the extractors.
         board_etree = lxml.etree.parse(board_xml)
+        root_node = board_etree.getroot()
 
         # Clear the whitespaces between adjacent children under the root node
-        board_etree.getroot().text = None
-        for elem in board_etree.getroot():
+        root_node.text = None
+        for elem in root_node:
             elem.tail = None
+
+        # Create nodes for each kind of resource
+        root_node.append(lxml.etree.Element("processors"))
+        root_node.append(lxml.etree.Element("caches"))
+        root_node.append(lxml.etree.Element("memory"))
+        root_node.append(lxml.etree.Element("devices"))
+
+        extractors_path = os.path.join(script_dir, "extractors")
+        extractors = [f for f in os.listdir(extractors_path) if f[:2].isdigit()]
+        for extractor in sorted(extractors):
+            module_name = os.path.splitext(extractor)[0]
+            module = import_module(f"extractors.{module_name}")
+            if not args.advanced and getattr(module, "advanced", False):
+                continue
+            module.extract(board_etree)
 
         # Finally overwrite the output with the updated XML
         board_etree.write(board_xml, pretty_print=True)
@@ -42,7 +58,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("board_name", help="the name of the board that runs the ACRN hypervisor")
     parser.add_argument("--out", help="the name of board info file")
+    parser.add_argument("--advanced", action="store_true", default=False, help="extract advanced information such as ACPI namespace")
     args = parser.parse_args()
 
     board_xml = args.out if args.out else f"{args.board_name}.xml"
-    main(args.board_name, board_xml)
+    main(args.board_name, board_xml, args)
