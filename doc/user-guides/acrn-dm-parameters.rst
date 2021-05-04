@@ -456,6 +456,10 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
       --windows
 
+   .. note::
+      This option is mandatory for running Windows in a User VM. If it is
+      not used, Windows will not recognize the virtual disk.
+
 ----
 
 ``--psram``
