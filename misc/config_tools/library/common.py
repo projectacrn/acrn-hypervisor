@@ -17,6 +17,7 @@ ACRN_CONFIG_TARGET = ''
 SOURCE_ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../')
 HV_LICENSE_FILE = SOURCE_ROOT_DIR + 'misc/config_tools/library/hypervisor_license'
 SCENARIO_SCHEMA_FILE = SOURCE_ROOT_DIR + 'misc/config_tools/schema/config.xsd'
+DATACHECK_SCHEMA_FILE = SOURCE_ROOT_DIR + 'misc/config_tools/schema/datachecks.xsd'
 
 
 PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/__pycache__"]
