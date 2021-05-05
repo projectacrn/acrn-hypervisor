@@ -18,6 +18,10 @@
 #include "passthru.h"
 #include "pci_util.h"
 #include "vmmapi.h"
+#include "acrn_common.h"
+
+#define PTM_ROOT_PORT_VENDOR           0x8086U
+#define PTM_ROOT_PORT_DEVICE           0x9d14U
 
 /* PTM capability register ID*/
 #define PCIZ_PTM    0x1fU
@@ -32,6 +36,9 @@
 #define PCIR_PTM_CTRL				0x08U
 	#define PCIM_PTM_CTRL_ENABLE	0x1U	/* PTM enable */
 	#define PCIM_PTM_CTRL_ROOT_SELECT	0x2U	/* Root select */
+
+/* virtual root port secondary bus */
+static int ptm_root_port_secondary_bus;
 
 /* get ptm capability register value */
 static int
@@ -56,12 +63,60 @@ get_ptm_cap(struct pci_device *pdev, int *offset)
 	return cap;
 }
 
-/* Probe whether device and its root port support PTM */
-int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev)
+/* add virtual root port to hv */
+static int
+add_vroot_port(struct vmctx *ctx, struct passthru_dev *ptdev, struct pci_device *root_port, int ptm_cap_offset)
 {
+	int error = 0;
+
+	struct acrn_emul_dev rp_vdev = {};
+	struct vrp_config *rp_priv = (struct vrp_config *)&rp_vdev.args;
+
+	rp_vdev.dev_id.fields.vendor_id = PTM_ROOT_PORT_VENDOR;
+	rp_vdev.dev_id.fields.device_id = PTM_ROOT_PORT_DEVICE;
+
+	// virtual root port takes bdf from its downstream device
+	rp_vdev.slot = PCI_BDF(ptdev->dev->bus, ptdev->dev->slot, ptdev->dev->func);
+
+	rp_priv->phy_bdf = PCI_BDF(root_port->bus, root_port->dev, root_port->func);
+
+	rp_priv->primary_bus = ptdev->dev->bus;
+
+	rp_priv->secondary_bus = ++ptm_root_port_secondary_bus;
+
+	// only passthru device is connected to virtual root port
+	rp_priv->subordinate_bus = rp_priv->secondary_bus;
+
+	rp_priv->ptm_capable = 1;
+
+	rp_priv->ptm_cap_offset = ptm_cap_offset;
+
+	pr_info("%s: virtual root port info: vbdf=0x%x, phy_bdf=0x%x, prim_bus=%x, sec_bus=%x, sub_bus=%x, ptm_cpa_offset=0x%x.\n", __func__,
+		rp_vdev.slot, rp_priv->phy_bdf, rp_priv->primary_bus, rp_priv->secondary_bus, rp_priv->subordinate_bus, rp_priv->ptm_cap_offset);
+
+	error = vm_add_hv_vdev(ctx, &rp_vdev);
+	if (error) {
+		pr_err("failed to add virtual root.\n");
+		return -1;
+	} else
+		return rp_priv->secondary_bus;
+}
+
+/* Probe whether device and its root port support PTM */
+int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
+{
+	int error = 0;
 	int pos, pcie_type, cap, rootport_ptm_offset, device_ptm_offset;
 	struct pci_device *phys_dev = ptdev->phys_dev;
+	//struct pci_bridge_info bridge_info = {};
 	struct pci_device *root_port;
+
+	*vrp_sec_bus = 0;
+
+	/* build pci hierarch */
+	error = scan_pci();
+	if (error)
+		return error;
 
 	if (!ptdev->pcie_cap) {
 		pr_err("%s Error: %x:%x.%x is not a pci-e device.\n", __func__,
@@ -105,6 +160,10 @@ int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev)
 				root_port->func, phys_dev->bus, phys_dev->dev, phys_dev->func);
 			return -EINVAL;
 		}
+
+		// add virtual root port
+		*vrp_sec_bus = add_vroot_port(ctx, ptdev, root_port, rootport_ptm_offset);
+
 	} else if (pcie_type == PCIEM_TYPE_ROOT_INT_EP) {
 		// No need to emulate root port if ptm requestor is RCIE
 		pr_notice("%s: ptm requestor is root complex integrated device.\n",
