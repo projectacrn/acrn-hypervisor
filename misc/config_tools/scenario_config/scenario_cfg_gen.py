@@ -24,6 +24,11 @@ import board_defconfig
 from hv_item import HvInfo
 import asl_gen
 
+try:
+    import xmlschema
+except ImportError:
+    pass
+
 ACRN_PATH = common.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + 'misc/config_tools/data/'
 GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c", ".config", "ivshmem_cfg.h", "pt_intx.c"]
@@ -97,10 +102,6 @@ def validate_scenario_schema(scenario_info):
     :param xsd_doc: scenario schema
     :param scenario_info: scenario file
     """
-    try:
-        import xmlschema
-    except ImportError:
-        return
 
     """
     XMLSchema does not process XInclude.
@@ -129,13 +130,36 @@ def validate_scenario_schema(scenario_info):
             reason = validation_error.reason + ": last call: " + str(validation_error.obj)
             scenario_cfg_lib.ERR_LIST[key] = element + reason
 
+def apply_data_checks(board_info, scenario_info):
+    xsd_doc = etree.parse(common.DATACHECK_SCHEMA_FILE)
+    xsd_doc.xinclude()
+    datachecks_schema = xmlschema.XMLSchema11(etree.tostring(xsd_doc, encoding="unicode"))
 
+    main_etree = etree.parse(board_info)
+    scenario_etree = etree.parse(scenario_info)
+    main_etree.getroot().extend(scenario_etree.getroot()[:])
+    # FIXME: Figure out proper error keys for data check failures
+    error_key = ""
+
+    it = datachecks_schema.iter_errors(main_etree)
+    for idx, error in enumerate(it, start=1):
+        anno = error.validator.annotation
+        description = anno.documentation[0].text
+        severity = anno.elem.get("{https://projectacrn.org}severity")
+
+        if severity == "error":
+            if error_key in scenario_cfg_lib.ERR_LIST.keys():
+                scenario_cfg_lib.ERR_LIST[error_key].append("\n" + description)
+            else:
+                scenario_cfg_lib.ERR_LIST[error_key] = description
 
 def validate_scenario_setting(board_info, scenario_info):
     hv_cfg_lib.ERR_LIST = {}
     scenario_cfg_lib.ERR_LIST = {}
 
-    validate_scenario_schema(scenario_info)
+    if "xmlschema" in sys.modules.keys():
+        validate_scenario_schema(scenario_info)
+        apply_data_checks(board_info, scenario_info)
 
     """
     Validate settings in scenario xml

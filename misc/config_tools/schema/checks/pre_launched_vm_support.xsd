@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<xs:schema xml:id="root"
+	   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	   xmlns:acrn="https://projectacrn.org">
+
+  <xs:assert test="every $cpu in vm/cpu_affinity/pcpu_id satisfies count(processors//thread[cpu_id = $cpu]) = 1">
+    <xs:annotation acrn:severity="warning">
+      <xs:documentation>The physical CPUs allocated to VMs shall exist on the target board.
+
+This assertion checks that the physical CPUs that are explicitly allocated to VMs do exist on the target board. Failures
+in meeting this assertion may cause the following.
+
+- The hypervisor may access wrong per CPU regions, leading to random memory corruption.
+- A VM may failed wake (by sending INIT-SIPI-SIPI IPIs) all the vCPUs allocated to it.
+
+To fix this error, you can
+
+- In the board XML, check whether all physical CPUs are encoded under the processors/ node. When generating the board
+  XML on the target board, make sure the native OS has not make any CPU offline.
+- In the scenario XML, check whether the allocated CPUs are specified using consecutive integers starting from 0, not
+  their APIC IDs or x2APIC IDs.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in vm satisfies
+		   every $cpu in $vm/cpu_affinity/pcpu_id satisfies
+		   processors//thread[cpu_id = $cpu]/core_type = processors//thread[cpu_id = $vm/cpu_affinity/pcpu_id[1]]/core_type">
+    <xs:annotation acrn:severity="warning">
+      <xs:documentation>The physical CPUs allocated to the same VM shall have the same core types.
+
+On platforms having both big and little cores, the current design of ACRN only allows allocating the same type of cores
+to a pre-launched VM.
+
+To fix this error, double check the allocation of physical CPUs to each pre-launched VM and ensure that only big cores
+or little cores are assigned, but not both.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+</xs:schema>
