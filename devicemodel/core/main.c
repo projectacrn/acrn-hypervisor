@@ -66,6 +66,7 @@
 #include "virtio.h"
 #include "pm_vuart.h"
 #include "log.h"
+#include "pci_util.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
@@ -1122,5 +1123,6 @@ fail:
 create_fail:
 	uninit_hugetlb();
 	deinit_loggers();
+	clean_pci_cache();
 	exit(ret);
 }
