@@ -10,6 +10,6 @@
 
 #include "passthru.h"
 
-int ptm_probe(struct vmctx *ctx, struct passthru_dev *pdev);
+int ptm_probe(struct vmctx *ctx, struct passthru_dev *pdev, int *vrp_sec_bus);
 
 #endif

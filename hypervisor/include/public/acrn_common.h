@@ -664,6 +664,22 @@ struct acrn_intr_monitor {
 #define INTR_CMD_DELAY_INT 1U
 
 /**
+ * @brief Info to configure virtual root port
+ *
+ * Configuration passed to hv when adding a virtual root port which
+ * is used as PTM root
+ */
+struct vrp_config
+{
+	uint16_t phy_bdf;
+	uint8_t primary_bus;
+	uint8_t secondary_bus;
+	uint8_t subordinate_bus;
+	uint8_t ptm_capable;
+	uint32_t ptm_cap_offset;
+};
+
+/**
  * @}
  */
 #endif /* ACRN_COMMON_H */
