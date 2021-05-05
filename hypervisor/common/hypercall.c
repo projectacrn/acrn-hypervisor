@@ -25,6 +25,7 @@
 #include <asm/rtcm.h>
 #include <asm/irq.h>
 #include <ticks.h>
+#include "vroot_port.h"
 
 #define DBG_LEVEL_HYCALL	6U
 
@@ -48,6 +49,7 @@ static struct emul_dev_ops emul_dev_ops_tbl[] = {
 	{(IVSHMEM_VENDOR_ID | (IVSHMEM_DEVICE_ID << 16U)), NULL, NULL},
 #endif
 	{(MCS9900_VENDOR | (MCS9900_DEV << 16U)), create_vmcs9900_vdev, destroy_vmcs9900_vdev},
+	{(VRP_VENDOR | (VRP_DEVICE << 16U)), create_vrp, destroy_vrp},
 };
 
 bool is_hypercall_from_ring0(void)

@@ -120,6 +120,7 @@
 #define PCI_ECAP_ID(hdr)	((uint32_t)((hdr) & 0xFFFFU))
 #define PCI_ECAP_NEXT(hdr)	((uint32_t)(((hdr) >> 20U) & 0xFFCU))
 #define PCIZ_SRIOV		0x10U
+#define PCIZ_PTM 		0x1fU
 
 /* SRIOV Definitions */
 #define PCI_SRIOV_CAP_LEN	0x40U
@@ -131,6 +132,14 @@
 #define PCIR_SRIOV_VF_DEV_ID	0x1AU
 #define PCIR_SRIOV_VF_BAR_OFF	0x24U
 #define PCIM_SRIOV_VF_ENABLE	0x1U
+
+/* PTM Definitions */
+#define PCI_PTM_CAP_LEN				0x04U
+#define PCIR_PTM_CAP				0x04U
+#define PCIR_PTM_CTRL				0x08U
+#define PCIM_PTM_CAP_ROOT_CAPABLE	0x4U
+#define PCIM_PTM_CTRL_ENABLED		0x1U
+#define PCIM_PTM_CTRL_ROOT_SELECTED	0x2U
 
 /* PCI Message Signalled Interrupts (MSI) */
 #define PCIR_MSI_CTRL         0x02U
