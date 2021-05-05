@@ -47,6 +47,7 @@
 #include "acpi.h"
 #include "dm.h"
 #include "passthru.h"
+#include "ptm.h"
 
 /* Some audio drivers get topology data from ACPI NHLT table.
  * For such drivers, we need to copy the host NHLT table to make it
@@ -524,6 +525,8 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	bool keep_gsi = false;
 	bool need_reset = true;
 	bool d3hot_reset = false;
+	bool enable_ptm = false;
+	int vrp_sec_bus = 0;
 	int vmsix_on_msi_bar_id = -1;
 	struct acrn_assign_pcidev pcidev = {};
 	uint16_t vendor = 0, device = 0;
@@ -564,7 +567,9 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				pr_err("faild to parse msix emulation bar id");
 				return -EINVAL;
 			}
-
+		} else if (!strncmp(opt, "enable_ptm", 10)) {
+			pr_notice("<PTM>: opt=enable_ptm.\n");
+			enable_ptm = true;
 		} else
 			pr_warn("Invalid passthru options:%s", opt);
 	}
@@ -667,6 +672,20 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				bus, slot, func, ptdev->phys_pin);
 			error = -1;
 			goto done;
+		}
+	}
+
+	if (enable_ptm) {
+		error = ptm_probe(ctx, ptdev, &vrp_sec_bus);
+
+		if (!error && (vrp_sec_bus > 0)) {
+			/* if ptm is enabled, ptm capable ptdev (ptm requestor) is connected to virtual
+			 * root port (ptm root), instead of virutal host bridge. */
+			pcidev.virt_bdf = PCI_BDF(vrp_sec_bus, 0, 0);
+		}
+		else {
+			enable_ptm = false;
+			pr_err("%s: Failed to enable PTM on passthrough device %x:%x:%x.\n", __func__, bus, slot, func);
 		}
 	}
 
