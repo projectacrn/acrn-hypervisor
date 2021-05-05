@@ -153,6 +153,7 @@ struct acrn_vm_pci_dev_config {
 	/* TODO: All device specific attributions need move to other place */
 	struct target_vuart t_vuart;
 	uint16_t vuart_idx;
+	uint16_t vroot_port_idx;
 	uint64_t vbar_base[PCI_BAR_COUNT];		/* vbar base address of PCI device, which is power-on default value */
 	struct pci_pdev *pdev;				/* the physical PCI device if it's a PT device */
 	const struct pci_vdev_ops *vdev_ops;		/* operations for PCI CFG read/write */

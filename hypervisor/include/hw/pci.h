@@ -109,6 +109,7 @@
 /* Capability Register Offsets */
 #define PCICAP_ID             0x0U
 #define PCICAP_NEXTPTR        0x1U
+#define PCICAP_EXP_CAP        0x2U
 
 /* Capability Identification Numbers */
 #define PCIY_MSI              0x05U
