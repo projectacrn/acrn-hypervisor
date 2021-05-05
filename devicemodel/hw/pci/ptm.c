@@ -106,10 +106,10 @@ add_vroot_port(struct vmctx *ctx, struct passthru_dev *ptdev, struct pci_device 
 int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 {
 	int error = 0;
-	int pos, pcie_type, cap, rootport_ptm_offset, device_ptm_offset;
+	int pos, pcie_type, cap, rp_ptm_offset, device_ptm_offset;
 	struct pci_device *phys_dev = ptdev->phys_dev;
-	//struct pci_bridge_info bridge_info = {};
-	struct pci_device *root_port;
+	struct pci_device *rp;
+	struct pci_device_info rp_info = {};
 
 	*vrp_sec_bus = 0;
 
@@ -146,23 +146,37 @@ int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 			return -EINVAL;
 		}
 
-		root_port = pci_find_root_port(phys_dev);
-		if (root_port == NULL) {
+		rp = pci_find_root_port(phys_dev);
+		if (rp == NULL) {
 			pr_err("%s Error: Cannot find root port of %x:%x.%x.\n", __func__,
 					phys_dev->bus, phys_dev->dev, phys_dev->func);
 			return -ENODEV;
 		}
 
-		cap = get_ptm_cap(root_port, &rootport_ptm_offset);
+		cap = get_ptm_cap(rp, &rp_ptm_offset);
 		if (!(cap & PCIM_PTM_CAP_ROOT)) {
 			pr_err("%s Error: root port %x:%x.%x of %x:%x.%x is not PTM root.\n",
-				__func__, root_port->bus, root_port->dev,
-				root_port->func, phys_dev->bus, phys_dev->dev, phys_dev->func);
+				__func__, rp->bus, rp->dev,
+				rp->func, phys_dev->bus, phys_dev->dev, phys_dev->func);
+			return -EINVAL;
+		}
+
+		/* check whether more than one devices are connected to the root port.
+		 * if more than one devices are connected to the root port, we flag
+		 * this as error and won't enable PTM.  We do this just because we
+		 * don't have this hw configuration and won't be able totest this case.
+		 */
+		error = pci_device_get_bridge_buses(rp, &(rp_info.primary_bus),
+					&(rp_info.secondary_bus), &(rp_info.subordinate_bus));
+
+		if (error || (get_device_count_on_bridge(&rp_info) != 1)) {
+			pr_err("%s Error: Failed to enable PTM on root port [%x:%x.%x] that has multiple children.\n",
+					__func__, rp->bus, rp->dev, rp->func);
 			return -EINVAL;
 		}
 
 		// add virtual root port
-		*vrp_sec_bus = add_vroot_port(ctx, ptdev, root_port, rootport_ptm_offset);
+		*vrp_sec_bus = add_vroot_port(ctx, ptdev, rp, rp_ptm_offset);
 
 	} else if (pcie_type == PCIEM_TYPE_ROOT_INT_EP) {
 		// No need to emulate root port if ptm requestor is RCIE

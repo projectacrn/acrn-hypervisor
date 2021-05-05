@@ -18,22 +18,6 @@
 
 #define MAX_LEN			(PCI_BUSMAX + 1)
 
-struct pci_device_info {
-	bool is_bridge;
-	int primary_bus;
-	int secondary_bus;
-	int subordinate_bus;
-	uint16_t bdf;
-	struct pci_device_info *parent;  /* pointer to its parent bridge */
-	struct pci_device_info *clist;  /* children list */
-
-	/* cache of all pci devices
-	 * FIXME: remove PCI_DEVICE_Q.  To cleanup pci device cache:
-	 * remove children, then remove parents
-	 */
-	TAILQ_ENTRY(pci_device_info) PCI_DEVICE_Q;
-};
-
 TAILQ_HEAD(ALL_PCI_DEVICES, pci_device_info);
 static struct ALL_PCI_DEVICES pci_device_q;
 
@@ -196,6 +180,9 @@ int scan_pci(void)
 	struct pci_device *dev;
 	int i;
 
+	if (pci_scanned)
+		return 0;
+
 	TAILQ_INIT(&pci_device_q);
 
 	pci_scanned = 1;
@@ -243,7 +230,11 @@ int scan_pci(void)
 
 done:
 	if (error < 0)
+	{
+		pr_err("%s: failed to build pci hierarchy.\n", __func__);
 		clean_pci_cache();
+		pci_scanned = false;
+	}
 
 	pci_iterator_destroy(iter);
 

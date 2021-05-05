@@ -11,7 +11,21 @@
 #include <stdbool.h>
 #include "pciaccess.h"
 
-struct pci_device_info;
+struct pci_device_info {
+	bool is_bridge;
+	int primary_bus;
+	int secondary_bus;
+	int subordinate_bus;
+	uint16_t bdf;
+	struct pci_device_info *parent;  /* pointer to its parent bridge */
+	struct pci_device_info *clist;  /* children list */
+
+	/* cache of all pci devices
+	 * FIXME: remove PCI_DEVICE_Q.  To cleanup pci device cache:
+	 * remove children, then remove parents
+	 */
+	TAILQ_ENTRY(pci_device_info) PCI_DEVICE_Q;
+};
 
 int pci_find_cap(struct pci_device *pdev, const int cap_id);
 int pci_find_ext_cap(struct pci_device *pdev, int cap_id);
