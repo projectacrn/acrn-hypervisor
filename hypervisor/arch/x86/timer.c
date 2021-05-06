@@ -19,7 +19,7 @@
 #define CAL_MS			10U
 #define MIN_TIMER_PERIOD_US	500U
 
-static uint32_t tsc_khz = 0U;
+static uint32_t tsc_khz;
 
 uint64_t rdtsc(void)
 {
@@ -74,8 +74,7 @@ static bool local_add_timer(struct per_cpu_timers *cpu_timer,
 		tmp = container_of(pos, struct hv_timer, node);
 		if (tmp->fire_tsc < tsc) {
 			prev = &tmp->node;
-		}
-		else {
+		} else {
 			break;
 		}
 	}
@@ -155,7 +154,7 @@ static void timer_softirq(uint16_t pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 	struct hv_timer *timer;
-	struct list_head *pos, *n;
+	const struct list_head *pos, *n;
 	uint32_t tries = MAX_TIMER_ACTIONS;
 	uint64_t current_tsc = rdtsc();
 
@@ -268,7 +267,7 @@ static uint64_t pit_calibrate_tsc(uint32_t cal_ms_arg)
 static uint64_t native_calibrate_tsc(void)
 {
 	uint64_t tsc_hz = 0UL;
-	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
+	const struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 
 	if (cpu_info->cpuid_level >= 0x15U) {
 		uint32_t eax_denominator, ebx_numerator, ecx_hz, reserved;
@@ -284,6 +283,7 @@ static uint64_t native_calibrate_tsc(void)
 
 	if ((tsc_hz == 0UL) && (cpu_info->cpuid_level >= 0x16U)) {
 		uint32_t eax_base_mhz, ebx_max_mhz, ecx_bus_mhz, edx;
+
 		cpuid_subleaf(0x16U, 0x0U, &eax_base_mhz, &ebx_max_mhz, &ecx_bus_mhz, &edx);
 		tsc_hz = (uint64_t) eax_base_mhz * 1000000U;
 	}
@@ -294,6 +294,7 @@ static uint64_t native_calibrate_tsc(void)
 void calibrate_tsc(void)
 {
 	uint64_t tsc_hz;
+
 	tsc_hz = native_calibrate_tsc();
 	if (tsc_hz == 0U) {
 		tsc_hz = pit_calibrate_tsc(CAL_MS);
@@ -321,7 +322,7 @@ uint64_t ticks_to_us(uint64_t ticks)
 {
 	uint64_t us = 0UL;
 
-	if (tsc_khz != 0U ) {
+	if (tsc_khz != 0U) {
 		us = (ticks * 1000UL) / (uint64_t)tsc_khz;
 	}
 

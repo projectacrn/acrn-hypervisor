@@ -61,8 +61,7 @@ static inline const struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcp
 
 		if ((leaf & 0x80000000U) != 0U) {
 			limit = vm->vcpuid_xlevel;
-		}
-		else {
+		} else {
 			limit = vm->vcpuid_level;
 		}
 
@@ -90,7 +89,7 @@ static inline int32_t set_vcpuid_entry(struct acrn_vm *vm,
 
 	if (vm->vcpuid_entry_nr == MAX_VM_VCPUID_ENTRIES) {
 		pr_err("%s, vcpuid entry over MAX_VM_VCPUID_ENTRIES(%u)\n", __func__, MAX_VM_VCPUID_ENTRIES);
-	        ret = -ENOMEM;
+		ret = -ENOMEM;
 	} else {
 		tmp = &vm->vcpuid_entries[vm->vcpuid_entry_nr];
 		vm->vcpuid_entry_nr++;
@@ -248,7 +247,7 @@ static int32_t set_vcpuid_sgx(struct acrn_vm *vm)
 
 	if (is_vsgx_supported(vm->vm_id)) {
 		struct vcpuid_entry entry;
-		struct epc_map* maps;
+		struct epc_map *maps;
 		uint32_t mid;
 		uint64_t size = 0;
 		/* init cpuid.12h.0h */

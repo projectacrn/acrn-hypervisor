@@ -440,7 +440,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 			ret = -1;
 			break;
 		}
-		if (ret == -1){
+		if (ret == -1) {
 			return 0;
 		}
 		pkt_header.payload_size = payload_size;
@@ -683,8 +683,7 @@ static void profiling_pmi_handler(uint32_t irq, __unused void *data)
 					if (msrop->msr_id != MSR_IA32_PERF_GLOBAL_CTRL) {
 						msr_write(msrop->msr_id, msrop->value);
 					}
-				}
-				else {
+				} else {
 					if (((perf_ovf_status >> msrop->param) & 0x1U) > 0U) {
 						msr_write(msrop->msr_id, msrop->value);
 					}
@@ -1391,6 +1390,7 @@ void profiling_setup(void)
 {
 	uint16_t cpu;
 	int32_t retval;
+
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 	cpu = get_pcpu_id();
 	/* support PMI notification, SOS_VM will register all CPU */
