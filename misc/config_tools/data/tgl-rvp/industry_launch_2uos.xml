@@ -5,7 +5,7 @@
 	<mem_size desc="UOS memory size in MByte">4096</mem_size>
 	<gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
-	<vuart0 desc="vUART0 which emulated by device model">Enable</vuart0>
+	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
 	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
 	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
 	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
@@ -71,8 +71,8 @@
 		<bluetooth desc="vm bluetooth"></bluetooth>
 		<sd_card desc="vm sd card device"></sd_card>
 		<ethernet desc="vm ethernet device"></ethernet>
-		<sata desc="vm sata device"></sata>
-		<nvme desc="vm nvme device">01:00.0 Non-Volatile memory controller: Intel Corporation SSD Pro 7600p/760p/E 6100p Series (rev 03)</nvme>
+		<sata desc="vm sata device">00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</sata>
+		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
 
 	<virtio_devices>
