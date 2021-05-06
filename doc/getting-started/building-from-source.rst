@@ -57,7 +57,7 @@ ACRN.
 
   .. code-block:: none
 
-     $ sudo apt install gcc \
+     sudo apt install gcc \
           git \
           make \
           libssl-dev \
@@ -77,14 +77,16 @@ ACRN.
           liblz4-tool \
           flex \
           bison \
-          xsltproc
+          xsltproc \
+          clang-format
 
-     $ sudo pip3 install lxml xmlschema
-     $ wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
-     $ tar zxvf acpica-unix-20210105.tar.gz
-     $ cd acpica-unix-20210105
-     $ make clean && make iasl
-     $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
+     sudo pip3 install lxml xmlschema
+
+     wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
+     tar zxvf acpica-unix-20210105.tar.gz
+     cd acpica-unix-20210105
+     make clean && make iasl
+     sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
 .. rst-class:: numbered-step
 
@@ -103,7 +105,7 @@ Enter the following to get the ACRN hypervisor source code:
 
 .. code-block:: none
 
-   $ git clone https://github.com/projectacrn/acrn-hypervisor
+   git clone https://github.com/projectacrn/acrn-hypervisor
 
 
 .. _build-with-acrn-scenario:
@@ -154,26 +156,26 @@ the following to build the hypervisor, device model, and tools:
 
   .. code-block:: none
 
-     $ make BOARD=nuc7i7dnb SCENARIO=industry
+     make BOARD=nuc7i7dnb SCENARIO=industry
 
 * Build the release version of ``HYBRID`` scenario on the ``whl-ipc-i5``:
 
   .. code-block:: none
 
-     $ make BOARD=whl-ipc-i5 SCENARIO=hybrid RELEASE=y
+     make BOARD=whl-ipc-i5 SCENARIO=hybrid RELEASE=y
 
 * Build the release version of ``HYBRID_RT`` scenario on the ``whl-ipc-i7``
   (hypervisor only):
 
   .. code-block:: none
 
-     $ make BOARD=whl-ipc-i7 SCENARIO=hybrid_rt RELEASE=y hypervisor
+     make BOARD=whl-ipc-i7 SCENARIO=hybrid_rt RELEASE=y hypervisor
 
 * Build the release version of the device model and tools:
 
   .. code-block:: none
 
-     $ make RELEASE=y devicemodel tools
+     make RELEASE=y devicemodel tools
 
 You can also build ACRN with your customized scenario:
 
@@ -182,14 +184,14 @@ You can also build ACRN with your customized scenario:
 
   .. code-block:: none
 
-    $ make BOARD=nuc6cayh SCENARIO=/path/to/scenario.xml
+     make BOARD=nuc6cayh SCENARIO=/path/to/scenario.xml
 
 * Build with your own board and scenario configuration, assuming the board and
   scenario XML files are ``/path/to/board.xml`` and ``/path/to/scenario.xml``:
 
   .. code-block:: none
 
-    $ make BOARD=/path/to/board.xml SCENARIO=/path/to/scenario.xml
+     make BOARD=/path/to/board.xml SCENARIO=/path/to/scenario.xml
 
 .. note::
    ACRN uses XML files to summarize board characteristics and scenario
@@ -245,10 +247,10 @@ building the hypervisor, allowing users to tweak the configurations.
 
 .. code-block:: none
 
-   $ make BOARD=nuc7i7dnb SCENARIO=industry hvdefconfig
-   $ vim build/hypervisor/.scenario.xml
-   (Modify the XML file per your needs)
-   $ make
+   make BOARD=nuc7i7dnb SCENARIO=industry hvdefconfig
+   vim build/hypervisor/.scenario.xml
+   #(Modify the XML file per your needs)
+   make
 
 .. note::
    A hypervisor build remembers the board and scenario previously
