@@ -181,7 +181,7 @@ value ``n``.</xs:documentation>
 are allowed. The value will be ignored when hardware does not support RDT.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="MBA_DELAY" type="xs:string" minOccurs="0">
+    <xs:element name="MBA_DELAY" type="xs:string" minOccurs="0"  maxOccurs="unbounded">
       <xs:annotation>
         <xs:documentation>Memory Bandwidth Allocation delay value.</xs:documentation>
       </xs:annotation>
