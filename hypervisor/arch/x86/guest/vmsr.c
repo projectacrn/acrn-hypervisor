@@ -234,8 +234,8 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 
 	/*
 	 * CET disabled:
-	 * 	CPUID.07H.ECX[7] (CPUID_ECX_CET_SS)
-	 * 	CPUID.07H.EDX[20] (CPUID_ECX_CET_IBT)
+	 * CPUID.07H.ECX[7] (CPUID_ECX_CET_SS)
+	 * CPUID.07H.EDX[20] (CPUID_ECX_CET_IBT)
 	 */
 	MSR_IA32_U_CET,
 	MSR_IA32_S_CET,
@@ -699,7 +699,7 @@ static void set_guest_tsc_adjust(struct acrn_vcpu *vcpu, uint64_t tsc_adjust)
 	/* IA32_TSC_ADJUST is supposed to carry the value it's written to */
 	vcpu_set_guest_msr(vcpu, MSR_IA32_TSC_ADJUST, tsc_adjust);
 
-	set_tsc_msr_interception(vcpu, (tsc_offset + tsc_adjust_delta ) != 0UL);
+	set_tsc_msr_interception(vcpu, (tsc_offset + tsc_adjust_delta) != 0UL);
 }
 
 /**

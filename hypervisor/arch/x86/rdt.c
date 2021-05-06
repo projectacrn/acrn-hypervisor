@@ -216,9 +216,8 @@ bool is_platform_rdt_capable(void)
 	return ret;
 }
 #else
-uint64_t clos2pqr_msr(uint16_t clos)
+uint64_t clos2pqr_msr(__unused uint16_t clos)
 {
-	(void)(clos);
 	return 0UL;
 }
 
