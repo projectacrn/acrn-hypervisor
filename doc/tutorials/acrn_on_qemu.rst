@@ -11,11 +11,15 @@ with basic functionality such as running Service VM (SOS) and User VM (UOS) for 
 
 This setup was tested with the following configuration,
 
-- ACRN Hypervisor: tag acrn-2020w19.5-140000p (Commit ID: b0ae9cfa2b374d3faad9f890ff61e88f97205ac8)
-- ACRN Kernel: 5.4.28 (Commit ID: a8cd22f49f0b2b56e526150fe0aaa9118edfcede)
+- ACRN Hypervisor: tag ``v2.0``
+- ACRN Kernel: release_2.0 (5.4.43-PKT-200203T060100Z)
 - QEMU emulator version 4.2.0
-- Service VM/User VM is ubuntu18.04
+- Service VM/User VM is ubuntu 18.04
 - Platforms Tested: Apollo Lake, Kaby Lake, Coffee Lake
+
+.. note::
+
+   ACRN versions newer than v2.0 do not work on QEMU.
 
 
 Prerequisites
