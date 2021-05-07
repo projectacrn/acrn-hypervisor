@@ -149,7 +149,7 @@ usage(int code)
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
 		"       %*s [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]\n"
 		"       %*s [--debugexit] [--logger_setting param_setting]\n"
-		"       %*s [--pm_notify_channel] [--pm_by_vuart vuart_node]\n"
+		"       %*s [--pm_notify_channel channel] [--pm_by_vuart vuart_node]\n"
 		"       %*s [--ssram] <vm>\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
@@ -433,8 +433,10 @@ guest_pm_notify_init(struct vmctx *ctx)
 		ioc_init(ctx);
 	else if (PWR_EVENT_NOTIFY_PWR_BT == pm_notify_channel)
 		power_button_init(ctx);
-	else if (PWR_EVENT_NOTIFY_UART == pm_notify_channel)
-		ret = pm_by_vuart_init(ctx);
+	else if (PWR_EVENT_NOTIFY_UART == pm_notify_channel ||
+		 PWR_EVENT_NOTIFY_UART_TRIG_PLAT_S5 == pm_notify_channel)
+		ret = pm_by_vuart_init(ctx,
+			(PWR_EVENT_NOTIFY_UART_TRIG_PLAT_S5 == pm_notify_channel));
 	else
 		pr_info("No pm notify channel given\n");
 
@@ -448,7 +450,8 @@ guest_pm_notify_deinit(struct vmctx *ctx)
 		ioc_deinit(ctx);
 	else if (PWR_EVENT_NOTIFY_PWR_BT == pm_notify_channel)
 		power_button_deinit(ctx);
-	else if (PWR_EVENT_NOTIFY_UART == pm_notify_channel)
+	else if (PWR_EVENT_NOTIFY_UART == pm_notify_channel ||
+		 PWR_EVENT_NOTIFY_UART_TRIG_PLAT_S5 == pm_notify_channel)
 		pm_by_vuart_deinit(ctx);
 	else
 		pr_err("No correct pm notify channel given\n");
@@ -968,13 +971,20 @@ main(int argc, char *argv[])
 				errx(EX_USAGE, "invalid logger setting params %s", optarg);
 			break;
 		case CMD_OPT_PM_NOTIFY_CHANNEL:
-			if (strncmp("ioc", optarg, 3) == 0)
+			if (strncmp("ioc", optarg, sizeof("ioc")) == 0)
 				pm_notify_channel = PWR_EVENT_NOTIFY_IOC;
-			else if (strncmp("power_button", optarg, 12) == 0)
+			else if (strncmp("power_button", optarg, sizeof("power_button")) == 0)
 				pm_notify_channel = PWR_EVENT_NOTIFY_PWR_BT;
-			else if (strncmp("uart", optarg, 4) == 0)
-				pm_notify_channel = PWR_EVENT_NOTIFY_UART;
-
+			else if (strncmp("uart", optarg, sizeof("uart") - 1) == 0) {
+				if (optarg[sizeof("uart") - 1] == '\0')
+					pm_notify_channel = PWR_EVENT_NOTIFY_UART;
+				else if (strncmp(",allow_trigger_s5", optarg + sizeof("uart") - 1,
+						sizeof(",allow_trigger_s5")) == 0)
+					pm_notify_channel = PWR_EVENT_NOTIFY_UART_TRIG_PLAT_S5;
+				else
+					errx(EX_USAGE, "invalid pm_notify_channel: %s", optarg);
+			} else
+				errx(EX_USAGE, "invalid pm_notify_channel: %s", optarg);
 			break;
 		case CMD_OPT_PM_BY_VUART:
 			if (parse_pm_by_vuart(optarg) != 0)
