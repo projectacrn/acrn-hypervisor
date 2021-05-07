@@ -82,6 +82,7 @@ enum VMXResult {
 };
 void nested_vmx_result(enum VMXResult, int error_number);
 int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu);
 
 #ifdef CONFIG_NVMX_ENABLED
 struct acrn_nested {
