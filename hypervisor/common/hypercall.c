@@ -75,31 +75,31 @@ inline static bool is_severity_pass(uint16_t target_vmid)
  *
  * The function offline specific vcpu from SOS.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 lapic id of the vcpu which wants to offline
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
-	struct acrn_vcpu *vcpu;
+	struct acrn_vcpu *target_vcpu;
 	uint16_t i;
 	int32_t ret = 0;
 	uint64_t lapicid = param1;
 
 	pr_info("sos offline cpu with lapicid %ld", lapicid);
 
-	foreach_vcpu(i, vm, vcpu) {
-		if (vlapic_get_apicid(vcpu_vlapic(vcpu)) == lapicid) {
+	foreach_vcpu(i, vcpu->vm, target_vcpu) {
+		if (vlapic_get_apicid(vcpu_vlapic(target_vcpu)) == lapicid) {
 			/* should not offline BSP */
-			if (vcpu->vcpu_id == BSP_CPU_ID) {
+			if (target_vcpu->vcpu_id == BSP_CPU_ID) {
 				ret = -1;
 				break;
 			}
-			zombie_vcpu(vcpu, VCPU_ZOMBIE);
-			offline_vcpu(vcpu);
+			zombie_vcpu(target_vcpu, VCPU_ZOMBIE);
+			offline_vcpu(target_vcpu);
 		}
 	}
 
@@ -111,14 +111,14 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, __unused struct acrn_vm *targe
  *
  * The function only return api version information when VM is SOS_VM.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 guest physical memory address. The api version returned
  *              will be copied to this gpa
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_get_api_version(struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+int32_t hcall_get_api_version(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
 	struct hc_api_version version;
@@ -126,7 +126,7 @@ int32_t hcall_get_api_version(struct acrn_vm *vm, __unused struct acrn_vm *targe
 	version.major_version = HV_API_MAJOR_VERSION;
 	version.minor_version = HV_API_MINOR_VERSION;
 
-	return copy_to_gpa(vm, &version, param1, sizeof(version));
+	return copy_to_gpa(vcpu->vm, &version, param1, sizeof(version));
 }
 
 /**
@@ -135,15 +135,16 @@ int32_t hcall_get_api_version(struct acrn_vm *vm, __unused struct acrn_vm *targe
  * The function returns basic hardware or configuration information
  * for the current platform.
  *
- * @param vm Pointer to VM data structure.
+ * @param vcpu Pointer to vCPU that initiates the hypercall.
  * @param param1 GPA pointer to struct hc_platform_info.
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non zero in case of error.
  */
-int32_t hcall_get_platform_info(struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	struct hc_platform_info pi = { 0 };
 	uint32_t entry_size = sizeof(struct acrn_vm_config);
 	int32_t ret;
@@ -178,16 +179,18 @@ int32_t hcall_get_platform_info(struct acrn_vm *vm, __unused struct acrn_vm *tar
  * limitation for calling times of this function, will add MAX_VM_NUM
  * support later.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param1 guest physical memory address. This gpa points to
  *              struct acrn_create_vm
  *
- * @pre Pointer vm shall point to SOS_VM, vm_config != NULL
+ * @pre is_sos_vm(vcpu->vm)
+ * @pre get_vm_config(target_vm->vm_id) != NULL
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_create_vm(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, __unused uint64_t param2)
+int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, __unused uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	uint16_t vmid = target_vm->vm_id;
 	int32_t ret = -1;
 	struct acrn_vm *tgt_vm = NULL;
@@ -252,7 +255,7 @@ int32_t hcall_create_vm(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t 
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_destroy_vm(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
+int32_t hcall_destroy_vm(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		__unused uint64_t param1, __unused uint64_t param2)
 {
 	int32_t ret = -1;
@@ -276,7 +279,7 @@ int32_t hcall_destroy_vm(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_start_vm(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
+int32_t hcall_start_vm(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		__unused uint64_t param1, __unused uint64_t param2)
 {
 	int32_t ret = -1;
@@ -301,7 +304,7 @@ int32_t hcall_start_vm(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_pause_vm(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
+int32_t hcall_pause_vm(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		__unused uint64_t param1, __unused uint64_t param2)
 {
 	int32_t ret = -1;
@@ -326,7 +329,7 @@ int32_t hcall_pause_vm(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_reset_vm(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
+int32_t hcall_reset_vm(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		__unused uint64_t param1, __unused uint64_t param2)
 {
 	int32_t ret = -1;
@@ -345,18 +348,20 @@ int32_t hcall_reset_vm(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
  * it's only applied to BSP. AP always uses fixed init regs.
  * The function will return -1 if the targat VM or BSP doesn't exist.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to
  *              struct acrn_vcpu_regs
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	struct acrn_set_vcpu_regs vcpu_regs;
-	struct acrn_vcpu *vcpu;
+	struct acrn_vcpu *target_vcpu;
 	int32_t ret = -1;
 
 	/* Only allow setup init ctx while target_vm is inactive */
@@ -365,10 +370,10 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, struct acrn_vm *target_vm, __unu
 		} else if (vcpu_regs.vcpu_id >= MAX_VCPUS_PER_VM) {
 			pr_err("%s: invalid vcpu_id for set_vcpu_regs\n", __func__);
 		} else {
-			vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
-			if (vcpu->state != VCPU_OFFLINE) {
+			target_vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
+			if (target_vcpu->state != VCPU_OFFLINE) {
 				if (is_valid_cr0_cr4(vcpu_regs.vcpu_regs.cr0, vcpu_regs.vcpu_regs.cr4)) {
-					set_vcpu_regs(vcpu, &(vcpu_regs.vcpu_regs));
+					set_vcpu_regs(target_vcpu, &(vcpu_regs.vcpu_regs));
 					ret = 0;
 				}
 			}
@@ -378,7 +383,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, struct acrn_vm *target_vm, __unu
 	return ret;
 }
 
-int32_t hcall_create_vcpu(__unused struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+int32_t hcall_create_vcpu(__unused struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		__unused uint64_t param1, __unused uint64_t param2)
 {
 	return 0;
@@ -391,15 +396,16 @@ int32_t hcall_create_vcpu(__unused struct acrn_vm *vm, __unused struct acrn_vm *
  * or IOAPIC, normally it triggers an edge IRQ.
  * The function will return -1 if the target VM does not exist.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 info for irqline
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_irqline(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_set_irqline(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	uint32_t irq_pic;
 	int32_t ret = -1;
 	struct acrn_irqline_ops *ops = (struct acrn_irqline_ops *)&param2;
@@ -431,15 +437,16 @@ int32_t hcall_set_irqline(struct acrn_vm *vm, struct acrn_vm *target_vm, __unuse
  * Inject a MSI interrupt for a VM.
  * The function will return -1 if the target VM does not exist.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to struct acrn_msi_entry
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_inject_msi(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_inject_msi(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -1;
 
 	if (is_severity_pass(target_vm->vm_id) && !is_poweroff_vm(target_vm)) {
@@ -459,16 +466,18 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused
  * Set the ioreq share buffer for a VM.
  * The function will return -1 if the target VM does not exist.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to
  *              struct acrn_set_ioreq_buffer
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_set_ioreq_buffer(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	uint64_t hpa;
 	uint16_t i;
 	int32_t ret = -1;
@@ -509,10 +518,10 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, struct acrn_vm *target_vm, __
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_notify_ioreq_finish(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
+int32_t hcall_notify_ioreq_finish(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		__unused uint64_t param1, uint64_t param2)
 {
-	struct acrn_vcpu *vcpu;
+	struct acrn_vcpu *target_vcpu;
 	int32_t ret = -1;
 	uint16_t vcpu_id = (uint16_t)param2;
 
@@ -526,9 +535,9 @@ int32_t hcall_notify_ioreq_finish(__unused struct acrn_vm *vm, struct acrn_vm *t
 			pr_err("%s, failed to get VCPU %d context from VM %d\n",
 				__func__, vcpu_id, target_vm->vm_id);
 		} else {
-			vcpu = vcpu_from_vid(target_vm, vcpu_id);
-			if (!vcpu->vm->sw.is_polling_ioreq) {
-				signal_event(&vcpu->events[VCPU_EVENT_IOREQ]);
+			target_vcpu = vcpu_from_vid(target_vm, vcpu_id);
+			if (!target_vcpu->vm->sw.is_polling_ioreq) {
+				signal_event(&target_vcpu->events[VCPU_EVENT_IOREQ]);
 			}
 			ret = 0;
 		}
@@ -538,7 +547,7 @@ int32_t hcall_notify_ioreq_finish(__unused struct acrn_vm *vm, struct acrn_vm *t
 }
 
 /**
- *@pre Pointer vm shall point to SOS_VM
+ *@pre is_sos_vm(vm)
  *@pre gpa2hpa(vm, region->sos_vm_gpa) != INVALID_HPA
  */
 static void add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
@@ -589,7 +598,7 @@ static void add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
 }
 
 /**
- *@pre Pointer vm shall point to SOS_VM
+ *@pre is_sos_vm(vm)
  */
 static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	struct acrn_vm *target_vm, const struct vm_memory_region *region)
@@ -624,17 +633,18 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 /**
  * @brief setup ept memory mapping for multi regions
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param1 guest physical address. This gpa points to
  *              struct set_memmaps
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, struct acrn_vm *target_vm,
+int32_t hcall_set_vm_memory_regions(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	struct set_regions regions;
 	struct vm_memory_region mr;
 	uint32_t idx;
@@ -666,7 +676,7 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, struct acrn_vm *target_v
 }
 
 /**
- *@pre Pointer vm shall point to SOS_VM
+ *@pre is_sos_vm(vm)
  */
 static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 {
@@ -712,17 +722,18 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 /**
  * @brief change guest memory page write permission
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to
  *              struct wp_data
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_write_protect_page(struct acrn_vm *vm, struct acrn_vm *target_vm,
+int32_t hcall_write_protect_page(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		__unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -1;
 	uint64_t wp_gpa = param2;
 
@@ -745,15 +756,16 @@ int32_t hcall_write_protect_page(struct acrn_vm *vm, struct acrn_vm *target_vm,
  * Translate guest physical address to host physical address for a VM.
  * The function will return -1 if the target VM does not exist.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to struct vm_gpa2hpa
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_gpa_to_hpa(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -1;
 	struct vm_gpa2hpa v_gpa2hpa;
 
@@ -777,16 +789,18 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused
 /**
  * @brief Assign one PCI dev to a VM.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_assign_pcidev including assign PCI device info
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_assign_pcidev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
 	struct acrn_assign_pcidev pcidev;
 
@@ -805,16 +819,18 @@ int32_t hcall_assign_pcidev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unu
 /**
  * @brief Deassign one PCI dev from a VM.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_assign_pcidev including deassign PCI device info
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_deassign_pcidev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_deassign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
 	struct acrn_assign_pcidev pcidev;
 
@@ -833,16 +849,18 @@ int32_t hcall_deassign_pcidev(struct acrn_vm *vm, struct acrn_vm *target_vm, __u
 /**
  * @brief Assign one MMIO dev to a VM.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_mmiodev including assign MMIO device info
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_assign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_assign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
 	struct acrn_mmiodev mmiodev;
 
@@ -866,16 +884,18 @@ int32_t hcall_assign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, __un
 /**
  * @brief Deassign one MMIO dev from a VM.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_mmiodev including deassign MMIO device info
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_deassign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
 	struct acrn_mmiodev mmiodev;
 
@@ -899,17 +919,18 @@ int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, __
 /**
  * @brief Set interrupt mapping info of ptdev.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, struct acrn_vm *target_vm,
+int32_t hcall_set_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 	       __unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -1;
 
 	if (is_created_vm(target_vm)) {
@@ -950,17 +971,18 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, struct acrn_vm *target_vm,
 /**
  * @brief Clear interrupt mapping info of ptdev.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_reset_ptdev_intr_info(struct acrn_vm *vm, struct acrn_vm *target_vm,
+int32_t hcall_reset_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		__unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -1;
 
 	if (is_created_vm(target_vm) || is_paused_vm(target_vm)) {
@@ -1001,16 +1023,17 @@ int32_t hcall_reset_ptdev_intr_info(struct acrn_vm *vm, struct acrn_vm *target_v
 /**
  * @brief Get VCPU Power state.
  *
- * @param vm pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param1 cmd to show get which VCPU power state data
  * @param param2 VCPU power state data
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2)
+int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -1;
 	uint64_t cmd = param1;
 
@@ -1079,16 +1102,18 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, struct acrn_vm *target_vm, ui
 /**
  * @brief Get VCPU a VM's interrupt count data.
  *
- * @param vm pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_intr_monitor
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_vm_intr_monitor(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t status = -EINVAL;
 	struct acrn_intr_monitor *intr_hdr;
 	uint64_t hpa;
@@ -1133,13 +1158,13 @@ int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, struct acrn_vm *target_vm, __u
  * not called, the hypervisor will use the default notifier vector(0xF3)
  * to notify the SOS kernel.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 the expected notifier vector from guest
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_callback_vector(__unused struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+int32_t hcall_set_callback_vector(__unused struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
 	int32_t ret;
@@ -1175,16 +1200,17 @@ static struct emul_dev_ops *find_emul_dev_ops(struct acrn_emul_dev *dev)
 /**
  * @brief Add an emulated device in hypervisor.
  *
- * @param vm pointer to VM data structure
- * @param vmid ID of the VM
+ * @param vcpu Pointer to vCPU that initiates the hypercall
+ * @param target_vm Pointer to target VM data structure
  * @param param guest physical address. This gpa points to data structure of
  *              acrn_emul_dev including information about PCI or legacy devices
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_add_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
 	struct acrn_emul_dev dev;
 	struct emul_dev_ops *op;
@@ -1206,16 +1232,17 @@ int32_t hcall_add_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused u
 /**
  * @brief Remove an emulated device in hypervisor.
  *
- * @param vm pointer to VM data structure
- * @param vmid ID of the VM
+ * @param vcpu Pointer to vCPU that initiates the hypercall
+ * @param target_vm Pointer to target VM data structure
  * @param param guest physical address. This gpa points to data structure of
  *              acrn_emul_dev including information about PCI or legacy devices
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_remove_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_remove_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
 	struct acrn_emul_dev dev;
 	struct pci_vdev *vdev;

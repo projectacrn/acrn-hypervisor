@@ -599,13 +599,16 @@ As shown in :numref:`security-hir`, there are some restrictions for
 hypercall invocation in the hypervisor design:
 
 #. Hypercalls from ring 1~3 of any guest VM are not allowed. The
-   hypervisor must discard such hypercalls silently. Only ring-0
+   hypervisor must discard such hypercalls and inject ``#GP(0)`` instead. Only ring-0
    hypercalls from the guest VM are handled by the hypervisor.
 #. All the hypercalls (except world\_switch hypercall) must be called
    from the ring-0 driver of the Service VM.
    World\_switch Hypercall is used by the TIPC (Trusty IPC) driver to
    switch guest VM context between secure world and non-secure world.
    Further details will be discussed in the :ref:`secure_trusty` section.
+   When a vCPU issues an unpermitted hypercall, the hypervisor shall either
+   inject ``#UD`` (if the VM cannot issue hypercalls at all) or return ``-EINVAL``
+   (if the VM is allowed to issue hypercalls but not this specific one).
 #. For those hypercalls that may result in data inconsistent intra hypervisor
    when they are executed concurrently, such as ``hcall_create_vm()``
    ``hcll_destroy_vm()`` etc. spinlock is used to ensure these hypercalls
