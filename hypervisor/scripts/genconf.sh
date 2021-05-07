@@ -42,7 +42,7 @@ transform() {
         exit 1
     fi
     sed -i -e "s/YEAR/$year/" ${out}/scenarios/${scenario}/${1}
-    echo "${1} was generated using xsltproc succesfully."
+    echo "${1} was generated using xsltproc successfully."
 }
 
 transform vm_configurations.c
@@ -56,7 +56,7 @@ if which clang-format ; then
     | xargs clang-format --style=file -i --fallback-style=none
 else
     echo "clang-format cannot be found. The generated files under ${out}/scenarios/${scenario} are not formatted."
-    echo "clang-format is a tool to format the C code automatically and improve the code readibility."
+    echo "clang-format is a tool to format the C code automatically and improve the code readability."
     echo "Please install clang-format and format the generated files if those need to be included and reviewed."
 fi
 
