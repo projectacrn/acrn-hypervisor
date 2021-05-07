@@ -6,7 +6,9 @@
 
 #include <types.h>
 #include <logmsg.h>
+#include <asm/mmu.h>
 #include <asm/guest/virq.h>
+#include <asm/guest/ept.h>
 #include <asm/guest/vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/nested.h>
@@ -434,6 +436,43 @@ int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
 		}
 	} else {
 		vcpu_inject_ud(vcpu);
+	}
+
+	return 0;
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+bool check_vmx_permission(struct acrn_vcpu *vcpu)
+{
+	bool permit = true;
+
+	/* If this VM is not nVMX enabled, it implies that 'vmxon == false' */
+	if ((vcpu->arch.nested.vmxon == false)
+		|| ((vcpu_get_cr0(vcpu) & CR0_PE) == 0UL)
+		|| ((vcpu_get_rflags(vcpu) & RFLAGS_VM) != 0U)) {
+		/* We rely on hardware to check "IA32_EFER.LMA = 1 and CS.L = 0" */
+		vcpu_inject_ud(vcpu);
+		permit = false;
+	} else if (get_guest_cpl() != 0) {
+		vcpu_inject_gp(vcpu, 0U);
+		permit = false;
+	}
+
+	return permit;
+}
+
+/*
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	if (check_vmx_permission(vcpu)) {
+		vcpu->arch.nested.vmxon = false;
+
+		nested_vmx_result(VMsucceed, 0);
 	}
 
 	return 0;
