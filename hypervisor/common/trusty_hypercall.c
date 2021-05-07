@@ -24,7 +24,8 @@
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_world_switch(struct acrn_vcpu *vcpu)
+int32_t hcall_world_switch(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+		__unused uint64_t param1, __unused uint64_t param2)
 {
 	int32_t next_world_id = !(vcpu->arch.cur_context);
 	int32_t ret = -EPERM;
@@ -46,12 +47,12 @@ int32_t hcall_world_switch(struct acrn_vcpu *vcpu)
  * * The hypervisor needs to save current vCPU contexts (Normal World)
  *
  * @param vcpu Pointer to vCPU data structure
- * @param param guest physical address. This gpa points to
- *              trusty_boot_param structure
+ * @param param1 guest physical address. This gpa points to trusty_boot_param structure
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
+int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+		uint64_t param1, __unused uint64_t param2)
 {
 	int32_t ret = -EFAULT;
 
@@ -60,7 +61,7 @@ int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 		&& (vcpu->arch.cur_context == NORMAL_WORLD)) {
 		struct trusty_boot_param boot_param;
 
-		if (copy_from_gpa(vcpu->vm, &boot_param, param, sizeof(boot_param)) == 0) {
+		if (copy_from_gpa(vcpu->vm, &boot_param, param1, sizeof(boot_param)) == 0) {
 			if (initialize_trusty(vcpu, &boot_param)) {
 				vcpu->vm->sworld_control.flag.active = 1UL;
 				ret = 0;
@@ -80,7 +81,8 @@ int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu)
+int32_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+		__unused uint64_t param1, __unused uint64_t param2)
 {
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;

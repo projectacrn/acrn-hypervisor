@@ -11,10 +11,16 @@ power management, and secure world switch.
 
 There are some restrictions for hypercall and upcall:
 
+#. Only specific VMs (currently the Service VM and the VM with trusty enabled)
+   can invoke hypercalls. A VM that cannot invoke hypercalls will get ``#UD``
+   (i.e. invalid opcode exception).
 #. Only ring 0 hypercalls from the guest VM are handled by the hypervisor;
-   otherwise, the hypervisor will inject GP to the Guest VM.
-#. All the hypercalls (except secure world hypercalls) must be called from the Service VM;
-   otherwise, the hypervisor will inject UD to the Guest VM.
+   otherwise, the hypervisor will inject ``#GP(0)`` (i.e. generation protection
+   exception with error code ``0``) to the Guest VM.
+#. Each VM is permitted to invoke a certain subset of hypercalls. Currently a VM
+   with trusty enabled is allowed to invoke trusty hypercalls, and the Service
+   VM is allowed to invoke the other hypercalls. A VM that invokes an
+   unpermitted hypercall will get the return value ``-EINVAL``.
    see :ref:`secure-hypervisor-interface` for a detailed description.
 #. The hypervisor needs to protect the critical resources such as global VM and VCPU structures
    for VM and VCPU management hypercalls.

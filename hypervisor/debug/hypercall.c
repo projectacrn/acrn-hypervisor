@@ -17,16 +17,18 @@
 /**
  * @brief Execute profiling operation
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 profiling command to be executed
  * @param param2 guest physical address. This gpa points to
  *             data structure required by each command
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_profiling_ops(struct acrn_vm *vm, __unused struct acrn_vm *target_vm, uint64_t param1, uint64_t param2)
+int32_t hcall_profiling_ops(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+		uint64_t param1, uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret;
 	uint64_t cmd = param1;
 
@@ -70,16 +72,17 @@ int32_t hcall_profiling_ops(struct acrn_vm *vm, __unused struct acrn_vm *target_
 /**
  * @brief Setup a share buffer for a VM.
  *
- * @param vm Pointer to VM data structure
+ * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 guest physical address. This gpa points to
  *              struct sbuf_setup_param
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_setup_sbuf(struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+int32_t hcall_setup_sbuf(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	struct sbuf_setup_param ssp;
 	uint64_t *hva;
 
@@ -97,18 +100,19 @@ int32_t hcall_setup_sbuf(struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
 }
 
 /**
-  * @brief Setup the hypervisor NPK log.
-  *
-  * @param vm Pointer to VM data structure
-  * @param param1 guest physical address. This gpa points to
-  *              struct hv_npk_log_param
-  *
-  * @pre Pointer vm shall point to SOS_VM
-  * @return 0 on success, non-zero on error.
-  */
-int32_t hcall_setup_hv_npk_log(struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+ * @brief Setup the hypervisor NPK log.
+ *
+ * @param vcpu Pointer to vCPU that initiates the hypercall
+ * @param param1 guest physical address. This gpa points to
+ *              struct hv_npk_log_param
+ *
+ * @pre is_sos_vm(vcpu->vm)
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_setup_hv_npk_log(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	struct hv_npk_log_param npk_param;
 
 	if (copy_from_gpa(vm, &npk_param, param1, sizeof(npk_param)) != 0) {
@@ -123,16 +127,16 @@ int32_t hcall_setup_hv_npk_log(struct acrn_vm *vm, __unused struct acrn_vm *targ
 /**
  * @brief Get hardware related info
  *
- * @param vm Pointer to vm data structure
- * @param param Guest physical address pointing to struct acrn_hw_info
+ * @param vcpu Pointer to vCPU that initiates the hypercall
+ * @param param1 Guest physical address pointing to struct acrn_hw_info
  *
- * @pre vm shall point to SOS_VM
+ * @pre is_sos_vm(vcpu->vm)
  * @pre param1 shall be a valid physical address
  *
  * @retval 0 on success
  * @retval -1 in case of error
  */
-int32_t hcall_get_hw_info(struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+int32_t hcall_get_hw_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
 	struct acrn_hw_info hw_info;
@@ -140,5 +144,5 @@ int32_t hcall_get_hw_info(struct acrn_vm *vm, __unused struct acrn_vm *target_vm
 	(void)memset((void *)&hw_info, 0U, sizeof(hw_info));
 
 	hw_info.cpu_num = get_pcpu_nums();
-	return copy_to_gpa(vm, &hw_info, param1, sizeof(hw_info));
+	return copy_to_gpa(vcpu->vm, &hw_info, param1, sizeof(hw_info));
 }

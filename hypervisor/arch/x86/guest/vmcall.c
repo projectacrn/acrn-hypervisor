@@ -16,8 +16,15 @@
 #include <logmsg.h>
 
 struct hc_dispatch {
-	/* handler(struct acrn_vm *sos_vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2) */
-	int32_t (*handler)(struct acrn_vm *, struct acrn_vm *, uint64_t, uint64_t);
+	int32_t (*handler)(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
+
+	/* The permission_flags is a bitmap of guest flags indicating whether a VM can invoke this hypercall:
+	 *
+	 * - If permission_flags == 0UL (which is the default value), this hypercall can only be invoked by the SOS.
+	 * - Otherwise, this hypercall can only be invoked by a VM whose guest flags have ALL set bits in
+	 *   permission_flags.
+	 */
+	uint64_t permission_flags;
 };
 
 /* VM Dispatch table for Exit condition handling */
@@ -85,8 +92,19 @@ static const struct hc_dispatch hc_dispatch_table[] = {
 	[HC_IDX(HC_PROFILING_OPS)] = {
 		.handler = hcall_profiling_ops},
 	[HC_IDX(HC_GET_HW_INFO)] = {
-		.handler = hcall_get_hw_info}
+		.handler = hcall_get_hw_info},
+	[HC_IDX(HC_INITIALIZE_TRUSTY)] = {
+		.handler = hcall_initialize_trusty,
+		.permission_flags = GUEST_FLAG_SECURE_WORLD_ENABLED},
+	[HC_IDX(HC_WORLD_SWITCH)] = {
+		.handler = hcall_world_switch,
+		.permission_flags = GUEST_FLAG_SECURE_WORLD_ENABLED},
+	[HC_IDX(HC_SAVE_RESTORE_SWORLD_CTX)] = {
+		.handler = hcall_save_restore_sworld_ctx,
+		.permission_flags = GUEST_FLAG_SECURE_WORLD_ENABLED},
 };
+
+#define GUEST_FLAGS_ALLOWING_HYPERCALLS GUEST_FLAG_SECURE_WORLD_ENABLED
 
 struct acrn_vm *parse_target_vm(struct acrn_vm *sos_vm, uint64_t hcall_id, uint64_t param1, __unused uint64_t param2)
 {
@@ -139,32 +157,43 @@ struct acrn_vm *parse_target_vm(struct acrn_vm *sos_vm, uint64_t hcall_id, uint6
 	return target_vm;
 }
 
-static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
+static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 {
 	int32_t ret = -EINVAL;
-	struct hc_dispatch *dispatch = NULL;
-	struct acrn_vm *sos_vm = vcpu->vm;
-	/* hypercall ID from guest*/
-	uint64_t hcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
-	/* hypercall param1 from guest*/
-	uint64_t param1 = vcpu_get_gpreg(vcpu, CPU_REG_RDI);
-	/* hypercall param2 from guest*/
-	uint64_t param2 = vcpu_get_gpreg(vcpu, CPU_REG_RSI);
-	struct acrn_vm *target_vm = parse_target_vm(sos_vm, hcall_id, param1, param2);
+	struct acrn_vm *vm = vcpu->vm;
+	uint64_t guest_flags = get_vm_config(vm->vm_id)->guest_flags;  /* hypercall ID from guest */
+	uint64_t hcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);  /* hypercall ID from guest */
 
-	if (((target_vm == sos_vm)
-			|| (((target_vm != NULL) && (target_vm != sos_vm) && is_postlaunched_vm(target_vm))))
-			&& (HC_IDX(hcall_id) < ARRAY_SIZE(hc_dispatch_table))) {
+	if (HC_IDX(hcall_id) < ARRAY_SIZE(hc_dispatch_table)) {
+		const struct hc_dispatch *dispatch = &(hc_dispatch_table[HC_IDX(hcall_id)]);
+		uint64_t permission_flags = dispatch->permission_flags;
 
-		/* Calculate dispatch table entry */
-		dispatch = (struct hc_dispatch *)(hc_dispatch_table + HC_IDX(hcall_id));
 		if (dispatch->handler != NULL) {
-			get_vm_lock(target_vm);
-			ret = dispatch->handler(sos_vm, target_vm, param1, param2);
-			put_vm_lock(target_vm);
-		}
+			uint64_t param1 = vcpu_get_gpreg(vcpu, CPU_REG_RDI);  /* hypercall param1 from guest */
+			uint64_t param2 = vcpu_get_gpreg(vcpu, CPU_REG_RSI);  /* hypercall param2 from guest */
 
+			if ((permission_flags == 0UL) && is_sos_vm(vm)) {
+				/* A permission_flags of 0 indicates that this hypercall is for SOS to manage
+				 * post-launched VMs.
+				 */
+				struct acrn_vm *target_vm = parse_target_vm(vm, hcall_id, param1, param2);
+
+				if ((target_vm != NULL) && !is_prelaunched_vm(target_vm)) {
+					get_vm_lock(target_vm);
+					ret = dispatch->handler(vcpu, target_vm, param1, param2);
+					put_vm_lock(target_vm);
+				}
+			} else if ((permission_flags != 0UL) &&
+					((guest_flags & permission_flags) == permission_flags)) {
+				ret = dispatch->handler(vcpu, vcpu->vm, param1, param2);
+			} else {
+				/* The vCPU is not allowed to invoke the given hypercall. Keep `ret` as -EINVAL and no
+				 * further actions required.
+				 */
+			}
+		}
 	}
+
 	return ret;
 }
 
@@ -179,25 +208,27 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	struct acrn_vm *vm = vcpu->vm;
 	/* hypercall ID from guest*/
 	uint64_t hypcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
+	uint64_t guest_flags = get_vm_config(vm->vm_id)->guest_flags;
 
-	if (!is_hypercall_from_ring0()) {
-		vcpu_inject_gp(vcpu, 0U);
-		ret = -EACCES;
-	} else if (hypcall_id == HC_WORLD_SWITCH) {
-		ret = hcall_world_switch(vcpu);
-	} else if (hypcall_id == HC_INITIALIZE_TRUSTY) {
-		/* hypercall param1 from guest*/
-		uint64_t param1 = vcpu_get_gpreg(vcpu, CPU_REG_RDI);
-
-		ret = hcall_initialize_trusty(vcpu, param1);
-	} else if (hypcall_id == HC_SAVE_RESTORE_SWORLD_CTX) {
-		ret = hcall_save_restore_sworld_ctx(vcpu);
-	} else if (is_sos_vm(vm)) {
-		/* Dispatch the hypercall handler */
-		ret = dispatch_sos_hypercall(vcpu);
-	} else  {
+	/*
+	 * The following permission checks are applied to hypercalls.
+	 *
+	 * 1. Only SOS and VMs with specific guest flags (referred to as 'allowed VMs' hereinafter) can invoke
+	 *    hypercalls by executing the `vmcall` instruction. Attempts to execute the `vmcall` instruction in the
+	 *    other VMs will trigger #UD.
+	 * 2. Attempts to execute the `vmcall` instruction from ring 1, 2 or 3 in an allowed VM will trigger #GP(0).
+	 * 3. An allowed VM is permitted to only invoke some of the supported hypercalls depending on its load order and
+	 *    guest flags. Attempts to invoke an unpermitted hypercall will make a vCPU see -EINVAL as the return
+	 *    value. No exception is triggered in this case.
+	 */
+	if (!is_sos_vm(vm) && ((guest_flags & GUEST_FLAGS_ALLOWING_HYPERCALLS) == 0UL)) {
 		vcpu_inject_ud(vcpu);
 		ret = -ENODEV;
+	} else if (!is_hypercall_from_ring0()) {
+		vcpu_inject_gp(vcpu, 0U);
+		ret = -EACCES;
+	} else {
+		ret = dispatch_hypercall(vcpu);
 	}
 
 	if ((ret != -EACCES) && (ret != -ENODEV)) {
