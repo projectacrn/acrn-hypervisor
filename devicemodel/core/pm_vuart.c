@@ -46,6 +46,7 @@ enum node_type_t {
 	MAX_NODE_CNT,
 };
 
+static bool allow_trigger_s5;
 static uint8_t node_index = MAX_NODE_CNT;
 static char node_path[MAX_NODE_PATH];
 static int node_fd = -1;
@@ -265,11 +266,13 @@ static int set_tty_attr(int fd, int speed)
 	return 0;
 }
 
-int pm_by_vuart_init(struct vmctx *ctx)
+int pm_by_vuart_init(struct vmctx *ctx, bool trigger_s5)
 {
 	assert(node_index < MAX_NODE_CNT);
 
-	pr_info("%s idx: %d, path: %s\r\n", __func__, node_index, node_path);
+	allow_trigger_s5 = trigger_s5;
+	pr_info("%s: allow_trigger_s5: %u, idx: %u, path: %s\r\n",
+			__func__, trigger_s5, node_index, node_path);
 
 	if (node_index == PTY_NODE)
 		node_fd = pty_open_virtual_uart(node_path);
@@ -290,7 +293,7 @@ int pm_by_vuart_init(struct vmctx *ctx)
 		return -1;
 	}
 
-	if (start_pm_monitor_thread()) {
+	if (trigger_s5 && start_pm_monitor_thread()) {
 		close(node_fd);
 		node_fd = -1;
 		return -1;
@@ -301,12 +304,14 @@ int pm_by_vuart_init(struct vmctx *ctx)
 
 void pm_by_vuart_deinit(struct vmctx *ctx)
 {
-	pthread_cancel(pm_monitor_thread);
-	pthread_join(pm_monitor_thread, NULL);
+	if (allow_trigger_s5) {
+		pthread_cancel(pm_monitor_thread);
+		pthread_join(pm_monitor_thread, NULL);
+		close(socket_fd);
+		socket_fd = -1;
+	}
 	close(node_fd);
 	node_fd = -1;
-	close(socket_fd);
-	socket_fd = -1;
 }
 
 /* called when acrn-dm receive stop command */

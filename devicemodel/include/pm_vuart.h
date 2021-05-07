@@ -12,7 +12,7 @@
 #define	__PM_VUART__
 
 int parse_pm_by_vuart(const char *opts);
-int pm_by_vuart_init(struct vmctx *ctx);
+int pm_by_vuart_init(struct vmctx *ctx, bool trigger_s5);
 void pm_by_vuart_deinit(struct vmctx *ctx);
 
 #endif
