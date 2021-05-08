@@ -25,17 +25,16 @@
 
 struct mmio_dev {
 	char name[16];
+	struct acrn_mmiodev dev;
 };
 
 #define MAX_MMIO_DEV_NUM	2
 
 static struct mmio_dev mmio_devs[MAX_MMIO_DEV_NUM];
+static uint32_t mmio_dev_idx = 0U;
 
 struct mmio_dev_ops {
 	char *name;
-	uint64_t base_gpa;
-	uint64_t base_hpa;
-	uint64_t size;
 	int (*init)(struct vmctx *, struct acrn_mmiodev *);
 	void (*deinit)(struct vmctx *, struct acrn_mmiodev *);
 };
@@ -65,11 +64,19 @@ int mmio_dev_alloc_gpa_resource32(uint32_t *addr, uint32_t size_in)
 
 int parse_pt_acpidev(char *opt)
 {
-	int err = -EINVAL;
+	int err = 0;
+
+	if (mmio_dev_idx >= MAX_MMIO_DEV_NUM) {
+		pr_err("MMIO dev number exceed MAX_MMIO_DEV_NUM!!!\n");
+		return -EINVAL;
+	}
+	/* TODO: support acpi dev framework, remove these TPM hard code */
 	if (strncmp(opt, "MSFT0101", 8) == 0) {
-		strncpy(mmio_devs[0].name, "MSFT0101", 8);
+		strncpy(mmio_devs[mmio_dev_idx].name, "MSFT0101", 8);
+		mmio_devs[mmio_dev_idx].dev.base_hpa = 0xFED40000UL;
+		mmio_devs[mmio_dev_idx].dev.size = 0x00005000UL;
+		mmio_dev_idx++;
 		pt_tpm2 = true;
-		err = 0;
 	}
 
 	return err;
@@ -78,16 +85,22 @@ int parse_pt_acpidev(char *opt)
 int parse_pt_mmiodev(char *opt)
 {
 
-	int err = -EINVAL;
+	int err = 0;
 	uint64_t base_hpa, size;
 	char *cp;
+
+	if (mmio_dev_idx >= MAX_MMIO_DEV_NUM) {
+		pr_err("MMIO dev number exceed MAX_MMIO_DEV_NUM!!!\n");
+		return -EINVAL;
+	}
 
 	if((!dm_strtoul(opt, &cp, 16, &base_hpa) && *cp == ',') &&
 		(!dm_strtoul(cp + 1, &cp, 16, &size))) {
 		pr_dbg("%s pt mmiodev base: 0x%lx, size: 0x%lx\n", __func__, base_hpa, size);
-		strncpy(mmio_devs[1].name, pt_mmiodev.name, 8);
-		pt_mmiodev.base_hpa = base_hpa;
-		pt_mmiodev.size = size;
+		strncpy(mmio_devs[mmio_dev_idx].name, pt_mmiodev.name, 8);
+		mmio_devs[mmio_dev_idx].dev.base_hpa = base_hpa;
+		mmio_devs[mmio_dev_idx].dev.size = size;
+		mmio_dev_idx++;
 	} else {
 		pr_err("%s, %s invalid, please check!\n", __func__, opt);
 	}
@@ -108,33 +121,21 @@ static struct mmio_dev_ops *mmio_dev_finddev(char *name)
 	return NULL;
 }
 
-int init_mmio_dev(struct vmctx *ctx, struct mmio_dev_ops *ops)
+int init_mmio_dev(struct vmctx *ctx, struct mmio_dev_ops *ops, struct acrn_mmiodev *mmiodev)
 {
 	int ret;
 	uint32_t base;
 
-	struct acrn_mmiodev mmiodev = {
-		.base_hpa = ops->base_hpa,
-		.size = ops->size,
-	};
-
-	ret = mmio_dev_alloc_gpa_resource32(&base, ops->size);
+	ret = mmio_dev_alloc_gpa_resource32(&base, mmiodev->size);
 	if (ret < 0)
 		return ret;
-	mmiodev.base_gpa = base;
-	ops->base_gpa = base;
-	return ops->init(ctx, &mmiodev);
+	mmiodev->base_gpa = base;
+	return ops->init(ctx, mmiodev);
 }
 
-void deinit_mmio_dev(struct vmctx *ctx, struct mmio_dev_ops *ops)
+void deinit_mmio_dev(struct vmctx *ctx, struct mmio_dev_ops *ops,  struct acrn_mmiodev *mmiodev)
 {
-	struct acrn_mmiodev mmiodev = {
-		.base_gpa = ops->base_gpa,
-		.base_hpa = ops->base_hpa,
-		.size = ops->size,
-	};
-
-	ops->deinit(ctx, &mmiodev);
+	ops->deinit(ctx, mmiodev);
 }
 
 int init_mmio_devs(struct vmctx *ctx)
@@ -144,8 +145,10 @@ int init_mmio_devs(struct vmctx *ctx)
 
 	for (i = 0; i < MAX_MMIO_DEV_NUM; i++) {
 		ops = mmio_dev_finddev(mmio_devs[i].name);	
-		if (ops != NULL)
-			err = init_mmio_dev(ctx, ops);
+		if (ops != NULL) {
+			err = init_mmio_dev(ctx, ops, &mmio_devs[i].dev);
+			pr_notice("mmiodev[%d] hpa:0x%x gpa:0x%x size:0x%x err:%d\n", i, mmio_devs[i].dev.base_hpa,  mmio_devs[i].dev.base_gpa,  mmio_devs[i].dev.size, err);
+		}
 
 		if (err != 0)
 			goto init_mmio_devs_fail;
@@ -157,7 +160,7 @@ init_mmio_devs_fail:
 	for (; i>=0; i--) {
 		ops = mmio_dev_finddev(mmio_devs[i].name);	
 		if (ops != NULL)
-			deinit_mmio_dev(ctx, ops);
+			deinit_mmio_dev(ctx, ops, &mmio_devs[i].dev);
 	}
 
 	return err;
@@ -171,7 +174,7 @@ void deinit_mmio_devs(struct vmctx *ctx)
 	for (i = 0; i < MAX_MMIO_DEV_NUM; i++) {
 		ops = mmio_dev_finddev(mmio_devs[i].name);	
 		if (ops != NULL)
-			deinit_mmio_dev(ctx, ops);
+			deinit_mmio_dev(ctx, ops, &mmio_devs[i].dev);
 
 	}
 }
@@ -191,16 +194,25 @@ struct mmio_dev_ops tpm2 = {
 	/* ToDo: we may allocate the gpa MMIO resource in a reserved MMIO region
 	 * rether than hard-coded here.
 	 */
-	.base_hpa	= 0xFED40000UL,
-	.size		= 0x00005000UL,
 	.init		= init_pt_mmiodev,
 	.deinit		= deinit_pt_mmiodev,
 };
 DEFINE_MMIO_DEV(tpm2);
 
+/* @pre (pt_tpm2 == true) */
 uint64_t get_mmio_dev_tpm2_base_gpa(void)
 {
-	return tpm2.base_gpa;
+	int i;
+	uint64_t base_gpa = 0UL;
+
+	for (i = 0; i < mmio_dev_idx; i++) {
+		if (!strcmp(mmio_devs[i].name, "MSFT0101")) {
+			base_gpa = mmio_devs[i].dev.base_gpa;
+			break;
+		}
+	}
+
+	return base_gpa;
 }
 
 struct mmio_dev_ops pt_mmiodev = {
