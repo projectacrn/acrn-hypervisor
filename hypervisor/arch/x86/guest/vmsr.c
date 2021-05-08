@@ -316,7 +316,7 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 /**
  * @pre vcpu != NULL
  */
-static void init_msr_area(struct acrn_vcpu *vcpu)
+static void prepare_auto_msr_area (struct acrn_vcpu *vcpu)
 {
 	struct acrn_vm_config *cfg = get_vm_config(vcpu->vm->vm_id);
 	uint16_t vcpu_clos = cfg->clos[vcpu->vcpu_id];
@@ -339,6 +339,27 @@ static void init_msr_area(struct acrn_vcpu *vcpu)
 		pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
 			vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
 	}
+}
+
+/**
+ * @pre vcpu != NULL
+ */
+void init_emulated_msrs(struct acrn_vcpu *vcpu)
+{
+	uint64_t val64 = 0UL;
+
+	/* MSR_IA32_FEATURE_CONTROL */
+	if (is_nvmx_configured(vcpu->vm)) {
+		/* currently support VMX outside SMX only */
+		val64 |= MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX;
+	}
+
+	val64 |= MSR_IA32_FEATURE_CONTROL_LOCK;
+	if (is_vsgx_supported(vcpu->vm->vm_id)) {
+		val64 |= MSR_IA32_FEATURE_CONTROL_SGX_GE;
+	}
+
+	vcpu_set_guest_msr(vcpu, MSR_IA32_FEATURE_CONTROL, val64);
 }
 
 /**
@@ -379,7 +400,10 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	pr_dbg("VMX_MSR_BITMAP: 0x%016lx ", value64);
 
 	/* Initialize the MSR save/store area */
-	init_msr_area(vcpu);
+	prepare_auto_msr_area (vcpu);
+
+	/* Setup initial value for emulated MSRs */
+	init_emulated_msrs(vcpu);
 }
 
 static int32_t write_pat_msr(struct acrn_vcpu *vcpu, uint64_t value)
@@ -507,10 +531,7 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	case MSR_IA32_FEATURE_CONTROL:
 	{
-		v = MSR_IA32_FEATURE_CONTROL_LOCK;
-		if (is_vsgx_supported(vcpu->vm->vm_id)) {
-			v |= MSR_IA32_FEATURE_CONTROL_SGX_GE;
-		}
+		v = vcpu_get_guest_msr(vcpu, MSR_IA32_FEATURE_CONTROL);
 		break;
 	}
 	case MSR_IA32_MCG_CAP:
