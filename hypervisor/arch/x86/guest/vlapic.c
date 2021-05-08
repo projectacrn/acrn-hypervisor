@@ -521,7 +521,8 @@ static void apicv_advanced_accept_intr(struct acrn_vlapic *vlapic, uint32_t vect
 		bitmap_set_lock(ACRN_REQUEST_EVENT, &vcpu->arch.pending_req);
 
 		if (get_pcpu_id() != pcpuid_from_vcpu(vcpu)) {
-			apicv_trigger_pi_anv(pcpuid_from_vcpu(vcpu), (uint32_t)vcpu->arch.pid.control.bits.nv);
+			/* WA: Interrupt the target CPU and let it do PI with VMENTRY */
+			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 		}
 	}
 }
