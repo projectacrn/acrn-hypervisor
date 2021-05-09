@@ -42,6 +42,7 @@ static inline uint64_t apic_access_offset(uint64_t qual)
 }
 void init_vmcs(struct acrn_vcpu *vcpu);
 void load_vmcs(const struct acrn_vcpu *vcpu);
+void init_host_state(void);
 
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu);
 #endif /* ASSEMBLER */

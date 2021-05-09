@@ -567,6 +567,10 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 		init_guest_pm(vm);
 
+		if (is_nvmx_configured(vm)) {
+			init_nested_vmx(vm);
+		}
+
 		if (!is_lapic_pt_configured(vm)) {
 			vpic_init(vm);
 		}
