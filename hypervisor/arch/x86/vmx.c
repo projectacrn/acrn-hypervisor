@@ -109,6 +109,28 @@ void exec_vmptrld(void *addr)
 		: "cc", "memory");
 }
 
+/*
+ * @pre vcpu != NULL
+ */
+void load_va_vmcs(const uint8_t *vmcs_va)
+{
+	uint64_t vmcs_pa;
+
+	vmcs_pa = hva2hpa(vmcs_va);
+	exec_vmptrld((void *)&vmcs_pa);
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+void clear_va_vmcs(const uint8_t *vmcs_va)
+{
+	uint64_t vmcs_pa;
+
+	vmcs_pa = hva2hpa(vmcs_va);
+	exec_vmclear((void *)&vmcs_pa);
+}
+
 /**
  * only run on current pcpu
  */

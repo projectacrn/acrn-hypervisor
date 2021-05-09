@@ -80,7 +80,7 @@ static void init_guest_state(struct acrn_vcpu *vcpu)
 			ctx->run_ctx.cr4 & ~(CR4_VMXE | CR4_SMXE | CR4_MCE));
 }
 
-static void init_host_state(void)
+void init_host_state(void)
 {
 	uint16_t value16;
 	uint64_t value64;

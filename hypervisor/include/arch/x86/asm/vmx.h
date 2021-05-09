@@ -61,6 +61,10 @@
 #define	VMX_EOI_EXIT2_HIGH			0x00002021U
 #define	VMX_EOI_EXIT3_FULL			0x00002022U
 #define	VMX_EOI_EXIT3_HIGH			0x00002023U
+#define VMX_VMREAD_BITMAP_FULL			0x00002026U
+#define VMX_VMREAD_BITMAP_HIGH			0x00002027U
+#define VMX_VMWRITE_BITMAP_FULL			0x00002028U
+#define VMX_VMWRITE_BITMAP_HIGH			0x00002029U
 
 #define VMX_XSS_EXITING_BITMAP_FULL		0x0000202CU
 #define VMX_XSS_EXITING_BITMAP_HIGH		0x0000202DU
@@ -443,6 +447,8 @@ void exec_vmwrite64(uint32_t field_full, uint64_t value);
 
 void exec_vmclear(void *addr);
 void exec_vmptrld(void *addr);
+void clear_va_vmcs(const uint8_t *vmcs_va);
+void load_va_vmcs(const uint8_t *vmcs_va);
 
 void init_cr0_cr4_flexible_bits(void);
 bool is_valid_cr0_cr4(uint64_t cr0, uint64_t cr4);
