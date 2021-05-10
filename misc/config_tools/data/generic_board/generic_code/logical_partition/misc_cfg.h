@@ -38,10 +38,10 @@
 
 #define VM0_BOOT_ARGS                                                                                                  \
 	"rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M "      \
-	"consoleblank=0 tsc=reliable reboot=acpi"
+	"consoleblank=0 tsc=reliable reboot=acpi "
 #define VM1_BOOT_ARGS                                                                                                  \
 	"rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M "      \
-	"consoleblank=0 tsc=reliable reboot=acpi"
+	"consoleblank=0 tsc=reliable reboot=acpi "
 #define VM0_PT_INTX_NUM 0U
 
 #endif /* MISC_CFG_H */
