@@ -1002,6 +1002,7 @@ virtio_net_teardown(void *param)
 	} else
 		pr_err("net->tapfd is -1!\n");
 
+	virtio_reset_dev(&net->base);
 	free(net);
 }
 
