@@ -128,11 +128,13 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 				base = 0UL;
 			}
 		}
-	} else if (is_pci_io_bar(vbar)) {
+
+		if (is_pci_io_bar(vbar)) {
 		/* Because guest driver may write to upper 16-bits of PIO BAR and expect that should have no effect,
 		 * SO PIO BAR base may bigger than 0xffff after calculation, should mask the upper 16-bits.
 		 */
-		base &= 0xffffUL;
+			base &= 0xffffUL;
+		}
 	}
 
 	/* TODO: 1. check whether the address locate in the MMIO windows 2. base must aligned with size */
