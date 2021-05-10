@@ -8,6 +8,8 @@ import lxml.etree
 from extractors.helpers import add_child, get_node
 
 from cpuparser import parse_cpuid
+from acpiparser import parse_rtct
+import acpiparser.rtct
 
 def extract_topology(root_node, caches_node):
     threads = root_node.xpath("//processors//*[cpu_id]")
@@ -48,11 +50,11 @@ def extract_topology(root_node, caches_node):
                 else:
                     leaf_10 = None
                 if leaf_10 is not None:
-                    cap = add_child(n, "capability", None, kind="cat")
+                    cap = add_child(n, "capability", None, id="CAT")
                     add_child(cap, "capacity_mask_length", str(leaf_10.capacity_mask_length))
                     add_child(cap, "clos_number", str(leaf_10.clos_number))
                     if leaf_10.code_and_data_prioritization == 1:
-                        add_child(n, "capability", None, kind="cdp")
+                        add_child(n, "capability", None, id="CDP")
 
             add_child(get_node(n, "processors"), "processor", get_node(thread, "apic_id/text()"))
 
@@ -65,7 +67,36 @@ def extract_topology(root_node, caches_node):
         return (level, id, type)
     caches_node[:] = sorted(caches_node, key=getkey)
 
+def extract_tcc_capabilities(caches_node):
+    try:
+        rtct = parse_rtct()
+        if rtct.version == 1:
+            for entry in rtct.entries:
+                if entry.type == acpiparser.rtct.ACPI_RTCT_V1_TYPE_SoftwareSRAM:
+                    cache_node = get_node(caches_node, f"cache[@level='{entry.cache_level}' and processors/processor='{hex(entry.apic_id_tbl[0])}']")
+                    if cache_node is None:
+                        logging.warning(f"Cannot find the level {entry.cache_level} cache of physical processor with apic ID {entry.apic_id_tbl[0]}")
+                        continue
+                    cap = add_child(cache_node, "capability", None, id="Software SRAM")
+                    add_child(cap, "start", "0x{:08x}".format(entry.base))
+                    add_child(cap, "end", "0x{:08x}".format(entry.base + entry.size - 1))
+                    add_child(cap, "size", str(entry.size))
+        elif rtct.version == 2:
+            for entry in rtct.entries:
+                if entry.type == acpiparser.rtct.ACPI_RTCT_V2_TYPE_SoftwareSRAM:
+                    cache_node = get_node(caches_node, f"cache[@level='{entry.level}' and @id='{hex(entry.cache_id)}']")
+                    if cache_node is None:
+                        logging.warning(f"Cannot find the level {entry.level} cache with cache ID {entry.cache_id}")
+                        continue
+                    cap = add_child(cache_node, "capability", None, id="Software SRAM")
+                    add_child(cap, "start", "0x{:08x}".format(entry.base))
+                    add_child(cap, "end", "0x{:08x}".format(entry.base + entry.size - 1))
+                    add_child(cap, "size", str(entry.size))
+    except FileNotFoundError:
+        pass
+
 def extract(board_etree):
     root_node = board_etree.getroot()
     caches_node = get_node(board_etree, "//caches")
     extract_topology(root_node, caches_node)
+    extract_tcc_capabilities(caches_node)

@@ -22,6 +22,8 @@
 
     <xsl:apply-templates select="config-data/acrn-config" />
 
+    <xsl:apply-templates select="allocation-data//ssram" />
+
     <xsl:value-of select="acrn:include-guard-end('MISC_CFG_H')" />
   </xsl:template>
 
@@ -38,6 +40,12 @@
     <xsl:call-template name="vm_config_pci_dev_num" />
     <xsl:call-template name="vm_boot_args" />
     <xsl:call-template name="vm_pt_intx_num" />
+  </xsl:template>
+
+  <xsl:template match="allocation-data//ssram">
+    <xsl:value-of select="acrn:define('PRE_RTVM_SW_SRAM_ENABLED', 1, '')" />
+    <xsl:value-of select="acrn:define('PRE_RTVM_SW_SRAM_BASE_GPA', start_gpa, 'UL')" />
+    <xsl:value-of select="acrn:define('PRE_RTVM_SW_SRAM_END_GPA', end_gpa, 'UL')" />
   </xsl:template>
 
 <xsl:template name="sos_rootfs">
