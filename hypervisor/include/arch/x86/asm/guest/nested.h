@@ -87,6 +87,8 @@ union value_64 {
 #define VMXERR_VMPTRLD_INVALID_ADDRESS		(9)
 #define VMXERR_VMPTRLD_INCORRECT_VMCS_REVISION_ID (10)
 #define VMXERR_VMPTRLD_VMXON_POINTER		(11)
+#define VMXERR_UNSUPPORTED_COMPONENT		(12)
+#define VMXERR_VMWRITE_RO_COMPONENT		(13)
 #define VMXERR_VMXON_IN_VMX_ROOT_OPERATION	(15)
 
 /*
@@ -313,6 +315,8 @@ int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t vmread_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu);
 
 #ifdef CONFIG_NVMX_ENABLED
 struct acrn_nested {
@@ -323,6 +327,8 @@ struct acrn_nested {
 	uint64_t current_vmcs12_ptr;	/* GPA */
 	uint64_t vmxon_ptr;		/* GPA */
 	bool vmxon;		/* To indicate if vCPU entered VMX operation */
+	bool host_state_dirty;	/* To indicate need to merge VMCS12 host-state fields to VMCS01 */
+	bool gpa_field_dirty;
 } __aligned(PAGE_SIZE);
 
 void init_nested_vmx(__unused struct acrn_vm *vm);
