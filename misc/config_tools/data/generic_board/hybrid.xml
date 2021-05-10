@@ -36,6 +36,7 @@
                 <CLOS_MASK>0xfff</CLOS_MASK>
                 <MBA_DELAY>0</MBA_DELAY>
             </RDT>
+            <NVMX_ENABLED>n</NVMX_ENABLED>
             <HYPERV_ENABLED>y</HYPERV_ENABLED>
             <IOMMU_ENFORCE_SNP>n</IOMMU_ENFORCE_SNP>
             <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
