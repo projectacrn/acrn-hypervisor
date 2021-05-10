@@ -38,8 +38,8 @@ enum key_type {
 	KEY_LONG,
 };
 
-int get_uptime_string(char newuptime[24], int *hours);
-int get_current_time_long(char buf[32]);
+int get_uptime_string(char *newuptime, int *hours);
+int get_current_time_long(char *buf);
 unsigned long long get_uptime(void);
 char *generate_event_id(const char *seed1, size_t slen1, const char *seed2,
 			size_t slen2, enum key_type type);
