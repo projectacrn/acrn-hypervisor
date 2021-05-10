@@ -729,6 +729,8 @@ int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
 				nested_vmx_result(VMfailInvalid, 0);
 			} else {
 				vcpu->arch.nested.vmxon = true;
+				vcpu->arch.nested.host_state_dirty = false;
+				vcpu->arch.nested.gpa_field_dirty = false;
 				vcpu->arch.nested.vmxon_ptr = vmptr_gpa;
 				vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
 
@@ -772,11 +774,109 @@ int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	if (check_vmx_permission(vcpu)) {
 		vcpu->arch.nested.vmxon = false;
+		vcpu->arch.nested.host_state_dirty = false;
+		vcpu->arch.nested.gpa_field_dirty = false;
 		vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
 		(void)memset(vcpu->arch.nested.vmcs02, 0U, PAGE_SIZE);
 		(void)memset(&vcpu->arch.nested.vmcs12, 0U, sizeof(struct acrn_vmcs12));
 
 		nested_vmx_result(VMsucceed, 0);
+	}
+
+	return 0;
+}
+
+/*
+ * Only VMCS fields of width 64-bit, 32-bit, and natural-width can be
+ * read-only. A value of 1 in bits [11:10] of these field encodings
+ * indicates a read-only field. ISDM Appendix B.
+ */
+static inline bool is_ro_vmcs_field(uint32_t field)
+{
+	const uint8_t w = VMX_VMCS_FIELD_WIDTH(field);
+	return (VMX_VMCS_FIELD_WIDTH_16 != w) && (VMX_VMCS_FIELD_TYPE(field) == 1U);
+}
+
+/*
+ * @brief emulate VMREAD instruction from L1
+ * @pre vcpu != NULL
+ */
+int32_t vmread_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	const uint32_t info = exec_vmread(VMX_INSTR_INFO);
+	uint64_t vmcs_value, gpa;
+	uint32_t vmcs_field;
+
+	if (check_vmx_permission(vcpu)) {
+		if (vcpu->arch.nested.current_vmcs12_ptr == INVALID_GPA) {
+			nested_vmx_result(VMfailInvalid, 0);
+		} else {
+			/* TODO: VMfailValid for invalid VMCS fields */
+			vmcs_field = (uint32_t)vcpu_get_gpreg(vcpu, VMX_II_REG2(info));
+			vmcs_value = vmcs12_read_field((uint64_t)&vcpu->arch.nested.vmcs12, vmcs_field);
+
+			/* Currently ACRN doesn't support 32bits L1 hypervisor, assuming operands are 64 bits */
+			if (VMX_II_IS_REG(info)) {
+				vcpu_set_gpreg(vcpu, VMX_II_REG1(info), vmcs_value);
+			} else {
+				gpa = get_vmx_memory_operand(vcpu, info);
+				(void)copy_to_gpa(vcpu->vm, &vmcs_value, gpa, 8U);
+			}
+
+			pr_dbg("vmcs_field: %x vmcs_value: %llx", vmcs_field, vmcs_value);
+			nested_vmx_result(VMsucceed, 0);
+		}
+	}
+
+	return 0;
+}
+
+/*
+ * @brief emulate VMWRITE instruction from L1
+ * @pre vcpu != NULL
+ */
+int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	const uint32_t info = exec_vmread(VMX_INSTR_INFO);
+	uint64_t vmcs_value, gpa;
+	uint32_t vmcs_field;
+
+	if (check_vmx_permission(vcpu)) {
+		if (vcpu->arch.nested.current_vmcs12_ptr == INVALID_GPA) {
+			nested_vmx_result(VMfailInvalid, 0);
+		} else {
+			/* TODO: VMfailValid for invalid VMCS fields */
+			vmcs_field = (uint32_t)vcpu_get_gpreg(vcpu, VMX_II_REG2(info));
+
+			if (is_ro_vmcs_field(vmcs_field) &&
+				((vcpu_get_guest_msr(vcpu, MSR_IA32_VMX_MISC) & (1UL << 29U)) == 0UL)) {
+				nested_vmx_result(VMfailValid, VMXERR_VMWRITE_RO_COMPONENT);
+			} else {
+				/* Currently not support 32bits L1 hypervisor, assuming operands are 64 bits */
+				if (VMX_II_IS_REG(info)) {
+					vmcs_value = vcpu_get_gpreg(vcpu, VMX_II_REG1(info));
+				} else {
+					gpa = get_vmx_memory_operand(vcpu, info);
+					(void)copy_from_gpa(vcpu->vm, &vmcs_value, gpa, 8U);
+				}
+
+				if (VMX_VMCS_FIELD_TYPE(vmcs_field) == VMX_VMCS_FIELD_TYPE_HOST) {
+					vcpu->arch.nested.host_state_dirty = true;
+				}
+
+				/*
+				 * For simplicity, gpa_field_dirty could be used for all VMCS fields that
+				 * are programmed by L1 hypervisor with a GPA address
+				 */
+				if (vmcs_field == VMX_MSR_BITMAP_FULL) {
+					vcpu->arch.nested.gpa_field_dirty = true;
+				}
+
+				pr_dbg("vmcs_field: %x vmcs_value: %llx", vmcs_field, vmcs_value);
+				vmcs12_write_field((uint64_t)&vcpu->arch.nested.vmcs12, vmcs_field, vmcs_value);
+				nested_vmx_result(VMsucceed, 0);
+			}
+		}
 	}
 
 	return 0;
