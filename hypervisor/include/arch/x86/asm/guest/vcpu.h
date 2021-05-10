@@ -27,6 +27,7 @@
 #include <asm/msr.h>
 #include <asm/cpu.h>
 #include <asm/guest/instr_emul.h>
+#include <asm/guest/nested.h>
 #include <asm/vmx.h>
 
 /**
@@ -172,7 +173,11 @@ enum reset_mode;
 
 #define NUM_WORLD_MSRS		2U
 #define NUM_COMMON_MSRS		22U
+#ifdef CONFIG_NVMX_ENABLED
+#define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS)
+#else
 #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
+#endif
 
 #define EOI_EXIT_BITMAP_SIZE	256U
 
