@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import sys
+import sys, os
 
 from acpiparser.apic import APIC
 from acpiparser.asf import ASF
@@ -29,4 +29,11 @@ parse_asf = make_parser('ASF!')
 parse_dsdt = make_parser('DSDT')
 parse_dmar = make_parser('DMAR')
 parse_facp = make_parser('FACP')
-parse_rtct = make_parser('RTCT')
+
+def parse_rtct(path=None):
+    if not path:
+        path = f"/sys/firmware/acpi/tables/RTCT"
+        if not os.path.exists(path):
+            path = f"/sys/firmware/acpi/tables/PTCT"
+    fn = getattr(sys.modules[f"acpiparser.rtct"], "RTCT")
+    return fn(path)

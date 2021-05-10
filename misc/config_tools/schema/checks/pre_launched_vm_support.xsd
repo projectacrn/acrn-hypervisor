@@ -36,4 +36,20 @@ or little cores are assigned, but not both.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="hv//PSRAM_ENABLED = 'n' or empty(vm[vm_type='PRE_RT_VM']) or
+		   every $cap in caches/cache[@level=3]/capability[@id='Software SRAM'] satisfies
+		   (compare($cap/end, '0x80000000') &lt; 0 or compare($cap/start, '0xf8000000') &gt;= 0)">
+    <xs:annotation acrn:severity="warning">
+      <xs:documentation>The physical software SRAM region shall not overlap with pre-defined regions in guest.
+
+When a pre-launched RT VM is enabled, the physical software SRAM is allocated to it at the same guest physical
+address. Thus it is assumed that the software SRAM region does not overlap with any pre-defined region in the
+pre-launched VM, such as the guest PCI hole which resides at 2G - 3.5G.
+
+This error cannot be fixed by tweaking the configurations. Report to _GitHub:
+https://github.com/projectacrn/acrn-hypervisor/issues if you meet this.</xs:documentation>
+
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
