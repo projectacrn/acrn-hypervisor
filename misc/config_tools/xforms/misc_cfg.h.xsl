@@ -41,7 +41,7 @@
   </xsl:template>
 
 <xsl:template name="sos_rootfs">
-  <xsl:value-of select="acrn:define('SOS_ROOTFS', concat($quot, 'root=', vm/board_private/rootfs[text()], $quot), '')" />
+  <xsl:value-of select="acrn:define('SOS_ROOTFS', concat($quot, 'root=', vm/board_private/rootfs[text()], ' ', $quot), '')" />
 </xsl:template>
 
 <xsl:template name="sos_serial_console">
@@ -52,10 +52,10 @@
     </xsl:if>
     <xsl:if test="$consoleport != ''">
       <xsl:if test="contains($consoleport, '/')">
-        <xsl:value-of select="concat($quot, 'console=', substring-after(substring-after($consoleport,'/'), '/'), $quot)" />
+        <xsl:value-of select="concat($quot, 'console=', substring-after(substring-after($consoleport,'/'), '/'), ' ', $quot)" />
       </xsl:if>
       <xsl:if test="not(contains($consoleport, '/'))">
-        <xsl:value-of select="concat($quot, 'console=', $consoleport, $quot)" />
+        <xsl:value-of select="concat($quot, 'console=', $consoleport, ' ', $quot)" />
       </xsl:if>
     </xsl:if>
   </xsl:variable>
@@ -97,7 +97,7 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
-  <xsl:value-of select="acrn:define('SOS_BOOTARGS_DIFF', concat($quot, $bootargs, ' ', $maxcpus, $quot), '')" />
+  <xsl:value-of select="acrn:define('SOS_BOOTARGS_DIFF', concat($quot, $bootargs, ' ', $maxcpus, ' ', $quot), '')" />
 </xsl:template>
 
 <xsl:template name="cpu_affinity">
@@ -196,7 +196,7 @@
     <xsl:if test="acrn:is-pre-launched-vm(vm_type)">
     <xsl:variable name="bootargs" select="normalize-space(os_config/bootargs)" />
       <xsl:if test="$bootargs">
-        <xsl:value-of select="acrn:define(concat('VM', @id, '_BOOT_ARGS'), concat($quot, $bootargs, $quot), '')" />
+        <xsl:value-of select="acrn:define(concat('VM', @id, '_BOOT_ARGS'), concat($quot, $bootargs, ' ', $quot), '')" />
       </xsl:if>
     </xsl:if>
   </xsl:for-each>
