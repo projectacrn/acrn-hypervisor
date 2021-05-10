@@ -206,6 +206,8 @@ Build the ACRN Hypervisor on Ubuntu
       $ sudo mkdir -p /boot/acrn
       $ sudo cp build/hypervisor/acrn.bin /boot/acrn/
 
+.. _build-and-install-ACRN-kernel:
+
 Build and Install the ACRN Kernel
 =================================
 
