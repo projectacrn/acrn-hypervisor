@@ -16,6 +16,7 @@
 #include <asm/sgx.h>
 #include <asm/guest/guest_pm.h>
 #include <asm/guest/ucode.h>
+#include <asm/guest/nested.h>
 #include <asm/cpufeatures.h>
 #include <asm/rdt.h>
 #include <trace.h>
@@ -71,6 +72,11 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	MSR_IA32_IWKEY_BACKUP_STATUS,
 
 	MSR_TEST_CTL,
+
+	/* VMX: CPUID.01H.ECX[5] */
+#ifdef CONFIG_NVMX_ENABLED
+	LIST_OF_VMX_MSRS,
+#endif
 };
 
 #define NUM_MTRR_MSRS	13U
@@ -91,7 +97,12 @@ static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
 };
 
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
-#define NUM_UNSUPPORTED_MSRS	112U
+#define NUM_ALWAYS_UNSUPPORTED_MSRS	92U
+#ifndef CONFIG_NVMX_ENABLED
+#define NUM_UNSUPPORTED_MSRS	(NUM_ALWAYS_UNSUPPORTED_MSRS + NUM_VMX_MSRS)
+#else
+#define NUM_UNSUPPORTED_MSRS	NUM_ALWAYS_UNSUPPORTED_MSRS
+#endif
 static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	/* Variable MTRRs are not supported */
 	MSR_IA32_MTRR_PHYSBASE_0,
@@ -117,27 +128,10 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	MSR_IA32_SMRR_PHYSBASE,
 	MSR_IA32_SMRR_PHYSMASK,
 
-	/* No level 2 VMX: CPUID.01H.ECX[5] */
-	MSR_IA32_SMBASE,
-	MSR_IA32_VMX_BASIC,
-	MSR_IA32_VMX_PINBASED_CTLS,
-	MSR_IA32_VMX_PROCBASED_CTLS,
-	MSR_IA32_VMX_EXIT_CTLS,
-	MSR_IA32_VMX_ENTRY_CTLS,
-	MSR_IA32_VMX_MISC,
-	MSR_IA32_VMX_CR0_FIXED0,
-	MSR_IA32_VMX_CR0_FIXED1,
-	MSR_IA32_VMX_CR4_FIXED0,
-	MSR_IA32_VMX_CR4_FIXED1,
-	MSR_IA32_VMX_VMCS_ENUM,
-	MSR_IA32_VMX_PROCBASED_CTLS2,
-	MSR_IA32_VMX_EPT_VPID_CAP,
-	MSR_IA32_VMX_TRUE_PINBASED_CTLS,
-	MSR_IA32_VMX_TRUE_PROCBASED_CTLS,
-	MSR_IA32_VMX_TRUE_EXIT_CTLS,
-	MSR_IA32_VMX_TRUE_ENTRY_CTLS,
-	MSR_IA32_VMX_VMFUNC,
-	MSR_IA32_VMX_PROCBASED_CTLS3,
+	/* VMX: CPUID.01H.ECX[5] */
+#ifndef CONFIG_NVMX_ENABLED
+	LIST_OF_VMX_MSRS,
+#endif
 
 	/* MPX disabled: CPUID.07H.EBX[14] */
 	MSR_IA32_BNDCFGS,
@@ -404,6 +398,9 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 
 	/* Setup initial value for emulated MSRs */
 	init_emulated_msrs(vcpu);
+
+	/* Initialize VMX MSRs for nested virtualization */
+	init_vmx_msrs(vcpu);
 }
 
 static int32_t write_pat_msr(struct acrn_vcpu *vcpu, uint64_t value)
@@ -602,6 +599,13 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	{
 		if (is_x2apic_msr(msr)) {
 			err = vlapic_x2apic_read(vcpu, msr, &v);
+		} else if (is_vmx_msr(msr)) {
+			/*
+			 * TODO: after the switch statement in this function, there is another
+			 * switch statement inside read_vmx_msr(). Is it possible to reduce it
+			 * to just one switch to improvement  performance?
+			 */
+			err = read_vmx_msr(vcpu, msr, &v);
 		} else {
 			pr_warn("%s(): vm%d vcpu%d reading MSR %lx not supported",
 				__func__, vcpu->vm->vm_id, vcpu->vcpu_id, msr);
