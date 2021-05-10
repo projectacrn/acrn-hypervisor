@@ -587,6 +587,7 @@ virtio_blk_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				WPRINTF(("vrito_blk: Failed to flush before close\n"));
 			blockif_close(bctxt);
 		}
+		virtio_reset_dev(&blk->base);
 		free(blk);
 	}
 }

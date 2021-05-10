@@ -1009,6 +1009,7 @@ static void
 virtio_console_destroy(struct virtio_console *console)
 {
 	if (console) {
+		virtio_console_reset(console);
 		if (console->config)
 			free(console->config);
 		free(console);

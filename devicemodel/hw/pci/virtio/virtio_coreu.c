@@ -358,6 +358,7 @@ virtio_coreu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pthread_cond_destroy(&vcoreu->rx_cond);
 	pthread_join(vcoreu->rx_tid, NULL);
 
+	virtio_coreu_reset(vcoreu);
 	free(vcoreu);
 }
 
