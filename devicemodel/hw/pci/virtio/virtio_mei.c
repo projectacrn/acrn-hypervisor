@@ -971,6 +971,7 @@ vmei_reset_teardown(void *param)
 	vmei->reset_mevp = NULL;
 
 	pthread_mutex_destroy(&vmei->mutex);
+	virtio_reset_dev(&vmei->base);
 	free(vmei->config);
 	free(vmei);
 }

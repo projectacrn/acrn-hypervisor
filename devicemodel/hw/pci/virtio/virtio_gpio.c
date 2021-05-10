@@ -1433,6 +1433,7 @@ virtio_gpio_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		gpio_irq_deinit(gpio);
 		for (i = 0; i < gpio->nchip; i++)
 			native_gpio_close_chip(&gpio->chips[i]);
+		virtio_gpio_reset(gpio);
 		free(gpio);
 		dev->arg = NULL;
 	}
