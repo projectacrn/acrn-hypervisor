@@ -510,6 +510,7 @@ virtio_rnd_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		close(rnd->fd);
 		rnd->fd = -1;
 	}
+	virtio_rnd_reset(rnd);
 	DPRINTF(("%s: free struct virtio_rnd!\n", __func__));
 	free(rnd);
 }
