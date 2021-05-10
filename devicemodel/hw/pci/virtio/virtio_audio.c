@@ -376,6 +376,7 @@ virtio_audio_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		close(virt_audio->vbs_k.audio_fd);
 		virt_audio->vbs_k.audio_fd = -1;
 	}
+	virtio_audio_reset(virt_audio);
 	pthread_mutex_destroy(&virt_audio->mtx);
 	DPRINTF(("%s: free struct virtio_audio!\n", __func__));
 	free((struct virtio_audio *)dev->arg);
