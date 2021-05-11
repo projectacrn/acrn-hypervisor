@@ -1,4 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
+
+<!-- Copyright (C) 2021 Intel Corporation. -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+
 <xsl:stylesheet
     version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -318,6 +322,23 @@
     </xsl:for-each>
   </func:function>
 
+  <!-- acrn:get-hidden-device-num checks if a board has hidden devices which cannot be explored by scanning pci configuration space -->
+  <func:function name="acrn:get-hidden-device-num">
+    <xsl:choose>
+      <!-- apl-mrb hidden devices list: [00:0d:0] -->
+      <xsl:when test="//@board = 'apl-mrb'">
+        <func:result select="1" />
+      </xsl:when>
+      <!-- apl-up2 hidden devices list: [00:0d:0] -->
+      <xsl:when test="//@board = 'apl-up2'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:otherwise>
+        <func:result select="0" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </func:function>
+
   <func:function name="acrn:is-rdt-enabled">
     <xsl:choose>
       <xsl:when test="//RDT_ENABLED = 'y'">
@@ -491,6 +512,90 @@
         <func:result select="false()" />
       </xsl:otherwise>
     </xsl:choose>
+  </func:function>
+
+  <!-- acrn:is-vmsix-supported-device checks the given params are matched with any of the listed devices -->
+  <!-- The listed devices are known that can have a virtual vmsix -->
+  <!-- Each pair of vendor and identifier represents a device which can have a vmsix (virtual msix) -->
+  <func:function name="acrn:is-vmsix-supported-device">
+    <xsl:param name="vendor" />
+    <xsl:param name="identifier" />
+    <xsl:choose>
+      <!-- TSN devices -->
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4b30'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4b31'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4b32'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4ba0'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4ba1'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4ba2'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4bb0'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4bb1'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4bb2'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0xa0ac'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x43ac'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x43a2'">
+        <func:result select="1" />
+      </xsl:when>
+      <!-- End of TSN devices -->
+      <!-- GPIO devices -->
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4b88'">
+        <func:result select="1" />
+      </xsl:when>
+      <xsl:when test="$vendor = '0x8086' and $identifier = '0x4b89'">
+        <func:result select="1" />
+      </xsl:when>
+      <!-- End of GPIO devices -->
+      <xsl:otherwise>
+        <func:result select="0" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </func:function>
+
+  <func:function name="acrn:get-vbdf">
+    <xsl:param name="vmid" />
+    <xsl:param name="name" />
+    <xsl:variable name="bus" select="acrn:initializer('b', concat(//vm[@id = $vmid]/device[@name = $name]/bus, 'U'), '')" />
+    <xsl:variable name="dev" select="acrn:initializer('d', concat(//vm[@id = $vmid]/device[@name = $name]/dev, 'U'), '')" />
+    <xsl:variable name="func" select="acrn:initializer('f', concat(//vm[@id = $vmid]/device[@name = $name]/func, 'U'), '')" />
+    <func:result select="concat('{', $bus, $dev, $func, '}')" />
+  </func:function>
+
+  <func:function name="acrn:get-pbdf">
+    <xsl:param name="pci_dev" />
+    <xsl:variable name="bus" select="acrn:initializer('b', concat('0x', translate(substring-before($pci_dev, ':'), $lowercase, $uppercase), 'U'), '')" />
+    <xsl:variable name="dev" select="acrn:initializer('d', concat('0x', translate(substring-before(substring-after($pci_dev, ':'), '.'), $lowercase, $uppercase), 'U'), '')" />
+    <xsl:variable name="func" select="acrn:initializer('f', concat('0x0', translate(substring-after(substring-before($pci_dev, ' '), '.'), $lowercase, $uppercase), 'U'), '')" />
+    <func:result select="concat('{', $bus, $dev, $func, '}')" />
+  </func:function>
+
+  <func:function name="acrn:ptdev-name-suffix">
+    <xsl:param name="pci_dev" />
+    <xsl:variable name="bus" select="translate(substring-before($pci_dev, ':'), $lowercase, $uppercase)" />
+    <xsl:variable name="dev" select="translate(substring-before(substring-after($pci_dev, ':'), '.'), $lowercase, $uppercase)" />
+    <xsl:variable name="func" select="translate(substring-after(substring-before($pci_dev, ' '), '.'), $lowercase, $uppercase)" />
+    <func:result select="concat('0X', $bus, '_0X', $dev, '000', $func)" />
   </func:function>
   <!-- End of scenario-specific functions-->
 
