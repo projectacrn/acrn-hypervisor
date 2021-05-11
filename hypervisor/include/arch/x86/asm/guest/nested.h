@@ -46,6 +46,30 @@ union value_64 {
 	MSR_IA32_VMX_PROCBASED_CTLS3
 
 /*
+ * VM-Exit Instruction-Information Field
+ *
+ * ISDM Vol 3C Table 27-9: INVEPT, INVPCID, INVVPID
+ * ISDM Vol 3C Table 27-13: VMCLEAR, VMPTRLD, VMPTRST, VMXON, XRSTORS, and XSAVES.
+ * ISDM Vol 3C Table 27-14: VMREAD and VMWRITE
+ *
+ * Either Table 27-9 or Table 27-13 is a subset of Table 27-14, so we are able to
+ * define the following macros to be used for the above mentioned instructions.
+ */
+#define VMX_II_SCALING(v)			(((v) >> 0U) & 0x3U)
+#define VMX_II_REG1(v)				(((v) >> 3U) & 0xfU)
+#define VMX_II_ADDR_SIZE(v)			(((v) >> 7U) & 0x7U)
+#define VMX_II_IS_REG(v)			(((v) >> 10U) & 0x1U)
+#define VMX_II_SEG_REG(v)			(((v) >> 15U) & 0x7U)
+#define VMX_II_IDX_REG(v)			(((v) >> 18U) & 0xfU)
+#define VMX_II_IDX_REG_VALID(v)			((((v) >> 22U) & 0x1U) == 0U)
+#define VMX_II_BASE_REG(v)			(((v) >> 23U) & 0xfU)
+#define VMX_II_BASE_REG_VALID(v)		((((v) >> 27U) & 0x1U) == 0U)
+#define VMX_II_REG2(v)				(((v) >> 28U) & 0xfU)
+
+/* refer to ISDM: Table 30-1. VM-Instruction Error Numbers */
+#define VMXERR_VMXON_IN_VMX_ROOT_OPERATION	(15)
+
+/*
  * This VMCS12 revision id is chosen arbitrarily.
  * The emulated MSR_IA32_VMX_BASIC returns this ID in bits 30:0.
  */
@@ -61,6 +85,7 @@ int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu);
 
 #ifdef CONFIG_NVMX_ENABLED
 struct acrn_nested {
+	uint64_t vmxon_ptr;		/* GPA */
 	bool vmxon;		/* To indicate if vCPU entered VMX operation */
 } __aligned(PAGE_SIZE);
 
