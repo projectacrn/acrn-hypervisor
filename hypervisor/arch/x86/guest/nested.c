@@ -228,8 +228,7 @@ int32_t read_vmx_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 	return err;
 }
 
-/* make it 1 to be able to build. correctly initialize it in next patch */
-#define MAX_SHADOW_VMCS_FIELDS 1
+#define MAX_SHADOW_VMCS_FIELDS 117U
 /*
  * VMCS fields included in the dual-purpose VMCS: as shadow for L1 and
  * as hardware VMCS for nested guest (L2).
@@ -244,10 +243,156 @@ int32_t read_vmx_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
  * for all platforms.
  */
 static const uint32_t vmcs_shadowing_fields[MAX_SHADOW_VMCS_FIELDS] = {
+	/* 16-bits */
+	VMX_VPID,
+
+	VMX_GUEST_ES_SEL,
+	VMX_GUEST_CS_SEL,
+	VMX_GUEST_SS_SEL,
+	VMX_GUEST_DS_SEL,
+	VMX_GUEST_FS_SEL,
+	VMX_GUEST_GS_SEL,
+	VMX_GUEST_LDTR_SEL,
+	VMX_GUEST_TR_SEL,
+	VMX_GUEST_PML_INDEX,
+
+	/* 64-bits */
+	VMX_IO_BITMAP_A_FULL,
+	VMX_IO_BITMAP_B_FULL,
+	VMX_EXIT_MSR_STORE_ADDR_FULL,
+	VMX_EXIT_MSR_LOAD_ADDR_FULL,
+	VMX_ENTRY_MSR_LOAD_ADDR_FULL,
+	VMX_EXECUTIVE_VMCS_PTR_FULL,
+	VMX_TSC_OFFSET_FULL,
+	VMX_VIRTUAL_APIC_PAGE_ADDR_FULL,
+	VMX_APIC_ACCESS_ADDR_FULL,
+	VMX_EPT_POINTER_FULL,
+	VMX_VMREAD_BITMAP_FULL,
+	VMX_VMWRITE_BITMAP_FULL,
+	VMX_XSS_EXITING_BITMAP_FULL,
+	VMX_TSC_MULTIPLIER_FULL,
+	VMX_GUEST_PHYSICAL_ADDR_FULL,
+	VMX_VMS_LINK_PTR_FULL,
+	VMX_GUEST_IA32_DEBUGCTL_FULL,
+	VMX_GUEST_IA32_PAT_FULL,
+	VMX_GUEST_IA32_EFER_FULL,
+	VMX_GUEST_IA32_PERF_CTL_FULL,
+	VMX_GUEST_PDPTE0_FULL,
+	VMX_GUEST_PDPTE1_FULL,
+	VMX_GUEST_PDPTE2_FULL,
+	VMX_GUEST_PDPTE3_FULL,
+
+	/* 32-bits */
+	VMX_PIN_VM_EXEC_CONTROLS,
+	VMX_PROC_VM_EXEC_CONTROLS,
+	VMX_EXCEPTION_BITMAP,
+	VMX_PF_ERROR_CODE_MASK,
+	VMX_PF_ERROR_CODE_MATCH,
+	VMX_CR3_TARGET_COUNT,
+	VMX_EXIT_CONTROLS,
+	VMX_EXIT_MSR_STORE_COUNT,
+	VMX_EXIT_MSR_LOAD_COUNT,
+	VMX_ENTRY_CONTROLS,
+	VMX_ENTRY_MSR_LOAD_COUNT,
+	VMX_ENTRY_INT_INFO_FIELD,
+	VMX_ENTRY_EXCEPTION_ERROR_CODE,
+	VMX_ENTRY_INSTR_LENGTH,
+	VMX_TPR_THRESHOLD,
+	VMX_PROC_VM_EXEC_CONTROLS2,
+	VMX_PLE_GAP,
+	VMX_PLE_WINDOW,
+	VMX_INSTR_ERROR,
+	VMX_EXIT_REASON,
+	VMX_EXIT_INT_INFO,
+	VMX_EXIT_INT_ERROR_CODE,
+	VMX_IDT_VEC_INFO_FIELD,
+	VMX_IDT_VEC_ERROR_CODE,
+	VMX_EXIT_INSTR_LEN,
+	VMX_INSTR_INFO,
+	VMX_GUEST_ES_LIMIT,
+	VMX_GUEST_CS_LIMIT,
+	VMX_GUEST_SS_LIMIT,
+	VMX_GUEST_DS_LIMIT,
+	VMX_GUEST_FS_LIMIT,
+	VMX_GUEST_GS_LIMIT,
+	VMX_GUEST_LDTR_LIMIT,
+	VMX_GUEST_TR_LIMIT,
+	VMX_GUEST_GDTR_LIMIT,
+	VMX_GUEST_IDTR_LIMIT,
+	VMX_GUEST_ES_ATTR,
+	VMX_GUEST_CS_ATTR,
+	VMX_GUEST_SS_ATTR,
+	VMX_GUEST_DS_ATTR,
+	VMX_GUEST_FS_ATTR,
+	VMX_GUEST_GS_ATTR,
+	VMX_GUEST_LDTR_ATTR,
+	VMX_GUEST_TR_ATTR,
+	VMX_GUEST_INTERRUPTIBILITY_INFO,
+	VMX_GUEST_ACTIVITY_STATE,
+	VMX_GUEST_SMBASE,
+	VMX_GUEST_IA32_SYSENTER_CS,
+	VMX_GUEST_TIMER,
+	VMX_CR0_GUEST_HOST_MASK,
+	VMX_CR4_GUEST_HOST_MASK,
+	VMX_CR0_READ_SHADOW,
+	VMX_CR4_READ_SHADOW,
+	VMX_CR3_TARGET_0,
+	VMX_CR3_TARGET_1,
+	VMX_CR3_TARGET_2,
+	VMX_CR3_TARGET_3,
+	VMX_EXIT_QUALIFICATION,
+	VMX_IO_RCX,
+	VMX_IO_RSI,
+	VMX_IO_RDI,
+	VMX_IO_RIP,
+	VMX_GUEST_LINEAR_ADDR,
+	VMX_GUEST_CR0,
+	VMX_GUEST_CR3,
+	VMX_GUEST_CR4,
+	VMX_GUEST_ES_BASE,
+	VMX_GUEST_CS_BASE,
+	VMX_GUEST_SS_BASE,
+	VMX_GUEST_DS_BASE,
+	VMX_GUEST_FS_BASE,
+	VMX_GUEST_GS_BASE,
+	VMX_GUEST_LDTR_BASE,
+	VMX_GUEST_TR_BASE,
+	VMX_GUEST_GDTR_BASE,
+	VMX_GUEST_IDTR_BASE,
+	VMX_GUEST_DR7,
+	VMX_GUEST_RSP,
+	VMX_GUEST_RIP,
+	VMX_GUEST_RFLAGS,
+	VMX_GUEST_PENDING_DEBUG_EXCEPT,
+	VMX_GUEST_IA32_SYSENTER_ESP,
+	VMX_GUEST_IA32_SYSENTER_EIP
 };
 
 /* to be shared by all vCPUs for all nested guests */
 static uint64_t vmcs_shadowing_bitmap[PAGE_SIZE / sizeof(uint64_t)] __aligned(PAGE_SIZE);
+
+static void setup_vmcs_shadowing_bitmap(void)
+{
+	uint16_t field_index;
+	uint32_t array_index;
+	uint16_t bit_pos;
+
+	/*
+	 * Set all the bits to 1s first and clear out the bits for
+	 * the corresponding fields that ACRN lets its guest to access Shadow VMCS
+	 */
+	memset((void *)vmcs_shadowing_bitmap, 0xFFU, PAGE_SIZE);
+
+	/*
+	 * Refer to ISDM Section 24.6.15 VMCS Shadowing Bitmap Addresses
+	 * and Section 30.3 VMX Instructions - VMWRITE/VMREAD
+	 */
+	for (field_index = 0U; field_index < MAX_SHADOW_VMCS_FIELDS; field_index++) {
+		bit_pos = vmcs_shadowing_fields[field_index] % 64U;
+		array_index = vmcs_shadowing_fields[field_index] / 64U;
+		bitmap_clear_nolock(bit_pos, &vmcs_shadowing_bitmap[array_index]);
+	}
+}
 
 /*
  * This is an array of offsets into a structure of type "struct acrn_vmcs12"
@@ -848,5 +993,6 @@ void init_nested_vmx(__unused struct acrn_vm *vm)
 
 		/* Cache the value of physical MSR_IA32_VMX_BASIC */
 		vmx_basic = (uint32_t)msr_read(MSR_IA32_VMX_BASIC);
+		setup_vmcs_shadowing_bitmap();
 	}
 }
