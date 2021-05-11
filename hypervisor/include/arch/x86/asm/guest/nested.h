@@ -84,6 +84,9 @@ union value_64 {
 
 /* refer to ISDM: Table 30-1. VM-Instruction Error Numbers */
 #define VMXERR_VMCLEAR_VMXON_POINTER		(3)
+#define VMXERR_VMLAUNCH_NONCLEAR_VMCS		(4)
+#define VMXERR_VMRESUME_NONLAUNCHED_VMCS	(5)
+#define VMXERR_VMRESUME_AFTER_VMXOFF		(6)
 #define VMXERR_VMPTRLD_INVALID_ADDRESS		(9)
 #define VMXERR_VMPTRLD_INCORRECT_VMCS_REVISION_ID (10)
 #define VMXERR_VMPTRLD_VMXON_POINTER		(11)
@@ -317,6 +320,8 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmread_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t vmresume_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t vmlaunch_vmexit_handler(struct acrn_vcpu *vcpu);
 
 #ifdef CONFIG_NVMX_ENABLED
 struct acrn_nested {
@@ -327,8 +332,10 @@ struct acrn_nested {
 	uint64_t current_vmcs12_ptr;	/* GPA */
 	uint64_t vmxon_ptr;		/* GPA */
 	bool vmxon;		/* To indicate if vCPU entered VMX operation */
+	bool in_l2_guest;	/* To indicate if vCPU is currently in Guest mode (from L1's perspective) */
 	bool host_state_dirty;	/* To indicate need to merge VMCS12 host-state fields to VMCS01 */
 	bool gpa_field_dirty;
+	bool control_field_dirty;	/* for VM-execution, VM-exit, VM-entry control fields */
 } __aligned(PAGE_SIZE);
 
 void init_nested_vmx(__unused struct acrn_vm *vm);
