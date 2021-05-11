@@ -38,6 +38,7 @@
 #include "boot.h"
 #include "acrn_common.h"
 #include "MpService.h"
+#include "container.h"
 
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
@@ -477,6 +478,8 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 		goto failed;
 
 	memcpy((char *)hv_hpa, info->ImageBase + sec_addr, sec_size);
+
+	parse_container_image(info);
 
 	/* load hypervisor and begin to run on it */
 	err = run_acrn(image, hv_hpa);

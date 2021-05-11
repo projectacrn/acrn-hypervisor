@@ -33,7 +33,7 @@
 HV_OBJDIR:=build
 HV_FILE:=acrn
 HV_SRC:=../../hypervisor
-C_SRCS = boot.c pe.c malloc.c
+C_SRCS = boot.c pe.c malloc.c container.c
 ACRN_OBJS := $(patsubst %.c,$(EFI_OBJDIR)/%.o,$(C_SRCS))
 INCLUDE_PATH += $(INCDIR)/efi
 INCLUDE_PATH += $(INCDIR)/efi/$(ARCH)
