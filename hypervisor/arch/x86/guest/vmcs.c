@@ -319,7 +319,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS2,
 			VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |VMX_PROCBASED_CTLS2_VPID |
 			VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT |
-			VMX_PROCBASED_CTLS2_PAUSE_LOOP);
+			VMX_PROCBASED_CTLS2_PAUSE_LOOP | VMX_PROCBASED_CTLS2_UWAIT_PAUSE);
 
 	/* SDM Vol3, 25.3,  setting "enable INVPCID" VM-execution to 1 with "INVLPG exiting" disabled,
 	 * passes-through INVPCID instruction to guest if the instruction is supported.

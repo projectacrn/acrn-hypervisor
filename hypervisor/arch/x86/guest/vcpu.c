@@ -857,6 +857,7 @@ static void context_switch_in(struct thread_object *next)
 {
 	struct acrn_vcpu *vcpu = container_of(next, struct acrn_vcpu, thread_obj);
 	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
+	uint64_t vmsr_val;
 
 	load_vmcs(vcpu);
 
@@ -865,6 +866,13 @@ static void context_switch_in(struct thread_object *next)
 	msr_write(MSR_IA32_LSTAR, ectx->ia32_lstar);
 	msr_write(MSR_IA32_FMASK, ectx->ia32_fmask);
 	msr_write(MSR_IA32_KERNEL_GS_BASE, ectx->ia32_kernel_gs_base);
+
+	if (pcpu_has_cap(X86_FEATURE_WAITPKG)) {
+		vmsr_val = vcpu_get_guest_msr(vcpu, MSR_IA32_UMWAIT_CONTROL);
+		if (vmsr_val != msr_read(MSR_IA32_UMWAIT_CONTROL)) {
+			msr_write(MSR_IA32_UMWAIT_CONTROL, vmsr_val);
+		}
+	}
 
 	load_iwkey(vcpu);
 
