@@ -45,11 +45,24 @@ transform() {
     echo "${1} was generated using xsltproc successfully."
 }
 
+transform_board() {
+    echo "Generating ${1}:"
+    xsltproc -o ${out}/boards/${1} --xinclude --xincludestyle ${tool_dir}/xforms/${1}.xsl ${unified_xml}
+    if [ $? -ne 0 ]; then
+        echo "Failed to generate ${1} with xsltproc!"
+        exit 1
+    fi
+    sed -i -e "s/YEAR/$year/" ${out}/boards/${1}
+    echo "${1} was generated using xsltproc successfully."
+}
+
 transform vm_configurations.c
 transform vm_configurations.h
 transform pt_intx.c
 transform ivshmem_cfg.h
 transform misc_cfg.h
+transform pci_dev.c
+transform_board board_info.h
 
 if which clang-format ; then
     find ${out}/scenarios/${scenario} -iname *.h -o -iname *.c \
