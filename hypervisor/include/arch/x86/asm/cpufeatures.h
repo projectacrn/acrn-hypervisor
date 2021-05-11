@@ -80,6 +80,7 @@
 #define X86_FEATURE_CLFLUSHOPT	((FEAT_7_0_EBX << 5U) + 23U)
 
 /* Intel-defined CPU features, CPUID level 0x00000007 (ECX)*/
+#define X86_FEATURE_WAITPKG	((FEAT_7_0_ECX << 5U) +  5U)
 #define X86_FEATURE_KEYLOCKER	((FEAT_7_0_ECX << 5U) + 23U)
 
 /* Intel-defined CPU features, CPUID level 0x00000007 (EDX)*/
