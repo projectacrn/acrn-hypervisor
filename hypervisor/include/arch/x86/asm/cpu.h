@@ -138,6 +138,7 @@
 #define RFLAGS_Z (1U<<6U)
 #define RFLAGS_S (1U<<7U)
 #define RFLAGS_O (1U<<11U)
+#define RFLAGS_VM (1U<<17U)
 #define RFLAGS_AC (1U<<18U)
 
 /* CPU clock frequencies (FSB) */
