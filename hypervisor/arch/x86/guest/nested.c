@@ -245,16 +245,193 @@ void nested_vmx_result(enum VMXResult result, int error_number)
 	exec_vmwrite(VMX_GUEST_RFLAGS, rflags);
 }
 
+/**
+ * @brief get the memory-address operand of a vmx instruction
+ *
+ * @pre vcpu != NULL
+ */
+static uint64_t get_vmx_memory_operand(struct acrn_vcpu *vcpu, uint32_t instr_info)
+{
+	uint64_t gva, gpa, seg_base = 0UL;
+	uint32_t seg, err_code = 0U;
+	uint64_t offset;
+
+	/*
+	 * According to ISDM 3B: Basic VM-Exit Information: For INVEPT, INVPCID, INVVPID, LGDT,
+	 * LIDT, LLDT, LTR, SGDT, SIDT, SLDT, STR, VMCLEAR, VMPTRLD, VMPTRST, VMREAD, VMWRITE,
+	 * VMXON, XRSTORS, and XSAVES, the exit qualification receives the value of the instruction’s
+	 * displacement field, which is sign-extended to 64 bits.
+	 */
+	offset = vcpu->arch.exit_qualification;
+
+	/* TODO: should we consider the cases of address size (bits 9:7 in instr_info) is 16 or 32? */
+
+	/*
+	 * refer to ISDM Vol.1-3-24 Operand addressing on how to calculate an effective address
+	 * offset = base + [index * scale] + displacement
+	 * address = segment_base + offset
+	 */
+	if (VMX_II_BASE_REG_VALID(instr_info)) {
+		offset += vcpu_get_gpreg(vcpu, VMX_II_BASE_REG(instr_info));
+	}
+
+	if (VMX_II_IDX_REG_VALID(instr_info)) {
+		uint64_t val64 = vcpu_get_gpreg(vcpu, VMX_II_IDX_REG(instr_info));
+		offset += (val64 << VMX_II_SCALING(instr_info));
+	}
+
+	/*
+	 * In 64-bit mode, the processor treats the segment base of CS, DS, ES, SS as zero,
+	 * creating a linear address that is equal to the effective address.
+	 * The exceptions are the FS and GS segments, whose segment registers can be used as
+	 * additional base registers in some linear address calculations.
+	 */
+	seg = VMX_II_SEG_REG(instr_info);
+	if (seg == 4U) {
+		seg_base = exec_vmread(VMX_GUEST_FS_BASE);
+	}
+
+	if (seg == 5U) {
+		seg_base = exec_vmread(VMX_GUEST_GS_BASE);
+	}
+
+	gva = seg_base + offset;
+	(void)gva2gpa(vcpu, gva, &gpa, &err_code);
+
+	return gpa;
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+static uint64_t get_vmptr_gpa(struct acrn_vcpu *vcpu)
+{
+	uint64_t gpa, vmptr;
+
+	/* get VMX pointer, which points to the VMCS or VMXON region GPA */
+	gpa = get_vmx_memory_operand(vcpu, exec_vmread(VMX_INSTR_INFO));
+
+	/* get the address (GPA) of the VMCS for VMPTRLD/VMCLEAR, or VMXON region for VMXON */
+	(void)copy_from_gpa(vcpu->vm, (void *)&vmptr, gpa, sizeof(uint64_t));
+
+	return vmptr;
+}
+
+static bool validate_vmptr_gpa(uint64_t vmptr_gpa)
+{
+	/* We don't emulate CPUID.80000008H for guests, so check with physical address width */
+	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
+
+	return (mem_aligned_check(vmptr_gpa, PAGE_SIZE) && ((vmptr_gpa >> cpu_info->phys_bits) == 0UL));
+}
+
+/**
+ * @pre vm != NULL
+ */
+static bool validate_vmcs_revision_id(struct acrn_vcpu *vcpu, uint64_t vmptr_gpa)
+{
+	uint32_t revision_id;
+
+	(void)copy_from_gpa(vcpu->vm, (void *)&revision_id, vmptr_gpa, sizeof(uint32_t));
+
+	/*
+	 * VMCS revision ID must equal to what reported by the emulated IA32_VMX_BASIC MSR.
+	 * The MSB of VMCS12_REVISION_ID is always smaller than 31, so the following statement
+	 * implicitly validates revision_id[31] as well.
+	 */
+	return (revision_id == VMCS12_REVISION_ID);
+}
+
+int32_t get_guest_cpl(void)
+{
+	/*
+	 * We get CPL from SS.DPL because:
+	 *
+	 * CS.DPL could not equal to the CPL for conforming code segments. ISDM 5.5 PRIVILEGE LEVELS:
+	 * Conforming code segments can be accessed from any privilege level that is equal to or
+	 * numerically greater (less privileged) than the DPL of the conforming code segment.
+	 *
+	 * ISDM 24.4.1 Guest Register State: The value of the DPL field for SS is always
+	 * equal to the logical processor’s current privilege level (CPL).
+	 */
+	uint32_t ar = exec_vmread32(VMX_GUEST_SS_ATTR);
+	return ((ar >> 5) & 3);
+}
+
+static bool validate_nvmx_cr0_cr4(uint64_t cr0_4, uint64_t fixed0, uint64_t fixed1)
+{
+	bool valid = true;
+
+	/* If bit X is 1 in IA32_VMX_CR0/4_FIXED0, then that bit of CR0/4 is fixed to 1 in VMX operation */
+	if ((cr0_4 & fixed0) != fixed0) {
+		valid = false;
+	}
+
+	/* if bit X is 0 in IA32_VMX_CR0/4_FIXED1, then that bit of CR0/4 is fixed to 0 in VMX operation */
+	/* Bits 63:32 of CR0 and CR4 are reserved and must be written with zeros */
+	if ((uint32_t)(~cr0_4 & ~fixed1) != (uint32_t)~fixed1) {
+		valid = false;
+	}
+
+	return valid;
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+static bool validate_nvmx_cr0(struct acrn_vcpu *vcpu)
+{
+	return validate_nvmx_cr0_cr4(vcpu_get_cr0(vcpu), msr_read(MSR_IA32_VMX_CR0_FIXED0),
+		msr_read(MSR_IA32_VMX_CR0_FIXED1));
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+static bool validate_nvmx_cr4(struct acrn_vcpu *vcpu)
+{
+	return validate_nvmx_cr0_cr4(vcpu_get_cr4(vcpu), msr_read(MSR_IA32_VMX_CR4_FIXED0),
+		msr_read(MSR_IA32_VMX_CR4_FIXED1));
+}
+
 /*
  * @pre vcpu != NULL
  */
 int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	/* Will do permission check in next patch */
-	if (is_nvmx_configured(vcpu->vm)) {
-		vcpu->arch.nested.vmxon = true;
+	const uint64_t features = MSR_IA32_FEATURE_CONTROL_LOCK | MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX;
+	uint32_t ar = exec_vmread32(VMX_GUEST_CS_ATTR);
 
-		nested_vmx_result(VMsucceed, 0);
+	if (is_nvmx_configured(vcpu->vm)) {
+		if (((vcpu_get_cr0(vcpu) & CR0_PE) == 0UL)
+			|| ((vcpu_get_cr4(vcpu) & CR4_VMXE) == 0UL)
+			|| ((vcpu_get_rflags(vcpu) & RFLAGS_VM) != 0U)) {
+			vcpu_inject_ud(vcpu);
+		} else if (((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LMA_BIT) == 0U)
+			|| ((ar & (1U << 13U)) == 0U)) {
+			/* Current ACRN doesn't support 32 bits L1 hypervisor */
+			vcpu_inject_ud(vcpu);
+		} else if ((get_guest_cpl() != 0)
+			|| !validate_nvmx_cr0(vcpu)
+			|| !validate_nvmx_cr4(vcpu)
+			|| ((vcpu_get_guest_msr(vcpu, MSR_IA32_FEATURE_CONTROL) & features) != features)) {
+			vcpu_inject_gp(vcpu, 0U);
+		} else if (vcpu->arch.nested.vmxon == true) {
+			nested_vmx_result(VMfailValid, VMXERR_VMXON_IN_VMX_ROOT_OPERATION);
+		} else {
+			uint64_t vmptr_gpa = get_vmptr_gpa(vcpu);
+
+			if (!validate_vmptr_gpa(vmptr_gpa)) {
+				nested_vmx_result(VMfailInvalid, 0);
+			} else if (!validate_vmcs_revision_id(vcpu, vmptr_gpa)) {
+				nested_vmx_result(VMfailInvalid, 0);
+			} else {
+				vcpu->arch.nested.vmxon = true;
+				vcpu->arch.nested.vmxon_ptr = vmptr_gpa;
+
+				nested_vmx_result(VMsucceed, 0);
+			}
+		}
 	} else {
 		vcpu_inject_ud(vcpu);
 	}
