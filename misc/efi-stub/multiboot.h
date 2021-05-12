@@ -171,9 +171,9 @@ struct __attribute__((packed)) multiboot_mmap {
 struct multiboot_module {
 	uint32_t	mmo_start;
 	uint32_t	mmo_end;
-	char *		mmo_string;
+	uint32_t	mmo_string;
 	uint32_t	mmo_reserved;
-};
+} __packed;
 
 #endif /* !defined(_LOCORE) */
 

@@ -68,7 +68,6 @@ typedef struct {
   UINT8         Data[];
 } LOADER_COMPRESSED_HEADER;
 
-
-EFI_STATUS parse_container_image(EFI_LOADED_IMAGE *info);
+EFI_STATUS load_container_image(EFI_LOADED_IMAGE *info, struct multiboot_module **mods_addr, uint32_t *mods_count);
 
 #endif /* __ACRNCONTAINER_H__ */

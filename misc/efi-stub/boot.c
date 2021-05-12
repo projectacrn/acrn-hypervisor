@@ -278,7 +278,7 @@ out:
 }
 
 static EFI_STATUS
-run_acrn(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
+run_acrn(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_module *mods_addr, uint32_t mods_count)
 {
 	EFI_PHYSICAL_ADDRESS addr;
 	EFI_STATUS err;
@@ -348,6 +348,10 @@ run_acrn(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	 */
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_LOADER_NAME;
 	mbi->mi_loader_name = (UINT32)uefi_boot_loader_name;
+
+	mbi->mi_mods_addr  = mods_addr;
+	mbi->mi_mods_count = mods_count;
+	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MODS;
 
 	terminate_boot_services(image, mmap_info.map_key);
 	hv_jump(hv_hpa, mbi);
@@ -423,6 +427,9 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	CHAR16 *options = NULL;
 	UINT32 options_size = 0;
 
+	struct multiboot_module *mods_addr = NULL;
+	uint32_t mods_count = 0;
+
 	InitializeLib(image, _table);
 	sys_table = _table;
 	boot = sys_table->BootServices;
@@ -479,10 +486,10 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 
 	memcpy((char *)hv_hpa, info->ImageBase + sec_addr, sec_size);
 
-	parse_container_image(info);
+	load_container_image(info, &mods_addr, &mods_count);
 
 	/* load hypervisor and begin to run on it */
-	err = run_acrn(image, hv_hpa);
+	err = run_acrn(image, hv_hpa, mods_addr, mods_count);
 	if (err != EFI_SUCCESS)
 		goto failed;
 
