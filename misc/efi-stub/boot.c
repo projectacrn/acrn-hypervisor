@@ -37,14 +37,66 @@
 #include "stdlib.h"
 #include "boot.h"
 #include "acrn_common.h"
-#include "deprivilege_boot.h"
 #include "MpService.h"
 
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
 char *cmdline = NULL;
-extern const uint64_t guest_entry;
 static UINT64 hv_hpa;
+static struct efi_memmap_info mmap_info;
+
+static EFI_STATUS
+get_current_memory_map(struct efi_memmap_info *mi)
+{
+	UINTN map_size, map_key;
+	UINT32 desc_version;
+	UINTN desc_size;
+	EFI_MEMORY_DESCRIPTOR *map_buf;
+	EFI_STATUS err = EFI_SUCCESS;
+
+	/* We're just interested in the map's size for now */
+	map_size = 0;
+	err = get_memory_map(&map_size, NULL, NULL, NULL, NULL);
+	if (err != EFI_SUCCESS && err != EFI_BUFFER_TOO_SMALL)
+		goto out;
+
+again:
+	err = allocate_pool(EfiLoaderData, map_size, (void **) &map_buf);
+	if (err != EFI_SUCCESS)
+		goto out;
+
+	/*
+	 * Remember! We've already allocated map_buf with emalloc (and
+	 * 'map_size' contains its size) which means that it should be
+	 * positioned below our allocation for the kernel. Use that
+	 * space for the memory map.
+	 */
+	err = get_memory_map(&map_size, map_buf, &map_key,
+			     &desc_size, &desc_version);
+	if (err != EFI_SUCCESS) {
+		if (err == EFI_BUFFER_TOO_SMALL) {
+			/*
+			 * Argh! The buffer that we allocated further
+			 * up wasn't large enough which means we need
+			 * to allocate them again, but this time
+			 * larger. 'map_size' has been updated by the
+			 * call to memory_map().
+			 */
+			free_pool(map_buf);
+			goto again;
+		}
+		goto out;
+	}
+
+	mi->map_size = map_size;
+	mi->map_key = map_key;
+	mi->desc_version = desc_version;
+	mi->desc_size = desc_size;
+	mi->mmap = map_buf;
+
+out:
+	return err;
+}
 
 static void
 enable_disable_all_ap(BOOLEAN enable)
@@ -87,12 +139,42 @@ enable_disable_all_ap(BOOLEAN enable)
 	}
 }
 
+static EFI_STATUS
+terminate_boot_services(EFI_HANDLE image, UINTN map_key)
+{
+	EFI_STATUS err = EFI_SUCCESS;
+
+	err = exit_boot_services(image, map_key);
+	if (err != EFI_SUCCESS) {
+		if (err == EFI_INVALID_PARAMETER) {
+			/*
+			 * Incorrect map key: memory map changed during the call of get_memory_map
+			 * and exit_boot_services.
+			 * We must call get_memory_map and exit_boot_services one more time.
+			 * We can't allocate nor free pool since exit_boot_services has already been called.
+			 * Original memory pool should be sufficient and this call is expected to succeed.
+			 */
+			UINTN map_size, desc_size;
+			UINT32 desc_version;
+
+			err = get_memory_map(&map_size, mmap_info.mmap, &map_key, &desc_size, &desc_version);
+			if (err != EFI_SUCCESS)
+				goto out;
+
+			err = exit_boot_services(image, map_key);
+			if (err != EFI_SUCCESS)
+				goto out;
+		}
+	}
+
+out:
+	return err;
+}
+
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
-			struct multiboot_info *mbi, struct depri_boot_context *efi_ctx)
+		struct multiboot_info *mbi)
 {
 	hv_func hf;
-
-	efi_ctx->vcpu_regs.rip = (uint64_t)&guest_entry;
 
 	/* The 64-bit entry of acrn hypervisor is 0x1200 from the start
 	 * address of hv image.
@@ -108,48 +190,10 @@ static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 EFI_STATUS construct_mbi(EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_info *mbi,
 		struct multiboot_mmap *mmap)
 {
-	UINTN map_size, map_key;
-	UINT32 desc_version;
-	UINTN desc_size;
-	EFI_MEMORY_DESCRIPTOR *map_buf;
 	EFI_STATUS err = EFI_SUCCESS;
 	int32_t i, j, mmap_entry_count;
 
-	/* We're just interested in the map's size for now */
-	map_size = 0;
-	err = get_memory_map(&map_size, NULL, NULL, NULL, NULL);
-	if (err != EFI_SUCCESS && err != EFI_BUFFER_TOO_SMALL)
-		goto out;
-
-again:
-	err = allocate_pool(EfiLoaderData, map_size, (void **) &map_buf);
-	if (err != EFI_SUCCESS)
-		goto out;
-
-	/*
-	 * Remember! We've already allocated map_buf with emalloc (and
-	 * 'map_size' contains its size) which means that it should be
-	 * positioned below our allocation for the kernel. Use that
-	 * space for the memory map.
-	 */
-	err = get_memory_map(&map_size, map_buf, &map_key,
-			     &desc_size, &desc_version);
-	if (err != EFI_SUCCESS) {
-		if (err == EFI_BUFFER_TOO_SMALL) {
-			/*
-			 * Argh! The buffer that we allocated further
-			 * up wasn't large enough which means we need
-			 * to allocate them again, but this time
-			 * larger. 'map_size' has been updated by the
-			 * call to memory_map().
-			 */
-			free_pool(map_buf);
-			goto again;
-		}
-		goto out;
-	}
-
-	mmap_entry_count = map_size / desc_size;
+	mmap_entry_count = mmap_info.map_size / mmap_info.desc_size;
 	/*
 	 * Convert the EFI memory map to E820.
 	 */
@@ -157,7 +201,7 @@ again:
 		EFI_MEMORY_DESCRIPTOR *d;
 		uint32_t e820_type = 0;
 
-		d = (EFI_MEMORY_DESCRIPTOR *)((uint64_t)map_buf + (i * desc_size));
+		d = (EFI_MEMORY_DESCRIPTOR *)((uint64_t)mmap_info.mmap + (i * mmap_info.desc_size));
 		switch(d->Type) {
 		case EfiReservedMemoryType:
 		case EfiRuntimeServicesCode:
@@ -233,13 +277,12 @@ out:
 }
 
 static EFI_STATUS
-switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
+run_acrn(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 {
 	EFI_PHYSICAL_ADDRESS addr;
 	EFI_STATUS err;
 	struct multiboot_mmap *mmap;
 	struct multiboot_info *mbi;
-	struct depri_boot_context *efi_ctx;
 	struct acpi_table_rsdp *rsdp = NULL;
 	int32_t i;
 	EFI_CONFIGURATION_TABLE *config_table;
@@ -255,7 +298,6 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 
 	mmap = MBOOT_MMAP_PTR(addr);
 	mbi = MBOOT_INFO_PTR(addr);
-	efi_ctx = BOOT_CTX_PTR(addr);
 
 	uefi_boot_loader_name = BOOT_LOADER_NAME_PTR(addr);
 	memcpy(uefi_boot_loader_name, loader_name, BOOT_LOADER_NAME_SIZE);
@@ -266,8 +308,6 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 		goto out;
 	if (addr < 4096)
 		Print(L"Warning: CPU trampoline code buf occupied zero-page\n");
-
-	efi_ctx->ap_trampoline_buf = addr;
 
 	config_table = sys_table->ConfigurationTable;
 
@@ -293,15 +333,14 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 		goto out;
 	}
 
-	efi_ctx->rsdp = rsdp;
+	err = get_current_memory_map(&mmap_info);
+	if (err != EFI_SUCCESS)
+		goto out;
 
 	/* construct multiboot info and deliver it to hypervisor */
 	err = construct_mbi(hv_hpa, mbi, mmap);
 	if (err != EFI_SUCCESS)
 		goto out;
-
-	mbi->mi_flags |= MULTIBOOT_INFO_HAS_DRIVES;
-	mbi->mi_drives_addr = (UINT32)(UINTN)efi_ctx;
 
 	/* Set boot loader name in the multiboot header of UEFI, this name is used by hypervisor;
 	 * The host physical start address of boot loader name is stored in multiboot header.
@@ -309,38 +348,12 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_LOADER_NAME;
 	mbi->mi_loader_name = (UINT32)uefi_boot_loader_name;
 
-	asm volatile ("pushf\n\t"
-		      "pop %0\n\t"
-		      : "=r"(efi_ctx->vcpu_regs.rflags)
-		      : );
-	asm volatile ("movq %%rax, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rax));
-	asm volatile ("movq %%rbx, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rbx));
-	asm volatile ("movq %%rcx, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rcx));
-	asm volatile ("movq %%rdx, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rdx));
-	asm volatile ("movq %%rdi, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rdi));
-	asm volatile ("movq %%rsi, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rsi));
-	asm volatile ("movq %%rsp, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rsp));
-	asm volatile ("movq %%rbp, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rbp));
-	asm volatile ("movq %%r8,  %0" : "=r"(efi_ctx->vcpu_regs.gprs.r8));
-	asm volatile ("movq %%r9,  %0" : "=r"(efi_ctx->vcpu_regs.gprs.r9));
-	asm volatile ("movq %%r10, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r10));
-	asm volatile ("movq %%r11, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r11));
-	asm volatile ("movq %%r12, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r12));
-	asm volatile ("movq %%r13, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r13));
-	asm volatile ("movq %%r14, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r14));
-	asm volatile ("movq %%r15, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r15));
+	terminate_boot_services(image, mmap_info.map_key);
+	hv_jump(hv_hpa, mbi);
 
-	hv_jump(hv_hpa, mbi, efi_ctx);
-	asm volatile (".global guest_entry\n\t"
-				  "guest_entry:\n\t");
-
+	/* Not reached on success */
 out:
 	return err;
-}
-
-static inline EFI_STATUS isspace(CHAR8 ch)
-{
-    return ((uint8_t)ch <= ' ');
 }
 
 EFI_STATUS reserve_unconfigure_high_memory(void)
@@ -404,15 +417,10 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	UINTN sec_addr;
 	UINTN sec_size;
 	char *section;
-	EFI_DEVICE_PATH *path;
 
 	INTN index;
-	CHAR16 *bootloader_name = NULL;
-	CHAR16 bootloader_param[] = L"bootloader=";
-	EFI_HANDLE bootloader_image;
 	CHAR16 *options = NULL;
-	UINT32 options_size = 0, bootloader_name_off = 0;
-	CHAR16 *cmdline16, *n;
+	UINT32 options_size = 0;
 
 	InitializeLib(image, _table);
 	sys_table = _table;
@@ -436,43 +444,17 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	if (options_size > 0)
 		cmdline = ch16_2_ch8(options, StrnLen(options, options_size));
 
-	/* First check if we were given a bootloader name
-	 * E.g.: "bootloader=\EFI\org.clearlinux\bootloaderx64.efi"
-	 */
-	cmdline16 = StrDuplicate(options);
-	bootloader_name = strstr_16(cmdline16, bootloader_param, StrLen(bootloader_param));
-
-	if (bootloader_name) {
-		bootloader_name = bootloader_name + StrLen(bootloader_param);
-		bootloader_name_off = bootloader_name - cmdline16;
-
-		bootloader_name_off *= sizeof(CHAR16);
-
-		n = bootloader_name;
-		while (*n && !isspace((CHAR8)*n) && (*n < 0xff) && (bootloader_name_off < options_size)) {
-			n++; bootloader_name_off += sizeof(CHAR16);
-		}
-		*n++ = '\0';
-	} else {
-		/*
-		 * If we reach this point, it means we did not receive a specific
-		 * bootloader name to be used. Fall back to the default bootloader
-		 * as specified in config.h
-		 */
-		bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME, strlen(CONFIG_UEFI_OS_LOADER_NAME));
-	}
-
 	section = ".hv";
 	err = get_pe_section(info->ImageBase, section, strlen(section), &sec_addr, &sec_size);
 	if (EFI_ERROR(err)) {
 		Print(L"Unable to locate section of ACRNHV %r ", err);
-		goto free_args;
+		goto failed;
 	}
 
 	err = reserve_unconfigure_high_memory();
 	if (err != EFI_SUCCESS) {
 		Print(L"Unable to reserve un-configure high memory %r ", err);
-		goto free_args;
+		goto failed;
 	}
 
 	/* without relocateion enabled, hypervisor binary need to reside in
@@ -492,47 +474,17 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	err = emalloc_fixed_addr(&hv_hpa, CONFIG_HV_RAM_SIZE, CONFIG_HV_RAM_START);
 #endif
 	if (err != EFI_SUCCESS)
-		goto free_args;
+		goto failed;
 
 	memcpy((char *)hv_hpa, info->ImageBase + sec_addr, sec_size);
 
 	/* load hypervisor and begin to run on it */
-	err = switch_to_guest_mode(image, hv_hpa);
+	err = run_acrn(image, hv_hpa);
 	if (err != EFI_SUCCESS)
-		goto free_args;
-
-	/*
-	 * enable all AP here will reset all APs,
-	 * so acrn can handle their ctx from now on.
-	 */
-	enable_disable_all_ap(TRUE);
-
-	/* load and start the default bootloader */
-	path = FileDevicePath(info->DeviceHandle, bootloader_name);
-	if (!path)
-		goto free_args;
-
-	FreePool(cmdline16);
-
-	err = uefi_call_wrapper(boot->LoadImage, 6, FALSE, image,
-		path, NULL, 0, &bootloader_image);
-	if (EFI_ERROR(err)) {
-		uefi_call_wrapper(boot->Stall, 1, 3 * 1000 * 1000);
 		goto failed;
-	}
-
-	err = uefi_call_wrapper(boot->StartImage, 3, bootloader_image,
-		NULL, NULL);
-	if (EFI_ERROR(err)) {
-		uefi_call_wrapper(boot->Stall, 1, 3 * 1000 * 1000);
-		goto failed;
-	}
-	uefi_call_wrapper(boot->UnloadImage, 1, bootloader_image);
 
 	return EFI_SUCCESS;
 
-free_args:
-	FreePool(cmdline16);
 failed:
 	/*
 	 * We need to be careful not to trash 'err' here. If we fail
