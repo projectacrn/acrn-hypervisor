@@ -19,7 +19,7 @@ The PS2 port is a 6-pin mini-Din connector used for connecting keyboards and mic
 PS2 Keyboard Emulation
 **********************
 
-ACRN supports AT keyboard controller for PS2 keyboard that can be accessed through I/O ports(0x60 and 0x64). 0x60 is used to access AT keyboard controller data register, 0x64 is used to access AT keyboard controller address register.
+ACRN supports the AT keyboard controller for PS2 keyboard that can be accessed through I/O ports (0x60 and 0x64). 0x60 is used to access AT keyboard controller data register; 0x64 is used to access AT keyboard controller address register.
 
 The PS2 keyboard ACPI description as below::
 
@@ -48,8 +48,8 @@ The PS2 keyboard ACPI description as below::
 PS2 Mouse Emulation
 *******************
 
-ACRN supports AT keyboard controller for PS2 mouse that can be accessed through I/O ports(0x60 and 0x64).
-0x60 is used to access AT keyboard controller data register, 0x64 is used to access AT keyboard controller address register.
+ACRN supports AT keyboard controller for PS2 mouse that can be accessed through I/O ports (0x60 and 0x64).
+0x60 is used to access AT keyboard controller data register; 0x64 is used to access AT keyboard controller address register.
 
 The PS2 mouse ACPI description as below::
 
