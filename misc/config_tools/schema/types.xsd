@@ -129,7 +129,7 @@ its size, and the VM IDs that can access it, such as ``hv:/shm_region_0, 2, 0:2`
 See :ref:`ivshmem-hv` for more information.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
-    <xs:pattern value="|hv:/\w+,\s?\d+\s?,\s?\d\s?(:\s?\d\s?)+" />
+    <xs:pattern value="|((hv)|(dm)):/\w+,\s?\d+\s?,\s?\d\s?(:\s?\d\s?)+" />
   </xs:restriction>
 </xs:simpleType>
 
