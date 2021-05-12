@@ -9,16 +9,17 @@
 #include <logmsg.h>
 #include <misc_cfg.h>
 #include <asm/mmu.h>
+#include <asm/cpu_caps.h>
 #include <asm/rtcm.h>
 
 
-static uint64_t software_sram_bottom_hpa;
-static uint64_t software_sram_top_hpa;
+static uint64_t ssram_bottom_hpa;
+static uint64_t ssram_top_hpa;
 
 /* is_sw_sram_initialized is used to tell whether Software SRAM is successfully initialized for all cores */
 static volatile bool is_sw_sram_initialized = false;
 
-#ifdef CONFIG_PSRAM_ENABLED
+#ifdef CONFIG_SSRAM_ENABLED
 
 static struct rtct_entry_data_rtcm_binary *rtcm_binary = NULL;
 
@@ -35,14 +36,14 @@ void set_rtct_tbl(void *rtct_tbl_addr)
 }
 
 /*
- *@pre the PSRAM region is separate and never mixed with normal DRAM
+ *@pre the SSRAM region is separate and never mixed with normal DRAM
  *@pre acpi_rtct_tbl != NULL
  */
 static void parse_rtct(void)
 {
 	uint64_t bottom_hpa = ULONG_MAX;
 	struct rtct_entry *entry;
-	struct rtct_entry_data_software_sram *sw_sram_entry;
+	struct rtct_entry_data_ssram *ssram;
 
 	entry = get_rtct_entry_base();
 	while (((uint64_t)entry - (uint64_t)acpi_rtct_tbl) < acpi_rtct_tbl->length) {
@@ -54,15 +55,15 @@ static void parse_rtct(void)
 			break;
 
 		case RTCT_ENTRY_TYPE_SOFTWARE_SRAM:
-			sw_sram_entry = (struct rtct_entry_data_software_sram *)entry->data;
-			if (software_sram_top_hpa < sw_sram_entry->base + sw_sram_entry->size) {
-				software_sram_top_hpa = sw_sram_entry->base + sw_sram_entry->size;
+			ssram = (struct rtct_entry_data_ssram *)entry->data;
+			if (ssram_top_hpa < ssram->base + ssram->size) {
+				ssram_top_hpa = ssram->base + ssram->size;
 			}
-			if (bottom_hpa > sw_sram_entry->base) {
-				bottom_hpa = sw_sram_entry->base;
+			if (bottom_hpa > ssram->base) {
+				bottom_hpa = ssram->base;
 			}
-			pr_info("found L%d Software SRAM, at HPA %llx, size %x", sw_sram_entry->cache_level,
-				sw_sram_entry->base, sw_sram_entry->size);
+			pr_info("found L%d Software SRAM, at HPA %llx, size %x", ssram->cache_level,
+				ssram->base, ssram->size);
 			break;
 		/* In current phase, we ignore other entries like gt_clos and wrc_close */
 		default:
@@ -74,8 +75,8 @@ static void parse_rtct(void)
 
 	if (bottom_hpa != ULONG_MAX) {
 		/* Software SRAM regions are detected. */
-		software_sram_bottom_hpa = bottom_hpa;
-		software_sram_top_hpa = round_page_up(software_sram_top_hpa);
+		ssram_bottom_hpa = bottom_hpa;
+		ssram_top_hpa = round_page_up(ssram_top_hpa);
 	}
 }
 
@@ -143,7 +144,7 @@ bool init_software_sram(bool is_bsp)
 			if (is_bsp) {
 				is_sw_sram_initialized = true;
 				pr_info("BSP Software SRAM has been initialized, base_hpa:0x%lx, top_hpa:0x%lx.\n",
-					software_sram_bottom_hpa, software_sram_top_hpa);
+					ssram_bottom_hpa, ssram_top_hpa);
 			}
 			ret = disable_host_monitor_wait();
 		}
@@ -169,10 +170,10 @@ bool is_software_sram_enabled(void)
 
 uint64_t get_software_sram_base(void)
 {
-	return software_sram_bottom_hpa;
+	return ssram_bottom_hpa;
 }
 
 uint64_t get_software_sram_size(void)
 {
-	return (software_sram_top_hpa - software_sram_bottom_hpa);
+	return (ssram_top_hpa - ssram_bottom_hpa);
 }
