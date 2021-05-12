@@ -48,7 +48,7 @@ struct rtct_entry_data_rtcm_binary
 	uint32_t size;
 } __packed;
 
-struct rtct_entry_data_software_sram
+struct rtct_entry_data_ssram
 {
 	uint32_t cache_level;
 	uint64_t base;
