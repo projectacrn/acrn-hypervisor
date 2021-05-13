@@ -8,6 +8,15 @@
 
 #include <lib/errno.h>
 
+/* helper data structure to make VMX capability MSR manipulation easier */
+union value_64 {
+	uint64_t full;
+	struct {
+		uint32_t lo_32;
+		uint32_t hi_32;
+	} u;
+};
+
 /*
  * Following MSRs are supported if nested virtualization is enabled
  * - If CONFIG_NVMX_ENABLED is set, these MSRs are included in emulated_guest_msrs[]
@@ -35,6 +44,12 @@
 	MSR_IA32_VMX_TRUE_ENTRY_CTLS,		\
 	MSR_IA32_VMX_VMFUNC,			\
 	MSR_IA32_VMX_PROCBASED_CTLS3
+
+/*
+ * This VMCS12 revision id is chosen arbitrarily.
+ * The emulated MSR_IA32_VMX_BASIC returns this ID in bits 30:0.
+ */
+#define VMCS12_REVISION_ID		0x15407E12U
 
 #ifdef CONFIG_NVMX_ENABLED
 bool is_vmx_msr(uint32_t msr);
