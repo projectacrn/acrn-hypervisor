@@ -91,7 +91,7 @@ bool stdio_in_use;
 bool lapic_pt;
 bool is_rtvm;
 bool pt_tpm2;
-bool pt_ptct;
+bool pt_rtct;
 bool is_winvm;
 bool skip_pci_mem64bar_workaround = false;
 
@@ -148,7 +148,7 @@ usage(int code)
 		"       %*s [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]\n"
 		"       %*s [--debugexit] [--logger_setting param_setting]\n"
 		"       %*s [--pm_notify_channel] [--pm_by_vuart vuart_node]\n"
-		"       %*s [--psram] <vm>\n"
+		"       %*s [--ssram] <vm>\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
 		"       -E: elf image path\n"
@@ -167,7 +167,7 @@ usage(int code)
 		"       --mac_seed: set a platform unique string as a seed for generate mac address\n"
 		"       --vsbl: vsbl file path\n"
 		"       --ovmf: ovmf file path\n"
-		"       --psram: Enable Software SRAM passthrough\n"
+		"       --ssram: Enable Software SRAM passthrough\n"
 		"       --cpu_affinity: list of pCPUs assigned to this VM\n"
 		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
@@ -796,7 +796,7 @@ static struct option long_options[] = {
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
 	{"rtvm",		no_argument,		0, CMD_OPT_RTVM},
-	{"psram",		no_argument,		0, CMD_OPT_SOFTWARE_SRAM},
+	{"ssram",		no_argument,		0, CMD_OPT_SOFTWARE_SRAM},
 	{"logger_setting",	required_argument,	0, CMD_OPT_LOGGER_SETTING},
 	{"pm_notify_channel",	required_argument,	0, CMD_OPT_PM_NOTIFY_CHANNEL},
 	{"pm_by_vuart",	required_argument,	0, CMD_OPT_PM_BY_VUART},
@@ -942,7 +942,7 @@ main(int argc, char *argv[])
 			break;
 		case CMD_OPT_SOFTWARE_SRAM:
 			/* TODO: we need to support parameter to specify Software SRAM size in the future */
-			pt_ptct = true;
+			pt_rtct = true;
 			break;
 		case CMD_OPT_ACPIDEV_PT:
 			if (parse_pt_acpidev(optarg) != 0)

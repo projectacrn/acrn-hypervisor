@@ -192,7 +192,7 @@ basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
 
-	if (pt_ptct) {
+	if (pt_rtct) {
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 			    basl_acpi_base + RTCT_OFFSET);
 	}
@@ -239,7 +239,7 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
 
-	if (pt_ptct) {
+	if (pt_rtct) {
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 			    basl_acpi_base + RTCT_OFFSET);
 	}
@@ -1208,7 +1208,7 @@ acpi_build(struct vmctx *ctx, int ncpu)
 		i++;
 	}
 
-	if (pt_ptct) {
+	if (pt_rtct) {
 		create_and_inject_vrtct(ctx);
 	}
 

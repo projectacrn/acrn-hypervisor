@@ -11,7 +11,7 @@
 #define RTCT_ENTRY_TYPE_PTCM_BINARY		2U
 #define RTCT_ENTRY_TYPE_WRC_L3_MASKS		3U
 #define RTCT_ENTRY_TYPE_GT_L3_MASKS		4U
-#define RTCT_ENTRY_TYPE_PSRAM			5U
+#define RTCT_ENTRY_TYPE_SSRAM			5U
 #define RTCT_ENTRY_TYPE_STREAM_DATAPATH		6U
 #define RTCT_ENTRY_TYPE_TIMEAWARE_SUBSYS	7U
 #define RTCT_ENTRY_TYPE_RT_IOMMU		8U
@@ -24,7 +24,7 @@ struct rtct_entry {
 	uint32_t data[64];
 } __packed;
 
-struct rtct_entry_data_psram {
+struct rtct_entry_data_ssram {
 	uint32_t cache_level;
 	uint64_t base;
 	uint32_t ways;
