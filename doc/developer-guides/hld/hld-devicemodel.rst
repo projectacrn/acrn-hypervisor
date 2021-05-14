@@ -60,7 +60,7 @@ options:
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
                [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]
                [--debugexit] [--logger-setting param_setting] [--pm_notify_channel]
-               [--pm_by_vuart vuart_node] [--psram] <vm>
+               [--pm_by_vuart vuart_node] [--ssram] <vm>
        -A: create ACPI tables
        -B: bootargs for kernel
        -E: elf image path
@@ -79,7 +79,7 @@ options:
        --mac_seed: set a platform unique string as a seed for generate mac address
        --vsbl: vsbl file path
        --ovmf: ovmf file path
-       --psram: Enable Pseudo (Software) SRAM passthrough
+       --ssram: Enable Software SRAM
        --cpu_affinity: list of pCPUs assigned to this VM
        --part_info: guest partition info file path
        --enable_trusty: enable trusty for guest
