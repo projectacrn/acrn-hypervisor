@@ -23,7 +23,7 @@
 #include "rtct.h"
 
 #define RTCT_ENTRY_HEADER_SIZE 8
-#define RTCT_PSRAM_HEADER_SIZE  (RTCT_ENTRY_HEADER_SIZE + 20)
+#define RTCT_SSRAM_HEADER_SIZE  (RTCT_ENTRY_HEADER_SIZE + 20)
 #define RTCT_MEM_HI_HEADER_SIZE  (RTCT_ENTRY_HEADER_SIZE + 8)
 
 #define BITMASK(nr) (1U << nr)
@@ -113,18 +113,18 @@ static inline void add_rtct_entry(struct acpi_table_hdr *rtct, struct rtct_entry
  *
  * @return 0 on success and non-zero on fail.
  */
-static int vrtct_add_psram_entry(struct acpi_table_hdr *vrtct, uint32_t cache_level, uint64_t base, uint32_t ways,
+static int vrtct_add_ssram_entry(struct acpi_table_hdr *vrtct, uint32_t cache_level, uint64_t base, uint32_t ways,
 					uint32_t size, uint64_t sw_sram_pcpu_bitmask, uint64_t guest_pcpu_bitmask)
 {
 	int vlapicid_num;
 	struct rtct_entry *rtct_entry;
-	struct rtct_entry_data_psram *sw_sram;
+	struct rtct_entry_data_ssram *sw_sram;
 
 	rtct_entry = get_free_rtct_entry(vrtct);
 	rtct_entry->format = 1;
-	rtct_entry->type = RTCT_ENTRY_TYPE_PSRAM;
+	rtct_entry->type = RTCT_ENTRY_TYPE_SSRAM;
 
-	sw_sram =  (struct rtct_entry_data_psram *)rtct_entry->data;
+	sw_sram =  (struct rtct_entry_data_ssram *)rtct_entry->data;
 	sw_sram->cache_level = cache_level;
 	sw_sram->base = base;
 	sw_sram->ways = ways;
@@ -134,7 +134,7 @@ static int vrtct_add_psram_entry(struct acpi_table_hdr *vrtct, uint32_t cache_le
 	if (vlapicid_num <= 0)
 		return -1;
 
-	rtct_entry->size = RTCT_PSRAM_HEADER_SIZE + (vlapicid_num * sizeof(uint32_t));
+	rtct_entry->size = RTCT_SSRAM_HEADER_SIZE + (vlapicid_num * sizeof(uint32_t));
 	add_rtct_entry(vrtct, rtct_entry);
 	return 0;
 }
@@ -184,15 +184,15 @@ static int vrtct_add_mem_hierarchy_entry(struct acpi_table_hdr *vrtct, uint32_t 
 static void remap_software_sram_regions(struct acpi_table_hdr *vrtct)
 {
 	struct rtct_entry *entry;
-	struct rtct_entry_data_psram *sw_sram_region;
+	struct rtct_entry_data_ssram *sw_sram_region;
 	uint64_t hpa_bottom, hpa_top;
 
 	hpa_bottom = (uint64_t)-1;
 	hpa_top = 0;
 
 	foreach_rtct_entry(vrtct, entry) {
-		if (entry->type == RTCT_ENTRY_TYPE_PSRAM) {
-			sw_sram_region = (struct rtct_entry_data_psram *)entry->data;
+		if (entry->type == RTCT_ENTRY_TYPE_SSRAM) {
+			sw_sram_region = (struct rtct_entry_data_ssram *)entry->data;
 			if (hpa_bottom > sw_sram_region->base) {
 				hpa_bottom = sw_sram_region->base;
 			}
@@ -208,8 +208,8 @@ static void remap_software_sram_regions(struct acpi_table_hdr *vrtct)
 	software_sram_size = hpa_top - hpa_bottom;
 
 	foreach_rtct_entry(vrtct, entry) {
-		if (entry->type == RTCT_ENTRY_TYPE_PSRAM) {
-			sw_sram_region = (struct rtct_entry_data_psram *)entry->data;
+		if (entry->type == RTCT_ENTRY_TYPE_SSRAM) {
+			sw_sram_region = (struct rtct_entry_data_ssram *)entry->data;
 			sw_sram_region->base = software_sram_base_gpa + (sw_sram_region->base - hpa_bottom);
 		}
 	}
@@ -231,16 +231,16 @@ static int passthru_rtct_to_guest(struct acpi_table_hdr *vrtct, struct acpi_tabl
 	int i, cpu_num, rc = 0;
 	uint64_t sw_sram_pcpu_bitmask;
 	struct rtct_entry *entry;
-	struct rtct_entry_data_psram *sw_sram;
+	struct rtct_entry_data_ssram *sw_sram;
 	struct rtct_entry_data_mem_hi_latency *mem_hi;
 
 	foreach_rtct_entry(native_rtct, entry) {
 		switch (entry->type) {
-		case RTCT_ENTRY_TYPE_PSRAM:
+		case RTCT_ENTRY_TYPE_SSRAM:
 			{
 				/* Get native CPUs of Software SRAM region */
-				cpu_num = (entry->size - RTCT_PSRAM_HEADER_SIZE) / sizeof(uint32_t);
-				sw_sram =  (struct rtct_entry_data_psram *)entry->data;
+				cpu_num = (entry->size - RTCT_SSRAM_HEADER_SIZE) / sizeof(uint32_t);
+				sw_sram =  (struct rtct_entry_data_ssram *)entry->data;
 				sw_sram_pcpu_bitmask = 0;
 				for (i = 0; i < cpu_num; i++) {
 					sw_sram_pcpu_bitmask |= (1U << lapicid_to_cpuid(sw_sram->apic_id_tbl[i]));
@@ -253,7 +253,7 @@ static int passthru_rtct_to_guest(struct acpi_table_hdr *vrtct, struct acpi_tabl
 					 * in host physical address space, this 'base' will be updated to
 					 * GPA when mapping all Software SRAM regions from HPA to GPA.
 					 */
-					rc = vrtct_add_psram_entry(vrtct, sw_sram->cache_level, sw_sram->base,
+					rc = vrtct_add_ssram_entry(vrtct, sw_sram->cache_level, sw_sram->base,
 						sw_sram->ways, sw_sram->size, sw_sram_pcpu_bitmask, guest_pcpu_bitmask);
 				}
 			}

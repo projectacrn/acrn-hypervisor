@@ -51,7 +51,7 @@ extern char *mac_seed;
 extern bool lapic_pt;
 extern bool is_rtvm;
 extern bool pt_tpm2;
-extern bool pt_ptct;
+extern bool pt_rtct;
 extern bool is_winvm;
 
 int vmexit_task_switch(struct vmctx *ctx, struct vhm_request *vhm_req,
