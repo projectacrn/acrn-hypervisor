@@ -7,6 +7,7 @@
 #include <asm/e820.h>
 #include <asm/mmu.h>
 #include <asm/guest/vm.h>
+#include <asm/guest/ept.h>
 #include <reloc.h>
 #include <vacpi.h>
 #include <logmsg.h>
@@ -18,6 +19,55 @@
 
 static struct e820_entry sos_vm_e820[E820_MAX_ENTRIES];
 static struct e820_entry pre_vm_e820[PRE_VM_NUM][E820_MAX_ENTRIES];
+
+uint64_t find_space_from_ve820(struct acrn_vm *vm, uint32_t size, uint64_t min_addr, uint64_t max_addr)
+{
+	int32_t i;
+	uint64_t gpa = INVALID_GPA;
+	uint64_t round_min_addr = round_page_up(min_addr);
+	uint64_t round_max_addr = round_page_down(max_addr);
+	uint32_t round_size = round_page_up(size);
+
+	for (i = (int32_t)(vm->e820_entry_num - 1U); i >= 0; i--) {
+		struct e820_entry *entry = vm->e820_entries + i;
+		uint64_t start, end, length;
+
+		start = round_page_up(entry->baseaddr);
+		end = round_page_down(entry->baseaddr + entry->length);
+		length = (end > start) ? (end - start) : 0UL;
+
+		if ((entry->type == E820_TYPE_RAM) && (length >= round_size)
+				&& (end > round_min_addr) && (start < round_max_addr)) {
+			if (((start >= min_addr) && ((start + round_size) <= min(end, round_max_addr)))
+				|| ((start < min_addr) && ((min_addr + round_size) <= min(end, round_max_addr)))) {
+				gpa = (end > round_max_addr) ? (round_max_addr - round_size) : (end - round_size);
+				break;
+			}
+		}
+	}
+	return gpa;
+}
+
+/* a sorted VM e820 table is critical for memory allocation or slot location,
+ * for example, put ramdisk at the end of TOLUD(Top of LOW Usable DRAM) and
+ * put kernel at its begining so that provide largest load capicity for them.
+ */
+static void sort_vm_e820(struct acrn_vm *vm)
+{
+	uint32_t i,j;
+	struct e820_entry tmp_entry;
+
+	/* Bubble sort */
+	for (i = 0U; i < (vm->e820_entry_num - 1U); i++) {
+		for (j = 0U; j < (vm->e820_entry_num - i - 1U); j++) {
+			if (vm->e820_entries[j].baseaddr > vm->e820_entries[j + 1U].baseaddr) {
+				tmp_entry = vm->e820_entries[j];
+				vm->e820_entries[j] = vm->e820_entries[j + 1U];
+				vm->e820_entries[j + 1U] = tmp_entry;
+			}
+		}
+	}
+}
 
 static void filter_mem_from_sos_e820(struct acrn_vm *vm, uint64_t start_pa, uint64_t end_pa)
 {
@@ -122,6 +172,7 @@ void create_sos_vm_e820(struct acrn_vm *vm)
 			sos_vm_config->memory.size += entry->length;
 		}
 	}
+	sort_vm_e820(vm);
 }
 
 static const struct e820_entry pre_ve820_template[E820_MAX_ENTRIES] = {
@@ -274,4 +325,5 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 	}
 
 	vm->e820_entry_num = entry_idx;
+	sort_vm_e820(vm);
 }
