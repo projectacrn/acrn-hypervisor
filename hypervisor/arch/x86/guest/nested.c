@@ -228,8 +228,156 @@ int32_t read_vmx_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 	return err;
 }
 
+/* make it 1 to be able to build. correctly initialize it in next patch */
+#define MAX_SHADOW_VMCS_FIELDS 1
+/*
+ * VMCS fields included in the dual-purpose VMCS: as shadow for L1 and
+ * as hardware VMCS for nested guest (L2).
+ *
+ * TODO: This list is for TGL and CFL machines and the fields
+ * for advacned APICv features such as Posted Interrupt and Virtual
+ * Interrupt Delivery are not included, as these are not available
+ * on those platforms.
+ *
+ * Certain fields, e.g. VMX_TSC_MULTIPLIER_FULL is available only if
+ * "use TSC scaling” is supported. Thus a static array may not work
+ * for all platforms.
+ */
+static const uint32_t vmcs_shadowing_fields[MAX_SHADOW_VMCS_FIELDS] = {
+};
+
 /* to be shared by all vCPUs for all nested guests */
 static uint64_t vmcs_shadowing_bitmap[PAGE_SIZE / sizeof(uint64_t)] __aligned(PAGE_SIZE);
+
+/*
+ * This is an array of offsets into a structure of type "struct acrn_vmcs12"
+ * 16 offsets for a total of 16 GROUPs. 4 "field widths" by 4 "field types".
+ * "Field type" is either Control, Read-Only Data, Guest State or Host State.
+ * Refer to the definition of "struct acrn_vmcs12" on how the fields are
+ * grouped together for these offsets to work in tandem.
+ * Refer to Intel SDM Appendix B Field Encoding in VMCS for info on how
+ * fields are grouped and indexed within a group.
+ */
+static const uint16_t vmcs12_group_offset_table[16] = {
+	offsetof(struct acrn_vmcs12, vpid),		/* 16-bit Control Fields */
+	offsetof(struct acrn_vmcs12, padding),		/* 16-bit Read-Only Fields */
+	offsetof(struct acrn_vmcs12, guest_es),		/* 16-bit Guest-State Fields */
+	offsetof(struct acrn_vmcs12, host_es),		/* 16-bit Host-State Fields */
+	offsetof(struct acrn_vmcs12, io_bitmap_a),	/* 64-bit Control Fields */
+	offsetof(struct acrn_vmcs12, guest_phys_addr),	/* 64-bit Read-Only Data Fields */
+	offsetof(struct acrn_vmcs12, vmcs_link_ptr),	/* 64-bit Guest-State Fields */
+	offsetof(struct acrn_vmcs12, host_ia32_pat),	/* 64-bit Host-State Fields */
+	offsetof(struct acrn_vmcs12, pin_based_exec_ctrl),	/* 32-bit Control Fields */
+	offsetof(struct acrn_vmcs12, vm_instr_error),	/* 32-bit Read-Only Data Fields */
+	offsetof(struct acrn_vmcs12, guest_es_limit),	/* 32-bit Guest-State Fields */
+	offsetof(struct acrn_vmcs12, host_ia32_sysenter_cs),	/* 32-bit Host-State Fields */
+	offsetof(struct acrn_vmcs12, cr0_guest_host_mask),	/* Natural-width Control Fields */
+	offsetof(struct acrn_vmcs12, exit_qual),		/* Natural-width Read-Only Data Fields */
+	offsetof(struct acrn_vmcs12, guest_cr0),		/* Natural-width Guest-State Fields */
+	offsetof(struct acrn_vmcs12, host_cr0),			/* Natural-width Host-State Fields */
+};
+
+/*
+ * field_idx is the index of the field within the group.
+ *
+ * Access-type is 0 for all widths except for 64-bit
+ * For 64-bit if Access-type is 1, offset is moved to
+ * high 4 bytes of the field.
+ */
+#define OFFSET_INTO_VMCS12(group_idx, field_idx, width_in_bytes, access_type) \
+	(vmcs12_group_offset_table[group_idx] + \
+	field_idx * width_in_bytes + \
+	access_type * sizeof(uint32_t))
+
+/* Given a vmcs field, this API returns the offset into "struct acrn_vmcs12" */
+static uint16_t vmcs_field_to_vmcs12_offset(uint32_t vmcs_field)
+{
+	/*
+	 * Refer to Appendix B Field Encoding in VMCS in SDM
+	 * A value of group index 0001b is not valid because there are no 16-bit
+	 * Read-Only fields.
+	 *
+	 * TODO: check invalid VMCS field
+	 */
+	uint16_t group_idx = (VMX_VMCS_FIELD_WIDTH(vmcs_field) << 2U) | VMX_VMCS_FIELD_TYPE(vmcs_field);
+	uint8_t field_width = VMX_VMCS_FIELD_WIDTH(vmcs_field);
+	uint8_t width_in_bytes;
+
+	if (field_width == VMX_VMCS_FIELD_WIDTH_16) {
+		width_in_bytes = 2U;
+	} else if (field_width == VMX_VMCS_FIELD_WIDTH_32) {
+		width_in_bytes = 4U;
+	} else {
+		/*
+		 * Natural-width or 64-bit
+		 */
+		width_in_bytes = 8U;
+	}
+
+	return OFFSET_INTO_VMCS12(group_idx,
+		VMX_VMCS_FIELD_INDEX(vmcs_field), width_in_bytes, /* field index within the group */
+		VMX_VMCS_FIELD_ACCESS_HIGH(vmcs_field));
+}
+
+/*
+ * Given a vmcs field and the pointer to the vmcs12, this API returns the
+ * corresponding value from the VMCS
+ */
+static uint64_t vmcs12_read_field(uint64_t vmcs_hva, uint32_t field)
+{
+	uint64_t *ptr = (uint64_t *)(vmcs_hva + vmcs_field_to_vmcs12_offset(field));
+	uint64_t val64 = 0UL;
+
+	switch (VMX_VMCS_FIELD_WIDTH(field)) {
+		case VMX_VMCS_FIELD_WIDTH_16:
+			val64 = *(uint16_t *)ptr;
+			break;
+		case VMX_VMCS_FIELD_WIDTH_32:
+			val64 = *(uint32_t *)ptr;
+			break;
+		case VMX_VMCS_FIELD_WIDTH_64:
+			if (!!VMX_VMCS_FIELD_ACCESS_HIGH(field)) {
+				val64 = *(uint32_t *)ptr;
+			} else {
+				val64 = *ptr;
+			}
+			break;
+		case VMX_VMCS_FIELD_WIDTH_NATURAL:
+		default:
+			val64 = *ptr;
+			break;
+	}
+
+	return val64;
+}
+
+/*
+ * Write the given VMCS field to the given vmcs12 data structure.
+ */
+static void vmcs12_write_field(uint64_t vmcs_hva, uint32_t field, uint64_t val64)
+{
+	uint64_t *ptr = (uint64_t *)(vmcs_hva + vmcs_field_to_vmcs12_offset(field));
+
+	switch (VMX_VMCS_FIELD_WIDTH(field)) {
+		case VMX_VMCS_FIELD_WIDTH_16:
+			*(uint16_t *)ptr = (uint16_t)val64;
+			break;
+		case VMX_VMCS_FIELD_WIDTH_32:
+			*(uint32_t *)ptr = (uint32_t)val64;
+			break;
+		case VMX_VMCS_FIELD_WIDTH_64:
+			if (!!VMX_VMCS_FIELD_ACCESS_HIGH(field)) {
+				*(uint32_t *)ptr = (uint32_t)val64;
+			} else {
+				*ptr = val64;
+			}
+			break;
+		case VMX_VMCS_FIELD_WIDTH_NATURAL:
+		default:
+			*ptr = val64;
+			break;
+	}
+}
 
 void nested_vmx_result(enum VMXResult result, int error_number)
 {
@@ -495,10 +643,16 @@ int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu)
  * @pre vcpu != NULL
  * @pre vmcs02 is current
  */
-static void sync_vmcs02_to_vmcs12(__unused struct acrn_vcpu *vcpu)
+static void sync_vmcs02_to_vmcs12(struct acrn_vcpu *vcpu)
 {
-	/* Implemented in next patch */
-	return;
+	uint64_t vmcs12 = (uint64_t)&vcpu->arch.nested.vmcs12;
+	uint64_t val64;
+	uint32_t idx;
+
+	for (idx = 0; idx < MAX_SHADOW_VMCS_FIELDS; idx++) {
+		val64 = exec_vmread(vmcs_shadowing_fields[idx]);
+		vmcs12_write_field(vmcs12, vmcs_shadowing_fields[idx], val64);
+	}
 }
 
 /**
@@ -507,10 +661,20 @@ static void sync_vmcs02_to_vmcs12(__unused struct acrn_vcpu *vcpu)
  * @pre vcpu != NULL
  * @pre vmcs02 is current
  */
-static void sync_vmcs12_to_vmcs02(__unused struct acrn_vcpu *vcpu)
+static void sync_vmcs12_to_vmcs02(struct acrn_vcpu *vcpu)
 {
-	/* Implemented in next patch */
-	return;
+	uint64_t vmcs12 = (uint64_t)&vcpu->arch.nested.vmcs12;
+	uint64_t val64;
+	uint32_t idx;
+
+	for (idx = 0; idx < MAX_SHADOW_VMCS_FIELDS; idx++) {
+		val64 = vmcs12_read_field(vmcs12, vmcs_shadowing_fields[idx]);
+		exec_vmwrite(vmcs_shadowing_fields[idx], val64);
+	}
+
+	/* Sync VMCS fields that are not shadowing */
+	val64 = vmcs12_read_field(vmcs12, VMX_MSR_BITMAP_FULL);
+	exec_vmwrite(VMX_MSR_BITMAP_FULL, gpa2hpa(vcpu->vm, val64));
 }
 
 /*
