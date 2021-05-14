@@ -127,12 +127,12 @@ void create_sos_vm_e820(struct acrn_vm *vm)
 static const struct e820_entry pre_ve820_template[E820_MAX_ENTRIES] = {
 	{	/* usable RAM under 1MB */
 		.baseaddr = 0x0UL,
-		.length   = 0xF0000UL,		/* 960KB */
+		.length   = 0xA0000UL,		/* 640KB */
 		.type     = E820_TYPE_RAM
 	},
-	{	/* mptable/RSDP */
-		.baseaddr = 0xF0000UL,		/* 960KB */
-		.length   = 0x10000UL,		/* 64KB */
+	{	/* Video/BIOS extentions */
+		.baseaddr = 0xA0000UL,
+		.length   = 0x60000UL,		/* 384KB */
 		.type     = E820_TYPE_RESERVED
 	},
 	/* Software SRAM segment splits the lowmem into two parts */
