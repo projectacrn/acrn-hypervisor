@@ -224,7 +224,7 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
 
-	/* FIXME: Here wastes 8MB memory if pSRAM is enabled, and 64MB+16KB if
+	/* FIXME: Here wastes 8MB memory if SSRAM is enabled, and 64MB+16KB if
 	 * GPU reserved memory is exist.
 	 *
 	 * Determines the GPU region due to DSM identical mapping.
