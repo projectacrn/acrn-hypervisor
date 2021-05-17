@@ -95,6 +95,7 @@
 <xsl:template name="sos_bootargs_diff">
   <xsl:variable name="bootargs" select="normalize-space(vm[acrn:is-sos-vm(vm_type)]/board_private/bootargs[text()])" />
   <xsl:variable name="maxcpunum" select="count(//vm[acrn:is-sos-vm(vm_type)]/cpu_affinity/pcpu_id)" />
+  <xsl:variable name="hugepages" select="round(number(substring-before(//board-data//TOTAL_MEM_INFO, 'kB')) div (1024 * 1024)) - 3" />
   <xsl:variable name="maxcpus">
     <xsl:choose>
       <xsl:when test="$maxcpunum != 0">
@@ -105,7 +106,12 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
-  <xsl:value-of select="acrn:define('SOS_BOOTARGS_DIFF', concat($quot, $bootargs, ' ', $maxcpus, ' ', $quot), '')" />
+  <xsl:variable name="hugepage_kernelstring">
+    <xsl:if test="//board-data//processors//capability[@id='gbyte_pages']">
+      <xsl:value-of select="concat('hugepagesz=1G hugepages=', $hugepages)" />
+    </xsl:if>
+  </xsl:variable>
+  <xsl:value-of select="acrn:define('SOS_BOOTARGS_DIFF', concat($quot, $bootargs, ' ', $maxcpus, ' ', $hugepage_kernelstring, ' ', $quot), '')" />
 </xsl:template>
 
 <xsl:template name="cpu_affinity">
