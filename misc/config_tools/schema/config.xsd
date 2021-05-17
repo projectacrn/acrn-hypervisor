@@ -156,13 +156,13 @@ Machine Check Error on Page Size Change.</xs:documentation>
         <xs:documentation>Enable Inter-VM Shared memory feature.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="PSRAM" minOccurs="0" type="PSRAMInfo">
+    <xs:element name="SSRAM" minOccurs="0" type="SSRAMInfo">
       <xs:annotation>
         <xs:documentation>Pseudo SRAM configuration.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
-  <xs:assert test="not (RDT/RDT_ENABLED = 'y' and PSRAM/PSRAM_ENABLED = 'y')"/>
+  <xs:assert test="not (RDT/RDT_ENABLED = 'y' and SSRAM/SSRAM_ENABLED = 'y')"/>
   <xs:assert test="not (NVMX_ENABLED = 'y' and not (SCHEDULER = 'SCHED_NOOP'))"/>
 </xs:complexType>
 

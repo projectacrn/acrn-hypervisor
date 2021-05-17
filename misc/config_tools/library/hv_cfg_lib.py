@@ -233,8 +233,8 @@ def max_msix_table_num_check(max_msix_table_num, cap_str, max_msi_num_str):
         range_check(native_max_msix_num, "In board xml", max_msi_num_str, RANGE_DB['MSIX_TABLE_NUM'])
 
 
-def hv_psram_check(psram_enabled, cpd_enabled, feature, tag, leaf):
+def hv_ssram_check(ssram_enabled, cpd_enabled, feature, tag, leaf):
     key = 'hv,{},{},{}'.format(feature, tag, leaf)
-    if psram_enabled == 'y' and cpd_enabled == 'y':
-        ERR_LIST[key] = "PSRAM_ENABLED should not be y when CDP_ENABLED is y."
+    if ssram_enabled == 'y' and cpd_enabled == 'y':
+        ERR_LIST[key] = "SSRAM_ENABLED should not be y when CDP_ENABLED is y."
         return

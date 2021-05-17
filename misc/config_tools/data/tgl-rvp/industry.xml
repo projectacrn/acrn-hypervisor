@@ -28,9 +28,9 @@
         <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
         <IVSHMEM_REGION>hv:/shm_region_0, 2, 2:3</IVSHMEM_REGION>
       </IVSHMEM>
-      <PSRAM>
-        <PSRAM_ENABLED>n</PSRAM_ENABLED>
-      </PSRAM>
+      <SSRAM>
+        <SSRAM_ENABLED>n</SSRAM_ENABLED>
+      </SSRAM>
     </FEATURES>
     <MEMORY>
         <STACK_SIZE>0x2000</STACK_SIZE>

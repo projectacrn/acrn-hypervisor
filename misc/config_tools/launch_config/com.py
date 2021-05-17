@@ -613,14 +613,14 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     # shm regions args set
     shm_arg_set(dm, vmid, config)
 
-    # psram set
-    psram_enabled = 'n'
+    # ssram set
+    ssram_enabled = 'n'
     try:
-        psram_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "PSRAM", "PSRAM_ENABLED")
+        ssram_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "SSRAM", "SSRAM_ENABLED")
     except:
         pass
-    if uos_type == "PREEMPT-RT LINUX" and psram_enabled == 'y':
-        print("   --psram \\", file=config)
+    if uos_type == "PREEMPT-RT LINUX" and ssram_enabled == 'y':
+        print("   --ssram \\", file=config)
 
     for value in sel.bdf.values():
         if value[vmid]:

@@ -114,8 +114,8 @@
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key-value">
-      <xsl:with-param name="key" select="'PSRAM_ENABLED'" />
-      <xsl:with-param name="value" select="PSRAM/PSRAM_ENABLED" />
+      <xsl:with-param name="key" select="'SSRAM_ENABLED'" />
+      <xsl:with-param name="value" select="SSRAM/SSRAM_ENABLED" />
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key-value">
