@@ -57,7 +57,7 @@
     <vm_type>SOS_VM</vm_type>
     <name>ACRN SOS VM</name>
     <guest_flags>
-      <guest_flag></guest_flag>
+      <guest_flag>0</guest_flag>
     </guest_flags>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -105,7 +105,7 @@
   <vm id="1">
     <vm_type>POST_STD_VM</vm_type>
     <guest_flags>
-      <guest_flag></guest_flag>
+      <guest_flag>0</guest_flag>
     </guest_flags>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -143,7 +143,7 @@
   <vm id="2">
     <vm_type>POST_RT_VM</vm_type>
     <guest_flags>
-      <guest_flag></guest_flag>
+      <guest_flag>0</guest_flag>
     </guest_flags>
     <cpu_affinity>
       <pcpu_id>2</pcpu_id>
@@ -181,7 +181,7 @@
   <vm id="3">
     <vm_type>POST_STD_VM</vm_type>
     <guest_flags>
-      <guest_flag></guest_flag>
+      <guest_flag>0</guest_flag>
     </guest_flags>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -219,7 +219,7 @@
   <vm id="4">
     <vm_type>POST_STD_VM</vm_type>
     <guest_flags>
-      <guest_flag></guest_flag>
+      <guest_flag>0</guest_flag>
     </guest_flags>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -257,7 +257,7 @@
   <vm id="5">
     <vm_type>POST_STD_VM</vm_type>
     <guest_flags>
-      <guest_flag></guest_flag>
+      <guest_flag>0</guest_flag>
     </guest_flags>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -295,7 +295,7 @@
   <vm id="6">
     <vm_type>POST_STD_VM</vm_type>
     <guest_flags>
-      <guest_flag></guest_flag>
+      <guest_flag>0</guest_flag>
     </guest_flags>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>

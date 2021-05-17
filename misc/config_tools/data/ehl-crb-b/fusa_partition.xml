@@ -71,7 +71,7 @@
         <vm_type>PRE_STD_VM</vm_type>
         <name>ACRN PRE-LAUNCHED VM0</name>
         <guest_flags>
-            <guest_flag></guest_flag>
+            <guest_flag>0</guest_flag>
         </guest_flags>
         <cpu_affinity>
             <pcpu_id>0</pcpu_id>
