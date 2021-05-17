@@ -6,6 +6,7 @@
 #include <types.h>
 #include <asm/lib/bits.h>
 #include <rtl.h>
+#include <util.h>
 #include <logmsg.h>
 #include <misc_cfg.h>
 #include <asm/mmu.h>
@@ -20,6 +21,15 @@ static uint64_t ssram_top_hpa;
 static volatile bool is_sw_sram_initialized = false;
 
 #ifdef CONFIG_SSRAM_ENABLED
+
+#define foreach_rtct_entry(rtct, e) \
+	for (e = (void *)rtct + sizeof(struct acpi_table_header); \
+		((uint64_t)e - (uint64_t)rtct) < rtct->length; \
+		e = (struct rtct_entry *)((uint64_t)e + e->size))
+
+#define RTCT_V1 1U
+#define RTCT_V2 2U
+static uint32_t rtct_version = RTCT_V1;
 
 static struct rtct_entry_data_rtcm_binary *rtcm_binary = NULL;
 
@@ -36,6 +46,9 @@ void set_rtct_tbl(void *rtct_tbl_addr)
 }
 
 /*
+ *@desc This function parses native RTCT ACPI talbe to figure out the entry to CRL binary
+ *	and SSRAM range. All SSRAM regions shall be continuous and L3 cache be inclusive.
+ *
  *@pre the SSRAM region is separate and never mixed with normal DRAM
  *@pre acpi_rtct_tbl != NULL
  */
@@ -44,33 +57,49 @@ static void parse_rtct(void)
 	uint64_t bottom_hpa = ULONG_MAX;
 	struct rtct_entry *entry;
 	struct rtct_entry_data_ssram *ssram;
+	struct rtct_entry_data_ssram_v2 *ssram_v2;
+	struct rtct_entry_data_compatibility *compat;
 
-	entry = get_rtct_entry_base();
-	while (((uint64_t)entry - (uint64_t)acpi_rtct_tbl) < acpi_rtct_tbl->length) {
-		switch (entry->type) {
-		case RTCT_ENTRY_TYPE_RTCM_BINARY:
-			rtcm_binary = (struct rtct_entry_data_rtcm_binary *)entry->data;
-			ASSERT((rtcm_binary->address != 0UL && rtcm_binary->size != 0U), "Invalid PTCM binary.");
-			pr_info("found RTCM bin, in HPA %llx, size %llx", rtcm_binary->address, rtcm_binary->size);
-			break;
-
-		case RTCT_ENTRY_TYPE_SOFTWARE_SRAM:
-			ssram = (struct rtct_entry_data_ssram *)entry->data;
-			if (ssram_top_hpa < ssram->base + ssram->size) {
-				ssram_top_hpa = ssram->base + ssram->size;
-			}
-			if (bottom_hpa > ssram->base) {
-				bottom_hpa = ssram->base;
-			}
-			pr_info("found L%d Software SRAM, at HPA %llx, size %x", ssram->cache_level,
-				ssram->base, ssram->size);
-			break;
-		/* In current phase, we ignore other entries like gt_clos and wrc_close */
-		default:
+	/* Check RTCT format */
+	foreach_rtct_entry(acpi_rtct_tbl, entry) {
+		if (entry->type == RTCT_V2_COMPATIBILITY) {
+			compat = (struct rtct_entry_data_compatibility *)entry->data;
+			rtct_version = compat->rtct_ver_major;
 			break;
 		}
-		/* point to next rtct entry */
-		entry = (struct rtct_entry *)((uint64_t)entry + entry->size);
+	}
+	pr_info("RTCT Version: V%d.\n", rtct_version);
+
+	if (rtct_version == RTCT_V1) {
+		foreach_rtct_entry(acpi_rtct_tbl, entry) {
+			if (entry->type == RTCT_ENTRY_TYPE_SOFTWARE_SRAM) {
+				ssram = (struct rtct_entry_data_ssram *)entry->data;
+
+				ssram_top_hpa = max(ssram_top_hpa, ssram->base + ssram->size);
+				bottom_hpa = min(bottom_hpa, ssram->base);
+				pr_info("found L%d Software SRAM, at HPA %llx, size %x",
+					ssram->cache_level, ssram->base, ssram->size);
+			} else if (entry->type == RTCT_ENTRY_TYPE_RTCM_BINARY) {
+				rtcm_binary = (struct rtct_entry_data_rtcm_binary *)entry->data;
+				ASSERT((rtcm_binary->address != 0UL && rtcm_binary->size != 0U),
+					"Invalid PTCM binary.");
+			}
+		}
+	} else if (rtct_version == RTCT_V2) {
+		foreach_rtct_entry(acpi_rtct_tbl, entry) {
+			if (entry->type == RTCT_V2_SSRAM) {
+				ssram_v2 = (struct rtct_entry_data_ssram_v2 *)entry->data;
+
+				ssram_top_hpa = max(ssram_top_hpa, ssram_v2->base + ssram_v2->size);
+				bottom_hpa = min(bottom_hpa, ssram_v2->base);
+				pr_info("found L%d Software SRAM, at HPA %llx, size %x",
+					ssram_v2->cache_level, ssram_v2->base, ssram_v2->size);
+			} else if (entry->type == RTCT_V2_CRL_BINARY) {
+				rtcm_binary = (struct rtct_entry_data_rtcm_binary *)entry->data;
+				ASSERT((rtcm_binary->address != 0UL && rtcm_binary->size != 0U),
+					"Invalid PTCM binary.");
+			}
+		}
 	}
 
 	if (bottom_hpa != ULONG_MAX) {
