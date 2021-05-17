@@ -12,6 +12,6 @@ int parse_pt_acpidev(char *arg);
 int parse_pt_mmiodev(char *arg);
 
 int init_mmio_devs(struct vmctx *ctx);
-int deinit_mmio_devs(struct vmctx *ctx);
+void deinit_mmio_devs(struct vmctx *ctx);
 
 #endif /* _MMIO_DEV_H_ */
