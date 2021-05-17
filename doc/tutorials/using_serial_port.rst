@@ -1,35 +1,38 @@
 .. _connect_serial_port:
 
-Using the Serial Port on KBL Intel NUC
-======================================
+Enable Serial Port on NUC
+#########################
 
+Option 1: Using the Serial Port on TGL Intel NUC
+================================================
+ 
 You can enable the serial console on the
-`KBL Intel NUC <https://www.amazon.com/Intel-Business-Mini-Technology-BLKNUC7i7DNH1E/dp/B07CCQ8V4R>`_
-(NUC7i7DNH). The KBL Intel NUC has a serial port header you can
+`TGL Intel NUC <https://ark.intel.com/content/www/us/en/ark/products/205594/intel-nuc-11-pro-kit-nuc11tnhi5.html?wapkw=NUC11TNHi5>`_.
+(NUC11TNHi5). The TGL Intel NUC has a serial port header you can
 expose with a serial DB9 header cable. (The Intel NUC has a punch out hole for
 mounting the serial connector.)
 
-.. figure:: images/NUC-serial-port.jpg
+.. figure:: images/NUC11TNH-serial-port.png
 
-   KBL Intel NUC with populated serial port punchout
+   TGL Intel NUC with populated serial port punchout
 
 You can `purchase
 <https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6>`_
 such a cable or you can build it yourself;
-refer to the `KBL Intel NUC product specification
-<https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i7DN_TechProdSpec.pdf>`_
+refer to the `TGL Intel NUC product specification
+<https://ark.intel.com/content/www/us/en/ark/products/205594/intel-nuc-11-pro-kit-nuc11tnhi5.html>`_
 as shown below:
 
-.. figure:: images/KBL-serial-port-header.png
+.. figure:: images/NUC11TNH-serial-port-header.png
    :scale: 80
 
-   KBL serial port header details
+   NUC11TNH serial port header details
 
 
-.. figure:: images/KBL-serial-port-header-to-RS232-cable.jpg
+.. figure:: images/NUC11TNH-serial-port-header-to-RS232-cable.png
    :scale: 80
 
-   KBL `serial port header to RS232 cable
+   NUC11TNH `serial port header to RS232 cable
    <https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6>`_
 
 
@@ -41,3 +44,64 @@ to connect to your host system.
 
 Note that If you want to use the RS232 DB9 female/female cable, choose
 the **cross-over** type rather than **straight-through** type.
+
+Option 2: Enabling PCIe Serial Port on TGL Intel NUC
+====================================================
+
+If there is no internal serial port header on your NUC; you can enable PCIe serial port to debug the issues effeciently.
+As you know,most of the NUC don't have PCIe interface,but have NVMe M.2 interface;so the additional M.2 to PCIe adaptor is needed to 
+enabnle PCIe serial port on NUC.You can buy the `adaptor 
+<https://item.jd.com/10025455296900.html>`_ first; Then buy the PCIe serial card with `StarTech 2 Port Native PCI Express 
+<https://www.ebay.ca/i/351912927278>`_  or `IO-PCE99100-2S.
+<https://item.jd.com/1126612955.html>`_ 
+Both of them are verified with this `commit.
+<https://github.com/projectacrn/acrn-hypervisor/commit/9e838248c3ce4d6b68e1c5b068d10d566a06db10>`_
+
+.. figure:: images/NVMe-M.2-to-PCIe-adaptor.png
+   :scale: 80
+
+   NVMe M.2 to PCIe adaptor
+
+.. figure:: images/PCIe-serial-StarTech.png
+   :scale: 80
+
+   StarTech 2 Port Native PCI Express
+
+.. figure:: images/PCIe-serial-LeKuo.png
+   :scale: 80
+
+   IO-PCE99100-2S
+
+    
+Check the BDF Information
+*************************
+Connection as following,boot into native and check the bdf information of the adapter using: ``lspci``
+
+.. figure:: images/PCIe-serial-Connection.png
+   :scale: 80
+
+   PCIe Serial Connection on NUC
+
+.. code-block:: bash
+   
+   01:00.0 Serial controller: Asix Electronics Corporation Device 9100
+   01:00.1 Serial controller: Asix Electronics Corporation Device 9100
+
+Convert the BDF to Hex Format
+*****************************
+
+Refer this :ref:`hv-parameters` to change bdf 01:00.1 to Hex format: 0x101;
+Then adding it into grub menu:
+
+.. Note::
+
+   multiboot2 /boot/acrn.bin  root=PARTUUID="b1bebafc-2b06-43e2-bf6a-323337daebc0“ uart=bdf@0x101
+
+.. Note::
+
+   uart=bdf@0x100 for port 1
+
+   uart=bdf@0x101 for port 2
+
+   uart=bdf@0x101 is preferred for industry scenario; otherwise it can’t input in Hypervisor console after Service VM boots up.
+   There is no this limitation for hybrid and hybrid_rt scenario.
