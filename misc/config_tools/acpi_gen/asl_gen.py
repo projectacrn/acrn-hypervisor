@@ -434,7 +434,7 @@ def main(args):
     PASSTHROUGH_PTCT = False
     PRELAUNCHED_RTVM_ID = None
     try:
-        if scenario_root.find('hv/FEATURES/PSRAM/PSRAM_ENABLED').text.strip() == 'y':
+        if scenario_root.find('hv/FEATURES/SSRAM/SSRAM_ENABLED').text.strip() == 'y':
             PASSTHROUGH_PTCT = True
         for vm in scenario_root.findall('vm'):
             vm_id = vm.attrib['id']

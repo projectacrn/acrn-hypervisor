@@ -8,7 +8,7 @@ from acpiparser import parse_rtct
 import acpiparser.rtct
 import parser_lib
 
-def dump_psram(config):
+def dump_ssram(config):
     print("\t<RTCT>", file=config)
 
     rtct = None
@@ -40,4 +40,4 @@ def generate_info(board_info):
     :param board_info: this is the file which stores the hardware board information
     """
     with open(board_info, 'a+') as config:
-        dump_psram(config)
+        dump_ssram(config)

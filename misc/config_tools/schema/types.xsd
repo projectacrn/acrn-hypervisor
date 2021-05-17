@@ -189,9 +189,9 @@ are allowed. The value will be ignored when hardware does not support RDT.</xs:d
   </xs:sequence>
 </xs:complexType>
 
-<xs:complexType name="PSRAMInfo">
+<xs:complexType name="SSRAMInfo">
   <xs:sequence>
-    <xs:element name="PSRAM_ENABLED" type="Boolean" default="n">
+    <xs:element name="SSRAM_ENABLED" type="Boolean" default="n">
       <xs:annotation>
         <xs:documentation>Enable PTCM (Platform Tuning Configuration
 Manager).</xs:documentation>

@@ -90,7 +90,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["hv,FEATURES,MCE_ON_PSC_DISABLED"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,IOMMU_ENFORCE_SNP"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,IVSHMEM,IVSHMEM_ENABLED"] = hv_cfg_lib.N_Y
-    scenario_item_values["hv,FEATURES,PSRAM,PSRAM_ENABLED"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,SSRAM,SSRAM_ENABLED"] = hv_cfg_lib.N_Y
 
     scenario_cfg_lib.ERR_LIST.update(hv_cfg_lib.ERR_LIST)
     return scenario_item_values

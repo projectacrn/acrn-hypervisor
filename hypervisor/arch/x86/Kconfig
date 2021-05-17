@@ -260,7 +260,7 @@ config CDP_ENABLED
 	  prioritization of code and data fetches to the L2 or L3 cache in a
 	  software configurable manner, depending on hardware support.
 
-config PSRAM_ENABLED
+config SSRAM_ENABLED
 	bool "Enable Software SRAM support"
 	depends on !CDP_ENABLED
 	default n

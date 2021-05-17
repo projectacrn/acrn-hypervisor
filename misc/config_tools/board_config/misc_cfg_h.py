@@ -191,7 +191,7 @@ def swsram_base_gpa_gen(config):
 
     """
     scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
-    enabled = scenario_etree.xpath("//PSRAM_ENABLED")
+    enabled = scenario_etree.xpath("//SSRAM_ENABLED")
     if enabled and enabled[0].text == "y":
         pre_rt_vms = scenario_etree.xpath("//vm/vm_type[text() ='PRE_RT_VM']")
         if pre_rt_vms:

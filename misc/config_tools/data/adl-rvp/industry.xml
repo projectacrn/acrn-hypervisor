@@ -30,9 +30,9 @@
             <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
             <IVSHMEM_REGION/>
         </IVSHMEM>
-        <PSRAM>
-            <PSRAM_ENABLED>n</PSRAM_ENABLED>
-        </PSRAM>
+        <SSRAM>
+            <SSRAM_ENABLED>n</SSRAM_ENABLED>
+        </SSRAM>
     </FEATURES>
 
     <MEMORY>

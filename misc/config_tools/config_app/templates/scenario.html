@@ -204,7 +204,7 @@ the source files will be generated into default path and overwirte the previous 
                             {% for sub_elem in elem|list %}
                                 {% set sub_elem_text = sub_elem.text if sub_elem.text != None else '' %}
 
-                                {% if sub_elem.tag in ['RDT', 'IVSHMEM', 'PSRAM'] %}
+                                {% if sub_elem.tag in ['RDT', 'IVSHMEM', 'SSRAM'] %}
                                     {% for sub_elem_2 in sub_elem|list %}
                                     {% set sub_elem_2_text = sub_elem_2.text if sub_elem_2.text != None else '' %}
                                     {% if ','.join([vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag]) in scenario_item_values %}
