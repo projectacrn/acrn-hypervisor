@@ -32,6 +32,7 @@
  */
 
 
+#include <elf.h>
 #include <efi.h>
 #include <efilib.h>
 #include "boot.h"
@@ -40,7 +41,64 @@
 #include "multiboot.h"
 #include "container.h"
 
-EFI_STATUS load_container_image(EFI_LOADED_IMAGE *info, struct multiboot_module **mods_addr, uint32_t *mods_count)
+EFI_STATUS load_acrn_elf(const UINT8 *elf_image, EFI_PHYSICAL_ADDRESS *hv_hpa)
+{
+	EFI_STATUS err = EFI_SUCCESS;
+	int i;
+
+	EFI_PHYSICAL_ADDRESS addr = 0u;
+
+	Elf32_Ehdr *ehdr  = (Elf32_Ehdr *)(elf_image);
+	Elf32_Phdr *pbase = (Elf32_Phdr *)(elf_image + ehdr->e_phoff);
+	Elf32_Phdr *phdr  = (Elf32_Phdr *)(elf_image + ehdr->e_phoff);
+
+	/* without relocateion enabled, hypervisor binary need to reside in
+	 * fixed memory address starting from CONFIG_HV_RAM_START, make a call
+	 * to emalloc_fixed_addr for that case. With CONFIG_RELOC enabled,
+	 * hypervisor is able to do relocation, the only requirement is that
+	 * it need to reside in memory below 4GB, call emalloc_reserved_mem()
+	 * instead.
+	 *
+	 * Don't relocate hypervisor binary under 256MB, which could be where
+	 * guest Linux kernel boots from, and other usage, e.g. hvlog buffer
+	*/
+#ifdef CONFIG_RELOC
+	err = emalloc_reserved_aligned(hv_hpa, CONFIG_HV_RAM_SIZE, 2U * MEM_ADDR_1MB,
+			256U * MEM_ADDR_1MB, MEM_ADDR_4GB);
+#else
+	err = emalloc_fixed_addr(hv_hpa, CONFIG_HV_RAM_SIZE, CONFIG_HV_RAM_START);
+#endif
+
+	if (err != EFI_SUCCESS) {
+		Print(L"Failed to allocate memory for ACRN HV %r\n", err);
+		goto out;
+	}
+
+	for (i = 0; i < ehdr->e_phnum; i++) {
+		phdr = (Elf32_Phdr *)((UINT8 *)pbase + i * ehdr->e_phentsize);
+		if ((phdr->p_type != PT_LOAD) || (phdr->p_memsz == 0) || (phdr->p_offset == 0)) {
+			continue;
+		}
+
+		if (phdr->p_filesz > phdr->p_memsz) {
+			err = EFI_LOAD_ERROR;
+			goto out;
+		}
+
+		addr = (EFI_PHYSICAL_ADDRESS)(*hv_hpa + (phdr->p_paddr - CONFIG_HV_RAM_START));
+		memcpy((char *)addr, (const char *)(elf_image + phdr->p_offset), phdr->p_filesz);
+
+		if (phdr->p_memsz > phdr->p_filesz) {
+			addr = (EFI_PHYSICAL_ADDRESS)(*hv_hpa + (phdr->p_paddr - CONFIG_HV_RAM_START + phdr->p_filesz));
+			(void)memset((void *)addr, 0x0, (phdr->p_memsz - phdr->p_filesz));
+		}
+	}
+
+out:
+	return err;
+}
+
+EFI_STATUS load_images_from_container(EFI_LOADED_IMAGE *info, struct hv_boot_info *hv_info)
 {
 	EFI_STATUS err = EFI_SUCCESS;
 	char *section  = NULL;
@@ -51,11 +109,10 @@ EFI_STATUS load_container_image(EFI_LOADED_IMAGE *info, struct multiboot_module 
 	CONTAINER_HDR   *hdr  = NULL;
 	COMPONENT_ENTRY *comp = NULL;
 
-	EFI_PHYSICAL_ADDRESS addr;
+	EFI_PHYSICAL_ADDRESS addr = 0u;
 	struct multiboot_module *mods = NULL;
-	UINTN mods_sz = 0u;
 
-	section = ".os";
+	section = ".hv";
 	err = get_pe_section(info->ImageBase, section, strlen(section), &sec_addr, &sec_size);
 	if (EFI_ERROR(err)) {
 		Print(L"Unable to locate section of ACRNHV Container %r ", err);
@@ -63,64 +120,57 @@ EFI_STATUS load_container_image(EFI_LOADED_IMAGE *info, struct multiboot_module 
 	}
 
 	hdr = (CONTAINER_HDR*)(info->ImageBase + sec_addr);
-#if 0
-	Print(L"\n");
-	Print(L"container   : name = %c%c%c%c, ", ((char*)&hdr->Signature)[0], ((char*)&hdr->Signature)[1],
-							((char*)&hdr->Signature)[2], ((char*)&hdr->Signature)[3]);
-	Print(L"offset = %08xh, size = %08lu\n", sec_addr, sec_size);
-#endif
-	*mods_count = (hdr->Count - 3) / 2;
-	mods_sz = sizeof(struct multiboot_module) * (*mods_count);
-
-	err = allocate_pool(EfiLoaderData, mods_sz, (VOID *)&addr);
-	if (err != EFI_SUCCESS) {
-		Print(L"Failed to allocate memory for EFI boot\n");
-		goto out;
-	}
-	(void)memset((void *)addr, 0x0, mods_sz);
-	*mods_addr = mods = (struct multiboot_module *)addr;
+	hv_info->mods_count = (hdr->Count - 3) / 2;
+	mods = hv_info->mods;
 
 	comp = (COMPONENT_ENTRY *)(hdr + 1);
 	for (i = 0; i < hdr->Count; i++) {
 		const UINTN offset = hdr->DataOffset + comp->Offset;
 		LOADER_COMPRESSED_HEADER *lzh = (LOADER_COMPRESSED_HEADER *)((UINT8 *)(hdr) + offset);
-#if 0
-		int j;
-		Print(L"component[%d]: name = %c%c%c%c, offset = %08xh, size = %08lu", i,
-									((char*)&comp->Name)[0], ((char*)&comp->Name)[1],
-									((char*)&comp->Name)[2], ((char*)&comp->Name)[3],
-									offset, lzh->Size);
-		if ((i % 2) == 0) {
-			if (i < hdr->Count - 1) {
-				Print(L", tag = ");
-				for (j = 0; j < lzh->Size; j++) {
-					Print(L"%c", lzh->Data[j]);
+
+		if (i == 0) {
+			/* hv_cmdline */
+			if (lzh->Size) {
+				err = allocate_pool(EfiLoaderData, lzh->Size + hv_info->cmdline_sz, (VOID *)&addr);
+				if (err != EFI_SUCCESS) {
+					Print(L"Failed to allocate memory for hv_string %r\n", i, err);
+					goto out;
 				}
-			}else {
-				Print(L"\n");
+				(void)memset((void *)addr, 0x0, lzh->Size + hv_info->cmdline_sz);
+				memcpy((char *)addr, (const char *)lzh->Data, lzh->Size - 1);
+				if (hv_info->cmdline_sz) {
+					*((char *)(addr) + lzh->Size - 1) = ' ';
+					memcpy((char *)(addr) + lzh->Size, (const char *)hv_info->cmdline, hv_info->cmdline_sz);
+					hv_info->cmdline_sz += lzh->Size;
+					free_pool((void *)hv_info->cmdline);
+				}
+				hv_info->cmdline = (char *)addr;
 			}
-		} else {
-			Print(L"\n");
-		}
-#endif
-		if (i < 2) {
-			/* TO-DO: Assume the first elf file is the one to boot i.e acrn.out */
+		} else if (i == 1) {
+			/* acrn.32.out elf */
+			err = load_acrn_elf((const UINT8 *)lzh->Data, &hv_info->hv_hpa);
+			if (err != EFI_SUCCESS) {
+				Print(L"Failed to load ACRN HV ELF Image%r\n", err);
+				goto out;
+			}
 		} else if (i == (hdr->Count - 1)) {
-			/* ignore signature */
+			/* sbl signature, should be ignored since entire image shall be verified by shim */
 		} else {
 			addr = 0;
-			if ((i % 2) == 0) {	/* string */
-				err = allocate_pool(EfiReservedMemoryType, lzh->Size, (VOID *)&addr);
+			if ((i % 2) == 0) {
+				/* vm0_tag.txt, vm1_tag.txt, acpi_vm0.txt */
+				err = allocate_pool(EfiLoaderData, lzh->Size, (VOID *)&addr);
 				if (err != EFI_SUCCESS) {
-					Print(L"Failed to allocate memory for EFI boot\n");
+					Print(L"Failed to allocate memory for module[%d] string %r\n", i, err);
 					goto out;
 				}
 				memcpy((char *)addr, (const char *)lzh->Data, lzh->Size);
 				mods->mmo_string = addr;
 			} else {
+				/* vm0_kernel, vm1_kernel, acpi_vm0.bin */
 				err = emalloc_reserved_aligned(&addr, lzh->Size, MEM_ADDR_1MB, 256U * MEM_ADDR_1MB, MEM_ADDR_4GB);
 				if (err != EFI_SUCCESS) {
-					Print(L"Failed to allocate memory for EFI boot\n");
+					Print(L"Failed to allocate memory for module[%d] image %r\n", i, err);
 					goto out;
 				}
 				memcpy((char *)addr, (const char *)lzh->Data, lzh->Size);
@@ -133,6 +183,18 @@ EFI_STATUS load_container_image(EFI_LOADED_IMAGE *info, struct multiboot_module 
 	}
 
 out:
-	/* TO-DO: free up allocated memory on failure */
+	if (err != EFI_SUCCESS) {
+		if (hv_info->hv_hpa) {
+			free_pages(hv_info->hv_hpa, EFI_SIZE_TO_PAGES(CONFIG_HV_RAM_SIZE));
+			hv_info->hv_hpa = 0;
+		}
+		for (i = 0; i < hv_info->mods_count; i++) {
+			mods = &hv_info->mods[i];
+			free_pool((void *)(EFI_PHYSICAL_ADDRESS)mods->mmo_string);
+			free_pages(mods->mmo_start, EFI_SIZE_TO_PAGES(mods->mmo_end - mods->mmo_start));
+		}
+		(void)memset((void *)hv_info->mods, 0x0, sizeof(struct multiboot_module) * hv_info->mods_count);
+		hv_info->mods_count = 0u;
+	}
 	return err;
 }

@@ -81,15 +81,19 @@ typedef void(*hv_func)(int32_t, struct multiboot_info*);
 #define MBOOT_MMAP_NUMS        256
 #define MBOOT_MMAP_SIZE (sizeof(struct multiboot_mmap) * MBOOT_MMAP_NUMS)
 #define MBOOT_INFO_SIZE (sizeof(struct multiboot_info))
+#define MBOOT_MODS_NUMS        4
+#define MBOOT_MODS_SIZE (sizeof(struct multiboot_module) * MBOOT_MODS_NUMS)
 #define BOOT_LOADER_NAME_SIZE 17U
 #define EFI_BOOT_MEM_SIZE \
-	(MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE + BOOT_LOADER_NAME_SIZE)
+	(MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE + MBOOT_MODS_SIZE + BOOT_LOADER_NAME_SIZE)
 #define MBOOT_MMAP_PTR(addr) \
 	((struct multiboot_mmap *)((VOID *)(addr)))
 #define MBOOT_INFO_PTR(addr)  \
 	((struct multiboot_info *)((VOID *)(addr) + MBOOT_MMAP_SIZE))
+#define MBOOT_MODS_PTR(addr)  \
+	((struct multiboot_module *)((VOID *)(addr) + MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE))
 #define BOOT_LOADER_NAME_PTR(addr)	\
-	((char *)((VOID *)(addr) + MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE))
+	((char *)((VOID *)(addr) + MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE + MBOOT_MODS_SIZE))
 
 struct efi_memmap_info {
 	UINT32 map_size;
@@ -156,6 +160,14 @@ struct acpi_table_header {
 	char asl_compiler_id[ACPI_NAME_SIZE];
 	/* ASL compiler version */
 	UINT32 asl_compiler_revision;
+};
+
+struct hv_boot_info {
+	char * cmdline;
+	UINT32 cmdline_sz;
+	EFI_PHYSICAL_ADDRESS hv_hpa;
+	UINT32 mods_count;
+	struct multiboot_module mods[MBOOT_MODS_NUMS];
 };
 
 static inline uint64_t
