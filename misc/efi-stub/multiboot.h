@@ -177,4 +177,210 @@ struct multiboot_module {
 
 #endif /* !defined(_LOCORE) */
 
+#ifdef CONFIG_MULTIBOOT2
+#define MBI_INFO_MAGIC	MULTIBOOT2_INFO_MAGIC
+#else
+#define MBI_INFO_MAGIC	MULTIBOOT_INFO_MAGIC
+#endif
+
+#ifdef CONFIG_MULTIBOOT2
+
+struct multiboot2_header
+{
+  uint32_t magic;
+  uint32_t architecture;
+  uint32_t header_length;
+  uint32_t checksum;
+};
+
+#define MULTIBOOT2_SEARCH                        32768
+
+#define MULTIBOOT2_HEADER_ALIGN				8
+
+#define MULTIBOOT2_HEADER_MAGIC				0xe85250d6U
+
+/*  This should be in %eax. */
+#define MULTIBOOT2_INFO_MAGIC				0x36d76289U
+
+/*  Alignment of the multiboot info structure. */
+#define MULTIBOOT2_INFO_ALIGN				0x00000008U
+
+/*  Flags set in the 'flags' member of the multiboot header. */
+
+#define MULTIBOOT2_TAG_ALIGN				8U
+#define MULTIBOOT2_TAG_TYPE_END				0U
+#define MULTIBOOT2_TAG_TYPE_CMDLINE			1U
+#define MULTIBOOT2_TAG_TYPE_BOOT_LOADER_NAME		2U
+#define MULTIBOOT2_TAG_TYPE_MODULE			3U
+#define MULTIBOOT2_TAG_TYPE_BASIC_MEMINFO		4U
+#define MULTIBOOT2_TAG_TYPE_BOOTDEV			5U
+#define MULTIBOOT2_TAG_TYPE_MMAP			6U
+#define MULTIBOOT2_TAG_TYPE_VBE				7U
+#define MULTIBOOT2_TAG_TYPE_FRAMEBUFFER			8U
+#define MULTIBOOT2_TAG_TYPE_ELF_SECTIONS		9U
+#define MULTIBOOT2_TAG_TYPE_APM				10U
+#define MULTIBOOT2_TAG_TYPE_EFI32			11U
+#define MULTIBOOT2_TAG_TYPE_EFI64			12U
+#define MULTIBOOT2_TAG_TYPE_SMBIOS			13U
+#define MULTIBOOT2_TAG_TYPE_ACPI_OLD			14U
+#define MULTIBOOT2_TAG_TYPE_ACPI_NEW			15U
+#define MULTIBOOT2_TAG_TYPE_NETWORK			16U
+#define MULTIBOOT2_TAG_TYPE_EFI_MMAP			17U
+#define MULTIBOOT2_TAG_TYPE_EFI_BS			18U
+#define MULTIBOOT2_TAG_TYPE_EFI32_IH			19U
+#define MULTIBOOT2_TAG_TYPE_EFI64_IH			20U
+#define MULTIBOOT2_TAG_TYPE_LOAD_BASE_ADDR		21U
+
+#define MULTIBOOT2_HEADER_TAG_END			0
+#define MULTIBOOT2_HEADER_TAG_INFORMATION_REQUEST	1
+#define MULTIBOOT2_HEADER_TAG_ADDRESS			2
+#define MULTIBOOT2_HEADER_TAG_ENTRY_ADDRESS		3
+#define MULTIBOOT2_HEADER_TAG_CONSOLE_FLAGS		4
+#define MULTIBOOT2_HEADER_TAG_FRAMEBUFFER		5
+#define MULTIBOOT2_HEADER_TAG_MODULE_ALIGN		6
+#define MULTIBOOT2_HEADER_TAG_EFI_BS			7
+#define MULTIBOOT2_HEADER_TAG_ENTRY_ADDRESS_EFI32	8
+#define MULTIBOOT2_HEADER_TAG_ENTRY_ADDRESS_EFI64	9
+#define MULTIBOOT2_HEADER_TAG_RELOCATABLE		10
+#define MULTIBOOT2_HEADER_TAG_OPTIONAL			1
+
+#define MULTIBOOT2_ARCHITECTURE_I386			0
+#define MULTIBOOT2_ARCHITECTURE_MIPS32			4
+
+#ifndef ASSEMBLER
+
+struct multiboot2_header_tag
+{
+	uint16_t type;
+	uint16_t flags;
+	uint32_t size;
+};
+
+struct multiboot2_header_tag_information_request
+{
+	uint16_t type;
+	uint16_t flags;
+	uint32_t size;
+	uint32_t requests[0];
+};
+
+struct multiboot2_header_tag_address
+{
+	uint16_t type;
+	uint16_t flags;
+	uint32_t size;
+	uint32_t header_addr;
+	uint32_t load_addr;
+	uint32_t load_end_addr;
+	uint32_t bss_end_addr;
+};
+
+struct multiboot2_header_tag_entry_address
+{
+	uint16_t type;
+	uint16_t flags;
+	uint32_t size;
+	uint32_t entry_addr;
+};
+
+struct multiboot2_header_tag_console_flags
+{
+	uint16_t type;
+	uint16_t flags;
+	uint32_t size;
+	uint32_t console_flags;
+};
+
+struct multiboot2_header_tag_framebuffer
+{
+	uint16_t type;
+	uint16_t flags;
+	uint32_t size;
+	uint32_t width;
+	uint32_t height;
+	uint32_t depth;
+};
+
+struct multiboot2_header_tag_module_align
+{
+	uint16_t type;
+	uint16_t flags;
+	uint32_t size;
+};
+
+struct multiboot2_header_tag_relocatable
+{
+	uint16_t type;
+	uint16_t flags;
+	uint32_t size;
+	uint32_t min_addr;
+	uint32_t max_addr;
+	uint32_t align;
+	uint32_t preference;
+};
+
+struct multiboot2_mmap_entry
+{
+	uint64_t addr;
+	uint64_t len;
+	uint32_t type;
+	uint32_t zero;
+};
+
+struct multiboot2_tag
+{
+	uint32_t type;
+	uint32_t size;
+};
+
+struct multiboot2_tag_string
+{
+	uint32_t type;
+	uint32_t size;
+	char string[0];
+};
+
+struct multiboot2_tag_module
+{
+	uint32_t type;
+	uint32_t size;
+	uint32_t mod_start;
+	uint32_t mod_end;
+	char cmdline[0];
+};
+
+struct multiboot2_tag_mmap
+{
+	uint32_t type;
+	uint32_t size;
+	uint32_t entry_size;
+	uint32_t entry_version;
+	struct multiboot2_mmap_entry entries[0];
+};
+
+struct multiboot2_tag_new_acpi
+{
+	uint32_t type;
+	uint32_t size;
+	uint8_t rsdp[0];
+};
+
+struct multiboot2_tag_efi64
+{
+	uint32_t	type;
+	uint32_t	size;
+	uint64_t	pointer;
+};
+
+struct multiboot2_tag_efi_mmap {
+	uint32_t	type;
+	uint32_t	size;
+	uint32_t	descr_size;
+	uint32_t	descr_vers;
+	uint8_t		efi_mmap[0];
+};
+#endif
+
+#endif /* CONFIG_MULTIBOOT2 */
+
 #endif /* _MULTIBOOT_H */

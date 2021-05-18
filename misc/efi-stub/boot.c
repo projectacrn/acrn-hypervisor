@@ -45,6 +45,8 @@ EFI_BOOT_SERVICES *boot;
 char *cmdline = NULL;
 static UINT64 hv_hpa;
 static struct efi_memmap_info mmap_info;
+static struct acpi_table_rsdp *rsdp = NULL;
+uint32_t modcnt, total_modcmdsize;
 
 static EFI_STATUS
 get_current_memory_map(struct efi_memmap_info *mi)
@@ -185,16 +187,15 @@ static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 	asm volatile ("cli");
 
 	/* jump to acrn hypervisor */
-	hf(MULTIBOOT_INFO_MAGIC, mbi);
+	hf(MBI_INFO_MAGIC, mbi);
 }
 
-EFI_STATUS construct_mbi(EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_info *mbi,
-		struct multiboot_mmap *mmap)
+static EFI_STATUS
+fill_e820(struct multiboot_mmap *mmap, int32_t mmap_entry_count, int32_t *e820_count)
 {
 	EFI_STATUS err = EFI_SUCCESS;
-	int32_t i, j, mmap_entry_count;
+	int32_t i, j;
 
-	mmap_entry_count = mmap_info.map_size / mmap_info.desc_size;
 	/*
 	 * Convert the EFI memory map to E820.
 	 */
@@ -269,13 +270,214 @@ EFI_STATUS construct_mbi(EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_info *mbi
 	mmap[j].mm_type = E820_RAM;
 	j++;
 
+	*e820_count = j;
+out:
+	return err;
+}
+
+
+EFI_STATUS construct_mbi(EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_info *mbi,
+		struct multiboot_mmap *mmap)
+{
+	EFI_STATUS err = EFI_SUCCESS;
+	int32_t mmap_entry_count, e820_count = 0;
+
+	mmap_entry_count = mmap_info.map_size / mmap_info.desc_size;
+
+	err = fill_e820(mmap, mmap_entry_count, &e820_count);
+	if (err != EFI_SUCCESS)
+		goto out;
+
 	mbi->mi_cmdline = (UINTN)cmdline;
 	mbi->mi_mmap_addr = (UINTN)mmap;
-	mbi->mi_mmap_length = j*sizeof(struct multiboot_mmap);
+	mbi->mi_mmap_length = e820_count*sizeof(struct multiboot_mmap);
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MMAP | MULTIBOOT_INFO_HAS_CMDLINE;
 out:
 	return err;
 }
+
+#ifdef CONFIG_MULTIBOOT2
+static uint32_t
+get_total_modcmdsize(struct multiboot_module *mods_addr, uint32_t mods_count)
+{
+	unsigned i;
+	uint32_t sz;
+
+	for (i = 0, sz = 0; i < mods_count; i++) {
+		/* TODO: use safe strlen */
+		/* convert to uint64_t first to make compiler happy */
+		sz += strlen((char *)(uint64_t)mods_addr[i].mmo_string);
+	}
+
+	return sz;
+}
+
+static uint32_t
+get_mbi2_size()
+{
+    return 2 * sizeof(uint32_t)
+		+ sizeof(struct multiboot2_tag)
+		+ sizeof(struct multiboot2_tag)
+		+ (sizeof(struct multiboot2_tag_string) + ALIGN_UP(strlen(cmdline), MULTIBOOT2_TAG_ALIGN))
+		+ (modcnt * sizeof(struct multiboot2_tag_module) + total_modcmdsize)
+		+ ALIGN_UP((sizeof(struct multiboot2_tag_mmap) + (mmap_info.map_size / mmap_info.desc_size) * sizeof(struct multiboot2_mmap_entry)), MULTIBOOT2_TAG_ALIGN)
+		+ ALIGN_UP(sizeof(struct multiboot2_tag_new_acpi) + rsdp->length, MULTIBOOT2_TAG_ALIGN)
+		+ ALIGN_UP(sizeof(struct multiboot2_tag_efi64), MULTIBOOT2_TAG_ALIGN)
+		+ ALIGN_UP(sizeof(struct multiboot2_tag_efi_mmap) + ALIGN_UP(mmap_info.map_size + 0x1000, 0x1000), /* Add an extra page since UEFI can alter the memory map */
+			MULTIBOOT2_TAG_ALIGN);
+}
+
+EFI_STATUS
+construct_mbi2(void **mbi_addr, struct multiboot_mmap *mmap,
+	struct multiboot_module *mods_addr, uint32_t mods_count)
+{
+	uint64_t *mbistart;
+	uint64_t *p;
+	uint32_t mbi2_size;
+	EFI_STATUS err;
+
+	/* Get size only for mbi size calculation */
+	err = get_memory_map((UINTN *)&(mmap_info.map_size), NULL, NULL, (UINTN *)&(mmap_info.desc_size), 0);
+	if (err != EFI_SUCCESS && err != EFI_BUFFER_TOO_SMALL)
+		return err;
+
+	mbi2_size = get_mbi2_size();
+
+	/* per UEFI spec v2.9: This allocation is guaranteed to be 8-bytes aligned */
+	err = allocate_pool(EfiLoaderData, mbi2_size, (void **)&mbistart);
+	if (err != EFI_SUCCESS)
+		goto out;
+
+	/*
+	 * Get full memory map again.
+	 * We have just allocated memory and the mmap_info will be different.
+	 */
+	err = get_current_memory_map(&mmap_info);
+	if (err != EFI_SUCCESS)
+		goto out;
+
+	/* total_size and reserved */
+	p = mbistart;
+	p += (2 * sizeof(uint32_t)) / sizeof(uint64_t);
+
+	/* Boot command line */
+	{
+		struct multiboot2_tag_string *tag = (struct multiboot2_tag_string *)p;
+		uint32_t cmdline_size = strlen(cmdline);
+		tag->type = MULTIBOOT2_TAG_TYPE_CMDLINE;
+		tag->size = sizeof(struct multiboot2_tag_string) + cmdline_size;
+		memcpy(tag->string, cmdline, cmdline_size);
+		p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
+	}
+
+	/* Boot loader name */
+	{
+		struct multiboot2_tag_string *tag = (struct multiboot2_tag_string *)p;
+		uint32_t boot_loader_name_size = strlen(UEFI_BOOT_LOADER_NAME);
+		tag->type = MULTIBOOT2_TAG_TYPE_BOOT_LOADER_NAME;
+		tag->size = sizeof(struct multiboot2_tag_string) + boot_loader_name_size;
+		memcpy(tag->string, UEFI_BOOT_LOADER_NAME, boot_loader_name_size);
+		p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
+	}
+
+	/* Modules */
+	{
+		unsigned i;
+		struct multiboot_module *cur;
+
+		for (i = 0; i < mods_count; i++) {
+			uint32_t mmo_string_size;
+			struct multiboot2_tag_module *tag = (struct multiboot2_tag_module *)p;
+
+			cur = &mods_addr[i];
+
+			mmo_string_size = strlen((char *)(uint64_t)cur->mmo_string);
+			tag->type = MULTIBOOT2_TAG_TYPE_MODULE;
+			tag->size = sizeof(struct multiboot2_tag_module) + mmo_string_size;
+			tag->mod_start = cur->mmo_start;
+			tag->mod_end = cur->mmo_end;
+			memcpy(tag->cmdline, (char *)(uint64_t)cur->mmo_string, mmo_string_size);
+			p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
+		}
+	}
+
+	/* Memory map */
+	{
+		unsigned i;
+		struct multiboot2_tag_mmap *tag = (struct multiboot2_tag_mmap *)p;
+		struct multiboot2_mmap_entry *e;
+		uint32_t mmap_count = mmap_info.map_size / mmap_info.desc_size;
+		int32_t e820_count = 0;
+
+		err = fill_e820(mmap, mmap_count, &e820_count);
+		if (err != EFI_SUCCESS)
+			goto out;
+
+		tag->type = MULTIBOOT2_TAG_TYPE_MMAP;
+		tag->size = sizeof(struct multiboot2_tag_mmap) + sizeof(struct multiboot2_mmap_entry) * e820_count;
+		tag->entry_size = sizeof(struct multiboot2_mmap_entry);
+		tag->entry_version = 0;
+
+		for (i = 0, e = (struct multiboot2_mmap_entry *)tag->entries; i < e820_count; i++) {
+			e->addr = mmap[i].mm_base_addr;
+			e->len = mmap[i].mm_length;
+			e->type = mmap[i].mm_type;
+			e->zero = 0;
+			e = (struct multiboot2_mmap_entry *)((char *)e + sizeof(struct multiboot2_mmap_entry));
+		}
+
+		p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
+	}
+
+	/* ACPI new */
+	{
+		struct multiboot2_tag_new_acpi *tag = (struct multiboot2_tag_new_acpi *)p;
+		tag->type = MULTIBOOT2_TAG_TYPE_ACPI_NEW;
+		tag->size = sizeof(struct multiboot2_tag_new_acpi) + rsdp->length;
+		memcpy((char *)tag->rsdp, (char *)rsdp, rsdp->length);
+		p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
+	}
+
+	/* EFI64 system table */
+	{
+		struct multiboot2_tag_efi64 *tag = (struct multiboot2_tag_efi64 *)p;
+		tag->type = MULTIBOOT2_TAG_TYPE_EFI64;
+		tag->size = sizeof(struct multiboot2_tag_efi64);
+		tag->pointer = (uint64_t)sys_table;
+		p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
+	}
+
+	/* EFI memory map */
+	{
+		struct multiboot2_tag_efi_mmap *tag = (struct multiboot2_tag_efi_mmap *)p;
+		tag->type = MULTIBOOT2_TAG_TYPE_EFI_MMAP;
+		tag->size = sizeof(struct multiboot2_tag_efi_mmap) + mmap_info.map_size;
+		tag->descr_size = mmap_info.desc_size;
+		tag->descr_vers = mmap_info.desc_version;
+		memcpy((char *)tag->efi_mmap, (char *)mmap_info.mmap, mmap_info.map_size);
+		p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
+	}
+
+	/* END */
+	{
+		struct multiboot2_tag *tag = (struct multiboot2_tag *)p;
+		tag->type = MULTIBOOT2_TAG_TYPE_END;
+		tag->size = sizeof(struct multiboot2_tag);
+		p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
+	}
+
+	((uint32_t *)mbistart)[0] = (uint64_t)((char *)p - (char *)mbistart);
+	((uint32_t *)mbistart)[1] = 0;
+
+	*mbi_addr = (void *)mbistart;
+
+	return EFI_SUCCESS;
+
+out:
+	free_pool(mbistart);
+	return err;
+}
+#endif
 
 static EFI_STATUS
 run_acrn(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_module *mods_addr, uint32_t mods_count)
@@ -284,7 +486,6 @@ run_acrn(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_module 
 	EFI_STATUS err;
 	struct multiboot_mmap *mmap;
 	struct multiboot_info *mbi;
-	struct acpi_table_rsdp *rsdp = NULL;
 	int32_t i;
 	EFI_CONFIGURATION_TABLE *config_table;
 	char *uefi_boot_loader_name;
@@ -334,6 +535,16 @@ run_acrn(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_module 
 		goto out;
 	}
 
+#ifdef CONFIG_MULTIBOOT2
+	modcnt = mods_count;
+	total_modcmdsize = get_total_modcmdsize(mods_addr, mods_count);
+
+	/*
+	 * If multiboot2, we're not going to use the mbi allocated above.
+	 * construct_mbi2 will reallocate mbi and this value will be overwritten.
+	 */
+	err = construct_mbi2((void **)&mbi, mmap, mods_addr, mods_count);
+#else
 	err = get_current_memory_map(&mmap_info);
 	if (err != EFI_SUCCESS)
 		goto out;
@@ -352,8 +563,12 @@ run_acrn(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_module 
 	mbi->mi_mods_addr  = mods_addr;
 	mbi->mi_mods_count = mods_count;
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MODS;
+#endif
 
-	terminate_boot_services(image, mmap_info.map_key);
+	err = terminate_boot_services(image, mmap_info.map_key);
+	if (err != EFI_SUCCESS)
+		goto out;
+
 	hv_jump(hv_hpa, mbi);
 
 	/* Not reached on success */

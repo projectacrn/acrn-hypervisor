@@ -59,6 +59,9 @@
 
 #define UEFI_BOOT_LOADER_NAME "ACRN UEFI loader"
 
+#define ALIGN_UP(addr, align) \
+	(((addr) + (typeof (addr)) (align) - 1) & ~((typeof (addr)) (align) - 1))
+
 /* Read MSR */
 #define CPU_MSR_READ(reg, msr_val_ptr)                      \
 {                                                           \
