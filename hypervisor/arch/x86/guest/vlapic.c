@@ -2200,16 +2200,8 @@ void vlapic_create(struct acrn_vcpu *vcpu, uint16_t pcpu_id)
 
 	vlapic_init_timer(vlapic);
 
-	if (is_sos_vm(vcpu->vm)) {
-		/*
-		 * For SOS_VM type, pLAPIC IDs need to be used because
-		 * host ACPI tables are passthru to SOS.
-		 * Get APIC ID sequence format from cpu_storage
-		 */
-		vlapic->vapic_id = per_cpu(lapic_id, pcpu_id);
-	} else {
-		vlapic->vapic_id = (uint32_t)vcpu->vcpu_id;
-	}
+	/* Set vLAPIC ID to be same as pLAPIC ID */
+	vlapic->vapic_id = per_cpu(lapic_id, pcpu_id);
 
 	dev_dbg(DBG_LEVEL_VLAPIC, "vlapic APIC ID : 0x%04x", vlapic->vapic_id);
 }
