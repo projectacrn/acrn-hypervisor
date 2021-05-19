@@ -523,37 +523,10 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 
 static void guest_cpuid_0bh(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
-	uint32_t leaf = 0x0bU;
-	uint32_t subleaf = *ecx;
+	/* Forward host cpu topology to the guest, guest will know the native platform information such as host cpu topology here */
+	cpuid_subleaf(0x0BU, *ecx, eax, ebx, ecx, edx);
 
 	/* Patching X2APIC */
-	if (is_sos_vm(vcpu->vm)) {
-		cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
-	} else {
-		*ecx = subleaf & 0xFFU;
-		/* No HT emulation for UOS */
-		switch (subleaf) {
-		case 0U:
-			*eax = 0U;
-			*ebx = 1U;
-			*ecx |= (1U << 8U);
-		break;
-		case 1U:
-			if (vcpu->vm->hw.created_vcpus == 1U) {
-				*eax = 0U;
-			} else {
-				*eax = (uint32_t)fls32(vcpu->vm->hw.created_vcpus - 1U) + 1U;
-			}
-			*ebx = vcpu->vm->hw.created_vcpus;
-			*ecx |= (2U << 8U);
-		break;
-		default:
-			*eax = 0U;
-			*ebx = 0U;
-			*ecx |= (0U << 8U);
-		break;
-		}
-	}
 	*edx = vlapic_get_apicid(vcpu_vlapic(vcpu));
 }
 
