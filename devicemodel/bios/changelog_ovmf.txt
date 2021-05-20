@@ -1,3 +1,7 @@
+OVMF release v2.5
+
+- Change 64-bit MMIO BAR window to 256G-512G
+
 OVMF release v2.4
 
 - Ensure successful USB enumeration
