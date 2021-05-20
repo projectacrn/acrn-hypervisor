@@ -329,8 +329,25 @@ struct platform_info {
 	/** version of this structure */
 	uint16_t version;
 
-	/** Align the size of version & hardware info to 128Bytes. */
-	uint8_t reserved0[124];
+	uint32_t l2_cat_shift;
+	uint32_t l3_cat_shift;
+
+	#define MAX_PLATFORM_LAPIC_IDS 64U
+	/** pLAPIC ID list */
+	uint8_t lapic_ids[MAX_PLATFORM_LAPIC_IDS];
+
+	/**
+	 * sizeof(uint8_t reserved0[]) + sizeof(l2_cat_shift)
+	 * + sizeof(l3_cat_shift) + sizeof(uint8_t lapic_ids[]) = 124
+	 *
+	 * Note:
+	 * 1. DM needs to use the same logic as hypervisor to calculate vLAPIC IDs
+	 * based on physical APIC IDs and CPU affinity setting.
+	 *
+	 * 2. Can only support at most 116 cores. And it assumes LAPIC ID is 8bits
+	 * (X2APIC mode supports 32 bits)
+	 */
+	uint8_t reserved0[116U - MAX_PLATFORM_LAPIC_IDS];
 
 	/** Configuration Information */
 	/** Maximum vCPU number for one VM. */
