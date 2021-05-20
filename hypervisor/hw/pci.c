@@ -690,9 +690,41 @@ static inline uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
 /**
  * @pre pdev != NULL
  */
-static void pci_enumerate_ext_cap(struct pci_pdev *pdev) {
+static void pci_enable_ptm_root(struct pci_pdev *pdev, uint32_t pos)
+{
+	uint32_t ctrl = 0, cap;
 
+	cap = pci_pdev_read_cfg(pdev->bdf, pos + PCIR_PTM_CAP, PCI_PTM_CAP_LEN);
+
+	if (cap & PCIM_PTM_CAP_ROOT_CAPABLE) {
+		ctrl = PCIM_PTM_CTRL_ENABLED | PCIM_PTM_CTRL_ROOT_SELECTED;
+
+		pci_pdev_write_cfg(pdev->bdf, pos + PCIR_PTM_CTRL, 4, ctrl);
+
+		ctrl = pci_pdev_read_cfg(pdev->bdf, pos + PCIR_PTM_CTRL, 4);
+
+		pr_acrnlog("ptm info [%x:%x.%x]: pos=%x, enabled=%d, root_select=%d, granularity=%d.\n",
+				pdev->bdf.bits.b, pdev->bdf.bits.d,
+				pdev->bdf.bits.f, pos, (ctrl & PCIM_PTM_CTRL_ENABLED) != 0,
+				(ctrl & PCIM_PTM_CTRL_ROOT_SELECTED) != 0,
+				(ctrl & PCIM_PTM_GRANULARITY_MASK) >> 8);
+	} else {
+		/* acrn doesn't support this hw config currently */
+		pr_err("%s: root port %x:%x.%x is not PTM root.\n", __func__,
+			 	pdev->bdf.bits.b, pdev->bdf.bits.d, pdev->bdf.bits.f);
+
+	}
+
+	return;
+}
+
+/**
+ * @pre pdev != NULL
+ */
+static void pci_enumerate_ext_cap(struct pci_pdev *pdev)
+{
 	uint32_t hdr, pos, pre_pos = 0U;
+	uint8_t pcie_dev_type;
 
 	pos = PCI_ECAP_BASE_PTR;
 
@@ -703,7 +735,33 @@ static void pci_enumerate_ext_cap(struct pci_pdev *pdev) {
 			pdev->sriov.capoff = pos;
 			pdev->sriov.caplen = PCI_SRIOV_CAP_LEN;
 			pdev->sriov.pre_pos = pre_pos;
+		} else if (PCI_ECAP_ID(hdr) == PCIZ_PTM) {
+			pcie_dev_type = (((uint8_t)pci_pdev_read_cfg(pdev->bdf,
+				pdev->pcie_capoff + PCIER_FLAGS, 1)) & PCIEM_FLAGS_TYPE) >> 4;
+
+			if (pcie_dev_type == PCIEM_TYPE_ENDPOINT ||
+					pcie_dev_type == PCIEM_TYPE_ROOT_INT_EP) {
+				/* No need to enable ptm on ep device.  If a PTM-capable ep pass
+				 * through to guest, guest OS will enable it
+				 */
+				pr_acrnlog("%s: [%x:%x.%x] is PTM capable.\n", __func__,
+					pdev->bdf.bits.b,
+					pdev->bdf.bits.d, pdev->bdf.bits.f);
+			} else if (pcie_dev_type == PCIEM_TYPE_ROOTPORT) {
+				/* if root port is PTM root capable, we need to make sure that
+				 * ptm is enabled in h/w
+				 */
+				pci_enable_ptm_root(pdev, pos);
+			} else {
+				/* Acrn supports a simple PTM hierarchy:  ptm capable ep is
+				 * directly connected to a ptm-root capable root port or ep itself
+				 * is rcie.  Report error for all other cases.
+				 * */
+				pr_err("%s: Do NOT enable PTM on [%x:%x.%x].\n", __func__,
+					pdev->bdf.bits.b, pdev->bdf.bits.d, pdev->bdf.bits.f);
+			}
 		}
+
 		pre_pos = pos;
 		pos = PCI_ECAP_NEXT(hdr);
 		if (pos == 0U) {
