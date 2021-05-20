@@ -758,6 +758,8 @@ vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg, struct platform_
 	memcpy((void *)vm_cfg, (void *)pcfg, sizeof(struct acrn_vm_config));
 	if (plat_info != NULL) {
 		memcpy((void *)plat_info, (void *)&platform_info, sizeof(struct platform_info));
+		pr_info("%s, l2_cat_shift=%u, l3_cat_shift=%u\n",
+			__func__, platform_info.l2_cat_shift, platform_info.l3_cat_shift);
 	}
 
 exit:
