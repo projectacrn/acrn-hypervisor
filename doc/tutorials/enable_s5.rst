@@ -58,9 +58,10 @@ the request via vUART to the lifecycle manager in the Service VM which in turn a
 the request and trigger the following flow. 
 
 .. note:: The User VM need to be authorized to be able to request a Shutdown, this is achieved by adding 
-   "``--pm_notify_channel uart``" in the launch script of that VM.
+   "``--pm_notify_channel uart,allow_trigger_s5``" in the launch script of that VM.
    And, there is only one VM in the system can be configured to request a shutdown. If there is a second User 
-   VM launched with "``--pm_notify_channel uart``", ACRN will stop launching it and throw out below error message:
+   VM launched with "``--pm_notify_channel uart,allow_trigger_s5``", ACRN will stop launching it and throw
+   out below error message:
    ``initiate a connection on a socket error``
    ``create socket to connect life-cycle manager failed``
 

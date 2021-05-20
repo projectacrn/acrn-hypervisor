@@ -417,13 +417,17 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
    This option is used to define which channel could be used DM to
    communicate with VM about power management event.
 
-   ACRN supports three channels: ``ioc``, ``power button`` and ``uart``.
+   ACRN supports three channels: ``ioc``, ``power_button`` and ``uart``.
+
+   For ``uart``, an additional option, ``,allow_trigger_s5``, can be added.
+   A user can use this option to indicate the User VM is allowed to trigger
+   system S5.
 
    usage::
 
       --pm_notify_channel ioc
 
-   Use ioc as power management event motify channel.
+   Use ioc as power management event notify channel.
 
 ----
 
