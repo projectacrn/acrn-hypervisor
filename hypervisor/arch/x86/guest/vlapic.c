@@ -997,21 +997,21 @@ static inline bool is_dest_field_matched(const struct acrn_vlapic *vlapic, uint3
  * This function populates 'dmask' with the set of vcpus that match the
  * addressing specified by the (dest, phys, lowprio) tuple.
  */
-void
-vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast,
+uint64_t
+vlapic_calc_dest_noshort(struct acrn_vm *vm, bool is_broadcast,
 		uint32_t dest, bool phys, bool lowprio)
 {
+	uint64_t dmask = 0UL;
 	struct acrn_vlapic *vlapic, *lowprio_dest = NULL;
 	struct acrn_vcpu *vcpu;
 	uint16_t vcpu_id;
 
-	*dmask = 0UL;
 	if (is_broadcast) {
 		/* Broadcast in both logical and physical modes. */
-		*dmask = vm_active_cpus(vm);
+		dmask = vm_active_cpus(vm);
 	} else if (phys) {
 		/* Physical mode: "dest" is local APIC ID. */
-		set_dest_mask_phys(vm, dmask, dest);
+		set_dest_mask_phys(vm, &dmask, dest);
 	} else {
 		/*
 		 * Logical mode: "dest" is message destination addr
@@ -1036,52 +1036,47 @@ vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast,
 					/* No other state currently, do nothing */
 				}
 			} else {
-				bitmap_set_nolock(vcpu_id, dmask);
+				bitmap_set_nolock(vcpu_id, &dmask);
 			}
 		}
 
 		if (lowprio && (lowprio_dest != NULL)) {
-			bitmap_set_nolock(vlapic2vcpu(lowprio_dest)->vcpu_id, dmask);
+			bitmap_set_nolock(vlapic2vcpu(lowprio_dest)->vcpu_id, &dmask);
 		}
 	}
+
+	return dmask;
 }
 
-/*
- * This function populates 'dmask' with the set of "possible" destination vcpu when lapic is passthru.
- * Hardware will handle the real delivery mode among all "possible" dest processors:
- * deliver to the lowprio one for lowprio mode.
- *
- * @pre is_x2apic_enabled(vlapic) == true
- */
-void
-vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast,
-		uint32_t dest, bool phys)
+uint64_t
+vlapic_calc_dest(struct acrn_vcpu *vcpu, uint32_t shorthand, bool is_broadcast,
+		uint32_t dest, bool phys, bool lowprio)
 {
-	struct acrn_vlapic *vlapic;
-	struct acrn_vcpu *vcpu;
-	uint16_t vcpu_id;
+	uint64_t dmask = 0UL;
 
-	*dmask = 0UL;
-	if (is_broadcast) {
-		/* Broadcast in both logical and physical modes. */
-		*dmask = vm_active_cpus(vm);
-	} else if (phys) {
-		/* Physical mode: "dest" is local APIC ID. */
-		set_dest_mask_phys(vm, dmask, dest);
-	} else {
+	switch (shorthand) {
+	case APIC_DEST_NOSHORT:
+		dmask = vlapic_calc_dest_noshort(vcpu->vm, is_broadcast, dest, phys, lowprio);
+		break;
+	case APIC_DEST_SELF:
+		bitmap_set_nolock(vcpu->vcpu_id, &dmask);
+		break;
+	case APIC_DEST_ALLISELF:
+		dmask = vm_active_cpus(vcpu->vm);
+		break;
+	case APIC_DEST_ALLESELF:
+		dmask = vm_active_cpus(vcpu->vm);
+		bitmap_clear_nolock(vcpu->vcpu_id, &dmask);
+		break;
+	default:
 		/*
-		 * Logical mode: "dest" is message destination addr
-		 * to be compared with the logical APIC ID in LDR.
+		 * All possible values of 'shorthand' has been handled in prior
+		 * case clauses.
 		 */
-		foreach_vcpu(vcpu_id, vm, vcpu) {
-			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
-			if (!is_dest_field_matched(vlapic, dest)) {
-				continue;
-			}
-			bitmap_set_nolock(vcpu_id, dmask);
-		}
-		dev_dbg(DBG_LEVEL_LAPICPT, "%s: logical destmod, dmask: 0x%016lx", __func__, *dmask);
+		break;
 	}
+
+	return dmask;
 }
 
 static void
@@ -1139,7 +1134,7 @@ static void vlapic_write_icrlo(struct acrn_vlapic *vlapic)
 {
 	uint16_t vcpu_id;
 	bool phys = false, is_broadcast = false;
-	uint64_t dmask = 0UL;
+	uint64_t dmask;
 	uint32_t icr_low, icr_high, dest;
 	uint32_t vec, mode, shorthand;
 	struct lapic_regs *lapic;
@@ -1176,27 +1171,7 @@ static void vlapic_write_icrlo(struct acrn_vlapic *vlapic)
 			"icrlo 0x%08x icrhi 0x%08x triggered ipi %u",
 				icr_low, icr_high, vec);
 
-		switch (shorthand) {
-		case APIC_DEST_DESTFLD:
-			vlapic_calc_dest(vcpu->vm, &dmask, is_broadcast, dest, phys, false);
-			break;
-		case APIC_DEST_SELF:
-			bitmap_set_nolock(vcpu->vcpu_id, &dmask);
-			break;
-		case APIC_DEST_ALLISELF:
-			dmask = vm_active_cpus(vcpu->vm);
-			break;
-		case APIC_DEST_ALLESELF:
-			dmask = vm_active_cpus(vcpu->vm);
-			bitmap_clear_nolock(vlapic2vcpu(vlapic)->vcpu_id, &dmask);
-			break;
-		default:
-			/*
-			 * All possible values of 'shorthand' has been handled in prior
-			 * case clauses.
-			 */
-			break;
-		}
+		dmask = vlapic_calc_dest(vcpu, shorthand, is_broadcast, dest, phys, false);
 
 		for (vcpu_id = 0U; vcpu_id < vcpu->vm->hw.created_vcpus; vcpu_id++) {
 			if ((dmask & (1UL << vcpu_id)) != 0UL) {
@@ -1774,7 +1749,7 @@ vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 		 * all interrupts originating from the ioapic or MSI specify the
 		 * 'dest' in the legacy xAPIC format.
 		 */
-		vlapic_calc_dest(vm, &dmask, false, dest, phys, lowprio);
+		dmask = vlapic_calc_dest_noshort(vm, false, dest, phys, lowprio);
 
 		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 			struct acrn_vlapic *vlapic;
@@ -1943,7 +1918,7 @@ static void inject_msi_for_lapic_pt(struct acrn_vm *vm, uint64_t addr, uint64_t 
 		 * the delivery mode of vmsi will be forwarded to ICR delievry field
 		 * and handled by hardware.
 		 */
-		vlapic_calc_dest_lapic_pt(vm, &vdmask, false, vdest, phys);
+		vdmask = vlapic_calc_dest_noshort(vm, false, vdest, phys, false);
 		dev_dbg(DBG_LEVEL_LAPICPT, "%s: vcpu destination mask 0x%016lx", __func__, vdmask);
 
 		vcpu_id = ffs64(vdmask);
@@ -2077,7 +2052,7 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	phys = ((icr_low & APIC_DESTMODE_LOG) == 0UL);
 	shorthand = icr_low & APIC_DEST_MASK;
 
-	if (!phys || (shorthand  != APIC_DEST_DESTFLD)) {
+	if (!phys || (shorthand  != APIC_DEST_NOSHORT)) {
 		pr_err("Logical destination mode or shorthands \
 				not supported in ICR forpartition mode\n");
 		/*
