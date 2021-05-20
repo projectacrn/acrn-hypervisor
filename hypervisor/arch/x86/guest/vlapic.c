@@ -2034,54 +2034,56 @@ static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
  * 1. INIT Delivery mode
  * 2. SIPI Delivery mode
  * For all other cases, send IPI on the wire.
- * No shorthand and Physical destination mode are only supported.
+ * Only works when the guest was in VM_VLAPIC_X2APIC mode
  */
 
 static int32_t
-vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
+vlapic_x2apic_pt_icr_access(struct acrn_vcpu *vcpu, uint64_t val)
 {
-	uint32_t papic_id, vapic_id = (uint32_t)(val >> 32U);
+	uint32_t papic_id, dest = (uint32_t)(val >> 32U);
 	uint32_t icr_low = (uint32_t)val;
 	uint32_t mode = icr_low & APIC_DELMODE_MASK;
 	uint16_t vcpu_id;
 	struct acrn_vcpu *target_vcpu;
 	bool phys;
 	uint32_t shorthand;
-	int32_t ret = -1;
+	int32_t ret = 0;
+	enum vm_vlapic_mode vlapic_mode = check_vm_vlapic_mode(vcpu->vm);
+	uint64_t dmask;
 
 	phys = ((icr_low & APIC_DESTMODE_LOG) == 0UL);
 	shorthand = icr_low & APIC_DEST_MASK;
 
-	if (!phys || (shorthand  != APIC_DEST_NOSHORT)) {
-		pr_err("Logical destination mode or shorthands \
-				not supported in ICR forpartition mode\n");
-		/*
-		 * TODO: To support logical destination and shorthand modes
-		 */
+	if (vlapic_mode != VM_VLAPIC_X2APIC) {
+		pr_err("Only works on VM_VLAPIC_X2APIC mode\n");
+		ret = -1;
 	} else {
-		vcpu_id = vm_apicid2vcpu_id(vm, vapic_id);
-		if ((vcpu_id < vm->hw.created_vcpus) && (vm->hw.vcpu_array[vcpu_id].state != VCPU_OFFLINE)) {
-			target_vcpu = vcpu_from_vid(vm, vcpu_id);
+		dmask = vlapic_calc_dest(vcpu, shorthand, (dest == 0xffffffffU), dest, phys, false);
 
-			switch (mode) {
-			case APIC_DELMODE_INIT:
-				vlapic_process_init_sipi(target_vcpu, mode, icr_low);
-			break;
-			case APIC_DELMODE_STARTUP:
-				vlapic_process_init_sipi(target_vcpu, mode, icr_low);
-			break;
-			default:
-				/* convert the dest from virtual apic_id to physical apic_id */
-				if (is_x2apic_enabled(vcpu_vlapic(target_vcpu))) {
-					papic_id = per_cpu(lapic_id, pcpuid_from_vcpu(target_vcpu));
-					dev_dbg(DBG_LEVEL_LAPICPT,
-						"%s vapic_id: 0x%08lx papic_id: 0x%08lx icr_low:0x%08lx",
-						 __func__, vapic_id, papic_id, icr_low);
-					msr_write(MSR_IA32_EXT_APIC_ICR, (((uint64_t)papic_id) << 32U) | icr_low);
+		for (vcpu_id = 0U; vcpu_id < vcpu->vm->hw.created_vcpus; vcpu_id++) {
+			if (((dmask & (1UL << vcpu_id)) != 0UL) &&
+					(vcpu->vm->hw.vcpu_array[vcpu_id].state != VCPU_OFFLINE)) {
+				target_vcpu = vcpu_from_vid(vcpu->vm, vcpu_id);
+
+				switch (mode) {
+				case APIC_DELMODE_INIT:
+					vlapic_process_init_sipi(target_vcpu, mode, icr_low);
+				break;
+				case APIC_DELMODE_STARTUP:
+					vlapic_process_init_sipi(target_vcpu, mode, icr_low);
+				break;
+				default:
+					/* convert the dest from virtual apic_id to physical apic_id */
+					if (is_x2apic_enabled(vcpu_vlapic(target_vcpu))) {
+						papic_id = per_cpu(lapic_id, pcpuid_from_vcpu(target_vcpu));
+							dev_dbg(DBG_LEVEL_LAPICPT,
+							"%s vapic_id: 0x%08lx papic_id: 0x%08lx icr_low:0x%08lx",
+							 __func__, target_vcpu->arch.vlapic.vapic_id, papic_id, icr_low);
+						msr_write(MSR_IA32_EXT_APIC_ICR, (((uint64_t)papic_id) << 32U) | icr_low);
+					}
+				break;
 				}
-			break;
 			}
-			ret = 0;
 		}
 	}
 	return ret;
@@ -2157,7 +2159,7 @@ int32_t vlapic_x2apic_write(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val)
 		if (is_lapic_pt_configured(vcpu->vm)) {
 			switch (msr) {
 			case MSR_IA32_EXT_APIC_ICR:
-				error = vlapic_x2apic_pt_icr_access(vcpu->vm, val);
+				error = vlapic_x2apic_pt_icr_access(vcpu, val);
 				break;
 			default:
 				pr_err("%s: unexpected MSR[0x%x] write with lapic_pt", __func__, msr);
