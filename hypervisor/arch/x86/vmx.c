@@ -139,10 +139,7 @@ void vmx_off(void)
 	void **vmcs_ptr = &get_cpu_var(vmcs_run);
 
 	if (*vmcs_ptr != NULL) {
-		uint64_t vmcs_pa;
-
-		vmcs_pa = hva2hpa(*vmcs_ptr);
-		exec_vmclear((void *)&vmcs_pa);
+		clear_va_vmcs(*vmcs_ptr);
 		*vmcs_ptr = NULL;
 	}
 
