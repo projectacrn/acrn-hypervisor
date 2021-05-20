@@ -712,7 +712,7 @@ vm_irqfd(struct vmctx *ctx, struct acrn_irqfd *args)
 }
 
 int
-vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg)
+vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg, struct platform_info *plat_info)
 {
 #define VM_CFG_BUFF_SIZE 0x8000
 	int i, err = 0;
@@ -751,6 +751,9 @@ vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg)
 	}
 
 	memcpy((void *)vm_cfg, (void *)pcfg, sizeof(struct acrn_vm_config));
+	if (plat_info != NULL) {
+		memcpy((void *)plat_info, (void *)&platform_info, sizeof(struct platform_info));
+	}
 
 exit:
 	free(configs_buff);
