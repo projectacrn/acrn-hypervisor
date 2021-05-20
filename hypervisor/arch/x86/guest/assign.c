@@ -32,7 +32,7 @@ static struct acrn_vcpu *is_single_destination(struct acrn_vm *vm, const struct 
 	uint16_t vid;
 	struct acrn_vcpu *vcpu = NULL;
 
-	vlapic_calc_dest(vm, &vdmask, false, (uint32_t)(info->addr.bits.dest_field),
+	vdmask = vlapic_calc_dest_noshort(vm, false, (uint32_t)(info->addr.bits.dest_field),
 		(bool)(info->addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS),
 		(bool)(info->data.bits.delivery_mode == MSI_DATA_DELMODE_LOPRI));
 
@@ -105,7 +105,7 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm,
 	dest = entry->vmsi.addr.bits.dest_field;
 	phys = (entry->vmsi.addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS);
 
-	vlapic_calc_dest(vm, &vdmask, false, dest, phys, false);
+	vdmask = vlapic_calc_dest_noshort(vm, false, dest, phys, false);
 	pdmask = vcpumask2pcpumask(vm, vdmask);
 
 	/* get physical delivery mode */
@@ -204,7 +204,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		/* physical destination cpu mask */
 		phys = (virt_rte.bits.dest_mode == IOAPIC_RTE_DESTMODE_PHY);
 		dest = (uint32_t)virt_rte.bits.dest_field;
-		vlapic_calc_dest(vm, &vdmask, false, dest, phys, false);
+		vdmask = vlapic_calc_dest_noshort(vm, false, dest, phys, false);
 		pdmask = vcpumask2pcpumask(vm, vdmask);
 
 		/* physical delivery mode */
