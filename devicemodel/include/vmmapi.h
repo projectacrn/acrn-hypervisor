@@ -151,5 +151,5 @@ void	vm_reset_watchdog(struct vmctx *ctx);
 
 int	vm_ioeventfd(struct vmctx *ctx, struct acrn_ioeventfd *args);
 int	vm_irqfd(struct vmctx *ctx, struct acrn_irqfd *args);
-int	vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg);
+int	vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg, struct platform_info *plat_info);
 #endif	/* _VMMAPI_H_ */
