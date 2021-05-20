@@ -419,11 +419,13 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
    ACRN supports three channels: ``ioc``, ``power button`` and ``uart``.
 
+   For ``uart``, an additional option, ``,allow_trigger_s5``, can be added.
+
    usage::
 
       --pm_notify_channel ioc
 
-   Use ioc as power management event motify channel.
+   Use ioc as power management event notify channel.
 
 ----
 
