@@ -59,7 +59,7 @@ options:
                [--acpidev_pt HID] [--mmiodev_pt MMIO_regions]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
                [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]
-               [--debugexit] [--logger-setting param_setting] [--pm_notify_channel]
+               [--debugexit] [--logger-setting param_setting] [--pm_notify_channel channel]
                [--pm_by_vuart vuart_node] [--ssram] <vm>
        -A: create ACPI tables
        -B: bootargs for kernel
