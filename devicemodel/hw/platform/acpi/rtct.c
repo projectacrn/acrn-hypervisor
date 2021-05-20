@@ -337,7 +337,7 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 	vrtct->length = sizeof(struct acpi_table_hdr);
 	vrtct->checksum = 0;
 
-	if (vm_get_config(ctx, &vm_cfg)) {
+	if (vm_get_config(ctx, &vm_cfg, NULL)) {
 		pr_err("%s, get VM configuration fail.\n", __func__);
 		goto error;
 	}
