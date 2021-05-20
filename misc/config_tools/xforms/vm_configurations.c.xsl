@@ -164,6 +164,7 @@
     <xsl:value-of select="acrn:initializer('name', concat($quot, name, $quot))" />
     <xsl:value-of select="acrn:initializer('kernel_type', kern_type)" />
     <xsl:value-of select="acrn:initializer('kernel_mod_tag', concat($quot, kern_mod, $quot))" />
+    <xsl:value-of select="acrn:initializer('ramdisk_mod_tag', concat($quot, ramdisk_mod, $quot))" />
     <xsl:if test="kern_load_addr">
       <xsl:value-of select="acrn:initializer('kernel_load_addr', kern_load_addr)" />
     </xsl:if>
