@@ -450,7 +450,9 @@ void cpu_dead(void)
 		/* clean up native stuff */
 		vmx_off();
 
+		stac();
 		flush_cache_range((void *)get_hv_image_base(), CONFIG_HV_RAM_SIZE);
+		clac();
 
 		/* Set state to show CPU is dead */
 		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
