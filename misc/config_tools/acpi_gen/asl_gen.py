@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ElementTree
 from acpi_const import *
 import board_cfg_lib
 import collections
+import lxml.etree
 
 def calculate_checksum8():
     '''
@@ -127,7 +128,7 @@ def gen_mcfg(dest_vm_acpi_path):
                     lines.append(line)
         dest.writelines(lines)
 
-def gen_madt(dest_vm_acpi_path, max_cpu_num):
+def gen_madt(dest_vm_acpi_path, max_cpu_num, apic_ids):
     '''
     generate apic.asl
     :param dest_vm_acpi_path: the path to store generated ACPI asl code
@@ -225,7 +226,7 @@ def gen_madt(dest_vm_acpi_path, max_cpu_num):
                     else:
                         lines.append(line)
                 elif re.search(p_lapic_id, line):
-                    lines.append(re.sub(p_lapic_id, 'Local Apic ID : {0:02X}'.format(0x0), line))
+                    lines.append(re.sub(p_lapic_id, 'Local Apic ID : {0:02X}'.format(apic_ids[0]), line))
 
                 elif re.search(p_ioapic_type, line):
                     ioapic_index += 1
@@ -290,7 +291,7 @@ def gen_madt(dest_vm_acpi_path, max_cpu_num):
                                                         process_id), lapic_line))
                             elif re.search(p_lapic_id, lapic_line):
                                 lines.append(
-                                    re.sub(p_lapic_id, 'Local Apic ID : {0:02X}'.format(process_id), lapic_line))
+                                    re.sub(p_lapic_id, 'Local Apic ID : {0:02X}'.format(apic_ids[process_id]), lapic_line))
                             else:
                                 lines.append(lapic_line)
 
@@ -394,6 +395,7 @@ def main(args):
     scenario= params['--scenario']
     out = params['--out']
 
+    board_etree = lxml.etree.parse(board)
     board_root = ElementTree.parse(board).getroot()
     scenario_root = ElementTree.parse(scenario).getroot()
     board_type = board_root.attrib['board']
@@ -412,7 +414,7 @@ def main(args):
                 shutil.rmtree(os.path.join(DEST_ACPI_PATH, config))
 
     dict_passthru_devices = collections.OrderedDict()
-    dict_vcpu_list = collections.OrderedDict()
+    dict_pcpu_list = collections.OrderedDict()
     for vm in scenario_root.findall('vm'):
         vm_id = vm.attrib['id']
         vm_type_node = vm.find('vm_type')
@@ -426,10 +428,10 @@ def main(args):
                 for mmio_dev_node in list(mmio_dev_nodes):
                     if mmio_dev_node is not None and mmio_dev_node.text.strip() == 'y':
                         dict_passthru_devices[vm_id].append(mmio_dev_node.tag)
-            dict_vcpu_list[vm_id] = []
+            dict_pcpu_list[vm_id] = []
             for pcpu_id in vm.findall('cpu_affinity/pcpu_id'):
                 if pcpu_id is not None and pcpu_id.text.strip() in pcpu_list:
-                    dict_vcpu_list[vm_id].append(pcpu_id)
+                    dict_pcpu_list[vm_id].append(int(pcpu_id.text))
 
     PASSTHROUGH_PTCT = False
     PRELAUNCHED_RTVM_ID = None
@@ -465,17 +467,28 @@ def main(args):
         gen_xsdt(dest_vm_acpi_path, passthru_devices)
         gen_fadt(dest_vm_acpi_path, board_root)
         gen_mcfg(dest_vm_acpi_path)
-        vcpu_len = 0
-        if vm_id in dict_vcpu_list:
-            vcpu_len = len(dict_vcpu_list[vm_id])
+        if vm_id in dict_pcpu_list:
+            dict_pcpu_list[vm_id].sort()
+
+            apic_ids = []
+            for id in dict_pcpu_list[vm_id]:
+                apic_id = common.get_node(f"//processors/die/core/thread[cpu_id='{id}']/apic_id/text()", board_etree)
+                if apic_id is None:
+                    emsg = 'some or all of the processors/die/core/thread/cpu_id tags are missing in board xml file for cpu {}, please run board_inspector.py to regenerate the board xml file!'.format(id)
+                    print(emsg)
+                    err_dic['board config: processors'] = emsg
+                    return err_dic
+                else:
+                    apic_ids.append(int(apic_id, 16))
+
+            gen_madt(dest_vm_acpi_path, len(dict_pcpu_list[vm_id]), apic_ids)
+            gen_tpm2(dest_vm_acpi_path, passthru_devices)
+            gen_dsdt(dest_vm_acpi_path, passthru_devices, board)
+            print('generate ASL code of ACPI tables for VM {} into {}'.format(vm_id, dest_vm_acpi_path))
         else:
             emsg = 'no cpu affinity config for VM {}'.format(vm_id)
             print(emsg)
             err_dic['vm,cpu_affinity,pcpu_id'] = emsg
-        gen_madt(dest_vm_acpi_path, vcpu_len)
-        gen_tpm2(dest_vm_acpi_path, passthru_devices)
-        gen_dsdt(dest_vm_acpi_path, passthru_devices, board)
-        print('generate ASL code of ACPI tables for VM {} into {}'.format(vm_id, dest_vm_acpi_path))
 
     return err_dic
 
