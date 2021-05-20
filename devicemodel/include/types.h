@@ -97,6 +97,34 @@ bitmap_weight(uint64_t bits)
 
 }
 
+#define build_bitmap_clear(name, op_len, op_type, lock)			\
+static inline void name(uint16_t nr_arg, volatile op_type *addr)	\
+{									\
+	uint16_t nr;							\
+	nr = nr_arg & ((8U * sizeof(op_type)) - 1U);			\
+	asm volatile(lock "and" op_len " %1,%0"				\
+			:  "+m" (*addr)					\
+			:  "r" ((op_type)(~(1UL<<(nr))))		\
+			:  "cc", "memory");				\
+}
+build_bitmap_clear(bitmap_clear_nolock, "q", uint64_t, "")
+
+/*
+ * ffs64 - Find the first (least significant) bit set of value
+ * and return the index of that bit.
+ *
+ * @return value: zero-based bit index, or if value is zero, returns INVALID_BIT_INDEX
+ */
+#define INVALID_BIT_INDEX  0xffffU
+static inline uint16_t ffs64(uint64_t value)
+{
+	/*
+	 * __builtin_ffsl: returns one plus the index of the least significant 1-bit of value,
+	 * or if value is zero, returns zero.
+	 */
+	return value ? (uint16_t)__builtin_ffsl(value) - 1U: INVALID_BIT_INDEX;
+}
+
 /* memory barrier */
 #define mb()    ({ asm volatile("mfence" ::: "memory"); (void)0; })
 
