@@ -25,7 +25,8 @@
 #include <asm/rtcm.h>
 #include <asm/irq.h>
 #include <ticks.h>
-#include "vroot_port.h"
+#include <asm/cpuid.h>
+#include <vroot_port.h>
 
 #define DBG_LEVEL_HYCALL	6U
 
@@ -132,6 +133,52 @@ int32_t hcall_get_api_version(struct acrn_vcpu *vcpu, __unused struct acrn_vm *t
 	return copy_to_gpa(vcpu->vm, &version, param1, sizeof(version));
 }
 
+/*
+ * nearest_pow2(n) is the nearest power of 2 integer that is not less than n
+ * The last (most significant) bit set of (n*2-1) matches the above definition
+ */
+static uint32_t nearest_pow2(uint32_t n)
+{
+	uint32_t p = n;
+
+	if (n >= 2U) {
+		p = fls32(2U*n - 1U);
+	}
+
+	return p;
+}
+
+static void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
+{
+	uint32_t subleaf;
+
+	*l2_shift = 0U;
+	*l3_shift = 0U;
+
+	for (subleaf = 0U;; subleaf++) {
+		uint32_t eax, ebx, ecx, edx;
+		uint32_t cache_type, cache_level, id, shift;
+
+		cpuid_subleaf(0x4U, subleaf, &eax, &ebx, &ecx, &edx);
+
+		cache_type = eax & 0x1fU;
+		cache_level = (eax >> 5U) & 0x7U;
+		id = (eax >> 14U) & 0xfffU;
+		shift = nearest_pow2(id + 1U);
+
+		/* No more caches */
+		if ((cache_type == 0U) || (cache_type >= 4U)) {
+			break;
+		}
+
+		if (cache_level == 2U) {
+			*l2_shift = shift;
+		} else if (cache_level == 3U) {
+			*l3_shift = shift;
+		}
+	}
+}
+
 /**
  * @brief Get basic platform information.
  *
@@ -155,7 +202,16 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
 	/* to get the vm_config_info pointer */
 	ret = copy_from_gpa(vm, &pi, param1, sizeof(pi));
 	if (ret == 0) {
-		pi.cpu_num = get_pcpu_nums();
+		uint16_t i;
+		uint16_t pcpu_nums = get_pcpu_nums();
+
+		get_cache_shift(&pi.l2_cat_shift, &pi.l3_cat_shift);
+
+		for (i = 0U; i < min(pcpu_nums, MAX_PLATFORM_LAPIC_IDS); i++) {
+			pi.lapic_ids[i] = per_cpu(lapic_id, i);
+		}
+
+		pi.cpu_num = pcpu_nums;
 		pi.version = 0x100;  /* version 1.0; byte[1:0] = major:minor version */
 		pi.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
 		pi.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
