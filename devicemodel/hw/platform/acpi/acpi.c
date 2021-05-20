@@ -72,7 +72,6 @@
 #include "hpet.h"
 #include "log.h"
 #include "rtct.h"
-#include "vhm_ioctl_defs.h"
 #include "vmmapi.h"
 
 /*
@@ -249,10 +248,65 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 	return 0;
 }
 
+/*
+ * Find the nth (least significant) bit set of val
+ * and return the index of that bit.
+ */
+static int find_nth_set_bit_index(uint64_t val, int n)
+{
+	int idx, set;
+
+	set = 0;
+	while (val != 0UL) {
+		idx = ffs64(val);
+		bitmap_clear_nolock(idx, &val);
+		if (set == n) {
+			return idx;
+		}
+		set++;
+	}
+
+	return -1;
+}
+
+int pcpuid_from_vcpuid(uint64_t guest_pcpu_bitmask, int vcpu_id)
+{
+	return find_nth_set_bit_index(guest_pcpu_bitmask, vcpu_id);
+}
+
+int lapicid_from_pcpuid(struct platform_info *plat_info, int pcpu_id)
+{
+	return plat_info->lapic_ids[pcpu_id];
+}
+
 static int
 basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 {
 	int i;
+	struct acrn_vm_config vm_cfg;
+	struct platform_info plat_info;
+	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
+
+	if (vm_get_config(ctx, &vm_cfg, &plat_info)) {
+		pr_err("%s, get VM configuration fail.\n", __func__);
+		return -1;
+	}
+
+	hv_cpu_bitmask = vm_cfg.cpu_affinity;
+	dm_cpu_bitmask = vm_get_cpu_affinity_dm();
+	if ((dm_cpu_bitmask != 0) && ((dm_cpu_bitmask & ~hv_cpu_bitmask) == 0)) {
+		guest_pcpu_bitmask = dm_cpu_bitmask;
+	} else {
+		guest_pcpu_bitmask = hv_cpu_bitmask;
+	}
+
+	if (guest_pcpu_bitmask == 0) {
+		pr_err("%s,Err: Invalid guest_pcpu_bitmask.\n", __func__);
+		return -1;
+	}
+
+	pr_info("%s, dm_cpu_bitmask:0x%x, hv_cpu_bitmask:0x%x, guest_cpu_bitmask: 0x%x\n",
+		__func__, dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask);
 
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm MADT template\n");
@@ -277,11 +331,31 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 
 	/* Add a Processor Local APIC entry for each CPU */
 	for (i = 0; i < basl_ncpu; i++) {
+		int pcpu_id = pcpuid_from_vcpuid(guest_pcpu_bitmask, i);
+		int lapic_id;
+
+		if (pcpu_id < 0) {
+			pr_err("%s,Err: pcpu id is not found in guest_pcpu_bitmask.\n", __func__);
+			return -1;
+		}
+
+		assert(pcpu_id < MAX_PLATFORM_LAPIC_IDS);
+		if (pcpu_id >= MAX_PLATFORM_LAPIC_IDS) {
+			pr_err("%s,Err: pcpu id %u should be less than MAX_PLATFORM_LAPIC_IDS.\n", __func__, pcpu_id);
+			return -1;
+		}
+
+		lapic_id = lapicid_from_pcpuid(&plat_info, pcpu_id);
+
 		EFPRINTF(fp, "[0001]\t\tSubtable Type : 00\n");
 		EFPRINTF(fp, "[0001]\t\tLength : 08\n");
 		/* iasl expects hex values for the proc and apic id's */
 		EFPRINTF(fp, "[0001]\t\tProcessor ID : %02x\n", i);
-		EFPRINTF(fp, "[0001]\t\tLocal Apic ID : %02x\n", i);
+
+		pr_info("%s, vcpu_id=0x%x, pcpu_id=0x%x, lapic_id=0x%x\n", __func__, i, pcpu_id, lapic_id);
+
+		EFPRINTF(fp, "[0001]\t\tLocal Apic ID : %02x\n", lapic_id);
+
 		EFPRINTF(fp, "[0004]\t\tFlags (decoded below) : 00000001\n");
 		EFPRINTF(fp, "\t\t\tProcessor Enabled : 1\n");
 		EFPRINTF(fp, "\t\t\tRuntime Online Capable : 0\n");
