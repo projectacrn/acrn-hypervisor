@@ -103,13 +103,13 @@ void init_e820(void)
 	uint32_t i;
 	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 
-	struct acrn_multiboot_info *mbi = get_acrn_multiboot_info();
-	struct multiboot_mmap *mmap = mbi->mi_mmap_entry;
+	struct acrn_boot_info *abi = get_acrn_boot_info();
+	struct multiboot_mmap *mmap = abi->mi_mmap_entry;
 
-	hv_e820_entries_nr = mbi->mi_mmap_entries;
+	hv_e820_entries_nr = abi->mi_mmap_entries;
 
 	dev_dbg(DBG_LEVEL_E820, "mmap addr 0x%x entries %d\n",
-		mbi->mi_mmap_entry, hv_e820_entries_nr);
+		abi->mi_mmap_entry, hv_e820_entries_nr);
 
 
 	for (i = 0U; i < hv_e820_entries_nr; i++) {

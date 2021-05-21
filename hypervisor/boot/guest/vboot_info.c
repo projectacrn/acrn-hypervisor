@@ -22,7 +22,7 @@
 #define DBG_LEVEL_BOOT	6U
 
 /**
- * @pre vm != NULL && mbi != NULL
+ * @pre vm != NULL && mod != NULL
  */
 static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct multiboot_module *mod)
 {
@@ -109,9 +109,9 @@ static int32_t init_vm_kernel_info(struct acrn_vm *vm, const struct multiboot_mo
 static char mod_cmdline[PRE_VM_NUM + SOS_VM_NUM][MAX_BOOTARGS_SIZE] = { '\0' };
 
 /**
- * @pre vm != NULL && mbi != NULL
+ * @pre vm != NULL && abi != NULL
  */
-static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_multiboot_info *mbi)
+static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_info *abi)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
@@ -140,9 +140,9 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_multiboo
 			 * This is very helpful when one of configured bootargs need to be revised at GRUB runtime
 			 * (e.g. "root="), since the later one would override the previous one if multiple bootargs exist.
 			 */
-			if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) && (*(mbi->mi_cmdline) != '\0')) {
+			if (((abi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) && (*(abi->mi_cmdline) != '\0')) {
 				if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
-						mbi->mi_cmdline, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
+						abi->mi_cmdline, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
 					pr_err("failed to merge mbi cmdline to SOS bootargs!");
 				}
 			}
@@ -162,16 +162,16 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_multiboo
 	}
 }
 
-/* @pre mbi != NULL && tag != NULL
+/* @pre abi != NULL && tag != NULL
  */
-static struct multiboot_module *get_mod_by_tag(const struct acrn_multiboot_info *mbi, const char *tag)
+static struct multiboot_module *get_mod_by_tag(const struct acrn_boot_info *abi, const char *tag)
 {
 	uint8_t i;
 	struct multiboot_module *mod = NULL;
-	struct multiboot_module *mods = (struct multiboot_module *)(&mbi->mi_mods[0]);
+	struct multiboot_module *mods = (struct multiboot_module *)(&abi->mi_mods[0]);
 	uint32_t tag_len = strnlen_s(tag, MAX_MOD_TAG_LEN);
 
-	for (i = 0U; i < mbi->mi_mods_count; i++) {
+	for (i = 0U; i < abi->mi_mods_count; i++) {
 		const char *mm_string = (char *)hpa2hva((uint64_t)(mods + i)->mm_string);
 		uint32_t mm_str_len = strnlen_s(mm_string, MAX_MOD_TAG_LEN);
 		const char *p_chr = mm_string + tag_len; /* point to right after the end of tag */
@@ -196,18 +196,18 @@ static struct multiboot_module *get_mod_by_tag(const struct acrn_multiboot_info 
 	return mod;
 }
 
-/* @pre vm != NULL && mbi != NULL
+/* @pre vm != NULL && abi != NULL
  */
-static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_multiboot_info *mbi)
+static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_boot_info *abi)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	struct multiboot_module *mod;
 	int32_t ret = -EINVAL;
 
-	dev_dbg(DBG_LEVEL_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
+	dev_dbg(DBG_LEVEL_BOOT, "mod counts=%d\n", abi->mi_mods_count);
 
 	/* find kernel module first */
-	mod = get_mod_by_tag(mbi, vm_config->os_config.kernel_mod_tag);
+	mod = get_mod_by_tag(abi, vm_config->os_config.kernel_mod_tag);
 	if (mod != NULL) {
 		const char *mm_string = (char *)hpa2hva((uint64_t)mod->mm_string);
 		uint32_t mm_str_len = strnlen_s(mm_string, MAX_BOOTARGS_SIZE);
@@ -226,16 +226,16 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_multiboot_i
 	if (ret == 0) {
 		/* Currently VM bootargs only support Linux guest */
 		if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
-			init_vm_bootargs_info(vm, mbi);
+			init_vm_bootargs_info(vm, abi);
 		}
 		/* check whether there is a ramdisk module */
-		mod = get_mod_by_tag(mbi, vm_config->os_config.ramdisk_mod_tag);
+		mod = get_mod_by_tag(abi, vm_config->os_config.ramdisk_mod_tag);
 		if (mod != NULL) {
 			init_vm_ramdisk_info(vm, mod);
 		}
 
 		if (is_prelaunched_vm(vm)) {
-			mod = get_mod_by_tag(mbi, vm_config->acpi_config.acpi_mod_tag);
+			mod = get_mod_by_tag(abi, vm_config->acpi_config.acpi_mod_tag);
 			if ((mod != NULL) && ((mod->mm_mod_end - mod->mm_mod_start) == ACPI_MODULE_SIZE)) {
 				init_vm_acpi_info(vm, mod);
 			} else {
@@ -259,11 +259,11 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_multiboot_i
  */
 int32_t init_vm_boot_info(struct acrn_vm *vm)
 {
-	struct acrn_multiboot_info *mbi = get_acrn_multiboot_info();
+	struct acrn_boot_info *abi = get_acrn_boot_info();
 	int32_t ret = -EINVAL;
 
 	stac();
-	ret = init_vm_sw_load(vm, mbi);
+	ret = init_vm_sw_load(vm, abi);
 	clac();
 
 	return ret;

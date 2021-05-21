@@ -71,7 +71,7 @@ void init_acpi(void)
 {
 	struct acpi_table_rsdp *rsdp = NULL;
 
-	rsdp = (struct acpi_table_rsdp *)(get_acrn_multiboot_info()->mi_acpi_rsdp_va);
+	rsdp = (struct acpi_table_rsdp *)(get_acrn_boot_info()->mi_acpi_rsdp_va);
 	if (rsdp == NULL) {
 		uint16_t *addr;
 

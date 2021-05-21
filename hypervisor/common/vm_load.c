@@ -73,10 +73,10 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 
 #ifdef CONFIG_MULTIBOOT2
 	if (is_sos_vm(vm)) {
-		struct acrn_multiboot_info *mbi = get_acrn_multiboot_info();
+		struct acrn_boot_info *abi = get_acrn_boot_info();
 
 		(void)memcpy_s(&(zeropage->boot_efi_info), sizeof(zeropage->boot_efi_info),
-				&(mbi->mi_efi_info), sizeof(mbi->mi_efi_info));
+				&(abi->mi_efi_info), sizeof(abi->mi_efi_info));
 	}
 #endif
 	/* copy part of the header into the zero page */
