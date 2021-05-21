@@ -29,7 +29,7 @@ static inline bool boot_from_multiboot2(uint32_t magic)
 	return (magic == MULTIBOOT2_INFO_MAGIC);
 }
 
-int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info);
+int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info);
 #endif
 
 static inline bool boot_from_multiboot1(uint32_t magic, uint32_t info)

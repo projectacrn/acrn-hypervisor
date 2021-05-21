@@ -41,12 +41,12 @@ static uint32_t parse_seed_arg(void)
 {
 	const char *cmd_src = NULL;
 	char *arg, *arg_end;
-	struct acrn_multiboot_info *mbi = get_acrn_multiboot_info();
+	struct acrn_boot_info *abi = get_acrn_boot_info();
 	uint32_t i = SEED_ARG_NUM - 1U;
 	uint32_t len;
 
-	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
-		cmd_src = mbi->mi_cmdline;
+	if ((abi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
+		cmd_src = abi->mi_cmdline;
 	}
 
 	if (cmd_src != NULL) {
