@@ -25,7 +25,7 @@
 #include <efi.h>
 #include <vm_configurations.h>
 
-struct acrn_multiboot_info {
+struct acrn_boot_info {
 	uint32_t		mi_flags;	/* the flags is back-compatible with multiboot1 */
 
 	const char		*mi_cmdline;
@@ -46,9 +46,9 @@ struct acrn_multiboot_info {
 	struct efi_info		mi_efi_info;
 };
 
-void init_acrn_multiboot_info(uint32_t magic, uint32_t info);
-int32_t sanitize_acrn_multiboot_info(uint32_t magic, uint32_t info);
-struct acrn_multiboot_info *get_acrn_multiboot_info(void);
+void init_acrn_boot_info(uint32_t magic, uint32_t info);
+int32_t sanitize_acrn_boot_info(uint32_t magic, uint32_t info);
+struct acrn_boot_info *get_acrn_boot_info(void);
 
 #endif	/* ASSEMBLER */
 
