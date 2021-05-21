@@ -411,7 +411,7 @@ def launch_end(names, args, virt_io, vmid, config):
     uos_launch(names, args, virt_io, vmid, config)
 
 
-def set_dm_pt(names, sel, vmid, config):
+def set_dm_pt(names, sel, vmid, config, dm):
 
     uos_type = names['uos_types'][vmid]
 
@@ -449,8 +449,12 @@ def set_dm_pt(names, sel, vmid, config):
         print("   $boot_ipu_option      \\", file=config)
 
     if sel.bdf['ethernet'][vmid] and sel.slot['ethernet'][vmid]:
-        print("   -s {},passthru,{}/{}/{} \\".format(sel.slot["ethernet"][vmid], sel.bdf["ethernet"][vmid][0:2], \
-            sel.bdf["ethernet"][vmid][3:5], sel.bdf["ethernet"][vmid][6:7]), file=config)
+        if vmid in dm["enable_ptm"] and dm["enable_ptm"][vmid] == 'y':
+            print("   -s {},passthru,{}/{}/{},enable_ptm \\".format(sel.slot["ethernet"][vmid], sel.bdf["ethernet"][vmid][0:2], \
+                sel.bdf["ethernet"][vmid][3:5], sel.bdf["ethernet"][vmid][6:7]), file=config)
+        else:
+            print("   -s {},passthru,{}/{}/{} \\".format(sel.slot["ethernet"][vmid], sel.bdf["ethernet"][vmid][0:2], \
+                sel.bdf["ethernet"][vmid][3:5], sel.bdf["ethernet"][vmid][6:7]), file=config)
 
     if sel.bdf['sata'] and sel.slot["sata"][vmid]:
         print("   -s {},passthru,{}/{}/{} \\".format(sel.slot["sata"][vmid], sel.bdf["sata"][vmid][0:2], \
@@ -642,7 +646,7 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         if not is_nuc_whl_linux(names, vmid):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
 
-    set_dm_pt(names, sel, vmid, config)
+    set_dm_pt(names, sel, vmid, config, dm)
 
     if dm['console_vuart'][vmid] == "Enable":
         print("   -s {},uart,vuart_idx:0 \\".format(launch_cfg_lib.virtual_dev_slot("console_vuart")), file=config)

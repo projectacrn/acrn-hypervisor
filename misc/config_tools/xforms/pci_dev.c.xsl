@@ -48,6 +48,9 @@
     <xsl:apply-templates select="console_vuart" />
     <xsl:apply-templates select="communication_vuart" />
     <xsl:apply-templates select="pci_devs" />
+    <xsl:if test="acrn:is-post-launched-vm(vm_type)">
+      <xsl:apply-templates select="PTM" />
+    </xsl:if>
 
     <xsl:if test="acrn:is-sos-vm(vm_type) or acrn:pci-dev-num(@id)">
       <xsl:value-of select="$end_of_array_initializer" />
@@ -162,6 +165,17 @@
         <xsl:value-of select="$newline" />
       </xsl:if>
     </xsl:for-each>
+  </xsl:template>
+
+  <xsl:template match="PTM">
+    <xsl:if test="text() = 'y'">
+      <xsl:text>{</xsl:text>
+      <xsl:value-of select="$newline" />
+      <xsl:value-of select="acrn:initializer('vbdf.value', 'UNASSIGNED_VBDF', '')" />
+      <xsl:value-of select="acrn:initializer('vrp_sec_bus', '1', '')" />
+      <xsl:text>},</xsl:text>
+      <xsl:value-of select="$newline" />
+    </xsl:if>
   </xsl:template>
 
 </xsl:stylesheet>
