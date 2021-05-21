@@ -15,9 +15,20 @@
  */
 static void mb2_mmap_to_abi(struct acrn_boot_info *abi, const struct multiboot2_tag_mmap *mb2_tag_mmap)
 {
+	uint32_t i;
+	struct multiboot2_mmap_entry *mb2_mmap = (struct multiboot2_mmap_entry *)mb2_tag_mmap->entries;
+
 	/* multiboot2 mmap tag header occupied 16 bytes */
 	abi->mi_mmap_entries = (mb2_tag_mmap->size - 16U) / sizeof(struct multiboot2_mmap_entry);
-	abi->mi_mmap_va = (struct multiboot2_mmap_entry *)mb2_tag_mmap->entries;
+	if (abi->mi_mmap_entries > MAX_MMAP_ENTRIES) {
+		abi->mi_mmap_entries = MAX_MMAP_ENTRIES;
+	}
+
+	for (i = 0U; i < abi->mi_mmap_entries; i++) {
+		abi->mi_mmap_entry[i].baseaddr = (mb2_mmap + i)->addr;
+		abi->mi_mmap_entry[i].length = (mb2_mmap + i)->len;
+		abi->mi_mmap_entry[i].type = (mb2_mmap + i)->type;
+	}
 }
 
 /**
@@ -120,5 +131,20 @@ int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info)
 
 	abi->mi_mods_count = mod_idx;
 
+	return ret;
+}
+
+int32_t init_multiboot2_info(uint32_t *registers)
+{
+	int32_t ret = -ENODEV;
+	uint32_t magic = registers[0];
+	uint32_t info = registers[1];
+	struct acrn_boot_info *abi = get_acrn_boot_info();
+
+	if (boot_from_multiboot2(magic)) {
+		if (multiboot2_to_acrn_bi(abi, hpa2hva_early((uint64_t)info)) == 0) {
+			ret = 0;
+		}
+	}
 	return ret;
 }
