@@ -210,5 +210,6 @@
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </communication_vuart>
+    <PTM>n</PTM>
   </vm>
 </acrn-config>
