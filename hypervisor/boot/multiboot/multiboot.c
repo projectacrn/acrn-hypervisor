@@ -8,126 +8,62 @@
 #include <errno.h>
 #include <asm/pgtable.h>
 #include <multiboot.h>
-#include <rtl.h>
-#include <logmsg.h>
 #include "multiboot_priv.h"
 
-static struct acrn_boot_info acrn_bi = { 0U };
-
-static int32_t abi_status;
-
-void init_acrn_boot_info(uint32_t magic, uint32_t info)
-{
-	if (boot_from_multiboot1(magic, info)) {
-		struct multiboot_info *mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)info));
-
-		acrn_bi.mi_flags = mbi->mi_flags;
-		acrn_bi.mi_drives_addr = mbi->mi_drives_addr;
-		acrn_bi.mi_drives_length = mbi->mi_drives_length;
-		acrn_bi.mi_cmdline = (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline);
-		acrn_bi.mi_loader_name = (char *)hpa2hva_early((uint64_t)mbi->mi_loader_name);
-		acrn_bi.mi_mmap_entries = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
-		acrn_bi.mi_mmap_va = (struct multiboot_mmap *)hpa2hva_early((uint64_t)mbi->mi_mmap_addr);
-		acrn_bi.mi_mods_count = mbi->mi_mods_count;
-		acrn_bi.mi_mods_va = (struct multiboot_module *)hpa2hva_early((uint64_t)mbi->mi_mods_addr);
-		abi_status = 0;
-#ifdef CONFIG_MULTIBOOT2
-	} else if (boot_from_multiboot2(magic)) {
-		abi_status = multiboot2_to_acrn_bi(&acrn_bi, hpa2hva_early((uint64_t)info));
-#endif
-	} else {
-		abi_status = -ENODEV;
-	}
-}
-
-int32_t sanitize_acrn_boot_info(uint32_t magic, uint32_t info)
-{
-	if ((acrn_bi.mi_mmap_entries != 0U) && (acrn_bi.mi_mmap_va != NULL)) {
-		if (acrn_bi.mi_mmap_entries > MAX_MMAP_ENTRIES) {
-			pr_err("Too many E820 entries %d\n", acrn_bi.mi_mmap_entries);
-			acrn_bi.mi_mmap_entries = MAX_MMAP_ENTRIES;
-		}
-		if (boot_from_multiboot1(magic, info)) {
-			uint32_t mmap_entry_size = sizeof(struct multiboot_mmap);
-
-			(void)memcpy_s((void *)(&acrn_bi.mi_mmap_entry[0]),
-				(acrn_bi.mi_mmap_entries * mmap_entry_size),
-				(const void *)acrn_bi.mi_mmap_va,
-				(acrn_bi.mi_mmap_entries * mmap_entry_size));
-		}
-#ifdef CONFIG_MULTIBOOT2
-		if (boot_from_multiboot2(magic)) {
-			uint32_t i;
-			struct multiboot2_mmap_entry *mb2_mmap = (struct multiboot2_mmap_entry *)acrn_bi.mi_mmap_va;
-
-			for (i = 0U; i < acrn_bi.mi_mmap_entries; i++) {
-				acrn_bi.mi_mmap_entry[i].baseaddr = (mb2_mmap + i)->addr;
-				acrn_bi.mi_mmap_entry[i].length = (mb2_mmap + i)->len;
-				acrn_bi.mi_mmap_entry[i].type = (mb2_mmap + i)->type;
-			}
-		}
-#endif
-		acrn_bi.mi_flags |= MULTIBOOT_INFO_HAS_MMAP;
-	} else {
-		acrn_bi.mi_flags &= ~MULTIBOOT_INFO_HAS_MMAP;
-	}
-
-	if (acrn_bi.mi_mods_count > MAX_MODULE_NUM) {
-		pr_err("Too many multiboot modules %d\n", acrn_bi.mi_mods_count);
-		acrn_bi.mi_mods_count = MAX_MODULE_NUM;
-	}
-	if (acrn_bi.mi_mods_count != 0U) {
-		if (boot_from_multiboot1(magic, info) && (acrn_bi.mi_mods_va != NULL)) {
-			(void)memcpy_s((void *)(&acrn_bi.mi_mods[0]),
-				(acrn_bi.mi_mods_count * sizeof(struct multiboot_module)),
-				(const void *)acrn_bi.mi_mods_va,
-				(acrn_bi.mi_mods_count * sizeof(struct multiboot_module)));
-		}
-		acrn_bi.mi_flags |= MULTIBOOT_INFO_HAS_MODS;
-	} else {
-		acrn_bi.mi_flags &= ~MULTIBOOT_INFO_HAS_MODS;
-	}
-
-	if ((acrn_bi.mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
-		pr_err("no multiboot module info found");
-		abi_status = -EINVAL;
-	}
-
-	if ((acrn_bi.mi_flags & MULTIBOOT_INFO_HAS_MMAP) == 0U) {
-		pr_err("wrong multiboot flags: 0x%08x", acrn_bi.mi_flags);
-		abi_status = -EINVAL;
-	}
-
-#ifdef CONFIG_MULTIBOOT2
-	if (boot_from_multiboot2(magic)) {
-		if (acrn_bi.mi_efi_info.efi_memmap_hi != 0U) {
-			pr_err("the EFI mmap address should be less than 4G!");
-			acrn_bi.mi_flags &= ~MULTIBOOT_INFO_HAS_EFI_MMAP;
-			abi_status = -EINVAL;
-		}
-
-		if ((acrn_bi.mi_flags & (MULTIBOOT_INFO_HAS_EFI64 | MULTIBOOT_INFO_HAS_EFI_MMAP)) == 0U) {
-			pr_err("no multiboot2 uefi info found!");
-		}
-	}
-#endif
-
-	if (acrn_bi.mi_loader_name[0] == '\0') {
-		pr_err("no bootloader name found!");
-		abi_status = -EINVAL;
-	} else {
-		printf("Multiboot%s Bootloader: %s\n", boot_from_multiboot1(magic, info) ? "" : "2", acrn_bi.mi_loader_name);
-	}
-
-	return abi_status;
-}
-
-/*
- * @post retval != NULL
- * @post retval->mi_flags & MULTIBOOT_INFO_HAS_MMAP != 0U
- * @post (retval->mi_mmap_entries > 0U) && (retval->mi_mmap_entries <= MAX_MMAP_ENTRIES)
+/**
+ * @pre abi != NULL
  */
-struct acrn_boot_info *get_acrn_boot_info(void)
+int32_t multiboot_to_acrn_bi(struct acrn_boot_info *abi, void *mb_info) {
+	struct multiboot_info *mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)mb_info));
+	struct multiboot_mmap *mmap = (struct multiboot_mmap *)hpa2hva_early((uint64_t)mbi->mi_mmap_addr);
+	struct multiboot_module *mods = (struct multiboot_module *)hpa2hva_early((uint64_t)mbi->mi_mods_addr);
+
+	abi->mi_flags = mbi->mi_flags;
+	abi->mi_cmdline = (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline);
+	abi->mi_loader_name = (char *)hpa2hva_early((uint64_t)mbi->mi_loader_name);
+	abi->mi_mmap_entries = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
+	abi->mi_mods_count = mbi->mi_mods_count;
+
+	if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_MMAP) != 0U) && (abi->mi_mmap_entries != 0U) && (mmap != NULL)) {
+
+		if (abi->mi_mmap_entries > MAX_MMAP_ENTRIES) {
+			abi->mi_mmap_entries = MAX_MMAP_ENTRIES;
+		}
+
+		(void)memcpy_s((void *)(&abi->mi_mmap_entry[0]),
+			(abi->mi_mmap_entries * sizeof(struct multiboot_mmap)),
+			mmap, (abi->mi_mmap_entries * sizeof(struct multiboot_mmap)));
+
+	} else {
+		abi->mi_mmap_entries = 0U;
+	}
+
+	if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) != 0U) && (abi->mi_mods_count != 0U) && (mods != NULL)) {
+		if (abi->mi_mods_count > MAX_MODULE_NUM) {
+			abi->mi_mods_count = MAX_MODULE_NUM;
+		}
+
+		(void)memcpy_s((void *)(&abi->mi_mods[0]),
+			(abi->mi_mods_count * sizeof(struct multiboot_module)),
+			mods, (abi->mi_mods_count * sizeof(struct multiboot_module)));
+	} else {
+		abi->mi_mods_count = 0U;
+	}
+
+	return 0;
+}
+
+int32_t init_multiboot_info(uint32_t *registers)
 {
-	return &acrn_bi;
+	int32_t ret = -ENODEV;
+	uint32_t magic = registers[0];
+	uint32_t info = registers[1];
+	struct acrn_boot_info *abi = get_acrn_boot_info();
+
+	if (boot_from_multiboot(magic, info)) {
+		if (multiboot_to_acrn_bi(abi, hpa2hva_early((uint64_t)info)) == 0) {
+			ret = 0;
+		}
+	}
+	return ret;
 }

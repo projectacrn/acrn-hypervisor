@@ -11,6 +11,13 @@
 #define	MULTIBOOT_INFO_HAS_EFI_MMAP	0x00010000U
 #define	MULTIBOOT_INFO_HAS_EFI64	0x00020000U
 
+static inline bool boot_from_multiboot(uint32_t magic, uint32_t info)
+{
+	return ((magic == MULTIBOOT_INFO_MAGIC) && (info != 0U));
+}
+
+int32_t multiboot_to_acrn_bi(struct acrn_boot_info *abi, void *mb_info);
+
 #ifdef CONFIG_MULTIBOOT2
 /*
  * @post boot_regs[1] stores the address pointer that point to a valid multiboot2 info
@@ -31,10 +38,5 @@ static inline bool boot_from_multiboot2(uint32_t magic)
 
 int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info);
 #endif
-
-static inline bool boot_from_multiboot1(uint32_t magic, uint32_t info)
-{
-	return ((magic == MULTIBOOT_INFO_MAGIC) && (info != 0U));
-}
 
 #endif /* MULTIBOOT_PRIV_H */
