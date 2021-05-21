@@ -162,12 +162,35 @@ struct acpi_table_header {
 	UINT32 asl_compiler_revision;
 };
 
-struct hv_boot_info {
-	char * cmdline;
-	UINT32 cmdline_sz;
-	EFI_PHYSICAL_ADDRESS hv_hpa;
-	UINT32 mods_count;
-	struct multiboot_module mods[MBOOT_MODS_NUMS];
+/* hypervisor loader operation table */
+typedef struct hv_loader *HV_LOADER;
+struct hv_loader {
+	/* Load ACRN hypervisor image into memory */
+	EFI_STATUS (*load_boot_image)(IN HV_LOADER hvld);
+	/* Load VM Kernels and ACPI Tables into memory */
+	EFI_STATUS (*load_modules)(IN HV_LOADER hvld);
+
+	/* Get hypervisor boot command length */
+	UINTN (*get_boot_cmdsize)(IN HV_LOADER hvld);
+	/* Get the number of multiboot2 modules */
+	UINTN (*get_mod_count)(IN HV_LOADER hvld);
+	/* Get the total memory size allocated to load module files */
+	UINTN (*get_total_modsize)(IN HV_LOADER hvld);
+	/* Get the total lengths of the module commands */
+	UINTN (*get_total_modcmdsize)(IN HV_LOADER hvld);
+
+	/* Get the start address of the memory region stored ACRN hypervisor image */
+	EFI_PHYSICAL_ADDRESS (*get_hv_hpa)(IN HV_LOADER hvld);
+	/* Get the start address of the memory region stored module files */	
+	EFI_PHYSICAL_ADDRESS (*get_mod_hpa)(IN HV_LOADER hvld);
+
+	/* Set hypervisor boot command line to multiboot2 tag */
+	void (*fill_bootcmd_tag)(IN HV_LOADER hvld, OUT struct multiboot2_tag_string *tag);
+	/* Set n-th module info to multiboot2 tag  */
+	void (*fill_module_tag)(IN HV_LOADER hvld, OUT struct multiboot2_tag_module *tag, IN UINTN index);
+
+	/* free up memory allocated by hypervisor loader */
+	void (*deinit)(IN HV_LOADER hvld);
 };
 
 static inline uint64_t

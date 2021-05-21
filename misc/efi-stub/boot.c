@@ -44,6 +44,7 @@ EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
 static struct efi_memmap_info mmap_info;
 static struct acpi_table_rsdp *rsdp = NULL;
+HV_LOADER hvld;
 
 static EFI_STATUS
 get_current_memory_map(struct efi_memmap_info *mi)
@@ -188,7 +189,7 @@ static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 }
 
 static EFI_STATUS
-fill_e820(struct hv_boot_info *hv_info, struct multiboot_mmap *mmap, int32_t mmap_entry_count, int32_t *e820_count)
+fill_e820(HV_LOADER hvld, struct multiboot_mmap *mmap, int32_t mmap_entry_count, int32_t *e820_count)
 {
 	EFI_STATUS err = EFI_SUCCESS;
 	int32_t i, j;
@@ -262,16 +263,15 @@ fill_e820(struct hv_boot_info *hv_info, struct multiboot_mmap *mmap, int32_t mma
 	/* switch hv memory region(0x20000000 ~ 0x22000000) to
 	 * available RAM in e820 table
 	 */
-	mmap[j].mm_base_addr = hv_info->hv_hpa;
+	mmap[j].mm_base_addr = hvld->get_hv_hpa(hvld);
 	mmap[j].mm_length = CONFIG_HV_RAM_SIZE;
 	mmap[j].mm_type = E820_RAM;
 	j++;
 
-	for (i = 0; i < hv_info->mods_count; i++, j++) {
-		mmap[j].mm_base_addr = hv_info->mods[i].mmo_start;
-		mmap[j].mm_length = EFI_SIZE_TO_PAGES(hv_info->mods[i].mmo_end - hv_info->mods[i].mmo_start);
-		mmap[j].mm_type = E820_RAM;
-	}
+	mmap[j].mm_base_addr = hvld->get_mod_hpa(hvld);
+	mmap[j].mm_length = hvld->get_total_modsize(hvld);
+	mmap[j].mm_type = E820_RAM;
+	j++;
 
 	*e820_count = j;
 out:
@@ -279,7 +279,7 @@ out:
 }
 
 
-EFI_STATUS construct_mbi(struct hv_boot_info *hv_info, struct multiboot_info *mbi,
+EFI_STATUS construct_mbi(HV_LOADER hvld, struct multiboot_info *mbi,
 		struct multiboot_mmap *mmap, struct multiboot_module *mods)
 {
 	EFI_STATUS err = EFI_SUCCESS;
@@ -287,11 +287,11 @@ EFI_STATUS construct_mbi(struct hv_boot_info *hv_info, struct multiboot_info *mb
 
 	mmap_entry_count = mmap_info.map_size / mmap_info.desc_size;
 
-	err = fill_e820(hv_info, mmap, mmap_entry_count, &e820_count);
+	err = fill_e820(hvld, mmap, mmap_entry_count, &e820_count);
 	if (err != EFI_SUCCESS)
 		goto out;
 
-	mbi->mi_cmdline = (UINTN)hv_info->cmdline;
+//	mbi->mi_cmdline = (UINTN)hv_info->cmdline;
 	mbi->mi_mmap_addr = (UINTN)mmap;
 	mbi->mi_mmap_length = e820_count*sizeof(struct multiboot_mmap);
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MMAP | MULTIBOOT_INFO_HAS_CMDLINE;
@@ -301,28 +301,13 @@ out:
 
 #ifdef CONFIG_MULTIBOOT2
 static uint32_t
-get_total_modcmdsize(struct hv_boot_info *hv_info)
-{
-	unsigned i;
-	uint32_t sz;
-
-	for (i = 0, sz = 0; i < hv_info->mods_count; i++) {
-		/* TODO: use safe strlen */
-		/* convert to uint64_t first to make compiler happy */
-		sz += strlen((char *)(uint64_t)hv_info->mods[i].mmo_string);
-	}
-
-	return sz;
-}
-
-static uint32_t
-get_mbi2_size(struct hv_boot_info *hv_info)
+get_mbi2_size(struct hv_loader *hvld)
 {
     return 2 * sizeof(uint32_t)
 		+ sizeof(struct multiboot2_tag)
 		+ sizeof(struct multiboot2_tag)
-		+ (sizeof(struct multiboot2_tag_string) + ALIGN_UP(strlen(hv_info->cmdline), MULTIBOOT2_TAG_ALIGN))
-		+ (hv_info->mods_count * sizeof(struct multiboot2_tag_module) + get_total_modcmdsize(hv_info))
+		+ (sizeof(struct multiboot2_tag_string) + ALIGN_UP(hvld->get_boot_cmdsize(hvld), MULTIBOOT2_TAG_ALIGN))
+		+ (hvld->get_mod_count(hvld) * sizeof(struct multiboot2_tag_module) + hvld->get_total_modcmdsize(hvld))
 		+ ALIGN_UP((sizeof(struct multiboot2_tag_mmap) + (mmap_info.map_size / mmap_info.desc_size) * sizeof(struct multiboot2_mmap_entry)), MULTIBOOT2_TAG_ALIGN)
 		+ ALIGN_UP(sizeof(struct multiboot2_tag_new_acpi) + rsdp->length, MULTIBOOT2_TAG_ALIGN)
 		+ ALIGN_UP(sizeof(struct multiboot2_tag_efi64), MULTIBOOT2_TAG_ALIGN)
@@ -331,7 +316,7 @@ get_mbi2_size(struct hv_boot_info *hv_info)
 }
 
 EFI_STATUS
-construct_mbi2(struct hv_boot_info *hv_info, void **mbi_addr, struct multiboot_mmap *mmap)
+construct_mbi2(struct hv_loader *hvld, void **mbi_addr, struct multiboot_mmap *mmap)
 {
 	uint64_t *mbistart;
 	uint64_t *p;
@@ -343,7 +328,7 @@ construct_mbi2(struct hv_boot_info *hv_info, void **mbi_addr, struct multiboot_m
 	if (err != EFI_SUCCESS && err != EFI_BUFFER_TOO_SMALL)
 		return err;
 
-	mbi2_size = get_mbi2_size(hv_info);
+	mbi2_size = get_mbi2_size(hvld);
 
 	/* per UEFI spec v2.9: This allocation is guaranteed to be 8-bytes aligned */
 	err = allocate_pool(EfiLoaderData, mbi2_size, (void **)&mbistart);
@@ -365,10 +350,7 @@ construct_mbi2(struct hv_boot_info *hv_info, void **mbi_addr, struct multiboot_m
 	/* Boot command line */
 	{
 		struct multiboot2_tag_string *tag = (struct multiboot2_tag_string *)p;
-		uint32_t cmdline_size = strlen(hv_info->cmdline);
-		tag->type = MULTIBOOT2_TAG_TYPE_CMDLINE;
-		tag->size = sizeof(struct multiboot2_tag_string) + cmdline_size;
-		memcpy(tag->string, hv_info->cmdline, cmdline_size);
+		(void)hvld->fill_bootcmd_tag(hvld, tag);
 		p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
 	}
 
@@ -385,20 +367,10 @@ construct_mbi2(struct hv_boot_info *hv_info, void **mbi_addr, struct multiboot_m
 	/* Modules */
 	{
 		unsigned i;
-		struct multiboot_module *cur;
-
-		for (i = 0; i < hv_info->mods_count; i++) {
-			uint32_t mmo_string_size;
+		uint32_t mod_count = hvld->get_mod_count(hvld);
+		for (i = 0; i < mod_count; i++) {
 			struct multiboot2_tag_module *tag = (struct multiboot2_tag_module *)p;
-
-			cur = &hv_info->mods[i];
-
-			mmo_string_size = strlen((char *)(uint64_t)cur->mmo_string);
-			tag->type = MULTIBOOT2_TAG_TYPE_MODULE;
-			tag->size = sizeof(struct multiboot2_tag_module) + mmo_string_size;
-			tag->mod_start = cur->mmo_start;
-			tag->mod_end = cur->mmo_end;
-			memcpy(tag->cmdline, (char *)(uint64_t)cur->mmo_string, mmo_string_size);
+			(void)hvld->fill_module_tag(hvld, tag, i);
 			p += ALIGN_UP(tag->size, MULTIBOOT2_TAG_ALIGN) / sizeof(uint64_t);
 		}
 	}
@@ -411,7 +383,7 @@ construct_mbi2(struct hv_boot_info *hv_info, void **mbi_addr, struct multiboot_m
 		uint32_t mmap_count = mmap_info.map_size / mmap_info.desc_size;
 		int32_t e820_count = 0;
 
-		err = fill_e820(hv_info, mmap, mmap_count, &e820_count);
+		err = fill_e820(hvld, mmap, mmap_count, &e820_count);
 		if (err != EFI_SUCCESS)
 			goto out;
 
@@ -482,7 +454,7 @@ out:
 #endif
 
 static EFI_STATUS
-run_acrn(EFI_HANDLE image, struct hv_boot_info *hv_info)
+run_acrn(EFI_HANDLE image, HV_LOADER hvld)
 {
 	EFI_PHYSICAL_ADDRESS addr;
 	EFI_STATUS err;
@@ -542,14 +514,14 @@ run_acrn(EFI_HANDLE image, struct hv_boot_info *hv_info)
 	 * If multiboot2, we're not going to use the mbi allocated above.
 	 * construct_mbi2 will reallocate mbi and this value will be overwritten.
 	 */
-	err = construct_mbi2(hv_info, (void **)&mbi, mmap);
+	err = construct_mbi2(hvld, (void **)&mbi, mmap);
 #else
 	err = get_current_memory_map(&mmap_info);
 	if (err != EFI_SUCCESS)
 		goto out;
 
 	/* construct multiboot info and deliver it to hypervisor */
-	err = construct_mbi(hv_info, mbi, mmap, mods);
+	err = construct_mbi(hvld, mbi, mmap, mods);
 	if (err != EFI_SUCCESS)
 		goto out;
 
@@ -568,7 +540,7 @@ run_acrn(EFI_HANDLE image, struct hv_boot_info *hv_info)
 	if (err != EFI_SUCCESS)
 		goto out;
 
-	hv_jump(hv_info->hv_hpa, mbi);
+	hv_jump(hvld->get_hv_hpa(hvld), mbi);
 
 	/* Not reached on success */
 out:
@@ -635,16 +607,10 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	EFI_LOADED_IMAGE *info;
 
 	INTN index;
-	CHAR16 *options = NULL;
-	UINT32 options_size = 0;
-
-	struct hv_boot_info hv_info;
 
 	InitializeLib(image, _table);
 	sys_table = _table;
 	boot = sys_table->BootServices;
-
-	(void)memset((void *)&hv_info, 0x0, sizeof(hv_info));
 
 	if (CheckCrc(sys_table->Hdr.HeaderSize, &sys_table->Hdr) != TRUE)
 		return EFI_LOAD_ERROR;
@@ -656,35 +622,46 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	if (err != EFI_SUCCESS)
 		goto failed;
 
-	/* get the options */
-	options = info->LoadOptions;
-	options_size = info->LoadOptionsSize;
-
-	/* convert the options to cmdline */
-	if (options_size > 0) {
-		hv_info.cmdline = ch16_2_ch8(options, StrnLen(options, options_size));
-		hv_info.cmdline_sz = options_size / 2;
-	}
-
 	err = reserve_unconfigure_high_memory();
 	if (err != EFI_SUCCESS) {
 		Print(L"Unable to reserve un-configure high memory %r ", err);
 		goto failed;
 	}
 
-	err = load_images_from_container(info, &hv_info);
+	/*
+	 * Load hypervisor boot image handler. Currently Slim Bootloader
+	 * compatible embedded container format is supported. File system
+	 * mode to come future.
+	 */
+	err = container_init(info, &hvld);
+	if (err != EFI_SUCCESS) {
+		Print(L"Unable to init container library %r ", err);
+		goto failed;
+	}
+
+	err = hvld->load_boot_image(hvld);
 	if (err != EFI_SUCCESS) {
 		Print(L"Unable to load ACRNHV Image %r ", err);
 		goto failed;
 	}
 
-	err = run_acrn(image, &hv_info);
+	err = hvld->load_modules(hvld);
+	if (err != EFI_SUCCESS) {
+		Print(L"Unable to load VM modules %r ", err);
+		goto failed;
+	}
+
+	err = run_acrn(image, hvld);
 	if (err != EFI_SUCCESS)
 		goto failed;
 
 	return EFI_SUCCESS;
 
 failed:
+	if (hvld) {
+		hvld->deinit(hvld);
+	}
+	
 	/*
 	 * We need to be careful not to trash 'err' here. If we fail
 	 * to allocate enough memory to hold the error string fallback

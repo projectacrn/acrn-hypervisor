@@ -35,39 +35,11 @@
 #ifndef __ACRNCONTAINER_H__
 #define __ACRNCONTAINER_H__
 
-typedef struct {
-  UINT32           Signature;
-  UINT8            Version;
-  UINT8            Svn;
-  UINT16           DataOffset;
-  UINT32           DataSize;
-  UINT8            AuthType;
-  UINT8            ImageType;
-  UINT8            Flags;
-  UINT8            Count;
-} CONTAINER_HDR;
-
-typedef struct {
-  UINT32           Name;
-  UINT32           Offset;
-  UINT32           Size;
-  UINT8            Attribute;
-  UINT8            Alignment;
-  UINT8            AuthType;
-  UINT8            HashSize;
-  UINT8            HashData[0];
-} COMPONENT_ENTRY;
-
-typedef struct {
-  UINT32        Signature;
-  UINT32        CompressedSize;
-  UINT32        Size;
-  UINT16        Version;
-  UINT8         Svn;
-  UINT8         Attribute;
-  UINT8         Data[];
-} LOADER_COMPRESSED_HEADER;
-
-EFI_STATUS load_images_from_container(EFI_LOADED_IMAGE *info, struct hv_boot_info *hv_info);
+/**
+ * container_init - Initialize Container Library and returned the loader operation table.
+ * @info: Firmware-allocated handle that identifies the EFI application image (i.e. acrn.efi)
+ * @hvld: Loader operation table
+ */
+EFI_STATUS container_init(EFI_LOADED_IMAGE *info, HV_LOADER *hvld);
 
 #endif /* __ACRNCONTAINER_H__ */
