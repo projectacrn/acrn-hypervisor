@@ -8,11 +8,14 @@ import getopt
 import common
 import board_cfg_lib
 import scenario_cfg_lib
+import lxml
+import lxml.etree
 
 ERR_LIST = {}
 BOOT_TYPE = ['no', 'vsbl', 'ovmf']
 RTOS_TYPE = ['no', 'Soft RT', 'Hard RT']
 DM_VUART0 = ['Disable', 'Enable']
+PTM = ['y', 'n']
 UOS_TYPES = ['CLEARLINUX', 'ANDROID', 'ALIOS', 'PREEMPT-RT LINUX', 'VXWORKS', 'WINDOWS', 'ZEPHYR', 'YOCTO', 'UBUNTU', 'GENERIC LINUX']
 LINUX_LIKE_OS = ['CLEARLINUX', 'PREEMPT-RT LINUX', 'YOCTO', 'UBUNTU', 'GENERIC LINUX']
 
@@ -669,3 +672,11 @@ def check_communication_vuart(launch_communication_vuarts, scenario_info):
                     ERR_LIST[vuart_key] = "uos {}'s communication_vuart 1 and legacy_vuart 1 should " \
                         "not be configured at the same time.".format(uos_id)
                 return
+
+def check_enable_ptm(launch_enable_ptm, scenario_info):
+    scenario_etree = lxml.etree.parse(scenario_info)
+    enable_ptm_vm_list = scenario_etree.xpath("//vm[PTM = 'y']/@id")
+    for uos_id, enable_ptm in launch_enable_ptm.items():
+        key = 'uos:id={},enable_ptm'.format(uos_id)
+        if enable_ptm == 'y' and str(uos_id) not in enable_ptm_vm_list:
+            ERR_LIST[key] = "PTM of uos:{} set to 'n' in scenario xml".format(uos_id)
