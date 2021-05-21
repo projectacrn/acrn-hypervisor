@@ -51,35 +51,37 @@ The diagram below shows the overall architecture:
 Initiate a system S5 from within a User VM (e.g. HMI)
 =====================================================
 
-As in Figure 56, a request to Service VM initiates the shutdown flow.
-This could come from a User VM, most likely the HMI (Windows or user-friendly Linux). 
-When a human operator click to initiate the flow, the lifecycle_mgr in it will send 
-the request via vUART to the lifecycle manager in the Service VM which in turn acknowledge 
-the request and trigger the following flow. 
+As shown in the :numref:`s5-architecture`, a request to Service VM initiates the shutdown flow.
+This could come from a User VM, most likely the HMI (running Windows or Linux).
+When a human operator initiates the flow, the Lifecycle Manager (``life_mngr``) running in that
+User VM will send the request via the vUART to the Lifecycle Manager in the Service VM which in
+turn acknowledges the request and triggers the following flow.
 
-.. note:: The User VM need to be authorized to be able to request a Shutdown, this is achieved by adding 
-   "``--pm_notify_channel uart``" in the launch script of that VM.
-   And, there is only one VM in the system can be configured to request a shutdown. If there is a second User 
-   VM launched with "``--pm_notify_channel uart``", ACRN will stop launching it and throw out below error message:
-   ``initiate a connection on a socket error``
-   ``create socket to connect life-cycle manager failed``
+.. note:: The User VM needs to be authorized to request a Shutdown, this is achieved by adding
+   ``--pm_notify_channel uart`` in the launch script of that VM. There is only one VM in the
+   system that can be configured to request a shutdown. If there is a second User VM launched
+   with ``--pm_notify_channel uart``, ACRN will refuse to start it, and will throw these error
+   messages:
+
+   - ``initiate a connection on a socket error``
+   - ``create socket to connect life-cycle manager failed``
 
 Trigger the User VM's S5
 ========================
 
 On the Service VM side, it uses the ``acrnctl`` tool to trigger the User VM's S5 flow:
 ``acrnctl stop user-vm-name``. Then, the Device Model sends a ``shutdown`` command
-to the User VM through a channel. If the User VM receives the command, it will send an "ACK"
+to the User VM through a channel. If the User VM receives the command, it will send an ``ACKED``
 to the Device Model. It is the Service VM's responsibility to check if the User VMs
-shut down successfully or not, and decides when to power off itself.
+shut down successfully or not, and decides when to power itself off.
 
 User VM "Lifecycle Manager"
 ===========================
 
-As part of the current S5 reference design, a lifecycle manager daemon (life_mngr) runs in the
-User VM to implement S5. It waits for the command from the Service VM on the
-paired serial port. The simple protocol between the Service VM and User VM is as follows:
-When the daemon receives ``shutdown``, it sends "ACKed" to the Service VM;
+As part of the current S5 reference design, a Lifecycle Manager daemon (``life_mngr`` in Linux,
+``life_mngr_win.exe`` in Windows) runs in the User VM to implement S5. It waits for the shutdown
+request from the Service VM on the serial port. The simple protocol between the Service VM and
+User VM is as follows: when the daemon receives ``shutdown``, it sends ``ACKED`` to the Service VM;
 then it can power off the User VM. If the User VM is not ready to power off,
 it can ignore the ``shutdown`` command.
 
@@ -97,7 +99,6 @@ The procedure for enabling S5 is specific to the particular OS:
      :name: laag-waag-script
      :caption: LaaG/WaaG launch script
      :linenos:
-     :lines: 97-117
      :emphasize-lines: 2-4,17
      :language: bash
 
@@ -107,7 +108,6 @@ The procedure for enabling S5 is specific to the particular OS:
      :name: rt-script
      :caption: RT-Linux launch script
      :linenos:
-     :lines: 42-58
      :emphasize-lines: 2-3,13
      :language: bash
 
@@ -119,15 +119,15 @@ The procedure for enabling S5 is specific to the particular OS:
 
       .. code-block:: none
 
-         $ cd acrn-hypervisor/misc/life_mngr
+         $ cd acrn-hypervisor
          $ make life_mngr
 
    #. Copy ``life_mngr`` and ``life_mngr.service`` into the User VM:
 
       .. code-block:: none
 
-         $ scp life_mngr root@<test board address>:/usr/bin/life_mngr
-         $ scp life_mngr.service root@<test board address>:/lib/systemd/system/life_mngr.service
+         $ scp build/misc/services/life_mngr root@<test board address>:/usr/bin/life_mngr
+         $ scp build/misc/services/life_mngr.service root@<test board address>:/lib/systemd/system/life_mngr.service
 
    #. Use the below commands to enable ``life_mngr.service`` and restart the User VM.
 
@@ -141,7 +141,7 @@ The procedure for enabling S5 is specific to the particular OS:
 
    a) Build the ``life_mngr_win.exe`` application::
 
-        $ cd acrn-hypervisor/misc
+        $ cd acrn-hypervisor
         $ make life_mngr
 
       .. note:: If there is no ``x86_64-w64-mingw32-gcc`` compiler, you can run ``sudo apt install gcc-mingw-w64-x86-64``
