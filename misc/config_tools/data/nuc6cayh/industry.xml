@@ -147,6 +147,7 @@
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </communication_vuart>
+    <PTM>n</PTM>
   </vm>
   <vm id="2">
     <vm_type>POST_RT_VM</vm_type>
@@ -185,6 +186,7 @@
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </communication_vuart>
+    <PTM>n</PTM>
   </vm>
   <vm id="3">
     <vm_type>POST_STD_VM</vm_type>
@@ -223,6 +225,7 @@
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </communication_vuart>
+    <PTM>n</PTM>
   </vm>
   <vm id="4">
     <vm_type>POST_STD_VM</vm_type>
@@ -261,6 +264,7 @@
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </communication_vuart>
+    <PTM>n</PTM>
   </vm>
   <vm id="5">
     <vm_type>POST_STD_VM</vm_type>
@@ -299,6 +303,7 @@
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </communication_vuart>
+    <PTM>n</PTM>
   </vm>
   <vm id="6">
     <vm_type>POST_STD_VM</vm_type>
@@ -337,6 +342,7 @@
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </communication_vuart>
+    <PTM>n</PTM>
   </vm>
   <vm id="7">
     <vm_type>KATA_VM</vm_type>
@@ -372,5 +378,6 @@
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </communication_vuart>
+    <PTM>n</PTM>
   </vm>
 </acrn-config>
