@@ -420,6 +420,11 @@ its ``id`` attribute. When it is enabled, specify which target VM's vUART the cu
       </xs:annotation>
     </xs:element>
     <xs:element name="board_private" type="BoardPrivateConfiguration" minOccurs="0" />
+    <xs:element name="PTM" type="Boolean" default="n" minOccurs="0">
+      <xs:annotation>
+        <xs:documentation>Enable and disable PTM(Precision Timing Measurement) feature.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
   </xs:all>
   <xs:attribute name="id" type="xs:integer" />
 

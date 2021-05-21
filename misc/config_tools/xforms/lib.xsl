@@ -311,12 +311,25 @@
       <xsl:variable name="communication_vuart" select="count(./communication_vuart/base[text() = 'PCI_VUART'])" />
       <xsl:variable name="pci_devs" select="count(./pci_devs/pci_dev[text() != ''])" />
       <xsl:variable name="pci_hostbridge" select="1" />
+      <xsl:variable name="virtual_root_port">
+        <xsl:choose>
+          <xsl:when test="./PTM = 'y'">
+            <xsl:value-of select="1" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="0" />
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
       <xsl:if test="acrn:is-pre-launched-vm($vmtype)">
         <xsl:if test="$ivshmem + $console_vuart + $communication_vuart + $pci_devs > 0">
           <func:result select="$ivshmem + $console_vuart + $communication_vuart + $pci_devs + $pci_hostbridge" />
         </xsl:if>
       </xsl:if>
-      <xsl:if test="acrn:is-post-launched-vm($vmtype) or acrn:is-sos-vm($vmtype)">
+      <xsl:if test="acrn:is-post-launched-vm($vmtype)">
+        <func:result select="$ivshmem + $console_vuart + $communication_vuart + $virtual_root_port" />
+      </xsl:if>
+      <xsl:if test="acrn:is-sos-vm($vmtype)">
         <func:result select="$ivshmem + $console_vuart + $communication_vuart" />
       </xsl:if>
     </xsl:for-each>

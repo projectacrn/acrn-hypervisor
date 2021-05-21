@@ -52,6 +52,7 @@ def get_launch_item_values(board_info, scenario_info=None):
     launch_item_values['uos,vuart0'] = launch_cfg_lib.DM_VUART0
     launch_item_values['uos,poweroff_channel'] = launch_cfg_lib.PM_CHANNEL
     launch_item_values["uos,cpu_affinity"] = board_cfg_lib.get_processor_info()
+    launch_item_values['uos,enable_ptm'] = launch_cfg_lib.PTM
     launch_cfg_lib.set_shm_regions(launch_item_values, scenario_info)
     launch_cfg_lib.set_pci_vuarts(launch_item_values, scenario_info)
 
