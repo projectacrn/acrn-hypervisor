@@ -152,12 +152,6 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
 
 	vm->sw.bootargs_info.size = strnlen_s((const char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE);
 
-	/* Kernel bootarg and zero page are right before the kernel image */
-	if (vm->sw.bootargs_info.size > 0U) {
-		vm->sw.bootargs_info.load_addr = vm->sw.kernel_info.kernel_load_addr - (MEM_1K * 8U);
-	} else {
-		vm->sw.bootargs_info.load_addr = NULL;
-	}
 }
 
 /* @pre abi != NULL && tag != NULL
