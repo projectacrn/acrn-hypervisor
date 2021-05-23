@@ -13,23 +13,23 @@
 #include <errno.h>
 #include <logmsg.h>
 
-/*
- * We put the guest init gdt after kernel/bootarg/ramdisk images. Suppose this is a
- * safe place for guest init gdt of guest whatever the configuration is used by guest.
+/* Define a 32KB memory block to store LaaG VM load params in guest address space
+ * The params including:
+ *	Init GDT entries : 1KB (must be 8byte aligned)
+ *	Linux Zeropage : 4KB
+ *	Boot cmdline : 2KB
+ *	EFI memory map : 12KB
+ *	Reserved region for trampoline code : 8KB
+ * Each param should keep 8byte aligned and the total region size should be less than 32KB
+ * so that it could be put below MEM_1M.
+ * Please note in Linux VM, the last 8KB space below MEM_1M is for trampoline code. The block
+ * should be able to accommodate it and so that avoid the trampoline corruption.
  */
-static uint64_t get_guest_gdt_base_gpa(const struct acrn_vm *vm)
-{
-	uint64_t new_guest_gdt_base_gpa, guest_kernel_end_gpa, guest_bootargs_end_gpa, guest_ramdisk_end_gpa;
-
-	guest_kernel_end_gpa = (uint64_t)vm->sw.kernel_info.kernel_load_addr + vm->sw.kernel_info.kernel_size;
-	guest_bootargs_end_gpa = (uint64_t)vm->sw.bootargs_info.load_addr + vm->sw.bootargs_info.size;
-	guest_ramdisk_end_gpa = (uint64_t)vm->sw.ramdisk_info.load_addr + vm->sw.ramdisk_info.size;
-
-	new_guest_gdt_base_gpa = max(guest_kernel_end_gpa, max(guest_bootargs_end_gpa, guest_ramdisk_end_gpa));
-	new_guest_gdt_base_gpa = (new_guest_gdt_base_gpa + 7UL) & ~(8UL - 1UL);
-
-	return new_guest_gdt_base_gpa;
-}
+#define BZIMG_LOAD_PARAMS_SIZE			(MEM_4K * 8)
+#define BZIMG_INITGDT_GPA(load_params_gpa)	(load_params_gpa + 0UL)
+#define BZIMG_ZEROPAGE_GPA(load_params_gpa)	(load_params_gpa + MEM_1K)
+#define BZIMG_CMDLINE_GPA(load_params_gpa)	(load_params_gpa + MEM_1K + MEM_4K)
+#define BZIMG_EFIMMAP_GPA(load_params_gpa)	(load_params_gpa + MEM_1K + MEM_4K + MEM_2K)
 
 /**
  * @pre zp != NULL && vm != NULL
@@ -54,7 +54,7 @@ static uint32_t create_zeropage_e820(struct zero_page *zp, const struct acrn_vm 
  * @pre vm != NULL
  * @pre (vm->min_mem_addr <= kernel_load_addr) && (kernel_load_addr < vm->max_mem_addr)
  */
-static uint64_t create_zero_page(struct acrn_vm *vm)
+static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 {
 	struct zero_page *zeropage, *hva;
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
@@ -62,8 +62,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
 	uint64_t gpa, addr;
 
-	/* Set zeropage in Linux Guest RAM region just past boot args */
-	gpa = (uint64_t)bootargs_info->load_addr + MEM_4K;
+	gpa = BZIMG_ZEROPAGE_GPA(load_params_gpa);
 	hva = (struct zero_page *)gpa2hva(vm, gpa);
 	zeropage = hva;
 
@@ -122,7 +121,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 /**
  * @pre vm != NULL
  */
-static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
+static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint64_t load_params_gpa)
 {
 	uint32_t i;
 	uint32_t kernel_entry_offset;
@@ -151,7 +150,7 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
 	/* Create Zeropage and copy Physical Base Address of Zeropage
 	 * in RSI
 	 */
-	vcpu_set_gpreg(vcpu, CPU_REG_RSI, create_zero_page(vm));
+	vcpu_set_gpreg(vcpu, CPU_REG_RSI, create_zero_page(vm, load_params_gpa));
 	pr_info("%s, RSI pointing to zero page for VM %d at GPA %X",
 			__func__, vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSI));
 }
@@ -168,66 +167,114 @@ static void prepare_loading_rawimage(struct acrn_vm *vm)
 }
 
 /**
+ * @pre sw_module != NULL
+ */
+static void load_sw_module(struct acrn_vm *vm, struct sw_module_info *sw_module)
+{
+	if (sw_module->size != 0) {
+		(void)copy_to_gpa(vm, sw_module->src_addr, (uint64_t)sw_module->load_addr, sw_module->size);
+	}
+}
+
+/**
  * @pre vm != NULL
  */
-int32_t vm_sw_loader(struct acrn_vm *vm)
+static void load_sw_modules(struct acrn_vm *vm, uint64_t load_params_gpa)
 {
-	int32_t ret = 0;
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
 	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
 	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
-	/* get primary vcpu */
-	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 
 	pr_dbg("Loading guest to run-time location");
-
-	/*
-	 * TODO:
-	 *    - We need to initialize the guest bsp registers according to
-	 *      guest boot mode (real mode vs protect mode)
-	 */
-	init_vcpu_protect_mode_regs(vcpu, get_guest_gdt_base_gpa(vcpu->vm));
 
 	/* Copy the guest kernel image to its run-time location */
 	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr,
 		(uint64_t)sw_kernel->kernel_load_addr, sw_kernel->kernel_size);
 
-	/* Check if a RAM disk is present */
-	if (ramdisk_info->size != 0U) {
-		/* Copy RAM disk to its load location */
-		(void)copy_to_gpa(vm, ramdisk_info->src_addr,
-			(uint64_t)ramdisk_info->load_addr,
-			ramdisk_info->size);
+	if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
+
+		load_sw_module(vm, ramdisk_info);
+
+		bootargs_info->load_addr = (void *)BZIMG_CMDLINE_GPA(load_params_gpa);
+
+		load_sw_module(vm, bootargs_info);
 	}
-	/* Copy Guest OS bootargs to its load location */
-	if ((bootargs_info->size != 0U) && (bootargs_info->load_addr != NULL)) {
-		(void)copy_to_gpa(vm, bootargs_info->src_addr,
-			(uint64_t)bootargs_info->load_addr,
-			(strnlen_s((char *)bootargs_info->src_addr, MAX_BOOTARGS_SIZE) + 1U));
-	}
+
 	/* Copy Guest OS ACPI to its load location */
-	if (acpi_info->size == ACPI_MODULE_SIZE) {
-		(void)copy_to_gpa(vm, acpi_info->src_addr, (uint64_t)acpi_info->load_addr, ACPI_MODULE_SIZE);
+	load_sw_module(vm, acpi_info);
+
+}
+
+static int32_t vm_bzimage_loader(struct acrn_vm *vm)
+{
+	int32_t ret = 0;
+	/* get primary vcpu */
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
+	uint64_t load_params_gpa = find_space_from_ve820(vm, BZIMG_LOAD_PARAMS_SIZE, MEM_4K, MEM_1M);
+
+	if (load_params_gpa != INVALID_GPA) {
+		/* We boot bzImage from protected mode directly */
+		init_vcpu_protect_mode_regs(vcpu, BZIMG_INITGDT_GPA(load_params_gpa));
+
+		load_sw_modules(vm, load_params_gpa);
+
+		prepare_loading_bzimage(vm, vcpu, load_params_gpa);
+	} else {
+		ret = -ENOMEM;
 	}
-	switch (vm->sw.kernel_type) {
-	case KERNEL_BZIMAGE:
-		prepare_loading_bzimage(vm, vcpu);
-		break;
-	case KERNEL_ZEPHYR:
-		prepare_loading_rawimage(vm);
-		break;
-	default:
-		pr_err("%s, Loading VM SW failed", __func__);
+
+	return ret;
+}
+
+static int32_t vm_rawimage_loader(struct acrn_vm *vm)
+{
+	int32_t ret = 0;
+	uint64_t load_params_gpa = 0x800;
+
+	/*
+	 * TODO:
+	 *    - We need to initialize the guest bsp registers according to
+	 *	guest boot mode (real mode vs protect mode)
+	 *    - The memory layout usage is unclear, only GDT might be needed as its boot param.
+	 *	currently we only support Zephyr which has no needs on cmdline/e820/efimmap/etc.
+	 *	hardcode the vGDT GPA to 0x800 where is not used by Zephyr so far;
+	 */
+	init_vcpu_protect_mode_regs(vcpu_from_vid(vm, BSP_CPU_ID), load_params_gpa);
+
+	load_sw_modules(vm, load_params_gpa);
+
+	prepare_loading_rawimage(vm);
+
+	return ret;
+}
+
+/**
+ * @pre vm != NULL
+ */
+int32_t vm_sw_loader(struct acrn_vm *vm)
+{
+	int32_t ret = 0;
+	/* get primary vcpu */
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
+
+	if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
+
+		ret = vm_bzimage_loader(vm);
+
+	} else if (vm->sw.kernel_type == KERNEL_ZEPHYR){
+
+		ret = vm_rawimage_loader(vm);
+
+	} else {
 		ret = -EINVAL;
-		break;
 	}
 
 	if (ret == 0) {
 		/* Set VCPU entry point to kernel entry */
-		vcpu_set_rip(vcpu, (uint64_t)sw_kernel->kernel_entry_addr);
+		vcpu_set_rip(vcpu, (uint64_t)vm->sw.kernel_info.kernel_entry_addr);
 		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016lx ", __func__, vm->vm_id, vcpu->vcpu_id,
-			sw_kernel->kernel_entry_addr);
+			vm->sw.kernel_info.kernel_entry_addr);
 	}
 
 	return ret;
