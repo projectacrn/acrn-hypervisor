@@ -900,12 +900,16 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 			build_vrsdp(vm);
 		}
 
-		(void)vm_sw_loader(vm);
+		err = vm_sw_loader(vm);
+		if (err == 0) {
 
-		/* start vm BSP automatically */
-		start_vm(vm);
+			/* start vm BSP automatically */
+			start_vm(vm);
 
-		pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
+			pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
+		} else {
+			pr_err("Failed to load VM id: %x name: %s, error = %d", vm_id, vm_config->name, err);
+		}
 	}
 }
 
