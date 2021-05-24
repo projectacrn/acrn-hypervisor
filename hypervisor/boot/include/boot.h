@@ -62,7 +62,7 @@ struct acrn_boot_info {
 	uint32_t		mmap_entries;
 	struct abi_mmap		mmap_entry[MAX_MMAP_ENTRIES];
 
-	const void		*mi_acpi_rsdp_va;
+	const void		*acpi_rsdp_va;
 	struct abi_efi_info	efi_info;
 };
 
