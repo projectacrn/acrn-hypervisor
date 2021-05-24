@@ -29,7 +29,7 @@ int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi)
 {
 	int32_t abi_status = 0;
 
-	if (abi->mi_mods_count == 0U) {
+	if (abi->mods_count == 0U) {
 		pr_err("no boot module info found");
 		abi_status = -EINVAL;
 	}
