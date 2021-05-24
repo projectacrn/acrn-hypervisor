@@ -24,7 +24,7 @@
 
 struct acrn_boot_info {
 
-	const char		*mi_cmdline;
+	const char		cmdline[MAX_BOOTARGS_SIZE];
 	const char		*mi_loader_name;
 
 	uint32_t		mi_mods_count;
