@@ -44,7 +44,7 @@ Prepare the Zephyr image
 
 Prepare the Zephyr kernel that you will run in VM0 later.
 
-- Follow step 1 from the :Ref:`using_zephyr_as_uos` instructions
+- Follow step 1 from the :ref:`using_zephyr_as_uos` instructions
 
   .. note:: We only need the binary Zephyr kernel, not the entire ``zephyr.img``
 
