@@ -404,6 +404,8 @@ vm_map_memseg_vma(struct vmctx *ctx, size_t len, vm_paddr_t gpa,
 int
 vm_setup_memory(struct vmctx *ctx, size_t memsize)
 {
+	int ret;
+
 	/*
 	 * If 'memsize' cannot fit entirely in the 'lowmem' segment then
 	 * create another 'highmem' segment above 4GB for the remainder.
@@ -418,7 +420,14 @@ vm_setup_memory(struct vmctx *ctx, size_t memsize)
 
 	ctx->biosmem = high_bios_size();
 
-	return hugetlb_setup_memory(ctx);
+	ret = hugetlb_setup_memory(ctx);
+	if (ret == 0) {
+		/* mitigate reset attack */
+		bzero((void *)ctx->baseaddr, ctx->lowmem);
+		bzero((void *)(ctx->baseaddr + ctx->highmem_gpa_base), ctx->highmem);
+	}
+
+	return ret;
 }
 
 void
@@ -439,10 +448,7 @@ vm_unsetup_memory(struct vmctx *ctx)
 
 	if (!is_rtvm) {
 		bzero((void *)ctx->baseaddr, ctx->lowmem);
-		if (ctx->highmem > 0) {
-			bzero((void *)(ctx->baseaddr + ctx->highmem_gpa_base),
-					ctx->highmem);
-		}
+		bzero((void *)(ctx->baseaddr + ctx->highmem_gpa_base), ctx->highmem);
 	}
 
 	hugetlb_unsetup_memory(ctx);
