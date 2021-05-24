@@ -26,20 +26,21 @@ int32_t multiboot_to_acrn_bi(struct acrn_boot_info *abi, void *mb_info) {
 			(char *)hpa2hva_early((uint64_t)mbi->mi_loader_name),
 			strnlen_s((char *)hpa2hva_early((uint64_t)mbi->mi_loader_name), (MAX_LOADER_NAME_SIZE - 1U)));
 
-	abi->mi_mmap_entries = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
+	abi->mmap_entries = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
 
-	if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_MMAP) != 0U) && (abi->mi_mmap_entries != 0U) && (mmap != NULL)) {
+	if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_MMAP) != 0U) && (abi->mmap_entries != 0U) && (mmap != NULL)) {
 
-		if (abi->mi_mmap_entries > MAX_MMAP_ENTRIES) {
-			abi->mi_mmap_entries = MAX_MMAP_ENTRIES;
+		if (abi->mmap_entries > MAX_MMAP_ENTRIES) {
+			abi->mmap_entries = MAX_MMAP_ENTRIES;
 		}
 
-		(void)memcpy_s((void *)(&abi->mi_mmap_entry[0]),
-			(abi->mi_mmap_entries * sizeof(struct multiboot_mmap)),
-			mmap, (abi->mi_mmap_entries * sizeof(struct multiboot_mmap)));
-
+		for (i = 0U; i < abi->mmap_entries; i++) {
+			abi->mmap_entry[i].baseaddr = (mmap + i)->baseaddr;
+			abi->mmap_entry[i].length = (mmap + i)->length;
+			abi->mmap_entry[i].type = (mmap + i)->type;
+		}
 	} else {
-		abi->mi_mmap_entries = 0U;
+		abi->mmap_entries = 0U;
 	}
 
 	abi->mods_count = mbi->mi_mods_count;

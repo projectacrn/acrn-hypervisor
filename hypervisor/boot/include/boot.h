@@ -30,6 +30,19 @@ struct abi_module {
 	const char		string[MAX_MOD_STRING_SIZE];
 };
 
+/* ABI memory map types, compatible to Multiboot/Multiboot2/E820; */
+#define MMAP_TYPE_RAM		1U
+#define MMAP_TYPE_RESERVED	2U
+#define MMAP_TYPE_ACPI_RECLAIM	3U
+#define MMAP_TYPE_ACPI_NVS	4U
+#define MMAP_TYPE_UNUSABLE	5U
+
+struct abi_mmap {
+	uint64_t		baseaddr;
+	uint64_t		length;
+	uint32_t		type;
+};
+
 struct acrn_boot_info {
 
 	const char		cmdline[MAX_BOOTARGS_SIZE];
@@ -38,8 +51,8 @@ struct acrn_boot_info {
 	uint32_t		mods_count;
 	struct abi_module	mods[MAX_MODULE_NUM];
 
-	uint32_t		mi_mmap_entries;
-	struct multiboot_mmap	mi_mmap_entry[MAX_MMAP_ENTRIES];
+	uint32_t		mmap_entries;
+	struct abi_mmap		mmap_entry[MAX_MMAP_ENTRIES];
 
 	const void		*mi_acpi_rsdp_va;
 	struct efi_info		mi_efi_info;
