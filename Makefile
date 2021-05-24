@@ -101,8 +101,6 @@ hypervisor: hvdefconfig
 	@echo -e "ACRN Configuration Summary:" > $(HV_CFG_LOG)
 	@$(MAKE) showconfig $(HV_MAKEOPTS) -s >> $(HV_CFG_LOG)
 	@cat $(HV_CFG_LOG)
-	@echo "building hypervisor as EFI executable..."
-	@$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) EFI_OBJDIR=$(HV_OUT)/$(EFI_OUT)
 
 # Targets that manipulate hypervisor configurations
 hvdefconfig:

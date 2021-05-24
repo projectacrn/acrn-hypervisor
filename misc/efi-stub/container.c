@@ -31,6 +31,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Library to support ACRN HV booting with Slim Bootloader container
+ *
+*/
 
 #include <elf.h>
 #include <efi.h>
