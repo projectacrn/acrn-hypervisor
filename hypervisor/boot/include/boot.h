@@ -15,6 +15,7 @@
 #define MAX_MMAP_ENTRIES		32U
 
 #define MAX_BOOTARGS_SIZE		2048U
+#define MAX_LOADER_NAME_SIZE		32U
 
 /* The modules in multiboot are: Pre-launched VM: kernel/ramdisk/acpi; SOS VM: kernel/ramdisk */
 #define MAX_MODULE_NUM			(3U * PRE_VM_NUM + 2U * SOS_VM_NUM)
@@ -25,13 +26,10 @@
 struct acrn_boot_info {
 
 	const char		cmdline[MAX_BOOTARGS_SIZE];
-	const char		*mi_loader_name;
+	const char		loader_name[MAX_LOADER_NAME_SIZE];
 
 	uint32_t		mi_mods_count;
 	struct multiboot_module	mi_mods[MAX_MODULE_NUM];
-
-	uint32_t 		mi_drives_length;
-	uint32_t		mi_drives_addr;
 
 	uint32_t		mi_mmap_entries;
 	struct multiboot_mmap	mi_mmap_entry[MAX_MMAP_ENTRIES];

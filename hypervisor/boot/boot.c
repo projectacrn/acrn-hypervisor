@@ -45,11 +45,11 @@ int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi)
 	}
 #endif
 
-	if (abi->mi_loader_name[0] == '\0') {
+	if (abi->loader_name[0] == '\0') {
 		pr_err("no bootloader name found!");
 		abi_status = -EINVAL;
 	} else {
-		printf("%s Bootloader: %s\n", boot_protocol_name, abi->mi_loader_name);
+		printf("%s Bootloader: %s\n", boot_protocol_name, abi->loader_name);
 	}
 
 	return abi_status;
