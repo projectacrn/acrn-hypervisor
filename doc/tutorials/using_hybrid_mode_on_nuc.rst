@@ -20,7 +20,7 @@ as shown in :numref:`hybrid_scenario_on_nuc`.
 
 .. note::
 
-   All build operations are done directly on the target. Building the artefacts (ACRN hypervisor, kernel, tools and Zephyr)
+   All build operations are done directly on the target. Building the artifacts (ACRN hypervisor, kernel, tools and Zephyr)
    on a separate development machine can be done but is not described in this document.
 
 .. contents::
