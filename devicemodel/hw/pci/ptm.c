@@ -181,12 +181,15 @@ int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 		/* hv is responsible to ensure that PTM is enabled on hw root port if
 		 * root port is PTM root-capable.  If PTM root is not enabled already in physical
 		 * root port before guest launch, guest OS can only enable it in root port's virtual
-		 * config space and PTM may not function as desired.
+		 * config space and PTM may not function as desired so we are not going to allow user
+		 * to enable PTM on pass-thru device.
 		 */
 		cap = get_ptm_reg_value(rp, PCIR_PTM_CTRL);
 		if (!(cap & PCIM_PTM_CTRL_ENABLE) || !(cap & PCIM_PTM_CTRL_ROOT_SELECT)) {
 			pr_err("%s Warning: guest is not allowed to enable PTM on root port %x:%x.%x.\n",
 				__func__, rp->bus, rp->dev, rp->func);
+
+			return -EINVAL;
 		}
 
 		rp_ptm_offset = pci_find_ext_cap(rp, PCIZ_PTM);
