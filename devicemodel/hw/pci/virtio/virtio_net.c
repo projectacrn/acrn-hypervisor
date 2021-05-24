@@ -489,7 +489,9 @@ virtio_net_ping_rxq(void *vdev, struct virtio_vq_info *vq)
 	 */
 	if (net->rx_ready == 0) {
 		net->rx_ready = 1;
-		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+		if (vq->used != NULL) {
+			vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+		}
 	}
 }
 
