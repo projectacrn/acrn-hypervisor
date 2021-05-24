@@ -42,25 +42,23 @@ static int ptm_root_port_secondary_bus;
 
 /* get ptm capability register value */
 static int
-get_ptm_cap(struct pci_device *pdev, int *offset)
+get_ptm_reg_value(struct pci_device *pdev, int reg)
 {
 	int pos;
-	uint32_t cap;
+	uint32_t reg_val;
 
 	pos = pci_find_ext_cap(pdev, PCIZ_PTM);
 
 	if (!pos) {
-		*offset = 0;
 		return 0;
 	}
 
-	*offset = pos;
-	pci_device_cfg_read_u32(pdev, &cap, pos + PCIR_PTM_CAP);
+	pci_device_cfg_read_u32(pdev, &reg_val, pos + reg);
 
-	pr_notice("<PTM>-%s: device [%x:%x.%x]: ptm-cap=0x%x, offset=0x%x.\n",
-				__func__, pdev->bus, pdev->dev, pdev->func, cap, *offset);
+	pr_notice("<PTM>-%s: device [%x:%x.%x]: ptm pos=0x%x, ptm reg val=0x%x.\n",
+				__func__, pdev->bus, pdev->dev, pdev->func, pos, reg_val);
 
-	return cap;
+	return reg_val;
 }
 
 /* add virtual root port to hv */
@@ -106,7 +104,7 @@ add_vroot_port(struct vmctx *ctx, struct passthru_dev *ptdev, struct pci_device 
 int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 {
 	int error = 0;
-	int pos, pcie_type, cap, rp_ptm_offset, device_ptm_offset;
+	int pos, pcie_type, cap, rp_ptm_offset;
 	struct pci_device *phys_dev = ptdev->phys_dev;
 	struct pci_device *rp;
 	struct pci_device_info rp_info = {};
@@ -133,13 +131,17 @@ int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 
 	pcie_type = pci_get_pcie_type(phys_dev);
 
-	/* Assume that PTM requestor can be enabled on pci ep or rcie.
-	 * If PTM is enabled on an ep, PTM hierarchy requires it has an upstream
-	 * PTM root.  Based on available HW platforms, currently PTM root
-	 * capability is implemented in pci root port.
+	/* The following sanity checks are based on these assumptions:
+	 * 1. PTM requestor can be enabled on pci ep or rcie.
+	 * 2. HW implements this simple PTM hierarchy: PTM requestor (EP) is
+	 * directly connected to PTM root (root port), or requestor itself is RCIE.
+	 * 3. There is no intermediate nodes (such as switch) in between the PTM
+	 * root and PTM requestor.
+	 * 4. HW only implements one PCI domain in the system and only one PTM
+	 * domain implemented in this PCI domain
 	 */
 	if (pcie_type == PCIEM_TYPE_ENDPOINT) {
-		cap = get_ptm_cap(phys_dev, &device_ptm_offset);
+		cap = get_ptm_reg_value(phys_dev, PCIR_PTM_CAP);
 		if (!(cap & PCIM_PTM_CAP_REQ)) {
 			pr_err("%s Error: %x:%x.%x must be PTM requestor.\n", __func__,
 					phys_dev->bus, phys_dev->dev, phys_dev->func);
@@ -153,18 +155,19 @@ int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 			return -ENODEV;
 		}
 
-		cap = get_ptm_cap(rp, &rp_ptm_offset);
+		/* check whether root port is PTM root-capable */
+		cap = get_ptm_reg_value(rp, PCIR_PTM_CAP);
 		if (!(cap & PCIM_PTM_CAP_ROOT)) {
-			pr_err("%s Error: root port %x:%x.%x of %x:%x.%x is not PTM root.\n",
-				__func__, rp->bus, rp->dev,
-				rp->func, phys_dev->bus, phys_dev->dev, phys_dev->func);
+			pr_err("%s Error: root port %x:%x.%x of %x:%x.%x is not PTM root capable.\n",
+				__func__, rp->bus, rp->dev, rp->func,
+				phys_dev->bus, phys_dev->dev, phys_dev->func);
 			return -EINVAL;
 		}
 
 		/* check whether more than one devices are connected to the root port.
 		 * if more than one devices are connected to the root port, we flag
 		 * this as error and won't enable PTM.  We do this just because we
-		 * don't have this hw configuration and won't be able totest this case.
+		 * don't have this hw configuration and won't be able to test this case.
 		 */
 		error = pci_device_get_bridge_buses(rp, &(rp_info.primary_bus),
 					&(rp_info.secondary_bus), &(rp_info.subordinate_bus));
@@ -175,11 +178,23 @@ int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 			return -EINVAL;
 		}
 
-		// add virtual root port
-		*vrp_sec_bus = add_vroot_port(ctx, ptdev, rp, rp_ptm_offset);
+		/* hv is responsible to ensure that PTM is enabled on hw root port if
+		 * root port is PTM root-capable.  If PTM root is not enabled already in physical
+		 * root port before guest launch, guest OS can only enable it in root port's virtual
+		 * config space and PTM may not function as desired.
+		 */
+		cap = get_ptm_reg_value(rp, PCIR_PTM_CTRL);
+		if (!(cap & PCIM_PTM_CTRL_ENABLE) || !(cap & PCIM_PTM_CTRL_ROOT_SELECT)) {
+			pr_err("%s Warning: guest is not allowed to enable PTM on root port %x:%x.%x.\n",
+				__func__, rp->bus, rp->dev, rp->func);
+		}
 
+		rp_ptm_offset = pci_find_ext_cap(rp, PCIZ_PTM);
+
+		/* add virtual root port */
+		*vrp_sec_bus = add_vroot_port(ctx, ptdev, rp, rp_ptm_offset);
 	} else if (pcie_type == PCIEM_TYPE_ROOT_INT_EP) {
-		// No need to emulate root port if ptm requestor is RCIE
+		/* Do NOT emulate root port if ptm requestor is RCIE */
 		pr_notice("%s: ptm requestor is root complex integrated device.\n",
 					__func__);
 	} else {
