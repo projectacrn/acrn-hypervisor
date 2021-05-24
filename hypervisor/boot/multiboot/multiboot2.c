@@ -77,6 +77,7 @@ int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info)
 	struct multiboot2_tag *mb2_tag, *mb2_tag_end;
 	uint32_t mb2_info_size = *(uint32_t *)mb2_info;
 	uint32_t mod_idx = 0U;
+	void *str;
 
 	/* The start part of multiboot2 info: total mbi size (4 bytes), reserved (4 bytes) */
 	mb2_tag = (struct multiboot2_tag *)((uint8_t *)mb2_info + 8U);
@@ -85,7 +86,9 @@ int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info)
 	while ((mb2_tag->type != MULTIBOOT2_TAG_TYPE_END) && (mb2_tag < mb2_tag_end)) {
 		switch (mb2_tag->type) {
 		case MULTIBOOT2_TAG_TYPE_CMDLINE:
-			abi->mi_cmdline = ((struct multiboot2_tag_string *)mb2_tag)->string;
+			str = ((struct multiboot2_tag_string *)mb2_tag)->string;
+			(void)strncpy_s((void *)(abi->cmdline), MAX_BOOTARGS_SIZE, str,
+						strnlen_s(str, (MAX_BOOTARGS_SIZE - 1U)));
 			break;
 		case MULTIBOOT2_TAG_TYPE_MMAP:
 			mb2_mmap_to_abi(abi, (const struct multiboot2_tag_mmap *)mb2_tag);
