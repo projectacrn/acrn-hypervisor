@@ -66,7 +66,6 @@ endif
 O ?= build
 ROOT_OUT := $(shell mkdir -p $(O);cd $(O);pwd)
 HV_OUT := $(ROOT_OUT)/hypervisor
-EFI_OUT := misc/efi-stub
 DM_OUT := $(ROOT_OUT)/devicemodel
 TOOLS_OUT := $(ROOT_OUT)/misc
 DOC_OUT := $(ROOT_OUT)/doc

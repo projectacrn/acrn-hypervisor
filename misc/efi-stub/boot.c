@@ -274,8 +274,8 @@ EFI_STATUS construct_mbi(HV_LOADER hvld, struct multiboot_info **mbinfo, struct 
 	if (err != EFI_SUCCESS)
 		goto out;
 
-	/* TODO: I'm not sure if we need to fix mbi1 case */
-//	mbi->mi_cmdline = (UINTN)hv_info->cmdline;
+	/* TODO: Current container library does not handle mbi1 case */
+	/* mbi->mi_cmdline = (UINTN)hv_info->cmdline; */
 	mbi->mi_mmap_addr = (UINTN)mmap;
 	mbi->mi_mmap_length = e820_count*sizeof(struct multiboot_mmap);
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MMAP | MULTIBOOT_INFO_HAS_CMDLINE;
@@ -598,7 +598,7 @@ failed:
 	if (hvld) {
 		hvld->deinit(hvld);
 	}
-	
+
 	/*
 	 * We need to be careful not to trash 'err' here. If we fail
 	 * to allocate enough memory to hold the error string fallback

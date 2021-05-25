@@ -181,7 +181,7 @@ struct hv_loader {
 
 	/* Get the start address of the memory region stored ACRN hypervisor image */
 	EFI_PHYSICAL_ADDRESS (*get_hv_hpa)(IN HV_LOADER hvld);
-	/* Get the start address of the memory region stored module files */	
+	/* Get the start address of the memory region stored module files */
 	EFI_PHYSICAL_ADDRESS (*get_mod_hpa)(IN HV_LOADER hvld);
 
 	/* Set hypervisor boot command line to multiboot2 tag */

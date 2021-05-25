@@ -102,10 +102,10 @@ struct container {
 
 /**
  * @brief Load acrn.32.out ELF file
- *  
+ *
  * @param[in]  elf_image ELF image
  * @param[out] hv_hpa    The physical memory address the relocated hypervisor is stored
- * 
+ *
  * @return EFI_SUCCESS(0) on success, non-zero on error
  */
 static EFI_STATUS load_acrn_elf(const UINT8 *elf_image, EFI_PHYSICAL_ADDRESS *hv_hpa)
@@ -167,50 +167,50 @@ out:
 
 /**
  * @brief Load hypervisor into memory from a container blob
- * 
+ *
  * @param[in] hvld Loader handle
- * 
+ *
  * @return EFI_SUCCESS(0) on success, non-zero on error
  */
 static EFI_STATUS container_load_boot_image(HV_LOADER hvld)
 {
-	EFI_STATUS err = EFI_SUCCESS;	
+	EFI_STATUS err = EFI_SUCCESS;
 	struct container *ctr = (struct container *)hvld;
 
 	LOADER_COMPRESSED_HEADER *lzh = NULL;
 
 	/* hv_cmdline.txt: to be copied into memory by the fill_bootcmd_tag operation later */
 	lzh = ctr->lzh_ptr[LZH_BOOT_CMD];
-	ctr->boot_cmdsize = lzh->Size + StrnLen(ctr->options, ctr->options_size);	
+	ctr->boot_cmdsize = lzh->Size + StrnLen(ctr->options, ctr->options_size);
 
 	/* acrn.32.out */
-	lzh = ctr->lzh_ptr[LZH_BOOT_IMG];	
+	lzh = ctr->lzh_ptr[LZH_BOOT_IMG];
 	err = load_acrn_elf((const UINT8 *)lzh->Data, &ctr->hv_hpa);
 	if (err != EFI_SUCCESS) {
 		Print(L"Failed to load ACRN HV ELF Image%r\n", err);
 		goto out;
 	}
 out:
-	return err;	
+	return err;
 }
 
 /**
  * @brief Load kernel modules and acpi tables into memory from a container blob
- * 
+ *
  * @param[in] hvld Loader handle
- * 
+ *
  * @return EFI_SUCCESS(0) on success, non-zero on error
  */
  static EFI_STATUS container_load_modules(HV_LOADER hvld)
 {
 	EFI_STATUS err = EFI_SUCCESS;
-	struct container *ctr = (struct container *)hvld;	
+	struct container *ctr = (struct container *)hvld;
 
 	UINTN i;
-	
+
 	UINT8 * p = NULL;
 	LOADER_COMPRESSED_HEADER *lzh = NULL;
-	
+
 	/* scan module headers to calculate required memory size to store files */
 	for (i = LZH_MOD0_CMD; i < ctr->lzh_count - 1; i++) {
 		if ((i % 2) == 0) {	/* vm0_tag.txt, vm1_tag.txt, acpi_vm0.txt ... */
@@ -224,10 +224,10 @@ out:
 	 *    mod_count = 3 (vm0_tag + vm0_kernel, vm1_tag + vm1_kernel, vm0_acpi_tag + vm0_acpi)
 	 */
 	ctr->mod_count = (ctr->lzh_count - 3) / 2;
-	
+
 	/* allocate single memory region to store all binary files to avoid mmap fragmentation */
-	err = emalloc_reserved_aligned(&(ctr->mod_hpa), ctr->total_modsize, 
-										EFI_PAGE_SIZE, 256U * MEM_ADDR_1MB, MEM_ADDR_4GB);
+	err = emalloc_reserved_aligned(&(ctr->mod_hpa), ctr->total_modsize,
+							EFI_PAGE_SIZE, 256U * MEM_ADDR_1MB, MEM_ADDR_4GB);
 	if (err != EFI_SUCCESS) {
 		Print(L"Failed to allocate memory for modules %r\n", err);
 		goto out;
@@ -240,14 +240,14 @@ out:
 		p += ALIGN_UP(lzh->Size, EFI_PAGE_SIZE);
 	}
 out:
-	return err;		
+	return err;
 }
 
 /**
  * @brief Get hypervisor boot command length
- * 
+ *
  * @param[in] hvld Loader handle
- * 
+ *
  * @return the length of hypervisor boot command
  */
 static UINTN container_get_boot_cmdsize(HV_LOADER hvld)
@@ -258,9 +258,9 @@ static UINTN container_get_boot_cmdsize(HV_LOADER hvld)
 
 /**
  * @brief Get the number of multiboot2 modules
- * 
+ *
  * @param[in] hvld Loader handle
- * 
+ *
  * @return the number of multiboot2 modules
  */
 static UINTN container_get_mod_count(HV_LOADER hvld)
@@ -270,9 +270,9 @@ static UINTN container_get_mod_count(HV_LOADER hvld)
 
 /**
  * @brief Get the total memory size allocated to load module files
- * 
+ *
  * @param[in] hvld Loader handle
- * 
+ *
  * @return the total size of memory allocated to store the module files
  */
 static UINTN container_get_total_modsize(HV_LOADER hvld)
@@ -282,11 +282,11 @@ static UINTN container_get_total_modsize(HV_LOADER hvld)
 
 /**
  * @brief Get the total lengths of the module commands
- * 
+ *
  * @param[in] hvld Loader handle
- * 
+ *
  * @return the total lengths of module command files
- */ 
+ */
 static UINTN container_get_total_modcmdsize(HV_LOADER hvld)
 {
 	return ((struct container *)hvld)->total_modcmdsize;
@@ -294,9 +294,9 @@ static UINTN container_get_total_modcmdsize(HV_LOADER hvld)
 
 /**
  * @brief Get the start address of the memory region stored ACRN hypervisor image
- * 
+ *
  * @param[in] hvld Loader handle
- * 
+ *
  * @return the address of hv image
  */
 static EFI_PHYSICAL_ADDRESS container_get_hv_hpa(HV_LOADER hvld)
@@ -306,9 +306,9 @@ static EFI_PHYSICAL_ADDRESS container_get_hv_hpa(HV_LOADER hvld)
 
 /**
  * @brief Get the start address of the memory region stored module files
- * 
+ *
  * @param[in] hvld Loader handle
- * 
+ *
  * @return the address of modules
  */
 static EFI_PHYSICAL_ADDRESS container_get_mod_hpa(HV_LOADER hvld)
@@ -318,10 +318,10 @@ static EFI_PHYSICAL_ADDRESS container_get_mod_hpa(HV_LOADER hvld)
 
 /**
  * @brief Set hypervisor boot command line to multiboot2 tag
- * 
+ *
  * @param[in]  hvld Loader handle
  * @param[out] tag  The buffer to be filled in. It's the caller's responsibility to allocate memory for the buffer
- * 
+ *
  * @return None
  */
 static void container_fill_bootcmd_tag(HV_LOADER hvld, struct multiboot2_tag_string *tag)
@@ -331,13 +331,13 @@ static void container_fill_bootcmd_tag(HV_LOADER hvld, struct multiboot2_tag_str
 	UINTN cmdline_size = container_get_boot_cmdsize(hvld);
 
 	UINTN i;
-	
+
 	tag->type = MULTIBOOT2_TAG_TYPE_CMDLINE;
 	tag->size = sizeof(struct multiboot2_tag_string) + cmdline_size;
-	
+
 	(void)memset((void *)tag->string, 0x0, cmdline_size);
 	memcpy(tag->string, (const char *)lzh->Data, lzh->Size - 1);
-	if (ctr->options) {		
+	if (ctr->options) {
 		tag->string[lzh->Size - 1] = ' ';
 		for (i = lzh->Size; i < cmdline_size; i++) {
 			/* append the options to the boot command line */
@@ -348,22 +348,22 @@ static void container_fill_bootcmd_tag(HV_LOADER hvld, struct multiboot2_tag_str
 
 /**
  * @brief Set n-th module info to multiboot2 tag
- * 
+ *
  * @param[in]  hvld Loader handle
  * @param[out] tag  The buffer to be filled in. It's the caller's responsibility to allocate memory for the buffer
- * 
+ *
  * @return None
  */
 static void container_fill_module_tag(HV_LOADER hvld, struct multiboot2_tag_module *tag, UINTN index)
 {
 	struct container *ctr = (struct container *)hvld;
-	
+
 	LOADER_COMPRESSED_HEADER *cmd_lzh = NULL;
 	LOADER_COMPRESSED_HEADER *mod_lzh = NULL;
 	UINT8 * p = (UINT8 *)ctr->mod_hpa;
 
 	UINTN i;
-	
+
 	for (i = LZH_MOD0_CMD; i < ctr->lzh_count - 1; i = i + 2) {
 		mod_lzh = ctr->lzh_ptr[i + 1];
 		if (i == (index * 2 + LZH_MOD0_CMD)) {
@@ -381,20 +381,20 @@ static void container_fill_module_tag(HV_LOADER hvld, struct multiboot2_tag_modu
 
 /**
  * @brief Free up memory allocated by the container loader
- * 
+ *
  * @param[in]  hvld Loader handle
- * 
+ *
  * @return None
  */
 static void container_deinit(HV_LOADER hvld)
 {
 	struct container *ctr = (struct container *)hvld;
-	
+
 	if (ctr->lzh_ptr) {
 		free_pool(ctr->lzh_ptr);
 		free_pool(ctr);
 	}
-	
+
 	if (ctr->mod_hpa) {
 		free_pages(ctr->mod_hpa, EFI_SIZE_TO_PAGES(ctr->total_modsize));
 	}
@@ -417,34 +417,34 @@ static struct hv_loader container_ops = {
 
 /**
  * @brief Initialize Container Library and returned the loader operation table
- * 
+ *
  * @param[in]  info Firmware-allocated handle that identifies the EFI application image (i.e. acrn.efi)
- * @param[out] info Allocated loader operation table 
- * 
+ * @param[out] info Allocated loader operation table
+ *
  * @return EFI_SUCCESS(0) on success, non-zero on error
  */
 EFI_STATUS container_init(EFI_LOADED_IMAGE *info, HV_LOADER *hvld)
 {
 	EFI_STATUS err = EFI_SUCCESS;
-	
+
 	struct container *ctr = NULL;
-	
+
 	UINTN sec_addr = 0u;
 	UINTN sec_size = 0u;
 	char *section  = ".hv";
-	
+
 	UINTN i;
 	CONTAINER_HDR   *hdr  = NULL;
 	COMPONENT_ENTRY *comp = NULL;
-	
+
 	UINTN offset = 0u;
-	
+
 	err = allocate_pool(EfiLoaderData, sizeof(struct container), (void **)&ctr);
 	if (EFI_ERROR(err)) {
 		Print(L"Failed to allocate memory for Container Library %r\n", err);
 		goto out;
 	}
-	
+
 	(void)memset((void *)ctr, 0x0, sizeof(struct container));
 	memcpy((char *)&ctr->ops, (const char *)&container_ops, sizeof(struct hv_loader));
 
@@ -458,15 +458,15 @@ EFI_STATUS container_init(EFI_LOADED_IMAGE *info, HV_LOADER *hvld)
 		Print(L"Unable to locate section of ACRNHV Container %r ", err);
 		goto out;
 	}
-	
+
 	hdr = (CONTAINER_HDR*)(info->ImageBase + sec_addr);
 	ctr->lzh_count = hdr->Count;
-	
+
 	err = allocate_pool(EfiLoaderData, sizeof(LOADER_COMPRESSED_HEADER *) * hdr->Count, (void **)&ctr->lzh_ptr);
 	if (EFI_ERROR(err)) {
 		Print(L"Failed to allocate memory for Container Library %r\n", err);
 		goto out;
-	}	
+	}
 
 	/* cache each file's header point for later use */
 	comp = (COMPONENT_ENTRY *)(hdr + 1);
