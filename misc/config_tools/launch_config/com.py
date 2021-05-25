@@ -632,7 +632,7 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
             break
 
     if uos_type != "PREEMPT-RT LINUX":
-        print("   -s 1:0,lpc \\", file=config)
+        print("   -s 31:0,lpc \\", file=config)
 
     # redirect console
     if dm['vuart0'][vmid] == "Enable":
