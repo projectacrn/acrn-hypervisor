@@ -216,7 +216,15 @@ jmpbuf_32:
     /* 0x0008 = HOST_GDT_RING0_CODE_SEL */
     .word 0x0008
 
-.code64
+    .org 0x200
+    .code64
+    .global cpu_primary_start_64
+
+cpu_primary_start_64:
+    lea boot_regs(%rip), %rax
+    movl %edi, (%rax)
+    movl %esi, 4(%rax)
+
 primary_start_long_mode:
 
     /* Initialize temporary stack pointer, size = 0x1000 */
