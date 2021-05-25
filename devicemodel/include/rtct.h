@@ -19,7 +19,7 @@
 
 struct rtct_entry {
 	uint16_t size;
-	uint16_t format;
+	uint16_t format_version;
 	uint32_t type;
 	uint32_t data[64];
 } __packed;
