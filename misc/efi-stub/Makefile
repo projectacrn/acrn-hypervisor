@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, Intel Corporation
+# Copyright (c) 2011 - 2021, Intel Corporation
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,8 @@ INCLUDE_PATH += $(HV_SRC)/include/public
 INCLUDE_PATH += $(HV_SRC)/include/lib
 INCLUDE_PATH += $(HV_SRC)/boot/include/guest
 
-SCENARIO ?= sdc
+BOARD ?= tgl-rvp
+SCENARIO ?= hybrid_rt
 
 OBJCOPY=objcopy
 
@@ -88,34 +89,17 @@ endif
 
 LDFLAGS=-T $(LDSCRIPT) -Bsymbolic -shared -nostdlib -znocombreloc \
 		-L$(LIBDIR) $(CRT0)
-EFIBIN=$(HV_OBJDIR)/$(HV_FILE).efi
 BOOT=$(EFI_OBJDIR)/boot.efi
-HV_BIN=$(HV_OBJDIR)/$(HV_FILE).bin
 
-CONF_FILE=$(CURDIR)/clearlinux/acrn.conf
-
-all: $(EFIBIN)
-
-install: $(EFIBIN) install-conf
-	install -D $(EFIBIN) $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).efi
-
-install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
-	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).efi.out
-	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).efi.map
-
-$(EFIBIN): $(BOOT) $(HV_BIN)
-	$(OBJCOPY) --add-section .hv="$(HV_BIN)"  --change-section-vma .hv=0x6e000 --set-section-flags .hv=alloc,data,contents,load  --section-alignment 0x1000 $(BOOT) $(EFIBIN)
+all: $(BOOT)
 
 $(BOOT): $(EFI_OBJDIR)/boot.so
 
 $(EFI_OBJDIR)/boot.so: $(ACRN_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $^  -lgnuefi -lefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-install-conf: $(CONF_FILE)
-	install -D --mode=0644 $^ $(DESTDIR)/usr/share/acrn/samples/nuc/acrn.conf
-
 clean:
-	rm -f $(BOOT) $(HV_OBJDIR)/$(HV_FILE).efi $(EFI_OBJDIR)/boot.so $(ACRN_OBJS)
+	rm -f $(BOOT) $(EFI_OBJDIR)/boot.so $(ACRN_OBJS)
 
 -include $(ACRN_OBJS:.o=.d)
 
