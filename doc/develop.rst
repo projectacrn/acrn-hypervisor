@@ -59,6 +59,7 @@ Enable ACRN Features
    :maxdepth: 1
 
    tutorials/sgx_virtualization
+   tutorials/nvmx_virtualization
    tutorials/vuart_configuration
    tutorials/rdt_configuration
    tutorials/waag-secure-boot
