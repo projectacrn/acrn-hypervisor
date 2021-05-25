@@ -405,18 +405,52 @@ bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
  */
 int32_t invept_vmexit_handler(struct acrn_vcpu *vcpu)
 {
+	uint32_t i;
+	struct nept_desc *desc;
 	struct invept_desc operand_gla_ept;
-	uint64_t type;
+	uint64_t type, ept_cap_vmsr;
 
 	if (check_vmx_permission(vcpu)) {
+		ept_cap_vmsr = vcpu_get_guest_msr(vcpu, MSR_IA32_VMX_EPT_VPID_CAP);
 		type = get_invvpid_ept_operands(vcpu, (void *)&operand_gla_ept, sizeof(operand_gla_ept));
-
-		if (type > INVEPT_TYPE_ALL_CONTEXTS) {
+		if (gpa2hpa(vcpu->vm, operand_gla_ept.eptp) == INVALID_HPA) {
 			nested_vmx_result(VMfailValid, VMXERR_INVEPT_INVVPID_INVALID_OPERAND);
-		} else {
-			operand_gla_ept.eptp = gpa2hpa(vcpu->vm, operand_gla_ept.eptp);
-			asm_invept(type, operand_gla_ept);
+		} else if (type == 1 && (ept_cap_vmsr & VMX_EPT_INVEPT_SINGLE_CONTEXT) != 0UL) {
+			/* Single-context invalidation */
+			/* Find corresponding nept_desc of the invalidated EPTP */
+			desc = get_nept_desc(operand_gla_ept.eptp);
+			if (desc) {
+				spinlock_obtain(&nept_desc_bucket_lock);
+				if (desc->shadow_eptp != 0UL) {
+					/*
+					 * Since ACRN does not know which paging entries are changed,
+					 * Remove all the shadow EPT entries that ACRN created for L2 VM
+					 */
+					free_sept_table((void *)(desc->shadow_eptp & PAGE_MASK));
+					invept((void *)(desc->shadow_eptp & PAGE_MASK));
+				}
+				spinlock_release(&nept_desc_bucket_lock);
+				put_nept_desc(operand_gla_ept.eptp);
+			}
 			nested_vmx_result(VMsucceed, 0);
+		} else if ((type == 2) && (ept_cap_vmsr & VMX_EPT_INVEPT_GLOBAL_CONTEXT) != 0UL) {
+			/* Global invalidation */
+			spinlock_obtain(&nept_desc_bucket_lock);
+			/*
+			 * Invalidate all shadow EPTPs of L1 VM
+			 * TODO: Invalidating all L2 vCPU associated EPTPs is enough. How?
+			 */
+			for (i = 0L; i < CONFIG_MAX_GUEST_EPT_NUM; i++) {
+				if (nept_desc_bucket[i].guest_eptp != 0UL) {
+					desc = &nept_desc_bucket[i];
+					free_sept_table((void *)(desc->shadow_eptp & PAGE_MASK));
+					invept((void *)(desc->shadow_eptp & PAGE_MASK));
+				}
+			}
+			spinlock_release(&nept_desc_bucket_lock);
+			nested_vmx_result(VMsucceed, 0);
+		} else {
+			nested_vmx_result(VMfailValid, VMXERR_INVEPT_INVVPID_INVALID_OPERAND);
 		}
 	}
 
