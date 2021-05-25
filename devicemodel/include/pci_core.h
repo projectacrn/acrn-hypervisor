@@ -41,7 +41,7 @@
 #define	PCI_BDF(b, d, f) (((b & 0xFF) << 8) | ((d & 0x1F) << 3) | ((f & 0x7)))
 
 #define	PCI_EMUL_MEMBASE32	0x80000000UL	/* 2GB */
-#define	PCI_EMUL_MEMLIMIT32	0xC0000000UL	/* 3GB */
+#define	PCI_EMUL_MEMLIMIT32	0xE0000000UL	/* 3.5GB */
 
 #define	PCI_EMUL_ECFG_BASE	0xE0000000UL	/* 3.5GB */
 
