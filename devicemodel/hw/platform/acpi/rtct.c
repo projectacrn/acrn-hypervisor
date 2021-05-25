@@ -33,6 +33,9 @@
 		((uint64_t)e - (uint64_t)rtct) < rtct->length; \
 		e = (struct rtct_entry *)((uint64_t)e + e->size))
 
+static uint16_t guest_vcpu_num;
+static uint32_t guest_lapicid_tbl[MAX_PLATFORM_LAPIC_IDS];
+
 static uint64_t software_sram_base_hpa;
 static uint64_t software_sram_size;
 static uint64_t software_sram_base_gpa;
@@ -46,48 +49,6 @@ static uint8_t vrtct_checksum(uint8_t *vrtct, uint32_t length)
 		sum += vrtct[i];
 	}
 	return -sum;
-}
-
-static inline uint32_t lapicid_to_cpuid(uint32_t lapicid)
-{
-	/* hardcode for TGL & EHL platform */
-	return (lapicid >> 1);
-}
-
-static inline uint32_t vcpuid_to_vlapicid(uint32_t vcpuid)
-{
-	/* keep vlapic same with vcpuid */
-	return vcpuid;
-}
-
-/**
- * @brief Build a vLAPIC ID table base on the pCPU bitmask of guest
- *        and pCPU bitmask of Software SRAM.
- *
- * @param sw_sram_pcpu_bitmask    pCPU bitmask of Software SRAM region.
- * @param guest_pcpu_bitmask    pCUP bitmask of guest.
- * @param vlapicid_tbl   Pointer to buffer of vLAPIC ID table, caller shall
- *                       guarantee it will not overflow.
- *
- * @return number of vlapic IDs filled to buffer.
- */
-static int map_software_sram_vlapic_ids(uint64_t sw_sram_pcpu_bitmask, uint64_t guest_pcpu_bitmask,
-	uint32_t *vlapicid_tbl)
-{
-	uint32_t vcpuid = 0;
-	int i, vlapicid_num = 0;
-	int guest_pcpu_index_start = ffsl(guest_pcpu_bitmask) - 1;
-	int guest_pcpu_index_end = flsl(guest_pcpu_bitmask) - 1;
-
-	for (i = guest_pcpu_index_start; i <= guest_pcpu_index_end; i++) {
-		if ((guest_pcpu_bitmask & BITMASK(i)) != 0) {
-			if ((sw_sram_pcpu_bitmask & BITMASK(i)) != 0) {
-				vlapicid_tbl[vlapicid_num++] = vcpuid_to_vlapicid(vcpuid);
-			}
-			vcpuid++;
-		}
-	}
-	return vlapicid_num;
 }
 
 static inline struct rtct_entry *get_free_rtct_entry(struct acpi_table_hdr *rtct)
@@ -108,20 +69,19 @@ static inline void add_rtct_entry(struct acpi_table_hdr *rtct, struct rtct_entry
  * @param base    Base address of Software SRAM region.
  * @param ways    Cache ways of Software SRAM region.
  * @param size    Size of Software SRAM region.
- * @param sw_sram_pcpu_bitmask    pCPU bitmask of Software SRAM region.
- * @param guest_pcpu_bitmask    pCUP bitmask of guest.
+ * @param vlapic_ids    vLAIC ID table base address.
+ * @param vlapicid_num   Entry number of vLAPIC ID table.
  *
  * @return 0 on success and non-zero on fail.
  */
 static int vrtct_add_ssram_entry(struct acpi_table_hdr *vrtct, uint32_t cache_level, uint64_t base, uint32_t ways,
-					uint32_t size, uint64_t sw_sram_pcpu_bitmask, uint64_t guest_pcpu_bitmask)
+					uint32_t size, uint32_t *vlapic_ids, uint32_t vlapicid_num)
 {
-	int vlapicid_num;
 	struct rtct_entry *rtct_entry;
 	struct rtct_entry_data_ssram *sw_sram;
 
 	rtct_entry = get_free_rtct_entry(vrtct);
-	rtct_entry->format = 1;
+	rtct_entry->format_version = 1;
 	rtct_entry->type = RTCT_ENTRY_TYPE_SSRAM;
 
 	sw_sram =  (struct rtct_entry_data_ssram *)rtct_entry->data;
@@ -130,9 +90,7 @@ static int vrtct_add_ssram_entry(struct acpi_table_hdr *vrtct, uint32_t cache_le
 	sw_sram->ways = ways;
 	sw_sram->size = size;
 
-	vlapicid_num = map_software_sram_vlapic_ids(sw_sram_pcpu_bitmask, guest_pcpu_bitmask, sw_sram->apic_id_tbl);
-	if (vlapicid_num <= 0)
-		return -1;
+	memcpy(sw_sram->apic_id_tbl, vlapic_ids, vlapicid_num * sizeof(uint32_t));
 
 	rtct_entry->size = RTCT_SSRAM_HEADER_SIZE + (vlapicid_num * sizeof(uint32_t));
 	add_rtct_entry(vrtct, rtct_entry);
@@ -149,25 +107,24 @@ static int vrtct_add_ssram_entry(struct acpi_table_hdr *vrtct, uint32_t cache_le
  *
  * @return 0 on success and non-zero on fail.
  */
-static int vrtct_add_mem_hierarchy_entry(struct acpi_table_hdr *vrtct, uint32_t hierarchy,
-		uint32_t clock_cycles, uint64_t vcpu_num)
+static int vrtct_add_mem_hierarchy_entry(struct acpi_table_hdr *vrtct, uint32_t hierarchy, uint32_t clock_cycles)
 {
-	int vcpuid;
+	uint32_t lapicid_tbl_sz;
 	struct rtct_entry *rtct_entry;
 	struct rtct_entry_data_mem_hi_latency *mem_hi;
 
 	rtct_entry = get_free_rtct_entry(vrtct);
-	rtct_entry->format = 1;
+	rtct_entry->format_version = 1;
 	rtct_entry->type = RTCT_ENTRY_TYPE_MEM_HIERARCHY_LATENCY;
 
 	mem_hi = (struct rtct_entry_data_mem_hi_latency *)rtct_entry->data;
 	mem_hi->hierarchy = hierarchy;
 	mem_hi->clock_cycles = clock_cycles;
 
-	for (vcpuid = 0; vcpuid < vcpu_num; vcpuid++) {
-		mem_hi->apic_id_tbl[vcpuid] = vcpuid_to_vlapicid(vcpuid);
-	}
-	rtct_entry->size = RTCT_MEM_HI_HEADER_SIZE +  (vcpu_num * sizeof(uint32_t));
+	lapicid_tbl_sz = guest_vcpu_num * sizeof(uint32_t);
+	memcpy(mem_hi->apic_id_tbl, guest_lapicid_tbl, lapicid_tbl_sz);
+
+	rtct_entry->size = RTCT_MEM_HI_HEADER_SIZE + lapicid_tbl_sz;
 
 	add_rtct_entry(vrtct, rtct_entry);
 	return 0;
@@ -216,71 +173,90 @@ static void remap_software_sram_regions(struct acpi_table_hdr *vrtct)
 }
 
 /**
+ * @brief  Check if a given pCPU is assigned to current guest.
+ *
+ * @param lapicid  Physical LAPIC ID of pCPU.
+ *
+ * @return true if given pCPU is assigned to current guest, else false.
+ */
+static bool is_pcpu_assigned_to_guest(uint32_t lapicid)
+{
+	int i;
+
+	for (i = 0; i < guest_vcpu_num; i++) {
+		if (lapicid == guest_lapicid_tbl[i])
+			return true;
+	}
+	return false;
+}
+
+/**
  * @brief Initialize Software SRAM and memory hierarchy entries in virtual RTCT,
  *        configurations of these entries are from native RTCT.
  *
  * @param vrtct        Pointer to virtual RTCT.
  * @param native_rtct  Pointer to native RTCT.
- * @param guest_pcpu_bitmask    pCUP bitmask of guest.
  *
  * @return 0 on success and non-zero on fail.
  */
-static int passthru_rtct_to_guest(struct acpi_table_hdr *vrtct, struct acpi_table_hdr *native_rtct,
-				uint64_t guest_pcpu_bitmask)
+static int passthru_rtct_to_guest(struct acpi_table_hdr *vrtct, struct acpi_table_hdr *native_rtct)
 {
-	int i, cpu_num, rc = 0;
-	uint64_t sw_sram_pcpu_bitmask;
+	int i, plapic_num, vlapic_num, rc = 0;
 	struct rtct_entry *entry;
-	struct rtct_entry_data_ssram *sw_sram;
+	struct rtct_entry_data_ssram *ssram;
 	struct rtct_entry_data_mem_hi_latency *mem_hi;
+	uint32_t lapicids[MAX_PLATFORM_LAPIC_IDS];
 
 	foreach_rtct_entry(native_rtct, entry) {
-		switch (entry->type) {
-		case RTCT_ENTRY_TYPE_SSRAM:
-			{
-				/* Get native CPUs of Software SRAM region */
-				cpu_num = (entry->size - RTCT_SSRAM_HEADER_SIZE) / sizeof(uint32_t);
-				sw_sram =  (struct rtct_entry_data_ssram *)entry->data;
-				sw_sram_pcpu_bitmask = 0;
-				for (i = 0; i < cpu_num; i++) {
-					sw_sram_pcpu_bitmask |= (1U << lapicid_to_cpuid(sw_sram->apic_id_tbl[i]));
-				}
+		if (entry->type == RTCT_ENTRY_TYPE_SSRAM) {
+			/* Get native CPUs of Software SRAM region */
+			plapic_num = (entry->size - RTCT_SSRAM_HEADER_SIZE) / sizeof(uint32_t);
+			ssram =  (struct rtct_entry_data_ssram *)entry->data;
 
-				if ((sw_sram_pcpu_bitmask & guest_pcpu_bitmask) != 0) {
-					/*
-					 * argument 'base' is set to HPA(sw_sram->base) in passthru RTCT
-					 * soluation as it is required to calculate Software SRAM regions range
-					 * in host physical address space, this 'base' will be updated to
-					 * GPA when mapping all Software SRAM regions from HPA to GPA.
-					 */
-					rc = vrtct_add_ssram_entry(vrtct, sw_sram->cache_level, sw_sram->base,
-						sw_sram->ways, sw_sram->size, sw_sram_pcpu_bitmask, guest_pcpu_bitmask);
+			memset(lapicids, 0, sizeof(lapicids[MAX_PLATFORM_LAPIC_IDS]));
+			vlapic_num = 0;
+			for (i = 0; i < plapic_num; i++) {
+				if (is_pcpu_assigned_to_guest(ssram->apic_id_tbl[i])) {
+					lapicids[vlapic_num++] = ssram->apic_id_tbl[i];
 				}
 			}
-			break;
 
-		case RTCT_ENTRY_TYPE_MEM_HIERARCHY_LATENCY:
-			{
-				mem_hi = (struct rtct_entry_data_mem_hi_latency *)entry->data;
-				rc = vrtct_add_mem_hierarchy_entry(vrtct, mem_hi->hierarchy, mem_hi->clock_cycles,
-					bitmap_weight(guest_pcpu_bitmask));
+			if (vlapic_num > 0) {
+				/*
+				 * argument 'base' is set to HPA(ssram->base) in passthru RTCT
+				 * soluation as it is required to calculate Software SRAM regions range
+				 * in host physical address space, this 'base' will be updated to
+				 * GPA when mapping all Software SRAM regions from HPA to GPA.
+				 */
+				rc = vrtct_add_ssram_entry(vrtct, ssram->cache_level, ssram->base,
+					ssram->ways, ssram->size, lapicids, vlapic_num);
 			}
-			break;
-
-		default:
-			break;
+		} else if (entry->type == RTCT_ENTRY_TYPE_MEM_HIERARCHY_LATENCY) {
+			mem_hi = (struct rtct_entry_data_mem_hi_latency *)entry->data;
+			rc = vrtct_add_mem_hierarchy_entry(vrtct, mem_hi->hierarchy, mem_hi->clock_cycles);
 		}
 
 		if (rc)
-			break;
+			return -1;
 	}
-
-	if (rc)
-		return -1;
 
 	remap_software_sram_regions(vrtct);
 	vrtct->checksum = vrtct_checksum((uint8_t *)vrtct, vrtct->length);
-	return  rc;
+	return  0;
+}
+
+static int init_guest_lapicid_tbl(struct platform_info *platform_info, uint64_t guest_pcpu_bitmask)
+{
+	int pcpu_id = 0, vcpu_id = 0;
+
+	for (vcpu_id = 0; vcpu_id < guest_vcpu_num; vcpu_id++) {
+		pcpu_id = pcpuid_from_vcpuid(guest_pcpu_bitmask, vcpu_id);
+		if (pcpu_id < 0)
+			return -1;
+
+		guest_lapicid_tbl[vcpu_id] = lapicid_from_pcpuid(platform_info, pcpu_id);
+	}
+	return 0;
 }
 
 /*
@@ -322,6 +298,7 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 	struct acpi_table_hdr *rtct_cfg, *vrtct = NULL;
 	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
 	uint32_t gpu_rsvmem_base_gpa = 0;
+	struct platform_info platform_info;
 
 	if ((cfg == NULL) || (ctx == NULL))
 		return NULL;
@@ -337,10 +314,11 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 	vrtct->length = sizeof(struct acpi_table_hdr);
 	vrtct->checksum = 0;
 
-	if (vm_get_config(ctx, &vm_cfg, NULL)) {
+	if (vm_get_config(ctx, &vm_cfg, &platform_info)) {
 		pr_err("%s, get VM configuration fail.\n", __func__);
 		goto error;
 	}
+	assert(platform_info.cpu_num <= MAX_PLATFORM_LAPIC_IDS);
 
 	/*
 	 * pCPU bitmask of VM is configured in hypervisor by default but can be
@@ -367,6 +345,13 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 	pr_info("%s, dm_cpu_bitmask:0x%x, hv_cpu_bitmask:0x%x, guest_cpu_bitmask: 0x%x\n",
 		__func__, dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask);
 
+	guest_vcpu_num = bitmap_weight(guest_pcpu_bitmask);
+
+	if (init_guest_lapicid_tbl(&platform_info, guest_pcpu_bitmask) < 0) {
+		pr_err("%s,init guest lapicid table fail.\n", __func__);
+		goto error;
+	}
+
 	gpu_rsvmem_base_gpa = get_gpu_rsvmem_base_gpa();
 	software_sram_size = SOFTWARE_SRAM_MAX_SIZE;
 	/* TODO: It is better to put one boundary between GPU region and SW SRAM
@@ -375,7 +360,7 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 	software_sram_base_gpa = ((gpu_rsvmem_base_gpa ? gpu_rsvmem_base_gpa : 0x80000000UL) -
 			software_sram_size) &  ~software_sram_size;
 
-	if (passthru_rtct_to_guest(vrtct, rtct_cfg, guest_pcpu_bitmask)) {
+	if (passthru_rtct_to_guest(vrtct, rtct_cfg)) {
 		pr_err("%s, initialize vRTCT fail.", __func__);
 		goto error;
 	}
