@@ -141,7 +141,7 @@ void init_vmx_msrs(struct acrn_vcpu *vcpu)
 			| VMX_PROCBASED_CTLS2_UNRESTRICT | VMX_PROCBASED_CTLS2_PAUSE_LOOP
 			| VMX_PROCBASED_CTLS2_RDRAND | VMX_PROCBASED_CTLS2_INVPCID
 			| VMX_PROCBASED_CTLS2_RDSEED | VMX_PROCBASED_CTLS2_XSVE_XRSTR
-			| VMX_PROCBASED_CTLS2_PT_USE_GPA | VMX_PROCBASED_CTLS2_TSC_SCALING;
+			| VMX_PROCBASED_CTLS2_TSC_SCALING;
 		msr_value = adjust_vmx_ctrls(MSR_IA32_VMX_PROCBASED_CTLS2, request_bits);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_PROCBASED_CTLS2, msr_value);
 
@@ -161,10 +161,15 @@ void init_vmx_msrs(struct acrn_vcpu *vcpu)
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_ENTRY_CTLS, msr_value);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_TRUE_ENTRY_CTLS, msr_value);
 
-		/* For now passthru the value from physical MSR to L1 guest */
 		msr_value = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
+		/*
+		 * Hide 5 level EPT capability
+		 * Hide accessed and dirty flags for EPT
+		 */
+		msr_value &= ~(VMX_EPT_PAGE_WALK_5 | VMX_EPT_AD);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_EPT_VPID_CAP, msr_value);
 
+		/* For now passthru the value from physical MSR to L1 guest */
 		msr_value = msr_read(MSR_IA32_VMX_CR0_FIXED0);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_CR0_FIXED0, msr_value);
 
