@@ -96,10 +96,10 @@ typedef void(*hv_func)(int32_t, struct multiboot_info*);
 	((char *)((VOID *)(addr) + MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE + MBOOT_MODS_SIZE))
 
 struct efi_memmap_info {
-	UINT32 map_size;
-	UINT32 map_key;
+	UINTN map_size;
+	UINTN map_key;
 	UINT32 desc_version;
-	UINT32 desc_size;
+	UINTN desc_size;
 	EFI_MEMORY_DESCRIPTOR *mmap;
 };
 
