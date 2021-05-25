@@ -21,7 +21,7 @@ DATACHECK_SCHEMA_FILE = SOURCE_ROOT_DIR + 'misc/config_tools/schema/datachecks.x
 
 
 PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/__pycache__"]
-GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
+GUEST_FLAG = ["0", "0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
               "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT"]
 
 MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev", "shm_region", "communication_vuart"]
