@@ -2054,8 +2054,8 @@ vlapic_x2apic_pt_icr_access(struct acrn_vcpu *vcpu, uint64_t val)
 	phys = ((icr_low & APIC_DESTMODE_LOG) == 0UL);
 	shorthand = icr_low & APIC_DEST_MASK;
 
-	if (vlapic_mode != VM_VLAPIC_X2APIC) {
-		pr_err("Only works on VM_VLAPIC_X2APIC mode\n");
+	if ((vlapic_mode != VM_VLAPIC_X2APIC) && !phys) {
+		pr_err("Only Physical Destination Mode could work on non-VM_VLAPIC_X2APIC mode\n");
 		ret = -1;
 	} else {
 		dmask = vlapic_calc_dest(vcpu, shorthand, (dest == 0xffffffffU), dest, phys, false);
