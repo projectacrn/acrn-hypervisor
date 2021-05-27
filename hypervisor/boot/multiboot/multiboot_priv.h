@@ -7,10 +7,6 @@
 #ifndef MULTIBOOT_PRIV_H
 #define MULTIBOOT_PRIV_H
 
-/* extended flags for acrn multiboot info from multiboot2  */
-#define	MULTIBOOT_INFO_HAS_EFI_MMAP	0x00010000U
-#define	MULTIBOOT_INFO_HAS_EFI64	0x00020000U
-
 static inline bool boot_from_multiboot(uint32_t magic, uint32_t info)
 {
 	return ((magic == MULTIBOOT_INFO_MAGIC) && (info != 0U));

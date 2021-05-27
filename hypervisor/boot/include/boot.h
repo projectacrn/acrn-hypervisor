@@ -23,7 +23,6 @@
 #define ACPI_MODULE_SIZE		MEM_1M
 
 struct acrn_boot_info {
-	uint32_t		mi_flags;	/* the flags is back-compatible with multiboot1 */
 
 	const char		*mi_cmdline;
 	const char		*mi_loader_name;
