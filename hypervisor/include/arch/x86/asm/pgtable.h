@@ -139,6 +139,8 @@
 #define PDPTE_PFN_MASK		0x0000FFFFFFFFF000UL
 #define PDE_PFN_MASK		0x0000FFFFFFFFF000UL
 
+#define EPT_ENTRY_PFN_MASK	((~EPT_PFN_HIGH_MASK) & PAGE_MASK)
+
 /**
  * @brief Page tables level in IA32 paging mode
  */
