@@ -10,7 +10,6 @@
 #include <boot.h>
 #include <rtl.h>
 #include <logmsg.h>
-#include "multiboot/multiboot_priv.h"
 
 static struct acrn_boot_info acrn_bi = { 0U };
 static char boot_protocol_name[16U] = { 0 };
@@ -30,30 +29,18 @@ int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi)
 {
 	int32_t abi_status = 0;
 
-	if (abi->mi_mmap_entries != 0U) {
-		abi->mi_flags |= MULTIBOOT_INFO_HAS_MMAP;
-	} else {
-		abi->mi_flags &= ~MULTIBOOT_INFO_HAS_MMAP;
-	}
-
-	if (abi->mi_mods_count != 0U) {
-		abi->mi_flags |= MULTIBOOT_INFO_HAS_MODS;
-	} else {
-		abi->mi_flags &= ~MULTIBOOT_INFO_HAS_MODS;
-	}
-
-	if ((abi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
-		pr_err("no multiboot module info found");
+	if (abi->mi_mods_count == 0U) {
+		pr_err("no boot module info found");
 		abi_status = -EINVAL;
 	}
 
-	if ((abi->mi_flags & MULTIBOOT_INFO_HAS_MMAP) == 0U) {
-		pr_err("wrong multiboot flags: 0x%08x", abi->mi_flags);
+	if (abi->mi_mmap_entries == 0U) {
+		pr_err("no boot mmap info found");
 		abi_status = -EINVAL;
 	}
 
 #ifdef CONFIG_MULTIBOOT2
-	if ((abi->mi_flags & (MULTIBOOT_INFO_HAS_EFI64 | MULTIBOOT_INFO_HAS_EFI_MMAP)) == 0U) {
+	if ((abi->mi_efi_info.efi_systab == 0U) && (abi->mi_efi_info.efi_systab_hi == 0U)) {
 		pr_err("no multiboot2 uefi info found!");
 	}
 #endif
@@ -70,7 +57,6 @@ int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi)
 
 /*
  * @post retval != NULL
- * @post retval->mi_flags & MULTIBOOT_INFO_HAS_MMAP != 0U
  * @post (retval->mi_mmap_entries > 0U) && (retval->mi_mmap_entries <= MAX_MMAP_ENTRIES)
  */
 struct acrn_boot_info *get_acrn_boot_info(void)
