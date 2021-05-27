@@ -163,6 +163,15 @@ void put_nept_desc(uint64_t guest_eptp)
 /**
  * @pre vcpu != NULL
  */
+bool handle_l2_ept_violation(__unused struct acrn_vcpu *vcpu)
+{
+	/* TODO: Construct the shadow page table for EPT violation address */
+	return true;
+}
+
+/**
+ * @pre vcpu != NULL
+ */
 int32_t invept_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	struct invept_desc operand_gla_ept;
