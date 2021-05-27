@@ -1161,12 +1161,15 @@ static struct {
 int create_and_inject_vrtct(struct vmctx *ctx)
 {
 #define RTCT_NATIVE_FILE_PATH_IN_SOS "/sys/firmware/acpi/tables/PTCT"
+#define RTCT_V2_NATIVE_FILE_PATH_IN_SOS "/sys/firmware/acpi/tables/RTCT"
+
+
 #define RTCT_BUF_LEN	0x200	/* Otherwise, need to modify DSDT_OFFSET corresponding */
 	int native_rtct_fd;
 	int rc;
 	size_t native_rtct_len;
 	size_t vrtct_len;
-	uint8_t buf[RTCT_BUF_LEN] = {0};
+	uint8_t *buf;
 	uint8_t *vrtct;
 	struct vm_memmap memmap = {
 		.type = VM_MMIO,
@@ -1176,14 +1179,19 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 		.prot = PROT_ALL
 	};
 
+	/* Name of native RTCT table is "PTCT"(v1) or "RTCT"(v2) */
 	native_rtct_fd = open(RTCT_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
 	if (native_rtct_fd < 0) {
-		pr_err("failed to open /sys/firmware/acpi/tables/PTCT !!!!! errno:%d\n", errno);
-		return -1;
+		native_rtct_fd = open(RTCT_V2_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
+		if (native_rtct_fd < 0) {
+			pr_err("RTCT file is NOT detected.\n");
+			return -1;
+		}
 	}
 	native_rtct_len = lseek(native_rtct_fd, 0, SEEK_END);
-	if (native_rtct_len > RTCT_BUF_LEN) {
-		pr_err("%s native_rtct_len = %d large than RTCT_BUF_LEN\n", __func__, native_rtct_len);
+	buf = malloc(native_rtct_len);
+	if (buf == NULL) {
+		pr_err("%s failed to allocate buffer, native_rtct_len = %d\n", __func__, native_rtct_len);
 		return -1;
 	}
 
@@ -1196,8 +1204,10 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	close(native_rtct_fd);
 
 	vrtct = build_vrtct(ctx, (void *)buf);
-	if (vrtct == NULL)
+	if (vrtct == NULL) {
+		free(buf);
 		return -1;
+	}
 
 	vrtct_len = ((struct acpi_table_hdr *)vrtct)->length;
 	if (vrtct_len > RTCT_BUF_LEN) {
@@ -1205,6 +1215,7 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	}
 	memcpy(vm_map_gpa(ctx, ACPI_BASE + RTCT_OFFSET, vrtct_len), vrtct, vrtct_len);
 	free(vrtct);
+	free(buf);
 
 	memmap.hpa = get_software_sram_base_hpa();
 	memmap.gpa = get_software_sram_base_gpa();
