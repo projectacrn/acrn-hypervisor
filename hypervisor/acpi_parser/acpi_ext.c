@@ -170,6 +170,10 @@ int32_t acpi_fixup(void)
 	}
 
 	rtct_tbl_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_RTCT);
+	if (rtct_tbl_addr == NULL) {
+		rtct_tbl_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_RTCT_V2);
+	}
+
 	if (rtct_tbl_addr != NULL) {
 		set_rtct_tbl((void *)rtct_tbl_addr);
 	}
