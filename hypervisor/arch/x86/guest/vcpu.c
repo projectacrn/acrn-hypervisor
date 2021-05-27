@@ -633,7 +633,8 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		pr_info("VM %d Starting VCPU %hu",
 				vcpu->vm->vm_id, vcpu->vcpu_id);
 
-		if (vcpu->arch.vpid != 0U) {
+		/* VMX_VPID for l2 guests is not managed in this way */
+		if (!is_vcpu_in_l2_guest(vcpu) && (vcpu->arch.vpid != 0U)) {
 			exec_vmwrite16(VMX_VPID, vcpu->arch.vpid);
 		}
 
@@ -699,15 +700,23 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 
 	vcpu->reg_cached = 0UL;
 
-	cs_attr = exec_vmread32(VMX_GUEST_CS_ATTR);
-	ia32_efer = vcpu_get_efer(vcpu);
-	cr0 = vcpu_get_cr0(vcpu);
-	set_vcpu_mode(vcpu, cs_attr, ia32_efer, cr0);
+	/*
+	 * - can not call vcpu_get_xxx() when vmcs02 is current, or it could mess up
+	 *   the cached registers for the L1 guest
+	 * - the L2 guests' vcpu mode is managed by L1 hypervisor
+	 * - ctx->cpu_regs.regs.rsp doesn't cache nested guests' RSP
+	 */
+	if (!is_vcpu_in_l2_guest(vcpu)) {
+		cs_attr = exec_vmread32(VMX_GUEST_CS_ATTR);
+		ia32_efer = vcpu_get_efer(vcpu);
+		cr0 = vcpu_get_cr0(vcpu);
+		set_vcpu_mode(vcpu, cs_attr, ia32_efer, cr0);
+
+		ctx->cpu_regs.regs.rsp = exec_vmread(VMX_GUEST_RSP);
+	}
 
 	/* Obtain current VCPU instruction length */
 	vcpu->arch.inst_len = exec_vmread32(VMX_EXIT_INSTR_LEN);
-
-	ctx->cpu_regs.regs.rsp = exec_vmread(VMX_GUEST_RSP);
 
 	/* Obtain VM exit reason */
 	vcpu->arch.exit_reason = exec_vmread32(VMX_EXIT_REASON);
