@@ -52,7 +52,7 @@ def gen_xsdt(dest_vm_acpi_path, passthru_devices):
     p_mcfg_addr = r'ACPI Table Address   1 : ([0-9a-fA-F]{16})'
     p_madt_addr = r'ACPI Table Address   2 : ([0-9a-fA-F]{16})'
     p_tpm2_addr = r'ACPI Table Address   3 : ([0-9a-fA-F]{16})'
-    p_ptct_addr = r'ACPI Table Address   4 : ([0-9a-fA-F]{16})'
+    p_rtct_addr = r'ACPI Table Address   4 : ([0-9a-fA-F]{16})'
 
     with open(os.path.join(dest_vm_acpi_path, xsdt_asl), 'w') as dest:
         lines = []
@@ -67,9 +67,9 @@ def gen_xsdt(dest_vm_acpi_path, passthru_devices):
                 elif re.search(p_tpm2_addr, line):
                     if 'TPM2' in passthru_devices:
                         lines.append(re.sub(p_tpm2_addr, 'ACPI Table Address   3 : {0:016X}'.format(ACPI_TPM2_ADDR), line))
-                elif re.search(p_ptct_addr, line):
-                    if 'PTCT' in passthru_devices:
-                        lines.append(re.sub(p_ptct_addr, 'ACPI Table Address   4 : {0:016X}'.format(ACPI_PTCT_ADDR), line))
+                elif re.search(p_rtct_addr, line):
+                    if 'PTCT' in passthru_devices or 'RTCT' in passthru_devices:
+                        lines.append(re.sub(p_rtct_addr, 'ACPI Table Address   4 : {0:016X}'.format(ACPI_RTCT_ADDR), line))
                 else:
                     lines.append(line)
 
@@ -433,11 +433,11 @@ def main(args):
                 if pcpu_id is not None and pcpu_id.text.strip() in pcpu_list:
                     dict_pcpu_list[vm_id].append(int(pcpu_id.text))
 
-    PASSTHROUGH_PTCT = False
+    PASSTHROUGH_RTCT = False
     PRELAUNCHED_RTVM_ID = None
     try:
         if scenario_root.find('hv/FEATURES/SSRAM/SSRAM_ENABLED').text.strip() == 'y':
-            PASSTHROUGH_PTCT = True
+            PASSTHROUGH_RTCT = True
         for vm in scenario_root.findall('vm'):
             vm_id = vm.attrib['id']
             vm_type_node = vm.find('vm_type')
@@ -445,7 +445,7 @@ def main(args):
                 PRELAUNCHED_RTVM_ID = vm_id
                 break
     except:
-        PASSTHROUGH_PTCT = False
+        PASSTHROUGH_RTCT = False
 
     kern_args = common.get_leaf_tag_map(scenario, "os_config", "bootargs")
     kern_type = common.get_leaf_tag_map(scenario, "os_config", "kern_type")
@@ -460,9 +460,13 @@ def main(args):
         dest_vm_acpi_path = os.path.join(DEST_ACPI_PATH, 'ACPI_VM'+vm_id)
         if not os.path.isdir(dest_vm_acpi_path):
             os.makedirs(dest_vm_acpi_path)
-        if PASSTHROUGH_PTCT is True and vm_id == PRELAUNCHED_RTVM_ID:
-            passthru_devices.append(PTCT)
-            shutil.copy(os.path.join(VM_CONFIGS_PATH, 'acpi_template', board_type, PTCT), dest_vm_acpi_path)
+        if PASSTHROUGH_RTCT is True and vm_id == PRELAUNCHED_RTVM_ID:
+                for f in RTCT:
+                    if os.path.isfile(os.path.join(VM_CONFIGS_PATH, 'acpi_template', board_type, f)):
+                        passthru_devices.append(f)
+                        shutil.copy(os.path.join(VM_CONFIGS_PATH, 'acpi_template', board_type, f),
+                                    dest_vm_acpi_path)
+                        break
         gen_rsdp(dest_vm_acpi_path)
         gen_xsdt(dest_vm_acpi_path, passthru_devices)
         gen_fadt(dest_vm_acpi_path, board_root)

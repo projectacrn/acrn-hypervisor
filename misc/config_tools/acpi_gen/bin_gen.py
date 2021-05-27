@@ -33,8 +33,12 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):
                         os.remove(os.path.join(dest_vm_acpi_path, acpi_table[1]))
                     rmsg = 'failed to compile {}'.format(acpi_table[0])
                     break
-        elif acpi_table[0] == PTCT:
-            if PTCT in os.listdir(dest_vm_acpi_path):
+        elif acpi_table[0] == 'PTCT':
+            if 'PTCT' in os.listdir(dest_vm_acpi_path):
+                shutil.copyfile(os.path.join(dest_vm_acpi_path, acpi_table[0]),
+                                os.path.join(dest_vm_acpi_bin_path, acpi_table[1]))
+        elif acpi_table[0] == 'RTCT':
+            if 'RTCT' in os.listdir(dest_vm_acpi_path):
                 shutil.copyfile(os.path.join(dest_vm_acpi_path, acpi_table[0]),
                                 os.path.join(dest_vm_acpi_bin_path, acpi_table[1]))
         else:
@@ -96,9 +100,13 @@ def aml_to_bin(dest_vm_acpi_path, dest_vm_acpi_bin_path, acpi_bin_name):
         with open(os.path.join(dest_vm_acpi_bin_path, ACPI_TABLE_LIST[6][1]), 'rb') as asl:
             acpi_bin.write(asl.read())
 
-        if PTCT in os.listdir(dest_vm_acpi_path):
-            acpi_bin.seek(ACPI_PTCT_ADDR_OFFSET)
+        if 'PTCT' in os.listdir(dest_vm_acpi_path):
+            acpi_bin.seek(ACPI_RTCT_ADDR_OFFSET)
             with open(os.path.join(dest_vm_acpi_bin_path, ACPI_TABLE_LIST[7][1]), 'rb') as asl:
+                acpi_bin.write(asl.read())
+        elif 'RTCT' in os.listdir(dest_vm_acpi_path):
+            acpi_bin.seek(ACPI_RTCT_ADDR_OFFSET)
+            with open(os.path.join(dest_vm_acpi_bin_path, ACPI_TABLE_LIST[8][1]), 'rb') as asl:
                 acpi_bin.write(asl.read())
 
         acpi_bin.seek(0xfffff)
