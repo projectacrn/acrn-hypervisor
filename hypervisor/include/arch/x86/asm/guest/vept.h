@@ -7,6 +7,18 @@
 #define VEPT_H
 
 #ifdef CONFIG_NVMX_ENABLED
+
+#define RESERVED_BITS(start, end) (((1UL << (end - start + 1)) - 1) << start)
+#define IA32E_PML4E_RESERVED_BITS(phy_addr_width)	(RESERVED_BITS(3U, 7U) | RESERVED_BITS(phy_addr_width, 51U))
+#define IA32E_PDPTE_RESERVED_BITS(phy_addr_width)	(RESERVED_BITS(3U, 6U) | RESERVED_BITS(phy_addr_width, 51U))
+#define IA32E_PDPTE_LEAF_RESERVED_BITS(phy_addr_width)	(RESERVED_BITS(12U,29U)| RESERVED_BITS(phy_addr_width, 51U))
+#define IA32E_PDE_RESERVED_BITS(phy_addr_width)		(RESERVED_BITS(3U, 6U) | RESERVED_BITS(phy_addr_width, 51U))
+#define IA32E_PDE_LEAF_RESERVED_BITS(phy_addr_width)	(RESERVED_BITS(12U,20U)| RESERVED_BITS(phy_addr_width, 51U))
+#define IA32E_PTE_RESERVED_BITS(phy_addr_width)		(RESERVED_BITS(phy_addr_width, 51U))
+
+#define PAGING_ENTRY_SHIFT(lvl)		((IA32E_PT - (lvl)) * 9U + PTE_SHIFT)
+#define PAGING_ENTRY_OFFSET(addr, lvl)	(((addr) >> PAGING_ENTRY_SHIFT(lvl)) & (PTRS_PER_PTE - 1UL))
+
 /*
  * A descriptor to store info of nested EPT
  */

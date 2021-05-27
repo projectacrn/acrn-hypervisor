@@ -49,6 +49,16 @@ void reserve_buffer_for_sept_pages(void)
 	sept_pages = (struct page *)page_base;
 }
 
+static bool is_present_ept_entry(uint64_t ept_entry)
+{
+	return ((ept_entry & EPT_RWX) != 0U);
+}
+
+static bool is_leaf_ept_entry(uint64_t ept_entry, enum _page_table_level pt_level)
+{
+	return (((ept_entry & PAGE_PSE) != 0U) || (pt_level == IA32E_PT));
+}
+
 /*
  * @brief Convert a guest EPTP to the associated nept_desc.
  * @return struct nept_desc * if existed.
@@ -161,12 +171,196 @@ void put_nept_desc(uint64_t guest_eptp)
 }
 
 /**
+ * @brief Shadow a guest EPT entry
  * @pre vcpu != NULL
  */
-bool handle_l2_ept_violation(__unused struct acrn_vcpu *vcpu)
+static uint64_t generate_shadow_ept_entry(struct acrn_vcpu *vcpu, uint64_t guest_ept_entry,
+				    enum _page_table_level guest_level)
 {
-	/* TODO: Construct the shadow page table for EPT violation address */
-	return true;
+	uint64_t shadow_ept_entry;
+
+	/*
+	 * Clone a shadow EPT entry w/o physical address bits from guest EPT entry
+	 * TODO:
+	 *   Before the cloning, host EPT mapping audit is a necessary.
+	 */
+	shadow_ept_entry = guest_ept_entry & ~EPT_ENTRY_PFN_MASK;
+	if (is_leaf_ept_entry(guest_ept_entry, guest_level)) {
+		/*
+		 * Use guest EPT entry HPA in shadow EPT entry
+		 */
+		shadow_ept_entry |= gpa2hpa(vcpu->vm, (guest_ept_entry & EPT_ENTRY_PFN_MASK));
+	} else {
+		/* Use a HPA of a new page in shadow EPT entry */
+		shadow_ept_entry |= hva2hpa((void *)alloc_page(&sept_page_pool)) & EPT_ENTRY_PFN_MASK;
+	}
+
+	return shadow_ept_entry;
+
+}
+
+/*
+ * @brief Check misconfigurations on EPT entries
+ *
+ * SDM 28.2.3.1
+ */
+static bool is_ept_entry_misconfig(uint64_t ept_entry, enum _page_table_level pt_level)
+{
+	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
+	uint8_t max_phy_addr_bits = cpu_info->phys_bits;
+	bool is_misconfig = false;
+	uint64_t reserved_bits = 0UL;
+	uint8_t memory_type;
+
+	/* Write w/o Read, misconfigured */
+	is_misconfig = ((ept_entry & (EPT_RD | EPT_WR)) == EPT_WR);
+
+	/* Execute-only is not supported */
+	if (!pcpu_has_vmx_ept_cap(VMX_EPT_EXECUTE_ONLY)) {
+		/* Execute w/o Read, misconfigured */
+		is_misconfig = is_misconfig || ((ept_entry & (EPT_RD | EPT_EXE)) == EPT_EXE);
+		/*
+		 * TODO: With 'mode-based execute control for EPT' set,
+		 * User-execute w/o Read, misconfigured
+		 *	is_misconfig = is_misconfig || ((epte & (EPT_RD | EPT_XU)) == EPT_XU);
+		 */
+	}
+
+	/* Reserved bits should be 0, else misconfigured */
+	switch (pt_level) {
+	case IA32E_PML4:
+		reserved_bits = IA32E_PML4E_RESERVED_BITS(max_phy_addr_bits);
+		break;
+	case IA32E_PDPT:
+		if (ept_entry & PAGE_PSE) {
+			reserved_bits = IA32E_PDPTE_LEAF_RESERVED_BITS(max_phy_addr_bits);
+		} else {
+			reserved_bits = IA32E_PDPTE_RESERVED_BITS(max_phy_addr_bits);
+		}
+		break;
+	case IA32E_PD:
+		if (ept_entry & PAGE_PSE) {
+			reserved_bits = IA32E_PDE_LEAF_RESERVED_BITS(max_phy_addr_bits);
+		} else {
+			reserved_bits = IA32E_PDE_RESERVED_BITS(max_phy_addr_bits);
+		}
+		break;
+	case IA32E_PT:
+		reserved_bits = IA32E_PTE_RESERVED_BITS(max_phy_addr_bits);
+		break;
+	default:
+		break;
+	}
+	is_misconfig = is_misconfig || ((ept_entry & reserved_bits) != 0UL);
+
+	/*
+	 * SDM 28.2.6.2: The EPT memory type is specified in bits 5:3 of the last EPT
+	 * paging-structure entry: 0 = UC; 1 = WC; 4 = WT; 5 = WP; and 6 = WB.
+	 * Other values are reserved and cause EPT misconfiguration
+	 */
+	if (is_leaf_ept_entry(ept_entry, pt_level)) {
+		memory_type = ept_entry & EPT_MT_MASK;
+		is_misconfig = is_misconfig || ((memory_type != EPT_UNCACHED) &&
+						(memory_type != EPT_WC) &&
+						(memory_type != EPT_WT) &&
+						(memory_type != EPT_WP) &&
+						(memory_type != EPT_WB));
+	}
+
+	return is_misconfig;
+}
+
+static bool is_access_violation(uint64_t ept_entry)
+{
+	uint64_t exit_qual = exec_vmread(VMX_EXIT_QUALIFICATION);
+	bool access_violation = false;
+
+	if (/* Caused by data read */
+	    (((exit_qual & 0x1UL) != 0UL) && ((ept_entry & EPT_RD) == 0)) ||
+	    /* Caused by data write */
+	    (((exit_qual & 0x2UL) != 0UL) && ((ept_entry & EPT_WR) == 0)) ||
+	    /* Caused by instruction fetch */
+	    (((exit_qual & 0x4UL) != 0UL) && ((ept_entry & EPT_EXE) == 0))) {
+		access_violation = true;
+	}
+
+	return access_violation;
+}
+
+/**
+ * @brief L2 VM EPT violation handler
+ * @pre vcpu != NULL
+ *
+ * SDM: 28.2.3 EPT-Induced VM Exits
+ *
+ * Walk through guest EPT and fill the entries in shadow EPT
+ */
+bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
+{
+	uint64_t guest_eptp = vcpu->arch.nested.vmcs12.ept_pointer;
+	struct nept_desc *desc = find_nept_desc(guest_eptp);
+	uint64_t l2_ept_violation_gpa = exec_vmread(VMX_GUEST_PHYSICAL_ADDR_FULL);
+	enum _page_table_level pt_level;
+	uint64_t guest_ept_entry, shadow_ept_entry;
+	uint64_t *p_guest_ept_page, *p_shadow_ept_page;
+	uint16_t offset;
+	bool is_l1_vmexit = true;
+
+	ASSERT(desc != NULL, "Invalid shadow EPTP!");
+
+	spinlock_obtain(&nept_desc_bucket_lock);
+	stac();
+
+	p_shadow_ept_page = (uint64_t *)(desc->shadow_eptp & PAGE_MASK);
+	p_guest_ept_page = gpa2hva(vcpu->vm, desc->guest_eptp & PAGE_MASK);
+
+	for (pt_level = IA32E_PML4; (p_guest_ept_page != NULL) && (pt_level <= IA32E_PT); pt_level++) {
+		offset = PAGING_ENTRY_OFFSET(l2_ept_violation_gpa, pt_level);
+		guest_ept_entry = p_guest_ept_page[offset];
+		shadow_ept_entry = p_shadow_ept_page[offset];
+
+		/*
+		 * If guest EPT entry is non-exist, reflect EPT violation to L1 VM.
+		 */
+		if (!is_present_ept_entry(guest_ept_entry)) {
+			break;
+		}
+
+		if (is_ept_entry_misconfig(guest_ept_entry, pt_level)) {
+			/* Inject EPT_MISCONFIGURATION to L1 VM */
+			exec_vmwrite(VMX_EXIT_REASON, VMX_EXIT_REASON_EPT_MISCONFIGURATION);
+			break;
+		}
+
+		if (is_access_violation(guest_ept_entry)) {
+			break;
+		}
+
+		/* Shadow EPT entry is non-exist, create it */
+		if (!is_present_ept_entry(shadow_ept_entry)) {
+			/* Create a shadow EPT entry */
+			shadow_ept_entry = generate_shadow_ept_entry(vcpu, guest_ept_entry, pt_level);
+			p_shadow_ept_page[offset] = shadow_ept_entry;
+		}
+
+		/* Shadow EPT entry exists */
+		if (is_leaf_ept_entry(guest_ept_entry, pt_level)) {
+			/* Shadow EPT is set up, let L2 VM re-execute the instruction. */
+			if ((exec_vmread32(VMX_IDT_VEC_INFO_FIELD) & VMX_INT_INFO_VALID) == 0U) {
+				is_l1_vmexit = false;
+			}
+			break;
+		} else {
+			/* Set up next level EPT entries. */
+			p_shadow_ept_page = hpa2hva(shadow_ept_entry & EPT_ENTRY_PFN_MASK);
+			p_guest_ept_page = gpa2hva(vcpu->vm, guest_ept_entry & EPT_ENTRY_PFN_MASK);
+		}
+	}
+
+	clac();
+	spinlock_release(&nept_desc_bucket_lock);
+
+	return is_l1_vmexit;
 }
 
 /**
