@@ -229,7 +229,7 @@ int32_t read_vmx_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 	return err;
 }
 
-#define MAX_SHADOW_VMCS_FIELDS 115U
+#define MAX_SHADOW_VMCS_FIELDS 114U
 /*
  * VMCS fields included in the dual-purpose VMCS: as shadow for L1 and
  * as hardware VMCS for nested guest (L2).
@@ -267,7 +267,6 @@ static const uint32_t vmcs_shadowing_fields[MAX_SHADOW_VMCS_FIELDS] = {
 	VMX_TSC_OFFSET_FULL,
 	VMX_VIRTUAL_APIC_PAGE_ADDR_FULL,
 	VMX_APIC_ACCESS_ADDR_FULL,
-	VMX_EPT_POINTER_FULL,
 	VMX_VMREAD_BITMAP_FULL,
 	VMX_VMWRITE_BITMAP_FULL,
 	VMX_XSS_EXITING_BITMAP_FULL,
@@ -871,8 +870,16 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 				 * For simplicity, gpa_field_dirty could be used for all VMCS fields that
 				 * are programmed by L1 hypervisor with a GPA address
 				 */
-				if (vmcs_field == VMX_MSR_BITMAP_FULL) {
+				if ((vmcs_field == VMX_MSR_BITMAP_FULL) ||
+				    (vmcs_field == VMX_EPT_POINTER_FULL)) {
 					vcpu->arch.nested.gpa_field_dirty = true;
+
+					if (vmcs_field == VMX_EPT_POINTER_FULL) {
+						if (vcpu->arch.nested.vmcs12.ept_pointer != vmcs_value) {
+							put_nept_desc(vcpu->arch.nested.vmcs12.ept_pointer);
+							get_nept_desc(vmcs_value);
+						}
+					}
 				}
 
 				if ((vmcs_field == VMX_ENTRY_CONTROLS)
@@ -1088,6 +1095,8 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 				 * needs to be VMCLEARed as well
 				 */
 				clear_va_vmcs(nested->vmcs02);
+
+				put_nept_desc(nested->vmcs12.ept_pointer);
 			}
 
 			/* Create the VMCS02 based on this new VMCS12 */
@@ -1111,9 +1120,11 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 			/* Load VMCS12 from L1 guest memory */
 			(void)copy_from_gpa(vcpu->vm, (void *)&nested->vmcs12, vmcs12_gpa,
 				sizeof(struct acrn_vmcs12));
+			vcpu->arch.nested.gpa_field_dirty = true;
 
 			/* Need to load shadow fields from this new VMCS12 to VMCS02 */
 			sync_vmcs12_to_vmcs02(vcpu);
+			get_nept_desc(nested->vmcs12.ept_pointer);
 
 			/* Before VMCS02 is being used as a shadow VMCS, VMCLEAR it */
 			clear_va_vmcs(nested->vmcs02);
@@ -1182,6 +1193,9 @@ int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 
 				/* Switch back to vmcs01 (no VMCS shadowing) */
 				load_va_vmcs(vcpu->arch.vmcs);
+
+				/* This VMCS can no longer refer to any shadow EPT */
+				put_nept_desc(nested->vmcs12.ept_pointer);
 
 				/* no current VMCS12 */
 				nested->current_vmcs12_ptr = INVALID_GPA;
@@ -1335,8 +1349,13 @@ static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
 int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vmcs12 *vmcs12 = (struct acrn_vmcs12 *)&vcpu->arch.nested.vmcs12;
-	bool reflect_to_l1 = true;
-	if (reflect_to_l1) {
+	bool is_l1_vmexit = true;
+
+	if ((exec_vmread(VMX_EXIT_REASON) & 0xFFFFU) == VMX_EXIT_REASON_EPT_VIOLATION) {
+		is_l1_vmexit = handle_l2_ept_violation(vcpu);
+	}
+
+	if (is_l1_vmexit) {
 		/*
 		 * Currerntly VMX_VPID is shadowing to L1, so we flush L2 VPID before
 		 * L1 VM entry to avoid conflicting with L1 VPID.
@@ -1384,6 +1403,7 @@ static void merge_and_sync_control_fields(struct acrn_vcpu *vcpu)
 	if (vcpu->arch.nested.gpa_field_dirty) {
 		vcpu->arch.nested.gpa_field_dirty = false;
 		exec_vmwrite(VMX_MSR_BITMAP_FULL, gpa2hpa(vcpu->vm, vmcs12->msr_bitmap));
+		exec_vmwrite(VMX_EPT_POINTER_FULL, get_shadow_eptp(vmcs12->ept_pointer));
 	}
 
 	/* for VM-execution, VM-exit, VM-entry control fields */
