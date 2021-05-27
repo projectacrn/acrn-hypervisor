@@ -149,7 +149,8 @@ bool init_software_sram(bool is_bsp)
 			header = hpa2hva(rtcm_binary->address);
 			pr_info("rtcm_bin_address:%llx, rtcm magic:%x, rtcm version:%x",
 				rtcm_binary->address, header->magic, header->version);
-			ASSERT(header->magic == RTCM_MAGIC, "Incorrect RTCM magic!");
+			ASSERT(((header->magic == RTCM_MAGIC_PTCM) || (header->magic == RTCM_MAGIC_RTCM)),
+				"Wrong RTCM magic value!");
 
 			/* Flush the TLB, so that BSP/AP can execute the RTCM ABI */
 			flush_tlb_range((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size);

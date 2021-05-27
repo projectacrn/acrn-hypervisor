@@ -18,7 +18,8 @@ typedef int32_t MSABI(*rtcm_abi_func)(uint32_t command, void *command_struct);
 #define RTCM_CMD_RDMSR			(int32_t)3U
 #define RTCM_CMD_WRMSR			(int32_t)4U
 
-#define RTCM_MAGIC 0x5054434dU
+#define RTCM_MAGIC_PTCM 0x5054434dU /* "PTCM", CRL header magic number for RTCT version 1 */
+#define RTCM_MAGIC_RTCM 0x5254434dU /* "RTCM", CRL header magic number for RTCT version 2 */
 
 struct rtcm_header {
 	uint32_t magic;
