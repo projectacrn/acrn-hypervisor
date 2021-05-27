@@ -11,7 +11,13 @@
 #include <asm/guest/vm.h>
 #include <asm/guest/vmexit.h>
 #include <asm/guest/ept.h>
+#include <asm/guest/vept.h>
 #include <asm/guest/nested.h>
+
+#define VETP_LOG_LEVEL			LOG_DEBUG
+#define CONFIG_MAX_GUEST_EPT_NUM	4
+static struct nept_desc nept_desc_bucket[CONFIG_MAX_GUEST_EPT_NUM];
+static spinlock_t nept_desc_bucket_lock;
 
 /*
  * For simplicity, total platform RAM size is considered to calculate the
@@ -41,6 +47,117 @@ void reserve_buffer_for_sept_pages(void)
 	page_base = e820_alloc_memory(TOTAL_SEPT_4K_PAGES_SIZE, ~0UL);
 	set_paging_supervisor(page_base, TOTAL_SEPT_4K_PAGES_SIZE);
 	sept_pages = (struct page *)page_base;
+}
+
+/*
+ * @brief Convert a guest EPTP to the associated nept_desc.
+ * @return struct nept_desc * if existed.
+ * @return NULL if non-existed.
+ */
+static struct nept_desc *find_nept_desc(uint64_t guest_eptp)
+{
+	uint32_t i;
+	struct nept_desc *desc = NULL;
+
+	if (guest_eptp) {
+		spinlock_obtain(&nept_desc_bucket_lock);
+		for (i = 0L; i < CONFIG_MAX_GUEST_EPT_NUM; i++) {
+			/* Find an existed nept_desc of the guest EPTP */
+			if (nept_desc_bucket[i].guest_eptp == guest_eptp) {
+				desc = &nept_desc_bucket[i];
+				break;
+			}
+		}
+		spinlock_release(&nept_desc_bucket_lock);
+	}
+
+	return desc;
+}
+
+/*
+ * @brief Convert a guest EPTP to a shadow EPTP.
+ * @return 0 if non-existed.
+ */
+uint64_t get_shadow_eptp(uint64_t guest_eptp)
+{
+	struct nept_desc *desc = NULL;
+
+	desc = find_nept_desc(guest_eptp);
+	return (desc != NULL) ? hva2hpa((void *)desc->shadow_eptp) : 0UL;
+}
+
+/*
+ * @brief Get a nept_desc to cache a guest EPTP
+ *
+ * If there is already an existed nept_desc associated with given guest_eptp,
+ * increase its ref_count and return it. If there is not existed nept_desc
+ * for guest_eptp, create one and initialize it.
+ *
+ * @return a nept_desc which associate the guest EPTP with a shadow EPTP
+ */
+struct nept_desc *get_nept_desc(uint64_t guest_eptp)
+{
+	uint32_t i;
+	struct nept_desc *desc = NULL;
+
+	if (guest_eptp != 0UL) {
+		spinlock_obtain(&nept_desc_bucket_lock);
+		for (i = 0L; i < CONFIG_MAX_GUEST_EPT_NUM; i++) {
+			/* Find an existed nept_desc of the guest EPTP address bits */
+			if (nept_desc_bucket[i].guest_eptp == guest_eptp) {
+				desc = &nept_desc_bucket[i];
+				desc->ref_count++;
+				break;
+			}
+			/* Get the first empty nept_desc for the guest EPTP */
+			if (!desc && (nept_desc_bucket[i].ref_count == 0UL)) {
+				desc = &nept_desc_bucket[i];
+			}
+		}
+		ASSERT(desc != NULL, "Get nept_desc failed!");
+
+		/* A new nept_desc, initialize it */
+		if (desc->shadow_eptp == 0UL) {
+			desc->shadow_eptp = (uint64_t)alloc_page(&sept_page_pool) | (guest_eptp & ~PAGE_MASK);
+			desc->guest_eptp = guest_eptp;
+			desc->ref_count = 1UL;
+
+			dev_dbg(VETP_LOG_LEVEL, "[%s], nept_desc[%llx] ref[%d] shadow_eptp[%llx] guest_eptp[%llx]",
+					__func__, desc, desc->ref_count, desc->shadow_eptp, desc->guest_eptp);
+		}
+
+		spinlock_release(&nept_desc_bucket_lock);
+	}
+
+	return desc;
+}
+
+/*
+ * @brief Put a nept_desc who associate with a guest_eptp
+ *
+ * If ref_count of the nept_desc, then release all resources used by it.
+ */
+void put_nept_desc(uint64_t guest_eptp)
+{
+	struct nept_desc *desc = NULL;
+
+	if (guest_eptp != 0UL) {
+		desc = find_nept_desc(guest_eptp);
+		spinlock_obtain(&nept_desc_bucket_lock);
+		if (desc) {
+			desc->ref_count--;
+			if (desc->ref_count == 0UL) {
+				dev_dbg(VETP_LOG_LEVEL, "[%s], nept_desc[%llx] ref[%d] shadow_eptp[%llx] guest_eptp[%llx]",
+						__func__, desc, desc->ref_count, desc->shadow_eptp, desc->guest_eptp);
+				free_page(&sept_page_pool, (struct page *)(desc->shadow_eptp & PAGE_MASK));
+				/* Flush the hardware TLB */
+				invept((void *)(desc->shadow_eptp & PAGE_MASK));
+				desc->shadow_eptp = 0UL;
+				desc->guest_eptp = 0UL;
+			}
+		}
+		spinlock_release(&nept_desc_bucket_lock);
+	}
 }
 
 /**
@@ -75,4 +192,6 @@ void init_vept(void)
 	spinlock_init(&sept_page_pool.lock);
 	memset((void *)sept_page_pool.bitmap, 0, sept_page_pool.bitmap_size * sizeof(uint64_t));
 	sept_page_pool.last_hint_id = 0UL;
+
+	spinlock_init(&nept_desc_bucket_lock);
 }
