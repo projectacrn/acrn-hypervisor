@@ -42,6 +42,7 @@
 
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
+EFI_RUNTIME_SERVICES *runtime;
 HV_LOADER hvld;
 
 static EFI_STATUS
@@ -99,6 +100,84 @@ again:
 	mi->desc_size = desc_size;
 	mi->mmap = map_buf;
 
+out:
+	return err;
+}
+
+static EFI_STATUS
+set_mor_bit()
+{
+    EFI_STATUS err;
+    UINT32 attrs;
+    UINTN size = 1;
+    uint8_t data = 0;
+    EFI_GUID efi_var_morctl_guid = EFI_VAR_MORCTL_GUID;
+#ifdef MORCTRL_LOCK_ENABLED
+    EFI_GUID efi_var_morctllock_guid = EFI_VAR_MORCTLLOCK_GUID;
+#endif
+
+    /*
+     * Per TCG Platform Reset Attack Mitigation Spec 1.10 rev 17, Chp 4.1
+     * MORCtrl is a 1-byte unsigned number and should be created by the firmware.
+     */
+    err = get_variable(EFI_VAR_MORCTL_NAME, &efi_var_morctl_guid, &attrs, &size, (void *)&data);
+    if (err != EFI_SUCCESS) {
+	    if (err == EFI_BUFFER_TOO_SMALL) {
+		    Print(L"Wrong MORCtrl variable size: 0x%x byte, should be 1 byte\n", size);
+	    } else if (err == EFI_NOT_FOUND) {
+		    Print(L"Warning: MORCtrl variable not found\n");
+	    }
+
+	    goto out;
+    }
+
+    if (attrs != (EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS)) {
+	    Print(L"Wrong MORCtrl attributes: 0x%x\n", attrs);
+	    goto out;
+    }
+
+    /* Bit 0 set: Firmware MUST set the MOR bit */
+    /* Bit 4 cleared: Firmware MAY autodetect a clean shutdown of the Static RTM OS. */
+    data = 0x1;
+
+    err = set_variable(EFI_VAR_MORCTL_NAME, &efi_var_morctl_guid, attrs, size, &data);
+    if (err != EFI_SUCCESS)
+	    goto out;
+
+#ifdef MORCTRL_LOCK_ENABLED
+    /*
+     * MORCTRL_LOCK_ENABLED is NOT part of the board configuration.
+     * To activate MORCTRL_LOCK_ENABLED, manually add -DMORCTRL_LOCK_ENABLED to the CFLAGS.
+     */
+
+    /* Lock MORCtrl with MORCtrlLock */
+    size = 1;
+    err = get_variable(EFI_VAR_MORCTLLOCK_NAME, &efi_var_morctllock_guid, &attrs, &size, (void *)&data);
+    if (err != EFI_SUCCESS)
+	    goto out;
+
+    if (attrs != (EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS)) {
+	    Print(L"Wrong MORCtrlLock attributes: 0x%x\n", attrs);
+	    goto out;
+    }
+
+    if (data == 0x1 || data == 0x2) {
+	    Print(L"Warning: MORCtrl already locked. No locking operation performed.\n");
+	    goto out;
+    }
+
+    /*
+     * Input value 1, size 1: Lock without key
+     * Try to lock MemoryOverwriteRequestControlLock and MemoryOverwriteRequestControl
+     * If success, MORCtrl and MORCtrlLock will be read-only until next boot, and reboot
+     * is the only way to unlock these variables.
+     */
+    data = 0x1;
+    size = 0x1;
+    err = set_variable(EFI_VAR_MORCTLLOCK_NAME, &efi_var_morctllock_guid, attrs, size, (void *)&data);
+    if (err != EFI_SUCCESS)
+	    goto out;
+#endif
 out:
 	return err;
 }
@@ -518,6 +597,11 @@ run_acrn(EFI_HANDLE image, HV_LOADER hvld)
 	struct efi_memmap_info memmapinfo;
 	struct multiboot_info *mbi;
 
+	err = set_mor_bit();
+	/* If MOR not supported, emit a warning and proceed */
+	if (err != EFI_SUCCESS && err != EFI_NOT_FOUND)
+		goto out;
+
 #ifdef CONFIG_MULTIBOOT2
 	/* MB2 has no fixed mbinfo layout. The mbi as output will
 	 * NOT conform to the layout of struct multiboot_info.
@@ -557,6 +641,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	InitializeLib(image, _table);
 	sys_table = _table;
 	boot = sys_table->BootServices;
+	runtime = sys_table->RuntimeServices;
 
 	if (CheckCrc(sys_table->Hdr.HeaderSize, &sys_table->Hdr) != TRUE)
 		return EFI_LOAD_ERROR;
