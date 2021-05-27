@@ -13,6 +13,7 @@
 #include <asm/guest/vm.h>
 #include <asm/guest/vmcs.h>
 #include <asm/guest/nested.h>
+#include <asm/guest/vept.h>
 
 /* Cache the content of MSR_IA32_VMX_BASIC */
 static uint32_t vmx_basic;
@@ -1555,5 +1556,7 @@ void init_nested_vmx(__unused struct acrn_vm *vm)
 		/* Cache the value of physical MSR_IA32_VMX_BASIC */
 		vmx_basic = (uint32_t)msr_read(MSR_IA32_VMX_BASIC);
 		setup_vmcs_shadowing_bitmap();
+
+		init_vept();
 	}
 }
