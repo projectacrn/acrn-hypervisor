@@ -12,6 +12,14 @@ emulation is discussed in :ref:`hld-io-emulation`, para-virtualization
 is discussed in :ref:`hld-virtio-devices` and device passthrough will be
 discussed here.
 
+.. rst-class:: rst-columns2
+
+.. contents::
+   :depth: 1
+   :local:
+
+--------
+
 In the ACRN project, device emulation means emulating all existing
 hardware resource through a software component device model running in
 the Service OS (SOS). Device emulation must maintain the same SW
@@ -386,10 +394,160 @@ The platform GSI information is in devicemodel/hw/pci/platform_gsi_info.c
 for limited platform (currently, only APL MRB). For other platforms, the platform
 specific GSI information should be added to activate the checking of GSI sharing violation.
 
-Data Structures and Interfaces
-******************************
+.. _PCIe PTM implementation:
 
-The following APIs are common APIs provided to initialize interrupt remapping for
+PCIe Precision Time Measurement (PTM)
+*************************************
+
+The PCI Express (PCIe) specification defines a Precision Time Measurement (PTM)
+mechanism that enables time coordination and synchronization of events across
+multiple PCI components with independent local time clocks within the same
+system.  Intel supports PTM on several of its systems and devices, such as PTM
+root capabilities support on Whiskey Lake and Tiger Lake PCIe root ports, and
+PTM device support on an Intel I225-V/I225-LM family Ethernet controller.  For
+further details on PTM, please refer to the `PCIe specification
+<https://pcisig.com/specifications>`_.
+
+ACRN adds PCIe root port emulation in the hypervisor to support the PTM feature
+and emulates a simple PTM hierarchy.  ACRN enables PTM in a Guest VM if the user
+sets the ``enable_ptm`` option when passing through a device to a post-launched
+VM.  When you enable PTM, the passthrough device is connected to a virtual
+root port instead of the host bridge.
+
+By default, the :ref:`vm.PTM` option is disabled in ACRN VMs. Use the
+:ref:`ACRN configuration tool <acrn_configuration_tool>` to enable PTM
+in the scenario XML file that configures the Guest VM.
+
+Here is an example launch script that configures a supported Ethernet card for
+passthrough and enables PTM on it:
+
+.. code-block:: bash
+   :emphasize-lines: 9-11,17
+
+   declare -A passthru_vpid
+   declare -A passthru_bdf
+   passthru_vpid=(
+    ["ethptm"]="8086 15f2"
+    )
+   passthru_bdf=(
+    ["ethptm"]="0000:aa:00.0"
+    )
+   echo ${passthru_vpid["ethptm"]} > /sys/bus/pci/drivers/pci-stub/new_id
+   echo ${passthru_bdf["ethptm"]} > /sys/bus/pci/devices/${passthru_bdf["ethptm"]}/driver/unbind
+   echo ${passthru_bdf["ethptm"]} > /sys/bus/pci/drivers/pci-stub/bind
+
+   acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+      -s 3,virtio-blk,uos-test.img \
+      -s 4,virtio-net,tap0 \
+      -s 5,virtio-console,@stdio:stdio_port \
+      -s 6,passthru,a9/00/0,enable_ptm \
+      --ovmf /usr/share/acrn/bios/OVMF.fd
+
+And here is the bus hierarchy from the User VM (as shown by the ``lspci`` command)::
+
+   lspci -tv
+   -[0000:00]-+-00.0  Network Appliance Corporation Device 1275
+              +-03.0  Red Hat, Inc. Virtio block device
+              +-04.0  Red Hat, Inc. Virtio network device
+              +-05.0  Red Hat, Inc. Virtio console
+              \-06.0-[01]----00.0  Intel Corporation Device 15f2
+
+
+PTM Implementation Notes
+========================
+
+To simplify PTM support implementation, the virtual root port only supports the
+most basic PCIe configuration and operation, in addition to PTM capabilities.
+
+In Guest VM post-launched scenarios, you enable PTM by setting the
+``enable_ptm`` option for the pass through device (as shown above).
+
+.. figure:: images/PTM-hld-PTM-flow.png
+   :align: center
+   :width: 700
+   :name: ptm-flow
+
+   PTM-enabling workflow in post-launched VM
+
+As shown in :numref:`ptm-flow`, PTM is enabled in the root port during the
+hypervisor startup. The Device Model (DM) then checks whether the pass-through device
+supports PTM requestor capabilities and whether the corresponding root port
+supports PTM root capabilities, as well as some other sanity checks.  If an
+error is detected during these checks, the error will be reported and ACRN will
+not enable PTM in the Guest VM. This doesn’t prevent the user from launching the Guest
+VM and passing through the device to the Guest VM.  If no error is detected,
+the device model will use ``add_vdev`` hypercall to add a virtual root port (VRP),
+acting as the PTM root, to the Guest VM before passing through the device to the Guest VM.
+
+.. figure:: images/PTM-hld-PTM-passthru.png
+   :align: center
+   :width: 700
+   :name: ptm-vrp
+
+   PTM-enabled PCI device pass-through to post-launched VM
+
+:numref:`ptm-vrp` shows that, after enabling PTM, the passthru device connects to
+the virtual root port instead of the virtual host bridge.
+
+To use PTM in a virtualized environment, you may want to first verify that PTM
+is supported by the device and is enabled on the bare metal machine.
+If supported, follow these steps to enable PTM in the post-launched guest VM:
+
+1. Make sure that PTM is enabled in the guest kernel.  In the Linux kernel, for example,
+   set ``CONFIG_PCIE_PTM=y``.
+2. Not every PCI device supports PTM.  One example that does is the Intel I225-V
+   Ethernet controller.  If you passthrough this card to the guest VM,  make sure the guest VM
+   uses a version of the IGC driver that supports PTM.
+3. In the device model launch script, add the ``enable_ptm`` option to the
+   passthrough device.  For example:
+
+   .. code-block:: bash
+      :emphasize-lines: 5
+
+      $ acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+          -s 3,virtio-blk,uos-test.img \
+          -s 4,virtio-net,tap0 \
+          -s 5,virtio-console,@stdio:stdio_port \
+          -s 6,passthru,a9/00/0,enable_ptm \
+          --ovmf /usr/share/acrn/bios/OVMF.fd \
+
+4. You can check that PTM is correctly enabled on guest by displaying the PCI
+   bus hiearchy on the guest using the ``lspci`` command:
+
+   .. code-block:: bash
+      :emphasize-lines: 12,20
+
+      lspci -tv
+        -[0000:00]-+-00.0  Network Appliance Corporation Device 1275
+         +-03.0  Red Hat, Inc. Virtio block device
+         +-04.0  Red Hat, Inc. Virtio network device
+         +-05.0  Red Hat, Inc. Virtio console
+         \-06.0-[01]----00.0  Intel Corporation Device 15f2
+
+      sudo lspci -vv # (Only relevant output is shown)
+        00:00.0 Host bridge: Network Appliance Corporation Device 1275
+        00:06.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #5 (rev 02) (prog-if 00 [Normal decode])
+        . . .
+                Capabilities: [100 v1] Precision Time Measurement
+                        PTMCap: Requester:- Responder:+ Root:+
+                        PTMClockGranularity: 4ns
+                        PTMControl: Enabled:+ RootSelected:+
+                        PTMEffectiveGranularity: 4ns
+                Kernel driver in use: pcieport
+        01:00.0 Ethernet controller: Intel Corporation Device 15f2 (rev 01)
+        . . .
+                Capabilities: [1f0 v1] Precision Time Measurement
+                        PTMCap: Requester:+ Responder:- Root:-
+                        PTMClockGranularity: 4ns
+                        PTMControl: Enabled:+ RootSelected:-
+                        PTMEffectiveGranularity: 4ns
+                Kernel driver in use: igc
+
+
+API Data Structures and Interfaces
+**********************************
+
+The following are common APIs provided to initialize interrupt remapping for
 VMs:
 
 .. doxygenfunction:: ptirq_intx_pin_remap
