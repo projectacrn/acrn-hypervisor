@@ -38,6 +38,7 @@
 #include <vgpio.h>
 #include <asm/rtcm.h>
 #include <asm/irq.h>
+#include <uart16550.h>
 
 /* Local variables */
 
@@ -354,12 +355,17 @@ static void deny_pdevs(struct acrn_vm *sos, struct acrn_vm_pci_dev_config *pci_d
 
 static void deny_hv_owned_devices(struct acrn_vm *sos)
 {
-	uint32_t i;
+	uint16_t pio_address;
+	uint32_t nbytes, i;
 
 	const struct pci_pdev **hv_owned = get_hv_owned_pdevs();
 
 	for (i = 0U; i < get_hv_owned_pdev_num(); i++) {
 		deny_pci_bar_access(sos, hv_owned[i]);
+	}
+
+	if (get_pio_dbg_uart_cfg(&pio_address, &nbytes)) {
+		deny_guest_pio_access(sos, pio_address, nbytes);
 	}
 }
 
@@ -434,8 +440,6 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 			(void)deassign_mmio_dev(vm, &vm_config->mmiodevs[i]);
 		}
 	}
-
-	deny_hv_owned_devices(vm);
 
 	/* unmap AP trampoline code for security
 	 * This buffer is guaranteed to be page aligned.
@@ -577,6 +581,10 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 		if (is_rt_vm(vm) || !is_postlaunched_vm(vm)) {
 			vrtc_init(vm);
+		}
+
+		if (is_sos_vm(vm)) {
+			deny_hv_owned_devices(vm);
 		}
 
 		init_vpci(vm);
