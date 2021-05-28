@@ -117,15 +117,13 @@ This concludes setting up of Service VM and preparing it to boot ACRN hypervisor
 Install ACRN Hypervisor
 ***********************
 
-1. Clone ACRN repo with ``tag: acrn-2020w19.5-140000p`` or the latest
-   (main) branch. Below steps show our tested version,
+1. Clone the ACRN repo and check out the ``v2.0`` tag.
 
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor.git
       $ cd acrn-hypervisor/
-      $ git fetch --all --tags --prune
-      $ git checkout tags/acrn-2020w19.5-140000p -b acrn_on_qemu
+      $ git checkout v2.0
 
 2. Use the following command to build ACRN for QEMU,
 
