@@ -60,6 +60,42 @@ static bool is_leaf_ept_entry(uint64_t ept_entry, enum _page_table_level pt_leve
 }
 
 /*
+ * @brief Release all pages except the PML4E page of a shadow EPT
+ */
+static void free_sept_table(uint64_t *shadow_eptp)
+{
+	uint64_t *shadow_pml4e, *shadow_pdpte, *shadow_pde;
+	uint64_t i, j, k;
+
+	if (shadow_eptp) {
+		for (i = 0UL; i < PTRS_PER_PML4E; i++) {
+			shadow_pml4e = pml4e_offset(shadow_eptp, i << PML4E_SHIFT);
+			if (!is_present_ept_entry(*shadow_pml4e)) {
+				continue;
+			}
+			for (j = 0UL; j < PTRS_PER_PDPTE; j++) {
+				shadow_pdpte = pdpte_offset(shadow_pml4e, j << PDPTE_SHIFT);
+				if (!is_present_ept_entry(*shadow_pdpte) ||
+				    is_leaf_ept_entry(*shadow_pdpte, IA32E_PDPT)) {
+					continue;
+				}
+				for (k = 0UL; k < PTRS_PER_PDE; k++) {
+					shadow_pde = pde_offset(shadow_pdpte, k << PDE_SHIFT);
+					if (!is_present_ept_entry(*shadow_pde) ||
+					    is_leaf_ept_entry(*shadow_pde, IA32E_PD)) {
+						continue;
+					}
+					free_page(&sept_page_pool, (struct page *)((*shadow_pde) & EPT_ENTRY_PFN_MASK));
+				}
+				free_page(&sept_page_pool, (struct page *)((*shadow_pdpte) & EPT_ENTRY_PFN_MASK));
+			}
+			free_page(&sept_page_pool, (struct page *)((*shadow_pml4e) & EPT_ENTRY_PFN_MASK));
+			*shadow_pml4e = 0UL;
+		}
+	}
+}
+
+/*
  * @brief Convert a guest EPTP to the associated nept_desc.
  * @return struct nept_desc * if existed.
  * @return NULL if non-existed.
@@ -159,6 +195,7 @@ void put_nept_desc(uint64_t guest_eptp)
 			if (desc->ref_count == 0UL) {
 				dev_dbg(VETP_LOG_LEVEL, "[%s], nept_desc[%llx] ref[%d] shadow_eptp[%llx] guest_eptp[%llx]",
 						__func__, desc, desc->ref_count, desc->shadow_eptp, desc->guest_eptp);
+				free_sept_table((void *)(desc->shadow_eptp & PAGE_MASK));
 				free_page(&sept_page_pool, (struct page *)(desc->shadow_eptp & PAGE_MASK));
 				/* Flush the hardware TLB */
 				invept((void *)(desc->shadow_eptp & PAGE_MASK));
