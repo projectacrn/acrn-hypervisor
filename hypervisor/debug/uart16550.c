@@ -276,3 +276,16 @@ bool is_pci_dbg_uart(union pci_bdf bdf_value)
 
 	return ret;
 }
+
+bool get_pio_dbg_uart_cfg(uint16_t *pio_address, uint32_t *nbytes)
+{
+	bool ret = false;
+
+	if (uart.enabled && (uart.type == PIO)) {
+		*pio_address = uart.port_address;
+		*nbytes = 8U;
+		ret = true;
+	}
+
+	return ret;
+}
