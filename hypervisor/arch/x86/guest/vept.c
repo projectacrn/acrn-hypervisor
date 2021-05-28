@@ -207,33 +207,82 @@ void put_nept_desc(uint64_t guest_eptp)
 	}
 }
 
+static uint64_t get_leaf_entry(uint64_t gpa, uint64_t *eptp, enum _page_table_level *level)
+{
+	enum _page_table_level pt_level = IA32E_PML4;
+	uint16_t offset;
+	uint64_t ept_entry = 0UL;
+	uint64_t *p_ept_entry = eptp;
+
+	while (pt_level <= IA32E_PT) {
+		offset = PAGING_ENTRY_OFFSET(gpa, pt_level);
+		ept_entry = p_ept_entry[offset];
+
+		if (is_present_ept_entry(ept_entry)) {
+			if (is_leaf_ept_entry(ept_entry, pt_level)) {
+				*level = pt_level;
+				break;
+			}
+		} else {
+			ept_entry = 0UL;
+			pr_err("%s, GPA[%llx] is invalid!", __func__, gpa);
+			break;
+		}
+
+		p_ept_entry = (uint64_t *)(ept_entry & EPT_ENTRY_PFN_MASK);
+		pt_level += 1;
+	}
+
+	return ept_entry;
+}
+
 /**
  * @brief Shadow a guest EPT entry
  * @pre vcpu != NULL
  */
 static uint64_t generate_shadow_ept_entry(struct acrn_vcpu *vcpu, uint64_t guest_ept_entry,
-				    enum _page_table_level guest_level)
+				    enum _page_table_level guest_ept_level)
 {
-	uint64_t shadow_ept_entry;
+	uint64_t shadow_ept_entry = 0UL;
+	uint64_t ept_entry;
+	enum _page_table_level ept_level;
 
 	/*
-	 * Clone a shadow EPT entry w/o physical address bits from guest EPT entry
-	 * TODO:
-	 *   Before the cloning, host EPT mapping audit is a necessary.
+	 * Create a shadow EPT entry
+	 * We only support 4K page for guest EPT. So it's simple to create a shadow EPT entry
+	 * for it. The rules are:
+	 *   > Find the host EPT leaf entry of address in ept_entry[M-1:12], named as ept_entry
+	 *   > Minimize the attribute bits (according to ept_entry and guest_ept_entry) and
+	 *     set in shadow EPT entry shadow_ept_entry.
+	 *   > Set the HPA of guest_ept_entry[M-1:12] to shadow_ept_entry.
 	 */
-	shadow_ept_entry = guest_ept_entry & ~EPT_ENTRY_PFN_MASK;
-	if (is_leaf_ept_entry(guest_ept_entry, guest_level)) {
-		/*
-		 * Use guest EPT entry HPA in shadow EPT entry
-		 */
-		shadow_ept_entry |= gpa2hpa(vcpu->vm, (guest_ept_entry & EPT_ENTRY_PFN_MASK));
+	if (is_leaf_ept_entry(guest_ept_entry, guest_ept_level)) {
+		ASSERT(guest_ept_level == IA32E_PT, "Only support 4K page for guest EPT!");
+		ept_entry = get_leaf_entry((guest_ept_entry & EPT_ENTRY_PFN_MASK), get_ept_entry(vcpu->vm), &ept_level);
+		if (ept_entry != 0UL) {
+			/*
+			 * TODO:
+			 * Now, take guest EPT entry attributes directly. We need take care
+			 * of memory type, permission bits, reserved bits when we merge EPT
+			 * entry and guest EPT entry.
+			 *
+			 * Just keep the code skeleton here for extend.
+			 */
+			shadow_ept_entry = guest_ept_entry & ~EPT_ENTRY_PFN_MASK;
+
+			/*
+			 * Set the address.
+			 * gpa2hpa() should be successful as ept_entry already be found.
+			 */
+			shadow_ept_entry |= gpa2hpa(vcpu->vm, (guest_ept_entry & EPT_ENTRY_PFN_MASK));
+		}
 	} else {
 		/* Use a HPA of a new page in shadow EPT entry */
+		shadow_ept_entry = guest_ept_entry & ~EPT_ENTRY_PFN_MASK;
 		shadow_ept_entry |= hva2hpa((void *)alloc_page(&sept_page_pool)) & EPT_ENTRY_PFN_MASK;
 	}
 
 	return shadow_ept_entry;
-
 }
 
 /*
@@ -378,6 +427,15 @@ bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 			/* Create a shadow EPT entry */
 			shadow_ept_entry = generate_shadow_ept_entry(vcpu, guest_ept_entry, pt_level);
 			p_shadow_ept_page[offset] = shadow_ept_entry;
+			if (shadow_ept_entry == 0UL) {
+				/*
+				 * TODO:
+				 * For invalid GPA in guest EPT entries, now reflect the violation to L1 VM.
+				 * Need to revisit this and evaluate if need to emulate the invalid GPA
+				 * access of L2 in HV directly.
+				 */
+				break;
+			}
 		}
 
 		/* Shadow EPT entry exists */

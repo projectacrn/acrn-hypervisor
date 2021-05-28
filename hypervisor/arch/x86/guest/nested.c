@@ -166,7 +166,7 @@ void init_vmx_msrs(struct acrn_vcpu *vcpu)
 		 * Hide 5 level EPT capability
 		 * Hide accessed and dirty flags for EPT
 		 */
-		msr_value &= ~(VMX_EPT_PAGE_WALK_5 | VMX_EPT_AD);
+		msr_value &= ~(VMX_EPT_PAGE_WALK_5 | VMX_EPT_AD | VMX_EPT_2MB_PAGE | VMX_EPT_1GB_PAGE);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_EPT_VPID_CAP, msr_value);
 
 		/* For now passthru the value from physical MSR to L1 guest */
