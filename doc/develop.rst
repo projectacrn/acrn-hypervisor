@@ -75,6 +75,7 @@ Enable ACRN Features
    tutorials/acrn-secure-boot-with-grub
    tutorials/pre-launched-rt
    tutorials/enable_ivshmem
+   tutorials/enable_ptm
 
 Debug
 *****

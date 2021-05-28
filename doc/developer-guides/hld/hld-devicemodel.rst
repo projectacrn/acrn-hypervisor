@@ -789,6 +789,7 @@ the bus hierarchy would be:
    00:04.0 Ethernet controller: Red Hat, Inc. Virtio network device
    00:05.0 Serial controller: Red Hat, Inc. Virtio console
 
+
 ACPI Virtualization
 *******************
 
