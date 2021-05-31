@@ -125,6 +125,8 @@ def dump_execute(cmd, desc, config):
     res = cmd_execute(cmd)
     while True:
         line = res.stdout.readline().decode('ascii')
+        line = line.replace("&", "&amp;").replace('"', "&quot;") \
+            .replace("'", "&apos;").replace("<", "&lt;").replace(">", "&gt;")
 
         if not line:
             break
