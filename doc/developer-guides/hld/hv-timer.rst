@@ -33,6 +33,9 @@ Interfaces Design
 .. doxygenfunction:: timer_expired
    :project: Project ACRN
 
+.. doxygenfunction:: timer_is_started
+   :project: Project ACRN
+
 .. doxygenfunction:: add_timer
    :project: Project ACRN
 
@@ -45,6 +48,12 @@ Interfaces Design
 .. doxygenfunction:: calibrate_tsc
    :project: Project ACRN
 
+.. doxygenfunction:: cpu_ticks
+   :project: Project ACRN
+
+.. doxygenfunction:: cpu_tickrate
+   :project: Project ACRN
+
 .. doxygenfunction:: us_to_ticks
    :project: Project ACRN
 
@@ -52,15 +61,6 @@ Interfaces Design
    :project: Project ACRN
 
 .. doxygenfunction:: ticks_to_ms
-   :project: Project ACRN
-
-.. doxygenfunction:: rdtsc
-   :project: Project ACRN
-
-.. doxygenfunction:: get_tsc_khz
-   :project: Project ACRN
-
-.. doxygenfunction:: timer_is_started
    :project: Project ACRN
 
 .. doxygenfunction:: udelay

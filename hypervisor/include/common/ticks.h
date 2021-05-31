@@ -14,12 +14,16 @@
 /**
  * @brief Read current CPU tick count.
  *
+ * @remark On x86, this is the Time Stamp Counter (TSC) value of the current logical CPU.
+ *
  * @return CPU ticks
  */
 uint64_t cpu_ticks(void);
 
 /**
  * @brief  Get CPU tick frequency in KHz.
+ *
+ * @remark On x86, this is the Time Stamp Counter (TSC) frequency of the current logical CPU.
  *
  * @return CPU frequency (KHz)
  */
