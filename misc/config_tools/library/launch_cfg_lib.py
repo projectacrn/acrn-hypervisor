@@ -40,9 +40,10 @@ PASSTHRU_DEVS = ['usb_xdci', 'ipu', 'ipu_i2c', 'cse', 'audio', 'sata',
 
 PT_SLOT = {
         "hostbridge":0,
-        "lpc":1,
+        "isa":1,
         "pci-gvt":2,
         "virtio-blk":3,
+        "lpc":31,
     }
 
 
@@ -423,17 +424,8 @@ def get_slot(bdf_list, dev):
         if not bdf_list[p_id]:
             slot_list[p_id] = ''
         else:
-            bus = int(bdf_list[p_id][0:2], 16)
-            slot = int(bdf_list[p_id][3:5], 16)
-            fun = int(bdf_list[p_id][6:7], 16)
-            slot_fun = str(bus) + ":" +  str(slot) + ":" + str(fun)
-            if bus != 0:
-                slot_fun = virtual_dev_slot(dev)
-                PT_SLOT[dev] = slot_fun
-            else:
-                # add already used slot for pass-throught devices to avoid conflict with virtio devices
-                PT_SLOT[dev] = slot
-
+            slot_fun = virtual_dev_slot(dev)
+            PT_SLOT[dev] = slot_fun
             slot_list[p_id] = slot_fun
 
     return slot_list
