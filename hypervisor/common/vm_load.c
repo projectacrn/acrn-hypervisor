@@ -250,8 +250,10 @@ static void load_sw_modules(struct acrn_vm *vm, uint64_t load_params_gpa)
 		(uint64_t)sw_kernel->kernel_load_addr, sw_kernel->kernel_size);
 
 	if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
-
-		load_sw_module(vm, ramdisk_info);
+		/* Don't need to load ramdisk if src_addr and load_addr are pointed to same place. */
+		if (gpa2hva(vm, (uint64_t)ramdisk_info->load_addr) != ramdisk_info->src_addr) {
+			load_sw_module(vm, ramdisk_info);
+		}
 
 		bootargs_info->load_addr = (void *)BZIMG_CMDLINE_GPA(load_params_gpa);
 
