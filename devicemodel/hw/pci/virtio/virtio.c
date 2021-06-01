@@ -603,6 +603,9 @@ vq_endchains(struct virtio_vq_info *vq, int used_all_avail)
 	uint16_t event_idx, new_idx, old_idx;
 	int intr;
 
+	if (!vq || !vq->used)
+		return;
+
 	/*
 	 * Interrupt generation: if we're using EVENT_IDX,
 	 * interrupt if we've crossed the event threshold.
