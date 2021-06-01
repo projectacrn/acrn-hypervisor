@@ -57,6 +57,13 @@ def gen_pre_launch_vm(scenario_items, config):
             print("#define VM{0}_CONFIG_MEM_SIZE_HPA2        {1}UL".format(
                 vm_i, vm_info.mem_info.mem_size_hpa2[vm_i]), file=config)
 
+        start_hpa3 = vm_info.mem_info.mem_start_hpa3.get(vm_i, '0')
+        size_hpa3 = vm_info.mem_info.mem_size_hpa3.get(vm_i, '0')
+        print("#define VM{0}_CONFIG_MEM_START_HPA3       {1}UL".format(
+            vm_i, start_hpa3), file=config)
+        print("#define VM{0}_CONFIG_MEM_SIZE_HPA3        {1}UL".format(
+            vm_i, size_hpa3), file=config)
+
         print("", file=config)
         vm_i += 1
 

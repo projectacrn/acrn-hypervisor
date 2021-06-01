@@ -150,6 +150,8 @@ class MemInfo:
     mem_size = {}
     mem_start_hpa2 = {}
     mem_size_hpa2 = {}
+    mem_start_hpa3 = {}
+    mem_size_hpa3 = {}
 
     def __init__(self, scenario_file):
         self.scenario_info = scenario_file
@@ -167,6 +169,10 @@ class MemInfo:
             self.scenario_info, "memory", "start_hpa2")
         self.mem_size_hpa2 = common.get_leaf_tag_map(
             self.scenario_info, "memory", "size_hpa2")
+        self.mem_start_hpa3 = common.get_leaf_tag_map(
+            self.scenario_info, "memory", "start_hpa3")
+        self.mem_size_hpa3 = common.get_leaf_tag_map(
+            self.scenario_info, "memory", "size_hpa3")
 
     def check_item(self):
         """
@@ -177,6 +183,8 @@ class MemInfo:
         scenario_cfg_lib.mem_size_check(self.mem_size, "memory", "size")
         scenario_cfg_lib.mem_start_hpa_check(self.mem_start_hpa2, "memory", "start_hpa2")
         scenario_cfg_lib.mem_size_check(self.mem_size_hpa2, "memory", "size_hpa2")
+        scenario_cfg_lib.mem_start_hpa_check(self.mem_start_hpa3, "memory", "start_hpa3")
+        scenario_cfg_lib.mem_size_check(self.mem_size_hpa3, "memory", "size_hpa3")
 
 
 class CfgPci:
