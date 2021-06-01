@@ -94,6 +94,10 @@ struct acrn_vm_mem_config {
 	uint64_t start_hpa2;	/* Start of second HPA for non-contiguous allocations in VM memory configuration,
 				   for pre-launched VMs only */
 	uint64_t size_hpa2;	/* Size of second HPA for non-contiguous allocations in VM memory configuration */
+
+	uint64_t start_hpa3;	/* Start of third HPA for non-contiguous allocations in VM memory configuration,
+				   for pre-launched VMs only */
+	uint64_t size_hpa3;	/* Size of third HPA for non-contiguous allocations in VM memory configuration */
 };
 
 struct target_vuart {

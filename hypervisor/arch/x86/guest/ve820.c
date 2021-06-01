@@ -177,6 +177,22 @@ static inline uint64_t add_ram_entry(struct e820_entry *entry, uint64_t gpa, uin
 	return round_pde_up(entry->baseaddr + entry->length);
 }
 
+static uint64_t ve820_find_max_avail_gpa(struct acrn_vm *vm, uint32_t entry_idx)
+{
+	uint32_t i;
+	uint64_t max_end_gpa = 0UL;
+
+	for (i = 0U; i < entry_idx; i++) {
+		const struct e820_entry *entry = &(vm->e820_entries[i]);
+
+		if ((entry->baseaddr + entry->length) > max_end_gpa) {
+			max_end_gpa = entry->baseaddr + entry->length;
+		}
+	}
+
+	return max_end_gpa;
+}
+
 /**
  * @pre vm != NULL
  *
@@ -251,13 +267,20 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 			hpa2_lo_size = remaining_hpa2_size;
 			remaining_hpa2_size = 0;
 		}
-		(void)add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa2_lo_size);
+
+		gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa2_lo_size);
 		entry_idx++;
 	}
 
 	/* check whether need an entry for remaining hpa2 */
 	if (remaining_hpa2_size > 0UL) {
 		gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, remaining_hpa2_size);
+		entry_idx++;
+	}
+
+	if (vm_config->memory.size_hpa3 > 0UL) {
+		gpa_start = ve820_find_max_avail_gpa(vm, entry_idx);
+		gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, vm_config->memory.size_hpa3);
 		entry_idx++;
 	}
 
