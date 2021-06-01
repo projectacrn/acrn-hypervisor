@@ -28,14 +28,16 @@ struct zero_page {
 		uint32_t ramdisk_size;	/* 0x21c */
 		uint8_t hdr_pad3[0x8];	/* 0x220 */
 		uint32_t bootargs_addr;	/* 0x228 */
-		uint8_t hdr_pad4[0x8];	/* 0x22c */
+		uint32_t initrd_addr_max;	/* 0x22c */
+		uint32_t kernel_alignment;	/* 0x230 */
 		uint8_t relocatable_kernel; /* 0x234 */
 		uint8_t hdr_pad5[0x13];    /* 0x235 */
 		uint32_t payload_offset;/* 0x248 */
 		uint32_t payload_length;/* 0x24c */
 		uint8_t hdr_pad6[0x8];	/* 0x250 */
 		uint64_t pref_addr;     /* 0x258 */
-		uint8_t hdr_pad7[8];    /* 0x260 */
+		uint32_t init_size;    /* 0x260 */
+		uint8_t hdr_pad7[4];    /* 0x264 */
 	} __packed hdr;
 
 	uint8_t pad3[0x68];	/* 0x268 */
