@@ -803,7 +803,7 @@ basl_fwrite_tpm2(FILE *fp, struct vmctx *ctx)
 
 	EFPRINTF(fp, "[0002]\t\tPlatform Class : 0000\n");
 	EFPRINTF(fp, "[0002]\t\tReserved : 0000\n");
-	EFPRINTF(fp, "[0008]\t\tControl Address : %016lX\n", (long)CRB_REGS_CTRL_REQ);
+	EFPRINTF(fp, "[0008]\t\tControl Address : %016lX\n", get_tpm_crb_mmio_addr() + (long)CRB_REGS_CTRL_REQ);
 	EFPRINTF(fp, "[0004]\t\tStart Method : 00000007\n");
 
 	EFPRINTF(fp, "[0012]\t\tMethod Parameters : 00 00 00 00 00 00 00 00 00 00 00 00\n");
