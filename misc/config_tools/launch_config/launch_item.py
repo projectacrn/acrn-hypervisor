@@ -37,6 +37,7 @@ class AcrnDmArgs:
         self.args["communication_vuarts"] = common.get_leaf_tag_map(self.launch_info, "communication_vuarts", "communication_vuart")
         self.args["console_vuart"] = common.get_leaf_tag_map(self.launch_info, "console_vuart")
         self.args["enable_ptm"] = common.get_leaf_tag_map(self.launch_info, "enable_ptm")
+        self.args["allow_trigger_s5"] = common.get_leaf_tag_map(self.launch_info, "allow_trigger_s5")
 
     def check_item(self):
         (rootfs, num) = board_cfg_lib.get_rootfs(self.board_info)
@@ -45,7 +46,8 @@ class AcrnDmArgs:
         launch_cfg_lib.mem_size_check(self.args["mem_size"], "mem_size")
         launch_cfg_lib.args_aval_check(self.args["vbootloader"], "vbootloader", launch_cfg_lib.BOOT_TYPE)
         launch_cfg_lib.args_aval_check(self.args["vuart0"], "vuart0", launch_cfg_lib.DM_VUART0)
-        launch_cfg_lib.args_aval_check(self.args["enable_ptm"], "enable_ptm", launch_cfg_lib.PTM)
+        launch_cfg_lib.args_aval_check(self.args["enable_ptm"], "enable_ptm", launch_cfg_lib.y_n)
+        launch_cfg_lib.args_aval_check(self.args["allow_trigger_s5"], "allow_trigger_s5", launch_cfg_lib.y_n)
         cpu_affinity = launch_cfg_lib.uos_cpu_affinity(self.args["cpu_affinity"])
         err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.launch_info, cpu_affinity, "pcpu_id")
         launch_cfg_lib.ERR_LIST.update(err_dic)
