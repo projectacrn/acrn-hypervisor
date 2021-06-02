@@ -221,8 +221,6 @@ void init_vpci(struct acrn_vm *vm)
 	struct pci_mmcfg_region *pci_mmcfg;
 
 	vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
-	/* Build up vdev list for vm */
-	vpci_init_vdevs(vm);
 
 	vm_config = get_vm_config(vm->vm_id);
 	/* virtual PCI MMCONFIG for SOS is same with the physical value */
@@ -242,6 +240,9 @@ void init_vpci(struct acrn_vm *vm)
 		vm->vpci.res64.start = UOS_VIRT_PCI_MEMBASE64;
 		vm->vpci.res64.end = UOS_VIRT_PCI_MEMLIMIT64;
 	}
+
+	/* Build up vdev list for vm */
+	vpci_init_vdevs(vm);
 
 	register_mmio_emulation_handler(vm, vpci_mmio_cfg_access, vm->vpci.pci_mmcfg.address,
 		vm->vpci.pci_mmcfg.address + get_pci_mmcfg_size(&vm->vpci.pci_mmcfg), &vm->vpci, false);
