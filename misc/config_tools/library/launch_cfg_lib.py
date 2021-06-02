@@ -15,7 +15,7 @@ ERR_LIST = {}
 BOOT_TYPE = ['no', 'vsbl', 'ovmf']
 RTOS_TYPE = ['no', 'Soft RT', 'Hard RT']
 DM_VUART0 = ['Disable', 'Enable']
-PTM = ['y', 'n']
+y_n = ['y', 'n']
 UOS_TYPES = ['CLEARLINUX', 'ANDROID', 'ALIOS', 'PREEMPT-RT LINUX', 'VXWORKS', 'WINDOWS', 'ZEPHYR', 'YOCTO', 'UBUNTU', 'GENERIC LINUX']
 LINUX_LIKE_OS = ['CLEARLINUX', 'PREEMPT-RT LINUX', 'YOCTO', 'UBUNTU', 'GENERIC LINUX']
 
@@ -52,8 +52,8 @@ PM_CHANNEL_DIC = {
     None:'',
     'IOC':'--pm_notify_channel ioc',
     'PowerButton':'--pm_notify_channel power_button',
-    'vuart1(pty)':'--pm_notify_channel uart \\\n   --pm_by_vuart pty,/run/acrn/life_mngr_$vm_name \\\n   -l com2,/run/acrn/life_mngr_$vm_name',
-    'vuart1(tty)':'--pm_notify_channel uart --pm_by_vuart tty,/dev/',
+    'vuart1(pty)':'--pm_by_vuart pty,/run/acrn/life_mngr_$vm_name \\\n   -l com2,/run/acrn/life_mngr_$vm_name',
+    'vuart1(tty)':'--pm_by_vuart tty,/dev/',
 }
 
 MOUNT_FLAG_DIC = {}
@@ -67,7 +67,7 @@ def usage(file_name):
     print('board_info_file :  file name of the board info')
     print('scenario_info_file :  file name of the scenario info')
     print('launch_info_file :  file name of the launch info')
-    print('uosid :  this is the relateive id for post launch vm in scenario info XML:[1..max post launch vm]')
+    print('uosid :  this is the relative id for post launch vm in scenario info XML:[1..max post launch vm]')
     print('output folder :  path to acrn-hypervisor_folder')
 
 
