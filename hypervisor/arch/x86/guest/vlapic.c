@@ -1469,9 +1469,6 @@ static int32_t vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_
 	uint32_t data32 = (uint32_t)data;
 	int32_t ret = 0;
 
-	ASSERT(((offset & 0xfU) == 0U) && (offset < PAGE_SIZE),
-		"%s: invalid offset %#x", __func__, offset);
-
 	dev_dbg(DBG_LEVEL_VLAPIC, "vlapic write offset %#x, data %#lx", offset, data);
 
 	if (offset <= sizeof(*lapic)) {
