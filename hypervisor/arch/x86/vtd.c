@@ -1398,7 +1398,7 @@ void dmar_free_irte(const struct intr_source *intr_src, uint16_t index)
 		dmar_unit = ioapic_to_dmaru(intr_src->src.ioapic_id, &sid);
 	}
 
-	if (is_dmar_unit_valid(dmar_unit, sid)) {
+	if (is_dmar_unit_valid(dmar_unit, sid) && (index < CONFIG_MAX_IR_ENTRIES)) {
 		ir_table = (union dmar_ir_entry *)hpa2hva(dmar_unit->ir_table_addr);
 		ir_entry = ir_table + index;
 		ir_entry->bits.remap.present = 0x0UL;
