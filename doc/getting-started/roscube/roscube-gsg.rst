@@ -115,16 +115,15 @@ Configure Hypervisor
    .. code-block:: bash
 
      sudo apt install -y cpuid msr-tools
-     cd ~/acrn/acrn-hypervisor/misc/acrn-config/target/
-     sudo python3 board_parser.py ros-cube-cfl
-     cp ~/acrn/acrn-hypervisor/misc/acrn-config/target/out/ros-cube-cfl.xml \
-       ~/acrn/acrn-hypervisor/misc/acrn-config/xmls/board-xmls/
+     cd ~/acrn/acrn-hypervisor/misc/config_tools/board_inspector
+     sudo python3 cli.py ros-cube-cfl
+   .. note:: Board XML generated as ros-cube-cfl.xml under the working directory.
 
 #. Run ACRN configuration app and it will open a browser page.
 
    .. code-block:: bash
 
-     cd ~/acrn/acrn-hypervisor/misc/acrn-config/config_app
+     cd ~/acrn/acrn-hypervisor/misc/config_tools/config_app
      sudo pip3 install -r requirements
      python3 app.py
 

@@ -115,13 +115,13 @@ toolset.
 
       | **Native Linux requirement:**
       | **Release:** Ubuntu 18.04+
-      | **Tools:** cpuid, rdmsr, lspci, dmidecode (optional)
+      | **Tools:** cpuid, rdmsr, lspci, lxml, dmidecode (optional)
       | **Kernel cmdline:** "idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
 
-   #. Copy the ``target`` directory into the target file system and then run the
-      ``sudo python3 board_parser.py $(BOARD)`` command.
+   #. Copy the ``board_inspector`` directory into the target file system and then run the
+      ``sudo python3 cli.py $(BOARD)`` command.
    #. A ``$(BOARD).xml`` that includes all needed hardware-specific information
-      is generated in the ``./out/`` directory. Here, ``$(BOARD)`` is the
+      is generated under the current working directory. Here, ``$(BOARD)`` is the
       specified board name.
 
 #. Customize your needs.
