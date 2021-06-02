@@ -73,7 +73,12 @@ int parse_pt_acpidev(char *opt)
 	/* TODO: support acpi dev framework, remove these TPM hard code */
 	if (strncmp(opt, "MSFT0101", 8) == 0) {
 		strncpy(mmio_devs[mmio_dev_idx].name, "MSFT0101", 8);
+		/* TODO: We would parse the /proc/iomem to get the corresponding resources */
 		mmio_devs[mmio_dev_idx].dev.base_hpa = 0xFED40000UL;
+		/* FIXME: The 0xFED40000 doesn't conflict with other mmio or system memory so far.
+		 * This need to be fixed by redesign the mmio_dev_alloc_gpa_resource32().
+		 */
+		mmio_devs[mmio_dev_idx].dev.base_gpa = 0xFED40000UL;
 		mmio_devs[mmio_dev_idx].dev.size = 0x00005000UL;
 		mmio_dev_idx++;
 		pt_tpm2 = true;
@@ -126,10 +131,16 @@ int init_mmio_dev(struct vmctx *ctx, struct mmio_dev_ops *ops, struct acrn_mmiod
 	int ret;
 	uint32_t base;
 
-	ret = mmio_dev_alloc_gpa_resource32(&base, mmiodev->size);
-	if (ret < 0)
-		return ret;
-	mmiodev->base_gpa = base;
+	if (mmiodev->base_gpa == 0UL) {
+	/* FIXME: The mmio_dev_alloc_gpa_resource32 needs to add one new parameter to indicate
+	 * if the caller needs one specific GPA instead of dynamic allocation.
+	 */
+		ret = mmio_dev_alloc_gpa_resource32(&base, mmiodev->size);
+		if (ret < 0)
+			return ret;
+		mmiodev->base_gpa = base;
+	}
+
 	return ops->init(ctx, mmiodev);
 }
 
