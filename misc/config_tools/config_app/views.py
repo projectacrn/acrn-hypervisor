@@ -676,11 +676,9 @@ def upload_board_info():
             if board_type not in board_type_list:
                 info = board_type
                 os.makedirs(os.path.join(config_path, board_type))
-                copyfile(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', filename),
-                        os.path.join(os.path.join(config_path, board_type), filename))
                 for generic_name in os.listdir(os.path.join(config_path, 'generic_board')):
                     generic_file = os.path.join(config_path, 'generic_board', generic_name)
-                    if os.path.isfile(generic_file) and generic_name not in ['generic_board.xml']:
+                    if os.path.isfile(generic_file):
                         new_file = os.path.join(config_path, board_type, generic_name)
                         copyfile(generic_file, new_file)
                         xml_config = XmlConfig(os.path.join(current_app.config.get('CONFIG_PATH'),
