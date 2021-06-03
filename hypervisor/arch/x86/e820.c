@@ -10,6 +10,7 @@
 #include <asm/e820.h>
 #include <asm/mmu.h>
 #include <boot.h>
+#include <efi_mmap.h>
 #include <logmsg.h>
 #include <asm/guest/ept.h>
 
@@ -97,20 +98,101 @@ uint64_t e820_alloc_memory(uint32_t size_arg, uint64_t max_addr)
 
 	return ret;
 }
+
+static void init_e820_from_efi_mmap(void)
+{
+	uint32_t i, e820_idx = 0U;
+	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
+	const struct efi_memory_desc *efi_mmap_entry = get_efi_mmap_entry();
+
+	for (i = 0U; i < get_efi_mmap_entries_count(); i++) {
+		if (e820_idx >= E820_MAX_ENTRIES) {
+			pr_err("Too many efi memmap entries !");
+			break;
+		}
+
+		hv_e820[e820_idx].baseaddr = efi_mmap_entry[i].phys_addr;
+		hv_e820[e820_idx].length = efi_mmap_entry[i].num_pages * PAGE_SIZE;
+		if (hv_e820[e820_idx].baseaddr >= top_addr_space) {
+			hv_e820[e820_idx].length = 0UL;
+		} else {
+			if ((hv_e820[e820_idx].baseaddr + hv_e820[e820_idx].length) > top_addr_space) {
+				hv_e820[e820_idx].length = top_addr_space - hv_e820[e820_idx].baseaddr;
+			}
+		}
+
+		/* The EFI BOOT Service releated regions need to be set to reserved and avoid being touched by
+		 * hypervisor, because at least below software modules rely on them:
+		 * 1. EFI ESRT(The EFI System Resource Table) which used for UEFI firmware upgrade;
+		 * 2. Image resource in ACPI BGRT(Boottime Graphics Resource Table) which used for boot time logo;
+		 */
+		switch (efi_mmap_entry[i].type)	{
+		case EFI_LOADER_CODE:
+		case EFI_LOADER_DATA:
+		case EFI_CONVENTIONAL_MEMORY:
+			if ((efi_mmap_entry[i].attribute & EFI_MEMORY_WB) != 0UL) {
+				hv_e820[e820_idx].type = E820_TYPE_RAM;
+			} else {
+				hv_e820[e820_idx].type = E820_TYPE_RESERVED;
+			}
+			break;
+		case EFI_UNUSABLE_MEMORY:
+			hv_e820[e820_idx].type = E820_TYPE_UNUSABLE;
+			break;
+		case EFI_ACPI_RECLAIM_MEMORY:
+			hv_e820[e820_idx].type = E820_TYPE_ACPI_RECLAIM;
+			break;
+		case EFI_ACPI_MEMORY_NVS:
+			hv_e820[e820_idx].type = E820_TYPE_ACPI_NVS;
+			break;
+		/* case EFI_RESERVED_MEMORYTYPE:
+		 * case EFI_BOOT_SERVICES_CODE:
+		 * case EFI_BOOT_SERVICES_DATA:
+		 * case EFI_RUNTIME_SERVICES_CODE:
+		 * case EFI_RUNTIME_SERVICES_DATA:
+		 * case EFI_MEMORYMAPPED_IO:
+		 * case EFI_MEMORYMAPPED_IOPORTSPACE:
+		 * case EFI_PALCODE:
+		 * case EFI_PERSISTENT_MEMORY:
+		 */
+		default:
+			hv_e820[e820_idx].type = E820_TYPE_RESERVED;
+			break;
+		}
+
+		/* Given the efi memmap has been sorted, the hv_e820[] is also sorted.
+		 * Then the algorithm is very simple, just merge with previous mmap entry
+		 * if type is same and base addr is continuous.
+		 */
+		if ((e820_idx > 0U) && (hv_e820[e820_idx].type == hv_e820[e820_idx - 1U].type)
+				&& (hv_e820[e820_idx].baseaddr ==
+					(hv_e820[e820_idx - 1U].baseaddr
+					+ hv_e820[e820_idx - 1U].length))) {
+			hv_e820[e820_idx - 1U].length += hv_e820[e820_idx].length;
+		} else {
+			dev_dbg(DBG_LEVEL_E820, "efi mmap hv_e820[%d]: type: 0x%x Base: 0x%016lx length: 0x%016lx",
+			    e820_idx, hv_e820[e820_idx].type, hv_e820[e820_idx].baseaddr, hv_e820[e820_idx].length);
+			e820_idx ++;
+		}
+
+	}
+
+	hv_e820_entries_nr = e820_idx;
+
+}
+
 /* HV read multiboot header to get e820 entries info and calc total RAM info */
-void init_e820(void)
+static void init_e820_from_mmap(struct acrn_boot_info *abi)
 {
 	uint32_t i;
 	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 
-	struct acrn_boot_info *abi = get_acrn_boot_info();
 	struct abi_mmap *mmap = abi->mmap_entry;
 
 	hv_e820_entries_nr = abi->mmap_entries;
 
 	dev_dbg(DBG_LEVEL_E820, "mmap addr 0x%x entries %d\n",
 		abi->mmap_entry, hv_e820_entries_nr);
-
 
 	for (i = 0U; i < hv_e820_entries_nr; i++) {
 		if (mmap[i].baseaddr >= top_addr_space) {
@@ -125,9 +207,20 @@ void init_e820(void)
 		hv_e820[i].length = mmap[i].length;
 		hv_e820[i].type = mmap[i].type;
 
-		dev_dbg(DBG_LEVEL_E820, "mmap table: %d type: 0x%x", i, mmap[i].type);
-		dev_dbg(DBG_LEVEL_E820, "Base: 0x%016lx length: 0x%016lx\n",
-			mmap[i].baseaddr, mmap[i].length);
+		dev_dbg(DBG_LEVEL_E820, "mmap hv_e820[%d]: type: 0x%x Base: 0x%016lx length: 0x%016lx", i,
+			mmap[i].type, mmap[i].baseaddr, mmap[i].length);
+	}
+}
+
+void init_e820(void)
+{
+	struct acrn_boot_info *abi = get_acrn_boot_info();
+
+	if (boot_from_uefi(abi)) {
+		init_efi_mmap_entries(&abi->uefi_info);
+		init_e820_from_efi_mmap();
+	} else {
+		init_e820_from_mmap(abi);
 	}
 }
 
