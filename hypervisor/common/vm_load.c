@@ -75,8 +75,18 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 	if (is_sos_vm(vm)) {
 		struct acrn_boot_info *abi = get_acrn_boot_info();
 
-		(void)memcpy_s(&(zeropage->boot_efi_info), sizeof(zeropage->boot_efi_info),
-				&(abi->mi_efi_info), sizeof(abi->mi_efi_info));
+		if (boot_from_uefi(abi)) {
+			struct efi_info *sos_efi_info = &zeropage->boot_efi_info;
+
+			sos_efi_info->efi_loader_signature = 0x34364c45; /* "EL64" */
+			sos_efi_info->efi_memdesc_version = abi->efi_info.memdesc_version;
+			sos_efi_info->efi_memdesc_size = abi->efi_info.memdesc_size;
+			sos_efi_info->efi_memmap_size = abi->efi_info.memmap_size;
+			sos_efi_info->efi_memmap = (uint32_t)(uint64_t)abi->efi_info.memmap;
+			sos_efi_info->efi_memmap_hi = (uint32_t)((uint64_t)abi->efi_info.memmap >> 32U);
+			sos_efi_info->efi_systab = (uint32_t)(uint64_t)abi->efi_info.system_table;
+			sos_efi_info->efi_systab_hi = (uint32_t)((uint64_t)abi->efi_info.system_table >> 32U);
+		}
 	}
 #endif
 	/* copy part of the header into the zero page */
