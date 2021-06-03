@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/pgtable.h>
+#include <asm/mmu.h>
 #include <boot.h>
 #include <rtl.h>
 #include <logmsg.h>
@@ -39,11 +39,7 @@ int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi)
 		abi_status = -EINVAL;
 	}
 
-#ifdef CONFIG_MULTIBOOT2
-	if ((abi->mi_efi_info.efi_systab == 0U) && (abi->mi_efi_info.efi_systab_hi == 0U)) {
-		pr_err("no multiboot2 uefi info found!");
-	}
-#endif
+	printf("%s environment detected.\n", boot_from_uefi(abi) ? "UEFI" : "Non-UEFI");
 
 	if (abi->loader_name[0] == '\0') {
 		pr_err("no bootloader name found!");

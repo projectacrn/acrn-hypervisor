@@ -43,6 +43,14 @@ struct abi_mmap {
 	uint32_t		type;
 };
 
+struct abi_efi_info {
+	const void		*system_table;
+	const void		*memmap;
+	uint32_t		memmap_size;
+	uint32_t		memdesc_size;
+	uint32_t		memdesc_version;
+};
+
 struct acrn_boot_info {
 
 	const char		cmdline[MAX_BOOTARGS_SIZE];
@@ -55,8 +63,13 @@ struct acrn_boot_info {
 	struct abi_mmap		mmap_entry[MAX_MMAP_ENTRIES];
 
 	const void		*mi_acpi_rsdp_va;
-	struct efi_info		mi_efi_info;
+	struct abi_efi_info	efi_info;
 };
+
+static inline bool boot_from_uefi(struct acrn_boot_info *abi)
+{
+	return (abi->efi_info.system_table != NULL);
+}
 
 int32_t init_multiboot_info(uint32_t *registers);
 int32_t init_multiboot2_info(uint32_t *registers);
