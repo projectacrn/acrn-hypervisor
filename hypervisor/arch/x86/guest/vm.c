@@ -14,7 +14,7 @@
 #include <asm/guest/virq.h>
 #include <asm/lib/bits.h>
 #include <asm/e820.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <asm/vtd.h>
 #include <reloc.h>
 #include <asm/guest/ept.h>
