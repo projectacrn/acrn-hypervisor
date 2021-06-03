@@ -231,10 +231,12 @@ void init_paging(void)
 	uint32_t i;
 	uint64_t low32_max_ram = 0UL;
 	uint64_t high64_max_ram = MEM_4G;
+	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 
-	const struct e820_entry *entry;
-	uint32_t entries_count = get_e820_entries_count();
-	const struct e820_entry *p_e820 = get_e820_entry();
+	struct acrn_boot_info *abi = get_acrn_boot_info();
+	const struct abi_mmap *entry;
+	uint32_t entries_count = abi->mmap_entries;
+	const struct abi_mmap *p_mmap = abi->mmap_entry;
 
 	pr_dbg("HV MMU Initialization");
 
@@ -245,8 +247,8 @@ void init_paging(void)
 
 	/* Modify WB attribute for E820_TYPE_RAM */
 	for (i = 0U; i < entries_count; i++) {
-		entry = p_e820 + i;
-		if (entry->type == E820_TYPE_RAM) {
+		entry = p_mmap + i;
+		if (entry->type == MMAP_TYPE_RAM) {
 			uint64_t end = entry->baseaddr + entry->length;
 			if (end < MEM_4G) {
 				low32_max_ram = max(end, low32_max_ram);
@@ -257,6 +259,7 @@ void init_paging(void)
 	}
 
 	low32_max_ram = round_pde_up(low32_max_ram);
+	high64_max_ram = min(high64_max_ram, top_addr_space);
 	high64_max_ram = round_pde_down(high64_max_ram);
 
 	/* Map [0, low32_max_ram) and [4G, high64_max_ram) RAM regions as WB attribute */
