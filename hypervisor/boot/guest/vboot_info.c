@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <asm/per_cpu.h>
 #include <asm/irq.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <asm/pgtable.h>
 #include <asm/zeropage.h>
 #include <asm/seed.h>

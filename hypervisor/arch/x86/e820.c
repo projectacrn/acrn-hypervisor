@@ -9,7 +9,7 @@
 #include <asm/page.h>
 #include <asm/e820.h>
 #include <asm/mmu.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <logmsg.h>
 #include <asm/guest/ept.h>
 

@@ -11,7 +11,7 @@
 #include <sprintf.h>
 #include <asm/guest/ept.h>
 #include <logmsg.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <crypto_api.h>
 #include <asm/seed.h>
 #include "seed_abl.h"
