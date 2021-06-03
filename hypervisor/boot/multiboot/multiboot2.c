@@ -7,8 +7,8 @@
 #include <types.h>
 #include <errno.h>
 #include <boot.h>
+#include <multiboot_std.h>
 #include <asm/pgtable.h>
-#include "multiboot_priv.h"
 
 /**
  * @pre abi != NULL && mb2_tag_mmap != NULL
@@ -62,7 +62,7 @@ static void mb2_efimmap_to_abi(struct acrn_boot_info *abi,
 /**
  * @pre abi != NULL
  */
-int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info)
+static int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info)
 {
 	int32_t ret = 0;
 	struct multiboot2_tag *mb2_tag, *mb2_tag_end;
@@ -128,6 +128,20 @@ int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info)
 	abi->mods_count = mod_idx;
 
 	return ret;
+}
+
+static inline bool boot_from_multiboot2(uint32_t magic)
+{
+	/*
+	 * Multiboot spec states that the Multiboot information structure may be placed
+	 * anywhere in memory by the boot loader.
+	 *
+	 * Seems both SBL and GRUB won't place multiboot1 MBI structure at 0 address,
+	 * but GRUB could place Multiboot2 MBI structure at 0 address until commit
+	 * 0f3f5b7c13fa9b67 ("multiboot2: Set min address for mbi allocation to 0x1000")
+	 * which dates on Dec 26 2019.
+	 */
+	return (magic == MULTIBOOT2_INFO_MAGIC);
 }
 
 int32_t init_multiboot2_info(uint32_t *registers)
