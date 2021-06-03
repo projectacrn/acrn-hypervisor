@@ -8,12 +8,12 @@
 #include <errno.h>
 #include <asm/pgtable.h>
 #include <boot.h>
-#include "multiboot_priv.h"
+#include <multiboot_std.h>
 
 /**
  * @pre abi != NULL
  */
-int32_t multiboot_to_acrn_bi(struct acrn_boot_info *abi, void *mb_info) {
+static int32_t multiboot_to_acrn_bi(struct acrn_boot_info *abi, void *mb_info) {
 	uint32_t i;
 	struct multiboot_info *mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)mb_info));
 	struct multiboot_mmap *mmap = (struct multiboot_mmap *)hpa2hva_early((uint64_t)mbi->mi_mmap_addr);
@@ -63,6 +63,11 @@ int32_t multiboot_to_acrn_bi(struct acrn_boot_info *abi, void *mb_info) {
 	}
 
 	return 0;
+}
+
+static inline bool boot_from_multiboot(uint32_t magic, uint32_t info)
+{
+	return ((magic == MULTIBOOT_INFO_MAGIC) && (info != 0U));
 }
 
 int32_t init_multiboot_info(uint32_t *registers)

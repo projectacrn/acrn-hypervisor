@@ -7,7 +7,6 @@
 #ifndef BOOT_H
 #define BOOT_H
 
-#include <multiboot_std.h>
 #include <efi.h>
 #include <vm_configurations.h>
 
