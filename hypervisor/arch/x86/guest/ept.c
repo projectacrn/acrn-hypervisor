@@ -234,7 +234,7 @@ uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
 	uint64_t pg_size = 0UL;
 	void *eptp;
 
-	eptp = get_ept_entry(vm);
+	eptp = get_eptp(vm);
 	pgentry = pgtable_lookup_entry((uint64_t *)eptp, gpa, &pg_size, &vm->arch_vm.ept_pgtable);
 	if (pgentry != NULL) {
 		hpa = (((*pgentry & (~EPT_PFN_HIGH_MASK)) & (~(pg_size - 1UL)))
@@ -392,7 +392,7 @@ void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
 /**
  * @pre: vm != NULL.
  */
-void *get_ept_entry(struct acrn_vm *vm)
+void *get_eptp(struct acrn_vm *vm)
 {
 	void *eptp;
 	struct acrn_vcpu *vcpu = vcpu_from_pid(vm, get_pcpu_id());
@@ -416,7 +416,7 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 	uint64_t i, j, k, m;
 
 	for (i = 0UL; i < PTRS_PER_PML4E; i++) {
-		pml4e = pml4e_offset((uint64_t *)get_ept_entry(vm), i << PML4E_SHIFT);
+		pml4e = pml4e_offset((uint64_t *)get_eptp(vm), i << PML4E_SHIFT);
 		if (table->pgentry_present(*pml4e) == 0UL) {
 			continue;
 		}
