@@ -874,6 +874,7 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 	launch_vcpu(bsp);
 }
 
+static uint8_t loaded_pre_vm_nr = 0U;
 /**
  * Prepare to create vm/vcpu for vm
  *
@@ -892,7 +893,30 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 			build_vrsdp(vm);
 		}
 
+		if (is_sos_vm(vm)) {
+			/* We need to ensure all modules of pre-launched VMs have been loaded already
+			 * before loading SOS VM modules, otherwise the module of pre-launched VMs could
+			 * be corrupted because SOS VM kernel might pick any usable RAM to extract kernel
+			 * when KASLR enabled.
+			 * In case the pre-launched VMs aren't loaded successfuly that cause deadlock here,
+			 * use a 10000ms timer to break the waiting loop.
+			 */
+			uint64_t start_tick = cpu_ticks();
+
+			while (1) {
+				uint64_t timeout = ticks_to_ms(cpu_ticks() - start_tick);
+				if ((loaded_pre_vm_nr == PRE_VM_NUM) || (timeout > 10000U)) {
+					break;
+				}
+			}
+		}
+
 		err = vm_sw_loader(vm);
+
+		if (is_prelaunched_vm(vm)) {
+			loaded_pre_vm_nr++;
+		}
+
 		if (err == 0) {
 
 			/* start vm BSP automatically */
