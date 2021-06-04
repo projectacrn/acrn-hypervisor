@@ -140,7 +140,7 @@ void ept_flush_leaf_page(uint64_t *pge, uint64_t size);
  * @retval If the current context of vm is SECURE_WORLD, return EPT pointer of
  *            secure world, otherwise return EPT pointer of normal world.
  */
-void *get_ept_entry(struct acrn_vm *vm);
+void *get_eptp(struct acrn_vm *vm);
 
 /**
  * @brief Walking through EPT table

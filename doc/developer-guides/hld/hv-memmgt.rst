@@ -440,7 +440,7 @@ EPT
 .. doxygenfunction:: ept_flush_leaf_page
    :project: Project ACRN
 
-.. doxygenfunction:: get_ept_entry
+.. doxygenfunction:: get_eptp
    :project: Project ACRN
 
 .. doxygenfunction:: walk_ept_table

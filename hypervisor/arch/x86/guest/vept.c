@@ -258,7 +258,7 @@ static uint64_t generate_shadow_ept_entry(struct acrn_vcpu *vcpu, uint64_t guest
 	 */
 	if (is_leaf_ept_entry(guest_ept_entry, guest_ept_level)) {
 		ASSERT(guest_ept_level == IA32E_PT, "Only support 4K page for guest EPT!");
-		ept_entry = get_leaf_entry((guest_ept_entry & EPT_ENTRY_PFN_MASK), get_ept_entry(vcpu->vm), &ept_level);
+		ept_entry = get_leaf_entry((guest_ept_entry & EPT_ENTRY_PFN_MASK), get_eptp(vcpu->vm), &ept_level);
 		if (ept_entry != 0UL) {
 			/*
 			 * TODO:
