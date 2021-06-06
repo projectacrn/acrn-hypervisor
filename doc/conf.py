@@ -228,10 +228,23 @@ numfig_format = {'figure': 'Figure %s', 'table': 'Table %s', 'code-block': 'Code
 html_static_path = ['static']
 
 def setup(app):
-   app.add_stylesheet("acrn-custom.css")
-   app.add_javascript("https://www.googletagmanager.com/gtag/js?id=UA-831873-64")
-   # note more GA tag manager calls are in acrn-custom.js
-   app.add_javascript("acrn-custom.js")
+   import sphinx
+
+   # add_stylesheet and add_javascript were deprecated in Sphinx 4.0
+   # so we'll need to tweak the configuration for CI systems using
+   # a newer Sphinx version than originally used for that ACRN release.
+
+   if float(sphinx.__version__[0:3]) < 3.0:
+      app.add_stylesheet("acrn-custom.css")
+      app.add_javascript("https://www.googletagmanager.com/gtag/js?id=UA-831873-64")
+      # note more GA tag manager calls are in acrn-custom.js
+      app.add_javascript("acrn-custom.js")
+   else:
+      app.add_css_file("acrn-custom.css")
+      app.add_js_file("https://www.googletagmanager.com/gtag/js?id=UA-831873-64")
+      # note more GA tag manager calls are in acrn-custom.js
+      app.add_js_file("acrn-custom.js")
+
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -304,7 +317,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'Project ACRN', u'Project ACRN Documentation',
-     author, 'Project ACRN', 
+     author, 'Project ACRN',
      'IoT-Optimized Hypervisor for Intel Architecture',
      'Miscellaneous'),
 ]
