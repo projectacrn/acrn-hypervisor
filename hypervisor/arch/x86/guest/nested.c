@@ -1051,6 +1051,39 @@ static void disable_vmcs_shadowing(void)
 	exec_vmwrite(VMX_VMS_LINK_PTR_FULL, ~0UL);
 }
 
+static void clear_vmcs02(struct acrn_vcpu *vcpu)
+{
+	struct acrn_nested *nested = &vcpu->arch.nested;
+
+	/*
+	 * Now VMCS02 is active and being used as a shadow VMCS.
+	 * Disable VMCS shadowing to avoid VMCS02 will be loaded by VMPTRLD
+	 * and referenced by VMCS01 as a shadow VMCS simultaneously.
+	 */
+	disable_vmcs_shadowing();
+
+	/* Flush shadow VMCS to memory */
+	clear_va_vmcs(nested->vmcs02);
+
+	/* VMPTRLD the shadow VMCS so that we are able to sync it to VMCS12 */
+	load_va_vmcs(nested->vmcs02);
+
+	/* Sync shadow VMCS to cache VMCS12, and copy cache VMCS12 to L1 guest */
+	flush_current_vmcs12(vcpu);
+
+	/*
+	 * The current VMCS12 has been flushed out, so that the active VMCS02
+	 * needs to be VMCLEARed as well
+	 */
+	clear_va_vmcs(nested->vmcs02);
+
+	/* This VMCS can no longer refer to any shadow EPT */
+	put_nept_desc(nested->vmcs12.ept_pointer);
+
+	/* no current VMCS12 */
+	nested->current_vmcs12_ptr = INVALID_GPA;
+}
+
 /*
  * @pre vcpu != NULL
  */
@@ -1078,30 +1111,8 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 				 * The current VMCS12 remains active but ACRN needs to sync the content of it
 				 * to guest memory so that the new VMCS12 can be loaded to the cache VMCS12.
 				 */
+				clear_vmcs02(vcpu);
 
-				/*
-				 * Now VMCS02 is active and being used as a shadow VMCS.
-				 * Disable VMCS shadowing to avoid VMCS02 will be loaded by VMPTRLD
-				 * and referenced by VMCS01 as a shadow VMCS simultaneously.
-				 */
-				disable_vmcs_shadowing();
-
-				/* Flush shadow VMCS to memory */
-				clear_va_vmcs(nested->vmcs02);
-
-				/* VMPTRLD the shadow VMCS so that we are able to sync it to VMCS12 */
-				load_va_vmcs(nested->vmcs02);
-
-				/* Sync shadow VMCS to cache VMCS12, and copy cache VMCS12 to L1 guest */
-				flush_current_vmcs12(vcpu);
-
-				/*
-				 * The current VMCS12 has been flushed out, so that the active VMCS02
-				 * needs to be VMCLEARed as well
-				 */
-				clear_va_vmcs(nested->vmcs02);
-
-				put_nept_desc(nested->vmcs12.ept_pointer);
 			}
 
 			/* Create the VMCS02 based on this new VMCS12 */
@@ -1172,38 +1183,10 @@ int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 
 				nested->vmcs12.launch_state = VMCS12_LAUNCH_STATE_CLEAR;
 
-				/*
-				 * Disable VMCS shadowing to avoid VMCS02 will be loaded by VMPTRLD
-				 * and referenced by VMCS01 as a shadow VMCS simultaneously.
-				 *
-				 * After this VMCLEAR, there is no active VMCS12 on this vCPU, so the
-				 * "VMCS shadowing" VM-execution control must be 0.
-				 */
-				disable_vmcs_shadowing();
-
-				/* Flush shadow VMCS to memory */
-				clear_va_vmcs(nested->vmcs02);
-
-				/*
-				 * upon VMCLEAR vmcs12, need to sync the cache VMCS12 back to guest memory.
-				 * VMPTRLD the shadow VMCS so that we are able to sync it to VMCS12.
-				 */
-				load_va_vmcs(nested->vmcs02);
-
-				/* Sync shadow VMCS to cache VMCS12, and copy cache VMCS12 to L1 guest */
-				flush_current_vmcs12(vcpu);
-
-				/* VMCLEAR VMCS02 */
-				clear_va_vmcs(nested->vmcs02);
+				clear_vmcs02(vcpu);
 
 				/* Switch back to vmcs01 (no VMCS shadowing) */
 				load_va_vmcs(vcpu->arch.vmcs);
-
-				/* This VMCS can no longer refer to any shadow EPT */
-				put_nept_desc(nested->vmcs12.ept_pointer);
-
-				/* no current VMCS12 */
-				nested->current_vmcs12_ptr = INVALID_GPA;
 
 				/* If no L2 VM entry happens between VMWRITE and VMCLEAR, need to clear these flags */
 				vcpu->arch.nested.host_state_dirty = false;
