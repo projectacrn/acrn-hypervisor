@@ -1199,6 +1199,7 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	rc = read(native_rtct_fd, buf, native_rtct_len);
 	if (rc < native_rtct_len) {
 		pr_err("Native RTCT is not fully read into buf!!!");
+		free(buf);
 		return -1;
 	}
 	close(native_rtct_fd);
