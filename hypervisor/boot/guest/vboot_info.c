@@ -28,12 +28,17 @@
  * but this should be configurable for different OS. */
 #define DEFAULT_RAMDISK_GPA_MAX		0x37ffffffUL
 
+#define PRE_VM_MAX_RAM_ADDR_BELOW_4GB		(VIRT_ACPI_DATA_ADDR - 1U)
+
 /**
  * @pre vm != NULL && mod != NULL
  */
 static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mod)
 {
 	uint64_t ramdisk_load_gpa = INVALID_GPA;
+	uint64_t ramdisk_gpa_max = DEFAULT_RAMDISK_GPA_MAX;
+	uint64_t kernel_start = (uint64_t)vm->sw.kernel_info.kernel_load_addr;
+	uint64_t kernel_end = kernel_start + vm->sw.kernel_info.kernel_size;
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	if (mod->start != NULL) {
@@ -41,9 +46,29 @@ static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mo
 		vm->sw.ramdisk_info.size = mod->size;
 	}
 
-	if (is_sos_vm(vm)) {
+	/* Per Linux boot protocol, the Kernel need a size of contiguous
+	 * memory(i.e. init_size field in zeropage) from its extract address to boot,
+	 * and initrd_addr_max field specifies the maximum address of the ramdisk.
+	 * Per kernel src head_64.S, decompressed kernel start at 2M aligned to the
+	 * compressed kernel load address.
+	 */
+	if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
 		struct zero_page *zeropage = (struct zero_page *)vm->sw.kernel_info.kernel_src_addr;
+		uint32_t kernel_init_size = zeropage->hdr.init_size;
 		uint32_t initrd_addr_max = zeropage->hdr.initrd_addr_max;
+
+		kernel_end = kernel_start + MEM_2M + kernel_init_size;
+		if (initrd_addr_max != 0U) {
+			ramdisk_gpa_max = initrd_addr_max;
+		}
+	}
+
+	if (is_sos_vm(vm)) {
+		uint64_t mods_start, mods_end;
+
+		get_boot_mods_range(&mods_start, &mods_end);
+		mods_start = sos_vm_hpa2gpa(mods_start);
+		mods_end = sos_vm_hpa2gpa(mods_end);
 
 		if (vm->sw.ramdisk_info.src_addr != NULL) {
 			ramdisk_load_gpa = sos_vm_hpa2gpa((uint64_t)vm->sw.ramdisk_info.src_addr);
@@ -52,45 +77,32 @@ static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mo
 		/* For SOS VM, the ramdisk has been loaded by bootloader, so in most cases
 		 * there is no need to do gpa copy again. But in the case that the ramdisk is
 		 * loaded by bootloader at a address higher than its limit, we should do gpa
-		 * copy then. Given the kernel is relocated to after all modules, we find
-		 * the space from MEM_1M to min(ramdisk_load_gpa, initrd_addr_max).
+		 * copy then.
 		 */
-		if ((ramdisk_load_gpa + vm->sw.ramdisk_info.size) > initrd_addr_max) {
+		if ((ramdisk_load_gpa + vm->sw.ramdisk_info.size) > ramdisk_gpa_max) {
+			/* In this case, mods_end must be higher than ramdisk_gpa_max,
+			 * so try to locate ramdisk between MEM_1M and mods_start/kernel_start,
+			 * or try the range between kernel_end and mods_start;
+			 */
 			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
-					MEM_1M, min(ramdisk_load_gpa, initrd_addr_max));
-		}
-	} else {
-		/* For pre-launched VM, the ramdisk would be put after guest kernel.
-		 * Its GPA should be got by searching ve820 table.
-		 */
-		uint64_t kernel_end, ramdisk_gpa_max;
-
-		kernel_end = (uint64_t)(vm->sw.kernel_info.kernel_load_addr + vm->sw.kernel_info.kernel_size);
-		ramdisk_gpa_max = min((VIRT_ACPI_DATA_ADDR - 1U), DEFAULT_RAMDISK_GPA_MAX);
-
-		/* Per Linux boot protocol, the Kernel need a size of contiguous
-		 * memory(i.e. init_size field in zeropage) from its extract address to boot,
-		 * and initrd_addr_max field specifies the maximum address of the ramdisk.
-		 * Per kernel src head_64.S, decompressed kernel start at 2M aligned to the
-		 * compressed kernel load address.
-		 */
-		if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
-			struct zero_page *zeropage = (struct zero_page *)vm->sw.kernel_info.kernel_src_addr;
-			uint32_t kernel_init_size = zeropage->hdr.init_size;
-			uint32_t initrd_addr_max = zeropage->hdr.initrd_addr_max;
-
-			kernel_end = (uint64_t)(vm->sw.kernel_info.kernel_load_addr + MEM_2M + kernel_init_size);
-			if (initrd_addr_max != 0U) {
-				ramdisk_gpa_max = min((VIRT_ACPI_DATA_ADDR - 1U), initrd_addr_max);
+					MEM_1M, min(min(mods_start, kernel_start), ramdisk_gpa_max));
+			if ((ramdisk_load_gpa == INVALID_GPA) && (kernel_end < min(mods_start, ramdisk_gpa_max))) {
+				ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
+						kernel_end, min(mods_start, ramdisk_gpa_max));
 			}
 		}
+	} else {
+		/* For pre-launched VM, the ramdisk would be put by searching ve820 table.
+		 */
+		ramdisk_gpa_max = min(PRE_VM_MAX_RAM_ADDR_BELOW_4GB, ramdisk_gpa_max);
 
-		if (kernel_end > ramdisk_gpa_max) {
-			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
-					MEM_1M, (uint64_t)vm->sw.kernel_info.kernel_load_addr);
-		} else {
+		if (kernel_end < ramdisk_gpa_max) {
 			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
 					kernel_end, ramdisk_gpa_max);
+		}
+		if (ramdisk_load_gpa == INVALID_GPA) {
+			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
+					MEM_1M, min(kernel_start, ramdisk_gpa_max));
 		}
 	}
 
@@ -122,20 +134,6 @@ static void init_vm_acpi_info(struct acrn_vm *vm, const struct abi_module *mod)
 	vm->sw.acpi_info.size = ACPI_MODULE_SIZE;
 }
 
-static uint64_t get_boot_mods_end_addr(void)
-{
-	uint32_t i;
-	uint64_t addr = 0UL;
-	struct acrn_boot_info *abi = get_acrn_boot_info();
-
-	for (i = 0; i < abi->mods_count; i++) {
-		if (hva2hpa(abi->mods[i].start + abi->mods[i].size) > addr) {
-			addr = hva2hpa(abi->mods[i].start + abi->mods[i].size);
-		}
-	}
-	return addr;
-}
-
 /**
  * @pre vm != NULL
  */
@@ -157,20 +155,29 @@ static void *get_kernel_load_addr(struct acrn_vm *vm)
 		zeropage = (struct zero_page *)sw_info->kernel_info.kernel_src_addr;
 
 		if ((is_sos_vm(vm)) && (zeropage->hdr.relocatable_kernel != 0U)) {
+			uint64_t mods_start, mods_end;
+			uint64_t kernel_load_gpa = INVALID_GPA;
 			uint32_t kernel_align = zeropage->hdr.kernel_alignment;
 			uint32_t kernel_init_size = zeropage->hdr.init_size;
-			uint64_t hv_end_addr, mods_end_addr, kernel_load_gpa;
-
-			hv_end_addr = sos_vm_hpa2gpa(get_hv_image_base() + CONFIG_HV_RAM_SIZE);
-			mods_end_addr = sos_vm_hpa2gpa(get_boot_mods_end_addr());
-
-			/* The kernel will be put after hypervisor and all boot modules before 4GB.
-			 * Because the kernel load address need to be up aligned to kernel_align size
+			/* Because the kernel load address need to be up aligned to kernel_align size
 			 * whereas find_space_from_ve820() can only return page aligned address,
 			 * we enlarge the needed size to (kernel_init_size + 2 * kernel_align).
 			 */
-			kernel_load_gpa = find_space_from_ve820(vm, (kernel_init_size + 2 * kernel_align),
-						max(hv_end_addr, mods_end_addr), MEM_4G);
+			uint32_t kernel_size = kernel_init_size + 2 * kernel_align;
+
+			get_boot_mods_range(&mods_start, &mods_end);
+			mods_start = sos_vm_hpa2gpa(mods_start);
+			mods_end = sos_vm_hpa2gpa(mods_end);
+
+			/* TODO: support load kernel when modules are beyond 4GB space. */
+			if (mods_end < MEM_4G) {
+				kernel_load_gpa = find_space_from_ve820(vm, kernel_size, MEM_1M, mods_start);
+
+				if (kernel_load_gpa == INVALID_GPA) {
+					kernel_load_gpa = find_space_from_ve820(vm, kernel_size, mods_end, MEM_4G);
+				}
+			}
+
 			if (kernel_load_gpa != INVALID_GPA) {
 				load_addr = (void *)roundup((uint64_t)kernel_load_gpa, kernel_align);
 			}

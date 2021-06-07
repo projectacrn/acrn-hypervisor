@@ -70,6 +70,8 @@ static inline bool boot_from_uefi(struct acrn_boot_info *abi)
 	return (abi->efi_info.system_table != NULL);
 }
 
+void get_boot_mods_range(uint64_t *p_start, uint64_t *p_end);
+
 int32_t init_multiboot_info(uint32_t *registers);
 int32_t init_multiboot2_info(uint32_t *registers);
 
