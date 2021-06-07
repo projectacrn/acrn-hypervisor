@@ -140,7 +140,7 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
 			 * This is very helpful when one of configured bootargs need to be revised at GRUB runtime
 			 * (e.g. "root="), since the later one would override the previous one if multiple bootargs exist.
 			 */
-			if (((abi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) && (*(abi->mi_cmdline) != '\0')) {
+			if ((abi->mi_cmdline != NULL) && (*(abi->mi_cmdline) != '\0')) {
 				if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
 						abi->mi_cmdline, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
 					pr_err("failed to merge mbi cmdline to SOS bootargs!");
