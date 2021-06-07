@@ -21,7 +21,6 @@ void init_acrn_boot_info(uint32_t magic, uint32_t info)
 	if (boot_from_multiboot1(magic, info)) {
 		struct multiboot_info *mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)info));
 
-		acrn_bi.mi_flags = mbi->mi_flags;
 		acrn_bi.mi_drives_addr = mbi->mi_drives_addr;
 		acrn_bi.mi_drives_length = mbi->mi_drives_length;
 		acrn_bi.mi_cmdline = (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline);
@@ -67,9 +66,8 @@ int32_t sanitize_acrn_boot_info(uint32_t magic, uint32_t info)
 			}
 		}
 #endif
-		acrn_bi.mi_flags |= MULTIBOOT_INFO_HAS_MMAP;
 	} else {
-		acrn_bi.mi_flags &= ~MULTIBOOT_INFO_HAS_MMAP;
+		abi_status = -EINVAL;
 	}
 
 	if (acrn_bi.mi_mods_count > MAX_MODULE_NUM) {
@@ -83,18 +81,8 @@ int32_t sanitize_acrn_boot_info(uint32_t magic, uint32_t info)
 				(const void *)acrn_bi.mi_mods_va,
 				(acrn_bi.mi_mods_count * sizeof(struct multiboot_module)));
 		}
-		acrn_bi.mi_flags |= MULTIBOOT_INFO_HAS_MODS;
 	} else {
-		acrn_bi.mi_flags &= ~MULTIBOOT_INFO_HAS_MODS;
-	}
-
-	if ((acrn_bi.mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
 		pr_err("no multiboot module info found");
-		abi_status = -EINVAL;
-	}
-
-	if ((acrn_bi.mi_flags & MULTIBOOT_INFO_HAS_MMAP) == 0U) {
-		pr_err("wrong multiboot flags: 0x%08x", acrn_bi.mi_flags);
 		abi_status = -EINVAL;
 	}
 
@@ -102,12 +90,7 @@ int32_t sanitize_acrn_boot_info(uint32_t magic, uint32_t info)
 	if (boot_from_multiboot2(magic)) {
 		if (acrn_bi.mi_efi_info.efi_memmap_hi != 0U) {
 			pr_err("the EFI mmap address should be less than 4G!");
-			acrn_bi.mi_flags &= ~MULTIBOOT_INFO_HAS_EFI_MMAP;
 			abi_status = -EINVAL;
-		}
-
-		if ((acrn_bi.mi_flags & (MULTIBOOT_INFO_HAS_EFI64 | MULTIBOOT_INFO_HAS_EFI_MMAP)) == 0U) {
-			pr_err("no multiboot2 uefi info found!");
 		}
 	}
 #endif
@@ -124,7 +107,6 @@ int32_t sanitize_acrn_boot_info(uint32_t magic, uint32_t info)
 
 /*
  * @post retval != NULL
- * @post retval->mi_flags & MULTIBOOT_INFO_HAS_MMAP != 0U
  * @post (retval->mi_mmap_entries > 0U) && (retval->mi_mmap_entries <= MAX_MMAP_ENTRIES)
  */
 struct acrn_boot_info *get_acrn_boot_info(void)

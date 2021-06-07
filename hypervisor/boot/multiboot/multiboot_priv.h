@@ -7,10 +7,6 @@
 #ifndef MULTIBOOT_PRIV_H
 #define MULTIBOOT_PRIV_H
 
-/* extended flags for acrn multiboot info from multiboot2  */
-#define	MULTIBOOT_INFO_HAS_EFI_MMAP	0x00010000U
-#define	MULTIBOOT_INFO_HAS_EFI64	0x00020000U
-
 #ifdef CONFIG_MULTIBOOT2
 /*
  * @post boot_regs[1] stores the address pointer that point to a valid multiboot2 info
