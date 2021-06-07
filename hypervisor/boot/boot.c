@@ -14,6 +14,27 @@
 static struct acrn_boot_info acrn_bi = { 0U };
 static char boot_protocol_name[16U] = { 0 };
 
+/**
+ * @pre (p_start != NULL) && (p_end != NULL)
+ */
+void get_boot_mods_range(uint64_t *p_start, uint64_t *p_end)
+{
+	uint32_t i;
+	uint64_t start = ~0UL, end = 0UL;
+	struct acrn_boot_info *abi = get_acrn_boot_info();
+
+	for (i = 0; i < abi->mods_count; i++) {
+		if (hva2hpa(abi->mods[i].start) < start) {
+			start = hva2hpa(abi->mods[i].start);
+		}
+		if (hva2hpa(abi->mods[i].start + abi->mods[i].size) > end) {
+			end = hva2hpa(abi->mods[i].start + abi->mods[i].size);
+		}
+	}
+	*p_start = start;
+	*p_end = end;
+}
+
 void init_acrn_boot_info(uint32_t *registers)
 {
 	if (init_multiboot_info(registers) == 0) {
