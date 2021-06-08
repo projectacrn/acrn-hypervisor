@@ -21,7 +21,10 @@ int32_t multiboot_to_acrn_bi(struct acrn_boot_info *abi, void *mb_info) {
 	(void)strncpy_s((void *)(abi->cmdline), MAX_BOOTARGS_SIZE, (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline),
 				strnlen_s((char *)hpa2hva_early((uint64_t)mbi->mi_cmdline), (MAX_BOOTARGS_SIZE - 1U)));
 
-	abi->mi_loader_name = (char *)hpa2hva_early((uint64_t)mbi->mi_loader_name);
+	(void)strncpy_s((void *)(abi->loader_name), MAX_LOADER_NAME_SIZE,
+			(char *)hpa2hva_early((uint64_t)mbi->mi_loader_name),
+			strnlen_s((char *)hpa2hva_early((uint64_t)mbi->mi_loader_name), (MAX_LOADER_NAME_SIZE - 1U)));
+
 	abi->mi_mmap_entries = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
 	abi->mi_mods_count = mbi->mi_mods_count;
 
