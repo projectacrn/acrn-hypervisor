@@ -249,19 +249,7 @@ Configure RDT for VM Using VM Configuration
    per-LP CLOS is applied to the core. If HT is turned on, don't place high
    priority threads on sibling LPs running lower priority threads.
 
-#. Based on our scenario, build the ACRN hypervisor and copy the
-   artifact ``acrn.efi`` to the
-   ``/boot/EFI/acrn`` directory. If needed, update the device model
-   ``acrn-dm`` as well in ``/usr/bin`` directory. see
-   :ref:`getting-started-building` for building instructions.
-
-   .. code-block:: none
-
-      $ make hypervisor BOARD=apl-up2 FIRMWARE=uefi
-      ...
-
-      # these operations are done on UP2 board
-      $ mount /dev/mmcblk0p0 /boot
-      $ scp <acrn.efi-at-your-compile-PC> /boot/EFI/acrn
+#. Based on our scenario, build and install ACRN. See :ref:`build-with-acrn-scenario`
+   for building and installing instructions.
 
 #. Restart the platform.

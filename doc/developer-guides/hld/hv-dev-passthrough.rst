@@ -390,9 +390,8 @@ the current VM, otherwise, none of them should be assigned to the
 current VM. A device that violates the rule will be rejected to be
 passed-through. The checking logic is implemented in Device Model and not
 in scope of hypervisor.
-The platform GSI information is in devicemodel/hw/pci/platform_gsi_info.c
-for limited platform (currently, only APL MRB). For other platforms, the platform
-specific GSI information should be added to activate the checking of GSI sharing violation.
+The platform specific GSI information shall be filled in devicemodel/hw/pci/platform_gsi_info.c
+for target platform to activate the checking of GSI sharing violation.
 
 .. _PCIe PTM implementation:
 
