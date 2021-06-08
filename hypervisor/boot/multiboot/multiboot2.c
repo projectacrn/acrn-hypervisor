@@ -37,11 +37,14 @@ static void mb2_mmap_to_abi(struct acrn_boot_info *abi, const struct multiboot2_
 static void mb2_mods_to_abi(struct acrn_boot_info *abi,
 			uint32_t mbi_mod_idx, const struct multiboot2_tag_module *mb2_tag_mods)
 {
-	if (mbi_mod_idx < MAX_MODULE_NUM) {
-		abi->mi_mods[mbi_mod_idx].mm_mod_start = mb2_tag_mods->mod_start;
-		abi->mi_mods[mbi_mod_idx].mm_mod_end = mb2_tag_mods->mod_end;
-		abi->mi_mods[mbi_mod_idx].mm_string = (uint32_t)(uint64_t)mb2_tag_mods->cmdline;
+	abi->mods[mbi_mod_idx].start = hpa2hva_early((uint64_t)mb2_tag_mods->mod_start);
+	if (mb2_tag_mods->mod_end > mb2_tag_mods->mod_start) {
+		abi->mods[mbi_mod_idx].size = mb2_tag_mods->mod_end - mb2_tag_mods->mod_start;
 	}
+
+	(void)strncpy_s((void *)(abi->mods[mbi_mod_idx].string), MAX_MOD_STRING_SIZE,
+		(char *)hpa2hva_early((uint64_t)mb2_tag_mods->cmdline),
+		strnlen_s((char *)hpa2hva_early((uint64_t)mb2_tag_mods->cmdline), MAX_MOD_STRING_SIZE));
 }
 
 /**
@@ -94,8 +97,10 @@ int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info)
 			mb2_mmap_to_abi(abi, (const struct multiboot2_tag_mmap *)mb2_tag);
 			break;
 		case MULTIBOOT2_TAG_TYPE_MODULE:
-			mb2_mods_to_abi(abi, mod_idx, (const struct multiboot2_tag_module *)mb2_tag);
-			mod_idx++;
+			if (mod_idx < MAX_MODULE_NUM) {
+				mb2_mods_to_abi(abi, mod_idx, (const struct multiboot2_tag_module *)mb2_tag);
+				mod_idx++;
+			}
 			break;
 		case MULTIBOOT2_TAG_TYPE_BOOT_LOADER_NAME:
 			str = ((struct multiboot2_tag_string *)mb2_tag)->string;
@@ -132,7 +137,7 @@ int32_t multiboot2_to_acrn_bi(struct acrn_boot_info *abi, void *mb2_info)
 				+ ((mb2_tag->size + (MULTIBOOT2_INFO_ALIGN - 1U)) & ~(MULTIBOOT2_INFO_ALIGN - 1U)));
 	}
 
-	abi->mi_mods_count = mod_idx;
+	abi->mods_count = mod_idx;
 
 	return ret;
 }
