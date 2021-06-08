@@ -15,7 +15,7 @@
 #include <acrn_hv_defs.h>
 #include <asm/guest/vm.h>
 #include <console.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <dbg_cmd.h>
 
 struct hv_timer console_timer;

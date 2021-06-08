@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef MULTIBOOT_H
-#define MULTIBOOT_H
+#ifndef BOOT_H
+#define BOOT_H
 
 #include <multiboot_std.h>
+#include <efi.h>
+#include <vm_configurations.h>
 
 /* TODO: MAX_MMAP_ENTRIES shall be config by config tool, and same as E820_MAX_ENTRIES */
 #define MAX_MMAP_ENTRIES		32U
@@ -19,11 +21,6 @@
 
 /* The vACPI module size is fixed to 1MB */
 #define ACPI_MODULE_SIZE		MEM_1M
-
-#ifndef ASSEMBLER
-
-#include <efi.h>
-#include <vm_configurations.h>
 
 struct acrn_boot_info {
 
@@ -49,6 +46,4 @@ void init_acrn_boot_info(uint32_t magic, uint32_t info);
 int32_t sanitize_acrn_boot_info(uint32_t magic, uint32_t info);
 struct acrn_boot_info *get_acrn_boot_info(void);
 
-#endif	/* ASSEMBLER */
-
-#endif	/* MULTIBOOT_H */
+#endif	/* BOOT_H */
