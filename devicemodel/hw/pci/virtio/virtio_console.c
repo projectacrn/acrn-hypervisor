@@ -1020,24 +1020,13 @@ virtio_console_destroy(struct virtio_console *console)
 static void
 virtio_console_teardown_backend(void *param)
 {
-	struct virtio_console *console = NULL;
 	struct virtio_console_backend *be;
 
 	be = (struct virtio_console_backend *)param;
 	if (!be)
 		return;
 
-	if (be->port)
-		console = be->port->console;
-
 	virtio_console_close_backend(be);
-
-	if (console) {
-		console->ref_count--;
-		/* free virtio_console if this is the last backend */
-		if (console->ref_count == 0)
-			virtio_console_destroy(console);
-	}
 }
 
 static int
