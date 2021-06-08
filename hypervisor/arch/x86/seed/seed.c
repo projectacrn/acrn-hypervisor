@@ -45,7 +45,7 @@ static uint32_t parse_seed_arg(void)
 	uint32_t i = SEED_ARG_NUM - 1U;
 	uint32_t len;
 
-	cmd_src = abi->mi_cmdline;
+	cmd_src = abi->cmdline;
 
 	if (cmd_src != NULL) {
 		for (i = 0U; seed_arg[i].str != NULL; i++) {

@@ -136,13 +136,13 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
 				pr_err("failed to fill seed arg to SOS bootargs!");
 			}
 
-			/* If there is cmdline from mbi->mi_cmdline, merge it with configured SOS bootargs.
+			/* If there is cmdline from abi->cmdline, merge it with configured SOS bootargs.
 			 * This is very helpful when one of configured bootargs need to be revised at GRUB runtime
 			 * (e.g. "root="), since the later one would override the previous one if multiple bootargs exist.
 			 */
-			if ((abi->mi_cmdline != NULL) && (*(abi->mi_cmdline) != '\0')) {
+			if (abi->cmdline[0] != '\0') {
 				if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
-						abi->mi_cmdline, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
+						abi->cmdline, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
 					pr_err("failed to merge mbi cmdline to SOS bootargs!");
 				}
 			}
