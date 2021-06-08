@@ -656,9 +656,6 @@ def get_pt_intx_table(config_file):
         #extract the phys_gsi and virt_gsi pairs between parenthesis to a list
         s = re.findall(r'\(([^)]+)', s)
 
-        phys_gsi[vm_i] = [];
-        virt_gsi[vm_i] = [];
-
         for part in s:
             if not part: continue
             assert ',' in part, "you need to use ',' to separate phys_gsi and virt_gsi!"
@@ -667,6 +664,9 @@ def get_pt_intx_table(config_file):
             assert a and b, "you need to specify both phys_gsi and virt_gsi!"
             a, b = str2int(a), str2int(b)
 
+            if vm_i not in phys_gsi and vm_i not in virt_gsi:
+                phys_gsi[vm_i] = []
+                virt_gsi[vm_i] = []
             phys_gsi[vm_i].append(a)
             virt_gsi[vm_i].append(b)
 
