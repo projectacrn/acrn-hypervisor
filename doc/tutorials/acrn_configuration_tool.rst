@@ -322,6 +322,13 @@ current scenario has:
   Specify whether the User VM power off channel is through the IOC,
   power button, or vUART.
 
+``allow_trigger_s5``:
+  Allow VM to trigger s5 shutdown flow, this flag works with ``poweroff_channel``
+  ``vuart1(pty)`` and ``vuart1(tty)`` only.
+
+``enable_ptm``:
+  Enable the Precision Timing Measurement (PTM) feature.
+
 ``usb_xhci``:
   USB xHCI mediator configuration. Input format:
   ``bus#-port#[:bus#-port#: ...]``, e.g.: ``1-2:2-4``.
@@ -333,6 +340,15 @@ current scenario has:
 ``shm_region`` (a child node of ``shm_regions``):
   configure the shared memory regions for current VM, input format:
   ``hv:/<;shm name>;, <;shm size in MB>;``. Refer to :ref:`ivshmem-hld` for details.
+
+``console_vuart``:
+  Enable a PCI-based console vUART. Refer to :ref:`vuart_config` for details.
+
+``communication_vuarts``:
+  List of PCI-based communication vUARTs. Refer to :ref:`vuart_config` for details.
+
+``communication_vuart`` (a child node of ``communication_vuarts``):
+  Enable a PCI-based communication vUART with its ID. Refer to :ref:`vuart_config` for details.
 
 ``passthrough_devices``:
   Select the passthrough device from the lspci list. Currently we support:
