@@ -2627,6 +2627,10 @@ pci_xhci_complete_commands(struct pci_xhci_vdev *xdev)
 	trb = xdev->opregs.cr_p;
 	ccs = xdev->opregs.crcr & XHCI_CRCR_LO_RCS;
 	crcr = xdev->opregs.crcr & ~0xF;
+	if (!trb) {
+		UPRINTF(LDBG, "Get the invalid guest address!\r\n");
+		goto out;
+	}
 
 	while (1) {
 		xdev->opregs.cr_p = trb;
@@ -2759,6 +2763,7 @@ pci_xhci_complete_commands(struct pci_xhci_vdev *xdev)
 		}
 	}
 
+out:
 	xdev->opregs.crcr = crcr | (xdev->opregs.crcr & XHCI_CRCR_LO_CA) | ccs;
 	xdev->opregs.crcr &= ~XHCI_CRCR_LO_CRR;
 	return 0;
