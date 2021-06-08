@@ -194,6 +194,7 @@ endif
 # platform boot component
 BOOT_S_SRCS += arch/x86/boot/cpu_primary.S
 BOOT_S_SRCS += arch/x86/boot/trampoline.S
+BOOT_C_SRCS += boot/boot.c
 BOOT_C_SRCS += boot/multiboot/multiboot.c
 ifeq ($(CONFIG_MULTIBOOT2),y)
 BOOT_C_SRCS += boot/multiboot/multiboot2.c

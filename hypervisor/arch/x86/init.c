@@ -91,12 +91,12 @@ void init_primary_pcpu(void)
 	/* Clear BSS */
 	(void)memset(&ld_bss_start, 0U, (size_t)(&ld_bss_end - &ld_bss_start));
 
-	init_acrn_boot_info(boot_regs[0], boot_regs[1]);
+	init_acrn_boot_info(boot_regs);
 
 	init_debug_pre();
 
-	if (sanitize_acrn_boot_info(boot_regs[0], boot_regs[1]) != 0) {
-		panic("Multiboot info error!");
+	if (sanitize_acrn_boot_info(get_acrn_boot_info()) != 0) {
+		panic("Sanitize boot info failed!");
 	}
 
 	init_pcpu_pre(true);
