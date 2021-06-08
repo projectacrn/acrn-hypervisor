@@ -10,7 +10,7 @@
 #include <types.h>
 #include <pci.h>
 #include <board_info.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <acrn_common.h>
 #include <vm_uuids.h>
 #include <vm_configurations.h>

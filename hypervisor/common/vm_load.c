@@ -9,7 +9,7 @@
 #include <asm/zeropage.h>
 #include <asm/guest/ept.h>
 #include <asm/mmu.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <errno.h>
 #include <logmsg.h>
 

@@ -14,7 +14,7 @@
 #include <logmsg.h>
 #include <asm/seed.h>
 #include <asm/boot/ld_sym.h>
-#include <multiboot.h>
+#include <boot.h>
 
 /* boot_regs store the multiboot info magic and address, defined in
    arch/x86/boot/cpu_primary.S.

@@ -22,7 +22,7 @@
  */
 
 #include <config.h>
-#include <multiboot.h>
+#include <multiboot_std.h>
 
 /* MULTIBOOT HEADER */
 #define MULTIBOOT_HEADER_FLAGS	MULTIBOOT_HEADER_NEED_MEMINFO
