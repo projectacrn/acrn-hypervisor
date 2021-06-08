@@ -33,9 +33,7 @@ int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi)
 		abi_status = -EINVAL;
 	}
 
-	if ((abi->mi_efi_info.efi_systab == 0U) && (abi->mi_efi_info.efi_systab_hi == 0U)) {
-		pr_err("no uefi info found!");
-	}
+	printf("%s environment detected.\n", boot_from_uefi(abi) ? "UEFI" : "Non-UEFI");
 
 	if (abi->loader_name[0] == '\0') {
 		pr_err("no bootloader name found!");
