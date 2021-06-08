@@ -28,7 +28,7 @@ int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi)
 		abi_status = -EINVAL;
 	}
 
-	if (abi->mi_mmap_entries == 0U) {
+	if (abi->mmap_entries == 0U) {
 		pr_err("no boot mmap info found");
 		abi_status = -EINVAL;
 	}
