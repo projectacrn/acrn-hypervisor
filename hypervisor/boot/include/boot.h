@@ -57,8 +57,13 @@ struct acrn_boot_info {
 	struct abi_mmap		mmap_entry[MAX_MMAP_ENTRIES];
 
 	const void		*mi_acpi_rsdp_va;
-	struct efi_info		mi_efi_info;
+	struct efi_info		uefi_info;
 };
+
+static inline bool boot_from_uefi(struct acrn_boot_info *abi)
+{
+	return !((abi->uefi_info.systab == 0U) && (abi->uefi_info.systab_hi == 0U));
+}
 
 int32_t init_multiboot_info(uint32_t *registers);
 
