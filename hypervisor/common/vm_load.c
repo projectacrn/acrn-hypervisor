@@ -10,6 +10,7 @@
 #include <asm/guest/ept.h>
 #include <asm/mmu.h>
 #include <boot.h>
+#include <efi_mmap.h>
 #include <errno.h>
 #include <logmsg.h>
 
@@ -30,6 +31,59 @@
 #define BZIMG_ZEROPAGE_GPA(load_params_gpa)	(load_params_gpa + MEM_1K)
 #define BZIMG_CMDLINE_GPA(load_params_gpa)	(load_params_gpa + MEM_1K + MEM_4K)
 #define BZIMG_EFIMMAP_GPA(load_params_gpa)	(load_params_gpa + MEM_1K + MEM_4K + MEM_2K)
+
+/**
+ * @pre vm != NULL && efi_mmap_desc != NULL
+ */
+static uint16_t create_sos_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_memory_desc *efi_mmap_desc)
+{
+	uint16_t i, desc_idx = 0U;
+	const struct efi_memory_desc *hv_efi_mmap_desc = get_efi_mmap_entry();
+
+	for (i = 0U; i < get_efi_mmap_entries_count(); i++) {
+		/* Below efi mmap desc types in native should be kept as original for SOS VM */
+		if ((hv_efi_mmap_desc[i].type == EFI_RESERVED_MEMORYTYPE)
+				|| (hv_efi_mmap_desc[i].type == EFI_UNUSABLE_MEMORY)
+				|| (hv_efi_mmap_desc[i].type == EFI_ACPI_RECLAIM_MEMORY)
+				|| (hv_efi_mmap_desc[i].type == EFI_ACPI_MEMORY_NVS)
+				|| (hv_efi_mmap_desc[i].type == EFI_BOOT_SERVICES_CODE)
+				|| (hv_efi_mmap_desc[i].type == EFI_BOOT_SERVICES_DATA)
+				|| (hv_efi_mmap_desc[i].type == EFI_RUNTIME_SERVICES_CODE)
+				|| (hv_efi_mmap_desc[i].type == EFI_RUNTIME_SERVICES_DATA)
+				|| (hv_efi_mmap_desc[i].type == EFI_MEMORYMAPPED_IO)
+				|| (hv_efi_mmap_desc[i].type == EFI_MEMORYMAPPED_IOPORTSPACE)
+				|| (hv_efi_mmap_desc[i].type == EFI_PALCODE)
+				|| (hv_efi_mmap_desc[i].type == EFI_PERSISTENT_MEMORY)) {
+
+			efi_mmap_desc[desc_idx] = hv_efi_mmap_desc[i];
+			desc_idx++;
+		}
+	}
+
+	for (i = 0U; i < vm->e820_entry_num; i++) {
+		/* The memory region with e820 type of RAM could be acted as EFI_CONVENTIONAL_MEMORY
+		 * for SOS VM, the region which occupied by HV and pre-launched VM has been filtered
+		 * already, so it is safe for SOS VM.
+		 * As SOS VM start to run after efi call ExitBootService(), the type of EFI_LOADER_CODE
+		 * and EFI_LOADER_DATA which have been mapped to E820_TYPE_RAM are not needed.
+		 */
+		if (vm->e820_entries[i].type == E820_TYPE_RAM) {
+			efi_mmap_desc[desc_idx].type = EFI_CONVENTIONAL_MEMORY;
+			efi_mmap_desc[desc_idx].phys_addr = vm->e820_entries[i].baseaddr;
+			efi_mmap_desc[desc_idx].virt_addr = vm->e820_entries[i].baseaddr;
+			efi_mmap_desc[desc_idx].num_pages = vm->e820_entries[i].length / PAGE_SIZE;
+			efi_mmap_desc[desc_idx].attribute = EFI_MEMORY_WB;
+			desc_idx++;
+		}
+	}
+
+	for (i = 0U; i < desc_idx; i++) {
+		pr_dbg("SOS VM efi mmap desc[%d]: addr: 0x%lx, len: 0x%lx, type: %d", i,
+			efi_mmap_desc[i].phys_addr, efi_mmap_desc[i].num_pages * PAGE_SIZE, efi_mmap_desc[i].type);
+	}
+
+	return desc_idx;
+}
 
 /**
  * @pre zp != NULL && vm != NULL
@@ -76,13 +130,16 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 
 		if (boot_from_uefi(abi)) {
 			struct efi_info *sos_efi_info = &zeropage->boot_efi_info;
+			uint64_t efi_mmap_gpa = BZIMG_EFIMMAP_GPA(load_params_gpa);
+			struct efi_memory_desc *efi_mmap_desc = (struct efi_memory_desc *)gpa2hva(vm, efi_mmap_gpa);
+			uint16_t efi_mmap_desc_nr = create_sos_vm_efi_mmap_desc(vm, efi_mmap_desc);
 
 			sos_efi_info->loader_signature = 0x34364c45; /* "EL64" */
 			sos_efi_info->memdesc_version = abi->uefi_info.memdesc_version;
-			sos_efi_info->memdesc_size = abi->uefi_info.memdesc_size;
-			sos_efi_info->memmap_size = abi->uefi_info.memmap_size;
-			sos_efi_info->memmap = abi->uefi_info.memmap;
-			sos_efi_info->memmap_hi = abi->uefi_info.memmap_hi;
+			sos_efi_info->memdesc_size = sizeof(struct efi_memory_desc);
+			sos_efi_info->memmap_size = efi_mmap_desc_nr * sizeof(struct efi_memory_desc);
+			sos_efi_info->memmap = (uint32_t)efi_mmap_gpa;
+			sos_efi_info->memmap_hi = (uint32_t)(efi_mmap_gpa >> 32U);
 			sos_efi_info->systab = abi->uefi_info.systab;
 			sos_efi_info->systab_hi = abi->uefi_info.systab_hi;
 		}
