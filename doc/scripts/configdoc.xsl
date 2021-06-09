@@ -84,6 +84,15 @@
        </xsl:if>
       </xsl:when>
       <xsl:otherwise>
+       <!-- Write a section header for elements with a simple type -->
+       <xsl:if test="$level = 3">
+         <xsl:call-template name="section-header">
+           <xsl:with-param name="title" select="concat($prefix, @name)"/>
+           <xsl:with-param name="label" select="concat($prefix, @name)"/>
+           <xsl:with-param name="level" select="$level"/>
+         </xsl:call-template>
+       </xsl:if>
+
        <xsl:call-template name="option-header">
          <xsl:with-param name="label" select="concat($prefix, @name)"/>
        </xsl:call-template>
