@@ -1,8 +1,8 @@
 diff --git a/scenarios/fusa_poc/ACPI_VM0/dsdt.asl b/scenarios/fusa_poc/ACPI_VM0/dsdt.asl
-index f72e756..1168589 100644
+index f72e756..e766b79 100644
 --- a/scenarios/fusa_poc/ACPI_VM0/dsdt.asl
 +++ b/scenarios/fusa_poc/ACPI_VM0/dsdt.asl
-@@ -16,10 +16,149 @@
+@@ -16,10 +16,199 @@
   */
  DefinitionBlock ("", "DSDT", 3, "ACRN  ", "ACRNDSDT", 0x00000001)
  {
@@ -38,6 +38,13 @@ index f72e756..1168589 100644
 +		})
 +		Name(_PRT, Package
 +		{
++			Package (0x04)
++			{
++				0x0004FFFF,
++				0,
++				0,
++				0x11
++			},
 +			Package (0x04)
 +			{
 +				0x0003FFFF,
@@ -111,7 +118,50 @@ index f72e756..1168589 100644
 +				})
 +			}
 +		}
++
++		Device (GTSN)
++		{
++			Name (_ADR, 0x00040000)  // _ADR: Address
++			OperationRegion (TSRT, PCI_Config, Zero, 0x0100)
++			Field (TSRT, AnyAcc, NoLock, Preserve)
++			{
++				DVID,   16,
++				Offset (0x10),
++				TADL,   32,
++				TADH,   32
++			}
++		}
 +	}
++
++        Device (PCS0)
++        {
++            Name (_HID, "INTC1034")  // _HID: Hardware ID
++            Name (_UID, Zero)  // _UID: Unique ID
++            Method (_STA, 0, NotSerialized)  // _STA: Status
++            {
++                    Return (0x0F)
++            }
++
++            Method (_CRS, 0, NotSerialized)  // _CRS: Current Resource Settings
++            {
++                Name (PCSR, ResourceTemplate ()
++                {
++                    Memory32Fixed (ReadWrite,
++                        0x00000000,         // Address Base
++                        0x00000004,         // Address Length
++                        _Y60)
++                    Memory32Fixed (ReadWrite,
++                        0x00000000,         // Address Base
++                        0x00000004,         // Address Length
++                        _Y61)
++                })
++                CreateDWordField (PCSR, \PCS0._CRS._Y60._BAS, MAL0)  // _BAS: Base Address
++                MAL0 = (^^PCI0.GTSN.TADL + 0x0200)
++                CreateDWordField (PCSR, \PCS0._CRS._Y61._BAS, MDL0)  // _BAS: Base Address
++                MDL0 = (^^PCI0.GTSN.TADL + 0x0204)
++                Return (PCSR) /* \_SB_.PCS0._CRS.PCSR */
++            }
++        }
 +
 +	Device (GPI0)
 +	{
@@ -153,20 +203,32 @@ index f72e756..1168589 100644
    })
  }
 -
+diff --git a/scenarios/fusa_poc/pci_dev.c b/scenarios/fusa_poc/pci_dev.c
+index 11d209b..f1b16d6 100644
+--- a/scenarios/fusa_poc/pci_dev.c
++++ b/scenarios/fusa_poc/pci_dev.c
+@@ -64,7 +64,7 @@ struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
+ .d = 0x1EU,
+ .f = 0x04U,
+ },
+-.vbar_base[5] = 0x80004000UL,
++.vbar_base[4] = 0x80004000UL,
+ .vbar_base[0] = 0x80008000UL,
+ .vbar_base[2] = 0x80007000UL,
+ },
 diff --git a/scenarios/fusa_poc/vm_configurations.c b/scenarios/fusa_poc/vm_configurations.c
-index 9d17281..8573957 100644
+index 3798094..96866f6 100644
 --- a/scenarios/fusa_poc/vm_configurations.c
 +++ b/scenarios/fusa_poc/vm_configurations.c
-@@ -72,6 +72,12 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
- 				.base_hpa = P2SB_BAR_ADDR,
- 				.size = P2SB_BAR_SIZE,
- 			},
-+		.mmiodevs[1] =
-+			{
-+				.base_gpa = 0xfe000000,
-+				.base_hpa = 0xfe000000,
-+				.size = 0x00002000
-+			},
+@@ -64,6 +64,11 @@ CONFIG_PRE_RT_VM(1),
+ .base_hpa = P2SB_BAR_ADDR,
+ .size = P2SB_BAR_SIZE,
+ },
++.mmiodevs[1] = {
++.base_gpa = 0xfe000000,
++.base_hpa = 0xfe000000,
++.size = 0x00002000
++},
  #endif
- 		.pt_intx_num = VM0_PT_INTX_NUM,
- 		.pt_intx = &vm0_pt_intx[0U],
+ .pt_intx_num = VM0_PT_INTX_NUM,
+ .pt_intx = &vm0_pt_intx[0U],
