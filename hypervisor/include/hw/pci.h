@@ -185,6 +185,7 @@
 #define PCIY_PCIE             0x10U
 #define PCIR_PCIE_DEVCAP      0x04U
 #define PCIR_PCIE_DEVCTRL     0x08U
+#define PCIM_PCIE_DEV_CTRL_MAX_PAYLOAD    0x00E0U
 #define PCIM_PCIE_FLRCAP      (0x1U << 28U)
 #define PCIM_PCIE_FLR         (0x1U << 15U)
 
