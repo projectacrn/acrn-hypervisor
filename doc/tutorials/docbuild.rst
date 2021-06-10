@@ -8,6 +8,10 @@ documentation and publishing it to https://projectacrn.github.io.
 You can also use these instructions to generate the ACRN documentation
 on your local system.
 
+.. contents::
+   :local:
+   :depth: 1
+
 Documentation Overview
 **********************
 
@@ -67,14 +71,15 @@ recommended folder setup for documentation contributions and generation:
          misc/
       acrn-kernel/
 
-The parent ``projectacrn folder`` is there because we'll also be creating a
-publishing area later in these steps.  For API documentation generation, we'll also
-need the ``acrn-kernel`` repo contents in a sibling folder to the
-acrn-hypervisor repo contents.
+The parent ``projectacrn folder`` is there because, if you have repo publishing
+rights, we'll also be creating a publishing area later in these steps.  For API
+documentation generation, we'll also need the ``acrn-kernel`` repo contents in a
+sibling folder to the acrn-hypervisor repo contents.
 
-It's best if the ``acrn-hypervisor``
-folder is an ssh clone of your personal fork of the upstream project
-repos (though ``https`` clones work too):
+It's best if the ``acrn-hypervisor`` folder is an ssh clone of your personal
+fork of the upstream project repos (though ``https`` clones work too and won't
+require you to
+`register your public SSH key with GitHub <https://github.com/settings/keys>`_):
 
 #. Use your browser to visit https://github.com/projectacrn and do a
    fork of the **acrn-hypervisor** repo to your personal GitHub account.)
@@ -100,8 +105,11 @@ repos (though ``https`` clones work too):
       cd acrn-hypervisor
       git remote add upstream git@github.com:projectacrn/acrn-hypervisor.git
 
+   After that, you'll have ``origin`` pointing to your cloned personal repo and
+   ``upstream`` pointing to the project repo.
+
 #. For API documentation generation we'll also need the ``acrn-kernel`` repo available
-   locally:
+   locally into the ``acrn-hypervisor`` folder:
 
    .. code-block:: bash
 
@@ -151,7 +159,7 @@ Then use ``pip3`` to install the remaining Python-based tools:
    cd ~/projectacrn/acrn-hypervisor/doc
    pip3 install --user -r scripts/requirements.txt
 
-Add ``$HOME/.local/bin`` to the front of your ``PATH`` so the system will
+Use this command to add ``$HOME/.local/bin`` to the front of your ``PATH`` so the system will
 find expected versions of these Python utilities such as ``sphinx-build`` and
 ``breathe``:
 
@@ -159,7 +167,7 @@ find expected versions of these Python utilities such as ``sphinx-build`` and
 
    printf "\nexport PATH=\$HOME/.local/bin:\$PATH" >> ~/.bashrc
 
-.. note::
+.. important::
 
    You will need to open a new terminal for this change to take effect.
    Adding this to your ``~/.bashrc`` file ensures it is set by default.
@@ -197,7 +205,7 @@ another ``make html`` and the output layout and style is changed. The
 sphinx build system creates document cache information that attempts to
 expedite documentation rebuilds, but occasionally can cause an unexpected error or
 warning to be generated.  Doing a ``make clean`` to create a clean
-generation environment and a ``make html`` again generally cleans this up.
+generation environment and a ``make html`` again generally fixes these issues.
 
 The ``read-the-docs`` theme is installed as part of the
 ``requirements.txt`` list above.  Tweaks to the standard

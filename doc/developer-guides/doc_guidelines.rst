@@ -653,6 +653,45 @@ This is the second instruction step.
    only one set of numbered steps is intended per document and the steps
    must be level 2 headings.
 
+Configuration Option Documentation
+**********************************
+
+Most of the ACRN documentation is maintained in ``.rst`` files found in the
+``doc/`` folder.  API documentation is maintained as Doxygen comments in the C
+header files (or as kerneldoc comments in the ``acrn-kernel`` repo headers),
+along with some prose documentation in ``.rst`` files. The ACRN configuration
+option documentation is created based on details maintained in schema definition
+files (``.xsd``) in the ``misc/config_tools/schema`` folder.  These schema
+definition files are used by the configuration tool to validate the XML scenario
+configuration files as well as to hold documentation about each option.  For
+example:
+
+.. code-block:: xml
+
+    <xs:element name="RELEASE" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>Build an image for release (``y``) or debug (``n``).
+    In a **release** image, assertions are not enforced and debugging
+    features are disabled, including logs, serial console, and the
+    hypervisor shell.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+
+During the documentation ``make html`` processing, the documentation annotations
+in the ``.xsd`` files are extracted and transformed into restructureText using
+an XSLT transformation found in ``doc/scripts/configdoc.xsl``. The generated
+option documentation is organized and formatted to make it easy to created links
+to specific option descriptions using an ``:option:`` role, for example
+``:option:`hv.DEBUG_OPTIONS.RELEASE``` would link to
+:option:`hv.DEBUG_OPTIONS.RELEASE`.
+
+The transformed option documentation is
+created in the ``_build/rst/reference/configdoc.txt`` file and included by
+``doc/reference/config-options.rst`` to create the final published
+:ref:`scenario-config-options` document.  You make changes to the option
+descriptions by editing the documentation found in one of the ``.xsd`` files.
+
+
 Documentation Generation
 ************************
 
