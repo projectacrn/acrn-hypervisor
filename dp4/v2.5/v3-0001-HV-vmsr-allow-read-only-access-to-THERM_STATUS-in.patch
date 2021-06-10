@@ -1,0 +1,60 @@
+From 6c4d0f06ecd53cfc4daf379bd15cd212cfd87688 Mon Sep 17 00:00:00 2001
+From: Junjie Mao <junjie.mao@intel.com>
+Date: Tue, 25 May 2021 13:56:20 +0800
+Subject: [PATCH v3 1/7] HV: vmsr: allow read-only access to THERM_STATUS in
+ VMs
+
+Signed-off-by: Junjie Mao <junjie.mao@intel.com>
+---
+ hypervisor/arch/x86/guest/vmsr.c             | 7 +++++++
+ hypervisor/include/arch/x86/asm/guest/vcpu.h | 2 +-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/hypervisor/arch/x86/guest/vmsr.c b/hypervisor/arch/x86/guest/vmsr.c
+index 195dd25..1290318 100644
+--- a/hypervisor/arch/x86/guest/vmsr.c
++++ b/hypervisor/arch/x86/guest/vmsr.c
+@@ -78,6 +78,9 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
+ #ifdef CONFIG_NVMX_ENABLED
+ 	LIST_OF_VMX_MSRS,
+ #endif
++
++	MSR_IA32_THERM_STATUS,
++	MSR_IA32_PACKAGE_THERM_STATUS,
+ };
+ 
+ #define NUM_MTRR_MSRS	13U
+@@ -507,6 +510,8 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
+ 		break;
+ 	}
+ 	case MSR_IA32_PERF_CTL:
++	case MSR_IA32_THERM_STATUS:
++	case MSR_IA32_PACKAGE_THERM_STATUS:
+ 	{
+ 		v = msr_read(msr);
+ 		break;
+@@ -890,6 +895,8 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
+ 	case MSR_IA32_SGXLEPUBKEYHASH2:
+ 	case MSR_IA32_SGXLEPUBKEYHASH3:
+ 	case MSR_IA32_SGX_SVN_STATUS:
++	case MSR_IA32_THERM_STATUS:
++	case MSR_IA32_PACKAGE_THERM_STATUS:
+ 	{
+ 		err = -EACCES;
+ 		break;
+diff --git a/hypervisor/include/arch/x86/asm/guest/vcpu.h b/hypervisor/include/arch/x86/asm/guest/vcpu.h
+index 0f29dd9..2b7d769 100644
+--- a/hypervisor/include/arch/x86/asm/guest/vcpu.h
++++ b/hypervisor/include/arch/x86/asm/guest/vcpu.h
+@@ -172,7 +172,7 @@ enum reset_mode;
+ #define SECURE_WORLD	1
+ 
+ #define NUM_WORLD_MSRS		2U
+-#define NUM_COMMON_MSRS		22U
++#define NUM_COMMON_MSRS		24U
+ #ifdef CONFIG_NVMX_ENABLED
+ #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS)
+ #else
+-- 
+2.7.4
+
