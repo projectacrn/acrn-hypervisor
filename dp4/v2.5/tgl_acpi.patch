@@ -1,0 +1,172 @@
+diff --git a/scenarios/fusa_poc/ACPI_VM0/dsdt.asl b/scenarios/fusa_poc/ACPI_VM0/dsdt.asl
+index f72e756..1168589 100644
+--- a/scenarios/fusa_poc/ACPI_VM0/dsdt.asl
++++ b/scenarios/fusa_poc/ACPI_VM0/dsdt.asl
+@@ -16,10 +16,149 @@
+  */
+ DefinitionBlock ("", "DSDT", 3, "ACRN  ", "ACRNDSDT", 0x00000001)
+ {
++	Device (PCI0)
++	{
++		Name (_HID, EISAID("PNP0A03"))
++		Name (_BBN, 0)
++		Name (_CRS, ResourceTemplate ()
++		{
++			WordBusNumber (ResourceProducer,MinFixed, MaxFixed, PosDecode,
++				0,      // Granularity
++				0,      // Range Minimum
++				255,    // Range Maximum
++				0,      // Translation Offset
++				256     // Length
++				)
++			DWordMemory (ResourceProducer, PosDecode,
++				MinFixed, MaxFixed, NonCacheable, ReadWrite,
++				0x0000000000000000, // Granularity
++				0x80000000, // Range Minimum
++				0xffffffff, // Range Maximum
++				0x0000000000000000, // Translation Offset
++				0x80000000, // Length
++				,, , AddressRangeMemory, TypeStatic)
++			QWordMemory (ResourceProducer, PosDecode,
++				MinFixed, MaxFixed, NonCacheable, ReadWrite,
++				0x0000000000000000, // Granularity
++				0x4000000000, // Range Minimum
++				0x4000009fff, // Range Maximum
++				0x0000000000000000, // Translation Offset
++				0xa000, // Length
++				,, , AddressRangeMemory, TypeStatic)
++		})
++		Name(_PRT, Package
++		{
++			Package (0x04)
++			{
++				0x0003FFFF,
++				3,
++				0,
++				0x25
++			}
++		})
++
++		Device (SPI0)
++		{
++			Method (_ADR, 0, NotSerialized)  // _ADR: Address
++			{
++			    Return (0x00030000)
++			}
++
++			Device (TP1)
++			{
++				Name (_HID, "SPT0001")  // _HID: Hardware ID
++				Name (_CID, "WITTTest")  // _CID: Compatible ID
++				Method (_STA, 0, NotSerialized)  // _STA: Status
++				{
++					Return (0x0F)
++				}
++
++				Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
++				{
++					SpiSerialBusV2 (0x0000, PolarityLow, FourWireMode, 0x08,
++						ControllerInitiated, 0x000F4240, ClockPolarityLow,
++						ClockPhaseFirst, "\\PCI0.SPI0",
++						0x00, ResourceConsumer, , Exclusive,
++						)
++				})
++			}
++
++			Device (TP2)
++			{
++				Name (_HID, "SPT0002")  // _HID: Hardware ID
++				Name (_CID, "WITTTest")  // _CID: Compatible ID
++				Method (_STA, 0, NotSerialized)  // _STA: Status
++				{
++					Return (0x0F)
++				}
++
++				Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
++				{
++					SpiSerialBusV2 (0x0000, PolarityLow, FourWireMode, 0x08,
++						ControllerInitiated, 0x004C4B40, ClockPolarityLow,
++						ClockPhaseFirst, "\\PCI0.SPI0",
++						0x00, ResourceConsumer, , Exclusive,
++						)
++				})
++			}
++
++			Device (TP3)
++			{
++				Name (_HID, "SPT0003")  // _HID: Hardware ID
++				Name (_CID, "WITTTest")  // _CID: Compatible ID
++				Method (_STA, 0, NotSerialized)  // _STA: Status
++				{
++					Return (0x0F)
++				}
++
++				Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
++				{
++					SpiSerialBusV2 (0x0000, PolarityLow, FourWireMode, 0x08,
++						ControllerInitiated, 0x01312D00, ClockPolarityLow,
++						ClockPhaseFirst, "\\PCI0.SPI0",
++						0x00, ResourceConsumer, , Exclusive,
++						)
++				})
++			}
++		}
++	}
++
++	Device (GPI0)
++	{
++		Method (_HID, 0, NotSerialized)  // _HID: Hardware ID
++		{
++			Return ("INT34C5")
++		}
++
++		Name (LINK, "\\GPI0")
++
++		Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
++		{
++			Interrupt (ResourceConsumer, Level, ActiveLow, Shared, ,, _Y22)
++			{
++				0x0000000E,
++			}
++			Memory32Fixed (ReadWrite,
++				0xFD6E0000,         // Address Base
++				0x00010000,         // Address Length
++				)
++			Memory32Fixed (ReadWrite,
++				0xFD6D0000,         // Address Base
++				0x00010000,         // Address Length
++				)
++			Memory32Fixed (ReadWrite,
++				0xFD6A0000,         // Address Base
++				0x00010000,         // Address Length
++				)
++			Memory32Fixed (ReadWrite,
++				0xFD690000,         // Address Base
++				0x00010000,         // Address Length
++				)
++		})
++	}
+   Name (_S5, Package ()
+   {
+       0x05,
+       Zero,
+   })
+ }
+-
+diff --git a/scenarios/fusa_poc/vm_configurations.c b/scenarios/fusa_poc/vm_configurations.c
+index 9d17281..8573957 100644
+--- a/scenarios/fusa_poc/vm_configurations.c
++++ b/scenarios/fusa_poc/vm_configurations.c
+@@ -72,6 +72,12 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
+ 				.base_hpa = P2SB_BAR_ADDR,
+ 				.size = P2SB_BAR_SIZE,
+ 			},
++		.mmiodevs[1] =
++			{
++				.base_gpa = 0xfe000000,
++				.base_hpa = 0xfe000000,
++				.size = 0x00002000
++			},
+ #endif
+ 		.pt_intx_num = VM0_PT_INTX_NUM,
+ 		.pt_intx = &vm0_pt_intx[0U],

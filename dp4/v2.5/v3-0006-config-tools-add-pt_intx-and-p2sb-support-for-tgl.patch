@@ -1,0 +1,57 @@
+From 1ca6f98acfbf94f91ba39ec5780f29014a347f15 Mon Sep 17 00:00:00 2001
+From: Victor Sun <victor.sun@intel.com>
+Date: Wed, 26 May 2021 10:19:42 +0800
+Subject: [PATCH v3 6/7] config-tools: add pt_intx and p2sb support for tgl-rvp
+
+Signed-off-by: Junjie Mao <junjie.mao@intel.com>
+---
+ misc/config_tools/library/board_cfg_lib.py    | 6 +++---
+ misc/config_tools/library/scenario_cfg_lib.py | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/misc/config_tools/library/board_cfg_lib.py b/misc/config_tools/library/board_cfg_lib.py
+index 529c281..45e87c7 100644
+--- a/misc/config_tools/library/board_cfg_lib.py
++++ b/misc/config_tools/library/board_cfg_lib.py
+@@ -40,7 +40,7 @@ KNOWN_CAPS_PCI_DEVS_DB = {
+     "VMSIX":TSN_DEVS + GPIO_DEVS,
+ }
+ 
+-P2SB_PASSTHRU_BOARD = ('ehl-crb-b')
++P2SB_PASSTHRU_BOARD = ('ehl-crb-b', 'tgl-rvp')
+ 
+ def get_info(board_info, msg_s, msg_e):
+     """
+@@ -705,14 +705,14 @@ def is_matched_board(boardlist):
+ 
+ 
+ def find_p2sb_bar_addr():
+-    if not is_matched_board(('ehl-crb-b')):
++    if not is_matched_board(('ehl-crb-b', 'tgl-rvp')):
+         common.print_red('find_p2sb_bar_addr() can only be called for board ehl-crb-b', err=True)
+         sys.exit(1)
+ 
+     iomem_lines = get_info(common.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+ 
+     for line in iomem_lines:
+-        if 'INTC1020:' in line:
++        if 'INTC1020:' in line or 'INT34C5:' in line:
+             start_addr = int(line.split('-')[0], 16) & 0xFF000000
+             return start_addr
+ 
+diff --git a/misc/config_tools/library/scenario_cfg_lib.py b/misc/config_tools/library/scenario_cfg_lib.py
+index 7649ef7..63f80f0 100644
+--- a/misc/config_tools/library/scenario_cfg_lib.py
++++ b/misc/config_tools/library/scenario_cfg_lib.py
+@@ -1218,7 +1218,7 @@ def check_pt_intx(phys_gsi, virt_gsi):
+     if len(phys_gsi) == 0 and len(virt_gsi) == 0:
+         return
+ 
+-    if not board_cfg_lib.is_matched_board(('ehl-crb-b','generic_board')):
++    if not board_cfg_lib.is_matched_board(('ehl-crb-b', 'tgl-rvp', 'generic_board')):
+         ERR_LIST["pt_intx"] = "only board ehl-crb-b/generic_board is supported"
+         return
+ 
+-- 
+2.7.4
+
