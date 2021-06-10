@@ -40,9 +40,31 @@ static void init_vrp(struct pci_vdev *vdev)
 	/* capability pointer */
 	pci_vdev_write_vcfg(vdev, PCIR_CAP_PTR, 1U, PCIE_CAP_VPOS);
 
-	/* pcie capability registers */
-	pci_vdev_write_vcfg(vdev, PCIE_CAP_VPOS + PCICAP_ID, 1U, 0x10);
+	/* pcie capability registers  */
+	pci_vdev_write_vcfg(vdev, PCIE_CAP_VPOS + PCICAP_ID, 1U, PCIY_PCIE);
+
+	/* bits (3:0): capability version = 010b
+	 * bits (7:4)  device/port type = 0100b (root port of pci-e)
+	 * bits (8) -- slot implemented = 1b
+	 */
 	pci_vdev_write_vcfg(vdev, PCIE_CAP_VPOS + PCICAP_EXP_CAP, 2U, 0x0142);
+
+	/* It seems important that passthru device's max payload settings match
+	 * the settings on the native device otherwise passthru device may not work.
+	 * So we have to set vrp's max payload capacity as native root port
+	 * otherwise we may accidentally change passthru device's max payload since
+	 * during guest OS's pci device enumeration, pass-thru device will renegotiate
+	 * its max payload's setting with vrp.
+	 */
+	pci_vdev_write_vcfg(vdev, PCIE_CAP_VPOS + PCIR_PCIE_DEVCAP, 4U,
+			vdev->pci_dev_config->vrp_max_payload);
+
+	/* In theory, we don't need to program dev ctr's max payload and hopefully OS
+	 * will program it but we cannot always rely on OS to program
+	 * this register.
+	 */
+	pci_vdev_write_vcfg(vdev, PCIE_CAP_VPOS + PCIR_PCIE_DEVCTRL, 2U,
+			(vdev->pci_dev_config->vrp_max_payload << 5) & PCIM_PCIE_DEV_CTRL_MAX_PAYLOAD);
 
 	vdev->parent_user = NULL;
 	vdev->user = vdev;
@@ -114,6 +136,7 @@ int32_t create_vrp(struct acrn_vm *vm, struct acrn_emul_dev *dev)
 		if (dev_config->vrp_sec_bus == vrp_config->secondary_bus) {
 			dev_config->vbdf.value = dev->slot;
 			dev_config->pbdf.value = vrp_config->phy_bdf;
+			dev_config->vrp_max_payload = vrp_config->max_payload;
 			dev_config->vdev_ops = &vrp_ops;
 
 			vdev = vpci_init_vdev(&vm->vpci, dev_config, NULL);
