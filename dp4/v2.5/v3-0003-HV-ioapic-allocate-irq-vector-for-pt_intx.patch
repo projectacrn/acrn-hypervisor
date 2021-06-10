@@ -1,4 +1,4 @@
-From b9fbab802fa38635bd1bafd5ee8ce1522bcfedbd Mon Sep 17 00:00:00 2001
+From 3279a0d3e9968a859ede698aa1c959b12c24f54c Mon Sep 17 00:00:00 2001
 From: Victor Sun <victor.sun@intel.com>
 Date: Fri, 23 Apr 2021 14:49:18 +0800
 Subject: [PATCH v3 3/7] HV: ioapic: allocate irq vector for pt_intx
@@ -8,11 +8,11 @@ in pre-launched VM;
 
 Signed-off-by: Victor Sun <victor.sun@intel.com>
 ---
- hypervisor/arch/x86/ioapic.c | 28 ++++++++++++++++++++++++++--
- 1 file changed, 26 insertions(+), 2 deletions(-)
+ hypervisor/arch/x86/ioapic.c | 32 +++++++++++++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
 
 diff --git a/hypervisor/arch/x86/ioapic.c b/hypervisor/arch/x86/ioapic.c
-index 9c7d3b7..375be2d 100644
+index 9c7d3b7ca..4cd1b1d1d 100644
 --- a/hypervisor/arch/x86/ioapic.c
 +++ b/hypervisor/arch/x86/ioapic.c
 @@ -13,6 +13,7 @@
@@ -32,10 +32,11 @@ index 9c7d3b7..375be2d 100644
   */
  
  uint32_t gsi_to_ioapic_pin(uint32_t gsi)
-@@ -441,6 +442,28 @@ int32_t init_ioapic_id_info(void)
+@@ -441,6 +442,30 @@ int32_t init_ioapic_id_info(void)
  	return ret;
  }
  
++#if PRE_VM_NUM > 0
 +static bool is_pre_vm_pt_intx(uint32_t irq)
 +{
 +	uint16_t vm_id;
@@ -57,21 +58,25 @@ index 9c7d3b7..375be2d 100644
 +	}
 +	return ret;
 +}
++#endif
 +
  void ioapic_setup_irqs(void)
  {
  	uint8_t ioapic_id;
-@@ -472,8 +495,9 @@ void ioapic_setup_irqs(void)
+@@ -472,8 +497,13 @@ void ioapic_setup_irqs(void)
  
  			/* assign vector for this GSI
  			 * for legacy irq, reserved vector and never free
 +			 * so do for pt_intx of pre-launched VM
  			 */
--			if (gsi < NR_LEGACY_PIN) {
++#if PRE_VM_NUM > 0
 +			if ((gsi < NR_LEGACY_PIN) || (is_pre_vm_pt_intx(gsi))) {
++#else
+ 			if (gsi < NR_LEGACY_PIN) {
++#endif
  				vr = alloc_irq_vector(gsi);
  				if (vr == VECTOR_INVALID) {
  					pr_err("failed to alloc VR");
 -- 
-2.7.4
+2.17.1
 
