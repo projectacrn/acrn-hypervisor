@@ -1,0 +1,227 @@
+From 5880359db86af44fd39497d997369f911f62eb0d Mon Sep 17 00:00:00 2001
+From: Minggui Cao <minggui.cao@intel.com>
+Date: Tue, 15 Sep 2020 13:25:29 +0800
+Subject: [PATCH 2/2] to enable CAT in TGL
+
+build TGL acrn:
+make hypervisor BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/tgl-rvp.xml SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/tgl-rvp/industry.xml
+
+Signed-off-by: Minggui Cao <minggui.cao@intel.com>
+---
+ hypervisor/arch/x86/cat_generic.h             | 51 +++++++++++++++++++
+ hypervisor/arch/x86/guest/vmsr.c              |  2 +-
+ hypervisor/arch/x86/rdt.c                     | 35 +++++++++++--
+ misc/vm_configs/xmls/board-xmls/tgl-rvp.xml   |  3 ++
+ .../xmls/config-xmls/tgl-rvp/industry.xml     | 10 ++--
+ 5 files changed, 94 insertions(+), 7 deletions(-)
+ create mode 100755 hypervisor/arch/x86/cat_generic.h
+ mode change 100644 => 100755 hypervisor/arch/x86/guest/vmsr.c
+ mode change 100644 => 100755 hypervisor/arch/x86/rdt.c
+ mode change 100644 => 100755 misc/vm_configs/xmls/config-xmls/tgl-rvp/industry.xml
+
+diff --git a/hypervisor/arch/x86/cat_generic.h b/hypervisor/arch/x86/cat_generic.h
+new file mode 100755
+index 00000000..325caf51
+--- /dev/null
++++ b/hypervisor/arch/x86/cat_generic.h
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (C) 2019 Intel Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <board.h>
++#include <msr.h>
++
++/* The big core (SKL, KBL, WHL, etc) can support L3 CAT only  */
++struct platform_clos_info platform_l3_way12_clos_array[4] = {
++	{
++		.value.clos_mask = 0xff0,
++		.msr_index = MSR_IA32_L3_MASK_BASE,
++	},
++	{
++		.value.clos_mask = 0xf,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 1U,
++	},
++	{
++		.value.clos_mask = 0xff0,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 2U,
++	},
++	{
++		.value.clos_mask = 0xff0,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 3U,
++	},
++};
++
++struct platform_clos_info platform_l3_way16_clos_array[4] = {
++	{
++		.value.clos_mask = 0xff00,
++		.msr_index = MSR_IA32_L3_MASK_BASE,
++	},
++	{
++		.value.clos_mask = 0x00ff,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 1U,
++	},
++	{
++		.value.clos_mask = 0x00fe,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 2U,
++	},
++	{
++		.value.clos_mask = 0x0001,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 3U,
++	},
++};
++
++//uint16_t platform_l2_clos_num = (uint16_t)(sizeof(platform_l2_clos_array)/sizeof(struct platform_clos_info));
++uint16_t platform_l3_way12_clos_num = (uint16_t)(sizeof(platform_l3_way12_clos_array)/sizeof(struct platform_clos_info));
++uint16_t platform_l3_way16_clos_num = (uint16_t)(sizeof(platform_l3_way16_clos_array)/sizeof(struct platform_clos_info));
+diff --git a/hypervisor/arch/x86/guest/vmsr.c b/hypervisor/arch/x86/guest/vmsr.c
+old mode 100644
+new mode 100755
+index cf5d6dbc..0e8fa75d
+--- a/hypervisor/arch/x86/guest/vmsr.c
++++ b/hypervisor/arch/x86/guest/vmsr.c
+@@ -324,7 +324,7 @@ static void init_msr_area(struct acrn_vcpu *vcpu)
+ 		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
+ 		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
+ 		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
+-		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(hv_clos);
++		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
+ 		vcpu->arch.msr_area.count++;
+ 		pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
+ 			vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
+diff --git a/hypervisor/arch/x86/rdt.c b/hypervisor/arch/x86/rdt.c
+old mode 100644
+new mode 100755
+index 8ce54cad..0f41636b
+--- a/hypervisor/arch/x86/rdt.c
++++ b/hypervisor/arch/x86/rdt.c
+@@ -16,6 +16,7 @@
+ #include <board.h>
+ #include <vm_config.h>
+ #include <msr.h>
++#include "cat_generic.h"
+ 
+ const uint16_t hv_clos = 0U;
+ /* RDT features can support different numbers of CLOS. Set the lowers numerical
+@@ -60,6 +61,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
+ 	},
+ };
+ 
++#if 0
+ /*
+  * @pre res == RDT_RESOURCE_L3 || res == RDT_RESOURCE_L2
+  */
+@@ -105,15 +107,19 @@ static void init_mba_capability(int res)
+ 	res_cap_info[res].res.membw.delay_linear = ((ecx & 0x4U) != 0U) ? true : false;
+ 	res_cap_info[res].clos_max = (uint16_t)(edx & 0xffffU) + 1U;
+ }
++#endif
+ 
+ /*
+  * @pre valid_clos_num > 0U
+  */
+ void init_rdt_info(void)
+ {
+-	uint8_t i;
+ 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
+ 
++
++#if 0
++	uint8_t i;
++
+ 	if (pcpu_has_cap(X86_FEATURE_RDT_A)) {
+ 		cpuid_subleaf(CPUID_RDT_ALLOCATION, 0U, &eax, &ebx, &ecx, &edx);
+ 
+@@ -143,6 +149,27 @@ void init_rdt_info(void)
+ 			}
+ 		}
+ 	}
++#else
++	uint32_t ways;
++	/* get the ways of LLC cache  */
++	cpuid_subleaf(0x4U, 3U, &eax, &ebx, &ecx, &edx);
++	ways = (ebx >> 22U) + 1U;
++
++	pr_acrnlog("LLC ways: %d\n", ways);
++
++	res_cap_info[RDT_RESOURCE_L3].res.cache.cbm_len = (uint16_t)ways;
++	res_cap_info[RDT_RESOURCE_L3].res.cache.bitmask = 0U;
++	res_cap_info[RDT_RESOURCE_L3].clos_max = 4U;
++
++	if (ways == 16U) {
++		res_cap_info[RDT_RESOURCE_L3].res.cache.cbm_len = 16U;
++		res_cap_info[RDT_RESOURCE_L3].platform_clos_array = platform_l3_way16_clos_array;
++	} else if (ways == 12U) {
++		res_cap_info[RDT_RESOURCE_L3].res.cache.cbm_len = 12U;
++		res_cap_info[RDT_RESOURCE_L3].platform_clos_array = platform_l3_way12_clos_array;
++	}
++
++#endif
+ }
+ 
+ /*
+@@ -196,10 +223,12 @@ void setup_clos(uint16_t pcpu_id)
+ uint64_t clos2pqr_msr(uint16_t clos)
+ {
+ 	uint64_t pqr_assoc;
+-
++#if 1
+ 	pqr_assoc = msr_read(MSR_IA32_PQR_ASSOC);
+ 	pqr_assoc = (pqr_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
+-
++#else
++	pqr_assoc = (uint64_t)clos;
++#endif
+ 	return pqr_assoc;
+ }
+ 
+diff --git a/misc/vm_configs/xmls/board-xmls/tgl-rvp.xml b/misc/vm_configs/xmls/board-xmls/tgl-rvp.xml
+index 70110462..2bc7d2f7 100644
+--- a/misc/vm_configs/xmls/board-xmls/tgl-rvp.xml
++++ b/misc/vm_configs/xmls/board-xmls/tgl-rvp.xml
+@@ -272,6 +272,9 @@
+ 	</MMCFG_BASE_INFO>
+ 
+ 	<CLOS_INFO>
++	rdt resources supported: L3
++	rdt resource clos max: 4
++	rdt resource mask max: '0xfff'
+ 	</CLOS_INFO>
+ 
+ 	<IOMEM_INFO>
+diff --git a/misc/vm_configs/xmls/config-xmls/tgl-rvp/industry.xml b/misc/vm_configs/xmls/config-xmls/tgl-rvp/industry.xml
+old mode 100644
+new mode 100755
+index e0679f77..74325281
+--- a/misc/vm_configs/xmls/config-xmls/tgl-rvp/industry.xml
++++ b/misc/vm_configs/xmls/config-xmls/tgl-rvp/industry.xml
+@@ -15,8 +15,12 @@
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+-            <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
++            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+         </RDT>
+         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+@@ -138,8 +142,8 @@
+         <pcpu_id>3</pcpu_id>
+     </cpu_affinity>
+     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+-        <vcpu_clos>0</vcpu_clos>
+-        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section configurable="0" desc="epc section">
+         <base desc="SGX EPC section base, must be page aligned">0</base>
+-- 
+2.17.1
+
