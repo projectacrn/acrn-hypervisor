@@ -672,6 +672,7 @@ struct acrn_intr_monitor {
 struct vrp_config
 {
 	uint16_t phy_bdf;
+	uint8_t max_payload; /* dev cap's max payload */
 	uint8_t primary_bus;
 	uint8_t secondary_bus;
 	uint8_t subordinate_bus;
