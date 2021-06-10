@@ -66,6 +66,8 @@ static int
 add_vroot_port(struct vmctx *ctx, struct passthru_dev *ptdev, struct pci_device *root_port, int ptm_cap_offset)
 {
 	int error = 0;
+	int offset = 0;
+	uint32_t dev_cap = 0;
 
 	struct acrn_emul_dev rp_vdev = {};
 	struct vrp_config *rp_priv = (struct vrp_config *)&rp_vdev.args;
@@ -89,8 +91,19 @@ add_vroot_port(struct vmctx *ctx, struct passthru_dev *ptdev, struct pci_device 
 
 	rp_priv->ptm_cap_offset = ptm_cap_offset;
 
-	pr_info("%s: virtual root port info: vbdf=0x%x, phy_bdf=0x%x, prim_bus=%x, sec_bus=%x, sub_bus=%x, ptm_cpa_offset=0x%x.\n", __func__,
-		rp_vdev.slot, rp_priv->phy_bdf, rp_priv->primary_bus, rp_priv->secondary_bus, rp_priv->subordinate_bus, rp_priv->ptm_cap_offset);
+	/* It seems important that passthru device's max payload settings match
+	 * the settings on the native device otherwise passthru device may not work.
+	 * So we have to set vrp's max payload capacity the same as native root port
+	 * otherwise we may accidentally change passthru device's max payload since
+	 * during guest OS's pci enumeration, pass-thru device will renegotiate
+	 * its max payload's setting with vrp.
+	 */
+	offset = pci_find_cap(root_port, PCIY_EXPRESS);
+	pci_device_cfg_read_u32(root_port, &dev_cap, offset + PCIER_DEVICE_CAP);
+	rp_priv->max_payload = dev_cap & PCIEM_CAP_MAX_PAYLOAD;
+	pr_info("%s: virtual root port info: vbdf=0x%x, phy_bdf=0x%x, prim_bus=%x, sec_bus=%x, sub_bus=%x, ptm_cpa_offset=0x%x, max_payload=0x%x.\n",
+		 __func__, rp_vdev.slot, rp_priv->phy_bdf, rp_priv->primary_bus, rp_priv->secondary_bus, rp_priv->subordinate_bus,
+		 rp_priv->ptm_cap_offset, rp_priv->max_payload);
 
 	error = vm_add_hv_vdev(ctx, &rp_vdev);
 	if (error) {
