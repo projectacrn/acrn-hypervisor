@@ -137,6 +137,12 @@ def insert_pt_devs_to_dev_dict(board_etree, vm_node_etree, devdict_32bits, devdi
                     devdict_64bits[(f"{dev_name}", f"{bar_region}")] = int(bar_len, 16)
 
 def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
+    """
+    Allocate an unused mmio window for the first free bar region of a vmsix supported passthrough device.
+    1. Check if this passtrhough device is in the list "KNOWN_CAPS_PCI_DEVS_DB" of "VMSIX" suppoeted device.
+    2. Find the first unused region index for the vmsix bar.
+    3. Allocate an unused mmio window for this bar.
+    """
     vendor = common.get_node("./vendor/text()", pt_dev_node)
     identifier = common.get_node("./identifier/text()", pt_dev_node)
     if vendor is None or identifier is None:
@@ -152,7 +158,7 @@ def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
         used_bar_index = set(bar_32bits_idx_list + bar_64bits_idx_list_1 + bar_64bits_idx_list_2)
         unused_bar_index = [i for i in range(6) if i not in used_bar_index]
         try:
-            next_bar_region = unused_bar_index.pop()
+            next_bar_region = unused_bar_index.pop(0)
         except IndexError:
             raise lib.error.ResourceError(f"Cannot allocate a bar index for vmsix supported device: {vendor}:{identifier}, used bar idx list: {used_bar_index}")
         address = common.get_node("./@address", pt_dev_node)
