@@ -44,11 +44,11 @@ steps:
 
 - Enable ``ivshmem`` hv-land in ACRN XML configuration file.
 
-   - Edit ``IVSHMEM_ENABLED`` to ``y`` in ACRN scenario XML configuration
+   - Edit :option:`hv.FEATURES.IVSHMEM.IVSHMEM_ENABLED` to ``y`` in ACRN scenario XML configuration
      to enable ``ivshmem`` hv-land
 
-   - Edit ``IVSHMEM_REGION`` to specify the shared memory name, size and
-     communication VMs in ACRN scenario XML configuration. The ``IVSHMEM_REGION``
+   - Edit :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` to specify the shared memory name, size and
+     communication VMs in ACRN scenario XML configuration. The :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION`
      format is ``shm_name,shm_size,VM IDs``:
 
      -  ``shm_name`` - Specify a shared memory name. The name needs to start
