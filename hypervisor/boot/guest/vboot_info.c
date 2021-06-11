@@ -64,6 +64,11 @@ static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mo
 	}
 
 	if (is_sos_vm(vm)) {
+		uint64_t mods_start, mods_end;
+
+		get_boot_mods_range(&mods_start, &mods_end);
+		mods_start = sos_vm_hpa2gpa(mods_start);
+		mods_end = sos_vm_hpa2gpa(mods_end);
 
 		if (vm->sw.ramdisk_info.src_addr != NULL) {
 			ramdisk_load_gpa = sos_vm_hpa2gpa((uint64_t)vm->sw.ramdisk_info.src_addr);
@@ -75,11 +80,15 @@ static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mo
 		 * copy then.
 		 */
 		if ((ramdisk_load_gpa + vm->sw.ramdisk_info.size) > ramdisk_gpa_max) {
+			/* In this case, mods_end must be higher than ramdisk_gpa_max,
+			 * so try to locate ramdisk between MEM_1M and mods_start/kernel_start,
+			 * or try the range between kernel_end and mods_start;
+			 */
 			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
-					MEM_1M, kernel_start);
-			if (ramdisk_load_gpa == INVALID_GPA) {
+					MEM_1M, min(min(mods_start, kernel_start), ramdisk_gpa_max));
+			if ((ramdisk_load_gpa == INVALID_GPA) && (kernel_end < min(mods_start, ramdisk_gpa_max))) {
 				ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
-						kernel_end, ramdisk_gpa_max);
+						kernel_end, min(mods_start, ramdisk_gpa_max));
 			}
 		}
 	} else {
@@ -87,12 +96,13 @@ static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mo
 		 */
 		ramdisk_gpa_max = min(PRE_VM_MAX_RAM_ADDR_BELOW_4GB, ramdisk_gpa_max);
 
-		if (kernel_end > ramdisk_gpa_max) {
-			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
-					MEM_1M, min(kernel_start, ramdisk_gpa_max));
-		} else {
+		if (kernel_end < ramdisk_gpa_max) {
 			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
 					kernel_end, ramdisk_gpa_max);
+		}
+		if (ramdisk_load_gpa == INVALID_GPA) {
+			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
+					MEM_1M, min(kernel_start, ramdisk_gpa_max));
 		}
 	}
 
@@ -145,7 +155,7 @@ static void *get_kernel_load_addr(struct acrn_vm *vm)
 		zeropage = (struct zero_page *)sw_info->kernel_info.kernel_src_addr;
 
 		if ((is_sos_vm(vm)) && (zeropage->hdr.relocatable_kernel != 0U)) {
-			uint64_t hv_start, hv_end, mods_start, mods_end;
+			uint64_t mods_start, mods_end;
 			uint64_t kernel_load_gpa = INVALID_GPA;
 			uint32_t kernel_align = zeropage->hdr.kernel_alignment;
 			uint32_t kernel_init_size = zeropage->hdr.init_size;
@@ -155,28 +165,17 @@ static void *get_kernel_load_addr(struct acrn_vm *vm)
 			 */
 			uint32_t kernel_size = kernel_init_size + 2 * kernel_align;
 
-			hv_start = sos_vm_hpa2gpa(get_hv_image_base());
-			hv_end = hv_start + CONFIG_HV_RAM_SIZE;
 			get_boot_mods_range(&mods_start, &mods_end);
 			mods_start = sos_vm_hpa2gpa(mods_start);
 			mods_end = sos_vm_hpa2gpa(mods_end);
 
-			if (hv_end < mods_start) {
-				kernel_load_gpa = find_space_from_ve820(vm, kernel_size, hv_end, mods_start);
-			}
+			/* TODO: support load kernel when modules are beyond 4GB space. */
+			if (mods_end < MEM_4G) {
+				kernel_load_gpa = find_space_from_ve820(vm, kernel_size, MEM_1M, mods_start);
 
-			if ((kernel_load_gpa == INVALID_GPA) && (max(mods_end, hv_end) < MEM_4G)) {
-				kernel_load_gpa = find_space_from_ve820(vm, kernel_size,
-								max(mods_end, hv_end), MEM_4G);
-			}
-
-			if ((kernel_load_gpa == INVALID_GPA) && (mods_end < hv_start)) {
-				kernel_load_gpa = find_space_from_ve820(vm, kernel_size, mods_end, hv_start);
-			}
-
-			if ((kernel_load_gpa == INVALID_GPA) && (min(mods_start, hv_start) > MEM_1M)) {
-				kernel_load_gpa = find_space_from_ve820(vm, kernel_size,
-								MEM_1M, min(mods_start, hv_start));
+				if (kernel_load_gpa == INVALID_GPA) {
+					kernel_load_gpa = find_space_from_ve820(vm, kernel_size, mods_end, MEM_4G);
+				}
 			}
 
 			if (kernel_load_gpa != INVALID_GPA) {
