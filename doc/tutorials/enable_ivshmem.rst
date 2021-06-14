@@ -9,50 +9,24 @@ solution or hv-land solution, according to the usage scenario needs.
 While both solutions can be used at the same time, VMs using different
 solutions cannot communicate with each other.
 
-Ivshmem DM-Land Usage
-*********************
+Enable Ivshmem Support
+**********************
 
-Add this line as an ``acrn-dm`` boot parameter::
-
-     -s slot,ivshmem,shm_name,shm_size
-
-where
-
--  ``-s slot``  - Specify the virtual PCI slot number
-
--  ``ivshmem``  - Virtual PCI device name
-
--  ``shm_name`` - Specify a shared memory name. Post-launched VMs with the same
-   ``shm_name`` share a shared memory region. The ``shm_name`` needs to start
-   with ``dm:/`` prefix. For example, ``dm:/test``
-
--  ``shm_size`` - Specify a shared memory size. The unit is megabyte. The size
-   ranges from 2 megabytes to 512 megabytes and must be a power of 2 megabytes.
-   For example, to set up a shared memory of 2 megabytes, use ``2``
-   instead of ``shm_size``. The two communicating VMs must define the same size.
-
-.. note:: This device can be used with real-time VM (RTVM) as well.
-
-.. _ivshmem-hv:
-
-Ivshmem HV-Land Usage
-*********************
-
-The ``ivshmem`` hv-land solution is disabled by default in ACRN. You can enable
+The ``ivshmem`` solution is disabled by default in ACRN. You can enable
 it using the :ref:`ACRN configuration toolset <acrn_config_workflow>` with these
 steps:
 
-- Enable ``ivshmem`` hv-land in ACRN XML configuration file.
+- Enable ``ivshmem`` via ACRN configuration tool GUI.
 
-   - Edit ``IVSHMEM_ENABLED`` to ``y`` in ACRN scenario XML configuration
-     to enable ``ivshmem`` hv-land
+   - Set :option:`hv.FEATURES.IVSHMEM.IVSHMEM_ENABLED` to ``y``
 
-   - Edit ``IVSHMEM_REGION`` to specify the shared memory name, size and
-     communication VMs in ACRN scenario XML configuration. The ``IVSHMEM_REGION``
-     format is ``shm_name,shm_size,VM IDs``:
+   - Edit :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` to specify the shared memory name, size and
+     communication VMs. The ``IVSHMEM_REGION`` format is ``shm_name,shm_size,VM IDs``:
 
      -  ``shm_name`` - Specify a shared memory name. The name needs to start
-        with the ``hv:/`` prefix. For example, ``hv:/shm_region_0``
+        with the ``hv:/`` prefix for hv-land, or ``dm:/`` for dm-land.
+        For example, ``hv:/shm_region_0`` for hv-land and ``dm:/shm_region_0``
+        for dm-land.
 
      -  ``shm_size`` - Specify a shared memory size. The unit is megabyte. The
         size ranges from 2 megabytes to 512 megabytes and must be a power of 2 megabytes.
@@ -63,9 +37,53 @@ steps:
         communication and separate it with ``:``. For example, the
         communication between VM0 and VM2, it can be written as ``0:2``
 
-   .. note:: You can define up to eight ``ivshmem`` hv-land shared regions.
-
 - Build with the XML configuration, refer to :ref:`getting-started-building`.
+
+Ivshmem DM-Land Usage
+*********************
+
+Follow `Enable Ivshmem Support`_ and
+add below line as an ``acrn-dm`` boot parameter::
+
+     -s slot,ivshmem,shm_name,shm_size
+
+where
+
+-  ``-s slot``  - Specify the virtual PCI slot number
+
+-  ``ivshmem``  - Virtual PCI device emulating the Shared Memory
+
+-  ``shm_name`` - Specify a shared memory name. This ``shm_name`` must be listed
+   in :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` in `Enable Ivshmem Support`_ section and needs to start
+   with ``dm:/`` prefix.
+
+-  ``shm_size`` - Shared memory size of selected ``shm_name``.
+
+There are two ways to insert above boot parameter for ``acrn-dm``
+
+-  Manually edit launch script file, in this case, user shall ensure that both
+   ``shm_name`` and ``shm_size`` match with that are defined via configuration tool GUI.
+
+-  Use the command following below format to create a launch script, when IVSHMEM is enabled
+    and :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` is properly configured via configuration tool GUI.
+
+     .. code-block:: none
+        :emphasize-lines: 5
+
+        python3 misc/config_tools/launch_config/launch_cfg_gen.py \
+        --board <path_to_your_boardxml> \
+        --scenario <path_to_your_scenarioxml> \
+        --launch <path_to_your_launched_script_xml>  \
+        --uosid <desired_single_vmid_or_0_for_all_vmids>
+
+.. note:: This device can be used with real-time VM (RTVM) as well.
+
+.. _ivshmem-hv:
+
+Ivshmem HV-Land Usage
+*********************
+
+ Follow `Enable Ivshmem Support`_ to setup HV-Land Ivshmem support.
 
 Ivshmem Notification Mechanism
 ******************************
@@ -188,7 +206,7 @@ Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
 
 2. Build ACRN based on the XML configuration for hybrid_rt scenario on whl-ipc-i5 board::
 
-	make BOARD=whl-ipc-i5 SCENARIO=<path/to/edited/scenario.xml> TARGET_DIR=xxx
+      make BOARD=whl-ipc-i5 SCENARIO=<path/to/edited/scenario.xml> TARGET_DIR=xxx
 
 3. Add a new virtual PCI device for VM2 (post-launched VM): the device type is
    ``ivshmem``, shared memory name is ``hv:/shm_region_0``, and shared memory
