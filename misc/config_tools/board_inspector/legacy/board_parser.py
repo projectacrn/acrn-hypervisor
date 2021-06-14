@@ -30,25 +30,6 @@ def check_permission():
         parser_lib.print_red("You need run this tool with root privileges (sudo)!")
         sys.exit(1)
 
-
-def native_check():
-    """Check if this is natvie os"""
-    cmd = "cpuid -r -l 0x01"
-    res = parser_lib.cmd_execute(cmd)
-    while True:
-        line = parser_lib.decode_stdout(res)
-
-        if line:
-
-            if len(line.split()) <= 2:
-                continue
-
-            reg_value = line.split()[4].split('=')[1]
-            break
-
-    return int(reg_value, 16) & 0x80000000 == 0
-
-
 def vendor_check():
     """Check the CPU vendor"""
     with open("/proc/cpuinfo", 'r') as f_node:
@@ -90,10 +71,6 @@ def check_env():
             if int(version) < 20170122:
                 parser_lib.print_yel("Need CPUID version >= 20170122")
                 sys.exit(1)
-
-    if not native_check():
-        parser_lib.print_red("Please run this tools in a native OS environment!")
-        sys.exit(1)
 
     if os.path.exists(OUTPUT):
         shutil.rmtree(OUTPUT)

@@ -11,11 +11,23 @@ import subprocess
 import lxml.etree
 import argparse
 from importlib import import_module
+from cpuparser import parse_cpuid, get_online_cpu_ids
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir))
 
+def native_check():
+    cpu_ids = get_online_cpu_ids()
+    cpu_id = cpu_ids.pop(0)
+    leaf_1 = parse_cpuid(1, 0, cpu_id)
+    if leaf_1.hypervisor != 0:
+        logging.warning(f"Board inspector is running inside a Virtual Machine (VM). Running ACRN inside a VM is only" \
+        "supported under KVM/QEMU. Unexpected results may occur when deviating from that combination.")
+
 def main(board_name, board_xml, args):
+    # Check if this is native os
+    native_check()
+
     try:
         # First invoke the legacy board parser to create the board XML ...
         legacy_parser = os.path.join(script_dir, "legacy", "board_parser.py")
