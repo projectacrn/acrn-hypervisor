@@ -6,7 +6,7 @@
 import logging
 import lxml.etree
 
-from cpuparser import parse_cpuid
+from cpuparser import parse_cpuid, get_online_cpu_ids
 from extractors.helpers import add_child, get_node
 
 level_types = {
@@ -16,18 +16,6 @@ level_types = {
     4: "tile",
     5: "die",
 }
-
-def get_online_cpu_ids():
-    acc = list()
-    with open("/sys/devices/system/cpu/online", "r") as f:
-        line = f.read().strip()
-        for r in line.split(","):
-            if r.find("-") > 0:
-                first, last = tuple(map(int, r.split("-")))
-                acc.extend(range(first, last + 1))
-            else:
-                acc.append(int(r))
-    return acc
 
 def get_parent(processors_node, topo_level, topo_id):
     n = get_node(processors_node, f"//{topo_level}[@id='{topo_id}']")
