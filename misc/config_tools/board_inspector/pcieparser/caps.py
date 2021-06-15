@@ -114,12 +114,12 @@ def parse_msi(buf, cap_ptr):
     field_list = msi_field_list(addr)
     return MSI_factory(field_list).from_buffer_copy(buf, cap_ptr)
 
-# MSI-X
+# MSI-X (0x11)
 
 class MSIX(cdata.Struct, Capability):
     _pack_ = 1
     _fields_ = copy.copy(CapabilityListRegister._fields_) + [
-        ('table_size', ctypes.c_uint16, 10),
+        ('table_size_z', ctypes.c_uint16, 10),
         ('reserved', ctypes.c_uint16, 3),
         ('function_mask', ctypes.c_uint16, 1),
         ('msix_enable', ctypes.c_uint16, 1),
@@ -128,6 +128,10 @@ class MSIX(cdata.Struct, Capability):
         ('pba_bir', ctypes.c_uint32, 3),
         ('pba_offset_z', ctypes.c_uint32, 29),
     ]
+
+    @property
+    def table_size(self):
+        return self.table_size_z + 1
 
     @property
     def table_offset(self):
