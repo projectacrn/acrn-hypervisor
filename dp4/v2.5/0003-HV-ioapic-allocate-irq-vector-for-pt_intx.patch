@@ -1,7 +1,7 @@
-From 3279a0d3e9968a859ede698aa1c959b12c24f54c Mon Sep 17 00:00:00 2001
+From 5e350483a6ae49d77a0a060d21e4799796a6aecb Mon Sep 17 00:00:00 2001
 From: Victor Sun <victor.sun@intel.com>
 Date: Fri, 23 Apr 2021 14:49:18 +0800
-Subject: [PATCH v3 3/7] HV: ioapic: allocate irq vector for pt_intx
+Subject: [PATCH 3/8] HV: ioapic: allocate irq vector for pt_intx
 
 Allocate irq vector for pre-configured pt_intx to enable legacy INTx passthrough
 in pre-launched VM;

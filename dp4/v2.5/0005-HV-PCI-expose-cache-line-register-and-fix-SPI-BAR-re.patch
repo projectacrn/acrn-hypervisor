@@ -1,8 +1,8 @@
-From abc80df67cba04604d851b5f6925d667db743d8c Mon Sep 17 00:00:00 2001
+From 30240dde88df0fe0686b2a555429c892de301e1d Mon Sep 17 00:00:00 2001
 From: Victor Sun <victor.sun@intel.com>
 Date: Wed, 26 May 2021 09:48:22 +0800
-Subject: [PATCH v3 5/7] HV: PCI: expose cache line register and fix SPI BAR
- reset by BIOS
+Subject: [PATCH 5/8] HV: PCI: expose cache line register and fix SPI BAR reset
+ by BIOS
 
 Signed-off-by: Junjie Mao <junjie.mao@intel.com>
 ---
@@ -12,7 +12,7 @@ Signed-off-by: Junjie Mao <junjie.mao@intel.com>
  3 files changed, 15 insertions(+), 2 deletions(-)
 
 diff --git a/hypervisor/dm/vpci/vpci.c b/hypervisor/dm/vpci/vpci.c
-index eb632d5..7466375 100644
+index eb632d5e4..7466375e6 100644
 --- a/hypervisor/dm/vpci/vpci.c
 +++ b/hypervisor/dm/vpci/vpci.c
 @@ -418,7 +418,7 @@ static const struct cfg_header_perm cfg_hdr_perm = {
@@ -49,7 +49,7 @@ index eb632d5..7466375 100644
  		if (!bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.ro_mask)) {
  			if (bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.pt_mask)) {
 diff --git a/hypervisor/hw/pci.c b/hypervisor/hw/pci.c
-index 4b6205e..b2c4c47 100644
+index 4b6205e61..b2c4c4724 100644
 --- a/hypervisor/hw/pci.c
 +++ b/hypervisor/hw/pci.c
 @@ -657,6 +657,10 @@ void init_pci_pdev_list(void)
@@ -64,7 +64,7 @@ index 4b6205e..b2c4c47 100644
  		was_visited = bitmap_test((bus & 0x3FU), &buses_visited[bus >> 6U]);
  		if (!was_visited) {
 diff --git a/hypervisor/include/hw/pci.h b/hypervisor/include/hw/pci.h
-index 7493587..22e7fb1 100644
+index dca0c58c4..42943f608 100644
 --- a/hypervisor/include/hw/pci.h
 +++ b/hypervisor/include/hw/pci.h
 @@ -77,6 +77,7 @@
@@ -76,5 +76,5 @@ index 7493587..22e7fb1 100644
  #define PCIM_HDRTYPE          0x7FU
  #define PCIM_HDRTYPE_NORMAL   0x00U
 -- 
-2.7.4
+2.17.1
 

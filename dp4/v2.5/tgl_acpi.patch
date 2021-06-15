@@ -203,19 +203,6 @@ index f72e756..e766b79 100644
    })
  }
 -
-diff --git a/scenarios/fusa_poc/pci_dev.c b/scenarios/fusa_poc/pci_dev.c
-index 11d209b..f1b16d6 100644
---- a/scenarios/fusa_poc/pci_dev.c
-+++ b/scenarios/fusa_poc/pci_dev.c
-@@ -64,7 +64,7 @@ struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
- .d = 0x1EU,
- .f = 0x04U,
- },
--.vbar_base[5] = 0x80004000UL,
-+.vbar_base[4] = 0x80004000UL,
- .vbar_base[0] = 0x80008000UL,
- .vbar_base[2] = 0x80007000UL,
- },
 diff --git a/scenarios/fusa_poc/vm_configurations.c b/scenarios/fusa_poc/vm_configurations.c
 index 3798094..96866f6 100644
 --- a/scenarios/fusa_poc/vm_configurations.c

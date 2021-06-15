@@ -1,17 +1,17 @@
-From ef10592d13a4c5d2f706b4951a983a358ebb6f3d Mon Sep 17 00:00:00 2001
+From 409a14b0082d6c0717e82d23d7fec7529b9d9880 Mon Sep 17 00:00:00 2001
 From: Victor Sun <victor.sun@intel.com>
 Date: Mon, 26 Apr 2021 20:52:41 +0800
-Subject: [PATCH v3 4/7] config-tool: xml: add fusa poc xml for tgl-rvp
+Subject: [PATCH 4/8] config-tool: xml: add fusa poc xml for tgl-rvp
 
 Signed-off-by: Victor Sun <victor.sun@intel.com>
 ---
- misc/config_tools/data/tgl-rvp/fusa_poc.xml | 184 ++++++++++++++++++++++++++++
+ misc/config_tools/data/tgl-rvp/fusa_poc.xml | 184 ++++++++++++++++++++
  1 file changed, 184 insertions(+)
  create mode 100644 misc/config_tools/data/tgl-rvp/fusa_poc.xml
 
 diff --git a/misc/config_tools/data/tgl-rvp/fusa_poc.xml b/misc/config_tools/data/tgl-rvp/fusa_poc.xml
 new file mode 100644
-index 0000000..593d759
+index 000000000..08fceb313
 --- /dev/null
 +++ b/misc/config_tools/data/tgl-rvp/fusa_poc.xml
 @@ -0,0 +1,184 @@
@@ -133,7 +133,7 @@ index 0000000..593d759
 +    </communication_vuart>
 +    <pci_devs>
 +        <pci_dev>00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</pci_dev>
-+        <pci_dev>00:1e.3 Serial bus controller [0c80]: Intel Corporation Device a0ab (rev 20)</pci_dev>
++        <pci_dev>00:1e.2 Serial bus controller [0c80]: Intel Corporation Device a0aa (rev 20)</pci_dev>
 +        <pci_dev>00:1e.4 Ethernet controller: Intel Corporation Device a0ac (rev 20)</pci_dev>
 +    </pci_devs>
 +    <mmio_resources>
@@ -200,5 +200,5 @@ index 0000000..593d759
 +  </vm>
 +</acrn-config>
 -- 
-2.7.4
+2.17.1
 

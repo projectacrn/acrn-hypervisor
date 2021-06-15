@@ -1,8 +1,7 @@
-From 6c4d0f06ecd53cfc4daf379bd15cd212cfd87688 Mon Sep 17 00:00:00 2001
+From b8c7eb4f139b88bfd20a724c6d10eaeeed92d9c5 Mon Sep 17 00:00:00 2001
 From: Junjie Mao <junjie.mao@intel.com>
 Date: Tue, 25 May 2021 13:56:20 +0800
-Subject: [PATCH v3 1/7] HV: vmsr: allow read-only access to THERM_STATUS in
- VMs
+Subject: [PATCH 1/8] HV: vmsr: allow read-only access to THERM_STATUS in VMs
 
 Signed-off-by: Junjie Mao <junjie.mao@intel.com>
 ---
@@ -11,7 +10,7 @@ Signed-off-by: Junjie Mao <junjie.mao@intel.com>
  2 files changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/hypervisor/arch/x86/guest/vmsr.c b/hypervisor/arch/x86/guest/vmsr.c
-index 195dd25..1290318 100644
+index 195dd2567..1290318bf 100644
 --- a/hypervisor/arch/x86/guest/vmsr.c
 +++ b/hypervisor/arch/x86/guest/vmsr.c
 @@ -78,6 +78,9 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
@@ -43,7 +42,7 @@ index 195dd25..1290318 100644
  		err = -EACCES;
  		break;
 diff --git a/hypervisor/include/arch/x86/asm/guest/vcpu.h b/hypervisor/include/arch/x86/asm/guest/vcpu.h
-index 0f29dd9..2b7d769 100644
+index 0f29dd9e6..2b7d76913 100644
 --- a/hypervisor/include/arch/x86/asm/guest/vcpu.h
 +++ b/hypervisor/include/arch/x86/asm/guest/vcpu.h
 @@ -172,7 +172,7 @@ enum reset_mode;
@@ -56,5 +55,5 @@ index 0f29dd9..2b7d769 100644
  #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS)
  #else
 -- 
-2.7.4
+2.17.1
 

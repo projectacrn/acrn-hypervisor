@@ -1,7 +1,7 @@
-From 1ca6f98acfbf94f91ba39ec5780f29014a347f15 Mon Sep 17 00:00:00 2001
+From 2ab15d43c87799f4598184980716d663ce71a6cb Mon Sep 17 00:00:00 2001
 From: Victor Sun <victor.sun@intel.com>
 Date: Wed, 26 May 2021 10:19:42 +0800
-Subject: [PATCH v3 6/7] config-tools: add pt_intx and p2sb support for tgl-rvp
+Subject: [PATCH 6/8] config-tools: add pt_intx and p2sb support for tgl-rvp
 
 Signed-off-by: Junjie Mao <junjie.mao@intel.com>
 ---
@@ -10,7 +10,7 @@ Signed-off-by: Junjie Mao <junjie.mao@intel.com>
  2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/misc/config_tools/library/board_cfg_lib.py b/misc/config_tools/library/board_cfg_lib.py
-index 529c281..45e87c7 100644
+index 529c2819a..45e87c701 100644
 --- a/misc/config_tools/library/board_cfg_lib.py
 +++ b/misc/config_tools/library/board_cfg_lib.py
 @@ -40,7 +40,7 @@ KNOWN_CAPS_PCI_DEVS_DB = {
@@ -40,7 +40,7 @@ index 529c281..45e87c7 100644
              return start_addr
  
 diff --git a/misc/config_tools/library/scenario_cfg_lib.py b/misc/config_tools/library/scenario_cfg_lib.py
-index 7649ef7..63f80f0 100644
+index 7649ef76e..63f80f0b0 100644
 --- a/misc/config_tools/library/scenario_cfg_lib.py
 +++ b/misc/config_tools/library/scenario_cfg_lib.py
 @@ -1218,7 +1218,7 @@ def check_pt_intx(phys_gsi, virt_gsi):
@@ -53,5 +53,5 @@ index 7649ef7..63f80f0 100644
          return
  
 -- 
-2.7.4
+2.17.1
 

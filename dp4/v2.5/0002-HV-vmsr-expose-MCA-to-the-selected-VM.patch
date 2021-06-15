@@ -1,20 +1,20 @@
-From f8c96da8ab11d897ec872bcf2703c464e366eb90 Mon Sep 17 00:00:00 2001
+From 80cb70b46a75c626fd8ae554b239cc8de27bb5f2 Mon Sep 17 00:00:00 2001
 From: Junjie Mao <junjie.mao@intel.com>
 Date: Wed, 26 May 2021 09:16:45 +0800
-Subject: [PATCH v3 2/7] HV: vmsr: expose MCA to the selected VM
+Subject: [PATCH 2/8] HV: vmsr: expose MCA to the selected VM
 
 Signed-off-by: Junjie Mao <junjie.mao@intel.com>
 ---
- hypervisor/arch/x86/guest/vm.c             |  7 +++++
- hypervisor/arch/x86/guest/vmsr.c           | 43 +++++++++++++++++++++++++++++-
+ hypervisor/arch/x86/guest/vm.c             |  7 ++++
+ hypervisor/arch/x86/guest/vmsr.c           | 43 +++++++++++++++++++++-
  hypervisor/include/arch/x86/asm/guest/vm.h |  1 +
- hypervisor/include/arch/x86/asm/msr.h      |  5 ++++
- hypervisor/include/public/acrn_common.h    |  2 ++
+ hypervisor/include/arch/x86/asm/msr.h      |  5 +++
+ hypervisor/include/public/acrn_common.h    |  2 +
  misc/config_tools/schema/VMtypes.xsd       |  1 +
  6 files changed, 58 insertions(+), 1 deletion(-)
 
 diff --git a/hypervisor/arch/x86/guest/vm.c b/hypervisor/arch/x86/guest/vm.c
-index 5b86729..e50388c 100644
+index efe355a7f..889390524 100644
 --- a/hypervisor/arch/x86/guest/vm.c
 +++ b/hypervisor/arch/x86/guest/vm.c
 @@ -148,6 +148,13 @@ bool is_nvmx_configured(const struct acrn_vm *vm)
@@ -32,7 +32,7 @@ index 5b86729..e50388c 100644
   * @brief VT-d PI posted mode can possibly be used for PTDEVs assigned
   * to this VM if platform supports VT-d PI AND lapic passthru is not configured
 diff --git a/hypervisor/arch/x86/guest/vmsr.c b/hypervisor/arch/x86/guest/vmsr.c
-index 1290318..1ba3182 100644
+index 1290318bf..1ba318244 100644
 --- a/hypervisor/arch/x86/guest/vmsr.c
 +++ b/hypervisor/arch/x86/guest/vmsr.c
 @@ -360,6 +360,22 @@ void init_emulated_msrs(struct acrn_vcpu *vcpu)
@@ -114,10 +114,10 @@ index 1290318..1ba3182 100644
  			pr_warn("%s(): vm%d vcpu%d reading MSR %lx not supported",
  				__func__, vcpu->vm->vm_id, vcpu->vcpu_id, msr);
 diff --git a/hypervisor/include/arch/x86/asm/guest/vm.h b/hypervisor/include/arch/x86/asm/guest/vm.h
-index 1d2d64c..6a271ce 100644
+index 74065db25..8300defee 100644
 --- a/hypervisor/include/arch/x86/asm/guest/vm.h
 +++ b/hypervisor/include/arch/x86/asm/guest/vm.h
-@@ -257,6 +257,7 @@ void vrtc_init(struct acrn_vm *vm);
+@@ -258,6 +258,7 @@ void vrtc_init(struct acrn_vm *vm);
  bool is_lapic_pt_configured(const struct acrn_vm *vm);
  bool is_rt_vm(const struct acrn_vm *vm);
  bool is_nvmx_configured(const struct acrn_vm *vm);
@@ -126,7 +126,7 @@ index 1d2d64c..6a271ce 100644
  bool has_rt_vm(void);
  struct acrn_vm *get_highest_severity_vm(bool runtime);
 diff --git a/hypervisor/include/arch/x86/asm/msr.h b/hypervisor/include/arch/x86/asm/msr.h
-index 00ed0a2..296cad1 100644
+index 00ed0a289..296cad1ba 100644
 --- a/hypervisor/include/arch/x86/asm/msr.h
 +++ b/hypervisor/include/arch/x86/asm/msr.h
 @@ -666,4 +666,9 @@ void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu);
@@ -140,7 +140,7 @@ index 00ed0a2..296cad1 100644
 +
  #endif /* MSR_H */
 diff --git a/hypervisor/include/public/acrn_common.h b/hypervisor/include/public/acrn_common.h
-index ba50006..9ec2fd2 100644
+index ae4a26771..11810ed34 100644
 --- a/hypervisor/include/public/acrn_common.h
 +++ b/hypervisor/include/public/acrn_common.h
 @@ -54,6 +54,8 @@
@@ -153,7 +153,7 @@ index ba50006..9ec2fd2 100644
  #define VIRTUAL_SLEEP_CTL_ADDR		0x400U /* Pre-launched VM uses ACPI reduced HW mode and sleep control register */
  #define VIRTUAL_PM1A_CNT_ADDR		0x404U
 diff --git a/misc/config_tools/schema/VMtypes.xsd b/misc/config_tools/schema/VMtypes.xsd
-index 3cc93c6..ac64ad4 100644
+index 3cc93c613..ac64ad442 100644
 --- a/misc/config_tools/schema/VMtypes.xsd
 +++ b/misc/config_tools/schema/VMtypes.xsd
 @@ -49,6 +49,7 @@
@@ -165,5 +165,5 @@ index 3cc93c6..ac64ad4 100644
  </xs:simpleType>
  
 -- 
-2.7.4
+2.17.1
 
