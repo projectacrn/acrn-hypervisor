@@ -85,7 +85,7 @@ L1 VMs have the following restrictions:
 Constraints on L1 guest configuration:
 
 * Local APIC passthrough must be enabled
-* Only SCHED_NOOP scheduler is supported. ACRN can't receive timer interrupts
+* Only the ``SCHED_NOOP`` scheduler is supported. ACRN can't receive timer interrupts
   on LAPIC passthrough pCPUs
 
 
