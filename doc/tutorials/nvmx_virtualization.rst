@@ -73,7 +73,7 @@ Restrictions and Constraints
 ****************************
 
 Nested virtualization is considered an experimental feature, and only tested
-on Tiger Lake and kaby Lake platforms (See :ref:`hardware`.)
+on Tiger Lake and Kaby Lake platforms (See :ref:`hardware`.)
 
 L1 VMs have the following restrictions:
 
