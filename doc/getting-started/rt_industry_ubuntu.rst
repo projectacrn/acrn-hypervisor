@@ -12,10 +12,11 @@ Verified Version
 
 - Ubuntu version: **18.04**
 - GCC version: **7.5**
-- ACRN-hypervisor branch: **release_2.4 (v2.4)**
-- ACRN-Kernel (Service VM kernel): **release_2.4 (v2.4)**
+- ACRN-hypervisor branch: **release_2.5 (v2.5)**
+- ACRN-Kernel (Service VM kernel): **release_2.5 (v2.5)**
 - RT kernel for Ubuntu User OS: **4.19/preempt-rt (4.19.72-rt25)**
-- HW: Maxtang Intel WHL-U i7-8665U (`AX8665U-A2 <http://www.maxtangpc.com/fanlessembeddedcomputers/140.html>`_)
+- HW: Intel NUC 11 Pro Kit NUC11TNHi5 (`NUC11TNHi5 
+  <https://ark.intel.com/content/www/us/en/ark/products/205594/intel-nuc-11-pro-kit-nuc11tnhi5.html>`_)
 
 Prerequisites
 *************
@@ -25,26 +26,24 @@ Prerequisites
 - Monitors with HDMI interface (DP interface is optional)
 - USB keyboard and mouse
 - Ethernet cables
-- A grub-2.04-7 bootloader with the following patch:
-
-  http://git.savannah.gnu.org/cgit/grub.git/commit/?id=0f3f5b7c13fa9b677a64cf11f20eca0f850a2b20:
-  multiboot2: Set min address for mbi allocation to 0x1000
 
 .. rst-class:: numbered-step
 
 Hardware Connection
 *******************
 
-Connect the WHL Maxtang with the appropriate external devices.
+Connect the NUC11TNHi5 with the appropriate external devices.
 
-#. Connect the WHL Maxtang board to a monitor via an HDMI cable.
+#. Connect the NUC11TNHi5 board to a monitor via an HDMI cable.
 #. Connect the mouse, keyboard, Ethernet cable, and power supply cable to
-   the WHL Maxtang board.
+   the NUC11TNHi5 board.
 #. Insert the Ubuntu 18.04 USB boot disk into the USB port.
 
    .. figure:: images/rt-ind-ubun-hw-1.png
+      :scale: 15
 
    .. figure:: images/rt-ind-ubun-hw-2.png
+      :scale: 15
 
 .. rst-class:: numbered-step
 
@@ -54,12 +53,12 @@ Connect the WHL Maxtang with the appropriate external devices.
 Install the Ubuntu User VM (RTVM) on the SATA Disk
 **************************************************
 
-.. note:: The WHL Maxtang machine contains both an NVMe and SATA disk.
+.. note:: The NUC11TNHi5 machine contains both an NVMe and SATA disk.
    Before you install the Ubuntu User VM on the SATA disk, either
    remove the NVMe disk or delete its blocks.
 
-#. Insert the Ubuntu USB boot disk into the WHL Maxtang machine.
-#. Power on the machine, then press F11 to select the USB disk as the boot
+#. Insert the Ubuntu USB boot disk into the NUC11TNHi5 machine.
+#. Power on the machine, then press F10 to select the USB disk as the boot
    device. Select **UEFI: SanDisk** to boot using **UEFI**. Note that the
    label depends on the brand/make of the USB drive.
 #. Install the Ubuntu OS.
@@ -69,10 +68,10 @@ Install the Ubuntu User VM (RTVM) on the SATA Disk
 
 #. Configure the ``/dev/sda`` partition. Refer to the diagram below:
 
-   .. figure:: images/native-ubuntu-on-SATA-2.png
+   .. figure:: images/native-ubuntu-on-SATA-3.png
 
    a. Select the ``/dev/sda`` partition, not ``/dev/nvme0p1``.
-   b. Select ``/dev/sda`` **ATA KINGSTON RBUSNS4** as the device for the
+   b. Select ``/dev/sda`` **ATA KINGSTON SA400S3** as the device for the
       bootloader installation. Note that the label depends on the SATA disk used.
 
 #. Complete the Ubuntu installation on ``/dev/sda``.
@@ -87,12 +86,11 @@ to turn it into a real-time User VM (RTVM).
 Install the Ubuntu Service VM on the NVMe Disk
 **********************************************
 
-.. note:: Before you install the Ubuntu Service VM on the NVMe disk, either
-   remove the SATA disk or disable it in the BIOS. Disable it by going to:
-   **Chipset** → **PCH-IO Configuration** -> **SATA and RST Configuration** -> **SATA Controller [Disabled]**
+.. note:: Before you install the Ubuntu Service VM on the NVMe disk, please
+   remove the SATA disk.
 
-#. Insert the Ubuntu USB boot disk into the WHL Maxtang machine.
-#. Power on the machine, then press F11 to select the USB disk as the boot
+#. Insert the Ubuntu USB boot disk into the NUC11TNHi5 machine.
+#. Power on the machine, then press F10 to select the USB disk as the boot
    device. Select **UEFI: SanDisk** to boot using **UEFI**. Note that the
    label depends on the brand/make of the USB drive.
 #. Install the Ubuntu OS.
@@ -102,10 +100,10 @@ Install the Ubuntu Service VM on the NVMe Disk
 
 #. Configure the ``/dev/nvme0n1`` partition. Refer to the diagram below:
 
-   .. figure:: images/native-ubuntu-on-NVME-2.png
+   .. figure:: images/native-ubuntu-on-NVME-3.png
 
    a. Select the ``/dev/nvme0n1`` partition, not ``/dev/sda``.
-   b. Select ``/dev/nvme0n1`` **FORESEE 256GB SSD** as the device for the
+   b. Select ``/dev/nvme0n1`` **Lenovo SL700 PCI-E M.2 256G** as the device for the
       bootloader installation. Note that the label depends on the NVMe disk used.
 
 #. Complete the Ubuntu installation and reboot the system.
@@ -191,17 +189,17 @@ Build the ACRN Hypervisor on Ubuntu
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
 
-#. Switch to the v2.4 version:
+#. Switch to the v2.5 version:
 
    .. code-block:: none
 
-      $ git checkout v2.4
+      $ git checkout v2.5
 
 #. Build ACRN:
 
    .. code-block:: none
 
-      $ make BOARD=whl-ipc-i7 SCENARIO=industry
+      $ make BOARD=nuc11tnbi5 SCENARIO=industry
       $ sudo make install
       $ sudo mkdir -p /boot/acrn
       $ sudo cp build/hypervisor/acrn.bin /boot/acrn/
@@ -223,7 +221,7 @@ Build and Install the ACRN Kernel
 
    .. code-block:: none
 
-      $ git checkout v2.4
+      $ git checkout v2.5
       $ cp kernel_config_uefi_sos .config
       $ make olddefconfig
       $ make all
@@ -318,23 +316,6 @@ typical output of a successful installation resembles the following:
 
 Additional Settings in the Service VM
 =====================================
-
-BIOS Settings of GVT-d for WaaG
--------------------------------
-
-.. note::
-   Skip this step if you are using a Kaby Lake (KBL) Intel NUC.
-
-Go to **Chipset** -> **System Agent (SA) Configuration** -> **Graphics
-Configuration** and make the following settings:
-
-Set **DVMT Pre-Allocated** to **64MB**:
-
-.. figure:: images/DVMT-reallocated-64mb.png
-
-Set **PM Support** to **Enabled**:
-
-.. figure:: images/PM-support-enabled.png
 
 Use OVMF to Launch the User VM
 ------------------------------
@@ -462,36 +443,6 @@ Launch the RTVM
 
 .. note::
    If using a KBL NUC, the script must be adapted to match the BDF on the actual HW platform
-
-Recommended BIOS Settings for RTVM
-----------------------------------
-
-.. csv-table::
-   :widths: 15, 30, 10
-
-   "Hyper-threading", "Intel Advanced Menu -> CPU Configuration", "Disabled"
-   "Intel VMX", "Intel Advanced Menu -> CPU Configuration", "Enable"
-   "Speed Step", "Intel Advanced Menu -> Power & Performance -> CPU - Power Management Control", "Disabled"
-   "Speed Shift", "Intel Advanced Menu -> Power & Performance -> CPU - Power Management Control", "Disabled"
-   "C States", "Intel Advanced Menu -> Power & Performance -> CPU - Power Management Control", "Disabled"
-   "RC6", "Intel Advanced Menu -> Power & Performance -> GT - Power Management", "Disabled"
-   "GT freq", "Intel Advanced Menu -> Power & Performance -> GT - Power Management", "Lowest"
-   "SA GV", "Intel Advanced Menu -> Memory Configuration", "Fixed High"
-   "VT-d", "Intel Advanced Menu -> System Agent Configuration", "Enable"
-   "Gfx Low Power Mode", "Intel Advanced Menu -> System Agent Configuration -> Graphics Configuration", "Disabled"
-   "DMI spine clock gating", "Intel Advanced Menu -> System Agent Configuration -> DMI/OPI Configuration", "Disabled"
-   "PCH Cross Throttling", "Intel Advanced Menu -> PCH-IO Configuration", "Disabled"
-   "Legacy IO Low Latency", "Intel Advanced Menu -> PCH-IO Configuration -> PCI Express Configuration", "Enabled"
-   "PCI Express Clock Gating", "Intel Advanced Menu -> PCH-IO Configuration -> PCI Express Configuration", "Disabled"
-   "Delay Enable DMI ASPM", "Intel Advanced Menu -> PCH-IO Configuration -> PCI Express Configuration", "Disabled"
-   "DMI Link ASPM", "Intel Advanced Menu -> PCH-IO Configuration -> PCI Express Configuration", "Disabled"
-   "Aggressive LPM Support", "Intel Advanced Menu -> PCH-IO Configuration -> SATA And RST Configuration", "Disabled"
-   "USB Periodic SMI", "Intel Advanced Menu -> LEGACY USB Configuration", "Disabled"
-   "ACPI S3 Support", "Intel Advanced Menu -> ACPI Settings", "Disabled"
-   "Native ASPM", "Intel Advanced Menu -> ACPI Settings", "Disabled"
-
-.. note:: BIOS settings depend on the platform and BIOS version; some may
-   not be applicable.
 
 Recommended Kernel Cmdline for RTVM
 -----------------------------------
@@ -637,7 +588,7 @@ to the ``launch_hard_rt_vm.sh`` script before launching it:
       --rtvm \
       --virtio_poll 1000000 \
       -U 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 \
-      -s 2,passthru,02/0/0 \
+      -s 2,passthru,00/17/0 \
       -s 3,virtio-console,@stdio:stdio_port \
       -s 8,virtio-net,tap0 \
       --ovmf /usr/share/acrn/bios/OVMF.fd \
@@ -654,7 +605,7 @@ Passthrough a Hard Disk to RTVM
    .. code-block:: none
 
       # lspci -nn | grep -i sata
-      00:17.0 SATA controller [0106]: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode] [8086:9dd3] (rev 30)
+      00:17.0 SATA controller [0106]: Intel Corporation Device [8086:a0d3] (rev 20)
 
 #. Modify the script to use the correct SATA device IDs and bus number:
 
@@ -663,14 +614,14 @@ Passthrough a Hard Disk to RTVM
       # vim /usr/share/acrn/launch_hard_rt_vm.sh
 
       passthru_vpid=(
-      ["eth"]="8086 156f"
-      ["sata"]="8086 9dd3"
-      ["nvme"]="8086 f1a6"
+      ["eth"]="8086 15f2"
+      ["sata"]="8086 a0d3"
+      ["nvme"]="126f 2263"
       )
       passthru_bdf=(
-      ["eth"]="0000:00:1f.6"
+      ["eth"]="0000:58:00.0"
       ["sata"]="0000:00:17.0"
-      ["nvme"]="0000:02:00.0"
+      ["nvme"]="0000:01:00.0"
       )
 
       # SATA pass-through
@@ -696,8 +647,7 @@ Passthrough a Hard Disk to RTVM
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          hard_rtvm
 
-#. Upon deployment completion, launch the RTVM directly onto your WHL
-   Intel NUC:
+#. Upon deployment completion, launch the RTVM directly onto your NUC11TNHi5:
 
    .. code-block:: none
 
