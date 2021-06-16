@@ -52,21 +52,21 @@ actually run the L2 guest.
 
    Nested Virtualization in ACRN
 
-- L0 hypervisor (ACRN) runs L1 guest with VMCS01
+#. L0 hypervisor (ACRN) runs L1 guest with VMCS01
 
-- L1 hypervisor (KVM) creates VMCS12 to run a L2 guest
+#. L1 hypervisor (KVM) creates VMCS12 to run a L2 guest
 
-- VMX instructions from L1 hypervisor trigger VMExits to L0 hypervisor:
+#. VMX instructions from L1 hypervisor trigger VMExits to L0 hypervisor:
 
-- L0 hypervisor runs a L2 guest with VMCS02
+#. L0 hypervisor runs a L2 guest with VMCS02
 
-   - L0 caches VMCS12 in host memory
-   - L0 merges VMCS01 and VMCS12 to create VMCS02
+   a. L0 caches VMCS12 in host memory
+   #. L0 merges VMCS01 and VMCS12 to create VMCS02
 
-- L2 guest runs until triggering VMExits to L0
+#. L2 guest runs until triggering VMExits to L0
 
-   - L0 reflects most VMEXits to L1 hypervisor
-   - L0 runs L1 guest with VMCS01 and VMCS02 as the shadow VMCS
+   a. L0 reflects most VMEXits to L1 hypervisor
+   #. L0 runs L1 guest with VMCS01 and VMCS02 as the shadow VMCS
 
 
 Restrictions and Constraints
@@ -99,7 +99,7 @@ The nested virtualization feature is disabled by default in ACRN. You can
 enable it using the :ref:`Use the ACRN Configuration Editor <acrn_config_tool_ui>`
 with these settings:
 
-- Configure system level features:
+#. Configure system level features:
 
    - Select ``y`` on :option:`hv.FEATURES.NVMX_ENABLED` to enable nested virtualization
 
@@ -111,45 +111,45 @@ with these settings:
 
         Setting NVMX_ENABLED and SCHEDULER with configuration tool
 
-- In each guest VM configuration:
+#. In each guest VM configuration:
 
-  - Select ``GUEST_FLAG_NVMX_ENABLED`` on :option:`vm.guest_flags.guest_flag` on the SOS VM section
-    to enable the nested virtualization feature on the Service VM.
-  - Select ``GUEST_FLAG_LAPIC_PASSTHROUGH`` on :option:`vm.guest_flags.guest_flag` to enable local
-    APIC passthrough on the Service VM.
+   - Select ``GUEST_FLAG_NVMX_ENABLED`` on :option:`vm.guest_flags.guest_flag` on the SOS VM section
+     to enable the nested virtualization feature on the Service VM.
+   - Select ``GUEST_FLAG_LAPIC_PASSTHROUGH`` on :option:`vm.guest_flags.guest_flag` to enable local
+     APIC passthrough on the Service VM.
 
-    .. figure:: images/nvmx_cfg_3.png
-       :width: 700px
-       :align: center
+     .. figure:: images/nvmx_cfg_3.png
+        :width: 700px
+        :align: center
 
-       Service VM (SOS) ``guest_flag`` settings
+        Service VM (SOS) ``guest_flag`` settings
 
-  - Edit :option:`vm.cpu_affinity.pcpu_id` to assign ``pCPU`` IDs to run the Service VM. If you are
-    using debug build and need the hypervisor console, don't assign
-    ``pCPU0`` to the Service VM.
+   - Edit :option:`vm.cpu_affinity.pcpu_id` to assign ``pCPU`` IDs to run the Service VM. If you are
+     using debug build and need the hypervisor console, don't assign
+     ``pCPU0`` to the Service VM.
 
-    You may need to manually edit the ACRN scenario XML configuration file to edit the ``pcpu_id`` for the Service VM (SOS):
+     You may need to manually edit the ACRN scenario XML configuration file to edit the ``pcpu_id`` for the Service VM (SOS):
 
-    .. code-block:: xml
-       :emphasize-lines: 5,6,7
+     .. code-block:: xml
+        :emphasize-lines: 5,6,7
 
-       <vm id="0">
-         <vm_type>SOS_VM</vm_type>
-         <name>ACRN SOS VM</name>
-         <cpu_affinity>
-           <pcpu_id>1</pcpu_id>
-           <pcpu_id>2</pcpu_id>
-           <pcpu_id>3</pcpu_id>
-         </cpu_affinity>
-         <guest_flags>
-           <guest_flag>GUEST_FLAG_NVMX_ENABLED</guest_flag>
-           <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
-         </guest_flags>
+        <vm id="0">
+          <vm_type>SOS_VM</vm_type>
+          <name>ACRN SOS VM</name>
+          <cpu_affinity>
+            <pcpu_id>1</pcpu_id>
+            <pcpu_id>2</pcpu_id>
+            <pcpu_id>3</pcpu_id>
+          </cpu_affinity>
+          <guest_flags>
+            <guest_flag>GUEST_FLAG_NVMX_ENABLED</guest_flag>
+            <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
+          </guest_flags>
 
-   The Service VM's virtual legacy UART interrupt doesn't work with LAPIC
-   passthrough, which may prevent the Service VM from booting. Instead, we need to use
-   the PCI-vUART for the Service VM. Refer to :ref:`Enable vUART Configurations <vuart_config>`
-   for more details about VUART configuration.
+     The Service VM's virtual legacy UART interrupt doesn't work with LAPIC
+     passthrough, which may prevent the Service VM from booting. Instead, we need to use
+     the PCI-vUART for the Service VM. Refer to :ref:`Enable vUART Configurations <vuart_config>`
+     for more details about VUART configuration.
 
    - Set :option:`vm.legacy_vuart.base` in ``legacy_vuart 0`` to ``INVALID_LEGACY_PIO``
 
@@ -161,7 +161,7 @@ with these settings:
 
         Service VM legacy and console vUART settings
 
-- Build with the XML configuration, referring to :ref:`getting-started-building`.
+#. Follow instructions in :ref:`getting-started-building` and build with this XML configuration.
 
 
 Prepare for Service VM Kernel and rootfs
@@ -173,17 +173,15 @@ Instructions on how to boot Ubuntu as the Service VM can be found in
 
 The Service VM kernel needs to be built from the ``acrn-kernel`` repo, and some changes
 to the kernel ``.config`` are needed.
-
 Instructions on how to build and install the Service VM kernel can be found
 in :ref:`Build and Install the ACRN Kernel <build-and-install-ACRN-kernel>`.
 
-Here is the quick start of how to modify and build the kernel:
+Here is a summary of how to modify and build the kernel:
 
 .. code-block:: none
 
    git clone https://github.com/projectacrn/acrn-kernel
    cd acrn-kernel
-   git checkout master
    cp kernel_config_uefi_sos .config
    make olddefconfig
 
@@ -196,18 +194,8 @@ guests on the Service VM:
    CONFIG_KVM_INTEL=y
    CONFIG_ACRN_GUEST=y
 
-This setting is also needed if you want to use virtio block device as root filesystem
-for the guest VMs:
-
-.. code-block:: none
-
-   CONFIG_VIRTIO_BLK=y
-
-After the configuration modifications, build and install the kernel.
-
-.. code-block:: none
-
-   make all
+After you made these configuration modifications, build and install the kernel
+as described in :ref:`rt_industry_ubuntu_setup`.
 
 
 Launch a Nested Guest VM
@@ -230,20 +218,20 @@ Install QEMU on the Service VM that will launch the nested guest VM:
 
    sudo apt-get install qemu-kvm qemu virt-manager virt-viewer libvirt-bin
 
-The following is a simple example for the script to launch a nested guest VM.
-
-.. important:: The ``-cpu host`` option is needed to launch a nested guest VM, and ``-nographics``
+.. important:: The QEMU ``-cpu host`` option is needed to launch a nested guest VM, and ``-nographics``
    is required to run nested guest VMs reliably.
 
-Besides this, there is no particular requirements for the launch script.
 You can prepare the script just like the one you use to launch a VM
-on native Linux.
+on native Linux. For example, other than ``-hda``, you can use the following option to launch
+a virtio block based RAW image::
 
-For example, other than ``-hda``, you can use the following option to launch
-a virtio block based RAW image: ``-drive format=raw,file=/root/ubuntu-20.04.img,if=virtio``
+   -drive format=raw,file=/root/ubuntu-20.04.img,if=virtio
 
-Use the following option to enable Ethernet on the guest VM:
-``-netdev tap,id=net0 -device virtio-net-pci,netdev=net0,mac=a6:cd:47:5f:20:dc``
+Use the following option to enable Ethernet on the guest VM::
+
+   -netdev tap,id=net0 -device virtio-net-pci,netdev=net0,mac=a6:cd:47:5f:20:dc
+
+The following is a simple example for the script to launch a nested guest VM.
 
 .. code-block:: bash
    :emphasize-lines: 2-4
@@ -264,7 +252,7 @@ or from an SSH remote login.
 If the nested VM is launched successfully, you should see the nested
 VM's login prompt:
 
-.. code-block:: bash
+.. code-block:: console
 
    [  OK  ] Started Terminate Plymouth Boot Screen.
    [  OK  ] Started Hold until boot process finishes up.
@@ -284,7 +272,7 @@ VM's login prompt:
 You won't see the nested guest from a ``vcpu_list`` or ``vm_list`` command
 on the ACRN hypervisor console because these commands only show level 1 VMs.
 
-.. code-block:: bash
+.. code-block:: console
 
    ACRN:\>vm_list
 
@@ -302,7 +290,7 @@ on the ACRN hypervisor console because these commands only show level 1 VMs.
 On the nested guest VM console, run an ``lshw`` or ``dmidecode`` command
 and you'll see that this is a QEMU-managed virtual machine:
 
-.. code-block:: bash
+.. code-block:: console
    :emphasize-lines: 4,5
 
    $ sudo lshw -c system
@@ -317,7 +305,7 @@ and you'll see that this is a QEMU-managed virtual machine:
 
 For example, compare this to the same command run on the L1 guest (Service VM):
 
-.. code-block:: bash
+.. code-block:: console
    :emphasize-lines: 4,5
 
    $ sudo lshw -c system
