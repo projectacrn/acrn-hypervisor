@@ -118,7 +118,13 @@ This concludes the initial configuration of the Service VM, the next steps will 
 Install ACRN Hypervisor
 ***********************
 
-1. Install the ACRN build tools and dependencies following the :ref:`install-build-tools-dependencies`
+1. Launch the ``ACRNSOS`` Service VM guest and log onto it (SSH is recommended but the console is
+   available too).
+
+   .. important:: All the steps below are performed **inside** the Service VM guest that we built in the
+      previous section.
+
+#. Install the ACRN build tools and dependencies following the :ref:`install-build-tools-dependencies`
 
 #. Clone ACRN repo and check out the ``v2.5`` tag.
 
@@ -149,38 +155,10 @@ Install ACRN Hypervisor
 
       sudo cp build/hypervisor/acrn.32.out /boot
 
-#. Clone and configure the Service VM kernel repository. The User VM (L2 guest) uses the
-   ``virtio-blk`` driver to mount the rootfs. We will modify the default kernel
-   configuration to enable it (built-in).
-
-   .. code-block:: none
-
-      cd ~
-      sudo apt install libncurses-dev bc libelf-dev
-      git clone --shallow-since=2021-01-01 https://github.com/projectacrn/acrn-kernel
-      cd acrn-kernel
-      git checkout v2.5
-      cp kernel_config_uefi_sos .config
-      make olddefconfig
-      make menuconfig
-
-   The figure below shows the additional drivers to be enabled.
-
-   .. figure:: images/acrn_qemu_4.png
-      :align: center
-
-#. Build the Service VM (L1 Guest) kernel.
-
-   .. code-block:: none
-
-      make
-
-#. Install the kernel and modules.
-
-   .. code-block:: none
-
-      sudo make modules_install
-      sudo cp arch/x86/boot/bzImage /boot
+#. Clone and configure the Service VM kernel repository following the instructions at
+   :ref:`build-and-install-ACRN-kernel` and using the ``v2.5`` tag. The User VM (L2 guest)
+   uses the ``virtio-blk`` driver to mount the rootfs. This driver is included in the default
+   kernel configuration as of the ``v2.5`` tag.
 
 #. Update Grub to boot the ACRN hypervisor and load the Service VM kernel. Append the following
    configuration to the :file:`/etc/grub.d/40_custom`.
