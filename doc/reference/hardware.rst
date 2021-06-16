@@ -25,35 +25,28 @@ Minimum Requirements for Processor
 
 Known Limitations
 *****************
-Platforms with multiple PCI segments
 
-ACRN assumes the following conditions are satisfied from the Platform BIOS
+Platforms with multiple PCI segments are not supported.
 
-* All the PCI device BARs should be assigned resources, including SR-IOV VF BARs if a device supports.
+ACRN assumes the following conditions are satisfied from the Platform BIOS:
 
-* Bridge windows for PCI bridge devices and the resources for root bus, should be programmed with values
+* All the PCI device BARs must be assigned resources, including SR-IOV VF BARs if a device supports it.
+
+* Bridge windows for PCI bridge devices and the resources for root bus must be programmed with values
   that enclose resources used by all the downstream devices.
 
-* There should be no conflict in resources among the PCI devices and also between PCI devices and other platform devices.
+* There should be no conflict in resources among the PCI devices or with other platform devices.
 
 
-New Processor Families
-**********************
 
-Here are announced Intel processor architectures that are supported by ACRN v2.2, but don't yet have a recommended platform available:
+Tested Platforms by ACRN Release
+********************************
 
-* `Tiger Lake <https://ark.intel.com/content/www/us/en/ark/products/codename/88759/tiger-lake.html#@Embedded>`_
-  (Q3'2020 Launch Date)
-* `Elkhart Lake <https://ark.intel.com/content/www/us/en/ark/products/codename/128825/elkhart-lake.html#@Embedded>`_
-  (Q1'2021 Launch Date)
+These platforms have been tested by the development team with the noted ACRN
+release version and may not work as expected on later ACRN releases.
 
-
-Verified Platforms According to ACRN Usage
-******************************************
-
-These Apollo Lake and Kaby Lake platforms have been verified by the
-development team for Software-Defined Cockpit (SDC), Industrial Usage
-(IU), and Logical Partition scenarios.
+.. _NUC11TNHi5:
+   https://ark.intel.com/content/www/us/en/ark/products/205594/intel-nuc-11-pro-kit-nuc11tnhi5.html
 
 .. _NUC6CAYH:
    https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html
@@ -79,50 +72,70 @@ development team for Software-Defined Cockpit (SDC), Industrial Usage
 
 For general instructions setting up ACRN on supported hardware platforms, visit the :ref:`rt_industry_ubuntu_setup` page.
 
+.. list-table:: Supported Target Platforms
+  :widths: 20 20 12 5 5
+  :header-rows: 1
 
-+--------------------------------+-------------------------+-----------+-----------+-------------+------------+
-|   Platform (Intel x86)         |   Product/Kit Name      |               Usage Scenario - BKC Examples      |
-|                                |                         +-----------+-----------+-------------+------------+
-|                                |                         | SDC with  | IU without| IU with     | Logical    |
-|                                |                         | 2 VMs     | Safety VM | Safety VM   | Partition  |
-|                                |                         |           |           |             |            |
-+================================+=========================+===========+===========+=============+============+
-| | **Apollo Lake**              | | `NUC6CAYH`_           | V         | V         |             |            |
-| | (Formal name: Arches Canyon  | | (Board: NUC6CAYB)     |           |           |             |            |
-|                                |                         |           |           |             |            |
-+--------------------------------+-------------------------+-----------+-----------+-------------+------------+
-| **Apollo Lake**                | | UP2 - N3350           | V         |           |             |            |
-|                                | | UP2 - N4200           |           |           |             |            |
-|                                | | UP2 - x5-E3940        |           |           |             |            |
-|                                | | (see `UP2 Shop`_)     |           |           |             |            |
-|                                |                         |           |           |             |            |
-+--------------------------------+-------------------------+-----------+-----------+-------------+------------+
-| | **Kaby Lake**                | | `NUC7i5BNH`_          | V         |           |             |            |
-| | (Code name: Baby Canyon)     | | (Board: NUC7i5BNB)    |           |           |             |            |
-+--------------------------------+-------------------------+-----------+-----------+-------------+------------+
-| | **Kaby Lake**                | | `NUC7i7BNH`_          | V         |           |             |            |
-| | (Code name: Baby Canyon)     | | (Board: NUC7i7BNB     |           |           |             |            |
-+--------------------------------+-------------------------+-----------+-----------+-------------+------------+
-| | **Kaby Lake**                | | `NUC7i5DNH`_          | V         |           |             |            |
-| | (Code name: Dawson Canyon)   | | (Board: NUC7i5DNB)    |           |           |             |            |
-+--------------------------------+-------------------------+-----------+-----------+-------------+------------+
-| | **Kaby Lake**                | | `NUC7i7DNH`_          | V         | V         | V           | V          |
-| | (Code name: Dawson Canyon)   | | (Board: NUC7i7DNB)    |           |           |             |            |
-+--------------------------------+-------------------------+-----------+-----------+-------------+------------+
-| | **Whiskey Lake**             | | `WHL-IPC-I5`_         | V         | V         | V           | V          |
-| |                              | | (Board: WHL-IPC-I5)   |           |           |             |            |
-+--------------------------------+-------------------------+-----------+-----------+-------------+------------+
+  * - Intel x86 Platform Family
+    - Product / Kit Name
+    - Board configuration
+    - ACRN Release
+    - Graphics
+  * - **Tiger Lake**
+    - `NUC11TNHi5`_ |br| (Board: NUC11TNBi5)
+    - :acrn_file:`nuc11tnbi5.xml <misc/config_tools/data/nuc11tnbi5/nuc11tnbi5.xml>`
+    - v2.5
+    - GVT-d
+  * - **Whiskey Lake**
+    - `WHL-IPC-I5`_ |br| (Board: WHL-IPC-I5)
+    - :acrn_file:`whl-ipc-i5.xml <misc/config_tools/data/whl-ipc-i5/whl-ipc-i5.xml>`
+    - v2.0
+    - GVT-g
+  * - **Kaby Lake** |br| (Codename: Baby Canyon)
+    - `NUC7i5BNH`_ |br| (board: NUC7i5BNB)
+    -
+    - v1.6.1
+    - GVT-g
+  * - **Kaby Lake** |br| (Codename: Baby Canyon)
+    - `NUC7i7BNH`_ |br| (board: NUC7i7BNB)
+    -
+    - v1.6.1
+    - GVT-g
+  * - **Kaby Lake** |br| (Codename: Dawson Canyon)
+    - `NUC7i5DNH`_ |br| (board: NUC7i5DNB)
+    -
+    - v1.6.1
+    - GVT-g
+  * - **Kaby Lake** |br| (Codename: Dawson Canyon)
+    - `NUC7i7DNH`_ |br| (board: NUC7i7DNB)
+    - :acrn_file:`nuc7i7dnb.xml <misc/config_tools/data/nuc7i7dnb/nuc7i7dnb.xml>`
+    - v1.6.1
+    - GVT-g
+  * - **Apollo Lake** |br| (Codename: Arches Canyon)
+    - `NUC6CAYH`_ |br| (board: NUC6CAYB)
+    - :acrn_file:`nuc6cayh.xml <misc/config_tools/data/nuc6cayh/nuc6cayh.xml>`
+    - v1.6.1
+    - GVT-g
+  * - **Apollo Lake**
+    - `UP2-N3350 <UP2 Shop>`_, |br| `UP2-N4200, UP2-x5-E3940 <UP2 Shop>`_
+    - 
+    - v1.0
+    - GVT-g
 
-V: Verified by engineering team; remaining scenarios are not in verification scope
+If an XML file is not provided by project ACRN for your board, we recommend you
+start with a provided board XML file for a similar board and use the configuration
+editor to make needed changes to match your board's configuration, or use the
+board inspector tool to generate an XML file specifically for your board.
 
-Verified Hardware Specifications Detail
-***************************************
+
+Tested Hardware Specifications Detail
+*************************************
 
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
 |   Platform (Intel x86)         |   Product/Kit Name     |   Hardware Class       |   Description                                             |
 +================================+========================+========================+===========================================================+
 | | **Apollo Lake**              | | NUC6CAYH             | Processor              | -  Intel® Celeron™ CPU J3455 @ 1.50GHz (4C4T)             |
-| | (Formal name: Arches Canyon) | | (Board: NUC6CAYB)    |                        |                                                           |
+| | (Code name: Arches Canyon)   | | (Board: NUC6CAYB)    |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  Intel® HD Graphics 500                                 |
 |                                |                        |                        | -  VGA (HDB15); HDMI 2.0                                  |
@@ -230,6 +243,19 @@ Verified Hardware Specifications Detail
 |                                |                        |                        |    LTE Category 6 and above                               |
 |                                |                        |                        | -  One M.2 connector for 2242 SSD                         |
 |                                |                        |                        | -  TWO SATA3 port (only one if Celeron onboard)           |
+|                                |                        +------------------------+-----------------------------------------------------------+
+|                                |                        | Serial Port            | -  Yes                                                    |
++--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
+| | **Tiger Lake**               | | NUC11TNHi5           | Processor              | -  Intel® Core™ i5-113G7 CPU (8M Cache, up to 4.2 GHz)    |
+| |                              | | (Board: NUC11TNBi5)  |                        |                                                           |
+|                                |                        +------------------------+-----------------------------------------------------------+
+|                                |                        | Graphics               | -  Dual HDMI 2.0b w/HDMI CEC, Dual DP 1.4a via Type C     |
+|                                |                        |                        | -  Supports 4 displays                                    |
+|                                |                        +------------------------+-----------------------------------------------------------+
+|                                |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 64 GB, 3200 MHz), 1.2V |
+|                                |                        +------------------------+-----------------------------------------------------------+
+|                                |                        | Storage capabilities   | -  One M.2 connector for storage                          |
+|                                |                        |                        |    22x80 NVMe (M), 22x42 SATA (B)                         |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
