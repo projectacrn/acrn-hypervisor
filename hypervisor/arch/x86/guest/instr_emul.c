@@ -2340,7 +2340,14 @@ static int32_t instr_check_gva(struct acrn_vcpu *vcpu, enum vm_cpu_mode cpu_mode
 	return ret;
 }
 
-int32_t decode_instruction(struct acrn_vcpu *vcpu)
+ /* @retval >=0 on success
+  * @retval -EINVAL on any failure if (full_decode == true).
+  * @retval -EINVAL on any failure except unknown instruction if (full_decode == false).
+  * @retval -1 for unknown instruction if (full_decode == false).
+  *
+  * For unknown instruction, when full_decode is false, will keep retval = -1, and do not inject #UD
+  */
+int32_t decode_instruction(struct acrn_vcpu *vcpu, bool full_decode)
 {
 	struct instr_emul_ctxt *emul_ctxt;
 	uint32_t csar;
@@ -2361,9 +2368,11 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 		retval = local_decode_instruction(cpu_mode, seg_desc_def32(csar), &emul_ctxt->vie);
 
 		if (retval != 0) {
-			pr_err("decode instruction failed @ 0x%016lx:", vcpu_get_rip(vcpu));
-			vcpu_inject_ud(vcpu);
-			retval = -EFAULT;
+			if (full_decode) {
+				pr_err("decode instruction failed @ 0x%016lx:", vcpu_get_rip(vcpu));
+				vcpu_inject_ud(vcpu);
+				retval = -EFAULT;
+			}
 		} else {
 			/*
 			 * We do operand check in instruction decode phase and
