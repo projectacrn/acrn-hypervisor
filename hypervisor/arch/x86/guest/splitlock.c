@@ -111,7 +111,7 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 					/* Skip the #AC, we have emulated it. */
 					*queue_exception = false;
 				} else {
-					status = decode_instruction(vcpu);
+					status = decode_instruction(vcpu, false);
 					if (status >= 0) {
 						/*
 						 * If this is the xchg, then emulate it, otherwise,
@@ -149,10 +149,13 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 					} else {
 						if (status == -EFAULT) {
 							pr_info("page fault happen during decode_instruction");
-							status = 0;
 							/* For this case, Inject #PF, not to queue #AC */
 							*queue_exception = false;
 						}
+
+						/* if decode_instruction(full_decode = false) return -1, that means this is an unknown instruction,
+						 * and has skipped #UD injection. Just keep queue_exception = true to inject #AC back */
+						status = 0;
 					}
 				}
 			}

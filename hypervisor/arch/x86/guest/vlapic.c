@@ -2404,7 +2404,7 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	 * 3 = linear access (read or write) during event delivery
 	 */
 	if (((access_type == TYPE_LINEAR_APIC_INST_READ) || (access_type == TYPE_LINEAR_APIC_INST_WRITE)) &&
-			(decode_instruction(vcpu) >= 0)) {
+			(decode_instruction(vcpu, true) >= 0)) {
 		vlapic = vcpu_vlapic(vcpu);
 		offset = (uint32_t)apic_access_offset(qual);
 		mmio = &vcpu->req.reqs.mmio_request;
