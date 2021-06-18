@@ -238,9 +238,12 @@
       <xsl:value-of select="acrn:ifdef('VM0_PASSTHROUGH_TPM')" />
       <xsl:value-of select="acrn:initializer('pt_tpm2', 'true')" />
       <xsl:value-of select="acrn:initializer('mmiodevs[0]', '{', true())" />
+      <xsl:value-of select="acrn:initializer('name', concat($quot, 'tpm2', $quot))" />
+      <xsl:value-of select="acrn:initializer('mmiores[0]', '{', true())" />
       <xsl:value-of select="acrn:initializer('base_gpa', 'VM0_TPM_BUFFER_BASE_ADDR_GPA')" />
       <xsl:value-of select="acrn:initializer('base_hpa', 'VM0_TPM_BUFFER_BASE_ADDR')" />
       <xsl:value-of select="acrn:initializer('size', 'VM0_TPM_BUFFER_SIZE')" />
+      <xsl:text>},</xsl:text>
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
       <xsl:value-of select="$endif" />
