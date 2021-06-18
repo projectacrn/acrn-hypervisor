@@ -305,23 +305,30 @@ struct acrn_assign_pcidev {
 
 } __attribute__((aligned(8)));
 
+#define MMIODEV_RES_NUM	3
+
 /**
  * @brief Info to assign or deassign a MMIO device for a VM
  *
  * the parameter for HC_ASSIGN_MMIODEV or HC_DEASSIGN_MMIODEV hypercall
  */
 struct acrn_mmiodev {
-	/** the gpa of the MMIO region for the MMIO device */
-	uint64_t base_gpa;
+	char name[8];
+	struct acrn_mmiores {
+		/** the gpa of the MMIO region for the MMIO device */
+		uint64_t base_gpa;
 
-	/** the hpa of the MMIO region for the MMIO device */
-	uint64_t base_hpa;
+		/** the hpa of the MMIO region for the MMIO device */
+		uint64_t base_hpa;
 
-	/** the size of the MMIO region for the MMIO device */
-	uint64_t size;
+		/** the size of the MMIO region for the MMIO device */
+		uint64_t size;
+
+		uint64_t attr;
+	} mmiores[MMIODEV_RES_NUM];
 
 	/** reserved for extension */
-	uint64_t reserved[13];
+	uint64_t reserved[3];
 
 } __attribute__((aligned(8)));
 

@@ -7,7 +7,7 @@
 #ifndef MMIO_DEV_H
 #define MMIO_DEV_H
 
-int32_t assign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev);
-int32_t deassign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev);
+int32_t assign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiores *res);
+int32_t deassign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiores *res);
 
 #endif /* MMIO_DEV_H */
