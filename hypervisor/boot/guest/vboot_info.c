@@ -30,37 +30,23 @@
 
 #define PRE_VM_MAX_RAM_ADDR_BELOW_4GB		(VIRT_ACPI_DATA_ADDR - 1U)
 
-/**
- * @pre vm != NULL && mod != NULL
- */
-static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mod)
+static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 {
 	uint64_t ramdisk_load_gpa = INVALID_GPA;
 	uint64_t ramdisk_gpa_max = DEFAULT_RAMDISK_GPA_MAX;
-	uint64_t kernel_start = (uint64_t)vm->sw.kernel_info.kernel_load_addr;
-	uint64_t kernel_end = kernel_start + vm->sw.kernel_info.kernel_size;
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
-	if (mod->start != NULL) {
-		vm->sw.ramdisk_info.src_addr = mod->start;
-		vm->sw.ramdisk_info.size = mod->size;
-	}
-
+	struct zero_page *zeropage = (struct zero_page *)vm->sw.kernel_info.kernel_src_addr;
 	/* Per Linux boot protocol, the Kernel need a size of contiguous
 	 * memory(i.e. init_size field in zeropage) from its extract address to boot,
 	 * and initrd_addr_max field specifies the maximum address of the ramdisk.
 	 * Per kernel src head_64.S, decompressed kernel start at 2M aligned to the
 	 * compressed kernel load address.
 	 */
-	if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
-		struct zero_page *zeropage = (struct zero_page *)vm->sw.kernel_info.kernel_src_addr;
-		uint32_t kernel_init_size = zeropage->hdr.init_size;
-		uint32_t initrd_addr_max = zeropage->hdr.initrd_addr_max;
+	uint32_t kernel_init_size = zeropage->hdr.init_size;
+	uint32_t initrd_addr_max = zeropage->hdr.initrd_addr_max;
+	uint64_t kernel_end = kernel_start + MEM_2M + kernel_init_size;
 
-		kernel_end = kernel_start + MEM_2M + kernel_init_size;
-		if (initrd_addr_max != 0U) {
-			ramdisk_gpa_max = initrd_addr_max;
-		}
+	if (initrd_addr_max != 0U) {
+		ramdisk_gpa_max = initrd_addr_max;
 	}
 
 	if (is_sos_vm(vm)) {
@@ -109,6 +95,28 @@ static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mo
 	if (ramdisk_load_gpa == INVALID_GPA) {
 		pr_err("no space in guest memory to load VM %d ramdisk", vm->vm_id);
 		vm->sw.ramdisk_info.size = 0U;
+	}
+
+	return (ramdisk_load_gpa == INVALID_GPA) ? NULL : (void *)ramdisk_load_gpa;
+}
+
+/**
+ * @pre vm != NULL && mod != NULL
+ */
+static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mod)
+{
+	uint64_t ramdisk_load_gpa = INVALID_GPA;
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	if (mod->start != NULL) {
+		vm->sw.ramdisk_info.src_addr = mod->start;
+		vm->sw.ramdisk_info.size = mod->size;
+	}
+
+	if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
+		uint64_t kernel_start = (uint64_t)vm->sw.kernel_info.kernel_load_addr;
+
+		ramdisk_load_gpa = (uint64_t)get_initrd_load_addr(vm, kernel_start);
 	}
 
 	/* Use customer specified ramdisk load addr if it is configured in VM configuration,
