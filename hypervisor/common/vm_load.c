@@ -176,6 +176,16 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 }
 
 /**
+ * @pre sw_module != NULL
+ */
+static void load_sw_module(struct acrn_vm *vm, struct sw_module_info *sw_module)
+{
+	if ((sw_module->size != 0) && (sw_module->load_addr != NULL)) {
+		(void)copy_to_gpa(vm, sw_module->src_addr, (uint64_t)sw_module->load_addr, sw_module->size);
+	}
+}
+
+/**
  * @pre vm != NULL
  */
 static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint64_t load_params_gpa)
@@ -184,6 +194,25 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, 
 	uint32_t kernel_entry_offset;
 	struct zero_page *zeropage;
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
+	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
+	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
+	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
+
+	/* Copy the guest kernel image to its run-time location */
+	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr,
+		(uint64_t)sw_kernel->kernel_load_addr, sw_kernel->kernel_size);
+
+	/* Don't need to load ramdisk if src_addr and load_addr are pointed to same place. */
+	if (gpa2hva(vm, (uint64_t)ramdisk_info->load_addr) != ramdisk_info->src_addr) {
+		load_sw_module(vm, ramdisk_info);
+	}
+
+	bootargs_info->load_addr = (void *)BZIMG_CMDLINE_GPA(load_params_gpa);
+
+	load_sw_module(vm, bootargs_info);
+
+	/* Copy Guest OS ACPI to its load location */
+	load_sw_module(vm, acpi_info);
 
 	/* calculate the kernel entry point */
 	zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;
@@ -218,51 +247,17 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, 
 static void prepare_loading_rawimage(struct acrn_vm *vm)
 {
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
-	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
-	sw_kernel->kernel_entry_addr = (void *)vm_config->os_config.kernel_entry_addr;
-}
-
-/**
- * @pre sw_module != NULL
- */
-static void load_sw_module(struct acrn_vm *vm, struct sw_module_info *sw_module)
-{
-	if (sw_module->size != 0) {
-		(void)copy_to_gpa(vm, sw_module->src_addr, (uint64_t)sw_module->load_addr, sw_module->size);
-	}
-}
-
-/**
- * @pre vm != NULL
- */
-static void load_sw_modules(struct acrn_vm *vm, uint64_t load_params_gpa)
-{
-	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
-	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
-	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
 	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
-
-	pr_dbg("Loading guest to run-time location");
+	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	/* Copy the guest kernel image to its run-time location */
 	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr,
 		(uint64_t)sw_kernel->kernel_load_addr, sw_kernel->kernel_size);
 
-	if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
-		/* Don't need to load ramdisk if src_addr and load_addr are pointed to same place. */
-		if (gpa2hva(vm, (uint64_t)ramdisk_info->load_addr) != ramdisk_info->src_addr) {
-			load_sw_module(vm, ramdisk_info);
-		}
-
-		bootargs_info->load_addr = (void *)BZIMG_CMDLINE_GPA(load_params_gpa);
-
-		load_sw_module(vm, bootargs_info);
-	}
-
 	/* Copy Guest OS ACPI to its load location */
 	load_sw_module(vm, acpi_info);
 
+	sw_kernel->kernel_entry_addr = (void *)vm_config->os_config.kernel_entry_addr;
 }
 
 static int32_t vm_bzimage_loader(struct acrn_vm *vm)
@@ -276,8 +271,6 @@ static int32_t vm_bzimage_loader(struct acrn_vm *vm)
 		/* We boot bzImage from protected mode directly */
 		init_vcpu_protect_mode_regs(vcpu, BZIMG_INITGDT_GPA(load_params_gpa));
 
-		load_sw_modules(vm, load_params_gpa);
-
 		prepare_loading_bzimage(vm, vcpu, load_params_gpa);
 	} else {
 		ret = -ENOMEM;
@@ -289,7 +282,7 @@ static int32_t vm_bzimage_loader(struct acrn_vm *vm)
 static int32_t vm_rawimage_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
-	uint64_t load_params_gpa = 0x800;
+	uint64_t vgdt_gpa = 0x800;
 
 	/*
 	 * TODO:
@@ -299,9 +292,7 @@ static int32_t vm_rawimage_loader(struct acrn_vm *vm)
 	 *	currently we only support Zephyr which has no needs on cmdline/e820/efimmap/etc.
 	 *	hardcode the vGDT GPA to 0x800 where is not used by Zephyr so far;
 	 */
-	init_vcpu_protect_mode_regs(vcpu_from_vid(vm, BSP_CPU_ID), load_params_gpa);
-
-	load_sw_modules(vm, load_params_gpa);
+	init_vcpu_protect_mode_regs(vcpu_from_vid(vm, BSP_CPU_ID), vgdt_gpa);
 
 	prepare_loading_rawimage(vm);
 
