@@ -103,9 +103,9 @@ For general instructions setting up ACRN on supported hardware platforms, visit 
     - GVT-g
 
 If an XML file is not provided by project ACRN for your board, we recommend you
-start with a provided board XML file for a similar board and use the configuration
-editor to make needed changes to match your board's configuration, or use the
-board inspector tool to generate an XML file specifically for your board.
+use the board inspector tool to generate an XML file specifically for your board.
+Refer to the :ref:`acrn_configuration_tool` for more details on using the board inspector
+tool.
 
 
 Tested Hardware Specifications Detail
@@ -187,6 +187,7 @@ Tested Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
+
 
 
 .. # vim: tw=200
