@@ -169,7 +169,7 @@ Prepare for Service VM Kernel and rootfs
 
 The service VM can run Ubuntu or other Linux distributions.
 Instructions on how to boot Ubuntu as the Service VM can be found in
-:ref:`rt_industry_ubuntu_setup`.
+:ref:`gsg`.
 
 The Service VM kernel needs to be built from the ``acrn-kernel`` repo, and some changes
 to the kernel ``.config`` are needed.
@@ -195,7 +195,7 @@ guests on the Service VM:
    CONFIG_ACRN_GUEST=y
 
 After you made these configuration modifications, build and install the kernel
-as described in :ref:`rt_industry_ubuntu_setup`.
+as described in :ref:`gsg`.
 
 
 Launch a Nested Guest VM

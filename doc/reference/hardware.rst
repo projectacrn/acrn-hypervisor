@@ -70,7 +70,7 @@ release version and may not work as expected on later ACRN releases.
    https://up-shop.org/home/270-up-squared.html
 
 
-For general instructions setting up ACRN on supported hardware platforms, visit the :ref:`rt_industry_ubuntu_setup` page.
+For general instructions setting up ACRN on supported hardware platforms, visit the :ref:`gsg` page.
 
 .. list-table:: Supported Target Platforms
   :widths: 20 20 12 5 5
