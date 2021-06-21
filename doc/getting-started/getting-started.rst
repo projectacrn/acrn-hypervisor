@@ -1,3 +1,4 @@
+.. _gsg:
 .. _rt_industry_ubuntu_setup:
 
 Getting Started Guide
@@ -29,7 +30,8 @@ Verified Version
 - HW: Intel NUC 11 Pro Kit NUC11TNHi5 (`NUC11TNHi5 
   <https://ark.intel.com/content/www/us/en/ark/products/205594/intel-nuc-11-pro-kit-nuc11tnhi5.html>`_)
 
-.. note:: This NUC is based on the `NUC11TNBi5 board <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_.
+.. note:: This NUC is based on the
+   `NUC11TNBi5 board <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_.
    The ``BOARD`` parameter that is used to build ACRN for this NUC is therefore ``nuc11tnbi5``.
 
 Prerequisites
@@ -247,6 +249,8 @@ Install the Service VM Kernel and Modules
 
    $ sudo make modules_install
    $ sudo cp arch/x86/boot/bzImage /boot/bzImage
+
+.. _gsg_update_grub:
 
 Update Grub for the Ubuntu Service VM
 =====================================

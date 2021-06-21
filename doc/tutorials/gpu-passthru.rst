@@ -28,7 +28,7 @@ Verified Version
 Prerequisites
 *************
 
-Follow :ref:`these instructions <rt_industry_ubuntu_setup>` to set up
+Follow :ref:`these instructions <gsg>` to set up
 Ubuntu as the ACRN Service VM.
 
 Supported Hardware Platform

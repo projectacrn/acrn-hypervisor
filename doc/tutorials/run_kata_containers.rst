@@ -18,7 +18,7 @@ Prerequisites
 #. Refer to the :ref:`ACRN supported hardware <hardware>`.
 #. For a default prebuilt ACRN binary in the end-to-end (E2E) package, you must have 4
    CPU cores or enable "CPU Hyper-threading" in order to have 4 CPU threads for 2 CPU cores.
-#. Follow the :ref:`rt_industry_ubuntu_setup` to set up the ACRN Service VM
+#. Follow the :ref:`gsg` to set up the ACRN Service VM
    based on Ubuntu.
 #. This tutorial is validated on the following configurations:
 
@@ -75,7 +75,7 @@ to automate the Kata Containers installation procedure.
       $ sudo cp build/misc/tools/acrnctl /usr/bin/
 
    .. note:: This assumes you have built ACRN on this machine following the
-      instructions in the :ref:`rt_industry_ubuntu_setup`.
+      instructions in the :ref:`gsg`.
 
 #. Modify the :ref:`daemon.json` file in order to:
 
