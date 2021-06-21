@@ -16,8 +16,8 @@ Follow these getting started guides to give ACRN a try:
    :maxdepth: 1
 
    reference/hardware
+   getting-started/getting-started
    getting-started/building-from-source
-   getting-started/rt_industry_ubuntu
    getting-started/roscube/roscube-gsg
    tutorials/using_hybrid_mode_on_nuc
    tutorials/using_partition_mode_on_nuc

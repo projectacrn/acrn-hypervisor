@@ -1,11 +1,22 @@
 .. _rt_industry_ubuntu_setup:
 
-Getting Started Guide for ACRN Industry Scenario With Ubuntu Service VM
-#######################################################################
+Getting Started Guide
+#####################
 
 .. contents::
    :local:
    :depth: 1
+
+Introduction
+************
+
+This document describes the various steps to set up a system based on the following components:
+
+- ACRN: Industry scenario
+- Service VM OS: Ubuntu (running off the NVMe storage device)
+- Real-Time VM (RTVM) OS: Ubuntu modified to use a PREEMPT-RT kernel (running off the
+  SATA storage device)
+- Post-launched User VM OS: Windows
 
 Verified Version
 ****************
@@ -17,6 +28,9 @@ Verified Version
 - RT kernel for Ubuntu User OS: **4.19/preempt-rt (4.19.72-rt25)**
 - HW: Intel NUC 11 Pro Kit NUC11TNHi5 (`NUC11TNHi5 
   <https://ark.intel.com/content/www/us/en/ark/products/205594/intel-nuc-11-pro-kit-nuc11tnhi5.html>`_)
+
+.. note:: This NUC is based on the `NUC11TNBi5 board <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_.
+   The ``BOARD`` parameter that is used to build ACRN for this NUC is therefore ``nuc11tnbi5``.
 
 Prerequisites
 *************
@@ -34,7 +48,7 @@ Hardware Connection
 
 Connect the NUC11TNHi5 with the appropriate external devices.
 
-#. Connect the NUC11TNHi5 board to a monitor via an HDMI cable.
+#. Connect the NUC11TNHi5 NUC to a monitor via an HDMI cable.
 #. Connect the mouse, keyboard, Ethernet cable, and power supply cable to
    the NUC11TNHi5 board.
 #. Insert the Ubuntu 18.04 USB boot disk into the USB port.
@@ -53,7 +67,7 @@ Connect the NUC11TNHi5 with the appropriate external devices.
 Install the Ubuntu User VM (RTVM) on the SATA Disk
 **************************************************
 
-.. note:: The NUC11TNHi5 machine contains both an NVMe and SATA disk.
+.. note:: The NUC11TNHi5 NUC contains both an NVMe and SATA disk.
    Before you install the Ubuntu User VM on the SATA disk, either
    remove the NVMe disk or delete its blocks.
 
@@ -317,16 +331,6 @@ typical output of a successful installation resembles the following:
 Additional Settings in the Service VM
 =====================================
 
-Use OVMF to Launch the User VM
-------------------------------
-
-The User VM will be launched by OVMF, so copy it to the specific folder:
-
-.. code-block:: none
-
-   $ sudo mkdir -p /usr/share/acrn/bios
-   $ sudo cp /home/acrn/work/acrn-hypervisor/devicemodel/bios/OVMF.fd  /usr/share/acrn/bios
-
 Build and Install the RT Kernel for the Ubuntu User VM
 ------------------------------------------------------
 
@@ -344,7 +348,7 @@ Follow these instructions to build the RT kernel.
 
       $ git clone https://github.com/projectacrn/acrn-kernel
       $ cd acrn-kernel
-      $ git checkout 4.19/preempt-rt
+      $ git checkout origin/4.19/preempt-rt
       $ make mrproper
 
    .. note::
@@ -365,8 +369,7 @@ Follow these instructions to build the RT kernel.
 
       $ sudo mount /dev/sda2 /mnt
       $ sudo cp arch/x86/boot/bzImage /mnt/boot/
-      $ sudo tar -zxvf linux-4.19.72-rt25-x86.tar.gz -C /mnt/lib/modules/
-      $ sudo cp -r /mnt/lib/modules/lib/modules/4.19.72-rt25 /mnt/lib/modules/
+      $ sudo tar -zxvf linux-4.19.72-rt25-x86.tar.gz -C /mnt/
       $ sudo cd ~ && sudo umount /mnt && sync
 
 .. rst-class:: numbered-step
@@ -438,8 +441,7 @@ Launch the RTVM
 
   .. code-block:: none
 
-     $ sudo cp /home/acrn/work/acrn-hyperviso/misc/config_tools/data/sample_launch_scripts/nuc/launch_hard_rt_vm.sh  /usr/share/acrn/
-     $ sudo /usr/share/acrn/launch_hard_rt_vm.sh
+     $ sudo /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
 .. note::
    If using a KBL NUC, the script must be adapted to match the BDF on the actual HW platform
@@ -476,13 +478,13 @@ this, follow the below steps to allocate all housekeeping tasks to core 0:
 #. Prepare the RTVM launch script
 
    Follow the `Passthrough a hard disk to RTVM`_ section to make adjustments to
-   the ``/usr/share/acrn/launch_hard_rt_vm.sh`` launch script.
+   the ``/usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh`` launch script.
 
 #. Launch the RTVM:
 
    .. code-block:: none
 
-      $ sudo /usr/share/acrn/launch_hard_rt_vm.sh
+      $ sudo /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
 #. Log in to the RTVM as root and run the script as below:
 
@@ -528,13 +530,13 @@ Run Cyclictest
 
    .. code-block:: none
 
-      # apt install rt-tests
+      sudo apt install rt-tests
 
 #. Use the following command to start cyclictest:
 
    .. code-block:: none
 
-      # cyclictest -a 1 -p 80 -m -N -D 1h -q -H 30000 --histfile=test.log
+      sudo cyclictest -a 1 -p 80 -m -N -D 1h -q -H 30000 --histfile=test.log
 
 
    Parameter descriptions:
@@ -651,4 +653,4 @@ Passthrough a Hard Disk to RTVM
 
    .. code-block:: none
 
-      $ sudo /usr/share/acrn/launch_hard_rt_vm.sh
+      $ sudo /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
