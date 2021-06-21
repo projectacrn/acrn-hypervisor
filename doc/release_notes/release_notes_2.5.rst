@@ -164,11 +164,14 @@ to the ACRN documentation around configuration and options, as listed here:
 * :ref:`sw_design_guidelines`
 * :ref:`trusty_tee`
 * :ref:`getting-started-building`
+* :ref:`gsg`
+* :ref:`hardware`
 * :ref:`acrn_configuration_tool`
 * :ref:`acrn_on_qemu`
 * :ref:`acrn_doc`
 * :ref:`enable_ivshmem`
 * :ref:`enable-ptm`
+* :ref:`nested_virt`
 * :ref:`running_deb_as_serv_vm`
 * :ref:`trusty-security-services`
 * :ref:`using_hybrid_mode_on_nuc`
