@@ -239,6 +239,51 @@ out:
 EFI_STATUS construct_mbi(HV_LOADER hvld, struct multiboot_info **mbinfo, struct efi_memmap_info *mmap_info)
 {
 	EFI_STATUS err = EFI_SUCCESS;
+	int32_t e820_count = 0;
+	EFI_PHYSICAL_ADDRESS addr;
+	struct multiboot_mmap *mmap;
+	struct multiboot_info *mbi;
+	char *uefi_boot_loader_name;
+	static const char loader_name[BOOT_LOADER_NAME_SIZE] = UEFI_BOOT_LOADER_NAME;
+
+	err = allocate_pool(EfiLoaderData, EFI_BOOT_MEM_SIZE, (VOID *)&addr);
+	if (err != EFI_SUCCESS) {
+		Print(L"Failed to allocate memory for EFI boot\n");
+		goto out;
+	}
+	(void)memset((void *)addr, 0x0, EFI_BOOT_MEM_SIZE);
+
+	mmap = MBOOT_MMAP_PTR(addr);
+	mbi = MBOOT_INFO_PTR(addr);
+
+	uefi_boot_loader_name = BOOT_LOADER_NAME_PTR(addr);
+	memcpy(uefi_boot_loader_name, loader_name, BOOT_LOADER_NAME_SIZE);
+
+	err = get_efi_memmap(mmap_info, 0);
+	if (err != EFI_SUCCESS)
+		goto out;
+
+	err = fill_e820(hvld, mmap_info, mmap, &e820_count);
+	if (err != EFI_SUCCESS)
+		goto out;
+
+	mbi->mi_cmdline = (UINTN)hvld->get_boot_cmd(hvld);
+	mbi->mi_mmap_addr = (UINTN)mmap;
+	mbi->mi_mmap_length = e820_count*sizeof(struct multiboot_mmap);
+	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MMAP | MULTIBOOT_INFO_HAS_CMDLINE;
+
+	/* Set boot loader name in the multiboot header of UEFI, this name is used by hypervisor;
+	 * The host physical start address of boot loader name is stored in multiboot header.
+	 */
+	mbi->mi_flags |= MULTIBOOT_INFO_HAS_LOADER_NAME;
+	mbi->mi_loader_name = (UINT32)(uint64_t)uefi_boot_loader_name;
+
+	mbi->mi_mods_addr  = hvld->get_mod_hpa(hvld);
+	mbi->mi_mods_count = hvld->get_mod_count(hvld);
+	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MODS;
+
+	*mbinfo = mbi;
+out:
 	return err;
 }
 
