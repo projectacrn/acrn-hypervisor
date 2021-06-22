@@ -7,6 +7,11 @@ from .context import *
 from .datatypes import *
 from .tree import Tree, Interpreter
 
+class MethodReturn(Exception):
+    """ A pseudo exception to return from a method"""
+    def __init__(self):
+        pass
+
 class ConcreteInterpreter(Interpreter):
     class Argument(Object):
         def __init__(self, frame, index):
@@ -188,7 +193,10 @@ class ConcreteInterpreter(Interpreter):
             # Evaluate the statements of the callee
             self.stack.append(self.StackFrame(realpath, args))
             logging.debug(f"Calling {realpath} with args {args}")
-            self.interpret(value.body)
+            try:
+                self.interpret(value.body)
+            except MethodReturn:
+                pass
             frame = self.stack.pop()
             self.context.pop_scope()
 
@@ -335,6 +343,7 @@ class ConcreteInterpreter(Interpreter):
         if isinstance(obj, (self.Argument, self.LocalVariable)):
             obj = obj.get_obj()
         self.stack[-1].return_value = obj
+        raise MethodReturn()
         return None
 
     def DefSignal(self, tree):
