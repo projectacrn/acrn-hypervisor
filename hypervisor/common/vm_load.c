@@ -119,6 +119,68 @@ static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 }
 
 /**
+ * @pre vm != NULL
+ */
+static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
+{
+	void *load_addr = NULL;
+	struct vm_sw_info *sw_info = &vm->sw;
+	struct zero_page *zeropage;
+
+	/* According to the explaination for pref_address
+	 * in Documentation/x86/boot.txt, a relocating
+	 * bootloader should attempt to load kernel at pref_address
+	 * if possible. A non-relocatable kernel will unconditionally
+	 * move itself and to run at this address.
+	 */
+	zeropage = (struct zero_page *)sw_info->kernel_info.kernel_src_addr;
+
+	stac();
+	if ((is_sos_vm(vm)) && (zeropage->hdr.relocatable_kernel != 0U)) {
+		uint64_t mods_start, mods_end;
+		uint64_t kernel_load_gpa = INVALID_GPA;
+		uint32_t kernel_align = zeropage->hdr.kernel_alignment;
+		uint32_t kernel_init_size = zeropage->hdr.init_size;
+		/* Because the kernel load address need to be up aligned to kernel_align size
+		 * whereas find_space_from_ve820() can only return page aligned address,
+		 * we enlarge the needed size to (kernel_init_size + 2 * kernel_align).
+		 */
+		uint32_t kernel_size = kernel_init_size + 2 * kernel_align;
+
+		get_boot_mods_range(&mods_start, &mods_end);
+		mods_start = sos_vm_hpa2gpa(mods_start);
+		mods_end = sos_vm_hpa2gpa(mods_end);
+
+		/* TODO: support load kernel when modules are beyond 4GB space. */
+		if (mods_end < MEM_4G) {
+			kernel_load_gpa = find_space_from_ve820(vm, kernel_size, MEM_1M, mods_start);
+
+			if (kernel_load_gpa == INVALID_GPA) {
+				kernel_load_gpa = find_space_from_ve820(vm, kernel_size, mods_end, MEM_4G);
+			}
+		}
+
+		if (kernel_load_gpa != INVALID_GPA) {
+			load_addr = (void *)roundup((uint64_t)kernel_load_gpa, kernel_align);
+		}
+	} else {
+		load_addr = (void *)zeropage->hdr.pref_addr;
+		if (is_sos_vm(vm)) {
+			/* The non-relocatable SOS kernel might overlap with boot modules. */
+			pr_err("Non-relocatable kernel found, risk to boot!");
+		}
+	}
+	clac();
+
+	if (load_addr == NULL) {
+		pr_err("Could not get kernel load addr of VM %d .", vm->vm_id);
+	}
+
+	dev_dbg(DBG_LEVEL_VMLOAD, "VM%d kernel load_addr: 0x%lx", vm->vm_id, load_addr);
+	return load_addr;
+}
+
+/**
  * @pre vm != NULL && efi_mmap_desc != NULL
  */
 static uint16_t create_sos_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_memory_desc *efi_mmap_desc)
@@ -353,6 +415,9 @@ static void prepare_loading_rawimage(struct acrn_vm *vm)
 	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
 	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
+	/* TODO: GPA 0 load support */
+	vm->sw.kernel_info.kernel_load_addr = (void *)vm_config->os_config.kernel_load_addr;
+
 	/* Copy the guest kernel image to its run-time location */
 	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr,
 		(uint64_t)sw_kernel->kernel_load_addr, sw_kernel->kernel_size);
@@ -365,18 +430,22 @@ static void prepare_loading_rawimage(struct acrn_vm *vm)
 
 static int32_t vm_bzimage_loader(struct acrn_vm *vm)
 {
-	int32_t ret = 0;
+	int32_t ret = -ENOMEM;
 	/* get primary vcpu */
 	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 	uint64_t load_params_gpa = find_space_from_ve820(vm, BZIMG_LOAD_PARAMS_SIZE, MEM_4K, MEM_1M);
 
 	if (load_params_gpa != INVALID_GPA) {
-		/* We boot bzImage from protected mode directly */
-		init_vcpu_protect_mode_regs(vcpu, BZIMG_INITGDT_GPA(load_params_gpa));
+		vm->sw.kernel_info.kernel_load_addr = get_bzimage_kernel_load_addr(vm);
 
-		prepare_loading_bzimage(vm, vcpu, load_params_gpa);
-	} else {
-		ret = -ENOMEM;
+		if (vm->sw.kernel_info.kernel_load_addr != NULL) {
+			/* We boot bzImage from protected mode directly */
+			init_vcpu_protect_mode_regs(vcpu, BZIMG_INITGDT_GPA(load_params_gpa));
+
+			prepare_loading_bzimage(vm, vcpu, load_params_gpa);
+
+			ret = 0;
+		}
 	}
 
 	return ret;
