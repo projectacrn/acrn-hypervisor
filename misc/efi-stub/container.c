@@ -115,6 +115,117 @@ struct container {
 };
 
 /**
+ * @brief Load acrn.32.out ELF file. If the hv_ram_start and hv_ram_size are both zero,
+ * these two parameters will be obtained from the ELF header.
+ *
+ * @param[in]      elf_image     ELF image
+ * @param[out]     hv_hpa        The physical memory address the relocated hypervisor is stored
+ * @param[in]      hv_ram_start  The link address of the hv, e.g. the address used in a linker script.
+ * @param[in,out]  hv_ram_size   A pointer to the size of the hv image. If the value of *hv_ram_size and hv_ram_start is 0,
+ *                               *hv_ram_size will be updated to reflect a conservative estimate of hv_ram_size from ELF header.
+ * @param[in]      reloc         A pointer to the relocation information. Can be NULL.
+ *
+ * @return EFI_SUCCESS(0) on success, non-zero on error
+ */
+static EFI_STATUS load_acrn_elf(const UINT8 *elf_image, EFI_PHYSICAL_ADDRESS *hv_hpa,
+	UINT32 hv_ram_start, UINT32 *hv_ram_size, const RELOC_INFO *reloc)
+{
+	EFI_STATUS err = EFI_SUCCESS;
+
+	if (validate_elf_header((Elf32_Ehdr *)elf_image) < 0) {
+		err = EFI_LOAD_ERROR;
+		goto out;
+	}
+
+	if (hv_ram_start == 0 && *hv_ram_size == 0) {
+		UINT64 ram_low, ram_high;
+
+		if (elf_calc_link_addr_range((Elf32_Ehdr *)elf_image, &ram_low, &ram_high) < 0) {
+			err = EFI_LOAD_ERROR;
+			goto out;
+		}
+
+		hv_ram_start = ram_low;
+		*hv_ram_size = ram_high - ram_low;
+
+		/* According to board_defconfig.py, the size required might include:
+		 * hv_base_ram + post_launched_ram * postlaunched_num + ivshmem (if enabled).
+		 *  i.e., 20MB + 16MB * postlaunched_num + 2 * max(total_ivshmem, 0x200000)
+		 *
+		 * From bootloader we can only do conservative estimate. I.e., we will calculate
+		 * using maximum possible number of postlaunched number and total_ivshmem.
+		 */
+
+		/* 16MB * postlaunched_num */
+		*hv_ram_size += (16 * 1024 * 1024) * 7;
+
+		/* total size of ivshmem will be at least 2 * 200000. Here we double the region. */
+		*hv_ram_size += 4 * 0x200000;
+
+		/* Typically this can use memory up to 0xAA00000, compared to the size calculated
+		 * for a typical hybrid_rt: 0x3800000.
+		 *
+		 * It might seemed a little bit wasteful but that's the best we can do without
+		 * an address tag in multiboot header.
+		 */
+	}
+
+	if (reloc) {
+		err = emalloc_reserved_aligned(hv_hpa, *hv_ram_size, reloc->align,
+			reloc->min_addr, reloc->max_addr);
+	}
+	else {
+		err = emalloc_fixed_addr(hv_hpa, *hv_ram_size, hv_ram_start);
+	}
+
+	if (err != EFI_SUCCESS) {
+		Print(L"Failed to allocate memory for ACRN HV %r\n", err);
+		goto out;
+	}
+
+	if (elf_load((Elf32_Ehdr *)elf_image, *hv_hpa, hv_ram_start) < 0) {
+		err = EFI_LOAD_ERROR;
+		goto out;
+	}
+
+out:
+	return err;
+}
+
+static int parse_boot_image(const UINT8 *data, EFI_PHYSICAL_ADDRESS *hv_entry,
+	UINT8 *mb_version, LADDR_INFO **laddr, RELOC_INFO **reloc, const void **mb_header)
+{
+	const void *mb_hdr;
+	UINT8 mbver = 0;
+
+	mb_hdr = find_mb2header(data, MULTIBOOT2_SEARCH);
+	if (mb_hdr) {
+		struct hv_mb2header_tag_list hv_tags;
+		mbver = 2;
+		if (parse_mb2header(mb_hdr, &hv_tags) < 0) {
+			Print(L"Illegal multiboot2 header tags\n");
+			return -1;
+		}
+
+		if (hv_tags.addr) *laddr = hv_tags.addr;
+		if (hv_tags.entry) *hv_entry = hv_tags.entry->entry_addr;
+		if (hv_tags.reloc) *reloc = hv_tags.reloc;
+	} else {
+		mb_hdr = (struct multiboot_header *)find_mb1header(data, MULTIBOOT_SEARCH);
+		if (!mb_hdr) {
+			Print(L"Image is not multiboot compatible\n");
+			return -1;
+		}
+		mbver = 1;
+	}
+
+	*mb_version = mbver;
+	*mb_header = mb_hdr;
+
+	return 0;
+}
+
+/**
  * @brief Load hypervisor into memory from a container blob
  *
  * @param[in] hvld Loader handle
@@ -123,7 +234,86 @@ struct container {
  */
 static EFI_STATUS container_load_boot_image(HV_LOADER hvld)
 {
+	int i;
 	EFI_STATUS err = EFI_SUCCESS;
+	struct container *ctr = (struct container *)hvld;
+	const void *mb_hdr;
+
+	LOADER_COMPRESSED_HEADER *lzh = NULL;
+
+	/* prepare boot command line: stitched from hv_cmdline.txt and argument from efibootmgr -u */
+	lzh = ctr->lzh_ptr[LZH_BOOT_CMD];
+	ctr->boot_cmdsize = lzh->Size + StrnLen(ctr->options, ctr->options_size);
+	if (ctr->boot_cmdsize >= MAX_BOOTCMD_SIZE) {
+		Print(L"Boot command size 0x%x exceeding limit 0x%x\n", ctr->boot_cmdsize, MAX_BOOTCMD_SIZE);
+		return EFI_INVALID_PARAMETER;
+	}
+	memcpy(ctr->boot_cmd, (const char *)lzh->Data, lzh->Size - 1);
+	if (ctr->options) {
+		ctr->boot_cmd[lzh->Size - 1] = ' ';
+		for (i = lzh->Size; i < ctr->boot_cmdsize; i++) {
+			ctr->boot_cmd[i] = ctr->options[i - lzh->Size];
+		}
+	}
+
+	/* parse and load boot image */
+	lzh = ctr->lzh_ptr[LZH_BOOT_IMG];
+
+	if (parse_boot_image((const UINT8 *)lzh->Data, &ctr->hv_entry, &ctr->mb_version,
+		&ctr->laddr, &ctr->reloc, &mb_hdr) < 0) {
+		err = EFI_INVALID_PARAMETER;
+		goto out;
+	}
+
+	if (ctr->mb_version == 2) {
+		/* Multiboot 2 */
+		if (!ctr->laddr) {
+			/* GRUB will fail if the elf image contains ".rela" section. We simply ignore it. */
+			UINT32 hv_ram_size = 0;
+			err = load_acrn_elf(lzh->Data, &ctr->hv_hpa, 0, &hv_ram_size, ctr->reloc);
+			ctr->est_hv_ram_size = hv_ram_size;
+			ctr->hv_entry = elf_get_entry((Elf32_Ehdr *)lzh->Data);
+		} else {
+			/*
+			 * Multiboot2 specs address tag contains only one pair of load address and end address, which implies that
+			 * the text and data segments in image must be consecutive. This is true for the a.out binary format
+			 * but not the ELF format.
+			 *
+			 * We can either implement a "load_acrn_binary" to substitute load_acrn_elf here and tell people
+			 * to use a flat binary (acrn.bin), or left it untouched and tell people to use an ELF (which is
+			 * what we're doing now).
+			 */
+			UINT32 load_addr = ctr->laddr->load_addr;
+			UINT32 load_size = ctr->laddr->load_end_addr - ctr->laddr->load_addr;
+
+			err = load_acrn_elf(lzh->Data, &ctr->hv_hpa, load_addr, &load_size, ctr->reloc);
+		}
+
+		if (err != EFI_SUCCESS) {
+			Print(L"Failed to load ACRN HV ELF Image%r\n", err);
+			goto out;
+		}
+
+		/* Fix up entry address */
+		if (ctr->reloc) {
+			ctr->hv_entry += (ctr->hv_hpa >= ctr->laddr->load_addr) ?
+				ctr->hv_hpa - ctr->laddr->load_addr :
+				ctr->laddr->load_addr - ctr->hv_hpa;
+		}
+	} else {
+		/* Multiboot 1. We don't do relocation for MB1 case. The ".rela" section will be ignored. */
+		/* TODO: add support for the case when AOUT_KLUDGE flag is set */
+		UINT32 hv_ram_size = 0;
+		err = load_acrn_elf(lzh->Data, &ctr->hv_hpa, 0, &hv_ram_size, NULL);
+		if (err != EFI_SUCCESS) {
+			Print(L"Failed to load ACRN HV ELF Image%r\n", err);
+			goto out;
+		}
+		ctr->est_hv_ram_size = hv_ram_size;
+		ctr->hv_entry = elf_get_entry((Elf32_Ehdr *)lzh->Data);
+	}
+
+out:
 	return err;
 }
 
