@@ -452,6 +452,20 @@ class ConcreteInterpreter(Interpreter):
             logging.warn(f"Attempt to dereference an object of type {ref.__class__.__name__}")
             return ref
 
+    def DefDivide(self, tree):
+        dividend = self.interpret(tree.children[0]).get()
+        divisor = self.interpret(tree.children[1]).get()
+        if len(tree.children) >= 3:
+            remainer = self.interpret(tree.children[2])
+            if remainer:
+                remainer.set(Integer(dividend % divisor))
+        res = Integer(dividend // divisor)
+        if len(tree.children) >= 4:
+            target = self.interpret(tree.children[3])
+            if target:
+                target.set(res)
+        return res
+
     def DefIncrement(self, tree):
         obj = self.interpret(tree.children[0])
         obj.set(Integer(obj.get() + 1))
