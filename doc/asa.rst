@@ -3,6 +3,53 @@
 Security Advisory
 #################
 
+Addressed in ACRN v2.5
+************************
+
+We recommend that all developers upgrade to this v2.5 release (or later), which
+addresses the following security issues that were discovered in previous releases:
+
+-----
+
+-  NULL Pointer Dereference in ``devicemodel/hw/pci/virtio/virtio_net.c``
+    ``virtio_net_ping_rxq()`` function tries to set ``vq->used->flags`` without
+    validating pointer ``vq->used``, which may be NULL and cause a NULL pointer dereference.
+
+    **Affected Release:** v2.4 and earlier.
+
+-  NULL Pointer Dereference in ``hw/pci/virtio/virtio.c``
+    ``vq_endchains`` function tries to read ``vq->used->idx`` without
+    validating pointer ``vq->used``, which may be NULL and cause a NULL pointer dereference.
+
+    **Affected Release:** v2.4 and earlier.
+
+-  NULL Pointer Dereference in ``devicemodel/hw/pci/xhci.c``
+    The ``trb`` pointer in ``pci_xhci_complete_commands`` function may be from user space and may be NULL.
+    Accessing it without validating may cause a NULL pointer dereference.
+
+    **Affected Release:** v2.4 and earlier.
+
+-  Buffer overflow in ``hypervisor/arch/x86/vtd.c``
+    Malicious input ``index`` for function ``dmar_free_irte`` may trigger buffer
+    overflow on array ``irte_alloc_bitmap[]``.
+
+    **Affected Release:** v2.4 and earlier.
+
+-  Page Fault in ``devicemodel/core/mem.c``
+    ``unregister_mem_int()`` function frees any entry when it is valid, which is not expected.
+    (only entries to be removed from RB tree can be freed). This will cause a page fault
+    when next RB tree iteration happens.
+
+    **Affected Release:** v2.4 and earlier
+
+-  Heap-use-after-free happens in VIRTIO timer_handler
+    With virtio polling mode enabled, a timer is running in the virtio
+    backend service. The timer will also be triggered if its frontend
+    driver didn't do the device reset on shutdown. A freed virtio device
+    could be accessed in the polling timer handler.
+
+    **Affected Release:** v2.4 and earlier
+
 Addressed in ACRN v2.3
 ************************
 
