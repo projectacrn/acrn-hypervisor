@@ -375,4 +375,18 @@ struct multiboot2_tag_efi_mmap {
 };
 #endif
 
+struct hv_mb2header_tag_list {
+	struct multiboot2_header_tag_information_request *info_req;
+	struct multiboot2_header_tag_address *addr;
+	struct multiboot2_header_tag_entry_address *entry;
+	struct multiboot2_header_tag_console_flags *console_flags;
+	struct multiboot2_header_tag_framebuffer *frbuf;
+	struct multiboot2_header_tag_module_align *modalign;
+	struct multiboot2_header_tag_relocatable *reloc;
+};
+
+const struct multiboot_header *find_mb1header(const UINT8 *buffer, uint64_t len);
+const struct multiboot2_header *find_mb2header(const UINT8 *buffer, uint64_t len);
+int parse_mb2header(const struct multiboot2_header *header, struct hv_mb2header_tag_list *hv_tags);
+
 #endif /* _MULTIBOOT_H */
