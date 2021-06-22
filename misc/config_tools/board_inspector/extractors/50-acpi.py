@@ -145,6 +145,11 @@ def fetch_device_info(devices_node, interpreter, namepath):
             element.tag = "bus"
             element.set("type", buses[hid])
 
+        # Description
+        if interpreter.context.has_symbol(f"{namepath}._STR"):
+            desc = interpreter.interpret_method_call(f"{namepath}._STR").get().decode(encoding="utf-16").strip("\00")
+            element.set("description", desc)
+
         # Address
         if interpreter.context.has_symbol(f"{namepath}._ADR"):
             adr = interpreter.interpret_method_call(f"{namepath}._ADR").get()
