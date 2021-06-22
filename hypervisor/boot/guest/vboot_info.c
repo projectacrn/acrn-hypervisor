@@ -23,113 +23,17 @@
 
 #define DBG_LEVEL_BOOT	6U
 
-/* TODO:
- * The value is referenced from Linux boot protocal for old kernels,
- * but this should be configurable for different OS. */
-#define DEFAULT_RAMDISK_GPA_MAX		0x37ffffffUL
-
-#define PRE_VM_MAX_RAM_ADDR_BELOW_4GB		(VIRT_ACPI_DATA_ADDR - 1U)
-
-static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
-{
-	uint64_t ramdisk_load_gpa = INVALID_GPA;
-	uint64_t ramdisk_gpa_max = DEFAULT_RAMDISK_GPA_MAX;
-	struct zero_page *zeropage = (struct zero_page *)vm->sw.kernel_info.kernel_src_addr;
-	/* Per Linux boot protocol, the Kernel need a size of contiguous
-	 * memory(i.e. init_size field in zeropage) from its extract address to boot,
-	 * and initrd_addr_max field specifies the maximum address of the ramdisk.
-	 * Per kernel src head_64.S, decompressed kernel start at 2M aligned to the
-	 * compressed kernel load address.
-	 */
-	uint32_t kernel_init_size = zeropage->hdr.init_size;
-	uint32_t initrd_addr_max = zeropage->hdr.initrd_addr_max;
-	uint64_t kernel_end = kernel_start + MEM_2M + kernel_init_size;
-
-	if (initrd_addr_max != 0U) {
-		ramdisk_gpa_max = initrd_addr_max;
-	}
-
-	if (is_sos_vm(vm)) {
-		uint64_t mods_start, mods_end;
-
-		get_boot_mods_range(&mods_start, &mods_end);
-		mods_start = sos_vm_hpa2gpa(mods_start);
-		mods_end = sos_vm_hpa2gpa(mods_end);
-
-		if (vm->sw.ramdisk_info.src_addr != NULL) {
-			ramdisk_load_gpa = sos_vm_hpa2gpa((uint64_t)vm->sw.ramdisk_info.src_addr);
-		}
-
-		/* For SOS VM, the ramdisk has been loaded by bootloader, so in most cases
-		 * there is no need to do gpa copy again. But in the case that the ramdisk is
-		 * loaded by bootloader at a address higher than its limit, we should do gpa
-		 * copy then.
-		 */
-		if ((ramdisk_load_gpa + vm->sw.ramdisk_info.size) > ramdisk_gpa_max) {
-			/* In this case, mods_end must be higher than ramdisk_gpa_max,
-			 * so try to locate ramdisk between MEM_1M and mods_start/kernel_start,
-			 * or try the range between kernel_end and mods_start;
-			 */
-			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
-					MEM_1M, min(min(mods_start, kernel_start), ramdisk_gpa_max));
-			if ((ramdisk_load_gpa == INVALID_GPA) && (kernel_end < min(mods_start, ramdisk_gpa_max))) {
-				ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
-						kernel_end, min(mods_start, ramdisk_gpa_max));
-			}
-		}
-	} else {
-		/* For pre-launched VM, the ramdisk would be put by searching ve820 table.
-		 */
-		ramdisk_gpa_max = min(PRE_VM_MAX_RAM_ADDR_BELOW_4GB, ramdisk_gpa_max);
-
-		if (kernel_end < ramdisk_gpa_max) {
-			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
-					kernel_end, ramdisk_gpa_max);
-		}
-		if (ramdisk_load_gpa == INVALID_GPA) {
-			ramdisk_load_gpa = find_space_from_ve820(vm, vm->sw.ramdisk_info.size,
-					MEM_1M, min(kernel_start, ramdisk_gpa_max));
-		}
-	}
-
-	if (ramdisk_load_gpa == INVALID_GPA) {
-		pr_err("no space in guest memory to load VM %d ramdisk", vm->vm_id);
-		vm->sw.ramdisk_info.size = 0U;
-	}
-
-	return (ramdisk_load_gpa == INVALID_GPA) ? NULL : (void *)ramdisk_load_gpa;
-}
-
 /**
  * @pre vm != NULL && mod != NULL
  */
 static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct abi_module *mod)
 {
-	uint64_t ramdisk_load_gpa = INVALID_GPA;
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
 	if (mod->start != NULL) {
 		vm->sw.ramdisk_info.src_addr = mod->start;
 		vm->sw.ramdisk_info.size = mod->size;
 	}
 
-	if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
-		uint64_t kernel_start = (uint64_t)vm->sw.kernel_info.kernel_load_addr;
-
-		ramdisk_load_gpa = (uint64_t)get_initrd_load_addr(vm, kernel_start);
-	}
-
-	/* Use customer specified ramdisk load addr if it is configured in VM configuration,
-	 * otherwise use allocated address calculated by HV.
-	 */
-	if (vm_config->os_config.kernel_ramdisk_addr != 0UL) {
-		vm->sw.ramdisk_info.load_addr = (void *)vm_config->os_config.kernel_ramdisk_addr;
-	} else {
-		vm->sw.ramdisk_info.load_addr = (void *)ramdisk_load_gpa;
-	}
-
 	dev_dbg(DBG_LEVEL_BOOT, "ramdisk mod start=0x%x, size=0x%x", (uint64_t)mod->start, mod->size);
-	dev_dbg(DBG_LEVEL_BOOT, "ramdisk load addr = 0x%lx", ramdisk_load_gpa);
 }
 
 /**
