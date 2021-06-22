@@ -327,6 +327,61 @@ out:
  static EFI_STATUS container_load_modules(HV_LOADER hvld)
 {
 	EFI_STATUS err = EFI_SUCCESS;
+	struct container *ctr = (struct container *)hvld;
+
+	UINTN i, j;
+
+	UINT8 * p = NULL;
+	LOADER_COMPRESSED_HEADER *lzh = NULL;
+	LOADER_COMPRESSED_HEADER *cmd_lzh = NULL;
+
+	/* scan module headers to calculate required memory size to store files */
+	for (i = LZH_MOD0_CMD; i < ctr->lzh_count - 1; i++) {
+		if ((i % 2) == 0) {	/* vm0_tag.txt, vm1_tag.txt, acpi_vm0.txt ... */
+			ctr->total_modcmdsize += ctr->lzh_ptr[i]->Size;
+		} else {	/* vm0_kernel, vm1_kernel, vm0_acpi.bin ... */
+			ctr->total_modsize += ALIGN_UP(ctr->lzh_ptr[i]->Size, EFI_PAGE_SIZE);
+		}
+	}
+	/* exclude hypervisor and SBL signature files. e.g.)
+	 *    lzh_count = 9 (hv_cmdline, acrn.32.out, vm0_tag, vm0_kernel, vm1_tag, vm1_kernel, vm0_acpi_tag, vm0_acpi, sig)
+	 *    mod_count = 3 (vm0_tag + vm0_kernel, vm1_tag + vm1_kernel, vm0_acpi_tag + vm0_acpi)
+	 */
+	ctr->mod_count = (ctr->lzh_count - 3) / 2;
+
+	if (ctr->mod_count >= MAX_MODULE_COUNT) {
+		Print(L"Too many modules: 0x%x\n", ctr->mod_count);
+		return EFI_INVALID_PARAMETER;
+	}
+
+	/* allocate single memory region to store all binary files to avoid mmap fragmentation */
+	if (ctr->reloc) {
+		err = emalloc_reserved_aligned(&(ctr->mod_hpa), ctr->total_modsize,
+								EFI_PAGE_SIZE, ctr->reloc->min_addr, ctr->reloc->max_addr);
+	} else {
+		/* We put modules after hv */
+		UINTN hv_ram_size = ctr->laddr->load_end_addr - ctr->laddr->load_addr;
+		err = emalloc_fixed_addr(&(ctr->mod_hpa), hv_ram_size, ctr->hv_hpa + ALIGN_UP(hv_ram_size, EFI_PAGE_SIZE));
+	}
+	if (err != EFI_SUCCESS) {
+		Print(L"Failed to allocate memory for modules %r\n", err);
+		goto out;
+	}
+
+	p = (UINT8 *)ctr->mod_hpa;
+	for (i = LZH_BOOT_IMG + 2, j = 0; i < ctr->lzh_count - 1; i = i + 2) {
+		lzh = ctr->lzh_ptr[i];
+		cmd_lzh = ctr->lzh_ptr[i - 1];
+		memcpy((char *)p, (const char *)lzh->Data, lzh->Size);
+		ctr->mod_info[j].mod_start = (EFI_PHYSICAL_ADDRESS)p;
+		ctr->mod_info[j].mod_end = (EFI_PHYSICAL_ADDRESS)p + lzh->Size;
+		ctr->mod_info[j].cmd = (const char *)cmd_lzh->Data;
+		ctr->mod_info[j].cmdsize = cmd_lzh->Size;
+		p += ALIGN_UP(lzh->Size, EFI_PAGE_SIZE);
+		j++;
+	}
+
+out:
 	return err;
 }
 
