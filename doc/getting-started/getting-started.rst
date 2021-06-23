@@ -157,7 +157,7 @@ Build the ACRN Hypervisor on Ubuntu
 
    .. code-block:: none
 
-      $ sudo -E apt install gcc \
+      $ sudo apt install gcc \
         git \
         make \
         libssl-dev \
@@ -166,6 +166,7 @@ Build the ACRN Hypervisor on Ubuntu
         libsystemd-dev \
         libevent-dev \
         libxml2-dev \
+        libxml2-utils \
         libusb-1.0-0-dev \
         python3 \
         python3-pip \
@@ -176,7 +177,8 @@ Build the ACRN Hypervisor on Ubuntu
         liblz4-tool \
         flex \
         bison \
-        xsltproc
+        xsltproc \
+        clang-format
 
       $ sudo pip3 install lxml xmlschema
 
@@ -558,22 +560,8 @@ Run Cyclictest
 Launch the Windows VM
 *********************
 
-#. Follow this :ref:`guide <using_windows_as_uos>` to prepare the Windows
-   image file and then reboot with a new ``acrngt.conf``.
-
-#. Modify the ``launch_uos_id1.sh`` script as follows and then launch
-   the Windows VM as one of the post-launched standard VMs:
-
-   .. code-block:: none
-      :emphasize-lines: 2
-
-      acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
-         -s 2,passthru,0/2/0,gpu \
-         -s 3,virtio-blk,./win10-ltsc.img \
-         -s 4,virtio-net,tap0 \
-         --ovmf /usr/share/acrn/bios/OVMF.fd \
-         --windows \
-         $vm_name
+Follow this :ref:`guide <using_windows_as_uos>` to prepare the Windows
+image file and then reboot.
 
 Troubleshooting
 ***************
