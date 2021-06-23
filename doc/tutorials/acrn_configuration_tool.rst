@@ -339,7 +339,7 @@ current scenario has:
 
 ``shm_region`` (a child node of ``shm_regions``):
   configure the shared memory regions for current VM, input format:
-  ``hv:/<;shm name>;, <;shm size in MB>;``. Refer to :ref:`ivshmem-hld` for details.
+  ``hv:/<;shm name>; (or dm:/<shm_name>;), <;shm size in MB>;``. Refer to :ref:`ivshmem-hld` for details.
 
 ``console_vuart``:
   Enable a PCI-based console vUART. Refer to :ref:`vuart_config` for details.
@@ -369,12 +369,15 @@ current scenario has:
   Input format:
   ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
 
+``cpu_affinity``:
+  List of pCPU that this VM's vCPUs are pinned to.
+
 .. note::
 
    The ``configurable`` and ``readonly`` attributes are used to mark
-   whether the item is configurable for users. When ``configurable="0"``
-   and ``readonly="true"``, the item is not configurable from the web
-   interface. When ``configurable="0"``, the item does not appear on the
+   whether the item is configurable for users. When ``configurable="n"``
+   and ``readonly="y"``, the item is not configurable from the web
+   interface. When ``configurable="n"``, the item does not appear on the
    interface.
 
 .. _acrn_config_tool_ui:
