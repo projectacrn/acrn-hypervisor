@@ -337,7 +337,8 @@ static void load_sw_module(struct acrn_vm *vm, struct sw_module_info *sw_module)
 /**
  * @pre vm != NULL
  */
-static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint64_t load_params_gpa)
+static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu,
+						uint64_t load_params_gpa, uint64_t kernel_load_gpa)
 {
 	uint32_t i;
 	uint32_t prot_code_offset, prot_code_size, kernel_entry_offset;
@@ -362,8 +363,7 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, 
 				(sw_kernel->kernel_size - prot_code_offset) : 0U;
 
 	/* Copy the protected mode part kernel code to its run-time location */
-	(void)copy_to_gpa(vm, (sw_kernel->kernel_src_addr + prot_code_offset),
-		(uint64_t)sw_kernel->kernel_load_addr, prot_code_size);
+	(void)copy_to_gpa(vm, (sw_kernel->kernel_src_addr + prot_code_offset), kernel_load_gpa, prot_code_size);
 
 	if (vm->sw.ramdisk_info.size > 0U) {
 		/* Use customer specified ramdisk load addr if it is configured in VM configuration,
@@ -372,9 +372,7 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, 
 		if (vm_config->os_config.kernel_ramdisk_addr != 0UL) {
 			vm->sw.ramdisk_info.load_addr = (void *)vm_config->os_config.kernel_ramdisk_addr;
 		} else {
-			uint64_t kernel_start = (uint64_t)sw_kernel->kernel_load_addr;
-
-			vm->sw.ramdisk_info.load_addr = (void *)get_initrd_load_addr(vm, kernel_start);
+			vm->sw.ramdisk_info.load_addr = (void *)get_initrd_load_addr(vm, kernel_load_gpa);
 			if (vm->sw.ramdisk_info.load_addr == NULL) {
 				pr_err("failed to load initrd for VM%d !", vm->vm_id);
 			}
@@ -400,7 +398,7 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, 
 		kernel_entry_offset += 512U;
 	}
 
-	sw_kernel->kernel_entry_addr = (void *)((uint64_t)sw_kernel->kernel_load_addr + kernel_entry_offset);
+	sw_kernel->kernel_entry_addr = (void *)(kernel_load_gpa + kernel_entry_offset);
 
 	/* Documentation states: ebx=0, edi=0, ebp=0, esi=ptr to
 	 * zeropage
@@ -425,13 +423,13 @@ static void prepare_loading_rawimage(struct acrn_vm *vm)
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
 	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+	uint64_t kernel_load_gpa;
 
 	/* TODO: GPA 0 load support */
-	vm->sw.kernel_info.kernel_load_addr = (void *)vm_config->os_config.kernel_load_addr;
+	kernel_load_gpa = vm_config->os_config.kernel_load_addr;
 
 	/* Copy the guest kernel image to its run-time location */
-	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr,
-		(uint64_t)sw_kernel->kernel_load_addr, sw_kernel->kernel_size);
+	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr, kernel_load_gpa, sw_kernel->kernel_size);
 
 	/* Copy Guest OS ACPI to its load location */
 	load_sw_module(vm, acpi_info);
@@ -447,13 +445,13 @@ static int32_t vm_bzimage_loader(struct acrn_vm *vm)
 	uint64_t load_params_gpa = find_space_from_ve820(vm, BZIMG_LOAD_PARAMS_SIZE, MEM_4K, MEM_1M);
 
 	if (load_params_gpa != INVALID_GPA) {
-		vm->sw.kernel_info.kernel_load_addr = get_bzimage_kernel_load_addr(vm);
+		uint64_t kernel_load_gpa = (uint64_t)get_bzimage_kernel_load_addr(vm);
 
-		if (vm->sw.kernel_info.kernel_load_addr != NULL) {
+		if (kernel_load_gpa != 0UL) {
 			/* We boot bzImage from protected mode directly */
 			init_vcpu_protect_mode_regs(vcpu, BZIMG_INITGDT_GPA(load_params_gpa));
 
-			prepare_loading_bzimage(vm, vcpu, load_params_gpa);
+			prepare_loading_bzimage(vm, vcpu, load_params_gpa, kernel_load_gpa);
 
 			ret = 0;
 		}
