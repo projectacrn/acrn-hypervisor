@@ -20,8 +20,8 @@ mode rather than the former deprivileged mode.
 
 In order to boot ACRN HV with the new EFI-Stub, you need to create a container blob
 which contains HV image and Service VM kernel image (and optionally pre-launched
-VM kernel image and ACPI table). That blob file is supposed to be stitched to the
-EFI-Stub to form single EFI application (``acrn.efi``). The overall boot flow is as below.
+VM kernel image and ACPI table). That blob file is stitched to the
+EFI-Stub to form a single EFI application (``acrn.efi``). The overall boot flow is as below.
 
 .. graphviz::
 
@@ -58,17 +58,19 @@ Build Dependencies
 ==================
 
 - Build Tools and Dependencies described in the :ref:`getting-started-building` guide
-- gnu-efi package
-- Service VM Kernel bzImage
-- pre-launched RTVM Kernel bzImage
+- ``gnu-efi`` package
+- Service VM Kernel ``bzImage``
+- pre-launched RTVM Kernel ``bzImage``
 - `Slim Bootloader Container Tool <https://slimbootloader.github.io/how-tos/create-container-boot-image.html>`_
 
 The Slim Bootloader Tools can be downloaded from its `GitHub project <https://github.com/slimbootloader/slimbootloader>`_.
 The verified version is the commit `9f146af <https://github.com/slimbootloader/slimbootloader/tree/9f146af>`_.
-You may use the `meta-acrn Yocto Project integration layer <https://github.com/intel/meta-acrn>`_ to build Service VM Kernel and pre-launched one.
+You may use the `meta-acrn Yocto Project integration layer
+<https://github.com/intel/meta-acrn>`_ to build Service VM Kernel and
+pre-launched VM.
 
-Build EFI-Stub for TGL platform hybrid_rt
-=========================================
+Build EFI-Stub for TGL hybrid_rt
+======================================
 
 .. code-block:: none
 
@@ -76,7 +78,8 @@ Build EFI-Stub for TGL platform hybrid_rt
    $ cd acrn-hypervisor
    $ make BOARD=tgl-rvp SCENARIO=hybrid_rt hypervisor
    $ make BOARD=tgl-rvp SCENARIO=hybrid_rt -C misc/efi-stub/ \
-     HV_OBJDIR=`pwd`/build/hypervisor/ EFI_OBJDIR=`pwd`/build/hypervisor/misc/efi-stub `pwd`/build/hypervisor/misc/efi-stub/boot.efi
+     HV_OBJDIR=`pwd`/build/hypervisor/ \
+     EFI_OBJDIR=`pwd`/build/hypervisor/misc/efi-stub `pwd`/build/hypervisor/misc/efi-stub/boot.efi
 
 Create Container
 ================
@@ -102,8 +105,8 @@ Create Container
      -t MULTIBOOT \
      -a NONE
 
-You may optionally put HV boot options in the hv_cmdline.txt. Since the current implementation does not accept empty files,
-it must contain at least one character even if you don't need additional boot options.
+You may optionally put HV boot options in the ``hv_cmdline.txt`` file. This file
+must contain at least one character even if you don't need additional boot options.
 
 .. code-block:: none
 
@@ -114,18 +117,20 @@ it must contain at least one character even if you don't need additional boot op
    # Not Acceptable Example
    $ touch hv_cmdline.txt         # empty file
 
-The vm0_kernel is the Kernel bzImage of the pre-launched RTVM, and the vm1_kernel is the one of the Service VM in the above case.
+The ``vm0_kernel`` is the Kernel ``bzImage`` of the pre-launched RTVM, and the
+``vm1_kernel`` is the image of the Service VM in the above case.
 
 Stitch Container to EFI-Stub
 ============================
 
 .. code-block:: none
 
-   $ objcopy --add-section .hv=sbl_os --change-section-vma .hv=0x6e000 --set-section-flags .hv=alloc,data,contents,load \
+   $ objcopy --add-section .hv=sbl_os --change-section-vma .hv=0x6e000 \
+     --set-section-flags .hv=alloc,data,contents,load \
      --section-alignment 0x1000 $TOPDIR/acrn-hypervisor/build/hypervisor/misc/efi-stub/boot.efi acrn.efi
 
-Installing (w/o SB for testing)
-*******************************
+Installing (without SB for testing)
+***********************************
 For example:
 
 .. code-block:: none
@@ -137,4 +142,5 @@ For example:
 
 Signing
 *******
-See the page :ref:`how-to-enable-acrn-secure-boot-with-grub` for how to sign your ``acrn.efi`` file.
+See :ref:`how-to-enable-acrn-secure-boot-with-grub` for how to sign your ``acrn.efi`` file.
+
