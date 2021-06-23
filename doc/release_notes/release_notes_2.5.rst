@@ -73,36 +73,36 @@ installed by executing the following command:
 
 .. code-block:: bash
 
-   $ sudo pip3 install lxml
+   sudo pip3 install lxml
 
 .. note::
    Refer to :ref:`acrn_config_workflow` for a complete list of tools required to
    run the board inspector.
 
-With the prerequisites, copying the entire board inspector folder from
+With the prerequisites done, copy the entire board inspector folder from
 ``misc/config_tools/board_inspector`` to the target board, ``cd`` to that
-directory on the target, and run the tool using::
+directory on the target, and run the board inspector tool using::
 
-  sudo python3 cli.py <my_board_name>
+   sudo python3 cli.py <my_board_name>
 
-This will generate ``<my_board_name>.xml`` under the current working directory.
+This will generate ``<my_board_name>.xml`` in the current working directory.
 
 Add New Configuration Options
 =============================
 
-In v2.5, the following elements are added to scenario XMLs:
+In v2.5, the following elements are added to scenario XML files:
 
- - :option:`hv.FEATURES.NVMX_ENABLED`
- - :option:`vm.PTM`
+- :option:`hv.FEATURES.NVMX_ENABLED`
+- :option:`vm.PTM`
 
 The following element is renamed:
 
- - :option:`hv.FEATURES.SSRAM.SSRAM_ENABLED` (was ``hv.FEATURES.PSRAM.PSRAM_ENABLED`` in v2.4)
+- :option:`hv.FEATURES.SSRAM.SSRAM_ENABLED` (was ``hv.FEATURES.PSRAM.PSRAM_ENABLED`` in v2.4)
 
-Constraints on values of the following element is changed:
+Constraints on values of the following element has changed:
 
- - :option:`vm.guest_flags.guest_flag` no longer accepts an empty text. For VMs
-   without any guest flag set, a ``0`` should be given.
+- :option:`vm.guest_flags.guest_flag` no longer accepts an empty text. For VMs
+  without any guest flag set, a ``0`` should be given.
 
 Document Updates
 ****************
