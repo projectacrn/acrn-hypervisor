@@ -294,7 +294,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 	}
 #endif
 	/* copy part of the header into the zero page */
-	hva = (struct zero_page *)gpa2hva(vm, (uint64_t)sw_kernel->kernel_load_addr);
+	hva = (struct zero_page *)sw_kernel->kernel_src_addr;
 	(void)memcpy_s(&(zeropage->hdr), sizeof(zeropage->hdr),
 				&(hva->hdr), sizeof(hva->hdr));
 
@@ -339,17 +339,30 @@ static void load_sw_module(struct acrn_vm *vm, struct sw_module_info *sw_module)
 static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint64_t load_params_gpa)
 {
 	uint32_t i;
-	uint32_t kernel_entry_offset;
+	uint32_t prot_code_offset, prot_code_size, kernel_entry_offset;
+	uint8_t setup_sectors;
 	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-	struct zero_page *zeropage;
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
 	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
 	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
+	struct zero_page *zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;
 
-	/* Copy the guest kernel image to its run-time location */
-	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr,
-		(uint64_t)sw_kernel->kernel_load_addr, sw_kernel->kernel_size);
+	/* The bzImage file consists of three parts:
+	 * boot_params(i.e. zero page) + real mode setup code + compressed protected mode code
+	 * The compressed proteced mode code start at offset (setup_sectors + 1U) * 512U of bzImage.
+	 * Only protected mode code need to be loaded.
+	 */
+	stac();
+	setup_sectors = (zeropage->hdr.setup_sects == 0U) ? 4U : zeropage->hdr.setup_sects;
+	clac();
+	prot_code_offset = (uint32_t)(setup_sectors + 1U) * 512U;
+	prot_code_size = (sw_kernel->kernel_size > prot_code_offset) ?
+				(sw_kernel->kernel_size - prot_code_offset) : 0U;
+
+	/* Copy the protected mode part kernel code to its run-time location */
+	(void)copy_to_gpa(vm, (sw_kernel->kernel_src_addr + prot_code_offset),
+		(uint64_t)sw_kernel->kernel_load_addr, prot_code_size);
 
 	if (vm->sw.ramdisk_info.size > 0U) {
 		/* Use customer specified ramdisk load addr if it is configured in VM configuration,
@@ -379,11 +392,8 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu, 
 	/* Copy Guest OS ACPI to its load location */
 	load_sw_module(vm, acpi_info);
 
-	/* calculate the kernel entry point */
-	zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;
-	stac();
-	kernel_entry_offset = (uint32_t)(zeropage->hdr.setup_sects + 1U) * 512U;
-	clac();
+	/* 32bit kernel entry is at where protected mode code loaded */
+	kernel_entry_offset = 0U;
 	if (vcpu->arch.cpu_mode == CPU_MODE_64BIT) {
 		/* 64bit entry is the 512bytes after the start */
 		kernel_entry_offset += 512U;
