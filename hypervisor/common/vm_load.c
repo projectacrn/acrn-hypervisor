@@ -47,7 +47,7 @@ static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 	uint64_t ramdisk_load_gpa = INVALID_GPA;
 	uint64_t ramdisk_gpa_max = DEFAULT_RAMDISK_GPA_MAX;
 	struct zero_page *zeropage = (struct zero_page *)vm->sw.kernel_info.kernel_src_addr;
-	uint32_t kernel_init_size, initrd_addr_max;
+	uint32_t kernel_init_size, kernel_align, initrd_addr_max;
 	uint64_t kernel_end;
 
 	/* Per Linux boot protocol, the Kernel need a size of contiguous
@@ -58,9 +58,10 @@ static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 	 */
 	stac();
 	kernel_init_size = zeropage->hdr.init_size;
+	kernel_align = zeropage->hdr.kernel_alignment;
 	initrd_addr_max = zeropage->hdr.initrd_addr_max;
 	stac();
-	kernel_end = kernel_start + MEM_2M + kernel_init_size;
+	kernel_end = roundup(kernel_start, kernel_align) + kernel_init_size;
 
 	if (initrd_addr_max != 0U) {
 		ramdisk_gpa_max = initrd_addr_max;
@@ -143,9 +144,9 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 		uint32_t kernel_init_size = zeropage->hdr.init_size;
 		/* Because the kernel load address need to be up aligned to kernel_align size
 		 * whereas find_space_from_ve820() can only return page aligned address,
-		 * we enlarge the needed size to (kernel_init_size + 2 * kernel_align).
+		 * we enlarge the needed size to (kernel_init_size + kernel_align).
 		 */
-		uint32_t kernel_size = kernel_init_size + 2 * kernel_align;
+		uint32_t kernel_size = kernel_init_size + kernel_align;
 
 		get_boot_mods_range(&mods_start, &mods_end);
 		mods_start = sos_vm_hpa2gpa(mods_start);
