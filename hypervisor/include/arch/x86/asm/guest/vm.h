@@ -55,7 +55,6 @@ struct sw_module_info {
 
 struct sw_kernel_info {
 	void *kernel_src_addr;		/* HVA */
-	void *kernel_load_addr;		/* GPA */
 	void *kernel_entry_addr;	/* GPA */
 	uint32_t kernel_size;
 };
