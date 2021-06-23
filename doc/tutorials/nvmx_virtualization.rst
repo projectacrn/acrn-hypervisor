@@ -101,39 +101,47 @@ with these settings:
 
 #. Configure system level features:
 
-   - Select ``y`` on :option:`hv.FEATURES.NVMX_ENABLED` to enable nested virtualization
+   - Edit :option:`hv.FEATURES.NVMX_ENABLED` to `y` to enable nested virtualization
 
-   - Select ``SCHED_NOOP`` on :option:`hv.FEATURES.SCHEDULER`
+   - Edit :option:`hv.FEATURES.SCHEDULER` to ``SCHED_NOOP`` to disable CPU sharing
 
-     .. figure:: images/nvmx_cfg_1.png
-        :width: 400px
-        :align: center
+     .. code-block:: xml
+        :emphasize-lines: 3,18
 
-        Setting NVMX_ENABLED and SCHEDULER with configuration tool
+        <FEATURES>
+            <RELOC>y</RELOC>
+            <SCHEDULER>SCHED_NOOP</SCHEDULER>
+            <MULTIBOOT2>y</MULTIBOOT2>
+            <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+            <RDT>
+                <RDT_ENABLED>n</RDT_ENABLED>
+                <CDP_ENABLED>y</CDP_ENABLED>
+                <CLOS_MASK>0xfff</CLOS_MASK>
+                <CLOS_MASK>0xfff</CLOS_MASK>
+                <CLOS_MASK>0xfff</CLOS_MASK>
+                <CLOS_MASK>0xfff</CLOS_MASK>
+                <CLOS_MASK>0xfff</CLOS_MASK>
+                <CLOS_MASK>0xfff</CLOS_MASK>
+                <CLOS_MASK>0xfff</CLOS_MASK>
+                <CLOS_MASK>0xfff</CLOS_MASK>
+            </RDT>
+            <NVMX_ENABLED>y</NVMX_ENABLED>
+            <HYPERV_ENABLED>y</HYPERV_ENABLED>
 
 #. In each guest VM configuration:
 
-   - Select ``GUEST_FLAG_NVMX_ENABLED`` on :option:`vm.guest_flags.guest_flag` on the SOS VM section
+   - Edit :option:`vm.guest_flags.guest_flag` on the SOS VM section and add ``GUEST_FLAG_NVMX_ENABLED``
      to enable the nested virtualization feature on the Service VM.
-   - Select ``GUEST_FLAG_LAPIC_PASSTHROUGH`` on :option:`vm.guest_flags.guest_flag` to enable local
+   - Edit :option:`vm.guest_flags.guest_flag` and add ``GUEST_FLAG_LAPIC_PASSTHROUGH`` to enable local
      APIC passthrough on the Service VM.
-
-     .. figure:: images/nvmx_cfg_3.png
-        :width: 700px
-        :align: center
-
-        Service VM (SOS) ``guest_flag`` settings
-
    - Edit :option:`vm.cpu_affinity.pcpu_id` to assign ``pCPU`` IDs to run the Service VM. If you are
      using debug build and need the hypervisor console, don't assign
      ``pCPU0`` to the Service VM.
 
-     You may need to manually edit the ACRN scenario XML configuration file to edit the ``pcpu_id`` for the Service VM (SOS):
-
      .. code-block:: xml
-        :emphasize-lines: 5,6,7
+        :emphasize-lines: 5,6,7,10,11
 
-        <vm id="0">
+        <vm id="1">
           <vm_type>SOS_VM</vm_type>
           <name>ACRN SOS VM</name>
           <cpu_affinity>
@@ -151,15 +159,33 @@ with these settings:
      the PCI-vUART for the Service VM. Refer to :ref:`Enable vUART Configurations <vuart_config>`
      for more details about VUART configuration.
 
-   - Set :option:`vm.legacy_vuart.base` in ``legacy_vuart 0`` to ``INVALID_LEGACY_PIO``
+   - Edit :option:`vm.legacy_vuart.base` in ``legacy_vuart 0`` and set it to ``INVALID_LEGACY_PIO``
 
-   - Set :option:`vm.console_vuart.base` in ``console_vuart 0`` to ``PCI_VUART``
+   - Edit :option:`vm.console_vuart.base` in ``console_vuart 0`` and set it to ``PCI_VUART``
 
-     .. figure:: images/nvmx_cfg_2.png
-        :width: 500px
-        :align: center
+     .. code-block:: xml
+        :emphasize-lines: 3, 14
 
-        Service VM legacy and console vUART settings
+        <legacy_vuart id="0">
+            <type>VUART_LEGACY_PIO</type>
+            <base>INVALID_COM_BASE</base>
+            <irq>COM1_IRQ</irq>
+        </legacy_vuart>
+        <legacy_vuart id="1">
+            <type>VUART_LEGACY_PIO</type>
+            <base>INVALID_COM_BASE</base>
+            <irq>COM2_IRQ</irq>
+            <target_vm_id>1</target_vm_id>
+            <target_uart_id>1</target_uart_id>
+        </legacy_vuart>
+        <console_vuart id="0">
+            <base>PCI_VUART</base>
+        </console_vuart>
+
+#. Remove CPU sharing VMs
+
+   Since CPU sharing is disabled, you may need to delete all ``POST_STD_VM`` and ``KATA_VM`` VMs
+   from the scenario configuration file, which may share pCPU with the Service OS VM.
 
 #. Follow instructions in :ref:`getting-started-building` and build with this XML configuration.
 
