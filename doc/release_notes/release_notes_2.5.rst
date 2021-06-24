@@ -36,7 +36,7 @@ ACRN v2.5 requires Ubuntu 18.04.  Follow the instructions in the
 What's New in v2.5
 ******************
 
-Nested Virtualization Technlolgy Preview
+Nested Virtualization Technology Preview
   A brand-new concept, nested virtualization, is introduced as a preview in this
   v2.5 release. Nested virtualization lets you run virtual machine instances
   inside of a guest VM that's running on the ACRN hypervisor. It's designed to
@@ -174,34 +174,34 @@ Fixed Issues Details
 
 - :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
 - :acrn-issue:`5879` - hybrid_rt scenario does not work with large initrd in pre-launched VM
-- :acrn-issue:`6015` - [Mainline][PTCM] Obsolete terms cleanup for SSRAM
-- :acrn-issue:`6024` - [TGL][Master][IVSHMEM] Only one share memory device in SOS while enabled two from the scenario xml
-- :acrn-issue:`6034` - [S5][DM] S5 trigger failed while launch multiple VMs
+- :acrn-issue:`6015` - HV and DM: Obsolete terms cleanup for SSRAM
+- :acrn-issue:`6024` - config-tools: generate board_info.h and pci_dev.c using xslt
+- :acrn-issue:`6034` - dm: add allow_trigger_s5 mode to pm_notify_channel uart
 - :acrn-issue:`6038` - [REG][RAMDISK] Fail to launch pre RTVM while config ramdisk
-- :acrn-issue:`6056` - [EHL][v2.4][config_tools]  Pop error message while config multi_ivshmem_device.
-- :acrn-issue:`6072` - [WHL][WAAG]use config tool to passthru Auido,will not display GOP
-- :acrn-issue:`6075` - [segmentation init value bug] (known issue) when some segmentation's init paramer's modified ,after ap reboot,these parameter is not restored init value.
-- :acrn-issue:`6078` - ACRN shall not use GRUB Multiboot2 when Secure Boot is enabled
+- :acrn-issue:`6056` - dm: a minor bug fix of unregister_mem_int
+- :acrn-issue:`6072` - [WHL][WAAG]use config tool to passthru Audio,will not display GOP
+- :acrn-issue:`6075` - [config_tools][regression][v2.5_rc1] config tool failed to save industry.xml with GuestFlagsOptionsType check
+- :acrn-issue:`6078` - Make ACRN HV with hybrid_rt bootable without GRUB on UEFI BIOS
 - :acrn-issue:`6100` - virtio_net_ping_rxq SEGV on read from NULL
-- :acrn-issue:`6102` - [REG][acrn-configuration-tool] make QEMU fail
+- :acrn-issue:`6102` - Build failure for BOARD=qemu SCENARIO=sdc on release_2.5
 - :acrn-issue:`6104` - [acrn-configuration-tool] Need update tgl-rvp.xml to the latest BIOS info
 - :acrn-issue:`6113` - [config_tools][ADL-S]generated board xml parse error on ADL-S
 - :acrn-issue:`6120` - [acrn-configuration-tool] shall we add CLOS_MASK elements into tgl scenario files as default configuration
-- :acrn-issue:`6126` - [TGL][HV] can not find "/dev/tpm0 and /dev/tpmrm0" in case "MMIO device pass-thru with dynamic gpa_tpm"
+- :acrn-issue:`6126` - TPM do not support dynamic GPA
 - :acrn-issue:`6129` - virtio: NULL deref in hw/pci/virtio/virtio.c:664 in vq_endchains
 - :acrn-issue:`6131` - guest/vlapic fatal assertion reachable from guest - DoS
 - :acrn-issue:`6134` - [acrn-configuration-tool] lxml module not found when get board xml following doc
-- :acrn-issue:`6138` - [acrn-configuration-tool] config tool should support new param for new s5
-- :acrn-issue:`6147` - timer_handler UAF
-- :acrn-issue:`6157` - [v2.5] critical coding style issues
+- :acrn-issue:`6138` - config-tools: support of launch script to generate the "allow_trigger_s5" automatically
+- :acrn-issue:`6147` - ASAN reports UAF + SEGV when fuzzing exposed PIO with Hypercube guest VM.
+- :acrn-issue:`6157` - coding style fix on v2.5 branch
 - :acrn-issue:`6162` - [REG][EHL][SBL] Fail to boot sos
-- :acrn-issue:`6168` - [REG][TGL][nest]SOS failed to boot with nest enabled
-- :acrn-issue:`6172` - virtio_xhci: member access within null pointer of type 'struct xhci_trb'
-- :acrn-issue:`6178` - [acrn-configuraiton-tool] saving manually generated hybrid xml failed with error by config tool
+- :acrn-issue:`6168` - SOS failed to boot with nest enabled 
+- :acrn-issue:`6172` - member access within null pointer of type 'struct xhci_trb'
+- :acrn-issue:`6178` - config-tools: adding an empty node <pt_intx> for a pre-launched VM causing check_pt_intx throw out an error
 - :acrn-issue:`6185` - [TGL][Industry]yaag can't get ip after SRIVO VF passthru
-- :acrn-issue:`6186` - [acrn-configuration-tool] The algorithm of CONFIG_MAX_MSIX_TABLE_NUM calculation is wrong.
+- :acrn-issue:`6186` - [acrn-configuration-tool] CONFIG_MAX_MSIX_TABLE_NUM value is auto set as 64 when generate an new scenario xml
 - :acrn-issue:`6199` - [doc][buildSource] can not pass SCENARIO parameter into hypervisor/build/.config with "make defconfig"
-
 
 Known Issues
 ************
+
