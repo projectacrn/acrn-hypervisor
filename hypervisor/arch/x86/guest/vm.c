@@ -39,6 +39,7 @@
 #include <asm/rtcm.h>
 #include <asm/irq.h>
 #include <uart16550.h>
+#include <quirks/fixup.h>
 
 /* Local variables */
 
@@ -897,6 +898,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 	int32_t err = 0;
 	struct acrn_vm *vm = NULL;
 
+	acrn_vm_fixup(vm_id);
 	/* SOS and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
 	err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
 
