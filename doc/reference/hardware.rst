@@ -66,6 +66,9 @@ release version and may not work as expected on later ACRN releases.
 .. _WHL-IPC-I7:
    http://www.maxtangpc.com/industrialmotherboards/142.html#parameters
 
+.. _UP2-N3350:
+.. _UP2-N4200:
+.. _UP2-x5-E3940:
 .. _UP2 Shop:
    https://up-shop.org/home/270-up-squared.html
 
@@ -97,7 +100,7 @@ For general instructions setting up ACRN on supported hardware platforms, visit 
     - v1.6.1
     - GVT-g
   * - **Apollo Lake**
-    - `NUC6CAYH`_, |br| `UP2-N3350 <UP2 Shop>`_, |br| `UP2-N4200, UP2-x5-E3940 <UP2 Shop>`_
+    - `NUC6CAYH`_, |br| `UP2-N3350`_, `UP2-N4200`_, |br| `UP2-x5-E3940`_
     - 
     - v1.0
     - GVT-g
