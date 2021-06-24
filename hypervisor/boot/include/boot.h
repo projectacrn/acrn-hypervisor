@@ -78,5 +78,5 @@ int32_t init_multiboot2_info(uint32_t *registers);
 void init_acrn_boot_info(uint32_t *registers);
 int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi);
 struct acrn_boot_info *get_acrn_boot_info(void);
-
+struct abi_module *get_mod_by_tag(const struct acrn_boot_info *abi, const char *tag);
 #endif	/* BOOT_H */
