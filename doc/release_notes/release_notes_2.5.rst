@@ -1,7 +1,7 @@
 .. _release_notes_2.5:
 
-ACRN v2.5 (Jun 2021) DRAFT
-##########################
+ACRN v2.5 (Jun 2021)
+####################
 
 We are pleased to announce the release of the Project ACRN hypervisor
 version 2.5.
@@ -30,34 +30,39 @@ latest under-development branch is found at
 https://projectacrn.github.io/latest/.
 
 ACRN v2.5 requires Ubuntu 18.04.  Follow the instructions in the
-:ref:`rt_industry_ubuntu_setup` to get started with ACRN.
+:ref:`gsg` to get started with ACRN.
 
 
 What's New in v2.5
 ******************
 
-- A brand-new concept, nested virtualization, is introduced as a preview in this
-  v2.5 release. It's designed to leverage KVM/Qemu community's rich feature set
-  while keeping ACRN's unique advantages in partition mode and hybrid mode. Read
-  more in the :ref:`nested_virt` advanced guide.
+Nested Virtualization Technology Preview
+  A brand-new concept, nested virtualization, is introduced as a preview in this
+  v2.5 release. Nested virtualization lets you run virtual machine instances
+  inside of a guest VM that's running on the ACRN hypervisor. It's designed to
+  leverage the KVM/QEMU community's rich feature set while keeping ACRN's unique
+  advantages in partition mode and hybrid mode. Read more in the
+  :ref:`nested_virt` advanced guide.
 
-- EFI stub, previously retired in favor of using direct boot, returns as an
-  alternative to end-to-end secure boot with Grub. The hypervisor, ServiceVM
-  kernel, and prelaunched VM kernel are packaged into a single blob,
-  ``acrn.efi``, as an EFI application, which can then be verified together by
-  the EFI BIOS. Read more in the
-  :ref:`how-to-enable-acrn-secure-boot-with-efi-stub` and
+Secure Boot Using EFI Stub
+  EFI stub, previously retired in favor of using direct boot, returns as an
+  alternative to end-to-end secure boot with Grub. The hypervisor, Service VM
+  kernel, and prelaunched VM kernel are packaged into a single ``acrn.efi`` blob
+  as an EFI application that can then be verified by the EFI BIOS. Read more in
+  the :ref:`how-to-enable-acrn-secure-boot-with-efi-stub` and
   :ref:`how-to-enable-acrn-secure-boot-with-grub` advanced guides.
 
-- :ref:`ACRN hypervisor modularization <modularity>` has been improved to be more
+Modularization Improvements
+  :ref:`ACRN hypervisor modularization <modularity>` has been improved to be more
   scalable, including change to multiboot, interrupt handling, paging and memory
-  management, timers, and more.
+  management, and timers, with more to come in future releases.
 
-- The ACRN configuration and build process continues to evolve from the changes
-  made in the previous releases.  For instructions using
-  the build system, refer to :ref:`getting-started-building`. For an
-  introduction on the concepts and workflow of the configuration tools and
-  processes, refer to :ref:`acrn_configuration_tool`.
+Configuration and Build Process Improvements
+  The ACRN configuration and build process continues to evolve from the changes
+  made in the previous releases.  For instructions using the build system, refer
+  to :ref:`getting-started-building`. For an introduction on the concepts and
+  workflow of the configuration tools and processes, refer to
+  :ref:`acrn_configuration_tool`.
 
 
 Upgrading to v2.5 From Previous Releases
@@ -111,16 +116,16 @@ The following element is renamed:
 
 - :option:`hv.FEATURES.SSRAM.SSRAM_ENABLED` (was ``hv.FEATURES.PSRAM.PSRAM_ENABLED`` in v2.4)
 
-Constraints on values of the following element has changed:
+Constraints on values of the following element have changed:
 
 - :option:`vm.guest_flags.guest_flag` no longer accepts an empty text. For VMs
-  without any guest flag set, a ``0`` should be given.
+  with no guest flag set, set the value to ``0``.
 
 Document Updates
 ****************
 
-With the changes to ACRN configuration noted above, we made updates
-to the ACRN documentation around configuration and options:
+With the changes to ACRN configuration, we made updates
+to the ACRN documentation around configuration, options, and parameters:
 
 .. rst-class:: rst-columns2
 
@@ -167,5 +172,36 @@ Fixed Issues Details
 .. comment example item
    - :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
 
+- :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
+- :acrn-issue:`5879` - hybrid_rt scenario does not work with large initrd in pre-launched VM
+- :acrn-issue:`6015` - HV and DM: Obsolete terms cleanup for SSRAM
+- :acrn-issue:`6024` - config-tools: generate board_info.h and pci_dev.c using xslt
+- :acrn-issue:`6034` - dm: add allow_trigger_s5 mode to pm_notify_channel uart
+- :acrn-issue:`6038` - [REG][RAMDISK] Fail to launch pre RTVM while config ramdisk
+- :acrn-issue:`6056` - dm: a minor bug fix of unregister_mem_int
+- :acrn-issue:`6072` - [WHL][WAAG]use config tool to passthru Audio,will not display GOP
+- :acrn-issue:`6075` - [config_tools][regression][v2.5_rc1] config tool failed to save industry.xml with GuestFlagsOptionsType check
+- :acrn-issue:`6078` - Make ACRN HV with hybrid_rt bootable without GRUB on UEFI BIOS
+- :acrn-issue:`6100` - virtio_net_ping_rxq SEGV on read from NULL
+- :acrn-issue:`6102` - Build failure for BOARD=qemu SCENARIO=sdc on release_2.5
+- :acrn-issue:`6104` - [acrn-configuration-tool] Need update tgl-rvp.xml to the latest BIOS info
+- :acrn-issue:`6113` - [config_tools][ADL-S]generated board xml parse error on ADL-S
+- :acrn-issue:`6120` - [acrn-configuration-tool] shall we add CLOS_MASK elements into tgl scenario files as default configuration
+- :acrn-issue:`6126` - TPM do not support dynamic GPA
+- :acrn-issue:`6129` - virtio: NULL deref in hw/pci/virtio/virtio.c:664 in vq_endchains
+- :acrn-issue:`6131` - guest/vlapic fatal assertion reachable from guest - DoS
+- :acrn-issue:`6134` - [acrn-configuration-tool] lxml module not found when get board xml following doc
+- :acrn-issue:`6138` - config-tools: support of launch script to generate the "allow_trigger_s5" automatically
+- :acrn-issue:`6147` - ASAN reports UAF + SEGV when fuzzing exposed PIO with Hypercube guest VM.
+- :acrn-issue:`6157` - coding style fix on v2.5 branch
+- :acrn-issue:`6162` - [REG][EHL][SBL] Fail to boot sos
+- :acrn-issue:`6168` - SOS failed to boot with nest enabled 
+- :acrn-issue:`6172` - member access within null pointer of type 'struct xhci_trb'
+- :acrn-issue:`6178` - config-tools: adding an empty node <pt_intx> for a pre-launched VM causing check_pt_intx throw out an error
+- :acrn-issue:`6185` - [TGL][Industry]yaag can't get ip after SRIVO VF passthru
+- :acrn-issue:`6186` - [acrn-configuration-tool] CONFIG_MAX_MSIX_TABLE_NUM value is auto set as 64 when generate an new scenario xml
+- :acrn-issue:`6199` - [doc][buildSource] can not pass SCENARIO parameter into hypervisor/build/.config with "make defconfig"
+
 Known Issues
 ************
+
