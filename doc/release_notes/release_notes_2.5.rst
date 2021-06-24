@@ -41,9 +41,6 @@ What's New in v2.5
   while keeping ACRN's unique advantages in partition mode and hybrid mode. Read
   more in the :ref:`nested_virt` advanced guide.
 
-- The v2.5 release supports the upcoming 12th generation of Intel |reg| Core |trade|
-  processor (codename Alder Lake)
-
 - EFI stub, previously retired in favor of using direct boot, returns as an
   alternative to end-to-end secure boot with Grub. The hypervisor, ServiceVM
   kernel, and prelaunched VM kernel are packaged into a single blob,
