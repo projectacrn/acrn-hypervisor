@@ -134,10 +134,9 @@ to the ACRN documentation around configuration, options, and parameters:
 * :ref:`acrn-dm_parameters`
 * :ref:`kernel-parameters`
 
-Some new capabilities are documented here:
+New capabilities are documented here:
 
 * :ref:`nested_virt`
-* :ref:`enable-ptm`
 
 We've also made edits throughout the documentation to improve clarity,
 formatting, and presentation throughout the ACRN documentation:
