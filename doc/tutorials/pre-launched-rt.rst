@@ -44,7 +44,7 @@ kernels are loaded as multiboot modules. The ACRN hypervisor, Service
 VM, and Pre-Launched RT kernel images are all located on the NVMe drive.
 We recommend installing Ubuntu on the NVMe drive as the Service VM OS,
 which also has the required GRUB image to launch Pre-Launched RT mode.
-Refer to :ref:`rt_industry_ubuntu_setup`, to
+Refer to :ref:`gsg`, to
 install Ubuntu on the NVMe drive, and use grub to launch the Service VM.
 
 Install Pre-Launched RT Filesystem on SATA and Kernel Image on NVMe
@@ -83,7 +83,7 @@ Add Pre-Launched RT Kernel Image to GRUB Config
 
 The last step is to modify the GRUB configuration file to load the Pre-Launched
 kernel. (For more information about this, see :ref:`Update Grub for the Ubuntu Service VM
-<rt_industry_ubuntu_setup>`.) The grub config file will look something
+<gsg_update_grub>` section in the :ref:`gsg`.) The grub config file will look something
 like this:
 
 .. code-block:: none

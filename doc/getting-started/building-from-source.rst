@@ -179,12 +179,12 @@ the following to build the hypervisor, device model, and tools:
 
 You can also build ACRN with your customized scenario:
 
-* Build with your own scenario configuration on the ``nuc6cayh``, assuming the
+* Build with your own scenario configuration on the ``nuc11tnbi5``, assuming the
   scenario is defined in ``/path/to/scenario.xml``:
 
   .. code-block:: none
 
-     make BOARD=nuc6cayh SCENARIO=/path/to/scenario.xml
+     make BOARD=nuc11tnbi5 SCENARIO=/path/to/scenario.xml
 
 * Build with your own board and scenario configuration, assuming the board and
   scenario XML files are ``/path/to/board.xml`` and ``/path/to/scenario.xml``:
