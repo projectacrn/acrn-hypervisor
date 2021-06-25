@@ -76,6 +76,8 @@ Upgrading to v2.4 From Previous Releases
 We highly recommended that you follow the instructions below to
 upgrade to v2.4 from previous ACRN releases.
 
+.. _upgrade_python:
+
 Additional Dependencies
 =======================
 

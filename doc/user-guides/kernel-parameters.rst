@@ -317,6 +317,28 @@ relevant for configuring or debugging ACRN-based systems.
 
          intel_iommu=off
 
+   * - ``hugepages``
+       ``hugepagesz``
+     - Service VM,User VM
+     - ``hugepages``:
+         HugeTLB pages to allocate at boot.
+
+       ``hugepagesz``:
+         The size of the HugeTLB pages. On x86-64 and PowerPC,
+         this option can be specified multiple times interleaved
+         with ``hugepages`` to reserve huge pages of different sizes.
+         Valid page sizes on x86-64 are 2M (when the CPU supports Page Size Extension (PSE))
+         and 1G (when the CPU supports the ``pdpe1gb`` cpuinfo flag).
+     - ::
+
+         hugepages=10
+         hugepagesz=1G
+
+.. note:: The ``hugepages`` and ``hugepagesz`` parameters are automatically
+   taken care of by ACRN config tool. In case user have customized hugepage
+   settings to satisfy their particular workloads in Service VM, the ``hugepages``
+   and ``hugepagesz`` parameters could be redefined in GRUB menu to override
+   the settings from ACRN config tool.
 
 Intel GVT-g (AcrnGT) Parameters
 *******************************

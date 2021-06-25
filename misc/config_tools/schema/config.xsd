@@ -273,7 +273,8 @@ devices.</xs:documentation>
     </xs:element>
     <xs:element name="MAX_MSIX_TABLE_NUM" default="64">
         <xs:annotation>
-          <xs:documentation>Maximum number of MSI-X tables per device.</xs:documentation>
+          <xs:documentation>Maximum number of MSI-X tables per device.
+If this value is empty, then the default value will be calculated from the board XML file.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>

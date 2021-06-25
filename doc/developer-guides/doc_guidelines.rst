@@ -294,11 +294,21 @@ For example, there are roles for marking :file:`filenames`
 (``:command:`make```).  You can also use the \`\`inline code\`\`
 markup (double backticks) to indicate a ``filename``.
 
-Don't use items within a single backtick, for example ```word```.
+Don't use items within a single backtick, for example ```word```. Instead
+use double backticks: ````word````.
 
-For references to files that are in the ACRN Hypervisor GitHub tree, you can
-use a special role that creates a hyperlink to that file. For example, a
-GitHub link to the reST file used to create this document can be generated
+Branch-Specific File Links
+**************************
+
+Links in the documentation to specific files in the GitHub tree should also be
+to the branch for that version of the documentation (e.g., links in the v2.5
+release of the documentation should be to files in the v2.5 branch).  You should
+not link to files in the master branch because files in that branch could change
+or even be deleted after the release is made.
+
+To make this kind of file linking possible, use a special role that
+creates a hyperlink to that file in the current branch.  For example, a GitHub
+link to the reST file used to create this document can be generated
 using ``:acrn_file:`doc/developer-guides/doc_guidelines.rst```, which will
 appear as :acrn_file:`doc/developer-guides/doc_guidelines.rst`, a link to
 the “blob” file in the GitHub repo as displayed by GitHub. There’s also an
@@ -306,6 +316,11 @@ the “blob” file in the GitHub repo as displayed by GitHub. There’s also an
 to the “raw” uninterpreted file,
 :acrn_raw:`doc/developer-guides/doc_guidelines.rst` file. (Click these links
 to see the difference.)
+
+If you don't want the whole path to the file name to
+appear in the text, you use the usual linking notation to define what link text
+is shown, for example ``:acrn_file:`Guidelines <doc/developer-guides/doc_guidelines.rst>```
+would show up as simply :acrn_file:`Guidelines <doc/developer-guides/doc_guidelines.rst>`.
 
 .. _internal-linking:
 
@@ -351,8 +366,12 @@ This is the same directive used to define a label that's a reference to a URL:
 
 To enable easy cross-page linking within the site, each file should have a
 reference label before its title so that it can be referenced from another
-file. These reference labels must be unique across the whole site, so generic
-names such as "samples" should be avoided.  For example, the top of this
+file.
+
+.. note:: These reference labels must be unique across the whole site, so generic
+   names such as "samples" should be avoided.
+
+For example, the top of this
 document's ``.rst`` file is:
 
 .. code-block:: rst
@@ -418,15 +437,15 @@ spaces (to the first non-blank space of the directive name).
 
 This would be rendered as:
 
-   .. code-block:: c
+.. code-block:: c
 
-      struct _k_object {
-         char *name;
-         u8_t perms[CONFIG_MAX_THREAD_BYTES];
-         u8_t type;
-         u8_t flags;
-         u32_t data;
-      } __packed;
+  struct _k_object {
+     char *name;
+     u8_t perms[CONFIG_MAX_THREAD_BYTES];
+     u8_t type;
+     u8_t flags;
+     u32_t data;
+  } __packed;
 
 
 You can specify other languages for the ``code-block`` directive, including
@@ -442,17 +461,17 @@ If you want no syntax highlighting, specify ``none``. For example:
 
 Would display as:
 
-   .. code-block:: none
+.. code-block:: none
 
-      This would be a block of text styled with a background
-      and box, but with no syntax highlighting.
+  This would be a block of text styled with a background
+  and box, but with no syntax highlighting.
 
 There's a shorthand for writing code blocks, too: end the introductory
 paragraph with a double colon (``::``) and indent the code block content
 by three spaces.  On output, only one colon will appear.
 
 .. note:: The highlighting package makes a best guess at the type of content
-   in the block for highlighting purposes.  This can lead to some odd 
+   in the block for highlighting purposes.  This can lead to some odd
    highlighting in the generated output.
 
 Images
@@ -517,7 +536,7 @@ This results in the image being placed in the document:
 .. image:: ../images/ACRNlogo.png
    :align: center
 
-Alternatively, use the ``.. figure`` directive to include a picture with
+The preferred alternative is to use the ``.. figure`` directive to include a picture with
 a caption and automatic figure numbering for your image, (so that you can say
 see :numref:`acrn-logo-figure`, by using the notation
 ``:numref:`acrn-logo-figure``` and specifying the name of figure)::
@@ -534,6 +553,7 @@ see :numref:`acrn-logo-figure`, by using the notation
 
    Caption for the figure
 
+All figures should have a figure caption.
 
 We've also included the ``graphviz`` Sphinx extension to enable you to use a
 text description language to render drawings.  For more information, see
@@ -613,8 +633,7 @@ a ``.. tab::`` directive.  Under the hood, we're using the `sphinx-tabs
 <https://github.com/djungelorm/sphinx-tabs>`_ extension that's included
 in the ACRN (requirements.txt)  setup.  Within a tab, you can have most
 any content *other than a heading* (code-blocks, ordered and unordered
-lists, pictures, paragraphs, and such).  You can read more about sphinx-tabs
-from the link above.
+lists, pictures, paragraphs, and such).
 
 Instruction Steps
 *****************
@@ -652,6 +671,45 @@ This is the second instruction step.
 .. note:: As implemented,
    only one set of numbered steps is intended per document and the steps
    must be level 2 headings.
+
+Configuration Option Documentation
+**********************************
+
+Most of the ACRN documentation is maintained in ``.rst`` files found in the
+``doc/`` folder.  API documentation is maintained as Doxygen comments in the C
+header files (or as kerneldoc comments in the ``acrn-kernel`` repo headers),
+along with some prose documentation in ``.rst`` files. The ACRN configuration
+option documentation is created based on details maintained in schema definition
+files (``.xsd``) in the ``misc/config_tools/schema`` folder.  These schema
+definition files are used by the configuration tool to validate the XML scenario
+configuration files as well as to hold documentation about each option.  For
+example:
+
+.. code-block:: xml
+
+    <xs:element name="RELEASE" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>Build an image for release (``y``) or debug (``n``).
+    In a **release** image, assertions are not enforced and debugging
+    features are disabled, including logs, serial console, and the
+    hypervisor shell.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+
+During the documentation ``make html`` processing, the documentation annotations
+in the ``.xsd`` files are extracted and transformed into restructureText using
+an XSLT transformation found in ``doc/scripts/configdoc.xsl``. The generated
+option documentation is organized and formatted to make it easy to created links
+to specific option descriptions using an ``:option:`` role, for example
+``:option:`hv.DEBUG_OPTIONS.RELEASE``` would link to
+:option:`hv.DEBUG_OPTIONS.RELEASE`.
+
+The transformed option documentation is
+created in the ``_build/rst/reference/configdoc.txt`` file and included by
+``doc/reference/config-options.rst`` to create the final published
+:ref:`scenario-config-options` document.  You make changes to the option
+descriptions by editing the documentation found in one of the ``.xsd`` files.
+
 
 Documentation Generation
 ************************

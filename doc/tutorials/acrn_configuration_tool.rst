@@ -115,13 +115,13 @@ toolset.
 
       | **Native Linux requirement:**
       | **Release:** Ubuntu 18.04+
-      | **Tools:** cpuid, rdmsr, lspci, dmidecode (optional)
+      | **Tools:** cpuid, rdmsr, lspci, lxml, dmidecode (optional)
       | **Kernel cmdline:** "idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
 
-   #. Copy the ``target`` directory into the target file system and then run the
-      ``sudo python3 board_parser.py $(BOARD)`` command.
+   #. Copy the ``board_inspector`` directory into the target file system and then run the
+      ``sudo python3 cli.py $(BOARD)`` command.
    #. A ``$(BOARD).xml`` that includes all needed hardware-specific information
-      is generated in the ``./out/`` directory. Here, ``$(BOARD)`` is the
+      is generated under the current working directory. Here, ``$(BOARD)`` is the
       specified board name.
 
 #. Customize your needs.
@@ -322,6 +322,13 @@ current scenario has:
   Specify whether the User VM power off channel is through the IOC,
   power button, or vUART.
 
+``allow_trigger_s5``:
+  Allow VM to trigger s5 shutdown flow, this flag works with ``poweroff_channel``
+  ``vuart1(pty)`` and ``vuart1(tty)`` only.
+
+``enable_ptm``:
+  Enable the Precision Timing Measurement (PTM) feature.
+
 ``usb_xhci``:
   USB xHCI mediator configuration. Input format:
   ``bus#-port#[:bus#-port#: ...]``, e.g.: ``1-2:2-4``.
@@ -332,7 +339,16 @@ current scenario has:
 
 ``shm_region`` (a child node of ``shm_regions``):
   configure the shared memory regions for current VM, input format:
-  ``hv:/<;shm name>;, <;shm size in MB>;``. Refer to :ref:`ivshmem-hld` for details.
+  ``hv:/<;shm name>; (or dm:/<shm_name>;), <;shm size in MB>;``. Refer to :ref:`ivshmem-hld` for details.
+
+``console_vuart``:
+  Enable a PCI-based console vUART. Refer to :ref:`vuart_config` for details.
+
+``communication_vuarts``:
+  List of PCI-based communication vUARTs. Refer to :ref:`vuart_config` for details.
+
+``communication_vuart`` (a child node of ``communication_vuarts``):
+  Enable a PCI-based communication vUART with its ID. Refer to :ref:`vuart_config` for details.
 
 ``passthrough_devices``:
   Select the passthrough device from the lspci list. Currently we support:
@@ -353,12 +369,15 @@ current scenario has:
   Input format:
   ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
 
+``cpu_affinity``:
+  List of pCPU that this VM's vCPUs are pinned to.
+
 .. note::
 
    The ``configurable`` and ``readonly`` attributes are used to mark
-   whether the item is configurable for users. When ``configurable="0"``
-   and ``readonly="true"``, the item is not configurable from the web
-   interface. When ``configurable="0"``, the item does not appear on the
+   whether the item is configurable for users. When ``configurable="n"``
+   and ``readonly="y"``, the item is not configurable from the web
+   interface. When ``configurable="n"``, the item does not appear on the
    interface.
 
 .. _acrn_config_tool_ui:

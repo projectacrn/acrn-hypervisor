@@ -59,7 +59,7 @@ options:
                [--acpidev_pt HID] [--mmiodev_pt MMIO_regions]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
                [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]
-               [--debugexit] [--logger-setting param_setting] [--pm_notify_channel]
+               [--debugexit] [--logger-setting param_setting] [--pm_notify_channel channel]
                [--pm_by_vuart vuart_node] [--ssram] <vm>
        -A: create ACPI tables
        -B: bootargs for kernel
@@ -788,6 +788,7 @@ the bus hierarchy would be:
    00:03.0 SCSI storage controller: Red Hat, Inc. Virtio block device
    00:04.0 Ethernet controller: Red Hat, Inc. Virtio network device
    00:05.0 Serial controller: Red Hat, Inc. Virtio console
+
 
 ACPI Virtualization
 *******************

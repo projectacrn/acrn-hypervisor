@@ -57,16 +57,17 @@ A typical industry usage would include one Windows HMI + one RT VM:
 - RT VM that runs a specific RTOS on it to handle
   real-time workloads such as PLC control
 
-ACRN supports guest OS of Windows; ACRN has also added/is adding a
-series features to enhance its real-time performance then meet hard-RT KPI
-for its RT VM:
+ACRN supports a Windows* Guest OS for such HMI capability. ACRN continues to add
+features to enhance its real-time performance to meet hard-RT key performance
+indicators for its RT VM:
 
-- CAT (Cache Allocation Technology)
-- MBA (Memory Bandwidth Allocation)
+- Cache Allocation Technology (CAT)
+- Memory Bandwidth Allocation (MBA)
 - LAPIC passthrough
 - Polling mode driver
-- ART (always running timer)
-- other TCC features like split lock detection, Pseudo locking for cache
+- Always Running Timer (ART)
+- Intel Time Coordinated Computing (TCC) features, such as split lock
+  detection and cache locking
 
 
 Hardware Requirements

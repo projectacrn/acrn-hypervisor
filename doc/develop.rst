@@ -59,6 +59,7 @@ Enable ACRN Features
    :maxdepth: 1
 
    tutorials/sgx_virtualization
+   tutorials/nvmx_virtualization
    tutorials/vuart_configuration
    tutorials/rdt_configuration
    tutorials/waag-secure-boot
@@ -73,6 +74,7 @@ Enable ACRN Features
    tutorials/acrn_on_qemu
    tutorials/using_grub
    tutorials/acrn-secure-boot-with-grub
+   tutorials/acrn-secure-boot-with-efi-stub
    tutorials/pre-launched-rt
    tutorials/enable_ivshmem
 

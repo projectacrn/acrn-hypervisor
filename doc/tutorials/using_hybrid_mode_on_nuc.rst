@@ -7,7 +7,7 @@ ACRN hypervisor supports a hybrid scenario where the User VM (such as Zephyr
 or Ubuntu) runs in a pre-launched VM or in a post-launched VM that is
 launched by a Device model in the Service VM.
 
-.. figure:: images/hybrid_scenario_on_nuc.png
+.. figure:: images/ACRN-Hybrid.png
    :align: center
    :width: 600px
    :name: hybrid_scenario_on_nuc
@@ -18,16 +18,69 @@ The following guidelines
 describe how to set up the ACRN hypervisor hybrid scenario on the Intel NUC,
 as shown in :numref:`hybrid_scenario_on_nuc`.
 
+.. note::
+
+   All build operations are done directly on the target. Building the artifacts (ACRN hypervisor, kernel, tools and Zephyr)
+   on a separate development machine can be done but is not described in this document.
+
 .. contents::
    :local:
    :depth: 1
 
-Prerequisites
-*************
+.. rst-class:: numbered-step
+
+Set-up base installation
+************************
+
 - Use the `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_.
 - Connect to the serial port as described in :ref:`Connecting to the serial port <connect_serial_port>`.
 - Install Ubuntu 18.04 on your SATA device or on the NVME disk of your
   Intel NUC.
+
+.. rst-class:: numbered-step
+
+Prepare the Zephyr image
+************************
+
+Prepare the Zephyr kernel that you will run in VM0 later.
+
+- Follow step 1 from the :ref:`using_zephyr_as_uos` instructions
+
+  .. note:: We only need the binary Zephyr kernel, not the entire ``zephyr.img``
+
+- Copy the :file:`zephyr/zephyr.bin` to the ``/boot`` folder::
+
+   sudo cp zephyr/zephyr.bin /boot
+
+.. rst-class:: numbered-step
+
+Set-up ACRN on your device
+**************************
+
+- Follow the instructions in :Ref:`getting-started-building` to build ACRN using the
+  ``hybrid`` scenario. Here is the build command-line for the `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_::
+
+     make BOARD=nuc7i7dnb SCENARIO=hybrid
+
+- Install the ACRN hypervisor and tools
+
+  .. code-block:: none
+
+     cd ~/acrn-hypervisor # Or wherever your sources are
+     sudo make install
+     sudo cp build/hypervisor/acrn.bin /boot
+     sudo cp build/hypervisor/acpi/ACPI_VM0.bin /boot
+
+- Build and install the ACRN kernel
+
+  .. code-block:: none
+
+     cd ~/acrn-kernel # Or where your ACRN kernel sources are
+     cp kernel_config_uefi_sos .config
+     make olddefconfig
+     make
+     sudo make modules_install
+     sudo cp arch/x86/boot/bzImage /boot/bzImage
 
 .. rst-class:: numbered-step
 

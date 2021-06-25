@@ -74,21 +74,21 @@ Install ACRN on the Debian VM
 
 #. Build and Install the Service VM kernel:
 
-      .. code-block:: bash
+   .. code-block:: bash
 
-         $ mkdir ~/sos-kernel && cd ~/sos-kernel
-         $ git clone https://github.com/projectacrn/acrn-kernel
-         $ cd acrn-kernel
-         $ git checkout release_2.2
-         $ cp kernel_config_uefi_sos .config
-         $ make olddefconfig
-         $ make all
-         $ sudo make modules_install
-         $ sudo cp arch/x86/boot/bzImage /boot/bzImage
+      $ mkdir ~/sos-kernel && cd ~/sos-kernel
+      $ git clone https://github.com/projectacrn/acrn-kernel
+      $ cd acrn-kernel
+      $ git checkout release_2.2
+      $ cp kernel_config_uefi_sos .config
+      $ make olddefconfig
+      $ make all
+      $ sudo make modules_install
+      $ sudo cp arch/x86/boot/bzImage /boot/bzImage
 
-#. Update Grub for the Debian Service VM
+#. Update Grub for the Debian Service VM:
 
-      Update the ``/etc/grub.d/40_custom`` file as shown below.
+   Update the ``/etc/grub.d/40_custom`` file as shown below.
 
    .. note::
       Enter the command line for the kernel in ``/etc/grub.d/40_custom`` as
@@ -146,10 +146,11 @@ Install ACRN on the Debian VM
       [    0.982837] ACRN HVLog: Failed to init last hvlog devs, errno -19
       [    0.983023] ACRN HVLog: Initialized hvlog module with 4 cp
 
-Enable the Network Sharing to Give Network Access to User VM
+Enable Network Sharing to Give Network Access to the User VM
 ************************************************************
-   .. code-block:: bash
 
-      $ sudo systemctl enable systemd-networkd
-      $ sudo systemctl start systemd-networkd
+.. code-block:: bash
+
+   $ sudo systemctl enable systemd-networkd
+   $ sudo systemctl start systemd-networkd
 
