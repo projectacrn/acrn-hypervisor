@@ -35,8 +35,7 @@ static struct cpu_capability {
 	uint8_t apicv_features;
 	uint8_t ept_features;
 
-	uint32_t vmx_ept;
-	uint32_t vmx_vpid;
+	uint64_t vmx_ept_vpid;
 	uint32_t core_caps;	/* value of MSR_IA32_CORE_CAPABLITIES */
 } cpu_caps;
 
@@ -229,12 +228,8 @@ static void detect_apicv_cap(void)
 
 static void detect_vmx_mmu_cap(void)
 {
-	uint64_t val;
-
 	/* Read the MSR register of EPT and VPID Capability -  SDM A.10 */
-	val = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
-	cpu_caps.vmx_ept = (uint32_t) val;
-	cpu_caps.vmx_vpid = (uint32_t) (val >> 32U);
+	cpu_caps.vmx_ept_vpid = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
 }
 
 static bool pcpu_vmx_set_32bit_addr_width(void)
@@ -360,14 +355,9 @@ bool is_apicv_advanced_feature_supported(void)
 	return ((cpu_caps.apicv_features & APICV_ADVANCED_FEATURE) == APICV_ADVANCED_FEATURE);
 }
 
-bool pcpu_has_vmx_ept_cap(uint32_t bit_mask)
+bool pcpu_has_vmx_ept_vpid_cap(uint64_t bit_mask)
 {
-	return ((cpu_caps.vmx_ept & bit_mask) != 0U);
-}
-
-bool pcpu_has_vmx_vpid_cap(uint32_t bit_mask)
-{
-	return ((cpu_caps.vmx_vpid & bit_mask) != 0U);
+	return ((cpu_caps.vmx_ept_vpid & bit_mask) != 0U);
 }
 
 void init_pcpu_model_name(void)
@@ -417,18 +407,18 @@ static int32_t check_vmx_mmu_cap(void)
 {
 	int32_t ret = 0;
 
-	if (!pcpu_has_vmx_ept_cap(VMX_EPT_INVEPT)) {
+	if (!pcpu_has_vmx_ept_vpid_cap(VMX_EPT_INVEPT)) {
 		printf("%s, invept not supported\n", __func__);
 		ret = -ENODEV;
-	} else if (!pcpu_has_vmx_vpid_cap(VMX_VPID_INVVPID) ||
-		!pcpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_SINGLE_CONTEXT) ||
-		!pcpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_GLOBAL_CONTEXT)) {
+	} else if (!pcpu_has_vmx_ept_vpid_cap(VMX_VPID_INVVPID) ||
+		!pcpu_has_vmx_ept_vpid_cap(VMX_VPID_INVVPID_SINGLE_CONTEXT) ||
+		!pcpu_has_vmx_ept_vpid_cap(VMX_VPID_INVVPID_GLOBAL_CONTEXT)) {
 		printf("%s, invvpid not supported\n", __func__);
 		ret = -ENODEV;
-	} else if (!pcpu_has_vmx_ept_cap(VMX_EPT_2MB_PAGE)) {
+	} else if (!pcpu_has_vmx_ept_vpid_cap(VMX_EPT_2MB_PAGE)) {
 		printf("%s, ept not support 2MB large page\n", __func__);
 		ret = -ENODEV;
-	} else if (pcpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE) !=
+	} else if (pcpu_has_vmx_ept_vpid_cap(VMX_EPT_1GB_PAGE) !=
 				pcpu_has_cap(X86_FEATURE_PAGE1GB)) {
 		/* This just for simple large_page_support in arch/x86/page.c */
 		ret = -ENODEV;
@@ -463,7 +453,7 @@ int32_t detect_hardware_support(void)
 			__func__, boot_cpu_data.phys_bits, MAXIMUM_PA_WIDTH);
 		ret = -ENODEV;
 	} else if ((boot_cpu_data.phys_bits > 39U) && (!pcpu_has_cap(X86_FEATURE_PAGE1GB) ||
-			!pcpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE))) {
+			!pcpu_has_vmx_ept_vpid_cap(VMX_EPT_1GB_PAGE))) {
 		printf("%s, physical-address width %d over 39 bits must support 1GB large page\n",
 			__func__, boot_cpu_data.phys_bits);
 		ret = -ENODEV;
