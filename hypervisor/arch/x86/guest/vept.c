@@ -438,6 +438,23 @@ bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 			}
 		}
 
+		/*
+		 * SDM 28.3.3.4 Guidelines for Use of the INVEPT Instruction:
+		 * Software may use the INVEPT instruction after modifying a present EPT
+		 * paging-structure entry (see Section 28.2.2) to change any of the
+		 * privilege bits 2:0 from 0 to 1. Failure to do so may cause an EPT
+		 * violation that would not otherwise occur. Because an EPT violation
+		 * invalidates any mappings that would be used by the access that caused
+		 * the EPT violation (see Section 28.3.3.1), an EPT violation will not
+		 * recur if the original access is performed again, even if the INVEPT
+		 * instruction is not executed.
+		 *
+		 * If access bits of guest EPT entry is added after shadow EPT entry setup,
+		 * guest VM may not call INVEPT. Sync it here directly.
+		 */
+		shadow_ept_entry = (shadow_ept_entry & ~EPT_RWX) | (guest_ept_entry & EPT_RWX);
+		p_shadow_ept_page[offset] = shadow_ept_entry;
+
 		/* Shadow EPT entry exists */
 		if (is_leaf_ept_entry(guest_ept_entry, pt_level)) {
 			/* Shadow EPT is set up, let L2 VM re-execute the instruction. */
