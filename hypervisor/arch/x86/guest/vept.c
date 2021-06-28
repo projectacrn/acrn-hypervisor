@@ -302,7 +302,7 @@ static bool is_ept_entry_misconfig(uint64_t ept_entry, enum _page_table_level pt
 	is_misconfig = ((ept_entry & (EPT_RD | EPT_WR)) == EPT_WR);
 
 	/* Execute-only is not supported */
-	if (!pcpu_has_vmx_ept_cap(VMX_EPT_EXECUTE_ONLY)) {
+	if (!pcpu_has_vmx_ept_vpid_cap(VMX_EPT_EXECUTE_ONLY)) {
 		/* Execute w/o Read, misconfigured */
 		is_misconfig = is_misconfig || ((ept_entry & (EPT_RD | EPT_EXE)) == EPT_EXE);
 		/*

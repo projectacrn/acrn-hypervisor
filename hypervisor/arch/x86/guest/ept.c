@@ -100,7 +100,7 @@ static inline bool ept_large_page_support(enum _page_table_level level, __unused
 	if (level == IA32E_PD) {
 		support = true;
 	} else if (level == IA32E_PDPT) {
-		support = pcpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
+		support = pcpu_has_vmx_ept_vpid_cap(VMX_EPT_1GB_PAGE);
 	} else {
 		support = false;
 	}
