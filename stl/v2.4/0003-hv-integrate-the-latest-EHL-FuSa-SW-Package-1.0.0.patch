@@ -1,0 +1,99 @@
+From 26490661f74891cadb41054e6c7b33fecd01d3c8 Mon Sep 17 00:00:00 2001
+From: Junjie Mao <junjie.mao@intel.com>
+Date: Tue, 29 Jun 2021 10:07:36 +0800
+Subject: [PATCH] hv: integrate the latest EHL FuSa SW Package 1.0.0
+
+This patch integrates the EHL FuSa SW Package 1.0.0 as was released on
+05/13/2021. The changes include:
+
+ * Find the path to StlLibOnline64.o under StlLib has the path can change
+   between debug and release builds.
+ * StlPchClockMonitoring is no longer provided.
+ * StlOsalMemoryMap needs to map the memory-mapped PCI configuration space
+   if the given physicalBase is 0.
+
+Signed-off-by: Junjie Mao <junjie.mao@intel.com>
+---
+ hypervisor/Makefile               |  2 +-
+ hypervisor/arch/x86/osal.c        | 22 +++++++++++++++-------
+ hypervisor/common/stl_hypercall.c |  7 ++++++-
+ 3 files changed, 22 insertions(+), 9 deletions(-)
+
+diff --git a/hypervisor/Makefile b/hypervisor/Makefile
+index 31294a7..f03a8cd 100644
+--- a/hypervisor/Makefile
++++ b/hypervisor/Makefile
+@@ -364,7 +364,7 @@ MODULES += $(SYS_INIT_MOD)
+ 
+ ifdef CONFIG_STL_ENABLED
+ # When set, CONFIG_STL_ENABLED also encodes the path to the StlLib directory under EHL SW package
+-MODULES += $(CONFIG_STL_ENABLED)/Output/StlLibOnline64.o
++MODULES += $(shell find $(CONFIG_STL_ENABLED) -name StlLibOnline64.o -print -quit)
+ INCLUDE_PATH += $(CONFIG_STL_ENABLED)/Include
+ endif
+ 
+diff --git a/hypervisor/arch/x86/osal.c b/hypervisor/arch/x86/osal.c
+index 1c8ffaf..8a69e7a 100644
+--- a/hypervisor/arch/x86/osal.c
++++ b/hypervisor/arch/x86/osal.c
+@@ -19,17 +19,25 @@ uint32_t StlOsalMemoryMap( uint64_t physicalBase,
+                            __unused uint32_t accessMode,
+                            uint64_t *pLinearAddress )
+ {
++	uint32_t ret;
++
+ 	if (pLinearAddress != NULL) {
+-		*pLinearAddress = (uint64_t)hpa2hva(physicalBase);
+-		ppt_clear_user_bit(*pLinearAddress, size);
++		if (physicalBase != 0UL) {
++			*pLinearAddress = (uint64_t)hpa2hva(physicalBase);
++			ppt_clear_user_bit(*pLinearAddress, size);
++		} else {
++			/* According to the specification of StlOsalMemoryMap, an attempt of mapping a physical address of 0
++			 * shall be interpreted as a request for the linear address where memory-mapped PCI configuration space
++			 * resides. This region is already accessible to the hypervisor after init_pci_pdev_list() is called. */
++			*pLinearAddress = (uint64_t)hpa2hva(DEFAULT_PCI_MMCFG_BASE);
++		}
++
++		ret = STL_OSAL_SUCCESS;
+ 	} else {
+-		/* According to the specification of StlOsalMemoryMap, an attempt of mapping a physical address of 0
+-		 * shall be interpreted as a request for the linear address where memory-mapped PCI configuration space
+-		 * resides. This region is already accessible to the hypervisor after init_pci_pdev_list() is called. */
+-		*pLinearAddress = (uint64_t)hpa2hva(DEFAULT_PCI_MMCFG_BASE);
++		ret = STL_OSAL_FAIL;
+ 	}
+ 
+-	return STL_OSAL_SUCCESS;
++	return ret;
+ }
+ 
+ uint32_t StlOsalMemoryUnmap( __unused uint64_t linearAddress,
+diff --git a/hypervisor/common/stl_hypercall.c b/hypervisor/common/stl_hypercall.c
+index 6a21e4d..7463bb2 100644
+--- a/hypervisor/common/stl_hypercall.c
++++ b/hypervisor/common/stl_hypercall.c
+@@ -28,7 +28,6 @@ StlTestApi stl_test_apis[totalNumStlTests] = {
+ 	[testNumCpuSimd] = StlCpuSimd,
+ 	[testNumCpuOthers] = StlCpuOthers,
+ 	[testNumCpuClockMonitoring] = StlCpuClockMonitoring,
+-	[testNumPchClockMonitoring] = StlPchClockMonitoring,
+ 	[testNumCpuMec] = StlCpuMec,
+ 	[testNumCpuErrConf] = StlCpuErrorConfig,
+ 	[testNumCcfPunitErrConf] = StlCcfPunitErrorConfig,
+@@ -37,6 +36,12 @@ StlTestApi stl_test_apis[totalNumStlTests] = {
+ 	[testNumPchPsf] = StlPchPsf,
+ 	[testNumPchErrConf] = StlPchErrorConfig,
+ 	[testNumPchErrStatus] = StlPchErrorStatus,
++	[testNumTsnGbeConf] = StlTsnGbeErrorConfig,
++	[testNumOseTsnGbe0Conf] = StlOseTsnGbe0ErrorConfig,
++	[testNumOseTsnGbe1Conf] = StlOseTsnGbe1ErrorConfig,
++	[testNumTsnGbeErrStatus] = StlTsnGbeErrorStatus,
++	[testNumOseTsnGbe0ErrStatus] = StlOseTsnGbe0ErrorStatus,
++	[testNumOseTsnGbe1ErrStatus] = StlOseTsnGbe1ErrorStatus,
+ 	[testNumStartupCpuPatchCheck] = StlStartupCpuPatchCheck,
+ 	[testNumIehErrConf] = StlIehErrorConfig,
+ 	[testNumIehErr0Reporting] = StlIehError0Reporting,
+-- 
+2.7.4
+
