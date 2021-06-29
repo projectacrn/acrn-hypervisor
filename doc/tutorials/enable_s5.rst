@@ -92,9 +92,9 @@ Enable S5
 The procedure for enabling S5 is specific to the particular OS:
 
 * For Linux (LaaG) or Windows (WaaG), refer to the following configurations in the
-  ``devicemodel/samples/nuc/launch_uos.sh`` launch script for ``acrn-dm``.
+  ``misc/config_tools/data/sample_launch_scripts/nuc/launch_uos.sh`` launch script for ``acrn-dm``.
 
-  .. literalinclude:: ../../../../devicemodel/samples/nuc/launch_uos.sh
+  .. literalinclude:: ../../../../misc/config_tools/data/sample_launch_scripts/nuc/launch_uos.sh
      :name: laag-waag-script
      :caption: LaaG/WaaG launch script
      :linenos:
@@ -102,9 +102,9 @@ The procedure for enabling S5 is specific to the particular OS:
      :emphasize-lines: 2-4,17
      :language: bash
 
-* For RT-Linux, refer to the ``devicemodel/samples/nuc/launch_hard_rt_vm.sh`` script:
+* For RT-Linux, refer to the ``misc/config_tools/data/sample_launch_scripts/nuc/launch_hard_rt_vm.sh`` script:
 
-  .. literalinclude:: ../../../../devicemodel/samples/nuc/launch_hard_rt_vm.sh
+  .. literalinclude:: ../../../../misc/config_tools/data/sample_launch_scripts/nuc/launch_hard_rt_vm.sh
      :name: rt-script
      :caption: RT-Linux launch script
      :linenos:
