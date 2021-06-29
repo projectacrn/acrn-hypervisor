@@ -205,5 +205,5 @@ Known Issues
 ************
 
 - :acrn-issue:`6256` - [TGL][qemu] Cannot launch qemu on TGL
-- :acrn-issue:`6256` - [S5]S5 fails on post-launched RTVM
+- :acrn-issue:`6257` - [S5]S5 fails on post-launched RTVM
 
