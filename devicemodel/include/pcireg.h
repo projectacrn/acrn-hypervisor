@@ -1066,8 +1066,6 @@
 #define	PCIM_OSC_CTL_PCIE_CAP_STRUCT	0x10 /* Various Capability Structures */
 
 /* Graphics definitions */
-#define INTEL_ELKHARTLAKE		0x4571
-#define INTEL_TIGERLAKE			0x9a49
 #define PCIR_BDSM			0x5C /* BDSM graphics base data of stolen memory register */
 #define PCIR_GEN11_BDSM_DW0		0xC0
 #define PCIR_GEN11_BDSM_DW1		0xC4

@@ -438,8 +438,34 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 	gpu_opregion_hpa = opregion_phys & PCIM_ASLS_OPREGION_MASK;
 
 	switch (device) {
-	case INTEL_ELKHARTLAKE:
-	case INTEL_TIGERLAKE:
+	/* ElkhartLake */
+	case 0x4500:
+	case 0x4541:
+	case 0x4551:
+	case 0x4571:
+	/* TigerLake */
+	case 0x9a40:
+	case 0x9a49:
+	case 0x9a59:
+	case 0x9a60:
+	case 0x9a68:
+	case 0x9a70:
+	case 0x9a78:
+	case 0x9ac0:
+	case 0x9ac9:
+	case 0x9ad9:
+	case 0x9af8:
+	/* AlderLake */
+	case 0x4680:
+	case 0x4681:
+	case 0x4682:
+	case 0x4683:
+	case 0x4690:
+	case 0x4691:
+	case 0x4692:
+	case 0x4693:
+	case 0x4698:
+	case 0x4699:
 		/* BDSM register has 64 bits.
 		 * bits 63:20 contains the base address of stolen memory
 		 */
