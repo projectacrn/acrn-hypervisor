@@ -70,21 +70,13 @@ ACRN support systems:
   You can browse through the reported issues and submit issues of your own.
 
 * **Reporting a Potential Security Vulnerability**: If you have discovered potential
-  security vulnerability in ACRN, please send an e-mail to secure@intel.com. For issues
-  related to Intel Products, please visit https://security-center.intel.com.
+  security vulnerability in ACRN, please send an e-mail to acrn-security@lists.projectacrn.org.
 
   It is important to include the following details:
 
   - The projects and versions affected
   - Detailed description of the vulnerability
   - Information on known exploits
-
-  Vulnerability information is extremely sensitive. Please encrypt all security vulnerability
-  reports using our `PGP key`_.
-
-  A member of the Intel Product Security Team will review your e-mail and contact you to
-  to collaborate on resolving the issue. For more information on how Intel works to resolve
-  security issues, see: `vulnerability handling guidelines`_.
 
 * **Mailing List**: The `Project ACRN Development mailing list`_ is perhaps the most convenient
   way to track developer discussions and to ask your own support questions to
