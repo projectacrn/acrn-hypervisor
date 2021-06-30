@@ -1,7 +1,7 @@
-From 144fcda31827e308b5c1662299d0cec882995570 Mon Sep 17 00:00:00 2001
+From 522e0af21fc39b1911011e41824d4354576f1003 Mon Sep 17 00:00:00 2001
 From: Minggui Cao <minggui.cao@intel.com>
 Date: Mon, 7 Jun 2021 10:05:06 +0800
-Subject: [PATCH] rebase CAT patch to release_v2.5 rc3
+Subject: [PATCH] rebase CAT patch to release tag_v2.5
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -127,7 +127,7 @@ index 4c0df143c..ae899c4ba 100644
    <IOMEM_INFO>
  	00000000-00000fff : Reserved
 diff --git a/misc/config_tools/data/cfl-k700-i7/hybrid_rt.xml b/misc/config_tools/data/cfl-k700-i7/hybrid_rt.xml
-index a4684e6f7..12875ec2f 100644
+index a4684e6f7..edbbb1286 100644
 --- a/misc/config_tools/data/cfl-k700-i7/hybrid_rt.xml
 +++ b/misc/config_tools/data/cfl-k700-i7/hybrid_rt.xml
 @@ -17,8 +17,12 @@
@@ -137,10 +137,10 @@ index a4684e6f7..12875ec2f 100644
 -            <RDT_ENABLED>n</RDT_ENABLED>
 +            <RDT_ENABLED>y</RDT_ENABLED>
              <CDP_ENABLED>n</CDP_ENABLED>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfc0</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x03f</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x0fe</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x001</CLOS_MASK>
++                <CLOS_MASK>0xfc0</CLOS_MASK>
++                <CLOS_MASK>0x03f</CLOS_MASK>
++                <CLOS_MASK>0x0fe</CLOS_MASK>
++                <CLOS_MASK>0x001</CLOS_MASK>
          </RDT>
          <NVMX_ENABLED>n</NVMX_ENABLED>
          <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -154,7 +154,7 @@ index a4684e6f7..12875ec2f 100644
      <epc_section>
          <base>0</base>
 diff --git a/misc/config_tools/data/cfl-k700-i7/industry.xml b/misc/config_tools/data/cfl-k700-i7/industry.xml
-index 1fa3668ba..355b6e753 100644
+index 1fa3668ba..78cbacedc 100644
 --- a/misc/config_tools/data/cfl-k700-i7/industry.xml
 +++ b/misc/config_tools/data/cfl-k700-i7/industry.xml
 @@ -17,8 +17,12 @@
@@ -164,10 +164,10 @@ index 1fa3668ba..355b6e753 100644
 -            <RDT_ENABLED>n</RDT_ENABLED>
 +            <RDT_ENABLED>y</RDT_ENABLED>
              <CDP_ENABLED>n</CDP_ENABLED>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfc0</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x03f</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x0fe</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x001</CLOS_MASK>
++                <CLOS_MASK>0xfc0</CLOS_MASK>
++                <CLOS_MASK>0x03f</CLOS_MASK>
++                <CLOS_MASK>0x0fe</CLOS_MASK>
++                <CLOS_MASK>0x001</CLOS_MASK>
          </RDT>
          <NVMX_ENABLED>n</NVMX_ENABLED>
          <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -198,7 +198,7 @@ index 9ed494756..28e7cc09c 100644
    <IOMEM_INFO>
  	00000000-00000fff : Reserved
 diff --git a/misc/config_tools/data/ehl-crb-b/hybrid_rt.xml b/misc/config_tools/data/ehl-crb-b/hybrid_rt.xml
-index 70adac06e..3baaa74eb 100644
+index 70adac06e..c947c335f 100644
 --- a/misc/config_tools/data/ehl-crb-b/hybrid_rt.xml
 +++ b/misc/config_tools/data/ehl-crb-b/hybrid_rt.xml
 @@ -16,24 +16,12 @@
@@ -225,10 +225,10 @@ index 70adac06e..3baaa74eb 100644
 -                <CLOS_MASK>0xfff</CLOS_MASK>
 +                <RDT_ENABLED>y</RDT_ENABLED>
 +                <CDP_ENABLED>n</CDP_ENABLED>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x00ff</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff00</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x000f</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x0001</CLOS_MASK>
++                <CLOS_MASK>0x00ff</CLOS_MASK>
++                <CLOS_MASK>0xff00</CLOS_MASK>
++                <CLOS_MASK>0x000f</CLOS_MASK>
++                <CLOS_MASK>0x0001</CLOS_MASK>
              </RDT>
              <NVMX_ENABLED>n</NVMX_ENABLED>
              <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -242,7 +242,7 @@ index 70adac06e..3baaa74eb 100644
          <epc_section>
              <base>0</base>
 diff --git a/misc/config_tools/data/ehl-crb-b/industry.xml b/misc/config_tools/data/ehl-crb-b/industry.xml
-index e511c7f66..ec0249c97 100644
+index e511c7f66..2db9ab88b 100644
 --- a/misc/config_tools/data/ehl-crb-b/industry.xml
 +++ b/misc/config_tools/data/ehl-crb-b/industry.xml
 @@ -17,23 +17,11 @@
@@ -267,10 +267,10 @@ index e511c7f66..ec0249c97 100644
 -                <CLOS_MASK>0xfff</CLOS_MASK>
 -                <CLOS_MASK>0xfff</CLOS_MASK>
 +                <CDP_ENABLED>n</CDP_ENABLED>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x00ff</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff00</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x000f</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x0001</CLOS_MASK>
++                <CLOS_MASK>0x00ff</CLOS_MASK>
++                <CLOS_MASK>0xff00</CLOS_MASK>
++                <CLOS_MASK>0x000f</CLOS_MASK>
++                <CLOS_MASK>0x0001</CLOS_MASK>
              </RDT>
              <NVMX_ENABLED>n</NVMX_ENABLED>
              <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -284,7 +284,7 @@ index e511c7f66..ec0249c97 100644
          <epc_section>
              <base>0</base>
 diff --git a/misc/config_tools/data/tgl-rvp/hybrid_rt.xml b/misc/config_tools/data/tgl-rvp/hybrid_rt.xml
-index 6f56848cc..d5299f32a 100644
+index 4e8dcf861..40b38b757 100644
 --- a/misc/config_tools/data/tgl-rvp/hybrid_rt.xml
 +++ b/misc/config_tools/data/tgl-rvp/hybrid_rt.xml
 @@ -17,16 +17,12 @@
@@ -303,10 +303,10 @@ index 6f56848cc..d5299f32a 100644
 -            <CLOS_MASK>0xfff</CLOS_MASK>
 +            <RDT_ENABLED>y</RDT_ENABLED>
 +            <CDP_ENABLED>n</CDP_ENABLED>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x00f</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
++                <CLOS_MASK>0xff0</CLOS_MASK>
++                <CLOS_MASK>0x00f</CLOS_MASK>
++                <CLOS_MASK>0xff0</CLOS_MASK>
++                <CLOS_MASK>0xff0</CLOS_MASK>
          </RDT>
          <NVMX_ENABLED>n</NVMX_ENABLED>
          <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -320,7 +320,7 @@ index 6f56848cc..d5299f32a 100644
      <epc_section>
          <base>0</base>
 diff --git a/misc/config_tools/data/tgl-rvp/industry.xml b/misc/config_tools/data/tgl-rvp/industry.xml
-index 3aa3e7f37..5646d0df5 100644
+index ee12bb96a..ef5173305 100644
 --- a/misc/config_tools/data/tgl-rvp/industry.xml
 +++ b/misc/config_tools/data/tgl-rvp/industry.xml
 @@ -15,16 +15,12 @@
@@ -339,10 +339,10 @@ index 3aa3e7f37..5646d0df5 100644
 -        <CLOS_MASK>0xfff</CLOS_MASK>
 +            <RDT_ENABLED>y</RDT_ENABLED>
 +            <CDP_ENABLED>n</CDP_ENABLED>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x00f</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
++                <CLOS_MASK>0xff0</CLOS_MASK>
++                <CLOS_MASK>0x00f</CLOS_MASK>
++                <CLOS_MASK>0xff0</CLOS_MASK>
++                <CLOS_MASK>0xff0</CLOS_MASK>
        </RDT>
        <NVMX_ENABLED>n</NVMX_ENABLED>
        <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -375,7 +375,7 @@ index ac0fc09ce..200b48432 100644
    <IOMEM_INFO>
  	00000000-00000fff : Reserved
 diff --git a/misc/config_tools/data/whl-ipc-i7/hybrid_rt.xml b/misc/config_tools/data/whl-ipc-i7/hybrid_rt.xml
-index dad0d7643..11e748cfc 100644
+index dad0d7643..215434575 100644
 --- a/misc/config_tools/data/whl-ipc-i7/hybrid_rt.xml
 +++ b/misc/config_tools/data/whl-ipc-i7/hybrid_rt.xml
 @@ -17,8 +17,12 @@
@@ -385,10 +385,10 @@ index dad0d7643..11e748cfc 100644
 -            <RDT_ENABLED>n</RDT_ENABLED>
 +            <RDT_ENABLED>y</RDT_ENABLED>
              <CDP_ENABLED>n</CDP_ENABLED>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff00</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x00ff</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x00fe</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x0001</CLOS_MASK>
++                <CLOS_MASK>0xff00</CLOS_MASK>
++                <CLOS_MASK>0x00ff</CLOS_MASK>
++                <CLOS_MASK>0x00fe</CLOS_MASK>
++                <CLOS_MASK>0x0001</CLOS_MASK>
          </RDT>
          <NVMX_ENABLED>n</NVMX_ENABLED>
          <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -402,7 +402,7 @@ index dad0d7643..11e748cfc 100644
      <epc_section>
          <base>0</base>
 diff --git a/misc/config_tools/data/whl-ipc-i7/industry.xml b/misc/config_tools/data/whl-ipc-i7/industry.xml
-index d7214fc48..3284aa580 100644
+index d7214fc48..163a263d3 100644
 --- a/misc/config_tools/data/whl-ipc-i7/industry.xml
 +++ b/misc/config_tools/data/whl-ipc-i7/industry.xml
 @@ -17,8 +17,12 @@
@@ -412,10 +412,10 @@ index d7214fc48..3284aa580 100644
 -            <RDT_ENABLED>n</RDT_ENABLED>
 +            <RDT_ENABLED>y</RDT_ENABLED>
              <CDP_ENABLED>n</CDP_ENABLED>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0xff00</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x00ff</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x00fe</CLOS_MASK>
-+                <CLOS_MASK desc="Cache Capacity Bitmask">0x0001</CLOS_MASK>
++                <CLOS_MASK>0xff00</CLOS_MASK>
++                <CLOS_MASK>0x00ff</CLOS_MASK>
++                <CLOS_MASK>0x00fe</CLOS_MASK>
++                <CLOS_MASK>0x0001</CLOS_MASK>
          </RDT>
          <NVMX_ENABLED>n</NVMX_ENABLED>
          <HYPERV_ENABLED>y</HYPERV_ENABLED>
