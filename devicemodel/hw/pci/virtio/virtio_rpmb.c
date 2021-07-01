@@ -777,6 +777,7 @@ virtio_rpmb_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	if (dev->arg) {
 		DPRINTF(("virtio_rpmb_be_deinit: free struct virtio_rpmb!\n"));
+		virtio_rpmb_reset(dev->arg);
 		free((struct virtio_rpmb *)dev->arg);
 	}
 }
