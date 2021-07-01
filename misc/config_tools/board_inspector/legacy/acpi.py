@@ -654,8 +654,11 @@ def generate_info(board_file):
     with open(board_file, 'a+') as config:
         gen_acpi_info(config)
 
-    # get the PTCT table from native environment
+    # get the PTCT/RTCT table from native environment
     out_dir = os.path.dirname(board_file)
     if os.path.isfile(SYS_PATH[1] + 'PTCT'):
         shutil.copy(SYS_PATH[1] + 'PTCT', out_dir if out_dir != "" else "./")
         print("PTCT table has been saved to {} successfully!".format(os.path.join(out_dir, 'PTCT')))
+    if os.path.isfile(SYS_PATH[1] + 'RTCT'):
+        shutil.copy(SYS_PATH[1] + 'RTCT', out_dir if out_dir != "" else "./")
+        print("RTCT table has been saved to {} successfully!".format(os.path.join(out_dir, 'RTCT')))
