@@ -346,11 +346,11 @@ unregister_mem(struct mem_range *memp)
 		/* flush Per-VM cache */
 		if (mmio_hint == entry)
 			mmio_hint = NULL;
+
+		if (entry)
+			free(entry);
 	}
 	pthread_rwlock_unlock(&mmio_rwlock);
-
-	if (entry)
-		free(entry);
 
 	return err;
 }
