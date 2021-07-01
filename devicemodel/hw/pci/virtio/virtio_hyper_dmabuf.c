@@ -348,8 +348,10 @@ virtio_hyper_dmabuf_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		vbs_k_hyper_dmabuf_fd = -1;
 	}
 
-	if (dev->arg)
+	if (dev->arg) {
+		virtio_hyper_dmabuf_reset(dev->arg);
 		free((struct virtio_hyper_dmabuf *)dev->arg);
+	}
 }
 
 struct pci_vdev_ops pci_ops_virtio_hyper_dmabuf = {

@@ -559,6 +559,8 @@ virtio_input_teardown(void *param)
 			free(vi->evdev);
 		if (vi->serial)
 			free(vi->serial);
+
+		virtio_input_reset(vi);
 		free(vi);
 		vi = NULL;
 	}

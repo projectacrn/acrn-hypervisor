@@ -466,6 +466,7 @@ virtio_hdcp_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	if (vhdcp) {
 		DPRINTF(("free struct virtio_hdcp\n"));
+		virtio_hdcp_reset(vhdcp);
 		free(vhdcp);
 	}
 }
