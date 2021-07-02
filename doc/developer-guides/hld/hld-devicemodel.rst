@@ -18,25 +18,25 @@ framework. There are 3 major subsystems in Service VM:
 
 -  **Device Emulation**: DM provides backend device emulation routines for
    frontend User VM device drivers. These routines register their I/O
-   handlers to the I/O dispatcher inside the DM. When the VHM
+   handlers to the I/O dispatcher inside the DM. When the HSM
    assigns any I/O request to the DM, the I/O dispatcher
    dispatches this request to the corresponding device emulation
    routine to do the emulation.
 
 -  I/O Path in Service VM:
 
-   -  HV initializes an I/O request and notifies VHM driver in Service VM
+   -  HV initializes an I/O request and notifies HSM driver in Service VM
       through upcall.
-   -  VHM driver dispatches I/O requests to I/O clients and notifies the
+   -  HSM driver dispatches I/O requests to I/O clients and notifies the
       clients (in this case the client is the DM, which is notified
       through char device)
    -  DM I/O dispatcher calls corresponding I/O handlers
-   -  I/O dispatcher notifies VHM driver the I/O request is completed
+   -  I/O dispatcher notifies HSM driver the I/O request is completed
       through char device
-   -  VHM driver notifies HV on the completion through hypercall
+   -  HSM driver notifies HV on the completion through hypercall
    -  DM injects VIRQ to User VM frontend device through hypercall
 
--  VHM: Virtio and Hypervisor Service Module is a kernel module in Service VM as a
+-  HSM: Hypervisor Service Module is a kernel module in Service VM as a
    middle layer to support DM. Refer to :ref:`virtio-APIs` for details
 
 This section introduces how the acrn-dm application is configured and
@@ -142,15 +142,15 @@ DM Initialization
 
 -  **Option Parsing**: DM parse options from command line inputs.
 
--  **VM Create**: DM calls ioctl to Service VM VHM, then Service VM VHM makes
+-  **VM Create**: DM calls ioctl to Service VM HSM, then Service VM HSM makes
    hypercalls to HV to create a VM, it returns a vmid for a
    dedicated VM.
 
 -  **Set I/O Request Buffer**: the I/O request buffer is a page buffer
    allocated by DM for a specific VM in user space. This buffer is
-   shared between DM, VHM and HV. **Set I/O Request buffer** calls
+   shared between DM, HSM and HV. **Set I/O Request buffer** calls
    an ioctl executing a hypercall to share this unique page buffer
-   with VHM and HV.  Refer to :ref:`hld-io-emulation` and
+   with HSM and HV.  Refer to :ref:`hld-io-emulation` and
    :ref:`IO-emulation-in-sos` for more details.
 
 -  **Memory Setup**: User VM memory is allocated from Service VM
@@ -277,33 +277,33 @@ DM Initialization
    thread. mevent dispatch will do polling for potential async
    event.
 
-VHM
+HSM
 ***
 
-VHM Overview
+HSM Overview
 ============
 
-Device Model manages User VM by accessing interfaces exported from VHM
-module. VHM module is a Service VM kernel driver. The ``/dev/acrn_vhm`` node is
-created when VHM module is initialized. Device Model follows the standard
-Linux char device API (ioctl) to access the functionality of VHM.
+Device Model manages User VM by accessing interfaces exported from HSM
+module. HSM module is a Service VM kernel driver. The ``/dev/acrn_hsm`` node is
+created when HSM module is initialized. Device Model follows the standard
+Linux char device API (ioctl) to access the functionality of HSM.
 
-In most of ioctl, VHM converts the ioctl command to a corresponding
+In most of ioctl, HSM converts the ioctl command to a corresponding
 hypercall to the hypervisor. There are two exceptions:
 
--  I/O request client management is implemented in VHM.
+-  I/O request client management is implemented in HSM.
 
--  For memory range management of User VM, VHM needs to save all memory
+-  For memory range management of User VM, HSM needs to save all memory
    range info of User VM. The subsequent memory mapping update of User VM
    needs this information.
 
 .. figure:: images/dm-image108.png
    :align: center
-   :name: vhm-arch
+   :name: hsm-arch
 
-   Architecture of ACRN VHM
+   Architecture of ACRN HSM
 
-VHM ioctl Interfaces
+HSM ioctl Interfaces
 ====================
 
 .. note:: Reference API documents for General interface, VM Management,
@@ -315,7 +315,7 @@ VHM ioctl Interfaces
 I/O Emulation in Service VM
 ***************************
 
-I/O requests from the hypervisor are dispatched by VHM in the Service VM kernel
+I/O requests from the hypervisor are dispatched by HSM in the Service VM kernel
 to a registered client, responsible for further processing the
 I/O access and notifying the hypervisor on its completion.
 
@@ -347,43 +347,43 @@ acts as the fallback client for any VM.
 
 Each I/O client can be configured to handle the I/O requests in the
 client thread context or in a separate kernel thread context.
-:numref:`vhm-interaction` shows how an I/O client talks to VHM to register
+:numref:`hsm-interaction` shows how an I/O client talks to HSM to register
 a handler and process the incoming I/O requests in a kernel thread
 specifically created for this purpose.
 
 .. figure:: images/dm-image94.png
    :align: center
-   :name: vhm-interaction
+   :name: hsm-interaction
 
-   Interaction of in-kernel I/O clients and VHM
+   Interaction of in-kernel I/O clients and HSM
 
 -  On registration, the client requests a fresh ID, registers a
    handler, adds the I/O range (or PCI BDF) to be emulated by this
-   client, and finally attaches it to VHM that kicks off
+   client, and finally attaches it to HSM that kicks off
    a new kernel thread.
 
 -  The kernel thread waits for any I/O request to be handled. When a
-   pending I/O request is assigned to the client by VHM, the kernel
+   pending I/O request is assigned to the client by HSM, the kernel
    thread wakes up and calls the registered callback function
    to process the request.
 
--  Before the client is destroyed, VHM ensures that the kernel
+-  Before the client is destroyed, HSM ensures that the kernel
    thread exits.
 
 
 An I/O client can also handle I/O requests in its own thread context.
-:numref:`dm-vhm-interaction` shows the interactions in such a case, using the
+:numref:`dm-hsm-interaction` shows the interactions in such a case, using the
 device model as an example. No callback is registered on
 registration and the I/O client (device model in the example) attaches
-itself to VHM every time it is ready to process additional I/O requests.
-Note also that the DM runs in userland and talks to VHM via the ioctl
-interface in `VHM ioctl interfaces`_.
+itself to HSM every time it is ready to process additional I/O requests.
+Note also that the DM runs in userland and talks to HSM via the ioctl
+interface in `HSM ioctl interfaces`_.
 
 .. figure:: images/dm-image99.png
    :align: center
-   :name: dm-vhm-interaction
+   :name: dm-hsm-interaction
 
-   Interaction of DM and VHM
+   Interaction of DM and HSM
 
 Refer to `I/O client interfaces`_ for a list of interfaces for developing
 I/O clients.
@@ -398,12 +398,12 @@ Processing I/O Requests
    I/O request handling sequence in Service VM
 
 :numref:`io-sequence-sos` above illustrates the interactions among the
-hypervisor, VHM,
+hypervisor, HSM,
 and the device model for handling I/O requests. The main interactions
 are as follows:
 
 1. The hypervisor makes an upcall to Service VM as an interrupt
-   handled by the upcall handler in VHM.
+   handled by the upcall handler in HSM.
 
 2. The upcall handler schedules the execution of the I/O request
    dispatcher. If the dispatcher is already running, another round
@@ -417,10 +417,10 @@ are as follows:
 
 4. The woken client (the DM in :numref:`io-sequence-sos` above) handles the
    assigned I/O requests, updates their state to COMPLETE, and notifies
-   the VHM of the completion via ioctl. :numref:`dm-io-flow` shows this
+   the HSM of the completion via ioctl. :numref:`dm-io-flow` shows this
    flow.
 
-5. The VHM device notifies the hypervisor of the completion via
+5. The HSM device notifies the hypervisor of the completion via
    hypercall.
 
 .. figure:: images/dm-image97.png
@@ -441,7 +441,7 @@ Emulation of Accesses to PCI Configuration Space
 
 PCI configuration spaces are accessed by writing to an address to I/O
 port 0xcf8 and then reading the I/O port 0xcfc. As the PCI configuration
-space of different devices is emulated by different clients, VHM
+space of different devices is emulated by different clients, HSM
 handles the emulation of accesses to I/O port 0xcf8, caches the BDF of
 the device and the offset of the register, and delivers the request to
 the client with the same BDF when I/O port 0xcfc is accessed.
@@ -599,7 +599,7 @@ device's MMIO handler:
 CFG SPACE Handler Register
 --------------------------
 
-As VHM intercepts the cf8/cfc PIO access for PCI CFG SPACE, the DM only
+As HSM intercepts the cf8/cfc PIO access for PCI CFG SPACE, the DM only
 needs to provide CFG SPACE read/write handlers directly. Such handlers
 are defined as shown below. Normally, a device emulation developer
 has no need to update this function.

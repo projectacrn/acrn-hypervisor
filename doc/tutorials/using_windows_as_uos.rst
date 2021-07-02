@@ -127,7 +127,7 @@ Prepare the Script to Create an Image
                            echo 0 > $i/online
                            online=`cat $i/online`
                    done
-                   echo $idx > /sys/class/vhm/acrn_vhm/offline_cpu
+                   echo $idx > /sys/devices/virtual/misc/acrn_hsm/remove_cpu
            fi
    done
    launch_win 1

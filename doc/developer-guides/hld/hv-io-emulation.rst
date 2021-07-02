@@ -4,7 +4,7 @@ I/O Emulation High-Level Design
 ###############################
 
 As discussed in :ref:`intro-io-emulation`, there are multiple ways and
-places to handle I/O emulation, including HV, Service VM Kernel VHM, and Service VM
+places to handle I/O emulation, including HV, Service VM Kernel HSM, and Service VM
 user-land device model (acrn-dm).
 
 I/O emulation in the hypervisor provides these functionalities:

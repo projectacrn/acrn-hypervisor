@@ -67,8 +67,8 @@ Px/Cx data for User VM P/C-state management:
    System block for building vACPI table with Px/Cx data
 
 Some ioctl APIs are defined for the Device model to query Px/Cx data from
-the Service VM VHM. The Hypervisor needs to provide hypercall APIs to transit
-Px/Cx data from the CPU state table to the Service VM VHM.
+the Service VM HSM. The Hypervisor needs to provide hypercall APIs to transit
+Px/Cx data from the CPU state table to the Service VM HSM.
 
 The build flow is:
 
@@ -76,8 +76,8 @@ The build flow is:
    a CPU state table in the Hypervisor. The Hypervisor loads the data after
    the system boots.
 2) Before User VM launching, the Device mode queries the Px/Cx data from the Service
-   VM VHM via ioctl interface.
-3) VHM transmits the query request to the Hypervisor by hypercall.
+   VM HSM via ioctl interface.
+3) HSM transmits the query request to the Hypervisor by hypercall.
 4) The Hypervisor returns the Px/Cx data.
 5) The Device model builds the virtual ACPI table with these Px/Cx data
 

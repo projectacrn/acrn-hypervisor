@@ -247,11 +247,11 @@ between the FE and BE driver is through shared memory, in the form of
 virtqueues.
 
 On the service OS side where the BE driver is located, there are several
-key components in ACRN, including device model (DM), virtio and HV
-service module (VHM), VBS-U, and user-level vring service API helpers.
+key components in ACRN, including device model (DM), Hypervisor
+service module (HSM), VBS-U, and user-level vring service API helpers.
 
 DM bridges the FE driver and BE driver since each VBS-U module emulates
-a PCIe virtio device. VHM bridges DM and the hypervisor by providing
+a PCIe virtio device. HSM bridges DM and the hypervisor by providing
 remote memory map APIs and notification APIs. VBS-U accesses the
 virtqueue through the user-level vring service API helpers.
 
@@ -332,7 +332,7 @@ can be described as:
 
 1. vhost proxy creates two eventfds per virtqueue, one is for kick,
    (an ioeventfd), the other is for call, (an irqfd).
-2. vhost proxy registers the two eventfds to VHM through VHM character
+2. vhost proxy registers the two eventfds to HSM through HSM character
    device:
 
    a) Ioevenftd is bound with a PIO/MMIO range. If it is a PIO, it is
@@ -343,14 +343,14 @@ can be described as:
 3. vhost proxy sets the two fds to vhost kernel through ioctl of vhost
    device.
 4. vhost starts polling the kick fd and wakes up when guest kicks a
-   virtqueue, which results a event_signal on kick fd by VHM ioeventfd.
+   virtqueue, which results a event_signal on kick fd by HSM ioeventfd.
 5. vhost device in kernel signals on the irqfd to notify the guest.
 
 Ioeventfd Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Ioeventfd module is implemented in VHM, and can enhance a registered
-eventfd to listen to IO requests (PIO/MMIO) from vhm ioreq module and
+Ioeventfd module is implemented in HSM, and can enhance a registered
+eventfd to listen to IO requests (PIO/MMIO) from HSM ioreq module and
 signal the eventfd when needed. :numref:`ioeventfd-workflow`  shows the
 general workflow of ioeventfd.
 
@@ -365,17 +365,17 @@ The workflow can be summarized as:
 1. vhost device init. Vhost proxy creates two eventfd for ioeventfd and
    irqfd.
 2. pass ioeventfd to vhost kernel driver.
-3. pass ioevent fd to vhm driver
+3. pass ioevent fd to HSM driver
 4. User VM FE driver triggers ioreq and forwarded to Service VM by hypervisor
-5. ioreq is dispatched by vhm driver to related vhm client.
-6. ioeventfd vhm client traverses the io_range list and find
+5. ioreq is dispatched by HSM driver to related HSM client.
+6. ioeventfd HSM client traverses the io_range list and find
    corresponding eventfd.
 7. trigger the signal to related eventfd.
 
 Irqfd Implementation
 ~~~~~~~~~~~~~~~~~~~~
 
-The irqfd module is implemented in VHM, and can enhance a registered
+The irqfd module is implemented in HSM, and can enhance a registered
 eventfd to inject an interrupt to a guest OS when the eventfd gets
 signaled. :numref:`irqfd-workflow` shows the general flow for irqfd.
 
@@ -390,12 +390,12 @@ The workflow can be summarized as:
 1. vhost device init. Vhost proxy creates two eventfd for ioeventfd and
    irqfd.
 2. pass irqfd to vhost kernel driver.
-3. pass IRQ fd to vhm driver
+3. pass IRQ fd to HSM driver
 4. vhost device driver triggers IRQ eventfd signal once related native
    transfer is completed.
 5. irqfd related logic traverses the irqfd list to retrieve related irq
    information.
-6. irqfd related logic injects an interrupt through vhm interrupt API.
+6. irqfd related logic injects an interrupt through HSM interrupt API.
 7. Interrupt is delivered to User VM FE driver through hypervisor.
 
 .. _virtio-APIs:
@@ -658,7 +658,7 @@ Linux Vhost IOCTLs
   This IOCTL is used to set the eventfd which is used by vhost do inject
   virtual interrupt.
 
-VHM Eventfd IOCTLs
+HSM Eventfd IOCTLs
 ------------------
 
 .. doxygenstruct:: acrn_ioeventfd
