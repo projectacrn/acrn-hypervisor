@@ -43,6 +43,10 @@ def SmallResourceItemIRQ_factory(_len):
             ('_WKC', ctypes.c_uint8, 1),
             ('reserved', ctypes.c_uint8, 2),
         ] if (_len > 2) else [])
+
+        @property
+        def irqs(self):
+            return [i for i in range(0, 16) if ((self._INT & (1 << i)) != 0)]
     return SmallResourceItemIRQ
 
 # 6.4.2.2 DMA Descriptor
