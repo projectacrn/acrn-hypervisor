@@ -203,14 +203,14 @@ the port I/O address, size of access, read/write, and target register
 into the I/O request in the I/O request buffer (shown in
 :numref:`overview-io-emu-path`) and then notify/interrupt the Service VM to process.
 
-The virtio and HV service module (VHM) in the Service VM intercepts HV interrupts,
+The Hypervisor service module (HSM) in the Service VM intercepts HV interrupts,
 and accesses the I/O request buffer for the port I/O instructions. It will
 then check to see if any kernel device claims ownership of the
 I/O port. The owning device, if any, executes the requested APIs from a
-VM. Otherwise, the VHM module leaves the I/O request in the request buffer
+VM. Otherwise, the HSM module leaves the I/O request in the request buffer
 and wakes up the DM thread for processing.
 
-DM follows the same mechanism as VHM. The I/O processing thread of the
+DM follows the same mechanism as HSM. The I/O processing thread of the
 DM queries the I/O request buffer to get the PIO instruction details and
 checks to see if any (guest) device emulation modules claim ownership of
 the I/O port. If yes, the owning module is invoked to execute requested
@@ -220,7 +220,7 @@ When the DM completes the emulation (port IO 20h access in this example)
 of a device such as uDev1, uDev1 will put the result into the request
 buffer (register AL). The DM will then return the control to HV
 indicating completion of an IO instruction emulation, typically thru
-VHM/hypercall. The HV then stores the result to the guest register
+HSM/hypercall. The HV then stores the result to the guest register
 context, advances the guest IP to indicate the completion of instruction
 execution, and resumes the guest.
 
@@ -299,7 +299,7 @@ Service VM
 The Service VM is an important guest OS in the ACRN architecture. It
 runs in non-root mode, and contains many critical components, including the VM
 manager, the device model (DM), ACRN services, kernel mediation, and virtio
-and hypercall modules (VHM). The DM manages the User VM and
+and hypercall modules (HSM). The DM manages the User VM and
 provides device emulation for it. The User VMS also provides services
 for system power lifecycle management through the ACRN service and VM manager,
 and services for system debugging through ACRN log/trace tools.
@@ -311,10 +311,10 @@ DM (Device Model) is a user-level QEMU-like application in the Service VM
 responsible for creating the User VM and then performing devices emulation
 based on command line configurations.
 
-Based on a VHM kernel module, DM interacts with VM manager to create the User
+Based on a HSM kernel module, DM interacts with VM manager to create the User
 VM. It then emulates devices through full virtualization on the DM user
 level, or para-virtualized based on kernel mediator (such as virtio,
-GVT), or passthrough based on kernel VHM APIs.
+GVT), or passthrough based on kernel HSM APIs.
 
 Refer to :ref:`hld-devicemodel` for more details.
 
@@ -337,16 +337,16 @@ ACRN service provides
 system lifecycle management based on IOC polling. It communicates with the
 VM manager to handle the User VM state, such as S3 and power-off.
 
-VHM
+HSM
 ===
 
-The VHM (virtio & hypercall module) kernel module is the Service VM kernel driver
+The HSM (Hypervisor service module) kernel module is the Service VM kernel driver
 supporting User VM management and device emulation. Device Model follows
-the standard Linux char device API (ioctl) to access VHM
-functionalities. VHM communicates with the ACRN hypervisor through
+the standard Linux char device API (ioctl) to access HSM
+functionalities. HSM communicates with the ACRN hypervisor through
 hypercall or upcall interrupts.
 
-Refer to the VHM chapter for more details.
+Refer to the HSM chapter for more details.
 
 Kernel Mediators
 ================
@@ -358,7 +358,7 @@ Log/Trace Tools
 ===============
 
 ACRN Log/Trace tools are user-level applications used to
-capture ACRN hypervisor log and trace data. The VHM kernel module provides a
+capture ACRN hypervisor log and trace data. The HSM kernel module provides a
 middle layer to support these tools.
 
 Refer to :ref:`hld-trace-log` for more details.

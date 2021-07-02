@@ -44,7 +44,7 @@ through IPI (inter-process interrupt) or shared memory, and the DM
 dispatches the operation to the watchdog emulation code.
 
 After the DM watchdog finishes emulating the read or write operation, it
-then calls ``ioctl`` to the Service VM/kernel (``/dev/acrn_vhm``). VHM will call a
+then calls ``ioctl`` to the Service VM/kernel (``/dev/acrn_hsm``). HSM will call a
 hypercall to trap into the hypervisor to tell it the operation is done, and
 the hypervisor will set User VM-related VCPU registers and resume the User VM so the
 User VM watchdog driver will get the return values (or return status). The

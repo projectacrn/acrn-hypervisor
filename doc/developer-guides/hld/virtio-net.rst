@@ -57,12 +57,12 @@ ACRN Hypervisor:
    bare-metal hardware, and suitable for a variety of IoT and embedded
    device solutions. It fetches and analyzes the guest instructions, puts
    the decoded information into the shared page as an IOREQ, and notifies
-   or interrupts the VHM module in the Service VM for processing.
+   or interrupts the HSM module in the Service VM for processing.
 
-VHM Module:
-   The Virtio and Hypervisor Service Module (VHM) is a kernel module in the
+HSM Module:
+   The Hypervisor Service Module (HSM) is a kernel module in the
    Service VM acting as a middle layer to support the device model
-   and hypervisor. The VHM forwards a IOREQ to the virtio-net backend
+   and hypervisor. The HSM forwards a IOREQ to the virtio-net backend
    driver for processing.
 
 ACRN Device Model and virtio-net Backend Driver:
@@ -185,18 +185,18 @@ example, showing the flow through each layer:
 
    vmexit_handler -->                      // vmexit because VMX_EXIT_REASON_IO_INSTRUCTION
        pio_instr_vmexit_handler -->
-           emulate_io -->                  // ioreq cant be processed in HV, forward it to VHM
+           emulate_io -->                  // ioreq cant be processed in HV, forward it to HSM
                acrn_insert_request_wait -->
-                   fire_vhm_interrupt -->  // interrupt Service VM, VHM will get notified
+                   fire_hsm_interrupt -->  // interrupt Service VM, HSM will get notified
 
-**VHM Module**
+**HSM Module**
 
 .. code-block:: c
 
-   vhm_intr_handler -->                          // VHM interrupt handler
+   vhm_intr_handler -->                          // HSM interrupt handler
        tasklet_schedule -->
            io_req_tasklet -->
-               acrn_ioreq_distribute_request --> // ioreq can't be processed in VHM, forward it to device DM
+               acrn_ioreq_distribute_request --> // ioreq can't be processed in HSM, forward it to device DM
                    acrn_ioreq_notify_client -->
                        wake_up_interruptible --> // wake up DM to handle ioreq
 
@@ -344,7 +344,7 @@ cases.)
                vq_interrupt -->
                    pci_generate_msi -->
 
-**VHM Module**
+**HSM Module**
 
 .. code-block:: c
 

@@ -22,7 +22,7 @@ Hypervisor High-Level Design
    hv-partitionmode
    Power Management <hv-pm>
    Console, Shell, and vUART <hv-console>
-   Hypercall / VHM upcall <hv-hypercall>
+   Hypercall / HSM upcall <hv-hypercall>
    Compile-time configuration <hv-config>
    RDT support <hv-rdt>
    Split-locked Access handling <hld-splitlock>

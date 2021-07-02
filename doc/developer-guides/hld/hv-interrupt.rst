@@ -215,7 +215,7 @@ The interrupt vectors are assigned as shown here:
      - Posted Interrupt
 
    * - 0xF3
-     - Hypervisor Callback VHM
+     - Hypervisor Callback HSM
 
    * - 0xF4
      - Performance Monitering Interrupt
