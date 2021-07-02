@@ -459,9 +459,21 @@ def DefExternal_hook_post(context, tree):
         sym = NamedDecl(name, tree)
     context.register_symbol(sym)
 
+access_width_map = {
+    0: 8,    # AnyAcc
+    1: 8,    # ByteAcc
+    2: 16,   # WordAcc
+    3: 32,   # DWordAcc
+    4: 64,   # QWordAcc
+    5: 8,    # BufferAcc
+    # The other values are reserved
+}
+
 def DefField_hook_post(context, tree):
     # Update the fields with region & offset info
     region_name = context.lookup_symbol(tree.children[1].children).name
+    flags = tree.children[2].children[0].children
+    access_width = access_width_map[flags & 0xF]
     fields = tree.children[3].children
     bit_offset = 0
     for field in fields:
@@ -471,7 +483,30 @@ def DefField_hook_post(context, tree):
             length = field.children[1].children
             sym = context.lookup_symbol(name)
             assert isinstance(sym, OperationFieldDecl)
-            sym.set_location(region_name, bit_offset)
+            sym.set_location(region_name, bit_offset, access_width)
+            bit_offset += length
+        elif field.label == "ReservedField":
+            length = field.children[0].children
+            bit_offset += length
+        else:
+            break
+
+def DefIndexField_hook_post(context, tree):
+    # Update the fields with region & offset info
+    index_register = context.lookup_symbol(tree.children[1].children)
+    data_register = context.lookup_symbol(tree.children[2].children)
+    flags = tree.children[3].children[0].children
+    access_width = access_width_map[flags & 0xF]
+    fields = tree.children[4].children
+    bit_offset = 0
+    for field in fields:
+        field = field.children[0]
+        if field.label == "NamedField":
+            name = field.children[0].children
+            length = field.children[1].children
+            sym = context.lookup_symbol(name)
+            assert isinstance(sym, OperationFieldDecl)
+            sym.set_indexed_location(index_register, data_register, bit_offset, access_width)
             bit_offset += length
         elif field.label == "ReservedField":
             length = field.children[0].children

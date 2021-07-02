@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import sys
 import mmap
 import logging
 from math import floor, ceil
@@ -38,52 +39,53 @@ class UninitializedObject(Object):
     def to_string(self):
         return "Uninitialized Object"
 
-class Buffer(Object):
+class BufferBase(Object):
     @staticmethod
     def bitmask(to, frm):
         return ((1 << (to + 1)) - 1) - ((1 << frm) - 1)
 
-    def __init__(self, data):
-        assert len(data) > 0
-        self.__data = bytearray(data)
-        self.__fields = {}    # name -> (offset, bitwidth)
+    def __init__(self, length):
+        self.__length = length
+        self.__fields = {}    # name -> (offset, bitwidth, access_width)
 
-    @property
-    def data(self):
-        return bytes(self.__data)
+    def read(self, norm_idx, bit_width):
+        return NotImplementedError(self.__class__.__name__)
 
-    def create_field(self, name, offset, bitwidth):
-        self.__fields[name] = (offset, bitwidth)
+    def write(self, norm_idx, value, bit_width):
+        return NotImplementedError(self.__class__.__name__)
+
+    def create_field(self, name, offset, bitwidth, access_width):
+        self.__fields[name] = (offset, bitwidth, access_width)
 
     def read_field(self, name):
-        offset, bitwidth = self.__fields[name]
+        offset, bitwidth, access_width = self.__fields[name]
         acc = 0
         acc_bit_count = 0
         bit_idx = offset
         bit_remaining = bitwidth
 
-        assert offset + bitwidth <= len(self.__data) * 8, \
+        assert offset + bitwidth <= self.__length * 8, \
             f"Buffer overflow: attempt to access field {name} at bit {offset + bitwidth} while the buffer has only {len(self.__data) * 8} bits"
 
         # Bits out of byte boundary
-        if bit_idx % 8 > 0:
-            byte_idx = floor(bit_idx / 8)
-            bit_count = (8 - bit_idx % 8)
+        if bit_idx % access_width > 0:
+            norm_idx = floor(bit_idx / access_width)
+            bit_count = (access_width - bit_idx % access_width)
             if bit_count > bit_remaining:
                 bit_count = bit_remaining
 
-            mask = self.bitmask(bit_idx % 8 + bit_count - 1, bit_idx % 8)
-            acc = (self.__data[byte_idx] & mask) >> bit_idx % 8
+            mask = self.bitmask(bit_idx % access_width + bit_count - 1, bit_idx % access_width)
+            acc = (self.read(norm_idx, access_width) & mask) >> (bit_idx % access_width)
             acc_bit_count += bit_count
             bit_idx += bit_count
             bit_remaining -= bit_count
 
         while bit_remaining > 0:
-            byte_idx = floor(bit_idx / 8)
-            bit_count = 8 if bit_remaining >= 8 else bit_remaining
+            norm_idx = floor(bit_idx / access_width)
+            bit_count = access_width if bit_remaining >= access_width else bit_remaining
 
             mask = self.bitmask(bit_count - 1, 0)
-            acc |= (self.__data[byte_idx] & mask) << acc_bit_count
+            acc |= (self.read(norm_idx, access_width) & mask) << acc_bit_count
             acc_bit_count += bit_count
             bit_idx += bit_count
             bit_remaining -= bit_count
@@ -91,45 +93,68 @@ class Buffer(Object):
         return acc
 
     def write_field(self, name, value):
-        offset, bitwidth = self.__fields[name]
+        offset, bitwidth, access_width = self.__fields[name]
         bit_idx = offset
         bit_remaining = bitwidth
 
-        assert offset + bitwidth <= len(self.__data) * 8, \
+        assert offset + bitwidth <= self.__length * 8, \
             f"Buffer overflow: attempt to access field {name} at bit {offset + bitwidth} while the buffer has only {len(self.__data) * 8} bits"
 
         # Bits out of byte boundary
-        if bit_idx % 8 > 0:
-            byte_idx = floor(bit_idx / 8)
-            bit_count = (8 - bit_idx % 8)
+        if bit_idx % access_width > 0:
+            norm_idx = floor(bit_idx / access_width)
+            bit_count = (access_width - bit_idx % access_width)
             if bit_count > bit_remaining:
                 bit_count = bit_remaining
 
-            mask = self.bitmask(bit_idx % 8 + bit_count - 1, bit_idx % 8)
-            v = (value & ((1 << bit_count) - 1)) << (bit_idx % 8)
-            self.__data[byte_idx] = (v & mask) | (self.__data[byte_idx] & (0xFF - mask))
+            mask_of_write = self.bitmask(bit_idx % access_width + bit_count - 1, bit_idx % access_width)
+            mask_of_keep = ((1 << access_width) - 1) - mask_of_write
+            v = (value & ((1 << bit_count) - 1)) << (bit_idx % access_width)
+            self.write(norm_idx, (v & mask_of_write) | (self.read(norm_idx, access_width) & mask_of_keep), access_width)
 
             value >>= bit_count
             bit_idx += bit_count
             bit_remaining -= bit_count
 
         while bit_remaining > 0:
-            byte_idx = floor(bit_idx / 8)
-            bit_count = 8 if bit_remaining >= 8 else bit_remaining
+            norm_idx = floor(bit_idx / access_width)
+            bit_count = access_width if bit_remaining >= access_width else bit_remaining
 
-            mask = self.bitmask(bit_count - 1, 0)
+            mask_of_write = self.bitmask(bit_count - 1, 0)
+            mask_of_keep = ((1 << access_width) - 1) - mask_of_write
             v = (value & ((1 << bit_count) - 1))
-            self.__data[byte_idx] = (v & mask) | (self.__data[byte_idx] & (0xFF - mask))
+            self.write(norm_idx, (v & mask_of_write) | (self.read(norm_idx, access_width) & mask_of_keep), access_width)
 
             value >>= bit_count
             bit_idx += bit_count
             bit_remaining -= bit_count
 
-    def get(self):
-        return self.__data
-
     def to_buffer(self):
         return self
+
+class Buffer(BufferBase):
+    def __init__(self, data):
+        assert len(data) > 0
+        super().__init__(len(data))
+        self.__data = bytearray(data)
+
+    @property
+    def data(self):
+        return bytes(self.__data)
+
+    def read(self, norm_idx, bit_width):
+        acc = 0
+        byte_width = bit_width // 8
+        offset = norm_idx * byte_width
+        return int.from_bytes(self.__data[offset : (offset + byte_width)], sys.byteorder)
+
+    def write(self, norm_idx, value, bit_width):
+        byte_width = bit_width // 8
+        offset = norm_idx * byte_width
+        self.__data[offset : (offset + byte_width)] = value.to_bytes(byte_width, sys.byteorder)
+
+    def get(self):
+        return self.__data
 
     def to_hex_string(self):
         result = ",".join(map(lambda x:hex(x)[2:], self.__data))
@@ -144,6 +169,41 @@ class Buffer(Object):
             i -= 1
         return Integer(acc)
 
+class StreamIOBuffer(BufferBase):
+    def __init__(self, stream, base, length):
+        super().__init__(length)
+        self.__stream = stream
+        self.__base = base
+
+    def read(self, norm_idx, bit_width):
+        byte_width = bit_width // 8
+        address = norm_idx * byte_width
+        self.__stream.seek(self.__base + address)
+        data = self.__stream.read(byte_width)
+        return int.from_bytes(data, sys.byteorder)
+
+    def write(self, norm_idx, value, bit_width):
+        byte_width = bit_width // 8
+        address = norm_idx * byte_width
+        self.__stream.seek(self.__base + address)
+        self.__stream.write(value.to_bytes(byte_width, sys.byteorder))
+
+class IndexedIOBuffer(BufferBase):
+    def __init__(self, index_register, data_register):
+        # FIXME: Get the real size of an indexed I/O region
+        super().__init__(256)
+        self.__index_register = index_register
+        self.__data_register = data_register
+
+    def read(self, norm_idx, bit_width):
+        assert bit_width == 8, f"Indexed I/O buffers can only be read one byte at a time"
+        self.__index_register.set(Integer(norm_idx, 8))
+        return self.__data_register.get()
+
+    def write(self, norm_idx, value, bit_width):
+        # Do not allow writes to indexed I/O buffer
+        assert False, "Cannot write to indexed I/O buffers"
+
 class BufferField(Object):
     def __init__(self, buf, field):
         self.__buf = buf
@@ -155,11 +215,14 @@ class BufferField(Object):
     def set(self, obj):
         self.__buf.write_field(self.__field, obj.get())
 
+    def set_writable(self):
+        self.__buf.set_field_writable(self.__field)
+
     def to_integer(self):
         return Integer(self.get())
 
     def to_string(self):
-        return "Buffer Field"
+        return f"BufferField({self.__field})"
 
 # DebugObject
 
@@ -237,45 +300,85 @@ class ObjectReference(Object):
         self.__obj = obj
         self.__index = index
 
-class OperationRegion(Buffer):
-    def __load_system_memory_space(self, offset, length):
+class OperationRegion(Object):
+    devmem = None
+    devport = None
+    opened_indexed_regions = {}
+
+    @classmethod
+    def open_system_memory(cls, name, offset, length):
+        if not cls.devmem:
+            cls.devmem = open("/dev/mem", "rb", buffering=0)
+
+        logging.info(f"Open system memory space {name}: [{hex(offset)}, {hex(offset + length - 1)}]")
         offset_page_aligned = (offset >> 12) << 12
         length_page_aligned = ceil(((offset & 0xFFF) + length) / 0x1000) * 0x1000
+        mm = mmap.mmap(cls.devmem.fileno(), length_page_aligned, flags=mmap.MAP_PRIVATE, prot=mmap.PROT_READ, offset=offset_page_aligned)
+        iobuf = StreamIOBuffer(mm, offset & 0xFFF, length)
+        return OperationRegion(iobuf)
 
-        with open('/dev/mem', 'rb') as f:
-            mm = mmap.mmap(f.fileno(), length_page_aligned, flags=mmap.MAP_PRIVATE, prot=mmap.PROT_READ, offset=offset_page_aligned)
-            mm.seek(offset & 0xFFF)
-            data = mm.read(length)
-            super().__init__(data)
+    @classmethod
+    def open_system_io(cls, name, offset, length):
+        if not cls.devport:
+            cls.devport = open("/dev/port", "w+b", buffering=0)
 
-    def __load_pci_configuration_space(self, bus, device, function, offset, length):
+        logging.info(f"Open system I/O space {name}: [{hex(offset)}, {hex(offset + length - 1)}]")
+        iobuf = StreamIOBuffer(cls.devport, offset, length)
+        return OperationRegion(iobuf)
+
+    @classmethod
+    def open_pci_configuration_space(cls, bus_number, device_adr, offset, length):
+        assert offset <= 0xFF and (offset + length) <= 0x100
+        # Assume bus is 0 for now
+        bus = bus_number
+        device = device_adr >> 16
+        function = device_adr & 0xFF
         sysfs_path = "/sys/devices/pci0000:%02x/0000:%02x:%02x.%d/config" % (bus, bus, device, function)
         try:
-            with open(sysfs_path, "rb") as f:
-                f.seek(offset)
-                data = f.read(length)
-                super().__init__(data)
+            f = open(sysfs_path, "rb", buffering=0)
+            iobuf = StreamIOBuffer(f, offset, length)
+            return OperationRegion(iobuf)
         except FileNotFoundError:
-            logging.error(f"Cannot read the configuration space of %02x:%02x.%d from {sysfs_path}. Assume the PCI device does not exist." % (bus, device, function))
+            logging.warning(f"Cannot read the configuration space of %02x:%02x.%d from {sysfs_path}. Assume the PCI device does not exist." % (bus, device, function))
             data = bytearray([0xff]) * length
-            super().__init__(data)
+            buf = Buffer(data)
+            return OperationRegion(buf)
 
-    def __init__(self, bus_id, device_id, name, space, offset, length):
-        if space == 0x00:          # SystemMemory
-            logging.info(f"Loading system memory space {name}: [{hex(offset)}, {hex(offset + length - 1)}]")
-            self.__load_system_memory_space(offset, length)
-        elif space == 0x01:        # SystemIO
-            raise FutureWork("Port I/O operation region")
-        elif space == 0x02:        # PCI_Config
-            assert offset <= 0xFF and (offset + length) <= 0x100
-            # Assume bus is 0 for now
-            bus = bus_id
-            device = device_id >> 16
-            function = device_id & 0xFF
-            logging.info(f"Loading PCI configuration space {name}: 00:%02x:%d [{hex(offset)}, {hex(offset + length - 1)}]" % (device, function))
-            self.__load_pci_configuration_space(bus, device, function, offset, length)
+    @classmethod
+    def open_indexed_region(cls, index_register, data_register):
+        logging.info(f"Open I/O region indexed by index register {index_register.to_string()} and data register {data_register.to_string()}.")
+        k = (str(index_register), str(data_register))
+        if k not in cls.opened_indexed_regions.keys():
+            iobuf = IndexedIOBuffer(index_register, data_register)
+            region = OperationRegion(iobuf)
+            cls.opened_indexed_regions[k] = region
+
+            # Mark the index register as writable
+            index_register.set_writable()
+
+            return region
         else:
-            raise NotImplementedError(f"Cannot load operation region in space {space}")
+            return cls.opened_indexed_regions[k]
+
+    def __init__(self, iobuf):
+        self.__iobuf = iobuf
+        self.__writable_fields = set()
+
+    def create_field(self, name, offset, bitwidth, access_width):
+        self.__iobuf.create_field(name, offset, bitwidth, access_width)
+
+    def read_field(self, name):
+        return self.__iobuf.read_field(name)
+
+    def write_field(self, name, value):
+        # Do not allow writes to stream I/O buffer unless the base is explicitly marked as writable
+        if name in self.__writable_fields:
+            self.__iobuf.write_field(name, value)
+        else:
+            logging.info(f"Skip writing 0x{value:0X} to I/O field {name}")
+
+    def set_field_writable(self, name):
+        self.__writable_fields.add(name)
 
     def to_string(self):
         return "Operation Region"

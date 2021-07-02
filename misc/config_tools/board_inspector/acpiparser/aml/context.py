@@ -32,17 +32,27 @@ class OperationFieldDecl(NamedDecl):
         self.region = None
         self.offset = None
         self.length = length
+        self.access_width = None
 
-    def set_location(self, region, offset):
+    def set_location(self, region, offset, access_width):
         self.region = region
         self.offset = offset
+        self.access_width = access_width
+
+    def set_indexed_location(self, index_register, data_register, index, access_width):
+        self.region = (index_register, data_register)
+        self.offset = index
+        self.access_width = access_width
 
     def dump(self):
         if self.region and self.offset:
             bit_index = self.offset
             byte_index = floor(bit_index / 8)
             offset_in_byte = bit_index % 8
-            print(f"{self.name}: {self.__class__.__name__}, {self.region}: bit {hex(bit_index)} (byte {hex(byte_index)}.{offset_in_byte}), {self.length} bits")
+            if isinstance(self.region, str):
+                print(f"{self.name}: {self.__class__.__name__}, {self.region}: bit {hex(bit_index)} (byte {hex(byte_index)}.{offset_in_byte}), {self.length} bits")
+            else:
+                print(f"{self.name}: {self.__class__.__name__}, ({self.region[0]}, {self.region[1]}): bit {hex(bit_index)} (byte {hex(byte_index)}.{offset_in_byte}), {self.length} bits")
         else:
             print(f"{self.name}: {self.__class__.__name__}, {self.length} bits")
 
