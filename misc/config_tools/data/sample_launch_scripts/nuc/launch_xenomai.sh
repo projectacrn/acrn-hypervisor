@@ -215,7 +215,7 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         echo cpu$idx online=$online
         if [ "$online" = "1" ]; then
                 echo 0 > $i/online
-                echo $idx > /sys/class/vhm/acrn_vhm/offline_cpu
+                echo $idx > /sys/devices/virtual/misc/acrn_hsm/remove_cpu
         fi
 done
 
