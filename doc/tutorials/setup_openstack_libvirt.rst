@@ -88,7 +88,7 @@ Set Up and Launch LXC/LXD
    b. Run the following commands to configure ``openstack``::
 
          $ lxc config device add openstack eth1 nic name=eth1 nictype=bridged parent=acrn-br0
-         $ lxc config device add openstack acrn_vhm unix-char path=/dev/acrn_vhm
+         $ lxc config device add openstack acrn_hsm unix-char path=/dev/acrn_hsm
          $ lxc config device add openstack loop-control unix-char path=/dev/loop-control
          $ for n in {0..15}; do lxc config device add openstack loop$n unix-block path=/dev/loop$n; done;
 

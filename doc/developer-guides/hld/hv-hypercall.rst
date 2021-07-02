@@ -1,6 +1,6 @@
 .. _hv-hypercall:
 
-Hypercall / VHM Upcall
+Hypercall / HSM Upcall
 ######################
 
 The hypercall/upcall is used to request services between the Guest VM and the hypervisor.

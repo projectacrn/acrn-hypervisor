@@ -597,25 +597,25 @@ ACRN Device model incorporates these three aspects:
 **I/O Path**:
   see `ACRN-io-mediator`_ below
 
-**VHM**:
-  The Virtio and Hypervisor Service Module is a kernel module in the
-  Service VM acting as a middle layer to support the device model. The VHM
+**HSM**:
+  The Hypervisor Service Module is a kernel module in the
+  Service VM acting as a middle layer to support the device model. The HSM
   client handling flow is described below:
 
-  #. ACRN hypervisor IOREQ is forwarded to the VHM by an upcall
+  #. ACRN hypervisor IOREQ is forwarded to the HSM by an upcall
      notification to the Service VM.
-  #. VHM will mark the IOREQ as "in process" so that the same IOREQ will
+  #. HSM will mark the IOREQ as "in process" so that the same IOREQ will
      not pick up again. The IOREQ will be sent to the client for handling.
-     Meanwhile, the VHM is ready for another IOREQ.
+     Meanwhile, the HSM is ready for another IOREQ.
   #. IOREQ clients are either a Service VM Userland application or a Service VM
      Kernel space module. Once the IOREQ is processed and completed, the
-     Client will issue an IOCTL call to the VHM to notify an IOREQ state
-     change. The VHM then checks and hypercalls to ACRN hypervisor
+     Client will issue an IOCTL call to the HSM to notify an IOREQ state
+     change. The HSM then checks and hypercalls to ACRN hypervisor
      notifying it that the IOREQ has completed.
 
 .. note::
    * Userland: dm as ACRN Device Model.
-   * Kernel space: VBS-K, MPT Service, VHM itself
+   * Kernel space: VBS-K, MPT Service, HSM itself
 
 .. _pass-through:
 
@@ -709,15 +709,15 @@ Following along with the numbered items in :numref:`io-emulation-path`:
    the decoded information (including the PIO address, size of access,
    read/write, and target register) into the shared page, and
    notify/interrupt the Service VM to process.
-3. The Virtio and hypervisor service module (VHM) in Service VM receives the
+3. The hypervisor service module (HSM) in Service VM receives the
    interrupt, and queries the IO request ring to get the PIO instruction
    details.
 4. It checks to see if any kernel device claims
    ownership of the IO port: if a kernel module claimed it, the kernel
-   module is activated to execute its processing APIs. Otherwise, the VHM
+   module is activated to execute its processing APIs. Otherwise, the HSM
    module leaves the IO request in the shared page and wakes up the
    device model thread to process.
-5. The ACRN device model follows the same mechanism as the VHM. The I/O
+5. The ACRN device model follows the same mechanism as the HSM. The I/O
    processing thread of device model queries the IO request ring to get the
    PIO instruction details and checks to see if any (guest) device emulation
    module claims ownership of the IO port: if a module claimed it,
@@ -726,7 +726,7 @@ Following along with the numbered items in :numref:`io-emulation-path`:
    in this example), (say uDev1 here), uDev1 puts the result into the
    shared page (in register AL in this example).
 7. ACRN device model then returns control to ACRN hypervisor to indicate the
-   completion of an IO instruction emulation, typically through VHM/hypercall.
+   completion of an IO instruction emulation, typically through HSM/hypercall.
 8. The ACRN hypervisor then knows IO emulation is complete, and copies
    the result to the guest register context.
 9. The ACRN hypervisor finally advances the guest IP to
@@ -844,7 +844,7 @@ Virtio Spec 0.9/1.0. The VBS-U is statically linked with the Device Model,
 and communicates with the Device Model through the PCIe interface: PIO/MMIO
 or MSI/MSI-X. VBS-U accesses Virtio APIs through the user space ``vring`` service
 API helpers. User space ``vring`` service API helpers access shared ring
-through a remote memory map (mmap). VHM maps User VM memory with the help of
+through a remote memory map (mmap). HSM maps User VM memory with the help of
 ACRN Hypervisor.
 
 .. figure:: images/virtio-framework-kernel.png
@@ -859,9 +859,9 @@ at the right timings, for example. The FE driver sets
 VIRTIO_CONFIG_S_DRIVER_OK to avoid unnecessary device configuration
 changes while running. VBS-K can access shared rings through the VBS-K
 virtqueue APIs. VBS-K virtqueue APIs are similar to VBS-U virtqueue
-APIs. VBS-K registers as a VHM client to handle a continuous range of
+APIs. VBS-K registers as a HSM client to handle a continuous range of
 registers.
 
-There may be one or more VHM-clients for each VBS-K, and there can be a
-single VHM-client for all VBS-Ks as well. VBS-K notifies FE through VHM
+There may be one or more HSM-clients for each VBS-K, and there can be a
+single HSM-client for all VBS-Ks as well. VBS-K notifies FE through HSM
 interrupt APIs.
