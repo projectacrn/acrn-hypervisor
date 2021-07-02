@@ -233,11 +233,20 @@ class ConcreteInterpreter(Interpreter):
         sym = self.context.lookup_symbol(self.context.realpath(tree.scope, name))
         assert isinstance(sym, OperationFieldDecl)
         assert sym.region, f"Field {sym.name} does not belong to any operation region."
-        buf = self.context.lookup_operation_region(sym.region)
-        if not buf:
-            buf = self.interpret(self.context.lookup_symbol(sym.region).tree)
-        buf.create_field(name, sym.offset, sym.length)
-        field = BufferField(buf, name)
+        if isinstance(sym.region, str):
+            buf = self.context.lookup_operation_region(sym.region)
+            if not buf:
+                buf = self.interpret(self.context.lookup_symbol(sym.region).tree)
+            buf.create_field(name, sym.offset, sym.length, sym.access_width)
+            field = BufferField(buf, name)
+        elif isinstance(sym.region, tuple):
+            index_register = self.interpret(sym.region[0].tree)
+            data_register = self.interpret(sym.region[1].tree)
+            buf = OperationRegion.open_indexed_region(index_register, data_register)
+            buf.create_field(name, sym.offset, sym.length, sym.access_width)
+            field = BufferField(buf, name)
+        else:
+            assert False, f"Cannot interpret the operation region: {sym.region}"
         return field
 
     def create_field(self, tree, bitwidth, name_idx):
@@ -246,9 +255,10 @@ class ConcreteInterpreter(Interpreter):
         index = self.interpret(tree.children[1]).get()
         name = tree.children[name_idx].children
         if bitwidth == 1 or name_idx == 3:
-            buf.create_field(name, index, bitwidth)
+            buf.create_field(name, index, bitwidth, 8)
         else:
-            buf.create_field(name, index * 8, bitwidth)
+            # bitwidth is 8, 16, 32 or 64 in this case. Reuse it as the access width.
+            buf.create_field(name, index * 8, bitwidth, bitwidth)
         obj = BufferField(buf, name)
         self.context.register_binding(name, obj)
         return obj
@@ -298,18 +308,21 @@ class ConcreteInterpreter(Interpreter):
         length = self.interpret(tree.children[3]).get()
         assert isinstance(space, int) and isinstance(offset, int) and (length, int)
 
-        # For PCI configuration space, try to invoke _ADR (if any) of the device containing the region to get the device
-        # identifier
-        bus_id = None
-        device_id = None
-        if space == 0x2:      # PCI_Config
+        if space == 0x00:    # SystemMemory
+            op_region = OperationRegion.open_system_memory(sym.name, offset, length)
+        elif space == 0x01:  # SystemIO
+            op_region = OperationRegion.open_system_io(sym.name, offset, length)
+        elif space == 0x02:  # PCI_Config
             self.context.change_scope(tree.scope)
             device_path = self.context.parent(sym.name)
             bus_id = self.interpret_method_call(f"_BBN").get()
             device_id = self.interpret_method_call(f"{device_path}._ADR").get()
             self.context.pop_scope()
+            op_region = OperationRegion.open_pci_configuration_space(bus_id, device_id, offset, length)
+            pass
+        else:
+            raise NotImplementedError(f"Cannot load operation region in space {space}")
 
-        op_region = OperationRegion(bus_id, device_id, sym.name, space, offset, length)
         self.context.register_operation_region(sym.name, op_region)
         return op_region
 
