@@ -11,6 +11,8 @@ from acpiparser.dmar import DMAR
 from acpiparser.dsdt import DSDT
 from acpiparser.facp import FACP
 from acpiparser.rtct import RTCT
+from acpiparser.rdt import parse_resource_data
+from acpiparser.prt import parse_pci_routing
 
 def parse_table(signature, path=None):
     if not path:
