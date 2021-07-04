@@ -151,7 +151,7 @@ def fetch_device_info(devices_node, interpreter, namepath):
             if isinstance(adr, int):
                 adr = hex(adr)
             if len(element.xpath(f"../*[@address='{adr}']")) > 0:
-                logging.warning(f"{namepath} has siblings with duplicated address {adr}.")
+                logging.info(f"{namepath} has siblings with duplicated address {adr}.")
             else:
                 element.set("address", hex(adr) if isinstance(adr, int) else adr)
 
@@ -188,8 +188,8 @@ def extract(board_etree):
     try:
         namespace = parse_dsdt()
     except Exception as e:
-        logging.info(f"Parse ACPI DSDT/SSDT failed: {str(e)}")
-        logging.info(f"Will not extract information from ACPI DSDT/SSDT")
+        logging.warning(f"Parse ACPI DSDT/SSDT failed: {str(e)}")
+        logging.warning(f"Will not extract information from ACPI DSDT/SSDT")
         return
 
     interpreter = ConcreteInterpreter(namespace)

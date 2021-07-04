@@ -66,12 +66,18 @@ def main(board_name, board_xml, args):
         sys.exit(1)
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument("board_name", help="the name of the board that runs the ACRN hypervisor")
     parser.add_argument("--out", help="the name of board info file")
     parser.add_argument("--advanced", action="store_true", default=False, help="extract advanced information such as ACPI namespace")
+    parser.add_argument("--loglevel", default="warning", help="choose log level, e.g. info, warning or error")
     args = parser.parse_args()
+    try:
+        logging.basicConfig(level=args.loglevel.upper())
+    except ValueError:
+        print(f"{args.loglevel} is not a valid log level")
+        print(f"Valid log levels (non case-sensitive): critical, error, warning, info, debug")
+        sys.exit(1)
 
     board_xml = args.out if args.out else f"{args.board_name}.xml"
     main(args.board_name, board_xml, args)

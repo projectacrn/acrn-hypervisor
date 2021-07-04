@@ -431,7 +431,7 @@ class DeferredExpansion(Transformer):
                 tree.factory = None
                 tree.complete_parsing()
             except (DecodeError, DeferLater, ScopeMismatch, UndefinedSymbol) as e:
-                logging.debug(f"expansion of {tree.label} at {hex(tree.deferred_range[0])} failed due to: " + str(e))
+                logging.info(f"expansion of {tree.label} at {hex(tree.deferred_range[0])} failed due to: " + str(e))
 
             self.context.pop_scope()
 
