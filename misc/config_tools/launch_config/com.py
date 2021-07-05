@@ -89,12 +89,14 @@ def off_line_cpus(args, vmid, uos_type, config):
         key = "scenario config error"
         launch_cfg_lib.ERR_LIST[key] = "No available cpu to offline and pass it to vm {}".format(vmid)
 
-    print('offline_path="/sys/class/vhm/acrn_vhm"', file=config)
+    print('offline_path="/sys/class/vhm/acrn_vhm/offline_cpu"', file=config)
     print("", file=config)
 
-    print("# Check the device file of /dev/acrn_hsm to determine the offline_path", file=config)
-    print('if [ -e "/dev/acrn_hsm" ]; then', file=config)
-    print('offline_path="/sys/class/acrn/acrn_hsm"', file=config)
+    print("# Check the device file to determine the offline_path", file=config)
+    print('if [ -e "/sys/devices/virtual/misc/acrn_hsm/remove_cpu" ]; then', file=config)
+    print('offline_path="/sys/devices/virtual/misc/acrn_hsm/remove_cpu"', file=config)
+    print('elif [ -e "/dev/acrn_hsm" ]; then', file=config)
+    print('offline_path="/sys/class/acrn/acrn_hsm/offline_cpu"', file=config)
     print('fi', file=config)
     print("", file=config)
     print("# offline pinned vCPUs from SOS before launch UOS", file=config)
@@ -114,7 +116,7 @@ def off_line_cpus(args, vmid, uos_type, config):
     print("                    echo 0 > ${cpu_path}/$i/online", file=config)
     print("                    online=`cat ${cpu_path}/$i/online`", file=config)
     print("                done", file=config)
-    print("                echo $idx > ${offline_path}/offline_cpu", file=config)
+    print("                echo $idx > ${offline_path}", file=config)
     print("            fi", file=config)
     print("        fi", file=config)
     print("    done", file=config)
