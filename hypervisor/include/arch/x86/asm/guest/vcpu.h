@@ -197,8 +197,7 @@ struct msr_store_entry {
 } __aligned(16);
 
 enum {
-	MSR_AREA_TSC_AUX = 0,
-	MSR_AREA_IA32_PQR_ASSOC,
+	MSR_AREA_IA32_PQR_ASSOC = 0,
 	MSR_AREA_COUNT,
 };
 
