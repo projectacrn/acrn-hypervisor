@@ -314,12 +314,6 @@ static void prepare_auto_msr_area (struct acrn_vcpu *vcpu)
 
 	vcpu->arch.msr_area.count = 0U;
 
-	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].msr_index = MSR_IA32_TSC_AUX;
-	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].value = vcpu->vcpu_id;
-	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].msr_index = MSR_IA32_TSC_AUX;
-	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].value = pcpuid_from_vcpu(vcpu);
-	vcpu->arch.msr_area.count++;
-
 	/* only load/restore MSR IA32_PQR_ASSOC when hv and guest have differnt settings */
 	if (is_platform_rdt_capable() && (vcpu_clos != hv_clos)) {
 		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;

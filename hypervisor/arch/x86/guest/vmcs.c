@@ -204,9 +204,11 @@ void init_host_state(void)
 	pr_dbg("vm exit return address = %016lx ", value64);
 
 	/* As a type I hypervisor, just init sysenter fields to 0 */
-	exec_vmwrite32(VMX_HOST_IA32_SYSENTER_CS, 0U);
 	exec_vmwrite(VMX_HOST_IA32_SYSENTER_ESP, 0UL);
 	exec_vmwrite(VMX_HOST_IA32_SYSENTER_EIP, 0UL);
+
+	/* We use IA32_SYSENTER_CS MSR to cache pCPU ID. */
+	exec_vmwrite32(VMX_HOST_IA32_SYSENTER_CS, msr_read(ACRN_PSEUDO_PCPUID_MSR));
 }
 
 static uint32_t check_vmx_ctrl(uint32_t msr, uint32_t ctrl_req)
