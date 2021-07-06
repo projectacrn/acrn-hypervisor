@@ -37,6 +37,7 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	 * Number of entries: NUM_WORLD_MSRS
 	 */
 	MSR_IA32_PAT,
+	MSR_IA32_EFER,
 	MSR_IA32_TSC_ADJUST,
 
 	/*
@@ -523,6 +524,11 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		v = vcpu_get_guest_msr(vcpu, MSR_IA32_PAT);
 		break;
 	}
+	case MSR_IA32_EFER:
+	{
+		v = vcpu_get_efer(vcpu);
+		break;
+	}
 	case MSR_IA32_APIC_BASE:
 	{
 		/* Read APIC base */
@@ -871,6 +877,11 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_PAT:
 	{
 		err = write_pat_msr(vcpu, v);
+		break;
+	}
+	case MSR_IA32_EFER:
+	{
+		vcpu_set_efer(vcpu, v);
 		break;
 	}
 	case MSR_IA32_APIC_BASE:
