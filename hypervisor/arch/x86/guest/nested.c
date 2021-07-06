@@ -118,8 +118,9 @@ void init_vmx_msrs(struct acrn_vcpu *vcpu)
 			| VMX_PINBASED_CTLS_NMI_EXIT
 			| VMX_PINBASED_CTLS_ENABLE_PTMR;
 		msr_value = adjust_vmx_ctrls(MSR_IA32_VMX_PINBASED_CTLS, request_bits);
-		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_TRUE_PINBASED_CTLS, msr_value);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_PINBASED_CTLS, msr_value);
+		msr_value = adjust_vmx_ctrls(MSR_IA32_VMX_TRUE_PINBASED_CTLS, request_bits);
+		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_TRUE_PINBASED_CTLS, msr_value);
 
 		/* MSR_IA32_VMX_PROCBASED_CTLS */
 		request_bits = VMX_PROCBASED_CTLS_IRQ_WIN | VMX_PROCBASED_CTLS_TSC_OFF
@@ -133,6 +134,7 @@ void init_vmx_msrs(struct acrn_vcpu *vcpu)
 			| VMX_PROCBASED_CTLS_PAUSE | VMX_PROCBASED_CTLS_SECONDARY;
 		msr_value = adjust_vmx_ctrls(MSR_IA32_VMX_PROCBASED_CTLS, request_bits);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_PROCBASED_CTLS, msr_value);
+		msr_value = adjust_vmx_ctrls(MSR_IA32_VMX_TRUE_PROCBASED_CTLS, request_bits);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_TRUE_PROCBASED_CTLS, msr_value);
 
 		/* MSR_IA32_VMX_PROCBASED_CTLS2 */
@@ -151,6 +153,7 @@ void init_vmx_msrs(struct acrn_vcpu *vcpu)
 			| VMX_EXIT_CTLS_LOAD_EFER;
 		msr_value = adjust_vmx_ctrls(MSR_IA32_VMX_EXIT_CTLS, request_bits);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_EXIT_CTLS, msr_value);
+		msr_value = adjust_vmx_ctrls(MSR_IA32_VMX_TRUE_EXIT_CTLS, request_bits);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_TRUE_EXIT_CTLS, msr_value);
 
 		/* MSR_IA32_VMX_ENTRY_CTLS */
@@ -159,6 +162,7 @@ void init_vmx_msrs(struct acrn_vcpu *vcpu)
 			| VMX_ENTRY_CTLS_LOAD_EFER;
 		msr_value = adjust_vmx_ctrls(MSR_IA32_VMX_ENTRY_CTLS, request_bits);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_ENTRY_CTLS, msr_value);
+		msr_value = adjust_vmx_ctrls(MSR_IA32_VMX_TRUE_ENTRY_CTLS, request_bits);
 		vcpu_set_guest_msr(vcpu, MSR_IA32_VMX_TRUE_ENTRY_CTLS, msr_value);
 
 		msr_value = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
