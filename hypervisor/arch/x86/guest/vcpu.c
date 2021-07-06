@@ -92,10 +92,6 @@ uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (!bitmap_test(CPU_REG_EFER, &vcpu->reg_updated) &&
-		!bitmap_test_and_set_lock(CPU_REG_EFER, &vcpu->reg_cached)) {
-		ctx->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
-	}
 	return ctx->ia32_efer;
 }
 
@@ -103,6 +99,16 @@ void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.ia32_efer
 		= val;
+
+	if (val == msr_read(MSR_IA32_EFER)) {
+		clear_vmcs_bit(VMX_ENTRY_CONTROLS, VMX_ENTRY_CTLS_LOAD_EFER);
+		clear_vmcs_bit(VMX_EXIT_CONTROLS, VMX_EXIT_CTLS_LOAD_EFER);
+	} else {
+		set_vmcs_bit(VMX_ENTRY_CONTROLS, VMX_ENTRY_CTLS_LOAD_EFER);
+		set_vmcs_bit(VMX_EXIT_CONTROLS, VMX_EXIT_CTLS_LOAD_EFER);
+	}
+
+	/* Write the new value to VMCS in either case */
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
 }
 

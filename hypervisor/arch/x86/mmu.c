@@ -160,7 +160,13 @@ void enable_paging(void)
 	 * instruction fetching from pages with XD bit set.
 	 */
 	tmp64 = msr_read(MSR_IA32_EFER);
-	tmp64 |= MSR_IA32_EFER_NXE_BIT;
+
+	/*
+	 * SCE bit is not used by the host. However we set this bit so that
+	 * it's highly likely that the value of IA32_EFER the host and the guest
+	 * is identical, and we don't need to switch this MSR on VMX transitions
+	 */
+	tmp64 |= MSR_IA32_EFER_NXE_BIT | MSR_IA32_EFER_SCE_BIT;
 	msr_write(MSR_IA32_EFER, tmp64);
 
 	/* Enable Write Protect, inhibiting writing to read-only pages */

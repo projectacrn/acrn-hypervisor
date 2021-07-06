@@ -172,7 +172,7 @@ enum reset_mode;
 #define SECURE_WORLD	1
 
 #define NUM_WORLD_MSRS		2U
-#define NUM_COMMON_MSRS		22U
+#define NUM_COMMON_MSRS		23U
 #ifdef CONFIG_NVMX_ENABLED
 #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS)
 #else
