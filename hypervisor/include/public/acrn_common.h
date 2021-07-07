@@ -367,19 +367,6 @@ struct acrn_vm_creation {
 	uint64_t cpu_affinity;
 } __aligned(8);
 
-/**
- * @brief Info to create a VCPU (deprecated)
- *
- * the parameter for HC_CREATE_VCPU hypercall
- */
-struct acrn_create_vcpu {
-	/** the virtual CPU ID for the VCPU created */
-	uint16_t vcpu_id;
-
-	/** the physical CPU ID for the VCPU created */
-	uint16_t pcpu_id;
-} __aligned(8);
-
 /* General-purpose register layout aligned with the general-purpose register idx
  * when vmexit, such as vmexit due to CR access, refer to SMD Vol.3C 27-6.
  */
@@ -460,16 +447,6 @@ struct acrn_vcpu_regs {
 	struct acrn_regs vcpu_regs;
 } __aligned(8);
 
-/**
- * @brief Info to set ioreq buffer for a created VM
- *
- * the parameter for HC_SET_IOREQ_BUFFER hypercall
- */
-struct acrn_set_ioreq_buffer {
-	/** guest physical address of VM request_buffer */
-	uint64_t req_buf;
-} __aligned(8);
-
 /** Operation types for setting IRQ line */
 #define GSI_SET_HIGH		0U
 #define GSI_SET_LOW		1U
@@ -497,64 +474,6 @@ struct acrn_msi_entry {
 
 	/** MSI data[7:0] with vector */
 	uint64_t msi_data;
-} __aligned(8);
-
-/**
- * @brief Info to inject a NMI interrupt for a VM
- */
-struct acrn_nmi_entry {
-	/** virtual CPU ID to inject */
-	uint16_t vcpu_id;
-
-	/** Reserved */
-	uint16_t reserved0;
-
-	/** Reserved */
-	uint32_t reserved1;
-} __aligned(8);
-
-/**
- * @brief Info to remap pass-through PCI MSI for a VM
- *
- * the parameter for HC_VM_PCI_MSIX_REMAP hypercall
- */
-struct acrn_vm_pci_msix_remap {
-	/** pass-through PCI device virtual BDF# */
-	uint16_t virt_bdf;
-
-	/** pass-through PCI device physical BDF# */
-	uint16_t phys_bdf;
-
-	/** pass-through PCI device MSI/MSI-X cap control data */
-	uint16_t msi_ctl;
-
-	/** reserved for alignment padding */
-	uint16_t reserved;
-
-	/** pass-through PCI device MSI address to remap, which will
-	 * return the caller after remapping
-	 */
-	uint64_t msi_addr;		/* IN/OUT: msi address to fix */
-
-	/** pass-through PCI device MSI data to remap, which will
-	 * return the caller after remapping
-	 */
-	uint32_t msi_data;
-
-	/** pass-through PCI device is MSI or MSI-X
-	 *  0 - MSI, 1 - MSI-X
-	 */
-	int32_t msix;
-
-	/** if the pass-through PCI device is MSI-X, this field contains
-	 *  the MSI-X entry table index
-	 */
-	uint32_t msix_entry_index;
-
-	/** if the pass-through PCI device is MSI-X, this field contains
-	 *  Vector Control for MSI-X Entry, field defined in MSI-X spec
-	 */
-	uint32_t vector_ctl;
 } __aligned(8);
 
 /**
