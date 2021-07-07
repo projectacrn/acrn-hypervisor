@@ -44,19 +44,19 @@
  */
 
 /**
- * @file vhm_ioctl_defs.h
+ * @file hsm_ioctl_defs.h
  *
- * @brief Virtio and Hypervisor Module definition for ioctl to user space
+ * @brief Hypervisor Module definition for ioctl to user space
  */
 
 #ifndef	_VHM_IOCTL_DEFS_H_
 #define	_VHM_IOCTL_DEFS_H_
 
-/* Commmon structures for ACRN/VHM/DM */
+/* Commmon structures for ACRN/HSM/DM */
 #include "acrn_common.h"
 
 /*
- * Commmon IOCTL ID defination for VHM/DM
+ * Commmon IOCTL ID defination for HSM/DM
  */
 #define _IC_ID(x, y) (((x)<<24)|(y))
 #define IC_ID 0x43UL

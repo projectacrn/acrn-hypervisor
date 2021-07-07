@@ -29,7 +29,7 @@
 #ifndef _MEM_H_
 #define	_MEM_H_
 #include "types.h"
-#include "vhm_ioctl_defs.h"
+#include "hsm_ioctl_defs.h"
 
 struct vmctx;
 
