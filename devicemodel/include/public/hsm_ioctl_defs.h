@@ -130,8 +130,8 @@
 	_IOW(ACRN_IOCTL_TYPE, 0x5A, struct acrn_vdev)
 
 /* Power management */
-#define IC_ID_PM_BASE                   0x60UL
-#define IC_PM_GET_CPU_STATE            _IC_ID(IC_ID, IC_ID_PM_BASE + 0x00)
+#define ACRN_IOCTL_PM_GET_CPU_STATE	\
+	_IOWR(ACRN_IOCTL_TYPE, 0x60, __u64)
 
 /* VHM eventfd */
 #define IC_ID_EVENT_BASE		0x70UL

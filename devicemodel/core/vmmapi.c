@@ -649,7 +649,7 @@ vm_set_vcpu_regs(struct vmctx *ctx, struct acrn_vcpu_regs *vcpu_regs)
 int
 vm_get_cpu_state(struct vmctx *ctx, void *state_buf)
 {
-	return ioctl(ctx->fd, IC_PM_GET_CPU_STATE, state_buf);
+	return ioctl(ctx->fd, ACRN_IOCTL_PM_GET_CPU_STATE, state_buf);
 }
 
 int

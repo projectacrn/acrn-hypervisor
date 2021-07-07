@@ -31,7 +31,7 @@ int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 		ret = 0;
 	} else {
 		uint8_t px_cnt = vm->pm.px_cnt;
-		const struct cpu_px_data *px_data = vm->pm.px_data;
+		const struct acrn_pstate_data *px_data = vm->pm.px_data;
 
 		if ((px_cnt != 0U) && (px_data != NULL)) {
 			uint64_t px_target_val, max_px_ctl_val, min_px_ctl_val;
@@ -57,13 +57,13 @@ static void vm_setup_cpu_px(struct acrn_vm *vm)
 	struct cpu_state_info *pm_state_info = get_cpu_pm_state_info();
 
 	vm->pm.px_cnt = 0U;
-	(void)memset(vm->pm.px_data, 0U, MAX_PSTATE * sizeof(struct cpu_px_data));
+	(void)memset(vm->pm.px_data, 0U, MAX_PSTATE * sizeof(struct acrn_pstate_data));
 
 	if ((pm_state_info->px_cnt != 0U) && (pm_state_info->px_data != NULL)) {
 		ASSERT((pm_state_info->px_cnt <= MAX_PSTATE), "failed to setup cpu px");
 
 		vm->pm.px_cnt = pm_state_info->px_cnt;
-		px_data_size = ((uint32_t)vm->pm.px_cnt) * sizeof(struct cpu_px_data);
+		px_data_size = ((uint32_t)vm->pm.px_cnt) * sizeof(struct acrn_pstate_data);
 		(void)memcpy_s(vm->pm.px_data, px_data_size, pm_state_info->px_data, px_data_size);
 	}
 }
@@ -74,13 +74,13 @@ static void vm_setup_cpu_cx(struct acrn_vm *vm)
 	struct cpu_state_info *pm_state_info = get_cpu_pm_state_info();
 
 	vm->pm.cx_cnt = 0U;
-	(void)memset(vm->pm.cx_data, 0U, MAX_CSTATE * sizeof(struct cpu_cx_data));
+	(void)memset(vm->pm.cx_data, 0U, MAX_CSTATE * sizeof(struct acrn_cstate_data));
 
 	if ((pm_state_info->cx_cnt != 0U) && (pm_state_info->cx_data != NULL)) {
 		ASSERT((pm_state_info->cx_cnt <= MAX_CX_ENTRY), "failed to setup cpu cx");
 
 		vm->pm.cx_cnt = pm_state_info->cx_cnt;
-		cx_data_size = ((uint32_t)vm->pm.cx_cnt) * sizeof(struct cpu_cx_data);
+		cx_data_size = ((uint32_t)vm->pm.cx_cnt) * sizeof(struct acrn_cstate_data);
 
 		/* please note pm.cx_data[0] is a empty space holder,
 		 * pm.cx_data[1...MAX_CX_ENTRY] would be used to store cx entry datas.
@@ -94,7 +94,7 @@ static inline void init_cx_port(struct acrn_vm *vm)
 	uint8_t cx_idx;
 
 	for (cx_idx = 2U; cx_idx <= vm->pm.cx_cnt; cx_idx++) {
-		struct cpu_cx_data *cx_data = vm->pm.cx_data + cx_idx;
+		struct acrn_cstate_data *cx_data = vm->pm.cx_data + cx_idx;
 
 		if (cx_data->cx_reg.space_id == SPACE_SYSTEM_IO) {
 			uint16_t port = (uint16_t)cx_data->cx_reg.address;
@@ -245,7 +245,7 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 	return true;
 }
 
-static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const struct acpi_generic_address *gas)
+static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const struct acrn_acpi_generic_address *gas)
 {
 	uint8_t io_len[5] = {0U, 1U, 2U, 4U, 8U};
 	struct vm_io_range gas_io;

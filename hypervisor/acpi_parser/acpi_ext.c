@@ -66,10 +66,10 @@ static inline uint64_t get_acpi_dt_qword(const uint8_t *dt_addr, uint32_t dt_off
 
 /* get a GAS struct from given table and its offset.
  * ACPI table stores packed gas, but it is not guaranteed that
- * struct acpi_generic_address is packed, so do not use memcpy in function.
+ * struct acrn_acpi_generic_address is packed, so do not use memcpy in function.
  * @pre dt_addr != NULL && gas != NULL
  */
-static inline void get_acpi_dt_gas(const uint8_t *dt_addr, uint32_t dt_offset, struct acpi_generic_address *gas)
+static inline void get_acpi_dt_gas(const uint8_t *dt_addr, uint32_t dt_offset, struct acrn_acpi_generic_address *gas)
 {
 	struct packed_gas *dt_gas = (struct packed_gas *)(dt_addr + dt_offset);
 
@@ -133,17 +133,17 @@ int32_t acpi_fixup(void)
 	uint8_t *facp_addr = NULL, *facs_addr = NULL, *mcfg_addr = NULL, *rtct_tbl_addr = NULL;
 	struct acpi_mcfg_allocation *mcfg_table = NULL;
 	int32_t ret = 0;
-	struct acpi_generic_address pm1a_cnt, pm1a_evt;
+	struct acrn_acpi_generic_address pm1a_cnt, pm1a_evt;
 	struct pm_s_state_data *sx_data = get_host_sstate_data();
 
 	facp_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_FADT);
 	if (facp_addr != NULL) {
 		get_acpi_dt_gas(facp_addr, OFFSET_PM1A_EVT, &pm1a_evt);
 		get_acpi_dt_gas(facp_addr, OFFSET_PM1A_CNT, &pm1a_cnt);
-		(void)memcpy_s((void *)&sx_data->pm1a_evt, sizeof(struct acpi_generic_address),
-				(const void *)&pm1a_evt, sizeof(struct acpi_generic_address));
-		(void)memcpy_s((void *)&sx_data->pm1a_cnt, sizeof(struct acpi_generic_address),
-				(const void *)&pm1a_cnt, sizeof(struct acpi_generic_address));
+		(void)memcpy_s((void *)&sx_data->pm1a_evt, sizeof(struct acrn_acpi_generic_address),
+				(const void *)&pm1a_evt, sizeof(struct acrn_acpi_generic_address));
+		(void)memcpy_s((void *)&sx_data->pm1a_cnt, sizeof(struct acrn_acpi_generic_address),
+				(const void *)&pm1a_cnt, sizeof(struct acrn_acpi_generic_address));
 
 		facs_addr = (uint8_t *)get_facs_table(facp_addr);
 		if (facs_addr != NULL) {
