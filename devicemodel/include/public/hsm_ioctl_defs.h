@@ -86,10 +86,12 @@
 	_IOW(ACRN_IOCTL_TYPE, 0x16, struct acrn_vcpu_regs)
 
 /* IRQ and Interrupts */
-#define IC_ID_IRQ_BASE                 0x20UL
-#define IC_INJECT_MSI                  _IC_ID(IC_ID, IC_ID_IRQ_BASE + 0x03)
-#define IC_VM_INTR_MONITOR             _IC_ID(IC_ID, IC_ID_IRQ_BASE + 0x04)
-#define IC_SET_IRQLINE                 _IC_ID(IC_ID, IC_ID_IRQ_BASE + 0x05)
+#define ACRN_IOCTL_INJECT_MSI		\
+	_IOW(ACRN_IOCTL_TYPE, 0x23, struct acrn_msi_entry)
+#define ACRN_IOCTL_VM_INTR_MONITOR	\
+	_IOW(ACRN_IOCTL_TYPE, 0x24, unsigned long)
+#define ACRN_IOCTL_SET_IRQLINE		\
+	_IOW(ACRN_IOCTL_TYPE, 0x25, __u64)
 
 /* DM ioreq management */
 #define IC_ID_IOREQ_BASE                0x30UL
