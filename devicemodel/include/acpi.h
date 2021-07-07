@@ -29,7 +29,7 @@
 #ifndef _ACPI_H_
 #define _ACPI_H_
 
-#include "vhm_ioctl_defs.h"
+#include "hsm_ioctl_defs.h"
 
 #define	SCI_INT			9
 

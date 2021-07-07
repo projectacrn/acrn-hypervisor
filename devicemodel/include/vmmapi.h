@@ -34,7 +34,7 @@
 #include "types.h"
 #include "macros.h"
 #include "pm.h"
-#include "vhm_ioctl_defs.h"
+#include "hsm_ioctl_defs.h"
 
 /*
  * API version for out-of-tree consumers for making compile time decisions.
