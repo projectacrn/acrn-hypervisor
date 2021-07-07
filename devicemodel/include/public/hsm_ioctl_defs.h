@@ -106,11 +106,10 @@
 	_IO(ACRN_IOCTL_TYPE, 0x35)
 
 /* Guest memory management */
-#define IC_ID_MEM_BASE                  0x40UL
-/* IC_ALLOC_MEMSEG not used */
-#define IC_ALLOC_MEMSEG                 _IC_ID(IC_ID, IC_ID_MEM_BASE + 0x00)
-#define IC_SET_MEMSEG                   _IC_ID(IC_ID, IC_ID_MEM_BASE + 0x01)
-#define IC_UNSET_MEMSEG                 _IC_ID(IC_ID, IC_ID_MEM_BASE + 0x02)
+#define ACRN_IOCTL_SET_MEMSEG		\
+	_IOW(ACRN_IOCTL_TYPE, 0x41, struct acrn_vm_memmap)
+#define ACRN_IOCTL_UNSET_MEMSEG		\
+	_IOW(ACRN_IOCTL_TYPE, 0x42, struct acrn_vm_memmap)
 
 /* PCI assignment*/
 #define IC_ID_PCI_BASE                  0x50UL
@@ -130,41 +129,54 @@
 #define IC_ID_PM_BASE                   0x60UL
 #define IC_PM_GET_CPU_STATE            _IC_ID(IC_ID, IC_ID_PM_BASE + 0x00)
 
-#define VM_MEMMAP_SYSMEM       0
-#define VM_MMIO         1
-
 /* VHM eventfd */
 #define IC_ID_EVENT_BASE		0x70UL
 #define IC_EVENT_IOEVENTFD		_IC_ID(IC_ID, IC_ID_EVENT_BASE + 0x00)
 #define IC_EVENT_IRQFD			_IC_ID(IC_ID, IC_ID_EVENT_BASE + 0x01)
 
+
+#define	ACRN_MEM_ACCESS_RIGHT_MASK	0x00000007U
+#define	ACRN_MEM_ACCESS_READ		0x00000001U
+#define	ACRN_MEM_ACCESS_WRITE		0x00000002U
+#define	ACRN_MEM_ACCESS_EXEC		0x00000004U
+#define	ACRN_MEM_ACCESS_RWX		(ACRN_MEM_ACCESS_READ  | \
+					 ACRN_MEM_ACCESS_WRITE | \
+					 ACRN_MEM_ACCESS_EXEC)
+
+#define	ACRN_MEM_TYPE_MASK		0x000007C0U
+#define	ACRN_MEM_TYPE_WB		0x00000040U
+#define	ACRN_MEM_TYPE_WT		0x00000080U
+#define	ACRN_MEM_TYPE_UC		0x00000100U
+#define	ACRN_MEM_TYPE_WC		0x00000200U
+#define	ACRN_MEM_TYPE_WP		0x00000400U
+
+/* Memory mapping types */
+#define	ACRN_MEMMAP_RAM			0
+#define	ACRN_MEMMAP_MMIO		1
+
 /**
  * @brief EPT memory mapping info for guest
  */
-struct vm_memmap {
+struct acrn_vm_memmap {
 	/** memory mapping type */
-	uint32_t type;
-	/** using vma_base to get sos_vm_gpa,
-	 * only for type == VM_MEMMAP_SYSMEM
-	 */
-	uint32_t using_vma;
+	__u32	type;
+	/** memory mapping attribute */
+	__u32	attr;
 	/** user OS guest physical start address of memory mapping */
-	uint64_t gpa;
+	__u64	user_vm_pa;
 	union {
 		/** host physical start address of memory,
 		 * only for type == VM_MMIO
 		 */
-		uint64_t hpa;
+		__u64	service_vm_pa;
 		/** service OS user virtual start address of
 		 * memory, only for type == VM_MEMMAP_SYSMEM &&
 		 * using_vma == true
 		 */
-		uint64_t vma_base;
+		__u64	vma_base;
 	};
 	/** the length of memory range mapped */
-	uint64_t len;	/* mmap length */
-	/** memory mapping attribute */
-	uint32_t prot;	/* RWX */
+	__u64	len;
 };
 
 /**

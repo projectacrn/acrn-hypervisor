@@ -1171,12 +1171,12 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	size_t vrtct_len;
 	uint8_t *buf;
 	uint8_t *vrtct;
-	struct vm_memmap memmap = {
-		.type = VM_MMIO,
+	struct acrn_vm_memmap memmap = {
+		.type = ACRN_MEMMAP_MMIO,
 		/* HPA base and size of Software SRAM shall be parsed from vRTCT. */
-		.hpa = 0,
+		.service_vm_pa = 0,
 		.len = 0,
-		.prot = PROT_ALL
+		.attr = ACRN_MEM_ACCESS_RWX
 	};
 
 	/* Name of native RTCT table is "PTCT"(v1) or "RTCT"(v2) */
@@ -1218,11 +1218,11 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	free(vrtct);
 	free(buf);
 
-	memmap.hpa = get_software_sram_base_hpa();
-	memmap.gpa = get_software_sram_base_gpa();
+	memmap.service_vm_pa = get_software_sram_base_hpa();
+	memmap.user_vm_pa = get_software_sram_base_gpa();
 	memmap.len = get_software_sram_size();
-	ioctl(ctx->fd, IC_UNSET_MEMSEG, &memmap);
-	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
+	ioctl(ctx->fd, ACRN_IOCTL_UNSET_MEMSEG, &memmap);
+	return ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
 };
 
 void
