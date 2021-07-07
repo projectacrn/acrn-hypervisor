@@ -87,7 +87,7 @@ register_default_iohandler(int start, int size)
 }
 
 int
-emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *pio_request)
+emulate_inout(struct vmctx *ctx, int *pvcpu, struct acrn_pio_request *pio_request)
 {
 	int bytes, flags, in, port;
 	inout_func_t handler;
@@ -95,7 +95,7 @@ emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *pio_request)
 	int retval;
 
 	bytes = pio_request->size;
-	in = (pio_request->direction == REQUEST_READ);
+	in = (pio_request->direction == ACRN_IOREQ_DIR_READ);
 	port = pio_request->address;
 
 	if ((port + bytes - 1 >= MAX_IOPORTS) ||
@@ -106,7 +106,7 @@ emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *pio_request)
 	flags = inout_handlers[port].flags;
 	arg = inout_handlers[port].arg;
 
-	if (pio_request->direction == REQUEST_READ) {
+	if (pio_request->direction == ACRN_IOREQ_DIR_READ) {
 		if (!(flags & IOPORT_F_IN))
 			return -1;
 	} else {

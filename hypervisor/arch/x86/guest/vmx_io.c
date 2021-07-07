@@ -18,7 +18,7 @@
 #include <trace.h>
 #include <logmsg.h>
 
-void arch_fire_vhm_interrupt(void)
+void arch_fire_hsm_interrupt(void)
 {
 	/*
 	 * use vLAPIC to inject vector to SOS vcpu 0 if vlapic is enabled
@@ -30,25 +30,25 @@ void arch_fire_vhm_interrupt(void)
 	sos_vm = get_sos_vm();
 	vcpu = vcpu_from_vid(sos_vm, BSP_CPU_ID);
 
-	vlapic_set_intr(vcpu, get_vhm_notification_vector(), LAPIC_TRIG_EDGE);
+	vlapic_set_intr(vcpu, get_hsm_notification_vector(), LAPIC_TRIG_EDGE);
 }
 
 /**
  * @brief General complete-work for port I/O emulation
  *
- * @pre io_req->io_type == REQ_PORTIO
+ * @pre io_req->io_type == ACRN_IOREQ_TYPE_PORTIO
  *
  * @remark This function must be called when \p io_req is completed, after
- * either a previous call to emulate_io() returning 0 or the corresponding VHM
+ * either a previous call to emulate_io() returning 0 or the corresponding IO
  * request having transferred to the COMPLETE state.
  */
 void
 emulate_pio_complete(struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
-	const struct pio_request *pio_req = &io_req->reqs.pio;
+	const struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
 	uint64_t mask = 0xFFFFFFFFUL >> (32UL - (8UL * pio_req->size));
 
-	if (pio_req->direction == REQUEST_READ) {
+	if (pio_req->direction == ACRN_IOREQ_DIR_READ) {
 		uint64_t value = (uint64_t)pio_req->value;
 		uint64_t rax = vcpu_get_gpreg(vcpu, CPU_REG_RAX);
 
@@ -70,19 +70,19 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint32_t mask;
 	int32_t cur_context_idx = vcpu->arch.cur_context;
 	struct io_request *io_req = &vcpu->req;
-	struct pio_request *pio_req = &io_req->reqs.pio;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
 
 	exit_qual = vcpu->arch.exit_qualification;
 
-	io_req->io_type = REQ_PORTIO;
+	io_req->io_type = ACRN_IOREQ_TYPE_PORTIO;
 	pio_req->size = vm_exit_io_instruction_size(exit_qual) + 1UL;
 	pio_req->address = vm_exit_io_instruction_port_number(exit_qual);
 	if (vm_exit_io_instruction_access_direction(exit_qual) == 0UL) {
 		mask = 0xFFFFFFFFU >> (32U - (8U * pio_req->size));
-		pio_req->direction = REQUEST_WRITE;
+		pio_req->direction = ACRN_IOREQ_DIR_WRITE;
 		pio_req->value = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RAX) & mask;
 	} else {
-		pio_req->direction = REQUEST_READ;
+		pio_req->direction = ACRN_IOREQ_DIR_READ;
 	}
 
 	TRACE_4I(TRACE_VMEXIT_IO_INSTRUCTION,
@@ -102,7 +102,7 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint64_t exit_qual;
 	uint64_t gpa;
 	struct io_request *io_req = &vcpu->req;
-	struct mmio_request *mmio_req = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio_req = &io_req->reqs.mmio_request;
 
 	/* Handle page fault from guest */
 	exit_qual = vcpu->arch.exit_qualification;
@@ -125,21 +125,21 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 		status = 0;
 	} else {
 
-		io_req->io_type = REQ_MMIO;
+		io_req->io_type = ACRN_IOREQ_TYPE_MMIO;
 
 		/* Specify if read or write operation */
 		if ((exit_qual & 0x2UL) != 0UL) {
 			/* Write operation */
-			mmio_req->direction = REQUEST_WRITE;
+			mmio_req->direction = ACRN_IOREQ_DIR_WRITE;
 			mmio_req->value = 0UL;
 
 			/* XXX: write access while EPT perm RX -> WP */
 			if ((exit_qual & 0x38UL) == 0x28UL) {
-				io_req->io_type = REQ_WP;
+				io_req->io_type = ACRN_IOREQ_TYPE_WP;
 			}
 		} else {
 			/* Read operation */
-			mmio_req->direction = REQUEST_READ;
+			mmio_req->direction = ACRN_IOREQ_DIR_READ;
 
 			/* TODO: Need to determine how sign extension is determined for
 			 * reads
@@ -160,7 +160,7 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 			 */
 
 			/* Determine value being written. */
-			if (mmio_req->direction == REQUEST_WRITE) {
+			if (mmio_req->direction == ACRN_IOREQ_DIR_WRITE) {
 				status = emulate_instruction(vcpu);
 				if (status != 0) {
 					ret = -EFAULT;

@@ -25,14 +25,19 @@ struct io_request {
 	/**
 	 * @brief Type of the request (PIO, MMIO, etc).
 	 *
-	 * Refer to vhm_request for detailed description of I/O request types.
+	 * Refer to acrn_io_request for detailed description of I/O request types.
 	 */
 	uint32_t io_type;
 
 	/**
-	 * @brief Details of this request in the same format as vhm_request.
+	 * @brief Details of this request in the same format as acrn_io_request.
 	 */
-	union vhm_io_request reqs;
+	union {
+		struct acrn_pio_request         pio_request;
+		struct acrn_pci_request         pci_request;
+		struct acrn_mmio_request        mmio_request;
+		uint64_t			data[8];
+	} reqs;
 };
 
 /**
@@ -105,7 +110,6 @@ struct vm_io_handler_desc {
 };
 
 /* Typedef for MMIO handler and range check routine */
-struct mmio_request;
 typedef int32_t (*hv_mem_io_handler_t)(struct io_request *io_req, void *handler_private_data);
 
 /**
@@ -187,45 +191,45 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 void reset_vm_ioreqs(struct acrn_vm *vm);
 
 /**
- * @brief Get the state of VHM request
+ * @brief Get the state of an IO request
  *
  * @param vm Target VM context
- * @param vhm_req_id VHM Request ID
+ * @param vcpu_id VCPU ID of the IO request
  *
  * @return State of the IO Request.
  */
-uint32_t get_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id);
+uint32_t get_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id);
 
 /**
- * @brief Set the state of VHM request
+ * @brief Set the state of IO request
  *
  * @param vm Target VM context
- * @param vhm_req_id VHM Request ID
- * @param state  State to be set
+ * @param vcpu_id VCPU ID of the IO request
+ * @param state State to be set
  * @return None
  */
-void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state);
+void set_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id, uint32_t state);
 
 /**
- * @brief Set the vector for HV callback VHM
+ * @brief Set the vector for HV callback HSM
  *
- * @param vector vector for HV callback VHM
+ * @param vector vector for HV callback HSM
  * @return None
  */
-void set_vhm_notification_vector(uint32_t vector);
+void set_hsm_notification_vector(uint32_t vector);
 
 /**
- * @brief Get the vector for HV callback VHM
+ * @brief Get the vector for HV callback HSM
  *
- * @return vector for HV callbakc VH
+ * @return vector for HV callbakc HSM
  */
-uint32_t get_vhm_notification_vector(void);
+uint32_t get_hsm_notification_vector(void);
 
 /**
  * @brief Emulate \p io_req for \p vcpu
  *
  * Handle an I/O request by either invoking a hypervisor-internal handler or
- * deliver to VHM.
+ * deliver to HSM.
  *
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
@@ -235,7 +239,7 @@ uint32_t get_vhm_notification_vector(void);
  * @param io_req The I/O request holding the details of the MMIO access
  *
  * @retval 0 Successfully emulated by registered handlers.
- * @retval IOREQ_PENDING The I/O request is delivered to VHM.
+ * @retval IOREQ_PENDING The I/O request is delivered to HSM.
  * @retval -EIO The request spans multiple devices and cannot be emulated.
  * @retval -EINVAL \p io_req has an invalid type.
  * @retval <0 on other errors during emulation.

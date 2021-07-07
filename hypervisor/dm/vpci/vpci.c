@@ -55,7 +55,7 @@ static bool vpci_pio_cfgaddr_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t 
 	uint32_t val = ~0U;
 	struct acrn_vpci *vpci = &vcpu->vm->vpci;
 	union pci_cfg_addr_reg *cfg_addr = &vpci->addr;
-	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
 		val = cfg_addr->value;
@@ -121,7 +121,7 @@ static bool vpci_pio_cfgdata_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t 
 	union pci_bdf bdf;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 	uint32_t val = ~0U;
-	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
 	if (cfg_addr.bits.enable != 0U) {
@@ -174,7 +174,7 @@ static bool vpci_pio_cfgdata_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 static int32_t vpci_mmio_cfg_access(struct io_request *io_req, void *private_data)
 {
 	int32_t ret = 0;
-	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio = &io_req->reqs.mmio_request;
 	struct acrn_vpci *vpci = (struct acrn_vpci *)private_data;
 	uint64_t pci_mmcofg_base = vpci->pci_mmcfg.address;
 	uint64_t address = mmio->address;
@@ -192,7 +192,7 @@ static int32_t vpci_mmio_cfg_access(struct io_request *io_req, void *private_dat
 	 */
 	bdf.value = (uint16_t)((address - pci_mmcofg_base) >> 12U);
 
-	if (mmio->direction == REQUEST_READ) {
+	if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 		ret = vpci_read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t *)&mmio->value);
 	} else {
 		ret = vpci_write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);

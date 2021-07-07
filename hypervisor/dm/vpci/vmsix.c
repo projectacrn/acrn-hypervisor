@@ -67,7 +67,7 @@ bool write_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
  */
 uint32_t rw_vmsix_table(struct pci_vdev *vdev, struct io_request *io_req)
 {
-	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio = &io_req->reqs.mmio_request;
 	struct msix_table_entry *entry;
 	uint32_t entry_offset, table_offset, index = CONFIG_MAX_MSIX_TABLE_NUM;
 	uint64_t offset;
@@ -83,14 +83,14 @@ uint32_t rw_vmsix_table(struct pci_vdev *vdev, struct io_request *io_req)
 			entry = &vdev->msix.table_entries[index];
 			entry_offset = table_offset % MSIX_TABLE_ENTRY_SIZE;
 
-			if (mmio->direction == REQUEST_READ) {
+			if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 				(void)memcpy_s(&mmio->value, (size_t)mmio->size,
 					(void *)entry + entry_offset, (size_t)mmio->size);
 			} else {
 				(void)memcpy_s((void *)entry + entry_offset, (size_t)mmio->size,
 					&mmio->value, (size_t)mmio->size);
 			}
-		} else if (mmio->direction == REQUEST_READ) {
+		} else if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 			mmio->value = 0UL;
 		}
 	} else {

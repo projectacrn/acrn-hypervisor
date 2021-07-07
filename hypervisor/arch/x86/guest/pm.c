@@ -143,7 +143,7 @@ static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
 
 static bool pm1ab_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
-	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	pio_req->value = pio_read(addr, width);
 
@@ -314,7 +314,7 @@ static void register_rt_vm_pm1a_ctl_handler(struct acrn_vm *vm)
  */
 static bool prelaunched_vm_sleep_io_read(struct acrn_vcpu *vcpu, __unused uint16_t addr, __unused size_t width)
 {
-	vcpu->req.reqs.pio.value = 0U;
+	vcpu->req.reqs.pio_request.value = 0U;
 
 	return true;
 }

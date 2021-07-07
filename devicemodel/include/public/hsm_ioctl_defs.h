@@ -94,13 +94,16 @@
 	_IOW(ACRN_IOCTL_TYPE, 0x25, __u64)
 
 /* DM ioreq management */
-#define IC_ID_IOREQ_BASE                0x30UL
-#define IC_SET_IOREQ_BUFFER             _IC_ID(IC_ID, IC_ID_IOREQ_BASE + 0x00)
-#define IC_NOTIFY_REQUEST_FINISH        _IC_ID(IC_ID, IC_ID_IOREQ_BASE + 0x01)
-#define IC_CREATE_IOREQ_CLIENT          _IC_ID(IC_ID, IC_ID_IOREQ_BASE + 0x02)
-#define IC_ATTACH_IOREQ_CLIENT          _IC_ID(IC_ID, IC_ID_IOREQ_BASE + 0x03)
-#define IC_DESTROY_IOREQ_CLIENT         _IC_ID(IC_ID, IC_ID_IOREQ_BASE + 0x04)
-#define IC_CLEAR_VM_IOREQ               _IC_ID(IC_ID, IC_ID_IOREQ_BASE + 0x05)
+#define ACRN_IOCTL_NOTIFY_REQUEST_FINISH \
+	_IOW(ACRN_IOCTL_TYPE, 0x31, struct acrn_ioreq_notify)
+#define ACRN_IOCTL_CREATE_IOREQ_CLIENT	\
+	_IO(ACRN_IOCTL_TYPE, 0x32)
+#define ACRN_IOCTL_ATTACH_IOREQ_CLIENT	\
+	_IO(ACRN_IOCTL_TYPE, 0x33)
+#define ACRN_IOCTL_DESTROY_IOREQ_CLIENT	\
+	_IO(ACRN_IOCTL_TYPE, 0x34)
+#define ACRN_IOCTL_CLEAR_VM_IOREQ	\
+	_IO(ACRN_IOCTL_TYPE, 0x35)
 
 /* Guest memory management */
 #define IC_ID_MEM_BASE                  0x40UL
@@ -286,11 +289,12 @@ struct ic_ptdev_irq {
 /**
  * @brief data strcture to notify hypervisor ioreq is handled
  */
-struct ioreq_notify {
-	/** client id to identify ioreq client */
-	int32_t client_id;
+struct acrn_ioreq_notify {
+	/** VM id to identify ioreq client */
+	__u16	vmid;
+	__u16	reserved;
 	/** identify the ioreq submitter */
-	uint32_t vcpu;
+	__u32	vcpu;
 };
 
 #define ACRN_PLATFORM_LAPIC_IDS_MAX	64

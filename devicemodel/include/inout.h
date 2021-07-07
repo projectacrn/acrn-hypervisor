@@ -32,7 +32,6 @@
 #include "types.h"
 #include "acrn_common.h"
 struct vmctx;
-struct vhm_request;
 
 /*
  * inout emulation handlers return 0 on success and -1 on failure.
@@ -71,7 +70,7 @@ struct inout_port {
 	DATA_SET(inout_port_set, __CONCAT(__inout_port, __LINE__))
 
 void	init_inout(void);
-int	emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *req);
+int	emulate_inout(struct vmctx *ctx, int *pvcpu, struct acrn_pio_request *req);
 int	register_inout(struct inout_port *iop);
 int	unregister_inout(struct inout_port *iop);
 

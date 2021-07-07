@@ -73,11 +73,11 @@
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
 /* Values returned for reads on invalid I/O requests. */
-#define VHM_REQ_PIO_INVAL	(~0U)
-#define VHM_REQ_MMIO_INVAL	(~0UL)
+#define IOREQ_PIO_INVAL		(~0U)
+#define IOREQ_MMIO_INVAL	(~0UL)
 
 typedef void (*vmexit_handler_t)(struct vmctx *,
-		struct vhm_request *, int *vcpu);
+		struct acrn_io_request *, int *vcpu);
 
 char *vmname;
 
@@ -114,10 +114,10 @@ static cpuset_t cpumask;
 
 static void vm_loop(struct vmctx *ctx);
 
-static char vhm_request_page[4096] __aligned(4096);
+static char io_request_page[4096] __aligned(4096);
 
-static struct vhm_request *vhm_req_buf =
-				(struct vhm_request *)&vhm_request_page;
+static struct acrn_io_request *ioreq_buf =
+				(struct acrn_io_request *)&io_request_page;
 
 struct dmstats {
 	uint64_t	vmexit_bogus;
@@ -302,16 +302,16 @@ notify_vmloop_thread(void)
 #endif
 
 static void
-vmexit_inout(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
+vmexit_inout(struct vmctx *ctx, struct acrn_io_request *io_req, int *pvcpu)
 {
 	int error;
 	int bytes, port, in;
 
-	port = vhm_req->reqs.pio.address;
-	bytes = vhm_req->reqs.pio.size;
-	in = (vhm_req->reqs.pio.direction == REQUEST_READ);
+	port = io_req->reqs.pio_request.address;
+	bytes = io_req->reqs.pio_request.size;
+	in = (io_req->reqs.pio_request.direction == ACRN_IOREQ_DIR_READ);
 
-	error = emulate_inout(ctx, pvcpu, &vhm_req->reqs.pio);
+	error = emulate_inout(ctx, pvcpu, &io_req->reqs.pio_request);
 	if (error) {
 		pr_err("Unhandled %s%c 0x%04x\n",
 				in ? "in" : "out",
@@ -319,56 +319,56 @@ vmexit_inout(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 				port);
 
 		if (in) {
-			vhm_req->reqs.pio.value = VHM_REQ_PIO_INVAL;
+			io_req->reqs.pio_request.value = IOREQ_PIO_INVAL;
 		}
 	}
 }
 
 static void
-vmexit_mmio_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
+vmexit_mmio_emul(struct vmctx *ctx, struct acrn_io_request *io_req, int *pvcpu)
 {
 	int err;
 
 	stats.vmexit_mmio_emul++;
-	err = emulate_mem(ctx, &vhm_req->reqs.mmio);
+	err = emulate_mem(ctx, &io_req->reqs.mmio_request);
 
 	if (err) {
 		if (err == -ESRCH)
 			pr_err("Unhandled memory access to 0x%lx\n",
-				vhm_req->reqs.mmio.address);
+				io_req->reqs.mmio_request.address);
 
 		pr_err("Failed to emulate instruction [");
 		pr_err("mmio address 0x%lx, size %ld",
-				vhm_req->reqs.mmio.address,
-				vhm_req->reqs.mmio.size);
+				io_req->reqs.mmio_request.address,
+				io_req->reqs.mmio_request.size);
 
-		if (vhm_req->reqs.mmio.direction == REQUEST_READ) {
-			vhm_req->reqs.mmio.value = VHM_REQ_MMIO_INVAL;
+		if (io_req->reqs.mmio_request.direction == ACRN_IOREQ_DIR_READ) {
+			io_req->reqs.mmio_request.value = IOREQ_MMIO_INVAL;
 		}
 	}
 }
 
 static void
-vmexit_pci_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
+vmexit_pci_emul(struct vmctx *ctx, struct acrn_io_request *io_req, int *pvcpu)
 {
-	int err, in = (vhm_req->reqs.pci.direction == REQUEST_READ);
+	int err, in = (io_req->reqs.pci_request.direction == ACRN_IOREQ_DIR_READ);
 
 	err = emulate_pci_cfgrw(ctx, *pvcpu, in,
-			vhm_req->reqs.pci.bus,
-			vhm_req->reqs.pci.dev,
-			vhm_req->reqs.pci.func,
-			vhm_req->reqs.pci.reg,
-			vhm_req->reqs.pci.size,
-			&vhm_req->reqs.pci.value);
+			io_req->reqs.pci_request.bus,
+			io_req->reqs.pci_request.dev,
+			io_req->reqs.pci_request.func,
+			io_req->reqs.pci_request.reg,
+			io_req->reqs.pci_request.size,
+			&io_req->reqs.pci_request.value);
 	if (err) {
 		pr_err("Unhandled pci cfg rw at %x:%x.%x reg 0x%x\n",
-			vhm_req->reqs.pci.bus,
-			vhm_req->reqs.pci.dev,
-			vhm_req->reqs.pci.func,
-			vhm_req->reqs.pci.reg);
+			io_req->reqs.pci_request.bus,
+			io_req->reqs.pci_request.dev,
+			io_req->reqs.pci_request.func,
+			io_req->reqs.pci_request.reg);
 
 		if (in) {
-			vhm_req->reqs.pio.value = VHM_REQ_PIO_INVAL;
+			io_req->reqs.pio_request.value = IOREQ_PIO_INVAL;
 		}
 	}
 }
@@ -397,24 +397,24 @@ static vmexit_handler_t handler[VM_EXITCODE_MAX] = {
 };
 
 static void
-handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
+handle_vmexit(struct vmctx *ctx, struct acrn_io_request *io_req, int vcpu)
 {
 	enum vm_exitcode exitcode;
 
-	exitcode = vhm_req->type;
+	exitcode = io_req->type;
 	if (exitcode >= VM_EXITCODE_MAX || handler[exitcode] == NULL) {
 		pr_err("handle vmexit: unexpected exitcode 0x%x\n",
 				exitcode);
 		exit(1);
 	}
 
-	(*handler[exitcode])(ctx, vhm_req, &vcpu);
+	(*handler[exitcode])(ctx, io_req, &vcpu);
 
-	/* We cannot notify the VHM/hypervisor on the request completion at this
+	/* We cannot notify the HSM/hypervisor on the request completion at this
 	 * point if the UOS is in suspend or system reset mode, as the VM is
 	 * still not paused and a notification can kick off the vcpu to run
 	 * again. Postpone the notification till vm_system_reset() or
-	 * vm_suspend_resume() for resetting the ioreq states in the VHM and
+	 * vm_suspend_resume() for resetting the ioreq states in the HSM and
 	 * hypervisor.
 	 */
 	if ((VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) ||
@@ -633,10 +633,10 @@ vm_system_reset(struct vmctx *ctx)
 	 * request which is the APIC PM CR write. VM reset will reset it
 	 *
 	 * When handling emergency mode triggered by one vcpu without
-	 * offlining any other vcpus, there can be multiple VHM requests
+	 * offlining any other vcpus, there can be multiple IO requests
 	 * with various states. We should be careful on potential races
 	 * when resetting especially in SMP SOS. vm_clear_ioreq can be used
-	 * to clear all ioreq status in VHM after VM pause, then let VM
+	 * to clear all ioreq status in HSM after VM pause, then let VM
 	 * reset in hypervisor reset all ioreqs.
 	 */
 	vm_clear_ioreq(ctx);
@@ -698,17 +698,17 @@ vm_loop(struct vmctx *ctx)
 
 	while (1) {
 		int vcpu_id;
-		struct vhm_request *vhm_req;
+		struct acrn_io_request *io_req;
 
 		error = vm_attach_ioreq_client(ctx);
 		if (error)
 			break;
 
 		for (vcpu_id = 0; vcpu_id < guest_ncpus; vcpu_id++) {
-			vhm_req = &vhm_req_buf[vcpu_id];
-			if ((atomic_load(&vhm_req->processed) == REQ_STATE_PROCESSING)
-				&& (vhm_req->client == ctx->ioreq_client))
-				handle_vmexit(ctx, vhm_req, vcpu_id);
+			io_req = &ioreq_buf[vcpu_id];
+			if ((atomic_load(&io_req->processed) == ACRN_IOREQ_STATE_PROCESSING)
+				&& !io_req->kernel_handled)
+				handle_vmexit(ctx, io_req, vcpu_id);
 		}
 
 		if (VM_SUSPEND_FULL_RESET == vm_get_suspend_mode() ||
@@ -1022,7 +1022,7 @@ main(int argc, char *argv[])
 
 	for (;;) {
 		pr_notice("vm_create: %s\n", vmname);
-		ctx = vm_create(vmname, (unsigned long)vhm_req_buf, &guest_ncpus);
+		ctx = vm_create(vmname, (unsigned long)ioreq_buf, &guest_ncpus);
 		if (!ctx) {
 			pr_err("vm_create failed");
 			goto create_fail;

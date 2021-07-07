@@ -600,7 +600,7 @@ static void vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
  */
 static inline void vie_mmio_read(const struct acrn_vcpu *vcpu, uint64_t *rval)
 {
-	*rval = vcpu->req.reqs.mmio.value;
+	*rval = vcpu->req.reqs.mmio_request.value;
 }
 
 /*
@@ -608,7 +608,7 @@ static inline void vie_mmio_read(const struct acrn_vcpu *vcpu, uint64_t *rval)
  */
 static inline void vie_mmio_write(struct acrn_vcpu *vcpu, uint64_t wval)
 {
-	vcpu->req.reqs.mmio.value = wval;
+	vcpu->req.reqs.mmio_request.value = wval;
 }
 
 static void vie_calc_bytereg(const struct instr_emul_vie *vie,
@@ -1087,7 +1087,7 @@ static int32_t emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie 
 
 	/* update the Memory Operand byte size if necessary */
 	opsize = ((vie->op.op_flags & VIE_OP_F_BYTE_OP) != 0U) ? 1U : vie->opsize;
-	is_mmio_write = (vcpu->req.reqs.mmio.direction == REQUEST_WRITE);
+	is_mmio_write = (vcpu->req.reqs.mmio_request.direction == ACRN_IOREQ_DIR_WRITE);
 
 	/*
 	 * XXX although the MOVS instruction is only supposed to be used with
@@ -2325,7 +2325,7 @@ static int32_t instr_check_gva(struct acrn_vcpu *vcpu, enum vm_cpu_mode cpu_mode
 		}
 		ret = -EFAULT;
 	} else {
-		err_code = (vcpu->req.reqs.mmio.direction == REQUEST_WRITE) ? PAGE_FAULT_WR_FLAG : 0U;
+		err_code = (vcpu->req.reqs.mmio_request.direction == ACRN_IOREQ_DIR_WRITE) ? PAGE_FAULT_WR_FLAG : 0U;
 
 		ret = gva2gpa(vcpu, gva, &gpa, &err_code);
 		if (ret < 0) {

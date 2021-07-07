@@ -10,34 +10,34 @@
 
 #define DBG_LEVEL_IOREQ	6U
 
-static uint32_t acrn_vhm_notification_vector = HYPERVISOR_CALLBACK_VHM_VECTOR;
+static uint32_t acrn_hsm_notification_vector = HYPERVISOR_CALLBACK_HSM_VECTOR;
 #define MMIO_DEFAULT_VALUE_SIZE_1	(0xFFUL)
 #define MMIO_DEFAULT_VALUE_SIZE_2	(0xFFFFUL)
 #define MMIO_DEFAULT_VALUE_SIZE_4	(0xFFFFFFFFUL)
 #define MMIO_DEFAULT_VALUE_SIZE_8	(0xFFFFFFFFFFFFFFFFUL)
 
 #if defined(HV_DEBUG)
-__unused static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
+__unused static void acrn_print_request(uint16_t vcpu_id, const struct acrn_io_request *req)
 {
 	switch (req->type) {
-	case REQ_MMIO:
+	case ACRN_IOREQ_TYPE_MMIO:
 		dev_dbg(DBG_LEVEL_IOREQ, "[vcpu_id=%hu type=MMIO]", vcpu_id);
 		dev_dbg(DBG_LEVEL_IOREQ,
 			"gpa=0x%lx, R/W=%d, size=%ld value=0x%lx processed=%lx",
-			req->reqs.mmio.address,
-			req->reqs.mmio.direction,
-			req->reqs.mmio.size,
-			req->reqs.mmio.value,
+			req->reqs.mmio_request.address,
+			req->reqs.mmio_request.direction,
+			req->reqs.mmio_request.size,
+			req->reqs.mmio_request.value,
 			req->processed);
 		break;
-	case REQ_PORTIO:
+	case ACRN_IOREQ_TYPE_PORTIO:
 		dev_dbg(DBG_LEVEL_IOREQ, "[vcpu_id=%hu type=PORTIO]", vcpu_id);
 		dev_dbg(DBG_LEVEL_IOREQ,
 			"IO=0x%lx, R/W=%d, size=%ld value=0x%lx processed=%lx",
-			req->reqs.pio.address,
-			req->reqs.pio.direction,
-			req->reqs.pio.size,
-			req->reqs.pio.value,
+			req->reqs.pio_request.address,
+			req->reqs.pio_request.direction,
+			req->reqs.pio_request.size,
+			req->reqs.pio_request.value,
 			req->processed);
 		break;
 	default:
@@ -59,14 +59,14 @@ void reset_vm_ioreqs(struct acrn_vm *vm)
 {
 	uint16_t i;
 
-	for (i = 0U; i < VHM_REQUEST_MAX; i++) {
-		set_vhm_req_state(vm, i, REQ_STATE_FREE);
+	for (i = 0U; i < ACRN_IO_REQUEST_MAX; i++) {
+		set_io_req_state(vm, i, ACRN_IOREQ_STATE_FREE);
 	}
 }
 
 static inline bool has_complete_ioreq(const struct acrn_vcpu *vcpu)
 {
-	return (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_COMPLETE);
+	return (get_io_req_state(vcpu->vm, vcpu->vcpu_id) == ACRN_IOREQ_STATE_COMPLETE);
 }
 
 /**
@@ -79,42 +79,42 @@ static inline bool has_complete_ioreq(const struct acrn_vcpu *vcpu)
  */
 int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
-	union vhm_request_buffer *req_buf = NULL;
-	struct vhm_request *vhm_req;
+	struct acrn_io_request_buffer *req_buf = NULL;
+	struct acrn_io_request *acrn_io_req;
 	bool is_polling = false;
 	int32_t ret = 0;
 	uint16_t cur;
 
 	if ((vcpu->vm->sw.io_shared_page != NULL)
-		 && (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_FREE)) {
+		 && (get_io_req_state(vcpu->vm, vcpu->vcpu_id) == ACRN_IOREQ_STATE_FREE)) {
 
-		req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
+		req_buf = (struct acrn_io_request_buffer *)(vcpu->vm->sw.io_shared_page);
 		cur = vcpu->vcpu_id;
 
 		stac();
-		vhm_req = &req_buf->req_queue[cur];
-		/* ACRN insert request to VHM and inject upcall */
-		vhm_req->type = io_req->io_type;
-		(void)memcpy_s(&vhm_req->reqs, sizeof(union vhm_io_request),
-			&io_req->reqs, sizeof(union vhm_io_request));
+		acrn_io_req = &req_buf->req_slot[cur];
+		/* ACRN insert request to HSM and inject upcall */
+		acrn_io_req->type = io_req->io_type;
+		(void)memcpy_s(&acrn_io_req->reqs, sizeof(acrn_io_req->reqs),
+			&io_req->reqs, sizeof(acrn_io_req->reqs));
 		if (vcpu->vm->sw.is_polling_ioreq) {
-			vhm_req->completion_polling = 1U;
+			acrn_io_req->completion_polling = 1U;
 			is_polling = true;
 		}
 		clac();
 
-		/* Before updating the vhm_req state, enforce all fill vhm_req operations done */
+		/* Before updating the acrn_io_req state, enforce all fill acrn_io_req operations done */
 		cpu_write_memory_barrier();
 
 		/* Must clear the signal before we mark req as pending
-		 * Once we mark it pending, VHM may process req and signal us
+		 * Once we mark it pending, HSM may process req and signal us
 		 * before we perform upcall.
-		 * because VHM can work in pulling mode without wait for upcall
+		 * because HSM can work in pulling mode without wait for upcall
 		 */
-		set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_PENDING);
+		set_io_req_state(vcpu->vm, vcpu->vcpu_id, ACRN_IOREQ_STATE_PENDING);
 
-		/* signal VHM */
-		arch_fire_vhm_interrupt();
+		/* signal HSM */
+		arch_fire_hsm_interrupt();
 
 		/* Polling completion of the request in polling mode */
 		if (is_polling) {
@@ -138,53 +138,53 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 	return ret;
 }
 
-uint32_t get_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id)
+uint32_t get_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id)
 {
 	uint32_t state;
-	union vhm_request_buffer *req_buf = NULL;
-	struct vhm_request *vhm_req;
+	struct acrn_io_request_buffer *req_buf = NULL;
+	struct acrn_io_request *acrn_io_req;
 
-	req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
+	req_buf = (struct acrn_io_request_buffer *)vm->sw.io_shared_page;
 	if (req_buf == NULL) {
 	        state =  0xffffffffU;
 	} else {
 		stac();
-		vhm_req = &req_buf->req_queue[vhm_req_id];
-		state = vhm_req->processed;
+		acrn_io_req = &req_buf->req_slot[vcpu_id];
+		state = acrn_io_req->processed;
 		clac();
 	}
 
 	return state;
 }
 
-void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state)
+void set_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id, uint32_t state)
 {
-	union vhm_request_buffer *req_buf = NULL;
-	struct vhm_request *vhm_req;
+	struct acrn_io_request_buffer *req_buf = NULL;
+	struct acrn_io_request *acrn_io_req;
 
-	req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
+	req_buf = (struct acrn_io_request_buffer *)vm->sw.io_shared_page;
 	if (req_buf != NULL) {
 		stac();
-		vhm_req = &req_buf->req_queue[vhm_req_id];
+		acrn_io_req = &req_buf->req_slot[vcpu_id];
 		/*
-		 * HV will only set processed to REQ_STATE_PENDING or REQ_STATE_FREE.
+		 * HV will only set processed to ACRN_IOREQ_STATE_PENDING or ACRN_IOREQ_STATE_FREE.
 		 * we don't need to sfence here is that even if the SOS/DM sees the previous state,
 		 * the only side effect is that it will defer the processing of the new IOReq.
 		 * It won't lead wrong processing.
 		 */
-		vhm_req->processed = state;
+		acrn_io_req->processed = state;
 		clac();
 	}
 }
 
-void set_vhm_notification_vector(uint32_t vector)
+void set_hsm_notification_vector(uint32_t vector)
 {
-	acrn_vhm_notification_vector = vector;
+	acrn_hsm_notification_vector = vector;
 }
 
-uint32_t get_vhm_notification_vector(void)
+uint32_t get_hsm_notification_vector(void)
 {
-	return acrn_vhm_notification_vector;
+	return acrn_hsm_notification_vector;
 }
 
 /**
@@ -193,17 +193,17 @@ uint32_t get_vhm_notification_vector(void)
  * @param vcpu The virtual CPU that triggers the MMIO access
  * @param io_req The I/O request holding the details of the MMIO access
  *
- * @pre io_req->io_type == REQ_MMIO
+ * @pre io_req->io_type == ACRN_IOREQ_TYPE_MMIO
  *
  * @remark This function must be called when \p io_req is completed, after
- * either a previous call to emulate_io() returning 0 or the corresponding VHM
+ * either a previous call to emulate_io() returning 0 or the corresponding HSM
  * request transferring to the COMPLETE state.
  */
 static void emulate_mmio_complete(struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
-	const struct mmio_request *mmio_req = &io_req->reqs.mmio;
+	const struct acrn_mmio_request *mmio_req = &io_req->reqs.mmio_request;
 
-	if (mmio_req->direction == REQUEST_READ) {
+	if (mmio_req->direction == ACRN_IOREQ_DIR_READ) {
 		/* Emulate instruction and update vcpu register set */
 		(void)emulate_instruction(vcpu);
 	}
@@ -211,21 +211,21 @@ static void emulate_mmio_complete(struct acrn_vcpu *vcpu, const struct io_reques
 
 static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
-	union vhm_request_buffer *req_buf = NULL;
-	struct vhm_request *vhm_req;
+	struct acrn_io_request_buffer *req_buf = NULL;
+	struct acrn_io_request *acrn_io_req;
 
-	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
+	req_buf = (struct acrn_io_request_buffer *)(vcpu->vm->sw.io_shared_page);
 
 	stac();
-	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
+	acrn_io_req = &req_buf->req_slot[vcpu->vcpu_id];
 	if (io_req != NULL) {
 		switch (vcpu->req.io_type) {
-		case REQ_PORTIO:
-			io_req->reqs.pio.value = vhm_req->reqs.pio.value;
+		case ACRN_IOREQ_TYPE_PORTIO:
+			io_req->reqs.pio_request.value = acrn_io_req->reqs.pio_request.value;
 			break;
 
-		case REQ_MMIO:
-			io_req->reqs.mmio.value = vhm_req->reqs.mmio.value;
+		case ACRN_IOREQ_TYPE_MMIO:
+			io_req->reqs.mmio_request.value = acrn_io_req->reqs.mmio_request.value;
 			break;
 
 		default:
@@ -235,19 +235,19 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	}
 
 	/*
-	 * Only HV will check whether processed is REQ_STATE_FREE on per-vCPU before inject a ioreq.
-	 * Only HV will set processed to REQ_STATE_FREE when ioreq is done.
+	 * Only HV will check whether processed is ACRN_IOREQ_STATE_FREE on per-vCPU before inject a ioreq.
+	 * Only HV will set processed to ACRN_IOREQ_STATE_FREE when ioreq is done.
 	 */
-	vhm_req->processed = REQ_STATE_FREE;
+	acrn_io_req->processed = ACRN_IOREQ_STATE_FREE;
 	clac();
 }
 
 /**
- * @brief Complete-work of VHM requests for port I/O emulation
+ * @brief Complete-work of HSM requests for port I/O emulation
  *
- * @pre vcpu->req.io_type == REQ_PORTIO
+ * @pre vcpu->req.io_type == ACRN_IOREQ_TYPE_PORTIO
  *
- * @remark This function must be called after the VHM request corresponding to
+ * @remark This function must be called after the HSM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
  */
 static void dm_emulate_pio_complete(struct acrn_vcpu *vcpu)
@@ -260,13 +260,13 @@ static void dm_emulate_pio_complete(struct acrn_vcpu *vcpu)
 }
 
 /**
- * @brief Complete-work of VHM requests for MMIO emulation
+ * @brief Complete-work of HSM requests for MMIO emulation
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  *
- * @pre vcpu->req.io_type == REQ_MMIO
+ * @pre vcpu->req.io_type == ACRN_IOREQ_TYPE_MMIO
  *
- * @remark This function must be called after the VHM request corresponding to
+ * @remark This function must be called after the HSM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
  */
 static void dm_emulate_mmio_complete(struct acrn_vcpu *vcpu)
@@ -279,13 +279,13 @@ static void dm_emulate_mmio_complete(struct acrn_vcpu *vcpu)
 }
 
 /**
- * @brief General complete-work for all kinds of VHM requests for I/O emulation
+ * @brief General complete-work for all kinds of HSM requests for I/O emulation
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  */
 static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
 {
-	if (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_COMPLETE) {
+	if (get_io_req_state(vcpu->vm, vcpu->vcpu_id) == ACRN_IOREQ_STATE_COMPLETE) {
 		/*
 		 * If vcpu is in Zombie state and will be destroyed soon. Just
 		 * mark ioreq done and don't resume vcpu.
@@ -294,26 +294,27 @@ static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
 			complete_ioreq(vcpu, NULL);
 		} else {
 			switch (vcpu->req.io_type) {
-			case REQ_MMIO:
+			case ACRN_IOREQ_TYPE_MMIO:
 				dm_emulate_mmio_complete(vcpu);
 				break;
 
-			case REQ_PORTIO:
-			case REQ_PCICFG:
+			case ACRN_IOREQ_TYPE_PORTIO:
+			case ACRN_IOREQ_TYPE_PCICFG:
 				/*
-				 * REQ_PORTIO on 0xcf8 & 0xcfc may switch to REQ_PCICFG in some
-				 * cases. It works to apply the post-work for REQ_PORTIO on
-				 * REQ_PCICFG because the format of the first 28 bytes of
-				 * REQ_PORTIO & REQ_PCICFG requests are exactly the same and
-				 * post-work is mainly interested in the read value.
+				 * ACRN_IOREQ_TYPE_PORTIO on 0xcf8 & 0xcfc may switch to
+				 * ACRN_IOREQ_TYPE_PCICFG in some cases. It works to apply the post-work
+				 * for ACRN_IOREQ_TYPE_PORTIO on ACRN_IOREQ_TYPE_PCICFG because the
+				 * format of the first 28 bytes of ACRN_IOREQ_TYPE_PORTIO &
+				 * ACRN_IOREQ_TYPE_PCICFG requests are exactly the same and post-work
+				 * is mainly interested in the read value.
 				 */
 				dm_emulate_pio_complete(vcpu);
 				break;
 
 			default:
 				/*
-				 * REQ_WP can only be triggered on writes which do not need
-				 * post-work. Just mark the ioreq done.
+				 * ACRN_IOREQ_TYPE_WP can only be triggered on writes which do
+				 * not need post-work. Just mark the ioreq done.
 				 */
 				complete_ioreq(vcpu, NULL);
 				break;
@@ -331,7 +332,7 @@ static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
 static bool pio_default_read(struct acrn_vcpu *vcpu,
 	__unused uint16_t addr, size_t width)
 {
-	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	pio_req->value = (uint32_t)((1UL << (width * 8U)) - 1UL);
 
@@ -356,9 +357,9 @@ static bool pio_default_write(__unused struct acrn_vcpu *vcpu, __unused uint16_t
 static int32_t mmio_default_access_handler(struct io_request *io_req,
 	__unused void *handler_private_data)
 {
-	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio = &io_req->reqs.mmio_request;
 
-	if (mmio->direction == REQUEST_READ) {
+	if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 		switch (mmio->size) {
 		case 1U:
 			mmio->value = MMIO_DEFAULT_VALUE_SIZE_1;
@@ -385,7 +386,7 @@ static int32_t mmio_default_access_handler(struct io_request *io_req,
  * Try handling the given request by any port I/O handler registered in the
  * hypervisor.
  *
- * @pre io_req->io_type == REQ_PORTIO
+ * @pre io_req->io_type == ACRN_IOREQ_TYPE_PORTIO
  *
  * @retval 0 Successfully emulated by registered handlers.
  * @retval -ENODEV No proper handler found.
@@ -398,7 +399,7 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	uint16_t port, size;
 	uint32_t idx;
 	struct acrn_vm *vm = vcpu->vm;
-	struct pio_request *pio_req = &io_req->reqs.pio;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
 	struct vm_io_handler_desc *handler;
 	io_read_fn_t io_read = NULL;
 	io_write_fn_t io_write = NULL;
@@ -427,11 +428,11 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		break;
 	}
 
-	if ((pio_req->direction == REQUEST_WRITE) && (io_write != NULL)) {
+	if ((pio_req->direction == ACRN_IOREQ_DIR_WRITE) && (io_write != NULL)) {
 		if (io_write(vcpu, port, size, pio_req->value)) {
 			status = 0;
 		}
-	} else if ((pio_req->direction == REQUEST_READ) && (io_read != NULL)) {
+	} else if ((pio_req->direction == ACRN_IOREQ_DIR_READ) && (io_read != NULL)) {
 		if (io_read(vcpu, port, size)) {
 			status = 0;
 		}
@@ -440,7 +441,7 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	}
 
 	pr_dbg("IO %s on port %04x, data %08x",
-		(pio_req->direction == REQUEST_READ) ? "read" : "write", port, pio_req->value);
+		(pio_req->direction == ACRN_IOREQ_DIR_READ) ? "read" : "write", port, pio_req->value);
 
 	return status;
 }
@@ -449,7 +450,7 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
  * Use registered MMIO handlers on the given request if it falls in the range of
  * any of them.
  *
- * @pre io_req->io_type == REQ_MMIO
+ * @pre io_req->io_type == ACRN_IOREQ_TYPE_MMIO
  *
  * @retval 0 Successfully emulated by registered handlers.
  * @retval -ENODEV No proper handler found.
@@ -462,7 +463,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	bool hold_lock = true;
 	uint16_t idx;
 	uint64_t address, size, base, end;
-	struct mmio_request *mmio_req = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio_req = &io_req->reqs.mmio_request;
 	struct mem_io_node *mmio_handler = NULL;
 	hv_mem_io_handler_t read_write = NULL;
 	void *handler_private_data = NULL;
@@ -518,7 +519,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
  * @brief Emulate \p io_req for \p vcpu
  *
  * Handle an I/O request by either invoking a hypervisor-internal handler or
- * deliver to VHM.
+ * deliver to HSM.
  *
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
@@ -528,7 +529,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
  * @param io_req The I/O request holding the details of the MMIO access
  *
  * @retval 0 Successfully emulated by registered handlers.
- * @retval IOREQ_PENDING The I/O request is delivered to VHM.
+ * @retval ACRN_IOREQ_STATE_PENDING The I/O request is delivered to HSM.
  * @retval -EIO The request spans multiple devices and cannot be emulated.
  * @retval -EINVAL \p io_req has an invalid io_type.
  * @retval <0 on other errors during emulation.
@@ -542,14 +543,14 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	vm_config = get_vm_config(vcpu->vm->vm_id);
 
 	switch (io_req->io_type) {
-	case REQ_PORTIO:
+	case ACRN_IOREQ_TYPE_PORTIO:
 		status = hv_emulate_pio(vcpu, io_req);
 		if (status == 0) {
 			emulate_pio_complete(vcpu, io_req);
 		}
 		break;
-	case REQ_MMIO:
-	case REQ_WP:
+	case ACRN_IOREQ_TYPE_MMIO:
+	case ACRN_IOREQ_TYPE_WP:
 		status = hv_emulate_mmio(vcpu, io_req);
 		if (status == 0) {
 			emulate_mmio_complete(vcpu, io_req);
@@ -563,9 +564,9 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 
 	if ((status == -ENODEV) && (vm_config->load_order == POST_LAUNCHED_VM)) {
 		/*
-		 * No handler from HV side, search from VHM in Dom0
+		 * No handler from HV side, search from HSM in Service VM
 		 *
-		 * ACRN insert request to VHM and inject upcall.
+		 * ACRN insert request to HSM and inject upcall.
 		 */
 		status = acrn_insert_request(vcpu, io_req);
 		if (status == 0) {
@@ -574,7 +575,7 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			/* here for both IO & MMIO, the direction, address,
 			 * size definition is same
 			 */
-			struct pio_request *pio_req = &io_req->reqs.pio;
+			struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
 
 			pr_fatal("%s Err: access dir %d, io_type %d, addr = 0x%lx, size=%lu", __func__,
 				pio_req->direction, io_req->io_type,

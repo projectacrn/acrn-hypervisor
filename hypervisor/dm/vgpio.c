@@ -84,7 +84,7 @@ static uint32_t ioapic_pin_to_vpin(struct acrn_vm *vm, const struct acrn_vm_conf
 
 static int32_t vgpio_mmio_handler(struct io_request *io_req, void *data)
 {
-	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio = &io_req->reqs.mmio_request;
 	struct acrn_vm *vm = (struct acrn_vm *) data;
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	int32_t ret = 0;
@@ -99,7 +99,7 @@ static int32_t vgpio_mmio_handler(struct io_request *io_req, void *data)
 
 	/* all gpio registers have 4 bytes size */
 	if (mmio->size == 4U) {
-		if (mmio->direction == REQUEST_READ) {
+		if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 			padbar = mmio_read32((const void *)hpa2hva((hpa & ~P2SB_PCR_SPACE_MASK) + GPIO_PADBAR));
 			pad0   = padbar & P2SB_PCR_SPACE_MASK;
 			value  = mmio_read32((const void *)hva);

@@ -2383,7 +2383,7 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint32_t offset;
 	uint64_t qual, access_type;
 	struct acrn_vlapic *vlapic;
-	struct mmio_request *mmio;
+	struct acrn_mmio_request *mmio;
 
 	qual = vcpu->arch.exit_qualification;
 	access_type = apic_access_type(qual);
@@ -2407,7 +2407,7 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 			(decode_instruction(vcpu) >= 0)) {
 		vlapic = vcpu_vlapic(vcpu);
 		offset = (uint32_t)apic_access_offset(qual);
-		mmio = &vcpu->req.reqs.mmio;
+		mmio = &vcpu->req.reqs.mmio_request;
 		if (access_type == TYPE_LINEAR_APIC_INST_WRITE) {
 			err = emulate_instruction(vcpu);
 			if (err == 0) {
