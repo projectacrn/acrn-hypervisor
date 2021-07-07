@@ -97,7 +97,7 @@ void restore_msrs(void)
 #endif
 }
 
-static void acpi_gas_write(const struct acpi_generic_address *gas, uint32_t val)
+static void acpi_gas_write(const struct acrn_acpi_generic_address *gas, uint32_t val)
 {
 	uint16_t val16 = (uint16_t)val;
 
@@ -108,7 +108,7 @@ static void acpi_gas_write(const struct acpi_generic_address *gas, uint32_t val)
 	}
 }
 
-static uint32_t acpi_gas_read(const struct acpi_generic_address *gas)
+static uint32_t acpi_gas_read(const struct acrn_acpi_generic_address *gas)
 {
 	uint32_t ret = 0U;
 
@@ -239,7 +239,7 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 
 void reset_host(void)
 {
-	struct acpi_generic_address *gas = &(host_reset_reg.reg);
+	struct acrn_acpi_generic_address *gas = &(host_reset_reg.reg);
 
 
 	/* TODO: gracefully shut down all guests before doing host reset. */

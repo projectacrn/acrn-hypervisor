@@ -1097,15 +1097,15 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 
 	if (is_created_vm(target_vm)) {
 		switch (cmd & PMCMD_TYPE_MASK) {
-		case PMCMD_GET_PX_CNT: {
+		case ACRN_PMCMD_GET_PX_CNT: {
 			if (target_vm->pm.px_cnt != 0U) {
 				ret = copy_to_gpa(vm, &(target_vm->pm.px_cnt), param2, sizeof(target_vm->pm.px_cnt));
 			}
 			break;
 		}
-		case PMCMD_GET_PX_DATA: {
+		case ACRN_PMCMD_GET_PX_DATA: {
 			uint8_t pn;
-			struct cpu_px_data *px_data;
+			struct acrn_pstate_data *px_data;
 
 			/* For now we put px data as per-vm,
 			 * If it is stored as per-cpu in the future,
@@ -1121,18 +1121,18 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 			}
 
 			px_data = target_vm->pm.px_data + pn;
-			ret = copy_to_gpa(vm, px_data, param2, sizeof(struct cpu_px_data));
+			ret = copy_to_gpa(vm, px_data, param2, sizeof(struct acrn_pstate_data));
 			break;
 		}
-		case PMCMD_GET_CX_CNT: {
+		case ACRN_PMCMD_GET_CX_CNT: {
 			if (target_vm->pm.cx_cnt != 0U) {
 				ret = copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param2, sizeof(target_vm->pm.cx_cnt));
 			}
 			break;
 		}
-		case PMCMD_GET_CX_DATA: {
+		case ACRN_PMCMD_GET_CX_DATA: {
 			uint8_t cx_idx;
-			struct cpu_cx_data *cx_data;
+			struct acrn_cstate_data *cx_data;
 
 			if (target_vm->pm.cx_cnt == 0U) {
 				break;
@@ -1145,7 +1145,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 			}
 
 			cx_data = target_vm->pm.cx_data + cx_idx;
-			ret = copy_to_gpa(vm, cx_data, param2, sizeof(struct cpu_cx_data));
+			ret = copy_to_gpa(vm, cx_data, param2, sizeof(struct acrn_cstate_data));
 			break;
 		}
 		default:

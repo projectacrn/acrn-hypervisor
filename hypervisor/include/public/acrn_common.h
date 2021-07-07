@@ -570,22 +570,22 @@ struct acrn_vm_pci_msix_remap {
 #define SPACE_PLATFORM_COMM     10U
 #define SPACE_FFixedHW          0x7FU
 
-struct acpi_generic_address {
+struct acrn_acpi_generic_address {
 	uint8_t 	space_id;
 	uint8_t 	bit_width;
 	uint8_t 	bit_offset;
 	uint8_t 	access_size;
 	uint64_t	address;
-} __aligned(8);
+} __attribute__ ((__packed__));
 
-struct cpu_cx_data {
-	struct acpi_generic_address cx_reg;
+struct acrn_cstate_data {
+	struct acrn_acpi_generic_address cx_reg;
 	uint8_t 	type;
 	uint32_t	latency;
 	uint64_t	power;
 } __aligned(8);
 
-struct cpu_px_data {
+struct acrn_pstate_data {
 	uint64_t core_frequency;	/* megahertz */
 	uint64_t power;			/* milliWatts */
 	uint64_t transition_latency;	/* microseconds */
@@ -601,10 +601,10 @@ struct acpi_sx_pkg {
 } __aligned(8);
 
 struct pm_s_state_data {
-	struct acpi_generic_address pm1a_evt;
-	struct acpi_generic_address pm1b_evt;
-	struct acpi_generic_address pm1a_cnt;
-	struct acpi_generic_address pm1b_cnt;
+	struct acrn_acpi_generic_address pm1a_evt;
+	struct acrn_acpi_generic_address pm1b_evt;
+	struct acrn_acpi_generic_address pm1a_cnt;
+	struct acrn_acpi_generic_address pm1b_cnt;
 	struct acpi_sx_pkg s3_pkg;
 	struct acpi_sx_pkg s5_pkg;
 	uint32_t *wake_vector_32;
@@ -612,7 +612,7 @@ struct pm_s_state_data {
 } __aligned(8);
 
 /**
- * @brief Info PM command from DM/VHM.
+ * @brief Info PM command from DM/HSM.
  *
  * The command would specify request type(e.g. get px count or data) for
  * specific VM and specific VCPU with specific state number.
@@ -628,11 +628,11 @@ struct pm_s_state_data {
 #define PMCMD_VCPUID_SHIFT	16U
 #define PMCMD_STATE_NUM_SHIFT	8U
 
-enum pm_cmd_type {
-	PMCMD_GET_PX_CNT,
-	PMCMD_GET_PX_DATA,
-	PMCMD_GET_CX_CNT,
-	PMCMD_GET_CX_DATA,
+enum acrn_pm_cmd_type {
+	ACRN_PMCMD_GET_PX_CNT,
+	ACRN_PMCMD_GET_PX_DATA,
+	ACRN_PMCMD_GET_CX_CNT,
+	ACRN_PMCMD_GET_CX_DATA,
 };
 
 /**

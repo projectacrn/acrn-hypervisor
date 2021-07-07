@@ -12,7 +12,7 @@
 #include <asm/board.h>
 
 /* The table includes cpu px info of Intel A3960 SoC */
-static const struct cpu_px_data px_a3960[17] = {
+static const struct acrn_pstate_data px_a3960[17] = {
 	{0x960UL, 0UL, 0xAUL, 0xAUL, 0x1800UL, 0x1800UL}, /* P0 */
 	{0x8FCUL, 0UL, 0xAUL, 0xAUL, 0x1700UL, 0x1700UL}, /* P1 */
 	{0x898UL, 0UL, 0xAUL, 0xAUL, 0x1600UL, 0x1600UL}, /* P2 */
@@ -33,14 +33,14 @@ static const struct cpu_px_data px_a3960[17] = {
 };
 
 /* The table includes cpu cx info of Intel Broxton SoC such as A39x0, J3455, N3350 */
-static const struct cpu_cx_data cx_bxt[3] = {
+static const struct acrn_cstate_data cx_bxt[3] = {
 	{{SPACE_FFixedHW,  0x0U, 0U, 0U,     0UL}, 0x1U, 0x1U, 0x3E8UL}, /* C1 */
 	{{SPACE_SYSTEM_IO, 0x8U, 0U, 0U, 0x415UL}, 0x2U, 0x32U, 0x0AUL}, /* C2 */
 	{{SPACE_SYSTEM_IO, 0x8U, 0U, 0U, 0x419UL}, 0x3U, 0x96U, 0x0AUL}  /* C3 */
 };
 
 /* The table includes cpu px info of Intel A3950 SoC */
-static const struct cpu_px_data px_a3950[13] = {
+static const struct acrn_pstate_data px_a3950[13] = {
 	{0x7D0UL, 0UL, 0xAUL, 0xAUL, 0x1400UL, 0x1400UL}, /* P0 */
 	{0x76CUL, 0UL, 0xAUL, 0xAUL, 0x1300UL, 0x1300UL}, /* P1 */
 	{0x708UL, 0UL, 0xAUL, 0xAUL, 0x1200UL, 0x1200UL}, /* P2 */
@@ -57,7 +57,7 @@ static const struct cpu_px_data px_a3950[13] = {
 };
 
 /* The table includes cpu px info of Intel J3455 SoC */
-static const struct cpu_px_data px_j3455[9] = {
+static const struct acrn_pstate_data px_j3455[9] = {
 	{0x5DDUL, 0UL, 0xAUL, 0xAUL, 0x1700UL, 0x1700UL}, /* P0 */
 	{0x5DCUL, 0UL, 0xAUL, 0xAUL, 0x0F00UL, 0x0F00UL}, /* P1 */
 	{0x578UL, 0UL, 0xAUL, 0xAUL, 0x0E00UL, 0x0E00UL}, /* P2 */
@@ -70,7 +70,7 @@ static const struct cpu_px_data px_j3455[9] = {
 };
 
 /* The table includes cpu px info of Intel N3350 SoC */
-static const struct cpu_px_data px_n3350[5] = {
+static const struct acrn_pstate_data px_n3350[5] = {
 	{0x44DUL, 0UL, 0xAUL, 0xAUL, 0x1800UL, 0x1800UL}, /* P0 */
 	{0x44CUL, 0UL, 0xAUL, 0xAUL, 0x0B00UL, 0x0B00UL}, /* P1 */
 	{0x3E8UL, 0UL, 0xAUL, 0xAUL, 0x0A00UL, 0x0A00UL}, /* P2 */
@@ -79,7 +79,7 @@ static const struct cpu_px_data px_n3350[5] = {
 };
 
 /* The table includes cpu cx info of Intel i7-8650U SoC */
-static const struct cpu_px_data px_i78650[16] = {
+static const struct acrn_pstate_data px_i78650[16] = {
 	{0x835UL, 0x0UL, 0xAUL, 0xAUL, 0x2A00UL, 0x2A00UL}, /* P0 */
 	{0x834UL, 0x0UL, 0xAUL, 0xAUL, 0x1500UL, 0x1500UL}, /* P1 */
 	{0x76CUL, 0x0UL, 0xAUL, 0xAUL, 0x1300UL, 0x1300UL}, /* P2 */
@@ -99,7 +99,7 @@ static const struct cpu_px_data px_i78650[16] = {
 };
 
 /* The table includes cpu cx info of Intel i7-8650U SoC */
-static const struct cpu_cx_data cx_i78650[3] = {
+static const struct acrn_cstate_data cx_i78650[3] = {
 	{{SPACE_FFixedHW,  0x0U, 0U, 0U,      0UL}, 0x1U, 0x1U,   0UL}, /* C1 */
 	{{SPACE_SYSTEM_IO, 0x8U, 0U, 0U, 0x1816UL}, 0x2U, 0x97U,  0UL}, /* C2 */
 	{{SPACE_SYSTEM_IO, 0x8U, 0U, 0U, 0x1819UL}, 0x3U, 0x40AU, 0UL}  /* C3 */

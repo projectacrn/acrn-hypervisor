@@ -201,7 +201,7 @@ void register_reset_port_handler(struct acrn_vm *vm)
 	/* Don't support SOS and pre-launched VM re-launch for now. */
 	if (!is_postlaunched_vm(vm) || is_rt_vm(vm)) {
 		struct acpi_reset_reg *reset_reg = get_host_reset_reg_data();
-		struct acpi_generic_address *gas = &(reset_reg->reg);
+		struct acrn_acpi_generic_address *gas = &(reset_reg->reg);
 
 		struct vm_io_range io_range = {
 			.len = 1U
