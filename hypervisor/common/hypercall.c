@@ -241,7 +241,7 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param1 guest physical memory address. This gpa points to
- *              struct acrn_create_vm
+ *              struct acrn_vm_creation
  *
  * @pre is_sos_vm(vcpu->vm)
  * @pre get_vm_config(target_vm->vm_id) != NULL
@@ -253,7 +253,7 @@ int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint6
 	uint16_t vmid = target_vm->vm_id;
 	int32_t ret = -1;
 	struct acrn_vm *tgt_vm = NULL;
-	struct acrn_create_vm cv;
+	struct acrn_vm_creation cv;
 	struct acrn_vm_config* vm_config = NULL;
 
 	if (copy_from_gpa(vm, &cv, param1, sizeof(cv)) == 0) {
