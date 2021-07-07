@@ -121,8 +121,10 @@
 	_IOW(ACRN_IOCTL_TYPE, 0x55, struct acrn_pcidev)
 #define ACRN_IOCTL_DEASSIGN_PCIDEV	\
 	_IOW(ACRN_IOCTL_TYPE, 0x56, struct acrn_pcidev)
-#define IC_ASSIGN_MMIODEV              _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x07)
-#define IC_DEASSIGN_MMIODEV            _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x08)
+#define ACRN_IOCTL_ASSIGN_MMIODEV	\
+	_IOW(ACRN_IOCTL_TYPE, 0x57, struct acrn_mmiodev)
+#define ACRN_IOCTL_DEASSIGN_MMIODEV	\
+	_IOW(ACRN_IOCTL_TYPE, 0x58, struct acrn_mmiodev)
 #define IC_ADD_HV_VDEV                 _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x09)
 #define IC_REMOVE_HV_VDEV              _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x0A)
 
@@ -179,24 +181,6 @@ struct acrn_vm_memmap {
 	/** the length of memory range mapped */
 	__u64	len;
 };
-
-/**
- * @brief Info to assign or deassign a MMIO device for a VM
- */
-struct acrn_mmiodev {
-	/** the gpa of the MMIO region for the MMIO device */
-	uint64_t base_gpa;
-
-	/** the hpa of the MMIO region for the MMIO device */
-	uint64_t base_hpa;
-
-	/** the size of the MMIO region for the MMIO device */
-	uint64_t size;
-
-	/** reserved for extension */
-	uint64_t reserved[13];
-
-} __attribute__((aligned(8)));
 
 /**
  * @brief Info to create or destroy a virtual PCI or legacy device for a VM

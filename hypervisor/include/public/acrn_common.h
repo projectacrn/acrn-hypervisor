@@ -735,6 +735,21 @@ struct acrn_pcidev {
 	uint32_t bar[ACRN_PCI_NUM_BARS];
 } __attribute__((aligned(8)));
 
+
+/**
+ * @brief Info to assign or deassign a MMIO device for a VM
+ */
+struct acrn_mmiodev {
+	/** the gpa of the MMIO region for the MMIO device */
+	uint64_t user_vm_pa;
+
+	/** the hpa of the MMIO region for the MMIO device */
+	uint64_t service_vm_pa;
+
+	/** the size of the MMIO region for the MMIO device */
+	uint64_t size;
+} __attribute__((aligned(8)));
+
 /**
  * @}
  */

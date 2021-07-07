@@ -272,26 +272,6 @@ struct hc_ptdev_irq {
 } __aligned(8);
 
 /**
- * @brief Info to assign or deassign a MMIO device for a VM
- *
- * the parameter for HC_ASSIGN_MMIODEV or HC_DEASSIGN_MMIODEV hypercall
- */
-struct acrn_mmiodev {
-	/** the gpa of the MMIO region for the MMIO device */
-	uint64_t base_gpa;
-
-	/** the hpa of the MMIO region for the MMIO device */
-	uint64_t base_hpa;
-
-	/** the size of the MMIO region for the MMIO device */
-	uint64_t size;
-
-	/** reserved for extension */
-	uint64_t reserved[13];
-
-} __attribute__((aligned(8)));
-
-/**
  * @brief Info to create or destroy a virtual PCI or legacy device for a VM
  *
  * the parameter for HC_ADD_VDEV or HC_REMOVE_VDEV hypercall

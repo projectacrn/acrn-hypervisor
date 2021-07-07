@@ -15,11 +15,11 @@ int32_t assign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev)
 {
 	int32_t ret = -EINVAL;
 
-	if (mem_aligned_check(mmiodev->base_gpa, PAGE_SIZE) &&
-			mem_aligned_check(mmiodev->base_hpa, PAGE_SIZE) &&
+	if (mem_aligned_check(mmiodev->user_vm_pa, PAGE_SIZE) &&
+			mem_aligned_check(mmiodev->service_vm_pa, PAGE_SIZE) &&
 			mem_aligned_check(mmiodev->size, PAGE_SIZE)) {
-		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, mmiodev->base_hpa,
-				is_sos_vm(vm) ? mmiodev->base_hpa : mmiodev->base_gpa,
+		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, mmiodev->service_vm_pa,
+				is_sos_vm(vm) ? mmiodev->service_vm_pa: mmiodev->user_vm_pa,
 				mmiodev->size, EPT_RWX | EPT_UNCACHED);
 		ret = 0;
 	}
@@ -31,11 +31,11 @@ int32_t deassign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev
 {
 	int32_t ret = -EINVAL;
 
-	if (mem_aligned_check(mmiodev->base_gpa, PAGE_SIZE) &&
-			mem_aligned_check(mmiodev->base_hpa, PAGE_SIZE) &&
+	if (mem_aligned_check(mmiodev->user_vm_pa, PAGE_SIZE) &&
+			mem_aligned_check(mmiodev->service_vm_pa, PAGE_SIZE) &&
 			mem_aligned_check(mmiodev->size, PAGE_SIZE)) {
 		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				is_sos_vm(vm) ? mmiodev->base_hpa : mmiodev->base_gpa, mmiodev->size);
+				is_sos_vm(vm) ? mmiodev->service_vm_pa: mmiodev->user_vm_pa, mmiodev->size);
 		ret = 0;
 	}
 
