@@ -30,7 +30,7 @@
 
 #define DBG_LEVEL_HYCALL	6U
 
-typedef int32_t (*emul_dev_create) (struct acrn_vm *vm, struct acrn_emul_dev *dev);
+typedef int32_t (*emul_dev_create) (struct acrn_vm *vm, struct acrn_vdev *dev);
 typedef int32_t (*emul_dev_destroy) (struct pci_vdev *vdev);
 struct emul_dev_ops {
 	/*
@@ -1241,13 +1241,13 @@ int32_t hcall_set_callback_vector(__unused struct acrn_vcpu *vcpu, __unused stru
 /*
  * @pre dev != NULL
  */
-static struct emul_dev_ops *find_emul_dev_ops(struct acrn_emul_dev *dev)
+static struct emul_dev_ops *find_emul_dev_ops(struct acrn_vdev *dev)
 {
 	struct emul_dev_ops *op = NULL;
 	uint32_t i;
 
 	for (i = 0U; i < ARRAY_SIZE(emul_dev_ops_tbl); i++) {
-		if (emul_dev_ops_tbl[i].dev_id == dev->dev_id.value) {
+		if (emul_dev_ops_tbl[i].dev_id == dev->id.value) {
 			op = &emul_dev_ops_tbl[i];
 			break;
 		}
@@ -1261,7 +1261,7 @@ static struct emul_dev_ops *find_emul_dev_ops(struct acrn_emul_dev *dev)
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param guest physical address. This gpa points to data structure of
- *              acrn_emul_dev including information about PCI or legacy devices
+ *              acrn_vdev including information about PCI or legacy devices
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -1270,7 +1270,7 @@ int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unus
 {
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
-	struct acrn_emul_dev dev;
+	struct acrn_vdev dev;
 	struct emul_dev_ops *op;
 
 	/* We should only create a device to a post-launched VM at creating time for safety, not runtime or other cases*/
@@ -1293,7 +1293,7 @@ int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unus
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param guest physical address. This gpa points to data structure of
- *              acrn_emul_dev including information about PCI or legacy devices
+ *              acrn_vdev including information about PCI or legacy devices
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -1302,7 +1302,7 @@ int32_t hcall_remove_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __u
 {
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
-	struct acrn_emul_dev dev;
+	struct acrn_vdev dev;
 	struct pci_vdev *vdev;
 	struct emul_dev_ops *op;
 	union pci_bdf bdf;

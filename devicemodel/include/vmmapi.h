@@ -137,8 +137,8 @@ int	vm_set_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf,
 	uint16_t phys_bdf, int virt_pin, int phys_pin, bool pic_pin);
 int	vm_reset_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf,
 	uint16_t phys_bdf, int virt_pin, bool pic_pin);
-int	vm_add_hv_vdev(struct vmctx *ctx, struct acrn_emul_dev *dev);
-int	vm_remove_hv_vdev(struct vmctx *ctx, struct acrn_emul_dev *dev);
+int	vm_add_hv_vdev(struct vmctx *ctx, struct acrn_vdev *dev);
+int	vm_remove_hv_vdev(struct vmctx *ctx, struct acrn_vdev *dev);
 
 int	acrn_parse_cpu_affinity(char *arg);
 uint64_t vm_get_cpu_affinity_dm(void);

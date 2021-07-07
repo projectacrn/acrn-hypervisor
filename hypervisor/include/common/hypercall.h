@@ -340,7 +340,7 @@ int32_t hcall_deassign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_emul_dev including information about PCI or legacy devices
+ *              acrn_vdev including information about PCI or legacy devices
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -354,7 +354,7 @@ int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_emul_dev including information about PCI or legacy devices
+ *              acrn_vdev including information about PCI or legacy devices
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.

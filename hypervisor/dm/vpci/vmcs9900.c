@@ -163,7 +163,7 @@ const struct pci_vdev_ops vmcs9900_ops = {
 	.read_vdev_cfg = read_vmcs9900_cfg,
 };
 
-int32_t create_vmcs9900_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev)
+int32_t create_vmcs9900_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 {
 	uint32_t i;
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);

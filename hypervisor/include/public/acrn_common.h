@@ -751,6 +751,42 @@ struct acrn_mmiodev {
 } __attribute__((aligned(8)));
 
 /**
+ * @brief Info to create or destroy a virtual PCI or legacy device for a VM
+ *
+ * the parameter for HC_CREATE_VDEV or HC_DESTROY_VDEV hypercall
+ */
+struct acrn_vdev {
+	/*
+	 * the identifier of the device, the low 32 bits represent the vendor
+	 * id and device id of PCI device and the high 32 bits represent the
+	 * device number of the legacy device
+	 */
+	union {
+		uint64_t value;
+		struct {
+			uint16_t vendor;
+			uint16_t device;
+			uint32_t legacy_id;
+		} fields;
+	} id;
+
+	/*
+	 * the slot of the device, if the device is a PCI device, the slot
+	 * represents BDF, otherwise it represents legacy device slot number
+	 */
+	uint64_t slot;
+
+	/** the IO resource address of the device, initialized by ACRN-DM. */
+	uint32_t io_addr[ACRN_PCI_NUM_BARS];
+
+	/** the IO resource size of the device, initialized by ACRN-DM. */
+	uint32_t io_size[ACRN_PCI_NUM_BARS];
+
+	/** the options for the virtual device, initialized by ACRN-DM. */
+	uint8_t	args[128];
+};
+
+/**
  * @}
  */
 #endif /* ACRN_COMMON_H */

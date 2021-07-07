@@ -37,7 +37,7 @@ extern const struct pci_vdev_ops vpci_ivshmem_ops;
  */
 void init_ivshmem_shared_memory(void);
 
-int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev);
+int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_vdev *dev);
 int32_t destroy_ivshmem_vdev(struct pci_vdev *vdev);
 #endif /* CONFIG_IVSHMEM_ENABLED */
 

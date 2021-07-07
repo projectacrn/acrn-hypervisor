@@ -596,15 +596,15 @@ vm_unmap_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 }
 
 int
-vm_add_hv_vdev(struct vmctx *ctx, struct acrn_emul_dev *dev)
+vm_add_hv_vdev(struct vmctx *ctx, struct acrn_vdev *dev)
 {
-	return ioctl(ctx->fd, IC_ADD_HV_VDEV, dev);
+	return ioctl(ctx->fd, ACRN_IOCTL_CREATE_VDEV, dev);
 }
 
 int
-vm_remove_hv_vdev(struct vmctx *ctx, struct acrn_emul_dev *dev)
+vm_remove_hv_vdev(struct vmctx *ctx, struct acrn_vdev *dev)
 {
-	return ioctl(ctx->fd, IC_REMOVE_HV_VDEV, dev);
+	return ioctl(ctx->fd, ACRN_IOCTL_DESTROY_VDEV, dev);
 }
 
 int
