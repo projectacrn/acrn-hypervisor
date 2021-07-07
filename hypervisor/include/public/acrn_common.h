@@ -418,7 +418,7 @@ struct acrn_descriptor_ptr {
 /**
  * @brief registers info for vcpu.
  */
-struct acrn_vcpu_regs {
+struct acrn_regs {
 	struct acrn_gp_regs gprs;
 	struct acrn_descriptor_ptr gdt;
 	struct acrn_descriptor_ptr idt;
@@ -445,8 +445,6 @@ struct acrn_vcpu_regs {
 	uint16_t        gs_sel;
 	uint16_t        ldt_sel;
 	uint16_t        tr_sel;
-
-	uint16_t        reserved_16[4];
 };
 
 /**
@@ -454,15 +452,15 @@ struct acrn_vcpu_regs {
  *
  * the pamameter for HC_SET_VCPU_STATE
  */
-struct acrn_set_vcpu_regs {
+struct acrn_vcpu_regs {
 	/** the virtual CPU ID for the VCPU to set state */
 	uint16_t vcpu_id;
 
 	/** reserved space to make cpu_state aligned to 8 bytes */
-	uint16_t reserved0[3];
+	uint16_t reserved[3];
 
 	/** the structure to hold vcpu state */
-	struct acrn_vcpu_regs vcpu_regs;
+	struct acrn_regs vcpu_regs;
 } __aligned(8);
 
 /**
