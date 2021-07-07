@@ -224,20 +224,7 @@ struct acrn_ioreq_notify {
 
 #define ACRN_PLATFORM_LAPIC_IDS_MAX	64
 /**
- * struct acrn_platform_info - Information of a platform from hypervisor
- * @hw.cpu_num:			Physical CPU number of the platform
- * @hw.version:			Version of this structure
- * @hw.l2_cat_shift:		Order of the number of threads sharing L2 cache
- * @hw.l3_cat_shift:		Order of the number of threads sharing L3 cache
- * @hw.lapic_ids:		IDs of LAPICs of all threads
- * @hw.reserved:		Reserved for alignment and should be 0
- * @sw.max_vcpus_per_vm:	Maximum number of vCPU of a VM
- * @sw.max_vms:			Maximum number of VM
- * @sw.vm_config_size:		Size of configuration of a VM
- * @sw.vm_configss_addr:	Memory address which user space provided to
- *				store the VM configurations
- * @sw.max_kata_containers:	Maximum number of VM for Kata containers
- * @sw.reserved:		Reserved for alignment and should be 0
+ * @brief - Information of a platform from hypervisor
  *
  * If vm_configs_addr is provided, the driver uses a bounce buffer (kmalloced
  * for continuous memory region) to fetch VM configurations data from the
@@ -245,19 +232,33 @@ struct acrn_ioreq_notify {
  */
 struct acrn_platform_info {
 	struct {
+		/** Physical CPU number of the platform */
 		__u16	cpu_num;
+		/** Version of this structure */
 		__u16	version;
+		/** Order of the number of threads sharing L2 cache */
 		__u32	l2_cat_shift;
+		/** Order of the number of threads sharing L3 cache */
 		__u32	l3_cat_shift;
+		/** IDs of LAPICs of all threads */
 		__u8	lapic_ids[ACRN_PLATFORM_LAPIC_IDS_MAX];
+		/** Reserved for alignment and should be 0 */
 		__u8	reserved[52];
 	} hw;
 
 	struct {
+		/** Maximum number of vCPU of a VM */
 		__u16	max_vcpus_per_vm;
+		/** Maximum number of VM */
 		__u16	max_vms;
+		/** Size of configuration of a VM */
 		__u32	vm_config_size;
+
+		/** Memory address which user space provided to
+		 *  store the VM configurations
+		 */
 		void	*vm_configs_addr;
+		/** Maximum number of VM for Kata containers */
 		__u64	max_kata_containers;
 		__u8	reserved[104];
 	} sw;
