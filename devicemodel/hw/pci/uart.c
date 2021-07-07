@@ -89,7 +89,7 @@ pci_uart_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char *tmp, *val = NULL;
 	bool is_hv_land = false;
 	uint32_t vuart_idx;
-	struct acrn_emul_dev vdev = {};
+	struct acrn_vdev vdev = {};
 	int32_t err = 0;
 
 	if (opts != NULL) {
@@ -116,8 +116,8 @@ pci_uart_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pci_emul_alloc_bar(dev, 0, PCIBAR_MEM32, 256);
 		pci_emul_alloc_bar(dev, 1, PCIBAR_MEM32, PAGE_SIZE);
 		dev->arg = NULL;
-		vdev.dev_id.fields.vendor_id = COM_VENDOR;
-		vdev.dev_id.fields.device_id = COM_DEV;
+		vdev.id.fields.vendor = COM_VENDOR;
+		vdev.id.fields.device = COM_DEV;
 		vdev.slot = PCI_BDF(dev->bus, dev->slot, dev->func);
 		vdev.io_addr[0] = pci_get_cfgdata32(dev, PCIR_BAR(0));
 		vdev.io_addr[1] = pci_get_cfgdata32(dev, PCIR_BAR(1));
@@ -150,11 +150,11 @@ static void
 pci_uart_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct uart_vdev *uart = (struct uart_vdev *)dev->arg;
-	struct acrn_emul_dev emul_dev = {};
+	struct acrn_vdev emul_dev = {};
 
 	if (uart == NULL) {
-		emul_dev.dev_id.fields.vendor_id = COM_VENDOR;
-		emul_dev.dev_id.fields.device_id = COM_DEV;
+		emul_dev.id.fields.vendor = COM_VENDOR;
+		emul_dev.id.fields.device = COM_DEV;
 		emul_dev.slot = PCI_BDF(dev->bus, dev->slot, dev->func);
 		vm_remove_hv_vdev(ctx, &emul_dev);
 		return;

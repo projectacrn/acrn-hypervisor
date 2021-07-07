@@ -361,7 +361,7 @@ static void deinit_ivshmem_vdev(struct pci_vdev *vdev)
  * @pre vm != NULL
  * @pre dev != NULL
  */
-int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev)
+int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 {
 	uint32_t i;
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
