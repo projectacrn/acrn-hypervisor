@@ -186,7 +186,7 @@ static void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
  * for the current platform.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall.
- * @param param1 GPA pointer to struct hc_platform_info.
+ * @param param1 GPA pointer to struct acrn_platform_info.
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non zero in case of error.
@@ -195,7 +195,7 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
 		uint64_t param1, __unused uint64_t param2)
 {
 	struct acrn_vm *vm = vcpu->vm;
-	struct hc_platform_info pi = { 0 };
+	struct acrn_platform_info pi = { 0 };
 	uint32_t entry_size = sizeof(struct acrn_vm_config);
 	int32_t ret;
 
@@ -205,22 +205,22 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
 		uint16_t i;
 		uint16_t pcpu_nums = get_pcpu_nums();
 
-		get_cache_shift(&pi.l2_cat_shift, &pi.l3_cat_shift);
+		get_cache_shift(&pi.hw.l2_cat_shift, &pi.hw.l3_cat_shift);
 
-		for (i = 0U; i < min(pcpu_nums, MAX_PLATFORM_LAPIC_IDS); i++) {
-			pi.lapic_ids[i] = per_cpu(lapic_id, i);
+		for (i = 0U; i < min(pcpu_nums, ACRN_PLATFORM_LAPIC_IDS_MAX); i++) {
+			pi.hw.lapic_ids[i] = per_cpu(lapic_id, i);
 		}
 
-		pi.cpu_num = pcpu_nums;
-		pi.version = 0x100;  /* version 1.0; byte[1:0] = major:minor version */
-		pi.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
-		pi.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
-		pi.max_vms = CONFIG_MAX_VM_NUM;
-		pi.vm_config_entry_size = entry_size;
+		pi.hw.cpu_num = pcpu_nums;
+		pi.hw.version = 0x100;  /* version 1.0; byte[1:0] = major:minor version */
+		pi.sw.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
+		pi.sw.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
+		pi.sw.max_vms = CONFIG_MAX_VM_NUM;
+		pi.sw.vm_config_size = entry_size;
 
 		/* If it wants to get the vm_configs info */
-		if (pi.vm_configs_addr != 0UL) {
-			ret = copy_to_gpa(vm, (void *)get_vm_config(0U), pi.vm_configs_addr, entry_size * pi.max_vms);
+		if (pi.sw.vm_configs_addr != 0UL) {
+			ret = copy_to_gpa(vm, (void *)get_vm_config(0U), pi.sw.vm_configs_addr, entry_size * pi.sw.max_vms);
 		}
 
 		if (ret == 0) {

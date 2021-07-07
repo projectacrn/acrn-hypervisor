@@ -61,7 +61,7 @@ int32_t hcall_get_api_version(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall.
  * @param target_vm not used
- * @param param1 GPA pointer to struct hc_platform_info.
+ * @param param1 GPA pointer to struct acrn_platform_info.
  * @param param2 not used
  *
  * @pre is_sos_vm(vcpu->vm)
