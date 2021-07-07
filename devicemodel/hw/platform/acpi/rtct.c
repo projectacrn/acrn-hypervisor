@@ -39,7 +39,7 @@
 static uint16_t guest_vcpu_num;
 static uint32_t guest_l2_cat_shift;
 static uint32_t guest_l3_cat_shift;
-static uint32_t guest_lapicid_tbl[MAX_PLATFORM_LAPIC_IDS];
+static uint32_t guest_lapicid_tbl[ACRN_PLATFORM_LAPIC_IDS_MAX];
 
 static uint64_t software_sram_base_hpa;
 static uint64_t software_sram_size;
@@ -281,7 +281,7 @@ static int init_vrtct_v1(struct acpi_table_hdr *vrtct, struct acpi_table_hdr *na
 	struct rtct_entry *entry;
 	struct rtct_entry_data_ssram *ssram;
 	struct rtct_entry_data_mem_hi_latency *mem_hi;
-	uint32_t lapicids[MAX_PLATFORM_LAPIC_IDS];
+	uint32_t lapicids[ACRN_PLATFORM_LAPIC_IDS_MAX];
 
 	foreach_rtct_entry(native_rtct, entry) {
 		if (entry->type == RTCT_ENTRY_TYPE_SSRAM) {
@@ -289,7 +289,7 @@ static int init_vrtct_v1(struct acpi_table_hdr *vrtct, struct acpi_table_hdr *na
 			plapic_num = (entry->size - RTCT_SSRAM_HEADER_SIZE) / sizeof(uint32_t);
 			ssram =  (struct rtct_entry_data_ssram *)entry->data;
 
-			memset(lapicids, 0, sizeof(lapicids[MAX_PLATFORM_LAPIC_IDS]));
+			memset(lapicids, 0, sizeof(lapicids[ACRN_PLATFORM_LAPIC_IDS_MAX]));
 			vlapic_num = 0;
 			for (i = 0; i < plapic_num; i++) {
 				if (is_pcpu_assigned_to_guest(ssram->apic_id_tbl[i])) {
@@ -391,7 +391,7 @@ static int passthru_rtct_to_guest(struct acpi_table_hdr *vrtct, struct acpi_tabl
 	return  0;
 }
 
-static int init_guest_lapicid_tbl(struct platform_info *platform_info, uint64_t guest_pcpu_bitmask)
+static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint64_t guest_pcpu_bitmask)
 {
 	int pcpu_id = 0, vcpu_id = 0;
 
@@ -440,11 +440,11 @@ uint64_t get_software_sram_size(void)
 uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 {
 #define PTCT_BUF_SIZE 4096
-	struct acrn_vm_config vm_cfg;
+	struct acrn_vm_config_header vm_cfg;
 	struct acpi_table_hdr *rtct_cfg, *vrtct = NULL;
 	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
 	uint32_t gpu_rsvmem_base_gpa = 0;
-	struct platform_info platform_info;
+	struct acrn_platform_info platform_info;
 
 	if ((cfg == NULL) || (ctx == NULL))
 		return NULL;
@@ -464,7 +464,7 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 		pr_err("%s, get VM configuration fail.\n", __func__);
 		goto error;
 	}
-	assert(platform_info.cpu_num <= MAX_PLATFORM_LAPIC_IDS);
+	assert(platform_info.hw.cpu_num <= ACRN_PLATFORM_LAPIC_IDS_MAX);
 
 	/*
 	 * pCPU bitmask of VM is configured in hypervisor by default but can be
@@ -492,8 +492,8 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 		__func__, dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask);
 
 	guest_vcpu_num = bitmap_weight(guest_pcpu_bitmask);
-	guest_l2_cat_shift = platform_info.l2_cat_shift;
-	guest_l3_cat_shift = platform_info.l3_cat_shift;
+	guest_l2_cat_shift = platform_info.hw.l2_cat_shift;
+	guest_l3_cat_shift = platform_info.hw.l3_cat_shift;
 
 	if (init_guest_lapicid_tbl(&platform_info, guest_pcpu_bitmask) < 0) {
 		pr_err("%s,init guest lapicid table fail.\n", __func__);

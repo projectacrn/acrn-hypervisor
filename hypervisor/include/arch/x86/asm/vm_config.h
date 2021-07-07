@@ -65,21 +65,6 @@
 				.uuid = KATA_VM_UUID##idx,	\
 				.severity = SEVERITY_STANDARD_VM
 
-/*
- * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
- * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
- * POST_LAUNCHED_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
- *
- * Assumption: vm_configs array is completely initialized w.r.t. load_order member of
- * 		acrn_vm_config for all the VMs.
- */
-enum acrn_vm_load_order {
-	PRE_LAUNCHED_VM = 0,
-	SOS_VM,
-	POST_LAUNCHED_VM,	/* Launched by Devicemodel in SOS_VM */
-	MAX_LOAD_ORDER
-};
-
 /* ACRN guest severity */
 enum acrn_vm_severity {
 	SEVERITY_SAFETY_VM = 0x40U,

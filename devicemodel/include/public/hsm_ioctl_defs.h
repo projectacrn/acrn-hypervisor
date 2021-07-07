@@ -52,8 +52,13 @@
 #ifndef	_VHM_IOCTL_DEFS_H_
 #define	_VHM_IOCTL_DEFS_H_
 
+#include <linux/types.h>
+
 /* Commmon structures for ACRN/HSM/DM */
 #include "acrn_common.h"
+
+/* The ioctl type, documented in ioctl-number.rst */
+#define ACRN_IOCTL_TYPE			0xA2
 
 /*
  * Commmon IOCTL ID defination for HSM/DM
@@ -61,9 +66,11 @@
 #define _IC_ID(x, y) (((x)<<24)|(y))
 #define IC_ID 0x43UL
 
-/* General */
-#define IC_ID_GEN_BASE                  0x0UL
-#define IC_GET_PLATFORM_INFO           _IC_ID(IC_ID, IC_ID_GEN_BASE + 0x03)
+/*
+ * Common IOCTL IDs definition for ACRN userspace
+ */
+#define ACRN_IOCTL_GET_PLATFORM_INFO	\
+	_IOR(ACRN_IOCTL_TYPE, 0x03, struct acrn_platform_info)
 
 /* VM management */
 #define IC_ID_VM_BASE                  0x10UL
@@ -280,95 +287,46 @@ struct ioreq_notify {
 	uint32_t vcpu;
 };
 
-enum acrn_vm_load_order {
-	PRE_LAUNCHED_VM = 0,
-	SOS_VM,
-	POST_LAUNCHED_VM,
-	MAX_LOAD_ORDER
+#define ACRN_PLATFORM_LAPIC_IDS_MAX	64
+/**
+ * struct acrn_platform_info - Information of a platform from hypervisor
+ * @hw.cpu_num:			Physical CPU number of the platform
+ * @hw.version:			Version of this structure
+ * @hw.l2_cat_shift:		Order of the number of threads sharing L2 cache
+ * @hw.l3_cat_shift:		Order of the number of threads sharing L3 cache
+ * @hw.lapic_ids:		IDs of LAPICs of all threads
+ * @hw.reserved:		Reserved for alignment and should be 0
+ * @sw.max_vcpus_per_vm:	Maximum number of vCPU of a VM
+ * @sw.max_vms:			Maximum number of VM
+ * @sw.vm_config_size:		Size of configuration of a VM
+ * @sw.vm_configss_addr:	Memory address which user space provided to
+ *				store the VM configurations
+ * @sw.max_kata_containers:	Maximum number of VM for Kata containers
+ * @sw.reserved:		Reserved for alignment and should be 0
+ *
+ * If vm_configs_addr is provided, the driver uses a bounce buffer (kmalloced
+ * for continuous memory region) to fetch VM configurations data from the
+ * hypervisor.
+ */
+struct acrn_platform_info {
+	struct {
+		__u16	cpu_num;
+		__u16	version;
+		__u32	l2_cat_shift;
+		__u32	l3_cat_shift;
+		__u8	lapic_ids[ACRN_PLATFORM_LAPIC_IDS_MAX];
+		__u8	reserved[52];
+	} hw;
+
+	struct {
+		__u16	max_vcpus_per_vm;
+		__u16	max_vms;
+		__u32	vm_config_size;
+		void	*vm_configs_addr;
+		__u64	max_kata_containers;
+		__u8	reserved[104];
+	} sw;
 };
-
-/**
- * @brief data structure to parse configuration data of VM.
- */
-struct acrn_vm_config {
-#define MAX_VM_OS_NAME_LEN      32U
-	enum acrn_vm_load_order load_order;
-	char name[MAX_VM_OS_NAME_LEN];
-	const uint8_t uuid[16];
-	uint8_t reserved[2];
-	uint8_t severity;
-	uint64_t cpu_affinity;
-	uint64_t guest_flags;
-	/*
-	 * Ignore other members that are hypervisor specific, actual size
-	 * of current structure can be parsed by 'vm_config_entry_size' of
-	 * 'struct platform_info'.
-	 */
-} __aligned(8);
-
-/**
- * @brief data structure to track VHM platform information
- */
-struct platform_info {
-	/** Hardware Information */
-	/** Physical CPU number */
-	uint16_t cpu_num;
-
-	/** version of this structure */
-	uint16_t version;
-
-	uint32_t l2_cat_shift;
-	uint32_t l3_cat_shift;
-
-	#define MAX_PLATFORM_LAPIC_IDS 64U
-	/** pLAPIC ID list */
-	uint8_t lapic_ids[MAX_PLATFORM_LAPIC_IDS];
-
-	/**
-	 * sizeof(uint8_t reserved0[]) + sizeof(l2_cat_shift)
-	 * + sizeof(l3_cat_shift) + sizeof(uint8_t lapic_ids[]) = 124
-	 *
-	 * Note:
-	 * 1. DM needs to use the same logic as hypervisor to calculate vLAPIC IDs
-	 * based on physical APIC IDs and CPU affinity setting.
-	 *
-	 * 2. Can only support at most 116 cores. And it assumes LAPIC ID is 8bits
-	 * (X2APIC mode supports 32 bits)
-	 */
-	uint8_t reserved0[116U - MAX_PLATFORM_LAPIC_IDS];
-
-	/** Configuration Information */
-	/** Maximum vCPU number for one VM. */
-	uint16_t max_vcpus_per_vm;
-
-	/** Maximum Kata container number in SOS VM */
-	uint8_t max_kata_containers;
-
-	uint8_t reserved1[7];
-
-	/** Number of configured VMs */
-	uint16_t max_vms;
-
-	/**
-	 * The size of acrn_vm_config is various on different platforms.
-	 * This is the size of this struct which is used by the caller
-	 * to parse the vm_configs array.
-	 */
-	uint32_t vm_config_entry_size;
-
-	/**
-	 * Address to an array of struct acrn_vm_config, containing all
-	 * the configurations of all VMs. VHM treats it as an opague data
-	 * structure.
-	 *
-	 * The size of one array element is vm_config_entry_size while
-	 * the number of elements is max_vms.
-	 */
-	uint64_t vm_configs_addr;
-
-	/** Align the size of Configuration info to 128Bytes. */
-	uint8_t reserved2[104];
-} __aligned(8);
 
 struct acrn_ioeventfd {
 #define ACRN_IOEVENTFD_FLAG_PIO		0x01
