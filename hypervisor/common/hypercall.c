@@ -850,7 +850,7 @@ int32_t hcall_gpa_to_hpa(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __un
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_assign_pcidev including assign PCI device info
+ *              acrn_pcidev including assign PCI device info
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -860,7 +860,7 @@ int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 {
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
-	struct acrn_assign_pcidev pcidev;
+	struct acrn_pcidev pcidev;
 
 	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
 	if (is_created_vm(target_vm)) {
@@ -880,7 +880,7 @@ int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_assign_pcidev including deassign PCI device info
+ *              acrn_pcidev including deassign PCI device info
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -890,7 +890,7 @@ int32_t hcall_deassign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 {
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
-	struct acrn_assign_pcidev pcidev;
+	struct acrn_pcidev pcidev;
 
 	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
 	if ((is_paused_vm(target_vm) || is_created_vm(target_vm))) {

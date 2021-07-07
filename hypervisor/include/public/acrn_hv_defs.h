@@ -272,40 +272,6 @@ struct hc_ptdev_irq {
 } __aligned(8);
 
 /**
- * @brief Info to assign or deassign PCI for a VM
- *
- * the parameter for HC_ASSIGN_PCIDEV or HC_DEASSIGN_PCIDEV hypercall
- */
-struct acrn_assign_pcidev {
-#define QUIRK_PTDEV    (1U << 0)    /* We will only handle general part in HV, others in DM */
-	/** the type of the the pass-through PCI device */
-	uint32_t type;
-
-	/** virtual BDF# of the pass-through PCI device */
-	uint16_t virt_bdf;
-
-	/** physical BDF# of the pass-through PCI device */
-	uint16_t phys_bdf;
-
-	/** the PCI Interrupt Line, initialized by ACRN-DM, which is RO and
-	 *  ideally not used for pass-through MSI/MSI-x devices.
-	 */
-	uint8_t intr_line;
-
-	/** the PCI Interrupt Pin, initialized by ACRN-DM, which is RO and
-	 *  ideally not used for pass-through MSI/MSI-x devices.
-	 */
-	uint8_t intr_pin;
-
-	/** the base address of the PCI BAR, initialized by ACRN-DM. */
-	uint32_t bar[6];
-
-	/** reserved for extension */
-	uint32_t rsvd2[6];
-
-} __attribute__((aligned(8)));
-
-/**
  * @brief Info to assign or deassign a MMIO device for a VM
  *
  * the parameter for HC_ASSIGN_MMIODEV or HC_DEASSIGN_MMIODEV hypercall

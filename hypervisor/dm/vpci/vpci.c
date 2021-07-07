@@ -670,7 +670,7 @@ static void vpci_init_vdevs(struct acrn_vm *vm)
  * @pre tgt_vm != NULL
  * @pre pcidev != NULL
  */
-int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev)
+int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev)
 {
 	int32_t ret = 0;
 	uint32_t idx;
@@ -743,7 +743,7 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
  * @pre tgt_vm != NULL
  * @pre pcidev != NULL
  */
-int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev)
+int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev)
 {
 	int32_t ret = 0;
 	struct pci_vdev *parent_vdev, *vdev;

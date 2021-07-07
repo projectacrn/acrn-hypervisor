@@ -429,7 +429,7 @@ get_gpu_rsvmem_size()
  */
 void
 passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
-			struct acrn_assign_pcidev *pcidev, uint16_t device)
+			struct acrn_pcidev *pcidev, uint16_t device)
 {
 	uint32_t opregion_phys, dsm_mask_val;
 
@@ -510,7 +510,7 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 	vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_opregion_gpa, GPU_OPREGION_SIZE, gpu_opregion_hpa);
 	vm_map_ptdev_mmio(ctx, 0, 2, 0, gpu_opregion_gpa, GPU_OPREGION_SIZE, gpu_opregion_hpa);
 
-	pcidev->type = QUIRK_PTDEV;
+	pcidev->type = ACRN_PTDEV_QUIRK_ASSIGN;
 }
 
 static int
@@ -554,7 +554,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	bool enable_ptm = false;
 	int vrp_sec_bus = 0;
 	int vmsix_on_msi_bar_id = -1;
-	struct acrn_assign_pcidev pcidev = {};
+	struct acrn_pcidev pcidev = {};
 	uint16_t vendor = 0, device = 0;
 
 	ptdev = NULL;
@@ -740,7 +740,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct passthru_dev *ptdev;
 	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
-	struct acrn_assign_pcidev pcidev = {};
+	struct acrn_pcidev pcidev = {};
 	uint16_t phys_bdf = 0;
 	char reset_path[60];
 	int fd;

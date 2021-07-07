@@ -117,9 +117,10 @@
 	_IOW(ACRN_IOCTL_TYPE, 0x53, struct acrn_ptdev_irq)
 #define ACRN_IOCTL_RESET_PTDEV_INTR	\
 	_IOW(ACRN_IOCTL_TYPE, 0x54, struct acrn_ptdev_irq)
-#define IC_RESET_PTDEV_INTR_INFO       _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x04)
-#define IC_ASSIGN_PCIDEV               _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x05)
-#define IC_DEASSIGN_PCIDEV             _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x06)
+#define ACRN_IOCTL_ASSIGN_PCIDEV	\
+	_IOW(ACRN_IOCTL_TYPE, 0x55, struct acrn_pcidev)
+#define ACRN_IOCTL_DEASSIGN_PCIDEV	\
+	_IOW(ACRN_IOCTL_TYPE, 0x56, struct acrn_pcidev)
 #define IC_ASSIGN_MMIODEV              _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x07)
 #define IC_DEASSIGN_MMIODEV            _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x08)
 #define IC_ADD_HV_VDEV                 _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x09)
@@ -178,39 +179,6 @@ struct acrn_vm_memmap {
 	/** the length of memory range mapped */
 	__u64	len;
 };
-
-/**
- * @brief Info to assign or deassign PCI for a VM
- *
- */
-struct acrn_assign_pcidev {
-#define QUIRK_PTDEV	(1 << 0)	/* We will only handle general part in HV, others in DM */
-	/** the type of the the pass-through PCI device */
-	uint32_t type;
-
-	/** virtual BDF# of the pass-through PCI device */
-	uint16_t virt_bdf;
-
-	/** physical BDF# of the pass-through PCI device */
-	uint16_t phys_bdf;
-
-	/** the PCI Interrupt Line, initialized by ACRN-DM, which is RO and
-	 *  ideally not used for pass-through MSI/MSI-x devices.
-	 */
-	uint8_t intr_line;
-
-	/** the PCI Interrupt Pin, initialized by ACRN-DM, which is RO and
-	 *  ideally not used for pass-through MSI/MSI-x devices.
-	 */
-	uint8_t intr_pin;
-
-	/** the base address of the PCI BAR, initialized by ACRN-DM. */
-	uint32_t bar[6];
-
-	/** reserved for extension */
-	uint32_t rsvd2[6];
-
-} __attribute__((aligned(8)));
 
 /**
  * @brief Info to assign or deassign a MMIO device for a VM
