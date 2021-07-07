@@ -672,13 +672,13 @@ vm_irqfd(struct vmctx *ctx, struct acrn_irqfd *args)
 }
 
 int
-vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg, struct platform_info *plat_info)
+vm_get_config(struct vmctx *ctx, struct acrn_vm_config_header *vm_cfg, struct acrn_platform_info *plat_info)
 {
 #define VM_CFG_BUFF_SIZE 0x8000
 	int i, err = 0;
 	uint8_t *configs_buff;
-	struct acrn_vm_config *pcfg;
-	struct platform_info platform_info;
+	struct acrn_vm_config_header *pcfg;
+	struct acrn_platform_info platform_info;
 
 	if ((ctx == NULL) || (vm_cfg == NULL))
 		return -1;
@@ -690,31 +690,31 @@ vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg, struct platform_
 	}
 
 	bzero(&platform_info, sizeof(platform_info));
-	platform_info.vm_configs_addr = (uint64_t)configs_buff;
-	err = ioctl(ctx->fd, IC_GET_PLATFORM_INFO, &platform_info);
+	platform_info.sw.vm_configs_addr = configs_buff;
+	err = ioctl(ctx->fd, ACRN_IOCTL_GET_PLATFORM_INFO, &platform_info);
 	if (err) {
 		pr_err("%s, failed: get platform info.\n", __func__);
 		goto exit;
 	}
-	assert(VM_CFG_BUFF_SIZE > (platform_info.max_vms * platform_info.vm_config_entry_size));
+	assert(VM_CFG_BUFF_SIZE > (platform_info.sw.max_vms * platform_info.sw.vm_config_size));
 
-	for (i = 0; i < platform_info.max_vms; i++) {
-		pcfg = (struct acrn_vm_config *)(configs_buff + (i * platform_info.vm_config_entry_size));
+	for (i = 0; i < platform_info.sw.max_vms; i++) {
+		pcfg = (struct acrn_vm_config_header *)(configs_buff + (i * platform_info.sw.vm_config_size));
 		if (!uuid_compare(ctx->vm_uuid, pcfg->uuid))
 			break;
 	}
 
-	if (i == platform_info.max_vms) {
+	if (i == platform_info.sw.max_vms) {
 		pr_err("%s, Not found target VM.\n", __func__);
 		err = -1;
 		goto exit;
 	}
 
-	memcpy((void *)vm_cfg, (void *)pcfg, sizeof(struct acrn_vm_config));
+	memcpy((void *)vm_cfg, (void *)pcfg, sizeof(struct acrn_vm_config_header));
 	if (plat_info != NULL) {
-		memcpy((void *)plat_info, (void *)&platform_info, sizeof(struct platform_info));
+		memcpy((void *)plat_info, (void *)&platform_info, sizeof(struct acrn_platform_info));
 		pr_info("%s, l2_cat_shift=%u, l3_cat_shift=%u\n",
-			__func__, platform_info.l2_cat_shift, platform_info.l3_cat_shift);
+			__func__, platform_info.hw.l2_cat_shift, platform_info.hw.l3_cat_shift);
 	}
 
 exit:

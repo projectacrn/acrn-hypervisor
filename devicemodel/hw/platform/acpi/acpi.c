@@ -274,17 +274,17 @@ int pcpuid_from_vcpuid(uint64_t guest_pcpu_bitmask, int vcpu_id)
 	return find_nth_set_bit_index(guest_pcpu_bitmask, vcpu_id);
 }
 
-int lapicid_from_pcpuid(struct platform_info *plat_info, int pcpu_id)
+int lapicid_from_pcpuid(struct acrn_platform_info *plat_info, int pcpu_id)
 {
-	return plat_info->lapic_ids[pcpu_id];
+	return plat_info->hw.lapic_ids[pcpu_id];
 }
 
 static int
 basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 {
 	int i;
-	struct acrn_vm_config vm_cfg;
-	struct platform_info plat_info;
+	struct acrn_vm_config_header vm_cfg;
+	struct acrn_platform_info plat_info;
 	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
 
 	if (vm_get_config(ctx, &vm_cfg, &plat_info)) {
@@ -339,9 +339,9 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 			return -1;
 		}
 
-		assert(pcpu_id < MAX_PLATFORM_LAPIC_IDS);
-		if (pcpu_id >= MAX_PLATFORM_LAPIC_IDS) {
-			pr_err("%s,Err: pcpu id %u should be less than MAX_PLATFORM_LAPIC_IDS.\n", __func__, pcpu_id);
+		assert(pcpu_id < ACRN_PLATFORM_LAPIC_IDS_MAX);
+		if (pcpu_id >= ACRN_PLATFORM_LAPIC_IDS_MAX) {
+			pr_err("%s,Err: pcpu id %u should be less than ACRN_PLATFORM_LAPIC_IDS_MAX.\n", __func__, pcpu_id);
 			return -1;
 		}
 

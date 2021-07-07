@@ -663,6 +663,37 @@ struct acrn_intr_monitor {
 #define INTR_CMD_GET_DATA 0U
 #define INTR_CMD_DELAY_INT 1U
 
+/*
+ * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
+ * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
+ * POST_LAUNCHED_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
+ *
+ * Assumption: vm_configs array is completely initialized w.r.t. load_order member of
+ * 		acrn_vm_config for all the VMs.
+ */
+enum acrn_vm_load_order {
+	PRE_LAUNCHED_VM = 0,
+	SOS_VM,
+	POST_LAUNCHED_VM,	/* Launched by Devicemodel in SOS_VM */
+	MAX_LOAD_ORDER
+};
+
+#define MAX_VM_OS_NAME_LEN      32U
+
+struct acrn_vm_config_header {
+       enum acrn_vm_load_order load_order;
+       char name[MAX_VM_OS_NAME_LEN];
+       const uint8_t uuid[16];
+       uint8_t reserved[2];
+       uint8_t severity;
+       uint64_t cpu_affinity;
+       uint64_t guest_flags;
+       /*
+        * The following are hv-specific members and are thus opaque.
+        * vm_config_entry_size determines the real size of this structure.
+        */
+} __aligned(8);
+
 /**
  * @brief Info to configure virtual root port
  *
