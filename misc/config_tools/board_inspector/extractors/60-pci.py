@@ -24,9 +24,9 @@ def collect_hostbridge_resources(bus_node):
                 add_child(bus_node, "resource", type="memory", min=hex(begin), max=hex(end), len=hex(end - begin + 1))
 
 def parse_msi(cap_node, cap_struct):
+    add_child(cap_node, "count", str(1 << cap_struct.multiple_message_capable))
     if cap_struct.multiple_message_capable > 0:
-        multiple_message_node = add_child(cap_node, "capability", id="multiple-message")
-        add_child(multiple_message_node, "count", str(1 << cap_struct.multiple_message_capable))
+        add_child(cap_node, "capability", id="multiple-message")
 
     if cap_struct.address_64bit:
         add_child(cap_node, "capability", id="64-bit address")
@@ -34,8 +34,16 @@ def parse_msi(cap_node, cap_struct):
     if cap_struct.per_vector_masking_capable:
         add_child(cap_node, "capability", id="per-vector masking")
 
+def parse_msix(cap_node, cap_struct):
+    add_child(cap_node, "table_size", str(cap_struct.table_size))
+    add_child(cap_node, "table_bir", str(cap_struct.table_bir))
+    add_child(cap_node, "table_offset", hex(cap_struct.table_offset_z))
+    add_child(cap_node, "pba_bir", str(cap_struct.pba_bir))
+    add_child(cap_node, "pba_offset", hex(cap_struct.pba_offset_z))
+
 cap_parsers = {
     "MSI": parse_msi,
+    "MSI-X": parse_msix,
 }
 
 def parse_device(bus_node, device_path):
