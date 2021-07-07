@@ -43,7 +43,7 @@ static int32_t read_vmcs9900_cfg(const struct pci_vdev *vdev,
 
 static int32_t vmcs9900_mmio_handler(struct io_request *io_req, void *data)
 {
-	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio = &io_req->reqs.mmio_request;
 	struct pci_vdev *vdev = (struct pci_vdev *)data;
 	struct acrn_vuart *vu = vdev->priv_data;
 	struct pci_vbar *vbar = &vdev->vbars[MCS9900_MMIO_BAR];
@@ -51,7 +51,7 @@ static int32_t vmcs9900_mmio_handler(struct io_request *io_req, void *data)
 
 	offset = mmio->address - vbar->base_gpa;
 
-	if (mmio->direction == REQUEST_READ) {
+	if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 		mmio->value = vuart_read_reg(vu, offset);
 	} else {
 		vuart_write_reg(vu, offset, (uint8_t) mmio->value);

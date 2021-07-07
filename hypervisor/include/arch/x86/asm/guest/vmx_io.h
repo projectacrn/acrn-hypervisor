@@ -52,7 +52,7 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu);
  * @pre io_req->io_type == REQ_PORTIO
  *
  * @remark This function must be called when \p io_req is completed, after
- * either a previous call to emulate_io() returning 0 or the corresponding VHM
+ * either a previous call to emulate_io() returning 0 or the corresponding HSM
  * request having transferred to the COMPLETE state.
  */
 void emulate_pio_complete(struct acrn_vcpu *vcpu, const struct io_request *io_req);
@@ -82,10 +82,10 @@ void   allow_guest_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_
 void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_t nbytes);
 
 /**
- * @brief Fire VHM interrupt to SOS
+ * @brief Fire HSM interrupt to SOS
  *
  * @return None
  */
-void arch_fire_vhm_interrupt(void);
+void arch_fire_hsm_interrupt(void);
 
 #endif /* IO_EMUL_H */

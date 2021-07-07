@@ -188,7 +188,7 @@ static void create_ivshmem_device(struct pci_vdev *vdev)
 static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
 {
 	union ivshmem_doorbell doorbell;
-	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio = &io_req->reqs.mmio_request;
 	struct pci_vdev *vdev = (struct pci_vdev *) data;
 	struct ivshmem_device *ivs_dev = (struct ivshmem_device *) vdev->priv_data;
 	uint64_t offset = mmio->address - vdev->vbars[IVSHMEM_MMIO_BAR].base_gpa;
@@ -200,7 +200,7 @@ static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
 		 * IVSHMEM_IV_POS_REG is Read-Only register and IVSHMEM_DOORBELL_REG
 		 * is Write-Only register, they are used for interrupt.
 		 */
-		if (mmio->direction == REQUEST_READ) {
+		if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 			if (offset != IVSHMEM_DOORBELL_REG) {
 				mmio->value = ivs_dev->mmio.data[offset >> 2U];
 			} else {

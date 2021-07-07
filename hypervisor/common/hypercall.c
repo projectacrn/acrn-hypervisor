@@ -527,8 +527,7 @@ int32_t hcall_inject_msi(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __un
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
- * @param param2 guest physical address. This gpa points to
- *              struct acrn_set_ioreq_buffer
+ * @param param2 guest physical address. This gpa points to buffer address
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -542,21 +541,21 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 	int32_t ret = -1;
 
 	if (is_created_vm(target_vm)) {
-		struct acrn_set_ioreq_buffer iobuf;
+		uint64_t iobuf;
 
 		if (copy_from_gpa(vm, &iobuf, param2, sizeof(iobuf)) == 0) {
 			dev_dbg(DBG_LEVEL_HYCALL, "[%d] SET BUFFER=0x%p",
-					target_vm->vm_id, iobuf.req_buf);
+					target_vm->vm_id, iobuf);
 
-			hpa = gpa2hpa(vm, iobuf.req_buf);
+			hpa = gpa2hpa(vm, iobuf);
 			if (hpa == INVALID_HPA) {
 				pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
-					__func__, vm->vm_id, iobuf.req_buf);
+					__func__, vm->vm_id, iobuf);
 				target_vm->sw.io_shared_page = NULL;
 			} else {
 				target_vm->sw.io_shared_page = hpa2hva(hpa);
-				for (i = 0U; i < VHM_REQUEST_MAX; i++) {
-					set_vhm_req_state(target_vm, i, REQ_STATE_FREE);
+				for (i = 0U; i < ACRN_IO_REQUEST_MAX; i++) {
+					set_io_req_state(target_vm, i, ACRN_IOREQ_STATE_FREE);
 				}
 				ret = 0;
 			}
@@ -1232,7 +1231,7 @@ int32_t hcall_set_callback_vector(__unused struct acrn_vcpu *vcpu, __unused stru
 		pr_err("%s: Invalid passed vector\n", __func__);
 		ret = -EINVAL;
 	} else {
-		set_vhm_notification_vector((uint32_t)param1);
+		set_hsm_notification_vector((uint32_t)param1);
 		ret = 0;
 	}
 

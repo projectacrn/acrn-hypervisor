@@ -556,7 +556,7 @@ get_vm_gsicount(const struct acrn_vm *vm)
 int32_t vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
 	struct acrn_single_vioapic *vioapic = (struct acrn_single_vioapic *)handler_private_data;
-	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio = &io_req->reqs.mmio_request;
 	uint64_t gpa = mmio->address;
 	int32_t ret = 0;
 
@@ -564,10 +564,10 @@ int32_t vioapic_mmio_access_handler(struct io_request *io_req, void *handler_pri
 	if (mmio->size == 4UL) {
 		uint32_t data = (uint32_t)mmio->value;
 
-		if (mmio->direction == REQUEST_READ) {
+		if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 			vioapic_mmio_rw(vioapic, gpa, &data, true);
 			mmio->value = (uint64_t)data;
-		} else if (mmio->direction == REQUEST_WRITE) {
+		} else if (mmio->direction == ACRN_IOREQ_DIR_WRITE) {
 			vioapic_mmio_rw(vioapic, gpa, &data, false);
 		} else {
 			ret = -EINVAL;

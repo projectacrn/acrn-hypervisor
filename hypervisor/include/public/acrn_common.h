@@ -18,26 +18,29 @@
 #include <types.h>
 
 /*
- * Common structures for ACRN/VHM/DM
+ * Common structures for ACRN/HSM/DM
  */
 
 /*
  * IO request
  */
-#define VHM_REQUEST_MAX 16U
 
-#define REQ_STATE_FREE          3U
-#define REQ_STATE_PENDING	0U
-#define REQ_STATE_COMPLETE	1U
-#define REQ_STATE_PROCESSING	2U
+#define ACRN_IO_REQUEST_MAX		16U
 
-#define REQ_PORTIO	0U
-#define REQ_MMIO	1U
-#define REQ_PCICFG	2U
-#define REQ_WP		3U
+#define ACRN_IOREQ_STATE_PENDING	0U
+#define ACRN_IOREQ_STATE_COMPLETE	1U
+#define ACRN_IOREQ_STATE_PROCESSING	2U
+#define ACRN_IOREQ_STATE_FREE		3U
 
-#define REQUEST_READ	0U
-#define REQUEST_WRITE	1U
+#define ACRN_IOREQ_TYPE_PORTIO		0U
+#define ACRN_IOREQ_TYPE_MMIO		1U
+#define ACRN_IOREQ_TYPE_PCICFG		2U
+#define ACRN_IOREQ_TYPE_WP		3U
+
+#define ACRN_IOREQ_DIR_READ		0U
+#define ACRN_IOREQ_DIR_WRITE		1U
+
+
 
 /* IOAPIC device model info */
 #define VIOAPIC_RTE_NUM	48U  /* vioapic pins */
@@ -72,11 +75,11 @@
 /**
  * @brief Representation of a MMIO request
  */
-struct mmio_request {
+struct acrn_mmio_request {
 	/**
 	 * @brief Direction of the access
 	 *
-	 * Either \p REQUEST_READ or \p REQUEST_WRITE.
+	 * Either \p ACRN_IOREQ_DIR_READ or \p ACRN_IOREQ_DIR_WRITE.
 	 */
 	uint32_t direction;
 
@@ -104,11 +107,11 @@ struct mmio_request {
 /**
  * @brief Representation of a port I/O request
  */
-struct pio_request {
+struct acrn_pio_request {
 	/**
 	 * @brief Direction of the access
 	 *
-	 * Either \p REQUEST_READ or \p REQUEST_WRITE.
+	 * Either \p ACRN_IOREQ_DIR_READ or \p ACRN_IOREQ_DIR_WRITE.
 	 */
 	uint32_t direction;
 
@@ -136,11 +139,11 @@ struct pio_request {
 /**
  * @brief Representation of a PCI configuration space access
  */
-struct pci_request {
+struct acrn_pci_request {
 	/**
 	 * @brief Direction of the access
 	 *
-	 * Either \p REQUEST_READ or \p REQUEST_WRITE.
+	 * Either \p ACRN_IOREQ_DIR_READ or \p ACRN_IOREQ_DIR_WRITE.
 	 */
 	uint32_t direction;
 
@@ -180,28 +183,21 @@ struct pci_request {
 	int32_t reg;
 } __aligned(8);
 
-union vhm_io_request {
-	struct pio_request pio;
-	struct pci_request pci;
-	struct mmio_request mmio;
-	int64_t reserved1[8];
-};
-
 /**
- * @brief 256-byte VHM requests
+ * @brief 256-byte I/O requests
  *
- * The state transitions of a VHM request are:
+ * The state transitions of a I/O request are:
  *
  *    FREE -> PENDING -> PROCESSING -> COMPLETE -> FREE -> ...
  *
  * When a request is in COMPLETE or FREE state, the request is owned by the
- * hypervisor. SOS (VHM or DM) shall not read or write the internals of the
+ * hypervisor. SOS (HSM or DM) shall not read or write the internals of the
  * request except the state.
  *
  * When a request is in PENDING or PROCESSING state, the request is owned by
  * SOS. The hypervisor shall not read or write the request other than the state.
  *
- * Based on the rules above, a typical VHM request lifecycle should looks like
+ * Based on the rules above, a typical I/O request lifecycle should looks like
  * the following.
  *
  * @verbatim embed:rst:leading-asterisk
@@ -270,9 +266,9 @@ union vhm_io_request {
  *      the hypervisor, as the hypervisor shall not access the request any more.
  *
  *   2. Due to similar reasons, setting state to COMPLETE is the last operation
- *      of request handling in VHM or clients in SOS.
+ *      of request handling in HSM or clients in SOS.
  */
-struct vhm_request {
+struct acrn_io_request {
 	/**
 	 * @brief Type of this request.
 	 *
@@ -297,13 +293,14 @@ struct vhm_request {
 	/**
 	 * @brief Details about this request.
 	 *
-	 * For REQ_PORTIO, this has type
-	 * pio_request. For REQ_MMIO and REQ_WP, this has type mmio_request. For
-	 * REQ_PCICFG, this has type pci_request.
-	 *
 	 * Byte offset: 64.
 	 */
-	union vhm_io_request reqs;
+	union {
+		struct acrn_pio_request		pio_request;
+		struct acrn_pci_request		pci_request;
+		struct acrn_mmio_request	mmio_request;
+		uint64_t			data[8];
+	} reqs;
 
 	/**
 	 * @brief Reserved.
@@ -313,27 +310,27 @@ struct vhm_request {
 	uint32_t reserved1;
 
 	/**
-	 * @brief The client which is distributed to handle this request.
-	 *
-	 * Accessed by VHM only.
+	 * @brief If this request has been handled by HSM driver.
 	 *
 	 * Byte offset: 132.
 	 */
-	int32_t client;
+	int32_t kernel_handled;
 
 	/**
 	 * @brief The status of this request.
 	 *
-	 * Taking REQ_STATE_xxx as values.
+	 * Taking ACRN_IOREQ_STATE_xxx as values.
 	 *
 	 * Byte offset: 136.
 	 */
 	uint32_t processed;
 } __aligned(256);
 
-union vhm_request_buffer {
-	struct vhm_request req_queue[VHM_REQUEST_MAX];
-	int8_t reserved[4096];
+struct acrn_io_request_buffer {
+	union {
+		struct acrn_io_request	req_slot[ACRN_IO_REQUEST_MAX];
+		int8_t			reserved[4096];
+	};
 } __aligned(4096);
 
 /**

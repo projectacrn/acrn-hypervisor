@@ -22,11 +22,11 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 		struct io_request *io_req = &vcpu->req;
 
 		/* Device model emulates PM1A for post-launched VMs */
-		io_req->io_type = REQ_PORTIO;
-		io_req->reqs.pio.direction = REQUEST_WRITE;
-		io_req->reqs.pio.address = VIRTUAL_PM1A_CNT_ADDR;
-		io_req->reqs.pio.size = 2UL;
-		io_req->reqs.pio.value = (VIRTUAL_PM1A_SLP_EN | (5U << 10U));
+		io_req->io_type = ACRN_IOREQ_TYPE_PORTIO;
+		io_req->reqs.pio_request.direction = ACRN_IOREQ_DIR_WRITE;
+		io_req->reqs.pio_request.address = VIRTUAL_PM1A_CNT_ADDR;
+		io_req->reqs.pio_request.size = 2UL;
+		io_req->reqs.pio_request.value = (VIRTUAL_PM1A_SLP_EN | (5U << 10U));
 
 		/* Inject pm1a S5 request to SOS to shut down the guest */
 		(void)emulate_io(vcpu, io_req);
@@ -76,7 +76,7 @@ static bool handle_reset_reg_read(struct acrn_vcpu *vcpu, __unused uint16_t addr
 		 * - reset control register 0xcf9: hide this from guests for now.
 		 * - FADT reset register: the read behavior is not defined in spec, keep it simple to return all '1'.
 		 */
-		vcpu->req.reqs.pio.value = ~0U;
+		vcpu->req.reqs.pio_request.value = ~0U;
 	}
 
 	return ret;
@@ -139,10 +139,10 @@ static bool handle_kb_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
 	if (is_sos_vm(vcpu->vm) && (bytes == 1U)) {
 		/* In case i8042 is defined as ACPI PNP device in BIOS, HV need expose physical 0x64 port. */
-		vcpu->req.reqs.pio.value = pio_read8(addr);
+		vcpu->req.reqs.pio_request.value = pio_read8(addr);
 	} else {
 		/* ACRN will not expose kbd controller to the guest in this case. */
-		vcpu->req.reqs.pio.value = ~0U;
+		vcpu->req.reqs.pio_request.value = ~0U;
 	}
 	return true;
 }

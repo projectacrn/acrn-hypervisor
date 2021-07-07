@@ -129,7 +129,7 @@ static void remap_one_vmsix_entry(const struct pci_vdev *vdev, uint32_t index)
  */
 static int32_t pt_vmsix_handle_table_mmio_access(struct io_request *io_req, void *priv_data)
 {
-	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct acrn_mmio_request *mmio = &io_req->reqs.mmio_request;
 	struct pci_vdev *vdev;
 	uint32_t index;
 	int32_t ret = 0;
@@ -138,7 +138,7 @@ static int32_t pt_vmsix_handle_table_mmio_access(struct io_request *io_req, void
 	if (vdev->user == vdev) {
 		index = rw_vmsix_table(vdev, io_req);
 
-		if ((mmio->direction == REQUEST_WRITE) && (index < vdev->msix.table_count)) {
+		if ((mmio->direction == ACRN_IOREQ_DIR_WRITE) && (index < vdev->msix.table_count)) {
 			if (vdev->msix.is_vmsix_on_msi) {
 				remap_one_vmsix_entry_on_msi(vdev, index);
 			} else {

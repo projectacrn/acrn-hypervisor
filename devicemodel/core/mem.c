@@ -150,7 +150,7 @@ mem_write(void *ctx, int vcpu, uint64_t gpa, uint64_t wval, int size, void *arg)
 }
 
 int
-emulate_mem(struct vmctx *ctx, struct mmio_request *mmio_req)
+emulate_mem(struct vmctx *ctx, struct acrn_mmio_request *mmio_req)
 {
 	uint64_t paddr = mmio_req->address;
 	int size = mmio_req->size;
@@ -179,7 +179,7 @@ emulate_mem(struct vmctx *ctx, struct mmio_request *mmio_req)
 	if (entry == NULL)
 		return -EINVAL;
 
-	if (mmio_req->direction == REQUEST_READ)
+	if (mmio_req->direction == ACRN_IOREQ_DIR_READ)
 		err = mem_read(ctx, 0, paddr, (uint64_t *)&mmio_req->value,
 				size, &entry->mr_param);
 	else

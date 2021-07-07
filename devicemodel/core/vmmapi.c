@@ -259,13 +259,13 @@ err:
 int
 vm_create_ioreq_client(struct vmctx *ctx)
 {
-	return ioctl(ctx->fd, IC_CREATE_IOREQ_CLIENT, 0);
+	return ioctl(ctx->fd, ACRN_IOCTL_CREATE_IOREQ_CLIENT, 0);
 }
 
 int
 vm_destroy_ioreq_client(struct vmctx *ctx)
 {
-	return ioctl(ctx->fd, IC_DESTROY_IOREQ_CLIENT, ctx->ioreq_client);
+	return ioctl(ctx->fd, ACRN_IOCTL_DESTROY_IOREQ_CLIENT, ctx->ioreq_client);
 }
 
 int
@@ -273,7 +273,7 @@ vm_attach_ioreq_client(struct vmctx *ctx)
 {
 	int error;
 
-	error = ioctl(ctx->fd, IC_ATTACH_IOREQ_CLIENT, ctx->ioreq_client);
+	error = ioctl(ctx->fd, ACRN_IOCTL_ATTACH_IOREQ_CLIENT, ctx->ioreq_client);
 
 	if (error) {
 		pr_err("attach ioreq client return %d "
@@ -289,13 +289,13 @@ int
 vm_notify_request_done(struct vmctx *ctx, int vcpu)
 {
 	int error;
-	struct ioreq_notify notify;
+	struct acrn_ioreq_notify notify;
 
 	bzero(&notify, sizeof(notify));
-	notify.client_id = ctx->ioreq_client;
+	notify.vmid = ctx->vmid;
 	notify.vcpu = vcpu;
 
-	error = ioctl(ctx->fd, IC_NOTIFY_REQUEST_FINISH, &notify);
+	error = ioctl(ctx->fd, ACRN_IOCTL_NOTIFY_REQUEST_FINISH, &notify);
 
 	if (error) {
 		pr_err("failed: notify request finish\n");
@@ -488,7 +488,7 @@ vm_reset(struct vmctx *ctx)
 void
 vm_clear_ioreq(struct vmctx *ctx)
 {
-	ioctl(ctx->fd, IC_CLEAR_VM_IOREQ, NULL);
+	ioctl(ctx->fd, ACRN_IOCTL_CLEAR_VM_IOREQ, NULL);
 }
 
 static enum vm_suspend_how suspend_mode = VM_SUSPEND_NONE;

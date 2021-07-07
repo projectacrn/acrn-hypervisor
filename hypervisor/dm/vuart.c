@@ -537,7 +537,7 @@ static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused siz
 {
 	uint16_t offset = offset_arg;
 	struct acrn_vuart *vu = find_vuart_by_port(vcpu->vm, offset);
-	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	if (vu != NULL) {
 		offset -= vu->port_base;

@@ -210,8 +210,7 @@ int32_t hcall_inject_msi(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
- * @param param2 guest physical address. This gpa points to
- *              struct acrn_set_ioreq_buffer
+ * @param param2 guest physical address. This gpa points to buffer address
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
