@@ -661,13 +661,13 @@ vm_intr_monitor(struct vmctx *ctx, void *intr_buf)
 int
 vm_ioeventfd(struct vmctx *ctx, struct acrn_ioeventfd *args)
 {
-	return ioctl(ctx->fd, IC_EVENT_IOEVENTFD, args);
+	return ioctl(ctx->fd, ACRN_IOCTL_IOEVENTFD, args);
 }
 
 int
 vm_irqfd(struct vmctx *ctx, struct acrn_irqfd *args)
 {
-	return ioctl(ctx->fd, IC_EVENT_IRQFD, args);
+	return ioctl(ctx->fd, ACRN_IOCTL_IRQFD, args);
 }
 
 int

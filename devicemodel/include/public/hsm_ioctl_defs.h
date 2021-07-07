@@ -133,10 +133,11 @@
 #define ACRN_IOCTL_PM_GET_CPU_STATE	\
 	_IOWR(ACRN_IOCTL_TYPE, 0x60, __u64)
 
-/* VHM eventfd */
-#define IC_ID_EVENT_BASE		0x70UL
-#define IC_EVENT_IOEVENTFD		_IC_ID(IC_ID, IC_ID_EVENT_BASE + 0x00)
-#define IC_EVENT_IRQFD			_IC_ID(IC_ID, IC_ID_EVENT_BASE + 0x01)
+/* HSM eventfd */
+#define ACRN_IOCTL_IOEVENTFD		\
+	_IOW(ACRN_IOCTL_TYPE, 0x70, struct acrn_ioeventfd)
+#define ACRN_IOCTL_IRQFD		\
+	_IOW(ACRN_IOCTL_TYPE, 0x71, struct acrn_irqfd)
 
 
 #define	ACRN_MEM_ACCESS_RIGHT_MASK	0x00000007U
