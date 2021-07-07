@@ -642,9 +642,9 @@ vm_reset_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf, uint16_t phys_bdf
 }
 
 int
-vm_set_vcpu_regs(struct vmctx *ctx, struct acrn_set_vcpu_regs *vcpu_regs)
+vm_set_vcpu_regs(struct vmctx *ctx, struct acrn_vcpu_regs *vcpu_regs)
 {
-	return ioctl(ctx->fd, IC_SET_VCPU_REGS, vcpu_regs);
+	return ioctl(ctx->fd, ACRN_IOCTL_SET_VCPU_REGS, vcpu_regs);
 }
 
 int

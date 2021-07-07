@@ -419,7 +419,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		__unused uint64_t param1, uint64_t param2)
 {
 	struct acrn_vm *vm = vcpu->vm;
-	struct acrn_set_vcpu_regs vcpu_regs;
+	struct acrn_vcpu_regs vcpu_regs;
 	struct acrn_vcpu *target_vcpu;
 	int32_t ret = -1;
 

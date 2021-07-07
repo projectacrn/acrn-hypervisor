@@ -310,7 +310,7 @@ acrn_sw_load_bzimage(struct vmctx *ctx)
 {
 	int ret, setup_size;
 
-	memset(&ctx->bsp_regs, 0, sizeof(struct acrn_set_vcpu_regs));
+	memset(&ctx->bsp_regs, 0, sizeof(struct acrn_vcpu_regs));
 	ctx->bsp_regs.vcpu_id = 0;
 
 	if (with_bootargs) {

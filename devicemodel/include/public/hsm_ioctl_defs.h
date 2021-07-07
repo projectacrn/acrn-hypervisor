@@ -72,7 +72,6 @@
 #define ACRN_IOCTL_GET_PLATFORM_INFO	\
 	_IOR(ACRN_IOCTL_TYPE, 0x03, struct acrn_platform_info)
 
-#define IC_ID_VM_BASE                  0x10UL
 #define ACRN_IOCTL_CREATE_VM		\
 	_IOWR(ACRN_IOCTL_TYPE, 0x10, struct acrn_vm_creation)
 #define ACRN_IOCTL_DESTROY_VM		\
@@ -83,8 +82,8 @@
 	_IO(ACRN_IOCTL_TYPE, 0x13)
 #define ACRN_IOCTL_RESET_VM		\
 	_IO(ACRN_IOCTL_TYPE, 0x15)
-
-#define IC_SET_VCPU_REGS               _IC_ID(IC_ID, IC_ID_VM_BASE + 0x06)
+#define ACRN_IOCTL_SET_VCPU_REGS	\
+	_IOW(ACRN_IOCTL_TYPE, 0x16, struct acrn_vcpu_regs)
 
 /* IRQ and Interrupts */
 #define IC_ID_IRQ_BASE                 0x20UL
