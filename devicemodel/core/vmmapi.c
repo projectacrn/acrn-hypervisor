@@ -165,12 +165,12 @@ struct vmctx *
 vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 {
 	struct vmctx *ctx;
-	struct acrn_create_vm create_vm;
+	struct acrn_vm_creation create_vm;
 	int error, retry = 10;
 	uuid_t vm_uuid;
 	struct stat tmp_st;
 
-	memset(&create_vm, 0, sizeof(struct acrn_create_vm));
+	memset(&create_vm, 0, sizeof(struct acrn_vm_creation));
 	ctx = calloc(1, sizeof(struct vmctx) + strnlen(name, PATH_MAX) + 1);
 	if ((ctx == NULL) || (devfd != -1))
 		goto err;
@@ -230,9 +230,9 @@ vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 		create_vm.vm_flag |= GUEST_FLAG_IO_COMPLETION_POLLING;
 	}
 
-	create_vm.req_buf = req_buf;
+	create_vm.ioreq_buf = req_buf;
 	while (retry > 0) {
-		error = ioctl(ctx->fd, IC_CREATE_VM, &create_vm);
+		error = ioctl(ctx->fd, ACRN_IOCTL_CREATE_VM, &create_vm);
 		if (error == 0)
 			break;
 		usleep(500000);
@@ -311,7 +311,7 @@ vm_destroy(struct vmctx *ctx)
 	if (!ctx)
 		return;
 
-	ioctl(ctx->fd, IC_DESTROY_VM, NULL);
+	ioctl(ctx->fd, ACRN_IOCTL_DESTROY_VM, NULL);
 	close(ctx->fd);
 	free(ctx);
 	devfd = -1;
@@ -468,7 +468,7 @@ vm_run(struct vmctx *ctx)
 {
 	int error;
 
-	error = ioctl(ctx->fd, IC_START_VM, &ctx->vmid);
+	error = ioctl(ctx->fd, ACRN_IOCTL_START_VM, &ctx->vmid);
 
 	return error;
 }
@@ -476,13 +476,13 @@ vm_run(struct vmctx *ctx)
 void
 vm_pause(struct vmctx *ctx)
 {
-	ioctl(ctx->fd, IC_PAUSE_VM, &ctx->vmid);
+	ioctl(ctx->fd, ACRN_IOCTL_PAUSE_VM, &ctx->vmid);
 }
 
 void
 vm_reset(struct vmctx *ctx)
 {
-	ioctl(ctx->fd, IC_RESET_VM, &ctx->vmid);
+	ioctl(ctx->fd, ACRN_IOCTL_RESET_VM, &ctx->vmid);
 }
 
 void

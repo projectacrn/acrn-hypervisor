@@ -339,7 +339,7 @@ union vhm_request_buffer {
 /**
  * @brief Info to create a VM, the parameter for HC_CREATE_VM hypercall
  */
-struct acrn_create_vm {
+struct acrn_vm_creation {
 	/** created vmid return to VHM. Keep it first field */
 	uint16_t vmid;
 
@@ -360,7 +360,7 @@ struct acrn_create_vm {
 	 */
 	uint64_t vm_flag;
 
-	uint64_t req_buf;
+	uint64_t ioreq_buf;
 
 	/**
 	 *   The least significant set bit is the PCPU # the VCPU 0 maps to;
@@ -368,9 +368,6 @@ struct acrn_create_vm {
 	 *   and so on...
 	*/
 	uint64_t cpu_affinity;
-
-	/** Reserved for future use*/
-	uint8_t  reserved2[8];
 } __aligned(8);
 
 /**
