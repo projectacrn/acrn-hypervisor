@@ -286,14 +286,14 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
  * return value:
  * -1 : fail
  * >=0: succeed
- *     IRQ_INTX(0): phy dev has no MSI support
- *     IRQ_MSI(1):  phy dev has MSI support
+ *     ACRN_PTDEV_IRQ_INTX(0): phy dev has no MSI support
+ *     ACRN_PTDEV_IRQ_MSI(1):  phy dev has MSI support
  */
 static int
 cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 	int slot, int func)
 {
-	int irq_type = IRQ_MSI;
+	int irq_type = ACRN_PTDEV_IRQ_MSI;
 	char reset_path[60];
 	int fd;
 
@@ -312,7 +312,7 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 	if (ptdev->msi.capoff == 0 && ptdev->msix.capoff == 0) {
 		pr_dbg("MSI not supported for PCI %x/%x/%x",
 		    bus, slot, func);
-		irq_type = IRQ_INTX;
+		irq_type = ACRN_PTDEV_IRQ_INTX;
 	}
 
 	/* If SOS kernel provides 'reset' entry in sysfs, related dev has some
@@ -671,7 +671,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		error = pci_emul_alloc_pbar(dev, vmsix_on_msi_bar_id, 0, PCIBAR_MEM32, 4096);
 		if (error < 0)
 			goto done;
-		error = IRQ_MSI;
+		error = ACRN_PTDEV_IRQ_MSI;
 	}
 
 	if (ptdev->phys_bdf == PCI_BDF_GPU)
@@ -687,7 +687,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * Forge Guest to use MSI/MSIX in this case to mitigate IRQ sharing
 	 * issue
 	 */
-	if (error != IRQ_MSI || keep_gsi) {
+	if (error != ACRN_PTDEV_IRQ_MSI || keep_gsi) {
 		/* Allocates the virq if ptdev only support INTx */
 		pci_lintr_request(dev);
 
