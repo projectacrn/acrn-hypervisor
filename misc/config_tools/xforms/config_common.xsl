@@ -15,6 +15,7 @@
       <xsl:with-param name="key" select="'BOARD'" />
       <xsl:with-param name="value" select="@board" />
     </xsl:call-template>
+    <xsl:call-template name="msi-msix-max" />
   </xsl:template>
 
   <xsl:template match="//config-data/acrn-config">
@@ -173,11 +174,6 @@
       <xsl:with-param name="key" select="'MAX_PT_IRQ_ENTRIES'" />
     </xsl:call-template>
 
-    <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'MAX_MSIX_TABLE_NUM'" />
-      <xsl:with-param name="default" select="normalize-space(/acrn-offline-data/board-data/acrn-config/MAX_MSIX_TABLE_NUM)" />
-    </xsl:call-template>
-
     <xsl:call-template name="integer-by-key-value">
       <xsl:with-param name="key" select="'MAX_EMULATED_MMIO_REGIONS'" />
       <xsl:with-param name="value" select="MAX_EMULATED_MMIO" />
@@ -252,6 +248,20 @@
   <xsl:template match="MISC_CFG">
     <xsl:call-template name="integer-by-key">
       <xsl:with-param name="key" select="'GPU_SBDF'" />
+    </xsl:call-template>
+  </xsl:template>
+
+  <xsl:template name="msi-msix-max">
+    <xsl:variable name="max">
+      <xsl:for-each select="//capability[@id='MSI' or @id='MSI-X']/*[starts-with(local-name(), 'count') or starts-with(local-name(), 'table_size')]">
+        <xsl:sort select="." data-type="number" order="descending"/>
+        <xsl:if test="position() = 1"><xsl:value-of select="."/></xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:call-template name="integer-by-key-value">
+      <xsl:with-param name="key" select="'MAX_MSIX_TABLE_NUM'" />
+      <xsl:with-param name="value" select="$max" />
+      <xsl:with-param name="default" select="'64'" />
     </xsl:call-template>
   </xsl:template>
 
