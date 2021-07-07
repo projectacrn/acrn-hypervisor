@@ -578,36 +578,6 @@ the virtio framework within DM will invoke them appropriately.
 .. doxygenfunction:: virtio_config_changed
    :project: Project ACRN
 
-VBS-K APIs
-----------
-
-The VBS-K APIs are exported by VBS-K related modules. Users could use
-the following APIs to implement their VBS-K modules.
-
-APIs Provided by DM
-~~~~~~~~~~~~~~~~~~~
-
-.. doxygenfunction:: vbs_kernel_reset
-   :project: Project ACRN
-
-.. doxygenfunction:: vbs_kernel_start
-   :project: Project ACRN
-
-.. doxygenfunction:: vbs_kernel_stop
-   :project: Project ACRN
-
-APIs Provided by VBS-K Modules in Service OS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. kernel-doc:: include/linux/vbs/vbs.h
-   :functions: virtio_dev_init
-               virtio_dev_ioctl
-               virtio_vqs_ioctl
-               virtio_dev_register
-               virtio_dev_deregister
-               virtio_vqs_index_get
-               virtio_dev_reset
-
 VHOST APIs
 ==========
 

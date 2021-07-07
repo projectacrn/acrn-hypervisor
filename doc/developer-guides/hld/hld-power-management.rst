@@ -26,7 +26,7 @@ Hypervisor module named CPU state table:
 
 .. code-block:: c
 
-   struct cpu_px_data {
+   struct cpu_pstate_data {
        uint64_t core_frequency;        /* megahertz */
        uint64_t power;                 /* milliWatts */
        uint64_t transition_latency;    /* microseconds */
@@ -35,7 +35,7 @@ Hypervisor module named CPU state table:
        uint64_t status;                /* success indicator */
    } __attribute__((aligned(8)));
 
-   struct acpi_generic_address {
+   struct acrn_acpi_generic_address {
        uint8_t     space_id;
        uint8_t     bit_width;
        uint8_t     bit_offset;
@@ -43,8 +43,8 @@ Hypervisor module named CPU state table:
        uint64_t    address;
    } __attribute__((aligned(8)));
 
-   struct cpu_cx_data {
-       struct acpi_generic_address cx_reg;
+   struct cpu_cstate_data {
+       struct acrn_acpi_generic_address cx_reg;
        uint8_t     type;
        uint32_t    latency;
        uint64_t    power;

@@ -232,46 +232,52 @@ DM Initialization
 
    .. code-block:: c
 
-      vm_loop(struct vmctx *ctx)
-      {
-          int error;
+    vm_loop(struct vmctx *ctx)
+    {
+        int error;
 
-          ctx->ioreq_client = vm_create_ioreq_client(ctx);
-          assert(ctx->ioreq_client > 0);
+        ctx->ioreq_client = vm_create_ioreq_client(ctx);
+        if (ctx->ioreq_client < 0) {
+            pr_err("%s, failed to create IOREQ.\n", __func__);
+            return;
+        }
 
-          error = vm_run(ctx);
-          assert(error == 0);
+        if (vm_run(ctx) != 0) {
+            pr_err("%s, failed to run VM.\n", __func__);
+            return;
+        }
 
-          while (1) {
-              int vcpu_id;
-              struct vhm_request *vhm_req;
+        while (1) {
+            int vcpu_id;
+            struct acrn_io_request *io_req;
 
-              error = vm_attach_ioreq_client(ctx);
-              if (error)
-                  break;
+            error = vm_attach_ioreq_client(ctx);
+            if (error)
+                break;
 
-              for (vcpu_id = 0; vcpu_id < 4; vcpu_id++) {
-                  vhm_req = &vhm_req_buf[vcpu_id];
-                  if ((atomic_load(&vhm_req->processed) == REQ_STATE_PROCESSING)
-                      && (vhm_req->client == ctx->ioreq_client))
-                      handle_vmexit(ctx, vhm_req, vcpu_id);
-              }
+            for (vcpu_id = 0; vcpu_id < guest_ncpus; vcpu_id++) {
+                io_req = &ioreq_buf[vcpu_id];
+                if ((atomic_load(&io_req->processed) == ACRN_IOREQ_STATE_PROCESSING)
+                    && !io_req->kernel_handled)
+                    handle_vmexit(ctx, io_req, vcpu_id);
+            }
 
-              if (VM_SUSPEND_FULL_RESET == vm_get_suspend_mode() ||
+            if (VM_SUSPEND_FULL_RESET == vm_get_suspend_mode() ||
                 VM_SUSPEND_POWEROFF == vm_get_suspend_mode()) {
                 break;
-              }
+            }
 
-              if (VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) {
-                  vm_system_reset(ctx);
-              }
+            /* RTVM can't be reset */
+            if ((VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) && (!is_rtvm)) {
+                vm_system_reset(ctx);
+            }
 
-              if (VM_SUSPEND_SUSPEND == vm_get_suspend_mode()) {
-                  vm_suspend_resume(ctx);
-              }
-          }
-          printf("VM loop exit\n");
-      }
+            if (VM_SUSPEND_SUSPEND == vm_get_suspend_mode()) {
+                vm_suspend_resume(ctx);
+            }
+        }
+        pr_err("VM loop exit\n");
+    }
 
 -  **Mevent Dispatch Loop**: It's the final loop of the main acrn-dm
    thread. mevent dispatch will do polling for potential async
