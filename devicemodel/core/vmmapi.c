@@ -525,7 +525,7 @@ vm_lapic_msi(struct vmctx *ctx, uint64_t addr, uint64_t msg)
 	msi.msi_addr = addr;
 	msi.msi_data = msg;
 
-	return ioctl(ctx->fd, IC_INJECT_MSI, &msi);
+	return ioctl(ctx->fd, ACRN_IOCTL_INJECT_MSI, &msi);
 }
 
 int
@@ -537,7 +537,7 @@ vm_set_gsi_irq(struct vmctx *ctx, int gsi, uint32_t operation)
 	op.op = operation;
 	op.gsi = (uint32_t)gsi;
 
-	return ioctl(ctx->fd, IC_SET_IRQLINE, *req);
+	return ioctl(ctx->fd, ACRN_IOCTL_SET_IRQLINE, *req);
 }
 
 int
@@ -656,7 +656,7 @@ vm_get_cpu_state(struct vmctx *ctx, void *state_buf)
 int
 vm_intr_monitor(struct vmctx *ctx, void *intr_buf)
 {
-	return ioctl(ctx->fd, IC_VM_INTR_MONITOR, intr_buf);
+	return ioctl(ctx->fd, ACRN_IOCTL_VM_INTR_MONITOR, intr_buf);
 }
 
 int
