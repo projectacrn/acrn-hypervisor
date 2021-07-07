@@ -40,6 +40,11 @@
 #include <asm/irq.h>
 #include <uart16550.h>
 #include <quirks/fixup.h>
+/* For debugging purpose only */
+#define CONFIG_QUIRKS_ENABLED
+#ifdef CONFIG_QUIRKS_ENABLED
+#include <quirks/smbios.h>
+#endif
 
 /* Local variables */
 
@@ -147,6 +152,16 @@ bool is_nvmx_configured(const struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	return ((vm_config->guest_flags & GUEST_FLAG_NVMX_ENABLED) != 0U);
+}
+
+/**
+ * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
+ */
+bool is_smbios_pt_configured(__unused const struct acrn_vm *vm)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	return ((vm_config->guest_flags & GUEST_FLAG_SMBIOS_PASSTHROUGH) != 0U);
 }
 
 /**
@@ -591,6 +606,10 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		if (is_sos_vm(vm)) {
 			deny_hv_owned_devices(vm);
 		}
+
+#ifdef CONFIG_QUIRKS_ENABLED
+		try_smbios_passthrough(vm, get_acrn_boot_info());
+#endif
 
 		init_vpci(vm);
 		enable_iommu();
