@@ -113,10 +113,10 @@
 
 /* PCI assignment*/
 #define IC_ID_PCI_BASE                  0x50UL
-#define IC_ASSIGN_PTDEV                _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x00)
-#define IC_DEASSIGN_PTDEV              _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x01)
-#define IC_VM_PCI_MSIX_REMAP           _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x02)
-#define IC_SET_PTDEV_INTR_INFO         _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x03)
+#define ACRN_IOCTL_SET_PTDEV_INTR	\
+	_IOW(ACRN_IOCTL_TYPE, 0x53, struct acrn_ptdev_irq)
+#define ACRN_IOCTL_RESET_PTDEV_INTR	\
+	_IOW(ACRN_IOCTL_TYPE, 0x54, struct acrn_ptdev_irq)
 #define IC_RESET_PTDEV_INTR_INFO       _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x04)
 #define IC_ASSIGN_PCIDEV               _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x05)
 #define IC_DEASSIGN_PCIDEV             _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x06)
@@ -273,13 +273,15 @@ struct acrn_emul_dev {
 
 } __attribute__((aligned(8)));
 
+/* Type of interrupt of a passthrough device */
+#define ACRN_PTDEV_IRQ_INTX	0
+#define ACRN_PTDEV_IRQ_MSI	1
+#define ACRN_PTDEV_IRQ_MSIX	2
+
 /**
  * @brief pass thru device irq data structure
  */
-struct ic_ptdev_irq {
-#define IRQ_INTX 0
-#define IRQ_MSI 1
-#define IRQ_MSIX 2
+struct acrn_ptdev_irq {
 	/** irq type */
 	uint32_t type;
 	/** virtual bdf description of pass thru device */

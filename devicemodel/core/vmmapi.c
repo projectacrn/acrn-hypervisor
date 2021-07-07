@@ -611,33 +611,33 @@ int
 vm_set_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf, uint16_t phys_bdf,
 		       int virt_pin, int phys_pin, bool pic_pin)
 {
-	struct ic_ptdev_irq ptirq;
+	struct acrn_ptdev_irq ptirq;
 
 	bzero(&ptirq, sizeof(ptirq));
-	ptirq.type = IRQ_INTX;
+	ptirq.type = ACRN_PTDEV_IRQ_INTX;
 	ptirq.virt_bdf = virt_bdf;
 	ptirq.phys_bdf = phys_bdf;
 	ptirq.intx.virt_pin = virt_pin;
 	ptirq.intx.phys_pin = phys_pin;
 	ptirq.intx.is_pic_pin = pic_pin;
 
-	return ioctl(ctx->fd, IC_SET_PTDEV_INTR_INFO, &ptirq);
+	return ioctl(ctx->fd, ACRN_IOCTL_SET_PTDEV_INTR, &ptirq);
 }
 
 int
 vm_reset_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf, uint16_t phys_bdf,
 			int virt_pin, bool pic_pin)
 {
-	struct ic_ptdev_irq ptirq;
+	struct acrn_ptdev_irq ptirq;
 
 	bzero(&ptirq, sizeof(ptirq));
-	ptirq.type = IRQ_INTX;
+	ptirq.type = ACRN_PTDEV_IRQ_INTX;
 	ptirq.intx.virt_pin = virt_pin;
 	ptirq.intx.is_pic_pin = pic_pin;
 	ptirq.virt_bdf = virt_bdf;
 	ptirq.phys_bdf = phys_bdf;
 
-	return ioctl(ctx->fd, IC_RESET_PTDEV_INTR_INFO, &ptirq);
+	return ioctl(ctx->fd, ACRN_IOCTL_RESET_PTDEV_INTR, &ptirq);
 }
 
 int
