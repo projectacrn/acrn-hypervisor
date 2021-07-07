@@ -292,6 +292,8 @@ VP_BASE_C_SRCS += arch/x86/configs/pci_dev.c
 VP_BASE_C_SRCS += arch/x86/configs/vacpi.c
 VP_BASE_C_SRCS += quirks/acrn_vm_fixup.c
 
+VP_BASE_C_SRCS += quirks/smbios.c
+
 # virtual platform device model
 VP_DM_C_SRCS += dm/vpic.c
 VP_DM_C_SRCS += dm/vrtc.c
