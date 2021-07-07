@@ -362,16 +362,15 @@ int
 vm_map_memseg_vma(struct vmctx *ctx, size_t len, vm_paddr_t gpa,
 	uint64_t vma, int prot)
 {
-	struct vm_memmap memmap;
+	struct acrn_vm_memmap memmap;
 
-	bzero(&memmap, sizeof(struct vm_memmap));
-	memmap.type = VM_MEMMAP_SYSMEM;
-	memmap.using_vma = 1;
+	bzero(&memmap, sizeof(struct acrn_vm_memmap));
+	memmap.type = ACRN_MEMMAP_RAM;
 	memmap.vma_base = vma;
 	memmap.len = len;
-	memmap.gpa = gpa;
-	memmap.prot = prot;
-	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
+	memmap.user_vm_pa = gpa;
+	memmap.attr = prot;
+	return ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
 }
 
 int
@@ -568,32 +567,32 @@ int
 vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 		   vm_paddr_t gpa, size_t len, vm_paddr_t hpa)
 {
-	struct vm_memmap memmap;
+	struct acrn_vm_memmap memmap;
 
-	bzero(&memmap, sizeof(struct vm_memmap));
-	memmap.type = VM_MMIO;
+	bzero(&memmap, sizeof(struct acrn_vm_memmap));
+	memmap.type = ACRN_MEMMAP_MMIO;
 	memmap.len = len;
-	memmap.gpa = gpa;
-	memmap.hpa = hpa;
-	memmap.prot = PROT_ALL;
+	memmap.user_vm_pa = gpa;
+	memmap.service_vm_pa = hpa;
+	memmap.attr = ACRN_MEM_ACCESS_RWX;
 
-	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
+	return ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
 }
 
 int
 vm_unmap_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 		   vm_paddr_t gpa, size_t len, vm_paddr_t hpa)
 {
-	struct vm_memmap memmap;
+	struct acrn_vm_memmap memmap;
 
-	bzero(&memmap, sizeof(struct vm_memmap));
-	memmap.type = VM_MMIO;
+	bzero(&memmap, sizeof(struct acrn_vm_memmap));
+	memmap.type = ACRN_MEMMAP_MMIO;
 	memmap.len = len;
-	memmap.gpa = gpa;
-	memmap.hpa = hpa;
-	memmap.prot = PROT_ALL;
+	memmap.user_vm_pa = gpa;
+	memmap.service_vm_pa = hpa;
+	memmap.attr = ACRN_MEM_ACCESS_RWX;
 
-	return ioctl(ctx->fd, IC_UNSET_MEMSEG, &memmap);
+	return ioctl(ctx->fd, ACRN_IOCTL_UNSET_MEMSEG, &memmap);
 }
 
 int
