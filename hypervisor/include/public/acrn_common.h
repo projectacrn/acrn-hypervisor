@@ -703,6 +703,38 @@ struct vrp_config
 	uint32_t ptm_cap_offset;
 };
 
+/* Type of PCI device assignment */
+#define ACRN_PTDEV_QUIRK_ASSIGN	(1U << 0)
+
+#define ACRN_PCI_NUM_BARS	6U
+/**
+ * @brief Info to assign or deassign PCI for a VM
+ *
+ */
+struct acrn_pcidev {
+	/** the type of the the pass-through PCI device */
+	uint32_t type;
+
+	/** virtual BDF# of the pass-through PCI device */
+	uint16_t virt_bdf;
+
+	/** physical BDF# of the pass-through PCI device */
+	uint16_t phys_bdf;
+
+	/** the PCI Interrupt Line, initialized by ACRN-DM, which is RO and
+	 *  ideally not used for pass-through MSI/MSI-x devices.
+	 */
+	uint8_t intr_line;
+
+	/** the PCI Interrupt Pin, initialized by ACRN-DM, which is RO and
+	 *  ideally not used for pass-through MSI/MSI-x devices.
+	 */
+	uint8_t intr_pin;
+
+	/** the base address of the PCI BAR, initialized by ACRN-DM. */
+	uint32_t bar[ACRN_PCI_NUM_BARS];
+} __attribute__((aligned(8)));
+
 /**
  * @}
  */

@@ -284,7 +284,7 @@ int32_t hcall_gpa_to_hpa(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_assign_pcidev including assign PCI device info
+ *              acrn_pcidev including assign PCI device info
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -298,7 +298,7 @@ int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, u
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_assign_pcidev including deassign PCI device info
+ *              acrn_pcidev including deassign PCI device info
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.

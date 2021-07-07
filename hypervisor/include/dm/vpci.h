@@ -187,9 +187,9 @@ extern const struct pci_vdev_ops vpci_bridge_ops;
 void init_vpci(struct acrn_vm *vm);
 void deinit_vpci(struct acrn_vm *vm);
 struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf);
-struct acrn_assign_pcidev;
-int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev);
-int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev);
+struct acrn_pcidev;
+int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev);
+int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev);
 struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_config *dev_config, struct pci_vdev *parent_pf_vdev);
 
 static inline bool is_pci_io_bar(struct pci_vbar *vbar)

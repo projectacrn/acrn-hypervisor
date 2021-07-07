@@ -49,7 +49,7 @@ static inline struct acrn_vm *vpci2vm(const struct acrn_vpci *vpci)
 
 static inline bool is_quirk_ptdev(const struct pci_vdev *vdev)
 {
-	return ((vdev->flags & QUIRK_PTDEV) != 0U);
+	return ((vdev->flags & ACRN_PTDEV_QUIRK_ASSIGN) != 0U);
 }
 
 static inline bool in_range(uint32_t value, uint32_t lower, uint32_t len)

@@ -540,15 +540,15 @@ vm_set_gsi_irq(struct vmctx *ctx, int gsi, uint32_t operation)
 }
 
 int
-vm_assign_pcidev(struct vmctx *ctx, struct acrn_assign_pcidev *pcidev)
+vm_assign_pcidev(struct vmctx *ctx, struct acrn_pcidev *pcidev)
 {
-	return ioctl(ctx->fd, IC_ASSIGN_PCIDEV, pcidev);
+	return ioctl(ctx->fd, ACRN_IOCTL_ASSIGN_PCIDEV, pcidev);
 }
 
 int
-vm_deassign_pcidev(struct vmctx *ctx, struct acrn_assign_pcidev *pcidev)
+vm_deassign_pcidev(struct vmctx *ctx, struct acrn_pcidev *pcidev)
 {
-	return ioctl(ctx->fd, IC_DEASSIGN_PCIDEV, pcidev);
+	return ioctl(ctx->fd, ACRN_IOCTL_DEASSIGN_PCIDEV, pcidev);
 }
 
 int
