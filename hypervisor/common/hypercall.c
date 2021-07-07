@@ -925,7 +925,7 @@ int32_t hcall_assign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
 	if (is_created_vm(target_vm)) {
 		if (copy_from_gpa(vm, &mmiodev, param2, sizeof(mmiodev)) == 0) {
-			if (ept_is_valid_mr(vm, mmiodev.base_hpa, mmiodev.size)) {
+			if (ept_is_valid_mr(vm, mmiodev.service_vm_pa, mmiodev.size)) {
 				ret = deassign_mmio_dev(vm, &mmiodev);
 				if (ret == 0) {
 					ret = assign_mmio_dev(target_vm, &mmiodev);
@@ -960,7 +960,7 @@ int32_t hcall_deassign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
 	if ((is_paused_vm(target_vm) || is_created_vm(target_vm))) {
 		if (copy_from_gpa(vm, &mmiodev, param2, sizeof(mmiodev)) == 0) {
-			if (ept_is_valid_mr(target_vm, mmiodev.base_gpa, mmiodev.size)) {
+			if (ept_is_valid_mr(target_vm, mmiodev.user_vm_pa, mmiodev.size)) {
 				ret = deassign_mmio_dev(target_vm, &mmiodev);
 				if (ret == 0) {
 					ret = assign_mmio_dev(vm, &mmiodev);

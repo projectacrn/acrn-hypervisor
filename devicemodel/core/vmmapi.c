@@ -554,13 +554,13 @@ vm_deassign_pcidev(struct vmctx *ctx, struct acrn_pcidev *pcidev)
 int
 vm_assign_mmiodev(struct vmctx *ctx, struct acrn_mmiodev *mmiodev)
 {
-	return ioctl(ctx->fd, IC_ASSIGN_MMIODEV, mmiodev);
+	return ioctl(ctx->fd, ACRN_IOCTL_ASSIGN_MMIODEV, mmiodev);
 }
 
 int
 vm_deassign_mmiodev(struct vmctx *ctx, struct acrn_mmiodev *mmiodev)
 {
-	return ioctl(ctx->fd, IC_DEASSIGN_MMIODEV, mmiodev);
+	return ioctl(ctx->fd, ACRN_IOCTL_DEASSIGN_MMIODEV, mmiodev);
 }
 
 int

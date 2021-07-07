@@ -238,8 +238,8 @@
       <xsl:value-of select="acrn:ifdef('VM0_PASSTHROUGH_TPM')" />
       <xsl:value-of select="acrn:initializer('pt_tpm2', 'true')" />
       <xsl:value-of select="acrn:initializer('mmiodevs[0]', '{', true())" />
-      <xsl:value-of select="acrn:initializer('base_gpa', 'VM0_TPM_BUFFER_BASE_ADDR_GPA')" />
-      <xsl:value-of select="acrn:initializer('base_hpa', 'VM0_TPM_BUFFER_BASE_ADDR')" />
+      <xsl:value-of select="acrn:initializer('user_vm_pa', 'VM0_TPM_BUFFER_BASE_ADDR_GPA')" />
+      <xsl:value-of select="acrn:initializer('service_vm_pa', 'VM0_TPM_BUFFER_BASE_ADDR')" />
       <xsl:value-of select="acrn:initializer('size', 'VM0_TPM_BUFFER_SIZE')" />
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
@@ -247,8 +247,8 @@
       <xsl:value-of select="acrn:ifdef('P2SB_BAR_ADDR')" />
       <xsl:value-of select="acrn:initializer('pt_p2sb_bar', 'true')" />
       <xsl:value-of select="acrn:initializer('mmiodevs[0]', '{', true())" />
-      <xsl:value-of select="acrn:initializer('base_gpa', 'P2SB_BAR_ADDR_GPA')" />
-      <xsl:value-of select="acrn:initializer('base_hpa', 'P2SB_BAR_ADDR')" />
+      <xsl:value-of select="acrn:initializer('user_vm_pa', 'P2SB_BAR_ADDR_GPA')" />
+      <xsl:value-of select="acrn:initializer('service_vm_pa', 'P2SB_BAR_ADDR')" />
       <xsl:value-of select="acrn:initializer('size', 'P2SB_BAR_SIZE')" />
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
