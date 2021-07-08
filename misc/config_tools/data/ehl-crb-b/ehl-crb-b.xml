@@ -2,8 +2,8 @@
   <BIOS_INFO>
 	BIOS Information
 	Vendor: Intel Corporation
-	Version: SB_EHL.001.000.005.000.008.00008.D-DE6BC238D41D2E2F-dirty
-	Release Date: Mar  2 2021
+	Version: SB_EHL.001.000.005.000.008.00018.D-2BD67C90F42587C7-dirty
+	Release Date: Jan 11 2021
 	BIOS Revision: 0.1
 	</BIOS_INFO>
   <BASE_BOARD_INFO>
@@ -18,65 +18,69 @@
 	Region 0: Memory at 80000000 (64-bit, non-prefetchable) [size=16M]
 	Region 2: Memory at 90000000 (64-bit, prefetchable) [size=256M]
 	00:08.0 System peripheral: Intel Corporation Device 4511 (rev 01)
-	Region 0: Memory at 825ea000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826ee000 (64-bit, non-prefetchable) [size=4K]
 	00:09.0 Non-Essential Instrumentation [1300]: Intel Corporation Device 4529 (rev 01)
-	Region 0: Memory at 82400000 (64-bit, non-prefetchable) [size=1M]
+	Region 0: Memory at 82500000 (64-bit, non-prefetchable) [size=1M]
 	Region 2: Memory at 81800000 (64-bit, non-prefetchable) [size=8M]
-	Region 4: Memory at 825e9000 (64-bit, non-prefetchable) [size=1K]
+	Region 4: Memory at 826ed000 (64-bit, non-prefetchable) [size=1K]
 	00:10.0 Serial bus controller [0c80]: Intel Corporation Device 4b44 (rev 10)
-	Region 0: Memory at 825e8000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826ec000 (64-bit, non-prefetchable) [size=4K]
 	00:10.1 Serial bus controller [0c80]: Intel Corporation Device 4b45 (rev 10)
-	Region 0: Memory at 825e7000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826eb000 (64-bit, non-prefetchable) [size=4K]
 	00:10.5 Host bridge: Intel Corporation Device 4b2f (rev 10)
 	00:14.0 USB controller: Intel Corporation Device 4b7d (rev 10)
-	Region 0: Memory at 825c0000 (64-bit, non-prefetchable) [size=64K]
+	Region 0: Memory at 826c0000 (64-bit, non-prefetchable) [size=64K]
 	00:14.2 RAM memory: Intel Corporation Device 4b7f (rev 10)
-	Region 0: Memory at 825d0000 (64-bit, non-prefetchable) [size=16K]
-	Region 2: Memory at 825e6000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826d4000 (64-bit, non-prefetchable) [size=16K]
+	Region 2: Memory at 826ea000 (64-bit, non-prefetchable) [size=4K]
 	00:15.0 Serial bus controller [0c80]: Intel Corporation Device 4b78 (rev 10)
-	Region 0: Memory at 825e5000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826e9000 (64-bit, non-prefetchable) [size=4K]
 	00:15.2 Serial bus controller [0c80]: Intel Corporation Device 4b7a (rev 10)
-	Region 0: Memory at 825e4000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826e8000 (64-bit, non-prefetchable) [size=4K]
 	00:15.3 Serial bus controller [0c80]: Intel Corporation Device 4b7b (rev 10)
-	Region 0: Memory at 825e3000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826e7000 (64-bit, non-prefetchable) [size=4K]
 	00:16.0 Communication controller: Intel Corporation Device 4b70 (rev 10)
-	Region 0: Memory at 825e2000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826e6000 (64-bit, non-prefetchable) [size=4K]
 	00:17.0 SATA controller: Intel Corporation Device 4b63 (rev 10)
-	Region 0: Memory at 825d6000 (32-bit, non-prefetchable) [size=8K]
-	Region 1: Memory at 825e1000 (32-bit, non-prefetchable) [size=256]
-	Region 5: Memory at 825e0000 (32-bit, non-prefetchable) [size=2K]
+	Region 0: Memory at 826da000 (32-bit, non-prefetchable) [size=8K]
+	Region 1: Memory at 826e5000 (32-bit, non-prefetchable) [size=256]
+	Region 5: Memory at 826e4000 (32-bit, non-prefetchable) [size=2K]
 	00:19.0 Serial bus controller [0c80]: Intel Corporation Device 4b4b (rev 10)
-	Region 0: Memory at 825df000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826e3000 (64-bit, non-prefetchable) [size=4K]
 	00:1a.0 SD Host controller: Intel Corporation Device 4b47 (rev 10)
-	Region 0: Memory at 825de000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826e2000 (64-bit, non-prefetchable) [size=4K]
 	00:1a.1 SD Host controller: Intel Corporation Device 4b48 (rev 10)
-	Region 0: Memory at 825dd000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826e1000 (64-bit, non-prefetchable) [size=4K]
 	00:1a.3 Non-VGA unclassified device: Intel Corporation Device 4b4a (rev 10)
-	Region 0: Memory at 82580000 (64-bit, non-prefetchable) [size=256K]
+	Region 0: Memory at 82680000 (64-bit, non-prefetchable) [size=256K]
 	00:1c.0 PCI bridge: Intel Corporation Device 4b38 (rev 10)
+	00:1c.4 PCI bridge: Intel Corporation Device 4b3c (rev 10)
 	00:1d.0 System peripheral: Intel Corporation Device 4bb3 (rev 10)
 	Region 0: Memory at 82000000 (64-bit, non-prefetchable) [size=2M]
 	00:1d.1 Ethernet controller: Intel Corporation Device 4ba0 (rev 10)
-	Region 0: Memory at 82600000 (64-bit, non-prefetchable) [size=256K]
+	Region 0: Memory at 82700000 (64-bit, non-prefetchable) [size=256K]
 	00:1d.2 Ethernet controller: Intel Corporation Device 4bb0 (rev 10)
-	Region 0: Memory at 82640000 (64-bit, non-prefetchable) [size=256K]
+	Region 0: Memory at 82740000 (64-bit, non-prefetchable) [size=256K]
 	00:1e.0 Communication controller: Intel Corporation Device 4b28 (rev 10)
-	Region 0: Memory at 825dc000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826e0000 (64-bit, non-prefetchable) [size=4K]
 	00:1e.1 Communication controller: Intel Corporation Device 4b29 (rev 10)
-	Region 0: Memory at 825db000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 826df000 (64-bit, non-prefetchable) [size=4K]
 	00:1e.4 Ethernet controller: Intel Corporation Device 4b32 (rev 10)
-	Region 0: Memory at 82502000 (64-bit, non-prefetchable) [size=8K]
-	Region 2: Memory at 825da000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 82602000 (64-bit, non-prefetchable) [size=8K]
+	Region 2: Memory at 826de000 (64-bit, non-prefetchable) [size=4K]
 	00:1f.0 ISA bridge: Intel Corporation Device 4b00 (rev 10)
+	00:1f.3 Audio device: Intel Corporation Device 4b58 (rev 10)
+	Region 0: Memory at 826d0000 (64-bit, non-prefetchable) [size=16K]
+	Region 4: Memory at 82300000 (64-bit, non-prefetchable) [size=1M]
 	00:1f.4 SMBus: Intel Corporation Device 4b23 (rev 10)
-	Region 0: Memory at 825d9000 (64-bit, non-prefetchable) [size=256]
+	Region 0: Memory at 826dd000 (64-bit, non-prefetchable) [size=256]
 	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device 4b24 (rev 10)
-	Region 0: Memory at 82501000 (32-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 82601000 (32-bit, non-prefetchable) [size=4K]
 	00:1f.7 Non-Essential Instrumentation [1300]: Intel Corporation Device 4b26 (rev 10)
 	Region 0: Memory at 82200000 (64-bit, non-prefetchable) [size=1M]
 	Region 2: Memory at 81000000 (64-bit, non-prefetchable) [size=8M]
-	01:00.0 Non-Volatile memory controller: Intel Corporation SSD Pro 7600p/760p/E 6100p Series (rev 03)
-	Region 0: Memory at 82300000 (64-bit, non-prefetchable) [size=16K]
+	01:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)
+	Region 0: Memory at 82400000 (64-bit, non-prefetchable) [size=16K]
 	</PCI_DEVICE>
   <PCI_VID_PID>
 	00:00.0 0600: 8086:4532 (rev 01)
@@ -98,6 +102,7 @@
 	00:1a.1 0805: 8086:4b48 (rev 10)
 	00:1a.3 0000: 8086:4b4a (rev 10)
 	00:1c.0 0604: 8086:4b38 (rev 10)
+	00:1c.4 0604: 8086:4b3c (rev 10)
 	00:1d.0 0880: 8086:4bb3 (rev 10)
 	00:1d.1 0200: 8086:4ba0 (rev 10)
 	00:1d.2 0200: 8086:4bb0 (rev 10)
@@ -105,14 +110,15 @@
 	00:1e.1 0780: 8086:4b29 (rev 10)
 	00:1e.4 0200: 8086:4b32 (rev 10)
 	00:1f.0 0601: 8086:4b00 (rev 10)
+	00:1f.3 0403: 8086:4b58 (rev 10)
 	00:1f.4 0c05: 8086:4b23 (rev 10)
 	00:1f.5 0c80: 8086:4b24 (rev 10)
 	00:1f.7 1300: 8086:4b26 (rev 10)
-	01:00.0 0108: 8086:f1a6 (rev 03)
+	01:00.0 0108: 126f:2263 (rev 03)
 	</PCI_VID_PID>
   <WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x786E02FCUL
-	#define WAKE_VECTOR_64          0x786E0308UL
+	#define WAKE_VECTOR_32          0x768542FCUL
+	#define WAKE_VECTOR_64          0x76854308UL
 	</WAKE_VECTOR_INFO>
   <RESET_REGISTER_INFO>
 	#define RESET_REGISTER_ADDRESS  0xCF9UL
@@ -183,10 +189,13 @@
 	"Intel Atom(R) Processor x6427FE @ 1.90GHz"
 	</CPU_BRAND>
   <CX_INFO>
-	/* Cx data is not available */
+	{{SPACE_FFixedHW, 0x00U, 0x00U, 0x00U, 0x00UL}, 0x01U, 0x01U, 0x00U},	/* C1 */
+	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1816UL}, 0x02U, 0xFDU, 0x00U},	/* C2 */
+	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1819UL}, 0x03U, 0x418U, 0x00U},	/* C3 */
 	</CX_INFO>
   <PX_INFO>
-	/* Px data is not available */
+	{0x76DUL, 0x00UL, 0x0AUL, 0x0AUL, 0x001300UL, 0x001300UL},	/* P0 */
+	{0x76CUL, 0x00UL, 0x0AUL, 0x0AUL, 0x001300UL, 0x001300UL},	/* P1 */
 	</PX_INFO>
   <MMCFG_BASE_INFO>
 	/* PCI mmcfg base of MCFG */
@@ -208,14 +217,13 @@
 	  000e8000-000ebfff : PCI Bus 0000:00
 	  000ec000-000effff : PCI Bus 0000:00
 	  000f0000-000fffff : System ROM
-	00100000-781dffff : System RAM
-	  67400000-682011b0 : Kernel code
-	  682011b1-6899c3ff : Kernel data
-	  6934d000-699fffff : Kernel bss
-	781e0000-786dffff : Reserved
-	786e0000-78747fff : ACPI Tables
-	78748000-7874ffff : ACPI Non-volatile Storage
-	78750000-7fbfffff : Reserved
+	00100000-3fffffff : System RAM
+	40000000-40087fff : Reserved
+	40088000-76353fff : System RAM
+	76354000-76853fff : Reserved
+	76854000-768bbfff : ACPI Tables
+	768bc000-768c3fff : ACPI Non-volatile Storage
+	768c4000-7fbfffff : Reserved
 	  7c000000-7fbfffff : Graphics Stolen Memory
 	80000000-bfffffff : PCI Bus 0000:00
 	  80000000-80ffffff : 0000:00:02.0
@@ -227,93 +235,97 @@
 	    82000000-821fffff : intel_ish_ipc
 	  82200000-822fffff : 0000:00:1f.7
 	    82200000-822fffff : intel_th_pci
-	  82300000-823fffff : PCI Bus 0000:01
-	    82300000-82303fff : 0000:01:00.0
-	      82300000-82303fff : nvme
-	  82400000-824fffff : 0000:00:09.0
-	    82400000-824fffff : intel_th_pci
-	  82500200-82500203 : INTC1033:02
-	  82500204-82500207 : INTC1033:02
-	  82501000-82501fff : 0000:00:1f.5
-	    82501000-82501fff : 0000:00:1f.5 0000:00:1f.5
-	  82502000-82503fff : 0000:00:1e.4
-	    82502000-82503fff : 0000:00:1e.4
-	  82540200-82540203 : INTC1033:01
-	  82540204-82540207 : INTC1033:01
-	  82580000-825bffff : 0000:00:1a.3
-	  825c0000-825cffff : 0000:00:14.0
-	    825c0000-825cffff : xhci-hcd
-	  825d0000-825d3fff : 0000:00:14.2
-	  825d4200-825d4203 : INTC1033:00
-	  825d4204-825d4207 : INTC1033:00
-	  825d6000-825d7fff : 0000:00:17.0
-	    825d6000-825d7fff : ahci
-	  825d9000-825d90ff : 0000:00:1f.4
-	  825da000-825dafff : 0000:00:1e.4
-	  825db000-825dbfff : 0000:00:1e.1
-	    825db000-825db1ff : lpss_dev
-	      825db000-825db01f : serial
-	    825db200-825db2ff : lpss_priv
-	    825db800-825dbfff : idma64.6
-	      825db800-825dbfff : idma64.6 idma64.6
-	  825dc000-825dcfff : 0000:00:1e.0
-	    825dc000-825dc1ff : lpss_dev
-	      825dc000-825dc01f : serial
-	    825dc200-825dc2ff : lpss_priv
-	    825dc800-825dcfff : idma64.5
-	      825dc800-825dcfff : idma64.5 idma64.5
-	  825dd000-825ddfff : 0000:00:1a.1
-	    825dd000-825ddfff : mmc1
-	  825de000-825defff : 0000:00:1a.0
-	    825de000-825defff : mmc0
-	  825df000-825dffff : 0000:00:19.0
-	    825df000-825df1ff : lpss_dev
-	      825df000-825df1ff : i2c_designware.4 lpss_dev
-	    825df200-825df2ff : lpss_priv
-	    825df800-825dffff : idma64.4
-	      825df800-825dffff : idma64.4 idma64.4
-	  825e0000-825e07ff : 0000:00:17.0
-	    825e0000-825e07ff : ahci
-	  825e1000-825e10ff : 0000:00:17.0
-	    825e1000-825e10ff : ahci
-	  825e2000-825e2fff : 0000:00:16.0
-	    825e2000-825e2fff : mei_me
-	  825e3000-825e3fff : 0000:00:15.3
-	    825e3000-825e31ff : lpss_dev
-	      825e3000-825e31ff : i2c_designware.3 lpss_dev
-	    825e3200-825e32ff : lpss_priv
-	    825e3800-825e3fff : idma64.3
-	      825e3800-825e3fff : idma64.3 idma64.3
-	  825e4000-825e4fff : 0000:00:15.2
-	    825e4000-825e41ff : lpss_dev
-	      825e4000-825e41ff : i2c_designware.2 lpss_dev
-	    825e4200-825e42ff : lpss_priv
-	    825e4800-825e4fff : idma64.2
-	      825e4800-825e4fff : idma64.2 idma64.2
-	  825e5000-825e5fff : 0000:00:15.0
-	    825e5000-825e51ff : lpss_dev
-	      825e5000-825e51ff : i2c_designware.1 lpss_dev
-	    825e5200-825e52ff : lpss_priv
-	    825e5800-825e5fff : idma64.1
-	      825e5800-825e5fff : idma64.1 idma64.1
-	  825e6000-825e6fff : 0000:00:14.2
-	  825e7000-825e7fff : 0000:00:10.1
-	    825e7000-825e71ff : lpss_dev
-	      825e7000-825e71ff : i2c_designware.0 lpss_dev
-	    825e7200-825e72ff : lpss_priv
-	  825e8000-825e8fff : 0000:00:10.0
-	  825e9000-825e93ff : 0000:00:09.0
-	    825e9000-825e93ff : intel_th_pci
-	  825ea000-825eafff : 0000:00:08.0
-	    825ea000-825eafff : gna
-	  82600000-8263ffff : 0000:00:1d.1
-	    82600000-8263ffff : 0000:00:1d.1
-	  82640000-8267ffff : 0000:00:1d.2
-	    82640000-8267ffff : 0000:00:1d.2
+	  82300000-823fffff : 0000:00:1f.3
+	    82300000-823fffff : ICH HD audio
+	  82400000-824fffff : PCI Bus 0000:01
+	    82400000-82403fff : 0000:01:00.0
+	      82400000-82403fff : nvme
+	  82500000-825fffff : 0000:00:09.0
+	    82500000-825fffff : intel_th_pci
+	  82600200-82600203 : INTC1033:02
+	  82600204-82600207 : INTC1033:02
+	  82601000-82601fff : 0000:00:1f.5
+	    82601000-82601fff : 0000:00:1f.5 0000:00:1f.5
+	  82602000-82603fff : 0000:00:1e.4
+	    82602000-82603fff : 0000:00:1e.4
+	  82640200-82640203 : INTC1033:01
+	  82640204-82640207 : INTC1033:01
+	  82680000-826bffff : 0000:00:1a.3
+	  826c0000-826cffff : 0000:00:14.0
+	    826c0000-826cffff : xhci-hcd
+	  826d0000-826d3fff : 0000:00:1f.3
+	    826d0000-826d3fff : ICH HD audio
+	  826d4000-826d7fff : 0000:00:14.2
+	  826d8200-826d8203 : INTC1033:00
+	  826d8204-826d8207 : INTC1033:00
+	  826da000-826dbfff : 0000:00:17.0
+	    826da000-826dbfff : ahci
+	  826dd000-826dd0ff : 0000:00:1f.4
+	  826de000-826defff : 0000:00:1e.4
+	  826df000-826dffff : 0000:00:1e.1
+	    826df000-826df1ff : lpss_dev
+	      826df000-826df01f : serial
+	    826df200-826df2ff : lpss_priv
+	    826df800-826dffff : idma64.6
+	      826df800-826dffff : idma64.6 idma64.6
+	  826e0000-826e0fff : 0000:00:1e.0
+	    826e0000-826e01ff : lpss_dev
+	      826e0000-826e001f : serial
+	    826e0200-826e02ff : lpss_priv
+	    826e0800-826e0fff : idma64.5
+	      826e0800-826e0fff : idma64.5 idma64.5
+	  826e1000-826e1fff : 0000:00:1a.1
+	    826e1000-826e1fff : mmc1
+	  826e2000-826e2fff : 0000:00:1a.0
+	    826e2000-826e2fff : mmc0
+	  826e3000-826e3fff : 0000:00:19.0
+	    826e3000-826e31ff : lpss_dev
+	      826e3000-826e31ff : i2c_designware.4 lpss_dev
+	    826e3200-826e32ff : lpss_priv
+	    826e3800-826e3fff : idma64.4
+	      826e3800-826e3fff : idma64.4 idma64.4
+	  826e4000-826e47ff : 0000:00:17.0
+	    826e4000-826e47ff : ahci
+	  826e5000-826e50ff : 0000:00:17.0
+	    826e5000-826e50ff : ahci
+	  826e6000-826e6fff : 0000:00:16.0
+	    826e6000-826e6fff : mei_me
+	  826e7000-826e7fff : 0000:00:15.3
+	    826e7000-826e71ff : lpss_dev
+	      826e7000-826e71ff : i2c_designware.3 lpss_dev
+	    826e7200-826e72ff : lpss_priv
+	    826e7800-826e7fff : idma64.3
+	      826e7800-826e7fff : idma64.3 idma64.3
+	  826e8000-826e8fff : 0000:00:15.2
+	    826e8000-826e81ff : lpss_dev
+	      826e8000-826e81ff : i2c_designware.2 lpss_dev
+	    826e8200-826e82ff : lpss_priv
+	    826e8800-826e8fff : idma64.2
+	      826e8800-826e8fff : idma64.2 idma64.2
+	  826e9000-826e9fff : 0000:00:15.0
+	    826e9000-826e91ff : lpss_dev
+	      826e9000-826e91ff : i2c_designware.1 lpss_dev
+	    826e9200-826e92ff : lpss_priv
+	    826e9800-826e9fff : idma64.1
+	      826e9800-826e9fff : idma64.1 idma64.1
+	  826ea000-826eafff : 0000:00:14.2
+	  826eb000-826ebfff : 0000:00:10.1
+	    826eb000-826eb1ff : lpss_dev
+	      826eb000-826eb1ff : i2c_designware.0 lpss_dev
+	    826eb200-826eb2ff : lpss_priv
+	  826ec000-826ecfff : 0000:00:10.0
+	  826ed000-826ed3ff : 0000:00:09.0
+	    826ed000-826ed3ff : intel_th_pci
+	  826ee000-826eefff : 0000:00:08.0
+	    826ee000-826eefff : gna
+	  82700000-8273ffff : 0000:00:1d.1
+	    82700000-8273ffff : 0000:00:1d.1
+	  82740000-8277ffff : 0000:00:1d.2
+	    82740000-8277ffff : 0000:00:1d.2
 	  90000000-9fffffff : 0000:00:02.0
 	c0000000-cfffffff : PCI MMCONFIG 0000 [bus 00-ff]
-	  c0000000-cfffffff : pnp 00:00
-	fd000000-fd68ffff : pnp 00:01
+	  c0000000-cfffffff : pnp 00:02
+	fd000000-fd68ffff : pnp 00:03
 	fd690000-fd69ffff : INTC1020:00
 	fd6a0000-fd6affff : INTC1020:00
 	  fd6a0000-fd6affff : INTC1020:00 INTC1020:00
@@ -325,27 +337,30 @@
 	  fd6d0000-fd6dffff : INTC1020:00 INTC1020:00
 	fd6e0000-fd6effff : INTC1020:00
 	  fd6e0000-fd6effff : INTC1020:00 INTC1020:00
-	fd6f0000-fdffffff : pnp 00:01
-	fe000000-fe01ffff : pnp 00:01
-	fe200000-fe7fffff : pnp 00:01
+	fd6f0000-fdffffff : pnp 00:03
+	fe000000-fe01ffff : pnp 00:03
+	fe200000-fe7fffff : pnp 00:03
 	fec00000-fec003ff : IOAPIC 0
-	fec80000-fec87fff : pnp 00:00
+	fec80000-fec87fff : pnp 00:02
 	fed00000-fed003ff : HPET 0
+	  fed00000-fed003ff : PNP0103:00
 	fed20000-fed7ffff : Reserved
 	  fed40000-fed44fff : MSFT0101:00
 	fed90000-fed90fff : dmar0
 	fed91000-fed91fff : dmar1
-	feda0000-feda0fff : pnp 00:00
-	feda1000-feda1fff : pnp 00:00
-	fee00000-feefffff : pnp 00:00
+	feda0000-feda0fff : pnp 00:02
+	feda1000-feda1fff : pnp 00:02
+	fee00000-feefffff : pnp 00:02
 	  fee00000-fee00fff : Local APIC
-	ff648000-ffffffff : Reserved
+	ff642000-ffffffff : Reserved
 	100000000-2803fffff : System RAM
+	  12ca00000-12d8011b0 : Kernel code
+	  12d8011b1-12df9c3ff : Kernel data
+	  12e94d000-12effffff : Kernel bss
 	280400000-283ffffff : RAM buffer
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
 	/dev/nvme0n1p3: TYPE="ext4"
-	/dev/mmcblk0: TYPE="ext4"
 	/dev/sda3: TYPE="ext4"
 	/dev/sdb2: TYPE="ext4"
 	/dev/sdb3: TYPE="ext4"
@@ -353,14 +368,14 @@
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
 	seri:/dev/ttyS3 type:mmio base:0xfe042000 irq:3
-	seri:/dev/ttyS4 type:mmio base:0x825DC000 irq:16 bdf:"00:1e.0"
-	seri:/dev/ttyS5 type:mmio base:0x825DB000 irq:17 bdf:"00:1e.1"
+	seri:/dev/ttyS4 type:mmio base:0x826E0000 irq:16 bdf:"00:1e.0"
+	seri:/dev/ttyS5 type:mmio base:0x826DF000 irq:17 bdf:"00:1e.1"
 	</TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
-	3, 4, 5, 6, 7, 10, 11, 12, 13, 15
+	3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	8085828 kB
+	8056040 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3
@@ -652,6 +667,11 @@
         <clos_number>16</clos_number>
       </capability>
       <capability id="CDP"/>
+      <capability id="Software SRAM">
+        <start>0x40000000</start>
+        <end>0x4003ffff</end>
+        <size>262144</size>
+      </capability>
     </cache>
     <cache level="3" id="0x0" type="3">
       <cache_size>4194304</cache_size>
@@ -670,11 +690,17 @@
         <processor>0x2</processor>
         <processor>0x6</processor>
       </processors>
+      <capability id="Software SRAM">
+        <start>0x40000000</start>
+        <end>0x4007ffff</end>
+        <size>524288</size>
+      </capability>
     </cache>
   </caches>
   <memory>
     <range start="0x0000000000000000" end="0x000000000009ffff" size="655360"/>
-    <range start="0x0000000000100000" end="0x00000000781dffff" size="2014183424"/>
+    <range start="0x0000000000100000" end="0x000000003fffffff" size="1072693248"/>
+    <range start="0x0000000040088000" end="0x0000000076353fff" size="908902400"/>
     <range start="0x0000000100000000" end="0x00000002803fffff" size="6446645248"/>
   </memory>
   <devices>
@@ -701,6 +727,7 @@
         <capability id="Vendor-Specific"/>
         <capability id="PCI Express"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="per-vector masking"/>
         </capability>
         <capability id="Power Management"/>
@@ -714,8 +741,10 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x088000</class>
-        <resource type="memory" min="0x825ea000" max="0x825eafff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="MSI"/>
+        <resource type="memory" min="0x826ee000" max="0x826eefff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Vendor-Specific"/>
         <capability id="Power Management"/>
         <capability id="Conventional PCI Advanced Features"/>
@@ -727,12 +756,11 @@
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x130000</class>
         <resource type="memory" min="0x81800000" max="0x81ffffff" len="0x800000" id="bar2" width="64" prefetchable="0"/>
-        <resource type="memory" min="0x82400000" max="0x824fffff" len="0x100000" id="bar0" width="64" prefetchable="0"/>
-        <resource type="memory" min="0x825e9000" max="0x825e93ff" len="0x400" id="bar4" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x82500000" max="0x825fffff" len="0x100000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826ed000" max="0x826ed3ff" len="0x400" id="bar4" width="64" prefetchable="0"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>8</count>
-          </capability>
+          <count>8</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
         </capability>
       </device>
@@ -742,7 +770,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0c8000</class>
-        <resource type="memory" min="0x825e8000" max="0x825e8fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826ec000" max="0x826ecfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -752,7 +780,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0c8000</class>
-        <resource type="memory" min="0x825e7000" max="0x825e7fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826eb000" max="0x826ebfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -770,12 +798,11 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0c0330</class>
-        <resource type="memory" min="0x825c0000" max="0x825cffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826c0000" max="0x826cffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>8</count>
-          </capability>
+          <count>8</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
         </capability>
         <capability id="Vendor-Specific"/>
@@ -787,8 +814,8 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x050000</class>
-        <resource type="memory" min="0x825d0000" max="0x825d3fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
-        <resource type="memory" min="0x825e6000" max="0x825e6fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826d4000" max="0x826d7fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826ea000" max="0x826eafff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
       </device>
       <device address="0x150000" id="0x4b78">
@@ -797,7 +824,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0c8000</class>
-        <resource type="memory" min="0x825e5000" max="0x825e5fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826e9000" max="0x826e9fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -807,7 +834,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0c8000</class>
-        <resource type="memory" min="0x825e4000" max="0x825e4fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826e8000" max="0x826e8fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -817,7 +844,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0c8000</class>
-        <resource type="memory" min="0x825e3000" max="0x825e3fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826e7000" max="0x826e7fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -827,9 +854,10 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x078000</class>
-        <resource type="memory" min="0x825e2000" max="0x825e2fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826e6000" max="0x826e6fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
         <capability id="Vendor-Specific"/>
@@ -843,10 +871,12 @@
         <resource type="io_port" min="0x2060" max="0x207f" len="0x20" id="bar4"/>
         <resource type="io_port" min="0x2080" max="0x2087" len="0x8" id="bar2"/>
         <resource type="io_port" min="0x2088" max="0x208b" len="0x4" id="bar3"/>
-        <resource type="memory" min="0x825d6000" max="0x825d7fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
-        <resource type="memory" min="0x825e0000" max="0x825e07ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
-        <resource type="memory" min="0x825e1000" max="0x825e10ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
-        <capability id="MSI"/>
+        <resource type="memory" min="0x826da000" max="0x826dbfff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
+        <resource type="memory" min="0x826e4000" max="0x826e47ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
+        <resource type="memory" min="0x826e5000" max="0x826e50ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Power Management"/>
         <capability id="Reserved (0x12)"/>
       </device>
@@ -856,7 +886,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0c8000</class>
-        <resource type="memory" min="0x825df000" max="0x825dffff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826e3000" max="0x826e3fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -866,7 +896,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x080501</class>
-        <resource type="memory" min="0x825de000" max="0x825defff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826e2000" max="0x826e2fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -876,7 +906,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x080501</class>
-        <resource type="memory" min="0x825dd000" max="0x825ddfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826e1000" max="0x826e1fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -886,10 +916,11 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0000ff</class>
-        <resource type="memory" min="0x82580000" max="0x825bffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x82680000" max="0x826bffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
           <capability id="per-vector masking"/>
         </capability>
@@ -898,39 +929,67 @@
         <vendor>0x8086</vendor>
         <identifier>0x4b38</identifier>
         <class>0x060400</class>
-        <resource type="memory" min="0x82300000" max="0x823fffff" len="0x100000"/>
+        <resource type="memory" min="0x82400000" max="0x824fffff" len="0x100000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="Advanced Error Reporting"/>
         <capability id="ACS"/>
+        <capability id="TPM"/>
+        <capability id="L1 PM Substates"/>
         <capability id="Secondary PCI Express"/>
         <capability id="DPC"/>
         <bus type="pci" address="0x1">
-          <device address="0x0" id="0xf1a6">
-            <vendor>0x8086</vendor>
-            <identifier>0xf1a6</identifier>
-            <subsystem_vendor>0x8086</subsystem_vendor>
-            <subsystem_identifier>0x390b</subsystem_identifier>
+          <device address="0x0" id="0x2263">
+            <vendor>0x126f</vendor>
+            <identifier>0x2263</identifier>
+            <subsystem_vendor>0x126f</subsystem_vendor>
+            <subsystem_identifier>0x2263</subsystem_identifier>
             <class>0x010802</class>
-            <resource type="memory" min="0x82300000" max="0x82303fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+            <resource type="memory" min="0x82400000" max="0x82403fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
             <capability id="Power Management"/>
             <capability id="MSI">
-              <capability id="multiple-message">
-                <count>8</count>
-              </capability>
+              <count>8</count>
+              <capability id="multiple-message"/>
               <capability id="64-bit address"/>
               <capability id="per-vector masking"/>
             </capability>
             <capability id="PCI Express"/>
-            <capability id="MSI-X"/>
+            <capability id="MSI-X">
+              <table_size>16</table_size>
+              <table_bir>1</table_bir>
+              <table_offset>0x1000000</table_offset>
+              <pba_bir>1</pba_bir>
+              <pba_offset>0x0</pba_offset>
+            </capability>
             <capability id="Advanced Error Reporting"/>
             <capability id="Secondary PCI Express"/>
             <capability id="LTR"/>
             <capability id="L1 PM Substates"/>
           </device>
         </bus>
+      </device>
+      <device address="0x1c0004" id="0x4b3c">
+        <vendor>0x8086</vendor>
+        <identifier>0x4b3c</identifier>
+        <class>0x060400</class>
+        <capability id="PCI Express"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
+        <capability id="Subsystem ID and Subsystem Vendor ID"/>
+        <capability id="Power Management"/>
+        <capability id="Advanced Error Reporting"/>
+        <capability id="ACS"/>
+        <capability id="TPM"/>
+        <capability id="Virtual Channel"/>
+        <capability id="L1 PM Substates"/>
+        <capability id="Secondary PCI Express"/>
+        <capability id="DPC"/>
+        <bus type="pci" address="0x2"/>
       </device>
       <device address="0x1d0000" id="0x4bb3">
         <vendor>0x8086</vendor>
@@ -942,6 +1001,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
           <capability id="per-vector masking"/>
         </capability>
@@ -952,13 +1012,12 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x020018</class>
-        <resource type="memory" min="0x82600000" max="0x8263ffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x82700000" max="0x8273ffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>32</count>
-          </capability>
+          <count>32</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
           <capability id="per-vector masking"/>
         </capability>
@@ -969,13 +1028,12 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x020019</class>
-        <resource type="memory" min="0x82640000" max="0x8267ffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x82740000" max="0x8277ffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>32</count>
-          </capability>
+          <count>32</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
           <capability id="per-vector masking"/>
         </capability>
@@ -986,7 +1044,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x078000</class>
-        <resource type="memory" min="0x825dc000" max="0x825dcfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826e0000" max="0x826e0fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -996,7 +1054,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x078000</class>
-        <resource type="memory" min="0x825db000" max="0x825dbfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826df000" max="0x826dffff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
@@ -1006,14 +1064,13 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x020000</class>
-        <resource type="memory" min="0x82502000" max="0x82503fff" len="0x2000" id="bar0" width="64" prefetchable="0"/>
-        <resource type="memory" min="0x825da000" max="0x825dafff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x82602000" max="0x82603fff" len="0x2000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826de000" max="0x826defff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>32</count>
-          </capability>
+          <count>32</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
           <capability id="per-vector masking"/>
         </capability>
@@ -1026,6 +1083,21 @@
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x060100</class>
       </device>
+      <device address="0x1f0003" id="0x4b58">
+        <vendor>0x8086</vendor>
+        <identifier>0x4b58</identifier>
+        <subsystem_vendor>0x8086</subsystem_vendor>
+        <subsystem_identifier>0x7270</subsystem_identifier>
+        <class>0x040300</class>
+        <resource type="memory" min="0x82300000" max="0x823fffff" len="0x100000" id="bar4" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826d0000" max="0x826d3fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+        <capability id="Power Management"/>
+        <capability id="Vendor-Specific"/>
+        <capability id="MSI">
+          <count>1</count>
+          <capability id="64-bit address"/>
+        </capability>
+      </device>
       <device address="0x1f0004" id="0x4b23">
         <vendor>0x8086</vendor>
         <identifier>0x4b23</identifier>
@@ -1033,7 +1105,7 @@
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0c0500</class>
         <resource type="io_port" min="0x2040" max="0x205f" len="0x20" id="bar4"/>
-        <resource type="memory" min="0x825d9000" max="0x825d90ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x826dd000" max="0x826dd0ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
       </device>
       <device address="0x1f0005" id="0x4b24">
         <vendor>0x8086</vendor>
@@ -1041,7 +1113,7 @@
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x0c8000</class>
-        <resource type="memory" min="0x82501000" max="0x82501fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+        <resource type="memory" min="0x82601000" max="0x82601fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
       </device>
       <device address="0x1f0007" id="0x4b26">
         <vendor>0x8086</vendor>
@@ -1052,9 +1124,8 @@
         <resource type="memory" min="0x81000000" max="0x817fffff" len="0x800000" id="bar2" width="64" prefetchable="0"/>
         <resource type="memory" min="0x82200000" max="0x822fffff" len="0x100000" id="bar0" width="64" prefetchable="0"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>8</count>
-          </capability>
+          <count>8</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
         </capability>
       </device>
