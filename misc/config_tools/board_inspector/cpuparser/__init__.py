@@ -59,3 +59,15 @@ def parse_cpuid(leaf, subleaf, cpu_id):
             return None
     else:
         return None
+
+def get_online_cpu_ids():
+    acc = list()
+    with open("/sys/devices/system/cpu/online", "r") as f:
+        line = f.read().strip()
+        for r in line.split(","):
+            if r.find("-") > 0:
+                first, last = tuple(map(int, r.split("-")))
+                acc.extend(range(first, last + 1))
+            else:
+                acc.append(int(r))
+    return acc

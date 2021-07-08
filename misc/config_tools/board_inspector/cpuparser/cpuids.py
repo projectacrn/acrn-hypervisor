@@ -75,6 +75,7 @@ class LEAF_1(CPUID):
     avx = cpuidfield(ECX, 28, 28)
     f16c = cpuidfield(ECX, 29, 29)
     rdrand = cpuidfield(ECX, 30, 30)
+    hypervisor = cpuidfield(ECX, 31, 31)
 
     fpu = cpuidfield(EDX, 0, 0)
     vme = cpuidfield(EDX, 1, 1)
