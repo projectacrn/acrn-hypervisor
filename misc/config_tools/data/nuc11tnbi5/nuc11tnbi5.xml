@@ -90,8 +90,8 @@
 	58:00.0 0200: 8086:15f2 (rev 03)
 	</PCI_VID_PID>
   <WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x40CDA00CUL
-	#define WAKE_VECTOR_64          0x40CDA018UL
+	#define WAKE_VECTOR_32          0x40CD800CUL
+	#define WAKE_VECTOR_64          0x40CD8018UL
 	</WAKE_VECTOR_INFO>
   <RESET_REGISTER_INFO>
 	#define RESET_REGISTER_ADDRESS  0xCF9UL
@@ -227,15 +227,15 @@
 	  000ec000-000effff : PCI Bus 0000:00
 	  000f0000-000fffff : PCI Bus 0000:00
 	    000f0000-000fffff : System ROM
-	00100000-2f7dffff : System RAM
-	2f7e0000-2f87efff : Reserved
-	2f87f000-32239fff : System RAM
-	3223a000-3223afff : Reserved
-	3223b000-38138fff : System RAM
-	38139000-40b53fff : Reserved
-	40b54000-40c1ffff : ACPI Tables
-	40c20000-40cddfff : ACPI Non-volatile Storage
-	40cde000-417fefff : Reserved
+	00100000-2f7cefff : System RAM
+	2f7cf000-2f86dfff : Reserved
+	2f86e000-33e6afff : System RAM
+	33e6b000-33e6bfff : Reserved
+	33e6c000-38136fff : System RAM
+	38137000-40b51fff : Reserved
+	40b52000-40c1dfff : ACPI Tables
+	40c1e000-40cdbfff : ACPI Non-volatile Storage
+	40cdc000-417fefff : Reserved
 	417ff000-417fffff : System RAM
 	41800000-47ffffff : Reserved
 	48e00000-4f7fffff : Reserved
@@ -291,13 +291,13 @@
 	ff000000-ffffffff : Reserved
 	  ff000000-ffffffff : pnp 00:05
 	100000000-3b07fffff : System RAM
-	  203400000-204200ed0 : Kernel code
-	  204200ed1-204c534bf : Kernel data
-	  204f1b000-2053fffff : Kernel bss
+	  2f3c00000-2f4a00ed0 : Kernel code
+	  2f4a00ed1-2f545353f : Kernel data
+	  2f571d000-2f5bfffff : Kernel bss
 	3b0800000-3b3ffffff : RAM buffer
 	4000000000-7fffffffff : PCI Bus 0000:00
 	  4000000000-400fffffff : 0000:00:02.0
-	    4000000000-40001d4fff : efifb
+	    4000000000-40007e8fff : efifb
 	  4010000000-4016ffffff : 0000:00:02.0
 	  4017000000-4017000fff : 0000:00:15.0
 	    4017000000-40170001ff : lpss_dev
@@ -335,8 +335,8 @@
 	  603d1b3000-603d1b3fff : 0000:00:08.0
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
-	/dev/sda3: TYPE="ext4"
 	/dev/nvme0n1p3: TYPE="ext4"
+	/dev/sda3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
@@ -345,7 +345,7 @@
 	3, 5, 6, 7, 10, 11, 12, 13, 14, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	11884916 kB
+	11884896 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3
@@ -745,7 +745,7 @@
   </caches>
   <memory>
     <range start="0x0000000000000000" end="0x000000000009efff" size="651264"/>
-    <range start="0x0000000000100000" end="0x0000000038138fff" size="939757568"/>
+    <range start="0x0000000000100000" end="0x0000000038136fff" size="939749376"/>
     <range start="0x00000000417ff000" end="0x00000000417fffff" size="4096"/>
     <range start="0x0000000100000000" end="0x00000003b07fffff" size="11551113216"/>
   </memory>
@@ -777,6 +777,7 @@
         <capability id="Vendor-Specific"/>
         <capability id="PCI Express"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="per-vector masking"/>
         </capability>
         <capability id="Power Management"/>
@@ -791,7 +792,9 @@
         <class>0x060400</class>
         <resource type="memory" min="0x6a400000" max="0x6a4fffff" len="0x100000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="Advanced Error Reporting"/>
@@ -814,14 +817,19 @@
             <resource type="memory" min="0x6a400000" max="0x6a403fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
             <capability id="Power Management"/>
             <capability id="MSI">
-              <capability id="multiple-message">
-                <count>8</count>
-              </capability>
+              <count>8</count>
+              <capability id="multiple-message"/>
               <capability id="64-bit address"/>
               <capability id="per-vector masking"/>
             </capability>
             <capability id="PCI Express"/>
-            <capability id="MSI-X"/>
+            <capability id="MSI-X">
+              <table_size>16</table_size>
+              <table_bir>1</table_bir>
+              <table_offset>0x1000000</table_offset>
+              <pba_bir>1</pba_bir>
+              <pba_offset>0x0</pba_offset>
+            </capability>
             <capability id="Advanced Error Reporting"/>
             <capability id="Secondary PCI Express"/>
             <capability id="LTR"/>
@@ -836,7 +844,9 @@
         <resource type="io_port" min="0x4000" max="0x4fff" len="0x1000"/>
         <resource type="memory" min="0x5e000000" max="0x6a1fffff" len="0xc200000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="ACS"/>
@@ -850,7 +860,9 @@
         <resource type="io_port" min="0x5000" max="0x5fff" len="0x1000"/>
         <resource type="memory" min="0x50000000" max="0x5c1fffff" len="0xc200000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="ACS"/>
@@ -864,7 +876,9 @@
         <subsystem_identifier>0x3002</subsystem_identifier>
         <class>0x088000</class>
         <resource type="memory" min="0x603d1b3000" max="0x603d1b3fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Vendor-Specific"/>
         <capability id="Power Management"/>
         <capability id="Conventional PCI Advanced Features"/>
@@ -878,9 +892,8 @@
         <resource type="memory" min="0x603d190000" max="0x603d19ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>8</count>
-          </capability>
+          <count>8</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
         </capability>
         <capability id="Vendor-Specific"/>
@@ -896,9 +909,16 @@
         <resource type="memory" min="0x603d1b2000" max="0x603d1b2fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
-        <capability id="MSI-X"/>
+        <capability id="MSI-X">
+          <table_size>16</table_size>
+          <table_bir>4</table_bir>
+          <table_offset>0xfa20000</table_offset>
+          <pba_bir>0</pba_bir>
+          <pba_offset>0x2000000</pba_offset>
+        </capability>
       </device>
       <device address="0xd0003" id="0x9a1d" description="USB controller: Intel Corporation">
         <vendor>0x8086</vendor>
@@ -910,9 +930,16 @@
         <resource type="memory" min="0x603d1b1000" max="0x603d1b1fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
-        <capability id="MSI-X"/>
+        <capability id="MSI-X">
+          <table_size>16</table_size>
+          <table_bir>4</table_bir>
+          <table_offset>0xfa20000</table_offset>
+          <pba_bir>0</pba_bir>
+          <pba_offset>0x2000000</pba_offset>
+        </capability>
       </device>
       <device address="0x140000" id="0xa0ed" description="USB controller: Intel Corporation">
         <vendor>0x8086</vendor>
@@ -923,9 +950,8 @@
         <resource type="memory" min="0x603d180000" max="0x603d18ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>8</count>
-          </capability>
+          <count>8</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
         </capability>
         <capability id="Vendor-Specific"/>
@@ -950,10 +976,17 @@
         <resource type="memory" min="0x603d1a4000" max="0x603d1a7fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
         <capability id="PCI Express"/>
-        <capability id="MSI-X"/>
+        <capability id="MSI-X">
+          <table_size>16</table_size>
+          <table_bir>1</table_bir>
+          <table_offset>0x10000000</table_offset>
+          <pba_bir>1</pba_bir>
+          <pba_offset>0x0</pba_offset>
+        </capability>
         <capability id="LTR"/>
         <capability id="Vendor-Specific Extended"/>
       </device>
@@ -986,6 +1019,7 @@
         <resource type="memory" min="0x603d1ad000" max="0x603d1adfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
         <capability id="Vendor-Specific"/>
@@ -1002,7 +1036,9 @@
         <resource type="memory" min="0x6a500000" max="0x6a501fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
         <resource type="memory" min="0x6a502000" max="0x6a5027ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
         <resource type="memory" min="0x6a503000" max="0x6a5030ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Power Management"/>
         <capability id="Reserved (0x12)"/>
       </device>
@@ -1012,7 +1048,9 @@
         <class>0x060400</class>
         <resource type="memory" min="0x6a200000" max="0x6a3fffff" len="0x200000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="Advanced Error Reporting"/>
@@ -1032,10 +1070,17 @@
             <resource type="memory" min="0x6a300000" max="0x6a303fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
             <capability id="Power Management"/>
             <capability id="MSI">
+              <count>1</count>
               <capability id="64-bit address"/>
               <capability id="per-vector masking"/>
             </capability>
-            <capability id="MSI-X"/>
+            <capability id="MSI-X">
+              <table_size>5</table_size>
+              <table_bir>7</table_bir>
+              <table_offset>0x30000</table_offset>
+              <pba_bir>1</pba_bir>
+              <pba_offset>0x0</pba_offset>
+            </capability>
             <capability id="PCI Express"/>
             <capability id="Advanced Error Reporting"/>
             <capability id="Device Serial Number"/>
@@ -1063,6 +1108,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
       </device>
