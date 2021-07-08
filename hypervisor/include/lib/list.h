@@ -119,7 +119,7 @@ static inline void list_splice_init(struct list_head *list,
 }
 
 #define container_of(ptr, type, member) \
-	((type *)((char *)(ptr)-offsetof(type, member)))
+	((type *)(((char *)(ptr)) - offsetof(type, member)))
 
 #define list_for_each(pos, head) \
 	for ((pos) = (head)->next; (pos) != (head); (pos) = (pos)->next)
