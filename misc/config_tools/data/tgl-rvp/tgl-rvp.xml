@@ -12,83 +12,83 @@
 	Version: 1
 	</BASE_BOARD_INFO>
   <PCI_DEVICE>
-	00:00.0 Host bridge: Intel Corporation 11th Gen Core Processor Host Bridge/DRAM Registers (rev 01)
-	00:02.0 VGA compatible controller: Intel Corporation UHD Graphics (rev 01)
+	00:00.0 Host bridge: Intel Corporation Device 9a14 (rev 01)
+	00:02.0 VGA compatible controller: Intel Corporation Device 9a49 (rev 01)
 	Region 0: Memory at 607c000000 (64-bit, non-prefetchable) [size=16M]
 	Region 2: Memory at 4000000000 (64-bit, prefetchable) [size=256M]
 	Region 0: Memory at 0000004010000000 (64-bit, non-prefetchable)
 	Region 2: Memory at 0000004020000000 (64-bit, prefetchable)
 	00:04.0 Signal processing controller: Intel Corporation Device 9a03 (rev 01)
 	Region 0: Memory at 607d480000 (64-bit, non-prefetchable) [size=128K]
-	00:06.0 PCI bridge: Intel Corporation 11th Gen Core Processor PCIe Controller (rev 01)
-	00:07.0 PCI bridge: Intel Corporation Tiger Lake-LP Thunderbolt PCI Express Root Port #0 (rev 01)
-	00:07.1 PCI bridge: Intel Corporation Tiger Lake-LP Thunderbolt PCI Express Root Port #1 (rev 01)
-	00:07.2 PCI bridge: Intel Corporation Tiger Lake-LP Thunderbolt PCI Express Root Port #2 (rev 01)
-	00:07.3 PCI bridge: Intel Corporation Tiger Lake-LP Thunderbolt PCI Express Root Port #3 (rev 01)
+	00:06.0 PCI bridge: Intel Corporation Device 9a09 (rev 01)
+	00:07.0 PCI bridge: Intel Corporation Device 9a23 (rev 01)
+	00:07.1 PCI bridge: Intel Corporation Device 9a25 (rev 01)
+	00:07.2 PCI bridge: Intel Corporation Device 9a27 (rev 01)
+	00:07.3 PCI bridge: Intel Corporation Device 9a29 (rev 01)
 	00:08.0 System peripheral: Intel Corporation Device 9a11 (rev 01)
 	Region 0: Memory at 607d4ef000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:0a.0 Signal processing controller: Intel Corporation Device 9a0d (rev 01)
 	Region 0: Memory at 607d4d0000 (64-bit, non-prefetchable) [size=32K]
-	00:0d.0 USB controller: Intel Corporation Tiger Lake-LP Thunderbolt USB Controller (rev 01)
+	00:0d.0 USB controller: Intel Corporation Device 9a13 (rev 01)
 	Region 0: Memory at 607d4c0000 (64-bit, non-prefetchable) [size=64K]
 	00:0d.1 USB controller: Intel Corporation Device 9a15 (rev 01)
-	Region 0: Memory at 607d200000 (64-bit, non-prefetchable) [size=2M]
-	Region 2: Memory at 607d4ee000 (64-bit, non-prefetchable) [size=4K]
-	00:0d.2 USB controller: Intel Corporation Tiger Lake-LP Thunderbolt NHI #0 (rev 01)
+	Region 0: Memory at 607d200000 (64-bit, non-prefetchable) [disabled] [size=2M]
+	Region 2: Memory at 607d4ee000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	00:0d.2 USB controller: Intel Corporation Device 9a1b (rev 01)
 	Region 0: Memory at 607d440000 (64-bit, non-prefetchable) [size=256K]
 	Region 2: Memory at 607d4ed000 (64-bit, non-prefetchable) [size=4K]
-	00:0d.3 USB controller: Intel Corporation Tiger Lake-LP Thunderbolt NHI #1 (rev 01)
+	00:0d.3 USB controller: Intel Corporation Device 9a1d (rev 01)
 	Region 0: Memory at 607d400000 (64-bit, non-prefetchable) [size=256K]
 	Region 2: Memory at 607d4ec000 (64-bit, non-prefetchable) [size=4K]
 	00:10.0 Serial bus controller [0c80]: Intel Corporation Device a0d8 (rev 20)
 	Region 0: Memory at 607d4eb000 (64-bit, non-prefetchable) [size=4K]
 	00:10.5 Host bridge: Intel Corporation Device a0af (rev 20)
-	00:12.0 Serial controller: Intel Corporation Tiger Lake-LP Integrated Sensor Hub (rev 20)
+	00:12.0 Serial controller: Intel Corporation Device a0fc (rev 20)
 	Region 0: Memory at 607d4b0000 (64-bit, non-prefetchable) [size=64K]
-	00:14.0 USB controller: Intel Corporation Tiger Lake-LP USB 3.2 Gen 2x1 xHCI Host Controller (rev 20)
+	00:14.0 USB controller: Intel Corporation Device a0ed (rev 20)
 	Region 0: Memory at 607d4a0000 (64-bit, non-prefetchable) [size=64K]
 	00:14.1 USB controller: Intel Corporation Device a0ee (rev 20)
 	Region 0: Memory at 607d000000 (64-bit, non-prefetchable) [size=2M]
 	Region 2: Memory at 607d4ea000 (64-bit, non-prefetchable) [size=4K]
-	00:14.2 RAM memory: Intel Corporation Tiger Lake-LP Shared SRAM (rev 20)
+	00:14.2 RAM memory: Intel Corporation Device a0ef (rev 20)
 	Region 0: Memory at 607d4d8000 (64-bit, non-prefetchable) [disabled] [size=16K]
 	Region 2: Memory at 607d4e9000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:15.0 Serial bus controller [0c80]: Intel Corporation Tiger Lake-LP Serial IO I2C Controller #0 (rev 20)
+	00:15.0 Serial bus controller [0c80]: Intel Corporation Device a0e8 (rev 20)
 	Region 0: Memory at 607d4e8000 (64-bit, non-prefetchable) [virtual] [size=4K]
-	00:15.1 Serial bus controller [0c80]: Intel Corporation Tiger Lake-LP Serial IO I2C Controller #1 (rev 20)
+	00:15.1 Serial bus controller [0c80]: Intel Corporation Device a0e9 (rev 20)
 	Region 0: Memory at 607d4e7000 (64-bit, non-prefetchable) [virtual] [size=4K]
-	00:15.2 Serial bus controller [0c80]: Intel Corporation Tiger Lake-LP Serial IO I2C Controller #2 (rev 20)
+	00:15.2 Serial bus controller [0c80]: Intel Corporation Device a0ea (rev 20)
 	Region 0: Memory at 607d4e6000 (64-bit, non-prefetchable) [virtual] [size=4K]
-	00:15.3 Serial bus controller [0c80]: Intel Corporation Tiger Lake-LP Serial IO I2C Controller #3 (rev 20)
+	00:15.3 Serial bus controller [0c80]: Intel Corporation Device a0eb (rev 20)
 	Region 0: Memory at 607d4e5000 (64-bit, non-prefetchable) [virtual] [size=4K]
-	00:16.0 Communication controller: Intel Corporation Tiger Lake-LP Management Engine Interface (rev 20)
+	00:16.0 Communication controller: Intel Corporation Device a0e0 (rev 20)
 	Region 0: Memory at 607d4e4000 (64-bit, non-prefetchable) [size=4K]
 	00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)
 	Region 0: Memory at 86620000 (32-bit, non-prefetchable) [size=8K]
 	Region 1: Memory at 86624000 (32-bit, non-prefetchable) [size=256]
 	Region 5: Memory at 86623000 (32-bit, non-prefetchable) [size=2K]
-	00:19.0 Serial bus controller [0c80]: Intel Corporation Tiger Lake-LP Serial IO I2C Controller #4 (rev 20)
+	00:19.0 Serial bus controller [0c80]: Intel Corporation Device a0c5 (rev 20)
 	Region 0: Memory at 607d4e3000 (64-bit, non-prefetchable) [virtual] [size=4K]
-	00:19.1 Serial bus controller [0c80]: Intel Corporation Tiger Lake-LP Serial IO I2C Controller #5 (rev 20)
+	00:19.1 Serial bus controller [0c80]: Intel Corporation Device a0c6 (rev 20)
 	Region 0: Memory at 607d4e2000 (64-bit, non-prefetchable) [virtual] [size=4K]
 	00:1c.0 PCI bridge: Intel Corporation Device a0bc (rev 20)
-	00:1e.0 Communication controller: Intel Corporation Tiger Lake-LP Serial IO UART Controller #0 (rev 20)
-	Region 0: Memory at 607d4e1000 (64-bit, non-prefetchable) [size=4K]
-	00:1e.3 Serial bus controller [0c80]: Intel Corporation Tiger Lake-LP Serial IO SPI Controller #1 (rev 20)
+	00:1e.0 Communication controller: Intel Corporation Device a0a8 (rev 20)
+	Region 0: Memory at 607d4e1000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	00:1e.3 Serial bus controller [0c80]: Intel Corporation Device a0ab (rev 20)
 	Region 0: Memory at 607d4e0000 (64-bit, non-prefetchable) [virtual] [size=4K]
 	00:1e.4 Ethernet controller: Intel Corporation Device a0ac (rev 20)
 	Region 0: Memory at 607d4dc000 (64-bit, non-prefetchable) [size=8K]
 	Region 2: Memory at 607d4df000 (64-bit, non-prefetchable) [size=4K]
 	00:1f.0 ISA bridge: Intel Corporation Device a088 (rev 20)
-	00:1f.4 SMBus: Intel Corporation Tiger Lake-LP SMBus Controller (rev 20)
+	00:1f.4 SMBus: Intel Corporation Device a0a3 (rev 20)
 	Region 0: Memory at 607d4de000 (64-bit, non-prefetchable) [size=256]
-	00:1f.5 Serial bus controller [0c80]: Intel Corporation Tiger Lake-LP SPI Controller (rev 20)
+	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device a0a4 (rev 20)
 	Region 0: Memory at 4f800000 (32-bit, non-prefetchable) [size=4K]
 	00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (13) I219-V (rev 20)
 	Region 0: Memory at 86600000 (32-bit, non-prefetchable) [size=128K]
 	01:00.0 Non-Volatile memory controller: Intel Corporation SSD 600P Series (rev 03)
 	Region 0: Memory at 86400000 (64-bit, non-prefetchable) [size=16K]
-	aa:00.0 Ethernet controller: Intel Corporation Intel(R) Ethernet Controller I225-LM (rev 03)
+	aa:00.0 Ethernet controller: Intel Corporation Device 15f2 (rev 03)
 	Region 0: Memory at 86200000 (32-bit, non-prefetchable) [size=1M]
 	Region 3: Memory at 86300000 (32-bit, non-prefetchable) [size=16K]
 	</PCI_DEVICE>
@@ -268,25 +268,26 @@
 	0009f000-000fffff : Reserved
 	  000a0000-000bffff : PCI Bus 0000:00
 	  000f0000-000fffff : System ROM
-	00100000-394ca017 : System RAM
-	394ca018-394fb857 : System RAM
-	394fb858-39522fff : System RAM
-	39523000-39523fff : Reserved
-	39524000-3cd3cfff : System RAM
+	00100000-37d8c017 : System RAM
+	37d8c018-37dbd857 : System RAM
+	37dbd858-394eafff : System RAM
+	394eb000-39505fff : Reserved
+	39506000-39506fff : System RAM
+	39507000-39507fff : Reserved
+	39508000-3cd3cfff : System RAM
 	3cd3d000-3ff10fff : Reserved
 	  3cdbc618-3cdbc618 : wdat_wdt
-	    3cdbc618-3cdbc618 : wdat_wdt wdat_wdt
 	3ff11000-3ffb2fff : ACPI Non-volatile Storage
 	  3ff5b000-3ff5bfff : USBC000:00
 	3ffb3000-4007efff : ACPI Tables
 	4007f000-4007ffff : System RAM
 	40080000-40080fff : Reserved
 	40081000-46bfffff : System RAM
-	46c00000-4f7fffff : Reserved
+	46c00000-48ffffff : Reserved
+	49100000-4f7fffff : Reserved
 	  4b800000-4f7fffff : Graphics Stolen Memory
 	4f800000-bfffffff : PCI Bus 0000:00
 	  4f800000-4f800fff : 0000:00:1f.5
-	    4f800000-4f800fff : 0000:00:1f.5 0000:00:1f.5
 	  50000000-5c1fffff : PCI Bus 0000:80
 	  5e000000-6a1fffff : PCI Bus 0000:56
 	  6c000000-781fffff : PCI Bus 0000:2c
@@ -344,12 +345,12 @@
 	fee00000-feefffff : pnp 00:04
 	  fee00000-fee00fff : Local APIC
 	ff400000-ffffffff : Reserved
-	100000000-4907fffff : System RAM
-	  378600000-3796036d6 : Kernel code
-	  379800000-379d9ffff : Kernel rodata
-	  379e00000-37a0859bf : Kernel data
-	  37ab2e000-37b1fffff : Kernel bss
-	490800000-493ffffff : RAM buffer
+	100000000-2a07fffff : System RAM
+	  1e3000000-1e3e00db6 : Kernel code
+	  1e4000000-1e4553fff : Kernel rodata
+	  1e4600000-1e487a83f : Kernel data
+	  1e4b34000-1e4ffffff : Kernel bss
+	2a0800000-2a3ffffff : RAM buffer
 	4000000000-7fffffffff : PCI Bus 0000:00
 	  4000000000-400fffffff : 0000:00:02.0
 	  4010000000-4016ffffff : 0000:00:02.0
@@ -361,7 +362,7 @@
 	  607c000000-607cffffff : 0000:00:02.0
 	  607d000000-607d1fffff : dwc_usb3
 	    607d000000-607d1fffff : 0000:00:14.1
-	      607d00c100-607d1fffff : dwc3.2.auto dwc_usb3
+	      607d00c100-607d1fffff : dwc3.1.auto dwc_usb3
 	  607d200000-607d3fffff : 0000:00:0d.1
 	  607d400000-607d43ffff : 0000:00:0d.3
 	    607d400000-607d43ffff : thunderbolt
@@ -376,11 +377,6 @@
 	  607d4c0000-607d4cffff : 0000:00:0d.0
 	    607d4c0000-607d4cffff : xhci-hcd
 	  607d4d0000-607d4d7fff : 0000:00:0a.0
-	    607d4d4000-607d4d48ff : telem0
-	    607d4d6198-607d4d61a7 : pmt_telemetry.1.auto
-	      607d4d6198-607d4d61a7 : pmt_telemetry.1.auto pmt_telemetry.1.auto
-	    607d4d61a8-607d4d61b7 : pmt_telemetry.1.auto
-	      607d4d61a8-607d4d61b7 : pmt_telemetry.1.auto pmt_telemetry.1.auto
 	  607d4d8000-607d4dbfff : 0000:00:14.2
 	  607d4dc000-607d4ddfff : 0000:00:1e.4
 	    607d4dc000-607d4ddfff : 0000:00:1e.4
@@ -448,11 +444,11 @@
 	  607d4ef000-607d4effff : 0000:00:08.0
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
+	/dev/sdb3: TYPE="ext4"
 	/dev/nvme0n1p3: TYPE="ext4"
 	/dev/sda3: TYPE="ext4"
-	/dev/sdb2: TYPE="ext4"
-	/dev/sdb3: TYPE="ext4"
-	/dev/sdb4: TYPE="ext4"
+	/dev/sdc1: TYPE="ext4"
+	/dev/sdc2: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
@@ -462,7 +458,7 @@
 	3, 5, 6, 7, 10, 11, 12, 13, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	15673924 kB
+	7698096 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3
@@ -867,10 +863,10 @@
     <range start="0x0000000000100000" end="0x000000003cd3cfff" size="1019465728"/>
     <range start="0x000000004007f000" end="0x000000004007ffff" size="4096"/>
     <range start="0x0000000040081000" end="0x0000000046bfffff" size="112717824"/>
-    <range start="0x0000000100000000" end="0x00000004907fffff" size="15309209600"/>
+    <range start="0x0000000100000000" end="0x00000002a07fffff" size="6987710464"/>
   </memory>
   <devices>
-    <bus type="pci" address="0x0" id="0x9a14">
+    <bus type="pci" address="0x0" id="0x9a14" description="Host bridge: Intel Corporation">
       <vendor>0x8086</vendor>
       <identifier>0x9a14</identifier>
       <subsystem_vendor>0x8086</subsystem_vendor>
@@ -880,7 +876,7 @@
       <resource type="memory" min="0x4f800000" max="0xbfffffff" len="0x70800000"/>
       <resource type="memory" min="0x4000000000" max="0x7fffffffff" len="0x4000000000"/>
       <capability id="Vendor-Specific"/>
-      <device address="0x20000" id="0x9a49">
+      <device address="0x20000" id="0x9a49" description="VGA compatible controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a49</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -892,6 +888,7 @@
         <capability id="Vendor-Specific"/>
         <capability id="PCI Express"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="per-vector masking"/>
         </capability>
         <capability id="Power Management"/>
@@ -900,24 +897,28 @@
         <capability id="PRI"/>
         <capability id="SR-IOV"/>
       </device>
-      <device address="0x40000" id="0x9a03">
+      <device address="0x40000" id="0x9a03" description="Signal processing controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a03</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x118000</class>
         <resource type="memory" min="0x607d480000" max="0x607d49ffff" len="0x20000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x60000" id="0x9a09">
+      <device address="0x60000" id="0x9a09" description="PCI bridge: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a09</identifier>
         <class>0x060400</class>
         <resource type="memory" min="0x86400000" max="0x864fffff" len="0x100000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="Advanced Error Reporting"/>
@@ -930,7 +931,7 @@
         <capability id="Physical Layer 16.0 GT/s"/>
         <capability id="Lane Margining at the Receiver"/>
         <bus type="pci" address="0x1">
-          <device address="0x0" id="0xf1a5">
+          <device address="0x0" id="0xf1a5" description="Non-Volatile memory controller: Intel Corporation SSD 600P Series">
             <vendor>0x8086</vendor>
             <identifier>0xf1a5</identifier>
             <subsystem_vendor>0x8086</subsystem_vendor>
@@ -939,7 +940,13 @@
             <resource type="memory" min="0x86400000" max="0x86403fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
             <capability id="Power Management"/>
             <capability id="PCI Express"/>
-            <capability id="MSI-X"/>
+            <capability id="MSI-X">
+              <table_size>16</table_size>
+              <table_bir>1</table_bir>
+              <table_offset>0x1000000</table_offset>
+              <pba_bir>1</pba_bir>
+              <pba_offset>0x0</pba_offset>
+            </capability>
             <capability id="Advanced Error Reporting"/>
             <capability id="Secondary PCI Express"/>
             <capability id="LTR"/>
@@ -947,75 +954,85 @@
           </device>
         </bus>
       </device>
-      <device address="0x70000" id="0x9a23">
+      <device address="0x70000" id="0x9a23" description="PCI bridge: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a23</identifier>
         <class>0x060400</class>
         <resource type="io_port" min="0x4000" max="0x4fff" len="0x1000"/>
         <resource type="memory" min="0x7a000000" max="0x861fffff" len="0xc200000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="ACS"/>
         <capability id="DPC"/>
         <bus type="pci" address="0x2"/>
       </device>
-      <device address="0x70001" id="0x9a25">
+      <device address="0x70001" id="0x9a25" description="PCI bridge: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a25</identifier>
         <class>0x060400</class>
         <resource type="io_port" min="0x5000" max="0x5fff" len="0x1000"/>
         <resource type="memory" min="0x6c000000" max="0x781fffff" len="0xc200000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="ACS"/>
         <capability id="DPC"/>
         <bus type="pci" address="0x2c"/>
       </device>
-      <device address="0x70002" id="0x9a27">
+      <device address="0x70002" id="0x9a27" description="PCI bridge: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a27</identifier>
         <class>0x060400</class>
         <resource type="io_port" min="0x6000" max="0x6fff" len="0x1000"/>
         <resource type="memory" min="0x5e000000" max="0x6a1fffff" len="0xc200000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="ACS"/>
         <capability id="DPC"/>
         <bus type="pci" address="0x56"/>
       </device>
-      <device address="0x70003" id="0x9a29">
+      <device address="0x70003" id="0x9a29" description="PCI bridge: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a29</identifier>
         <class>0x060400</class>
         <resource type="io_port" min="0x7000" max="0x7fff" len="0x1000"/>
         <resource type="memory" min="0x50000000" max="0x5c1fffff" len="0xc200000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="ACS"/>
         <capability id="DPC"/>
         <bus type="pci" address="0x80"/>
       </device>
-      <device address="0x80000" id="0x9a11">
+      <device address="0x80000" id="0x9a11" description="System peripheral: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a11</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x088000</class>
         <resource type="memory" min="0x607d4ef000" max="0x607d4effff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Vendor-Specific"/>
         <capability id="Power Management"/>
         <capability id="Conventional PCI Advanced Features"/>
       </device>
-      <device address="0xa0000" id="0x9a0d">
+      <device address="0xa0000" id="0x9a0d" description="Signal processing controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a0d</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1028,7 +1045,7 @@
         <capability id="Designated Vendor-Specific"/>
         <capability id="Designated Vendor-Specific"/>
       </device>
-      <device address="0xd0000" id="0x9a13">
+      <device address="0xd0000" id="0x9a13" description="USB controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a13</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1037,15 +1054,14 @@
         <resource type="memory" min="0x607d4c0000" max="0x607d4cffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>8</count>
-          </capability>
+          <count>8</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
         </capability>
         <capability id="Vendor-Specific"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0xd0001" id="0x9a15">
+      <device address="0xd0001" id="0x9a15" description="USB controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a15</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1056,7 +1072,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0xd0002" id="0x9a1b">
+      <device address="0xd0002" id="0x9a1b" description="USB controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a1b</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1066,11 +1082,18 @@
         <resource type="memory" min="0x607d4ed000" max="0x607d4edfff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
-        <capability id="MSI-X"/>
+        <capability id="MSI-X">
+          <table_size>16</table_size>
+          <table_bir>5</table_bir>
+          <table_offset>0xfa20000</table_offset>
+          <pba_bir>0</pba_bir>
+          <pba_offset>0x2000000</pba_offset>
+        </capability>
       </device>
-      <device address="0xd0003" id="0x9a1d">
+      <device address="0xd0003" id="0x9a1d" description="USB controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0x9a1d</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1080,11 +1103,18 @@
         <resource type="memory" min="0x607d4ec000" max="0x607d4ecfff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
-        <capability id="MSI-X"/>
+        <capability id="MSI-X">
+          <table_size>16</table_size>
+          <table_bir>5</table_bir>
+          <table_offset>0xfa20000</table_offset>
+          <pba_bir>0</pba_bir>
+          <pba_offset>0x2000000</pba_offset>
+        </capability>
       </device>
-      <device address="0x100000" id="0xa0d8">
+      <device address="0x100000" id="0xa0d8" description="Serial bus controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0d8</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1094,7 +1124,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x100005" id="0xa0af">
+      <device address="0x100005" id="0xa0af" description="Host bridge: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0af</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1102,7 +1132,7 @@
         <class>0x060000</class>
         <capability id="PCI Express"/>
       </device>
-      <device address="0x120000" id="0xa0fc">
+      <device address="0x120000" id="0xa0fc" description="Serial controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0fc</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1112,7 +1142,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x140000" id="0xa0ed">
+      <device address="0x140000" id="0xa0ed" description="USB controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0ed</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1121,15 +1151,14 @@
         <resource type="memory" min="0x607d4a0000" max="0x607d4affff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>8</count>
-          </capability>
+          <count>8</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
         </capability>
         <capability id="Vendor-Specific"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x140001" id="0xa0ee">
+      <device address="0x140001" id="0xa0ee" description="USB controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0ee</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1140,7 +1169,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x140002" id="0xa0ef">
+      <device address="0x140002" id="0xa0ef" description="RAM memory: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0ef</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1150,7 +1179,7 @@
         <resource type="memory" min="0x607d4e9000" max="0x607d4e9fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
       </device>
-      <device address="0x150000" id="0xa0e8">
+      <device address="0x150000" id="0xa0e8" description="Serial bus controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0e8</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1160,7 +1189,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x150001" id="0xa0e9">
+      <device address="0x150001" id="0xa0e9" description="Serial bus controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0e9</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1170,7 +1199,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x150002" id="0xa0ea">
+      <device address="0x150002" id="0xa0ea" description="Serial bus controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0ea</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1180,7 +1209,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x150003" id="0xa0eb">
+      <device address="0x150003" id="0xa0eb" description="Serial bus controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0eb</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1190,7 +1219,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x160000" id="0xa0e0">
+      <device address="0x160000" id="0xa0e0" description="Communication controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0e0</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1199,11 +1228,12 @@
         <resource type="memory" min="0x607d4e4000" max="0x607d4e4fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x170000" id="0xa0d3">
+      <device address="0x170000" id="0xa0d3" description="SATA controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0d3</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1215,11 +1245,13 @@
         <resource type="memory" min="0x86620000" max="0x86621fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
         <resource type="memory" min="0x86623000" max="0x866237ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
         <resource type="memory" min="0x86624000" max="0x866240ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Power Management"/>
         <capability id="Reserved (0x12)"/>
       </device>
-      <device address="0x190000" id="0xa0c5">
+      <device address="0x190000" id="0xa0c5" description="Serial bus controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0c5</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1229,7 +1261,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x190001" id="0xa0c6">
+      <device address="0x190001" id="0xa0c6" description="Serial bus controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0c6</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1239,13 +1271,15 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x1c0000" id="0xa0bc">
+      <device address="0x1c0000" id="0xa0bc" description="PCI bridge: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0bc</identifier>
         <class>0x060400</class>
         <resource type="memory" min="0x86200000" max="0x863fffff" len="0x200000"/>
         <capability id="PCI Express"/>
-        <capability id="MSI"/>
+        <capability id="MSI">
+          <count>1</count>
+        </capability>
         <capability id="Subsystem ID and Subsystem Vendor ID"/>
         <capability id="Power Management"/>
         <capability id="Advanced Error Reporting"/>
@@ -1254,7 +1288,7 @@
         <capability id="Secondary PCI Express"/>
         <capability id="DPC"/>
         <bus type="pci" address="0xaa">
-          <device address="0x0" id="0x15f2">
+          <device address="0x0" id="0x15f2" description="Ethernet controller: Intel Corporation">
             <vendor>0x8086</vendor>
             <identifier>0x15f2</identifier>
             <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1264,10 +1298,17 @@
             <resource type="memory" min="0x86300000" max="0x86303fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
             <capability id="Power Management"/>
             <capability id="MSI">
+              <count>1</count>
               <capability id="64-bit address"/>
               <capability id="per-vector masking"/>
             </capability>
-            <capability id="MSI-X"/>
+            <capability id="MSI-X">
+              <table_size>5</table_size>
+              <table_bir>7</table_bir>
+              <table_offset>0x30000</table_offset>
+              <pba_bir>1</pba_bir>
+              <pba_offset>0x0</pba_offset>
+            </capability>
             <capability id="PCI Express"/>
             <capability id="Advanced Error Reporting"/>
             <capability id="Device Serial Number"/>
@@ -1277,17 +1318,17 @@
           </device>
         </bus>
       </device>
-      <device address="0x1e0000" id="0xa0a8">
+      <device address="0x1e0000" id="0xa0a8" description="Communication controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0a8</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x078000</class>
-        <resource type="memory" min="0x607d4e1000" max="0x607d4e1fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x1e0003" id="0xa0ab">
+      <device address="0x1e0003" id="0xa0ab" description="Serial bus controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0ab</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1297,7 +1338,7 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
       </device>
-      <device address="0x1e0004" id="0xa0ac">
+      <device address="0x1e0004" id="0xa0ac" description="Ethernet controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0ac</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1308,22 +1349,21 @@
         <capability id="Power Management"/>
         <capability id="Vendor-Specific"/>
         <capability id="MSI">
-          <capability id="multiple-message">
-            <count>32</count>
-          </capability>
+          <count>32</count>
+          <capability id="multiple-message"/>
           <capability id="64-bit address"/>
           <capability id="per-vector masking"/>
         </capability>
         <capability id="PCI Express"/>
       </device>
-      <device address="0x1f0000" id="0xa088">
+      <device address="0x1f0000" id="0xa088" description="ISA bridge: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa088</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x7270</subsystem_identifier>
         <class>0x060100</class>
       </device>
-      <device address="0x1f0004" id="0xa0a3">
+      <device address="0x1f0004" id="0xa0a3" description="SMBus: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0a3</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1332,7 +1372,7 @@
         <resource type="io_port" min="0xefa0" max="0xefbf" len="0x20" id="bar4"/>
         <resource type="memory" min="0x607d4de000" max="0x607d4de0ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
       </device>
-      <device address="0x1f0005" id="0xa0a4">
+      <device address="0x1f0005" id="0xa0a4" description="Serial bus controller: Intel Corporation">
         <vendor>0x8086</vendor>
         <identifier>0xa0a4</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1340,7 +1380,7 @@
         <class>0x0c8000</class>
         <resource type="memory" min="0x4f800000" max="0x4f800fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
       </device>
-      <device address="0x1f0006" id="0x15fc">
+      <device address="0x1f0006" id="0x15fc" description="Ethernet controller: Intel Corporation Ethernet Connection (13) I219-V">
         <vendor>0x8086</vendor>
         <identifier>0x15fc</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1349,6 +1389,7 @@
         <resource type="memory" min="0x86600000" max="0x8661ffff" len="0x20000" id="bar0" width="32" prefetchable="0"/>
         <capability id="Power Management"/>
         <capability id="MSI">
+          <count>1</count>
           <capability id="64-bit address"/>
         </capability>
       </device>
