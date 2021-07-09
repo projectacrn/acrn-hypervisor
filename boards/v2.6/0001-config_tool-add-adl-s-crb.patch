@@ -1,0 +1,3049 @@
+From d2fdb6a97fe16f78af996b7f09c5269a77d269a4 Mon Sep 17 00:00:00 2001
+From: Shuang Zheng <shuang.zheng@intel.com>
+Date: Thu, 1 Jul 2021 23:11:40 +0800
+Subject: [PATCH 1/2] config_tool: add adl-s-crb
+
+add adl-s-crb board and scenario, launch xmls.
+
+Signed-off-by: Shuang Zheng <shuang.zheng@intel.com>
+---
+ .../config_tools/data/adl-s-crb/adl-s-crb.xml | 1526 +++++++++++++++++
+ misc/config_tools/data/adl-s-crb/hybrid.xml   |  210 +++
+ .../config_tools/data/adl-s-crb/hybrid_rt.xml |  264 +++
+ misc/config_tools/data/adl-s-crb/industry.xml |  436 +++++
+ .../data/adl-s-crb/industry_launch_2uos.xml   |   89 +
+ .../data/adl-s-crb/industry_launch_6uos.xml   |  257 +++
+ .../data/adl-s-crb/logical_partition.xml      |  197 +++
+ 7 files changed, 2979 insertions(+)
+ create mode 100644 misc/config_tools/data/adl-s-crb/adl-s-crb.xml
+ create mode 100644 misc/config_tools/data/adl-s-crb/hybrid.xml
+ create mode 100644 misc/config_tools/data/adl-s-crb/hybrid_rt.xml
+ create mode 100644 misc/config_tools/data/adl-s-crb/industry.xml
+ create mode 100644 misc/config_tools/data/adl-s-crb/industry_launch_2uos.xml
+ create mode 100644 misc/config_tools/data/adl-s-crb/industry_launch_6uos.xml
+ create mode 100644 misc/config_tools/data/adl-s-crb/logical_partition.xml
+
+diff --git a/misc/config_tools/data/adl-s-crb/adl-s-crb.xml b/misc/config_tools/data/adl-s-crb/adl-s-crb.xml
+new file mode 100644
+index 000000000..bd1d95bd7
+--- /dev/null
++++ b/misc/config_tools/data/adl-s-crb/adl-s-crb.xml
+@@ -0,0 +1,1526 @@
++<acrn-config board="adl-s-crb">
++  <BIOS_INFO>
++	BIOS Information
++	Vendor: Intel Corporation
++	Version: ADLSFWI1.R00.2184.A00.2104300602
++	Release Date: 04/30/2021
++	</BIOS_INFO>
++  <BASE_BOARD_INFO>
++	Base Board Information
++	Manufacturer: Intel Corporation
++	Product Name: AlderLake-S ADP-S DDR5 UDIMM CRB
++	Version: 2
++	</BASE_BOARD_INFO>
++  <PCI_DEVICE>
++	00:00.0 Host bridge: Intel Corporation Device 4660 (rev 01)
++	Region 3: Memory at &lt;ignored&gt; (32-bit, non-prefetchable)
++	00:02.0 VGA compatible controller: Intel Corporation Device 4680 (rev 04)
++	Region 0: Memory at 6000000000 (64-bit, non-prefetchable) [size=16M]
++	Region 2: Memory at 4000000000 (64-bit, prefetchable) [size=256M]
++	Region 0: Memory at 0000004010000000 (64-bit, non-prefetchable)
++	Region 2: Memory at 0000004020000000 (64-bit, prefetchable)
++	00:08.0 System peripheral: Intel Corporation Device 464f (rev 01)
++	Region 0: Memory at 600113b000 (64-bit, non-prefetchable) [disabled] [size=4K]
++	00:0a.0 Signal processing controller: Intel Corporation Device 467d (rev 01)
++	Region 0: Memory at 6001120000 (64-bit, non-prefetchable) [size=32K]
++	00:12.0 Serial controller: Intel Corporation Device 7af8 (rev 10)
++	Region 0: Memory at 6001110000 (64-bit, non-prefetchable) [size=64K]
++	00:14.0 USB controller: Intel Corporation Device 7ae0 (rev 10)
++	Region 0: Memory at 6001100000 (64-bit, non-prefetchable) [size=64K]
++	00:14.2 RAM memory: Intel Corporation Device 7aa7 (rev 10)
++	Region 0: Memory at 600112c000 (64-bit, non-prefetchable) [disabled] [size=16K]
++	Region 2: Memory at 600113a000 (64-bit, non-prefetchable) [disabled] [size=4K]
++	00:15.0 Serial bus controller [0c80]: Intel Corporation Device 7acc (rev 10)
++	Region 0: Memory at 4017000000 (64-bit, non-prefetchable) [virtual] [size=4K]
++	00:15.1 Serial bus controller [0c80]: Intel Corporation Device 7acd (rev 10)
++	Region 0: Memory at 4017001000 (64-bit, non-prefetchable) [virtual] [size=4K]
++	00:15.2 Serial bus controller [0c80]: Intel Corporation Device 7ace (rev 10)
++	Region 0: Memory at 4017002000 (64-bit, non-prefetchable) [virtual] [size=4K]
++	00:15.3 Serial bus controller [0c80]: Intel Corporation Device 7acf (rev 10)
++	Region 0: Memory at 4017003000 (64-bit, non-prefetchable) [virtual] [size=4K]
++	00:16.0 Communication controller: Intel Corporation Device 7ae8 (rev 10)
++	Region 0: Memory at 6001135000 (64-bit, non-prefetchable) [size=4K]
++	00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 10)
++	Region 0: Memory at 50520000 (32-bit, non-prefetchable) [size=8K]
++	Region 1: Memory at 50524000 (32-bit, non-prefetchable) [size=256]
++	Region 5: Memory at 50523000 (32-bit, non-prefetchable) [size=2K]
++	00:19.0 Serial bus controller [0c80]: Intel Corporation Device 7afc (rev 10)
++	Region 0: Memory at 4017004000 (64-bit, non-prefetchable) [virtual] [size=4K]
++	00:19.1 Serial bus controller [0c80]: Intel Corporation Device 7afd (rev 10)
++	Region 0: Memory at 4017005000 (64-bit, non-prefetchable) [virtual] [size=4K]
++	00:1d.0 PCI bridge: Intel Corporation Device 7ab4 (rev 10)
++	00:1e.0 Communication controller: Intel Corporation Device 7aa8 (rev 10)
++	Region 0: Memory at 4017006000 (64-bit, non-prefetchable) [size=4K]
++	00:1e.3 Serial bus controller [0c80]: Intel Corporation Device 7aab (rev 10)
++	Region 0: Memory at 4017007000 (64-bit, non-prefetchable) [virtual] [size=4K]
++	00:1f.0 ISA bridge: Intel Corporation Device 7a82 (rev 10)
++	00:1f.3 Multimedia audio controller: Intel Corporation Device 7ad0 (rev 10)
++	Region 0: Memory at 6001128000 (64-bit, non-prefetchable) [size=16K]
++	Region 4: Memory at 6001000000 (64-bit, non-prefetchable) [size=1M]
++	00:1f.4 SMBus: Intel Corporation Device 7aa3 (rev 10)
++	Region 0: Memory at 6001130000 (64-bit, non-prefetchable) [size=256]
++	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device 7aa4 (rev 10)
++	Region 0: Memory at 50522000 (32-bit, non-prefetchable) [size=4K]
++	00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (17) I219-V (rev 10)
++	Region 0: Memory at 50500000 (32-bit, non-prefetchable) [size=128K]
++	01:00.0 Non-Volatile memory controller: Intel Corporation SSD Pro 7600p/760p/E 6100p Series (rev 03)
++	Region 0: Memory at 50400000 (64-bit, non-prefetchable) [size=16K]
++	</PCI_DEVICE>
++  <PCI_VID_PID>
++	00:00.0 0600: 8086:4660 (rev 01)
++	00:02.0 0300: 8086:4680 (rev 04)
++	00:08.0 0880: 8086:464f (rev 01)
++	00:0a.0 1180: 8086:467d (rev 01)
++	00:12.0 0700: 8086:7af8 (rev 10)
++	00:14.0 0c03: 8086:7ae0 (rev 10)
++	00:14.2 0500: 8086:7aa7 (rev 10)
++	00:15.0 0c80: 8086:7acc (rev 10)
++	00:15.1 0c80: 8086:7acd (rev 10)
++	00:15.2 0c80: 8086:7ace (rev 10)
++	00:15.3 0c80: 8086:7acf (rev 10)
++	00:16.0 0780: 8086:7ae8 (rev 10)
++	00:17.0 0106: 8086:7ae2 (rev 10)
++	00:19.0 0c80: 8086:7afc (rev 10)
++	00:19.1 0c80: 8086:7afd (rev 10)
++	00:1d.0 0604: 8086:7ab4 (rev 10)
++	00:1e.0 0780: 8086:7aa8 (rev 10)
++	00:1e.3 0c80: 8086:7aab (rev 10)
++	00:1f.0 0601: 8086:7a82 (rev 10)
++	00:1f.3 0401: 8086:7ad0 (rev 10)
++	00:1f.4 0c05: 8086:7aa3 (rev 10)
++	00:1f.5 0c80: 8086:7aa4 (rev 10)
++	00:1f.6 0200: 8086:1a1d (rev 10)
++	01:00.0 0108: 8086:f1a6 (rev 03)
++	</PCI_VID_PID>
++  <WAKE_VECTOR_INFO>
++	#define WAKE_VECTOR_32          0x44A4000CUL
++	#define WAKE_VECTOR_64          0x44A40018UL
++	</WAKE_VECTOR_INFO>
++  <RESET_REGISTER_INFO>
++	#define RESET_REGISTER_ADDRESS  0xCF9UL
++	#define RESET_REGISTER_SPACE_ID SPACE_SYSTEM_IO
++	#define RESET_REGISTER_VALUE    0x6U
++	</RESET_REGISTER_INFO>
++  <PM_INFO>
++	#define PM1A_EVT_SPACE_ID       SPACE_SYSTEM_IO
++	#define PM1A_EVT_BIT_WIDTH      0x20U
++	#define PM1A_EVT_BIT_OFFSET     0x0U
++	#define PM1A_EVT_ADDRESS        0x1800UL
++	#define PM1A_EVT_ACCESS_SIZE    0x2U
++	#define PM1B_EVT_SPACE_ID       SPACE_SYSTEM_IO
++	#define PM1B_EVT_BIT_WIDTH      0x0U
++	#define PM1B_EVT_BIT_OFFSET     0x0U
++	#define PM1B_EVT_ADDRESS        0x0UL
++	#define PM1B_EVT_ACCESS_SIZE    0x2U
++	#define PM1A_CNT_SPACE_ID       SPACE_SYSTEM_IO
++	#define PM1A_CNT_BIT_WIDTH      0x10U
++	#define PM1A_CNT_BIT_OFFSET     0x0U
++	#define PM1A_CNT_ADDRESS        0x1804UL
++	#define PM1A_CNT_ACCESS_SIZE    0x2U
++	#define PM1B_CNT_SPACE_ID       SPACE_SYSTEM_IO
++	#define PM1B_CNT_BIT_WIDTH      0x0U
++	#define PM1B_CNT_BIT_OFFSET     0x0U
++	#define PM1B_CNT_ADDRESS        0x0UL
++	#define PM1B_CNT_ACCESS_SIZE    0x2U
++	</PM_INFO>
++  <S3_INFO>
++	#define S3_PKG_VAL_PM1A         0x5U
++	#define S3_PKG_VAL_PM1B         0U
++	#define S3_PKG_RESERVED         0x0U
++	</S3_INFO>
++  <S5_INFO>
++	#define S5_PKG_VAL_PM1A         0x7U
++	#define S5_PKG_VAL_PM1B         0U
++	#define S5_PKG_RESERVED         0x0U
++	</S5_INFO>
++  <DRHD_INFO>
++	#define DRHD_COUNT              2U
++
++	#define DRHD0_DEV_CNT           0x1U
++	#define DRHD0_SEGMENT           0x0U
++	#define DRHD0_FLAGS             0x0U
++	#define DRHD0_REG_BASE          0xFED90000UL
++	#define DRHD0_IGNORE            true
++	#define DRHD0_DEVSCOPE0_TYPE    0x1U
++	#define DRHD0_DEVSCOPE0_ID      0x0U
++	#define DRHD0_DEVSCOPE0_BUS     0x0U
++	#define DRHD0_DEVSCOPE0_PATH    0x10U
++
++	#define DRHD1_DEV_CNT           0x2U
++	#define DRHD1_SEGMENT           0x0U
++	#define DRHD1_FLAGS             0x1U
++	#define DRHD1_REG_BASE          0xFED91000UL
++	#define DRHD1_IGNORE            false
++	#define DRHD1_DEVSCOPE0_TYPE    0x3U
++	#define DRHD1_DEVSCOPE0_ID      0x2U
++	#define DRHD1_DEVSCOPE0_BUS     0x0U
++	#define DRHD1_DEVSCOPE0_PATH    0xf7U
++	#define DRHD1_DEVSCOPE1_TYPE    0x4U
++	#define DRHD1_DEVSCOPE1_ID      0x0U
++	#define DRHD1_DEVSCOPE1_BUS     0x0U
++	#define DRHD1_DEVSCOPE1_PATH    0xf6U
++
++	</DRHD_INFO>
++  <CPU_BRAND>
++	"Genuine Intel(R) 0000"
++	</CPU_BRAND>
++  <CX_INFO>
++	/* Cx data is not available */
++	</CX_INFO>
++  <PX_INFO>
++	/* Px data is not available */
++	</PX_INFO>
++  <MMCFG_BASE_INFO>
++	/* PCI mmcfg base of MCFG */
++	#define DEFAULT_PCI_MMCFG_BASE   0xc0000000UL
++	</MMCFG_BASE_INFO>
++  <TPM_INFO>
++	TPM2
++	</TPM_INFO>
++  <CLOS_INFO>
++	</CLOS_INFO>
++  <IOMEM_INFO>
++	00000000-00000fff : Reserved
++	00001000-0009efff : System RAM
++	0009f000-000fffff : Reserved
++	  000a0000-000bffff : PCI Bus 0000:00
++	  000f0000-000fffff : System ROM
++	00100000-3dff3fff : System RAM
++	3dff4000-3e00efff : Reserved
++	3e00f000-3e0c6fff : System RAM
++	3e0c7000-3e0c7fff : Reserved
++	3e0c8000-41646fff : System RAM
++	41647000-449b7fff : Reserved
++	449b8000-44aeffff : ACPI Non-volatile Storage
++	44af0000-44bfefff : ACPI Tables
++	44bff000-44bfffff : System RAM
++	44c00000-491fffff : Reserved
++	49e00000-503fffff : Reserved
++	  4c800000-503fffff : Graphics Stolen Memory
++	50400000-bfffffff : PCI Bus 0000:00
++	  50400000-504fffff : PCI Bus 0000:01
++	    50400000-50403fff : 0000:01:00.0
++	      50400000-50403fff : nvme
++	  50500000-5051ffff : 0000:00:1f.6
++	    50500000-5051ffff : e1000e
++	  50520000-50521fff : 0000:00:17.0
++	    50520000-50521fff : ahci
++	  50522000-50522fff : 0000:00:1f.5
++	    50522000-50522fff : 0000:00:1f.5 0000:00:1f.5
++	  50523000-505237ff : 0000:00:17.0
++	    50523000-505237ff : ahci
++	  50524000-505240ff : 0000:00:17.0
++	    50524000-505240ff : ahci
++	c0000000-cfffffff : PCI MMCONFIG 0000 [bus 00-ff]
++	  c0000000-cfffffff : Reserved
++	e0690000-e069ffff : INTC1056:00
++	  e0690000-e069ffff : INTC1056:00 INTC1056:00
++	e06a0000-e06affff : INTC1056:00
++	  e06a0000-e06affff : INTC1056:00 INTC1056:00
++	e06b0000-e06bffff : INTC1056:00
++	  e06b0000-e06bffff : INTC1056:00 INTC1056:00
++	e06d0000-e06dffff : INTC1056:00
++	  e06d0000-e06dffff : INTC1056:00 INTC1056:00
++	e06e0000-e06effff : INTC1056:00
++	  e06e0000-e06effff : INTC1056:00 INTC1056:00
++	fec00000-fec003ff : IOAPIC 0
++	fed00000-fed003ff : HPET 0
++	  fed00000-fed003ff : PNP0103:00
++	fed20000-fed7ffff : Reserved
++	  fed40000-fed44fff : INTC6001:00
++	    fed40000-fed44fff : INTC6001:00
++	fed90000-fed90fff : dmar0
++	fed91000-fed91fff : dmar1
++	feda0000-feda0fff : pnp 00:05
++	feda1000-feda1fff : pnp 00:05
++	fedc0000-fedc7fff : pnp 00:05
++	fee00000-feefffff : pnp 00:05
++	  fee00000-fee00fff : Local APIC
++	ff000000-ffffffff : Reserved
++	100000000-8afbfffff : System RAM
++	  87d400000-87e4036d6 : Kernel code
++	  87e600000-87eb9ffff : Kernel rodata
++	  87ec00000-87ee859bf : Kernel data
++	  87f92e000-87fffffff : Kernel bss
++	8afc00000-8afffffff : RAM buffer
++	4000000000-7fffffffff : PCI Bus 0000:00
++	  4000000000-400fffffff : 0000:00:02.0
++	  4010000000-4016ffffff : 0000:00:02.0
++	  4017000000-4017000fff : 0000:00:15.0
++	    4017000000-40170001ff : lpss_dev
++	      4017000000-40170001ff : i2c_designware.0 lpss_dev
++	    4017000200-40170002ff : lpss_priv
++	    4017000800-4017000fff : idma64.0
++	      4017000800-4017000fff : idma64.0 idma64.0
++	  4017001000-4017001fff : 0000:00:15.1
++	    4017001000-40170011ff : lpss_dev
++	      4017001000-40170011ff : i2c_designware.1 lpss_dev
++	    4017001200-40170012ff : lpss_priv
++	    4017001800-4017001fff : idma64.1
++	      4017001800-4017001fff : idma64.1 idma64.1
++	  4017002000-4017002fff : 0000:00:15.2
++	    4017002000-40170021ff : lpss_dev
++	      4017002000-40170021ff : i2c_designware.2 lpss_dev
++	    4017002200-40170022ff : lpss_priv
++	    4017002800-4017002fff : idma64.2
++	      4017002800-4017002fff : idma64.2 idma64.2
++	  4017003000-4017003fff : 0000:00:15.3
++	    4017003000-40170031ff : lpss_dev
++	      4017003000-40170031ff : i2c_designware.3 lpss_dev
++	    4017003200-40170032ff : lpss_priv
++	    4017003800-4017003fff : idma64.3
++	      4017003800-4017003fff : idma64.3 idma64.3
++	  4017004000-4017004fff : 0000:00:19.0
++	    4017004000-40170041ff : lpss_dev
++	      4017004000-40170041ff : i2c_designware.4 lpss_dev
++	    4017004200-40170042ff : lpss_priv
++	    4017004800-4017004fff : idma64.4
++	      4017004800-4017004fff : idma64.4 idma64.4
++	  4017005000-4017005fff : 0000:00:19.1
++	    4017005000-40170051ff : lpss_dev
++	      4017005000-40170051ff : i2c_designware.5 lpss_dev
++	    4017005200-40170052ff : lpss_priv
++	    4017005800-4017005fff : idma64.5
++	      4017005800-4017005fff : idma64.5 idma64.5
++	  4017006000-4017006fff : 0000:00:1e.0
++	    4017006000-40170061ff : lpss_dev
++	      4017006000-401700601f : serial
++	    4017006200-40170062ff : lpss_priv
++	    4017006800-4017006fff : idma64.6
++	      4017006800-4017006fff : idma64.6 idma64.6
++	  4017007000-4017007fff : 0000:00:1e.3
++	    4017007000-40170071ff : lpss_dev
++	      4017007000-40170071ff : pxa2xx-spi.7 lpss_dev
++	    4017007200-40170072ff : lpss_priv
++	    4017007800-4017007fff : idma64.7
++	      4017007800-4017007fff : idma64.7 idma64.7
++	  4020000000-40ffffffff : 0000:00:02.0
++	  6000000000-6000ffffff : 0000:00:02.0
++	  6001000000-60010fffff : 0000:00:1f.3
++	    6001000000-60010fffff : ICH HD audio
++	  6001100000-600110ffff : 0000:00:14.0
++	    6001100000-600110ffff : xhci-hcd
++	  6001110000-600111ffff : 0000:00:12.0
++	  6001120000-6001127fff : 0000:00:0a.0
++	    60011264d8-60011264e7 : pmt_telemetry.1.auto
++	    60011264e8-60011264f7 : pmt_telemetry.1.auto
++	    60011264f8-6001126507 : pmt_telemetry.1.auto
++	    6001126508-6001126517 : pmt_telemetry.1.auto
++	  6001128000-600112bfff : 0000:00:1f.3
++	    6001128000-600112bfff : ICH HD audio
++	  600112c000-600112ffff : 0000:00:14.2
++	  6001130000-60011300ff : 0000:00:1f.4
++	  6001135000-6001135fff : 0000:00:16.0
++	    6001135000-6001135fff : mei_me
++	  600113a000-600113afff : 0000:00:14.2
++	  600113b000-600113bfff : 0000:00:08.0
++	</IOMEM_INFO>
++  <BLOCK_DEVICE_INFO>
++	/dev/nvme0n1p3: TYPE="ext4"
++	/dev/sda2: TYPE="ext4"
++	/dev/sda3: TYPE="ext4"
++	/dev/sda4: TYPE="ext4"
++	</BLOCK_DEVICE_INFO>
++  <TTYS_INFO>
++	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
++	seri:/dev/ttyS4 type:mmio base:0x4017006000 irq:16 bdf:"00:1e.0"
++	</TTYS_INFO>
++  <AVAILABLE_IRQ_INFO>
++	3, 5, 6, 7, 10, 11, 12, 13, 15
++	</AVAILABLE_IRQ_INFO>
++  <TOTAL_MEM_INFO>
++	32632524 kB
++	</TOTAL_MEM_INFO>
++  <CPU_PROCESSOR_INFO>
++	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
++	</CPU_PROCESSOR_INFO>
++  <MAX_MSIX_TABLE_NUM>
++	16
++	</MAX_MSIX_TABLE_NUM>
++  <processors>
++    <model description="Genuine Intel(R) 0000">
++      <family_id>0x6</family_id>
++      <model_id>0x97</model_id>
++      <core_type>Core</core_type>
++      <native_model_id>0x1</native_model_id>
++      <capability id="sse3"/>
++      <capability id="pclmulqdq"/>
++      <capability id="dtes64"/>
++      <capability id="monitor"/>
++      <capability id="ds_cpl"/>
++      <capability id="vmx"/>
++      <capability id="smx"/>
++      <capability id="est"/>
++      <capability id="tm2"/>
++      <capability id="ssse3"/>
++      <capability id="sdbg"/>
++      <capability id="fma"/>
++      <capability id="cmpxchg16b"/>
++      <capability id="xtpr"/>
++      <capability id="pdcm"/>
++      <capability id="pcid"/>
++      <capability id="sse4_1"/>
++      <capability id="sse4_2"/>
++      <capability id="x2apic"/>
++      <capability id="movbe"/>
++      <capability id="popcnt"/>
++      <capability id="tsc_deadline"/>
++      <capability id="aes"/>
++      <capability id="xsave"/>
++      <capability id="avx"/>
++      <capability id="f16c"/>
++      <capability id="rdrand"/>
++      <capability id="fpu"/>
++      <capability id="vme"/>
++      <capability id="de"/>
++      <capability id="pse"/>
++      <capability id="tsc"/>
++      <capability id="msr"/>
++      <capability id="pae"/>
++      <capability id="mce"/>
++      <capability id="cx8"/>
++      <capability id="apic"/>
++      <capability id="sep"/>
++      <capability id="mtrr"/>
++      <capability id="pge"/>
++      <capability id="mca"/>
++      <capability id="cmov"/>
++      <capability id="pat"/>
++      <capability id="pse36"/>
++      <capability id="clfsh"/>
++      <capability id="ds"/>
++      <capability id="acpi"/>
++      <capability id="mmx"/>
++      <capability id="fxsr"/>
++      <capability id="sse"/>
++      <capability id="sse2"/>
++      <capability id="ss"/>
++      <capability id="htt"/>
++      <capability id="tm"/>
++      <capability id="pbe"/>
++      <capability id="fsgsbase"/>
++      <capability id="ia32_tsc_adjust_msr"/>
++      <capability id="bmi1"/>
++      <capability id="avx2"/>
++      <capability id="fdp_excptn_only"/>
++      <capability id="smep"/>
++      <capability id="bmi2"/>
++      <capability id="erms"/>
++      <capability id="invpcid"/>
++      <capability id="deprecate_fpu"/>
++      <capability id="rdseed"/>
++      <capability id="adx"/>
++      <capability id="smap"/>
++      <capability id="clflushopt"/>
++      <capability id="clwb"/>
++      <capability id="intel_pt"/>
++      <capability id="sha"/>
++      <capability id="umip"/>
++      <capability id="pku"/>
++      <capability id="waitpkg"/>
++      <capability id="cet_ss"/>
++      <capability id="gfni"/>
++      <capability id="vaes"/>
++      <capability id="vpclmulqdq"/>
++      <capability id="tme_en"/>
++      <capability id="rdpid"/>
++      <capability id="kl"/>
++      <capability id="cldemote"/>
++      <capability id="movdiri"/>
++      <capability id="movdiri64b"/>
++      <capability id="pks"/>
++      <capability id="fast_short_rep_mov"/>
++      <capability id="md_clear"/>
++      <capability id="hybrid"/>
++      <capability id="pconfig"/>
++      <capability id="cet_ibt"/>
++      <capability id="ibrs_ibpb"/>
++      <capability id="stibp"/>
++      <capability id="l1d_flush"/>
++      <capability id="ia32_arch_capabilities"/>
++      <capability id="ia32_core_capabilities"/>
++      <capability id="ssbd"/>
++      <capability id="lahf_sahf_64"/>
++      <capability id="lzcnt"/>
++      <capability id="prefetchw"/>
++      <capability id="syscall_sysret_64"/>
++      <capability id="execute_disable"/>
++      <capability id="gbyte_pages"/>
++      <capability id="rdtscp_ia32_tsc_aux"/>
++      <capability id="intel_64"/>
++      <capability id="invariant_tsc"/>
++    </model>
++    <model description="Genuine Intel(R) 0000">
++      <family_id>0x6</family_id>
++      <model_id>0x97</model_id>
++      <core_type>Atom</core_type>
++      <native_model_id>0x1</native_model_id>
++      <capability id="sse3"/>
++      <capability id="pclmulqdq"/>
++      <capability id="dtes64"/>
++      <capability id="monitor"/>
++      <capability id="ds_cpl"/>
++      <capability id="vmx"/>
++      <capability id="smx"/>
++      <capability id="est"/>
++      <capability id="tm2"/>
++      <capability id="ssse3"/>
++      <capability id="sdbg"/>
++      <capability id="fma"/>
++      <capability id="cmpxchg16b"/>
++      <capability id="xtpr"/>
++      <capability id="pdcm"/>
++      <capability id="pcid"/>
++      <capability id="sse4_1"/>
++      <capability id="sse4_2"/>
++      <capability id="x2apic"/>
++      <capability id="movbe"/>
++      <capability id="popcnt"/>
++      <capability id="tsc_deadline"/>
++      <capability id="aes"/>
++      <capability id="xsave"/>
++      <capability id="avx"/>
++      <capability id="f16c"/>
++      <capability id="rdrand"/>
++      <capability id="fpu"/>
++      <capability id="vme"/>
++      <capability id="de"/>
++      <capability id="pse"/>
++      <capability id="tsc"/>
++      <capability id="msr"/>
++      <capability id="pae"/>
++      <capability id="mce"/>
++      <capability id="cx8"/>
++      <capability id="apic"/>
++      <capability id="sep"/>
++      <capability id="mtrr"/>
++      <capability id="pge"/>
++      <capability id="mca"/>
++      <capability id="cmov"/>
++      <capability id="pat"/>
++      <capability id="pse36"/>
++      <capability id="clfsh"/>
++      <capability id="ds"/>
++      <capability id="acpi"/>
++      <capability id="mmx"/>
++      <capability id="fxsr"/>
++      <capability id="sse"/>
++      <capability id="sse2"/>
++      <capability id="ss"/>
++      <capability id="htt"/>
++      <capability id="tm"/>
++      <capability id="pbe"/>
++      <capability id="fsgsbase"/>
++      <capability id="ia32_tsc_adjust_msr"/>
++      <capability id="bmi1"/>
++      <capability id="avx2"/>
++      <capability id="fdp_excptn_only"/>
++      <capability id="smep"/>
++      <capability id="bmi2"/>
++      <capability id="erms"/>
++      <capability id="invpcid"/>
++      <capability id="deprecate_fpu"/>
++      <capability id="rdseed"/>
++      <capability id="adx"/>
++      <capability id="smap"/>
++      <capability id="clflushopt"/>
++      <capability id="clwb"/>
++      <capability id="intel_pt"/>
++      <capability id="sha"/>
++      <capability id="umip"/>
++      <capability id="pku"/>
++      <capability id="waitpkg"/>
++      <capability id="cet_ss"/>
++      <capability id="gfni"/>
++      <capability id="vaes"/>
++      <capability id="vpclmulqdq"/>
++      <capability id="tme_en"/>
++      <capability id="rdpid"/>
++      <capability id="kl"/>
++      <capability id="cldemote"/>
++      <capability id="movdiri"/>
++      <capability id="movdiri64b"/>
++      <capability id="pks"/>
++      <capability id="fast_short_rep_mov"/>
++      <capability id="md_clear"/>
++      <capability id="hybrid"/>
++      <capability id="pconfig"/>
++      <capability id="cet_ibt"/>
++      <capability id="ibrs_ibpb"/>
++      <capability id="stibp"/>
++      <capability id="l1d_flush"/>
++      <capability id="ia32_arch_capabilities"/>
++      <capability id="ia32_core_capabilities"/>
++      <capability id="ssbd"/>
++      <capability id="lahf_sahf_64"/>
++      <capability id="lzcnt"/>
++      <capability id="prefetchw"/>
++      <capability id="syscall_sysret_64"/>
++      <capability id="execute_disable"/>
++      <capability id="gbyte_pages"/>
++      <capability id="rdtscp_ia32_tsc_aux"/>
++      <capability id="intel_64"/>
++      <capability id="invariant_tsc"/>
++    </model>
++    <die id="0">
++      <core id="0x0">
++        <thread id="0x0">
++          <cpu_id>0</cpu_id>
++          <apic_id>0x0</apic_id>
++          <x2apic_id>0x0</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Core</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x4">
++        <thread id="0x8">
++          <cpu_id>1</cpu_id>
++          <apic_id>0x8</apic_id>
++          <x2apic_id>0x8</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Core</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x8">
++        <thread id="0x10">
++          <cpu_id>2</cpu_id>
++          <apic_id>0x10</apic_id>
++          <x2apic_id>0x10</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Core</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0xc">
++        <thread id="0x18">
++          <cpu_id>3</cpu_id>
++          <apic_id>0x18</apic_id>
++          <x2apic_id>0x18</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Core</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x10">
++        <thread id="0x20">
++          <cpu_id>4</cpu_id>
++          <apic_id>0x20</apic_id>
++          <x2apic_id>0x20</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Core</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x14">
++        <thread id="0x28">
++          <cpu_id>5</cpu_id>
++          <apic_id>0x28</apic_id>
++          <x2apic_id>0x28</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Core</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x18">
++        <thread id="0x30">
++          <cpu_id>6</cpu_id>
++          <apic_id>0x30</apic_id>
++          <x2apic_id>0x30</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Core</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x1c">
++        <thread id="0x38">
++          <cpu_id>7</cpu_id>
++          <apic_id>0x38</apic_id>
++          <x2apic_id>0x38</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Core</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x20">
++        <thread id="0x40">
++          <cpu_id>8</cpu_id>
++          <apic_id>0x40</apic_id>
++          <x2apic_id>0x40</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Atom</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x21">
++        <thread id="0x42">
++          <cpu_id>9</cpu_id>
++          <apic_id>0x42</apic_id>
++          <x2apic_id>0x42</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Atom</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x22">
++        <thread id="0x44">
++          <cpu_id>10</cpu_id>
++          <apic_id>0x44</apic_id>
++          <x2apic_id>0x44</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Atom</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x23">
++        <thread id="0x46">
++          <cpu_id>11</cpu_id>
++          <apic_id>0x46</apic_id>
++          <x2apic_id>0x46</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Atom</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x24">
++        <thread id="0x48">
++          <cpu_id>12</cpu_id>
++          <apic_id>0x48</apic_id>
++          <x2apic_id>0x48</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Atom</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x25">
++        <thread id="0x4a">
++          <cpu_id>13</cpu_id>
++          <apic_id>0x4a</apic_id>
++          <x2apic_id>0x4a</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Atom</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x26">
++        <thread id="0x4c">
++          <cpu_id>14</cpu_id>
++          <apic_id>0x4c</apic_id>
++          <x2apic_id>0x4c</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Atom</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++      <core id="0x27">
++        <thread id="0x4e">
++          <cpu_id>15</cpu_id>
++          <apic_id>0x4e</apic_id>
++          <x2apic_id>0x4e</x2apic_id>
++          <family_id>0x6</family_id>
++          <model_id>0x97</model_id>
++          <stepping_id>0x1</stepping_id>
++          <core_type>Atom</core_type>
++          <native_model_id>0x1</native_model_id>
++        </thread>
++      </core>
++    </die>
++  </processors>
++  <caches>
++    <cache level="1" id="0x0" type="1">
++      <cache_size>49152</cache_size>
++      <line_size>64</line_size>
++      <ways>12</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x0</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x0" type="2">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x0</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x4" type="1">
++      <cache_size>49152</cache_size>
++      <line_size>64</line_size>
++      <ways>12</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x8</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x4" type="2">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x8</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x8" type="1">
++      <cache_size>49152</cache_size>
++      <line_size>64</line_size>
++      <ways>12</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x10</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x8" type="2">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x10</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0xc" type="1">
++      <cache_size>49152</cache_size>
++      <line_size>64</line_size>
++      <ways>12</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x18</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0xc" type="2">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x18</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x10" type="1">
++      <cache_size>49152</cache_size>
++      <line_size>64</line_size>
++      <ways>12</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x20</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x10" type="2">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x20</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x14" type="1">
++      <cache_size>49152</cache_size>
++      <line_size>64</line_size>
++      <ways>12</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x28</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x14" type="2">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x28</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x18" type="1">
++      <cache_size>49152</cache_size>
++      <line_size>64</line_size>
++      <ways>12</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x30</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x18" type="2">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x30</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x1c" type="1">
++      <cache_size>49152</cache_size>
++      <line_size>64</line_size>
++      <ways>12</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x38</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x1c" type="2">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x38</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x20" type="1">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x40</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x20" type="2">
++      <cache_size>65536</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>128</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x40</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x21" type="1">
++      <cache_size>32768</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>64</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x42</processor>
++      </processors>
++    </cache>
++    <cache level="1" id="0x21" type="2">
++      <cache_size>65536</cache_size>
++      <line_size>64</line_size>
++      <ways>8</ways>
++      <sets>128</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x42</processor>
++      </processors>
++    </cache>
++    <cache level="2" id="0x0" type="3">
++      <cache_size>1310720</cache_size>
++      <line_size>64</line_size>
++      <ways>10</ways>
++      <sets>2048</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x0</processor>
++      </processors>
++    </cache>
++    <cache level="2" id="0x1" type="3">
++      <cache_size>1310720</cache_size>
++      <line_size>64</line_size>
++      <ways>10</ways>
++      <sets>2048</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x8</processor>
++      </processors>
++    </cache>
++    <cache level="2" id="0x2" type="3">
++      <cache_size>1310720</cache_size>
++      <line_size>64</line_size>
++      <ways>10</ways>
++      <sets>2048</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x10</processor>
++      </processors>
++    </cache>
++    <cache level="2" id="0x3" type="3">
++      <cache_size>1310720</cache_size>
++      <line_size>64</line_size>
++      <ways>10</ways>
++      <sets>2048</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x18</processor>
++      </processors>
++    </cache>
++    <cache level="2" id="0x4" type="3">
++      <cache_size>1310720</cache_size>
++      <line_size>64</line_size>
++      <ways>10</ways>
++      <sets>2048</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x20</processor>
++      </processors>
++    </cache>
++    <cache level="2" id="0x5" type="3">
++      <cache_size>1310720</cache_size>
++      <line_size>64</line_size>
++      <ways>10</ways>
++      <sets>2048</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x28</processor>
++      </processors>
++    </cache>
++    <cache level="2" id="0x6" type="3">
++      <cache_size>1310720</cache_size>
++      <line_size>64</line_size>
++      <ways>10</ways>
++      <sets>2048</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x30</processor>
++      </processors>
++    </cache>
++    <cache level="2" id="0x7" type="3">
++      <cache_size>1310720</cache_size>
++      <line_size>64</line_size>
++      <ways>10</ways>
++      <sets>2048</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x38</processor>
++      </processors>
++    </cache>
++    <cache level="2" id="0x8" type="3">
++      <cache_size>2097152</cache_size>
++      <line_size>64</line_size>
++      <ways>16</ways>
++      <sets>2048</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>0</complex_cache_indexing>
++      <processors>
++        <processor>0x40</processor>
++        <processor>0x42</processor>
++      </processors>
++    </cache>
++    <cache level="3" id="0x0" type="3">
++      <cache_size>31457280</cache_size>
++      <line_size>64</line_size>
++      <ways>12</ways>
++      <sets>40960</sets>
++      <partitions>1</partitions>
++      <self_initializing>1</self_initializing>
++      <fully_associative>0</fully_associative>
++      <write_back_invalidate>0</write_back_invalidate>
++      <cache_inclusiveness>0</cache_inclusiveness>
++      <complex_cache_indexing>1</complex_cache_indexing>
++      <processors>
++        <processor>0x0</processor>
++        <processor>0x8</processor>
++        <processor>0x10</processor>
++        <processor>0x18</processor>
++        <processor>0x20</processor>
++        <processor>0x28</processor>
++        <processor>0x30</processor>
++        <processor>0x38</processor>
++        <processor>0x40</processor>
++        <processor>0x42</processor>
++      </processors>
++    </cache>
++  </caches>
++  <memory>
++    <range start="0x0000000000000000" end="0x000000000009efff" size="651264"/>
++    <range start="0x0000000000100000" end="0x0000000041646fff" size="1096052736"/>
++    <range start="0x0000000044bff000" end="0x0000000044bfffff" size="4096"/>
++    <range start="0x0000000100000000" end="0x00000008afbfffff" size="33013366784"/>
++  </memory>
++  <devices>
++    <bus type="pci" address="0x0" id="0x4660">
++      <vendor>0x8086</vendor>
++      <identifier>0x4660</identifier>
++      <subsystem_vendor>0x8086</subsystem_vendor>
++      <subsystem_identifier>0x7270</subsystem_identifier>
++      <class>0x060000</class>
++      <resource type="memory" min="0xa0000" max="0xbffff" len="0x20000"/>
++      <resource type="memory" min="0x50400000" max="0xbfffffff" len="0x6fc00000"/>
++      <resource type="memory" min="0x4000000000" max="0x7fffffffff" len="0x4000000000"/>
++      <device address="0x20000" id="0x4680">
++        <vendor>0x8086</vendor>
++        <identifier>0x4680</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x2212</subsystem_identifier>
++        <class>0x030000</class>
++        <resource type="io_port" min="0x3000" max="0x303f" len="0x40" id="bar4"/>
++        <resource type="memory" min="0x4000000000" max="0x400fffffff" len="0x10000000" id="bar2" width="64" prefetchable="1"/>
++        <resource type="memory" min="0x6000000000" max="0x6000ffffff" len="0x1000000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Vendor-Specific"/>
++        <capability id="PCI Express"/>
++        <capability id="MSI">
++          <capability id="per-vector masking"/>
++        </capability>
++        <capability id="Power Management"/>
++        <capability id="PASID"/>
++        <capability id="ATS"/>
++        <capability id="PRI"/>
++        <capability id="SR-IOV"/>
++      </device>
++      <device address="0x80000" id="0x464f">
++        <vendor>0x8086</vendor>
++        <identifier>0x464f</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x088000</class>
++        <resource type="memory" min="0x600113b000" max="0x600113bfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="MSI"/>
++        <capability id="Vendor-Specific"/>
++        <capability id="Power Management"/>
++        <capability id="Conventional PCI Advanced Features"/>
++      </device>
++      <device address="0xa0000" id="0x467d">
++        <vendor>0x8086</vendor>
++        <identifier>0x467d</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x118000</class>
++        <resource type="memory" min="0x6001120000" max="0x6001127fff" len="0x8000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="PCI Express"/>
++        <capability id="Power Management"/>
++        <capability id="Designated Vendor-Specific"/>
++        <capability id="Designated Vendor-Specific"/>
++        <capability id="Designated Vendor-Specific"/>
++      </device>
++      <device address="0x120000" id="0x7af8">
++        <vendor>0x8086</vendor>
++        <identifier>0x7af8</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x070000</class>
++        <resource type="memory" min="0x6001110000" max="0x600111ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x140000" id="0x7ae0">
++        <vendor>0x8086</vendor>
++        <identifier>0x7ae0</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c0330</class>
++        <resource type="memory" min="0x6001100000" max="0x600110ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="MSI">
++          <capability id="multiple-message">
++            <count>8</count>
++          </capability>
++          <capability id="64-bit address"/>
++        </capability>
++        <capability id="Vendor-Specific"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x140002" id="0x7aa7">
++        <vendor>0x8086</vendor>
++        <identifier>0x7aa7</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x050000</class>
++        <resource type="memory" min="0x600112c000" max="0x600112ffff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
++        <resource type="memory" min="0x600113a000" max="0x600113afff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++      </device>
++      <device address="0x150000" id="0x7acc">
++        <vendor>0x8086</vendor>
++        <identifier>0x7acc</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c8000</class>
++        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x150001" id="0x7acd">
++        <vendor>0x8086</vendor>
++        <identifier>0x7acd</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c8000</class>
++        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x150002" id="0x7ace">
++        <vendor>0x8086</vendor>
++        <identifier>0x7ace</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c8000</class>
++        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x150003" id="0x7acf">
++        <vendor>0x8086</vendor>
++        <identifier>0x7acf</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c8000</class>
++        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x160000" id="0x7ae8">
++        <vendor>0x8086</vendor>
++        <identifier>0x7ae8</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x078000</class>
++        <resource type="memory" min="0x6001135000" max="0x6001135fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="MSI">
++          <capability id="64-bit address"/>
++        </capability>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x170000" id="0x7ae2">
++        <vendor>0x8086</vendor>
++        <identifier>0x7ae2</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x010601</class>
++        <resource type="io_port" min="0x3060" max="0x307f" len="0x20" id="bar4"/>
++        <resource type="io_port" min="0x3080" max="0x3087" len="0x8" id="bar2"/>
++        <resource type="io_port" min="0x3088" max="0x308b" len="0x4" id="bar3"/>
++        <resource type="memory" min="0x50520000" max="0x50521fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
++        <resource type="memory" min="0x50523000" max="0x505237ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
++        <resource type="memory" min="0x50524000" max="0x505240ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
++        <capability id="MSI"/>
++        <capability id="Power Management"/>
++        <capability id="Reserved (0x12)"/>
++      </device>
++      <device address="0x190000" id="0x7afc">
++        <vendor>0x8086</vendor>
++        <identifier>0x7afc</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c8000</class>
++        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x190001" id="0x7afd">
++        <vendor>0x8086</vendor>
++        <identifier>0x7afd</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c8000</class>
++        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x1d0000" id="0x7ab4">
++        <vendor>0x8086</vendor>
++        <identifier>0x7ab4</identifier>
++        <class>0x060400</class>
++        <resource type="memory" min="0x50400000" max="0x504fffff" len="0x100000"/>
++        <capability id="PCI Express"/>
++        <capability id="MSI">
++          <capability id="64-bit address"/>
++        </capability>
++        <capability id="Subsystem ID and Subsystem Vendor ID"/>
++        <capability id="Power Management"/>
++        <capability id="Advanced Error Reporting"/>
++        <capability id="ACS"/>
++        <capability id="L1 PM Substates"/>
++        <capability id="TPM"/>
++        <capability id="DPC"/>
++        <capability id="Secondary PCI Express"/>
++        <capability id="Data Link Feature"/>
++        <capability id="Physical Layer 16.0 GT/s"/>
++        <capability id="Lane Margining at the Receiver"/>
++        <bus type="pci" address="0x1">
++          <device address="0x0" id="0xf1a6">
++            <vendor>0x8086</vendor>
++            <identifier>0xf1a6</identifier>
++            <subsystem_vendor>0x8086</subsystem_vendor>
++            <subsystem_identifier>0x390b</subsystem_identifier>
++            <class>0x010802</class>
++            <resource type="memory" min="0x50400000" max="0x50403fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
++            <capability id="Power Management"/>
++            <capability id="MSI">
++              <capability id="multiple-message">
++                <count>8</count>
++              </capability>
++              <capability id="64-bit address"/>
++              <capability id="per-vector masking"/>
++            </capability>
++            <capability id="PCI Express"/>
++            <capability id="MSI-X"/>
++            <capability id="Advanced Error Reporting"/>
++            <capability id="Secondary PCI Express"/>
++            <capability id="LTR"/>
++            <capability id="L1 PM Substates"/>
++          </device>
++        </bus>
++      </device>
++      <device address="0x1e0000" id="0x7aa8">
++        <vendor>0x8086</vendor>
++        <identifier>0x7aa8</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x078000</class>
++        <resource type="memory" min="0x4017006000" max="0x4017006fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x1e0003" id="0x7aab">
++        <vendor>0x8086</vendor>
++        <identifier>0x7aab</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c8000</class>
++        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++      </device>
++      <device address="0x1f0000" id="0x7a82">
++        <vendor>0x8086</vendor>
++        <identifier>0x7a82</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x060100</class>
++      </device>
++      <device address="0x1f0003" id="0x7ad0">
++        <vendor>0x8086</vendor>
++        <identifier>0x7ad0</identifier>
++        <subsystem_vendor>0x10ec</subsystem_vendor>
++        <subsystem_identifier>0x3026</subsystem_identifier>
++        <class>0x040100</class>
++        <resource type="memory" min="0x6001000000" max="0x60010fffff" len="0x100000" id="bar4" width="64" prefetchable="0"/>
++        <resource type="memory" min="0x6001128000" max="0x600112bfff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="Vendor-Specific"/>
++        <capability id="MSI">
++          <capability id="64-bit address"/>
++        </capability>
++      </device>
++      <device address="0x1f0004" id="0x7aa3">
++        <vendor>0x8086</vendor>
++        <identifier>0x7aa3</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c0500</class>
++        <resource type="io_port" min="0xefa0" max="0xefbf" len="0x20" id="bar4"/>
++        <resource type="memory" min="0x6001130000" max="0x60011300ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
++      </device>
++      <device address="0x1f0005" id="0x7aa4">
++        <vendor>0x8086</vendor>
++        <identifier>0x7aa4</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x7270</subsystem_identifier>
++        <class>0x0c8000</class>
++        <resource type="memory" min="0x50522000" max="0x50522fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
++      </device>
++      <device address="0x1f0006" id="0x1a1d">
++        <vendor>0x8086</vendor>
++        <identifier>0x1a1d</identifier>
++        <subsystem_vendor>0x8086</subsystem_vendor>
++        <subsystem_identifier>0x0000</subsystem_identifier>
++        <class>0x020000</class>
++        <resource type="memory" min="0x50500000" max="0x5051ffff" len="0x20000" id="bar0" width="32" prefetchable="0"/>
++        <capability id="Power Management"/>
++        <capability id="MSI">
++          <capability id="64-bit address"/>
++        </capability>
++      </device>
++    </bus>
++  </devices>
++</acrn-config>
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid.xml b/misc/config_tools/data/adl-s-crb/hybrid.xml
+new file mode 100644
+index 000000000..812cdda3d
+--- /dev/null
++++ b/misc/config_tools/data/adl-s-crb/hybrid.xml
+@@ -0,0 +1,210 @@
++<?xml version="1.0"?>
++<acrn-config board="adl-s-crb" scenario="hybrid">
++    <hv>
++        <DEBUG_OPTIONS>
++            <RELEASE>n</RELEASE>
++            <SERIAL_CONSOLE>/dev/ttyS0</SERIAL_CONSOLE>
++            <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
++            <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
++            <CONSOLE_LOGLEVEL>3</CONSOLE_LOGLEVEL>
++            <LOG_DESTINATION>7</LOG_DESTINATION>
++            <LOG_BUF_SIZE>0x40000</LOG_BUF_SIZE>
++        </DEBUG_OPTIONS>
++        <FEATURES>
++            <RELOC>y</RELOC>
++            <SCHEDULER>SCHED_BVT</SCHEDULER>
++            <MULTIBOOT2>y</MULTIBOOT2>
++            <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
++            <RDT>
++                <RDT_ENABLED>n</RDT_ENABLED>
++                <CDP_ENABLED>n</CDP_ENABLED>
++            </RDT>
++            <NVMX_ENABLED>n</NVMX_ENABLED>
++            <HYPERV_ENABLED>y</HYPERV_ENABLED>
++            <IOMMU_ENFORCE_SNP>n</IOMMU_ENFORCE_SNP>
++            <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
++            <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
++            <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
++            <IVSHMEM>
++                <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
++                <IVSHMEM_REGION/>
++            </IVSHMEM>
++        </FEATURES>
++        <MEMORY>
++            <STACK_SIZE>0x2000</STACK_SIZE>
++            <HV_RAM_SIZE/>
++            <HV_RAM_START/>
++            <LOW_RAM_SIZE>0x00010000</LOW_RAM_SIZE>
++            <PLATFORM_RAM_SIZE>0x400000000</PLATFORM_RAM_SIZE>
++        </MEMORY>
++        <CAPACITIES>
++            <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++            <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
++            <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
++            <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
++            <MAX_IOAPIC_LINES>120</MAX_IOAPIC_LINES>
++            <MAX_PT_IRQ_ENTRIES>256</MAX_PT_IRQ_ENTRIES>
++            <MAX_MSIX_TABLE_NUM>64</MAX_MSIX_TABLE_NUM>
++            <MAX_EMULATED_MMIO>16</MAX_EMULATED_MMIO>
++        </CAPACITIES>
++        <MISC_CFG>
++            <GPU_SBDF>0x00000010</GPU_SBDF>
++        </MISC_CFG>
++    </hv>
++    <vm id="0">
++        <vm_type>SAFETY_VM</vm_type>
++        <name>ACRN PRE-LAUNCHED VM0</name>
++        <guest_flags>
++            <guest_flag>0</guest_flag>
++        </guest_flags>
++        <cpu_affinity>
++          <pcpu_id>12</pcpu_id>
++          <pcpu_id>13</pcpu_id>
++          <pcpu_id>14</pcpu_id>
++          <pcpu_id>15</pcpu_id>
++        </cpu_affinity>
++        <clos>
++          <vcpu_clos/>
++          <vcpu_clos/>
++          <vcpu_clos/>
++          <vcpu_clos/>
++        </clos>
++        <epc_section>
++            <base>0</base>
++            <size>0</size>
++        </epc_section>
++        <memory>
++            <start_hpa>0x100000000</start_hpa>
++            <size>0x20000000</size>
++            <start_hpa2>0x0</start_hpa2>
++            <size_hpa2>0x0</size_hpa2>
++        </memory>
++        <os_config>
++            <name>Zephyr</name>
++            <kern_type>KERNEL_ZEPHYR</kern_type>
++            <kern_mod>Zephyr_RawImage</kern_mod>
++            <ramdisk_mod/>
++            <bootargs></bootargs>
++            <kern_load_addr>0x8000</kern_load_addr>
++            <kern_entry_addr>0x8000</kern_entry_addr>
++        </os_config>
++        <legacy_vuart id="0">
++            <type>VUART_LEGACY_PIO</type>
++            <base>COM1_BASE</base>
++            <irq>COM1_IRQ</irq>
++        </legacy_vuart>
++        <legacy_vuart id="1">
++            <type>VUART_LEGACY_PIO</type>
++            <base>COM2_BASE</base>
++            <irq>COM2_IRQ</irq>
++            <target_vm_id>1</target_vm_id>
++            <target_uart_id>1</target_uart_id>
++        </legacy_vuart>
++        <console_vuart id="0">
++            <base>INVALID_PCI_BASE</base>
++        </console_vuart>
++        <communication_vuart id="1">
++            <base>INVALID_PCI_BASE</base>
++            <target_vm_id>1</target_vm_id>
++            <target_uart_id>1</target_uart_id>
++        </communication_vuart>
++        <pci_devs>
++            <pci_dev/>
++        </pci_devs>
++        <mmio_resources>
++            <TPM2>n</TPM2>
++            <p2sb>n</p2sb>
++        </mmio_resources>
++    </vm>
++    <vm id="1">
++        <vm_type>SOS_VM</vm_type>
++        <name>ACRN SOS VM</name>
++        <guest_flags>
++            <guest_flag>0</guest_flag>
++        </guest_flags>
++        <clos>
++            <vcpu_clos/>
++        </clos>
++        <memory>
++            <start_hpa>0</start_hpa>
++        </memory>
++        <os_config>
++            <name>ACRN Service OS</name>
++            <kern_type>KERNEL_BZIMAGE</kern_type>
++            <kern_mod>Linux_bzImage</kern_mod>
++            <ramdisk_mod/>
++            <bootargs>SOS_VM_BOOTARGS</bootargs>
++        </os_config>
++        <legacy_vuart id="0">
++            <type>VUART_LEGACY_PIO</type>
++            <base>SOS_COM1_BASE</base>
++            <irq>SOS_COM1_IRQ</irq>
++        </legacy_vuart>
++        <legacy_vuart id="1">
++            <type>VUART_LEGACY_PIO</type>
++            <base>SOS_COM2_BASE</base>
++            <irq>SOS_COM2_IRQ</irq>
++            <target_vm_id>0</target_vm_id>
++            <target_uart_id>1</target_uart_id>
++        </legacy_vuart>
++        <console_vuart id="0">
++            <base>INVALID_PCI_BASE</base>
++        </console_vuart>
++        <communication_vuart id="1">
++            <base>INVALID_PCI_BASE</base>
++            <target_vm_id>1</target_vm_id>
++            <target_uart_id>1</target_uart_id>
++        </communication_vuart>
++        <pci_devs>
++            <pci_dev/>
++        </pci_devs>
++        <board_private>
++            <rootfs>/dev/sda3</rootfs>
++            <bootargs>rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 swiotlb=131072 nokaslr
++            </bootargs>
++        </board_private>
++    </vm>
++    <vm id="2">
++        <vm_type>POST_STD_VM</vm_type>
++        <guest_flags>
++            <guest_flag>0</guest_flag>
++        </guest_flags>
++        <cpu_affinity>
++            <pcpu_id>8</pcpu_id>
++            <pcpu_id>9</pcpu_id>
++            <pcpu_id>10</pcpu_id>
++            <pcpu_id>11</pcpu_id>
++        </cpu_affinity>
++        <clos>
++            <vcpu_clos/>
++            <vcpu_clos/>
++            <vcpu_clos/>
++            <vcpu_clos/>
++        </clos>
++        <epc_section>
++            <base>0</base>
++            <size>0</size>
++        </epc_section>
++        <legacy_vuart id="0">
++            <type>VUART_LEGACY_PIO</type>
++            <base>COM1_BASE</base>
++            <irq>COM1_IRQ</irq>
++        </legacy_vuart>
++        <legacy_vuart id="1">
++            <type>VUART_LEGACY_PIO</type>
++            <base>INVALID_COM_BASE</base>
++            <irq>COM2_IRQ</irq>
++            <target_vm_id>0</target_vm_id>
++            <target_uart_id>0</target_uart_id>
++        </legacy_vuart>
++        <console_vuart id="0">
++            <base>INVALID_PCI_BASE</base>
++        </console_vuart>
++        <communication_vuart id="1">
++            <base>INVALID_PCI_BASE</base>
++            <target_vm_id>1</target_vm_id>
++            <target_uart_id>1</target_uart_id>
++        </communication_vuart>
++        <PTM>n</PTM>
++    </vm>
++</acrn-config>
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid_rt.xml b/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
+new file mode 100644
+index 000000000..f7aa90483
+--- /dev/null
++++ b/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
+@@ -0,0 +1,264 @@
++<acrn-config board="adl-s-crb" scenario="hybrid_rt">
++  <hv>
++    <DEBUG_OPTIONS>
++      <RELEASE>n</RELEASE>
++      <SERIAL_CONSOLE>/dev/ttyS0</SERIAL_CONSOLE>
++      <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
++      <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
++      <CONSOLE_LOGLEVEL>3</CONSOLE_LOGLEVEL>
++      <LOG_DESTINATION>7</LOG_DESTINATION>
++      <LOG_BUF_SIZE>0x40000</LOG_BUF_SIZE>
++    </DEBUG_OPTIONS>
++    <FEATURES>
++      <RELOC>y</RELOC>
++      <SCHEDULER>SCHED_BVT</SCHEDULER>
++      <MULTIBOOT2>y</MULTIBOOT2>
++      <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
++      <RDT>
++        <RDT_ENABLED>n</RDT_ENABLED>
++        <CDP_ENABLED>n</CDP_ENABLED>
++      </RDT>
++      <NVMX_ENABLED>n</NVMX_ENABLED>
++      <HYPERV_ENABLED>y</HYPERV_ENABLED>
++      <IOMMU_ENFORCE_SNP>n</IOMMU_ENFORCE_SNP>
++      <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
++      <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
++      <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
++      <IVSHMEM>
++        <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
++        <IVSHMEM_REGION>hv:/shm_region_0, 2, 0:2</IVSHMEM_REGION>
++      </IVSHMEM>
++    </FEATURES>
++    <MEMORY>
++      <STACK_SIZE>0x2000</STACK_SIZE>
++      <HV_RAM_SIZE></HV_RAM_SIZE>
++      <HV_RAM_START></HV_RAM_START>
++      <LOW_RAM_SIZE>0x00010000</LOW_RAM_SIZE>
++      <PLATFORM_RAM_SIZE>0x400000000</PLATFORM_RAM_SIZE>
++    </MEMORY>
++    <CAPACITIES>
++      <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++      <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
++      <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
++      <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
++      <MAX_IOAPIC_LINES>120</MAX_IOAPIC_LINES>
++      <MAX_PT_IRQ_ENTRIES>256</MAX_PT_IRQ_ENTRIES>
++      <MAX_MSIX_TABLE_NUM>64</MAX_MSIX_TABLE_NUM>
++      <MAX_EMULATED_MMIO>16</MAX_EMULATED_MMIO>
++    </CAPACITIES>
++    <MISC_CFG>
++      <GPU_SBDF>0x00000010</GPU_SBDF>
++      <UEFI_OS_LOADER_NAME></UEFI_OS_LOADER_NAME>
++    </MISC_CFG>
++  </hv>
++  <vm id="0">
++    <vm_type>PRE_RT_VM</vm_type>
++    <name>ACRN PRE-LAUNCHED VM0</name>
++    <guest_flags>
++      <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
++      <guest_flag>GUEST_FLAG_RT</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>12</pcpu_id>
++      <pcpu_id>13</pcpu_id>
++      <pcpu_id>14</pcpu_id>
++      <pcpu_id>15</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <memory>
++      <start_hpa>0x100000000</start_hpa>
++      <size>0x40000000</size>
++      <start_hpa2>0x0</start_hpa2>
++      <size_hpa2>0x0</size_hpa2>
++    </memory>
++    <os_config>
++      <name>PREEMPT-RT</name>
++      <kern_type>KERNEL_BZIMAGE</kern_type>
++      <kern_mod>RT_bzImage</kern_mod>
++      <ramdisk_mod></ramdisk_mod>
++      <bootargs>rw rootwait root=/dev/sda3 no_ipi_broadcast=1 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable clocksource=tsc x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0 reboot=acpi </bootargs>
++    </os_config>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM2_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++    <pci_devs>
++	    <pci_dev>00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 10)</pci_dev>
++    </pci_devs>
++    <mmio_resources>
++      <TPM2>y</TPM2>
++    </mmio_resources>
++  </vm>
++  <vm id="1">
++    <vm_type>SOS_VM</vm_type>
++    <name>ACRN SOS VM</name>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>0</pcpu_id>
++      <pcpu_id>1</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <memory>
++      <start_hpa>0</start_hpa>
++    </memory>
++    <os_config>
++      <name>ACRN Service OS</name>
++      <kern_type>KERNEL_BZIMAGE</kern_type>
++      <kern_mod>Linux_bzImage</kern_mod>
++      <ramdisk_mod></ramdisk_mod>
++      <bootargs>SOS_VM_BOOTARGS</bootargs>
++    </os_config>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>SOS_COM1_BASE</base>
++      <irq>SOS_COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>SOS_COM2_BASE</base>
++      <irq>SOS_COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++    <pci_devs>
++      <pci_dev></pci_dev>
++    </pci_devs>
++    <board_private>
++      <rootfs>/dev/nvme0n1p3</rootfs>
++      <bootargs>rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 swiotlb=131072 nokaslr
++      </bootargs>
++    </board_private>
++  </vm>
++  <vm id="2">
++    <vm_type>POST_STD_VM</vm_type>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>8</pcpu_id>
++      <pcpu_id>9</pcpu_id>
++      <pcpu_id>10</pcpu_id>
++      <pcpu_id>11</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>INVALID_COM_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>0</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++    <PTM>n</PTM>
++  </vm>
++  <vm id="3">
++    <vm_type>POST_STD_VM</vm_type>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>0</pcpu_id>
++      <pcpu_id>1</pcpu_id>
++      <pcpu_id>2</pcpu_id>
++      <pcpu_id>3</pcpu_id>
++      <pcpu_id>4</pcpu_id>
++      <pcpu_id>5</pcpu_id>
++      <pcpu_id>6</pcpu_id>
++      <pcpu_id>7</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>INVALID_COM_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>0</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++    <PTM>n</PTM>
++  </vm>
++</acrn-config>
+diff --git a/misc/config_tools/data/adl-s-crb/industry.xml b/misc/config_tools/data/adl-s-crb/industry.xml
+new file mode 100644
+index 000000000..5a2afca55
+--- /dev/null
++++ b/misc/config_tools/data/adl-s-crb/industry.xml
+@@ -0,0 +1,436 @@
++<acrn-config board="adl-s-crb" scenario="industry">
++  <hv>
++    <DEBUG_OPTIONS>
++      <RELEASE>n</RELEASE>
++      <SERIAL_CONSOLE>/dev/ttyS0</SERIAL_CONSOLE>
++      <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
++      <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
++      <CONSOLE_LOGLEVEL>3</CONSOLE_LOGLEVEL>
++      <LOG_DESTINATION>7</LOG_DESTINATION>
++      <LOG_BUF_SIZE>0x40000</LOG_BUF_SIZE>
++    </DEBUG_OPTIONS>
++    <FEATURES>
++      <RELOC>y</RELOC>
++      <SCHEDULER>SCHED_BVT</SCHEDULER>
++      <MULTIBOOT2>y</MULTIBOOT2>
++      <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
++      <RDT>
++        <RDT_ENABLED>n</RDT_ENABLED>
++        <CDP_ENABLED>n</CDP_ENABLED>
++      </RDT>
++      <NVMX_ENABLED>n</NVMX_ENABLED>
++      <HYPERV_ENABLED>y</HYPERV_ENABLED>
++      <IOMMU_ENFORCE_SNP>n</IOMMU_ENFORCE_SNP>
++      <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
++      <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
++      <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
++      <IVSHMEM>
++        <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
++        <IVSHMEM_REGION></IVSHMEM_REGION>
++      </IVSHMEM>
++      <SSRAM>
++        <SSRAM_ENABLED>n</SSRAM_ENABLED>
++      </SSRAM>
++    </FEATURES>
++    <MEMORY>
++      <STACK_SIZE>0x2000</STACK_SIZE>
++      <HV_RAM_SIZE></HV_RAM_SIZE>
++      <HV_RAM_START></HV_RAM_START>
++      <LOW_RAM_SIZE>0x00010000</LOW_RAM_SIZE>
++      <PLATFORM_RAM_SIZE>0x480000000</PLATFORM_RAM_SIZE>
++    </MEMORY>
++    <CAPACITIES>
++      <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++      <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
++      <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
++      <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
++      <MAX_IOAPIC_LINES>120</MAX_IOAPIC_LINES>
++      <MAX_PT_IRQ_ENTRIES>64</MAX_PT_IRQ_ENTRIES>
++      <MAX_MSIX_TABLE_NUM>64</MAX_MSIX_TABLE_NUM>
++      <MAX_EMULATED_MMIO>16</MAX_EMULATED_MMIO>
++    </CAPACITIES>
++    <MISC_CFG>
++      <GPU_SBDF>0x00000010</GPU_SBDF>
++    </MISC_CFG>
++  </hv>
++  <vm id="0">
++    <vm_type>SOS_VM</vm_type>
++    <name>ACRN SOS VM</name>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <clos>
++      <vcpu_clos/>
++    </clos>
++    <memory>
++      <start_hpa>0</start_hpa>
++      <size>0x20000000</size>
++    </memory>
++    <os_config>
++      <name>ACRN Service OS</name>
++      <kern_type>KERNEL_BZIMAGE</kern_type>
++      <kern_mod>Linux_bzImage</kern_mod>
++      <ramdisk_mod></ramdisk_mod>
++      <bootargs>SOS_VM_BOOTARGS</bootargs>
++    </os_config>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>SOS_COM1_BASE</base>
++      <irq>SOS_COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>SOS_COM2_BASE</base>
++      <irq>SOS_COM2_IRQ</irq>
++      <target_vm_id>2</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++    <pci_devs>
++      <pci_dev></pci_dev>
++    </pci_devs>
++    <board_private>
++      <rootfs>/dev/nvme0n1p3</rootfs>
++      <bootargs>rw rootwait console=ttyS0  earlyprintk=serial,ttyS0,115200 cons_timer_check consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 idle=halt nokaslr
++    </bootargs>
++    </board_private>
++  </vm>
++  <vm id="1">
++    <vm_type>POST_STD_VM</vm_type>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>8</pcpu_id>
++      <pcpu_id>9</pcpu_id>
++      <pcpu_id>10</pcpu_id>
++      <pcpu_id>11</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>INVALID_COM_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++  </vm>
++  <vm id="2">
++    <vm_type>POST_RT_VM</vm_type>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>12</pcpu_id>
++      <pcpu_id>13</pcpu_id>
++      <pcpu_id>14</pcpu_id>
++      <pcpu_id>15</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM2_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++  </vm>
++  <vm id="3">
++    <vm_type>POST_STD_VM</vm_type>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>0</pcpu_id>
++      <pcpu_id>1</pcpu_id>
++      <pcpu_id>2</pcpu_id>
++      <pcpu_id>3</pcpu_id>
++      <pcpu_id>4</pcpu_id>
++      <pcpu_id>5</pcpu_id>
++      <pcpu_id>6</pcpu_id>
++      <pcpu_id>7</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>INVALID_COM_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++  </vm>
++  <vm id="4">
++    <vm_type>POST_STD_VM</vm_type>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>0</pcpu_id>
++      <pcpu_id>1</pcpu_id>
++      <pcpu_id>2</pcpu_id>
++      <pcpu_id>3</pcpu_id>
++      <pcpu_id>4</pcpu_id>
++      <pcpu_id>5</pcpu_id>
++      <pcpu_id>6</pcpu_id>
++      <pcpu_id>7</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>INVALID_COM_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++  </vm>
++  <vm id="5">
++    <vm_type>POST_STD_VM</vm_type>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>0</pcpu_id>
++      <pcpu_id>1</pcpu_id>
++      <pcpu_id>2</pcpu_id>
++      <pcpu_id>3</pcpu_id>
++      <pcpu_id>4</pcpu_id>
++      <pcpu_id>5</pcpu_id>
++      <pcpu_id>6</pcpu_id>
++      <pcpu_id>7</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>INVALID_COM_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++  </vm>
++  <vm id="6">
++    <vm_type>POST_STD_VM</vm_type>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>0</pcpu_id>
++      <pcpu_id>1</pcpu_id>
++      <pcpu_id>2</pcpu_id>
++      <pcpu_id>3</pcpu_id>
++      <pcpu_id>4</pcpu_id>
++      <pcpu_id>5</pcpu_id>
++      <pcpu_id>6</pcpu_id>
++      <pcpu_id>7</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>INVALID_COM_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++  </vm>
++  <vm id="7">
++    <vm_type>KATA_VM</vm_type>
++    <cpu_affinity>
++      <pcpu_id>0</pcpu_id>
++      <pcpu_id>1</pcpu_id>
++      <pcpu_id>2</pcpu_id>
++      <pcpu_id>3</pcpu_id>
++      <pcpu_id>4</pcpu_id>
++      <pcpu_id>5</pcpu_id>
++      <pcpu_id>6</pcpu_id>
++      <pcpu_id>7</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>INVALID_COM_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>INVALID_COM_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>0</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++  </vm>
++</acrn-config>
+diff --git a/misc/config_tools/data/adl-s-crb/industry_launch_2uos.xml b/misc/config_tools/data/adl-s-crb/industry_launch_2uos.xml
+new file mode 100644
+index 000000000..4ab01d47c
+--- /dev/null
++++ b/misc/config_tools/data/adl-s-crb/industry_launch_2uos.xml
+@@ -0,0 +1,89 @@
++<acrn-config board="adl-s-crb" scenario="industry" uos_launcher="2">
++    <uos id="1">
++	<uos_type desc="UOS type">WINDOWS</uos_type>
++	<rtos_type desc="UOS Realtime capability">no</rtos_type>
++	<mem_size desc="UOS memory size in MByte">4096</mem_size>
++	<gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
++	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
++	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
++	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
++	<allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
++	<enable_ptm desc="enable ptm of uos">n</enable_ptm>
++	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
++	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
++		<pcpu_id></pcpu_id>
++	</cpu_affinity>
++	<shm_regions desc="List of shared memory regions for inter-VM communication.">
++		<shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
++	</shm_regions>
++	<console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
++	<communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
++		<communication_vuart></communication_vuart>
++	</communication_vuarts>
++	<passthrough_devices>
++		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
++		<audio desc="vm audio device"></audio>
++		<audio_codec desc="vm audio codec device"></audio_codec>
++		<ipu desc="vm ipu device"></ipu>
++		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
++		<cse desc="vm cse device"></cse>
++		<wifi desc="vm wifi device"></wifi>
++		<bluetooth desc="vm bluetooth"></bluetooth>
++		<sd_card desc="vm sd card device"></sd_card>
++		<ethernet desc="vm ethernet device"></ethernet>
++		<sata desc="vm sata device"></sata>
++		<nvme desc="vm nvme device"></nvme>
++	</passthrough_devices>
++
++	<virtio_devices>
++		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">WaaG</network>
++		<input desc="virtio input device"></input>
++		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./win10-ltsc.img</block>
++		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"></console>
++	</virtio_devices>
++    </uos>
++
++    <uos id="2">
++	<uos_type desc="UOS type">PREEMPT-RT LINUX</uos_type>
++	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
++	<mem_size desc="UOS memory size in MByte">1024</mem_size>
++	<gvt_args configurable="0" desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
++	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
++	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
++	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
++	<allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
++	<enable_ptm desc="enable ptm of uos">n</enable_ptm>
++	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
++	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
++		<pcpu_id></pcpu_id>
++	</cpu_affinity>
++	<shm_regions desc="List of shared memory regions for inter-VM communication.">
++		<shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
++	</shm_regions>
++	<console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
++	<communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
++		<communication_vuart></communication_vuart>
++	</communication_vuarts>
++	<passthrough_devices>
++		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
++		<audio desc="vm audio device"></audio>
++		<audio_codec desc="vm audio codec device"></audio_codec>
++		<ipu desc="vm ipu device"></ipu>
++		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
++		<cse desc="vm cse device"></cse>
++		<wifi desc="vm wifi device"></wifi>
++		<bluetooth desc="vm bluetooth"></bluetooth>
++		<sd_card desc="vm sd card device"></sd_card>
++		<ethernet desc="vm ethernet device"></ethernet>
++		<sata desc="vm sata device">00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</sata>
++		<nvme desc="vm nvme device"></nvme>
++	</passthrough_devices>
++
++	<virtio_devices>
++		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."></network>
++		<input desc="virtio input device"></input>
++		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"></block>
++		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
++	</virtio_devices>
++    </uos>
++</acrn-config>
+diff --git a/misc/config_tools/data/adl-s-crb/industry_launch_6uos.xml b/misc/config_tools/data/adl-s-crb/industry_launch_6uos.xml
+new file mode 100644
+index 000000000..39577ac9f
+--- /dev/null
++++ b/misc/config_tools/data/adl-s-crb/industry_launch_6uos.xml
+@@ -0,0 +1,257 @@
++<acrn-config board="adl-s-crb" scenario="industry" uos_launcher="6">
++    <uos id="1">
++	<uos_type desc="UOS type">WINDOWS</uos_type>
++	<rtos_type desc="UOS Realtime capability">no</rtos_type>
++	<mem_size desc="UOS memory size in MByte">4096</mem_size>
++	<gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
++	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
++	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
++	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
++	<allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
++	<enable_ptm desc="enable ptm of uos">n</enable_ptm>
++	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
++	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
++		<pcpu_id></pcpu_id>
++	</cpu_affinity>
++	<shm_regions desc="List of shared memory regions for inter-VM communication.">
++		<shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
++	</shm_regions>
++	<console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
++	<communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
++		<communication_vuart></communication_vuart>
++	</communication_vuarts>
++	<passthrough_devices>
++		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
++		<audio desc="vm audio device"></audio>
++		<audio_codec desc="vm audio codec device"></audio_codec>
++		<ipu desc="vm ipu device"></ipu>
++		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
++		<cse desc="vm cse device"></cse>
++		<wifi desc="vm wifi device"></wifi>
++		<bluetooth desc="vm bluetooth"></bluetooth>
++		<sd_card desc="vm sd card device"></sd_card>
++		<ethernet desc="vm ethernet device"></ethernet>
++		<sata desc="vm sata device"></sata>
++		<nvme desc="vm nvme device"></nvme>
++	</passthrough_devices>
++
++	<virtio_devices>
++		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">WaaG</network>
++		<input desc="virtio input device"></input>
++		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./win10-ltsc.img</block>
++		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"></console>
++	</virtio_devices>
++    </uos>
++
++    <uos id="2">
++	<uos_type desc="UOS type">PREEMPT-RT LINUX</uos_type>
++	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
++	<mem_size desc="UOS memory size in MByte">1024</mem_size>
++	<gvt_args configurable="0" desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
++	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
++	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
++	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
++    <enable_ptm desc="enable ptm of uos">n</enable_ptm>
++	<allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
++	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
++	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
++		<pcpu_id></pcpu_id>
++	</cpu_affinity>
++	<shm_regions desc="List of shared memory regions for inter-VM communication.">
++		<shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
++	</shm_regions>
++	<console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
++	<communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
++		<communication_vuart></communication_vuart>
++	</communication_vuarts>
++	<passthrough_devices>
++		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
++		<audio desc="vm audio device"></audio>
++		<audio_codec desc="vm audio codec device"></audio_codec>
++		<ipu desc="vm ipu device"></ipu>
++		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
++		<cse desc="vm cse device"></cse>
++		<wifi desc="vm wifi device"></wifi>
++		<bluetooth desc="vm bluetooth"></bluetooth>
++		<sd_card desc="vm sd card device"></sd_card>
++		<ethernet desc="vm ethernet device"></ethernet>
++		<sata desc="vm sata device">00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</sata>
++		<nvme desc="vm nvme device"></nvme>
++	</passthrough_devices>
++
++	<virtio_devices>
++		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."></network>
++		<input desc="virtio input device"></input>
++		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"></block>
++		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
++	</virtio_devices>
++    </uos>
++    <uos id="3">
++        <uos_type desc="UOS type">YOCTO</uos_type>
++        <rtos_type desc="UOS Realtime capability">no</rtos_type>
++        <mem_size desc="UOS memory size in MByte">512</mem_size>
++        <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
++        <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
++        <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
++        <poweroff_channel desc="the method of power off uos" />
++        <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
++        <enable_ptm desc="enable ptm of uos">n</enable_ptm>
++        <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4" />
++        <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
++            <pcpu_id />
++        </cpu_affinity>
++	    <shm_regions desc="List of shared memory regions for inter-VM communication.">
++		    <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
++	    </shm_regions>
++        <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
++        <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
++            <communication_vuart></communication_vuart>
++        </communication_vuarts>
++        <passthrough_devices>
++            <usb_xdci desc="vm usb_xdci device" />
++            <audio desc="vm audio device" />
++            <audio_codec desc="vm audio codec device" />
++            <ipu desc="vm ipu device" />
++            <ipu_i2c desc="vm ipu_i2c device" />
++            <cse desc="vm cse device" />
++            <wifi desc="vm wifi device" />
++            <bluetooth desc="vm bluetooth" />
++            <sd_card desc="vm sd card device" />
++            <ethernet desc="vm ethernet device" />
++            <sata desc="vm sata device" />
++            <nvme desc="vm nvme device" />
++        </passthrough_devices>
++        <virtio_devices>
++            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
++            <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG3</network>
++            <input desc="virtio input device" />
++            <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
++        </virtio_devices>
++    </uos>
++    <uos id="4">
++        <uos_type desc="UOS type">YOCTO</uos_type>
++        <rtos_type desc="UOS Realtime capability">no</rtos_type>
++        <mem_size desc="UOS memory size in MByte">512</mem_size>
++        <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
++        <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
++        <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
++        <poweroff_channel desc="the method of power off uos" />
++        <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
++        <enable_ptm desc="enable ptm of uos">n</enable_ptm>
++        <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4" />
++        <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
++            <pcpu_id />
++        </cpu_affinity>
++        <shm_regions desc="List of shared memory regions for inter-VM communication.">
++		    <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
++	    </shm_regions>
++        <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
++        <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
++            <communication_vuart></communication_vuart>
++        </communication_vuarts>
++        <passthrough_devices>
++            <usb_xdci desc="vm usb_xdci device" />
++            <audio desc="vm audio device" />
++            <audio_codec desc="vm audio codec device" />
++            <ipu desc="vm ipu device" />
++            <ipu_i2c desc="vm ipu_i2c device" />
++            <cse desc="vm cse device" />
++            <wifi desc="vm wifi device" />
++            <bluetooth desc="vm bluetooth" />
++            <sd_card desc="vm sd card device" />
++            <ethernet desc="vm ethernet device" />
++            <sata desc="vm sata device" />
++            <nvme desc="vm nvme device" />
++        </passthrough_devices>
++        <virtio_devices>
++            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
++            <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG4</network>
++            <input desc="virtio input device" />
++            <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
++        </virtio_devices>
++    </uos>
++    <uos id="5">
++        <uos_type desc="UOS type">YOCTO</uos_type>
++        <rtos_type desc="UOS Realtime capability">no</rtos_type>
++        <mem_size desc="UOS memory size in MByte">512</mem_size>
++        <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
++        <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
++        <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
++        <poweroff_channel desc="the method of power off uos" />
++        <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
++        <enable_ptm desc="enable ptm of uos">n</enable_ptm>
++        <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4" />
++        <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
++            <pcpu_id />
++        </cpu_affinity>
++        <shm_regions desc="List of shared memory regions for inter-VM communication.">
++            <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
++        </shm_regions>
++        <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
++        <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
++            <communication_vuart></communication_vuart>
++        </communication_vuarts>
++        <passthrough_devices>
++            <usb_xdci desc="vm usb_xdci device" />
++            <audio desc="vm audio device" />
++            <audio_codec desc="vm audio codec device" />
++            <ipu desc="vm ipu device" />
++            <ipu_i2c desc="vm ipu_i2c device" />
++            <cse desc="vm cse device" />
++            <wifi desc="vm wifi device" />
++            <bluetooth desc="vm bluetooth" />
++            <sd_card desc="vm sd card device" />
++            <ethernet desc="vm ethernet device" />
++            <sata desc="vm sata device" />
++            <nvme desc="vm nvme device" />
++        </passthrough_devices>
++        <virtio_devices>
++            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
++            <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG5</network>
++            <input desc="virtio input device" />
++            <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
++        </virtio_devices>
++    </uos>
++    <uos id="6">
++        <uos_type desc="UOS type">YOCTO</uos_type>
++        <rtos_type desc="UOS Realtime capability">no</rtos_type>
++        <mem_size desc="UOS memory size in MByte">512</mem_size>
++        <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
++        <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
++        <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
++        <poweroff_channel desc="the method of power off uos" />
++        <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
++        <enable_ptm desc="enable ptm of uos">n</enable_ptm>
++        <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4" />
++        <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
++            <pcpu_id />
++        </cpu_affinity>
++        <shm_regions desc="List of shared memory regions for inter-VM communication.">
++            <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
++        </shm_regions>
++        <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
++        <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
++            <communication_vuart></communication_vuart>
++        </communication_vuarts>
++        <passthrough_devices>
++            <usb_xdci desc="vm usb_xdci device" />
++            <audio desc="vm audio device" />
++            <audio_codec desc="vm audio codec device" />
++            <ipu desc="vm ipu device" />
++            <ipu_i2c desc="vm ipu_i2c device" />
++            <cse desc="vm cse device" />
++            <wifi desc="vm wifi device" />
++            <bluetooth desc="vm bluetooth" />
++            <sd_card desc="vm sd card device" />
++            <ethernet desc="vm ethernet device" />
++            <sata desc="vm sata device" />
++            <nvme desc="vm nvme device" />
++        </passthrough_devices>
++        <virtio_devices>
++            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
++            <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG6</network>
++            <input desc="virtio input device" />
++            <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
++        </virtio_devices>
++    </uos>
++</acrn-config>
+diff --git a/misc/config_tools/data/adl-s-crb/logical_partition.xml b/misc/config_tools/data/adl-s-crb/logical_partition.xml
+new file mode 100644
+index 000000000..5fc6c2f96
+--- /dev/null
++++ b/misc/config_tools/data/adl-s-crb/logical_partition.xml
+@@ -0,0 +1,197 @@
++<acrn-config board="adl-s-crb" scenario="logical_partition">
++  <hv>
++    <DEBUG_OPTIONS>
++      <RELEASE>n</RELEASE>
++      <SERIAL_CONSOLE>/dev/ttyS0</SERIAL_CONSOLE>
++      <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
++      <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
++      <CONSOLE_LOGLEVEL>3</CONSOLE_LOGLEVEL>
++      <LOG_DESTINATION>7</LOG_DESTINATION>
++      <LOG_BUF_SIZE>0x40000</LOG_BUF_SIZE>
++    </DEBUG_OPTIONS>
++    <FEATURES>
++      <RELOC>y</RELOC>
++      <SCHEDULER>SCHED_BVT</SCHEDULER>
++      <MULTIBOOT2>y</MULTIBOOT2>
++      <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
++      <RDT>
++        <RDT_ENABLED>n</RDT_ENABLED>
++        <CDP_ENABLED>n</CDP_ENABLED>
++      </RDT>
++      <NVMX_ENABLED>n</NVMX_ENABLED>
++      <HYPERV_ENABLED>y</HYPERV_ENABLED>
++      <IOMMU_ENFORCE_SNP>n</IOMMU_ENFORCE_SNP>
++      <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
++      <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
++      <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
++      <IVSHMEM>
++        <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
++        <IVSHMEM_REGION></IVSHMEM_REGION>
++      </IVSHMEM>
++    </FEATURES>
++    <MEMORY>
++      <STACK_SIZE>0x2000</STACK_SIZE>
++      <HV_RAM_SIZE></HV_RAM_SIZE>
++      <HV_RAM_START></HV_RAM_START>
++      <LOW_RAM_SIZE>0x00010000</LOW_RAM_SIZE>
++      <PLATFORM_RAM_SIZE>0x400000000</PLATFORM_RAM_SIZE>
++    </MEMORY>
++    <CAPACITIES>
++      <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++      <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
++      <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
++      <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
++      <MAX_IOAPIC_LINES>120</MAX_IOAPIC_LINES>
++      <MAX_PT_IRQ_ENTRIES>64</MAX_PT_IRQ_ENTRIES>
++      <MAX_MSIX_TABLE_NUM>64</MAX_MSIX_TABLE_NUM>
++      <MAX_EMULATED_MMIO>16</MAX_EMULATED_MMIO>
++    </CAPACITIES>
++    <MISC_CFG>
++      <GPU_SBDF>0x00000010</GPU_SBDF>
++    </MISC_CFG>
++  </hv>
++  <vm id="0">
++    <vm_type>PRE_STD_VM</vm_type>
++    <name>ACRN PRE-LAUNCHED VM0</name>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>0</pcpu_id>
++      <pcpu_id>1</pcpu_id>
++      <pcpu_id>2</pcpu_id>
++      <pcpu_id>3</pcpu_id>
++      <pcpu_id>4</pcpu_id>
++      <pcpu_id>5</pcpu_id>
++      <pcpu_id>6</pcpu_id>
++      <pcpu_id>7</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <memory>
++      <start_hpa>0x100000000</start_hpa>
++      <size>0x20000000</size>
++      <start_hpa2>0x0</start_hpa2>
++      <size_hpa2>0x0</size_hpa2>
++    </memory>
++    <os_config>
++      <name>YOCTO</name>
++      <kern_type>KERNEL_BZIMAGE</kern_type>
++      <kern_mod>Linux_bzImage</kern_mod>
++      <ramdisk_mod></ramdisk_mod>
++      <bootargs>rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
++      </bootargs>
++    </os_config>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM2_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++    <pci_devs>
++      <pci_dev></pci_dev>
++      <pci_dev></pci_dev>
++    </pci_devs>
++    <mmio_resources>
++      <TPM2>n</TPM2>
++    </mmio_resources>
++  </vm>
++  <vm id="1">
++    <vm_type>PRE_STD_VM</vm_type>
++    <name>ACRN PRE-LAUNCHED VM1</name>
++    <guest_flags>
++      <guest_flag>0</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++      <pcpu_id>8</pcpu_id>
++      <pcpu_id>9</pcpu_id>
++      <pcpu_id>10</pcpu_id>
++      <pcpu_id>11</pcpu_id>
++      <pcpu_id>12</pcpu_id>
++      <pcpu_id>13</pcpu_id>
++      <pcpu_id>14</pcpu_id>
++      <pcpu_id>15</pcpu_id>
++    </cpu_affinity>
++    <clos>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++      <vcpu_clos/>
++    </clos>
++    <epc_section>
++      <base>0</base>
++      <size>0</size>
++    </epc_section>
++    <memory>
++      <start_hpa>0x120000000</start_hpa>
++      <size>0x20000000</size>
++      <start_hpa2>0x0</start_hpa2>
++      <size_hpa2>0x0</size_hpa2>
++    </memory>
++    <os_config>
++      <name>YOCTO</name>
++      <kern_type>KERNEL_BZIMAGE</kern_type>
++      <kern_mod>Linux_bzImage</kern_mod>
++      <ramdisk_mod></ramdisk_mod>
++      <bootargs>rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
++      </bootargs>
++    </os_config>
++    <legacy_vuart id="0">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM1_BASE</base>
++      <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++      <type>VUART_LEGACY_PIO</type>
++      <base>COM2_BASE</base>
++      <irq>COM2_IRQ</irq>
++      <target_vm_id>0</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++      <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++      <base>INVALID_PCI_BASE</base>
++      <target_vm_id>1</target_vm_id>
++      <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++    <pci_devs>
++      <pci_dev></pci_dev>
++      <pci_dev></pci_dev>
++    </pci_devs>
++    <mmio_resources>
++      <TPM2>n</TPM2>
++    </mmio_resources>
++  </vm>
++</acrn-config>
+-- 
+2.25.1
+
