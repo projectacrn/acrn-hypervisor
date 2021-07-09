@@ -102,7 +102,7 @@ struct acrn_mmio_request {
 	 * @brief The value read for I/O reads or to be written for I/O writes
 	 */
 	uint64_t value;
-} __aligned(8);
+};
 
 /**
  * @brief Representation of a port I/O request
@@ -134,7 +134,7 @@ struct acrn_pio_request {
 	 * @brief The value read for I/O reads or to be written for I/O writes
 	 */
 	uint32_t value;
-} __aligned(8);
+};
 
 /**
  * @brief Representation of a PCI configuration space access
@@ -181,7 +181,7 @@ struct acrn_pci_request {
 	 * @brief The register to be accessed in the configuration space
 	 */
 	int32_t reg;
-} __aligned(8);
+};
 
 /**
  * @brief 256-byte I/O requests
@@ -331,7 +331,7 @@ struct acrn_io_request_buffer {
 		struct acrn_io_request	req_slot[ACRN_IO_REQUEST_MAX];
 		int8_t			reserved[4096];
 	};
-} __aligned(4096);
+};
 
 /**
  * @brief Info to create a VM, the parameter for HC_CREATE_VM hypercall
@@ -365,7 +365,7 @@ struct acrn_vm_creation {
 	 *   and so on...
 	*/
 	uint64_t cpu_affinity;
-} __aligned(8);
+};
 
 /* General-purpose register layout aligned with the general-purpose register idx
  * when vmexit, such as vmexit due to CR access, refer to SMD Vol.3C 27-6.
@@ -445,7 +445,7 @@ struct acrn_vcpu_regs {
 
 	/** the structure to hold vcpu state */
 	struct acrn_regs vcpu_regs;
-} __aligned(8);
+};
 
 /** Operation types for setting IRQ line */
 #define GSI_SET_HIGH		0U
@@ -461,7 +461,7 @@ struct acrn_vcpu_regs {
 struct acrn_irqline_ops {
 	uint32_t gsi;
 	uint32_t op;
-} __aligned(8);
+};
 
 /**
  * @brief Info to inject a MSI interrupt to VM
@@ -474,7 +474,7 @@ struct acrn_msi_entry {
 
 	/** MSI data[7:0] with vector */
 	uint64_t msi_data;
-} __aligned(8);
+};
 
 /**
  * @brief Info The power state data of a VCPU.
@@ -502,7 +502,7 @@ struct acrn_cstate_data {
 	uint8_t 	type;
 	uint32_t	latency;
 	uint64_t	power;
-} __aligned(8);
+};
 
 struct acrn_pstate_data {
 	uint64_t core_frequency;	/* megahertz */
@@ -511,7 +511,7 @@ struct acrn_pstate_data {
 	uint64_t bus_master_latency;	/* microseconds */
 	uint64_t control;		/* control value */
 	uint64_t status;		/* success indicator */
-} __aligned(8);
+};
 
 struct acpi_sx_pkg {
 	uint8_t		val_pm1a;
@@ -652,7 +652,7 @@ struct acrn_pcidev {
 
 	/** the base address of the PCI BAR, initialized by ACRN-DM. */
 	uint32_t bar[ACRN_PCI_NUM_BARS];
-} __attribute__((aligned(8)));
+};
 
 
 /**
@@ -667,7 +667,7 @@ struct acrn_mmiodev {
 
 	/** the size of the MMIO region for the MMIO device */
 	uint64_t size;
-} __attribute__((aligned(8)));
+};
 
 /**
  * @brief Info to create or destroy a virtual PCI or legacy device for a VM
