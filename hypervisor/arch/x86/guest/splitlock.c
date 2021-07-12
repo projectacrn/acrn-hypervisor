@@ -36,7 +36,7 @@ static bool is_guest_gp_enabled(struct acrn_vcpu *vcpu)
 	return ret;
 }
 
-void vcpu_kick_splitlock_emulation(struct acrn_vcpu *cur_vcpu)
+void vcpu_kick_lock_instr_emulation(struct acrn_vcpu *cur_vcpu)
 {
 	struct acrn_vcpu *other;
 	uint16_t i;
@@ -52,7 +52,7 @@ void vcpu_kick_splitlock_emulation(struct acrn_vcpu *cur_vcpu)
 	}
 }
 
-void vcpu_complete_splitlock_emulation(struct acrn_vcpu *cur_vcpu)
+void vcpu_complete_lock_instr_emulation(struct acrn_vcpu *cur_vcpu)
 {
 	struct acrn_vcpu *other;
 	uint16_t i;
@@ -68,7 +68,7 @@ void vcpu_complete_splitlock_emulation(struct acrn_vcpu *cur_vcpu)
 	}
 }
 
-int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, bool *queue_exception)
+int32_t emulate_lock_instr(struct acrn_vcpu *vcpu, uint32_t exception_vector, bool *queue_exception)
 {
 	int32_t status = 0;
 	uint8_t inst[1];
@@ -107,7 +107,7 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 					 * Kick other vcpus of the guest to stop execution
 					 * until the split-lock/uc-lock emulation being completed.
 					 */
-					vcpu_kick_splitlock_emulation(vcpu);
+					vcpu_kick_lock_instr_emulation(vcpu);
 
 					/*
 					 * Skip the LOCK prefix and re-execute the instruction.
@@ -134,7 +134,7 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 							 * Kick other vcpus of the guest to stop execution
 							 * until the split-lock/uc-lock emulation being completed.
 							 */
-							vcpu_kick_splitlock_emulation(vcpu);
+							vcpu_kick_lock_instr_emulation(vcpu);
 
 							/*
 							 * Using emulating_lock to make sure xchg emulation
@@ -153,7 +153,7 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 							/*
 							 * Notify other vcpus of the guest to restart execution.
 							 */
-							vcpu_complete_splitlock_emulation(vcpu);
+							vcpu_complete_lock_instr_emulation(vcpu);
 
 							/* Do not inject #AC/#GP, we have emulated it */
 							*queue_exception = false;

@@ -7,8 +7,8 @@
 #ifndef SPLITLOCK_H_
 #define SPLITLOCK_H_
 
-void vcpu_kick_splitlock_emulation(struct acrn_vcpu *cur_vcpu);
-void vcpu_complete_splitlock_emulation(struct acrn_vcpu *cur_vcpu);
-int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, bool *queue_exception);
+void vcpu_kick_lock_instr_emulation(struct acrn_vcpu *cur_vcpu);
+void vcpu_complete_lock_instr_emulation(struct acrn_vcpu *cur_vcpu);
+int32_t emulate_lock_instr(struct acrn_vcpu *vcpu, uint32_t exception_vector, bool *queue_exception);
 
 #endif /* SPLITLOCK_H_ */
