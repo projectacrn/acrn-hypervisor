@@ -18,7 +18,18 @@ static bool is_guest_ac_enabled(struct acrn_vcpu *vcpu)
 {
 	bool ret = false;
 
-	if ((vcpu_get_guest_msr(vcpu, MSR_TEST_CTL) & (1UL << 29UL)) != 0UL) {
+	if ((vcpu_get_guest_msr(vcpu, MSR_TEST_CTL) & MSR_TEST_CTL_AC_SPLITLOCK) != 0UL) {
+		ret = true;
+	}
+
+	return ret;
+}
+
+static bool is_guest_gp_enabled(struct acrn_vcpu *vcpu)
+{
+	bool ret = false;
+
+	if ((vcpu_get_guest_msr(vcpu, MSR_TEST_CTL) & MSR_TEST_CTL_GP_UCLOCK) != 0UL) {
 		ret = true;
 	}
 
@@ -68,14 +79,15 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 	*queue_exception = true;
 
 	/*
-	 * The split-lock detection is enabled by default if the platform supports it.
+	 * The split-lock/uc-lock detection is enabled by default if the platform supports it.
 	 * Here, we check if the split-lock detection is really enabled or not. If the
-	 * split-lock detection is enabled in the platform but not enabled in the guest
+	 * split-lock/uc-lock detection is enabled in the platform but not enabled in the guest
 	 * then we try to emulate it, otherwise, inject the exception back.
 	 */
-	if (is_ac_enabled() && !is_guest_ac_enabled(vcpu)) {
+	if ((is_ac_enabled() && !is_guest_ac_enabled(vcpu)) || (is_gp_enabled() && !is_guest_gp_enabled(vcpu))){
 		switch (exception_vector) {
 		case IDT_AC:
+		case IDT_GP:
 			status = copy_from_gva(vcpu, inst, vcpu_get_rip(vcpu), 1U, &err_code, &fault_addr);
 			if (status < 0) {
 				pr_err("Error copy instruction from Guest!");
@@ -87,13 +99,13 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 				}
 			} else {
 				/*
-				 * If AC is caused by instruction with LOCK prefix or xchg, then emulate it,
+				 * If #AC/#GP is caused by instruction with LOCK prefix or xchg, then emulate it,
 				 * otherwise, inject it back.
 				 */
 				if (inst[0] == 0xf0U) {  /* This is LOCK prefix */
 					/*
 					 * Kick other vcpus of the guest to stop execution
-					 * until the split-lock emulation being completed.
+					 * until the split-lock/uc-lock emulation being completed.
 					 */
 					vcpu_kick_splitlock_emulation(vcpu);
 
@@ -108,7 +120,7 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 						vcpu->arch.emulating_lock = true;
 					}
 
-					/* Skip the #AC, we have emulated it. */
+					/* Skip the #AC/#GP, we have emulated it. */
 					*queue_exception = false;
 				} else {
 					status = decode_instruction(vcpu, false);
@@ -120,13 +132,13 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 						if (is_current_opcode_xchg(vcpu)) {
 							/*
 							 * Kick other vcpus of the guest to stop execution
-							 * until the split-lock emulation being completed.
+							 * until the split-lock/uc-lock emulation being completed.
 							 */
 							vcpu_kick_splitlock_emulation(vcpu);
 
 							/*
 							 * Using emulating_lock to make sure xchg emulation
-							 * is only called by split-lock emulation.
+							 * is only called by split-lock/uc-lock emulation.
 							 */
 							vcpu->arch.emulating_lock = true;
 							status = emulate_instruction(vcpu);
@@ -143,13 +155,13 @@ int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, boo
 							 */
 							vcpu_complete_splitlock_emulation(vcpu);
 
-							/* Do not inject #AC, we have emulated it */
+							/* Do not inject #AC/#GP, we have emulated it */
 							*queue_exception = false;
 						}
 					} else {
 						if (status == -EFAULT) {
 							pr_info("page fault happen during decode_instruction");
-							/* For this case, Inject #PF, not to queue #AC */
+							/* For this case, Inject #PF, not to queue #AC/#GP */
 							*queue_exception = false;
 						}
 
