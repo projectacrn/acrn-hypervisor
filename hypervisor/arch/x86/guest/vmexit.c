@@ -14,7 +14,7 @@
 #include <asm/guest/vmexit.h>
 #include <asm/guest/vm_reset.h>
 #include <asm/guest/vmx_io.h>
-#include <asm/guest/splitlock.h>
+#include <asm/guest/lock_instr_emul.h>
 #include <asm/guest/ept.h>
 #include <asm/guest/vept.h>
 #include <asm/vtd.h>

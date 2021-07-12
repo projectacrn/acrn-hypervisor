@@ -12,7 +12,7 @@
 #include <asm/cpu_caps.h>
 #include <logmsg.h>
 #include <errno.h>
-#include <asm/guest/splitlock.h>
+#include <asm/guest/lock_instr_emul.h>
 
 static bool is_guest_ac_enabled(struct acrn_vcpu *vcpu)
 {
