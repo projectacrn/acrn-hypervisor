@@ -153,12 +153,24 @@ bool is_ac_enabled(void)
 {
 	bool ac_enabled = false;
 
-	if (has_core_cap(1U << 5U) && (msr_read(MSR_TEST_CTL) & (1U << 29U))) {
+	if (has_core_cap(CORE_CAP_SPLIT_LOCK) && (msr_read(MSR_TEST_CTL) & MSR_TEST_CTL_AC_SPLITLOCK)) {
 		ac_enabled = true;
 	}
 
 	return ac_enabled;
 }
+
+bool is_gp_enabled(void)
+{
+	bool gp_enabled = false;
+
+	if (has_core_cap(CORE_CAP_UC_LOCK) && (msr_read(MSR_TEST_CTL) & MSR_TEST_CTL_GP_UCLOCK)) {
+		gp_enabled = true;
+	}
+
+	return gp_enabled;
+}
+
 
 static void detect_ept_cap(void)
 {
