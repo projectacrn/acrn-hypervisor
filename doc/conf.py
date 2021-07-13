@@ -39,7 +39,7 @@ if "RELEASE" in os.environ:
 sys.path.insert(0, os.path.join(os.path.abspath('.'), 'extensions'))
 extensions = [
    'breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks',
-   'kerneldoc', 'eager_only', 'html_redirects', 'link_roles',
+   'eager_only', 'html_redirects', 'link_roles',
    'sphinx_tabs.tabs'
 ]
 
@@ -48,13 +48,6 @@ extensions = [
 extlinks = {'acrn-commit': ('https://github.com/projectacrn/acrn-hypervisor/commit/%s', ''),
             'acrn-issue': ('https://github.com/projectacrn/acrn-hypervisor/issues/%s', '')
            }
-
-# kernel-doc extension configuration for running Sphinx directly (e.g. by Read
-# the Docs). In a normal build, these are supplied from the Makefile via command
-# line arguments.
-
-kerneldoc_bin = 'scripts/kernel-doc'
-kerneldoc_srctree = '../../acrn-kernel'
 
 
 graphviz_output_format='png'

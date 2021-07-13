@@ -56,10 +56,6 @@ content:
 	$(Q)rsync -rt ../misc/config_tools/schema/*.xsd $(SOURCEDIR)/misc/config_tools/schema
 	$(Q)xsltproc -xinclude ./scripts/configdoc.xsl $(SOURCEDIR)/misc/config_tools/schema/config.xsd > $(SOURCEDIR)/reference/configdoc.txt
 
-# Used to pull the acrn kernel source (for API docs)
-
-pullsource:
-	$(Q)scripts/pullsource.sh
 
 html: content doxy
 	@echo making HTML content

@@ -35,8 +35,7 @@ The project's documentation contains the following items:
 * Doxygen-generated material used to create all API-specific documents
   found at http://projectacrn.github.io/latest/api/.  The documentation build
   process uses doxygen to scan source files in the hypervisor and
-  device-model folders, and from sources in the acrn-kernel repo (as
-  explained later).
+  device-model folders (as explained later).
 
 .. image:: images/doc-gen-flow.png
    :align: center
@@ -69,12 +68,9 @@ recommended folder setup for documentation contributions and generation:
          doc/
          hypervisor/
          misc/
-      acrn-kernel/
 
 The parent ``projectacrn folder`` is there because, if you have repo publishing
-rights, we'll also be creating a publishing area later in these steps.  For API
-documentation generation, we'll also need the ``acrn-kernel`` repo contents in a
-sibling folder to the acrn-hypervisor repo contents.
+rights, we'll also be creating a publishing area later in these steps.
 
 It's best if the ``acrn-hypervisor`` folder is an ssh clone of your personal
 fork of the upstream project repos (though ``https`` clones work too and won't
@@ -107,19 +103,6 @@ require you to
 
    After that, you'll have ``origin`` pointing to your cloned personal repo and
    ``upstream`` pointing to the project repo.
-
-#. For API documentation generation we'll also need the ``acrn-kernel`` repo available
-   locally into the ``acrn-hypervisor`` folder:
-
-   .. code-block:: bash
-
-      cd ..
-      git clone git@github.com:projectacrn/acrn-kernel.git
-
-   .. note:: We assume for documentation generation that ``origin`` is pointed to
-      the upstream ``acrn-kernel`` repo.  If you're a developer and have the acrn-kernel
-      repo already set up as a sibling folder to the acrn-hypervisor,
-      you can skip this clone step.
 
 #. If you haven't done so already, be sure to configure git with your name
    and email address for the ``signed-off-by`` line in your commit messages:
@@ -220,11 +203,6 @@ The ``acrn-hypervisor/doc`` directory has all the ``.rst`` source files, extra
 tools, and ``Makefile`` for generating a local copy of the ACRN technical
 documentation. (Some additional ``.rst`` files and other material is extracted
 or generated from the ``/misc`` folder as part of the ``Makefile``.)
-For generating all the API documentation, there is a
-dependency on having the ``acrn-kernel`` repo's contents available too
-(as described previously).  You'll get a sphinx warning if that repo is
-not set up as described, but you can ignore that warning if you're
-not planning to publish or show the API documentation.
 
 .. code-block:: bash
 

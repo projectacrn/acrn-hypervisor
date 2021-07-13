@@ -596,18 +596,6 @@ APIs Provided by DM
 .. doxygenfunction:: vbs_kernel_stop
    :project: Project ACRN
 
-APIs Provided by VBS-K Modules in Service OS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. kernel-doc:: include/linux/vbs/vbs.h
-   :functions: virtio_dev_init
-               virtio_dev_ioctl
-               virtio_vqs_ioctl
-               virtio_dev_register
-               virtio_dev_deregister
-               virtio_vqs_index_get
-               virtio_dev_reset
-
 VHOST APIs
 ==========
 
