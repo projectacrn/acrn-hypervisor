@@ -677,7 +677,7 @@ Configuration Option Documentation
 
 Most of the ACRN documentation is maintained in ``.rst`` files found in the
 ``doc/`` folder.  API documentation is maintained as Doxygen comments in the C
-header files (or as kerneldoc comments in the ``acrn-kernel`` repo headers),
+header files,
 along with some prose documentation in ``.rst`` files. The ACRN configuration
 option documentation is created based on details maintained in schema definition
 files (``.xsd``) in the ``misc/config_tools/schema`` folder.  These schema

@@ -73,7 +73,7 @@ New and updated reference documents are available, including:
 .. rst-class:: rst-columns2
 
 * :ref:`asa`
-* :ref:`GVT-g-porting`
+* GVT-g-porting (obsolete with v2.6))
 * :ref:`vbsk-overhead`
 * :ref:`asm_coding_guidelines`
 * :ref:`c_coding_guidelines`

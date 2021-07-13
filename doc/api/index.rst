@@ -16,4 +16,3 @@ about that API.
 
    hypercall_api.rst
    devicemodel_api.rst
-   GVT-g_api.rst
