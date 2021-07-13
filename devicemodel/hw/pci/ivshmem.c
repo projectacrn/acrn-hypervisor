@@ -147,11 +147,11 @@ static int
 create_ivshmem_from_hv(struct vmctx *ctx, struct pci_vdev *vdev,
 		const char *shm_name, uint32_t shm_size)
 {
-	struct acrn_emul_dev dev = {};
+	struct acrn_vdev dev = {};
 	uint64_t addr = 0;
 
-	dev.dev_id.fields.vendor_id = IVSHMEM_VENDOR_ID;
-	dev.dev_id.fields.device_id = IVSHMEM_DEVICE_ID;
+	dev.id.fields.vendor = IVSHMEM_VENDOR_ID;
+	dev.id.fields.device = IVSHMEM_DEVICE_ID;
 	dev.slot = PCI_BDF(vdev->bus, vdev->slot, vdev->func);
 	dev.io_addr[IVSHMEM_MMIO_BAR] = pci_get_cfgdata32(vdev,
 			PCIR_BAR(IVSHMEM_MMIO_BAR));
@@ -347,10 +347,10 @@ static void
 destroy_ivshmem_from_hv(struct vmctx *ctx, struct pci_vdev *vdev)
 {
 
-	struct acrn_emul_dev emul_dev = {};
+	struct acrn_vdev emul_dev = {};
 
-	emul_dev.dev_id.fields.vendor_id = IVSHMEM_VENDOR_ID;
-	emul_dev.dev_id.fields.device_id = IVSHMEM_DEVICE_ID;
+	emul_dev.id.fields.vendor = IVSHMEM_VENDOR_ID;
+	emul_dev.id.fields.device = IVSHMEM_DEVICE_ID;
 	emul_dev.slot = PCI_BDF(vdev->bus, vdev->slot, vdev->func);
 	vm_remove_hv_vdev(ctx, &emul_dev);
 }

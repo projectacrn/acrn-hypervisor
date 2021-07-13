@@ -31,7 +31,6 @@
 
 #include <stdbool.h>
 #include "types.h"
-#include "vmm.h"
 #include "dm_string.h"
 
 #define MAX_VMNAME_LEN	128U
@@ -54,9 +53,6 @@ extern bool pt_tpm2;
 extern bool pt_rtct;
 extern bool vtpm2;
 extern bool is_winvm;
-
-int vmexit_task_switch(struct vmctx *ctx, struct vhm_request *vhm_req,
-		       int *vcpu);
 
 /**
  * @brief Convert guest physical address to host virtual address

@@ -26,7 +26,7 @@ Hypervisor module named CPU state table:
 
 .. code-block:: c
 
-   struct cpu_px_data {
+   struct cpu_pstate_data {
        uint64_t core_frequency;        /* megahertz */
        uint64_t power;                 /* milliWatts */
        uint64_t transition_latency;    /* microseconds */
@@ -35,7 +35,7 @@ Hypervisor module named CPU state table:
        uint64_t status;                /* success indicator */
    } __attribute__((aligned(8)));
 
-   struct acpi_generic_address {
+   struct acrn_acpi_generic_address {
        uint8_t     space_id;
        uint8_t     bit_width;
        uint8_t     bit_offset;
@@ -43,8 +43,8 @@ Hypervisor module named CPU state table:
        uint64_t    address;
    } __attribute__((aligned(8)));
 
-   struct cpu_cx_data {
-       struct acpi_generic_address cx_reg;
+   struct cpu_cstate_data {
+       struct acrn_acpi_generic_address cx_reg;
        uint8_t     type;
        uint32_t    latency;
        uint64_t    power;
@@ -67,8 +67,8 @@ Px/Cx data for User VM P/C-state management:
    System block for building vACPI table with Px/Cx data
 
 Some ioctl APIs are defined for the Device model to query Px/Cx data from
-the Service VM VHM. The Hypervisor needs to provide hypercall APIs to transit
-Px/Cx data from the CPU state table to the Service VM VHM.
+the Service VM HSM. The Hypervisor needs to provide hypercall APIs to transit
+Px/Cx data from the CPU state table to the Service VM HSM.
 
 The build flow is:
 
@@ -76,8 +76,8 @@ The build flow is:
    a CPU state table in the Hypervisor. The Hypervisor loads the data after
    the system boots.
 2) Before User VM launching, the Device mode queries the Px/Cx data from the Service
-   VM VHM via ioctl interface.
-3) VHM transmits the query request to the Hypervisor by hypercall.
+   VM HSM via ioctl interface.
+3) HSM transmits the query request to the Hypervisor by hypercall.
 4) The Hypervisor returns the Px/Cx data.
 5) The Device model builds the virtual ACPI table with these Px/Cx data
 

@@ -40,7 +40,7 @@
  */
 #define NR_STATIC_MAPPINGS	(NR_STATIC_MAPPINGS_1 + CONFIG_MAX_VM_NUM)
 
-#define HYPERVISOR_CALLBACK_VHM_VECTOR	0xF3U
+#define HYPERVISOR_CALLBACK_HSM_VECTOR	0xF3U
 
 /* vectors range for dynamic allocation, usually for devices */
 #define VECTOR_DYNAMIC_START	0x20U

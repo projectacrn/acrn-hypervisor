@@ -61,7 +61,7 @@ int32_t hcall_get_api_version(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall.
  * @param target_vm not used
- * @param param1 GPA pointer to struct hc_platform_info.
+ * @param param1 GPA pointer to struct acrn_platform_info.
  * @param param2 not used
  *
  * @pre is_sos_vm(vcpu->vm)
@@ -79,7 +79,7 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_v
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param1 guest physical memory address. This gpa points to
- *              struct acrn_create_vm
+ *              struct acrn_vm_creation
  * @param param2 not used
  *
  * @pre is_sos_vm(vcpu->vm)
@@ -210,8 +210,7 @@ int32_t hcall_inject_msi(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
- * @param param2 guest physical address. This gpa points to
- *              struct acrn_set_ioreq_buffer
+ * @param param2 guest physical address. This gpa points to buffer address
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -285,7 +284,7 @@ int32_t hcall_gpa_to_hpa(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_assign_pcidev including assign PCI device info
+ *              acrn_pcidev including assign PCI device info
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -299,7 +298,7 @@ int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, u
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_assign_pcidev including deassign PCI device info
+ *              acrn_pcidev including deassign PCI device info
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -341,7 +340,7 @@ int32_t hcall_deassign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_emul_dev including information about PCI or legacy devices
+ *              acrn_vdev including information about PCI or legacy devices
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -355,7 +354,7 @@ int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64
  * @param target_vm Pointer to target VM data structure
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_emul_dev including information about PCI or legacy devices
+ *              acrn_vdev including information about PCI or legacy devices
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.

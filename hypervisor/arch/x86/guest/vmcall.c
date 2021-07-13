@@ -110,7 +110,7 @@ struct acrn_vm *parse_target_vm(struct acrn_vm *sos_vm, uint64_t hcall_id, uint6
 {
 	struct acrn_vm *target_vm = NULL;
 	uint16_t vm_id = ACRN_INVALID_VMID;
-	struct acrn_create_vm cv;
+	struct acrn_vm_creation cv;
 	struct set_regions regions;
 	uint16_t relative_vm_id;
 

@@ -26,7 +26,7 @@ static inline uint8_t get_vcpu_px_cnt(struct vmctx *ctx, int vcpu_id)
 {
 	uint64_t px_cnt;
 
-	if (get_vcpu_pm_info(ctx, vcpu_id, PMCMD_GET_PX_CNT, &px_cnt)) {
+	if (get_vcpu_pm_info(ctx, vcpu_id, ACRN_PMCMD_GET_PX_CNT, &px_cnt)) {
 		return 0;
 	}
 
@@ -37,7 +37,7 @@ uint8_t get_vcpu_cx_cnt(struct vmctx *ctx, int vcpu_id)
 {
 	uint64_t cx_cnt;
 
-	if (get_vcpu_pm_info(ctx, vcpu_id, PMCMD_GET_CX_CNT, &cx_cnt)) {
+	if (get_vcpu_pm_info(ctx, vcpu_id, ACRN_PMCMD_GET_CX_CNT, &cx_cnt)) {
 		return 0;
 	}
 
@@ -45,12 +45,12 @@ uint8_t get_vcpu_cx_cnt(struct vmctx *ctx, int vcpu_id)
 }
 
 static int get_vcpu_px_data(struct vmctx *ctx, int vcpu_id,
-			int px_num, struct cpu_px_data *vcpu_px_data)
+			int px_num, struct acrn_pstate_data *vcpu_px_data)
 {
 	uint64_t *pm_ioctl_buf;
-	enum pm_cmd_type cmd_type = PMCMD_GET_PX_DATA;
+	enum acrn_pm_cmd_type cmd_type = ACRN_PMCMD_GET_PX_DATA;
 
-	pm_ioctl_buf = malloc(sizeof(struct cpu_px_data));
+	pm_ioctl_buf = malloc(sizeof(struct acrn_pstate_data));
 	if (!pm_ioctl_buf) {
 		return -1;
 	}
@@ -67,19 +67,19 @@ static int get_vcpu_px_data(struct vmctx *ctx, int vcpu_id,
 	}
 
 	memcpy(vcpu_px_data, pm_ioctl_buf,
-			sizeof(struct cpu_px_data));
+			sizeof(struct acrn_pstate_data));
 
 	free(pm_ioctl_buf);
 	return 0;
 }
 
 int get_vcpu_cx_data(struct vmctx *ctx, int vcpu_id,
-			int cx_num, struct cpu_cx_data *vcpu_cx_data)
+			int cx_num, struct acrn_cstate_data *vcpu_cx_data)
 {
 	uint64_t *pm_ioctl_buf;
-	enum pm_cmd_type cmd_type = PMCMD_GET_CX_DATA;
+	enum acrn_pm_cmd_type cmd_type = ACRN_PMCMD_GET_CX_DATA;
 
-	pm_ioctl_buf = malloc(sizeof(struct cpu_cx_data));
+	pm_ioctl_buf = malloc(sizeof(struct acrn_cstate_data));
 	if (!pm_ioctl_buf) {
 		return -1;
 	}
@@ -96,7 +96,7 @@ int get_vcpu_cx_data(struct vmctx *ctx, int vcpu_id,
 	}
 
 	memcpy(vcpu_cx_data, pm_ioctl_buf,
-			sizeof(struct cpu_cx_data));
+			sizeof(struct acrn_cstate_data));
 
 	free(pm_ioctl_buf);
 	return 0;
@@ -146,8 +146,8 @@ void dsdt_write_cst(struct vmctx *ctx, int vcpu_id)
 	int i;
 	uint8_t vcpu_cx_cnt;
 	char *cx_asi;
-	struct acpi_generic_address cx_reg;
-	struct cpu_cx_data *vcpu_cx_data;
+	struct acrn_acpi_generic_address cx_reg;
+	struct acrn_cstate_data *vcpu_cx_data;
 
 	vcpu_cx_cnt = get_vcpu_cx_cnt(ctx, vcpu_id);
 	if (!vcpu_cx_cnt) {
@@ -155,7 +155,7 @@ void dsdt_write_cst(struct vmctx *ctx, int vcpu_id)
 	}
 
 	/* vcpu_cx_data start from C1, cx_cnt is total Cx entry num. */
-	vcpu_cx_data = malloc(vcpu_cx_cnt * sizeof(struct cpu_cx_data));
+	vcpu_cx_data = malloc(vcpu_cx_cnt * sizeof(struct acrn_cstate_data));
 	if (!vcpu_cx_data) {
 		return;
 	}
@@ -258,14 +258,14 @@ static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 {
 	uint8_t vcpu_px_cnt;
 	int i;
-	struct cpu_px_data *vcpu_px_data;
+	struct acrn_pstate_data *vcpu_px_data;
 
 	vcpu_px_cnt = get_vcpu_px_cnt(ctx, vcpu_id);
 	if (!vcpu_px_cnt) {
 		return;
 	}
 
-	vcpu_px_data = malloc(vcpu_px_cnt * sizeof(struct cpu_px_data));
+	vcpu_px_data = malloc(vcpu_px_cnt * sizeof(struct acrn_pstate_data));
 	if (!vcpu_px_data) {
 		return;
 	}

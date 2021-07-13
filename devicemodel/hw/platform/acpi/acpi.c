@@ -274,17 +274,17 @@ int pcpuid_from_vcpuid(uint64_t guest_pcpu_bitmask, int vcpu_id)
 	return find_nth_set_bit_index(guest_pcpu_bitmask, vcpu_id);
 }
 
-int lapicid_from_pcpuid(struct platform_info *plat_info, int pcpu_id)
+int lapicid_from_pcpuid(struct acrn_platform_info *plat_info, int pcpu_id)
 {
-	return plat_info->lapic_ids[pcpu_id];
+	return plat_info->hw.lapic_ids[pcpu_id];
 }
 
 static int
 basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 {
 	int i;
-	struct acrn_vm_config vm_cfg;
-	struct platform_info plat_info;
+	struct acrn_vm_config_header vm_cfg;
+	struct acrn_platform_info plat_info;
 	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
 
 	if (vm_get_config(ctx, &vm_cfg, &plat_info)) {
@@ -339,9 +339,9 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 			return -1;
 		}
 
-		assert(pcpu_id < MAX_PLATFORM_LAPIC_IDS);
-		if (pcpu_id >= MAX_PLATFORM_LAPIC_IDS) {
-			pr_err("%s,Err: pcpu id %u should be less than MAX_PLATFORM_LAPIC_IDS.\n", __func__, pcpu_id);
+		assert(pcpu_id < ACRN_PLATFORM_LAPIC_IDS_MAX);
+		if (pcpu_id >= ACRN_PLATFORM_LAPIC_IDS_MAX) {
+			pr_err("%s,Err: pcpu id %u should be less than ACRN_PLATFORM_LAPIC_IDS_MAX.\n", __func__, pcpu_id);
 			return -1;
 		}
 
@@ -1171,12 +1171,12 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	size_t vrtct_len;
 	uint8_t *buf;
 	uint8_t *vrtct;
-	struct vm_memmap memmap = {
-		.type = VM_MMIO,
+	struct acrn_vm_memmap memmap = {
+		.type = ACRN_MEMMAP_MMIO,
 		/* HPA base and size of Software SRAM shall be parsed from vRTCT. */
-		.hpa = 0,
+		.service_vm_pa = 0,
 		.len = 0,
-		.prot = PROT_ALL
+		.attr = ACRN_MEM_ACCESS_RWX
 	};
 
 	/* Name of native RTCT table is "PTCT"(v1) or "RTCT"(v2) */
@@ -1218,11 +1218,11 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	free(vrtct);
 	free(buf);
 
-	memmap.hpa = get_software_sram_base_hpa();
-	memmap.gpa = get_software_sram_base_gpa();
+	memmap.service_vm_pa = get_software_sram_base_hpa();
+	memmap.user_vm_pa = get_software_sram_base_gpa();
 	memmap.len = get_software_sram_size();
-	ioctl(ctx->fd, IC_UNSET_MEMSEG, &memmap);
-	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
+	ioctl(ctx->fd, ACRN_IOCTL_UNSET_MEMSEG, &memmap);
+	return ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
 };
 
 void

@@ -3,7 +3,7 @@ Description=ACRN manager deamon
 After=weston.service
 After=systemd-resolved.service
 ConditionPathExists=/sys/kernel/gvt
-ConditionPathExists=/dev/acrn_vhm
+ConditionPathExists=/dev/acrn_hsm
 
 [Service]
 Type=simple

@@ -4,7 +4,7 @@ I/O Emulation High-Level Design
 ###############################
 
 As discussed in :ref:`intro-io-emulation`, there are multiple ways and
-places to handle I/O emulation, including HV, Service VM Kernel VHM, and Service VM
+places to handle I/O emulation, including HV, Service VM Kernel HSM, and Service VM
 user-land device model (acrn-dm).
 
 I/O emulation in the hypervisor provides these functionalities:
@@ -265,23 +265,20 @@ Data Structures and Interfaces
 External Interfaces
 ===================
 
-The following structures represent an I/O request. *struct vhm_request*
+The following structures represent an I/O request. *struct acrn_io_request*
 is the main structure and the others are detailed representations of I/O
 requests of different kinds.
 
-.. doxygenstruct:: mmio_request
+.. doxygenstruct:: acrn_mmio_request
    :project: Project ACRN
 
-.. doxygenstruct:: pio_request
+.. doxygenstruct:: acrn_pio_request
    :project: Project ACRN
 
-.. doxygenstruct:: pci_request
+.. doxygenstruct:: acrn_pci_request
    :project: Project ACRN
 
-.. doxygenunion:: vhm_io_request
-   :project: Project ACRN
-
-.. doxygenstruct:: vhm_request
+.. doxygenstruct:: acrn_io_request
    :project: Project ACRN
 
 For hypercalls related to I/O emulation, refer to `I/O Emulation in the Hypervisor`_.

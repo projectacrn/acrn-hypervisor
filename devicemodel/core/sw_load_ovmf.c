@@ -299,7 +299,7 @@ acrn_sw_load_ovmf(struct vmctx *ctx)
 	/* set guest bsp state. Will call hypercall set bsp state
 	 * after bsp is created.
 	 */
-	memset(&ctx->bsp_regs, 0, sizeof(struct acrn_set_vcpu_regs));
+	memset(&ctx->bsp_regs, 0, sizeof(struct acrn_vcpu_regs));
 	ctx->bsp_regs.vcpu_id = 0;
 
 	/* CR0_ET | CR0_NE */

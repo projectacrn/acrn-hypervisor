@@ -69,11 +69,11 @@ add_vroot_port(struct vmctx *ctx, struct passthru_dev *ptdev, struct pci_device 
 	int offset = 0;
 	uint32_t dev_cap = 0;
 
-	struct acrn_emul_dev rp_vdev = {};
+	struct acrn_vdev rp_vdev = {};
 	struct vrp_config *rp_priv = (struct vrp_config *)&rp_vdev.args;
 
-	rp_vdev.dev_id.fields.vendor_id = PTM_ROOT_PORT_VENDOR;
-	rp_vdev.dev_id.fields.device_id = PTM_ROOT_PORT_DEVICE;
+	rp_vdev.id.fields.vendor = PTM_ROOT_PORT_VENDOR;
+	rp_vdev.id.fields.device = PTM_ROOT_PORT_DEVICE;
 
 	// virtual root port takes bdf from its downstream device
 	rp_vdev.slot = PCI_BDF(ptdev->dev->bus, ptdev->dev->slot, ptdev->dev->func);

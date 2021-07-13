@@ -272,103 +272,6 @@ struct hc_ptdev_irq {
 } __aligned(8);
 
 /**
- * @brief Info to assign or deassign PCI for a VM
- *
- * the parameter for HC_ASSIGN_PCIDEV or HC_DEASSIGN_PCIDEV hypercall
- */
-struct acrn_assign_pcidev {
-#define QUIRK_PTDEV    (1U << 0)    /* We will only handle general part in HV, others in DM */
-	/** the type of the the pass-through PCI device */
-	uint32_t type;
-
-	/** virtual BDF# of the pass-through PCI device */
-	uint16_t virt_bdf;
-
-	/** physical BDF# of the pass-through PCI device */
-	uint16_t phys_bdf;
-
-	/** the PCI Interrupt Line, initialized by ACRN-DM, which is RO and
-	 *  ideally not used for pass-through MSI/MSI-x devices.
-	 */
-	uint8_t intr_line;
-
-	/** the PCI Interrupt Pin, initialized by ACRN-DM, which is RO and
-	 *  ideally not used for pass-through MSI/MSI-x devices.
-	 */
-	uint8_t intr_pin;
-
-	/** the base address of the PCI BAR, initialized by ACRN-DM. */
-	uint32_t bar[6];
-
-	/** reserved for extension */
-	uint32_t rsvd2[6];
-
-} __attribute__((aligned(8)));
-
-/**
- * @brief Info to assign or deassign a MMIO device for a VM
- *
- * the parameter for HC_ASSIGN_MMIODEV or HC_DEASSIGN_MMIODEV hypercall
- */
-struct acrn_mmiodev {
-	/** the gpa of the MMIO region for the MMIO device */
-	uint64_t base_gpa;
-
-	/** the hpa of the MMIO region for the MMIO device */
-	uint64_t base_hpa;
-
-	/** the size of the MMIO region for the MMIO device */
-	uint64_t size;
-
-	/** reserved for extension */
-	uint64_t reserved[13];
-
-} __attribute__((aligned(8)));
-
-/**
- * @brief Info to create or destroy a virtual PCI or legacy device for a VM
- *
- * the parameter for HC_ADD_VDEV or HC_REMOVE_VDEV hypercall
- */
-struct acrn_emul_dev {
-	/*
-	 * the identifier of the device, the low 32 bits represent the vendor
-	 * id and device id of PCI device and the high 32 bits represent the
-	 * device number of the legacy device
-	 */
-	union dev_id_info {
-		uint64_t value;
-		struct fields_info {
-			uint16_t vendor_id;
-			uint16_t device_id;
-			uint32_t legacy_device_number;
-		} fields;
-	} dev_id;
-
-	/*
-	 * the slot of the device, if the device is a PCI device, the slot
-	 * represents BDF, otherwise it represents legacy device slot number
-	 */
-	uint32_t slot;
-
-	/** reserved for extension */
-	uint32_t reserved0;
-
-	/** the IO resource address of the device, initialized by ACRN-DM. */
-	uint32_t io_addr[6];
-
-	/** the IO resource size of the device, initialized by ACRN-DM. */
-	uint32_t io_size[6];
-
-	/** the options for the virtual device, initialized by ACRN-DM. */
-	uint8_t args[128];
-
-	/** reserved for extension */
-	uint64_t reserved1[8];
-
-} __attribute__((aligned(8)));
-
-/**
  * Hypervisor api version info, return it for HC_GET_API_VERSION hypercall
  */
 struct hc_api_version {
@@ -379,68 +282,66 @@ struct hc_api_version {
 	uint32_t minor_version;
 } __aligned(8);
 
+#define ACRN_PLATFORM_LAPIC_IDS_MAX	64
 /**
  * Hypervisor API, return it for HC_GET_PLATFORM_INFO hypercall
  */
-struct hc_platform_info {
+struct acrn_platform_info {
 	/** Hardware Information */
-	/** Physical CPU number */
-	uint16_t cpu_num;
+	struct {
+		/** Physical CPU number */
+		uint16_t cpu_num;
+		/** version of this structure */
+		uint16_t version;
 
-	/** version of this structure */
-	uint16_t version;
+		uint32_t l2_cat_shift;
+		uint32_t l3_cat_shift;
 
-	uint32_t l2_cat_shift;
-	uint32_t l3_cat_shift;
+		/** pLAPIC ID list */
+		uint8_t  lapic_ids[ACRN_PLATFORM_LAPIC_IDS_MAX];
 
-	#define MAX_PLATFORM_LAPIC_IDS 64U
-	/** pLAPIC ID list */
-	uint8_t lapic_ids[MAX_PLATFORM_LAPIC_IDS];
-
-	/**
-	 * sizeof(uint8_t reserved0[]) + sizeof(l2_cat_shift)
-	 * + sizeof(l3_cat_shift) + sizeof(uint8_t lapic_ids[]) = 124
-	 *
-	 * Note:
-	 * 1. DM needs to use the same logic as hypervisor to calculate vLAPIC IDs
-	 * based on physical APIC IDs and CPU affinity setting.
-	 *
-	 * 2. Can only support at most 116 cores. And it assumes LAPIC ID is 8bits
-	 * (X2APIC mode supports 32 bits)
-	 */
-	uint8_t reserved0[116U - MAX_PLATFORM_LAPIC_IDS];
+		/**
+		 * sizeof(uint8_t reserved0[]) + sizeof(l2_cat_shift)
+		 * + sizeof(l3_cat_shift) + sizeof(uint8_t lapic_ids[]) = 124
+		 *
+		 * Note:
+		 * 1. DM needs to use the same logic as hypervisor to calculate vLAPIC IDs
+		 * based on physical APIC IDs and CPU affinity setting.
+		 *
+		 * 2. Can only support at most 116 cores. And it assumes LAPIC ID is 8bits
+		 * (X2APIC mode supports 32 bits)
+		 */
+		uint8_t  reserved[52];
+	} hw;
 
 	/** Configuration Information */
-	/** Maximum vCPU number for one VM. */
-	uint16_t max_vcpus_per_vm;
+	struct {
+		/** Maximum vCPU number for one VM. */
+		uint16_t max_vcpus_per_vm;
+		/** Number of configured VMs */
+		uint16_t max_vms;
+		/**
+		 * The size of acrn_vm_config is various on different platforms.
+		 * This is the size of this struct which is used by the caller
+		 * to parse the vm_configs array.
+		 */
+		uint32_t vm_config_size;
 
-	/** Maximum Kata container number in SOS VM */
-	uint8_t max_kata_containers;
+		/**
+		 * Address to an array of struct acrn_vm_config, containing all
+		 * the configurations of all VMs. VHM treats it as an opague data
+		 * structure.
+		 *
+		 * The size of one array element is vm_config_entry_size while
+		 * the number of elements is max_vms.
+		 */
+		uint64_t vm_configs_addr;
 
-	uint8_t reserved1[7];
-
-	/** Number of configured VMs */
-	uint16_t max_vms;
-
-	/**
-	 * The size of acrn_vm_config is various on different platforms.
-	 * This is the size of this struct which is used by the caller
-	 * to parse the vm_configs array.
-	 */
-	uint32_t vm_config_entry_size;
-
-	/**
-	 * Address to an array of struct acrn_vm_config, containing all
-	 * the configurations of all VMs. VHM treats it as an opague data
-	 * structure.
-	 *
-	 * The size of one array element is vm_config_entry_size while
-	 * the number of elements is max_vms.
-	 */
-	uint64_t vm_configs_addr;
-
-	/** Align the size of Configuration info to 128Bytes. */
-	uint8_t reserved2[104];
+		/** Maximum Kata container number in SOS VM */
+		uint64_t max_kata_containers;
+		/** Align the size of Configuration info to 128Bytes. */
+		uint8_t  reserved[104];
+	} sw;
 } __aligned(8);
 
 /**

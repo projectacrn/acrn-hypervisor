@@ -114,7 +114,7 @@ static void init_ptm(struct pci_vdev *vdev, struct vrp_config *vrp_config)
 	pci_vdev_write_vcfg(vdev, PCIR_SUBBUS_1, 1U, vrp_config->subordinate_bus);
 }
 
-int32_t create_vrp(struct acrn_vm *vm, struct acrn_emul_dev *dev)
+int32_t create_vrp(struct acrn_vm *vm, struct acrn_vdev *dev)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	struct acrn_vm_pci_dev_config *dev_config = NULL;
@@ -128,7 +128,7 @@ int32_t create_vrp(struct acrn_vm *vm, struct acrn_emul_dev *dev)
 	pr_acrnlog("%s: virtual root port phy_bdf=0x%x, vbdf=0x%x, vendor_id=0x%x, dev_id=0x%x,\
 			primary_bus=0x%x, secondary_bus=0x%x, sub_bus=0x%x.\n",
 			__func__, vrp_config->phy_bdf, dev->slot,
-			dev->dev_id.fields.vendor_id, dev->dev_id.fields.device_id,
+			dev->id.fields.vendor, dev->id.fields.device,
 			vrp_config->primary_bus, vrp_config->secondary_bus, vrp_config->subordinate_bus);
 
 	for (i = 0U; i < vm_config->pci_dev_num; i++) {

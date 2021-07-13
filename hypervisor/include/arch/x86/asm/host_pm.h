@@ -13,10 +13,10 @@
 #define	BIT_WAK_STS	15U
 
 struct cpu_state_info {
-	uint8_t			 px_cnt;	/* count of all Px states */
-	const struct cpu_px_data *px_data;
-	uint8_t			 cx_cnt;	/* count of all Cx entries */
-	const struct cpu_cx_data *cx_data;
+	uint8_t			 	px_cnt;	/* count of all Px states */
+	const struct acrn_pstate_data	*px_data;
+	uint8_t			 	cx_cnt;	/* count of all Cx entries */
+	const struct acrn_cstate_data	*cx_data;
 };
 
 struct cpu_state_table {
@@ -25,7 +25,7 @@ struct cpu_state_table {
 };
 
 struct acpi_reset_reg {
-	struct acpi_generic_address reg;
+	struct acrn_acpi_generic_address reg;
 	uint8_t val;
 };
 

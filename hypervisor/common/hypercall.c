@@ -30,7 +30,7 @@
 
 #define DBG_LEVEL_HYCALL	6U
 
-typedef int32_t (*emul_dev_create) (struct acrn_vm *vm, struct acrn_emul_dev *dev);
+typedef int32_t (*emul_dev_create) (struct acrn_vm *vm, struct acrn_vdev *dev);
 typedef int32_t (*emul_dev_destroy) (struct pci_vdev *vdev);
 struct emul_dev_ops {
 	/*
@@ -186,7 +186,7 @@ static void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
  * for the current platform.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall.
- * @param param1 GPA pointer to struct hc_platform_info.
+ * @param param1 GPA pointer to struct acrn_platform_info.
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non zero in case of error.
@@ -195,7 +195,7 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
 		uint64_t param1, __unused uint64_t param2)
 {
 	struct acrn_vm *vm = vcpu->vm;
-	struct hc_platform_info pi = { 0 };
+	struct acrn_platform_info pi = { 0 };
 	uint32_t entry_size = sizeof(struct acrn_vm_config);
 	int32_t ret;
 
@@ -205,22 +205,22 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
 		uint16_t i;
 		uint16_t pcpu_nums = get_pcpu_nums();
 
-		get_cache_shift(&pi.l2_cat_shift, &pi.l3_cat_shift);
+		get_cache_shift(&pi.hw.l2_cat_shift, &pi.hw.l3_cat_shift);
 
-		for (i = 0U; i < min(pcpu_nums, MAX_PLATFORM_LAPIC_IDS); i++) {
-			pi.lapic_ids[i] = per_cpu(lapic_id, i);
+		for (i = 0U; i < min(pcpu_nums, ACRN_PLATFORM_LAPIC_IDS_MAX); i++) {
+			pi.hw.lapic_ids[i] = per_cpu(lapic_id, i);
 		}
 
-		pi.cpu_num = pcpu_nums;
-		pi.version = 0x100;  /* version 1.0; byte[1:0] = major:minor version */
-		pi.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
-		pi.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
-		pi.max_vms = CONFIG_MAX_VM_NUM;
-		pi.vm_config_entry_size = entry_size;
+		pi.hw.cpu_num = pcpu_nums;
+		pi.hw.version = 0x100;  /* version 1.0; byte[1:0] = major:minor version */
+		pi.sw.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
+		pi.sw.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
+		pi.sw.max_vms = CONFIG_MAX_VM_NUM;
+		pi.sw.vm_config_size = entry_size;
 
 		/* If it wants to get the vm_configs info */
-		if (pi.vm_configs_addr != 0UL) {
-			ret = copy_to_gpa(vm, (void *)get_vm_config(0U), pi.vm_configs_addr, entry_size * pi.max_vms);
+		if (pi.sw.vm_configs_addr != 0UL) {
+			ret = copy_to_gpa(vm, (void *)get_vm_config(0U), pi.sw.vm_configs_addr, entry_size * pi.sw.max_vms);
 		}
 
 		if (ret == 0) {
@@ -241,7 +241,7 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param1 guest physical memory address. This gpa points to
- *              struct acrn_create_vm
+ *              struct acrn_vm_creation
  *
  * @pre is_sos_vm(vcpu->vm)
  * @pre get_vm_config(target_vm->vm_id) != NULL
@@ -253,7 +253,7 @@ int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint6
 	uint16_t vmid = target_vm->vm_id;
 	int32_t ret = -1;
 	struct acrn_vm *tgt_vm = NULL;
-	struct acrn_create_vm cv;
+	struct acrn_vm_creation cv;
 	struct acrn_vm_config* vm_config = NULL;
 
 	if (copy_from_gpa(vm, &cv, param1, sizeof(cv)) == 0) {
@@ -419,7 +419,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		__unused uint64_t param1, uint64_t param2)
 {
 	struct acrn_vm *vm = vcpu->vm;
-	struct acrn_set_vcpu_regs vcpu_regs;
+	struct acrn_vcpu_regs vcpu_regs;
 	struct acrn_vcpu *target_vcpu;
 	int32_t ret = -1;
 
@@ -527,8 +527,7 @@ int32_t hcall_inject_msi(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __un
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
- * @param param2 guest physical address. This gpa points to
- *              struct acrn_set_ioreq_buffer
+ * @param param2 guest physical address. This gpa points to buffer address
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -542,21 +541,21 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 	int32_t ret = -1;
 
 	if (is_created_vm(target_vm)) {
-		struct acrn_set_ioreq_buffer iobuf;
+		uint64_t iobuf;
 
 		if (copy_from_gpa(vm, &iobuf, param2, sizeof(iobuf)) == 0) {
 			dev_dbg(DBG_LEVEL_HYCALL, "[%d] SET BUFFER=0x%p",
-					target_vm->vm_id, iobuf.req_buf);
+					target_vm->vm_id, iobuf);
 
-			hpa = gpa2hpa(vm, iobuf.req_buf);
+			hpa = gpa2hpa(vm, iobuf);
 			if (hpa == INVALID_HPA) {
 				pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
-					__func__, vm->vm_id, iobuf.req_buf);
+					__func__, vm->vm_id, iobuf);
 				target_vm->sw.io_shared_page = NULL;
 			} else {
 				target_vm->sw.io_shared_page = hpa2hva(hpa);
-				for (i = 0U; i < VHM_REQUEST_MAX; i++) {
-					set_vhm_req_state(target_vm, i, REQ_STATE_FREE);
+				for (i = 0U; i < ACRN_IO_REQUEST_MAX; i++) {
+					set_io_req_state(target_vm, i, ACRN_IOREQ_STATE_FREE);
 				}
 				ret = 0;
 			}
@@ -851,7 +850,7 @@ int32_t hcall_gpa_to_hpa(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __un
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_assign_pcidev including assign PCI device info
+ *              acrn_pcidev including assign PCI device info
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -861,7 +860,7 @@ int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 {
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
-	struct acrn_assign_pcidev pcidev;
+	struct acrn_pcidev pcidev;
 
 	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
 	if (is_created_vm(target_vm)) {
@@ -881,7 +880,7 @@ int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to data structure of
- *              acrn_assign_pcidev including deassign PCI device info
+ *              acrn_pcidev including deassign PCI device info
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -891,7 +890,7 @@ int32_t hcall_deassign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 {
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
-	struct acrn_assign_pcidev pcidev;
+	struct acrn_pcidev pcidev;
 
 	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
 	if ((is_paused_vm(target_vm) || is_created_vm(target_vm))) {
@@ -926,7 +925,7 @@ int32_t hcall_assign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
 	if (is_created_vm(target_vm)) {
 		if (copy_from_gpa(vm, &mmiodev, param2, sizeof(mmiodev)) == 0) {
-			if (ept_is_valid_mr(vm, mmiodev.base_hpa, mmiodev.size)) {
+			if (ept_is_valid_mr(vm, mmiodev.service_vm_pa, mmiodev.size)) {
 				ret = deassign_mmio_dev(vm, &mmiodev);
 				if (ret == 0) {
 					ret = assign_mmio_dev(target_vm, &mmiodev);
@@ -961,7 +960,7 @@ int32_t hcall_deassign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
 	if ((is_paused_vm(target_vm) || is_created_vm(target_vm))) {
 		if (copy_from_gpa(vm, &mmiodev, param2, sizeof(mmiodev)) == 0) {
-			if (ept_is_valid_mr(target_vm, mmiodev.base_gpa, mmiodev.size)) {
+			if (ept_is_valid_mr(target_vm, mmiodev.user_vm_pa, mmiodev.size)) {
 				ret = deassign_mmio_dev(target_vm, &mmiodev);
 				if (ret == 0) {
 					ret = assign_mmio_dev(vm, &mmiodev);
@@ -1098,15 +1097,15 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 
 	if (is_created_vm(target_vm)) {
 		switch (cmd & PMCMD_TYPE_MASK) {
-		case PMCMD_GET_PX_CNT: {
+		case ACRN_PMCMD_GET_PX_CNT: {
 			if (target_vm->pm.px_cnt != 0U) {
 				ret = copy_to_gpa(vm, &(target_vm->pm.px_cnt), param2, sizeof(target_vm->pm.px_cnt));
 			}
 			break;
 		}
-		case PMCMD_GET_PX_DATA: {
+		case ACRN_PMCMD_GET_PX_DATA: {
 			uint8_t pn;
-			struct cpu_px_data *px_data;
+			struct acrn_pstate_data *px_data;
 
 			/* For now we put px data as per-vm,
 			 * If it is stored as per-cpu in the future,
@@ -1122,18 +1121,18 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 			}
 
 			px_data = target_vm->pm.px_data + pn;
-			ret = copy_to_gpa(vm, px_data, param2, sizeof(struct cpu_px_data));
+			ret = copy_to_gpa(vm, px_data, param2, sizeof(struct acrn_pstate_data));
 			break;
 		}
-		case PMCMD_GET_CX_CNT: {
+		case ACRN_PMCMD_GET_CX_CNT: {
 			if (target_vm->pm.cx_cnt != 0U) {
 				ret = copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param2, sizeof(target_vm->pm.cx_cnt));
 			}
 			break;
 		}
-		case PMCMD_GET_CX_DATA: {
+		case ACRN_PMCMD_GET_CX_DATA: {
 			uint8_t cx_idx;
-			struct cpu_cx_data *cx_data;
+			struct acrn_cstate_data *cx_data;
 
 			if (target_vm->pm.cx_cnt == 0U) {
 				break;
@@ -1146,7 +1145,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 			}
 
 			cx_data = target_vm->pm.cx_data + cx_idx;
-			ret = copy_to_gpa(vm, cx_data, param2, sizeof(struct cpu_cx_data));
+			ret = copy_to_gpa(vm, cx_data, param2, sizeof(struct acrn_cstate_data));
 			break;
 		}
 		default:
@@ -1232,7 +1231,7 @@ int32_t hcall_set_callback_vector(__unused struct acrn_vcpu *vcpu, __unused stru
 		pr_err("%s: Invalid passed vector\n", __func__);
 		ret = -EINVAL;
 	} else {
-		set_vhm_notification_vector((uint32_t)param1);
+		set_hsm_notification_vector((uint32_t)param1);
 		ret = 0;
 	}
 
@@ -1242,13 +1241,13 @@ int32_t hcall_set_callback_vector(__unused struct acrn_vcpu *vcpu, __unused stru
 /*
  * @pre dev != NULL
  */
-static struct emul_dev_ops *find_emul_dev_ops(struct acrn_emul_dev *dev)
+static struct emul_dev_ops *find_emul_dev_ops(struct acrn_vdev *dev)
 {
 	struct emul_dev_ops *op = NULL;
 	uint32_t i;
 
 	for (i = 0U; i < ARRAY_SIZE(emul_dev_ops_tbl); i++) {
-		if (emul_dev_ops_tbl[i].dev_id == dev->dev_id.value) {
+		if (emul_dev_ops_tbl[i].dev_id == dev->id.value) {
 			op = &emul_dev_ops_tbl[i];
 			break;
 		}
@@ -1262,7 +1261,7 @@ static struct emul_dev_ops *find_emul_dev_ops(struct acrn_emul_dev *dev)
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param guest physical address. This gpa points to data structure of
- *              acrn_emul_dev including information about PCI or legacy devices
+ *              acrn_vdev including information about PCI or legacy devices
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -1271,7 +1270,7 @@ int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unus
 {
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
-	struct acrn_emul_dev dev;
+	struct acrn_vdev dev;
 	struct emul_dev_ops *op;
 
 	/* We should only create a device to a post-launched VM at creating time for safety, not runtime or other cases*/
@@ -1294,7 +1293,7 @@ int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unus
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm Pointer to target VM data structure
  * @param param guest physical address. This gpa points to data structure of
- *              acrn_emul_dev including information about PCI or legacy devices
+ *              acrn_vdev including information about PCI or legacy devices
  *
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
@@ -1303,7 +1302,7 @@ int32_t hcall_remove_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __u
 {
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
-	struct acrn_emul_dev dev;
+	struct acrn_vdev dev;
 	struct pci_vdev *vdev;
 	struct emul_dev_ops *op;
 	union pci_bdf bdf;

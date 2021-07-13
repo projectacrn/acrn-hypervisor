@@ -75,9 +75,9 @@ struct vm_sw_info {
 
 struct vm_pm_info {
 	uint8_t			px_cnt;		/* count of all Px states */
-	struct cpu_px_data	px_data[MAX_PSTATE];
+	struct acrn_pstate_data	px_data[MAX_PSTATE];
 	uint8_t			cx_cnt;		/* count of all Cx entries */
-	struct cpu_cx_data	cx_data[MAX_CSTATE];
+	struct acrn_cstate_data	cx_data[MAX_CSTATE];
 	struct pm_s_state_data	*sx_state_data;	/* data for S3/S5 implementation */
 };
 

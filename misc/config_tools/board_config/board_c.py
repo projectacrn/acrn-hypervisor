@@ -202,12 +202,12 @@ def gen_single_data(data_lines, domain_str, config):
         if line_i == 0:
             if "not available" in data_l:
                 print(data_l.strip(), file=config)
-                print("static const struct cpu_{}x_data board_cpu_{}x[0];".format(domain_str, domain_str), file=config)
+                print("static const struct acrn_{}state_data board_cpu_{}x[0];".format(domain_str, domain_str), file=config)
                 print("", file=config)
                 data_statues = False
                 break
             else:
-                print("static const struct cpu_{}x_data board_cpu_{}x[{}] = {{".format(domain_str, domain_str, data_len), file=config)
+                print("static const struct acrn_{}state_data board_cpu_{}x[{}] = {{".format(domain_str, domain_str, data_len), file=config)
         print("\t{0}".format(data_l.strip()), file=config)
         line_i += 1
     if data_statues:

@@ -813,7 +813,7 @@ static int32_t vpic_primary_handler(struct acrn_vpic *vpic, bool in, uint16_t po
  */
 static bool vpic_primary_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
-	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	if (vpic_primary_handler(vm_pic(vcpu->vm), true, addr, width, &pio_req->value) < 0) {
 		pr_err("Primary vPIC read port 0x%x width=%d failed\n",
@@ -865,7 +865,7 @@ static int32_t vpic_secondary_handler(struct acrn_vpic *vpic, bool in, uint16_t 
  */
 static bool vpic_secondary_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
-	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	if (vpic_secondary_handler(vm_pic(vcpu->vm), true, addr, width, &pio_req->value) < 0) {
 		pr_err("Secondary vPIC read port 0x%x width=%d failed\n",
@@ -943,7 +943,7 @@ static int32_t vpic_elc_handler(struct acrn_vpic *vpic, bool in, uint16_t port, 
  */
 static bool vpic_elc_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
-	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	if (vpic_elc_handler(vm_pic(vcpu->vm), true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic elc read port 0x%x width=%d failed", addr, width);

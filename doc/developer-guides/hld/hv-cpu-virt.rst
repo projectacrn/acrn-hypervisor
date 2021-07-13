@@ -568,7 +568,7 @@ For a guest vCPU's state initialization:
 -  If it's AP, then it will always start from real mode, and the start
        vector will always come from vlapic INIT-SIPI emulation.
 
-.. doxygenstruct:: acrn_vcpu_regs
+.. doxygenstruct:: acrn_regs
    :project: Project ACRN
 
 .. list-table::

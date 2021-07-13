@@ -29,7 +29,7 @@
 #ifndef _ACPI_H_
 #define _ACPI_H_
 
-#include "vhm_ioctl_defs.h"
+#include "hsm_ioctl_defs.h"
 
 #define	SCI_INT			9
 
@@ -86,6 +86,6 @@ void	power_button_init(struct vmctx *ctx);
 void	power_button_deinit(struct vmctx *ctx);
 
 int pcpuid_from_vcpuid(uint64_t guest_pcpu_bitmask, int vcpu_id);
-int lapicid_from_pcpuid(struct platform_info *plat_info, int pcpu_id);
+int lapicid_from_pcpuid(struct acrn_platform_info *plat_info, int pcpu_id);
 
 #endif /* _ACPI_H_ */

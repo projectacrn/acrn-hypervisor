@@ -18,26 +18,29 @@
 #include <types.h>
 
 /*
- * Common structures for ACRN/VHM/DM
+ * Common structures for ACRN/HSM/DM
  */
 
 /*
  * IO request
  */
-#define VHM_REQUEST_MAX 16U
 
-#define REQ_STATE_FREE          3U
-#define REQ_STATE_PENDING	0U
-#define REQ_STATE_COMPLETE	1U
-#define REQ_STATE_PROCESSING	2U
+#define ACRN_IO_REQUEST_MAX		16U
 
-#define REQ_PORTIO	0U
-#define REQ_MMIO	1U
-#define REQ_PCICFG	2U
-#define REQ_WP		3U
+#define ACRN_IOREQ_STATE_PENDING	0U
+#define ACRN_IOREQ_STATE_COMPLETE	1U
+#define ACRN_IOREQ_STATE_PROCESSING	2U
+#define ACRN_IOREQ_STATE_FREE		3U
 
-#define REQUEST_READ	0U
-#define REQUEST_WRITE	1U
+#define ACRN_IOREQ_TYPE_PORTIO		0U
+#define ACRN_IOREQ_TYPE_MMIO		1U
+#define ACRN_IOREQ_TYPE_PCICFG		2U
+#define ACRN_IOREQ_TYPE_WP		3U
+
+#define ACRN_IOREQ_DIR_READ		0U
+#define ACRN_IOREQ_DIR_WRITE		1U
+
+
 
 /* IOAPIC device model info */
 #define VIOAPIC_RTE_NUM	48U  /* vioapic pins */
@@ -72,11 +75,11 @@
 /**
  * @brief Representation of a MMIO request
  */
-struct mmio_request {
+struct acrn_mmio_request {
 	/**
 	 * @brief Direction of the access
 	 *
-	 * Either \p REQUEST_READ or \p REQUEST_WRITE.
+	 * Either \p ACRN_IOREQ_DIR_READ or \p ACRN_IOREQ_DIR_WRITE.
 	 */
 	uint32_t direction;
 
@@ -99,16 +102,16 @@ struct mmio_request {
 	 * @brief The value read for I/O reads or to be written for I/O writes
 	 */
 	uint64_t value;
-} __aligned(8);
+};
 
 /**
  * @brief Representation of a port I/O request
  */
-struct pio_request {
+struct acrn_pio_request {
 	/**
 	 * @brief Direction of the access
 	 *
-	 * Either \p REQUEST_READ or \p REQUEST_WRITE.
+	 * Either \p ACRN_IOREQ_DIR_READ or \p ACRN_IOREQ_DIR_WRITE.
 	 */
 	uint32_t direction;
 
@@ -131,16 +134,16 @@ struct pio_request {
 	 * @brief The value read for I/O reads or to be written for I/O writes
 	 */
 	uint32_t value;
-} __aligned(8);
+};
 
 /**
  * @brief Representation of a PCI configuration space access
  */
-struct pci_request {
+struct acrn_pci_request {
 	/**
 	 * @brief Direction of the access
 	 *
-	 * Either \p REQUEST_READ or \p REQUEST_WRITE.
+	 * Either \p ACRN_IOREQ_DIR_READ or \p ACRN_IOREQ_DIR_WRITE.
 	 */
 	uint32_t direction;
 
@@ -178,30 +181,23 @@ struct pci_request {
 	 * @brief The register to be accessed in the configuration space
 	 */
 	int32_t reg;
-} __aligned(8);
-
-union vhm_io_request {
-	struct pio_request pio;
-	struct pci_request pci;
-	struct mmio_request mmio;
-	int64_t reserved1[8];
 };
 
 /**
- * @brief 256-byte VHM requests
+ * @brief 256-byte I/O requests
  *
- * The state transitions of a VHM request are:
+ * The state transitions of a I/O request are:
  *
  *    FREE -> PENDING -> PROCESSING -> COMPLETE -> FREE -> ...
  *
  * When a request is in COMPLETE or FREE state, the request is owned by the
- * hypervisor. SOS (VHM or DM) shall not read or write the internals of the
+ * hypervisor. SOS (HSM or DM) shall not read or write the internals of the
  * request except the state.
  *
  * When a request is in PENDING or PROCESSING state, the request is owned by
  * SOS. The hypervisor shall not read or write the request other than the state.
  *
- * Based on the rules above, a typical VHM request lifecycle should looks like
+ * Based on the rules above, a typical I/O request lifecycle should looks like
  * the following.
  *
  * @verbatim embed:rst:leading-asterisk
@@ -270,9 +266,9 @@ union vhm_io_request {
  *      the hypervisor, as the hypervisor shall not access the request any more.
  *
  *   2. Due to similar reasons, setting state to COMPLETE is the last operation
- *      of request handling in VHM or clients in SOS.
+ *      of request handling in HSM or clients in SOS.
  */
-struct vhm_request {
+struct acrn_io_request {
 	/**
 	 * @brief Type of this request.
 	 *
@@ -297,13 +293,14 @@ struct vhm_request {
 	/**
 	 * @brief Details about this request.
 	 *
-	 * For REQ_PORTIO, this has type
-	 * pio_request. For REQ_MMIO and REQ_WP, this has type mmio_request. For
-	 * REQ_PCICFG, this has type pci_request.
-	 *
 	 * Byte offset: 64.
 	 */
-	union vhm_io_request reqs;
+	union {
+		struct acrn_pio_request		pio_request;
+		struct acrn_pci_request		pci_request;
+		struct acrn_mmio_request	mmio_request;
+		uint64_t			data[8];
+	} reqs;
 
 	/**
 	 * @brief Reserved.
@@ -313,33 +310,33 @@ struct vhm_request {
 	uint32_t reserved1;
 
 	/**
-	 * @brief The client which is distributed to handle this request.
-	 *
-	 * Accessed by VHM only.
+	 * @brief If this request has been handled by HSM driver.
 	 *
 	 * Byte offset: 132.
 	 */
-	int32_t client;
+	int32_t kernel_handled;
 
 	/**
 	 * @brief The status of this request.
 	 *
-	 * Taking REQ_STATE_xxx as values.
+	 * Taking ACRN_IOREQ_STATE_xxx as values.
 	 *
 	 * Byte offset: 136.
 	 */
 	uint32_t processed;
 } __aligned(256);
 
-union vhm_request_buffer {
-	struct vhm_request req_queue[VHM_REQUEST_MAX];
-	int8_t reserved[4096];
-} __aligned(4096);
+struct acrn_io_request_buffer {
+	union {
+		struct acrn_io_request	req_slot[ACRN_IO_REQUEST_MAX];
+		int8_t			reserved[4096];
+	};
+};
 
 /**
  * @brief Info to create a VM, the parameter for HC_CREATE_VM hypercall
  */
-struct acrn_create_vm {
+struct acrn_vm_creation {
 	/** created vmid return to VHM. Keep it first field */
 	uint16_t vmid;
 
@@ -360,7 +357,7 @@ struct acrn_create_vm {
 	 */
 	uint64_t vm_flag;
 
-	uint64_t req_buf;
+	uint64_t ioreq_buf;
 
 	/**
 	 *   The least significant set bit is the PCPU # the VCPU 0 maps to;
@@ -368,23 +365,7 @@ struct acrn_create_vm {
 	 *   and so on...
 	*/
 	uint64_t cpu_affinity;
-
-	/** Reserved for future use*/
-	uint8_t  reserved2[8];
-} __aligned(8);
-
-/**
- * @brief Info to create a VCPU (deprecated)
- *
- * the parameter for HC_CREATE_VCPU hypercall
- */
-struct acrn_create_vcpu {
-	/** the virtual CPU ID for the VCPU created */
-	uint16_t vcpu_id;
-
-	/** the physical CPU ID for the VCPU created */
-	uint16_t pcpu_id;
-} __aligned(8);
+};
 
 /* General-purpose register layout aligned with the general-purpose register idx
  * when vmexit, such as vmexit due to CR access, refer to SMD Vol.3C 27-6.
@@ -421,7 +402,7 @@ struct acrn_descriptor_ptr {
 /**
  * @brief registers info for vcpu.
  */
-struct acrn_vcpu_regs {
+struct acrn_regs {
 	struct acrn_gp_regs gprs;
 	struct acrn_descriptor_ptr gdt;
 	struct acrn_descriptor_ptr idt;
@@ -448,8 +429,6 @@ struct acrn_vcpu_regs {
 	uint16_t        gs_sel;
 	uint16_t        ldt_sel;
 	uint16_t        tr_sel;
-
-	uint16_t        reserved_16[4];
 };
 
 /**
@@ -457,26 +436,16 @@ struct acrn_vcpu_regs {
  *
  * the pamameter for HC_SET_VCPU_STATE
  */
-struct acrn_set_vcpu_regs {
+struct acrn_vcpu_regs {
 	/** the virtual CPU ID for the VCPU to set state */
 	uint16_t vcpu_id;
 
 	/** reserved space to make cpu_state aligned to 8 bytes */
-	uint16_t reserved0[3];
+	uint16_t reserved[3];
 
 	/** the structure to hold vcpu state */
-	struct acrn_vcpu_regs vcpu_regs;
-} __aligned(8);
-
-/**
- * @brief Info to set ioreq buffer for a created VM
- *
- * the parameter for HC_SET_IOREQ_BUFFER hypercall
- */
-struct acrn_set_ioreq_buffer {
-	/** guest physical address of VM request_buffer */
-	uint64_t req_buf;
-} __aligned(8);
+	struct acrn_regs vcpu_regs;
+};
 
 /** Operation types for setting IRQ line */
 #define GSI_SET_HIGH		0U
@@ -492,7 +461,7 @@ struct acrn_set_ioreq_buffer {
 struct acrn_irqline_ops {
 	uint32_t gsi;
 	uint32_t op;
-} __aligned(8);
+};
 
 /**
  * @brief Info to inject a MSI interrupt to VM
@@ -505,65 +474,7 @@ struct acrn_msi_entry {
 
 	/** MSI data[7:0] with vector */
 	uint64_t msi_data;
-} __aligned(8);
-
-/**
- * @brief Info to inject a NMI interrupt for a VM
- */
-struct acrn_nmi_entry {
-	/** virtual CPU ID to inject */
-	uint16_t vcpu_id;
-
-	/** Reserved */
-	uint16_t reserved0;
-
-	/** Reserved */
-	uint32_t reserved1;
-} __aligned(8);
-
-/**
- * @brief Info to remap pass-through PCI MSI for a VM
- *
- * the parameter for HC_VM_PCI_MSIX_REMAP hypercall
- */
-struct acrn_vm_pci_msix_remap {
-	/** pass-through PCI device virtual BDF# */
-	uint16_t virt_bdf;
-
-	/** pass-through PCI device physical BDF# */
-	uint16_t phys_bdf;
-
-	/** pass-through PCI device MSI/MSI-X cap control data */
-	uint16_t msi_ctl;
-
-	/** reserved for alignment padding */
-	uint16_t reserved;
-
-	/** pass-through PCI device MSI address to remap, which will
-	 * return the caller after remapping
-	 */
-	uint64_t msi_addr;		/* IN/OUT: msi address to fix */
-
-	/** pass-through PCI device MSI data to remap, which will
-	 * return the caller after remapping
-	 */
-	uint32_t msi_data;
-
-	/** pass-through PCI device is MSI or MSI-X
-	 *  0 - MSI, 1 - MSI-X
-	 */
-	int32_t msix;
-
-	/** if the pass-through PCI device is MSI-X, this field contains
-	 *  the MSI-X entry table index
-	 */
-	uint32_t msix_entry_index;
-
-	/** if the pass-through PCI device is MSI-X, this field contains
-	 *  Vector Control for MSI-X Entry, field defined in MSI-X spec
-	 */
-	uint32_t vector_ctl;
-} __aligned(8);
+};
 
 /**
  * @brief Info The power state data of a VCPU.
@@ -578,29 +489,29 @@ struct acrn_vm_pci_msix_remap {
 #define SPACE_PLATFORM_COMM     10U
 #define SPACE_FFixedHW          0x7FU
 
-struct acpi_generic_address {
+struct acrn_acpi_generic_address {
 	uint8_t 	space_id;
 	uint8_t 	bit_width;
 	uint8_t 	bit_offset;
 	uint8_t 	access_size;
 	uint64_t	address;
-} __aligned(8);
+} __attribute__ ((__packed__));
 
-struct cpu_cx_data {
-	struct acpi_generic_address cx_reg;
+struct acrn_cstate_data {
+	struct acrn_acpi_generic_address cx_reg;
 	uint8_t 	type;
 	uint32_t	latency;
 	uint64_t	power;
-} __aligned(8);
+};
 
-struct cpu_px_data {
+struct acrn_pstate_data {
 	uint64_t core_frequency;	/* megahertz */
 	uint64_t power;			/* milliWatts */
 	uint64_t transition_latency;	/* microseconds */
 	uint64_t bus_master_latency;	/* microseconds */
 	uint64_t control;		/* control value */
 	uint64_t status;		/* success indicator */
-} __aligned(8);
+};
 
 struct acpi_sx_pkg {
 	uint8_t		val_pm1a;
@@ -609,10 +520,10 @@ struct acpi_sx_pkg {
 } __aligned(8);
 
 struct pm_s_state_data {
-	struct acpi_generic_address pm1a_evt;
-	struct acpi_generic_address pm1b_evt;
-	struct acpi_generic_address pm1a_cnt;
-	struct acpi_generic_address pm1b_cnt;
+	struct acrn_acpi_generic_address pm1a_evt;
+	struct acrn_acpi_generic_address pm1b_evt;
+	struct acrn_acpi_generic_address pm1a_cnt;
+	struct acrn_acpi_generic_address pm1b_cnt;
 	struct acpi_sx_pkg s3_pkg;
 	struct acpi_sx_pkg s5_pkg;
 	uint32_t *wake_vector_32;
@@ -620,7 +531,7 @@ struct pm_s_state_data {
 } __aligned(8);
 
 /**
- * @brief Info PM command from DM/VHM.
+ * @brief Info PM command from DM/HSM.
  *
  * The command would specify request type(e.g. get px count or data) for
  * specific VM and specific VCPU with specific state number.
@@ -636,11 +547,11 @@ struct pm_s_state_data {
 #define PMCMD_VCPUID_SHIFT	16U
 #define PMCMD_STATE_NUM_SHIFT	8U
 
-enum pm_cmd_type {
-	PMCMD_GET_PX_CNT,
-	PMCMD_GET_PX_DATA,
-	PMCMD_GET_CX_CNT,
-	PMCMD_GET_CX_DATA,
+enum acrn_pm_cmd_type {
+	ACRN_PMCMD_GET_PX_CNT,
+	ACRN_PMCMD_GET_PX_DATA,
+	ACRN_PMCMD_GET_CX_CNT,
+	ACRN_PMCMD_GET_CX_DATA,
 };
 
 /**
@@ -663,6 +574,37 @@ struct acrn_intr_monitor {
 #define INTR_CMD_GET_DATA 0U
 #define INTR_CMD_DELAY_INT 1U
 
+/*
+ * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
+ * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
+ * POST_LAUNCHED_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
+ *
+ * Assumption: vm_configs array is completely initialized w.r.t. load_order member of
+ * 		acrn_vm_config for all the VMs.
+ */
+enum acrn_vm_load_order {
+	PRE_LAUNCHED_VM = 0,
+	SOS_VM,
+	POST_LAUNCHED_VM,	/* Launched by Devicemodel in SOS_VM */
+	MAX_LOAD_ORDER
+};
+
+#define MAX_VM_OS_NAME_LEN      32U
+
+struct acrn_vm_config_header {
+       enum acrn_vm_load_order load_order;
+       char name[MAX_VM_OS_NAME_LEN];
+       const uint8_t uuid[16];
+       uint8_t reserved[2];
+       uint8_t severity;
+       uint64_t cpu_affinity;
+       uint64_t guest_flags;
+       /*
+        * The following are hv-specific members and are thus opaque.
+        * vm_config_entry_size determines the real size of this structure.
+        */
+} __aligned(8);
+
 /**
  * @brief Info to configure virtual root port
  *
@@ -678,6 +620,89 @@ struct vrp_config
 	uint8_t subordinate_bus;
 	uint8_t ptm_capable;
 	uint32_t ptm_cap_offset;
+};
+
+/* Type of PCI device assignment */
+#define ACRN_PTDEV_QUIRK_ASSIGN	(1U << 0)
+
+#define ACRN_PCI_NUM_BARS	6U
+/**
+ * @brief Info to assign or deassign PCI for a VM
+ *
+ */
+struct acrn_pcidev {
+	/** the type of the the pass-through PCI device */
+	uint32_t type;
+
+	/** virtual BDF# of the pass-through PCI device */
+	uint16_t virt_bdf;
+
+	/** physical BDF# of the pass-through PCI device */
+	uint16_t phys_bdf;
+
+	/** the PCI Interrupt Line, initialized by ACRN-DM, which is RO and
+	 *  ideally not used for pass-through MSI/MSI-x devices.
+	 */
+	uint8_t intr_line;
+
+	/** the PCI Interrupt Pin, initialized by ACRN-DM, which is RO and
+	 *  ideally not used for pass-through MSI/MSI-x devices.
+	 */
+	uint8_t intr_pin;
+
+	/** the base address of the PCI BAR, initialized by ACRN-DM. */
+	uint32_t bar[ACRN_PCI_NUM_BARS];
+};
+
+
+/**
+ * @brief Info to assign or deassign a MMIO device for a VM
+ */
+struct acrn_mmiodev {
+	/** the gpa of the MMIO region for the MMIO device */
+	uint64_t user_vm_pa;
+
+	/** the hpa of the MMIO region for the MMIO device */
+	uint64_t service_vm_pa;
+
+	/** the size of the MMIO region for the MMIO device */
+	uint64_t size;
+};
+
+/**
+ * @brief Info to create or destroy a virtual PCI or legacy device for a VM
+ *
+ * the parameter for HC_CREATE_VDEV or HC_DESTROY_VDEV hypercall
+ */
+struct acrn_vdev {
+	/*
+	 * the identifier of the device, the low 32 bits represent the vendor
+	 * id and device id of PCI device and the high 32 bits represent the
+	 * device number of the legacy device
+	 */
+	union {
+		uint64_t value;
+		struct {
+			uint16_t vendor;
+			uint16_t device;
+			uint32_t legacy_id;
+		} fields;
+	} id;
+
+	/*
+	 * the slot of the device, if the device is a PCI device, the slot
+	 * represents BDF, otherwise it represents legacy device slot number
+	 */
+	uint64_t slot;
+
+	/** the IO resource address of the device, initialized by ACRN-DM. */
+	uint32_t io_addr[ACRN_PCI_NUM_BARS];
+
+	/** the IO resource size of the device, initialized by ACRN-DM. */
+	uint32_t io_size[ACRN_PCI_NUM_BARS];
+
+	/** the options for the virtual device, initialized by ACRN-DM. */
+	uint8_t	args[128];
 };
 
 /**

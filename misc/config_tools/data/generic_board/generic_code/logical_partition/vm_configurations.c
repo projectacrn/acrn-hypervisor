@@ -54,8 +54,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.pt_tpm2 = true,
 		.mmiodevs[0] =
 			{
-				.base_gpa = VM0_TPM_BUFFER_BASE_ADDR_GPA,
-				.base_hpa = VM0_TPM_BUFFER_BASE_ADDR,
+				.user_vm_pa = VM0_TPM_BUFFER_BASE_ADDR_GPA,
+				.service_vm_pa = VM0_TPM_BUFFER_BASE_ADDR,
 				.size = VM0_TPM_BUFFER_SIZE,
 			},
 #endif
@@ -63,8 +63,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.pt_p2sb_bar = true,
 		.mmiodevs[0] =
 			{
-				.base_gpa = P2SB_BAR_ADDR_GPA,
-				.base_hpa = P2SB_BAR_ADDR,
+				.user_vm_pa = P2SB_BAR_ADDR_GPA,
+				.service_vm_pa = P2SB_BAR_ADDR,
 				.size = P2SB_BAR_SIZE,
 			},
 #endif

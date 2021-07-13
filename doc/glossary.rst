@@ -222,8 +222,8 @@ Glossary of Terms
    vGPU
       Virtual GPU Instance, created by GVT-g and used by a VM
 
-   VHM
-      Virtio and Hypervisor Service Module
+   HSM
+      Hypervisor Service Module
 
    Virtio-BE
       Back-End, VirtIO framework provides front-end driver and back-end driver

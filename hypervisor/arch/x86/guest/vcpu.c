@@ -323,7 +323,7 @@ static void init_xsave(struct acrn_vcpu *vcpu)
 	ectx->xs_area.xsave_hdr.hdr.xcomp_bv |= XSAVE_COMPACTED_FORMAT;
 }
 
-void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
+void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_regs *vcpu_regs)
 {
 	struct ext_context *ectx;
 	struct run_context *ctx;
@@ -406,7 +406,7 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 			vcpu_regs->cr0);
 }
 
-static struct acrn_vcpu_regs realmode_init_vregs = {
+static struct acrn_regs realmode_init_vregs = {
 	.gdt = {
 		.limit = 0xFFFFU,
 		.base = 0UL,
@@ -432,7 +432,7 @@ static uint64_t init_vgdt[] = {
 	0x00CF93000000FFFFUL,   /* Linear Data */
 };
 
-static struct acrn_vcpu_regs protect_mode_init_vregs = {
+static struct acrn_regs protect_mode_init_vregs = {
 	.cs_ar = PROTECTED_MODE_CODE_SEG_AR,
 	.cs_limit = PROTECTED_MODE_SEG_LIMIT,
 	.cs_sel = 0x10U,
@@ -463,10 +463,10 @@ void reset_vcpu_regs(struct acrn_vcpu *vcpu)
 
 void init_vcpu_protect_mode_regs(struct acrn_vcpu *vcpu, uint64_t vgdt_base_gpa)
 {
-	struct acrn_vcpu_regs vcpu_regs;
+	struct acrn_regs vcpu_regs;
 
-	(void)memcpy_s((void *)&vcpu_regs, sizeof(struct acrn_vcpu_regs),
-		(void *)&protect_mode_init_vregs, sizeof(struct acrn_vcpu_regs));
+	(void)memcpy_s((void *)&vcpu_regs, sizeof(struct acrn_regs),
+		(void *)&protect_mode_init_vregs, sizeof(struct acrn_regs));
 
 	vcpu_regs.gdt.base = vgdt_base_gpa;
 	vcpu_regs.gdt.limit = sizeof(init_vgdt) - 1U;
