@@ -17,14 +17,14 @@
       <RDT>
         <RDT_ENABLED>n</RDT_ENABLED>
         <CDP_ENABLED>y</CDP_ENABLED>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
       </RDT>
       <NVMX_ENABLED>n</NVMX_ENABLED>
       <HYPERV_ENABLED>y</HYPERV_ENABLED>
