@@ -59,6 +59,9 @@ PCI_VUART_VBAR1_SIZE = 4 * SIZE_K
 # Constants for vmsix bar
 VMSIX_VBAR_SIZE = 4 * SIZE_K
 
+# Constants for tpm2 log area minimum length
+LOG_AREA_MIN_LEN = 256 * SIZE_K
+
 class MmioWindow(namedtuple(
         "MmioWindow", [
             "start",
@@ -288,27 +291,7 @@ def alloc_mmio(mems, devdict, used_mem):
         devdict_base[bar_name] = bar_window.start
     return devdict_base
 
-def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
-    # Guest physical address of the SW SRAM allocated to a pre-launched VM
-    enabled = common.get_node("//PSRAM_ENABLED/text()", scenario_etree)
-    if enabled == "y":
-        pre_rt_vms = common.get_node("//vm[vm_type ='PRE_RT_VM']", scenario_etree)
-        if pre_rt_vms is not None:
-            vm_id = pre_rt_vms.get("id")
-            l3_sw_sram = board_etree.xpath("//cache[@level='3']/capability[@id='Software SRAM']")
-            if l3_sw_sram:
-                start = min(map(lambda x: int(x.find("start").text, 16), l3_sw_sram))
-                end = max(map(lambda x: int(x.find("end").text, 16), l3_sw_sram))
-
-                allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
-                if allocation_vm_node is None:
-                    allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
-                common.append_node("./ssram/start_gpa", hex(start), allocation_vm_node)
-                common.append_node("./ssram/end_gpa", hex(end), allocation_vm_node)
-
-def fn(board_etree, scenario_etree, allocation_etree):
-    allocate_ssram_region(board_etree, scenario_etree, allocation_etree)
-
+def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
     native_low_mem, native_high_mem = get_pci_hole_native(board_etree)
     create_native_pci_hole_node(allocation_etree, native_low_mem, native_high_mem)
 
@@ -348,3 +331,77 @@ def fn(board_etree, scenario_etree, allocation_etree):
         devdict_base_64_bits = alloc_mmio(low_mem + high_mem, devdict_64bits, used_low_mem + used_high_mem)
         create_device_node(allocation_etree, vm_id, devdict_base_32_bits)
         create_device_node(allocation_etree, vm_id, devdict_base_64_bits)
+
+def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
+    # Guest physical address of the SW SRAM allocated to a pre-launched VM
+    enabled = common.get_node("//PSRAM_ENABLED/text()", scenario_etree)
+    if enabled == "y":
+        pre_rt_vms = common.get_node("//vm[vm_type ='PRE_RT_VM']", scenario_etree)
+        if pre_rt_vms is not None:
+            vm_id = pre_rt_vms.get("id")
+            l3_sw_sram = board_etree.xpath("//cache[@level='3']/capability[@id='Software SRAM']")
+            if l3_sw_sram:
+                start = min(map(lambda x: int(x.find("start").text, 16), l3_sw_sram))
+                end = max(map(lambda x: int(x.find("end").text, 16), l3_sw_sram))
+
+                allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+                if allocation_vm_node is None:
+                    allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
+                common.append_node("./ssram/start_gpa", hex(start), allocation_vm_node)
+                common.append_node("./ssram/end_gpa", hex(end), allocation_vm_node)
+
+def allocate_log_area(board_etree, scenario_etree, allocation_etree):
+    tpm2_enabled = common.get_node(f"//vm[@id = '0']/mmio_resources/TPM2/text()", scenario_etree)
+    if tpm2_enabled is None or tpm2_enabled == 'n':
+        return
+
+    if common.get_node("//capability[@id='log_area']", board_etree) is not None:
+        # VIRT_ACPI_DATA_ADDR
+        log_area_end_address = 0x7FFF0000
+        log_area_start_address = log_area_end_address - LOG_AREA_MIN_LEN
+        allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '0']", allocation_etree)
+        if allocation_vm_node is None:
+            allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = '0')
+        common.append_node("./log_area_start_address", hex(log_area_start_address).upper(), allocation_vm_node)
+        common.append_node("./log_area_minimum_length", hex(LOG_AREA_MIN_LEN).upper(), allocation_vm_node)
+
+"""
+            Pre-launched VM gpa layout:
+ +--------------------------------------------------+ <--End of VM high pci hole
+ |      64 bits vbar of emulated PCI devices        |    Offset 0x8000000000
+ +--------------------------------------------------+ <--Start of VM high pci hole
+ |                                                  |    Offset 0x4000000000
+...                                                ...
+ |                                                  |
+ +--------------------------------------------------+ <--End of VM low pci hole
+ |   32 and 64 bits vbar of emulated PCI devices    |    Offset 0xE0000000
+ +--------------------------------------------------+ <--Start of VM low pci hole
+ |                                                  |    Offset 0x80000000
+...                                                ...
+ |            TPM2 log area at  0x7FFB0000          |
+...                                                ...
+ |                                                  |
+ +--------------------------------------------------+ <--Offset 0
+
+                  SOS VM gpa layout:
+ +--------------------------------------------------+ <--End of native high pci hole
+ |      64 bits vbar of emulated PCI devices        |
+ +--------------------------------------------------+ <--Start of native high pci hole
+ |                                                  |
+...                                                ...
+ |                                                  |
+ +--------------------------------------------------+ <--End of native low pci hole
+ |   32 and 64 bits vbar of emulated PCI devices    |
+ +--------------------------------------------------+ <--Start of native low pci hole
+ |                                                  |
+...                                                ...
+ |                                                  |
+ |                                                  |
+ |                                                  |
+ +--------------------------------------------------+ <--Offset 0
+
+"""
+def fn(board_etree, scenario_etree, allocation_etree):
+    allocate_ssram_region(board_etree, scenario_etree, allocation_etree)
+    allocate_log_area(board_etree, scenario_etree, allocation_etree)
+    allocate_pci_bar(board_etree, scenario_etree, allocation_etree)
