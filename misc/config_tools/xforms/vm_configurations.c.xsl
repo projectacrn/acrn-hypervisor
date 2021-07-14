@@ -17,6 +17,7 @@
     <xsl:value-of select="acrn:include('asm/vm_config.h')" />
     <xsl:value-of select="acrn:include('vuart.h')" />
     <xsl:value-of select="acrn:include('asm/pci_dev.h')" />
+    <xsl:value-of select="acrn:include('asm/pgtable.h')" />
 
     <xsl:apply-templates select="config-data/acrn-config" />
   </xsl:template>
@@ -243,7 +244,18 @@
       <xsl:value-of select="acrn:initializer('base_gpa', 'VM0_TPM_BUFFER_BASE_ADDR_GPA')" />
       <xsl:value-of select="acrn:initializer('base_hpa', 'VM0_TPM_BUFFER_BASE_ADDR')" />
       <xsl:value-of select="acrn:initializer('size', 'VM0_TPM_BUFFER_SIZE')" />
+      <xsl:value-of select="acrn:initializer('attr', 'EPT_UNCACHED')" />
       <xsl:text>},</xsl:text>
+      <xsl:value-of select="$newline" />
+      <xsl:if test="//capability[@id='log_area']">
+        <xsl:value-of select="acrn:initializer('mmiores[1]', '{', true())" />
+        <xsl:value-of select="acrn:initializer('base_gpa', 'VM0_TPM_EVENTLOG_BASE_ADDR')" />
+        <xsl:value-of select="acrn:initializer('base_hpa', 'VM0_TPM_EVENTLOG_BASE_ADDR')" />
+        <xsl:value-of select="acrn:initializer('size', 'VM0_TPM_EVENTLOG_SIZE')" />
+        <xsl:value-of select="acrn:initializer('attr', 'EPT_WB')" />
+        <xsl:text>},</xsl:text>
+        <xsl:value-of select="$newline" />
+      </xsl:if>
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
       <xsl:value-of select="$endif" />
