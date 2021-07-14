@@ -17,6 +17,7 @@
     <xsl:value-of select="acrn:include('asm/vm_config.h')" />
     <xsl:value-of select="acrn:include('vuart.h')" />
     <xsl:value-of select="acrn:include('asm/pci_dev.h')" />
+    <xsl:value-of select="acrn:include('asm/pgtable.h')" />
 
     <xsl:apply-templates select="config-data/acrn-config" />
   </xsl:template>
@@ -240,18 +241,35 @@
       <xsl:value-of select="acrn:ifdef('VM0_PASSTHROUGH_TPM')" />
       <xsl:value-of select="acrn:initializer('pt_tpm2', 'true')" />
       <xsl:value-of select="acrn:initializer('mmiodevs[0]', '{', true())" />
+      <xsl:value-of select="acrn:initializer('name', concat($quot, 'tpm2', $quot))" />
+      <xsl:value-of select="acrn:initializer('res[0]', '{', true())" />
       <xsl:value-of select="acrn:initializer('user_vm_pa', 'VM0_TPM_BUFFER_BASE_ADDR_GPA')" />
-      <xsl:value-of select="acrn:initializer('service_vm_pa', 'VM0_TPM_BUFFER_BASE_ADDR')" />
+      <xsl:value-of select="acrn:initializer('host_pa', 'VM0_TPM_BUFFER_BASE_ADDR')" />
       <xsl:value-of select="acrn:initializer('size', 'VM0_TPM_BUFFER_SIZE')" />
+      <xsl:value-of select="acrn:initializer('mem_type', 'EPT_UNCACHED')" />
+      <xsl:text>},</xsl:text>
+      <xsl:value-of select="$newline" />
+      <xsl:if test="//capability[@id='log_area']">
+        <xsl:value-of select="acrn:initializer('res[1]', '{', true())" />
+        <xsl:value-of select="acrn:initializer('user_vm_pa', 'VM0_TPM_EVENTLOG_BASE_ADDR')" />
+        <xsl:value-of select="acrn:initializer('host_pa', 'VM0_TPM_EVENTLOG_BASE_ADDR')" />
+        <xsl:value-of select="acrn:initializer('size', 'VM0_TPM_EVENTLOG_SIZE')" />
+        <xsl:value-of select="acrn:initializer('mem_type', 'EPT_WB')" />
+        <xsl:text>},</xsl:text>
+        <xsl:value-of select="$newline" />
+      </xsl:if>
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
       <xsl:value-of select="$endif" />
       <xsl:value-of select="acrn:ifdef('P2SB_BAR_ADDR')" />
       <xsl:value-of select="acrn:initializer('pt_p2sb_bar', 'true')" />
       <xsl:value-of select="acrn:initializer('mmiodevs[0]', '{', true())" />
+      <xsl:value-of select="acrn:initializer('res[0]', '{', true())" />
       <xsl:value-of select="acrn:initializer('user_vm_pa', 'P2SB_BAR_ADDR_GPA')" />
-      <xsl:value-of select="acrn:initializer('service_vm_pa', 'P2SB_BAR_ADDR')" />
+      <xsl:value-of select="acrn:initializer('host_pa', 'P2SB_BAR_ADDR')" />
       <xsl:value-of select="acrn:initializer('size', 'P2SB_BAR_SIZE')" />
+      <xsl:text>},</xsl:text>
+      <xsl:value-of select="$newline" />
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
       <xsl:value-of select="$endif" />
