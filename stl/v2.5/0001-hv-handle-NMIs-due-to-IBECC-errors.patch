@@ -1,0 +1,418 @@
+From c2cb0dc6be73fe83571bfad4dcc81ecaebf7c811 Mon Sep 17 00:00:00 2001
+From: Junjie Mao <junjie.mao@intel.com>
+Date: Fri, 26 Feb 2021 12:01:32 +0800
+Subject: [PATCH 1/3] hv: handle NMIs due to IBECC errors
+
+EHL STL requires the execution environment to collect the number of IBECC
+errors that have occurred since poweron. This patch turns on NMI exiting
+unconditionally and checks IBECC registers upon NMIs.
+
+Physical NMIs are now handled in two paths, depending on whether a CPU is
+in VMX root or non-root operation:
+
+ - An NMI asserted in VMX root operation is handled by handle_nmi().
+ - An NMI asserted in VMX non-root operation triggers an Exception or NMI
+   VM exit and is handled by the handler exception_vmexit_handler().
+
+IBECC error checks are added to both paths, but only on the physical
+BSP. Upon IBECC errors the HW will deliver NMI to all physical cores. As
+the hypervisor is only collecting the number of IBECC errors, there is no
+need for every core to respond to the NMI.
+
+This patch only enables IBECC checking on EHL SKU11 which is known to be
+equipped with IBECC hardware. The hypervisor clears the related
+error-reporting registers, including NMI status, PCI ERRSTS and IBECC
+ERROR_LOG, upon NMIs because one IBECC error blocks the reporting of
+further ones.
+
+v2:
+ * Add capability checks on virtual NMIs and panic when IBECC is present but
+   virtual NMIs are not supported.
+ * Only enable virtual NMIs when IBECC is present.
+
+Signed-off-by: Junjie Mao <junjie.mao@intel.com>
+Acked-by: Eddie Dong <eddie.dong@intel.com>
+---
+ hypervisor/Makefile                        |   1 +
+ hypervisor/arch/x86/cpu.c                  |   2 +
+ hypervisor/arch/x86/cpu_caps.c             |  18 ++++
+ hypervisor/arch/x86/guest/virq.c           |  32 ++++---
+ hypervisor/arch/x86/guest/vmcs.c           |  14 +++-
+ hypervisor/arch/x86/ibecc.c                | 130 +++++++++++++++++++++++++++++
+ hypervisor/arch/x86/irq.c                  |   5 ++
+ hypervisor/include/arch/x86/asm/cpu_caps.h |   1 +
+ hypervisor/include/arch/x86/asm/ibecc.h    |  18 ++++
+ 9 files changed, 209 insertions(+), 12 deletions(-)
+ create mode 100644 hypervisor/arch/x86/ibecc.c
+ create mode 100644 hypervisor/include/arch/x86/asm/ibecc.h
+
+diff --git a/hypervisor/Makefile b/hypervisor/Makefile
+index 71119c3..ee7c831 100644
+--- a/hypervisor/Makefile
++++ b/hypervisor/Makefile
+@@ -230,6 +230,7 @@ HW_C_SRCS += arch/x86/trampoline.c
+ HW_S_SRCS += arch/x86/sched.S
+ HW_C_SRCS += arch/x86/rdt.c
+ HW_C_SRCS += arch/x86/sgx.c
++HW_C_SRCS += arch/x86/ibecc.c
+ HW_C_SRCS += common/ticks.c
+ HW_C_SRCS += common/delay.c
+ HW_C_SRCS += common/timer.c
+diff --git a/hypervisor/arch/x86/cpu.c b/hypervisor/arch/x86/cpu.c
+index 8cdef8a..7942cc6 100644
+--- a/hypervisor/arch/x86/cpu.c
++++ b/hypervisor/arch/x86/cpu.c
+@@ -36,6 +36,7 @@
+ #include <asm/tsc.h>
+ #include <ticks.h>
+ #include <delay.h>
++#include <asm/ibecc.h>
+ 
+ #define CPU_UP_TIMEOUT		100U /* millisecond */
+ #define CPU_DOWN_TIMEOUT	100U /* millisecond */
+@@ -254,6 +255,7 @@ void init_pcpu_post(uint16_t pcpu_id)
+ #endif
+ 		init_pci_pdev_list(); /* init_iommu must come before this */
+ 		ptdev_init();
++		init_ibecc();
+ 
+ 		if (init_sgx() != 0) {
+ 			panic("failed to initialize sgx!");
+diff --git a/hypervisor/arch/x86/cpu_caps.c b/hypervisor/arch/x86/cpu_caps.c
+index 8a67536..4a896b0 100644
+--- a/hypervisor/arch/x86/cpu_caps.c
++++ b/hypervisor/arch/x86/cpu_caps.c
+@@ -34,6 +34,7 @@
+ static struct cpu_capability {
+ 	uint8_t apicv_features;
+ 	uint8_t ept_features;
++	uint8_t virt_nmi_features;
+ 
+ 	uint32_t vmx_ept;
+ 	uint32_t vmx_vpid;
+@@ -227,6 +228,17 @@ static void detect_apicv_cap(void)
+ 	vlapic_set_apicv_ops();
+ }
+ 
++static void detect_nmi_cap(void)
++{
++	uint64_t msr_val = msr_read(MSR_IA32_VMX_PINBASED_CTLS);
++
++	if (is_ctrl_setting_allowed(msr_val, VMX_PINBASED_CTLS_NMI_EXIT | VMX_PINBASED_CTLS_VIRT_NMI)) {
++		cpu_caps.virt_nmi_features = 1U;
++	} else {
++		cpu_caps.virt_nmi_features = 0U;
++	}
++}
++
+ static void detect_vmx_mmu_cap(void)
+ {
+ 	uint64_t val;
+@@ -269,6 +281,7 @@ static void detect_pcpu_cap(void)
+ {
+ 	detect_apicv_cap();
+ 	detect_ept_cap();
++	detect_nmi_cap();
+ 	detect_vmx_mmu_cap();
+ 	detect_xsave_cap();
+ 	detect_core_caps();
+@@ -370,6 +383,11 @@ bool pcpu_has_vmx_vpid_cap(uint32_t bit_mask)
+ 	return ((cpu_caps.vmx_vpid & bit_mask) != 0U);
+ }
+ 
++bool pcpu_has_vmx_virt_nmi_cap(void)
++{
++	return (cpu_caps.virt_nmi_features != 0U);
++}
++
+ void init_pcpu_model_name(void)
+ {
+ 	cpuid_subleaf(CPUID_EXTEND_FUNCTION_2, 0x0U,
+diff --git a/hypervisor/arch/x86/guest/virq.c b/hypervisor/arch/x86/guest/virq.c
+index e83ef1b..e054e03 100644
+--- a/hypervisor/arch/x86/guest/virq.c
++++ b/hypervisor/arch/x86/guest/virq.c
+@@ -18,6 +18,7 @@
+ #include <trace.h>
+ #include <logmsg.h>
+ #include <asm/irq.h>
++#include <asm/ibecc.h>
+ 
+ #define EXCEPTION_ERROR_CODE_VALID  8U
+ 
+@@ -253,7 +254,7 @@ static bool vcpu_inject_exception(struct acrn_vcpu *vcpu)
+ 
+ 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EXCP, &vcpu->arch.pending_req)) {
+ 		uint32_t vector = vcpu->arch.exception_info.exception;
+-	
++
+ 		if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
+ 			exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
+ 					vcpu->arch.exception_info.error);
+@@ -536,16 +537,27 @@ int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu)
+ 		}
+ 	}
+ 
+-	status = emulate_splitlock(vcpu, exception_vector, &queue_exception);
+-	if ((status == 0) && queue_exception) {
+-		vcpu_retain_rip(vcpu);
+-		status = vcpu_queue_exception(vcpu, exception_vector, int_err_code);
+-	}
++	switch (exception_vector) {
++	case IDT_NMI:
++		/* Take this opportunity to check IBECC status. NMIs from HW are now handled by the hypervisor, and thus
++		 * there is no need to inject the NMI back to the VM. Virtual NMIs are recorded as ACRN_REQUEST_NMI
++		 * requests which have their own path for injection.
++		 *
++		 * Assume a splitlock will never trigger NMIs. */
++		check_ibecc_error();
++		break;
++	default:
++		status = emulate_splitlock(vcpu, exception_vector, &queue_exception);
++		if ((status == 0) && queue_exception) {
++			vcpu_retain_rip(vcpu);
++			status = vcpu_queue_exception(vcpu, exception_vector, int_err_code);
++		}
+ 
+-	if (exception_vector == IDT_MC) {
+-		/* just print error message for #MC, it then will be injected
+-		 * back to guest */
+-		pr_fatal("Exception #MC got from guest!");
++		if (exception_vector == IDT_MC) {
++			/* just print error message for #MC, it has been be injected back to guest */
++			pr_fatal("Exception #MC got from guest!");
++		}
++		break;
+ 	}
+ 
+ 	TRACE_4I(TRACE_VMEXIT_EXCEPTION_OR_NMI,
+diff --git a/hypervisor/arch/x86/guest/vmcs.c b/hypervisor/arch/x86/guest/vmcs.c
+index c548f4f..9611e5a 100644
+--- a/hypervisor/arch/x86/guest/vmcs.c
++++ b/hypervisor/arch/x86/guest/vmcs.c
+@@ -18,6 +18,7 @@
+ #include <asm/cpufeatures.h>
+ #include <asm/guest/vmexit.h>
+ #include <logmsg.h>
++#include <asm/ibecc.h>
+ 
+ /* rip, rsp, ia32_efer and rflags are written to VMCS in start_vcpu */
+ static void init_guest_vmx(struct acrn_vcpu *vcpu, uint64_t cr0, uint64_t cr3,
+@@ -268,8 +269,17 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
+ 	/* Set up VM Execution control to enable Set VM-exits on external
+ 	 * interrupts preemption timer - pg 2899 24.6.1
+ 	 */
+-	/* enable external interrupt VM Exit */
+-	value32 = check_vmx_ctrl(MSR_IA32_VMX_PINBASED_CTLS, VMX_PINBASED_CTLS_IRQ_EXIT);
++
++	/* Enable external interrupt VM Exit and NMI exiting. NMIs are configured to cause VM exits in order to check
++	 * IBECC errors.
++	 */
++	if (is_ibecc_enabled()) {
++		value32 = check_vmx_ctrl(
++			MSR_IA32_VMX_PINBASED_CTLS,
++			VMX_PINBASED_CTLS_IRQ_EXIT | VMX_PINBASED_CTLS_NMI_EXIT | VMX_PINBASED_CTLS_VIRT_NMI);
++	} else {
++		value32 = check_vmx_ctrl(MSR_IA32_VMX_PINBASED_CTLS, VMX_PINBASED_CTLS_IRQ_EXIT);
++	}
+ 
+ 	if (is_apicv_advanced_feature_supported()) {
+ 		value32 |= VMX_PINBASED_CTLS_POST_IRQ;
+diff --git a/hypervisor/arch/x86/ibecc.c b/hypervisor/arch/x86/ibecc.c
+new file mode 100644
+index 0000000..df0da6d
+--- /dev/null
++++ b/hypervisor/arch/x86/ibecc.c
+@@ -0,0 +1,130 @@
++/*
++ * Copyright (C) 2021 Intel Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <asm/ibecc.h>
++#include <types.h>
++#include <asm/mmu.h>
++#include <asm/io.h>
++#include <pci.h>
++#include <asm/cpu_caps.h>
++#include <logmsg.h>
++
++#define NMI_STS_CNT            0x61            /**< The port of NMI status and control register */
++#define SERR_NMI_STS           (1U << 7U)      /**< SERR# NMI source status bit in NMI_STS_CNT */
++#define PCI_SERR_EN            (1U << 2U)      /**< PCI SERR# enable bit in NMI_STS_CNT */
++
++#define PCIV_EHL_SKU11         0x8086U
++#define PCID_EHL_SKU11         0x4532U
++#define PCIR_MCHBAR            0x48U
++#define PCIM_MCHBAREN          (1UL < 0U)
++#define PCIM_MCHBAR            0x0000007fffff0000UL   /**< Mask of MCHBAR base in MCHBAR register */
++#define PCIR_ERRSTS            0xC8U
++#define PCIM_ERRSTS_IBECC_UC   (1U << 7U)
++#define PCIM_ERRSTS_IBECC_COR  (1U << 6U)
++#define PCIM_ERRSTS_IBECC_ERR  (PCIM_ERRSTS_IBECC_UC | PCIM_ERRSTS_IBECC_COR)
++
++#define IBECC_ERROR_LOG        0xDD70UL
++#define IBECC_ERRLOG_MERRSTS   (1UL << 63U)   /**< Uncorrectable (Multiple-bit) Error Status */
++#define IBECC_ERRLOG_CERRSTS   (1UL << 62U)   /**< Correctable Error Status */
++#define IBECC_ERRLOG_ERRSTS    (IBECC_ERRLOG_MERRSTS | IBECC_ERRLOG_CERRSTS)
++
++/** Address of the IBECC ERROR_LOG register in MCHBAR. A NULL value indicates that IBECC is not available. */
++static void *ibecc_errlog_addr = NULL;
++
++/** Internal counters of IBECC correctable and uncorrectable errors. */
++static uint64_t ibecc_cerr_count = 0UL, ibecc_uerr_count = 0UL;
++
++void init_ibecc(void)
++{
++	union pci_bdf hostbridge_bdf = { .value = 0x0U };
++	uint16_t did, vid;
++
++	/* Detect the presence of IBECC. For now we only interpret IBECC error logs on EHL SKU 11. */
++	vid = pci_pdev_read_cfg(hostbridge_bdf, PCIR_VENDOR, 2U);
++	did = pci_pdev_read_cfg(hostbridge_bdf, PCIR_DEVICE, 2U);
++	if (vid == PCIV_EHL_SKU11 && did == PCID_EHL_SKU11) {
++		uint64_t mchbar = pci_pdev_read_cfg(hostbridge_bdf, PCIR_MCHBAR, 4U);
++		uint64_t mchbar_high = pci_pdev_read_cfg(hostbridge_bdf, PCIR_MCHBAR + 4U, 4U);
++		mchbar |= (mchbar_high << 32U);
++		if ((mchbar & PCIM_MCHBAREN) != 0UL) {
++			uint64_t mchbar_base = (mchbar & PCIM_MCHBAR);
++			ibecc_errlog_addr = hpa2hva(mchbar_base + IBECC_ERROR_LOG);
++
++			if (!pcpu_has_vmx_virt_nmi_cap()) {
++				panic("Cannot enable IBECC on platforms without virtual NMIs support");
++			}
++		}
++	}
++}
++
++bool is_ibecc_enabled(void) {
++	return (ibecc_errlog_addr != NULL);
++}
++
++void check_ibecc_error(void)
++{
++	/* Each physical core will receive an NMI when an IBECC error occurs. Only check IBECC error on the BSP the
++	 * avoid racing in accessing the error reporting registers. */
++	if ((ibecc_errlog_addr != NULL) && (get_pcpu_id() == BSP_CPU_ID)) {
++		uint8_t nmists;
++
++		/* Check if the NMI is caused by an SERR# assertion */
++		nmists = pio_read(NMI_STS_CNT, 1U);
++		if ((nmists & SERR_NMI_STS) != 0U) {
++			union pci_bdf hostbridge_bdf = { .value = 0x0U };
++			uint16_t errsts;
++
++			/* Reset SERR# status by setting PCI_SERR_EN to 1 and then to 0. The upper 4 bits in NMI_STS_CNT
++			 * are read-only and must be 0 on writes. */
++			nmists = nmists & 0xfU;
++			pio_write(nmists | PCI_SERR_EN, NMI_STS_CNT, 1);
++			pio_write(nmists, NMI_STS_CNT, 1);
++
++			/* Read the ERRSTS register in the hostbridge to determine if it is an IBECC error. */
++			errsts = pci_pdev_read_cfg(hostbridge_bdf, PCIR_ERRSTS, 2U);
++			if ((errsts & PCIM_ERRSTS_IBECC_ERR) != 0U) {
++				uint64_t errlog;
++
++				/* Read IBECC Error Log register to understand the source of the error. SMAP needs to be
++				 * turned off to access the register in MCHBAR. */
++				stac();
++				errlog = mmio_read64(ibecc_errlog_addr);
++				clac();
++
++				/* Accumulate the error count. No need to use atomic instructions as the count
++				 * variables should be placed in a 64-bit aligned manner. */
++				if ((errlog & IBECC_ERRLOG_MERRSTS) != 0UL) {
++					ibecc_uerr_count += 1;
++				}
++
++				if ((errlog & IBECC_ERRLOG_CERRSTS) != 0UL) {
++					ibecc_cerr_count += 1;
++				}
++
++				/* Clear the IBECC_UC and IBECC_COR bis in the ERRSTS register in the hostbridge by writing 1 to
++				 * them. */
++				errsts = pci_pdev_read_cfg(hostbridge_bdf, PCIR_ERRSTS, 2U);
++				errsts &= ~(PCIM_ERRSTS_IBECC_UC | PCIM_ERRSTS_IBECC_COR);
++				pci_pdev_write_cfg(hostbridge_bdf, PCIR_ERRSTS, 2U, errsts);
++
++				/* Lastly, clear the ERRSTS bits in IBECC errlog register by writing 1 to them. */
++				stac();
++				mmio_write64(errlog | IBECC_ERRLOG_ERRSTS, ibecc_errlog_addr);
++				clac();
++			}
++		}
++	}
++}
++
++uint64_t get_ibecc_cerr_count(void)
++{
++	return ibecc_cerr_count;
++}
++
++uint64_t get_ibecc_uerr_count(void)
++{
++	return ibecc_uerr_count;
++}
+diff --git a/hypervisor/arch/x86/irq.c b/hypervisor/arch/x86/irq.c
+index 2d9337d..aa16366 100644
+--- a/hypervisor/arch/x86/irq.c
++++ b/hypervisor/arch/x86/irq.c
+@@ -16,6 +16,7 @@
+ #include <dump.h>
+ #include <logmsg.h>
+ #include <asm/vmx.h>
++#include <asm/ibecc.h>
+ 
+ static spinlock_t x86_irq_spinlock = { .head = 0U, .tail = 0U, };
+ 
+@@ -217,6 +218,10 @@ void init_irq_descs_arch(struct irq_desc descs[])
+ {
+ 	uint32_t i;
+ 
++	/* Check if the NMI is triggered by an IBECC error. If it is, updates the internal counters and reset IBECC
++	 * error status. */
++	check_ibecc_error();
++
+ 	/*
+ 	 * Fill in #CONFIG_MAX_VM_NUM posted interrupt specific irq and vector pairs
+ 	 * at runtime
+diff --git a/hypervisor/include/arch/x86/asm/cpu_caps.h b/hypervisor/include/arch/x86/asm/cpu_caps.h
+index 5559eef..7455874 100644
+--- a/hypervisor/include/arch/x86/asm/cpu_caps.h
++++ b/hypervisor/include/arch/x86/asm/cpu_caps.h
+@@ -52,6 +52,7 @@ bool is_apicv_advanced_feature_supported(void);
+ bool pcpu_has_cap(uint32_t bit);
+ bool pcpu_has_vmx_ept_cap(uint32_t bit_mask);
+ bool pcpu_has_vmx_vpid_cap(uint32_t bit_mask);
++bool pcpu_has_vmx_virt_nmi_cap(void);
+ bool is_apl_platform(void);
+ bool has_core_cap(uint32_t bit_mask);
+ bool is_ac_enabled(void);
+diff --git a/hypervisor/include/arch/x86/asm/ibecc.h b/hypervisor/include/arch/x86/asm/ibecc.h
+new file mode 100644
+index 0000000..a5948c8
+--- /dev/null
++++ b/hypervisor/include/arch/x86/asm/ibecc.h
+@@ -0,0 +1,18 @@
++/*
++ * Copyright (C) 2021 Intel Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef IBECC_H
++#define IBECC_H
++
++#include <types.h>
++
++void init_ibecc(void);
++bool is_ibecc_enabled(void);
++void check_ibecc_error(void);
++uint64_t get_ibecc_cerr_count(void);
++uint64_t get_ibecc_uerr_count(void);
++
++#endif
+-- 
+2.7.4
+

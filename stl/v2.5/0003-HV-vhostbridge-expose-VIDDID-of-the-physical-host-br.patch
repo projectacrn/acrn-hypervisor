@@ -1,0 +1,71 @@
+From ede3a503ff2db7e4022ed98ea0c7bc1ab9758552 Mon Sep 17 00:00:00 2001
+From: Junjie Mao <junjie.mao@intel.com>
+Date: Tue, 13 Jul 2021 15:29:13 +0800
+Subject: [PATCH 3/3] HV: vhostbridge: expose VIDDID of the physical host
+ bridge
+
+On IA platforms the vendor ID (VID) and device ID (DID) of the host bridge
+can be used to identify the model and SKU of the chipset. This is useful to
+determine the pass/fail criteria of model/SKU specific tests.
+
+However, ACRN generally provides a virtual host bridge to VMs, as is a
+common practice in many hypervisors to avoid unintended accesses to host
+bridge registers. This avoid ACRN from exposing the VIDDID of the physical
+host bridge to guests using the VIDDID registers in the virtual host
+bridge.
+
+This patch initializes the scratchpad register in the virtual host bridge
+with the VIDDID of the physical one. According to the specification, the
+scratchpad register is a read-write register with no functionality behind
+them. This allows the software in VM (which awares that it is running on
+ACRN) to check the model of chipset for further operations.
+
+Signed-off-by: Junjie Mao <junjie.mao@intel.com>
+---
+ hypervisor/dm/vpci/vhostbridge.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/hypervisor/dm/vpci/vhostbridge.c b/hypervisor/dm/vpci/vhostbridge.c
+index 642b64b..9774e9a 100644
+--- a/hypervisor/dm/vpci/vhostbridge.c
++++ b/hypervisor/dm/vpci/vhostbridge.c
+@@ -81,14 +81,14 @@ static const uint32_t hostbridge_did_highbytes[] = {0x19U, 0x5aU, 0x59U, 0x3eU,
+ 	BGSM		|	0xB4	|	dword	|	hard-coded	|	base of graphics stolen memory
+ 	TSEGMB		|	0xB8	|	dword	|	hard-coded	|	top segmentmemory base
+ 	TOLUD		|	0xBC	|	dword	|	hard-coded	|	top of lower usable dram
+-	SKPD		|	0xDC	|	dword	|	unemulated	|	scratchpad
++	SKPD		|	0xDC	|	dword	|	hard-coded	|	scratchpad containing DIDVID of the host
+ 	CAPID0_CAPCTRL0	|	0xe0	|	dword	|	hard-coded	|	capability 0 control
+ 	----------------------------------------------------------------------------------------------------------------
+ */
+ static void init_vhostbridge(struct pci_vdev *vdev)
+ {
+ 	union pci_bdf hostbridge_bdf = {.value = 0x0U};
+-	uint32_t pciexbar_low = 0x0U, pciexbar_high = 0x0U, phys_did, i;
++	uint32_t pciexbar_low = 0x0U, pciexbar_high = 0x0U, phys_did, phys_vid, i;
+ 	/* PCI config space */
+ 	pci_vdev_write_vcfg(vdev, PCIR_VENDOR, 2U, 0x8086U);
+ 	pci_vdev_write_vcfg(vdev, PCIR_DEVICE, 2U, 0x5af0U);
+@@ -112,6 +112,11 @@ static void init_vhostbridge(struct pci_vdev *vdev)
+ 	pci_vdev_write_vcfg(vdev, 0xe0U, 4U, 0x010c0009U);
+ 	pci_vdev_write_vcfg(vdev, 0xf4U, 4U, 0x011c0f00U);
+ 
++	phys_vid = pci_pdev_read_cfg(hostbridge_bdf, PCIR_VENDOR, 2);
++	phys_did = pci_pdev_read_cfg(hostbridge_bdf, PCIR_DEVICE, 2);
++	pci_vdev_write_vcfg(vdev, 0xdcU, 2U, phys_vid);
++	pci_vdev_write_vcfg(vdev, 0xdeU, 2U, phys_did);
++
+ 	if (is_prelaunched_vm(container_of(vdev->vpci, struct acrn_vm, vpci))) {
+ 		/* For pre-launched VMs, we only need to write an GPA that's reserved in guest ve820,
+ 		 * and UOS_VIRT_PCI_MMCFG_BASE(0xE0000000) is fine. The trailing 1 is a ECAM enable-bit
+@@ -119,7 +124,6 @@ static void init_vhostbridge(struct pci_vdev *vdev)
+ 		pciexbar_low = UOS_VIRT_PCI_MMCFG_BASE | 0x1U;
+ 	} else {
+ 		/*Inject physical ECAM value to SOS vhostbridge since SOS may check PCIe-MMIO Base Address with it */
+-		phys_did = pci_pdev_read_cfg(hostbridge_bdf, PCIR_DEVICE, 2);
+ 		for (i = 0U; i < (sizeof(hostbridge_did_highbytes) / sizeof(uint32_t)); i++) {
+ 			if (((phys_did & 0xff00U) >> 8) == hostbridge_did_highbytes[i]) {
+ 				/* The offset of PCIEXBAR register is 0x60 on Intel platforms, and no counter-case is encountered yet */
+-- 
+2.7.4
+
