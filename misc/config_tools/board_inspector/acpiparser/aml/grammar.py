@@ -136,15 +136,15 @@ AML_DATA_REGION_OP          = 0x885b
 
 AMLCode = ("DefBlockHeader", "TermObj*")
 DefBlockHeader = ("TableSignature", "TableLength", "SpecCompliance", "CheckSum", "OemID", "OemTableID", "OemRevision", "CreatorID", "CreatorRevision")
-TableSignature = ("DWordData",)
-TableLength = ("DWordData",)
-SpecCompliance = ("ByteData",)
-CheckSum = ("ByteData",)
-OemID = ("TWordData",)
-OemTableID = ("QWordData",)
-OemRevision = ("DWordData",)
-CreatorID = ("DWordData",)
-CreatorRevision = ("DWordData",)
+TableSignature = ["DWordData"]
+TableLength = ["DWordData"]
+SpecCompliance = ["ByteData"]
+CheckSum = ["ByteData"]
+OemID = ["TWordData"]
+OemTableID = ["QWordData"]
+OemRevision = ["DWordData"]
+CreatorID = ["DWordData"]
+CreatorRevision = ["DWordData"]
 
 ################################################################################
 # 20.2.2 Name Objects Encoding
@@ -202,7 +202,7 @@ TermArg = ["ExpressionOpcode", "DataObject", "ArgObj", "LocalObj"]
 
 NameSpaceModifierObj = ["DefAlias", "DefName", "DefScope"]
 
-DefAlias = (AML_ALIAS_OP, "NameString", "NameString")
+DefAlias = (AML_ALIAS_OP, "NameString:SourceObject", "NameString:AliasObject")
 DefName = (AML_NAME_OP, "NameString", "DataRefObject")
 DefScope = (AML_SCOPE_OP, "PkgLength", "NameString", "TermList")
 
@@ -214,68 +214,68 @@ NamedObj = ["DefBankField", "DefCreateBitField", "DefCreateByteField", "DefCreat
             "DefField", "DefIndexField", "DefMethod", "DefMutex", "DefOpRegion", "DefPowerRes", "DefProcessor",
             "DefThermalZone"]
 
-DefBankField = (AML_BANK_FIELD_OP, "PkgLength", "NameString", "NameString", "BankValue", "FieldFlags", "FieldList")
-BankValue = ("TermArg",)
-FieldFlags = ("ByteData",)
+DefBankField = (AML_BANK_FIELD_OP, "PkgLength", "NameString:RegionName", "NameString:BankName", "BankValue", "FieldFlags", "FieldList")
+BankValue = ["TermArg"]
+FieldFlags = ["ByteData"]
 FieldList = ("FieldElement*",)
 NamedField = ("NameSeg", "FieldLength")
 ReservedField = (AML_RESERVED_FIELD_PREFIX, "FieldLength")
 AccessField = (AML_ACCESS_FIELD_PREFIX, "AccessType", "AccessAttrib")
-AccessType = ("ByteData",)
-AccessAttrib = ("ByteData",)
-ConnectFieldDef = ["NameString", "BufferData"]
+AccessType = ["ByteData"]
+AccessAttrib = ["ByteData"]
+ConnectFieldDef = ["NameString"]  # FIXME: ACPI spec allows "BufferData" here but does not define what "BufferData" is
 ConnectField = (AML_CONNECT_FIELD_PREFIX, "ConnectFieldDef")
 
 DefCreateBitField = (AML_CREATE_BIT_FIELD_OP, "SourceBuff", "BitIndex", "NameString")
-SourceBuff = ("TermArg",)
-BitIndex = ("TermArg",)
+SourceBuff = ["TermArg"]
+BitIndex = ["TermArg"]
 DefCreateByteField = (AML_CREATE_BYTE_FIELD_OP, "SourceBuff", "ByteIndex", "NameString")
-ByteIndex = ("TermArg",)
+ByteIndex = ["TermArg"]
 DefCreateDWordField = (AML_CREATE_DWORD_FIELD_OP, "SourceBuff", "ByteIndex", "NameString")
 DefCreateField = (AML_CREATE_FIELD_OP, "SourceBuff", "BitIndex", "NumBits", "NameString")
-NumBits = ("TermArg",)
+NumBits = ["TermArg"]
 DefCreateQWordField = (AML_CREATE_QWORD_FIELD_OP, "SourceBuff", "ByteIndex", "NameString")
 DefCreateWordField = (AML_CREATE_WORD_FIELD_OP, "SourceBuff", "ByteIndex", "NameString")
 
-DefDataRegion = (AML_DATA_REGION_OP, "NameString", "TermArg", "TermArg", "TermArg")
+DefDataRegion = (AML_DATA_REGION_OP, "NameString", "TermArg:Signature", "TermArg:OEMID", "TermArg:OEMTableID")
 
 DefDevice = (AML_DEVICE_OP, "PkgLength", "NameString", "TermList")
 
 DefEvent = (AML_EVENT_OP, "NameString")
 
 DefExternal = (AML_EXTERNAL_OP, "NameString", "ObjectType", "ArgumentCount")
-ObjectType = ("ByteData",)
-ArgumentCount = ("ByteData",)
+ObjectType = ["ByteData"]
+ArgumentCount = ["ByteData"]
 
 DefField = (AML_FIELD_OP, "PkgLength", "NameString", "FieldFlags", "FieldList")
 
-DefIndexField = (AML_INDEX_FIELD_OP, "PkgLength", "NameString", "NameString", "FieldFlags", "FieldList")
+DefIndexField = (AML_INDEX_FIELD_OP, "PkgLength", "NameString:IndexName", "NameString:DataName", "FieldFlags", "FieldList")
 
 DefMethod = (AML_METHOD_OP, "PkgLength", "NameString", "MethodFlags", "TermList")
-MethodFlags = ("ByteData",)
+MethodFlags = ["ByteData"]
 
 DefMutex = (AML_MUTEX_OP, "NameString", "SyncFlags")
-SyncFlags = ("ByteData",)
+SyncFlags = ["ByteData"]
 
 DefOpRegion = (AML_REGION_OP, "NameString", "RegionSpace", "RegionOffset", "RegionLen")
-RegionSpace = ("ByteData",)
-RegionOffset = ("TermArg",)
-RegionLen = ("TermArg",)
+RegionSpace = ["ByteData"]
+RegionOffset = ["TermArg"]
+RegionLen = ["TermArg"]
 
 DefPowerRes = (AML_POWER_RESOURCE_OP, "PkgLength", "NameString", "SystemLevel", "ResourceOrder", "TermList")
-SystemLevel = ("ByteData",)
-ResourceOrder = ("WordData",)
+SystemLevel = ["ByteData"]
+ResourceOrder = ["WordData"]
 
 DefProcessor = (AML_PROCESSOR_OP, "PkgLength", "NameString", "ProcID", "PblkAddr", "PblkLen", "TermList")
-ProcID = ("ByteData",)
-PblkAddr = ("DWordData",)
-PblkLen = ("ByteData",)
+ProcID = ["ByteData"]
+PblkAddr = ["DWordData"]
+PblkLen = ["ByteData"]
 
 DefThermalZone = (AML_THERMAL_ZONE_OP, "PkgLength", "NameString", "TermList")
 
 ExtendedAccessField = (AML_EXTENDED_ACCESS_FIELD_PREFIX, "AccessType", "ExtendedAccessAttrib", "AccessLength")
-ExtendedAccessAttrib = ("ByteData",)
-AccessLength = ("ByteData",)
+ExtendedAccessAttrib = ["ByteData"]
+AccessLength = ["ByteData"]
 FieldElement = ["NamedField", "ReservedField", "AccessField", "ExtendedAccessField", "ConnectField"]
 
 # 20.2.5.3 Statement Opcodes Encoding
@@ -293,35 +293,35 @@ DefContinue = (AML_CONTINUE_OP,)
 DefElse = (AML_ELSE_OP, "PkgLength", "TermList")
 
 DefFatal = (AML_FATAL_OP, "FatalType", "FatalCode", "FataArg")
-FatalType = ("ByteData",)
-FatalCode = ("DWordData",)
-FatalArg = ("TermArg",)
+FatalType = ["ByteData"]
+FatalCode = ["DWordData"]
+FatalArg = ["TermArg"]
 
 DefIfElse = (AML_IF_OP, "PkgLength", "Predicate", "TermList", "DefElse?")
-Predicate = ("TermArg",)
+Predicate = ["TermArg"]
 
 DefNoop = (AML_NOOP_OP,)
 
 DefNotify = (AML_NOTIFY_OP, "NotifyObject", "NotifyValue")
-NotifyObject = ("SuperName",)
-NotifyValue = ("TermArg",)
+NotifyObject = ["SuperName"]
+NotifyValue = ["TermArg"]
 
 DefRelease = (AML_RELEASE_OP, "MutexObject")
-MutexObject = ("SuperName",)
+MutexObject = ["SuperName"]
 
 DefReset = (AML_RESET_OP, "EventObject")
-EventObject = ("SuperName",)
+EventObject = ["SuperName"]
 
 DefReturn = (AML_RETURN_OP, "ArgObject")
-ArgObject = ("TermArg",)
+ArgObject = ["TermArg"]
 
 DefSignal = (AML_SIGNAL_OP, "EventObject")
 
 DefSleep = (AML_SLEEP_OP, "MsecTime")
-MsecTime = ("TermArg",)
+MsecTime = ["TermArg"]
 
 DefStall = (AML_STALL_OP, "UsecTime")
-UsecTime = ("TermArg",)
+UsecTime = ["TermArg"]
 
 DefUnload = (AML_UNLOAD_OP, "Target")
 
@@ -342,21 +342,21 @@ ExpressionOpcode = ["DefAcquire", "DefAdd", "DefAnd", "DefBuffer", "DefConcat", 
 ReferenceTypeOpcode = ["DefRefOf", "DefDerefOf", "DefIndex"]
 
 DefAcquire = (AML_ACQUIRE_OP, "MutexObject", "Timeout")
-Timeout = ("WordData",)
+Timeout = ["WordData"]
 
-DefAdd = (AML_ADD_OP, "Operand", "Operand", "Target")
+DefAdd = (AML_ADD_OP, "Operand:LeftOperand", "Operand:RightOperand", "Target")
 Operand = ["TermArg"]
 
-DefAnd = (AML_AND_OP, "Operand", "Operand", "Target")
+DefAnd = (AML_AND_OP, "Operand:LeftOperand", "Operand:RightOperand", "Target")
 
 DefBuffer = (AML_BUFFER_OP, "PkgLength", "BufferSize", "ByteList")
-BufferSize = ("TermArg",)
+BufferSize = ["TermArg"]
 
-DefConcat = (AML_CONCAT_OP, "Data", "Data", "Target")
-Data = ("TermArg",)
+DefConcat = (AML_CONCAT_OP, "Data:Data1", "Data:Data2", "Target")
+Data = ["TermArg"]
 
-DefConcatRes = (AML_CONCAT_RES_OP, "BufData", "BufData", "Target")
-BufData = ("TermArg",)
+DefConcatRes = (AML_CONCAT_RES_OP, "BufData:BufData1", "BufData:BufData2", "Target")
+BufData = ["TermArg"]
 
 DefCondRefOf = (AML_CONDITIONAL_REF_OF_OP, "SuperName", "Target")
 
@@ -365,80 +365,80 @@ DefCopyObject = (AML_COPY_OBJECT_OP, "TermArg", "SimpleName")
 DefDecrement = (AML_DECREMENT_OP, "SuperName")
 
 DefDerefOf = (AML_DEREF_OF_OP, "ObjReference")
-ObjReference = ("TermArg",)
+ObjReference = ["TermArg"]
 
 DefDivide = (AML_DIVIDE_OP, "Dividend", "Divisor", "Remainder", "Quotient")
-Dividend = ("TermArg",)
-Divisor = ("TermArg",)
-Remainder = ("Target",)
-Quotient = ("Target",)
+Dividend = ["TermArg"]
+Divisor = ["TermArg"]
+Remainder = ["Target"]
+Quotient = ["Target"]
 
 DefFindSetLeftBit = (AML_FIND_SET_LEFT_BIT_OP, "Operand", "Target")
 DefFindSetRightBit = (AML_FIND_SET_RIGHT_BIT_OP, "Operand", "Target")
 
 DefFromBCD = (AML_FROM_BCD_OP, "BCDValue", "Target")
-BCDValue = ("TermArg",)
+BCDValue = ["TermArg"]
 
 DefIncrement = (AML_INCREMENT_OP, "SuperName")
 
 DefIndex = (AML_INDEX_OP, "BuffPkgStrObj", "IndexValue", "Target")
-BuffPkgStrObj = ("TermArg",)
-IndexValue = ("TermArg",)
+BuffPkgStrObj = ["TermArg"]
+IndexValue = ["TermArg"]
 
-DefLAnd = (AML_LAND_OP, "Operand", "Operand")
-DefLEqual = (AML_LEQUAL_OP, "Operand", "Operand")
-DefLGreater = (AML_LGREATER_OP, "Operand", "Operand")
+DefLAnd = (AML_LAND_OP, "Operand:LeftOperand", "Operand:RightOperand")
+DefLEqual = (AML_LEQUAL_OP, "Operand:LeftOperand", "Operand:RightOperand")
+DefLGreater = (AML_LGREATER_OP, "Operand:LeftOperand", "Operand:RightOperand")
 # DefLGreaterEqual is equivalent to (AML_LNOT_OP, DefLLess)
-DefLLess = (AML_LLESS_OP, "Operand", "Operand")
+DefLLess = (AML_LLESS_OP, "Operand:LeftOperand", "Operand:RightOperand")
 # DefLLessEqual is equivalent to (AML_LNOT_OP, DefLGreater)
 DefLNot = (AML_LNOT_OP, "Operand")
 # DefLNotEqual is equivalent to (AML_LNOT_OP, DefLEqual)
 
 DefLoad = (AML_LOAD_OP, "NameString", "Target")
 
-DefLoadTable = (AML_LOAD_TABLE_OP, "TermArg", "TermArg", "TermArg", "TermArg", "TermArg", "TermArg")
+DefLoadTable = (AML_LOAD_TABLE_OP, "TermArg:Signature", "TermArg:OEMID", "TermArg:TableID", "TermArg:RootPath", "TermArg:ParameterPath", "TermArg:ParameterData")
 
-DefLOr = (AML_LOR_OP, "Operand", "Operand")
+DefLOr = (AML_LOR_OP, "Operand:LeftOperand", "Operand:RightOperand")
 
-DefMatch = (AML_MATCH_OP, "SearchPkg", "MatchOpcode", "Operand", "MatchOpcode", "Operand", "StartIndex")
-SearchPkg = ("TermArg",)
-MatchOpcode = ("ByteData",)
-StartIndex = ("TermArg",)
+DefMatch = (AML_MATCH_OP, "SearchPkg", "MatchOpcode:MatchOpcode1", "Operand:Operand1", "MatchOpcode:MatchOpcode2", "Operand:Operand2", "StartIndex")
+SearchPkg = ["TermArg"]
+MatchOpcode = ["ByteData"]
+StartIndex = ["TermArg"]
 
-DefMid = (AML_MID_OP, "MidObj", "TermArg", "TermArg", "Target")
-MidObj = ("TermArg",)
+DefMid = (AML_MID_OP, "MidObj", "TermArg:Source", "TermArg:Index", "Target")
+MidObj = ["TermArg"]
 
 DefMod = (AML_MOD_OP, "Dividend", "Divisor", "Target")
 
-DefMultiply = (AML_MULTIPLY_OP, "Operand", "Operand", "Target")
+DefMultiply = (AML_MULTIPLY_OP, "Operand:LeftOperand", "Operand:RightOperand", "Target")
 
-DefNAnd = (AML_NAND_OP, "Operand", "Operand", "Target")
-DefNOr = (AML_NOR_OP, "Operand", "Operand", "Target")
+DefNAnd = (AML_NAND_OP, "Operand:LeftOperand", "Operand:RightOperand", "Target")
+DefNOr = (AML_NOR_OP, "Operand:LeftOperand", "Operand:RightOperand", "Target")
 DefNot = (AML_NOT_OP, "Operand", "Target")
 
 DefObjectType = (AML_OBJECT_TYPE_OP, "ObjectTypeContent")
 ObjectTypeContent = ["SimpleName", "DebugObj", "DefRefof", "DefDerefof", "DefIndex"]
 
-DefOr = (AML_OR_OP, "Operand", "Operand", "Target")
+DefOr = (AML_OR_OP, "Operand:LeftOperand", "Operand:RightOperand", "Target")
 
 DefPackage = (AML_PACKAGE_OP, "PkgLength", "NumElements", "PackageElementList")
 DefVarPackage = (AML_VAR_PACKAGE_OP, "PkgLength", "VarNumElements", "PackageElementList")
-NumElements = ("ByteData",)
-VarNumElements = ("TermArg",)
+NumElements = ["ByteData"]
+VarNumElements = ["TermArg"]
 PackageElementList = ("PackageElement*",)
 PackageElement = ["DataRefObject", "NameString"]
 
 DefRefOf = (AML_REF_OF_OP, "SuperName")
 
 DefShiftLeft = (AML_SHIFT_LEFT_OP, "Operand", "ShiftCount", "Target")
-ShiftCount = ("TermArg",)
+ShiftCount = ["TermArg"]
 DefShiftRight = (AML_SHIFT_RIGHT_OP, "Operand", "ShiftCount", "Target")
 
 DefSizeOf = (AML_SIZE_OF_OP, "SuperName")
 
 DefStore = (AML_STORE_OP, "TermArg", "SuperName")
 
-DefSubtract = (AML_SUBTRACT_OP, "Operand", "Operand", "Target")
+DefSubtract = (AML_SUBTRACT_OP, "Operand:LeftOperand", "Operand:RightOperand", "Target")
 
 DefTimer = (AML_TIMER_OP,)
 
@@ -453,11 +453,11 @@ DefToHexString = (AML_TO_HEX_STRING_OP, "Operand", "Target")
 DefToInteger = (AML_TO_INTEGER_OP, "Operand", "Target")
 
 DefToString = (AML_TO_STRING_OP, "TermArg", "LengthArg", "Target")
-LengthArg = ("TermArg",)
+LengthArg = ["TermArg"]
 
 DefWait = (AML_WAIT_OP, "EventObject", "Operand")
 
-DefXOr = (AML_XOR_OP, "Operand", "Operand", "Target")
+DefXOr = (AML_XOR_OP, "Operand:LeftOperand", "Operand:RightOperand", "Target")
 
 ################################################################################
 # 20.2.6 Miscellaneous Objects Encoding
@@ -492,3 +492,24 @@ Local7Op = (AML_LOCAL7_OP,)
 ################################################################################
 
 DebugObj = (AML_DEBUG_OP,)
+
+################################################################################
+# Helper methods
+################################################################################
+
+def __get_spec(sym, fn):
+    spec = globals()[sym]
+    if isinstance(spec, tuple):
+        return tuple(map(fn, spec))
+    else:
+        return spec
+
+def get_definition(sym):
+    def __get_definition(elem):
+        return elem.split(":")[0] if isinstance(elem, str) else elem
+    return __get_spec(sym, __get_definition)
+
+def get_names(sym):
+    def __get_names(elem):
+        return elem.split(":")[-1] if isinstance(elem, str) else elem
+    return __get_spec(sym, __get_names)
