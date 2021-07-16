@@ -27,6 +27,7 @@ void suspend_console(void) {}
 void resume_console(void) {}
 
 bool handle_dbg_cmd(__unused const char *cmd, __unused int32_t len) { return false; }
+void console_vmexit_callback(__unused struct acrn_vcpu *vcpu) {}
 
 void shell_init(void) {}
 void shell_kick(void) {}

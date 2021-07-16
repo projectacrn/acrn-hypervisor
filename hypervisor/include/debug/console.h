@@ -8,6 +8,7 @@
 #define CONSOLE_H
 
 #include <vuart.h>
+#include <asm/guest/vcpu.h>
 
 /** Initializes the console module.
  *
@@ -35,6 +36,7 @@ void console_putc(const char *ch);
 char console_getc(void);
 
 void console_setup_timer(void);
+void console_vmexit_callback(struct acrn_vcpu *vcpu);
 
 void suspend_console(void);
 void resume_console(void);
