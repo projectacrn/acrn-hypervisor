@@ -897,9 +897,6 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 	err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
 
 	if (err == 0) {
-		if (is_prelaunched_vm(vm)) {
-			build_vrsdp(vm);
-		}
 
 		if (is_sos_vm(vm)) {
 			/* We need to ensure all modules of pre-launched VMs have been loaded already
@@ -922,6 +919,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 		err = vm_sw_loader(vm);
 
 		if (is_prelaunched_vm(vm)) {
+			build_vrsdp(vm);
 			loaded_pre_vm_nr++;
 		}
 
