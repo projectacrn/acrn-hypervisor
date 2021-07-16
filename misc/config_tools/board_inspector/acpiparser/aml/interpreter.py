@@ -86,9 +86,13 @@ class ConcreteInterpreter(Interpreter):
 
     def interpret_method_call(self, name, *args):
         stack_depth_before = len(self.stack)
-        name_string = Tree("NameString", name)
+        name_string = Tree("NameString", [name])
+        name_string.register_structure(("value",))
+        name_string.complete_parsing()
         name_string.scope = self.context.parent(name)
         pseudo_invocation = Tree("MethodInvocation", [name_string])
+        pseudo_invocation.register_structure(("NameString", "TermArg*"))
+        pseudo_invocation.complete_parsing()
         try:
             val = self.interpret(pseudo_invocation)
         except:
@@ -118,7 +122,7 @@ class ConcreteInterpreter(Interpreter):
         return None
 
     def NameString(self, tree):
-        name = tree.children
+        name = tree.value
         obj = self.context.lookup_binding(name)
         if not obj:
             sym = self.context.lookup_symbol(name)
@@ -133,7 +137,7 @@ class ConcreteInterpreter(Interpreter):
 
     # 20.2.3 Data Objects Encoding
     def ByteList(self, tree):
-        return RawDataBuffer(tree.children)
+        return RawDataBuffer(tree.value)
 
     def ByteConst(self, tree):
         return self.interpret(tree.children[0])
@@ -148,19 +152,19 @@ class ConcreteInterpreter(Interpreter):
         return self.interpret(tree.children[0])
 
     def String(self, tree):
-        return String(tree.children)
+        return String(tree.value)
 
     def ByteData(self, tree):
-        return Integer(tree.children)
+        return Integer(tree.value)
 
     def WordData(self, tree):
-        return Integer(tree.children)
+        return Integer(tree.value)
 
     def DWordData(self, tree):
-        return Integer(tree.children)
+        return Integer(tree.value)
 
     def QWordData(self, tree):
-        return Integer(tree.children)
+        return Integer(tree.value)
 
     def ZeroOp(self, tree):
         return Integer(0x00)
@@ -210,7 +214,7 @@ class ConcreteInterpreter(Interpreter):
             return Integer(value.fn(args))
         else:
             assert value == None or isinstance(value, Object), \
-                f"{tree.children[0].children} evaluates to a non-object value {value}"
+                f"{tree.children[0]} evaluates to a non-object value {value}"
             return value
 
     # 20.2.5.1 Namespace Modifier Objects Encoding
@@ -219,7 +223,7 @@ class ConcreteInterpreter(Interpreter):
 
     def DefName(self, tree):
         self.context.change_scope(tree.children[0].scope)
-        name = tree.children[0].children
+        name = tree.children[0].value
         obj = self.context.lookup_binding(name)
         if not obj:
             obj = self.interpret(tree.children[1])
@@ -229,7 +233,7 @@ class ConcreteInterpreter(Interpreter):
 
     # 20.2.5.2 Named Objects Encoding
     def NamedField(self, tree):
-        name = tree.children[0].children
+        name = tree.children[0].value
         sym = self.context.lookup_symbol(self.context.realpath(tree.scope, name))
         assert isinstance(sym, OperationFieldDecl)
         assert sym.region, f"Field {sym.name} does not belong to any operation region."
@@ -253,7 +257,7 @@ class ConcreteInterpreter(Interpreter):
         buf = self.interpret(tree.children[0])
         assert isinstance(buf, Buffer)
         index = self.interpret(tree.children[1]).get()
-        name = tree.children[name_idx].children
+        name = tree.children[name_idx].value
         if bitwidth == 1 or name_idx == 3:
             buf.create_field(name, index, bitwidth, 8)
         else:
@@ -283,13 +287,13 @@ class ConcreteInterpreter(Interpreter):
         return self.create_field(tree, numbits, 3)
 
     def DefDevice(self, tree):
-        name = tree.children[1].children
+        name = tree.children[1].value
         fullpath = self.context.realpath(tree.scope, name)
         sym = self.context.lookup_symbol(fullpath)
         return Device(sym)
 
     def DefExternal(self, tree):
-        logging.info(f"The loaded tables do not have a definition of {tree.children[0].children}")
+        logging.info(f"The loaded tables do not have a definition of {tree.children[0].value}")
         return None
 
     def DefField(self, tree):
@@ -300,7 +304,7 @@ class ConcreteInterpreter(Interpreter):
         return Method(tree)
 
     def DefOpRegion(self, tree):
-        name = tree.children[0].children
+        name = tree.children[0].value
         sym = self.context.lookup_symbol(self.context.realpath(tree.scope, name))
 
         space = self.interpret(tree.children[1]).get()

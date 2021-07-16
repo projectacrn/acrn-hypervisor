@@ -13,11 +13,12 @@ class PrintLayoutVisitor(Visitor):
     def default(self, tree):
         indent = "  " * self.depth
         print(f"{indent}{tree.label}", end="")
-        if isinstance(tree.children, int):
-            print(f" = {hex(tree.children)}", end="")
-        elif isinstance(tree.children, str):
-            if self.__is_printable(tree.children):
-                print(f" = '{tree.children}'", end="")
+        if hasattr(tree, "value"):
+            if isinstance(tree.value, int):
+                print(f" = {hex(tree.value)}", end="")
+            elif isinstance(tree.value, str):
+                if self.__is_printable(tree.value):
+                    print(f" = '{tree.value}'", end="")
         if tree.deferred_range:
             print(f" (deferred at {hex(tree.deferred_range[0])}, length {hex(tree.deferred_range[1])})", end="")
         if tree.factory:
@@ -39,7 +40,7 @@ class ConditionallyUnregisterSymbolVisitor(Visitor):
         def f(tree):
             if self.conditionally_hidden:
                 scope = tree.scope
-                name = tree.children[name_string_idx].children
+                name = tree.children[name_string_idx].value
                 realpath = self.context.realpath(scope, name)
                 self.context.unregister_object(realpath)
         return f
