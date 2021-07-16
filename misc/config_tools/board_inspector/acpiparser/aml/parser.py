@@ -293,6 +293,14 @@ class SequenceFactory(Factory):
                             factory.parse(context, child)
                             tree.append_child(child)
                 else:
+                    # It is likely that a method body has forward definitions, while typically it does not define
+                    # symbols that are referred later. Thus always defer the parsing of method bodies to the second
+                    # phase.
+                    #
+                    # In second phase the labels of sequence factories always have the ".deferred" suffix. Thus it is
+                    # safe to check self.label against "DefMethod" here.
+                    if elem == "TermList" and self.label == "DefMethod":
+                        raise DeferLater(self.label, [elem])
                     factory = globals()[elem]
                     child = Tree()
                     factory.parse(context, child)
