@@ -57,13 +57,13 @@ class OperationFieldDecl(NamedDecl):
             print(f"{self.name}: {self.__class__.__name__}, {self.length} bits")
 
 class AliasDecl(NamedDecl):
-    def __init__(self, name, target, tree):
+    def __init__(self, name, source, tree):
         super().__init__(name, tree)
         self.name = name
-        self.target = target
+        self.source = source
 
     def dump(self):
-        print(f"{self.name}: {self.__class__.__name__}, aliasing {self.target}")
+        print(f"{self.name}: {self.__class__.__name__}, aliasing {self.source}")
 
 class MethodDecl(NamedDecl):
     def __init__(self, name, nargs, tree):

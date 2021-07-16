@@ -8,7 +8,7 @@ import logging
 
 from acpiparser.aml.stream import Stream
 from acpiparser.aml.parser import AMLCode, DeferredExpansion
-from acpiparser.aml.tree import Tree, FlattenTransformer
+from acpiparser.aml.tree import Tree
 from acpiparser.aml.context import Context
 from acpiparser.aml.interpreter import ConcreteInterpreter
 from acpiparser.aml.visitors import ConditionallyUnregisterSymbolVisitor
@@ -29,7 +29,6 @@ def DSDT(val):
             tree = Tree()
             AMLCode.parse(context, tree)
             tree = DeferredExpansion(context).transform_topdown(tree)
-            tree = FlattenTransformer().transform_bottomup(tree)
             trees.append(tree)
     except Exception as e:
         context.current_stream.dump()
