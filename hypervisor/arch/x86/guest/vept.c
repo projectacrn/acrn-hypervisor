@@ -383,7 +383,7 @@ static bool is_access_violation(uint64_t ept_entry)
  */
 bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 {
-	uint64_t guest_eptp = vcpu->arch.nested.vmcs12.ept_pointer;
+	uint64_t guest_eptp = vcpu->arch.nested.current_vvmcs->vmcs12.ept_pointer;
 	struct nept_desc *desc = find_nept_desc(guest_eptp);
 	uint64_t l2_ept_violation_gpa = exec_vmread(VMX_GUEST_PHYSICAL_ADDR_FULL);
 	enum _page_table_level pt_level;
