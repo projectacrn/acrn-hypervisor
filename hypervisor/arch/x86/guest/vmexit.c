@@ -22,6 +22,7 @@
 #include <asm/guest/vcpuid.h>
 #include <trace.h>
 #include <asm/rtcm.h>
+#include <debug/console.h>
 
 /*
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",
@@ -291,6 +292,8 @@ int32_t vmexit_handler(struct acrn_vcpu *vcpu)
 			}
 		}
 	}
+
+	console_vmexit_callback(vcpu);
 
 	return ret;
 }
