@@ -739,6 +739,7 @@ int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
 				vcpu->arch.nested.in_l2_guest = false;
 				vcpu->arch.nested.vmxon_ptr = vmptr_gpa;
 				vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
+				vcpu->arch.nested.current_vvmcs = NULL;
 
 				nested_vmx_result(VMsucceed, 0);
 			}
@@ -784,8 +785,10 @@ int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu)
 		vcpu->arch.nested.control_fields_dirty = false;
 		vcpu->arch.nested.in_l2_guest = false;
 		vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
-		(void)memset(vcpu->arch.nested.vmcs02, 0U, PAGE_SIZE);
-		(void)memset(&vcpu->arch.nested.vmcs12, 0U, sizeof(struct acrn_vmcs12));
+		vcpu->arch.nested.current_vvmcs = NULL;
+
+		(void)memset(vcpu->arch.nested.vvmcs[0].vmcs02, 0U, PAGE_SIZE);
+		(void)memset(&vcpu->arch.nested.vvmcs[0].vmcs12, 0U, sizeof(struct acrn_vmcs12));
 
 		nested_vmx_result(VMsucceed, 0);
 	}
@@ -810,6 +813,7 @@ static inline bool is_ro_vmcs_field(uint32_t field)
  */
 int32_t vmread_vmexit_handler(struct acrn_vcpu *vcpu)
 {
+	struct acrn_vvmcs *cur_vvmcs = vcpu->arch.nested.current_vvmcs;
 	const uint32_t info = exec_vmread(VMX_INSTR_INFO);
 	uint64_t vmcs_value, gpa;
 	uint32_t vmcs_field;
@@ -820,7 +824,7 @@ int32_t vmread_vmexit_handler(struct acrn_vcpu *vcpu)
 		} else {
 			/* TODO: VMfailValid for invalid VMCS fields */
 			vmcs_field = (uint32_t)vcpu_get_gpreg(vcpu, VMX_II_REG2(info));
-			vmcs_value = vmcs12_read_field((uint64_t)&vcpu->arch.nested.vmcs12, vmcs_field);
+			vmcs_value = vmcs12_read_field((uint64_t)&cur_vvmcs->vmcs12, vmcs_field);
 
 			/* Currently ACRN doesn't support 32bits L1 hypervisor, assuming operands are 64 bits */
 			if (VMX_II_IS_REG(info)) {
@@ -844,6 +848,7 @@ int32_t vmread_vmexit_handler(struct acrn_vcpu *vcpu)
  */
 int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 {
+	struct acrn_vvmcs *cur_vvmcs = vcpu->arch.nested.current_vvmcs;
 	const uint32_t info = exec_vmread(VMX_INSTR_INFO);
 	uint64_t vmcs_value, gpa;
 	uint32_t vmcs_field;
@@ -879,15 +884,15 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 					vcpu->arch.nested.control_fields_dirty = true;
 
 					if (vmcs_field == VMX_EPT_POINTER_FULL) {
-						if (vcpu->arch.nested.vmcs12.ept_pointer != vmcs_value) {
-							put_nept_desc(vcpu->arch.nested.vmcs12.ept_pointer);
+						if (cur_vvmcs->vmcs12.ept_pointer != vmcs_value) {
+							put_nept_desc(cur_vvmcs->vmcs12.ept_pointer);
 							get_nept_desc(vmcs_value);
 						}
 					}
 				}
 
 				pr_dbg("vmcs_field: %x vmcs_value: %llx", vmcs_field, vmcs_value);
-				vmcs12_write_field((uint64_t)&vcpu->arch.nested.vmcs12, vmcs_field, vmcs_value);
+				vmcs12_write_field((uint64_t)&cur_vvmcs->vmcs12, vmcs_field, vmcs_value);
 				nested_vmx_result(VMsucceed, 0);
 			}
 		}
@@ -968,27 +973,27 @@ static void sync_vmcs12_to_vmcs02(struct acrn_vcpu *vcpu, struct acrn_vmcs12 *vm
 /*
  * @pre vcpu != NULL
  */
-static void set_vmcs02_shadow_indicator(struct acrn_vcpu *vcpu)
+static void set_vmcs02_shadow_indicator(struct acrn_vvmcs *vvmcs)
 {
 	/* vmcs02 is shadowing */
-	*((uint32_t*)vcpu->arch.nested.vmcs02) |= VMCS_SHADOW_BIT_INDICATOR;
+	*((uint32_t*)vvmcs->vmcs02) |= VMCS_SHADOW_BIT_INDICATOR;
 }
 
 /*
  * @pre vcpu != NULL
  * @pre vmcs01 is current
  */
-static void clear_vmcs02_shadow_indicator(struct acrn_vcpu *vcpu)
+static void clear_vmcs02_shadow_indicator(struct acrn_vvmcs *vvmcs)
 {
 	/* vmcs02 is s an ordinary VMCS */
-	*((uint32_t*)vcpu->arch.nested.vmcs02) &= ~VMCS_SHADOW_BIT_INDICATOR;
+	*((uint32_t*)vvmcs->vmcs02) &= ~VMCS_SHADOW_BIT_INDICATOR;
 }
 
 /*
  * @pre vcpu != NULL
  * @pre vmcs01 is current
  */
-static void enable_vmcs_shadowing(struct acrn_vcpu *vcpu)
+static void enable_vmcs_shadowing(struct acrn_vvmcs *vvmcs)
 {
 	uint32_t val32;
 
@@ -1006,7 +1011,7 @@ static void enable_vmcs_shadowing(struct acrn_vcpu *vcpu)
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, val32);
 
 	/* Set VMCS Link pointer */
-	exec_vmwrite(VMX_VMS_LINK_PTR_FULL, hva2hpa(vcpu->arch.nested.vmcs02));
+	exec_vmwrite(VMX_VMS_LINK_PTR_FULL, hva2hpa(vvmcs->vmcs02));
 }
 
 /*
@@ -1029,10 +1034,8 @@ static void disable_vmcs_shadowing(void)
  * @pre vcpu != NULL
  * @pre vmcs01 is current
  */
-static void clear_vmcs02(struct acrn_vcpu *vcpu)
+static void clear_vmcs02(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs)
 {
-	struct acrn_nested *nested = &vcpu->arch.nested;
-
 	/*
 	 * Now VMCS02 is active and being used as a shadow VMCS.
 	 * Disable VMCS shadowing to avoid VMCS02 will be loaded by VMPTRLD
@@ -1041,28 +1044,28 @@ static void clear_vmcs02(struct acrn_vcpu *vcpu)
 	disable_vmcs_shadowing();
 
 	/* Flush shadow VMCS to memory */
-	clear_va_vmcs(nested->vmcs02);
+	clear_va_vmcs(vvmcs->vmcs02);
 
 	/* VMPTRLD the shadow VMCS so that we are able to sync it to VMCS12 */
-	load_va_vmcs(nested->vmcs02);
+	load_va_vmcs(vvmcs->vmcs02);
 
-	sync_vmcs02_to_vmcs12(&nested->vmcs12);
+	sync_vmcs02_to_vmcs12(&vvmcs->vmcs12);
 
 	/* flush cached VMCS12 back to L1 guest */
-	(void)copy_to_gpa(vcpu->vm, (void *)&nested->vmcs12, nested->current_vmcs12_ptr,
-		sizeof(struct acrn_vmcs12));
+	(void)copy_to_gpa(vcpu->vm, (void *)&vvmcs->vmcs12,
+		vcpu->arch.nested.current_vmcs12_ptr, sizeof(struct acrn_vmcs12));
 
 	/*
 	 * The current VMCS12 has been flushed out, so that the active VMCS02
 	 * needs to be VMCLEARed as well
 	 */
-	clear_va_vmcs(nested->vmcs02);
+	clear_va_vmcs(vvmcs->vmcs02);
 
 	/* This VMCS can no longer refer to any shadow EPT */
-	put_nept_desc(nested->vmcs12.ept_pointer);
+	put_nept_desc(vvmcs->vmcs12.ept_pointer);
 
 	/* no current VMCS12 */
-	nested->current_vmcs12_ptr = INVALID_GPA;
+	vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
 }
 
 /*
@@ -1071,6 +1074,7 @@ static void clear_vmcs02(struct acrn_vcpu *vcpu)
 int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	struct acrn_nested *nested = &vcpu->arch.nested;
+	struct acrn_vvmcs *vvmcs = &nested->vvmcs[0];
 	uint64_t vmcs12_gpa;
 
 	if (check_vmx_permission(vcpu)) {
@@ -1092,8 +1096,7 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 				 * The current VMCS12 remains active but ACRN needs to sync the content of it
 				 * to guest memory so that the new VMCS12 can be loaded to the cache VMCS12.
 				 */
-				clear_vmcs02(vcpu);
-
+				clear_vmcs02(vcpu, vvmcs);
 			}
 
 			/* Create the VMCS02 based on this new VMCS12 */
@@ -1102,37 +1105,38 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 			 * initialize VMCS02
 			 * VMCS revision ID must equal to what reported by IA32_VMX_BASIC MSR
 			 */
-			(void)memcpy_s(nested->vmcs02, 4U, (void *)&vmx_basic, 4U);
+			(void)memcpy_s(vvmcs->vmcs02, 4U, (void *)&vmx_basic, 4U);
 
 			/*
 			 * Now VMCS02 is not active, set the shadow-VMCS indicator.
 			 * At L1 VM entry, VMCS02 will be referenced as a shadow VMCS.
 			 */
-			set_vmcs02_shadow_indicator(vcpu);
+			set_vmcs02_shadow_indicator(vvmcs);
 
 			/* VMPTRLD VMCS02 so that we can VMWRITE to it */
-			load_va_vmcs(nested->vmcs02);
+			load_va_vmcs(vvmcs->vmcs02);
 			init_host_state();
 
 			/* Load VMCS12 from L1 guest memory */
-			(void)copy_from_gpa(vcpu->vm, (void *)&nested->vmcs12, vmcs12_gpa,
+			(void)copy_from_gpa(vcpu->vm, (void *)&vvmcs->vmcs12, vmcs12_gpa,
 				sizeof(struct acrn_vmcs12));
 
 			/* if needed, create nept_desc and allocate shadow root for the EPTP */
-			get_nept_desc(nested->vmcs12.ept_pointer);
+			get_nept_desc(vvmcs->vmcs12.ept_pointer);
 
 			/* Need to load shadow fields from this new VMCS12 to VMCS02 */
-			sync_vmcs12_to_vmcs02(vcpu, &nested->vmcs12);
+			sync_vmcs12_to_vmcs02(vcpu, &vvmcs->vmcs12);
 
 			/* Before VMCS02 is being used as a shadow VMCS, VMCLEAR it */
-			clear_va_vmcs(nested->vmcs02);
+			clear_va_vmcs(vvmcs->vmcs02);
 
 			/* Switch back to vmcs01 */
 			load_va_vmcs(vcpu->arch.vmcs);
 
 			/* VMCS02 is referenced by VMCS01 Link Pointer */
-			enable_vmcs_shadowing(vcpu);
+			enable_vmcs_shadowing(vvmcs);
 
+			nested->current_vvmcs = vvmcs;
 			nested->current_vmcs12_ptr = vmcs12_gpa;
 			nested_vmx_result(VMsucceed, 0);
 		}
@@ -1147,6 +1151,7 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	struct acrn_nested *nested = &vcpu->arch.nested;
+	struct acrn_vvmcs *vvmcs = &nested->vvmcs[0];
 	uint64_t vmcs12_gpa;
 
 	if (check_vmx_permission(vcpu)) {
@@ -1163,9 +1168,9 @@ int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 				 * VMCS02 is active and being used as a shadow VMCS.
 				 */
 
-				nested->vmcs12.launch_state = VMCS12_LAUNCH_STATE_CLEAR;
+				vvmcs->vmcs12.launch_state = VMCS12_LAUNCH_STATE_CLEAR;
 
-				clear_vmcs02(vcpu);
+				clear_vmcs02(vcpu, vvmcs);
 
 				/* Switch back to vmcs01 (no VMCS shadowing) */
 				load_va_vmcs(vcpu->arch.vmcs);
@@ -1173,6 +1178,9 @@ int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 				/* If no L2 VM entry happens between VMWRITE and VMCLEAR, need to clear these flags */
 				vcpu->arch.nested.host_state_dirty = false;
 				vcpu->arch.nested.control_fields_dirty = false;
+
+				/* no current VMCS12 */
+				nested->current_vvmcs = NULL;
 			} else {
 				 /*
 				  * we need to update the VMCS12 launch state in L1 memory in these two cases:
@@ -1231,7 +1239,7 @@ static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
 	 * 3. Load Segmentation State
 	 * 4. Non-Register state
 	 */
-	struct acrn_vmcs12 *vmcs12 = &vcpu->arch.nested.vmcs12;
+	struct acrn_vmcs12 *vmcs12 = &vcpu->arch.nested.current_vvmcs->vmcs12;
 	struct segment_sel seg;
 
 	if (vcpu->arch.nested.host_state_dirty == true) {
@@ -1328,6 +1336,7 @@ static void sanitize_l2_vpid(struct acrn_vmcs12 *vmcs12)
  */
 int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
 {
+	struct acrn_vvmcs *cur_vvmcs = vcpu->arch.nested.current_vvmcs;
 	bool is_l1_vmexit = true;
 
 	if ((vcpu->arch.exit_reason & 0xFFFFU) == VMX_EXIT_REASON_EPT_VIOLATION) {
@@ -1335,14 +1344,14 @@ int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 
 	if (is_l1_vmexit) {
-		sanitize_l2_vpid(&vcpu->arch.nested.vmcs12);
+		sanitize_l2_vpid(&cur_vvmcs->vmcs12);
 
 		/*
 		 * Clear VMCS02 because: ISDM: Before modifying the shadow-VMCS indicator,
 		 * software should execute VMCLEAR for the VMCS to ensure that it is not active.
 		 */
-		clear_va_vmcs(vcpu->arch.nested.vmcs02);
-		set_vmcs02_shadow_indicator(vcpu);
+		clear_va_vmcs(cur_vvmcs->vmcs02);
+		set_vmcs02_shadow_indicator(cur_vvmcs);
 
 		/* Switch to VMCS01, and VMCS02 is referenced as a shadow VMCS */
 		load_va_vmcs(vcpu->arch.vmcs);
@@ -1364,7 +1373,8 @@ int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
  */
 static void nested_vmentry(struct acrn_vcpu *vcpu, bool is_launch)
 {
-	struct acrn_vmcs12 *vmcs12 = &vcpu->arch.nested.vmcs12;
+	struct acrn_vvmcs *cur_vvmcs = vcpu->arch.nested.current_vvmcs;
+	struct acrn_vmcs12 *vmcs12 = &cur_vvmcs->vmcs12;
 
 	if (vcpu->arch.nested.current_vmcs12_ptr == INVALID_GPA) {
 		nested_vmx_result(VMfailInvalid, 0);
@@ -1383,11 +1393,11 @@ static void nested_vmentry(struct acrn_vcpu *vcpu, bool is_launch)
 		 * ISDM: Software should not modify the shadow-VMCS indicator in
 		 * the VMCS region of a VMCS that is active
 		 */
-		clear_va_vmcs(vcpu->arch.nested.vmcs02);
-		clear_vmcs02_shadow_indicator(vcpu);
+		clear_va_vmcs(cur_vvmcs->vmcs02);
+		clear_vmcs02_shadow_indicator(cur_vvmcs);
 
 		/* as an ordinary VMCS, VMCS02 is active and currernt when L2 guest is running */
-		load_va_vmcs(vcpu->arch.nested.vmcs02);
+		load_va_vmcs(cur_vvmcs->vmcs02);
 
 		if (vcpu->arch.nested.control_fields_dirty) {
 			vcpu->arch.nested.control_fields_dirty = false;

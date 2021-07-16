@@ -329,11 +329,14 @@ int32_t vmlaunch_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t invvpid_vmexit_handler(struct acrn_vcpu *vcpu);
 
 #ifdef CONFIG_NVMX_ENABLED
-struct acrn_nested {
+struct acrn_vvmcs {
 	uint8_t vmcs02[PAGE_SIZE];	/* VMCS to run L2 and as Link Pointer in VMCS01 */
-
-	/* TODO: change this to uint8_t vmcs12[PAGE_SIZE] */
 	struct acrn_vmcs12 vmcs12;	/* To cache L1's VMCS12*/
+} __aligned(PAGE_SIZE);
+
+struct acrn_nested {
+	struct acrn_vvmcs vvmcs[1];
+	struct acrn_vvmcs *current_vvmcs;	/* Refer to the current loaded VMCS12 */
 	uint64_t current_vmcs12_ptr;	/* GPA */
 	uint64_t vmxon_ptr;		/* GPA */
 	bool vmxon;		/* To indicate if vCPU entered VMX operation */
