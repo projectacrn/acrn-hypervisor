@@ -13,6 +13,8 @@ class Tree:
         self.children = copy(children)
         self.scope = None
 
+        self.structure = None
+
         self.package_range = None
 
         self.deferred_range = None
@@ -21,6 +23,26 @@ class Tree:
 
     def append_child(self, child):
         self.children.append(child)
+
+    def register_structure(self, structure):
+        self.structure = structure
+
+    def complete_parsing(self):
+        i = 0
+        for elem in self.structure:
+            if isinstance(elem, str):
+                if elem.endswith("?"):
+                    if i < len(self.children):
+                        setattr(self, elem[:-1], self.children[i])
+                    else:
+                        setattr(self, elem[:-1], None)
+                    break
+                elif elem.endswith("*"):
+                    setattr(self, elem[:-1] + "s", self.children[i:])
+                    break
+                else:
+                    setattr(self, elem, self.children[i])
+                    i += 1
 
 class Visitor:
     def __init__(self):
@@ -35,12 +57,11 @@ class Visitor:
 
     def visit_topdown(self, tree):
         self.__visit(tree)
-        if isinstance(tree.children, list):
-            self.depth += 1
-            for child in tree.children:
-                if isinstance(child, Tree):
-                    self.visit_topdown(child)
-            self.depth -= 1
+        self.depth += 1
+        for child in tree.children:
+            if isinstance(child, Tree):
+                self.visit_topdown(child)
+        self.depth -= 1
 
 class Transformer:
     def __init__(self):
@@ -57,44 +78,20 @@ class Transformer:
 
     def transform_topdown(self, tree):
         new_tree = self.__transform(tree)
-        if isinstance(new_tree.children, list):
-            self.depth += 1
-            for i, child in enumerate(tree.children):
-                if isinstance(child, Tree):
-                    tree.children[i] = self.transform_topdown(child)
-            self.depth -= 1
+        self.depth += 1
+        for i, child in enumerate(tree.children):
+            if isinstance(child, Tree):
+                tree.children[i] = self.transform_topdown(child)
+        self.depth -= 1
         return new_tree
 
     def transform_bottomup(self, tree):
-        if isinstance(tree.children, list):
-            self.depth += 1
-            for i, child in enumerate(tree.children):
-                if isinstance(child, Tree):
-                    tree.children[i] = self.transform_bottomup(child)
-            self.depth -= 1
+        self.depth += 1
+        for i, child in enumerate(tree.children):
+            if isinstance(child, Tree):
+                tree.children[i] = self.transform_bottomup(child)
+        self.depth -= 1
         return self.__transform(tree)
-
-single_operand_op = ["MethodInvocation"]
-for sym in dir(grammar):
-    # Ignore builtin members and opcode constants
-    if sym.startswith("__") or (sym.upper() == sym):
-        continue
-
-    definition = getattr(grammar, sym)
-    if isinstance(definition, tuple) and\
-       isinstance(definition[0], int) and\
-       len(definition) == 2:
-        single_operand_op.append(sym)
-
-class FlattenTransformer(Transformer):
-    def default(self, tree):
-        if tree.label not in single_operand_op and \
-           isinstance(tree.children, list) and \
-           len(tree.children) == 1 and \
-           not tree.deferred_range:
-            return tree.children[0]
-        else:
-            return tree
 
 class Interpreter:
     def __init__(self, context):

@@ -48,10 +48,10 @@ class BufferBase(Object):
         self.__length = length
         self.__fields = {}    # name -> (offset, bitwidth, access_width)
 
-    def read(self, norm_idx, bit_width):
+    def read(self, byte_idx, bit_width):
         return NotImplementedError(self.__class__.__name__)
 
-    def write(self, norm_idx, value, bit_width):
+    def write(self, byte_idx, value, bit_width):
         return NotImplementedError(self.__class__.__name__)
 
     def create_field(self, name, offset, bitwidth, access_width):
@@ -69,23 +69,23 @@ class BufferBase(Object):
 
         # Bits out of byte boundary
         if bit_idx % access_width > 0:
-            norm_idx = floor(bit_idx / access_width)
+            byte_idx = bit_idx // 8
             bit_count = (access_width - bit_idx % access_width)
             if bit_count > bit_remaining:
                 bit_count = bit_remaining
 
             mask = self.bitmask(bit_idx % access_width + bit_count - 1, bit_idx % access_width)
-            acc = (self.read(norm_idx, access_width) & mask) >> (bit_idx % access_width)
+            acc = (self.read(byte_idx, access_width) & mask) >> (bit_idx % access_width)
             acc_bit_count += bit_count
             bit_idx += bit_count
             bit_remaining -= bit_count
 
         while bit_remaining > 0:
-            norm_idx = floor(bit_idx / access_width)
-            bit_count = access_width if bit_remaining >= access_width else bit_remaining
+            byte_idx = bit_idx // 8
+            bit_count = min(access_width, bit_remaining)
 
             mask = self.bitmask(bit_count - 1, 0)
-            acc |= (self.read(norm_idx, access_width) & mask) << acc_bit_count
+            acc |= (self.read(byte_idx, access_width) & mask) << acc_bit_count
             acc_bit_count += bit_count
             bit_idx += bit_count
             bit_remaining -= bit_count
@@ -100,9 +100,9 @@ class BufferBase(Object):
         assert offset + bitwidth <= self.__length * 8, \
             f"Buffer overflow: attempt to access field {name} at bit {offset + bitwidth} while the buffer has only {len(self.__data) * 8} bits"
 
-        # Bits out of byte boundary
+        # Bits out of access_width boundary
         if bit_idx % access_width > 0:
-            norm_idx = floor(bit_idx / access_width)
+            byte_idx = bit_idx // 8
             bit_count = (access_width - bit_idx % access_width)
             if bit_count > bit_remaining:
                 bit_count = bit_remaining
@@ -110,20 +110,20 @@ class BufferBase(Object):
             mask_of_write = self.bitmask(bit_idx % access_width + bit_count - 1, bit_idx % access_width)
             mask_of_keep = ((1 << access_width) - 1) - mask_of_write
             v = (value & ((1 << bit_count) - 1)) << (bit_idx % access_width)
-            self.write(norm_idx, (v & mask_of_write) | (self.read(norm_idx, access_width) & mask_of_keep), access_width)
+            self.write(byte_idx, (v & mask_of_write) | (self.read(byte_idx, access_width) & mask_of_keep), access_width)
 
             value >>= bit_count
             bit_idx += bit_count
             bit_remaining -= bit_count
 
         while bit_remaining > 0:
-            norm_idx = floor(bit_idx / access_width)
-            bit_count = access_width if bit_remaining >= access_width else bit_remaining
+            byte_idx = bit_idx // 8
+            bit_count = min(access_width, bit_remaining)
 
             mask_of_write = self.bitmask(bit_count - 1, 0)
             mask_of_keep = ((1 << access_width) - 1) - mask_of_write
             v = (value & ((1 << bit_count) - 1))
-            self.write(norm_idx, (v & mask_of_write) | (self.read(norm_idx, access_width) & mask_of_keep), access_width)
+            self.write(byte_idx, (v & mask_of_write) | (self.read(byte_idx, access_width) & mask_of_keep), access_width)
 
             value >>= bit_count
             bit_idx += bit_count
@@ -142,16 +142,14 @@ class Buffer(BufferBase):
     def data(self):
         return bytes(self.__data)
 
-    def read(self, norm_idx, bit_width):
+    def read(self, byte_idx, bit_width):
         acc = 0
-        byte_width = bit_width // 8
-        offset = norm_idx * byte_width
-        return int.from_bytes(self.__data[offset : (offset + byte_width)], sys.byteorder)
+        byte_width = min(bit_width // 8, len(self.__data) - byte_idx)
+        return int.from_bytes(self.__data[byte_idx : (byte_idx + byte_width)], sys.byteorder)
 
-    def write(self, norm_idx, value, bit_width):
-        byte_width = bit_width // 8
-        offset = norm_idx * byte_width
-        self.__data[offset : (offset + byte_width)] = value.to_bytes(byte_width, sys.byteorder)
+    def write(self, byte_idx, value, bit_width):
+        byte_width = min(bit_width // 8, len(self.__data) - byte_idx)
+        self.__data[byte_idx : (byte_idx + byte_width)] = value.to_bytes(byte_width, sys.byteorder)
 
     def get(self):
         return self.__data
@@ -175,18 +173,16 @@ class StreamIOBuffer(BufferBase):
         self.__stream = stream
         self.__base = base
 
-    def read(self, norm_idx, bit_width):
+    def read(self, byte_idx, bit_width):
         byte_width = bit_width // 8
-        address = norm_idx * byte_width
-        self.__stream.seek(self.__base + address)
+        self.__stream.seek(self.__base + byte_idx)
         data = self.__stream.read(byte_width)
         return int.from_bytes(data, sys.byteorder)
 
-    def write(self, norm_idx, value, bit_width):
+    def write(self, byte_idx, value, bit_width):
         # Do not allow writes to stream I/O buffer unless the base is explicitly marked as writable
         byte_width = bit_width // 8
-        address = norm_idx * byte_width
-        self.__stream.seek(self.__base + address)
+        self.__stream.seek(self.__base + byte_idx)
         self.__stream.write(value.to_bytes(byte_width, sys.byteorder))
 
 class IndexedIOBuffer(BufferBase):
@@ -196,12 +192,12 @@ class IndexedIOBuffer(BufferBase):
         self.__index_register = index_register
         self.__data_register = data_register
 
-    def read(self, norm_idx, bit_width):
+    def read(self, byte_idx, bit_width):
         assert bit_width == 8, f"Indexed I/O buffers can only be read one byte at a time"
-        self.__index_register.set(Integer(norm_idx, 8))
+        self.__index_register.set(Integer(byte_idx, 8))
         return self.__data_register.get()
 
-    def write(self, norm_idx, value, bit_width):
+    def write(self, byte_idx, value, bit_width):
         # Do not allow writes to indexed I/O buffer
         assert False, "Cannot write to indexed I/O buffers"
 
@@ -274,7 +270,7 @@ class Integer(Object):
 class Method(Object):
     def __init__(self, tree):
         self.tree = tree
-        self.name = tree.children[1].children
+        self.name = tree.children[1].value
         self.body = tree.children[3]
 
 class PredefinedMethod(Object):

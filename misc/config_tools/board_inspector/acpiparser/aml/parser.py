@@ -56,7 +56,8 @@ class Factory:
         self.mark_end()
         return tree
 
-    def opcodes(self):
+    @property
+    def decoder(self):
         raise NotImplementedError
 
 ################################################################################
@@ -66,17 +67,20 @@ class Factory:
 class NameSegFactory(Factory):
     def __init__(self):
         super().__init__()
-        self.__opcodes = []
+        self.__decoder = {}
         for i in range(ord('A'), ord('Z') + 1):
-            self.__opcodes.append(i)
-        self.__opcodes.append(ord('_'))
+            self.__decoder[i] = self
+        self.__decoder[ord('_')] = self
         self.label = "NameSeg"
 
     def match(self, context, stream, tree):
-        tree.children = stream.get_fixed_length_string(4)
+        tree.register_structure(("value",))
+        tree.append_child(stream.get_fixed_length_string(4))
+        tree.complete_parsing()
 
-    def opcodes(self):
-        return self.__opcodes
+    @property
+    def decoder(self):
+        return self.__decoder
 
 NameSeg = NameSegFactory()
 
@@ -84,12 +88,14 @@ class NameStringFactory(Factory):
     def __init__(self):
         super().__init__()
         self.label = "NameString"
-        self.__opcodes = []
+        self.__decoder = {}
         for i in range(ord('A'), ord('Z') + 1):
-            self.__opcodes.append(i)
-        self.__opcodes.extend([ord('_'), ord('\\'), ord('^'), grammar.AML_DUAL_NAME_PREFIX, grammar.AML_MULTI_NAME_PREFIX])
+            self.__decoder[i] = self
+        for i in [ord('_'), ord('\\'), ord('^'), grammar.AML_DUAL_NAME_PREFIX, grammar.AML_MULTI_NAME_PREFIX]:
+            self.__decoder[i] = self
 
     def match(self, context, stream, tree):
+        tree.register_structure(("value",))
         acc = ""
 
         # Namespace prefixes
@@ -117,10 +123,12 @@ class NameStringFactory(Factory):
             stream.seek(-1)
             acc += stream.get_fixed_length_string(4)
 
-        tree.children = acc
+        tree.append_child(acc)
+        tree.complete_parsing()
 
-    def opcodes(self):
-        return self.__opcodes
+    @property
+    def decoder(self):
+        return self.__decoder
 
 NameString = NameStringFactory()
 
@@ -135,11 +143,10 @@ class ConstDataFactory(Factory):
         self.width = width
 
     def match(self, context, stream, tree):
-        tree.children = stream.get_integer(self.width)
+        tree.register_structure(("value",))
+        tree.append_child(stream.get_integer(self.width))
+        tree.complete_parsing()
         return tree
-
-    def opcodes(self):
-        return None
 
 ByteData = ConstDataFactory("ByteData", 1)
 WordData = ConstDataFactory("WordData", 2)
@@ -155,11 +162,14 @@ class StringFactory(Factory):
     def match(self, context, stream, tree):
         assert stream.get_opcode()[0] == grammar.AML_STRING_PREFIX
 
-        tree.children = stream.get_string()
+        tree.register_structure(("value",))
+        tree.append_child(stream.get_string())
+        tree.complete_parsing()
         return tree
 
-    def opcodes(self):
-        return [grammar.AML_STRING_PREFIX]
+    @property
+    def decoder(self):
+        return {grammar.AML_STRING_PREFIX: self}
 
 String = StringFactory()
 
@@ -169,7 +179,9 @@ class ByteListFactory(Factory):
         self.label = "ByteList"
 
     def match(self, context, stream, tree):
-        tree.children = stream.get_buffer()
+        tree.register_structure(("value",))
+        tree.append_child(stream.get_buffer())
+        tree.complete_parsing()
         stream.pop_scope()
 
 ByteList = ByteListFactory()
@@ -200,10 +212,12 @@ class PkgLengthFactory(Factory):
         byte_count = pkg_lead_byte >> 6
         assert byte_count <= 3
 
-        tree.children = self.get_package_length(byte_count, stream.get_integer(byte_count + 1))
+        tree.register_structure(("value",))
+        tree.append_child(self.get_package_length(byte_count, stream.get_integer(byte_count + 1)))
+        tree.complete_parsing()
 
         if self.create_new_scope:
-            remaining = tree.children - byte_count - 1
+            remaining = tree.value - byte_count - 1
             stream.push_scope(remaining)
             tree.package_range = (stream.current, remaining)
         return tree
@@ -218,27 +232,33 @@ FieldLength = PkgLengthFactory("FieldLength", False)
 class MethodInvocationFactory(Factory):
     def __init__(self):
         super().__init__()
-        self.__opcodes = None
+        self.__decoder = None
         self.label = "MethodInvocation"
 
     def match(self, context, stream, tree):
+        tree.register_structure(("NameString", "TermArg*"))
+
         child_namestring = Tree()
         globals()["NameString"].parse(context, child_namestring)
         tree.append_child(child_namestring)
 
-        sym = context.lookup_symbol(child_namestring.children)
+        sym = context.lookup_symbol(child_namestring.value)
         if isinstance(sym, (MethodDecl, PredefinedMethodDecl)):
             for i in range(0, sym.nargs):
                 child_arg = Tree()
                 globals()["TermArg"].parse(context, child_arg)
                 tree.append_child(child_arg)
 
+        tree.complete_parsing()
         return tree
 
-    def opcodes(self):
-        if not self.__opcodes:
-            self.__opcodes = globals()["NameString"].opcodes()
-        return self.__opcodes
+    @property
+    def decoder(self):
+        if not self.__decoder:
+            self.__decoder = {}
+            for k in globals()["NameString"].decoder.keys():
+                self.__decoder[k] = self
+        return self.__decoder
 
 MethodInvocation = MethodInvocationFactory()
 
@@ -250,15 +270,31 @@ class SequenceFactory(Factory):
     def __init__(self, label, seq):
         super().__init__()
         self.label = label
-        self.seq = seq
-        self.__opcodes = None
+        # Some objects in ACPI AML have multiple occurrences of the same type of object in the grammar. In order to
+        # refer to these different occurrences, the grammar module uses the following notation to give names to each of
+        # them:
+        #
+        #     "<object type>:<alias name>"
+        #
+        # The grammar module provides the get_definition() and get_names() methods to get the specification solely in
+        # object types or alias names, respectively. For objects without aliases, the type is reused as the name.
+        try:
+            self.seq = grammar.get_definition(label)
+            self.structure = grammar.get_names(label)
+        except KeyError:
+            self.seq = seq
+            self.structure = seq
+        self.__decoder = None
 
     def match(self, context, stream, tree):
+        tree.register_structure(self.structure)
+
         # When a TermList is empty, the stream has already come to the end of the current scope here. Do not attempt to
         # peek the next opcode in such cases.
         if stream.at_end() and \
            (self.seq[0][-1] in ["*", "?"]):
             stream.pop_scope()
+            tree.complete_parsing()
             return tree
 
         opcode, opcode_width = stream.peek_opcode()
@@ -268,6 +304,7 @@ class SequenceFactory(Factory):
         # cleanup actions upon exceptions.
         to_recover_from_deferred_mode = False
         to_pop_stream_scope = False
+        completed = True
 
         for i,elem in enumerate(self.seq):
             pos = stream.current
@@ -288,7 +325,7 @@ class SequenceFactory(Factory):
                     factory = globals()[elem]
                     if not stream.at_end():
                         sub_opcode, _ = stream.peek_opcode()
-                        if sub_opcode in factory.opcodes():
+                        if sub_opcode in factory.decoder.keys():
                             child = Tree()
                             factory.parse(context, child)
                             tree.append_child(child)
@@ -312,7 +349,7 @@ class SequenceFactory(Factory):
                             context.enter_deferred_mode()
                             to_recover_from_deferred_mode = True
                     elif child.label == "NameString":
-                        self.hook_named(context, tree, child.children)
+                        self.hook_named(context, tree, child.value)
             except (DecodeError, DeferLater, ScopeMismatch, UndefinedSymbol) as e:
                 if to_pop_stream_scope:
                     stream.pop_scope(force=True)
@@ -321,49 +358,54 @@ class SequenceFactory(Factory):
                         tree.context_scope = context.get_scope()
                         tree.factory = SequenceFactory(f"{self.label}.deferred", self.seq[i:])
                         stream.seek(package_end, absolute=True)
+                        completed = False
                         break
                 else:
                     raise e
+
+        if completed:
+            tree.complete_parsing()
 
         if to_recover_from_deferred_mode:
             context.exit_deferred_mode()
         return tree
 
-    def opcodes(self):
-        if not self.__opcodes:
+    @property
+    def decoder(self):
+        if not self.__decoder:
             if isinstance(self.seq[0], int):
-                self.__opcodes = [self.seq[0]]
+                self.__decoder = {self.seq[0]: self}
             else:
-                self.__opcodes = globals()[self.seq[0]].opcodes()
-        return self.__opcodes
+                self.__decoder = {}
+                for k in globals()[self.seq[0]].decoder.keys():
+                    self.__decoder[k] = self
+        return self.__decoder
 
 class OptionFactory(Factory):
     def __init__(self, label, opts):
         super().__init__()
         self.label = label
         self.opts = opts
-        self.__opcodes = None
+        self.__decoder = None
 
     def match(self, context, stream, tree):
         opcode, _ = stream.peek_opcode()
+        try:
+            if len(self.opts) == 1:
+                globals()[self.opts[0]].parse(context, tree)
+            else:
+                self.decoder[opcode].parse(context, tree)
+            return tree
+        except KeyError:
+            raise DecodeError(opcode, self.label)
 
-        for opt in self.opts:
-            factory = globals()[opt]
-            matched_opcodes = factory.opcodes()
-            if matched_opcodes is None or opcode in matched_opcodes:
-                child = Tree()
-                tree.append_child(child)
-                factory.parse(context, child)
-                return tree
-
-        raise DecodeError(opcode, self.label)
-
-    def opcodes(self):
-        if not self.__opcodes:
-            self.__opcodes = []
+    @property
+    def decoder(self):
+        if not self.__decoder:
+            self.__decoder = {}
             for opt in self.opts:
-                self.__opcodes.extend(globals()[opt].opcodes())
-        return self.__opcodes
+                self.__decoder.update(globals()[opt].decoder)
+        return self.__decoder
 
 class DeferredExpansion(Transformer):
     def __init__(self, context):
@@ -390,6 +432,7 @@ class DeferredExpansion(Transformer):
                 tree.children.extend(aux_tree.children)
                 tree.deferred_range = None
                 tree.factory = None
+                tree.complete_parsing()
             except (DecodeError, DeferLater, ScopeMismatch, UndefinedSymbol) as e:
                 logging.debug(f"expansion of {tree.label} at {hex(tree.deferred_range[0])} failed due to: " + str(e))
 
@@ -402,9 +445,9 @@ class DeferredExpansion(Transformer):
 ################################################################################
 
 def DefAlias_hook_post(context, tree):
-    target = tree.children[0].children
-    name = tree.children[1].children
-    sym = AliasDecl(name, target, tree)
+    source = tree.SourceObject.value
+    alias = tree.AliasObject.value
+    sym = AliasDecl(alias, source, tree)
     context.register_symbol(sym)
 
 def DefName_hook_named(context, tree, name):
@@ -419,32 +462,32 @@ def DefScope_hook_post(context, tree):
 
 
 def DefCreateBitField_hook_named(context, tree, name):
-    name = tree.children[2].children
+    name = tree.children[2].value
     sym = FieldDecl(name, 1, tree)
     context.register_symbol(sym)
 
 def DefCreateByteField_hook_named(context, tree, name):
-    name = tree.children[2].children
+    name = tree.children[2].value
     sym = FieldDecl(name, 8, tree)
     context.register_symbol(sym)
 
 def DefCreateDWordField_hook_named(context, tree, name):
-    name = tree.children[2].children
+    name = tree.children[2].value
     sym = FieldDecl(name, 32, tree)
     context.register_symbol(sym)
 
 def DefCreateField_hook_named(context, tree, name):
-    name = tree.children[3].children
+    name = tree.children[3].value
     sym = FieldDecl(name, 0, tree)
     context.register_symbol(sym)
 
 def DefCreateQWordField_hook_named(context, tree, name):
-    name = tree.children[2].children
+    name = tree.children[2].value
     sym = FieldDecl(name, 64, tree)
     context.register_symbol(sym)
 
 def DefCreateWordField_hook_named(context, tree, name):
-    name = tree.children[2].children
+    name = tree.children[2].value
     sym = FieldDecl(name, 16, tree)
     context.register_symbol(sym)
 
@@ -457,9 +500,9 @@ def DefDevice_hook_post(context, tree):
     context.pop_scope()
 
 def DefExternal_hook_post(context, tree):
-    name = tree.children[0].children
-    ty = tree.children[1].children[0].children
-    nargs = tree.children[2].children[0].children
+    name = tree.NameString.value
+    ty = tree.ObjectType.value
+    nargs = tree.ArgumentCount.value
 
     if ty == 0x8:     # an external method
         sym = MethodDecl(name, nargs, tree)
@@ -479,52 +522,50 @@ access_width_map = {
 
 def DefField_hook_post(context, tree):
     # Update the fields with region & offset info
-    region_name = context.lookup_symbol(tree.children[1].children).name
-    flags = tree.children[2].children[0].children
+    region_name = context.lookup_symbol(tree.NameString.value).name
+    flags = tree.FieldFlags.value
     access_width = access_width_map[flags & 0xF]
-    fields = tree.children[3].children
+    fields = tree.FieldList.FieldElements
     bit_offset = 0
     for field in fields:
-        field = field.children[0]
         if field.label == "NamedField":
-            name = field.children[0].children
-            length = field.children[1].children
+            name = field.NameSeg.value
+            length = field.FieldLength.value
             sym = context.lookup_symbol(name)
             assert isinstance(sym, OperationFieldDecl)
             sym.set_location(region_name, bit_offset, access_width)
             bit_offset += length
         elif field.label == "ReservedField":
-            length = field.children[0].children
+            length = field.FieldLength.value
             bit_offset += length
         else:
             break
 
 def DefIndexField_hook_post(context, tree):
     # Update the fields with region & offset info
-    index_register = context.lookup_symbol(tree.children[1].children)
-    data_register = context.lookup_symbol(tree.children[2].children)
-    flags = tree.children[3].children[0].children
+    index_register = context.lookup_symbol(tree.IndexName.value)
+    data_register = context.lookup_symbol(tree.DataName.value)
+    flags = tree.FieldFlags.value
     access_width = access_width_map[flags & 0xF]
-    fields = tree.children[4].children
+    fields = tree.FieldList.FieldElements
     bit_offset = 0
     for field in fields:
-        field = field.children[0]
         if field.label == "NamedField":
-            name = field.children[0].children
-            length = field.children[1].children
+            name = field.NameSeg.value
+            length = field.FieldLength.value
             sym = context.lookup_symbol(name)
             assert isinstance(sym, OperationFieldDecl)
             sym.set_indexed_location(index_register, data_register, bit_offset, access_width)
             bit_offset += length
         elif field.label == "ReservedField":
-            length = field.children[0].children
+            length = field.FieldLength.value
             bit_offset += length
         else:
             break
 
 def NamedField_hook_post(context, tree):
-    name = tree.children[0].children
-    length = tree.children[1].children
+    name = tree.NameSeg.value
+    length = tree.FieldLength.value
     sym = OperationFieldDecl(name, length, tree)
     context.register_symbol(sym)
 
@@ -534,8 +575,9 @@ def DefMethod_hook_named(context, tree, name):
 def DefMethod_hook_post(context, tree):
     context.pop_scope()
     if len(tree.children) >= 3:
-        name = tree.children[1].children
-        flags = tree.children[2].children[0].children
+        # Parsing of the method may be deferred. Do not use named fields to access its children.
+        name = tree.children[1].value
+        flags = tree.children[2].value
         nargs = flags & 0x7
         sym = MethodDecl(name, nargs, tree)
         context.register_symbol(sym)
