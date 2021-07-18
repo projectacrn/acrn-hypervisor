@@ -297,7 +297,6 @@ class SequenceFactory(Factory):
             tree.complete_parsing()
             return tree
 
-        opcode, opcode_width = stream.peek_opcode()
         package_end = 0
 
         # Under any case this function shall maintain the balance of stream scopes. The following flags indicate the
@@ -310,8 +309,8 @@ class SequenceFactory(Factory):
             pos = stream.current
             try:
                 if isinstance(elem, int):  # The leading opcode
+                    opcode, _ = stream.get_opcode()
                     assert elem == opcode
-                    stream.seek(opcode_width)
                 elif elem.endswith("*"):
                     elem = elem[:-1]
                     factory = globals()[elem]
