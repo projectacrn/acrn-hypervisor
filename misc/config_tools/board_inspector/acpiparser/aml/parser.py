@@ -106,8 +106,6 @@ class NameStringFactory(Factory):
 
         # Object name
         if ord(char) == grammar.AML_DUAL_NAME_PREFIX:
-            if acc and acc[-1] not in ["\\", "^"]:
-                acc += "."
             acc += stream.get_fixed_length_string(4)
             acc += "."
             acc += stream.get_fixed_length_string(4)
