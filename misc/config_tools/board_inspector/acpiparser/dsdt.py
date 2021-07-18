@@ -21,7 +21,6 @@ def DSDT(val):
     tables = [val] + list(map(lambda x: os.path.join(table_dir, x), ssdt))
 
     context = Context()
-    trees = []
     try:
         for t in tables:
             logging.info(f"Loading {t}")
@@ -29,13 +28,13 @@ def DSDT(val):
             tree = Tree()
             AMLCode.parse(context, tree)
             tree = DeferredExpansion(context).transform_topdown(tree)
-            trees.append(tree)
+            context.trees[os.path.basename(t)] = tree
     except Exception as e:
         context.current_stream.dump()
         raise
 
     context.skip_external_on_lookup()
     visitor = ConditionallyUnregisterSymbolVisitor(ConcreteInterpreter(context))
-    for tree in trees:
+    for tree in context.trees.values():
         visitor.visit_topdown(tree)
     return context

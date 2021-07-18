@@ -3,7 +3,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import sys
+
 from .tree import Visitor
+from . import grammar
 
 class PrintLayoutVisitor(Visitor):
     @staticmethod
@@ -69,3 +72,124 @@ class ConditionallyUnregisterSymbolVisitor(Visitor):
             self.depth -= 1
         elif tree.label not in ["DefMethod"]:
             super().visit_topdown(tree)
+
+class GenerateBinaryVisitor(Visitor):
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def __format_length(length):
+        assert length <= 0x0FFFFFFF
+        if length <= 0x3F:
+            return length.to_bytes(1, sys.byteorder)
+        else:
+            first_byte_value = length & 0xF
+            rest_byte_value = length >> 4
+            if rest_byte_value <= 0xFF:
+                first_byte = (first_byte_value + (1 << 6)).to_bytes(1, sys.byteorder)
+                rest_bytes = rest_byte_value.to_bytes(1, sys.byteorder)
+            elif rest_byte_value <= 0xFFFF:
+                first_byte = (first_byte_value + (2 << 6)).to_bytes(1, sys.byteorder)
+                rest_bytes = rest_byte_value.to_bytes(2, sys.byteorder)
+            else:
+                first_byte = (first_byte_value + (3 << 6)).to_bytes(1, sys.byteorder)
+                rest_bytes = rest_byte_value.to_bytes(3, sys.byteorder)
+            return first_byte + rest_bytes
+
+    @staticmethod
+    def __format_pkg_length(length):
+        assert length <= 0x0FFFFFFB
+        if length <= 0x3E:
+            length += 1
+        elif length <= 0x0FFD:
+            length += 2
+        elif length <= 0x0FFFFC:
+            length += 3
+        else:
+            length += 4
+        return GenerateBinaryVisitor.__format_length(length)
+
+    def generate(self, tree):
+        self.acc = []
+        self.visit(tree)
+        assert len(self.acc) == 1
+        return self.acc.pop()
+
+    def ByteData(self, tree):
+        self.acc.append(tree.value.to_bytes(1, sys.byteorder))
+
+    def WordData(self, tree):
+        self.acc.append(tree.value.to_bytes(2, sys.byteorder))
+
+    def DWordData(self, tree):
+        self.acc.append(tree.value.to_bytes(4, sys.byteorder))
+
+    def TWordData(self, tree):
+        self.acc.append(tree.value.to_bytes(6, sys.byteorder))
+
+    def QWordData(self, tree):
+        self.acc.append(tree.value.to_bytes(8, sys.byteorder))
+
+    def NameSeg(self, tree):
+        name = tree.value[:4]
+        if len(name) < 4:
+            name += ("_" * (4 - len(name)))
+        self.acc.append(bytes(name, "ascii"))
+
+    def NameString(self, tree):
+        acc = bytearray()
+        segs = tree.value.lstrip("^\\")
+        if len(segs) < len(tree.value):
+            acc.extend(bytes(tree.value[:len(tree.value) - len(segs)], "ascii"))
+        if segs:
+            nr_dots = segs.count(".")
+            if nr_dots == 1:
+                acc.append(grammar.AML_DUAL_NAME_PREFIX)
+            elif nr_dots >= 2:
+                acc.append(grammar.AML_MULTI_NAME_PREFIX)
+                acc.append(nr_dots + 1)
+            acc.extend(bytes(segs.replace(".", ""), "ascii"))
+        else:
+            acc.append(grammar.AML_NULL_NAME)
+        self.acc.append(acc)
+
+    def String(self, tree):
+        acc = bytearray()
+        acc.append(grammar.AML_STRING_PREFIX)
+        acc.extend(bytes(tree.value, "latin-1"))
+        acc.append(0)
+        self.acc.append(acc)
+
+    def ByteList(self, tree):
+        self.acc.append(tree.value)
+
+    def PkgLength(self, tree):
+        pass
+
+    def FieldLength(self, tree):
+        self.acc.append(self.__format_length(tree.value))
+
+    def default(self, tree):
+        assert tree.structure and isinstance(tree.structure, tuple)
+        assert tree.structure != ("value",), f"{tree.label} is not expected to be handled by the default handler"
+
+        parts = []
+        for child in reversed(tree.children):
+            if child.label == "PkgLength":
+                if tree.label == "DefIfElse" and tree.DefElse:
+                    # The last component of a DefIfElse clause (i.e. DefElse) is not counted by the PkgLength of the
+                    # DefIfElse.
+                    length = sum(map(len, parts[1:]))
+                else:
+                    length = sum(map(len, parts))
+                parts.append(self.__format_pkg_length(length))
+            else:
+                parts.append(self.acc.pop())
+        if isinstance(tree.structure[0], int):
+            opcode = tree.structure[0]
+            if opcode <= 0xFF:
+                parts.append(opcode.to_bytes(1, sys.byteorder))
+            else:
+                parts.append(opcode.to_bytes(2, sys.byteorder))
+
+        self.acc.append(b''.join(reversed(parts)))

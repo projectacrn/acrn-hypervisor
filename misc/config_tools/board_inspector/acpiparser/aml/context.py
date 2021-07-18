@@ -142,6 +142,7 @@ class Context:
     def __init__(self):
         self.streams = {}
         self.current_stream = None
+        self.trees = {}
 
         # Loaded namespace
         self.__symbol_table = {}

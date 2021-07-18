@@ -63,6 +63,14 @@ class Visitor:
                 self.visit_topdown(child)
         self.depth -= 1
 
+    def visit_bottomup(self, tree):
+        self.depth += 1
+        for child in tree.children:
+            if isinstance(child, Tree):
+                self.visit_bottomup(child)
+        self.depth -= 1
+        self.__visit(tree)
+
 class Transformer:
     def __init__(self):
         self.depth = 0
