@@ -39,11 +39,14 @@ The high-level design of nested virtualization in ACRN is shown in :numref:`nest
 Nested VMX is enabled by allowing a guest VM to use VMX instructions,
 and emulating them using the single level of VMX available in the hardware.
 
-In x86, a logical processor uses VMCSs to manage VM entries and VM exits as
-well as processor behavior in VMX non-root operation. The trick of nVMX
-emulation is ACRN builds a VMCS02 out of the VMCS01, which is the VMCS
-ACRN uses to run the L1 VM, and VMCS12 which is built by L1 hypervisor to
-actually run the L2 guest.
+In x86, a logical processor uses a VM control structure (named VMCS in Intel
+processors) to manage the state for each vCPU of its guest VMs.  These VMCSs
+manage VM entries and VM exits as well as processor behavior in VMX non-root
+operation. We'll suffix each VMCS with two digits, the hypervisor level managing
+it, and the VM level it represents.  For example, L0 stores the state of L1 in
+VMCS01. The trick of nVMX emulation is ACRN builds a VMCS02 out of the VMCS01,
+which is the VMCS ACRN uses to run the L1 VM, and VMCS12 which is built by L1
+hypervisor to actually run the L2 guest.
 
 .. figure:: images/nvmx_arch_1.png
    :width: 400px
