@@ -96,6 +96,41 @@ static const uint32_t mtrr_msrs[] = {
 	MSR_IA32_MTRR_FIX4K_F8000
 };
 
+/* Performance Counters and Events: CPUID.0AH.EAX[15:8] */
+static const uint32_t pmc_msrs[] = {
+	MSR_IA32_PMC0,
+	MSR_IA32_PMC1,
+	MSR_IA32_PMC2,
+	MSR_IA32_PMC3,
+	MSR_IA32_PMC4,
+	MSR_IA32_PMC5,
+	MSR_IA32_PMC6,
+	MSR_IA32_PMC7,
+	MSR_IA32_PERFEVTSEL0,
+	MSR_IA32_PERFEVTSEL1,
+	MSR_IA32_PERFEVTSEL2,
+	MSR_IA32_PERFEVTSEL3,
+	MSR_IA32_A_PMC0,
+	MSR_IA32_A_PMC1,
+	MSR_IA32_A_PMC2,
+	MSR_IA32_A_PMC3,
+	MSR_IA32_A_PMC4,
+	MSR_IA32_A_PMC5,
+	MSR_IA32_A_PMC6,
+	MSR_IA32_A_PMC7,
+	/* CPUID.0AH.EAX[7:0] */
+	MSR_IA32_FIXED_CTR_CTL,
+	MSR_IA32_PERF_GLOBAL_STATUS,
+	MSR_IA32_PERF_GLOBAL_CTRL,
+	MSR_IA32_PERF_GLOBAL_OVF_CTRL,
+	MSR_IA32_PERF_GLOBAL_STATUS_SET,
+	MSR_IA32_PERF_GLOBAL_INUSE,
+	/* CPUID.0AH.EDX[4:0] */
+	MSR_IA32_FIXED_CTR0,
+	MSR_IA32_FIXED_CTR1,
+	MSR_IA32_FIXED_CTR2
+};
+
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
 static const uint32_t unsupported_msrs[] = {
 	/* Variable MTRRs are not supported */
@@ -133,39 +168,6 @@ static const uint32_t unsupported_msrs[] = {
 	/* SGX disabled : CPUID.12H.EAX[0] */
 	MSR_SGXOWNEREPOCH0,
 	MSR_SGXOWNEREPOCH1,
-
-	/* Performance Counters and Events: CPUID.0AH.EAX[15:8] */
-	MSR_IA32_PMC0,
-	MSR_IA32_PMC1,
-	MSR_IA32_PMC2,
-	MSR_IA32_PMC3,
-	MSR_IA32_PMC4,
-	MSR_IA32_PMC5,
-	MSR_IA32_PMC6,
-	MSR_IA32_PMC7,
-	MSR_IA32_PERFEVTSEL0,
-	MSR_IA32_PERFEVTSEL1,
-	MSR_IA32_PERFEVTSEL2,
-	MSR_IA32_PERFEVTSEL3,
-	MSR_IA32_A_PMC0,
-	MSR_IA32_A_PMC1,
-	MSR_IA32_A_PMC2,
-	MSR_IA32_A_PMC3,
-	MSR_IA32_A_PMC4,
-	MSR_IA32_A_PMC5,
-	MSR_IA32_A_PMC6,
-	MSR_IA32_A_PMC7,
-	/* CPUID.0AH.EAX[7:0] */
-	MSR_IA32_FIXED_CTR_CTL,
-	MSR_IA32_PERF_GLOBAL_STATUS,
-	MSR_IA32_PERF_GLOBAL_CTRL,
-	MSR_IA32_PERF_GLOBAL_OVF_CTRL,
-	MSR_IA32_PERF_GLOBAL_STATUS_SET,
-	MSR_IA32_PERF_GLOBAL_INUSE,
-	/* CPUID.0AH.EDX[4:0] */
-	MSR_IA32_FIXED_CTR0,
-	MSR_IA32_FIXED_CTR1,
-	MSR_IA32_FIXED_CTR2,
 
 	/* QOS Configuration disabled: CPUID.10H.ECX[2] */
 	MSR_IA32_L3_QOS_CFG,
@@ -365,6 +367,13 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 
 	for (i = 0U; i < ARRAY_SIZE(mtrr_msrs); i++) {
 		enable_msr_interception(msr_bitmap, mtrr_msrs[i], INTERCEPT_READ_WRITE);
+	}
+
+	/* for core partition VM (like RTVM), passthrou PMC MSRs for performance profiling/tuning; hide to other VMs */
+	if (!is_lapic_pt_configured(vcpu->vm)) {
+		for (i = 0U; i < ARRAY_SIZE(pmc_msrs); i++) {
+			enable_msr_interception(msr_bitmap, pmc_msrs[i], INTERCEPT_READ_WRITE);
+		}
 	}
 
 	intercept_x2apic_msrs(msr_bitmap, INTERCEPT_READ_WRITE);

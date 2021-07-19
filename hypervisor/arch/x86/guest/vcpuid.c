@@ -395,8 +395,14 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 				result = set_vcpuid_sgx(vm);
 				break;
 			/* These features are disabled */
-			/* PMU is not supported */
+			/* PMU is not supported except for core partition VM, like RTVM */
 			case 0x0aU:
+				if (is_lapic_pt_configured(vm)) {
+					init_vcpuid_entry(i, 0U, 0U, &entry);
+					result = set_vcpuid_entry(vm, &entry);
+				}
+				break;
+
 			/* Intel RDT */
 			case 0x0fU:
 			case 0x10U:
