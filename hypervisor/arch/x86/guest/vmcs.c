@@ -305,9 +305,12 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	value32 &= ~VMX_PROCBASED_CTLS_INVLPG;
 
 	/*
-	 * Enable VM_EXIT for rdpmc execution.
+	 * Enable VM_EXIT for rdpmc execution except core partition VM, like RTVM
 	 */
-	value32 |= VMX_PROCBASED_CTLS_RDPMC;
+	if (!is_lapic_pt_configured(vcpu->vm)) {
+		value32 |= VMX_PROCBASED_CTLS_RDPMC;
+	}
+
 	vcpu->arch.proc_vm_exec_ctrls = value32;
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS: 0x%x ", value32);
