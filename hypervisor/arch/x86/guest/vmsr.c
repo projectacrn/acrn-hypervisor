@@ -80,8 +80,7 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 #endif
 };
 
-#define NUM_MTRR_MSRS	13U
-static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
+static const uint32_t mtrr_msrs[] = {
 	MSR_IA32_MTRR_CAP,
 	MSR_IA32_MTRR_DEF_TYPE,
 	MSR_IA32_MTRR_FIX64K_00000,
@@ -98,13 +97,7 @@ static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
 };
 
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
-#define NUM_ALWAYS_UNSUPPORTED_MSRS	92U
-#ifndef CONFIG_NVMX_ENABLED
-#define NUM_UNSUPPORTED_MSRS	(NUM_ALWAYS_UNSUPPORTED_MSRS + NUM_VMX_MSRS)
-#else
-#define NUM_UNSUPPORTED_MSRS	NUM_ALWAYS_UNSUPPORTED_MSRS
-#endif
-static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
+static const uint32_t unsupported_msrs[] = {
 	/* Variable MTRRs are not supported */
 	MSR_IA32_MTRR_PHYSBASE_0,
 	MSR_IA32_MTRR_PHYSMASK_0,
@@ -370,13 +363,13 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 		enable_msr_interception(msr_bitmap, emulated_guest_msrs[i], INTERCEPT_READ_WRITE);
 	}
 
-	for (i = 0U; i < NUM_MTRR_MSRS; i++) {
+	for (i = 0U; i < ARRAY_SIZE(mtrr_msrs); i++) {
 		enable_msr_interception(msr_bitmap, mtrr_msrs[i], INTERCEPT_READ_WRITE);
 	}
 
 	intercept_x2apic_msrs(msr_bitmap, INTERCEPT_READ_WRITE);
 
-	for (i = 0U; i < NUM_UNSUPPORTED_MSRS; i++) {
+	for (i = 0U; i < ARRAY_SIZE(unsupported_msrs); i++) {
 		enable_msr_interception(msr_bitmap, unsupported_msrs[i], INTERCEPT_READ_WRITE);
 	}
 
