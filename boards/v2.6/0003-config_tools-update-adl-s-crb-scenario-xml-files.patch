@@ -1,0 +1,403 @@
+From 50153d792ca2a8962eae21d4cbcc39cd26cfdb9a Mon Sep 17 00:00:00 2001
+From: Kunhui-Li <kunhuix.li@intel.com>
+Date: Tue, 20 Jul 2021 14:37:22 +0800
+Subject: [PATCH 3/3] config_tools: update adl-s-crb scenario xml files
+
+Update scenario xml files to fix the issue that fail to build hypervisor
+when enable RDT on the adl-s-crb platform.
+
+Tracked-On: #6310
+Signed-off-by: Kunhui-Li <kunhuix.li@intel.com>
+---
+ misc/config_tools/data/adl-s-crb/hybrid.xml   |  26 +++--
+ .../config_tools/data/adl-s-crb/hybrid_rt.xml |  46 +++++---
+ misc/config_tools/data/adl-s-crb/industry.xml | 108 ++++++++++--------
+ .../data/adl-s-crb/logical_partition.xml      |  40 ++++---
+ 4 files changed, 126 insertions(+), 94 deletions(-)
+
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid.xml b/misc/config_tools/data/adl-s-crb/hybrid.xml
+index 812cdda3d..f4e67ec3c 100644
+--- a/misc/config_tools/data/adl-s-crb/hybrid.xml
++++ b/misc/config_tools/data/adl-s-crb/hybrid.xml
+@@ -18,6 +18,14 @@
+             <RDT>
+                 <RDT_ENABLED>n</RDT_ENABLED>
+                 <CDP_ENABLED>n</CDP_ENABLED>
++                <CLOS_MASK>0x3ff</CLOS_MASK>
++                <CLOS_MASK>0x3ff</CLOS_MASK>
++                <CLOS_MASK>0x3ff</CLOS_MASK>
++                <CLOS_MASK>0x3ff</CLOS_MASK>
++                <CLOS_MASK>0x3ff</CLOS_MASK>
++                <CLOS_MASK>0x3ff</CLOS_MASK>
++                <CLOS_MASK>0x3ff</CLOS_MASK>
++                <CLOS_MASK>0x3ff</CLOS_MASK>
+             </RDT>
+             <NVMX_ENABLED>n</NVMX_ENABLED>
+             <HYPERV_ENABLED>y</HYPERV_ENABLED>
+@@ -64,10 +72,10 @@
+           <pcpu_id>15</pcpu_id>
+         </cpu_affinity>
+         <clos>
+-          <vcpu_clos/>
+-          <vcpu_clos/>
+-          <vcpu_clos/>
+-          <vcpu_clos/>
++          <vcpu_clos>0</vcpu_clos>
++          <vcpu_clos>0</vcpu_clos>
++          <vcpu_clos>0</vcpu_clos>
++          <vcpu_clos>0</vcpu_clos>
+         </clos>
+         <epc_section>
+             <base>0</base>
+@@ -123,7 +131,7 @@
+             <guest_flag>0</guest_flag>
+         </guest_flags>
+         <clos>
+-            <vcpu_clos/>
++            <vcpu_clos>0</vcpu_clos>
+         </clos>
+         <memory>
+             <start_hpa>0</start_hpa>
+@@ -176,10 +184,10 @@
+             <pcpu_id>11</pcpu_id>
+         </cpu_affinity>
+         <clos>
+-            <vcpu_clos/>
+-            <vcpu_clos/>
+-            <vcpu_clos/>
+-            <vcpu_clos/>
++            <vcpu_clos>0</vcpu_clos>
++            <vcpu_clos>0</vcpu_clos>
++            <vcpu_clos>0</vcpu_clos>
++            <vcpu_clos>0</vcpu_clos>
+         </clos>
+         <epc_section>
+             <base>0</base>
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid_rt.xml b/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
+index f7aa90483..c2afddd62 100644
+--- a/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
++++ b/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
+@@ -16,7 +16,15 @@
+       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+       <RDT>
+         <RDT_ENABLED>n</RDT_ENABLED>
+-        <CDP_ENABLED>n</CDP_ENABLED>
++        <CDP_ENABLED>y</CDP_ENABLED>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
+       </RDT>
+       <NVMX_ENABLED>n</NVMX_ENABLED>
+       <HYPERV_ENABLED>y</HYPERV_ENABLED>
+@@ -65,10 +73,10 @@
+       <pcpu_id>15</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+@@ -125,8 +133,8 @@
+       <pcpu_id>1</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <memory>
+       <start_hpa>0</start_hpa>
+@@ -179,10 +187,10 @@
+       <pcpu_id>11</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+@@ -226,14 +234,14 @@
+       <pcpu_id>7</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+diff --git a/misc/config_tools/data/adl-s-crb/industry.xml b/misc/config_tools/data/adl-s-crb/industry.xml
+index 5a2afca55..a3d8f37d6 100644
+--- a/misc/config_tools/data/adl-s-crb/industry.xml
++++ b/misc/config_tools/data/adl-s-crb/industry.xml
+@@ -16,7 +16,15 @@
+       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+       <RDT>
+         <RDT_ENABLED>n</RDT_ENABLED>
+-        <CDP_ENABLED>n</CDP_ENABLED>
++        <CDP_ENABLED>y</CDP_ENABLED>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
+       </RDT>
+       <NVMX_ENABLED>n</NVMX_ENABLED>
+       <HYPERV_ENABLED>y</HYPERV_ENABLED>
+@@ -60,7 +68,7 @@
+       <guest_flag>0</guest_flag>
+     </guest_flags>
+     <clos>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <memory>
+       <start_hpa>0</start_hpa>
+@@ -114,10 +122,10 @@
+       <pcpu_id>11</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+@@ -156,10 +164,10 @@
+       <pcpu_id>15</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+@@ -202,14 +210,14 @@
+       <pcpu_id>7</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+@@ -252,14 +260,14 @@
+       <pcpu_id>7</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+@@ -302,14 +310,14 @@
+       <pcpu_id>7</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+@@ -352,14 +360,14 @@
+       <pcpu_id>7</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+@@ -399,14 +407,14 @@
+       <pcpu_id>7</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+diff --git a/misc/config_tools/data/adl-s-crb/logical_partition.xml b/misc/config_tools/data/adl-s-crb/logical_partition.xml
+index 5fc6c2f96..b83c4c0c4 100644
+--- a/misc/config_tools/data/adl-s-crb/logical_partition.xml
++++ b/misc/config_tools/data/adl-s-crb/logical_partition.xml
+@@ -17,6 +17,14 @@
+       <RDT>
+         <RDT_ENABLED>n</RDT_ENABLED>
+         <CDP_ENABLED>n</CDP_ENABLED>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
++        <CLOS_MASK>0x3ff</CLOS_MASK>
+       </RDT>
+       <NVMX_ENABLED>n</NVMX_ENABLED>
+       <HYPERV_ENABLED>y</HYPERV_ENABLED>
+@@ -67,14 +75,14 @@
+       <pcpu_id>7</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+@@ -139,14 +147,14 @@
+       <pcpu_id>15</pcpu_id>
+     </cpu_affinity>
+     <clos>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
+-      <vcpu_clos/>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
++      <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <epc_section>
+       <base>0</base>
+-- 
+2.25.1
+
