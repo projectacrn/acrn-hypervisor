@@ -80,6 +80,10 @@
       <xsl:with-param name="key" select="'ENFORCE_TURNOFF_AC'" />
     </xsl:call-template>
 
+    <xsl:call-template name="boolean-by-key">
+      <xsl:with-param name="key" select="'ENFORCE_TURNOFF_GP'" />
+    </xsl:call-template>
+
     <xsl:call-template name="boolean-by-key-value">
       <xsl:with-param name="key" select="'RDT_ENABLED'" />
       <xsl:with-param name="value" select="RDT/RDT_ENABLED" />

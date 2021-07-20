@@ -111,6 +111,13 @@ split-locked access, HV enables it and VMs can't disable. Set this to enforce tu
 #AC, for debugging purposes only.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="ENFORCE_TURNOFF_GP" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>Force to disable #GP for Split-locked Access. If CPU has #GP for
+UC lock, HV enable it and VMs can't disable. Set this to enforce turn off that #GP, for community
+developer only.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="RDT" type="RDTType">
       <xs:annotation>
         <xs:documentation>Enable the Intel Resource Director Technology (RDT)
