@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<acrn-config board="whl-ipc-i5" scenario="partitioned.xml">
+<acrn-config board="whl-ipc-i5" scenario="partitioned">
   <hv>
     <DEBUG_OPTIONS>
         <RELEASE>n</RELEASE>
