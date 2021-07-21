@@ -588,10 +588,18 @@ def DefOpRegion_hook_named(context, tree, name):
 def DefPowerRes_hook_named(context, tree, name):
     sym = NamedDecl(name, tree)
     context.register_symbol(sym)
+    context.change_scope(name)
+
+def DefPowerRes_hook_post(context, tree):
+    context.pop_scope()
 
 def DefThermalZone_hook_named(context, tree, name):
     sym = NamedDecl(name, tree)
     context.register_symbol(sym)
+    context.change_scope(name)
+
+def DefThermalZone_hook_post(context, tree):
+    context.pop_scope()
 
 ################################################################################
 # Instantiate parsers
