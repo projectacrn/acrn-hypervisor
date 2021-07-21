@@ -46,24 +46,26 @@ class ConditionallyUnregisterSymbolVisitor(Visitor):
         return f
 
     def visit_topdown(self, tree):
-        if tree.label == "DefIfElse":
+        if not self.conditionally_hidden and tree.label == "DefIfElse":
             self.context.change_scope(tree.scope)
             cond = self.interpreter.interpret(tree.children[1]).get()
             self.context.pop_scope()
 
             self.depth += 1
             if cond:
-                self.visit_topdown(tree.children[2])
-                if len(tree.children) == 4:
+                if hasattr(tree, "TermList"):
+                    self.visit_topdown(tree.TermList)
+                if hasattr(tree, "DefElse") and tree.DefElse:
                     self.conditionally_hidden = True
-                    self.visit_topdown(tree.children[3])
+                    self.visit_topdown(tree.DefElse)
                     self.conditionally_hidden = False
             else:
-                self.conditionally_hidden = True
-                self.visit_topdown(tree.children[2])
-                self.conditionally_hidden = False
-                if len(tree.children) == 4:
-                    self.visit_topdown(tree.children[3])
+                if hasattr(tree, "TermList"):
+                    self.conditionally_hidden = True
+                    self.visit_topdown(tree.TermList)
+                    self.conditionally_hidden = False
+                if hasattr(tree, "DefElse") and tree.DefElse:
+                    self.visit_topdown(tree.DefElse)
             self.depth -= 1
         elif tree.label not in ["DefMethod"]:
             super().visit_topdown(tree)
