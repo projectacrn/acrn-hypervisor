@@ -5,13 +5,16 @@
 
 import sys
 
-from .tree import Visitor
+from .tree import Visitor, Direction
 from . import grammar
 
 class PrintLayoutVisitor(Visitor):
     @staticmethod
     def __is_printable(s):
         return all(ord(c) >= 0x20 and ord(c) < 0xFF for c in s)
+
+    def __init__(self):
+        super().__init__(Direction.TOPDOWN)
 
     def default(self, tree):
         indent = "  " * self.depth
@@ -30,7 +33,7 @@ class PrintLayoutVisitor(Visitor):
 
 class ConditionallyUnregisterSymbolVisitor(Visitor):
     def __init__(self, interpreter):
-        super().__init__()
+        super().__init__(Direction.CUSTOMIZED)
         self.context = interpreter.context
         self.interpreter = interpreter
         self.conditionally_hidden = False
@@ -48,7 +51,7 @@ class ConditionallyUnregisterSymbolVisitor(Visitor):
                 self.context.unregister_object(realpath)
         return f
 
-    def visit_topdown(self, tree):
+    def visit(self, tree):
         if not self.conditionally_hidden and tree.label == "DefIfElse":
             self.context.change_scope(tree.scope)
             cond = self.interpreter.interpret(tree.children[1]).get()
@@ -57,25 +60,25 @@ class ConditionallyUnregisterSymbolVisitor(Visitor):
             self.depth += 1
             if cond:
                 if hasattr(tree, "TermList"):
-                    self.visit_topdown(tree.TermList)
+                    self.visit(tree.TermList)
                 if hasattr(tree, "DefElse") and tree.DefElse:
                     self.conditionally_hidden = True
-                    self.visit_topdown(tree.DefElse)
+                    self.visit(tree.DefElse)
                     self.conditionally_hidden = False
             else:
                 if hasattr(tree, "TermList"):
                     self.conditionally_hidden = True
-                    self.visit_topdown(tree.TermList)
+                    self.visit(tree.TermList)
                     self.conditionally_hidden = False
                 if hasattr(tree, "DefElse") and tree.DefElse:
-                    self.visit_topdown(tree.DefElse)
+                    self.visit(tree.DefElse)
             self.depth -= 1
         elif tree.label not in ["DefMethod"]:
-            super().visit_topdown(tree)
+            self._visit_topdown(tree)
 
 class GenerateBinaryVisitor(Visitor):
     def __init__(self):
-        super().__init__()
+        super().__init__(Direction.BOTTOMUP)
 
     @staticmethod
     def __format_length(length):

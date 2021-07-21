@@ -8,7 +8,7 @@ import logging
 from . import grammar
 from .context import *
 from .exception import *
-from .tree import Tree, Transformer
+from .tree import Tree, Transformer, Direction
 
 class Factory:
     @staticmethod
@@ -406,7 +406,7 @@ class OptionFactory(Factory):
 
 class DeferredExpansion(Transformer):
     def __init__(self, context):
-        super().__init__()
+        super().__init__(Direction.TOPDOWN)
         self.context = context
 
         nodes = ["DefScope", "DefDevice", "DefMethod", "DefPowerRes", "DefProcessor", "DefThermalZone",
