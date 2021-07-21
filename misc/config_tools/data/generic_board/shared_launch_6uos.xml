@@ -1,4 +1,4 @@
-<acrn-config board="generic_board" scenario="industry" uos_launcher="6">
+<acrn-config board="generic_board" scenario="shared" uos_launcher="6">
     <uos id="1">
 	<uos_type desc="UOS type">WINDOWS</uos_type>
 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
