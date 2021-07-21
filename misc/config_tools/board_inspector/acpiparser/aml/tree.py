@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+from enum import Enum
 from copy import copy
 
 from . import grammar
@@ -44,38 +45,54 @@ class Tree:
                     setattr(self, elem, self.children[i])
                     i += 1
 
-class Visitor:
-    def __init__(self):
-        self.depth = 0
+class Direction(Enum):
+    TOPDOWN = 1
+    BOTTOMUP = 2
+    CUSTOMIZED = 3
 
-    def __visit(self, tree):
+class Visitor:
+    def __init__(self, direction):
+        self.depth = 0
+        if direction == Direction.TOPDOWN:
+            self.visit = self._visit_topdown
+        elif direction == Direction.BOTTOMUP:
+            self.visit = self._visit_bottomup
+
+    def __visit_node(self, tree):
         fn = getattr(self, tree.label, None)
         if not fn:
             fn = getattr(self, "default", None)
         if fn:
             fn(tree)
 
-    def visit_topdown(self, tree):
-        self.__visit(tree)
+    def _visit_topdown(self, tree):
+        self.__visit_node(tree)
         self.depth += 1
         for child in tree.children:
             if isinstance(child, Tree):
-                self.visit_topdown(child)
+                self.visit(child)
         self.depth -= 1
 
-    def visit_bottomup(self, tree):
+    def _visit_bottomup(self, tree):
         self.depth += 1
         for child in tree.children:
             if isinstance(child, Tree):
-                self.visit_bottomup(child)
+                self.visit(child)
         self.depth -= 1
-        self.__visit(tree)
+        self.__visit_node(tree)
+
+    def visit(self, tree):
+        raise NotImplementedError
 
 class Transformer:
-    def __init__(self):
+    def __init__(self, direction):
         self.depth = 0
+        if direction == Direction.TOPDOWN:
+            self.transform = self._transform_topdown
+        elif direction == Direction.BOTTOMUP:
+            self.transform = self._transform_bottomup
 
-    def __transform(self, tree):
+    def __transform_node(self, tree):
         fn = getattr(self, tree.label, None)
         if not fn:
             fn = getattr(self, "default", None)
@@ -84,22 +101,25 @@ class Transformer:
         else:
             return tree
 
-    def transform_topdown(self, tree):
-        new_tree = self.__transform(tree)
+    def _transform_topdown(self, tree):
+        new_tree = self.__transform_node(tree)
         self.depth += 1
         for i, child in enumerate(tree.children):
             if isinstance(child, Tree):
-                tree.children[i] = self.transform_topdown(child)
+                tree.children[i] = self.transform(child)
         self.depth -= 1
         return new_tree
 
-    def transform_bottomup(self, tree):
+    def _transform_bottomup(self, tree):
         self.depth += 1
         for i, child in enumerate(tree.children):
             if isinstance(child, Tree):
-                tree.children[i] = self.transform_bottomup(child)
+                tree.children[i] = self.transform(child)
         self.depth -= 1
-        return self.__transform(tree)
+        return self.__transform_node(tree)
+
+    def transform(self, tree):
+        raise NotImplementedError
 
 class Interpreter:
     def __init__(self, context):

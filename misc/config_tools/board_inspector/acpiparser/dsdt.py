@@ -27,7 +27,7 @@ def DSDT(val):
             context.switch_stream(t)
             tree = Tree()
             AMLCode.parse(context, tree)
-            tree = DeferredExpansion(context).transform_topdown(tree)
+            tree = DeferredExpansion(context).transform(tree)
             context.trees[os.path.basename(t)] = tree
     except Exception as e:
         context.current_stream.dump()
@@ -36,5 +36,5 @@ def DSDT(val):
     context.skip_external_on_lookup()
     visitor = ConditionallyUnregisterSymbolVisitor(ConcreteInterpreter(context))
     for tree in context.trees.values():
-        visitor.visit_topdown(tree)
+        visitor.visit(tree)
     return context
