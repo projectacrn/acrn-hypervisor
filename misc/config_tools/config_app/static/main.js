@@ -265,7 +265,6 @@ $().ready(function(){
     $('#export_scenario_xml').on('click', function() {
         var dataId = $(this).data('id');
         $("#save_scenario").data('id', dataId);
-        $('#src_path_row').addClass('hidden');
     });
 
     $('#generate_config_src').on('click', function() {
@@ -277,7 +276,6 @@ $().ready(function(){
     $('#export_launch_xml').on('click', function() {
         var dataId = $(this).data('id');
         $("#save_launch").data('id', dataId);
-        $('#src_path_row').addClass('hidden');
     });
 
 
@@ -777,6 +775,7 @@ function create_setting(type, default_name, name, mode){
         type: type,
         default_name: default_name,
         create_name: name,
+        src_path: '',
         mode: mode
     }
 
@@ -789,10 +788,10 @@ function create_setting(type, default_name, name, mode){
             exist = result.exist
             create_flag = true
             if(exist == "yes") {
-                overwirte_confirm_message = 'Setting name: ' + create_config['create_name'] + ' existed in ' +
-                    'acrn-hypervisor/misc/config_tools/data/'+board_info+'/user_defined/.\n'+
+                overwrite_confirm_message = 'Setting name: ' + create_config['create_name'] + ' existed in ' +
+                    'acrn-hypervisor/../user_config/'+board_info+'/.\n'+
                     'Do you want to overwrite it?\nClick OK to overwrite it; click Cancel to rename it.'
-                if(!confirm(overwirte_confirm_message)) {
+                if(!confirm(overwrite_confirm_message)) {
                     create_flag = false
                 }
             }
@@ -870,8 +869,7 @@ function save_scenario(generator=null){
                 scenario_config[id] = [value];
             }
         } else if(id!='new_scenario_name' && id!='new_scenario_name2' && id!='board_info_file' && id!='board_info_upload'
-            && id!='scenario_file' && id!='create_name' && id!='load_scenario_name2' && id!='load_launch_name2'
-            && id!='src_path') {
+            && id!='scenario_file' && id!='create_name' && id!='load_scenario_name2' && id!='load_launch_name2') {
             scenario_config[id] = value;
         }
     })
@@ -905,10 +903,10 @@ function save_scenario(generator=null){
             exist = result.exist
             create_flag = true
             if(exist == "yes") {
-                overwirte_confirm_message = 'Setting name: ' + scenario_config['create_name'] + ' existed in ' +
-                    'acrn-hypervisor/misc/config_tools/data/'+board_info+'/user_defined/.\n'+
+                overwrite_confirm_message = 'Setting name: ' + ' existed in current setting ' +
+                    'acrn-hypervisor/../user_config/'+board_info+'/.\n'+
                     'Do you want to overwrite it?\nClick OK to overwrite it; click Cancel to rename it.'
-                if(!confirm(overwirte_confirm_message)) {
+                if(!confirm(overwrite_confirm_message)) {
                     create_flag = false
                 }
             }
@@ -929,21 +927,26 @@ function save_scenario(generator=null){
                             $("#"+index+"_err").text(item);
                         })
                         if(no_err == true && status == 'success') {
+                            var src_path = $("input#src_path").val();
+                            if(src_path == null || src_path == '') {
+                                xml_path = 'acrn-hypervisor/../user_config/'+board_info+'/.'
+                            } else {
+                                xml_path = src_path
+                            }
                             file_name = result.file_name;
                             validate_message = 'Scenario setting saved successfully with name: '
-                                +file_name+'\ninto acrn-hypervisor/misc/config_tools/data/'+board_info+'/user_defined/.'
+                                +file_name+'\ninto '+xml_path;
                             if(result.rename==true) {
                                 validate_message = 'Scenario setting existed, saved successfully with a new name: '
-                                    +file_name+'\ninto acrn-hypervisor/misc/config_tools/data/'+board_info+'/user_defined/.';
+                                    +file_name+'\ninto acrn-hypervisor/../user_config/'+board_info+'/.';
                             }
                             if(generator=="generate_config_src") {
-                                var src_path = $("input#src_path").val();
                                 generate_flag = true;
                                 if(src_path == null || src_path == '') {
-                                    overwirte_confirm_message = 'The Source Path for configuration files is not set.\n' +
+                                    overwrite_confirm_message = 'The Source Path for configuration files is not set.\n' +
                                         'Do you want to generate them into the default path: acrn-hypervisor/build/hypervisor/configs/board/ and acrn-hypervisor/build/hypervisor/configs/scenarios/,\n'+
                                         'and overwrite the old ones?\nClick OK to overwrite them; click Cancel to edit the Source Path.'
-                                    if(!confirm(overwirte_confirm_message)) {
+                                    if(!confirm(overwrite_confirm_message)) {
                                         generate_flag = false
                                     }
                                 }
@@ -1043,8 +1046,7 @@ function save_launch(generator=null) {
                 launch_config[id] = [value];
             }
         } else if(id!='new_launch_name' && id!='new_launch_name2' && id!='board_info_file' && id!='board_info_upload'
-            && id!="launch_file" && id!='create_name'  && id!='load_scenario_name2' && id!='load_launch_name2'
-            && id!='src_path') {
+            && id!="launch_file" && id!='create_name'  && id!='load_scenario_name2' && id!='load_launch_name2') {
             launch_config[id] = value;
         }
     })
@@ -1079,10 +1081,9 @@ function save_launch(generator=null) {
             exist = result.exist
             create_flag = true
             if(exist == "yes") {
-                overwirte_confirm_message = 'Setting name: ' + launch_config['create_name'] + ' existed in ' +
-                    'acrn-hypervisor/misc/config_tools/data/'+board_info+'/user_defined/.\n'+
+                overwrite_confirm_message = 'Setting name: existed in the XML path\n'+
                     'Do you want to overwrite it?\nClick OK to overwrite it; click Cancel to rename it.'
-                if(!confirm(overwirte_confirm_message)) {
+                if(!confirm(overwrite_confirm_message)) {
                     create_flag = false
                 }
             }
@@ -1105,21 +1106,26 @@ function save_launch(generator=null) {
                                 $("#"+index+"_err").text(item);
                         })
                         if(no_err == true && status == 'success') {
+                            var src_path = $("input#src_path").val();
+                            if(src_path == null || src_path == '') {
+                                xml_path = 'acrn-hypervisor/../user_config/'+board_info+'/.'
+                            } else {
+                                xml_path = src_path
+                            }
                             file_name = result.file_name;
                             validate_message = 'Launch setting saved successfully with name: '
-                                +file_name+'\nto acrn-hypervisor/misc/config_tools/data/'+board_info+'/user_defined/.'
+                                +file_name+'\nto '+xml_path;
                             if(result.rename==true) {
                                 validate_message = 'Launch setting existed, saved successfully with a new name: '
-                                    +file_name+'\nto acrn-hypervisor/misc/config_tools/data/'+board_info+'/user_defined/.';
+                                    +file_name+'\nto  '+xml_path;
                             }
                             if(generator == 'generate_launch_script') {
-                                var src_path = $("input#src_path").val();
                                 generate_flag = true;
                                 if(src_path == null || src_path == '') {
-                                    overwirte_confirm_message = 'The Source Path for launch scripts is not set.\n' +
-                                        'Do you want to generate them into the default path: misc/config_tools/data/'+board_info+'/output/,\n'+
+                                    overwrite_confirm_message = 'The Source Path for launch scripts is not set.\n' +
+                                        'Do you want to generate them into the default path: acrn-hypervisor/../user_config/'+board_info+'/output/,\n'+
                                         'and overwrite the old ones?\nClick OK to overwrite them; click Cancel to edit the Source Path.'
-                                    if(!confirm(overwirte_confirm_message)) {
+                                    if(!confirm(overwrite_confirm_message)) {
                                         generate_flag = false
                                     }
                                 }
@@ -1144,7 +1150,7 @@ function save_launch(generator=null) {
                                         if (status == 'success' && (JSON.stringify(error_list)=='{}' || JSON.stringify(error_list)=='null')) {
                                             if(src_path==null || src_path==='') {
                                                 alert(generator+' successfully into '+
-                                                      'acrn-hypervisor/misc/config_tools/data/'+board_info+'/output/.');
+                                                      'acrn-hypervisor/../user_config'+board_info+'/output/.');
                                             } else {
                                                 alert(generator+' successfully into '+src_path);
                                             }
