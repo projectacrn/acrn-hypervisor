@@ -313,7 +313,7 @@ class XmlConfig:
 
         raise Exception('can not find node by {} from xml'.format(args))
 
-    def save(self, xml=None, user_defined=True):
+    def save(self, xml=None, user_defined=False):
         """
         save current xml to file.
         :param xml: the file name to save; if not specified, save current xml to default names.
