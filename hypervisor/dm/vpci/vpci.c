@@ -482,6 +482,17 @@ static void write_cfg_header(struct pci_vdev *vdev,
 				pci_vdev_write_vcfg(vdev, offset, bytes, val);
 			}
 		}
+
+		/* According to PCIe Spec, for a RW register bits, If the optional feature
+		 * that is associated with the bits is not implemented, the bits are permitted
+		 * to be hardwired to 0b. However Zephyr would use INTx Line Register as writable
+		 * even this PCI device has no INTx, so emulate INTx Line Register as writable.
+		 */
+		if (offset == PCIR_INTERRUPT_LINE) {
+			val &= 0xfU;
+			pci_vdev_write_vcfg(vdev, offset, bytes, val);
+		}
+
 	}
 }
 
