@@ -65,7 +65,7 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):
 def tpm2_acpi_gen(acpi_bin, board_etree, scenario_etree, allocation_etree):
     tpm2_enabled = common.get_node("//vm[@id = '0']/mmio_resources/TPM2/text()", scenario_etree)
     if tpm2_enabled is not None and tpm2_enabled == 'y':
-        tpm2_node = common.get_node("//device[@id = 'MSFT0101']", board_etree)
+        tpm2_node = common.get_node("//device[@id = 'MSFT0101' or compatible_id = 'MSFT0101']", board_etree)
         if tpm2_node is not None:
             _data_len = 0x4c if common.get_node("//capability[@id = 'log_area']", board_etree) is not None else 0x40
             _data = bytearray(_data_len)
@@ -212,22 +212,22 @@ def check_iasl():
 
 def main(args):
 
-    board_type = args.board
-    scenario_name = args.scenario
-    board_path = os.path.join(VM_CONFIGS_PATH, 'data', board_type, board_type + '.xml')
-    board_etree = lxml.etree.parse(board_path)
-    scenario_path = os.path.join(VM_CONFIGS_PATH, 'data', board_type, scenario_name + '.xml')
-    scenario_etree = lxml.etree.parse(scenario_path)
-    allocation_path = os.path.join(common.SOURCE_ROOT_DIR, 'build', 'hypervisor', 'configs' ,'allocation.xml')
-    allocation_etree = lxml.etree.parse(allocation_path)
+    board_etree = lxml.etree.parse(args.board)
+    scenario_etree = lxml.etree.parse(args.scenario)
+
+    scenario_name = common.get_node("//@scenario", scenario_etree)
+
     if args.asl is None:
         DEST_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'scenarios', scenario_name)
     else:
         DEST_ACPI_PATH = os.path.join(common.SOURCE_ROOT_DIR, args.asl, 'scenarios', scenario_name)
     if args.out is None:
-        DEST_ACPI_BIN_PATH = os.path.join(common.SOURCE_ROOT_DIR, 'build', 'hypervisor', 'acpi')
+        hypervisor_out = os.path.join(common.SOURCE_ROOT_DIR, 'build', 'hypervisor')
     else:
-        DEST_ACPI_BIN_PATH = args.out
+        hypervisor_out = args.out
+    DEST_ACPI_BIN_PATH = os.path.join(hypervisor_out, 'acpi')
+
+    allocation_etree = lxml.etree.parse(os.path.join(hypervisor_out, 'configs', 'allocation.xml'))
 
     if os.path.isdir(DEST_ACPI_BIN_PATH):
         shutil.rmtree(DEST_ACPI_BIN_PATH)
@@ -251,13 +251,13 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage="python3 bin_gen.py --board [board] --scenario [scenario]"
                                            "[ --out [output dir of acpi ASL code]]",
-                                     description="the tool to generate ACPI binary for Pre-launched VMs.")
-    parser.add_argument("--board", required=True, help="the board type.")
-    parser.add_argument("--scenario", required=True, help="the scenario name.")
+                                     description="the tool to generate ACPI binary for Pre-launched VMs")
+    parser.add_argument("--board", required=True, help="the XML file summarizing characteristics of the target board")
+    parser.add_argument("--scenario", required=True, help="the XML file specifying the scenario to be set up")
     parser.add_argument("--asl", default=None, help="the input folder to store the ACPI ASL code. ")
     parser.add_argument("--out", default=None, help="the output folder to store the ACPI binary code. "
                                                     "If not specified, the path for the binary code is"
-                                                    "build/acpi/")
+                                                    "build/hypervisor/acpi/")
 
     args = parser.parse_args()
     rc = main(args)
