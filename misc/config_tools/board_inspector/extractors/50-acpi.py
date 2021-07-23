@@ -9,6 +9,7 @@ import logging
 from acpiparser import parse_dsdt, parse_tpm2
 from acpiparser.aml.interpreter import ConcreteInterpreter
 from acpiparser.aml.exception import UndefinedSymbol, FutureWork
+import acpiparser.aml.datatypes as datatypes
 from acpiparser.rdt import *
 
 from extractors.helpers import add_child, get_node
@@ -156,13 +157,34 @@ def fetch_device_info(devices_node, interpreter, namepath):
             else:
                 hid = "<unknown>"
 
+        # Compatible ID
+        cids = []
+        if interpreter.context.has_symbol(f"{namepath}._CID"):
+            cid_object = interpreter.interpret_method_call(f"{namepath}._CID")
+            if isinstance(cid_object, (datatypes.String, datatypes.Integer)):
+                cid_data = [cid_object]
+            elif isinstance(cid_object, datatypes.Package):
+                cid_data = cid_object.elements
+
+            for cid_datum in cid_data:
+                if isinstance(cid_datum, datatypes.Integer):
+                    eisa_id = parse_eisa_id(cid_datum.get())
+                    if eisa_id:
+                        cids.append(eisa_id)
+                    else:
+                        cids.append(hex(cid_datum.get()))
+                elif isinstance(cid_datum, datatypes.String):
+                    cids.append(cid_datum.get())
+
         # Create the XML element for the device and create its ancestors if necessary
         element = get_device_element(devices_node, namepath, hid)
         if hid in buses.keys():
             element.tag = "bus"
             element.set("type", buses[hid])
+        for cid in cids:
+            add_child(element, "compatible_id", cid)
 
-        if hid == "MSFT0101":
+        if "MSFT0101" in [hid, *cids]:
             parse_tpm(element)
 
         # Address
