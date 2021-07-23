@@ -595,10 +595,6 @@
 
 /* 5 high-order bits in every field are reserved */
 #define PAT_FIELD_RSV_BITS			(0xF8UL)
-/* MSR_TEST_CTL bits */
-#define MSR_TEST_CTL_GP_UCLOCK                 (1U << 28U)
-#define MSR_TEST_CTL_AC_SPLITLOCK              (1U << 29U)
-#define MSR_TEST_CTL_DISABLE_LOCK_ASSERTION    (1U << 31U)
 
 #ifndef ASSEMBLER
 static inline bool is_pat_mem_type_invalid(uint64_t x)

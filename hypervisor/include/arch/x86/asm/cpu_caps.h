@@ -54,15 +54,9 @@ bool pcpu_has_vmx_ept_vpid_cap(uint64_t bit_mask);
 bool is_apl_platform(void);
 bool has_core_cap(uint32_t bit_mask);
 bool is_ac_enabled(void);
-bool is_gp_enabled(void);
 void init_pcpu_capabilities(void);
 void init_pcpu_model_name(void);
 int32_t detect_hardware_support(void);
 struct cpuinfo_x86 *get_pcpu_info(void);
-
-/* The bits of MSR IA32_CORE_CAPABILITIES */
-#define CORE_CAP_SPLIT_LOCK    (1U << 5U)      /* support #AC for Split-locked Access */
-#define CORE_CAP_UC_LOCK       (1U << 4U)      /* support #GP for non-guaranteed-atomic-locked access at Non-WB memory */
-
 
 #endif /* CPUINFO_H */
