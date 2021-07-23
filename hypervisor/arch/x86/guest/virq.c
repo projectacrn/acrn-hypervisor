@@ -536,7 +536,7 @@ int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu)
 		}
 	}
 
-	status = emulate_lock_instr(vcpu, exception_vector, &queue_exception);
+	status = emulate_splitlock(vcpu, exception_vector, &queue_exception);
 	if ((status == 0) && queue_exception) {
 		vcpu_retain_rip(vcpu);
 		status = vcpu_queue_exception(vcpu, exception_vector, int_err_code);

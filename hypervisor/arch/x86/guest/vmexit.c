@@ -323,7 +323,7 @@ static int32_t mtf_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	if (vcpu->arch.emulating_lock) {
 		vcpu->arch.emulating_lock = false;
-		vcpu_complete_lock_instr_emulation(vcpu);
+		vcpu_complete_splitlock_emulation(vcpu);
 	}
 
 	return 0;
