@@ -150,7 +150,7 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 		 */
 		mmio_req->address = gpa;
 
-		ret = decode_instruction(vcpu, true);
+		ret = decode_instruction(vcpu);
 		if (ret > 0) {
 			mmio_req->size = (uint64_t)ret;
 			/*
