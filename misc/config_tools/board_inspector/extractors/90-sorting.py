@@ -22,7 +22,7 @@ def getkey(child):
         else:
             return 0xFFFFFFFF
 
-    tags = ["vendor", "identifier", "subsystem_vendor", "subsystem_identifier", "class", "acpi_object", "status", "resource", "capability", "bus", "device"]
+    tags = ["vendor", "identifier", "subsystem_vendor", "subsystem_identifier", "class", "acpi_object", "compatible_id", "status", "resource", "capability", "bus", "device"]
 
     if child.tag == "resource":
         return (tags.index(child.tag), child.get("type"), resource_subkey(child))
