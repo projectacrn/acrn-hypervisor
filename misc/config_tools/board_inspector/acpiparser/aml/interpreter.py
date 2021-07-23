@@ -432,7 +432,11 @@ class ConcreteInterpreter(Interpreter):
     def DefConcatRes(self, tree):
         data = bytearray()
         source1 = self.interpret(tree.children[0])
-        data.extend(source1.to_buffer().get())
+        buf = source1.to_buffer().get()
+        if len(buf) >= 2 and buf[-2] == 0x79:
+            data.extend(buf[:-2])
+        else:
+            data.extend(buf)
         source2 = self.interpret(tree.children[1])
         data.extend(source2.to_buffer().get())
         result = Buffer(data)
