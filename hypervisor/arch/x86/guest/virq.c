@@ -14,7 +14,7 @@
 #include <asm/guest/vcpu.h>
 #include <asm/guest/vmcs.h>
 #include <asm/guest/vm.h>
-#include <asm/guest/lock_instr_emul.h>
+#include <asm/guest/splitlock.h>
 #include <trace.h>
 #include <logmsg.h>
 #include <asm/irq.h>

@@ -316,7 +316,7 @@ VP_DM_C_SRCS += arch/x86/guest/pm.c
 VP_DM_C_SRCS += arch/x86/guest/assign.c
 VP_DM_C_SRCS += arch/x86/guest/vmx_io.c
 VP_DM_C_SRCS += arch/x86/guest/instr_emul.c
-VP_DM_C_SRCS += arch/x86/guest/lock_instr_emul.c
+VP_DM_C_SRCS += arch/x86/guest/splitlock.c
 VP_DM_C_SRCS += arch/x86/guest/vm_reset.c
 VP_DM_C_SRCS += common/ptdev.c
 
