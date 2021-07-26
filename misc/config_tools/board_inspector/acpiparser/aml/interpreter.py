@@ -6,6 +6,7 @@
 from .context import *
 from .datatypes import *
 from .tree import Tree, Interpreter
+from . import builder
 
 class MethodReturn(Exception):
     """ A pseudo exception to return from a method"""
@@ -86,13 +87,18 @@ class ConcreteInterpreter(Interpreter):
 
     def interpret_method_call(self, name, *args):
         stack_depth_before = len(self.stack)
-        name_string = Tree("NameString", [name])
-        name_string.register_structure(("value",))
-        name_string.complete_parsing()
+        name_string = builder.NameString(name)
         name_string.scope = self.context.parent(name)
-        pseudo_invocation = Tree("MethodInvocation", [name_string])
-        pseudo_invocation.register_structure(("NameString", "TermArg*"))
-        pseudo_invocation.complete_parsing()
+
+        arg_trees = []
+        for arg in args:
+            v = builder.build_value(arg)
+            if v != None:
+                arg_trees.append(v)
+            else:
+                raise NotImplementedError(f"Unsupported type of method argument: {arg}")
+
+        pseudo_invocation = builder.MethodInvocation(name_string, *arg_trees)
         try:
             val = self.interpret(pseudo_invocation)
         except:
