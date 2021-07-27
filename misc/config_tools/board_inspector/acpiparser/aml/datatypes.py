@@ -310,7 +310,12 @@ class OperationRegion(Object):
         logging.info(f"Open system memory space {name}: [{hex(offset)}, {hex(offset + length - 1)}]")
         offset_page_aligned = (offset >> 12) << 12
         length_page_aligned = ceil(((offset & 0xFFF) + length) / 0x1000) * 0x1000
-        mm = mmap.mmap(cls.devmem.fileno(), length_page_aligned, flags=mmap.MAP_PRIVATE, prot=mmap.PROT_READ, offset=offset_page_aligned)
+        try:
+            mm = mmap.mmap(cls.devmem.fileno(), length_page_aligned, flags=mmap.MAP_PRIVATE, prot=mmap.PROT_READ, offset=offset_page_aligned)
+        except PermissionError as e:
+            logging.warning(f"Do not have permission to access [{hex(offset_page_aligned)}, {hex(offset_page_aligned + length_page_aligned)}] by /dev/mem.")
+            logging.warning(f"You may need to add `iomem=relaxed` to the Linux kernel command line in your bootloader configuration file.")
+            raise
         iobuf = StreamIOBuffer(mm, offset & 0xFFF, length)
         return OperationRegion(iobuf)
 
