@@ -95,7 +95,7 @@
         </memory>
         <os_config>
             <name>Zephyr</name>
-            <kern_type>KERNEL_ZEPHYR</kern_type>
+            <kern_type>KERNEL_RAWIMAGE</kern_type>
             <kern_mod>Zephyr_RawImage</kern_mod>
             <ramdisk_mod/>
             <bootargs/>

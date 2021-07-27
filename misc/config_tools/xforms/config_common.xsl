@@ -29,6 +29,7 @@
     <xsl:apply-templates select="hv/MEMORY" />
     <xsl:apply-templates select="hv/CAPACITIES" />
     <xsl:apply-templates select="hv/MISC_CFG" />
+    <xsl:apply-templates select="vm/os_config/kern_type" />
   </xsl:template>
 
   <xsl:template match="DEBUG_OPTIONS">
@@ -280,6 +281,13 @@
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <xsl:template match="kern_type">
+    <xsl:call-template name="boolean-by-key-value">
+      <xsl:with-param name="key" select="concat('GUEST_', current())" />
+      <xsl:with-param name="value" select="'y'" />
+    </xsl:call-template>
   </xsl:template>
 
   <xsl:template name="hex-to-bin">

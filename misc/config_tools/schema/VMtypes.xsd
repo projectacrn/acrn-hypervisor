@@ -194,12 +194,13 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
 
 <xs:simpleType name="VMKernelType">
   <xs:annotation>
-    <xs:documentation>A string with either ``KERNEL_BZIMAGE`` or
-``KERNEL_ZEPHYR``.</xs:documentation>
+    <xs:documentation>A string with either ``KERNEL_BZIMAGE``, ``KERNEL_ELF`` or
+``KERNEL_RAWIMAGE``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="KERNEL_BZIMAGE" />
-    <xs:enumeration value="KERNEL_ZEPHYR" />
+    <xs:enumeration value="KERNEL_RAWIMAGE" />
+    <xs:enumeration value="KERNEL_ELF" />
   </xs:restriction>
 </xs:simpleType>
 
