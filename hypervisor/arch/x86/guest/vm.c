@@ -304,6 +304,10 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 
 	for (i = 0U; i < MAX_MMIO_DEV_NUM; i++) {
 		for (j = 0; j < MMIODEV_RES_NUM; j++) {
+			/* If mmio resource is included in ACPI DATA e820 entry, it is already mapped to RAM
+			 * delete this potential mapping first
+			 */
+			(void)deassign_mmio_dev(vm, &vm_config->mmiodevs[i].mmiores[j]);
 			(void)assign_mmio_dev(vm, &vm_config->mmiodevs[i].mmiores[j]);
 		}
 
