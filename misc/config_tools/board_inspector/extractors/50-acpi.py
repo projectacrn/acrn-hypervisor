@@ -8,12 +8,18 @@ import lxml.etree
 from collections import defaultdict
 
 from acpiparser import parse_dsdt, parse_resource_data, parse_pci_routing
+from acpiparser.aml.tree import Visitor, Direction
+import acpiparser.aml.builder as builder
 import acpiparser.aml.context as context
+import acpiparser.aml.datatypes as datatypes
 from acpiparser.aml.interpreter import ConcreteInterpreter
 from acpiparser.aml.exception import UndefinedSymbol, FutureWork
+from acpiparser.aml.visitors import GenerateBinaryVisitor
 from acpiparser.rdt import *
 
 from extractors.helpers import add_child, get_node
+
+device_objects = defaultdict(lambda: {})
 
 def parse_eisa_id(eisa_id):
     chars = [
@@ -111,6 +117,14 @@ resource_parsers = {
     (1, LARGE_RESOURCE_ITEM_EXTENDED_ADDRESS_SPACE): parse_address_space_resource,
 }
 
+def add_object_to_device(context, device_path, obj_name, result):
+    if not obj_name in device_objects[device_path].keys():
+        tree = builder.build_value(result)
+        if tree:
+            device_objects[device_path][obj_name] = builder.DefName(obj_name, tree)
+        else:
+            logging.warning(f"{device_path}.{obj_name}: will not added to vACPI due to unrecognized type: {result.__class__.__name__}")
+
 def fetch_device_info(devices_node, interpreter, namepath):
     logging.info(f"Fetch information about device object {namepath}")
 
@@ -123,14 +137,17 @@ def fetch_device_info(devices_node, interpreter, namepath):
 
         sta = None
         if interpreter.context.has_symbol(f"{namepath}._STA"):
-            sta = interpreter.interpret_method_call(f"{namepath}._STA").get()
+            result = interpreter.interpret_method_call(f"{namepath}._STA")
+            sta = result.get()
             if sta & 0x1 == 0:
                 return
+            add_object_to_device(interpreter.context, namepath, "_STA", result)
 
         # Hardware ID
         hid = ""
         if interpreter.context.has_symbol(f"{namepath}._HID"):
-            hid = interpreter.interpret_method_call(f"{namepath}._HID").get()
+            result = interpreter.interpret_method_call(f"{namepath}._HID")
+            hid = result.get()
             if isinstance(hid, str):
                 pass
             elif isinstance(hid, int):
@@ -141,6 +158,7 @@ def fetch_device_info(devices_node, interpreter, namepath):
                     hid = hex(hid)
             else:
                 hid = "<unknown>"
+            add_object_to_device(interpreter.context, namepath, "_HID", result)
 
         # Compatible ID
         cids = []
@@ -169,20 +187,32 @@ def fetch_device_info(devices_node, interpreter, namepath):
         for cid in cids:
             add_child(element, "compatible_id", cid)
 
+        # Unique ID
+        uid = ""
+        if interpreter.context.has_symbol(f"{namepath}._UID"):
+            result = interpreter.interpret_method_call(f"{namepath}._UID")
+            uid = result.get()
+            add_child(element, "acpi_uid", str(uid))
+            add_object_to_device(interpreter.context, namepath, "_UID", result)
+
         # Description
         if interpreter.context.has_symbol(f"{namepath}._STR"):
-            desc = interpreter.interpret_method_call(f"{namepath}._STR").get().decode(encoding="utf-16").strip("\00")
+            result = interpreter.interpret_method_call(f"{namepath}._STR")
+            desc = result.get().decode(encoding="utf-16").strip("\00")
             element.set("description", desc)
+            add_object_to_device(interpreter.context, namepath, "_STR", result)
 
         # Address
         if interpreter.context.has_symbol(f"{namepath}._ADR"):
-            adr = interpreter.interpret_method_call(f"{namepath}._ADR").get()
+            result = interpreter.interpret_method_call(f"{namepath}._ADR")
+            adr = result.get()
             if isinstance(adr, int):
                 adr = hex(adr)
             if len(element.xpath(f"../*[@address='{adr}']")) > 0:
                 logging.info(f"{namepath} has siblings with duplicated address {adr}.")
             else:
                 element.set("address", hex(adr) if isinstance(adr, int) else adr)
+            add_object_to_device(interpreter.context, namepath, "_ADR", result)
 
         # Status
         if sta is not None:
@@ -194,7 +224,8 @@ def fetch_device_info(devices_node, interpreter, namepath):
 
         # Resources
         if interpreter.context.has_symbol(f"{namepath}._CRS"):
-            data = interpreter.interpret_method_call(f"{namepath}._CRS").get()
+            result = interpreter.interpret_method_call(f"{namepath}._CRS")
+            data = result.get()
             rdt = parse_resource_data(data)
 
             for idx, item in enumerate(rdt.items):
@@ -203,6 +234,8 @@ def fetch_device_info(devices_node, interpreter, namepath):
                     resource_parsers[p](idx, item, element)
                 else:
                     add_child(element, "resource", type=item.__class__.__name__, id=f"res{idx}")
+
+            add_object_to_device(interpreter.context, namepath, "_CRS", result)
 
         # PCI interrupt routing
         if interpreter.context.has_symbol(f"{namepath}._PRT"):
@@ -260,5 +293,15 @@ def extract(board_etree):
             fetch_device_info(devices_node, interpreter, device.name)
         except Exception as e:
             logging.info(f"Fetch information about device object {device.name} failed: {str(e)}")
+
+    visitor = GenerateBinaryVisitor()
+    for dev, objs in device_objects.items():
+        element = get_node(devices_node, f"//device[acpi_object='{dev}']")
+        if element is not None:
+            tree = builder.DefDevice(
+                builder.PkgLength(),
+                dev,
+                builder.TermList(*list(objs.values())))
+            add_child(element, "aml_template", visitor.generate(tree).hex())
 
 advanced = True

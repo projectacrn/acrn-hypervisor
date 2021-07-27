@@ -23,7 +23,7 @@ def getkey(child):
             return 0xFFFFFFFF
 
     tags = ["vendor", "identifier", "subsystem_vendor", "subsystem_identifier", "class",
-            "acpi_object", "compatible_id", "status",
+            "acpi_object", "compatible_id", "acpi_uid", "aml_template", "status",
             "resource", "capability", "interrupt_pin_routing", "bus", "device"]
 
     if child.tag == "resource":
