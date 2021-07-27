@@ -13,7 +13,7 @@ NATIVE_TTYS_DIC = {}
 
 START_HPA_LIST = ['0', '0x100000000', '0x120000000']
 
-KERN_TYPE_LIST = ['KERNEL_BZIMAGE', 'KERNEL_ZEPHYR']
+KERN_TYPE_LIST = ['KERNEL_BZIMAGE', 'KERNEL_RAWIMAGE', 'KERNEL_ELF']
 KERN_BOOT_ADDR_LIST = ['0x100000']
 
 VUART_TYPE = ['VUART_LEGACY_PIO', 'VUART_PCI']
@@ -515,7 +515,7 @@ def os_kern_load_addr_check(kern_type, id_kern_load_addr_dic, prime_item, item):
     """
 
     for id_key, kern_load_addr in id_kern_load_addr_dic.items():
-        if kern_type[id_key] != 'KERNEL_ZEPHYR':
+        if kern_type[id_key] != 'KERNEL_RAWIMAGE':
             continue
 
         if not kern_load_addr:
@@ -537,7 +537,7 @@ def os_kern_entry_addr_check(kern_type, id_kern_entry_addr_dic, prime_item, item
     """
 
     for id_key, kern_entry_addr in id_kern_entry_addr_dic.items():
-        if kern_type[id_key] != 'KERNEL_ZEPHYR':
+        if kern_type[id_key] != 'KERNEL_RAWIMAGE':
             continue
 
         if not kern_entry_addr:
