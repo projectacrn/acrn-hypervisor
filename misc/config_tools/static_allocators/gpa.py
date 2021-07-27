@@ -204,7 +204,7 @@ def get_devs_mem_passthrough(board_etree, scenario_etree):
 
 def get_pci_hole_native(board_etree):
     resources = board_etree.xpath(f"//bus[@type = 'pci']/device[@address]/resource[@type = 'memory' and @len != '0x0']")
-    resources_hostbridge =  board_etree.xpath("//bus[@address = '0x0']/resource[@type = 'memory' and @len != '0x0' and not(@id) and not(@width)]")
+    resources_hostbridge =  board_etree.xpath("//bus[@address = '0x0']/resource[@type = 'memory' and @len != '0x0' and not(starts-with(@id, 'bar')) and not(@width)]")
     low_mem = set()
     high_mem = set()
     for resource_hostbridge in resources_hostbridge:

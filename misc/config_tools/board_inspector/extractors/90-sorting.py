@@ -11,7 +11,7 @@ def getkey(child):
         if typ in ["memory", "io_port"]:
             return int(node.get("min"), base=16)
         elif typ == "irq":
-            return int(node.get("int"), base=16)
+            return int(node.get("int").split(", ")[0])
         else:
             return 0
 
@@ -22,7 +22,9 @@ def getkey(child):
         else:
             return 0xFFFFFFFF
 
-    tags = ["vendor", "identifier", "subsystem_vendor", "subsystem_identifier", "class", "acpi_object", "status", "resource", "capability", "bus", "device"]
+    tags = ["vendor", "identifier", "subsystem_vendor", "subsystem_identifier", "class",
+            "acpi_object", "status",
+            "resource", "capability", "interrupt_pin_routing", "bus", "device"]
 
     if child.tag == "resource":
         return (tags.index(child.tag), child.get("type"), resource_subkey(child))

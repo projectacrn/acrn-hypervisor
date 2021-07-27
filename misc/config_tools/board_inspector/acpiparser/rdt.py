@@ -611,6 +611,9 @@ def rdt_factory(field_list):
             for f in self._fields_:
                 yield getattr(self, f[0])
 
+        def __getitem__(self, index):
+            return getattr(self, self._fields_[index][0])
+
     class ResourceData(cdata.Struct):
         _pack_ = 1
         _fields_ = [

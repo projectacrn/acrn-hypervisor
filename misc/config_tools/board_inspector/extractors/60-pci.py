@@ -15,6 +15,13 @@ from extractors.helpers import add_child, get_node
 PCI_ROOT_PATH = "/sys/devices/pci0000:00"
 bdf_regex = re.compile(r"^([0-9a-f]{4}):([0-9a-f]{2}):([0-9a-f]{2}).([0-7]{1})$")
 
+interrupt_pin_names = {
+    1: "INTA#",
+    2: "INTB#",
+    3: "INTC#",
+    4: "INTD#",
+}
+
 def collect_hostbridge_resources(bus_node):
     with open("/proc/iomem", "r") as f:
         for line in f.readlines():
@@ -114,6 +121,17 @@ def parse_device(bus_node, device_path):
         if cap.name in cap_parsers:
             cap_parsers[cap.name](cap_node, cap)
 
+    # Interrupt pin
+    pin = cfg.header.interrupt_pin
+    if pin > 0 and pin <= 4:
+        pin_name = interrupt_pin_names[pin]
+        res_node = add_child(device_node, "resource", type="interrupt_pin", pin=pin_name)
+
+        prt_address = hex(int(device_node.get("address"), 16) | 0xffff)
+        mapping = device_node.xpath(f"../interrupt_pin_routing/routing[@address='{prt_address}']/mapping[@pin='{pin_name}']")
+        if len(mapping) > 0:
+            res_node.set("source", mapping[0].get("source"))
+
     # Secondary bus
     if cfg.header.header_type == 1:
         # According to section 3.2.5.6, PCI to PCI Bridge Architecture Specification, the I/O Limit register contains a
@@ -134,6 +152,14 @@ def parse_device(bus_node, device_path):
                       min=hex(memory_base), max=hex(memory_end), len=hex(memory_end - memory_base + 1))
 
         secondary_bus_node = add_child(device_node, "bus", type="pci", address=hex(cfg.header.secondary_bus_number))
+
+        # If a PCI routing table is provided for the root port / switch, move the routing table down to the bus node, in
+        # order to align the relative position of devices and routing tables.
+        prt = device_node.find("interrupt_pin_routing")
+        if prt is not None:
+            device_node.remove(prt)
+            secondary_bus_node.append(prt)
+
         return secondary_bus_node
 
     return device_node
