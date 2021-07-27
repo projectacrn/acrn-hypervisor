@@ -357,7 +357,7 @@ class ConcreteInterpreter(Interpreter):
 
     def DefReturn(self, tree):
         obj = self.interpret(tree.children[0])
-        if isinstance(obj, (self.Argument, self.LocalVariable)):
+        while isinstance(obj, (self.Argument, self.LocalVariable)):
             obj = obj.get_obj()
         self.stack[-1].return_value = obj
         raise MethodReturn()
