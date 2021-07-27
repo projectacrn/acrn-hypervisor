@@ -5,12 +5,18 @@
 
 """
 
-import os, re, argparse, shutil
-import xml.etree.ElementTree as ElementTree
+import sys, os, re, argparse, shutil, ctypes
 from acpi_const import *
-import board_cfg_lib
+import board_cfg_lib, common
 import collections
 import lxml.etree
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'board_inspector'))
+from acpiparser import rdt
+from acpiparser.dsdt import parse_tree
+from acpiparser.aml import builder
+from acpiparser.aml.context import Context
+from acpiparser.aml.visitors import GenerateBinaryVisitor, PrintLayoutVisitor
 
 def calculate_checksum8():
     '''
@@ -327,61 +333,304 @@ def gen_tpm2(dest_vm_acpi_path, passthru_devices):
         dest.writelines(lines)
 
 
-def gen_dsdt(dest_vm_acpi_path, passthru_devices, board_info):
-    '''
-    generate dsdt.asl
-    :param dest_vm_acpi_path: the path to store generated ACPI asl code
-    :param passthru_devices:
-    :return:
-    '''
-    dsdt_asl = 'dsdt.asl'
-    p_dsdt_start = r'{'
-    (bdf_desc_map, bdf_vpid_map) = board_cfg_lib.get_pci_info(board_info)
-    with open(os.path.join(dest_vm_acpi_path, dsdt_asl), 'w') as dest:
-        lines = []
-        with open(os.path.join(TEMPLATE_ACPI_PATH, dsdt_asl), 'r') as src:
-            for line in src.readlines():
-                lines.append(line)
-                if line.startswith(p_dsdt_start):
-                    for passthru_device in passthru_devices:
-                        passthru_bdf = None
-                        passthru_vpid = None
-                        for bdf in bdf_desc_map.keys():
-                            if bdf_desc_map[bdf].find(passthru_device) >= 0:
-                                passthru_bdf = bdf
-                                break
-                        if passthru_bdf is not None and passthru_bdf in bdf_vpid_map.keys():
-                            passthru_vpid = bdf_vpid_map[passthru_bdf]
-                        if passthru_device in ['TPM2']:
-                            tpm2_asl = os.path.join(TEMPLATE_ACPI_PATH, 'dsdt_tpm2.asl')
-                            start = False
-                            with open(tpm2_asl, 'r') as tpm2_src:
-                                for tpm2_line in tpm2_src.readlines():
-                                    if tpm2_line.startswith('{'):
-                                        start = True
-                                        continue
-                                    if tpm2_line.startswith('}'):
-                                        start = False
-                                        continue
-                                    if start:
-                                        lines.append(tpm2_line)
-                        elif passthru_vpid is not None and passthru_vpid == TSN_DEVICE_LIST[1]:
-                            otn1_asl = os.path.join(TEMPLATE_ACPI_PATH, 'dsdt_tsn_otn1.asl')
-                            start = False
-                            with open(otn1_asl, 'r') as otn1_src:
-                                for otn1_line in otn1_src.readlines():
-                                    if otn1_line.startswith('{'):
-                                        start = True
-                                        continue
-                                    if otn1_line.startswith('}'):
-                                        start = False
-                                        continue
-                                    if start:
-                                        lines.append(otn1_line)
-                        else:
-                            pass
-        dest.writelines(lines)
+def encode_eisa_id(s):
+    chars = list(map(lambda x: (ord(x) - 0x40) & 0x1F, s[0:3]))
+    digits = list(map(lambda x: int(x, 16), s[3:7]))
+    encoded = [
+        (chars[0] << 2) | (chars[1] >> 3),     # Bit 6:2 is char[0]; Bit 1:0 is the higher 2 bits of char[1].
+        ((chars[1] & 0x7) << 5) | (chars[2]),  # Bit 7:5 is the lower 3 bits of char[1]; Bit 4:0 is char[2].
+        (digits[0] << 4) | (digits[1]),        # Bit 7:4 is digits[0]; Bit 3:0 is digits[1]
+        (digits[2] << 4) | (digits[3]),        # Bit 7:4 is digits[2]; Bit 3:0 is digits[2]
+    ]
+    return int.from_bytes(bytes(encoded), sys.byteorder)
 
+def gen_root_pci_bus(path, prt_packages):
+    resources = []
+
+    # Bus number
+    cls = rdt.LargeResourceItemWordAddressSpace_factory()
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    res = cls.from_buffer(data)
+    res.type = 1  # Large type
+    res.name = rdt.LARGE_RESOURCE_ITEM_WORD_ADDRESS_SPACE
+    res.length = length - 3
+    res._TYP = 2  # Bus number range
+    res._DEC = 0  # Positive decoding
+    res._MIF = 1  # Minimum address fixed
+    res._MAF = 1  # Maximum address fixed
+    res.flags = 0
+    res._MAX = 0xff
+    res._LEN = 0x100
+    resources.append(data)
+
+    # The PCI hole below 4G
+    cls = rdt.LargeResourceItemDWordAddressSpace_factory()
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    res = cls.from_buffer(data)
+    res.type = 1  # Large type
+    res.name = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE
+    res.length = length - 3
+    res._TYP = 0  # Memory range
+    res._DEC = 0  # Positive decoding
+    res._MIF = 1  # Minimum address fixed
+    res._MAF = 1  # Maximum address fixed
+    res.flags = 1  # read-write, non-cachable, TypeStatic
+    res._MIN = 0x80000000
+    res._MAX = 0xdfffffff
+    res._LEN = 0x60000000
+    resources.append(data)
+
+    # The PCI hole above 4G
+    cls = rdt.LargeResourceItemQWordAddressSpace_factory()
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    res = cls.from_buffer(data)
+    res.type = 1  # Large type
+    res.name = rdt.LARGE_RESOURCE_ITEM_QWORD_ADDRESS_SPACE
+    res.length = length - 3
+    res._TYP = 0  # Memory range
+    res._DEC = 0  # Positive decoding
+    res._MIF = 1  # Minimum address fixed
+    res._MAF = 1  # Maximum address fixed
+    res.flags = 1  # read-write, non-cachable, TypeStatic
+    res._MIN = 0x4000000000
+    res._MAX = 0x7fffffffff
+    res._LEN = 0x4000000000
+    resources.append(data)
+
+    # End tag
+    resources.append(bytes([0x79, 0]))
+    resource_buf = bytearray().join(resources)
+    checksum = (256 - (sum(resource_buf) % 256)) % 256
+    resource_buf[-1] = checksum
+
+    # Device object for the root PCI bus
+    tree = builder.DefDevice(
+        builder.PkgLength(),
+        path,
+        builder.TermList(
+            builder.DefName(
+                "_HID",
+                builder.DWordConst(encode_eisa_id("PNP0A08"))),
+            builder.DefName(
+                "_CID",
+                builder.DWordConst(encode_eisa_id("PNP0A03"))),
+            builder.DefName(
+                "_BBN",
+                builder.ZeroOp()),
+            builder.DefName(
+                "_UID",
+                builder.ZeroOp()),
+            builder.DefName(
+                "_CRS",
+                builder.DefBuffer(
+                    builder.PkgLength(),
+                    builder.WordConst(len(resource_buf)),
+                    builder.ByteList(resource_buf))),
+            builder.DefName(
+                "_PRT",
+                builder.DefPackage(
+                    builder.PkgLength(),
+                    builder.ByteData(len(prt_packages)),
+                    builder.PackageElementList(*prt_packages)))))
+
+    return tree
+
+def collect_dependent_devices(board_etree, device_node):
+    types_in_scope = ["uses", "is used by", "consumes resources from"]
+    result = set()
+    queue = [device_node]
+
+    while queue:
+        device = queue.pop()
+        if device not in result:
+            result.add(device)
+            for node in device.findall("dependency"):
+                if node.get("type") in types_in_scope:
+                    peer_device = common.get_node(f"//device[acpi_object='{node.text}']", board_etree)
+                    if peer_device is not None:
+                        queue.append(peer_device)
+
+    result.discard(device_node)
+    return result
+
+def add_or_replace_object(device_object, new_tree):
+    name = new_tree.NameString.value
+    objects_tree = device_object.TermList
+    for idx, object_tree in enumerate(objects_tree.children):
+        if object_tree.NameString.value == name:
+            objects_tree.children[idx] = new_tree
+            return
+    objects_tree.append_child(new_tree)
+
+class ObjectCollector:
+    def __init__(self):
+        self.__objects = collections.defaultdict(lambda: [])
+
+    @staticmethod
+    def __discard_external_objects(tree):
+        objects_tree = tree.TermList
+        objects_tree.children = list(filter(lambda x: x.label != "DefExternal", objects_tree.children))
+        return tree
+
+    def add_device_object(self, device_object):
+        device_path = device_object.NameString.value
+        scope = Context.parent(device_path)
+        device_name = device_path[-4:]
+        device_object.NameString.value = device_name
+        self.__objects[scope].append(self.__discard_external_objects(device_object))
+
+    def add_object(self, scope, obj):
+        self.__objects[scope].append(obj)
+
+    def __get_scope_contents(self, termlist, path):
+        scopes = [i for i in path.lstrip("\\").split(".") if i]
+        ret = termlist
+        for scope in scopes:
+            for term in ret:
+                if term.label in ["DefScope", "DefDevice"] and term.NameString.value == scope:
+                    ret = term.TermList.children
+                    break
+            else:
+                tree = builder.DefScope(builder.PkgLength(), scope, builder.TermList())
+                ret.append(tree)
+                ret = tree.TermList.children
+        return ret
+
+    def get_term_list(self):
+        acc = []
+
+        for scope, objects in sorted(self.__objects.items(), key=lambda p:p[0]):
+            if scope.startswith("\\"):
+                self.__get_scope_contents(acc, scope).extend(objects)
+            else:
+                print(f"Relative scope is unexpected: {scope}. The objects will be added to the root scope.")
+                acc.extend(objects)
+
+        return acc
+
+def gen_dsdt(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
+    interrupt_pin_ids = {
+        "INTA#": 0,
+        "INTB#": 1,
+        "INTC#": 2,
+        "INTD#": 3,
+    }
+
+    header = builder.DefBlockHeader(
+        int.from_bytes(bytearray("DSDT", "ascii"), sys.byteorder),     # Signature
+        0x0badbeef,                                                    # Length, will calculate later
+        3,                                                             # Revision
+        0,                                                             # Checksum, will calculate later
+        int.from_bytes(bytearray("ACRN  ", "ascii"), sys.byteorder),   # OEM ID
+        int.from_bytes(bytearray("ACRNDSDT", "ascii"), sys.byteorder), # OEM Table ID
+        1,                                                             # OEM Revision
+        int.from_bytes(bytearray("INTL", "ascii"), sys.byteorder),     # Compiler ID
+        0x20190703,                                                    # Compiler Version
+    )
+
+    objects = ObjectCollector()
+    prt_packages = []
+
+    pci_dev_regex = re.compile(r"([0-9a-f]{2}):([0-1][0-9a-f]{1}).([0-7]) .*")
+    for pci_dev in scenario_etree.xpath(f"//vm[@id='{vm_id}']/pci_devs/pci_dev/text()"):
+        m = pci_dev_regex.match(pci_dev)
+        if m:
+            device_number = int(m.group(2), 16)
+            function_number = int(m.group(3))
+            bus_number = int(m.group(1), 16)
+            bdf = f"{bus_number:02x}:{device_number:02x}.{function_number}"
+            address = hex((device_number << 16) | (function_number))
+            device_node = common.get_node(f"//bus[@address='{hex(bus_number)}']/device[@address='{address}']", board_etree)
+            alloc_node = common.get_node(f"/acrn-config/vm[@id='{vm_id}']/device[@name='PTDEV_{bdf}']", allocation_etree)
+            if device_node is not None and alloc_node is not None:
+                assert int(alloc_node.find("bus").text, 16) == 0, "Virtual PCI devices must be on bus 0."
+                vdev = int(alloc_node.find("dev").text, 16)
+                vfunc = int(alloc_node.find("func").text, 16)
+
+                # The AML object template, with _ADR replaced to vBDF
+                template = device_node.find("aml_template")
+                if template is not None:
+                    tree = parse_tree("DefDevice", bytes.fromhex(template.text))
+                    vaddr = (vdev << 16) | vfunc
+                    add_or_replace_object(tree,
+                        builder.DefName("_ADR", builder.build_value(vaddr)))
+                    objects.add_device_object(tree)
+
+                # The _PRT remapping package, if necessary
+                intr_pin_node = common.get_node("resource[@type='interrupt_pin']", device_node)
+                virq_node = common.get_node("pt_intx", alloc_node)
+                if intr_pin_node is not None and virq_node is not None:
+                    pin_id = interrupt_pin_ids[intr_pin_node.get("pin")]
+                    vaddr = (vdev << 16) | 0xffff
+                    pirq = int(intr_pin_node.get("source", -1))
+                    virq_mapping = dict(eval(f"[{virq_node.text.replace(' ','').replace(')(', '), (')}]"))
+                    if pirq in virq_mapping.keys():
+                        virq = virq_mapping[pirq]
+                        prt_packages.append(
+                            builder.DefPackage(
+                                builder.PkgLength(),
+                                builder.ByteData(4),
+                                builder.PackageElementList(
+                                    builder.build_value(vaddr),
+                                    builder.build_value(pin_id),
+                                    builder.build_value(0),
+                                    builder.build_value(virq))))
+
+                for peer_device_node in collect_dependent_devices(board_etree, device_node):
+                    template = peer_device_node.find("aml_template")
+                    if template is not None:
+                        tree = parse_tree("DefDevice", bytes.fromhex(template.text))
+                        objects.add_device_object(tree)
+
+    root_pci_bus = board_etree.xpath("//bus[@type='pci' and @address='0x0']")
+    if root_pci_bus:
+        acpi_object = root_pci_bus[0].find("acpi_object")
+        if acpi_object is not None:
+            path = acpi_object.text
+            objects.add_device_object(gen_root_pci_bus(path, prt_packages))
+
+    # If TPM is assigned to the VM, copy the TPM2 device object to vACPI as well.
+    #
+    # FIXME: Today the TPM2 MMIO registers are always located at 0xFED40000 with length 0x5000. The same address is used
+    # as the guest physical address of the passed through TPM2. Thus, it works for now to reuse the host TPM2 device
+    # object without updating the addresses of operation regions or resource descriptors. It is, however, necessary to
+    # introduce a pass to translate such address to arbitrary guest physical ones in the future.
+    has_tpm2 = common.get_node(f"//vm[@id='{vm_id}']//TPM2/text()", scenario_etree)
+    if has_tpm2 == "y":
+        # TPM2 devices should have "MSFT0101" as hardware id or compatible ID
+        template = common.get_node("//device[@id='MSFT0101']/aml_template", board_etree)
+        if template is None:
+            template = common.get_node("//device[compatible_id='MSFT0101']/aml_template", board_etree)
+        if template is not None:
+            tree = parse_tree("DefDevice", bytes.fromhex(template.text))
+            objects.add_device_object(tree)
+
+    s5_object = builder.DefName(
+        "_S5_",
+        builder.DefPackage(
+            builder.PkgLength(),
+            2,
+            builder.PackageElementList(
+                builder.build_value(5),
+                builder.build_value(0))))
+    objects.add_object("\\", s5_object)
+
+    amlcode = builder.AMLCode(header, *objects.get_term_list())
+    with open(dest_path, "wb") as dest:
+        visitor = GenerateBinaryVisitor()
+        binary = bytearray(visitor.generate(amlcode))
+
+        # Overwrite length
+        binary[4:8] = len(binary).to_bytes(4, sys.byteorder)
+
+        # Overwrite checksum
+        checksum = (256 - (sum(binary) % 256)) % 256
+        binary[9] = checksum
+
+        dest.write(binary)
 
 def main(args):
 
@@ -396,8 +645,10 @@ def main(args):
     out = params['--out']
 
     board_etree = lxml.etree.parse(board)
-    board_root = ElementTree.parse(board).getroot()
-    scenario_root = ElementTree.parse(scenario).getroot()
+    board_root = board_etree.getroot()
+    scenario_etree = lxml.etree.parse(scenario)
+    scenario_root = scenario_etree.getroot()
+    allocation_etree = lxml.etree.parse(os.path.join(os.path.dirname(board), "configs", "allocation.xml"))
     board_type = board_root.attrib['board']
     scenario_name = scenario_root.attrib['scenario']
     pcpu_list = board_root.find('CPU_PROCESSOR_INFO').text.strip().split(',')
@@ -487,7 +738,7 @@ def main(args):
 
             gen_madt(dest_vm_acpi_path, len(dict_pcpu_list[vm_id]), apic_ids)
             gen_tpm2(dest_vm_acpi_path, passthru_devices)
-            gen_dsdt(dest_vm_acpi_path, passthru_devices, board)
+            gen_dsdt(board_etree, scenario_etree, allocation_etree, vm_id, os.path.join(dest_vm_acpi_path, "dsdt.aml"))
             print('generate ASL code of ACPI tables for VM {} into {}'.format(vm_id, dest_vm_acpi_path))
         else:
             emsg = 'no cpu affinity config for VM {}'.format(vm_id)
@@ -500,4 +751,3 @@ def main(args):
 if __name__ == '__main__':
 
     main(sys.argv)
-

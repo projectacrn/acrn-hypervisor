@@ -42,15 +42,19 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):
                 shutil.copyfile(os.path.join(dest_vm_acpi_path, acpi_table[0]),
                                 os.path.join(dest_vm_acpi_bin_path, acpi_table[1]))
         else:
-            rc = exec_command('iasl {}'.format(acpi_table[0]))
-            if rc == 0 and os.path.isfile(os.path.join(dest_vm_acpi_path, acpi_table[1])):
-                shutil.move(os.path.join(dest_vm_acpi_path, acpi_table[1]),
+            if acpi_table[0].endswith(".asl"):
+                rc = exec_command('iasl {}'.format(acpi_table[0]))
+                if rc == 0 and os.path.isfile(os.path.join(dest_vm_acpi_path, acpi_table[1])):
+                    shutil.move(os.path.join(dest_vm_acpi_path, acpi_table[1]),
+                                os.path.join(dest_vm_acpi_bin_path, acpi_table[1]))
+                else:
+                    if os.path.isfile(os.path.join(dest_vm_acpi_path, acpi_table[1])):
+                        os.remove(os.path.join(dest_vm_acpi_path, acpi_table[1]))
+                    rmsg = 'failed to compile {}'.format(acpi_table[0])
+                    break
+            elif acpi_table[0].endswith(".aml"):
+                shutil.copy(os.path.join(dest_vm_acpi_path, acpi_table[0]),
                             os.path.join(dest_vm_acpi_bin_path, acpi_table[1]))
-            else:
-                if os.path.isfile(os.path.join(dest_vm_acpi_path, acpi_table[1])):
-                    os.remove(os.path.join(dest_vm_acpi_path, acpi_table[1]))
-                rmsg = 'failed to compile {}'.format(acpi_table[0])
-                break
 
     os.chdir(curr_path)
     if not rmsg:

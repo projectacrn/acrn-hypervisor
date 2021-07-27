@@ -15,7 +15,7 @@ TEMPLATE_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'acpi_template', 'template')
 
 ACPI_TABLE_LIST = [('rsdp.asl', 'rsdp.aml'), ('xsdt.asl', 'xsdt.aml'), ('facp.asl', 'facp.aml'),
                    ('mcfg.asl', 'mcfg.aml'), ('apic.asl', 'apic.aml'), ('tpm2.asl', 'tpm2.aml'),
-                   ('dsdt.asl', 'dsdt.aml'), ('PTCT', 'ptct.aml'), ('RTCT', 'rtct.aml')]
+                   ('dsdt.aml', 'dsdt.aml'), ('PTCT', 'ptct.aml'), ('RTCT', 'rtct.aml')]
 
 ACPI_BASE = 0x7ff00000
 
