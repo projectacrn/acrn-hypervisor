@@ -355,7 +355,7 @@ def allocate_log_area(board_etree, scenario_etree, allocation_etree):
 
     if common.get_node("//capability[@id='log_area']", board_etree) is not None:
         # VIRT_ACPI_DATA_ADDR
-        log_area_end_address = 0x7FF00000
+        log_area_end_address = 0x7FFF0000
         log_area_start_address = log_area_end_address - LOG_AREA_MIN_LEN
         allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '0']", allocation_etree)
         if allocation_vm_node is None:
@@ -376,7 +376,7 @@ def allocate_log_area(board_etree, scenario_etree, allocation_etree):
  +--------------------------------------------------+ <--Start of VM low pci hole
  |                                                  |    Offset 0x80000000
 ...                                                ...
- |            TPM2 log area at  0x7FEC0000          |
+ |            TPM2 log area at  0x7FFB0000          |
 ...                                                ...
  |                                                  |
  +--------------------------------------------------+ <--Offset 0
