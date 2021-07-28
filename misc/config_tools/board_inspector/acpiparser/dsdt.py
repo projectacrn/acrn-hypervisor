@@ -7,7 +7,7 @@ import os
 import logging
 
 from acpiparser.aml.stream import Stream
-from acpiparser.aml.parser import AMLCode, DeferredExpansion
+from acpiparser.aml import parser
 from acpiparser.aml.tree import Tree
 from acpiparser.aml.context import Context
 from acpiparser.aml.interpreter import ConcreteInterpreter
@@ -26,8 +26,8 @@ def DSDT(val):
             logging.info(f"Loading {t}")
             context.switch_stream(t)
             tree = Tree()
-            AMLCode.parse(context, tree)
-            tree = DeferredExpansion(context).transform(tree)
+            parser.AMLCode.parse(context, tree)
+            tree = parser.DeferredExpansion(context).transform(tree)
             context.trees[os.path.basename(t)] = tree
     except Exception as e:
         context.current_stream.dump()
@@ -38,3 +38,11 @@ def DSDT(val):
     for tree in context.trees.values():
         visitor.visit(tree)
     return context
+
+def parse_tree(label, data):
+    context = Context()
+    context.switch_stream(data)
+    tree = Tree()
+    getattr(parser, label).parse(context, tree)
+    tree = parser.DeferredExpansion(context).transform(tree)
+    return tree

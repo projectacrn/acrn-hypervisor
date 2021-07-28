@@ -167,15 +167,20 @@ class Context:
         # Mode switches
         self.__skip_external_on_lookup = False
 
-    def switch_stream(self, filepath):
-        if not filepath in self.streams.keys():
-            with open(filepath, "rb") as f:
-                stream = Stream(f.read())
-                self.streams[filepath] = stream
-                self.current_stream = stream
+    def switch_stream(self, val):
+        if isinstance(val, str):
+            if not val in self.streams.keys():
+                with open(val, "rb") as f:
+                    stream = Stream(f.read())
+                    self.streams[val] = stream
+                    self.current_stream = stream
+            else:
+                self.current_stream = self.streams[val]
+                self.current_stream.reset()
+        elif isinstance(val, (bytes, bytearray)):
+            self.current_stream = Stream(val)
         else:
-            self.current_stream = self.streams[filepath]
-            self.current_stream.reset()
+            raise NotImplementedError(f"Cannot use {val} as a stream.")
 
     def get_scope(self):
         return self.realpath(self.__current_scope, "")
