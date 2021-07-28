@@ -240,7 +240,7 @@ max_address_fixed = {
 
 # 6.4.3.5.1 QWord Address Space Descriptor
 
-def LargeResourceItemQWordAddressSpace_factory(_len):
+def LargeResourceItemQWordAddressSpace_factory(_len=43):
     class LargeResourceItemQWordAddressSpace(cdata.Struct):
         _pack_ = 1
         _fields_ = LargeResourceDataTag._fields_ + [
@@ -271,7 +271,7 @@ def LargeResourceItemQWordAddressSpace_factory(_len):
 
 # 6.4.3.5.2 DWord Address Space Descriptor
 
-def LargeResourceItemDWordAddressSpace_factory(_len):
+def LargeResourceItemDWordAddressSpace_factory(_len=23):
     class LargeResourceItemDWordAddressSpace(cdata.Struct):
         _pack_ = 1
         _fields_ = LargeResourceDataTag._fields_ + [
@@ -302,7 +302,7 @@ def LargeResourceItemDWordAddressSpace_factory(_len):
 
 # 6.4.3.5.3 Word Address Space Descriptor
 
-def LargeResourceItemWordAddressSpace_factory(_len):
+def LargeResourceItemWordAddressSpace_factory(_len=13):
     class LargeResourceItemWordAddressSpace(cdata.Struct):
         _pack_ = 1
         _fields_ = LargeResourceDataTag._fields_ + [
