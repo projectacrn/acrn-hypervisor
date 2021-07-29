@@ -4,7 +4,6 @@
 #
 
 import parser_lib
-import subprocess
 
 MEM_PATH = ['/proc/iomem', '/proc/meminfo']
 TTY_PATH = '/sys/class/tty/'

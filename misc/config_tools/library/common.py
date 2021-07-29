@@ -7,7 +7,7 @@ import os
 import sys
 import getopt
 import shutil
-import subprocess
+import subprocess # nosec
 import xml.etree.ElementTree as ET
 import re
 import lxml

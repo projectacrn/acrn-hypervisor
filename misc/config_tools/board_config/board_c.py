@@ -5,7 +5,6 @@
 
 import sys
 import enum
-import subprocess
 import board_cfg_lib
 import common
 

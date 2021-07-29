@@ -7,7 +7,7 @@
 
 import sys, os
 import logging
-import subprocess
+import subprocess # nosec
 import lxml.etree
 import argparse
 from importlib import import_module

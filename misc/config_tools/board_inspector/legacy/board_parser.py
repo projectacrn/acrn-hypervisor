@@ -7,7 +7,7 @@ import os
 import sys
 import shutil
 import argparse
-import subprocess
+import subprocess # nosec
 import pci_dev
 import dmi
 import acpi
