@@ -5,12 +5,14 @@
 
 import os
 import logging
+import gzip
 
 from extractors.helpers import get_node
 
 PCI_IDS_PATHS = [
     "/usr/share/misc/pci.ids",
     "/usr/share/hwdata/pci.ids",
+    "/usr/share/pci.ids.gz",
 ]
 
 class PCI_IDs:
@@ -22,6 +24,9 @@ class PCI_IDs:
         class_id = None
 
         for line in f.readlines():
+            if isinstance(line, (bytes, bytearray)):
+                line = line.decode()
+
             line = line.strip("\n")
             if line == "" or line.startswith("#"):
                 continue
@@ -106,7 +111,8 @@ def lookup_pci_devices(board_etree):
             pci_id_path = path
 
     if pci_id_path:
-        with open(pci_id_path, "r") as f:
+        opener = gzip.open if pci_id_path.endswith(".gz") else open
+        with opener(pci_id_path, "r") as f:
             ids = PCI_IDs(f)
 
             devices = board_etree.xpath("//device")
