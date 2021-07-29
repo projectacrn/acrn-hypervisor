@@ -4,7 +4,7 @@
 #
 
 import sys
-import subprocess
+import subprocess # nosec
 import board_cfg_lib, scenario_cfg_lib
 import hv_cfg_lib
 import common

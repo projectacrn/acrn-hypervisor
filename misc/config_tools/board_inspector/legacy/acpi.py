@@ -5,7 +5,7 @@
 
 import os
 import sys
-import subprocess
+import subprocess # nosec
 import shutil
 from collections import defaultdict
 import dmar

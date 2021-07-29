@@ -6,7 +6,8 @@
 """
 
 import logging
-import os, sys, subprocess, argparse, re, shutil
+import subprocess # nosec
+import os, sys, argparse, re, shutil
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'board_inspector'))
 import lxml.etree
 from acpi_const import *

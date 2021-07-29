@@ -4,7 +4,7 @@
 #
 
 import os
-import subprocess
+import subprocess # nosec
 
 BIOS_INFO_KEY = ['BIOS Information', 'Vendor:', 'Version:', 'Release Date:', 'BIOS Revision:']
 
