@@ -199,17 +199,17 @@ static const struct e820_entry pre_ve820_template[E820_MAX_ENTRIES] = {
 	},
 	{	/* part2 of lowmem of hpa1*/
 		.baseaddr = PRE_RTVM_SW_SRAM_BASE_GPA + PRE_RTVM_SW_SRAM_MAX_SIZE,
-		.length   = MEM_2G - MEM_1M - (PRE_RTVM_SW_SRAM_BASE_GPA + PRE_RTVM_SW_SRAM_MAX_SIZE),
+		.length   = VIRT_ACPI_DATA_ADDR - (PRE_RTVM_SW_SRAM_BASE_GPA + PRE_RTVM_SW_SRAM_MAX_SIZE),
 		.type     = E820_TYPE_RAM
 	},
 	{	/* ACPI Reclaim */
-		.baseaddr = VIRT_ACPI_DATA_ADDR,/* consecutive from 0x7fff0000UL */
+		.baseaddr = VIRT_ACPI_DATA_ADDR,/* consecutive from 0x7fe00000UL */
 		.length   = (960U * MEM_1K),	/* 960KB */
 		.type	  = E820_TYPE_ACPI_RECLAIM
 	},
 	{	/* ACPI NVS */
 		.baseaddr = VIRT_ACPI_NVS_ADDR,	/* consecutive after ACPI Reclaim */
-		.length   = 0x10000, 		/* 64KB */
+		.length   = MEM_1M, 		/* only the first 64KB is used for NVS */
 		.type	  = E820_TYPE_ACPI_NVS
 	},
 	{	/* 32bit PCI hole */
