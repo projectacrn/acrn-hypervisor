@@ -6,13 +6,50 @@
 #
 
 
-import sys, os
+import sys, os, re
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 import common, board_cfg_lib
+from collections import namedtuple
 
 PRE_LAUNCHED_VMS_TYPE = ["SAFETY_VM", "PRE_RT_VM", "PRE_STD_VM"]
 POST_LAUNCHED_VMS_TYPE = ["POST_STD_VM", "POST_RT_VM", "KATA_VM"]
 SOS_VM_TYPE = ["SOS_VM"]
+
+class BusDevFunc(namedtuple(
+        "BusDevFunc", [
+            "bus",
+            "dev",
+            "func"])):
+
+    PATTERN = re.compile(r"(?P<bus>[0-9a-f]{2}):(?P<dev>[0-9a-f]{2})\.(?P<func>[0-7]{1})")
+
+    @classmethod
+    def from_str(cls, value):
+        if not(isinstance(value, str)):
+            raise ValueError("value must be a str: {}".format(type(value)))
+
+        match = cls.PATTERN.fullmatch(value)
+        if match:
+            return BusDevFunc(
+                bus=int(match.group("bus"), 16),
+                dev=int(match.group("dev"), 16),
+                func=int(match.group("func"), 16))
+        else:
+            raise ValueError("not a bdf: {!r}".format(value))
+
+    def __init__(self, *args, **kwargs):
+        if not (0x00 <= self.bus <= 0xff):
+            raise ValueError(f"Invalid bus number (0x00 ~ 0xff): {self.bus:#04x}")
+        if not (0x00 <= self.dev <= 0x1f):
+            raise ValueError(f"Invalid device number (0x00 ~ 0x1f): {self.dev:#04x}")
+        if not (0x0 <= self.func <= 0x7):
+            raise ValueError(f"Invalid function number (0 ~ 7): {self.func:#x}")
+
+    def __str__(self):
+        return f"PTDEV_{self.bus:02x}:{self.dev:02x}.{self.func:x}"
+
+    def __repr__(self):
+        return "BusDevFunc.from_str({!r})".format(str(self))
 
 def parse_hv_console(scenario_etree):
     """
