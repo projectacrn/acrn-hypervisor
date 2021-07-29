@@ -52,8 +52,20 @@ def scenarios():
     if board_type is not None:
         default_xml_config = XmlConfig(os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type))
         xml_config = XmlConfig(os.path.join(current_app.config.get('CONFIG_PATH'), board_type))
-        scenario_list = (default_xml_config.list_all(xml_type='scenario')[0], xml_config.list_all(xml_type='scenario')[0])
-        launch_list = (default_xml_config.list_all(xml_type='uos_launcher')[0], xml_config.list_all(xml_type='uos_launcher')[0])
+        generic_config_list = get_generic_config_list()
+        if default_xml_config.list_all(xml_type='scenario')[0]:
+            scenario_list = (
+                default_xml_config.list_all(xml_type='scenario')[0], xml_config.list_all(xml_type='scenario')[0])
+        else:
+            scenario_list = (
+                generic_config_list[0], xml_config.list_all(xml_type='scenario')[0])
+        if default_xml_config.list_all(xml_type='uos_launcher')[0]:
+            launch_list = (
+                default_xml_config.list_all(xml_type='uos_launcher')[0],
+                xml_config.list_all(xml_type='uos_launcher')[0])
+        else:
+            launch_list = (
+                generic_config_list[1], xml_config.list_all(xml_type='uos_launcher')[0])
 
     return render_template('scenario.html', board_info_list=get_board_list(),
                            board_info=board_info, board_type=board_type,
@@ -78,8 +90,21 @@ def scenario(scenario_name):
     if board_type is not None:
         default_xml_config = XmlConfig(os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type))
         xml_config = XmlConfig(os.path.join(current_app.config.get('CONFIG_PATH'), board_type))
-        scenario_list = (default_xml_config.list_all(xml_type='scenario')[0], xml_config.list_all(xml_type='scenario')[0])
-        launch_list = (default_xml_config.list_all(xml_type='uos_launcher')[0], xml_config.list_all(xml_type='uos_launcher')[0])
+        generic_config_list = get_generic_config_list()
+        if default_xml_config.list_all(xml_type='scenario')[0]:
+            scenario_list = (
+                default_xml_config.list_all(xml_type='scenario')[0], xml_config.list_all(xml_type='scenario')[0])
+        else:
+            scenario_list = (
+                generic_config_list[0], xml_config.list_all(xml_type='scenario')[0])
+        if default_xml_config.list_all(xml_type='uos_launcher')[0]:
+            launch_list = (
+                default_xml_config.list_all(xml_type='uos_launcher')[0],
+                xml_config.list_all(xml_type='uos_launcher')[0])
+        else:
+            launch_list = (
+                generic_config_list[1], xml_config.list_all(xml_type='uos_launcher')[0])
+
     xpath_dict = get_xpath_dict_of_xsd()
 
     current_app.config.update(SCENARIO=scenario_name)
@@ -121,8 +146,20 @@ def launches():
     if board_type is not None:
         default_xml_config = XmlConfig(os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type))
         xml_config = XmlConfig(os.path.join(current_app.config.get('CONFIG_PATH'), board_type))
-        scenario_list = (default_xml_config.list_all(xml_type='scenario')[0], xml_config.list_all(xml_type='scenario')[0])
-        launch_list = (default_xml_config.list_all(xml_type='uos_launcher')[0], xml_config.list_all(xml_type='uos_launcher')[0])
+        generic_config_list = get_generic_config_list()
+        if default_xml_config.list_all(xml_type='scenario')[0]:
+            scenario_list = (
+                default_xml_config.list_all(xml_type='scenario')[0], xml_config.list_all(xml_type='scenario')[0])
+        else:
+            scenario_list = (
+                generic_config_list[0], xml_config.list_all(xml_type='scenario')[0])
+        if default_xml_config.list_all(xml_type='uos_launcher')[0]:
+            launch_list = (
+                default_xml_config.list_all(xml_type='uos_launcher')[0],
+                xml_config.list_all(xml_type='uos_launcher')[0])
+        else:
+            launch_list = (
+                generic_config_list[1], xml_config.list_all(xml_type='uos_launcher')[0])
 
     return render_template('launch.html', board_info_list=get_board_list(),
                            board_info=board_info, board_type=board_type,
@@ -146,8 +183,20 @@ def launch(launch_name):
     if board_type is not None:
         default_xml_config = XmlConfig(os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type))
         xml_config = XmlConfig(os.path.join(current_app.config.get('CONFIG_PATH'), board_type))
-        scenario_list = (default_xml_config.list_all(xml_type='scenario')[0], xml_config.list_all(xml_type='scenario')[0])
-        launch_list = (default_xml_config.list_all(xml_type='uos_launcher')[0], xml_config.list_all(xml_type='uos_launcher')[0])
+        generic_config_list = get_generic_config_list()
+        if default_xml_config.list_all(xml_type='scenario')[0]:
+            scenario_list = (
+                default_xml_config.list_all(xml_type='scenario')[0], xml_config.list_all(xml_type='scenario')[0])
+        else:
+            scenario_list = (
+                generic_config_list[0], xml_config.list_all(xml_type='scenario')[0])
+        if default_xml_config.list_all(xml_type='uos_launcher')[0]:
+            launch_list = (
+                default_xml_config.list_all(xml_type='uos_launcher')[0],
+                xml_config.list_all(xml_type='uos_launcher')[0])
+        else:
+            launch_list = (
+                generic_config_list[1], xml_config.list_all(xml_type='uos_launcher')[0])
 
     launch_config.set_curr(launch_name)
 
@@ -539,16 +588,17 @@ def create_setting():
 
     if create_config_data['type'] == 'launch':
         launch_file = os.path.join(setting_path,  create_name + '.xml')
-        if os.path.isfile(launch_file):
-            os.remove(launch_file)
 
         if mode == 'create':
             template_file_name = 'industry_launch_2uos'
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board', template_file_name + '.xml')
-        else:
+        else: #load
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type, default_name + '.xml')
-        copyfile(src_file_name,
-                 os.path.join(current_app.config.get('CONFIG_PATH'), board_type, create_name + '.xml'))
+        if os.path.isfile(src_file_name):
+            if os.path.isfile(launch_file):
+                os.remove(launch_file)
+            copyfile(src_file_name,
+                     os.path.join(current_app.config.get('CONFIG_PATH'), board_type, create_name + '.xml'))
 
         launch_config.set_curr(create_name)
         if mode == 'create':
@@ -562,17 +612,19 @@ def create_setting():
 
     elif create_config_data['type'] == 'scenario':
         scenario_file = os.path.join(setting_path, create_name + '.xml')
-        if os.path.isfile(scenario_file):
-            os.remove(scenario_file)
 
         if mode == 'create':
             template_file_name = 'industry'
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board', template_file_name + '.xml')
         else: # load
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type, default_name + '.xml')
-        copyfile(src_file_name,
+        if os.path.isfile(src_file_name):
+            if os.path.isfile(scenario_file):
+                os.remove(scenario_file)
+            copyfile(src_file_name,
                  os.path.join(current_app.config.get('CONFIG_PATH'), board_type,
                               create_name + '.xml'))
+
         if mode == 'create':
             # update RDT->CLOS_MASK according to board xml
             scenario_config.set_curr(create_name)
@@ -723,32 +775,36 @@ def upload_board_info():
                 os.makedirs(board_path)
             move(save_tmp_board_path, os.path.join(board_path, filename))
             info = 'updated'
-            # if board_type not in board_type_list:
-            #     info = board_type
-            #     for generic_name in os.listdir(os.path.join(config_path, 'generic_board')):
-            #         generic_file = os.path.join(config_path, 'generic_board', generic_name)
-            #         if os.path.isfile(generic_file):
-            #             new_file = os.path.join(user_config_path, board_type, generic_name)
-            #             copyfile(generic_file, new_file)
-            #             xml_config = XmlConfig(user_config_path, user_defined=False)
-            #             xml_config.set_curr(generic_name.rsplit('.', 1)[0])
-            #             xml_config.set_curr_attr('board', board_type)
-            #             # update RDT->CLOS_MASK according to board xml
-            #             xml_config_root = xml_config.get_curr_root()
-            #             if 'board' in xml_config_root.attrib and 'scenario' in xml_config_root.attrib \
-            #                     and 'uos_launcher' not in xml_config_root.attrib:
-            #                 cdp_enabled = xml_config.get_curr_value('hv', 'FEATURES', 'RDT', 'CDP_ENABLED')
-            #                 (num_clos_mask, num_mba_delay) = \
-            #                     get_num_of_rdt_res(filename.rsplit('.', 1)[0], cdp_enabled)
-            #                 elem_clos_max = xml_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
-            #                 elem_mba_delay = xml_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
-            #                 xml_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
-            #                 xml_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
-            #                 for i in range(num_clos_mask):
-            #                     xml_config.clone_curr_elem(elem_clos_max, 'hv', 'FEATURES', 'RDT')
-            #                 for i in range(num_mba_delay):
-            #                     xml_config.clone_curr_elem(elem_mba_delay, 'hv', 'FEATURES', 'RDT')
-            #             xml_config.save(generic_name.rsplit('.', 1)[0], user_defined=False)
+            if board_type not in board_type_list:
+                info = board_type
+                for generic_name in os.listdir(os.path.join(default_config_path, 'generic_board')):
+                    generic_file = os.path.join(default_config_path, 'generic_board', generic_name)
+                    if os.path.isfile(generic_file):
+                        new_file = os.path.join(board_path, generic_name)
+                        copyfile(generic_file, new_file)
+                        xml_config = XmlConfig(board_path)
+                        xml_config.set_curr(generic_name.rsplit('.', 1)[0])
+                        xml_config.set_curr_attr('board', board_type)
+                        xml_config_root = xml_config.get_curr_root()
+                        if 'scenario' not in xml_config_root.attrib and 'uos_launcher' not in xml_config_root.attrib:
+                            os.remove(new_file)
+                            continue
+                        # update RDT->CLOS_MASK according to board xml
+                        if 'board' in xml_config_root.attrib and 'scenario' in xml_config_root.attrib \
+                                and 'uos_launcher' not in xml_config_root.attrib:
+                            cdp_enabled = xml_config.get_curr_value('hv', 'FEATURES', 'RDT', 'CDP_ENABLED')
+                            (num_clos_mask, num_mba_delay) = \
+                                get_num_of_rdt_res(filename.rsplit('.', 1)[0], cdp_enabled)
+                            elem_clos_max = xml_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
+                            elem_mba_delay = xml_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
+                            xml_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
+                            xml_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
+                            for i in range(num_clos_mask):
+                                xml_config.clone_curr_elem(elem_clos_max, 'hv', 'FEATURES', 'RDT')
+                            for i in range(num_mba_delay):
+                                xml_config.clone_curr_elem(elem_mba_delay, 'hv', 'FEATURES', 'RDT')
+                            # xml_config = set_default_config(xml_config)
+                        xml_config.save(generic_name.rsplit('.', 1)[0], user_defined=False)
 
             board_info = os.path.splitext(file.filename)[0]
             current_app.config.update(BOARD_INFO=board_info)
@@ -1257,6 +1313,23 @@ def set_default_config_for_curr_layer(config, elem, key, xpath_dict):
             config.set_curr_value(xpath_dict[sub_key]['default'], *tuple(sub_key.split('/')[2:]))
         set_default_config_for_curr_layer(config, sub_elem, sub_key, xpath_dict)
     return config
+
+
+def get_generic_config_list():
+    default_config_path = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board')
+    default_xml_config = XmlConfig(default_config_path)
+    secenario_config_list = []
+    launch_config_list = []
+    for config_name in os.listdir(default_config_path):
+        if os.path.isfile(os.path.join(default_config_path, config_name)):
+            default_xml_config.set_curr(config_name.rsplit('.', 1)[0])
+            xml_config_root = default_xml_config.get_curr_root()
+            if 'scenario' in xml_config_root.attrib and 'uos_launcher' not in xml_config_root.attrib:
+                secenario_config_list.append(config_name.rsplit('.', 1)[0])
+            elif 'scenario' in xml_config_root.attrib and 'uos_launcher' in xml_config_root.attrib:
+                launch_config_list.append(config_name.rsplit('.', 1)[0])
+
+    return (secenario_config_list, launch_config_list)
 
 
 @CONFIG_APP.context_processor
