@@ -430,11 +430,6 @@ static int32_t check_vmx_mmu_cap(void)
 	} else if (!pcpu_has_vmx_ept_vpid_cap(VMX_EPT_2MB_PAGE)) {
 		printf("%s, ept not support 2MB large page\n", __func__);
 		ret = -ENODEV;
-	} else if (pcpu_has_vmx_ept_vpid_cap(VMX_EPT_1GB_PAGE) !=
-				pcpu_has_cap(X86_FEATURE_PAGE1GB)) {
-		/* This just for simple large_page_support in arch/x86/page.c */
-		ret = -ENODEV;
-		printf("%s ept support 1GB large page while mmu is not or opposite\n", __func__);
 	} else {
 		/* No other state currently, do nothing */
 	}
