@@ -9,6 +9,8 @@
     xmlns:dyn="http://exslt.org/dynamic"
     xmlns:math="http://exslt.org/math"
     xmlns:func="http://exslt.org/functions"
+    xmlns:str="http://exslt.org/strings"
+    xmlns:set="http://exslt.org/sets"
     xmlns:acrn="http://projectacrn.org"
     extension-element-prefixes="func">
 
@@ -584,6 +586,13 @@
         <func:result select="0" />
       </xsl:otherwise>
     </xsl:choose>
+  </func:function>
+
+  <func:function name="acrn:get-intx-mapping">
+    <xsl:param name="pt_intx_nodes" />
+    <xsl:variable name="joined" select="translate(acrn:string-join($pt_intx_nodes/text(), '', '', ''), ' ', '')" />
+    <xsl:variable name="unique_mapping" select="set:distinct(str:split(str:replace($joined, ')(', ').('), '.'))" />
+    <func:result select="$unique_mapping" />
   </func:function>
 
   <func:function name="acrn:get-vbdf">

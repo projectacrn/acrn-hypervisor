@@ -32,19 +32,21 @@
           <xsl:value-of select="acrn:extern('struct acrn_vm_pci_dev_config', concat('vm', @id, '_pci_devs'), concat('VM', @id, '_CONFIG_PCI_DEV_NUM'))" />
         </xsl:when>
       </xsl:choose>
-    </xsl:for-each>
 
-    <!-- Declaration of pt_intx -->
-    <xsl:variable name="pt_intx" select="normalize-space(vm[@id = 0]/pt_intx)" />
-    <xsl:variable name="length" select="string-length($pt_intx) - string-length(translate($pt_intx, ',', ''))" />
-    <xsl:choose>
-      <xsl:when test="$length > 0">
-        <xsl:value-of select="acrn:extern('struct pt_intx_config', 'vm0_pt_intx', concat($length, 'U'))" />
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="acrn:extern('struct pt_intx_config', 'vm0_pt_intx', '1U')" />
-      </xsl:otherwise>
-    </xsl:choose>
+      <!-- Declaration of pt_intx -->
+      <xsl:if test="acrn:is-pre-launched-vm(vm_type)">
+	<xsl:variable name="vm_id" select="@id" />
+	<xsl:variable name="length" select="count(acrn:get-intx-mapping(//vm[@id=$vm_id]//pt_intx))" />
+	<xsl:choose>
+	  <xsl:when test="$length">
+            <xsl:value-of select="acrn:extern('struct pt_intx_config', concat('vm', @id, '_pt_intx'), concat($length, 'U'))" />
+	  </xsl:when>
+	  <xsl:otherwise>
+            <xsl:value-of select="acrn:extern('struct pt_intx_config', concat('vm', @id, '_pt_intx'), '1U')" />
+	  </xsl:otherwise>
+	</xsl:choose>
+      </xsl:if>
+    </xsl:for-each>
 
     <!-- Definition of vm_configs -->
     <xsl:value-of select="acrn:array-initializer('struct acrn_vm_config', 'vm_configs', 'CONFIG_MAX_VM_NUM')" />
@@ -253,9 +255,12 @@
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
       <xsl:value-of select="$endif" />
-      <xsl:value-of select="acrn:initializer('pt_intx_num', 'VM0_PT_INTX_NUM')" />
-      <xsl:value-of select="acrn:initializer('pt_intx', '&amp;vm0_pt_intx[0U]')" />
     </xsl:if>
+
+    <xsl:variable name="vm_id" select="@id" />
+    <xsl:variable name="length" select="count(acrn:get-intx-mapping(//vm[@id=$vm_id]//pt_intx))" />
+    <xsl:value-of select="acrn:initializer('pt_intx_num', $length)" />
+    <xsl:value-of select="acrn:initializer('pt_intx', concat('vm', @id, '_pt_intx'))" />
   </xsl:template>
 
 </xsl:stylesheet>
