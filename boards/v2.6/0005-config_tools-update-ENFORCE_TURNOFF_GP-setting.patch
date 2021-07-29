@@ -1,0 +1,72 @@
+From da683ebd2804867f7a6255554df2528c0b87558c Mon Sep 17 00:00:00 2001
+From: Kunhui-Li <kunhuix.li@intel.com>
+Date: Thu, 29 Jul 2021 13:18:56 +0800
+Subject: [PATCH 5/5] config_tools: update ENFORCE_TURNOFF_GP setting
+
+Update ENFORCE_TURNOFF_GP setting to y because it is not
+able to boot sos while setting ENFORCE_TURNOFF_GP set to N on
+adl-s-crb platform according to QA's test result.
+
+Signed-off-by: Kunhui-Li <kunhuix.li@intel.com>
+---
+ misc/config_tools/data/adl-s-crb/hybrid.xml            | 2 +-
+ misc/config_tools/data/adl-s-crb/hybrid_rt.xml         | 2 +-
+ misc/config_tools/data/adl-s-crb/industry.xml          | 2 +-
+ misc/config_tools/data/adl-s-crb/logical_partition.xml | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid.xml b/misc/config_tools/data/adl-s-crb/hybrid.xml
+index 7d2bf1a26..9158a8a5d 100644
+--- a/misc/config_tools/data/adl-s-crb/hybrid.xml
++++ b/misc/config_tools/data/adl-s-crb/hybrid.xml
+@@ -15,7 +15,7 @@
+             <SCHEDULER>SCHED_BVT</SCHEDULER>
+             <MULTIBOOT2>y</MULTIBOOT2>
+             <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+-            <ENFORCE_TURNOFF_GP>n</ENFORCE_TURNOFF_GP>
++            <ENFORCE_TURNOFF_GP>y</ENFORCE_TURNOFF_GP>
+             <RDT>
+                 <RDT_ENABLED>n</RDT_ENABLED>
+                 <CDP_ENABLED>n</CDP_ENABLED>
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid_rt.xml b/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
+index 57aeedb5f..f66cfa95c 100644
+--- a/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
++++ b/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
+@@ -14,7 +14,7 @@
+       <SCHEDULER>SCHED_BVT</SCHEDULER>
+       <MULTIBOOT2>y</MULTIBOOT2>
+       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+-      <ENFORCE_TURNOFF_GP>n</ENFORCE_TURNOFF_GP>
++      <ENFORCE_TURNOFF_GP>y</ENFORCE_TURNOFF_GP>
+       <RDT>
+         <RDT_ENABLED>n</RDT_ENABLED>
+         <CDP_ENABLED>y</CDP_ENABLED>
+diff --git a/misc/config_tools/data/adl-s-crb/industry.xml b/misc/config_tools/data/adl-s-crb/industry.xml
+index bb9434f88..77e96733e 100644
+--- a/misc/config_tools/data/adl-s-crb/industry.xml
++++ b/misc/config_tools/data/adl-s-crb/industry.xml
+@@ -14,7 +14,7 @@
+       <SCHEDULER>SCHED_BVT</SCHEDULER>
+       <MULTIBOOT2>y</MULTIBOOT2>
+       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+-      <ENFORCE_TURNOFF_GP>n</ENFORCE_TURNOFF_GP>
++      <ENFORCE_TURNOFF_GP>y</ENFORCE_TURNOFF_GP>
+       <RDT>
+         <RDT_ENABLED>n</RDT_ENABLED>
+         <CDP_ENABLED>y</CDP_ENABLED>
+diff --git a/misc/config_tools/data/adl-s-crb/logical_partition.xml b/misc/config_tools/data/adl-s-crb/logical_partition.xml
+index 8dd093180..f482ad3ca 100644
+--- a/misc/config_tools/data/adl-s-crb/logical_partition.xml
++++ b/misc/config_tools/data/adl-s-crb/logical_partition.xml
+@@ -14,7 +14,7 @@
+       <SCHEDULER>SCHED_BVT</SCHEDULER>
+       <MULTIBOOT2>y</MULTIBOOT2>
+       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+-      <ENFORCE_TURNOFF_GP>n</ENFORCE_TURNOFF_GP>
++      <ENFORCE_TURNOFF_GP>y</ENFORCE_TURNOFF_GP>
+       <RDT>
+         <RDT_ENABLED>n</RDT_ENABLED>
+         <CDP_ENABLED>n</CDP_ENABLED>
+-- 
+2.25.1
+
