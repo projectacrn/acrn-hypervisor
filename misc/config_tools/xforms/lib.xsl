@@ -605,10 +605,10 @@
 
   <func:function name="acrn:ptdev-name-suffix">
     <xsl:param name="pci_dev" />
-    <xsl:variable name="bus" select="translate(substring-before($pci_dev, ':'), $lowercase, $uppercase)" />
-    <xsl:variable name="dev" select="translate(substring-before(substring-after($pci_dev, ':'), '.'), $lowercase, $uppercase)" />
-    <xsl:variable name="func" select="translate(substring-after(substring-before($pci_dev, ' '), '.'), $lowercase, $uppercase)" />
-    <func:result select="concat('0X', $bus, '_0X', $dev, '000', $func)" />
+    <xsl:variable name="bus" select="translate(substring-before($pci_dev, ':'), $uppercase, $lowercase)" />
+    <xsl:variable name="dev" select="translate(substring-before(substring-after($pci_dev, ':'), '.'), $uppercase, $lowercase)" />
+    <xsl:variable name="func" select="translate(substring-after(substring-before($pci_dev, ' '), '.'), $uppercase, $lowercase)" />
+    <func:result select="concat($bus, ':', $dev, '.', $func)" />
   </func:function>
   <!-- End of scenario-specific functions-->
 

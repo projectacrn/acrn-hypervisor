@@ -120,6 +120,7 @@ def insert_pt_devs_to_dev_dict(board_etree, vm_node_etree, devdict_32bits, devdi
         bus = int(bdf.split(':')[0], 16)
         dev = int(bdf.split(":")[1].split('.')[0], 16)
         func = int(bdf.split(":")[1].split('.')[1], 16)
+        bdf = lib.lib.BusDevFunc(bus=bus, dev=dev, func=func)
         pt_dev_node = common.get_node(f"//bus[@type = 'pci' and @address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}']", board_etree)
         if pt_dev_node is not None:
             insert_vmsix_to_dev_dict(pt_dev_node, devdict_32bits)
@@ -127,7 +128,7 @@ def insert_pt_devs_to_dev_dict(board_etree, vm_node_etree, devdict_32bits, devdi
             for pt_dev_resource in pt_dev_resources:
                 if int(pt_dev_resource.get('min'), 16) < PCI_HOLE_THRESHOLD:
                     continue
-                dev_name = f"{PTDEV}_{bus:#04x}_{((dev << 16) | func):#08x}".upper()
+                dev_name = str(bdf)
                 bar_len = pt_dev_resource.get('len')
                 bar_region = pt_dev_resource.get('id')
                 bar_width = pt_dev_resource.get('width')
@@ -164,7 +165,8 @@ def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
         address = common.get_node("./@address", pt_dev_node)
         bus = common.get_node(f"../@address", pt_dev_node)
         if bus is not None and address is not None:
-            dev_name = f"{PTDEV}_{int(bus, 16):#04x}_{int(address, 16):#08x}".upper()
+            bdf = lib.lib.BusDevFunc(bus=int(bus, 16), dev=int(address, 16) >> 16, func=int(address, 16) & 0xffff)
+            dev_name = str(bdf)
             devdict[(f"{dev_name}", f"bar{next_bar_region}")] = VMSIX_VBAR_SIZE
 
 def get_devs_mem_native(board_etree, mems):
