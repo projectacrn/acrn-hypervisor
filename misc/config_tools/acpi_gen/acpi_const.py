@@ -17,7 +17,7 @@ ACPI_TABLE_LIST = [('rsdp.asl', 'rsdp.aml'), ('xsdt.asl', 'xsdt.aml'), ('facp.as
                    ('mcfg.asl', 'mcfg.aml'), ('apic.asl', 'apic.aml'), ('tpm2.asl', 'tpm2.aml'),
                    ('dsdt.asl', 'dsdt.aml'), ('PTCT', 'ptct.aml'), ('RTCT', 'rtct.aml')]
 
-ACPI_BASE = 0x7ff00000
+ACPI_BASE = 0x7fe00000
 
 ACPI_RSDP_ADDR_OFFSET = 0x0         # (36 bytes fixed)
 ACPI_XSDT_ADDR_OFFSET = 0x80        # (36 bytes + 8*7 table addrs)
