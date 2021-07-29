@@ -80,7 +80,7 @@ ACRN.
           xsltproc \
           clang-format
 
-     sudo pip3 install lxml xmlschema
+     sudo pip3 install lxml xmlschema defusedxml
 
      wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
      tar zxvf acpica-unix-20210105.tar.gz

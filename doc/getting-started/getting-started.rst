@@ -180,7 +180,7 @@ Build the ACRN Hypervisor on Ubuntu
         xsltproc \
         clang-format
 
-      $ sudo pip3 install lxml xmlschema
+      $ sudo pip3 install lxml xmlschema defusedxml
 
 #. Starting with the ACRN v2.2 release, we use the ``iasl`` tool to
    compile an offline ACPI binary for pre-launched VMs while building ACRN,
