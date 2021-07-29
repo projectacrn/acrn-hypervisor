@@ -63,15 +63,18 @@ class Visitor:
         if not fn:
             fn = getattr(self, "default", None)
         if fn:
-            fn(tree)
+            return fn(tree)
+        else:
+            return True
 
     def _visit_topdown(self, tree):
-        self.__visit_node(tree)
-        self.depth += 1
-        for child in tree.children:
-            if isinstance(child, Tree):
-                self.visit(child)
-        self.depth -= 1
+        go_on = self.__visit_node(tree)
+        if go_on != False:
+            self.depth += 1
+            for child in tree.children:
+                if isinstance(child, Tree):
+                    self.visit(child)
+            self.depth -= 1
 
     def _visit_bottomup(self, tree):
         self.depth += 1
