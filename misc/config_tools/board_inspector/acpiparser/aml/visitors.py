@@ -38,17 +38,18 @@ class ConditionallyUnregisterSymbolVisitor(Visitor):
         self.interpreter = interpreter
         self.conditionally_hidden = False
 
-        self.DefName = self.__unregister(0)
-        self.DefMethod = self.__unregister(1)
-        self.DefDevice = self.__unregister(1)
+        self.DefName = self.__unregister(0, False)
+        self.DefMethod = self.__unregister(1, False)
+        self.DefDevice = self.__unregister(1, True)
 
-    def __unregister(self, name_string_idx):
+    def __unregister(self, name_string_idx, go_on):
         def f(tree):
             if self.conditionally_hidden:
                 scope = tree.scope
                 name = tree.children[name_string_idx].value
                 realpath = self.context.realpath(scope, name)
                 self.context.unregister_object(realpath)
+            return go_on
         return f
 
     def visit(self, tree):
@@ -73,7 +74,7 @@ class ConditionallyUnregisterSymbolVisitor(Visitor):
                 if hasattr(tree, "DefElse") and tree.DefElse:
                     self.visit(tree.DefElse)
             self.depth -= 1
-        elif tree.label not in ["DefMethod"]:
+        else:
             self._visit_topdown(tree)
 
 class GenerateBinaryVisitor(Visitor):
