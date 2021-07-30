@@ -40,10 +40,10 @@ PASSTHRU_DEVS = ['usb_xdci', 'ipu', 'ipu_i2c', 'cse', 'audio', 'sata',
 
 PT_SLOT = {
         "hostbridge":0,
-        "isa":1,
+        "lpc":1,
         "pci-gvt":2,
         "virtio-blk":3,
-        "lpc":31,
+        "igd-lpc":31,
     }
 
 
