@@ -155,7 +155,9 @@ void uart16550_init(bool early_boot)
 				uart.reg_width = 1;
 				pci_pdev_write_cfg(uart.bdf, PCIR_COMMAND, 2U, cmd | PCIM_CMD_PORTEN);
 			} else {
-				if ((bar0 & 0xfU) == 0U) { /* 32 bits MMIO Space */
+				uint32_t bar_hi = pci_pdev_read_cfg(uart.bdf, pci_bar_offset(1), 4U);
+
+				if (((bar0 & 0xfU) == 0U) || (((bar0 & 0xfU) == 4U) && (bar_hi == 0U))) {
 					uart.type = MMIO;
 					uart.mmio_base_vaddr = hpa2hva_early((bar0 & PCI_BASE_ADDRESS_MEM_MASK));
 					pci_pdev_write_cfg(uart.bdf, PCIR_COMMAND, 2U, cmd | PCIM_CMD_MEMEN);
