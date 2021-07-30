@@ -155,11 +155,15 @@ void uart16550_init(bool early_boot)
 				uart.reg_width = 1;
 				pci_pdev_write_cfg(uart.bdf, PCIR_COMMAND, 2U, cmd | PCIM_CMD_PORTEN);
 			} else {
-				if ((bar0 & 0xfU) == 0U) { /* 32 bits MMIO Space */
+				uint32_t bar_hi = pci_pdev_read_cfg(uart.bdf, pci_bar_offset(1), 4U);
+
+				/* Enable the PCI UART if the BAR is 32bit, or 64bit with 4GB- mmio space. */
+				if (((bar0 & 0x7U) == 0U) || (((bar0 & 0x7U) == 4U) && (bar_hi == 0U))) {
 					uart.type = MMIO;
 					uart.mmio_base_vaddr = hpa2hva_early((bar0 & PCI_BASE_ADDRESS_MEM_MASK));
 					pci_pdev_write_cfg(uart.bdf, PCIR_COMMAND, 2U, cmd | PCIM_CMD_MEMEN);
 				} else {
+					/* TODO: enable 64bit BAR with 4GB+ mmio space */
 					uart.enabled = false;
 					return;
 				}
