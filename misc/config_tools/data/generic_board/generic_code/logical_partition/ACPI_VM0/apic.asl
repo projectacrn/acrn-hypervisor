@@ -48,7 +48,7 @@
 [0001]                Subtable Type : 00 [Processor Local APIC]
 [0001]                       Length : 08
 [0001]                 Processor ID : 01
-[0001]                Local Apic ID : 01
+[0001]                Local Apic ID : 04
 [0004]        Flags (decoded below) : 00000001
                   Processor Enabled : 1
              Runtime Online Capable : 0
