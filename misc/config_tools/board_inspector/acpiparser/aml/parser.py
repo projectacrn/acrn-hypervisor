@@ -531,6 +531,7 @@ def DefField_hook_post(context, tree):
             sym = context.lookup_symbol(name)
             assert isinstance(sym, OperationFieldDecl)
             sym.set_location(region_name, bit_offset, access_width)
+            sym.parent_tree = tree
             bit_offset += length
         elif field.label == "ReservedField":
             length = field.FieldLength.value
@@ -580,7 +581,7 @@ def DefMethod_hook_post(context, tree):
         context.register_symbol(sym)
 
 def DefOpRegion_hook_named(context, tree, name):
-    sym = NamedDecl(name, tree)
+    sym = OperationRegionDecl(name, tree)
     context.register_symbol(sym)
 
 def DefPowerRes_hook_named(context, tree, name):
