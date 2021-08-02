@@ -13,6 +13,7 @@
 #include <asm/guest/ept.h>
 #include <acrn_common.h>
 #include <debug/logmsg.h>
+#include <boot.h>
 
 #define SMBIOS_TABLE_GUID {0xeb9d2d31, 0x2d88, 0x11d3, {0x9a,0x16,0x00,0x90,0x27,0x3f,0xc1,0x4d}}
 #define SMBIOS3_TABLE_GUID {0xf2fd1544, 0x9794, 0x4a2c, {0x99,0x2e,0xe5,0xbb,0xcf,0x20,0xe3,0x94}}
@@ -212,7 +213,9 @@ void try_smbios_passthrough(struct acrn_vm *vm, struct acrn_boot_info *abi)
 {
     /* TODO: Add config and guest flag to disable it by default */
     if (is_prelaunched_vm(vm)) {
-        smbios_table_probe(abi);
-        (void)copy_smbios_to_guest(vm);
+        if (boot_from_uefi(abi)) {
+            smbios_table_probe(abi);
+            (void)copy_smbios_to_guest(vm);
+        }
     }
 }
