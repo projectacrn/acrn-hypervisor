@@ -501,7 +501,7 @@ def DefExternal_hook_post(context, tree):
     ty = tree.ObjectType.value
     nargs = tree.ArgumentCount.value
 
-    if ty == 0x8:     # an external method
+    if ty == MethodDecl.object_type():
         sym = MethodDecl(name, nargs, tree)
     else:
         sym = NamedDecl(name, tree)

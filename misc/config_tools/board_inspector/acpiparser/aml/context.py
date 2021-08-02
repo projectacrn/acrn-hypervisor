@@ -11,6 +11,10 @@ from .exception import *
 from .stream import Stream
 
 class NamedDecl:
+    @staticmethod
+    def object_type():
+        return 0
+
     def __init__(self, name, tree):
         self.tree = tree
         self.name = name
@@ -66,6 +70,10 @@ class AliasDecl(NamedDecl):
         print(f"{self.name}: {self.__class__.__name__}, aliasing {self.source}")
 
 class MethodDecl(NamedDecl):
+    @staticmethod
+    def object_type():
+        return 8
+
     def __init__(self, name, nargs, tree):
         super().__init__(name, tree)
         self.nargs = nargs
@@ -74,6 +82,10 @@ class MethodDecl(NamedDecl):
         print(f"{self.name}: {self.__class__.__name__}, {self.nargs} args")
 
 class PredefinedMethodDecl(NamedDecl):
+    @staticmethod
+    def object_type():
+        return 8
+
     def __init__(self, name, nargs, fn):
         super().__init__(name, None)
         self.nargs = nargs
@@ -83,6 +95,10 @@ class PredefinedMethodDecl(NamedDecl):
         print(f"{self.name}: {self.__class__.__name__}, {self.nargs} args")
 
 class DeviceDecl(NamedDecl):
+    @staticmethod
+    def object_type():
+        return 6
+
     def __init__(self, name, tree):
         super().__init__(name, tree)
 
