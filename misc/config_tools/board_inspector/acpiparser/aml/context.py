@@ -30,6 +30,14 @@ class FieldDecl(NamedDecl):
     def dump(self):
         print(f"{self.name}: {self.__class__.__name__}, {self.length} bits")
 
+class OperationRegionDecl(NamedDecl):
+    @staticmethod
+    def object_type():
+        return 10
+
+    def __init__(self, name, tree):
+        super().__init__(name, tree)
+
 class OperationFieldDecl(NamedDecl):
     def __init__(self, name, length, tree):
         super().__init__(name, tree)
@@ -37,6 +45,7 @@ class OperationFieldDecl(NamedDecl):
         self.offset = None
         self.length = length
         self.access_width = None
+        self.parent_tree = None
 
     def set_location(self, region, offset, access_width):
         self.region = region
@@ -155,6 +164,13 @@ class Context:
             else:
                 return parent
 
+    @staticmethod
+    def normalize_namepath(namepath):
+        path = namepath.lstrip("\\^")
+        prefix = namepath[:(len(namepath) - len(path))]
+        parts = '.'.join(map(lambda x: x[:4].ljust(4, '_'), path.split(".")))
+        return prefix + parts
+
     def __init__(self):
         self.streams = {}
         self.current_stream = None
@@ -266,18 +282,25 @@ class Context:
             prefix_len -= 1
         raise KeyError(name)
 
-    def lookup_symbol(self, name):
+    def lookup_symbol(self, name, scope=None):
+        if scope:
+            self.change_scope(scope)
         try:
             if name.startswith("\\"):
-                return self.__symbol_table[name]
+                ret = self.__symbol_table[name]
             elif name.startswith("^") or name.find(".") >= 0:
                 realpath = self.realpath(self.__current_scope, name)
-                return self.__symbol_table[realpath]
+                ret = self.__symbol_table[realpath]
             else:
-                return self.__lookup_symbol_in_parents(self.__symbol_table, name)
+                ret = self.__lookup_symbol_in_parents(self.__symbol_table, name)
         except KeyError:
-            logging.debug(f"Cannot find definition of {name}")
-            raise UndefinedSymbol(name, self.get_scope())
+            ret = None
+
+        if scope:
+            self.pop_scope()
+        if not ret:
+            raise UndefinedSymbol(name, scope if scope else self.get_scope())
+        return ret
 
     def has_symbol(self, name):
         try:
