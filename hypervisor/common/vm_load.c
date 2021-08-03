@@ -485,20 +485,20 @@ static int32_t vm_rawimage_loader(struct acrn_vm *vm)
  */
 int32_t vm_sw_loader(struct acrn_vm *vm)
 {
-	int32_t ret = 0;
+	int32_t ret = -EINVAL;
 	/* get primary vcpu */
 	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 
-	if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
-
+	switch (vm->sw.kernel_type) {
+	case KERNEL_BZIMAGE:
 		ret = vm_bzimage_loader(vm);
-
-	} else if (vm->sw.kernel_type == KERNEL_RAWIMAGE){
-
+		break;
+	case KERNEL_RAWIMAGE:
 		ret = vm_rawimage_loader(vm);
-
-	} else {
+		break;
+	default:
 		ret = -EINVAL;
+		break;
 	}
 
 	if (ret == 0) {
