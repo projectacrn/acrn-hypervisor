@@ -314,13 +314,18 @@ static void init_xsave(struct acrn_vcpu *vcpu)
 	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
 	struct xsave_area *area = &ectx->xs_area;
 
-	ectx->xcr0 = XSAVE_FPU;
-	(void)memset((void *)area, 0U, XSAVE_STATE_AREA_SIZE);
-
-	/* xsaves only support compacted format, so set it in xcomp_bv[63],
-	 * keep the reset area in header area as zero.
+	/* if the HW has this cap, we need to prepare the buffer for potential save/restore.
+	 *  Guest may or may not enable XSAVE -- it doesn't matter.
 	 */
-	ectx->xs_area.xsave_hdr.hdr.xcomp_bv |= XSAVE_COMPACTED_FORMAT;
+	if (pcpu_has_cap(X86_FEATURE_XSAVE)) {
+		ectx->xcr0 = XSAVE_FPU;
+		(void)memset((void *)area, 0U, XSAVE_STATE_AREA_SIZE);
+
+		/* xsaves only support compacted format, so set it in xcomp_bv[63],
+		 * keep the reset area in header area as zero.
+		 */
+		ectx->xs_area.xsave_hdr.hdr.xcomp_bv |= XSAVE_COMPACTED_FORMAT;
+	}
 }
 
 void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_regs *vcpu_regs)
@@ -827,19 +832,23 @@ void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	}
 }
 
-void save_xsave_area(__unused struct acrn_vcpu *vcpu, struct ext_context *ectx)
+void save_xsave_area(struct acrn_vcpu *vcpu, struct ext_context *ectx)
 {
-	ectx->xcr0 = read_xcr(0);
-	write_xcr(0, ectx->xcr0 | XSAVE_SSE);
-	xsaves(&ectx->xs_area, UINT64_MAX);
+	if (vcpu->arch.xsave_enabled) {
+		ectx->xcr0 = read_xcr(0);
+		write_xcr(0, ectx->xcr0 | XSAVE_SSE);
+		xsaves(&ectx->xs_area, UINT64_MAX);
+	}
 }
 
 void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *ectx)
 {
-	write_xcr(0, ectx->xcr0 | XSAVE_SSE);
-	msr_write(MSR_IA32_XSS, vcpu_get_guest_msr(vcpu, MSR_IA32_XSS));
-	xrstors(&ectx->xs_area, UINT64_MAX);
-	write_xcr(0, ectx->xcr0);
+	if (vcpu->arch.xsave_enabled) {
+		write_xcr(0, ectx->xcr0 | XSAVE_SSE);
+		msr_write(MSR_IA32_XSS, vcpu_get_guest_msr(vcpu, MSR_IA32_XSS));
+		xrstors(&ectx->xs_area, UINT64_MAX);
+		write_xcr(0, ectx->xcr0);
+	}
 }
 
 /* TODO:

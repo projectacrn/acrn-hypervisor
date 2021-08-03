@@ -321,7 +321,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	 */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS2,
 			VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |VMX_PROCBASED_CTLS2_VPID |
-			VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT |
+			VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT | VMX_PROCBASED_CTLS2_XSVE_XRSTR |
 			VMX_PROCBASED_CTLS2_PAUSE_LOOP | VMX_PROCBASED_CTLS2_UWAIT_PAUSE);
 
 	/* SDM Vol3, 25.3,  setting "enable INVPCID" VM-execution to 1 with "INVLPG exiting" disabled,
@@ -348,9 +348,11 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 		exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
 	}
 
-	if (pcpu_has_cap(X86_FEATURE_OSXSAVE)) {
+	if ((value32 & VMX_PROCBASED_CTLS2_XSVE_XRSTR) != 0U) {
 		exec_vmwrite64(VMX_XSS_EXITING_BITMAP_FULL, 0UL);
-		value32 |= VMX_PROCBASED_CTLS2_XSVE_XRSTR;
+		vcpu->arch.xsave_enabled = true;
+	} else {
+		value32 &= ~VMX_PROCBASED_CTLS2_XSVE_XRSTR;
 	}
 
 	value32 |= VMX_PROCBASED_CTLS2_WBINVD;

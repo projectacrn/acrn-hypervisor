@@ -903,11 +903,15 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	case MSR_IA32_XSS:
 	{
-		if ((v & ~(MSR_IA32_XSS_PT | MSR_IA32_XSS_HDC)) != 0UL) {
-			err = -EACCES;
+		if (vcpu->arch.xsave_enabled) {
+			if ((v & ~(MSR_IA32_XSS_PT | MSR_IA32_XSS_HDC)) != 0UL) {
+				err = -EACCES;
+			} else {
+				vcpu_set_guest_msr(vcpu, MSR_IA32_XSS, v);
+				msr_write(msr, v);
+			}
 		} else {
-			vcpu_set_guest_msr(vcpu, MSR_IA32_XSS, v);
-			msr_write(msr, v);
+			err = -EACCES;
 		}
 		break;
 	}
