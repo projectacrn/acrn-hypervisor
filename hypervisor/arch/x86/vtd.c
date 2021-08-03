@@ -251,10 +251,9 @@ static inline void dmar_wait_completion(const struct dmar_drhd_rt *dmar_unit, ui
 	__unused uint64_t start = cpu_ticks();
 
 	do {
-		*status = iommu_read32(dmar_unit, offset);
-		ASSERT(((cpu_ticks() - start) < TICKS_PER_MS),
-			"DMAR OP Timeout!");
+		ASSERT(((cpu_ticks() - start) < TICKS_PER_MS), "DMAR OP Timeout!");
 		asm_pause();
+		*status = iommu_read32(dmar_unit, offset);
 	} while( (*status & mask) == pre_condition);
 }
 
