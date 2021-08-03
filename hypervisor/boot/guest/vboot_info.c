@@ -61,7 +61,7 @@ static int32_t init_vm_kernel_info(struct acrn_vm *vm, const struct abi_module *
 	if ((mod->start != NULL) && (mod->size != 0U)) {
 		vm->sw.kernel_info.kernel_src_addr = mod->start;
 		vm->sw.kernel_info.kernel_size = mod->size;
-		if ((vm->sw.kernel_type == KERNEL_BZIMAGE) || (vm->sw.kernel_type == KERNEL_ZEPHYR)) {
+		if ((vm->sw.kernel_type > 0) && (vm->sw.kernel_type < KERNEL_UNKNOWN)) {
 			ret = 0;
 		} else {
 			pr_err("Unsupported Kernel type.");
