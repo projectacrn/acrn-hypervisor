@@ -23,8 +23,8 @@ ACPI_RSDP_ADDR_OFFSET = 0x0         # (36 bytes fixed)
 ACPI_XSDT_ADDR_OFFSET = 0x80        # (36 bytes + 8*7 table addrs)
 ACPI_FADT_ADDR_OFFSET = 0x100       # (268 bytes)
 ACPI_DSDT_ADDR_OFFSET = 0x240       # (variable)
-ACPI_MCFG_ADDR_OFFSET = 0x440       # (60 bytes)
-ACPI_MADT_ADDR_OFFSET = 0x480       # (depends on #CPUs)
+ACPI_MCFG_ADDR_OFFSET = 0xBC0       # (60 bytes)
+ACPI_MADT_ADDR_OFFSET = 0xC00       # (62 + 8*n bytes, where n is the number of vCPUs)
 ACPI_RTCT_ADDR_OFFSET = 0xF00
 ACPI_TPM2_ADDR_OFFSET = 0x1300      # (52 bytes)
 
