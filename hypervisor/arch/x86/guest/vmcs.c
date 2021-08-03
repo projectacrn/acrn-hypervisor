@@ -406,6 +406,9 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	if (is_ac_enabled()) {
 		value32 = (value32 | (1U << IDT_AC));
 	}
+	if (is_gp_enabled()) {
+		value32 = (value32 | (1U << IDT_GP));
+	}
 	exec_vmwrite32(VMX_EXCEPTION_BITMAP, value32);
 
 	/* Set up page fault error code mask - second paragraph * pg 2902
