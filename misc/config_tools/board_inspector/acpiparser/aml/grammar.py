@@ -192,7 +192,7 @@ RevisionOp = (AML_REVISION_OP,)
 ################################################################################
 
 Object = ["NameSpaceModifierObj", "NamedObj"]
-TermObj = ["Object", "StatementOpcode", "ExpressionOpcode"]
+TermObj = ["Object", "StatementOpcode", "ExpressionOpcode", "ConstObj"]
 TermList = ("TermObj*",)
 TermArg = ["ExpressionOpcode", "DataObject", "ArgObj", "LocalObj"]
 # MethodInvocation is defined in parser.py
