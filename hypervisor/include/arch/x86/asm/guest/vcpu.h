@@ -253,6 +253,7 @@ struct acrn_vcpu_arch {
 	uint8_t lapic_mask;
 	bool irq_window_enabled;
 	bool emulating_lock;
+	bool xsave_enabled;
 	uint32_t nrexits;
 
 	/* VCPU context state information */

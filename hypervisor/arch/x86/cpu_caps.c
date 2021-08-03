@@ -415,6 +415,26 @@ static inline bool pcpu_has_vmx_unrestricted_guest_cap(void)
 	return ((msr_read(MSR_IA32_VMX_MISC) & MSR_IA32_MISC_UNRESTRICTED_GUEST) != 0UL);
 }
 
+static bool is_valid_xsave_combination(void)
+{
+	uint64_t value64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
+	uint32_t high = (uint32_t)(value64 >> 32U);	/* allowed 1-settings */
+	bool ret;
+
+	/* Now we only assume the platform must support XSAVE on CPU side and XSVE_XRSTR on VMX side or not,
+	 * in this case, we could pass through CR4.OSXSAVE bit.
+	 */
+	if (pcpu_has_cap(X86_FEATURE_XSAVE)) {
+		ret = pcpu_has_cap(X86_FEATURE_XSAVES) && pcpu_has_cap(X86_FEATURE_COMPACTION_EXT) &&
+			((high & VMX_PROCBASED_CTLS2_XSVE_XRSTR) != 0U);
+	} else {
+		ret = !pcpu_has_cap(X86_FEATURE_XSAVES) && !pcpu_has_cap(X86_FEATURE_COMPACTION_EXT) &&
+			((high & VMX_PROCBASED_CTLS2_XSVE_XRSTR) == 0U);
+	}
+
+	return ret;
+}
+
 static int32_t check_vmx_mmu_cap(void)
 {
 	int32_t ret = 0;
@@ -519,17 +539,14 @@ int32_t detect_hardware_support(void)
 	} else if (!pcpu_has_cap(X86_FEATURE_POPCNT)) {
 		printf("%s, popcnt instruction not supported\n", __func__);
 		ret = -ENODEV;
-	} else if (!pcpu_has_cap(X86_FEATURE_XSAVES)) {
-		printf("%s, XSAVES not supported\n", __func__);
-		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_SSE)) {
 		printf("%s, SSE not supported\n", __func__);
 		ret = -ENODEV;
-	} else if (!pcpu_has_cap(X86_FEATURE_COMPACTION_EXT)) {
-		printf("%s, Compaction extensions in XSAVE is not supported\n", __func__);
-		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_RDRAND)) {
 		printf("%s, RDRAND is not supported\n", __func__);
+		ret = -ENODEV;
+	} else if (!is_valid_xsave_combination()) {
+		printf("%s, check XSAVE combined Capability failed\n", __func__);
 		ret = -ENODEV;
 	} else {
 		ret = check_vmx_mmu_cap();
