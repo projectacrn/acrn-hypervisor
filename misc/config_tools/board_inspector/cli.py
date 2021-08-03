@@ -31,7 +31,7 @@ def main(board_name, board_xml, args):
     try:
         # First invoke the legacy board parser to create the board XML ...
         legacy_parser = os.path.join(script_dir, "legacy", "board_parser.py")
-        env = { "PYTHONPATH": script_dir }
+        env = { "PYTHONPATH": script_dir, "PATH": os.environ["PATH"] }
         subprocess.run([sys.executable, legacy_parser, args.board_name, "--out", board_xml], check=True, env=env)
 
         # ... then load the created board XML and append it with additional data by invoking the extractors.
