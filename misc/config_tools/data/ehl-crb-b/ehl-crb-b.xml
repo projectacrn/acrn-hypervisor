@@ -352,6 +352,7 @@
 	/dev/sdb4: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
+	seri:/dev/ttyS0 type:mmio base:0x813e9000 irq:33 bdf:"00:19.2"
 	seri:/dev/ttyS3 type:mmio base:0xfe042000 irq:3
 	seri:/dev/ttyS4 type:mmio base:0x825DC000 irq:16 bdf:"00:1e.0"
 	seri:/dev/ttyS5 type:mmio base:0x825DB000 irq:17 bdf:"00:1e.1"
