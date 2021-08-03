@@ -110,6 +110,9 @@ struct vuart_config {
 enum os_kernel_type {
 	KERNEL_BZIMAGE = 1,
 	KERNEL_ZEPHYR,
+	KERNEL_RAWIMAGE,
+	KERNEL_ELF,
+	KERNEL_UNKNOWN,
 };
 
 struct acrn_vm_os_config {

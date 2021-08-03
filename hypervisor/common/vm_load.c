@@ -493,7 +493,7 @@ int32_t vm_sw_loader(struct acrn_vm *vm)
 
 		ret = vm_bzimage_loader(vm);
 
-	} else if (vm->sw.kernel_type == KERNEL_ZEPHYR){
+	} else if (vm->sw.kernel_type == KERNEL_RAWIMAGE){
 
 		ret = vm_rawimage_loader(vm);
 
