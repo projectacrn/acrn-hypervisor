@@ -5,7 +5,7 @@
  */
 
 #include <asm/guest/vm.h>
-#include <vboot_info.h>
+#include <vboot.h>
 
 /**
  * @pre vm != NULL

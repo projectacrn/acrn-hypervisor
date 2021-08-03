@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef VBOOT_INFO_H
+#ifndef VBOOT_H
 
-#define VBOOT_INFO_H
+#define VBOOT_H
 
 int32_t init_vm_boot_info(struct acrn_vm *vm);
 void load_sw_module(struct acrn_vm *vm, struct sw_module_info *sw_module);
@@ -19,4 +19,4 @@ int32_t vm_rawimage_loader(struct acrn_vm *vm);
 #endif
 
 
-#endif /* end of include guard: VBOOT_INFO_H */
+#endif /* end of include guard: VBOOT_H */
