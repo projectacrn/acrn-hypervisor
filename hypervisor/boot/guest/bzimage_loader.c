@@ -10,7 +10,7 @@
 #include <asm/guest/ept.h>
 #include <asm/mmu.h>
 #include <boot.h>
-#include <vboot_info.h>
+#include <vboot.h>
 #include <vacpi.h>
 #include <efi_mmap.h>
 #include <errno.h>

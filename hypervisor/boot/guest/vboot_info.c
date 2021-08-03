@@ -18,7 +18,7 @@
 #include <asm/guest/ept.h>
 #include <reloc.h>
 #include <logmsg.h>
-#include <vboot_info.h>
+#include <vboot.h>
 #include <vacpi.h>
 
 #define DBG_LEVEL_BOOT	6U

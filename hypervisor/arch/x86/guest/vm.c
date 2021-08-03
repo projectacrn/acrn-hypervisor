@@ -25,7 +25,7 @@
 #include <asm/pgtable.h>
 #include <asm/mmu.h>
 #include <logmsg.h>
-#include <vboot_info.h>
+#include <vboot.h>
 #include <asm/board.h>
 #include <asm/sgx.h>
 #include <sbuf.h>
