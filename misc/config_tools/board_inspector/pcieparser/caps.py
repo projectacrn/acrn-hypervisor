@@ -67,8 +67,8 @@ class PowerManagement(cdata.Struct, Capability):
         ('data_select', ctypes.c_uint16, 4),
         ('data_scale', ctypes.c_uint16, 2),
         ('pme_status', ctypes.c_uint16, 1),
-        ('reserved3', ctypes.c_uint16, 6),
-        ('undefined', ctypes.c_uint16, 2),
+        ('reserved3', ctypes.c_uint8, 6),
+        ('undefined', ctypes.c_uint8, 2),
         ('data', ctypes.c_uint8),
     ]
 

@@ -66,6 +66,16 @@ def parse_device(bus_node, device_path):
             device_node = add_child(bus_node, "device", None, address=adr)
 
     cfg = parse_config_space(device_path)
+    for cap in cfg.caps:
+        # If the device is not in D0, power it on and reparse its configuration space.
+        if cap.name == "Power Management" and cap.power_state != 0:
+            logging.info(f"Try resuming {device_path}")
+            try:
+                with open(os.path.join(device_path, "power", "control"), "w") as f:
+                    f.write("on")
+                cfg = parse_config_space(device_path)
+            except Exception as e:
+                logging.info(f"Resuming {device_path} failed: {str(e)}")
 
     # Device identifiers
     vendor_id = "0x{:04x}".format(cfg.header.vendor_id)
