@@ -1,10 +1,8 @@
 #
 # ACRN-DM
 #
-include ../VERSION
 include ../paths.make
 
-FULL_VERSION=$(MAJOR_VERSION).$(MINOR_VERSION)$(EXTRA_VERSION)
 BASEDIR := $(shell pwd)
 DM_OBJDIR ?= $(CURDIR)/build
 DM_BUILD_VERSION ?=

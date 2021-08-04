@@ -6,6 +6,10 @@ SHELL := /bin/bash
 # global helper variables
 T := $(CURDIR)
 
+# ACRN Version Information
+include VERSION
+export FULL_VERSION=$(MAJOR_VERSION).$(MINOR_VERSION)$(EXTRA_VERSION)
+
 ifdef TARGET_DIR
   $(warning TARGET_DIR is obsoleted because generated configuration files are now stored in the build directory)
 endif
@@ -69,6 +73,7 @@ HV_OUT := $(ROOT_OUT)/hypervisor
 DM_OUT := $(ROOT_OUT)/devicemodel
 TOOLS_OUT := $(ROOT_OUT)/misc
 DOC_OUT := $(ROOT_OUT)/doc
+TARBALL_OUT := $(ROOT_OUT)/tarball
 BUILD_VERSION ?=
 BUILD_TAG ?=
 HV_CFG_LOG = $(HV_OUT)/cfg.log
@@ -175,3 +180,9 @@ tools-install:
 
 life_mngr-install:
 	$(MAKE) -C $(T)/misc OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE) acrn-life-mngr-install
+
+.PHONY: targz-pkg
+targz-pkg:
+	$(MAKE) install DESTDIR=$(TARBALL_OUT)
+	cd $(TARBALL_OUT) && \
+	tar -zcvf $(ROOT_OUT)/acrn-$(FULL_VERSION).tar.gz *

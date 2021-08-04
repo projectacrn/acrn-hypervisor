@@ -2,9 +2,6 @@
 # acrn-hypervisor/hypervisor/Makefile
 #
 
-include ../VERSION
-FULL_VERSION=$(MAJOR_VERSION).$(MINOR_VERSION)$(EXTRA_VERSION)
-
 API_MAJOR_VERSION=1
 API_MINOR_VERSION=0
 
