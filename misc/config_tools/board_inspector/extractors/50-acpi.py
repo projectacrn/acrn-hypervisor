@@ -468,6 +468,15 @@ def fetch_device_info(devices_node, interpreter, namepath):
                 element.set("address", hex(adr) if isinstance(adr, int) else adr)
             add_object_to_device(interpreter, namepath, "_ADR", result)
 
+        # Bus number that overrides _ADR when exists
+        if interpreter.context.has_symbol(f"{namepath}._BBN"):
+            result = interpreter.interpret_method_call(f"{namepath}._BBN")
+            bus_number = result.get()
+            if isinstance(bus_number, int):
+                bus_number = hex(bus_number)
+            element.set("address", bus_number)
+            add_object_to_device(interpreter, namepath, "_BBN", result)
+
         # Status
         if sta is not None:
             status = add_child(element, "status")

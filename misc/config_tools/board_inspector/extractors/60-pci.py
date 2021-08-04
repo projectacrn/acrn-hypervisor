@@ -12,6 +12,7 @@ from pcieparser import parse_config_space
 from pcieparser.header import IOBar, MemoryBar32, MemoryBar64
 from extractors.helpers import add_child, get_node
 
+SYS_DEVICES_PATH = "/sys/devices"
 PCI_ROOT_PATH = "/sys/devices/pci0000:00"
 bdf_regex = re.compile(r"^([0-9a-f]{4}):([0-9a-f]{2}):([0-9a-f]{2}).([0-7]{1})$")
 
@@ -22,11 +23,11 @@ interrupt_pin_names = {
     4: "INTD#",
 }
 
-def collect_hostbridge_resources(bus_node):
+def collect_hostbridge_resources(bus_node, bus_number):
     with open("/proc/iomem", "r") as f:
         for line in f.readlines():
             fields = line.strip().split(" : ")
-            if fields[1] == "PCI Bus 0000:00":
+            if fields[1] == f"PCI Bus 0000:{bus_number:02x}":
                 begin, end = tuple(map(lambda x: int(f"0x{x}", base=16), fields[0].split("-")))
                 add_child(bus_node, "resource", type="memory", min=hex(begin), max=hex(end), len=hex(end - begin + 1))
 
@@ -182,16 +183,16 @@ def enum_devices(bus_node, root_path):
         enum_devices(device_node, p)
 
 def extract(board_etree):
-    bus_node = get_node(board_etree, "//bus[@type='pci']")
-    if bus_node is None:
-        devices_node = get_node(board_etree, "//devices")
-        bus_node = add_child(devices_node, "bus", type="pci", address="0x0")
-        collect_hostbridge_resources(bus_node)
-    else:
-        # Assume there is only one device object in the ACPI DSDT that represents a PCI bridge (which should be the host
-        # bridge in this case). If the ACPI table does not provide an _ADR object, add the default address of the host
-        # bridge (i.e. bus 0).
-        if bus_node.get("address") is None:
-            bus_node.set("address", "0x0")
-
-    enum_devices(bus_node, PCI_ROOT_PATH)
+    # Assume we only care about PCI devices under domain 0, as the hypervisor only uses BDF (without domain) for device
+    # identification.
+    root_regex = re.compile("pci0000:([0-9a-f]{2})")
+    for root in filter(lambda x: x.startswith("pci"), os.listdir(SYS_DEVICES_PATH)):
+        m = root_regex.match(root)
+        if m:
+            bus_number = int(m.group(1), 16)
+            bus_node = get_node(board_etree, f"//bus[@type='pci' and @address='{hex(bus_number)}']")
+            if bus_node is None:
+                devices_node = get_node(board_etree, "//devices")
+                bus_node = add_child(devices_node, "bus", type="pci", address=hex(bus_number))
+                collect_hostbridge_resources(bus_node, bus_number)
+            enum_devices(bus_node, os.path.join(SYS_DEVICES_PATH, root))
