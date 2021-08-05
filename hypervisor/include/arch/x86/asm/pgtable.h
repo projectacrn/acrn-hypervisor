@@ -105,6 +105,11 @@
 #define EPT_WB			(6UL << EPT_MT_SHIFT)
 
 /**
+ * @brief Ignore PAT memory type.
+ */
+#define EPT_IGNORE_PAT		(1UL << 6U)
+
+/**
  * @}
  */
 /* End of ept_mem_type */
