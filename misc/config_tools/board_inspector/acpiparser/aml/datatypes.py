@@ -221,6 +221,9 @@ class BufferField(Object):
     def to_string(self):
         return f"BufferField({self.__field})"
 
+    def to_hex_string(self):
+        return String(hex(self.get())[2:])
+
 # DebugObject
 
 class Device(Object):
