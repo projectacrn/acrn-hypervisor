@@ -32,13 +32,13 @@
 		<sd_card desc="vm sd card device"></sd_card>
 		<ethernet desc="vm ethernet device"></ethernet>
 		<sata desc="vm sata device"></sata>
-		<nvme desc="vm nvme device">02:00.0 Non-Volatile memory controller: Intel Corporation Device f1a6 (rev 03)</nvme>
+		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
 
 	<virtio_devices>
-		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."></network>
+		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">RT</network>
 		<input desc="virtio input device"></input>
-		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"></block>
+		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./core-image-weston-intel-corei7-64.wic</block>
 		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
 	</virtio_devices>
     </uos>
