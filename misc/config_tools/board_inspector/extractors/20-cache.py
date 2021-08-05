@@ -95,7 +95,7 @@ def extract_tcc_capabilities(caches_node):
     except FileNotFoundError:
         pass
 
-def extract(board_etree):
+def extract(args, board_etree):
     root_node = board_etree.getroot()
     caches_node = get_node(board_etree, "//caches")
     extract_topology(root_node, caches_node)
