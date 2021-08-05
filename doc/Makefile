@@ -34,7 +34,7 @@ help:
 	@echo "   specify RELEASE=name to publish as a tagged release version"
 	@echo "   and placed in a version subfolder.  Requires repo merge permission."
 
-.PHONY: help Makefile copy-to-sourcedir doxy content kconfig html singlehtml clean publish
+.PHONY: help Makefile copy-to-sourcedir doxy content html singlehtml clean publish
 
 # Generate the doxygen xml (for Sphinx) and copy the doxygen html to the
 # api folder for publishing along with the Sphinx-generated API docs.
@@ -77,8 +77,6 @@ pdf: html
 
 clean:
 	rm -fr $(BUILDDIR)
-	@# Keeping these temporarily, but no longer strictly needed.
-	rm -fr doxygen misc reference/kconfig
 
 
 # Copy material over to the GitHub pages staging repo
