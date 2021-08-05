@@ -142,7 +142,7 @@ clean:
 .PHONY: install life_mngr-install
 install: hypervisor-install devicemodel-install tools-install
 
-hypervisor-install:
+hypervisor-install: hypervisor
 	$(MAKE) $(HV_MAKEOPTS) install
 
 hypervisor-install-debug:
@@ -172,10 +172,10 @@ apl-up2-hybrid-install-debug:
 sbl-hypervisor-install-debug: kbl-nuc-i7-industry-install-debug \
 			      apl-up2-hybrid-install-debug
 
-devicemodel-install:
+devicemodel-install: tools-install devicemodel
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
 
-tools-install:
+tools-install: tools
 	$(MAKE) -C $(T)/misc OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE) install
 
 life_mngr-install:
