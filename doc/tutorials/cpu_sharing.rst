@@ -128,26 +128,11 @@ and BVT (Borrowed Virtual Time) scheduler.
 
 Scheduler configuration
 
+* The scheduler used at runtime is defined in the scenario XML file
+  via the :option:`hv.FEATURES.SCHEDULER` option. The default scheduler
+  is **SCHED_BVT**. Use the :ref:`ACRN configuration tool <acrn_configuration_tool>` 
+  if you want to change this scenario option value.
 
-* The option in Kconfig decides the only scheduler used in runtime.
-  ``hypervisor/arch/x86/Kconfig``
-
-.. code-block:: none
-
-  choice
-          prompt "ACRN Scheduler"
-          default SCHED_BVT
-          help
-          Select the CPU scheduler to be used by the hypervisor
-
-  config SCHED_BVT
-          bool "BVT scheduler"
-          help
-          BVT (Borrowed Virtual time) is virtual time based scheduling algorithm. It
-          dispatches the runnable thread with the earliest effective virtual time.
-          TODO: BVT scheduler will be built on top of prioritized scheduling mechanism,
-          i.e. higher priority threads get scheduled first, and same priority tasks are
-          scheduled per BVT.
 
 The default scheduler is **SCHED_BVT**.
 
