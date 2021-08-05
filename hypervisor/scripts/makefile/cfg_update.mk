@@ -19,16 +19,6 @@ ifeq ($(CONFIG_XML_ENABLED),)
 endif
 
 ifeq ($(CONFIG_XML_ENABLED),true)
-    ifneq ($(BOARD_IN_KCONFIG),)
-        ifneq ($(BOARD_IN_XML),$(BOARD_IN_KCONFIG))
-            $(error BOARD $(BOARD_IN_XML) in $(BOARD_FILE) does not match BOARD $(BOARD_IN_KCONFIG) in $(KCONFIG_FILE))
-        endif
-    endif
-    ifneq ($(SCENARIO_IN_KCONFIG),)
-        ifneq ($(SCENARIO_IN_XML),$(SCENARIO_IN_KCONFIG))
-            $(error SCENARIO $(SCENARIO_IN_XML) in $(SCENARIO_FILE) does not match SCENARIO $(SCENARIO_IN_KCONFIG) in $(KCONFIG_FILE))
-        endif
-    endif
     override BOARD := $(BOARD_IN_XML)
     override SCENARIO := $(SCENARIO_IN_XML)
     RELEASE_IN_XML := $(shell echo `sed -n '/<RELEASE/p' $(SCENARIO_FILE) | sed -r 's/.*<RELEASE(.*)>(.*)<(.*)/\2/g'`)
