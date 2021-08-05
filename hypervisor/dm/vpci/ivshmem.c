@@ -252,7 +252,7 @@ static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
 
 	if ((idx == IVSHMEM_SHM_BAR) && (vbar->base_hpa != INVALID_HPA) && (vbar->base_gpa != 0UL)) {
 		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_hpa,
-				vbar->base_gpa, vbar->size, EPT_RD | EPT_WR | EPT_WB);
+				vbar->base_gpa, vbar->size, EPT_RD | EPT_WR | EPT_WB | EPT_IGNORE_PAT);
 	} else if ((idx == IVSHMEM_MMIO_BAR) && (vbar->base_gpa != 0UL)) {
 		(void)memset(&ivs_dev->mmio, 0U, sizeof(ivs_dev->mmio));
 		register_mmio_emulation_handler(vm, ivshmem_mmio_handler, vbar->base_gpa,
