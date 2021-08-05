@@ -18,6 +18,6 @@ def extract_layout(memory_node):
             size = e820_entry.end - e820_entry.start + 1
             add_child(memory_node, "range", start=start, end=end, size=str(size))
 
-def extract(board_etree):
+def extract(args, board_etree):
     memory_node = get_node(board_etree, "//memory")
     extract_layout(memory_node)

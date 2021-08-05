@@ -125,5 +125,5 @@ def lookup_pci_devices(board_etree):
     else:
         logging.info(f"Cannot find pci.ids under /usr/share. PCI device names will not be available.")
 
-def extract(board_etree):
+def extract(args, board_etree):
     lookup_pci_devices(board_etree)

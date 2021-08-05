@@ -182,7 +182,7 @@ def enum_devices(bus_node, root_path):
         device_node = parse_device(bus_node, p)
         enum_devices(device_node, p)
 
-def extract(board_etree):
+def extract(args, board_etree):
     # Assume we only care about PCI devices under domain 0, as the hypervisor only uses BDF (without domain) for device
     # identification.
     root_regex = re.compile("pci0000:([0-9a-f]{2})")

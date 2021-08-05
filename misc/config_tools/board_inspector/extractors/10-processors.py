@@ -111,6 +111,6 @@ def extract_topology(processors_node):
             last_shift = leaf_topo.num_bit_shift
             subleaf += 1
 
-def extract(board_etree):
+def extract(args, board_etree):
     processors_node = get_node(board_etree, "//processors")
     extract_topology(processors_node)

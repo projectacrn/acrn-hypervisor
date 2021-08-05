@@ -379,7 +379,7 @@ def add_object_to_device(interpreter, device_path, obj_name, result):
     except NotImplementedError as e:
         logging.info(f"{device_path}.{obj_name}: will not be added to vACPI, reason: {str(e)}")
 
-def fetch_device_info(devices_node, interpreter, namepath):
+def fetch_device_info(devices_node, interpreter, namepath, args):
     logging.info(f"Fetch information about device object {namepath}")
 
     try:
@@ -393,7 +393,7 @@ def fetch_device_info(devices_node, interpreter, namepath):
         if interpreter.context.has_symbol(f"{namepath}._STA"):
             result = interpreter.interpret_method_call(f"{namepath}._STA")
             sta = result.get()
-            if sta & 0x1 == 0:
+            if args.check_device_status and sta & 0x1 == 0:
                 return
             add_object_to_device(interpreter, namepath, "_STA", result)
 
@@ -532,7 +532,7 @@ def fetch_device_info(devices_node, interpreter, namepath):
     except FutureWork:
         pass
 
-def extract(board_etree):
+def extract(args, board_etree):
     devices_node = get_node(board_etree, "//devices")
 
     try:
@@ -553,7 +553,7 @@ def extract(board_etree):
 
     for device in sorted(namespace.devices, key=lambda x:x.name):
         try:
-            fetch_device_info(devices_node, interpreter, device.name)
+            fetch_device_info(devices_node, interpreter, device.name, args)
         except Exception as e:
             logging.info(f"Fetch information about device object {device.name} failed: {str(e)}")
 

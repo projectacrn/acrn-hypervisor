@@ -56,7 +56,7 @@ def main(board_name, board_xml, args):
             module = import_module(f"extractors.{module_name}")
             if not args.advanced and getattr(module, "advanced", False):
                 continue
-            module.extract(board_etree)
+            module.extract(args, board_etree)
 
         # Finally overwrite the output with the updated XML
         board_etree.write(board_xml, pretty_print=True)
@@ -71,6 +71,7 @@ if __name__ == "__main__":
     parser.add_argument("--out", help="the name of board info file")
     parser.add_argument("--advanced", action="store_true", default=False, help="extract advanced information such as ACPI namespace")
     parser.add_argument("--loglevel", default="warning", help="choose log level, e.g. info, warning or error")
+    parser.add_argument("--check-device-status", action="store_true", default=False, help="filter out devices whose _STA object evaluates to 0")
     args = parser.parse_args()
     try:
         logging.basicConfig(level=args.loglevel.upper())
