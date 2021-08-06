@@ -751,3 +751,8 @@ class LEAF_80000008(CPUID):
     leaf = 0x80000008
     physical_address_bits = cpuidfield(EAX, 7, 0, doc="# Physical Address bits")
     linear_address_bits = cpuidfield(EAX, 15, 8, doc="# Linear Address bits")
+
+    attribute_bits = [
+        "physical_address_bits",
+        "linear_address_bits",
+    ]
