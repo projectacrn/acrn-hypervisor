@@ -654,19 +654,25 @@ struct acrn_pcidev {
 	uint32_t bar[ACRN_PCI_NUM_BARS];
 };
 
+#define MMIODEV_RES_NUM        3
 
 /**
  * @brief Info to assign or deassign a MMIO device for a VM
  */
 struct acrn_mmiodev {
-	/** the gpa of the MMIO region for the MMIO device */
-	uint64_t user_vm_pa;
-
-	/** the hpa of the MMIO region for the MMIO device */
-	uint64_t service_vm_pa;
-
-	/** the size of the MMIO region for the MMIO device */
-	uint64_t size;
+	char name[8];
+	struct acrn_mmiores {
+		/** the gpa of the MMIO region for the MMIO device */
+		uint64_t user_vm_pa;
+		/** the hpa of the MMIO region for the MMIO device: for post-launched VM
+		  * it's pa in service vm; for pre-launched VM it's pa in HV.
+		  */
+		uint64_t host_pa;
+		/** the size of the MMIO region for the MMIO resource */
+		uint64_t size;
+		/** the memory type of the MMIO region for the MMIO resource */
+		uint64_t mem_type;
+	} res[MMIODEV_RES_NUM];
 };
 
 /**
