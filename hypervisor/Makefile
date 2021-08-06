@@ -287,6 +287,9 @@ VP_BASE_C_SRCS += common/hv_main.c
 VP_BASE_C_SRCS += common/vm_load.c
 VP_BASE_C_SRCS += arch/x86/configs/pci_dev.c
 VP_BASE_C_SRCS += arch/x86/configs/vacpi.c
+ifeq ($(CONFIG_SECURITY_VM_FIXUP),y)
+VP_BASE_C_SRCS += quirks/security_vm_fixup.c
+endif
 
 # virtual platform device model
 VP_DM_C_SRCS += dm/vpic.c

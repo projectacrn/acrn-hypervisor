@@ -37,7 +37,8 @@
   IO polling to completion
 - ``GUEST_FLAG_HIDE_MTRR`` specify that MTRR is hidden from the VM
 - ``GUEST_FLAG_RT`` specify that the VM is an RT-VM (real-time)
-- ``GUEST_FLAG_NVMX_ENABLED`` specify that the VM supports nested virtualization</xs:documentation>
+- ``GUEST_FLAG_NVMX_ENABLED`` specify that the VM supports nested virtualization
+- ``GUEST_FLAG_TPM2_FIXUP`` specify that the VM needs to do fixup for TPM2 passthrough</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="" />
@@ -49,6 +50,7 @@
     <xs:enumeration value="GUEST_FLAG_HIDE_MTRR" />
     <xs:enumeration value="GUEST_FLAG_RT" />
     <xs:enumeration value="GUEST_FLAG_NVMX_ENABLED" />
+    <xs:enumeration value="GUEST_FLAG_TPM2_FIXUP" />
   </xs:restriction>
 </xs:simpleType>
 

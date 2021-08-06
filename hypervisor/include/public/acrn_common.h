@@ -56,6 +56,7 @@
 #define GUEST_FLAG_HIDE_MTRR			(1UL << 3U)  	/* Whether hide MTRR from VM */
 #define GUEST_FLAG_RT				(1UL << 4U)     /* Whether the vm is RT-VM */
 #define GUEST_FLAG_NVMX_ENABLED			(1UL << 5U)	/* Whether this VM supports nested virtualization */
+#define GUEST_FLAG_TPM2_FIXUP			(1UL << 6U)	/* Whether this VM needs to do TPM2 fixup */
 
 /* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
 #define VIRTUAL_SLEEP_CTL_ADDR		0x400U /* Pre-launched VM uses ACPI reduced HW mode and sleep control register */
