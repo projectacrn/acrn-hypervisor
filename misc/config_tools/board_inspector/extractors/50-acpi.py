@@ -103,7 +103,7 @@ def parse_address_space_resource(idx, item, elem):
         typ = "bus_number"
     else:
         typ = "custom"
-    add_child(elem, "resource", id=f"res{idx}", type=typ, min=hex(item._MIN), max=hex(item._MAX), len=hex(item._LEN))
+    add_child(elem, "resource", id=f"res{idx}", type=typ, min=hex(item._MIN), max=hex(item._MIN + item._LEN - 1), len=hex(item._LEN))
 
 def parse_extended_irq(idx, item, elem):
     irqs = ", ".join(map(str, item._INT))
@@ -195,7 +195,7 @@ class CollectDependencyVisitor(Visitor):
                                            LARGE_RESOURCE_ITEM_WORD_ADDRESS_SPACE,
                                            LARGE_RESOURCE_ITEM_QWORD_ADDRESS_SPACE,
                                            LARGE_RESOURCE_ITEM_EXTENDED_ADDRESS_SPACE]:
-                            if item._MIN <= region_base and region_base + region_length - 1 <= item._MAX:
+                            if item._MIN <= region_base and region_base + region_length - 1 <= item._MIN + item._LEN - 1:
                                 op_region_is_exposed = True
                                 break
             elif op_region_type == 0x02:  # PCI configuration space is always exposed
