@@ -399,7 +399,9 @@ class Package(Object):
     def to_string(self):
         return "Package"
 
-# PowerResource
+class PowerResource(Object):
+    def __init__(self, name):
+        self.name = name
 
 # Processor
 

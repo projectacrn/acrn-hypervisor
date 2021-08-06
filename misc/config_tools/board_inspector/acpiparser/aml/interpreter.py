@@ -336,6 +336,9 @@ class ConcreteInterpreter(Interpreter):
         self.context.register_operation_region(sym.name, op_region)
         return op_region
 
+    def DefPowerRes(self, tree):
+        return PowerResource(tree.NameString.value)
+
     # 20.2.5.3 Statement Opcodes Encoding
     def DefBreak(self, tree):
         self.to_break = True
@@ -385,7 +388,20 @@ class ConcreteInterpreter(Interpreter):
     def __eval_binary_op(self, tree, op):
         lhs = self.interpret(tree.children[0])
         rhs = self.interpret(tree.children[1])
-        res = Integer(op(lhs.get(), rhs.get()))
+        # FIXME: The current design of AML parsing, objects are first defined in the namespace and later dropped if they
+        # are in a False branch. This leads to incorrect interpretation of the AML code where:
+        #
+        #   1. A name T is defined in the root scope as an integer.
+        #   2. A method M in an inner scope S references T.
+        #   3. The name T is defined as a device, power resource or other named objects in scope S under conditions
+        #      where M will not be called.
+        #
+        # As a workaround, check if both the left and right hand sides are integers first. If either is not the case,
+        # the condition is evaluated to False.
+        if isinstance(lhs, Integer) and isinstance(rhs, Integer):
+            res = Integer(op(lhs.get(), rhs.get()))
+        else:
+            res = Integer(0)
         if len(tree.children) >= 3:
             target = self.interpret(tree.children[2])
             if target:
