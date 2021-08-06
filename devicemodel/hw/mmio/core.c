@@ -73,13 +73,15 @@ int parse_pt_acpidev(char *opt)
 	/* TODO: support acpi dev framework, remove these TPM hard code */
 	if (strncmp(opt, "MSFT0101", 8) == 0) {
 		strncpy(mmio_devs[mmio_dev_idx].name, "MSFT0101", 8);
+
+		strncpy(mmio_devs[mmio_dev_idx].dev.name, "tpm2", 4);
 		/* TODO: We would parse the /proc/iomem to get the corresponding resources */
-		mmio_devs[mmio_dev_idx].dev.service_vm_pa = 0xFED40000UL;
+		mmio_devs[mmio_dev_idx].dev.res[0].host_pa = 0xFED40000UL;
 		/* FIXME: The 0xFED40000 doesn't conflict with other mmio or system memory so far.
 		 * This need to be fixed by redesign the mmio_dev_alloc_gpa_resource32().
 		 */
-		mmio_devs[mmio_dev_idx].dev.user_vm_pa = 0xFED40000UL;
-		mmio_devs[mmio_dev_idx].dev.size = 0x00005000UL;
+		mmio_devs[mmio_dev_idx].dev.res[0].user_vm_pa = 0xFED40000UL;
+		mmio_devs[mmio_dev_idx].dev.res[0].size = 0x00005000UL;
 		mmio_dev_idx++;
 		pt_tpm2 = true;
 	}
@@ -103,8 +105,8 @@ int parse_pt_mmiodev(char *opt)
 		(!dm_strtoul(cp + 1, &cp, 16, &size))) {
 		pr_dbg("%s pt mmiodev base: 0x%lx, size: 0x%lx\n", __func__, base_hpa, size);
 		strncpy(mmio_devs[mmio_dev_idx].name, pt_mmiodev.name, 8);
-		mmio_devs[mmio_dev_idx].dev.service_vm_pa = base_hpa;
-		mmio_devs[mmio_dev_idx].dev.size = size;
+		mmio_devs[mmio_dev_idx].dev.res[0].host_pa = base_hpa;
+		mmio_devs[mmio_dev_idx].dev.res[0].size = size;
 		mmio_dev_idx++;
 	} else {
 		pr_err("%s, %s invalid, please check!\n", __func__, opt);
@@ -131,14 +133,14 @@ int init_mmio_dev(struct vmctx *ctx, struct mmio_dev_ops *ops, struct acrn_mmiod
 	int ret;
 	uint32_t base;
 
-	if (mmiodev->user_vm_pa == 0UL) {
+	if (mmiodev->res[0].user_vm_pa == 0UL) {
 	/* FIXME: The mmio_dev_alloc_gpa_resource32 needs to add one new parameter to indicate
 	 * if the caller needs one specific GPA instead of dynamic allocation.
 	 */
-		ret = mmio_dev_alloc_gpa_resource32(&base, mmiodev->size);
+		ret = mmio_dev_alloc_gpa_resource32(&base, mmiodev->res[0].size);
 		if (ret < 0)
 			return ret;
-		mmiodev->user_vm_pa = base;
+		mmiodev->res[0].user_vm_pa = base;
 	}
 
 	return ops->init(ctx, mmiodev);
@@ -159,8 +161,8 @@ int init_mmio_devs(struct vmctx *ctx)
 		if (ops != NULL) {
 			err = init_mmio_dev(ctx, ops, &mmio_devs[i].dev);
 			pr_notice("mmiodev[%d] hpa:0x%x gpa:0x%x size:0x%x err:%d\n", i,
-				  mmio_devs[i].dev.service_vm_pa,  mmio_devs[i].dev.user_vm_pa,
-				  mmio_devs[i].dev.size, err);
+				  mmio_devs[i].dev.res[0].host_pa,  mmio_devs[i].dev.res[0].user_vm_pa,
+				  mmio_devs[i].dev.res[0].size, err);
 		}
 
 		if (err != 0)
@@ -220,7 +222,7 @@ uint64_t get_mmio_dev_tpm2_base_gpa(void)
 
 	for (i = 0; i < mmio_dev_idx; i++) {
 		if (!strcmp(mmio_devs[i].name, "MSFT0101")) {
-			base_gpa = mmio_devs[i].dev.user_vm_pa;
+			base_gpa = mmio_devs[i].dev.res[0].user_vm_pa;
 			break;
 		}
 	}

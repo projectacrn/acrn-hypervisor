@@ -10,18 +10,28 @@
 #include <asm/pgtable.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/ept.h>
+#include <debug/logmsg.h>
+
 
 int32_t assign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev)
 {
-	int32_t ret = -EINVAL;
+	int32_t i, ret = 0;
+	const struct acrn_mmiores *res;
 
-	if (mem_aligned_check(mmiodev->user_vm_pa, PAGE_SIZE) &&
-			mem_aligned_check(mmiodev->service_vm_pa, PAGE_SIZE) &&
-			mem_aligned_check(mmiodev->size, PAGE_SIZE)) {
-		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, mmiodev->service_vm_pa,
-				is_sos_vm(vm) ? mmiodev->service_vm_pa: mmiodev->user_vm_pa,
-				mmiodev->size, EPT_RWX | EPT_UNCACHED);
-		ret = 0;
+	for (i = 0; i < MMIODEV_RES_NUM; i++) {
+		res = &mmiodev->res[i];
+		if (mem_aligned_check(res->user_vm_pa, PAGE_SIZE) &&
+			mem_aligned_check(res->host_pa, PAGE_SIZE) &&
+			mem_aligned_check(res->size, PAGE_SIZE)) {
+			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, res->host_pa,
+				is_sos_vm(vm) ? res->host_pa : res->user_vm_pa,
+				res->size, EPT_RWX | (res->mem_type & EPT_MT_MASK));
+		} else {
+			pr_err("%s invalid mmio res[%d] gpa:0x%lx hpa:0x%lx size:0x%lx",
+				__FUNCTION__, i, res->user_vm_pa, res->host_pa, res->size);
+			ret = -EINVAL;
+			break;
+		}
 	}
 
 	return ret;
@@ -29,14 +39,24 @@ int32_t assign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev)
 
 int32_t deassign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev)
 {
-	int32_t ret = -EINVAL;
+	int32_t i, ret = 0;
+	uint64_t gpa;
+	const struct acrn_mmiores *res;
 
-	if (mem_aligned_check(mmiodev->user_vm_pa, PAGE_SIZE) &&
-			mem_aligned_check(mmiodev->service_vm_pa, PAGE_SIZE) &&
-			mem_aligned_check(mmiodev->size, PAGE_SIZE)) {
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				is_sos_vm(vm) ? mmiodev->service_vm_pa: mmiodev->user_vm_pa, mmiodev->size);
-		ret = 0;
+	for (i = 0; i < MMIODEV_RES_NUM; i++) {
+		res = &mmiodev->res[i];
+		gpa = is_sos_vm(vm) ? res->host_pa : res->user_vm_pa;
+		if (ept_is_valid_mr(vm, gpa, res->size)) {
+			if (mem_aligned_check(gpa, PAGE_SIZE) &&
+				mem_aligned_check(res->size, PAGE_SIZE)) {
+				ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, gpa, res->size);
+			} else {
+				pr_err("%s invalid mmio res[%d] gpa:0x%lx hpa:0x%lx size:0x%lx",
+					__FUNCTION__, i, res->user_vm_pa, res->host_pa, res->size);
+				ret = -EINVAL;
+				break;
+			}
+		}
 	}
 
 	return ret;

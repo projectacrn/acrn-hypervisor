@@ -139,7 +139,7 @@ void register_vgpio_handler(struct acrn_vm *vm, const struct acrn_mmiodev *mmiod
 	gpa_start   = mmiodev->user_vm_pa + (P2SB_BASE_GPIO_PORT_ID << P2SB_PORTID_SHIFT);
 	gpio_pcr_sz = P2SB_PCR_SPACE_SIZE_PER_AGENT * P2SB_MAX_GPIO_COMMUNITIES;
 	gpa_end     = gpa_start + gpio_pcr_sz;
-	base_hpa    = mmiodev->service_vm_pa + (P2SB_BASE_GPIO_PORT_ID << P2SB_PORTID_SHIFT);
+	base_hpa    = mmiodev->host_pa + (P2SB_BASE_GPIO_PORT_ID << P2SB_PORTID_SHIFT);
 
 	/* emulate MMIO access to the GPIO private configuration space registers */
 	set_paging_supervisor((uint64_t)hpa2hva(base_hpa), gpio_pcr_sz);

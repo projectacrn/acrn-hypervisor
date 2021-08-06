@@ -291,6 +291,11 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 	}
 
 	for (i = 0U; i < MAX_MMIO_DEV_NUM; i++) {
+		/* Now we include the TPM2 event log region in ACPI NVS, so we need to
+		 * delete this potential mapping first.
+		 */
+		(void)deassign_mmio_dev(vm, &vm_config->mmiodevs[i]);
+
 		(void)assign_mmio_dev(vm, &vm_config->mmiodevs[i]);
 
 #ifdef P2SB_VGPIO_DM_ENABLED
