@@ -124,7 +124,7 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
 
 /* @pre abi != NULL && tag != NULL
  */
-static struct abi_module *get_mod_by_tag(const struct acrn_boot_info *abi, const char *tag)
+struct abi_module *get_mod_by_tag(const struct acrn_boot_info *abi, const char *tag)
 {
 	uint8_t i;
 	struct abi_module *mod = NULL;

@@ -235,6 +235,11 @@ struct acpi_table_tpm2 {
 	uint16_t reserved;
 	uint64_t control_address;
 	uint32_t start_method;
+#ifdef CONFIG_SECURITY_VM_FIXUP
+	uint8_t start_method_spec_para[12];
+	uint32_t laml;
+	uint64_t lasa;
+#endif
 } __packed;
 
 void init_acpi(void);
