@@ -52,6 +52,12 @@ def extract_model(processors_node, cpu_id, family_id, model_id, core_type, nativ
                 if getattr(leaf_data, cap) == 1:
                     add_child(n, "capability", id=cap)
 
+        leaves = [(0x80000008, 0)]
+        for leaf in leaves:
+            leaf_data = parse_cpuid(leaf[0], leaf[1], cpu_id)
+            for cap in leaf_data.attribute_bits:
+                add_child(n, "attribute", str(getattr(leaf_data, cap)), id=cap)
+
 def extract_topology(processors_node):
     cpu_ids = get_online_cpu_ids()
     for cpu_id in cpu_ids:
