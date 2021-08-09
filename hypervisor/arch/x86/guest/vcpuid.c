@@ -121,6 +121,9 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 
 			entry->ebx &= ~(CPUID_EBX_PQM | CPUID_EBX_PQE);
 
+			/* mask LA57 */
+			entry->ecx &= ~CPUID_ECX_LA57;
+
 			/* mask SGX and SGX_LC */
 			entry->ebx &= ~CPUID_EBX_SGX;
 			entry->ecx &= ~CPUID_ECX_SGX_LC;
