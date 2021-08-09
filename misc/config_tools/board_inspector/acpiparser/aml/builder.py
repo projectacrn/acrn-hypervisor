@@ -116,7 +116,7 @@ def build_value(value):
         return DefPackage(
             PkgLength(),
             len(value.elements),
-            PackageElementList(elements))
+            PackageElementList(*elements))
     elif isinstance(value, (str, datatypes.String)):
         if isinstance(value, str):
             return String(value)
