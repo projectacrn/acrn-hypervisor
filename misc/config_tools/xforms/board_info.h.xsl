@@ -37,6 +37,10 @@
   <xsl:template match="board-data/acrn-config">
     <xsl:call-template name="MAX_PCPU_NUM" />
     <xsl:call-template name="MAX_VMSIX_ON_MSI_PDEVS_NUM" />
+    <xsl:variable name="physical_address_bits" select="//processors/model/attribute[@id='physical_address_bits']/text()" />
+    <xsl:if test="$physical_address_bits">
+      <xsl:value-of select="acrn:define('MAXIMUM_PA_WIDTH', $physical_address_bits[1], 'U')" />
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="allocation-data/acrn-config">
