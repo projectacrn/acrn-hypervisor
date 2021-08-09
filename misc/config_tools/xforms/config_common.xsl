@@ -258,11 +258,20 @@
         <xsl:if test="position() = 1"><xsl:value-of select="."/></xsl:if>
       </xsl:for-each>
     </xsl:variable>
-    <xsl:call-template name="integer-by-key-value">
-      <xsl:with-param name="key" select="'MAX_MSIX_TABLE_NUM'" />
-      <xsl:with-param name="value" select="$max" />
-      <xsl:with-param name="default" select="'64'" />
-    </xsl:call-template>
+    <xsl:choose>
+      <xsl:when test="//CAPACITIES/MAX_MSIX_TABLE_NUM/text()">
+        <xsl:call-template name="integer-by-key-value">
+          <xsl:with-param name="key" select="'MAX_MSIX_TABLE_NUM'" />
+          <xsl:with-param name="value" select="acrn:max($max, //CAPACITIES/MAX_MSIX_TABLE_NUM)" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="integer-by-key-value">
+          <xsl:with-param name="key" select="'MAX_MSIX_TABLE_NUM'" />
+          <xsl:with-param name="value" select="$max" />
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template name="hex-to-bin">
