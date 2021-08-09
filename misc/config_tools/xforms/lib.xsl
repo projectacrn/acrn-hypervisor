@@ -128,6 +128,19 @@
     </xsl:choose>
   </func:function>
 
+  <func:function name="acrn:max">
+    <xsl:param name="a" />
+    <xsl:param name="b" />
+    <xsl:choose>
+      <xsl:when test="$a &gt; $b">
+        <func:result select="$a" />
+      </xsl:when>
+      <xsl:otherwise>
+        <func:result select="$b" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </func:function>
+
   <func:function name="acrn:find-list-min">
     <xsl:param name="list" />
     <xsl:param name="delimar" />
