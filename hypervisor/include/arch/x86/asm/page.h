@@ -8,12 +8,12 @@
 #define PAGE_H
 
 #include <asm/lib/spinlock.h>
+#include <board_info.h>
 
 #define PAGE_SHIFT	12U
 #define PAGE_SIZE	(1U << PAGE_SHIFT)
 #define PAGE_MASK	0xFFFFFFFFFFFFF000UL
 
-#define MAXIMUM_PA_WIDTH	46U	/* maximum physical-address width */
 #define MAX_PHY_ADDRESS_SPACE	(1UL << MAXIMUM_PA_WIDTH)
 
 /* size of the low MMIO address space: 2GB */
