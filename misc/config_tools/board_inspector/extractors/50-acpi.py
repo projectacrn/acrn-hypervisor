@@ -474,7 +474,9 @@ def fetch_device_info(devices_node, interpreter, namepath, args):
             bus_number = result.get()
             if isinstance(bus_number, int):
                 bus_number = hex(bus_number)
-            element.set("address", bus_number)
+            # To avoid confusion to the later extractors, do not recognize _BBN for non-present host bridges.
+            if sta == None or (sta & 0x1) != 0:
+                element.set("address", bus_number)
             add_object_to_device(interpreter, namepath, "_BBN", result)
 
         # Status
