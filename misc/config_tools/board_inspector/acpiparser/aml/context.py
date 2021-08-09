@@ -233,10 +233,6 @@ class Context:
         else:
             raise InvalidPath(new_scope)
 
-    def enter_scope(self, name):
-        self.__scope_history.append(copy(self.__current_scope))
-        self.__current_scope.append(name)
-
     def pop_scope(self):
         assert(self.__scope_history)
         self.__current_scope = self.__scope_history.pop()
