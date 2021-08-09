@@ -57,6 +57,9 @@ class BufferBase(Object):
     def create_field(self, name, offset, bitwidth, access_width):
         self.__fields[name] = (offset, bitwidth, access_width)
 
+    def field_bitwidth(self, name):
+        return self.__fields[name][1]
+
     def read_field(self, name):
         offset, bitwidth, access_width = self.__fields[name]
         acc = 0
@@ -155,6 +158,11 @@ class Buffer(BufferBase):
     def get(self):
         return self.__data
 
+    def set(self, value):
+        data = value.to_buffer().get()
+        copy_length = min(len(data), len(self.__data))
+        self.__data[:copy_length] = data[:copy_length]
+
     def to_hex_string(self):
         result = ",".join(map(lambda x:hex(x)[2:], self.__data))
         return String(result)
@@ -217,6 +225,10 @@ class BufferField(Object):
 
     def to_integer(self):
         return Integer(self.get())
+
+    def to_buffer(self):
+        bitwidth = self.__buf.field_bitwidth(self.__field)
+        return Buffer(self.get().to_bytes((bitwidth + 7) // 8, sys.byteorder))
 
     def to_string(self):
         return f"BufferField({self.__field})"
@@ -291,8 +303,12 @@ class ObjectReference(Object):
         if self.__index is not None:
             if isinstance(self.__obj, Package):
                 return self.__obj.elements[self.__index]
+            elif isinstance(self.__obj, Buffer):
+                name = f"byte_{hex(self.__index)[2:]}"
+                self.__obj.create_field(name, self.__index * 8, 8, 8)
+                return BufferField(self.__obj, name)
             else:
-                raise NotImplementedError
+                raise NotImplementedError(self.__obj.__class__.__name__)
         else:
             return self.__obj
 
@@ -375,12 +391,18 @@ class OperationRegion(Object):
     def read_field(self, name):
         return self.__iobuf.read_field(name)
 
+    def field_bitwidth(self, name):
+        return self.__iobuf.field_bitwidth(name)
+
     def write_field(self, name, value):
         # Do not allow writes to stream I/O buffer unless the base is explicitly marked as writable
         if name in self.__writable_fields:
             self.__iobuf.write_field(name, value)
         else:
-            logging.info(f"Skip writing 0x{value:0X} to I/O field {name}")
+            if isinstance(value, int):
+                logging.info(f"Skip writing 0x{value:0X} to I/O field {name}")
+            else:
+                logging.info(f"Skip writing {value} to I/O field {name}")
 
     def set_field_writable(self, name):
         self.__writable_fields.add(name)
