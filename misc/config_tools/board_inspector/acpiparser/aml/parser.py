@@ -491,7 +491,7 @@ def DefCreateWordField_hook_named(context, tree, name):
 def DefDevice_hook_named(context, tree, name):
     sym = DeviceDecl(name, tree)
     context.register_symbol(sym)
-    context.enter_scope(name)
+    context.change_scope(name)
 
 def DefDevice_hook_post(context, tree):
     context.pop_scope()
