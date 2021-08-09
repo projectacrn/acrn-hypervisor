@@ -85,8 +85,8 @@
     </memory>
     <os_config>
       <name>Zephyr</name>
-      <kern_type>KERNEL_ZEPHYR</kern_type>
-      <kern_mod>Zephyr_RawImage</kern_mod>
+      <kern_type>KERNEL_ELF</kern_type>
+      <kern_mod>Zephyr_ElfImage</kern_mod>
       <ramdisk_mod></ramdisk_mod>
       <bootargs/>
       <kern_load_addr>0x8000</kern_load_addr>
