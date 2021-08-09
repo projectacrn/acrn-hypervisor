@@ -283,6 +283,12 @@ VP_BASE_C_SRCS += arch/x86/guest/nested.c
 VP_BASE_C_SRCS += arch/x86/guest/vept.c
 endif
 VP_BASE_C_SRCS += boot/guest/vboot_info.c
+ifeq ($(CONFIG_GUEST_KERNEL_BZIMAGE),y)
+VP_BASE_C_SRCS += boot/guest/bzimage_loader.c
+endif
+ifeq ($(CONFIG_GUEST_KERNEL_RAWIMAGE),y)
+VP_BASE_C_SRCS += boot/guest/rawimage_loader.c
+endif
 VP_BASE_C_SRCS += common/hv_main.c
 VP_BASE_C_SRCS += common/vm_load.c
 VP_BASE_C_SRCS += arch/x86/configs/pci_dev.c
