@@ -398,10 +398,13 @@ class ConcreteInterpreter(Interpreter):
         #
         # As a workaround, check if both the left and right hand sides are integers first. If either is not the case,
         # the condition is evaluated to False.
-        if isinstance(lhs, Integer) and isinstance(rhs, Integer):
-            res = Integer(op(lhs.get(), rhs.get()))
-        else:
-            res = Integer(0)
+        try:
+            res = Integer(op(lhs.to_integer().get(), rhs.to_integer().get()))
+        except NotImplementedError:
+            if isinstance(lhs, String) and isinstance(rhs, String):
+                res = Integer(op(lhs.get(), rhs.get()))
+            else:
+                res = Integer(0)
         if len(tree.children) >= 3:
             target = self.interpret(tree.children[2])
             if target:
