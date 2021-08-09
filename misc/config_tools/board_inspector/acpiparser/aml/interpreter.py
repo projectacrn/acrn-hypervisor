@@ -178,6 +178,9 @@ class ConcreteInterpreter(Interpreter):
     def OneOp(self, tree):
         return Integer(0x01)
 
+    def OnesOp(self, tree):
+        return Integer(0xffffffffffffffff)
+
     # 20.2.5 Term Objects Encoding
     def TermList(self, tree):
         for child in tree.children:
@@ -545,6 +548,41 @@ class ConcreteInterpreter(Interpreter):
     def DefLOr(self, tree):
         return self.__eval_binary_op(tree, lambda x,y: 1 if x or y else 0)
 
+    def __match(self, op, obj, match_obj):
+        try:
+            if isinstance(match_obj, String):
+                return op(obj.to_string().get(), match_obj.get())
+            elif isinstance(match_obj, (Integer, BufferField)):
+                return op(obj.to_integer().get(), match_obj.get())
+            else:
+                # Comparison of buffer fields is not implemented yet
+                return False
+        except NotImplementedError:
+            return False
+
+    match_ops = {
+        0: lambda x,y: True,    # TRUE
+        1: lambda x,y: x == y,  # EQ
+        2: lambda x,y: x <= y,  # LE
+        3: lambda x,y: x < y,   # LT
+        4: lambda x,y: x >= y,  # GE
+        5: lambda x,y: x > y,   # GT
+    }
+
+    def DefMatch(self, tree):
+        pkg = self.interpret(tree.SearchPkg)
+        op1 = self.match_ops[tree.MatchOpcode1.value]
+        match_obj1 = self.interpret(tree.Operand1)
+        op2 = self.match_ops[tree.MatchOpcode2.value]
+        match_obj2 = self.interpret(tree.Operand2)
+        start_index = self.interpret(tree.StartIndex).get()
+        if isinstance(pkg, Package) and isinstance(start_index, int):
+            for i in range(start_index, len(pkg.elements)):
+                obj = pkg.elements[i]
+                if self.__match(op1, obj, match_obj1) and self.__match(op2, obj, match_obj2):
+                    return Integer(i)
+        return Integer(0xffffffffffffffff) # Ones is 64-bit in DSDT rev 2 and above
+
     def DefMod(self, tree):
         return self.__eval_binary_op(tree, lambda x,y: x % y)
 
@@ -581,6 +619,19 @@ class ConcreteInterpreter(Interpreter):
 
     def DefShiftRight(self, tree):
         return self.__eval_binary_op(tree, lambda x,y: x >> y)
+
+    def DefSizeOf(self, tree):
+        obj = self.interpret(tree.SuperName)
+        if isinstance(obj, (self.Argument, self.LocalVariable)):
+            obj = obj.get_obj()
+
+        if isinstance(obj, Buffer):
+            return Integer(len(obj.get()))
+        elif isinstance(obj, String):
+            return Integer(len(obj.get()))
+        elif isinstance(obj, Package):
+            return Integer(len(obj.elements))
+        raise NotImplementedError(f"Cannot calculate the size of object of type {obj.__class__.__name__}")
 
     def DefStore(self, tree):
         obj = self.interpret(tree.children[0])
