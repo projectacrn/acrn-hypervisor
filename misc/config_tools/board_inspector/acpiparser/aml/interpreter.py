@@ -329,7 +329,11 @@ class ConcreteInterpreter(Interpreter):
             self.context.change_scope(tree.scope)
             device_path = self.context.parent(sym.name)
             bus_id = self.interpret_method_call(f"_BBN").get()
-            device_id = self.interpret_method_call(f"{device_path}._ADR").get()
+            if self.context.has_symbol(f"{device_path}._ADR"):
+                device_id = self.interpret_method_call(f"{device_path}._ADR").get()
+            elif self.context.has_symbol(f"{device_path}._BBN"):
+                # Device objects representing PCI host bridges may not have an _ADR object
+                device_id = 0
             self.context.pop_scope()
             op_region = OperationRegion.open_pci_configuration_space(bus_id, device_id, offset, length)
             pass
