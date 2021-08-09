@@ -86,13 +86,16 @@ def parse_irq(idx, item, elem):
     add_child(elem, "resource", id=f"res{idx}", type="irq", int=irqs)
 
 def parse_io_port(idx, item, elem):
-    add_child(elem, "resource", id=f"res{idx}", type="io_port", min=hex(item._MIN), max=hex(item._MAX), len=hex(item._LEN))
+    add_child(elem, "resource", id=f"res{idx}", type="io_port",
+              min=hex(item._MIN), max=hex(item._MAX), len=hex(item._LEN))
 
 def parse_fixed_io_port(idx, item, elem):
-    add_child(elem, "resource", id=f"res{idx}", type="io_port", min=hex(item._BAS), max=hex(item._BAS + item._LEN - 1), len=hex(item._LEN))
+    add_child(elem, "resource", id=f"res{idx}", type="io_port",
+              min=hex(item._BAS), max=hex(item._BAS + item._LEN - 1 if item._LEN else 0), len=hex(item._LEN))
 
 def parse_fixed_memory_range(idx, item, elem):
-    add_child(elem, "resource", id=f"res{idx}", type="memory", min=hex(item._BAS), max=hex(item._BAS + item._LEN - 1), len=hex(item._LEN))
+    add_child(elem, "resource", id=f"res{idx}", type="memory",
+              min=hex(item._BAS), max=hex(item._BAS + item._LEN - 1 if item._LEN else 0), len=hex(item._LEN))
 
 def parse_address_space_resource(idx, item, elem):
     if item._TYP == 0:
