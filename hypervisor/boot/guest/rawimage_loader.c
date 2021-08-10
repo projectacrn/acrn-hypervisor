@@ -13,7 +13,6 @@
 static void load_rawimage(struct acrn_vm *vm)
 {
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
-	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
 	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	uint64_t kernel_load_gpa;
 
@@ -22,9 +21,6 @@ static void load_rawimage(struct acrn_vm *vm)
 
 	/* Copy the guest kernel image to its run-time location */
 	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr, kernel_load_gpa, sw_kernel->kernel_size);
-
-	/* Copy Guest OS ACPI to its load location */
-	load_sw_module(vm, acpi_info);
 
 	sw_kernel->kernel_entry_addr = (void *)vm_config->os_config.kernel_entry_addr;
 }
