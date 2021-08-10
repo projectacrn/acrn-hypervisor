@@ -238,7 +238,7 @@ int32_t read_vmx_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 	return err;
 }
 
-#define MAX_SHADOW_VMCS_FIELDS 114U
+#define MAX_SHADOW_VMCS_FIELDS 113U
 /*
  * VMCS fields included in the dual-purpose VMCS: as shadow for L1 and
  * as hardware VMCS for nested guest (L2).
@@ -254,8 +254,6 @@ int32_t read_vmx_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
  */
 static const uint32_t vmcs_shadowing_fields[MAX_SHADOW_VMCS_FIELDS] = {
 	/* 16-bits */
-	VMX_VPID,
-
 	VMX_GUEST_ES_SEL,
 	VMX_GUEST_CS_SEL,
 	VMX_GUEST_SS_SEL,
@@ -875,6 +873,7 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 
 				if ((vmcs_field == VMX_MSR_BITMAP_FULL)
 					|| (vmcs_field == VMX_EPT_POINTER_FULL)
+					|| (vmcs_field == VMX_VPID)
 					|| (vmcs_field == VMX_ENTRY_CONTROLS)
 					|| (vmcs_field == VMX_EXIT_CONTROLS)) {
 					vcpu->arch.nested.control_fields_dirty = true;
@@ -945,6 +944,8 @@ static void merge_and_sync_control_fields(struct acrn_vcpu *vcpu)
 	/* Host is alway runing in 64-bit mode */
 	value64 = vmcs12->vm_exit_controls | VMX_EXIT_CTLS_HOST_ADDR64;
 	exec_vmwrite(VMX_EXIT_CONTROLS, value64);
+
+	exec_vmwrite(VMX_VPID, vmcs12->vpid);
 }
 
 /**
@@ -1324,6 +1325,17 @@ static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
 }
 
 /**
+ * @pre vcpu != NULL
+ */
+static void sanitize_l2_vpid(struct acrn_vmcs12 *vmcs12)
+{
+	/* Flush VPID if the L2 VPID could be conflicted with any L1 VPIDs */
+	if (vmcs12->vpid >= ALLOCATED_MIN_L1_VPID) {
+		flush_vpid_single(vmcs12->vpid);
+	}
+}
+
+/**
  * @brief handler for all VMEXITs from nested guests
  *
  * @pre vcpu != NULL
@@ -1331,7 +1343,6 @@ static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
  */
 int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	struct acrn_vmcs12 *vmcs12 = (struct acrn_vmcs12 *)&vcpu->arch.nested.vmcs12;
 	bool is_l1_vmexit = true;
 
 	if ((vcpu->arch.exit_reason & 0xFFFFU) == VMX_EXIT_REASON_EPT_VIOLATION) {
@@ -1339,13 +1350,7 @@ int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 
 	if (is_l1_vmexit) {
-		/*
-		 * Currerntly VMX_VPID is shadowing to L1, so we flush L2 VPID before
-		 * L1 VM entry to avoid conflicting with L1 VPID.
-		 *
-		 * TODO: emulate VPID for L2 so that we can save this VPID flush
-		 */
-		flush_vpid_single(vmcs12->vpid);
+		sanitize_l2_vpid(&vcpu->arch.nested.vmcs12);
 
 		/*
 		 * Clear VMCS02 because: ISDM: Before modifying the shadow-VMCS indicator,
@@ -1411,15 +1416,11 @@ static void nested_vmentry(struct acrn_vcpu *vcpu, bool is_launch)
 			vmcs12->launch_state = VMCS12_LAUNCH_STATE_LAUNCHED;
 		}
 
+		sanitize_l2_vpid(&vcpu->arch.nested.vmcs12);
+
 		/*
-		 * There are two reasons to set vcpu->launched to false even for VMRESUME:
-		 *
-		 * - the launch state of VMCS02 is clear at this moment.
-		 * - currently VMX_VPID is shadowing to L1, and it could happens that
-		 *   L2 VPID will be conflicted with L1 VPID. We rely on run_vcpu() to
-		 *   flush global vpid in the VMLAUNCH path to resolve this conflict.
-		 *
-		 *  TODO: emulate L2 VPID to avoid VPID flush.
+		 * set vcpu->launched to false because the launch state of VMCS02 is
+		 * clear at this moment, even for VMRESUME
 		 */
 		vcpu->launched = false;
 	}
