@@ -238,6 +238,7 @@ struct acrn_vcpu_arch {
 	/* common MSRs, world_msrs[] is a subset of it */
 	uint64_t guest_msrs[NUM_GUEST_MSRS];
 
+#define ALLOCATED_MIN_L1_VPID	(0x10000U - CONFIG_MAX_VM_NUM * MAX_VCPUS_PER_VM)
 	uint16_t vpid;
 
 	/* Holds the information needed for IRQ/exception handling. */
