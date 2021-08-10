@@ -2,7 +2,7 @@
   <BIOS_INFO>
 	BIOS Information
 	Vendor: SeaBIOS
-	Version: 1.13.0-1ubuntu1.1
+	Version: rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org
 	Release Date: 04/01/2014
 	BIOS Revision: 0.0
 	</BIOS_INFO>
@@ -32,7 +32,7 @@
 	Region 5: Memory at fde07000 (32-bit, non-prefetchable) [size=4K]
 	00:1f.3 SMBus: Intel Corporation 82801I (ICH9 Family) SMBus Controller (rev 02)
 	01:00.0 Ethernet controller: Red Hat, Inc. Virtio network device (rev 01)
-	Region 1: Memory at fdc80000 (32-bit, non-prefetchable) [size=4K]
+	Region 1: Memory at fdc40000 (32-bit, non-prefetchable) [size=4K]
 	Region 4: Memory at fea00000 (64-bit, prefetchable) [size=16K]
 	02:00.0 Communication controller: Red Hat, Inc. Virtio console (rev 01)
 	Region 1: Memory at fda00000 (32-bit, non-prefetchable) [size=4K]
@@ -67,8 +67,8 @@
 	05:00.0 00ff: 1af4:1044 (rev 01)
 	</PCI_VID_PID>
   <WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x7FFE000CUL
-	#define WAKE_VECTOR_64          0x7FFE0018UL
+	#define WAKE_VECTOR_32          0x7FFDFD8CUL
+	#define WAKE_VECTOR_64          0x7FFDFD98UL
 	</WAKE_VECTOR_INFO>
   <RESET_REGISTER_INFO>
 	#define RESET_REGISTER_ADDRESS  0xCF9UL
@@ -116,7 +116,7 @@
 
 	</DRHD_INFO>
   <CPU_BRAND>
-	"Intel(R) Core(TM) i7-6770HQ CPU @ 2.60GHz"
+	"Intel Atom Processor (Denverton)"
 	</CPU_BRAND>
   <CX_INFO>
 	/* Cx data is not available */
@@ -141,11 +141,11 @@
 	000c0000-000c0dff : Video ROM
 	000f0000-000fffff : Reserved
 	  000f0000-000fffff : System ROM
-	00100000-7ffd7fff : System RAM
-	  25400000-260031d0 : Kernel code
-	  260031d1-26a6cebf : Kernel data
-	  26cee000-26f96fff : Kernel bss
-	7ffd8000-7fffffff : Reserved
+	00100000-7ffd8fff : System RAM
+	  5ac00000-5b8031d0 : Kernel code
+	  5b8031d1-5c26cebf : Kernel data
+	  5c4ee000-5c796fff : Kernel bss
+	7ffd9000-7fffffff : Reserved
 	80000000-afffffff : PCI Bus 0000:00
 	b0000000-bfffffff : PCI MMCONFIG 0000 [bus 00-ff]
 	  b0000000-bfffffff : Reserved
@@ -158,8 +158,8 @@
 	  fda00000-fdbfffff : PCI Bus 0000:02
 	    fda00000-fda00fff : 0000:02:00.0
 	  fdc00000-fddfffff : PCI Bus 0000:01
-	    fdc00000-fdc7ffff : 0000:01:00.0
-	    fdc80000-fdc80fff : 0000:01:00.0
+	    fdc00000-fdc3ffff : 0000:01:00.0
+	    fdc40000-fdc40fff : 0000:01:00.0
 	  fde00000-fde00fff : 0000:00:01.0
 	  fde01000-fde01fff : 0000:00:01.1
 	  fde02000-fde02fff : 0000:00:01.2
@@ -203,34 +203,30 @@
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
-	seri:/dev/ttyS1 type:portio base:0x2F8 irq:3
 	</TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
-	5, 6, 7, 10, 11, 13, 14, 15
+	3, 5, 6, 7, 10, 11, 13, 14, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	4194304 kB
+	4038724 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3
 	</CPU_PROCESSOR_INFO>
   <MAX_MSIX_TABLE_NUM>
-	16
+	3
 	</MAX_MSIX_TABLE_NUM>
   <processors>
-    <model description="Intel(R) Core(TM) i7-6770HQ CPU @ 2.60GHz">
+    <model description="Intel Atom Processor (Denverton)">
       <family_id>0x6</family_id>
-      <model_id>0x5e</model_id>
+      <model_id>0x5f</model_id>
       <core_type></core_type>
       <native_model_id></native_model_id>
       <capability id="sse3"/>
       <capability id="pclmulqdq"/>
       <capability id="vmx"/>
       <capability id="ssse3"/>
-      <capability id="fma"/>
       <capability id="cmpxchg16b"/>
-      <capability id="pdcm"/>
-      <capability id="pcid"/>
       <capability id="sse4_1"/>
       <capability id="sse4_2"/>
       <capability id="x2apic"/>
@@ -238,9 +234,6 @@
       <capability id="popcnt"/>
       <capability id="tsc_deadline"/>
       <capability id="aes"/>
-      <capability id="xsave"/>
-      <capability id="avx"/>
-      <capability id="f16c"/>
       <capability id="rdrand"/>
       <capability id="fpu"/>
       <capability id="vme"/>
@@ -264,30 +257,17 @@
       <capability id="fxsr"/>
       <capability id="sse"/>
       <capability id="sse2"/>
-      <capability id="ss"/>
       <capability id="fsgsbase"/>
-      <capability id="ia32_tsc_adjust_msr"/>
-      <capability id="bmi1"/>
-      <capability id="hle"/>
-      <capability id="avx2"/>
       <capability id="smep"/>
-      <capability id="bmi2"/>
       <capability id="erms"/>
-      <capability id="invpcid"/>
-      <capability id="rtm"/>
       <capability id="mpx"/>
       <capability id="rdseed"/>
-      <capability id="adx"/>
       <capability id="smap"/>
       <capability id="clflushopt"/>
-      <capability id="umip"/>
-      <capability id="md_clear"/>
       <capability id="ibrs_ibpb"/>
-      <capability id="stibp"/>
       <capability id="ia32_arch_capabilities"/>
       <capability id="ssbd"/>
       <capability id="lahf_sahf_64"/>
-      <capability id="lzcnt"/>
       <capability id="prefetchw"/>
       <capability id="syscall_sysret_64"/>
       <capability id="execute_disable"/>
@@ -295,6 +275,8 @@
       <capability id="rdtscp_ia32_tsc_aux"/>
       <capability id="intel_64"/>
       <capability id="invariant_tsc"/>
+      <attribute id="physical_address_bits">40</attribute>
+      <attribute id="linear_address_bits">48</attribute>
     </model>
     <die id="0">
       <core id="0x0">
@@ -303,8 +285,8 @@
           <apic_id>0x0</apic_id>
           <x2apic_id>0x0</x2apic_id>
           <family_id>0x6</family_id>
-          <model_id>0x5e</model_id>
-          <stepping_id>0x3</stepping_id>
+          <model_id>0x5f</model_id>
+          <stepping_id>0x1</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -315,8 +297,8 @@
           <apic_id>0x1</apic_id>
           <x2apic_id>0x1</x2apic_id>
           <family_id>0x6</family_id>
-          <model_id>0x5e</model_id>
-          <stepping_id>0x3</stepping_id>
+          <model_id>0x5f</model_id>
+          <stepping_id>0x1</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -327,8 +309,8 @@
           <apic_id>0x2</apic_id>
           <x2apic_id>0x2</x2apic_id>
           <family_id>0x6</family_id>
-          <model_id>0x5e</model_id>
-          <stepping_id>0x3</stepping_id>
+          <model_id>0x5f</model_id>
+          <stepping_id>0x1</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -339,8 +321,8 @@
           <apic_id>0x3</apic_id>
           <x2apic_id>0x3</x2apic_id>
           <family_id>0x6</family_id>
-          <model_id>0x5e</model_id>
-          <stepping_id>0x3</stepping_id>
+          <model_id>0x5f</model_id>
+          <stepping_id>0x1</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -591,249 +573,662 @@
   </caches>
   <memory>
     <range start="0x0000000000000000" end="0x000000000009fbff" size="654336"/>
-    <range start="0x0000000000100000" end="0x000000007ffd7fff" size="2146271232"/>
+    <range start="0x0000000000100000" end="0x000000007ffd8fff" size="2146275328"/>
     <range start="0x0000000100000000" end="0x000000017fffffff" size="2147483648"/>
   </memory>
   <devices>
-    <bus type="pci" address="0x0" id="0x29c0" description="Host bridge: Intel Corporation 82G33/G31/P35/P31 Express DRAM Controller">
-      <vendor>0x8086</vendor>
-      <identifier>0x29c0</identifier>
-      <subsystem_vendor>0x1af4</subsystem_vendor>
-      <subsystem_identifier>0x1100</subsystem_identifier>
-      <class>0x060000</class>
-      <resource type="memory" min="0xa0000" max="0xbffff" len="0x20000"/>
-      <resource type="memory" min="0x80000000" max="0xafffffff" len="0x30000000"/>
-      <resource type="memory" min="0xc0000000" max="0xfebfffff" len="0x3ec00000"/>
-      <resource type="memory" min="0x180000000" max="0x97fffffff" len="0x800000000"/>
-      <device address="0x10000" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
-        <vendor>0x1b36</vendor>
-        <identifier>0x000c</identifier>
-        <class>0x060400</class>
-        <resource type="io_port" min="0x1000" max="0x1fff" len="0x1000"/>
-        <resource type="memory" min="0xfdc00000" max="0xfddfffff" len="0x200000"/>
-        <resource type="memory" min="0xfde00000" max="0xfde00fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI-X"/>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Advanced Error Reporting"/>
-        <capability id="ACS"/>
-        <bus type="pci" address="0x1">
-          <device address="0x0" id="0x1041" description="Ethernet controller: Red Hat, Inc. Virtio network device">
-            <vendor>0x1af4</vendor>
-            <identifier>0x1041</identifier>
-            <subsystem_vendor>0x1af4</subsystem_vendor>
-            <subsystem_identifier>0x1100</subsystem_identifier>
-            <class>0x020000</class>
-            <resource type="memory" min="0xfdc80000" max="0xfdc80fff" len="0x1000" id="bar1" width="32" prefetchable="0"/>
-            <resource type="memory" min="0xfea00000" max="0xfea03fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
-            <capability id="MSI-X"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Power Management"/>
-            <capability id="PCI Express"/>
+    <bus type="system">
+      <acpi_object>\_SB_</acpi_object>
+      <bus id="PNP0A08" type="pci" address="0x0" description="Host bridge: Intel Corporation 82G33/G31/P35/P31 Express DRAM Controller">
+        <vendor>0x8086</vendor>
+        <identifier>0x29c0</identifier>
+        <subsystem_vendor>0x1af4</subsystem_vendor>
+        <subsystem_identifier>0x1100</subsystem_identifier>
+        <class>0x060000</class>
+        <acpi_object>\_SB_.PCI0</acpi_object>
+        <compatible_id>PNP0A03</compatible_id>
+        <acpi_uid>1</acpi_uid>
+        <resource id="res0" type="bus_number" min="0x0" max="0xff" len="0x100"/>
+        <resource id="res2" type="io_port" min="0x0" max="0xcf7" len="0xcf8"/>
+        <resource id="res1" type="io_port" min="0xcf8" max="0xcf8" len="0x8"/>
+        <resource id="res3" type="io_port" min="0xd00" max="0xffff" len="0xf300"/>
+        <resource id="res4" type="memory" min="0xa0000" max="0xbffff" len="0x20000"/>
+        <resource id="res5" type="memory" min="0x80000000" max="0xafffffff" len="0x30000000"/>
+        <resource id="res6" type="memory" min="0xc0000000" max="0xfebfffff" len="0x3ec00000"/>
+        <resource id="res7" type="memory" min="0x180000000" max="0x97fffffff" len="0x800000000"/>
+        <interrupt_pin_routing>
+          <routing address="0xffff">
+            <mapping pin="INTA#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIH" index="0"/>
+          </routing>
+          <routing address="0x1ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIE" index="0"/>
+          </routing>
+          <routing address="0x2ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIF" index="0"/>
+          </routing>
+          <routing address="0x3ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIG" index="0"/>
+          </routing>
+          <routing address="0x4ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIH" index="0"/>
+          </routing>
+          <routing address="0x5ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIE" index="0"/>
+          </routing>
+          <routing address="0x6ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIF" index="0"/>
+          </routing>
+          <routing address="0x7ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIG" index="0"/>
+          </routing>
+          <routing address="0x8ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIH" index="0"/>
+          </routing>
+          <routing address="0x9ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIE" index="0"/>
+          </routing>
+          <routing address="0xaffff">
+            <mapping pin="INTA#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIF" index="0"/>
+          </routing>
+          <routing address="0xbffff">
+            <mapping pin="INTA#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIG" index="0"/>
+          </routing>
+          <routing address="0xcffff">
+            <mapping pin="INTA#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIH" index="0"/>
+          </routing>
+          <routing address="0xdffff">
+            <mapping pin="INTA#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIE" index="0"/>
+          </routing>
+          <routing address="0xeffff">
+            <mapping pin="INTA#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIF" index="0"/>
+          </routing>
+          <routing address="0xfffff">
+            <mapping pin="INTA#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIG" index="0"/>
+          </routing>
+          <routing address="0x10ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIH" index="0"/>
+          </routing>
+          <routing address="0x11ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIE" index="0"/>
+          </routing>
+          <routing address="0x12ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIF" index="0"/>
+          </routing>
+          <routing address="0x13ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIG" index="0"/>
+          </routing>
+          <routing address="0x14ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIH" index="0"/>
+          </routing>
+          <routing address="0x15ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIE" index="0"/>
+          </routing>
+          <routing address="0x16ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIF" index="0"/>
+          </routing>
+          <routing address="0x17ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIH" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIG" index="0"/>
+          </routing>
+          <routing address="0x18ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIH" index="0"/>
+          </routing>
+          <routing address="0x19ffff">
+            <mapping pin="INTA#" source="\_SB_.GSIA" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIB" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIC" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSID" index="0"/>
+          </routing>
+          <routing address="0x1affff">
+            <mapping pin="INTA#" source="\_SB_.GSIA" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIB" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIC" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSID" index="0"/>
+          </routing>
+          <routing address="0x1bffff">
+            <mapping pin="INTA#" source="\_SB_.GSIA" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIB" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIC" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSID" index="0"/>
+          </routing>
+          <routing address="0x1cffff">
+            <mapping pin="INTA#" source="\_SB_.GSIA" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIB" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIC" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSID" index="0"/>
+          </routing>
+          <routing address="0x1dffff">
+            <mapping pin="INTA#" source="\_SB_.GSIA" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIB" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIC" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSID" index="0"/>
+          </routing>
+          <routing address="0x1effff">
+            <mapping pin="INTA#" source="\_SB_.GSIE" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIF" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIG" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSIH" index="0"/>
+          </routing>
+          <routing address="0x1fffff">
+            <mapping pin="INTA#" source="\_SB_.GSIA" index="0"/>
+            <mapping pin="INTB#" source="\_SB_.GSIB" index="0"/>
+            <mapping pin="INTC#" source="\_SB_.GSIC" index="0"/>
+            <mapping pin="INTD#" source="\_SB_.GSID" index="0"/>
+          </routing>
+        </interrupt_pin_routing>
+        <device address="0x0">
+          <acpi_object>\_SB_.PCI0.S00_</acpi_object>
+          <aml_template>5b82165c2f035f53425f504349305330305f085f41445200</aml_template>
+        </device>
+        <device address="0x10000" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
+          <vendor>0x1b36</vendor>
+          <identifier>0x000c</identifier>
+          <class>0x060400</class>
+          <acpi_object>\_SB_.PCI0.S08_</acpi_object>
+          <aml_template>5b821a5c2f035f53425f504349305330385f085f4144520c00000100</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="21"/>
+          <resource type="io_port" min="0x1000" max="0x1fff" len="0x1000"/>
+          <resource type="memory" min="0xfdc00000" max="0xfddfffff" len="0x200000"/>
+          <resource type="memory" min="0xfde00000" max="0xfde00fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI-X">
+            <table_size>1</table_size>
+            <table_bir>1</table_bir>
+            <table_offset>0x8000000</table_offset>
+            <pba_bir>0</pba_bir>
+            <pba_offset>0x8100000</pba_offset>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Advanced Error Reporting"/>
+          <capability id="ACS"/>
+          <bus type="pci" address="0x1">
+            <device address="0x0" id="0x1041" description="Ethernet controller: Red Hat, Inc. Virtio network device">
+              <vendor>0x1af4</vendor>
+              <identifier>0x1041</identifier>
+              <subsystem_vendor>0x1af4</subsystem_vendor>
+              <subsystem_identifier>0x1100</subsystem_identifier>
+              <class>0x020000</class>
+              <resource type="interrupt_pin" pin="INTA#"/>
+              <resource type="memory" min="0xfdc40000" max="0xfdc40fff" len="0x1000" id="bar1" width="32" prefetchable="0"/>
+              <resource type="memory" min="0xfea00000" max="0xfea03fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
+              <capability id="MSI-X">
+                <table_size>3</table_size>
+                <table_bir>3</table_bir>
+                <table_offset>0x8010000</table_offset>
+                <pba_bir>0</pba_bir>
+                <pba_offset>0x0</pba_offset>
+              </capability>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Power Management"/>
+              <capability id="PCI Express"/>
+            </device>
+          </bus>
+        </device>
+        <device address="0x10001" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
+          <vendor>0x1b36</vendor>
+          <identifier>0x000c</identifier>
+          <class>0x060400</class>
+          <resource type="interrupt_pin" pin="INTA#" source="21"/>
+          <resource type="io_port" min="0x2000" max="0x2fff" len="0x1000"/>
+          <resource type="memory" min="0xfda00000" max="0xfdbfffff" len="0x200000"/>
+          <resource type="memory" min="0xfde01000" max="0xfde01fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI-X">
+            <table_size>1</table_size>
+            <table_bir>1</table_bir>
+            <table_offset>0x8000000</table_offset>
+            <pba_bir>0</pba_bir>
+            <pba_offset>0x8100000</pba_offset>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Advanced Error Reporting"/>
+          <capability id="ACS"/>
+          <bus type="pci" address="0x2">
+            <device address="0x0" id="0x1043" description="Communication controller: Red Hat, Inc. Virtio console">
+              <vendor>0x1af4</vendor>
+              <identifier>0x1043</identifier>
+              <subsystem_vendor>0x1af4</subsystem_vendor>
+              <subsystem_identifier>0x1100</subsystem_identifier>
+              <class>0x078000</class>
+              <resource type="interrupt_pin" pin="INTA#"/>
+              <resource type="memory" min="0xfda00000" max="0xfda00fff" len="0x1000" id="bar1" width="32" prefetchable="0"/>
+              <resource type="memory" min="0xfe800000" max="0xfe803fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
+              <capability id="MSI-X">
+                <table_size>2</table_size>
+                <table_bir>3</table_bir>
+                <table_offset>0x8010000</table_offset>
+                <pba_bir>0</pba_bir>
+                <pba_offset>0x0</pba_offset>
+              </capability>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Power Management"/>
+              <capability id="PCI Express"/>
+            </device>
+          </bus>
+        </device>
+        <device address="0x10002" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
+          <vendor>0x1b36</vendor>
+          <identifier>0x000c</identifier>
+          <class>0x060400</class>
+          <resource type="interrupt_pin" pin="INTA#" source="21"/>
+          <resource type="io_port" min="0x3000" max="0x3fff" len="0x1000"/>
+          <resource type="memory" min="0xfd800000" max="0xfd9fffff" len="0x200000"/>
+          <resource type="memory" min="0xfde02000" max="0xfde02fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI-X">
+            <table_size>1</table_size>
+            <table_bir>1</table_bir>
+            <table_offset>0x8000000</table_offset>
+            <pba_bir>0</pba_bir>
+            <pba_offset>0x8100000</pba_offset>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Advanced Error Reporting"/>
+          <capability id="ACS"/>
+          <bus type="pci" address="0x3">
+            <device address="0x0" id="0x1042" description="SCSI storage controller: Red Hat, Inc. Virtio block device">
+              <vendor>0x1af4</vendor>
+              <identifier>0x1042</identifier>
+              <subsystem_vendor>0x1af4</subsystem_vendor>
+              <subsystem_identifier>0x1100</subsystem_identifier>
+              <class>0x010000</class>
+              <resource type="interrupt_pin" pin="INTA#"/>
+              <resource type="memory" min="0xfd800000" max="0xfd800fff" len="0x1000" id="bar1" width="32" prefetchable="0"/>
+              <resource type="memory" min="0xfe600000" max="0xfe603fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
+              <capability id="MSI-X">
+                <table_size>2</table_size>
+                <table_bir>3</table_bir>
+                <table_offset>0x8010000</table_offset>
+                <pba_bir>0</pba_bir>
+                <pba_offset>0x0</pba_offset>
+              </capability>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Power Management"/>
+              <capability id="PCI Express"/>
+            </device>
+          </bus>
+        </device>
+        <device address="0x10003" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
+          <vendor>0x1b36</vendor>
+          <identifier>0x000c</identifier>
+          <class>0x060400</class>
+          <resource type="interrupt_pin" pin="INTA#" source="21"/>
+          <resource type="io_port" min="0x4000" max="0x4fff" len="0x1000"/>
+          <resource type="memory" min="0xfd600000" max="0xfd7fffff" len="0x200000"/>
+          <resource type="memory" min="0xfde03000" max="0xfde03fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI-X">
+            <table_size>1</table_size>
+            <table_bir>1</table_bir>
+            <table_offset>0x8000000</table_offset>
+            <pba_bir>0</pba_bir>
+            <pba_offset>0x8100000</pba_offset>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Advanced Error Reporting"/>
+          <capability id="ACS"/>
+          <bus type="pci" address="0x4">
+            <device address="0x0" id="0x1045" description="Unclassified device: Red Hat, Inc. Virtio memory balloon">
+              <vendor>0x1af4</vendor>
+              <identifier>0x1045</identifier>
+              <subsystem_vendor>0x1af4</subsystem_vendor>
+              <subsystem_identifier>0x1100</subsystem_identifier>
+              <class>0x00ff00</class>
+              <resource type="interrupt_pin" pin="INTA#"/>
+              <resource type="memory" min="0xfe400000" max="0xfe403fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Power Management"/>
+              <capability id="PCI Express"/>
+            </device>
+          </bus>
+        </device>
+        <device address="0x10004" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
+          <vendor>0x1b36</vendor>
+          <identifier>0x000c</identifier>
+          <class>0x060400</class>
+          <resource type="interrupt_pin" pin="INTA#" source="21"/>
+          <resource type="io_port" min="0x5000" max="0x5fff" len="0x1000"/>
+          <resource type="memory" min="0xfd400000" max="0xfd5fffff" len="0x200000"/>
+          <resource type="memory" min="0xfde04000" max="0xfde04fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI-X">
+            <table_size>1</table_size>
+            <table_bir>1</table_bir>
+            <table_offset>0x8000000</table_offset>
+            <pba_bir>0</pba_bir>
+            <pba_offset>0x8100000</pba_offset>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Advanced Error Reporting"/>
+          <capability id="ACS"/>
+          <bus type="pci" address="0x5">
+            <device address="0x0" id="0x1044" description="Unclassified device: Red Hat, Inc. Virtio RNG">
+              <vendor>0x1af4</vendor>
+              <identifier>0x1044</identifier>
+              <subsystem_vendor>0x1af4</subsystem_vendor>
+              <subsystem_identifier>0x1100</subsystem_identifier>
+              <class>0x00ff00</class>
+              <resource type="interrupt_pin" pin="INTA#"/>
+              <resource type="memory" min="0xfe200000" max="0xfe203fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Vendor-Specific"/>
+              <capability id="Power Management"/>
+              <capability id="PCI Express"/>
+            </device>
+          </bus>
+        </device>
+        <device address="0x10005" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
+          <vendor>0x1b36</vendor>
+          <identifier>0x000c</identifier>
+          <class>0x060400</class>
+          <resource type="interrupt_pin" pin="INTA#" source="21"/>
+          <resource type="io_port" min="0x6000" max="0x6fff" len="0x1000"/>
+          <resource type="memory" min="0xfd200000" max="0xfd3fffff" len="0x200000"/>
+          <resource type="memory" min="0xfde05000" max="0xfde05fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI-X">
+            <table_size>1</table_size>
+            <table_bir>1</table_bir>
+            <table_offset>0x8000000</table_offset>
+            <pba_bir>0</pba_bir>
+            <pba_offset>0x8100000</pba_offset>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Advanced Error Reporting"/>
+          <capability id="ACS"/>
+          <bus type="pci" address="0x6"/>
+        </device>
+        <device address="0x1d0000" id="0x2934" description="USB controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #1">
+          <vendor>0x8086</vendor>
+          <identifier>0x2934</identifier>
+          <subsystem_vendor>0x1af4</subsystem_vendor>
+          <subsystem_identifier>0x1100</subsystem_identifier>
+          <class>0x0c0300</class>
+          <acpi_object>\_SB_.PCI0.SE8_</acpi_object>
+          <aml_template>5b821a5c2f035f53425f504349305345385f085f4144520c00001d00</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="io_port" min="0xc040" max="0xc05f" len="0x20" id="bar4"/>
+        </device>
+        <device address="0x1d0001" id="0x2935" description="USB controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #2">
+          <vendor>0x8086</vendor>
+          <identifier>0x2935</identifier>
+          <subsystem_vendor>0x1af4</subsystem_vendor>
+          <subsystem_identifier>0x1100</subsystem_identifier>
+          <class>0x0c0300</class>
+          <resource type="interrupt_pin" pin="INTB#" source="17"/>
+          <resource type="io_port" min="0xc060" max="0xc07f" len="0x20" id="bar4"/>
+        </device>
+        <device address="0x1d0002" id="0x2936" description="USB controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #3">
+          <vendor>0x8086</vendor>
+          <identifier>0x2936</identifier>
+          <subsystem_vendor>0x1af4</subsystem_vendor>
+          <subsystem_identifier>0x1100</subsystem_identifier>
+          <class>0x0c0300</class>
+          <resource type="interrupt_pin" pin="INTC#" source="18"/>
+          <resource type="io_port" min="0xc080" max="0xc09f" len="0x20" id="bar4"/>
+        </device>
+        <device address="0x1d0007" id="0x293a" description="USB controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #1">
+          <vendor>0x8086</vendor>
+          <identifier>0x293a</identifier>
+          <subsystem_vendor>0x1af4</subsystem_vendor>
+          <subsystem_identifier>0x1100</subsystem_identifier>
+          <class>0x0c0320</class>
+          <resource type="interrupt_pin" pin="INTD#" source="19"/>
+          <resource type="memory" min="0xfde06000" max="0xfde06fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+        </device>
+        <device address="0x1f0000" id="0x2918" description="ISA bridge: Intel Corporation 82801IB (ICH9) LPC Interface Controller">
+          <vendor>0x8086</vendor>
+          <identifier>0x2918</identifier>
+          <subsystem_vendor>0x1af4</subsystem_vendor>
+          <subsystem_identifier>0x1100</subsystem_identifier>
+          <class>0x060100</class>
+          <acpi_object>\_SB_.PCI0.ISA_</acpi_object>
+          <aml_template>5b821a5c2f035f53425f504349304953415f085f4144520c00001f00</aml_template>
+          <device id="PNP0303">
+            <acpi_object>\_SB_.PCI0.ISA_.KBD_</acpi_object>
+            <aml_template>5b8244045c2f045f53425f504349304953415f4b42445f085f5354410a0f085f4849440c41d00303085f43525311180a15470160006000010147016400640001012202007900</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+            <resource id="res0" type="io_port" min="0x60" max="0x60" len="0x1"/>
+            <resource id="res1" type="io_port" min="0x64" max="0x64" len="0x1"/>
+            <resource id="res2" type="irq" int="1"/>
           </device>
-        </bus>
-      </device>
-      <device address="0x10001" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
-        <vendor>0x1b36</vendor>
-        <identifier>0x000c</identifier>
-        <class>0x060400</class>
-        <resource type="io_port" min="0x2000" max="0x2fff" len="0x1000"/>
-        <resource type="memory" min="0xfda00000" max="0xfdbfffff" len="0x200000"/>
-        <resource type="memory" min="0xfde01000" max="0xfde01fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI-X"/>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Advanced Error Reporting"/>
-        <capability id="ACS"/>
-        <bus type="pci" address="0x2">
-          <device address="0x0" id="0x1043" description="Communication controller: Red Hat, Inc. Virtio console">
-            <vendor>0x1af4</vendor>
-            <identifier>0x1043</identifier>
-            <subsystem_vendor>0x1af4</subsystem_vendor>
-            <subsystem_identifier>0x1100</subsystem_identifier>
-            <class>0x078000</class>
-            <resource type="memory" min="0xfda00000" max="0xfda00fff" len="0x1000" id="bar1" width="32" prefetchable="0"/>
-            <resource type="memory" min="0xfe800000" max="0xfe803fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
-            <capability id="MSI-X"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Power Management"/>
-            <capability id="PCI Express"/>
+          <device id="PNP0F13">
+            <acpi_object>\_SB_.PCI0.ISA_.MOU_</acpi_object>
+            <aml_template>5b82335c2f045f53425f504349304953415f4d4f555f085f5354410a0f085f4849440c41d00f13085f43525311080a052200107900</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+            <resource id="res0" type="irq" int="12"/>
           </device>
-        </bus>
-      </device>
-      <device address="0x10002" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
-        <vendor>0x1b36</vendor>
-        <identifier>0x000c</identifier>
-        <class>0x060400</class>
-        <resource type="io_port" min="0x3000" max="0x3fff" len="0x1000"/>
-        <resource type="memory" min="0xfd800000" max="0xfd9fffff" len="0x200000"/>
-        <resource type="memory" min="0xfde02000" max="0xfde02fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI-X"/>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Advanced Error Reporting"/>
-        <capability id="ACS"/>
-        <bus type="pci" address="0x3">
-          <device address="0x0" id="0x1042" description="SCSI storage controller: Red Hat, Inc. Virtio block device">
-            <vendor>0x1af4</vendor>
-            <identifier>0x1042</identifier>
-            <subsystem_vendor>0x1af4</subsystem_vendor>
-            <subsystem_identifier>0x1100</subsystem_identifier>
-            <class>0x010000</class>
-            <resource type="memory" min="0xfd800000" max="0xfd800fff" len="0x1000" id="bar1" width="32" prefetchable="0"/>
-            <resource type="memory" min="0xfe600000" max="0xfe603fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
-            <capability id="MSI-X"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Power Management"/>
-            <capability id="PCI Express"/>
+          <device id="PNP0B00">
+            <acpi_object>\_SB_.PCI0.ISA_.RTC_</acpi_object>
+            <aml_template>5b823c5c2f045f53425f504349304953415f5254435f085f4849440c41d00b00085f43525311180a15470170007000100222000147017200720002067900</aml_template>
+            <resource id="res0" type="io_port" min="0x70" max="0x70" len="0x2"/>
+            <resource id="res2" type="io_port" min="0x72" max="0x72" len="0x6"/>
+            <resource id="res1" type="irq" int="8"/>
           </device>
-        </bus>
+        </device>
+        <device address="0x1f0002" id="0x2922" description="SATA controller: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA Controller [AHCI mode]">
+          <vendor>0x8086</vendor>
+          <identifier>0x2922</identifier>
+          <subsystem_vendor>0x1af4</subsystem_vendor>
+          <subsystem_identifier>0x1100</subsystem_identifier>
+          <class>0x010601</class>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="io_port" min="0xc0a0" max="0xc0bf" len="0x20" id="bar4"/>
+          <resource type="memory" min="0xfde07000" max="0xfde07fff" len="0x1000" id="bar5" width="32" prefetchable="0"/>
+          <capability id="MSI">
+            <count>1</count>
+            <capability id="64-bit address"/>
+          </capability>
+          <capability id="Reserved (0x12)"/>
+        </device>
+        <device id="APP0005" address="0x1f0003" description="SMBus: Intel Corporation 82801I (ICH9 Family) SMBus Controller">
+          <vendor>0x8086</vendor>
+          <identifier>0x2930</identifier>
+          <subsystem_vendor>0x1af4</subsystem_vendor>
+          <subsystem_identifier>0x1100</subsystem_identifier>
+          <class>0x0c0500</class>
+          <acpi_object>\_SB_.PCI0.SMB0</acpi_object>
+          <aml_template>5b82245c2f035f53425f50434930534d4230085f4849440c06100005085f4144520c03001f00</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="io_port" min="0x700" max="0x73f" len="0x40" id="bar4"/>
+        </device>
+        <device id="QEMU0002">
+          <acpi_object>\_SB_.PCI0.FWCF</acpi_object>
+          <aml_template>5b82395c2f035f53425f5043493046574346085f5354410a0b085f4849440d51454d553030303200085f435253110d0a0a470110051005010c7900</aml_template>
+          <status>
+            <present>y</present>
+            <enabled>y</enabled>
+            <functioning>y</functioning>
+          </status>
+          <resource id="res0" type="io_port" min="0x510" max="0x510" len="0xc"/>
+        </device>
+        <device id="PNP0A06">
+          <acpi_object>\_SB_.PCI0.GPE0</acpi_object>
+          <acpi_uid>GPE0 resources</acpi_uid>
+          <aml_template>5b824e045c2f035f53425f5043493047504530085f5354410a0b085f4849440d504e503041303600085f5549440d47504530207265736f757263657300085f435253110d0a0a47012006200601107900</aml_template>
+          <status>
+            <present>y</present>
+            <enabled>y</enabled>
+            <functioning>y</functioning>
+          </status>
+          <resource id="res0" type="io_port" min="0x620" max="0x620" len="0x10"/>
+        </device>
+        <device id="PNP0A06">
+          <acpi_object>\_SB_.PCI0.PRES</acpi_object>
+          <acpi_uid>CPU Hotplug resources</acpi_uid>
+          <aml_template>5b824a045c2f035f53425f5043493050524553085f4849440c41d00a06085f5549440d43505520486f74706c7567207265736f757263657300085f435253110d0a0a4701d80cd80c010c7900</aml_template>
+          <resource id="res0" type="io_port" min="0xcd8" max="0xcd8" len="0xc"/>
+        </device>
+      </bus>
+      <device id="ACPI0010">
+        <acpi_object>\_SB_.CPUS</acpi_object>
+        <compatible_id>PNP0A05</compatible_id>
+        <aml_template>5b82215c2e5f53425f43505553085f5354410a0f085f4849440d414350493030313000</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
       </device>
-      <device address="0x10003" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
-        <vendor>0x1b36</vendor>
-        <identifier>0x000c</identifier>
-        <class>0x060400</class>
-        <resource type="io_port" min="0x4000" max="0x4fff" len="0x1000"/>
-        <resource type="memory" min="0xfd600000" max="0xfd7fffff" len="0x200000"/>
-        <resource type="memory" min="0xfde03000" max="0xfde03fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI-X"/>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Advanced Error Reporting"/>
-        <capability id="ACS"/>
-        <bus type="pci" address="0x4">
-          <device address="0x0" id="0x1045" description="Unclassified device: Red Hat, Inc. Virtio memory balloon">
-            <vendor>0x1af4</vendor>
-            <identifier>0x1045</identifier>
-            <subsystem_vendor>0x1af4</subsystem_vendor>
-            <subsystem_identifier>0x1100</subsystem_identifier>
-            <class>0x00ff00</class>
-            <resource type="memory" min="0xfe400000" max="0xfe403fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Power Management"/>
-            <capability id="PCI Express"/>
-          </device>
-        </bus>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.GSIA</acpi_object>
+        <acpi_uid>16</acpi_uid>
+        <aml_template>5b82305c2e5f53425f47534941085f4849440c41d00c0f085f5549440a10085f435253110e0a0b8906000901100000007900</aml_template>
+        <resource id="res0" type="irq" int="16"/>
       </device>
-      <device address="0x10004" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
-        <vendor>0x1b36</vendor>
-        <identifier>0x000c</identifier>
-        <class>0x060400</class>
-        <resource type="io_port" min="0x5000" max="0x5fff" len="0x1000"/>
-        <resource type="memory" min="0xfd400000" max="0xfd5fffff" len="0x200000"/>
-        <resource type="memory" min="0xfde04000" max="0xfde04fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI-X"/>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Advanced Error Reporting"/>
-        <capability id="ACS"/>
-        <bus type="pci" address="0x5">
-          <device address="0x0" id="0x1044" description="Unclassified device: Red Hat, Inc. Virtio RNG">
-            <vendor>0x1af4</vendor>
-            <identifier>0x1044</identifier>
-            <subsystem_vendor>0x1af4</subsystem_vendor>
-            <subsystem_identifier>0x1100</subsystem_identifier>
-            <class>0x00ff00</class>
-            <resource type="memory" min="0xfe200000" max="0xfe203fff" len="0x4000" id="bar4" width="64" prefetchable="1"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Vendor-Specific"/>
-            <capability id="Power Management"/>
-            <capability id="PCI Express"/>
-          </device>
-        </bus>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.GSIB</acpi_object>
+        <acpi_uid>17</acpi_uid>
+        <aml_template>5b82305c2e5f53425f47534942085f4849440c41d00c0f085f5549440a11085f435253110e0a0b8906000901110000007900</aml_template>
+        <resource id="res0" type="irq" int="17"/>
       </device>
-      <device address="0x10005" id="0x000c" description="PCI bridge: Red Hat, Inc. QEMU PCIe Root port">
-        <vendor>0x1b36</vendor>
-        <identifier>0x000c</identifier>
-        <class>0x060400</class>
-        <resource type="io_port" min="0x6000" max="0x6fff" len="0x1000"/>
-        <resource type="memory" min="0xfd200000" max="0xfd3fffff" len="0x200000"/>
-        <resource type="memory" min="0xfde05000" max="0xfde05fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI-X"/>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Advanced Error Reporting"/>
-        <capability id="ACS"/>
-        <bus type="pci" address="0x6"/>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.GSIC</acpi_object>
+        <acpi_uid>18</acpi_uid>
+        <aml_template>5b82305c2e5f53425f47534943085f4849440c41d00c0f085f5549440a12085f435253110e0a0b8906000901120000007900</aml_template>
+        <resource id="res0" type="irq" int="18"/>
       </device>
-      <device address="0x1d0000" id="0x2934" description="USB controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #1">
-        <vendor>0x8086</vendor>
-        <identifier>0x2934</identifier>
-        <subsystem_vendor>0x1af4</subsystem_vendor>
-        <subsystem_identifier>0x1100</subsystem_identifier>
-        <class>0x0c0300</class>
-        <resource type="io_port" min="0xc040" max="0xc05f" len="0x20" id="bar4"/>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.GSID</acpi_object>
+        <acpi_uid>19</acpi_uid>
+        <aml_template>5b82305c2e5f53425f47534944085f4849440c41d00c0f085f5549440a13085f435253110e0a0b8906000901130000007900</aml_template>
+        <resource id="res0" type="irq" int="19"/>
       </device>
-      <device address="0x1d0001" id="0x2935" description="USB controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #2">
-        <vendor>0x8086</vendor>
-        <identifier>0x2935</identifier>
-        <subsystem_vendor>0x1af4</subsystem_vendor>
-        <subsystem_identifier>0x1100</subsystem_identifier>
-        <class>0x0c0300</class>
-        <resource type="io_port" min="0xc060" max="0xc07f" len="0x20" id="bar4"/>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.GSIE</acpi_object>
+        <acpi_uid>20</acpi_uid>
+        <aml_template>5b82305c2e5f53425f47534945085f4849440c41d00c0f085f5549440a14085f435253110e0a0b8906000901140000007900</aml_template>
+        <resource id="res0" type="irq" int="20"/>
       </device>
-      <device address="0x1d0002" id="0x2936" description="USB controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #3">
-        <vendor>0x8086</vendor>
-        <identifier>0x2936</identifier>
-        <subsystem_vendor>0x1af4</subsystem_vendor>
-        <subsystem_identifier>0x1100</subsystem_identifier>
-        <class>0x0c0300</class>
-        <resource type="io_port" min="0xc080" max="0xc09f" len="0x20" id="bar4"/>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.GSIF</acpi_object>
+        <acpi_uid>21</acpi_uid>
+        <aml_template>5b82305c2e5f53425f47534946085f4849440c41d00c0f085f5549440a15085f435253110e0a0b8906000901150000007900</aml_template>
+        <resource id="res0" type="irq" int="21"/>
       </device>
-      <device address="0x1d0007" id="0x293a" description="USB controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #1">
-        <vendor>0x8086</vendor>
-        <identifier>0x293a</identifier>
-        <subsystem_vendor>0x1af4</subsystem_vendor>
-        <subsystem_identifier>0x1100</subsystem_identifier>
-        <class>0x0c0320</class>
-        <resource type="memory" min="0xfde06000" max="0xfde06fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.GSIG</acpi_object>
+        <acpi_uid>22</acpi_uid>
+        <aml_template>5b82305c2e5f53425f47534947085f4849440c41d00c0f085f5549440a16085f435253110e0a0b8906000901160000007900</aml_template>
+        <resource id="res0" type="irq" int="22"/>
       </device>
-      <device address="0x1f0000" id="0x2918" description="ISA bridge: Intel Corporation 82801IB (ICH9) LPC Interface Controller">
-        <vendor>0x8086</vendor>
-        <identifier>0x2918</identifier>
-        <subsystem_vendor>0x1af4</subsystem_vendor>
-        <subsystem_identifier>0x1100</subsystem_identifier>
-        <class>0x060100</class>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.GSIH</acpi_object>
+        <acpi_uid>23</acpi_uid>
+        <aml_template>5b82305c2e5f53425f47534948085f4849440c41d00c0f085f5549440a17085f435253110e0a0b8906000901170000007900</aml_template>
+        <resource id="res0" type="irq" int="23"/>
       </device>
-      <device address="0x1f0002" id="0x2922" description="SATA controller: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA Controller [AHCI mode]">
-        <vendor>0x8086</vendor>
-        <identifier>0x2922</identifier>
-        <subsystem_vendor>0x1af4</subsystem_vendor>
-        <subsystem_identifier>0x1100</subsystem_identifier>
-        <class>0x010601</class>
-        <resource type="io_port" min="0xc0a0" max="0xc0bf" len="0x20" id="bar4"/>
-        <resource type="memory" min="0xfde07000" max="0xfde07fff" len="0x1000" id="bar5" width="32" prefetchable="0"/>
-        <capability id="MSI">
-          <capability id="64-bit address"/>
-        </capability>
-        <capability id="Reserved (0x12)"/>
-      </device>
-      <device address="0x1f0003" id="0x2930" description="SMBus: Intel Corporation 82801I (ICH9 Family) SMBus Controller">
-        <vendor>0x8086</vendor>
-        <identifier>0x2930</identifier>
-        <subsystem_vendor>0x1af4</subsystem_vendor>
-        <subsystem_identifier>0x1100</subsystem_identifier>
-        <class>0x0c0500</class>
-        <resource type="io_port" min="0x700" max="0x73f" len="0x40" id="bar4"/>
+      <device id="PNP0103">
+        <acpi_object>\_SB_.HPET</acpi_object>
+        <acpi_uid>0</acpi_uid>
+        <aml_template>5b824b085c2e5f53425f485045545b804850544d000c0000d0fe0b00045b81104850544d1356454e44205052445f2014365f535441007056454e4460705052445f617a600a1060a00c9193600093600bffffa400a00e9193610094610c00e1f505a400a40a0f085f4849440c41d00103085f55494400085f43525311110a0e860900000000d0fe000400007900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="memory" min="0xfed00000" max="0xfed003ff" len="0x400"/>
       </device>
     </bus>
   </devices>
