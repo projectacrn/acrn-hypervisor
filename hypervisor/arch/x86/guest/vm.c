@@ -816,7 +816,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 	vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
 
 	if (is_sos_vm(vm)) {
-		(void)vm_sw_loader(vm);
+		(void)prepare_os_image(vm);
 	}
 
 	reset_vm_ioreqs(vm);
@@ -932,7 +932,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 			}
 		}
 
-		err = vm_sw_loader(vm);
+		err = prepare_os_image(vm);
 
 		if (is_prelaunched_vm(vm)) {
 			loaded_pre_vm_nr++;
