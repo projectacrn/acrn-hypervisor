@@ -22,11 +22,12 @@ void load_sw_module(struct acrn_vm *vm, struct sw_module_info *sw_module)
 /**
  * @pre vm != NULL
  */
-int32_t vm_sw_loader(struct acrn_vm *vm)
+int32_t prepare_os_image(struct acrn_vm *vm)
 {
 	int32_t ret = -EINVAL;
 	/* get primary vcpu */
 	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
+	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
 
 	switch (vm->sw.kernel_type) {
 #ifdef CONFIG_GUEST_KERNEL_BZIMAGE
@@ -45,6 +46,8 @@ int32_t vm_sw_loader(struct acrn_vm *vm)
 	}
 
 	if (ret == 0) {
+		/* Copy Guest OS ACPI to its load location */
+		load_sw_module(vm, acpi_info);
 		/* Set VCPU entry point to kernel entry */
 		vcpu_set_rip(vcpu, (uint64_t)vm->sw.kernel_info.kernel_entry_addr);
 		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016lx ", __func__, vm->vm_id, vcpu->vcpu_id,

@@ -338,7 +338,6 @@ static void load_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu,
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
 	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
-	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
 	struct zero_page *zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;
 
 	/* The bzImage file consists of three parts:
@@ -378,9 +377,6 @@ static void load_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu,
 	bootargs_info->load_addr = (void *)BZIMG_CMDLINE_GPA(load_params_gpa);
 
 	load_sw_module(vm, bootargs_info);
-
-	/* Copy Guest OS ACPI to its load location */
-	load_sw_module(vm, acpi_info);
 
 	/* 32bit kernel entry is at where protected mode code loaded */
 	kernel_entry_offset = 0U;
