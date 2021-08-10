@@ -25,7 +25,7 @@ static void load_rawimage(struct acrn_vm *vm)
 	sw_kernel->kernel_entry_addr = (void *)vm_config->os_config.kernel_entry_addr;
 }
 
-int32_t vm_rawimage_loader(struct acrn_vm *vm)
+int32_t rawimage_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
 	uint64_t vgdt_gpa = 0x800;

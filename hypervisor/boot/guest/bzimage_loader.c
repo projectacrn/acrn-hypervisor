@@ -402,7 +402,7 @@ static void load_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu,
 			__func__, vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSI));
 }
 
-int32_t vm_bzimage_loader(struct acrn_vm *vm)
+int32_t bzimage_loader(struct acrn_vm *vm)
 {
 	int32_t ret = -ENOMEM;
 	/* get primary vcpu */

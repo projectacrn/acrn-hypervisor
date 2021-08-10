@@ -32,12 +32,12 @@ int32_t prepare_os_image(struct acrn_vm *vm)
 	switch (vm->sw.kernel_type) {
 #ifdef CONFIG_GUEST_KERNEL_BZIMAGE
 	case KERNEL_BZIMAGE:
-		ret = vm_bzimage_loader(vm);
+		ret = bzimage_loader(vm);
 		break;
 #endif
 #ifdef CONFIG_GUEST_KERNEL_RAWIMAGE
 	case KERNEL_RAWIMAGE:
-		ret = vm_rawimage_loader(vm);
+		ret = rawimage_loader(vm);
 		break;
 #endif
 	default:
