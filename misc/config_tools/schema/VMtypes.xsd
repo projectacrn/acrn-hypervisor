@@ -86,8 +86,7 @@ to.</xs:documentation>
       <xs:annotation>
         <xs:documentation>Configure each CPU in VMs to a desired CLOS ID in the ``VM`` section of the
 scenario file. Follow :ref:`rdt_detection_capabilities`
-to identify the maximum supported CLOS ID that can be used. Default
-value ``0``.</xs:documentation>
+to identify the maximum supported CLOS ID that can be used.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>

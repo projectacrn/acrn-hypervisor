@@ -24,17 +24,17 @@ hypervisor shell.</xs:documentation>
     <xs:element name="SERIAL_CONSOLE" type="SerialConsoleOptions" default="/dev/ttyS0">
       <xs:annotation>
         <xs:documentation>Specify the host serial device used for hypervisor debugging.
-This entry is valid if and only if `hv.DEBUG_OPTIONS.RELEASE` is n.
-This entry impacts the content of `vm.(legacy_vuart id="0").base` when `vm.vm_type` is SOS_VM,
-which specifies the PIO base for Service VM legacy vUART 0 (used for console).
-The determination of the PIO base for Service VM legacy vUART 0 follows the rules below:
+This option is only valid if :option:`hv.DEBUG_OPTIONS.RELEASE` is set to ``n``.
+This option impacts the content of ``vm.(legacy_vuart id="0").base`` when :option:`vm.vm_type` is ``SOS_VM``,
+which specifies the PIO base for Service VM legacy vUART 0 (used for the console).
+The PIO base for the Service VM's legacy vUART 0 is determined using these rules:
 
-- If hv.DEBUG_OPTIONS.SERIAL_CONSOLE is one of [ttys0, ttys1, ttys2, ttys3] and it's a PIO in the
-  native environment, the PIO base of Service VM legacy vUART 0 would be the same as the PIO base
-  corresponding to hv.DEBUG_OPTIONS.SERIAL_CONSOLE in the native environment.
-- Otherwise, a PIO base would be assigned to Service VM legacy vUART 0 from the available PIO list.
+- If :option:`hv.DEBUG_OPTIONS.SERIAL_CONSOLE` is ``ttys0``, ``ttys1``, ``ttys2``, or ``ttys3`` and it is a PIO in the
+  native environment, the PIO base of the Service VM legacy vUART 0 would be the same as the PIO base
+  corresponding to :option:`hv.DEBUG_OPTIONS.SERIAL_CONSOLE` in the native environment.
+- Otherwise, a PIO base would be assigned to the Service VM legacy vUART 0 from the available PIO list.
 
-The above logic is implemented in the configuration tools.</xs:documentation>
+This logic is implemented in the configuration tools.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MEM_LOGLEVEL" type="LogLevelType" default="5">
@@ -292,8 +292,8 @@ initialization.</xs:documentation>
     </xs:element>
     <xs:element name="MAX_MSIX_TABLE_NUM" default="64">
         <xs:annotation>
-          <xs:documentation>Pre-defined maximum number of virtual MSI-X Table entries per device.
-If this value is empty, then the default value will be calculated from the board XML file.</xs:documentation>
+          <xs:documentation>Pre-defined maximum number of virtual MSI-X table entries per device.
+If this value is empty, then the default value will be calculated from information in the board XML file.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
