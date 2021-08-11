@@ -328,7 +328,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 /**
  * @pre vm != NULL
  */
-static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu,
+static void load_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu,
 						uint64_t load_params_gpa, uint64_t kernel_load_gpa)
 {
 	uint32_t i;
@@ -420,7 +420,7 @@ int32_t vm_bzimage_loader(struct acrn_vm *vm)
 			/* We boot bzImage from protected mode directly */
 			init_vcpu_protect_mode_regs(vcpu, BZIMG_INITGDT_GPA(load_params_gpa));
 
-			prepare_loading_bzimage(vm, vcpu, load_params_gpa, kernel_load_gpa);
+			load_bzimage(vm, vcpu, load_params_gpa, kernel_load_gpa);
 
 			ret = 0;
 		}
