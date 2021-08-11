@@ -20,6 +20,8 @@
 
   <!-- C code common variables -->
   <xsl:variable name="newline" select="'&#xa;'" />
+  <xsl:variable name="tab" select="'&#x9;'" />
+  <xsl:variable name="whitespaces" select="concat(' ', '&#xd;', $tab, $newline)" />
   <xsl:variable name="quot" select="'&#x22;'" />
   <xsl:variable name="end_of_initializer" select="concat(',', $newline)" />
   <xsl:variable name="end_of_array_initializer" select="concat('};', $newline)" />
@@ -603,7 +605,7 @@
 
   <func:function name="acrn:get-intx-mapping">
     <xsl:param name="pt_intx_nodes" />
-    <xsl:variable name="joined" select="translate(acrn:string-join($pt_intx_nodes/text(), '', '', ''), ' ', '')" />
+    <xsl:variable name="joined" select="translate(acrn:string-join($pt_intx_nodes/text(), '', '', ''), $whitespaces, '')" />
     <xsl:variable name="unique_mapping" select="set:distinct(str:split(str:replace($joined, ')(', ').('), '.'))" />
     <func:result select="$unique_mapping" />
   </func:function>

@@ -104,9 +104,9 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
         vm_type = vm.find("vm_type").text
         vm_id = int(vm.get("id"))
         if lib.lib.is_pre_launched_vm(vm_type):
-            pt_intx_node = common.get_node("pt_intx", vm)
-            if pt_intx_node is not None:
-                pt_intx_mapping = dict(eval(f"[{pt_intx_node.text.replace(')(', '), (')}]"))
+            pt_intx_text = common.get_node("pt_intx/text()", vm)
+            if pt_intx_text is not None:
+                pt_intx_mapping = dict(eval(f"[{pt_intx_text.replace(')(', '), (')}]"))
                 for irq in pt_intx_mapping.keys():
                     irq_allocation[vm_id][irq].append("(Explicitly assigned in scenario configuration)")
             for pci_dev in vm.xpath("pci_devs/pci_dev/text()"):
@@ -181,8 +181,8 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
         vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
         if vm_node is None:
             vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = str(vm_id))
-        pt_intx_node = common.get_node(f"//vm[@id='{vm_id}']/pt_intx", scenario_etree)
-        pt_intx_mapping = dict(eval(f"[{pt_intx_node.text.replace(')(', '), (')}]")) if pt_intx_node is not None else {}
+        pt_intx_text = common.get_node(f"//vm[@id='{vm_id}']/pt_intx/text()", scenario_etree)
+        pt_intx_mapping = dict(eval(f"[{pt_intx_text.replace(')(', '), (')}]")) if pt_intx_text is not None else {}
         for irq, devs in alloc.items():
             for dev in devs:
                 if dev.startswith("("):  # Allocation in the scenario configuration need not go to allocation.xml
