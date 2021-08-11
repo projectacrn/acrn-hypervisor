@@ -179,9 +179,9 @@ value ``n``.</xs:documentation>
       <xs:annotation>
         <xs:documentation>Specify the cache capacity bitmask for the CLOS; only continuous '1' bits
 are allowed. The value will be ignored when hardware does not support RDT.
-This entry takes effect only if `hv.FEATURES.RDT.RDT_ENABLED` is y.
-As `vm.clos.vcpu_clos` specifies the index of the CLOS to be associated with the given vCPU,
-`hv.FEATURES.RDT.CLOS_MASK` of that CLOS would impact the performance of the given vCPU.</xs:documentation>
+This option takes effect only if :option:`hv.FEATURES.RDT.RDT_ENABLED` is set to ``y``.
+As :option:`vm.clos.vcpu_clos` specifies the index of the CLOS to be associated with the given vCPU,
+:option:`hv.FEATURES.RDT.CLOS_MASK` of that CLOS would impact the performance of the given vCPU.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MBA_DELAY" type="xs:string" minOccurs="0"  maxOccurs="unbounded">
