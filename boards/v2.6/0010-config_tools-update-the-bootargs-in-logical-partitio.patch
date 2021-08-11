@@ -1,0 +1,30 @@
+From cf12838f990d6745e6065f92b920ff7546b7e52b Mon Sep 17 00:00:00 2001
+From: Kunhui-Li <kunhuix.li@intel.com>
+Date: Wed, 11 Aug 2021 16:55:14 +0800
+Subject: [PATCH 10/13] config_tools: update the bootargs in logical partition
+ xml
+
+update VM1 bootargs from "root=/dev/sda3" to "root=/dev/sda2"
+in logical partition xml file.
+
+Signed-off-by: Kunhui-Li <kunhuix.li@intel.com>
+---
+ misc/config_tools/data/adl-s-crb/logical_partition.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/misc/config_tools/data/adl-s-crb/logical_partition.xml b/misc/config_tools/data/adl-s-crb/logical_partition.xml
+index f482ad3ca..526dd815c 100644
+--- a/misc/config_tools/data/adl-s-crb/logical_partition.xml
++++ b/misc/config_tools/data/adl-s-crb/logical_partition.xml
+@@ -172,7 +172,7 @@
+       <kern_type>KERNEL_BZIMAGE</kern_type>
+       <kern_mod>Linux_bzImage</kern_mod>
+       <ramdisk_mod></ramdisk_mod>
+-      <bootargs>rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
++      <bootargs>rw rootwait root=/dev/sda2 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
+       </bootargs>
+     </os_config>
+     <legacy_vuart id="0">
+-- 
+2.25.1
+

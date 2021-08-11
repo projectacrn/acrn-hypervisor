@@ -1,0 +1,32 @@
+From cf3896978b40938d26fcef2e9d9b516c2af1c238 Mon Sep 17 00:00:00 2001
+From: Kunhui-Li <kunhuix.li@intel.com>
+Date: Wed, 11 Aug 2021 17:09:08 +0800
+Subject: [PATCH 11/13] config_tools: update hybrid xml files
+
+update entry/load address to 0x1000 to fix the issue that failed to
+boot pre-launch Zephyr on the adl-s platform.
+
+Tracked-On: #6384
+Signed-off-by: Kunhui-Li <kunhuix.li@intel.com>
+---
+ misc/config_tools/data/adl-s-crb/hybrid.xml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid.xml b/misc/config_tools/data/adl-s-crb/hybrid.xml
+index 9158a8a5d..2ab65b994 100644
+--- a/misc/config_tools/data/adl-s-crb/hybrid.xml
++++ b/misc/config_tools/data/adl-s-crb/hybrid.xml
+@@ -94,8 +94,8 @@
+             <kern_mod>Zephyr_RawImage</kern_mod>
+             <ramdisk_mod/>
+             <bootargs></bootargs>
+-            <kern_load_addr>0x8000</kern_load_addr>
+-            <kern_entry_addr>0x8000</kern_entry_addr>
++            <kern_load_addr>0x1000</kern_load_addr>
++            <kern_entry_addr>0x1000</kern_entry_addr>
+         </os_config>
+         <legacy_vuart id="0">
+             <type>VUART_LEGACY_PIO</type>
+-- 
+2.25.1
+

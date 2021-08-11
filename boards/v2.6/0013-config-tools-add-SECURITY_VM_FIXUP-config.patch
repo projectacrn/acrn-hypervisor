@@ -1,0 +1,81 @@
+From b4f4a52dd89b9441781f5946f47980da242d2f9a Mon Sep 17 00:00:00 2001
+From: Kunhui-Li <kunhuix.li@intel.com>
+Date: Wed, 11 Aug 2021 17:39:43 +0800
+Subject: [PATCH 13/13] config-tools: add SECURITY_VM_FIXUP config
+
+Add SECURITY_VM_FIXUP config for Security VM whether it needs to do
+fixup for TPM2 and SMBIOS
+
+Tracked-On: #6320
+Signed-off-by: Kunhui-Li <kunhuix.li@intel.com>
+---
+ misc/config_tools/data/adl-s-crb/hybrid.xml      | 1 +
+ misc/config_tools/data/adl-s-crb/hybrid_rt.xml   | 1 +
+ misc/config_tools/data/adl-s-crb/partitioned.xml | 1 +
+ misc/config_tools/data/adl-s-crb/shared.xml      | 1 +
+ misc/config_tools/data/icx-rvp/shared.xml        | 1 +
+ 5 files changed, 5 insertions(+)
+
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid.xml b/misc/config_tools/data/adl-s-crb/hybrid.xml
+index 2ab65b994..ae5e5aeb9 100644
+--- a/misc/config_tools/data/adl-s-crb/hybrid.xml
++++ b/misc/config_tools/data/adl-s-crb/hybrid.xml
+@@ -16,6 +16,7 @@
+             <MULTIBOOT2>y</MULTIBOOT2>
+             <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+             <ENFORCE_TURNOFF_GP>y</ENFORCE_TURNOFF_GP>
++            <SECURITY_VM_FIXUP>n</SECURITY_VM_FIXUP>
+             <RDT>
+                 <RDT_ENABLED>n</RDT_ENABLED>
+                 <CDP_ENABLED>n</CDP_ENABLED>
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid_rt.xml b/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
+index f66cfa95c..3f94d6581 100644
+--- a/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
++++ b/misc/config_tools/data/adl-s-crb/hybrid_rt.xml
+@@ -15,6 +15,7 @@
+       <MULTIBOOT2>y</MULTIBOOT2>
+       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+       <ENFORCE_TURNOFF_GP>y</ENFORCE_TURNOFF_GP>
++      <SECURITY_VM_FIXUP>n</SECURITY_VM_FIXUP>
+       <RDT>
+         <RDT_ENABLED>n</RDT_ENABLED>
+         <CDP_ENABLED>y</CDP_ENABLED>
+diff --git a/misc/config_tools/data/adl-s-crb/partitioned.xml b/misc/config_tools/data/adl-s-crb/partitioned.xml
+index 0bd610b1d..ae2ba4e7c 100644
+--- a/misc/config_tools/data/adl-s-crb/partitioned.xml
++++ b/misc/config_tools/data/adl-s-crb/partitioned.xml
+@@ -15,6 +15,7 @@
+       <MULTIBOOT2>y</MULTIBOOT2>
+       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+       <ENFORCE_TURNOFF_GP>y</ENFORCE_TURNOFF_GP>
++      <SECURITY_VM_FIXUP>n</SECURITY_VM_FIXUP>
+       <RDT>
+         <RDT_ENABLED>n</RDT_ENABLED>
+         <CDP_ENABLED>n</CDP_ENABLED>
+diff --git a/misc/config_tools/data/adl-s-crb/shared.xml b/misc/config_tools/data/adl-s-crb/shared.xml
+index 899f95306..44a298bf2 100644
+--- a/misc/config_tools/data/adl-s-crb/shared.xml
++++ b/misc/config_tools/data/adl-s-crb/shared.xml
+@@ -15,6 +15,7 @@
+       <MULTIBOOT2>y</MULTIBOOT2>
+       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+       <ENFORCE_TURNOFF_GP>y</ENFORCE_TURNOFF_GP>
++      <SECURITY_VM_FIXUP>n</SECURITY_VM_FIXUP>
+       <RDT>
+         <RDT_ENABLED>n</RDT_ENABLED>
+         <CDP_ENABLED>y</CDP_ENABLED>
+diff --git a/misc/config_tools/data/icx-rvp/shared.xml b/misc/config_tools/data/icx-rvp/shared.xml
+index 52402d9f7..eda4be7d0 100644
+--- a/misc/config_tools/data/icx-rvp/shared.xml
++++ b/misc/config_tools/data/icx-rvp/shared.xml
+@@ -15,6 +15,7 @@
+       <MULTIBOOT2>y</MULTIBOOT2>
+       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+       <ENFORCE_TURNOFF_GP>n</ENFORCE_TURNOFF_GP>
++      <SECURITY_VM_FIXUP>n</SECURITY_VM_FIXUP>
+       <RDT>
+ 	<RDT_ENABLED>n</RDT_ENABLED>
+ 	<CDP_ENABLED>y</CDP_ENABLED>
+-- 
+2.25.1
+

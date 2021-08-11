@@ -1,0 +1,92 @@
+From f92d82f07943014e17d70b0f540dc473675f5909 Mon Sep 17 00:00:00 2001
+From: Kunhui-Li <kunhuix.li@intel.com>
+Date: Wed, 11 Aug 2021 17:19:14 +0800
+Subject: [PATCH 12/12] config_tools: rename scenario xml files
+
+1. Rename industry.xml to shared.xml
+2. Rename logical_partition.xml to partitioned.xml.
+3. Rename industry_launch_[num]uos.xml to shared_launch_[num]uos.xml.
+
+Tracked-On: #6315
+Signed-off-by: Kunhui-Li <kunhuix.li@intel.com>
+---
+ .../data/adl-s-crb/{logical_partition.xml => partitioned.xml}   | 2 +-
+ misc/config_tools/data/adl-s-crb/{industry.xml => shared.xml}   | 2 +-
+ .../{industry_launch_2uos.xml => shared_launch_2uos.xml}        | 2 +-
+ .../{industry_launch_6uos.xml => shared_launch_6uos.xml}        | 2 +-
+ misc/config_tools/data/icx-rvp/{industry.xml => shared.xml}     | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
+ rename misc/config_tools/data/adl-s-crb/{logical_partition.xml => partitioned.xml} (99%)
+ rename misc/config_tools/data/adl-s-crb/{industry.xml => shared.xml} (99%)
+ rename misc/config_tools/data/adl-s-crb/{industry_launch_2uos.xml => shared_launch_2uos.xml} (98%)
+ rename misc/config_tools/data/adl-s-crb/{industry_launch_6uos.xml => shared_launch_6uos.xml} (99%)
+ rename misc/config_tools/data/icx-rvp/{industry.xml => shared.xml} (99%)
+
+diff --git a/misc/config_tools/data/adl-s-crb/logical_partition.xml b/misc/config_tools/data/adl-s-crb/partitioned.xml
+similarity index 99%
+rename from misc/config_tools/data/adl-s-crb/logical_partition.xml
+rename to misc/config_tools/data/adl-s-crb/partitioned.xml
+index 526dd815c..0bd610b1d 100644
+--- a/misc/config_tools/data/adl-s-crb/logical_partition.xml
++++ b/misc/config_tools/data/adl-s-crb/partitioned.xml
+@@ -1,4 +1,4 @@
+-<acrn-config board="adl-s-crb" scenario="logical_partition">
++<acrn-config board="adl-s-crb" scenario="partitioned">
+   <hv>
+     <DEBUG_OPTIONS>
+       <RELEASE>n</RELEASE>
+diff --git a/misc/config_tools/data/adl-s-crb/industry.xml b/misc/config_tools/data/adl-s-crb/shared.xml
+similarity index 99%
+rename from misc/config_tools/data/adl-s-crb/industry.xml
+rename to misc/config_tools/data/adl-s-crb/shared.xml
+index d4266966e..899f95306 100644
+--- a/misc/config_tools/data/adl-s-crb/industry.xml
++++ b/misc/config_tools/data/adl-s-crb/shared.xml
+@@ -1,4 +1,4 @@
+-<acrn-config board="adl-s-crb" scenario="industry">
++<acrn-config board="adl-s-crb" scenario="shared">
+   <hv>
+     <DEBUG_OPTIONS>
+       <RELEASE>n</RELEASE>
+diff --git a/misc/config_tools/data/adl-s-crb/industry_launch_2uos.xml b/misc/config_tools/data/adl-s-crb/shared_launch_2uos.xml
+similarity index 98%
+rename from misc/config_tools/data/adl-s-crb/industry_launch_2uos.xml
+rename to misc/config_tools/data/adl-s-crb/shared_launch_2uos.xml
+index a4958b50a..97d7a6297 100644
+--- a/misc/config_tools/data/adl-s-crb/industry_launch_2uos.xml
++++ b/misc/config_tools/data/adl-s-crb/shared_launch_2uos.xml
+@@ -1,4 +1,4 @@
+-<acrn-config board="adl-s-crb" scenario="industry" uos_launcher="2">
++<acrn-config board="adl-s-crb" scenario="shared" uos_launcher="2">
+     <uos id="1">
+ 	<uos_type desc="UOS type">WINDOWS</uos_type>
+ 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
+diff --git a/misc/config_tools/data/adl-s-crb/industry_launch_6uos.xml b/misc/config_tools/data/adl-s-crb/shared_launch_6uos.xml
+similarity index 99%
+rename from misc/config_tools/data/adl-s-crb/industry_launch_6uos.xml
+rename to misc/config_tools/data/adl-s-crb/shared_launch_6uos.xml
+index d7a741bc4..0497e99a8 100644
+--- a/misc/config_tools/data/adl-s-crb/industry_launch_6uos.xml
++++ b/misc/config_tools/data/adl-s-crb/shared_launch_6uos.xml
+@@ -1,4 +1,4 @@
+-<acrn-config board="adl-s-crb" scenario="industry" uos_launcher="6">
++<acrn-config board="adl-s-crb" scenario="shared" uos_launcher="6">
+     <uos id="1">
+ 	<uos_type desc="UOS type">WINDOWS</uos_type>
+ 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
+diff --git a/misc/config_tools/data/icx-rvp/industry.xml b/misc/config_tools/data/icx-rvp/shared.xml
+similarity index 99%
+rename from misc/config_tools/data/icx-rvp/industry.xml
+rename to misc/config_tools/data/icx-rvp/shared.xml
+index ba921b9fc..52402d9f7 100644
+--- a/misc/config_tools/data/icx-rvp/industry.xml
++++ b/misc/config_tools/data/icx-rvp/shared.xml
+@@ -1,4 +1,4 @@
+-<acrn-config board="icx-rvp" scenario="industry">
++<acrn-config board="icx-rvp" scenario="shared">
+   <hv>
+     <DEBUG_OPTIONS>
+       <RELEASE>n</RELEASE>
+-- 
+2.25.1
+
