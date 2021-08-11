@@ -17,6 +17,7 @@
         <MULTIBOOT2>y</MULTIBOOT2>
         <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
         <ENFORCE_TURNOFF_GP>n</ENFORCE_TURNOFF_GP>
+        <SECURITY_VM_FIXUP>y</SECURITY_VM_FIXUP>
         <RDT>
             <RDT_ENABLED>n</RDT_ENABLED>
             <CDP_ENABLED>n</CDP_ENABLED>
@@ -69,7 +70,7 @@
     <vm_type>SAFETY_VM</vm_type>
     <name>ACRN PRE-LAUNCHED VM0</name>
     <guest_flags>
-        <guest_flag>0</guest_flag>
+        <guest_flag>GUEST_FLAG_TPM2_FIXUP</guest_flag>
     </guest_flags>
     <cpu_affinity>
         <pcpu_id>3</pcpu_id>

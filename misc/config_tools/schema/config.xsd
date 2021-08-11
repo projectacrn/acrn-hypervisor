@@ -118,6 +118,12 @@ UC lock, HV enable it and VMs can't disable. Set this to enforce turn off that #
 developer only.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="SECURITY_VM_FIXUP" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>Enable to do fixup for TPM2 and SMBIOS for Security VM. If no
+Security VM, setting this option to ``n``</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="RDT" type="RDTType">
       <xs:annotation>
         <xs:documentation>Enable the Intel Resource Director Technology (RDT)
