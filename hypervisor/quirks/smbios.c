@@ -190,7 +190,8 @@ static int copy_smbios_to_guest(struct acrn_vm *vm)
                     struct smbios_entry_point *eps = &smbios_eps.eps;
                     eps->st_addr = (uint32_t)gpa;
                     /* the intermediate checksum covers the structure table field */
-                    recalc_checksum((uint8_t *)eps->int_anchor, 0xf, &eps->int_checksum);
+                    recalc_checksum((uint8_t *)eps + offsetof(struct smbios_entry_point, int_anchor),
+                        0xf, &eps->int_checksum);
                 } else {
                     /* SMBIOS3 (_SM3_) */
                     struct smbios3_entry_point *eps3 = &smbios_eps.eps3;
