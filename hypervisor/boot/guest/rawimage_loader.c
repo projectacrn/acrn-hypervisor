@@ -10,7 +10,7 @@
 /**
  * @pre vm != NULL
  */
-static void prepare_loading_rawimage(struct acrn_vm *vm)
+static void load_rawimage(struct acrn_vm *vm)
 {
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
@@ -36,7 +36,7 @@ int32_t vm_rawimage_loader(struct acrn_vm *vm)
 
 	/*
 	 * TODO:
-	 *    - We need to initialize the guest bsp registers according to
+	 *    - We need to initialize the guest BSP(boot strap processor) registers according to
 	 *	guest boot mode (real mode vs protect mode)
 	 *    - The memory layout usage is unclear, only GDT might be needed as its boot param.
 	 *	currently we only support Zephyr which has no needs on cmdline/e820/efimmap/etc.
@@ -44,7 +44,7 @@ int32_t vm_rawimage_loader(struct acrn_vm *vm)
 	 */
 	init_vcpu_protect_mode_regs(vcpu_from_vid(vm, BSP_CPU_ID), vgdt_gpa);
 
-	prepare_loading_rawimage(vm);
+	load_rawimage(vm);
 
 	return ret;
 }
