@@ -292,6 +292,9 @@ Explanation for acrn-dm Popular Command Lines
 * ``--ovmf /home/acrn/work/OVMF.fd``:
   Make sure it points to your OVMF binary path.
 
+* ``--windows``:
+  Specify this to use the Windows ORACLE virtio device when enabling secure boot in Windows; otherwise, the REDHAT virtio device will be used.
+
 Secure Boot Enabling
 ********************
 Refer to the steps in :ref:`How-to-enable-secure-boot-for-windows` for

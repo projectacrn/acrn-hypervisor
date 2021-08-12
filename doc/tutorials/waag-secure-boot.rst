@@ -571,9 +571,11 @@ to import PK, KEK, and DB into OVMF, Ubuntu 16.04 used.
 
 Notes:
 
-   1. According to Microsoft documentation, after enabling secure boot, kernel
+   1. According to Microsoft documentation, after enabling secure boot, the kernel
       mode driver must be signed by a trusted certification authority
-      (CA).
+      (CA). Specify the acrn-dm parameter ``--windows`` to use the Windows
+      ORACLE virtio device driver. The default REDHAT virtio device driver is
+      not signed and may lead to problems in the secure boot process.
 
    2. A cross-signed driver using a SHA-1 or SHA-256 certificate issued
       after July 29th, 2015 is not recommended for Windows 10.
