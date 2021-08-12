@@ -292,7 +292,7 @@ void destory_mmio_rsvd_rgns(struct pci_vdev *vdev);
  */
 #define GPU_DSM_GPA			0x7C000000
 #define GPU_DSM_SIZE			0x4000000
-#define GPU_OPREGION_SIZE		0x4000
+#define GPU_OPREGION_SIZE		0x5000
 /*
  * TODO: Forced DSM/OPREGION size requires native BIOS configuration.
  * This limitation need remove in future
