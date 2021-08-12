@@ -17,6 +17,8 @@ int32_t bzimage_loader(struct acrn_vm *vm);
 #ifdef CONFIG_GUEST_KERNEL_RAWIMAGE
 int32_t rawimage_loader(struct acrn_vm *vm);
 #endif
-
+#ifdef CONFIG_GUEST_KERNEL_ELF
+int32_t elf_loader(struct acrn_vm *vm);
+#endif
 
 #endif /* end of include guard: VBOOT_H */

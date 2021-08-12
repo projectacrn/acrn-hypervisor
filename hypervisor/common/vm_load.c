@@ -40,6 +40,11 @@ int32_t prepare_os_image(struct acrn_vm *vm)
 		ret = rawimage_loader(vm);
 		break;
 #endif
+#ifdef CONFIG_GUEST_KERNEL_ELF
+	case KERNEL_ELF:
+		ret = elf_loader(vm);
+		break;
+#endif
 	default:
 		ret = -EINVAL;
 		break;
