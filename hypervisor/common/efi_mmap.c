@@ -11,7 +11,7 @@
 #include <logmsg.h>
 
 static uint16_t hv_memdesc_nr;
-static struct efi_memory_desc hv_memdesc[MAX_EFI_MMAP_ENTRIES];
+static struct efi_memory_desc hv_memdesc[CONFIG_MAX_EFI_MMAP_ENTRIES];
 
 static void sort_efi_mmap_entries(void)
 {
@@ -37,8 +37,8 @@ void init_efi_mmap_entries(struct efi_info *uefi_info)
 	uint32_t entry = 0U;
 
 	while ((void *)efi_memdesc < (efi_memmap + uefi_info->memmap_size)) {
-		if (entry >= MAX_EFI_MMAP_ENTRIES) {
-			pr_err("Too many efi memmap entries, entries up %d are ignored.", MAX_EFI_MMAP_ENTRIES);
+		if (entry >= CONFIG_MAX_EFI_MMAP_ENTRIES) {
+			pr_err("Too many efi memmap entries, entries up %d are ignored.", CONFIG_MAX_EFI_MMAP_ENTRIES);
 			break;
 		}
 
