@@ -35,6 +35,7 @@
 #include <asm/mmu.h>
 #include <asm/io.h>
 #include <logmsg.h>
+#include <config.h>
 #include "vpci_priv.h"
 
 /**
@@ -487,6 +488,28 @@ void vdev_pt_hide_sriov_cap(struct pci_vdev *vdev)
 
 	pr_acrnlog("Hide sriov cap for %02x:%02x.%x", vdev->pdev->bdf.bits.b, vdev->pdev->bdf.bits.d, vdev->pdev->bdf.bits.f);
 }
+
+/* TODO:
+ * The OpRegion is not 4KB aligned, while under some platforms,
+ * it will take up to 16KB. In this case, OpRegion overlay 5 pages.
+ * So set GPU_OPREGION_SIZE to 0x5000U(20KB) here.
+ *
+ * The solution that pass-thru OpRegion has potential security issue.
+ * Will take the copy + emulation solution to expose host OpRegion to guest later.
+ */
+void passthru_gpu_opregion(struct pci_vdev *vdev)
+{
+	uint32_t gpu_opregion_hpa, gpu_opregion_gpa, gpu_asls_phys;
+
+	gpu_opregion_gpa = GPU_OPREGION_GPA;
+	gpu_asls_phys = pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_ASLS_CTL, 4U);
+	gpu_opregion_hpa = gpu_asls_phys & PCIM_ASLS_OPREGION_MASK;
+	ept_add_mr(vpci2vm(vdev->vpci), vpci2vm(vdev->vpci)->arch_vm.nworld_eptp,
+			gpu_opregion_hpa, gpu_opregion_gpa,
+			GPU_OPREGION_SIZE, EPT_RD | EPT_UNCACHED);
+	pci_vdev_write_vcfg(vdev, PCIR_ASLS_CTL, 4U, gpu_opregion_gpa | (gpu_asls_phys & ~PCIM_ASLS_OPREGION_MASK));
+}
+
 /*
  * @brief Initialize a specified passthrough vdev structure.
  *
@@ -523,6 +546,10 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 			/* Disable INTX */
 			pci_command |= 0x400U;
 			pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
+
+			if (vdev->pdev->bdf.value == CONFIG_GPU_SBDF) {
+				passthru_gpu_opregion(vdev);
+			}
 		}
 	} else {
 		if (vdev->phyfun->vpci != vdev->vpci) {

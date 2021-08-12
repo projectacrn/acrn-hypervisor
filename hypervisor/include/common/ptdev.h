@@ -19,6 +19,11 @@ enum intx_ctlr {
 #define PTDEV_INTR_MSI		(1U << 0U)
 #define PTDEV_INTR_INTX		(1U << 1U)
 
+#define GPU_OPREGION_SIZE	0x5000U
+#define GPU_OPREGION_GPA	0x40880000U
+#define PCIR_ASLS_CTL		0xfcU /* register offset in PCIe configuration space for Opregion base address */
+#define PCIM_ASLS_OPREGION_MASK	0xfffff000U /* opregion need 4KB aligned */
+
 #define INVALID_PTDEV_ENTRY_ID 0xffffU
 
 #define DEFINE_MSI_SID(name, a, b)	\

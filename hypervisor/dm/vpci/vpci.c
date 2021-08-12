@@ -516,8 +516,10 @@ static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	} else {
 		if (offset != vdev->pdev->sriov.pre_pos) {
 			if (!is_quirk_ptdev(vdev)) {
-				/* passthru to physical device */
-				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+				if ((vdev->pdev->bdf.value != CONFIG_GPU_SBDF) || (offset != PCIR_ASLS_CTL)) {
+					/* passthru to physical device */
+					pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+				}
 			} else {
 				ret = -ENODEV;
 			}
@@ -544,6 +546,9 @@ static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 		} else if (!is_quirk_ptdev(vdev)) {
 			/* passthru to physical device */
 			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+			if ((vdev->pdev->bdf.value == CONFIG_GPU_SBDF) && (offset == PCIR_ASLS_CTL)) {
+				*val = pci_vdev_read_vcfg(vdev, offset, bytes);
+			}
 		} else {
 			ret = -ENODEV;
 		}
