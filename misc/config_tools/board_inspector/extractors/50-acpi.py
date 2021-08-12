@@ -126,7 +126,9 @@ def parse_tpm(elem):
         for parameter in tpm2.start_method_specific_parameters:
             add_child(start_method, "parameter", hex(parameter))
         if hasattr(tpm2, "log_area_minimum_length"):
-            add_child(elem, "capability", None, id="log_area")
+            log_area = add_child(elem, "capability", None, id="log_area")
+            add_child(log_area, "log_area_minimum_length", hex(tpm2.log_area_minimum_length))
+            add_child(log_area, "log_area_start_address", hex(tpm2.log_area_start_address))
     except Exception as e:
         logging.info(f"Parse ACPI TPM2 failed: {str(e)}")
         logging.info(f"Will not extract information from ACPI TPM2")

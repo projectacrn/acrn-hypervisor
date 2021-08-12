@@ -252,7 +252,7 @@
       <xsl:if test="//capability[@id='log_area']">
         <xsl:value-of select="acrn:initializer('res[1]', '{', true())" />
         <xsl:value-of select="acrn:initializer('user_vm_pa', 'VM0_TPM_EVENTLOG_BASE_ADDR')" />
-        <xsl:value-of select="acrn:initializer('host_pa', 'VM0_TPM_EVENTLOG_BASE_ADDR')" />
+        <xsl:value-of select="acrn:initializer('host_pa', 'VM0_TPM_EVENTLOG_BASE_ADDR_HPA')" />
         <xsl:value-of select="acrn:initializer('size', 'VM0_TPM_EVENTLOG_SIZE')" />
         <xsl:value-of select="acrn:initializer('mem_type', 'EPT_WB')" />
         <xsl:text>},</xsl:text>
