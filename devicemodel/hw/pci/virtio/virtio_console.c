@@ -390,7 +390,7 @@ virtio_console_notify_tx(void *vdev, struct virtio_vq_info *vq)
 
 	while (vq_has_descs(vq)) {
 		vq_getchain(vq, &idx, iov, 1, flags);
-		if (port != NULL)
+		if ((port != NULL) && (port->cb != NULL))
 			port->cb(port, port->arg, iov, 1);
 
 		/*
