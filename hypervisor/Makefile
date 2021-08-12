@@ -289,6 +289,9 @@ endif
 ifeq ($(CONFIG_GUEST_KERNEL_RAWIMAGE),y)
 VP_BASE_C_SRCS += boot/guest/rawimage_loader.c
 endif
+ifeq ($(CONFIG_GUEST_KERNEL_ELF),y)
+VP_BASE_C_SRCS += boot/guest/elf_loader.c
+endif
 VP_BASE_C_SRCS += common/hv_main.c
 VP_BASE_C_SRCS += common/vm_load.c
 VP_BASE_C_SRCS += arch/x86/configs/pci_dev.c
