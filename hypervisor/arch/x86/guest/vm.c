@@ -302,8 +302,8 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 		(void)assign_mmio_dev(vm, &vm_config->mmiodevs[i]);
 
 #ifdef P2SB_VGPIO_DM_ENABLED
-		if ((vm_config->pt_p2sb_bar) && (vm_config->mmiodevs[i].base_hpa == P2SB_BAR_ADDR)) {
-			register_vgpio_handler(vm, &vm_config->mmiodevs[i]);
+		if ((vm_config->pt_p2sb_bar) && (vm_config->mmiodevs[i].res[0].host_pa == P2SB_BAR_ADDR)) {
+			register_vgpio_handler(vm, &vm_config->mmiodevs[i].res[0]);
 		}
 #endif
 	}

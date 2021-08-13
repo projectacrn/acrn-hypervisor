@@ -7,6 +7,6 @@
 #ifndef VGPIO_H
 #define VGPIO_H
 
-void register_vgpio_handler(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev);
+void register_vgpio_handler(struct acrn_vm *vm, const struct acrn_mmiores *res);
 
 #endif /* MMIO_DEV_H */
