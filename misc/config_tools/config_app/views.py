@@ -760,7 +760,7 @@ def upload_board_info():
             board_info_config.set_curr(tmp_filename.rsplit('.', 1)[0])
             board_info_root = board_info_config.get_curr_root()
             board_type = None
-            if board_info_root and 'board' in board_info_root.attrib \
+            if board_info_root is not None and 'board' in board_info_root.attrib \
                 and 'scenario' not in board_info_root.attrib \
                     and 'uos_launcher' not in board_info_root.attrib:
                 board_type = board_info_root.attrib['board']
@@ -790,19 +790,19 @@ def upload_board_info():
                             os.remove(new_file)
                             continue
                         # update RDT->CLOS_MASK according to board xml
-                        if 'board' in xml_config_root.attrib and 'scenario' in xml_config_root.attrib \
-                                and 'uos_launcher' not in xml_config_root.attrib:
-                            cdp_enabled = xml_config.get_curr_value('hv', 'FEATURES', 'RDT', 'CDP_ENABLED')
-                            (num_clos_mask, num_mba_delay) = \
-                                get_num_of_rdt_res(filename.rsplit('.', 1)[0], cdp_enabled)
-                            elem_clos_max = xml_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
-                            elem_mba_delay = xml_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
-                            xml_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
-                            xml_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
-                            for i in range(num_clos_mask):
-                                xml_config.clone_curr_elem(elem_clos_max, 'hv', 'FEATURES', 'RDT')
-                            for i in range(num_mba_delay):
-                                xml_config.clone_curr_elem(elem_mba_delay, 'hv', 'FEATURES', 'RDT')
+                       # if 'board' in xml_config_root.attrib and 'scenario' in xml_config_root.attrib \
+                           #     and 'uos_launcher' not in xml_config_root.attrib:
+                           # cdp_enabled = xml_config.get_curr_value('hv', 'FEATURES', 'RDT', 'CDP_ENABLED')
+                           # (num_clos_mask, num_mba_delay) = \
+                           #     get_num_of_rdt_res(filename.rsplit('.', 1)[0], cdp_enabled)
+                           # elem_clos_max = xml_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
+                           # elem_mba_delay = xml_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
+                           # xml_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
+                           # xml_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
+                           # for i in range(num_clos_mask):
+                           #     xml_config.clone_curr_elem(elem_clos_max, 'hv', 'FEATURES', 'RDT')
+                           # for i in range(num_mba_delay):
+                           #     xml_config.clone_curr_elem(elem_mba_delay, 'hv', 'FEATURES', 'RDT')
                             # xml_config = set_default_config(xml_config)
                         xml_config.save(generic_name.rsplit('.', 1)[0], user_defined=False)
 
