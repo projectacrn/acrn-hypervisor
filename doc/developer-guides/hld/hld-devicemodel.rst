@@ -216,14 +216,14 @@ DM Initialization
        *   map[0]:0~ctx->lowmem_limit & map[2]:4G~ctx->highmem for RAM
        *   ctx->highmem = request_memory_size - ctx->lowmem_limit
        *
-       *             Begin      End         Type         Length
-       * 0:             0 -     0xef000     RAM          0xEF000
-       * 1        0xef000 -     0x100000    (reserved)   0x11000
-       * 2       0x100000 -     lowmem      RAM          lowmem - 0x100000
-       * 3:        lowmem -     bff_fffff   (reserved)   0xc00_00000-lowmem
-       * 4:   0xc00_00000 -     dff_fffff   PCI hole     512MB
-       * 5:   0xe00_00000 -     fff_fffff   (reserved)   512MB
-       * 6:   1_000_00000 -     highmem     RAM          highmem-4G
+       *            Begin     Limit           Type            Length
+       * 0:             0  -  0xA0000         RAM             0xA0000
+       * 1       0x100000  -  lowmem part1    RAM             0x0
+       * 2:   SW SRAM_bot  -  SW SRAM_top     (reserved)      SOFTWARE_SRAM_MAX_SIZE
+       * 3:   gpu_rsvd_bot -  gpu_rsvd_top    (reserved)      0x4004000
+       * 4:   lowmem part2 -  0x80000000      (reserved)      0x0
+       * 5:     0xE0000000 -  0x100000000     MCFG, MMIO      512MB
+       * 6:  HIGHRAM_START_ADDR -  mmio64 start  RAM          ctx->highmem
        */
 
 -  **VM Loop Thread**: DM kicks this VM loop thread to create I/O
