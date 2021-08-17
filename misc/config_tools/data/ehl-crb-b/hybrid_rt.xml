@@ -130,7 +130,7 @@
             <pci_dev>00:1d.2 Ethernet controller: Intel Corporation Device 4bb0</pci_dev>
         </pci_devs>
         <mmio_resources>
-            <TPM2>y</TPM2>
+            <TPM2>n</TPM2>
         </mmio_resources>
     </vm>
     <vm id="1">
