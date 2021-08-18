@@ -118,7 +118,7 @@
         <pci_dev>03:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)</pci_dev>
     </pci_devs>
     <mmio_resources>
-        <TPM2>y</TPM2>
+        <TPM2>n</TPM2>
     </mmio_resources>
   </vm>
   <vm id="1">
