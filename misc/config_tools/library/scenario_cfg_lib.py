@@ -350,7 +350,7 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
     cpu_affinity = common.get_leaf_tag_map(config_file, "cpu_affinity", "pcpu_id")
     for vm_i in id_cpus_per_vm_dic.keys():
         for cpu in id_cpus_per_vm_dic[vm_i]:
-            if cpu in use_cpus and not cpu_sharing_enabled:
+            if cpu is not None and cpu in use_cpus and not cpu_sharing_enabled:
                 key = "vm:id={},{}".format(vm_i, item)
                 err_dic[key] = "The same pcpu was configurated in <pcpu_id>/<cpu_affinity>, but CPU sharing is disabled by 'SCHED_NOOP'. Please re-configurate them!"
                 return err_dic
