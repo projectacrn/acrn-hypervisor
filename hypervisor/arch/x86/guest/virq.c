@@ -376,38 +376,42 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	struct acrn_vcpu_arch *arch = &vcpu->arch;
 	uint64_t *pending_req_bits = &arch->pending_req;
 
-	/* make sure ACRN_REQUEST_INIT_VMCS handler as the first one */
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_INIT_VMCS, pending_req_bits)) {
-		init_vmcs(vcpu);
-	}
-
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
-		pr_fatal("Triple fault happen -> shutdown!");
-		ret = -EFAULT;
-	} else {
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_WAIT_WBINVD, pending_req_bits)) {
-			wait_event(&vcpu->events[VCPU_EVENT_SYNC_WBINVD]);
+	if (*pending_req_bits != 0UL) {
+		/* make sure ACRN_REQUEST_INIT_VMCS handler as the first one */
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_INIT_VMCS, pending_req_bits)) {
+			init_vmcs(vcpu);
 		}
 
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_SPLIT_LOCK, pending_req_bits)) {
-			wait_event(&vcpu->events[VCPU_EVENT_SPLIT_LOCK]);
-		}
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
+			pr_fatal("Triple fault happen -> shutdown!");
+			ret = -EFAULT;
+		} else {
+			if (bitmap_test_and_clear_lock(ACRN_REQUEST_WAIT_WBINVD, pending_req_bits)) {
+				wait_event(&vcpu->events[VCPU_EVENT_SYNC_WBINVD]);
+			}
 
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH, pending_req_bits)) {
-			invept(vcpu->vm->arch_vm.nworld_eptp);
-			if (vcpu->vm->sworld_control.flag.active != 0UL) {
-				invept(vcpu->vm->arch_vm.sworld_eptp);
+			if (bitmap_test_and_clear_lock(ACRN_REQUEST_SPLIT_LOCK, pending_req_bits)) {
+				wait_event(&vcpu->events[VCPU_EVENT_SPLIT_LOCK]);
+			}
+
+			if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH, pending_req_bits)) {
+				invept(vcpu->vm->arch_vm.nworld_eptp);
+				if (vcpu->vm->sworld_control.flag.active != 0UL) {
+					invept(vcpu->vm->arch_vm.sworld_eptp);
+				}
+			}
+
+			if (bitmap_test_and_clear_lock(ACRN_REQUEST_VPID_FLUSH,	pending_req_bits)) {
+				flush_vpid_single(arch->vpid);
+			}
+
+			if (bitmap_test_and_clear_lock(ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE, pending_req_bits)) {
+				vcpu_set_vmcs_eoi_exit(vcpu);
 			}
 		}
+	}
 
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_VPID_FLUSH,	pending_req_bits)) {
-			flush_vpid_single(arch->vpid);
-		}
-
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE, pending_req_bits)) {
-			vcpu_set_vmcs_eoi_exit(vcpu);
-		}
-
+	if (ret == 0) {
 		/*
 		 * Inject pending exception prior pending interrupt to complete the previous instruction.
 		 */
@@ -415,7 +419,8 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		if (!injected) {
 			/* inject NMI before maskable hardware interrupt */
 
-			if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
+			if ((*pending_req_bits != 0UL) &&
+				bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
 				if (is_nmi_injectable()) {
 					/* Inject NMI vector = 2 */
 					exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,

@@ -603,16 +603,12 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 }
 
 /*
- *  @pre vcpu != NULL
+ * @pre vcpu != NULL
  */
-int32_t run_vcpu(struct acrn_vcpu *vcpu)
+static void write_cached_registers(struct acrn_vcpu *vcpu)
 {
-	uint32_t instlen, cs_attr;
-	uint64_t rip, ia32_efer, cr0;
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
-	int32_t status = 0;
-	int32_t ibrs_type = get_ibrs_type();
 
 	if (bitmap_test_and_clear_lock(CPU_REG_RIP, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RIP, ctx->rip);
@@ -638,6 +634,23 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 
 	if (bitmap_test_and_clear_lock(CPU_REG_CR4, &vcpu->reg_updated)) {
 		vcpu_set_cr4(vcpu, ctx->cr4);
+	}
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+int32_t run_vcpu(struct acrn_vcpu *vcpu)
+{
+	uint32_t instlen, cs_attr;
+	uint64_t rip, ia32_efer, cr0;
+	struct run_context *ctx =
+		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
+	int32_t status = 0;
+	int32_t ibrs_type = get_ibrs_type();
+
+	if (vcpu->reg_updated != 0UL) {
+		write_cached_registers(vcpu);
 	}
 
 	/* If this VCPU is not already launched, launch it */
