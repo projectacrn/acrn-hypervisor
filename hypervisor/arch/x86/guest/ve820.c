@@ -243,8 +243,13 @@ static inline uint64_t add_ram_entry(struct e820_entry *entry, uint64_t gpa, uin
  *           Software SRAM segment rather than hpa1.
  *   entry4: usable, the part2 of hpa1 in lowmem, from the ceil of Software SRAM segment,
  *           and up to 2G-1M.
- *   entry5: ACPI Reclaim from 0x7ff00000 to 0x7ffeffff
- *   entry6: ACPI NVS from 0x7fff0000 to 0x7fffffff
+ *   entry5: ACPI Reclaim from 0x7fe00000 to 0x7feeffff (960K)
+ *   entry6: ACPI NVS from 0x7ff00000 to 0x7fffffff (1M)
+ *            Currently this is used by:
+ *            a) first 64k reserved
+ *            if CONFIG_SECURITY_VM_FIXUP enabled,
+ *              b) TPM2 event log region (if platform supports TPM2 eventlog) from 0x7ffb0000 to 0x7fffffff
+ *              c) SMBIOS table in between 64k and 0xb0000
  *   entry7: reserved for 32bit PCI hole from 0x80000000 to 0xffffffff
  *   (entry8): usable for
  *            a) hpa1_hi, if hpa1 > 2GB - PRE_RTVM_SW_SRAM_MAX_SIZE
@@ -264,7 +269,7 @@ static inline uint64_t add_ram_entry(struct e820_entry *entry, uint64_t gpa, uin
 	|<---Software SRAM--->|
 	|<-----hpa1_low_part2--->|
 	|<---Non-mapped hole (if there is)-->|
-	|<---1M ACPI NVS/DATA--->|
+	|<---(1M + 960K) ACPI NVS/DATA--->|
 */
 void create_prelaunched_vm_e820(struct acrn_vm *vm)
 {
@@ -286,13 +291,12 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 		hpa1_hi_size = vm_config->memory.size - lowmem_max_length;
 		gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa1_hi_size);
 		entry_idx++;
-	} else if (vm_config->memory.size <= MEM_1M + hpa1_part1_max_length + MEM_1M) {
+	} else if (vm_config->memory.size <= MEM_1M + hpa1_part1_max_length + MEM_1M + (960 * MEM_1K)) {
 		/*
 		 * In this case, hpa1 is only enough for the first
-		 * 1M + part1 + last 1M (ACPI NVS/DATA), so part2 will be empty.
-		 * Below 'MEM_2M' includes the first and last 1M
+		 * 1M + part1 + last (1M + 960K) (ACPI NVS/DATA), so part2 will be empty.
 		 */
-		vm->e820_entries[ENTRY_HPA1_LOW_PART1].length = vm_config->memory.size - MEM_2M;
+		vm->e820_entries[ENTRY_HPA1_LOW_PART1].length = vm_config->memory.size - MEM_2M - (960 * MEM_1K);
 		vm->e820_entries[ENTRY_HPA1_LOW_PART2].length = 0;
 	} else {
 		/* Otherwise, part2 is not empty. */
