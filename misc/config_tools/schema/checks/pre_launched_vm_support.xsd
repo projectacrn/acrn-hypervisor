@@ -36,7 +36,7 @@ or little cores are assigned, but not both.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
-  <xs:assert test="hv//PSRAM_ENABLED = 'n' or empty(vm[vm_type='PRE_RT_VM']) or
+  <xs:assert test="hv//SSRAM_ENABLED = 'n' or empty(vm[vm_type='PRE_RT_VM']) or
 		   every $cap in caches/cache[@level=3]/capability[@id='Software SRAM'] satisfies
 		   (compare($cap/end, '0x80000000') &lt; 0 or compare($cap/start, '0xf8000000') &gt;= 0)">
     <xs:annotation acrn:severity="warning">
