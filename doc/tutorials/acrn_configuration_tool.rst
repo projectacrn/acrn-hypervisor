@@ -119,7 +119,7 @@ toolset.
       | **Kernel cmdline:** "idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
 
    #. Copy the ``board_inspector`` directory into the target file system and then run the
-      ``sudo python3 cli.py $(BOARD)`` command.
+      ``sudo python3 board_inspector.py $(BOARD)`` command.
    #. A ``$(BOARD).xml`` that includes all needed hardware-specific information
       is generated under the current working directory. Here, ``$(BOARD)`` is the
       specified board name.
@@ -128,7 +128,7 @@ toolset.
 
    a. Copy ``$(BOARD).xml`` to the host development machine.
    #. Run the ACRN configuration editor (available at
-      ``misc/config_tools/config_app/app.py``) on the host machine and import
+      ``misc/config_tools/config_app/acrn_configurator.py``) on the host machine and import
       the ``$(BOARD).xml``. Select your working scenario under **Scenario Setting**
       and input the desired scenario settings. The tool will do validation checks
       on the input based on the ``$(BOARD).xml``. The customized settings can be
@@ -422,7 +422,7 @@ Instructions
 
    .. code-block:: bash
 
-      $ python3 app.py
+      $ python3 acrn_configurator.py
 
 #. Open a browser and navigate to the website
    `<http://127.0.0.1:5001/>`_ automatically, or you may need to visit this
