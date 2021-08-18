@@ -119,7 +119,7 @@
         <pci_dev>09:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)</pci_dev>
     </pci_devs>
     <mmio_resources>
-        <TPM2>y</TPM2>
+        <TPM2>n</TPM2>
     </mmio_resources>
   </vm>
   <vm id="1">
