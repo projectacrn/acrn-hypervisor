@@ -843,7 +843,7 @@ void save_xsave_area(struct acrn_vcpu *vcpu, struct ext_context *ectx)
 
 void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *ectx)
 {
-	if (vcpu->arch.xsave_enabled) {
+	if ((!vcpu->launched) || (vcpu->arch.xsave_enabled)) {
 		write_xcr(0, ectx->xcr0 | XSAVE_SSE);
 		msr_write(MSR_IA32_XSS, vcpu_get_guest_msr(vcpu, MSR_IA32_XSS));
 		xrstors(&ectx->xs_area, UINT64_MAX);
