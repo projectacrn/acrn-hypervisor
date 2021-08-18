@@ -332,7 +332,7 @@ def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
 
 def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
     # Guest physical address of the SW SRAM allocated to a pre-launched VM
-    enabled = common.get_node("//PSRAM_ENABLED/text()", scenario_etree)
+    enabled = common.get_node("//SSRAM_ENABLED/text()", scenario_etree)
     if enabled == "y":
         pre_rt_vms = common.get_node("//vm[vm_type ='PRE_RT_VM']", scenario_etree)
         if pre_rt_vms is not None:
