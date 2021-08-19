@@ -82,7 +82,7 @@ void security_vm_fixup(uint16_t vm_id)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
 
-	if ((vm_config->guest_flags & GUEST_FLAG_TPM2_FIXUP) != 0UL) {
+	if ((vm_config->guest_flags & GUEST_FLAG_SECURITY_VM) != 0UL) {
 		stac();
 		tpm2_fixup(vm_id);
 		clac();
