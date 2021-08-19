@@ -1043,7 +1043,7 @@ virtio_console_teardown_backend(void *param)
 static int
 virtio_console_close_all(struct virtio_console *console)
 {
-	int i, rc = 0;
+	int i, rc = 0, nports_num;
 	struct virtio_console_port *port;
 	struct virtio_console_backend *be;
 
@@ -1061,8 +1061,16 @@ virtio_console_close_all(struct virtio_console *console)
 		if (be && !be->evp)
 			virtio_console_close_backend(be);
 	}
+	/*
+	 * The mevent_delete function will call teardown to delete
+	 * the console if the console->nports = 1, after the console
+	 * be destroyed there will be a NULL pointer issue.
+	 * Why don't check the console ? because the console delete
+	 * is not at the same thread.
+	 * */
 
-	for (i = 0; i < console->nports; i++) {
+	nports_num = console->nports;
+	for (i = 0; i < nports_num; i++) {
 		port = &console->ports[i];
 
 		if (!port->enabled)
