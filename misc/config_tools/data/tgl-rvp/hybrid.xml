@@ -93,9 +93,6 @@
         <kern_type>KERNEL_ELF</kern_type>
         <kern_mod>Zephyr_ElfImage</kern_mod>
         <ramdisk_mod/>
-        <bootargs>reboot=acpi</bootargs>
-        <kern_load_addr>0x8000</kern_load_addr>
-        <kern_entry_addr>0x8000</kern_entry_addr>
     </os_config>
     <legacy_vuart id="0">
         <type>VUART_LEGACY_PIO</type>
