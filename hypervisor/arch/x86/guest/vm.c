@@ -595,6 +595,10 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 			deny_hv_owned_devices(vm);
 		}
 
+#ifdef CONFIG_SECURITY_VM_FIXUP
+		passthrough_smbios(vm, get_acrn_boot_info());
+#endif
+
 		init_vpci(vm);
 		enable_iommu();
 
