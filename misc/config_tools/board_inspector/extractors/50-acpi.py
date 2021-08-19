@@ -439,6 +439,12 @@ def fetch_device_info(devices_node, interpreter, namepath, args):
                 hid = "<unknown>"
             add_object_to_device(interpreter, namepath, "_HID", result)
 
+        # Create the XML element for the device and create its ancestors if necessary
+        element = get_device_element(devices_node, namepath, hid)
+        if hid in buses.keys():
+            element.tag = "bus"
+            element.set("type", buses[hid])
+
         # Compatible ID
         cids = []
         if interpreter.context.has_symbol(f"{namepath}._CID"):
@@ -458,13 +464,9 @@ def fetch_device_info(devices_node, interpreter, namepath, args):
                 elif isinstance(cid_datum, datatypes.String):
                     cids.append(cid_datum.get())
 
-        # Create the XML element for the device and create its ancestors if necessary
-        element = get_device_element(devices_node, namepath, hid)
-        if hid in buses.keys():
-            element.tag = "bus"
-            element.set("type", buses[hid])
-        for cid in cids:
-            add_child(element, "compatible_id", cid)
+            for cid in cids:
+                add_child(element, "compatible_id", cid)
+            add_object_to_device(interpreter, namepath, "_CID", cid_object)
 
         # Unique ID
         uid = ""
