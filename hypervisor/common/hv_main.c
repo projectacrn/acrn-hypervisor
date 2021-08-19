@@ -18,7 +18,6 @@
 void vcpu_thread(struct thread_object *obj)
 {
 	struct acrn_vcpu *vcpu = container_of(obj, struct acrn_vcpu, thread_obj);
-	uint32_t basic_exit_reason = 0U;
 	int32_t ret = 0;
 
 	do {
@@ -55,10 +54,7 @@ void vcpu_thread(struct thread_object *obj)
 			/* Fatal error happened (resume vcpu failed). Stop the vcpu running. */
 			continue;
 		}
-		basic_exit_reason = vcpu->arch.exit_reason & 0xFFFFU;
-		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason, vcpu_get_rip(vcpu));
-
-		vcpu->arch.nrexits++;
+		TRACE_2L(TRACE_VM_EXIT, vcpu->arch.exit_reason, vcpu_get_rip(vcpu));
 
 		profiling_pre_vmexit_handler(vcpu);
 
@@ -69,7 +65,7 @@ void vcpu_thread(struct thread_object *obj)
 		ret = vmexit_handler(vcpu);
 		if (ret < 0) {
 			pr_fatal("dispatch VM exit handler failed for reason"
-				" %d, ret = %d!", basic_exit_reason, ret);
+				" %d, ret = %d!", vcpu->arch.exit_reason, ret);
 			vcpu_inject_gp(vcpu, 0U);
 			continue;
 		}
