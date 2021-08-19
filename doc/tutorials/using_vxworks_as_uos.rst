@@ -92,7 +92,7 @@ Steps for Using VxWorks as User VM
 
    You now have a virtual disk image with bootable VxWorks in ``VxWorks.img``.
 
-#. Follow :ref:`install-ubuntu-Service VM-NVMe` to boot the ACRN Service VM.
+#. Follow :ref:`gsg` to boot the ACRN Service VM.
 
 
 #. Boot VxWorks as User VM.

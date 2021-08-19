@@ -12,7 +12,7 @@ Intel NUC Kit. If you have not, refer to the following instructions:
 - Install a `Ubuntu 18.04 desktop ISO
   <http://releases.ubuntu.com/18.04.3/ubuntu-18.04.3-desktop-amd64.iso?_ga=2.160010942.221344839.1566963570-491064742.1554370503>`_
   on your board.
-- Follow the instructions :ref:`install-ubuntu-Service VM-NVMe` guide to setup the Service VM.
+- Follow the instructions in :ref:`gsg` guide to setup the Service VM.
 
 We are using a Kaby Lake Intel NUC (NUC7i7DNHE) and Debian 10 as the User VM in this tutorial.
 

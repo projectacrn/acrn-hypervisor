@@ -3,6 +3,44 @@
 Advanced Guides
 ###############
 
+Advanced Scenario Tutorials
+*********************************
+
+.. rst-class:: rst-columns2
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorials/using_hybrid_mode_on_nuc
+   tutorials/using_partition_mode_on_nuc
+
+Service VM Tutorials
+********************
+
+.. rst-class:: rst-columns2
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorials/running_deb_as_serv_vm
+   tutorials/using_yp
+
+.. _develop_acrn_user_vm:
+
+User VM Tutorials
+*****************
+
+.. rst-class:: rst-columns2
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorials/using_windows_as_uos
+   tutorials/running_ubun_as_user_vm
+   tutorials/running_deb_as_user_vm
+   tutorials/using_xenomai_as_uos
+   tutorials/using_vxworks_as_uos
+   tutorials/using_zephyr_as_uos
 
 Configuration and Tools
 ***********************
@@ -24,33 +62,7 @@ Configuration and Tools
    misc/debug_tools/**
    misc/services/acrn_manager/**
 
-Service VM Tutorials
-********************
-
-.. rst-class:: rst-columns2
-
-.. toctree::
-   :maxdepth: 1
-
-   tutorials/running_deb_as_serv_vm
-   tutorials/using_yp
-
-User VM Tutorials
-*****************
-
-.. rst-class:: rst-columns2
-
-.. toctree::
-   :maxdepth: 1
-
-   tutorials/using_windows_as_uos
-   tutorials/running_ubun_as_user_vm
-   tutorials/running_deb_as_user_vm
-   tutorials/using_xenomai_as_uos
-   tutorials/using_vxworks_as_uos
-   tutorials/using_zephyr_as_uos
-
-Enable ACRN Features
+Advanced Features
 ********************
 
 .. rst-class:: rst-columns2

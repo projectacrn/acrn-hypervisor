@@ -92,7 +92,7 @@ Steps for Using Zephyr as User VM
    the ACRN Service VM, then you will need to transfer this image to the
    ACRN Service VM (via, e.g, a USB drive or network)
 
-#. Follow :ref:`install-ubuntu-Service VM-NVMe`
+#. Follow :ref:`gsg`
    to boot "The ACRN Service OS" based on Ubnuntu OS (ACRN tag: v2.2)
 
 

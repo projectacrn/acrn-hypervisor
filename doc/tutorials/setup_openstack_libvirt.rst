@@ -18,7 +18,7 @@ Install ACRN
 ************
 
 #. Install ACRN using Ubuntu 20.04 as its Service VM. Refer to
-   :ref:`Build and Install ACRN on Ubuntu <build-and-install-acrn-on-ubuntu>`.
+   :ref:`gsg`.
 
 #. Make the acrn-kernel using the `kernel_config_uefi_sos
    <https://raw.githubusercontent.com/projectacrn/acrn-kernel/master/kernel_config_uefi_sos>`_
@@ -37,9 +37,8 @@ Install ACRN
    available loop devices. Follow the `snaps guide
    <https://maslosoft.com/kb/how-to-clean-old-snaps/>`_ to clean up old
    snap revisions if you're running out of loop devices.
-#. Make sure the networking bridge ``acrn-br0`` is created. If not,
-   create it using the instructions in
-   :ref:`Build and Install ACRN on Ubuntu <build-and-install-acrn-on-ubuntu>`.
+#. Make sure the networking bridge ``acrn-br0`` is created. See
+   :ref:`hostbridge_virt_hld` for more information.
 
 Set Up and Launch LXC/LXD
 *************************
@@ -155,7 +154,7 @@ Set Up ACRN Prerequisites Inside the Container
 
      $ lxc exec openstack -- su -l stack
 
-2. Download and compile ACRN's source code. Refer to :ref:`getting-started-building`.
+2. Download and compile ACRN's source code. Refer to :ref:`gsg`.
 
    .. note::
       All tools and build dependencies must be installed before you run the first ``make`` command.

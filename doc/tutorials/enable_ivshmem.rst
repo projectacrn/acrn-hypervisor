@@ -37,7 +37,7 @@ steps:
         communication and separate it with ``:``. For example, the
         communication between VM0 and VM2, it can be written as ``0:2``
 
-- Build with the XML configuration, refer to :ref:`getting-started-building`.
+- Build with the XML configuration, refer to :ref:`gsg`.
 
 Ivshmem DM-Land Usage
 *********************

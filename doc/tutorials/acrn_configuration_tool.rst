@@ -142,7 +142,7 @@ toolset.
    .. note:: Refer to :ref:`acrn_config_tool_ui` for more details on
       the configuration editor.
 
-#. Build with your XML files. Refer to :ref:`getting-started-building` to build
+#. Build with your XML files. Refer to :ref:`gsg` to build
    the ACRN hypervisor with your XML files on the host machine.
 
 #. Deploy VMs and run ACRN hypervisor on the target board.
@@ -397,9 +397,6 @@ The ACRN configuration editor provides a web-based user interface for the follow
 
 Prerequisites
 =============
-
-.. _get acrn repo guide:
-   https://projectacrn.github.io/latest/getting-started/building-from-source.html#get-the-acrn-hypervisor-source-code
 
 - Clone the ACRN hypervisor repo
 

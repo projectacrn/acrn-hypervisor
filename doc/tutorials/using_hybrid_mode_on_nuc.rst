@@ -57,7 +57,7 @@ Prepare the Zephyr kernel that you will run in VM0 later.
 Set-up ACRN on your device
 **************************
 
-- Follow the instructions in :Ref:`getting-started-building` to build ACRN using the
+- Follow the instructions in :Ref:`gsg` to build ACRN using the
   ``hybrid`` scenario. Here is the build command-line for the `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_::
 
      make BOARD=nuc7i7dnb SCENARIO=hybrid
