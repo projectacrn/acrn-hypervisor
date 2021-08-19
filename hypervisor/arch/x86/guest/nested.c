@@ -1409,52 +1409,50 @@ static void nested_vmentry(struct acrn_vcpu *vcpu, bool is_launch)
 {
 	struct acrn_vmcs12 *vmcs12 = &vcpu->arch.nested.vmcs12;
 
-	if (check_vmx_permission(vcpu)) {
-		if (vcpu->arch.nested.current_vmcs12_ptr == INVALID_GPA) {
-			nested_vmx_result(VMfailInvalid, 0);
-		} else if (is_launch && (vmcs12->launch_state != VMCS12_LAUNCH_STATE_CLEAR)) {
-			nested_vmx_result(VMfailValid, VMXERR_VMLAUNCH_NONCLEAR_VMCS);
-		} else if (!is_launch && (vmcs12->launch_state != VMCS12_LAUNCH_STATE_LAUNCHED)) {
-			nested_vmx_result(VMfailValid, VMXERR_VMRESUME_NONLAUNCHED_VMCS);
-		} else {
-			/*
-			 * TODO: Need to do VM-Entry checks before L2 VM entry.
-			 * Refer to ISDM Vol3 VMX Instructions reference.
-			 */
+	if (vcpu->arch.nested.current_vmcs12_ptr == INVALID_GPA) {
+		nested_vmx_result(VMfailInvalid, 0);
+	} else if (is_launch && (vmcs12->launch_state != VMCS12_LAUNCH_STATE_CLEAR)) {
+		nested_vmx_result(VMfailValid, VMXERR_VMLAUNCH_NONCLEAR_VMCS);
+	} else if (!is_launch && (vmcs12->launch_state != VMCS12_LAUNCH_STATE_LAUNCHED)) {
+		nested_vmx_result(VMfailValid, VMXERR_VMRESUME_NONLAUNCHED_VMCS);
+	} else {
+		/*
+		 * TODO: Need to do VM-Entry checks before L2 VM entry.
+		 * Refer to ISDM Vol3 VMX Instructions reference.
+		 */
 
-			/*
-			 * Convert the shadow VMCS to an ordinary VMCS.
-			 * ISDM: Software should not modify the shadow-VMCS indicator in
-			 * the VMCS region of a VMCS that is active
-			 */
-			clear_va_vmcs(vcpu->arch.nested.vmcs02);
-			clear_vmcs02_shadow_indicator(vcpu);
+		/*
+		 * Convert the shadow VMCS to an ordinary VMCS.
+		 * ISDM: Software should not modify the shadow-VMCS indicator in
+		 * the VMCS region of a VMCS that is active
+		 */
+		clear_va_vmcs(vcpu->arch.nested.vmcs02);
+		clear_vmcs02_shadow_indicator(vcpu);
 
-			/* as an ordinary VMCS, VMCS02 is active and currernt when L2 guest is running */
-			load_va_vmcs(vcpu->arch.nested.vmcs02);
+		/* as an ordinary VMCS, VMCS02 is active and currernt when L2 guest is running */
+		load_va_vmcs(vcpu->arch.nested.vmcs02);
 
-			/* Merge L0 settings and L1 settings for VMCS Control fields */
-			merge_and_sync_control_fields(vcpu);
+		/* Merge L0 settings and L1 settings for VMCS Control fields */
+		merge_and_sync_control_fields(vcpu);
 
-			/* vCPU is in guest mode from this point */
-			vcpu->arch.nested.in_l2_guest = true;
+		/* vCPU is in guest mode from this point */
+		vcpu->arch.nested.in_l2_guest = true;
 
-			if (is_launch) {
-				vmcs12->launch_state = VMCS12_LAUNCH_STATE_LAUNCHED;
-			}
-
-			/*
-			 * There are two reasons to set vcpu->launched to false even for VMRESUME:
-			 *
-			 * - the launch state of VMCS02 is clear at this moment.
-			 * - currently VMX_VPID is shadowing to L1, and it could happens that
-			 *   L2 VPID will be conflicted with L1 VPID. We rely on run_vcpu() to
-			 *   flush global vpid in the VMLAUNCH path to resolve this conflict.
-			 *
-			 *  TODO: emulate L2 VPID to avoid VPID flush.
-			 */
-			vcpu->launched = false;
+		if (is_launch) {
+			vmcs12->launch_state = VMCS12_LAUNCH_STATE_LAUNCHED;
 		}
+
+		/*
+		 * There are two reasons to set vcpu->launched to false even for VMRESUME:
+		 *
+		 * - the launch state of VMCS02 is clear at this moment.
+		 * - currently VMX_VPID is shadowing to L1, and it could happens that
+		 *   L2 VPID will be conflicted with L1 VPID. We rely on run_vcpu() to
+		 *   flush global vpid in the VMLAUNCH path to resolve this conflict.
+		 *
+		 *  TODO: emulate L2 VPID to avoid VPID flush.
+		 */
+		vcpu->launched = false;
 	}
 }
 
