@@ -1,0 +1,101 @@
+From c5f5015aecd7a688c94286610881f242b40b3d34 Mon Sep 17 00:00:00 2001
+From: Shiqing Gao <shiqing.gao@intel.com>
+Date: Thu, 19 Aug 2021 17:06:34 +0800
+Subject: [PATCH] config_tools: add a new entry MAX_EFI_MMAP_ENTRIES
+
+It is used to specify the maximum number of EFI memmap entries.
+
+On some platforms, like Tiger Lake, the number of EFI memmap entries
+becomes 268 when the BIOS settings are changed.
+The current value of MAX_EFI_MMAP_ENTRIES (256) defined in hypervisor
+is not big enough to cover such cases.
+
+As the number of EFI memmap entries depends on the platforms and the
+BIOS settings, this patch introduces a new entry MAX_EFI_MMAP_ENTRIES
+in configurations so that it can be adjusted for different cases.
+
+Signed-off-by: Shiqing Gao <shiqing.gao@intel.com>
+---
+ boards/adl-rvp/industry.xml          | 1 +
+ boards/tgl-rvp/hybrid.xml            | 1 +
+ boards/tgl-rvp/hybrid_rt.xml         | 1 +
+ boards/tgl-rvp/industry.xml          | 1 +
+ boards/tgl-rvp/logical_partition.xml | 1 +
+ boards/tgl-rvp/sdc.xml               | 1 +
+ 6 files changed, 6 insertions(+)
+
+diff --git a/boards/adl-rvp/industry.xml b/boards/adl-rvp/industry.xml
+index b70ca79..a2041dc 100755
+--- a/boards/adl-rvp/industry.xml
++++ b/boards/adl-rvp/industry.xml
+@@ -45,6 +45,7 @@
+ 
+     <CAPACITIES>
+         <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++        <MAX_EFI_MMAP_ENTRIES>256</MAX_EFI_MMAP_ENTRIES>
+         <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
+         <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
+         <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
+diff --git a/boards/tgl-rvp/hybrid.xml b/boards/tgl-rvp/hybrid.xml
+index 185620f..fa9a4d3 100644
+--- a/boards/tgl-rvp/hybrid.xml
++++ b/boards/tgl-rvp/hybrid.xml
+@@ -50,6 +50,7 @@
+ 
+     <CAPACITIES>
+         <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++        <MAX_EFI_MMAP_ENTRIES>300</MAX_EFI_MMAP_ENTRIES>
+         <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
+         <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
+         <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
+diff --git a/boards/tgl-rvp/hybrid_rt.xml b/boards/tgl-rvp/hybrid_rt.xml
+index 662aa1a..503a6bc 100644
+--- a/boards/tgl-rvp/hybrid_rt.xml
++++ b/boards/tgl-rvp/hybrid_rt.xml
+@@ -53,6 +53,7 @@
+ 
+     <CAPACITIES>
+         <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++        <MAX_EFI_MMAP_ENTRIES>300</MAX_EFI_MMAP_ENTRIES>
+         <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
+         <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
+         <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
+diff --git a/boards/tgl-rvp/industry.xml b/boards/tgl-rvp/industry.xml
+index ba1c66c..79edc3e 100644
+--- a/boards/tgl-rvp/industry.xml
++++ b/boards/tgl-rvp/industry.xml
+@@ -49,6 +49,7 @@
+     </MEMORY>
+     <CAPACITIES>
+       <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++      <MAX_EFI_MMAP_ENTRIES>300</MAX_EFI_MMAP_ENTRIES>
+       <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
+       <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
+       <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
+diff --git a/boards/tgl-rvp/logical_partition.xml b/boards/tgl-rvp/logical_partition.xml
+index b59d8fe..ec10321 100644
+--- a/boards/tgl-rvp/logical_partition.xml
++++ b/boards/tgl-rvp/logical_partition.xml
+@@ -50,6 +50,7 @@
+ 
+     <CAPACITIES>
+         <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++        <MAX_EFI_MMAP_ENTRIES>300</MAX_EFI_MMAP_ENTRIES>
+         <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
+         <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
+         <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
+diff --git a/boards/tgl-rvp/sdc.xml b/boards/tgl-rvp/sdc.xml
+index 2eee367..54762b9 100644
+--- a/boards/tgl-rvp/sdc.xml
++++ b/boards/tgl-rvp/sdc.xml
+@@ -50,6 +50,7 @@
+ 
+     <CAPACITIES>
+         <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++        <MAX_EFI_MMAP_ENTRIES>300</MAX_EFI_MMAP_ENTRIES>
+         <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
+         <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
+         <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
+-- 
+2.7.4
+
