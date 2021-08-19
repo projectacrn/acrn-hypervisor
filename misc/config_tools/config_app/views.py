@@ -463,7 +463,7 @@ def save_launch():
                     if curr_vm_id == vm_list[i]:
                         curr_vm_index = i + 1
                         break
-            if add_launch_config and add_launch_config.tag == 'uos':
+            if add_launch_config is not None and add_launch_config.tag == 'uos':
                 for i in range(1, MAX_VM_NUM):
                     if str(i) not in vm_list:
                         break
@@ -590,7 +590,7 @@ def create_setting():
         launch_file = os.path.join(setting_path,  create_name + '.xml')
 
         if mode == 'create':
-            template_file_name = 'industry_launch_2uos'
+            template_file_name = 'hybrid_launch_2uos'
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board', template_file_name + '.xml')
         else: #load
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type, default_name + '.xml')
@@ -629,15 +629,15 @@ def create_setting():
             # update RDT->CLOS_MASK according to board xml
             scenario_config.set_curr(create_name)
             elem_clos_max = scenario_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
-            elem_mba_delay = scenario_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
+            # elem_mba_delay = scenario_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
             scenario_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
-            scenario_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
+            # scenario_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'MBA_DELAY')
             cdp_enabled = scenario_config.get_curr_value('hv', 'FEATURES', 'RDT', 'CDP_ENABLED')
             (num_clos_mask, num_mba_delay) = get_num_of_rdt_res(board_info, cdp_enabled)
             for i in range(num_clos_mask):
                 scenario_config.clone_curr_elem(elem_clos_max, 'hv', 'FEATURES', 'RDT')
-            for i in range(num_mba_delay):
-                scenario_config.clone_curr_elem(elem_mba_delay, 'hv', 'FEATURES', 'RDT')
+            # for i in range(num_mba_delay):
+            #    scenario_config.clone_curr_elem(elem_mba_delay, 'hv', 'FEATURES', 'RDT')
             for i in range(8):
                 scenario_config.delete_curr_key('vm:id={}'.format(i))
             scenario_config = set_default_config(scenario_config)
@@ -1074,8 +1074,8 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             'POST_STD_VM': ('industry', 'vm:id=1'),
             'POST_RT_VM': ('industry', 'vm:id=2'),
             'KATA_VM': ('industry', 'vm:id=7'),
-            'LAUNCH_POST_STD_VM': ('industry_launch_2uos', 'uos:id=1'),
-            'LAUNCH_POST_RT_VM': ('industry_launch_2uos', 'uos:id=2')
+            'LAUNCH_POST_STD_VM': ('hybrid_launch_2uos', 'uos:id=1'),
+            'LAUNCH_POST_RT_VM': ('industry_launch_6uos', 'uos:id=2')
         }
         config_path = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board')
         generic_scenario_config = XmlConfig(config_path)
