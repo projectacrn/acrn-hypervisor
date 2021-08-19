@@ -71,7 +71,7 @@
     <vm_type>SAFETY_VM</vm_type>
     <name>ACRN PRE-LAUNCHED VM0</name>
     <guest_flags>
-        <guest_flag>GUEST_FLAG_TPM2_FIXUP</guest_flag>
+        <guest_flag>GUEST_FLAG_SECURITY_VM</guest_flag>
     </guest_flags>
     <cpu_affinity>
         <pcpu_id>3</pcpu_id>
