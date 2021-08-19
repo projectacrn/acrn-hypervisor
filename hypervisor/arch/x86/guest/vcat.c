@@ -210,19 +210,96 @@ int32_t read_vcbm(const struct acrn_vcpu *vcpu, uint32_t vmsr, uint64_t *rval)
 }
 
 /**
+ * @brief Map vCBM to pCBM
+ *
+ * @pre vm != NULL && ((vcbm & vcat_get_max_vcbm(vm, res)) == vcbm)
+ */
+static uint64_t vcbm_to_pcbm(const struct acrn_vm *vm, uint64_t vcbm, int res)
+{
+	uint64_t max_pcbm = get_max_pcbm(vm, res);
+
+	/* Find the position low (the first bit set) in max_pcbm */
+	uint16_t low = ffs64(max_pcbm);
+
+	return vcbm << low;
+}
+
+/*
+ * Check if bitmask is contiguous:
+ * All (and only) contiguous '1' combinations are allowed (e.g. FFFFH, 0FF0H, 003CH, etc.)
+ */
+static bool is_contiguous(uint64_t bitmask)
+{
+	bool ret = false;
+
+	if (bitmask != 0UL) {
+		uint16_t low = ffs64(bitmask);
+		uint16_t high = fls64(bitmask);
+
+		if (((2UL << high) - (1UL << low)) == bitmask) {
+			ret = true;
+		}
+	}
+
+	return ret;
+}
+
+/**
  * @brief vCBM MSR write handler
  *
  * @pre vcpu != NULL && vcpu->vm != NULL
  */
-int32_t write_vcbm(__unused struct acrn_vcpu *vcpu, __unused uint32_t vmsr, __unused uint64_t val)
+int32_t write_vcbm(struct acrn_vcpu *vcpu, uint32_t vmsr, uint64_t val)
 {
-	/*
-	 * TODO: this is going to be implemented in a subsequent commit, will perform the following actions:
-	 * write vCBM
-	 * vmsr to pmsr and vcbm to pcbm
-	 * write pCBM
-	 */
-	return -EACCES;
+	int ret = -EACCES;
+	struct acrn_vm *vm = vcpu->vm;
+	int res = -1;
+	uint32_t msr_base;
+
+	if (is_vcat_configured(vm)) {
+		if (is_l2_vcbm_msr(vm, vmsr)) {
+			res = RDT_RESOURCE_L2;
+			msr_base = MSR_IA32_L2_MASK_BASE;
+		} else if (is_l3_vcbm_msr(vm, vmsr)) {
+			res = RDT_RESOURCE_L3;
+			msr_base = MSR_IA32_L3_MASK_BASE;
+		}
+	}
+
+	if (res >= 0) {
+		/*
+		 * vcbm set bits should only be in the range of [0, vcbm_len) (vcat_get_max_vcbm),
+		 * so mask with vcat_get_max_vcbm to prevent erroneous vCBM value
+		 */
+		uint64_t masked_vcbm = val & vcat_get_max_vcbm(vm, res);
+
+		/*
+		 * Validity check on val:
+		 * Bits 63:32 of val are reserved and must be written with zeros
+		 * (satisfied by the masked_vcbm == val condition)
+		 * vCBM must be contiguous
+		 */
+		if ((masked_vcbm == val) && is_contiguous(val)) {
+			uint32_t pmsr;
+			uint16_t vclosid;
+			uint64_t pcbm, pvalue;
+
+			/* Write vCBM first: */
+			vcpu_set_guest_msr(vcpu, vmsr, val);
+
+			/* Write pCBM: */
+			vclosid = (uint16_t)(vmsr - msr_base);
+			pmsr = msr_base + (uint32_t)vclosid_to_pclosid(vm, vclosid);
+			pcbm = vcbm_to_pcbm(vm, val, res);
+			/* Preserve reserved bits, and only set the pCBM bits */
+			pvalue = (msr_read(pmsr) & ~get_max_pcbm(vm, res)) | pcbm;
+			msr_write(pmsr, pvalue);
+
+			ret = 0;
+		}
+	}
+
+	return ret;
 }
 
 /**
