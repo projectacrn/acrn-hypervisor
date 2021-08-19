@@ -472,3 +472,92 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
    usage::
 
       --ssram
+
+----
+
+.. list-table:: Emul Items List For PCI Device Type
+   :header-rows: 1
+
+   * - Emul Type
+     - Description
+
+   * - "xhci"
+     - Usb controller used to support USB3.0 devices, provide downward compatibility
+
+   * - "lpc"
+     - LPC bus used to connect low speed device to cpu, e.g.serial port
+
+   * - "igd-lpc"
+     - Windows graphic driver requires this virtualized LPC device to complete the display function
+
+   * - "ivshmem"
+     - Virtualized PCI device used specifically for shared memory between VMs
+
+   * - "ahci"
+     - Advanced Host Controller Interface used to connect with SATA storage device
+
+   * - "ahci-cd"
+     - Advanced Host Controller Interface used to connect with AT Attachment Packet Interface device
+
+   * - "amd_hostbridge"
+     - Virtualized PCI AMD hostbridge
+
+   * - "hostbridge"
+     - Virtualized PCI hostbridge
+
+   * - "pci_gvt"
+     - Using Intel GVT-g technology
+
+   * - "virtio-blk"
+     - Virtio block type device
+
+   * - "virtio-coreu"
+     - Used for PAVP session management
+
+   * - "virtio-input"
+     - Virtio type device to emulate input device
+
+   * - "virtio-ipu"
+     - Virtio ipu type device
+
+   * - "virtio-console"
+     - Virtio console type device for data input and output
+
+   * - "virtio-hyper_dmabuf"
+     - Virtio device which allows to share data buffers between VMs using dmabuf like interface
+
+   * - "virtio-hdcp"
+     - Virtio hdcp type device
+
+   * - "virtio-heci"
+     - Virtio Host Embedded Controller Interface
+
+   * - "virtio-i2c"
+     - Virtio i2c type device
+
+   * - "virtio-gpio"
+     - Virtio gpio type device
+
+   * - "virtio-rnd"
+     - Virtio random generater type device
+
+   * - "virtio-rpmb"
+     - Virtio RPMB type device
+
+   * - "virtio-audio"
+     - Virtio audio type device
+
+   * - "virtio-net"
+     - Virtio net type device
+
+   * - "passthru"
+     - Passthrough device
+
+   * - "uart"
+     - Emulated PCI uart
+
+   * - "npk"
+     - Intel Trace Hub (aka. North Peak, NPK) is a trace aggregator for Software, Firmware, and Hardware
+
+   * - "wdt-i6300esb"
+     - Emulated i6300esb PCI wdt Intel SOC devices used to monitor guest OS
