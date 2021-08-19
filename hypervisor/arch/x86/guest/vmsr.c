@@ -28,7 +28,7 @@
 #define INTERCEPT_WRITE			(1U << 1U)
 #define INTERCEPT_READ_WRITE		(INTERCEPT_READ | INTERCEPT_WRITE)
 
-static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
+static uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	/*
 	 * MSRs that trusty may touch and need isolation between secure and normal world
 	 * This may include MSR_IA32_STAR, MSR_IA32_LSTAR, MSR_IA32_FMASK,
@@ -79,6 +79,24 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 #ifdef CONFIG_NVMX_ENABLED
 	LIST_OF_VMX_MSRS,
 #endif
+
+	/* The following range of elements are reserved for vCAT usage and are
+	 * initialized dynamically by init_intercepted_cat_msr_list() during platform initialization:
+	 * [(NUM_GUEST_MSRS - NUM_VCAT_MSRS) ... (NUM_GUEST_MSRS - 1)] = {
+	 * The following layout of each CAT MSR entry is determined by cat_msr_to_index_of_emulated_msr():
+	 * MSR_IA32_L3_MASK_BASE,
+	 * MSR_IA32_L3_MASK_BASE + 1,
+	 * ...
+	 * MSR_IA32_L3_MASK_BASE + NUM_VCAT_L3_MSRS - 1,
+	 *
+	 * MSR_IA32_L2_MASK_BASE + NUM_VCAT_L3_MSRS,
+	 * MSR_IA32_L2_MASK_BASE + NUM_VCAT_L3_MSRS + 1,
+	 * ...
+	 * MSR_IA32_L2_MASK_BASE + NUM_VCAT_L3_MSRS + NUM_VCAT_L2_MSRS - 1,
+	 *
+	 * MSR_IA32_PQR_ASSOC + NUM_VCAT_L3_MSRS + NUM_VCAT_L2_MSRS
+	 * }
+	 */
 };
 
 static const uint32_t mtrr_msrs[] = {
@@ -354,6 +372,74 @@ void init_emulated_msrs(struct acrn_vcpu *vcpu)
 
 	vcpu_set_guest_msr(vcpu, MSR_IA32_FEATURE_CONTROL, val64);
 }
+
+#ifdef CONFIG_VCAT_ENABLED
+/**
+ * @brief Map CAT MSR address to zero based index
+ *
+ * @pre  ((msr >= MSR_IA32_L3_MASK_BASE) && msr < (MSR_IA32_L3_MASK_BASE + NUM_VCAT_L3_MSRS))
+ *       || ((msr >= MSR_IA32_L2_MASK_BASE) && msr < (MSR_IA32_L2_MASK_BASE + NUM_VCAT_L2_MSRS))
+ *       || (msr == MSR_IA32_PQR_ASSOC)
+ */
+static uint32_t cat_msr_to_index_of_emulated_msr(uint32_t msr)
+{
+	uint32_t index = 0U;
+
+	/*  L3 MSRs indices assignment for MSR_IA32_L3_MASK_BASE ~ (MSR_IA32_L3_MASK_BASE + NUM_VCAT_L3_MSRS):
+	 *  0
+	 *  1
+	 *  ...
+	 *  (NUM_VCAT_L3_MSRS - 1)
+	 *
+	 *  L2 MSRs indices assignment:
+	 *  NUM_VCAT_L3_MSRS
+	 *  ...
+	 *  NUM_VCAT_L3_MSRS + NUM_VCAT_L2_MSRS - 1
+
+	 *  PQR index assignment for MSR_IA32_PQR_ASSOC:
+	 *  NUM_VCAT_L3_MSRS
+	 */
+
+	if ((msr >= MSR_IA32_L3_MASK_BASE) && (msr < (MSR_IA32_L3_MASK_BASE + NUM_VCAT_L3_MSRS))) {
+		index = msr - MSR_IA32_L3_MASK_BASE;
+	} else if ((msr >= MSR_IA32_L2_MASK_BASE) && (msr < (MSR_IA32_L2_MASK_BASE + NUM_VCAT_L2_MSRS))) {
+		index = msr - MSR_IA32_L2_MASK_BASE + NUM_VCAT_L3_MSRS;
+	} else if (msr == MSR_IA32_PQR_ASSOC) {
+		index = NUM_VCAT_L3_MSRS + NUM_VCAT_L2_MSRS;
+	} else {
+		ASSERT(false, "invalid CAT msr address");
+	}
+
+	return index;
+}
+
+static void init_cat_msr_entry(uint32_t msr)
+{
+	/* Get index into the emulated_guest_msrs[] table for a given CAT MSR */
+	uint32_t index = cat_msr_to_index_of_emulated_msr(msr) + CAT_MSR_START_INDEX;
+
+	emulated_guest_msrs[index] = msr;
+}
+
+/* Init emulated_guest_msrs[] dynamically for CAT MSRs */
+void init_intercepted_cat_msr_list(void)
+{
+	uint32_t msr;
+
+	/* MSR_IA32_L2_MASK_n MSRs */
+	for (msr = MSR_IA32_L2_MASK_BASE; msr < (MSR_IA32_L2_MASK_BASE + NUM_VCAT_L2_MSRS); msr++) {
+		init_cat_msr_entry(msr);
+	}
+
+	/* MSR_IA32_L3_MASK_n MSRs */
+	for (msr = MSR_IA32_L3_MASK_BASE; msr < (MSR_IA32_L3_MASK_BASE + NUM_VCAT_L3_MSRS); msr++) {
+		init_cat_msr_entry(msr);
+	}
+
+	/* MSR_IA32_PQR_ASSOC */
+	init_cat_msr_entry(MSR_IA32_PQR_ASSOC);
+}
+#endif
 
 /**
  * @pre vcpu != NULL

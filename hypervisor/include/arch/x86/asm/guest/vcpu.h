@@ -29,6 +29,7 @@
 #include <asm/guest/instr_emul.h>
 #include <asm/guest/nested.h>
 #include <asm/vmx.h>
+#include <asm/vm_config.h>
 
 /**
  * @brief vcpu
@@ -173,11 +174,29 @@ enum reset_mode;
 
 #define NUM_WORLD_MSRS		2U
 #define NUM_COMMON_MSRS		23U
+
+#ifdef CONFIG_VCAT_ENABLED
+#define NUM_VCAT_L2_MSRS	MAX_CACHE_CLOS_NUM_ENTRIES
+#define NUM_VCAT_L3_MSRS	MAX_CACHE_CLOS_NUM_ENTRIES
+/* L2/L3 mask MSRs plus MSR_IA32_PQR_ASSOC */
+#define NUM_VCAT_MSRS		(NUM_VCAT_L2_MSRS + NUM_VCAT_L3_MSRS + 1U)
+
 #ifdef CONFIG_NVMX_ENABLED
-#define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS)
+#define CAT_MSR_START_INDEX	(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS)
 #else
-#define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
+#define CAT_MSR_START_INDEX	(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
 #endif
+#else
+#define NUM_VCAT_MSRS		0U
+#endif
+
+/* For detailed layout of the emulated guest MSRs, see emulated_guest_msrs[NUM_GUEST_MSRS] in vmsr.c */
+#ifdef CONFIG_NVMX_ENABLED
+#define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS + NUM_VCAT_MSRS)
+#else
+#define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VCAT_MSRS)
+#endif
+
 
 #define EOI_EXIT_BITMAP_SIZE	256U
 
