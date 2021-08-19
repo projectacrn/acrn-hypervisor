@@ -196,7 +196,7 @@ with these settings:
    Since CPU sharing is disabled, you may need to delete all ``POST_STD_VM`` and ``KATA_VM`` VMs
    from the scenario configuration file, which may share pCPU with the Service OS VM.
 
-#. Follow instructions in :ref:`getting-started-building` and build with this XML configuration.
+#. Follow instructions in :ref:`gsg` and build with this XML configuration.
 
 
 Prepare for Service VM Kernel and rootfs
@@ -209,7 +209,7 @@ Instructions on how to boot Ubuntu as the Service VM can be found in
 The Service VM kernel needs to be built from the ``acrn-kernel`` repo, and some changes
 to the kernel ``.config`` are needed.
 Instructions on how to build and install the Service VM kernel can be found
-in :ref:`Build and Install the ACRN Kernel <build-and-install-ACRN-kernel>`.
+in :ref:`gsg`.
 
 Here is a summary of how to modify and build the kernel:
 

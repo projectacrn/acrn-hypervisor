@@ -38,6 +38,7 @@ ACRN assumes the following conditions are satisfied from the Platform BIOS:
 * There should be no conflict in resources among the PCI devices or with other platform devices.
 
 
+.. _hardware_tested:
 
 Tested Platforms by ACRN Release
 ********************************

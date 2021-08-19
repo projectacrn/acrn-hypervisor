@@ -50,7 +50,7 @@ install Ubuntu on the NVMe drive, and use grub to launch the Service VM.
 Install Pre-Launched RT Filesystem on SATA and Kernel Image on NVMe
 ===================================================================
 
-Follow the :ref:`install-ubuntu-rtvm-sata` guide to install RT rootfs on SATA drive.
+Follow the :ref:`gsg` to install RT rootfs on SATA drive.
 
 The Kernel should
 be on the NVMe drive along with GRUB. You'll need to copy the RT kernel
@@ -82,8 +82,8 @@ Add Pre-Launched RT Kernel Image to GRUB Config
 ===============================================
 
 The last step is to modify the GRUB configuration file to load the Pre-Launched
-kernel. (For more information about this, see :ref:`Update Grub for the Ubuntu Service VM
-<gsg_update_grub>` section in the :ref:`gsg`.) The grub config file will look something
+kernel. (For more information about this, see
+the :ref:`gsg`.) The grub config file will look something
 like this:
 
 .. code-block:: none

@@ -1,3 +1,5 @@
+:orphan:
+
 .. _roscube-gsg:
 
 Getting Started Guide for ACRN Industry Scenario With ROScube-I
