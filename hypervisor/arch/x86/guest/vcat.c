@@ -152,6 +152,22 @@ static uint64_t vcat_get_max_vcbm(const struct acrn_vm *vm, int res)
 }
 
 /**
+ * @brief Map pCBM to vCBM
+ *
+ * @pre vm != NULL
+ */
+uint64_t vcat_pcbm_to_vcbm(const struct acrn_vm *vm, uint64_t pcbm, int res)
+{
+	uint64_t max_pcbm = get_max_pcbm(vm, res);
+
+	/* Find the position low (the first bit set) in max_pcbm */
+	uint16_t low = ffs64(max_pcbm);
+
+	/* pcbm set bits should only be in the range of [low, high] */
+	return (pcbm & max_pcbm) >> low;
+}
+
+/**
  * @brief vCBM MSR write handler
  *
  * @pre vcpu != NULL && vcpu->vm != NULL
