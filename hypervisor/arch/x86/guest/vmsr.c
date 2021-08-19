@@ -703,6 +703,19 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		}
 		break;
 	}
+#ifdef CONFIG_VCAT_ENABLED
+	case MSR_IA32_L2_MASK_BASE ... (MSR_IA32_L2_MASK_BASE +  NUM_VCAT_L2_MSRS - 1U):
+	case MSR_IA32_L3_MASK_BASE ... (MSR_IA32_L3_MASK_BASE +  NUM_VCAT_L3_MSRS - 1U):
+	{
+		err = read_vcbm(vcpu, msr, &v);
+		break;
+	}
+	case MSR_IA32_PQR_ASSOC:
+	{
+		err = read_vclosid(vcpu, &v);
+		break;
+	}
+#endif
 	default:
 	{
 		if (is_x2apic_msr(msr)) {
