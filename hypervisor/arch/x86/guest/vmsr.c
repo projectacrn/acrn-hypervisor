@@ -22,6 +22,7 @@
 #include <asm/tsc.h>
 #include <trace.h>
 #include <logmsg.h>
+#include <asm/guest/vcat.h>
 
 #define INTERCEPT_DISABLE		(0U)
 #define INTERCEPT_READ			(1U << 0U)
@@ -338,8 +339,10 @@ static void prepare_auto_msr_area(struct acrn_vcpu *vcpu)
 
 		vcpu_clos = cfg->pclosids[vcpu->vcpu_id%cfg->num_pclosids];
 
-		/* RDT: only load/restore MSR_IA32_PQR_ASSOC when hv and guest have different settings */
-		if (vcpu_clos != hv_clos) {
+		/* RDT: only load/restore MSR_IA32_PQR_ASSOC when hv and guest have different settings
+		 * vCAT: always load/restore MSR_IA32_PQR_ASSOC
+		 */
+		if (is_vcat_configured(vcpu->vm) || (vcpu_clos != hv_clos)) {
 			vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
 			vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
 			vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
@@ -371,6 +374,14 @@ void init_emulated_msrs(struct acrn_vcpu *vcpu)
 	}
 
 	vcpu_set_guest_msr(vcpu, MSR_IA32_FEATURE_CONTROL, val64);
+
+#ifdef CONFIG_VCAT_ENABLED
+	/*
+	 * init_vcat_msrs() will overwrite the vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value
+	 * set by prepare_auto_msr_area()
+	 */
+	init_vcat_msrs(vcpu);
+#endif
 }
 
 #ifdef CONFIG_VCAT_ENABLED
