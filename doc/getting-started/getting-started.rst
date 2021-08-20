@@ -34,7 +34,8 @@ Before you begin, make sure your machines have the following prerequisites:
 
 * Hardware specifications
 
-  - A PC with Internet access
+  - A PC with Internet access (A fast system with multiple cores and 16MB
+    memory or more will make the builds go faster.)
 
 * Software specifications
 
@@ -46,13 +47,13 @@ Before you begin, make sure your machines have the following prerequisites:
 * Hardware specifications
 
   - Target board (see :ref:`hardware_tested`)
+  - Ubuntu 18.04 bootable USB disk (see `Ubuntu documentation
+    <https://ubuntu.com/tutorials/create-a-usb-stick-on-ubuntu#1-overview>`__
+    for instructions)
   - USB keyboard and mouse
   - Monitor
   - Ethernet cable and Internet access
   - Serial-to-USB cable to view the ACRN and VM console (optional)
-  - Ubuntu 18.04 bootable USB disk (see `Ubuntu documentation
-    <https://ubuntu.com/tutorials/create-a-usb-stick-on-ubuntu#1-overview>`__
-    for instructions)
   - A second USB disk with minimum 1GB capacity to copy files between the
     development computer and target system
   - Local storage device (NVMe or SATA drive, for example)
@@ -101,7 +102,9 @@ To set up the ACRN build environment on the development computer:
    .. code-block:: bash
 
       sudo apt update
+
       sudo apt upgrade -y
+
       sudo apt install gcc \
            git \
            make \
@@ -124,7 +127,8 @@ To set up the ACRN build environment on the development computer:
            bison \
            xsltproc \
            clang-format
-      sudo pip3 install lxml xmlschema
+
+      sudo pip3 install lxml xmlschema defusedxml
 
 #. Install the iASL compiler/disassembler used for advanced power management,
    device discovery, and configuration (ACPI) within the host OS:
@@ -165,7 +169,7 @@ target hardware.
 You use the **board inspector tool** to generate the board
 configuration file.
 
-.. note::
+.. important::
 
    Whenever you change the configuration of the board, such as BIOS settings,
    additional memory, or PCI devices, you must
@@ -358,13 +362,13 @@ Generate a Board Configuration File
 Generate a Scenario Configuration File and Launch Script
 *********************************************************
 
+You use the **ACRN configuration editor** to generate scenario configuration files and launch scripts.
+
 A **scenario configuration file** is an XML file that holds the parameters of
 a specific ACRN configuration, such as the number of VMs that can be run,
 their attributes, and the resources they have access to.
 
 A **launch script** is a shell script that is used to create a User VM.
-
-You use the **ACRN configuration editor** to generate scenario configuration files and launch scripts.
 
 To generate a scenario configuration file and launch script:
 
@@ -383,14 +387,7 @@ To generate a scenario configuration file and launch script:
 
 #. Your web browser should open the website `<http://127.0.0.1:5001/>`__
    automatically, or you may need to visit this website manually.
-
-   .. note::
-
-      The ACRN configuration editor is supported on Chrome and Firefox.
-
-   The browser-based configuration editor interface:
-
-   .. image:: ./images/gsg_config_01.png
+   The ACRN configuration editor is supported on Chrome and Firefox.
 
 #. Click the **Import Board info** button and browse to the board configuration
    file ``my_board.xml`` previously generated. When it is successfully
@@ -399,6 +396,8 @@ To generate a scenario configuration file and launch script:
 
    .. image:: ./images/gsg_config_board.png
 
+   |br|
+
 #. Generate the scenario configuration file:
 
    a. Click the **Scenario Setting** menu on the top banner of the UI and select
@@ -406,9 +405,13 @@ To generate a scenario configuration file and launch script:
 
       .. image:: ./images/gsg_config_scenario_default.png
 
+      |br|
+
    #. In the dialog box, select **industry** as the default scenario setting and click **OK**.
 
       .. image:: ./images/gsg_config_scenario_load.png
+
+      |br|
 
    #. The scenario's configurable items appear. Feel free to look through all
       the available configuration settings used in this sample scenario. This
@@ -427,6 +430,8 @@ To generate a scenario configuration file and launch script:
 
       .. image:: ./images/gsg_config_scenario_save.png
 
+      |br|
+
    #. Confirm that ``industry.xml`` appears in the directory ``/home/<username>/acrn-work``.
 
 #. Generate the launch script:
@@ -436,20 +441,28 @@ To generate a scenario configuration file and launch script:
 
       .. image:: ./images/gsg_config_launch_default.png
 
+      |br|
+
    #. In the dialog box, select **industry_launch_6uos** as the default launch
       setting and click **OK**.
 
       .. image:: ./images/gsg_config_launch_load.png
 
-   #. Click the **Generate Launch Script** button.
+      |br|
+
+      #. Click the **Generate Launch Script** button.
 
       .. image:: ./images/gsg_config_launch_generate.png
+
+      |br|
 
    #. In the dialog box, type ``/home/<username>/acrn-work/`` in the Source Path
       field. In the following example, ``acrn`` is the username. Click **Submit**
       to save the script.
 
       .. image:: ./images/gsg_config_launch_save.png
+
+      |br|
 
    #. Confirm that ``launch_uos_id3.sh`` appears in the directory
       ``/home/<username>/acrn-work/my_board/output/``.
@@ -483,8 +496,8 @@ Build ACRN
       make olddefconfig
       make -j $(nproc) targz-pkg
 
-   The build can take 1-3 hours depending on the performance of your development
-   computer and network.
+   The kernel build can take 15 minutes or less on a fast computer, but could
+   take 1-3 hours depending on the performance of your development computer.
 
 #. Copy all the necessary files generated on the development computer to the
    target system by USB disk as follows:
