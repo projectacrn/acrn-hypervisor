@@ -57,4 +57,17 @@ static inline uint8_t calculate_checksum8(const void *buf, uint32_t len)
 	return (uint8_t)(0x100U - calculate_sum8(buf, len));
 }
 
+/**
+ * @pre (uuid1 != NULL) && (uuid2 != NULL)
+ */
+static inline bool uuid_is_equal(const uint8_t *uuid1, const uint8_t *uuid2)
+{
+	uint64_t uuid1_h = *(const uint64_t *)uuid1;
+	uint64_t uuid1_l = *(const uint64_t *)(uuid1 + 8);
+	uint64_t uuid2_h = *(const uint64_t *)uuid2;
+	uint64_t uuid2_l = *(const uint64_t *)(uuid2 + 8);
+
+	return ((uuid1_h == uuid2_h) && (uuid1_l == uuid2_l));
+}
+
 #endif /* UTIL_H */
