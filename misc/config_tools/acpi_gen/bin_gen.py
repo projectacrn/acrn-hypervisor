@@ -77,7 +77,7 @@ def tpm2_acpi_gen(acpi_bin, board_etree, scenario_etree, allocation_etree):
             ctype_data = acpiparser.tpm2.TPM2(_data)
             ctype_data.header.signature = "TPM2".encode()
             ctype_data.header.length = _data_len
-            ctype_data.header.revision = 0x3
+            ctype_data.header.revision = 4
             ctype_data.header.oemid = "ACRN  ".encode()
             ctype_data.header.oemtableid = "ACRNTPM2".encode()
             ctype_data.header.oemrevision = 0x1
