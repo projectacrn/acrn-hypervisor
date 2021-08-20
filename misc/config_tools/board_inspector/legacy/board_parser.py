@@ -113,5 +113,3 @@ if __name__ == '__main__':
 
     with open(BOARD_INFO, 'a+') as f:
         print("</acrn-config>", file=f)
-
-    print("{} has been generated successfully!".format(BOARD_INFO))
