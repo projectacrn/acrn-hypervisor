@@ -602,6 +602,21 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	return ret;
 }
 
+/**
+ * @pre ctx != NULL
+ */
+static inline int32_t exec_vmentry(struct run_context *ctx, int32_t launch_type, int32_t ibrs_type)
+{
+#ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
+	cpu_l1d_flush();
+#endif
+
+	/* Mitigation for MDS vulnerability, overwrite CPU internal buffers */
+	cpu_internal_buffers_clear();
+
+	return vmx_vmrun(ctx, launch_type, ibrs_type);
+}
+
 /*
  * @pre vcpu != NULL
  */
@@ -689,15 +704,8 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 			msr_write(MSR_IA32_PRED_CMD, PRED_SET_IBPB);
 		}
 
-#ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
-		cpu_l1d_flush();
-#endif
-
-		/*Mitigation for MDS vulnerability, overwrite CPU internal buffers */
-		cpu_internal_buffers_clear();
-
 		/* Launch the VM */
-		status = vmx_vmrun(ctx, VM_LAUNCH, ibrs_type);
+		status = exec_vmentry(ctx, VM_LAUNCH, ibrs_type);
 
 		/* See if VM launched successfully */
 		if (status == 0) {
@@ -712,17 +720,10 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		 */
 		instlen = vcpu->arch.inst_len;
 		rip = vcpu_get_rip(vcpu);
-		exec_vmwrite(VMX_GUEST_RIP, ((rip+(uint64_t)instlen) &
-				0xFFFFFFFFFFFFFFFFUL));
-#ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
-		cpu_l1d_flush();
-#endif
-
-		/* Mitigation for MDS vulnerability, overwrite CPU internal buffers */
-		cpu_internal_buffers_clear();
+		exec_vmwrite(VMX_GUEST_RIP, rip + instlen);
 
 		/* Resume the VM */
-		status = vmx_vmrun(ctx, VM_RESUME, ibrs_type);
+		status = exec_vmentry(ctx, VM_RESUME, ibrs_type);
 	}
 
 	vcpu->reg_cached = 0UL;
@@ -738,8 +739,6 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		ia32_efer = vcpu_get_efer(vcpu);
 		cr0 = vcpu_get_cr0(vcpu);
 		set_vcpu_mode(vcpu, cs_attr, ia32_efer, cr0);
-
-		ctx->cpu_regs.regs.rsp = exec_vmread(VMX_GUEST_RSP);
 	}
 
 	/* Obtain current VCPU instruction length */
