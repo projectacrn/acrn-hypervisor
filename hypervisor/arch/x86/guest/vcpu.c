@@ -256,6 +256,7 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 
 	vcpu->arch.exception_info.exception = VECTOR_INVALID;
 	vcpu->arch.cur_context = NORMAL_WORLD;
+	vcpu->arch.lapic_pt_enabled = false;
 	vcpu->arch.irq_window_enabled = false;
 	vcpu->arch.emulating_lock = false;
 	(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
@@ -978,20 +979,6 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
 	}
 
 	return dmask;
-}
-
-/*
- * @brief Check if vCPU uses LAPIC in x2APIC mode and the VM, vCPU belongs to, is configured for
- * LAPIC Pass-through
- *
- * @pre vcpu != NULL
- *
- * @return true, if vCPU LAPIC is in x2APIC mode and VM, vCPU belongs to, is configured for
- *				LAPIC Pass-through
- */
-bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu)
-{
-	return ((is_x2apic_enabled(vcpu_vlapic(vcpu))) && (is_lapic_pt_configured(vcpu->vm)));
 }
 
 /*
