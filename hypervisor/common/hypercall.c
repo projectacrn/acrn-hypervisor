@@ -462,15 +462,15 @@ int32_t hcall_create_vcpu(__unused struct acrn_vcpu *vcpu, __unused struct acrn_
  * @pre is_sos_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_irqline(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_set_irqline(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+	__unused uint64_t param1, uint64_t param2)
 {
-	struct acrn_vm *vm = vcpu->vm;
 	uint32_t irq_pic;
 	int32_t ret = -1;
 	struct acrn_irqline_ops *ops = (struct acrn_irqline_ops *)&param2;
 
 	if (is_severity_pass(target_vm->vm_id) && !is_poweroff_vm(target_vm)) {
-		if (ops->gsi < get_vm_gsicount(vm)) {
+		if (ops->gsi < get_vm_gsicount(target_vm)) {
 			if (ops->gsi < vpic_pincount()) {
 				/*
 				 * IRQ line for 8254 timer is connected to
