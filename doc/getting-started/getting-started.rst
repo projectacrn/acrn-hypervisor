@@ -361,7 +361,7 @@ Generate a Board Configuration File
 
    a. Make sure the USB disk is connected to the target.
 
-   a. Copy ``my_board.xml`` to the USB disk:
+   #. Copy ``my_board.xml`` to the USB disk:
 
       .. code-block:: bash
 
@@ -466,7 +466,7 @@ To generate a scenario configuration file and launch script:
       .. image:: ./images/gsg_config_launch_load.png
          :class: drop-shadow
 
-      #. Click the **Generate Launch Script** button.
+   #. Click the **Generate Launch Script** button.
 
       .. image:: ./images/gsg_config_launch_generate.png
          :class: drop-shadow
