@@ -179,12 +179,12 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
         <xs:documentation>Configurable boot argument for pre-launched VM of hybrid or hybrid_rt mode.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="kern_load_addr" type="HexFormat" minOccurs="0">
+    <xs:element name="kern_load_addr" type="KernLoadAddr" minOccurs="0">
       <xs:annotation>
         <xs:documentation>The loading address in host memory for the VM kernel.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="kern_entry_addr" type="HexFormat" minOccurs="0">
+    <xs:element name="kern_entry_addr" type="KernEntryAddr" minOccurs="0">
       <xs:annotation>
         <xs:documentation>The entry address in host memory for the VM kernel.</xs:documentation>
       </xs:annotation>
