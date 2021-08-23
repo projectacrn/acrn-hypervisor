@@ -417,8 +417,7 @@ To generate a scenario configuration file and launch script:
    Example:
 
    .. image:: ./images/gsg_config_board.png
-
-   |br|
+      :class: drop-shadow
 
 #. Generate the scenario configuration file:
 
@@ -426,14 +425,12 @@ To generate a scenario configuration file and launch script:
       **Load a default scenario**. Example:
 
       .. image:: ./images/gsg_config_scenario_default.png
-
-      |br|
+         :class: drop-shadow
 
    #. In the dialog box, select **industry** as the default scenario setting and click **OK**.
 
       .. image:: ./images/gsg_config_scenario_load.png
-
-      |br|
+         :class: drop-shadow
 
    #. The scenario's configurable items appear. Feel free to look through all
       the available configuration settings used in this sample scenario. This
@@ -451,8 +448,7 @@ To generate a scenario configuration file and launch script:
       file.
 
       .. image:: ./images/gsg_config_scenario_save.png
-
-      |br|
+         :class: drop-shadow
 
    #. Confirm that ``industry.xml`` appears in the directory ``/home/<username>/acrn-work``.
 
@@ -462,29 +458,25 @@ To generate a scenario configuration file and launch script:
       **Load a default launch script**.
 
       .. image:: ./images/gsg_config_launch_default.png
-
-      |br|
+         :class: drop-shadow
 
    #. In the dialog box, select **industry_launch_6uos** as the default launch
       setting and click **OK**.
 
       .. image:: ./images/gsg_config_launch_load.png
-
-      |br|
+         :class: drop-shadow
 
       #. Click the **Generate Launch Script** button.
 
       .. image:: ./images/gsg_config_launch_generate.png
-
-      |br|
+         :class: drop-shadow
 
    #. In the dialog box, type ``/home/<username>/acrn-work/`` in the Source Path
       field. In the following example, ``acrn`` is the username. Click **Submit**
       to save the script.
 
       .. image:: ./images/gsg_config_launch_save.png
-
-      |br|
+         :class: drop-shadow
 
    #. Confirm that ``launch_uos_id3.sh`` appears in the directory
       ``/home/<username>/acrn-work/my_board/output/``.
@@ -529,7 +521,7 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp linux-5.10.47-acrn-sos-x86.tar.gz $disk/
+         cp linux-5.10.52-acrn-sos-x86.tar.gz $disk/
          cp ~/acrn-work/acrn-hypervisor/build/hypervisor/acrn.bin $disk/
          cp ~/acrn-work/my_board/output/launch_uos_id3.sh $disk/
          cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl $disk/
@@ -542,7 +534,7 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp $disk/linux-5.10.47-acrn-sos-x86.tar.gz ~/acrn-work
+         cp $disk/linux-5.10.52-acrn-sos-x86.tar.gz ~/acrn-work
          cp $disk/acrn-2.6-unstable.tar.gz ~/acrn-work
 
    #. Extract the Service VM files onto the target system:
@@ -550,7 +542,7 @@ Build ACRN
       .. code-block:: bash
 
          cd ~/acrn-work
-         sudo tar -zxvf linux-5.10.47-acrn-sos-x86.tar.gz -C / --keep-directory-symlink
+         sudo tar -zxvf linux-5.10.52-acrn-sos-x86.tar.gz -C / --keep-directory-symlink
 
    #. Extract the ACRN tools and images:
 
@@ -645,7 +637,7 @@ In the following steps, you will configure GRUB on the target system.
            search --no-floppy --fs-uuid --set <UUID>
            echo 'loading ACRN...'
            multiboot2 /boot/acrn/acrn.bin  root=PARTUUID=<PARTUUID>
-           module2 /boot/vmlinuz-5.10.47-acrn-sos Linux_bzImage
+           module2 /boot/vmlinuz-5.10.52-acrn-sos Linux_bzImage
          }
 
    #. Save and close the file.
@@ -659,7 +651,8 @@ In the following steps, you will configure GRUB on the target system.
 
          sudo vi /etc/default/grub
 
-   #. Edit these items:
+   #. Edit lines with these settings (comment out the ``GRUB_TIMEOUT_STYLE`` line).
+      Leave other lines as they are:
 
       .. code-block:: bash
 
@@ -699,10 +692,11 @@ Run ACRN and the Service VM
 ******************************
 
 When the ACRN hypervisor starts to boot, the ACRN console log will be displayed
-to the serial port (optional). The ACRN hypervisor boots the Service VM
+to the serial port (optional). The ACRN hypervisor boots the Ubuntu Service VM
 automatically.
 
-#. On the target, log in to the Service VM.
+#. On the target, log in to the Service VM. (It will look like a normal Ubuntu
+   session.)
 
 #. Verify that the hypervisor is running by checking ``dmesg`` in
    the Service VM:
@@ -712,12 +706,12 @@ automatically.
       dmesg | grep ACRN
 
    You should see "Hypervisor detected: ACRN" in the output. Example output of a
-   successful installation:
+   successful installation (your's may look slightly different):
 
    .. code-block:: console
 
-      [    0.000000] Hypervisor detected: ACRN
-      [    0.862942] ACRN HVLog: acrn_hvlog_init
+      [  0.000000] Hypervisor detected: ACRN
+      [  3.875620] ACRNTrace: Initialized acrn trace module with 4 cpu
 
 .. rst-class:: numbered-step
 
