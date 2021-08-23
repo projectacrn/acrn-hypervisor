@@ -507,8 +507,10 @@ Instructions
    pop-up model.
 
    .. note::
-      All customized scenario XMLs will be in user-defined groups
-      located in ``misc/config_tools/data/[board]/user_defined/``.
+      Save the customized scenario XML to a specific folder by inputting the
+      absolute path to this folder in the **Scenario XML Path** field. If you
+      don't specify a path, the scenario xml file will be saved to
+      default folder: ``acrn-hypervisor/../user_config/[board]/``.
 
    Before saving the scenario XML, the configuration editor validates the
    configurable items. If errors exist, the configuration editor lists all
@@ -547,7 +549,7 @@ The **Launch Setting** is quite similar to the **Scenario Setting**:
    - Remove a UOS launch script by clicking **Remove this VM** for the
      current launch configuration.
 
-#. Save the current launch configuration to the user-defined XML files by
+#. Save the current launch configuration to the ``user_config`` XML folder by
    clicking **Export XML**. The configuration editor validates the current
    configuration and lists all incorrectly configured items.
 
