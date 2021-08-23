@@ -312,3 +312,13 @@ a.reference.external::after {
    font-size: 80%;
    content: " \f08e";
 }
+
+/* generic light gray box shadow (for use on images via class directive) */
+.drop-shadow {
+   box-shadow: 5px 5px 10px #aaaaaa;
+}
+
+/* add some space after an image with a shadow style applied */
+img.drop-shadow {
+   margin-bottom: 2em !important;
+}
