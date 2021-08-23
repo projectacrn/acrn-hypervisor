@@ -47,9 +47,10 @@ Before you begin, make sure your machines have the following prerequisites:
 * Hardware specifications
 
   - Target board (see :ref:`hardware_tested`)
-  - Ubuntu 18.04 bootable USB disk (see `Ubuntu documentation
+  - Ubuntu 18.04 Desktop bootable USB disk: download the `Ubuntu 18.04.05 Desktop
+    ISO image <https://releases.ubuntu.com/18.04.5/>`_ and follow the `Ubuntu documentation
     <https://ubuntu.com/tutorials/create-a-usb-stick-on-ubuntu#1-overview>`__
-    for instructions)
+    for instructions for creating the USB disk.
   - USB keyboard and mouse
   - Monitor
   - Ethernet cable and Internet access
@@ -96,14 +97,21 @@ To set up the ACRN build environment on the development computer:
    <https://ubuntu.com/tutorials/install-ubuntu-desktop#1-overview>`__ to
    install a new OS on the development computer.
 
-#. Update Ubuntu with any outstanding patches, and install the necessary ACRN
-   build tools and dependencies:
+#. Update Ubuntu with any outstanding patches:
 
    .. code-block:: bash
 
       sudo apt update
 
+   Followed by:
+
+   .. code-block:: bash
+
       sudo apt upgrade -y
+
+#. Install the necessary ACRN build tools:
+
+   .. code-block:: bash
 
       sudo apt install gcc \
            git \
@@ -127,6 +135,10 @@ To set up the ACRN build environment on the development computer:
            bison \
            xsltproc \
            clang-format
+
+#. Install Python package dependencies:
+
+   .. code-block:: bash
 
       sudo pip3 install lxml xmlschema defusedxml
 
@@ -249,7 +261,11 @@ Generate a Board Configuration File
    .. code-block:: bash
 
       sudo apt install cpuid msr-tools pciutils dmidecode python3 python3-pip
-      sudo modprobe msr
+
+#. Install the Python package dependencies:
+
+   .. code-block:: bash
+
       sudo pip3 install lxml
 
 #. Configure the GRUB kernel command line as follows:
@@ -298,7 +314,7 @@ Generate a Board Configuration File
 
       .. code-block:: bash
 
-         ls /media/${USER}
+         ls /media/$USER
 
       Confirm that one disk name appears. You'll use that disk name in
       the following steps.
@@ -322,9 +338,15 @@ Generate a Board Configuration File
          disk="/media/$USER/"$(ls /media/$USER)
          cp -r $disk/board_inspector ~/acrn-work
 
-#. On the target, run ``board_inspector.py`` (the board inspector tool) to generate
-   the board configuration file. This example uses the parameter ``my_board``
-   as the file name.
+#. On the target, load the ``msr`` driver, used by the board inspector:
+
+   .. code-block:: bash
+
+      sudo modprobe msr
+
+#. Run the board inspector tool ( ``board_inspector.py``)
+   to generate the board configuration file. This
+   example uses the parameter ``my_board`` as the file name.
 
    .. code-block:: bash
 
@@ -507,23 +529,39 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         sudo cp linux-5.10.47-acrn-sos-x86.tar.gz $disk/
-         sudo cp ~/acrn-work/acrn-hypervisor/build/hypervisor/acrn.bin $disk/
-         sudo cp ~/acrn-work/my_board3/output/launch_uos_id3.sh $disk/
-         sudo cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl $disk/
-         sudo cp ~/acrn-work/acrn-hypervisor/build/acrn-2.6-unstable.tar.gz $disk/
+         cp linux-5.10.47-acrn-sos-x86.tar.gz $disk/
+         cp ~/acrn-work/acrn-hypervisor/build/hypervisor/acrn.bin $disk/
+         cp ~/acrn-work/my_board/output/launch_uos_id3.sh $disk/
+         cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl $disk/
+         cp ~/acrn-work/acrn-hypervisor/build/acrn-2.6-unstable.tar.gz $disk/
          sync && sudo umount $disk/
 
-   #. Insert the USB disk you just used into the target system and run these commands:
+   #. Insert the USB disk you just used into the target system and run these
+      commands to copy the tar files locally:
 
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         sudo cp $disk/linux-5.10.47-acrn-sos-x86.tar.gz ~/acrn-work
-         sudo cp $disk/acrn-2.6-unstable.tar.gz ~/acrn-work
+         cp $disk/linux-5.10.47-acrn-sos-x86.tar.gz ~/acrn-work
+         cp $disk/acrn-2.6-unstable.tar.gz ~/acrn-work
+
+   #. Extract the Service VM files onto the target system:
+
+      .. code-block:: bash
+
          cd ~/acrn-work
-         sudo tar -zxvf linux-5.10.47-acrn-sos-x86.tar.gz -C /
-         sudo tar -zxvf acrn-2.6-unstable.tar.gz -C /
+         sudo tar -zxvf linux-5.10.47-acrn-sos-x86.tar.gz -C / --keep-directory-symlink
+
+   #. Extract the ACRN tools and images:
+
+      .. code-block:: bash
+
+         sudo tar -zxvf acrn-2.6-unstable.tar.gz -C / --keep-directory-symlink
+
+   #. Copy a few additional ACRN files to the expected locations:
+
+      .. code-block:: bash
+
          sudo mkdir -p /boot/acrn/
          sudo cp $disk/acrn.bin /boot/acrn
          sudo cp $disk/launch_uos_id3.sh ~/acrn-work
