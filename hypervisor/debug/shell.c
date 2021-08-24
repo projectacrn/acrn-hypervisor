@@ -834,6 +834,12 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 		goto out;
 	}
 
+	if (is_lapic_pt_enabled(vcpu)) {
+		shell_puts("Please switch to vlapic mode for vcpu register dump!\r\n");
+		status = 0;
+		goto out;
+	}
+
 	pcpu_id = pcpuid_from_vcpu(vcpu);
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
