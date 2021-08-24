@@ -832,9 +832,9 @@ void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	}
 }
 
-void save_xsave_area(struct acrn_vcpu *vcpu, struct ext_context *ectx)
+void save_xsave_area(__unused struct acrn_vcpu *vcpu, struct ext_context *ectx)
 {
-	if (vcpu->arch.xsave_enabled) {
+	if (pcpu_has_cap(X86_FEATURE_XSAVES)) {
 		ectx->xcr0 = read_xcr(0);
 		write_xcr(0, ectx->xcr0 | XSAVE_SSE);
 		xsaves(&ectx->xs_area, UINT64_MAX);
@@ -843,7 +843,18 @@ void save_xsave_area(struct acrn_vcpu *vcpu, struct ext_context *ectx)
 
 void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *ectx)
 {
-	if ((!vcpu->launched) || (vcpu->arch.xsave_enabled)) {
+	if (pcpu_has_cap(X86_FEATURE_XSAVES)) {
+		/*
+		 * Restore XSAVE area if any of the following conditions is met:
+		 * 1. "vcpu->launched" is false (state initialization for guest)
+		 * 2. "vcpu->arch.xsave_enabled" is true (state restoring for guest)
+		 *
+		 * Before vCPU is launched, condition 1 is satisfied.
+		 * After vCPU is launched, condition 2 is satisfied because is_valid_xsave_combination() guarantees
+		 * that "vcpu->arch.xsave_enabled" is consistent with pcpu_has_cap(X86_FEATURE_XSAVES).
+		 *
+		 * Therefore, the check against "vcpu->launched" and "vcpu->arch.xsave_enabled" can be eliminated here.
+		 */
 		write_xcr(0, ectx->xcr0 | XSAVE_SSE);
 		msr_write(MSR_IA32_XSS, vcpu_get_guest_msr(vcpu, MSR_IA32_XSS));
 		xrstors(&ectx->xs_area, UINT64_MAX);
