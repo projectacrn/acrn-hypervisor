@@ -134,7 +134,8 @@ To set up the ACRN build environment on the development computer:
            flex \
            bison \
            xsltproc \
-           clang-format
+           clang-format \
+           bc
 
 #. Install Python package dependencies:
 
