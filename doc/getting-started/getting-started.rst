@@ -155,14 +155,15 @@ To set up the ACRN build environment on the development computer:
       make clean && make iasl
       sudo cp ./generate/unix/bin/iasl /usr/sbin
 
-#. Get the ACRN hypervisor and kernel source code:
+#. Get the ACRN hypervisor and kernel source code.  (Note these checkout tags
+   will be updated when we launch the v2.6 release):
 
    .. code-block:: bash
 
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor
       cd acrn-hypervisor
-      git checkout release_2.6
+      git checkout a7c273996
 
       cd ..
       git clone https://github.com/projectacrn/acrn-kernel
