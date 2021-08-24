@@ -11,8 +11,8 @@ with basic functionality such as running Service VM (SOS) and User VM (UOS) for 
 
 This setup was tested with the following configuration,
 
-- ACRN Hypervisor: ``v2.5`` tag
-- ACRN Kernel: ``v2.5`` tag
+- ACRN Hypervisor: ``v2.6`` tag
+- ACRN Kernel: ``v2.6`` tag
 - QEMU emulator version 4.2.1
 - Service VM/User VM is Ubuntu 20.04
 - Platforms Tested: Kaby Lake, Skylake
@@ -53,7 +53,6 @@ Prepare Service VM (L1 Guest)
       --connect qemu:///system \
       --name ACRNSOS \
       --machine q35 \
-      --cpu host-passthrough,+invtsc \
       --ram 4096 \
       --disk path=/var/lib/libvirt/images/acrnsos.img,size=32 \
       --vcpus 4 \
@@ -62,7 +61,7 @@ Prepare Service VM (L1 Guest)
       --os-variant ubuntu18.04 \
       --graphics none \
       --clock offset=utc,tsc_present=yes,kvmclock_present=no \
-      --qemu-commandline="-machine kernel-irqchip=split -device intel-iommu,intremap=on,caching-mode=on,aw-bits=48" \
+      --qemu-commandline="-machine kernel-irqchip=split -cpu Denverton,+invtsc,+lm,+nx,+smep,+smap,+mtrr,+clflushopt,+vmx,+x2apic,+popcnt,-xsave,+sse,+rdrand,+vmx-apicv-xapic,+vmx-apicv-x2apic,+vmx-flexpriority,+tsc-deadline,+pdpe1gb -device intel-iommu,intremap=on,caching-mode=on,aw-bits=48" \
       --location 'http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/' \
       --extra-args "console=tty0 console=ttyS0,115200n8"
 
@@ -126,14 +125,14 @@ Install ACRN Hypervisor
 
 #. Install the ACRN build tools and dependencies following the :ref:`gsg`
 
-#. Clone ACRN repo and check out the ``v2.5`` tag.
+#. Clone ACRN repo and check out the ``v2.6`` tag.
 
    .. code-block:: none
 
       cd ~
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout v2.5
+      git checkout v2.6
 
 #. Build ACRN for QEMU,
 
@@ -156,9 +155,9 @@ Install ACRN Hypervisor
       sudo cp build/hypervisor/acrn.32.out /boot
 
 #. Clone and configure the Service VM kernel repository following the instructions at
-   :ref:`gsg` and using the ``v2.5`` tag. The User VM (L2 guest)
+   :ref:`gsg` and using the ``v2.6`` tag. The User VM (L2 guest)
    uses the ``virtio-blk`` driver to mount the rootfs. This driver is included in the default
-   kernel configuration as of the ``v2.5`` tag.
+   kernel configuration as of the ``v2.6`` tag.
 
 #. Update Grub to boot the ACRN hypervisor and load the Service VM kernel. Append the following
    configuration to the :file:`/etc/grub.d/40_custom`.
