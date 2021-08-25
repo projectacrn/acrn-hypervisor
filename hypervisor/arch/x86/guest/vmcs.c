@@ -230,9 +230,8 @@ static uint32_t check_vmx_ctrl(uint32_t msr, uint32_t ctrl_req)
 	ctrl |= vmx_msr_low;
 
 	if ((ctrl_req & ~ctrl) != 0U) {
-		pr_err("VMX ctrl 0x%x not fully enabled: "
-			"request 0x%x but get 0x%x\n",
-			msr, ctrl_req, ctrl);
+		pr_info("VMX ctrl 0x%x not fully enabled: current capabilities are 0x%x (full capabilities are 0x%x)\n",
+						msr, ctrl, ctrl_req);
 	}
 
 	return ctrl;
@@ -250,9 +249,8 @@ static uint32_t check_vmx_ctrl_64(uint32_t msr, uint64_t ctrl_req)
 	ctrl &= vmx_msr;
 
 	if ((ctrl_req & ~ctrl) != 0U) {
-		pr_err("VMX ctrl 0x%x not fully enabled: "
-			"request 0x%llx but get 0x%llx\n",
-			msr, ctrl_req, ctrl);
+		pr_info("VMX ctrl 0x%x not fully enabled: current capabilities are 0x%lx (full capabilities are 0x%lx)\n",
+						msr, ctrl, ctrl_req);
 	}
 
 	return ctrl;
