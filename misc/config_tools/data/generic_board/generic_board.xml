@@ -291,9 +291,9 @@
 	ff000000-ffffffff : Reserved
 	  ff000000-ffffffff : pnp 00:05
 	100000000-3b07fffff : System RAM
-	  2f3c00000-2f4a00ed0 : Kernel code
-	  2f4a00ed1-2f545353f : Kernel data
-	  2f571d000-2f5bfffff : Kernel bss
+	  15de00000-15ec00ed0 : Kernel code
+	  15ec00ed1-15f65357f : Kernel data
+	  15f91d000-15fdfffff : Kernel bss
 	3b0800000-3b3ffffff : RAM buffer
 	4000000000-7fffffffff : PCI Bus 0000:00
 	  4000000000-400fffffff : 0000:00:02.0
@@ -337,6 +337,7 @@
   <BLOCK_DEVICE_INFO>
 	/dev/nvme0n1p3: TYPE="ext4"
 	/dev/sda3: TYPE="ext4"
+	/dev/sdb3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
@@ -471,6 +472,8 @@
       <capability id="rdtscp_ia32_tsc_aux"/>
       <capability id="intel_64"/>
       <capability id="invariant_tsc"/>
+      <attribute id="physical_address_bits">39</attribute>
+      <attribute id="linear_address_bits">48</attribute>
     </model>
     <die id="0">
       <core id="0x0">
@@ -750,385 +753,2674 @@
     <range start="0x0000000100000000" end="0x00000003b07fffff" size="11551113216"/>
   </memory>
   <devices>
-    <bus type="pci" address="0x0" id="0x9a14" description="Host bridge: Intel Corporation">
-      <vendor>0x8086</vendor>
-      <identifier>0x9a14</identifier>
-      <subsystem_vendor>0x8086</subsystem_vendor>
-      <subsystem_identifier>0x3002</subsystem_identifier>
-      <class>0x060000</class>
-      <resource type="memory" min="0xa0000" max="0xbffff" len="0x20000"/>
-      <resource type="memory" min="0xe0000" max="0xe3fff" len="0x4000"/>
-      <resource type="memory" min="0xe4000" max="0xe7fff" len="0x4000"/>
-      <resource type="memory" min="0xe8000" max="0xebfff" len="0x4000"/>
-      <resource type="memory" min="0xec000" max="0xeffff" len="0x4000"/>
-      <resource type="memory" min="0xf0000" max="0xfffff" len="0x10000"/>
-      <resource type="memory" min="0x4f800000" max="0xbfffffff" len="0x70800000"/>
-      <resource type="memory" min="0x4000000000" max="0x7fffffffff" len="0x4000000000"/>
-      <capability id="Vendor-Specific"/>
-      <device address="0x20000" id="0x9a49" description="VGA compatible controller: Intel Corporation">
+    <device id="PNP0C14">
+      <acpi_object>\AMW0</acpi_object>
+      <acpi_uid>0</acpi_uid>
+      <aml_template>5b821a5c414d5730085f4849440d504e503043313400085f55494400</aml_template>
+    </device>
+    <device id="INT339B">
+      <acpi_object>\CHUB</acpi_object>
+      <aml_template>5b82165c43485542085f53544100085f4849440c25d4339b</aml_template>
+      <status>
+        <present>n</present>
+        <enabled>n</enabled>
+        <functioning>n</functioning>
+      </status>
+    </device>
+    <device id="INT3420" description="Power Sharing Manager">
+      <acpi_object>\PSM_</acpi_object>
+      <acpi_uid>0</acpi_uid>
+      <aml_template>5b8242055c50534d5f085f53544100085f4849440c25d43420085f55494400085f535452112f0a2c50006f007700650072002000530068006100720069006e00670020004d0061006e0061006700650072000000</aml_template>
+      <status>
+        <present>n</present>
+        <enabled>n</enabled>
+        <functioning>n</functioning>
+      </status>
+    </device>
+    <bus type="system">
+      <acpi_object>\_SB_</acpi_object>
+      <bus id="PNP0A08" type="pci" address="0x0" description="Host bridge: Intel Corporation">
         <vendor>0x8086</vendor>
-        <identifier>0x9a49</identifier>
+        <identifier>0x9a14</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
         <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x030000</class>
-        <resource type="io_port" min="0x3000" max="0x303f" len="0x40" id="bar4"/>
-        <resource type="memory" min="0x4000000000" max="0x400fffffff" len="0x10000000" id="bar2" width="64" prefetchable="1"/>
-        <resource type="memory" min="0x603c000000" max="0x603cffffff" len="0x1000000" id="bar0" width="64" prefetchable="0"/>
+        <class>0x060000</class>
+        <acpi_object>\_SB_.PC00</acpi_object>
+        <compatible_id>PNP0A03</compatible_id>
+        <acpi_uid>0</acpi_uid>
+        <resource id="res0" type="bus_number" min="0x0" max="0xfffe" len="0xffff"/>
+        <resource id="res1" type="io_port" min="0x0" max="0xcf7" len="0xcf8"/>
+        <resource id="res2" type="io_port" min="0xcf8" max="0xcf8" len="0x8"/>
+        <resource id="res3" type="io_port" min="0xd00" max="0xffff" len="0xf300"/>
+        <resource id="res4" type="memory" min="0xa0000" max="0xbffff" len="0x20000"/>
+        <resource id="res5" type="memory" min="0xc0000" max="0xbffff" len="0x0"/>
+        <resource id="res6" type="memory" min="0xc4000" max="0xc3fff" len="0x0"/>
+        <resource id="res7" type="memory" min="0xc8000" max="0xc7fff" len="0x0"/>
+        <resource id="res8" type="memory" min="0xcc000" max="0xcbfff" len="0x0"/>
+        <resource id="res9" type="memory" min="0xd0000" max="0xcffff" len="0x0"/>
+        <resource id="res10" type="memory" min="0xd4000" max="0xd3fff" len="0x0"/>
+        <resource id="res11" type="memory" min="0xd8000" max="0xd7fff" len="0x0"/>
+        <resource id="res12" type="memory" min="0xdc000" max="0xdbfff" len="0x0"/>
+        <resource id="res13" type="memory" min="0xe0000" max="0xe3fff" len="0x4000"/>
+        <resource id="res14" type="memory" min="0xe4000" max="0xe7fff" len="0x4000"/>
+        <resource id="res15" type="memory" min="0xe8000" max="0xebfff" len="0x4000"/>
+        <resource id="res16" type="memory" min="0xec000" max="0xeffff" len="0x4000"/>
+        <resource id="res17" type="memory" min="0xf0000" max="0xfffff" len="0x10000"/>
+        <resource id="res18" type="memory" min="0x4f800000" max="0xbfffffff" len="0x70800000"/>
+        <resource id="res19" type="memory" min="0x4000000000" max="0x7fffffffff" len="0x4000000000"/>
         <capability id="Vendor-Specific"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI">
-          <count>1</count>
-          <capability id="per-vector masking"/>
-        </capability>
-        <capability id="Power Management"/>
-        <capability id="PASID"/>
-        <capability id="ATS"/>
-        <capability id="PRI"/>
-        <capability id="SR-IOV"/>
-      </device>
-      <device address="0x60000" id="0x9a09" description="PCI bridge: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0x9a09</identifier>
-        <class>0x060400</class>
-        <resource type="memory" min="0x6a400000" max="0x6a4fffff" len="0x100000"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI">
-          <count>1</count>
-        </capability>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Power Management"/>
-        <capability id="Advanced Error Reporting"/>
-        <capability id="ACS"/>
-        <capability id="L1 PM Substates"/>
-        <capability id="TPM"/>
-        <capability id="Virtual Channel"/>
-        <capability id="DPC"/>
-        <capability id="Secondary PCI Express"/>
-        <capability id="Data Link Feature"/>
-        <capability id="Physical Layer 16.0 GT/s"/>
-        <capability id="Lane Margining at the Receiver"/>
-        <bus type="pci" address="0x1">
-          <device address="0x0" id="0x2263" description="Non-Volatile memory controller: Silicon Motion, Inc.">
-            <vendor>0x126f</vendor>
-            <identifier>0x2263</identifier>
-            <subsystem_vendor>0x126f</subsystem_vendor>
-            <subsystem_identifier>0x2263</subsystem_identifier>
-            <class>0x010802</class>
-            <resource type="memory" min="0x6a400000" max="0x6a403fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
-            <capability id="Power Management"/>
-            <capability id="MSI">
-              <count>8</count>
-              <capability id="multiple-message"/>
-              <capability id="64-bit address"/>
-              <capability id="per-vector masking"/>
-            </capability>
-            <capability id="PCI Express"/>
-            <capability id="MSI-X">
-              <table_size>16</table_size>
-              <table_bir>1</table_bir>
-              <table_offset>0x1000000</table_offset>
-              <pba_bir>1</pba_bir>
-              <pba_offset>0x0</pba_offset>
-            </capability>
-            <capability id="Advanced Error Reporting"/>
-            <capability id="Secondary PCI Express"/>
-            <capability id="LTR"/>
-            <capability id="L1 PM Substates"/>
+        <interrupt_pin_routing>
+          <routing address="0x1ffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x6ffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x7ffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x2ffff">
+            <mapping pin="INTA#" source="16"/>
+          </routing>
+          <routing address="0x4ffff">
+            <mapping pin="INTA#" source="16"/>
+          </routing>
+          <routing address="0x5ffff">
+            <mapping pin="INTA#" source="16"/>
+          </routing>
+          <routing address="0x8ffff">
+            <mapping pin="INTA#" source="16"/>
+          </routing>
+          <routing address="0xdffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+          </routing>
+          <routing address="0x1fffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x1effff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="36"/>
+            <mapping pin="INTD#" source="37"/>
+          </routing>
+          <routing address="0x1affff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x19ffff">
+            <mapping pin="INTA#" source="31"/>
+            <mapping pin="INTB#" source="32"/>
+            <mapping pin="INTC#" source="33"/>
+          </routing>
+          <routing address="0x11ffff">
+            <mapping pin="INTA#" source="35"/>
+            <mapping pin="INTB#" source="20"/>
+            <mapping pin="INTC#" source="21"/>
+            <mapping pin="INTD#" source="42"/>
+          </routing>
+          <routing address="0x17ffff">
+            <mapping pin="INTA#" source="16"/>
+          </routing>
+          <routing address="0x16ffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x15ffff">
+            <mapping pin="INTA#" source="27"/>
+            <mapping pin="INTB#" source="40"/>
+            <mapping pin="INTC#" source="29"/>
+            <mapping pin="INTD#" source="30"/>
+          </routing>
+          <routing address="0x14ffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x13ffff">
+            <mapping pin="INTA#" source="43"/>
+            <mapping pin="INTB#" source="24"/>
+            <mapping pin="INTC#" source="25"/>
+            <mapping pin="INTD#" source="38"/>
+          </routing>
+          <routing address="0x12ffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="34"/>
+          </routing>
+          <routing address="0x10ffff">
+            <mapping pin="INTA#" source="23"/>
+            <mapping pin="INTB#" source="22"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x1cffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x1dffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+          <routing address="0x1bffff">
+            <mapping pin="INTA#" source="16"/>
+            <mapping pin="INTB#" source="17"/>
+            <mapping pin="INTC#" source="18"/>
+            <mapping pin="INTD#" source="19"/>
+          </routing>
+        </interrupt_pin_routing>
+        <device id="INT3472" address="0x0">
+          <acpi_object>\_SB_.PC00.CLP0</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>0</acpi_uid>
+          <aml_template>5b824d055c2f035f53425f50433030434c5030085f53544100085f4849440d494e543334373200085f55494400085f41445200085f43525311260a238e1e00010001020000010600801a06004d005c5f53422e504330302e49324333007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C3</dependency>
+        </device>
+        <device address="0x10000">
+          <acpi_object>\_SB_.PC00.PEG1</acpi_object>
+          <aml_template>5b82205c2f035f53425f5043303050454731085f53544100085f4144520c00000100</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="17"/>
+              <mapping pin="INTB#" source="18"/>
+              <mapping pin="INTC#" source="19"/>
+              <mapping pin="INTD#" source="16"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.PEG1.PEGP</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305045473150454750085f41445200</aml_template>
           </device>
-        </bus>
-      </device>
-      <device address="0x70000" id="0x9a25" description="PCI bridge: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0x9a25</identifier>
-        <class>0x060400</class>
-        <resource type="io_port" min="0x4000" max="0x4fff" len="0x1000"/>
-        <resource type="memory" min="0x5e000000" max="0x6a1fffff" len="0xc200000"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI">
-          <count>1</count>
-        </capability>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Power Management"/>
-        <capability id="ACS"/>
-        <capability id="DPC"/>
-        <bus type="pci" address="0x2"/>
-      </device>
-      <device address="0x70002" id="0x9a27" description="PCI bridge: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0x9a27</identifier>
-        <class>0x060400</class>
-        <resource type="io_port" min="0x5000" max="0x5fff" len="0x1000"/>
-        <resource type="memory" min="0x50000000" max="0x5c1fffff" len="0xc200000"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI">
-          <count>1</count>
-        </capability>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Power Management"/>
-        <capability id="ACS"/>
-        <capability id="DPC"/>
-        <bus type="pci" address="0x2d"/>
-      </device>
-      <device address="0x80000" id="0x9a11" description="System peripheral: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0x9a11</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x088000</class>
-        <resource type="memory" min="0x603d1b3000" max="0x603d1b3fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="MSI">
-          <count>1</count>
-        </capability>
-        <capability id="Vendor-Specific"/>
-        <capability id="Power Management"/>
-        <capability id="Conventional PCI Advanced Features"/>
-      </device>
-      <device address="0xd0000" id="0x9a13" description="USB controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0x9a13</identifier>
-        <subsystem_vendor>0x0000</subsystem_vendor>
-        <subsystem_identifier>0x0000</subsystem_identifier>
-        <class>0x0c0330</class>
-        <resource type="memory" min="0x603d190000" max="0x603d19ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-        <capability id="MSI">
-          <count>8</count>
-          <capability id="multiple-message"/>
-          <capability id="64-bit address"/>
-        </capability>
-        <capability id="Vendor-Specific"/>
-        <capability id="Vendor-Specific"/>
-      </device>
-      <device address="0xd0002" id="0x9a1b" description="USB controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0x9a1b</identifier>
-        <subsystem_vendor>0x2222</subsystem_vendor>
-        <subsystem_identifier>0x1111</subsystem_identifier>
-        <class>0x0c0340</class>
-        <resource type="memory" min="0x603d140000" max="0x603d17ffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
-        <resource type="memory" min="0x603d1b2000" max="0x603d1b2fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-        <capability id="MSI">
-          <count>1</count>
-          <capability id="64-bit address"/>
-        </capability>
-        <capability id="MSI-X">
-          <table_size>16</table_size>
-          <table_bir>4</table_bir>
-          <table_offset>0xfa20000</table_offset>
-          <pba_bir>0</pba_bir>
-          <pba_offset>0x2000000</pba_offset>
-        </capability>
-      </device>
-      <device address="0xd0003" id="0x9a1d" description="USB controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0x9a1d</identifier>
-        <subsystem_vendor>0x2222</subsystem_vendor>
-        <subsystem_identifier>0x1111</subsystem_identifier>
-        <class>0x0c0340</class>
-        <resource type="memory" min="0x603d100000" max="0x603d13ffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
-        <resource type="memory" min="0x603d1b1000" max="0x603d1b1fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-        <capability id="MSI">
-          <count>1</count>
-          <capability id="64-bit address"/>
-        </capability>
-        <capability id="MSI-X">
-          <table_size>16</table_size>
-          <table_bir>4</table_bir>
-          <table_offset>0xfa20000</table_offset>
-          <pba_bir>0</pba_bir>
-          <pba_offset>0x2000000</pba_offset>
-        </capability>
-      </device>
-      <device address="0x140000" id="0xa0ed" description="USB controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0ed</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x0c0330</class>
-        <resource type="memory" min="0x603d180000" max="0x603d18ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-        <capability id="MSI">
-          <count>8</count>
-          <capability id="multiple-message"/>
-          <capability id="64-bit address"/>
-        </capability>
-        <capability id="Vendor-Specific"/>
-        <capability id="Vendor-Specific"/>
-      </device>
-      <device address="0x140002" id="0xa0ef" description="RAM memory: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0ef</identifier>
-        <subsystem_vendor>0x0000</subsystem_vendor>
-        <subsystem_identifier>0x0000</subsystem_identifier>
-        <class>0x050000</class>
-        <resource type="memory" min="0x603d1a8000" max="0x603d1abfff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
-        <resource type="memory" min="0x603d1b0000" max="0x603d1b0fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-      </device>
-      <device address="0x140003" id="0xa0f0" description="Network controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0f0</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x0074</subsystem_identifier>
-        <class>0x028000</class>
-        <resource type="memory" min="0x603d1a4000" max="0x603d1a7fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-        <capability id="MSI">
-          <count>1</count>
-          <capability id="64-bit address"/>
-        </capability>
-        <capability id="PCI Express"/>
-        <capability id="MSI-X">
-          <table_size>16</table_size>
-          <table_bir>1</table_bir>
-          <table_offset>0x10000000</table_offset>
-          <pba_bir>1</pba_bir>
-          <pba_offset>0x0</pba_offset>
-        </capability>
-        <capability id="LTR"/>
-        <capability id="Vendor-Specific Extended"/>
-      </device>
-      <device address="0x150000" id="0xa0e8" description="Serial bus controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0e8</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x0c8000</class>
-        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-        <capability id="Vendor-Specific"/>
-      </device>
-      <device address="0x150001" id="0xa0e9" description="Serial bus controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0e9</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x0c8000</class>
-        <resource type="memory" min="0x0" max="0xfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-        <capability id="Vendor-Specific"/>
-      </device>
-      <device address="0x160000" id="0xa0e0" description="Communication controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0e0</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x078000</class>
-        <resource type="memory" min="0x603d1ad000" max="0x603d1adfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-        <capability id="MSI">
-          <count>1</count>
-          <capability id="64-bit address"/>
-        </capability>
-        <capability id="Vendor-Specific"/>
-      </device>
-      <device address="0x170000" id="0xa0d3" description="SATA controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0d3</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x010601</class>
-        <resource type="io_port" min="0x3060" max="0x307f" len="0x20" id="bar4"/>
-        <resource type="io_port" min="0x3080" max="0x3083" len="0x4" id="bar3"/>
-        <resource type="io_port" min="0x3090" max="0x3097" len="0x8" id="bar2"/>
-        <resource type="memory" min="0x6a500000" max="0x6a501fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
-        <resource type="memory" min="0x6a502000" max="0x6a5027ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
-        <resource type="memory" min="0x6a503000" max="0x6a5030ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
-        <capability id="MSI">
-          <count>1</count>
-        </capability>
-        <capability id="Power Management"/>
-        <capability id="Reserved (0x12)"/>
-      </device>
-      <device address="0x1d0000" id="0xa0b1" description="PCI bridge: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0b1</identifier>
-        <class>0x060400</class>
-        <resource type="memory" min="0x6a200000" max="0x6a3fffff" len="0x200000"/>
-        <capability id="PCI Express"/>
-        <capability id="MSI">
-          <count>1</count>
-        </capability>
-        <capability id="Subsystem ID and Subsystem Vendor ID"/>
-        <capability id="Power Management"/>
-        <capability id="Advanced Error Reporting"/>
-        <capability id="ACS"/>
-        <capability id="TPM"/>
-        <capability id="L1 PM Substates"/>
-        <capability id="Secondary PCI Express"/>
-        <capability id="DPC"/>
-        <bus type="pci" address="0x58">
-          <device address="0x0" id="0x15f2" description="Ethernet controller: Intel Corporation">
-            <vendor>0x8086</vendor>
-            <identifier>0x15f2</identifier>
-            <subsystem_vendor>0x8086</subsystem_vendor>
-            <subsystem_identifier>0x3002</subsystem_identifier>
-            <class>0x020000</class>
-            <resource type="memory" min="0x6a200000" max="0x6a2fffff" len="0x100000" id="bar0" width="32" prefetchable="0"/>
-            <resource type="memory" min="0x6a300000" max="0x6a303fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
-            <capability id="Power Management"/>
-            <capability id="MSI">
-              <count>1</count>
-              <capability id="64-bit address"/>
-              <capability id="per-vector masking"/>
-            </capability>
-            <capability id="MSI-X">
-              <table_size>5</table_size>
-              <table_bir>7</table_bir>
-              <table_offset>0x30000</table_offset>
-              <pba_bir>1</pba_bir>
-              <pba_offset>0x0</pba_offset>
-            </capability>
-            <capability id="PCI Express"/>
-            <capability id="Advanced Error Reporting"/>
-            <capability id="Device Serial Number"/>
-            <capability id="LTR"/>
-            <capability id="TPM"/>
-            <capability id="L1 PM Substates"/>
+        </device>
+        <device address="0x10001">
+          <acpi_object>\_SB_.PC00.PEG2</acpi_object>
+          <aml_template>5b82205c2f035f53425f5043303050454732085f53544100085f4144520c01000100</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="18"/>
+              <mapping pin="INTB#" source="19"/>
+              <mapping pin="INTC#" source="16"/>
+              <mapping pin="INTD#" source="17"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.PEG2.PEGP</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305045473250454750085f41445200</aml_template>
           </device>
-        </bus>
+        </device>
+        <device address="0x10002">
+          <acpi_object>\_SB_.PC00.PEG3</acpi_object>
+          <aml_template>5b82205c2f035f53425f5043303050454733085f53544100085f4144520c02000100</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="19"/>
+              <mapping pin="INTB#" source="16"/>
+              <mapping pin="INTC#" source="17"/>
+              <mapping pin="INTD#" source="18"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.PEG3.PEGP</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305045473350454750085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x20000" id="0x9a49" description="VGA compatible controller: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0x9a49</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x030000</class>
+          <acpi_object>\_SB_.PC00.GFX0</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303047465830085f4144520c00000200</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="io_port" min="0x3000" max="0x303f" len="0x40" id="bar4"/>
+          <resource type="memory" min="0x4000000000" max="0x400fffffff" len="0x10000000" id="bar2" width="64" prefetchable="1"/>
+          <resource type="memory" min="0x603c000000" max="0x603cffffff" len="0x1000000" id="bar0" width="64" prefetchable="0"/>
+          <capability id="Vendor-Specific"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI">
+            <count>1</count>
+            <capability id="per-vector masking"/>
+          </capability>
+          <capability id="Power Management"/>
+          <capability id="PASID"/>
+          <capability id="ATS"/>
+          <capability id="PRI"/>
+          <capability id="SR-IOV"/>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.GFX0.DD01</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443031085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD02</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443032085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD03</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443033085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD04</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443034085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD05</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443035085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD06</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443036085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD07</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443037085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD08</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443038085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD09</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443039085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD0A</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443041085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD0B</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443042085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD0C</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443043085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD0D</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443044085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD0E</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443045085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD0F</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443046085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD1F</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443146085f41445200</aml_template>
+          </device>
+          <device>
+            <acpi_object>\_SB_.PC00.GFX0.DD2F</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330304746583044443246085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x40000">
+          <acpi_object>\_SB_.PC00.TCPU</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303054435055085f4144520c00000400</aml_template>
+        </device>
+        <device address="0x50000">
+          <acpi_object>\_SB_.PC00.IPU0</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303049505530085f4144520c00000500</aml_template>
+        </device>
+        <device address="0x60000" id="0x9a09" description="PCI bridge: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0x9a09</identifier>
+          <class>0x060400</class>
+          <acpi_object>\_SB_.PC00.PEG0</acpi_object>
+          <aml_template>5b82205c2f035f53425f5043303050454730085f53544100085f4144520c00000600</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="interrupt_pin" pin="INTD#" source="19"/>
+          <resource type="memory" min="0x6a400000" max="0x6a4fffff" len="0x100000"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI">
+            <count>1</count>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Power Management"/>
+          <capability id="Advanced Error Reporting"/>
+          <capability id="ACS"/>
+          <capability id="L1 PM Substates"/>
+          <capability id="TPM"/>
+          <capability id="Virtual Channel"/>
+          <capability id="DPC"/>
+          <capability id="Secondary PCI Express"/>
+          <capability id="Data Link Feature"/>
+          <capability id="Physical Layer 16.0 GT/s"/>
+          <capability id="Lane Margining at the Receiver"/>
+          <bus type="pci" address="0x1">
+            <interrupt_pin_routing>
+              <routing address="0xffff">
+                <mapping pin="INTA#" source="16"/>
+                <mapping pin="INTB#" source="17"/>
+                <mapping pin="INTC#" source="18"/>
+                <mapping pin="INTD#" source="19"/>
+              </routing>
+            </interrupt_pin_routing>
+            <device address="0x0" id="0x2263" description="Non-Volatile memory controller: Silicon Motion, Inc.">
+              <vendor>0x126f</vendor>
+              <identifier>0x2263</identifier>
+              <subsystem_vendor>0x126f</subsystem_vendor>
+              <subsystem_identifier>0x2263</subsystem_identifier>
+              <class>0x010802</class>
+              <resource type="interrupt_pin" pin="INTA#" source="16"/>
+              <resource type="memory" min="0x6a400000" max="0x6a403fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+              <capability id="Power Management"/>
+              <capability id="MSI">
+                <count>8</count>
+                <capability id="multiple-message"/>
+                <capability id="64-bit address"/>
+                <capability id="per-vector masking"/>
+              </capability>
+              <capability id="PCI Express"/>
+              <capability id="MSI-X">
+                <table_size>16</table_size>
+                <table_bir>1</table_bir>
+                <table_offset>0x1000000</table_offset>
+                <pba_bir>1</pba_bir>
+                <pba_offset>0x0</pba_offset>
+              </capability>
+              <capability id="Advanced Error Reporting"/>
+              <capability id="Secondary PCI Express"/>
+              <capability id="LTR"/>
+              <capability id="L1 PM Substates"/>
+            </device>
+          </bus>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.PEG0.PEGP</acpi_object>
+            <aml_template>5b8241065c2f045f53425f504330305045473050454750085f414452005b8050434358020a090a045b8115504343580150495858085343435808424343580814235041484308a01a934243435801a01293534343580a06a009935049585801a401a400</aml_template>
+            <dependency type="is used by">\_SB_.PC00.PEG0.PEGP.MINI</dependency>
+            <device address="0xffff">
+              <acpi_object>\_SB_.PC00.PEG0.PEGP.MINI</acpi_object>
+              <aml_template>5b824f045c2f055f53425f5043303050454730504547504d494e49155c2f055f53425f50433030504547305045475050414843080014135f53544108a00850414843a40a0fa103a400085f4144520bffff</aml_template>
+              <status>
+                <present>n</present>
+                <enabled>n</enabled>
+                <functioning>n</functioning>
+              </status>
+              <dependency type="uses">\_SB_.PC00.PEG0.PEGP</dependency>
+            </device>
+          </device>
+        </device>
+        <device address="0x70000" id="0x9a25" description="PCI bridge: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0x9a25</identifier>
+          <class>0x060400</class>
+          <acpi_object>\_SB_.PC00.TRP1</acpi_object>
+          <aml_template>5b82205c2f035f53425f5043303054525031085f53544100085f4144520c00000700</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="interrupt_pin" pin="INTB#" source="17"/>
+          <resource type="io_port" min="0x4000" max="0x4fff" len="0x1000"/>
+          <resource type="memory" min="0x5e000000" max="0x6a1fffff" len="0xc200000"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI">
+            <count>1</count>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Power Management"/>
+          <capability id="ACS"/>
+          <capability id="DPC"/>
+          <bus type="pci" address="0x2">
+            <interrupt_pin_routing>
+              <routing address="0xffff">
+                <mapping pin="INTA#" source="16"/>
+                <mapping pin="INTB#" source="17"/>
+                <mapping pin="INTC#" source="18"/>
+                <mapping pin="INTD#" source="19"/>
+              </routing>
+            </interrupt_pin_routing>
+          </bus>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.TRP1.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305452503150585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x70001">
+          <acpi_object>\_SB_.PC00.TRP0</acpi_object>
+          <aml_template>5b82205c2f035f53425f5043303054525030085f53544100085f4144520c01000700</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="16"/>
+              <mapping pin="INTB#" source="17"/>
+              <mapping pin="INTC#" source="18"/>
+              <mapping pin="INTD#" source="19"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.TRP0.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305452503050585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x70002" id="0x9a27" description="PCI bridge: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0x9a27</identifier>
+          <class>0x060400</class>
+          <acpi_object>\_SB_.PC00.TRP2</acpi_object>
+          <aml_template>5b82205c2f035f53425f5043303054525032085f53544100085f4144520c02000700</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="interrupt_pin" pin="INTC#" source="18"/>
+          <resource type="io_port" min="0x5000" max="0x5fff" len="0x1000"/>
+          <resource type="memory" min="0x50000000" max="0x5c1fffff" len="0xc200000"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI">
+            <count>1</count>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Power Management"/>
+          <capability id="ACS"/>
+          <capability id="DPC"/>
+          <bus type="pci" address="0x2d">
+            <interrupt_pin_routing>
+              <routing address="0xffff">
+                <mapping pin="INTA#" source="16"/>
+                <mapping pin="INTB#" source="17"/>
+                <mapping pin="INTC#" source="18"/>
+                <mapping pin="INTD#" source="19"/>
+              </routing>
+            </interrupt_pin_routing>
+          </bus>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.TRP2.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305452503250585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x70003">
+          <acpi_object>\_SB_.PC00.TRP3</acpi_object>
+          <aml_template>5b82205c2f035f53425f5043303054525033085f53544100085f4144520c03000700</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="16"/>
+              <mapping pin="INTB#" source="17"/>
+              <mapping pin="INTC#" source="18"/>
+              <mapping pin="INTD#" source="19"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.TRP3.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305452503350585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x80000" id="0x9a11" description="System peripheral: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0x9a11</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x088000</class>
+          <acpi_object>\_SB_.PC00.GNA0</acpi_object>
+          <aml_template>5b821a5c2f035f53425f50433030474e4130085f4144520c00000800</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="memory" min="0x603d1b3000" max="0x603d1b3fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <capability id="MSI">
+            <count>1</count>
+          </capability>
+          <capability id="Vendor-Specific"/>
+          <capability id="Power Management"/>
+          <capability id="Conventional PCI Advanced Features"/>
+        </device>
+        <device description="USB controller: Intel Corporation" address="0xd0000" id="0x9a13">
+          <vendor>0x8086</vendor>
+          <identifier>0x9a13</identifier>
+          <subsystem_vendor>0x0000</subsystem_vendor>
+          <subsystem_identifier>0x0000</subsystem_identifier>
+          <class>0x0c0330</class>
+          <acpi_object>\_SB_.PC00.TXHC</acpi_object>
+          <aml_template>5b824e055c2f035f53425f5043303054584843085f53544100085f53545211370a34490043004c0020004e006f0072007400680020005800480043004900200063006f006e00740072006f006c006c00650072000000085f4144520c00000d00</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="memory" min="0x603d190000" max="0x603d19ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+          <capability id="MSI">
+            <count>8</count>
+            <capability id="multiple-message"/>
+            <capability id="64-bit address"/>
+          </capability>
+          <capability id="Vendor-Specific"/>
+          <capability id="Vendor-Specific"/>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.TXHC.RHUB</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305458484352485542085f41445200</aml_template>
+            <device address="0x1">
+              <acpi_object>\_SB_.PC00.TXHC.RHUB.HS01</acpi_object>
+              <aml_template>5b821e5c2f055f53425f50433030545848435248554248533031085f41445201</aml_template>
+            </device>
+            <device address="0x2">
+              <acpi_object>\_SB_.PC00.TXHC.RHUB.SS01</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030545848435248554253533031085f4144520a02</aml_template>
+            </device>
+            <device address="0x3">
+              <acpi_object>\_SB_.PC00.TXHC.RHUB.SS02</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030545848435248554253533032085f4144520a03</aml_template>
+            </device>
+            <device address="0x4">
+              <acpi_object>\_SB_.PC00.TXHC.RHUB.SS03</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030545848435248554253533033085f4144520a04</aml_template>
+            </device>
+            <device address="0x5">
+              <acpi_object>\_SB_.PC00.TXHC.RHUB.SS04</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030545848435248554253533034085f4144520a05</aml_template>
+            </device>
+          </device>
+        </device>
+        <device description="USB controller: Intel Corporation" address="0xd0002" id="0x9a1b">
+          <vendor>0x8086</vendor>
+          <identifier>0x9a1b</identifier>
+          <subsystem_vendor>0x2222</subsystem_vendor>
+          <subsystem_identifier>0x1111</subsystem_identifier>
+          <class>0x0c0340</class>
+          <acpi_object>\_SB_.PC00.TDM0</acpi_object>
+          <aml_template>5b824a055c2f035f53425f5043303054444d30085f53544100085f53545211330a30490043004c002000540042005400200044004d0041003000200063006f006e00740072006f006c006c00650072000000085f4144520c02000d00</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="memory" min="0x603d140000" max="0x603d17ffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x603d1b2000" max="0x603d1b2fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+          <capability id="MSI">
+            <count>1</count>
+            <capability id="64-bit address"/>
+          </capability>
+          <capability id="MSI-X">
+            <table_size>16</table_size>
+            <table_bir>4</table_bir>
+            <table_offset>0xfa20000</table_offset>
+            <pba_bir>0</pba_bir>
+            <pba_offset>0x2000000</pba_offset>
+          </capability>
+        </device>
+        <device description="USB controller: Intel Corporation" address="0xd0003" id="0x9a1d">
+          <vendor>0x8086</vendor>
+          <identifier>0x9a1d</identifier>
+          <subsystem_vendor>0x2222</subsystem_vendor>
+          <subsystem_identifier>0x1111</subsystem_identifier>
+          <class>0x0c0340</class>
+          <acpi_object>\_SB_.PC00.TDM1</acpi_object>
+          <aml_template>5b824a055c2f035f53425f5043303054444d31085f53544100085f53545211330a30490043004c002000540042005400200044004d0041003100200063006f006e00740072006f006c006c00650072000000085f4144520c03000d00</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="memory" min="0x603d100000" max="0x603d13ffff" len="0x40000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x603d1b1000" max="0x603d1b1fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+          <capability id="MSI">
+            <count>1</count>
+            <capability id="64-bit address"/>
+          </capability>
+          <capability id="MSI-X">
+            <table_size>16</table_size>
+            <table_bir>4</table_bir>
+            <table_offset>0xfa20000</table_offset>
+            <pba_bir>0</pba_bir>
+            <pba_offset>0x2000000</pba_offset>
+          </capability>
+        </device>
+        <device address="0x100006">
+          <acpi_object>\_SB_.PC00.THC0</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303054484330085f4144520c06001000</aml_template>
+          <device address="0x1">
+            <acpi_object>\_SB_.PC00.THC0.TLC1</acpi_object>
+            <aml_template>5b82215c2f045f53425f5043303054484330544c4331085f5354410a0f085f41445201</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+          </device>
+          <device address="0x2">
+            <acpi_object>\_SB_.PC00.THC0.TLC2</acpi_object>
+            <aml_template>5b82225c2f045f53425f5043303054484330544c4332085f5354410a0f085f4144520a02</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+          </device>
+          <device address="0x3">
+            <acpi_object>\_SB_.PC00.THC0.TLC3</acpi_object>
+            <aml_template>5b82225c2f045f53425f5043303054484330544c4333085f5354410a0f085f4144520a03</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+          </device>
+        </device>
+        <device address="0x100007">
+          <acpi_object>\_SB_.PC00.THC1</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303054484331085f4144520c07001000</aml_template>
+          <device address="0x1">
+            <acpi_object>\_SB_.PC00.THC1.TLC1</acpi_object>
+            <aml_template>5b82215c2f045f53425f5043303054484331544c4331085f5354410a0f085f41445201</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+          </device>
+          <device address="0x2">
+            <acpi_object>\_SB_.PC00.THC1.TLC2</acpi_object>
+            <aml_template>5b82225c2f045f53425f5043303054484331544c4332085f5354410a0f085f4144520a02</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+          </device>
+          <device address="0x3">
+            <acpi_object>\_SB_.PC00.THC1.TLC3</acpi_object>
+            <aml_template>5b82225c2f045f53425f5043303054484331544c4333085f5354410a0f085f4144520a03</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+          </device>
+        </device>
+        <device address="0x110000">
+          <acpi_object>\_SB_.PC00.UA03</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303055413033085f4144520c00001100</aml_template>
+        </device>
+        <device address="0x110001">
+          <acpi_object>\_SB_.PC00.UA04</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303055413034085f4144520c01001100</aml_template>
+        </device>
+        <device address="0x110002">
+          <acpi_object>\_SB_.PC00.UA05</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303055413035085f4144520c02001100</aml_template>
+        </device>
+        <device address="0x110003">
+          <acpi_object>\_SB_.PC00.UA06</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303055413036085f4144520c03001100</aml_template>
+        </device>
+        <device address="0x120000">
+          <acpi_object>\_SB_.PC00.ISHD</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303049534844085f4144520c00001200</aml_template>
+        </device>
+        <device address="0x140000" id="0xa0ed" description="USB controller: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0ed</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x0c0330</class>
+          <acpi_object>\_SB_.PC00.XHCI</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303058484349085f4144520c00001400</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="memory" min="0x603d180000" max="0x603d18ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+          <capability id="MSI">
+            <count>8</count>
+            <capability id="multiple-message"/>
+            <capability id="64-bit address"/>
+          </capability>
+          <capability id="Vendor-Specific"/>
+          <capability id="Vendor-Specific"/>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.XHCI.RHUB</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305848434952485542085f41445200</aml_template>
+            <device address="0x0">
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.SS01</acpi_object>
+              <aml_template>5b821e5c2f055f53425f50433030584843495248554253533031085f41445200</aml_template>
+            </device>
+            <device address="0x1">
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.HS01</acpi_object>
+              <aml_template>5b821e5c2f055f53425f50433030584843495248554248533031085f41445201</aml_template>
+            </device>
+            <device address="0x2">
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.HS02</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554248533032085f4144520a02</aml_template>
+            </device>
+            <device address="0x3">
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.HS03</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554248533033085f4144520a03</aml_template>
+            </device>
+            <device address="0x4">
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.HS04</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554248533034085f4144520a04</aml_template>
+              <device address="0x1">
+                <acpi_object>\_SB_.PC00.XHCI.RHUB.HS04.PRT1</acpi_object>
+                <aml_template>5b82225c2f065f53425f5043303058484349524855424853303450525431085f41445201</aml_template>
+              </device>
+              <device address="0x2">
+                <acpi_object>\_SB_.PC00.XHCI.RHUB.HS04.PRT2</acpi_object>
+                <aml_template>5b82235c2f065f53425f5043303058484349524855424853303450525432085f4144520a02</aml_template>
+              </device>
+            </device>
+            <device address="0x5">
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.HS05</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554248533035085f4144520a05</aml_template>
+            </device>
+            <device address="0x6">
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.HS06</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554248533036085f4144520a06</aml_template>
+            </device>
+            <device address="0x7">
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.HS07</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554248533037085f4144520a07</aml_template>
+            </device>
+            <device address="0x8">
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.HS08</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554248533038085f4144520a08</aml_template>
+            </device>
+            <device>
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.SS02</acpi_object>
+              <aml_template>5b821e5c2f055f53425f50433030584843495248554253533032085f41445201</aml_template>
+            </device>
+            <device>
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.SS03</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554253533033085f4144520a02</aml_template>
+            </device>
+            <device>
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.SS04</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554253533034085f4144520a03</aml_template>
+            </device>
+            <device>
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.SS05</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554253533035085f4144520a04</aml_template>
+            </device>
+            <device>
+              <acpi_object>\_SB_.PC00.XHCI.RHUB.SS06</acpi_object>
+              <aml_template>5b821f5c2f055f53425f50433030584843495248554253533036085f4144520a05</aml_template>
+            </device>
+          </device>
+        </device>
+        <device description="ICL PCH XDCI controller" address="0x140001">
+          <acpi_object>\_SB_.PC00.XDCI</acpi_object>
+          <aml_template>5b8244055c2f035f53425f5043303058444349085f53545211330a30490043004c00200050004300480020005800440043004900200063006f006e00740072006f006c006c00650072000000085f4144520c01001400</aml_template>
+        </device>
+        <device address="0x140002" id="0xa0ef" description="RAM memory: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0ef</identifier>
+          <subsystem_vendor>0x0000</subsystem_vendor>
+          <subsystem_identifier>0x0000</subsystem_identifier>
+          <class>0x050000</class>
+          <resource type="memory" min="0x603d1a8000" max="0x603d1abfff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x603d1b0000" max="0x603d1b0fff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+        </device>
+        <device address="0x140003" id="0xa0f0" description="Network controller: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0f0</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x0074</subsystem_identifier>
+          <class>0x028000</class>
+          <acpi_object>\_SB_.PC00.CNVW</acpi_object>
+          <aml_template>5b821a5c2f035f53425f50433030434e5657085f4144520c03001400</aml_template>
+          <resource type="interrupt_pin" pin="INTD#" source="19"/>
+          <resource type="memory" min="0x603d1a4000" max="0x603d1a7fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+          <capability id="MSI">
+            <count>1</count>
+            <capability id="64-bit address"/>
+          </capability>
+          <capability id="PCI Express"/>
+          <capability id="MSI-X">
+            <table_size>16</table_size>
+            <table_bir>1</table_bir>
+            <table_offset>0x10000000</table_offset>
+            <pba_bir>1</pba_bir>
+            <pba_offset>0x0</pba_offset>
+          </capability>
+          <capability id="LTR"/>
+          <capability id="Vendor-Specific Extended"/>
+        </device>
+        <device address="0x150000" id="0xa0e8" description="Serial bus controller: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0e8</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x0c8000</class>
+          <resource type="interrupt_pin" pin="INTA#" source="27"/>
+          <resource type="memory" min="0x4017000000" max="0x4017000fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+          <capability id="Vendor-Specific"/>
+        </device>
+        <device address="0x150001" id="0xa0e9" description="Serial bus controller: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0e9</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x0c8000</class>
+          <resource type="interrupt_pin" pin="INTB#" source="40"/>
+          <resource type="memory" min="0x4017001000" max="0x4017001fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+          <capability id="Vendor-Specific"/>
+        </device>
+        <device address="0x160000" id="0xa0e0" description="Communication controller: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0e0</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x078000</class>
+          <acpi_object>\_SB_.PC00.HECI</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303048454349085f4144520c00001600</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="memory" min="0x603d1ad000" max="0x603d1adfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+          <capability id="MSI">
+            <count>1</count>
+            <capability id="64-bit address"/>
+          </capability>
+          <capability id="Vendor-Specific"/>
+        </device>
+        <device address="0x160004">
+          <acpi_object>\_SB_.PC00.HEC3</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303048454333085f4144520c04001600</aml_template>
+        </device>
+        <device address="0x170000" id="0xa0d3" description="SATA controller: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0d3</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x010601</class>
+          <acpi_object>\_SB_.PC00.SAT0</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303053415430085f4144520c00001700</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="io_port" min="0x3060" max="0x307f" len="0x20" id="bar4"/>
+          <resource type="io_port" min="0x3080" max="0x3083" len="0x4" id="bar3"/>
+          <resource type="io_port" min="0x3090" max="0x3097" len="0x8" id="bar2"/>
+          <resource type="memory" min="0x6a500000" max="0x6a501fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
+          <resource type="memory" min="0x6a502000" max="0x6a5027ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
+          <resource type="memory" min="0x6a503000" max="0x6a5030ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
+          <capability id="MSI">
+            <count>1</count>
+          </capability>
+          <capability id="Power Management"/>
+          <capability id="Reserved (0x12)"/>
+          <device address="0xffff">
+            <acpi_object>\_SB_.PC00.SAT0.PRT0</acpi_object>
+            <aml_template>5b821c5c2f045f53425f504330305341543050525430085f4144520bffff</aml_template>
+          </device>
+          <device address="0x1ffff">
+            <acpi_object>\_SB_.PC00.SAT0.PRT1</acpi_object>
+            <aml_template>5b821e5c2f045f53425f504330305341543050525431085f4144520cffff0100</aml_template>
+          </device>
+          <device address="0x2ffff">
+            <acpi_object>\_SB_.PC00.SAT0.PRT2</acpi_object>
+            <aml_template>5b821e5c2f045f53425f504330305341543050525432085f4144520cffff0200</aml_template>
+          </device>
+          <device address="0x3ffff">
+            <acpi_object>\_SB_.PC00.SAT0.PRT3</acpi_object>
+            <aml_template>5b821e5c2f045f53425f504330305341543050525433085f4144520cffff0300</aml_template>
+          </device>
+          <device address="0x4ffff">
+            <acpi_object>\_SB_.PC00.SAT0.PRT4</acpi_object>
+            <aml_template>5b821e5c2f045f53425f504330305341543050525434085f4144520cffff0400</aml_template>
+          </device>
+          <device address="0x5ffff">
+            <acpi_object>\_SB_.PC00.SAT0.PRT5</acpi_object>
+            <aml_template>5b821e5c2f045f53425f504330305341543050525435085f4144520cffff0500</aml_template>
+          </device>
+          <device address="0x80ffff">
+            <acpi_object>\_SB_.PC00.SAT0.VOL0</acpi_object>
+            <aml_template>5b821e5c2f045f53425f5043303053415430564f4c30085f4144520cffff8000</aml_template>
+          </device>
+          <device address="0x81ffff">
+            <acpi_object>\_SB_.PC00.SAT0.VOL1</acpi_object>
+            <aml_template>5b821e5c2f045f53425f5043303053415430564f4c31085f4144520cffff8100</aml_template>
+          </device>
+          <device address="0x82ffff">
+            <acpi_object>\_SB_.PC00.SAT0.VOL2</acpi_object>
+            <aml_template>5b821e5c2f045f53425f5043303053415430564f4c32085f4144520cffff8200</aml_template>
+          </device>
+          <device address="0xc1ffff">
+            <acpi_object>\_SB_.PC00.SAT0.NVM1</acpi_object>
+            <aml_template>5b821e5c2f045f53425f50433030534154304e564d31085f4144520cffffc100</aml_template>
+          </device>
+          <device address="0xc2ffff">
+            <acpi_object>\_SB_.PC00.SAT0.NVM2</acpi_object>
+            <aml_template>5b821e5c2f045f53425f50433030534154304e564d32085f4144520cffffc200</aml_template>
+          </device>
+          <device address="0xc3ffff">
+            <acpi_object>\_SB_.PC00.SAT0.NVM3</acpi_object>
+            <aml_template>5b821e5c2f045f53425f50433030534154304e564d33085f4144520cffffc300</aml_template>
+          </device>
+        </device>
+        <device address="0x190002">
+          <acpi_object>\_SB_.PC00.UA02</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303055413032085f4144520c02001900</aml_template>
+        </device>
+        <device address="0x1b0000">
+          <acpi_object>\_SB_.PC00.RP17</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503137085f4144520c00001b00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="16"/>
+              <mapping pin="INTB#" source="17"/>
+              <mapping pin="INTC#" source="18"/>
+              <mapping pin="INTD#" source="19"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP17.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313750585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1b0001">
+          <acpi_object>\_SB_.PC00.RP18</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503138085f4144520c01001b00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="17"/>
+              <mapping pin="INTB#" source="18"/>
+              <mapping pin="INTC#" source="19"/>
+              <mapping pin="INTD#" source="16"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP18.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313850585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1b0002">
+          <acpi_object>\_SB_.PC00.RP19</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503139085f4144520c02001b00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="18"/>
+              <mapping pin="INTB#" source="19"/>
+              <mapping pin="INTC#" source="16"/>
+              <mapping pin="INTD#" source="17"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP19.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313950585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1b0003">
+          <acpi_object>\_SB_.PC00.RP20</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503230085f4144520c03001b00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="19"/>
+              <mapping pin="INTB#" source="16"/>
+              <mapping pin="INTC#" source="17"/>
+              <mapping pin="INTD#" source="18"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP20.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250323050585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1b0004">
+          <acpi_object>\_SB_.PC00.RP21</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503231085f4144520c04001b00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="16"/>
+              <mapping pin="INTB#" source="17"/>
+              <mapping pin="INTC#" source="18"/>
+              <mapping pin="INTD#" source="19"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP21.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250323150585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1b0005">
+          <acpi_object>\_SB_.PC00.RP22</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503232085f4144520c05001b00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="17"/>
+              <mapping pin="INTB#" source="18"/>
+              <mapping pin="INTC#" source="19"/>
+              <mapping pin="INTD#" source="16"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP22.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250323250585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1b0006">
+          <acpi_object>\_SB_.PC00.RP23</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503233085f4144520c06001b00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="18"/>
+              <mapping pin="INTB#" source="19"/>
+              <mapping pin="INTC#" source="16"/>
+              <mapping pin="INTD#" source="17"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP23.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250323350585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1b0007">
+          <acpi_object>\_SB_.PC00.RP24</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503234085f4144520c07001b00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="19"/>
+              <mapping pin="INTB#" source="16"/>
+              <mapping pin="INTC#" source="17"/>
+              <mapping pin="INTD#" source="18"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP24.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250323450585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1c0000">
+          <acpi_object>\_SB_.PC00.RP01</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503031085f4144520c00001c00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="16"/>
+              <mapping pin="INTB#" source="17"/>
+              <mapping pin="INTC#" source="18"/>
+              <mapping pin="INTD#" source="19"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP01.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250303150585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1c0001">
+          <acpi_object>\_SB_.PC00.RP02</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503032085f4144520c01001c00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="17"/>
+              <mapping pin="INTB#" source="18"/>
+              <mapping pin="INTC#" source="19"/>
+              <mapping pin="INTD#" source="16"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP02.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250303250585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1c0002">
+          <acpi_object>\_SB_.PC00.RP03</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503033085f4144520c02001c00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="18"/>
+              <mapping pin="INTB#" source="19"/>
+              <mapping pin="INTC#" source="16"/>
+              <mapping pin="INTD#" source="17"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP03.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250303350585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1c0003">
+          <acpi_object>\_SB_.PC00.RP04</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503034085f4144520c03001c00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="19"/>
+              <mapping pin="INTB#" source="16"/>
+              <mapping pin="INTC#" source="17"/>
+              <mapping pin="INTD#" source="18"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP04.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250303450585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1c0004">
+          <acpi_object>\_SB_.PC00.RP05</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503035085f4144520c04001c00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="16"/>
+              <mapping pin="INTB#" source="17"/>
+              <mapping pin="INTC#" source="18"/>
+              <mapping pin="INTD#" source="19"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP05.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250303550585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1c0005">
+          <acpi_object>\_SB_.PC00.RP06</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503036085f4144520c05001c00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="17"/>
+              <mapping pin="INTB#" source="18"/>
+              <mapping pin="INTC#" source="19"/>
+              <mapping pin="INTD#" source="16"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP06.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250303650585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1c0006">
+          <acpi_object>\_SB_.PC00.RP07</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503037085f4144520c06001c00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="18"/>
+              <mapping pin="INTB#" source="19"/>
+              <mapping pin="INTC#" source="16"/>
+              <mapping pin="INTD#" source="17"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP07.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250303750585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1c0007">
+          <acpi_object>\_SB_.PC00.RP08</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503038085f4144520c07001c00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="19"/>
+              <mapping pin="INTB#" source="16"/>
+              <mapping pin="INTC#" source="17"/>
+              <mapping pin="INTD#" source="18"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP08.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250303850585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1d0000" id="0xa0b1" description="PCI bridge: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0b1</identifier>
+          <class>0x060400</class>
+          <acpi_object>\_SB_.PC00.RP10</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503130085f4144520c00001d00</aml_template>
+          <resource type="interrupt_pin" pin="INTB#" source="17"/>
+          <resource type="memory" min="0x6a200000" max="0x6a3fffff" len="0x200000"/>
+          <capability id="PCI Express"/>
+          <capability id="MSI">
+            <count>1</count>
+          </capability>
+          <capability id="Subsystem ID and Subsystem Vendor ID"/>
+          <capability id="Power Management"/>
+          <capability id="Advanced Error Reporting"/>
+          <capability id="ACS"/>
+          <capability id="TPM"/>
+          <capability id="L1 PM Substates"/>
+          <capability id="Secondary PCI Express"/>
+          <capability id="DPC"/>
+          <bus type="pci" address="0x58">
+            <interrupt_pin_routing>
+              <routing address="0xffff">
+                <mapping pin="INTA#" source="17"/>
+                <mapping pin="INTB#" source="18"/>
+                <mapping pin="INTC#" source="19"/>
+                <mapping pin="INTD#" source="16"/>
+              </routing>
+            </interrupt_pin_routing>
+            <device address="0x0" id="0x15f2" description="Ethernet controller: Intel Corporation">
+              <vendor>0x8086</vendor>
+              <identifier>0x15f2</identifier>
+              <subsystem_vendor>0x8086</subsystem_vendor>
+              <subsystem_identifier>0x3002</subsystem_identifier>
+              <class>0x020000</class>
+              <resource type="interrupt_pin" pin="INTA#" source="17"/>
+              <resource type="memory" min="0x6a200000" max="0x6a2fffff" len="0x100000" id="bar0" width="32" prefetchable="0"/>
+              <resource type="memory" min="0x6a300000" max="0x6a303fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
+              <capability id="Power Management"/>
+              <capability id="MSI">
+                <count>1</count>
+                <capability id="64-bit address"/>
+                <capability id="per-vector masking"/>
+              </capability>
+              <capability id="MSI-X">
+                <table_size>5</table_size>
+                <table_bir>7</table_bir>
+                <table_offset>0x30000</table_offset>
+                <pba_bir>1</pba_bir>
+                <pba_offset>0x0</pba_offset>
+              </capability>
+              <capability id="PCI Express"/>
+              <capability id="Advanced Error Reporting"/>
+              <capability id="Device Serial Number"/>
+              <capability id="LTR"/>
+              <capability id="TPM"/>
+              <capability id="L1 PM Substates"/>
+            </device>
+          </bus>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP10.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313050585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1d0001">
+          <acpi_object>\_SB_.PC00.RP09</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503039085f4144520c01001d00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="16"/>
+              <mapping pin="INTB#" source="17"/>
+              <mapping pin="INTC#" source="18"/>
+              <mapping pin="INTD#" source="19"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP09.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250303950585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1d0002">
+          <acpi_object>\_SB_.PC00.RP11</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503131085f4144520c02001d00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="18"/>
+              <mapping pin="INTB#" source="19"/>
+              <mapping pin="INTC#" source="16"/>
+              <mapping pin="INTD#" source="17"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP11.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313150585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1d0003">
+          <acpi_object>\_SB_.PC00.RP12</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503132085f4144520c03001d00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="19"/>
+              <mapping pin="INTB#" source="16"/>
+              <mapping pin="INTC#" source="17"/>
+              <mapping pin="INTD#" source="18"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP12.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313250585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1d0004">
+          <acpi_object>\_SB_.PC00.RP13</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503133085f4144520c04001d00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="16"/>
+              <mapping pin="INTB#" source="17"/>
+              <mapping pin="INTC#" source="18"/>
+              <mapping pin="INTD#" source="19"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP13.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313350585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1d0005">
+          <acpi_object>\_SB_.PC00.RP14</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503134085f4144520c05001d00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="17"/>
+              <mapping pin="INTB#" source="18"/>
+              <mapping pin="INTC#" source="19"/>
+              <mapping pin="INTD#" source="16"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP14.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313450585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1d0006">
+          <acpi_object>\_SB_.PC00.RP15</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503135085f4144520c06001d00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="18"/>
+              <mapping pin="INTB#" source="19"/>
+              <mapping pin="INTC#" source="16"/>
+              <mapping pin="INTD#" source="17"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP15.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313550585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1d0007">
+          <acpi_object>\_SB_.PC00.RP16</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303052503136085f4144520c07001d00</aml_template>
+          <interrupt_pin_routing>
+            <routing address="0xffff">
+              <mapping pin="INTA#" source="19"/>
+              <mapping pin="INTB#" source="16"/>
+              <mapping pin="INTC#" source="17"/>
+              <mapping pin="INTD#" source="18"/>
+            </routing>
+          </interrupt_pin_routing>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.RP16.PXSX</acpi_object>
+            <aml_template>5b821a5c2f045f53425f504330305250313650585358085f41445200</aml_template>
+          </device>
+        </device>
+        <device address="0x1e0000">
+          <acpi_object>\_SB_.PC00.UA00</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303055413030085f4144520c00001e00</aml_template>
+          <dependency type="provides resources to">\_SB_.PC00.UA00.BTH0</dependency>
+          <device id="INT33E1">
+            <acpi_object>\_SB_.PC00.UA00.BTH0</acpi_object>
+            <aml_template>5b8246085c2f045f53425f504330305541303042544830085f53544100085f4849440d494e543333453100085f4352531147050a538e2200010003023500010a0000c201002000200000c05c5f53422e504330302e55413030008c2000010101000200000000000017000019002300000000005c5f53422e47504930008906001701000000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGPIOConnection" id="res1"/>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res2" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.UA00</dependency>
+            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
+          </device>
+        </device>
+        <device address="0x1e0001">
+          <acpi_object>\_SB_.PC00.UA01</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303055413031085f4144520c01001e00</aml_template>
+        </device>
+        <device address="0x1f0000" id="0xa082" description="ISA bridge: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa082</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x060100</class>
+          <acpi_object>\_SB_.PC00.LPCB</acpi_object>
+          <aml_template>5b821a5c2f035f53425f504330304c504342085f4144520c00001f00</aml_template>
+          <device id="INTC1028">
+            <acpi_object>\_SB_.PC00.LPCB.CWDT</acpi_object>
+            <compatible_id>PNP0C02</compatible_id>
+            <aml_template>5b823d5c2f045f53425f504330304c50434243574454085f5354410a0f085f4849440d494e54433130323800085f435253110d0a0a47010000000004047900</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x4"/>
+          </device>
+          <device id="PNP0103">
+            <acpi_object>\_SB_.PC00.LPCB.HPET</acpi_object>
+            <acpi_uid>0</acpi_uid>
+            <aml_template>5b8243045c2f045f53425f504330304c50434248504554085f5354410a0f085f4849440c41d00103085f55494400085f43525311110a0e860900010000d0fe000400007900</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+            <resource id="res0" type="memory" min="0xfed00000" max="0xfed003ff" len="0x400"/>
+          </device>
+          <device id="PNP0C09">
+            <acpi_object>\_SB_.PC00.LPCB.H_EC</acpi_object>
+            <acpi_uid>1</acpi_uid>
+            <aml_template>5b8247045c2f045f53425f504330304c504342485f4543085f5354410a0b085f4849440c41d00c09085f55494401085f43525311150a12470162006200000147016600660000017900</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+            <resource id="res0" type="io_port" min="0x62" max="0x62" len="0x1"/>
+            <resource id="res1" type="io_port" min="0x66" max="0x66" len="0x1"/>
+            <device id="PNP0C0A">
+              <acpi_object>\_SB_.PC00.LPCB.H_EC.BAT0</acpi_object>
+              <acpi_uid>0</acpi_uid>
+              <aml_template>5b822e5c2f055f53425f504330304c504342485f454342415430085f53544100085f4849440c41d00c0a085f55494400</aml_template>
+              <status>
+                <present>n</present>
+                <enabled>n</enabled>
+                <functioning>n</functioning>
+              </status>
+            </device>
+            <device id="PNP0C0A">
+              <acpi_object>\_SB_.PC00.LPCB.H_EC.BAT1</acpi_object>
+              <acpi_uid>1</acpi_uid>
+              <aml_template>5b822e5c2f055f53425f504330304c504342485f454342415431085f53544100085f4849440c41d00c0a085f55494401</aml_template>
+              <status>
+                <present>n</present>
+                <enabled>n</enabled>
+                <functioning>n</functioning>
+              </status>
+            </device>
+            <device id="PNP0C0A">
+              <acpi_object>\_SB_.PC00.LPCB.H_EC.BAT2</acpi_object>
+              <acpi_uid>2</acpi_uid>
+              <aml_template>5b822f5c2f055f53425f504330304c504342485f454342415432085f53544100085f4849440c41d00c0a085f5549440a02</aml_template>
+              <status>
+                <present>n</present>
+                <enabled>n</enabled>
+                <functioning>n</functioning>
+              </status>
+            </device>
+          </device>
+          <device id="PNP0000">
+            <acpi_object>\_SB_.PC00.LPCB.IPIC</acpi_object>
+            <aml_template>5b82440b5c2f045f53425f504330304c50434249504943085f4849440b41d0085f4352531141090a8d47012000200001024701240024000102470128002800010247012c002c00010247013000300001024701340034000102470138003800010247013c003c0001024701a000a00001024701a400a40001024701a800a80001024701ac00ac0001024701b000b00001024701b400b40001024701b800b80001024701bc00bc0001024701d004d00401022204007900</aml_template>
+            <resource id="res0" type="io_port" min="0x20" max="0x20" len="0x2"/>
+            <resource id="res1" type="io_port" min="0x24" max="0x24" len="0x2"/>
+            <resource id="res2" type="io_port" min="0x28" max="0x28" len="0x2"/>
+            <resource id="res3" type="io_port" min="0x2c" max="0x2c" len="0x2"/>
+            <resource id="res4" type="io_port" min="0x30" max="0x30" len="0x2"/>
+            <resource id="res5" type="io_port" min="0x34" max="0x34" len="0x2"/>
+            <resource id="res6" type="io_port" min="0x38" max="0x38" len="0x2"/>
+            <resource id="res7" type="io_port" min="0x3c" max="0x3c" len="0x2"/>
+            <resource id="res8" type="io_port" min="0xa0" max="0xa0" len="0x2"/>
+            <resource id="res9" type="io_port" min="0xa4" max="0xa4" len="0x2"/>
+            <resource id="res10" type="io_port" min="0xa8" max="0xa8" len="0x2"/>
+            <resource id="res11" type="io_port" min="0xac" max="0xac" len="0x2"/>
+            <resource id="res12" type="io_port" min="0xb0" max="0xb0" len="0x2"/>
+            <resource id="res13" type="io_port" min="0xb4" max="0xb4" len="0x2"/>
+            <resource id="res14" type="io_port" min="0xb8" max="0xb8" len="0x2"/>
+            <resource id="res15" type="io_port" min="0xbc" max="0xbc" len="0x2"/>
+            <resource id="res16" type="io_port" min="0x4d0" max="0x4d0" len="0x2"/>
+            <resource id="res17" type="irq" int="2"/>
+          </device>
+          <device id="PNP0C02">
+            <acpi_object>\_SB_.PC00.LPCB.LDRC</acpi_object>
+            <acpi_uid>2</acpi_uid>
+            <aml_template>5b8242095c2f045f53425f504330304c5043424c445243085f4849440c41d00c02085f5549440a02085f4352531146060a6247012e002e00010247014e004e00010247016100610001014701630063000101470165006500010147016700670001014701700070000101470180008000010147019200920001014701b200b2000102470180068006012047014e164e1601027900</aml_template>
+            <resource id="res0" type="io_port" min="0x2e" max="0x2e" len="0x2"/>
+            <resource id="res1" type="io_port" min="0x4e" max="0x4e" len="0x2"/>
+            <resource id="res2" type="io_port" min="0x61" max="0x61" len="0x1"/>
+            <resource id="res3" type="io_port" min="0x63" max="0x63" len="0x1"/>
+            <resource id="res4" type="io_port" min="0x65" max="0x65" len="0x1"/>
+            <resource id="res5" type="io_port" min="0x67" max="0x67" len="0x1"/>
+            <resource id="res6" type="io_port" min="0x70" max="0x70" len="0x1"/>
+            <resource id="res7" type="io_port" min="0x80" max="0x80" len="0x1"/>
+            <resource id="res8" type="io_port" min="0x92" max="0x92" len="0x1"/>
+            <resource id="res9" type="io_port" min="0xb2" max="0xb2" len="0x2"/>
+            <resource id="res10" type="io_port" min="0x680" max="0x680" len="0x20"/>
+            <resource id="res11" type="io_port" min="0x164e" max="0x164e" len="0x2"/>
+          </device>
+          <device id="PNP0C04">
+            <acpi_object>\_SB_.PC00.LPCB.MATH</acpi_object>
+            <aml_template>5b823a5c2f045f53425f504330304c5043424d415448085f53544100085f4849440c41d00c04085f43525311100a0d4701f000f00001012200207900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource id="res0" type="io_port" min="0xf0" max="0xf0" len="0x1"/>
+            <resource id="res1" type="irq" int="13"/>
+          </device>
+          <device id="PNP0B00">
+            <acpi_object>\_SB_.PC00.LPCB.RTC_</acpi_object>
+            <aml_template>5b823a5c2f045f53425f504330304c5043425254435f085f53544100085f4849440c41d00b00085f43525311100a0d47017000700001082200017900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource id="res0" type="io_port" min="0x70" max="0x70" len="0x8"/>
+            <resource id="res1" type="irq" int="8"/>
+          </device>
+          <device id="PNP0C02">
+            <acpi_object>\_SB_.PC00.LPCB.SIO1</acpi_object>
+            <acpi_uid>0</acpi_uid>
+            <aml_template>5b8248065c2f045f53425f504330304c50434253494f31085f4849440c41d00c02085f55494400085f435253113d0a3a47010000000000004701000a000a00104701100a100a00204701300a300a00204701500a500a00204701700a700a00104701800a800a00107900</aml_template>
+            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x0"/>
+            <resource id="res1" type="io_port" min="0xa00" max="0xa00" len="0x10"/>
+            <resource id="res2" type="io_port" min="0xa10" max="0xa10" len="0x20"/>
+            <resource id="res3" type="io_port" min="0xa30" max="0xa30" len="0x20"/>
+            <resource id="res4" type="io_port" min="0xa50" max="0xa50" len="0x20"/>
+            <resource id="res5" type="io_port" min="0xa70" max="0xa70" len="0x10"/>
+            <resource id="res6" type="io_port" min="0xa80" max="0xa80" len="0x10"/>
+          </device>
+          <device id="PNP0C08">
+            <acpi_object>\_SB_.PC00.LPCB.SSMF</acpi_object>
+            <acpi_uid>1</acpi_uid>
+            <aml_template>5b822a5c2f045f53425f504330304c50434253534d46085f53544100085f4849440c41d00c08085f55494401</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+          </device>
+          <device id="PNP0100">
+            <acpi_object>\_SB_.PC00.LPCB.TIMR</acpi_object>
+            <aml_template>5b823c5c2f045f53425f504330304c50434254494d52085f4849440c41d00100085f43525311180a15470140004000010447015000500010042201007900</aml_template>
+            <resource id="res0" type="io_port" min="0x40" max="0x40" len="0x4"/>
+            <resource id="res1" type="io_port" min="0x50" max="0x50" len="0x4"/>
+            <resource id="res2" type="irq" int="0"/>
+          </device>
+          <device id="PNP0501">
+            <acpi_object>\_SB_.PC00.LPCB.UAR1</acpi_object>
+            <acpi_uid>0</acpi_uid>
+            <aml_template>5b8244045c2f045f53425f504330304c50434255415231085f53544100085f4849440c41d00501085f55494400085f43525311130a1047010000000001082200002a00007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="SmallResourceItemDMA" id="res2"/>
+            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x8"/>
+            <resource id="res1" type="irq" int=""/>
+          </device>
+        </device>
+        <device address="0x1f0003" id="0xa0c8" description="Audio device: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0c8</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x040300</class>
+          <acpi_object>\_SB_.PC00.HDAS</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303048444153085f4144520c03001f00</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="memory" min="0x603d000000" max="0x603d0fffff" len="0x100000" id="bar4" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x603d1a0000" max="0x603d1a3fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+          <capability id="Power Management"/>
+          <capability id="Vendor-Specific"/>
+          <capability id="MSI">
+            <count>1</count>
+            <capability id="64-bit address"/>
+          </capability>
+          <device address="0x0">
+            <acpi_object>\_SB_.PC00.HDAS.IDA_</acpi_object>
+            <aml_template>5b821a5c2f045f53425f50433030484441534944415f085f41445200</aml_template>
+          </device>
+          <device address="0x40000000">
+            <acpi_object>\_SB_.PC00.HDAS.SNDW</acpi_object>
+            <compatible_id>PRP00001</compatible_id>
+            <compatible_id>PNP0A05</compatible_id>
+            <aml_template>5b82255c2f045f53425f5043303048444153534e4457085f5354410a0b085f4144520c00000040</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+            <device address="0x10025d070000">
+              <acpi_object>\_SB_.PC00.HDAS.SNDW.SWD4</acpi_object>
+              <aml_template>5b82265c2f055f53425f5043303048444153534e445753574434085f4144520e0000075d02100000</aml_template>
+            </device>
+            <device address="0x10025d070100">
+              <acpi_object>\_SB_.PC00.HDAS.SNDW.SWD0</acpi_object>
+              <aml_template>5b82265c2f055f53425f5043303048444153534e445753574430085f4144520e0001075d02100000</aml_template>
+            </device>
+            <device address="0x110025d070000">
+              <acpi_object>\_SB_.PC00.HDAS.SNDW.SWD5</acpi_object>
+              <aml_template>5b82265c2f055f53425f5043303048444153534e445753574435085f4144520e0000075d02100100</aml_template>
+            </device>
+            <device address="0x110025d070100">
+              <acpi_object>\_SB_.PC00.HDAS.SNDW.SWD1</acpi_object>
+              <aml_template>5b82265c2f055f53425f5043303048444153534e445753574431085f4144520e0001075d02100100</aml_template>
+            </device>
+            <device address="0x210025d070000">
+              <acpi_object>\_SB_.PC00.HDAS.SNDW.SWD6</acpi_object>
+              <aml_template>5b82265c2f055f53425f5043303048444153534e445753574436085f4144520e0000075d02100200</aml_template>
+            </device>
+            <device address="0x210025d070100">
+              <acpi_object>\_SB_.PC00.HDAS.SNDW.SWD2</acpi_object>
+              <aml_template>5b82265c2f055f53425f5043303048444153534e445753574432085f4144520e0001075d02100200</aml_template>
+            </device>
+            <device address="0x310025d070000">
+              <acpi_object>\_SB_.PC00.HDAS.SNDW.SWD7</acpi_object>
+              <aml_template>5b82265c2f055f53425f5043303048444153534e445753574437085f4144520e0000075d02100300</aml_template>
+            </device>
+            <device address="0x310025d070100">
+              <acpi_object>\_SB_.PC00.HDAS.SNDW.SWD3</acpi_object>
+              <aml_template>5b82265c2f055f53425f5043303048444153534e445753574433085f4144520e0001075d02100300</aml_template>
+            </device>
+          </device>
+          <device address="0x50000000">
+            <acpi_object>\_SB_.PC00.HDAS.UAOL</acpi_object>
+            <compatible_id>PRP00001</compatible_id>
+            <compatible_id>PNP0A05</compatible_id>
+            <aml_template>5b82255c2f045f53425f504330304844415355414f4c085f5354410a0b085f4144520c00000050</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+          </device>
+        </device>
+        <device address="0x1f0004" id="0xa0a3" description="SMBus: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0a3</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x0c0500</class>
+          <acpi_object>\_SB_.PC00.SBUS</acpi_object>
+          <aml_template>5b821a5c2f035f53425f5043303053425553085f4144520c04001f00</aml_template>
+          <resource type="interrupt_pin" pin="INTA#" source="16"/>
+          <resource type="io_port" min="0xefa0" max="0xefbf" len="0x20" id="bar4"/>
+          <resource type="memory" min="0x603d1ac000" max="0x603d1ac0ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
+        </device>
+        <device address="0x1f0005" id="0xa0a4" description="Serial bus controller: Intel Corporation">
+          <vendor>0x8086</vendor>
+          <identifier>0xa0a4</identifier>
+          <subsystem_vendor>0x8086</subsystem_vendor>
+          <subsystem_identifier>0x3002</subsystem_identifier>
+          <class>0x0c8000</class>
+          <resource type="memory" min="0x4f800000" max="0x4f800fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+        </device>
+        <device address="0x1f0006">
+          <acpi_object>\_SB_.PC00.GLAN</acpi_object>
+          <aml_template>5b821a5c2f035f53425f50433030474c414e085f4144520c06001f00</aml_template>
+        </device>
+        <device address="0x1f0007">
+          <acpi_object>\_SB_.PC00.PTHT</acpi_object>
+          <aml_template>5b82205c2f035f53425f5043303050544854085f53544100085f4144520c07001f00</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.CLP1</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>1</acpi_uid>
+          <aml_template>5b824d055c2f035f53425f50433030434c5031085f53544100085f4849440d494e543334373200085f55494401085f41445200085f43525311260a238e1e00010001020000010600801a060049005c5f53422e504330302e49324333007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C3</dependency>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.CLP2</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>2</acpi_uid>
+          <aml_template>5b824e055c2f035f53425f50433030434c5032085f53544100085f4849440d494e543334373200085f5549440a02085f41445200085f43525311260a238e1e00010001020000010600801a060049005c5f53422e504330302e49324333007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C3</dependency>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.CLP3</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>3</acpi_uid>
+          <aml_template>5b824e055c2f035f53425f50433030434c5033085f53544100085f4849440d494e543334373200085f5549440a03085f41445200085f43525311260a238e1e00010001020000010600801a060049005c5f53422e504330302e49324333007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C3</dependency>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.CLP4</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>4</acpi_uid>
+          <aml_template>5b824e055c2f035f53425f50433030434c5034085f53544100085f4849440d494e543334373200085f5549440a04085f41445200085f43525311260a238e1e00010001020000010600801a060049005c5f53422e504330302e49324333007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C3</dependency>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.CLP5</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>5</acpi_uid>
+          <aml_template>5b824e055c2f035f53425f50433030434c5035085f53544100085f4849440d494e543334373200085f5549440a05085f41445200085f43525311260a238e1e00010001020000010600801a060049005c5f53422e504330302e49324333007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C3</dependency>
+        </device>
+        <device id="ABCD0000">
+          <acpi_object>\_SB_.PC00.DOCK</acpi_object>
+          <compatible_id>PNP0C15</compatible_id>
+          <acpi_uid>2</acpi_uid>
+          <aml_template>5b822c5c2f035f53425f50433030444f434b085f53544100085f4849440d414243443030303000085f5549440a02</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.DSC0</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>0</acpi_uid>
+          <aml_template>5b823b5c2f035f53425f5043303044534330085f53544100085f4849440d494e543334373200085f55494400085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.DSC1</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>1</acpi_uid>
+          <aml_template>5b823b5c2f035f53425f5043303044534331085f53544100085f4849440d494e543334373200085f55494401085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.DSC2</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>2</acpi_uid>
+          <aml_template>5b823c5c2f035f53425f5043303044534332085f53544100085f4849440d494e543334373200085f5549440a02085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.DSC3</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>3</acpi_uid>
+          <aml_template>5b823c5c2f035f53425f5043303044534333085f53544100085f4849440d494e543334373200085f5549440a03085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.DSC4</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>4</acpi_uid>
+          <aml_template>5b823c5c2f035f53425f5043303044534334085f53544100085f4849440d494e543334373200085f5549440a04085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT3472">
+          <acpi_object>\_SB_.PC00.DSC5</acpi_object>
+          <compatible_id>INT3472</compatible_id>
+          <acpi_uid>5</acpi_uid>
+          <aml_template>5b823c5c2f035f53425f5043303044534335085f53544100085f4849440d494e543334373200085f5549440a05085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="PWRC0000">
+          <acpi_object>\_SB_.PC00.FLM0</acpi_object>
+          <compatible_id>PWRC0000</compatible_id>
+          <acpi_uid>0</acpi_uid>
+          <aml_template>5b8242085c2f035f53425f50433030464c4d30085f53544100085f4849440d505752433030303000085f55494400085f41445200085f435253114a040a468c2000010101000200000000000017000019002300000000005c5f53422e47504930008e1e00010001020000010600801a060067005c5f53422e504330302e49324331007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGPIOConnection" id="res0"/>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C1</dependency>
+          <dependency type="consumes resources from">\_SB_.GPI0</dependency>
+        </device>
+        <device id="PWRC0000">
+          <acpi_object>\_SB_.PC00.FLM1</acpi_object>
+          <compatible_id>PWRC0000</compatible_id>
+          <acpi_uid>0</acpi_uid>
+          <aml_template>5b8242085c2f035f53425f50433030464c4d31085f53544100085f4849440d505752433030303000085f55494400085f41445200085f435253114a040a468c2000010101000200000000000017000019002300000000005c5f53422e47504930008e1e00010001020000010600801a060067005c5f53422e504330302e49324332007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGPIOConnection" id="res0"/>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C2</dependency>
+          <dependency type="consumes resources from">\_SB_.GPI0</dependency>
+        </device>
+        <device id="TXNW3643">
+          <acpi_object>\_SB_.PC00.FLM2</acpi_object>
+          <compatible_id>TXNW3643</compatible_id>
+          <acpi_uid>0</acpi_uid>
+          <aml_template>5b8242085c2f035f53425f50433030464c4d32085f53544100085f4849440d54584e573336343300085f55494400085f41445200085f435253114a040a468c2000010101000200000000000017000019002300000000005c5f53422e47504930008e1e00010001020000010600801a060063005c5f53422e504330302e49324332007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGPIOConnection" id="res0"/>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C2</dependency>
+          <dependency type="consumes resources from">\_SB_.GPI0</dependency>
+        </device>
+        <device id="PWRC0000">
+          <acpi_object>\_SB_.PC00.FLM3</acpi_object>
+          <compatible_id>PWRC0000</compatible_id>
+          <acpi_uid>0</acpi_uid>
+          <aml_template>5b8242085c2f035f53425f50433030464c4d33085f53544100085f4849440d505752433030303000085f55494400085f41445200085f435253114a040a468c2000010101000200000000000017000019002300000000005c5f53422e47504930008e1e00010001020000010600801a060067005c5f53422e504330302e49324333007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGPIOConnection" id="res0"/>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C3</dependency>
+          <dependency type="consumes resources from">\_SB_.GPI0</dependency>
+        </device>
+        <device id="PWRC0000">
+          <acpi_object>\_SB_.PC00.FLM4</acpi_object>
+          <compatible_id>PWRC0000</compatible_id>
+          <acpi_uid>0</acpi_uid>
+          <aml_template>5b8242085c2f035f53425f50433030464c4d34085f53544100085f4849440d505752433030303000085f55494400085f41445200085f435253114a040a468c2000010101000200000000000017000019002300000000005c5f53422e47504930008e1e00010001020000010600801a060067005c5f53422e504330302e49324333007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGPIOConnection" id="res0"/>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C3</dependency>
+          <dependency type="consumes resources from">\_SB_.GPI0</dependency>
+        </device>
+        <device id="PWRC0000">
+          <acpi_object>\_SB_.PC00.FLM5</acpi_object>
+          <compatible_id>PWRC0000</compatible_id>
+          <acpi_uid>0</acpi_uid>
+          <aml_template>5b8242085c2f035f53425f50433030464c4d35085f53544100085f4849440d505752433030303000085f55494400085f41445200085f435253114a040a468c2000010101000200000000000017000019002300000000005c5f53422e47504930008e1e00010001020000010600801a060067005c5f53422e504330302e49324333007900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+          <resource type="LargeResourceItemGPIOConnection" id="res0"/>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
+          <dependency type="consumes resources from">\_SB_.PC00.I2C3</dependency>
+          <dependency type="consumes resources from">\_SB_.GPI0</dependency>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.I2C0</acpi_object>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.UCM1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.TPL1</dependency>
+          <device id="PNP0C50">
+            <acpi_object>\_SB_.PC00.I2C0.TPD0</acpi_object>
+            <compatible_id>PNP0C50</compatible_id>
+            <aml_template>5b824e055c2f045f53425f504330304932433054504430085f53544100085f4849440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504330302e49324330008906001501000000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res1" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+          </device>
+          <device id="XXXX0000">
+            <acpi_object>\_SB_.PC00.I2C0.TPL1</acpi_object>
+            <compatible_id>PNP0C50</compatible_id>
+            <aml_template>5b824f055c2f045f53425f504330304932433054504c31085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504330302e49324330008906000101000000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res1" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+          </device>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.I2C1</acpi_object>
+          <dependency type="provides resources to">\_SB_.PC00.FLM0</dependency>
+          <device id="PNP0C50">
+            <acpi_object>\_SB_.PC00.I2C1.TPD0</acpi_object>
+            <compatible_id>PNP0C50</compatible_id>
+            <aml_template>5b824e055c2f045f53425f504330304932433154504430085f53544100085f4849440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504330302e49324330008906001501000000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res1" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+          </device>
+          <device id="XXXX0000">
+            <acpi_object>\_SB_.PC00.I2C1.TPL1</acpi_object>
+            <compatible_id>PNP0C50</compatible_id>
+            <aml_template>5b824f055c2f045f53425f504330304932433154504c31085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504330302e49324330008906000101000000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res1" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+          </device>
+          <device id="INT3515">
+            <acpi_object>\_SB_.PC00.I2C1.UCM1</acpi_object>
+            <acpi_uid>0</acpi_uid>
+            <aml_template>5b8247085c2f045f53425f504330304932433155434d31085f5354410a0f085f4849440d494e543335313500085f55494400085f4352531141050a4d8e1e00010001020000010600801a060021005c5f53422e504330302e49324330008e1e00010001020000010600801a060025005c5f53422e504330302e49324330008906000701000000007900</aml_template>
+            <status>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
+            <resource id="res2" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+          </device>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.I2C2</acpi_object>
+          <dependency type="provides resources to">\_SB_.PC00.FLM2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.PMIC</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.CAM0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.FLM1</dependency>
+          <device id="INT3471" address="0x0">
+            <acpi_object>\_SB_.PC00.I2C2.CAM0</acpi_object>
+            <compatible_id>INT3471</compatible_id>
+            <acpi_uid>0</acpi_uid>
+            <aml_template>5b8249105c2f045f53425f504330304932433243414d30085f53544100085f4849440d494e543334373100085f5549440d3000085f41445200085f435253114c0c0ac88e1e00010001020000010600801a060010005c5f53422e504330302e49324332008e1e00010001020000010600801a06000e005c5f53422e504330302e49324332008e1e00010001020000010600801a060050005c5f53422e504330302e49324332008e1e00010001020000010600801a060051005c5f53422e504330302e49324332008e1e00010001020000010600801a060052005c5f53422e504330302e49324332008e1e00010001020000010600801a060053005c5f53422e504330302e49324332007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res2"/>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res3"/>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res4"/>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res5"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C2</dependency>
+          </device>
+          <device id="INT3472">
+            <acpi_object>\_SB_.PC00.I2C2.PMIC</acpi_object>
+            <compatible_id>INT3472</compatible_id>
+            <acpi_uid>0</acpi_uid>
+            <aml_template>5b8243065c2f045f53425f5043303049324332504d4943085f53544100085f4849440d494e543334373200085f5549440d3000085f41445200085f43525311260a238e1e00010001020000010600801a06004c005c5f53422e504330302e49324332007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C2</dependency>
+          </device>
+          <device id="PNP0C50">
+            <acpi_object>\_SB_.PC00.I2C2.TPD0</acpi_object>
+            <compatible_id>PNP0C50</compatible_id>
+            <aml_template>5b824e055c2f045f53425f504330304932433254504430085f53544100085f4849440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504330302e49324330008906001501000000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res1" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+          </device>
+          <device id="XXXX0000">
+            <acpi_object>\_SB_.PC00.I2C2.TPL1</acpi_object>
+            <compatible_id>PNP0C50</compatible_id>
+            <aml_template>5b824f055c2f045f53425f504330304932433254504c31085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504330302e49324330008906000101000000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res1" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+          </device>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.I2C3</acpi_object>
+          <dependency type="provides resources to">\_SB_.PC00.FLM5</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP3</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.FLM3</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP4</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.FLM4</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP5</dependency>
+          <device id="PNP0C50">
+            <acpi_object>\_SB_.PC00.I2C3.TPD0</acpi_object>
+            <compatible_id>PNP0C50</compatible_id>
+            <aml_template>5b824e055c2f045f53425f504330304932433354504430085f53544100085f4849440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504330302e49324330008906001501000000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res1" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+          </device>
+          <device id="XXXX0000">
+            <acpi_object>\_SB_.PC00.I2C3.TPL1</acpi_object>
+            <compatible_id>PNP0C50</compatible_id>
+            <aml_template>5b824f055c2f045f53425f504330304932433354504c31085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504330302e49324330008906000101000000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res1" type="irq" int="0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+          </device>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.I2C4</acpi_object>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.CAM1</dependency>
+          <device id="INT3474" address="0x0">
+            <acpi_object>\_SB_.PC00.I2C4.CAM1</acpi_object>
+            <compatible_id>INT3474</compatible_id>
+            <acpi_uid>0</acpi_uid>
+            <aml_template>5b8243065c2f045f53425f504330304932433443414d31085f53544100085f4849440d494e543334373400085f5549440d3000085f41445200085f43525311260a238e1e00010001020000010600801a060036005c5f53422e504330302e49324334007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C4</dependency>
+          </device>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.I2C5</acpi_object>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.PA04</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.PA01</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.PA03</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.PA02</dependency>
+          <device id="MCHP1930">
+            <acpi_object>\_SB_.PC00.I2C5.PA01</acpi_object>
+            <acpi_uid>1</acpi_uid>
+            <aml_template>5b824c055c2f045f53425f504330304932433550413031085f53544100085f4849440d4d4348503139333000085f55494401085f43525311260a238e1e00010001020000010600801a060018005c5f53422e504330302e49324335007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C5</dependency>
+          </device>
+          <device id="MCHP1930">
+            <acpi_object>\_SB_.PC00.I2C5.PA02</acpi_object>
+            <acpi_uid>2</acpi_uid>
+            <aml_template>5b824d055c2f045f53425f504330304932433550413032085f53544100085f4849440d4d4348503139333000085f5549440a02085f43525311260a238e1e00010001020000010600801a060011005c5f53422e504330302e49324335007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C5</dependency>
+          </device>
+          <device id="MCHP1930">
+            <acpi_object>\_SB_.PC00.I2C5.PA03</acpi_object>
+            <acpi_uid>3</acpi_uid>
+            <aml_template>5b824d055c2f045f53425f504330304932433550413033085f53544100085f4849440d4d4348503139333000085f5549440a03085f43525311260a238e1e00010001020000010600801a06001e005c5f53422e504330302e49324335007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C5</dependency>
+          </device>
+          <device id="MCHP1930">
+            <acpi_object>\_SB_.PC00.I2C5.PA04</acpi_object>
+            <acpi_uid>4</acpi_uid>
+            <aml_template>5b824d055c2f045f53425f504330304932433550413034085f53544100085f4849440d4d4348503139333000085f5549440a04085f43525311260a238e1e00010001020000010600801a060000005c5f53422e504330302e49324335007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <dependency type="consumes resources from">\_SB_.PC00.I2C5</dependency>
+          </device>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.I2C6</acpi_object>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.I2C7</acpi_object>
+        </device>
+        <device id="SONY362A">
+          <acpi_object>\_SB_.PC00.LNK0</acpi_object>
+          <compatible_id>SONY362A</compatible_id>
+          <acpi_uid>0</acpi_uid>
+          <aml_template>5b823c5c2f035f53425f504330304c4e4b30085f53544100085f4849440d534f4e593336324100085f55494400085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="SONY488A">
+          <acpi_object>\_SB_.PC00.LNK1</acpi_object>
+          <compatible_id>SONY488A</compatible_id>
+          <acpi_uid>1</acpi_uid>
+          <aml_template>5b823c5c2f035f53425f504330304c4e4b31085f53544100085f4849440d534f4e593438384100085f55494401085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="SONY362A">
+          <acpi_object>\_SB_.PC00.LNK2</acpi_object>
+          <compatible_id>SONY362A</compatible_id>
+          <acpi_uid>2</acpi_uid>
+          <aml_template>5b823d5c2f035f53425f504330304c4e4b32085f53544100085f4849440d534f4e593336324100085f5549440a02085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT33BE">
+          <acpi_object>\_SB_.PC00.LNK3</acpi_object>
+          <compatible_id>INT33BE</compatible_id>
+          <acpi_uid>3</acpi_uid>
+          <aml_template>5b823c5c2f035f53425f504330304c4e4b33085f53544100085f4849440d494e543333424500085f5549440a03085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT33BE">
+          <acpi_object>\_SB_.PC00.LNK4</acpi_object>
+          <compatible_id>INT33BE</compatible_id>
+          <acpi_uid>4</acpi_uid>
+          <aml_template>5b823c5c2f035f53425f504330304c4e4b34085f53544100085f4849440d494e543333424500085f5549440a04085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="INT33BE">
+          <acpi_object>\_SB_.PC00.LNK5</acpi_object>
+          <compatible_id>INT33BE</compatible_id>
+          <acpi_uid>5</acpi_uid>
+          <aml_template>5b823c5c2f035f53425f504330304c4e4b35085f53544100085f4849440d494e543333424500085f5549440a05085f41445200085f43525311050a027900</aml_template>
+          <status>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
+          </status>
+        </device>
+        <device id="PNP0C02">
+          <acpi_object>\_SB_.PC00.PDRC</acpi_object>
+          <acpi_uid>1</acpi_uid>
+          <aml_template>5b82205c2f035f53425f5043303050445243085f4849440c41d00c02085f55494401</aml_template>
+          <resource id="res0" type="memory" min="0x0" max="0x7fff" len="0x8000"/>
+          <resource id="res1" type="memory" min="0x0" max="0xfff" len="0x1000"/>
+          <resource id="res2" type="memory" min="0x0" max="0xfff" len="0x1000"/>
+          <resource id="res3" type="memory" min="0x0" max="0xfffffff" len="0x10000000"/>
+          <resource id="res8" type="memory" min="0x0" max="-0x1" len="0x0"/>
+          <resource id="res9" type="memory" min="0x0" max="-0x1" len="0x0"/>
+          <resource id="res4" type="memory" min="0xfed20000" max="0xfed7ffff" len="0x60000"/>
+          <resource id="res6" type="memory" min="0xfed45000" max="0xfed8ffff" len="0x4b000"/>
+          <resource id="res5" type="memory" min="0xfed90000" max="0xfed93fff" len="0x4000"/>
+          <resource id="res7" type="memory" min="0xfee00000" max="0xfeefffff" len="0x100000"/>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.SPI0</acpi_object>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.SPI1</acpi_object>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.SPFD</dependency>
+          <device id="DUMY0000">
+            <acpi_object>\_SB_.PC00.SPI1.FPNT</acpi_object>
+            <aml_template>5b82295c2f045f53425f504330305350493146504e54085f53544100085f4849440d44554d593030303000</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+          </device>
+          <device id="INTC1058">
+            <acpi_object>\_SB_.PC00.SPI1.SPFD</acpi_object>
+            <aml_template>5b82400e5c2f045f53425f504330305350493153504644085f4849440d494e54433130353800085f43525311460b0ab28c200001010100090000000000001700001900230000008f005c5f53422e47504930008c200001010100020000000000001700001900230000008d005c5f53422e47504930008c2000010101000200000000000017000019002300000065015c5f53422e47504930008c2000010001000b0000000000001700001900230000008f005c5f53422e47504930008e2100010002020000010900809fd50008010100005c5f53422e504330302e53504931007900</aml_template>
+            <resource type="LargeResourceItemGPIOConnection" id="res0"/>
+            <resource type="LargeResourceItemGPIOConnection" id="res1"/>
+            <resource type="LargeResourceItemGPIOConnection" id="res2"/>
+            <resource type="LargeResourceItemGPIOConnection" id="res3"/>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res4"/>
+            <dependency type="consumes resources from">\_SB_.PC00.SPI1</dependency>
+            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
+            <device id="INTC1059">
+              <acpi_object>\_SB_.PC00.SPI1.SPFD.CVFD</acpi_object>
+              <aml_template>5b82275c2f055f53425f50433030535049315350464443564644085f4849440d494e54433130353900</aml_template>
+            </device>
+          </device>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.SPI2</acpi_object>
+          <device id="DUMY0000">
+            <acpi_object>\_SB_.PC00.SPI2.FPNT</acpi_object>
+            <aml_template>5b82295c2f045f53425f504330305350493246504e54085f53544100085f4849440d44554d593030303000</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+          </device>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.SPI3</acpi_object>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.SPI4</acpi_object>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.SPI5</acpi_object>
+        </device>
+        <device>
+          <acpi_object>\_SB_.PC00.SPI6</acpi_object>
+        </device>
+      </bus>
+      <device id="ACPI000E">
+        <acpi_object>\_SB_.AWAC</acpi_object>
+        <aml_template>5b82205c2e5f53425f41574143085f53544100085f4849440d414350493030304500</aml_template>
+        <status>
+          <present>n</present>
+          <enabled>n</enabled>
+          <functioning>n</functioning>
+        </status>
       </device>
-      <device address="0x1f0000" id="0xa082" description="ISA bridge: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa082</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x060100</class>
+      <device id="INT3519" description="CoExistence Manager">
+        <acpi_object>\_SB_.COEX</acpi_object>
+        <aml_template>5b824d045c2e5f53425f434f4558085f53544100085f4849440c25d43519085f535452112b0a2843006f004500780069007300740065006e006300650020004d0061006e0061006700650072000000</aml_template>
+        <status>
+          <present>n</present>
+          <enabled>n</enabled>
+          <functioning>n</functioning>
+        </status>
       </device>
-      <device address="0x1f0003" id="0xa0c8" description="Audio device: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0c8</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x040300</class>
-        <resource type="memory" min="0x603d000000" max="0x603d0fffff" len="0x100000" id="bar4" width="64" prefetchable="0"/>
-        <resource type="memory" min="0x603d1a0000" max="0x603d1a3fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
-        <capability id="Power Management"/>
-        <capability id="Vendor-Specific"/>
-        <capability id="MSI">
-          <count>1</count>
-          <capability id="64-bit address"/>
-        </capability>
+      <device id="INT0E0C" description="Enclave Page Cache 1.0">
+        <acpi_object>\_SB_.EPC_</acpi_object>
+        <aml_template>5b824d085c2e5f53425f4550435f085f5354410a0f085f4849440c25d40e0c085f53545211310a2e45006e0063006c0061007600650020005000610067006500200043006100630068006500200031002e0030000000085f43525311330a308a2b0000010100000000000000000000000000000000ffffffffffffffff000000000000000000000000000000007900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="memory" min="0x0" max="-0x1" len="0x0"/>
       </device>
-      <device address="0x1f0004" id="0xa0a3" description="SMBus: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0a3</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x0c0500</class>
-        <resource type="io_port" min="0xefa0" max="0xefbf" len="0x20" id="bar4"/>
-        <resource type="memory" min="0x603d1ac000" max="0x603d1ac0ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
+      <device id="INT34C5">
+        <acpi_object>\_SB_.GPI0</acpi_object>
+        <aml_template>5b8245065c2e5f53425f47504930085f5354410a0f085f4849440d494e543334433500085f435253113e0a3b8906000d010e0000008609000100000000000001008609000100000000000001008609000100000000000001008609000100000000000001007900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="irq" int="14"/>
+        <resource id="res1" type="memory" min="0x0" max="0xffff" len="0x10000"/>
+        <resource id="res2" type="memory" min="0x0" max="0xffff" len="0x10000"/>
+        <resource id="res3" type="memory" min="0x0" max="0xffff" len="0x10000"/>
+        <resource id="res4" type="memory" min="0x0" max="0xffff" len="0x10000"/>
+        <dependency type="provides resources to">\_SB_.PC00.FLM0</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.FLM5</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.UA00.BTH0</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.SPI1.SPFD</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.FLM3</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.FLM1</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.FLM2</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.FLM4</dependency>
       </device>
-      <device address="0x1f0005" id="0xa0a4" description="Serial bus controller: Intel Corporation">
-        <vendor>0x8086</vendor>
-        <identifier>0xa0a4</identifier>
-        <subsystem_vendor>0x8086</subsystem_vendor>
-        <subsystem_identifier>0x3002</subsystem_identifier>
-        <class>0x0c8000</class>
-        <resource type="memory" min="0x4f800000" max="0x4f800fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+      <device id="INTC1051">
+        <acpi_object>\_SB_.HIDD</acpi_object>
+        <aml_template>5b82205c2e5f53425f48494444085f53544100085f4849440d494e54433130353100</aml_template>
+        <status>
+          <present>n</present>
+          <enabled>n</enabled>
+          <functioning>n</functioning>
+        </status>
+      </device>
+      <device id="PNP0C02">
+        <acpi_object>\_SB_.IOTR</acpi_object>
+        <acpi_uid>IoTraps</acpi_uid>
+        <aml_template>5b822e5c2e5f53425f494f5452085f4849440c41d00c02085f5549440d496f547261707300085f43525311050a027900</aml_template>
+      </device>
+      <device id="PNP0C0D">
+        <acpi_object>\_SB_.LID0</acpi_object>
+        <aml_template>5b821b5c2e5f53425f4c494430085f53544100085f4849440c41d00c0d</aml_template>
+        <status>
+          <present>n</present>
+          <enabled>n</enabled>
+          <functioning>n</functioning>
+        </status>
+      </device>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.LNKA</acpi_object>
+        <acpi_uid>1</acpi_uid>
+        <aml_template>5b82315c2e5f53425f4c4e4b41085f5354410a0b085f4849440c41d00c0f085f55494401085f43525311090a06238b00187900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="irq" int="0, 1, 3, 7"/>
+      </device>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.LNKB</acpi_object>
+        <acpi_uid>2</acpi_uid>
+        <aml_template>5b82325c2e5f53425f4c4e4b42085f5354410a0b085f4849440c41d00c0f085f5549440a02085f43525311090a06238a00187900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="irq" int="1, 3, 7"/>
+      </device>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.LNKC</acpi_object>
+        <acpi_uid>3</acpi_uid>
+        <aml_template>5b82325c2e5f53425f4c4e4b43085f5354410a0b085f4849440c41d00c0f085f5549440a03085f43525311090a06238b00187900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="irq" int="0, 1, 3, 7"/>
+      </device>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.LNKD</acpi_object>
+        <acpi_uid>4</acpi_uid>
+        <aml_template>5b82325c2e5f53425f4c4e4b44085f5354410a0b085f4849440c41d00c0f085f5549440a04085f43525311090a06238b00187900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="irq" int="0, 1, 3, 7"/>
+      </device>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.LNKE</acpi_object>
+        <acpi_uid>5</acpi_uid>
+        <aml_template>5b82325c2e5f53425f4c4e4b45085f5354410a0b085f4849440c41d00c0f085f5549440a05085f43525311090a06238b00187900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="irq" int="0, 1, 3, 7"/>
+      </device>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.LNKF</acpi_object>
+        <acpi_uid>6</acpi_uid>
+        <aml_template>5b82325c2e5f53425f4c4e4b46085f5354410a0b085f4849440c41d00c0f085f5549440a06085f43525311090a06238b00187900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="irq" int="0, 1, 3, 7"/>
+      </device>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.LNKG</acpi_object>
+        <acpi_uid>7</acpi_uid>
+        <aml_template>5b82325c2e5f53425f4c4e4b47085f5354410a0b085f4849440c41d00c0f085f5549440a07085f43525311090a06238b00187900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="irq" int="0, 1, 3, 7"/>
+      </device>
+      <device id="PNP0C0F">
+        <acpi_object>\_SB_.LNKH</acpi_object>
+        <acpi_uid>8</acpi_uid>
+        <aml_template>5b82325c2e5f53425f4c4e4b48085f5354410a0b085f4849440c41d00c0f085f5549440a08085f43525311090a06238b00187900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="irq" int="0, 1, 3, 7"/>
+      </device>
+      <device id="ACPI000C">
+        <acpi_object>\_SB_.PAGD</acpi_object>
+        <aml_template>5b82215c2e5f53425f50414744085f5354410a0f085f4849440d414350493030304300</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+      </device>
+      <device id="INT33A1">
+        <acpi_object>\_SB_.PEPD</acpi_object>
+        <compatible_id>PNP0D80</compatible_id>
+        <acpi_uid>1</acpi_uid>
+        <aml_template>5b82265c2e5f53425f50455044085f5354410a0f085f4849440d494e543333413100085f55494401</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+      </device>
+      <device id="PNP0C02">
+        <acpi_object>\_SB_.PRRE</acpi_object>
+        <acpi_uid>PCHRESV</acpi_uid>
+        <aml_template>5b824b0a5c2e5f53425f50525245085f5354410a0b085f4849440c41d00c02085f5549440d5043485245535600085f435253114a070a7686090001000000fe000002008609000100c004fe0040000086090001000005fe000006008609000100000dfe0000030086090001000020fe0000600086090000000000ff0000000147010018001801ff86090001000000fd000069008609000100000000000002008609000100000000000000007900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res6" type="io_port" min="0x1800" max="0x1800" len="0xff"/>
+        <resource id="res8" type="memory" min="0x0" max="0x1ffff" len="0x20000"/>
+        <resource id="res9" type="memory" min="0x0" max="-0x1" len="0x0"/>
+        <resource id="res7" type="memory" min="0xfd000000" max="0xfd68ffff" len="0x690000"/>
+        <resource id="res0" type="memory" min="0xfe000000" max="0xfe01ffff" len="0x20000"/>
+        <resource id="res1" type="memory" min="0xfe04c000" max="0xfe04ffff" len="0x4000"/>
+        <resource id="res2" type="memory" min="0xfe050000" max="0xfe0affff" len="0x60000"/>
+        <resource id="res3" type="memory" min="0xfe0d0000" max="0xfe0fffff" len="0x30000"/>
+        <resource id="res4" type="memory" min="0xfe200000" max="0xfe7fffff" len="0x600000"/>
+        <resource id="res5" type="memory" min="0xff000000" max="0xffffffff" len="0x1000000"/>
+      </device>
+      <device id="INTC1001">
+        <acpi_object>\_SB_.PTHH</acpi_object>
+        <aml_template>5b8244045c2e5f53425f50544848085f53544100085f4849440d494e54433130303100085f435253111d0a1a86090001000010fe0000100086090001000080fc000080007900</aml_template>
+        <status>
+          <present>n</present>
+          <enabled>n</enabled>
+          <functioning>n</functioning>
+        </status>
+        <resource id="res1" type="memory" min="0xfc800000" max="0xfcffffff" len="0x800000"/>
+        <resource id="res0" type="memory" min="0xfe100000" max="0xfe1fffff" len="0x100000"/>
+      </device>
+      <device id="INT340E">
+        <acpi_object>\_SB_.PTID</acpi_object>
+        <compatible_id>PNP0C02</compatible_id>
+        <aml_template>5b821c5c2e5f53425f50544944085f5354410a0f085f4849440c25d4340e</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+      </device>
+      <device id="PNP0C0C">
+        <acpi_object>\_SB_.PWRB</acpi_object>
+        <aml_template>5b821c5c2e5f53425f50575242085f5354410a0f085f4849440c41d00c0c</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+      </device>
+      <device id="PNP0C0E">
+        <acpi_object>\_SB_.SLPB</acpi_object>
+        <aml_template>5b821c5c2e5f53425f534c5042085f5354410a0b085f4849440c41d00c0e</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+      </device>
+      <device id="MSFT0101" description="TPM 2.0 Device">
+        <acpi_object>\_SB_.TPM_</acpi_object>
+        <acpi_uid>1</acpi_uid>
+        <aml_template>5b8246065c2e5f53425f54504d5f085f5354410a0f085f4849440d4d5346543031303100085f55494401085f53545211210a1e540050004d00200032002e00300020004400650076006900630065000000085f43525311110a0e860900010000d4fe005000007900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+        <resource id="res0" type="memory" min="0xfed40000" max="0xfed44fff" len="0x5000"/>
+      </device>
+      <device id="PNP0C02">
+        <acpi_object>\_SB_.URSC</acpi_object>
+        <acpi_uid>5</acpi_uid>
+        <aml_template>5b822e5c2e5f53425f55525343085f5354410a0b085f4849440c41d00c02085f5549440a05085f43525311050a027900</aml_template>
+        <status>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
+        </status>
+      </device>
+      <device id="PNP0C14">
+        <acpi_object>\_SB_.WFDE</acpi_object>
+        <acpi_uid>SampleDev</acpi_uid>
+        <aml_template>5b82295c2e5f53425f57464445085f4849440d504e503043313400085f5549440d53616d706c6544657600</aml_template>
+      </device>
+      <device id="PNP0C14">
+        <acpi_object>\_SB_.WFTE</acpi_object>
+        <acpi_uid>TestDev</acpi_uid>
+        <aml_template>5b82275c2e5f53425f57465445085f4849440d504e503043313400085f5549440d5465737444657600</aml_template>
       </device>
     </bus>
+    <thermalzone>
+      <acpi_object>\_TZ_</acpi_object>
+      <device id="PNP0C0B">
+        <acpi_object>\_TZ_.FAN0</acpi_object>
+        <acpi_uid>0</acpi_uid>
+        <aml_template>5b821b5c2e5f545a5f46414e30085f4849440c41d00c0b085f55494400</aml_template>
+      </device>
+      <device id="PNP0C0B">
+        <acpi_object>\_TZ_.FAN1</acpi_object>
+        <acpi_uid>1</acpi_uid>
+        <aml_template>5b821b5c2e5f545a5f46414e31085f4849440c41d00c0b085f55494401</aml_template>
+      </device>
+      <device id="PNP0C0B">
+        <acpi_object>\_TZ_.FAN2</acpi_object>
+        <acpi_uid>2</acpi_uid>
+        <aml_template>5b821c5c2e5f545a5f46414e32085f4849440c41d00c0b085f5549440a02</aml_template>
+      </device>
+      <device id="PNP0C0B">
+        <acpi_object>\_TZ_.FAN3</acpi_object>
+        <acpi_uid>3</acpi_uid>
+        <aml_template>5b821c5c2e5f545a5f46414e33085f4849440c41d00c0b085f5549440a03</aml_template>
+      </device>
+      <device id="PNP0C0B">
+        <acpi_object>\_TZ_.FAN4</acpi_object>
+        <acpi_uid>4</acpi_uid>
+        <aml_template>5b821c5c2e5f545a5f46414e34085f4849440c41d00c0b085f5549440a04</aml_template>
+      </device>
+    </thermalzone>
   </devices>
 </acrn-config>
