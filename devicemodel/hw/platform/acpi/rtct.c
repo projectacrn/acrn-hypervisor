@@ -267,6 +267,30 @@ static bool is_cache_accessible_to_guest(uint32_t cache_id, uint32_t cache_level
 }
 
 /**
+ * @brief  Check if a given cache is shared.
+ *
+ * @param cache_level Cache Level, 2 or 3.
+ *
+ * @return true if given cache is shared, else false.
+ */
+static bool is_cache_shared(uint32_t cache_level)
+{
+	int i;
+	uint32_t shift[2];
+
+	if ((cache_level != 2) && (cache_level != 3))
+		return false;
+
+	shift[0] = guest_l2_cat_shift;
+	shift[1] = guest_l3_cat_shift;
+	for (i = 0; i < guest_vcpu_num; i++) {
+		if ((guest_lapicid_tbl[i] >> shift[cache_level - 2]) != 0)
+			return false;
+	}
+	return true;
+}
+
+/**
  * @brief Initialize Software SRAM and memory hierarchy entries in virtual RTCT,
  *        configurations of these entries are from native RTCT.
  *
@@ -291,9 +315,16 @@ static int init_vrtct_v1(struct acpi_table_hdr *vrtct, struct acpi_table_hdr *na
 
 			memset(lapicids, 0, sizeof(lapicids[ACRN_PLATFORM_LAPIC_IDS_MAX]));
 			vlapic_num = 0;
-			for (i = 0; i < plapic_num; i++) {
-				if (is_pcpu_assigned_to_guest(ssram->apic_id_tbl[i])) {
-					lapicids[vlapic_num++] = ssram->apic_id_tbl[i];
+
+			if (is_cache_shared(ssram->cache_level)) {
+				lapicids[0] = 0;
+				vlapic_num = 1;
+
+			} else {
+				for (i = 0; i < plapic_num; i++) {
+					if (is_pcpu_assigned_to_guest(ssram->apic_id_tbl[i])) {
+						lapicids[vlapic_num++] = ssram->apic_id_tbl[i];
+					}
 				}
 			}
 
