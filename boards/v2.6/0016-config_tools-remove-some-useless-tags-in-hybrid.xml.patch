@@ -1,0 +1,29 @@
+From ef4ee4464197c2c125d9dbf92b08536dc02727c2 Mon Sep 17 00:00:00 2001
+From: Kunhui-Li <kunhuix.li@intel.com>
+Date: Wed, 25 Aug 2021 10:26:12 +0800
+Subject: [PATCH 16/16] config_tools: remove some useless tags in hybrid.xml
+
+remove unnecessary kern_load_addr and kern_entry_addr tags for KERNEL_ELF
+kernel in hybrid.xml.
+
+Signed-off-by: Kunhui-Li <kunhuix.li@intel.com>
+---
+ misc/config_tools/data/adl-s-crb/hybrid.xml | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid.xml b/misc/config_tools/data/adl-s-crb/hybrid.xml
+index 31f7ab1ca..5aba236e5 100644
+--- a/misc/config_tools/data/adl-s-crb/hybrid.xml
++++ b/misc/config_tools/data/adl-s-crb/hybrid.xml
+@@ -96,8 +96,6 @@
+             <kern_mod>Zephyr_ElfImage</kern_mod>
+             <ramdisk_mod/>
+             <bootargs></bootargs>
+-            <kern_load_addr>0x1000</kern_load_addr>
+-            <kern_entry_addr>0x1000</kern_entry_addr>
+         </os_config>
+         <legacy_vuart id="0">
+             <type>VUART_LEGACY_PIO</type>
+-- 
+2.25.1
+
