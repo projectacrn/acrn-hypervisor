@@ -59,8 +59,12 @@ PCI_VUART_VBAR1_SIZE = 4 * SIZE_K
 # Constants for vmsix bar
 VMSIX_VBAR_SIZE = 4 * SIZE_K
 
-# Constants for tpm2 log area minimum length
-LOG_AREA_MIN_LEN = 256 * SIZE_K
+# Constant for VIRT_ACPI_NVS_ADDR
+"""
+VIRT_ACPI_NVS_ADDR needs to be consistant with the layout of hypervisor\arch\x86\guest\ve820.c
+"""
+VIRT_ACPI_NVS_ADDR = 0x7FF00000
+RESERVED_NVS_AREA = 0xB0000
 
 class MmioWindow(namedtuple(
         "MmioWindow", [
@@ -356,15 +360,13 @@ def allocate_log_area(board_etree, scenario_etree, allocation_etree):
         return
 
     if common.get_node("//capability[@id='log_area']", board_etree) is not None:
-        # VIRT_ACPI_DATA_ADDR
-        log_area_min_len = int(common.get_node(f"//log_area_minimum_length/text()", board_etree), 16)
-        log_area_end_address = 0x7FFF0000
-        log_area_start_address = log_area_end_address - log_area_min_len
+        log_area_min_len_native = int(common.get_node(f"//log_area_minimum_length/text()", board_etree), 16)
+        log_area_start_address = common.round_up(VIRT_ACPI_NVS_ADDR, 0x10000) + RESERVED_NVS_AREA
         allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '0']", allocation_etree)
         if allocation_vm_node is None:
             allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = '0')
         common.append_node("./log_area_start_address", hex(log_area_start_address).upper(), allocation_vm_node)
-        common.append_node("./log_area_minimum_length", hex(log_area_min_len).upper(), allocation_vm_node)
+        common.append_node("./log_area_minimum_length", hex(log_area_min_len_native).upper(), allocation_vm_node)
 
 """
             Pre-launched VM gpa layout:
