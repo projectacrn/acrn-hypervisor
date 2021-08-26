@@ -224,14 +224,15 @@ def interrupt_storm(pt_sel, config):
 def gvt_arg_set(dm, vmid, uos_type, config):
 
     gvt_args = dm['gvt_args'][vmid]
-    if gvt_args == "gvtd":
-        bus = int(launch_cfg_lib.GPU_BDF.split(':')[0], 16)
-        dev = int(launch_cfg_lib.GPU_BDF.split('.')[0].split(':')[1], 16)
-        fun = int(launch_cfg_lib.GPU_BDF.split('.')[1], 16)
+    gpu_bdf = launch_cfg_lib.get_gpu_bdf()
+
+    if gvt_args == "gvtd" and gpu_bdf is not None:
+        bus = int(gpu_bdf[0:2], 16)
+        dev = int(gpu_bdf[3:5], 16)
+        fun = int(gpu_bdf[6:7], 16)
         print('   -s 2,passthru,{}/{}/{},gpu  \\'.format(bus, dev, fun), file=config)
     elif gvt_args:
         print('   -s 2,pci-gvt -G "$2"  \\', file=config)
-
 
 def log_level_set(uos_type, config):
 
@@ -603,14 +604,14 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     # set logger_setting for all VMs
     print("   $logger_setting \\", file=config)
 
+    # GVT args set
+    gvt_arg_set(dm, vmid, uos_type, config)
+
     # XHCI args set
     xhci_args_set(dm, vmid, config)
 
     # VIRTIO args set
     virtio_args_set(dm, virt_io, vmid, config)
-
-    # GVT args set
-    gvt_arg_set(dm, vmid, uos_type, config)
 
     # vbootloader setting
     vboot_arg_set(dm, vmid, config)
