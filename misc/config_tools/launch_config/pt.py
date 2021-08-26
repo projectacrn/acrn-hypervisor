@@ -253,7 +253,8 @@ def gen_pt_head(names, dm, sel, vmid, config):
             continue
         print('["{}"]="0000:{}"'.format(pt_dev, sel.bdf[pt_dev][vmid]), file=config)
     if dm['gvt_args'][vmid] == "gvtd":
-        print('["gpu"]="0000:{}"'.format(launch_cfg_lib.GPU_BDF), file=config)
+        gpu_bdf = launch_cfg_lib.get_gpu_bdf()
+        print('["gpu"]="0000:{}"'.format(gpu_bdf), file=config)
     print(')', file=config)
 
     print("", file=config)
