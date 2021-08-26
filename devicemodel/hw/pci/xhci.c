@@ -1817,7 +1817,7 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 	int erdp_idx;
 
 	rts = &xdev->rtsregs;
-	if (&rts->erstba_p == NULL) {
+	if (rts->erstba_p == NULL) {
 		UPRINTF(LFTL, "Invalid Event Ring Segment Table base address!\r\n");
 		return -EINVAL;
 	}
