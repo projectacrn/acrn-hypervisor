@@ -92,10 +92,6 @@ uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (!bitmap_test(CPU_REG_EFER, &vcpu->reg_updated) &&
-		!bitmap_test_and_set_lock(CPU_REG_EFER, &vcpu->reg_cached)) {
-		ctx->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
-	}
 	return ctx->ia32_efer;
 }
 
@@ -103,6 +99,16 @@ void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.ia32_efer
 		= val;
+
+	if (val == msr_read(MSR_IA32_EFER)) {
+		clear_vmcs_bit(VMX_ENTRY_CONTROLS, VMX_ENTRY_CTLS_LOAD_EFER);
+		clear_vmcs_bit(VMX_EXIT_CONTROLS, VMX_EXIT_CTLS_LOAD_EFER);
+	} else {
+		set_vmcs_bit(VMX_ENTRY_CONTROLS, VMX_ENTRY_CTLS_LOAD_EFER);
+		set_vmcs_bit(VMX_EXIT_CONTROLS, VMX_EXIT_CTLS_LOAD_EFER);
+	}
+
+	/* Write the new value to VMCS in either case */
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
 }
 
@@ -250,6 +256,7 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 
 	vcpu->arch.exception_info.exception = VECTOR_INVALID;
 	vcpu->arch.cur_context = NORMAL_WORLD;
+	vcpu->arch.lapic_pt_enabled = false;
 	vcpu->arch.irq_window_enabled = false;
 	vcpu->arch.emulating_lock = false;
 	(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
@@ -832,9 +839,9 @@ void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	}
 }
 
-void save_xsave_area(struct acrn_vcpu *vcpu, struct ext_context *ectx)
+void save_xsave_area(__unused struct acrn_vcpu *vcpu, struct ext_context *ectx)
 {
-	if (vcpu->arch.xsave_enabled) {
+	if (pcpu_has_cap(X86_FEATURE_XSAVES)) {
 		ectx->xcr0 = read_xcr(0);
 		write_xcr(0, ectx->xcr0 | XSAVE_SSE);
 		xsaves(&ectx->xs_area, UINT64_MAX);
@@ -843,7 +850,18 @@ void save_xsave_area(struct acrn_vcpu *vcpu, struct ext_context *ectx)
 
 void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *ectx)
 {
-	if (vcpu->arch.xsave_enabled) {
+	if (pcpu_has_cap(X86_FEATURE_XSAVES)) {
+		/*
+		 * Restore XSAVE area if any of the following conditions is met:
+		 * 1. "vcpu->launched" is false (state initialization for guest)
+		 * 2. "vcpu->arch.xsave_enabled" is true (state restoring for guest)
+		 *
+		 * Before vCPU is launched, condition 1 is satisfied.
+		 * After vCPU is launched, condition 2 is satisfied because is_valid_xsave_combination() guarantees
+		 * that "vcpu->arch.xsave_enabled" is consistent with pcpu_has_cap(X86_FEATURE_XSAVES).
+		 *
+		 * Therefore, the check against "vcpu->launched" and "vcpu->arch.xsave_enabled" can be eliminated here.
+		 */
 		write_xcr(0, ectx->xcr0 | XSAVE_SSE);
 		msr_write(MSR_IA32_XSS, vcpu_get_guest_msr(vcpu, MSR_IA32_XSS));
 		xrstors(&ectx->xs_area, UINT64_MAX);
@@ -961,20 +979,6 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
 	}
 
 	return dmask;
-}
-
-/*
- * @brief Check if vCPU uses LAPIC in x2APIC mode and the VM, vCPU belongs to, is configured for
- * LAPIC Pass-through
- *
- * @pre vcpu != NULL
- *
- * @return true, if vCPU LAPIC is in x2APIC mode and VM, vCPU belongs to, is configured for
- *				LAPIC Pass-through
- */
-bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu)
-{
-	return ((is_x2apic_enabled(vcpu_vlapic(vcpu))) && (is_lapic_pt_configured(vcpu->vm)));
 }
 
 /*

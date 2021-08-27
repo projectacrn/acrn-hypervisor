@@ -39,6 +39,7 @@
 #define CPU_H
 #include <types.h>
 #include <acrn_common.h>
+#include <asm/msr.h>
 
 /* Define CPU stack alignment */
 #define CPU_STACK_ALIGN         16UL
@@ -630,16 +631,15 @@ cpu_rdtscp_execute(uint64_t *timestamp_ptr, uint32_t *cpu_id_ptr)
 	CPU_RFLAGS_RESTORE(rflags);                 \
 }
 
+#define ACRN_PSEUDO_PCPUID_MSR		MSR_IA32_SYSENTER_CS
+
 /*
  * Macro to get CPU ID
  * @pre: the return CPU ID would never equal or large than phys_cpu_num.
  */
 static inline uint16_t get_pcpu_id(void)
 {
-	uint32_t tsl, tsh, cpu_id;
-
-	asm volatile ("rdtscp":"=a" (tsl), "=d"(tsh), "=c"(cpu_id)::);
-	return (uint16_t)cpu_id;
+	return (uint16_t)cpu_msr_read(ACRN_PSEUDO_PCPUID_MSR);
 }
 
 static inline uint64_t cpu_rsp_get(void)

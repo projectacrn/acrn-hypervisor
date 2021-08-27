@@ -302,8 +302,8 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 		(void)assign_mmio_dev(vm, &vm_config->mmiodevs[i]);
 
 #ifdef P2SB_VGPIO_DM_ENABLED
-		if ((vm_config->pt_p2sb_bar) && (vm_config->mmiodevs[i].base_hpa == P2SB_BAR_ADDR)) {
-			register_vgpio_handler(vm, &vm_config->mmiodevs[i]);
+		if ((vm_config->pt_p2sb_bar) && (vm_config->mmiodevs[i].res[0].host_pa == P2SB_BAR_ADDR)) {
+			register_vgpio_handler(vm, &vm_config->mmiodevs[i].res[0]);
 		}
 #endif
 	}
@@ -594,6 +594,10 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		if (is_sos_vm(vm)) {
 			deny_hv_owned_devices(vm);
 		}
+
+#ifdef CONFIG_SECURITY_VM_FIXUP
+		passthrough_smbios(vm, get_acrn_boot_info());
+#endif
 
 		init_vpci(vm);
 		enable_iommu();

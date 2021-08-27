@@ -172,7 +172,7 @@ enum reset_mode;
 #define SECURE_WORLD	1
 
 #define NUM_WORLD_MSRS		2U
-#define NUM_COMMON_MSRS		22U
+#define NUM_COMMON_MSRS		23U
 #ifdef CONFIG_NVMX_ENABLED
 #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS)
 #else
@@ -197,8 +197,7 @@ struct msr_store_entry {
 } __aligned(16);
 
 enum {
-	MSR_AREA_TSC_AUX = 0,
-	MSR_AREA_IA32_PQR_ASSOC,
+	MSR_AREA_IA32_PQR_ASSOC = 0,
 	MSR_AREA_COUNT,
 };
 
@@ -250,11 +249,10 @@ struct acrn_vcpu_arch {
 		uint32_t error;
 	} exception_info;
 
-	uint8_t lapic_mask;
+	bool lapic_pt_enabled;
 	bool irq_window_enabled;
 	bool emulating_lock;
 	bool xsave_enabled;
-	uint32_t nrexits;
 
 	/* VCPU context state information */
 	uint32_t exit_reason;
@@ -730,7 +728,20 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
  * @return The physical destination CPU mask
  */
 uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
-bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu);
+
+/*
+ * @brief Check if vCPU uses LAPIC in x2APIC mode and the VM, vCPU belongs to, is configured for
+ * LAPIC Pass-through
+ *
+ * @pre vcpu != NULL
+ *
+ * @return true, if vCPU LAPIC is in x2APIC mode and VM, vCPU belongs to, is configured for
+ *				LAPIC Pass-through
+ */
+static inline bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu)
+{
+	return vcpu->arch.lapic_pt_enabled;
+}
 
 /**
  * @brief handle posted interrupts

@@ -38,7 +38,8 @@
 - ``GUEST_FLAG_HIDE_MTRR`` specify that MTRR is hidden from the VM
 - ``GUEST_FLAG_RT`` specify that the VM is an RT-VM (real-time)
 - ``GUEST_FLAG_NVMX_ENABLED`` specify that the VM supports nested virtualization
-- ``GUEST_FLAG_TPM2_FIXUP`` specify that the VM needs to do fixup for TPM2 passthrough</xs:documentation>
+- ``GUEST_FLAG_SECURITY_VM`` specify that the VM needs to do security-vm related
+  fixup (TPM2 passthrough and SMBIOS passthrough)</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="" />
@@ -50,7 +51,7 @@
     <xs:enumeration value="GUEST_FLAG_HIDE_MTRR" />
     <xs:enumeration value="GUEST_FLAG_RT" />
     <xs:enumeration value="GUEST_FLAG_NVMX_ENABLED" />
-    <xs:enumeration value="GUEST_FLAG_TPM2_FIXUP" />
+    <xs:enumeration value="GUEST_FLAG_SECURITY_VM" />
   </xs:restriction>
 </xs:simpleType>
 
@@ -179,12 +180,12 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
         <xs:documentation>Configurable boot argument for pre-launched VM of hybrid or hybrid_rt mode.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="kern_load_addr" type="HexFormat" minOccurs="0">
+    <xs:element name="kern_load_addr" type="KernLoadAddr" minOccurs="0">
       <xs:annotation>
         <xs:documentation>The loading address in host memory for the VM kernel.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="kern_entry_addr" type="HexFormat" minOccurs="0">
+    <xs:element name="kern_entry_addr" type="KernEntryAddr" minOccurs="0">
       <xs:annotation>
         <xs:documentation>The entry address in host memory for the VM kernel.</xs:documentation>
       </xs:annotation>

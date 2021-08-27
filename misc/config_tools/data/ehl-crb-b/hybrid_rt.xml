@@ -60,6 +60,7 @@
         </MEMORY>
         <CAPACITIES>
             <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
+            <MAX_EFI_MMAP_ENTRIES>256</MAX_EFI_MMAP_ENTRIES>
             <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
             <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
             <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
@@ -130,7 +131,7 @@
             <pci_dev>00:1d.2 Ethernet controller: Intel Corporation Device 4bb0</pci_dev>
         </pci_devs>
         <mmio_resources>
-            <TPM2>y</TPM2>
+            <TPM2>n</TPM2>
         </mmio_resources>
     </vm>
     <vm id="1">

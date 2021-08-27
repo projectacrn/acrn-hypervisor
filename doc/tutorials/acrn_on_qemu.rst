@@ -124,7 +124,7 @@ Install ACRN Hypervisor
    .. important:: All the steps below are performed **inside** the Service VM guest that we built in the
       previous section.
 
-#. Install the ACRN build tools and dependencies following the :ref:`install-build-tools-dependencies`
+#. Install the ACRN build tools and dependencies following the :ref:`gsg`
 
 #. Clone ACRN repo and check out the ``v2.5`` tag.
 
@@ -141,7 +141,7 @@ Install ACRN Hypervisor
 
       make BOARD=qemu SCENARIO=sdc
 
-   For more details, refer to :ref:`getting-started-building`.
+   For more details, refer to :ref:`gsg`.
 
 #. Install the ACRN Device Model and tools
 
@@ -156,7 +156,7 @@ Install ACRN Hypervisor
       sudo cp build/hypervisor/acrn.32.out /boot
 
 #. Clone and configure the Service VM kernel repository following the instructions at
-   :ref:`build-and-install-ACRN-kernel` and using the ``v2.5`` tag. The User VM (L2 guest)
+   :ref:`gsg` and using the ``v2.5`` tag. The User VM (L2 guest)
    uses the ``virtio-blk`` driver to mount the rootfs. This driver is included in the default
    kernel configuration as of the ``v2.5`` tag.
 

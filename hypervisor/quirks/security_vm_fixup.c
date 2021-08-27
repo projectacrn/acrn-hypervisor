@@ -8,6 +8,13 @@
 #include <asm/guest/vm.h>
 #include <vacpi.h>
 #include <logmsg.h>
+#include <util.h>
+#include <asm/mmu.h>
+#include <asm/pgtable.h>
+#include <asm/guest/ept.h>
+#include <acrn_common.h>
+#include <quirks/smbios.h>
+#include <boot.h>
 
 static void *get_acpi_mod_entry(const char *signature, void *acpi)
 {
@@ -82,10 +89,216 @@ void security_vm_fixup(uint16_t vm_id)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
 
-	if ((vm_config->guest_flags & GUEST_FLAG_TPM2_FIXUP) != 0UL) {
+	if ((vm_config->guest_flags & GUEST_FLAG_SECURITY_VM) != 0UL) {
 		stac();
 		tpm2_fixup(vm_id);
 		clac();
 	}
 }
 
+/* Below are code for SMBIOS passthrough */
+
+/* The region after the first 64kb is currently not used. On some platforms,
+ * there might be an TPM2 event log region starting from VIRT_ACPI_NVS_ADDR + 0xB0000.
+ * This table is usually a few KB in size so we have plenty of room here.
+ */
+#define VIRT_SMBIOS_TABLE_ADDR (VIRT_ACPI_NVS_ADDR + 64 * MEM_1K)
+/* We hardcode the eps addr to 0xf1000. The ACPI RSDP addr is hardcoded to 0xf2400
+ * so we're safe here. This header is at most 31 bytes.
+ */
+#define VIRT_SMBIOS_EPS_ADDR    0xf1000UL
+#define SMBIOS_EPS_SEARCH_START 0xf0000UL
+#define SMBIOS_EPS_SEARCH_END   0xfffffUL
+
+/* For subsequent code, "smbios2" will be specifically refering to 32bit SMBIOS (major version 2),
+ * and "smbios3" will refer to 64-bit SMBIOS (major version 3). "smbios" will be a generic
+ * reference to SMBIOS structure.
+ */
+struct smbios_info {
+    union {
+        struct smbios2_entry_point eps2;
+        struct smbios3_entry_point eps3;
+    } smbios_eps;
+    uint8_t major_ver;
+    size_t smbios_eps_size;
+    void *smbios_table;
+    size_t smbios_table_size;
+};
+
+static void *efi_search_guid(EFI_SYSTEM_TABLE *tab, EFI_GUID *guid)
+{
+	uint64_t i;
+	void *pVendortable = NULL;
+
+	if (tab != NULL) {
+		for (i = 0; i < tab->NumberOfTableEntries; i++) {
+			EFI_CONFIGURATION_TABLE *conf_tab = &tab->ConfigurationTable[i];
+
+			if (uuid_is_equal((uint8_t *)&conf_tab->VendorGuid, (uint8_t *)guid)) {
+				pVendortable = hpa2hva((uint64_t)conf_tab->VendorTable);
+				break;
+			}
+		}
+	}
+
+	return pVendortable;
+}
+
+static inline void get_smbios3_info(struct smbios3_entry_point *eps3, struct smbios_info *si)
+{
+    si->smbios_eps_size = eps3->length;
+    memcpy_s(&si->smbios_eps, si->smbios_eps_size, eps3, si->smbios_eps_size);
+    si->smbios_table = hpa2hva(eps3->st_addr);
+    si->smbios_table_size = eps3->max_st_size;
+    si->major_ver = eps3->major_ver;
+}
+
+static inline void get_smbios2_info(struct smbios2_entry_point *eps2, struct smbios_info *si)
+{
+    si->smbios_eps_size = eps2->length;
+    memcpy_s(&si->smbios_eps, si->smbios_eps_size, eps2, si->smbios_eps_size);
+    si->smbios_table = hpa2hva(eps2->st_addr);
+    si->smbios_table_size = eps2->st_length;
+    si->major_ver = eps2->major_ver;
+}
+
+static void generate_checksum(uint8_t *byte_start, int nbytes, uint8_t *checksum_pos)
+{
+    *checksum_pos = 0;
+    *checksum_pos = -calculate_sum8(byte_start, nbytes);
+}
+
+static int efi_search_smbios_eps(EFI_SYSTEM_TABLE *efi_system_table, struct smbios_info *si)
+{
+    void *p = NULL;
+    EFI_GUID smbios3_guid = SMBIOS3_TABLE_GUID;
+    EFI_GUID smbios2_guid = SMBIOS2_TABLE_GUID;
+
+    /* If both are present, SMBIOS3 takes precedence over SMBIOS */
+    stac();
+    p = efi_search_guid(efi_system_table, &smbios3_guid);
+    if (p != NULL) {
+        get_smbios3_info((struct smbios3_entry_point *)p, si);
+    } else {
+        p = efi_search_guid(efi_system_table, &smbios2_guid);
+        if (p != NULL) {
+            get_smbios2_info((struct smbios2_entry_point *)p, si);
+        }
+    }
+    clac();
+
+    return (p != NULL);
+}
+
+static int copy_smbios_to_guest(struct acrn_vm *vm, struct smbios_info *si)
+{
+    int ret = 0;
+    uint64_t gpa;
+
+    gpa = VIRT_SMBIOS_TABLE_ADDR;
+    ret = copy_to_gpa(vm, si->smbios_table, gpa, si->smbios_table_size);
+    if (ret == 0) {
+        if (si->major_ver == 2) {
+            struct smbios2_entry_point *eps2 = &si->smbios_eps.eps2;
+            eps2->st_addr = (uint32_t)gpa;
+            /* If we wrote generate_checksum(eps->int_anchor, ...), the code scanning tool will
+             * emit warnings about array bound overflow. So use offsetof instead.
+             */
+            generate_checksum((uint8_t *)eps2 + offsetof(struct smbios2_entry_point, int_anchor),
+                0xf, &eps2->int_checksum);
+            generate_checksum((uint8_t *)eps2, eps2->length, &eps2->checksum);
+        } else if (si->major_ver == 3) {
+            struct smbios3_entry_point *eps3 = &si->smbios_eps.eps3;
+            eps3->st_addr = (uint32_t)gpa;
+            generate_checksum((uint8_t *)eps3, eps3->length, &eps3->checksum);
+        }
+
+        gpa = VIRT_SMBIOS_EPS_ADDR;
+        ret = copy_to_gpa(vm, &si->smbios_eps, gpa, si->smbios_eps_size);
+    }
+
+    return ret;
+}
+
+static int is_smbios3_present(uint8_t *p)
+{
+    return (strncmp((const char *)p, "_SM3_", 5) == 0 &&
+        (calculate_sum8(p, ((struct smbios3_entry_point *)p)->length)) == 0);
+}
+
+static int is_smbios2_present(uint8_t *p)
+{
+    return (strncmp((const char *)p, "_SM_", 4) == 0 &&
+        (calculate_sum8(p, ((struct smbios2_entry_point *)p)->length)) == 0);
+}
+
+static int mem_search_smbios_eps(struct smbios_info *si)
+{
+    uint8_t *start = (uint8_t *)hpa2hva(SMBIOS_EPS_SEARCH_START);
+    uint8_t *end = (uint8_t *)hpa2hva(SMBIOS_EPS_SEARCH_END);
+    uint8_t *p;
+
+    /* per SMBIOS spec 3.2.0, 32-bit (SMBIOS) and 64-bit (SMBIOS3) EPS can be found by searching
+     * for the anchor string on paragraph (16-byte) boundaries within the physical address
+     * 0xf0000-0xfffff.
+     */
+    stac();
+    for (p = start; p < end; p += 16) {
+        if (is_smbios3_present(p)) {
+            get_smbios3_info((struct smbios3_entry_point *)p, si);
+            break;
+        } else if (is_smbios2_present(p)) {
+            get_smbios2_info((struct smbios2_entry_point *)p, si);
+            break;
+        }
+    }
+    clac();
+
+    return (p < end);
+}
+
+static int probe_smbios_table(struct acrn_boot_info *abi, struct smbios_info *si)
+{
+    int found = 0;
+
+    if (boot_from_uefi(abi)) {
+        /* Get from EFI system table */
+        uint64_t efi_system_tab_paddr = ((uint64_t)abi->uefi_info.systab_hi << 32) | ((uint64_t)abi->uefi_info.systab);
+        EFI_SYSTEM_TABLE *efi_system_tab = (EFI_SYSTEM_TABLE *)hpa2hva(efi_system_tab_paddr);
+        found = efi_search_smbios_eps(efi_system_tab, si);
+    } else {
+        /* Search eps in 0xf0000-0xfffff */
+        found = mem_search_smbios_eps(si);
+    }
+    /* Note: Multiboot2 spec specifies an SMBIOS tag where the bootloader can pass an "SMBIOS table" to OS.
+     * As of today GRUB does not support this feature, and if they were to support it, they will do the same
+     * thing we did here, i.e.: either reading from EFI system table or scan 0xf0000~0xfffff. So we will skip
+     * trying to get SMBIOS table from Multiboot2 tag.
+     */
+
+#ifdef VM0_TPM_EVENTLOG_BASE_ADDR
+    if (found && (si->smbios_table_size > (VM0_TPM_EVENTLOG_BASE_ADDR - VIRT_SMBIOS_TABLE_ADDR))) {
+        /* Unlikely but we check this anyway */
+        pr_err("Error: SMBIOS table too large. Stop copying SMBIOS info to guest.");
+        found = 0;
+    }
+#endif
+
+    return found;
+}
+
+void passthrough_smbios(struct acrn_vm *vm, struct acrn_boot_info *abi)
+{
+    struct smbios_info si;
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+    if (is_prelaunched_vm(vm) && ((vm_config->guest_flags & GUEST_FLAG_SECURITY_VM) != 0)) {
+        memset(&si, 0, sizeof(struct smbios_info));
+
+        if (probe_smbios_table(abi, &si)) {
+            if (copy_smbios_to_guest(vm, &si)) {
+                pr_err("Failed to copy SMBIOS info to vm%d", vm->vm_id);
+            }
+        }
+    }
+}

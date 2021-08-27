@@ -149,7 +149,7 @@ Configure RDT for VM Using VM Configuration
    platform-specific XML file that helps ACRN identify RDT-supported
    platforms. RDT on ACRN is enabled by configuring the ``FEATURES``
    sub-section of the scenario XML file as in the below example. For
-   details on building ACRN with a scenario, refer  to :ref:`build-with-acrn-scenario`.
+   details on building ACRN with a scenario, refer  to :ref:`gsg`.
 
    .. code-block:: none
       :emphasize-lines: 6
@@ -249,7 +249,7 @@ Configure RDT for VM Using VM Configuration
    per-LP CLOS is applied to the core. If HT is turned on, don't place high
    priority threads on sibling LPs running lower priority threads.
 
-#. Based on our scenario, build and install ACRN. See :ref:`build-with-acrn-scenario`
+#. Based on our scenario, build and install ACRN. See :ref:`gsg`
    for building and installing instructions.
 
 #. Restart the platform.

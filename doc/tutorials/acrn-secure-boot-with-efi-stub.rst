@@ -57,7 +57,7 @@ Building
 Build Dependencies
 ==================
 
-- Build Tools and Dependencies described in the :ref:`getting-started-building` guide
+- Build Tools and Dependencies described in the :ref:`gsg` guide
 - ``gnu-efi`` package
 - Service VM Kernel ``bzImage``
 - pre-launched RTVM Kernel ``bzImage``

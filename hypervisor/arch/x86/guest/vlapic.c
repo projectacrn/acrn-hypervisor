@@ -1702,6 +1702,7 @@ int32_t vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 				if (is_lapic_pt_configured(vcpu->vm)) {
 					/* vlapic need to be reset to make sure it is in correct state */
 					vlapic_reset(vlapic, &ptapic_ops, SOFTWARE_RESET);
+					vcpu->arch.lapic_pt_enabled = true;
 				}
 				vlapic->msr_apicbase = new;
 				vlapic_build_x2apic_id(vlapic);

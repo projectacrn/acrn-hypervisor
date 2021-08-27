@@ -490,7 +490,7 @@ void cpu_dead(void)
 static void set_current_pcpu_id(uint16_t pcpu_id)
 {
 	/* Write TSC AUX register */
-	msr_write(MSR_IA32_TSC_AUX, (uint64_t) pcpu_id);
+	msr_write(ACRN_PSEUDO_PCPUID_MSR, (uint32_t) pcpu_id);
 }
 
 static void print_hv_banner(void)

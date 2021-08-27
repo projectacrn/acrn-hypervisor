@@ -23,15 +23,6 @@ partitioning hypervisors. The ACRN hypervisor architecture partitions
 the system into different functional domains, with carefully selected
 user VM sharing optimizations for IoT and embedded devices.
 
-ACRN Open Source Roadmap
-************************
-
-Stay informed on what's ahead for ACRN by visiting the
-`ACRN Project Roadmap <https://projectacrn.org/#resources>`_ on the
-projectacrn.org website.
-
-For up-to-date happenings, visit the `ACRN blog <https://projectacrn.org/blog/>`_.
-
 ACRN High-Level Architecture
 ****************************
 

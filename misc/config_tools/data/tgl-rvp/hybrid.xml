@@ -52,6 +52,7 @@
 
     <CAPACITIES>
         <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
+        <MAX_EFI_MMAP_ENTRIES>300</MAX_EFI_MMAP_ENTRIES>
         <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
         <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
         <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
@@ -70,7 +71,7 @@
     <vm_type>SAFETY_VM</vm_type>
     <name>ACRN PRE-LAUNCHED VM0</name>
     <guest_flags>
-        <guest_flag>GUEST_FLAG_TPM2_FIXUP</guest_flag>
+        <guest_flag>GUEST_FLAG_SECURITY_VM</guest_flag>
     </guest_flags>
     <cpu_affinity>
         <pcpu_id>3</pcpu_id>
@@ -93,9 +94,7 @@
         <kern_type>KERNEL_ELF</kern_type>
         <kern_mod>Zephyr_ElfImage</kern_mod>
         <ramdisk_mod/>
-        <bootargs>reboot=acpi</bootargs>
-        <kern_load_addr>0x8000</kern_load_addr>
-        <kern_entry_addr>0x8000</kern_entry_addr>
+        <bootargs></bootargs>
     </os_config>
     <legacy_vuart id="0">
         <type>VUART_LEGACY_PIO</type>

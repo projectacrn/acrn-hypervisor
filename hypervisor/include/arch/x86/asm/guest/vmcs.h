@@ -40,6 +40,25 @@ static inline uint64_t apic_access_offset(uint64_t qual)
 {
 	return (qual & APIC_ACCESS_OFFSET);
 }
+
+static inline void clear_vmcs_bit(uint32_t vmcs_field, uint32_t bit)
+{
+	uint64_t val64;
+
+	val64 = exec_vmread(vmcs_field);
+	val64 &= ~bit;
+	exec_vmwrite(vmcs_field, val64);
+}
+
+static inline void set_vmcs_bit(uint32_t vmcs_field, uint32_t bit)
+{
+	uint64_t val64;
+
+	val64 = exec_vmread(vmcs_field);
+	val64 |= bit;
+	exec_vmwrite(vmcs_field, val64);
+}
+
 void init_vmcs(struct acrn_vcpu *vcpu);
 void load_vmcs(const struct acrn_vcpu *vcpu);
 void init_host_state(void);

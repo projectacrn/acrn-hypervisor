@@ -40,6 +40,20 @@
   <xs:union memberTypes="None HexFormat" />
 </xs:simpleType>
 
+<xs:simpleType name="KernLoadAddr">
+  <xs:annotation>
+    <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
+  </xs:annotation>
+  <xs:union memberTypes="None HexFormat" />
+</xs:simpleType>
+
+<xs:simpleType name="KernEntryAddr">
+  <xs:annotation>
+    <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
+  </xs:annotation>
+  <xs:union memberTypes="None HexFormat" />
+</xs:simpleType>
+
 <xs:simpleType name="MaxMsixTableNumType">
   <xs:annotation>
     <xs:documentation>Integer from 1 to 2048.</xs:documentation>

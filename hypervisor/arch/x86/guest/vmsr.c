@@ -37,6 +37,7 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	 * Number of entries: NUM_WORLD_MSRS
 	 */
 	MSR_IA32_PAT,
+	MSR_IA32_EFER,
 	MSR_IA32_TSC_ADJUST,
 
 	/*
@@ -313,12 +314,6 @@ static void prepare_auto_msr_area (struct acrn_vcpu *vcpu)
 
 	vcpu->arch.msr_area.count = 0U;
 
-	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].msr_index = MSR_IA32_TSC_AUX;
-	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].value = vcpu->vcpu_id;
-	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].msr_index = MSR_IA32_TSC_AUX;
-	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].value = pcpuid_from_vcpu(vcpu);
-	vcpu->arch.msr_area.count++;
-
 	/* only load/restore MSR IA32_PQR_ASSOC when hv and guest have differnt settings */
 	if (is_platform_rdt_capable() && (vcpu_clos != hv_clos)) {
 		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
@@ -521,6 +516,11 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		 * the saved value guest_msrs[MSR_IA32_PAT]
 		 */
 		v = vcpu_get_guest_msr(vcpu, MSR_IA32_PAT);
+		break;
+	}
+	case MSR_IA32_EFER:
+	{
+		v = vcpu_get_efer(vcpu);
 		break;
 	}
 	case MSR_IA32_APIC_BASE:
@@ -871,6 +871,11 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_PAT:
 	{
 		err = write_pat_msr(vcpu, v);
+		break;
+	}
+	case MSR_IA32_EFER:
+	{
+		vcpu_set_efer(vcpu, v);
 		break;
 	}
 	case MSR_IA32_APIC_BASE:

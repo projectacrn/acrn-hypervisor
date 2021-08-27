@@ -204,9 +204,11 @@ void init_host_state(void)
 	pr_dbg("vm exit return address = %016lx ", value64);
 
 	/* As a type I hypervisor, just init sysenter fields to 0 */
-	exec_vmwrite32(VMX_HOST_IA32_SYSENTER_CS, 0U);
 	exec_vmwrite(VMX_HOST_IA32_SYSENTER_ESP, 0UL);
 	exec_vmwrite(VMX_HOST_IA32_SYSENTER_EIP, 0UL);
+
+	/* We use IA32_SYSENTER_CS MSR to cache pCPU ID. */
+	exec_vmwrite32(VMX_HOST_IA32_SYSENTER_CS, msr_read(ACRN_PSEUDO_PCPUID_MSR));
 }
 
 static uint32_t check_vmx_ctrl(uint32_t msr, uint32_t ctrl_req)
@@ -481,12 +483,8 @@ static void init_entry_ctrl(const struct acrn_vcpu *vcpu)
 	/* Log messages to show initializing VMX entry controls */
 	pr_dbg("Initialize Entry control ");
 
-	/* Set up VMX entry controls - pg 2908 24.8.1 * Set IA32e guest mode -
-	 * on VM entry processor is in IA32e 64 bitmode * Start guest with host
-	 * IA32_PAT and IA32_EFER
-	 */
-	value32 = (VMX_ENTRY_CTLS_LOAD_EFER |
-		   VMX_ENTRY_CTLS_LOAD_PAT);
+	/* Set up VMX entry controls - ISDM 24.8.1 */
+	value32 = VMX_ENTRY_CTLS_LOAD_PAT;
 
 	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		value32 |= (VMX_ENTRY_CTLS_IA32E_MODE);
@@ -525,13 +523,11 @@ static void init_exit_ctrl(const struct acrn_vcpu *vcpu)
 	 * size is 64 bit Set up to acknowledge interrupt on exit, if 1 the HW
 	 * acks the interrupt in VMX non-root and saves the interrupt vector to
 	 * the relevant VM exit field for further processing by Hypervisor
-	 * Enable saving and loading of IA32_PAT and IA32_EFER on VMEXIT Enable
-	 * saving of pre-emption timer on VMEXIT
+	 * Enable saving and loading IA32_PAT on VMEXIT
 	 */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_EXIT_CTLS,
 			 VMX_EXIT_CTLS_ACK_IRQ | VMX_EXIT_CTLS_SAVE_PAT |
-			 VMX_EXIT_CTLS_LOAD_PAT | VMX_EXIT_CTLS_LOAD_EFER |
-			 VMX_EXIT_CTLS_SAVE_EFER | VMX_EXIT_CTLS_HOST_ADDR64);
+			 VMX_EXIT_CTLS_LOAD_PAT | VMX_EXIT_CTLS_HOST_ADDR64);
 
 	exec_vmwrite32(VMX_EXIT_CONTROLS, value32);
 	pr_dbg("VMX_EXIT_CONTROL: 0x%x ", value32);

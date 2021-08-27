@@ -119,7 +119,7 @@ toolset.
       | **Kernel cmdline:** "idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
 
    #. Copy the ``board_inspector`` directory into the target file system and then run the
-      ``sudo python3 cli.py $(BOARD)`` command.
+      ``sudo python3 board_inspector.py $(BOARD)`` command.
    #. A ``$(BOARD).xml`` that includes all needed hardware-specific information
       is generated under the current working directory. Here, ``$(BOARD)`` is the
       specified board name.
@@ -128,7 +128,7 @@ toolset.
 
    a. Copy ``$(BOARD).xml`` to the host development machine.
    #. Run the ACRN configuration editor (available at
-      ``misc/config_tools/config_app/app.py``) on the host machine and import
+      ``misc/config_tools/config_app/acrn_configurator.py``) on the host machine and import
       the ``$(BOARD).xml``. Select your working scenario under **Scenario Setting**
       and input the desired scenario settings. The tool will do validation checks
       on the input based on the ``$(BOARD).xml``. The customized settings can be
@@ -142,7 +142,7 @@ toolset.
    .. note:: Refer to :ref:`acrn_config_tool_ui` for more details on
       the configuration editor.
 
-#. Build with your XML files. Refer to :ref:`getting-started-building` to build
+#. Build with your XML files. Refer to :ref:`gsg` to build
    the ACRN hypervisor with your XML files on the host machine.
 
 #. Deploy VMs and run ACRN hypervisor on the target board.
@@ -398,9 +398,6 @@ The ACRN configuration editor provides a web-based user interface for the follow
 Prerequisites
 =============
 
-.. _get acrn repo guide:
-   https://projectacrn.github.io/latest/getting-started/building-from-source.html#get-the-acrn-hypervisor-source-code
-
 - Clone the ACRN hypervisor repo
 
   .. code-block:: bash
@@ -422,7 +419,7 @@ Instructions
 
    .. code-block:: bash
 
-      $ python3 app.py
+      $ python3 acrn_configurator.py
 
 #. Open a browser and navigate to the website
    `<http://127.0.0.1:5001/>`_ automatically, or you may need to visit this
@@ -510,8 +507,10 @@ Instructions
    pop-up model.
 
    .. note::
-      All customized scenario XMLs will be in user-defined groups
-      located in ``misc/config_tools/data/[board]/user_defined/``.
+      Save the customized scenario XML to a specific folder by inputting the
+      absolute path to this folder in the **Scenario XML Path** field. If you
+      don't specify a path, the scenario xml file will be saved to
+      default folder: ``acrn-hypervisor/../user_config/[board]/``.
 
    Before saving the scenario XML, the configuration editor validates the
    configurable items. If errors exist, the configuration editor lists all
@@ -550,7 +549,7 @@ The **Launch Setting** is quite similar to the **Scenario Setting**:
    - Remove a UOS launch script by clicking **Remove this VM** for the
      current launch configuration.
 
-#. Save the current launch configuration to the user-defined XML files by
+#. Save the current launch configuration to the ``user_config`` XML folder by
    clicking **Export XML**. The configuration editor validates the current
    configuration and lists all incorrectly configured items.
 

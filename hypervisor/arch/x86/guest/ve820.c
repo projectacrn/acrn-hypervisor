@@ -12,10 +12,11 @@
 #include <vacpi.h>
 #include <logmsg.h>
 #include <asm/rtcm.h>
+#include <ptdev.h>
 
 #define ENTRY_HPA1_LOW_PART1	2U
-#define ENTRY_HPA1_LOW_PART2	4U
-#define ENTRY_HPA1_HI		8U
+#define ENTRY_HPA1_LOW_PART2	5U
+#define ENTRY_HPA1_HI		9U
 
 static struct e820_entry sos_vm_e820[E820_MAX_ENTRIES];
 static struct e820_entry pre_vm_e820[PRE_VM_NUM][E820_MAX_ENTRIES];
@@ -197,9 +198,14 @@ static const struct e820_entry pre_ve820_template[E820_MAX_ENTRIES] = {
 		.length   = PRE_RTVM_SW_SRAM_MAX_SIZE,
 		.type     = E820_TYPE_RESERVED
 	},
+	{	/* GPU OpRegion for pre-launched VM */
+		.baseaddr = GPU_OPREGION_GPA,
+		.length   = GPU_OPREGION_SIZE,
+		.type     = E820_TYPE_RESERVED
+	},
 	{	/* part2 of lowmem of hpa1*/
-		.baseaddr = PRE_RTVM_SW_SRAM_BASE_GPA + PRE_RTVM_SW_SRAM_MAX_SIZE,
-		.length   = VIRT_ACPI_DATA_ADDR - (PRE_RTVM_SW_SRAM_BASE_GPA + PRE_RTVM_SW_SRAM_MAX_SIZE),
+		.baseaddr = GPU_OPREGION_GPA + GPU_OPREGION_SIZE,
+		.length   = VIRT_ACPI_DATA_ADDR - (GPU_OPREGION_GPA + GPU_OPREGION_SIZE),
 		.type     = E820_TYPE_RAM
 	},
 	{	/* ACPI Reclaim */

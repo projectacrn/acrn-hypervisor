@@ -5,6 +5,7 @@
  */
 
 #include <asm/vm_config.h>
+#include <util.h>
 
 /*
  * @pre vm_id < CONFIG_MAX_VM_NUM
@@ -21,16 +22,6 @@ struct acrn_vm_config *get_vm_config(uint16_t vm_id)
 uint8_t get_vm_severity(uint16_t vm_id)
 {
 	return vm_configs[vm_id].severity;
-}
-
-bool uuid_is_equal(const uint8_t *uuid1, const uint8_t *uuid2)
-{
-	uint64_t uuid1_h = *(const uint64_t *)uuid1;
-	uint64_t uuid1_l = *(const uint64_t *)(uuid1 + 8);
-	uint64_t uuid2_h = *(const uint64_t *)uuid2;
-	uint64_t uuid2_l = *(const uint64_t *)(uuid2 + 8);
-
-	return ((uuid1_h == uuid2_h) && (uuid1_l == uuid2_l));
 }
 
 /**
