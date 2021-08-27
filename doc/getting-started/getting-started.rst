@@ -386,7 +386,7 @@ Generate a Board Configuration File
 Generate a Scenario Configuration File and Launch Script
 *********************************************************
 
-You use the **ACRN configuration editor** to generate scenario configuration files and launch scripts.
+You use the **ACRN configurator** to generate scenario configuration files and launch scripts.
 
 A **scenario configuration file** is an XML file that holds the parameters of
 a specific ACRN configuration, such as the number of VMs that can be run,
@@ -396,14 +396,14 @@ A **launch script** is a shell script that is used to create a User VM.
 
 To generate a scenario configuration file and launch script:
 
-#. On the development computer, install ACRN configuration editor dependencies:
+#. On the development computer, install ACRN configurator dependencies:
 
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-hypervisor/misc/config_tools/config_app
       sudo pip3 install -r requirements
 
-#. Launch the ACRN configuration editor:
+#. Launch the ACRN configurator:
 
    .. code-block:: bash
 
@@ -411,7 +411,7 @@ To generate a scenario configuration file and launch script:
 
 #. Your web browser should open the website `<http://127.0.0.1:5001/>`__
    automatically, or you may need to visit this website manually.
-   The ACRN configuration editor is supported on Chrome and Firefox.
+   The ACRN configurator is supported on Chrome and Firefox.
 
 #. Click the **Import Board info** button and browse to the board configuration
    file ``my_board.xml`` previously generated. When it is successfully
