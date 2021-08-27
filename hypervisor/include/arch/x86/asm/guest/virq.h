@@ -103,6 +103,7 @@ void vcpu_inject_ud(struct acrn_vcpu *vcpu);
  */
 void vcpu_inject_ss(struct acrn_vcpu *vcpu);
 void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid);
+bool vcpu_try_cancel_request(struct acrn_vcpu *vcpu, uint16_t eventid);
 
 /*
  * @pre vcpu != NULL
