@@ -4,7 +4,7 @@
 
 struct sched_event {
 	spinlock_t lock;
-	int8_t nqueued;
+	int32_t nqueued;
 	struct thread_object* waiting_thread;
 };
 

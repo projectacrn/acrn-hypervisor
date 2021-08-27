@@ -45,7 +45,7 @@ void vcpu_kick_lock_instr_emulation(struct acrn_vcpu *cur_vcpu)
 		get_vm_lock(cur_vcpu->vm);
 
 		foreach_vcpu(i, cur_vcpu->vm, other) {
-			if (other != cur_vcpu) {
+			if ((other != cur_vcpu) && (other->state == VCPU_RUNNING)) {
 				vcpu_make_request(other, ACRN_REQUEST_SPLIT_LOCK);
 			}
 		}
@@ -59,7 +59,7 @@ void vcpu_complete_lock_instr_emulation(struct acrn_vcpu *cur_vcpu)
 
 	if (cur_vcpu->vm->hw.created_vcpus > 1U) {
 		foreach_vcpu(i, cur_vcpu->vm, other) {
-			if (other != cur_vcpu) {
+			if ((other != cur_vcpu) && (other->state == VCPU_RUNNING)) {
 				signal_event(&other->events[VCPU_EVENT_SPLIT_LOCK]);
 			}
 		}
