@@ -260,28 +260,9 @@ static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
 	if (!is_sos_vm(vm)) {
 		struct pci_vbar *vbar = &vdev->vbars[idx];
-		if (vbar->base_gpa != 0UL) {
-			allow_guest_pio_access(vm, (uint16_t)vbar->base_gpa, (uint32_t)(vbar->size));
+		if (vbar->base_hpa != 0UL) {
+			allow_guest_pio_access(vm, (uint16_t)vbar->base_hpa, (uint32_t)(vbar->size));
 		}
-	}
-}
-
-/**
- * @brief Deny IO bar access
- * @pre vdev != NULL
- * @pre vdev->vpci != NULL
- */
-static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
-{
-	struct acrn_vm *vm = vpci2vm(vdev->vpci);
-
-	/* For SOS, all port IO access is allowed by default, so skip SOS here */
-	if (!is_sos_vm(vm)) {
-		struct pci_vbar *vbar = &vdev->vbars[idx];
-		if (vbar->base_gpa != 0UL) {
-			deny_guest_pio_access(vm, (uint16_t)(vbar->base_gpa), (uint32_t)(vbar->size));
-		}
-
 	}
 }
 
@@ -293,7 +274,7 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 	struct pci_vbar *vbar = &vdev->vbars[idx];
 
 	if (is_pci_io_bar(vbar)) {
-		vpci_update_one_vbar(vdev, idx, val, vdev_pt_allow_io_vbar, vdev_pt_deny_io_vbar);
+		vpci_update_one_vbar(vdev, idx, val, NULL, NULL);
 	} else if (is_pci_mem_bar(vbar)) {
 		vpci_update_one_vbar(vdev, idx, val, vdev_pt_map_mem_vbar, vdev_pt_unmap_mem_vbar);
 	}
@@ -425,6 +406,10 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 				/* if it is parsing SRIOV VF BARs, no need to write vdev bar */
 				if (!is_sriov_bar) {
 					pci_vdev_write_vbar(vdev, idx, lo);
+				}
+
+				if (is_pci_io_bar(vbar)) {
+					vdev_pt_allow_io_vbar(vdev, idx);
 				}
 			}
 		}

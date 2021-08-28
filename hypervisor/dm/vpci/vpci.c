@@ -784,9 +784,6 @@ int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *
 	return ret;
 }
 
-/*
- * @pre unmap_cb != NULL
- */
 void vpci_update_one_vbar(struct pci_vdev *vdev, uint32_t bar_idx, uint32_t val,
 		map_pcibar map_cb, unmap_pcibar unmap_cb)
 {
@@ -796,7 +793,9 @@ void vpci_update_one_vbar(struct pci_vdev *vdev, uint32_t bar_idx, uint32_t val,
 	if (vbar->is_mem64hi) {
 		update_idx -= 1U;
 	}
-	unmap_cb(vdev, update_idx);
+	if (unmap_cb != NULL) {
+		unmap_cb(vdev, update_idx);
+	}
 	pci_vdev_write_vbar(vdev, bar_idx, val);
 	if ((map_cb != NULL) && (vdev->vbars[update_idx].base_gpa != 0UL)) {
 		map_cb(vdev, update_idx);
