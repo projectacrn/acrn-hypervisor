@@ -149,7 +149,7 @@
     <xsl:param name="list" />
     <xsl:param name="delimar" />
     <func:result>
-      <xsl:value-of select="acrn:find-list-min-aux($list, $delimar, '')" />
+      <xsl:value-of select="acrn:find-list-min-aux($list, $delimar, '1000000000000000000000000000000000000000')" />
     </func:result>
   </func:function>
 
