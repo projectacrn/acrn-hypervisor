@@ -737,8 +737,7 @@ int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
 			} else {
 				vcpu->arch.nested.vmxon = true;
 				vcpu->arch.nested.host_state_dirty = false;
-				vcpu->arch.nested.gpa_field_dirty = false;
-				vcpu->arch.nested.control_field_dirty = false;
+				vcpu->arch.nested.control_fields_dirty = false;
 				vcpu->arch.nested.in_l2_guest = false;
 				vcpu->arch.nested.vmxon_ptr = vmptr_gpa;
 				vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
@@ -784,8 +783,7 @@ int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu)
 	if (check_vmx_permission(vcpu)) {
 		vcpu->arch.nested.vmxon = false;
 		vcpu->arch.nested.host_state_dirty = false;
-		vcpu->arch.nested.gpa_field_dirty = false;
-		vcpu->arch.nested.control_field_dirty = false;
+		vcpu->arch.nested.control_fields_dirty = false;
 		vcpu->arch.nested.in_l2_guest = false;
 		vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
 		(void)memset(vcpu->arch.nested.vmcs02, 0U, PAGE_SIZE);
@@ -875,13 +873,11 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 					vcpu->arch.nested.host_state_dirty = true;
 				}
 
-				/*
-				 * For simplicity, gpa_field_dirty could be used for all VMCS fields that
-				 * are programmed by L1 hypervisor with a GPA address
-				 */
-				if ((vmcs_field == VMX_MSR_BITMAP_FULL) ||
-				    (vmcs_field == VMX_EPT_POINTER_FULL)) {
-					vcpu->arch.nested.gpa_field_dirty = true;
+				if ((vmcs_field == VMX_MSR_BITMAP_FULL)
+					|| (vmcs_field == VMX_EPT_POINTER_FULL)
+					|| (vmcs_field == VMX_ENTRY_CONTROLS)
+					|| (vmcs_field == VMX_EXIT_CONTROLS)) {
+					vcpu->arch.nested.control_fields_dirty = true;
 
 					if (vmcs_field == VMX_EPT_POINTER_FULL) {
 						if (vcpu->arch.nested.vmcs12.ept_pointer != vmcs_value) {
@@ -889,11 +885,6 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 							get_nept_desc(vmcs_value);
 						}
 					}
-				}
-
-				if ((vmcs_field == VMX_ENTRY_CONTROLS)
-					|| (vmcs_field == VMX_EXIT_CONTROLS)) {
-					vcpu->arch.nested.control_field_dirty = true;
 				}
 
 				pr_dbg("vmcs_field: %x vmcs_value: %llx", vmcs_field, vmcs_value);
@@ -928,11 +919,17 @@ static void sync_vmcs02_to_vmcs12(struct acrn_vcpu *vcpu)
  * @pre vcpu != NULL
  * @pre VMCS02 (as an ordinary VMCS) is current
  */
-static void adjust_vmcs02_control_fields(struct acrn_vcpu *vcpu)
+static void merge_and_sync_control_fields(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vmcs12 *vmcs12 = &vcpu->arch.nested.vmcs12;
 	uint64_t value64;
 
+	/* Sync VMCS fields that are not shadowing. Don't need to sync these fields back to VMCS12. */
+
+	exec_vmwrite(VMX_MSR_BITMAP_FULL, gpa2hpa(vcpu->vm, vmcs12->msr_bitmap));
+	exec_vmwrite(VMX_EPT_POINTER_FULL, get_shadow_eptp(vmcs12->ept_pointer));
+
+	/* For VM-execution, entry and exit controls */
 	value64 = vmcs12->vm_entry_controls;
 	if ((value64 & VMX_ENTRY_CTLS_LOAD_EFER) != VMX_ENTRY_CTLS_LOAD_EFER) {
 		/*
@@ -967,16 +964,7 @@ static void sync_vmcs12_to_vmcs02(struct acrn_vcpu *vcpu)
 		exec_vmwrite(vmcs_shadowing_fields[idx], val64);
 	}
 
-	/* Sync VMCS fields that are not shadowing. Don't need to sync these fields back to VMCS12. */
-
-	val64 = vmcs12_read_field(vmcs12, VMX_MSR_BITMAP_FULL);
-	exec_vmwrite(VMX_MSR_BITMAP_FULL, gpa2hpa(vcpu->vm, val64));
-
-	val64 = vmcs12_read_field(vmcs12, VMX_EPT_POINTER_FULL);
-	exec_vmwrite(VMX_EPT_POINTER_FULL, get_shadow_eptp(val64));
-
-	/* For VM-execution, entry and exit controls */
-	adjust_vmcs02_control_fields(vcpu);
+	merge_and_sync_control_fields(vcpu);
 }
 
 /*
@@ -1198,8 +1186,7 @@ int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 
 				/* If no L2 VM entry happens between VMWRITE and VMCLEAR, need to clear these flags */
 				vcpu->arch.nested.host_state_dirty = false;
-				vcpu->arch.nested.gpa_field_dirty = false;
-				vcpu->arch.nested.control_field_dirty = false;
+				vcpu->arch.nested.control_fields_dirty = false;
 			} else {
 				 /*
 				  * we need to update the VMCS12 launch state in L1 memory in these two cases:
@@ -1383,34 +1370,6 @@ int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
 
 /*
  * @pre vcpu != NULL
- * @pre VMCS02 (as an ordinary VMCS) is current
- */
-static void merge_and_sync_control_fields(struct acrn_vcpu *vcpu)
-{
-	struct acrn_vmcs12 *vmcs12 = &vcpu->arch.nested.vmcs12;
-
-	/*
-	 * Merge non shadowing fields from VMCS12 to VMCS02 if needed.
-	 * If no L2 VM entry happens between VMWRITE and VMCLEAR,
-	 * these dirty VMCS fields will be merged to VMCS02 in sync_vmcs12_to_vmcs02()
-	 * next time when this VMCS12 is being VMPTRLDed.
-	 */
-
-	if (vcpu->arch.nested.gpa_field_dirty) {
-		vcpu->arch.nested.gpa_field_dirty = false;
-		exec_vmwrite(VMX_MSR_BITMAP_FULL, gpa2hpa(vcpu->vm, vmcs12->msr_bitmap));
-		exec_vmwrite(VMX_EPT_POINTER_FULL, get_shadow_eptp(vmcs12->ept_pointer));
-	}
-
-	/* for VM-execution, VM-exit, VM-entry control fields */
-	if (vcpu->arch.nested.control_field_dirty) {
-		vcpu->arch.nested.control_field_dirty = false;
-		adjust_vmcs02_control_fields(vcpu);
-	}
-}
-
-/*
- * @pre vcpu != NULL
  * @pre VMCS01 is current and VMCS02 is referenced by VMCS Link Pointer
  */
 static void nested_vmentry(struct acrn_vcpu *vcpu, bool is_launch)
@@ -1440,8 +1399,10 @@ static void nested_vmentry(struct acrn_vcpu *vcpu, bool is_launch)
 		/* as an ordinary VMCS, VMCS02 is active and currernt when L2 guest is running */
 		load_va_vmcs(vcpu->arch.nested.vmcs02);
 
-		/* Merge L0 settings and L1 settings for VMCS Control fields */
-		merge_and_sync_control_fields(vcpu);
+		if (vcpu->arch.nested.control_fields_dirty) {
+			vcpu->arch.nested.control_fields_dirty = false;
+			merge_and_sync_control_fields(vcpu);
+		}
 
 		/* vCPU is in guest mode from this point */
 		vcpu->arch.nested.in_l2_guest = true;
