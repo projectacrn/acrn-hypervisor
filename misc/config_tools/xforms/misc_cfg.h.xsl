@@ -145,20 +145,19 @@
 <!-- MAX_CACHE_CLOS_NUM_ENTRIES:
   Max number of MBA delay entries corresponding to each CLOS. -->
 <xsl:template name="rdt">
-  <xsl:variable name="rdt_resource" select="normalize-space(substring-before(substring-after(//CLOS_INFO, 'rdt resources supported:'), 'rdt resource clos max:'))" />
-  <xsl:variable name="rdt_res_clos_max" select="normalize-space(substring-before(substring-after(//CLOS_INFO, 'rdt resource clos max:'), 'rdt resource mask max:'))" />
-  <xsl:variable name="common_clos_max" select="acrn:get-common-clos-max('', $rdt_resource, $rdt_res_clos_max)"/>
+  <xsl:variable name="rdt_res_clos_max" select="acrn:get-normalized-closinfo-rdt-clos-max-str()" />
+  <xsl:variable name="common_clos_max" select="acrn:get-common-clos-max()"/>
   <xsl:choose>
     <xsl:when test="acrn:is-cdp-enabled()">
       <xsl:value-of select="acrn:ifdef('CONFIG_RDT_ENABLED')" />
       <xsl:value-of select="acrn:ifdef('CONFIG_CDP_ENABLED')" />
       <xsl:value-of select="acrn:define('HV_SUPPORTED_MAX_CLOS', $common_clos_max, 'U')" />
       <xsl:value-of select="acrn:define('MAX_CACHE_CLOS_NUM_ENTRIES', 2 * $common_clos_max, 'U')" />
-      <xsl:value-of select="acrn:define('MAX_MBA_CLOS_NUM_ENTRIES', $common_clos_max, 'U')" />
       <xsl:value-of select="$else" />
       <xsl:value-of select="acrn:define('HV_SUPPORTED_MAX_CLOS', acrn:find-list-min($rdt_res_clos_max, ','), 'U')" />
       <xsl:value-of select="acrn:define('MAX_CACHE_CLOS_NUM_ENTRIES', $common_clos_max, 'U')" />
       <xsl:value-of select="$endif" />
+      <xsl:value-of select="acrn:define('MAX_MBA_CLOS_NUM_ENTRIES', $common_clos_max, 'U')" />
     </xsl:when>
     <xsl:otherwise>
       <xsl:value-of select="acrn:ifdef('CONFIG_RDT_ENABLED')" />
