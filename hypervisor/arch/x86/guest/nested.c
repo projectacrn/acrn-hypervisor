@@ -972,6 +972,9 @@ static void sync_vmcs12_to_vmcs02(struct acrn_vcpu *vcpu)
 	val64 = vmcs12_read_field(vmcs12, VMX_MSR_BITMAP_FULL);
 	exec_vmwrite(VMX_MSR_BITMAP_FULL, gpa2hpa(vcpu->vm, val64));
 
+	val64 = vmcs12_read_field(vmcs12, VMX_EPT_POINTER_FULL);
+	exec_vmwrite(VMX_EPT_POINTER_FULL, get_shadow_eptp(val64));
+
 	/* For VM-execution, entry and exit controls */
 	adjust_vmcs02_control_fields(vcpu);
 }
@@ -1140,11 +1143,12 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 			/* Load VMCS12 from L1 guest memory */
 			(void)copy_from_gpa(vcpu->vm, (void *)&nested->vmcs12, vmcs12_gpa,
 				sizeof(struct acrn_vmcs12));
-			vcpu->arch.nested.gpa_field_dirty = true;
+
+			/* if needed, create nept_desc and allocate shadow root for the EPTP */
+			get_nept_desc(nested->vmcs12.ept_pointer);
 
 			/* Need to load shadow fields from this new VMCS12 to VMCS02 */
 			sync_vmcs12_to_vmcs02(vcpu);
-			get_nept_desc(nested->vmcs12.ept_pointer);
 
 			/* Before VMCS02 is being used as a shadow VMCS, VMCLEAR it */
 			clear_va_vmcs(nested->vmcs02);
@@ -1343,7 +1347,7 @@ int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
 	struct acrn_vmcs12 *vmcs12 = (struct acrn_vmcs12 *)&vcpu->arch.nested.vmcs12;
 	bool is_l1_vmexit = true;
 
-	if ((exec_vmread(VMX_EXIT_REASON) & 0xFFFFU) == VMX_EXIT_REASON_EPT_VIOLATION) {
+	if ((vcpu->arch.exit_reason & 0xFFFFU) == VMX_EXIT_REASON_EPT_VIOLATION) {
 		is_l1_vmexit = handle_l2_ept_violation(vcpu);
 	}
 
