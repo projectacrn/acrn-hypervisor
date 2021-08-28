@@ -339,8 +339,7 @@ struct acrn_nested {
 	bool vmxon;		/* To indicate if vCPU entered VMX operation */
 	bool in_l2_guest;	/* To indicate if vCPU is currently in Guest mode (from L1's perspective) */
 	bool host_state_dirty;	/* To indicate need to merge VMCS12 host-state fields to VMCS01 */
-	bool gpa_field_dirty;
-	bool control_field_dirty;	/* for VM-execution, VM-exit, VM-entry control fields */
+	bool control_fields_dirty;	/* For all other non-host-state fields that need to be merged */
 } __aligned(PAGE_SIZE);
 
 void init_nested_vmx(__unused struct acrn_vm *vm);
