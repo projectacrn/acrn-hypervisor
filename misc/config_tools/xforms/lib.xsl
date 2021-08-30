@@ -392,8 +392,8 @@
   </func:function>
 
   <func:function name="acrn:is-rdt-supported">
-    <xsl:variable name="rdt_resource" select="substring-before(substring-after(//CLOS_INFO, 'rdt resources supported:'), 'rdt resource clos max:')" />
-    <xsl:variable name="rdt_res_clos_max" select="substring-before(substring-after(//CLOS_INFO, 'rdt resource clos max:'), 'rdt resource mask max:')" />
+    <xsl:variable name="rdt_resource" select="acrn:get-normalized-closinfo-rdt-res-str()" />
+    <xsl:variable name="rdt_res_clos_max" select="acrn:get-normalized-closinfo-rdt-clos-max-str()" />
     <xsl:choose>
       <xsl:when test="$rdt_resource and $rdt_res_clos_max">
         <func:result select="true()" />
@@ -635,5 +635,18 @@
     <func:result select="concat($bus, ':', $dev, '.', $func)" />
   </func:function>
   <!-- End of scenario-specific functions-->
+
+  <!-- Board-specific functions-->
+  <func:function name="acrn:get-normalized-closinfo-rdt-res-str">
+    <xsl:variable name="rdt_resource" select="translate(substring-before(substring-after(//CLOS_INFO, 'rdt resources supported:'), 'rdt resource clos max:'), '&#x9;&#xa;&#xd;&#x20;', '')" />
+    <func:result select="$rdt_resource" />
+  </func:function>
+
+  <func:function name="acrn:get-normalized-closinfo-rdt-clos-max-str">
+    <xsl:variable name="rdt_res_clos_max" select="translate(substring-before(substring-after(//CLOS_INFO, 'rdt resource clos max:'), 'rdt resource mask max:'), '&#x9;&#xa;&#xd;&#x20;', '')" />
+    <func:result select="$rdt_res_clos_max" />
+  </func:function>
+
+  <!-- End of board-specific functions-->
 
 </xsl:stylesheet>

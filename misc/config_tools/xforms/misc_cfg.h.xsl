@@ -145,8 +145,8 @@
 <!-- MAX_CACHE_CLOS_NUM_ENTRIES:
   Max number of MBA delay entries corresponding to each CLOS. -->
 <xsl:template name="rdt">
-  <xsl:variable name="rdt_resource" select="translate(normalize-space(substring-before(substring-after(//CLOS_INFO, 'rdt resources supported:'), 'rdt resource clos max:')), ' ', '')" />
-  <xsl:variable name="rdt_res_clos_max" select="translate(normalize-space(substring-before(substring-after(//CLOS_INFO, 'rdt resource clos max:'), 'rdt resource mask max:')), ' ', '')" />
+  <xsl:variable name="rdt_resource" select="acrn:get-normalized-closinfo-rdt-res-str()" />
+  <xsl:variable name="rdt_res_clos_max" select="acrn:get-normalized-closinfo-rdt-clos-max-str()" />
   <xsl:variable name="common_clos_max" select="acrn:get-common-clos-max('', $rdt_resource, $rdt_res_clos_max)"/>
   <xsl:choose>
     <xsl:when test="acrn:is-cdp-enabled()">
