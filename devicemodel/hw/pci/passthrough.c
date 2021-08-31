@@ -243,7 +243,12 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 		if (size == 0)
 			continue;
 
-		/* Allocate the BAR in the guest I/O or MMIO space */
+		if (bartype == PCIBAR_IO)
+			error = create_mmio_rsvd_rgn(base, base + size - 1, i, PCIBAR_IO, dev);
+		if (error)
+			return -1;
+
+		/* Allocate the BAR in the guest MMIO space */
 		error = pci_emul_alloc_pbar(dev, i, base, bartype, size);
 		if (error)
 			return -1;

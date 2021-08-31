@@ -51,10 +51,10 @@
 #define SOFTWARE_SRAM_MAX_SIZE	0x00800000UL
 #define SOFTWARE_SRAM_BASE_GPA	(PCI_EMUL_MEMBASE32 - SOFTWARE_SRAM_MAX_SIZE)
 
-/* Currently,only gvt need reserved bar regions,
- * so just hardcode REGION_NUMS=5 here
+/*
+ * GVT BARs + PTDEV IO BARs
  */
-#define REGION_NUMS 5
+#define REGION_NUMS 32
 
 struct vmctx;
 struct pci_vdev;
