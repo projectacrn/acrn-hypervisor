@@ -17,7 +17,7 @@
         <MULTIBOOT2>y</MULTIBOOT2>
         <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
         <ENFORCE_TURNOFF_GP>n</ENFORCE_TURNOFF_GP>
-        <SECURITY_VM_FIXUP>n</SECURITY_VM_FIXUP>
+        <SECURITY_VM_FIXUP>y</SECURITY_VM_FIXUP>
         <RDT>
             <RDT_ENABLED>n</RDT_ENABLED>
             <CDP_ENABLED>y</CDP_ENABLED>
@@ -76,6 +76,7 @@
     <guest_flags>
         <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
         <guest_flag>GUEST_FLAG_RT</guest_flag>
+        <guest_flag>GUEST_FLAG_SECURITY_VM</guest_flag>
     </guest_flags>
     <cpu_affinity>
         <pcpu_id>2</pcpu_id>
