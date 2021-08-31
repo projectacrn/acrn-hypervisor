@@ -65,7 +65,7 @@ static int probe_disk_log_file(void)
 
 	if (stat(LOG_PATH_NODE, &st)) {
 		if (system("mkdir -p " LOG_PATH_NODE) < 0) {
-			pr_err(DISK_PREFIX"create path: %s failed! Error: %s\n",
+			printf(DISK_PREFIX"create path: %s failed! Error: %s\n",
 				LOG_PATH_NODE, strerror(errno));
 			return -1;
 		}
@@ -73,7 +73,7 @@ static int probe_disk_log_file(void)
 
 	dir = opendir(LOG_PATH_NODE);
 	if (!dir) {
-		pr_err(DISK_PREFIX" open %s failed! Error: %s\n",
+		printf(DISK_PREFIX" open %s failed! Error: %s\n",
 			LOG_PATH_NODE, strerror(errno));
 		return -1;
 	}
@@ -100,12 +100,12 @@ static int probe_disk_log_file(void)
 	snprintf(file_name, FILE_NAME_LENGTH - 1, LOG_NAME_FMT, LOG_PATH_NODE, vmname, index);
 	disk_fd = open(file_name, O_RDWR | O_CREAT | O_APPEND, 0644);
 	if (disk_fd < 0) {
-		pr_err(DISK_PREFIX" open %s failed! Error: %s\n", file_name, strerror(errno));
+		printf(DISK_PREFIX" open %s failed! Error: %s\n", file_name, strerror(errno));
 		return -1;
 	}
 
 	if (write(disk_fd, LOG_DELIMITER, strlen(LOG_DELIMITER)) < 0) {
-		pr_err(DISK_PREFIX" write %s failed! Error: %s\n", file_name, strerror(errno));
+		printf(DISK_PREFIX" write %s failed! Error: %s\n", file_name, strerror(errno));
 		return -1;
 	}
 
@@ -182,7 +182,7 @@ static void write_to_disk(const char *fmt, va_list args)
 
 	write_cnt = write(disk_fd, buffer, strnlen(buffer, DISK_LOG_MAX_LEN));
 	if (write_cnt < 0) {
-		pr_err(DISK_PREFIX"write disk failed");
+		printf(DISK_PREFIX"write disk failed");
 		close(disk_fd);
 		disk_fd = -1;
 		return;
@@ -204,7 +204,7 @@ static void write_to_disk(const char *fmt, va_list args)
 		close(disk_fd);
 		disk_fd = open(file_name, O_RDWR | O_CREAT, 0644);
 		if (disk_fd < 0) {
-			pr_err(DISK_PREFIX" open %s failed! Error: %s\n", file_name, strerror(errno));
+			printf(DISK_PREFIX" open %s failed! Error: %s\n", file_name, strerror(errno));
 			return;
 		}
 		cur_log_size = 0;

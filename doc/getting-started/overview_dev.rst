@@ -210,7 +210,7 @@ and the resources they have access to. These parameters are saved in a
 
 A **launch script** is a shell script that is used to create a post-launched VM.
 
-The **configuration editor tool** ``acrn_configurator.py`` is a web-based user interface that
+The **ACRN configurator** ``acrn_configurator.py`` is a web-based user interface that
 runs on your development computer. It enables you to customize, validate, and
 generate scenario configuration files and launch scripts. The following sections
 provide an overview and important information to keep in mind when using the
@@ -219,7 +219,7 @@ tool.
 Generate a Scenario Configuration File
 ======================================
 
-Before using the configuration editor tool to generate a scenario configuration
+Before using the ACRN configurator to generate a scenario configuration
 file, be sure you have the board configuration file that you generated in
 :ref:`overview_dev_board_config`. The tool needs the board configuration file to
 validate that your custom scenario is supported by the target hardware.
@@ -235,7 +235,7 @@ configuration file.
 Generate Launch Scripts
 =======================
 
-Before using the configuration editor tool to generate a launch script, be sure
+Before using the ACRN configurator to generate a launch script, be sure
 you have your board configuration file and scenario configuration file. The tool
 needs both files to validate your launch script configuration.
 
@@ -247,7 +247,7 @@ configuration file and scenario configuration file. After validation is
 successful, the tool generates your custom launch script.
 
 .. note::
-   The configuration editor may not show all editable
+   The ACRN configurator may not show all editable
    parameters for scenario configuration files and launch scripts. You can edit
    the parameters manually. See :ref:`acrn_config_data`.
 
