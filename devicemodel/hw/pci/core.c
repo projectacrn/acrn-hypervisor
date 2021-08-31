@@ -131,11 +131,6 @@ int create_mmio_rsvd_rgn(uint64_t start,
 {
 	int i;
 
-	if(bar_type == PCIBAR_IO){
-		pr_err("fail to create PCIBAR_IO bar_type\n");
-		return -1;
-	}
-
 	for(i = 0; i < REGION_NUMS; i++){
 		if(reserved_bar_regions[i].vdev == NULL){
 			reserved_bar_regions[i].start = start;
@@ -574,13 +569,7 @@ pci_emul_alloc_resource(uint64_t *baseptr, uint64_t limit, uint64_t size,
 		size = PAGE_SIZE;
 	base = roundup2(*baseptr, size);
 
-	/* TODO:Currently, we only reserve gvt mmio regions,
-	 * so ignore PCIBAR_IO when adjust_bar_region.
-	 * If other devices also use reserved bar regions later,
-	 * need remove pcibar_type != PCIBAR_IO condition
-	 */
-	if(bar_type != PCIBAR_IO)
-		adjust_bar_region(&base, size, bar_type);
+	adjust_bar_region(&base, size, bar_type);
 
 	if (base + size <= limit) {
 		*addr = base;
@@ -1381,8 +1370,8 @@ init_pci(struct vmctx *ctx)
 	struct businfo *bi;
 	struct slotinfo *si;
 	struct funcinfo *fi;
-	int bus, slot, func, i;
-	int success_cnt = 0;
+	int bus, slot, func, i,j;
+	int success_cnt[2] = {0};	/* 0 for passthru and 1 for others */
 	int error;
 	uint64_t bus0_memlimit;
 
@@ -1404,25 +1393,34 @@ init_pci(struct vmctx *ctx)
 		bi->membase32 = pci_emul_membase32;
 		bi->membase64 = pci_emul_membase64;
 
-		for (slot = 0; slot < MAXSLOTS; slot++) {
-			si = &bi->slotinfo[slot];
-			for (func = 0; func < MAXFUNCS; func++) {
-				fi = &si->si_funcs[func];
-				if (fi->fi_name == NULL)
-					continue;
-				ops = pci_emul_finddev(fi->fi_name);
-				if (!ops) {
-					pr_warn("No driver for device [%s]\n", fi->fi_name);
-					continue;
+		for (j = 0; j < 2; j++) {
+			for (slot = 0; slot < MAXSLOTS; slot++) {
+				si = &bi->slotinfo[slot];
+				for (func = 0; func < MAXFUNCS; func++) {
+					fi = &si->si_funcs[func];
+					if (fi->fi_name == NULL)
+						continue;
+					ops = pci_emul_finddev(fi->fi_name);
+					if (!ops) {
+						pr_warn("No driver for device [%s]\n", fi->fi_name);
+						continue;
+					}
+
+					if ((j == 0) && strcmp(ops->class_name, "passthru")) {
+						pr_warn("init passthru first to reserve PIO BAR\n");
+						continue;
+					} else if ((j == 1) && !strcmp(ops->class_name, "passthru")) {
+						continue;
+					}
+
+					pr_notice("pci init %s\r\n", fi->fi_name);
+					error = pci_emul_init(ctx, ops, bus, slot, func, fi);
+					if (error) {
+						pr_err("pci %s init failed\n", fi->fi_name);
+						goto pci_emul_init_fail;
+					}
+					success_cnt[j]++;
 				}
-				pr_notice("pci init %s\r\n", fi->fi_name);
-				error = pci_emul_init(ctx, ops, bus, slot,
-				    func, fi);
-				if (error) {
-					pr_err("pci %s init failed\n", fi->fi_name);
-					goto pci_emul_init_fail;
-				}
-				success_cnt++;
 			}
 		}
 
@@ -1462,6 +1460,24 @@ init_pci(struct vmctx *ctx)
 		}
 	}
 	bi->memlimit32 = bus0_memlimit;
+
+	for (i = 0; i < REGION_NUMS; i++) {
+		if(reserved_bar_regions[i].vdev &&
+				reserved_bar_regions[i].bar_type == PCIBAR_IO) {
+			if (reserved_bar_regions[i].start < bi->iobase)
+				bi->iobase = reserved_bar_regions[i].start;
+			break;
+		}
+	}
+
+	for (i = REGION_NUMS - 1; i >= 0; i--) {
+		if(reserved_bar_regions[i].vdev &&
+				reserved_bar_regions[i].bar_type == PCIBAR_IO) {
+			if (reserved_bar_regions[i].end + 1 > bi->iolimit)
+				bi->iolimit = reserved_bar_regions[i].end + 1;
+			break;
+		}
+	}
 
 	error = check_gsi_sharing_violation();
 	if (error < 0)
@@ -1543,25 +1559,35 @@ init_pci(struct vmctx *ctx)
 	return 0;
 
 pci_emul_init_fail:
-	for (bus = 0; bus < MAXBUSES && success_cnt > 0; bus++) {
-		bi = pci_businfo[bus];
-		if (bi == NULL)
-			continue;
-		for (slot = 0; slot < MAXSLOTS && success_cnt > 0; slot++) {
-			si = &bi->slotinfo[slot];
-			for (func = 0; func < MAXFUNCS; func++) {
-				fi = &si->si_funcs[func];
-				if (fi->fi_name == NULL)
-					continue;
-				if (success_cnt-- <= 0)
-					break;
-				ops = pci_emul_finddev(fi->fi_name);
-				if (!ops) {
-					pr_warn("No driver for device [%s]\n", fi->fi_name);
-					continue;
+	for (j = 0; j < 2; j++) {
+		for (bus = 0; bus < MAXBUSES && success_cnt[j] > 0; bus++) {
+			bi = pci_businfo[bus];
+			if (bi == NULL)
+				continue;
+			for (slot = 0; slot < MAXSLOTS && success_cnt[j] > 0; slot++) {
+				si = &bi->slotinfo[slot];
+				for (func = 0; func < MAXFUNCS; func++) {
+					fi = &si->si_funcs[func];
+					if (fi->fi_name == NULL)
+						continue;
+					if (success_cnt[j]-- <= 0)
+						break;
+					ops = pci_emul_finddev(fi->fi_name);
+					if (!ops) {
+						pr_warn("No driver for device [%s]\n", fi->fi_name);
+						continue;
+					}
+
+					if ((j == 0) && strcmp(ops->class_name, "passthru")) {
+						pr_warn("init passthru first to reserve PIO BAR\n");
+						continue;
+					} else if ((j == 1) && !strcmp(ops->class_name, "passthru")) {
+						continue;
+					}
+
+					pci_emul_deinit(ctx, ops, bus, slot,
+					    func, fi);
 				}
-				pci_emul_deinit(ctx, ops, bus, slot,
-				    func, fi);
 			}
 		}
 	}
