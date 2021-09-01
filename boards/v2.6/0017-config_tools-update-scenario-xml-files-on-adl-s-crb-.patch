@@ -1,0 +1,44 @@
+From b89da1621695148eb3eb6d04142e6c74698a9f2d Mon Sep 17 00:00:00 2001
+From: Kunhui-Li <kunhuix.li@intel.com>
+Date: Wed, 1 Sep 2021 14:27:53 +0800
+Subject: [PATCH 17/17] config_tools: update scenario xml files on adl-s-crb
+ platform
+
+1. update sos rootfs to NVMe in hybrid.xml
+2. remove "idle=halt" in bootargs.
+
+Signed-off-by: Kunhui-Li <kunhuix.li@intel.com>
+---
+ misc/config_tools/data/adl-s-crb/hybrid.xml   | 2 +-
+ misc/config_tools/data/adl-s-crb/industry.xml | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/misc/config_tools/data/adl-s-crb/hybrid.xml b/misc/config_tools/data/adl-s-crb/hybrid.xml
+index 5aba236e5..39a0db42d 100644
+--- a/misc/config_tools/data/adl-s-crb/hybrid.xml
++++ b/misc/config_tools/data/adl-s-crb/hybrid.xml
+@@ -168,7 +168,7 @@
+             <pci_dev/>
+         </pci_devs>
+         <board_private>
+-            <rootfs>/dev/sda3</rootfs>
++            <rootfs>/dev/nvme0n1p3</rootfs>
+             <bootargs>rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 swiotlb=131072 nokaslr
+             </bootargs>
+         </board_private>
+diff --git a/misc/config_tools/data/adl-s-crb/industry.xml b/misc/config_tools/data/adl-s-crb/industry.xml
+index 2964c446e..6db9e5b43 100644
+--- a/misc/config_tools/data/adl-s-crb/industry.xml
++++ b/misc/config_tools/data/adl-s-crb/industry.xml
+@@ -109,7 +109,7 @@
+     </pci_devs>
+     <board_private>
+       <rootfs>/dev/nvme0n1p3</rootfs>
+-      <bootargs>rw rootwait console=ttyS0  earlyprintk=serial,ttyS0,115200 cons_timer_check consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 idle=halt nokaslr
++      <bootargs>rw rootwait console=ttyS0  earlyprintk=serial,ttyS0,115200 cons_timer_check consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 nokaslr
+     </bootargs>
+     </board_private>
+   </vm>
+-- 
+2.25.1
+
