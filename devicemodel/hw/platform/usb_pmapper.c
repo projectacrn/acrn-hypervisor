@@ -1119,6 +1119,24 @@ errout:
 }
 
 void
+usb_dev_free_request(void *pdata)
+{
+	struct libusb_transfer *trn;
+
+	trn = pdata;
+	libusb_free_transfer(trn);
+}
+
+void
+usb_dev_cancel_request(void *pdata)
+{
+	struct libusb_transfer *trn;
+
+	trn = pdata;
+	libusb_cancel_transfer(trn);
+}
+
+void
 usb_dev_deinit(void *pdata)
 {
 	int rc = 0;
