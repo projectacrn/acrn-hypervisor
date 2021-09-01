@@ -129,4 +129,6 @@ int usb_dev_info(void *pdata, int type, void *value, int size);
 int usb_dev_request(void *pdata, struct usb_xfer *xfer);
 int usb_dev_reset(void *pdata);
 int usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx);
+void usb_dev_cancel_request(void *pdata);
+void usb_dev_free_request(void *pdata);
 #endif
