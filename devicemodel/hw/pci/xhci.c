@@ -481,7 +481,7 @@ static int pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_convert_speed(int lspeed);
-static void pci_xhci_free_usb_xfer(struct usb_xfer *xfer);
+static void pci_xhci_free_usb_xfer(struct pci_xhci_dev_emu *dev, struct usb_xfer *xfer);
 static void pci_xhci_isoc_handler(void *arg, uint64_t param);
 
 #define XHCI_OPT_MAX_LEN 32
@@ -1006,15 +1006,17 @@ pci_xhci_dev_create(struct pci_xhci_vdev *xdev, void *dev_data)
 	 * function interface should be changed and refined
 	 * in future.
 	 */
-	ue->ue_init     = usb_dev_init;
-	ue->ue_request  = usb_dev_request;
-	ue->ue_data     = usb_dev_data;
-	ue->ue_info	= usb_dev_info;
-	ue->ue_reset    = usb_dev_reset;
-	ue->ue_remove   = NULL;
-	ue->ue_stop     = NULL;
-	ue->ue_deinit	= usb_dev_deinit;
-	ue->ue_devtype  = USB_DEV_PORT_MAPPER;
+	ue->ue_init        = usb_dev_init;
+	ue->ue_request     = usb_dev_request;
+	ue->ue_data        = usb_dev_data;
+	ue->ue_info	   = usb_dev_info;
+	ue->ue_reset       = usb_dev_reset;
+	ue->ue_remove      = NULL;
+	ue->ue_stop        = NULL;
+	ue->ue_cancel_req  = usb_dev_cancel_request;
+	ue->ue_free_req    = usb_dev_free_request;
+	ue->ue_deinit	   = usb_dev_deinit;
+	ue->ue_devtype     = USB_DEV_PORT_MAPPER;
 
 	ud = ue->ue_init(dev_data, NULL);
 	if (!ud)
@@ -1072,16 +1074,16 @@ pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
 		} else
 			return;
 
-		if (ue->ue_devtype == USB_DEV_PORT_MAPPER)
-			free(ue);
 
 		for (i = 1; i < XHCI_MAX_ENDPOINTS; i++) {
 			vdep = &de->eps[i];
 			if (vdep->ep_xfer) {
-				pci_xhci_free_usb_xfer(vdep->ep_xfer);
+				pci_xhci_free_usb_xfer(de, vdep->ep_xfer);
 				vdep->ep_xfer = NULL;
 			}
 		}
+		if (ue->ue_devtype == USB_DEV_PORT_MAPPER)
+			free(ue);
 
 		free(de);
 	}
@@ -1654,15 +1656,23 @@ fail:
 }
 
 static void
-pci_xhci_free_usb_xfer(struct usb_xfer *xfer)
+pci_xhci_free_usb_xfer(struct pci_xhci_dev_emu *dev, struct usb_xfer *xfer)
 {
 	int i;
 
 	if (!xfer)
 		return;
 
-	for (i = 0; i < xfer->max_blk_cnt; i++)
-		free(xfer->data[i].hcb);
+	for (i = 0; i < xfer->max_blk_cnt; i++) {
+		if(xfer->reqs[i]) {
+			if (dev && dev->dev_ue->ue_free_req)
+				dev->dev_ue->ue_free_req(xfer->reqs[i]->trn);
+			free(xfer->reqs[i]->buffer);
+			free(xfer->reqs[i]);
+		}
+		if (xfer->data)
+			free(xfer->data[i].hcb);
+	}
 
 	free(xfer->data);
 	free(xfer->reqs);
@@ -1748,7 +1758,7 @@ pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid, uint32_t slot)
 	return 0;
 
 errout:
-	pci_xhci_free_usb_xfer(devep->ep_xfer);
+	pci_xhci_free_usb_xfer(dev, devep->ep_xfer);
 	devep->ep_xfer = NULL;
 	devep->timer_data.dev = NULL;
 	devep->timer_data.slot = 0;
@@ -1777,7 +1787,7 @@ pci_xhci_disable_ep(struct pci_xhci_dev_emu *dev, int epid)
 		free(devep->ep_sctx_trbs);
 
 	if (devep->ep_xfer != NULL) {
-		pci_xhci_free_usb_xfer(devep->ep_xfer);
+		pci_xhci_free_usb_xfer(dev, devep->ep_xfer);
 		devep->ep_xfer = NULL;
 	}
 
@@ -2380,7 +2390,8 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 		r = xfer->reqs[i];
 		if (r && r->trn)
 			/* let usb_dev_comp_req to free the memory */
-			libusb_cancel_transfer(r->trn);
+			if (dev->dev_ue->ue_cancel_req != NULL)
+				dev->dev_ue->ue_cancel_req(r->trn);
 	}
 
 	xfer->ndata = 0;
@@ -3021,7 +3032,7 @@ pci_xhci_try_usb_xfer(struct pci_xhci_vdev *xdev,
 			if (err == XHCI_TRB_ERROR_SUCCESS && do_intr)
 				pci_xhci_assert_interrupt(xdev);
 
-			pci_xhci_free_usb_xfer(devep->ep_xfer);
+			pci_xhci_free_usb_xfer(dev, devep->ep_xfer);
 			devep->ep_xfer = NULL;
 		}
 	}
