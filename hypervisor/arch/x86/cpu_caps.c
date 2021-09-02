@@ -41,6 +41,42 @@ static struct cpu_capability {
 
 static struct cpuinfo_x86 boot_cpu_data;
 
+struct vmx_capability {
+	uint32_t msr;
+	uint32_t bits;
+};
+
+/* SDM APPENDIX A:
+ * Bits 31:0 indicate the allowed 0-settings of these controls. VM entry allows control X
+ *  to be 0 if bit X in the MSR is cleared to 0; if bit X in the MSR is set to 1,
+ *  VM entry fails if control X is 0.
+ * Bits 63:32 indicate the allowed 1-settings of these controls. VM entry allows control X to be 1
+ *  if bit 32+X in the MSR is set to 1; if bit 32+X in the MSR is cleared to 0, VM entry fails if control X is 1.
+ */
+static struct vmx_capability vmx_caps[] = {
+	{
+		MSR_IA32_VMX_PINBASED_CTLS, VMX_PINBASED_CTLS_IRQ_EXIT
+	},
+	{
+		MSR_IA32_VMX_PROCBASED_CTLS, VMX_PROCBASED_CTLS_TSC_OFF | VMX_PROCBASED_CTLS_TPR_SHADOW |
+					VMX_PROCBASED_CTLS_IO_BITMAP | VMX_PROCBASED_CTLS_MSR_BITMAP |
+					VMX_PROCBASED_CTLS_HLT | VMX_PROCBASED_CTLS_SECONDARY
+	},
+	{
+		MSR_IA32_VMX_PROCBASED_CTLS2, VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |
+					VMX_PROCBASED_CTLS2_VPID | VMX_PROCBASED_CTLS2_RDTSCP |
+					VMX_PROCBASED_CTLS2_UNRESTRICT | VMX_PROCBASED_CTLS2_XSVE_XRSTR |
+					VMX_PROCBASED_CTLS2_PAUSE_LOOP
+	},
+	{
+		MSR_IA32_VMX_EXIT_CTLS, VMX_EXIT_CTLS_ACK_IRQ | VMX_EXIT_CTLS_SAVE_PAT |
+					VMX_EXIT_CTLS_LOAD_PAT | VMX_EXIT_CTLS_HOST_ADDR64
+	},
+	{
+		MSR_IA32_VMX_ENTRY_CTLS, VMX_ENTRY_CTLS_LOAD_PAT | VMX_ENTRY_CTLS_IA32E_MODE
+	}
+};
+
 bool pcpu_has_cap(uint32_t bit)
 {
 	uint32_t feat_idx = bit >> 5U;
@@ -457,6 +493,49 @@ static int32_t check_vmx_mmu_cap(void)
 	return ret;
 }
 
+static bool is_vmx_cap_supported(uint32_t msr, uint32_t bits)
+{
+	uint64_t vmx_msr;
+	uint32_t vmx_msr_low, vmx_msr_high;
+
+	vmx_msr = msr_read(msr);
+	vmx_msr_low  = (uint32_t)vmx_msr;
+	vmx_msr_high = (uint32_t)(vmx_msr >> 32U);
+	/* Bits 31:0 indicate the allowed 0-settings
+	 * Bits 63:32 indicate the allowed 1-settings
+	 */
+	return (((vmx_msr_high & bits) == bits) && ((vmx_msr_low & bits) == 0U));
+}
+
+static int32_t check_essential_vmx_caps(void)
+{
+	int32_t ret = 0;
+	uint32_t i;
+
+	if (check_vmx_mmu_cap() != 0) {
+		ret = -ENODEV;
+	} else if (!pcpu_has_vmx_unrestricted_guest_cap()) {
+		printf("%s, unrestricted guest not supported\n", __func__);
+		ret = -ENODEV;
+	} else if (pcpu_vmx_set_32bit_addr_width()) {
+		printf("%s, Only support Intel 64 architecture.\n", __func__);
+		ret = -ENODEV;
+	} else if (!is_valid_xsave_combination()) {
+		printf("%s, check XSAVE combined Capability failed\n", __func__);
+		ret = -ENODEV;
+	} else {
+		for (i = 0U; i < ARRAY_SIZE(vmx_caps);	i++) {
+			if (!is_vmx_cap_supported(vmx_caps[i].msr, vmx_caps[i].bits)) {
+				printf("%s, check MSR[0x%x]:0x%lx bits:0x%x failed\n", __func__,
+						vmx_caps[i].msr, msr_read(vmx_caps[i].msr), vmx_caps[i].bits);
+				ret = -ENODEV;
+				break;
+			}
+		}
+	}
+
+	return ret;
+}
 
 /*
  * basic hardware capability check
@@ -515,9 +594,6 @@ int32_t detect_hardware_support(void)
 		ret = -ENODEV;
 	} else if (!is_fast_string_erms_supported_and_enabled()) {
 		ret = -ENODEV;
-	} else if (!pcpu_has_vmx_unrestricted_guest_cap()) {
-		printf("%s, unrestricted guest not supported\n", __func__);
-		ret = -ENODEV;
 	} else if (!is_ept_supported()) {
 		printf("%s, EPT not supported\n", __func__);
 		ret = -ENODEV;
@@ -529,9 +605,6 @@ int32_t detect_hardware_support(void)
 		ret = -ENODEV;
 	} else if (is_vmx_disabled()) {
 		printf("%s, VMX can not be enabled\n", __func__);
-		ret = -ENODEV;
-	} else if (pcpu_vmx_set_32bit_addr_width()) {
-		printf("%s, Only support Intel 64 architecture.\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_X2APIC)) {
 		printf("%s, x2APIC not supported\n", __func__);
@@ -545,11 +618,8 @@ int32_t detect_hardware_support(void)
 	} else if (!pcpu_has_cap(X86_FEATURE_RDRAND)) {
 		printf("%s, RDRAND is not supported\n", __func__);
 		ret = -ENODEV;
-	} else if (!is_valid_xsave_combination()) {
-		printf("%s, check XSAVE combined Capability failed\n", __func__);
-		ret = -ENODEV;
 	} else {
-		ret = check_vmx_mmu_cap();
+		ret = check_essential_vmx_caps();
 	}
 
 	return ret;
