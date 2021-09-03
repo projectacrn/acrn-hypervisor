@@ -220,19 +220,23 @@ def interrupt_storm(pt_sel, config):
     print('intr_storm_monitor="--intr_monitor 10000,10,1,100"', file=config)
     print("", file=config)
 
-
 def gvt_arg_set(dm, vmid, uos_type, config):
 
     gvt_args = dm['gvt_args'][vmid]
     gpu_bdf = launch_cfg_lib.get_gpu_bdf()
 
-    if gvt_args == "gvtd" and gpu_bdf is not None:
+    if gpu_bdf is not None:
         bus = int(gpu_bdf[0:2], 16)
         dev = int(gpu_bdf[3:5], 16)
         fun = int(gpu_bdf[6:7], 16)
-        print('   -s 2,passthru,{}/{}/{},gpu  \\'.format(bus, dev, fun), file=config)
-    elif gvt_args:
-        print('   -s 2,pci-gvt -G "$2"  \\', file=config)
+        if gvt_args == "gvtd":
+            print('   -s 2,passthru,{}/{}/{},gpu  \\'.format(bus, dev, fun), file=config)
+        elif gvt_args == "sriov" and uos_type in launch_cfg_lib.LINUX_LIKE_OS and uos_type != "PREEMPT-RT LINUX":
+            print('   -s 2,passthru,{}/{}/1,gpu  \\'.format(bus, dev), file=config)
+        elif gvt_args == "sriov" and uos_type == "WINDOWS":
+            print('   -s 2,passthru,{}/{}/2,igd-vf  \\'.format(bus, dev), file=config)
+        elif gvt_args:
+            print('   -s 2,pci-gvt -G "$2"  \\', file=config)
 
 def log_level_set(uos_type, config):
 
