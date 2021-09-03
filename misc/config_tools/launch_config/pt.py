@@ -242,7 +242,7 @@ def gen_pt_head(names, dm, sel, vmid, config):
         if not sel.vpid[pt_dev] or not sel.vpid[pt_dev][vmid]:
             continue
         print('["{}"]="{}"'.format(pt_dev, sel.vpid[pt_dev][vmid]), file=config)
-    if dm['gvt_args'][vmid] == "gvtd":
+    if dm['gvt_args'][vmid] == "gvtd" or dm['gvt_args'][vmid] == "sriov":
         gpu_vpid = launch_cfg_lib.get_gpu_vpid()
         print('["gpu"]="{}"'.format(gpu_vpid), file=config)
     print(')', file=config)
@@ -252,9 +252,13 @@ def gen_pt_head(names, dm, sel, vmid, config):
         if not sel.bdf[pt_dev] or not sel.bdf[pt_dev][vmid]:
             continue
         print('["{}"]="0000:{}"'.format(pt_dev, sel.bdf[pt_dev][vmid]), file=config)
+    gpu_bdf = launch_cfg_lib.get_gpu_bdf()
     if dm['gvt_args'][vmid] == "gvtd":
-        gpu_bdf = launch_cfg_lib.get_gpu_bdf()
         print('["gpu"]="0000:{}"'.format(gpu_bdf), file=config)
+    elif uos_type in launch_cfg_lib.LINUX_LIKE_OS and uos_type != "PREEMPT-RT LINUX" and dm['gvt_args'][vmid] == "sriov":
+        print('["gpu"]="0000:{}.1"'.format(gpu_bdf[0:5]), file=config)
+    elif dm['gvt_args'][vmid] == "sriov" and uos_type == "WINDOWS":
+        print('["gpu"]="0000:{}.2"'.format(gpu_bdf[0:5]), file=config)
     print(')', file=config)
 
     print("", file=config)
