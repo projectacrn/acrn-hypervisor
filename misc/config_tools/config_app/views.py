@@ -614,7 +614,7 @@ def create_setting():
         scenario_file = os.path.join(setting_path, create_name + '.xml')
 
         if mode == 'create':
-            template_file_name = 'industry'
+            template_file_name = 'shared'
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board', template_file_name + '.xml')
         else: # load
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type, default_name + '.xml')
@@ -1067,15 +1067,15 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
 
     if add_vm_type is not None:
         vm_dict = {
-            'PRE_STD_VM': ('logical_partition', 'vm:id=0'),
+            'PRE_STD_VM': ('partitioned', 'vm:id=0'),
             'PRE_RT_VM': ('hybrid_rt', 'vm:id=0'),
             'SAFETY_VM': ('hybrid', 'vm:id=0'),
-            'SOS_VM': ('industry', 'vm:id=0'),
-            'POST_STD_VM': ('industry', 'vm:id=1'),
-            'POST_RT_VM': ('industry', 'vm:id=2'),
-            'KATA_VM': ('industry', 'vm:id=7'),
+            'SOS_VM': ('shared', 'vm:id=0'),
+            'POST_STD_VM': ('shared', 'vm:id=1'),
+            'POST_RT_VM': ('shared', 'vm:id=2'),
+            'KATA_VM': ('shared', 'vm:id=7'),
             'LAUNCH_POST_STD_VM': ('hybrid_launch_2uos', 'uos:id=1'),
-            'LAUNCH_POST_RT_VM': ('industry_launch_6uos', 'uos:id=2')
+            'LAUNCH_POST_RT_VM': ('shared_launch_6uos', 'uos:id=2')
         }
         config_path = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board')
         generic_scenario_config = XmlConfig(config_path)

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<acrn-config board="ehl-crb-b" scenario="hybrid">
+<acrn-config board="ehl-crb-b" scenario="partitioned">
     <hv>
         <DEBUG_OPTIONS>
             <RELEASE>n</RELEASE>
@@ -62,7 +62,7 @@
             <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
             <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
             <MAX_IOAPIC_LINES>120</MAX_IOAPIC_LINES>
-            <MAX_PT_IRQ_ENTRIES>256</MAX_PT_IRQ_ENTRIES>
+            <MAX_PT_IRQ_ENTRIES>64</MAX_PT_IRQ_ENTRIES>
             <MAX_MSIX_TABLE_NUM>96</MAX_MSIX_TABLE_NUM>
             <MAX_EMULATED_MMIO>16</MAX_EMULATED_MMIO>
         </CAPACITIES>
@@ -71,17 +71,17 @@
         </MISC_CFG>
     </hv>
     <vm id="0">
-        <vm_type>SAFETY_VM</vm_type>
+        <vm_type>PRE_STD_VM</vm_type>
         <name>ACRN PRE-LAUNCHED VM0</name>
         <guest_flags>
             <guest_flag>0</guest_flag>
         </guest_flags>
         <cpu_affinity>
-            <pcpu_id>3</pcpu_id>
+            <pcpu_id>0</pcpu_id>
+            <pcpu_id>2</pcpu_id>
         </cpu_affinity>
-        <pt_intx>
-        </pt_intx>
         <clos>
+            <vcpu_clos>0</vcpu_clos>
             <vcpu_clos>0</vcpu_clos>
         </clos>
         <epc_section>
@@ -95,11 +95,13 @@
             <size_hpa2>0x0</size_hpa2>
         </memory>
         <os_config>
-            <name>Zephyr</name>
-            <kern_type>KERNEL_ELF</kern_type>
-            <kern_mod>Zephyr_ElfImage</kern_mod>
+            <name>YOCTO</name>
+            <kern_type>KERNEL_BZIMAGE</kern_type>
+            <kern_mod>Linux_bzImage</kern_mod>
             <ramdisk_mod/>
-            <bootargs></bootargs>
+            <bootargs>
+        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
+        </bootargs>
         </os_config>
         <legacy_vuart id="0">
             <type>VUART_LEGACY_PIO</type>
@@ -122,48 +124,56 @@
             <target_uart_id>1</target_uart_id>
         </communication_vuart>
         <pci_devs>
-            <pci_dev/>
+            <pci_dev>00:17.0 SATA controller: Intel Corporation Device 4b63 (rev 10)</pci_dev>
+            <pci_dev>00:1d.1 Ethernet controller: Intel Corporation Device 4ba0 (rev 10)</pci_dev>
         </pci_devs>
         <mmio_resources>
             <TPM2>n</TPM2>
-            <p2sb>n</p2sb>
         </mmio_resources>
     </vm>
     <vm id="1">
-        <vm_type>SOS_VM</vm_type>
-        <name>ACRN SOS VM</name>
+        <vm_type>PRE_STD_VM</vm_type>
+        <name>ACRN PRE-LAUNCHED VM1</name>
         <guest_flags>
             <guest_flag>0</guest_flag>
         </guest_flags>
         <cpu_affinity>
-            <pcpu_id>0</pcpu_id>
             <pcpu_id>1</pcpu_id>
-            <pcpu_id>2</pcpu_id>
+            <pcpu_id>3</pcpu_id>
         </cpu_affinity>
         <clos>
             <vcpu_clos>0</vcpu_clos>
             <vcpu_clos>0</vcpu_clos>
-            <vcpu_clos>0</vcpu_clos>
         </clos>
+        <epc_section>
+            <base>0</base>
+            <size>0</size>
+        </epc_section>
         <memory>
-            <start_hpa>0</start_hpa>
+            <start_hpa>0x120000000</start_hpa>
+            <size>0x20000000</size>
+            <start_hpa2>0x0</start_hpa2>
+            <size_hpa2>0x0</size_hpa2>
         </memory>
         <os_config>
-            <name>ACRN Service OS</name>
+            <name>YOCTO</name>
             <kern_type>KERNEL_BZIMAGE</kern_type>
             <kern_mod>Linux_bzImage</kern_mod>
             <ramdisk_mod/>
-            <bootargs>SOS_VM_BOOTARGS</bootargs>
+            <bootargs>
+        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
+        consoleblank=0 tsc=reliable reboot=acpi
+        </bootargs>
         </os_config>
         <legacy_vuart id="0">
             <type>VUART_LEGACY_PIO</type>
-            <base>SOS_COM1_BASE</base>
-            <irq>SOS_COM1_IRQ</irq>
+            <base>COM1_BASE</base>
+            <irq>COM1_IRQ</irq>
         </legacy_vuart>
         <legacy_vuart id="1">
             <type>VUART_LEGACY_PIO</type>
-            <base>SOS_COM2_BASE</base>
-            <irq>SOS_COM2_IRQ</irq>
+            <base>COM2_BASE</base>
+            <irq>COM2_IRQ</irq>
             <target_vm_id>0</target_vm_id>
             <target_uart_id>1</target_uart_id>
         </legacy_vuart>
@@ -176,51 +186,10 @@
             <target_uart_id>1</target_uart_id>
         </communication_vuart>
         <pci_devs>
-            <pci_dev/>
+            <pci_dev>00:14.0 USB controller: Intel Corporation Device 4b7d (rev 10)</pci_dev>
         </pci_devs>
-        <board_private>
-            <rootfs>/dev/nvme0n1p3</rootfs>
-            <bootargs>
-        rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
-        i915.nuclear_pageflip=1 swiotlb=131072
-        </bootargs>
-        </board_private>
-    </vm>
-    <vm id="2">
-        <vm_type>POST_STD_VM</vm_type>
-        <guest_flags>
-            <guest_flag>0</guest_flag>
-        </guest_flags>
-        <cpu_affinity>
-            <pcpu_id>2</pcpu_id>
-        </cpu_affinity>
-        <clos>
-            <vcpu_clos>0</vcpu_clos>
-        </clos>
-        <epc_section>
-            <base>0</base>
-            <size>0</size>
-        </epc_section>
-        <legacy_vuart id="0">
-            <type>VUART_LEGACY_PIO</type>
-            <base>COM1_BASE</base>
-            <irq>COM1_IRQ</irq>
-        </legacy_vuart>
-        <legacy_vuart id="1">
-            <type>VUART_LEGACY_PIO</type>
-            <base>INVALID_COM_BASE</base>
-            <irq>COM2_IRQ</irq>
-            <target_vm_id>0</target_vm_id>
-            <target_uart_id>0</target_uart_id>
-        </legacy_vuart>
-        <console_vuart id="0">
-            <base>INVALID_PCI_BASE</base>
-        </console_vuart>
-        <communication_vuart id="1">
-            <base>INVALID_PCI_BASE</base>
-            <target_vm_id>1</target_vm_id>
-            <target_uart_id>1</target_uart_id>
-        </communication_vuart>
-        <PTM>n</PTM>
+        <mmio_resources>
+            <TPM2>n</TPM2>
+        </mmio_resources>
     </vm>
 </acrn-config>

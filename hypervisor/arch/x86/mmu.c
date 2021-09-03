@@ -155,6 +155,9 @@ void enable_paging(void)
 {
 	uint64_t tmp64 = 0UL;
 
+	/* Initialize IA32_PAT according to ISDM 11.12.4 Programming the PAT */
+	msr_write(MSR_IA32_PAT, PAT_POWER_ON_VALUE);
+
 	/*
 	 * Enable MSR IA32_EFER.NXE bit,to prevent
 	 * instruction fetching from pages with XD bit set.

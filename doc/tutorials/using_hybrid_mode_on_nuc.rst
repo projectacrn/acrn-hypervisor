@@ -46,11 +46,11 @@ Prepare the Zephyr kernel that you will run in VM0 later.
 
 - Follow step 1 from the :ref:`using_zephyr_as_uos` instructions
 
-  .. note:: We only need the binary Zephyr kernel, not the entire ``zephyr.img``
+  .. note:: We only need the ELF binary Zephyr kernel, not the entire ``zephyr.img``
 
-- Copy the :file:`zephyr/zephyr.bin` to the ``/boot`` folder::
+- Copy the :file:`zephyr/zephyr.elf` to the ``/boot`` folder::
 
-   sudo cp zephyr/zephyr.bin /boot
+   sudo cp zephyr/zephyr.elf /boot
 
 .. rst-class:: numbered-step
 
@@ -103,14 +103,14 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
          insmod ext2
          echo 'Loading hypervisor Hybrid scenario ...'
          multiboot2 /boot/acrn.bin
-         module2 /boot/zephyr.bin xxxxxx
+         module2 /boot/zephyr.elf xxxxxx
          module2 /boot/bzImage yyyyyy
          module2 /boot/ACPI_VM0.bin ACPI_VM0
 
       }
 
 
-   .. note:: The module ``/boot/zephyr.bin`` is the VM0 (Zephyr) kernel file.
+   .. note:: The module ``/boot/zephyr.elf`` is the VM0 (Zephyr) kernel file.
       The param ``xxxxxx`` is VM0's kernel file tag and must exactly match the
       ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``
       file. The multiboot module ``/boot/bzImage`` is the Service VM kernel
