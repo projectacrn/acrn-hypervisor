@@ -1,0 +1,1895 @@
+<acrn-config board="icx-rvp">
+  <BIOS_INFO>
+	BIOS Information
+	Vendor: Intel Corporation
+	Version: IDVICRB1.JHE.0019.D85.2107190756
+	Release Date: 07/19/2021
+	</BIOS_INFO>
+  <BASE_BOARD_INFO>
+	Base Board Information
+	Manufacturer: ACCTON
+	Product Name: BRIGHTONCITY
+	Version: K79922-100
+	</BASE_BOARD_INFO>
+  <PCI_DEVICE>
+	00:00.0 System peripheral: Intel Corporation Device 09a2 (rev 04)
+	00:00.1 System peripheral: Intel Corporation Device 09a4 (rev 04)
+	00:00.2 System peripheral: Intel Corporation Device 09a3 (rev 04)
+	00:00.3 System peripheral: Intel Corporation Device 09a5 (rev 04)
+	00:00.4 Host bridge: Intel Corporation Device 0998
+	00:01.0 System peripheral: Intel Corporation Device 0b00
+	Region 0: Memory at 20fffab0000 (64-bit, non-prefetchable) [size=16K]
+	00:01.1 System peripheral: Intel Corporation Device 0b00
+	Region 0: Memory at 20fffaac000 (64-bit, non-prefetchable) [size=16K]
+	00:01.2 System peripheral: Intel Corporation Device 0b00
+	Region 0: Memory at 20fffaa8000 (64-bit, non-prefetchable) [size=16K]
+	00:01.3 System peripheral: Intel Corporation Device 0b00
+	Region 0: Memory at 20fffaa4000 (64-bit, non-prefetchable) [size=16K]
+	00:01.4 System peripheral: Intel Corporation Device 0b00
+	Region 0: Memory at 20fffaa0000 (64-bit, non-prefetchable) [size=16K]
+	00:01.5 System peripheral: Intel Corporation Device 0b00
+	Region 0: Memory at 20fffa9c000 (64-bit, non-prefetchable) [size=16K]
+	00:01.6 System peripheral: Intel Corporation Device 0b00
+	Region 0: Memory at 20fffa98000 (64-bit, non-prefetchable) [size=16K]
+	00:01.7 System peripheral: Intel Corporation Device 0b00
+	Region 0: Memory at 20fffa94000 (64-bit, non-prefetchable) [size=16K]
+	00:02.0 System peripheral: Intel Corporation Device 09a6
+	Region 0: Memory at 91782000 (32-bit, non-prefetchable) [size=8K]
+	00:02.1 System peripheral: Intel Corporation Device 09a7
+	Region 0: Memory at 91700000 (32-bit, non-prefetchable) [size=512K]
+	Region 1: Memory at 91680000 (32-bit, non-prefetchable) [size=512K]
+	00:02.2 System peripheral: Intel Corporation Device 09a8
+	Region 0: Memory at 91600000 (32-bit, non-prefetchable) [size=512K]
+	00:02.4 Non-Essential Instrumentation [1300]: Intel Corporation Device 3456 (rev 01)
+	Region 0: Memory at 20fff900000 (64-bit, non-prefetchable) [disabled] [size=1M]
+	Region 2: Memory at 20fffa90000 (64-bit, non-prefetchable) [disabled] [size=16K]
+	Region 4: Memory at 20fffa60000 (64-bit, non-prefetchable) [disabled] [size=128K]
+	00:06.0 PCI bridge: Intel Corporation Device 18da (rev 11)
+	00:08.0 SATA controller: Intel Corporation Device 18c2 (rev 11)
+	Region 0: Memory at 91780000 (32-bit, non-prefetchable) [size=8K]
+	Region 1: Memory at 91789000 (32-bit, non-prefetchable) [size=256]
+	Region 5: Memory at 91785000 (32-bit, non-prefetchable) [size=2K]
+	00:0f.0 System peripheral: Intel Corporation Device 18ac (rev 11)
+	Region 0: Memory at 20fffabb000 (64-bit, non-prefetchable) [size=1K]
+	00:14.0 PCI bridge: Intel Corporation Device 18ad (rev 11)
+	Region 0: Memory at 20fffa40000 (64-bit, non-prefetchable) [size=128K]
+	00:16.0 PCI bridge: Intel Corporation Device 18af (rev 11)
+	Region 0: Memory at 20fffa20000 (64-bit, non-prefetchable) [size=128K]
+	00:17.0 PCI bridge: Intel Corporation Device 18a2 (rev 11)
+	Region 0: Memory at 20fffa00000 (64-bit, non-prefetchable) [size=128K]
+	00:18.0 Communication controller: Intel Corporation Device 18d3 (rev 11)
+	Region 0: Memory at 20fffaba000 (64-bit, non-prefetchable) [size=4K]
+	00:18.1 Communication controller: Intel Corporation Device 18d4 (rev 11)
+	Region 0: Memory at 20fffab9000 (64-bit, non-prefetchable) [size=4K]
+	00:18.4 Communication controller: Intel Corporation Device 18d6 (rev 11)
+	Region 0: Memory at 20fffab8000 (64-bit, non-prefetchable) [size=4K]
+	00:1a.0 Serial controller: Intel Corporation Device 18d8 (rev 11)
+	Region 1: Memory at 91788000 (32-bit, non-prefetchable) [size=256]
+	00:1a.1 Serial controller: Intel Corporation Device 18d8 (rev 11)
+	Region 1: Memory at 91787000 (32-bit, non-prefetchable) [size=256]
+	00:1a.2 Serial controller: Intel Corporation Device 18d8 (rev 11)
+	Region 1: Memory at 91786000 (32-bit, non-prefetchable) [size=256]
+	00:1a.3 Unassigned class [ff00]: Intel Corporation Device 18d9 (rev 11)
+	00:1c.0 SD Host controller: Intel Corporation Device 18db (rev 11)
+	Region 0: Memory at 20fffab7000 (64-bit, non-prefetchable) [size=4K]
+	00:1d.0 Host bridge: Intel Corporation Device 0998
+	00:1e.0 USB controller: Intel Corporation Device 18d0 (rev 11)
+	Region 0: Memory at 20fffa80000 (64-bit, non-prefetchable) [size=64K]
+	00:1f.0 ISA bridge: Intel Corporation Device 18dc (rev 11)
+	00:1f.4 SMBus: Intel Corporation Device 18df (rev 11)
+	Region 0: Memory at 20fffab6000 (64-bit, non-prefetchable) [size=256]
+	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device 18e0 (rev 11)
+	Region 0: Memory at fe010000 (32-bit, non-prefetchable) [size=4K]
+	00:1f.7 Non-Essential Instrumentation [1300]: Intel Corporation Device 18e1 (rev 11)
+	Region 0: Memory at 20fff800000 (64-bit, non-prefetchable) [size=1M]
+	Region 2: Memory at 20fff000000 (64-bit, non-prefetchable) [size=8M]
+	Region 4: Memory at 20fffab4000 (64-bit, non-prefetchable) [size=8K]
+	01:00.0 Co-processor: Intel Corporation Device 18ee (rev 11)
+	Region 2: Memory at 91400000 (64-bit, non-prefetchable) [size=256K]
+	Region 4: Memory at 91440000 (64-bit, non-prefetchable) [size=256K]
+	Region 0: Memory at 0000000091480000 (64-bit, non-prefetchable)
+	Region 2: Memory at 0000000091490000 (64-bit, non-prefetchable)
+	03:00.0 Non-Volatile memory controller: Intel Corporation SSD Pro 7600p/760p/E 6100p Series (rev 03)
+	Region 0: Memory at 91300000 (64-bit, non-prefetchable) [size=16K]
+	04:00.0 PCI bridge: ASPEED Technology, Inc. AST1150 PCI-to-PCI Bridge (rev 04)
+	05:00.0 VGA compatible controller: ASPEED Technology, Inc. ASPEED Graphics Family (rev 41)
+	Region 0: Memory at 90000000 (32-bit, non-prefetchable) [size=16M]
+	Region 1: Memory at 91000000 (32-bit, non-prefetchable) [size=128K]
+	06:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
+	Region 0: Memory at 91100000 (32-bit, non-prefetchable) [size=1M]
+	Region 3: Memory at 91200000 (32-bit, non-prefetchable) [size=16K]
+	14:00.0 System peripheral: Intel Corporation Device 09a2 (rev 04)
+	14:00.1 System peripheral: Intel Corporation Device 09a4 (rev 04)
+	14:00.2 System peripheral: Intel Corporation Device 09a3 (rev 04)
+	14:00.3 System peripheral: Intel Corporation Device 09a5 (rev 04)
+	14:00.4 Host bridge: Intel Corporation Device 0998
+	f3:00.0 System peripheral: Intel Corporation Device 09a2 (rev 04)
+	f3:00.1 System peripheral: Intel Corporation Device 09a4 (rev 04)
+	f3:00.2 System peripheral: Intel Corporation Device 09a3 (rev 04)
+	f3:00.3 System peripheral: Intel Corporation Device 09a5 (rev 04)
+	f3:00.4 Host bridge: Intel Corporation Device 0998
+	f3:04.0 PCI bridge: Intel Corporation Device 18d1
+	f4:00.0 Ethernet controller: Intel Corporation Device 124c
+	Region 0: Memory at 22ff0000000 (64-bit, prefetchable) [disabled] [size=128M]
+	Region 3: Memory at 22ffc030000 (64-bit, prefetchable) [disabled] [size=64K]
+	Region 0: Memory at 0000022ffb000000 (64-bit, prefetchable)
+	Region 3: Memory at 0000022ffc340000 (64-bit, prefetchable)
+	f4:00.1 Ethernet controller: Intel Corporation Device 124c
+	Region 0: Memory at 22fe8000000 (64-bit, prefetchable) [disabled] [size=128M]
+	Region 3: Memory at 22ffc020000 (64-bit, prefetchable) [disabled] [size=64K]
+	Region 0: Memory at 0000022ffa000000 (64-bit, prefetchable)
+	Region 3: Memory at 0000022ffc240000 (64-bit, prefetchable)
+	f4:00.2 Ethernet controller: Intel Corporation Device 124c
+	Region 0: Memory at 22fe0000000 (64-bit, prefetchable) [disabled] [size=128M]
+	Region 3: Memory at 22ffc010000 (64-bit, prefetchable) [disabled] [size=64K]
+	Region 0: Memory at 0000022ff9000000 (64-bit, prefetchable)
+	Region 3: Memory at 0000022ffc140000 (64-bit, prefetchable)
+	f4:00.3 Ethernet controller: Intel Corporation Device 124c
+	Region 0: Memory at 22fd8000000 (64-bit, prefetchable) [disabled] [size=128M]
+	Region 3: Memory at 22ffc000000 (64-bit, prefetchable) [disabled] [size=64K]
+	Region 0: Memory at 0000022ff8000000 (64-bit, prefetchable)
+	Region 3: Memory at 0000022ffc040000 (64-bit, prefetchable)
+	fe:00.0 System peripheral: Intel Corporation Device 3450
+	fe:00.1 System peripheral: Intel Corporation Device 3451
+	fe:00.2 System peripheral: Intel Corporation Device 3452
+	fe:00.3 Host bridge: Intel Corporation Device 0998
+	fe:00.5 System peripheral: Intel Corporation Device 3455
+	fe:0b.0 System peripheral: Intel Corporation Device 3448
+	fe:0b.1 System peripheral: Intel Corporation Device 3448
+	fe:0b.2 System peripheral: Intel Corporation Device 344b
+	fe:0c.0 Performance counters: Intel Corporation Device 344a
+	fe:1a.0 Performance counters: Intel Corporation Device 2880
+	ff:00.0 System peripheral: Intel Corporation Device 344c
+	ff:00.1 System peripheral: Intel Corporation Device 344c
+	ff:00.2 System peripheral: Intel Corporation Device 344c
+	ff:00.3 System peripheral: Intel Corporation Device 344c
+	ff:00.4 System peripheral: Intel Corporation Device 344c
+	ff:00.5 System peripheral: Intel Corporation Device 344c
+	ff:0a.0 System peripheral: Intel Corporation Device 344d
+	ff:0a.1 System peripheral: Intel Corporation Device 344d
+	ff:0a.2 System peripheral: Intel Corporation Device 344d
+	ff:0a.3 System peripheral: Intel Corporation Device 344d
+	ff:0a.4 System peripheral: Intel Corporation Device 344d
+	ff:0a.5 System peripheral: Intel Corporation Device 344d
+	ff:1d.0 System peripheral: Intel Corporation Device 344f
+	ff:1d.1 System peripheral: Intel Corporation Device 3457
+	ff:1e.0 System peripheral: Intel Corporation Device 3458 (rev 01)
+	ff:1e.1 System peripheral: Intel Corporation Device 3459 (rev 01)
+	ff:1e.2 System peripheral: Intel Corporation Device 345a (rev 01)
+	ff:1e.3 System peripheral: Intel Corporation Device 345b (rev 01)
+	ff:1e.4 System peripheral: Intel Corporation Device 345c (rev 01)
+	ff:1e.5 System peripheral: Intel Corporation Device 345d (rev 01)
+	ff:1e.6 System peripheral: Intel Corporation Device 345e (rev 01)
+	ff:1e.7 System peripheral: Intel Corporation Device 345f (rev 01)
+	</PCI_DEVICE>
+  <PCI_VID_PID>
+	00:00.0 0880: 8086:09a2 (rev 04)
+	00:00.1 0880: 8086:09a4 (rev 04)
+	00:00.2 0880: 8086:09a3 (rev 04)
+	00:00.3 0880: 8086:09a5 (rev 04)
+	00:00.4 0600: 8086:0998
+	00:01.0 0880: 8086:0b00
+	00:01.1 0880: 8086:0b00
+	00:01.2 0880: 8086:0b00
+	00:01.3 0880: 8086:0b00
+	00:01.4 0880: 8086:0b00
+	00:01.5 0880: 8086:0b00
+	00:01.6 0880: 8086:0b00
+	00:01.7 0880: 8086:0b00
+	00:02.0 0880: 8086:09a6
+	00:02.1 0880: 8086:09a7
+	00:02.2 0880: 8086:09a8
+	00:02.4 1300: 8086:3456 (rev 01)
+	00:06.0 0604: 8086:18da (rev 11)
+	00:08.0 0106: 8086:18c2 (rev 11)
+	00:0f.0 0880: 8086:18ac (rev 11)
+	00:14.0 0604: 8086:18ad (rev 11)
+	00:16.0 0604: 8086:18af (rev 11)
+	00:17.0 0604: 8086:18a2 (rev 11)
+	00:18.0 0780: 8086:18d3 (rev 11)
+	00:18.1 0780: 8086:18d4 (rev 11)
+	00:18.4 0780: 8086:18d6 (rev 11)
+	00:1a.0 0700: 8086:18d8 (rev 11)
+	00:1a.1 0700: 8086:18d8 (rev 11)
+	00:1a.2 0700: 8086:18d8 (rev 11)
+	00:1a.3 ff00: 8086:18d9 (rev 11)
+	00:1c.0 0805: 8086:18db (rev 11)
+	00:1d.0 0600: 8086:0998
+	00:1e.0 0c03: 8086:18d0 (rev 11)
+	00:1f.0 0601: 8086:18dc (rev 11)
+	00:1f.4 0c05: 8086:18df (rev 11)
+	00:1f.5 0c80: 8086:18e0 (rev 11)
+	00:1f.7 1300: 8086:18e1 (rev 11)
+	01:00.0 0b40: 8086:18ee (rev 11)
+	03:00.0 0108: 8086:f1a6 (rev 03)
+	04:00.0 0604: 1a03:1150 (rev 04)
+	05:00.0 0300: 1a03:2000 (rev 41)
+	06:00.0 0200: 8086:1533 (rev 03)
+	14:00.0 0880: 8086:09a2 (rev 04)
+	14:00.1 0880: 8086:09a4 (rev 04)
+	14:00.2 0880: 8086:09a3 (rev 04)
+	14:00.3 0880: 8086:09a5 (rev 04)
+	14:00.4 0600: 8086:0998
+	f3:00.0 0880: 8086:09a2 (rev 04)
+	f3:00.1 0880: 8086:09a4 (rev 04)
+	f3:00.2 0880: 8086:09a3 (rev 04)
+	f3:00.3 0880: 8086:09a5 (rev 04)
+	f3:00.4 0600: 8086:0998
+	f3:04.0 0604: 8086:18d1
+	f4:00.0 0200: 8086:124c
+	f4:00.1 0200: 8086:124c
+	f4:00.2 0200: 8086:124c
+	f4:00.3 0200: 8086:124c
+	fe:00.0 0880: 8086:3450
+	fe:00.1 0880: 8086:3451
+	fe:00.2 0880: 8086:3452
+	fe:00.3 0600: 8086:0998
+	fe:00.5 0880: 8086:3455
+	fe:0b.0 0880: 8086:3448
+	fe:0b.1 0880: 8086:3448
+	fe:0b.2 0880: 8086:344b
+	fe:0c.0 1101: 8086:344a
+	fe:1a.0 1101: 8086:2880
+	ff:00.0 0880: 8086:344c
+	ff:00.1 0880: 8086:344c
+	ff:00.2 0880: 8086:344c
+	ff:00.3 0880: 8086:344c
+	ff:00.4 0880: 8086:344c
+	ff:00.5 0880: 8086:344c
+	ff:0a.0 0880: 8086:344d
+	ff:0a.1 0880: 8086:344d
+	ff:0a.2 0880: 8086:344d
+	ff:0a.3 0880: 8086:344d
+	ff:0a.4 0880: 8086:344d
+	ff:0a.5 0880: 8086:344d
+	ff:1d.0 0880: 8086:344f
+	ff:1d.1 0880: 8086:3457
+	ff:1e.0 0880: 8086:3458 (rev 01)
+	ff:1e.1 0880: 8086:3459 (rev 01)
+	ff:1e.2 0880: 8086:345a (rev 01)
+	ff:1e.3 0880: 8086:345b (rev 01)
+	ff:1e.4 0880: 8086:345c (rev 01)
+	ff:1e.5 0880: 8086:345d (rev 01)
+	ff:1e.6 0880: 8086:345e (rev 01)
+	ff:1e.7 0880: 8086:345f (rev 01)
+	</PCI_VID_PID>
+  <WAKE_VECTOR_INFO>
+	#define WAKE_VECTOR_32		0x68C9C00CUL
+	#define WAKE_VECTOR_64		0x68C9C018UL
+	</WAKE_VECTOR_INFO>
+  <RESET_REGISTER_INFO>
+	#define RESET_REGISTER_ADDRESS	0xCF9UL
+	#define RESET_REGISTER_SPACE_ID SPACE_SYSTEM_IO
+	#define RESET_REGISTER_VALUE	0x6U
+	</RESET_REGISTER_INFO>
+  <PM_INFO>
+	#define PM1A_EVT_SPACE_ID	SPACE_SYSTEM_IO
+	#define PM1A_EVT_BIT_WIDTH	0x20U
+	#define PM1A_EVT_BIT_OFFSET	0x0U
+	#define PM1A_EVT_ADDRESS	0x500UL
+	#define PM1A_EVT_ACCESS_SIZE	0x2U
+	#define PM1B_EVT_SPACE_ID	SPACE_SYSTEM_IO
+	#define PM1B_EVT_BIT_WIDTH	0x0U
+	#define PM1B_EVT_BIT_OFFSET	0x0U
+	#define PM1B_EVT_ADDRESS	0x0UL
+	#define PM1B_EVT_ACCESS_SIZE	0x0U
+	#define PM1A_CNT_SPACE_ID	SPACE_SYSTEM_IO
+	#define PM1A_CNT_BIT_WIDTH	0x10U
+	#define PM1A_CNT_BIT_OFFSET	0x0U
+	#define PM1A_CNT_ADDRESS	0x504UL
+	#define PM1A_CNT_ACCESS_SIZE	0x2U
+	#define PM1B_CNT_SPACE_ID	SPACE_SYSTEM_IO
+	#define PM1B_CNT_BIT_WIDTH	0x0U
+	#define PM1B_CNT_BIT_OFFSET	0x0U
+	#define PM1B_CNT_ADDRESS	0x0UL
+	#define PM1B_CNT_ACCESS_SIZE	0x0U
+	</PM_INFO>
+  <S3_INFO>
+	#define S3_PKG_VAL_PM1A		0x5U
+	#define S3_PKG_VAL_PM1B		0U
+	#define S3_PKG_RESERVED		0xaU
+	</S3_INFO>
+  <S5_INFO>
+	#define S5_PKG_VAL_PM1A		0x7U
+	#define S5_PKG_VAL_PM1B		0U
+	#define S5_PKG_RESERVED		0xaU
+	</S5_INFO>
+  <DRHD_INFO>
+	#define DRHD_COUNT		3U
+
+	#define DRHD0_DEV_CNT		0x0U
+	#define DRHD0_SEGMENT		0x0U
+	#define DRHD0_FLAGS		0x0U
+	#define DRHD0_REG_BASE		0xD7FFC000UL
+	#define DRHD0_IGNORE		true
+
+	#define DRHD1_DEV_CNT		0x2U
+	#define DRHD1_SEGMENT		0x0U
+	#define DRHD1_FLAGS		0x0U
+	#define DRHD1_REG_BASE		0xFB7FC000UL
+	#define DRHD1_IGNORE		false
+	#define DRHD1_DEVSCOPE0_TYPE	0x2U
+	#define DRHD1_DEVSCOPE0_ID	0x0U
+	#define DRHD1_DEVSCOPE0_BUS	0xf3U
+	#define DRHD1_DEVSCOPE0_PATH	0x20U
+	#define DRHD1_DEVSCOPE1_TYPE	0x1U
+	#define DRHD1_DEVSCOPE1_ID	0x0U
+	#define DRHD1_DEVSCOPE1_BUS	0xf3U
+	#define DRHD1_DEVSCOPE1_PATH	0x30U
+
+	#define DRHD2_DEV_CNT		0x2U
+	#define DRHD2_SEGMENT		0x0U
+	#define DRHD2_FLAGS		0x1U
+	#define DRHD2_REG_BASE		0xB3FF6000UL
+	#define DRHD2_IGNORE		false
+	#define DRHD2_DEVSCOPE0_TYPE	0x3U
+	#define DRHD2_DEVSCOPE0_ID	0x8U
+	#define DRHD2_DEVSCOPE0_BUS	0x0U
+	#define DRHD2_DEVSCOPE0_PATH	0xf7U
+	#define DRHD2_DEVSCOPE1_TYPE	0x4U
+	#define DRHD2_DEVSCOPE1_ID	0x0U
+	#define DRHD2_DEVSCOPE1_BUS	0x0U
+	#define DRHD2_DEVSCOPE1_PATH	0xf6U
+
+	</DRHD_INFO>
+  <CPU_BRAND>
+	"06/6c"
+	</CPU_BRAND>
+  <CX_INFO>
+	{{SPACE_FFixedHW, 0x01U, 0x02U, 0x01U, 0x00UL}, 0x01U, 0x01U, 0x00U},	/* C1 */
+	{{SPACE_FFixedHW, 0x01U, 0x02U, 0x01U, 0x20UL}, 0x02U, 0x29U, 0x00U},	/* C2 */
+	</CX_INFO>
+  <PX_INFO>
+	/* Px data is not available */
+	</PX_INFO>
+  <MMCFG_BASE_INFO>
+	/* PCI mmcfg base of MCFG */
+	#define DEFAULT_PCI_MMCFG_BASE	 0x80000000UL
+	</MMCFG_BASE_INFO>
+  <TPM_INFO>
+	/* no TPM device */
+	</TPM_INFO>
+  <CLOS_INFO>
+	rdt resources supported: L3, MBA
+	rdt resource clos max: 15, 15
+	rdt resource mask max: '0xfffff', '0x5a'
+	</CLOS_INFO>
+  <IOMEM_INFO>
+	00000000-00000fff : Reserved
+	00001000-0009efff : System RAM
+	0009f000-000fffff : Reserved
+	  000a0000-000bffff : PCI Bus 0000:00
+	  000c8000-000cffff : PCI Bus 0000:00
+	  000f0000-000fffff : System ROM
+	00100000-3fffffff : System RAM
+	40000000-40007fff : Reserved
+	40008000-60f8b017 : System RAM
+	60f8b018-60fa9457 : System RAM
+	60fa9458-60faa017 : System RAM
+	60faa018-60fc8457 : System RAM
+	60fc8458-60fc9017 : System RAM
+	60fc9018-60fe7457 : System RAM
+	60fe7458-60fe8017 : System RAM
+	60fe8018-61006457 : System RAM
+	61006458-62db5fff : System RAM
+	62db6000-62db6fff : Reserved
+	62db7000-62de7fff : System RAM
+	62de8000-62df7fff : Reserved
+	62df8000-659a6fff : System RAM
+	659a7000-66d49fff : Reserved
+	  660f6018-660f6067 : APEI ERST
+	  660f6070-660f6077 : APEI ERST
+	  660f6078-660f8017 : APEI ERST
+	66d4a000-68cb1fff : ACPI Non-volatile Storage
+	68cb2000-68dfdfff : ACPI Tables
+	68dfe000-6f7fffff : System RAM
+	6f800000-8fffffff : Reserved
+	  80000000-8fffffff : PCI MMCONFIG 0000 [bus 00-ff]
+	90000000-b3ffffff : PCI Bus 0000:00
+	  90000000-910fffff : PCI Bus 0000:04
+	    90000000-910fffff : PCI Bus 0000:05
+	      90000000-90ffffff : 0000:05:00.0
+	      91000000-9101ffff : 0000:05:00.0
+	  91100000-912fffff : PCI Bus 0000:06
+	    91100000-911fffff : 0000:06:00.0
+	      91100000-911fffff : igb
+	    91200000-91203fff : 0000:06:00.0
+	      91200000-91203fff : igb
+	  91300000-913fffff : PCI Bus 0000:03
+	    91300000-91303fff : 0000:03:00.0
+	      91300000-91303fff : nvme
+	  91400000-914fffff : PCI Bus 0000:01
+	    91400000-9143ffff : 0000:01:00.0
+	    91440000-9147ffff : 0000:01:00.0
+	    91480000-9148ffff : 0000:01:00.0
+	    91490000-9149ffff : 0000:01:00.0
+	  91600000-9167ffff : 0000:00:02.2
+	  91680000-916fffff : 0000:00:02.1
+	  91700000-9177ffff : 0000:00:02.1
+	  91780000-91781fff : 0000:00:08.0
+	    91780000-91781fff : ahci
+	  91782000-91783fff : 0000:00:02.0
+	  91785000-917857ff : 0000:00:08.0
+	    91785000-917857ff : ahci
+	  91786000-917860ff : 0000:00:1a.2
+	    91786000-91786007 : serial
+	  91787000-917870ff : 0000:00:1a.1
+	    91787000-91787007 : serial
+	  91788000-917880ff : 0000:00:1a.0
+	    91788000-91788007 : serial
+	  91789000-917890ff : 0000:00:08.0
+	    91789000-917890ff : ahci
+	  b3ff6000-b3ff6fff : dmar2
+	b4000000-d7ffffff : PCI Bus 0000:14
+	  d7ffc000-d7ffcfff : dmar0
+	d8000000-fb7fffff : PCI Bus 0000:f3
+	  d8000000-d83fffff : PCI Bus 0000:f4
+	    d8000000-d80fffff : 0000:f4:00.0
+	    d8100000-d81fffff : 0000:f4:00.1
+	    d8200000-d82fffff : 0000:f4:00.2
+	    d8300000-d83fffff : 0000:f4:00.3
+	  fb7fc000-fb7fcfff : dmar1
+	fd000000-fd69ffff : pnp 00:02
+	fd6c0000-fd6cffff : pnp 00:02
+	fdc20000-fdc21fff : INTC3001:00
+	  fdc20000-fdc21fff : INTC3001:00 INTC3001:00
+	fdc50000-fdc51fff : INTC3001:00
+	  fdc50000-fdc51fff : INTC3001:00 INTC3001:00
+	fe010000-fe010fff : Reserved
+	  fe010000-fe010fff : PCI Bus 0000:00
+	    fe010000-fe010fff : 0000:00:1f.5
+	fe200000-fe7fffff : pnp 00:02
+	fec00000-fecfffff : PNP0003:00
+	  fec00000-fec003ff : IOAPIC 0
+	fed00000-fed003ff : HPET 0
+	  fed00000-fed003ff : PNP0103:00
+	fee00000-fee00fff : Local APIC
+	ff000000-ffffffff : pnp 00:01
+	  ff000000-ffffffff : pnp 00:02
+	100000000-47fffffff : System RAM
+	  28c800000-28d600ed0 : Kernel code
+	  28d600ed1-28e05357f : Kernel data
+	  28e31d000-28e7fffff : Kernel bss
+	20000000000-20fffffffff : PCI Bus 0000:00
+	  20fff000000-20fff7fffff : 0000:00:1f.7
+	    20fff000000-20fff7fffff : intel_th_pci
+	  20fff800000-20fff8fffff : 0000:00:1f.7
+	    20fff800000-20fff8fffff : intel_th_pci
+	  20fff900000-20fff9fffff : 0000:00:02.4
+	  20fffa00000-20fffa1ffff : 0000:00:17.0
+	  20fffa20000-20fffa3ffff : 0000:00:16.0
+	  20fffa40000-20fffa5ffff : 0000:00:14.0
+	  20fffa60000-20fffa7ffff : 0000:00:02.4
+	  20fffa80000-20fffa8ffff : 0000:00:1e.0
+	    20fffa80000-20fffa8ffff : xhci-hcd
+	  20fffa90000-20fffa93fff : 0000:00:02.4
+	  20fffa94000-20fffa97fff : 0000:00:01.7
+	    20fffa94000-20fffa97fff : ioatdma
+	  20fffa98000-20fffa9bfff : 0000:00:01.6
+	    20fffa98000-20fffa9bfff : ioatdma
+	  20fffa9c000-20fffa9ffff : 0000:00:01.5
+	    20fffa9c000-20fffa9ffff : ioatdma
+	  20fffaa0000-20fffaa3fff : 0000:00:01.4
+	    20fffaa0000-20fffaa3fff : ioatdma
+	  20fffaa4000-20fffaa7fff : 0000:00:01.3
+	    20fffaa4000-20fffaa7fff : ioatdma
+	  20fffaa8000-20fffaabfff : 0000:00:01.2
+	    20fffaa8000-20fffaabfff : ioatdma
+	  20fffaac000-20fffaaffff : 0000:00:01.1
+	    20fffaac000-20fffaaffff : ioatdma
+	  20fffab0000-20fffab3fff : 0000:00:01.0
+	    20fffab0000-20fffab3fff : ioatdma
+	  20fffab4000-20fffab5fff : 0000:00:1f.7
+	    20fffab4000-20fffab5fff : intel_th_pci
+	  20fffab6000-20fffab60ff : 0000:00:1f.4
+	  20fffab7000-20fffab7fff : 0000:00:1c.0
+	    20fffab7000-20fffab7fff : mmc0
+	  20fffab8000-20fffab8fff : 0000:00:18.4
+	  20fffab9000-20fffab9fff : 0000:00:18.1
+	  20fffaba000-20fffabafff : 0000:00:18.0
+	    20fffaba000-20fffabafff : mei_me
+	  20fffabb000-20fffabb3ff : 0000:00:0f.0
+	    20fffabb000-20fffabb3ff : ismt_smbus
+	21000000000-21fffffffff : PCI Bus 0000:14
+	22000000000-22fffffffff : PCI Bus 0000:f3
+	  22fd8000000-22ffc4fffff : PCI Bus 0000:f4
+	    22fd8000000-22fdfffffff : 0000:f4:00.3
+	    22fe0000000-22fe7ffffff : 0000:f4:00.2
+	    22fe8000000-22fefffffff : 0000:f4:00.1
+	    22ff0000000-22ff7ffffff : 0000:f4:00.0
+	    22ff8000000-22ff8ffffff : 0000:f4:00.3
+	    22ff9000000-22ff9ffffff : 0000:f4:00.2
+	    22ffa000000-22ffaffffff : 0000:f4:00.1
+	    22ffb000000-22ffbffffff : 0000:f4:00.0
+	    22ffc000000-22ffc00ffff : 0000:f4:00.3
+	    22ffc010000-22ffc01ffff : 0000:f4:00.2
+	    22ffc020000-22ffc02ffff : 0000:f4:00.1
+	    22ffc030000-22ffc03ffff : 0000:f4:00.0
+	    22ffc040000-22ffc13ffff : 0000:f4:00.3
+	    22ffc140000-22ffc23ffff : 0000:f4:00.2
+	    22ffc240000-22ffc33ffff : 0000:f4:00.1
+	    22ffc340000-22ffc43ffff : 0000:f4:00.0
+	</IOMEM_INFO>
+  <BLOCK_DEVICE_INFO>
+	/dev/nvme0n1p3: TYPE="ext4"
+	</BLOCK_DEVICE_INFO>
+  <TTYS_INFO>
+	seri:/dev/ttyS0 type:mmio base:0x91788000 irq:52 bdf:"00:1a.0"
+	seri:/dev/ttyS5 type:mmio base:0x91787000 irq:53 bdf:"00:1a.1"
+	seri:/dev/ttyS6 type:mmio base:0x91786000 irq:65 bdf:"00:1a.2"
+	</TTYS_INFO>
+  <AVAILABLE_IRQ_INFO>
+	3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15
+	</AVAILABLE_IRQ_INFO>
+  <TOTAL_MEM_INFO>
+	16076360 kB
+	</TOTAL_MEM_INFO>
+  <CPU_PROCESSOR_INFO>
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+	</CPU_PROCESSOR_INFO>
+  <MAX_MSIX_TABLE_NUM>
+	512
+	</MAX_MSIX_TABLE_NUM>
+  <processors>
+    <model description="">
+      <family_id>0x6</family_id>
+      <model_id>0x6c</model_id>
+      <core_type>Reserved</core_type>
+      <native_model_id>0x0</native_model_id>
+      <capability id="sse3"/>
+      <capability id="pclmulqdq"/>
+      <capability id="dtes64"/>
+      <capability id="monitor"/>
+      <capability id="ds_cpl"/>
+      <capability id="vmx"/>
+      <capability id="smx"/>
+      <capability id="est"/>
+      <capability id="tm2"/>
+      <capability id="ssse3"/>
+      <capability id="sdbg"/>
+      <capability id="fma"/>
+      <capability id="cmpxchg16b"/>
+      <capability id="xtpr"/>
+      <capability id="pdcm"/>
+      <capability id="pcid"/>
+      <capability id="dca"/>
+      <capability id="sse4_1"/>
+      <capability id="sse4_2"/>
+      <capability id="x2apic"/>
+      <capability id="movbe"/>
+      <capability id="popcnt"/>
+      <capability id="tsc_deadline"/>
+      <capability id="aes"/>
+      <capability id="xsave"/>
+      <capability id="avx"/>
+      <capability id="f16c"/>
+      <capability id="rdrand"/>
+      <capability id="fpu"/>
+      <capability id="vme"/>
+      <capability id="de"/>
+      <capability id="pse"/>
+      <capability id="tsc"/>
+      <capability id="msr"/>
+      <capability id="pae"/>
+      <capability id="mce"/>
+      <capability id="cx8"/>
+      <capability id="apic"/>
+      <capability id="sep"/>
+      <capability id="mtrr"/>
+      <capability id="pge"/>
+      <capability id="mca"/>
+      <capability id="cmov"/>
+      <capability id="pat"/>
+      <capability id="pse36"/>
+      <capability id="clfsh"/>
+      <capability id="ds"/>
+      <capability id="acpi"/>
+      <capability id="mmx"/>
+      <capability id="fxsr"/>
+      <capability id="sse"/>
+      <capability id="sse2"/>
+      <capability id="ss"/>
+      <capability id="htt"/>
+      <capability id="tm"/>
+      <capability id="pbe"/>
+      <capability id="fsgsbase"/>
+      <capability id="ia32_tsc_adjust_msr"/>
+      <capability id="sgx"/>
+      <capability id="bmi1"/>
+      <capability id="avx2"/>
+      <capability id="fdp_excptn_only"/>
+      <capability id="smep"/>
+      <capability id="bmi2"/>
+      <capability id="erms"/>
+      <capability id="invpcid"/>
+      <capability id="qm"/>
+      <capability id="deprecate_fpu"/>
+      <capability id="rdt_a"/>
+      <capability id="avx512f"/>
+      <capability id="avx512dq"/>
+      <capability id="rdseed"/>
+      <capability id="adx"/>
+      <capability id="smap"/>
+      <capability id="avx512_ifma"/>
+      <capability id="clflushopt"/>
+      <capability id="clwb"/>
+      <capability id="intel_pt"/>
+      <capability id="avx512cd"/>
+      <capability id="sha"/>
+      <capability id="avx512bw"/>
+      <capability id="avx512vl"/>
+      <capability id="avx512_vbmi"/>
+      <capability id="umip"/>
+      <capability id="pku"/>
+      <capability id="avx512_vbmi2"/>
+      <capability id="gfni"/>
+      <capability id="vaes"/>
+      <capability id="vpclmulqdq"/>
+      <capability id="avx512_vnni"/>
+      <capability id="avx512_bitalg"/>
+      <capability id="tme_en"/>
+      <capability id="avx512_vpopcntdq"/>
+      <capability id="la57"/>
+      <capability id="rdpid"/>
+      <capability id="sgx_lc"/>
+      <capability id="fast_short_rep_mov"/>
+      <capability id="md_clear"/>
+      <capability id="pconfig"/>
+      <capability id="ibrs_ibpb"/>
+      <capability id="stibp"/>
+      <capability id="l1d_flush"/>
+      <capability id="ia32_arch_capabilities"/>
+      <capability id="ssbd"/>
+      <capability id="lahf_sahf_64"/>
+      <capability id="lzcnt"/>
+      <capability id="prefetchw"/>
+      <capability id="syscall_sysret_64"/>
+      <capability id="execute_disable"/>
+      <capability id="gbyte_pages"/>
+      <capability id="rdtscp_ia32_tsc_aux"/>
+      <capability id="intel_64"/>
+      <capability id="invariant_tsc"/>
+      <attribute id="physical_address_bits">52</attribute>
+      <attribute id="linear_address_bits">57</attribute>
+    </model>
+    <die id="0">
+      <core id="0x0">
+	<thread id="0x0">
+	  <cpu_id>0</cpu_id>
+	  <apic_id>0x0</apic_id>
+	  <x2apic_id>0x0</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+      <core id="0x1">
+	<thread id="0x2">
+	  <cpu_id>1</cpu_id>
+	  <apic_id>0x2</apic_id>
+	  <x2apic_id>0x2</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+      <core id="0x2">
+	<thread id="0x4">
+	  <cpu_id>2</cpu_id>
+	  <apic_id>0x4</apic_id>
+	  <x2apic_id>0x4</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+      <core id="0x3">
+	<thread id="0x6">
+	  <cpu_id>3</cpu_id>
+	  <apic_id>0x6</apic_id>
+	  <x2apic_id>0x6</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+      <core id="0x4">
+	<thread id="0x8">
+	  <cpu_id>4</cpu_id>
+	  <apic_id>0x8</apic_id>
+	  <x2apic_id>0x8</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+      <core id="0x5">
+	<thread id="0xa">
+	  <cpu_id>5</cpu_id>
+	  <apic_id>0xa</apic_id>
+	  <x2apic_id>0xa</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+      <core id="0x6">
+	<thread id="0xc">
+	  <cpu_id>6</cpu_id>
+	  <apic_id>0xc</apic_id>
+	  <x2apic_id>0xc</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+      <core id="0x7">
+	<thread id="0xe">
+	  <cpu_id>7</cpu_id>
+	  <apic_id>0xe</apic_id>
+	  <x2apic_id>0xe</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+      <core id="0x8">
+	<thread id="0x10">
+	  <cpu_id>8</cpu_id>
+	  <apic_id>0x10</apic_id>
+	  <x2apic_id>0x10</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+      <core id="0x9">
+	<thread id="0x12">
+	  <cpu_id>9</cpu_id>
+	  <apic_id>0x12</apic_id>
+	  <x2apic_id>0x12</x2apic_id>
+	  <family_id>0x6</family_id>
+	  <model_id>0x6c</model_id>
+	  <stepping_id>0x1</stepping_id>
+	  <core_type>Reserved</core_type>
+	  <native_model_id>0x0</native_model_id>
+	</thread>
+      </core>
+    </die>
+  </processors>
+  <caches>
+    <cache level="1" id="0x0" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x0</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x0" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x0</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x1" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x2</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x1" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x2</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x2" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x4</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x2" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x4</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x3" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x6</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x3" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x6</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x4" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x8</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x4" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x8</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x5" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0xa</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x5" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0xa</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x6" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0xc</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x6" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0xc</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x7" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0xe</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x7" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0xe</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x8" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x10</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x8" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x10</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x9" type="1">
+      <cache_size>49152</cache_size>
+      <line_size>64</line_size>
+      <ways>12</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x12</processor>
+      </processors>
+    </cache>
+    <cache level="1" id="0x9" type="2">
+      <cache_size>32768</cache_size>
+      <line_size>64</line_size>
+      <ways>8</ways>
+      <sets>64</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x12</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x0" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x0</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x1" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x2</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x2" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x4</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x3" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x6</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x4" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x8</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x5" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0xa</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x6" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0xc</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x7" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0xe</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x8" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x10</processor>
+      </processors>
+    </cache>
+    <cache level="2" id="0x9" type="3">
+      <cache_size>1310720</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>1024</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>0</complex_cache_indexing>
+      <processors>
+	<processor>0x12</processor>
+      </processors>
+    </cache>
+    <cache level="3" id="0x0" type="3">
+      <cache_size>15728640</cache_size>
+      <line_size>64</line_size>
+      <ways>20</ways>
+      <sets>12288</sets>
+      <partitions>1</partitions>
+      <self_initializing>1</self_initializing>
+      <fully_associative>0</fully_associative>
+      <write_back_invalidate>0</write_back_invalidate>
+      <cache_inclusiveness>0</cache_inclusiveness>
+      <complex_cache_indexing>1</complex_cache_indexing>
+      <processors>
+	<processor>0x0</processor>
+	<processor>0x2</processor>
+	<processor>0x4</processor>
+	<processor>0x6</processor>
+	<processor>0x8</processor>
+	<processor>0xa</processor>
+	<processor>0xc</processor>
+	<processor>0xe</processor>
+	<processor>0x10</processor>
+	<processor>0x12</processor>
+      </processors>
+      <capability id="CAT">
+	<capacity_mask_length>20</capacity_mask_length>
+	<clos_number>15</clos_number>
+      </capability>
+    </cache>
+  </caches>
+  <memory>
+    <range start="0x0000000000000000" end="0x000000000009efff" size="651264"/>
+    <range start="0x0000000000100000" end="0x000000003fffffff" size="1072693248"/>
+    <range start="0x0000000040008000" end="0x0000000062de7fff" size="584974336"/>
+    <range start="0x0000000062df8000" end="0x00000000659a6fff" size="45805568"/>
+    <range start="0x0000000068dfe000" end="0x000000006f7fffff" size="111157248"/>
+    <range start="0x0000000100000000" end="0x000000047fffffff" size="15032385536"/>
+  </memory>
+  <devices>
+    <bus type="pci" address="0x0" id="0x09a2" description="System peripheral: Intel Corporation">
+      <vendor>0x8086</vendor>
+      <identifier>0x09a2</identifier>
+      <subsystem_vendor>0x8086</subsystem_vendor>
+      <subsystem_identifier>0x0000</subsystem_identifier>
+      <class>0x088000</class>
+      <resource type="memory" min="0xa0000" max="0xbffff" len="0x20000"/>
+      <resource type="memory" min="0xc8000" max="0xcffff" len="0x8000"/>
+      <resource type="memory" min="0x90000000" max="0xb3ffffff" len="0x24000000"/>
+      <resource type="memory" min="0xfe010000" max="0xfe010fff" len="0x1000"/>
+      <resource type="memory" min="0x20000000000" max="0x22fffffffff" len="0x3000000000"/>
+      <capability id="PCI Express"/>
+      <device address="0x1" id="0x09a4" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x09a4</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<capability id="PCI Express"/>
+      </device>
+      <device address="0x2" id="0x09a3" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x09a3</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<capability id="PCI Express"/>
+      </device>
+      <device address="0x3" id="0x09a5" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x09a5</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x8086</subsystem_identifier>
+	<class>0x088000</class>
+	<capability id="PCI Express"/>
+      </device>
+      <device address="0x4" id="0x0998" description="Host bridge: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0998</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x060000</class>
+	<capability id="PCI Express"/>
+      </device>
+      <device address="0x10000" id="0x0b00" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0b00</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x20fffab0000" max="0x20fffab3fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="MSI-X">
+	  <table_size>1</table_size>
+	  <table_bir>1</table_bir>
+	  <table_offset>0x10000000</table_offset>
+	  <pba_bir>1</pba_bir>
+	  <pba_offset>0x0</pba_offset>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="LTR"/>
+      </device>
+      <device address="0x10001" id="0x0b00" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0b00</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x20fffaac000" max="0x20fffaaffff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="MSI-X">
+	  <table_size>1</table_size>
+	  <table_bir>1</table_bir>
+	  <table_offset>0x10000000</table_offset>
+	  <pba_bir>1</pba_bir>
+	  <pba_offset>0x0</pba_offset>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="LTR"/>
+      </device>
+      <device address="0x10002" id="0x0b00" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0b00</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x20fffaa8000" max="0x20fffaabfff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="MSI-X">
+	  <table_size>1</table_size>
+	  <table_bir>1</table_bir>
+	  <table_offset>0x10000000</table_offset>
+	  <pba_bir>1</pba_bir>
+	  <pba_offset>0x0</pba_offset>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="LTR"/>
+      </device>
+      <device address="0x10003" id="0x0b00" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0b00</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x20fffaa4000" max="0x20fffaa7fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="MSI-X">
+	  <table_size>1</table_size>
+	  <table_bir>1</table_bir>
+	  <table_offset>0x10000000</table_offset>
+	  <pba_bir>1</pba_bir>
+	  <pba_offset>0x0</pba_offset>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="LTR"/>
+      </device>
+      <device address="0x10004" id="0x0b00" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0b00</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x20fffaa0000" max="0x20fffaa3fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="MSI-X">
+	  <table_size>1</table_size>
+	  <table_bir>1</table_bir>
+	  <table_offset>0x10000000</table_offset>
+	  <pba_bir>1</pba_bir>
+	  <pba_offset>0x0</pba_offset>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="LTR"/>
+      </device>
+      <device address="0x10005" id="0x0b00" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0b00</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x20fffa9c000" max="0x20fffa9ffff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="MSI-X">
+	  <table_size>1</table_size>
+	  <table_bir>1</table_bir>
+	  <table_offset>0x10000000</table_offset>
+	  <pba_bir>1</pba_bir>
+	  <pba_offset>0x0</pba_offset>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="LTR"/>
+      </device>
+      <device address="0x10006" id="0x0b00" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0b00</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x20fffa98000" max="0x20fffa9bfff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="MSI-X">
+	  <table_size>1</table_size>
+	  <table_bir>1</table_bir>
+	  <table_offset>0x10000000</table_offset>
+	  <pba_bir>1</pba_bir>
+	  <pba_offset>0x0</pba_offset>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="LTR"/>
+      </device>
+      <device address="0x10007" id="0x0b00" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0b00</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x20fffa94000" max="0x20fffa97fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="MSI-X">
+	  <table_size>1</table_size>
+	  <table_bir>1</table_bir>
+	  <table_offset>0x10000000</table_offset>
+	  <pba_bir>1</pba_bir>
+	  <pba_offset>0x0</pba_offset>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="LTR"/>
+      </device>
+      <device address="0x20000" id="0x09a6" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x09a6</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x91782000" max="0x91783fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
+      </device>
+      <device address="0x20001" id="0x09a7" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x09a7</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x91680000" max="0x916fffff" len="0x80000" id="bar1" width="32" prefetchable="0"/>
+	<resource type="memory" min="0x91700000" max="0x9177ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
+      </device>
+      <device address="0x20002" id="0x09a8" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x09a8</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x91600000" max="0x9167ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
+      </device>
+      <device address="0x20004" id="0x3456" description="Non-Essential Instrumentation: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x3456</identifier>
+	<subsystem_vendor>0x0000</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0x130000</class>
+	<resource type="memory" min="0x20fff900000" max="0x20fff9fffff" len="0x100000" id="bar0" width="64" prefetchable="0"/>
+	<resource type="memory" min="0x20fffa60000" max="0x20fffa7ffff" len="0x20000" id="bar4" width="64" prefetchable="0"/>
+	<resource type="memory" min="0x20fffa90000" max="0x20fffa93fff" len="0x4000" id="bar2" width="64" prefetchable="0"/>
+	<capability id="Reserved (0x0)"/>
+      </device>
+      <device address="0x60000" id="0x18da" description="PCI bridge: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18da</identifier>
+	<class>0x060400</class>
+	<resource type="memory" min="0x91400000" max="0x914fffff" len="0x100000"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="Subsystem ID and Subsystem Vendor ID"/>
+	<capability id="MSI">
+	  <count>1</count>
+	  <capability id="per-vector masking"/>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="ACS"/>
+	<bus type="pci" address="0x1">
+	  <device address="0x0" id="0x18ee" description="Co-processor: Intel Corporation">
+	    <vendor>0x8086</vendor>
+	    <identifier>0x18ee</identifier>
+	    <subsystem_vendor>0x8086</subsystem_vendor>
+	    <subsystem_identifier>0x0000</subsystem_identifier>
+	    <class>0x0b4000</class>
+	    <resource type="memory" min="0x91400000" max="0x9143ffff" len="0x40000" id="bar2" width="64" prefetchable="0"/>
+	    <resource type="memory" min="0x91440000" max="0x9147ffff" len="0x40000" id="bar4" width="64" prefetchable="0"/>
+	    <capability id="MSI">
+	      <count>1</count>
+	      <capability id="64-bit address"/>
+	      <capability id="per-vector masking"/>
+	    </capability>
+	    <capability id="MSI-X">
+	      <table_size>512</table_size>
+	      <table_bir>4</table_bir>
+	      <table_offset>0x18020003</table_offset>
+	      <pba_bir>5</pba_bir>
+	      <pba_offset>0x14010003</pba_offset>
+	    </capability>
+	    <capability id="Power Management"/>
+	    <capability id="PCI Express"/>
+	    <capability id="Advanced Error Reporting"/>
+	    <capability id="ARI"/>
+	    <capability id="SR-IOV"/>
+	    <capability id="ACS"/>
+	  </device>
+	</bus>
+      </device>
+      <device address="0x80000" id="0x18c2" description="SATA controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18c2</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x010601</class>
+	<resource type="io_port" min="0x3020" max="0x303f" len="0x20" id="bar4"/>
+	<resource type="io_port" min="0x3058" max="0x305f" len="0x8" id="bar2"/>
+	<resource type="io_port" min="0x3060" max="0x3063" len="0x4" id="bar3"/>
+	<resource type="memory" min="0x91780000" max="0x91781fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
+	<resource type="memory" min="0x91785000" max="0x917857ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
+	<resource type="memory" min="0x91789000" max="0x917890ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
+	<capability id="MSI">
+	  <count>1</count>
+	</capability>
+	<capability id="Power Management"/>
+	<capability id="Reserved (0x12)"/>
+      </device>
+      <device address="0xf0000" id="0x18ac" description="System peripheral: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18ac</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x088000</class>
+	<resource type="memory" min="0x20fffabb000" max="0x20fffabb3ff" len="0x400" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="MSI">
+	  <count>1</count>
+	  <capability id="64-bit address"/>
+	  <capability id="per-vector masking"/>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+      </device>
+      <device address="0x140000" id="0x18ad" description="PCI bridge: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18ad</identifier>
+	<class>0x060400</class>
+	<resource type="memory" min="0x91300000" max="0x913fffff" len="0x100000"/>
+	<resource type="memory" min="0x20fffa40000" max="0x20fffa5ffff" len="0x20000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="Subsystem ID and Subsystem Vendor ID"/>
+	<capability id="MSI">
+	  <count>1</count>
+	  <capability id="per-vector masking"/>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="Virtual Channel"/>
+	<capability id="ACS"/>
+	<capability id="TPM"/>
+	<capability id="Secondary PCI Express"/>
+	<capability id="DPC"/>
+	<bus type="pci" address="0x3">
+	  <device address="0x0" id="0xf1a6" description="Non-Volatile memory controller: Intel Corporation SSD Pro 7600p/760p/E 6100p Series">
+	    <vendor>0x8086</vendor>
+	    <identifier>0xf1a6</identifier>
+	    <subsystem_vendor>0x8086</subsystem_vendor>
+	    <subsystem_identifier>0x390b</subsystem_identifier>
+	    <class>0x010802</class>
+	    <resource type="memory" min="0x91300000" max="0x91303fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+	    <capability id="Power Management"/>
+	    <capability id="MSI">
+	      <count>8</count>
+	      <capability id="multiple-message"/>
+	      <capability id="64-bit address"/>
+	      <capability id="per-vector masking"/>
+	    </capability>
+	    <capability id="PCI Express"/>
+	    <capability id="MSI-X">
+	      <table_size>16</table_size>
+	      <table_bir>1</table_bir>
+	      <table_offset>0x1000000</table_offset>
+	      <pba_bir>1</pba_bir>
+	      <pba_offset>0x0</pba_offset>
+	    </capability>
+	    <capability id="Advanced Error Reporting"/>
+	    <capability id="Secondary PCI Express"/>
+	    <capability id="LTR"/>
+	    <capability id="L1 PM Substates"/>
+	  </device>
+	</bus>
+      </device>
+      <device address="0x160000" id="0x18af" description="PCI bridge: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18af</identifier>
+	<class>0x060400</class>
+	<resource type="io_port" min="0x2000" max="0x2fff" len="0x1000"/>
+	<resource type="memory" min="0x90000000" max="0x910fffff" len="0x1100000"/>
+	<resource type="memory" min="0x20fffa20000" max="0x20fffa3ffff" len="0x20000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="Subsystem ID and Subsystem Vendor ID"/>
+	<capability id="MSI">
+	  <count>1</count>
+	  <capability id="per-vector masking"/>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="Virtual Channel"/>
+	<capability id="ACS"/>
+	<capability id="TPM"/>
+	<capability id="Secondary PCI Express"/>
+	<capability id="DPC"/>
+	<bus type="pci" address="0x4">
+	  <device address="0x0" id="0x1150" description="PCI bridge: ASPEED Technology, Inc. AST1150 PCI-to-PCI Bridge">
+	    <vendor>0x1a03</vendor>
+	    <identifier>0x1150</identifier>
+	    <class>0x060400</class>
+	    <resource type="io_port" min="0x2000" max="0x2fff" len="0x1000"/>
+	    <resource type="memory" min="0x90000000" max="0x910fffff" len="0x1100000"/>
+	    <capability id="MSI">
+	      <count>1</count>
+	      <capability id="64-bit address"/>
+	    </capability>
+	    <capability id="Power Management"/>
+	    <capability id="PCI Express"/>
+	    <capability id="Subsystem ID and Subsystem Vendor ID"/>
+	    <capability id="Virtual Channel"/>
+	    <capability id="Advanced Error Reporting"/>
+	    <bus type="pci" address="0x5">
+	      <device address="0x0" id="0x2000" description="VGA compatible controller: ASPEED Technology, Inc. ASPEED Graphics Family">
+		<vendor>0x1a03</vendor>
+		<identifier>0x2000</identifier>
+		<subsystem_vendor>0x1a03</subsystem_vendor>
+		<subsystem_identifier>0x2000</subsystem_identifier>
+		<class>0x030000</class>
+		<resource type="io_port" min="0x2000" max="0x207f" len="0x80" id="bar2"/>
+		<resource type="memory" min="0x90000000" max="0x90ffffff" len="0x1000000" id="bar0" width="32" prefetchable="0"/>
+		<resource type="memory" min="0x91000000" max="0x9101ffff" len="0x20000" id="bar1" width="32" prefetchable="0"/>
+		<capability id="Power Management"/>
+		<capability id="MSI">
+		  <count>2</count>
+		  <capability id="multiple-message"/>
+		  <capability id="64-bit address"/>
+		</capability>
+	      </device>
+	    </bus>
+	  </device>
+	</bus>
+      </device>
+      <device address="0x170000" id="0x18a2" description="PCI bridge: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18a2</identifier>
+	<class>0x060400</class>
+	<resource type="io_port" min="0x1000" max="0x1fff" len="0x1000"/>
+	<resource type="memory" min="0x91100000" max="0x912fffff" len="0x200000"/>
+	<resource type="memory" min="0x20fffa00000" max="0x20fffa1ffff" len="0x20000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="PCI Express"/>
+	<capability id="Power Management"/>
+	<capability id="Subsystem ID and Subsystem Vendor ID"/>
+	<capability id="MSI">
+	  <count>1</count>
+	  <capability id="per-vector masking"/>
+	</capability>
+	<capability id="Advanced Error Reporting"/>
+	<capability id="Virtual Channel"/>
+	<capability id="ACS"/>
+	<capability id="TPM"/>
+	<capability id="Secondary PCI Express"/>
+	<capability id="DPC"/>
+	<bus type="pci" address="0x6">
+	  <device address="0x0" id="0x1533" description="Ethernet controller: Intel Corporation I210 Gigabit Network Connection">
+	    <vendor>0x8086</vendor>
+	    <identifier>0x1533</identifier>
+	    <subsystem_vendor>0xffff</subsystem_vendor>
+	    <subsystem_identifier>0x0000</subsystem_identifier>
+	    <class>0x020000</class>
+	    <resource type="io_port" min="0x1000" max="0x101f" len="0x20" id="bar2"/>
+	    <resource type="memory" min="0x91100000" max="0x911fffff" len="0x100000" id="bar0" width="32" prefetchable="0"/>
+	    <resource type="memory" min="0x91200000" max="0x91203fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
+	    <capability id="Power Management"/>
+	    <capability id="MSI">
+	      <count>1</count>
+	      <capability id="64-bit address"/>
+	      <capability id="per-vector masking"/>
+	    </capability>
+	    <capability id="MSI-X">
+	      <table_size>5</table_size>
+	      <table_bir>7</table_bir>
+	      <table_offset>0x30000</table_offset>
+	      <pba_bir>1</pba_bir>
+	      <pba_offset>0x0</pba_offset>
+	    </capability>
+	    <capability id="PCI Express"/>
+	    <capability id="Advanced Error Reporting"/>
+	    <capability id="Device Serial Number"/>
+	    <capability id="TPH Requester"/>
+	  </device>
+	</bus>
+      </device>
+      <device address="0x180000" id="0x18d3" description="Communication controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18d3</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x078000</class>
+	<resource type="memory" min="0x20fffaba000" max="0x20fffabafff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="Power Management"/>
+	<capability id="MSI">
+	  <count>1</count>
+	  <capability id="64-bit address"/>
+	</capability>
+	<capability id="Vendor-Specific"/>
+      </device>
+      <device address="0x180001" id="0x18d4" description="Communication controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18d4</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x078000</class>
+	<resource type="memory" min="0x20fffab9000" max="0x20fffab9fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="Power Management"/>
+	<capability id="MSI">
+	  <count>1</count>
+	  <capability id="64-bit address"/>
+	</capability>
+	<capability id="Vendor-Specific"/>
+      </device>
+      <device address="0x180004" id="0x18d6" description="Communication controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18d6</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x078000</class>
+	<resource type="memory" min="0x20fffab8000" max="0x20fffab8fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="Power Management"/>
+	<capability id="MSI">
+	  <count>1</count>
+	  <capability id="64-bit address"/>
+	</capability>
+	<capability id="Vendor-Specific"/>
+      </device>
+      <device address="0x1a0000" id="0x18d8" description="Serial controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18d8</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x070002</class>
+	<resource type="io_port" min="0x3050" max="0x3057" len="0x8" id="bar0"/>
+	<resource type="memory" min="0x91788000" max="0x917880ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
+	<capability id="MSI">
+	  <count>1</count>
+	</capability>
+	<capability id="Power Management"/>
+      </device>
+      <device address="0x1a0001" id="0x18d8" description="Serial controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18d8</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x070002</class>
+	<resource type="io_port" min="0x3048" max="0x304f" len="0x8" id="bar0"/>
+	<resource type="memory" min="0x91787000" max="0x917870ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
+	<capability id="MSI">
+	  <count>1</count>
+	</capability>
+	<capability id="Power Management"/>
+      </device>
+      <device address="0x1a0002" id="0x18d8" description="Serial controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18d8</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x070002</class>
+	<resource type="io_port" min="0x3040" max="0x3047" len="0x8" id="bar0"/>
+	<resource type="memory" min="0x91786000" max="0x917860ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
+	<capability id="MSI">
+	  <count>1</count>
+	</capability>
+	<capability id="Power Management"/>
+      </device>
+      <device address="0x1a0003" id="0x18d9" description="Unassigned class: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18d9</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x0000</subsystem_identifier>
+	<class>0xff0000</class>
+	<capability id="Power Management"/>
+      </device>
+      <device address="0x1c0000" id="0x18db" description="SD Host controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18db</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x080501</class>
+	<resource type="memory" min="0x20fffab7000" max="0x20fffab7fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="Power Management"/>
+	<capability id="Vendor-Specific"/>
+      </device>
+      <device address="0x1d0000" id="0x0998" description="Host bridge: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x0998</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x060000</class>
+	<capability id="PCI Express"/>
+      </device>
+      <device address="0x1e0000" id="0x18d0" description="USB controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18d0</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x0c0330</class>
+	<resource type="memory" min="0x20fffa80000" max="0x20fffa8ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
+	<capability id="Power Management"/>
+	<capability id="MSI">
+	  <count>8</count>
+	  <capability id="multiple-message"/>
+	  <capability id="64-bit address"/>
+	</capability>
+      </device>
+      <device address="0x1f0000" id="0x18dc" description="ISA bridge: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18dc</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x060100</class>
+      </device>
+      <device address="0x1f0004" id="0x18df" description="SMBus: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18df</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x0c0500</class>
+	<resource type="io_port" min="0x3000" max="0x301f" len="0x20" id="bar4"/>
+	<resource type="memory" min="0x20fffab6000" max="0x20fffab60ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
+      </device>
+      <device address="0x1f0005" id="0x18e0" description="Serial bus controller: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18e0</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x0c8000</class>
+	<resource type="memory" min="0xfe010000" max="0xfe010fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
+      </device>
+      <device address="0x1f0007" id="0x18e1" description="Non-Essential Instrumentation: Intel Corporation">
+	<vendor>0x8086</vendor>
+	<identifier>0x18e1</identifier>
+	<subsystem_vendor>0x8086</subsystem_vendor>
+	<subsystem_identifier>0x7270</subsystem_identifier>
+	<class>0x130000</class>
+	<resource type="memory" min="0x20fff000000" max="0x20fff7fffff" len="0x800000" id="bar2" width="64" prefetchable="0"/>
+	<resource type="memory" min="0x20fff800000" max="0x20fff8fffff" len="0x100000" id="bar0" width="64" prefetchable="0"/>
+	<resource type="memory" min="0x20fffab4000" max="0x20fffab5fff" len="0x2000" id="bar4" width="64" prefetchable="0"/>
+	<capability id="MSI">
+	  <count>8</count>
+	  <capability id="multiple-message"/>
+	  <capability id="64-bit address"/>
+	</capability>
+      </device>
+    </bus>
+  </devices>
+</acrn-config>
