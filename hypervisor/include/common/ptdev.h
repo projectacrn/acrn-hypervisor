@@ -9,6 +9,7 @@
 #include <list.h>
 #include <asm/lib/spinlock.h>
 #include <timer.h>
+#include <vacpi.h>
 
 
 enum intx_ctlr {
@@ -20,7 +21,7 @@ enum intx_ctlr {
 #define PTDEV_INTR_INTX		(1U << 1U)
 
 #define GPU_OPREGION_SIZE	0x5000U
-#define GPU_OPREGION_GPA	0x40880000U
+#define GPU_OPREGION_GPA	(VIRT_ACPI_DATA_ADDR  - GPU_OPREGION_SIZE)
 #define PCIR_ASLS_CTL		0xfcU /* register offset in PCIe configuration space for Opregion base address */
 #define PCIM_ASLS_OPREGION_MASK	0xfffff000U /* opregion need 4KB aligned */
 
