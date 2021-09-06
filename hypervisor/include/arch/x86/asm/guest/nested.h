@@ -333,6 +333,8 @@ struct acrn_vvmcs {
 	uint8_t vmcs02[PAGE_SIZE];	/* VMCS to run L2 and as Link Pointer in VMCS01 */
 	struct acrn_vmcs12 vmcs12;	/* To cache L1's VMCS12*/
 	uint64_t vmcs12_gpa;            /* The corresponding L1 GPA for this VMCS12 */
+	bool host_state_dirty;		/* To indicate need to merge VMCS12 host-state fields to VMCS01 */
+	bool control_fields_dirty;	/* For all other non-host-state fields that need to be merged */
 } __aligned(PAGE_SIZE);
 
 struct acrn_nested {
@@ -341,8 +343,6 @@ struct acrn_nested {
 	uint64_t vmxon_ptr;		/* GPA */
 	bool vmxon;		/* To indicate if vCPU entered VMX operation */
 	bool in_l2_guest;	/* To indicate if vCPU is currently in Guest mode (from L1's perspective) */
-	bool host_state_dirty;	/* To indicate need to merge VMCS12 host-state fields to VMCS01 */
-	bool control_fields_dirty;	/* For all other non-host-state fields that need to be merged */
 } __aligned(PAGE_SIZE);
 
 void init_nested_vmx(__unused struct acrn_vm *vm);
