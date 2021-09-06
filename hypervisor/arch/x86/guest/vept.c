@@ -15,7 +15,7 @@
 #include <asm/guest/nested.h>
 
 #define VETP_LOG_LEVEL			LOG_DEBUG
-#define CONFIG_MAX_GUEST_EPT_NUM	4
+#define CONFIG_MAX_GUEST_EPT_NUM	(MAX_ACTIVE_VVMCS_NUM * MAX_VCPUS_PER_VM)
 static struct nept_desc nept_desc_bucket[CONFIG_MAX_GUEST_EPT_NUM];
 static spinlock_t nept_desc_bucket_lock;
 
