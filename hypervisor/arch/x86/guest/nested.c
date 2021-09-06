@@ -738,7 +738,6 @@ int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
 				vcpu->arch.nested.control_fields_dirty = false;
 				vcpu->arch.nested.in_l2_guest = false;
 				vcpu->arch.nested.vmxon_ptr = vmptr_gpa;
-				vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
 				vcpu->arch.nested.current_vvmcs = NULL;
 
 				nested_vmx_result(VMsucceed, 0);
@@ -784,7 +783,6 @@ int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu)
 		vcpu->arch.nested.host_state_dirty = false;
 		vcpu->arch.nested.control_fields_dirty = false;
 		vcpu->arch.nested.in_l2_guest = false;
-		vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
 		vcpu->arch.nested.current_vvmcs = NULL;
 
 		(void)memset(vcpu->arch.nested.vvmcs[0].vmcs02, 0U, PAGE_SIZE);
@@ -819,7 +817,7 @@ int32_t vmread_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint32_t vmcs_field;
 
 	if (check_vmx_permission(vcpu)) {
-		if (vcpu->arch.nested.current_vmcs12_ptr == INVALID_GPA) {
+		if ((cur_vvmcs == NULL) || (cur_vvmcs->vmcs12_gpa == INVALID_GPA)) {
 			nested_vmx_result(VMfailInvalid, 0);
 		} else {
 			/* TODO: VMfailValid for invalid VMCS fields */
@@ -854,7 +852,7 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint32_t vmcs_field;
 
 	if (check_vmx_permission(vcpu)) {
-		if (vcpu->arch.nested.current_vmcs12_ptr == INVALID_GPA) {
+		if ((cur_vvmcs == NULL) || (cur_vvmcs->vmcs12_gpa == INVALID_GPA)) {
 			nested_vmx_result(VMfailInvalid, 0);
 		} else {
 			/* TODO: VMfailValid for invalid VMCS fields */
@@ -1052,8 +1050,7 @@ static void clear_vmcs02(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs)
 	sync_vmcs02_to_vmcs12(&vvmcs->vmcs12);
 
 	/* flush cached VMCS12 back to L1 guest */
-	(void)copy_to_gpa(vcpu->vm, (void *)&vvmcs->vmcs12,
-		vcpu->arch.nested.current_vmcs12_ptr, sizeof(struct acrn_vmcs12));
+	(void)copy_to_gpa(vcpu->vm, (void *)&vvmcs->vmcs12, vvmcs->vmcs12_gpa, sizeof(struct acrn_vmcs12));
 
 	/*
 	 * The current VMCS12 has been flushed out, so that the active VMCS02
@@ -1064,8 +1061,8 @@ static void clear_vmcs02(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs)
 	/* This VMCS can no longer refer to any shadow EPT */
 	put_nept_desc(vvmcs->vmcs12.ept_pointer);
 
-	/* no current VMCS12 */
-	vcpu->arch.nested.current_vmcs12_ptr = INVALID_GPA;
+	/* This vvmcs[] entry doesn't cache a VMCS12 any more */
+	vvmcs->vmcs12_gpa = INVALID_GPA;
 }
 
 /*
@@ -1086,11 +1083,11 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 			nested_vmx_result(VMfailValid, VMXERR_VMPTRLD_VMXON_POINTER);
 		} else if (!validate_vmcs_revision_id(vcpu, vmcs12_gpa)) {
 			nested_vmx_result(VMfailValid, VMXERR_VMPTRLD_INCORRECT_VMCS_REVISION_ID);
-		} else if (nested->current_vmcs12_ptr == vmcs12_gpa) {
+		} else if ((nested->current_vvmcs != NULL) && (nested->current_vvmcs->vmcs12_gpa == vmcs12_gpa)) {
 			/* VMPTRLD current VMCS12, do nothing */
 			nested_vmx_result(VMsucceed, 0);
 		} else {
-			if (nested->current_vmcs12_ptr != INVALID_GPA) {
+			if (vvmcs->vmcs12_gpa != INVALID_GPA) {
 				/*
 				 * L1 hypervisor VMPTRLD a new VMCS12, or VMPTRLD a VMCLEARed VMCS12.
 				 * The current VMCS12 remains active but ACRN needs to sync the content of it
@@ -1136,8 +1133,8 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 			/* VMCS02 is referenced by VMCS01 Link Pointer */
 			enable_vmcs_shadowing(vvmcs);
 
+			vvmcs->vmcs12_gpa = vmcs12_gpa;
 			nested->current_vvmcs = vvmcs;
-			nested->current_vmcs12_ptr = vmcs12_gpa;
 			nested_vmx_result(VMsucceed, 0);
 		}
 	}
@@ -1162,7 +1159,7 @@ int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 		} else if (vmcs12_gpa == nested->vmxon_ptr) {
 			nested_vmx_result(VMfailValid, VMXERR_VMCLEAR_VMXON_POINTER);
 		} else {
-			if (vcpu->arch.nested.current_vmcs12_ptr == vmcs12_gpa) {
+			if (vvmcs->vmcs12_gpa == vmcs12_gpa) {
 				/*
 				 * The target VMCS12 is active and current.
 				 * VMCS02 is active and being used as a shadow VMCS.
@@ -1376,7 +1373,7 @@ static void nested_vmentry(struct acrn_vcpu *vcpu, bool is_launch)
 	struct acrn_vvmcs *cur_vvmcs = vcpu->arch.nested.current_vvmcs;
 	struct acrn_vmcs12 *vmcs12 = &cur_vvmcs->vmcs12;
 
-	if (vcpu->arch.nested.current_vmcs12_ptr == INVALID_GPA) {
+	if ((cur_vvmcs == NULL) || (cur_vvmcs->vmcs12_gpa == INVALID_GPA)) {
 		nested_vmx_result(VMfailInvalid, 0);
 	} else if (is_launch && (vmcs12->launch_state != VMCS12_LAUNCH_STATE_CLEAR)) {
 		nested_vmx_result(VMfailValid, VMXERR_VMLAUNCH_NONCLEAR_VMCS);
