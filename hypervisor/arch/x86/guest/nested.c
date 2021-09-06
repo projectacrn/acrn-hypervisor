@@ -734,8 +734,8 @@ int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
 				nested_vmx_result(VMfailInvalid, 0);
 			} else {
 				vcpu->arch.nested.vmxon = true;
-				vcpu->arch.nested.host_state_dirty = false;
-				vcpu->arch.nested.control_fields_dirty = false;
+				vcpu->arch.nested.vvmcs[0].host_state_dirty = false;
+				vcpu->arch.nested.vvmcs[0].control_fields_dirty = false;
 				vcpu->arch.nested.in_l2_guest = false;
 				vcpu->arch.nested.vmxon_ptr = vmptr_gpa;
 				vcpu->arch.nested.current_vvmcs = NULL;
@@ -780,8 +780,8 @@ int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	if (check_vmx_permission(vcpu)) {
 		vcpu->arch.nested.vmxon = false;
-		vcpu->arch.nested.host_state_dirty = false;
-		vcpu->arch.nested.control_fields_dirty = false;
+		vcpu->arch.nested.vvmcs[0].host_state_dirty = false;
+		vcpu->arch.nested.vvmcs[0].control_fields_dirty = false;
 		vcpu->arch.nested.in_l2_guest = false;
 		vcpu->arch.nested.current_vvmcs = NULL;
 
@@ -871,7 +871,7 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 				}
 
 				if (VMX_VMCS_FIELD_TYPE(vmcs_field) == VMX_VMCS_FIELD_TYPE_HOST) {
-					vcpu->arch.nested.host_state_dirty = true;
+					cur_vvmcs->host_state_dirty = true;
 				}
 
 				if ((vmcs_field == VMX_MSR_BITMAP_FULL)
@@ -879,7 +879,7 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 					|| (vmcs_field == VMX_VPID)
 					|| (vmcs_field == VMX_ENTRY_CONTROLS)
 					|| (vmcs_field == VMX_EXIT_CONTROLS)) {
-					vcpu->arch.nested.control_fields_dirty = true;
+					cur_vvmcs->control_fields_dirty = true;
 
 					if (vmcs_field == VMX_EPT_POINTER_FULL) {
 						if (cur_vvmcs->vmcs12.ept_pointer != vmcs_value) {
@@ -1063,6 +1063,10 @@ static void clear_vmcs02(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs)
 
 	/* This vvmcs[] entry doesn't cache a VMCS12 any more */
 	vvmcs->vmcs12_gpa = INVALID_GPA;
+
+	/* Cleanup per VVMCS dirty flags */
+	vvmcs->host_state_dirty = false;
+	vvmcs->control_fields_dirty = false;
 }
 
 /*
@@ -1172,10 +1176,6 @@ int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 				/* Switch back to vmcs01 (no VMCS shadowing) */
 				load_va_vmcs(vcpu->arch.vmcs);
 
-				/* If no L2 VM entry happens between VMWRITE and VMCLEAR, need to clear these flags */
-				vcpu->arch.nested.host_state_dirty = false;
-				vcpu->arch.nested.control_fields_dirty = false;
-
 				/* no current VMCS12 */
 				nested->current_vvmcs = NULL;
 			} else {
@@ -1239,8 +1239,8 @@ static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
 	struct acrn_vmcs12 *vmcs12 = &vcpu->arch.nested.current_vvmcs->vmcs12;
 	struct segment_sel seg;
 
-	if (vcpu->arch.nested.host_state_dirty == true) {
-		vcpu->arch.nested.host_state_dirty = false;
+	if (vcpu->arch.nested.current_vvmcs->host_state_dirty == true) {
+		vcpu->arch.nested.current_vvmcs->host_state_dirty = false;
 
 		/*
 		 * We want vcpu_get_cr0/4() can get the up-to-date values, but we don't
@@ -1396,8 +1396,8 @@ static void nested_vmentry(struct acrn_vcpu *vcpu, bool is_launch)
 		/* as an ordinary VMCS, VMCS02 is active and currernt when L2 guest is running */
 		load_va_vmcs(cur_vvmcs->vmcs02);
 
-		if (vcpu->arch.nested.control_fields_dirty) {
-			vcpu->arch.nested.control_fields_dirty = false;
+		if (cur_vvmcs->control_fields_dirty) {
+			cur_vvmcs->control_fields_dirty = false;
 			merge_and_sync_control_fields(vcpu, vmcs12);
 		}
 
