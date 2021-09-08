@@ -52,6 +52,8 @@
     <xs:enumeration value="GUEST_FLAG_NVMX_ENABLED" />
     <xs:enumeration value="GUEST_FLAG_SECURITY_VM" />
     <xs:enumeration value="GUEST_FLAG_VCAT_ENABLED" />
+    <xs:enumeration value="GUEST_FLAG_TEE" />
+    <xs:enumeration value="GUEST_FLAG_REE" />
   </xs:restriction>
 </xs:simpleType>
 
