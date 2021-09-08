@@ -45,7 +45,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="loadScenarioModalLabel">Load Scenario Setting</h4>
+                <h4 class="modal-title" id="loadScenarioModalLabel">Load Default Scenario Settings</h4>
             </div>
             <div class="modal-body">
                 <div class="form-group row">
@@ -81,7 +81,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="loadLaunchModalLabel">Load Launch setting</h4>
+                <h4 class="modal-title" id="loadLaunchModalLabel">Load Default Launch Settings</h4>
             </div>
             <div class="modal-body">
                 <div class="form-group row">
@@ -116,12 +116,12 @@
 <nav class="navbar navbar-inverse">
     <div class="container-fluid">
         <div class="navbar-header">
-            <a class="navbar-brand" href="{{ url_for('CONFIG_APP.scenarios') }}">ACRN Config</a>
+            <a class="navbar-brand" href="{{ url_for('CONFIG_APP.scenarios') }}">ACRN Configurator</a>
         </div>
         <ul class="nav navbar-nav">
             <li class="dropdown">
                 <a href="{{ url_for('CONFIG_APP.scenarios') }}">
-                    Scenario Setting <span class="caret"></span></a>
+                    Scenario Settings<span class="caret"></span></a>
                 <ul class="dropdown-menu">
                     {% if board_info %}
                         <li><a href="" data-toggle="modal" data-target="#create_modal"  class="create_menu"
@@ -140,7 +140,7 @@
                 </ul>
             </li>
             <li class="dropdown">
-                <a href="{{ url_for('CONFIG_APP.launches') }}">Launch Setting <span
+                <a href="{{ url_for('CONFIG_APP.launches') }}">Launch Settings <span
                         class="caret"></span></a>
                 <ul class="dropdown-menu">
                     {% if board_info %}
@@ -186,7 +186,7 @@
                 <label for="board_info_file" class="custom-file-upload btn btn-primary" id="board_info_file2"
                        style="border: 1px solid #ccc; display: inline-block; padding: 6px 12px;
                            cursor: pointer; border-radius:5px; ">
-                    Import Board info</label>
+                    Import Board XML</label>
                 <input type="file" name="file" id="board_info_file" class="col-sm-6 btn btn-primary"
                        style="display: none;">
             </form>
