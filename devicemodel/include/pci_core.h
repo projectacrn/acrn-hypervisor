@@ -249,19 +249,19 @@ struct pciecap {
 } __attribute__((packed));
 static_assert(sizeof(struct pciecap) == 60, "compile-time assertion failed");
 
-struct mmio_rsvd_rgn {
+struct io_rsvd_rgn {
 	uint64_t start;
 	uint64_t end;
 	int idx;
 	int bar_type;
-	/* if vdev=NULL, it also indicates this mmio_rsvd_rgn is not used */
+	/* if vdev=NULL, it also indicates this io_rsvd_rgn is not used */
 	struct pci_vdev *vdev;
 };
 
-extern struct mmio_rsvd_rgn reserved_bar_regions[REGION_NUMS];
-int create_mmio_rsvd_rgn(uint64_t start,
+extern struct io_rsvd_rgn reserved_bar_regions[REGION_NUMS];
+int reserve_io_rgn(uint64_t start,
                 uint64_t end, int idx, int bar_type, struct pci_vdev *vdev);
-void destory_mmio_rsvd_rgns(struct pci_vdev *vdev);
+void destory_io_rsvd_rgns(struct pci_vdev *vdev);
 
 /* Reserved region in e820 table for GVT
  * for GVT-g use:
