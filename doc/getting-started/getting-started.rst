@@ -116,6 +116,7 @@ To set up the ACRN build environment on the development computer:
       sudo apt install gcc \
            git \
            make \
+           vim \
            libssl-dev \
            libpciaccess-dev \
            uuid-dev \
@@ -558,8 +559,8 @@ Build ACRN
 
          sudo mkdir -p /boot/acrn/
          sudo cp $disk/acrn.bin /boot/acrn
-         sudo cp $disk/launch_uos_id3.sh ~/acrn-work
          sudo cp $disk/iasl /usr/sbin/
+         cp $disk/launch_uos_id3.sh ~/acrn-work
          sudo umount $disk/
 
 .. rst-class:: numbered-step
@@ -708,7 +709,7 @@ automatically.
       dmesg | grep ACRN
 
    You should see "Hypervisor detected: ACRN" in the output. Example output of a
-   successful installation (your's may look slightly different):
+   successful installation (yours may look slightly different):
 
    .. code-block:: console
 
@@ -804,7 +805,7 @@ Launch the User VM
 
       ubuntu@ubuntu:~$
 
-The guest VM has launched successfully. You have completed this ACRN setup.
+The User VM has launched successfully. You have completed this ACRN setup.
 
 Next Steps
 **************
