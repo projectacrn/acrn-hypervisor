@@ -9,6 +9,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:dyn="http://exslt.org/dynamic"
     xmlns:math="http://exslt.org/math"
+    xmlns:str="http://exslt.org/strings"
     xmlns:acrn="http://projectacrn.org">
   <xsl:include href="lib.xsl" />
   <xsl:output method="text" />
@@ -20,11 +21,16 @@
     <!-- Header include guard -->
     <xsl:value-of select="acrn:include-guard('MISC_CFG_H')" />
 
+    <xsl:apply-templates select="board-data/acrn-config" />
     <xsl:apply-templates select="config-data/acrn-config" />
 
     <xsl:apply-templates select="allocation-data//ssram" />
 
     <xsl:value-of select="acrn:include-guard-end('MISC_CFG_H')" />
+  </xsl:template>
+
+  <xsl:template match="board-data/acrn-config">
+    <xsl:apply-templates select="BLOCK_DEVICE_INFO" />
   </xsl:template>
 
   <xsl:template match="config-data/acrn-config">
@@ -45,6 +51,19 @@
     <xsl:value-of select="acrn:define('PRE_RTVM_SW_SRAM_ENABLED', 1, '')" />
     <xsl:value-of select="acrn:define('PRE_RTVM_SW_SRAM_BASE_GPA', start_gpa, 'UL')" />
     <xsl:value-of select="acrn:define('PRE_RTVM_SW_SRAM_END_GPA', end_gpa, 'UL')" />
+  </xsl:template>
+
+  <xsl:template match="BLOCK_DEVICE_INFO">
+    <xsl:variable name="block_devices_list_1" select="translate(current(), $newline, ',')" />
+    <xsl:variable name="block_devices_list_2" select="translate($block_devices_list_1, $whitespaces, '')" />
+    <xsl:variable name="block_devices_list" select="str:split($block_devices_list_2, ',')" />
+    <xsl:for-each select="$block_devices_list">
+      <xsl:variable name="pos" select="position()" />
+      <xsl:variable name="block_device" select="$block_devices_list[$pos]" />
+      <xsl:if test="not(contains($block_device, 'ext4'))">
+        <xsl:value-of select="acrn:define(concat('ROOTFS_', $pos), concat($quot, 'root=', substring-before($block_device, ':'), ' ', $quot))" />
+      </xsl:if>
+    </xsl:for-each>
   </xsl:template>
 
 <xsl:template name="sos_rootfs">
