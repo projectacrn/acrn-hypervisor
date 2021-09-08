@@ -3,7 +3,7 @@
 	<uos_type desc="UOS type">WINDOWS</uos_type>
 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
 	<mem_size desc="UOS memory size in MByte">4096</mem_size>
-	<gvt_args desc="GPU virtualization settings: gvtd/sriov, gvtd: GPU passthrough, sriov: Intel GPU SRIOV. Default is sriov.">sriov</gvt_args>
+	<gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
 	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
@@ -14,7 +14,7 @@
 		<pcpu_id></pcpu_id>
 	</cpu_affinity>
 	<shm_regions desc="List of shared memory regions for inter-VM communication.">
-		<shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2">dm:/looking_glass_waag,32</shm_region>
+		<shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
 	</shm_regions>
 	<console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
 	<communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
@@ -47,7 +47,7 @@
 	<uos_type desc="UOS type">PREEMPT-RT LINUX</uos_type>
 	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
 	<mem_size desc="UOS memory size in MByte">1024</mem_size>
-	<gvt_args configurable="0" desc="GPU virtualization settings: gvtd/sriov, gvtd: GPU passthrough, sriov: Intel GPU SRIOV. Default is sriov."></gvt_args>
+	<gvt_args configurable="0" desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
 	<poweroff_channel desc="the method of power off uos"></poweroff_channel>

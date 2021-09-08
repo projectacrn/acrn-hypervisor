@@ -1,7 +1,7 @@
-From 40f0f72a432f3f98d220bc7410aed141af00ba80 Mon Sep 17 00:00:00 2001
+From 453717774771d7167b8761ba1c17c21a6c0eeef4 Mon Sep 17 00:00:00 2001
 From: Kunhui-Li <kunhuix.li@intel.com>
 Date: Tue, 7 Sep 2021 11:15:10 +0800
-Subject: [PATCH 19/19] config_tools: add the PTM tag in scenario xml file
+Subject: [PATCH 18/19] config_tools: add the PTM tag in scenario xml file
 
 add the PTM tag in industry.xml for adl-s-crb platform.
 
@@ -11,10 +11,10 @@ Signed-off-by: Kunhui-Li <kunhuix.li@intel.com>
  1 file changed, 7 insertions(+)
 
 diff --git a/misc/config_tools/data/adl-s-crb/industry.xml b/misc/config_tools/data/adl-s-crb/industry.xml
-index 63ea3cae5..ebe9514ee 100644
+index d8cee4aee..c4a11b956 100644
 --- a/misc/config_tools/data/adl-s-crb/industry.xml
 +++ b/misc/config_tools/data/adl-s-crb/industry.xml
-@@ -155,6 +155,7 @@
+@@ -154,6 +154,7 @@
        <target_vm_id>1</target_vm_id>
        <target_uart_id>1</target_uart_id>
      </communication_vuart>
@@ -22,7 +22,7 @@ index 63ea3cae5..ebe9514ee 100644
    </vm>
    <vm id="2">
      <vm_type>POST_RT_VM</vm_type>
-@@ -193,6 +194,7 @@
+@@ -192,6 +193,7 @@
        <target_vm_id>1</target_vm_id>
        <target_uart_id>1</target_uart_id>
      </communication_vuart>
@@ -30,7 +30,7 @@ index 63ea3cae5..ebe9514ee 100644
    </vm>
    <vm id="3">
      <vm_type>POST_STD_VM</vm_type>
-@@ -235,6 +237,7 @@
+@@ -234,6 +236,7 @@
        <target_vm_id>1</target_vm_id>
        <target_uart_id>1</target_uart_id>
      </communication_vuart>
@@ -38,7 +38,7 @@ index 63ea3cae5..ebe9514ee 100644
    </vm>
    <vm id="4">
      <vm_type>POST_STD_VM</vm_type>
-@@ -273,6 +276,7 @@
+@@ -272,6 +275,7 @@
        <target_vm_id>1</target_vm_id>
        <target_uart_id>1</target_uart_id>
      </communication_vuart>
@@ -46,7 +46,7 @@ index 63ea3cae5..ebe9514ee 100644
    </vm>
    <vm id="5">
      <vm_type>POST_STD_VM</vm_type>
-@@ -311,6 +315,7 @@
+@@ -310,6 +314,7 @@
        <target_vm_id>1</target_vm_id>
        <target_uart_id>1</target_uart_id>
      </communication_vuart>
@@ -54,7 +54,7 @@ index 63ea3cae5..ebe9514ee 100644
    </vm>
    <vm id="6">
      <vm_type>POST_STD_VM</vm_type>
-@@ -349,6 +354,7 @@
+@@ -348,6 +353,7 @@
        <target_vm_id>1</target_vm_id>
        <target_uart_id>1</target_uart_id>
      </communication_vuart>
@@ -62,7 +62,7 @@ index 63ea3cae5..ebe9514ee 100644
    </vm>
    <vm id="7">
      <vm_type>KATA_VM</vm_type>
-@@ -396,5 +402,6 @@
+@@ -395,5 +401,6 @@
        <target_vm_id>1</target_vm_id>
        <target_uart_id>1</target_uart_id>
      </communication_vuart>
