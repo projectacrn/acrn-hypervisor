@@ -15,16 +15,12 @@
       <MULTIBOOT2>y</MULTIBOOT2>
       <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
       <RDT>
-        <RDT_ENABLED>n</RDT_ENABLED>
-        <CDP_ENABLED>y</CDP_ENABLED>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
-        <CLOS_MASK>0xfff</CLOS_MASK>
+            <RDT_ENABLED>y</RDT_ENABLED>
+            <CDP_ENABLED>n</CDP_ENABLED>
+                <CLOS_MASK>0x0ff</CLOS_MASK>
+                <CLOS_MASK>0xf00</CLOS_MASK>
+                <CLOS_MASK>0x0ff</CLOS_MASK>
+                <CLOS_MASK>0x0ff</CLOS_MASK>
       </RDT>
       <NVMX_ENABLED>n</NVMX_ENABLED>
       <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -159,8 +155,8 @@
       <pcpu_id>3</pcpu_id>
     </cpu_affinity>
     <clos>
-      <vcpu_clos>0</vcpu_clos>
-      <vcpu_clos>0</vcpu_clos>
+        <vcpu_clos>0</vcpu_clos>
+        <vcpu_clos>1</vcpu_clos>
     </clos>
     <epc_section>
       <base>0</base>

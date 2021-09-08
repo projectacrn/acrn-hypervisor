@@ -258,9 +258,9 @@
 	TPM2
 	</TPM_INFO>
   <CLOS_INFO>
-	rdt resources supported: L2
-	rdt resource clos max: 8
-	rdt resource mask max: '0xfffff'
+	rdt resources supported: L3
+	rdt resource clos max: 4
+	rdt resource mask max: '0xfff'
 	</CLOS_INFO>
   <IOMEM_INFO>
 	00000000-00000fff : Reserved
