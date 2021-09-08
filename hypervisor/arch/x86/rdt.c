@@ -114,7 +114,11 @@ void init_rdt_info(void)
 	uint8_t i;
 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
 
-	if (pcpu_has_cap(X86_FEATURE_RDT_A)) {
+	if (MAX_CACHE_CLOS_NUM_ENTRIES > 0) {
+		pr_acrnlog("LLC CAT enabled.");
+		res_cap_info[RDT_RESOURCE_L3].clos_max = MAX_CACHE_CLOS_NUM_ENTRIES;
+
+	} else if (pcpu_has_cap(X86_FEATURE_RDT_A)) {
 		cpuid_subleaf(CPUID_RDT_ALLOCATION, 0U, &eax, &ebx, &ecx, &edx);
 
 		/* If HW supports L3 CAT, EBX[1] is set */

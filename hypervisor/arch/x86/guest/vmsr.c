@@ -321,13 +321,9 @@ static void prepare_auto_msr_area (struct acrn_vcpu *vcpu)
 
 	/* only load/restore MSR IA32_PQR_ASSOC when hv and guest have differnt settings */
 	if (is_platform_rdt_capable() && (vcpu_clos != hv_clos)) {
-		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
-		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
-		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
-		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(hv_clos);
-		vcpu->arch.msr_area.count++;
-		pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
-			vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
+		msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2pqr_msr(vcpu_clos), pcpuid_from_vcpu(vcpu));
+		pr_acrnlog("switch clos for VM %u vcpu_id %u: 0x%x",
+			vcpu->vm->vm_id, vcpu->vcpu_id, vcpu_clos);
 	}
 }
 
