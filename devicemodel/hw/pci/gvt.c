@@ -132,13 +132,13 @@ update_gvt_bar(struct vmctx *ctx)
 		}
 	}
 
-	destory_mmio_rsvd_rgns(gvt_dev);
+	destory_io_rsvd_rgns(gvt_dev);
 
-	ret = create_mmio_rsvd_rgn(bar0_start_addr,
+	ret = reserve_io_rgn(bar0_start_addr,
                         bar0_end_addr, 0, PCIBAR_MEM32, gvt_dev);
 	if(ret != 0)
 		return;
-	ret = create_mmio_rsvd_rgn(bar2_start_addr,
+	ret = reserve_io_rgn(bar2_start_addr,
                         bar2_end_addr, 2, PCIBAR_MEM32, gvt_dev);
 	if(ret != 0)
 		return;
@@ -211,11 +211,11 @@ gvt_init_config(struct pci_gvt *gvt)
 	/* In GVT-g design, it only use pci bar0 and bar2,
 	 * So we need reserve bar0 region and bar2 region only
 	 */
-	ret = create_mmio_rsvd_rgn(bar0_start_addr,
+	ret = reserve_io_rgn(bar0_start_addr,
 				bar0_end_addr, 0, PCIBAR_MEM32, gvt->gvt_pi);
 	if(ret != 0)
 		return -1;
-	ret = create_mmio_rsvd_rgn(bar2_start_addr,
+	ret = reserve_io_rgn(bar2_start_addr,
 				bar2_end_addr, 2, PCIBAR_MEM32, gvt->gvt_pi);
 	if(ret != 0)
 		return -1;
@@ -413,7 +413,7 @@ pci_gvt_deinit(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 		if (ret)
 			WPRINTF(("GVT: %s: failed: errno=%d\n", __func__, ret));
 
-		destory_mmio_rsvd_rgns(gvt_dev);
+		destory_io_rsvd_rgns(gvt_dev);
 		free(gvt);
 		pi->arg = NULL;
 		gvt_dev = NULL;
