@@ -7,11 +7,11 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Save as</h4>
+                <h4 class="modal-title" id="myModalLabel">Save Launch XML</h4>
             </div>
             <div class="modal-body">
                 <div class="form-group row">
-                    <label for="new_launch_name" class="col-sm-3 control-label">XML Name: </label>
+                    <label for="new_launch_name" class="col-sm-3 control-label">Launch XML Name: </label>
                     <div class="col-sm-6">
                         <input type="text" class="form-control" id="new_launch_name"
                                value={{launch}}>
@@ -21,7 +21,7 @@
                     <label for="src_path" class="col-sm-3 control-label"
                         title="the path to save config xmls; if no path is specified,
 the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[board]/output and overwirte the previous files.">
-                        Source Path: </label>
+                        Launch XML Path: </label>
                     <div class="col-sm-9">
                         <input type="text" class="form-control" id="src_path" value=""
                                placeholder="[acrn-hypervisor]/../user_config/">
