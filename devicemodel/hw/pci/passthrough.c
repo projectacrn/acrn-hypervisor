@@ -243,7 +243,12 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 		if (size == 0)
 			continue;
 
-		/* Allocate the BAR in the guest I/O or MMIO space */
+		if (bartype == PCIBAR_IO)
+			error = reserve_io_rgn(base, base + size - 1, i, PCIBAR_IO, dev);
+		if (error)
+			return -1;
+
+		/* Allocate the BAR in the guest MMIO space */
 		error = pci_emul_alloc_pbar(dev, i, base, bartype, size);
 		if (error)
 			return -1;
@@ -749,6 +754,8 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pr_warn("%s: passthru_dev is NULL", __func__);
 		return;
 	}
+
+	destory_io_rsvd_rgns(dev);
 
 	ptdev = (struct passthru_dev *) dev->arg;
 
