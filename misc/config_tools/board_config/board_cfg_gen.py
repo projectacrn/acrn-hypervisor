@@ -12,7 +12,6 @@ import board_c
 import board_info_h
 import pci_devices_h
 import acpi_platform_h
-import misc_cfg_h
 import common
 import vbar_base_h
 
@@ -84,7 +83,6 @@ def main(args):
     config_board = board_fix_dir + GEN_FILE[1]
     config_acpi =  board_fix_dir + GEN_FILE[2]
     config_board_h =  board_fix_dir + GEN_FILE[4]
-    config_misc_cfg = scen_board_dir + GEN_FILE[3]
     config_vbar_base = scen_board_dir + GEN_FILE[5]
 
     # generate pci_devices.h
@@ -110,12 +108,6 @@ def main(args):
     # generate platform_acpi_info.h
     with open(config_acpi, 'w+') as config:
         acpi_platform_h.generate_file(config, ACRN_DEFAULT_ACPI)
-
-    # generate misc_cfg.h
-    with open(config_misc_cfg, 'w+') as config:
-        err_dic = misc_cfg_h.generate_file(config)
-        if err_dic:
-            return err_dic
 
     if not err_dic:
         print("Board configurations for {} is generated successfully.".format(board))
