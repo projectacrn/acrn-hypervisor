@@ -177,7 +177,7 @@ static inline int ptdev_msix_pba_bar(struct passthru_dev *ptdev)
 static int
 cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 {
-	int i, error;
+	int i, error = 0;
 	struct pci_vdev *dev;
 	struct pci_bar_io bar;
 	enum pcibar_type bartype;
