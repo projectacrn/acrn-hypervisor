@@ -18,6 +18,7 @@
     <xsl:value-of select="acrn:include('vuart.h')" />
     <xsl:value-of select="acrn:include('asm/pci_dev.h')" />
     <xsl:value-of select="acrn:include('asm/pgtable.h')" />
+    <xsl:value-of select="acrn:include('schedule.h')" />
 
     <xsl:apply-templates select="config-data/acrn-config" />
   </xsl:template>
@@ -67,6 +68,7 @@
       <xsl:value-of select="acrn:comment('Allow Service VM to reboot the system since it is the highest priority VM.')" />
       <xsl:value-of select="$newline" />
     </xsl:if>
+    <xsl:value-of select="acrn:initializer('vm_prio', priority)" />
     <xsl:apply-templates select="guest_flags" />
     <xsl:apply-templates select="clos" />
     <xsl:call-template name="cpu_affinity" />

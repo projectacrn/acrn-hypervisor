@@ -400,6 +400,11 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
         <xs:documentation>Specify memory information for Service and User VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="priority" type="PriorityType"  default="PRIO_LOW">
+      <xs:annotation>
+        <xs:documentation>Specify the VM vCPU priority for scheduling.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="os_config" type="OSConfigurations" minOccurs="0">
       <xs:annotation>
         <xs:documentation>General information for host kernel, boot
