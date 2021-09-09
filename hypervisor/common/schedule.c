@@ -78,6 +78,9 @@ void init_sched(uint16_t pcpu_id)
 #ifdef CONFIG_SCHED_BVT
 	ctl->scheduler = &sched_bvt;
 #endif
+#ifdef CONFIG_SCHED_PRIO
+	ctl->scheduler = &sched_prio;
+#endif
 	if (ctl->scheduler->init != NULL) {
 		ctl->scheduler->init(ctl);
 	}

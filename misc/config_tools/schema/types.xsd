@@ -101,7 +101,7 @@ higher value (lower severity) are discarded.</xs:documentation>
 
 <xs:simpleType name="SchedulerType">
   <xs:annotation>
-    <xs:documentation>Three scheduler options are supported:
+    <xs:documentation>Four scheduler options are supported:
 
 - ``SCHED_NOOP``: The NOOP (No-Operation) scheduler means there is a
   strict 1 to 1 mapping between vCPUs and pCPUs.
@@ -113,6 +113,8 @@ higher value (lower severity) are discarded.</xs:documentation>
   earliest effective virtual time. *TODO: BVT scheduler will be built on
   top of a prioritized scheduling mechanism, i.e. higher priority threads
   get scheduled first, and same priority tasks are scheduled per BVT.*
+- ``SCHED_PRIO``: The priority based scheduler. vCPU scheduling will be based on
+  their pre-configured priorities.
 
 Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:documentation>
   </xs:annotation>
@@ -120,6 +122,21 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
     <xs:enumeration value="SCHED_NOOP" />
     <xs:enumeration value="SCHED_IORR" />
     <xs:enumeration value="SCHED_BVT" />
+    <xs:enumeration value="SCHED_PRIO" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="PriorityType">
+  <xs:annotation>
+    <xs:documentation>Two priorities are supported for priority based scheduler:
+
+- ``PRIO_LOW``: low priority for vCPU scheduling.
+- ``PRIO_HIGH``: high priority for vCPU scheduling.
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="PRIO_LOW" />
+    <xs:enumeration value="PRIO_HIGH" />
   </xs:restriction>
 </xs:simpleType>
 

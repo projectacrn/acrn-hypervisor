@@ -169,6 +169,7 @@ struct acrn_vm_config {
 							 *	GUEST_FLAG_LAPIC_PASSTHROUGH
 							 * We could add more guest flags in future;
 							 */
+	uint32_t vm_prio;				/* The priority for VM vCPU scheduling */
 	struct acrn_vm_mem_config memory;		/* memory configuration of VM */
 	struct epc_section epc;				/* EPC memory configuration of VM */
 	uint16_t pci_dev_num;				/* indicate how many PCI devices in VM */

@@ -963,6 +963,7 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 		vcpu->thread_obj.host_sp = build_stack_frame(vcpu);
 		vcpu->thread_obj.switch_out = context_switch_out;
 		vcpu->thread_obj.switch_in = context_switch_in;
+		vcpu->thread_obj.priority = get_vm_config(vm->vm_id)->vm_prio;
 		init_thread_data(&vcpu->thread_obj);
 		for (i = 0; i < VCPU_EVENT_NUM; i++) {
 			init_event(&vcpu->events[i]);
