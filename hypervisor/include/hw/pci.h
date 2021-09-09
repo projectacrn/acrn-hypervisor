@@ -391,7 +391,7 @@ static inline bool is_pci_vendor_valid(uint32_t vendor_id)
 
 static inline bool is_pci_cfg_multifunction(uint8_t header_type)
 {
-	return ((header_type & PCIM_MFDEV) == PCIM_MFDEV);
+	return ((header_type != 0xffU) && ((header_type & PCIM_MFDEV) == PCIM_MFDEV));
 }
 
 static inline bool pci_is_valid_access_offset(uint32_t offset, uint32_t bytes)
