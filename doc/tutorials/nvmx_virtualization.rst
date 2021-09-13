@@ -91,6 +91,20 @@ Constraints on L1 guest configuration:
 * Only the ``SCHED_NOOP`` scheduler is supported. ACRN can't receive timer interrupts
   on LAPIC passthrough pCPUs
 
+VPID allocation
+===============
+
+ACRN doesn't emulate L2 VPIDs and allocates VPIDs for L1 VMs from the reserved top
+16-bit VPID range (``0x10000U - CONFIG_MAX_VM_NUM * MAX_VCPUS_PER_VM`` and up).
+If the L1 hypervisor enables VPID for L2 VMs and allocates L2 VPIDs not in this
+range, ACRN doesn't need to flush L2 VPID during L2 VMX transitions.
+
+This is the expected behavior in most of the time. But in special cases where a
+L2 VPID allocated by L1 hypervisor is within this reserved range, it's possible
+that this L2 VPID may conflict with a L1 VPID. In this case,  ACRN flushes VPID
+on L2 VMExit/VMEntry that are associated with this L2 VPID, which may significantly
+negatively impact performances of this L2 VM.
+
 
 Service OS VM configuration
 ***************************
