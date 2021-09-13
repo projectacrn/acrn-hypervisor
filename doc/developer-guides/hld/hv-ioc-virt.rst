@@ -613,7 +613,4 @@ for TTY line discipline in User VM::
    -l com2,/run/acrn/ioc_$vm_name
 
 
-Porting and Adaptation to Different Platforms
-*********************************************
 
-TBD
