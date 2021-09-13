@@ -481,29 +481,6 @@
     </xsl:choose>
   </func:function>
 
-  <func:function name="acrn:is-tpm-passthrough-board">
-    <xsl:choose>
-      <xsl:when test="//@board = 'whl-ipc-i5'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:when test="//@board = 'whl-ipc-i7'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:when test="//@board = 'tgl-rvp'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:when test="//@board = 'ehl-crb-b'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:when test="//@board = 'cfl-k700-i7'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:otherwise>
-        <func:result select="false()" />
-      </xsl:otherwise>
-    </xsl:choose>
-  </func:function>
-
   <!-- acrn:is-vmsix-supported-device checks the given params are matched with any of the listed devices -->
   <!-- The listed devices are known that can have a virtual vmsix -->
   <!-- Each pair of vendor and identifier represents a device which can have a vmsix (virtual msix) -->

@@ -202,17 +202,15 @@
 
 <xsl:template name="vm0_passthrough_tpm">
   <xsl:if test="acrn:is-pre-launched-vm(vm[@id = 0]/vm_type)">
-    <xsl:if test="acrn:is-tpm-passthrough-board()">
-      <xsl:if test="vm[@id = 0]/mmio_resources/TPM2 = 'y'">
-        <xsl:value-of select="acrn:define('VM0_PASSTHROUGH_TPM', '', '')" />
-        <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_BASE_ADDR', '0xFED40000', 'UL')" />
-        <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_BASE_ADDR_GPA', '0xFED40000', 'UL')" />
-        <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_SIZE', '0x5000', 'UL')" />
-        <xsl:if test="//capability[@id='log_area']">
-          <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_BASE_ADDR', //allocation-data/acrn-config/vm[@id = '0']/log_area_start_address, 'UL')" />
-          <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_BASE_ADDR_HPA', //capability[@id='log_area']/log_area_start_address, 'UL')" />
-          <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_SIZE', //allocation-data/acrn-config/vm[@id = '0']/log_area_minimum_length, 'UL')" />
-        </xsl:if>
+    <xsl:if test="//vm/mmio_resources/TPM2/text() = 'y' and //device[@id = 'MSFT0101' or compatible_id = 'MSFT0101']">
+      <xsl:value-of select="acrn:define('VM0_PASSTHROUGH_TPM', '', '')" />
+      <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_BASE_ADDR', '0xFED40000', 'UL')" />
+      <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_BASE_ADDR_GPA', '0xFED40000', 'UL')" />
+      <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_SIZE', '0x5000', 'UL')" />
+      <xsl:if test="//capability[@id='log_area']">
+        <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_BASE_ADDR', //allocation-data/acrn-config/vm[@id = '0']/log_area_start_address, 'UL')" />
+        <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_BASE_ADDR_HPA', //capability[@id='log_area']/log_area_start_address, 'UL')" />
+        <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_SIZE', //allocation-data/acrn-config/vm[@id = '0']/log_area_minimum_length, 'UL')" />
       </xsl:if>
     </xsl:if>
   </xsl:if>
