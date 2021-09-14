@@ -14,7 +14,7 @@ embedded development through an open-source platform. See the
 All project ACRN source code is maintained in the
 https://github.com/projectacrn/acrn-hypervisor repository and includes
 folders for the ACRN hypervisor, the ACRN device model, tools, and
-documentation. You can either download this source code as a zip or
+documentation. You can download this source code either as a zip or
 tar.gz file (see the `ACRN v2.6 GitHub release page
 <https://github.com/projectacrn/acrn-hypervisor/releases/tag/v2.6>`_) or
 use Git ``clone`` and ``checkout`` commands::
@@ -26,8 +26,7 @@ use Git ``clone`` and ``checkout`` commands::
 The project's online technical documentation is also tagged to
 correspond with a specific release: generated v2.6 documents can be
 found at https://projectacrn.github.io/2.6/.  Documentation for the
-latest under-development branch is found at
-https://projectacrn.github.io/latest/.
+latest development branch is found at https://projectacrn.github.io/latest/.
 
 ACRN v2.6 requires Ubuntu 18.04.  Follow the instructions in the
 :ref:`gsg` to get started with ACRN.
@@ -50,8 +49,31 @@ upgrade to v2.6 from previous ACRN releases.
 Document Updates
 ****************
 
-[Add list of significant doc changes, e.g., new What's ACRN, GSG, Config/Dev
-Intro, ...]
+We've made major improvements to the introductory ACRN documentation including:
+
+* :ref:`introduction`
+* :ref:`overview_dev`
+* :ref:`gsg`
+* :ref:`acrn_configuration_tool`
+
+We’ve also made edits throughout the documentation to improve clarity,
+formatting, and presentation:
+
+.. rst-class:: rst-columns2
+
+* :ref:`hld-devicemodel`
+* :ref:`hld-overview`
+* :ref:`hld-power-management`
+* :ref:`hld-virtio-devices`
+* :ref:`hld-io-emulation`
+* :ref:`virtio-net`
+* :ref:`acrn_on_qemu`
+* :ref:`cpu_sharing`
+* :ref:`enable-ptm`
+* :ref:`nested_virt`
+* :ref:`setup_openstack_libvirt`
+* :ref:`using_hybrid_mode_on_nuc`
+* :ref:`acrn_doc`
 
 Fixed Issues Details
 ********************
