@@ -209,7 +209,7 @@ vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t opera
 }
 
 static uint32_t
-vioapic_indirect_read(const struct acrn_single_vioapic *vioapic, uint32_t addr)
+vioapic_indirect_read(struct acrn_single_vioapic *vioapic, uint32_t addr)
 {
 	uint32_t regnum, ret = 0U;
 	uint32_t pin, pincount = vioapic->chipinfo.nr_pins;
@@ -244,6 +244,23 @@ vioapic_indirect_read(const struct acrn_single_vioapic *vioapic, uint32_t addr)
 		if ((addr_offset & 0x1U) != 0U) {
 			ret = vioapic->rtbl[pin].u.hi_32;
 		} else {
+			if (is_lapic_pt_configured(vioapic->vm) && (vioapic->rtbl[pin].bits.trigger_mode != 0UL)) {
+				/*
+				 * For local APIC passthrough case, EOI would not trigger VM-exit. So virtual
+				 * 'Remote IRR' would not be updated. Needs to read physical IOxAPIC RTE to
+				 * update virtual 'Remote IRR' field each time when guest wants to read I/O
+				 * REDIRECTION TABLE REGISTERS
+				 */
+				struct ptirq_remapping_info *entry = NULL;
+				union ioapic_rte phys_rte = {};
+				DEFINE_INTX_SID(virt_sid, vioapic->rtbl[pin].bits.vector, INTX_CTLR_IOAPIC);
+
+				entry = find_ptirq_entry(PTDEV_INTR_INTX, &virt_sid, vioapic->vm);
+				if (entry != NULL) {
+					ioapic_get_rte(entry->allocated_pirq, &phys_rte);
+					vioapic->rtbl[pin].bits.remote_irr = phys_rte.bits.remote_irr;
+				}
+			}
 			ret = vioapic->rtbl[pin].u.lo_32;
 		}
 	}
