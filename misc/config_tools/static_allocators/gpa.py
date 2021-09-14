@@ -144,6 +144,24 @@ def insert_pt_devs_to_dev_dict(board_etree, vm_node_etree, devdict_32bits, devdi
                 else:
                     devdict_64bits[(f"{dev_name}", f"{bar_region}")] = int(bar_len, 16)
 
+def get_pt_devs_io_port(board_etree, vm_node_etree):
+    pt_devs = vm_node_etree.xpath(f".//pci_dev/text()")
+    devdict = {}
+    for pt_dev in pt_devs:
+        bdf = pt_dev.split()[0]
+        bus = int(bdf.split(':')[0], 16)
+        dev = int(bdf.split(":")[1].split('.')[0], 16)
+        func = int(bdf.split(":")[1].split('.')[1], 16)
+        bdf = lib.lib.BusDevFunc(bus=bus, dev=dev, func=func)
+        pt_dev_node = common.get_node(f"//bus[@type = 'pci' and @address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}']", board_etree)
+        if pt_dev_node is not None:
+            pt_dev_resources = pt_dev_node.xpath(".//resource[@type = 'io_port' and @id[starts-with(., 'bar')]]")
+            for pt_dev_resource in pt_dev_resources:
+                dev_name = str(bdf)
+                bar_region = pt_dev_resource.get('id')
+                devdict[(f"{dev_name}", f"{bar_region}")] = int(pt_dev_resource.get('min'), 16)
+    return devdict
+
 def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
     """
     Allocate an unused mmio window for the first free bar region of a vmsix supported passthrough device.
@@ -163,7 +181,11 @@ def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
         bar_64bits = [bar_region.get('id') for bar_region in bar_regions if bar_region.get('width') == '64']
         bar_64bits_idx_list_1 = [int(bar.split('bar')[-1]) for bar in bar_64bits]
         bar_64bits_idx_list_2 = [idx + 1 for idx in bar_64bits_idx_list_1]
-        used_bar_index = set(bar_32bits_idx_list + bar_64bits_idx_list_1 + bar_64bits_idx_list_2)
+
+        bar_regions_io_port = pt_dev_node.xpath(".//resource[@type = 'io_port' and @id[starts-with(., 'bar')]]/@id")
+        bar_io_port_idx_list = [int(bar.split('bar')[-1]) for bar in bar_regions_io_port]
+
+        used_bar_index = set(bar_32bits_idx_list + bar_64bits_idx_list_1 + bar_64bits_idx_list_2 + bar_io_port_idx_list)
         unused_bar_index = [i for i in range(6) if i not in used_bar_index]
         try:
             next_bar_region = unused_bar_index.pop(0)
@@ -368,6 +390,13 @@ def allocate_log_area(board_etree, scenario_etree, allocation_etree):
         common.append_node("./log_area_start_address", hex(log_area_start_address).upper(), allocation_vm_node)
         common.append_node("./log_area_minimum_length", hex(log_area_min_len_native).upper(), allocation_vm_node)
 
+def pt_dev_io_port_passthrough(board_etree, scenario_etree, allocation_etree):
+    vm_nodes = scenario_etree.xpath("//vm")
+    for vm_node in vm_nodes:
+        vm_id = vm_node.get('id')
+        devdict_io_port = get_pt_devs_io_port(board_etree, vm_node)
+        create_device_node(allocation_etree, vm_id, devdict_io_port)
+
 """
             Pre-launched VM gpa layout:
  +--------------------------------------------------+ <--End of VM high pci hole
@@ -408,3 +437,4 @@ def fn(board_etree, scenario_etree, allocation_etree):
     allocate_ssram_region(board_etree, scenario_etree, allocation_etree)
     allocate_log_area(board_etree, scenario_etree, allocation_etree)
     allocate_pci_bar(board_etree, scenario_etree, allocation_etree)
+    pt_dev_io_port_passthrough(board_etree, scenario_etree, allocation_etree)
