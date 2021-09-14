@@ -43,6 +43,7 @@
 #include <quirks/security_vm_fixup.h>
 #endif
 #include <asm/boot/ld_sym.h>
+#include <asm/guest/optee.h>
 
 /* Local variables */
 
@@ -614,8 +615,18 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		}
 
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
-			create_prelaunched_vm_e820(vm);
-			prepare_prelaunched_vm_memmap(vm, vm_config);
+			/*
+			 * If a prelaunched VM has the flag GUEST_FLAG_TEE set then it
+			 * is a special prelaunched VM called TEE VM which need special
+			 * memmap, e.g. mapping the REE VM into its space. Otherwise,
+			 * just use the standard preplaunched VM memmap.
+			 */
+			if ((vm_config->guest_flags & GUEST_FLAG_TEE) != 0U) {
+				prepare_tee_vm_memmap(vm, vm_config);
+			} else {
+				create_prelaunched_vm_e820(vm);
+				prepare_prelaunched_vm_memmap(vm, vm_config);
+			}
 			status = init_vm_boot_info(vm);
 		}
 	}
