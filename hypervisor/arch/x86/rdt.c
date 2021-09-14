@@ -80,14 +80,9 @@ static void init_cat_capability(int res)
 #else
 	res_cap_info[res].res.cache.is_cdp_enabled = false;
 #endif
+	res_cap_info[res].num_closids = (uint16_t)(edx & 0xffffU) + 1U;
 	if (res_cap_info[res].res.cache.is_cdp_enabled) {
-		res_cap_info[res].num_closids = (uint16_t)((edx & 0xffffU) >> 1U) + 1U;
-		/* enable CDP before setting COS to simplify CAT mask remapping
-		 * and prevent unintended behavior.
-		 */
-		msr_write(res_cap_info[res].res.cache.msr_qos_cfg, 0x1UL);
-	} else {
-		res_cap_info[res].num_closids = (uint16_t)(edx & 0xffffU) + 1U;
+		res_cap_info[res].num_closids >>= 1U;
 	}
 }
 
@@ -156,7 +151,13 @@ static void setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_c
 
 	if (res != RDT_RESOURCE_MBA && res_cap_info[res].res.cache.is_cdp_enabled) {
 		mask_array_size = mask_array_size << 1U;
+
+		/* enable CDP before setting COS to simplify CAT mask remapping
+		 * and prevent unintended behavior.
+		 */
+		msr_write(res_cap_info[res].res.cache.msr_qos_cfg, 0x1UL);
 	}
+
 	for (i = 0U; i < mask_array_size; i++) {
 		switch (res) {
 		case RDT_RESOURCE_L3:
