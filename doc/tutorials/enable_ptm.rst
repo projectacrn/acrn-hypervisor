@@ -1,18 +1,32 @@
 .. _enable-ptm:
 
-Enable PCIe Precision Time Management
-#####################################
+Enable PCIe Precision Time Management in a User VM
+##################################################
 
 The PCI Express (PCIe) specification defines a Precision Time Measurement (PTM)
 mechanism that lets you coordinate and synchronize events across multiple PCI
 components within the same system with very fine time precision.
 
 ACRN adds PCIe root port emulation in the hypervisor to support the PTM feature
-and emulates a simple PTM hierarchy.  ACRN enables PTM in a Guest VM if the user
+and emulates a simple PTM hierarchy.  ACRN enables PTM in a User VM if the user
 sets the ``enable_ptm`` option when passing through a device to a post-launched
 VM and :ref:`vm.PTM` is enabled in the scenario configuration. When you enable
 PTM, the passthrough device is connected to a virtual root port instead of the host
 bridge as it normally would.
+
+Before you can enable PTM in a User VM, PTM must be enabled in the Service VM.
+You should verify this by using ``dmesg`` in a Service VM terminal::
+
+    dmesg | grep -i ptm
+    [    3.072144] pci 0000:00:06.0: PTM enabled (root), 4ns granularity
+    [    3.101591] pci 0000:00:1a.0: PTM enabled (root), 4ns granularity
+    [    3.103434] pci 0000:00:1c.0: PTM enabled (root), 4ns granularity
+    [    5.089042] igc 0000:04:00.0: PTM enabled, 4ns granularity
+    [   88.103910] acrn_dm: <PTM>: opt=enable_ptm.
+    [   88.217266] acrn_dm: <PTM>-get_ptm_reg_value: device [4:0.0]: ptm pos=0x1f0, ptm reg val=0x401.
+    [   88.217566] acrn_dm: <PTM>-get_ptm_reg_value: device [0:1c.0]: ptm pos=0x150, ptm reg val=0x416.
+    [   88.217743] acrn_dm: <PTM>-get_ptm_reg_value: device [0:1c.0]: ptm pos=0x150, ptm reg val=0x3.
+
 
 Here is an example launch script that configures a supported Ethernet card for
 passthrough and enables PTM on it:
@@ -26,7 +40,7 @@ passthrough and enables PTM on it:
     ["ethptm"]="8086 15f2"
     )
    passthru_bdf=(
-    ["ethptm"]="0000:aa:00.0"
+    ["ethptm"]="0000:a9:00.0"
     )
    echo ${passthru_vpid["ethptm"]} > /sys/bus/pci/drivers/pci-stub/new_id
    echo ${passthru_bdf["ethptm"]} > /sys/bus/pci/devices/${passthru_bdf["ethptm"]}/driver/unbind
@@ -43,7 +57,7 @@ passthrough and enables PTM on it:
     :ref:`ACRN configuration tool <acrn_configuration_tool>` to enable PTM
     in the scenario XML file that configures the Guest VM.
 
-Here is the bus hierarchy in the Guest VM (as shown by the ``lspci`` command)::
+Here is the bus hierarchy in the User VM (as shown by the ``lspci`` command)::
 
    lspci -tv
    -[0000:00]-+-00.0  Network Appliance Corporation Device 1275
@@ -54,23 +68,11 @@ Here is the bus hierarchy in the Guest VM (as shown by the ``lspci`` command)::
 
 (Instead of ``Device 15f2`` you might see ``Ethernet Controller I225LM``.)
 
-You can also verify that PTM was enabled by using ``dmesg`` in the guest VM::
+You can verify that PTM was enabled by using ``dmesg`` in the User VM::
 
     dmesg | grep -i ptm
-    [ 1.555284] pci_ptm_init: 00:00.00, ispcie=1, type=0x4
-    [ 1.555356] Cannot find PTM ext cap.
-    [ 1.561311] pci_ptm_init: 00:03.00, ispcie=0, type=0x0
-    [ 1.567146] pci_ptm_init: 00:04.00, ispcie=0, type=0x0
-    [ 1.572983] pci_ptm_init: 00:05.00, ispcie=0, type=0x0
-    [ 1.718038] pci_ptm_init: 00:06.00, ispcie=1, type=0x4
-    [ 1.722034] ptm is ptm_root.
-    [ 1.723033] Condition-2: ptm is enabled.
-    [ 1.723052] pci 0000:00:06.0: PTM enabled (root), 4ns granularity
-    [ 1.766438] pci_ptm_init: a9:00.00, ispcie=1, type=0x0
-    [ 5.715000] igc_probe enable ptm.
-    [ 5.715068] pci_enable_ptm: a9:00.00, ispcie=1, type=0x0
-    [ 5.715294] ptm is enabled on endpoint device.
-    [ 5.715371] igc 0000:a9:00.0: PTM enabled, 4ns granularity
+    [    0.774547] pci 0000:00:05.0: PTM enabled (root), 4ns granularity
+    [    2.478440] igc 0000:01:00.0: PTM enabled, 4ns granularity
 
 PTM Implementation Notes
 ************************
@@ -84,4 +86,3 @@ Guest VM kernel (e.g., ``CONFIG_PCIE_PTM=y`` option is set in the Linux kernel).
 
 You can find more details about the PTM implementation in the
 :ref:`ACRN HLD PCIe PTM documentation <PCIe PTM implementation>`.
-
