@@ -21,7 +21,6 @@ enum {
 #define RDT_RESID_MBA   3U
 
 extern const uint16_t hv_clos;
-extern uint16_t valid_clos_num;
 
 /* The intel Resource Director Tech(RDT) based Allocation Tech support */
 struct rdt_info {
@@ -38,9 +37,9 @@ struct rdt_info {
 			bool delay_linear;	/* True if memory B/W delay is in linear scale */
 		} membw;
 	} res;
-	uint16_t clos_max;	/* Maximum CLOS supported, 0 indicates resource is not supported.*/
+	uint16_t num_closids;	/* Number of CLOSIDs available, 0 indicates resource is not supported.*/
 	uint32_t res_id;
-	uint32_t msr_base;	/* MSR base to program clos mask*/
+	uint32_t msr_base;	/* MSR base to program clos value */
 	struct platform_clos_info *platform_clos_array; /* user configured mask and MSR info for each CLOS*/
 };
 
