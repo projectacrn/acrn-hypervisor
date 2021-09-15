@@ -20,7 +20,7 @@
 #define TRACE_FILE_NAME_LEN	32
 #define TRACE_FILE_DIR_LEN	(TRACE_FILE_NAME_LEN - 3)
 #define TRACE_FILE_ROOT		"acrntrace/"
-#define DEV_PATH_LEN		18
+#define DEV_PATH_LEN		20
 #define TIME_STR_LEN		16
 #define CMD_MAX_LEN		48
 
