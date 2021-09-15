@@ -84,13 +84,12 @@ static bool check_vm_clos_config(uint16_t vm_id)
 	uint16_t platform_clos_num = HV_SUPPORTED_MAX_CLOS;
 	bool ret = true;
 	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
-	uint16_t vcpu_num = bitmap_weight(vm_config->cpu_affinity);
 
-	for (i = 0U; i < vcpu_num; i++) {
-		if (((platform_clos_num != 0U) && (vm_config->clos[i] == platform_clos_num))
-				|| (vm_config->clos[i] > platform_clos_num)) {
+	for (i = 0U; i < vm_config->num_pclosids; i++) {
+		if (((platform_clos_num != 0U) && (vm_config->pclosids[i] == platform_clos_num))
+				|| (vm_config->pclosids[i] > platform_clos_num)) {
 			printf("vm%u: vcpu%u clos(%u) exceed the max clos(%u).",
-				vm_id, i, vm_config->clos[i], platform_clos_num);
+				vm_id, i, vm_config->pclosids[i], platform_clos_num);
 			ret = false;
 			break;
 		}

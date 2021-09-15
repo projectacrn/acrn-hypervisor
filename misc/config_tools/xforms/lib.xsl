@@ -376,6 +376,17 @@
     </xsl:choose>
   </func:function>
 
+  <func:function name="acrn:is-vcat-enabled">
+    <xsl:choose>
+      <xsl:when test="acrn:is-rdt-enabled() and //VCAT_ENABLED = 'y'">
+        <func:result select="true()" />
+      </xsl:when>
+      <xsl:otherwise>
+        <func:result select="false()" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </func:function>
+
   <func:function name="acrn:is-rdt-supported">
     <xsl:variable name="rdt_resource" select="acrn:get-normalized-closinfo-rdt-res-str()" />
     <xsl:variable name="rdt_res_clos_max" select="acrn:get-normalized-closinfo-rdt-clos-max-str()" />

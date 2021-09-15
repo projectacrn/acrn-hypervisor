@@ -122,12 +122,6 @@
   </xsl:for-each>
 </xsl:template>
 
-<xsl:template name="vcpu_clos">
-  <xsl:for-each select="vm">
-    <xsl:value-of select="acrn:define(concat('VM', @id, '_VCPU_CLOS'), concat('{', acrn:string-join(clos/vcpu_clos, ',', '', 'U'),'}'), '')" />
-  </xsl:for-each>
-</xsl:template>
-
 <!-- HV_SUPPORTED_MAX_CLOS:
   The maximum CLOS that is allowed by ACRN hypervisor.
   Its value is set to be least common Max CLOS (CPUID.(EAX=0x10,ECX=ResID):EDX[15:0])
@@ -172,7 +166,6 @@
     <xsl:for-each select="hv/FEATURES/RDT/CLOS_MASK">
       <xsl:value-of select="acrn:define(concat('CLOS_MASK_', position() - 1), current(), 'U')" />
     </xsl:for-each>
-    <xsl:call-template name="vcpu_clos" />
     <xsl:value-of select="$endif" />
   </xsl:if>
 </xsl:template>
