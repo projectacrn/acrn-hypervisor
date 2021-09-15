@@ -87,10 +87,10 @@ static bool check_vm_clos_config(uint16_t vm_id)
 	uint16_t vcpu_num = bitmap_weight(vm_config->cpu_affinity);
 
 	for (i = 0U; i < vcpu_num; i++) {
-		if (((platform_clos_num != 0U) && (vm_config->clos[i] == platform_clos_num))
-				|| (vm_config->clos[i] > platform_clos_num)) {
+		if (((platform_clos_num != 0U) && (vm_config->pclosids[i] == platform_clos_num))
+				|| (vm_config->pclosids[i] > platform_clos_num)) {
 			printf("vm%u: vcpu%u clos(%u) exceed the max clos(%u).",
-				vm_id, i, vm_config->clos[i], platform_clos_num);
+				vm_id, i, vm_config->pclosids[i], platform_clos_num);
 			ret = false;
 			break;
 		}

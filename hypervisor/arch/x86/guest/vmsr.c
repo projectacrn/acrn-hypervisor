@@ -305,24 +305,34 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 }
 
 /**
- * @pre vcpu != NULL
+ * @pre vcpu != NULL && vcpu->vm != NULL && vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
+ * @pre get_vm_config(vcpu->vm->vm_id)->pclosids != NULL
+ * @pre vcpu->vcpu_id < get_vm_config(vcpu->vm->vm_id)->num_pclosids
  */
 static void prepare_auto_msr_area (struct acrn_vcpu *vcpu)
 {
-	struct acrn_vm_config *cfg = get_vm_config(vcpu->vm->vm_id);
-	uint16_t vcpu_clos = cfg->clos[vcpu->vcpu_id];
-
 	vcpu->arch.msr_area.count = 0U;
 
-	/* only load/restore MSR IA32_PQR_ASSOC when hv and guest have differnt settings */
-	if (is_platform_rdt_capable() && (vcpu_clos != hv_clos)) {
-		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
-		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
-		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
-		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(hv_clos);
-		vcpu->arch.msr_area.count++;
-		pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
-			vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
+	if (is_platform_rdt_capable()) {
+		struct acrn_vm_config *cfg = get_vm_config(vcpu->vm->vm_id);
+		uint16_t vcpu_clos;
+
+		ASSERT(cfg->pclosids != NULL, "error, cfg->pclosids is NULL");
+
+		ASSERT(vcpu->vcpu_id < cfg->num_pclosids, "error, vcpu->vcpu_id is out of range");
+		vcpu_clos = cfg->pclosids[vcpu->vcpu_id];
+
+		/* RDT: only load/restore MSR IA32_PQR_ASSOC when hv and guest have different settings */
+		if (vcpu_clos != hv_clos) {
+			vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
+			vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
+			vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
+			vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(hv_clos);
+			vcpu->arch.msr_area.count++;
+
+			pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
+				vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
+		}
 	}
 }
 

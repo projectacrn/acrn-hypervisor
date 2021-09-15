@@ -182,9 +182,25 @@ struct acrn_vm_config {
 	 * SOS can get the vm_configs[] array through hypercall, but SOS may not
 	 * need to parse these members.
 	 */
-	uint16_t clos[MAX_VCPUS_PER_VM];		/* Class of Service, effective only if CONFIG_RDT_ENABLED
-							 * is defined on CAT capable platforms
-							 */
+
+	uint16_t num_pclosids; /* This defines the number of elements in the array pointed to by pclosids */
+	/* pclosids: a pointer to an array of physical CLOSIDs (pCLOSIDs)) that is defined in vm_configurations.c
+	 * by vmconfig,
+	 * applicable only if CONFIG_RDT_ENABLED is defined on CAT capable platforms.
+	 * The number of elements in the array must be equal to the value given by num_pclosids
+	 */
+	uint16_t *pclosids;
+
+	bool vcat_enabled; /* whether or not to enable vCAT for this VM */
+	/* max_type_pcbm (type: l2 or l3) specifies the allocated portion of physical cache
+	 * for the VM and is a contiguous capacity bitmask (CBM) starting at bit position low
+	 * (the lowest assigned physical cache way) and ending at position high
+	 * (the highest assigned physical cache way, inclusive).
+	 * As CBM only allows contiguous '1' combinations, so max_type_pcbm essentially
+	 * is a bitmask that selects/covers all the physical cache ways assigned to the VM.
+	 */
+	uint32_t max_l2_pcbm;
+	uint32_t max_l3_pcbm;
 
 	struct vuart_config vuart[MAX_VUART_NUM_PER_VM];/* vuart configuration for VM */
 
