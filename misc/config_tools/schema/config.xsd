@@ -492,6 +492,79 @@ to launch post-launched User VMs.</xs:documentation>
       <xs:documentation>Per VM GUEST_FLAG_NVMX_ENABLED can be set only if CONFIG_NVMX_ENABLED is set.</xs:documentation>
     </xs:annotation>
   </xs:assert>
+
+  <xs:assert test="if (//VCAT_ENABLED = 'y')
+                   then (//CDP_ENABLED = 'n' and //RDT_ENABLED = 'y')
+                   else true()">
+    <xs:annotation>
+      <xs:documentation>vCAT can be enabled only when RDT_ENABLED is 'y' and CDP_ENABLED is 'n'</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="if (count(//guest_flag[text() = 'GUEST_FLAG_VCAT_ENABLED']) > 0)
+                   then //RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y'
+                   else true()">
+    <xs:annotation>
+      <xs:documentation>Per VM GUEST_FLAG_VCAT_ENABLED can be set only when RDT_ENABLED is 'y' and VCAT_ENABLED is 'y'.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in vm satisfies
+                  (
+                    if (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y' and $vm/guest_flags[guest_flag = 'GUEST_FLAG_VCAT_ENABLED'])
+                    then count($vm/clos/vcpu_clos) > 1
+                    else true()
+                  )
+                  ">
+    <xs:annotation>
+      <xs:documentation>For a vCAT VM, number of clos/vcpu_clos elements must be greater than 1!</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="if (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y')
+                   then count(vm[guest_flags[guest_flag = 'GUEST_FLAG_VCAT_ENABLED'] and count(clos/vcpu_clos[. = 0])]) = 0
+                   else true()">
+    <xs:annotation>
+      <xs:documentation>For a vCAT VM, vcpu_clos cannot be set to CLOSID 0, CLOSID 0 is reserved to be used by hypervisor</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in vm satisfies
+                  (
+                    if (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y' and $vm/guest_flags[guest_flag = 'GUEST_FLAG_VCAT_ENABLED'])
+                    then count($vm[clos/vcpu_clos[. &gt;= count($vm/..//CLOS_MASK)]]) = 0
+                    else true()
+                  )
+                  ">
+    <xs:annotation>
+      <xs:documentation>For a vCAT VM, each clos/vcpu_clos must be less than L2/L3 COS_MAX!</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in vm satisfies
+                  (
+                    if (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y' and $vm/guest_flags[guest_flag = 'GUEST_FLAG_VCAT_ENABLED'])
+                    then count($vm/clos/vcpu_clos) = count(distinct-values($vm/clos/vcpu_clos))
+                    else true()
+                  )
+                  ">
+    <xs:annotation>
+      <xs:documentation>For a vCAT VM, its clos/vcpu_clos elements cannot contain duplicate values</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm1 in vm, $vm2 in $vm1/following-sibling::vm satisfies
+                  (
+                    if (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y' and ($vm1/guest_flags[guest_flag = 'GUEST_FLAG_VCAT_ENABLED'] or $vm2/guest_flags[guest_flag = 'GUEST_FLAG_VCAT_ENABLED']))
+                    then count($vm1/clos/vcpu_clos[. = $vm2/clos/vcpu_clos]) = 0
+                    else true()
+                  )
+                  ">
+    <xs:annotation>
+      <xs:documentation>if RDT_ENABLED is 'y', there should not be any CLOS IDs overlap between a vCAT VM and any other VMs</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:complexType>
 
 <xs:element name="acrn-config" type="ACRNConfigType" />

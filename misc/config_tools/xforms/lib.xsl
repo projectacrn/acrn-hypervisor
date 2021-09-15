@@ -356,7 +356,7 @@
 
   <func:function name="acrn:is-rdt-enabled">
     <xsl:choose>
-      <xsl:when test="//RDT_ENABLED = 'y'">
+      <xsl:when test="acrn:is-rdt-supported() and //RDT_ENABLED = 'y'">
         <func:result select="true()" />
       </xsl:when>
       <xsl:otherwise>
