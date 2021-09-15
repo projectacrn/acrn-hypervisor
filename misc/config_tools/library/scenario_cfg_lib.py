@@ -1044,7 +1044,7 @@ def check_target_connection(vm_id, target_vm_id, target_uart_id, vm_visited, leg
         raise TargetError("target vm{}'s vuart{} is not present".format(target_vm_id ,target_uart_id))
 
 
-def vcpu_clos_check(cpus_per_vm, clos_per_vm, prime_item, item):
+def vcpu_clos_check(cpus_per_vm, clos_per_vm, guest_flags, prime_item, item):
 
     if not board_cfg_lib.is_rdt_enabled():
         return
@@ -1052,6 +1052,9 @@ def vcpu_clos_check(cpus_per_vm, clos_per_vm, prime_item, item):
     common_clos_max = board_cfg_lib.get_common_clos_max()
 
     for vm_i,vcpus in cpus_per_vm.items():
+        if vm_i in guest_flags and "GUEST_FLAG_VCAT_ENABLED" in guest_flags[vm_i]:
+            continue
+
         clos_per_vm_len = 0
         if vm_i in clos_per_vm:
             clos_per_vm_len = len(clos_per_vm[vm_i])

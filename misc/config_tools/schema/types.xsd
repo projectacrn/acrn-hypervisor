@@ -188,8 +188,14 @@ RDT, setting this option to ``y`` is ignored.</xs:documentation>
       <xs:annotation>
         <xs:documentation>Specify whether to enable Code and Data Prioritization (CDP).
 CDP is an extension of CAT. Set to 'y' to enable the feature or 'n' to disable it.
-The 'y' will be ignored when hardware does not support CDP. Default
-value ``n``.</xs:documentation>
+The 'y' will be ignored when hardware does not support CDP.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="VCAT_ENABLED" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>Specify whether to enable CAT virtualization (vCAT).
+Set to 'y' to enable the feature or 'n' to disable it.
+The 'y' will be ignored when hardware does not support CAT.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CLOS_MASK" type="xs:string"  minOccurs="0" maxOccurs="unbounded">
