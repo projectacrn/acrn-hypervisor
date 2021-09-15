@@ -85,12 +85,18 @@ to.</xs:documentation>
   <xs:sequence>
     <xs:element name="vcpu_clos" type="xs:integer" default="0" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>Configure each CPU in VMs to a desired CLOS ID in the ``VM`` section of the
-scenario file. Follow :ref:`rdt_detection_capabilities`
-to identify the maximum supported CLOS ID that can be used.</xs:documentation>
+        <xs:documentation>If vcat is 'n':
+vcpu_clos is per-CPU and it configures each CPU in VMs to a desired CLOS ID in the ``VM`` section of the
+scenario file. Follow :ref:`rdt_detection_capabilities` to identify the maximum supported CLOS ID that can be used.
+
+If vcat is 'y':
+vcpu_clos is not per-CPU anymore, just a list of physical CLOSIDs (minimum 2) that are assigned to VMs
+for vCAT use. Each vcpu_clos will be mapped to a virtual CLOSID, the first vcpu_clos is mapped to virtual
+CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
+  <xs:attribute name="vcat" type="Boolean" default="n" use="optional"/>
 </xs:complexType>
 
 <xs:complexType name="EPCSection">

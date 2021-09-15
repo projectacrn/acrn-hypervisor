@@ -37,16 +37,16 @@
 
       <!-- Declaration of pt_intx -->
       <xsl:if test="acrn:is-pre-launched-vm(vm_type)">
-	<xsl:variable name="vm_id" select="@id" />
-	<xsl:variable name="length" select="count(acrn:get-intx-mapping(//vm[@id=$vm_id]//pt_intx))" />
-	<xsl:choose>
-	  <xsl:when test="$length">
+        <xsl:variable name="vm_id" select="@id" />
+        <xsl:variable name="length" select="count(acrn:get-intx-mapping(//vm[@id=$vm_id]//pt_intx))" />
+        <xsl:choose>
+          <xsl:when test="$length">
             <xsl:value-of select="acrn:extern('struct pt_intx_config', concat('vm', @id, '_pt_intx'), concat($length, 'U'))" />
-	  </xsl:when>
-	  <xsl:otherwise>
+          </xsl:when>
+          <xsl:otherwise>
             <xsl:value-of select="acrn:extern('struct pt_intx_config', concat('vm', @id, '_pt_intx'), '1U')" />
-	  </xsl:otherwise>
-	</xsl:choose>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:if>
     </xsl:for-each>
 
@@ -148,13 +148,13 @@
         <xsl:value-of select="acrn:initializer('size', concat('VM', ../@id, '_CONFIG_MEM_SIZE'))" />
         <xsl:value-of select="acrn:initializer('start_hpa2', concat('VM', ../@id, '_CONFIG_MEM_START_HPA2'))" />
         <xsl:value-of select="acrn:initializer('size_hpa2', concat('VM', ../@id, '_CONFIG_MEM_SIZE_HPA2'))" />
-     </xsl:otherwise>
+      </xsl:otherwise>
     </xsl:choose>
     <xsl:text>},</xsl:text>
     <xsl:value-of select="$newline" />
   </xsl:template>
 
-   <xsl:template match="epc_section">
+  <xsl:template match="epc_section">
     <xsl:if test="base != '0' and size != '0'">
     <xsl:value-of select="acrn:initializer('epc', '{', true())" />
       <xsl:value-of select="acrn:initializer('base', base)" />

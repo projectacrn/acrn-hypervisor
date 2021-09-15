@@ -1052,6 +1052,10 @@ def vcpu_clos_check(cpus_per_vm, clos_per_vm, prime_item, item):
     common_clos_max = board_cfg_lib.get_common_clos_max()
 
     for vm_i,vcpus in cpus_per_vm.items():
+        vcat = common.get_xpath(common.SCENARIO_INFO_FILE, "//vm[@id={}]/clos/@vcat".format(vm_i))
+        if vcat and vcat[0] == 'y':
+            continue
+
         clos_per_vm_len = 0
         if vm_i in clos_per_vm:
             clos_per_vm_len = len(clos_per_vm[vm_i])

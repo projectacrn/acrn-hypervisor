@@ -11,6 +11,7 @@ import subprocess # nosec
 import defusedxml.ElementTree as ET
 import re
 import lxml
+from lxml import etree
 
 
 ACRN_CONFIG_TARGET = ''
@@ -672,3 +673,16 @@ def get_pt_intx_table(config_file):
             virt_gsi[vm_i].append(b)
 
     return phys_gsi, virt_gsi
+
+def get_xpath(scenario, path):
+    """
+    A wrapper around lxml's xpath().
+    Finds the nodes of matched path using lxml's xpath
+    :param scenario: scenario xml file
+    :param path: tag name or an XPath path.
+    :return: the nodes of found xpath
+    """
+    # create element tree object
+    tree = lxml.etree.parse(scenario)
+
+    return tree.xpath(path)
