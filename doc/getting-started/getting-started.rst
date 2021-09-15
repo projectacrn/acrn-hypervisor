@@ -626,8 +626,8 @@ In the following steps, you will configure GRUB on the target system.
 
          sudo vi /etc/grub.d/40_custom
 
-   #. Add the following text at the end of the file. Replace ``<UUID>`` and
-      ``<PARTUUID>`` with the output from the previous step.
+   #. Add the following text at the end of the file. Replace ``"UUID"`` and
+      ``"PARTUUID"`` with the output from the previous step.
 
       .. code-block:: bash
          :emphasize-lines: 6,8
@@ -637,9 +637,9 @@ In the following steps, you will configure GRUB on the target system.
            insmod gzio
            insmod part_gpt
            insmod ext2
-           search --no-floppy --fs-uuid --set <UUID>
+           search --no-floppy --fs-uuid --set "UUID"
            echo 'loading ACRN...'
-           multiboot2 /boot/acrn/acrn.bin  root=PARTUUID=<PARTUUID>
+           multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="PARTUUID"
            module2 /boot/vmlinuz-5.10.52-acrn-sos Linux_bzImage
          }
 
@@ -660,9 +660,9 @@ In the following steps, you will configure GRUB on the target system.
       .. code-block:: bash
 
          GRUB_DEFAULT=ubuntu-service-vm
+         GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
          #GRUB_TIMEOUT_STYLE=hidden
          GRUB_TIMEOUT=5
-         GRUB_CMDLINE_LINUX="text"
 
    #. Save and close the file.
 
@@ -752,7 +752,7 @@ Launch the User VM
          -s 8,virtio-net,tap_YaaG3 \
          -s 6,virtio-console,@stdio:stdio_port \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
-         -s 31:0,lpc \
+         -s 1:0,lpc \
          $vm_name
 
 #. Save and close the file.
