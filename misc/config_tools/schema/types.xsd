@@ -142,7 +142,7 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 
 <xs:simpleType name="SerialConsoleType">
   <xs:restriction base="xs:string">
-    <xs:pattern value=".*ttyS[0-3]" />
+    <xs:pattern value=".*ttyS[\d]+" />
   </xs:restriction>
 </xs:simpleType>
 

@@ -7,7 +7,7 @@
 
 import sys, os, logging
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common, lib.lib
+import common, lib.lib, lib.error
 
 def alloc_pio(pio_list):
     try:
