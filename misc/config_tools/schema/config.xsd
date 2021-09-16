@@ -29,8 +29,8 @@ This option impacts the content of ``vm.(legacy_vuart id="0").base`` when :optio
 which specifies the PIO base for Service VM legacy vUART 0 (used for the console).
 The PIO base for the Service VM's legacy vUART 0 is determined using these rules:
 
-- If :option:`hv.DEBUG_OPTIONS.SERIAL_CONSOLE` is ``ttys0``, ``ttys1``, ``ttys2``, or ``ttys3`` and it is a PIO in the
-  native environment, the PIO base of the Service VM legacy vUART 0 would be the same as the PIO base
+- If :option:`hv.DEBUG_OPTIONS.SERIAL_CONSOLE` is any available ttyS# in the native environment,
+  the PIO base of the Service VM legacy vUART 0 would be the same as the PIO base
   corresponding to :option:`hv.DEBUG_OPTIONS.SERIAL_CONSOLE` in the native environment.
 - Otherwise, a PIO base would be assigned to the Service VM legacy vUART 0 from the available PIO list.
 
