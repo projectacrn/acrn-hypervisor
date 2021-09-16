@@ -495,21 +495,20 @@ void shell_init(void)
 			SHELL_CMD_MAX_LEN + 1U);
 }
 
-#define SHELL_ROWS	10
-#define MAX_INDENT_LEN	16U
+#define SHELL_ROWS	30
+#define MAX_OUTPUT_LEN  80
 static int32_t shell_cmd_help(__unused int32_t argc, __unused char **argv)
 {
-	uint16_t spaces;
 	struct shell_cmd *p_cmd = NULL;
-	char space_buf[MAX_INDENT_LEN + 1];
 
+	char str[MAX_STR_SIZE];
+	char* help_str;
 	/* Print title */
 	shell_puts("\r\nRegistered Commands:\r\n\r\n");
 
 	pr_dbg("shell: Number of registered commands = %u in %s\n",
 		p_shell->cmd_count, __func__);
 
-	(void)memset(space_buf, ' ', sizeof(space_buf));
 	/* Proceed based on the number of registered commands. */
 	if (p_shell->cmd_count == 0U) {
 		/* No registered commands */
@@ -539,29 +538,30 @@ static int32_t shell_cmd_help(__unused int32_t argc, __unused char **argv)
 			}
 
 			i++;
-
-			/* Output the command string */
-			shell_puts("  ");
-			shell_puts(p_cmd->str);
-
-			/* Calculate spaces needed for alignment */
-			spaces = MAX_INDENT_LEN - strnlen_s(p_cmd->str, MAX_INDENT_LEN - 1);
-
-			space_buf[spaces] = '\0';
-			shell_puts(space_buf);
-			space_buf[spaces] = ' ';
-
-			/* Display parameter info if applicable. */
-			if (p_cmd->cmd_param != NULL) {
-				shell_puts(p_cmd->cmd_param);
-			}
-
-			/* Display help text if available. */
-			if (p_cmd->help_str != NULL) {
-				shell_puts(" - ");
-				shell_puts(p_cmd->help_str);
-			}
+			if (p_cmd->cmd_param == NULL)
+				p_cmd->cmd_param = " ";
+			(void)memset(str, ' ', sizeof(str));
+			/* Output the command & parameter string */
+			snprintf(str, MAX_OUTPUT_LEN, " %-15s%-64s",
+					p_cmd->str, p_cmd->cmd_param);
+			shell_puts(str);
 			shell_puts("\r\n");
+
+			help_str = p_cmd->help_str;
+			while (strnlen_s(help_str, MAX_OUTPUT_LEN > 0)) {
+				(void)memset(str, ' ', sizeof(str));
+				if (strnlen_s(help_str, MAX_OUTPUT_LEN) > 65) {
+					snprintf(str, MAX_OUTPUT_LEN, "               %-s", help_str);
+					shell_puts(str);
+					shell_puts("\r\n");
+					help_str = help_str + 65;
+				} else {
+					snprintf(str, MAX_OUTPUT_LEN, "               %-s", help_str);
+					shell_puts(str);
+					shell_puts("\r\n");
+					break;
+				}
+			}
 		}
 	}
 
