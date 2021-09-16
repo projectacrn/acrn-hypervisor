@@ -588,7 +588,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			need_reset = false;
 		else if (!strncmp(opt, "d3hot_reset", 11))
 			d3hot_reset = true;
-		else if (!strncmp(opt, "gpu", 3)) {
+		else if (!strncmp(opt, "igd", 3)) {
 			/* Create the dedicated "igd-lpc" on 00:1f.0 for IGD passthrough */
 			if (pci_parse_slot("31,igd-lpc") != 0)
 				pr_warn("faild to create igd-lpc");
