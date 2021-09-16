@@ -89,7 +89,7 @@ Passthrough the GPU to Guest
      echo "0000:00:02.0" > /sys/bus/pci/devices/0000:00:02.0/driver/unbind
      echo "0000:00:02.0" > /sys/bus/pci/drivers/pci-stub/bind
 
-   Replace ``-s 2,pci-gvt -G "$2" \`` with ``-s 2,passthru,0/2/0,gpu \``
+   Replace ``-s 2,pci-gvt -G "$2" \`` with ``-s 2,passthru,0/2/0,igd \``
 
 4. Run ``launch_win.sh``.
 
