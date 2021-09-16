@@ -97,7 +97,7 @@ acrn-dm -A -m $mem_size -s 0:0,hostbridge -U d2795438-25d6-11e8-864e-cb7a18b3464
    $logger_setting \
    -s 6,virtio-blk,./win10-ltsc.img \
    -s 7,virtio-net,tap_WaaG \
-   -s 2,passthru,0/2/0,gpu  \
+   -s 2,passthru,0/2/0,igd  \
    --ovmf /usr/share/acrn/bios/OVMF.fd \
    $intr_storm_monitor \
    -s 31:0,lpc \

@@ -230,7 +230,7 @@ def gvt_arg_set(dm, vmid, uos_type, config):
         bus = int(gpu_bdf[0:2], 16)
         dev = int(gpu_bdf[3:5], 16)
         fun = int(gpu_bdf[6:7], 16)
-        print('   -s 2,passthru,{}/{}/{},gpu  \\'.format(bus, dev, fun), file=config)
+        print('   -s 2,passthru,{}/{}/{},igd  \\'.format(bus, dev, fun), file=config)
     elif gvt_args:
         print('   -s 2,pci-gvt -G "$2"  \\', file=config)
 
