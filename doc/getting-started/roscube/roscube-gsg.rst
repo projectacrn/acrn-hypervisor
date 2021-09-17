@@ -12,8 +12,8 @@ Verified Version
 
 - Ubuntu version: **18.04**
 - GCC version: **7.5.0**
-- ACRN-hypervisor branch: **v2.1**
-- ACRN-Kernel (Service VM kernel): **v2.1**
+- ACRN-hypervisor branch: **v2.5**
+- ACRN-Kernel (Service VM kernel): **v2.5**
 - RT kernel for Ubuntu User VM OS: **Linux kernel 4.19.59 with Xenomai 3.1**
 - HW: `ROScube-I`_
 
@@ -93,18 +93,50 @@ Set Up Environment
    .. code-block:: bash
 
      sudo apt update
-     sudo apt install -y gcc git make gnu-efi libssl-dev libpciaccess-dev \
-       uuid-dev libsystemd-dev libevent-dev libxml2-dev libxml2-utils \
-       libusb-1.0-0-dev python3 python3-pip libblkid-dev \
-       e2fslibs-dev pkg-config libnuma-dev liblz4-tool flex bison
-     sudo pip3 install kconfiglib
+     sudo apt install -y gcc \
+         git \
+         make \
+         vim \
+         libssl-dev \
+         libpciaccess-dev \
+         uuid-dev \
+         libsystemd-dev \
+         libevent-dev \
+         libxml2-dev \
+         libxml2-utils \
+         libusb-1.0-0-dev \
+         python3 \
+         python3-pip \
+         libblkid-dev \
+         e2fslibs-dev \
+         pkg-config \
+         libnuma-dev \
+         liblz4-tool \
+         flex \
+         bison \
+         xsltproc \
+         clang-format \
+         bc
+     sudo pip3 install lxml xmlschema defusedxml
+
+#. Install the iASL compiler/disassembler used for advanced power management,
+   device discovery, and configuration (ACPI) within the host OS:
+
+   .. code-block:: bash
+
+     cd /tmp
+     wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
+     tar zxvf acpica-unix-20210105.tar.gz
+     cd acpica-unix-20210105
+     make clean && make iasl
+     sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
 #. Get code from GitHub.
 
    .. code-block:: bash
 
      mkdir ~/acrn && cd ~/acrn
-     git clone https://github.com/projectacrn/acrn-hypervisor -b release_2.1
+     git clone https://github.com/projectacrn/acrn-hypervisor -b release_2.5
      cd acrn-hypervisor
 
 Configure Hypervisor
@@ -115,16 +147,16 @@ Configure Hypervisor
    .. code-block:: bash
 
      sudo apt install -y cpuid msr-tools
-     cd ~/acrn/acrn-hypervisor/misc/acrn-config/target/
-     sudo python3 board_parser.py ros-cube-cfl
-     cp ~/acrn/acrn-hypervisor/misc/acrn-config/target/out/ros-cube-cfl.xml \
-       ~/acrn/acrn-hypervisor/misc/acrn-config/xmls/board-xmls/
+     cd ~/acrn/acrn-hypervisor/misc/config_tools/board_inspector/
+     sudo python3 cli.py ros-cube-cfl
+     cp ~/acrn/acrn-hypervisor/misc/config_tools/board_inspector/ros-cube-cfl.xml \
+       ~/acrn/acrn-hypervisor/misc/config_tools/data/
 
 #. Run ACRN configuration app and it will open a browser page.
 
    .. code-block:: bash
 
-     cd ~/acrn/acrn-hypervisor/misc/acrn-config/config_app
+     cd ~/acrn/acrn-hypervisor/misc/config_tools/config_app
      sudo pip3 install -r requirements
      python3 app.py
 
@@ -142,11 +174,17 @@ Configure Hypervisor
 
    .. figure:: images/rqi-acrn-config-scenario-settings.png
 
+#. Settings "Features": "RDT_ENABLED" option must be "n".
+
+   .. figure:: images/rqi-acrn-config-features-settings.png
+
 #. Settings "HV": You can ignore this if your RAM is <= 16GB.
 
    .. figure:: images/rqi-acrn-config-hv-settings.png
 
 #. Settings "VM0": Select the hard disk currently used.
+   If you system need some special bootargs (like "video=eDP-1:d"),
+   you can add it below.
 
    .. figure:: images/rqi-acrn-config-vm0-settings.png
 
@@ -169,12 +207,6 @@ Configure Hypervisor
 
    .. figure:: images/rqi-acrn-config-export-xml-submit.png
 
-#. Generate configuration files.
-
-   .. figure:: images/rqi-acrn-config-generate-config.png
-
-   .. figure:: images/rqi-acrn-config-generate-config-submit.png
-
 #. Close the browser and stop the process (Ctrl+C).
 
 #. Optional: Patch the hypervisor if you want to passthrough GPIO to VM.
@@ -190,9 +222,11 @@ Configure Hypervisor
    .. code-block:: bash
 
      cd ~/acrn/acrn-hypervisor
+     cp misc/config_tools/data/ros-cube-cfl.xml \
+        misc/config_tools/data/ros-cube-cfl/ros-cube-cfl.xml
      make all \
-        BOARD_FILE=misc/acrn-config/xmls/board-xmls/ros-cube-cfl.xml \
-        SCENARIO_FILE=misc/acrn-config/xmls/config-xmls/ros-cube-cfl/user_defined/industry_ROS2SystemOS.xml \
+        BOARD_FILE=misc/config_tools/data/ros-cube-cfl/ros-cube-cfl.xml \
+        SCENARIO_FILE=misc/config_tools/data/ros-cube-cfl/user_defined/industry_ROS2SystemOS.xml \
         RELEASE=0
 
 #. Install hypervisor
@@ -216,7 +250,7 @@ Build Service VM Kernel
    .. code-block:: bash
 
      cd ~/acrn
-     git clone https://github.com/projectacrn/acrn-kernel -b release_2.1
+     git clone https://github.com/projectacrn/acrn-kernel -b release_2.5
      cd acrn-kernel
 
 #. Restore default ACRN configuration.
@@ -371,7 +405,7 @@ Create User VM Image
      sudo apt install git build-essential bison flex libelf-dev libssl-dev liblz4-tool
 
      # Clone code
-     git clone -b release_2.1 https://github.com/projectacrn/acrn-kernel
+     git clone -b release_2.5 https://github.com/projectacrn/acrn-kernel
      cd acrn-kernel
 
      # Set up kernel config
@@ -405,19 +439,6 @@ Run User VM
 Now back to the native machine to set up the environment for launching
 the User VM.
 
-#. Manually fetch and install the ``iasl`` binary to ``/usr/bin`` (where
-   ACRN expects it) with a newer version of the
-   than what's included with Ubuntu 18.04:
-
-   .. code-block:: bash
-
-     cd /tmp
-     wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
-     tar zxvf acpica-unix-20210105.tar.gz
-     cd acpica-unix-20210105
-     make clean && make iasl
-     sudo cp ./generate/unix/bin/iasl /usr/sbin/
-
 #. Convert KVM image file format.
 
    .. code-block:: bash
@@ -433,10 +454,15 @@ the User VM.
      wget https://raw.githubusercontent.com/Adlink-ROS/ROScube_ACRN_guide/v2.1/scripts/launch_ubuntu_uos.sh
      chmod +x ./launch_ubuntu_uos.sh
 
+   .. note:: In different models of machines, you may need to modify this
+             script to set which device you want to passthrough and the
+             memory size of the virtual machine.
+
 #. Set up network and reboot to take effect.
 
    .. code-block:: bash
 
+     sudo apt install net-tools wget
      mkdir -p ~/acrn/tools/
      cd ~/acrn/tools
      wget https://raw.githubusercontent.com/Adlink-ROS/ROScube_ACRN_guide/v2.1/scripts/acrn_bridge.sh
@@ -572,6 +598,10 @@ launching the real-time VM.
 
      wget https://raw.githubusercontent.com/Adlink-ROS/ROScube_ACRN_guide/v2.1/scripts/launch_ubuntu_rtos.sh
      chmod +x ./launch_ubuntu_rtos.sh
+
+   .. note:: In different models of machines, you may need to modify this
+             script to set which device you want to passthrough and the
+             memory size of the virtual machine.
 
 #. **Reboot to ACRN kernel** and now you can launch the VM.
 
