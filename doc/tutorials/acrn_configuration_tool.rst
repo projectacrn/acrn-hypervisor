@@ -369,6 +369,10 @@ current scenario has:
   Input format:
   ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
 
+``input`` (a child node of ``virtio_devices``):
+  The virtio input device setting.
+  Input format: ``/dev/input/eventX[,serial]``.
+
 ``cpu_affinity``:
   List of pCPU that this VM's vCPUs are pinned to.
 
