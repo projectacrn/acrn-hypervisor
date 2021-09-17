@@ -637,9 +637,9 @@ In the following steps, you will configure GRUB on the target system.
            insmod gzio
            insmod part_gpt
            insmod ext2
-           search --no-floppy --fs-uuid --set <UUID>
+           search --no-floppy --fs-uuid --set "3cac5675-e329-4cal-b346-0a3e65f99016"
            echo 'loading ACRN...'
-           multiboot2 /boot/acrn/acrn.bin  root=PARTUUID=<PARTUUID>
+           multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="03db7f45-8a6c-454b-adf7-30343d82c4f4"
            module2 /boot/vmlinuz-5.10.52-acrn-sos Linux_bzImage
          }
 
@@ -662,7 +662,6 @@ In the following steps, you will configure GRUB on the target system.
          GRUB_DEFAULT=ubuntu-service-vm
          #GRUB_TIMEOUT_STYLE=hidden
          GRUB_TIMEOUT=5
-         GRUB_CMDLINE_LINUX="text"
 
    #. Save and close the file.
 
@@ -752,7 +751,7 @@ Launch the User VM
          -s 8,virtio-net,tap_YaaG3 \
          -s 6,virtio-console,@stdio:stdio_port \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
-         -s 31:0,lpc \
+         -s 1:0,lpc \
          $vm_name
 
 #. Save and close the file.
