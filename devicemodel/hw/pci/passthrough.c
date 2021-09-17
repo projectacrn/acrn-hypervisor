@@ -58,8 +58,6 @@
  */
 #define AUDIO_NHLT_HACK 1
 
-#define PCI_BDF_GPU			0x00000010	/* 00:02.0 */
-
 extern uint64_t audio_nhlt_len;
 
 uint32_t gpu_dsm_hpa = 0;
@@ -404,6 +402,27 @@ pciaccess_init(void)
 	return 0;	/* success */
 }
 
+static bool is_intel_graphics_dev(struct pci_vdev *dev)
+{
+	struct passthru_dev *ptdev;
+	bool ret = true;
+
+	ptdev = (struct passthru_dev *) dev->arg;
+	/* If physical BDF isn't 00:02.0, return false */
+	if (ptdev->phys_bdf != PCI_BDF(0, 2, 0))
+		ret = false;
+
+	/* If vendor id isn't 0x8086, return false */
+	if (pci_get_cfgdata16(dev, PCIR_VENDOR) != 0x8086)
+		ret = false;
+
+	/* If class id isn't 0x3(Display controller), return false */
+	if (pci_get_cfgdata8(dev, PCIR_CLASS) != 0x3)
+		ret = false;
+
+	return ret;
+}
+
 static bool
 has_virt_pcicfg_regs_on_ehl_gpu(int offset)
 {
@@ -577,11 +596,6 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		return -EINVAL;
 	}
 
-	if (is_rtvm && (PCI_BDF(bus, slot, func) == PCI_BDF_GPU)) {
-		pr_err("%s RTVM doesn't support GVT-D.", __func__);
-		return -EINVAL;
-	}
-
 	while ((opt = strsep(&opts, ",")) != NULL) {
 		if (!strncmp(opt, "keep_gsi", 8))
 			keep_gsi = true;
@@ -589,11 +603,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			need_reset = false;
 		else if (!strncmp(opt, "d3hot_reset", 11))
 			d3hot_reset = true;
-		else if (!strncmp(opt, "gpu", 3)) {
-			/* Create the dedicated "igd-lpc" on 00:1f.0 for IGD passthrough */
-			if (pci_parse_slot("31,igd-lpc") != 0)
-				pr_warn("faild to create igd-lpc");
-		} else if (!strncmp(opt, "vmsix_on_msi", 12)) {
+		else if (!strncmp(opt, "vmsix_on_msi", 12)) {
 			opt = strsep(&opts, ",");
 			if (parse_vmsix_on_msi_bar_id(opt, &vmsix_on_msi_bar_id, 10) != 0) {
 				pr_err("faild to parse msix emulation bar id");
@@ -682,8 +692,16 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		error = ACRN_PTDEV_IRQ_MSI;
 	}
 
-	if (ptdev->phys_bdf == PCI_BDF_GPU)
+	if (is_intel_graphics_dev(dev)) {
+		if (is_rtvm) {
+			pr_err("%s RTVM doesn't support GVT-D.", __func__);
+			return -EINVAL;
+		}
+		/* Create the dedicated "igd-lpc" on 00:1f.0 for IGD passthrough */
+		if (pci_parse_slot("31,igd-lpc") != 0)
+			pr_warn("faild to create igd-lpc");
 		passthru_gpu_dsm_opregion(ctx, ptdev, &pcidev, device);
+	}
 
 	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	pcidev.phys_bdf = ptdev->phys_bdf;
@@ -771,7 +789,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (ptdev)
 		phys_bdf = ptdev->phys_bdf;
 
-	if (ptdev->phys_bdf == PCI_BDF_GPU) {
+	if (is_intel_graphics_dev(dev)) {
 		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, GPU_DSM_SIZE, gpu_dsm_hpa);
 		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_opregion_gpa, GPU_OPREGION_SIZE, gpu_opregion_hpa);
 	}
