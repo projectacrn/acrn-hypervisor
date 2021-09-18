@@ -637,13 +637,28 @@ In the following steps, you will configure GRUB on the target system.
            insmod gzio
            insmod part_gpt
            insmod ext2
+           search --no-floppy --fs-uuid --set "UUID"
+           echo 'loading ACRN...'
+           multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="PARTUUID"
+           module2 /boot/vmlinuz-5.10.52-acrn-sos Linux_bzImage
+         }
+
+   #. Save and close the file.
+   
+   #. Correct example image
+
+      .. code-block:: console
+
+         menuentry "ACRN Multiboot Ubuntu Service VM" --id ubuntu-service-vm {
+           load_video
+           insmod gzio
+           insmod part_gpt
+           insmod ext2
            search --no-floppy --fs-uuid --set "3cac5675-e329-4cal-b346-0a3e65f99016"
            echo 'loading ACRN...'
            multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="03db7f45-8a6c-454b-adf7-30343d82c4f4"
            module2 /boot/vmlinuz-5.10.52-acrn-sos Linux_bzImage
          }
-
-   #. Save and close the file.
 
 #. Make the GRUB menu visible when
    booting and make it load the Service VM kernel by default:
