@@ -561,6 +561,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	int vmsix_on_msi_bar_id = -1;
 	struct acrn_pcidev pcidev = {};
 	uint16_t vendor = 0, device = 0;
+	uint8_t class = 0;
 
 	ptdev = NULL;
 	error = -EINVAL;
@@ -656,8 +657,10 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 */
 	vendor = read_config(ptdev->phys_dev, PCIR_VENDOR, 2);
 	device = read_config(ptdev->phys_dev, PCIR_DEVICE, 2);
+	class = read_config(ptdev->phys_dev, PCIR_CLASS, 1);
 	pci_set_cfgdata16(dev, PCIR_VENDOR, vendor);
 	pci_set_cfgdata16(dev, PCIR_DEVICE, device);
+	pci_set_cfgdata8(dev, PCIR_CLASS, class);
 
 #if AUDIO_NHLT_HACK
 	/* device specific handling:
