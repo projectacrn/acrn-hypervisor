@@ -1,4 +1,4 @@
-<acrn-config board="tgl-rvp" scenario="industry" uos_launcher="6">
+<acrn-config board="ehl-crb-b" scenario="shared" uos_launcher="6">
     <uos id="1">
 	<uos_type desc="UOS type">WINDOWS</uos_type>
 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
@@ -51,8 +51,8 @@
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
 	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
-    <enable_ptm desc="enable ptm of uos">n</enable_ptm>
 	<allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
+	<enable_ptm desc="enable ptm of uos">n</enable_ptm>
 	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
 	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
 		<pcpu_id></pcpu_id>
@@ -75,14 +75,14 @@
 		<bluetooth desc="vm bluetooth"></bluetooth>
 		<sd_card desc="vm sd card device"></sd_card>
 		<ethernet desc="vm ethernet device"></ethernet>
-		<sata desc="vm sata device">00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</sata>
+		<sata desc="vm sata device"></sata>
 		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
 
 	<virtio_devices>
-		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."></network>
+		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">RT</network>
 		<input desc="virtio input device"></input>
-		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"></block>
+		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./core-image-weston-intel-corei7-64.wic</block>
 		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
 	</virtio_devices>
     </uos>
@@ -122,7 +122,7 @@
             <nvme desc="vm nvme device" />
         </passthrough_devices>
         <virtio_devices>
-            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]" />
             <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG3</network>
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
@@ -164,7 +164,7 @@
             <nvme desc="vm nvme device" />
         </passthrough_devices>
         <virtio_devices>
-            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]" />
             <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG4</network>
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
@@ -206,7 +206,7 @@
             <nvme desc="vm nvme device" />
         </passthrough_devices>
         <virtio_devices>
-            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]" />
             <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG5</network>
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
@@ -248,7 +248,7 @@
             <nvme desc="vm nvme device" />
         </passthrough_devices>
         <virtio_devices>
-            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+            <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]" />
             <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG6</network>
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>

@@ -16,6 +16,8 @@
         <SCHEDULER>SCHED_BVT</SCHEDULER>
         <MULTIBOOT2>y</MULTIBOOT2>
         <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+        <ENFORCE_TURNOFF_GP>n</ENFORCE_TURNOFF_GP>
+        <SECURITY_VM_FIXUP>n</SECURITY_VM_FIXUP>
         <RDT>
             <RDT_ENABLED>n</RDT_ENABLED>
             <CDP_ENABLED>n</CDP_ENABLED>
@@ -50,6 +52,7 @@
 
     <CAPACITIES>
         <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
+        <MAX_EFI_MMAP_ENTRIES>300</MAX_EFI_MMAP_ENTRIES>
         <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
         <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
         <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
@@ -88,12 +91,10 @@
     </memory>
     <os_config>
         <name>Zephyr</name>
-        <kern_type>KERNEL_ZEPHYR</kern_type>
-        <kern_mod>Zephyr_RawImage</kern_mod>
+        <kern_type>KERNEL_ELF</kern_type>
+        <kern_mod>Zephyr_ElfImage</kern_mod>
         <ramdisk_mod/>
-        <bootargs>reboot=acpi</bootargs>
-        <kern_load_addr>0x8000</kern_load_addr>
-        <kern_entry_addr>0x8000</kern_entry_addr>
+        <bootargs></bootargs>
     </os_config>
     <legacy_vuart id="0">
         <type>VUART_LEGACY_PIO</type>
