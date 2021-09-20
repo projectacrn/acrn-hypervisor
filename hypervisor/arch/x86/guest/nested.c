@@ -18,6 +18,7 @@
 /* Cache the content of MSR_IA32_VMX_BASIC */
 static uint32_t vmx_basic;
 
+static void disable_vmcs_shadowing(void);
 static void clear_vvmcs(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs);
 
 /* The only purpose of this array is to serve the is_vmx_msr() function */
@@ -801,6 +802,8 @@ bool check_vmx_permission(struct acrn_vcpu *vcpu)
 int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	if (check_vmx_permission(vcpu)) {
+		disable_vmcs_shadowing();
+
 		vcpu->arch.nested.vmxon = false;
 		vcpu->arch.nested.in_l2_guest = false;
 
