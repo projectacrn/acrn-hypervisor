@@ -5,13 +5,13 @@ Drawings Using Graphviz
 
 We support using the Sphinx `graphviz extension`_ for creating simple
 graphs and line drawings using the dot language.  The advantage of using
-graphviz for drawings is that the source for a drawing is a text file that
+Graphviz for drawings is that the source for a drawing is a text file that
 can be edited and maintained in the repo along with the documentation.
 
 .. _graphviz extension: http://graphviz.gitlab.io
 
 These source ``.dot`` files are generally kept separate from the document
-itself, and included by using a graphviz directive:
+itself, and included by using a Graphviz directive:
 
 .. code-block:: none
 
@@ -38,7 +38,7 @@ the dot language and drawing options.
 Simple Directed Graph
 *********************
 
-For simple drawings with shapes and lines, you can put the graphviz commands
+For simple drawings with shapes and lines, you can put the Graphviz commands
 in the content block for the directive. For example, for a simple directed
 graph (digraph) with two nodes connected by an arrow, you can write:
 
@@ -108,7 +108,7 @@ are centered, left-justified, and right-justified, respectively.
 Finite-State Machine
 ********************
 
-Here's an example of using graphviz for defining a finite-state machine
+Here's an example of using Graphviz for defining a finite-state machine
 for pumping gas:
 
 .. literalinclude:: images/gaspump.dot

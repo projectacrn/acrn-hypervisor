@@ -113,8 +113,8 @@ initial states, including IDT and physical PICs.
 
 After the BSP detects that all APs are up, it will continue to enter guest mode; similar, after one AP
 complete its initialization, it will start entering guest mode as well.
-When BSP & APs enter guest mode, they will try to launch pre-defined VMs whose vBSP associated with
-this physical core; these pre-defined VMs are static configured in ``vm config`` and they could be
+When BSP & APs enter guest mode, they will try to launch predefined VMs whose vBSP associated with
+this physical core; these predefined VMs are static configured in ``vm config`` and they could be
 pre-launched Safety VM or Service VM; the VM startup will be explained in next section.
 
 .. _vm-startup:

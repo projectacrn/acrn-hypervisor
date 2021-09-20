@@ -467,13 +467,13 @@ All changes and topics sent to GitHub must be well-formed, as described above.
 Commit Message Body
 ===================
 
-When editing the commit message, please briefly explain what your change
+When editing the commit message, briefly explain what your change
 does and why it's needed. A change summary of ``"Fixes stuff"`` will be
 rejected.
 
 .. warning::
    An empty change summary body is not permitted. Even for trivial changes,
-   please include a summary body in the commit message.
+   include a summary body in the commit message.
 
 The description body of the commit message must include:
 

@@ -82,12 +82,12 @@ The device model configuration command syntax for virtio-console is::
 -  The ``stdio/tty/pty`` is TTY capable, which means :kbd:`TAB` and
    :kbd:`BACKSPACE` are supported, as on a regular terminal
 
--  When TTY is used, please make sure the redirected TTY is sleeping,
+-  When TTY is used, make sure the redirected TTY is sleeping,
    (e.g., by ``sleep 2d`` command), and will not read input from stdin before it
    is used by virtio-console to redirect guest output.
 
--  When virtio-console socket_type is appointed to client, please make sure
-   server VM(socket_type is appointed to server) has started.
+-  When virtio-console socket_type is appointed to client, make sure
+   server VM (socket_type is appointed to server) has started.
 
 -  Claiming multiple virtio-serial ports as consoles is supported,
    however the guest Linux OS will only use one of them, through the
@@ -222,7 +222,7 @@ SOCKET
 The virtio-console socket-type can be set as socket server or client. Device model will
 create a Unix domain socket if appointed the socket_type as server, then server VM or
 another user VM can bind and listen for communication requirement. If appointed to
-client, please make sure the socket server is ready prior to launch device model.
+client, make sure the socket server is ready prior to launch device model.
 
 1. Add a PCI slot to the device model (``acrn-dm``) command line, adjusting
    the ``</path/to/file.sock>`` to your use case in the VM1 configuration::

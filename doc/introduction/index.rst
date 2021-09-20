@@ -345,7 +345,7 @@ can define your own configuration scenarios.
 
   In this example, one post-launched User VM provides Human Machine Interface
   (HMI) capability, another provides Artificial Intelligence (AI) capability,
-  some compute function is run the Kata Container, d the RTVM runs the soft
+  some compute function is run the Kata Container, and the RTVM runs the soft
   Programmable Logic Controller (PLC) that requires hard real-time
   characteristics.
 

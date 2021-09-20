@@ -46,19 +46,19 @@ to enforce the settings.
    .. code-block:: none
       :emphasize-lines: 2,4
 
-      <RDT desc="Intel RDT (Resource Director Technology).">
-            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
-            <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
-            <CLOS_MASK desc="Cache Capacity Bitmask">0xF</CLOS_MASK>
+      <RDT>
+            <RDT_ENABLED>y</RDT_ENABLED>
+            <CDP_ENABLED</CDP_ENABLED>
+            <CLOS_MASK>0xF</CLOS_MASK>
 
 Once the cache mask is set of each individual CPU, the respective CLOS ID
 needs to be set in the scenario XML file under ``VM`` section. If user desires
-to use CDP feature, CDP_ENABLED should be set to ``y``.
+to use CDP feature, ``CDP_ENABLED`` should be set to ``y``.
 
    .. code-block:: none
       :emphasize-lines: 2
 
-      <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+      <clos>
             <vcpu_clos>0</vcpu_clos>
 
 .. note::
@@ -113,11 +113,11 @@ for non-root and root modes to enforce the settings.
    .. code-block:: none
       :emphasize-lines: 2,5
 
-      <RDT desc="Intel RDT (Resource Director Technology).">
-            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
-            <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
-            <CLOS_MASK desc="Cache Capacity Bitmask"></CLOS_MASK>
-            <MBA_DELAY desc="Memory Bandwidth Allocation delay value">0</MBA_DELAY>
+      <RDT>
+            <RDT_ENABLED>y</RDT_ENABLED>
+            <CDP_ENABLED>n</CDP_ENABLED>
+            <CLOS_MASK></CLOS_MASK>
+            <MBA_DELAY>0</MBA_DELAY>
 
 Once the cache mask is set of each individual CPU, the respective CLOS ID
 needs to be set in the scenario XML file under ``VM`` section.
@@ -125,7 +125,7 @@ needs to be set in the scenario XML file under ``VM`` section.
    .. code-block:: none
       :emphasize-lines: 2
 
-      <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+      <clos>
             <vcpu_clos>0</vcpu_clos>
 
 .. note::

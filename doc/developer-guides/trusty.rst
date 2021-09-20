@@ -9,7 +9,7 @@ Introduction
 `Trusty`_ is a set of software components supporting a Trusted Execution
 Environment (TEE). TEE is commonly known as an isolated processing environment
 in which applications can be securely executed irrespective of the rest of the
-system. For more information about TEE, please visit the
+system. For more information about TEE, visit the
 `Trusted Execution Environment wiki page <https://en.wikipedia.org/wiki/Trusted_execution_environment>`_.
 Trusty consists of:
 

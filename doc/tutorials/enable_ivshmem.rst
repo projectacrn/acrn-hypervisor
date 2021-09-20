@@ -199,7 +199,7 @@ Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
    .. code-block:: none
       :emphasize-lines: 2,3
 
-      <IVSHMEM desc="IVSHMEM configuration">
+      <IVSHMEM>
              <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
              <IVSHMEM_REGION>hv:/shm_region_0, 2, 0:2</IVSHMEM_REGION>
       </IVSHMEM>

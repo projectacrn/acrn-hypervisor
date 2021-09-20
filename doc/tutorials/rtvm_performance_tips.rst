@@ -148,7 +148,7 @@ Tip: Do not share CPUs allocated to the RTVM with other RT or non-RT VMs.
    However, for an RT VM, CPUs should be dedicatedly allocated for determinism.
 
 Tip: Use RDT such as CAT and MBA to allocate dedicated resources to the RTVM.
-   ACRN enables Intel® Resource Director Technology such as CAT, and MBA
+   ACRN enables Intel Resource Director Technology such as CAT, and MBA
    components such as the GPU via the memory hierarchy. The availability of RDT is
    hardware-specific. Refer to the :ref:`rdt_configuration`.
 

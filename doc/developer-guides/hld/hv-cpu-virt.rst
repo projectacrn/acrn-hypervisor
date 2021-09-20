@@ -116,7 +116,7 @@ any pCPU that is not included in it.
 CPU Assignment Management in HV
 ===============================
 
-The physical CPU assignment is pre-defined by ``cpu_affinity`` in
+The physical CPU assignment is predefined by ``cpu_affinity`` in
 ``vm config``, while post-launched VMs could be launched on pCPUs that are
 a subset of it.
 
@@ -1084,7 +1084,7 @@ ACRN always enables I/O bitmap in *VMX_PROC_VM_EXEC_CONTROLS* and EPT
 in *VMX_PROC_VM_EXEC_CONTROLS2*. Based on them,
 *pio_instr_vmexit_handler* and *ept_violation_vmexit_handler* are
 used for IO/MMIO emulation for a emulated device. The emulated device
-could locate in hypervisor or DM in the Service VM. Please refer to the "I/O
+could locate in hypervisor or DM in the Service VM. Refer to the "I/O
 Emulation" section for more details.
 
 For an emulated device done in the hypervisor, ACRN provide some basic
