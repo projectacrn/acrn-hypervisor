@@ -228,7 +228,7 @@ Configure Target BIOS Settings
 
 #. Boot your target and enter the BIOS configuration editor.
 
-   Tip: When you are booting your target, you’ll see an option (quickly) to
+   Tip: When you are booting your target, you'll see an option (quickly) to
    enter the BIOS configuration editor, typically by pressing :kbd:`F2` during
    the boot and before the GRUB menu (or Ubuntu login screen) appears.
 

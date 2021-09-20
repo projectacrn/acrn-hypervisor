@@ -118,8 +118,8 @@ API forwarding, or a split driver model, is another widely-used I/O
 virtualization technology. It has been used in commercial virtualization
 productions such as VMware*, PCoIP*, and Microsoft* RemoteFx*.
 It is a natural path when researchers study a new type of
-I/O virtualization usage—for example, when GPGPU computing in a VM was
-initially proposed. Intel GVT-s is based on this approach.
+I/O virtualization usage (for example, when GPGPU computing in a VM was
+initially proposed). Intel GVT-s is based on this approach.
 
 The architecture of API forwarding is shown in :numref:`api-forwarding`:
 
@@ -319,9 +319,9 @@ ACRN hypervisor, with Service VM as the privileged VM, and multiple user
 guests. A GVT-g device model working with the ACRN hypervisor
 implements the policies of trap and passthrough. Each guest runs the
 native graphics driver and can directly access performance-critical
-resources: the Frame Buffer and Command Buffer, with resource
-partitioning (as presented later). To protect privileged resources—that
-is, the I/O registers and PTEs—corresponding accesses from the graphics
+resources, such as the Frame Buffer and Command Buffer, with resource
+partitioning. To protect privileged resources including
+the I/O registers and PTEs, corresponding accesses from the graphics
 driver in user VMs are trapped and forwarded to the GVT device model in the
 Service VM for emulation. The device model leverages i915 interfaces to access
 the physical GPU.
@@ -399,8 +399,8 @@ read-write; that is, the guest driver will read back the same value that was
 programmed earlier. A common emulation handler (for example,
 intel_gvt_emulate_read/write) is enough to handle such general
 emulation requirements. However, some registers must be emulated with
-specific logic—for example, affected by change of other states or
-additional audit or translation when updating the virtual register.
+specific logic (for example, affected by change of other states or
+additional audit or translation when updating the virtual register).
 Therefore, a specific emulation handler must be installed for those
 special registers.
 
@@ -653,7 +653,7 @@ buffers for the IPU and others can also be shared with it. However, it
 does require that the Service VM port the Hyper DMA Buffer importer driver. Also,
 the Service VM must comprehend and implement the DMA buffer sharing model.
 
-For detailed information about this model, please refer to the `Linux
+For detailed information about this model, refer to the `Linux
 HYPER_DMABUF Driver High Level Design
 <https://github.com/downor/linux_hyper_dmabuf/blob/hyper_dmabuf_integration_v4/Documentation/hyper-dmabuf-sharing.txt>`_.
 
@@ -842,7 +842,7 @@ Because the User VM always uses the host-based command submission (ELSP) model
 and it never accesses the GPU or the Graphic Micro Controller (:term:`GuC`)
 directly, its scheduler cannot do any preemption by itself.
 The i915 scheduler does ensure that batch buffers are
-submitted in dependency order—that is, if a compositor has to wait for
+submitted in dependency order. If a compositor has to wait for
 an application buffer to finish before its workload can be submitted to
 the GPU, then the i915 scheduler of the User VM ensures that this happens.
 

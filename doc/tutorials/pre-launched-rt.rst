@@ -75,7 +75,7 @@ Ethernet 03:00.0 devices to the Pre-Launched RT VM, build ACRN with:
 
    make BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml RELEASE=0
 
-After the build completes, please update ACRN on NVMe. It is
+After the build completes, update ACRN on NVMe. It is
 /boot/EFI/BOOT/acrn.bin, if /dev/nvme0n1p1 is mounted at /boot.
 
 Add Pre-Launched RT Kernel Image to GRUB Config

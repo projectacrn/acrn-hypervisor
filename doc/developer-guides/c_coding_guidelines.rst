@@ -3283,10 +3283,10 @@ each function:
 
 1) The comments block shall start with ``/**`` (slash-asterisk-asterisk) in a
    single line.
-2) The comments block shall end with :literal:`\ */` (space-asterisk-slash) in
+2) The comments block shall end with :literal:`\ */` (space-asterisk-slash) in
    a single line.
 3) Other than the first line and the last line, every line inside the comments
-   block shall start with :literal:`\ *` (space-asterisk). It also applies to
+   block shall start with :literal:`\ *` (space-asterisk). It also applies to
    the line which is used to separate different paragraphs. We'll call it a
    blank line for simplicity.
 4) For each function, following information shall be documented:

@@ -333,7 +333,7 @@ power operations.
 VM Manager creates the User VM based on DM application, and does User VM state
 management by interacting with lifecycle service in ACRN service.
 
-Please refer to VM management chapter for more details.
+Refer to VM management chapter for more details.
 
 ACRN Service
 ============

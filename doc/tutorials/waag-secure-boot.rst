@@ -22,7 +22,7 @@ the OEM can generate their own PK.
 
 Here we show two ways to generate a PK: ``openssl`` and Microsoft tools.
 
-Generate PK Using Openssl
+Generate PK Using OpenSSL
 =========================
 
 - Generate a Self-Signed Certificate as PK from a new key using the
@@ -139,7 +139,7 @@ which we'll summarize below.
   (CSP)
 
    For the detailed information of each Microsoft Cryptographic Service
-   Provider, please check the `Microsoft CRP document
+   Provider, check the `Microsoft CRP document
    <https://docs.microsoft.com/en-us/windows/desktop/seccrypto/microsoft-cryptographic-service-providers>`_
 
    Here, we chose "Microsoft Strong Cryptographic Provider" for example::
@@ -393,12 +393,12 @@ Download KEK and DB From Microsoft
 KEK (Key Exchange Key):
   `Microsoft Corporation KEK CA 2011
   <https://go.microsoft.com/fwlink/p/?linkid=321185>`_:
-  allows updates to db and dbx.
+  allows updates to DB and DBX.
 
 DB (Allowed Signature database):
   `Microsoft Windows Production CA 2011
   <https://go.microsoft.com/fwlink/?LinkId=321192>`_:
-  This CA in the Signature Database (db) allows Windows to boot.
+  This CA in the Signature Database (DB) allows Windows to boot.
 
   `Microsoft Corporation UEFI CA 2011
   <https://go.microsoft.com/fwlink/p/?LinkID=321194>`_:
@@ -407,25 +407,28 @@ DB (Allowed Signature database):
 Compile OVMF With Secure Boot Support
 *************************************
 
+.. code-block:: bash
 
-    git clone https://github.com/projectacrn/acrn-edk2.git
+   git clone https://github.com/projectacrn/acrn-edk2.git
 
-    cd acrn-edk2
+   cd acrn-edk2
 
-    git checkout -b ovmf b64fe247c434e2a4228b9804c522575804550f82
+   git checkout -b ovmf b64fe247c434e2a4228b9804c522575804550f82
 
-    git submodule update --init CryptoPkg/Library/OpensslLib/openssl
+   git submodule update --init CryptoPkg/Library/OpensslLib/openssl
 
-    source edksetup.sh
-    make -C BaseTools
+   source edksetup.sh
+   make -C BaseTools
 
-    vim Conf/target.txt
+Edit the ``Conf/target.txt`` file and set these values::
 
-      ACTIVE_PLATFORM = OvmfPkg/OvmfPkgX64.dsc
-      TARGET_ARCH = X64
-      TOOL_CHAIN_TAG = GCC5
+   ACTIVE_PLATFORM = OvmfPkg/OvmfPkgX64.dsc
+   TARGET_ARCH = X64
+   TOOL_CHAIN_TAG = GCC5
 
-    build -DFD_SIZE_2MB -DDEBUG_ON_SERIAL_PORT=TRUE -DSECURE_BOOT_ENABLE
+Then continue doing the build::
+
+   build -DFD_SIZE_2MB -DDEBUG_ON_SERIAL_PORT=TRUE -DSECURE_BOOT_ENABLE
 
 
 Notes:
