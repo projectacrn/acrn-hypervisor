@@ -148,7 +148,7 @@ static uint32_t nearest_pow2(uint32_t n)
 	return p;
 }
 
-static void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
+void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
 {
 	uint32_t subleaf;
 

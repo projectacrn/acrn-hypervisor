@@ -224,6 +224,58 @@ static uint64_t vcbm_to_pcbm(const struct acrn_vm *vm, uint64_t vcbm, int res)
 	return vcbm << low;
 }
 
+void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift);
+/**
+ * @pre vcpu != NULL && l2_id != NULL && l3_id != NULL
+ */
+static void get_cache_id(struct acrn_vcpu *vcpu, uint32_t *l2_id, uint32_t *l3_id)
+{
+	uint32_t l2_shift, l3_shift;
+	uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
+
+	get_cache_shift(&l2_shift, &l3_shift);
+
+	/*
+	 * Relationship between APIC ID and cache ID:
+	 * Intel SDM Vol 2, CPUID 04H:
+	 * EAX: bits 25 - 14: Maximum number of addressable IDs for logical processors sharing this cache.
+	 * The nearest power-of-2 integer that is not smaller than (1 + EAX[25:14]) is the number of unique
+	 * initial APIC IDs reserved for addressing different logical processors sharing this cache
+	 */
+	*l2_id = apicid >> l2_shift;
+	*l3_id = apicid >> l3_shift;
+}
+
+/**
+ * @brief Propagate vCBM to other vCPUs that share cache with vcpu
+ * @pre vcpu != NULL && vcpu->vm != NULL
+ */
+static void propagate_vcbm(struct acrn_vcpu *vcpu, uint32_t vmsr, uint64_t val)
+{
+	uint16_t i;
+	struct acrn_vcpu *tmp_vcpu;
+	uint32_t l2_id, l3_id;
+	struct acrn_vm *vm = vcpu->vm;
+
+	get_cache_id(vcpu, &l2_id, &l3_id);
+
+	/*
+	 * Determine which logical processors share an MSR (for instance local
+	 * to a core, or shared across multiple cores) by checking if they have the same
+	 * L2/L3 cache id
+	 */
+	foreach_vcpu(i, vm, tmp_vcpu) {
+		uint32_t tmp_l2_id, tmp_l3_id;
+
+		get_cache_id(tmp_vcpu, &tmp_l2_id, &tmp_l3_id);
+
+		if ((is_l2_vcbm_msr(vm, vmsr) && (l2_id == tmp_l2_id))
+			|| (is_l3_vcbm_msr(vm, vmsr) && (l3_id == tmp_l3_id))) {
+			vcpu_set_guest_msr(tmp_vcpu, vmsr, val);
+		}
+	}
+}
+
 /*
  * Check if bitmask is contiguous:
  * All (and only) contiguous '1' combinations are allowed (e.g. FFFFH, 0FF0H, 003CH, etc.)
@@ -284,8 +336,17 @@ int32_t write_vcbm(struct acrn_vcpu *vcpu, uint32_t vmsr, uint64_t val)
 			uint16_t vclosid;
 			uint64_t pcbm, pvalue;
 
-			/* Write vCBM first: */
-			vcpu_set_guest_msr(vcpu, vmsr, val);
+			/*
+			 * Write vCBM first:
+			 * The L2 mask MSRs are scoped at the same level as the L2 cache (similarly,
+			 * the L3 mask MSRs are scoped at the same level as the L3 cache).
+			 *
+			 * For example, the MSR_IA32_L3_MASK_n MSRs are scoped at socket level, which means if
+			 * we program MSR_IA32_L3_MASK_n on one cpu and the same MSR_IA32_L3_MASK_n on all other cpus
+			 * of the same socket will also get the change!
+			 * Set vcbm to all the vCPUs that share cache with vcpu to mimic this hardware behavior.
+			 */
+			propagate_vcbm(vcpu, vmsr, val);
 
 			/* Write pCBM: */
 			vclosid = (uint16_t)(vmsr - msr_base);
