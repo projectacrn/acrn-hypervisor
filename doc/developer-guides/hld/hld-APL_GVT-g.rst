@@ -923,14 +923,14 @@ AcrnGT in Kernel
 =================
 
 The AcrnGT module in the Service VM kernel acts as an adaption layer to connect
-between GVT-g in the i915, the VHM module, and the ACRN-DM user space
+between GVT-g in the i915, the HSM module, and the ACRN-DM user space
 application:
 
 -  AcrnGT module implements the MPT interface of GVT-g to provide
    services to it, including set and unset trap areas, set and unset
    write-protection pages, etc.
 
--  It calls the VHM APIs provided by the ACRN VHM module in the Service VM
+-  It calls the HSM APIs provided by the ACRN HSM module in the Service VM
    kernel, to eventually call into the routines provided by ACRN
    hypervisor through hyper-calls.
 

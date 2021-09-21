@@ -193,7 +193,7 @@ example, showing the flow through each layer:
 
 .. code-block:: c
 
-   vhm_intr_handler -->                          // HSM interrupt handler
+   hsm_intr_handler -->                          // HSM interrupt handler
        tasklet_schedule -->
            io_req_tasklet -->
                acrn_ioreq_distribute_request --> // ioreq can't be processed in HSM, forward it to device DM
@@ -348,7 +348,7 @@ cases.)
 
 .. code-block:: c
 
-   vhm_dev_ioctl -->                // process the IOCTL and call hypercall to inject interrupt
+   hsm_dev_ioctl -->                // process the IOCTL and call hypercall to inject interrupt
        hcall_inject_msi -->
 
 **ACRN Hypervisor**
