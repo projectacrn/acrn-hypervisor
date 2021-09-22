@@ -49,16 +49,6 @@ Pre-Parsed DMAR Information
 For specific platforms, the ACRN hypervisor uses pre-parsed DMA remapping
 reporting information directly to save hypervisor bootup time.
 
-DMA Remapping Unit for Integrated Graphics Device
-=================================================
-
-Generally, there is a dedicated remapping hardware unit for the Intel
-integrated graphics device. ACRN implements GVT-g for graphics, but
-GVT-g is not compatible with VT-d. The remapping hardware unit for the
-graphics device is disabled on ACRN if GVT-g is enabled. If the graphics
-device needs to passthrough to a VM, then the remapping hardware unit
-must be enabled.
-
 DMA Remapping
 *************
 
