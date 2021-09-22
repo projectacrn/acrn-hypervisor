@@ -156,9 +156,10 @@ void init_pcpu_pre(bool is_bsp)
 
 		load_pcpu_state_data();
 
+		init_e820();
+
 		/* Initialize the hypervisor paging */
 		init_paging();
-		init_e820();
 
 		/*
 		 * Need update uart_base_address here for vaddr2paddr mapping may changed

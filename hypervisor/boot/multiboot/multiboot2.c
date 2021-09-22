@@ -66,6 +66,7 @@ static void mb2_efimmap_to_abi(struct acrn_boot_info *abi,
 	abi->uefi_info.memdesc_version = mb2_tag_efimmap->descr_vers;
 	abi->uefi_info.memmap = (uint32_t)(uint64_t)mb2_tag_efimmap->efi_mmap;
 	abi->uefi_info.memmap_size = mb2_tag_efimmap->size - 16U;
+	/* Per multiboot2 spec, multiboot info is below 4GB space hence memmap_hi must be 0U. */
 	abi->uefi_info.memmap_hi = (uint32_t)(((uint64_t)mb2_tag_efimmap->efi_mmap) >> 32U);
 }
 
