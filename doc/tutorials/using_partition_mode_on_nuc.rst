@@ -223,25 +223,24 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
       The module ``/boot/ACPI_VM1.bin`` is the binary of ACPI tables for pre-launched VM1 the parameter ``ACPI_VM1`` is
       VM1's ACPI tag and should not be modified.
 
-      #. Correct example image
+#. Correct example image
 
-      .. code-block:: console
+   .. code-block:: console
 
-         menuentry 'ACRN hypervisor Logical Partition Scenario' --id ACRN_Logical_Partition --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
-              recordfail
-              load_video
-              gfxmode $linux_gfx_mode
-              insmod gzio
-              insmod part_gpt
-              insmod ext2
-
-              search --no-floppy --fs-uuid --set 9bd58889-add7-410c-bdb7-1fbc2af9b0e1
-              echo 'Loading hypervisor logical partition scenario ...'
-              multiboot2  /boot/acrn.bin root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
-              module2 /boot/bzImage Linux_bzImage
-              module2 /boot/ACPI_VM0.bin ACPI_VM0
-              module2 /boot/ACPI_VM1.bin ACPI_VM1
-      }
+      menuentry 'ACRN hypervisor Logical Partition Scenario' --id ACRN_Logical_Partition --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
+           recordfail
+           load_video
+           gfxmode $linux_gfx_mode
+           insmod gzio
+           insmod part_gpt
+           insmod ext2
+           search --no-floppy --fs-uuid --set 9bd58889-add7-410c-bdb7-1fbc2af9b0e1
+           echo 'Loading hypervisor logical partition scenario ...'
+           multiboot2  /boot/acrn.bin root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
+           module2 /boot/bzImage Linux_bzImage
+           module2 /boot/ACPI_VM0.bin ACPI_VM0
+           module2 /boot/ACPI_VM1.bin ACPI_VM1
+         }      
 
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
