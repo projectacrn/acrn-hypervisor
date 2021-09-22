@@ -18,8 +18,7 @@ Validated Versions
 ******************
 
 - Ubuntu version: **18.04**
-- ACRN hypervisor tag: **v2.4**
-- ACRN kernel tag: **v2.4**
+- ACRN hypervisor tag: **v2.6**
 
 Prerequisites
 *************
@@ -43,29 +42,34 @@ Prerequisites
 
 Update Kernel Image and Modules of Pre-Launched VM
 **************************************************
-#. On your development workstation, clone the ACRN kernel source tree, and
-   build the Linux kernel image that will be used to boot the pre-launched VMs:
+#. On the local Ubuntu test machine, find the kernel file,
+   copy to your (/boot directory) and name the file bzImage
 
    .. code-block:: none
 
-      $ git clone https://github.com/projectacrn/acrn-kernel.git
-      Cloning into 'acrn-kernel'...
-      ...
-      $ cd acrn-kernel
-      $ cp kernel_config_uos .config
-      $ make olddefconfig
-      scripts/kconfig/conf  --olddefconfig Kconfig
-      #
-      # configuration written to .config
-      #
-      $ make
-      $ make modules_install INSTALL_MOD_PATH=out/
+   $ uname -r   
+   ##search kernel version    
+   5.11.0-34-generic
+   
+   $ cat /boot/grub/grub.cfg |grep "5.11.0-34-generic"  
+   ##Filter files to see which directory the core files are located in
+   
+   linux   /boot/vmlinuz-5.11.0-34-generic root=UUID=ab80a7d9-2b7c-4e07-a944-e7ed1a9a2ea4 
+   ro  quiet splash idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable $vt_handoff
+   initrd  /boot/initrd.img-5.11.0-34-generic
+   menuentry 'Ubuntu, with Linux 5.11.0-34-generic' --class ubuntu --class gnu-linux --class 
+   gnu --class os $menuentry_id_option 'gnulinux-5.11.0-34-generic-advanced-ab80a7d9-2b7c-4e07-a944-e7ed1a9a2ea4' {
+   echo    'Loading Linux 5.11.0-34-generic ...'
+   linux   /boot/vmlinuz-5.11.0-34-generic root=UUID=ab80a7d9-2b7c-4e07-a944-e7ed1a9a2ea4 ro  
+   quiet splash idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable $vt_handoff
+   initrd  /boot/initrd.img-5.11.0-34-generic
 
-   The last two commands build the bootable kernel image as
-   ``arch/x86/boot/bzImage``, and loadable kernel modules under the ``./out/``
-   folder. Copy these files to a removable disk for installing on the
-   Intel NUC later.
+#. Copy the bootable kernel image to the /boot directory:
 
+   .. code-block:: none
+
+      $ sudo cp /boot/vmlinuz-5.11.0-34-generic  /boot/bzImage
+   
 #. The current ACRN logical partition scenario implementation requires a
    multi-boot capable bootloader to boot both the ACRN hypervisor and the
    bootable kernel image built from the previous step. Install the Ubuntu OS
@@ -90,19 +94,13 @@ Update Kernel Image and Modules of Pre-Launched VM
 
       # Mount the Ubuntu OS root filesystem on the SATA disk
       $ sudo mount /dev/sda3 /mnt
-      $ sudo cp -r <kernel-modules-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
+      $ sudo cp -r /lib/modules/* /mnt/lib/modules
       $ sudo umount /mnt
       # Mount the Ubuntu OS root filesystem on the USB flash disk
       $ sudo mount /dev/sdb3 /mnt
-      $ sudo cp -r <path-to-kernel-module-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
+      $ sudo cp -r /lib/modules/* /mnt/lib/modules
       $ sudo umount /mnt
-
-#. Copy the bootable kernel image to the /boot directory:
-
-   .. code-block:: none
-
-      $ sudo cp <path-to-kernel-image-built-in-step1>/bzImage /boot/
-
+                 
 .. rst-class:: numbered-step
 
 Update ACRN Hypervisor Image
@@ -150,7 +148,7 @@ Update ACRN Hypervisor Image
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor.git
       $ cd acrn-hypervisor
-      $ git checkout v2.4
+      $ git checkout v2.6
 
 #. Check the ``pci_devs`` sections in ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml``
    for each pre-launched VM to ensure you are using the right PCI device BDF information (as
@@ -253,6 +251,12 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
 
 Logical Partition Scenario Startup Check
 ****************************************
+#. install plug picocom
+   Note: Note that it needs to be installed on the development machine
+   Need to connect the serial port to the local development machine to test whether the installation is successful
+   Connect the serial port command, this plug-in needs to be installed, without this plug-in: apt install -y picocom
+   Run the following command:
+   $ picocom -b 115200 /dev/ttyUSB0  ###Enter the serial port test
 
 #. Use these steps to verify that the hypervisor is properly running:
 

@@ -110,16 +110,16 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
       }
 
 
-   .. note:: The module ``/boot/zephyr.elf`` is the VM0 (Zephyr) kernel file.
-      The param ``xxxxxx`` is VM0's kernel file tag and must exactly match the
-      ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``
-      file. The multiboot module ``/boot/bzImage`` is the Service VM kernel
-      file. The param ``yyyyyy`` is the bzImage tag and must exactly match the
-      ``kern_mod`` of VM1 in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``
-      file. The kernel command-line arguments used to boot the Service VM are
-      ``bootargs`` of VM1 in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``.
-      The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0 (Zephyr).
-      The parameter ``ACPI_VM0`` is VM0's ACPI tag and should not be modified.
+   .. note:: The module /boot/zephyr.elf is the VM0 (Zephyr) kernel file. 
+             The param (xxxxxx) is VM0’s kernel file tag and must exactly match the kern_mod of VM0, 
+             which is configured in the misc/config_tools/data/nuc7i7dnb/hybrid.xml file.
+             The multiboot module /boot/bzImage is the Service VM kernel file. 
+             The param (yyyyyy) is the bzImage tag and must exactly match the kern_mod of VM1 in the 
+             misc/config_tools/data/nuc7i7dnb/hybrid.xml file. 
+             The kernel command-line arguments used to boot the Service VM are bootargs of VM1 in the 
+             misc/config_tools/data/nuc7i7dnb/hybrid.xml. 
+             The module /boot/ACPI_VM0.bin is the binary of ACPI tables for pre-launched VM0 (Zephyr). 
+             The parameter ACPI_VM0 is VM0’s ACPI tag and should not be modified.
 
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
@@ -143,6 +143,15 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
 
 Hybrid Scenario Startup Check
 *****************************
+#. install plug picocom
+   Note: Note that it needs to be installed on the development machine
+   Need to connect the serial port to the local development machine to test whether the installation is successful
+   Connect the serial port command, this plug-in needs to be installed, without this plug-in: apt install -y picocom
+   Run the following command:
+   $ dmesg | grep ttyS0  ###View serial port number
+   # [0.372420] 00:01: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+   $ picocom -b 115200 /dev/ttyUSB0  ###Enter the serial port test
+
 #. Use these steps to verify that the hypervisor is properly running:
 
    a. Log in to the ACRN hypervisor shell from the serial console.
