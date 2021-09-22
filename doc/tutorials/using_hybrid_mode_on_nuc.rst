@@ -121,6 +121,23 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
              The module /boot/ACPI_VM0.bin is the binary of ACPI tables for pre-launched VM0 (Zephyr). 
              The parameter ACPI_VM0 is VM0’s ACPI tag and should not be modified.
 
+   .. code-block:: console
+
+      menuentry 'ACRN hypervisor Hybrid Scenario' --id ACRN_Hybrid --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
+         recordfail
+         load_video
+         gfxmode $linux_gfx_mode
+         insmod gzio
+         insmod part_gpt
+         insmod ext2
+         echo 'Loading hypervisor Hybrid scenario ...'
+         multiboot2 /boot/acrn.bin
+         module2 /boot/zephyr.elf Zephyr_ElfImage
+         module2 /boot/bzImage Linux_bzImage
+         module2 /boot/ACPI_VM0.bin ACPI_VM0
+
+      }
+
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
 
