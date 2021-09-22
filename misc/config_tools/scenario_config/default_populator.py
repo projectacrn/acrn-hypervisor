@@ -41,8 +41,8 @@ def populate_all(xsd_etree, xsd_all_node, xml_node):
         element_name = element_node.get("name")
         if not element_name:
             continue
-        xml_child_node = xml_node.find(element_name)
-        if xml_child_node is None:
+        xml_child_nodes = xml_node.findall(element_name)
+        if len(xml_child_nodes) == 0:
             element_min_occurs = element_node.get("minOccurs")
             if element_min_occurs == "0":
                 continue
@@ -51,7 +51,8 @@ def populate_all(xsd_etree, xsd_all_node, xml_node):
             xml_node.append(xml_child_node)
             populate(xsd_etree, element_node, xml_child_node, True)
         else:
-            populate(xsd_etree, element_node, xml_child_node, False)
+            for xml_child_node in xml_child_nodes:
+                populate(xsd_etree, element_node, xml_child_node, False)
 
 def populate(xsd_etree, xsd_element_node, xml_node, is_new_node):
     complex_type_node = xsd_element_node.find("xs:complexType", namespaces=xpath_ns)
