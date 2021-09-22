@@ -14,9 +14,6 @@ Glossary of Terms
       real-time and safety-criticality in mind, optimized to streamline
       embedded development through an open source platform.
 
-   AcrnGT
-      Intel GVT-g technology for ACRN.
-
    ACRN-DM
       A user mode device model application running in Service OS to provide
       device emulations in ACRN hypervisor.
@@ -65,15 +62,8 @@ Glossary of Terms
    GuC
       Graphic Micro-controller
 
-   GVT
-      Graphics Virtual Technology. GVT-g core device model module up-streamed
-      to the Linux kernel.
-
    GVT-d
       Virtual dedicated graphics acceleration (one VM to one physical GPU)
-
-   GVT-g
-      Virtual graphics processing unit (multiple VMs to one physical GPU)
 
    GVT-s
       Virtual shared graphics acceleration (multiple VMs to one physical GPU)
@@ -218,9 +208,6 @@ Glossary of Terms
 
    User OS
       Obsolete, see :term:`User VM`
-
-   vGPU
-      Virtual GPU Instance, created by GVT-g and used by a VM
 
    HSM
       Hypervisor Service Module

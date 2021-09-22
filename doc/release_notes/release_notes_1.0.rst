@@ -150,8 +150,8 @@ GVT-g for ACRN
 GVT-g for ACRN (a.k.a AcrnGT) is a feature to enable GPU sharing Service OS
 and User OS, so both can run GPU workload simultaneously. Direct display is
 supported by AcrnGT, where the Service OS and User OS are each assigned to
-a different display. The display ports support eDP and HDMI. See :ref:`APL_GVT-g-hld`
-for more information.
+a different display. The display ports support eDP and HDMI.
+See the HLD GVT-g documentation for more information.
 
 GPU - Preemption
 ================
@@ -214,9 +214,9 @@ We have many reference documents `available
 * ACRN Roadmap: look ahead in `2019
   <https://projectacrn.org/wp-content/uploads/sites/59/2019/02/ACRN-Rodamap-2019.pdf>`_
 * Performance analysis of `VBS-k framework
-  <https://projectacrn.github.io/latest/developer-guides/VBSK-analysis.html>`_
+  <https://projectacrn.github.io/1.0/developer-guides/VBSK-analysis.html>`_
 * HLD design doc for `IOC virtualization
-  <https://projectacrn.github.io/latest/developer-guides/hld/hld-APL_GVT-g.html?highlight=hld>`_
+  <https://projectacrn.github.io/1.0/developer-guides/hld/hld-APL_GVT-g.html?highlight=hld>`_
 * Additional project `coding guidelines
   <coding_guidelines.html>`_
 * :ref:`Zephyr RTOS as Guest OS <using_zephyr_as_uos>`
@@ -480,7 +480,7 @@ Known Issues
     These steps reproduce the issue:
 
     1) Build Zephyr image by follow the `guide
-       <https://projectacrn.github.io/latest/tutorials/using_zephyr_as_uos.html?highlight=zephyr>`_.
+       <https://projectacrn.github.io/1.0/tutorials/using_zephyr_as_uos.html?highlight=zephyr>`_.
     2) Copy the "Zephyr.img", "OVMF.fd" and "launch_zephyr.sh" to ISD.
     3) execute the launch_zephyr.sh script.
 

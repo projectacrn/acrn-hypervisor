@@ -55,27 +55,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
 ----
 
-``-G``, ``--gvtargs <GVT_args>``
-   ACRN implements GVT-g for graphics virtualization (aka AcrnGT).  This
-   option allows you to set some of its parameters.
-
-   GVT_args format: ``low_gm_sz high_gm_sz fence_sz``
-
-   Where:
-
-   -  ``low_gm_sz``: GVT-g aperture size, unit is MB
-   -  ``high_gm_sz``: GVT-g hidden gfx memory size, unit is MB
-   -  ``fence_sz``: the number of fence registers
-
-   Example::
-
-      -G "10 128 6"
-
-      sets up 10Mb for GVT-g aperture, 128M for GVT-g hidden memory, and 6
-      fence registers.
-
-----
-
 ``-h``, ``--help``
    Show a summary of commands.
 
