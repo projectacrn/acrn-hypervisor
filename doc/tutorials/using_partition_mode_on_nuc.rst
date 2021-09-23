@@ -252,8 +252,8 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
 
 Logical Partition Scenario Startup Check
 ****************************************
-#. Refer to the **Test the Communication Port** section in the
-   :ref:`connect_serial_port` tutorial.
+#. Connect to the serial port as described in this :ref:`Connecting to the
+   serial port <connect_serial_port>` tutorial.
 
 #. Use these steps to verify that the hypervisor is properly running:
 
