@@ -113,10 +113,10 @@ ACRN only supports enabling the nested virtualization feature on the Service VM,
 VMs.
 
 The nested virtualization feature is disabled by default in ACRN. You can
-enable it using the :ref:`Use the ACRN Configuration Editor <acrn_config_tool_ui>`
+enable it using the :ref:`ACRN configurator tool <acrn_configurator_tool>`
 with these settings:
 
-.. note:: Normally you'd use the configuration tool GUI to edit the scenario XML file.
+.. note:: Normally you'd use the configurator tool GUI to edit the scenario XML file.
    The tool wasn't updated in time for the v2.5 release, so you'll need to manually edit
    the ACRN scenario XML configuration file to edit the ``SCHEDULER``, ``NVMX_ENABLED``,
    ``pcpu_id`` , ``guest_flags``, ``legacy_vuart``, and ``console_vuart`` settings for

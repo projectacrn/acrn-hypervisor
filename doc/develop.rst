@@ -52,7 +52,11 @@ Configuration and Tools
    :maxdepth: 1
 
    tutorials/acrn_configuration_tool
+   tutorials/board_inspector_tool
+   tutorials/acrn_configurator_tool
    reference/config-options
+   reference/config-options-launch
+   reference/hv-make-options
    user-guides/hv-parameters
    user-guides/kernel-parameters
    user-guides/acrn-shell

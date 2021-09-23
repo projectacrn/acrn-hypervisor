@@ -172,6 +172,8 @@ To set up the ACRN build environment on the development computer:
       cd acrn-kernel
       git checkout release_2.6
 
+.. _gsg-board-setup:
+
 .. rst-class:: numbered-step
 
 Prepare the Target and Generate a Board Configuration File
@@ -381,6 +383,8 @@ Generate a Board Configuration File
          disk="/media/$USER/"$(ls /media/$USER)
          cp $disk/my_board.xml ~/acrn-work
          sudo umount $disk
+
+.. _gsg-dev-setup:
 
 .. rst-class:: numbered-step
 
