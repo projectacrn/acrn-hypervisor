@@ -35,8 +35,17 @@ ACRN v2.6 requires Ubuntu 18.04.  Follow the instructions in the
 What's New in v2.6
 ******************
 
-Topic
-  Description
+Nested Virtualization Technology Performance Tuning
+  The performance of nested virtualization, a feature first introduced as a
+  preview in the v2.5 release, was improved. CPU and I/O performance of level 2
+  virtual machines (for example, a VM running on a KVM/QEMU VM that itself is a
+  VM on ACRN hypervisor) is now on par with a VM running on KVM on bare metal.
+  Read more in the :ref:`nested_virt` tutorial.
+
+Support loading OSes in ELF format
+  ACRN hypervisor now can load OS images packed in ELF (Executable and Linkable
+  Format). This adds flexibility to OSs such as Zephyr running in pre-launched
+  VMs.
 
 
 Upgrading to v2.6 From Previous Releases
@@ -74,6 +83,8 @@ Document Updates
 ****************
 
 We've made major improvements to the introductory ACRN documentation including:
+
+.. rst-class:: rst-columns2
 
 * :ref:`introduction`
 * :ref:`overview_dev`
