@@ -119,7 +119,6 @@ struct smbios_info {
         struct smbios2_entry_point eps2;
         struct smbios3_entry_point eps3;
     } smbios_eps;
-    uint8_t major_ver;
     size_t smbios_eps_size;
     void *smbios_table;
     size_t smbios_table_size;
@@ -150,7 +149,6 @@ static inline void get_smbios3_info(struct smbios3_entry_point *eps3, struct smb
     memcpy_s(&si->smbios_eps, si->smbios_eps_size, eps3, si->smbios_eps_size);
     si->smbios_table = hpa2hva(eps3->st_addr);
     si->smbios_table_size = eps3->max_st_size;
-    si->major_ver = eps3->major_ver;
 }
 
 static inline void get_smbios2_info(struct smbios2_entry_point *eps2, struct smbios_info *si)
@@ -159,7 +157,6 @@ static inline void get_smbios2_info(struct smbios2_entry_point *eps2, struct smb
     memcpy_s(&si->smbios_eps, si->smbios_eps_size, eps2, si->smbios_eps_size);
     si->smbios_table = hpa2hva(eps2->st_addr);
     si->smbios_table_size = eps2->st_length;
-    si->major_ver = eps2->major_ver;
 }
 
 static void generate_checksum(uint8_t *byte_start, int nbytes, uint8_t *checksum_pos)
@@ -198,7 +195,7 @@ static int copy_smbios_to_guest(struct acrn_vm *vm, struct smbios_info *si)
     gpa = VIRT_SMBIOS_TABLE_ADDR;
     ret = copy_to_gpa(vm, si->smbios_table, gpa, si->smbios_table_size);
     if (ret == 0) {
-        if (si->major_ver == 2) {
+        if (strncmp("_SM_", si->smbios_eps.eps2.anchor, 4) == 0) {
             struct smbios2_entry_point *eps2 = &si->smbios_eps.eps2;
             eps2->st_addr = (uint32_t)gpa;
             /* If we wrote generate_checksum(eps->int_anchor, ...), the code scanning tool will
@@ -207,7 +204,7 @@ static int copy_smbios_to_guest(struct acrn_vm *vm, struct smbios_info *si)
             generate_checksum((uint8_t *)eps2 + offsetof(struct smbios2_entry_point, int_anchor),
                 0xf, &eps2->int_checksum);
             generate_checksum((uint8_t *)eps2, eps2->length, &eps2->checksum);
-        } else if (si->major_ver == 3) {
+        } else if (strncmp("_SM3_", si->smbios_eps.eps3.anchor, 5) == 0) {
             struct smbios3_entry_point *eps3 = &si->smbios_eps.eps3;
             eps3->st_addr = (uint32_t)gpa;
             generate_checksum((uint8_t *)eps3, eps3->length, &eps3->checksum);

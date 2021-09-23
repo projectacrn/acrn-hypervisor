@@ -3,8 +3,8 @@
 Enable SGX Virtualization
 #########################
 
-SGX refers to `Intel® Software Guard Extensions <https://software.intel.com/
-en-us/sgx>`_ (Intel® SGX). This is a set of instructions that can be used by
+SGX refers to `Intel Software Guard Extensions <https://software.intel.com/
+en-us/sgx>`_ (Intel SGX). This is a set of instructions that can be used by
 applications to set aside protected areas for select code and data in order to
 prevent direct attacks on executing code or data stored in memory. SGX allows
 an application to instantiate a protected container, referred to as an

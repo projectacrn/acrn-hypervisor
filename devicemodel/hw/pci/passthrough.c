@@ -58,8 +58,6 @@
  */
 #define AUDIO_NHLT_HACK 1
 
-#define PCI_BDF_GPU			0x00000010	/* 00:02.0 */
-
 extern uint64_t audio_nhlt_len;
 
 uint32_t gpu_dsm_hpa = 0;
@@ -243,7 +241,12 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 		if (size == 0)
 			continue;
 
-		/* Allocate the BAR in the guest I/O or MMIO space */
+		if (bartype == PCIBAR_IO)
+			error = reserve_io_rgn(base, base + size - 1, i, PCIBAR_IO, dev);
+		if (error)
+			return -1;
+
+		/* Allocate the BAR in the guest MMIO space */
 		error = pci_emul_alloc_pbar(dev, i, base, bartype, size);
 		if (error)
 			return -1;
@@ -397,6 +400,27 @@ pciaccess_init(void)
 	pthread_mutex_unlock(&ref_cnt_mtx);
 
 	return 0;	/* success */
+}
+
+static bool is_intel_graphics_dev(struct pci_vdev *dev)
+{
+	struct passthru_dev *ptdev;
+	bool ret = true;
+
+	ptdev = (struct passthru_dev *) dev->arg;
+	/* If physical BDF isn't 00:02.0, return false */
+	if (ptdev->phys_bdf != PCI_BDF(0, 2, 0))
+		ret = false;
+
+	/* If vendor id isn't 0x8086, return false */
+	if (pci_get_cfgdata16(dev, PCIR_VENDOR) != 0x8086)
+		ret = false;
+
+	/* If class id isn't 0x3(Display controller), return false */
+	if (pci_get_cfgdata8(dev, PCIR_CLASS) != 0x3)
+		ret = false;
+
+	return ret;
 }
 
 static bool
@@ -556,6 +580,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	int vmsix_on_msi_bar_id = -1;
 	struct acrn_pcidev pcidev = {};
 	uint16_t vendor = 0, device = 0;
+	uint8_t class = 0;
 
 	ptdev = NULL;
 	error = -EINVAL;
@@ -571,11 +596,6 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		return -EINVAL;
 	}
 
-	if (is_rtvm && (PCI_BDF(bus, slot, func) == PCI_BDF_GPU)) {
-		pr_err("%s RTVM doesn't support GVT-D.", __func__);
-		return -EINVAL;
-	}
-
 	while ((opt = strsep(&opts, ",")) != NULL) {
 		if (!strncmp(opt, "keep_gsi", 8))
 			keep_gsi = true;
@@ -583,11 +603,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			need_reset = false;
 		else if (!strncmp(opt, "d3hot_reset", 11))
 			d3hot_reset = true;
-		else if (!strncmp(opt, "gpu", 3)) {
-			/* Create the dedicated "igd-lpc" on 00:1f.0 for IGD passthrough */
-			if (pci_parse_slot("31,igd-lpc") != 0)
-				pr_warn("faild to create igd-lpc");
-		} else if (!strncmp(opt, "vmsix_on_msi", 12)) {
+		else if (!strncmp(opt, "vmsix_on_msi", 12)) {
 			opt = strsep(&opts, ",");
 			if (parse_vmsix_on_msi_bar_id(opt, &vmsix_on_msi_bar_id, 10) != 0) {
 				pr_err("faild to parse msix emulation bar id");
@@ -651,8 +667,10 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 */
 	vendor = read_config(ptdev->phys_dev, PCIR_VENDOR, 2);
 	device = read_config(ptdev->phys_dev, PCIR_DEVICE, 2);
+	class = read_config(ptdev->phys_dev, PCIR_CLASS, 1);
 	pci_set_cfgdata16(dev, PCIR_VENDOR, vendor);
 	pci_set_cfgdata16(dev, PCIR_DEVICE, device);
+	pci_set_cfgdata8(dev, PCIR_CLASS, class);
 
 #if AUDIO_NHLT_HACK
 	/* device specific handling:
@@ -674,8 +692,16 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		error = ACRN_PTDEV_IRQ_MSI;
 	}
 
-	if (ptdev->phys_bdf == PCI_BDF_GPU)
+	if (is_intel_graphics_dev(dev)) {
+		if (is_rtvm) {
+			pr_err("%s RTVM doesn't support GVT-D.", __func__);
+			return -EINVAL;
+		}
+		/* Create the dedicated "igd-lpc" on 00:1f.0 for IGD passthrough */
+		if (pci_parse_slot("31,igd-lpc") != 0)
+			pr_warn("faild to create igd-lpc");
 		passthru_gpu_dsm_opregion(ctx, ptdev, &pcidev, device);
+	}
 
 	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	pcidev.phys_bdf = ptdev->phys_bdf;
@@ -750,6 +776,8 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		return;
 	}
 
+	destory_io_rsvd_rgns(dev);
+
 	ptdev = (struct passthru_dev *) dev->arg;
 
 	pr_info("vm_reset_ptdev_intx:0x%x-%x, ioapic virpin=%d.\n",
@@ -761,7 +789,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (ptdev)
 		phys_bdf = ptdev->phys_bdf;
 
-	if (ptdev->phys_bdf == PCI_BDF_GPU) {
+	if (is_intel_graphics_dev(dev)) {
 		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, GPU_DSM_SIZE, gpu_dsm_hpa);
 		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_opregion_gpa, GPU_OPREGION_SIZE, gpu_opregion_hpa);
 	}

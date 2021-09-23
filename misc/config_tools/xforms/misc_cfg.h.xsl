@@ -9,6 +9,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:dyn="http://exslt.org/dynamic"
     xmlns:math="http://exslt.org/math"
+    xmlns:str="http://exslt.org/strings"
     xmlns:acrn="http://projectacrn.org">
   <xsl:include href="lib.xsl" />
   <xsl:output method="text" />
@@ -20,11 +21,16 @@
     <!-- Header include guard -->
     <xsl:value-of select="acrn:include-guard('MISC_CFG_H')" />
 
+    <xsl:apply-templates select="board-data/acrn-config" />
     <xsl:apply-templates select="config-data/acrn-config" />
 
     <xsl:apply-templates select="allocation-data//ssram" />
 
     <xsl:value-of select="acrn:include-guard-end('MISC_CFG_H')" />
+  </xsl:template>
+
+  <xsl:template match="board-data/acrn-config">
+    <xsl:apply-templates select="BLOCK_DEVICE_INFO" />
   </xsl:template>
 
   <xsl:template match="config-data/acrn-config">
@@ -45,6 +51,19 @@
     <xsl:value-of select="acrn:define('PRE_RTVM_SW_SRAM_ENABLED', 1, '')" />
     <xsl:value-of select="acrn:define('PRE_RTVM_SW_SRAM_BASE_GPA', start_gpa, 'UL')" />
     <xsl:value-of select="acrn:define('PRE_RTVM_SW_SRAM_END_GPA', end_gpa, 'UL')" />
+  </xsl:template>
+
+  <xsl:template match="BLOCK_DEVICE_INFO">
+    <xsl:variable name="block_devices_list_1" select="translate(current(), $newline, ',')" />
+    <xsl:variable name="block_devices_list_2" select="translate($block_devices_list_1, $whitespaces, '')" />
+    <xsl:variable name="block_devices_list" select="str:split($block_devices_list_2, ',')" />
+    <xsl:for-each select="$block_devices_list">
+      <xsl:variable name="pos" select="position()" />
+      <xsl:variable name="block_device" select="$block_devices_list[$pos]" />
+      <xsl:if test="not(contains($block_device, 'ext4'))">
+        <xsl:value-of select="acrn:define(concat('ROOTFS_', $pos), concat($quot, 'root=', substring-before($block_device, ':'), ' ', $quot))" />
+      </xsl:if>
+    </xsl:for-each>
   </xsl:template>
 
 <xsl:template name="sos_rootfs">
@@ -145,20 +164,19 @@
 <!-- MAX_CACHE_CLOS_NUM_ENTRIES:
   Max number of MBA delay entries corresponding to each CLOS. -->
 <xsl:template name="rdt">
-  <xsl:variable name="rdt_resource" select="normalize-space(substring-before(substring-after(//CLOS_INFO, 'rdt resources supported:'), 'rdt resource clos max:'))" />
-  <xsl:variable name="rdt_res_clos_max" select="normalize-space(substring-before(substring-after(//CLOS_INFO, 'rdt resource clos max:'), 'rdt resource mask max:'))" />
-  <xsl:variable name="common_clos_max" select="acrn:get-common-clos-max('', $rdt_resource, $rdt_res_clos_max)"/>
+  <xsl:variable name="rdt_res_clos_max" select="acrn:get-normalized-closinfo-rdt-clos-max-str()" />
+  <xsl:variable name="common_clos_max" select="acrn:get-common-clos-max()"/>
   <xsl:choose>
     <xsl:when test="acrn:is-cdp-enabled()">
       <xsl:value-of select="acrn:ifdef('CONFIG_RDT_ENABLED')" />
       <xsl:value-of select="acrn:ifdef('CONFIG_CDP_ENABLED')" />
       <xsl:value-of select="acrn:define('HV_SUPPORTED_MAX_CLOS', $common_clos_max, 'U')" />
       <xsl:value-of select="acrn:define('MAX_CACHE_CLOS_NUM_ENTRIES', 2 * $common_clos_max, 'U')" />
-      <xsl:value-of select="acrn:define('MAX_MBA_CLOS_NUM_ENTRIES', $common_clos_max, 'U')" />
       <xsl:value-of select="$else" />
       <xsl:value-of select="acrn:define('HV_SUPPORTED_MAX_CLOS', acrn:find-list-min($rdt_res_clos_max, ','), 'U')" />
       <xsl:value-of select="acrn:define('MAX_CACHE_CLOS_NUM_ENTRIES', $common_clos_max, 'U')" />
       <xsl:value-of select="$endif" />
+      <xsl:value-of select="acrn:define('MAX_MBA_CLOS_NUM_ENTRIES', $common_clos_max, 'U')" />
     </xsl:when>
     <xsl:otherwise>
       <xsl:value-of select="acrn:ifdef('CONFIG_RDT_ENABLED')" />
@@ -184,17 +202,15 @@
 
 <xsl:template name="vm0_passthrough_tpm">
   <xsl:if test="acrn:is-pre-launched-vm(vm[@id = 0]/vm_type)">
-    <xsl:if test="acrn:is-tpm-passthrough-board()">
-      <xsl:if test="vm[@id = 0]/mmio_resources/TPM2 = 'y'">
-        <xsl:value-of select="acrn:define('VM0_PASSTHROUGH_TPM', '', '')" />
-        <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_BASE_ADDR', '0xFED40000', 'UL')" />
-        <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_BASE_ADDR_GPA', '0xFED40000', 'UL')" />
-        <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_SIZE', '0x5000', 'UL')" />
-        <xsl:if test="//capability[@id='log_area']">
-          <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_BASE_ADDR', //allocation-data/acrn-config/vm[@id = '0']/log_area_start_address, 'UL')" />
-          <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_BASE_ADDR_HPA', //capability[@id='log_area']/log_area_start_address, 'UL')" />
-          <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_SIZE', //allocation-data/acrn-config/vm[@id = '0']/log_area_minimum_length, 'UL')" />
-        </xsl:if>
+    <xsl:if test="//vm/mmio_resources/TPM2/text() = 'y' and //device[@id = 'MSFT0101' or compatible_id = 'MSFT0101']">
+      <xsl:value-of select="acrn:define('VM0_PASSTHROUGH_TPM', '', '')" />
+      <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_BASE_ADDR', '0xFED40000', 'UL')" />
+      <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_BASE_ADDR_GPA', '0xFED40000', 'UL')" />
+      <xsl:value-of select="acrn:define('VM0_TPM_BUFFER_SIZE', '0x5000', 'UL')" />
+      <xsl:if test="//capability[@id='log_area']">
+        <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_BASE_ADDR', //allocation-data/acrn-config/vm[@id = '0']/log_area_start_address, 'UL')" />
+        <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_BASE_ADDR_HPA', //capability[@id='log_area']/log_area_start_address, 'UL')" />
+        <xsl:value-of select="acrn:define('VM0_TPM_EVENTLOG_SIZE', //allocation-data/acrn-config/vm[@id = '0']/log_area_minimum_length, 'UL')" />
       </xsl:if>
     </xsl:if>
   </xsl:if>

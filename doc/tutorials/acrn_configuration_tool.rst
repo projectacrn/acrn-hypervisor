@@ -305,9 +305,8 @@ current scenario has:
   Specify the User VM memory size in megabytes.
 
 ``gvt_args``:
-  GVT arguments for the VM. Set it to ``gvtd`` for GVT-d, otherwise it's
-  for GVT-g arguments.  The GVT-g input format: ``low_gm_size high_gm_size fence_sz``,
-  The recommendation is ``64 448 8``.  Leave it blank to disable the GVT.
+  GVT arguments for the VM. Set it to ``gvtd`` for GVT-d.
+  Leave it blank to disable the GVT.
 
 ``vbootloader``:
   Virtual bootloader type; currently only supports OVMF.
@@ -368,6 +367,10 @@ current scenario has:
   The virtio console device setting.
   Input format:
   ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
+
+``input`` (a child node of ``virtio_devices``):
+  The virtio input device setting.
+  Input format: ``/dev/input/eventX[,serial]``.
 
 ``cpu_affinity``:
   List of pCPU that this VM's vCPUs are pinned to.

@@ -206,6 +206,7 @@ def gen_pt(names, dm, sel, vmid, config):
     cap_pt = launch_cfg_lib.get_pt_dev()
     uos_type = names['uos_types'][vmid]
 
+    print("modprobe pci_stub", file=config)
     # pass thru GPU
     if dm['gvt_args'][vmid] == "gvtd":
         print('echo ${passthru_vpid["gpu"]} > /sys/bus/pci/drivers/pci-stub/new_id', file=config)
@@ -218,7 +219,6 @@ def gen_pt(names, dm, sel, vmid, config):
     if pt_none:
         return
 
-    print("modprobe pci_stub", file=config)
     for pt_dev in cap_pt:
         if pt_dev not in MEDIA_DEV:
             pass_through_dev(sel, pt_dev, vmid, config)

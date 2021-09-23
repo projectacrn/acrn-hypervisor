@@ -92,7 +92,7 @@ static uint64_t pci_emul_membase64;
 
 extern bool skip_pci_mem64bar_workaround;
 
-struct mmio_rsvd_rgn reserved_bar_regions[REGION_NUMS];
+struct io_rsvd_rgn reserved_bar_regions[REGION_NUMS];
 
 #define	PCI_EMUL_IOBASE		0x2000
 #define	PCI_EMUL_IOLIMIT	0x10000
@@ -107,12 +107,12 @@ static void pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot,
 		      int func, int coff, int bytes, uint32_t *val);
 static void pci_emul_free_msixcap(struct pci_vdev *pdi);
 
-int compare_mmio_rgns(const void *data1, const void *data2)
+int compare_io_rgns(const void *data1, const void *data2)
 {
-    struct mmio_rsvd_rgn *rng1, *rng2;
+    struct io_rsvd_rgn *rng1, *rng2;
 
-    rng1 = (struct mmio_rsvd_rgn*)data1;
-    rng2 = (struct mmio_rsvd_rgn*)data2;
+    rng1 = (struct io_rsvd_rgn*)data1;
+    rng2 = (struct io_rsvd_rgn*)data2;
 
     if(!rng1->vdev)
             return 1;
@@ -126,15 +126,10 @@ int compare_mmio_rgns(const void *data1, const void *data2)
  * Due to we only has gvt-g to use this feature,
  * this case rarely happen.
  */
-int create_mmio_rsvd_rgn(uint64_t start,
+int reserve_io_rgn(uint64_t start,
 	    uint64_t end, int idx, int bar_type, struct pci_vdev *vdev)
 {
 	int i;
-
-	if(bar_type == PCIBAR_IO){
-		pr_err("fail to create PCIBAR_IO bar_type\n");
-		return -1;
-	}
 
 	for(i = 0; i < REGION_NUMS; i++){
 		if(reserved_bar_regions[i].vdev == NULL){
@@ -145,10 +140,10 @@ int create_mmio_rsvd_rgn(uint64_t start,
 			reserved_bar_regions[i].vdev = vdev;
 
 			/* sort reserved_bar_regions array by "start" member,
-			 * if this mmio_rsvd_rgn is not used, put it in the last.
+			 * if this io_rsvd_rgn is not used, put it in the last.
 			 */
 			qsort((void*)reserved_bar_regions, REGION_NUMS,
-					sizeof(reserved_bar_regions[0]),  compare_mmio_rgns);
+					sizeof(reserved_bar_regions[0]),  compare_io_rgns);
 			return 0;
 		}
 	}
@@ -157,7 +152,7 @@ int create_mmio_rsvd_rgn(uint64_t start,
 	return -1;
 }
 
-void destory_mmio_rsvd_rgns(struct pci_vdev *vdev){
+void destory_io_rsvd_rgns(struct pci_vdev *vdev){
     int i;
 
     for(i = 0; i < REGION_NUMS; i++)
@@ -166,18 +161,18 @@ void destory_mmio_rsvd_rgns(struct pci_vdev *vdev){
 }
 
 static bool
-is_mmio_rgns_overlap(uint64_t x1, uint64_t x2, uint64_t y1, uint64_t y2)
+is_io_rgns_overlap(uint64_t x1, uint64_t x2, uint64_t y1, uint64_t y2)
 {
 	if(x1 <= y2 && y1 <= x2)
 		return true;
 	return false;
 }
 
-/* reserved_bar_regions has sorted mmio_rsvd_rgns.
- * iterate all mmio_rsvd_rgn in reserved_bar_regions,
- * if [base, base + size - 1] with any mmio_rsvd_rgn,
+/* reserved_bar_regions has sorted io_rsvd_rgns.
+ * iterate all io_rsvd_rgn in reserved_bar_regions,
+ * if [base, base + size - 1] with any io_rsvd_rgn,
  * adjust base addr to ensure [base, base + size - 1]
- * won't overlap with reserved mmio_rsvd_rgn
+ * won't overlap with reserved io_rsvd_rgn
  */
 static void
 adjust_bar_region(uint64_t *base, uint64_t size, int bar_type)
@@ -188,7 +183,7 @@ adjust_bar_region(uint64_t *base, uint64_t size, int bar_type)
 		if(!reserved_bar_regions[i].vdev ||
 			reserved_bar_regions[i].bar_type != bar_type)
 			continue;
-		if(is_mmio_rgns_overlap(reserved_bar_regions[i].start,
+		if(is_io_rgns_overlap(reserved_bar_regions[i].start,
 					reserved_bar_regions[i].end, *base, *base + size -1)){
 			*base = roundup2(reserved_bar_regions[i].end + 1, size);
 		}
@@ -574,13 +569,7 @@ pci_emul_alloc_resource(uint64_t *baseptr, uint64_t limit, uint64_t size,
 		size = PAGE_SIZE;
 	base = roundup2(*baseptr, size);
 
-	/* TODO:Currently, we only reserve gvt mmio regions,
-	 * so ignore PCIBAR_IO when adjust_bar_region.
-	 * If other devices also use reserved bar regions later,
-	 * need remove pcibar_type != PCIBAR_IO condition
-	 */
-	if(bar_type != PCIBAR_IO)
-		adjust_bar_region(&base, size, bar_type);
+	adjust_bar_region(&base, size, bar_type);
 
 	if (base + size <= limit) {
 		*addr = base;
@@ -741,8 +730,8 @@ update_bar_address(struct vmctx *ctx, struct pci_vdev *dev, uint64_t addr,
 		register_bar(dev, idx);
 }
 
-static struct mmio_rsvd_rgn *
-get_mmio_rsvd_rgn_by_vdev_idx(struct pci_vdev *pdi, int idx)
+static struct io_rsvd_rgn *
+get_io_rsvd_rgn_by_vdev_idx(struct pci_vdev *pdi, int idx)
 {
 	int i;
 
@@ -762,7 +751,7 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 {
 	int error;
 	uint64_t *baseptr, limit, addr, mask, lobits, bar;
-	struct mmio_rsvd_rgn *region;
+	struct io_rsvd_rgn *region;
 
 	if ((size & (size - 1)) != 0)
 		size = 1UL << flsl(size);	/* round up to a power of 2 */
@@ -831,7 +820,7 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 		return -1;
 	}
 
-	region = get_mmio_rsvd_rgn_by_vdev_idx(pdi, idx);
+	region = get_io_rsvd_rgn_by_vdev_idx(pdi, idx);
 	if(region)
 		addr = region->start;
 
@@ -1382,7 +1371,7 @@ init_pci(struct vmctx *ctx)
 	struct slotinfo *si;
 	struct funcinfo *fi;
 	int bus, slot, func, i;
-	int success_cnt = 0;
+	int success_cnt[2] = {0};	/* 0 for passthru and 1 for others */
 	int error;
 	uint64_t bus0_memlimit;
 
@@ -1404,25 +1393,40 @@ init_pci(struct vmctx *ctx)
 		bi->membase32 = pci_emul_membase32;
 		bi->membase64 = pci_emul_membase64;
 
-		for (slot = 0; slot < MAXSLOTS; slot++) {
-			si = &bi->slotinfo[slot];
-			for (func = 0; func < MAXFUNCS; func++) {
-				fi = &si->si_funcs[func];
-				if (fi->fi_name == NULL)
-					continue;
-				ops = pci_emul_finddev(fi->fi_name);
-				if (!ops) {
-					pr_warn("No driver for device [%s]\n", fi->fi_name);
-					continue;
+		/*
+		 * Initialize pass-thru devices firstly to reserve PIO bar regions.
+		 * For pass-thru devices, ACRN-DM need to ensure PIO bar regions identical mapping
+		 * (guest PIO bar start address equals to host PIO bar start address).
+		 *
+		 * Then initialize non pass-thru devices.
+		 */
+		for (i = 0; i < 2; i++) {
+			for (slot = 0; slot < MAXSLOTS; slot++) {
+				si = &bi->slotinfo[slot];
+				for (func = 0; func < MAXFUNCS; func++) {
+					fi = &si->si_funcs[func];
+					if (fi->fi_name == NULL)
+						continue;
+					ops = pci_emul_finddev(fi->fi_name);
+					if (!ops) {
+						pr_warn("No driver for device [%s]\n", fi->fi_name);
+						continue;
+					}
+
+					if ((i == 0) && strcmp(ops->class_name, "passthru")) {
+						continue;
+					} else if ((i == 1) && !strcmp(ops->class_name, "passthru")) {
+						continue;
+					}
+
+					pr_notice("pci init %s\r\n", fi->fi_name);
+					error = pci_emul_init(ctx, ops, bus, slot, func, fi);
+					if (error) {
+						pr_err("pci %s init failed\n", fi->fi_name);
+						goto pci_emul_init_fail;
+					}
+					success_cnt[i]++;
 				}
-				pr_notice("pci init %s\r\n", fi->fi_name);
-				error = pci_emul_init(ctx, ops, bus, slot,
-				    func, fi);
-				if (error) {
-					pr_err("pci %s init failed\n", fi->fi_name);
-					goto pci_emul_init_fail;
-				}
-				success_cnt++;
 			}
 		}
 
@@ -1462,6 +1466,19 @@ init_pci(struct vmctx *ctx)
 		}
 	}
 	bi->memlimit32 = bus0_memlimit;
+
+	/* Update the PIO window in the guest ACPI DSDT table */
+	for (i = 0; i < REGION_NUMS; i++) {
+		if (reserved_bar_regions[i].vdev &&
+				reserved_bar_regions[i].bar_type == PCIBAR_IO) {
+			if (reserved_bar_regions[i].start < bi->iobase) {
+				bi->iobase = reserved_bar_regions[i].start;
+			}
+			if ((reserved_bar_regions[i].end + 1) > bi->iolimit) {
+				bi->iolimit = reserved_bar_regions[i].end + 1;
+			}	
+		}
+	}
 
 	error = check_gsi_sharing_violation();
 	if (error < 0)
@@ -1543,25 +1560,34 @@ init_pci(struct vmctx *ctx)
 	return 0;
 
 pci_emul_init_fail:
-	for (bus = 0; bus < MAXBUSES && success_cnt > 0; bus++) {
-		bi = pci_businfo[bus];
-		if (bi == NULL)
-			continue;
-		for (slot = 0; slot < MAXSLOTS && success_cnt > 0; slot++) {
-			si = &bi->slotinfo[slot];
-			for (func = 0; func < MAXFUNCS; func++) {
-				fi = &si->si_funcs[func];
-				if (fi->fi_name == NULL)
-					continue;
-				if (success_cnt-- <= 0)
-					break;
-				ops = pci_emul_finddev(fi->fi_name);
-				if (!ops) {
-					pr_warn("No driver for device [%s]\n", fi->fi_name);
-					continue;
+	for (i = 0; i < 2; i++) {
+		for (bus = 0; bus < MAXBUSES && success_cnt[i] > 0; bus++) {
+			bi = pci_businfo[bus];
+			if (bi == NULL)
+				continue;
+			for (slot = 0; slot < MAXSLOTS && success_cnt[i] > 0; slot++) {
+				si = &bi->slotinfo[slot];
+				for (func = 0; func < MAXFUNCS; func++) {
+					fi = &si->si_funcs[func];
+					if (fi->fi_name == NULL)
+						continue;
+					if (success_cnt[i]-- <= 0)
+						break;
+					ops = pci_emul_finddev(fi->fi_name);
+					if (!ops) {
+						pr_warn("No driver for device [%s]\n", fi->fi_name);
+						continue;
+					}
+
+					if ((i == 0) && strcmp(ops->class_name, "passthru")) {
+						continue;
+					} else if ((i == 1) && !strcmp(ops->class_name, "passthru")) {
+						continue;
+					}
+
+					pci_emul_deinit(ctx, ops, bus, slot,
+						func, fi);
 				}
-				pci_emul_deinit(ctx, ops, bus, slot,
-				    func, fi);
 			}
 		}
 	}

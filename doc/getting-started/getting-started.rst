@@ -116,6 +116,7 @@ To set up the ACRN build environment on the development computer:
       sudo apt install gcc \
            git \
            make \
+           vim \
            libssl-dev \
            libpciaccess-dev \
            uuid-dev \
@@ -227,7 +228,7 @@ Configure Target BIOS Settings
 
 #. Boot your target and enter the BIOS configuration editor.
 
-   Tip: When you are booting your target, you’ll see an option (quickly) to
+   Tip: When you are booting your target, you'll see an option (quickly) to
    enter the BIOS configuration editor, typically by pressing :kbd:`F2` during
    the boot and before the GRUB menu (or Ubuntu login screen) appears.
 
@@ -558,8 +559,8 @@ Build ACRN
 
          sudo mkdir -p /boot/acrn/
          sudo cp $disk/acrn.bin /boot/acrn
-         sudo cp $disk/launch_uos_id3.sh ~/acrn-work
          sudo cp $disk/iasl /usr/sbin/
+         cp $disk/launch_uos_id3.sh ~/acrn-work
          sudo umount $disk/
 
 .. rst-class:: numbered-step
@@ -636,13 +637,28 @@ In the following steps, you will configure GRUB on the target system.
            insmod gzio
            insmod part_gpt
            insmod ext2
-           search --no-floppy --fs-uuid --set <UUID>
+           search --no-floppy --fs-uuid --set "UUID"
            echo 'loading ACRN...'
-           multiboot2 /boot/acrn/acrn.bin  root=PARTUUID=<PARTUUID>
+           multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="PARTUUID"
            module2 /boot/vmlinuz-5.10.52-acrn-sos Linux_bzImage
          }
 
    #. Save and close the file.
+   
+   #. Correct example image
+
+      .. code-block:: console
+
+         menuentry "ACRN Multiboot Ubuntu Service VM" --id ubuntu-service-vm {
+           load_video
+           insmod gzio
+           insmod part_gpt
+           insmod ext2
+           search --no-floppy --fs-uuid --set "3cac5675-e329-4cal-b346-0a3e65f99016"
+           echo 'loading ACRN...'
+           multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="03db7f45-8a6c-454b-adf7-30343d82c4f4"
+           module2 /boot/vmlinuz-5.10.52-acrn-sos Linux_bzImage
+         }
 
 #. Make the GRUB menu visible when
    booting and make it load the Service VM kernel by default:
@@ -661,7 +677,6 @@ In the following steps, you will configure GRUB on the target system.
          GRUB_DEFAULT=ubuntu-service-vm
          #GRUB_TIMEOUT_STYLE=hidden
          GRUB_TIMEOUT=5
-         GRUB_CMDLINE_LINUX="text"
 
    #. Save and close the file.
 
@@ -708,7 +723,7 @@ automatically.
       dmesg | grep ACRN
 
    You should see "Hypervisor detected: ACRN" in the output. Example output of a
-   successful installation (your's may look slightly different):
+   successful installation (yours may look slightly different):
 
    .. code-block:: console
 
@@ -751,7 +766,7 @@ Launch the User VM
          -s 8,virtio-net,tap_YaaG3 \
          -s 6,virtio-console,@stdio:stdio_port \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
-         -s 31:0,lpc \
+         -s 1:0,lpc \
          $vm_name
 
 #. Save and close the file.
@@ -804,7 +819,7 @@ Launch the User VM
 
       ubuntu@ubuntu:~$
 
-The guest VM has launched successfully. You have completed this ACRN setup.
+The User VM has launched successfully. You have completed this ACRN setup.
 
 Next Steps
 **************

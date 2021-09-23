@@ -36,7 +36,7 @@ its members and the User Community to get the most out of Project ACRN.
 
 Welcome to the project ARCN community!
 
-We're now holding weekly Technical Community Meetings and encourage you
+We're now holding monthly Technical Community Meetings and encourage you
 to call in and learn more about the project. Meeting information is on
 the `TCM Meeting page`_ in our `ACRN wiki <https://wiki.projectacrn.org/>`_.
 

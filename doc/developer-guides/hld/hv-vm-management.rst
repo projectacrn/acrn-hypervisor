@@ -32,8 +32,8 @@ VM powers off, the VM returns to a 'powered off' state again.
 A VM can be paused to wait for some operation when it is running, so there is
 also a 'paused' state.
 
-:numref:`hvvm-state` illustrates the state-machine of a VM state transition,
-please refer to :ref:`hv-cpu-virt` for related VCPU state.
+:numref:`hvvm-state` illustrates the state-machine of a VM state transition.
+Refer to :ref:`hv-cpu-virt` for related vCPU state.
 
 .. figure:: images/hld-image108.png
    :align: center
@@ -49,7 +49,7 @@ Pre-Launched and Service VM
 
 The hypervisor is the owner to control pre-launched and Service VM's state
 by calling VM APIs directly, following the design of system power
-management. Please refer to ACRN power management design for more details.
+management. Refer to ACRN power management design for more details.
 
 
 Post-Launched User VMs
@@ -59,5 +59,5 @@ DM takes control of post-launched User VMs' state transition after the Service V
 boots, by calling VM APIs through hypercalls.
 
 Service VM user level service such as Life-Cycle-Service and tools such
-as Acrnd may work together with DM to launch or stop a User VM. Please
-refer to ACRN tool introduction for more details.
+as ``acrnd`` may work together with DM to launch or stop a User VM.
+Refer to :ref:`acrnctl` documentation for more details.

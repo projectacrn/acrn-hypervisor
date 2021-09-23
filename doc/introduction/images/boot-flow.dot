@@ -1,6 +1,0 @@
-digraph G {
-   rankdir=LR;
-   bgcolor="transparent";
-   UEFI -> "acrn.efi" -> "OS\nBootloader" ->
-     "SOS\nKernel" -> "ACRN\nDevice Model" -> "Virtual\nBootloader";
-}

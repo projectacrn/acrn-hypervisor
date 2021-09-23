@@ -11,6 +11,7 @@
     xmlns:func="http://exslt.org/functions"
     xmlns:str="http://exslt.org/strings"
     xmlns:set="http://exslt.org/sets"
+    xmlns:exslt="http://exslt.org/common"
     xmlns:acrn="http://projectacrn.org"
     extension-element-prefixes="func">
 
@@ -53,22 +54,6 @@
         <func:result select="acrn:string-to-num-aux(substring($v, 2), $base, ($acc * $base) + $digit)" />
       </xsl:otherwise>
     </xsl:choose>
-  </func:function>
-
-  <func:function name="acrn:find-list-min-aux">
-    <xsl:param name="list" />
-    <xsl:param name="delimar" />
-    <xsl:param name="min" />
-    <func:result>
-      <xsl:choose>
-        <xsl:when test="contains($list, $delimar)">
-          <xsl:value-of select="acrn:find-list-min-aux(substring-after($list, $delimar), $delimar, acrn:min(substring-before($list, $delimar), $min))" />
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="acrn:min($list, $min)" />
-        </xsl:otherwise>
-      </xsl:choose>
-    </func:result>
   </func:function>
 
   <func:function name="acrn:num-to-string-aux">
@@ -147,9 +132,9 @@
 
   <func:function name="acrn:find-list-min">
     <xsl:param name="list" />
-    <xsl:param name="delimar" />
+    <xsl:param name="delimiter" />
     <func:result>
-      <xsl:value-of select="acrn:find-list-min-aux($list, $delimar, '')" />
+      <xsl:value-of select="math:min(str:split($list, $delimiter))" />
     </func:result>
   </func:function>
 
@@ -392,8 +377,8 @@
   </func:function>
 
   <func:function name="acrn:is-rdt-supported">
-    <xsl:variable name="rdt_resource" select="substring-before(substring-after(//CLOS_INFO, 'rdt resources supported:'), 'rdt resource clos max:')" />
-    <xsl:variable name="rdt_res_clos_max" select="substring-before(substring-after(//CLOS_INFO, 'rdt resource clos max:'), 'rdt resource mask max:')" />
+    <xsl:variable name="rdt_resource" select="acrn:get-normalized-closinfo-rdt-res-str()" />
+    <xsl:variable name="rdt_res_clos_max" select="acrn:get-normalized-closinfo-rdt-clos-max-str()" />
     <xsl:choose>
       <xsl:when test="$rdt_resource and $rdt_res_clos_max">
         <func:result select="true()" />
@@ -405,60 +390,35 @@
   </func:function>
 
   <func:function name="acrn:get-common-clos-max">
-    <xsl:param name="min" />
-    <xsl:param name="rdt_resource" />
-    <xsl:param name="rdt_res_clos_max" />
-    <xsl:variable name="resource">
-      <xsl:choose>
-        <xsl:when test="contains($rdt_resource, ',')">
-          <xsl:value-of select="substring-before($rdt_resource, ',')" />
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="$rdt_resource" />
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
-    <xsl:variable name="res_clos_max">
-      <xsl:choose>
-        <xsl:when test="contains($rdt_res_clos_max, ',')">
-          <xsl:value-of select="number(substring-before($rdt_res_clos_max, ','))" />
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="number($rdt_res_clos_max)" />
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
-    <xsl:variable name="cur_res_clos_max">
-      <xsl:choose>
-        <xsl:when test="acrn:is-rdt-enabled() and not(acrn:is-cdp-enabled())">
-          <xsl:value-of select="$res_clos_max" />
-        </xsl:when>
-        <xsl:when test="acrn:is-rdt-enabled() and acrn:is-cdp-enabled()">
-          <xsl:choose>
-            <xsl:when test="$resource = 'MBA'">
-              <xsl:value-of select="$res_clos_max" />
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:value-of select="$res_clos_max div 2" />
-            </xsl:otherwise>
-          </xsl:choose>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="0" />
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
-    <func:result>
-      <xsl:choose>
-        <xsl:when test="substring-after($rdt_resource, ',')">
-          <xsl:variable name="new_min" select="acrn:min($min, $cur_res_clos_max)" />
-          <xsl:value-of select="acrn:get-common-clos-max($new_min, substring-after($rdt_resource, ','), substring-after($rdt_res_clos_max, ','))" />
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="acrn:min($min, $cur_res_clos_max)" />
-        </xsl:otherwise>
-      </xsl:choose>
-    </func:result>
+    <xsl:choose>
+      <xsl:when test="not(acrn:is-rdt-enabled()) and not(acrn:is-cdp-enabled())">
+        <func:result select="0" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="rdt_resource_list" select="str:split(acrn:get-normalized-closinfo-rdt-res-str(), ',')" />
+        <xsl:variable name="rdt_res_clos_max_list" select="str:split(acrn:get-normalized-closinfo-rdt-clos-max-str(), ',')" />
+        <xsl:variable name="cdp_enabled" select="acrn:is-cdp-enabled()"/>
+
+        <xsl:variable name="clos_max_list_rtf">
+          <xsl:for-each select="$rdt_resource_list">
+            <xsl:variable name="pos" select="position()" />
+            <xsl:variable name="res_clos_max" select="number($rdt_res_clos_max_list[$pos])" />
+
+            <xsl:choose>
+              <xsl:when test=". = 'MBA'">
+                <node><xsl:value-of select="$res_clos_max"/></node>
+              </xsl:when>
+              <xsl:otherwise>
+                <node><xsl:value-of select="$res_clos_max div (1 + $cdp_enabled)"/></node>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:for-each>
+        </xsl:variable>
+
+        <xsl:variable name="clos_max_list_it" select="exslt:node-set($clos_max_list_rtf)/node" />
+        <func:result select="math:min($clos_max_list_it)" />
+      </xsl:otherwise>
+    </xsl:choose>
   </func:function>
 
   <func:function name="acrn:is-sos-vm">
@@ -513,29 +473,6 @@
     <xsl:param name="vm_type" />
     <xsl:choose>
       <xsl:when test="$vm_type = 'KATA_VM'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:otherwise>
-        <func:result select="false()" />
-      </xsl:otherwise>
-    </xsl:choose>
-  </func:function>
-
-  <func:function name="acrn:is-tpm-passthrough-board">
-    <xsl:choose>
-      <xsl:when test="//@board = 'whl-ipc-i5'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:when test="//@board = 'whl-ipc-i7'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:when test="//@board = 'tgl-rvp'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:when test="//@board = 'ehl-crb-b'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:when test="//@board = 'cfl-k700-i7'">
         <func:result select="true()" />
       </xsl:when>
       <xsl:otherwise>
@@ -635,5 +572,18 @@
     <func:result select="concat($bus, ':', $dev, '.', $func)" />
   </func:function>
   <!-- End of scenario-specific functions-->
+
+  <!-- Board-specific functions-->
+  <func:function name="acrn:get-normalized-closinfo-rdt-res-str">
+    <xsl:variable name="rdt_resource" select="translate(substring-before(substring-after(//CLOS_INFO, 'rdt resources supported:'), 'rdt resource clos max:'), $whitespaces, '')" />
+    <func:result select="$rdt_resource" />
+  </func:function>
+
+  <func:function name="acrn:get-normalized-closinfo-rdt-clos-max-str">
+    <xsl:variable name="rdt_res_clos_max" select="translate(substring-before(substring-after(//CLOS_INFO, 'rdt resource clos max:'), 'rdt resource mask max:'), $whitespaces, '')" />
+    <func:result select="$rdt_res_clos_max" />
+  </func:function>
+
+  <!-- End of board-specific functions-->
 
 </xsl:stylesheet>

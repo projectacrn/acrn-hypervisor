@@ -95,9 +95,9 @@ def off_line_cpus(args, vmid, uos_type, config):
     print("    for j in {}; do".format(' '.join([str(i) for i in pcpu_id_list])), file=config)
     print('        if [ "cpu"$j = $i ]; then', file=config)
     print('            online=`cat ${cpu_path}/$i/online`', file=config)
-    print('            idx=`echo $i | tr -cd "[1-99]"`', file=config)
+    print('            idx=`echo $i | tr -cd "[0-9]"`', file=config)
     print('            echo $i online=$online', file=config)
-    print('            if [ "$online" = "1" ]; then', file=config)
+    print('            if [ "$online" = "1" ] && [ "$idx" != "0" ]; then', file=config)
     print("                echo 0 > ${cpu_path}/$i/online", file=config)
     print("                online=`cat ${cpu_path}/$i/online`", file=config)
     print("                # during boot time, cpu hotplug may be disabled by pci_device_probe during a pci module insmod", file=config)
@@ -230,7 +230,7 @@ def gvt_arg_set(dm, vmid, uos_type, config):
         bus = int(gpu_bdf[0:2], 16)
         dev = int(gpu_bdf[3:5], 16)
         fun = int(gpu_bdf[6:7], 16)
-        print('   -s 2,passthru,{}/{}/{},gpu  \\'.format(bus, dev, fun), file=config)
+        print('   -s 2,passthru,{}/{}/{}  \\'.format(bus, dev, fun), file=config)
     elif gvt_args:
         print('   -s 2,pci-gvt -G "$2"  \\', file=config)
 
