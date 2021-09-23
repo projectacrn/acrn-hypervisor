@@ -84,7 +84,8 @@ You can specify the following information in a scenario configuration:
   - Settings of virtual devices, such as virtual UARTs.
 
 You need a scenario configuration file to build an ACRN hypervisor. The
-build process uses the file to build a hypervisor that can initialize its capabilities and set up the VMs at runtime.
+build process uses the file to build a hypervisor that can initialize its
+capabilities and set up the VMs at runtime.
 
 The scenario configuration defines User VMs as follows:
 
@@ -106,7 +107,8 @@ post-launched User VMs. The file defines certain attributes and
 resources of the post-launched VMs specified in the scenario configuration
 file. We call these settings "dynamic" because they are used at runtime.
 
-You need a launch configuration file to generate a launch script (shell script) for each post-launched User VM. The launch script invokes the
+You need a launch configuration file to generate a launch script (shell script)
+for each post-launched User VM. The launch script invokes the
 Service VM's :ref:`Device Model <hld-devicemodel>` ``acrn-dm`` to create
 the VM. Unlike board and scenario configurations used at build time or by
 ACRN hypervisor, launch configurations are used dynamically in the Service VM.
@@ -122,18 +124,24 @@ and edit configuration data. The toolset consists of the following:
 * :ref:`Board inspector tool <board_inspector_tool>`
 * :ref:`ACRN configurator tool <acrn_configurator_tool>`
 
-As introduced in :ref:`overview_dev`, configuration takes place at Steps 3 and 4 in the overall development process:
+As introduced in :ref:`overview_dev`, configuration takes place at
+:ref:`overview_dev_board_config` and :ref:`overview_dev_config_editor` in
+the overall development process:
 
 .. image:: ../getting-started/images/overview_flow.png
 
-ACRN source also includes makefile targets to aid customization. See :ref:`hypervisor-make-options`.
+ACRN source also includes makefile targets to aid customization. See
+:ref:`hypervisor-make-options`.
 
 .. _acrn_config_data:
 
 ACRN Configuration Data
 ***********************
 
-The following sections explain the format of the board, scenario, and launch configuration files. Although we recommend using the ACRN configuration toolset to create these files, this reference may be useful for advanced usage and troubleshooting.
+The following sections explain the format of the board, scenario, and launch
+configuration files. Although we recommend using the ACRN configuration toolset
+to create these files, this reference may be useful for advanced usage and
+troubleshooting.
 
 ACRN source code offers predefined XMLs in the ``misc/config_tools/data/``
 directory of the ``acrn-hypervisor`` repo.
@@ -153,7 +161,8 @@ The ``board`` attribute defines the board name and must match the
 configuration file. The file name of the board configuration file
 (example: ``my_board.xml``) doesn’t affect the board name.
 
-Board XML files are input to the ACRN configurator tool and the build system, and are not intended for end users to modify.
+Board XML files are input to the ACRN configurator tool and the build system,
+and are not intended for end users to modify.
 
 Scenario XML Format
 ===================
@@ -168,7 +177,8 @@ The scenario XML has an ``acrn-config`` root element as well as ``board`` and
 The ``board`` attribute specifies the board name and must match the ``board``
 attribute in the board configuration file.
 
-The ``scenario`` attribute specifies the scenario name, followed by hypervisor and VM settings.
+The ``scenario`` attribute specifies the scenario name, followed by hypervisor
+and VM settings.
 
 See :ref:`scenario-config-options` for a full explanation of available scenario
 XML elements.

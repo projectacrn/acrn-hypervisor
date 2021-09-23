@@ -7,7 +7,8 @@ The ACRN hypervisor source code provides a makefile to build the ACRN
 hypervisor binary and associated components.
 
 Assuming that you are at the top level of the ``acrn-hypervisor`` directory,
-you can run the ``make`` command to start the build. See :ref:`acrn_configuration_tool` for information about required input files.
+you can run the ``make`` command to start the build. See
+:ref:`acrn_configuration_tool` for information about required input files.
 
 Build Options
 *************

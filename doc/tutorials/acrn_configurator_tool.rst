@@ -45,7 +45,8 @@ overview of what to expect:
 Generate a Scenario Configuration File and Launch Scripts
 *********************************************************
 
-The following steps describe all options in the ACRN configurator for generating a custom scenario configuration file and launch scripts.
+The following steps describe all options in the ACRN configurator for generating
+a custom scenario configuration file and launch scripts.
 
 #. Make sure the development computer is set up and ready to launch the ACRN
    configurator, according to :ref:`gsg-dev-setup` in the Getting Started Guide.
@@ -68,7 +69,7 @@ The following steps describe all options in the ACRN configurator for generating
 
 #. Start the scenario configuration process by selecting an option from the
    **Scenario Setting** menu on the top banner of the UI or by importing a
-   scenario configuration file via the **Import XML** button. The 4 options
+   scenario configuration file via the **Import XML** button. The four options
    are described below:
 
    * Click **Create a new scenario** from the **Scenario Setting** menu to
@@ -131,7 +132,8 @@ The following steps describe all options in the ACRN configurator for generating
    .. image:: images/err_acrn_configuration.png
       :align: center
 
-   After the scenario is saved, the page automatically displays the saved scenario configuration file.
+   After the scenario is saved, the page automatically displays the saved
+   scenario configuration file.
 
 #. To delete a scenario configuration file, click **Export XML** > **Remove**.
    The configurator will delete the loaded file, even if you change the name of
@@ -144,7 +146,7 @@ The following steps describe all options in the ACRN configurator for generating
 #. Start the launch script configuration process by
    selecting an option from the **Launch Setting** menu on the top banner of
    the UI or by importing a launch configuration file via the **Import XML**
-   button. The 4 options are described below:
+   button. The four options are described below:
 
    * Click **Create a new launch script** from the **Launch Setting** menu to
      dynamically create a new launch configuration for the current board.
