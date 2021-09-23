@@ -178,6 +178,8 @@ void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
 
 void vdev_pt_hide_sriov_cap(struct pci_vdev *vdev);
 
+int32_t check_pt_dev_pio_bars(struct pci_vdev *vdev);
+
 typedef void (*map_pcibar)(struct pci_vdev *vdev, uint32_t bar_idx);
 typedef void (*unmap_pcibar)(struct pci_vdev *vdev, uint32_t bar_idx);
 void vpci_update_one_vbar(struct pci_vdev *vdev, uint32_t bar_idx, uint32_t val, map_pcibar map_cb, unmap_pcibar unmap_cb);

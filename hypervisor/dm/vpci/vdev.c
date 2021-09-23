@@ -149,6 +149,27 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 	vdev->vbars[idx].base_gpa = base;
 }
 
+int32_t check_pt_dev_pio_bars(struct pci_vdev *vdev)
+{
+	int32_t ret = 0;
+	uint32_t idx;
+
+	if (vdev->pdev != NULL) {
+		for (idx = 0U; idx < vdev->nr_bars; idx++) {
+			if ((is_pci_io_bar(&vdev->vbars[idx])) && (vdev->vbars[idx].base_gpa != vdev->vbars[idx].base_hpa)) {
+				ret = -EIO;
+				pr_err("%s, PCI:%02x:%02x.%x PIO BAR%d isn't identical mapping, "
+					"host start addr is 0x%lx, while guest start addr is 0x%lx",
+					__func__, vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx,
+					vdev->vbars[idx].base_hpa, vdev->vbars[idx].base_gpa);
+				break;
+			}
+		}
+	}
+
+	return ret;
+}
+
 void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 {
 	struct pci_vbar *vbar;
