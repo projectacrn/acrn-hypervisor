@@ -7,8 +7,7 @@ As explained in :ref:`acrn_configuration_tool`, launch configuration files
 define post-launched User VM settings. This document describes these option settings.
 
 ``uos``:
-  Specify the User VM with its relative ID to Service VM by the ``id``
-  attribute.
+  Specify the User VM ``id`` to the Service VM.
 
 ``uos_type``:
   Specify the User VM type, such as ``CLEARLINUX``, ``ANDROID``, ``ALIOS``,
@@ -22,10 +21,8 @@ define post-launched User VM settings. This document describes these option sett
   Specify the User VM memory size in megabytes.
 
 ``gvt_args``:
-  GVT arguments for the VM. Set it to ``gvtd`` for GVT-d, otherwise it's
-  for GVT-g arguments.  The GVT-g input format:
-  ``low_gm_size high_gm_size fence_sz``,
-  The recommendation is ``64 448 8``.  Leave it blank to disable the GVT.
+  GVT arguments for the VM. Set it to ``gvtd`` for GVT-d. Leave it blank
+  to disable the GVT.
 
 ``vbootloader``:
   Virtual bootloader type; currently only supports OVMF.
@@ -41,7 +38,7 @@ define post-launched User VM settings. This document describes these option sett
   power button, or vUART.
 
 ``allow_trigger_s5``:
-  Allow VM to trigger s5 shutdown flow, this flag works with
+  Allow the VM to trigger S5 shutdown flow. This flag works with
   ``poweroff_channel``
   ``vuart1(pty)`` and ``vuart1(tty)`` only.
 
