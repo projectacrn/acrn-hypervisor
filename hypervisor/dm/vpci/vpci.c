@@ -41,7 +41,7 @@
 #include <board_info.h>
 
 
-static void vpci_init_vdevs(struct acrn_vm *vm);
+static int32_t vpci_init_vdevs(struct acrn_vm *vm);
 static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
 static int32_t vpci_write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bdf bdf);
@@ -205,7 +205,7 @@ static int32_t vpci_mmio_cfg_access(struct io_request *io_req, void *private_dat
  * @pre vm != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
  */
-void init_vpci(struct acrn_vm *vm)
+int32_t init_vpci(struct acrn_vm *vm)
 {
 	struct vm_io_range pci_cfgaddr_range = {
 		.base = PCI_CONFIG_ADDR,
@@ -219,6 +219,7 @@ void init_vpci(struct acrn_vm *vm)
 
 	struct acrn_vm_config *vm_config;
 	struct pci_mmcfg_region *pci_mmcfg;
+	int32_t ret = 0;
 
 	vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
 
@@ -242,20 +243,24 @@ void init_vpci(struct acrn_vm *vm)
 	}
 
 	/* Build up vdev list for vm */
-	vpci_init_vdevs(vm);
+	ret = vpci_init_vdevs(vm);
 
-	register_mmio_emulation_handler(vm, vpci_mmio_cfg_access, vm->vpci.pci_mmcfg.address,
-		vm->vpci.pci_mmcfg.address + get_pci_mmcfg_size(&vm->vpci.pci_mmcfg), &vm->vpci, false);
+	if (ret == 0) {
+		register_mmio_emulation_handler(vm, vpci_mmio_cfg_access, vm->vpci.pci_mmcfg.address,
+			vm->vpci.pci_mmcfg.address + get_pci_mmcfg_size(&vm->vpci.pci_mmcfg), &vm->vpci, false);
 
-	/* Intercept and handle I/O ports CF8h */
-	register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
-		vpci_pio_cfgaddr_read, vpci_pio_cfgaddr_write);
+		/* Intercept and handle I/O ports CF8h */
+		register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
+			vpci_pio_cfgaddr_read, vpci_pio_cfgaddr_write);
 
-	/* Intercept and handle I/O ports CFCh -- CFFh */
-	register_pio_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
-		vpci_pio_cfgdata_read, vpci_pio_cfgdata_write);
+		/* Intercept and handle I/O ports CFCh -- CFFh */
+		register_pio_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
+			vpci_pio_cfgdata_read, vpci_pio_cfgdata_write);
 
-	spinlock_init(&vm->vpci.lock);
+		spinlock_init(&vm->vpci.lock);
+	}
+
+	return ret;
 }
 
 /**
@@ -666,18 +671,25 @@ struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_c
 /**
  * @pre vm != NULL
  */
-static void vpci_init_vdevs(struct acrn_vm *vm)
+static int32_t vpci_init_vdevs(struct acrn_vm *vm)
 {
 	uint32_t idx;
 	struct acrn_vpci *vpci = &(vm->vpci);
 	const struct acrn_vm_config *vm_config = get_vm_config(vpci2vm(vpci)->vm_id);
+	int32_t ret = 0;
 
 	for (idx = 0U; idx < vm_config->pci_dev_num; idx++) {
 		/* the vdev whose vBDF is unassigned will be created by hypercall */
 		if ((!is_postlaunched_vm(vm)) || (vm_config->pci_devs[idx].vbdf.value != UNASSIGNED_VBDF)) {
 			(void)vpci_init_vdev(vpci, &vm_config->pci_devs[idx], NULL);
+			ret = check_pt_dev_pio_bars(&vpci->pci_vdevs[idx]);
+			if (ret != 0) {
+				break;
+			}
 		}
 	}
+
+	return ret;
 }
 
 /**
@@ -733,14 +745,21 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev)
 			pci_vdev_write_vbar(vdev, idx, pcidev->bar[idx]);
 		}
 
-		vdev->flags |= pcidev->type;
-		vdev->bdf.value = pcidev->virt_bdf;
-		/*We should re-add the vdev to hashlist since its vbdf has changed */
-		hlist_del(&vdev->link);
-		hlist_add_head(&vdev->link, &vpci->vdevs_hlist_heads[hash64(vdev->bdf.value, VDEV_LIST_HASHBITS)]);
-		vdev->parent_user = vdev_in_sos;
+		ret = check_pt_dev_pio_bars(vdev);
+
+		if (ret == 0) {
+			vdev->flags |= pcidev->type;
+			vdev->bdf.value = pcidev->virt_bdf;
+			/*We should re-add the vdev to hashlist since its vbdf has changed */
+			hlist_del(&vdev->link);
+			hlist_add_head(&vdev->link, &vpci->vdevs_hlist_heads[hash64(vdev->bdf.value, VDEV_LIST_HASHBITS)]);
+			vdev->parent_user = vdev_in_sos;
+			vdev_in_sos->user = vdev;
+		} else {
+			vdev->vdev_ops->deinit_vdev(vdev);
+			vdev_in_sos->vdev_ops->init_vdev(vdev_in_sos);
+		}
 		spinlock_release(&tgt_vm->vpci.lock);
-		vdev_in_sos->user = vdev;
 	} else {
 		pr_fatal("%s, can't find PCI device %x:%x.%x for vm[%d] %x:%x.%x\n", __func__,
 			pcidev->phys_bdf >> 8U, (pcidev->phys_bdf >> 3U) & 0x1fU, pcidev->phys_bdf & 0x7U,
