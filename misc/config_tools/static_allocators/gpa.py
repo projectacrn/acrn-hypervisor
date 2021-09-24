@@ -72,10 +72,14 @@ VMSIX_VBAR_SIZE = 4 * SIZE_K
 
 # Constant for VIRT_ACPI_NVS_ADDR
 """
-VIRT_ACPI_NVS_ADDR needs to be consistant with the layout of hypervisor\arch\x86\guest\ve820.c
+VIRT_ACPI_NVS_ADDR, PRE_RTVM_SW_SRAM_BASE_GPA and PRE_RTVM_SW_SRAM_MAX_SIZE
+need to be consistant with the layout of hypervisor\arch\x86\guest\ve820.c
 """
 VIRT_ACPI_NVS_ADDR = 0x7FF00000
 RESERVED_NVS_AREA = 0xB0000
+
+PRE_RTVM_SW_SRAM_BASE_GPA = 0x7F5FB000
+PRE_RTVM_SW_SRAM_MAX_SIZE = 0x800000
 
 class AddrWindow(namedtuple(
         "AddrWindow", [
@@ -488,8 +492,8 @@ def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
                 allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
                 if allocation_vm_node is None:
                     allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
-                common.append_node("./ssram/start_gpa", hex(start), allocation_vm_node)
-                common.append_node("./ssram/end_gpa", hex(end), allocation_vm_node)
+                common.append_node("./ssram/start_gpa", hex(PRE_RTVM_SW_SRAM_BASE_GPA), allocation_vm_node)
+                common.append_node("./ssram/end_gpa", hex(PRE_RTVM_SW_SRAM_BASE_GPA + (end - start)), allocation_vm_node)
 
 def allocate_log_area(board_etree, scenario_etree, allocation_etree):
     tpm2_enabled = common.get_node(f"//vm[@id = '0']/mmio_resources/TPM2/text()", scenario_etree)
