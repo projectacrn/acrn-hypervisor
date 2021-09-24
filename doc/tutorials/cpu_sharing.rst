@@ -86,8 +86,9 @@ Scheduler
 *********
 
 The below block diagram shows the basic concept for the scheduler. There
-are two kinds of schedulers in the diagram: NOOP (No-Operation) scheduler
-and BVT (Borrowed Virtual Time) scheduler.
+are four kinds of schedulers in the diagram: NOOP (No-Operation) scheduler,
+the IO sensitive Round Robin scheduler, the priority based scheduler and
+the BVT (Borrowed Virtual Time) scheduler. By default, BVT is used.
 
 
 - **No-Operation scheduler**:
@@ -98,6 +99,21 @@ and BVT (Borrowed Virtual Time) scheduler.
   With this scheduler, vCPU works in Work-Conserving mode, which always
   tries to keep resources busy, and will run once it is ready. The idle thread
   can run when the vCPU thread is blocked.
+
+- **IO sensitive Round Robin scheduler**:
+
+  The IORR (IO sensitive Round Robin) scheduler supports multiple vCPUs running
+  on one pCPU, scheduled by a IO sensitive round robin policy.
+
+- **Priority based scheduler**:
+
+  The priority based scheduler can support vCPU scheduling based on their
+  pre-configured priorities. A vCPU can be running only if there is no
+  higher priority vCPU running on the same pCPU. For example, in some cases,
+  we have two VM, one VM can be configured to use **PRIO_LOW** and the
+  other one to use **PRIO_HIGH**, then the vCPU of the **PRIO_LOW** VM can
+  only be running when the vCPU of the "PRIO_HIGH" VM voluntarily relinquish
+  the usage of the pCPU.
 
 - **Borrowed Virtual Time scheduler**:
 
