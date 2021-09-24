@@ -89,7 +89,6 @@ Advanced Features
    tutorials/acrn-secure-boot-with-efi-stub
    tutorials/pre-launched-rt
    tutorials/enable_ivshmem
-   tutorials/enable_ptm
 
 Debug
 *****
