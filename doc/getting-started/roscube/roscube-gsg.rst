@@ -183,7 +183,7 @@ Configure Hypervisor
    .. figure:: images/rqi-acrn-config-hv-settings.png
 
 #. Settings "VM0": Select the hard disk currently used.
-   If you system need some special bootargs (like "video=eDP-1:d"),
+   If you system need some special bootargs (like ``video=eDP-1:d``),
    you can add it below.
 
    .. figure:: images/rqi-acrn-config-vm0-settings.png
