@@ -104,7 +104,6 @@ formatting, and presentation:
 * :ref:`virtio-net`
 * :ref:`acrn_on_qemu`
 * :ref:`cpu_sharing`
-* :ref:`enable-ptm`
 * :ref:`nested_virt`
 * :ref:`setup_openstack_libvirt`
 * :ref:`using_hybrid_mode_on_nuc`
