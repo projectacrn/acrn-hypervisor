@@ -284,13 +284,13 @@ Generate a Board Configuration File
 
       .. code-block:: bash
 
-         idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable
+         idle=nomwait iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable
 
       Example:
 
       .. code-block:: bash
 
-         GRUB_CMDLINE_LINUX_DEFAULT="quiet splash idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
+         GRUB_CMDLINE_LINUX_DEFAULT="quiet splash idle=nomwait iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable"
 
       These settings allow the board inspector tool to
       gather important information about the board.

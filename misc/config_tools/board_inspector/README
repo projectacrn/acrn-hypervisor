@@ -10,4 +10,4 @@ Please run this script under native Linux environment with root privilege.
 OS requirement:
 	Release:	Ubuntu 18.04+
 	Tools:		cpuid, rdmsr, lspci, lxml, dmidecode (optional)
-	kernel cmdline: "idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
+	kernel cmdline: "idle=nomwait iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable"
