@@ -8,6 +8,7 @@
 #define RTCT_H
 
 #include <acpi.h>
+#include <ptdev.h>
 
 #include "misc_cfg.h"
 
@@ -41,7 +42,7 @@
  * placeholder entry in vE820 table of Prelaunch VM to unify the logic
  * to initialize the vE820.
  */
-#define PRE_RTVM_SW_SRAM_BASE_GPA 0x40080000U
+#define PRE_RTVM_SW_SRAM_BASE_GPA (GPU_OPREGION_GPA - PRE_RTVM_SW_SRAM_MAX_SIZE)
 #endif
 
 #define PRE_RTVM_SW_SRAM_MAX_SIZE  0x00800000U
