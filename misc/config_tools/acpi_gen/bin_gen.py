@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 import lxml.etree
 from acpi_const import *
 import acpiparser.tpm2
-import lib.cdata
+import inspectorlib.cdata
 import common
 
 def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):

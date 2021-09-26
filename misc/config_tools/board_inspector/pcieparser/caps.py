@@ -5,7 +5,7 @@
 
 import ctypes
 import copy
-import lib.cdata as cdata
+import inspectorlib.cdata as cdata
 
 class Capability:
     # Capability names from PCI Local Bus Specification and PCI Express Base Specification

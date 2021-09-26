@@ -5,117 +5,31 @@
 # please NOTE ！！！  scenario_info/board_info please add in release.json if needed !!!
 set -e
 
+#Build info Start
 
-echo "please choose <scenario> ,<board> ,<disk type>"
+SCENARIO=(shared)
 
-scenario_info=(industry hybrid logical_partition )
+BOARD=(nuc11tnbi5)
 
-board_info=(nuc7i7dnb whl-ipc-i5 )
-
-echo "Scenario is ->"
-
-scenario_num=${#scenario_info[@]}
-
-for ((i=0;i<scenario_num;i++))
-
-{
-    let s_num=i+1
-    echo  $s_num ${scenario_info[i]};
-
-}
-
-
-while :
-do
-    read num
-    if [ $num = 0 ] || [ $num -gt ${scenario_num} ]; then
-
-        echo "out of scenario scope,please retry"
-    else
-        c=$(($num-1))
-        echo "scenario is" ${scenario_info[c]};
-        SCENARIO="${scenario_info[c]}"
-        break
-    fi
-
-done
-
-echo "Board is ->"
-board_num=${#board_info[@]}
-
-for ((i=0;i<board_num;i++))
-
-{
-    let b_num=i+1
-    echo  $b_num ${board_info[i]};
-
-}
-
-
-while :
-do
-    read num2
-    if [ $num2 = 0 ] || [ $num2 -gt ${board_num} ]; then
-
-        echo "out of board scope,please retry"
-    else
-        c1=$(($num2-1))
-        echo "board is" ${board_info[c1]};
-        BOARD="${board_info[c1]}"
-        break
-    fi
-
-done
-
+#Build info End
 
 ACRNBIN="/boot/acrn.${SCENARIO}.${BOARD}.bin"
+type=$(lsblk -l |awk '$NF == "/" {print $1}')
 
-echo "Your acrn bin is ->"
-echo $ACRNBIN
-
-
-echo "disk type is ->"
-
-disk_info=(nvme sda)
-disk_num=${#disk_info[@]}
-
-for ((i=0;i<disk_num;i++))
-
-{
-    let d_num=i+1
-    echo  $d_num ${disk_info[i]};
-
-}
-
-
-while :
-do
-    read num3
-    if [ $num3 = 0 ] || [ $num3 -gt ${disk_num} ]; then
-
-        echo "out of disk scope,please retry"
-    else
-        c3=$(($num3-1))
-        echo "disk is" ${disk_info[c3]};
-        type="${disk_info[c3]}"
-        break
+pattern='^/dev/.* UUID="([^"]+)".* PARTUUID="([^"]+)"'
+while IFS= read -r line; do
+    if [[ $line =~ $pattern ]]; then
+        uuid="${BASH_REMATCH[1]}"
+        partuuid="${BASH_REMATCH[2]}"
     fi
-
-done
-
-str=$(blkid |grep ext4 |grep ${type})
-
-uuid=$(echo $str |cut -d " " -f 2|cut -d "=" -f 2)
-
-str=$(blkid |grep ext4 |grep ${type})
-
-partuuid=$(echo ${str##*PARTUUID=})
+done < <(blkid |grep ext4 |grep ${type})
 
 filename="/etc/grub.d/40_custom"
 
-kernelimg=$(grep module ${filename}|| true)
+kernelimg=$(grep module ${filename} | tail -1 || true)
 
-cat>"${filename}"<<EOF
+if [ $SCENARIO == shared ];then
+    cat>"${filename}"<<EOF
 #!/bin/sh
 exec tail -n +3 \$0
 menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
@@ -130,6 +44,42 @@ $kernelimg
 }
 
 EOF
+elif [ $SCENARIO == hybrid ];then
+    cat>"${filename}"<<EOF
+#!/bin/sh
+exec tail -n +3 \$0
+menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
+    load_video
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid  --set $uuid
+multiboot2 $ACRNBIN root=PARTUUID=$partuuid i915.modeset=0 video=efifb:off
+$kernelimg
+module2 /boot/zephyr64.elf Zephyr_ElfImage
+module2 /boot/ACPI_VM0.bin ACPI_VM0
+}
+
+EOF
+elif [ $SCENARIO == partitioned ];then
+    cat>"${filename}"<<EOF
+#!/bin/sh
+exec tail -n +3 \$0
+menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
+    load_video
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid  --set $uuid
+    echo 'loading ACRN...'
+multiboot2 $ACRNBIN root=PARTUUID=$partuuid i915.modeset=0 video=efifb:off
+$kernelimg
+module2 /boot/ACPI_VM0.bin ACPI_VM0
+module2 /boot/ACPI_VM1.bin ACPI_VM1
+}
+
+EOF
+fi
 
 filename='/etc/default/grub'
 sed -i '/GRUB_DEFAULT/d' ${filename}

@@ -9,8 +9,8 @@ import sys
 import ctypes
 import struct
 import uuid
-import lib.bitfields as bitfields
-import lib.unpack as unpack
+import inspectorlib.bitfields as bitfields
+import inspectorlib.unpack as unpack
 
 class SMBIOS(unpack.Struct):
     def __new__(cls):
