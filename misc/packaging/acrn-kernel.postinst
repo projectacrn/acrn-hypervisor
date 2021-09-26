@@ -19,7 +19,7 @@ cat>"${filename}"<<EOF
             insmod part_gpt
             insmod ext2
         search --no-floppy --fs-uuid  --set $uuid
-    multiboot2 /boot/acrn.bin root=PARTUUID=$partuuid i915.modeset=0 video=efifb:off
+    multiboot2 /boot/acrn.bin root=PARTUUID=$partuuid
 
         }
 

@@ -5,7 +5,7 @@
 
 import ctypes
 import copy
-import lib.cdata as cdata
+import inspectorlib.cdata as cdata
 
 class ExtendedCapability:
     # Capability names from PCI Express Base Specification, mostly Table 9-23

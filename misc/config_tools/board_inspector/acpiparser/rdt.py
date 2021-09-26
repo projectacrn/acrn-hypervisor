@@ -5,8 +5,8 @@
 
 import ctypes
 
-import lib.cdata as cdata
-import lib.unpack as unpack
+import inspectorlib.cdata as cdata
+import inspectorlib.unpack as unpack
 
 # 6.4.2 Small Resource Data Type
 

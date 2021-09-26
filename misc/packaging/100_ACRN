@@ -1,0 +1,56 @@
+#!/bin/bash
+#* Copyright (c) 2020 Intel Corporation All rights reserved.
+# postinst script for acrn kernel
+set -e
+
+if [ -f /usr/lib/grub/grub-mkconfig_lib ]; then
+  . /usr/lib/grub/grub-mkconfig_lib
+  LX=linux16
+elif [ -f /usr/lib/grub/update-grub_lib ]; then
+  . /usr/lib/grub/update-grub_lib
+  LX=linux
+else
+  # no grub file, so we notify and exit gracefully
+  echo "Cannot find grub config file, exiting." >&2
+  exit 0
+fi
+
+filename="/etc/grub.d/40_custom"
+menu=$(grep ACRN_deb_multiboot2 ${filename}) || true
+
+type=$(lsblk -l |awk '$NF == "/" {print $1}')
+pattern='^/dev/.* UUID="([^"]+)".* PARTUUID="([^"]+)"'
+while IFS= read -r line; do
+    if [[ $line =~ $pattern ]]; then
+        uuid="${BASH_REMATCH[1]}"
+        partuuid="${BASH_REMATCH[2]}"
+    fi
+done < <(blkid |grep ext4 |grep ${type})
+
+if ls /boot/vmlinuz*acrn-sos* 1> /dev/null 2>&1;then
+    sos_kernel=$(ls -tr /boot/vmlinuz-*acrn-sos* | tail -1)
+else
+    sos_kernel=$(ls /boot/vmlinuz-* | tail -1)
+fi
+
+if [ -z "$menu" ];then
+cat>"${filename}"<<EOF
+    #!/bin/sh
+    exec tail -n +3 \$0
+    menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
+            load_video
+            insmod gzio
+            insmod part_gpt
+            insmod ext2
+        search --no-floppy --fs-uuid  --set $uuid
+    multiboot2 /boot/acrn.bin root=PARTUUID=$partuuid
+
+        }
+
+EOF
+fi
+
+sed -i '/Linux_bzImage/d' ${filename} || true
+sed -i '/multiboot2 \/boot/a\module2 '$sos_kernel' Linux_bzImage' ${filename}
+
+sync

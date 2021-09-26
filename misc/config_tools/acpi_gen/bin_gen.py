@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 import lxml.etree
 from acpi_const import *
 import acpiparser.tpm2
-import lib.cdata
+import inspectorlib.cdata
 import common
 
 def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):
@@ -91,9 +91,9 @@ def tpm2_acpi_gen(acpi_bin, board_etree, scenario_etree, allocation_etree):
             if common.get_node("//capability[@id = 'log_area']", board_etree) is not None:
                 ctype_data.log_area_minimum_length = int(common.get_node("//log_area_minimum_length/text()", allocation_etree), 16)
                 ctype_data.log_area_start_address = int(common.get_node("//log_area_start_address/text()", allocation_etree), 16)
-            ctype_data.header.checksum = (~(sum(lib.cdata.to_bytes(ctype_data))) + 1) & 0xFF
+            ctype_data.header.checksum = (~(sum(inspectorlib.cdata.to_bytes(ctype_data))) + 1) & 0xFF
             acpi_bin.seek(ACPI_TPM2_ADDR_OFFSET)
-            acpi_bin.write(lib.cdata.to_bytes(ctype_data))
+            acpi_bin.write(inspectorlib.cdata.to_bytes(ctype_data))
         else:
             logging.warning("Passtrhough tpm2 is enabled in scenario but the device is not presented on board.")
             logging.warning("Check there is tpm2 device on board and re-generate the xml using board inspector with --advanced option.")
