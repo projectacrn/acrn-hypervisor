@@ -1,0 +1,18 @@
+#!/bin/bash
+#* Copyright (c) 2020 Intel Corporation SPDX-License-Identifier: BSD-3-Clause
+# postinst script for acrn-board-inspector
+
+set -e
+
+filename='/etc/default/grub'
+sed -i '/GRUB_DEFAULT/d' ${filename}
+sed -i '/GRUB_TIMEOUT/d' ${filename}
+sed -i '/GRUB_HIDDEN_TIMEOUT/d' ${filename}
+sed -i '/GRUB_CMDLINE_LINUX_DEFAULT/d' ${filename}
+sed -i '$a GRUB_CMDLINE_LINUX_DEFAULT="quiet splash idle=nomwait iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable"' ${filename}
+sed -i '$a GRUB_TIMEOUT=20' ${filename}
+
+sync
+update-grub
+
+exit 0

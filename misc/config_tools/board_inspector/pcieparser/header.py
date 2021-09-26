@@ -5,7 +5,7 @@
 
 import ctypes
 import copy
-import lib.cdata as cdata
+import inspectorlib.cdata as cdata
 
 class Common(cdata.Struct):
     _pack_ = 1

@@ -83,6 +83,7 @@ ASL_COMPILER ?= $(shell which iasl)
 .PHONY: all hypervisor devicemodel tools life_mngr doc
 all: hypervisor devicemodel tools
 	@cat $(HV_CFG_LOG)
+	@python3 misc/packaging/gen_acrn_deb.py acrn_all $(ROOT_OUT) --version=$(FULL_VERSION) --board_name=$(BOARD) --scenario=$(SCENARIO)
 
 #help functions to build acrn and install acrn/acrn symbols
 define build_acrn
@@ -99,6 +100,8 @@ define install_acrn_debug
 endef
 
 HV_MAKEOPTS := -C $(T)/hypervisor BOARD=$(BOARD) SCENARIO=$(SCENARIO) HV_OBJDIR=$(HV_OUT) RELEASE=$(RELEASE)
+board_inspector:
+	@python3 misc/packaging/gen_acrn_deb.py board_inspector $(ROOT_OUT) --version=$(FULL_VERSION)
 
 hypervisor: hvdefconfig
 	$(MAKE) $(HV_MAKEOPTS)
