@@ -45,10 +45,10 @@
 #define	PCI_EMUL_MEMBASE64	0x100000000UL	/* 4GB */
 #define	PCI_EMUL_MEMLIMIT64	0x140000000UL	/* 5GB */
 
-/* Currently,only gvt need reserved bar regions,
- * so just hardcode REGION_NUMS=5 here
+/*
+ * GVT BARs + PTDEV IO BARs
  */
-#define REGION_NUMS 5
+#define REGION_NUMS 32
 
 struct vmctx;
 struct pci_vdev;
