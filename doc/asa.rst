@@ -3,6 +3,21 @@
 Security Advisory
 #################
 
+Addressed in ACRN v2.6
+************************
+
+We recommend that all developers upgrade to this v2.6 release (or later), which
+addresses the following security issue discovered in previous releases:
+
+-----
+
+-  Memory leakage vulnerability in ``devicemodel/hw/pci/xhci.c``
+    De-initializing of emulated USB devices results in a memory leakage issue
+    as some resources allocated for transfer are not properly released.
+
+    **Affected Release:** v2.5 and earlier.
+
+
 Addressed in ACRN v2.5
 ************************
 
