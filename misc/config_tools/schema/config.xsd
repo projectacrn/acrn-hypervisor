@@ -411,7 +411,7 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
 argument and memory.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="legacy_vuart" type="LegacyVuartConfiguration" minOccurs="2" maxOccurs="2">
+    <xs:element name="legacy_vuart" type="LegacyVuartConfiguration" minOccurs="2" maxOccurs="8">
       <xs:annotation>
         <xs:documentation>Specify the vUART (aka COM) with the vUART ID by its ``id`` attribute.
 Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
