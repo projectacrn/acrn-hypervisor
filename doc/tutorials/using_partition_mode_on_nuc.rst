@@ -23,7 +23,7 @@ Validated Versions
 Prerequisites
 *************
 
-* `Intel Whiskey Lake <http://www.maxtangpc.com/industrialmotherboards/142.html#parameters>`_
+* `Intel NUC Kit NUC11TNBi5 <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_.
 * NVMe disk
 * SATA disk
 * Storage device with USB interface (such as USB Flash
@@ -45,7 +45,7 @@ Update Kernel Image and Modules of Pre-Launched VM
 #. On the local Ubuntu target machine, find the kernel file,
    copy to your (``/boot`` directory) and name the file ``bzImage``.
    The ``uname -r`` command returns the kernel release, for example,
-   ``5.11.0-34-generic``):
+   ``4.15.0-55-generic``):
 
    .. code-block:: none
 
@@ -132,7 +132,7 @@ Update ACRN Hypervisor Image
       $ cd acrn-hypervisor
       $ git checkout v2.6
 
-#. Check the ``pci_devs`` sections in ``misc/config_tools/data/nuc7i7dnb/logical_partition.xml``
+#. Check the ``pci_devs`` sections in ``misc/config_tools/data/nuc11tnbi5/logical_partition.xml``
    for each pre-launched VM to ensure you are using the right PCI device BDF information (as
    reported by ``lspci -vv``). If you need to make changes to this file, create a copy of it and
    use it subsequently when building ACRN (``SCENARIO=/path/to/newfile.xml``).
@@ -141,7 +141,7 @@ Update ACRN Hypervisor Image
 
    .. code-block:: none
 
-      $ make hypervisor BOARD=nuc7i7dnb  SCENARIO=logical_partition RELEASE=0
+      $ make hypervisor BOARD=nuc11tnbi5  SCENARIO=logical_partition RELEASE=0
 
    .. note::
       The ``acrn.bin`` will be generated to ``./build/hypervisor/acrn.bin``.
@@ -197,9 +197,9 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
       Update the UUID (``--set``) and PARTUUID (``root=`` parameter)
       (or use the device node directly) of the root partition (e.g.``/dev/nvme0n1p2). Hint: use ``sudo blkid``.
       The kernel command-line arguments used to boot the pre-launched VMs is ``bootargs``
-      in the ``misc/config_tools/data/nuc7i7dnb/logical_partition.xml``
+      in the ``misc/config_tools/data/nuc11tnbi5/logical_partition.xml``
       The ``module2 /boot/bzImage`` param ``XXXXXX`` is the bzImage tag and must exactly match the ``kern_mod``
-      in the ``misc/config_tools/data/nuc7i7dnb/logical_partition.xml`` file.
+      in the ``misc/config_tools/data/nuc11tnbi5/logical_partition.xml`` file.
       The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0, the parameter ``ACPI_VM0`` is
       VM0's ACPI tag and should not be modified.
       The module ``/boot/ACPI_VM1.bin`` is the binary of ACPI tables for pre-launched VM1 the parameter ``ACPI_VM1`` is

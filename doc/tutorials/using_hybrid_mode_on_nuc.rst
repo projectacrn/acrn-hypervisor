@@ -32,7 +32,7 @@ as shown in :numref:`hybrid_scenario_on_nuc`.
 Set-up base installation
 ************************
 
-- Use the `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_.
+- Use the `Intel NUC Kit NUC11TNBi5 <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_.
 - Connect to the serial port as described in :ref:`Connecting to the serial port <connect_serial_port>`.
 - Install Ubuntu 18.04 on your SATA device or on the NVME disk of your
   Intel NUC.
@@ -58,9 +58,9 @@ Set-up ACRN on your device
 **************************
 
 - Follow the instructions in :Ref:`gsg` to build ACRN using the
-  ``hybrid`` scenario. Here is the build command-line for the `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_::
+  ``hybrid`` scenario. Here is the build command-line for the `Intel NUC Kit NUC11TNBi5 <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_::
 
-     make BOARD=nuc7i7dnb SCENARIO=hybrid
+   make clean && make BOARD=nuc11tnbi5 SCENARIO=hybrid
 
 - Install the ACRN hypervisor and tools
 
@@ -112,12 +112,12 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
      
    .. note:: The module ``/boot/zephyr.elf`` is the VM0 (Zephyr) kernel file.
       The param ``xxxxxx`` is VM0's kernel file tag and must exactly match the
-      ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``
+      ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``
       file. The multiboot module ``/boot/bzImage`` is the Service VM kernel
       file. The param ``yyyyyy`` is the bzImage tag and must exactly match the
-      ``kern_mod`` of VM1 in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``
+      ``kern_mod`` of VM1 in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``
       file. The kernel command-line arguments used to boot the Service VM are
-      ``bootargs`` of VM1 in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``.
+      ``bootargs`` of VM1 in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``.
       The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0 (Zephyr).
       The parameter ``ACPI_VM0`` is VM0's ACPI tag and should not be modified.
 
