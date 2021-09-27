@@ -37,7 +37,6 @@
     <xsl:if test="count(vm[acrn:is-sos-vm(vm_type)])">
       <xsl:call-template name="sos_rootfs" />
       <xsl:call-template name="sos_serial_console" />
-      <xsl:call-template name="sos_com_vuarts" />
       <xsl:call-template name="sos_bootargs_diff" />
     </xsl:if>
     <xsl:call-template name="cpu_affinity" />
@@ -86,28 +85,6 @@
     </xsl:if>
   </xsl:variable>
   <xsl:value-of select="acrn:define('SOS_CONSOLE', $sos_console, '')" />
-</xsl:template>
-
-<xsl:template name="sos_com_vuarts">
-  <xsl:for-each select="vm">
-    <xsl:if test="acrn:is-sos-vm(vm_type)">
-      <xsl:choose>
-        <xsl:when test="legacy_vuart[@id = 0]/base[text() != 'INVALID_COM_BASE']">
-          <xsl:value-of select="acrn:define('SOS_COM1_BASE', //allocation-data/acrn-config/vm[acrn:is-sos-vm(vm_type)]/legacy_vuart[@id = 0]/base, 'U')" />
-          <xsl:value-of select="acrn:define('SOS_COM1_IRQ', //allocation-data/acrn-config/vm[acrn:is-sos-vm(vm_type)]/legacy_vuart[@id = 0]/irq, 'U')" />
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="acrn:define('SOS_COM1_BASE', '0', 'U')" />
-          <xsl:value-of select="acrn:define('SOS_COM1_IRQ', '0', 'U')" />
-        </xsl:otherwise>
-      </xsl:choose>
-      <xsl:if test="legacy_vuart[@id = 1]/base[text() != 'INVALID_COM_BASE']">
-        <xsl:value-of select="acrn:define('SOS_COM2_BASE', //allocation-data/acrn-config/vm[acrn:is-sos-vm(vm_type)]/legacy_vuart[@id = 1]/base, 'U')" />
-        <xsl:value-of select="acrn:define('SOS_COM2_IRQ', //allocation-data/acrn-config/vm[acrn:is-sos-vm(vm_type)]/legacy_vuart[@id = 1]/irq, 'U')" />
-      </xsl:if>
-      <xsl:value-of select="$newline" />
-    </xsl:if>
-  </xsl:for-each>
 </xsl:template>
 
 <xsl:template name="sos_bootargs_diff">
