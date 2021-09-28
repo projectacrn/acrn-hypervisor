@@ -18,19 +18,19 @@
 
 #define DBG_LEVEL_VM_BZIMAGE	6U
 
-/* Define a 32KB memory block to store LaaG VM load params in guest address space
+/* Define a memory block to store LaaG VM load params in guest address space
  * The params including:
  *	Init GDT entries : 1KB (must be 8byte aligned)
  *	Linux Zeropage : 4KB
  *	Boot cmdline : 2KB
- *	EFI memory map : 12KB
+ *	EFI memory map : MAX_EFI_MMAP_ENTRIES * sizeof(struct efi_memory_desc)
  *	Reserved region for trampoline code : 8KB
- * Each param should keep 8byte aligned and the total region size should be less than 32KB
- * so that it could be put below MEM_1M.
+ * Each param should keep 8byte aligned and the total region should be able to put below MEM_1M.
  * Please note in Linux VM, the last 8KB space below MEM_1M is for trampoline code. The block
- * should be able to accommodate it and so that avoid the trampoline corruption.
+ * should be able to accommodate it so that avoid the trampoline corruption. So the params size is:
+ * (MEM_1K + MEM_4K + MEM_2K + 40B * MAX_EFI_MMAP_ENTRIES + MEM_8K)
  */
-#define BZIMG_LOAD_PARAMS_SIZE			(MEM_4K * 8)
+#define BZIMG_LOAD_PARAMS_SIZE			(MEM_1K * 15U + MAX_EFI_MMAP_ENTRIES * sizeof(struct efi_memory_desc))
 #define BZIMG_INITGDT_GPA(load_params_gpa)	((load_params_gpa) + 0UL)
 #define BZIMG_ZEROPAGE_GPA(load_params_gpa)	((load_params_gpa) + MEM_1K)
 #define BZIMG_CMDLINE_GPA(load_params_gpa)	((load_params_gpa) + MEM_1K + MEM_4K)
