@@ -41,7 +41,7 @@ The following table shows ACRN-specific command-line options:
      - Optional. Path to the directory where the built files will be stored.
        (Default is the ``build`` directory.)
 
-The following table shows ACRN-specific targets:
+The following table shows ACRN-specific targets. The default target (if no target is specified on the command-line) is to build the ``hypervisor``, ``devicemodel``, and ``tools``.
 
 .. list-table::
    :widths: 33 77
