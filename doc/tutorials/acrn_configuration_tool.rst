@@ -157,10 +157,10 @@ The board XML has an ``acrn-config`` root element and a
 
    <acrn-config board="BOARD">
 
-The ``board`` attribute defines the board name and must match the
-``board`` attribute in the scenario configuration file and the launch
+The ``board`` attribute defines the board name and must match the
+``board`` attribute in the scenario configuration file and the launch
 configuration file. The file name of the board configuration file
-(example: ``my_board.xml``) doesn’t affect the board name.
+(example: ``my_board.xml``) doesn't affect the board name.
 
 Board XML files are input to the ACRN configurator tool and the build system,
 and are not intended for end users to modify.
