@@ -8,7 +8,7 @@ This guide describes all features and uses of the tool.
 About the ACRN Configurator Tool
 *********************************
 
-The ACRN configurator tool ``acrn_configurator.py`` provides a web-based
+The ACRN configurator tool ``acrn_configurator.py`` provides a web-based
 user interface to help you customize your
 :ref:`ACRN configuration <acrn_configuration_tool>`. Capabilities:
 
@@ -51,7 +51,7 @@ a custom scenario configuration file and launch scripts.
 #. Make sure the development computer is set up and ready to launch the ACRN
    configurator, according to :ref:`gsg-dev-setup` in the Getting Started Guide.
 
-#. Launch the ACRN configurator. This example assumes the tool is in the
+#. Launch the ACRN configurator. This example assumes the tool is in the
    ``~/acrn-work/`` directory. Feel free to modify the command as needed.
 
    .. code-block:: bash
@@ -72,19 +72,19 @@ a custom scenario configuration file and launch scripts.
    scenario configuration file via the **Import XML** button. The four options
    are described below:
 
-   * Click **Create a new scenario** from the **Scenario Setting** menu to
+   * Click **Create a new scenario** from the **Scenario Setting** menu to
      dynamically create a new scenario configuration for the current board.
 
-   * Click **Load a default scenario** from the **Scenario Setting** menu to
+   * Click **Load a default scenario** from the **Scenario Setting** menu to
      select a :ref:`predefined scenario configuration <usage-scenarios>`.
 
-   * Click the **Scenario Setting** menu and select a scenario from the list
+   * Click the **Scenario Setting** menu and select a scenario from the list
      under **scenario setting list**.
 
    .. image:: images/choose_scenario.png
       :align: center
 
-   * Click the **Import XML** button to import a customized scenario
+   * Click the **Import XML** button to import a customized scenario
      configuration file.
      The file must be one that was written for the current board. Any mismatch
      in the board name and the one found in the scenario configuration file you
@@ -106,10 +106,10 @@ a custom scenario configuration file and launch scripts.
 
 #. Add or delete VMs:
 
-   * Click **Add a VM below** in a VM’s settings, and then select a VM type
+   * Click **Add a VM below** in a VM's settings, and then select a VM type
      to add a new VM under the current VM.
 
-   * Click **Remove this VM** in a VM’s settings to remove the VM from the
+   * Click **Remove this VM** in a VM's settings to remove the VM from the
      scenario.
 
    When a VM is added or removed, the configurator reassigns the VM IDs for
@@ -119,11 +119,10 @@ a custom scenario configuration file and launch scripts.
    .. image:: images/configure_vm_add.png
       :align: center
 
-#. Click **Export XML** to save the scenario configuration file. A dialog box
+#. Click **Export XML** to save the scenario configuration file. A dialog box
    appears, enabling you to save the file to a specific folder by inputting the
-   absolute path to this folder. If you don’t specify a path, the file will be
-   saved to the default folder:
-    ``acrn-hypervisor/../user_config/<board name>``.
+   absolute path to this folder. If you don't specify a path, the file will be
+   saved to the default folder: ``acrn-hypervisor/../user_config/<board name>``.
 
    Before saving the scenario configuration file, the configurator validates
    the configurable items. If errors exist, the configurator lists all
@@ -135,7 +134,7 @@ a custom scenario configuration file and launch scripts.
    After the scenario is saved, the page automatically displays the saved
    scenario configuration file.
 
-#. To delete a scenario configuration file, click **Export XML** > **Remove**.
+#. To delete a scenario configuration file, click **Export XML** > **Remove**.
    The configurator will delete the loaded file, even if you change the name of
    the file in the dialog box.
 
@@ -148,23 +147,23 @@ a custom scenario configuration file and launch scripts.
    the UI or by importing a launch configuration file via the **Import XML**
    button. The four options are described below:
 
-   * Click **Create a new launch script** from the **Launch Setting** menu to
+   * Click **Create a new launch script** from the **Launch Setting** menu to
      dynamically create a new launch configuration for the current board.
 
-   * Click **Load a default launch script** from the **Launch Setting** menu to
+   * Click **Load a default launch script** from the **Launch Setting** menu to
      select a predefined launch configuration.
 
-   * Click the **Launch Setting** menu and select a launch configuration
+   * Click the **Launch Setting** menu and select a launch configuration
      from the list under **launch setting list**.
 
    .. image:: images/choose_launch.png
       :align: center
 
-   * Click the **Import XML** button to import a customized launch
+   * Click the **Import XML** button to import a customized launch
      configuration file.
 
 #. Select a scenario for the current launch configuration from the
-   **Select Scenario** drop-down box.
+   **Select Scenario** drop-down box.
 
 #. When the launch configuration file is available for editing, the
    configurable items appear below the **Launch Setting** row. You may need
@@ -182,28 +181,28 @@ a custom scenario configuration file and launch scripts.
 
 #. Add or remove User VM (UOS) launch scripts:
 
-   * Click **Configure an UOS below** to add a User VM launch script.
+   * Click **Configure an UOS below** to add a User VM launch script.
 
-   * Click **Remove this VM** to remove a User VM launch script.
+   * Click **Remove this VM** to remove a User VM launch script.
 
    .. image:: images/configure_launch_add.png
       :align: center
 
-#. Click **Export XML** to save the launch configuration file. A dialog box
+#. Click **Export XML** to save the launch configuration file. A dialog box
    appears, enabling you to save the file to a specific folder by inputting the
-   absolute path to this folder. If you don’t specify a path, the file will
+   absolute path to this folder. If you don't specify a path, the file will
    be saved to the default folder:
-   ``acrn-hypervisor/../user_config/<board name>``.
+   ``acrn-hypervisor/../user_config/<board name>``.
 
    Before saving the launch configuration file, the configurator validates the
    configurable items. If errors exist, the configurator lists all incorrectly
    configured items and shows the errors.
 
-#. To delete a launch configuration file, click **Export XML** > **Remove**.
+#. To delete a launch configuration file, click **Export XML** > **Remove**.
    The configurator will delete the loaded file, even if you change the name of
    the file in the dialog box.
 
-#. Click **Generate Launch Script** to save the current launch configuration
+#. Click **Generate Launch Script** to save the current launch configuration
    and then generate a launch script for each VM defined in the launch
    configuration.
 

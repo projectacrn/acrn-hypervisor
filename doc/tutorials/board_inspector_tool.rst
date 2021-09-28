@@ -35,8 +35,8 @@ a board configuration file.
       sudo modprobe msr
 
 #. Run the board inspector tool (``board_inspector.py``) to generate the board
-   configuration file. This example assumes the tool is in the
-   ``~/acrn-work/`` directory and ``my_board`` is the desired file
+   configuration file. This example assumes the tool is in the
+   ``~/acrn-work/`` directory and ``my_board`` is the desired file
    name. Feel free to modify the commands as needed.
 
    .. code-block:: bash
@@ -50,7 +50,7 @@ a board configuration file.
 
       PTCT table has been saved to PTCT successfully!
 
-#. Confirm that the board configuration file ``my_board.xml`` was generated in
+#. Confirm that the board configuration file ``my_board.xml`` was generated in
    the current directory.
 
 .. _board_inspector_cl:
@@ -67,19 +67,13 @@ board inspector with the ``-h`` option yields the following usage message:
                 [--check-device-status] board_name
 
    positional arguments:
-
      board_name            the name of the board that runs the ACRN hypervisor
 
    optional arguments:
-
      -h, --help            show this help message and exit
-
      --out OUT             the name of board info file
-
      --basic               do not extract advanced information such as ACPI namespace
-
      --loglevel LOGLEVEL   choose log level, e.g. info, warning or error
-
      --check-device-status
 
                            filter out devices whose _STA object evaluates to 0
