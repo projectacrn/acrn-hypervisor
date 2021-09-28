@@ -143,8 +143,9 @@ configuration files. Although we recommend using the ACRN configuration toolset
 to create these files, this reference may be useful for advanced usage and
 troubleshooting.
 
-ACRN source code offers predefined XMLs in the ``misc/config_tools/data/``
-directory of the ``acrn-hypervisor`` repo.
+ACRN source code offers predefined XMLs, and the generic templates used for
+new boards and scenarios, in the ``misc/config_tools/data/`` directory of
+the ``acrn-hypervisor`` repo.
 
 Board XML Format
 ================
