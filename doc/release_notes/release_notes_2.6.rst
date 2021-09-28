@@ -81,7 +81,39 @@ Fixed Issues Details
 .. comment example item
    - :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
 
+- :acrn-issue:`6012` -  [Mainline][PTCM] [ConfigTool]Obsolete terms cleanup for SSRAM
+- :acrn-issue:`6284` -  [v2.6] vulnerable coding style in hypervisor and DM
+- :acrn-issue:`6340` -  [EF]Invalid LPC entry prevents GOP driver from working properly in WaaG for DP3
+- :acrn-issue:`6342` -  [v2.6] vulnerable coding style in config tool python source
+- :acrn-issue:`6360` -  ACRN Makefile missing dependencies
+- :acrn-issue:`6366` -  TPM pass-thru shall be able to support start method 6, not only support Start Method of 7
+- :acrn-issue:`6388` -  [hypercube][tgl][ADL]AddressSanitizer: SEGV virtio_console
+- :acrn-issue:`6389` -  [hv ivshmem] map SHM BAR with PAT ignored
+- :acrn-issue:`6405` -  [ADL-S][Industry][Yocto] WaaG BSOD in startup when run reboot or create/destory stability test.
+- :acrn-issue:`6417` -  ACRN ConfigTool improvement from DX view
+- :acrn-issue:`6423` -  ACPI NVS region might not be mapped on prelaunched-VM
+- :acrn-issue:`6428` -  [acrn-configuration-tool] Fail to generate launch script when disable CPU sharing
+- :acrn-issue:`6431` -  virtio_console use-after-free
+- :acrn-issue:`6434` -  HV panic when SOS VM boot 5.4 kernel
+- :acrn-issue:`6442` -  [EF]Post-launched VMs do not boot with "EFI Network" enabled
+- :acrn-issue:`6461` -  [config_tools] kernel load addr/entry addr should not be configurable for kernel type KERNEL_ELF
+- :acrn-issue:`6473` -  [HV]HV can't be used after dumpreg rtvm vcpu
+- :acrn-issue:`6476` -  [hypercube][TGL][ADL]pci_xhci_insert_event SEGV on read from NULL
+- :acrn-issue:`6481` -  ACRN on QEMU can't boot up with v2.6 branch
+- :acrn-issue:`6482` -  [ADL-S][RTVM]rtvm poweroff causes sos to crash
+- :acrn-issue:`6502` -  [ADL][HV][UC lock] SoS kernel panic when #GP for UC lock enabled
+- :acrn-issue:`6507` -  [TGL][HV][hybrid] during boot zephyr64.elf find HV error: "Unable to copy HPA 0x100000 to GPA 0x7fe00000 in VM0"
+- :acrn-issue:`6508` -  [HV]Refine pass-thru device PIO BAR handling
+- :acrn-issue:`6510` -  [ICX-RVP][SSRAM] No SSRAM entries  in guest PTCT
+- :acrn-issue:`6518` -  [hypercube][ADL]acrn-dm program crash during hypercube testing
+- :acrn-issue:`6528` -  [TGL][HV][hybrid_rt] dmidecode Fail on pre-launched RTVM
+- :acrn-issue:`6530` -  [ADL-S][EHL][Hybrid]Path of sos rootfs in hybrid.xml is wrong
+- :acrn-issue:`6533` -  [hypercube][tgl][ADL] mem leak while poweroff in guest
+- :acrn-issue:`6592` -  [doc] failed to make hvdiffconfig
 
 Known Issues
 ************
+
+- :acrn-issue:`6630` -  Fail to enable 7 PCI based VUART on 5.10.56 RTVM
+- :acrn-issue:`6631` -  [KATA][5.10 Kernel]failed to start docker with ServiceVM 5.10 kernel
 
