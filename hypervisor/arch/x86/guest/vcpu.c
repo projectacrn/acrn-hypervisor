@@ -657,8 +657,8 @@ static void write_cached_registers(struct acrn_vcpu *vcpu)
  */
 int32_t run_vcpu(struct acrn_vcpu *vcpu)
 {
-	uint32_t instlen, cs_attr;
-	uint64_t rip, ia32_efer, cr0;
+	uint32_t cs_attr;
+	uint64_t ia32_efer, cr0;
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 	int32_t status = 0;
@@ -718,9 +718,9 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		/* This VCPU was already launched, check if the last guest
 		 * instruction needs to be repeated and resume VCPU accordingly
 		 */
-		instlen = vcpu->arch.inst_len;
-		rip = vcpu_get_rip(vcpu);
-		exec_vmwrite(VMX_GUEST_RIP, rip + instlen);
+		if (vcpu->arch.inst_len != 0U) {
+			exec_vmwrite(VMX_GUEST_RIP, vcpu_get_rip(vcpu) + vcpu->arch.inst_len);
+		}
 
 		/* Resume the VM */
 		status = exec_vmentry(ctx, VM_RESUME, ibrs_type);

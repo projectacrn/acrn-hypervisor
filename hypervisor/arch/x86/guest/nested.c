@@ -1450,6 +1450,16 @@ int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
 		vcpu->arch.nested.in_l2_guest = false;
 	}
 
+	/*
+	 * For VM-exits that reflect to L1 hypervisor, ACRN can't advance to next guest RIP
+	 * which is up to the L1 hypervisor to make the decision.
+	 *
+	 * The only case that doesn't need to be reflected is EPT violations that can be
+	 * completely handled by ACRN, which requires L2 VM to re-execute the instruction
+	 * after the shadow EPT is being properly setup.
+
+	 * In either case, need to set vcpu->arch.inst_len to zero.
+	 */
 	vcpu_retain_rip(vcpu);
 	return 0;
 }
