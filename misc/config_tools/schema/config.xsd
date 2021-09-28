@@ -280,11 +280,6 @@ initialization.</xs:documentation>
         </xs:restriction>
       </xs:simpleType>
     </xs:element>
-    <xs:element name="MAX_EFI_MMAP_ENTRIES" type="xs:integer" default="256">
-      <xs:annotation>
-        <xs:documentation>The maximum number of EFI memmap entries.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
     <xs:element name="MAX_PT_IRQ_ENTRIES" type="xs:integer" default="256">
       <xs:annotation>
         <xs:documentation>The pre-defined number of interrupt sources of all pass-through devices.</xs:documentation>
