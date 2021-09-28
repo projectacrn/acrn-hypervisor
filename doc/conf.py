@@ -381,8 +381,10 @@ html_redirect_pages = [
    ('developer-guides/index', 'contribute'),
    ('getting-started/index', 'try'),
    ('user-guides/index', 'develop'),
+   ('tutorials/index', 'develop'),
    ('hardware', 'reference/hardware'),
    ('release_notes', 'release_notes/index'),
    ('getting-started/rt_industry', 'getting-started/getting-started'),
    ('getting-started/rt_industry_ubuntu', 'getting-started/getting-started'),
+   ('getting-started/building-from-source', 'getting-started/getting-started'),
    ]
