@@ -130,7 +130,7 @@ Scheduler configuration
 
 * The scheduler used at runtime is defined in the scenario XML file
   via the :option:`hv.FEATURES.SCHEDULER` option. The default scheduler
-  is **SCHED_BVT**. Use the :ref:`ACRN configuration tool <acrn_configuration_tool>` 
+  is **SCHED_BVT**. Use the :ref:`ACRN configurator tool <acrn_configurator_tool>`
   if you want to change this scenario option value.
 
 

@@ -83,7 +83,7 @@ one the following 4 cases:
   debug purpose, so the UART device is owned by hypervisor and is not visible
   to any VM. For now, UART is the only pci device could be owned by hypervisor.
 - **Pre-launched VM**: The passthrough devices will be used in a pre-launched VM is
-  pre-defined in VM configuration. These passthrough devices are owned by the
+  predefined in VM configuration. These passthrough devices are owned by the
   pre-launched VM after the VM is created. These devices will not be removed
   from the pre-launched VM. There could be pre-launched VM(s) in logical partition
   mode and hybrid mode.
@@ -381,7 +381,7 @@ GSI Sharing Violation Check
 All the PCI devices that are sharing the same GSI should be assigned to
 the same VM to avoid physical GSI sharing between multiple VMs.
 In logical partition mode or hybrid mode, the PCI devices assigned to
-pre-launched VM is statically pre-defined. Developers should take care not to
+pre-launched VM is statically predefined. Developers should take care not to
 violate the rule.
 For post-launched VM, devices that don't support MSI, ACRN DM puts the devices
 sharing the same GSI pin to a GSI
@@ -404,7 +404,7 @@ multiple PCI components with independent local time clocks within the same
 system.  Intel supports PTM on several of its systems and devices, such as PTM
 root capabilities support on Whiskey Lake and Tiger Lake PCIe root ports, and
 PTM device support on an Intel I225-V/I225-LM family Ethernet controller.  For
-further details on PTM, please refer to the `PCIe specification
+further details on PTM, refer to the `PCIe specification
 <https://pcisig.com/specifications>`_.
 
 ACRN adds PCIe root port emulation in the hypervisor to support the PTM feature
@@ -473,7 +473,7 @@ hypervisor startup. The Device Model (DM) then checks whether the pass-through d
 supports PTM requestor capabilities and whether the corresponding root port
 supports PTM root capabilities, as well as some other sanity checks.  If an
 error is detected during these checks, the error will be reported and ACRN will
-not enable PTM in the Guest VM. This doesn’t prevent the user from launching the Guest
+not enable PTM in the Guest VM. This doesn't prevent the user from launching the Guest
 VM and passing through the device to the Guest VM.  If no error is detected,
 the device model will use ``add_vdev`` hypercall to add a virtual root port (VRP),
 acting as the PTM root, to the Guest VM before passing through the device to the Guest VM.

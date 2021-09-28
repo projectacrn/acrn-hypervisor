@@ -33,7 +33,7 @@ Virtual Graphics support added:
   and User OS can run GPU workload simultaneously.
 - Direct display supported by ACRNGT. Service OS and User OS are each
   assigned to different display. The display ports supports eDP and HDMI.
-- See :ref:`APL_GVT-G-hld` documentation for more information.
+- See the HLD GVT-g documentation for more information.
 
 Virtio Standard Is Supported
 ============================

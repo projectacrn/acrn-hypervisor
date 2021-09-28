@@ -91,7 +91,7 @@ installed by executing the following command:
    sudo pip3 install lxml
 
 .. note::
-   Refer to :ref:`acrn_config_workflow` for a complete list of tools required to
+   Refer to :ref:`gsg` for a complete list of tools required to
    run the board inspector.
 
 With the prerequisites done, copy the entire board inspector folder from

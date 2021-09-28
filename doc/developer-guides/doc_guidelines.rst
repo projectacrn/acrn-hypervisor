@@ -311,9 +311,9 @@ creates a hyperlink to that file in the current branch.  For example, a GitHub
 link to the reST file used to create this document can be generated
 using ``:acrn_file:`doc/developer-guides/doc_guidelines.rst```, which will
 appear as :acrn_file:`doc/developer-guides/doc_guidelines.rst`, a link to
-the “blob” file in the GitHub repo as displayed by GitHub. There’s also an
+the "blob" file in the GitHub repo as displayed by GitHub. There's also an
 ``:acrn_raw:`doc/developer-guides/doc_guidelines.rst``` role that will link
-to the “raw” uninterpreted file,
+to the "raw" uninterpreted file,
 :acrn_raw:`doc/developer-guides/doc_guidelines.rst` file. (Click these links
 to see the difference.)
 

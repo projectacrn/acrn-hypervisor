@@ -12,7 +12,7 @@ Intel NUC Kit. If you have not, refer to the following instructions:
 - Install a `Ubuntu 18.04 desktop ISO
   <http://releases.ubuntu.com/18.04.3/ubuntu-18.04.3-desktop-amd64.iso?_ga=2.160010942.221344839.1566963570-491064742.1554370503>`_
   on your board.
-- Follow the instructions :ref:`install-ubuntu-Service VM-NVMe` to set up the Service VM.
+- Follow the instructions in :ref:`gsg` to set up the Service VM.
 
 
 Before you start this tutorial, make sure the KVM tools are installed on the

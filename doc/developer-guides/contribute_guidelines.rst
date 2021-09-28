@@ -135,6 +135,9 @@ Submitting Issues
 .. _ACRN-dev mailing list:
    https://lists.projectacrn.org/g/acrn-dev
 
+.. _ACRN-users mailing list:
+   https://lists.projectacrn.org/g/acrn-users
+
 .. _ACRN hypervisor issues:
    https://github.com/projectacrn/acrn-hypervisor/issues
 
@@ -143,7 +146,8 @@ GitHub issues in the `ACRN hypervisor issues`_ list. Before submitting a
 bug or enhancement request, first check to see what's already been
 reported, and add to that discussion if you have additional information.
 (Be sure to check both the "open" and "closed" issues.)
-You should also read through discussions in the `ACRN-dev mailing list`_
+You should also read through discussions in the `ACRN-users mailing list`_
+(and the `ACRN-dev mailing list`_)
 to see what's been reported on or discussed.  You may find others that
 have encountered the issue you're finding, or that have similar ideas
 for changes or additions.
@@ -463,13 +467,13 @@ All changes and topics sent to GitHub must be well-formed, as described above.
 Commit Message Body
 ===================
 
-When editing the commit message, please briefly explain what your change
+When editing the commit message, briefly explain what your change
 does and why it's needed. A change summary of ``"Fixes stuff"`` will be
 rejected.
 
 .. warning::
    An empty change summary body is not permitted. Even for trivial changes,
-   please include a summary body in the commit message.
+   include a summary body in the commit message.
 
 The description body of the commit message must include:
 

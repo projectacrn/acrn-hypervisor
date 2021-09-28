@@ -38,6 +38,7 @@ ACRN assumes the following conditions are satisfied from the Platform BIOS:
 * There should be no conflict in resources among the PCI devices or with other platform devices.
 
 
+.. _hardware_tested:
 
 Tested Platforms by ACRN Release
 ********************************
@@ -107,7 +108,7 @@ For general instructions setting up ACRN on supported hardware platforms, visit 
 
 If an XML file is not provided by project ACRN for your board, we recommend you
 use the board inspector tool to generate an XML file specifically for your board.
-Refer to the :ref:`acrn_configuration_tool` for more details on using the board inspector
+Refer to :ref:`board_inspector_tool` for more details on using the board inspector
 tool.
 
 

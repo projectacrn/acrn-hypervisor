@@ -50,7 +50,7 @@ install Ubuntu on the NVMe drive, and use grub to launch the Service VM.
 Install Pre-Launched RT Filesystem on SATA and Kernel Image on NVMe
 ===================================================================
 
-Follow the :ref:`install-ubuntu-rtvm-sata` guide to install RT rootfs on SATA drive.
+Follow the :ref:`gsg` to install RT rootfs on SATA drive.
 
 The Kernel should
 be on the NVMe drive along with GRUB. You'll need to copy the RT kernel
@@ -75,15 +75,15 @@ Ethernet 03:00.0 devices to the Pre-Launched RT VM, build ACRN with:
 
    make BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml RELEASE=0
 
-After the build completes, please update ACRN on NVMe. It is
+After the build completes, update ACRN on NVMe. It is
 /boot/EFI/BOOT/acrn.bin, if /dev/nvme0n1p1 is mounted at /boot.
 
 Add Pre-Launched RT Kernel Image to GRUB Config
 ===============================================
 
 The last step is to modify the GRUB configuration file to load the Pre-Launched
-kernel. (For more information about this, see :ref:`Update Grub for the Ubuntu Service VM
-<gsg_update_grub>` section in the :ref:`gsg`.) The grub config file will look something
+kernel. (For more information about this, see
+the :ref:`gsg`.) The grub config file will look something
 like this:
 
 .. code-block:: none

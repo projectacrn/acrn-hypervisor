@@ -11,8 +11,8 @@ with basic functionality such as running Service VM (SOS) and User VM (UOS) for 
 
 This setup was tested with the following configuration,
 
-- ACRN Hypervisor: ``v2.5`` tag
-- ACRN Kernel: ``v2.5`` tag
+- ACRN Hypervisor: ``v2.6`` tag
+- ACRN Kernel: ``v2.6`` tag
 - QEMU emulator version 4.2.1
 - Service VM/User VM is Ubuntu 20.04
 - Platforms Tested: Kaby Lake, Skylake
@@ -53,7 +53,6 @@ Prepare Service VM (L1 Guest)
       --connect qemu:///system \
       --name ACRNSOS \
       --machine q35 \
-      --cpu host-passthrough,+invtsc \
       --ram 4096 \
       --disk path=/var/lib/libvirt/images/acrnsos.img,size=32 \
       --vcpus 4 \
@@ -62,7 +61,7 @@ Prepare Service VM (L1 Guest)
       --os-variant ubuntu18.04 \
       --graphics none \
       --clock offset=utc,tsc_present=yes,kvmclock_present=no \
-      --qemu-commandline="-machine kernel-irqchip=split -device intel-iommu,intremap=on,caching-mode=on,aw-bits=48" \
+      --qemu-commandline="-machine kernel-irqchip=split -cpu Denverton,+invtsc,+lm,+nx,+smep,+smap,+mtrr,+clflushopt,+vmx,+x2apic,+popcnt,-xsave,+sse,+rdrand,+vmx-apicv-xapic,+vmx-apicv-x2apic,+vmx-flexpriority,+tsc-deadline,+pdpe1gb -device intel-iommu,intremap=on,caching-mode=on,aw-bits=48" \
       --location 'http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/' \
       --extra-args "console=tty0 console=ttyS0,115200n8"
 
@@ -124,16 +123,16 @@ Install ACRN Hypervisor
    .. important:: All the steps below are performed **inside** the Service VM guest that we built in the
       previous section.
 
-#. Install the ACRN build tools and dependencies following the :ref:`install-build-tools-dependencies`
+#. Install the ACRN build tools and dependencies following the :ref:`gsg`
 
-#. Clone ACRN repo and check out the ``v2.5`` tag.
+#. Clone ACRN repo and check out the ``v2.6`` tag.
 
    .. code-block:: none
 
       cd ~
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout v2.5
+      git checkout v2.6
 
 #. Build ACRN for QEMU,
 
@@ -141,7 +140,7 @@ Install ACRN Hypervisor
 
       make BOARD=qemu SCENARIO=sdc
 
-   For more details, refer to :ref:`getting-started-building`.
+   For more details, refer to :ref:`gsg`.
 
 #. Install the ACRN Device Model and tools
 
@@ -156,9 +155,9 @@ Install ACRN Hypervisor
       sudo cp build/hypervisor/acrn.32.out /boot
 
 #. Clone and configure the Service VM kernel repository following the instructions at
-   :ref:`build-and-install-ACRN-kernel` and using the ``v2.5`` tag. The User VM (L2 guest)
+   :ref:`gsg` and using the ``v2.6`` tag. The User VM (L2 guest)
    uses the ``virtio-blk`` driver to mount the rootfs. This driver is included in the default
-   kernel configuration as of the ``v2.5`` tag.
+   kernel configuration as of the ``v2.6`` tag.
 
 #. Update Grub to boot the ACRN hypervisor and load the Service VM kernel. Append the following
    configuration to the :file:`/etc/grub.d/40_custom`.
@@ -218,61 +217,27 @@ Install ACRN Hypervisor
 Bring-Up User VM (L2 Guest)
 ***************************
 
-1. Build the ACRN User VM kernel.
+1. Build the User VM disk image (``UserVM.img``) following :ref:`build-the-ubuntu-kvm-image` and copy it to the ACRNSOS (L1 Guest).
+   Alternatively you can also use an `Ubuntu Desktop ISO image <https://ubuntu.com/#download>`_.
+   Rename the downloaded ISO image to ``UserVM.iso``.
 
-   .. code-block:: none
-
-      cd ~/acrn-kernel
-      cp kernel_config_uos .config
-      make olddefconfig
-      make
-
-#. Copy the User VM kernel to your home folder, we will use it to launch the User VM (L2 guest)
-
-   .. code-block:: none
-
-      cp arch/x86/boot/bzImage ~/bzImage_uos
-
-#. Build the User VM disk image (``UOS.img``) following :ref:`build-the-ubuntu-kvm-image` and copy it to the ACRNSOS (L1 Guest).
-   Alternatively you can also use ``virt-install`` **in the host environment** to create a User VM image similarly to how we built ACRNSOS previously.
-
-   .. code-block:: none
-
-      virt-install \
-      --name UOS \
-      --ram 1024 \
-      --disk path=/var/lib/libvirt/images/UOS.img,size=8,format=raw \
-      --vcpus 2 \
-      --virt-type kvm \
-      --os-type linux \
-      --os-variant ubuntu18.04 \
-      --graphics none \
-      --location 'http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/' \
-      --extra-args "console=tty0 console=ttyS0,115200n8"
-
-#. Transfer the ``UOS.img`` User VM disk image to the Service VM (L1 guest).
-
-   .. code-block::
-
-      sudo scp /var/lib/libvirt/images/UOS.img <username>@<IP address>
-
-  Where ``<username>`` is your username in the Service VM and ``<IP address>`` its IP address.
+#. Transfer the ``UserVM.img``  or ``UserVM.iso`` User VM disk image to the Service VM (L1 guest).
 
 #. Launch User VM using the ``launch_ubuntu.sh`` script.
 
    .. code-block:: none
 
       cp ~/acrn-hypervisor/misc/config_tools/data/samples_launch_scripts/launch_ubuntu.sh ~/
+      cp ~/acrn-hypervisor/devicemodel/bios/OVMF.fd ~/
 
-#. Update the script to use your disk image and kernel
+#. Update the script to use your disk image (``UserVM.img or ``UserVM.iso``).
 
    .. code-block:: none
 
       acrn-dm -A -m $mem_size -s 0:0,hostbridge \
-      -s 3,virtio-blk,~/UOS.img \
+      -s 3,virtio-blk,~/UserVM.img \
       -s 4,virtio-net,tap0 \
       -s 5,virtio-console,@stdio:stdio_port \
-      -k ~/bzImage_uos \
-      -B "earlyprintk=serial,ttyS0,115200n8 consoleblank=0 root=/dev/vda1 rw rootwait maxcpus=1 nohpet console=tty0 console=hvc0 console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M tsc=reliable" \
+      --ovmf ~/OVMF.fd \
       $logger_setting \
       $vm_name

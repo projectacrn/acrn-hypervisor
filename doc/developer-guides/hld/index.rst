@@ -25,5 +25,4 @@ system.
    Virtio Devices <hld-virtio-devices>
    Power Management <hld-power-management>
    Tracing and Logging <hld-trace-log>
-   Virtual Bootloader <hld-vsbl>
    Security <hld-security>

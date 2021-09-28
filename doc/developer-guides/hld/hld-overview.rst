@@ -175,6 +175,9 @@ ACRN adopts various approaches for emulating devices for the User VM:
    resources (mostly data-plane related) are passed-through to the User VMs and
    others (mostly control-plane related) are emulated.
 
+
+.. _ACRN-io-mediator:
+
 I/O Emulation
 -------------
 
@@ -193,6 +196,7 @@ I/O read from the User VM.
    I/O (PIO/MMIO) Emulation Path
 
 :numref:`overview-io-emu-path` shows an example I/O emulation flow path.
+
 When a guest executes an I/O instruction (port I/O or MMIO), a VM exit
 happens. The HV takes control and executes the request based on the VM exit
 reason ``VMX_EXIT_REASON_IO_INSTRUCTION`` for port I/O access, for
@@ -224,8 +228,9 @@ HSM/hypercall. The HV then stores the result to the guest register
 context, advances the guest IP to indicate the completion of instruction
 execution, and resumes the guest.
 
-MMIO access path is similar except for a VM exit reason of *EPT
-violation*.
+MMIO access path is similar except for a VM exit reason of *EPT violation*.
+MMIO access is usually trapped through a ``VMX_EXIT_REASON_EPT_VIOLATION`` in
+the hypervisor.
 
 DMA Emulation
 -------------
@@ -328,7 +333,7 @@ power operations.
 VM Manager creates the User VM based on DM application, and does User VM state
 management by interacting with lifecycle service in ACRN service.
 
-Please refer to VM management chapter for more details.
+Refer to VM management chapter for more details.
 
 ACRN Service
 ============

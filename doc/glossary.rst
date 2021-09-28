@@ -6,6 +6,15 @@ Glossary of Terms
 .. glossary::
    :sorted:
 
+   AaaG
+   LaaG
+   WaaG
+      Acronyms for Android, Linux, and Windows as a Guest VM. ACRN supports a
+      variety of :term:`User VM` OS choices. Your choice depends on the
+      needs of your application.  For example, Windows is popular for
+      Human-Machine Interface (HMI) applications in industrial applications,
+      while Linux is a likely OS choice for a VM running an AI application.
+
    ACPI
       Advanced Configuration and Power Interface
 
@@ -13,19 +22,6 @@ Glossary of Terms
       ACRN is a flexible, lightweight reference hypervisor, built with
       real-time and safety-criticality in mind, optimized to streamline
       embedded development through an open source platform.
-
-   AcrnGT
-      Intel GVT-g technology for ACRN.
-
-   ACRN-DM
-      A user mode device model application running in Service OS to provide
-      device emulations in ACRN hypervisor.
-
-   aperture
-      CPU-visible graphics memory
-
-   low GM
-      see :term:`aperture`
 
    API
       Application Program Interface: A defined set of routines and protocols for
@@ -40,63 +36,37 @@ Glossary of Terms
    BIOS
       Basic Input/Output System.
 
-   Dom0 i915
-      The Intel Graphics driver running in Domain 0
+   DM
+   Device Model
+      An application within the Service VM responsible for creating and
+      launching a User VM and then performing device emulation for the devices
+      configured for sharing with that User VM. The Service VM and Device Model
+      can access hardware resources directly through native drivers and provide
+      device sharing services to User VMs. User VMs can access hardware devices
+      directly if they've been configured as passthrough devices.
 
-   ELSP
-      GPU's ExecList submission port
+   Development Computer
+   Host
+      As with most IoT development environments, you configure, compile, and
+      build your application on a separate system from where the application is
+      deployed and run (i.e., the :term:`Target`). ACRN recommends using Ubuntu
+      18.04 as the OS on your development computer and that is an assumption in
+      our documentation.
 
-   GGTT
-      Global Graphic Translation Table.  The virtual address page table
-      used by a GPU to reference system memory.
-
-   GMA
-      Graphics Memory Address
-
-   GPU
-      Graphics Processing Unit
-
-   GTT
-      Graphic Translation Table
-
-   GTTMMADR
-      Graphic Translation Table Memory Map Address
-
-   GuC
-      Graphic Micro-controller
-
-   GVT
-      Graphics Virtual Technology. GVT-g core device model module up-streamed
-      to the Linux kernel.
+   Guest
+   Guest VM
+      A term used to refer to any :term:`VM` that runs on the hypervisor.  Both Service
+      and User VMs are considered Guest VMs from the hypervisor's perspective,
+      albeit with different properties. *(You'll find the term Guest used in the
+      names of functions and variables in the ACRN source code.)*
 
    GVT-d
-      Virtual dedicated graphics acceleration (one VM to one physical GPU)
+      Virtual dedicated graphics acceleration (one VM to one physical GPU).
 
-   GVT-g
-      Virtual graphics processing unit (multiple VMs to one physical GPU)
-
-   GVT-s
-      Virtual shared graphics acceleration (multiple VMs to one physical GPU)
-
-   Hidden GM
-      Hidden or High graphics memory, not visible to the CPU.
-
-   High GM
-      See :term:`Hidden GM`
-
-   Hybrid Mode
-      One of three operation modes (hybrid, partition, sharing) that ACRN supports.
-      In this mixed mode, physical hardware resources can be both partitioned to
-      individual user VMs and shared across user VMs.
-
-   I2C
-      Inter-Integrated Circuit
-
-   i915
-      The Intel Graphics driver
-
-   IC
-      Instrument Cluster
+   Hybrid
+      One of three operation scenarios (partitioned, shared, and hybrid) that ACRN supports.
+      In the hybrid mode, some physical hardware resources can be  partitioned to
+      individual User VMs while others are shared across User VMs.
 
    IDT
       Interrupt Descriptor Table: a data structure used by the x86
@@ -107,63 +77,38 @@ Glossary of Terms
       Interrupt Service Routine: Also known as an interrupt handler, an ISR
       is a callback function whose execution is triggered by a hardware
       interrupt (or software interrupt instructions) and is used to handle
-      high-priority conditions that require interrupting the current code
+      high-priority conditions that require interrupting the code currently
       executing on the processor.
 
-   IVE
-      In-Vehicle Experience
-
-   IVI
-      In-vehicle Infotainment
-
-   OS
-      Operating System
-
-   OSPM
-      Operating System Power Management
-
    Passthrough Device
-      Physical devices (typically PCI) exclusively assigned to a guest.  In
-      the Project ACRN architecture, passthrough devices are owned by the
-      foreground OS.
+      Physical I/O devices (typically PCI) exclusively assigned to a User VM so
+      that the VM can access the hardware device directly and with minimal (if any)
+      VM management involvement. Normally, the Service VM owns the hardware
+      devices shared among User VMs and virtualized access is done through
+      Device Model emulation.
 
-   Partition Mode
-      One of three operation modes (partition, sharing, hybrid) that ACRN supports.
-      Physical hardware resources are partitioned to individual user VMs.
-
-   PCI
-      Peripheral Component Interface.
-
-   PDE
-      Page Directory Entry
-
-   PM
-      Power Management
+   Partitioned
+      One of three operation scenarios (partitioned, shared, and hybrid) that ACRN supports.
+      Physical hardware resources are dedicated to individual User VMs.
 
    Pre-launched VM
-      Pre-launched VMs are started by the ACRN hypervisor before the
-      Service VM is launched. (See :term:`Post-launched VM`)
+      A :term:`User VM` launched by the hypervisor before the :term:`Service VM`
+      is started.  Such a User VM runs independently of and is partitioned from
+      the Service VM and other post-launched VMs. It has its own carefully
+      configured and dedicated hardware resources such as CPUs, memory, and I/O
+      devices. Other VMs, including the Service VM, may not even be aware of a
+      pre-launched VM's existence. A pre-launched VM can be used as a
+      special-case :term:`Safety VM` for reacting to critical system failures.
+      It cannot take advantage of the Service VM or Device Model services.
 
    Post-launched VM
-      Post-Launched VMs are launched and configured by the Service VM.
-      (See :term:`Pre-launched VM`)
-
-   PTE
-      Page Table Entry
-
-   PV
-      Para-virtualization (See
-      https://en.wikipedia.org/wiki/Paravirtualization)
-
-   PVINFO
-      Para-Virtualization Information Page, a MMIO range used to
-      implement para-virtualization
+      A :term:`User VM` configured and launched by the Service VM and typically
+      accessing shared hardware resources managed by the Service VM and Device
+      Model. Most User VMs are post-launched while special-purpose User VMs are
+      pre-launched.
 
    QEMU
       Quick EMUlator.  Machine emulator running in user space.
-
-   RSE
-      Rear Seat Entertainment
 
    RDT
       Intel Resource Director Technology (Intel RDT) provides a set of
@@ -172,36 +117,54 @@ Glossary of Terms
       Memory Bandwidth Allocation (MBA).
 
    RTVM
-      Real-time VM. A specially-designed VM that can run hard real-time or
-      soft real-time workloads (or applications) much more efficiently
-      than the typical User VM through the use of a passthrough interrupt
-      controller, polling-mode Virtio, Intel RDT allocation features (CAT,
-      MBA), and I/O prioritization.  RTVMs are typically a :term:`Pre-launched VM`.
-      A non-:term:`Safety VM` with real-time requirements is a
-      :term:`Post-launched VM`.
+   Real-time VM
+      A :term:`User VM` configured specifically for real-time applications and
+      their performance needs. ACRN supports near bare-metal performance for a
+      post-launched real-time VM by configuring certain key technologies or
+      enabling device-passthrough to avoid common virtualization and
+      device-access overhead issues. Such technologies include: using a
+      passthrough interrupt controller, polling-mode Virtio, Intel RDT
+      allocation features (CAT, MBA), and I/O prioritization.  RTVMs are
+      typically a :term:`Pre-launched VM`.  A non-:term:`Safety VM` with
+      real-time requirements is a :term:`Post-launched VM`.
 
    Safety VM
-      A special VM with dedicated hardware resources, running in
-      partition mode, and providing overall system health-monitoring
-      functionality.  Currently, a Safety VM is always a pre-launched User VM.
+      A special VM with dedicated hardware resources for providing overall
+      system health-monitoring functionality.  A safety VM is always a
+      pre-launched User VM, either in a partitioned or hybrid scenario.
 
-   SDC
-      Software Defined Cockpit
-
-   Service VM
-      The Service VM is generally the first VM launched by ACRN and can
-      access hardware resources directly by running native drivers and
-      provides device sharing services to User VMs via the Device Model.
-
-   Sharing Mode
-      One of three operation modes (sharing, hybrid, partition) that ACRN supports.
-      Most of the physical hardware resources are shared across user VMs.
+   Scenario
+      A collection of hypervisor and VM configuration settings that define an
+      ACRN-based application's environment. A scenario configuration is stored
+      in a scenario XML file and edited using a GUI configuration tool. The
+      scenario configuration, along with the target board configuration, is used
+      by the ACRN build system to modify the source code to build tailored
+      images of the hypervisor and Service VM for the application. ACRN provides
+      example scenarios for shared, partitioned, and hybrid configurations that
+      developers can use to define a scenario configuration appropriate for
+      their own application.
 
    SOS
-      Obsolete, see :term:`Service VM`
-
    Service OS
-      Obsolete, see :term:`Service VM`
+   Service VM
+      A special VM, directly launched by the hypervisor. The Service VM can
+      access hardware resources directly by running native drivers and provides
+      device sharing services to post-launched User VMs through the ACRN Device
+      Model (DM). Hardware resources include CPUs, memory, graphics memory, USB
+      devices, disk, and network mediation. *(Historically, the Service VM was
+      called the Service OS or SOS. You may still see these terms used in the
+      code and API interfaces.)*
+
+   Industry
+   Shared
+      One of three operation scenarios (shared, hybrid, partitioned) that ACRN supports.
+      Most of the physical hardware resources are shared across User VMs.
+      *(Industry scenario is being renamed to Shared in the v2.7 release.)*
+
+   Target
+      This is the hardware where the configured ACRN hypervisor and
+      developer-written application (built on the :term:`Development Computer`) is
+      deployed and runs.
 
    UEFI
       Unified Extensible Firmare Interface. UEFI replaces the
@@ -210,33 +173,25 @@ Glossary of Terms
       important, support Secure Boot, checking the OS validity to ensure no
       malware has tampered with the boot process.
 
-   User VM
-      User Virtual Machine.
-
    UOS
-      Obsolete, see :term:`User VM`
-
    User OS
-      Obsolete, see :term:`User VM`
-
-   vGPU
-      Virtual GPU Instance, created by GVT-g and used by a VM
-
-   HSM
-      Hypervisor Service Module
-
-   Virtio-BE
-      Back-End, VirtIO framework provides front-end driver and back-end driver
-      for IO mediators, developer has habit of using Shorthand. So they say
-      Virtio-BE and Virtio-FE
-
-   Virtio-FE
-      Front-End, VirtIO framework provides front-end driver and back-end
-      driver for IO mediators, developer has  habit of using Shorthand. So
-      they say Virtio-BE and Virtio-FE
+   User VM
+      A :term:`VM` where user-defined environments and applications run. User VMs can
+      run different OSes based on their needs, including for example, Ubuntu for
+      an AI application, Android or Windows for a Human-Machine Interface, or a
+      hard real-time control OS such as Zephyr, VxWorks, or RT-Linux for soft or
+      hard real-time control. There are three types of ACRN User VMs: pre-launched,
+      post-launched standard, and post-launched real-time.  *(Historically, a
+      User VM was also called a User OS, or simply UOS.  You may still see these
+      other terms used in the code and API interfaces.)*
 
    VM
-      Virtual Machine, a guest OS running environment
+   Virtual Machine
+     A compute resource that uses software instead of physical hardware to run a
+     program. Multiple VMs can run independently on the same physical machine,
+     and with their own OS. A hypervisor uses direct access to the underlying
+     machine to create the software environment for sharing and managing
+     hardware resources.
 
    VMM
       Virtual Machine Monitor
