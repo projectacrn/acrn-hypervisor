@@ -30,7 +30,7 @@ Use the following instructions to install Debian.
   <https://www.debian.org/releases/stable/amd64/index.en.html>`_ to
   install it on your board; we are using a Kaby Lake Intel NUC (NUC7i7DNHE)
   in this tutorial.
-- :ref:`install-build-tools-dependencies` for ACRN.
+- :ref:`gsg` for ACRN.
 - Update to the newer iASL:
 
   .. code-block:: bash

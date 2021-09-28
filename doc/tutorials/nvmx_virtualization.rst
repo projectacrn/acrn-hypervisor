@@ -91,6 +91,20 @@ Constraints on L1 guest configuration:
 * Only the ``SCHED_NOOP`` scheduler is supported. ACRN can't receive timer interrupts
   on LAPIC passthrough pCPUs
 
+VPID allocation
+===============
+
+ACRN doesn't emulate L2 VPIDs and allocates VPIDs for L1 VMs from the reserved top
+16-bit VPID range (``0x10000U - CONFIG_MAX_VM_NUM * MAX_VCPUS_PER_VM`` and up).
+If the L1 hypervisor enables VPID for L2 VMs and allocates L2 VPIDs not in this
+range, ACRN doesn't need to flush L2 VPID during L2 VMX transitions.
+
+This is the expected behavior in most of the time. But in special cases where a
+L2 VPID allocated by L1 hypervisor is within this reserved range, it's possible
+that this L2 VPID may conflict with a L1 VPID. In this case,  ACRN flushes VPID
+on L2 VMExit/VMEntry that are associated with this L2 VPID, which may significantly
+negatively impact performances of this L2 VM.
+
 
 Service OS VM configuration
 ***************************
@@ -99,10 +113,10 @@ ACRN only supports enabling the nested virtualization feature on the Service VM,
 VMs.
 
 The nested virtualization feature is disabled by default in ACRN. You can
-enable it using the :ref:`Use the ACRN Configuration Editor <acrn_config_tool_ui>`
+enable it using the :ref:`ACRN configurator tool <acrn_configurator_tool>`
 with these settings:
 
-.. note:: Normally you'd use the configuration tool GUI to edit the scenario XML file.
+.. note:: Normally you'd use the configurator tool GUI to edit the scenario XML file.
    The tool wasn't updated in time for the v2.5 release, so you'll need to manually edit
    the ACRN scenario XML configuration file to edit the ``SCHEDULER``, ``NVMX_ENABLED``,
    ``pcpu_id`` , ``guest_flags``, ``legacy_vuart``, and ``console_vuart`` settings for
@@ -196,7 +210,7 @@ with these settings:
    Since CPU sharing is disabled, you may need to delete all ``POST_STD_VM`` and ``KATA_VM`` VMs
    from the scenario configuration file, which may share pCPU with the Service OS VM.
 
-#. Follow instructions in :ref:`getting-started-building` and build with this XML configuration.
+#. Follow instructions in :ref:`gsg` and build with this XML configuration.
 
 
 Prepare for Service VM Kernel and rootfs
@@ -209,7 +223,7 @@ Instructions on how to boot Ubuntu as the Service VM can be found in
 The Service VM kernel needs to be built from the ``acrn-kernel`` repo, and some changes
 to the kernel ``.config`` are needed.
 Instructions on how to build and install the Service VM kernel can be found
-in :ref:`Build and Install the ACRN Kernel <build-and-install-ACRN-kernel>`.
+in :ref:`gsg`.
 
 Here is a summary of how to modify and build the kernel:
 

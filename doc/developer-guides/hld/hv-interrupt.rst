@@ -28,7 +28,7 @@ In the software modules view shown in :numref:`interrupt-sw-modules`,
 the ACRN hypervisor sets up the physical interrupt in its basic
 interrupt modules (e.g., IOAPIC/LAPIC/IDT). It dispatches the interrupt
 in the hypervisor interrupt flow control layer to the corresponding
-handlers; this could be pre-defined IPI notification, timer, or runtime
+handlers; this could be predefined IPI notification, timer, or runtime
 registered passthrough devices. The ACRN hypervisor then uses its VM
 interfaces based on vPIC, vIOAPIC, and vMSI modules, to inject the
 necessary virtual interrupt into the specific VM, or directly deliver
@@ -245,9 +245,6 @@ IRQ Descriptor Table
 ACRN hypervisor maintains a global IRQ Descriptor Table shared among the
 physical CPUs, so the same vector will link to the same IRQ number for
 all CPUs.
-
-.. note:: need to reference API doc for irq_desc
-
 
 The *irq_desc[]* array's index represents IRQ number. A *handle_irq*
 will be called from *interrupt_dispatch* to commonly handle edge/level

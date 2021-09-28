@@ -80,14 +80,14 @@ two parts:  kick overhead and notify overhead.
 -  **Kick Overhead**: The User VM gets trapped when it executes sensitive
    instructions that notify the hypervisor first. The notification is
    assembled into an IOREQ, saved in a shared IO page, and then
-   forwarded to the VHM module by the hypervisor. The VHM notifies its
+   forwarded to the HSM module by the hypervisor. The HSM notifies its
    client for this IOREQ, in this case, the client is the vbs-echo
    backend driver. Kick overhead is defined as the interval from the
    beginning of User VM trap to a specific VBS-K driver, e.g. when
    virtio-echo gets notified.
 -  **Notify Overhead**: After the data in virtqueue being processed by the
-   backend driver, vbs-echo calls the VHM module to inject an interrupt
-   into the frontend. The VHM then uses the hypercall provided by the
+   backend driver, vbs-echo calls the HSM module to inject an interrupt
+   into the frontend. The HSM then uses the hypercall provided by the
    hypervisor, which causes a User VM VMEXIT. The hypervisor finally injects
    an interrupt into the vLAPIC of the User VM and resumes it. The User VM
    therefore receives the interrupt notification.  Notify overhead is

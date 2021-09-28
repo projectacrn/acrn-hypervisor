@@ -1034,7 +1034,7 @@ Note that there are some security considerations in this design:
    other User VM.
 
 Keeping the Service VM system as secure as possible is a very important goal in
-the system security design, please follow the recommendations in
+the system security design. Follow the recommendations in
 :ref:`sos_hardening`.
 
 SEED Derivation
@@ -1058,7 +1058,7 @@ the non-secure OS issues this power event) is about to enter S3. While
 the restore state hypercall is called only by vBIOS when User VM is ready to
 resume from suspend state.
 
-For security design consideration of handling secure world S3, please
+For security design consideration of handling secure world S3,
 read the previous section: :ref:`uos_suspend_resume`.
 
 Platform Security Feature Virtualization and Enablement

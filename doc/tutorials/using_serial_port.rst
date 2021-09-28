@@ -94,16 +94,16 @@ Convert the BDF to Hex Format
 Refer this :ref:`hv-parameters` to change bdf 01:00.1 to Hex format: 0x101;
 then add it to the grub menu:
 
+.. code-block:: bash
+
+   multiboot2 /boot/acrn.bin  root=PARTUUID="b1bebafc-2b06-43e2-bf6a-323337daebc0" uart=bdf@0x101
+
 .. Note::
 
-   multiboot2 /boot/acrn.bin  root=PARTUUID="b1bebafc-2b06-43e2-bf6a-323337daebc0“ uart=bdf@0x101
+   ``uart=bdf@0x100`` for port 1
 
-.. Note::
+   ``uart=bdf@0x101`` for port 2
 
-   uart=bdf@0x100 for port 1
-
-   uart=bdf@0x101 for port 2
-
-   uart=bdf@0x101 is preferred for the industry scenario; otherwise, it can't
+   ``uart=bdf@0x101`` is preferred for the industry scenario; otherwise, it can't
    input in the Hypervisor console after the Service VM boots up.
    There is no such limitation for the hybrid or hybrid_rt scenarios.

@@ -3,26 +3,16 @@
 Advanced Guides
 ###############
 
-
-Configuration and Tools
-***********************
+Advanced Scenario Tutorials
+*********************************
 
 .. rst-class:: rst-columns2
 
 .. toctree::
-   :glob:
    :maxdepth: 1
 
-   tutorials/acrn_configuration_tool
-   reference/config-options
-   user-guides/hv-parameters
-   user-guides/kernel-parameters
-   user-guides/acrn-shell
-   user-guides/acrn-dm-parameters
-   misc/debug_tools/acrn_crashlog/README
-   misc/packaging/README
-   misc/debug_tools/**
-   misc/services/acrn_manager/**
+   tutorials/using_hybrid_mode_on_nuc
+   tutorials/using_partition_mode_on_nuc
 
 Service VM Tutorials
 ********************
@@ -34,6 +24,8 @@ Service VM Tutorials
 
    tutorials/running_deb_as_serv_vm
    tutorials/using_yp
+
+.. _develop_acrn_user_vm:
 
 User VM Tutorials
 *****************
@@ -50,7 +42,27 @@ User VM Tutorials
    tutorials/using_vxworks_as_uos
    tutorials/using_zephyr_as_uos
 
-Enable ACRN Features
+Configuration Tutorials
+***********************
+
+.. rst-class:: rst-columns2
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+
+   tutorials/acrn_configuration_tool
+   tutorials/board_inspector_tool
+   tutorials/acrn_configurator_tool
+   reference/config-options
+   reference/config-options-launch
+   reference/hv-make-options
+   user-guides/hv-parameters
+   user-guides/kernel-parameters
+   user-guides/acrn-dm-parameters
+   misc/packaging/README
+
+Advanced Features
 ********************
 
 .. rst-class:: rst-columns2
@@ -77,7 +89,6 @@ Enable ACRN Features
    tutorials/acrn-secure-boot-with-efi-stub
    tutorials/pre-launched-rt
    tutorials/enable_ivshmem
-   tutorials/enable_ptm
 
 Debug
 *****
@@ -85,9 +96,14 @@ Debug
 .. rst-class:: rst-columns2
 
 .. toctree::
+   :glob:
    :maxdepth: 1
 
    tutorials/using_serial_port
    tutorials/debug
    tutorials/realtime_performance_tuning
    tutorials/rtvm_performance_tips
+   user-guides/acrn-shell
+   misc/debug_tools/acrn_crashlog/README
+   misc/debug_tools/**
+   misc/services/acrn_manager/**

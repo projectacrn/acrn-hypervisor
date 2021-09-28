@@ -149,20 +149,20 @@ Configure RDT for VM Using VM Configuration
    platform-specific XML file that helps ACRN identify RDT-supported
    platforms. RDT on ACRN is enabled by configuring the ``FEATURES``
    sub-section of the scenario XML file as in the below example. For
-   details on building ACRN with a scenario, refer  to :ref:`build-with-acrn-scenario`.
+   details on building ACRN with a scenario, refer  to :ref:`gsg`.
 
    .. code-block:: none
       :emphasize-lines: 6
 
       <FEATURES>
-         <RELOC desc="Enable hypervisor relocation">y</RELOC>
-         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
-         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
-         <RDT desc="Intel RDT (Resource Director Technology).">
-            <RDT_ENABLED desc="Enable RDT">*y*</RDT_ENABLED>
-            <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
-            <CLOS_MASK desc="Cache Capacity Bitmask"></CLOS_MASK>
-            <MBA_DELAY desc="Memory Bandwidth Allocation delay value"></MBA_DELAY>
+         <RELOC>y</RELOC>
+         <SCHEDULER>SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2>y</MULTIBOOT2>
+         <RDT>
+            <RDT_ENABLED>y</RDT_ENABLED>
+            <CDP_ENABLED>n</CDP_ENABLED>
+            <CLOS_MASK></CLOS_MASK>
+            <MBA_DELAY></MBA_DELAY>
          </RDT>
 
 #. Once RDT is enabled in the scenario XML file, the next step is to program
@@ -177,17 +177,17 @@ Configure RDT for VM Using VM Configuration
       :emphasize-lines: 8,9,10,11,12
 
       <FEATURES>
-         <RELOC desc="Enable hypervisor relocation">y</RELOC>
-         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
-         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
-         <RDT desc="Intel RDT (Resource Director Technology).">
-            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
-            <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
-            <CLOS_MASK desc="Cache Capacity Bitmask">*0xff*</CLOS_MASK>
-            <CLOS_MASK desc="Cache Capacity Bitmask">*0x3f*</CLOS_MASK>
-            <CLOS_MASK desc="Cache Capacity Bitmask">*0xf*</CLOS_MASK>
-            <CLOS_MASK desc="Cache Capacity Bitmask">*0x3*</CLOS_MASK>
-            <MBA_DELAY desc="Memory Bandwidth Allocation delay value">*0*</MBA_DELAY>
+         <RELOC>y</RELOC>
+         <SCHEDULER>SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2>y</MULTIBOOT2>
+         <RDT>
+            <RDT_ENABLED>y</RDT_ENABLED>
+            <CDP_ENABLED>n</CDP_ENABLED>
+            <CLOS_MASK>0xff</CLOS_MASK>
+            <CLOS_MASK>0x3f</CLOS_MASK>
+            <CLOS_MASK>0xf</CLOS_MASK>
+            <CLOS_MASK>0x3</CLOS_MASK>
+            <MBA_DELAY>0</MBA_DELAY>
          </RDT>
 
    .. note::
@@ -206,12 +206,12 @@ Configure RDT for VM Using VM Configuration
       :emphasize-lines: 5,6,7,8
 
       <vm id="0">
-         <vm_type desc="Specify the VM type" readonly="true">PRE_STD_VM</vm_type>
-         <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN PRE-LAUNCHED VM0</name>
-         <uuid configurable="0" desc="vm uuid">26c5e0d8-8f8a-47d8-8109-f201ebd61a5e</uuid>
-         <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
-            <vcpu_clos>*0*</vcpu_clos>
-            <vcpu_clos>*1*</vcpu_clos>
+         <vm_type readonly="true">PRE_STD_VM</vm_type>
+         <name>ACRN PRE-LAUNCHED VM0</name>
+         <uuid configurable="0">26c5e0d8-8f8a-47d8-8109-f201ebd61a5e</uuid>
+         <clos>
+            <vcpu_clos>0</vcpu_clos>
+            <vcpu_clos>1</vcpu_clos>
          </clos>
       </vm>
 
@@ -249,7 +249,7 @@ Configure RDT for VM Using VM Configuration
    per-LP CLOS is applied to the core. If HT is turned on, don't place high
    priority threads on sibling LPs running lower priority threads.
 
-#. Based on our scenario, build and install ACRN. See :ref:`build-with-acrn-scenario`
+#. Based on our scenario, build and install ACRN. See :ref:`gsg`
    for building and installing instructions.
 
 #. Restart the platform.

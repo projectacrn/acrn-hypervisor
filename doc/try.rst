@@ -3,21 +3,19 @@
 Getting Started
 ###############
 
-After reading the :ref:`introduction`, use these guides to get started
+After reading the :ref:`introduction`, use these documents to get started
 using ACRN in a reference setup.  We'll show how to set up your
 development and target hardware, and then how to boot the ACRN
-hypervisor, the Service VM, and a User VM on the Intel platform.
+hypervisor, the Service VM, and a User VM on a supported Intel target platform.
 
-ACRN is supported on platforms listed in :ref:`hardware`.
-
-Follow these getting started guides to give ACRN a try:
 
 .. toctree::
    :maxdepth: 1
 
    reference/hardware
+   getting-started/overview_dev
    getting-started/getting-started
-   getting-started/building-from-source
-   getting-started/roscube/roscube-gsg
-   tutorials/using_hybrid_mode_on_nuc
-   tutorials/using_partition_mode_on_nuc
+
+After getting familiar with ACRN development, check out these
+:ref:`develop_acrn` for information about more-advanced scenarios and enabling
+ACRN advanced capabilities.

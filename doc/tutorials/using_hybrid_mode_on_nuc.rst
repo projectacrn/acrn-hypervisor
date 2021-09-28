@@ -32,7 +32,7 @@ as shown in :numref:`hybrid_scenario_on_nuc`.
 Set-up base installation
 ************************
 
-- Use the `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_.
+- Use the `Intel NUC Kit NUC11TNBi5 <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_.
 - Connect to the serial port as described in :ref:`Connecting to the serial port <connect_serial_port>`.
 - Install Ubuntu 18.04 on your SATA device or on the NVME disk of your
   Intel NUC.
@@ -46,21 +46,21 @@ Prepare the Zephyr kernel that you will run in VM0 later.
 
 - Follow step 1 from the :ref:`using_zephyr_as_uos` instructions
 
-  .. note:: We only need the binary Zephyr kernel, not the entire ``zephyr.img``
+  .. note:: We only need the ELF binary Zephyr kernel, not the entire ``zephyr.img``
 
-- Copy the :file:`zephyr/zephyr.bin` to the ``/boot`` folder::
+- Copy the :file:`zephyr/zephyr.elf` to the ``/boot`` folder::
 
-   sudo cp zephyr/zephyr.bin /boot
+   sudo cp zephyr/zephyr.elf /boot
 
 .. rst-class:: numbered-step
 
 Set-up ACRN on your device
 **************************
 
-- Follow the instructions in :Ref:`getting-started-building` to build ACRN using the
-  ``hybrid`` scenario. Here is the build command-line for the `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_::
+- Follow the instructions in :Ref:`gsg` to build ACRN using the
+  ``hybrid`` scenario. Here is the build command-line for the `Intel NUC Kit NUC11TNBi5 <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_::
 
-     make BOARD=nuc7i7dnb SCENARIO=hybrid
+   make clean && make BOARD=nuc11tnbi5 SCENARIO=hybrid
 
 - Install the ACRN hypervisor and tools
 
@@ -103,23 +103,43 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
          insmod ext2
          echo 'Loading hypervisor Hybrid scenario ...'
          multiboot2 /boot/acrn.bin
-         module2 /boot/zephyr.bin xxxxxx
+         module2 /boot/zephyr.elf xxxxxx
          module2 /boot/bzImage yyyyyy
          module2 /boot/ACPI_VM0.bin ACPI_VM0
 
       }
 
-
-   .. note:: The module ``/boot/zephyr.bin`` is the VM0 (Zephyr) kernel file.
+     
+   .. note:: The module ``/boot/zephyr.elf`` is the VM0 (Zephyr) kernel file.
       The param ``xxxxxx`` is VM0's kernel file tag and must exactly match the
-      ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``
+      ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``
       file. The multiboot module ``/boot/bzImage`` is the Service VM kernel
       file. The param ``yyyyyy`` is the bzImage tag and must exactly match the
-      ``kern_mod`` of VM1 in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``
+      ``kern_mod`` of VM1 in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``
       file. The kernel command-line arguments used to boot the Service VM are
-      ``bootargs`` of VM1 in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``.
+      ``bootargs`` of VM1 in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``.
       The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0 (Zephyr).
       The parameter ``ACPI_VM0`` is VM0's ACPI tag and should not be modified.
+
+#. Correct example Grub configuration (with ``module2`` image paths set):
+
+   .. code-block:: console
+      :emphasize-lines: 10,11,12
+
+      menuentry 'ACRN hypervisor Hybrid Scenario' --id ACRN_Hybrid --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
+         recordfail
+         load_video
+         gfxmode $linux_gfx_mode
+         insmod gzio
+         insmod part_gpt
+         insmod ext2
+         echo 'Loading hypervisor Hybrid scenario ...'
+         multiboot2 /boot/acrn.bin
+         module2 /boot/zephyr.elf Zephyr_ElfImage
+         module2 /boot/bzImage Linux_bzImage
+         module2 /boot/ACPI_VM0.bin ACPI_VM0
+         
+      }
 
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
@@ -143,6 +163,9 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
 
 Hybrid Scenario Startup Check
 *****************************
+#. Connect to the serial port as described in this :ref:`Connecting to the
+   serial port <connect_serial_port>` tutorial.
+
 #. Use these steps to verify that the hypervisor is properly running:
 
    a. Log in to the ACRN hypervisor shell from the serial console.
