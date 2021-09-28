@@ -3,15 +3,15 @@
 Hypervisor Makefile Options
 ###########################
 
-The ACRN hypervisor source code provides a makefile to build the ACRN
+The ACRN hypervisor source code provides a ``Makefile`` to build the ACRN
 hypervisor binary and associated components.
 
 Assuming that you are at the top level of the ``acrn-hypervisor`` directory,
 you can run the ``make`` command to start the build. See
 :ref:`acrn_configuration_tool` for information about required input files.
 
-Build Options
-*************
+Build Options and Targets
+**************************
 
 The following table shows ACRN-specific command-line options:
 
@@ -33,18 +33,44 @@ The following table shows ACRN-specific command-line options:
        are ``y`` for release version or ``n`` for debug version. (Default
        is ``n``.)
 
-   * - ``hypervisor``
-     - Optional. Build the hypervisor only.
-
-   * - ``devicemodel``
-     - Optional. Build the Device Model only.
-
-   * - ``tools``
-     - Optional. Build the tools only.
+   * - ``ASL_COMPILER``
+     - Optional. Use an ``iasl`` compiler that is not in the default path
+       (``/usr/sbin``).
 
    * - ``O``
      - Optional. Path to the directory where the built files will be stored.
        (Default is the ``build`` directory.)
+
+The following table shows ACRN-specific targets:
+
+.. list-table::
+   :widths: 33 77
+   :header-rows: 1
+
+   * - Makefile Target
+     - Description
+
+   * - ``hypervisor``
+     - Optional. Build the hypervisor.
+
+   * - ``devicemodel``
+     - Optional. Build the Device Model. The ``tools`` will also be built as
+       a dependency.
+
+   * - ``tools``
+     - Optional. Build the tools.
+
+   * - ``doc``
+     - Optional. Build the project's HTML documentation (using Sphinx), output
+       to the ``build/doc`` folder.
+
+   * - ``life_mngr``
+     - Optional. Build the Lifecycle Manager daemon that runs in the User VM
+       to manage power state transitions (S5).
+
+   * - ``targz-pkg``
+     - Optional. Create a compressed tarball (``acrn-$(FULL_VERSION).tar.gz``)
+       in the build folder (default: ``build``) with all the build artifacts.
 
 Example of a command to build the debug version:
 
@@ -76,6 +102,12 @@ Example of a command to put the built files in the specified directory
 .. code-block:: none
 
    make O=build-nuc BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/industry.xml
+
+Example of a command that specifies ``iasl`` compiler:
+
+.. code-block:: none
+
+   make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/industry.xml ASL_COMPILER=/usr/local/bin/iasl
 
 ACRN uses XML files to summarize board characteristics and scenario settings.
 The ``BOARD`` and ``SCENARIO`` variables accept board/scenario names as well
@@ -175,7 +207,8 @@ it to ``config.patch``:
    acrn-hypervisor$ make hvdiffconfig
    ...
    Diff on generated configuration files is available at /path/to/acrn-hypervisor/build/hypervisor/config.patch.
-   To make a patch effective, use 'applydiffconfig PATCH=/path/to/patch' to register it to a build.
+   To make a patch effective, use 'hvapplydiffconfig PATCH=/path/to/patch' to
+   register it to a build.
    ...
    acrn-hypervisor$ cp build/hypervisor/config.patch config.patch
 

@@ -28,7 +28,7 @@ define post-launched User VM settings. This document describes these option sett
   Virtual bootloader type; currently only supports OVMF.
 
 ``vuart0``:
-  Specify whether the device model emulates the vUART0(vCOM1); refer to
+  Specify whether the device model emulates the vUART0 (vCOM1); refer to
   :ref:`vuart_config` for details.  If set to ``Enable``, the vUART0 is
   emulated by the device model; if set to ``Disable``, the vUART0 is
   emulated by the hypervisor if it is configured in the scenario XML.
@@ -54,9 +54,9 @@ define post-launched User VM settings. This document describes these option sett
   List of shared memory regions for inter-VM communication.
 
 ``shm_region`` (a child node of ``shm_regions``):
-  configure the shared memory regions for current VM, input format:
-  ``hv:/<;shm name>; (or dm:/<shm_name>;), <;shm size in MB>;``. Refer
-  to :ref:`ivshmem-hld` for details.
+  Configure the shared memory regions for the current VM, input format:
+  ``[hv|dm]:/<shm name>,<shm size in MB>``. Refer to :ref:`ivshmem-hld`
+  for details.
 
 ``console_vuart``:
   Enable a PCI-based console vUART. Refer to :ref:`vuart_config` for details.
@@ -70,14 +70,14 @@ define post-launched User VM settings. This document describes these option sett
   :ref:`vuart_config` for details.
 
 ``passthrough_devices``:
-  Select the passthrough device from the lspci list. Currently we support:
+  Select the passthrough device from the PCI device list. Currently we support:
   ``usb_xdci``, ``audio``, ``audio_codec``, ``ipu``, ``ipu_i2c``,
   ``cse``, ``wifi``, ``bluetooth``, ``sd_card``,
   ``ethernet``, ``sata``, and ``nvme``.
 
 ``network`` (a child node of ``virtio_devices``):
   The virtio network device setting.
-  Input format: ``tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]``.
+  Input format: ``[tap_name|macvtap_name],[vhost],[mac=XX:XX:XX:XX:XX:XX]``.
 
 ``block`` (a child node of ``virtio_devices``):
   The virtio block device setting.
