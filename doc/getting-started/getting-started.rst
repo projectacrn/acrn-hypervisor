@@ -165,7 +165,7 @@ To set up the ACRN build environment on the development computer:
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor
       cd acrn-hypervisor
-      git checkout a7c273996
+      git checkout v2.6
 
       cd ..
       git clone https://github.com/projectacrn/acrn-kernel
