@@ -47,10 +47,11 @@ Before you begin, make sure your machines have the following prerequisites:
 * Hardware specifications
 
   - Target board (see :ref:`hardware_tested`)
-  - Ubuntu 18.04 Desktop bootable USB disk: download the `Ubuntu 18.04.05 Desktop
-    ISO image <https://releases.ubuntu.com/18.04.5/>`_ and follow the `Ubuntu documentation
+  - Ubuntu 18.04 Desktop bootable USB disk: download the `Ubuntu 18.04.05
+    Desktop ISO image <https://releases.ubuntu.com/18.04.5/>`_ and follow the
+    `Ubuntu documentation
     <https://ubuntu.com/tutorials/create-a-usb-stick-on-ubuntu#1-overview>`__
-    for instructions for creating the USB disk.
+    for creating the USB disk.
   - USB keyboard and mouse
   - Monitor
   - Ethernet cable and Internet access
@@ -72,7 +73,8 @@ To set up the hardware environment:
 #. Connect the target system to the LAN with the Ethernet cable.
 
 #. (Optional) Connect the serial cable between the target and development
-   computer to view the ACRN and VM console (for an example, see :ref:`connect_serial_port`).
+   computer to view the ACRN and VM console (for an example, see
+   :ref:`connect_serial_port`).
 
 Example of a target system with cables connected:
 
@@ -113,7 +115,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo apt install gcc \
+      sudo apt install -y gcc \
            git \
            make \
            vim \
@@ -157,8 +159,9 @@ To set up the ACRN build environment on the development computer:
       make clean && make iasl
       sudo cp ./generate/unix/bin/iasl /usr/sbin
 
-#. Get the ACRN hypervisor and kernel source code.  (Note these checkout tags
-   will be updated when we launch the v2.6 release):
+#. Get the ACRN hypervisor and kernel source code. (Because the acrn-kernel repo
+   has a lot of Linux kernel history, you can clone the relevant release branch
+   with minimal history, as shown here.)
 
    .. code-block:: bash
 
@@ -168,9 +171,7 @@ To set up the ACRN build environment on the development computer:
       git checkout v2.6
 
       cd ..
-      git clone https://github.com/projectacrn/acrn-kernel
-      cd acrn-kernel
-      git checkout release_2.6
+      git clone --depth 1 --branch release_2.6 https://github.com/projectacrn/acrn-kernel
 
 .. _gsg-board-setup:
 
@@ -179,9 +180,10 @@ To set up the ACRN build environment on the development computer:
 Prepare the Target and Generate a Board Configuration File
 ***************************************************************
 
-A **board configuration file** is an XML file that stores hardware-specific information extracted from the target system. The file is used to configure
-the ACRN hypervisor, because each hypervisor instance is specific to your
-target hardware.
+A **board configuration file** is an XML file that stores hardware-specific
+information extracted from the target system. The file is used to configure the
+ACRN hypervisor, because each hypervisor instance is specific to your target
+hardware.
 
 You use the **board inspector tool** to generate the board
 configuration file.
@@ -265,7 +267,7 @@ Generate a Board Configuration File
 
    .. code-block:: bash
 
-      sudo apt install cpuid msr-tools pciutils dmidecode python3 python3-pip
+      sudo apt install -y cpuid msr-tools pciutils dmidecode python3 python3-pip
 
 #. Install the Python package dependencies:
 
@@ -391,7 +393,8 @@ Generate a Board Configuration File
 Generate a Scenario Configuration File and Launch Script
 *********************************************************
 
-You use the **ACRN configurator** to generate scenario configuration files and launch scripts.
+You use the **ACRN configurator** to generate scenario configuration files and
+launch scripts.
 
 A **scenario configuration file** is an XML file that holds the parameters of
 a specific ACRN configuration, such as the number of VMs that can be run,
@@ -434,7 +437,8 @@ To generate a scenario configuration file and launch script:
       .. image:: ./images/gsg_config_scenario_default.png
          :class: drop-shadow
 
-   #. In the dialog box, select **industry** as the default scenario setting and click **OK**.
+   #. In the dialog box, select **industry** as the default scenario setting and
+      then click **OK**.
 
       .. image:: ./images/gsg_config_scenario_load.png
          :class: drop-shadow
@@ -457,7 +461,8 @@ To generate a scenario configuration file and launch script:
       .. image:: ./images/gsg_config_scenario_save.png
          :class: drop-shadow
 
-   #. Confirm that ``industry.xml`` appears in the directory ``/home/<username>/acrn-work``.
+   #. Confirm that ``industry.xml`` appears in the directory
+      ``/home/<username>/acrn-work``.
 
 #. Generate the launch script:
 
@@ -574,7 +579,8 @@ Install ACRN
 
 In the following steps, you will configure GRUB on the target system.
 
-#. On the target, find the root file system (rootfs) device name by using the ``lsblk`` command:
+#. On the target, find the root file system (rootfs) device name by using the
+   ``lsblk`` command:
 
    .. code-block:: console
       :emphasize-lines: 24
@@ -608,7 +614,8 @@ In the following steps, you will configure GRUB on the target system.
    partition named ``/``, in this case ``nvme0n1p2``.
 
 #. Run the ``blkid`` command to get the UUID and PARTUUID for the rootfs device
-   (replace the ``nvme0n1p2`` name with the name shown for the rootfs on your system):
+   (replace the ``nvme0n1p2`` name with the name shown for the rootfs on your
+   system):
 
    .. code-block:: bash
 
@@ -648,7 +655,7 @@ In the following steps, you will configure GRUB on the target system.
          }
 
    #. Save and close the file.
-   
+
    #. Correct example image
 
       .. code-block:: console
@@ -755,10 +762,10 @@ Launch the User VM
 
       vi ~/acrn-work/launch_uos_id3.sh
 
-#. Look for the line that contains the term ``virtio-blk`` and replace
-   the existing image file path with your ISO image file path.
-   In the following example, the
-   ISO image file path is ``/home/acrn/acrn-work/ubuntu-18.04.5-desktop-amd64.iso``.
+#. Look for the line that contains the term ``virtio-blk`` and replace the
+   existing image file path with your ISO image file path.  In the following
+   example, the ISO image file path is
+   ``/home/acrn/acrn-work/ubuntu-18.04.5-desktop-amd64.iso``.
 
    .. code-block:: bash
       :emphasize-lines: 4
@@ -828,4 +835,5 @@ The User VM has launched successfully. You have completed this ACRN setup.
 Next Steps
 **************
 
-:ref:`overview_dev` describes the ACRN configuration process, with links to additional details.
+:ref:`overview_dev` describes the ACRN configuration process, with links to
+additional details.
