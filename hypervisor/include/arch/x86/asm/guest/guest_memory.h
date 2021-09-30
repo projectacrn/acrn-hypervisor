@@ -56,7 +56,7 @@ void *gpa2hva(struct acrn_vm *vm, uint64_t x);
  * @pre Caller(Guest) should make sure gpa is continuous.
  * - gpa from hypercall input which from kernel stack is gpa continuous, not
  *   support kernel stack from vmap
- * - some other gpa from hypercall parameters, VHM should make sure it's
+ * - some other gpa from hypercall parameters, HSM should make sure it's
  *   continuous
  * @pre Pointer vm is non-NULL
  */
@@ -75,7 +75,7 @@ int32_t copy_from_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t si
  * @pre Caller(Guest) should make sure gpa is continuous.
  * - gpa from hypercall input which from kernel stack is gpa continuous, not
  *   support kernel stack from vmap
- * - some other gpa from hypercall parameters, VHM should make sure it's
+ * - some other gpa from hypercall parameters, HSM should make sure it's
  *   continuous
  * @pre Pointer vm is non-NULL
  */
