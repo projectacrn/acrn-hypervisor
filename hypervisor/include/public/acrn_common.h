@@ -217,7 +217,7 @@ struct acrn_pci_request {
  * |                       |                         |   SOS vCPU 0         |
  * |                       |                         |                      |
  * +-----------------------+-------------------------+----------------------+
- * | VHM:                  |                         |                      |
+ * | HSM:                  |                         |                      |
  * |                       |                         |                      |
  * | - Scan for pending    |                         |                      |
  * |   requests            |                         |                      |
@@ -260,7 +260,7 @@ struct acrn_pci_request {
  *   4. One vCPU cannot trigger another I/O request before the previous one has
  *      completed (i.e. the state switched to FREE)
  *
- * Accesses to the state of a vhm_request shall be atomic and proper barriers
+ * Accesses to the state of a acrn_io_request shall be atomic and proper barriers
  * are needed to ensure that:
  *
  *   1. Setting state to PENDING is the last operation when issuing a request in
@@ -338,7 +338,7 @@ struct acrn_io_request_buffer {
  * @brief Info to create a VM, the parameter for HC_CREATE_VM hypercall
  */
 struct acrn_vm_creation {
-	/** created vmid return to VHM. Keep it first field */
+	/** created vmid return to HSM. Keep it first field */
 	uint16_t vmid;
 
 	/** Reserved */
@@ -435,7 +435,7 @@ struct acrn_regs {
 /**
  * @brief Info to set vcpu state
  *
- * the pamameter for HC_SET_VCPU_STATE
+ * the parameter for HC_SET_VCPU_STATE
  */
 struct acrn_vcpu_regs {
 	/** the virtual CPU ID for the VCPU to set state */

@@ -16,7 +16,7 @@
 #define ACRN_HV_DEFS_H
 
 /*
- * Common structures for HV/VHM
+ * Common structures for HV/HSM
  */
 
 #define BASE_HC_ID(x, y) (((x)<<24U)|(y))
@@ -329,7 +329,7 @@ struct acrn_platform_info {
 
 		/**
 		 * Address to an array of struct acrn_vm_config, containing all
-		 * the configurations of all VMs. VHM treats it as an opague data
+		 * the configurations of all VMs. HSM treats it as an opaque data
 		 * structure.
 		 *
 		 * The size of one array element is vm_config_entry_size while
