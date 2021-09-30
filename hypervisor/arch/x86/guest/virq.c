@@ -444,7 +444,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		 * Defer injection of interrupt to be after MTF VM exit,
 		 * when emulating the split-lock.
 		 */
-		if (!vcpu->arch.emulating_lock) {
+		if (!is_lapic_pt_enabled(vcpu) && !vcpu->arch.emulating_lock) {
 			acrn_inject_pending_intr(vcpu, pending_req_bits, injected);
 		}
 
@@ -461,7 +461,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		 * an ExtInt or there is lapic interrupt and virtual interrupt
 		 * deliver is disabled.
 		 */
-		if (!arch->irq_window_enabled) {
+		if (!is_lapic_pt_enabled(vcpu) && !arch->irq_window_enabled) {
 			/*
 			 * TODO: Currently, NMI exiting and virtual NMIs are not enabled,
 			 * so use interrupt window to inject NMI.
