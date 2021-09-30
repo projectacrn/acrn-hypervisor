@@ -104,6 +104,6 @@ then add it to the grub menu:
 
    ``uart=bdf@0x101`` for port 2
 
-   ``uart=bdf@0x101`` is preferred for the industry scenario; otherwise, it can't
+   ``uart=bdf@0x101`` is preferred for the shared scenario; otherwise, it can't
    input in the Hypervisor console after the Service VM boots up.
    There is no such limitation for the hybrid or hybrid_rt scenarios.

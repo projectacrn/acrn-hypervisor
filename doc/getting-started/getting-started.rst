@@ -8,7 +8,7 @@ Getting Started Guide
 This guide will help you get started with ACRN. We'll show how to prepare a
 build environment on your development computer. Then we'll walk through the
 steps to set up a simple ACRN configuration on a target system. The
-configuration is based on the ACRN predefined **industry** scenario and consists
+configuration is based on the ACRN predefined **shared** scenario and consists
 of an ACRN hypervisor, Service VM, and one User VM, as illustrated in this
 figure:
 
@@ -437,7 +437,7 @@ To generate a scenario configuration file and launch script:
       .. image:: ./images/gsg_config_scenario_default.png
          :class: drop-shadow
 
-   #. In the dialog box, select **industry** as the default scenario setting and
+   #. In the dialog box, select **shared** as the default scenario setting and
       then click **OK**.
 
       .. image:: ./images/gsg_config_scenario_load.png
@@ -461,7 +461,7 @@ To generate a scenario configuration file and launch script:
       .. image:: ./images/gsg_config_scenario_save.png
          :class: drop-shadow
 
-   #. Confirm that ``industry.xml`` appears in the directory
+   #. Confirm that ``shared.xml`` appears in the directory
       ``/home/<username>/acrn-work``.
 
 #. Generate the launch script:
@@ -472,7 +472,7 @@ To generate a scenario configuration file and launch script:
       .. image:: ./images/gsg_config_launch_default.png
          :class: drop-shadow
 
-   #. In the dialog box, select **industry_launch_6uos** as the default launch
+   #. In the dialog box, select **shared_launch_6uos** as the default launch
       setting and click **OK**.
 
       .. image:: ./images/gsg_config_launch_load.png
@@ -506,7 +506,7 @@ Build ACRN
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-hypervisor
-      make -j $(nproc) BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/industry.xml
+      make -j $(nproc) BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/shared.xml
       make targz-pkg
 
    The build typically takes a few minutes. By default, the build results are

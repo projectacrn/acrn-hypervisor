@@ -1,13 +1,13 @@
 .. _using_partition_mode_on_nuc:
 
-Getting Started Guide for ACRN Logical Partition Mode
-#####################################################
+Getting Started Guide for ACRN Partitioned Mode
+###############################################
 
-The ACRN hypervisor supports a logical partition scenario in which the User
+The ACRN hypervisor supports a partitioned scenario in which the User
 OS, running in a pre-launched VM, can bypass the ACRN
 hypervisor and directly access isolated PCI devices. The following
 guidelines provide step-by-step instructions on how to set up the ACRN
-hypervisor logical partition scenario on Intel NUC while running two
+hypervisor partitioned scenario on Intel NUC while running two
 pre-launched VMs.
 
 .. contents::
@@ -19,6 +19,10 @@ Validated Versions
 
 - Ubuntu version: **18.04**
 - ACRN hypervisor tag: **v2.6**
+
+.. note:: After the v2.6 release, the ``logical_partition`` scenario
+   was renamed to ``partitioned``, affecting the file names used in this
+   guide (validated with v2.6).
 
 Prerequisites
 *************
