@@ -152,7 +152,7 @@ The default scheduler is **SCHED_BVT**.
 Example
 *******
 
-Use the following settings to support this configuration in the industry scenario:
+Use the following settings to support this configuration in the shared scenario:
 
 +---------+--------+-------+-------+
 |pCPU0    |pCPU1   |pCPU2  |pCPU3  |

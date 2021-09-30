@@ -205,7 +205,7 @@ How to Test
 #. Refer to the :ref:`enable_s5` section to set up the S5 environment for the User VMs.
 
    .. note:: RT-Linux's UUID must use ``495ae2e5-2603-4d64-af76-d4bc5a8ec0e5``. Also, the
-      industry EFI image is required for launching the RT-Linux VM.
+      shared EFI image is required for launching the RT-Linux VM.
 
    .. note:: Use the ``systemctl status life_mngr.service`` command to ensure the service is working on the LaaG or RT-Linux:
 

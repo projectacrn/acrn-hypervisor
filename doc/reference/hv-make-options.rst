@@ -76,19 +76,19 @@ Example of a command to build the debug version:
 
 .. code-block:: none
 
-   make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/industry.xml
+   make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/shared.xml
 
 Example of a command to build the release version:
 
 .. code-block:: none
 
-   make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/industry.xml RELEASE=y
+   make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/shared.xml RELEASE=y
 
 Example of a command to build the release version (hypervisor only):
 
 .. code-block:: none
 
-   make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/industry.xml RELEASE=y hypervisor
+   make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/shared.xml RELEASE=y hypervisor
 
 Example of a command to build the release version of the Device Model and tools:
 
@@ -101,13 +101,13 @@ Example of a command to put the built files in the specified directory
 
 .. code-block:: none
 
-   make O=build-nuc BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/industry.xml
+   make O=build-nuc BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/shared.xml
 
 Example of a command that specifies ``iasl`` compiler:
 
 .. code-block:: none
 
-   make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/industry.xml ASL_COMPILER=/usr/local/bin/iasl
+   make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/shared.xml ASL_COMPILER=/usr/local/bin/iasl
 
 ACRN uses XML files to summarize board characteristics and scenario settings.
 The ``BOARD`` and ``SCENARIO`` variables accept board/scenario names as well
@@ -171,7 +171,7 @@ files manually (``scenario.xml``) and then building the hypervisor:
 
 .. code-block:: none
 
-   make BOARD=nuc7i7dnb SCENARIO=industry hvdefconfig
+   make BOARD=nuc7i7dnb SCENARIO=shared hvdefconfig
    vim build/hypervisor/.scenario.xml
    #(Modify the XML file per your needs)
    make
