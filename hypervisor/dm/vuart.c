@@ -548,30 +548,21 @@ static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused siz
 }
 
 /*
- * @pre: vuart_idx = 0 or 1
+ * @pre: vuart_idx < MAX_VUART_NUM_PER_VM
  */
 static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, uint32_t vuart_idx)
 {
-	uint32_t pio_idx;
 	bool ret = true;
 
 	struct vm_io_range range = {
 		.base = port_base,
 		.len = 8U
 	};
-	switch (vuart_idx) {
-	case 0U:
-		pio_idx = UART_PIO_IDX0;
-		break;
-	case 1U:
-		pio_idx = UART_PIO_IDX1;
-		break;
-	default:
+	if (vuart_idx < MAX_VUART_NUM_PER_VM) {
+		register_pio_emulation_handler(vm, UART_PIO_IDX0 + vuart_idx, &range, vuart_read, vuart_write);
+	} else {
 		printf("Not support vuart index %d, will not register \n", vuart_idx);
 		ret = false;
-	}
-	if (ret != 0U) {
-		register_pio_emulation_handler(vm, pio_idx, &range, vuart_read, vuart_write);
 	}
 	return ret;
 }
