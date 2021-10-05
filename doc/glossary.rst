@@ -136,7 +136,7 @@ Glossary of Terms
    Scenario
       A collection of hypervisor and VM configuration settings that define an
       ACRN-based application's environment. A scenario configuration is stored
-      in a scenario XML file and edited using a GUI configuration tool. The
+      in a scenario XML file and edited using the ACRN configurator tool. The
       scenario configuration, along with the target board configuration, is used
       by the ACRN build system to modify the source code to build tailored
       images of the hypervisor and Service VM for the application. ACRN provides

@@ -12,7 +12,7 @@ only works on a single function.
 
 Only two vUART configurations are added to the predefined scenarios,
 but you can customize the scenarios to enable more using the :ref:`ACRN
-configuration toolset <acrn_config_workflow>`.
+configurator tool <acrn_configurator_tool>`.
 
 Console Enable List
 ===================

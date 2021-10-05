@@ -681,7 +681,8 @@ header files,
 along with some prose documentation in ``.rst`` files. The ACRN configuration
 option documentation is created based on details maintained in schema definition
 files (``.xsd``) in the ``misc/config_tools/schema`` folder.  These schema
-definition files are used by the configuration tool to validate the XML scenario
+definition files are used by the ACRN configurator tool to validate the XML
+scenario
 configuration files as well as to hold documentation about each option.  For
 example:
 
@@ -697,10 +698,10 @@ example:
     </xs:element>
 
 During the documentation ``make html`` processing, the documentation annotations
-in the ``.xsd`` files are extracted and transformed into restructureText using
+in the ``.xsd`` files are extracted and transformed into reStructuredText using
 an XSLT transformation found in ``doc/scripts/configdoc.xsl``. The generated
-option documentation is organized and formatted to make it easy to created links
-to specific option descriptions using an ``:option:`` role, for example
+option documentation is organized and formatted to make it easy to create links
+to specific option descriptions using an ``:option:`` role, for example,
 ``:option:`hv.DEBUG_OPTIONS.RELEASE``` would link to
 :option:`hv.DEBUG_OPTIONS.RELEASE`.
 
