@@ -189,6 +189,7 @@
             <pci_dev>00:08.0 System peripheral: Intel Corporation Device 4511</pci_dev>
             <pci_dev>00:17.0 SATA controller: Intel Corporation Device 4b63</pci_dev>
             <pci_dev>00:1d.2 Ethernet controller: Intel Corporation Device 4bb0</pci_dev>
+            <pci_dev>00:02.0 VGA compatible controller: Intel Corporation Device 4571</pci_dev>
         </pci_devs>
         <mmio_resources>
             <TPM2>n</TPM2>
