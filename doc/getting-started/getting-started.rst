@@ -9,8 +9,8 @@ This guide will help you get started with ACRN. We'll show how to prepare a
 build environment on your development computer. Then we'll walk through the
 steps to set up a simple ACRN configuration on a target system. The
 configuration is based on the ACRN predefined **shared** scenario and consists
-of an ACRN hypervisor, Service VM, and one User VM, as illustrated in this
-figure:
+of an ACRN hypervisor, Service VM, and six User VMs, but we'll launch only one
+User VM, as illustrated in this figure:
 
 .. image:: ./images/gsg_scenario.png
    :scale: 80%
@@ -791,7 +791,7 @@ Launch the User VM
 
 #. It will take a few seconds for the User VM to boot and start running the
    Ubuntu image.  Confirm that you see the console of the User VM on the Service
-   VM's terminal (on the monitor connected to the target system). Example:
+   VM's terminal. Example:
 
    .. code-block:: console
 
