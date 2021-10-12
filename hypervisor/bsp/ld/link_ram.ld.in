@@ -6,7 +6,7 @@ MEMORY
     lowram  :   ORIGIN = 0, LENGTH = CONFIG_LOW_RAM_SIZE
 
     /* 32 MBytes of RAM for HV */
-    ram     :   ORIGIN = CONFIG_HV_RAM_START, LENGTH = CONFIG_HV_RAM_SIZE
+    ram     :   ORIGIN = CONFIG_HV_RAM_START, LENGTH = 0x80000000 - CONFIG_HV_RAM_START
 }
 
 SECTIONS
@@ -98,6 +98,7 @@ SECTIONS
         ld_bss_end = . ;
     } > ram
 
-    _ld_ram_size = LENGTH(ram) ;
-    _ld_ram_end = _ld_ram_size + _ld_ram_start ;
+   . = ALIGN(0x200000) ;
+    _ld_ram_end = . ;
+    ld_ram_size = _ld_ram_end - _ld_ram_start ;
 }
