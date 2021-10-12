@@ -40,6 +40,7 @@
 #include <logmsg.h>
 #include <misc_cfg.h>
 
+static uint32_t hv_ram_size;
 static void *ppt_mmu_pml4_addr;
 static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
 
@@ -151,6 +152,11 @@ void invept(const void *eptp)
 	}
 }
 
+uint32_t get_hv_ram_size(void)
+{
+	return hv_ram_size;
+}
+
 void enable_paging(void)
 {
 	uint64_t tmp64 = 0UL;
@@ -249,6 +255,7 @@ void init_paging(void)
 	const struct abi_mmap *p_mmap = abi->mmap_entry;
 
 	pr_dbg("HV MMU Initialization");
+	hv_ram_size = (uint32_t)(uint64_t)&ld_ram_size;
 
 	init_sanitized_page((uint64_t *)sanitized_page, hva2hpa_early(sanitized_page));
 
@@ -295,7 +302,7 @@ void init_paging(void)
 	 */
 	hv_hva = get_hv_image_base();
 	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, hv_hva & PDE_MASK,
-			CONFIG_HV_RAM_SIZE + (((hv_hva & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
+			hv_ram_size + (((hv_hva & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER, &ppt_pgtable, MR_MODIFY);
 
 	/*
