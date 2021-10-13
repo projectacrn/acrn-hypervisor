@@ -62,23 +62,23 @@ a custom scenario configuration file and launch scripts.
    automatically, or you may need to visit this website manually. The ACRN
    configurator is supported on Chrome and Firefox.
 
-#. Click the **Import Board info** button and browse to your board
+#. Click the **Import Board XML** button and browse to your board
    configuration file. After the file is uploaded, make sure the board name
    is selected in the **Board info** drop-down list and the board information
    appears.
 
 #. Start the scenario configuration process by selecting an option from the
-   **Scenario Setting** menu on the top banner of the UI or by importing a
+   **Scenario Settings** menu on the top banner of the UI or by importing a
    scenario configuration file via the **Import XML** button. The four options
    are described below:
 
-   * Click **Create a new scenario** from the **Scenario Setting** menu to
+   * Click **Create a new scenario** from the **Scenario Settings** menu to
      dynamically create a new scenario configuration for the current board.
 
-   * Click **Load a default scenario** from the **Scenario Setting** menu to
+   * Click **Load a default scenario** from the **Scenario Settings** menu to
      select a :ref:`predefined scenario configuration <usage-scenarios>`.
 
-   * Click the **Scenario Setting** menu and select a scenario from the list
+   * Click the **Scenario Settings** menu and select a scenario from the list
      under **scenario setting list**.
 
    .. image:: images/choose_scenario.png
@@ -143,17 +143,17 @@ a custom scenario configuration file and launch scripts.
    post-launched User VMs, you can skip to the final step to close the tool.
 
 #. Start the launch script configuration process by
-   selecting an option from the **Launch Setting** menu on the top banner of
+   selecting an option from the **Launch Settings** menu on the top banner of
    the UI or by importing a launch configuration file via the **Import XML**
    button. The four options are described below:
 
-   * Click **Create a new launch script** from the **Launch Setting** menu to
+   * Click **Create a new launch script** from the **Launch Settings** menu to
      dynamically create a new launch configuration for the current board.
 
-   * Click **Load a default launch script** from the **Launch Setting** menu to
+   * Click **Load a default launch script** from the **Launch Settings** menu to
      select a predefined launch configuration.
 
-   * Click the **Launch Setting** menu and select a launch configuration
+   * Click the **Launch Settings** menu and select a launch configuration
      from the list under **launch setting list**.
 
    .. image:: images/choose_launch.png
