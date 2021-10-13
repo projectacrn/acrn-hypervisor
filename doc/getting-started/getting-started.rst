@@ -409,7 +409,7 @@ To generate a scenario configuration file and launch scripts:
    automatically, or you may need to visit this website manually.
    The ACRN configurator is supported on Chrome and Firefox.
 
-#. Click the **Import Board info** button and browse to the board configuration
+#. Click the **Import Board XML** button and browse to the board configuration
    file ``my_board.xml`` previously generated. When it is successfully
    imported, the board information appears.
    Example:
@@ -419,8 +419,8 @@ To generate a scenario configuration file and launch scripts:
 
 #. Generate the scenario configuration file:
 
-   a. Click the **Scenario Setting** menu on the top banner of the UI and select
-      **Load a default scenario**. Example:
+   a. Click the **Scenario Settings** menu on the top banner of the UI and
+      select **Load a default scenario**. Example:
 
       .. image:: ./images/gsg_config_scenario_default.png
          :class: drop-shadow
@@ -455,7 +455,7 @@ To generate a scenario configuration file and launch scripts:
 
 #. Generate the launch scripts:
 
-   a. Click the **Launch Setting** menu on the top banner of the UI and select
+   a. Click the **Launch Settings** menu on the top banner of the UI and select
       **Load a default launch script**.
 
       .. image:: ./images/gsg_config_launch_default.png
@@ -473,14 +473,15 @@ To generate a scenario configuration file and launch scripts:
       .. image:: ./images/gsg_config_launch_generate.png
          :class: drop-shadow
 
-   #. In the dialog box, type ``/home/<username>/acrn-work/`` in the Source Path
-      field. In the following example, ``acrn`` is the username. Click **Submit**
-      to save the script.
+   #. In the dialog box, type ``/home/<username>/acrn-work/`` in the Launch XML
+      Path field. In the following example, ``acrn`` is the username. Click
+      **Submit** to save the script.
 
       .. image:: ./images/gsg_config_launch_save.png
          :class: drop-shadow
 
-   #. Confirm that ``launch_uos_id3.sh`` appears in the expected output directory::
+   #. Confirm that ``launch_uos_id3.sh`` appears in the expected output
+      directory::
 
          ls ~/acrn-work/my_board/output/launch_uos_id3.sh
 
