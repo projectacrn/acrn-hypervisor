@@ -85,7 +85,7 @@ one the following 4 cases:
 - **Pre-launched VM**: The passthrough devices will be used in a pre-launched VM is
   predefined in VM configuration. These passthrough devices are owned by the
   pre-launched VM after the VM is created. These devices will not be removed
-  from the pre-launched VM. There could be pre-launched VM(s) in logical partition
+  from the pre-launched VM. There could be pre-launched VM(s) in partitioned
   mode and hybrid mode.
 - **Service VM**: All the passthrough devices except these described above (owned by
   hypervisor or pre-launched VM(s)) are assigned to Service VM. And some of these devices
@@ -380,7 +380,7 @@ GSI Sharing Violation Check
 
 All the PCI devices that are sharing the same GSI should be assigned to
 the same VM to avoid physical GSI sharing between multiple VMs.
-In logical partition mode or hybrid mode, the PCI devices assigned to
+In partitioned mode or hybrid mode, the PCI devices assigned to
 pre-launched VM is statically predefined. Developers should take care not to
 violate the rule.
 For post-launched VM, devices that don't support MSI, ACRN DM puts the devices
