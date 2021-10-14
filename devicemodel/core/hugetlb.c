@@ -168,8 +168,6 @@ static int unlock_acrn_hugetlb(void)
 
 static int open_hugetlbfs(struct vmctx *ctx, int level)
 {
-	char uuid_str[48];
-	uint8_t	 UUID[16];
 	char *path;
 	size_t len;
 	struct statfs fs;
@@ -181,26 +179,13 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 
 	path = hugetlb_priv[level].node_path;
 	memset(path, '\0', MAX_PATH_LEN);
-	snprintf(path, MAX_PATH_LEN, "%s%s/", hugetlb_priv[level].mount_path, ctx->name);
+	snprintf(path, MAX_PATH_LEN, "%s%s", hugetlb_priv[level].mount_path, ctx->name);
 
 	len = strnlen(path, MAX_PATH_LEN);
-	/* UUID will use 32 bytes */
-	if (len + 32 > MAX_PATH_LEN) {
+	if (len > MAX_PATH_LEN) {
 		pr_err("PATH overflow");
 		return -ENOMEM;
 	}
-
-	uuid_copy(UUID, ctx->vm_uuid);
-	snprintf(uuid_str, sizeof(uuid_str),
-		"%02X%02X%02X%02X%02X%02X%02X%02X"
-		"%02X%02X%02X%02X%02X%02X%02X%02X",
-		UUID[0], UUID[1], UUID[2], UUID[3],
-		UUID[4], UUID[5], UUID[6], UUID[7],
-		UUID[8], UUID[9], UUID[10], UUID[11],
-		UUID[12], UUID[13], UUID[14], UUID[15]);
-
-	*(path + len) = '\0';
-	strncat(path, uuid_str, strnlen(uuid_str, sizeof(uuid_str)));
 
 	pr_info("open hugetlbfs file %s\n", path);
 
@@ -383,7 +368,7 @@ static int rm_hugetlb_dirs(int level)
 		return -EINVAL;
 	}
 
-	snprintf(path,MAX_PATH_LEN, "%s%s/",hugetlb_priv[level].mount_path,vmname);
+	snprintf(path,MAX_PATH_LEN, "%s/",hugetlb_priv[level].mount_path);
 
 	if (access(path, F_OK) == 0) {
 		if (rmdir(path) < 0) {
@@ -405,7 +390,7 @@ static int create_hugetlb_dirs(int level)
 		return -EINVAL;
 	}
 
-	snprintf(path,MAX_PATH_LEN, "%s%s/",hugetlb_priv[level].mount_path,vmname);
+	snprintf(path,MAX_PATH_LEN, "%s/",hugetlb_priv[level].mount_path);
 
 	len = strnlen(path, MAX_PATH_LEN);
 	for (i = 1; i < len; i++) {
@@ -437,7 +422,7 @@ static int mount_hugetlbfs(int level)
 	if (hugetlb_priv[level].mounted)
 		return 0;
 
-	snprintf(path, MAX_PATH_LEN, "%s%s", hugetlb_priv[level].mount_path,vmname);
+	snprintf(path, MAX_PATH_LEN, "%s", hugetlb_priv[level].mount_path);
 
 	/* only support x86 as HUGETLB level-1 2M page, level-2 1G page*/
 	ret = mount("none", path, "hugetlbfs",
@@ -457,7 +442,7 @@ static void umount_hugetlbfs(int level)
 		return;
 	}
 
-	snprintf(path, MAX_PATH_LEN, "%s%s", hugetlb_priv[level].mount_path,vmname);
+	snprintf(path, MAX_PATH_LEN, "%s", hugetlb_priv[level].mount_path);
 
 
 	if (hugetlb_priv[level].mounted) {
