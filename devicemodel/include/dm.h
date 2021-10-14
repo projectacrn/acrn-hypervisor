@@ -32,11 +32,9 @@
 #include <stdbool.h>
 #include "types.h"
 #include "dm_string.h"
-
-#define MAX_VMNAME_LEN	128U
+#include "acrn_common.h"
 
 struct vmctx;
-extern char *guest_uuid_str;
 extern uint8_t trusty_enabled;
 extern char *vsbl_file_name;
 extern char *ovmf_file_name;
