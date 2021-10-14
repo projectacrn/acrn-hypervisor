@@ -57,7 +57,6 @@ struct vmctx {
 	size_t  highmem;
 	char    *baseaddr;
 	char    *name;
-	uuid_t  vm_uuid;
 
 	/* fields to track virtual devices */
 	void *atkbdc_base;

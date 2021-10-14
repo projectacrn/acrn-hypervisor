@@ -81,7 +81,6 @@ typedef void (*vmexit_handler_t)(struct vmctx *,
 
 char *vmname;
 
-char *guest_uuid_str;
 char *vsbl_file_name;
 char *ovmf_file_name;
 char *ovmf_code_file_name;
@@ -145,7 +144,7 @@ usage(int code)
 		"Usage: %s [-hAWYv] [-B bootargs] [-E elf_image_path]\n"
 		"       %*s [-G GVT_args] [-i ioc_mediator_parameters] [-k kernel_image_path]\n"
 		"       %*s [-l lpc] [-m mem] [-r ramdisk_image_path]\n"
-		"       %*s [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]\n"
+		"       %*s [-s pci] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]\n"
 		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--acpidev_pt HID] [--mmiodev_pt MMIO_Regions]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
@@ -164,7 +163,6 @@ usage(int code)
 		"       -m: memory size in MB\n"
 		"       -r: ramdisk image path\n"
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
-		"       -U: uuid\n"
 		"       -v: version\n"
 		"       -W: force virtio to use single-vector MSI\n"
 		"       -Y: disable MPtable generation\n"
@@ -777,7 +775,6 @@ static struct option long_options[] = {
 	{"lpc",			required_argument,	0, 'l' },
 	{"pci_slot",		required_argument,	0, 's' },
 	{"memsize",		required_argument,	0, 'm' },
-	{"uuid",		required_argument,	0, 'U' },
 	{"virtio_msix",		no_argument,		0, 'W' },
 	{"mptgen",		no_argument,		0, 'Y' },
 	{"kernel",		required_argument,	0, 'k' },
@@ -871,9 +868,6 @@ main(int argc, char *argv[])
 		case 'm':
 			if (vm_parse_memsize(optarg, &memsize) != 0)
 				errx(EX_USAGE, "invalid memsize '%s'", optarg);
-			break;
-		case 'U':
-			guest_uuid_str = optarg;
 			break;
 		case 'W':
 			virtio_msix = 0;
@@ -1006,12 +1000,15 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (argc != 1)
+	if (argc != 1) {
+		pr_err("You must provide the name of the Virtual Machine (VM) you want to start. Exiting.\n");
 		usage(1);
+        }
 
 	vmname = argv[0];
+
 	if (strnlen(vmname, MAX_VMNAME_LEN) >= MAX_VMNAME_LEN) {
-		pr_err("vmname size exceed %u\n", MAX_VMNAME_LEN);
+		pr_err("The name of the VM exceeds the maximum length: %u\n", MAX_VMNAME_LEN - 1);
 		exit(1);
 	}
 
