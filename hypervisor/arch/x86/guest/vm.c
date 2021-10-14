@@ -465,6 +465,15 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	 */
 	ept_del_mr(vm, pml4_page, PRE_RTVM_SW_SRAM_BASE_GPA, PRE_RTVM_SW_SRAM_END_GPA - PRE_RTVM_SW_SRAM_BASE_GPA);
 #endif
+
+	/* unmap Intel IOMMU register pages for below reason:
+	 * Service VM can detect IOMMU capability in its ACPI table hence it may access
+	 * IOMMU hardware resources, which is not expected, as IOMMU hardware is owned by hypervisor.
+	 */
+	for (i = 0U; i < plat_dmar_info.drhd_count; i++) {
+		ept_del_mr(vm, pml4_page, plat_dmar_info.drhd_units[i].reg_base_addr, PAGE_SIZE);
+	}
+
 }
 
 /* Add EPT mapping of EPC reource for the VM */
