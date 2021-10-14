@@ -34,7 +34,7 @@ static struct e820_entry hv_e820[E820_MAX_ENTRIES];
  * @pre (size_arg & 0xFFFU) == 0U
  * @return base address of the memory region
  */
-uint64_t e820_alloc_memory(uint32_t size_arg, uint64_t max_addr)
+uint64_t e820_alloc_memory(uint64_t size_arg, uint64_t max_addr)
 {
 	int32_t i;
 	uint64_t size = size_arg;
