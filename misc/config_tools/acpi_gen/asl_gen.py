@@ -400,6 +400,23 @@ def gen_root_pci_bus(path, prt_packages):
     res._LEN = 0x4000000000
     resources.append(data)
 
+    cls = rdt.LargeResourceItemDWordAddressSpace_factory()
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    res = cls.from_buffer(data)
+    res.type = 1  # Large type
+    res.name = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE
+    res.length = length - 3
+    res._TYP = 1 # Memory range
+    res._DEC = 0  # Positive decoding
+    res._MIF = 1  # Minimum address fixed
+    res._MAF = 1  # Maximum address fixed
+    res.flags = 3   # Entire range, TypeStatic
+    res._MIN = 0x0
+    res._MAX = 0xffff
+    res._LEN = 0x10000
+    resources.append(data)
+
     # End tag
     resources.append(bytes([0x79, 0]))
     resource_buf = bytearray().join(resources)

@@ -196,7 +196,7 @@ The tool generates a board configuration file specific to your hardware.
    settings or PCI ports, you must generate a new board configuration file.
 
 The :ref:`gsg` provides step-by-step instructions for using the tool. For more
-information about the tool, see :ref:`acrn_config_workflow`.
+information about the tool, see :ref:`board_inspector_tool`.
 
 .. _overview_dev_config_editor:
 
@@ -252,7 +252,7 @@ successful, the tool generates your custom launch script.
    the parameters manually. See :ref:`acrn_config_data`.
 
 The :ref:`gsg` walks you through a simple example of using the tool. For more
-information about the tool, see :ref:`acrn_config_tool_ui`.
+information about the tool, see :ref:`acrn_configurator_tool`.
 
 |icon_host| Step 5: Build ACRN
 ******************************

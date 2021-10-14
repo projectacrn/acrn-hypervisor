@@ -319,7 +319,8 @@ Project ACRN provides some predefined sample scenarios to illustrate how you
 can define your own configuration scenarios.
 
 
-* **Industry** is a traditional computing, memory, and device resource sharing
+* **Shared** (called **Industry** in previous releases) is a traditional
+  computing, memory, and device resource sharing
   model among VMs. The ACRN hypervisor launches the Service VM. The Service VM
   then launches any post-launched User VMs and provides device and resource
   sharing mediation through the Device Model.  The Service VM runs the native
@@ -331,7 +332,7 @@ can define your own configuration scenarios.
      :align: center
      :name: arch-shared-example
 
-     ACRN High-Level Architecture Industry (Shared) Example
+     ACRN High-Level Architecture Shared Example
 
   Virtualization is especially important in industrial environments because of
   device and application longevity. Virtualization enables factories to

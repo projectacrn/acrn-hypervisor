@@ -42,7 +42,7 @@ User VM Tutorials
    tutorials/using_vxworks_as_uos
    tutorials/using_zephyr_as_uos
 
-Configuration and Tools
+Configuration Tutorials
 ***********************
 
 .. rst-class:: rst-columns2
@@ -52,15 +52,15 @@ Configuration and Tools
    :maxdepth: 1
 
    tutorials/acrn_configuration_tool
+   tutorials/board_inspector_tool
+   tutorials/acrn_configurator_tool
    reference/config-options
+   reference/config-options-launch
+   reference/hv-make-options
    user-guides/hv-parameters
    user-guides/kernel-parameters
-   user-guides/acrn-shell
    user-guides/acrn-dm-parameters
-   misc/debug_tools/acrn_crashlog/README
    misc/packaging/README
-   misc/debug_tools/**
-   misc/services/acrn_manager/**
 
 Advanced Features
 ********************
@@ -89,7 +89,6 @@ Advanced Features
    tutorials/acrn-secure-boot-with-efi-stub
    tutorials/pre-launched-rt
    tutorials/enable_ivshmem
-   tutorials/enable_ptm
 
 Debug
 *****
@@ -97,9 +96,14 @@ Debug
 .. rst-class:: rst-columns2
 
 .. toctree::
+   :glob:
    :maxdepth: 1
 
    tutorials/using_serial_port
    tutorials/debug
    tutorials/realtime_performance_tuning
    tutorials/rtvm_performance_tips
+   user-guides/acrn-shell
+   misc/debug_tools/acrn_crashlog/README
+   misc/debug_tools/**
+   misc/services/acrn_manager/**

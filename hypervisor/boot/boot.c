@@ -55,8 +55,8 @@ int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi)
 	}
 
 	printf("%s environment detected.\n", boot_from_uefi(abi) ? "UEFI" : "Non-UEFI");
-	if (boot_from_uefi(abi) && (abi->uefi_info.memmap == 0U) && (abi->uefi_info.memmap_hi == 0U)) {
-		pr_err("no efi memmap found!");
+	if (boot_from_uefi(abi) && ((abi->uefi_info.memmap == 0U) || (abi->uefi_info.memmap_hi != 0U))) {
+		pr_err("no efi memmap found below 4GB space!");
 		abi_status = -EINVAL;
 	}
 

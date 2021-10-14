@@ -105,6 +105,7 @@ void run_idle_thread(void)
 	idle->thread_entry = default_idle;
 	idle->switch_out = NULL;
 	idle->switch_in = NULL;
+	idle->priority = PRIO_IDLE;
 
 	run_thread(idle);
 

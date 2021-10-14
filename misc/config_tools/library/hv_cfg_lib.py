@@ -12,7 +12,7 @@ import board_cfg_lib
 
 ERR_LIST = {}
 N_Y = ['n', 'y']
-SCHEDULER_TYPE = ['SCHED_NOOP', 'SCHED_IORR', 'SCHED_BVT']
+SCHEDULER_TYPE = ['SCHED_NOOP', 'SCHED_IORR', 'SCHED_BVT', 'SCHED_PRIO']
 
 RANGE_DB = {
     'LOG_LEVEL':{'min':0,'max':6},

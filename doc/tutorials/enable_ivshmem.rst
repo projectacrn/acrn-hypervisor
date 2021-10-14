@@ -13,14 +13,15 @@ Enable Ivshmem Support
 **********************
 
 The ``ivshmem`` solution is disabled by default in ACRN. You can enable
-it using the :ref:`ACRN configuration toolset <acrn_config_workflow>` with these
+it using the :ref:`ACRN configurator tool <acrn_configurator_tool>` with these
 steps:
 
-- Enable ``ivshmem`` via ACRN configuration tool GUI.
+- Enable ``ivshmem`` via ACRN configurator tool GUI.
 
    - Set :option:`hv.FEATURES.IVSHMEM.IVSHMEM_ENABLED` to ``y``
 
-   - Edit :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` to specify the shared memory name, size and
+   - Edit :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` to specify the shared
+     memory name, size and
      communication VMs. The ``IVSHMEM_REGION`` format is ``shm_name,shm_size,VM IDs``:
 
      -  ``shm_name`` - Specify a shared memory name. The name needs to start
@@ -59,13 +60,15 @@ where
 
 -  ``shm_size`` - Shared memory size of selected ``shm_name``.
 
-There are two ways to insert above boot parameter for ``acrn-dm``
+There are two ways to insert the above boot parameter for ``acrn-dm``:
 
--  Manually edit launch script file, in this case, user shall ensure that both
-   ``shm_name`` and ``shm_size`` match with that are defined via configuration tool GUI.
+-  Manually edit the launch script file. In this case, ensure that both
+   ``shm_name`` and ``shm_size`` match those defined via the ACRN configurator
+   tool.
 
--  Use the command following below format to create a launch script, when IVSHMEM is enabled
-    and :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` is properly configured via configuration tool GUI.
+-  Use the following command to create a launch script, when IVSHMEM is enabled
+   and :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` is properly configured via
+   the ACRN configurator tool.
 
      .. code-block:: none
         :emphasize-lines: 5
@@ -73,7 +76,7 @@ There are two ways to insert above boot parameter for ``acrn-dm``
         python3 misc/config_tools/launch_config/launch_cfg_gen.py \
         --board <path_to_your_boardxml> \
         --scenario <path_to_your_scenarioxml> \
-        --launch <path_to_your_launched_script_xml>  \
+        --launch <path_to_your_launch_script_xml>  \
         --uosid <desired_single_vmid_or_0_for_all_vmids>
 
 .. note:: This device can be used with real-time VM (RTVM) as well.

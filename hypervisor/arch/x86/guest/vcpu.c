@@ -58,7 +58,7 @@ uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	if (!bitmap_test(CPU_REG_RIP, &vcpu->reg_updated) &&
-		!bitmap_test_and_set_lock(CPU_REG_RIP, &vcpu->reg_cached)) {
+		!bitmap_test_and_set_nolock(CPU_REG_RIP, &vcpu->reg_cached)) {
 		ctx->rip = exec_vmread(VMX_GUEST_RIP);
 	}
 	return ctx->rip;
@@ -67,7 +67,7 @@ uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rip = val;
-	bitmap_set_lock(CPU_REG_RIP, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_RIP, &vcpu->reg_updated);
 }
 
 uint64_t vcpu_get_rsp(const struct acrn_vcpu *vcpu)
@@ -84,7 +84,7 @@ void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	ctx->cpu_regs.regs.rsp = val;
-	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_RSP, &vcpu->reg_updated);
 }
 
 uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
@@ -109,7 +109,7 @@ void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
 	}
 
 	/* Write the new value to VMCS in either case */
-	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_EFER, &vcpu->reg_updated);
 }
 
 uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
@@ -118,8 +118,7 @@ uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	if (!bitmap_test(CPU_REG_RFLAGS, &vcpu->reg_updated) &&
-		!bitmap_test_and_set_lock(CPU_REG_RFLAGS,
-			&vcpu->reg_cached) && vcpu->launched) {
+		!bitmap_test_and_set_nolock(CPU_REG_RFLAGS, &vcpu->reg_cached) && vcpu->launched) {
 		ctx->rflags = exec_vmread(VMX_GUEST_RFLAGS);
 	}
 	return ctx->rflags;
@@ -129,7 +128,7 @@ void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rflags =
 		val;
-	bitmap_set_lock(CPU_REG_RFLAGS, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_RFLAGS, &vcpu->reg_updated);
 }
 
 uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr)
@@ -602,6 +601,21 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	return ret;
 }
 
+/**
+ * @pre ctx != NULL
+ */
+static inline int32_t exec_vmentry(struct run_context *ctx, int32_t launch_type, int32_t ibrs_type)
+{
+#ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
+	cpu_l1d_flush();
+#endif
+
+	/* Mitigation for MDS vulnerability, overwrite CPU internal buffers */
+	cpu_internal_buffers_clear();
+
+	return vmx_vmrun(ctx, launch_type, ibrs_type);
+}
+
 /*
  * @pre vcpu != NULL
  */
@@ -610,16 +624,16 @@ static void write_cached_registers(struct acrn_vcpu *vcpu)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (bitmap_test_and_clear_lock(CPU_REG_RIP, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_nolock(CPU_REG_RIP, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RIP, ctx->rip);
 	}
-	if (bitmap_test_and_clear_lock(CPU_REG_RSP, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_nolock(CPU_REG_RSP, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RSP, ctx->cpu_regs.regs.rsp);
 	}
-	if (bitmap_test_and_clear_lock(CPU_REG_EFER, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_nolock(CPU_REG_EFER, &vcpu->reg_updated)) {
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, ctx->ia32_efer);
 	}
-	if (bitmap_test_and_clear_lock(CPU_REG_RFLAGS, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_nolock(CPU_REG_RFLAGS, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RFLAGS, ctx->rflags);
 	}
 
@@ -628,11 +642,11 @@ static void write_cached_registers(struct acrn_vcpu *vcpu)
 	 * switching. There should no other module request updating
 	 * CR0/CR4 here.
 	 */
-	if (bitmap_test_and_clear_lock(CPU_REG_CR0, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_nolock(CPU_REG_CR0, &vcpu->reg_updated)) {
 		vcpu_set_cr0(vcpu, ctx->cr0);
 	}
 
-	if (bitmap_test_and_clear_lock(CPU_REG_CR4, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_nolock(CPU_REG_CR4, &vcpu->reg_updated)) {
 		vcpu_set_cr4(vcpu, ctx->cr4);
 	}
 }
@@ -642,8 +656,8 @@ static void write_cached_registers(struct acrn_vcpu *vcpu)
  */
 int32_t run_vcpu(struct acrn_vcpu *vcpu)
 {
-	uint32_t instlen, cs_attr;
-	uint64_t rip, ia32_efer, cr0;
+	uint32_t cs_attr;
+	uint64_t ia32_efer, cr0;
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 	int32_t status = 0;
@@ -653,94 +667,82 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		write_cached_registers(vcpu);
 	}
 
-	/* If this VCPU is not already launched, launch it */
-	if (!vcpu->launched) {
-		pr_info("VM %d Starting VCPU %hu",
-				vcpu->vm->vm_id, vcpu->vcpu_id);
+	if (is_vcpu_in_l2_guest(vcpu)) {
+		int32_t launch_type;
 
-		/* VMX_VPID for l2 guests is not managed in this way */
-		if (!is_vcpu_in_l2_guest(vcpu) && (vcpu->arch.vpid != 0U)) {
-			exec_vmwrite16(VMX_VPID, vcpu->arch.vpid);
+		if (vcpu->launched) {
+			/* for nested VM-exits that don't need to be reflected to L1 hypervisor */
+			launch_type = VM_RESUME;
+		} else {
+			/* for VMEntry case, VMCS02 was VMCLEARed by ACRN */
+			launch_type = VM_LAUNCH;
+			vcpu->launched = true;
 		}
 
-		/*
-		 * A power-up or a reset invalidates all linear mappings,
-		 * guest-physical mappings, and combined mappings
-		 */
-		if (!is_vcpu_in_l2_guest(vcpu)) {
+		status = exec_vmentry(ctx, launch_type, ibrs_type);
+	} else {
+		/* If this VCPU is not already launched, launch it */
+		if (!vcpu->launched) {
+			pr_info("VM %d Starting VCPU %hu",
+					vcpu->vm->vm_id, vcpu->vcpu_id);
+
+			if (vcpu->arch.vpid != 0U) {
+				exec_vmwrite16(VMX_VPID, vcpu->arch.vpid);
+			}
+
+			/*
+			 * A power-up or a reset invalidates all linear mappings,
+			 * guest-physical mappings, and combined mappings
+			 */
 			flush_vpid_global();
-		}
 
 #ifdef CONFIG_HYPERV_ENABLED
-		if (is_vcpu_bsp(vcpu)) {
-			hyperv_init_time(vcpu->vm);
-		}
-#endif
-
-		/* Set vcpu launched */
-		vcpu->launched = true;
-
-		/* avoid VMCS recycling RSB usage, set IBPB.
-		 * NOTE: this should be done for any time vmcs got switch
-		 * currently, there is no other place to do vmcs switch
-		 * Please add IBPB set for future vmcs switch case(like trusty)
-		 */
-		if (ibrs_type == IBRS_RAW) {
-			msr_write(MSR_IA32_PRED_CMD, PRED_SET_IBPB);
-		}
-
-#ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
-		cpu_l1d_flush();
-#endif
-
-		/*Mitigation for MDS vulnerability, overwrite CPU internal buffers */
-		cpu_internal_buffers_clear();
-
-		/* Launch the VM */
-		status = vmx_vmrun(ctx, VM_LAUNCH, ibrs_type);
-
-		/* See if VM launched successfully */
-		if (status == 0) {
 			if (is_vcpu_bsp(vcpu)) {
-				pr_info("VM %d VCPU %hu successfully launched",
-					vcpu->vm->vm_id, vcpu->vcpu_id);
+				hyperv_init_time(vcpu->vm);
 			}
-		}
-	} else {
-		/* This VCPU was already launched, check if the last guest
-		 * instruction needs to be repeated and resume VCPU accordingly
-		 */
-		instlen = vcpu->arch.inst_len;
-		rip = vcpu_get_rip(vcpu);
-		exec_vmwrite(VMX_GUEST_RIP, ((rip+(uint64_t)instlen) &
-				0xFFFFFFFFFFFFFFFFUL));
-#ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
-		cpu_l1d_flush();
 #endif
 
-		/* Mitigation for MDS vulnerability, overwrite CPU internal buffers */
-		cpu_internal_buffers_clear();
+			/* Set vcpu launched */
+			vcpu->launched = true;
 
-		/* Resume the VM */
-		status = vmx_vmrun(ctx, VM_RESUME, ibrs_type);
-	}
+			/* avoid VMCS recycling RSB usage, set IBPB.
+			 * NOTE: this should be done for any time vmcs got switch
+			 * currently, there is no other place to do vmcs switch
+			 * Please add IBPB set for future vmcs switch case(like trusty)
+			 */
+			if (ibrs_type == IBRS_RAW) {
+				msr_write(MSR_IA32_PRED_CMD, PRED_SET_IBPB);
+			}
 
-	vcpu->reg_cached = 0UL;
+			/* Launch the VM */
+			status = exec_vmentry(ctx, VM_LAUNCH, ibrs_type);
 
-	/*
-	 * - can not call vcpu_get_xxx() when vmcs02 is current, or it could mess up
-	 *   the cached registers for the L1 guest
-	 * - the L2 guests' vcpu mode is managed by L1 hypervisor
-	 * - ctx->cpu_regs.regs.rsp doesn't cache nested guests' RSP
-	 */
-	if (!is_vcpu_in_l2_guest(vcpu)) {
+			/* See if VM launched successfully */
+			if (status == 0) {
+				if (is_vcpu_bsp(vcpu)) {
+					pr_info("VM %d VCPU %hu successfully launched",
+						vcpu->vm->vm_id, vcpu->vcpu_id);
+				}
+			}
+		} else {
+			/* This VCPU was already launched, check if the last guest
+			 * instruction needs to be repeated and resume VCPU accordingly
+			 */
+			if (vcpu->arch.inst_len != 0U) {
+				exec_vmwrite(VMX_GUEST_RIP, vcpu_get_rip(vcpu) + vcpu->arch.inst_len);
+			}
+
+			/* Resume the VM */
+			status = exec_vmentry(ctx, VM_RESUME, ibrs_type);
+		}
+
 		cs_attr = exec_vmread32(VMX_GUEST_CS_ATTR);
 		ia32_efer = vcpu_get_efer(vcpu);
 		cr0 = vcpu_get_cr0(vcpu);
 		set_vcpu_mode(vcpu, cs_attr, ia32_efer, cr0);
-
-		ctx->cpu_regs.regs.rsp = exec_vmread(VMX_GUEST_RSP);
 	}
+
+	vcpu->reg_cached = 0UL;
 
 	/* Obtain current VCPU instruction length */
 	vcpu->arch.inst_len = exec_vmread32(VMX_EXIT_INSTR_LEN);
@@ -963,6 +965,7 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 		vcpu->thread_obj.host_sp = build_stack_frame(vcpu);
 		vcpu->thread_obj.switch_out = context_switch_out;
 		vcpu->thread_obj.switch_in = context_switch_in;
+		vcpu->thread_obj.priority = get_vm_config(vm->vm_id)->vm_prio;
 		init_thread_data(&vcpu->thread_obj);
 		for (i = 0; i < VCPU_EVENT_NUM; i++) {
 			init_event(&vcpu->events[i]);

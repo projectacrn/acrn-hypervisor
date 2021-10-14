@@ -14,5 +14,6 @@ extern uint8_t		ld_entry_end;
 extern const uint8_t	ld_trampoline_load;
 extern uint8_t		ld_trampoline_start;
 extern uint8_t		ld_trampoline_end;
+extern uint8_t		ld_ram_size;
 
 #endif /* LD_SYM_H */

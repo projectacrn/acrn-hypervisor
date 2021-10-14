@@ -31,47 +31,62 @@ def alloc_irq(irq_list):
         remove_irq(irq_list, irq)
         return irq
     except IndexError as e:
-        raise lib.error.ResourceError("Cannot allocate legacy irq, the available legacy irq list: {}, {}".format(e, irq_list)) from e
+        raise lib.error.ResourceError("Cannot allocate legacy irq, the available irq list: {}, {}".format(e, irq_list)) from e
 
 def remove_irq(irq_list, irq):
     try:
         irq_list.remove(irq)
     except ValueError as e:
-        raise ValueError("Cannot remove irq:{} from available legacy irq list:{}, {}". format(irq, e, irq_list)) from e
+        raise ValueError("Cannot remove irq:{} from available irq list:{}, {}". format(irq, e, irq_list)) from e
 
-def create_vuart_irq_node(etree, vm_id, vuart_id, irq):
-    allocation_sos_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", etree)
-    if allocation_sos_vm_node is None:
-        allocation_sos_vm_node = common.append_node("/acrn-config/vm", None, etree, id = vm_id)
-    if common.get_node("./vm_type", allocation_sos_vm_node) is None:
-        common.append_node("./vm_type", "SOS_VM", allocation_sos_vm_node)
-    if common.get_node(f"./legacy_vuart[@id = '{vuart_id}']", allocation_sos_vm_node) is None:
-        common.append_node("./legacy_vuart", None, allocation_sos_vm_node, id = vuart_id)
+def create_vuart_irq_node(etree, vm_id, vm_type, vuart_id, irq):
+    allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", etree)
+    if allocation_vm_node is None:
+        allocation_vm_node = common.append_node("/acrn-config/vm", None, etree, id = vm_id)
+    if common.get_node("./vm_type", allocation_vm_node) is None:
+        common.append_node("./vm_type", vm_type, allocation_vm_node)
+    if common.get_node(f"./legacy_vuart[@id = '{vuart_id}']", allocation_vm_node) is None:
+        common.append_node("./legacy_vuart", None, allocation_vm_node, id = vuart_id)
 
-    common.append_node(f"./legacy_vuart[@id = '{vuart_id}']/irq", irq, allocation_sos_vm_node)
+    common.append_node(f"./legacy_vuart[@id = '{vuart_id}']/irq", irq, allocation_vm_node)
 
-def alloc_sos_vuart_irqs(board_etree, scenario_etree, allocation_etree):
-    irq_list = get_native_valid_irq()
-    hv_debug_console = lib.lib.parse_hv_console(scenario_etree)
+def alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree):
     native_ttys = lib.lib.get_native_ttys()
-    vuart_valid = ['ttyS0', 'ttyS1', 'ttyS2', 'ttyS3']
+    hv_debug_console = lib.lib.parse_hv_console(scenario_etree)
 
-    scenario_sos_vm_node = common.get_node("//vm[vm_type = 'SOS_VM']", scenario_etree)
-    if scenario_sos_vm_node is not None:
-        vm_id = common.get_node("./@id", scenario_sos_vm_node)
-        if common.get_node("./legacy_vuart[@id = '0']/base/text()", scenario_sos_vm_node) != "INVALID_COM_BASE":
-            vuart0_irq = -1
-            if hv_debug_console in vuart_valid and hv_debug_console in native_ttys.keys() and native_ttys[hv_debug_console]['irq'] < LEGACY_IRQ_MAX:
-                vuart0_irq = native_ttys[hv_debug_console]['irq']
+    vm_node_list = scenario_etree.xpath("//vm")
+    for vm_node in vm_node_list:
+        vm_type = common.get_node("./vm_type/text()", vm_node)
+        irq_list = get_native_valid_irq() if vm_type == "SOS_VM" else [f"{d}" for d in list(range(1,15))]
+        legacy_vuart_id_list = vm_node.xpath("legacy_vuart[base != 'INVALID_COM_BASE']/@id")
+        legacy_vuart_irq = -1
+        for legacy_vuart_id in legacy_vuart_id_list:
+            if legacy_vuart_id == '0' and vm_type == "SOS_VM":
+                if hv_debug_console in native_ttys.keys():
+                    if native_ttys[hv_debug_console]['irq'] < LEGACY_IRQ_MAX:
+                        legacy_vuart_irq = native_ttys[hv_debug_console]['irq']
+                        if legacy_vuart_irq in irq_list:
+                            remove_irq(irq_list, legacy_vuart_irq)
+                    else:
+                        legacy_vuart_irq = alloc_irq(irq_list)
+                else:
+                    raise lib.error.ResourceError(f"{hv_debug_console} is not in the native environment! The ttyS available are: {native_ttys.keys()}")
             else:
-                vuart0_irq = alloc_irq(irq_list)
+                legacy_vuart_node_irq_text = common.get_node(f"legacy_vuart[@id = '{legacy_vuart_id}']/irq/text()", vm_node)
+                if legacy_vuart_node_irq_text == 'COM1_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM1_IRQ' \
+                    or legacy_vuart_node_irq_text == 'COM3_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM3_IRQ':
+                    legacy_vuart_irq = '4'
+                    if legacy_vuart_irq in irq_list:
+                        remove_irq(irq_list, legacy_vuart_irq)
+                elif legacy_vuart_node_irq_text == 'COM2_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM2_IRQ' \
+                    or legacy_vuart_node_irq_text == 'COM4_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM4_IRQ':
+                    legacy_vuart_irq = '3'
+                    if legacy_vuart_irq in irq_list:
+                        remove_irq(irq_list, legacy_vuart_irq)
+                else:
+                    legacy_vuart_irq = alloc_irq(irq_list)
 
-            create_vuart_irq_node(allocation_etree, vm_id, "0", vuart0_irq)
-
-        if common.get_node("./legacy_vuart[@id = '1']/base/text()", scenario_sos_vm_node) != "INVALID_COM_BASE":
-            vuart1_irq = alloc_irq(irq_list)
-
-            create_vuart_irq_node(allocation_etree, vm_id, "1", vuart1_irq)
+            create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), vm_type, legacy_vuart_id, legacy_vuart_irq)
 
 def get_irqs_of_device(device_node):
     irqs = set()
@@ -200,5 +215,5 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
                     pt_intx_node.text += f" ({irq}, {virq})"
 
 def fn(board_etree, scenario_etree, allocation_etree):
-    alloc_sos_vuart_irqs(board_etree, scenario_etree, allocation_etree)
+    alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree)
     alloc_device_irqs(board_etree, scenario_etree, allocation_etree)

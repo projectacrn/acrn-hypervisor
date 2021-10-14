@@ -24,10 +24,18 @@ KNOWN_CAPS_PCI_DEVS_DB = {
 IVSHMEM = "IVSHMEM"
 VUART = "VUART"
 PTDEV = "PTDEV"
+LEGACY_VUART = "LEGACY_VUART"
 
 # A bar in pci hole must be above this threshold
 # A bar's address below this threshold is for special purpose and should be preserved
 PCI_HOLE_THRESHOLD = 0x100000
+
+# IO port address common constants
+# The valid io port address range will fall into [0x0, 0xFFFF]
+# The address below 0xD00 are usually reserved for particular usage.
+# For example: Configuration Space Address and Configuration Space Data
+IO_PORT_MAX_ADDRESS = 0xFFFF
+IO_PORT_THRESHOLD = 0xD00
 
 # Common memory size units
 SIZE_K = 1024
@@ -56,6 +64,9 @@ BAR2_SHEMEM_ALIGNMENT = 2 * common.SIZE_M
 PCI_VUART_VBAR0_SIZE = 4 * SIZE_K
 PCI_VUART_VBAR1_SIZE = 4 * SIZE_K
 
+# Constants for legacy vuart
+LEGACY_VUART_IO_PORT_SIZE = 0x10
+
 # Constants for vmsix bar
 VMSIX_VBAR_SIZE = 4 * SIZE_K
 
@@ -66,8 +77,8 @@ VIRT_ACPI_NVS_ADDR needs to be consistant with the layout of hypervisor\arch\x86
 VIRT_ACPI_NVS_ADDR = 0x7FF00000
 RESERVED_NVS_AREA = 0xB0000
 
-class MmioWindow(namedtuple(
-        "MmioWindow", [
+class AddrWindow(namedtuple(
+        "AddrWindow", [
             "start",
             "end"])):
 
@@ -80,15 +91,15 @@ class MmioWindow(namedtuple(
 
         match = cls.PATTERN.fullmatch(value)
         if match:
-            return MmioWindow(
+            return AddrWindow(
                 start=int(match.group("start"), 16),
                 end=int(match.group("end"), 16))
         else:
-            raise ValueError("not an mmio window: {!r}".format(value))
+            raise ValueError("not an address window: {!r}".format(value))
 
     def overlaps(self, other):
-        if not isinstance(other, MmioWindow):
-            raise TypeError('overlaps() other must be an MmioWindow: {}'.format(type(other)))
+        if not isinstance(other, AddrWindow):
+            raise TypeError('overlaps() other must be an AddrWindow: {}'.format(type(other)))
         if other.end < self.start:
             return False
         if self.end < other.start:
@@ -104,6 +115,11 @@ def insert_vuart_to_dev_dict(scenario_etree, devdict_32bits):
     for vuart_id in communication_vuarts:
         devdict_32bits[(f"{VUART}_{vuart_id}", "bar0")] = PCI_VUART_VBAR0_SIZE
         devdict_32bits[(f"{VUART}_{vuart_id}", "bar1")] = PCI_VUART_VBAR1_SIZE
+
+def insert_legacy_vuart_to_dev_dict(vm_node, devdict_io_port):
+    legacy_vuart =  vm_node.xpath(f".//legacy_vuart[base = 'CONFIG_COM_BASE']/@id")
+    for vuart_id in legacy_vuart:
+        devdict_io_port[(f"{LEGACY_VUART}_{vuart_id}", "base")] = LEGACY_VUART_IO_PORT_SIZE
 
 def insert_ivsheme_to_dev_dict(scenario_etree, devdict_32bits, devdict_64bits, vm_id):
     shmem_regions = lib.lib.get_shmem_regions(scenario_etree)
@@ -144,6 +160,24 @@ def insert_pt_devs_to_dev_dict(board_etree, vm_node_etree, devdict_32bits, devdi
                 else:
                     devdict_64bits[(f"{dev_name}", f"{bar_region}")] = int(bar_len, 16)
 
+def get_pt_devs_io_port(board_etree, vm_node_etree):
+    pt_devs = vm_node_etree.xpath(f".//pci_dev/text()")
+    devdict = {}
+    for pt_dev in pt_devs:
+        bdf = pt_dev.split()[0]
+        bus = int(bdf.split(':')[0], 16)
+        dev = int(bdf.split(":")[1].split('.')[0], 16)
+        func = int(bdf.split(":")[1].split('.')[1], 16)
+        bdf = lib.lib.BusDevFunc(bus=bus, dev=dev, func=func)
+        pt_dev_node = common.get_node(f"//bus[@type = 'pci' and @address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}']", board_etree)
+        if pt_dev_node is not None:
+            pt_dev_resources = pt_dev_node.xpath(".//resource[@type = 'io_port' and @id[starts-with(., 'bar')]]")
+            for pt_dev_resource in pt_dev_resources:
+                dev_name = str(bdf)
+                bar_region = pt_dev_resource.get('id')
+                devdict[(f"{dev_name}", f"{bar_region}")] = int(pt_dev_resource.get('min'), 16)
+    return devdict
+
 def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
     """
     Allocate an unused mmio window for the first free bar region of a vmsix supported passthrough device.
@@ -163,7 +197,11 @@ def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
         bar_64bits = [bar_region.get('id') for bar_region in bar_regions if bar_region.get('width') == '64']
         bar_64bits_idx_list_1 = [int(bar.split('bar')[-1]) for bar in bar_64bits]
         bar_64bits_idx_list_2 = [idx + 1 for idx in bar_64bits_idx_list_1]
-        used_bar_index = set(bar_32bits_idx_list + bar_64bits_idx_list_1 + bar_64bits_idx_list_2)
+
+        bar_regions_io_port = pt_dev_node.xpath(".//resource[@type = 'io_port' and @id[starts-with(., 'bar')]]/@id")
+        bar_io_port_idx_list = [int(bar.split('bar')[-1]) for bar in bar_regions_io_port]
+
+        used_bar_index = set(bar_32bits_idx_list + bar_64bits_idx_list_1 + bar_64bits_idx_list_2 + bar_io_port_idx_list)
         unused_bar_index = [i for i in range(6) if i not in used_bar_index]
         try:
             next_bar_region = unused_bar_index.pop(0)
@@ -183,9 +221,23 @@ def get_devs_mem_native(board_etree, mems):
         start = node.get('min')
         end = node.get('max')
         if start is not None and end is not None:
-            window = MmioWindow(int(start, 16), int(end, 16))
+            window = AddrWindow(int(start, 16), int(end, 16))
             for mem in mems:
                 if window.start >= mem.start and window.end <= mem.end:
+                    dev_list.append(window)
+                    break
+    return sorted(dev_list)
+
+def get_devs_io_port_native(board_etree, io_port_range):
+    nodes = board_etree.xpath(f"//device/resource[@type = 'io_port' and @len != '0x0' and @id]")
+    dev_list = []
+    for node in nodes:
+        start = node.get('min')
+        end = node.get('max')
+        if start is not None and end is not None:
+            window = AddrWindow(int(start, 16), int(end, 16))
+            for range in io_port_range:
+                if window.start >= range.start and window.end <= range.end:
                     dev_list.append(window)
                     break
     return sorted(dev_list)
@@ -208,7 +260,40 @@ def get_devs_mem_passthrough(board_etree, scenario_etree):
             for resource in resources:
                 start = resource.get('min')
                 end = resource.get('max')
-                dev_list.append(MmioWindow(int(start, 16), int(end, 16)))
+                dev_list.append(AddrWindow(int(start, 16), int(end, 16)))
+    return dev_list
+
+def get_pt_devs_io_port_passthrough_per_vm(board_etree, vm_node):
+    """
+    Get all pre-launched vms' passthrough devices' io port addresses in native environment.
+    return: list of passtrhough devices' io port addresses.
+    """
+    dev_list = []
+    pt_devs = vm_node.xpath(f".//pci_devs/pci_dev/text()")
+    for pt_dev in pt_devs:
+        bdf = pt_dev.split()[0]
+        bus = int(bdf.split(':')[0], 16)
+        dev = int(bdf.split(":")[1].split('.')[0], 16)
+        func = int(bdf.split(":")[1].split('.')[1], 16)
+        resources = board_etree.xpath(f"//bus[@address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}'] \
+                        /resource[@type = 'io_port' and @len != '0x0']")
+        for resource in resources:
+            start = resource.get('min')
+            end = resource.get('max')
+            dev_list.append(AddrWindow(int(start, 16), int(end, 16)))
+    return dev_list
+
+def get_pt_devs_io_port_passthrough(board_etree, scenario_etree):
+    """
+    Get all pre-launched vms' passthrough devices' io port addresses in native environment.
+    return: list of passtrhough devices' io port addresses.
+    """
+    dev_list = []
+    for vm_type in lib.lib.PRE_LAUNCHED_VMS_TYPE:
+        vm_nodes = scenario_etree.xpath(f"//vm[vm_type = '{vm_type}']")
+        for vm_node in vm_nodes:
+            dev_list_per_vm = get_pt_devs_io_port_passthrough_per_vm(board_etree, vm_node)
+            dev_list = dev_list + dev_list_per_vm
     return dev_list
 
 def get_pci_hole_native(board_etree):
@@ -225,12 +310,23 @@ def get_pci_hole_native(board_etree):
                 resource_end = int(resource.get('max'), 16)
                 if resource_start >= int(start, 16) and resource_end <= int(end, 16):
                     if resource_end < 4 * SIZE_G:
-                        low_mem.add(MmioWindow(int(start, 16), int(end, 16)))
+                        low_mem.add(AddrWindow(int(start, 16), int(end, 16)))
                         break
                     else:
-                        high_mem.add(MmioWindow(int(start, 16), int(end, 16)))
+                        high_mem.add(AddrWindow(int(start, 16), int(end, 16)))
                         break
     return list(sorted(low_mem)), list(sorted(high_mem))
+
+def get_io_port_range_native(board_etree):
+    resources_hostbridge =  board_etree.xpath("//bus[@address = '0x0']/resource[@type = 'io_port' and @len != '0x0']")
+    io_port_range_list = set()
+    for resource_hostbridge in resources_hostbridge:
+        start = resource_hostbridge.get('min')
+        end = resource_hostbridge.get('max')
+        if start is not None and end is not None and \
+             int(start, 16) >= IO_PORT_THRESHOLD and int(end, 16) <= IO_PORT_MAX_ADDRESS:
+                io_port_range_list.add(AddrWindow(int(start, 16), int(end, 16)))
+    return list(sorted(io_port_range_list))
 
 def create_device_node(allocation_etree, vm_id, devdict):
     for dev in devdict:
@@ -249,6 +345,20 @@ def create_device_node(allocation_etree, vm_id, devdict):
         if IVSHMEM in dev_name and bar_region == '2':
             common.update_text(f"./bar[@id = '2']", hex(bar_base | PREFETCHABLE_BIT | MEMORY_BAR_LOCATABLE_64BITS), dev_node, True)
 
+def create_vuart_node(allocation_etree, vm_id, devdict):
+    for dev in devdict:
+        vuart_id = dev[0][-1]
+        bar_base = devdict.get(dev)
+
+        vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+        if vm_node is None:
+            vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
+        vuart_node = common.get_node(f"./legacy_vuart[@id = '{vuart_id}']", vm_node)
+        if vuart_node is None:
+            vuart_node = common.append_node("./legacy_vuart", None, vm_node, id = vuart_id)
+        if common.get_node(f"./base", vuart_node) is None:
+            common.append_node(f"./base", hex(bar_base), vuart_node)
+
 def create_native_pci_hole_node(allocation_etree, low_mem, high_mem):
     common.append_node("/acrn-config/hv/MMIO/MMIO32_START", hex(low_mem[0].start).upper(), allocation_etree)
     common.append_node("/acrn-config/hv/MMIO/MMIO32_END", hex(low_mem[0].end + 1).upper(), allocation_etree)
@@ -263,34 +373,34 @@ def create_native_pci_hole_node(allocation_etree, low_mem, high_mem):
         common.append_node("/acrn-config/hv/MMIO/HI_MMIO_START", "~0".upper(), allocation_etree)
         common.append_node("/acrn-config/hv/MMIO/HI_MMIO_END", "0", allocation_etree)
 
-def get_free_mmio(windowslist, used, size):
+def get_free_addr(windowslist, used, size, alignment):
     if not size:
         raise ValueError(f"allocate size cannot be: {size}")
     if not windowslist:
-        raise ValueError(f"No mmio range is specified:{windowslist}")
+        raise ValueError(f"No address range is specified:{windowslist}")
 
-    alignment = max(VBAR_ALIGNMENT, size)
+    alignment = max(alignment, size)
     for w in windowslist:
         new_w_start = common.round_up(w.start, alignment)
-        window = MmioWindow(start = new_w_start, end = new_w_start + size - 1)
+        window = AddrWindow(start = new_w_start, end = new_w_start + size - 1)
         for u in used:
             if window.overlaps(u):
                 new_u_end = common.round_up(u.end + 1, alignment)
-                window = MmioWindow(start = new_u_end, end = new_u_end + size - 1)
+                window = AddrWindow(start = new_u_end, end = new_u_end + size - 1)
                 continue
         if window.overlaps(w):
             return window
-    raise lib.error.ResourceError(f"Not enough mmio window for a device size: {size}, free mmio windows: {windowslist}, used mmio windos{used}")
+    raise lib.error.ResourceError(f"Not enough address window for a device size: {size}, free address windows: {windowslist}, used address windos{used}")
 
-def alloc_mmio(mems, devdict, used_mem):
+def alloc_addr(mems, devdict, used_mem, alignment):
     devdict_list = sorted(devdict.items(), key = lambda t : t[1], reverse = True)
     devdict_base = {}
     for dev_bar in devdict_list:
         bar_name = dev_bar[0]
         bar_length = dev_bar[1]
-        bar_window = get_free_mmio(mems, used_mem, bar_length)
+        bar_window = get_free_addr(mems, used_mem, bar_length, alignment)
         bar_end_addr = bar_window.start + bar_length - 1
-        used_mem.append(MmioWindow(bar_window.start, bar_end_addr))
+        used_mem.append(AddrWindow(bar_window.start, bar_end_addr))
         used_mem.sort()
         devdict_base[bar_name] = bar_window.start
     return devdict_base
@@ -316,8 +426,8 @@ def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
 
         vm_type = common.get_node("./vm_type/text()", vm_node)
         if vm_type is not None and lib.lib.is_pre_launched_vm(vm_type):
-            low_mem = [MmioWindow(start = PRE_LAUNCHED_VM_LOW_MEM_START, end = PRE_LAUNCHED_VM_LOW_MEM_END - 1)]
-            high_mem = [MmioWindow(start = PRE_LAUNCHED_VM_HIGH_MEM_START, end = PRE_LAUNCHED_VM_HIGH_MEM_END - 1)]
+            low_mem = [AddrWindow(start = PRE_LAUNCHED_VM_LOW_MEM_START, end = PRE_LAUNCHED_VM_LOW_MEM_END - 1)]
+            high_mem = [AddrWindow(start = PRE_LAUNCHED_VM_HIGH_MEM_START, end = PRE_LAUNCHED_VM_HIGH_MEM_END - 1)]
         elif vm_type is not None and lib.lib.is_sos_vm(vm_type):
             low_mem = native_low_mem
             high_mem = native_high_mem
@@ -331,10 +441,37 @@ def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
             # fall into else when the vm_type is post-launched vm, no mmio allocation is needed
             continue
 
-        devdict_base_32_bits = alloc_mmio(low_mem, devdict_32bits, used_low_mem)
-        devdict_base_64_bits = alloc_mmio(low_mem + high_mem, devdict_64bits, used_low_mem + used_high_mem)
+        devdict_base_32_bits = alloc_addr(low_mem, devdict_32bits, used_low_mem, VBAR_ALIGNMENT)
+        devdict_base_64_bits = alloc_addr(low_mem + high_mem, devdict_64bits, used_low_mem + used_high_mem, VBAR_ALIGNMENT)
         create_device_node(allocation_etree, vm_id, devdict_base_32_bits)
         create_device_node(allocation_etree, vm_id, devdict_base_64_bits)
+
+def allocate_io_port(board_etree, scenario_etree, allocation_etree):
+    io_port_range_list_native = get_io_port_range_native(board_etree)
+
+    vm_nodes = scenario_etree.xpath("//vm")
+    for vm_node in vm_nodes:
+        vm_id = vm_node.get('id')
+
+        devdict_io_port = {}
+        insert_legacy_vuart_to_dev_dict(vm_node, devdict_io_port)
+
+        io_port_range_list = []
+        used_io_port_list = []
+
+        vm_type = common.get_node("./vm_type/text()", vm_node)
+        if vm_type is not None and lib.lib.is_sos_vm(vm_type):
+            io_port_range_list = io_port_range_list_native
+            io_port_passthrough = get_pt_devs_io_port_passthrough(board_etree, scenario_etree)
+            used_io_port_list_native = get_devs_io_port_native(board_etree, io_port_range_list_native)
+            # release the passthrough devices io port address from SOS
+            used_io_port_list = [io_port for io_port in used_io_port_list_native if io_port not in io_port_passthrough]
+        else:
+            io_port_range_list = [AddrWindow(start = IO_PORT_THRESHOLD, end = IO_PORT_MAX_ADDRESS)]
+            used_io_port_list = get_pt_devs_io_port_passthrough_per_vm(board_etree, vm_node)
+
+        devdict_base_io_port = alloc_addr(io_port_range_list, devdict_io_port, used_io_port_list, 0)
+        create_vuart_node(allocation_etree, vm_id, devdict_base_io_port)
 
 def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
     # Guest physical address of the SW SRAM allocated to a pre-launched VM
@@ -367,6 +504,13 @@ def allocate_log_area(board_etree, scenario_etree, allocation_etree):
             allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = '0')
         common.append_node("./log_area_start_address", hex(log_area_start_address).upper(), allocation_vm_node)
         common.append_node("./log_area_minimum_length", hex(log_area_min_len_native).upper(), allocation_vm_node)
+
+def pt_dev_io_port_passthrough(board_etree, scenario_etree, allocation_etree):
+    vm_nodes = scenario_etree.xpath("//vm")
+    for vm_node in vm_nodes:
+        vm_id = vm_node.get('id')
+        devdict_io_port = get_pt_devs_io_port(board_etree, vm_node)
+        create_device_node(allocation_etree, vm_id, devdict_io_port)
 
 """
             Pre-launched VM gpa layout:
@@ -408,3 +552,5 @@ def fn(board_etree, scenario_etree, allocation_etree):
     allocate_ssram_region(board_etree, scenario_etree, allocation_etree)
     allocate_log_area(board_etree, scenario_etree, allocation_etree)
     allocate_pci_bar(board_etree, scenario_etree, allocation_etree)
+    allocate_io_port(board_etree, scenario_etree, allocation_etree)
+    pt_dev_io_port_passthrough(board_etree, scenario_etree, allocation_etree)

@@ -8,9 +8,9 @@ Getting Started Guide
 This guide will help you get started with ACRN. We'll show how to prepare a
 build environment on your development computer. Then we'll walk through the
 steps to set up a simple ACRN configuration on a target system. The
-configuration is based on the ACRN predefined **industry** scenario and consists
-of an ACRN hypervisor, Service VM, and one User VM, as illustrated in this
-figure:
+configuration is based on the ACRN predefined **shared** scenario and consists
+of an ACRN hypervisor, Service VM, and six User VMs, but we'll launch only one
+User VM, as illustrated in this figure:
 
 .. image:: ./images/gsg_scenario.png
    :scale: 80%
@@ -34,7 +34,7 @@ Before you begin, make sure your machines have the following prerequisites:
 
 * Hardware specifications
 
-  - A PC with Internet access (A fast system with multiple cores and 16MB
+  - A PC with Internet access (A fast system with multiple cores and 16GB
     memory or more will make the builds go faster.)
 
 * Software specifications
@@ -47,14 +47,14 @@ Before you begin, make sure your machines have the following prerequisites:
 * Hardware specifications
 
   - Target board (see :ref:`hardware_tested`)
-  - Ubuntu 18.04 Desktop bootable USB disk: download the `Ubuntu 18.04.05 Desktop
-    ISO image <https://releases.ubuntu.com/18.04.5/>`_ and follow the `Ubuntu documentation
+  - Ubuntu 18.04 Desktop bootable USB disk: download the `Ubuntu 18.04.05
+    Desktop ISO image <https://releases.ubuntu.com/18.04.5/>`_ and follow the
+    `Ubuntu documentation
     <https://ubuntu.com/tutorials/create-a-usb-stick-on-ubuntu#1-overview>`__
-    for instructions for creating the USB disk.
+    for creating the USB disk.
   - USB keyboard and mouse
   - Monitor
   - Ethernet cable and Internet access
-  - Serial-to-USB cable to view the ACRN and VM console (optional)
   - A second USB disk with minimum 1GB capacity to copy files between the
     development computer and target system
   - Local storage device (NVMe or SATA drive, for example)
@@ -70,9 +70,6 @@ To set up the hardware environment:
    system.
 
 #. Connect the target system to the LAN with the Ethernet cable.
-
-#. (Optional) Connect the serial cable between the target and development
-   computer to view the ACRN and VM console (for an example, see :ref:`connect_serial_port`).
 
 Example of a target system with cables connected:
 
@@ -113,7 +110,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo apt install gcc \
+      sudo apt install -y gcc \
            git \
            make \
            vim \
@@ -157,29 +154,31 @@ To set up the ACRN build environment on the development computer:
       make clean && make iasl
       sudo cp ./generate/unix/bin/iasl /usr/sbin
 
-#. Get the ACRN hypervisor and kernel source code.  (Note these checkout tags
-   will be updated when we launch the v2.6 release):
+#. Get the ACRN hypervisor and kernel source code. (Because the acrn-kernel repo
+   has a lot of Linux kernel history, you can clone the relevant release branch
+   with minimal history, as shown here.)
 
    .. code-block:: bash
 
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor
       cd acrn-hypervisor
-      git checkout a7c273996
+      git checkout v2.6
 
       cd ..
-      git clone https://github.com/projectacrn/acrn-kernel
-      cd acrn-kernel
-      git checkout release_2.6
+      git clone --depth 1 --branch release_2.6 https://github.com/projectacrn/acrn-kernel
+
+.. _gsg-board-setup:
 
 .. rst-class:: numbered-step
 
 Prepare the Target and Generate a Board Configuration File
 ***************************************************************
 
-A **board configuration file** is an XML file that stores hardware-specific information extracted from the target system. The file is used to configure
-the ACRN hypervisor, because each hypervisor instance is specific to your
-target hardware.
+A **board configuration file** is an XML file that stores hardware-specific
+information extracted from the target system. The file is used to configure the
+ACRN hypervisor, because each hypervisor instance is specific to your target
+hardware.
 
 You use the **board inspector tool** to generate the board
 configuration file.
@@ -211,7 +210,7 @@ To install Ubuntu 18.04:
 
    .. image:: ./images/gsg_ubuntu_install_01.png
 
-#. Use the checkboxes to choose whether you'd like to install Ubuntu alongside
+#. Use the check boxes to choose whether you'd like to install Ubuntu alongside
    another operating system, or delete your existing operating system and
    replace it with Ubuntu:
 
@@ -238,20 +237,10 @@ Configure Target BIOS Settings
      assist for CPU virtualization).
    * Enable **VT-d** (Intel Virtualization Technology for Directed I/O, which
      provides additional support for managing I/O virtualization).
-   * Disable **Secure Boot**. This simplifies the steps for this example.
+   * Disable **Secure Boot**. This setting simplifies the steps for this example.
 
    The names and locations of the BIOS settings differ depending on the target
-   hardware and BIOS version. You can search for the items in the BIOS
-   configuration editor.
-
-   For example, on a Tiger Lake NUC, quickly press :kbd:`F2` while the system
-   is booting. (If the GRUB menu or Ubuntu login screen
-   appears, press :kbd:`CTRL` + :kbd:`ALT` + :kbd:`DEL` to reboot again and
-   press :kbd:`F2` sooner.) The settings are in the following paths:
-
-   * **System Agent (SA) Configuration** > **VT-d** > **Enabled**
-   * **CPU Configuration** > **VMX** > **Enabled**
-   * **Boot** > **Secure Boot** > **Secure Boot** > **Disabled**
+   hardware and BIOS version.
 
 #. Set other BIOS settings, such as Hyper-Threading, depending on the needs
    of your application.
@@ -263,7 +252,7 @@ Generate a Board Configuration File
 
    .. code-block:: bash
 
-      sudo apt install cpuid msr-tools pciutils dmidecode python3 python3-pip
+      sudo apt install -y cpuid msr-tools pciutils dmidecode python3 python3-pip
 
 #. Install the Python package dependencies:
 
@@ -284,13 +273,13 @@ Generate a Board Configuration File
 
       .. code-block:: bash
 
-         idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable
+         idle=nomwait iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable
 
       Example:
 
       .. code-block:: bash
 
-         GRUB_CMDLINE_LINUX_DEFAULT="quiet splash idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
+         GRUB_CMDLINE_LINUX_DEFAULT="quiet splash idle=nomwait iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable"
 
       These settings allow the board inspector tool to
       gather important information about the board.
@@ -319,7 +308,7 @@ Generate a Board Configuration File
 
          ls /media/$USER
 
-      Confirm that one disk name appears. You'll use that disk name in
+      Confirm that only one disk name appears. You'll use that disk name in
       the following steps.
 
    #. Copy the board inspector tool folder from the acrn-hypervisor source code to the USB disk:
@@ -357,7 +346,9 @@ Generate a Board Configuration File
       sudo python3 board_inspector.py my_board
 
 #. Confirm that the board configuration file ``my_board.xml`` was generated
-   in the current directory.
+   in the current directory::
+
+      ls ./my_board.xml
 
 #. Copy ``my_board.xml`` from the target to the development computer
    via USB disk as follows:
@@ -382,20 +373,24 @@ Generate a Board Configuration File
          cp $disk/my_board.xml ~/acrn-work
          sudo umount $disk
 
+.. _gsg-dev-setup:
+
 .. rst-class:: numbered-step
 
-Generate a Scenario Configuration File and Launch Script
+Generate a Scenario Configuration File and Launch Scripts
 *********************************************************
 
-You use the **ACRN configurator** to generate scenario configuration files and launch scripts.
+You use the **ACRN configurator** to generate scenario configuration files and
+launch scripts.
 
 A **scenario configuration file** is an XML file that holds the parameters of
 a specific ACRN configuration, such as the number of VMs that can be run,
 their attributes, and the resources they have access to.
 
-A **launch script** is a shell script that is used to create a User VM.
+A **launch script** is a shell script that is used to configure and create a
+User VM. Each User VM has its own launch script.
 
-To generate a scenario configuration file and launch script:
+To generate a scenario configuration file and launch scripts:
 
 #. On the development computer, install ACRN configurator dependencies:
 
@@ -414,7 +409,7 @@ To generate a scenario configuration file and launch script:
    automatically, or you may need to visit this website manually.
    The ACRN configurator is supported on Chrome and Firefox.
 
-#. Click the **Import Board info** button and browse to the board configuration
+#. Click the **Import Board XML** button and browse to the board configuration
    file ``my_board.xml`` previously generated. When it is successfully
    imported, the board information appears.
    Example:
@@ -424,13 +419,14 @@ To generate a scenario configuration file and launch script:
 
 #. Generate the scenario configuration file:
 
-   a. Click the **Scenario Setting** menu on the top banner of the UI and select
-      **Load a default scenario**. Example:
+   a. Click the **Scenario Settings** menu on the top banner of the UI and
+      select **Load a default scenario**. Example:
 
       .. image:: ./images/gsg_config_scenario_default.png
          :class: drop-shadow
 
-   #. In the dialog box, select **industry** as the default scenario setting and click **OK**.
+   #. In the dialog box, select **shared** as the default scenario setting and
+      then click **OK**. This sample default scenario defines six User VMs.
 
       .. image:: ./images/gsg_config_scenario_load.png
          :class: drop-shadow
@@ -447,24 +443,27 @@ To generate a scenario configuration file and launch script:
 
    #. In the dialog box, keep the default name as is. Type
       ``/home/<username>/acrn-work`` in the Scenario XML Path field. In the
-      following example, acrn is the username. Click **Submit** to save the
+      following example, ``acrn`` is the username. Click **Submit** to save the
       file.
 
       .. image:: ./images/gsg_config_scenario_save.png
          :class: drop-shadow
 
-   #. Confirm that ``industry.xml`` appears in the directory ``/home/<username>/acrn-work``.
+   #. Confirm that ``shared.xml`` appears in your ``acrn-work`` directory::
 
-#. Generate the launch script:
+         ls ~/acrn-work/shared.xml
 
-   a. Click the **Launch Setting** menu on the top banner of the UI and select
+#. Generate the launch scripts:
+
+   a. Click the **Launch Settings** menu on the top banner of the UI and select
       **Load a default launch script**.
 
       .. image:: ./images/gsg_config_launch_default.png
          :class: drop-shadow
 
-   #. In the dialog box, select **industry_launch_6uos** as the default launch
-      setting and click **OK**.
+   #. In the dialog box, select **shared_launch_6uos** as the default launch
+      setting and click **OK**. Because our sample ``shared`` scenario defines six
+      User VMs, we're using this ``shared_launch_6uos`` launch XML configuration.
 
       .. image:: ./images/gsg_config_launch_load.png
          :class: drop-shadow
@@ -474,15 +473,17 @@ To generate a scenario configuration file and launch script:
       .. image:: ./images/gsg_config_launch_generate.png
          :class: drop-shadow
 
-   #. In the dialog box, type ``/home/<username>/acrn-work/`` in the Source Path
-      field. In the following example, ``acrn`` is the username. Click **Submit**
-      to save the script.
+   #. In the dialog box, type ``/home/<username>/acrn-work/`` in the Launch XML
+      Path field. In the following example, ``acrn`` is the username. Click
+      **Submit** to save the script.
 
       .. image:: ./images/gsg_config_launch_save.png
          :class: drop-shadow
 
-   #. Confirm that ``launch_uos_id3.sh`` appears in the directory
-      ``/home/<username>/acrn-work/my_board/output/``.
+   #. Confirm that ``launch_uos_id3.sh`` appears in the expected output
+      directory::
+
+         ls ~/acrn-work/my_board/output/launch_uos_id3.sh
 
 #. Close the browser and press :kbd:`CTRL` + :kbd:`C` to terminate the
    ``acrn_configurator.py`` program running in the terminal window.
@@ -497,7 +498,7 @@ Build ACRN
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-hypervisor
-      make -j $(nproc) BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/industry.xml
+      make -j $(nproc) BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/shared.xml
       make targz-pkg
 
    The build typically takes a few minutes. By default, the build results are
@@ -514,7 +515,7 @@ Build ACRN
       make -j $(nproc) targz-pkg
 
    The kernel build can take 15 minutes or less on a fast computer, but could
-   take 1-3 hours depending on the performance of your development computer.
+   take an hour or more depending on the performance of your development computer.
 
 #. Copy all the necessary files generated on the development computer to the
    target system by USB disk as follows:
@@ -531,6 +532,9 @@ Build ACRN
          cp ~/acrn-work/acrn-hypervisor/build/acrn-2.6-unstable.tar.gz $disk/
          sync && sudo umount $disk/
 
+      Even though our sample default scenario defines six User VMs, we're only
+      going to launch one of them, so we'll only need the one launch script.
+
    #. Insert the USB disk you just used into the target system and run these
       commands to copy the tar files locally:
 
@@ -546,6 +550,10 @@ Build ACRN
 
          cd ~/acrn-work
          sudo tar -zxvf linux-5.10.52-acrn-sos-x86.tar.gz -C / --keep-directory-symlink
+
+      This tar extraction replaces parts of the Ubuntu installation we installed
+      and used for running the board inspector, with the Linux kernel we built
+      based on the board and scenario configuration.
 
    #. Extract the ACRN tools and images:
 
@@ -570,7 +578,8 @@ Install ACRN
 
 In the following steps, you will configure GRUB on the target system.
 
-#. On the target, find the root file system (rootfs) device name by using the ``lsblk`` command:
+#. On the target, find the root filesystem (rootfs) device name by using the
+   ``lsblk`` command:
 
    .. code-block:: console
       :emphasize-lines: 24
@@ -604,7 +613,8 @@ In the following steps, you will configure GRUB on the target system.
    partition named ``/``, in this case ``nvme0n1p2``.
 
 #. Run the ``blkid`` command to get the UUID and PARTUUID for the rootfs device
-   (replace the ``nvme0n1p2`` name with the name shown for the rootfs on your system):
+   (replace the ``nvme0n1p2`` name with the name shown for the rootfs on your
+   system):
 
    .. code-block:: bash
 
@@ -644,7 +654,7 @@ In the following steps, you will configure GRUB on the target system.
          }
 
    #. Save and close the file.
-   
+
    #. Correct example image
 
       .. code-block:: console
@@ -708,9 +718,7 @@ In the following steps, you will configure GRUB on the target system.
 Run ACRN and the Service VM
 ******************************
 
-When the ACRN hypervisor starts to boot, the ACRN console log will be displayed
-to the serial port (optional). The ACRN hypervisor boots the Ubuntu Service VM
-automatically.
+The ACRN hypervisor boots the Ubuntu Service VM automatically.
 
 #. On the target, log in to the Service VM. (It will look like a normal Ubuntu
    session.)
@@ -744,17 +752,19 @@ Launch the User VM
 
    #. Put the ISO file in the path ``~/acrn-work/`` on the target system.
 
-#. Open the launch script in a text editor. The following command uses vi, but
+#. Even though our sample default scenario defines six User VMs, we're only
+   going to launch one of them.
+   Open the launch script in a text editor. The following command uses ``vi``, but
    you can use any text editor.
 
    .. code-block:: bash
 
       vi ~/acrn-work/launch_uos_id3.sh
 
-#. Look for the line that contains the term ``virtio-blk`` and replace
-   the existing image file path with your ISO image file path.
-   In the following example, the
-   ISO image file path is ``/home/acrn/acrn-work/ubuntu-18.04.5-desktop-amd64.iso``.
+#. Look for the line that contains the term ``virtio-blk`` and replace the
+   existing image file path with your ISO image file path.  In the following
+   example, the ISO image file path is
+   ``/home/acrn/acrn-work/ubuntu-18.04.5-desktop-amd64.iso``.
 
    .. code-block:: bash
       :emphasize-lines: 4
@@ -780,8 +790,9 @@ Launch the User VM
       sudo chmod +x /usr/sbin/iasl
       sudo ~/acrn-work/launch_uos_id3.sh
 
-#. Confirm that you see the console of the User VM on the Service VM's terminal
-   (on the monitor connected to the target system). Example:
+#. It will take a few seconds for the User VM to boot and start running the
+   Ubuntu image.  Confirm that you see the console of the User VM on the Service
+   VM's terminal. Example:
 
    .. code-block:: console
 
@@ -824,4 +835,5 @@ The User VM has launched successfully. You have completed this ACRN setup.
 Next Steps
 **************
 
-:ref:`overview_dev` describes the ACRN configuration process, with links to additional details.
+:ref:`overview_dev` describes the ACRN configuration process, with links to
+additional details.

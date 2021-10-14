@@ -164,12 +164,12 @@ static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext
 	uint32_t i;
 
 	/* mark to update on-demand run_context for efer/rflags/rsp/rip/cr0/cr4 */
-	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
-	bitmap_set_lock(CPU_REG_RFLAGS, &vcpu->reg_updated);
-	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);
-	bitmap_set_lock(CPU_REG_RIP, &vcpu->reg_updated);
-	bitmap_set_lock(CPU_REG_CR0, &vcpu->reg_updated);
-	bitmap_set_lock(CPU_REG_CR4, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_EFER, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_RFLAGS, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_RSP, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_RIP, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_CR0, &vcpu->reg_updated);
+	bitmap_set_nolock(CPU_REG_CR4, &vcpu->reg_updated);
 
 	/* VMCS Execution field */
 	exec_vmwrite64(VMX_TSC_OFFSET_FULL, ext_ctx->tsc_offset);

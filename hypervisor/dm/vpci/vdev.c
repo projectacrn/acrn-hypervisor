@@ -30,6 +30,7 @@
 #include <asm/guest/vm.h>
 #include "vpci_priv.h"
 #include <asm/guest/ept.h>
+#include <asm/guest/virq.h>
 #include <logmsg.h>
 #include <hash.h>
 
@@ -132,8 +133,26 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 		}
 	}
 
-	if ( (base != 0UL) && (!is_pci_io_bar(vbar))) {
-		if ((!is_pci_mem_bar_base_valid(vpci2vm(vdev->vpci), base)) || (!mem_aligned_check(base, vdev->vbars[idx].size))) {
+	if (base != 0UL) {
+		if (is_pci_io_bar(vbar)) {
+			/*
+			* ACRN-DM and acrn-config should ensure the identical mapping of PIO bar of pass-thru devs.
+			* Currently, we don't support the reprogram of PIO bar of pass-thru devs,
+			* If guest tries to reprogram, hv will inject #GP to guest.
+			*/
+			if ((vdev->pdev != NULL) && ((lo & PCI_BASE_ADDRESS_IO_MASK) != vbar->base_hpa)) {
+				struct acrn_vcpu *vcpu = vcpu_from_pid(vpci2vm(vdev->vpci), get_pcpu_id());
+				if (vcpu != NULL) {
+					vcpu_inject_gp(vcpu, 0U);
+				}
+				pr_err("%s, PCI:%02x:%02x.%x PIO BAR%d couldn't be reprogramed, "
+					"the valid value is 0x%lx, but the actual value is 0x%lx",
+					__func__, vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx,
+					vdev->vbars[idx].base_hpa, lo & PCI_BASE_ADDRESS_IO_MASK);
+				base = 0UL;
+			}
+		} else if ((!is_pci_mem_bar_base_valid(vpci2vm(vdev->vpci), base))
+					|| (!mem_aligned_check(base, vdev->vbars[idx].size))) {
 			res = (base < (1UL << 32UL)) ? &(vdev->vpci->res32): &(vdev->vpci->res64);
 			/* VM tries to reprogram vbar address out of pci mmio bar window, it can be caused by:
 			 * 1. For SOS, <board>.xml is misaligned with the actual native platform, and we get wrong mmio window.
@@ -147,6 +166,27 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 	}
 
 	vdev->vbars[idx].base_gpa = base;
+}
+
+int32_t check_pt_dev_pio_bars(struct pci_vdev *vdev)
+{
+	int32_t ret = 0;
+	uint32_t idx;
+
+	if (vdev->pdev != NULL) {
+		for (idx = 0U; idx < vdev->nr_bars; idx++) {
+			if ((is_pci_io_bar(&vdev->vbars[idx])) && (vdev->vbars[idx].base_gpa != vdev->vbars[idx].base_hpa)) {
+				ret = -EIO;
+				pr_err("%s, PCI:%02x:%02x.%x PIO BAR%d isn't identical mapping, "
+					"host start addr is 0x%lx, while guest start addr is 0x%lx",
+					__func__, vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx,
+					vdev->vbars[idx].base_hpa, vdev->vbars[idx].base_gpa);
+				break;
+			}
+		}
+	}
+
+	return ret;
 }
 
 void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)

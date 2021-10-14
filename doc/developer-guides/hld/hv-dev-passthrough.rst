@@ -414,7 +414,7 @@ VM.  When you enable PTM, the passthrough device is connected to a virtual
 root port instead of the host bridge.
 
 By default, the :ref:`vm.PTM` option is disabled in ACRN VMs. Use the
-:ref:`ACRN configuration tool <acrn_configuration_tool>` to enable PTM
+:ref:`ACRN configurator tool <acrn_configurator_tool>` to enable PTM
 in the scenario XML file that configures the Guest VM.
 
 Here is an example launch script that configures a supported Ethernet card for

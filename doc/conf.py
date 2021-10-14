@@ -192,6 +192,7 @@ html_context = {
    'docs_title': docs_title,
    'is_release': is_release,
    'versions': ( ("latest", "/latest/"),
+                 ("2.6", "/2.6/"),
                  ("2.5", "/2.5/"),
                  ("2.4", "/2.4/"),
                  ("2.3", "/2.3/"),
@@ -381,8 +382,10 @@ html_redirect_pages = [
    ('developer-guides/index', 'contribute'),
    ('getting-started/index', 'try'),
    ('user-guides/index', 'develop'),
+   ('tutorials/index', 'develop'),
    ('hardware', 'reference/hardware'),
    ('release_notes', 'release_notes/index'),
    ('getting-started/rt_industry', 'getting-started/getting-started'),
    ('getting-started/rt_industry_ubuntu', 'getting-started/getting-started'),
+   ('getting-started/building-from-source', 'getting-started/getting-started'),
    ]

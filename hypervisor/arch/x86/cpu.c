@@ -156,9 +156,10 @@ void init_pcpu_pre(bool is_bsp)
 
 		load_pcpu_state_data();
 
+		init_e820();
+
 		/* Initialize the hypervisor paging */
 		init_paging();
-		init_e820();
 
 		/*
 		 * Need update uart_base_address here for vaddr2paddr mapping may changed
@@ -471,7 +472,7 @@ void cpu_dead(void)
 		vmx_off();
 
 		stac();
-		flush_cache_range((void *)get_hv_image_base(), CONFIG_HV_RAM_SIZE);
+		flush_cache_range((void *)get_hv_image_base(), get_hv_ram_size());
 		clac();
 
 		/* Set state to show CPU is dead */

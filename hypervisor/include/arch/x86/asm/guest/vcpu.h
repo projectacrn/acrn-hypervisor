@@ -215,7 +215,7 @@ struct iwkey {
 };
 
 struct acrn_vcpu_arch {
-	/* vmcs region for this vcpu, MUST be 4KB-aligned */
+	/* vmcs region for this vcpu, MUST be 4KB-aligned. This is VMCS01 when nested VMX is enabled */
 	uint8_t vmcs[PAGE_SIZE];
 
 	/* context for nested virtualization, 4KB-aligned */

@@ -247,40 +247,32 @@ int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector_arg, uint32
 /*
  * @pre vcpu->arch.exception_info.exception < 0x20U
  */
-static bool vcpu_inject_exception(struct acrn_vcpu *vcpu)
+static void vcpu_inject_exception(struct acrn_vcpu *vcpu)
 {
-	bool injected = false;
+	uint32_t vector = vcpu->arch.exception_info.exception;
 
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EXCP, &vcpu->arch.pending_req)) {
-		uint32_t vector = vcpu->arch.exception_info.exception;
-	
-		if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
-			exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
-					vcpu->arch.exception_info.error);
-		}
-
-		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
-				(exception_type[vector] << 8U) | (vector & 0xFFU));
-
-		vcpu->arch.exception_info.exception = VECTOR_INVALID;
-
-		/* If this is a fault, we should retain the RIP */
-		if (get_exception_type(vector) == EXCEPTION_FAULT) {
-			vcpu_retain_rip(vcpu);
-		}
-
-		/* SDM 17.3.1.1 For any fault-class exception except a debug exception generated in response to an
-		 * instruction breakpoint, the value pushed for RF is 1.
-		 * #DB is treated as Trap in get_exception_type, so RF will not be set for instruction breakpoint.
-		 */
-		if (get_exception_type(vector) == EXCEPTION_FAULT) {
-			vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) | HV_ARCH_VCPU_RFLAGS_RF);
-		}
-
-		injected = true;
+	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
+		exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
+				vcpu->arch.exception_info.error);
 	}
 
-	return injected;
+	exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
+			(exception_type[vector] << 8U) | (vector & 0xFFU));
+
+	vcpu->arch.exception_info.exception = VECTOR_INVALID;
+
+	/* If this is a fault, we should retain the RIP */
+	if (get_exception_type(vector) == EXCEPTION_FAULT) {
+		vcpu_retain_rip(vcpu);
+	}
+
+	/* SDM 17.3.1.1 For any fault-class exception except a debug exception generated in response to an
+	 * instruction breakpoint, the value pushed for RF is 1.
+	 * #DB is treated as Trap in get_exception_type, so RF will not be set for instruction breakpoint.
+	 */
+	if (get_exception_type(vector) == EXCEPTION_FAULT) {
+		vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) | HV_ARCH_VCPU_RFLAGS_RF);
+	}
 }
 
 /* Inject external interrupt to guest */
@@ -415,8 +407,10 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		/*
 		 * Inject pending exception prior pending interrupt to complete the previous instruction.
 		 */
-		injected = vcpu_inject_exception(vcpu);
-		if (!injected) {
+		if ((*pending_req_bits != 0UL) && bitmap_test_and_clear_lock(ACRN_REQUEST_EXCP, pending_req_bits)) {
+			vcpu_inject_exception(vcpu);
+			injected = true;
+		} else {
 			/* inject NMI before maskable hardware interrupt */
 
 			if ((*pending_req_bits != 0UL) &&
@@ -450,7 +444,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		 * Defer injection of interrupt to be after MTF VM exit,
 		 * when emulating the split-lock.
 		 */
-		if (!vcpu->arch.emulating_lock) {
+		if (!is_lapic_pt_enabled(vcpu) && !vcpu->arch.emulating_lock) {
 			acrn_inject_pending_intr(vcpu, pending_req_bits, injected);
 		}
 
@@ -467,7 +461,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		 * an ExtInt or there is lapic interrupt and virtual interrupt
 		 * deliver is disabled.
 		 */
-		if (!arch->irq_window_enabled) {
+		if (!is_lapic_pt_enabled(vcpu) && !arch->irq_window_enabled) {
 			/*
 			 * TODO: Currently, NMI exiting and virtual NMIs are not enabled,
 			 * so use interrupt window to inject NMI.

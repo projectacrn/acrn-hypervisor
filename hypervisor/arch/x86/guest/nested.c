@@ -18,6 +18,9 @@
 /* Cache the content of MSR_IA32_VMX_BASIC */
 static uint32_t vmx_basic;
 
+static void disable_vmcs_shadowing(void);
+static void clear_vvmcs(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs);
+
 /* The only purpose of this array is to serve the is_vmx_msr() function */
 static const uint32_t vmx_msrs[NUM_VMX_MSRS] = {
 	LIST_OF_VMX_MSRS
@@ -473,7 +476,7 @@ static uint16_t vmcs_field_to_vmcs12_offset(uint32_t vmcs_field)
  * Given a vmcs field and the pointer to the vmcs12, this API returns the
  * corresponding value from the VMCS
  */
-static uint64_t vmcs12_read_field(uint64_t vmcs_hva, uint32_t field)
+static uint64_t vmcs12_read_field(void *vmcs_hva, uint32_t field)
 {
 	uint64_t *ptr = (uint64_t *)(vmcs_hva + vmcs_field_to_vmcs12_offset(field));
 	uint64_t val64 = 0UL;
@@ -504,7 +507,7 @@ static uint64_t vmcs12_read_field(uint64_t vmcs_hva, uint32_t field)
 /*
  * Write the given VMCS field to the given vmcs12 data structure.
  */
-static void vmcs12_write_field(uint64_t vmcs_hva, uint32_t field, uint64_t val64)
+static void vmcs12_write_field(void *vmcs_hva, uint32_t field, uint64_t val64)
 {
 	uint64_t *ptr = (uint64_t *)(vmcs_hva + vmcs_field_to_vmcs12_offset(field));
 
@@ -704,6 +707,28 @@ static bool validate_nvmx_cr4(struct acrn_vcpu *vcpu)
 /*
  * @pre vcpu != NULL
  */
+static void reset_vvmcs(struct acrn_vcpu *vcpu)
+{
+	struct acrn_vvmcs *vvmcs;
+	uint32_t idx;
+
+	vcpu->arch.nested.current_vvmcs = NULL;
+
+	for (idx = 0U; idx < MAX_ACTIVE_VVMCS_NUM; idx++) {
+		vvmcs = &vcpu->arch.nested.vvmcs[idx];
+		vvmcs->host_state_dirty = false;
+		vvmcs->control_fields_dirty = false;
+		vvmcs->vmcs12_gpa = INVALID_GPA;
+		vvmcs->ref_cnt = 0;
+
+		(void)memset(vvmcs->vmcs02, 0U, PAGE_SIZE);
+		(void)memset(&vvmcs->vmcs12, 0U, sizeof(struct acrn_vmcs12));
+	}
+}
+
+/*
+ * @pre vcpu != NULL
+ */
 int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	const uint64_t features = MSR_IA32_FEATURE_CONTROL_LOCK | MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX;
@@ -734,12 +759,10 @@ int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu)
 				nested_vmx_result(VMfailInvalid, 0);
 			} else {
 				vcpu->arch.nested.vmxon = true;
-				vcpu->arch.nested.vvmcs[0].host_state_dirty = false;
-				vcpu->arch.nested.vvmcs[0].control_fields_dirty = false;
 				vcpu->arch.nested.in_l2_guest = false;
 				vcpu->arch.nested.vmxon_ptr = vmptr_gpa;
-				vcpu->arch.nested.current_vvmcs = NULL;
 
+				reset_vvmcs(vcpu);
 				nested_vmx_result(VMsucceed, 0);
 			}
 		}
@@ -779,15 +802,12 @@ bool check_vmx_permission(struct acrn_vcpu *vcpu)
 int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	if (check_vmx_permission(vcpu)) {
+		disable_vmcs_shadowing();
+
 		vcpu->arch.nested.vmxon = false;
-		vcpu->arch.nested.vvmcs[0].host_state_dirty = false;
-		vcpu->arch.nested.vvmcs[0].control_fields_dirty = false;
 		vcpu->arch.nested.in_l2_guest = false;
-		vcpu->arch.nested.current_vvmcs = NULL;
 
-		(void)memset(vcpu->arch.nested.vvmcs[0].vmcs02, 0U, PAGE_SIZE);
-		(void)memset(&vcpu->arch.nested.vvmcs[0].vmcs12, 0U, sizeof(struct acrn_vmcs12));
-
+		reset_vvmcs(vcpu);
 		nested_vmx_result(VMsucceed, 0);
 	}
 
@@ -803,6 +823,63 @@ static inline bool is_ro_vmcs_field(uint32_t field)
 {
 	const uint8_t w = VMX_VMCS_FIELD_WIDTH(field);
 	return (VMX_VMCS_FIELD_WIDTH_16 != w) && (VMX_VMCS_FIELD_TYPE(field) == 1U);
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+static struct acrn_vvmcs *lookup_vvmcs(struct acrn_vcpu *vcpu, uint64_t vmcs12_gpa)
+{
+	struct acrn_vvmcs *vvmcs = NULL;
+	uint32_t idx;
+
+	for (idx = 0U; idx < MAX_ACTIVE_VVMCS_NUM; idx++) {
+		if (vcpu->arch.nested.vvmcs[idx].vmcs12_gpa == vmcs12_gpa) {
+			vvmcs = &vcpu->arch.nested.vvmcs[idx];
+			break;
+		}
+	}
+
+	return vvmcs;
+}
+
+/*
+ * @pre vcpu != NULL
+ */
+static struct acrn_vvmcs *get_or_replace_vvmcs_entry(struct acrn_vcpu *vcpu)
+{
+	struct acrn_nested *nested = &vcpu->arch.nested;
+	struct acrn_vvmcs *vvmcs = NULL;
+	uint32_t idx, min_cnt = ~0U;
+
+	/* look for an inactive entry first */
+	for (idx = 0U; idx < MAX_ACTIVE_VVMCS_NUM; idx++) {
+		if (nested->vvmcs[idx].vmcs12_gpa == INVALID_GPA) {
+			/* found an inactive vvmcs[] entry. */
+			vvmcs = &nested->vvmcs[idx];
+			break;
+		}
+	}
+
+	/* In case we have to release an active entry to make room for the new VMCS12 */
+	if (vvmcs == NULL) {
+		for (idx = 0U; idx < MAX_ACTIVE_VVMCS_NUM; idx++) {
+			/* look for the entry with least reference count */
+			if (nested->vvmcs[idx].ref_cnt < min_cnt) {
+				min_cnt = nested->vvmcs[idx].ref_cnt;
+				vvmcs = &nested->vvmcs[idx];
+			}
+		}
+
+		clear_vvmcs(vcpu, vvmcs);
+	}
+
+	/* reset ref_cnt for all entries */
+	for (idx = 0U; idx < MAX_ACTIVE_VVMCS_NUM; idx++) {
+		nested->vvmcs[idx].ref_cnt = 0U;
+	}
+
+	return vvmcs;
 }
 
 /*
@@ -822,7 +899,7 @@ int32_t vmread_vmexit_handler(struct acrn_vcpu *vcpu)
 		} else {
 			/* TODO: VMfailValid for invalid VMCS fields */
 			vmcs_field = (uint32_t)vcpu_get_gpreg(vcpu, VMX_II_REG2(info));
-			vmcs_value = vmcs12_read_field((uint64_t)&cur_vvmcs->vmcs12, vmcs_field);
+			vmcs_value = vmcs12_read_field(&cur_vvmcs->vmcs12, vmcs_field);
 
 			/* Currently ACRN doesn't support 32bits L1 hypervisor, assuming operands are 64 bits */
 			if (VMX_II_IS_REG(info)) {
@@ -890,7 +967,7 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 				}
 
 				pr_dbg("vmcs_field: %x vmcs_value: %llx", vmcs_field, vmcs_value);
-				vmcs12_write_field((uint64_t)&cur_vvmcs->vmcs12, vmcs_field, vmcs_value);
+				vmcs12_write_field(&cur_vvmcs->vmcs12, vmcs_field, vmcs_value);
 				nested_vmx_result(VMsucceed, 0);
 			}
 		}
@@ -912,7 +989,7 @@ static void sync_vmcs02_to_vmcs12(struct acrn_vmcs12 *vmcs12)
 
 	for (idx = 0; idx < MAX_SHADOW_VMCS_FIELDS; idx++) {
 		val64 = exec_vmread(vmcs_shadowing_fields[idx]);
-		vmcs12_write_field((uint64_t)vmcs12, vmcs_shadowing_fields[idx], val64);
+		vmcs12_write_field(vmcs12, vmcs_shadowing_fields[idx], val64);
 	}
 }
 
@@ -961,7 +1038,7 @@ static void sync_vmcs12_to_vmcs02(struct acrn_vcpu *vcpu, struct acrn_vmcs12 *vm
 	uint32_t idx;
 
 	for (idx = 0; idx < MAX_SHADOW_VMCS_FIELDS; idx++) {
-		val64 = vmcs12_read_field((uint64_t)vmcs12, vmcs_shadowing_fields[idx]);
+		val64 = vmcs12_read_field(vmcs12, vmcs_shadowing_fields[idx]);
 		exec_vmwrite(vmcs_shadowing_fields[idx], val64);
 	}
 
@@ -1032,7 +1109,7 @@ static void disable_vmcs_shadowing(void)
  * @pre vcpu != NULL
  * @pre vmcs01 is current
  */
-static void clear_vmcs02(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs)
+static void clear_vvmcs(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs)
 {
 	/*
 	 * Now VMCS02 is active and being used as a shadow VMCS.
@@ -1075,7 +1152,7 @@ static void clear_vmcs02(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs)
 int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	struct acrn_nested *nested = &vcpu->arch.nested;
-	struct acrn_vvmcs *vvmcs = &nested->vvmcs[0];
+	struct acrn_vvmcs *vvmcs;
 	uint64_t vmcs12_gpa;
 
 	if (check_vmx_permission(vcpu)) {
@@ -1091,45 +1168,43 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 			/* VMPTRLD current VMCS12, do nothing */
 			nested_vmx_result(VMsucceed, 0);
 		} else {
-			if (vvmcs->vmcs12_gpa != INVALID_GPA) {
+			vvmcs = lookup_vvmcs(vcpu, vmcs12_gpa);
+			if (vvmcs == NULL) {
+				vvmcs = get_or_replace_vvmcs_entry(vcpu);
+
+				/* Create the VMCS02 based on this new VMCS12 */
+
 				/*
-				 * L1 hypervisor VMPTRLD a new VMCS12, or VMPTRLD a VMCLEARed VMCS12.
-				 * The current VMCS12 remains active but ACRN needs to sync the content of it
-				 * to guest memory so that the new VMCS12 can be loaded to the cache VMCS12.
+				 * initialize VMCS02
+				 * VMCS revision ID must equal to what reported by IA32_VMX_BASIC MSR
 				 */
-				clear_vmcs02(vcpu, vvmcs);
+				(void)memcpy_s(vvmcs->vmcs02, 4U, (void *)&vmx_basic, 4U);
+
+				/* VMPTRLD VMCS02 so that we can VMWRITE to it */
+				load_va_vmcs(vvmcs->vmcs02);
+				init_host_state();
+
+				/* Load VMCS12 from L1 guest memory */
+				(void)copy_from_gpa(vcpu->vm, (void *)&vvmcs->vmcs12, vmcs12_gpa,
+					sizeof(struct acrn_vmcs12));
+
+				/* if needed, create nept_desc and allocate shadow root for the EPTP */
+				get_nept_desc(vvmcs->vmcs12.ept_pointer);
+
+				/* Need to load shadow fields from this new VMCS12 to VMCS02 */
+				sync_vmcs12_to_vmcs02(vcpu, &vvmcs->vmcs12);
+			} else {
+				vvmcs->ref_cnt += 1U;
 			}
 
-			/* Create the VMCS02 based on this new VMCS12 */
-
-			/*
-			 * initialize VMCS02
-			 * VMCS revision ID must equal to what reported by IA32_VMX_BASIC MSR
-			 */
-			(void)memcpy_s(vvmcs->vmcs02, 4U, (void *)&vmx_basic, 4U);
+			/* Before VMCS02 is being used as a shadow VMCS, VMCLEAR it */
+			clear_va_vmcs(vvmcs->vmcs02);
 
 			/*
 			 * Now VMCS02 is not active, set the shadow-VMCS indicator.
 			 * At L1 VM entry, VMCS02 will be referenced as a shadow VMCS.
 			 */
 			set_vmcs02_shadow_indicator(vvmcs);
-
-			/* VMPTRLD VMCS02 so that we can VMWRITE to it */
-			load_va_vmcs(vvmcs->vmcs02);
-			init_host_state();
-
-			/* Load VMCS12 from L1 guest memory */
-			(void)copy_from_gpa(vcpu->vm, (void *)&vvmcs->vmcs12, vmcs12_gpa,
-				sizeof(struct acrn_vmcs12));
-
-			/* if needed, create nept_desc and allocate shadow root for the EPTP */
-			get_nept_desc(vvmcs->vmcs12.ept_pointer);
-
-			/* Need to load shadow fields from this new VMCS12 to VMCS02 */
-			sync_vmcs12_to_vmcs02(vcpu, &vvmcs->vmcs12);
-
-			/* Before VMCS02 is being used as a shadow VMCS, VMCLEAR it */
-			clear_va_vmcs(vvmcs->vmcs02);
 
 			/* Switch back to vmcs01 */
 			load_va_vmcs(vcpu->arch.vmcs);
@@ -1152,7 +1227,7 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	struct acrn_nested *nested = &vcpu->arch.nested;
-	struct acrn_vvmcs *vvmcs = &nested->vvmcs[0];
+	struct acrn_vvmcs *vvmcs;
 	uint64_t vmcs12_gpa;
 
 	if (check_vmx_permission(vcpu)) {
@@ -1163,21 +1238,36 @@ int32_t vmclear_vmexit_handler(struct acrn_vcpu *vcpu)
 		} else if (vmcs12_gpa == nested->vmxon_ptr) {
 			nested_vmx_result(VMfailValid, VMXERR_VMCLEAR_VMXON_POINTER);
 		} else {
-			if (vvmcs->vmcs12_gpa == vmcs12_gpa) {
-				/*
-				 * The target VMCS12 is active and current.
-				 * VMCS02 is active and being used as a shadow VMCS.
-				 */
+			vvmcs = lookup_vvmcs(vcpu, vmcs12_gpa);
+			if (vvmcs != NULL) {
+				uint64_t current_vmcs12_gpa = INVALID_GPA;
 
+				/* Save for comparison */
+				if (nested->current_vvmcs) {
+					current_vmcs12_gpa = nested->current_vvmcs->vmcs12_gpa;
+				}
+
+				/* VMCLEAR an active VMCS12, may or may not be current */
 				vvmcs->vmcs12.launch_state = VMCS12_LAUNCH_STATE_CLEAR;
-
-				clear_vmcs02(vcpu, vvmcs);
+				clear_vvmcs(vcpu, vvmcs);
 
 				/* Switch back to vmcs01 (no VMCS shadowing) */
 				load_va_vmcs(vcpu->arch.vmcs);
 
-				/* no current VMCS12 */
-				nested->current_vvmcs = NULL;
+				if (current_vmcs12_gpa != INVALID_GPA) {
+					if (current_vmcs12_gpa == vmcs12_gpa) {
+						/* VMCLEAR current VMCS12 */
+						nested->current_vvmcs = NULL;
+					} else {
+						/*
+						 * VMCLEAR an active but not current VMCS12.
+						 * VMCS shadowing was cleared earlier in clear_vvmcs()
+						 */
+						enable_vmcs_shadowing(nested->current_vvmcs);
+					}
+				} else {
+					/* do nothing if there is no current VMCS12 */
+				}
 			} else {
 				 /*
 				  * we need to update the VMCS12 launch state in L1 memory in these two cases:
@@ -1248,8 +1338,8 @@ static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
 		 */
 		exec_vmwrite(VMX_GUEST_CR0, vmcs12->host_cr0);
 		exec_vmwrite(VMX_GUEST_CR4, vmcs12->host_cr4);
-		bitmap_clear_lock(CPU_REG_CR0, &vcpu->reg_cached);
-		bitmap_clear_lock(CPU_REG_CR4, &vcpu->reg_cached);
+		bitmap_clear_nolock(CPU_REG_CR0, &vcpu->reg_cached);
+		bitmap_clear_nolock(CPU_REG_CR4, &vcpu->reg_cached);
 
 		exec_vmwrite(VMX_GUEST_CR3, vmcs12->host_cr3);
 		exec_vmwrite(VMX_GUEST_DR7, DR7_INIT_VALUE);
@@ -1360,6 +1450,16 @@ int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu)
 		vcpu->arch.nested.in_l2_guest = false;
 	}
 
+	/*
+	 * For VM-exits that reflect to L1 hypervisor, ACRN can't advance to next guest RIP
+	 * which is up to the L1 hypervisor to make the decision.
+	 *
+	 * The only case that doesn't need to be reflected is EPT violations that can be
+	 * completely handled by ACRN, which requires L2 VM to re-execute the instruction
+	 * after the shadow EPT is being properly setup.
+
+	 * In either case, need to set vcpu->arch.inst_len to zero.
+	 */
 	vcpu_retain_rip(vcpu);
 	return 0;
 }

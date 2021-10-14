@@ -434,7 +434,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	 * will cause EPT violation if sos accesses hv memory
 	 */
 	hv_hpa = hva2hpa((void *)(get_hv_image_base()));
-	ept_del_mr(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
+	ept_del_mr(vm, pml4_page, hv_hpa, get_hv_ram_size());
 	/* unmap prelaunch VM memory */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
@@ -599,34 +599,37 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		passthrough_smbios(vm, get_acrn_boot_info());
 #endif
 
-		init_vpci(vm);
-		enable_iommu();
-
-		/* Create virtual uart;*/
-		init_legacy_vuarts(vm, vm_config->vuart);
-
-		register_reset_port_handler(vm);
-
-		/* vpic wire_mode default is INTR */
-		vm->wire_mode = VPIC_WIRE_INTR;
-
-		/* Init full emulated vIOAPIC instance:
-		 * Present a virtual IOAPIC to guest, as a placeholder interrupt controller,
-		 * even if the guest uses PT LAPIC. This is to satisfy the guest OSes,
-		 * in some cases, though the functionality of vIOAPIC doesn't work.
-		 */
-		vioapic_init(vm);
-
-		/* Populate return VM handle */
-		*rtn_vm = vm;
-		vm->sw.io_shared_page = NULL;
-		if ((vm_config->load_order == POST_LAUNCHED_VM) && ((vm_config->guest_flags & GUEST_FLAG_IO_COMPLETION_POLLING) != 0U)) {
-			/* enable IO completion polling mode per its guest flags in vm_config. */
-			vm->sw.is_polling_ioreq = true;
-		}
-		status = set_vcpuid_entries(vm);
+		status = init_vpci(vm);
 		if (status == 0) {
-			vm->state = VM_CREATED;
+			enable_iommu();
+
+			/* Create virtual uart;*/
+			init_legacy_vuarts(vm, vm_config->vuart);
+
+			register_reset_port_handler(vm);
+
+			/* vpic wire_mode default is INTR */
+			vm->wire_mode = VPIC_WIRE_INTR;
+
+			/* Init full emulated vIOAPIC instance:
+			* Present a virtual IOAPIC to guest, as a placeholder interrupt controller,
+			* even if the guest uses PT LAPIC. This is to satisfy the guest OSes,
+			* in some cases, though the functionality of vIOAPIC doesn't work.
+			*/
+			vioapic_init(vm);
+
+			/* Populate return VM handle */
+			*rtn_vm = vm;
+			vm->sw.io_shared_page = NULL;
+			if ((vm_config->load_order == POST_LAUNCHED_VM)
+				&& ((vm_config->guest_flags & GUEST_FLAG_IO_COMPLETION_POLLING) != 0U)) {
+				/* enable IO completion polling mode per its guest flags in vm_config. */
+				vm->sw.is_polling_ioreq = true;
+			}
+			status = set_vcpuid_entries(vm);
+			if (status == 0) {
+				vm->state = VM_CREATED;
+			}
 		}
 	}
 

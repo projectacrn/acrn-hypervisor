@@ -79,7 +79,7 @@ def get_devs_bdf_native(board_etree):
     Get all pci devices' bdf in native environment.
     return: list of pci devices' bdf
     """
-    nodes = board_etree.xpath(f"//bus[@type = 'pci' and @id]/device[@address]")
+    nodes = board_etree.xpath(f"//bus[@type = 'pci' and @address = '0x0']/device[@address]")
     dev_list = []
     for node in nodes:
         address = node.get('address')

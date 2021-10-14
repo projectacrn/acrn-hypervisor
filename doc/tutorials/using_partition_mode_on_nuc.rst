@@ -1,13 +1,13 @@
 .. _using_partition_mode_on_nuc:
 
-Getting Started Guide for ACRN Logical Partition Mode
-#####################################################
+Getting Started Guide for ACRN Partitioned Mode
+###############################################
 
-The ACRN hypervisor supports a logical partition scenario in which the User
+The ACRN hypervisor supports a partitioned scenario in which the User
 OS, running in a pre-launched VM, can bypass the ACRN
 hypervisor and directly access isolated PCI devices. The following
 guidelines provide step-by-step instructions on how to set up the ACRN
-hypervisor logical partition scenario on Intel NUC while running two
+hypervisor partitioned scenario on Intel NUC while running two
 pre-launched VMs.
 
 .. contents::
@@ -18,13 +18,16 @@ Validated Versions
 ******************
 
 - Ubuntu version: **18.04**
-- ACRN hypervisor tag: **v2.4**
-- ACRN kernel tag: **v2.4**
+- ACRN hypervisor tag: **v2.6**
+
+.. note:: After the v2.6 release, the ``logical_partition`` scenario
+   was renamed to ``partitioned``, affecting the file names used in this
+   guide (validated with v2.6).
 
 Prerequisites
 *************
 
-* `Intel Whiskey Lake <http://www.maxtangpc.com/industrialmotherboards/142.html#parameters>`_
+* `Intel NUC Kit NUC11TNBi5 <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_.
 * NVMe disk
 * SATA disk
 * Storage device with USB interface (such as USB Flash
@@ -43,28 +46,14 @@ Prerequisites
 
 Update Kernel Image and Modules of Pre-Launched VM
 **************************************************
-#. On your development workstation, clone the ACRN kernel source tree, and
-   build the Linux kernel image that will be used to boot the pre-launched VMs:
+#. On the local Ubuntu target machine, find the kernel file,
+   copy to your (``/boot`` directory) and name the file ``bzImage``.
+   The ``uname -r`` command returns the kernel release, for example,
+   ``4.15.0-55-generic``):
 
    .. code-block:: none
 
-      $ git clone https://github.com/projectacrn/acrn-kernel.git
-      Cloning into 'acrn-kernel'...
-      ...
-      $ cd acrn-kernel
-      $ cp kernel_config_uos .config
-      $ make olddefconfig
-      scripts/kconfig/conf  --olddefconfig Kconfig
-      #
-      # configuration written to .config
-      #
-      $ make
-      $ make modules_install INSTALL_MOD_PATH=out/
-
-   The last two commands build the bootable kernel image as
-   ``arch/x86/boot/bzImage``, and loadable kernel modules under the ``./out/``
-   folder. Copy these files to a removable disk for installing on the
-   Intel NUC later.
+      $ sudo cp /boot/vmlinuz-$(uname -r)  /boot/bzImage
 
 #. The current ACRN logical partition scenario implementation requires a
    multi-boot capable bootloader to boot both the ACRN hypervisor and the
@@ -74,6 +63,7 @@ Update Kernel Image and Modules of Pre-Launched VM
    Ubuntu installer creates 3 disk partitions on the onboard NVMe SSD. By
    default, the GRUB bootloader is installed on the EFI System Partition
    (ESP) that's used to bootstrap the ACRN hypervisor.
+
 
 #. After installing the Ubuntu OS, power off the Intel NUC. Attach the
    SATA disk and storage device with the USB interface to the Intel NUC. Power on
@@ -90,20 +80,14 @@ Update Kernel Image and Modules of Pre-Launched VM
 
       # Mount the Ubuntu OS root filesystem on the SATA disk
       $ sudo mount /dev/sda3 /mnt
-      $ sudo cp -r <kernel-modules-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
+      $ sudo cp -r /lib/modules/* /mnt/lib/modules
       $ sudo umount /mnt
       # Mount the Ubuntu OS root filesystem on the USB flash disk
       $ sudo mount /dev/sdb3 /mnt
-      $ sudo cp -r <path-to-kernel-module-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
+      $ sudo cp -r /lib/modules/* /mnt/lib/modules
       $ sudo umount /mnt
 
-#. Copy the bootable kernel image to the /boot directory:
 
-   .. code-block:: none
-
-      $ sudo cp <path-to-kernel-image-built-in-step1>/bzImage /boot/
-
-.. rst-class:: numbered-step
 
 Update ACRN Hypervisor Image
 ****************************
@@ -144,15 +128,15 @@ Update ACRN Hypervisor Image
    Refer to :ref:`gsg` to set up the ACRN build
    environment on your development workstation.
 
-   Clone the ACRN source code and check out to the tag v2.4:
+   Clone the ACRN source code and check out to the tag v2.6:
 
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor.git
       $ cd acrn-hypervisor
-      $ git checkout v2.4
+      $ git checkout v2.6
 
-#. Check the ``pci_devs`` sections in ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml``
+#. Check the ``pci_devs`` sections in ``misc/config_tools/data/nuc11tnbi5/logical_partition.xml``
    for each pre-launched VM to ensure you are using the right PCI device BDF information (as
    reported by ``lspci -vv``). If you need to make changes to this file, create a copy of it and
    use it subsequently when building ACRN (``SCENARIO=/path/to/newfile.xml``).
@@ -161,7 +145,7 @@ Update ACRN Hypervisor Image
 
    .. code-block:: none
 
-      $ make hypervisor BOARD=whl-ipc-i7 SCENARIO=logical_partition RELEASE=0
+      $ make hypervisor BOARD=nuc11tnbi5  SCENARIO=logical_partition RELEASE=0
 
    .. note::
       The ``acrn.bin`` will be generated to ``./build/hypervisor/acrn.bin``.
@@ -217,13 +201,32 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
       Update the UUID (``--set``) and PARTUUID (``root=`` parameter)
       (or use the device node directly) of the root partition (e.g.``/dev/nvme0n1p2). Hint: use ``sudo blkid``.
       The kernel command-line arguments used to boot the pre-launched VMs is ``bootargs``
-      in the ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml``
+      in the ``misc/config_tools/data/nuc11tnbi5/logical_partition.xml``
       The ``module2 /boot/bzImage`` param ``XXXXXX`` is the bzImage tag and must exactly match the ``kern_mod``
-      in the ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml`` file.
+      in the ``misc/config_tools/data/nuc11tnbi5/logical_partition.xml`` file.
       The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0, the parameter ``ACPI_VM0`` is
       VM0's ACPI tag and should not be modified.
       The module ``/boot/ACPI_VM1.bin`` is the binary of ACPI tables for pre-launched VM1 the parameter ``ACPI_VM1`` is
       VM1's ACPI tag and should not be modified.
+
+#. Correct example Grub configuration (with ``module2`` image paths set):
+
+   .. code-block:: console
+
+      menuentry 'ACRN hypervisor Logical Partition Scenario' --id ACRN_Logical_Partition --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
+           recordfail
+           load_video
+           gfxmode $linux_gfx_mode
+           insmod gzio
+           insmod part_gpt
+           insmod ext2
+           search --no-floppy --fs-uuid --set 9bd58889-add7-410c-bdb7-1fbc2af9b0e1
+           echo 'Loading hypervisor logical partition scenario ...'
+           multiboot2  /boot/acrn.bin root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
+           module2 /boot/bzImage Linux_bzImage
+           module2 /boot/ACPI_VM0.bin ACPI_VM0
+           module2 /boot/ACPI_VM1.bin ACPI_VM1
+      }
 
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
@@ -253,6 +256,8 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
 
 Logical Partition Scenario Startup Check
 ****************************************
+#. Connect to the serial port as described in this :ref:`Connecting to the
+   serial port <connect_serial_port>` tutorial.
 
 #. Use these steps to verify that the hypervisor is properly running:
 

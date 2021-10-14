@@ -28,6 +28,14 @@ enum sched_notify_mode {
 	SCHED_NOTIFY_IPI
 };
 
+/* Tools can configure a VM to use PRIO_LOW or PRIO_HIGH */
+enum thread_priority {
+	PRIO_IDLE = 0,
+	PRIO_LOW,
+	PRIO_HIGH,
+	PRIO_MAX
+};
+
 struct thread_object;
 typedef void (*thread_entry_t)(struct thread_object *obj);
 typedef void (*switch_t)(struct thread_object *obj);
@@ -43,6 +51,8 @@ struct thread_object {
 	uint64_t host_sp;
 	switch_t switch_out;
 	switch_t switch_in;
+
+	int priority;
 
 	uint8_t data[THREAD_DATA_SIZE];
 };
@@ -95,6 +105,11 @@ extern struct acrn_scheduler sched_bvt;
 struct sched_bvt_control {
 	struct list_head runqueue;
 	struct hv_timer tick_timer;
+};
+
+extern struct acrn_scheduler sched_prio;
+struct sched_prio_control {
+	struct list_head prio_queue;
 };
 
 bool is_idle_thread(const struct thread_object *obj);
