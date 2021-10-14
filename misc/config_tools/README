@@ -5,3 +5,4 @@ folder structure
 	scenario_config	: Parse board_info XML and scenario XML to generate scenario based VM configuration files under misc/acrn-config/xmls/config-xmls/$(BOARD)/ folder.
 	launch_config	: Parse board_info XML, scenario XML and devicemodel param XML to generate launch script for post-launched vm under misc/acrn-config/xmls/config-xmls/$(BOARD)/ folder.
 	library		: The folder stores shared software modules or libs for acrn-config offline tool.
+        CI/1source verify
