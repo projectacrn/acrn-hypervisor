@@ -60,6 +60,7 @@ def main(board_name, board_xml, args):
 
         # Finally overwrite the output with the updated XML
         board_etree.write(board_xml, pretty_print=True)
+        print("{} saved successfully!".format(board_xml))
 
     except subprocess.CalledProcessError as e:
         print(e)
