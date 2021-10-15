@@ -73,6 +73,7 @@
 #include "log.h"
 #include "rtct.h"
 #include "vmmapi.h"
+#include "mmio_dev.h"
 
 /*
  * Define the base address of the ACPI tables, and the offsets to
@@ -947,6 +948,8 @@ basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 	dsdt_line("      })");
 	dsdt_line("    }");
 	dsdt_line("  }");
+
+	acpi_dev_write_dsdt(ctx);
 
 	pm_write_dsdt(ctx, basl_ncpu);
 

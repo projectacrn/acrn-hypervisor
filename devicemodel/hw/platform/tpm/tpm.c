@@ -108,3 +108,6 @@ void deinit_vtpm2(struct vmctx *ctx)
 		deinit_tpm_emulator();
 	}
 }
+
+struct acpi_dev_pt_ops pt_tpm2_dev_ops = { 0 };
+DEFINE_ACPI_PT_DEV(pt_tpm2_dev_ops);

@@ -22,12 +22,6 @@
 #include "log.h"
 #include "mmio_dev.h"
 
-
-struct mmio_dev {
-	char name[16];
-	struct acrn_mmiodev dev;
-};
-
 #define MAX_MMIO_DEV_NUM	2
 
 static struct mmio_dev mmio_devs[MAX_MMIO_DEV_NUM];
@@ -43,9 +37,38 @@ struct mmio_dev_ops {
 SET_DECLARE(mmio_dev_ops_set, struct mmio_dev_ops);
 #define DEFINE_MMIO_DEV(x)	DATA_SET(mmio_dev_ops_set, x)
 
+SET_DECLARE(acpi_dev_pt_ops_set, struct acpi_dev_pt_ops);
+
 struct mmio_dev_ops pt_mmiodev;
 
 static uint32_t mmio_dev_base = MMIO_DEV_BASE;
+
+static inline char *ltrim(char *s)
+{
+	while (*s && *s == ' ')
+		s++;
+	return s;
+}
+
+struct mmio_dev *get_mmiodev(char *name)
+{
+	int i;
+	struct mmio_dev *dev;
+
+	for (i = 0; i < mmio_dev_idx; i++) {
+		dev = &mmio_devs[i];
+		if (!strncmp(dev->name, name, 16)) {
+			return dev;
+		}
+	}
+
+	return NULL;
+}
+
+struct mmio_dev *alloc_mmiodev(void)
+{
+	return (mmio_dev_idx >= MAX_MMIO_DEV_NUM) ? NULL : &mmio_devs[mmio_dev_idx++];
+}
 
 int mmio_dev_alloc_gpa_resource32(uint32_t *addr, uint32_t size_in)
 {
@@ -62,41 +85,130 @@ int mmio_dev_alloc_gpa_resource32(uint32_t *addr, uint32_t size_in)
 	}
 }
 
-int parse_pt_acpidev(char *opt)
+int create_pt_acpidev(char *opt)
 {
-	int err = 0;
+	struct mmio_dev *dev;
+	struct acpi_dev_pt_ops **adptops, *ops;
 
-	if (mmio_dev_idx >= MAX_MMIO_DEV_NUM) {
-		pr_err("MMIO dev number exceed MAX_MMIO_DEV_NUM!!!\n");
-		return -EINVAL;
-	}
-	/* TODO: support acpi dev framework, remove these TPM hard code */
-	if (strncmp(opt, "MSFT0101", 8) == 0) {
-		strncpy(mmio_devs[mmio_dev_idx].name, "MSFT0101", 8);
+	SET_FOREACH(adptops, acpi_dev_pt_ops_set) {
+		ops = *adptops;
+		if (ops->match && ops->match(opt)) {
+			dev = alloc_mmiodev();
+			if (!dev) {
+				pr_err("Failed to create MMIO device %s due to exceeding max MMIO device number\n", opt);
+				return -EINVAL;
+			}
 
-		strncpy(mmio_devs[mmio_dev_idx].dev.name, "tpm2", 4);
-		/* TODO: We would parse the /proc/iomem to get the corresponding resources */
-		mmio_devs[mmio_dev_idx].dev.res[0].host_pa = 0xFED40000UL;
-		/* FIXME: The 0xFED40000 doesn't conflict with other mmio or system memory so far.
-		 * This need to be fixed by redesign the mmio_dev_alloc_gpa_resource32().
-		 */
-		mmio_devs[mmio_dev_idx].dev.res[0].user_vm_pa = 0xFED40000UL;
-		mmio_devs[mmio_dev_idx].dev.res[0].size = 0x00005000UL;
-		mmio_dev_idx++;
-		pt_tpm2 = true;
+			return ops->init ? ops->init(opt, dev) : -1;
+		}
 	}
 
-	return err;
+	pr_err("Unrecognized or unsupported ACPI device HID: %s\n", opt);
+	return -EINVAL;
 }
 
-int parse_pt_mmiodev(char *opt)
+/**
+ * Parse /proc/iomem to see if there's an entry that contains name.
+ * Returns false if not found,
+ * Returns true if an entry is found, and res_start and res_size will be filled
+ * 	to the start and (end - start + 1) of the first found entry.
+ *
+ * @pre (name != NULL) && (strlen(name) > 0)
+ */
+int get_mmio_hpa_resource(char *name, uint64_t *res_start, uint64_t *res_size)
+{
+	FILE *fp;
+	uint64_t start, end;
+	int found = false;
+	char line[128];
+	char *cp;
+
+	fp = fopen("/proc/iomem", "r");
+	if (!fp) {
+		pr_err("Error opening /proc/iomem\n");
+		return false;
+	}
+
+	while (fgets(line, sizeof(line), fp)) {
+		if (strstr(line, name)) {
+			if ((!dm_strtoul(ltrim(line), &cp, 16, &start) && *cp == '-') &&
+				(!dm_strtoul(cp + 1, &cp, 16, &end))) {
+				if ((start == 0) && (end == 0)) {
+					pr_err("Please run acrn-dm with superuser privilege\n");
+					break;
+				}
+			}
+
+			*res_start = start;
+			/* proc/iomem displays regions like: 000-fff so we add 1 as size */
+			*res_size = end - start + 1;
+			found = true;
+			break;
+		}
+	}
+
+	fclose(fp);
+	return found;
+}
+
+/**
+ * Search /sys/bus/acpi/devices for given HID and fill modalias to ops.
+ * (TODO: we may add more functionality later when we support pt
+ * of other ACPI dev)
+ * According to https://www.kernel.org/doc/Documentation/acpi/namespace.txt,
+ *
+ * The Linux ACPI subsystem converts ACPI namespace objects into a Linux
+ * device tree under the /sys/devices/LNXSYSTEM:00 and updates it upon
+ * receiving ACPI hotplug notification events.  For each device object in this
+ * hierarchy there is a corresponding symbolic link in the
+ * /sys/bus/acpi/devices.
+ */
+int get_more_acpi_dev_info(char *hid, uint32_t instance, struct acpi_dev_pt_ops *ops)
+{
+	char pathbuf[128], line[64];
+	int ret = -1;
+	size_t ch_read;
+	FILE *fp;
+
+	snprintf(pathbuf, sizeof(pathbuf), "/sys/bus/acpi/devices/%s:%02x/modalias", hid, instance);
+	fp = fopen(pathbuf, "r");
+	if (!fp)
+		return ret;
+
+	ch_read = fread(line, 1, sizeof(line), fp);
+	if (!ch_read)
+		goto out;
+
+	memcpy(ops->hid, hid, 8);
+	memcpy(ops->modalias, line, ch_read);
+	ret = 0;
+
+out:
+	fclose(fp);
+	return ret;
+}
+
+void acpi_dev_write_dsdt(struct vmctx *ctx)
+{
+	struct acpi_dev_pt_ops **adptops, *ops;
+
+	SET_FOREACH(adptops, acpi_dev_pt_ops_set) {
+		ops = *adptops;
+		if (ops->write_dsdt)
+			ops->write_dsdt(ctx);
+	}
+}
+
+int create_pt_mmiodev(char *opt)
 {
 
 	int err = 0;
 	uint64_t base_hpa, size;
+	struct mmio_dev *dev;
 	char *cp;
 
-	if (mmio_dev_idx >= MAX_MMIO_DEV_NUM) {
+	dev = alloc_mmiodev();
+	if (!dev) {
 		pr_err("MMIO dev number exceed MAX_MMIO_DEV_NUM!!!\n");
 		return -EINVAL;
 	}
@@ -104,10 +216,9 @@ int parse_pt_mmiodev(char *opt)
 	if((!dm_strtoul(opt, &cp, 16, &base_hpa) && *cp == ',') &&
 		(!dm_strtoul(cp + 1, &cp, 16, &size))) {
 		pr_dbg("%s pt mmiodev base: 0x%lx, size: 0x%lx\n", __func__, base_hpa, size);
-		strncpy(mmio_devs[mmio_dev_idx].name, pt_mmiodev.name, 8);
-		mmio_devs[mmio_dev_idx].dev.res[0].host_pa = base_hpa;
-		mmio_devs[mmio_dev_idx].dev.res[0].size = size;
-		mmio_dev_idx++;
+		strncpy(dev->name, pt_mmiodev.name, 8);
+		dev->dev.res[0].host_pa = base_hpa;
+		dev->dev.res[0].size = size;
 	} else {
 		pr_err("%s, %s invalid, please check!\n", __func__, opt);
 	}
