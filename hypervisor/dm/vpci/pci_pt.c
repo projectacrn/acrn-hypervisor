@@ -540,6 +540,9 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 	if (vdev->phyfun == NULL) {
 		init_bars(vdev, is_pf_vdev);
 		init_vmsix_on_msi(vdev);
+		if (is_sos_vm(vpci2vm(vdev->vpci)) && (vdev->pdev->bdf.value == CONFIG_GPU_SBDF)) {
+			pci_vdev_write_vcfg(vdev, PCIR_ASLS_CTL, 4U, pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_ASLS_CTL, 4U));
+		}
 		if (is_prelaunched_vm(vpci2vm(vdev->vpci)) && (!is_pf_vdev)) {
 			pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 
