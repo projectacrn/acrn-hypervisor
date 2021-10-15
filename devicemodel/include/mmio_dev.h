@@ -38,7 +38,6 @@ int init_mmio_devs(struct vmctx *ctx);
 void deinit_mmio_devs(struct vmctx *ctx);
 
 int mmio_dev_alloc_gpa_resource32(uint32_t *addr, uint32_t size_in);
-uint64_t get_mmio_dev_tpm2_base_gpa(void);
 
 #define MMIO_DEV_BASE  0xF0000000U
 #define MMIO_DEV_LIMIT 0xFE000000U
