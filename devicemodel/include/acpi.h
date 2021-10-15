@@ -65,6 +65,9 @@ struct acpi_table_hdr {
 /* All dynamic table entry no. */
 #define NHLT_ENTRY_NO		8
 
+#define EFPRINTF(...) fprintf(__VA_ARGS__)
+#define EFFLUSH(x) fflush(x)
+
 void acpi_table_enable(int num);
 uint32_t get_acpi_base(void);
 uint32_t get_acpi_table_length(void);

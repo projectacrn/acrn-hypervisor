@@ -8,11 +8,26 @@
 #ifndef _TPM_H_
 #define _TPM_H_
 
+#include "mmio_dev.h"
+#include "acpi.h"
+
 #define TPM_CRB_MMIO_ADDR 0xFED40000UL
 #define TPM_CRB_MMIO_SIZE 0x5000U
 
 uint32_t get_vtpm_crb_mmio_addr(void);
 uint32_t get_tpm_crb_mmio_addr(void);
+int basl_fwrite_tpm2(FILE *fp, struct vmctx *ctx);
+
+struct acpi_table_tpm2 {
+	struct acpi_table_hdr header;
+	uint16_t platform_class;
+	uint16_t reserved;
+	uint64_t control_address;
+	uint32_t start_method;
+	uint8_t start_method_spec_para[12];
+	uint32_t laml;
+	uint64_t lasa;
+} __attribute__((packed));
 
 /* TPM CRB registers */
 enum {

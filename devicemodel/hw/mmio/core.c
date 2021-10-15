@@ -325,22 +325,6 @@ struct mmio_dev_ops tpm2 = {
 };
 DEFINE_MMIO_DEV(tpm2);
 
-/* @pre (pt_tpm2 == true) */
-uint64_t get_mmio_dev_tpm2_base_gpa(void)
-{
-	int i;
-	uint64_t base_gpa = 0UL;
-
-	for (i = 0; i < mmio_dev_idx; i++) {
-		if (!strcmp(mmio_devs[i].name, "MSFT0101")) {
-			base_gpa = mmio_devs[i].dev.res[0].user_vm_pa;
-			break;
-		}
-	}
-
-	return base_gpa;
-}
-
 struct mmio_dev_ops pt_mmiodev = {
 	.name		= "MMIODEV",
 	/* ToDo: we may allocate the gpa MMIO resource in a reserved MMIO region
