@@ -955,11 +955,11 @@ main(int argc, char *argv[])
 			break;
 		case CMD_OPT_ACPIDEV_PT:
 			/* FIXME: check acpi TPM device rules in acpi device famework init functions */
-			if (vtpm2 || parse_pt_acpidev(optarg) != 0)
+			if (vtpm2 || create_pt_acpidev(optarg) != 0)
 				errx(EX_USAGE, "invalid pt acpi dev param %s", optarg);
 			break;
 		case CMD_OPT_MMIODEV_PT:
-			if (parse_pt_mmiodev(optarg) != 0)
+			if (create_pt_mmiodev(optarg) != 0)
 				errx(EX_USAGE, "invalid pt mmio dev param %s", optarg);
 			break;
 		case CMD_OPT_VTPM2:
