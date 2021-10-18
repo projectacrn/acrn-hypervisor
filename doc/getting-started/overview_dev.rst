@@ -4,8 +4,8 @@ Configuration and Development Overview
 ######################################
 
 This overview is for developers who are new or relatively new to ACRN and are
-responsible for configuring and building ACRN hypervisors. It will introduce you to the general development process, including ACRN components and
-tools.
+responsible for configuring and building ACRN hypervisors. It will introduce you
+to the general development process, including ACRN components and tools.
 
 The overview covers the process at an abstract and universal level.
 
@@ -17,7 +17,8 @@ step-by-step instructions to enable an ACRN example for first-time use, while
 the overview provides background information and serves as a gateway to
 additional features and resources that can help you develop your solution.
 
-The overview doesn't cover ACRN benefits, use cases, or architecture. See :ref:`introduction` to learn more.
+The overview doesn't cover ACRN benefits, use cases, or architecture. See
+:ref:`introduction` to learn more.
 
 .. _overview_dev_dev_env:
 
@@ -154,7 +155,8 @@ ACRN:
 * ACRN hypervisor source code
 * If your scenario has a Service VM: ACRN kernel source code
 
-In the next step, :ref:`overview_dev_board_config`, you will need the Board Inspector tool found in the ACRN hypervisor source code to collect information
+In the next step, :ref:`overview_dev_board_config`, you will need the Board
+Inspector tool found in the ACRN hypervisor source code to collect information
 about the target hardware and generate a board configuration file.
 
 .. _overview_dev_board_config:
@@ -231,7 +233,10 @@ in mind when using the ACRN Configurator.
 Generate a Scenario Configuration File
 ======================================
 
-A **scenario configuration file** defines a working scenario by configuring hypervisor capabilities and defining some VM attributes and resources. We call these settings “static” because they are used to build the hypervisor. The file contains:
+A **scenario configuration file** defines a working scenario by configuring
+hypervisor capabilities and defining some VM attributes and resources. We call
+these settings “static” because they are used to build the hypervisor. The file
+contains:
 
 * All hypervisor settings
 * All pre-launched User VM settings
