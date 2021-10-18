@@ -26,20 +26,6 @@
   </xs:restriction>
 </xs:simpleType>
 
-<xs:simpleType name="HVRamSizeType">
-  <xs:annotation>
-    <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
-  </xs:annotation>
-  <xs:union memberTypes="None HexFormat" />
-</xs:simpleType>
-
-<xs:simpleType name="HVRamStartType">
-  <xs:annotation>
-    <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
-  </xs:annotation>
-  <xs:union memberTypes="None HexFormat" />
-</xs:simpleType>
-
 <xs:simpleType name="KernLoadAddr">
   <xs:annotation>
     <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
