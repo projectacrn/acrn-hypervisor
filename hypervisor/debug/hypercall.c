@@ -22,7 +22,7 @@
  * @param param2 guest physical address. This gpa points to
  *             data structure required by each command
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_profiling_ops(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
@@ -76,7 +76,7 @@ int32_t hcall_profiling_ops(struct acrn_vcpu *vcpu, __unused struct acrn_vm *tar
  * @param param1 guest physical address. This gpa points to
  *              struct sbuf_setup_param
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_setup_sbuf(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
@@ -106,7 +106,7 @@ int32_t hcall_setup_sbuf(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target
  * @param param1 guest physical address. This gpa points to
  *              struct hv_npk_log_param
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_setup_hv_npk_log(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
@@ -130,7 +130,7 @@ int32_t hcall_setup_hv_npk_log(struct acrn_vcpu *vcpu, __unused struct acrn_vm *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 Guest physical address pointing to struct acrn_hw_info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @pre param1 shall be a valid physical address
  *
  * @retval 0 on success

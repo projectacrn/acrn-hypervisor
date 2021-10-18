@@ -855,7 +855,7 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_BIOS_UPDT_TRIG:
 	{
 		/* We only allow SOS to do uCode update */
-		if (is_sos_vm(vcpu->vm)) {
+		if (is_service_vm(vcpu->vm)) {
 			acrn_update_ucode(vcpu, v);
 		}
 		break;

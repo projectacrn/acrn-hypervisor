@@ -103,8 +103,8 @@ struct ptirq_remapping_info *ptirq_dequeue_softirq(uint16_t pcpu_id)
 
 		list_del_init(&entry->softirq_node);
 
-		/* if sos vm, just dequeue, if uos, check delay timer */
-		if (is_sos_vm(entry->vm) || timer_expired(&entry->intr_delay_timer, cpu_ticks(), NULL)) {
+		/* if Service VM, just dequeue, if User VM, check delay timer */
+		if (is_service_vm(entry->vm) || timer_expired(&entry->intr_delay_timer, cpu_ticks(), NULL)) {
 			break;
 		} else {
 			/* add it into timer list; dequeue next one */
@@ -164,10 +164,10 @@ static void ptirq_interrupt_handler(__unused uint32_t irq, void *data)
 	bool to_enqueue = true;
 
 	/*
-	 * "interrupt storm" detection & delay intr injection just for UOS
+	 * "interrupt storm" detection & delay intr injection just for User VM
 	 * pass-thru devices, collect its data and delay injection if needed
 	 */
-	if (!is_sos_vm(entry->vm)) {
+	if (!is_service_vm(entry->vm)) {
 		entry->intr_count++;
 
 		/* if delta > 0, set the delay TSC, dequeue to handle */

@@ -238,7 +238,7 @@ void launch_vms(uint16_t pcpu_id);
 bool is_poweroff_vm(const struct acrn_vm *vm);
 bool is_created_vm(const struct acrn_vm *vm);
 bool is_paused_vm(const struct acrn_vm *vm);
-bool is_sos_vm(const struct acrn_vm *vm);
+bool is_service_vm(const struct acrn_vm *vm);
 bool is_postlaunched_vm(const struct acrn_vm *vm);
 bool is_prelaunched_vm(const struct acrn_vm *vm);
 uint16_t get_vmid_by_uuid(const uint8_t *uuid);

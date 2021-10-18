@@ -24,7 +24,7 @@ int32_t assign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev)
 			mem_aligned_check(res->host_pa, PAGE_SIZE) &&
 			mem_aligned_check(res->size, PAGE_SIZE)) {
 			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, res->host_pa,
-				is_sos_vm(vm) ? res->host_pa : res->user_vm_pa,
+				is_service_vm(vm) ? res->host_pa : res->user_vm_pa,
 				res->size, EPT_RWX | (res->mem_type & EPT_MT_MASK));
 		} else {
 			pr_err("%s invalid mmio res[%d] gpa:0x%lx hpa:0x%lx size:0x%lx",
@@ -45,7 +45,7 @@ int32_t deassign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev
 
 	for (i = 0; i < MMIODEV_RES_NUM; i++) {
 		res = &mmiodev->res[i];
-		gpa = is_sos_vm(vm) ? res->host_pa : res->user_vm_pa;
+		gpa = is_service_vm(vm) ? res->host_pa : res->user_vm_pa;
 		if (ept_is_valid_mr(vm, gpa, res->size)) {
 			if (mem_aligned_check(gpa, PAGE_SIZE) &&
 				mem_aligned_check(res->size, PAGE_SIZE)) {

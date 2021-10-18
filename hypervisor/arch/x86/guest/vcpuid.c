@@ -297,7 +297,7 @@ static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 	if (result == 0) {
 		init_vcpuid_entry(0x40000001U, 0U, 0U, &entry);
 		/* EAX: Guest capability flags (e.g. whether it is a privilege VM) */
-		if (is_sos_vm(vm)) {
+		if (is_service_vm(vm)) {
 			entry.eax |= GUEST_CAPS_PRIVILEGE_VM;
 		}
 #ifdef CONFIG_HYPERV_ENABLED
