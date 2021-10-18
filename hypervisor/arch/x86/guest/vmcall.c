@@ -172,7 +172,7 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 			uint64_t param1 = vcpu_get_gpreg(vcpu, CPU_REG_RDI);  /* hypercall param1 from guest */
 			uint64_t param2 = vcpu_get_gpreg(vcpu, CPU_REG_RSI);  /* hypercall param2 from guest */
 
-			if ((permission_flags == 0UL) && is_sos_vm(vm)) {
+			if ((permission_flags == 0UL) && is_service_vm(vm)) {
 				/* A permission_flags of 0 indicates that this hypercall is for SOS to manage
 				 * post-launched VMs.
 				 */
@@ -221,7 +221,7 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	 *    guest flags. Attempts to invoke an unpermitted hypercall will make a vCPU see -EINVAL as the return
 	 *    value. No exception is triggered in this case.
 	 */
-	if (!is_sos_vm(vm) && ((guest_flags & GUEST_FLAGS_ALLOWING_HYPERCALLS) == 0UL)) {
+	if (!is_service_vm(vm) && ((guest_flags & GUEST_FLAGS_ALLOWING_HYPERCALLS) == 0UL)) {
 		vcpu_inject_ud(vcpu);
 		ret = -ENODEV;
 	} else if (!is_hypercall_from_ring0()) {

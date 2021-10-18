@@ -94,7 +94,7 @@ bool is_paused_vm(const struct acrn_vm *vm)
 	return (vm->state == VM_PAUSED);
 }
 
-bool is_sos_vm(const struct acrn_vm *vm)
+bool is_service_vm(const struct acrn_vm *vm)
 {
 	return (vm != NULL)  && (get_vm_config(vm->vm_id)->load_order == SOS_VM);
 }
@@ -210,7 +210,7 @@ bool vm_hide_mtrr(const struct acrn_vm *vm)
  */
 static void setup_io_bitmap(struct acrn_vm *vm)
 {
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		(void)memset(vm->arch_vm.io_bitmap, 0x00U, PAGE_SIZE * 2U);
 	} else {
 		/* block all IO port access from Guest */
@@ -393,7 +393,7 @@ static void deny_hv_owned_devices(struct acrn_vm *sos)
  * @retval 0 on success
  *
  * @pre vm != NULL
- * @pre is_sos_vm(vm) == true
+ * @pre is_service_vm(vm) == true
  */
 static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 {
@@ -547,8 +547,8 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),
 		&vm_config->uuid[0], sizeof(vm_config->uuid));
 
-	if (is_sos_vm(vm)) {
-		/* Only for SOS_VM */
+	if (is_service_vm(vm)) {
+		/* Only for Service VM */
 		create_sos_vm_e820(vm);
 		prepare_sos_vm_memmap(vm);
 
@@ -610,7 +610,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 			vrtc_init(vm);
 		}
 
-		if (is_sos_vm(vm)) {
+		if (is_service_vm(vm)) {
 			deny_hv_owned_devices(vm);
 		}
 
@@ -763,7 +763,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	/* Only allow shutdown paused vm */
 	vm->state = VM_POWERED_OFF;
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		sbuf_reset();
 	}
 
@@ -841,7 +841,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 	 */
 	vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		(void)prepare_os_image(vm);
 	}
 
@@ -897,7 +897,7 @@ void pause_vm(struct acrn_vm *vm)
  * @wakeup_vec[in]	The resume address of vm
  *
  * @pre vm != NULL
- * @pre is_sos_vm(vm) && vm->state == VM_PAUSED
+ * @pre is_service_vm(vm) && vm->state == VM_PAUSED
  */
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 {
@@ -938,7 +938,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 			build_vrsdp(vm);
 		}
 
-		if (is_sos_vm(vm)) {
+		if (is_service_vm(vm)) {
 			/* We need to ensure all modules of pre-launched VMs have been loaded already
 			 * before loading SOS VM modules, otherwise the module of pre-launched VMs could
 			 * be corrupted because SOS VM kernel might pick any usable RAM to extract kernel

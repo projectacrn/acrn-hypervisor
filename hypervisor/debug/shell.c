@@ -1196,7 +1196,7 @@ static void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid)
 	gsi_count = get_vm_gsicount(vm);
 	rte.full = 0UL;
 	for (gsi = 0U; gsi < gsi_count; gsi++) {
-		if (is_sos_vm(vm) && (!is_gsi_valid(gsi))) {
+		if (is_service_vm(vm) && (!is_gsi_valid(gsi))) {
 			continue;
 		}
 		vioapic_get_rte(vm, gsi, &rte);

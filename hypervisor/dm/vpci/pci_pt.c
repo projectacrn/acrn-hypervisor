@@ -259,7 +259,7 @@ static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 	struct acrn_vm *vm = vpci2vm(vdev->vpci);
 
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
-	if (!is_sos_vm(vm)) {
+	if (!is_service_vm(vm)) {
 		struct pci_vbar *vbar = &vdev->vbars[idx];
 		if (vbar->base_gpa != 0UL) {
 			allow_guest_pio_access(vm, (uint16_t)vbar->base_gpa, (uint32_t)(vbar->size));
@@ -277,7 +277,7 @@ static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 	struct acrn_vm *vm = vpci2vm(vdev->vpci);
 
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
-	if (!is_sos_vm(vm)) {
+	if (!is_service_vm(vm)) {
 		struct pci_vbar *vbar = &vdev->vbars[idx];
 		if (vbar->base_gpa != 0UL) {
 			deny_guest_pio_access(vm, (uint16_t)(vbar->base_gpa), (uint32_t)(vbar->size));
@@ -540,7 +540,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 	if (vdev->phyfun == NULL) {
 		init_bars(vdev, is_pf_vdev);
 		init_vmsix_on_msi(vdev);
-		if (is_sos_vm(vpci2vm(vdev->vpci)) && (vdev->pdev->bdf.value == CONFIG_GPU_SBDF)) {
+		if (is_service_vm(vpci2vm(vdev->vpci)) && (vdev->pdev->bdf.value == CONFIG_GPU_SBDF)) {
 			pci_vdev_write_vcfg(vdev, PCIR_ASLS_CTL, 4U, pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_ASLS_CTL, 4U));
 		}
 		if (is_prelaunched_vm(vpci2vm(vdev->vpci)) && (!is_pf_vdev)) {
@@ -576,7 +576,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 		}
 	}
 
-	if (!is_sos_vm(vpci2vm(vdev->vpci)) && (has_sriov_cap(vdev))) {
+	if (!is_service_vm(vpci2vm(vdev->vpci)) && (has_sriov_cap(vdev))) {
 		vdev_pt_hide_sriov_cap(vdev);
 	}
 
