@@ -107,10 +107,6 @@ def get_memory(hv_info, config):
         print("CONFIG_HV_RAM_START={}".format(hex(hv_start_addr)), file=config)
     else:
         print("CONFIG_HV_RAM_START={}".format(hv_info.mem.hv_ram_start), file=config)
-    if not hv_info.mem.hv_ram_size:
-        print("CONFIG_HV_RAM_SIZE={}".format(hex(hv_ram_size)), file=config)
-    else:
-        print("CONFIG_HV_RAM_SIZE={}".format(hv_info.mem.hv_ram_size), file=config)
 
     print("CONFIG_PLATFORM_RAM_SIZE={}".format(hv_info.mem.platform_ram_size), file=config)
     print("CONFIG_LOW_RAM_SIZE={}".format(hv_info.mem.low_ram_size), file=config)
