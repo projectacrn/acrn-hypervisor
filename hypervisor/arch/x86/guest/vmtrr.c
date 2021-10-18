@@ -108,7 +108,7 @@ void init_vmtrr(struct acrn_vcpu *vcpu)
 	vmtrr->def_type.bits.fixed_enable = 1U;
 	vmtrr->def_type.bits.type = MTRR_MEM_TYPE_UC;
 
-	if (is_sos_vm(vcpu->vm)) {
+	if (is_service_vm(vcpu->vm)) {
 		cap.value = msr_read(MSR_IA32_MTRR_CAP);
 	}
 

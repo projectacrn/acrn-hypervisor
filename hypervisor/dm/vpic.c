@@ -325,7 +325,7 @@ static uint32_t vpin_to_vgsi(const struct acrn_vm *vm, uint32_t vpin)
 	 * Remap depending on the type of VM
 	 */
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		/*
 		 * For SOS VM vPIC pin to GSI is same as the one
 		 * that is used for platform
@@ -361,7 +361,7 @@ static uint32_t vgsi_to_vpin(const struct acrn_vm *vm, uint32_t vgsi)
 	 * Remap depending on the type of VM
 	 */
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		/*
 		 * For SOS VM vPIC pin to GSI is same as the one
 		 * that is used for platform

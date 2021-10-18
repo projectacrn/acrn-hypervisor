@@ -31,7 +31,7 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 		/* Inject pm1a S5 request to SOS to shut down the guest */
 		(void)emulate_io(vcpu, io_req);
 	} else {
-		if (is_sos_vm(vm)) {
+		if (is_service_vm(vm)) {
 			uint16_t vm_id;
 
 			/* Shut down all non real time post-launched VMs */
@@ -137,7 +137,7 @@ static bool handle_kb_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size
 
 static bool handle_kb_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
-	if (is_sos_vm(vcpu->vm) && (bytes == 1U)) {
+	if (is_service_vm(vcpu->vm) && (bytes == 1U)) {
 		/* In case i8042 is defined as ACPI PNP device in BIOS, HV need expose physical 0x64 port. */
 		vcpu->req.reqs.pio_request.value = pio_read8(addr);
 	} else {
@@ -219,7 +219,7 @@ void register_reset_port_handler(struct acrn_vm *vm)
 		 *   Don't support MMIO or PCI based reset register for now.
 		 *   ACPI Spec: Register_Bit_Width must be 8 and Register_Bit_Offset must be 0.
 		 */
-		if (is_sos_vm(vm) &&
+		if (is_service_vm(vm) &&
 			(gas->space_id == SPACE_SYSTEM_IO) &&
 			(gas->bit_width == 8U) && (gas->bit_offset == 0U) &&
 			(gas->address != 0xcf9U) && (gas->address != 0x64U)) {

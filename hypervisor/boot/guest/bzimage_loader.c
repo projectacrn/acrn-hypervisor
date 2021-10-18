@@ -68,7 +68,7 @@ static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 		ramdisk_gpa_max = initrd_addr_max;
 	}
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		uint64_t mods_start, mods_end;
 
 		get_boot_mods_range(&mods_start, &mods_end);
@@ -138,7 +138,7 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 	zeropage = (struct zero_page *)sw_info->kernel_info.kernel_src_addr;
 
 	stac();
-	if ((is_sos_vm(vm)) && (zeropage->hdr.relocatable_kernel != 0U)) {
+	if ((is_service_vm(vm)) && (zeropage->hdr.relocatable_kernel != 0U)) {
 		uint64_t mods_start, mods_end;
 		uint64_t kernel_load_gpa = INVALID_GPA;
 		uint32_t kernel_align = zeropage->hdr.kernel_alignment;
@@ -167,7 +167,7 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 		}
 	} else {
 		load_addr = (void *)zeropage->hdr.pref_addr;
-		if (is_sos_vm(vm)) {
+		if (is_service_vm(vm)) {
 			/* The non-relocatable SOS kernel might overlap with boot modules. */
 			pr_err("Non-relocatable kernel found, risk to boot!");
 		}
@@ -275,7 +275,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 	(void)memset(zeropage, 0U, MEM_2K);
 
 #ifdef CONFIG_MULTIBOOT2
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		struct acrn_boot_info *abi = get_acrn_boot_info();
 
 		if (boot_from_uefi(abi)) {

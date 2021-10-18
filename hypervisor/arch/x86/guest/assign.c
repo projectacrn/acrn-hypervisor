@@ -381,7 +381,7 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 			pr_err("INTX re-add vpin %d", virt_gsi);
 		}
 	} else if (entry->vm != vm) {
-		if (is_sos_vm(entry->vm)) {
+		if (is_service_vm(entry->vm)) {
 			entry->vm = vm;
 			entry->virt_sid.value = virt_sid.value;
 			entry->polarity = 0U;
@@ -700,7 +700,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 	 * Device Model should pre-hold the mapping entries by calling
 	 * ptirq_add_intx_remapping for UOS.
 	 *
-	 * For SOS(sos_vm), it adds the mapping entries at runtime, if the
+	 * For Service VM, it adds the mapping entries at runtime, if the
 	 * entry already be held by others, return error.
 	 */
 
@@ -710,9 +710,9 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 		spinlock_obtain(&ptdev_lock);
 		entry = find_ptirq_entry(PTDEV_INTR_INTX, &virt_sid, vm);
 		if (entry == NULL) {
-			if (is_sos_vm(vm)) {
+			if (is_service_vm(vm)) {
 
-				/* for sos_vm, there is chance of vpin source switch
+				/* for Service VM, there is chance of vpin source switch
 				 * between vPIC & vIOAPIC for one legacy phys_pin.
 				 *
 				 * here checks if there is already mapping entry from
