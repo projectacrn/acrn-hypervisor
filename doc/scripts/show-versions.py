@@ -32,6 +32,9 @@ for reqs in pkg_resources.parse_requirements(rf):
     try:
         ver = pkg_resources.get_distribution(reqs.project_name).version
         print ("  " + reqs.project_name.ljust(25," ") + " version: " + ver)
+        if not reqs.__contains__(ver):
+            print (color.RED + color.BOLD + "   >>> Warning: Expected version " +
+                    reqs.__str__() + " Python module from scripts/requirements.text." + color.END)
     except:
         print (color.RED + color.BOLD + reqs.project_name + " is missing." + color.END +
                 " (Hint: install all dependencies with " + color.YELLOW +
