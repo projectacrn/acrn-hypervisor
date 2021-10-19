@@ -7,9 +7,3 @@ $(document).ready(function(){
    /* open external links in a new tab */
    $('a[class*=external]').attr({target: '_blank', rel: 'noopener'});
 });
-
-/* Global site tag (gtag.js) - Google Analytics */
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'UA-831873-64');
