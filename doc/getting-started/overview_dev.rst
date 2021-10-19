@@ -3,22 +3,23 @@
 Configuration and Development Overview
 ######################################
 
-This overview is for developers who are new or relatively new to ACRN and are
-responsible for configuring and building ACRN hypervisors. It will introduce you
-to the general development process, including ACRN components and tools.
+This overview is for developers who are new to ACRN and are responsible for
+configuring and building the hypervisor and the VMs for applications. It will
+introduce you to the general development process, including ACRN components and
+tools.
 
 The overview covers the process at an abstract and universal level.
 
 * Abstract: the overall structure rather than detailed instructions
 * Universal: applicable to most use cases
 
-The overview is intended to complement the :ref:`gsg`. The guide provides
+This overview complements the :ref:`gsg`. The guide provides
 step-by-step instructions to enable an ACRN example for first-time use, while
 the overview provides background information and serves as a gateway to
 additional features and resources that can help you develop your solution.
 
-The overview doesn't cover ACRN benefits, use cases, or architecture. See
-:ref:`introduction` to learn more.
+See :ref:`introduction` for information about ACRN benefits, use cases, and
+architecture.
 
 .. _overview_dev_dev_env:
 
@@ -39,8 +40,8 @@ have a serial output, :ref:`here are some tips for connecting a serial output
 <connect_serial_port>`.
 
 You need a way to copy the built ACRN images and other files between the
-development computer and target system. ACRN documentation, such as the Getting
-Started Guide, offers steps for copying via USB disk as a simple solution.
+development computer and target system. ACRN documentation, such as the
+:ref:`gsg`, offers steps for copying via USB disk as a simple solution.
 
 General Process for Building an ACRN Hypervisor
 ***********************************************
@@ -87,9 +88,10 @@ ACRN offers three types of VMs:
 * **Pre-launched User VMs**: These VMs are automatically launched at boot time
   by the hypervisor. They run independently of other VMs and own dedicated
   hardware resources, such as a CPU core, memory, and I/O devices. Other VMs,
-  including the Service VM, may not even be aware of a pre-launched VM’s
+  including the Service VM, may not even be aware of a pre-launched VM's
   existence. The configuration of pre-launched VMs is static and must be defined
-  at build time. They are well-suited for safety-critical applications.
+  at build time. They are well-suited for safety-critical applications and where
+  very strict isolation, including from the Service VM, is desirable.
 
 * **Service VM**: A special VM, required for scenarios that have post-launched
   User VMs. The Service VM can access hardware resources directly by running
@@ -130,8 +132,8 @@ To help accelerate the configuration process, ACRN offers the following
 * **Partitioned scenario:** This scenario has pre-launched User VMs to
   demonstrate VM partitioning: the User VMs are independent and isolated, and
   they do not share resources. There is no need for the Service VM or Device
-  Model since all partitioned VMs run native device drivers and directly access
-  their configured resources.
+  Model because all partitioned VMs run native device drivers and directly
+  access their configured resources.
 
 * **Hybrid scenario:** This scenario simultaneously supports both sharing and
   partitioning on the consolidated system. It has pre-launched and
@@ -187,15 +189,8 @@ You must configure all of your target's BIOS settings before running the Board
 Inspector tool, because the tool records the current BIOS settings in the board
 configuration file.
 
-ACRN requires the following BIOS settings:
-
-* Enable **VMX** (Virtual Machine Extensions, which provide hardware assist
-  for CPU virtualization).
-
-* Enable **VT-d** (Intel Virtualization Technology for Directed I/O, which
-  provides additional support for managing I/O virtualization).
-
-Be sure to configure any other settings that your application needs.
+ACRN requires the BIOS settings listed in :ref:`gsg-board-setup` of the Getting
+Started Guide.
 
 Use the Board Inspector to Generate a Board Configuration File
 ==============================================================
@@ -235,7 +230,7 @@ Generate a Scenario Configuration File
 
 A **scenario configuration file** defines a working scenario by configuring
 hypervisor capabilities and defining some VM attributes and resources. We call
-these settings “static” because they are used to build the hypervisor. The file
+these settings "static" because they are used to build the hypervisor. The file
 contains:
 
 * All hypervisor settings
@@ -251,7 +246,7 @@ validate that your custom scenario is supported by the target hardware.
 
 You can use the tool to create a new scenario configuration file or modify an
 existing one, such as a predefined scenario described in
-:ref:`overview_dev_hw_scenario`. The tool’s GUI enables you to edit the
+:ref:`overview_dev_hw_scenario`. The tool's GUI enables you to edit the
 configurable items in the file, such as adding VMs, modifying VM attributes, or
 deleting VMs. The tool validates your inputs against your board configuration
 file. After validation is successful, the tool generates your custom scenario
@@ -260,10 +255,10 @@ configuration file in XML format.
 Generate Launch Scripts
 =======================
 
-A **launch script** invokes the Service VM’s Device Model to create a
+A **launch script** invokes the Service VM's Device Model to create a
 post-launched User VM. The launch script defines settings needed to launch the
 User VM and emulate the devices configured for sharing with that User VM. We
-call these settings “dynamic” because they are used at runtime.
+call these settings "dynamic" because they are used at runtime.
 
 Before using the ACRN Configurator to generate a launch script, be sure
 you have your board configuration file and scenario configuration file. The tool
@@ -298,7 +293,7 @@ the Service VM. The ACRN kernel source code provides a predefined configuration
 file and a makefile to build the ACRN kernel binary and associated components.
 The kernel build can take 15 minutes or less on a fast computer, but could take
 an hour or more depending on the performance of your development computer. For
-more information about the kernel, see :ref:`kernel-parameters`.
+more information about the kernel parameters, see :ref:`kernel-parameters`.
 
 .. _overview_dev_install:
 
@@ -313,8 +308,7 @@ At a high level, you will:
 * Copy the built ACRN hypervisor files, Service VM kernel files, and launch
   scripts from the development computer to the target. The Service VM kernel
   files replace parts of the Ubuntu installation we installed and used for
-  running the Board Inspector, with the Linux kernel we built based on the board
-  and scenario configuration.
+  running the Board Inspector, with the Linux kernel we built.
 
 * Configure GRUB to boot the ACRN hypervisor, pre-launched VMs, and Service VM.
   Reboot the target, and launch ACRN.
@@ -329,6 +323,6 @@ Learn More
 * To get ACRN up and running for the first time, see the :ref:`gsg` for
   step-by-step instructions.
 
-* If you have already completed the Getting Started Guide, see the
+* If you have already completed the :ref:`gsg` , see the
   :ref:`develop_acrn` for more information about complex scenarios, advanced
-  features, and debugging
+  features, and debugging.
