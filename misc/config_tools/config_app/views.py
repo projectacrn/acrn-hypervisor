@@ -618,7 +618,10 @@ def create_setting():
             template_file_name = 'shared'
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board', template_file_name + '.xml')
         else: # load
-            src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type, default_name + '.xml')
+            src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type,
+                                         default_name + '.xml')
+            if not os.path.isfile(src_file_name):
+                src_file_name=os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board', default_name + '.xml')
 
         if os.path.isfile(src_file_name):
             xsd_path =  os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'schema', 'config.xsd')
