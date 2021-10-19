@@ -25,6 +25,7 @@ from scenario_config.scenario_cfg_gen import validate_scenario_setting
 from launch_config.launch_cfg_gen import get_launch_item_values
 from launch_config.launch_cfg_gen import validate_launch_setting
 from library.common import MAX_VM_NUM
+import scenario_config.default_populator as default_populator
 
 
 CONFIG_APP = Blueprint('CONFIG_APP', __name__, template_folder='templates')
@@ -618,12 +619,17 @@ def create_setting():
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board', template_file_name + '.xml')
         else: # load
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type, default_name + '.xml')
+
         if os.path.isfile(src_file_name):
+            xsd_path =  os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'schema', 'config.xsd')
+            out_xml = os.path.join(os.path.dirname(os.path.abspath(__file__)), create_name + '.xml')
+            default_populator.main(xsd_path, src_file_name, out_xml)
             if os.path.isfile(scenario_file):
                 os.remove(scenario_file)
-            copyfile(src_file_name,
+            copyfile(out_xml,
                  os.path.join(current_app.config.get('CONFIG_PATH'), board_type,
                               create_name + '.xml'))
+            os.remove(out_xml)
 
         if mode == 'create':
             # update RDT->CLOS_MASK according to board xml
@@ -1078,10 +1084,15 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             'LAUNCH_POST_RT_VM': ('shared_launch_6uos', 'uos:id=2')
         }
         config_path = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board')
-        generic_scenario_config = XmlConfig(config_path)
-        if os.path.isfile(os.path.join(config_path, vm_dict[add_vm_type][0] + '.xml')):
-            generic_scenario_config.set_curr(vm_dict[add_vm_type][0])
+        xml_path = os.path.join(config_path, vm_dict[add_vm_type][0] + '.xml')
+        if os.path.isfile(xml_path):
+            xsd_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'schema', 'config.xsd')
+            output_xml = os.path.join(config_path, vm_dict[add_vm_type][0] + '_1' + '.xml')
+            default_populator.main(xsd_path, xml_path, output_xml)
+            generic_scenario_config = XmlConfig(config_path)
+            generic_scenario_config.set_curr(vm_dict[add_vm_type][0] + '_1')
             generic_scenario_config = set_default_config(generic_scenario_config)
+            os.remove(output_xml)
             return generic_scenario_config.get_curr_elem(vm_dict[add_vm_type][1])
         else:
             return None
