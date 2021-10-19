@@ -36,11 +36,37 @@ def vendor_check():
                     vendor_name = line.split(':')[1].strip()
                     return vendor_name == CPU_VENDOR
 
+def check_msr_files(cpu_dirs):
+    cpu_list = []
+    for cpu_num in os.listdir(cpu_dirs):
+        if cpu_num.isdigit():
+            if os.path.exists(os.path.join(cpu_dirs, "{}/msr".format(cpu_num))):
+                continue
+            else:
+                cpu_list.append(cpu_num)
+    return cpu_list
 
 def check_env():
     """Check if there is appropriate environment on this system"""
     if os.path.exists(PY_CACHE):
         shutil.rmtree(PY_CACHE)
+
+    # check cpu msr file
+    cpu_dirs = "/dev/cpu"
+    if check_msr_files(cpu_dirs):
+        res = subprocess.Popen("modprobe msr",
+                            shell=True, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, close_fds=True)
+        err_msg = res.stderr.readline().decode('ascii')
+        if err_msg:
+            parser_lib.print_red("{}".format(err_msg), err=True)
+            exit(-1)
+    msr_info = check_msr_files(cpu_dirs)
+    if msr_info:
+        for cpu_num in msr_info:
+            parser_lib.print_red("Missing CPU msr file in the {}/{}/".format(cpu_dirs, cpu_num), err=True)
+        parser_lib.print_red("Missing CPU msr file, please check the value of CONFIG_X86_MSR in the kernel config.", err=True)
+        exit(-1)
 
     # check cpu vendor id
     if not vendor_check():
