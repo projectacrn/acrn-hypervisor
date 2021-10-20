@@ -306,9 +306,7 @@ then boot ACRN.
 At a high level, you will:
 
 * Copy the built ACRN hypervisor files, Service VM kernel files, and launch
-  scripts from the development computer to the target. The Service VM kernel
-  files replace parts of the Ubuntu installation we installed and used for
-  running the Board Inspector, with the Linux kernel we built.
+  scripts from the development computer to the target.
 
 * Configure GRUB to boot the ACRN hypervisor, pre-launched VMs, and Service VM.
   Reboot the target, and launch ACRN.
