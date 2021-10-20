@@ -1,0 +1,494 @@
+From 9a65fbca587fb004076e9908e4652028a081fe10 Mon Sep 17 00:00:00 2001
+From: Junjie Mao <junjie.mao@intel.com>
+Date: Fri, 26 Feb 2021 09:51:27 +0800
+Subject: [PATCH 2/3] hv: add hypercalls to invoke STL tests
+
+This patch integrates STL library for EHL into the hypervisor and provides
+two hypercalls to allow a safety VM to initialize and run STL tests inside
+the hypervisor. In more details, the following artifacts are added:
+
+ - A new flag to guest_flags to mark a VM to be safety related.
+ - Two new hypercalls whose IDs have the base 0x90. These hypercalls can
+   only be invoked from ring0 of the safety VM.
+ - An implementation of the OS Abstraction Layer (OSAL) required to run
+   STL.
+
+The new hypercalls have the following prototype:
+
+ - StlStatus_t initialize_stl (void);
+
+   This hypercall simply invokes StlInitialize and return its return value.
+
+ - StlStatus_t do_stl_test(StlResult_t *result, uint64_t test_bitmap);
+
+   `result` is a pointer to a buffer in RAM (with WB memory type) where STL
+   results are maintained.
+
+   `test_bitmap` is a bitmap listing the STL checks to be executed. STL
+   test numbers are used to map bit indices to the actual STL checks.
+
+   The return value is a 32-bit error code defined by STL.
+
+   All tests indicated by the `test_bitmap` are executed with their results
+   written in `result`. The returned error code is determined as follows.
+
+   * If all tests pass, the error code is stlNoError
+   * If there is any test that fails, the error code is stlTestFailed
+   * The other test codes (e.g. stlOsalError, stlNotInitialized,
+     stlInternalError, etc.) are not used.
+
+The OSAL implementation simply invokes the helper functions that are
+already available in the hypervisor.
+
+v2:
+ * Add a configuration entry to enable/disable STL.
+ * Drop the header file from STL; use the header in the specified path to
+   STL, instead.
+ * Rename `GUEST_FLAG_SAFETY_RELATED` to `GUEST_FLAG_SAFETY_FEATURES`
+   and remove `is_safety_vm`.
+
+Signed-off-by: Junjie Mao <junjie.mao@intel.com>
+---
+ hypervisor/Makefile                        |  12 +++
+ hypervisor/arch/x86/guest/vmcall.c         |  10 ++-
+ hypervisor/arch/x86/ibecc.c                |   2 +
+ hypervisor/arch/x86/osal.c                 | 103 ++++++++++++++++++++++++++
+ hypervisor/common/stl_hypercall.c          | 113 +++++++++++++++++++++++++++++
+ hypervisor/include/common/hypercall.h      |   5 ++
+ hypervisor/include/public/acrn_common.h    |   3 +
+ hypervisor/include/public/acrn_hv_defs.h   |   5 ++
+ misc/config_tools/library/common.py        |   2 +-
+ misc/config_tools/schema/VMtypes.xsd       |   4 +-
+ misc/config_tools/schema/config.xsd        |   6 ++
+ misc/config_tools/xforms/config_common.xsl |   7 ++
+ 12 files changed, 269 insertions(+), 3 deletions(-)
+ create mode 100644 hypervisor/arch/x86/osal.c
+ create mode 100644 hypervisor/common/stl_hypercall.c
+
+diff --git a/hypervisor/Makefile b/hypervisor/Makefile
+index fcf75de..a8d6c6d 100644
+--- a/hypervisor/Makefile
++++ b/hypervisor/Makefile
+@@ -257,6 +257,9 @@ ifeq ($(CONFIG_ACPI_PARSE_ENABLED),y)
+ HW_C_SRCS += acpi_parser/dmar_parse.c
+ HW_C_SRCS += acpi_parser/acpi_ext.c
+ endif
++ifdef CONFIG_STL_ENABLED
++HW_C_SRCS += arch/x86/osal.c
++endif
+ 
+ # VM Configuration
+ VM_CFG_C_SRCS += $(BOARD_INFO_DIR)/board.c
+@@ -343,6 +346,9 @@ VP_TRUSTY_C_SRCS += arch/x86/seed/seed_sbl.c
+ # virtual platform hypercall
+ VP_HCALL_C_SRCS += arch/x86/guest/vmcall.c
+ VP_HCALL_C_SRCS += common/hypercall.c
++ifdef CONFIG_STL_ENABLED
++VP_HCALL_C_SRCS += common/stl_hypercall.c
++endif
+ 
+ # system initialization
+ SYS_INIT_C_SRCS += arch/x86/init.c
+@@ -383,6 +389,12 @@ LIB_MK = debug/Makefile
+ endif
+ MODULES += $(SYS_INIT_MOD)
+ 
++ifdef CONFIG_STL_ENABLED
++# When set, CONFIG_STL_ENABLED also encodes the path to the StlLib directory under EHL SW package
++MODULES += $(shell find $(CONFIG_STL_ENABLED) -name StlLibOnline64.o -print -quit)
++INCLUDE_PATH += $(CONFIG_STL_ENABLED)/Include
++endif
++
+ DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
+ VERSION := $(HV_OBJDIR)/include/version.h
+ 
+diff --git a/hypervisor/arch/x86/guest/vmcall.c b/hypervisor/arch/x86/guest/vmcall.c
+index 56c41dc..78ccdc6 100644
+--- a/hypervisor/arch/x86/guest/vmcall.c
++++ b/hypervisor/arch/x86/guest/vmcall.c
+@@ -102,9 +102,17 @@ static const struct hc_dispatch hc_dispatch_table[] = {
+ 	[HC_IDX(HC_SAVE_RESTORE_SWORLD_CTX)] = {
+ 		.handler = hcall_save_restore_sworld_ctx,
+ 		.permission_flags = GUEST_FLAG_SECURE_WORLD_ENABLED},
++#ifdef CONFIG_STL_ENABLED
++	[HC_IDX(HC_INITIALIZE_STL)] = {
++		.handler = hcall_initialize_stl,
++		.permission_flags = GUEST_FLAG_SAFETY_FEATURES},
++	[HC_IDX(HC_DO_STL_TEST)] = {
++		.handler = hcall_do_stl_tests,
++		.permission_flags = GUEST_FLAG_SAFETY_FEATURES},
++#endif
+ };
+ 
+-#define GUEST_FLAGS_ALLOWING_HYPERCALLS GUEST_FLAG_SECURE_WORLD_ENABLED
++#define GUEST_FLAGS_ALLOWING_HYPERCALLS (GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_SAFETY_FEATURES)
+ 
+ struct acrn_vm *parse_target_vm(struct acrn_vm *sos_vm, uint64_t hcall_id, uint64_t param1, __unused uint64_t param2)
+ {
+diff --git a/hypervisor/arch/x86/ibecc.c b/hypervisor/arch/x86/ibecc.c
+index df0da6d..2730339 100644
+--- a/hypervisor/arch/x86/ibecc.c
++++ b/hypervisor/arch/x86/ibecc.c
+@@ -39,6 +39,7 @@ static uint64_t ibecc_cerr_count = 0UL, ibecc_uerr_count = 0UL;
+ 
+ void init_ibecc(void)
+ {
++#ifdef CONFIG_STL_ENABLED
+ 	union pci_bdf hostbridge_bdf = { .value = 0x0U };
+ 	uint16_t did, vid;
+ 
+@@ -58,6 +59,7 @@ void init_ibecc(void)
+ 			}
+ 		}
+ 	}
++#endif
+ }
+ 
+ bool is_ibecc_enabled(void) {
+diff --git a/hypervisor/arch/x86/osal.c b/hypervisor/arch/x86/osal.c
+new file mode 100644
+index 0000000..9520a7b
+--- /dev/null
++++ b/hypervisor/arch/x86/osal.c
+@@ -0,0 +1,103 @@
++/*
++ * Copyright (C) 2021 Intel Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <types.h>
++#include <asm/cpu.h>
++#include <asm/mmu.h>
++#include <delay.h>
++#include <platform_acpi_info.h>
++#include <asm/ibecc.h>
++
++#define STL_OSAL_SUCCESS   0U
++#define STL_OSAL_FAIL      0xFFU
++
++uint32_t StlOsalMemoryMap( uint64_t physicalBase,
++                           uint64_t size,
++                           __unused uint32_t accessMode,
++                           uint64_t *pLinearAddress )
++{
++	uint32_t ret;
++
++	if (pLinearAddress != NULL) {
++		if (physicalBase != 0UL) {
++			*pLinearAddress = (uint64_t)hpa2hva(physicalBase);
++			set_paging_supervisor(*pLinearAddress, size);
++		} else {
++			/* According to the specification of StlOsalMemoryMap, an attempt of mapping a physical address of 0
++			 * shall be interpreted as a request for the linear address where memory-mapped PCI configuration space
++			 * resides. This region is already accessible to the hypervisor after init_pci_pdev_list() is called. */
++			*pLinearAddress = (uint64_t)hpa2hva(DEFAULT_PCI_MMCFG_BASE);
++		}
++
++		ret = STL_OSAL_SUCCESS;
++	} else {
++		ret = STL_OSAL_FAIL;
++	}
++
++	return ret;
++}
++
++uint32_t StlOsalMemoryUnmap( __unused uint64_t linearAddress,
++                             __unused uint64_t size )
++{
++	return STL_OSAL_SUCCESS;
++}
++
++uint32_t StlOsalMsrRead( uint32_t msrIndex,
++                         uint64_t *pMsrData )
++{
++	uint32_t ret;
++
++	if (pMsrData != NULL) {
++		*pMsrData = cpu_msr_read(msrIndex);
++		ret = STL_OSAL_SUCCESS;
++	} else {
++		ret = STL_OSAL_FAIL;
++	}
++
++	return ret;
++}
++
++uint32_t StlOsalMsrWrite(uint32_t msrIndex,
++                         uint64_t msrData)
++{
++	cpu_msr_write(msrIndex, msrData);
++	return STL_OSAL_SUCCESS;
++}
++
++uint32_t StlOsalSleep ( uint32_t numberOfMicroSeconds )
++{
++	udelay(numberOfMicroSeconds);
++	return STL_OSAL_SUCCESS;
++}
++
++uint32_t StlOsalGetUeCount(uint64_t *pData)
++{
++	uint32_t ret;
++
++	if (pData != NULL) {
++		*pData = get_ibecc_uerr_count();
++		ret = STL_OSAL_SUCCESS;
++	} else {
++		ret = STL_OSAL_FAIL;
++	}
++
++	return ret;
++}
++
++uint32_t StlOsalGetCeCount(uint64_t *pData)
++{
++	uint32_t ret;
++
++	if (pData != NULL) {
++		*pData = get_ibecc_cerr_count();
++		ret = STL_OSAL_SUCCESS;
++	} else {
++		ret = STL_OSAL_FAIL;
++	}
++
++	return ret;
++}
+diff --git a/hypervisor/common/stl_hypercall.c b/hypervisor/common/stl_hypercall.c
+new file mode 100644
+index 0000000..62e5ea1
+--- /dev/null
++++ b/hypervisor/common/stl_hypercall.c
+@@ -0,0 +1,113 @@
++/*
++ * Copyright (C) 2021 Intel Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <asm/guest/vm.h>
++#include <asm/guest/guest_memory.h>
++#include <hypercall.h>
++#include <errno.h>
++#include <logmsg.h>
++
++#define SKIP_STD_HEADER
++#include <StlLib.h>
++#undef SKIP_STD_HEADER
++
++typedef StlStatus_t (*StlTestApi)(StlResult_t *pStlResult);
++
++#define ERR1_REC_UNKNOWN 0xff
++
++StlStatus_t StlIehError1ReportingWrapper (StlResult_t *pStlResult) {
++	return StlIehError1Reporting(pStlResult, ERR1_REC_UNKNOWN);
++}
++
++StlTestApi stl_test_apis[totalNumStlTests] = {
++	[testNumCpuInteger] = StlCpuInteger,
++	[testNumCpuFloatingPoint] = StlCpuFloatingPoint,
++	[testNumCpuSimd] = StlCpuSimd,
++	[testNumCpuOthers] = StlCpuOthers,
++	[testNumCpuClockMonitoring] = StlCpuClockMonitoring,
++	[testNumCpuMec] = StlCpuMec,
++	[testNumCpuErrConf] = StlCpuErrorConfig,
++	[testNumCcfPunitErrConf] = StlCcfPunitErrorConfig,
++	[testNumCpuErrStatus] = StlCpuErrorStatus,
++	[testNumCcfPunitErrStatus] = StlCcfPunitErrorStatus,
++	[testNumPchPsf] = StlPchPsf,
++	[testNumPchErrConf] = StlPchErrorConfig,
++	[testNumPchErrStatus] = StlPchErrorStatus,
++	[testNumTsnGbeConf] = StlTsnGbeErrorConfig,
++	[testNumOseTsnGbe0Conf] = StlOseTsnGbe0ErrorConfig,
++	[testNumOseTsnGbe1Conf] = StlOseTsnGbe1ErrorConfig,
++	[testNumTsnGbeErrStatus] = StlTsnGbeErrorStatus,
++	[testNumOseTsnGbe0ErrStatus] = StlOseTsnGbe0ErrorStatus,
++	[testNumOseTsnGbe1ErrStatus] = StlOseTsnGbe1ErrorStatus,
++	[testNumStartupCpuPatchCheck] = StlStartupCpuPatchCheck,
++	[testNumIehErrConf] = StlIehErrorConfig,
++	[testNumIehErr0Reporting] = StlIehError0Reporting,
++	[testNumIehErr1Reporting] = StlIehError1ReportingWrapper,
++	[testNumIbeccErrorConfig] = StlIbeccErrorConfig,
++	[testNumIbeccErrorReporting] = StlIbeccErrorReporting,
++};
++
++int32_t
++hcall_initialize_stl(__unused struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
++	__unused uint64_t param1, __unused uint64_t param2)
++{
++	StlStatus_t ret;
++
++	ret = StlInitialize();
++	return ret;
++}
++
++static StlStatus_t
++do_stl_tests(StlResult_t *result, uint64_t test_bitmap)
++{
++	int i = ffs64(test_bitmap);
++	StlStatus_t stl_status = stlNoError;
++	uint64_t bitmap = test_bitmap;
++
++	while (i != INVALID_BIT_INDEX) {
++		bitmap_clear_nolock(i, &bitmap);
++
++		if (i < totalNumStlTests) {
++			StlStatus_t s = stl_test_apis[i](result);
++			if (s != stlNoError) {
++				pr_fatal("STL test %d failed. Error code: %d", i, s);
++				stl_status = stlTestFailed;
++			}
++		} else {
++			stl_status = stlTestFailed;
++		}
++
++		i = ffs64(bitmap);
++	}
++
++	return stl_status;
++}
++
++int32_t
++hcall_do_stl_tests(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm, uint64_t param1, uint64_t param2)
++{
++	StlResult_t stl_result;
++	StlStatus_t ret;
++	int status;
++	uint32_t err_code;
++	uint64_t gpa;
++
++	status = gva2gpa(vcpu, param1, &gpa, &err_code);
++	if (status == 0) {
++		status = copy_from_gpa(vcpu->vm, &stl_result, gpa, sizeof(StlResult_t));
++	}
++
++	if (status == 0) {
++		ret = do_stl_tests(&stl_result, param2);
++		status = copy_to_gpa(vcpu->vm, &stl_result, gpa, sizeof(StlResult_t));
++	}
++
++	if (status != 0) {
++		ret = invalidParam;
++	}
++
++	return ret;
++}
+diff --git a/hypervisor/include/common/hypercall.h b/hypervisor/include/common/hypercall.h
+index 8e391a5..182150b 100644
+--- a/hypervisor/include/common/hypercall.h
++++ b/hypervisor/include/common/hypercall.h
+@@ -558,6 +558,11 @@ int32_t hcall_get_hw_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uin
+ int32_t hcall_profiling_ops(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
+ 
+ int32_t hcall_create_vcpu(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
++
++int32_t hcall_initialize_stl(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
++
++int32_t hcall_do_stl_tests(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
++
+ /**
+  * @}
+  */
+diff --git a/hypervisor/include/public/acrn_common.h b/hypervisor/include/public/acrn_common.h
+index de46085..bc105c9 100644
+--- a/hypervisor/include/public/acrn_common.h
++++ b/hypervisor/include/public/acrn_common.h
+@@ -58,6 +58,9 @@
+ #define GUEST_FLAG_NVMX_ENABLED			(1UL << 5U)	/* Whether this VM supports nested virtualization */
+ #define GUEST_FLAG_SECURITY_VM			(1UL << 6U)	/* Whether this VM needs to do security-vm related fixup (TPM2 and SMBIOS pt) */
+ 
++#define GUEST_FLAG_SAFETY_FEATURES		(1UL << 32U)    /* Whether the VM is permitted to invoke safety features
++						                 * such as STL hypercalls */
++
+ /* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
+ #define VIRTUAL_SLEEP_CTL_ADDR		0x400U /* Pre-launched VM uses ACPI reduced HW mode and sleep control register */
+ #define VIRTUAL_PM1A_CNT_ADDR		0x404U
+diff --git a/hypervisor/include/public/acrn_hv_defs.h b/hypervisor/include/public/acrn_hv_defs.h
+index a280e38..7ff3c8e 100644
+--- a/hypervisor/include/public/acrn_hv_defs.h
++++ b/hypervisor/include/public/acrn_hv_defs.h
+@@ -89,6 +89,11 @@
+ #define HC_ID_PM_BASE               0x80UL
+ #define HC_PM_GET_CPU_STATE         BASE_HC_ID(HC_ID, HC_ID_PM_BASE + 0x00UL)
+ 
++/* Safety related functions */
++#define HC_ID_SAFETY_BASE           0x90UL
++#define HC_INITIALIZE_STL           BASE_HC_ID(HC_ID, HC_ID_SAFETY_BASE + 0x00UL)
++#define HC_DO_STL_TEST              BASE_HC_ID(HC_ID, HC_ID_SAFETY_BASE + 0x01UL)
++
+ #define ACRN_INVALID_VMID (0xffffU)
+ #define ACRN_INVALID_HPA (~0UL)
+ 
+diff --git a/misc/config_tools/library/common.py b/misc/config_tools/library/common.py
+index cc5de61..585caaa 100644
+--- a/misc/config_tools/library/common.py
++++ b/misc/config_tools/library/common.py
+@@ -23,7 +23,7 @@ DATACHECK_SCHEMA_FILE = SOURCE_ROOT_DIR + 'misc/config_tools/schema/datachecks.x
+ PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/__pycache__"]
+ GUEST_FLAG = ["0", "0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
+               "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_NVMX_ENABLED", "GUEST_FLAG_HIDE_MTRR",
+-              "GUEST_FLAG_RT", "GUEST_FLAG_SECURITY_VM"]
++              "GUEST_FLAG_RT", "GUEST_FLAG_SECURITY_VM", "GUEST_FLAG_SAFETY_FEATURES"]
+ 
+ MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev", "shm_region", "communication_vuart"]
+ 
+diff --git a/misc/config_tools/schema/VMtypes.xsd b/misc/config_tools/schema/VMtypes.xsd
+index f05ef82..6037d8a 100644
+--- a/misc/config_tools/schema/VMtypes.xsd
++++ b/misc/config_tools/schema/VMtypes.xsd
+@@ -39,7 +39,8 @@
+ - ``GUEST_FLAG_RT`` specify that the VM is an RT-VM (real-time)
+ - ``GUEST_FLAG_NVMX_ENABLED`` specify that the VM supports nested virtualization
+ - ``GUEST_FLAG_SECURITY_VM`` specify that the VM needs to do security-vm related
+-  fixup (TPM2 passthrough and SMBIOS passthrough)</xs:documentation>
++  fixup (TPM2 passthrough and SMBIOS passthrough)
++- ``GUEST_FLAG_SAFETY_FEATURES`` specify that the VM can invoke STLs built in the hypervisor</xs:documentation>
+   </xs:annotation>
+   <xs:restriction base="xs:string">
+     <xs:enumeration value="" />
+@@ -52,6 +53,7 @@
+     <xs:enumeration value="GUEST_FLAG_RT" />
+     <xs:enumeration value="GUEST_FLAG_NVMX_ENABLED" />
+     <xs:enumeration value="GUEST_FLAG_SECURITY_VM" />
++    <xs:enumeration value="GUEST_FLAG_SAFETY_FEATURES" />
+   </xs:restriction>
+ </xs:simpleType>
+ 
+diff --git a/misc/config_tools/schema/config.xsd b/misc/config_tools/schema/config.xsd
+index 36b44fb..1e49eed 100644
+--- a/misc/config_tools/schema/config.xsd
++++ b/misc/config_tools/schema/config.xsd
+@@ -181,6 +181,12 @@ Machine Check Error on Page Size Change.</xs:documentation>
+         <xs:documentation>Pseudo SRAM configuration.</xs:documentation>
+       </xs:annotation>
+     </xs:element>
++    <xs:element name="STL_ENABLED" minOccurs="0" type="xs:string" default="''">
++      <xs:annotation>
++        <xs:documentation>Path to the StlLib directory under EHL FuSa SW package. A built static library is expected
++under the Output directory there.</xs:documentation>
++      </xs:annotation>
++    </xs:element>
+   </xs:all>
+   <xs:assert test="not (RDT/RDT_ENABLED = 'y' and SSRAM/SSRAM_ENABLED = 'y')"/>
+   <xs:assert test="not (NVMX_ENABLED = 'y' and not (SCHEDULER = 'SCHED_NOOP'))"/>
+diff --git a/misc/config_tools/xforms/config_common.xsl b/misc/config_tools/xforms/config_common.xsl
+index e4bb228..a660503 100644
+--- a/misc/config_tools/xforms/config_common.xsl
++++ b/misc/config_tools/xforms/config_common.xsl
+@@ -132,6 +132,13 @@
+       <xsl:with-param name="key" select="'IVSHMEM_ENABLED'" />
+       <xsl:with-param name="value" select="IVSHMEM/IVSHMEM_ENABLED" />
+     </xsl:call-template>
++
++    <xsl:if test="STL_ENABLED">
++      <xsl:call-template name="string-by-key-value">
++        <xsl:with-param name="key" select="'STL_ENABLED'" />
++        <xsl:with-param name="value" select="STL_ENABLED" />
++      </xsl:call-template>
++    </xsl:if>
+   </xsl:template>
+ 
+   <xsl:template match="MEMORY">
+-- 
+2.7.4
+
