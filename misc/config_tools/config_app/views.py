@@ -299,30 +299,7 @@ def save_scenario():
 
     generator = scenario_config_data['generator']
     if generator is not None:
-        if generator == 'remove_vm_kata':
-            scenario_config.delete_curr_key('vm:desc=specific for Kata')
-            assign_vm_id(scenario_config)
-        elif generator == 'add_vm_kata':
-            vm_list = []
-            for vm in list(scenario_config.get_curr_root()):
-                if vm.tag == 'vm':
-                    vm_list.append(vm.attrib['id'])
-            if len(vm_list) >= MAX_VM_NUM:
-                return {'status': 'fail',
-                        'error_list': {'error': 'Can not add a new VM. Max VM number is {}.'.format(MAX_VM_NUM)}}
-
-            # clone vm kata from generic config
-            generic_scenario_config = get_generic_scenario_config(scenario_config)
-            generic_scenario_config_root = generic_scenario_config.get_curr_root()
-            elem_kata = None
-            for vm in list(generic_scenario_config_root):
-                if 'desc' in vm.attrib and vm.attrib['desc'] == 'specific for Kata':
-                    elem_kata = vm
-                    break
-            if elem_kata is not None:
-                scenario_config.clone_curr_elem(elem_kata)
-            assign_vm_id(scenario_config)
-        elif generator.startswith('add_vm:'):
+        if generator.startswith('add_vm:'):
             vm_list = []
             for vm in list(scenario_config.get_curr_root()):
                 if vm.tag == 'vm':
@@ -445,8 +422,6 @@ def save_launch():
                                                 'Please select a scenario with available post launched VMs.'}}
             add_vm_id = add_launch_type.split('ID :')[1].replace(')', '').strip()
             add_launch_type = 'LAUNCH_' + add_launch_type.split()[0]
-            if add_launch_type == 'LAUNCH_KATA_VM':
-                add_launch_type = 'LAUNCH_POST_STD_VM'
             add_launch_id = 1
             post_vm_list = get_post_launch_vm_list(scenario_name)
             for i in range(len(post_vm_list)):
@@ -647,7 +622,7 @@ def create_setting():
                 scenario_config.clone_curr_elem(elem_clos_max, 'hv', 'FEATURES', 'RDT')
             # for i in range(num_mba_delay):
             #    scenario_config.clone_curr_elem(elem_mba_delay, 'hv', 'FEATURES', 'RDT')
-            for i in range(8):
+            for i in range(7):
                 scenario_config.delete_curr_key('vm:id={}'.format(i))
             scenario_config = set_default_config(scenario_config)
         scenario_config.save(create_name)
@@ -1084,7 +1059,6 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             'SERVICE_VM': ('shared', 'vm:id=0'),
             'POST_STD_VM': ('shared', 'vm:id=1'),
             'POST_RT_VM': ('shared', 'vm:id=2'),
-            'KATA_VM': ('shared', 'vm:id=7'),
             'LAUNCH_POST_STD_VM': ('hybrid_launch_2user_vm', 'user_vm:id=1'),
             'LAUNCH_POST_RT_VM': ('shared_launch_6user_vm', 'user_vm:id=2')
         }
@@ -1278,7 +1252,7 @@ def assign_vm_id(scenario_config):
                         pre_launched_vm_num += 1
                     elif item.text in ['SERVICE_VM']:
                         sos_vm_num += 1
-                    elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
+                    elif item.text in ['POST_STD_VM', 'POST_RT_VM']:
                         post_launched_vm_num += 1
 
     pre_launched_vm_index = 0
@@ -1294,7 +1268,7 @@ def assign_vm_id(scenario_config):
                     elif item.text in ['SERVICE_VM']:
                         vm.attrib['id'] = str(sos_vm_index)
                         sos_vm_index += 1
-                    elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
+                    elif item.text in ['POST_STD_VM', 'POST_RT_VM']:
                         vm.attrib['id'] = str(post_launched_vm_index)
                         post_launched_vm_index += 1
 
