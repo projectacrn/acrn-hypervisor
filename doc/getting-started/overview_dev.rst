@@ -157,10 +157,6 @@ ACRN:
 * ACRN hypervisor source code
 * If your scenario has a Service VM: ACRN kernel source code
 
-In the next step, :ref:`overview_dev_board_config`, you will need the Board
-Inspector tool found in the ACRN hypervisor source code to collect information
-about the target hardware and generate a board configuration file.
-
 .. _overview_dev_board_config:
 
 |icon_target| Step 3: Generate a Board Configuration File
@@ -169,8 +165,9 @@ about the target hardware and generate a board configuration file.
 .. |icon_target| image:: ./images/icon_target.png
    :scale: 75%
 
-The :ref:`board_inspector_tool` ``board_inspector.py`` enables you to generate a
-board configuration file on the target system.
+The :ref:`board_inspector_tool` ``board_inspector.py``, found in the ACRN
+hypervisor source code, enables you to generate a board configuration file on
+the target system.
 
 A **board configuration file** stores hardware-specific information extracted
 from the target system. This XML file describes the capacity of hardware
