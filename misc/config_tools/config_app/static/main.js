@@ -597,18 +597,6 @@ $().ready(function(){
         }
         config_item.remove();
     });
-
-    $('#remove_vm_kata').on('click', function() {
-        if(confirm("Do you want to remove the VM?")) {
-            save_scenario("remove_vm_kata");
-        }
-    });
-
-    $('#add_vm_kata').on('click', function() {
-        if(confirm("Do you want to add the Kata VM based on generic config?")) {
-            save_scenario("add_vm_kata");
-        }
-    });
 })
 
 
