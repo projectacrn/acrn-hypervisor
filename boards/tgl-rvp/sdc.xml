@@ -66,7 +66,7 @@
 
   <vm id="0">
     <vm_type>SERVICE_VM</vm_type>
-    <name>ACRN Service VM</name>
+    <name>ACRN_Service_VM</name>
     <guest_flags>
         <guest_flag>0</guest_flag>
     </guest_flags>
@@ -115,6 +115,7 @@
   </vm>
   <vm id="1">
     <vm_type>POST_STD_VM</vm_type>
+    <name>POST_STD_VM1</name>
     <guest_flags>
         <guest_flag>0</guest_flag>
     </guest_flags>
@@ -141,40 +142,6 @@
         <irq>COM2_IRQ</irq>
         <target_vm_id>0</target_vm_id>
         <target_uart_id>1</target_uart_id>
-    </legacy_vuart>
-    <console_vuart id="0">
-        <base>INVALID_PCI_BASE</base>
-    </console_vuart>
-    <communication_vuart id="1">
-        <base>INVALID_PCI_BASE</base>
-        <target_vm_id>1</target_vm_id>
-        <target_uart_id>1</target_uart_id>
-    </communication_vuart>
-    <PTM>n</PTM>
-  </vm>
-  <vm id="2">
-    <vm_type>KATA_VM</vm_type>
-    <cpu_affinity>
-        <pcpu_id>3</pcpu_id>
-    </cpu_affinity>
-    <clos>
-        <vcpu_clos>0</vcpu_clos>
-    </clos>
-    <epc_section>
-        <base>0</base>
-        <size>0</size>
-    </epc_section>
-    <legacy_vuart id="0">
-        <type>VUART_LEGACY_PIO</type>
-        <base>INVALID_COM_BASE</base>
-        <irq>COM1_IRQ</irq>
-    </legacy_vuart>
-    <legacy_vuart id="1">
-        <type>VUART_LEGACY_PIO</type>
-        <base>INVALID_COM_BASE</base>
-        <irq>COM2_IRQ</irq>
-        <target_vm_id>0</target_vm_id>
-        <target_uart_id>0</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
         <base>INVALID_PCI_BASE</base>
