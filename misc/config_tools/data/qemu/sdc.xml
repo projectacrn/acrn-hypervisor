@@ -60,7 +60,7 @@
 
   <vm id="0">
     <vm_type>SERVICE_VM</vm_type>
-    <name>ACRN Service VM</name>
+    <name>ACRN_Service_VM</name>
     <guest_flags>
         <guest_flag>0</guest_flag>
     </guest_flags>
@@ -110,6 +110,7 @@
   </vm>
   <vm id="1">
     <vm_type>POST_STD_VM</vm_type>
+    <name>POST_STD_VM1</name>
     <guest_flags>
         <guest_flag>0</guest_flag>
     </guest_flags>

@@ -558,12 +558,10 @@ def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
 
     boot_image_type(dm, vmid, config)
 
-    # uuid get
     sos_vmid = launch_cfg_lib.get_sos_vmid()
-    scenario_uuid = launch_cfg_lib.get_scenario_uuid(vmid, sos_vmid)
 
     # clearlinux/android/alios
-    print('acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\'.format(scenario_uuid), file=config)
+    print('acrn-dm -A -m $mem_size -s 0:0,hostbridge \\', file=config)
     if launch_cfg_lib.is_linux_like(user_vm_type) or user_vm_type in ("ANDROID", "ALIOS"):
         if user_vm_type in ("ANDROID", "ALIOS"):
             print('   $npk_virt \\', file=config)

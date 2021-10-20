@@ -56,7 +56,6 @@ the source files will be generated into default path and overwirte the previous 
                             <option value="SERVICE_VM">SERVICE_VM</option>
                             <option value="POST_STD_VM">POST_STD_VM</option>
                             <option value="POST_RT_VM">POST_RT_VM</option>
-                            <option value="KATA_VM">KATA_VM</option>
                         </select>
                     </div>
                 </div>
@@ -115,11 +114,7 @@ the source files will be generated into default path and overwirte the previous 
 
     {% if board_info != None and root != None and scenario_item_values %}
     <table class="table table-hover" id="tab">
-        {% set vm_kata = [] %}
         {% for vm in root|list %}
-            {% if 'desc' in vm.attrib and vm.attrib['desc'] == 'specific for Kata'  %}
-                {% do vm_kata.append(1) %}
-            {% endif %}
             {% set first_multi_child = {'IVSHMEM_REGION': 0, 'communication_vuart': 1} %}
             {% if xpath_dict['/'.join(['/acrn-config', vm.tag])]['configurable'] == 'y' or
                 vm.xpath(xpath_dict['/'.join(['/acrn-config', vm.tag])]['configurable'])%}
@@ -147,11 +142,6 @@ the source files will be generated into default path and overwirte the previous 
                     <div class="form-group">
                         <button type="button" class="btn" id="remove_vm" data-id="{{vm.attrib['id']}}">
                             Remove this VM</button>
-                    </div>
-                    {% endif %}
-                    {% if 'desc' in vm.attrib or vm.attrib['desc'] == 'specific for Kata'  %}
-                    <div class="form-group">
-                        <button type="button" class="btn" id="remove_vm_kata">Remove Kata VM</button>
                     </div>
                     {% endif %}
                 </td>
@@ -481,11 +471,6 @@ the source files will be generated into default path and overwirte the previous 
             </tr>
             {% endif %}
         {% endfor %}
-        {% if not vm_kata and ('scenario' in root.attrib and root.attrib['scenario'] == 'sdc') %}
-        <tr><td>
-            <button type="button" class="btn" id="add_vm_kata">Add Kata VM</button>
-        </td></tr>
-        {% endif %}
     </table>
     {% else %}
     <text class="form-control" id="err_msg">No setting available. Select one board info and make sure the scenario xml

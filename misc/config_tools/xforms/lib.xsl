@@ -471,21 +471,6 @@
       <xsl:when test="$vm_type = 'POST_RT_VM'">
         <func:result select="true()" />
       </xsl:when>
-      <xsl:when test="$vm_type = 'KATA_VM'">
-        <func:result select="true()" />
-      </xsl:when>
-      <xsl:otherwise>
-        <func:result select="false()" />
-      </xsl:otherwise>
-    </xsl:choose>
-  </func:function>
-
-  <func:function name="acrn:is-kata-vm">
-    <xsl:param name="vm_type" />
-    <xsl:choose>
-      <xsl:when test="$vm_type = 'KATA_VM'">
-        <func:result select="true()" />
-      </xsl:when>
       <xsl:otherwise>
         <func:result select="false()" />
       </xsl:otherwise>
