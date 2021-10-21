@@ -33,7 +33,7 @@
 #define SHUTDOWN_CMD  "shutdown"
 #define CMD_LEN 16
 #define MAX_NODE_PATH  128
-#define SOS_SOCKET_PORT 0x2000
+#define SERVICE_VM_SOCKET_PORT 0x2000
 
 static const char * const node_name[] = {
 	"pty",
@@ -98,7 +98,7 @@ static int pm_setup_socket(void)
 
 	memset(&socket_addr, 0, sizeof(struct sockaddr_in));
 	socket_addr.sin_family = AF_INET;
-	socket_addr.sin_port = htons(SOS_SOCKET_PORT);
+	socket_addr.sin_port = htons(SERVICE_VM_SOCKET_PORT);
 	socket_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	if (connect(socket_fd, (struct sockaddr *)&socket_addr, sizeof(socket_addr)) == -1) {

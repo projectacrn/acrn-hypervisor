@@ -24,8 +24,8 @@
 #define MSG_SIZE		8U
 #define NODE_SIZE		3U
 #define TRY_SEND_CNT		3U
-#define SOS_SOCKET_PORT		(0x2000U)
-#define UOS_SOCKET_PORT		(SOS_SOCKET_PORT + 1U)
+#define SERVICE_VM_SOCKET_PORT	(0x2000U)
+#define UOS_SOCKET_PORT		(SERVICE_VM_SOCKET_PORT + 1U)
 
 /* life_mngr process run in SOS or UOS */
 enum process_env {
@@ -169,8 +169,8 @@ static void *sos_socket_thread(void *arg)
 	int flags, nfds, num, ret;
 	char buf[BUFF_SIZE];
 
-	listen_fd = setup_socket_listen(SOS_SOCKET_PORT);
-	LOG_PRINTF("life_mngr:listen_fd=0x%x socket port is 0x%x\r\n", listen_fd, SOS_SOCKET_PORT);
+	listen_fd = setup_socket_listen(SERVICE_VM_SOCKET_PORT);
+	LOG_PRINTF("life_mngr:listen_fd=0x%x socket port is 0x%x\r\n", listen_fd, SERVICE_VM_SOCKET_PORT);
 
 	connect_fd = accept(listen_fd, (struct sockaddr *)&client, &len);
 	if (connect_fd == -1) {
