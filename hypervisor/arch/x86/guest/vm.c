@@ -385,7 +385,7 @@ static void deny_hv_owned_devices(struct acrn_vm *sos)
  * @pre vm != NULL
  * @pre is_service_vm(vm) == true
  */
-static void prepare_sos_vm_memmap(struct acrn_vm *vm)
+static void prepare_service_vm_memmap(struct acrn_vm *vm)
 {
 	uint16_t vm_id;
 	uint32_t i;
@@ -531,7 +531,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	if (is_service_vm(vm)) {
 		/* Only for Service VM */
 		create_sos_vm_e820(vm);
-		prepare_sos_vm_memmap(vm);
+		prepare_service_vm_memmap(vm);
 
 		status = init_vm_boot_info(vm);
 	} else {
