@@ -106,7 +106,7 @@
   <xsl:template name="cpu_affinity">
     <xsl:choose>
       <xsl:when test="acrn:is-sos-vm(vm_type)">
-        <xsl:value-of select="acrn:initializer('cpu_affinity', 'SOS_VM_CONFIG_CPU_AFFINITY')" />
+        <xsl:value-of select="acrn:initializer('cpu_affinity', 'SERVICE_VM_CONFIG_CPU_AFFINITY')" />
       </xsl:when>
       <xsl:otherwise>
         <xsl:if test="cpu_affinity">

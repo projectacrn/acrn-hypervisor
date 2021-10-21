@@ -72,7 +72,7 @@ def gen_sos_header(scenario_items, config):
 
     print("#define SOS_VM_BOOTARGS\t\t\tSOS_ROOTFS\t\\", file=config)
     print("\t\t\t\t\tSOS_CONSOLE\t\\", file=config)
-    print("\t\t\t\t\tSOS_IDLE\t\\", file=config)
+    print("\t\t\t\t\tSERVICE_VM_IDLE\t\\", file=config)
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
 
     print("", file=config)

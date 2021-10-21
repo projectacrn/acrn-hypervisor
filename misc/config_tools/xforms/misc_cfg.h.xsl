@@ -113,7 +113,7 @@
   <xsl:for-each select="vm">
     <xsl:choose>
       <xsl:when test="acrn:is-sos-vm(vm_type)">
-        <xsl:value-of select="acrn:define('SOS_VM_CONFIG_CPU_AFFINITY', concat('(', acrn:string-join(//vm[acrn:is-sos-vm(vm_type)]/cpu_affinity/pcpu_id, '|', 'AFFINITY_CPU(', 'U)'),')'), '')" />
+        <xsl:value-of select="acrn:define('SERVICE_VM_CONFIG_CPU_AFFINITY', concat('(', acrn:string-join(//vm[acrn:is-sos-vm(vm_type)]/cpu_affinity/pcpu_id, '|', 'AFFINITY_CPU(', 'U)'),')'), '')" />
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="acrn:define(concat('VM', @id, '_CONFIG_CPU_AFFINITY'), concat('(', acrn:string-join(cpu_affinity/pcpu_id, '|', 'AFFINITY_CPU(', 'U)'),')'), '')" />

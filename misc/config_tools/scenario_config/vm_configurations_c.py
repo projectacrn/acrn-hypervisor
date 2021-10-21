@@ -181,7 +181,7 @@ def cpu_affinity_output(vm_info, i, config):
     """
 
     if "SOS_VM" == common.VM_TYPES[i]:
-        print("\t\t.cpu_affinity = SOS_VM_CONFIG_CPU_AFFINITY,", file=config)
+        print("\t\t.cpu_affinity = SERVICE_VM_CONFIG_CPU_AFFINITY,", file=config)
     else:
         print("\t\t.cpu_affinity = VM{}_CONFIG_CPU_AFFINITY,".format(i), file=config)
 

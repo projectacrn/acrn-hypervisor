@@ -62,7 +62,7 @@
     <xsl:if test="count(vm[vm_type='SOS_VM'])">
       <xsl:value-of select="acrn:comment(concat('SOS_VM == VM', vm[vm_type='SOS_VM']/@id))" />
       <xsl:value-of select="$newline" />
-      <xsl:value-of select="acrn:define('SOS_VM_BOOTARGS', 'SOS_ROOTFS SOS_CONSOLE SOS_IDLE SOS_BOOTARGS_DIFF', '')" />
+      <xsl:value-of select="acrn:define('SOS_VM_BOOTARGS', 'SOS_ROOTFS SOS_CONSOLE SERVICE_VM_IDLE SOS_BOOTARGS_DIFF', '')" />
     </xsl:if>
   </xsl:template>
 
