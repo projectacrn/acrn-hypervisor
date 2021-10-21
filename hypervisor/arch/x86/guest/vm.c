@@ -220,7 +220,7 @@ struct acrn_vm *get_vm_from_vmid(uint16_t vm_id)
 }
 
 /* return a pointer to the virtual machine structure of Service VM */
-struct acrn_vm *get_sos_vm(void)
+struct acrn_vm *get_service_vm(void)
 {
 	ASSERT(service_vm_ptr != NULL, "service_vm_ptr is NULL");
 
@@ -540,7 +540,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 			vm->sworld_control.flag.supported = 1U;
 		}
 		if (vm->sworld_control.flag.supported != 0UL) {
-			uint16_t sos_vm_id = (get_sos_vm())->vm_id;
+			uint16_t sos_vm_id = (get_service_vm())->vm_id;
 			uint16_t page_idx = vmid_2_rel_vmid(sos_vm_id, vm_id) - 1U;
 
 			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,

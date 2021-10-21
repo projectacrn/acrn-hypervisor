@@ -341,7 +341,7 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
  * @brief Find an available vdev structure with BDF from a specified vpci structure.
  *        If the vdev's vpci is the same as the specified vpci, the vdev is available.
  *        If the vdev's vpci is not the same as the specified vpci, the vdev has already
- *        been assigned and it is unavailable for SOS.
+ *        been assigned and it is unavailable for Service VM.
  *        If the vdev's vpci is NULL, the vdev is a orphan/zombie instance, it can't
  *        be accessed by any vpci.
  *
@@ -358,7 +358,7 @@ static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bd
 
 	if ((vdev != NULL) && (vdev->user != vdev)) {
 		if (vdev->user != NULL) {
-			/* the SOS is able to access, if and only if the SOS has higher severity than the UOS. */
+			/* the Service VM is able to access, if and only if the Service VM has higher severity than the UOS. */
 			if (get_vm_severity(vpci2vm(vpci)->vm_id) <
 					get_vm_severity(vpci2vm(vdev->user->vpci)->vm_id)) {
 				vdev = NULL;
@@ -693,7 +693,7 @@ static int32_t vpci_init_vdevs(struct acrn_vm *vm)
 }
 
 /**
- * @brief assign a PCI device from SOS to target post-launched VM.
+ * @brief assign a PCI device from Service VM to target post-launched VM.
  *
  * @pre tgt_vm != NULL
  * @pre pcidev != NULL
@@ -705,12 +705,12 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev)
 	struct pci_vdev *vdev_in_sos, *vdev;
 	struct acrn_vpci *vpci;
 	union pci_bdf bdf;
-	struct acrn_vm *sos_vm;
+	struct acrn_vm *service_vm;
 
 	bdf.value = pcidev->phys_bdf;
-	sos_vm = get_sos_vm();
-	spinlock_obtain(&sos_vm->vpci.lock);
-	vdev_in_sos = pci_find_vdev(&sos_vm->vpci, bdf);
+	service_vm = get_service_vm();
+	spinlock_obtain(&service_vm->vpci.lock);
+	vdev_in_sos = pci_find_vdev(&service_vm->vpci, bdf);
 	if ((vdev_in_sos != NULL) && (vdev_in_sos->user == vdev_in_sos) &&
 			(vdev_in_sos->pdev != NULL) &&
 			!is_host_bridge(vdev_in_sos->pdev) && !is_bridge(vdev_in_sos->pdev)) {
@@ -767,13 +767,13 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev)
 			pcidev->virt_bdf >> 8U, (pcidev->virt_bdf >> 3U) & 0x1fU, pcidev->virt_bdf & 0x7U);
 		ret = -ENODEV;
 	}
-	spinlock_release(&sos_vm->vpci.lock);
+	spinlock_release(&service_vm->vpci.lock);
 
 	return ret;
 }
 
 /**
- * @brief deassign a PCI device from target post-launched VM to SOS.
+ * @brief deassign a PCI device from target post-launched VM to Service VM.
  *
  * @pre tgt_vm != NULL
  * @pre pcidev != NULL
