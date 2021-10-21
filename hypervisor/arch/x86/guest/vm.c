@@ -400,7 +400,7 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 	const struct e820_entry *p_e820 = vm->e820_entries;
 	struct pci_mmcfg_region *pci_mmcfg;
 
-	pr_dbg("SOS_VM e820 layout:\n");
+	pr_dbg("Service VM e820 layout:\n");
 	for (i = 0U; i < entries_count; i++) {
 		entry = p_e820 + i;
 		pr_dbg("e820 table: %d type: 0x%x", i, entry->type);
@@ -421,7 +421,7 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 		}
 	}
 
-	/* Unmap all platform EPC resource from SOS.
+	/* Unmap all platform EPC resource from Service VM.
 	 * This part has already been marked as reserved by BIOS in E820
 	 * will cause EPT violation if service vm accesses EPC resource.
 	 */
@@ -635,7 +635,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 	if (status == 0) {
 		/* We have assumptions:
-		 *   1) vcpus used by SOS has been offlined by DM before UOS re-use it.
+		 *   1) vcpus used by Service VM has been offlined by DM before UOS re-use it.
 		 *   2) pcpu_bitmap passed sanitization is OK for vcpu creating.
 		 */
 		vm->hw.cpu_affinity = pcpu_bitmap;
@@ -888,7 +888,7 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 
 	reset_vcpu(bsp, POWER_ON_RESET);
 
-	/* When SOS resume from S3, it will return to real mode
+	/* When Service VM resume from S3, it will return to real mode
 	 * with entry set to wakeup_vec.
 	 */
 	set_vcpu_startup_entry(bsp, wakeup_vec);
@@ -911,7 +911,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 #ifdef CONFIG_SECURITY_VM_FIXUP
 	security_vm_fixup(vm_id);
 #endif
-	/* SOS and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
+	/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
 	err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
 
 	if (err == 0) {
@@ -921,8 +921,8 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 
 		if (is_service_vm(vm)) {
 			/* We need to ensure all modules of pre-launched VMs have been loaded already
-			 * before loading SOS VM modules, otherwise the module of pre-launched VMs could
-			 * be corrupted because SOS VM kernel might pick any usable RAM to extract kernel
+			 * before loading Service VM modules, otherwise the module of pre-launched VMs could
+			 * be corrupted because Service VM kernel might pick any usable RAM to extract kernel
 			 * when KASLR enabled.
 			 * In case the pre-launched VMs aren't loaded successfuly that cause deadlock here,
 			 * use a 10000ms timer to break the waiting loop.
