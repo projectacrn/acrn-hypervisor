@@ -33,7 +33,7 @@
 
 #define PCI_DEV_TYPE_PTDEV	(1U << 0U)
 #define PCI_DEV_TYPE_HVEMUL	(1U << 1U)
-#define PCI_DEV_TYPE_SOSEMUL	(1U << 2U)
+#define PCI_DEV_TYPE_SERVICE_VM_EMUL	(1U << 2U)
 
 #define MAX_MMIO_DEV_NUM	2U
 

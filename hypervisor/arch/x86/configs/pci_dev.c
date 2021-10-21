@@ -65,8 +65,8 @@ struct acrn_vm_pci_dev_config *init_one_dev_config(struct pci_pdev *pdev)
 
 			dev_config = &vm_config->pci_devs[vm_config->pci_dev_num];
 			if (is_hv_owned_pdev(pdev->bdf)) {
-				/* SOS need to emulate the type1 pdevs owned by HV */
-				dev_config->emu_type = PCI_DEV_TYPE_SOSEMUL;
+				/* Service VM need to emulate the type1 pdevs owned by HV */
+				dev_config->emu_type = PCI_DEV_TYPE_SERVICE_VM_EMUL;
 				if (is_bridge(pdev)) {
 					dev_config->vdev_ops = &vpci_bridge_ops;
 				} else if (is_host_bridge(pdev)) {
