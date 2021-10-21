@@ -245,7 +245,7 @@ uint16_t get_vmid_by_uuid(const uint8_t *uuid);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 struct acrn_vm *get_service_vm(void);
 
-void create_sos_vm_e820(struct acrn_vm *vm);
+void create_service_vm_e820(struct acrn_vm *vm);
 void create_prelaunched_vm_e820(struct acrn_vm *vm);
 uint64_t find_space_from_ve820(struct acrn_vm *vm, uint32_t size, uint64_t min_addr, uint64_t max_addr);
 

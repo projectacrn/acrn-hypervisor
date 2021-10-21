@@ -131,11 +131,11 @@ static void filter_mem_from_sos_e820(struct acrn_vm *vm, uint64_t start_pa, uint
 }
 
 /**
- * before boot sos_vm(service OS), call it to hide HV and prelaunched VM memory in e820 table from sos_vm
+ * before boot Service VM, call it to hide HV and prelaunched VM memory in e820 table from Service VM
  *
  * @pre vm != NULL
  */
-void create_sos_vm_e820(struct acrn_vm *vm)
+void create_service_vm_e820(struct acrn_vm *vm)
 {
 	uint16_t vm_id, i;
 	uint64_t hv_start_pa = hva2hpa((void *)(get_hv_image_base()));
