@@ -35,7 +35,7 @@ bool is_hypercall_from_ring0(void);
  * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
+int32_t hcall_service_vm_offline_cpu(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
 /**
  * @brief Get hypervisor api version

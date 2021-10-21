@@ -75,9 +75,9 @@ inline static bool is_severity_pass(uint16_t target_vmid)
 }
 
 /**
- * @brief offline vcpu from SOS
+ * @brief offline vcpu from Service VM
  *
- * The function offline specific vcpu from SOS.
+ * The function offline specific vcpu from Service VM.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 lapic id of the vcpu which wants to offline
@@ -85,7 +85,7 @@ inline static bool is_severity_pass(uint16_t target_vmid)
  * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+int32_t hcall_service_vm_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
 	struct acrn_vcpu *target_vcpu;
@@ -93,7 +93,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *t
 	int32_t ret = 0;
 	uint64_t lapicid = param1;
 
-	pr_info("sos offline cpu with lapicid %ld", lapicid);
+	pr_info("service vm offline cpu with lapicid %ld", lapicid);
 
 	foreach_vcpu(i, vcpu->vm, target_vcpu) {
 		if (vlapic_get_apicid(vcpu_vlapic(target_vcpu)) == lapicid) {
