@@ -37,10 +37,10 @@
   </xsl:template>
 
   <xsl:template name ="vm_count">
-    <xsl:value-of select="acrn:comment('SOS_VM_NUM can only be 0U or 1U; When SOS_VM_NUM is 0U, MAX_POST_VM_NUM must be 0U too; MAX_POST_VM_NUM must be bigger than CONFIG_MAX_KATA_VM_NUM.')" />
+    <xsl:value-of select="acrn:comment('SERVICE_VM_NUM can only be 0U or 1U; When SERVICE_VM_NUM is 0U, MAX_POST_VM_NUM must be 0U too; MAX_POST_VM_NUM must be bigger than CONFIG_MAX_KATA_VM_NUM.')" />
     <xsl:value-of select="$newline" />
     <xsl:value-of select="acrn:define('PRE_VM_NUM', count(vm[acrn:is-pre-launched-vm(vm_type)]), 'U')" />
-    <xsl:value-of select="acrn:define('SOS_VM_NUM', count(vm[acrn:is-sos-vm(vm_type)]), 'U')" />
+    <xsl:value-of select="acrn:define('SERVICE_VM_NUM', count(vm[acrn:is-sos-vm(vm_type)]), 'U')" />
     <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', count(vm[acrn:is-post-launched-vm(vm_type)]), 'U')" />
     <xsl:value-of select="acrn:define('CONFIG_MAX_KATA_VM_NUM', count(vm[acrn:is-kata-vm(vm_type)]), 'U')" />
   </xsl:template>

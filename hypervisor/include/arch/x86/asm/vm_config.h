@@ -17,7 +17,7 @@
 #include <asm/sgx.h>
 #include <acrn_hv_defs.h>
 
-#define CONFIG_MAX_VM_NUM	(PRE_VM_NUM + SOS_VM_NUM + MAX_POST_VM_NUM)
+#define CONFIG_MAX_VM_NUM	(PRE_VM_NUM + SERVICE_VM_NUM + MAX_POST_VM_NUM)
 
 #define AFFINITY_CPU(n)		(1UL << (n))
 #define MAX_VCPUS_PER_VM	MAX_PCPU_NUM
