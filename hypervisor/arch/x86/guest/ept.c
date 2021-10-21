@@ -184,8 +184,8 @@ void init_ept_pgtable(struct pgtable *table, uint16_t vm_id)
 	}
 }
 /*
- * To enable the identical map and support of legacy devices/ACPI method in SOS,
- * ACRN presents the entire host 0-4GB memory region to SOS, except the memory
+ * To enable the identical map and support of legacy devices/ACPI method in Service VM,
+ * ACRN presents the entire host 0-4GB memory region to Service VM, except the memory
  * regions explicitly assigned to pre-launched VMs or HV (DRAM and MMIO). However,
  * virtual e820 only contains the known DRAM regions. For this reason,
  * we can't know if the GPA range is guest valid or not, by checking with
@@ -260,9 +260,9 @@ uint64_t gpa2hpa(struct acrn_vm *vm, uint64_t gpa)
 }
 
 /**
- * @pre: the gpa and hpa are identical mapping in SOS.
+ * @pre: the gpa and hpa are identical mapping in Service VM.
  */
-uint64_t sos_vm_hpa2gpa(uint64_t hpa)
+uint64_t service_vm_hpa2gpa(uint64_t hpa)
 {
 	return hpa;
 }
