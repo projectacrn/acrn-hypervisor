@@ -140,12 +140,12 @@ struct pci_vdev {
 	const struct pci_vdev_ops *vdev_ops;
 
 	/*
-	 * vdev in    |   HV       |   pre-VM       |               SOS                   | post-VM
-	 *            |            |                |vdev used by SOS|vdev used by post-VM|
-	 * -----------------------------------------------------------------------------------------------
-	 * parent_user| NULL(HV)   |   NULL(HV)     |   NULL(HV)     |   NULL(HV)         | vdev in SOS
-	 * -----------------------------------------------------------------------------------------------
-	 * user       | vdev in HV | vdev in pre-VM |   vdev in SOS  |   vdev in post-VM  | vdev in post-VM
+	 * vdev in    |   HV       |   pre-VM       |          Service VM                 | post-VM
+	 *            |            |                |vdev used by Service VM|vdev used by post-VM|
+	 * ----------------------------------------------------------------------------------------------------------
+	 * parent_user| NULL(HV)   |   NULL(HV)     |   NULL(HV)            |   NULL(HV)         | vdev in Service VM
+	 * ----------------------------------------------------------------------------------------------------------
+	 * user       | vdev in HV | vdev in pre-VM |   vdev in Service VM  |   vdev in post-VM  | vdev in post-VM
 	 */
 	struct pci_vdev *parent_user;
 	struct pci_vdev *user;	/* NULL means this device is not used or is a zombie VF */

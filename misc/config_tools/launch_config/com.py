@@ -594,8 +594,8 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
                 err_key = "uos:id={}:poweroff_channel".format(vmid)
                 launch_cfg_lib.ERR_LIST[err_key] = "vuart1 of VM{} in scenario file should select 'SOS_COM2_BASE'".format(sos_vmid + vmid)
                 return
-            scenario_cfg_lib.get_sos_vuart_settings()
-            print("   {} \\".format(pm_vuart + launch_cfg_lib.PM_CHANNEL_DIC[pm_key] + scenario_cfg_lib.SOS_UART1_VALID_NUM), file=config)
+            scenario_cfg_lib.get_service_vm_vuart_settings()
+            print("   {} \\".format(pm_vuart + launch_cfg_lib.PM_CHANNEL_DIC[pm_key] + scenario_cfg_lib.SERVICE_VM_UART1_VALID_NUM), file=config)
         elif pm_key == "vuart1(pty)":
             print("   {} \\".format(pm_vuart + launch_cfg_lib.PM_CHANNEL_DIC[pm_key]), file=config)
         else:

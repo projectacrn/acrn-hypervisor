@@ -152,7 +152,7 @@ class Memory:
         self.hv_ram_start = 0
         self.hv_ram_size = 0
         self.platform_ram_size = 0
-        self.sos_ram_size = 0
+        self.service_vm_ram_size = 0
         self.uos_ram_size = 0
         self.ivshmem_enable = 'n'
         self.ivshmem_region = []

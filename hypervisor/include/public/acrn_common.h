@@ -192,11 +192,11 @@ struct acrn_pci_request {
  *    FREE -> PENDING -> PROCESSING -> COMPLETE -> FREE -> ...
  *
  * When a request is in COMPLETE or FREE state, the request is owned by the
- * hypervisor. SOS (HSM or DM) shall not read or write the internals of the
+ * hypervisor. Service VM (HSM or DM) shall not read or write the internals of the
  * request except the state.
  *
  * When a request is in PENDING or PROCESSING state, the request is owned by
- * SOS. The hypervisor shall not read or write the request other than the state.
+ * Service VM. The hypervisor shall not read or write the request other than the state.
  *
  * Based on the rules above, a typical I/O request lifecycle should looks like
  * the following.
@@ -204,7 +204,7 @@ struct acrn_pci_request {
  * @verbatim embed:rst:leading-asterisk
  *
  * +-----------------------+-------------------------+----------------------+
- * | SOS vCPU 0            | SOS vCPU x              | UOS vCPU y           |
+ * | Service VM vCPU 0     | Service VM vCPU x       | UOS vCPU y           |
  * +=======================+=========================+======================+
  * |                       |                         | Hypervisor:          |
  * |                       |                         |                      |
@@ -214,7 +214,7 @@ struct acrn_pci_request {
  * |                       |                         | - Set state to       |
  * |                       |                         |   PENDING (a)        |
  * |                       |                         | - Fire upcall to     |
- * |                       |                         |   SOS vCPU 0         |
+ * |                       |                         |   Service VM vCPU 0  |
  * |                       |                         |                      |
  * +-----------------------+-------------------------+----------------------+
  * | VHM:                  |                         |                      |
@@ -267,7 +267,7 @@ struct acrn_pci_request {
  *      the hypervisor, as the hypervisor shall not access the request any more.
  *
  *   2. Due to similar reasons, setting state to COMPLETE is the last operation
- *      of request handling in HSM or clients in SOS.
+ *      of request handling in HSM or clients in Service VM.
  */
 struct acrn_io_request {
 	/**
@@ -577,7 +577,7 @@ struct acrn_intr_monitor {
 
 /*
  * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
- * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
+ * Service VM is launched by ACRN hypervisor, without LAPIC_PT;
  * POST_LAUNCHED_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
  *
  * Assumption: vm_configs array is completely initialized w.r.t. load_order member of
@@ -586,7 +586,7 @@ struct acrn_intr_monitor {
 enum acrn_vm_load_order {
 	PRE_LAUNCHED_VM = 0,
 	SOS_VM,
-	POST_LAUNCHED_VM,	/* Launched by Devicemodel in SOS_VM */
+	POST_LAUNCHED_VM,	/* Launched by Devicemodel in Service VM */
 	MAX_LOAD_ORDER
 };
 

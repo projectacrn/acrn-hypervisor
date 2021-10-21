@@ -142,7 +142,7 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
                     for device in devices:
                         print(f"\t{device}")
                 raise lib.error.ResourceError(f"Pre-launched VM {vm_id} with LAPIC_PASSTHROUGH flag cannot use interrupt lines.")
-        elif lib.lib.is_sos_vm(vm_type):
+        elif lib.lib.is_service_vm(vm_type):
             service_vm_id = vm_id
 
     #

@@ -131,8 +131,8 @@ struct vm_memory_region {
 	/** the beginning guest physical address of the memory reion*/
 	uint64_t gpa;
 
-	/** SOS_VM's guest physcial address which gpa will be mapped to */
-	uint64_t sos_vm_gpa;
+	/** Service VM's guest physcial address which gpa will be mapped to */
+	uint64_t service_vm_gpa;
 
 	/** size of the memory region */
 	uint64_t size;
@@ -337,7 +337,7 @@ struct acrn_platform_info {
 		 */
 		uint64_t vm_configs_addr;
 
-		/** Maximum Kata container number in SOS VM */
+		/** Maximum Kata container number in Service VM */
 		uint64_t max_kata_containers;
 		/** Align the size of Configuration info to 128Bytes. */
 		uint8_t  reserved[104];

@@ -129,7 +129,7 @@ def fn(board_etree, scenario_etree, allocation_etree):
         if vm_type is not None and lib.lib.is_post_launched_vm(vm_type):
             continue
 
-        if vm_type is not None and lib.lib.is_sos_vm(vm_type):
+        if vm_type is not None and lib.lib.is_service_vm(vm_type):
             native_used = get_devs_bdf_native(board_etree)
             passthrough_used = get_devs_bdf_passthrough(scenario_etree)
             used = [bdf for bdf in native_used if bdf not in passthrough_used]

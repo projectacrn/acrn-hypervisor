@@ -416,14 +416,14 @@ def generate_file(config):
     print(VBAR_INFO_DEFINE, file=config)
     common.get_vm_types()
     pre_vm = False
-    sos_vm = False
+    service_vm = False
     for vm_type in common.VM_TYPES.values():
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
             pre_vm = True
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
-            sos_vm = True
+            service_vm = True
 
-    if not pre_vm and not sos_vm:
+    if not pre_vm and not service_vm:
         print(VBAR_INFO_ENDIF, file=config)
         return
 

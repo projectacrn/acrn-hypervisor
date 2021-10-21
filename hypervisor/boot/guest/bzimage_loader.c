@@ -185,7 +185,7 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 /**
  * @pre vm != NULL && efi_mmap_desc != NULL
  */
-static uint16_t create_sos_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_memory_desc *efi_mmap_desc)
+static uint16_t create_service_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_memory_desc *efi_mmap_desc)
 {
 	uint16_t i, desc_idx = 0U;
 	const struct efi_memory_desc *hv_efi_mmap_desc = get_efi_mmap_entry();
@@ -279,19 +279,19 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 		struct acrn_boot_info *abi = get_acrn_boot_info();
 
 		if (boot_from_uefi(abi)) {
-			struct efi_info *sos_efi_info = &zeropage->boot_efi_info;
+			struct efi_info *service_vm_efi_info = &zeropage->boot_efi_info;
 			uint64_t efi_mmap_gpa = BZIMG_EFIMMAP_GPA(load_params_gpa);
 			struct efi_memory_desc *efi_mmap_desc = (struct efi_memory_desc *)gpa2hva(vm, efi_mmap_gpa);
-			uint16_t efi_mmap_desc_nr = create_sos_vm_efi_mmap_desc(vm, efi_mmap_desc);
+			uint16_t efi_mmap_desc_nr = create_service_vm_efi_mmap_desc(vm, efi_mmap_desc);
 
-			sos_efi_info->loader_signature = 0x34364c45; /* "EL64" */
-			sos_efi_info->memdesc_version = abi->uefi_info.memdesc_version;
-			sos_efi_info->memdesc_size = sizeof(struct efi_memory_desc);
-			sos_efi_info->memmap_size = efi_mmap_desc_nr * sizeof(struct efi_memory_desc);
-			sos_efi_info->memmap = (uint32_t)efi_mmap_gpa;
-			sos_efi_info->memmap_hi = (uint32_t)(efi_mmap_gpa >> 32U);
-			sos_efi_info->systab = abi->uefi_info.systab;
-			sos_efi_info->systab_hi = abi->uefi_info.systab_hi;
+			service_vm_efi_info->loader_signature = 0x34364c45; /* "EL64" */
+			service_vm_efi_info->memdesc_version = abi->uefi_info.memdesc_version;
+			service_vm_efi_info->memdesc_size = sizeof(struct efi_memory_desc);
+			service_vm_efi_info->memmap_size = efi_mmap_desc_nr * sizeof(struct efi_memory_desc);
+			service_vm_efi_info->memmap = (uint32_t)efi_mmap_gpa;
+			service_vm_efi_info->memmap_hi = (uint32_t)(efi_mmap_gpa >> 32U);
+			service_vm_efi_info->systab = abi->uefi_info.systab;
+			service_vm_efi_info->systab_hi = abi->uefi_info.systab_hi;
 		}
 	}
 #endif

@@ -215,13 +215,13 @@ static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_
 }
 
 /* Convert relative vm id to absolute vm id */
-static inline uint16_t rel_vmid_2_vmid(uint16_t sos_vmid, uint16_t rel_vmid) {
-	return (sos_vmid + rel_vmid);
+static inline uint16_t rel_vmid_2_vmid(uint16_t service_vmid, uint16_t rel_vmid) {
+	return (service_vmid + rel_vmid);
 }
 
 /* Convert absolute vm id to relative vm id */
-static inline uint16_t vmid_2_rel_vmid(uint16_t sos_vmid, uint16_t vmid) {
-	return (vmid - sos_vmid);
+static inline uint16_t vmid_2_rel_vmid(uint16_t service_vmid, uint16_t vmid) {
+	return (vmid - service_vmid);
 }
 
 void make_shutdown_vm_request(uint16_t pcpu_id);

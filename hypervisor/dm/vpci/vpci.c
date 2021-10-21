@@ -224,7 +224,7 @@ int32_t init_vpci(struct acrn_vm *vm)
 	vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
 
 	vm_config = get_vm_config(vm->vm_id);
-	/* virtual PCI MMCONFIG for SOS is same with the physical value */
+	/* virtual PCI MMCONFIG for Service VM is same with the physical value */
 	if (vm_config->load_order == SOS_VM) {
 		pci_mmcfg = get_mmcfg_region();
 		vm->vpci.pci_mmcfg = *pci_mmcfg;
@@ -702,7 +702,7 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev)
 {
 	int32_t ret = 0;
 	uint32_t idx;
-	struct pci_vdev *vdev_in_sos, *vdev;
+	struct pci_vdev *vdev_in_service_vm, *vdev;
 	struct acrn_vpci *vpci;
 	union pci_bdf bdf;
 	struct acrn_vm *service_vm;
@@ -710,33 +710,33 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev)
 	bdf.value = pcidev->phys_bdf;
 	service_vm = get_service_vm();
 	spinlock_obtain(&service_vm->vpci.lock);
-	vdev_in_sos = pci_find_vdev(&service_vm->vpci, bdf);
-	if ((vdev_in_sos != NULL) && (vdev_in_sos->user == vdev_in_sos) &&
-			(vdev_in_sos->pdev != NULL) &&
-			!is_host_bridge(vdev_in_sos->pdev) && !is_bridge(vdev_in_sos->pdev)) {
+	vdev_in_service_vm = pci_find_vdev(&service_vm->vpci, bdf);
+	if ((vdev_in_service_vm != NULL) && (vdev_in_service_vm->user == vdev_in_service_vm) &&
+			(vdev_in_service_vm->pdev != NULL) &&
+			!is_host_bridge(vdev_in_service_vm->pdev) && !is_bridge(vdev_in_service_vm->pdev)) {
 
 		/* ToDo: Each PT device must support one type reset */
-		if (!vdev_in_sos->pdev->has_pm_reset && !vdev_in_sos->pdev->has_flr &&
-				!vdev_in_sos->pdev->has_af_flr) {
+		if (!vdev_in_service_vm->pdev->has_pm_reset && !vdev_in_service_vm->pdev->has_flr &&
+				!vdev_in_service_vm->pdev->has_af_flr) {
 			pr_fatal("%s %x:%x.%x not support FLR or not support PM reset\n",
 				__func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
 		} else {
 			/* DM will reset this device before assigning it */
-			pdev_restore_bar(vdev_in_sos->pdev);
+			pdev_restore_bar(vdev_in_service_vm->pdev);
 		}
 
-		vdev_in_sos->vdev_ops->deinit_vdev(vdev_in_sos);
+		vdev_in_service_vm->vdev_ops->deinit_vdev(vdev_in_service_vm);
 
 		vpci = &(tgt_vm->vpci);
 
 		spinlock_obtain(&tgt_vm->vpci.lock);
-		vdev = vpci_init_vdev(vpci, vdev_in_sos->pci_dev_config, vdev_in_sos->phyfun);
+		vdev = vpci_init_vdev(vpci, vdev_in_service_vm->pci_dev_config, vdev_in_service_vm->phyfun);
 		pci_vdev_write_vcfg(vdev, PCIR_INTERRUPT_LINE, 1U, pcidev->intr_line);
 		pci_vdev_write_vcfg(vdev, PCIR_INTERRUPT_PIN, 1U, pcidev->intr_pin);
 		for (idx = 0U; idx < vdev->nr_bars; idx++) {
 			/* VF is assigned to a UOS */
 			if (vdev->phyfun != NULL) {
-				vdev->vbars[idx] = vdev_in_sos->vbars[idx];
+				vdev->vbars[idx] = vdev_in_service_vm->vbars[idx];
 				if (has_msix_cap(vdev) && (idx == vdev->msix.table_bar)) {
 					vdev->msix.mmio_hpa = vdev->vbars[idx].base_hpa;
 					vdev->msix.mmio_size = vdev->vbars[idx].size;
@@ -753,11 +753,11 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev)
 			/*We should re-add the vdev to hashlist since its vbdf has changed */
 			hlist_del(&vdev->link);
 			hlist_add_head(&vdev->link, &vpci->vdevs_hlist_heads[hash64(vdev->bdf.value, VDEV_LIST_HASHBITS)]);
-			vdev->parent_user = vdev_in_sos;
-			vdev_in_sos->user = vdev;
+			vdev->parent_user = vdev_in_service_vm;
+			vdev_in_service_vm->user = vdev;
 		} else {
 			vdev->vdev_ops->deinit_vdev(vdev);
-			vdev_in_sos->vdev_ops->init_vdev(vdev_in_sos);
+			vdev_in_service_vm->vdev_ops->init_vdev(vdev_in_service_vm);
 		}
 		spinlock_release(&tgt_vm->vpci.lock);
 	} else {

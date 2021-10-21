@@ -428,7 +428,7 @@ def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
         if vm_type is not None and lib.lib.is_pre_launched_vm(vm_type):
             low_mem = [AddrWindow(start = PRE_LAUNCHED_VM_LOW_MEM_START, end = PRE_LAUNCHED_VM_LOW_MEM_END - 1)]
             high_mem = [AddrWindow(start = PRE_LAUNCHED_VM_HIGH_MEM_START, end = PRE_LAUNCHED_VM_HIGH_MEM_END - 1)]
-        elif vm_type is not None and lib.lib.is_sos_vm(vm_type):
+        elif vm_type is not None and lib.lib.is_service_vm(vm_type):
             low_mem = native_low_mem
             high_mem = native_high_mem
             mem_passthrough = get_devs_mem_passthrough(board_etree, scenario_etree)
@@ -460,7 +460,7 @@ def allocate_io_port(board_etree, scenario_etree, allocation_etree):
         used_io_port_list = []
 
         vm_type = common.get_node("./vm_type/text()", vm_node)
-        if vm_type is not None and lib.lib.is_sos_vm(vm_type):
+        if vm_type is not None and lib.lib.is_service_vm(vm_type):
             io_port_range_list = io_port_range_list_native
             io_port_passthrough = get_pt_devs_io_port_passthrough(board_etree, scenario_etree)
             used_io_port_list_native = get_devs_io_port_native(board_etree, io_port_range_list_native)

@@ -55,7 +55,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ctlr vgsi_c
  * @return
  *    - 0: on success
  *    - \p -ENODEV:
- *      - for SOS, the entry already be held by others
+ *      - for Service VM, the entry already be held by others
  *      - for UOS, no pre-hold mapping found.
  *
  * @pre vm != NULL
@@ -79,7 +79,7 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,  uint16_
  * @return
  *    - 0: on success
  *    - \p -ENODEV:
- *      - for SOS, the entry already be held by others
+ *      - for Service VM, the entry already be held by others
  *      - for UOS, no pre-hold mapping found.
  *
  * @pre vm != NULL
@@ -90,7 +90,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 /**
  * @brief Add an interrupt remapping entry for INTx as pre-hold mapping.
  *
- * Except sos_vm, Device Model should call this function to pre-hold ptdev intx
+ * Except Service VM, Device Model should call this function to pre-hold ptdev intx
  * The entry is identified by phys_pin, one entry vs. one phys_pin.
  * Currently, one phys_pin can only be held by one pin source (vPIC or vIOAPIC).
  *

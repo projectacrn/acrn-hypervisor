@@ -217,25 +217,25 @@ def get_vm_uuid_idx(vm_type, uosid):
     return i_cnt
 
 
-def get_scenario_uuid(uosid, sos_vmid):
+def get_scenario_uuid(uosid, service_vmid):
     # {id_num:uuid} (id_num:0~max)
     scenario_uuid = ''
-    vm_id = uosid + sos_vmid
+    vm_id = uosid + service_vmid
     i_cnt = get_vm_uuid_idx(common.VM_TYPES[vm_id], vm_id)
     scenario_uuid = scenario_cfg_lib.VM_DB[common.VM_TYPES[vm_id]]['uuid'][i_cnt]
     return scenario_uuid
 
 
 
-def get_sos_vmid():
+def get_service_vmid():
 
-    sos_id = ''
+    service_vmid = ''
     for vm_i,vm_type in common.VM_TYPES.items():
         if vm_type == "SOS_VM":
-            sos_id = vm_i
+            service_vmid = vm_i
             break
 
-    return sos_id
+    return service_vmid
 
 
 def get_bdf_from_tag(config_file, branch_tag, tag_str):
@@ -530,9 +530,9 @@ def get_gpu_vpid():
 def uos_cpu_affinity(uosid_cpu_affinity):
 
     cpu_affinity = {}
-    sos_vm_id = get_sos_vmid()
+    service_vm_id = get_service_vmid()
     for uosid,cpu_affinity_list in uosid_cpu_affinity.items():
-        cpu_affinity[int(uosid) + int(sos_vm_id)] = cpu_affinity_list
+        cpu_affinity[int(uosid) + int(service_vm_id)] = cpu_affinity_list
     return cpu_affinity
 
 
@@ -582,12 +582,12 @@ def set_shm_regions(launch_item_values, scenario_info):
     except:
         return
 
-    sos_vm_id = 0
+    service_vm_id = 0
     for vm_id, vm_type in vm_types.items():
         if vm_type in ['SOS_VM']:
-            sos_vm_id = vm_id
+            service_vm_id = vm_id
         elif vm_type in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
-            uos_id = vm_id - sos_vm_id
+            uos_id = vm_id - service_vm_id
             shm_region_key = 'uos:id={},shm_regions,shm_region'.format(uos_id)
             launch_item_values[shm_region_key] = ['']
             if shm_enabled == 'y':
@@ -609,13 +609,13 @@ def set_pci_vuarts(launch_item_values, scenario_info):
     try:
         launch_item_values['uos,console_vuart'] = DM_VUART0
         vm_types = common.get_leaf_tag_map(scenario_info, 'vm_type')
-        sos_vm_id = 0
+        service_vm_id = 0
         for vm_id, vm_type in vm_types.items():
             if vm_type in ['SOS_VM']:
-                sos_vm_id = vm_id
+                service_vm_id = vm_id
         for vm in list(common.get_config_root(scenario_info)):
             if vm.tag == 'vm' and scenario_cfg_lib.VM_DB[vm_types[int(vm.attrib['id'])]]['load_type'] == 'POST_LAUNCHED_VM':
-                uos_id = int(vm.attrib['id']) - sos_vm_id
+                uos_id = int(vm.attrib['id']) - service_vm_id
                 pci_vuart_key = 'uos:id={},communication_vuarts,communication_vuart'.format(uos_id)
                 for elem in list(vm):
                     if elem.tag == 'communication_vuart':

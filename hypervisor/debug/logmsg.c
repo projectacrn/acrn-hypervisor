@@ -14,7 +14,7 @@
 #include <ticks.h>
 
 /* buf size should be identical to the size in hvlog option, which is
- * transfered to SOS:
+ * transfered to Service VM:
  * bsp/uefi/clearlinux/acrn.conf: hvlog=2M@0x1FE00000
  */
 
