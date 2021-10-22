@@ -47,7 +47,6 @@
                 <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
                 <IVSHMEM_REGION>hv:/shmem,2,0:1</IVSHMEM_REGION>
             </IVSHMEM>
-	    <STL_ENABLED>/path/to/ElkhartLake_FuSa_SW_Package/StlLib</STL_ENABLED>
         </FEATURES>
         <MEMORY>
             <STACK_SIZE>0x2000</STACK_SIZE>
@@ -75,7 +74,7 @@
         <vm_type>PRE_STD_VM</vm_type>
         <name>ACRN PRE-LAUNCHED VM0</name>
         <guest_flags>
-            <guest_flag>GUEST_FLAG_SAFETY_FEATURES</guest_flag>
+            <guest_flag>0</guest_flag>
         </guest_flags>
         <cpu_affinity>
             <pcpu_id>0</pcpu_id>
