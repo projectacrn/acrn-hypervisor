@@ -3,6 +3,7 @@
 	<uos_type desc="UOS type">WINDOWS</uos_type>
 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
 	<mem_size desc="UOS memory size in MByte">4096</mem_size>
+	<gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
 	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
@@ -23,7 +24,6 @@
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
 		<audio desc="vm audio device"></audio>
 		<audio_codec desc="vm audio codec device"></audio_codec>
-		<gpu desc="vm gpu device"></gpu>
 		<ipu desc="vm ipu device"></ipu>
 		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
 		<cse desc="vm cse device"></cse>
@@ -41,16 +41,13 @@
 		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./win10-ltsc.img</block>
 		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"></console>
 	</virtio_devices>
-	<sriov_devices>
-	    <gpu></gpu>
-	    <network></network>
-	</sriov_devices>
     </uos>
 
     <uos id="2">
 	<uos_type desc="UOS type">PREEMPT-RT LINUX</uos_type>
 	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
 	<mem_size desc="UOS memory size in MByte">1024</mem_size>
+	<gvt_args configurable="0" desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
 	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
@@ -71,7 +68,6 @@
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
 		<audio desc="vm audio device"></audio>
 		<audio_codec desc="vm audio codec device"></audio_codec>
-		<gpu desc="vm gpu device"></gpu>
 		<ipu desc="vm ipu device"></ipu>
 		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
 		<cse desc="vm cse device"></cse>
@@ -89,15 +85,12 @@
 		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./core-image-weston-intel-corei7-64.wic</block>
 		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
 	</virtio_devices>
-	<sriov_devices>
-	    <gpu></gpu>
-	    <network></network>
-	</sriov_devices>
     </uos>
     <uos id="3">
         <uos_type desc="UOS type">YOCTO</uos_type>
         <rtos_type desc="UOS Realtime capability">no</rtos_type>
         <mem_size desc="UOS memory size in MByte">512</mem_size>
+        <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
         <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
         <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
         <poweroff_channel desc="the method of power off uos" />
@@ -118,7 +111,6 @@
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
             <audio_codec desc="vm audio codec device" />
-            <gpu desc="vm gpu device"></gpu>
             <ipu desc="vm ipu device" />
             <ipu_i2c desc="vm ipu_i2c device" />
             <cse desc="vm cse device" />
@@ -135,15 +127,12 @@
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
         </virtio_devices>
-        <sriov_devices>
-            <gpu></gpu>
-            <network></network>
-        </sriov_devices>
     </uos>
     <uos id="4">
         <uos_type desc="UOS type">YOCTO</uos_type>
         <rtos_type desc="UOS Realtime capability">no</rtos_type>
         <mem_size desc="UOS memory size in MByte">512</mem_size>
+        <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
         <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
         <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
         <poweroff_channel desc="the method of power off uos" />
@@ -164,7 +153,6 @@
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
             <audio_codec desc="vm audio codec device" />
-            <gpu desc="vm gpu device"></gpu>
             <ipu desc="vm ipu device" />
             <ipu_i2c desc="vm ipu_i2c device" />
             <cse desc="vm cse device" />
@@ -181,15 +169,12 @@
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
         </virtio_devices>
-        <sriov_devices>
-            <gpu></gpu>
-            <network></network>
-        </sriov_devices>
     </uos>
     <uos id="5">
         <uos_type desc="UOS type">YOCTO</uos_type>
         <rtos_type desc="UOS Realtime capability">no</rtos_type>
         <mem_size desc="UOS memory size in MByte">512</mem_size>
+        <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
         <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
         <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
         <poweroff_channel desc="the method of power off uos" />
@@ -210,7 +195,6 @@
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
             <audio_codec desc="vm audio codec device" />
-            <gpu desc="vm gpu device"></gpu>
             <ipu desc="vm ipu device" />
             <ipu_i2c desc="vm ipu_i2c device" />
             <cse desc="vm cse device" />
@@ -227,15 +211,12 @@
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
         </virtio_devices>
-        <sriov_devices>
-            <gpu></gpu>
-            <network></network>
-        </sriov_devices>
     </uos>
     <uos id="6">
         <uos_type desc="UOS type">YOCTO</uos_type>
         <rtos_type desc="UOS Realtime capability">no</rtos_type>
         <mem_size desc="UOS memory size in MByte">512</mem_size>
+        <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
         <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
         <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
         <poweroff_channel desc="the method of power off uos" />
@@ -256,7 +237,6 @@
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
             <audio_codec desc="vm audio codec device" />
-            <gpu desc="vm gpu device"></gpu>
             <ipu desc="vm ipu device" />
             <ipu_i2c desc="vm ipu_i2c device" />
             <cse desc="vm cse device" />
@@ -273,9 +253,5 @@
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
         </virtio_devices>
-        <sriov_devices>
-            <gpu></gpu>
-            <network></network>
-        </sriov_devices>
     </uos>
 </acrn-config>
