@@ -122,9 +122,9 @@
             <target_uart_id>1</target_uart_id>
         </communication_vuart>
         <pci_devs>
-            <pci_dev>00:14.0 USB controller: Intel Corporation Device 4b7d</pci_dev>
-            <pci_dev>00:1a.3 Non-VGA unclassified device [0000]: Intel Corporation Device 4b4a</pci_dev>
-            <pci_dev>00:1d.1 Ethernet controller: Intel Corporation Device 4ba0</pci_dev>
+            <pci_dev>00:14.0 USB controller: Intel Corporation Device 4b7d (rev 10)</pci_dev>
+            <pci_dev>00:1a.3 Non-VGA unclassified device: Intel Corporation Device 4b4a (rev 10)</pci_dev>
+            <pci_dev>00:1d.1 Ethernet controller: Intel Corporation Device 4ba0 (rev 10)</pci_dev>
         </pci_devs>
         <mmio_resources>
             <TPM2>n</TPM2>
@@ -186,10 +186,10 @@
             <target_uart_id>1</target_uart_id>
         </communication_vuart>
         <pci_devs>
-            <pci_dev>00:08.0 System peripheral: Intel Corporation Device 4511</pci_dev>
-            <pci_dev>00:17.0 SATA controller: Intel Corporation Device 4b63</pci_dev>
-            <pci_dev>00:1d.2 Ethernet controller: Intel Corporation Device 4bb0</pci_dev>
-            <pci_dev>00:02.0 VGA compatible controller: Intel Corporation Device 4571</pci_dev>
+            <pci_dev>00:08.0 System peripheral: Intel Corporation Device 4511 (rev 01)</pci_dev>
+            <pci_dev>00:17.0 SATA controller: Intel Corporation Device 4b63 (rev 10)</pci_dev>
+            <pci_dev>00:1d.2 Ethernet controller: Intel Corporation Device 4bb0 (rev 10)</pci_dev>
+            <pci_dev>00:02.0 VGA compatible controller: Intel Corporation Device 4571 (rev 01)</pci_dev>
         </pci_devs>
         <mmio_resources>
             <TPM2>n</TPM2>
