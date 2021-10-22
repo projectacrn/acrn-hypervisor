@@ -455,6 +455,108 @@ def gen_root_pci_bus(path, prt_packages):
 
     return tree
 
+def pnp_uart(path, uid, ddn, port, irq):
+    resources = []
+
+    cls = rdt.SmallResourceItemIOPort
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    res = cls.from_buffer(data)
+    res.type = 0
+    res.name = rdt.SMALL_RESOURCE_ITEM_IO_PORT
+    res.length = 7
+    res._DEC = 1
+    res._MIN = port
+    res._MAX = port
+    res._ALN = 1
+    res._LEN = 8
+    resources.append(data)
+
+    cls = rdt.SmallResourceItemIRQ_factory(2)
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    res = cls.from_buffer(data)
+    res.type = 0
+    res.name = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT
+    res.length = 2
+    res._INT = 1 << irq
+    resources.append(data)
+
+    resources.append(bytes([0x79, 0]))
+
+    resource_buf = bytearray().join(resources)
+    checksum = (256 - (sum(resource_buf) % 256)) % 256
+    resource_buf[-1] = checksum
+    uart = builder.DefDevice(
+        builder.PkgLength(),
+        path,
+        builder.TermList(
+            builder.DefName(
+                "_HID",
+                builder.DWordConst(encode_eisa_id("PNP0501"))),
+            builder.DefName(
+                "_UID",
+                builder.build_value(uid)),
+            builder.DefName(
+                "_DDN",
+                builder.String(ddn)),
+            builder.DefName(
+                "_CRS",
+                builder.DefBuffer(
+                    builder.PkgLength(),
+                    builder.WordConst(len(resource_buf)),
+                    builder.ByteList(resource_buf)))))
+
+    return uart
+
+def pnp_rtc(path):
+    resources = []
+
+    cls = rdt.SmallResourceItemIOPort
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    res = cls.from_buffer(data)
+    res.type = 0
+    res.name = rdt.SMALL_RESOURCE_ITEM_IO_PORT
+    res.length = 7
+    res._DEC = 1
+    res._MIN = 0x70
+    res._MAX = 0x70
+    res._ALN = 1
+    res._LEN = 8
+    resources.append(data)
+
+    cls = rdt.SmallResourceItemIRQ_factory(2)
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    res = cls.from_buffer(data)
+    res.type = 0
+    res.name = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT
+    res.length = 2
+    res._INT = 1 << 8
+    resources.append(data)
+
+    resources.append(bytes([0x79, 0]))
+
+    resource_buf = bytearray().join(resources)
+    checksum = (256 - (sum(resource_buf) % 256)) % 256
+    resource_buf[-1] = checksum
+    rtc = builder.DefDevice(
+        builder.PkgLength(),
+        path,
+        builder.TermList(
+            builder.DefName(
+                "_HID",
+                builder.DWordConst(encode_eisa_id("PNP0B00"))),
+            builder.DefName(
+                "_CRS",
+                builder.DefBuffer(
+                    builder.PkgLength(),
+                    builder.WordConst(len(resource_buf)),
+                    builder.ByteList(resource_buf)))))
+
+    return rtc
+
 def collect_dependent_devices(board_etree, device_node):
     types_in_scope = ["uses", "is used by", "consumes resources from"]
     result = set()
@@ -634,6 +736,19 @@ def gen_dsdt(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
                 builder.build_value(5),
                 builder.build_value(0))))
     objects.add_object("\\", s5_object)
+
+    rtvm = False
+    for guest_flag in scenario_etree.xpath(f"//vm[@id='{vm_id}']/guest_flags/guest_flag/text()"):
+        if guest_flag == 'GUEST_FLAG_LAPIC_PASSTHROUGH':
+            rtvm = True
+            break
+
+    # RTVM cannot set IRQ because no INTR is sent with LAPIC PT
+    if rtvm is False:
+        objects.add_object("\\_SB_", pnp_uart("UAR0", 0, "COM1", 0x3f8, 4))
+        objects.add_object("\\_SB_", pnp_uart("UAR1", 1, "COM2", 0x2f8, 3))
+
+    objects.add_object("\\_SB_", pnp_rtc("RTC0"))
 
     amlcode = builder.AMLCode(header, *objects.get_term_list())
     with open(dest_path, "wb") as dest:
