@@ -19,6 +19,7 @@
       <RDT>
         <RDT_ENABLED>n</RDT_ENABLED>
         <CDP_ENABLED>y</CDP_ENABLED>
+        <VCAT_ENABLED>n</VCAT_ENABLED>
         <CLOS_MASK>0xfffff</CLOS_MASK>
         <CLOS_MASK>0xfffff</CLOS_MASK>
         <CLOS_MASK>0xfffff</CLOS_MASK>
