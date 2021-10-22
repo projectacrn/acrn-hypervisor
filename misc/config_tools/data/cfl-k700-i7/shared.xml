@@ -21,6 +21,7 @@
         <RDT>
             <RDT_ENABLED>n</RDT_ENABLED>
             <CDP_ENABLED>n</CDP_ENABLED>
+            <VCAT_ENABLED>n</VCAT_ENABLED>
         </RDT>
         <NVMX_ENABLED>n</NVMX_ENABLED>
         <HYPERV_ENABLED>y</HYPERV_ENABLED>
