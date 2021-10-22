@@ -54,7 +54,7 @@ Most Linux distributions use GRUB version 2 by default. For version
 hypervisor.
 
 Here's an example using Ubuntu to load ACRN on a scenario with two
-pre-launched VMs (the Service VM is also a kind of pre-launched VM):
+pre-launched VMs:
 
 #. Copy the ACRN hypervisor binary ``acrn.32.out`` (or ``acrn.bin``) and the
    pre-launched VM kernel images to ``/boot/``;
@@ -112,12 +112,11 @@ pre-launched VMs (the Service VM is also a kind of pre-launched VM):
       are overridden by the ``$(VMx bootargs)`` parameters.
 
       The ``$(Service VM bootargs)`` parameter in the multiboot command is
-      appended to the end of the Service VM kernel command line. This is useful
-      to override some Service VM kernel command-line parameters because the
-      later one would be used if the same parameters were configured in the
-      Linux kernel command line. For example, adding ``root=/dev/sda3`` will
-      override the original root device to ``/dev/sda3`` for the Service VM
-      kernel.
+      appended to the end of the Service VM kernel command line. If a
+      command-line configuration parameter is specified more than once, the last
+      one wins and earlier ones are ignored. For example, adding
+      ``root=/dev/sda3`` will override the original root device for the Service
+      VM kernel.
 
       All parameters after a ``#`` character are ignored since GRUB
       treats them as comments.
