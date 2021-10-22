@@ -22,7 +22,9 @@
 #define MAX_VM_OS_NAME_LEN	32U
 #define MAX_MOD_TAG_LEN		32U
 
-#ifdef CONFIG_SCHED_NOOP
+#if defined(CONFIG_SCHED_NOOP)
+#define SERVICE_VM_IDLE		""
+#elif defined(CONFIG_SCHED_PRIO)
 #define SERVICE_VM_IDLE		""
 #else
 #define SERVICE_VM_IDLE		"idle=halt "
