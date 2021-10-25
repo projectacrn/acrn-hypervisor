@@ -2,8 +2,8 @@
   <BIOS_INFO>
 	BIOS Information
 	Vendor: American Megatrends Inc.
-	Version: WL10R104
-	Release Date: 09/12/2019
+	Version: WL10R109
+	Release Date: 06/05/2020
 	BIOS Revision: 5.13
 	</BIOS_INFO>
   <BASE_BOARD_INFO>
@@ -13,8 +13,8 @@
 	Version: V1.0
 	</BASE_BOARD_INFO>
   <PCI_DEVICE>
-	00:00.0 Host bridge: Intel Corporation Device 3e34 (rev 0b)
-	00:02.0 VGA compatible controller: Intel Corporation Device 3ea0
+	00:00.0 Host bridge: Intel Corporation Device 3e34 (rev 0c)
+	00:02.0 VGA compatible controller: Intel Corporation Device 3ea0 (rev 02)
 	Region 0: Memory at a0000000 (64-bit, non-prefetchable) [size=16M]
 	Region 2: Memory at 90000000 (64-bit, prefetchable) [size=256M]
 	00:12.0 Signal processing controller: Intel Corporation Device 9df9 (rev 30)
@@ -54,8 +54,8 @@
 	Region 3: Memory at a1120000 (32-bit, non-prefetchable) [size=16K]
 	</PCI_DEVICE>
   <PCI_VID_PID>
-	00:00.0 0600: 8086:3e34 (rev 0b)
-	00:02.0 0300: 8086:3ea0
+	00:00.0 0600: 8086:3e34 (rev 0c)
+	00:02.0 0300: 8086:3ea0 (rev 02)
 	00:12.0 1180: 8086:9df9 (rev 30)
 	00:14.0 0c03: 8086:9ded (rev 30)
 	00:14.2 0500: 8086:9def (rev 30)
@@ -75,8 +75,8 @@
 	04:00.0 0200: 8086:157b (rev 03)
 	</PCI_VID_PID>
   <WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x8A8A808CUL
-	#define WAKE_VECTOR_64          0x8A8A8098UL
+	#define WAKE_VECTOR_32          0x8C93E08CUL
+	#define WAKE_VECTOR_64          0x8C93E098UL
 	</WAKE_VECTOR_INFO>
   <RESET_REGISTER_INFO>
 	#define RESET_REGISTER_ADDRESS  0xCF9UL
@@ -144,27 +144,10 @@
 	"Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz"
 	</CPU_BRAND>
   <CX_INFO>
-	{{SPACE_FFixedHW, 0x00U, 0x00U, 0x00U, 0x00UL}, 0x01U, 0x01U, 0x00U},	/* C1 */
-	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1816UL}, 0x02U, 0x97U, 0x00U},	/* C2 */
-	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1819UL}, 0x03U, 0x40AU, 0x00U},	/* C3 */
+	/* Cx data is not available */
 	</CX_INFO>
   <PX_INFO>
-	{0x709UL, 0x00UL, 0x0AUL, 0x0AUL, 0x002700UL, 0x002700UL},	/* P0 */
-	{0x708UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001200UL, 0x001200UL},	/* P1 */
-	{0x6A4UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001100UL, 0x001100UL},	/* P2 */
-	{0x640UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001000UL, 0x001000UL},	/* P3 */
-	{0x5DCUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000F00UL, 0x000F00UL},	/* P4 */
-	{0x578UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000E00UL, 0x000E00UL},	/* P5 */
-	{0x514UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000D00UL, 0x000D00UL},	/* P6 */
-	{0x4B0UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000C00UL, 0x000C00UL},	/* P7 */
-	{0x44CUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000B00UL, 0x000B00UL},	/* P8 */
-	{0x3E8UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000A00UL, 0x000A00UL},	/* P9 */
-	{0x384UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000900UL, 0x000900UL},	/* P10 */
-	{0x320UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000800UL, 0x000800UL},	/* P11 */
-	{0x2BCUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000700UL, 0x000700UL},	/* P12 */
-	{0x258UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000600UL, 0x000600UL},	/* P13 */
-	{0x1F4UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000500UL, 0x000500UL},	/* P14 */
-	{0x190UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000400UL, 0x000400UL},	/* P15 */
+	/* Px data is not available */
 	</PX_INFO>
   <MMCFG_BASE_INFO>
 	/* PCI mmcfg base of MCFG */
@@ -187,26 +170,28 @@
 	00100000-3fffffff : System RAM
 	40000000-403fffff : Reserved
 	  40000000-403fffff : pnp 00:00
-	40400000-8229f017 : System RAM
-	8229f018-822af657 : System RAM
-	822af658-822b0017 : System RAM
-	822b0018-822c0057 : System RAM
-	822c0058-8352afff : System RAM
-	8352b000-8352bfff : ACPI Non-volatile Storage
-	8352c000-8352cfff : Reserved
-	8352d000-89f86fff : System RAM
-	89f87000-8a3f6fff : Reserved
-	8a3f7000-8a473fff : ACPI Tables
-	8a474000-8a8a8fff : ACPI Non-volatile Storage
-	8a8a9000-8aefefff : Reserved
-	8aeff000-8aefffff : System RAM
-	8af00000-8fffffff : Reserved
-	  8c000000-8fffffff : Graphics Stolen Memory
+	40400000-846a2017 : System RAM
+	846a2018-846b2657 : System RAM
+	846b2658-846b3017 : System RAM
+	846b3018-846c3057 : System RAM
+	846c3058-85cbcfff : System RAM
+	85cbd000-85cbdfff : ACPI Non-volatile Storage
+	85cbe000-85cbefff : Reserved
+	85cbf000-88b01fff : System RAM
+	88b02000-88b40fff : Reserved
+	88b41000-8c052fff : System RAM
+	8c053000-8c4b4fff : Reserved
+	8c4b5000-8c531fff : ACPI Tables
+	8c532000-8c93efff : ACPI Non-volatile Storage
+	8c93f000-8cffefff : Reserved
+	8cfff000-8cffffff : System RAM
+	8d000000-8fffffff : Reserved
+	  8e000000-8fffffff : Graphics Stolen Memory
 	90000000-dfffffff : PCI Bus 0000:00
 	  90000000-9fffffff : 0000:00:02.0
 	  a0000000-a0ffffff : 0000:00:02.0
 	  a1000000-a10fffff : 0000:00:1f.3
-	    a1000000-a10fffff : Audio DSP
+	    a1000000-a10fffff : ICH HD audio
 	  a1100000-a11fffff : PCI Bus 0000:04
 	    a1100000-a111ffff : 0000:04:00.0
 	      a1100000-a111ffff : igb
@@ -223,7 +208,7 @@
 	  a1400000-a140ffff : 0000:00:14.0
 	    a1400000-a140ffff : xhci-hcd
 	  a1410000-a1413fff : 0000:00:1f.3
-	    a1410000-a1413fff : Audio DSP
+	    a1410000-a1413fff : ICH HD audio
 	  a1414000-a1415fff : 0000:00:17.0
 	    a1414000-a1415fff : ahci
 	  a1416000-a1417fff : 0000:00:14.2
@@ -268,31 +253,28 @@
 	ff000000-ffffffff : Reserved
 	  ff000000-ffffffff : pnp 00:0e
 	100000000-26dffffff : System RAM
-	  234800000-2354010d6 : Kernel code
-	  235600000-235924fff : Kernel rodata
-	  235a00000-235ba09bf : Kernel data
-	  2360b0000-2361fffff : Kernel bss
+	  262c00000-263a00ea0 : Kernel code
+	  263a00ea1-26445363f : Kernel data
+	  26471d000-264bfffff : Kernel bss
 	26e000000-26fffffff : RAM buffer
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
-	/dev/nvme0n1p2: TYPE="ext4"
-	/dev/sda3: TYPE="ext4"
-	/dev/sdb2: TYPE="ext4"
-	/dev/sdb3: TYPE="ext4"
-	/dev/sdc3: TYPE="ext4"
-	/dev/sdc4: TYPE="ext4"
+	/dev/nvme0n1p3: TYPE="ext4"
+	/dev/sda5: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
 	seri:/dev/ttyS1 type:portio base:0x2F8 irq:3
 	seri:/dev/ttyS2 type:portio base:0x3E8 irq:7
 	seri:/dev/ttyS3 type:portio base:0x2E8 irq:7
+	seri:/dev/ttyS4 type:portio base:0x2F0 irq:7
+	seri:/dev/ttyS5 type:portio base:0x2E0 irq:7
 	</TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
-	5, 6, 10, 11, 13, 14, 15
+	6, 10, 11, 13, 14, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	8019604 kB
+	8050404 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3
@@ -402,7 +384,7 @@
           <x2apic_id>0x0</x2apic_id>
           <family_id>0x6</family_id>
           <model_id>0x8e</model_id>
-          <stepping_id>0xb</stepping_id>
+          <stepping_id>0xc</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -414,7 +396,7 @@
           <x2apic_id>0x2</x2apic_id>
           <family_id>0x6</family_id>
           <model_id>0x8e</model_id>
-          <stepping_id>0xb</stepping_id>
+          <stepping_id>0xc</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -426,7 +408,7 @@
           <x2apic_id>0x4</x2apic_id>
           <family_id>0x6</family_id>
           <model_id>0x8e</model_id>
-          <stepping_id>0xb</stepping_id>
+          <stepping_id>0xc</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -438,7 +420,7 @@
           <x2apic_id>0x6</x2apic_id>
           <family_id>0x6</family_id>
           <model_id>0x8e</model_id>
-          <stepping_id>0xb</stepping_id>
+          <stepping_id>0xc</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -649,9 +631,9 @@
     <range start="0x0000000000000000" end="0x000000000005efff" size="389120"/>
     <range start="0x0000000000060000" end="0x000000000009ffff" size="262144"/>
     <range start="0x0000000000100000" end="0x000000003fffffff" size="1072693248"/>
-    <range start="0x0000000040400000" end="0x000000008352afff" size="1125298176"/>
-    <range start="0x000000008352d000" end="0x0000000089f86fff" size="111517696"/>
-    <range start="0x000000008aeff000" end="0x000000008aefffff" size="4096"/>
+    <range start="0x0000000040400000" end="0x0000000085cbcfff" size="1166790656"/>
+    <range start="0x0000000085cbf000" end="0x000000008c052fff" size="104415232"/>
+    <range start="0x000000008cfff000" end="0x000000008cffffff" size="4096"/>
     <range start="0x0000000100000000" end="0x000000026dffffff" size="6140461056"/>
   </memory>
   <devices>
@@ -694,11 +676,11 @@
         <acpi_object>\_SB_.PCI0</acpi_object>
         <compatible_id>PNP0A03</compatible_id>
         <acpi_uid>0</acpi_uid>
-        <resource id="res0" type="bus_number" min="0x0" max="0xfffe" len="0xffff"/>
+        <resource id="res0" type="bus_number" min="0x0" max="0xfe" len="0xff"/>
         <resource id="res1" type="io_port" min="0x0" max="0xcf7" len="0xcf8"/>
         <resource id="res2" type="io_port" min="0xcf8" max="0xcf8" len="0x8"/>
         <resource id="res3" type="io_port" min="0xd00" max="0xffff" len="0xf300"/>
-        <resource id="res19" type="memory" min="0x0" max="-0x1" len="0x0"/>
+        <resource id="res19" type="memory" min="0x10000" max="0xffff" len="0x0"/>
         <resource id="res4" type="memory" min="0xa0000" max="0xbffff" len="0x20000"/>
         <resource id="res5" type="memory" min="0xc0000" max="0xbffff" len="0x0"/>
         <resource id="res6" type="memory" min="0xc4000" max="0xc3fff" len="0x0"/>
@@ -811,7 +793,7 @@
           <acpi_object>\_SB_.PCI0.CLP0</acpi_object>
           <compatible_id>INT346F</compatible_id>
           <acpi_uid>0</acpi_uid>
-          <aml_template>5b824d055c2f035f53425f50434930434c5030085f53544100085f4849440d494e543334364600085f55494400085f41445200085f43525311260a238e1e00010001020000010600801a06004d005c5f53422e504349302e49324332007900</aml_template>
+          <aml_template>5b824b065c2f035f53425f50434930434c5030085f53544100085f4849440d494e543334364600085f4349440d494e543334364600085f55494400085f41445200085f43525311260a238e1e00010001020000010600801a06004d005c5f53422e504349302e49324332007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
@@ -889,9 +871,61 @@
           <capability id="PASID"/>
           <capability id="ATS"/>
           <capability id="PRI"/>
-          <device address="0x0">
+          <device address="0x9">
+            <acpi_object>\_SB_.PCI0.GFX0.DD09</acpi_object>
+            <aml_template>5b821b5c2f045f53425f504349304746583044443039085f4144520a09</aml_template>
+          </device>
+          <device address="0xa">
+            <acpi_object>\_SB_.PCI0.GFX0.DD0A</acpi_object>
+            <aml_template>5b821b5c2f045f53425f504349304746583044443041085f4144520a0a</aml_template>
+          </device>
+          <device address="0xb">
+            <acpi_object>\_SB_.PCI0.GFX0.DD0B</acpi_object>
+            <aml_template>5b821b5c2f045f53425f504349304746583044443042085f4144520a0b</aml_template>
+          </device>
+          <device address="0xc">
+            <acpi_object>\_SB_.PCI0.GFX0.DD0C</acpi_object>
+            <aml_template>5b821b5c2f045f53425f504349304746583044443043085f4144520a0c</aml_template>
+          </device>
+          <device address="0xd">
+            <acpi_object>\_SB_.PCI0.GFX0.DD0D</acpi_object>
+            <aml_template>5b821b5c2f045f53425f504349304746583044443044085f4144520a0d</aml_template>
+          </device>
+          <device address="0xe">
+            <acpi_object>\_SB_.PCI0.GFX0.DD0E</acpi_object>
+            <aml_template>5b821b5c2f045f53425f504349304746583044443045085f4144520a0e</aml_template>
+          </device>
+          <device address="0xf">
+            <acpi_object>\_SB_.PCI0.GFX0.DD0F</acpi_object>
+            <aml_template>5b821b5c2f045f53425f504349304746583044443046085f4144520a0f</aml_template>
+          </device>
+          <device address="0x300">
             <acpi_object>\_SB_.PCI0.GFX0.DD01</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443031085f41445200</aml_template>
+            <aml_template>5b821c5c2f045f53425f504349304746583044443031085f4144520b0003</aml_template>
+          </device>
+          <device address="0x301">
+            <acpi_object>\_SB_.PCI0.GFX0.DD02</acpi_object>
+            <aml_template>5b821c5c2f045f53425f504349304746583044443032085f4144520b0103</aml_template>
+          </device>
+          <device address="0x302">
+            <acpi_object>\_SB_.PCI0.GFX0.DD03</acpi_object>
+            <aml_template>5b821c5c2f045f53425f504349304746583044443033085f4144520b0203</aml_template>
+          </device>
+          <device address="0x303">
+            <acpi_object>\_SB_.PCI0.GFX0.DD06</acpi_object>
+            <aml_template>5b821c5c2f045f53425f504349304746583044443036085f4144520b0303</aml_template>
+          </device>
+          <device address="0x304">
+            <acpi_object>\_SB_.PCI0.GFX0.DD07</acpi_object>
+            <aml_template>5b821c5c2f045f53425f504349304746583044443037085f4144520b0403</aml_template>
+          </device>
+          <device address="0x305">
+            <acpi_object>\_SB_.PCI0.GFX0.DD08</acpi_object>
+            <aml_template>5b821c5c2f045f53425f504349304746583044443038085f4144520b0503</aml_template>
+          </device>
+          <device address="0x400">
+            <acpi_object>\_SB_.PCI0.GFX0.DD1F</acpi_object>
+            <aml_template>5b821c5c2f045f53425f504349304746583044443146085f4144520b0004</aml_template>
           </device>
           <device address="0x3480">
             <acpi_object>\_SB_.PCI0.GFX0.IPUA</acpi_object>
@@ -903,64 +937,12 @@
             </status>
           </device>
           <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD02</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443032085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD03</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443033085f41445200</aml_template>
-          </device>
-          <device>
             <acpi_object>\_SB_.PCI0.GFX0.DD04</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443034085f41445200</aml_template>
+            <aml_template>5b821c5c2f045f53425f504349304746583044443034085f4144520b0103</aml_template>
           </device>
           <device>
             <acpi_object>\_SB_.PCI0.GFX0.DD05</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443035085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD06</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443036085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD07</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443037085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD08</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443038085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD09</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443039085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD0A</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443041085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD0B</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443042085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD0C</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443043085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD0D</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443044085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD0E</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443045085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD0F</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443046085f41445200</aml_template>
-          </device>
-          <device>
-            <acpi_object>\_SB_.PCI0.GFX0.DD1F</acpi_object>
-            <aml_template>5b821a5c2f045f53425f504349304746583044443146085f41445200</aml_template>
+            <aml_template>5b821c5c2f045f53425f504349304746583044443035085f4144520b0203</aml_template>
           </device>
         </device>
         <device address="0x40000">
@@ -1110,11 +1092,11 @@
         </device>
         <device address="0x140005">
           <acpi_object>\_SB_.PCI0.PSDC</acpi_object>
-          <aml_template>5b824e075c2f035f53425f5043493050534443085f5354410a0f085f4144520c05001400085f4352531146050a528c2500010001001d00030000102717000019002800000000005c5f53422e504349302e47504930008c2500010101000900000000000017000019002800000000005c5f53422e504349302e47504930007900</aml_template>
+          <aml_template>5b824d075c2f035f53425f5043493050534443085f53544100085f4144520c05001400085f4352531146050a528c2500010001001d000300001027170000190028000000e7005c5f53422e504349302e47504930008c25000101010009000000000000170000190028000000e7005c5f53422e504349302e47504930007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource type="LargeResourceItemGPIOConnection" id="res0"/>
           <resource type="LargeResourceItemGPIOConnection" id="res1"/>
@@ -1397,13 +1379,13 @@
           <device id="INT3F0D">
             <acpi_object>\_SB_.PCI0.LPCB.CWDT</acpi_object>
             <compatible_id>PNP0C02</compatible_id>
-            <aml_template>5b82385c2f045f53425f504349304c50434243574454085f5354410a0f085f4849440c25d43f0d085f435253110d0a0a47010000000004047900</aml_template>
+            <aml_template>5b8243045c2f045f53425f504349304c50434243574454085f5354410a0f085f4849440c25d43f0d085f4349440c41d00c02085f435253110d0a0a47015418541804047900</aml_template>
             <status>
               <present>y</present>
               <enabled>y</enabled>
               <functioning>y</functioning>
             </status>
-            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x4"/>
+            <resource id="res0" type="io_port" min="0x1854" max="0x1854" len="0x4"/>
           </device>
           <device id="PNP0C08">
             <acpi_object>\_SB_.PCI0.LPCB.HHMD</acpi_object>
@@ -1509,15 +1491,15 @@
             <acpi_object>\_SB_.PCI0.LPCB.LPTE</acpi_object>
             <compatible_id>PNP0400</compatible_id>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b8244045c2f045f53425f504349304c5043424c505445085f53544100085f4849440c41d00401085f55494400085f43525311130a1047010000000001082200002a00007900</aml_template>
+            <aml_template>5b824e045c2f045f53425f504349304c5043424c505445085f53544100085f4849440c41d00401085f4349440c41d00400085f55494400085f43525311130a104701e002e00201082280002a00007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
               <functioning>n</functioning>
             </status>
             <resource type="SmallResourceItemDMA" id="res2"/>
-            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x8"/>
-            <resource id="res1" type="irq" int=""/>
+            <resource id="res0" type="io_port" min="0x2e0" max="0x2e0" len="0x8"/>
+            <resource id="res1" type="irq" int="7"/>
           </device>
           <device id="PNP0C04">
             <acpi_object>\_SB_.PCI0.LPCB.MATH</acpi_object>
@@ -1534,7 +1516,7 @@
             <acpi_object>\_SB_.PCI0.LPCB.PS2K</acpi_object>
             <compatible_id>PNP030B</compatible_id>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b824a045c2f045f53425f504349304c5043425053324b085f5354410a0f085f4849440c41d00303085f55494400085f43525311180a15470160006000000147016400640000012202007900</aml_template>
+            <aml_template>5b8244055c2f045f53425f504349304c5043425053324b085f5354410a0f085f4849440c41d00303085f4349440c41d0030b085f55494400085f43525311180a15470160006000000147016400640000012202007900</aml_template>
             <status>
               <present>y</present>
               <enabled>y</enabled>
@@ -1548,7 +1530,7 @@
             <acpi_object>\_SB_.PCI0.LPCB.PS2M</acpi_object>
             <compatible_id>PNP0F13</compatible_id>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b82395c2f045f53425f504349304c5043425053324d085f5354410a0f085f4849440c41d00f03085f55494400085f43525311080a052200107900</aml_template>
+            <aml_template>5b8244045c2f045f53425f504349304c5043425053324d085f5354410a0f085f4849440c41d00f03085f4349440c41d00f13085f55494400085f43525311080a052200107900</aml_template>
             <status>
               <present>y</present>
               <enabled>y</enabled>
@@ -1596,80 +1578,80 @@
           <device id="PNP0501">
             <acpi_object>\_SB_.PCI0.LPCB.UAR1</acpi_object>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b8244045c2f045f53425f504349304c50434255415231085f53544100085f4849440c41d00501085f55494400085f43525311130a1047010000000001082200002a00007900</aml_template>
+            <aml_template>5b8245045c2f045f53425f504349304c50434255415231085f5354410a0f085f4849440c41d00501085f55494400085f43525311130a104701e002e00201082280002a00007900</aml_template>
             <status>
-              <present>n</present>
-              <enabled>n</enabled>
-              <functioning>n</functioning>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
             </status>
             <resource type="SmallResourceItemDMA" id="res2"/>
-            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x8"/>
-            <resource id="res1" type="irq" int=""/>
+            <resource id="res0" type="io_port" min="0x2e0" max="0x2e0" len="0x8"/>
+            <resource id="res1" type="irq" int="7"/>
           </device>
           <device id="PNP0501">
             <acpi_object>\_SB_.PCI0.LPCB.UAR2</acpi_object>
             <acpi_uid>1</acpi_uid>
-            <aml_template>5b8244045c2f045f53425f504349304c50434255415232085f53544100085f4849440c41d00501085f55494401085f43525311130a1047010000000001082200002a00007900</aml_template>
+            <aml_template>5b8245045c2f045f53425f504349304c50434255415232085f5354410a0f085f4849440c41d00501085f55494401085f43525311130a104701e002e00201082280002a00007900</aml_template>
             <status>
-              <present>n</present>
-              <enabled>n</enabled>
-              <functioning>n</functioning>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
             </status>
             <resource type="SmallResourceItemDMA" id="res2"/>
-            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x8"/>
-            <resource id="res1" type="irq" int=""/>
+            <resource id="res0" type="io_port" min="0x2e0" max="0x2e0" len="0x8"/>
+            <resource id="res1" type="irq" int="7"/>
           </device>
           <device id="PNP0501">
             <acpi_object>\_SB_.PCI0.LPCB.UAR3</acpi_object>
             <acpi_uid>2</acpi_uid>
-            <aml_template>5b8246045c2f045f53425f504349304c50434255415233085f53544100085f4849440c41d00501085f5549440a02085f43525311140a114701000000000108230000192a00007900</aml_template>
+            <aml_template>5b8247045c2f045f53425f504349304c50434255415233085f5354410a0f085f4849440c41d00501085f5549440a02085f43525311140a114701e002e0020108238000192a00007900</aml_template>
             <status>
-              <present>n</present>
-              <enabled>n</enabled>
-              <functioning>n</functioning>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
             </status>
             <resource type="SmallResourceItemDMA" id="res2"/>
-            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x8"/>
-            <resource id="res1" type="irq" int=""/>
+            <resource id="res0" type="io_port" min="0x2e0" max="0x2e0" len="0x8"/>
+            <resource id="res1" type="irq" int="7"/>
           </device>
           <device id="PNP0501">
             <acpi_object>\_SB_.PCI0.LPCB.UAR4</acpi_object>
             <acpi_uid>3</acpi_uid>
-            <aml_template>5b8246045c2f045f53425f504349304c50434255415234085f53544100085f4849440c41d00501085f5549440a03085f43525311140a114701000000000108230000192a00007900</aml_template>
+            <aml_template>5b8247045c2f045f53425f504349304c50434255415234085f5354410a0f085f4849440c41d00501085f5549440a03085f43525311140a114701e002e0020108238000192a00007900</aml_template>
             <status>
-              <present>n</present>
-              <enabled>n</enabled>
-              <functioning>n</functioning>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
             </status>
             <resource type="SmallResourceItemDMA" id="res2"/>
-            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x8"/>
-            <resource id="res1" type="irq" int=""/>
+            <resource id="res0" type="io_port" min="0x2e0" max="0x2e0" len="0x8"/>
+            <resource id="res1" type="irq" int="7"/>
           </device>
           <device id="PNP0501">
             <acpi_object>\_SB_.PCI0.LPCB.UAR5</acpi_object>
             <acpi_uid>4</acpi_uid>
-            <aml_template>5b8246045c2f045f53425f504349304c50434255415235085f53544100085f4849440c41d00501085f5549440a04085f43525311140a114701000000000108230000192a00007900</aml_template>
+            <aml_template>5b8247045c2f045f53425f504349304c50434255415235085f5354410a0f085f4849440c41d00501085f5549440a04085f43525311140a114701e002e0020108238000192a00007900</aml_template>
             <status>
-              <present>n</present>
-              <enabled>n</enabled>
-              <functioning>n</functioning>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
             </status>
             <resource type="SmallResourceItemDMA" id="res2"/>
-            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x8"/>
-            <resource id="res1" type="irq" int=""/>
+            <resource id="res0" type="io_port" min="0x2e0" max="0x2e0" len="0x8"/>
+            <resource id="res1" type="irq" int="7"/>
           </device>
           <device id="PNP0501">
             <acpi_object>\_SB_.PCI0.LPCB.UAR6</acpi_object>
             <acpi_uid>5</acpi_uid>
-            <aml_template>5b8246045c2f045f53425f504349304c50434255415236085f53544100085f4849440c41d00501085f5549440a05085f43525311140a114701000000000108230000192a00007900</aml_template>
+            <aml_template>5b8247045c2f045f53425f504349304c50434255415236085f5354410a0f085f4849440c41d00501085f5549440a05085f43525311140a114701e002e0020108238000192a00007900</aml_template>
             <status>
-              <present>n</present>
-              <enabled>n</enabled>
-              <functioning>n</functioning>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
             </status>
             <resource type="SmallResourceItemDMA" id="res2"/>
-            <resource id="res0" type="io_port" min="0x0" max="0x0" len="0x8"/>
-            <resource id="res1" type="irq" int=""/>
+            <resource id="res0" type="io_port" min="0x2e0" max="0x2e0" len="0x8"/>
+            <resource id="res1" type="irq" int="7"/>
           </device>
         </device>
         <device address="0x1f0003" id="0x9dc8" description="Audio device: Intel Corporation">
@@ -1693,7 +1675,7 @@
             <acpi_object>\_SB_.PCI0.HDAS.SNDW</acpi_object>
             <compatible_id>PRP00001</compatible_id>
             <compatible_id>PNP0A05</compatible_id>
-            <aml_template>5b82255c2f045f53425f5043493048444153534e4457085f5354410a0b085f4144520c00000040</aml_template>
+            <aml_template>5b8241045c2f045f53425f5043493048444153534e4457085f5354410a0b085f4349441215020d5052503030303031000d504e503041303500085f4144520c00000040</aml_template>
             <status>
               <present>y</present>
               <enabled>y</enabled>
@@ -1753,15 +1735,11 @@
           <class>0x0c8000</class>
           <resource type="memory" min="0xfe010000" max="0xfe010fff" len="0x1000" id="bar0" width="32" prefetchable="0"/>
         </device>
-        <device address="0x1f0006">
-          <acpi_object>\_SB_.PCI0.GLAN</acpi_object>
-          <aml_template>5b821a5c2f035f53425f50434930474c414e085f4144520c06001f00</aml_template>
-        </device>
         <device id="INT346F">
           <acpi_object>\_SB_.PCI0.CLP1</acpi_object>
           <compatible_id>INT346F</compatible_id>
           <acpi_uid>1</acpi_uid>
-          <aml_template>5b824d055c2f035f53425f50434930434c5031085f53544100085f4849440d494e543334364600085f55494401085f41445200085f43525311260a238e1e00010001020000010600801a060049005c5f53422e504349302e49324333007900</aml_template>
+          <aml_template>5b824b065c2f035f53425f50434930434c5031085f53544100085f4849440d494e543334364600085f4349440d494e543334364600085f55494401085f41445200085f43525311260a238e1e00010001020000010600801a060049005c5f53422e504349302e49324333007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
@@ -1774,7 +1752,7 @@
           <acpi_object>\_SB_.PCI0.CLP2</acpi_object>
           <compatible_id>INT346F</compatible_id>
           <acpi_uid>2</acpi_uid>
-          <aml_template>5b824e055c2f035f53425f50434930434c5032085f53544100085f4849440d494e543334364600085f5549440a02085f41445200085f43525311260a238e1e00010001020000010600801a06004d005c5f53422e504349302e49324332007900</aml_template>
+          <aml_template>5b824c065c2f035f53425f50434930434c5032085f53544100085f4849440d494e543334364600085f4349440d494e543334364600085f5549440a02085f41445200085f43525311260a238e1e00010001020000010600801a06004d005c5f53422e504349302e49324332007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
@@ -1787,7 +1765,7 @@
           <acpi_object>\_SB_.PCI0.CLP3</acpi_object>
           <compatible_id>INT346F</compatible_id>
           <acpi_uid>3</acpi_uid>
-          <aml_template>5b824e055c2f035f53425f50434930434c5033085f53544100085f4849440d494e543334364600085f5549440a03085f41445200085f43525311260a238e1e00010001020000010600801a06004d005c5f53422e504349302e49324332007900</aml_template>
+          <aml_template>5b824c065c2f035f53425f50434930434c5033085f53544100085f4849440d494e543334364600085f4349440d494e543334364600085f5549440a03085f41445200085f43525311260a238e1e00010001020000010600801a06004d005c5f53422e504349302e49324332007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
@@ -1800,7 +1778,7 @@
           <acpi_object>\_SB_.PCI0.DOCK</acpi_object>
           <compatible_id>PNP0C15</compatible_id>
           <acpi_uid>2</acpi_uid>
-          <aml_template>5b822c5c2f035f53425f50434930444f434b085f53544100085f4849440d414243443030303000085f5549440a02</aml_template>
+          <aml_template>5b82365c2f035f53425f50434930444f434b085f53544100085f4849440d414243443030303000085f4349440c41d00c15085f5549440a02</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
@@ -1811,7 +1789,7 @@
           <acpi_object>\_SB_.PCI0.DSC0</acpi_object>
           <compatible_id>INT346F</compatible_id>
           <acpi_uid>0</acpi_uid>
-          <aml_template>5b823b5c2f035f53425f5043493044534330085f53544100085f4849440d494e543334364600085f55494400085f41445200085f43525311050a027900</aml_template>
+          <aml_template>5b824a045c2f035f53425f5043493044534330085f53544100085f4849440d494e543334364600085f4349440d494e543334364600085f55494400085f41445200085f43525311050a027900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
@@ -1822,18 +1800,21 @@
           <acpi_object>\_SB_.PCI0.DSC1</acpi_object>
           <compatible_id>INT346F</compatible_id>
           <acpi_uid>1</acpi_uid>
-          <aml_template>5b823b5c2f035f53425f5043493044534331085f53544100085f4849440d494e543334364600085f55494401085f41445200085f43525311050a027900</aml_template>
+          <aml_template>5b824b095c2f035f53425f5043493044534331085f53544100085f4849440d494e543334364600085f4349440d494e543334364600085f55494401085f41445200085f4352531146050a528c25000101010002000000000000170000190028000000b6005c5f53422e504349302e47504930008c2500010101000200000000000017000019002800000010005c5f53422e504349302e47504930007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
             <functioning>n</functioning>
           </status>
+          <resource type="LargeResourceItemGPIOConnection" id="res0"/>
+          <resource type="LargeResourceItemGPIOConnection" id="res1"/>
+          <dependency type="consumes resources from">\_SB_.PCI0.GPI0</dependency>
         </device>
         <device id="INT346F">
           <acpi_object>\_SB_.PCI0.DSC2</acpi_object>
           <compatible_id>INT346F</compatible_id>
           <acpi_uid>2</acpi_uid>
-          <aml_template>5b823c5c2f035f53425f5043493044534332085f53544100085f4849440d494e543334364600085f5549440a02085f41445200085f43525311050a027900</aml_template>
+          <aml_template>5b824b045c2f035f53425f5043493044534332085f53544100085f4849440d494e543334364600085f4349440d494e543334364600085f5549440a02085f41445200085f43525311050a027900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
@@ -1844,7 +1825,7 @@
           <acpi_object>\_SB_.PCI0.DSC3</acpi_object>
           <compatible_id>INT346F</compatible_id>
           <acpi_uid>3</acpi_uid>
-          <aml_template>5b823c5c2f035f53425f5043493044534333085f53544100085f4849440d494e543334364600085f5549440a03085f41445200085f43525311050a027900</aml_template>
+          <aml_template>5b824b045c2f035f53425f5043493044534333085f53544100085f4849440d494e543334364600085f4349440d494e543334364600085f5549440a03085f41445200085f43525311050a027900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
@@ -1853,37 +1834,53 @@
         </device>
         <device id="INT34BB">
           <acpi_object>\_SB_.PCI0.GPI0</acpi_object>
-          <aml_template>5b824d055c2f035f53425f5043493047504930085f53544100085f4849440d494e543334424200085f43525311320a2f8609000100000000000001008609000100000000000001008609000100000000000001008906000d010e0000007900</aml_template>
+          <aml_template>5b824d055c2f035f53425f5043493047504930085f53544100085f4849440d494e543334424200085f43525311320a2f8609000100006efd000001008609000100006dfd000001008609000100006afd000001008906000d010e0000007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
             <functioning>n</functioning>
           </status>
           <resource id="res3" type="irq" int="14"/>
-          <resource id="res0" type="memory" min="0x0" max="0xffff" len="0x10000"/>
-          <resource id="res1" type="memory" min="0x0" max="0xffff" len="0x10000"/>
-          <resource id="res2" type="memory" min="0x0" max="0xffff" len="0x10000"/>
+          <resource id="res2" type="memory" min="0xfd6a0000" max="0xfd6affff" len="0x10000"/>
+          <resource id="res1" type="memory" min="0xfd6d0000" max="0xfd6dffff" len="0x10000"/>
+          <resource id="res0" type="memory" min="0xfd6e0000" max="0xfd6effff" len="0x10000"/>
           <dependency type="provides resources to">\_SB_.PCI0.PSDC</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.DSC1</dependency>
         </device>
         <device id="INT34B2">
           <acpi_object>\_SB_.PCI0.I2C0</acpi_object>
-          <aml_template>5b8246045c2f035f53425f5043493049324330085f5354410a0f085f4849440d494e543334423200085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8245045c2f035f53425f5043493049324330085f53544100085f4849440d494e543334423200085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="16"/>
           <resource id="res0" type="memory" min="0xfe020000" max="0xfe020fff" len="0x1000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.HDAC</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.PA01</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.UCMX</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPD0</dependency>
+          <device id="INT0000">
+            <acpi_object>\_SB_.PCI0.I2C0.HDAC</acpi_object>
+            <compatible_id>INT0000</compatible_id>
+            <acpi_uid>1</acpi_uid>
+            <aml_template>5b8242075c2f045f53425f504349304932433048444143085f53544100085f4849440d494e543030303000085f4349440d494e543030303000085f55494401085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324330008906001101500000007900</aml_template>
+            <status>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
+            </status>
+            <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+            <resource id="res1" type="irq" int="80"/>
+            <dependency type="consumes resources from">\_SB_.PCI0.I2C0</dependency>
+          </device>
           <device id="MAX34407">
             <acpi_object>\_SB_.PCI0.I2C0.PA01</acpi_object>
             <compatible_id>MAX34407</compatible_id>
             <acpi_uid>1</acpi_uid>
-            <aml_template>5b824c055c2f045f53425f504349304932433050413031085f53544100085f4849440d4d4158333434303700085f55494401085f43525311260a238e1e00010001020000010600801a060010005c5f53422e504349302e49324330007900</aml_template>
+            <aml_template>5b824b065c2f045f53425f504349304932433050413031085f53544100085f4849440d4d4158333434303700085f4349440d4d4158333434303700085f55494401085f43525311260a238e1e00010001020000010600801a060010005c5f53422e504349302e49324330007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
@@ -1895,33 +1892,33 @@
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C0.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
-            <aml_template>5b8240065c2f045f53425f504349304932433054504430085f5354410a0f085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324330008906001501000000007900</aml_template>
+            <aml_template>5b824d065c2f045f53425f504349304932433054504430085f53544100085f4849440d585858583030303000085f4349440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324330008906001501500000007900</aml_template>
             <status>
-              <present>y</present>
-              <enabled>y</enabled>
-              <functioning>y</functioning>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
             </status>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <resource id="res1" type="irq" int="0"/>
+            <resource id="res1" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C0</dependency>
           </device>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C0.TPL1</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
-            <aml_template>5b824f055c2f045f53425f504349304932433054504c31085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324330008906000101000000007900</aml_template>
+            <aml_template>5b824d065c2f045f53425f504349304932433054504c31085f53544100085f4849440d585858583030303000085f4349440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324330008906000101500000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
               <functioning>n</functioning>
             </status>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <resource id="res1" type="irq" int="0"/>
+            <resource id="res1" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C0</dependency>
           </device>
           <device id="INT3515">
             <acpi_object>\_SB_.PCI0.I2C0.UCMX</acpi_object>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b82430e5c2f045f53425f504349304932433055434d58085f53544100085f4849440d494e543335313500085f55494400085f435253114e0a0aaa8e1e00010001020000010600801a060038005c5f53422e504349302e49324330008e1e00010001020000010600801a06003f005c5f53422e504349302e49324330008e1e00010001020000010600801a060020005c5f53422e504349302e49324330008e1e00010001020000010600801a060027005c5f53422e504349302e49324330008906000501000000008906000501000000008906000501000000008906000501000000007900</aml_template>
+            <aml_template>5b82430e5c2f045f53425f504349304932433055434d58085f53544100085f4849440d494e543335313500085f55494400085f435253114e0a0aaa8e1e00010001020000010600801a060038005c5f53422e504349302e49324330008e1e00010001020000010600801a06003f005c5f53422e504349302e49324330008e1e00010001020000010600801a060020005c5f53422e504349302e49324330008e1e00010001020000010600801a060027005c5f53422e504349302e49324330008906000501500000008906000501500000008906000501500000008906000501000000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
@@ -1931,56 +1928,56 @@
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res2"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res3"/>
-            <resource id="res4" type="irq" int="0"/>
-            <resource id="res5" type="irq" int="0"/>
-            <resource id="res6" type="irq" int="0"/>
             <resource id="res7" type="irq" int="0"/>
+            <resource id="res4" type="irq" int="80"/>
+            <resource id="res5" type="irq" int="80"/>
+            <resource id="res6" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C0</dependency>
           </device>
         </device>
         <device id="INT34B3">
           <acpi_object>\_SB_.PCI0.I2C1</acpi_object>
-          <aml_template>5b8246045c2f035f53425f5043493049324331085f5354410a0f085f4849440d494e543334423300085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8245045c2f035f53425f5043493049324331085f53544100085f4849440d494e543334423300085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="17"/>
           <resource id="res0" type="memory" min="0xfe022000" max="0xfe022fff" len="0x1000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C1.UCMX</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C1.UCMX</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C1.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
-            <aml_template>5b824f055c2f045f53425f504349304932433154504430085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324331008906001501000000007900</aml_template>
+            <aml_template>5b824d065c2f045f53425f504349304932433154504430085f53544100085f4849440d585858583030303000085f4349440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324331008906001501500000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
               <functioning>n</functioning>
             </status>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <resource id="res1" type="irq" int="0"/>
+            <resource id="res1" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C1</dependency>
           </device>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C1.TPL1</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
-            <aml_template>5b8240065c2f045f53425f504349304932433154504c31085f5354410a0f085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324331008906000101000000007900</aml_template>
+            <aml_template>5b824d065c2f045f53425f504349304932433154504c31085f53544100085f4849440d585858583030303000085f4349440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324331008906000101500000007900</aml_template>
             <status>
-              <present>y</present>
-              <enabled>y</enabled>
-              <functioning>y</functioning>
+              <present>n</present>
+              <enabled>n</enabled>
+              <functioning>n</functioning>
             </status>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <resource id="res1" type="irq" int="0"/>
+            <resource id="res1" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C1</dependency>
           </device>
           <device id="INT3515">
             <acpi_object>\_SB_.PCI0.I2C1.UCMX</acpi_object>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b82430e5c2f045f53425f504349304932433155434d58085f53544100085f4849440d494e543335313500085f55494400085f435253114e0a0aaa8e1e00010001020000010600801a060038005c5f53422e504349302e49324331008e1e00010001020000010600801a06003f005c5f53422e504349302e49324331008e1e00010001020000010600801a060020005c5f53422e504349302e49324331008e1e00010001020000010600801a060027005c5f53422e504349302e49324331008906000501000000008906000501000000008906000501000000008906000501000000007900</aml_template>
+            <aml_template>5b82430e5c2f045f53425f504349304932433155434d58085f53544100085f4849440d494e543335313500085f55494400085f435253114e0a0aaa8e1e00010001020000010600801a060038005c5f53422e504349302e49324331008e1e00010001020000010600801a06003f005c5f53422e504349302e49324331008e1e00010001020000010600801a060020005c5f53422e504349302e49324331008e1e00010001020000010600801a060027005c5f53422e504349302e49324331008906000501500000008906000501500000008906000501500000008906000501000000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
@@ -1990,36 +1987,39 @@
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res2"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res3"/>
-            <resource id="res4" type="irq" int="0"/>
-            <resource id="res5" type="irq" int="0"/>
-            <resource id="res6" type="irq" int="0"/>
             <resource id="res7" type="irq" int="0"/>
+            <resource id="res4" type="irq" int="80"/>
+            <resource id="res5" type="irq" int="80"/>
+            <resource id="res6" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C1</dependency>
           </device>
         </device>
         <device id="INT34B4">
           <acpi_object>\_SB_.PCI0.I2C2</acpi_object>
-          <aml_template>5b8246045c2f035f53425f5043493049324332085f5354410a0f085f4849440d494e543334423400085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8245045c2f035f53425f5043493049324332085f53544100085f4849440d494e543334423400085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="18"/>
           <resource id="res0" type="memory" min="0xfe024000" max="0xfe024fff" len="0x1000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.CAM0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.PMIC</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP2</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP3</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.UCMX</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK3</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.CAM0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.PMIC</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.UCMX</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP2</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP3</dependency>
           <device id="INT3471" address="0x0">
             <acpi_object>\_SB_.PCI0.I2C2.CAM0</acpi_object>
             <compatible_id>INT3471</compatible_id>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b8249105c2f045f53425f504349304932433243414d30085f53544100085f4849440d494e543334373100085f5549440d3000085f41445200085f435253114c0c0ac88e1e00010001020000010600801a060010005c5f53422e504349302e49324332008e1e00010001020000010600801a06000e005c5f53422e504349302e49324332008e1e00010001020000010600801a060050005c5f53422e504349302e49324332008e1e00010001020000010600801a060051005c5f53422e504349302e49324332008e1e00010001020000010600801a060052005c5f53422e504349302e49324332008e1e00010001020000010600801a060053005c5f53422e504349302e49324332007900</aml_template>
+            <aml_template>5b8247115c2f045f53425f504349304932433243414d30085f53544100085f4849440d494e543334373100085f4349440d494e543334373100085f5549440d3000085f41445200085f435253114c0c0ac88e1e00010001020000010600801a060010005c5f53422e504349302e49324332008e1e00010001020000010600801a06000e005c5f53422e504349302e49324332008e1e00010001020000010600801a060050005c5f53422e504349302e49324332008e1e00010001020000010600801a060051005c5f53422e504349302e49324332008e1e00010001020000010600801a060052005c5f53422e504349302e49324332008e1e00010001020000010600801a060053005c5f53422e504349302e49324332007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
@@ -2037,7 +2037,7 @@
             <acpi_object>\_SB_.PCI0.I2C2.PMIC</acpi_object>
             <compatible_id>INT346F</compatible_id>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b8243065c2f045f53425f5043493049324332504d4943085f53544100085f4849440d494e543334364600085f5549440d3000085f41445200085f43525311260a238e1e00010001020000010600801a06004c005c5f53422e504349302e49324332007900</aml_template>
+            <aml_template>5b8241075c2f045f53425f5043493049324332504d4943085f53544100085f4849440d494e543334364600085f4349440d494e543334364600085f5549440d3000085f41445200085f43525311260a238e1e00010001020000010600801a06004c005c5f53422e504349302e49324332007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
@@ -2049,33 +2049,33 @@
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C2.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
-            <aml_template>5b824f055c2f045f53425f504349304932433254504430085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324332008906001501000000007900</aml_template>
+            <aml_template>5b824d065c2f045f53425f504349304932433254504430085f53544100085f4849440d585858583030303000085f4349440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324332008906001501500000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
               <functioning>n</functioning>
             </status>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <resource id="res1" type="irq" int="0"/>
+            <resource id="res1" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C2</dependency>
           </device>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C2.TPL1</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
-            <aml_template>5b824f055c2f045f53425f504349304932433254504c31085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324332008906000101000000007900</aml_template>
+            <aml_template>5b824d065c2f045f53425f504349304932433254504c31085f53544100085f4849440d585858583030303000085f4349440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324332008906000101500000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
               <functioning>n</functioning>
             </status>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <resource id="res1" type="irq" int="0"/>
+            <resource id="res1" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C2</dependency>
           </device>
           <device id="INT3515">
             <acpi_object>\_SB_.PCI0.I2C2.UCMX</acpi_object>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b82430e5c2f045f53425f504349304932433255434d58085f53544100085f4849440d494e543335313500085f55494400085f435253114e0a0aaa8e1e00010001020000010600801a060038005c5f53422e504349302e49324332008e1e00010001020000010600801a06003f005c5f53422e504349302e49324332008e1e00010001020000010600801a060020005c5f53422e504349302e49324332008e1e00010001020000010600801a060027005c5f53422e504349302e49324332008906000501000000008906000501000000008906000501000000008906000501000000007900</aml_template>
+            <aml_template>5b82430e5c2f045f53425f504349304932433255434d58085f53544100085f4849440d494e543335313500085f55494400085f435253114e0a0aaa8e1e00010001020000010600801a060038005c5f53422e504349302e49324332008e1e00010001020000010600801a06003f005c5f53422e504349302e49324332008e1e00010001020000010600801a060020005c5f53422e504349302e49324332008e1e00010001020000010600801a060027005c5f53422e504349302e49324332008906000501500000008906000501500000008906000501500000008906000501000000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
@@ -2085,57 +2085,58 @@
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res2"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res3"/>
-            <resource id="res4" type="irq" int="0"/>
-            <resource id="res5" type="irq" int="0"/>
-            <resource id="res6" type="irq" int="0"/>
             <resource id="res7" type="irq" int="0"/>
+            <resource id="res4" type="irq" int="80"/>
+            <resource id="res5" type="irq" int="80"/>
+            <resource id="res6" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C2</dependency>
           </device>
         </device>
         <device id="INT34B5">
           <acpi_object>\_SB_.PCI0.I2C3</acpi_object>
-          <aml_template>5b8246045c2f035f53425f5043493049324333085f5354410a0f085f4849440d494e543334423500085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8245045c2f035f53425f5043493049324333085f53544100085f4849440d494e543334423500085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="19"/>
           <resource id="res0" type="memory" min="0xfe026000" max="0xfe026fff" len="0x1000"/>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK2</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C3.UCMX</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.CLP1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPD0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C3.UCMX</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C3.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
-            <aml_template>5b824f055c2f045f53425f504349304932433354504430085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324333008906001501000000007900</aml_template>
+            <aml_template>5b824d065c2f045f53425f504349304932433354504430085f53544100085f4849440d585858583030303000085f4349440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324333008906001501500000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
               <functioning>n</functioning>
             </status>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <resource id="res1" type="irq" int="0"/>
+            <resource id="res1" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C3</dependency>
           </device>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C3.TPL1</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
-            <aml_template>5b824f055c2f045f53425f504349304932433354504c31085f53544100085f4849440d585858583030303000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324333008906000101000000007900</aml_template>
+            <aml_template>5b824d065c2f045f53425f504349304932433354504c31085f53544100085f4849440d585858583030303000085f4349440d504e503043353000085f435253112f0a2c8e1e00010001020000010600801a060000005c5f53422e504349302e49324333008906000101500000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
               <functioning>n</functioning>
             </status>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <resource id="res1" type="irq" int="0"/>
+            <resource id="res1" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C3</dependency>
           </device>
           <device id="INT3515">
             <acpi_object>\_SB_.PCI0.I2C3.UCMX</acpi_object>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b82430e5c2f045f53425f504349304932433355434d58085f53544100085f4849440d494e543335313500085f55494400085f435253114e0a0aaa8e1e00010001020000010600801a060038005c5f53422e504349302e49324333008e1e00010001020000010600801a06003f005c5f53422e504349302e49324333008e1e00010001020000010600801a060020005c5f53422e504349302e49324333008e1e00010001020000010600801a060027005c5f53422e504349302e49324333008906000501000000008906000501000000008906000501000000008906000501000000007900</aml_template>
+            <aml_template>5b82430e5c2f045f53425f504349304932433355434d58085f53544100085f4849440d494e543335313500085f55494400085f435253114e0a0aaa8e1e00010001020000010600801a060038005c5f53422e504349302e49324333008e1e00010001020000010600801a06003f005c5f53422e504349302e49324333008e1e00010001020000010600801a060020005c5f53422e504349302e49324333008e1e00010001020000010600801a060027005c5f53422e504349302e49324333008906000501500000008906000501500000008906000501500000008906000501000000007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
@@ -2145,20 +2146,20 @@
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res2"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res3"/>
-            <resource id="res4" type="irq" int="0"/>
-            <resource id="res5" type="irq" int="0"/>
-            <resource id="res6" type="irq" int="0"/>
             <resource id="res7" type="irq" int="0"/>
+            <resource id="res4" type="irq" int="80"/>
+            <resource id="res5" type="irq" int="80"/>
+            <resource id="res6" type="irq" int="80"/>
             <dependency type="consumes resources from">\_SB_.PCI0.I2C3</dependency>
           </device>
         </device>
         <device id="INT34B6">
           <acpi_object>\_SB_.PCI0.I2C4</acpi_object>
-          <aml_template>5b8246045c2f035f53425f5043493049324334085f5354410a0f085f4849440d494e543334423600085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8245045c2f035f53425f5043493049324334085f53544100085f4849440d494e543334423600085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="32"/>
           <resource id="res0" type="memory" min="0xfe028000" max="0xfe028fff" len="0x1000"/>
@@ -2167,7 +2168,7 @@
             <acpi_object>\_SB_.PCI0.I2C4.CAM1</acpi_object>
             <compatible_id>INT3474</compatible_id>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b8243065c2f045f53425f504349304932433443414d31085f53544100085f4849440d494e543334373400085f5549440d3000085f41445200085f43525311260a238e1e00010001020000010600801a060036005c5f53422e504349302e49324334007900</aml_template>
+            <aml_template>5b8241075c2f045f53425f504349304932433443414d31085f53544100085f4849440d494e543334373400085f4349440d494e543334373400085f5549440d3000085f41445200085f43525311260a238e1e00010001020000010600801a060036005c5f53422e504349302e49324334007900</aml_template>
             <status>
               <present>n</present>
               <enabled>n</enabled>
@@ -2179,11 +2180,11 @@
         </device>
         <device id="INT34B7">
           <acpi_object>\_SB_.PCI0.I2C5</acpi_object>
-          <aml_template>5b8246045c2f035f53425f5043493049324335085f5354410a0f085f4849440d494e543334423700085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8245045c2f035f53425f5043493049324335085f53544100085f4849440d494e543334423700085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="33"/>
           <resource id="res0" type="memory" min="0xfe02a000" max="0xfe02afff" len="0x1000"/>
@@ -2191,62 +2192,73 @@
         <device id="PNP0C02">
           <acpi_object>\_SB_.PCI0.IOTR</acpi_object>
           <acpi_uid>IoTraps</acpi_uid>
-          <aml_template>5b82335c2f035f53425f50434930494f5452085f4849440c41d00c02085f5549440d496f547261707300085f43525311050a027900</aml_template>
+          <aml_template>5b823b5c2f035f53425f50434930494f5452085f4849440c41d00c02085f5549440d496f547261707300085f435253110d0a0a47010020002001ff7900</aml_template>
+          <resource id="res0" type="io_port" min="0x2000" max="0x2000" len="0xff"/>
         </device>
         <device id="OVTIF860">
           <acpi_object>\_SB_.PCI0.LNK0</acpi_object>
           <compatible_id>OVTIF860</compatible_id>
           <acpi_uid>0</acpi_uid>
-          <aml_template>5b823c5c2f035f53425f504349304c4e4b30085f53544100085f4849440d4f5654494638363000085f55494400085f41445200085f43525311050a027900</aml_template>
+          <aml_template>5b82400b5c2f035f53425f504349304c4e4b30085f53544100085f4849440d4f5654494638363000085f4349440d4f5654494638363000085f55494400085f41445200085f4352531149060a658e1e00010001020000010600801a060010005c5f53422e504349302e49324332008e1e00010001020000010600801a060072005c5f53422e504349302e49324332008e1e00010001020000010600801a060051005c5f53422e504349302e49324332007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
             <functioning>n</functioning>
           </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res1"/>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res2"/>
+          <dependency type="consumes resources from">\_SB_.PCI0.I2C2</dependency>
         </device>
         <device id="OVTI9234">
           <acpi_object>\_SB_.PCI0.LNK1</acpi_object>
           <compatible_id>OVTI9234</compatible_id>
           <acpi_uid>1</acpi_uid>
-          <aml_template>5b823c5c2f035f53425f504349304c4e4b31085f53544100085f4849440d4f5654493932333400085f55494401085f41445200085f43525311050a027900</aml_template>
+          <aml_template>5b824d065c2f035f53425f504349304c4e4b31085f53544100085f4849440d4f5654493932333400085f4349440d4f5654493932333400085f55494401085f41445200085f43525311260a238e1e00010001020000010600801a060036005c5f53422e504349302e49324332007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
             <functioning>n</functioning>
           </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <dependency type="consumes resources from">\_SB_.PCI0.I2C2</dependency>
         </device>
         <device id="OVTI8856">
           <acpi_object>\_SB_.PCI0.LNK2</acpi_object>
           <compatible_id>OVTI8856</compatible_id>
           <acpi_uid>2</acpi_uid>
-          <aml_template>5b823d5c2f035f53425f504349304c4e4b32085f53544100085f4849440d4f5654493838353600085f5549440a02085f41445200085f43525311050a027900</aml_template>
+          <aml_template>5b824e065c2f035f53425f504349304c4e4b32085f53544100085f4849440d4f5654493838353600085f4349440d4f5654493838353600085f5549440a02085f41445200085f43525311260a238e1e00010001020000010600801a060010005c5f53422e504349302e49324333007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
             <functioning>n</functioning>
           </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <dependency type="consumes resources from">\_SB_.PCI0.I2C3</dependency>
         </device>
         <device id="OVTI9234">
           <acpi_object>\_SB_.PCI0.LNK3</acpi_object>
           <compatible_id>OVTI9234</compatible_id>
           <acpi_uid>3</acpi_uid>
-          <aml_template>5b823d5c2f035f53425f504349304c4e4b33085f53544100085f4849440d4f5654493932333400085f5549440a03085f41445200085f43525311050a027900</aml_template>
+          <aml_template>5b824e065c2f035f53425f504349304c4e4b33085f53544100085f4849440d4f5654493932333400085f4349440d4f5654493932333400085f5549440a03085f41445200085f43525311260a238e1e00010001020000010600801a060036005c5f53422e504349302e49324332007900</aml_template>
           <status>
             <present>n</present>
             <enabled>n</enabled>
             <functioning>n</functioning>
           </status>
+          <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
+          <dependency type="consumes resources from">\_SB_.PCI0.I2C2</dependency>
         </device>
         <device id="PNP0C02">
           <acpi_object>\_SB_.PCI0.PDRC</acpi_object>
           <acpi_uid>1</acpi_uid>
           <aml_template>5b82205c2f035f53425f5043493050445243085f4849440c41d00c02085f55494401</aml_template>
-          <resource id="res0" type="memory" min="0x0" max="0x7fff" len="0x8000"/>
-          <resource id="res1" type="memory" min="0x0" max="0xfff" len="0x1000"/>
-          <resource id="res2" type="memory" min="0x0" max="0xfff" len="0x1000"/>
-          <resource id="res3" type="memory" min="0x0" max="-0x1" len="0x0"/>
-          <resource id="res8" type="memory" min="0x0" max="-0x1" len="0x0"/>
-          <resource id="res9" type="memory" min="0x0" max="-0x1" len="0x0"/>
+          <resource id="res8" type="memory" min="0x0" max="0x0" len="0x0"/>
+          <resource id="res9" type="memory" min="0x0" max="0x0" len="0x0"/>
+          <resource id="res3" type="memory" min="0xe0000000" max="0xefffffff" len="0x10000000"/>
+          <resource id="res0" type="memory" min="0xfed10000" max="0xfed17fff" len="0x8000"/>
+          <resource id="res1" type="memory" min="0xfed18000" max="0xfed18fff" len="0x1000"/>
+          <resource id="res2" type="memory" min="0xfed19000" max="0xfed19fff" len="0x1000"/>
           <resource id="res4" type="memory" min="0xfed20000" max="0xfed3ffff" len="0x20000"/>
           <resource id="res6" type="memory" min="0xfed45000" max="0xfed8ffff" len="0x4b000"/>
           <resource id="res5" type="memory" min="0xfed90000" max="0xfed93fff" len="0x4000"/>
@@ -2255,15 +2267,15 @@
         <device id="PNP0C02">
           <acpi_object>\_SB_.PCI0.PRRE</acpi_object>
           <acpi_uid>PCHRESV</acpi_uid>
-          <aml_template>5b824c085c2f035f53425f5043493050525245085f5354410a03085f4849440c41d00c02085f5549440d5043485245535600085f4352531146050a5286090001000000fd00006a008609000100000000000002008609000100006ffd0000910086090001000000fe0000020086090001000020fe0000600086090000000000ff0000000147010018001801ff7900</aml_template>
+          <aml_template>5b824c085c2f035f53425f5043493050525245085f5354410a03085f4849440c41d00c02085f5549440d5043485245535600085f4352531146050a5286090001000000fd00006a008609000100006bfd000002008609000100006ffd0000910086090001000000fe0000020086090001000020fe0000600086090000000000ff0000000147010018001801ff7900</aml_template>
           <status>
             <present>y</present>
             <enabled>y</enabled>
             <functioning>n</functioning>
           </status>
           <resource id="res6" type="io_port" min="0x1800" max="0x1800" len="0xff"/>
-          <resource id="res1" type="memory" min="0x0" max="0x1ffff" len="0x20000"/>
           <resource id="res0" type="memory" min="0xfd000000" max="0xfd69ffff" len="0x6a0000"/>
+          <resource id="res1" type="memory" min="0xfd6b0000" max="0xfd6cffff" len="0x20000"/>
           <resource id="res2" type="memory" min="0xfd6f0000" max="0xfdffffff" len="0x910000"/>
           <resource id="res3" type="memory" min="0xfe000000" max="0xfe01ffff" len="0x20000"/>
           <resource id="res4" type="memory" min="0xfe200000" max="0xfe7fffff" len="0x600000"/>
@@ -2330,6 +2342,10 @@
           <device address="0x0">
             <acpi_object>\_SB_.PCI0.RP09.PXSX</acpi_object>
             <aml_template>5b821a5c2f045f53425f504349305250303950585358085f41445200</aml_template>
+          </device>
+          <device address="0xff">
+            <acpi_object>\_SB_.PCI0.RP09.SL09</acpi_object>
+            <aml_template>5b821b5c2f045f53425f5043493052503039534c3039085f4144520aff</aml_template>
           </device>
         </device>
         <device>
@@ -2440,67 +2456,49 @@
         <device id="PNP0C02">
           <acpi_object>\_SB_.PCI0.SIRC</acpi_object>
           <acpi_uid>5</acpi_uid>
-          <aml_template>5b8241065c2f035f53425f5043493053495243085f5354410a03085f4849440c41d00c02085f5549440a05085f43525311320a2f8609000100000000000001008609000100000000000001008609000100000000000001008906000d010e0000007900</aml_template>
+          <aml_template>5b8241065c2f035f53425f5043493053495243085f5354410a03085f4849440c41d00c02085f5549440a05085f43525311320a2f8609000100006efd000001008609000100006dfd000001008609000100006afd000001008906000d010e0000007900</aml_template>
           <status>
             <present>y</present>
             <enabled>y</enabled>
             <functioning>n</functioning>
           </status>
           <resource id="res3" type="irq" int="14"/>
-          <resource id="res0" type="memory" min="0x0" max="0xffff" len="0x10000"/>
-          <resource id="res1" type="memory" min="0x0" max="0xffff" len="0x10000"/>
-          <resource id="res2" type="memory" min="0x0" max="0xffff" len="0x10000"/>
+          <resource id="res2" type="memory" min="0xfd6a0000" max="0xfd6affff" len="0x10000"/>
+          <resource id="res1" type="memory" min="0xfd6d0000" max="0xfd6dffff" len="0x10000"/>
+          <resource id="res0" type="memory" min="0xfd6e0000" max="0xfd6effff" len="0x10000"/>
         </device>
         <device id="INT34B0">
           <acpi_object>\_SB_.PCI0.SPI0</acpi_object>
-          <aml_template>5b8246045c2f035f53425f5043493053504930085f5354410a0f085f4849440d494e543334423000085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8245045c2f035f53425f5043493053504930085f53544100085f4849440d494e543334423000085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="22"/>
           <resource id="res0" type="memory" min="0xfe02c000" max="0xfe02cfff" len="0x1000"/>
         </device>
         <device id="INT34B1">
           <acpi_object>\_SB_.PCI0.SPI1</acpi_object>
-          <aml_template>5b8246045c2f035f53425f5043493053504931085f5354410a0f085f4849440d494e543334423100085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8245045c2f035f53425f5043493053504931085f53544100085f4849440d494e543334423100085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="23"/>
           <resource id="res0" type="memory" min="0xfe02e000" max="0xfe02efff" len="0x1000"/>
-          <device id="FPNT_DIS">
-            <acpi_object>\_SB_.PCI0.SPI1.FPNT</acpi_object>
-            <aml_template>5b822a5c2f045f53425f504349305350493146504e54085f5354410a0f085f4849440d46504e545f44495300</aml_template>
-            <status>
-              <present>y</present>
-              <enabled>y</enabled>
-              <functioning>y</functioning>
-            </status>
-          </device>
         </device>
         <device id="INT34BC">
           <acpi_object>\_SB_.PCI0.SPI2</acpi_object>
-          <aml_template>5b8246045c2f035f53425f5043493053504932085f5354410a0f085f4849440d494e543334424300085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8245045c2f035f53425f5043493053504932085f53544100085f4849440d494e543334424300085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="24"/>
           <resource id="res0" type="memory" min="0xfe030000" max="0xfe030fff" len="0x1000"/>
-          <device id="FPNT_DIS">
-            <acpi_object>\_SB_.PCI0.SPI2.FPNT</acpi_object>
-            <aml_template>5b82295c2f045f53425f504349305350493246504e54085f53544100085f4849440d46504e545f44495300</aml_template>
-            <status>
-              <present>n</present>
-              <enabled>n</enabled>
-              <functioning>n</functioning>
-            </status>
-          </device>
         </device>
         <device id="PNP0C02">
           <acpi_object>\_SB_.PCI0.SRRE</acpi_object>
@@ -2517,11 +2515,11 @@
         <device id="INT34B8">
           <acpi_object>\_SB_.PCI0.UA00</acpi_object>
           <acpi_uid>SerialIoUart0</acpi_uid>
-          <aml_template>5b824a055c2f035f53425f5043493055413030085f5354410a0f085f4849440d494e543334423800085f5549440d53657269616c496f556172743000085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8249055c2f035f53425f5043493055413030085f53544100085f4849440d494e543334423800085f5549440d53657269616c496f556172743000085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="20"/>
           <resource id="res0" type="memory" min="0xfe032000" max="0xfe032fff" len="0x1000"/>
@@ -2529,11 +2527,11 @@
         <device id="INT34B9">
           <acpi_object>\_SB_.PCI0.UA01</acpi_object>
           <acpi_uid>SerialIoUart1</acpi_uid>
-          <aml_template>5b824a055c2f035f53425f5043493055413031085f5354410a0f085f4849440d494e543334423900085f5549440d53657269616c496f556172743100085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8249055c2f035f53425f5043493055413031085f53544100085f4849440d494e543334423900085f5549440d53657269616c496f556172743100085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="21"/>
           <resource id="res0" type="memory" min="0xfe034000" max="0xfe034fff" len="0x1000"/>
@@ -2541,11 +2539,11 @@
         <device id="INT34BA">
           <acpi_object>\_SB_.PCI0.UA02</acpi_object>
           <acpi_uid>SerialIoUart2</acpi_uid>
-          <aml_template>5b824a055c2f035f53425f5043493055413032085f5354410a0f085f4849440d494e543334424100085f5549440d53657269616c496f556172743200085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
+          <aml_template>5b8249055c2f035f53425f5043493055413032085f53544100085f4849440d494e543334424100085f5549440d53657269616c496f556172743200085f435253111a0a1786090001006003fe001000008906000d01220000007900</aml_template>
           <status>
-            <present>y</present>
-            <enabled>y</enabled>
-            <functioning>y</functioning>
+            <present>n</present>
+            <enabled>n</enabled>
+            <functioning>n</functioning>
           </status>
           <resource id="res1" type="irq" int="34"/>
           <resource id="res0" type="memory" min="0xfe036000" max="0xfe036fff" len="0x1000"/>
@@ -2553,11 +2551,11 @@
       </bus>
       <device id="ACPI000E">
         <acpi_object>\_SB_.AWAC</acpi_object>
-        <aml_template>5b82205c2e5f53425f41574143085f53544100085f4849440d414350493030304500</aml_template>
+        <aml_template>5b82215c2e5f53425f41574143085f5354410a0f085f4849440d414350493030304500</aml_template>
         <status>
-          <present>n</present>
-          <enabled>n</enabled>
-          <functioning>n</functioning>
+          <present>y</present>
+          <enabled>y</enabled>
+          <functioning>y</functioning>
         </status>
       </device>
       <device id="INT3519" description="CoExistence Manager">
@@ -2571,11 +2569,11 @@
       </device>
       <device id="INT0E0C" description="Enclave Page Cache 1.0">
         <acpi_object>\_SB_.EPC_</acpi_object>
-        <aml_template>5b824d085c2e5f53425f4550435f085f5354410a0f085f4849440c25d40e0c085f53545211310a2e45006e0063006c0061007600650020005000610067006500200043006100630068006500200031002e0030000000085f43525311330a308a2b0000010100000000000000000000000000000000ffffffffffffffff000000000000000001000000000000007900</aml_template>
+        <aml_template>5b824c085c2e5f53425f4550435f085f53544100085f4849440c25d40e0c085f53545211310a2e45006e0063006c0061007600650020005000610067006500200043006100630068006500200031002e0030000000085f43525311330a308a2b00000101000000000000000000000000000000000000000000000000000000000000000001000000000000007900</aml_template>
         <status>
-          <present>y</present>
-          <enabled>y</enabled>
-          <functioning>y</functioning>
+          <present>n</present>
+          <enabled>n</enabled>
+          <functioning>n</functioning>
         </status>
         <resource id="res0" type="memory" min="0x0" max="0x0" len="0x1"/>
       </device>
@@ -2591,10 +2589,10 @@
       <device id="PNP0C0F">
         <acpi_object>\_SB_.LNKA</acpi_object>
         <acpi_uid>1</acpi_uid>
-        <aml_template>5b82315c2e5f53425f4c4e4b41085f5354410a0b085f4849440c41d00c0f085f55494401085f43525311090a06238b00187900</aml_template>
+        <aml_template>5b82315c2e5f53425f4c4e4b41085f5354410a09085f4849440c41d00c0f085f55494401085f43525311090a06238b00187900</aml_template>
         <status>
           <present>y</present>
-          <enabled>y</enabled>
+          <enabled>n</enabled>
           <functioning>y</functioning>
         </status>
         <resource id="res0" type="irq" int="0, 1, 3, 7"/>
@@ -2602,10 +2600,10 @@
       <device id="PNP0C0F">
         <acpi_object>\_SB_.LNKB</acpi_object>
         <acpi_uid>2</acpi_uid>
-        <aml_template>5b82325c2e5f53425f4c4e4b42085f5354410a0b085f4849440c41d00c0f085f5549440a02085f43525311090a06238a00187900</aml_template>
+        <aml_template>5b82325c2e5f53425f4c4e4b42085f5354410a09085f4849440c41d00c0f085f5549440a02085f43525311090a06238a00187900</aml_template>
         <status>
           <present>y</present>
-          <enabled>y</enabled>
+          <enabled>n</enabled>
           <functioning>y</functioning>
         </status>
         <resource id="res0" type="irq" int="1, 3, 7"/>
@@ -2613,10 +2611,10 @@
       <device id="PNP0C0F">
         <acpi_object>\_SB_.LNKC</acpi_object>
         <acpi_uid>3</acpi_uid>
-        <aml_template>5b82325c2e5f53425f4c4e4b43085f5354410a0b085f4849440c41d00c0f085f5549440a03085f43525311090a06238b00187900</aml_template>
+        <aml_template>5b82325c2e5f53425f4c4e4b43085f5354410a09085f4849440c41d00c0f085f5549440a03085f43525311090a06238b00187900</aml_template>
         <status>
           <present>y</present>
-          <enabled>y</enabled>
+          <enabled>n</enabled>
           <functioning>y</functioning>
         </status>
         <resource id="res0" type="irq" int="0, 1, 3, 7"/>
@@ -2624,10 +2622,10 @@
       <device id="PNP0C0F">
         <acpi_object>\_SB_.LNKD</acpi_object>
         <acpi_uid>4</acpi_uid>
-        <aml_template>5b82325c2e5f53425f4c4e4b44085f5354410a0b085f4849440c41d00c0f085f5549440a04085f43525311090a06238b00187900</aml_template>
+        <aml_template>5b82325c2e5f53425f4c4e4b44085f5354410a09085f4849440c41d00c0f085f5549440a04085f43525311090a06238b00187900</aml_template>
         <status>
           <present>y</present>
-          <enabled>y</enabled>
+          <enabled>n</enabled>
           <functioning>y</functioning>
         </status>
         <resource id="res0" type="irq" int="0, 1, 3, 7"/>
@@ -2635,10 +2633,10 @@
       <device id="PNP0C0F">
         <acpi_object>\_SB_.LNKE</acpi_object>
         <acpi_uid>5</acpi_uid>
-        <aml_template>5b82325c2e5f53425f4c4e4b45085f5354410a0b085f4849440c41d00c0f085f5549440a05085f43525311090a06238b00187900</aml_template>
+        <aml_template>5b82325c2e5f53425f4c4e4b45085f5354410a09085f4849440c41d00c0f085f5549440a05085f43525311090a06238b00187900</aml_template>
         <status>
           <present>y</present>
-          <enabled>y</enabled>
+          <enabled>n</enabled>
           <functioning>y</functioning>
         </status>
         <resource id="res0" type="irq" int="0, 1, 3, 7"/>
@@ -2646,10 +2644,10 @@
       <device id="PNP0C0F">
         <acpi_object>\_SB_.LNKF</acpi_object>
         <acpi_uid>6</acpi_uid>
-        <aml_template>5b82325c2e5f53425f4c4e4b46085f5354410a0b085f4849440c41d00c0f085f5549440a06085f43525311090a06238b00187900</aml_template>
+        <aml_template>5b82325c2e5f53425f4c4e4b46085f5354410a09085f4849440c41d00c0f085f5549440a06085f43525311090a06238b00187900</aml_template>
         <status>
           <present>y</present>
-          <enabled>y</enabled>
+          <enabled>n</enabled>
           <functioning>y</functioning>
         </status>
         <resource id="res0" type="irq" int="0, 1, 3, 7"/>
@@ -2657,10 +2655,10 @@
       <device id="PNP0C0F">
         <acpi_object>\_SB_.LNKG</acpi_object>
         <acpi_uid>7</acpi_uid>
-        <aml_template>5b82325c2e5f53425f4c4e4b47085f5354410a0b085f4849440c41d00c0f085f5549440a07085f43525311090a06238b00187900</aml_template>
+        <aml_template>5b82325c2e5f53425f4c4e4b47085f5354410a09085f4849440c41d00c0f085f5549440a07085f43525311090a06238b00187900</aml_template>
         <status>
           <present>y</present>
-          <enabled>y</enabled>
+          <enabled>n</enabled>
           <functioning>y</functioning>
         </status>
         <resource id="res0" type="irq" int="0, 1, 3, 7"/>
@@ -2668,10 +2666,10 @@
       <device id="PNP0C0F">
         <acpi_object>\_SB_.LNKH</acpi_object>
         <acpi_uid>8</acpi_uid>
-        <aml_template>5b82325c2e5f53425f4c4e4b48085f5354410a0b085f4849440c41d00c0f085f5549440a08085f43525311090a06238b00187900</aml_template>
+        <aml_template>5b82325c2e5f53425f4c4e4b48085f5354410a09085f4849440c41d00c0f085f5549440a08085f43525311090a06238b00187900</aml_template>
         <status>
           <present>y</present>
-          <enabled>y</enabled>
+          <enabled>n</enabled>
           <functioning>y</functioning>
         </status>
         <resource id="res0" type="irq" int="0, 1, 3, 7"/>
@@ -2689,7 +2687,7 @@
         <acpi_object>\_SB_.PEPD</acpi_object>
         <compatible_id>PNP0D80</compatible_id>
         <acpi_uid>1</acpi_uid>
-        <aml_template>5b82265c2e5f53425f50455044085f5354410a0f085f4849440d494e543333413100085f55494401</aml_template>
+        <aml_template>5b82305c2e5f53425f50455044085f5354410a0f085f4849440d494e543333413100085f4349440c41d00d80085f55494401</aml_template>
         <status>
           <present>y</present>
           <enabled>y</enabled>
@@ -2699,7 +2697,7 @@
       <device id="INT340E">
         <acpi_object>\_SB_.PTID</acpi_object>
         <compatible_id>PNP0C02</compatible_id>
-        <aml_template>5b821c5c2e5f53425f50544944085f5354410a0f085f4849440c25d4340e</aml_template>
+        <aml_template>5b82265c2e5f53425f50544944085f5354410a0f085f4849440c25d4340e085f4349440c41d00c02</aml_template>
         <status>
           <present>y</present>
           <enabled>y</enabled>
@@ -2739,13 +2737,13 @@
         <acpi_object>\_SB_.UBTC</acpi_object>
         <compatible_id>PNP0CA0</compatible_id>
         <acpi_uid>0</acpi_uid>
-        <aml_template>5b82385c2e5f53425f55425443085f4849440c5662c000085f55494400085f41445200085f43525311110a0e8609000100b0568a001000007900</aml_template>
+        <aml_template>5b8243045c2e5f53425f55425443085f4849440c5662c000085f4349440c41d00ca0085f55494400085f41445200085f43525311110a0e860900010010608c001000007900</aml_template>
         <status>
           <present>n</present>
           <enabled>n</enabled>
           <functioning>n</functioning>
         </status>
-        <resource id="res0" type="memory" min="0x8a56b000" max="0x8a56bfff" len="0x1000"/>
+        <resource id="res0" type="memory" min="0x8c601000" max="0x8c601fff" len="0x1000"/>
         <device address="0x0">
           <acpi_object>\_SB_.UBTC.CR01</acpi_object>
           <aml_template>5b82165c2f035f53425f5542544343523031085f41445200</aml_template>
@@ -2753,22 +2751,6 @@
         <device>
           <acpi_object>\_SB_.UBTC.CR02</acpi_object>
           <aml_template>5b82165c2f035f53425f5542544343523032085f41445200</aml_template>
-        </device>
-        <device>
-          <acpi_object>\_SB_.UBTC.CR03</acpi_object>
-          <aml_template>5b82165c2f035f53425f5542544343523033085f41445200</aml_template>
-        </device>
-        <device>
-          <acpi_object>\_SB_.UBTC.CR04</acpi_object>
-          <aml_template>5b82165c2f035f53425f5542544343523034085f41445200</aml_template>
-        </device>
-        <device>
-          <acpi_object>\_SB_.UBTC.CR05</acpi_object>
-          <aml_template>5b82165c2f035f53425f5542544343523035085f41445200</aml_template>
-        </device>
-        <device>
-          <acpi_object>\_SB_.UBTC.CR06</acpi_object>
-          <aml_template>5b82165c2f035f53425f5542544343523036085f41445200</aml_template>
         </device>
       </device>
       <device id="PNP0C14">
