@@ -619,9 +619,11 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	}
 
-	/* Store the MSR contents in RAX and RDX */
-	vcpu_set_gpreg(vcpu, CPU_REG_RAX, v & 0xffffffffU);
-	vcpu_set_gpreg(vcpu, CPU_REG_RDX, v >> 32U);
+	if (err == 0) {
+		/* Store the MSR contents in RAX and RDX */
+		vcpu_set_gpreg(vcpu, CPU_REG_RAX, v & 0xffffffffU);
+		vcpu_set_gpreg(vcpu, CPU_REG_RDX, v >> 32U);
+	}
 
 	TRACE_2L(TRACE_VMEXIT_RDMSR, msr, v);
 
