@@ -69,29 +69,16 @@ The ``acrnalyze.py`` is an offline tool to analyze trace data (as output by
 
 Options:
 
-.. list-table::
-
-   * - ``-h``
-     - print this message
-
-   * - ``-i, --ifile=string``
-     - input file name
-
-   * - ``-o, --ofile=string``
-     - output file name
-
-   * - ``-f, --frequency=unsigned_int``
-     - TSC frequency in MHz
-
-   * - ``--vm_exit``
-     - generate a vm_exit report
-
-   * - ``--irq``
-     - generate an IRQ-related report
+-h                                print this message
+-i, --ifile=string                input file name
+-o, --ofile=string                output file name
+-f, --frequency=unsigned_int      TSC frequency in MHz
+--vm_exit                         generate a vm_exit report
+--irq                             generate an IRQ-related report
 
 .. note:: The tool depends on TSC frequency to do time-based analysis. Be sure
    to configure the right TSC frequency that ACRN runs on. TSC frequency can be
-   obtained from the ACRN console log (calibrate_tsc, tsc_hz=xxx) when the
+   obtained from the ACRN console log (``calibrate_tsc, tsc_hz=xxx``) when the
    hypervisor boots.
 
    The tool does not take into account CPU frequency variation that can
@@ -137,9 +124,9 @@ data to your development computer (Linux system), and run the analysis tool.
    Trace data will be converted to human-readable format based on a given format
    and printed to stdout.
 
-#. Analysis of the collected data is done on your development computer. Copy
-   the collected trace data to your development computer (using ``scp`` is
-   recommended):
+#. Analysis of the collected trace data is done on your development computer.
+   Copy the collected trace data to your development computer via USB disk or
+   ``scp`` as shown in this example:
 
    .. code-block:: none
 
@@ -148,8 +135,8 @@ data to your development computer (Linux system), and run the analysis tool.
 
    Replace username and hostname with appropriate values.
 
-#. On the development computer, run the provided Python3 script to analyze the
-   ``vm_exits``, ``irq``:
+#. On the development computer, run the provided Python3 script to analyze, for
+   example, the ``vm_exits``, ``irq``:
 
    .. code-block:: none
 
@@ -171,5 +158,6 @@ directory. To build and install ``acrntrace``, run these commands:
    # make
    # make install
 
-The processing scripts are in ``misc/debug_tools/acrn_trace/scripts`` and need
-to be copied to and run on your development computer.
+The processing scripts are in ``misc/debug_tools/acrn_trace/scripts``. The
+``acrnalyze.py`` tool needs to be copied to and run on your development
+computer.
