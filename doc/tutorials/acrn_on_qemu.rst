@@ -203,7 +203,7 @@ Install ACRN Hypervisor
 
    .. note::
       You may occasionally run into the following error: ``Assertion failed in
-      file arch/x86/vtd.c,line 256 : fatal error``. This is a transient issue,
+      file arch/x86/vtd.c,line 256 : fatal error``. This is a transient issue;
       try to restart the VM when that happens. If you need a more stable setup,
       you can work around the problem by switching your native host to a
       non-graphical environment (``sudo systemctl set-default
@@ -232,7 +232,7 @@ Bring Up User VM (L2 Guest)
 
 1. Build the User VM disk image (``UserVM.img``) following
    :ref:`build-the-ubuntu-kvm-image` and copy it to the Service VM (L1 guest).
-   Alternatively you can also use an
+   Alternatively you can use an
    `Ubuntu Desktop ISO image <https://ubuntu.com/#download>`_.
    Rename the downloaded ISO image to ``UserVM.iso``.
 
