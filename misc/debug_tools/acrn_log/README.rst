@@ -52,7 +52,13 @@ steps:
       # acrnlog -n 8 -s 4 &
 
 You can use the ``loglevel`` command in the hypervisor shell (not the Service
-VM shell) to query and change the hypervisor log level.
+VM shell) to query or dynamically override the hypervisor log level
+configuration settings made in the ACRN Configurator tool to the
+:option:`hv.DEBUG_OPTIONS.MEM_LOGLEVEL`,
+:option:`hv.DEBUG_OPTIONS.CONSOLE_LOGLEVEL`, and
+:option:`hv.DEBUG_OPTIONS.NPK_LOGLEVEL` options.  If the
+system is rebooted, these log level settings will return to the
+values set by the ACRN Configurator.
 
 The ``mem_loglevel`` parameter controls the log to be saved using
 ``acrnlog``, while the ``console_loglevel`` parameter controls the log
