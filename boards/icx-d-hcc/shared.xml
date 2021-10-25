@@ -1,4 +1,4 @@
-<acrn-config board="icx-rvp" scenario="shared">
+<acrn-config board="icx-d-hcc" scenario="shared">
   <hv>
     <DEBUG_OPTIONS>
       <RELEASE>n</RELEASE>
