@@ -39,16 +39,16 @@ To build the ``ACRN-Crashlog``, run:
 
 .. code-block:: none
 
-   $ cd acrn-crashlog
-   $ make
+   cd misc/debug_tools/acrn_crashlog
+   make
 
 To remove all generated files and return the folder to its clean state,
 use:
 
 .. code-block:: none
 
-   $ cd acrn-crashlog
-   $ make clean
+   cd misc/debug_tools/acrn_crashlog
+   make clean
 
 Installing
 **********
@@ -57,8 +57,8 @@ To install the build:
 
 .. code-block:: none
 
-   $ cd acrn-crashlog
-   $ sudo make install
+   cd misc/debug_tools/acrn_crashlog
+   sudo make install
 
 Enabling/Disabling
 ******************
@@ -67,7 +67,7 @@ To enable this tool:
 
 .. code-block:: none
 
-   $ sudo crashlogctl enable
+   sudo crashlogctl enable
 
 Then it will show:
 
@@ -86,13 +86,13 @@ Follow the hints to reboot the system:
 
 .. code-block:: none
 
-   $ sudo reboot
+   sudo reboot
 
 To disable this tool:
 
 .. code-block:: none
 
-   $ sudo crashlogctl disable
+   sudo crashlogctl disable
 
 Then it will show:
 
@@ -108,15 +108,15 @@ Follow the hints to reboot the system:
 
 .. code-block:: none
 
-   $ sudo reboot
+   sudo reboot
 
 To check the status of this tool:
 
 .. code-block:: none
 
-   $ sudo crashlogctl is-active
+   sudo crashlogctl is-active
 
-It will show the status of the related services like:
+It will show the status of the related services. Example:
 
 .. code-block:: console
 
@@ -135,7 +135,7 @@ process information:
 
 .. code-block:: none
 
-   $ debugger <pid>
+   debugger <pid>
 
 .. note::
 
@@ -157,15 +157,14 @@ The source code structure:
    └── usercrash
        └── include
 
-- ``acrnprobe``: to gather all the crash and event logs on the platform, and
-  probe on telemetrics-client. For the hypervisor, the log is collected with
-  ``acrnlog``. For the Service VM, the userspace crash log is collected with
-  ``usercrash``, and the kernel crash log is collected with the inherent
-  mechanism
-  like ``ipanic``, ``pstore``, etc. For the AaaG, the log is collected by
-  monitoring the change of related folders on the Service VM image, like
-  ``/data/logs/``. ``acrnprobe`` also provides a flexible way to
-  configure which crash or event to collect, by using an XML configuration file.
+- ``acrnprobe``: to gather all the crash and event logs on the platform. For
+  the hypervisor, the log is collected with ``acrnlog``. For the Service VM, the
+  userspace crash log is collected with ``usercrash``, and the kernel crash log
+  is collected with the inherent mechanism, such as ``ipanic`` or ``pstore``.
+  For the AaaG, the log is collected by monitoring the change of related folders
+  on the Service VM image, such as ``/data/logs/``. ``acrnprobe`` also provides
+  a flexible way to configure which crash or event to collect, by using an XML
+  configuration file.
 - ``common``: some utils for logs, command and string.
 - ``data``: configuration file, service files and shell script.
 - ``usercrash``: to implement the tool that gets the crash information for the
@@ -176,8 +175,7 @@ Acrnprobe
 
 The ``acrnprobe`` tool detects all critical events on the platform and collects
 specific information for debug purposes. The information is saved as
-logs, and the log path is delivered to telemetrics-client as a record if
-telemetrics-client exists on the system.
+logs.
 For more details on ``acrnprobe``, see :ref:`acrnprobe_doc`.
 
 Usercrash
