@@ -331,6 +331,11 @@ def walk_dmar_table(dmar_tbl, dmar_hw_list, dmar_dev_list, sysnode):
             dmar_tbl.drhd_offset += dmar_len
             continue
 
+        # Skip remapping hardware units without any device under its scope
+        if dmar_tbl.dmar_drhd.flags == 0 and dmar_len == ctypes.sizeof(DmarHwUnit):
+            dmar_tbl.drhd_offset += dmar_len
+            continue
+
         dmar_hw_list.hw_segment_list.append(dmar_tbl.dmar_drhd.segment)
         dmar_hw_list.hw_flags_list.append(dmar_tbl.dmar_drhd.flags)
         dmar_hw_list.hw_address_list.append(dmar_tbl.dmar_drhd.address)
