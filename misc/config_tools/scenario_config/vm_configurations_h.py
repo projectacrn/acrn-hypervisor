@@ -70,10 +70,10 @@ def gen_service_vm_header(scenario_items, config):
         if vm_type == 'SERVICE_VM':
             print("/* SERVICE_VM == VM{0} */".format(vm_i), file=config)
 
-    print("#define SOS_VM_BOOTARGS\t\t\tSOS_ROOTFS\t\\", file=config)
-    print("\t\t\t\t\tSOS_CONSOLE\t\\", file=config)
+    print("#define SERVICE_VM_OS_BOOTARGS\t\t\tSERVICE_VM_ROOTFS\t\\", file=config)
+    print("\t\t\t\t\tSERVICE_VM_OS_CONSOLE\t\\", file=config)
     print("\t\t\t\t\tSERVICE_VM_IDLE\t\\", file=config)
-    print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
+    print("\t\t\t\t\tSERVICE_VM_BOOTARGS_DIFF", file=config)
 
     print("", file=config)
 

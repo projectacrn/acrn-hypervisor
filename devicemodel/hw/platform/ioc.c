@@ -99,7 +99,7 @@ static char virtual_uart_path[32 + MAX_VMNAME_LEN];
  * signal data.
  * NOTE: Only send open channel command, no need to send close channel since
  * close channel command would deactivate the signal channel for all UOS, so
- * there will be a SOS service to deactivate signal channel in the future.
+ * there will be a Service VM service to deactivate signal channel in the future.
  */
 static uint8_t cbc_open_channel_command[] = {0xFD, 0x00, 0x00, 0x00};
 
@@ -120,7 +120,7 @@ static int dummy2_sfd = -1;
  * VM Manager interfaces description.
  *
  * +---------+                 +---------+                 +---------+
- * |IOC      | VM stop         |VM       |                 |SOS      |
+ * |IOC      | VM stop         |VM       |                 |ServiceVM|
  * |Mediator |<----------------+Manager  |                 |Lifecycle|
  * |         |                 |         |                 |         |
  * |         | VM suspend      |         |                 |         |
@@ -134,7 +134,7 @@ static int dummy2_sfd = -1;
  * +---------+                 +---------+                 +---------+
  *
  * Only support stop/resume/suspend in IOC mediator currently.
- * For resume request, IOC mediator will get the wakeup reason from SOS
+ * For resume request, IOC mediator will get the wakeup reason from Service VM
  * lifecycle service, then pass to UOS once received HB INIT from UOS.
  * For stop and suspend requests, they are implemented as wakeup reason of
  * ignition button.
@@ -1010,7 +1010,7 @@ process_resume_event(struct ioc_dev *ioc)
 	}
 
 	/*
-	 * The signal channel is inactive after SOS resumed, need to send
+	 * The signal channel is inactive after Service VM resumed, need to send
 	 * open channel command again to activate the signal channel.
 	 * And it would not impact to UOS itself enter/exit S3.
 	 */

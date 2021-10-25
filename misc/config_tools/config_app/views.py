@@ -1251,7 +1251,7 @@ def assign_vm_id(scenario_config):
     """
     root = scenario_config.get_curr_root()
     pre_launched_vm_num = 0
-    sos_vm_num = 0
+    service_vm_num = 0
     post_launched_vm_num = 0
 
     for vm in list(root):
@@ -1261,13 +1261,13 @@ def assign_vm_id(scenario_config):
                     if item.text in ['PRE_STD_VM', 'SAFETY_VM', 'PRE_RT_VM']:
                         pre_launched_vm_num += 1
                     elif item.text in ['SERVICE_VM']:
-                        sos_vm_num += 1
+                        service_vm_num += 1
                     elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
                         post_launched_vm_num += 1
 
     pre_launched_vm_index = 0
-    sos_vm_index = pre_launched_vm_num
-    post_launched_vm_index = pre_launched_vm_num + sos_vm_num
+    service_vm_index = pre_launched_vm_num
+    post_launched_vm_index = pre_launched_vm_num + service_vm_num
     for vm in list(root):
         if vm.tag == 'vm':
             for item in list(vm):
@@ -1276,8 +1276,8 @@ def assign_vm_id(scenario_config):
                         vm.attrib['id'] = str(pre_launched_vm_index)
                         pre_launched_vm_index += 1
                     elif item.text in ['SERVICE_VM']:
-                        vm.attrib['id'] = str(sos_vm_index)
-                        sos_vm_index += 1
+                        vm.attrib['id'] = str(service_vm_index)
+                        service_vm_index += 1
                     elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
                         vm.attrib['id'] = str(post_launched_vm_index)
                         post_launched_vm_index += 1

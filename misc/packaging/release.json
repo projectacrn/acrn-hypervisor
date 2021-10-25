@@ -56,7 +56,7 @@
 
 	},
 	"kernel_release_version":"remotes/origin/release_2.1",
-	"sos_kernel_repo":"https://github.com/projectacrn/acrn-kernel.git",
+	"service_vm_os_kernel_repo":"https://github.com/projectacrn/acrn-kernel.git",
 	"acrn_kernel_deb_package":"true",
 	"install_acrn_kernel_deb":"false",
 	"//":"misc",

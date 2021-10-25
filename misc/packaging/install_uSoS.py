@@ -174,7 +174,7 @@ def create_acrn_kernel_deb():
 
 	#control file description
 
-	listcontrol=['Package: acrn-kernel-package\n','version: %s \n'% datetime.date.today(),'Section: free \n','Priority: optional \n','Architecture: amd64 \n','Installed-Size: 66666 \n','Maintainer: Intel\n','Description: sos_kernel \n','\n']
+	listcontrol=['Package: acrn-kernel-package\n','version: %s \n'% datetime.date.today(),'Section: free \n','Priority: optional \n','Architecture: amd64 \n','Installed-Size: 66666 \n','Maintainer: Intel\n','Description: service_vm_os_kernel \n','\n']
 
 
 	with open('acrn_kernel_deb/DEBIAN/control','w',encoding='utf-8') as fr:
@@ -361,7 +361,7 @@ def install_process():
 
 	if load_dict['build_acrn_kernel'] == 'true':
 		print('start build_acrn_kernel')
-		build_acrn_kernel(load_dict['sos_kernel_repo'],load_dict['kernel_release_version'])
+		build_acrn_kernel(load_dict['service_vm_os_kernel_repo'],load_dict['kernel_release_version'])
 
 	if load_dict['acrn_deb_package'] == 'true':
 		print('start create acrn_deb_package deb')

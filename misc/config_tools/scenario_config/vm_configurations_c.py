@@ -58,17 +58,17 @@ def vuart0_output(i, vm_type, vm_info, config):
     print("\t\t\t.type = {0},".format(vm_info.vuart.v0_vuart[i]['type']), file=config)
     if vm_info.vuart.v0_vuart[i]['base'] == "INVALID_COM_BASE":
         print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
-        if "SOS_" in vm_type:
-            print("\t\t\t.irq = SOS_COM1_IRQ,", file=config)
+        if "SERVICE_" in vm_type:
+            print("\t\t\t.irq = SERVICE_VM_COM1_IRQ,", file=config)
         elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             print("\t\t\t.irq = COM1_IRQ,", file=config)
         elif "POST_LAUNCHED_VM" in scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             print("\t\t\t.irq = {0},".format(
                     vm_info.vuart.v0_vuart[i]['irq']), file=config)
     else:
-        if "SOS_" in vm_type:
-            print("\t\t\t.addr.port_base = SOS_COM1_BASE,", file=config)
-            print("\t\t\t.irq = SOS_COM1_IRQ,", file=config)
+        if "SERVICE_" in vm_type:
+            print("\t\t\t.addr.port_base = SERVICE_VM_COM1_BASE,", file=config)
+            print("\t\t\t.irq = SERVICE_VM_COM1_IRQ,", file=config)
         elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             print("\t\t\t.addr.port_base = COM1_BASE,", file=config)
             print("\t\t\t.irq = COM1_IRQ,", file=config)
@@ -121,7 +121,7 @@ def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
     if vuart1_vmid_dic and i in vuart1_vmid_dic.keys():
         if "SERVICE_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE" and vuart_enable[i]:
-                print("\t\t\t.irq = SOS_COM2_IRQ,", file=config)
+                print("\t\t\t.irq = SERVICE_VM_COM2_IRQ,", file=config)
         else:
             if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE" and vuart_enable[i]:
                 print("\t\t\t.irq = COM2_IRQ,", file=config)
@@ -244,7 +244,7 @@ def gen_source_header(config):
 def gen_service_vm(vm_type, vm_i, scenario_items, config):
 
     vm_info = scenario_items['vm']
-    (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
+    (err_dic, service_vm_guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
     if err_dic:
         return err_dic
 
@@ -252,10 +252,10 @@ def gen_service_vm(vm_type, vm_i, scenario_items, config):
     print("\t\tCONFIG_SERVICE_VM,", file=config)
     print('\t\t.name = "{0}",'.format(vm_info.name[vm_i]), file=config)
     print("", file=config)
-    print("\t\t/* Allow SOS to reboot the host since " +
+    print("\t\t/* Allow Service VM to reboot the host since " +
           "there is supposed to be the highest severity guest */", file=config)
-    if sos_guest_flags:
-        print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
+    if service_vm_guest_flags:
+        print("\t\t.guest_flags = {0},".format(service_vm_guest_flags), file=config)
     clos_output(scenario_items, vm_i, config)
     cpu_affinity_output(vm_info, vm_i, config)
     print("\t\t.memory = {", file=config)

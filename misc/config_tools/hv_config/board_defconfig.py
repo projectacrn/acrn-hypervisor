@@ -91,7 +91,7 @@ def get_memory(hv_info, config):
     # reseve 16M memory for hv sbuf, ramoops, etc.
     reserved_ram = 0x1000000
     # We recommend to put hv ram start address high than 0x10000000 to
-    # reduce memory conflict with GRUB/SOS Kernel.
+    # reduce memory conflict with GRUB/Service VM Kernel.
     hv_start_offset = 0x10000000
     total_size = reserved_ram + hv_ram_size
     for start_addr in list(board_cfg_lib.USED_RAM_RANGE):

@@ -26,13 +26,13 @@ def remove_pio(pio_list, base):
 def assign_legacy_vuart_io_port(vm_node, legacy_vuart_id):
     legacy_vuart_base = ""
     legacy_vuart_node_base_text = common.get_node(f"./legacy_vuart[@id = '{legacy_vuart_id}']/base/text()", vm_node)
-    if legacy_vuart_node_base_text == 'COM1_BASE' or legacy_vuart_node_base_text == 'SOS_COM1_BASE':
+    if legacy_vuart_node_base_text == 'COM1_BASE' or legacy_vuart_node_base_text == 'SERVICE_VM_COM1_BASE':
         legacy_vuart_base = '0x3F8'
-    elif legacy_vuart_node_base_text == 'COM2_BASE' or legacy_vuart_node_base_text == 'SOS_COM2_BASE':
+    elif legacy_vuart_node_base_text == 'COM2_BASE' or legacy_vuart_node_base_text == 'SERVICE_VM_COM2_BASE':
         legacy_vuart_base = '0x2F8'
-    elif legacy_vuart_node_base_text == 'COM3_BASE' or legacy_vuart_node_base_text == 'SOS_COM3_BASE':
+    elif legacy_vuart_node_base_text == 'COM3_BASE' or legacy_vuart_node_base_text == 'SERVICE_VM_COM3_BASE':
         legacy_vuart_base = '0x3E8'
-    elif legacy_vuart_node_base_text == 'COM4_BASE' or legacy_vuart_node_base_text == 'SOS_COM4_BASE':
+    elif legacy_vuart_node_base_text == 'COM4_BASE' or legacy_vuart_node_base_text == 'SERVICE_VM_COM4_BASE':
         legacy_vuart_base = '0x2E8'
     return legacy_vuart_base
 

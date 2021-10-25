@@ -71,7 +71,7 @@ bool is_hypercall_from_ring0(void)
 
 inline static bool is_severity_pass(uint16_t target_vmid)
 {
-	return SEVERITY_SOS >= get_vm_severity(target_vmid);
+	return SEVERITY_SERVICE_VM >= get_vm_severity(target_vmid);
 }
 
 /**

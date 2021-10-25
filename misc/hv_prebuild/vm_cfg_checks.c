@@ -131,7 +131,7 @@ bool sanitize_vm_config(void)
 				ret = false;
 			} else {
 #if (SERVICE_VM_NUM == 1U)
-				if (vm_config->severity <= SEVERITY_SOS) {
+				if (vm_config->severity <= SEVERITY_SERVICE_VM) {
 				/* If there are both Service VM and Pre-launched VM, make sure pre-launched VM has higher severity than Service VM */
 					printf("%s: pre-launched vm doesn't has higher severity than Service VM \n", __func__);
 					ret = false;
@@ -142,7 +142,7 @@ bool sanitize_vm_config(void)
 		case SERVICE_VM:
 			break;
 		case POST_LAUNCHED_VM:
-			if ((vm_config->severity == (uint8_t)SEVERITY_SAFETY_VM) || (vm_config->severity == (uint8_t)SEVERITY_SOS)) {
+			if ((vm_config->severity == (uint8_t)SEVERITY_SAFETY_VM) || (vm_config->severity == (uint8_t)SEVERITY_SERVICE_VM)) {
 				ret = false;
 			}
 			break;

@@ -217,16 +217,16 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
 
 <xs:simpleType name="LegacyVuartBase">
   <xs:annotation>
-    <xs:documentation>A string with either ``SOS_COM1_BASE``,
-``SOS_COM2_BASE``, ``SOS_COM3_BASE``, ``SOS_COM4_BASE``,
+    <xs:documentation>A string with either ``SERVICE_VM_COM1_BASE``,
+``SERVICE_VM_COM2_BASE``, ``SERVICE_VM_COM3_BASE``, ``SERVICE_VM_COM4_BASE``,
 ``COM1_BASE``, ``COM2_BASE``, ``COM3_BASE``, ``COM4_BASE``,
 ``CONFIG_COM_BASE``, or indicating it's disabled with ``INVALID_COM_BASE``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
-    <xs:enumeration value="SOS_COM1_BASE" />
-    <xs:enumeration value="SOS_COM2_BASE" />
-    <xs:enumeration value="SOS_COM3_BASE" />
-    <xs:enumeration value="SOS_COM4_BASE" />
+    <xs:enumeration value="SERVICE_VM_COM1_BASE" />
+    <xs:enumeration value="SERVICE_VM_COM2_BASE" />
+    <xs:enumeration value="SERVICE_VM_COM3_BASE" />
+    <xs:enumeration value="SERVICE_VM_COM4_BASE" />
     <xs:enumeration value="COM1_BASE" />
     <xs:enumeration value="COM2_BASE" />
     <xs:enumeration value="COM3_BASE" />
@@ -238,16 +238,16 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
 
 <xs:simpleType name="LegacyVuartIrq">
   <xs:annotation acrn:configurable="n">
-    <xs:documentation>A string with either ``SOS_COM1_IRQ``,
-``SOS_COM2_IRQ``, ``SOS_COM3_IRQ``, ``SOS_COM4_IRQ``,
+    <xs:documentation>A string with either ``SERVICE_VM_COM1_IRQ``,
+``SERVICE_VM_COM2_IRQ``, ``SERVICE_VM_COM3_IRQ``, ``SERVICE_VM_COM4_IRQ``,
 ``COM1_IRQ``, ``COM2_IRQ``, ``COM3_IRQ``, ``COM4_IRQ``
 or ``CONFIG_COM_IRQ``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
-    <xs:enumeration value="SOS_COM1_IRQ" />
-    <xs:enumeration value="SOS_COM2_IRQ" />
-    <xs:enumeration value="SOS_COM3_IRQ" />
-    <xs:enumeration value="SOS_COM4_IRQ" />
+    <xs:enumeration value="SERVICE_VM_COM1_IRQ" />
+    <xs:enumeration value="SERVICE_VM_COM2_IRQ" />
+    <xs:enumeration value="SERVICE_VM_COM3_IRQ" />
+    <xs:enumeration value="SERVICE_VM_COM4_IRQ" />
     <xs:enumeration value="COM1_IRQ" />
     <xs:enumeration value="COM2_IRQ" />
     <xs:enumeration value="COM3_IRQ" />
@@ -267,7 +267,7 @@ supported.</xs:documentation>
     <xs:element name="base" type="LegacyVuartBase">
       <xs:annotation>
         <xs:documentation>vUART (COM) enabling switch. Enable by exposing its COM_BASE
-(e.b., ``SOS_COM1_BASE`` for Service VM); disable by returning
+(e.b., ``SERVICE_VM_COM1_BASE`` for Service VM); disable by returning
 ``INVALID_COM_BASE``.</xs:documentation>
       </xs:annotation>
     </xs:element>

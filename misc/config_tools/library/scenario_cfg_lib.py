@@ -18,7 +18,7 @@ KERN_BOOT_ADDR_LIST = ['0x100000']
 
 VUART_TYPE = ['VUART_LEGACY_PIO', 'VUART_PCI']
 INVALID_COM_BASE = 'INVALID_COM_BASE'
-VUART_BASE = ['SOS_COM1_BASE', 'SOS_COM2_BASE', 'SOS_COM3_BASE', 'SOS_COM4_BASE', 'COM1_BASE',
+VUART_BASE = ['SERVICE_VM_COM1_BASE', 'SERVICE_VM_COM2_BASE', 'SERVICE_VM_COM3_BASE', 'SERVICE_VM_COM4_BASE', 'COM1_BASE',
               'COM2_BASE', 'COM3_BASE', 'COM4_BASE', 'CONFIG_COM_BASE', INVALID_COM_BASE]
 INVALID_PCI_BASE = 'INVALID_PCI_BASE'
 PCI_VUART = 'PCI_VUART'
@@ -27,11 +27,11 @@ PCI_VUART_BASE = [PCI_VUART, INVALID_PCI_BASE]
 AVALIBLE_COM1_BASE = [INVALID_COM_BASE, 'COM1_BASE']
 AVALIBLE_COM2_BASE = [INVALID_COM_BASE, 'COM2_BASE']
 
-VUART_IRQ = ['SOS_COM1_IRQ', 'SOS_COM2_IRQ', 'SOS_COM3_IRQ', 'SOS_COM4_IRQ',
+VUART_IRQ = ['SERVICE_VM_COM1_IRQ', 'SERVICE_VM_COM2_IRQ', 'SERVICE_VM_COM3_IRQ', 'SERVICE_VM_COM4_IRQ',
              'COM1_IRQ', 'COM2_IRQ', 'COM3_IRQ', 'COM4_IRQ', 'CONFIG_COM_IRQ']
 
 # Support 512M, 1G, 2G
-# pre launch less then 2G, sos vm less than 24G
+# pre launch less then 2G, Service VM less than 24G
 START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000']
 
 COMMUNICATE_VM_ID = []
@@ -57,7 +57,7 @@ UUID_DB = {
 }
 
 VM_DB = {
-    'SERVICE_VM':{'load_type':'SERVICE_VM', 'severity':'SEVERITY_SOS', 'uuid':UUID_DB['SERVICE_VM']},
+    'SERVICE_VM':{'load_type':'SERVICE_VM', 'severity':'SEVERITY_SERVICE_VM', 'uuid':UUID_DB['SERVICE_VM']},
     'SAFETY_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_SAFETY_VM', 'uuid':UUID_DB['SAFETY_VM']},
     'PRE_RT_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['PRE_RT_VM']},
     'PRE_STD_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['PRE_STD_VM']},
@@ -290,7 +290,7 @@ def load_vm_check(load_vms, item):
 
     if len(service_vm_ids) > 1:
         key = "vm:id={},{}".format(service_vm_ids[0], item)
-        ERR_LIST[key] = "SOS VM number should not be greater than 1"
+        ERR_LIST[key] = "Service VM number should not be greater than 1"
         return
 
     if len(post_vm_ids) > len(UUID_DB["POST_STD_VM"]):
@@ -383,8 +383,8 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
 
     if pre_launch_cpus:
         if "SERVICE_VM" in common.VM_TYPES and not service_vm_cpus:
-            key = "SOS VM cpu_affinity"
-            err_dic[key] = "Should assign CPU id for SOS VM"
+            key = "Service VM cpu_affinity"
+            err_dic[key] = "Should assign CPU id for Service VM"
 
         for pcpu in pre_launch_cpus:
             if pre_launch_cpus.count(pcpu) >= 2:
@@ -501,9 +501,9 @@ def os_kern_args_check(id_kern_args_dic, prime_item, item):
         if vm_i not in id_kern_args_dic.keys():
             continue
         kern_args = id_kern_args_dic[vm_i]
-        if "SOS_" in vm_type and kern_args != "SOS_VM_BOOTARGS":
+        if "SERVICE_" in vm_type and kern_args != "SERVICE_VM_OS_BOOTARGS":
             key = "vm:id={},{},{}".format(vm_i, prime_item, item)
-            ERR_LIST[key] = "VM os config kernel service os should be SOS_VM_BOOTARGS"
+            ERR_LIST[key] = "The kernel command-line options for the Service VM kernel should be stored in SERVICE_VM_OS_BOOTARGS"
 
 
 def os_kern_load_addr_check(kern_type, id_kern_load_addr_dic, prime_item, item):
@@ -658,9 +658,9 @@ def avl_vuart_ui_select(scenario_info):
 
         if "SERVICE_VM" == VM_DB[vm_type]['load_type']:
             key = "vm={},legacy_vuart=0,base".format(vm_i)
-            tmp_vuart[key] = ['SOS_COM1_BASE', 'INVALID_COM_BASE']
+            tmp_vuart[key] = ['SERVICE_VM_COM1_BASE', 'INVALID_COM_BASE']
             key = "vm={},legacy_vuart=1,base".format(vm_i)
-            tmp_vuart[key] = ['SOS_COM2_BASE', 'INVALID_COM_BASE']
+            tmp_vuart[key] = ['SERVICE_VM_COM2_BASE', 'INVALID_COM_BASE']
         else:
             key = "vm={},legacy_vuart=0,base".format(vm_i)
             tmp_vuart[key] = ['INVALID_COM_BASE', 'COM1_BASE']
@@ -709,7 +709,7 @@ def check_vuart(v0_vuart, v1_vuart):
 
         if not vuart_dic['base'] or vuart_dic['base'] not in VUART_BASE:
             key = "vm:id={},legacy_vuart:id=1,base".format(vm_i)
-            ERR_LIST[key] = "base should be SOS/COM BASE"
+            ERR_LIST[key] = "base should be Service VM/COM BASE"
 
         if vuart_dic['base'] == "INVALID_COM_BASE":
             continue
@@ -1322,7 +1322,7 @@ def get_service_vm_vuart_settings(launch_flag=True):
         return
 
     # VUART1 setting
-    # The IRQ of vUART1(COM2) might be hard-coded by SOS ACPI table(i.e. host ACPI),
+    # The IRQ of vUART1(COM2) might be hard-coded by Service VM ACPI table(i.e. host ACPI),
     # so we had better follow native COM2 IRQ assignment for vUART1 if COM2 is a legacy ttyS,
     # otherwise function of vUART1 would be failed. If host COM2 does not exist or it is a PCI ttyS,
     # then we could allocate a free IRQ for vUART1.

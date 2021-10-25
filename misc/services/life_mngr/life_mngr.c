@@ -27,18 +27,18 @@
 #define SERVICE_VM_SOCKET_PORT	(0x2000U)
 #define UOS_SOCKET_PORT		(SERVICE_VM_SOCKET_PORT + 1U)
 
-/* life_mngr process run in SOS or UOS */
+/* life_mngr process run in Service VM or UOS */
 enum process_env {
 	PROCESS_UNKNOWN = 0,
-	PROCESS_RUN_IN_SOS,
+	PROCESS_RUN_IN_SERVICE_VM,
 	PROCESS_RUN_IN_UOS,
 };
 
 /* Enumerated shutdown state machine only for UOS thread */
 enum shutdown_state {
 	SHUTDOWN_REQ_WAITING = 0,	     /* Can receive shutdown cmd in this state */
-	SHUTDOWN_ACK_WAITING,                /* Wait acked message from SOS */
-	SHUTDOWN_REQ_FROM_SOS,             /* Trigger shutdown by SOS */
+	SHUTDOWN_ACK_WAITING,                /* Wait acked message from Service VM */
+	SHUTDOWN_REQ_FROM_SERVICE_VM,        /* Trigger shutdown by Service VM */
 	SHUTDOWN_REQ_FROM_UOS,             /* Trigger shutdown by UOS */
 
 };
@@ -160,7 +160,7 @@ static int setup_socket_listen(unsigned short port)
 /* this thread runs on Service VM:
  * communiate between lifecycle-mngr and acrn-dm process in Service VM side
  */
-static void *sos_socket_thread(void *arg)
+static void *service_vm_socket_thread(void *arg)
 {
 	int listen_fd, connect_fd, connect_fd2;
 	struct sockaddr_in client;
@@ -251,7 +251,7 @@ out:
 /* this thread runs on User VM:
  * User VM wait for message from Service VM
  */
-static void *listener_fn_to_sos(void *arg)
+static void *listener_fn_to_service_vm(void *arg)
 {
 
 	int ret;
@@ -259,7 +259,7 @@ static void *listener_fn_to_sos(void *arg)
 	bool shutdown_self = false;
 	unsigned char buf[BUFF_SIZE];
 
-	/* UOS-server wait for message from SOS */
+	/* UOS-server wait for message from Service VM */
 	do {
 		memset(buf, 0, sizeof(buf));
 		ret = receive_message(tty_dev_fd, buf, sizeof(buf));
@@ -268,11 +268,11 @@ static void *listener_fn_to_sos(void *arg)
 		}
 
 		switch (shutdown_state) {
-		/* it can receive shutdown command from SOS */
+		/* it can receive shutdown command from Service VM */
 		case SHUTDOWN_REQ_WAITING:
-		case SHUTDOWN_REQ_FROM_SOS:
+		case SHUTDOWN_REQ_FROM_SERVICE_VM:
 			if ((ret > 0) && (strncmp(SHUTDOWN_CMD, (const char *)buf, strlen(SHUTDOWN_CMD)) == 0)) {
-				shutdown_state = SHUTDOWN_REQ_FROM_SOS;
+				shutdown_state = SHUTDOWN_REQ_FROM_SERVICE_VM;
 				ret = send_message(tty_dev_fd, ACK_CMD, sizeof(ACK_CMD));
 				if (ret != 0) {
 					LOG_WRITE("UOS send acked message failed!\n");
@@ -283,7 +283,7 @@ static void *listener_fn_to_sos(void *arg)
 			}
 			break;
 
-		/* it will try to resend shutdown cmd to sos if there is no acked message */
+		/* it will try to resend shutdown cmd to Service VM if there is no acked message */
 		case SHUTDOWN_ACK_WAITING:
 			if ((ret > 0) && (strncmp(ACK_CMD, (const char *)buf, strlen(ACK_CMD)) == 0)) {
 				LOG_WRITE("received acked message from Service VM\n");
@@ -295,7 +295,7 @@ static void *listener_fn_to_sos(void *arg)
 					}
 					retry--;
 				} else {
-					LOG_PRINTF("Cann't not receive acked message from SOS, have try %d times\r\n",
+					LOG_PRINTF("Cann't not receive acked message from Service VM, have try %d times\r\n",
 							TRY_SEND_CNT);
 					shutdown_state = SHUTDOWN_REQ_WAITING;
 					retry = TRY_SEND_CNT;
@@ -372,7 +372,7 @@ static void *listener_fn_to_operator(void *arg)
 				LOG_WRITE("Send acked message fail\n");
 			}
 
-			LOG_WRITE("send shutdown message to sos\r\n");
+			LOG_WRITE("send shutdown message to Service VM\r\n");
 			/* send shutdown command to the Servcie VM  */
 			ret = send_message(tty_dev_fd, SHUTDOWN_CMD, sizeof(SHUTDOWN_CMD));
 			if (ret != 0) {
@@ -396,7 +396,7 @@ int main(int argc, char *argv[])
 	int ret = 0;
 	char *devname_uos = "";
 	enum process_env env = PROCESS_UNKNOWN;
-	pthread_t sos_socket_pid;
+	pthread_t service_vm_socket_pid;
 	/* User VM wait for shutdown from Service VM */
 	pthread_t uos_thread_pid_1;
 	/* User VM wait for shutdown from other process */
@@ -427,20 +427,20 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 
-		ret = pthread_create(&uos_thread_pid_1, NULL, listener_fn_to_sos, NULL);
+		ret = pthread_create(&uos_thread_pid_1, NULL, listener_fn_to_service_vm, NULL);
 		ret = pthread_create(&uos_thread_pid_2, NULL, listener_fn_to_operator, NULL);
 
 	} else if (strncmp("sos", argv[1], NODE_SIZE) == 0) {
-		env = PROCESS_RUN_IN_SOS;
-		ret = pthread_create(&sos_socket_pid, NULL, sos_socket_thread, NULL);
+		env = PROCESS_RUN_IN_SERVICE_VM;
+		ret = pthread_create(&service_vm_socket_pid, NULL, service_vm_socket_thread, NULL);
 	} else {
 		LOG_WRITE("Invalid param. Example: [./life_mngr uos /dev/ttyS1] or ./life_mngr sos /dev/ttyS1]\n");
 		fclose(log_fd);
 		return -EINVAL;
 	}
 
-	if (env == PROCESS_RUN_IN_SOS) {
-		pthread_join(sos_socket_pid, NULL);
+	if (env == PROCESS_RUN_IN_SERVICE_VM) {
+		pthread_join(service_vm_socket_pid, NULL);
 	} else if (env == PROCESS_RUN_IN_UOS) {
 		pthread_join(uos_thread_pid_1, NULL);
 		pthread_join(uos_thread_pid_2, NULL);

@@ -22,7 +22,7 @@
 #include "ioc.h"
 
 #define ACRND_NAME		"acrnd"
-#define SOS_LCS_SOCK		"sos-lcs"
+#define SERVICE_VM_LCS_SOCK	"service-vm-lcs"
 #define HW_IOC_PATH		"/dev/cbc-early-signals"
 #define VMS_STOP_TIMEOUT	20U /* Time to wait VMs to stop */
 #define SOCK_TIMEOUT		2U
@@ -126,7 +126,7 @@ static void try_do_works(void)
 }
 
 static void acrnd_run_vm(char *name);
-unsigned get_sos_wakeup_reason(void);
+unsigned get_service_vm_wakeup_reason(void);
 
 /* Timer callback to run/resume VM.
  * Will be called with work_mutex hold
@@ -164,7 +164,7 @@ void acrnd_vm_timer_func(struct work_arg *arg)
 
 static pthread_mutex_t timer_file_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/* load/store_timer_list to file to keep timers if SOS poweroff */
+/* load/store_timer_list to file to keep timers if Service VM poweroff */
 static int load_timer_list(void)
 {
 	FILE *fp;
@@ -269,7 +269,7 @@ static int active_all_vms(void)
 			break;
 		case VM_SUSPENDED:
 			if (platform_has_hw_ioc) {
-				reason = get_sos_wakeup_reason();
+				reason = get_service_vm_wakeup_reason();
 			}
 			ret += resume_vm(vm->name, reason);
 			break;
@@ -315,16 +315,16 @@ static int wakeup_suspended_vms(unsigned wakeup_reason)
 
 static int acrnd_fd = -1;
 
-unsigned get_sos_wakeup_reason(void)
+unsigned get_service_vm_wakeup_reason(void)
 {
 	int client_fd, ret = 0;
 	struct mngr_msg req;
 	struct mngr_msg ack;
 
-	client_fd = mngr_open_un(SOS_LCS_SOCK, MNGR_CLIENT);
+	client_fd = mngr_open_un(SERVICE_VM_LCS_SOCK, MNGR_CLIENT);
 	if (client_fd <= 0) {
 		fprintf(stderr, "Failed to open the socket(%s) to query the "
-				"reason for the wake-up", SOS_LCS_SOCK);
+				"reason for the wake-up", SERVICE_VM_LCS_SOCK);
 		goto EXIT;
 	}
 
@@ -333,7 +333,7 @@ unsigned get_sos_wakeup_reason(void)
 	req.timestamp = time(NULL);
 
 	if (mngr_send_msg(client_fd, &req, &ack, SOCK_TIMEOUT) <= 0)
-		fprintf(stderr, "Failed to get wakeup_reason from SOS, err(%d)\n", ret);
+		fprintf(stderr, "Failed to get wakeup_reason from Service VM, err(%d)\n", ret);
 	else
 		ret = ack.data.reason;
 
@@ -376,14 +376,14 @@ static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
 		mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
-static int set_sos_timer(time_t due_time)
+static int set_service_vm_timer(time_t due_time)
 {
 	int client_fd, ret;
 	int retry = 1;
 	struct mngr_msg req;
 	struct mngr_msg ack;
 
-	client_fd = mngr_open_un(SOS_LCS_SOCK, MNGR_CLIENT);
+	client_fd = mngr_open_un(SERVICE_VM_LCS_SOCK, MNGR_CLIENT);
 	if (client_fd <= 0) {
 		perror("Failed to open sock for to req wkup_reason");
 		ret = client_fd;
@@ -442,7 +442,7 @@ static int store_timer_list(void)
 	/* If any timer is stored
 	 * system must be awake at sys_wakeup */
 	if (sys_wakeup) {
-		set_sos_timer(sys_wakeup);
+		set_service_vm_timer(sys_wakeup);
 	} else {
 		unlink(ACRN_CONF_TIMER_LIST);
 	}
@@ -513,9 +513,9 @@ static void* notify_stop_state(void *arg)
 
 	store_timer_list();
 
-	lcs_fd = mngr_open_un(SOS_LCS_SOCK, MNGR_CLIENT);
+	lcs_fd = mngr_open_un(SERVICE_VM_LCS_SOCK, MNGR_CLIENT);
 	if (lcs_fd < 0) {
-		fprintf(stderr, "cannot open sos-lcs.socket\n");
+		fprintf(stderr, "cannot open service-vm-lcs.socket\n");
 		goto exit;
 	}
 
@@ -594,9 +594,9 @@ void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 	ack.timestamp = msg->timestamp;
 	ack.data.err = -1;
 
-	/* acrnd get wakeup_reason from sos lcs */
+	/* acrnd get wakeup_reason from Service VM lcs */
 	if (platform_has_hw_ioc) {
-		wakeup_reason = get_sos_wakeup_reason();
+		wakeup_reason = get_service_vm_wakeup_reason();
 	}
 
 	if (wakeup_reason & CBC_WK_RSN_RTC) {
@@ -650,7 +650,7 @@ int init_vm(void)
 
 	/* init all UOSs, according wakeup_reason */
 	if (platform_has_hw_ioc) {
-		wakeup_reason = get_sos_wakeup_reason();
+		wakeup_reason = get_service_vm_wakeup_reason();
 	}
 
 	if (wakeup_reason & CBC_WK_RSN_RTC) {

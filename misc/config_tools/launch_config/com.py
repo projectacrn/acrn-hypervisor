@@ -81,15 +81,15 @@ def off_line_cpus(args, vmid, uos_type, config):
     """
     pcpu_id_list = get_cpu_affinity_list(args["cpu_affinity"], vmid)
     if not pcpu_id_list:
-        sos_vmid = launch_cfg_lib.get_sos_vmid()
+        service_vmid = launch_cfg_lib.get_service_vmid()
         cpu_affinity = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "cpu_affinity", "pcpu_id")
-        pcpu_id_list = get_cpu_affinity_list(cpu_affinity, sos_vmid+vmid)
+        pcpu_id_list = get_cpu_affinity_list(cpu_affinity, service_vmid+vmid)
 
     if not pcpu_id_list:
         key = "scenario config error"
         launch_cfg_lib.ERR_LIST[key] = "No available cpu to offline and pass it to vm {}".format(vmid)
 
-    print("# offline pinned vCPUs from SOS before launch UOS", file=config)
+    print("# offline pinned vCPUs from Service VM before launch UOS", file=config)
     print('cpu_path="/sys/devices/system/cpu"', file=config)
     print("for i in `ls ${cpu_path}`; do", file=config)
     print("    for j in {}; do".format(' '.join([str(i) for i in pcpu_id_list])), file=config)
@@ -402,8 +402,8 @@ def launch_end(names, args, virt_io, vmid, config):
             print("", file=config)
             i += 1
 
-    sos_vmid = launch_cfg_lib.get_sos_vmid()
-    if args['cpu_sharing'] == "SCHED_NOOP" or common.VM_TYPES[vmid+sos_vmid] == "POST_RT_VM":
+    service_vmid = launch_cfg_lib.get_service_vmid()
+    if args['cpu_sharing'] == "SCHED_NOOP" or common.VM_TYPES[vmid+service_vmid] == "POST_RT_VM":
         off_line_cpus(args, vmid, uos_type, config)
 
     uos_launch(names, args, virt_io, vmid, config)
@@ -553,8 +553,8 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     boot_image_type(dm, vmid, config)
 
     # uuid get
-    sos_vmid = launch_cfg_lib.get_sos_vmid()
-    scenario_uuid = launch_cfg_lib.get_scenario_uuid(vmid, sos_vmid)
+    service_vmid = launch_cfg_lib.get_service_vmid()
+    scenario_uuid = launch_cfg_lib.get_scenario_uuid(vmid, service_vmid)
 
     # clearlinux/android/alios
     print('acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\'.format(scenario_uuid), file=config)
@@ -589,10 +589,10 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         else:
             pm_vuart = pm_vuart + " "
         if pm_key == "vuart1(tty)":
-            vuart_base = launch_cfg_lib.get_vuart1_from_scenario(sos_vmid + vmid)
+            vuart_base = launch_cfg_lib.get_vuart1_from_scenario(service_vmid + vmid)
             if vuart_base == "INVALID_COM_BASE":
                 err_key = "uos:id={}:poweroff_channel".format(vmid)
-                launch_cfg_lib.ERR_LIST[err_key] = "vuart1 of VM{} in scenario file should select 'SOS_COM2_BASE'".format(sos_vmid + vmid)
+                launch_cfg_lib.ERR_LIST[err_key] = "vuart1 of VM{} in scenario file should select 'SERVICE_VM_COM2_BASE'".format(service_vmid + vmid)
                 return
             scenario_cfg_lib.get_service_vm_vuart_settings()
             print("   {} \\".format(pm_vuart + launch_cfg_lib.PM_CHANNEL_DIC[pm_key] + scenario_cfg_lib.SERVICE_VM_UART1_VALID_NUM), file=config)

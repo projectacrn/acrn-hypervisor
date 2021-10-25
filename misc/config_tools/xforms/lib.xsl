@@ -331,7 +331,7 @@
       <xsl:if test="acrn:is-post-launched-vm($vmtype)">
         <func:result select="$ivshmem + $console_vuart + $communication_vuart + $virtual_root_port" />
       </xsl:if>
-      <xsl:if test="acrn:is-sos-vm($vmtype)">
+      <xsl:if test="acrn:is-service-vm($vmtype)">
         <func:result select="$ivshmem + $console_vuart + $communication_vuart" />
       </xsl:if>
     </xsl:for-each>
@@ -421,7 +421,7 @@
     </xsl:choose>
   </func:function>
 
-  <func:function name="acrn:is-sos-vm">
+  <func:function name="acrn:is-service-vm">
     <xsl:param name="vm_type" />
     <xsl:choose>
       <xsl:when test="$vm_type = 'SERVICE_VM'">

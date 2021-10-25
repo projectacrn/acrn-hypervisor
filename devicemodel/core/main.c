@@ -635,7 +635,7 @@ vm_system_reset(struct vmctx *ctx)
 	 * When handling emergency mode triggered by one vcpu without
 	 * offlining any other vcpus, there can be multiple IO requests
 	 * with various states. We should be careful on potential races
-	 * when resetting especially in SMP SOS. vm_clear_ioreq can be used
+	 * when resetting especially in SMP Service VM. vm_clear_ioreq can be used
 	 * to clear all ioreq status in HSM after VM pause, then let VM
 	 * reset in hypervisor reset all ioreqs.
 	 */

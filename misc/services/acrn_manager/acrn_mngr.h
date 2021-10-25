@@ -108,17 +108,17 @@ enum acrnd_msgid {
 	ACRND_REASON,		/* DM ask for updating wakeup reason */
 	DM_NOTIFY,		/* DM notify Acrnd that state is changed */
 
-	/* SOS-LCS ->Acrnd */
-	ACRND_STOP,		/* SOS-LCS request to Stop all UOS */
-	ACRND_RESUME,		/* SOS-LCS request to Resume UOS */
-	ACRND_SUSPEND,		/* SOS-LCS request to Suspend all UOS */
+	/* SERVICE-VM-LCS ->Acrnd */
+	ACRND_STOP,		/* SERVICE-VM-LCS request to Stop all UOS */
+	ACRND_RESUME,		/* SERVICE-VM-LCS request to Resume UOS */
+	ACRND_SUSPEND,		/* SERVICE-VM-LCS request to Suspend all UOS */
 
 	ACRND_MAX,
 };
 
 /* Acrnd handled message req/ack pairs */
 
-/* SOS-LCS handled message event types */
+/* SERVICE-VM-LCS handled message event types */
 enum sos_lcs_msgid {
 	WAKEUP_REASON = ACRND_MAX + 1,	/* Acrnd/Acrnctl request wakeup reason */
 	RTC_TIMER,		/* Acrnd request to setup RTC timer */

@@ -122,7 +122,7 @@ int vmrecord_gen_ifnot_exists(struct vmrecord_t *vmrecord)
 		" * \"NOT_FOUND\" indicates event not found in UOS.\n"
 		" * \"MISS_LOGS\" indicates event miss logs in UOS.\n"
 		" * \"ON_GOING\" indicates event is under syncing.\n"
-		" * \"NO_RESORC\" indicates no enough resources in SOS.\n"
+		" * \"NO_RESORC\" indicates no enough resources in Service VM.\n"
 		" */\n\n";
 
 	if (!vmrecord) {

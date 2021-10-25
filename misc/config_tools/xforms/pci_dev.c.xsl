@@ -33,7 +33,7 @@
   <xsl:template match="config-data/acrn-config/vm">
     <!-- Initializer of a acrn_vm_pci_dev_config instance -->
     <xsl:choose>
-      <xsl:when test="acrn:is-sos-vm(vm_type)">
+      <xsl:when test="acrn:is-service-vm(vm_type)">
         <xsl:value-of select="acrn:array-initializer('struct acrn_vm_pci_dev_config', 'service_vm_pci_devs', 'CONFIG_MAX_PCI_DEV_NUM')" />
       </xsl:when>
       <xsl:when test="acrn:pci-dev-num(@id)">
@@ -52,7 +52,7 @@
       <xsl:apply-templates select="PTM" />
     </xsl:if>
 
-    <xsl:if test="acrn:is-sos-vm(vm_type) or acrn:pci-dev-num(@id)">
+    <xsl:if test="acrn:is-service-vm(vm_type) or acrn:pci-dev-num(@id)">
       <xsl:value-of select="$end_of_array_initializer" />
     </xsl:if>
   </xsl:template>

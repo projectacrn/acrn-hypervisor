@@ -73,13 +73,13 @@ def alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree):
                     raise lib.error.ResourceError(f"{hv_debug_console} is not in the native environment! The ttyS available are: {native_ttys.keys()}")
             else:
                 legacy_vuart_node_irq_text = common.get_node(f"legacy_vuart[@id = '{legacy_vuart_id}']/irq/text()", vm_node)
-                if legacy_vuart_node_irq_text == 'COM1_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM1_IRQ' \
-                    or legacy_vuart_node_irq_text == 'COM3_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM3_IRQ':
+                if legacy_vuart_node_irq_text == 'COM1_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM1_IRQ' \
+                    or legacy_vuart_node_irq_text == 'COM3_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM3_IRQ':
                     legacy_vuart_irq = '4'
                     if legacy_vuart_irq in irq_list:
                         remove_irq(irq_list, legacy_vuart_irq)
-                elif legacy_vuart_node_irq_text == 'COM2_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM2_IRQ' \
-                    or legacy_vuart_node_irq_text == 'COM4_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM4_IRQ':
+                elif legacy_vuart_node_irq_text == 'COM2_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM2_IRQ' \
+                    or legacy_vuart_node_irq_text == 'COM4_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM4_IRQ':
                     legacy_vuart_irq = '3'
                     if legacy_vuart_irq in irq_list:
                         remove_irq(irq_list, legacy_vuart_irq)

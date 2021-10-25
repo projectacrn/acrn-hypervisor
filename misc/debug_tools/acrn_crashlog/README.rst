@@ -162,7 +162,7 @@ The source code structure:
   acrnlog. For the log on SOS, the userspace crash log is collected with
   usercrash, and the kernel crash log is collected with the inherent mechanism
   like ``ipanic``, ``pstore`` and etc. For the log on AaaG, it's collected with
-  monitoring the change of related folders on the sos image, like
+  monitoring the change of related folders on the Service VM OS image, like
   ``/data/logs/``. ``acrnprobe`` also provides a flexible way to allow users to
   configure which crash or event they want to collect through the XML file
   easily.

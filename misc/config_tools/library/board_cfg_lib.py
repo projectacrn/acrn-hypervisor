@@ -271,7 +271,7 @@ def get_native_ttys_info(board_info):
 
         ttys_dev = ttys_line.split()[0].split(':')[1]
         ttysn = ttys_dev.split('/')[-1]
-        # currently SOS console can only support legacy serial port
+        # currently Service VM console can only support legacy serial port
         if ttysn not in list(LEGACY_TTYS.keys()):
             continue
         ttys_list.append(ttys_dev)

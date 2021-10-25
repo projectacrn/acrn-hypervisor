@@ -38,8 +38,8 @@
 #define MAX_MMIO_DEV_NUM	2U
 
 #define CONFIG_SERVICE_VM	.load_order = SERVICE_VM,	\
-				.uuid = SOS_VM_UUID,	\
-				.severity = SEVERITY_SOS
+				.uuid = SERVICE_VM_UUID,	\
+				.severity = SEVERITY_SERVICE_VM
 
 #define CONFIG_SAFETY_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
 				.uuid = SAFETY_VM_UUID##idx,	\
@@ -69,7 +69,7 @@
 enum acrn_vm_severity {
 	SEVERITY_SAFETY_VM = 0x40U,
 	SEVERITY_RTVM = 0x30U,
-	SEVERITY_SOS = 0x20U,
+	SEVERITY_SERVICE_VM = 0x20U,
 	SEVERITY_STANDARD_VM = 0x10U,
 };
 

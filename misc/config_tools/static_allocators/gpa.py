@@ -434,7 +434,7 @@ def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
             mem_passthrough = get_devs_mem_passthrough(board_etree, scenario_etree)
             used_low_mem_native = get_devs_mem_native(board_etree, low_mem)
             used_high_mem_native = get_devs_mem_native(board_etree, high_mem)
-            # release the passthrough devices mmio windows from SOS
+            # release the passthrough devices mmio windows from Service VM
             used_low_mem = [mem for mem in used_low_mem_native if mem not in mem_passthrough]
             used_high_mem = [mem for mem in used_high_mem_native if mem not in mem_passthrough]
         else:
@@ -464,7 +464,7 @@ def allocate_io_port(board_etree, scenario_etree, allocation_etree):
             io_port_range_list = io_port_range_list_native
             io_port_passthrough = get_pt_devs_io_port_passthrough(board_etree, scenario_etree)
             used_io_port_list_native = get_devs_io_port_native(board_etree, io_port_range_list_native)
-            # release the passthrough devices io port address from SOS
+            # release the passthrough devices io port address from Service VM
             used_io_port_list = [io_port for io_port in used_io_port_list_native if io_port not in io_port_passthrough]
         else:
             io_port_range_list = [AddrWindow(start = IO_PORT_THRESHOLD, end = IO_PORT_MAX_ADDRESS)]
@@ -530,7 +530,7 @@ def pt_dev_io_port_passthrough(board_etree, scenario_etree, allocation_etree):
  |                                                  |
  +--------------------------------------------------+ <--Offset 0
 
-                  SOS VM gpa layout:
+                  Service VM gpa layout:
  +--------------------------------------------------+ <--End of native high pci hole
  |      64 bits vbar of emulated PCI devices        |
  +--------------------------------------------------+ <--Start of native high pci hole
