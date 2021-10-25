@@ -53,7 +53,7 @@ def vuart0_output(i, vm_type, vm_info, config):
     :param config: it is the pointer which file write to
     :return: None
     """
-    # SOS_VM vuart[0]
+    # Service VM vuart[0]
     print("\t\t.vuart[0] = {", file=config)
     print("\t\t\t.type = {0},".format(vm_info.vuart.v0_vuart[i]['type']), file=config)
     if vm_info.vuart.v0_vuart[i]['base'] == "INVALID_COM_BASE":
@@ -119,7 +119,7 @@ def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
         print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
 
     if vuart1_vmid_dic and i in vuart1_vmid_dic.keys():
-        if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+        if "SERVICE_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE" and vuart_enable[i]:
                 print("\t\t\t.irq = SOS_COM2_IRQ,", file=config)
         else:
@@ -156,11 +156,11 @@ def is_need_epc(epc_section, i, config):
     :param config: it is file pointer to store the information
     :return: None
     """
-    # SOS_VM have not set epc section
+    # Service VM have not set epc section
     if i not in common.VM_TYPES.keys():
         return
     vm_type = list(common.VM_TYPES.values())[i]
-    if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+    if "SERVICE_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
         return
 
     if epc_section.base[i] == '0' and epc_section.size[i] == '0':
@@ -180,7 +180,7 @@ def cpu_affinity_output(vm_info, i, config):
     :param config: file pointor to store the information
     """
 
-    if "SOS_VM" == common.VM_TYPES[i]:
+    if "SERVICE_VM" == common.VM_TYPES[i]:
         print("\t\t.cpu_affinity = SERVICE_VM_CONFIG_CPU_AFFINITY,", file=config)
     else:
         print("\t\t.cpu_affinity = VM{}_CONFIG_CPU_AFFINITY,".format(i), file=config)
@@ -249,7 +249,7 @@ def gen_service_vm(vm_type, vm_i, scenario_items, config):
         return err_dic
 
     print("\t{{\t/* VM{} */".format(vm_i), file=config)
-    print("\t\tCONFIG_SOS_VM,", file=config)
+    print("\t\tCONFIG_SERVICE_VM,", file=config)
     print('\t\t.name = "{0}",'.format(vm_info.name[vm_i]), file=config)
     print("", file=config)
     print("\t\t/* Allow SOS to reboot the host since " +
@@ -386,7 +386,7 @@ def gen_post_launch_vm(vm_type, vm_i, scenario_items, config):
 def declare_pci_devs(vm_info, config):
 
     for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_type == "SOS_VM":
+        if vm_type == "SERVICE_VM":
             print("extern struct acrn_vm_pci_dev_config " +
                 "service_vm_pci_devs[CONFIG_MAX_PCI_DEV_NUM];", file=config)
             continue
@@ -418,7 +418,7 @@ def generate_file(scenario_items, config):
     print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
     for vm_i, vm_type in common.VM_TYPES.items():
 
-        if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+        if "SERVICE_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             gen_service_vm(vm_type, vm_i, scenario_items, config)
         elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             gen_pre_launch_vm(vm_type, vm_i, scenario_items, config)

@@ -109,7 +109,7 @@ bool sanitize_vm_config(void)
 	struct acrn_vm_config *vm_config;
 
 	/* We need to setup a rule, that the vm_configs[] array should follow
-	 * the order of PRE_LAUNCHED_VM first, and then SOS_VM.
+	 * the order of PRE_LAUNCHED_VM first, and then Service VM.
 	 */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
@@ -139,7 +139,7 @@ bool sanitize_vm_config(void)
 #endif
 			}
 			break;
-		case SOS_VM:
+		case SERVICE_VM:
 			break;
 		case POST_LAUNCHED_VM:
 			if ((vm_config->severity == (uint8_t)SEVERITY_SAFETY_VM) || (vm_config->severity == (uint8_t)SEVERITY_SOS)) {

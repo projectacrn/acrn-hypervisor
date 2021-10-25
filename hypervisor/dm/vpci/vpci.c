@@ -107,7 +107,7 @@ static bool vpci_pio_cfgaddr_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
  * @pre vcpu->vm != NULL
  * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
  * @pre (get_vm_config(vcpu->vm->vm_id)->load_order == PRE_LAUNCHED_VM)
- *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SOS_VM)
+ *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SERVICE_VM)
  *
  * @retval true on success.
  * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
@@ -140,7 +140,7 @@ static bool vpci_pio_cfgdata_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t 
  * @pre vcpu->vm != NULL
  * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
  * @pre (get_vm_config(vcpu->vm->vm_id)->load_order == PRE_LAUNCHED_VM)
- *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SOS_VM)
+ *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SERVICE_VM)
  *
  * @retval true on success.
  * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
@@ -225,7 +225,7 @@ int32_t init_vpci(struct acrn_vm *vm)
 
 	vm_config = get_vm_config(vm->vm_id);
 	/* virtual PCI MMCONFIG for Service VM is same with the physical value */
-	if (vm_config->load_order == SOS_VM) {
+	if (vm_config->load_order == SERVICE_VM) {
 		pci_mmcfg = get_mmcfg_region();
 		vm->vpci.pci_mmcfg = *pci_mmcfg;
 		vm->vpci.res32.start = MMIO32_START;

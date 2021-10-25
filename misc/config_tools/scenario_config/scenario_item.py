@@ -271,7 +271,7 @@ class LoadOrderNum:
 
     def get_info(self, load_vm):
         self.pre_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "PRE_LAUNCHED_VM")
-        self.service_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "SOS_VM")
+        self.service_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "SERVICE_VM")
         self.post_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "POST_LAUNCHED_VM")
 
 

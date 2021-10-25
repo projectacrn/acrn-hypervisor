@@ -46,7 +46,7 @@ PT_SUB_PCI['sata'] = ['SATA controller']
 PT_SUB_PCI['nvme'] = ['Non-Volatile memory controller']
 PT_SUB_PCI['usb'] = ['USB controller']
 UUID_DB = {
-    'SOS_VM':['dbbbd434-7a57-4216-a12c-2201f1ab0240'],
+    'SERVICE_VM':['dbbbd434-7a57-4216-a12c-2201f1ab0240'],
     'SAFETY_VM':['fc836901-8685-4bc0-8b71-6e31dc36fa47'],
     'PRE_STD_VM':['26c5e0d8-8f8a-47d8-8109-f201ebd61a5e', 'dd87ce08-66f9-473d-bc58-7605837f935e'],
     'POST_STD_VM':['d2795438-25d6-11e8-864e-cb7a18b34643', '615db82a-e189-4b4f-8dbb-d321343e4ab3',
@@ -57,7 +57,7 @@ UUID_DB = {
 }
 
 VM_DB = {
-    'SOS_VM':{'load_type':'SOS_VM', 'severity':'SEVERITY_SOS', 'uuid':UUID_DB['SOS_VM']},
+    'SERVICE_VM':{'load_type':'SERVICE_VM', 'severity':'SEVERITY_SOS', 'uuid':UUID_DB['SERVICE_VM']},
     'SAFETY_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_SAFETY_VM', 'uuid':UUID_DB['SAFETY_VM']},
     'PRE_RT_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['PRE_RT_VM']},
     'PRE_STD_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['PRE_STD_VM']},
@@ -200,7 +200,7 @@ def get_pci_dev_num_per_vm():
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
             pci_dev_num_per_vm[vm_i] = pt_pci_num[vm_i] + shmem_num_i + vuarts_num[vm_i]
-        elif "SOS_VM" == VM_DB[vm_type]['load_type']:
+        elif "SERVICE_VM" == VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
@@ -211,7 +211,7 @@ def get_pci_dev_num_per_vm():
 
 def check_board_private_info():
 
-    if 'SOS_VM' not in common.VM_TYPES.values():
+    if 'SERVICE_VM' not in common.VM_TYPES.values():
         return
     branch_tag = "board_private"
     private_info = {}
@@ -262,7 +262,7 @@ def load_vm_check(load_vms, item):
             key = "vm:id={},{}".format(order_i, item)
             ERR_LIST[key] = "VM load order unknown"
 
-        if "SOS_VM" == VM_DB[load_str]['load_type']:
+        if "SERVICE_VM" == VM_DB[load_str]['load_type']:
             service_vm_ids.append(order_i)
 
         if "PRE_LAUNCHED_VM" == VM_DB[load_str]['load_type']:
@@ -307,12 +307,12 @@ def load_vm_check(load_vms, item):
     if post_vm_ids and service_vm_ids:
         if post_vm_ids[0] < service_vm_ids[-1]:
             key = "vm:id={},{}".format(post_vm_ids[0], item)
-            ERR_LIST[key] = "Post vm should be configured after SOS_VM"
+            ERR_LIST[key] = "Post vm should be configured after SERVICE_VM"
 
     if pre_vm_ids and service_vm_ids:
         if service_vm_ids[-1] < pre_vm_ids[-1]:
             key = "vm:id={},{}".format(service_vm_ids[0], item)
-            ERR_LIST[key] = "Pre vm should be configured before SOS_VM"
+            ERR_LIST[key] = "Pre vm should be configured before SERVICE_VM"
 
 
 def get_load_vm_cnt(load_vms, type_name):
@@ -369,7 +369,7 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
         elif VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
             cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
             post_launch_cpus.extend(cpus)
-        elif VM_DB[vm_type]['load_type'] == "SOS_VM":
+        elif VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
             service_vm_cpus.extend(cpus)
 
@@ -382,7 +382,7 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
                 return err_dic
 
     if pre_launch_cpus:
-        if "SOS_VM" in common.VM_TYPES and not service_vm_cpus:
+        if "SERVICE_VM" in common.VM_TYPES and not service_vm_cpus:
             key = "SOS VM cpu_affinity"
             err_dic[key] = "Should assign CPU id for SOS VM"
 
@@ -596,7 +596,7 @@ def cpus_assignment(cpus_per_vm, index):
     :return: cpu assignment string
     """
     vm_cpu_bmp = {}
-    if "SOS_VM" == common.VM_TYPES[index]:
+    if "SERVICE_VM" == common.VM_TYPES[index]:
         if index not in cpus_per_vm or cpus_per_vm[index] == [None]:
             service_vm_extend_all_cpus = board_cfg_lib.get_processor_info()
             pre_all_cpus = []
@@ -656,7 +656,7 @@ def avl_vuart_ui_select(scenario_info):
     tmp_vuart = {}
     for vm_i,vm_type in common.VM_TYPES.items():
 
-        if "SOS_VM" == VM_DB[vm_type]['load_type']:
+        if "SERVICE_VM" == VM_DB[vm_type]['load_type']:
             key = "vm={},legacy_vuart=0,base".format(vm_i)
             tmp_vuart[key] = ['SOS_COM1_BASE', 'INVALID_COM_BASE']
             key = "vm={},legacy_vuart=1,base".format(vm_i)

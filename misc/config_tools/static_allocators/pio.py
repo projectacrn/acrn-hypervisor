@@ -56,7 +56,7 @@ def fn(board_etree, scenario_etree, allocation_etree):
         legacy_vuart_base = ""
         legacy_vuart_id_list = vm_node.xpath("legacy_vuart[base != 'INVALID_COM_BASE']/@id")
         for legacy_vuart_id in legacy_vuart_id_list:
-            if legacy_vuart_id == '0' and  vm_type == "SOS_VM":
+            if legacy_vuart_id == '0' and  vm_type == "SERVICE_VM":
                 if hv_debug_console in native_ttys.keys():
                     if native_ttys[hv_debug_console]['type'] == "portio":
                         legacy_vuart_base = native_ttys[hv_debug_console]['base']

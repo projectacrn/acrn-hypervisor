@@ -424,7 +424,7 @@
   <func:function name="acrn:is-sos-vm">
     <xsl:param name="vm_type" />
     <xsl:choose>
-      <xsl:when test="$vm_type = 'SOS_VM'">
+      <xsl:when test="$vm_type = 'SERVICE_VM'">
         <func:result select="true()" />
       </xsl:when>
       <xsl:otherwise>

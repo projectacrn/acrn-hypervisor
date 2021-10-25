@@ -585,7 +585,7 @@ struct acrn_intr_monitor {
  */
 enum acrn_vm_load_order {
 	PRE_LAUNCHED_VM = 0,
-	SOS_VM,
+	SERVICE_VM,
 	POST_LAUNCHED_VM,	/* Launched by Devicemodel in Service VM */
 	MAX_LOAD_ORDER
 };

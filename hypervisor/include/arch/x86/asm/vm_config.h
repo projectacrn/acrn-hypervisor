@@ -37,7 +37,7 @@
 
 #define MAX_MMIO_DEV_NUM	2U
 
-#define CONFIG_SOS_VM		.load_order = SOS_VM,	\
+#define CONFIG_SERVICE_VM	.load_order = SERVICE_VM,	\
 				.uuid = SOS_VM_UUID,	\
 				.severity = SEVERITY_SOS
 

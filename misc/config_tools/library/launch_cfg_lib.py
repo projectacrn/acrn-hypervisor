@@ -231,7 +231,7 @@ def get_service_vmid():
 
     service_vmid = ''
     for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_type == "SOS_VM":
+        if vm_type == "SERVICE_VM":
             service_vmid = vm_i
             break
 
@@ -584,7 +584,7 @@ def set_shm_regions(launch_item_values, scenario_info):
 
     service_vm_id = 0
     for vm_id, vm_type in vm_types.items():
-        if vm_type in ['SOS_VM']:
+        if vm_type in ['SERVICE_VM']:
             service_vm_id = vm_id
         elif vm_type in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
             uos_id = vm_id - service_vm_id
@@ -611,7 +611,7 @@ def set_pci_vuarts(launch_item_values, scenario_info):
         vm_types = common.get_leaf_tag_map(scenario_info, 'vm_type')
         service_vm_id = 0
         for vm_id, vm_type in vm_types.items():
-            if vm_type in ['SOS_VM']:
+            if vm_type in ['SERVICE_VM']:
                 service_vm_id = vm_id
         for vm in list(common.get_config_root(scenario_info)):
             if vm.tag == 'vm' and scenario_cfg_lib.VM_DB[vm_types[int(vm.attrib['id'])]]['load_type'] == 'POST_LAUNCHED_VM':

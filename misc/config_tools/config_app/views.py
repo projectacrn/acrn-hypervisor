@@ -1070,7 +1070,7 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             'PRE_STD_VM': ('partitioned', 'vm:id=0'),
             'PRE_RT_VM': ('hybrid_rt', 'vm:id=0'),
             'SAFETY_VM': ('hybrid', 'vm:id=0'),
-            'SOS_VM': ('shared', 'vm:id=0'),
+            'SERVICE_VM': ('shared', 'vm:id=0'),
             'POST_STD_VM': ('shared', 'vm:id=1'),
             'POST_RT_VM': ('shared', 'vm:id=2'),
             'KATA_VM': ('shared', 'vm:id=7'),
@@ -1260,7 +1260,7 @@ def assign_vm_id(scenario_config):
                 if item.tag == 'vm_type':
                     if item.text in ['PRE_STD_VM', 'SAFETY_VM', 'PRE_RT_VM']:
                         pre_launched_vm_num += 1
-                    elif item.text in ['SOS_VM']:
+                    elif item.text in ['SERVICE_VM']:
                         sos_vm_num += 1
                     elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
                         post_launched_vm_num += 1
@@ -1275,7 +1275,7 @@ def assign_vm_id(scenario_config):
                     if item.text in ['PRE_STD_VM', 'SAFETY_VM', 'PRE_RT_VM']:
                         vm.attrib['id'] = str(pre_launched_vm_index)
                         pre_launched_vm_index += 1
-                    elif item.text in ['SOS_VM']:
+                    elif item.text in ['SERVICE_VM']:
                         vm.attrib['id'] = str(sos_vm_index)
                         sos_vm_index += 1
                     elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:

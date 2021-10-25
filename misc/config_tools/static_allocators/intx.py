@@ -57,11 +57,11 @@ def alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree):
     vm_node_list = scenario_etree.xpath("//vm")
     for vm_node in vm_node_list:
         vm_type = common.get_node("./vm_type/text()", vm_node)
-        irq_list = get_native_valid_irq() if vm_type == "SOS_VM" else [f"{d}" for d in list(range(1,15))]
+        irq_list = get_native_valid_irq() if vm_type == "SERVICE_VM" else [f"{d}" for d in list(range(1,15))]
         legacy_vuart_id_list = vm_node.xpath("legacy_vuart[base != 'INVALID_COM_BASE']/@id")
         legacy_vuart_irq = -1
         for legacy_vuart_id in legacy_vuart_id_list:
-            if legacy_vuart_id == '0' and vm_type == "SOS_VM":
+            if legacy_vuart_id == '0' and vm_type == "SERVICE_VM":
                 if hv_debug_console in native_ttys.keys():
                     if native_ttys[hv_debug_console]['irq'] < LEGACY_IRQ_MAX:
                         legacy_vuart_irq = native_ttys[hv_debug_console]['irq']

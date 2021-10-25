@@ -59,7 +59,7 @@ struct acrn_vm_pci_dev_config *init_one_dev_config(struct pci_pdev *pdev)
 	if (!is_allocated_to_prelaunched_vm(pdev)) {
 		for (vmid = 0U; vmid < CONFIG_MAX_VM_NUM; vmid++) {
 			vm_config = get_vm_config(vmid);
-			if (vm_config->load_order != SOS_VM) {
+			if (vm_config->load_order != SERVICE_VM) {
 				continue;
 			}
 

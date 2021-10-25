@@ -167,10 +167,10 @@ def generate_file(vm_info, config):
 
         # Skip this vm if there is no any pci device and virtual device
         if not scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i] and \
-             scenario_cfg_lib.VM_DB[vm_type]['load_type'] != "SOS_VM":
+             scenario_cfg_lib.VM_DB[vm_type]['load_type'] != "SERVICE_VM":
             continue
         if not scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i] and \
-             scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+             scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             print("", file=config)
             print("struct acrn_vm_pci_dev_config " +
                   "service_vm_pci_devs[CONFIG_MAX_PCI_DEV_NUM];", file=config)
@@ -179,7 +179,7 @@ def generate_file(vm_info, config):
         pci_cnt = 1
         # Insert device structure and bracket
         print("", file=config)
-        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             print("struct acrn_vm_pci_dev_config " +
                   "service_vm_pci_devs[CONFIG_MAX_PCI_DEV_NUM] = {", file=config)
         else:
@@ -242,7 +242,7 @@ def generate_file(vm_info, config):
                 print("\t{", file=config)
                 print("\t\t.emu_type = {},".format(PCI_DEV_TYPE[0]), file=config)
 
-                if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+                if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
                     free_bdf = find_unused_bdf(service_vm_used_bdf, "ivshmem", last_bdf)
                     last_bdf = free_bdf
                     print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02x}U, .f = 0x{:02x}U}}," \
@@ -263,7 +263,7 @@ def generate_file(vm_info, config):
                         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
                             print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(region), file=config)
                             print("\t\tIVSHMEM_DEVICE_{}_VBAR,".format(index), file=config)
-                        elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+                        elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
                             print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(region), file=config)
                             print("\t\tSOS_IVSHMEM_DEVICE_{}_VBAR,".format(index), file=config)
                         else:
@@ -305,7 +305,7 @@ def generate_file(vm_info, config):
                     if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
                         free_bdf = find_unused_bdf(vm_used_bdf, "vuart", last_bdf)
                         vm_used_bdf.append(free_bdf)
-                    elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+                    elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
                         free_bdf = find_unused_bdf(service_vm_used_bdf, "vuart", last_bdf)
                         service_vm_used_bdf.append(free_bdf)
                     print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02x}U, .f = 0x00U}},".format(free_bdf.dev,free_bdf.func), file=config)
