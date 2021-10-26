@@ -238,7 +238,7 @@ static void disable_vfs(struct pci_vdev *pf_vdev)
 	 * we simply set the VF instance status to "zombie" to avoid dynamically adding/removing
 	 * resources
 	 *
-	 * If the VF drivers are still running in Service VM or UOS, the MMIO access will return 0xFF.
+	 * If the VF drivers are still running in Service VM or User VM, the MMIO access will return 0xFF.
 	 */
 	num_vfs = read_sriov_reg(pf_vdev, PCIR_SRIOV_NUMVFS);
 	first = read_sriov_reg(pf_vdev, PCIR_SRIOV_FST_VF_OFF);

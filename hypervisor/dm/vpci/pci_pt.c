@@ -556,7 +556,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 		}
 	} else {
 		if (vdev->phyfun->vpci != vdev->vpci) {
-			/* VF is assigned to a UOS */
+			/* VF is assigned to a User VM */
 			uint32_t vid, did;
 
 			vdev->nr_bars = PCI_BAR_COUNT;

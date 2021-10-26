@@ -56,7 +56,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ctlr vgsi_c
  *    - 0: on success
  *    - \p -ENODEV:
  *      - for Service VM, the entry already be held by others
- *      - for UOS, no pre-hold mapping found.
+ *      - for User VM, no pre-hold mapping found.
  *
  * @pre vm != NULL
  * @pre info != NULL
@@ -80,7 +80,7 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,  uint16_
  *    - 0: on success
  *    - \p -ENODEV:
  *      - for Service VM, the entry already be held by others
- *      - for UOS, no pre-hold mapping found.
+ *      - for User VM, no pre-hold mapping found.
  *
  * @pre vm != NULL
  *

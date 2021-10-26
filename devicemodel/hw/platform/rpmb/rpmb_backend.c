@@ -54,7 +54,7 @@ static const char READ_DATA_STR[READ_STR_LEN] = "read data";
 static const char WRITE_DATA_STR[WRITE_STR_LEN] = "write data";
 
 //TODO: will be read from config file.
-static uint16_t get_uos_count(void)
+static uint16_t get_user_vm_count(void)
 {
 	return 1;
 }
@@ -80,7 +80,7 @@ static uint16_t get_common_blocks(void)
 static uint16_t get_accessible_blocks(void)
 {
 	return (get_rpmb_blocks() - get_common_blocks()) /
-			get_uos_count() + get_common_blocks();
+			get_user_vm_count() + get_common_blocks();
 }
 
 /* Todo: To get the uos number, e.g. No.0 or No.1, which is
@@ -90,7 +90,7 @@ static uint16_t get_accessible_blocks(void)
 */
 static uint8_t get_uos_id(void)
 {
-	return (get_uos_count() - 1);
+	return (get_user_vm_count() - 1);
 }
 
 void rpmb_mode_init(uint16_t mode)

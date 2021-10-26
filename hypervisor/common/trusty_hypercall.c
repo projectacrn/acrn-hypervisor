@@ -41,7 +41,7 @@ int32_t hcall_world_switch(struct acrn_vcpu *vcpu, __unused struct acrn_vm *targ
 /**
  * @brief Initialize environment for Trusty-OS on a vCPU.
  *
- * * It is used by the User OS bootloader (``UOS_Loader``) to request ACRN
+ * * It is used by the User OS bootloader (``User VM Loader``) to request ACRN
  *   to initialize Trusty
  * * The Trusty memory region range, entry point must be specified
  * * The hypervisor needs to save current vCPU contexts (Normal World)
