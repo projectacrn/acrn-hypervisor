@@ -16,6 +16,30 @@ from cpuparser import parse_cpuid, get_online_cpu_ids
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir))
 
+def check_deps():
+    # Check that the required tools are installed on the system
+    BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode', 'blkid', 'stty']
+    cpuid_min_ver = 20170122
+    for execute in BIN_LIST:
+        res = subprocess.Popen("which {}".format(execute),
+                               shell=True, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, close_fds=True)
+
+        line = res.stdout.readline().decode('ascii')
+        if not line:
+            logging.warning("'{}' cannot be found, please install it!".format(execute))
+            sys.exit(1)
+
+        if execute == 'cpuid':
+            res = subprocess.Popen("cpuid -v",
+                                   shell=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, close_fds=True)
+            line = res.stdout.readline().decode('ascii')
+            version = line.split()[2]
+            if int(version) < cpuid_min_ver:
+                logging.warning("This tool requires CPUID version >= {}".format(cpuid_min_ver))
+                sys.exit(1)
+
 def native_check():
     cpu_ids = get_online_cpu_ids()
     cpu_id = cpu_ids.pop(0)
@@ -25,6 +49,9 @@ def native_check():
         "supported under KVM/QEMU. Unexpected results may occur when deviating from that combination.")
 
 def main(board_name, board_xml, args):
+    # Check that the dependencies are met
+    check_deps()
+
     # Check if this is native os
     native_check()
 

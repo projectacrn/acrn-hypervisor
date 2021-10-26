@@ -18,11 +18,7 @@ import parser_lib
 OUTPUT = "./out/"
 PY_CACHE = "__pycache__"
 
-# This file store information which query from hw board
-BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode', 'blkid', 'stty']
-
 CPU_VENDOR = "GenuineIntel"
-
 
 def check_permission():
     """Check if it is root permission"""
@@ -50,27 +46,6 @@ def check_env():
     if not vendor_check():
         parser_lib.print_red("Please run this tools on {}!".format(CPU_VENDOR))
         sys.exit(1)
-
-    # check if required tools are exists
-    for excute in BIN_LIST:
-        res = subprocess.Popen("which {}".format(excute),
-                               shell=True, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, close_fds=True)
-
-        line = res.stdout.readline().decode('ascii')
-        if not line:
-            parser_lib.print_yel("'{}' not found, please install it!".format(excute))
-            sys.exit(1)
-
-        if excute == 'cpuid':
-            res = subprocess.Popen("cpuid -v",
-                                   shell=True, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, close_fds=True)
-            line = res.stdout.readline().decode('ascii')
-            version = line.split()[2]
-            if int(version) < 20170122:
-                parser_lib.print_yel("Need CPUID version >= 20170122")
-                sys.exit(1)
 
     if os.path.exists(OUTPUT):
         shutil.rmtree(OUTPUT)
