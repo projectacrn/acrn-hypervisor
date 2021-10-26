@@ -25,21 +25,21 @@
 #define NODE_SIZE		3U
 #define TRY_SEND_CNT		3U
 #define SERVICE_VM_SOCKET_PORT	(0x2000U)
-#define UOS_SOCKET_PORT		(SERVICE_VM_SOCKET_PORT + 1U)
+#define USER_VM_SOCKET_PORT	(SERVICE_VM_SOCKET_PORT + 1U)
 
-/* life_mngr process run in Service VM or UOS */
+/* life_mngr process run in Service VM or User VM */
 enum process_env {
 	PROCESS_UNKNOWN = 0,
 	PROCESS_RUN_IN_SERVICE_VM,
-	PROCESS_RUN_IN_UOS,
+	PROCESS_RUN_IN_USER_VM,
 };
 
-/* Enumerated shutdown state machine only for UOS thread */
+/* Enumerated shutdown state machine only for User VM thread */
 enum shutdown_state {
 	SHUTDOWN_REQ_WAITING = 0,	     /* Can receive shutdown cmd in this state */
 	SHUTDOWN_ACK_WAITING,                /* Wait acked message from Service VM */
 	SHUTDOWN_REQ_FROM_SERVICE_VM,        /* Trigger shutdown by Service VM */
-	SHUTDOWN_REQ_FROM_UOS,             /* Trigger shutdown by UOS */
+	SHUTDOWN_REQ_FROM_USER_VM,             /* Trigger shutdown by User VM */
 
 };
 
@@ -259,7 +259,7 @@ static void *listener_fn_to_service_vm(void *arg)
 	bool shutdown_self = false;
 	unsigned char buf[BUFF_SIZE];
 
-	/* UOS-server wait for message from Service VM */
+	/* User VM server wait for message from Service VM */
 	do {
 		memset(buf, 0, sizeof(buf));
 		ret = receive_message(tty_dev_fd, buf, sizeof(buf));
@@ -275,11 +275,11 @@ static void *listener_fn_to_service_vm(void *arg)
 				shutdown_state = SHUTDOWN_REQ_FROM_SERVICE_VM;
 				ret = send_message(tty_dev_fd, ACK_CMD, sizeof(ACK_CMD));
 				if (ret != 0) {
-					LOG_WRITE("UOS send acked message failed!\n");
+					LOG_WRITE("User VM send acked message failed!\n");
 				} else {
 					shutdown_self = true;
 				}
-				LOG_WRITE("UOS start shutdown\n");
+				LOG_WRITE("User VM start shutdown\n");
 			}
 			break;
 
@@ -333,9 +333,9 @@ static void *listener_fn_to_operator(void *arg)
 	int num, ret;
 	char buf[BUFF_SIZE];
 
-	listen_fd = setup_socket_listen(UOS_SOCKET_PORT);
+	listen_fd = setup_socket_listen(USER_VM_SOCKET_PORT);
 	LOG_PRINTF("listen_fd=0x%x socket port is 0x%x\r\n",
-			listen_fd, UOS_SOCKET_PORT);
+			listen_fd, USER_VM_SOCKET_PORT);
 
 	while (1) {
 		connect_fd = accept(listen_fd, (struct sockaddr *)&client, &len);
@@ -364,7 +364,7 @@ static void *listener_fn_to_operator(void *arg)
 				}
 				continue;
 			}
-			shutdown_state = SHUTDOWN_REQ_FROM_UOS;
+			shutdown_state = SHUTDOWN_REQ_FROM_USER_VM;
 			/* send acked message to the caller */
 			LOG_WRITE("Send acked message to the caller\r\n");
 			ret = send_message(connect_fd, ACK_CMD, sizeof(ACK_CMD));
@@ -394,13 +394,13 @@ int main(int argc, char *argv[])
 {
 
 	int ret = 0;
-	char *devname_uos = "";
+	char *devname_user_vm = "";
 	enum process_env env = PROCESS_UNKNOWN;
 	pthread_t service_vm_socket_pid;
 	/* User VM wait for shutdown from Service VM */
-	pthread_t uos_thread_pid_1;
+	pthread_t user_vm_thread_pid_1;
 	/* User VM wait for shutdown from other process */
-	pthread_t uos_thread_pid_2;
+	pthread_t user_vm_thread_pid_2;
 
 	log_fd = fopen("/var/log/life_mngr.log", "w+");
 	if (log_fd == NULL) {
@@ -415,11 +415,11 @@ int main(int argc, char *argv[])
 	}
 
 	if (strncmp("uos", argv[1], NODE_SIZE) == 0) {
-		env = PROCESS_RUN_IN_UOS;
-		devname_uos = argv[2];
-		tty_dev_fd = open(devname_uos, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
+		env = PROCESS_RUN_IN_USER_VM;
+		devname_user_vm = argv[2];
+		tty_dev_fd = open(devname_user_vm, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
 		if (tty_dev_fd < 0) {
-			LOG_PRINTF("Error opening %s: %s\n", devname_uos, strerror(errno));
+			LOG_PRINTF("Error opening %s: %s\n", devname_user_vm, strerror(errno));
 			fclose(log_fd);
 			return errno;
 		}
@@ -427,8 +427,8 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 
-		ret = pthread_create(&uos_thread_pid_1, NULL, listener_fn_to_service_vm, NULL);
-		ret = pthread_create(&uos_thread_pid_2, NULL, listener_fn_to_operator, NULL);
+		ret = pthread_create(&user_vm_thread_pid_1, NULL, listener_fn_to_service_vm, NULL);
+		ret = pthread_create(&uer_vm_thread_pid_2, NULL, listener_fn_to_operator, NULL);
 
 	} else if (strncmp("sos", argv[1], NODE_SIZE) == 0) {
 		env = PROCESS_RUN_IN_SERVICE_VM;
@@ -441,9 +441,9 @@ int main(int argc, char *argv[])
 
 	if (env == PROCESS_RUN_IN_SERVICE_VM) {
 		pthread_join(service_vm_socket_pid, NULL);
-	} else if (env == PROCESS_RUN_IN_UOS) {
-		pthread_join(uos_thread_pid_1, NULL);
-		pthread_join(uos_thread_pid_2, NULL);
+	} else if (env == PROCESS_RUN_IN_USER_VM) {
+		pthread_join(user_vm_thread_pid_1, NULL);
+		pthread_join(user_vm_thread_pid_2, NULL);
 		close(tty_dev_fd);
 	}
 	fclose(log_fd);

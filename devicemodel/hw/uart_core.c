@@ -1055,7 +1055,7 @@ uart_release_backend(struct uart_vdev *uart, const char *opts)
 
 	/*
 	 * By current design, for the invalid PTY parameters, the virtual uarts
-	 * are still expose to UOS but all data be dropped by backend service.
+	 * are still expose to User VM but all data be dropped by backend service.
 	 * The uart backend is not setup for this case, so don't try to release
 	 * the uart backend in here.
 	 * TODO: need re-visit the whole policy for such scenario in future.

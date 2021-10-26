@@ -411,7 +411,7 @@ handle_vmexit(struct vmctx *ctx, struct acrn_io_request *io_req, int vcpu)
 	(*handler[exitcode])(ctx, io_req, &vcpu);
 
 	/* We cannot notify the HSM/hypervisor on the request completion at this
-	 * point if the UOS is in suspend or system reset mode, as the VM is
+	 * point if the User VM is in suspend or system reset mode, as the VM is
 	 * still not paused and a notification can kick off the vcpu to run
 	 * again. Postpone the notification till vm_system_reset() or
 	 * vm_suspend_resume() for resetting the ioreq states in the HSM and
@@ -617,7 +617,7 @@ vm_system_reset(struct vmctx *ctx)
 	 *   1. pause VM
 	 *   2. flush and clear ioreqs
 	 *   3. reset virtual devices
-	 *   4. load software for UOS
+	 *   4. load software for User VM
 	 *   5. hypercall reset vm
 	 *   6. reset suspend mode to VM_SUSPEND_NONE
 	 */
@@ -835,7 +835,7 @@ main(int argc, char *argv[])
 	/*
 	 * Ignore SIGPIPE signal and handle the error directly when write()
 	 * function fails. this will help us to catch the write failure rather
-	 * than crashing the UOS.
+	 * than crashing the User VM.
 	 */
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGPIPE\n");

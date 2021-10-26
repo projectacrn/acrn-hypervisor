@@ -407,13 +407,13 @@ vm_unsetup_memory(struct vmctx *ctx)
 	/*
 	 * For security reason, clean the VM's memory region
 	 * to avoid secret information leaking in below case:
-	 * After a UOS is destroyed, the memory will be reclaimed,
-	 * then if the new UOS starts, that memory region may be
-	 * allocated the new UOS, the previous UOS sensitive data
-	 * may be leaked to the new UOS if the memory is not cleared.
+	 * After a User VM is destroyed, the memory will be reclaimed,
+	 * then if the new User VM starts, that memory region may be
+	 * allocated the new User VM, the previous User VM sensitive data
+	 * may be leaked to the new User VM if the memory is not cleared.
 	 *
 	 * For rtvm, we can't clean VM's memory as RTVM may still
-	 * run. But we need to return the memory to SOS here.
+	 * run. But we need to return the memory to Service VM here.
 	 * Otherwise, VM can't be restart again.
 	 */
 

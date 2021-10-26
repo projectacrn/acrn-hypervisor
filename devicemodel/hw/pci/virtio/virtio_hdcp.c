@@ -19,15 +19,15 @@
  *   +---------------------+    |    |  HDCP Libraries  |
  *              |               |    +------------------+
  *              |               |              |
- *     +------------------+     |    +------------------+
- *     | HDCP SOS Daemon  |     |    | HDCP UOS Daemon  |
- *     +------------------+     |    +------------------+
+ *   +-----------------------+  |    +--------------------+
+ *   | HDCP Service VM Daemon|  |    | HDCP Uer VM Daemon |
+ *   +-----------------------+  |    +--------------------+
  *                              |
- *    Service OS User Space     |     User OS User Space
+ *    Service VM User Space     |     User VM User Space
  *                              |
  *  --------------------------  |  ---------------------------
  *                              |
- *   Service OS Kernel Space    |    User OS Kernel Space
+ *   Service VM Kernel Space    |    User VM Kernel Space
  *                              |
  *     +------------------+     |    +------------------+
  *     | i915 HDCP Driver |     |    |  HDCP Front End  |
@@ -35,12 +35,12 @@
  *                              |             |
  *                              +-------------+
  *
- * Above diagram illustrates the HDCP architecture in ACRN. In SOS, HDCP
- * library being used by media app. In UOS, HDCP Daemon gets the HDCP
+ * Above diagram illustrates the HDCP architecture in ACRN. In Service VM, HDCP
+ * library being used by media app. In User VM, HDCP Daemon gets the HDCP
  * request by open/read/write /dev/hdcp0 which is created by HDCP
  * frontend, instead of accessing GPU. Then the HDCP frontend sends the
  * requests to the HDCP backend thru virtio mechanism. HDCP backend talks to
- * HDCP SOS daemon that will ask HDCP Kernel Driver to execute the requsted
+ * HDCP Service VM daemon that will ask HDCP Kernel Driver to execute the requsted
  * operation.
  *
  */
@@ -453,7 +453,7 @@ virtio_hdcp_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * connect to hdcp daemon in init phase
 	 *
 	 * @FIXME if failed connecting to HDCP daemon, the return value should
-	 * be set appropriately for SOS not exposing the HDCP PCI device to UOS
+	 * be set appropriately for Service VM not exposing the HDCP PCI device to User VM
 	 */
 	vhdcp->fd = connect_hdcp_daemon();
 	if (vhdcp->fd < 0) {

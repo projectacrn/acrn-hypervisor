@@ -45,7 +45,7 @@ def get_launch_item_values(board_info, scenario_info=None):
     launch_item_values["uos,passthrough_devices,bluetooth"] = pthru.avl["bluetooth"]
 
     # acrn dm available optargs
-    launch_item_values['uos,uos_type'] = launch_cfg_lib.UOS_TYPES
+    launch_item_values['uos,user_vm_type'] = launch_cfg_lib.USER_VM_TYPES
     launch_item_values["uos,rtos_type"] = launch_cfg_lib.RTOS_TYPE
 
     launch_item_values["uos,vbootloader"] = launch_cfg_lib.BOOT_TYPE
@@ -114,8 +114,8 @@ def get_names():
     names = {}
 
     # get uos name
-    uos_types = launch_cfg_lib.get_uos_type()
-    names['uos_types'] = uos_types
+    user_vm_types = launch_cfg_lib.get_user_vm_type()
+    names['user_vm_types'] = user_vm_types
 
     # get board name
     (err_dic, board_name) = common.get_board_name()
@@ -134,13 +134,13 @@ def get_names():
 
 def generate_script_file(names, pt_sel, virt_io, dm, vmid, config):
 
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
     board_name = names['board_name']
     scenario_name = names['scenario_name']
 
     header_info = "#!/bin/bash\n" +\
         "# board: {}, scenario: {}, uos: {}".format(
-            board_name.upper(), scenario_name.upper(), uos_type.upper())
+            board_name.upper(), scenario_name.upper(), user_vm_type.upper())
 
     print("{}".format(header_info), file=config)
     com.gen(names, pt_sel, virt_io, dm, vmid, config)

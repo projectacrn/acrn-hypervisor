@@ -29,9 +29,9 @@
  * SUCH DAMAGE.
  *
  * Create virtio rpmb backend VBS-U. This component will work with RPMB FE
- * driver to provide one communication channel between UOS and SOS.
+ * driver to provide one communication channel between User VM and Service VM.
  * The message from RPMB daemon in Android will be transferred over the
- * channel and finally arrived RPMB physical driver on SOS kernel.
+ * channel and finally arrived RPMB physical driver on Service VM kernel.
  *
  */
 
@@ -75,7 +75,7 @@ struct virtio_rpmb {
 	struct virtio_vq_info vq;
 	pthread_mutex_t mtx;
 	/*
-	 * Different UOS (with vmid) will access physical rpmb area
+	 * Different User VM (with vmid) will access physical rpmb area
 	 * with different offsets.
 	 */
 	int vmid;
@@ -746,7 +746,7 @@ virtio_rpmb_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	rc = get_virt_rpmb_key();
 	if (rc == 0) {
-		DPRINTF(("%s: get uos key failed!\n", __func__));
+		DPRINTF(("%s: get User VM key failed!\n", __func__));
 		goto out;
 	}
 

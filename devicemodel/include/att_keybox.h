@@ -71,7 +71,7 @@ typedef struct rpmb_block {
 	uint16_t attkb_addr;
 	uint32_t attkb_size;
 	uint16_t attkb_svn;
-	uint16_t uos_rpmb_size;
+	uint16_t user_vm_rpmb_size;
 	uint8_t  reserved[230];
 } rpmb_block_t;
 #pragma pack ()

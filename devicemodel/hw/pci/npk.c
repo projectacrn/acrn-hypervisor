@@ -45,20 +45,20 @@
  *
  * Based on these, the npk virtualization is implemented in this way:
  * 1. The physical CSR is owned by Service VM, and dm/npk emulates a software
- * one for the UOS, to keep the npk driver on UOS unchanged. Some CSR
- * initial values are configured to make the UOS npk driver think it
- * is working on a real npk. The CSR configuration from UOS is ignored
+ * one for the User VM, to keep the npk driver on User VM unchanged. Some CSR
+ * initial values are configured to make the User VM npk driver think it
+ * is working on a real npk. The CSR configuration from Use VM is ignored
  * by dm, and it will not bring any side-effect. Because traces are the
- * only things needed from UOS, the location to send traces to and the
+ * only things needed from User VM, the location to send traces to and the
  * trace format are not affected by the CSR configuration.
  * 2. Part of the physical STMR will be reserved for the Service VM, and the
- * others will be passed through to the UOS, so that the UOS can write
+ * others will be passed through to the User VM, so that the User VM can write
  * the traces to the MMIO space directly.
  *
  * A parameter is needed to indicate the offset and size of the Masters
- * to pass through to the UOS. For example, "-s 0:2,npk,512/256", there
+ * to pass through to the User VM. For example, "-s 0:2,npk,512/256", there
  * are 256 Masters from #768 (256+512, #256 is the starting Master for
- * software tracing) passed through to the UOS.
+ * software tracing) passed through to the User VM.
  *
  *             CSR                       STMR
  * Service VM:  +--------------+  +----------------------------------+
@@ -73,11 +73,11 @@
  * 2. The dm is launched with parameters to enable npk virtualization.
  * 3. The dm/npk sets up a bar for CSR, and some values are initialized
  * based on the parameters, for example, the total number of Masters for
- * the UOS.
+ * the User VM.
  * 4. The dm/npk sets up a bar for STMR, and maps part of the physical
  * STMR to it with an offset, according to the parameters.
- * 5. The UOS boots up, and the native npk driver on the UOS is loaded.
- * 6. Enable the traces from UOS, and the traces are written directly to
+ * 5. The User VM boots up, and the native npk driver on the User VM is loaded.
+ * 6. Enable the traces from User VM, and the traces are written directly to
  * STMR, but not output by npk for now.
  * 7. Enable the npk output on Service VM, and now the traces are output by npk
  * to the selected target.
@@ -173,7 +173,7 @@ static inline int valid_param(uint32_t m_off, uint32_t m_num)
 
 /*
  * Set up a bar for CSR, and some values are initialized based on the
- * parameters, for example, the total number of Masters for the UOS.
+ * parameters, for example, the total number of Masters for the User VM.
  * Set up a bar for STMR, and map part of the physical STMR to it with
  * an offset, according to the parameters.
  */
@@ -286,7 +286,7 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	/*
-	 * map this part of STMR to the guest so that the traces from UOS are
+	 * map this part of STMR to the guest so that the traces from User VM are
 	 * written directly to it.
 	 */
 	error = vm_map_ptdev_mmio(ctx, dev->bus, dev->slot, dev->func,
@@ -301,7 +301,7 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		d = &regs_default_val[i];
 		npk_csr[d->csr].data.u32[d->offset >> 2] = d->default_val;
 	}
-	/* setup the SW Master Start/Stop and Channels per Master for UOS */
+	/* setup the SW Master Start/Stop and Channels per Master for User VM */
 	npk_sth_reg32(NPK_CSR_STHCAP0) = NPK_SW_MSTR_STRT |
 				((m_num + NPK_SW_MSTR_STRT - 1) << 16);
 	npk_sth_reg32(NPK_CSR_STHCAP1) = ((NPK_SW_MSTR_STRT - 1) << 24) |
@@ -326,7 +326,7 @@ static void pci_npk_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	npk_in_use = 0;
 }
 
-/* the CSR configuration from UOS will not take effect on the physical NPK */
+/* the CSR configuration from User VM will not take effect on the physical NPK */
 static void pci_npk_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		int baridx, uint64_t offset, int size, uint64_t value)
 {

@@ -590,7 +590,7 @@ cbc_update_heartbeat(struct cbc_pkt *pkt, uint8_t cmd, uint8_t sus_action)
 }
 
 /*
- * Update wakeup reason value and notify UOS immediately.
+ * Update wakeup reason value and notify User VM immediately.
  * Some events can change the wakeup reason include periodic wakeup reason
  * from IOC firmware, IOC boot/resume reason, heartbeat state changing.
  */
@@ -621,7 +621,7 @@ cbc_update_wakeup_reason(struct cbc_pkt *pkt, uint32_t reason)
 }
 
 /*
- * CBC wakeup reason processing is main entry for Tx(IOC->UOS) lifecycle
+ * CBC wakeup reason processing is main entry for Tx(IOC->User_VM) lifecycle
  * service.
  */
 static void
@@ -640,20 +640,20 @@ cbc_process_wakeup_reason(struct cbc_pkt *pkt)
 	reason = payload[0] | (payload[1] << 8) | (payload[2] << 16);
 
 	/*
-	 * Save the reason for UOS status switching from inactive to active,
+	 * Save the reason for User VM status switching from inactive to active,
 	 * since need to send a wakeup reason immediatly after the switching.
 	 */
 	pkt->reason = reason;
 
-	if (pkt->uos_active) {
+	if (pkt->user_vm_active) {
 		reason |= CBC_WK_RSN_SOC;
 
-		/* Unset RTC bit if UOS sends active heartbeat */
+		/* Unset RTC bit if User VM sends active heartbeat */
 		reason &= ~CBC_WK_RSN_RTC;
 	} else {
 		/*
-		 * If UOS is inactive, indicate the acrnd boot reason
-		 * as UOS periodic wakeup reason.
+		 * If User VM is inactive, indicate the acrnd boot reason
+		 * as User VM periodic wakeup reason.
 		 */
 		reason = pkt->ioc->boot_reason;
 
@@ -708,7 +708,7 @@ cbc_update_rtc_timer(uint16_t value, uint8_t unit)
 }
 
 /*
- * CBC heartbeat processing is main entry for Rx(UOS->IOC) lifecycle service.
+ * CBC heartbeat processing is main entry for Rx(User_VM->IOC) lifecycle service.
  */
 static void
 cbc_process_heartbeat(struct cbc_pkt *pkt)
@@ -753,7 +753,7 @@ cbc_process_signal(struct cbc_pkt *pkt)
 	 * link_len is 0 means the packet is transmitted to PTY(UART DM)
 	 * if the signal channel is not active, do not transmit it to PTY
 	 * to CBC cdevs, always forward the signals because signal channel
-	 * status only for UOS
+	 * status only for User VM
 	 */
 	if (pkt->req->link_len == 0 && is_active == false &&
 			(cmd == CBC_SD_SINGLE_SIGNAL ||
@@ -945,22 +945,22 @@ cbc_tx_handler(struct cbc_pkt *pkt)
 				CBC_WK_RSN_SOC);
 		cbc_send_pkt(pkt);
 
-		/* Heartbeat init also indicates UOS enter active state */
-		pkt->uos_active = true;
-	} else if (pkt->req->rtype == CBC_REQ_T_UOS_ACTIVE) {
+		/* Heartbeat init also indicates User VM enter active state */
+		pkt->user_vm_active = true;
+	} else if (pkt->req->rtype == CBC_REQ_T_USER_VM_ACTIVE) {
 		cbc_update_wakeup_reason(pkt, pkt->ioc->boot_reason |
 				CBC_WK_RSN_SOC);
 		cbc_send_pkt(pkt);
 
-		/* Enable UOS active flag */
-		pkt->uos_active = true;
-	} else if (pkt->req->rtype == CBC_REQ_T_UOS_INACTIVE) {
+		/* Enable User VM active flag */
+		pkt->user_vm_active = true;
+	} else if (pkt->req->rtype == CBC_REQ_T_USER_VM_INACTIVE) {
 		cbc_update_wakeup_reason(pkt, CBC_WK_RSN_SHUTDOWN);
 
 		cbc_send_pkt(pkt);
 
-		/* Disable UOS active flag */
-		pkt->uos_active = false;
+		/* Disable User VM active flag */
+		pkt->user_vm_active = false;
 
 		/*
 		 * After sending shutdown wakeup reason, then trigger shutdown

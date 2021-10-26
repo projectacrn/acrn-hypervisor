@@ -1,8 +1,8 @@
 <acrn-config board="whl-ipc-i5" scenario="shared" uos_launcher="1">
     <uos id="1">
-	<uos_type desc="UOS type">VXWORKS</uos_type>
-	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
-	<mem_size desc="UOS memory size in MByte">2048</mem_size>
+	<user_vm_type desc="User VM type">VXWORKS</user_vm_type>
+	<rtos_type desc="User VM Realtime capability">Hard RT</rtos_type>
+	<mem_size desc="User VM memory size in MByte">2048</mem_size>
 	<gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>

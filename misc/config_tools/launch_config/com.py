@@ -10,10 +10,10 @@ import pt
 
 
 def is_nuc_whl_linux(names, vmid):
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
     board_name = names['board_name']
 
-    if launch_cfg_lib.is_linux_like(uos_type) and board_name not in ("apl-mrb", "apl-up2"):
+    if launch_cfg_lib.is_linux_like(user_vm_type) and board_name not in ("apl-mrb", "apl-up2"):
         return True
 
     return False
@@ -27,13 +27,13 @@ def is_mount_needed(virt_io, vmid):
     return False
 
 
-def tap_uos_net(names, virt_io, vmid, config):
-    uos_type = names['uos_types'][vmid]
+def tap_user_vm_net(names, virt_io, vmid, config):
+    user_vm_type = names['user_vm_types'][vmid]
     board_name = names['board_name']
 
-    vm_name = common.undline_name(uos_type).lower()
+    vm_name = common.undline_name(user_vm_type).lower()
 
-    if launch_cfg_lib.is_linux_like(uos_type) or uos_type in ("ANDROID", "ALIOS"):
+    if launch_cfg_lib.is_linux_like(user_vm_type) or user_vm_type in ("ANDROID", "ALIOS"):
         i = 0
         for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
             if not mount_flag:
@@ -72,11 +72,11 @@ def tap_uos_net(names, virt_io, vmid, config):
     print("", file=config)
 
 
-def off_line_cpus(args, vmid, uos_type, config):
+def off_line_cpus(args, vmid, user_vm_type, config):
     """
     :param args: the dictionary of argument for acrn-dm
     :param vmid: ID of the vm
-    :param uos_type: the type of UOS
+    :param user_vm_type: the type of User VM
     :param config: it is a file pointer to write offline cpu information
     """
     pcpu_id_list = get_cpu_affinity_list(args["cpu_affinity"], vmid)
@@ -89,7 +89,7 @@ def off_line_cpus(args, vmid, uos_type, config):
         key = "scenario config error"
         launch_cfg_lib.ERR_LIST[key] = "No available cpu to offline and pass it to vm {}".format(vmid)
 
-    print("# offline pinned vCPUs from Service VM before launch UOS", file=config)
+    print("# offline pinned vCPUs from Service VM before launch User VM", file=config)
     print('cpu_path="/sys/devices/system/cpu"', file=config)
     print("for i in `ls ${cpu_path}`; do", file=config)
     print("    for j in {}; do".format(' '.join([str(i) for i in pcpu_id_list])), file=config)
@@ -114,18 +114,18 @@ def off_line_cpus(args, vmid, uos_type, config):
     print("", file=config)
 
 
-def run_container(board_name, uos_type, config):
+def run_container(board_name, user_vm_type, config):
     """
     The container contains the clearlinux as rootfs
     :param board_name: board name
-    :param uos_type: the os name of user os
+    :param user_vm_type: the os name of user os
     :param config: the file pointer to store the information
     """
     # the runC.json is store in the path under board name, but for nuc7i7dnb/nuc6cayh/kbl-nuc-i7 is under nuc/
     if 'nuc' in board_name:
         board_name = 'nuc'
 
-    if board_name not in ("apl-mrb", "nuc") or not launch_cfg_lib.is_linux_like(uos_type):
+    if board_name not in ("apl-mrb", "nuc") or not launch_cfg_lib.is_linux_like(user_vm_type):
         return
 
     print("function run_container()", file=config)
@@ -221,7 +221,7 @@ def interrupt_storm(pt_sel, config):
     print("", file=config)
 
 
-def gvt_arg_set(dm, vmid, uos_type, config):
+def gvt_arg_set(dm, vmid, user_vm_type, config):
 
     gvt_args = dm['gvt_args'][vmid]
     gpu_bdf = launch_cfg_lib.get_gpu_bdf()
@@ -234,7 +234,7 @@ def gvt_arg_set(dm, vmid, uos_type, config):
     elif gvt_args:
         print('   -s 2,pci-gvt -G "$2"  \\', file=config)
 
-def log_level_set(uos_type, config):
+def log_level_set(user_vm_type, config):
 
     print("#logger_setting, format: logger_name,level; like following", file=config)
     print('logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"', file=config)
@@ -274,17 +274,17 @@ def tap_network(virt_io, vmid, config):
 
 def launch_begin(names, virt_io, vmid, config):
     board_name = names['board_name']
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
 
-    launch_uos = common.undline_name(uos_type).lower()
+    launch_uos = common.undline_name(user_vm_type).lower()
     tap_network(virt_io, vmid, config)
-    run_container(board_name, uos_type, config)
+    run_container(board_name, user_vm_type, config)
     print("function launch_{}()".format(launch_uos), file=config)
     print("{", file=config)
 
 
-def wa_usage(uos_type, config):
-    if uos_type in ("ANDROID", "ALIOS"):
+def wa_usage(user_vm_type, config):
+    if user_vm_type in ("ANDROID", "ALIOS"):
         print("# WA for USB role switch hang issue, disable runtime PM of xHCI device", file=config)
         print("echo on > /sys/devices/pci0000:00/0000:00:15.0/power/control", file=config)
         print("", file=config)
@@ -298,13 +298,13 @@ def mem_size_set(args, vmid, config):
 def uos_launch(names, args, virt_io, vmid, config):
 
     gvt_args = args['gvt_args'][vmid]
-    uos_type = names['uos_types'][vmid]
-    launch_uos = common.undline_name(uos_type).lower()
+    user_vm_type = names['user_vm_types'][vmid]
+    launch_uos = common.undline_name(user_vm_type).lower()
     board_name = names['board_name']
     if 'nuc' in board_name:
         board_name = 'nuc'
 
-    if uos_type == "CLEARLINUX" and board_name in ("apl-mrb", "nuc"):
+    if user_vm_type == "CLEARLINUX" and board_name in ("apl-mrb", "nuc"):
         print('if [ "$1" = "-C" ];then', file=config)
         print('    if [ $(hostname) = "runc" ]; then', file=config)
         print('            echo "Already in container exit!"', file=config)
@@ -362,10 +362,10 @@ def uos_launch(names, args, virt_io, vmid, config):
 def launch_end(names, args, virt_io, vmid, config):
 
     board_name = names['board_name']
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
     mem_size = args["mem_size"][vmid]
 
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_whl_linux(names, vmid):
+    if user_vm_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_whl_linux(names, vmid):
         print("debug=0", file=config)
         print("", file=config)
         print('while getopts "hdC" opt', file=config)
@@ -404,18 +404,18 @@ def launch_end(names, args, virt_io, vmid, config):
 
     service_vmid = launch_cfg_lib.get_service_vmid()
     if args['cpu_sharing'] == "SCHED_NOOP" or common.VM_TYPES[vmid+service_vmid] == "POST_RT_VM":
-        off_line_cpus(args, vmid, uos_type, config)
+        off_line_cpus(args, vmid, user_vm_type, config)
 
     uos_launch(names, args, virt_io, vmid, config)
 
 
 def set_dm_pt(names, sel, vmid, config, dm):
 
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
 
     if sel.bdf['usb_xdci'][vmid] and sel.slot['usb_xdci'][vmid]:
         sub_attr = ''
-        if uos_type == "WINDOWS":
+        if user_vm_type == "WINDOWS":
             sub_attr = ',d3hot_reset'
         print('   -s {},passthru,{}/{}/{}{} \\'.format(sel.slot["usb_xdci"][vmid], sel.bdf["usb_xdci"][vmid][0:2],\
             sel.bdf["usb_xdci"][vmid][3:5], sel.bdf["usb_xdci"][vmid][6:7], sub_attr), file=config)
@@ -436,7 +436,7 @@ def set_dm_pt(names, sel, vmid, config, dm):
             sel.bdf["bluetooth"][vmid][3:5], sel.bdf["bluetooth"][vmid][6:7]), file=config)
 
     if sel.bdf['wifi'][vmid] and sel.slot['wifi'][vmid]:
-        if uos_type == "ANDROID":
+        if user_vm_type == "ANDROID":
             print("   -s {},passthru,{}/{}/{},keep_gsi \\".format(sel.slot["wifi"][vmid], sel.bdf["wifi"][vmid][0:2], \
                 sel.bdf["wifi"][vmid][3:5], sel.bdf["wifi"][vmid][6:7]), file=config)
         else:
@@ -547,7 +547,7 @@ def pcpu_arg_set(dm, vmid, config):
 
 def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
     board_name = names['board_name']
 
     boot_image_type(dm, vmid, config)
@@ -558,8 +558,8 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
     # clearlinux/android/alios
     print('acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\'.format(scenario_uuid), file=config)
-    if launch_cfg_lib.is_linux_like(uos_type) or uos_type in ("ANDROID", "ALIOS"):
-        if uos_type in ("ANDROID", "ALIOS"):
+    if launch_cfg_lib.is_linux_like(user_vm_type) or user_vm_type in ("ANDROID", "ALIOS"):
+        if user_vm_type in ("ANDROID", "ALIOS"):
             print('   $npk_virt \\', file=config)
             print("   -s {},virtio-rpmb \\".format(launch_cfg_lib.virtual_dev_slot("virtio-rpmb")), file=config)
             print("   --enable_trusty \\", file=config)
@@ -577,7 +577,7 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
             print("   --lapic_pt \\", file=config)
 
     # windows
-    if uos_type == "WINDOWS":
+    if user_vm_type == "WINDOWS":
         print("   --windows \\", file=config)
 
     # pm_channel set
@@ -605,7 +605,7 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     print("   $logger_setting \\", file=config)
 
     # GVT args set
-    gvt_arg_set(dm, vmid, uos_type, config)
+    gvt_arg_set(dm, vmid, user_vm_type, config)
 
     # XHCI args set
     xhci_args_set(dm, vmid, config)
@@ -628,7 +628,7 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         ssram_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "SSRAM", "SSRAM_ENABLED")
     except:
         pass
-    if uos_type == "PREEMPT-RT LINUX" and ssram_enabled == 'y':
+    if user_vm_type == "PREEMPT-RT LINUX" and ssram_enabled == 'y':
         print("   --ssram \\", file=config)
 
     for value in sel.bdf.values():
@@ -636,14 +636,14 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
             print("   $intr_storm_monitor \\", file=config)
             break
 
-    if uos_type != "PREEMPT-RT LINUX":
+    if user_vm_type != "PREEMPT-RT LINUX":
         print("   -s 1:0,lpc \\", file=config)
 
     # redirect console
     if dm['vuart0'][vmid] == "Enable":
         print("   -l com1,stdio \\", file=config)
 
-    if launch_cfg_lib.is_linux_like(uos_type) or uos_type in ("ANDROID", "ALIOS"):
+    if launch_cfg_lib.is_linux_like(user_vm_type) or user_vm_type in ("ANDROID", "ALIOS"):
         if board_name == "apl-mrb":
             print("   -i /run/acrn/ioc_$vm_name,0x20 \\", file=config)
             print("   -l com2,/run/acrn/ioc_$vm_name \\", file=config)
@@ -669,21 +669,21 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 def gen(names, pt_sel, virt_io, dm, vmid, config):
 
     board_name = names['board_name']
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
 
     # passthrough bdf/vpid dictionay
     pt.gen_pt_head(names, dm, pt_sel, vmid, config)
 
     # gen launch header
     launch_begin(names, virt_io, vmid, config)
-    tap_uos_net(names, virt_io,  vmid, config)
+    tap_user_vm_net(names, virt_io,  vmid, config)
 
     # passthrough device
     pt.gen_pt(names, dm, pt_sel, vmid, config)
-    wa_usage(uos_type, config)
+    wa_usage(user_vm_type, config)
     mem_size_set(dm, vmid, config)
     interrupt_storm(pt_sel, config)
-    log_level_set(uos_type, config)
+    log_level_set(user_vm_type, config)
 
     # gen acrn-dm args
     dm_arg_set(names, pt_sel, virt_io, dm, vmid, config)

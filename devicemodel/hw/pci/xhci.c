@@ -42,10 +42,12 @@
  *  |  |  | drd emulator  |<----------+    +----------------------+
  *  |  |  +---------------+  |  |     |    |        app           |
  *  |  +---------|-----------+  |     |    +----------------------+
- *  +------------|--------------+     | echo H or D |
- *               | SOS USER SPACE     |             |  UOS USER SPACE
+ *  +------------|--------------+     |   echo H or D |
+ *               | Service VM   |     |
+ *               | USER SPACE   |     |      User VM USER SPACE
  *  -------------|--------------------|-------------|-----------------
- *               v SOS KERNEL SPACE   |             v  UOS KERNEL SPACE
+ *               v Service VM   |     |             |  
+ *               |KERNEL SPACE  |     |             v  User VM KERNEL SPACE
  *  +------------------------------+  |    +--------------------------+
  *  | native drd sysfs interface   |  |    |native drd sysfs interface|
  *  +------------------------------+  |    +--------------------------+

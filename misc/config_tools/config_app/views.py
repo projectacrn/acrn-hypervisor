@@ -977,7 +977,7 @@ def get_post_launch_vms():
 
     vm_list = get_post_launch_vm_list(scenario_name)
 
-    uos_id_list = []
+    user_vm_id_list = []
     launch_name = data['launch_name']
     xml_configs = get_xml_configs()
     launch_config = xml_configs[3]
@@ -985,12 +985,12 @@ def get_post_launch_vms():
     if launch_config is not None and launch_config.get_curr_root() is not None:
         for uos in list(launch_config.get_curr_root()):
             if 'id' in uos.attrib:
-                uos_id_list.append(int(uos.attrib['id'])-1)
+                user_vm_id_list.append(int(uos.attrib['id'])-1)
 
     vm_list_index = [i for i in range(len(vm_list))]
     vm_list_index = set(vm_list_index)
-    uos_id_list = set(uos_id_list)
-    index = list(vm_list_index - uos_id_list)
+    user_vm_id_list = set(user_vm_id_list)
+    index = list(vm_list_index - user_vm_id_list)
     vm_list = [vm_list[i] for i in index]
 
     return {'vm_list': vm_list}

@@ -334,7 +334,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 		/* Properly null-terminate cmd_out */
 		cmd_out[len - 1] = '\0';
 
-		printf("No executable acrn-dm found: %s, ,please make sure it can launch an UOS\n"
+		printf("No executable acrn-dm found: %s, ,please make sure it can launch an User VM\n"
 		       "result:\n%s\n", argv[1], cmd_out);
 		goto get_vmname;
 	}

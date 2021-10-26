@@ -39,14 +39,14 @@
  *           +---------+     |        |                  |
  *           v               v        v                  |
  *   +----------------+   +-----+   +----------------+   | +---------------+
- *  -+ /dev/gpiochip0 +---+ ... +---+ /dev/gpiochipN +-----+ UOS           +-
+ *  -+ /dev/gpiochip0 +---+ ... +---+ /dev/gpiochipN +-----+ User VM       +-
  *   +                +   +     +   +                +   | +/dev/gpiochip0 +
  *   +------------+---+   +--+--+   +-------------+--+   | +------+--------+
  *   Kernel space |          +--------------+     |      |        |
  *                +--------------------+    |     |      |        |
  *                                     v    v     v      |        v
  *   +---------------------+    +---------------------+  |  +-------------+
- *   |                     |    |                     |  |  |UOS Virtio   |
+ *   |                     |    |                     |  |  |UserVM Virtio|
  *   |  pinctrl subsystem  |<---+  gpiolib subsystem  |  +->+GPIO Driver  |
  *   |                     |    |                     |     |             |
  *   +--------+------------+    +----------+----------+     +-------------+
@@ -65,7 +65,7 @@
 /*
  *  GPIO IRQ virtualization architecture
  *
- *               SOS                                         UOS
+ *               Service VM                                   User VM
  *  +-------------------------------+
  *  |      virtio GPIO mediator     |
  *  | +-------------------------+   |
@@ -85,10 +85,10 @@
  *    | gpiolib framework|                   |  | |IRQ consumer|  |IRQ consumer|
  *    +------------------+                   |  | +------------+  +------------+
  *                                           |  | +----------------------------+
- *                                           |  | |   UOS gpiolib framework    |
+ *                                           |  | | User VM gpiolib framework  |
  *                                           |  | +----------------------------+
  *                                           |  | +----------------------+
- *                                           |  +-+   UOS virtio GPIO    |
+ *                                           |  +-+   User VM virtio GPIO|
  *                                           +--->|   IRQ chip           |
  *                                                +----------------------+
  */
@@ -640,8 +640,8 @@ virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 
 			/*
 			 * if the user provides the name of gpios in the
-			 * command line paremeter, then provide it to UOS,
-			 * otherwise provide the physical name of gpio to UOS.
+			 * command line paremeter, then provide it to User VM,
+			 * otherwise provide the physical name of gpio to User VM.
 			 */
 			if (strnlen(line->vname, sizeof(line->vname)))
 				strncpy(data[i].name, line->vname,

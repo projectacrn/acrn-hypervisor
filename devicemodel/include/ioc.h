@@ -638,12 +638,12 @@ enum cbc_queue_type {
  * CBC request types.
  */
 enum cbc_request_type {
-	CBC_REQ_T_PROT,		/* CBC protocol request */
-	CBC_REQ_T_SUSPEND,	/* CBC suspend request */
-	CBC_REQ_T_SHUTDOWN,	/* CBC shutdown request */
-	CBC_REQ_T_HB_INIT,	/* CBC Heartbeat init request */
-	CBC_REQ_T_UOS_ACTIVE,	/* CBC UOS active request */
-	CBC_REQ_T_UOS_INACTIVE	/* CBC UOS inactive request */
+	CBC_REQ_T_PROT,		   /* CBC protocol request */
+	CBC_REQ_T_SUSPEND,	   /* CBC suspend request */
+	CBC_REQ_T_SHUTDOWN,	   /* CBC shutdown request */
+	CBC_REQ_T_HB_INIT,	   /* CBC Heartbeat init request */
+	CBC_REQ_T_USER_VM_ACTIVE,  /* CBC User VM active request */
+	CBC_REQ_T_USER_VM_INACTIVE /* CBC User VM inactive request */
 };
 
 /*
@@ -759,7 +759,7 @@ enum vm_request_type {
  * CBC packet is mainly structure for CBC protocol process.
  */
 struct cbc_pkt {
-	bool uos_active;		/* Mark UOS active status */
+	bool user_vm_active;		/* Mark User VM active status */
 	uint32_t reason;		/* Record current wakeup reason */
 	struct cbc_request *req;	/* CBC packet data */
 	struct cbc_config *cfg;		/* CBC and whitelist configurations */

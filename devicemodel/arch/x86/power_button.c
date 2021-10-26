@@ -67,8 +67,8 @@ static int
 vm_suspend_handler(void *arg)
 {
 	/*
-	 * Invoke vm_stop_handler directly in here since suspend of UOS is
-	 * set by UOS power button setting.
+	 * Invoke vm_stop_handler directly in here since suspend of User VM is
+	 * set by User VM power button setting.
 	 */
 	return vm_stop_handler(arg);
 }
@@ -211,7 +211,7 @@ power_button_init(struct vmctx *ctx)
 	}
 
 	/*
-	 * Suspend or shutdown UOS by acrnctl suspend and
+	 * Suspend or shutdown User VM by acrnctl suspend and
 	 * stop command.
 	 */
 	if (monitor_run == false) {

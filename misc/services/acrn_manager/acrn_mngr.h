@@ -91,11 +91,11 @@ enum msgid {
 
 /* DM handled message event types */
 enum dm_msgid {
-	DM_STOP = MSG_MAX + 1,	/* Stop this UOS */
-	DM_SUSPEND,		/* Suspend this UOS from running state */
-	DM_RESUME,		/* Resume this UOS from suspend state */
-	DM_QUERY,		/* Ask power state of this UOS */
-	DM_BLKRESCAN,		/* Rescan virtio-blk device for any changes in UOS */
+	DM_STOP = MSG_MAX + 1,	/* Stop this User VM */
+	DM_SUSPEND,		/* Suspend this User VM from running state */
+	DM_RESUME,		/* Resume this User VM from suspend state */
+	DM_QUERY,		/* Ask power state of this User VM */
+	DM_BLKRESCAN,		/* Rescan virtio-blk device for any changes in User VM */
 	DM_MAX,
 };
 
@@ -109,9 +109,9 @@ enum acrnd_msgid {
 	DM_NOTIFY,		/* DM notify Acrnd that state is changed */
 
 	/* SERVICE-VM-LCS ->Acrnd */
-	ACRND_STOP,		/* SERVICE-VM-LCS request to Stop all UOS */
-	ACRND_RESUME,		/* SERVICE-VM-LCS request to Resume UOS */
-	ACRND_SUSPEND,		/* SERVICE-VM-LCS request to Suspend all UOS */
+	ACRND_STOP,		/* SERVICE-VM-LCS request to Stop all User VM */
+	ACRND_RESUME,		/* SERVICE-VM-LCS request to Resume User VM */
+	ACRND_SUSPEND,		/* SERVICE-VM-LCS request to Suspend all User VM */
 
 	ACRND_MAX,
 };
