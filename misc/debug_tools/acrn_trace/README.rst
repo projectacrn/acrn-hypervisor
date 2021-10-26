@@ -93,17 +93,11 @@ Here's a typical use of ``acrntrace`` to capture trace data from the Service VM,
 convert the binary data to human-readable form, copy the processed trace
 data to your development computer (Linux system), and run the analysis tool.
 
-1. On the Service VM, clear buffers before starting a trace:
+1. On the Service VM, start capturing buffered trace data:
 
    .. code-block:: none
 
-      # acrntrace -c
-
-#. Start capturing buffered trace data:
-
-   .. code-block:: none
-
-      # acrntrace
+      sudo acrntrace
 
    Trace files are created under the current directory where you launched
    ``acrntrace``, with a date-time-based directory name such as
@@ -119,7 +113,7 @@ data to your development computer (Linux system), and run the analysis tool.
 
    .. code-block:: none
 
-      # acrntrace_format.py formats trace_data
+      sudo acrntrace_format.py formats trace_data
 
    Trace data will be converted to human-readable format based on a given format
    and printed to stdout.
@@ -130,7 +124,7 @@ data to your development computer (Linux system), and run the analysis tool.
 
    .. code-block:: none
 
-      # scp -r ./acrntrace/20171115-101605/ \
+      sudo scp -r ./acrntrace/20171115-101605/ \
           username@hostname:/home/username/trace_data
 
    Replace username and hostname with appropriate values.
@@ -140,7 +134,7 @@ data to your development computer (Linux system), and run the analysis tool.
 
    .. code-block:: none
 
-      # acrnalyze.py -i /home/xxxx/trace_data/20171115-101605/0 \
+      sudo acrnalyze.py -i /home/xxxx/trace_data/20171115-101605/0 \
            -o /home/xxxx/trace_data/20171115-101605/cpu0 --vm_exit --irq
 
    - The analysis report is written to stdout, or to a CSV file if
@@ -155,8 +149,8 @@ directory. To build and install ``acrntrace``, run these commands:
 
 .. code-block:: none
 
-   # make
-   # make install
+   make
+   sudo make install
 
 The processing scripts are in ``misc/debug_tools/acrn_trace/scripts``. The
 ``acrnalyze.py`` tool needs to be copied to and run on your development
