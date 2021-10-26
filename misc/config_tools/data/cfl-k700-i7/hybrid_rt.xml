@@ -161,10 +161,24 @@
     </legacy_vuart>
     <legacy_vuart id="1">
         <type>VUART_LEGACY_PIO</type>
-        <base>SERVICE_VM_COM2_BASE</base>
-        <irq>SERVICE_VM_COM2_IRQ</irq>
+        <base>CONFIG_COM_BASE</base>
+        <irq>0</irq>
         <target_vm_id>0</target_vm_id>
         <target_uart_id>1</target_uart_id>
+    </legacy_vuart>
+    <legacy_vuart id="2">
+        <type>VUART_LEGACY_PIO</type>
+        <base>CONFIG_COM_BASE</base>
+        <irq>0</irq>
+        <target_vm_id>2</target_vm_id>
+        <target_uart_id>2</target_uart_id>
+    </legacy_vuart>
+    <legacy_vuart id="3">
+        <type>VUART_LEGACY_PIO</type>
+        <base>CONFIG_COM_BASE</base>
+        <irq>0</irq>
+        <target_vm_id>3</target_vm_id>
+        <target_uart_id>2</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
         <base>INVALID_PCI_BASE</base>
@@ -181,7 +195,7 @@
         <rootfs>/dev/nvme0n1p3</rootfs>
         <bootargs>
         rw rootwait console=ttyS0,115200n8 ignore_loglevel no_timer_check
-        hvlog=2M@0xe00000 memmap=0x200000$0xe00000
+        hvlog=2M@0xe00000 memmap=0x200000$0xe00000 8250.nr_uarts=20
         </bootargs>
     </board_private>
   </vm>
@@ -215,6 +229,13 @@
         <irq>COM2_IRQ</irq>
         <target_vm_id>0</target_vm_id>
         <target_uart_id>0</target_uart_id>
+    </legacy_vuart>
+    <legacy_vuart id="2">
+        <type>VUART_LEGACY_PIO</type>
+        <base>COM2_BASE</base>
+        <irq>COM2_IRQ</irq>
+        <target_vm_id>1</target_vm_id>
+        <target_uart_id>2</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
         <base>INVALID_PCI_BASE</base>
@@ -254,6 +275,13 @@
         <irq>COM2_IRQ</irq>
         <target_vm_id>0</target_vm_id>
         <target_uart_id>0</target_uart_id>
+    </legacy_vuart>
+    <legacy_vuart id="2">
+        <type>VUART_LEGACY_PIO</type>
+        <base>COM2_BASE</base>
+        <irq>COM2_IRQ</irq>
+        <target_vm_id>1</target_vm_id>
+        <target_uart_id>3</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
         <base>INVALID_PCI_BASE</base>
