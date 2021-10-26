@@ -136,17 +136,15 @@
   </xsl:template>
 
   <xsl:template match="guest_flags">
-    <xsl:if test="not(acrn:is-post-launched-vm(../vm_type))">
-      <xsl:if test="guest_flag">
-        <xsl:choose>
-          <xsl:when test="guest_flag = '' or guest_flag = '0' or guest_flag = '0UL'">
-            <xsl:value-of select="acrn:initializer('guest_flags', '0UL')" />
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:value-of select="acrn:initializer('guest_flags', concat('(', acrn:string-join(guest_flag, '|', '', ''),')'))" />
-          </xsl:otherwise>
-        </xsl:choose>
-      </xsl:if>
+    <xsl:if test="guest_flag">
+      <xsl:choose>
+        <xsl:when test="guest_flag = '' or guest_flag = '0' or guest_flag = '0UL'">
+          <xsl:value-of select="acrn:initializer('guest_flags', '0UL')" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="acrn:initializer('guest_flags', concat('(', acrn:string-join(guest_flag, '|', '', ''),')'))" />
+        </xsl:otherwise>
+      </xsl:choose>
     </xsl:if>
   </xsl:template>
 
