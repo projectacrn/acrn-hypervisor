@@ -101,7 +101,7 @@ data to your development computer (Linux system), and run the analysis tool.
 
    Trace files are created under the current directory where you launched
    ``acrntrace``, with a date-time-based directory name such as
-   ``./acrntrace/20171115-101605``.
+   ``./acrntrace/20211027-101605``.
 
 #. When done, stop a running ``acrntrace``:
 
@@ -124,7 +124,7 @@ data to your development computer (Linux system), and run the analysis tool.
 
    .. code-block:: none
 
-      sudo scp -r ./acrntrace/20171115-101605/ \
+      sudo scp -r ./acrntrace/20211027-101605/ \
           username@hostname:/home/username/trace_data
 
    Replace username and hostname with appropriate values.
@@ -134,8 +134,8 @@ data to your development computer (Linux system), and run the analysis tool.
 
    .. code-block:: none
 
-      sudo acrnalyze.py -i /home/xxxx/trace_data/20171115-101605/0 \
-           -o /home/xxxx/trace_data/20171115-101605/cpu0 --vm_exit --irq
+      sudo acrnalyze.py -i /home/xxxx/trace_data/20211027-101605/0 \
+           -o /home/xxxx/trace_data/20211027-101605/cpu0 --vm_exit --irq
 
    - The analysis report is written to stdout, or to a CSV file if
      a file name is specified using ``-o filename``.
