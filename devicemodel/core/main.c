@@ -1012,6 +1012,11 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+	if (parse_madt()) {
+		pr_err("parse madt failed\n");
+		exit(1);
+	}
+
 	if (!init_hugetlb()) {
 		pr_err("init_hugetlb failed\n");
 		exit(1);
