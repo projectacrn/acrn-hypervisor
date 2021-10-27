@@ -441,7 +441,7 @@ static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint
 		if (pcpu_id < 0)
 			return -1;
 
-		guest_lapicid_tbl[vcpu_id] = lapicid_from_pcpuid(platform_info, pcpu_id);
+		guest_lapicid_tbl[vcpu_id] = lapicid_from_pcpuid(pcpu_id);
 	}
 	return 0;
 }

@@ -836,6 +836,11 @@ main(int argc, char *argv[])
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGPIPE\n");
 
+	if (parse_madt()) {
+		pr_err("Failed to parse the MADT table\n");
+		exit(1);
+	}
+
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
 		switch (c) {
