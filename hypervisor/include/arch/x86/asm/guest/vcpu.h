@@ -176,27 +176,24 @@ enum reset_mode;
 #define NUM_COMMON_MSRS		23U
 
 #ifdef CONFIG_VCAT_ENABLED
-#define NUM_VCAT_L2_MSRS	MAX_CACHE_CLOS_NUM_ENTRIES
-#define NUM_VCAT_L3_MSRS	MAX_CACHE_CLOS_NUM_ENTRIES
+#define NUM_CAT_L2_MSRS	MAX_CACHE_CLOS_NUM_ENTRIES
+#define NUM_CAT_L3_MSRS	MAX_CACHE_CLOS_NUM_ENTRIES
+
 /* L2/L3 mask MSRs plus MSR_IA32_PQR_ASSOC */
-#define NUM_VCAT_MSRS		(NUM_VCAT_L2_MSRS + NUM_VCAT_L3_MSRS + 1U)
+#define NUM_CAT_MSRS		(NUM_CAT_L2_MSRS + NUM_CAT_L3_MSRS + 1U)
+
+#else
+#define NUM_CAT_MSRS		0U
+#endif
 
 #ifdef CONFIG_NVMX_ENABLED
-#define CAT_MSR_START_INDEX	(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS)
+#define FLEXIBLE_MSR_INDEX	(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS)
 #else
-#define CAT_MSR_START_INDEX	(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
-#endif
-#else
-#define NUM_VCAT_MSRS		0U
+#define FLEXIBLE_MSR_INDEX	(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
 #endif
 
-/* For detailed layout of the emulated guest MSRs, see emulated_guest_msrs[NUM_GUEST_MSRS] in vmsr.c */
-#ifdef CONFIG_NVMX_ENABLED
-#define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VMX_MSRS + NUM_VCAT_MSRS)
-#else
-#define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS + NUM_VCAT_MSRS)
-#endif
-
+#define NUM_EMULATED_MSRS	(FLEXIBLE_MSR_INDEX + NUM_CAT_MSRS)
+/* For detailed layout of the emulated guest MSRs, see emulated_guest_msrs[NUM_EMULATED_MSRS] in vmsr.c */
 
 #define EOI_EXIT_BITMAP_SIZE	256U
 
@@ -255,7 +252,7 @@ struct acrn_vcpu_arch {
 	struct guest_cpu_context contexts[NR_WORLD];
 
 	/* common MSRs, world_msrs[] is a subset of it */
-	uint64_t guest_msrs[NUM_GUEST_MSRS];
+	uint64_t guest_msrs[NUM_EMULATED_MSRS];
 
 #define ALLOCATED_MIN_L1_VPID	(0x10000U - CONFIG_MAX_VM_NUM * MAX_VCPUS_PER_VM)
 	uint16_t vpid;
