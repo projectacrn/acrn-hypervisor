@@ -3,7 +3,7 @@
 VT-d
 ####
 
-Intel Virtual Technology for Directed I/O, or VT-d, provides
+Intel Virtualization Technology for Directed I/O, or VT-d, provides
 hardware support for I/O device virtualization. It extends the
 protection and isolation properties of VMs for I/O operations.
 
@@ -64,7 +64,7 @@ platform, to which a subset of the host physical memory is allocated.
 The memory resource of a domain is specified by the address translation
 tables.
 
-Device to Domain Mapping Structure
+Device-to-Domain Mapping Structure
 ==================================
 
 VT-d hardware uses root-table and context-tables to build the mapping
@@ -74,7 +74,7 @@ between devices and domains as shown in :numref:`vt-d-mapping`.
    :align: center
    :name: vt-d-mapping
 
-   Device to Domain Mapping structures
+   Device-to-Domain Mapping Structures
 
 The root-table is 4-KByte in size and contains 256 root-entries to cover
 the PCI bus number space (0-255). Each root-entry contains a
@@ -104,7 +104,7 @@ Refer to the `VT-d spec`_ for more details on device-to-domain
 mapping structures.
 
 .. _VT-d spec:
-   https://software.intel.com/sites/default/files/managed/c5/15/vt-directed-io-spec.pdf
+   https://software.intel.com/content/www/us/en/develop/download/intel-virtualization-technology-for-directed-io-architecture-specification.html
 
 Address Translation Structures
 ==============================
@@ -137,24 +137,23 @@ an EPT table exists for Normal world; an EPT table for Secure world might
 also exist. Secure world can access Normal world's memory, but Normal
 world cannot access Secure world's memory.
 
-SOS_VM domain
-   The SOS_VM domain is created when the hypervisor creates the VM for the
-   Service OS.
+Service VM domain
+   The Service VM domain is created when the hypervisor creates the Service VM.
 
-   IOMMU uses the EPT table of Normal world of SOS_VM as the address
-   translation structures for the devices in the SOS_VM domain. The Normal
-   world's EPT table of SOS_VM doesn't include the memory resource of the
-   hypervisor and Secure worlds (if any exists). So the devices in SOS_VM
-   domain can't access the memory belonging to the hypervisor or secure
-   worlds.
+   IOMMU uses the Normal world's EPT table of the Service VM as the address
+   translation structures for the devices in the Service VM domain. The Normal
+   world's EPT table of the Service VM doesn't include the memory resource of
+   the hypervisor and Secure worlds (if any exists). The devices in the
+   Service VM domain can't access the memory belonging to the hypervisor or
+   Secure worlds.
 
 Other domains
-   Other VM domains will be created when the hypervisor creates the User OS.
-   One domain for each User OS.
+   Other VM domains are created when the hypervisor creates User VMs,
+   one domain for each User VM.
 
-   IOMMU uses the EPT table of the Normal world of a VM as the address
+   IOMMU uses the Normal world's EPT table of a VM as the address
    translation structures for the devices in the domain. The Normal world's
-   EPT table of the VM only allows devices to access the memory
+   EPT table of the VM allows devices to access only the memory
    allocated for the Normal world of the VM.
 
 Page-Walk Coherency
@@ -164,7 +163,7 @@ For the VT-d hardware, which doesn't support page-walk coherency, the
 hypervisor needs to make sure the updates of VT-d tables are synced in
 memory:
 
--  Device to Domain Mapping Structures, including Root-entries and
+-  Device-to-Domain Mapping Structures, including Root-entries and
    Context-entries.
 
 -  The EPT table of a VM.
@@ -182,21 +181,21 @@ EPT table.
 Snoop Control
 =============
 
-If VT-d hardware supports snoop control, iVT-d can control the
-ability to ignore the "no-snoop attribute" in PCI-E transactions.
+If VT-d hardware supports Snoop Control, VT-d can control the
+ability to ignore the "no-snoop attribute" in PCIe transactions.
 
 The following table shows the snoop behavior of a DMA operation controlled by
 the following:
 
 -  Snoop Control capability of VT-d DMAR unit
 -  The setting of SNP filed in leaf PTE
--  No-snoop attribute in PCI-e request
+-  No-snoop attribute in PCIe request
 
 .. list-table::
    :widths: 25 25 25 25
    :header-rows: 1
 
-   * - SC cap of VT-d
+   * - Snoop Control capability of VT-d
      - SNP filed in leaf PTE
      - No-snoop attribute in request
      - Snoop behavior
@@ -227,23 +226,23 @@ the following:
      - Snoop
 
 If VT-d DMAR units do not support Snoop Control, then the SNP Bit (bit 11)
-of leaf PETs of the EPT is not set since the field is treated as reserved (0)
+of leaf PTEs of the EPT is not set since the field is treated as reserved (0)
 by the VT-d hardware implementations of not supporting Snoop Control.
 
 The VT-d DMAR unit of the Intel integrated graphics device doesn't support
 Snoop Control. The ACRN hypervisor uses the same copy of EPT as the
 secondary address translation table for a VM. When the DMAR unit for the
 Intel integrated graphics device is enabled, the SNP Bit cannot be set in
-the lead PTEs of the EPT.
+the leaf PTEs of the EPT.
 
 No matter if ACRN enables or disables Snoop Control, the DMA operations of
 passthrough devices behave correctly from the guest's point of view. ACRN
 disables Snoop Control in VT-d DMAR engines that simplify the implementation.
-Also, since the snoop behavior of PCIE transactions can be controlled by
+Also, since the snoop behavior of PCIe transactions can be controlled by
 guest drivers, some devices may take advantage of the NO_SNOOP_ATTRIBUTE
-of PCIE transactions for better performance when snoop is not needed.
+of PCIe transactions for better performance when snoop is not needed.
 
-The driver is responsible for configuring correct attribute in PCIE
+The driver is responsible for configuring the correct attribute in PCIe
 transactions. Otherwise, the corresponding device may not work properly.
 
 Initialization
@@ -251,30 +250,30 @@ Initialization
 
 During hypervisor initialization, it registers DMAR units on the
 platform according to the reparsed information or DMAR table. There may
-be multiple DMAR units on the platform, ACRN allows some of the DMAR
-units to be ignored. If some DMAR unit(s) are marked as ignored, they
+be multiple DMAR units on the platform; ACRN allows some of the DMAR
+units to be ignored. If some DMAR units are marked as ignored, they
 would not be enabled.
 
-Hypervisor creates SOS_VM domain using the Normal World's EPT table of SOS_VM
-as address translation table when creating SOS_VM as Service OS. And all
-PCI devices on the platform are added to SOS_VM domain. Then enable DMAR
-translation for DMAR unit(s) if they are not marked as ignored.
+The hypervisor creates the Service VM domain using the Normal World's EPT table
+of the Service VM as address translation table when creating the Service VM. All
+PCI devices on the platform are added to the Service VM domain. Then enable DMAR
+translation for DMAR units if they are not marked as ignored.
 
 .. _device-assignment:
 
 Device Assignment
 *****************
 
-All devices are initially added to the SOS_VM domain. To assign a device
+All devices are initially added to the Service VM domain. To assign a device
 means to assign the device to a User VM. The device is removed from the
-SOS_VM domain and is added to the VM domain related to the User VM, which
-changes the address translation table from the EPT of SOS_VM to the EPT
-of the User OS for the device.
+Service VM domain and is added to the VM domain related to the User VM, which
+changes the address translation table from the EPT of the Service VM to the EPT
+of the User VM for the device.
 
-To unassign a device means to unassign the device from a User OS. The
-device is removed from the VM domain related to the User OS and then added
-back to the SOS_VM domain; this changes the address translation table from
-the EPT of the User OS to the EPT of the SOS_VM for the device.
+To unassign a device means to unassign the device from a User VM. The
+device is removed from the VM domain related to the User VM and then added
+back to the Service VM domain; this changes the address translation table from
+the EPT of the User VM to the EPT of the Service VM for the device.
 
 Power Management Support for S3
 *******************************
@@ -295,8 +294,8 @@ Error Handling
 
 ACRN VT-d supports DMA remapping error reporting. ACRN VT-d requests a
 IRQ / vector for DMAR error reporting. A DMAR fault handler is
-registered for the IRQ. DMAR unit supports report fault event via MSI.
-When a fault event occurs, a MSI is generated, so that the DMAR fault
+registered for the IRQ. DMAR units support report fault events via MSI.
+When a fault event occurs, an MSI is generated, so that the DMAR fault
 handler will be called to report the error event.
 
 Data Structures and Interfaces
