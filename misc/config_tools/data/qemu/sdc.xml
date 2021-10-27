@@ -105,7 +105,7 @@
         <rootfs>/dev/vda1</rootfs>
         <bootargs>
         earlyprintk=serial,ttyS0,115200n8 rw rootwait console=tty0 consoleblank=0 no_timer_check ignore_loglevel
-        ignore_loglevel no_timer_check intel_iommu=off tsc=reliable hvlog=2M@0x1FE00000 8250.nr_uarts=20
+        ignore_loglevel no_timer_check intel_iommu=off tsc=reliable 8250.nr_uarts=20
         </bootargs>
     </board_private>
   </vm>

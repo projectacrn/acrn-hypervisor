@@ -88,6 +88,18 @@ def hv_size_check(str_val, branch_tag, item):
     if not is_numeric_check(str_val, branch_tag, item):
         return
 
+def hv_ram_start_check(hv_ram_start, prime_item, item):
+
+    err_dic = {}
+    if '0x' not in hv_ram_start and '0X' not in hv_ram_start:
+        key = "hv,{},{}".format(prime_item, item)
+        ERR_LIST[key] = "Address should be Hex format"
+
+    to_mb = (int(hv_ram_start, 16) / (1024 * 1024))
+    is_aligned = to_mb % 2
+    if to_mb < 2 or is_aligned != 0:
+        key = "hv,{},{}".format(prime_item, item)
+        ERR_LIST[key] = "Address should be larger than or equal to 2MB and 2MB-aligned."
 
 def ir_entries_check(str_num, cap, cap_ir_entries):
     hv_size_check(str_num, cap, cap_ir_entries)

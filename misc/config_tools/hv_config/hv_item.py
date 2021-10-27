@@ -167,6 +167,7 @@ class Memory:
     def check_item(self):
         hv_cfg_lib.hv_size_check(self.stack_size, "MEMORY", "STACK_SIZE")
         hv_cfg_lib.hv_size_check(self.low_ram_size, "MEMORY", "LOW_RAM_SIZE")
+        hv_cfg_lib.hv_ram_start_check(self.hv_ram_start, "MEMORY", "HV_RAM_START")
         hv_cfg_lib.hv_size_check(self.platform_ram_size, "MEMORY", "PLATFORM_RAM_SIZE")
         hv_cfg_lib.ny_support_check(self.ivshmem_enable, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
 

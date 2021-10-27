@@ -195,7 +195,7 @@ physical core. Each core uses one stack for normal operation and another
 three for specific exceptions.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="HV_RAM_START" type="HexFormat" default="0x00200000">
+    <xs:element name="HV_RAM_START" type="HexFormat" default="0x00400000">
       <xs:annotation>
         <xs:documentation>The 2MB-aligned starting physical address of
 the RAM region used by the hypervisor.</xs:documentation>
