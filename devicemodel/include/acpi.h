@@ -41,6 +41,11 @@
 
 #define	IO_PMTMR		0x0	/* PM Timer is disabled in ACPI */
 
+#define ACPI_MADT_TYPE_LOCAL_APIC   0U
+#define ACPI_MADT_TYPE_IOAPIC       1U
+#define ACPI_MADT_ENABLED           1U
+#define ACPI_MADT_TYPE_LOCAL_APIC_NMI 4U
+
 struct acpi_table_hdr {
 	/* ASCII table signature */
 	char                    signature[4];
@@ -61,6 +66,29 @@ struct acpi_table_hdr {
 	/* ASL compiler version */
 	uint32_t                asl_compiler_revision;
 } __attribute__((packed));
+
+struct acpi_table_madt {
+	/* Common ACPI table header */
+	struct acpi_table_hdr header;
+	/* Physical address of local APIC */
+	uint32_t                     address;
+	uint32_t                     flags;
+} __packed;
+
+struct acpi_subtable_header {
+	uint8_t                   type;
+	uint8_t                   length;
+} __packed;
+
+struct acpi_madt_local_apic {
+	struct acpi_subtable_header    header;
+	/* ACPI processor id */
+	uint8_t                        processor_id;
+	/* Processor's local APIC id */
+	uint8_t                        id;
+	uint32_t                       lapic_flags;
+} __packed;
+
 
 /* All dynamic table entry no. */
 #define NHLT_ENTRY_NO		8
@@ -89,6 +117,8 @@ void	power_button_init(struct vmctx *ctx);
 void	power_button_deinit(struct vmctx *ctx);
 
 int pcpuid_from_vcpuid(uint64_t guest_pcpu_bitmask, int vcpu_id);
-int lapicid_from_pcpuid(struct acrn_platform_info *plat_info, int pcpu_id);
+int lapicid_from_pcpuid(int pcpu_id);
+int lapic_to_pcpu(int lapic);
 
+int parse_madt(void);
 #endif /* _ACPI_H_ */
