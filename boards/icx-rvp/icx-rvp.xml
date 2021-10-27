@@ -77,7 +77,7 @@
 	Region 0: Memory at 20fffa80000 (64-bit, non-prefetchable) [size=64K]
 	00:1f.0 ISA bridge: Intel Corporation Device 18dc (rev 11)
 	00:1f.4 SMBus: Intel Corporation Device 18df (rev 11)
-	Region 0: Memory at 20fffab6000 (64-bit, non-prefetchable) [disabled] [size=256]
+	Region 0: Memory at 20fffab6000 (64-bit, non-prefetchable) [size=256]
 	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device 18e0 (rev 11)
 	Region 0: Memory at fe010000 (32-bit, non-prefetchable) [size=4K]
 	00:1f.7 Non-Essential Instrumentation [1300]: Intel Corporation Device 18e1 (rev 11)
@@ -110,23 +110,23 @@
 	f3:00.4 Host bridge: Intel Corporation Device 0998
 	f3:04.0 PCI bridge: Intel Corporation Device 18d1
 	f4:00.0 Ethernet controller: Intel Corporation Device 124c
-	Region 0: Memory at 22ff0000000 (64-bit, prefetchable) [disabled] [size=128M]
-	Region 3: Memory at 22ffc030000 (64-bit, prefetchable) [disabled] [size=64K]
+	Region 0: Memory at 22ff0000000 (64-bit, prefetchable) [size=128M]
+	Region 3: Memory at 22ffc030000 (64-bit, prefetchable) [size=64K]
 	Region 0: Memory at 0000022ffb000000 (64-bit, prefetchable)
 	Region 3: Memory at 0000022ffc340000 (64-bit, prefetchable)
 	f4:00.1 Ethernet controller: Intel Corporation Device 124c
-	Region 0: Memory at 22fe8000000 (64-bit, prefetchable) [disabled] [size=128M]
-	Region 3: Memory at 22ffc020000 (64-bit, prefetchable) [disabled] [size=64K]
+	Region 0: Memory at 22fe8000000 (64-bit, prefetchable) [size=128M]
+	Region 3: Memory at 22ffc020000 (64-bit, prefetchable) [size=64K]
 	Region 0: Memory at 0000022ffa000000 (64-bit, prefetchable)
 	Region 3: Memory at 0000022ffc240000 (64-bit, prefetchable)
 	f4:00.2 Ethernet controller: Intel Corporation Device 124c
-	Region 0: Memory at 22fe0000000 (64-bit, prefetchable) [disabled] [size=128M]
-	Region 3: Memory at 22ffc010000 (64-bit, prefetchable) [disabled] [size=64K]
+	Region 0: Memory at 22fe0000000 (64-bit, prefetchable) [size=128M]
+	Region 3: Memory at 22ffc010000 (64-bit, prefetchable) [size=64K]
 	Region 0: Memory at 0000022ff9000000 (64-bit, prefetchable)
 	Region 3: Memory at 0000022ffc140000 (64-bit, prefetchable)
 	f4:00.3 Ethernet controller: Intel Corporation Device 124c
-	Region 0: Memory at 22fd8000000 (64-bit, prefetchable) [disabled] [size=128M]
-	Region 3: Memory at 22ffc000000 (64-bit, prefetchable) [disabled] [size=64K]
+	Region 0: Memory at 22fd8000000 (64-bit, prefetchable) [size=128M]
+	Region 3: Memory at 22ffc000000 (64-bit, prefetchable) [size=64K]
 	Region 0: Memory at 0000022ff8000000 (64-bit, prefetchable)
 	Region 3: Memory at 0000022ffc040000 (64-bit, prefetchable)
 	fe:00.0 System peripheral: Intel Corporation Device 3450
@@ -295,35 +295,41 @@
 	#define S5_PKG_RESERVED         0xaU
 	</S5_INFO>
   <DRHD_INFO>
-	#define DRHD_COUNT              2U
+	#define DRHD_COUNT              3U
 
-	#define DRHD0_DEV_CNT           0x2U
+	#define DRHD0_DEV_CNT           0x0U
 	#define DRHD0_SEGMENT           0x0U
 	#define DRHD0_FLAGS             0x0U
-	#define DRHD0_REG_BASE          0xFB7FC000UL
+	#define DRHD0_REG_BASE          0xD7FFC000UL
 	#define DRHD0_IGNORE            false
-	#define DRHD0_DEVSCOPE0_TYPE    0x2U
-	#define DRHD0_DEVSCOPE0_ID      0x0U
-	#define DRHD0_DEVSCOPE0_BUS     0xf3U
-	#define DRHD0_DEVSCOPE0_PATH    0x20U
-	#define DRHD0_DEVSCOPE1_TYPE    0x1U
-	#define DRHD0_DEVSCOPE1_ID      0x0U
-	#define DRHD0_DEVSCOPE1_BUS     0xf3U
-	#define DRHD0_DEVSCOPE1_PATH    0x30U
 
 	#define DRHD1_DEV_CNT           0x2U
 	#define DRHD1_SEGMENT           0x0U
-	#define DRHD1_FLAGS             0x1U
-	#define DRHD1_REG_BASE          0xB3FF6000UL
+	#define DRHD1_FLAGS             0x0U
+	#define DRHD1_REG_BASE          0xFB7FC000UL
 	#define DRHD1_IGNORE            false
-	#define DRHD1_DEVSCOPE0_TYPE    0x3U
-	#define DRHD1_DEVSCOPE0_ID      0x8U
-	#define DRHD1_DEVSCOPE0_BUS     0x0U
-	#define DRHD1_DEVSCOPE0_PATH    0xf7U
-	#define DRHD1_DEVSCOPE1_TYPE    0x4U
+	#define DRHD1_DEVSCOPE0_TYPE    0x2U
+	#define DRHD1_DEVSCOPE0_ID      0x0U
+	#define DRHD1_DEVSCOPE0_BUS     0xf3U
+	#define DRHD1_DEVSCOPE0_PATH    0x20U
+	#define DRHD1_DEVSCOPE1_TYPE    0x1U
 	#define DRHD1_DEVSCOPE1_ID      0x0U
-	#define DRHD1_DEVSCOPE1_BUS     0x0U
-	#define DRHD1_DEVSCOPE1_PATH    0xf6U
+	#define DRHD1_DEVSCOPE1_BUS     0xf3U
+	#define DRHD1_DEVSCOPE1_PATH    0x30U
+
+	#define DRHD2_DEV_CNT           0x2U
+	#define DRHD2_SEGMENT           0x0U
+	#define DRHD2_FLAGS             0x1U
+	#define DRHD2_REG_BASE          0xB3FF6000UL
+	#define DRHD2_IGNORE            false
+	#define DRHD2_DEVSCOPE0_TYPE    0x3U
+	#define DRHD2_DEVSCOPE0_ID      0x8U
+	#define DRHD2_DEVSCOPE0_BUS     0x0U
+	#define DRHD2_DEVSCOPE0_PATH    0xf7U
+	#define DRHD2_DEVSCOPE1_TYPE    0x4U
+	#define DRHD2_DEVSCOPE1_ID      0x0U
+	#define DRHD2_DEVSCOPE1_BUS     0x0U
+	#define DRHD2_DEVSCOPE1_PATH    0xf6U
 
 	</DRHD_INFO>
   <CPU_BRAND>
@@ -357,15 +363,15 @@
 	  000f0000-000fffff : System ROM
 	00100000-003fefff : System RAM
 	003ff000-00606fff : Reserved
-	00607000-61291017 : System RAM
-	61291018-612af457 : System RAM
-	612af458-612b0017 : System RAM
-	612b0018-612ce457 : System RAM
-	612ce458-612cf017 : System RAM
-	612cf018-612ed457 : System RAM
-	612ed458-612ee017 : System RAM
-	612ee018-6130c457 : System RAM
-	6130c458-6330afff : System RAM
+	00607000-60ab2017 : System RAM
+	60ab2018-60ad0457 : System RAM
+	60ad0458-60ad1017 : System RAM
+	60ad1018-60aef457 : System RAM
+	60aef458-60af0017 : System RAM
+	60af0018-60b0e457 : System RAM
+	60b0e458-60b0f017 : System RAM
+	60b0f018-60b2d457 : System RAM
+	60b2d458-6330afff : System RAM
 	6330b000-6330bfff : Reserved
 	6330c000-63349fff : System RAM
 	6334a000-63359fff : Reserved
@@ -441,9 +447,10 @@
 	ff000000-ffffffff : pnp 00:01
 	  ff000000-ffffffff : pnp 00:02
 	100000000-47fffffff : System RAM
-	  12b400000-12c200ea0 : Kernel code
-	  12c200ea1-12cc5363f : Kernel data
-	  12cf1d000-12d3fffff : Kernel bss
+	  146000000-146e025b6 : Kernel code
+	  147000000-147554fff : Kernel rodata
+	  147600000-1479658bf : Kernel data
+	  147c2a000-1481fffff : Kernel bss
 	20000000000-20fffffffff : PCI Bus 0000:00
 	  20fff000000-20fff7fffff : 0000:00:1f.7
 	    20fff000000-20fff7fffff : intel_th_pci
@@ -488,9 +495,13 @@
 	22000000000-22fffffffff : PCI Bus 0000:f3
 	  22fd8000000-22ffc4fffff : PCI Bus 0000:f4
 	    22fd8000000-22fdfffffff : 0000:f4:00.3
+	      22fd8000000-22fdfffffff : 0000:f4:00.3
 	    22fe0000000-22fe7ffffff : 0000:f4:00.2
+	      22fe0000000-22fe7ffffff : 0000:f4:00.2
 	    22fe8000000-22fefffffff : 0000:f4:00.1
+	      22fe8000000-22fefffffff : 0000:f4:00.1
 	    22ff0000000-22ff7ffffff : 0000:f4:00.0
+	      22ff0000000-22ff7ffffff : 0000:f4:00.0
 	    22ff8000000-22ff8ffffff : 0000:f4:00.3
 	    22ff9000000-22ff9ffffff : 0000:f4:00.2
 	    22ffa000000-22ffaffffff : 0000:f4:00.1
@@ -505,18 +516,19 @@
 	    22ffc340000-22ffc43ffff : 0000:f4:00.0
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
-	/dev/nvme0n1p3: TYPE="ext4"
+	/dev/sda3: TYPE="ext4"
+	/dev/nvme0n1p2: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
-	seri:/dev/ttyS4 type:mmio base:0x91788000 irq:64 bdf:"00:1a.0"
-	seri:/dev/ttyS5 type:mmio base:0x91787000 irq:65 bdf:"00:1a.1"
-	seri:/dev/ttyS6 type:mmio base:0x91786000 irq:68 bdf:"00:1a.2"
+	seri:/dev/ttyS4 type:mmio base:0x91788000 irq:99 bdf:"00:1a.0"
+	seri:/dev/ttyS5 type:mmio base:0x91787000 irq:103 bdf:"00:1a.1"
+	seri:/dev/ttyS6 type:mmio base:0x91786000 irq:106 bdf:"00:1a.2"
 	</TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
 	3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	16075808 kB
+	16072232 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -2551,11 +2563,7 @@
           <resource type="memory" min="0x20fff000000" max="0x20fff7fffff" len="0x800000" id="bar2" width="64" prefetchable="0"/>
           <resource type="memory" min="0x20fff800000" max="0x20fff8fffff" len="0x100000" id="bar0" width="64" prefetchable="0"/>
           <resource type="memory" min="0x20fffab4000" max="0x20fffab5fff" len="0x2000" id="bar4" width="64" prefetchable="0"/>
-          <capability id="MSI">
-            <count>8</count>
-            <capability id="multiple-message"/>
-            <capability id="64-bit address"/>
-          </capability>
+          <capability id="Reserved (0x0)"/>
         </device>
         <device id="PNP0003">
           <acpi_object>\_SB_.PC00.APIC</acpi_object>
@@ -3046,7 +3054,7 @@
               </capability>
               <capability id="MSI-X">
                 <table_size>512</table_size>
-                <table_bir>6</table_bir>
+                <table_bir>7</table_bir>
                 <table_offset>0x30000</table_offset>
                 <pba_bir>4</pba_bir>
                 <pba_offset>0x0</pba_offset>
@@ -3076,7 +3084,7 @@
               </capability>
               <capability id="MSI-X">
                 <table_size>512</table_size>
-                <table_bir>6</table_bir>
+                <table_bir>7</table_bir>
                 <table_offset>0x30000</table_offset>
                 <pba_bir>4</pba_bir>
                 <pba_offset>0x0</pba_offset>
@@ -3106,7 +3114,7 @@
               </capability>
               <capability id="MSI-X">
                 <table_size>512</table_size>
-                <table_bir>6</table_bir>
+                <table_bir>7</table_bir>
                 <table_offset>0x30000</table_offset>
                 <pba_bir>4</pba_bir>
                 <pba_offset>0x0</pba_offset>
@@ -3136,7 +3144,7 @@
               </capability>
               <capability id="MSI-X">
                 <table_size>512</table_size>
-                <table_bir>6</table_bir>
+                <table_bir>7</table_bir>
                 <table_offset>0x30000</table_offset>
                 <pba_bir>4</pba_bir>
                 <pba_offset>0x0</pba_offset>

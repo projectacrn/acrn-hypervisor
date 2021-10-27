@@ -117,7 +117,7 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-	    <pci_dev>00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 10)</pci_dev>
+	    <pci_dev>00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 11)</pci_dev>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>

@@ -341,45 +341,57 @@
 	#define S5_PKG_RESERVED         0xaU
 	</S5_INFO>
   <DRHD_INFO>
-	#define DRHD_COUNT              3U
+	#define DRHD_COUNT              5U
 
-	#define DRHD0_DEV_CNT           0x2U
+	#define DRHD0_DEV_CNT           0x0U
 	#define DRHD0_SEGMENT           0x0U
 	#define DRHD0_FLAGS             0x0U
-	#define DRHD0_REG_BASE          0xD0FFC000UL
+	#define DRHD0_REG_BASE          0xBB7FC000UL
 	#define DRHD0_IGNORE            false
-	#define DRHD0_DEVSCOPE0_TYPE    0x2U
-	#define DRHD0_DEVSCOPE0_ID      0x0U
-	#define DRHD0_DEVSCOPE0_BUS     0x80U
-	#define DRHD0_DEVSCOPE0_PATH    0x28U
-	#define DRHD0_DEVSCOPE1_TYPE    0x1U
-	#define DRHD0_DEVSCOPE1_ID      0x0U
-	#define DRHD0_DEVSCOPE1_BUS     0x80U
-	#define DRHD0_DEVSCOPE1_PATH    0x30U
 
-	#define DRHD1_DEV_CNT           0x1U
+	#define DRHD1_DEV_CNT           0x2U
 	#define DRHD1_SEGMENT           0x0U
 	#define DRHD1_FLAGS             0x0U
-	#define DRHD1_REG_BASE          0xE67FC000UL
+	#define DRHD1_REG_BASE          0xD0FFC000UL
 	#define DRHD1_IGNORE            false
 	#define DRHD1_DEVSCOPE0_TYPE    0x2U
 	#define DRHD1_DEVSCOPE0_ID      0x0U
-	#define DRHD1_DEVSCOPE0_BUS     0x88U
-	#define DRHD1_DEVSCOPE0_PATH    0x20U
+	#define DRHD1_DEVSCOPE0_BUS     0x80U
+	#define DRHD1_DEVSCOPE0_PATH    0x28U
+	#define DRHD1_DEVSCOPE1_TYPE    0x1U
+	#define DRHD1_DEVSCOPE1_ID      0x0U
+	#define DRHD1_DEVSCOPE1_BUS     0x80U
+	#define DRHD1_DEVSCOPE1_PATH    0x30U
 
-	#define DRHD2_DEV_CNT           0x2U
+	#define DRHD2_DEV_CNT           0x1U
 	#define DRHD2_SEGMENT           0x0U
-	#define DRHD2_FLAGS             0x1U
-	#define DRHD2_REG_BASE          0xA5FF6000UL
+	#define DRHD2_FLAGS             0x0U
+	#define DRHD2_REG_BASE          0xE67FC000UL
 	#define DRHD2_IGNORE            false
-	#define DRHD2_DEVSCOPE0_TYPE    0x3U
-	#define DRHD2_DEVSCOPE0_ID      0x8U
-	#define DRHD2_DEVSCOPE0_BUS     0x0U
-	#define DRHD2_DEVSCOPE0_PATH    0xf7U
-	#define DRHD2_DEVSCOPE1_TYPE    0x4U
-	#define DRHD2_DEVSCOPE1_ID      0x0U
-	#define DRHD2_DEVSCOPE1_BUS     0x0U
-	#define DRHD2_DEVSCOPE1_PATH    0xf6U
+	#define DRHD2_DEVSCOPE0_TYPE    0x2U
+	#define DRHD2_DEVSCOPE0_ID      0x0U
+	#define DRHD2_DEVSCOPE0_BUS     0x88U
+	#define DRHD2_DEVSCOPE0_PATH    0x20U
+
+	#define DRHD3_DEV_CNT           0x0U
+	#define DRHD3_SEGMENT           0x0U
+	#define DRHD3_FLAGS             0x0U
+	#define DRHD3_REG_BASE          0xFB7FC000UL
+	#define DRHD3_IGNORE            false
+
+	#define DRHD4_DEV_CNT           0x2U
+	#define DRHD4_SEGMENT           0x0U
+	#define DRHD4_FLAGS             0x1U
+	#define DRHD4_REG_BASE          0xA5FF6000UL
+	#define DRHD4_IGNORE            false
+	#define DRHD4_DEVSCOPE0_TYPE    0x3U
+	#define DRHD4_DEVSCOPE0_ID      0x8U
+	#define DRHD4_DEVSCOPE0_BUS     0x0U
+	#define DRHD4_DEVSCOPE0_PATH    0xf7U
+	#define DRHD4_DEVSCOPE1_TYPE    0x4U
+	#define DRHD4_DEVSCOPE1_ID      0x0U
+	#define DRHD4_DEVSCOPE1_BUS     0x0U
+	#define DRHD4_DEVSCOPE1_PATH    0xf6U
 
 	</DRHD_INFO>
   <CPU_BRAND>
@@ -422,15 +434,15 @@
 	  000f0000-000fffff : System ROM
 	00100000-3fffffff : System RAM
 	40000000-40007fff : Reserved
-	40008000-6045d017 : System RAM
-	6045d018-6047b457 : System RAM
-	6047b458-6047c017 : System RAM
-	6047c018-6049a457 : System RAM
-	6049a458-6049b017 : System RAM
-	6049b018-604b9457 : System RAM
-	604b9458-604ba017 : System RAM
-	604ba018-604d8457 : System RAM
-	604d8458-62a61fff : System RAM
+	40008000-60491017 : System RAM
+	60491018-604af457 : System RAM
+	604af458-604b0017 : System RAM
+	604b0018-604ce457 : System RAM
+	604ce458-604cf017 : System RAM
+	604cf018-604ed457 : System RAM
+	604ed458-6068c017 : System RAM
+	6068c018-606aa457 : System RAM
+	606aa458-62a61fff : System RAM
 	62a62000-62a62fff : Reserved
 	62a63000-62aa3fff : System RAM
 	62aa4000-62ab3fff : Reserved
@@ -510,9 +522,9 @@
 	ff000000-ffffffff : pnp 00:01
 	  ff000000-ffffffff : pnp 00:02
 	100000000-27fffffff : System RAM
-	  26c600000-26d400ea0 : Kernel code
-	  26d400ea1-26de5363f : Kernel data
-	  26e11d000-26e5fffff : Kernel bss
+	  153400000-154200ea0 : Kernel code
+	  154200ea1-154c5363f : Kernel data
+	  154f1d000-1553fffff : Kernel bss
 	20000000000-20fffffffff : PCI Bus 0000:00
 	  20fff000000-20fff7fffff : 0000:00:1f.7
 	    20fff000000-20fff7fffff : intel_th_pci
@@ -581,9 +593,9 @@
 	/dev/sda3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
-	seri:/dev/ttyS4 type:mmio base:0x91688000 irq:55 bdf:"00:1a.0"
-	seri:/dev/ttyS5 type:mmio base:0x91687000 irq:56 bdf:"00:1a.1"
-	seri:/dev/ttyS6 type:mmio base:0x91686000 irq:57 bdf:"00:1a.2"
+	seri:/dev/ttyS4 type:mmio base:0x91688000 irq:57 bdf:"00:1a.0"
+	seri:/dev/ttyS5 type:mmio base:0x91687000 irq:60 bdf:"00:1a.1"
+	seri:/dev/ttyS6 type:mmio base:0x91686000 irq:62 bdf:"00:1a.2"
 	</TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
 	3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15
