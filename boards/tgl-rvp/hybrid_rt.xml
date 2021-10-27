@@ -183,7 +183,7 @@
         <rootfs>/dev/nvme0n1p3</rootfs>
         <bootargs>
         rw rootwait console=ttyS0,115200n8 ignore_loglevel no_timer_check
-        i915.nuclear_pageflip=1 hvlog=2M@0xe00000 memmap=0x200000$0xe00000
+        i915.nuclear_pageflip=1
         </bootargs>
     </board_private>
   </vm>
