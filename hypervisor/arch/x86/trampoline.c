@@ -107,22 +107,22 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 
 uint64_t prepare_trampoline(void)
 {
-	uint64_t size, dest_pa;
+	uint64_t trampline_size, trampoline_pa;
 
-	size = (uint64_t)(&ld_trampoline_end - &ld_trampoline_start);
-	dest_pa = e820_alloc_memory(CONFIG_LOW_RAM_SIZE, MEM_1M);
+	trampline_size = (uint64_t)(&ld_trampoline_end - &ld_trampoline_start);
+	trampoline_pa = e820_alloc_memory(trampline_size, MEM_1M);
 
-	pr_dbg("trampoline code: %lx size %x", dest_pa, size);
+	pr_dbg("trampoline code: %lx trampline_size %x", trampoline_pa, trampline_size);
 
 	/* Copy segment for AP initialization code below 1MB */
-	(void)memcpy_s(hpa2hva(dest_pa), (size_t)size, &ld_trampoline_load,
-			(size_t)size);
-	update_trampoline_code_refs(dest_pa);
+	(void)memcpy_s(hpa2hva(trampoline_pa), (size_t)trampline_size, &ld_trampoline_load,
+			(size_t)trampline_size);
+	update_trampoline_code_refs(trampoline_pa);
 
 	cpu_memory_barrier();
-	flush_cache_range(hpa2hva(dest_pa), size);
+	flush_cache_range(hpa2hva(trampoline_pa), trampline_size);
 
-	trampoline_start16_paddr = dest_pa;
+	trampoline_start16_paddr = trampoline_pa;
 
-	return dest_pa;
+	return trampoline_pa;
 }

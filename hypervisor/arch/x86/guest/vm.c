@@ -42,6 +42,7 @@
 #ifdef CONFIG_SECURITY_VM_FIXUP
 #include <quirks/security_vm_fixup.h>
 #endif
+#include <asm/boot/ld_sym.h>
 
 /* Local variables */
 
@@ -409,6 +410,7 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 	uint32_t entries_count = vm->e820_entry_num;
 	const struct e820_entry *p_e820 = vm->e820_entries;
 	struct pci_mmcfg_region *pci_mmcfg;
+	uint64_t trampoline_memory_size = round_page_up((uint64_t)(&ld_trampoline_end - &ld_trampoline_start));
 
 	pr_dbg("Service VM e820 layout:\n");
 	for (i = 0U; i < entries_count; i++) {
@@ -462,7 +464,7 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 	/* unmap AP trampoline code for security
 	 * This buffer is guaranteed to be page aligned.
 	 */
-	ept_del_mr(vm, pml4_page, get_trampoline_start16_paddr(), CONFIG_LOW_RAM_SIZE);
+	ept_del_mr(vm, pml4_page, get_trampoline_start16_paddr(), trampoline_memory_size);
 
 	/* unmap PCIe MMCONFIG region since it's owned by hypervisor */
 	pci_mmcfg = get_mmcfg_region();
