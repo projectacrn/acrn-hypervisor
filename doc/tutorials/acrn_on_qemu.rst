@@ -55,10 +55,10 @@ Prepare Service VM (L1 Guest)
 
       virt-install \
       --connect qemu:///system \
-      --name ACRNSOS \
+      --name ServiceVM \
       --machine q35 \
       --ram 4096 \
-      --disk path=/var/lib/libvirt/images/acrnsos.img,size=32 \
+      --disk path=/var/lib/libvirt/images/servicevm.img,size=32 \
       --vcpus 4 \
       --virt-type kvm \
       --os-type linux \
@@ -90,7 +90,7 @@ Prepare Service VM (L1 Guest)
 
    .. code-block:: console
 
-      virsh domifaddr ACRNSOS
+      virsh domifaddr ServiceVM
        Name       MAC address          Protocol     Address
       -------------------------------------------------------------------------------
        vnet0      52:54:00:72:4e:71    ipv4         192.168.122.31/24
@@ -114,8 +114,8 @@ Prepare Service VM (L1 Guest)
       GRUB_GFXMODE=text
 
 #. The Service VM guest can also be launched again later using
-   ``virsh start ACRNSOS --console``. Make sure to use the domain name you used
-   while creating the VM in case it is different than ``ACRNSOS``.
+   ``virsh start ServiceVM --console``. Make sure to use the domain name you
+   used while creating the VM in case it is different than ``ServiceVM``.
 
 This concludes the initial configuration of the Service VM. The next steps will
 install ACRN in it.
@@ -125,7 +125,7 @@ install ACRN in it.
 Install ACRN Hypervisor
 ***********************
 
-1. Launch the ``ACRNSOS`` Service VM guest and log into it (SSH is recommended
+1. Launch the ``ServiceVM`` Service VM guest and log into it (SSH is recommended
    but the console is available too).
 
    .. important:: All the steps below are performed **inside** the Service VM
@@ -198,7 +198,8 @@ Install ACRN Hypervisor
       sudo systemctl enable systemd-networkd
       sudo systemctl start systemd-networkd
 
-#. Shut down the guest and relaunch it using ``virsh start ACRNSOS --console``.
+#. Shut down the guest and relaunch it using
+   ``virsh start ServiceVM --console``.
    Select the ``ACRN hypervisor`` entry from the GRUB menu.
 
    .. note::
@@ -217,7 +218,7 @@ Install ACRN Hypervisor
       [    0.000000] Hypervisor detected: ACRN
       [    2.337176] ACRNTrace: Initialized acrn trace module with 4 cpu
       [    2.368358] ACRN HVLog: Initialized hvlog module with 4 cpu
-      [    2.727905] systemd[1]: Set hostname to <ACRNSOS>.
+      [    2.727905] systemd[1]: Set hostname to <ServiceVM>.
 
    .. note::
       When shutting down the Service VM, make sure to cleanly destroy it with
@@ -225,7 +226,7 @@ Install ACRN Hypervisor
 
       .. code-block:: none
 
-         virsh destroy ACRNSOS # where ACRNSOS is the virsh domain name.
+         virsh destroy ServiceVM # where ServiceVM is the virsh domain name.
 
 Bring Up User VM (L2 Guest)
 ***************************
