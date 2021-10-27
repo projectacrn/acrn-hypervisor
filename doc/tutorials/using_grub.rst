@@ -130,7 +130,7 @@ pre-launched VMs:
 
 #. Update GRUB::
 
-   $ sudo update-grub
+      sudo update-grub
 
 #. Reboot the platform. On the platform's console, select the
    **Boot ACRN hypervisor xxx** entry to boot the ACRN hypervisor.
@@ -155,12 +155,12 @@ Here we provide another simple method to build GRUB in EFI application format:
 
    .. code-block:: none
 
-      $ git clone https://git.savannah.gnu.org/git/grub.git
-      $ cd grub
-      $ ./bootstrap
-      $ ./configure --with-platform=efi --target=x86_64
-      $ make
-      $ ./grub-mkimage -p /EFI/BOOT -d ./grub-core/ -O x86_64-efi -o grub_x86_64.efi \
+      git clone https://git.savannah.gnu.org/git/grub.git
+      cd grub
+      ./bootstrap
+      ./configure --with-platform=efi --target=x86_64
+      make
+      ./grub-mkimage -p /EFI/BOOT -d ./grub-core/ -O x86_64-efi -o grub_x86_64.efi \
             boot efifwsetup efi_gop efinet efi_uga lsefimmap lsefi lsefisystab \
             exfat fat multiboot2 multiboot terminal part_msdos part_gpt normal \
             all_video aout configfile echo file fixvideo fshelp gfxterm gfxmenu \
