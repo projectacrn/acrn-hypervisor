@@ -158,7 +158,7 @@ else:
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
     html_theme_options = {
         'canonical_url': '',
-        'analytics_id': 'UA-831873-64',
+        'analytics_id': 'GTM-K4WWJZD',
         'logo_only': False,
         'display_version': True,
         #'prev_next_buttons_location': 'None',
@@ -236,8 +236,9 @@ def setup(app):
       app.add_javascript("acrn-custom.js")
    else:
       app.add_css_file("acrn-custom.css")
-      app.add_js_file("https://www.googletagmanager.com/gtag/js?id=UA-831873-64")
-      # note more GA tag manager calls are in acrn-custom.js
+      # we removed the old google analytics codes in favor or enabling analytics
+      # via the "analytics_id" provided by sphinx_RTD_theme
+      # app.add_js_file("https://www.googletagmanager.com/gtag/js?id=UA-831873-64")
       app.add_js_file("acrn-custom.js")
 
 # Custom sidebar templates, must be a dictionary that maps document names
