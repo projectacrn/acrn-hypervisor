@@ -4,12 +4,10 @@ Enable ACRN Over QEMU/KVM
 #########################
 
 This document shows how to bring up ACRN as a nested hypervisor on top of
-QEMU/KVM with basic functionality such as running a Service VM and User VM for
-primarily two reasons:
-
-1. Enable users to evaluate ACRN.
-2. Make ACRN platform agnostic and remove the overhead of setting up
-   hardware-specific platform configurations.
+QEMU/KVM with basic functionality such as running a Service VM and User VM.
+Running ACRN as a nested hypervisor gives you an easy way to evaluate ACRN in an
+emulated environment instead of setting up a separate hardware platform
+configuration.
 
 This setup was tested with the following configuration:
 
@@ -28,7 +26,7 @@ Prerequisites
    output displays **KVM acceleration can be used**,
    the platform supports it.
 
-   .. code-block:: none
+   .. code-block:: console
 
       kvm-ok
       INFO: /dev/kvm exists
@@ -133,7 +131,7 @@ Install ACRN Hypervisor
 
 #. Install the ACRN build tools and dependencies following the :ref:`gsg`.
 
-#. Clone the ACRN repo and check out the ``v2.6`` tag.
+#. Switch to the ACRN hypervisor ``v2.6`` tag.
 
    .. code-block:: none
 
