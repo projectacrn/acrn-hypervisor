@@ -272,11 +272,6 @@ int pcpuid_from_vcpuid(uint64_t guest_pcpu_bitmask, int vcpu_id)
 	return find_nth_set_bit_index(guest_pcpu_bitmask, vcpu_id);
 }
 
-int lapicid_from_pcpuid(struct acrn_platform_info *plat_info, int pcpu_id)
-{
-	return plat_info->hw.lapic_ids[pcpu_id];
-}
-
 static int
 basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 {
@@ -343,7 +338,11 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 			return -1;
 		}
 
-		lapic_id = lapicid_from_pcpuid(&plat_info, pcpu_id);
+		lapic_id = lapicid_from_pcpuid(pcpu_id);
+		if (lapic_id == -1) {
+			pr_err("Get lapic id fail.\n");
+			return -1;
+		}
 
 		EFPRINTF(fp, "[0001]\t\tSubtable Type : 00\n");
 		EFPRINTF(fp, "[0001]\t\tLength : 08\n");
