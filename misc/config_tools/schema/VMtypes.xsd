@@ -247,8 +247,9 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
   <xs:annotation acrn:configurable="n">
     <xs:documentation>A string with either ``SOS_COM1_IRQ``,
 ``SOS_COM2_IRQ``, ``SOS_COM3_IRQ``, ``SOS_COM4_IRQ``,
-``COM1_IRQ``, ``COM2_IRQ``, ``COM3_IRQ``, ``COM4_IRQ``
-or ``CONFIG_COM_IRQ``.</xs:documentation>
+``COM1_IRQ``, ``COM2_IRQ``, ``COM3_IRQ``, ``COM4_IRQ``,
+``CONFIG_COM_IRQ`` or ``0``. If ``0`` is set, the vuart will
+use polling mode.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="SOS_COM1_IRQ" />
@@ -260,6 +261,7 @@ or ``CONFIG_COM_IRQ``.</xs:documentation>
     <xs:enumeration value="COM3_IRQ" />
     <xs:enumeration value="COM4_IRQ" />
     <xs:enumeration value="CONFIG_COM_IRQ" />
+    <xs:enumeration value="0" />
   </xs:restriction>
 </xs:simpleType>
 
