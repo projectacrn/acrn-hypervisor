@@ -77,7 +77,10 @@ define post-launched User VM settings. This document describes these option sett
 
 ``network`` (a child node of ``virtio_devices``):
   The virtio network device setting.
-  Input format: ``[tap_name|macvtap_name],[vhost],[mac=XX:XX:XX:XX:XX:XX]``.
+  Input format: ``<device_name>,[vhost],[mac=<XX:XX:XX:XX:XX:XX>]``.
+  The ``mac`` address is optional, ``device_name`` is the name of the TAP (or
+  MacVTap) device. It must include the keyword ``tap``. ``vhost`` specifies
+  vhost backend, otherwise the VBSU backend is used.
 
 ``block`` (a child node of ``virtio_devices``):
   The virtio block device setting.
