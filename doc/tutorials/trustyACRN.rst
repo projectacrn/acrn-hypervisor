@@ -403,7 +403,7 @@ should obey these following rules (and more):
 Detailed configurations and policies are out of scope in this article.
 Good references for OS system security hardening and enhancement
 include: `AGL security
-<https://docs.automotivelinux.org/docs/en/master/architecture/reference/security/part-2/0_Abstract.html>`_
+<https://docs.automotivelinux.org/en/master/#2_Architecture_Guides/2_Security_Blueprint/9_Secure_development/>`_
 and `Android security
 <https://source.android.com/security/>`_
 
