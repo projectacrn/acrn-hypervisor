@@ -92,12 +92,12 @@ For general instructions setting up ACRN on supported hardware platforms, visit 
     - GVT-d
   * - **Whiskey Lake**
     - `WHL-IPC-I7`_ |br| (Board: WHL-IPC-I7)
-    - :acrn_file:`whl-ipc-i7.xml <misc/config_tools/data/whl-ipc-i7/whl-ipc-i7.xml>`
+    -
     - v2.0
     - GVT-g
   * - **Kaby Lake** |br| (Dawson Canyon)
     - `NUC7i7DNH`_ |br| (board: NUC7i7DNB)
-    - :acrn_file:`nuc7i7dnb.xml <misc/config_tools/data/nuc7i7dnb/nuc7i7dnb.xml>`
+    -
     - v1.6.1
     - GVT-g
   * - **Apollo Lake**
