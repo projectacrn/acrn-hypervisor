@@ -66,7 +66,7 @@
 
 <xs:simpleType name="LogLevelType">
   <xs:annotation>
-    <xs:documentation>An Integer from 0 to 7 representing log message
+    <xs:documentation>An Integer from 1 to 6 representing log message
 severity and intent:
 
 - 1 (LOG_FATAL) system is unusable
