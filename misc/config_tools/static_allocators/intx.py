@@ -63,6 +63,8 @@ def assign_legacy_vuart_irqs(vm_node, legacy_vuart_id, irq_list):
         legacy_vuart_irq = '3'
         if legacy_vuart_irq in irq_list:
             remove_irq(irq_list, legacy_vuart_irq)
+    elif legacy_vuart_node_irq_text == '0':
+        legacy_vuart_irq = '0'
     else:
         legacy_vuart_irq = alloc_irq(irq_list)
     return legacy_vuart_irq
