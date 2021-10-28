@@ -24,9 +24,9 @@ def print_yel(msg, warn=False, end=True):
     """
     if warn:
         if end:
-            print("\033[1;33mWarning\033[0m:"+msg)
+            print("\033[1;33mWarning\033[0m: "+msg)
         else:
-            print("\033[1;33mWarning\033[0m:"+msg, end="")
+            print("\033[1;33mWarning\033[0m: "+msg, end="")
     else:
         if end:
             print("\033[1;33m{}\033[0m".format(msg))
@@ -40,7 +40,7 @@ def print_red(msg, err=False):
     :param err: the condition if needs to be output the color of red with 'Error'
     """
     if err:
-        print("\033[1;31mError\033[0m:"+msg)
+        print("\033[1;31mError\033[0m: "+msg)
     else:
         print("\033[1;31m{0}\033[0m".format(msg))
 
