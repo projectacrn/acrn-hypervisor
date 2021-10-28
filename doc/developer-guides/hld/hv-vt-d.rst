@@ -255,9 +255,9 @@ units to be ignored. If some DMAR units are marked as ignored, they
 would not be enabled.
 
 The hypervisor creates the Service VM domain using the Normal World's EPT table
-of the Service VM as address translation table when creating the Service VM. All
-PCI devices on the platform are added to the Service VM domain. Then enable DMAR
-translation for DMAR units if they are not marked as ignored.
+of the Service VM as the address translation table when creating the Service VM.
+All PCI devices on the platform are added to the Service VM domain. Then enable
+DMAR translation for DMAR units if they are not marked as ignored.
 
 .. _device-assignment:
 
@@ -292,11 +292,11 @@ units on the platform, except for the DMAR units marked ignored.
 Error Handling
 **************
 
-ACRN VT-d supports DMA remapping error reporting. ACRN VT-d requests a
+ACRN VT-d supports DMA remapping error reporting. ACRN VT-d requests an
 IRQ / vector for DMAR error reporting. A DMAR fault handler is
-registered for the IRQ. DMAR units support report fault events via MSI.
-When a fault event occurs, an MSI is generated, so that the DMAR fault
-handler will be called to report the error event.
+registered for the IRQ. DMAR units support reporting fault events via an MSI.
+When a fault event occurs, an MSI is generated, and the DMAR fault
+handler reports the error event.
 
 Data Structures and Interfaces
 ******************************
