@@ -92,7 +92,8 @@ publish:
 	cp -r $(BUILDDIR)/html/* $(PUBLISHDIR)
 ifeq ($(RELEASE),latest)
 	cp scripts/publish-README.md $(PUBLISHDIR)/../README.md
-	cp scripts/publish-index.html $(PUBLISHDIR)/../index.html
+	scripts/publish-redirect.sh $(PUBLISHDIR)/../index.html latest/index.html
+	scripts/publish-redirect.sh $(PUBLISHDIR)/../hardware.html latest/reference/hardware.html
 	cp scripts/publish-robots.txt $(PUBLISHDIR)/../robots.txt
 	sed 's/<head>/<head>\n  <base href="https:\/\/projectacrn.github.io\/latest\/">/' $(BUILDDIR)/html/404.html > $(PUBLISHDIR)/../404.html
 endif
