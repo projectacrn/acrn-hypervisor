@@ -135,7 +135,9 @@ process information:
 
 .. code-block:: none
 
-   debugger <pid>
+   sudo debugger 12
+
+Replace ``12`` with the process ID you want to dump.
 
 .. note::
 
@@ -157,17 +159,17 @@ The source code structure:
    └── usercrash
        └── include
 
-- ``acrnprobe``: to gather all the crash and event logs on the platform. For
-  the hypervisor, the log is collected with ``acrnlog``. For the Service VM, the
-  userspace crash log is collected with ``usercrash``, and the kernel crash log
-  is collected with the inherent mechanism, such as ``ipanic`` or ``pstore``.
-  For the AaaG, the log is collected by monitoring the change of related folders
-  on the Service VM image, such as ``/data/logs/``. ``acrnprobe`` also provides
-  a flexible way to configure which crash or event to collect, by using an XML
-  configuration file.
+- ``acrnprobe``: tool that gathers all the crash and event logs on the
+  platform. For the hypervisor, the log is collected with ``acrnlog``. For the
+  Service VM, the userspace crash log is collected with ``usercrash``, and the
+  kernel crash log is collected with the inherent mechanism, such as ``ipanic``
+  or ``pstore``. For an AaaG VM, the log is collected by monitoring the change
+  of related folders on the Service VM image, such as ``/data/logs/``.
+  ``acrnprobe`` also provides a flexible way to configure which crash or event
+  to collect, by using an XML configuration file.
 - ``common``: some utils for logs, command and string.
 - ``data``: configuration file, service files and shell script.
-- ``usercrash``: to implement the tool that gets the crash information for the
+- ``usercrash``: tool that gets the crash information for the
   crashing process in userspace.
 
 Acrnprobe
