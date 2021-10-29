@@ -37,10 +37,10 @@
   </xsl:template>
 
   <xsl:template name ="vm_count">
-    <xsl:value-of select="acrn:comment('SOS_VM_NUM can only be 0U or 1U; When SOS_VM_NUM is 0U, MAX_POST_VM_NUM must be 0U too; MAX_POST_VM_NUM must be bigger than CONFIG_MAX_KATA_VM_NUM.')" />
+    <xsl:value-of select="acrn:comment('SERVICE_VM_NUM can only be 0U or 1U; When SERVICE_VM_NUM is 0U, MAX_POST_VM_NUM must be 0U too; MAX_POST_VM_NUM must be bigger than CONFIG_MAX_KATA_VM_NUM.')" />
     <xsl:value-of select="$newline" />
     <xsl:value-of select="acrn:define('PRE_VM_NUM', count(vm[acrn:is-pre-launched-vm(vm_type)]), 'U')" />
-    <xsl:value-of select="acrn:define('SOS_VM_NUM', count(vm[acrn:is-sos-vm(vm_type)]), 'U')" />
+    <xsl:value-of select="acrn:define('SERVICE_VM_NUM', count(vm[acrn:is-sos-vm(vm_type)]), 'U')" />
     <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', count(vm[acrn:is-post-launched-vm(vm_type)]), 'U')" />
     <xsl:value-of select="acrn:define('CONFIG_MAX_KATA_VM_NUM', count(vm[acrn:is-kata-vm(vm_type)]), 'U')" />
   </xsl:template>
@@ -62,7 +62,7 @@
     <xsl:if test="count(vm[vm_type='SOS_VM'])">
       <xsl:value-of select="acrn:comment(concat('SOS_VM == VM', vm[vm_type='SOS_VM']/@id))" />
       <xsl:value-of select="$newline" />
-      <xsl:value-of select="acrn:define('SOS_VM_BOOTARGS', 'SOS_ROOTFS SOS_CONSOLE SOS_IDLE SOS_BOOTARGS_DIFF', '')" />
+      <xsl:value-of select="acrn:define('SERVICE_VM_OS_BOOTARGS', 'SERVICE_VM_ROOTFS SERVICE_VM_OS_CONSOLE SERVICE_VM_IDLE SOS_BOOTARGS_DIFF', '')" />
     </xsl:if>
   </xsl:template>
 

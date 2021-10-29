@@ -318,10 +318,10 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 		irq_type = ACRN_PTDEV_IRQ_INTX;
 	}
 
-	/* If SOS kernel provides 'reset' entry in sysfs, related dev has some
+	/* If Service VM kernel provides 'reset' entry in sysfs, related dev has some
 	 * reset capability, e.g. FLR, or secondary bus reset. We do 2 things:
 	 * - reset each dev before passthrough to achieve valid dev state after
-	 *   UOS reboot
+	 *   User VM reboot
 	 * - refuse to passthrough PCIe dev without any reset capability
 	 */
 	if (ptdev->need_reset) {

@@ -127,7 +127,7 @@ static void *intr_storm_monitor_thread(void *arg)
 		 * calc the delta of the two times count of interrupt;
 		 * compare the IRQ num first, if not same just drop it,
 		 * for it just happens rarelly when devices dynamically
-		 * allocation in SOS or UOS, it can be calc next time
+		 * allocation in Service VM or User VM, it can be calc next time
 		 */
 		for (i = 0; i < hdr->buf_cnt; i += 2) {
 			if (hdr->buffer[i] != intr_cnt_buf[i])
@@ -194,7 +194,7 @@ static void stop_intr_storm_monitor(void)
 }
 
 /*
-.* interrupt monitor setting params, current interrupt mitigation will delay UOS's
+.* interrupt monitor setting params, current interrupt mitigation will delay User VM's
 .* pass-through devices' interrupt injection, the settings input from acrn-dm:
 .* params:
 .* threshold: each intr count/second when intr storm happens;

@@ -98,8 +98,8 @@ static char virtual_uart_path[32 + MAX_VMNAME_LEN];
  * Need to send open channel command to CBC signal char device before receive
  * signal data.
  * NOTE: Only send open channel command, no need to send close channel since
- * close channel command would deactivate the signal channel for all UOS, so
- * there will be a SOS service to deactivate signal channel in the future.
+ * close channel command would deactivate the signal channel for all User VM, so
+ * there will be a Service VM service to deactivate signal channel in the future.
  */
 static uint8_t cbc_open_channel_command[] = {0xFD, 0x00, 0x00, 0x00};
 
@@ -119,23 +119,23 @@ static int dummy2_sfd = -1;
 /*
  * VM Manager interfaces description.
  *
- * +---------+                 +---------+                 +---------+
- * |IOC      | VM stop         |VM       |                 |SOS      |
- * |Mediator |<----------------+Manager  |                 |Lifecycle|
- * |         |                 |         |                 |         |
- * |         | VM suspend      |         |                 |         |
- * |         |<----------------+         |                 |         |
- * |         |                 |         |                 |         |
- * |         | VM resume       |         |                 |         |
- * |         |<----------------+         |                 |         |
- * |         |get_wakeup_reason|         |get wakeup reason|         |
- * |         |for resume flow  |         |via unix socket  |         |
- * |         +---------------->|         +---------------->|         |
- * +---------+                 +---------+                 +---------+
+ * +---------+                 +---------+                 +----------+
+ * |IOC      | VM stop         |VM       |                 |Service VM|
+ * |Mediator |<----------------+Manager  |                 |Lifecycle |
+ * |         |                 |         |                 |          |
+ * |         | VM suspend      |         |                 |          |
+ * |         |<----------------+         |                 |          |
+ * |         |                 |         |                 |          |
+ * |         | VM resume       |         |                 |          |
+ * |         |<----------------+         |                 |          |
+ * |         |get_wakeup_reason|         |get wakeup reason|          |
+ * |         |for resume flow  |         |via unix socket  |          |
+ * |         +---------------->|         +---------------->|          |
+ * +---------+                 +---------+                 +----------+
  *
  * Only support stop/resume/suspend in IOC mediator currently.
- * For resume request, IOC mediator will get the wakeup reason from SOS
- * lifecycle service, then pass to UOS once received HB INIT from UOS.
+ * For resume request, IOC mediator will get the wakeup reason from Service VM
+ * lifecycle service, then pass to User VM once received HB INIT from User VM.
  * For stop and suspend requests, they are implemented as wakeup reason of
  * ignition button.
  */
@@ -166,11 +166,11 @@ static struct monitor_vm_ops vm_ops = {
  * +-----------+                            +-----------+
  *
  * INIT state:   The state is IOC mediator initialized IOC state, all of CBC
- *               protocol packats are handler normally. In this state, UOS has
+ *               protocol packats are handler normally. In this state, User VM has
  *               not yet sent active heartbeat.
  *
  * ACTIVE state: Enter this state if HB ACTIVE event is triggered that indicates
- *               UOS state has been active and need to set the bit 23(SoC active
+ *               User VM state has been active and need to set the bit 23(SoC active
  *               bit) in the wakeup reason.
  *
  * SUSPENDING state: Enter this state if RAM REFRESH event or HB INACTIVE event
@@ -898,8 +898,8 @@ send_tx_request(struct ioc_dev *ioc, enum cbc_request_type type)
 static int
 process_hb_active_event(struct ioc_dev *ioc)
 {
-	/* Enable wakeup reason bit 23 that indicating UOS is active */
-	return send_tx_request(ioc, CBC_REQ_T_UOS_ACTIVE);
+	/* Enable wakeup reason bit 23 that indicating User VM is active */
+	return send_tx_request(ioc, CBC_REQ_T_USER_VM_ACTIVE);
 }
 
 /*
@@ -917,7 +917,7 @@ process_ram_refresh_event(struct ioc_dev *ioc)
 	 * Tx handler sents shutdown wakeup reason,
 	 * Then enter suspended state.
 	 */
-	rc = send_tx_request(ioc, CBC_REQ_T_UOS_INACTIVE);
+	rc = send_tx_request(ioc, CBC_REQ_T_USER_VM_INACTIVE);
 
 	/*
 	 * TODO: set suspend to PM DM
@@ -941,7 +941,7 @@ process_hb_inactive_event(struct ioc_dev *ioc)
 	 * Tx sents shutdown wakeup reason,
 	 * Then enter shutdown state.
 	 */
-	rc = send_tx_request(ioc, CBC_REQ_T_UOS_INACTIVE);
+	rc = send_tx_request(ioc, CBC_REQ_T_USER_VM_INACTIVE);
 
 	/*
 	 * TODO: set shutdown to PM DM
@@ -1010,9 +1010,9 @@ process_resume_event(struct ioc_dev *ioc)
 	}
 
 	/*
-	 * The signal channel is inactive after SOS resumed, need to send
+	 * The signal channel is inactive after Service VM resumed, need to send
 	 * open channel command again to activate the signal channel.
-	 * And it would not impact to UOS itself enter/exit S3.
+	 * And it would not impact to User VM itself enter/exit S3.
 	 */
 	if (ioc_ch_xmit(IOC_NATIVE_SIGNAL, cbc_open_channel_command,
 				sizeof(cbc_open_channel_command)) <= 0)

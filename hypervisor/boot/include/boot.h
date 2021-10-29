@@ -20,7 +20,7 @@
 #define MAX_MOD_STRING_SIZE		2048U
 
 /* The modules in multiboot are: Pre-launched VM: kernel/ramdisk/acpi; Service VM: kernel/ramdisk */
-#define MAX_MODULE_NUM			(3U * PRE_VM_NUM + 2U * SOS_VM_NUM)
+#define MAX_MODULE_NUM			(3U * PRE_VM_NUM + 2U * SERVICE_VM_NUM)
 
 /* The vACPI module size is fixed to 1MB */
 #define ACPI_MODULE_SIZE		MEM_1M

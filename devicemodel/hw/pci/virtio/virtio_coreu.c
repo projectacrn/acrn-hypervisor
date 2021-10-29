@@ -26,14 +26,15 @@
  *              |               |    +------------------+
  *              |               |              |
  *     +------------------+     |    +------------------+
- *     | CoreU SOS Daemon |     |    | CoreU UOS Daemon |
+ *     | CoreU Service VM |     |    | CoreU User VM    |
+ *     |      Daemon      |     |    |      Daemon      |
  *     +------------------+     |    +------------------+
  *                              |
- *    Service OS User Space     |     User OS User Space
+ *    Service VM User Space     |     User VM User Space
  *                              |
  *  --------------------------  |  ---------------------------
  *                              |
- *   Service OS Kernel Space    |    User OS Kernel Space
+ *   Service VM Kernel Space    |    User VM Kernel Space
  *                              |
  *                              |    +------------------+
  *                              |    |  CoreU Frontend  |
@@ -41,12 +42,12 @@
  *                              |             |
  *                              +-------------+
  *
- * Above diagram illustrates the CoreU architecture in ACRN. In SOS, CoreU
- * daemon starts upon the system boots. In UOS, CoreU daemon gets the PAVP
+ * Above diagram illustrates the CoreU architecture in ACRN. In Service VM, CoreU
+ * daemon starts upon the system boots. In User VM, CoreU daemon gets the PAVP
  * session status by open/read/write /dev/coreu0 which is created by CoreU
  * frontend, instead of accessing GPU. Then the CoreU frontend sends the
  * requests to the CoreU backend thru virtio mechanism. CoreU backend talks to
- * CoreU SOS daemon to get the PAVP session status.
+ * CoreU Service VM daemon to get the PAVP session status.
  *
  */
 
@@ -324,7 +325,7 @@ virtio_coreu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * connect to coreu daemon in init phase
 	 *
 	 * @FIXME if failed connecting to CoreU daemon, the return value should
-	 * be set appropriately for SOS not exposing the CoreU PCI device to UOS
+	 * be set appropriately for Service VM not exposing the CoreU PCI device to User VM
 	 */
 	vcoreu->fd = connect_coreu_daemon();
 	if (vcoreu->fd < 0) {

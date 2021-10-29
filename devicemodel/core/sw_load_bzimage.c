@@ -37,7 +37,7 @@
 
 #define SETUP_SIG 0x5a5aaa55
 
-/* If we load kernel/ramdisk/bootargs directly, the UOS
+/* If we load kernel/ramdisk/bootargs directly, the User VM
  * memory layout will be like:
  *
  * | ...                                                 |

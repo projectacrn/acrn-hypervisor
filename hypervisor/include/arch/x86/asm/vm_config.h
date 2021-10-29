@@ -17,7 +17,7 @@
 #include <asm/sgx.h>
 #include <acrn_hv_defs.h>
 
-#define CONFIG_MAX_VM_NUM	(PRE_VM_NUM + SOS_VM_NUM + MAX_POST_VM_NUM)
+#define CONFIG_MAX_VM_NUM	(PRE_VM_NUM + SERVICE_VM_NUM + MAX_POST_VM_NUM)
 
 #define AFFINITY_CPU(n)		(1UL << (n))
 #define MAX_VCPUS_PER_VM	MAX_PCPU_NUM
@@ -26,20 +26,20 @@
 #define MAX_MOD_TAG_LEN		32U
 
 #ifdef CONFIG_SCHED_NOOP
-#define SOS_IDLE		""
+#define SERVICE_VM_IDLE		""
 #else
-#define SOS_IDLE		"idle=halt "
+#define SERVICE_VM_IDLE		"idle=halt "
 #endif
 
-#define PCI_DEV_TYPE_PTDEV	(1U << 0U)
-#define PCI_DEV_TYPE_HVEMUL	(1U << 1U)
-#define PCI_DEV_TYPE_SOSEMUL	(1U << 2U)
+#define PCI_DEV_TYPE_PTDEV		(1U << 0U)
+#define PCI_DEV_TYPE_HVEMUL		(1U << 1U)
+#define PCI_DEV_TYPE_SERVICE_VM_EMUL	(1U << 2U)
 
 #define MAX_MMIO_DEV_NUM	2U
 
 #define CONFIG_SOS_VM		.load_order = SOS_VM,	\
-				.uuid = SOS_VM_UUID,	\
-				.severity = SEVERITY_SOS
+				.uuid = SERVICE_VM_UUID,	\
+				.severity = SEVERITY_SERVICE_VM
 
 #define CONFIG_SAFETY_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
 				.uuid = SAFETY_VM_UUID##idx,	\
@@ -69,7 +69,7 @@
 enum acrn_vm_severity {
 	SEVERITY_SAFETY_VM = 0x40U,
 	SEVERITY_RTVM = 0x30U,
-	SEVERITY_SOS = 0x20U,
+	SEVERITY_SERVICE_VM = 0x20U,
 	SEVERITY_STANDARD_VM = 0x10U,
 };
 
