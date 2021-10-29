@@ -31,10 +31,10 @@
  * should be able to accommodate it and so that avoid the trampoline corruption.
  */
 #define BZIMG_LOAD_PARAMS_SIZE			(MEM_4K * 8)
-#define BZIMG_INITGDT_GPA(load_params_gpa)	(load_params_gpa + 0UL)
-#define BZIMG_ZEROPAGE_GPA(load_params_gpa)	(load_params_gpa + MEM_1K)
-#define BZIMG_CMDLINE_GPA(load_params_gpa)	(load_params_gpa + MEM_1K + MEM_4K)
-#define BZIMG_EFIMMAP_GPA(load_params_gpa)	(load_params_gpa + MEM_1K + MEM_4K + MEM_2K)
+#define BZIMG_INITGDT_GPA(load_params_gpa)	((load_params_gpa) + 0UL)
+#define BZIMG_ZEROPAGE_GPA(load_params_gpa)	((load_params_gpa) + MEM_1K)
+#define BZIMG_CMDLINE_GPA(load_params_gpa)	((load_params_gpa) + MEM_1K + MEM_4K)
+#define BZIMG_EFIMMAP_GPA(load_params_gpa)	((load_params_gpa) + MEM_1K + MEM_4K + MEM_2K)
 
 /* TODO:
  * The value is referenced from Linux boot protocal for old kernels,
