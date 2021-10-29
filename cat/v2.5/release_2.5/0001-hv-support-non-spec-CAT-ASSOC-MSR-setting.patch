@@ -1,0 +1,79 @@
+From 4e38bb3dccfc209159d8eb2b602dcc6a6849a1c3 Mon Sep 17 00:00:00 2001
+From: Minggui Cao <minggui.cao@intel.com>
+Date: Fri, 29 Oct 2021 10:40:17 +0800
+Subject: [PATCH 1/2] hv: support non-spec CAT ASSOC MSR setting
+
+some platform CAT ASSOC MSR not follow spec, need to support.
+
+on release_2.5, by default it support TGL/EHL LLC, this patch is
+to support WHL/CFL and EHL L2 CAT.
+
+Signed-off-by: Minggui Cao <minggui.cao@intel.com>
+---
+ hypervisor/arch/x86/rdt.c | 34 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 33 insertions(+), 1 deletion(-)
+
+diff --git a/hypervisor/arch/x86/rdt.c b/hypervisor/arch/x86/rdt.c
+index 47d87c267..69c6c7214 100644
+--- a/hypervisor/arch/x86/rdt.c
++++ b/hypervisor/arch/x86/rdt.c
+@@ -60,6 +60,34 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
+ 	},
+ };
+ 
++static void check_init_L2_cat(void)
++{
++	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
++
++	if ((cpu_info->displayfamily == 6) &&
++		(cpu_info->displaymodel == 0x96 /* EHL */)) {
++
++		res_cap_info[RDT_RESOURCE_L2].clos_max = MAX_CACHE_CLOS_NUM_ENTRIES;
++
++		platform_l2_clos_array[0].value.clos_mask = 0x0ff;
++		platform_l2_clos_array[1].value.clos_mask = 0xf00;
++		platform_l2_clos_array[2].value.clos_mask = 0x00f;
++		platform_l2_clos_array[3].value.clos_mask = 0x001;
++	}
++}
++
++static inline bool is_follow_spec()
++{
++	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
++
++	if (cpu_info->displayfamily == 6 &&
++		((cpu_info->displaymodel == 0x8c /* TGL-U */) ||
++		(cpu_info->displaymodel == 0x96 /* EHL */))) {
++		return true;
++	}
++	return false;
++}
++
+ /*
+  * @pre res == RDT_RESOURCE_L3 || res == RDT_RESOURCE_L2
+  */
+@@ -115,9 +143,10 @@ void init_rdt_info(void)
+ 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
+ 
+ 	if (MAX_CACHE_CLOS_NUM_ENTRIES > 0) {
+-		pr_acrnlog("LLC CAT enabled.");
++		pr_acrnlog("LLC CAT enabled, %sfollow spec\n", is_follow_spec() ? "" : "not ");
+ 		res_cap_info[RDT_RESOURCE_L3].clos_max = MAX_CACHE_CLOS_NUM_ENTRIES;
+ 
++		check_init_L2_cat();
+ 	} else if (pcpu_has_cap(X86_FEATURE_RDT_A)) {
+ 		cpuid_subleaf(CPUID_RDT_ALLOCATION, 0U, &eax, &ebx, &ecx, &edx);
+ 
+@@ -201,6 +230,9 @@ uint64_t clos2pqr_msr(uint16_t clos)
+ {
+ 	uint64_t pqr_assoc;
+ 
++	if (!is_follow_spec()) {
++		return clos;
++	}
+ 	pqr_assoc = msr_read(MSR_IA32_PQR_ASSOC);
+ 	pqr_assoc = (pqr_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
+ 
+-- 
+2.17.1
+
