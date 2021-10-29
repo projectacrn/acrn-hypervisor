@@ -1333,7 +1333,7 @@ static int32_t emulate_and(struct acrn_vcpu *vcpu, const struct instr_emul_vie *
 		 * perform the operation with the pre-fetched immediate
 		 * operand and write the result
 		 */
-		result = val1 & vie->immediate;
+		result = val1 & (uint64_t)vie->immediate;
 		vie_mmio_write(vcpu, result);
 		break;
 	default:
