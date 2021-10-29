@@ -70,8 +70,8 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	/* Map [gpa_rebased, gpa_rebased + size) to secure ept mapping */
 	ept_add_mr(vm, (uint64_t *)vm->arch_vm.sworld_eptp, hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
 
-	/* Backup secure world info, will be used when destroy secure world and suspend UOS */
-	vm->sworld_control.sworld_memory.base_gpa_in_uos = gpa_orig;
+	/* Backup secure world info, will be used when destroy secure world and suspend User VM */
+	vm->sworld_control.sworld_memory.base_gpa_in_user_vm = gpa_orig;
 	vm->sworld_control.sworld_memory.base_hpa = hpa;
 	vm->sworld_control.sworld_memory.length = size;
 }
@@ -79,7 +79,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 {
 	uint64_t hpa = vm->sworld_control.sworld_memory.base_hpa;
-	uint64_t gpa_uos = vm->sworld_control.sworld_memory.base_gpa_in_uos;
+	uint64_t gpa_user_vm = vm->sworld_control.sworld_memory.base_gpa_in_user_vm;
 	uint64_t size = vm->sworld_control.sworld_memory.length;
 
 	if (vm->arch_vm.sworld_eptp != NULL) {
@@ -90,11 +90,11 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 			clac();
 		}
 
-		ept_del_mr(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
+		ept_del_mr(vm, vm->arch_vm.sworld_eptp, gpa_user_vm, size);
 		vm->arch_vm.sworld_eptp = NULL;
 
 		/* Restore memory to guest normal world */
-		ept_add_mr(vm, vm->arch_vm.nworld_eptp, hpa, gpa_uos, size, EPT_RWX | EPT_WB);
+		ept_add_mr(vm, vm->arch_vm.nworld_eptp, hpa, gpa_user_vm, size, EPT_RWX | EPT_WB);
 	} else {
 		pr_err("sworld eptp is NULL, it's not created");
 	}
@@ -309,7 +309,7 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_
 	return success;
 }
 
-/* Secure World will reuse environment of UOS_Loder since they are
+/* Secure World will reuse environment of User VM Loder since they are
  * both booting from and running in 64bit mode, except GP registers.
  * RIP, RSP and RDI are specified below, other GP registers are leaved
  * as 0.
@@ -409,7 +409,7 @@ void restore_sworld_context(struct acrn_vcpu *vcpu)
 		&vcpu->vm->sworld_control;
 
 	create_secure_world_ept(vcpu->vm,
-		sworld_ctl->sworld_memory.base_gpa_in_uos,
+		sworld_ctl->sworld_memory.base_gpa_in_user_vm,
 		sworld_ctl->sworld_memory.length,
 		TRUSTY_EPT_REBASE_GPA);
 

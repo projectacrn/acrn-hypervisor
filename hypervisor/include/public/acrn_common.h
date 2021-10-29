@@ -211,7 +211,8 @@ struct acrn_pci_request {
  * |                       |                         |                      |
  * |                       |                         | - Fill in type,      |
  * |                       |                         |   addr, etc.         |
- * |                       |                         | - Pause UOS vCPU y   |
+ * |                       |                         | - Pause User VM      |
+ * |			   |                         |		   vCPU y   |
  * |                       |                         | - Set state to       |
  * |                       |                         |   PENDING (a)        |
  * |                       |                         | - Fire upcall to     |
@@ -240,7 +241,7 @@ struct acrn_pci_request {
  * +-----------------------+-------------------------+----------------------+
  * |                       | Hypervisor:             |                      |
  * |                       |                         |                      |
- * |                       | - resume UOS vCPU y     |                      |
+ * |                       | - resume User VM vCPU y |                      |
  * |                       |   (e)                   |                      |
  * |                       |                         |                      |
  * +-----------------------+-------------------------+----------------------+

@@ -233,13 +233,13 @@ int32_t init_vpci(struct acrn_vm *vm)
 		vm->vpci.res64.start = MMIO64_START;
 		vm->vpci.res64.end = MMIO64_END;
 	} else {
-		vm->vpci.pci_mmcfg.address = UOS_VIRT_PCI_MMCFG_BASE;
-		vm->vpci.pci_mmcfg.start_bus = UOS_VIRT_PCI_MMCFG_START_BUS;
-		vm->vpci.pci_mmcfg.end_bus = UOS_VIRT_PCI_MMCFG_END_BUS;
-		vm->vpci.res32.start = UOS_VIRT_PCI_MEMBASE32;
-		vm->vpci.res32.end = UOS_VIRT_PCI_MEMLIMIT32;
-		vm->vpci.res64.start = UOS_VIRT_PCI_MEMBASE64;
-		vm->vpci.res64.end = UOS_VIRT_PCI_MEMLIMIT64;
+		vm->vpci.pci_mmcfg.address = USER_VM_VIRT_PCI_MMCFG_BASE;
+		vm->vpci.pci_mmcfg.start_bus = USER_VM_VIRT_PCI_MMCFG_START_BUS;
+		vm->vpci.pci_mmcfg.end_bus = USER_VM_VIRT_PCI_MMCFG_END_BUS;
+		vm->vpci.res32.start = USER_VM_VIRT_PCI_MEMBASE32;
+		vm->vpci.res32.end = USER_VM_VIRT_PCI_MEMLIMIT32;
+		vm->vpci.res64.start = USER_VM_VIRT_PCI_MEMBASE64;
+		vm->vpci.res64.end = USER_VM_VIRT_PCI_MEMLIMIT64;
 	}
 
 	/* Build up vdev list for vm */
@@ -358,7 +358,7 @@ static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bd
 
 	if ((vdev != NULL) && (vdev->user != vdev)) {
 		if (vdev->user != NULL) {
-			/* the Service VM is able to access, if and only if the Service VM has higher severity than the UOS. */
+			/* the Service VM is able to access, if and only if the Service VM has higher severity than the User VM. */
 			if (get_vm_severity(vpci2vm(vpci)->vm_id) <
 					get_vm_severity(vpci2vm(vdev->user->vpci)->vm_id)) {
 				vdev = NULL;
@@ -734,7 +734,7 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_pcidev *pcidev)
 		pci_vdev_write_vcfg(vdev, PCIR_INTERRUPT_LINE, 1U, pcidev->intr_line);
 		pci_vdev_write_vcfg(vdev, PCIR_INTERRUPT_PIN, 1U, pcidev->intr_pin);
 		for (idx = 0U; idx < vdev->nr_bars; idx++) {
-			/* VF is assigned to a UOS */
+			/* VF is assigned to a User VM */
 			if (vdev->phyfun != NULL) {
 				vdev->vbars[idx] = vdev_in_service_vm->vbars[idx];
 				if (has_msix_cap(vdev) && (idx == vdev->msix.table_bar)) {

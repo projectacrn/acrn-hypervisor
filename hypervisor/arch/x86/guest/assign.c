@@ -698,7 +698,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 	 * while phys pin is always means for physical IOAPIC.
 	 *
 	 * Device Model should pre-hold the mapping entries by calling
-	 * ptirq_add_intx_remapping for UOS.
+	 * ptirq_add_intx_remapping for User VM.
 	 *
 	 * For Service VM, it adds the mapping entries at runtime, if the
 	 * entry already be held by others, return error.
