@@ -176,7 +176,7 @@ def write_vuart_vbar(mmiolist_per_vm, sos_mmio_range, config):
             free_bar0 = []
             free_bar1 = []
             # vuart decice requires 2 bars
-            if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+            if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
                 free_bar0 = get_free_mmio(sos_mmio_range, mmiolist_per_vm[vm_id], \
                              PCI_VUART_VBAR0_SIZE + PCI_VUART_VBAR0_ALIGNMENT)
                 free_bar0_start_addr = common.round_up(free_bar0.start, PCI_VUART_VBAR0_ALIGNMENT)
@@ -232,7 +232,7 @@ def write_ivshmem_vbar(mmiolist_per_vm, sos_mmio_range, config):
                 int_size = int(size) * 0x100000
             except:
                 int_size = 0
-            if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+            if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
                 # vbar[0] for shared memory is 4k
                 free_bar0 = get_free_mmio(sos_mmio_range, mmiolist_per_vm[vm_id], BAR0_SHEMEM_ALIGNMENT + BAR0_SHEMEM_SIZE)
                 free_bar0_start_addr = common.round_up(free_bar0.start, BAR0_SHEMEM_ALIGNMENT)
@@ -376,7 +376,7 @@ def generate_file(config):
     pci_items = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "pci_devs", "pci_dev")
     pci_devs = scenario_cfg_lib.get_pt_pci_devs(pci_items)
     pci_devs_per_vm = get_devs_per_vm_with_key(pci_devs, bdf_list)
-    # list SOS vmsix supported devices without other PRE_LAUNCHED_VMs' in bdf format
+    # list Service VM vmsix supported devices without other PRE_LAUNCHED_VMs' in bdf format
     sos_bdf_list = [
         d for d in bdf_list
         if all((d not in pci_devs_per_vm[i] for i in pci_devs_per_vm))
@@ -384,14 +384,14 @@ def generate_file(config):
 
     for vm_i in pci_devs_per_vm:
         vm_type = common.VM_TYPES[vm_i]
-        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             pci_devs_per_vm[vm_i] = sos_bdf_list
 
     mmiolist_per_vm = {}
     for vm_i,vm_type in common.VM_TYPES.items():
         if vm_i not in mmiolist_per_vm.keys():
             mmiolist_per_vm[vm_i] = []
-        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             mmiolist_per_vm[vm_i] = non_matching_mmios
         else:
             if vm_i in pci_devs.keys():
@@ -420,7 +420,7 @@ def generate_file(config):
     for vm_type in common.VM_TYPES.values():
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
             pre_vm = True
-        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             sos_vm = True
 
     if not pre_vm and not sos_vm:

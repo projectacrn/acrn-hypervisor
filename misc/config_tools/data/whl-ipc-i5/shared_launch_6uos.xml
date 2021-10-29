@@ -1,14 +1,14 @@
 <acrn-config board="whl-ipc-i5" scenario="shared" uos_launcher="6">
-    <uos id="1">
-	<uos_type desc="UOS type">WINDOWS</uos_type>
-	<rtos_type desc="UOS Realtime capability">no</rtos_type>
-	<mem_size desc="UOS memory size in MByte">4096</mem_size>
+    <user_vm id="1">
+	<user_vm_type desc="User VM type">WINDOWS</user_vm_type>
+	<rtos_type desc="User VM Realtime capability">no</rtos_type>
+	<mem_size desc="User VM memory size in MByte">4096</mem_size>
 	<gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Enable</vuart0>
-	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
+	<poweroff_channel desc="the method of power off User VM"></poweroff_channel>
 	<allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
-	<enable_ptm desc="enable ptm of uos">n</enable_ptm>
+	<enable_ptm desc="enable ptm of User VM">n</enable_ptm>
 	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
 	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
 		<pcpu_id></pcpu_id>
@@ -41,18 +41,18 @@
 		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./win10-ltsc.img</block>
 		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"></console>
 	</virtio_devices>
-    </uos>
+    </user_vm>
 
-    <uos id="2">
-	<uos_type desc="UOS type">PREEMPT-RT LINUX</uos_type>
-	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
-	<mem_size desc="UOS memory size in MByte">1024</mem_size>
+    <user_vm id="2">
+	<user_vm_type desc="User VM type">PREEMPT-RT LINUX</user_vm_type>
+	<rtos_type desc="User VM Realtime capability">Hard RT</rtos_type>
+	<mem_size desc="User VM memory size in MByte">1024</mem_size>
 	<gvt_args configurable="0" desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
+	<poweroff_channel desc="the method of power off User VM"></poweroff_channel>
 	<allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
-	<enable_ptm desc="enable ptm of uos">n</enable_ptm>
+	<enable_ptm desc="enable ptm of User VM">n</enable_ptm>
 	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
 	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
 		<pcpu_id></pcpu_id>
@@ -85,17 +85,17 @@
 		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./core-image-weston-intel-corei7-64.wic</block>
 		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
 	</virtio_devices>
-    </uos>
-    <uos id="3">
-        <uos_type desc="UOS type">YOCTO</uos_type>
-        <rtos_type desc="UOS Realtime capability">no</rtos_type>
-        <mem_size desc="UOS memory size in MByte">512</mem_size>
+    </user_vm>
+    <user_vm id="3">
+        <user_vm_type desc="User VM type">YOCTO</user_vm_type>
+        <rtos_type desc="User VM Realtime capability">no</rtos_type>
+        <mem_size desc="User VM memory size in MByte">512</mem_size>
         <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
         <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
         <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-        <poweroff_channel desc="the method of power off uos" />
+        <poweroff_channel desc="the method of power off User VM" />
         <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
-        <enable_ptm desc="enable ptm of uos">n</enable_ptm>
+        <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
         <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4" />
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id />
@@ -127,17 +127,17 @@
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img" />
         </virtio_devices>
-    </uos>
-    <uos id="4">
-        <uos_type desc="UOS type">YOCTO</uos_type>
-        <rtos_type desc="UOS Realtime capability">no</rtos_type>
-        <mem_size desc="UOS memory size in MByte">512</mem_size>
+    </user_vm>
+    <user_vm id="4">
+        <user_vm_type desc="User VM type">YOCTO</user_vm_type>
+        <rtos_type desc="User VM Realtime capability">no</rtos_type>
+        <mem_size desc="User VM memory size in MByte">512</mem_size>
         <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
         <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
         <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-        <poweroff_channel desc="the method of power off uos" />
+        <poweroff_channel desc="the method of power off User VM" />
         <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
-        <enable_ptm desc="enable ptm of uos">n</enable_ptm>
+        <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
         <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4" />
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id />
@@ -169,17 +169,17 @@
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img" />
         </virtio_devices>
-    </uos>
-    <uos id="5">
-        <uos_type desc="UOS type">YOCTO</uos_type>
-        <rtos_type desc="UOS Realtime capability">no</rtos_type>
-        <mem_size desc="UOS memory size in MByte">512</mem_size>
+    </user_vm>
+    <user_vm id="5">
+        <user_vm_type desc="User VM type">YOCTO</user_vm_type>
+        <rtos_type desc="User VM Realtime capability">no</rtos_type>
+        <mem_size desc="User VM memory size in MByte">512</mem_size>
         <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
         <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
         <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-        <poweroff_channel desc="the method of power off uos" />
+        <poweroff_channel desc="the method of power off User VM" />
         <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
-        <enable_ptm desc="enable ptm of uos">n</enable_ptm>
+        <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
         <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4" />
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id />
@@ -211,17 +211,17 @@
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img" />
         </virtio_devices>
-    </uos>
-    <uos id="6">
-        <uos_type desc="UOS type">YOCTO</uos_type>
-        <rtos_type desc="UOS Realtime capability">no</rtos_type>
-        <mem_size desc="UOS memory size in MByte">512</mem_size>
+    </user_vm>
+    <user_vm id="6">
+        <user_vm_type desc="User VM type">YOCTO</user_vm_type>
+        <rtos_type desc="User VM Realtime capability">no</rtos_type>
+        <mem_size desc="User VM memory size in MByte">512</mem_size>
         <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
         <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
         <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-        <poweroff_channel desc="the method of power off uos" />
+        <poweroff_channel desc="the method of power off User VM" />
         <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
-        <enable_ptm desc="enable ptm of uos">n</enable_ptm>
+        <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
         <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4" />
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id />
@@ -253,5 +253,5 @@
             <input desc="virtio input device" />
             <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img" />
         </virtio_devices>
-    </uos>
+    </user_vm>
 </acrn-config>

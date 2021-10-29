@@ -89,7 +89,7 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
 		vm->sw.bootargs_info.src_addr = &mod_cmdline[vm->vm_id][0];
 	}
 
-	if (vm_config->load_order == SOS_VM) {
+	if (vm_config->load_order == SERVICE_VM) {
 		if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE, " ", 1U) == 0) {
 			char seed_args[MAX_SEED_ARG_SIZE] = "";
 

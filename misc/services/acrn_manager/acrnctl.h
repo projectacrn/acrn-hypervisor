@@ -38,7 +38,7 @@ struct vmmngr_struct {
 
 int shell_cmd(const char *cmd, char *outbuf, int len);
 
-/* update names and states of VMs in SOS
+/* update names and states of VMs in Service VM
  * before you stop, start, pause, resume, suspend continue a VM
  * use a name, it is better to run vmmngr_update() first
  * and use vmngr_find() to check is this VM is still available

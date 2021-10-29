@@ -53,13 +53,13 @@ def create_vuart_irq_node(etree, vm_id, vm_type, vuart_id, irq):
 def assign_legacy_vuart_irqs(vm_node, legacy_vuart_id, irq_list):
     legacy_vuart_node_irq_text = common.get_node(f"legacy_vuart[@id = '{legacy_vuart_id}']/irq/text()", vm_node)
     legacy_vuart_irq = ''
-    if legacy_vuart_node_irq_text == 'COM1_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM1_IRQ' \
-        or legacy_vuart_node_irq_text == 'COM3_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM3_IRQ':
+    if legacy_vuart_node_irq_text == 'COM1_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM1_IRQ' \
+        or legacy_vuart_node_irq_text == 'COM3_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM3_IRQ':
         legacy_vuart_irq = '4'
         if legacy_vuart_irq in irq_list:
             remove_irq(irq_list, legacy_vuart_irq)
-    elif legacy_vuart_node_irq_text == 'COM2_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM2_IRQ' \
-        or legacy_vuart_node_irq_text == 'COM4_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM4_IRQ':
+    elif legacy_vuart_node_irq_text == 'COM2_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM2_IRQ' \
+        or legacy_vuart_node_irq_text == 'COM4_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM4_IRQ':
         legacy_vuart_irq = '3'
         if legacy_vuart_irq in irq_list:
             remove_irq(irq_list, legacy_vuart_irq)
@@ -76,11 +76,11 @@ def alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree):
     vm_node_list = scenario_etree.xpath("//vm")
     for vm_node in vm_node_list:
         vm_type = common.get_node("./vm_type/text()", vm_node)
-        irq_list = get_native_valid_irq() if vm_type == "SOS_VM" else [f"{d}" for d in list(range(1,15))]
+        irq_list = get_native_valid_irq() if vm_type == "SERVICE_VM" else [f"{d}" for d in list(range(1,15))]
         legacy_vuart_id_list = vm_node.xpath("legacy_vuart[base != 'INVALID_COM_BASE']/@id")
         legacy_vuart_irq = ''
         for legacy_vuart_id in legacy_vuart_id_list:
-            if legacy_vuart_id == '0' and vm_type == "SOS_VM":
+            if legacy_vuart_id == '0' and vm_type == "SERVICE_VM":
                 if hv_debug_console in native_ttys.keys():
                     if native_ttys[hv_debug_console]['irq'] < LEGACY_IRQ_MAX:
                         legacy_vuart_irq = native_ttys[hv_debug_console]['irq']

@@ -8,7 +8,7 @@ import common
 import board_cfg_lib
 
 HEADER_LICENSE = common.open_license()
-SOS_UART1_VALID_NUM = ""
+SERVICE_VM_UART1_VALID_NUM = ""
 NATIVE_TTYS_DIC = {}
 
 START_HPA_LIST = ['0', '0x100000000', '0x120000000']
@@ -18,7 +18,7 @@ KERN_BOOT_ADDR_LIST = ['0x100000']
 
 VUART_TYPE = ['VUART_LEGACY_PIO', 'VUART_PCI']
 INVALID_COM_BASE = 'INVALID_COM_BASE'
-VUART_BASE = ['SOS_COM1_BASE', 'SOS_COM2_BASE', 'SOS_COM3_BASE', 'SOS_COM4_BASE', 'COM1_BASE',
+VUART_BASE = ['SERVICE_VM_COM1_BASE', 'SERVICE_VM_COM2_BASE', 'SERVICE_VM_COM3_BASE', 'SERVICE_VM_COM4_BASE', 'COM1_BASE',
               'COM2_BASE', 'COM3_BASE', 'COM4_BASE', 'CONFIG_COM_BASE', INVALID_COM_BASE]
 INVALID_PCI_BASE = 'INVALID_PCI_BASE'
 PCI_VUART = 'PCI_VUART'
@@ -27,7 +27,7 @@ PCI_VUART_BASE = [PCI_VUART, INVALID_PCI_BASE]
 AVALIBLE_COM1_BASE = [INVALID_COM_BASE, 'COM1_BASE']
 AVALIBLE_COM2_BASE = [INVALID_COM_BASE, 'COM2_BASE']
 
-VUART_IRQ = ['SOS_COM1_IRQ', 'SOS_COM2_IRQ', 'SOS_COM3_IRQ', 'SOS_COM4_IRQ',
+VUART_IRQ = ['SERVICE_VM_COM1_IRQ', 'SERVICE_VM_COM2_IRQ', 'SERVICE_VM_COM3_IRQ', 'SERVICE_VM_COM4_IRQ',
              'COM1_IRQ', 'COM2_IRQ', 'COM3_IRQ', 'COM4_IRQ', 'CONFIG_COM_IRQ', '0']
 
 # Support 512M, 1G, 2G
@@ -46,7 +46,7 @@ PT_SUB_PCI['sata'] = ['SATA controller']
 PT_SUB_PCI['nvme'] = ['Non-Volatile memory controller']
 PT_SUB_PCI['usb'] = ['USB controller']
 UUID_DB = {
-    'SOS_VM':['dbbbd434-7a57-4216-a12c-2201f1ab0240'],
+    'SERVICE_VM':['dbbbd434-7a57-4216-a12c-2201f1ab0240'],
     'SAFETY_VM':['fc836901-8685-4bc0-8b71-6e31dc36fa47'],
     'PRE_STD_VM':['26c5e0d8-8f8a-47d8-8109-f201ebd61a5e', 'dd87ce08-66f9-473d-bc58-7605837f935e'],
     'POST_STD_VM':['d2795438-25d6-11e8-864e-cb7a18b34643', '615db82a-e189-4b4f-8dbb-d321343e4ab3',
@@ -57,7 +57,7 @@ UUID_DB = {
 }
 
 VM_DB = {
-    'SOS_VM':{'load_type':'SOS_VM', 'severity':'SEVERITY_SERVICE_VM', 'uuid':UUID_DB['SOS_VM']},
+    'SERVICE_VM':{'load_type':'SERVICE_VM', 'severity':'SEVERITY_SERVICE_VM', 'uuid':UUID_DB['SERVICE_VM']},
     'SAFETY_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_SAFETY_VM', 'uuid':UUID_DB['SAFETY_VM']},
     'PRE_RT_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['PRE_RT_VM']},
     'PRE_STD_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['PRE_STD_VM']},
@@ -200,7 +200,7 @@ def get_pci_dev_num_per_vm():
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
             pci_dev_num_per_vm[vm_i] = pt_pci_num[vm_i] + shmem_num_i + vuarts_num[vm_i]
-        elif "SOS_VM" == VM_DB[vm_type]['load_type']:
+        elif "SERVICE_VM" == VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
@@ -211,7 +211,7 @@ def get_pci_dev_num_per_vm():
 
 def check_board_private_info():
 
-    if 'SOS_VM' not in common.VM_TYPES.values():
+    if 'SERVICE_VM' not in common.VM_TYPES.values():
         return
     branch_tag = "board_private"
     private_info = {}
@@ -262,7 +262,7 @@ def load_vm_check(load_vms, item):
             key = "vm:id={},{}".format(order_i, item)
             ERR_LIST[key] = "VM load order unknown"
 
-        if "SOS_VM" == VM_DB[load_str]['load_type']:
+        if "SERVICE_VM" == VM_DB[load_str]['load_type']:
             sos_vm_ids.append(order_i)
 
         if "PRE_LAUNCHED_VM" == VM_DB[load_str]['load_type']:
@@ -290,7 +290,7 @@ def load_vm_check(load_vms, item):
 
     if len(sos_vm_ids) > 1:
         key = "vm:id={},{}".format(sos_vm_ids[0], item)
-        ERR_LIST[key] = "SOS VM number should not be greater than 1"
+        ERR_LIST[key] = "Service VM number should not be greater than 1"
         return
 
     if len(post_vm_ids) > len(UUID_DB["POST_STD_VM"]):
@@ -307,12 +307,12 @@ def load_vm_check(load_vms, item):
     if post_vm_ids and sos_vm_ids:
         if post_vm_ids[0] < sos_vm_ids[-1]:
             key = "vm:id={},{}".format(post_vm_ids[0], item)
-            ERR_LIST[key] = "Post vm should be configured after SOS_VM"
+            ERR_LIST[key] = "Post vm should be configured after SERVICE_VM"
 
     if pre_vm_ids and sos_vm_ids:
         if sos_vm_ids[-1] < pre_vm_ids[-1]:
             key = "vm:id={},{}".format(sos_vm_ids[0], item)
-            ERR_LIST[key] = "Pre vm should be configured before SOS_VM"
+            ERR_LIST[key] = "Pre vm should be configured before SERVICE_VM"
 
 
 def get_load_vm_cnt(load_vms, type_name):
@@ -369,7 +369,7 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
         elif VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
             cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
             post_launch_cpus.extend(cpus)
-        elif VM_DB[vm_type]['load_type'] == "SOS_VM":
+        elif VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
             sos_vm_cpus.extend(cpus)
 
@@ -382,9 +382,9 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
                 return err_dic
 
     if pre_launch_cpus:
-        if "SOS_VM" in common.VM_TYPES and not sos_vm_cpus:
-            key = "SOS VM cpu_affinity"
-            err_dic[key] = "Should assign CPU id for SOS VM"
+        if "SERVICE_VM" in common.VM_TYPES and not sos_vm_cpus:
+            key = "Service VM cpu_affinity"
+            err_dic[key] = "Should assign CPU id for Service VM"
 
         for pcpu in pre_launch_cpus:
             if pre_launch_cpus.count(pcpu) >= 2:
@@ -501,7 +501,7 @@ def os_kern_args_check(id_kern_args_dic, prime_item, item):
         if vm_i not in id_kern_args_dic.keys():
             continue
         kern_args = id_kern_args_dic[vm_i]
-        if "SOS_" in vm_type and kern_args != "SERVICE_VM_OS_BOOTARGS":
+        if "SERVICE_" in vm_type and kern_args != "SERVICE_VM_OS_BOOTARGS":
             key = "vm:id={},{},{}".format(vm_i, prime_item, item)
             ERR_LIST[key] = "VM os config kernel service os should be SERVICE_VM_OS_BOOTARGS"
 
@@ -596,7 +596,7 @@ def cpus_assignment(cpus_per_vm, index):
     :return: cpu assignment string
     """
     vm_cpu_bmp = {}
-    if "SOS_VM" == common.VM_TYPES[index]:
+    if "SERVICE_VM" == common.VM_TYPES[index]:
         if index not in cpus_per_vm or cpus_per_vm[index] == [None]:
             sos_extend_all_cpus = board_cfg_lib.get_processor_info()
             pre_all_cpus = []
@@ -656,11 +656,11 @@ def avl_vuart_ui_select(scenario_info):
     tmp_vuart = {}
     for vm_i,vm_type in common.VM_TYPES.items():
 
-        if "SOS_VM" == VM_DB[vm_type]['load_type']:
+        if "SERVICE_VM" == VM_DB[vm_type]['load_type']:
             key = "vm={},legacy_vuart=0,base".format(vm_i)
-            tmp_vuart[key] = ['SOS_COM1_BASE', 'INVALID_COM_BASE']
+            tmp_vuart[key] = ['SERVICE_VM_COM1_BASE', 'INVALID_COM_BASE']
             key = "vm={},legacy_vuart=1,base".format(vm_i)
-            tmp_vuart[key] = ['SOS_COM2_BASE', 'INVALID_COM_BASE']
+            tmp_vuart[key] = ['SERVICE_VM_COM2_BASE', 'INVALID_COM_BASE']
         else:
             key = "vm={},legacy_vuart=0,base".format(vm_i)
             tmp_vuart[key] = ['INVALID_COM_BASE', 'COM1_BASE']
@@ -709,7 +709,7 @@ def check_vuart(v0_vuart, v1_vuart):
 
         if not vuart_dic['base'] or vuart_dic['base'] not in VUART_BASE:
             key = "vm:id={},legacy_vuart:id=1,base".format(vm_i)
-            ERR_LIST[key] = "base should be SOS/COM BASE"
+            ERR_LIST[key] = "base should be Service VM/COM BASE"
 
         if vuart_dic['base'] == "INVALID_COM_BASE":
             continue
@@ -1293,7 +1293,7 @@ def get_sos_vuart_settings(launch_flag=True):
     Get vuart setting from scenario setting
     :return: vuart0/vuart1 setting dictionary
     """
-    global SOS_UART1_VALID_NUM
+    global SERVICE_VM_UART1_VALID_NUM
     err_dic = {}
     vuart0_setting = {}
     vuart1_setting = {}
@@ -1301,7 +1301,7 @@ def get_sos_vuart_settings(launch_flag=True):
     (err_dic, ttys_n) = board_cfg_lib.parser_hv_console()
     if err_dic:
         if launch_flag:
-            SOS_UART1_VALID_NUM += "ttyS1"
+            SERVICE_VM_UART1_VALID_NUM += "ttyS1"
             return
         return err_dic
 
@@ -1321,11 +1321,11 @@ def get_sos_vuart_settings(launch_flag=True):
         vuart1_valid = ['ttyS1']
 
     if launch_flag:
-        SOS_UART1_VALID_NUM += vuart1_valid[0]
+        SERVICE_VM_UART1_VALID_NUM += vuart1_valid[0]
         return
 
     # VUART1 setting
-    # The IRQ of vUART1(COM2) might be hard-coded by SOS ACPI table(i.e. host ACPI),
+    # The IRQ of vUART1(COM2) might be hard-coded by Service VM ACPI table(i.e. host ACPI),
     # so we had better follow native COM2 IRQ assignment for vUART1 if COM2 is a legacy ttyS,
     # otherwise function of vUART1 would be failed. If host COM2 does not exist or it is a PCI ttyS,
     # then we could allocate a free IRQ for vUART1.

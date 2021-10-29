@@ -47,7 +47,7 @@
 
   <xsl:template name ="dm_guest_flag">
     <xsl:choose>
-      <xsl:when test="count(vm[vm_type='SOS_VM'])">
+      <xsl:when test="count(vm[vm_type='SERVICE_VM'])">
         <xsl:value-of select="acrn:comment('Bitmask of guest flags that can be programmed by device model. Other bits are set by hypervisor only.')" />
         <xsl:value-of select="$newline" />
         <xsl:value-of select="acrn:define('DM_OWNED_GUEST_FLAG_MASK', '(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | GUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING | GUEST_FLAG_SECURITY_VM)', '')" />
@@ -59,10 +59,10 @@
   </xsl:template>
 
   <xsl:template name ="sos_vm_bootarges">
-    <xsl:if test="count(vm[vm_type='SOS_VM'])">
-      <xsl:value-of select="acrn:comment(concat('SOS_VM == VM', vm[vm_type='SOS_VM']/@id))" />
+    <xsl:if test="count(vm[vm_type='SERVICE_VM'])">
+      <xsl:value-of select="acrn:comment(concat('SERVICE_VM == VM', vm[vm_type='SERVICE_VM']/@id))" />
       <xsl:value-of select="$newline" />
-      <xsl:value-of select="acrn:define('SERVICE_VM_OS_BOOTARGS', 'SERVICE_VM_ROOTFS SERVICE_VM_OS_CONSOLE SERVICE_VM_IDLE SOS_BOOTARGS_DIFF', '')" />
+      <xsl:value-of select="acrn:define('SERVICE_VM_OS_BOOTARGS', 'SERVICE_VM_ROOTFS SERVICE_VM_OS_CONSOLE SERVICE_VM_IDLE SERVICE_VM_BOOTARGS_DIFF', '')" />
     </xsl:if>
   </xsl:template>
 

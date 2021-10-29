@@ -115,7 +115,7 @@ def cse_pt(sel, vmid, config):
         print("", file=config)
 
 
-def audio_pt(uos_type, sel, vmid, config):
+def audio_pt(user_vm_type, sel, vmid, config):
 
     if not sel.bdf['audio'][vmid] and not sel.bdf['audio_codec'][vmid]:
         return
@@ -172,7 +172,7 @@ def audio_pt(uos_type, sel, vmid, config):
             print('    echo ${passthru_bdf["audio_codec"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
             print("", file=config)
 
-            if uos_type == "ANDROID":
+            if user_vm_type == "ANDROID":
                 print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi '.format(
                     slot_audio, bus, dev, fun), end="", file=config)
             else:
@@ -182,7 +182,7 @@ def audio_pt(uos_type, sel, vmid, config):
                 slot_codec, bus_codec, dev_codec, fun_codec), file=config)
         else:
             # only select audio device to pass through to vm
-            if uos_type == "ANDROID":
+            if user_vm_type == "ANDROID":
                 print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi"'.format(
                     slot_audio, bus, dev, fun), file=config)
             else:
@@ -194,17 +194,17 @@ def audio_pt(uos_type, sel, vmid, config):
         print("fi", file=config)
 
 
-def media_pt(uos_type, sel, vmid, config):
+def media_pt(user_vm_type, sel, vmid, config):
     ipu_pt(sel, vmid, config)
     cse_pt(sel, vmid, config)
-    audio_pt(uos_type, sel, vmid, config)
+    audio_pt(user_vm_type, sel, vmid, config)
 
 
 def gen_pt(names, dm, sel, vmid, config):
 
     pt_none = True
     cap_pt = launch_cfg_lib.get_pt_dev()
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
 
     print("modprobe pci_stub", file=config)
     # pass thru GPU
@@ -224,13 +224,13 @@ def gen_pt(names, dm, sel, vmid, config):
             pass_through_dev(sel, pt_dev, vmid, config)
             continue
 
-    media_pt(uos_type, sel, vmid, config)
+    media_pt(user_vm_type, sel, vmid, config)
 
 
 def gen_pt_head(names, dm, sel, vmid, config):
 
     cap_pt = launch_cfg_lib.get_pt_dev()
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
 
     print("# pci devices for passthru", file=config)
     print("declare -A passthru_vpid", file=config)

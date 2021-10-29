@@ -211,8 +211,7 @@ struct acrn_pci_request {
  * |                       |                         |                      |
  * |                       |                         | - Fill in type,      |
  * |                       |                         |   addr, etc.         |
- * |                       |                         | - Pause User VM      |
- * |			   |                         |		   vCPU y   |
+ * |                       |                         | - Pause User VM vCPU |
  * |                       |                         | - Set state to       |
  * |                       |                         |   PENDING (a)        |
  * |                       |                         | - Fire upcall to     |
@@ -587,7 +586,7 @@ struct acrn_intr_monitor {
  */
 enum acrn_vm_load_order {
 	PRE_LAUNCHED_VM = 0,
-	SOS_VM,
+	SERVICE_VM,
 	POST_LAUNCHED_VM,	/* Launched by Devicemodel in Service VM */
 	MAX_LOAD_ORDER
 };

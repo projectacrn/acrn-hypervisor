@@ -34,7 +34,7 @@ static const char *android_histpath = "logs/history_event";
 char *loop_dev;
 
 /* Find the next event that needs to be synced.
- * There is a history_event file in UOS side, it records UOS's events in
+ * There is a history_event file in User VM side, it records User VM's events in
  * real-time. Generally, the cursor point to the first unsynchronized line.
  */
 static char *next_vm_event(const char *cursor, const char *data,
@@ -161,7 +161,7 @@ static int get_vms_history(const struct sender_t *sender)
  * Stage2: push the recorded events to event_queue, the senders will do
  *         the corresponding process.
  *
- * The design reason is giving UOS some time to get log stored.
+ * The design reason is giving User VM some time to get log stored.
  */
 static void detect_new_events(struct sender_t *sender)
 {
@@ -350,7 +350,7 @@ static void get_last_evt_detected(struct sender_t *sender)
 static char *setup_loop_dev(void)
 {
 
-	/* Currently UOS image(/data/android/android.img) mounted by
+	/* Currently User VM image(/data/android/android.img) mounted by
 	 * launch_UOS.sh, we need mount its data partition to loop device
 	 */
 	char loop_dev_tmp[32];
