@@ -1889,7 +1889,7 @@ static int32_t inject_msi_for_non_lapic_pt(struct acrn_vm *vm, uint64_t addr, ui
 }
 
 /**
- *@pre Pointer vm shall point to SOS_VM
+ *@pre Pointer vm shall point to Service VM
  */
 static void inject_msi_for_lapic_pt(struct acrn_vm *vm, uint64_t addr, uint64_t data)
 {

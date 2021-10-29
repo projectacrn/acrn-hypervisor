@@ -38,7 +38,7 @@ static uint64_t sept_page_bitmap[TOTAL_SEPT_4K_PAGES_NUM / 64U];
 
 /*
  * @brief Reserve space for SEPT 4K pages from platform E820 table
- * 	  At moment, we only support nested VMX for SOS VM.
+ * 	  At moment, we only support nested VMX for Service VM.
  */
 void reserve_buffer_for_sept_pages(void)
 {

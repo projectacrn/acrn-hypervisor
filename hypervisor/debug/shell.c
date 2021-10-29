@@ -977,7 +977,7 @@ static int32_t shell_to_vm_console(int32_t argc, char **argv)
 		return 0;
 	}
 	console_vmid = vm_id;
-	/* Output that switching to SOS shell */
+	/* Output that switching to Service VM shell */
 	snprintf(temp_str, TEMP_STR_SIZE, "\r\n----- Entering VM %d Shell -----\r\n", vm_id);
 
 	shell_puts(temp_str);

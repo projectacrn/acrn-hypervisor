@@ -19,7 +19,7 @@
 #define MAX_PROTOCOL_NAME_SIZE		16U
 #define MAX_MOD_STRING_SIZE		2048U
 
-/* The modules in multiboot are: Pre-launched VM: kernel/ramdisk/acpi; SOS VM: kernel/ramdisk */
+/* The modules in multiboot are: Pre-launched VM: kernel/ramdisk/acpi; Service VM: kernel/ramdisk */
 #define MAX_MODULE_NUM			(3U * PRE_VM_NUM + 2U * SOS_VM_NUM)
 
 /* The vACPI module size is fixed to 1MB */

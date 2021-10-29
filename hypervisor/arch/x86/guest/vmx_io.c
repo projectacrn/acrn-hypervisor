@@ -21,14 +21,14 @@
 void arch_fire_hsm_interrupt(void)
 {
 	/*
-	 * use vLAPIC to inject vector to SOS vcpu 0 if vlapic is enabled
+	 * use vLAPIC to inject vector to Service VM vcpu 0 if vlapic is enabled
 	 * otherwise, send IPI hardcoded to BSP_CPU_ID
 	 */
-	struct acrn_vm *sos_vm;
+	struct acrn_vm *service_vm;
 	struct acrn_vcpu *vcpu;
 
-	sos_vm = get_sos_vm();
-	vcpu = vcpu_from_vid(sos_vm, BSP_CPU_ID);
+	service_vm = get_service_vm();
+	vcpu = vcpu_from_vid(service_vm, BSP_CPU_ID);
 
 	vlapic_set_intr(vcpu, get_hsm_notification_vector(), LAPIC_TRIG_EDGE);
 }

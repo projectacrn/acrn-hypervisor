@@ -46,15 +46,15 @@
 /* Local variables */
 
 /* pre-assumption: TRUSTY_RAM_SIZE is 2M aligned */
-static struct page post_uos_sworld_memory[MAX_POST_VM_NUM][TRUSTY_RAM_SIZE >> PAGE_SHIFT] __aligned(MEM_2M);
+static struct page post_user_vm_sworld_memory[MAX_POST_VM_NUM][TRUSTY_RAM_SIZE >> PAGE_SHIFT] __aligned(MEM_2M);
 
 static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
-static struct acrn_vm *sos_vm_ptr = NULL;
+static struct acrn_vm *service_vm_ptr = NULL;
 
 void *get_sworld_memory_base(void)
 {
-	return post_uos_sworld_memory;
+	return post_user_vm_sworld_memory;
 }
 
 uint16_t get_vmid_by_uuid(const uint8_t *uuid)
@@ -229,12 +229,12 @@ struct acrn_vm *get_vm_from_vmid(uint16_t vm_id)
 	return &vm_array[vm_id];
 }
 
-/* return a pointer to the virtual machine structure of SOS VM */
-struct acrn_vm *get_sos_vm(void)
+/* return a pointer to the virtual machine structure of Service VM */
+struct acrn_vm *get_service_vm(void)
 {
-	ASSERT(sos_vm_ptr != NULL, "sos_vm_ptr is NULL");
+	ASSERT(service_vm_ptr != NULL, "service_vm_ptr is NULL");
 
-	return sos_vm_ptr;
+	return service_vm_ptr;
 }
 
 /**
@@ -319,14 +319,14 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 	}
 }
 
-static void deny_pci_bar_access(struct acrn_vm *sos, const struct pci_pdev *pdev)
+static void deny_pci_bar_access(struct acrn_vm *service_vm, const struct pci_pdev *pdev)
 {
 	uint32_t idx, mask;
 	struct pci_vbar vbar = {};
 	uint64_t base = 0UL, size = 0UL;
 	uint64_t *pml4_page;
 
-	pml4_page = (uint64_t *)sos->arch_vm.nworld_eptp;
+	pml4_page = (uint64_t *)service_vm->arch_vm.nworld_eptp;
 
 	for ( idx= 0; idx < pdev->nr_bars; idx++) {
 		vbar.bar_type.bits = pdev->bars[idx].phy_bar;
@@ -347,31 +347,31 @@ static void deny_pci_bar_access(struct acrn_vm *sos, const struct pci_pdev *pdev
 			if ((base != 0UL)) {
 				if (is_pci_io_bar(&vbar)) {
 					base &= 0xffffU;
-					deny_guest_pio_access(sos, base, size);
+					deny_guest_pio_access(service_vm, base, size);
 				} else {
 					/*for passthru device MMIO BAR base must be 4K aligned. This is the requirement of passthru devices.*/
 					ASSERT((base & PAGE_MASK) != 0U, "%02x:%02x.%d bar[%d] 0x%lx, is not 4K aligned!",
 						pdev->bdf.bits.b, pdev->bdf.bits.d, pdev->bdf.bits.f, idx, base);
 					size =  round_page_up(size);
-					ept_del_mr(sos, pml4_page, base, size);
+					ept_del_mr(service_vm, pml4_page, base, size);
 				}
 			}
 		}
 	}
 }
 
-static void deny_pdevs(struct acrn_vm *sos, struct acrn_vm_pci_dev_config *pci_devs, uint16_t pci_dev_num)
+static void deny_pdevs(struct acrn_vm *service_vm, struct acrn_vm_pci_dev_config *pci_devs, uint16_t pci_dev_num)
 {
 	uint16_t i;
 
 	for (i = 0; i < pci_dev_num; i++) {
 		if ( pci_devs[i].pdev != NULL) {
-			deny_pci_bar_access(sos, pci_devs[i].pdev);
+			deny_pci_bar_access(service_vm, pci_devs[i].pdev);
 		}
 	}
 }
 
-static void deny_hv_owned_devices(struct acrn_vm *sos)
+static void deny_hv_owned_devices(struct acrn_vm *service_vm)
 {
 	uint16_t pio_address;
 	uint32_t nbytes, i;
@@ -379,11 +379,11 @@ static void deny_hv_owned_devices(struct acrn_vm *sos)
 	const struct pci_pdev **hv_owned = get_hv_owned_pdevs();
 
 	for (i = 0U; i < get_hv_owned_pdev_num(); i++) {
-		deny_pci_bar_access(sos, hv_owned[i]);
+		deny_pci_bar_access(service_vm, hv_owned[i]);
 	}
 
 	if (get_pio_dbg_uart_cfg(&pio_address, &nbytes)) {
-		deny_guest_pio_access(sos, pio_address, nbytes);
+		deny_guest_pio_access(service_vm, pio_address, nbytes);
 	}
 }
 
@@ -395,12 +395,12 @@ static void deny_hv_owned_devices(struct acrn_vm *sos)
  * @pre vm != NULL
  * @pre is_service_vm(vm) == true
  */
-static void prepare_sos_vm_memmap(struct acrn_vm *vm)
+static void prepare_service_vm_memmap(struct acrn_vm *vm)
 {
 	uint16_t vm_id;
 	uint32_t i;
 	uint64_t hv_hpa;
-	uint64_t sos_high64_max_ram = MEM_4G;
+	uint64_t service_vm_high64_max_ram = MEM_4G;
 	struct acrn_vm_config *vm_config;
 	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
 	struct epc_section* epc_secs;
@@ -410,18 +410,18 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	const struct e820_entry *p_e820 = vm->e820_entries;
 	struct pci_mmcfg_region *pci_mmcfg;
 
-	pr_dbg("SOS_VM e820 layout:\n");
+	pr_dbg("Service VM e820 layout:\n");
 	for (i = 0U; i < entries_count; i++) {
 		entry = p_e820 + i;
 		pr_dbg("e820 table: %d type: 0x%x", i, entry->type);
 		pr_dbg("BaseAddress: 0x%016lx length: 0x%016lx\n", entry->baseaddr, entry->length);
 		if (entry->type == E820_TYPE_RAM) {
-			sos_high64_max_ram = max((entry->baseaddr + entry->length), sos_high64_max_ram);
+			service_vm_high64_max_ram = max((entry->baseaddr + entry->length), service_vm_high64_max_ram);
 		}
 	}
 
-	/* create real ept map for [0, sos_high64_max_ram) with UC */
-	ept_add_mr(vm, pml4_page, 0UL, 0UL, sos_high64_max_ram, EPT_RWX | EPT_UNCACHED);
+	/* create real ept map for [0, service_vm_high64_max_ram) with UC */
+	ept_add_mr(vm, pml4_page, 0UL, 0UL, service_vm_high64_max_ram, EPT_RWX | EPT_UNCACHED);
 
 	/* update ram entries to WB attr */
 	for (i = 0U; i < entries_count; i++) {
@@ -431,9 +431,9 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 		}
 	}
 
-	/* Unmap all platform EPC resource from SOS.
+	/* Unmap all platform EPC resource from Service VM.
 	 * This part has already been marked as reserved by BIOS in E820
-	 * will cause EPT violation if sos accesses EPC resource.
+	 * will cause EPT violation if Service VM accesses EPC resource.
 	 */
 	epc_secs = get_phys_epc();
 	for (i = 0U; (i < MAX_EPC_SECTIONS) && (epc_secs[i].size != 0UL); i++) {
@@ -441,7 +441,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	}
 
 	/* unmap hypervisor itself for safety
-	 * will cause EPT violation if sos accesses hv memory
+	 * will cause EPT violation if Service VM accesses hv memory
 	 */
 	hv_hpa = hva2hpa((void *)(get_hv_image_base()));
 	ept_del_mr(vm, pml4_page, hv_hpa, get_hv_ram_size());
@@ -549,8 +549,8 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 	if (is_service_vm(vm)) {
 		/* Only for Service VM */
-		create_sos_vm_e820(vm);
-		prepare_sos_vm_memmap(vm);
+		create_service_vm_e820(vm);
+		prepare_service_vm_memmap(vm);
 
 		status = init_vm_boot_info(vm);
 	} else {
@@ -559,11 +559,11 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 			vm->sworld_control.flag.supported = 1U;
 		}
 		if (vm->sworld_control.flag.supported != 0UL) {
-			uint16_t sos_vm_id = (get_sos_vm())->vm_id;
-			uint16_t page_idx = vmid_2_rel_vmid(sos_vm_id, vm_id) - 1U;
+			uint16_t service_vm_id = (get_service_vm())->vm_id;
+			uint16_t page_idx = vmid_2_rel_vmid(service_vm_id, vm_id) - 1U;
 
 			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				hva2hpa(post_uos_sworld_memory[page_idx]),
+				hva2hpa(post_user_vm_sworld_memory[page_idx]),
 				TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
 		}
 		if (vm_config->name[0] == '\0') {
@@ -654,7 +654,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 	if (status == 0) {
 		/* We have assumptions:
-		 *   1) vcpus used by SOS has been offlined by DM before UOS re-use it.
+		 *   1) vcpus used by Service VM has been offlined by DM before User VM re-use it.
 		 *   2) pcpu_bitmap passed sanitization is OK for vcpu creating.
 		 */
 		vm->hw.cpu_affinity = pcpu_bitmap;
@@ -907,7 +907,7 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 
 	reset_vcpu(bsp, POWER_ON_RESET);
 
-	/* When SOS resume from S3, it will return to real mode
+	/* When Service VM resume from S3, it will return to real mode
 	 * with entry set to wakeup_vec.
 	 */
 	set_vcpu_startup_entry(bsp, wakeup_vec);
@@ -930,7 +930,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 #ifdef CONFIG_SECURITY_VM_FIXUP
 	security_vm_fixup(vm_id);
 #endif
-	/* SOS and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
+	/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
 	err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
 
 	if (err == 0) {
@@ -940,8 +940,8 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 
 		if (is_service_vm(vm)) {
 			/* We need to ensure all modules of pre-launched VMs have been loaded already
-			 * before loading SOS VM modules, otherwise the module of pre-launched VMs could
-			 * be corrupted because SOS VM kernel might pick any usable RAM to extract kernel
+			 * before loading Service VM modules, otherwise the module of pre-launched VMs could
+			 * be corrupted because Service VM kernel might pick any usable RAM to extract kernel
 			 * when KASLR enabled.
 			 * In case the pre-launched VMs aren't loaded successfuly that cause deadlock here,
 			 * use a 10000ms timer to break the waiting loop.
@@ -990,7 +990,7 @@ void launch_vms(uint16_t pcpu_id)
 		if ((vm_config->load_order == SOS_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
 			if (pcpu_id == get_configured_bsp_pcpu_id(vm_config)) {
 				if (vm_config->load_order == SOS_VM) {
-					sos_vm_ptr = &vm_array[vm_id];
+					service_vm_ptr = &vm_array[vm_id];
 				}
 				prepare_vm(vm_id, vm_config);
 			}

@@ -44,7 +44,7 @@
 #define	VIOAPIC_BASE	0xFEC00000UL
 #define	VIOAPIC_SIZE	4096UL
 
-#define REDIR_ENTRIES_HW	120U /* SOS align with native ioapic */
+#define REDIR_ENTRIES_HW	120U /* Service VM align with native ioapic */
 #define STATE_BITMAP_SIZE	INT_DIV_ROUNDUP(REDIR_ENTRIES_HW, 64U)
 
 #define IOAPIC_RTE_LOW_INTVEC	((uint32_t)IOAPIC_RTE_INTVEC)

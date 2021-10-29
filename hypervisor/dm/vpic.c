@@ -327,7 +327,7 @@ static uint32_t vpin_to_vgsi(const struct acrn_vm *vm, uint32_t vpin)
 
 	if (is_service_vm(vm)) {
 		/*
-		 * For SOS VM vPIC pin to GSI is same as the one
+		 * For Service VM vPIC pin to GSI is same as the one
 		 * that is used for platform
 		 */
 		vgsi = get_pic_pin_from_ioapic_pin(vpin);
@@ -363,7 +363,7 @@ static uint32_t vgsi_to_vpin(const struct acrn_vm *vm, uint32_t vgsi)
 
 	if (is_service_vm(vm)) {
 		/*
-		 * For SOS VM vPIC pin to GSI is same as the one
+		 * For Service VM vPIC pin to GSI is same as the one
 		 * that is used for platform
 		 */
 		vpin = get_pic_pin_from_ioapic_pin(vgsi);

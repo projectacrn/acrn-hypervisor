@@ -258,7 +258,7 @@ static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct acrn_vm *vm = vpci2vm(vdev->vpci);
 
-	/* For SOS, all port IO access is allowed by default, so skip SOS here */
+	/* For Service VM, all port IO access is allowed by default, so skip Service VM here */
 	if (!is_service_vm(vm)) {
 		struct pci_vbar *vbar = &vdev->vbars[idx];
 		if (vbar->base_gpa != 0UL) {
@@ -276,7 +276,7 @@ static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct acrn_vm *vm = vpci2vm(vdev->vpci);
 
-	/* For SOS, all port IO access is allowed by default, so skip SOS here */
+	/* For Service VM, all port IO access is allowed by default, so skip Service VM here */
 	if (!is_service_vm(vm)) {
 		struct pci_vbar *vbar = &vdev->vbars[idx];
 		if (vbar->base_gpa != 0UL) {
@@ -556,7 +556,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 		}
 	} else {
 		if (vdev->phyfun->vpci != vdev->vpci) {
-			/* VF is assigned to a UOS */
+			/* VF is assigned to a User VM */
 			uint32_t vid, did;
 
 			vdev->nr_bars = PCI_BAR_COUNT;

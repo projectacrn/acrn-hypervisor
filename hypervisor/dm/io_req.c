@@ -70,7 +70,7 @@ static inline bool has_complete_ioreq(const struct acrn_vcpu *vcpu)
 }
 
 /**
- * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
+ * @brief Deliver \p io_req to Service VM and suspend \p vcpu till its completion
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  * @param io_req The I/O request holding the details of the MMIO access
@@ -168,7 +168,7 @@ void set_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id, uint32_t state)
 		acrn_io_req = &req_buf->req_slot[vcpu_id];
 		/*
 		 * HV will only set processed to ACRN_IOREQ_STATE_PENDING or ACRN_IOREQ_STATE_FREE.
-		 * we don't need to sfence here is that even if the SOS/DM sees the previous state,
+		 * we don't need to sfence here is that even if the Service-VM/DM sees the previous state,
 		 * the only side effect is that it will defer the processing of the new IOReq.
 		 * It won't lead wrong processing.
 		 */

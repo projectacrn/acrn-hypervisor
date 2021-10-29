@@ -118,7 +118,7 @@ static void init_vhostbridge(struct pci_vdev *vdev)
 		 */
 		pciexbar_low = UOS_VIRT_PCI_MMCFG_BASE | 0x1U;
 	} else {
-		/*Inject physical ECAM value to SOS vhostbridge since SOS may check PCIe-MMIO Base Address with it */
+		/*Inject physical ECAM value to Service VM vhostbridge since Service VM may check PCIe-MMIO Base Address with it */
 		phys_did = pci_pdev_read_cfg(hostbridge_bdf, PCIR_DEVICE, 2);
 		for (i = 0U; i < (sizeof(hostbridge_did_highbytes) / sizeof(uint32_t)); i++) {
 			if (((phys_did & 0xff00U) >> 8) == hostbridge_did_highbytes[i]) {

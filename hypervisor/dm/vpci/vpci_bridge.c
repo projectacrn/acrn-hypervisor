@@ -42,7 +42,7 @@
  *  1. configure tool can select whether a PCI bridge is emulated or pass through
  *
  * Open:
- *   1. SOS how to reset PCI devices under the PCI bridge
+ *   1. Service VM how to reset PCI devices under the PCI bridge
  */
 
 #include <asm/guest/vm.h>

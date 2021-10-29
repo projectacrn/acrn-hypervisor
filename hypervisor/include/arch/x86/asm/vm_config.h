@@ -179,7 +179,7 @@ struct acrn_vm_config {
 
 	/*
 	 * below are variable length members (per build).
-	 * SOS can get the vm_configs[] array through hypercall, but SOS may not
+	 * Service VM can get the vm_configs[] array through hypercall, but Service VM may not
 	 * need to parse these members.
 	 */
 

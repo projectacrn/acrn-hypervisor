@@ -71,7 +71,7 @@ static int32_t init_vm_kernel_info(struct acrn_vm *vm, const struct abi_module *
 	return ret;
 }
 
-/* cmdline parsed from abi module string, for pre-launched VMs and SOS VM only. */
+/* cmdline parsed from abi module string, for pre-launched VMs and Service VM only. */
 static char mod_cmdline[PRE_VM_NUM + SOS_VM_NUM][MAX_BOOTARGS_SIZE] = { '\0' };
 
 /**
@@ -94,26 +94,26 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
 			char seed_args[MAX_SEED_ARG_SIZE] = "";
 
 			fill_seed_arg(seed_args, MAX_SEED_ARG_SIZE);
-			/* Fill seed argument for SOS
+			/* Fill seed argument for Service VM
 			 * seed_args string ends with a white space and '\0', so no additional delimiter is needed
 			 */
 			if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
 					seed_args, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
-				pr_err("failed to fill seed arg to SOS bootargs!");
+				pr_err("failed to fill seed arg to Service VM bootargs!");
 			}
 
-			/* If there is cmdline from abi->cmdline, merge it with configured SOS bootargs.
+			/* If there is cmdline from abi->cmdline, merge it with configured Service VM bootargs.
 			 * This is very helpful when one of configured bootargs need to be revised at GRUB runtime
 			 * (e.g. "root="), since the later one would override the previous one if multiple bootargs exist.
 			 */
 			if (abi->cmdline[0] != '\0') {
 				if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
 						abi->cmdline, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
-					pr_err("failed to merge mbi cmdline to SOS bootargs!");
+					pr_err("failed to merge mbi cmdline to Service VM bootargs!");
 				}
 			}
 		} else {
-			pr_err("no space to append SOS bootargs!");
+			pr_err("no space to append Service VM bootargs!");
 		}
 
 	}
