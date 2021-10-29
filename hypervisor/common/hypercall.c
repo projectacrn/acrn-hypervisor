@@ -91,7 +91,7 @@ int32_t hcall_service_vm_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acr
 	struct acrn_vcpu *target_vcpu;
 	uint16_t i;
 	int32_t ret = 0;
-	uint64_t lapicid = param1;
+	uint32_t lapicid = (uint32_t)param1;
 
 	pr_info("Service VM offline cpu with lapicid %ld", lapicid);
 
@@ -208,7 +208,7 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
 		get_cache_shift(&pi.hw.l2_cat_shift, &pi.hw.l3_cat_shift);
 
 		for (i = 0U; i < min(pcpu_nums, ACRN_PLATFORM_LAPIC_IDS_MAX); i++) {
-			pi.hw.lapic_ids[i] = per_cpu(lapic_id, i);
+			pi.hw.lapic_ids[i] = (uint8_t)per_cpu(lapic_id, i);
 		}
 
 		pi.hw.cpu_num = pcpu_nums;

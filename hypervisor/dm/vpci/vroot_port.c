@@ -121,7 +121,7 @@ int32_t create_vrp(struct acrn_vm *vm, struct acrn_vdev *dev)
 	struct pci_vdev *vdev;
 	struct vrp_config *vrp_config;
 
-	int i;
+	uint16_t i;
 
 	vrp_config = (struct vrp_config*)dev->args;
 
@@ -134,7 +134,7 @@ int32_t create_vrp(struct acrn_vm *vm, struct acrn_vdev *dev)
 	for (i = 0U; i < vm_config->pci_dev_num; i++) {
 		dev_config = &vm_config->pci_devs[i];
 		if (dev_config->vrp_sec_bus == vrp_config->secondary_bus) {
-			dev_config->vbdf.value = dev->slot;
+			dev_config->vbdf.value = (uint16_t)dev->slot;
 			dev_config->pbdf.value = vrp_config->phy_bdf;
 			dev_config->vrp_max_payload = vrp_config->max_payload;
 			dev_config->vdev_ops = &vrp_ops;

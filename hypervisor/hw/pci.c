@@ -414,7 +414,7 @@ static uint32_t pci_check_override_drhd_index(union pci_bdf pbdf,
 		const struct pci_bdf_mapping_group *const bdfs_from_drhds,
 		uint32_t current_drhd_index)
 {
-	uint16_t bdfi;
+	uint32_t bdfi;
 	uint32_t bdf_drhd_index = current_drhd_index;
 
 	for (bdfi = 0U; bdfi < bdfs_from_drhds->pci_bdf_map_count; bdfi++) {

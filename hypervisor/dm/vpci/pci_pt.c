@@ -378,7 +378,7 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 			pci_pdev_write_cfg(pbdf, offset, 4U, lo);
 
 			vbar->mask = size32 & mask;
-			vbar->bar_type.bits &= (~mask);
+			vbar->bar_type.bits &= (uint32_t)(~mask);
 			vbar->size = (uint64_t)size32 & mask;
 
 			if (is_prelaunched_vm(vpci2vm(vdev->vpci))) {

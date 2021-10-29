@@ -137,7 +137,7 @@ int32_t add_vmsix_capability(struct pci_vdev *vdev, uint32_t entry_num, uint8_t 
 		(void)memset(&msixcap, 0U, sizeof(struct msixcap));
 
 		msixcap.capid = PCIY_MSIX;
-		msixcap.msgctrl = entry_num - 1U;
+		msixcap.msgctrl = (uint16_t)entry_num - 1U;
 
 		/* - MSI-X table start at offset 0 */
 		msixcap.table_info = bar_num;

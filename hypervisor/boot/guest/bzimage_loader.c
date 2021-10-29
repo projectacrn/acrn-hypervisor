@@ -41,7 +41,7 @@
  * but this should be configurable for different OS. */
 #define DEFAULT_RAMDISK_GPA_MAX		0x37ffffffUL
 
-#define PRE_VM_MAX_RAM_ADDR_BELOW_4GB		(VIRT_ACPI_DATA_ADDR - 1U)
+#define PRE_VM_MAX_RAM_ADDR_BELOW_4GB		(VIRT_ACPI_DATA_ADDR - 1UL)
 
 static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 {
@@ -190,7 +190,7 @@ static uint16_t create_service_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_m
 	uint16_t i, desc_idx = 0U;
 	const struct efi_memory_desc *hv_efi_mmap_desc = get_efi_mmap_entry();
 
-	for (i = 0U; i < get_efi_mmap_entries_count(); i++) {
+	for (i = 0U; i < (uint16_t)get_efi_mmap_entries_count(); i++) {
 		/* Below efi mmap desc types in native should be kept as original for Service VM */
 		if ((hv_efi_mmap_desc[i].type == EFI_RESERVED_MEMORYTYPE)
 				|| (hv_efi_mmap_desc[i].type == EFI_UNUSABLE_MEMORY)
@@ -210,7 +210,7 @@ static uint16_t create_service_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_m
 		}
 	}
 
-	for (i = 0U; i < vm->e820_entry_num; i++) {
+	for (i = 0U; i < (uint16_t)vm->e820_entry_num; i++) {
 		/* The memory region with e820 type of RAM could be acted as EFI_CONVENTIONAL_MEMORY
 		 * for Service VM, the region which occupied by HV and pre-launched VM has been filtered
 		 * already, so it is safe for Service VM.

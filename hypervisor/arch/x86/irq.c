@@ -275,8 +275,8 @@ static inline void fixup_idt(const struct host_idt_descriptor *idtd)
 		entry_hi_32 = idt_desc[i].rsvd;
 		idt_desc[i].rsvd = 0U;
 		idt_desc[i].offset_63_32 = entry_hi_32;
-		idt_desc[i].high32.bits.offset_31_16 = entry_lo_32 >> 16U;
-		idt_desc[i].low32.bits.offset_15_0 = entry_lo_32 & 0xffffUL;
+		idt_desc[i].high32.bits.offset_31_16 = (uint16_t)(entry_lo_32 >> 16U);
+		idt_desc[i].low32.bits.offset_15_0 = (uint16_t)entry_lo_32;
 	}
 }
 

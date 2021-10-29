@@ -40,7 +40,7 @@
 #include <logmsg.h>
 #include <misc_cfg.h>
 
-static uint32_t hv_ram_size;
+static uint64_t hv_ram_size;
 static void *ppt_mmu_pml4_addr;
 static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
 
@@ -152,7 +152,7 @@ void invept(const void *eptp)
 	}
 }
 
-uint32_t get_hv_ram_size(void)
+uint64_t get_hv_ram_size(void)
 {
 	return hv_ram_size;
 }
@@ -255,7 +255,7 @@ void init_paging(void)
 	const struct abi_mmap *p_mmap = abi->mmap_entry;
 
 	pr_dbg("HV MMU Initialization");
-	hv_ram_size = (uint32_t)(uint64_t)&ld_ram_size;
+	hv_ram_size = (uint64_t)&ld_ram_size;
 
 	init_sanitized_page((uint64_t *)sanitized_page, hva2hpa_early(sanitized_page));
 
