@@ -68,7 +68,7 @@ bool parse_seed_abl(uint64_t addr, struct physical_seed *phy_seed)
 
 		/*
 		 * Copy out abl_seed for trusty and clear the original seed in memory.
-		 * The SOS requires the legacy seed to derive RPMB key. So skip the
+		 * The Service VM requires the legacy seed to derive RPMB key. So skip the
 		 * legacy seed when clear original seed.
 		 */
 		(void)memset((void *)&phy_seed->seed_list[0U], 0U, sizeof(phy_seed->seed_list));

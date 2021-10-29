@@ -115,7 +115,7 @@ void init_vmtrr(struct acrn_vcpu *vcpu)
 	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
 		if (cap.bits.fix != 0U) {
 			/*
-			 * The system firmware runs in VMX non-root mode on SOS_VM.
+			 * The system firmware runs in VMX non-root mode on Service VM.
 			 * In some cases, the firmware needs particular mem type
 			 * at certain mmeory locations (e.g. UC for some
 			 * hardware registers), so we need to configure EPT
@@ -124,7 +124,7 @@ void init_vmtrr(struct acrn_vcpu *vcpu)
 			vmtrr->fixed_range[i].value = msr_read(fixed_mtrr_map[i].msr);
 		} else {
 			/*
-			 * For non-sos_vm EPT, all memory is setup with WB type in
+			 * For non-Service VM EPT, all memory is setup with WB type in
 			 * EPT, so we setup fixed range MTRRs accordingly.
 			 */
 			vmtrr->fixed_range[i].value = MTRR_FIXED_RANGE_ALL_WB;

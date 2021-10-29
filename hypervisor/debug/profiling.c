@@ -298,7 +298,7 @@ static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
 }
 
 /*
- * Read profiling data and transferred to SOS
+ * Read profiling data and transferred to Service VM
  * Drop transfer of profiling data if sbuf is full/insufficient and log it
  */
 static int32_t profiling_generate_data(int32_t collector, uint32_t type)
@@ -1394,7 +1394,7 @@ void profiling_setup(void)
 
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 	cpu = get_pcpu_id();
-	/* support PMI notification, SOS_VM will register all CPU */
+	/* support PMI notification, Service VM will register all CPU */
 	if ((cpu == BSP_CPU_ID) && (profiling_pmi_irq == IRQ_INVALID)) {
 		pr_info("%s: calling request_irq", __func__);
 		retval = request_irq(PMI_IRQ,

@@ -290,7 +290,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 
 /* add msix entry for a vm, based on msi id (phys_bdf+msix_index)
  * - if the entry not be added by any vm, allocate it
- * - if the entry already be added by sos_vm, then change the owner to current vm
+ * - if the entry already be added by Service VM, then change the owner to current vm
  * - if the entry already be added by other vm, return NULL
  */
 static struct ptirq_remapping_info *add_msix_remapping(struct acrn_vm *vm,
@@ -351,7 +351,7 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t phys_bdf, uint32_t entr
 
 /* add intx entry for a vm, based on intx id (phys_pin)
  * - if the entry not be added by any vm, allocate it
- * - if the entry already be added by sos_vm, then change the owner to current vm
+ * - if the entry already be added by Service VM, then change the owner to current vm
  * - if the entry already be added by other vm, return NULL
  */
 static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint32_t virt_gsi,
@@ -398,7 +398,7 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 
 
 	/*
-	 * ptirq entry is either created or transferred from SOS VM to Post-launched VM
+	 * ptirq entry is either created or transferred from Service VM to Post-launched VM
 	 */
 
 	if (entry != NULL) {
@@ -781,7 +781,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 }
 
 /* @pre vm != NULL
- * except sos_vm, Device Model should call this function to pre-hold ptdev intx
+ * except Service VM, Device Model should call this function to pre-hold ptdev intx
  * entries:
  * - the entry is identified by phys_pin:
  *   one entry vs. one phys_pin

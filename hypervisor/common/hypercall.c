@@ -75,9 +75,9 @@ inline static bool is_severity_pass(uint16_t target_vmid)
 }
 
 /**
- * @brief offline vcpu from SOS
+ * @brief offline vcpu from Service VM
  *
- * The function offline specific vcpu from SOS.
+ * The function offline specific vcpu from Service VM.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 lapic id of the vcpu which wants to offline
@@ -85,7 +85,7 @@ inline static bool is_severity_pass(uint16_t target_vmid)
  * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+int32_t hcall_service_vm_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
 	struct acrn_vcpu *target_vcpu;
@@ -93,7 +93,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *t
 	int32_t ret = 0;
 	uint64_t lapicid = param1;
 
-	pr_info("sos offline cpu with lapicid %ld", lapicid);
+	pr_info("Service VM offline cpu with lapicid %ld", lapicid);
 
 	foreach_vcpu(i, vcpu->vm, target_vcpu) {
 		if (vlapic_get_apicid(vcpu_vlapic(target_vcpu)) == lapicid) {
@@ -113,7 +113,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *t
 /**
  * @brief Get hypervisor api version
  *
- * The function only return api version information when VM is SOS_VM.
+ * The function only return api version information when VM is Service VM.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 guest physical memory address. The api version returned
@@ -283,7 +283,7 @@ int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint6
 					pr_err("Wrong guest flags 0x%lx\n", vm_config->guest_flags);
 				} else {
 					if (create_vm(vmid, pcpu_bitmap, vm_config, &tgt_vm) == 0) {
-						/* return a relative vm_id from SOS view */
+						/* return a relative vm_id from Service VM view */
 						cv.vmid = vmid_2_rel_vmid(vm->vm_id, vmid);
 						cv.vcpu_num = tgt_vm->hw.created_vcpus;
 					} else {
@@ -606,13 +606,13 @@ int32_t hcall_notify_ioreq_finish(__unused struct acrn_vcpu *vcpu, struct acrn_v
 
 /**
  *@pre is_service_vm(vm)
- *@pre gpa2hpa(vm, region->sos_vm_gpa) != INVALID_HPA
+ *@pre gpa2hpa(vm, region->service_vm_gpa) != INVALID_HPA
  */
 static void add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
 				const struct vm_memory_region *region,uint64_t *pml4_page)
 {
 	uint64_t prot = 0UL, base_paddr;
-	uint64_t hpa = gpa2hpa(vm, region->sos_vm_gpa);
+	uint64_t hpa = gpa2hpa(vm, region->service_vm_gpa);
 
 	/* access right */
 	if ((region->prot & MEM_ACCESS_READ) != 0U) {
@@ -641,7 +641,7 @@ static void add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
 	/* If Software SRAM is initialized, and HV received a request to map Software SRAM
 	 * area to guest, we should add EPT_WB flag to make Software SRAM effective.
 	 * TODO: We can enforce WB for any region has overlap with Software SRAM, for simplicity,
-	 * and leave it to SOS to make sure it won't violate.
+	 * and leave it to Service VM to make sure it won't violate.
 	 */
 	if (is_software_sram_enabled()) {
 		base_paddr = get_software_sram_base();
@@ -667,8 +667,8 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	if ((region->size & (PAGE_SIZE - 1UL)) == 0UL) {
 		pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
 		if (region->type == MR_ADD) {
-			/* if the GPA range is SOS valid GPA or not */
-			if (ept_is_valid_mr(vm, region->sos_vm_gpa, region->size)) {
+			/* if the GPA range is Service VM valid GPA or not */
+			if (ept_is_valid_mr(vm, region->service_vm_gpa, region->size)) {
 				/* FIXME: how to filter the alias mapping ? */
 				add_vm_memory_region(vm, target_vm, region, pml4_page);
 				ret = 0;
@@ -682,9 +682,9 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	}
 
 	dev_dbg((ret == 0) ? DBG_LEVEL_HYCALL : LOG_ERROR,
-			"[vm%d] type=%d gpa=0x%x sos_gpa=0x%x sz=0x%x",
+			"[vm%d] type=%d gpa=0x%x service_vm_gpa=0x%x sz=0x%x",
 			target_vm->vm_id, region->type, region->gpa,
-			region->sos_vm_gpa, region->size);
+			region->service_vm_gpa, region->size);
 	return ret;
 }
 
@@ -1210,7 +1210,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  *
  * This is the API that helps to switch the notifer vecotr. If this API is
  * not called, the hypervisor will use the default notifier vector(0xF3)
- * to notify the SOS kernel.
+ * to notify the Service VM kernel.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 the expected notifier vector from guest

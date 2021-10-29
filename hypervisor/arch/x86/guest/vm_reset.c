@@ -28,7 +28,7 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 		io_req->reqs.pio_request.size = 2UL;
 		io_req->reqs.pio_request.value = (VIRTUAL_PM1A_SLP_EN | (5U << 10U));
 
-		/* Inject pm1a S5 request to SOS to shut down the guest */
+		/* Inject pm1a S5 request to Service VM to shut down the guest */
 		(void)emulate_io(vcpu, io_req);
 	} else {
 		if (is_service_vm(vm)) {
@@ -47,7 +47,7 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 			}
 		}
 
-		/* Either SOS or pre-launched VMs */
+		/* Either Service VM or pre-launched VMs */
 		get_vm_lock(vm);
 		poweroff_if_rt_vm(vm);
 		pause_vm(vm);
@@ -101,7 +101,7 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset)
 			ret = false;
 		} else {
 			/*
-			 * If it's SOS reset while RTVM is still alive
+			 * If it's Service VM reset while RTVM is still alive
 			 *    or pre-launched VM reset,
 			 * ACRN doesn't support re-launch, just shutdown the guest.
 			 */
@@ -116,7 +116,7 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset)
 			ret = false;
 		}
 		/*
-		 * Ignore writes from SOS and pre-launched VM.
+		 * Ignore writes from Service VM and pre-launched VM.
 		 * Equivalent to hiding this port from the guest.
 		 */
 	}
@@ -198,7 +198,7 @@ static bool handle_reset_reg_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
  */
 void register_reset_port_handler(struct acrn_vm *vm)
 {
-	/* Don't support SOS and pre-launched VM re-launch for now. */
+	/* Don't support Service VM and pre-launched VM re-launch for now. */
 	if (!is_postlaunched_vm(vm) || is_rt_vm(vm)) {
 		struct acpi_reset_reg *reset_reg = get_host_reset_reg_data();
 		struct acrn_acpi_generic_address *gas = &(reset_reg->reg);
@@ -215,7 +215,7 @@ void register_reset_port_handler(struct acrn_vm *vm)
 		register_pio_emulation_handler(vm, CF9_PIO_IDX, &io_range, handle_reset_reg_read, handle_cf9_write);
 
 		/*
-		 * - here is taking care of SOS only:
+		 * - here is taking care of Service VM only:
 		 *   Don't support MMIO or PCI based reset register for now.
 		 *   ACPI Spec: Register_Bit_Width must be 8 and Register_Bit_Offset must be 0.
 		 */
