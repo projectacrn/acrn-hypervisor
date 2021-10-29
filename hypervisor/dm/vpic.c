@@ -462,7 +462,7 @@ static int32_t vpic_ocw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 		/* if level ack PTDEV */
 		if ((i8259->elc & (1U << (isr_bit & 0x7U))) != 0U) {
-			vgsi = vpin_to_vgsi(vm, (primary_pic(vpic, i8259) ? isr_bit : isr_bit + 8U));
+			vgsi = vpin_to_vgsi(vm, (primary_pic(vpic, i8259) ? isr_bit : (isr_bit + 8U)));
 			ptirq_intx_ack(vm, vgsi, INTX_CTLR_PIC);
 		}
 	} else if (((val & OCW2_SL) != 0U) && i8259->rotate) {

@@ -16,7 +16,7 @@ struct page *alloc_page(struct page_pool *pool)
 
 	spinlock_obtain(&pool->lock);
 	for (loop_idx = pool->last_hint_id;
-		loop_idx < pool->last_hint_id + pool->bitmap_size; loop_idx++) {
+		loop_idx < (pool->last_hint_id + pool->bitmap_size); loop_idx++) {
 		idx = loop_idx % pool->bitmap_size;
 		if (*(pool->bitmap + idx) != ~0UL) {
 			bit = ffz64(*(pool->bitmap + idx));
