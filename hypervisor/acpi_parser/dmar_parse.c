@@ -93,8 +93,9 @@ static uint32_t get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
 	while (start < end) {
 		scope = (struct acpi_dmar_device_scope *)start;
 		if ((scope->entry_type != ACPI_DMAR_SCOPE_TYPE_NOT_USED) &&
-			(scope->entry_type < ACPI_DMAR_SCOPE_TYPE_RESERVED))
+			(scope->entry_type < ACPI_DMAR_SCOPE_TYPE_RESERVED)) {
 			count++;
+		}
 		start += scope->length;
 	}
 	return count;
@@ -140,8 +141,9 @@ static int32_t handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd, struct
 			}
 		}
 
-		if (consumed <= 0)
+		if (consumed <= 0) {
 			break;
+		}
 
 		remaining -= consumed;
 		/* skip IOAPIC & HPET */

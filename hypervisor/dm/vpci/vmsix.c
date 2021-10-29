@@ -130,8 +130,9 @@ int32_t add_vmsix_capability(struct pci_vdev *vdev, uint32_t entry_num, uint8_t 
 		vdev->msix.table_count = entry_num;
 
 		/* set mask bit of vector control register */
-		for (i = 0; i < entry_num; i++)
+		for (i = 0; i < entry_num; i++) {
 			vdev->msix.table_entries[i].vector_control |= PCIM_MSIX_VCTRL_MASK;
+		}
 
 		(void)memset(&msixcap, 0U, sizeof(struct msixcap));
 
