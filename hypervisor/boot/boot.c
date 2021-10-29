@@ -11,7 +11,7 @@
 #include <rtl.h>
 #include <logmsg.h>
 
-static struct acrn_boot_info acrn_bi = { 0U };
+static struct acrn_boot_info acrn_bi = { 0 };
 
 /**
  * @pre (p_start != NULL) && (p_end != NULL)

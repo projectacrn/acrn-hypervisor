@@ -189,7 +189,7 @@ bool is_ac_enabled(void)
 {
 	bool ac_enabled = false;
 
-	if (has_core_cap(CORE_CAP_SPLIT_LOCK) && (msr_read(MSR_TEST_CTL) & MSR_TEST_CTL_AC_SPLITLOCK)) {
+	if (has_core_cap(CORE_CAP_SPLIT_LOCK) && ((msr_read(MSR_TEST_CTL) & MSR_TEST_CTL_AC_SPLITLOCK) != 0UL)) {
 		ac_enabled = true;
 	}
 
@@ -200,7 +200,7 @@ bool is_gp_enabled(void)
 {
 	bool gp_enabled = false;
 
-	if (has_core_cap(CORE_CAP_UC_LOCK) && (msr_read(MSR_TEST_CTL) & MSR_TEST_CTL_GP_UCLOCK)) {
+	if (has_core_cap(CORE_CAP_UC_LOCK) && ((msr_read(MSR_TEST_CTL) & MSR_TEST_CTL_GP_UCLOCK) != 0UL)) {
 		gp_enabled = true;
 	}
 

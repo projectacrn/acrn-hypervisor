@@ -290,7 +290,7 @@ static bool rt_vm_pm1a_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t wi
 	if (width != 2U) {
 		pr_dbg("Invalid address (0x%x) or width (0x%x)", addr, width);
 	} else {
-		if ((((v & VIRTUAL_PM1A_SLP_EN) != 0U) && (((v & VIRTUAL_PM1A_SLP_TYP) >> 10U) == 5U)) != 0U) {
+		if (((v & VIRTUAL_PM1A_SLP_EN) != 0U) && (((v & VIRTUAL_PM1A_SLP_TYP) >> 10U) == 5U)) {
 			poweroff_if_rt_vm(vcpu->vm);
 		}
 	}

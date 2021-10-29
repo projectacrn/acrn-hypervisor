@@ -133,7 +133,7 @@ static struct cpu_state_info cpu_pm_state_info;
 static int32_t get_state_tbl_idx(const char *cpuname)
 {
 	int32_t i;
-	int32_t count = ARRAY_SIZE(cpu_state_tbl);
+	int32_t count = (int32_t)ARRAY_SIZE(cpu_state_tbl);
 	int32_t ret = -1;
 
 	if (cpuname != NULL) {

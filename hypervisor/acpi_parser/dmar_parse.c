@@ -65,9 +65,8 @@ static int32_t handle_dmar_devscope(struct dmar_dev_scope *dev_scope, void *addr
 	if ((remaining >= (int32_t)sizeof(struct acpi_dmar_device_scope)) &&
 	    (remaining >= (int32_t)apci_devscope->length)) {
 		path = (struct acpi_dmar_pci_path *)(apci_devscope + 1);
-		path_len = (apci_devscope->length -
-			    sizeof(struct acpi_dmar_device_scope)) /
-			sizeof(struct acpi_dmar_pci_path);
+		path_len = (int32_t)((apci_devscope->length - sizeof(struct acpi_dmar_device_scope)) /
+				sizeof(struct acpi_dmar_pci_path));
 
 		dmar_bdf = dmar_path_bdf(path_len, apci_devscope->bus, path);
 		dev_scope->id = apci_devscope->enumeration_id;
@@ -122,8 +121,7 @@ static int32_t handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd, struct
 
 	drhd->dev_cnt = dev_count;
 
-	remaining = acpi_drhd->header.length -
-			sizeof(struct acpi_dmar_hardware_unit);
+	remaining = (int32_t)(acpi_drhd->header.length - sizeof(struct acpi_dmar_hardware_unit));
 
 	dev_scope = drhd->devices;
 

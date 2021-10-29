@@ -63,7 +63,7 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 {
 	void *ptr;
 	uint64_t val;
-	int32_t i;
+	uint32_t i;
 
 	/*
 	 * calculate the fixup CS:IP according to fixup target address
@@ -88,7 +88,7 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	*(uint64_t *)(ptr) += dest_pa;
 
 	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_pdpt_addr));
-	for (i = 0; i < 4; i++) {
+	for (i = 0U; i < 4U; i++) {
 		*(uint64_t *)(ptr + sizeof(uint64_t) * i) += dest_pa;
 	}
 
