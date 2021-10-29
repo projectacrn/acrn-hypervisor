@@ -321,9 +321,9 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 
 static void deny_pci_bar_access(struct acrn_vm *service_vm, const struct pci_pdev *pdev)
 {
-	uint32_t idx, mask;
+	uint32_t idx;
 	struct pci_vbar vbar = {};
-	uint64_t base = 0UL, size = 0UL;
+	uint64_t base = 0UL, size = 0UL, mask;
 	uint64_t *pml4_page;
 
 	pml4_page = (uint64_t *)service_vm->arch_vm.nworld_eptp;

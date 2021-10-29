@@ -396,7 +396,7 @@ static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint32_t cpl;
 	uint64_t val64;
 
-	if (vcpu->arch.xsave_enabled && ((vcpu_get_cr4(vcpu) && CR4_OSXSAVE) != 0UL)) {
+	if (vcpu->arch.xsave_enabled && ((vcpu_get_cr4(vcpu) & CR4_OSXSAVE) != 0UL)) {
 		idx = vcpu->arch.cur_context;
 		/* get current privilege level */
 		cpl = exec_vmread32(VMX_GUEST_CS_ATTR);
