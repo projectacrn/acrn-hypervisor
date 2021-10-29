@@ -54,7 +54,7 @@ static const char READ_DATA_STR[READ_STR_LEN] = "read data";
 static const char WRITE_DATA_STR[WRITE_STR_LEN] = "write data";
 
 //TODO: will be read from config file.
-static uint16_t get_uos_count(void)
+static uint16_t get_user_vm_count(void)
 {
 	return 1;
 }
@@ -80,17 +80,17 @@ static uint16_t get_common_blocks(void)
 static uint16_t get_accessible_blocks(void)
 {
 	return (get_rpmb_blocks() - get_common_blocks()) /
-			get_uos_count() + get_common_blocks();
+			get_user_vm_count() + get_common_blocks();
 }
 
-/* Todo: To get the uos number, e.g. No.0 or No.1, which is
+/* Todo: To get the User VM number, e.g. No.0 or No.1, which is
   used for calculating User VM RPMB range address.
   But this will be removed after config file is supported.
   We plan to predefine such info and save to config file.
 */
-static uint8_t get_uos_id(void)
+static uint8_t get_user_vmid(void)
 {
-	return (get_uos_count() - 1);
+	return (get_user_vm_count() - 1);
 }
 
 void rpmb_mode_init(uint16_t mode)
@@ -117,7 +117,7 @@ static bool is_key_programmed(void)
 	return false;
 }
 
-static uint16_t get_phy_addr(uint8_t uos_id, uint16_t vaddr)
+static uint16_t get_phy_addr(uint8_t user_vmid, uint16_t vaddr)
 {
 	uint16_t common_blocks = get_common_blocks();
 	uint16_t accessible_blocks = get_accessible_blocks();
@@ -125,7 +125,7 @@ static uint16_t get_phy_addr(uint8_t uos_id, uint16_t vaddr)
 	if (vaddr < get_common_blocks()) {
 		return vaddr;
 	} else {
-		return (((accessible_blocks - common_blocks) * uos_id) + vaddr);
+		return (((accessible_blocks - common_blocks) * user_vmid) + vaddr);
 	}
 }
 
@@ -136,7 +136,7 @@ int get_virt_rpmb_key(void)
 
 	rc = get_vrpmb_key(key, sizeof(key));
 	if (rc == 0){
-		DPRINTF(("%s: get uos key fail\n", __func__));
+		DPRINTF(("%s: get User VM key fail\n", __func__));
 	}
 
 	memcpy(virt_rpmb_key, key, RPMB_KEY_32_LEN);
@@ -301,7 +301,7 @@ static int rpmb_virt_write(uint32_t ioc_cmd, void* seq_data,
 	uint16_t vaddr;
 	uint16_t paddr;
 	uint16_t block_count;
-	uint8_t uos_id;
+	uint8_t user_vmid;
 	__u16 rpmb_result = 0;
 	int rc;
 
@@ -317,7 +317,7 @@ static int rpmb_virt_write(uint32_t ioc_cmd, void* seq_data,
 		return -1;
 	}
 
-	uos_id = get_uos_id();
+	user_vmid = get_user_vmid();
 
 	vaddr = swap16(in_frame->addr);
 	block_count = in_cnt;
@@ -325,7 +325,7 @@ static int rpmb_virt_write(uint32_t ioc_cmd, void* seq_data,
 			virt_rpmb_key, &virt_counter, &vaddr, &block_count))
 		goto out;
 
-	paddr = get_phy_addr(uos_id, vaddr);
+	paddr = get_phy_addr(user_vmid, vaddr);
 
 	if (rpmb_replace_frame(in_frame, in_cnt, rpmb_key, NULL,
 			&phy_counter, &paddr, NULL, NULL, NULL))
@@ -386,7 +386,7 @@ static int rpmb_virt_read(uint32_t ioc_cmd, void* seq_data,
 	uint16_t vaddr;
 	uint16_t paddr;
 	uint16_t block_count;
-	uint8_t uos_id;
+	uint8_t user_vmid;
 
 	if (in_cnt == 0 || in_frame == NULL) {
 		DPRINTF(("%s: in_frame, in_cnt or seq_data is not available\n", __func__));
@@ -398,7 +398,7 @@ static int rpmb_virt_read(uint32_t ioc_cmd, void* seq_data,
 		return -1;
 	}
 
-	uos_id = get_uos_id();
+	user_vmid = get_user_vmid();
 
 	memset(out_frame, 0, out_cnt * RPMB_FRAME_SIZE);
 	vaddr = swap16(in_frame->addr);
@@ -408,7 +408,7 @@ static int rpmb_virt_read(uint32_t ioc_cmd, void* seq_data,
 			in_cnt, NULL, NULL, &vaddr, &block_count))
 		goto out;
 
-	paddr = get_phy_addr(uos_id, vaddr);
+	paddr = get_phy_addr(user_vmid, vaddr);
 	if (rpmb_replace_frame(in_frame, in_cnt, NULL,
 			NULL, NULL, &paddr, NULL, NULL, NULL )) {
 		err = RPMB_RES_GENERAL_FAILURE;

@@ -701,7 +701,7 @@ update_bar_address(struct vmctx *ctx, struct pci_vdev *dev, uint64_t addr,
 	 * need remove pcibar_type != PCIBAR_IO condition
 	 */
 	if(type != PCIBAR_IO && ctx->gvt_enabled)
-		/* uos kernel may update gvt bars' value,
+		/* User VM kernel may update gvt bars' value,
 		 * but ACRN-DM doesn't know this update.
 		 * When other pci devices write bar address,
 		 * ACRN-DM need update vgpu bars' info.

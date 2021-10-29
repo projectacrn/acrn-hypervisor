@@ -332,7 +332,7 @@ static int vm_stop_handler(void *arg)
 	pthread_mutex_unlock(&pm_vuart_lock);
 	if (ret != sizeof(SHUTDOWN_CMD)) {
 		/* no need to resend shutdown here, will resend in pm_monitor thread */
-		pr_err("send shutdown command to uos failed\r\n");
+		pr_err("send shutdown command to User VM failed\r\n");
 	}
 
 	return 0;
