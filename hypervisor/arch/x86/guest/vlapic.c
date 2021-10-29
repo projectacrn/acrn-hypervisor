@@ -223,7 +223,7 @@ vlapic_timer_divisor_shift(uint32_t dcr)
 	return ((val + 1U) & 0x7U);
 }
 
-static inline bool
+__unused static inline bool
 vlapic_lvtt_oneshot(const struct acrn_vlapic *vlapic)
 {
 	return (((vlapic->apic_page.lvt[APIC_LVT_TIMER].v) & APIC_LVTT_TM)

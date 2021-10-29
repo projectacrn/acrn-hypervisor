@@ -169,7 +169,7 @@ void create_service_vm_e820(struct acrn_vm *vm)
 
 	for (i = 0U; i < vm->e820_entry_num; i++) {
 		struct e820_entry *entry = &service_vm_e820[i];
-		if ((entry->type == E820_TYPE_RAM)) {
+		if (entry->type == E820_TYPE_RAM) {
 			service_vm_config->memory.size += entry->length;
 		}
 	}

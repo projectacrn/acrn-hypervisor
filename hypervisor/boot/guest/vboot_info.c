@@ -72,7 +72,7 @@ static int32_t init_vm_kernel_info(struct acrn_vm *vm, const struct abi_module *
 }
 
 /* cmdline parsed from abi module string, for pre-launched VMs and Service VM only. */
-static char mod_cmdline[PRE_VM_NUM + SERVICE_VM_NUM][MAX_BOOTARGS_SIZE] = { '\0' };
+static char mod_cmdline[PRE_VM_NUM + SERVICE_VM_NUM][MAX_BOOTARGS_SIZE] = { 0 };
 
 /**
  * @pre vm != NULL && abi != NULL
