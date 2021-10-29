@@ -25,13 +25,13 @@ struct acrn_vm;
  * @brief Check if the GPA range is guest valid GPA or not
  *
  * @param[in] vm the pointer that points to VM data structure
- * @param[in] base The specified start guest physical address of guest
- *                physical memory region
+ * @param[in] mr_base_gpa The specified start guest physical address of guest
+ *                        physical memory region
  * @param[in] size The size of guest physical memory region
  *
  * @retval true if the GPA range is guest valid GPA, false otherwise.
  */
-bool ept_is_valid_mr(struct acrn_vm *vm, uint64_t base, uint64_t size);
+bool ept_is_valid_mr(struct acrn_vm *vm, uint64_t mr_base_gpa, uint64_t size);
 
 /**
  * @brief EPT page tables destroy
