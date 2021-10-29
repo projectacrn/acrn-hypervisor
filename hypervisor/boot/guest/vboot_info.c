@@ -126,7 +126,7 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
  */
 struct abi_module *get_mod_by_tag(const struct acrn_boot_info *abi, const char *tag)
 {
-	uint8_t i;
+	uint32_t i;
 	struct abi_module *mod = NULL;
 	struct abi_module *mods = (struct abi_module *)(&abi->mods[0]);
 	uint32_t tag_len = strnlen_s(tag, MAX_MOD_TAG_LEN);

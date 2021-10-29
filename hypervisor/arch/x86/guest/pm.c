@@ -342,7 +342,7 @@ static bool prelaunched_vm_sleep_io_write(struct acrn_vcpu *vcpu, uint16_t addr,
 		 * SLP_TYPx fields programmed with the values from the \_S5 object
 		 */
 		slp_type = (v >> 2U) & 0x7U;
-		slp_en  = (v >> 5U) & 0x1U;
+		slp_en  = ((v >> 5U) & 0x1U) != 0U;
 
 		if (slp_en && (slp_type == 5U)) {
 			get_vm_lock(vm);

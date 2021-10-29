@@ -37,7 +37,7 @@ uint64_t find_space_from_ve820(struct acrn_vm *vm, uint32_t size, uint64_t min_a
 		end = round_page_down(entry->baseaddr + entry->length);
 		length = (end > start) ? (end - start) : 0UL;
 
-		if ((entry->type == E820_TYPE_RAM) && (length >= round_size)
+		if ((entry->type == E820_TYPE_RAM) && (length >= (uint64_t)round_size)
 				&& (end > round_min_addr) && (start < round_max_addr)) {
 			if (((start >= min_addr) && ((start + round_size) <= min(end, round_max_addr)))
 				|| ((start < min_addr) && ((min_addr + round_size) <= min(end, round_max_addr)))) {
@@ -137,7 +137,8 @@ static void filter_mem_from_service_vm_e820(struct acrn_vm *vm, uint64_t start_p
  */
 void create_service_vm_e820(struct acrn_vm *vm)
 {
-	uint16_t vm_id, i;
+	uint16_t vm_id;
+	uint32_t i;
 	uint64_t hv_start_pa = hva2hpa((void *)(get_hv_image_base()));
 	uint64_t hv_end_pa  = hv_start_pa + get_hv_ram_size();
 	uint32_t entries_count = get_e820_entries_count();

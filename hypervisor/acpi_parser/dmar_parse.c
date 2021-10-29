@@ -37,12 +37,12 @@ static uint8_t get_secondary_bus(uint8_t bus, uint8_t dev, uint8_t func)
 	return (data >> 8U) & 0xffU;
 }
 
-static union pci_bdf dmar_path_bdf(int32_t path_len, int32_t busno, const struct acpi_dmar_pci_path *path)
+static union pci_bdf dmar_path_bdf(int32_t path_len, uint8_t busno, const struct acpi_dmar_pci_path *path)
 {
 	int32_t i;
 	union pci_bdf dmar_bdf;
 
-	dmar_bdf.bits.b = (uint8_t)busno;
+	dmar_bdf.bits.b = busno;
 	dmar_bdf.bits.d = path->device;
 	dmar_bdf.bits.f = path->function;
 

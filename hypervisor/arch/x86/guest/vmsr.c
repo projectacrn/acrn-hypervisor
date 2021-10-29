@@ -291,7 +291,7 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, uint32_t 
 		}
 
 		msr &= 0x1FFFU;
-		msr_bit = 1U << (msr & 0x7U);
+		msr_bit = (uint8_t)(1U << (msr & 0x7U));
 		msr_index = msr >> 3U;
 
 		if ((mode & INTERCEPT_READ) == INTERCEPT_READ) {

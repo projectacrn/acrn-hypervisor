@@ -10,12 +10,12 @@
 #include <efi_mmap.h>
 #include <logmsg.h>
 
-static uint16_t hv_memdesc_nr;
+static uint32_t hv_memdesc_nr;
 static struct efi_memory_desc hv_memdesc[CONFIG_MAX_EFI_MMAP_ENTRIES];
 
 static void sort_efi_mmap_entries(void)
 {
-	uint32_t i,j;
+	uint32_t i, j;
 	struct efi_memory_desc tmp_memdesc;
 
 	/* Bubble sort */

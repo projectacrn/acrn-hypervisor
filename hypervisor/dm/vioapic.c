@@ -274,7 +274,7 @@ static inline bool vioapic_need_intr(const struct acrn_single_vioapic *vioapic, 
 	union ioapic_rte rte;
 	bool ret = false;
 
-	if (pin < vioapic->chipinfo.nr_pins) {
+	if ((uint32_t)pin < vioapic->chipinfo.nr_pins) {
 		rte = vioapic->rtbl[pin];
 		lvl = (uint32_t)bitmap_test(pin & 0x3FU, &vioapic->pin_state[pin >> 6U]);
 		ret = !!(((rte.bits.intr_polarity == IOAPIC_RTE_INTPOL_ALO) && (lvl == 0U)) ||
