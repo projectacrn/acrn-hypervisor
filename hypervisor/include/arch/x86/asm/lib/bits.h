@@ -293,7 +293,7 @@ build_bitmap_testandclear(bitmap32_test_and_clear_lock, "l", uint32_t, BUS_LOCK)
 
 static inline uint16_t bitmap_weight(uint64_t bits)
 {
-	return __builtin_popcountl(bits);
+	return (uint16_t)__builtin_popcountl(bits);
 }
 
 #endif /* BITS_H*/

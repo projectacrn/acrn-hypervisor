@@ -282,7 +282,7 @@ struct hc_api_version {
 	uint32_t minor_version;
 } __aligned(8);
 
-#define ACRN_PLATFORM_LAPIC_IDS_MAX	64
+#define ACRN_PLATFORM_LAPIC_IDS_MAX	64U
 /**
  * Hypervisor API, return it for HC_GET_PLATFORM_INFO hypercall
  */

@@ -528,7 +528,7 @@ void do_print(const char *fmt_arg, struct print_param *param,
 			else if (ch == 'c') {
 				char c[2];
 
-				c[0] = __builtin_va_arg(args, int32_t);
+				c[0] = (char)__builtin_va_arg(args, int32_t);
 				c[1] = 0;
 				print_string(param, c);
 			}
