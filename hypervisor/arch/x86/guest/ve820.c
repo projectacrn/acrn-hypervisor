@@ -292,7 +292,7 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 		hpa1_hi_size = vm_config->memory.size - lowmem_max_length;
 		gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa1_hi_size);
 		entry_idx++;
-	} else if (vm_config->memory.size <= MEM_1M + hpa1_part1_max_length + MEM_1M) {
+	} else if (vm_config->memory.size <= (MEM_1M + hpa1_part1_max_length + MEM_1M)) {
 		/*
 		 * In this case, hpa1 is only enough for the first
 		 * 1M + part1 + last 1M (ACPI NVS/DATA), so part2 will be empty.
@@ -310,7 +310,7 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 	hpa2_lo_size = (lowmem_max_length - vm_config->memory.size);
 	gpa_start = vm->e820_entries[ENTRY_HPA1_LOW_PART2].baseaddr + vm->e820_entries[ENTRY_HPA1_LOW_PART2].length;
 
-	if (hpa2_lo_size > 0 && remaining_hpa2_size > 0) {
+	if ((hpa2_lo_size > 0) && (remaining_hpa2_size > 0)) {
 		/* In this case, hpa2 may have some parts to be mapped to lowmem, so we add an entry for hpa2_lo */
 		if (remaining_hpa2_size > hpa2_lo_size) {
 			remaining_hpa2_size -= hpa2_lo_size;

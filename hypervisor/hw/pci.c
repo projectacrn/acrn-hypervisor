@@ -461,7 +461,7 @@ static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
 					&buses_visited[current_bus_index >> 6U]);
 
 		pbdf.bits.b = current_bus_index;
-		if (pbdf.bits.b < phys_pci_mmcfg.start_bus || pbdf.bits.b > phys_pci_mmcfg.end_bus) {
+		if ((pbdf.bits.b < phys_pci_mmcfg.start_bus) || (pbdf.bits.b > phys_pci_mmcfg.end_bus)) {
 			continue;
 		}
 
@@ -739,8 +739,8 @@ static void pci_enumerate_ext_cap(struct pci_pdev *pdev)
 			pcie_dev_type = (((uint8_t)pci_pdev_read_cfg(pdev->bdf,
 				pdev->pcie_capoff + PCIER_FLAGS, 1)) & PCIEM_FLAGS_TYPE) >> 4;
 
-			if (pcie_dev_type == PCIEM_TYPE_ENDPOINT ||
-					pcie_dev_type == PCIEM_TYPE_ROOT_INT_EP) {
+			if ((pcie_dev_type == PCIEM_TYPE_ENDPOINT) ||
+					(pcie_dev_type == PCIEM_TYPE_ROOT_INT_EP)) {
 				/* No need to enable ptm on ep device.  If a PTM-capable ep pass
 				 * through to guest, guest OS will enable it
 				 */

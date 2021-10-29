@@ -108,7 +108,7 @@ static void free_irq_vector(uint32_t irq)
 			vr = irqd->vector;
 			irqd->vector = VECTOR_INVALID;
 
-			if (vr <= NR_MAX_VECTOR && vector_to_irq[vr] == irq) {
+			if ((vr <= NR_MAX_VECTOR) && (vector_to_irq[vr] == irq)) {
 				vector_to_irq[vr] = IRQ_INVALID;
 			}
 		}
