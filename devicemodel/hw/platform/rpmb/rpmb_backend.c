@@ -66,7 +66,7 @@ static uint16_t get_rpmb_blocks(void)
 }
 
 /* Common area of RPMB refers to the start area of RPMB
- * shared among all UOS with RO access.
+ * shared among all User VM with RO access.
  * It's predefined to 32KB in size which contains:
  * AttKB(up to 16KB), RPMB info header (256B)
  * and the remaining size for future uasge.
@@ -84,7 +84,7 @@ static uint16_t get_accessible_blocks(void)
 }
 
 /* Todo: To get the uos number, e.g. No.0 or No.1, which is
-  used for calculating UOS RPMB range address.
+  used for calculating User VM RPMB range address.
   But this will be removed after config file is supported.
   We plan to predefine such info and save to config file.
 */

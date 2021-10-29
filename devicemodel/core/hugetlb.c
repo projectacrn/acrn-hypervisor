@@ -491,7 +491,7 @@ static int read_sys_info(const char *sys_path)
 	return pages;
 }
 
-/* check if enough free huge pages for the UOS */
+/* check if enough free huge pages for the User VM */
 static bool hugetlb_check_memgap(void)
 {
 	int lvl, free_pages, need_pages;
@@ -590,7 +590,7 @@ static bool release_larger_freepage(int level_limit)
  * other info:
  *.   even enough free memory, it is eaiser to reserve smaller pages than
  * lager ones, for example:2MB easier than 1GB. One flow of current solution:
- *.it could leave SOS very small free memory.
+ *.it could leave Service VM very small free memory.
  *.return value: true: success; false: failure
  */
 static bool hugetlb_reserve_pages(void)

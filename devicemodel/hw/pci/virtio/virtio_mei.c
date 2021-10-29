@@ -1086,7 +1086,7 @@ vmei_hbm_disconnect_client(struct vmei_host_client *hclient)
 	disconnect_req.me_addr = hclient->me_addr;
 	disconnect_req.host_addr = hclient->host_addr;
 
-	HCL_DBG(hclient, "DM->UOS: Disconnect Client\n");
+	HCL_DBG(hclient, "DM->User_VM: Disconnect Client\n");
 
 	return vmei_hbm_response(vmei, &disconnect_req, sizeof(disconnect_req));
 }
@@ -1115,7 +1115,7 @@ vmei_hbm_flow_ctl_req(struct vmei_host_client *hclient)
 	flow_ctl_req.me_addr = hclient->me_addr;
 	flow_ctl_req.host_addr = hclient->host_addr;
 
-	HCL_DBG(hclient, "DM->UOS: Flow Control\n");
+	HCL_DBG(hclient, "DM->User_VM: Flow Control\n");
 	return vmei_hbm_response(vmei, &flow_ctl_req, sizeof(flow_ctl_req));
 }
 
@@ -1535,9 +1535,9 @@ vmei_proc_tx(struct virtio_mei *vmei, struct virtio_vq_info *vq)
 	data_len = iov[1].iov_len;
 
 
-	DPRINTF("TX: UOS->DM, hdr[h=%02d me=%02d comp=%1d] length[%d]\n",
+	DPRINTF("TX: User_VM->DM, hdr[h=%02d me=%02d comp=%1d] length[%d]\n",
 		hdr->host_addr, hdr->me_addr, hdr->msg_complete, hdr->length);
-	vmei_dbg_print_hex("TX: UOS->DM", data, data_len);
+	vmei_dbg_print_hex("TX: User_VM->DM", data, data_len);
 
 	if (hdr->length < data_len) {
 		pr_err("%s: supplied buffer has invalid size");
@@ -1783,7 +1783,7 @@ vmei_rx_callback(int fd, enum ev_type type, void *param)
 
 	if (hclient->recv_offset) {
 		/* still has data in recv_buf, wait guest reading */
-		HCL_DBG(hclient, "data in recv_buf, wait for UOS reading.\n");
+		HCL_DBG(hclient, "data in recv_buf, wait for User VM reading.\n");
 		goto out;
 	}
 
@@ -1833,7 +1833,7 @@ vmei_proc_vclient_rx(struct vmei_host_client *hclient,
 	}
 
 	len = hclient->recv_offset - hclient->recv_handled;
-	HCL_DBG(hclient, "RX: DM->UOS: off=%d len=%d\n",
+	HCL_DBG(hclient, "RX: DM->User_VM: off=%d len=%d\n",
 		hclient->recv_handled, len);
 
 	buf_len = VMEI_BUF_SZ - sizeof(*hdr);
@@ -1849,7 +1849,7 @@ vmei_proc_vclient_rx(struct vmei_host_client *hclient,
 	memcpy(buf, hclient->recv_buf + hclient->recv_handled, len);
 	hclient->recv_handled += len;
 
-	HCL_DBG(hclient, "RX: complete = %d DM->UOS:off=%d len=%d\n",
+	HCL_DBG(hclient, "RX: complete = %d DM->User_VM:off=%d len=%d\n",
 		complete, hclient->recv_handled, len);
 	len += sizeof(struct mei_msg_hdr);
 
@@ -1866,12 +1866,12 @@ vmei_proc_vclient_rx(struct vmei_host_client *hclient,
 }
 
 /**
- * vmei_proc_rx() process rx UOS
+ * vmei_proc_rx() process rx User VM
  * @vmei: virtio mei device
  * @vq: virtio queue
  *
  * Function looks for client with pending buffer and sends
- * it to the UOS.
+ * it to the User VM.
  *
  * Locking: Must run under rx mutex
  * Return:

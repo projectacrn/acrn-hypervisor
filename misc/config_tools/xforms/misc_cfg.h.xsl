@@ -66,7 +66,7 @@
   </xsl:template>
 
 <xsl:template name="sos_rootfs">
-  <xsl:value-of select="acrn:define('SOS_ROOTFS', concat($quot, 'root=', vm/board_private/rootfs[text()], ' ', $quot), '')" />
+  <xsl:value-of select="acrn:define('SERVICE_VM_ROOTFS', concat($quot, 'root=', vm/board_private/rootfs[text()], ' ', $quot), '')" />
 </xsl:template>
 
 <xsl:template name="sos_serial_console">
@@ -84,7 +84,7 @@
       </xsl:if>
     </xsl:if>
   </xsl:variable>
-  <xsl:value-of select="acrn:define('SOS_CONSOLE', $sos_console, '')" />
+  <xsl:value-of select="acrn:define('SERVICE_VM_OS_CONSOLE', $sos_console, '')" />
 </xsl:template>
 
 <xsl:template name="sos_bootargs_diff">

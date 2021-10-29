@@ -43,9 +43,11 @@
  *  |  |  +---------------+  |  |     |    |        app           |
  *  |  +---------|-----------+  |     |    +----------------------+
  *  +------------|--------------+     | echo H or D |
- *               | SOS USER SPACE     |             |  UOS USER SPACE
+ *               | Service VM   |     |             v User VM
+ *               | User Space   |     |             |  User Space
  *  -------------|--------------------|-------------|-----------------
- *               v SOS KERNEL SPACE   |             v  UOS KERNEL SPACE
+ *               v SERVICE VM         |             v  User VM
+ *               |     Kernel Space   |             |  Kernel Space
  *  +------------------------------+  |    +--------------------------+
  *  | native drd sysfs interface   |  |    |native drd sysfs interface|
  *  +------------------------------+  |    +--------------------------+

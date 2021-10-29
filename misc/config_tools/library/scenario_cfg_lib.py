@@ -57,7 +57,7 @@ UUID_DB = {
 }
 
 VM_DB = {
-    'SOS_VM':{'load_type':'SOS_VM', 'severity':'SEVERITY_SOS', 'uuid':UUID_DB['SOS_VM']},
+    'SOS_VM':{'load_type':'SOS_VM', 'severity':'SEVERITY_SERVICE_VM', 'uuid':UUID_DB['SOS_VM']},
     'SAFETY_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_SAFETY_VM', 'uuid':UUID_DB['SAFETY_VM']},
     'PRE_RT_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['PRE_RT_VM']},
     'PRE_STD_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['PRE_STD_VM']},
@@ -501,9 +501,9 @@ def os_kern_args_check(id_kern_args_dic, prime_item, item):
         if vm_i not in id_kern_args_dic.keys():
             continue
         kern_args = id_kern_args_dic[vm_i]
-        if "SOS_" in vm_type and kern_args != "SOS_VM_BOOTARGS":
+        if "SOS_" in vm_type and kern_args != "SERVICE_VM_OS_BOOTARGS":
             key = "vm:id={},{},{}".format(vm_i, prime_item, item)
-            ERR_LIST[key] = "VM os config kernel service os should be SOS_VM_BOOTARGS"
+            ERR_LIST[key] = "VM os config kernel service os should be SERVICE_VM_OS_BOOTARGS"
 
 
 def os_kern_load_addr_check(kern_type, id_kern_load_addr_dic, prime_item, item):

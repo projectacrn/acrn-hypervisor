@@ -212,7 +212,7 @@
     <xsl:if test="normalize-space(bootargs)">
       <xsl:choose>
         <xsl:when test="acrn:is-sos-vm(../vm_type)">
-          <xsl:value-of select="acrn:initializer('bootargs', 'SOS_VM_BOOTARGS')" />
+          <xsl:value-of select="acrn:initializer('bootargs', 'SERVICE_VM_OS_BOOTARGS')" />
         </xsl:when>
         <xsl:when test="acrn:is-pre-launched-vm(../vm_type)">
             <xsl:value-of select="acrn:initializer('bootargs', concat('VM', ../@id, '_BOOT_ARGS'))" />

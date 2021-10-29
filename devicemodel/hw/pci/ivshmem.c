@@ -313,8 +313,8 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		rc = create_ivshmem_from_hv(ctx, dev, name, size);
 	} else {
 		/*
-		 * TODO: If UOS reprograms ivshmem BAR2, the shared memory will be
-		 * unavailable for UOS, so we need to remap GPA and HPA of shared
+		 * TODO: If User VM reprograms ivshmem BAR2, the shared memory will be
+		 * unavailable for User VM, so we need to remap GPA and HPA of shared
 		 * memory in this case.
 		 */
 		rc = create_ivshmem_from_dm(ctx, dev, name, size);

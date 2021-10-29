@@ -122,7 +122,7 @@ typedef struct  {
 
 /* This is the main data structure for tpm emulator,
  * it will work with one SWTPM instance to
- * provide TPM functionlity to UOS.
+ * provide TPM functionlity to User VM.
  *
  * ctrl_chan_fd: fd to communicate with SWTPM ctrl channel
  * cmd_chan_fd: fd to communicate with SWTPM cmd channel
