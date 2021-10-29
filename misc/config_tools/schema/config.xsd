@@ -25,7 +25,7 @@ hypervisor shell.</xs:documentation>
       <xs:annotation>
         <xs:documentation>Specify the host serial device used for hypervisor debugging.
 This option is only valid if :option:`hv.DEBUG_OPTIONS.RELEASE` is set to ``n``.
-This option impacts the content of ``vm.(legacy_vuart id="0").base`` when :option:`vm.vm_type` is ``SOS_VM``,
+This option impacts the content of ``vm.(legacy_vuart id="0").base`` when :option:`vm.vm_type` is ``SERVICE_VM``,
 which specifies the PIO base for Service VM legacy vUART 0 (used for the console).
 The PIO base for the Service VM's legacy vUART 0 is determined using these rules:
 
@@ -453,9 +453,9 @@ its ``id`` attribute. When it is enabled, specify which target VM's vUART the cu
   </xs:all>
   <xs:attribute name="id" type="xs:integer" />
 
-  <xs:assert test="vm_type != 'SOS_VM' or count(guest_flags[guest_flag = 'GUEST_FLAG_LAPIC_PASSTHROUGH']) = 0 or count(guest_flags[guest_flag = 'GUEST_FLAG_NVMX_ENABLED']) > 0">
+  <xs:assert test="vm_type != 'SERVICE_VM' or count(guest_flags[guest_flag = 'GUEST_FLAG_LAPIC_PASSTHROUGH']) = 0 or count(guest_flags[guest_flag = 'GUEST_FLAG_NVMX_ENABLED']) > 0">
     <xs:annotation>
-      <xs:documentation>SOS cannot use LAPIC passthrough unless GUEST_FLAG_NVMX_ENABLED is set.</xs:documentation>
+      <xs:documentation>Service VM cannot use LAPIC passthrough unless GUEST_FLAG_NVMX_ENABLED is set.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 </xs:complexType>

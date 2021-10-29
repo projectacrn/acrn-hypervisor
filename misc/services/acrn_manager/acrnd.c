@@ -164,7 +164,7 @@ void acrnd_vm_timer_func(struct work_arg *arg)
 
 static pthread_mutex_t timer_file_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/* load/store_timer_list to file to keep timers if SOS poweroff */
+/* load/store_timer_list to file to keep timers if Service VM poweroff */
 static int load_timer_list(void)
 {
 	FILE *fp;
@@ -333,7 +333,7 @@ unsigned get_sos_wakeup_reason(void)
 	req.timestamp = time(NULL);
 
 	if (mngr_send_msg(client_fd, &req, &ack, SOCK_TIMEOUT) <= 0)
-		fprintf(stderr, "Failed to get wakeup_reason from SOS, err(%d)\n", ret);
+		fprintf(stderr, "Failed to get wakeup_reason from Service VM, err(%d)\n", ret);
 	else
 		ret = ack.data.reason;
 
@@ -468,7 +468,7 @@ static int wait_for_stop(unsigned int timeout)
 {
 	unsigned long t = timeout;
 
-	/*Let ospm stopping UOSs */
+	/*Let ospm stopping User VMs */
 
 	/* list and update the vm status */
 	do {
@@ -600,13 +600,13 @@ void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 	}
 
 	if (wakeup_reason & CBC_WK_RSN_RTC) {
-		printf("Resumed UOS, by RTC timer, reason(%x)!\n", wakeup_reason);
+		printf("Resumed User VM, by RTC timer, reason(%x)!\n", wakeup_reason);
 		/* wakeup by RTC timer */
 		if (!stat(ACRN_CONF_TIMER_LIST, &st)
 			&& S_ISREG(st.st_mode)) {
 			ack.data.err = load_timer_list();
 			if (ack.data.err == 0) {
-				printf("Resumed UOS by RTC timer, try do works!\n");
+				printf("Resumed User VM by RTC timer, try do works!\n");
 				/* load timers successfully */
 				try_do_works();
 				goto reply_ack;
@@ -616,7 +616,7 @@ void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 		perror("Error to load timers, wakeup all VMs");
 		ack.data.err = wakeup_suspended_vms(wakeup_reason);	
 	} else {
-		printf("Resumed UOS, by ignition button\n");
+		printf("Resumed User VM, by ignition button\n");
 		ack.data.err = wakeup_suspended_vms(wakeup_reason);
 	}
 
@@ -648,7 +648,7 @@ int init_vm(void)
 	sleep(autostart_delay);
 #endif
 
-	/* init all UOSs, according wakeup_reason */
+	/* init all User VMs, according wakeup_reason */
 	if (platform_has_hw_ioc) {
 		wakeup_reason = get_sos_wakeup_reason();
 	}
@@ -664,7 +664,7 @@ int init_vm(void)
 		}
 	}
 
-	/* TODO: auto start UOSs */
+	/* TODO: auto start User VMs */
 	printf("Activating all vms\n");
 	return active_all_vms();
 }

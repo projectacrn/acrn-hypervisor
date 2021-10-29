@@ -96,7 +96,7 @@ bool is_paused_vm(const struct acrn_vm *vm)
 
 bool is_service_vm(const struct acrn_vm *vm)
 {
-	return (vm != NULL)  && (get_vm_config(vm->vm_id)->load_order == SOS_VM);
+	return (vm != NULL)  && (get_vm_config(vm->vm_id)->load_order == SERVICE_VM);
 }
 
 /**
@@ -987,9 +987,9 @@ void launch_vms(uint16_t pcpu_id)
 
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
-		if ((vm_config->load_order == SOS_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
+		if ((vm_config->load_order == SERVICE_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
 			if (pcpu_id == get_configured_bsp_pcpu_id(vm_config)) {
-				if (vm_config->load_order == SOS_VM) {
+				if (vm_config->load_order == SERVICE_VM) {
 					service_vm_ptr = &vm_array[vm_id];
 				}
 				prepare_vm(vm_id, vm_config);

@@ -195,7 +195,7 @@ handle_protocol(EFI_HANDLE handle, EFI_GUID *protocol, void **interface)
 /*
  * emalloc_reserved_mem - it is called to allocate memory hypervisor itself
  * and trampoline code, and mark the allocate memory as EfiReserved memory
- * type so that SOS won't touch it during boot.
+ * type so that Service VM won't touch it during boot.
  * @addr: a pointer to the allocated address on success
  * @size: size in bytes of the requested allocation
  * @max_addr: the allocated memory must be no more than this threshold
@@ -212,7 +212,7 @@ static inline EFI_STATUS emalloc_reserved_mem(EFI_PHYSICAL_ADDRESS *addr,
 /*
  * emalloc_fixed_addr - it is called to allocate memory hypervisor itself
  * when CONFIG_RELOC config is NOT enable.And mark the allocated memory as
- * EfiReserved memory type so that SOS won't touch it during boot.
+ * EfiReserved memory type so that Service VM won't touch it during boot.
  * @addr: a pointer to the allocated address on success
  * @size: size in bytes of the requested allocation
  */

@@ -59,8 +59,8 @@
   </hv>
 
   <vm id="0">
-    <vm_type>SOS_VM</vm_type>
-    <name>ACRN SOS VM</name>
+    <vm_type>SERVICE_VM</vm_type>
+    <name>ACRN Service VM</name>
     <guest_flags>
         <guest_flag>0</guest_flag>
     </guest_flags>
@@ -80,13 +80,13 @@
     </os_config>
     <legacy_vuart id="0">
         <type>VUART_LEGACY_PIO</type>
-        <base>SOS_COM1_BASE</base>
-        <irq>SOS_COM1_IRQ</irq>
+        <base>SERVICE_VM_COM1_BASE</base>
+        <irq>SERVICE_VM_COM1_IRQ</irq>
     </legacy_vuart>
     <legacy_vuart id="1">
         <type>VUART_LEGACY_PIO</type>
-        <base>SOS_COM2_BASE</base>
-        <irq>SOS_COM2_IRQ</irq>
+        <base>SERVICE_VM_COM2_BASE</base>
+        <irq>SERVICE_VM_COM2_IRQ</irq>
         <target_vm_id>2</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </legacy_vuart>

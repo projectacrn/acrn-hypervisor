@@ -16,7 +16,7 @@ BOOT_TYPE = ['no', 'vsbl', 'ovmf']
 RTOS_TYPE = ['no', 'Soft RT', 'Hard RT']
 DM_VUART0 = ['Disable', 'Enable']
 y_n = ['y', 'n']
-UOS_TYPES = ['CLEARLINUX', 'ANDROID', 'ALIOS', 'PREEMPT-RT LINUX', 'VXWORKS', 'WINDOWS', 'ZEPHYR', 'YOCTO', 'UBUNTU', 'GENERIC LINUX']
+USER_VM_TYPES = ['CLEARLINUX', 'ANDROID', 'ALIOS', 'PREEMPT-RT LINUX', 'VXWORKS', 'WINDOWS', 'ZEPHYR', 'YOCTO', 'UBUNTU', 'GENERIC LINUX']
 LINUX_LIKE_OS = ['CLEARLINUX', 'PREEMPT-RT LINUX', 'YOCTO', 'UBUNTU', 'GENERIC LINUX']
 
 PT_SUB_PCI = {}
@@ -62,11 +62,11 @@ MOUNT_FLAG_DIC = {}
 def usage(file_name):
     """ This is usage for how to use this tool """
     print("usage= {} [h]".format(file_name), end="")
-    print("--board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file> --uosid <uosid id> --out [output folder]")
+    print("--board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file> --user_vmid <user_vmid id> --out [output folder]")
     print('board_info_file :  file name of the board info')
     print('scenario_info_file :  file name of the scenario info')
     print('launch_info_file :  file name of the launch info')
-    print('uosid :  this is the relative id for post launch vm in scenario info XML:[1..max post launch vm]')
+    print('user_vmid :  this is the relative id for post launch vm in scenario info XML:[1..max post launch vm]')
     print('output folder :  path to acrn-hypervisor_folder')
 
 
@@ -81,7 +81,7 @@ def get_param(args):
     scenario_info_file = False
     launch_info_file = False
     output_folder = False
-    param_list = ['--board', '--scenario', '--launch', '--uosid']
+    param_list = ['--board', '--scenario', '--launch', '--user_vmid']
 
     for arg_str in param_list:
 
@@ -91,7 +91,7 @@ def get_param(args):
             return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     args_list = args[1:]
-    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'launch=', 'uosid=', 'out='])
+    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'launch=', 'user_vmid=', 'out='])
     for arg_k, arg_v in optlist:
         if arg_k == '--board':
             board_info_file = arg_v
@@ -101,11 +101,11 @@ def get_param(args):
             launch_info_file = arg_v
         if arg_k == '--out':
             output_folder = arg_v
-        if '--uosid' in args:
-            if arg_k == '--uosid':
+        if '--user_vmid' in args:
+            if arg_k == '--user_vmid':
                 vm_th = arg_v
                 if not vm_th.isnumeric():
-                    err_dic['common error: wrong parameter'] = "--uosid should be a number"
+                    err_dic['common error: wrong parameter'] = "--user_vmid should be a number"
                     return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     if not board_info_file or not scenario_info_file or not launch_info_file:
@@ -139,7 +139,7 @@ def launch_vm_cnt(config_file):
     # get post vm number
     root = common.get_config_root(config_file)
     for item in root:
-        if item.tag == "uos":
+        if item.tag == "user_vm":
             post_vm_count += 1
 
     return post_vm_count
@@ -155,7 +155,7 @@ def get_post_num_list():
     # get post vm number
     root = common.get_config_root(common.LAUNCH_INFO_FILE)
     for item in root:
-        if item.tag == "uos":
+        if item.tag == "user_vm":
             post_vm_list.append(int(item.attrib['id']))
 
     return post_vm_list
@@ -205,11 +205,11 @@ def is_config_file_match():
     return (err_dic, match)
 
 
-def get_vm_uuid_idx(vm_type, uosid):
+def get_vm_uuid_idx(vm_type, user_vmid):
 
     i_cnt = 0
     for vm_i,vm_t in common.VM_TYPES.items():
-        if vm_t == vm_type and vm_i <= uosid:
+        if vm_t == vm_type and vm_i <= user_vmid:
             i_cnt += 1
     if i_cnt > 0:
         i_cnt -= 1
@@ -217,10 +217,10 @@ def get_vm_uuid_idx(vm_type, uosid):
     return i_cnt
 
 
-def get_scenario_uuid(uosid, sos_vmid):
+def get_scenario_uuid(user_vmid, sos_vmid):
     # {id_num:uuid} (id_num:0~max)
     scenario_uuid = ''
-    vm_id = uosid + sos_vmid
+    vm_id = user_vmid + sos_vmid
     i_cnt = get_vm_uuid_idx(common.VM_TYPES[vm_id], vm_id)
     scenario_uuid = scenario_cfg_lib.VM_DB[common.VM_TYPES[vm_id]]['uuid'][i_cnt]
     return scenario_uuid
@@ -231,7 +231,7 @@ def get_sos_vmid():
 
     sos_id = ''
     for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_type == "SOS_VM":
+        if vm_type == "SERVICE_VM":
             sos_id = vm_i
             break
 
@@ -266,13 +266,13 @@ def get_vpid_from_bdf(bdf_vpid_map, bdf_list):
     return vpid_list
 
 
-def get_uos_type():
+def get_user_vm_type():
     """
-    Get uos name from launch.xml at fist line
+    Get User VM name from launch.xml at fist line
     """
-    uos_types = common.get_leaf_tag_map(common.LAUNCH_INFO_FILE, "uos_type")
+    user_vm_types = common.get_leaf_tag_map(common.LAUNCH_INFO_FILE, "user_vm_type")
 
-    return uos_types
+    return user_vm_types
 
 
 def is_bdf_format(bdf_str):
@@ -314,7 +314,7 @@ def pt_devs_check(bdf_list, vpid_list, item):
         if is_bdf_format(bdf_str):
             continue
         else:
-            key = "uos:id={},passthrough_devices,{}".format(i_cnt, item)
+            key = "user_vm:id={},passthrough_devices,{}".format(i_cnt, item)
             ERR_LIST[key] = "Unkonw the BDF format of {} device".format(item)
         i_cnt += 1
 
@@ -324,7 +324,7 @@ def pt_devs_check(bdf_list, vpid_list, item):
         if is_vpid_format(vpid_str):
             continue
         else:
-            key = "uos:id={},passthrough_devices,{}".format(i_cnt, item)
+            key = "user_vm:id={},passthrough_devices,{}".format(i_cnt, item)
             ERR_LIST[key] = "Unkonw the Vendor:Product ID format of {} device".format(item)
 
         i_cnt += 1
@@ -337,7 +337,7 @@ def empty_err(i_cnt, item):
     :param item: the item of tag from config xml
     :return: None
     """
-    key = "uos:id={},{}".format(i_cnt, item)
+    key = "user_vm:id={},{}".format(i_cnt, item)
     ERR_LIST[key] = "The parameter should not be empty"
 
 
@@ -362,7 +362,7 @@ def args_aval_check(arg_list, item, avl_list):
             continue
 
         if arg_str not in avl_list:
-            key = "uos:id={},{}".format(i_cnt, item)
+            key = "user_vm:id={},{}".format(i_cnt, item)
             ERR_LIST[key] = "The {} is invalidate".format(item)
         i_cnt += 1
 
@@ -387,7 +387,7 @@ def mem_size_check(arg_list, item):
 
         mem_size_set = int(arg_str.strip())
         if mem_size_set > total_mem_mb:
-            key = "uos:id={},{}".format(i_cnt, item)
+            key = "user_vm:id={},{}".format(i_cnt, item)
             ERR_LIST[key] = "{}MB should be less than total memory {}MB".format(item)
         i_cnt += 1
 
@@ -455,7 +455,7 @@ def pt_devs_check_audio(audio_map, audio_codec_map):
         bdf_audio = audio_map[vmid]
         bdf_codec = audio_codec_map[vmid]
         if not bdf_audio and bdf_codec:
-            key = "uos:id={},passthrough_devices,{}".format(vmid, 'audio_codec')
+            key = "user_vm:id={},passthrough_devices,{}".format(vmid, 'audio_codec')
             ERR_LIST[key] = "Audio codec device should be pass through together with Audio devcie!"
 
 
@@ -498,7 +498,7 @@ def bdf_duplicate_check(bdf_dic):
                 continue
 
             if dev_bdf in bdf_used:
-                key = "uos:id={},{},{}".format(vm_i, 'passthrough_devices', dev)
+                key = "user_vm:id={},{},{}".format(vm_i, 'passthrough_devices', dev)
                 ERR_LIST[key] = "You select the same device for {} pass-through !".format(dev)
                 return
             else:
@@ -527,12 +527,12 @@ def get_gpu_vpid():
     return vpid
 
 
-def uos_cpu_affinity(uosid_cpu_affinity):
+def user_vm_cpu_affinity(user_vmid_cpu_affinity):
 
     cpu_affinity = {}
     sos_vm_id = get_sos_vmid()
-    for uosid,cpu_affinity_list in uosid_cpu_affinity.items():
-        cpu_affinity[int(uosid) + int(sos_vm_id)] = cpu_affinity_list
+    for user_vmid,cpu_affinity_list in user_vmid_cpu_affinity.items():
+        cpu_affinity[int(user_vmid) + int(sos_vm_id)] = cpu_affinity_list
     return cpu_affinity
 
 
@@ -541,33 +541,33 @@ def check_slot(slot_db):
     slot_values = {}
     # init list of slot values for Post VM
     for dev in slot_db.keys():
-        for uosid in slot_db[dev].keys():
-            slot_values[uosid] = []
+        for user_vmid in slot_db[dev].keys():
+            slot_values[user_vmid] = []
         break
 
     # get slot values for Passthrough devices
     for dev in PASSTHRU_DEVS:
-        for uosid,slot_str in slot_db[dev].items():
+        for user_vmid,slot_str in slot_db[dev].items():
             if not slot_str:
                 continue
-            slot_values[uosid].append(slot_str)
+            slot_values[user_vmid].append(slot_str)
 
     # update slot values and replace the fun=0 if there is no fun 0 in bdf list
     for dev in PASSTHRU_DEVS:
-        for uosid,slot_str in slot_db[dev].items():
+        for user_vmid,slot_str in slot_db[dev].items():
             if not slot_str or ':' not in str(slot_str):
                 continue
             bus_slot = slot_str[0:-1]
             bus_slot_fun0 = bus_slot + "0"
-            if bus_slot_fun0 not in slot_values[uosid]:
-                slot_db[dev][uosid] = bus_slot_fun0
-                slot_values[uosid].append(bus_slot_fun0)
+            if bus_slot_fun0 not in slot_values[user_vmid]:
+                slot_db[dev][user_vmid] = bus_slot_fun0
+                slot_values[user_vmid].append(bus_slot_fun0)
 
 
-def is_linux_like(uos_type):
+def is_linux_like(user_vm_type):
 
     is_linux = False
-    if uos_type in LINUX_LIKE_OS:
+    if user_vm_type in LINUX_LIKE_OS:
         is_linux = True
 
     return is_linux
@@ -584,11 +584,11 @@ def set_shm_regions(launch_item_values, scenario_info):
 
     sos_vm_id = 0
     for vm_id, vm_type in vm_types.items():
-        if vm_type in ['SOS_VM']:
+        if vm_type in ['SERVICE_VM']:
             sos_vm_id = vm_id
         elif vm_type in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
-            uos_id = vm_id - sos_vm_id
-            shm_region_key = 'uos:id={},shm_regions,shm_region'.format(uos_id)
+            user_vmid = vm_id - sos_vm_id
+            shm_region_key = 'user_vm:id={},shm_regions,shm_region'.format(user_vmid)
             launch_item_values[shm_region_key] = ['']
             if shm_enabled == 'y':
                 for shmem_region in raw_shmem_regions:
@@ -607,16 +607,16 @@ def set_shm_regions(launch_item_values, scenario_info):
 
 def set_pci_vuarts(launch_item_values, scenario_info):
     try:
-        launch_item_values['uos,console_vuart'] = DM_VUART0
+        launch_item_values['user_vm,console_vuart'] = DM_VUART0
         vm_types = common.get_leaf_tag_map(scenario_info, 'vm_type')
         sos_vm_id = 0
         for vm_id, vm_type in vm_types.items():
-            if vm_type in ['SOS_VM']:
+            if vm_type in ['SERVICE_VM']:
                 sos_vm_id = vm_id
         for vm in list(common.get_config_root(scenario_info)):
             if vm.tag == 'vm' and scenario_cfg_lib.VM_DB[vm_types[int(vm.attrib['id'])]]['load_type'] == 'POST_LAUNCHED_VM':
-                uos_id = int(vm.attrib['id']) - sos_vm_id
-                pci_vuart_key = 'uos:id={},communication_vuarts,communication_vuart'.format(uos_id)
+                user_vmid = int(vm.attrib['id']) - sos_vm_id
+                pci_vuart_key = 'user_vm:id={},communication_vuarts,communication_vuart'.format(user_vmid)
                 for elem in list(vm):
                     if elem.tag == 'communication_vuart':
                         for sub_elem in list(elem):
@@ -633,8 +633,8 @@ def check_shm_regions(launch_shm_regions, scenario_info):
     launch_item_values = {}
     set_shm_regions(launch_item_values, scenario_info)
 
-    for uos_id, shm_regions in launch_shm_regions.items():
-        shm_region_key = 'uos:id={},shm_regions,shm_region'.format(uos_id)
+    for user_vmid, shm_regions in launch_shm_regions.items():
+        shm_region_key = 'user_vm:id={},shm_regions,shm_region'.format(user_vmid)
         for shm_region in shm_regions:
             if shm_region_key not in launch_item_values.keys() or shm_region not in launch_item_values[shm_region_key]:
                 ERR_LIST[shm_region_key] = "shm {} should be configured in scenario setting and the size should be decimal" \
@@ -645,15 +645,15 @@ def check_shm_regions(launch_shm_regions, scenario_info):
 def check_console_vuart(launch_console_vuart, vuart0, scenario_info):
     vuarts = common.get_vuart_info(scenario_info)
 
-    for uos_id, console_vuart_enable in launch_console_vuart.items():
-        key = 'uos:id={},console_vuart'.format(uos_id)
-        if console_vuart_enable == "Enable" and vuart0[uos_id] == "Enable":
-            ERR_LIST[key] = "vuart0 and console_vuart of uos {} should not be enabled " \
-                 "at the same time".format(uos_id)
+    for user_vmid, console_vuart_enable in launch_console_vuart.items():
+        key = 'user_vm:id={},console_vuart'.format(user_vmid)
+        if console_vuart_enable == "Enable" and vuart0[user_vmid] == "Enable":
+            ERR_LIST[key] = "vuart0 and console_vuart of user_vm {} should not be enabled " \
+                 "at the same time".format(user_vmid)
             return
-        if console_vuart_enable == "Enable" and int(uos_id) in vuarts.keys() \
-             and 0 in vuarts[uos_id] and vuarts[uos_id][0]['base'] == "INVALID_PCI_BASE":
-            ERR_LIST[key] = "console_vuart of uos {} should be enabled in scenario setting".format(uos_id)
+        if console_vuart_enable == "Enable" and int(user_vmid) in vuarts.keys() \
+             and 0 in vuarts[user_vmid] and vuarts[user_vmid][0]['base'] == "INVALID_PCI_BASE":
+            ERR_LIST[key] = "console_vuart of user_vm {} should be enabled in scenario setting".format(user_vmid)
             return
 
 
@@ -661,25 +661,25 @@ def check_communication_vuart(launch_communication_vuarts, scenario_info):
     vuarts = common.get_vuart_info(scenario_info)
     vuart1_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
 
-    for uos_id, vuart_list in launch_communication_vuarts.items():
-        vuart_key = 'uos:id={},communication_vuarts,communication_vuart'.format(uos_id)
+    for user_vmid, vuart_list in launch_communication_vuarts.items():
+        vuart_key = 'user_vm:id={},communication_vuarts,communication_vuart'.format(user_vmid)
         for vuart_id in vuart_list:
             if not vuart_id:
                 return
-            if int(vuart_id) not in vuarts[uos_id].keys():
-                ERR_LIST[vuart_key] = "communication_vuart {} of uos {} should be configured" \
-                     "in scenario setting.".format(vuart_id, uos_id)
+            if int(vuart_id) not in vuarts[user_vmid].keys():
+                ERR_LIST[vuart_key] = "communication_vuart {} of user_vm {} should be configured" \
+                     "in scenario setting.".format(vuart_id, user_vmid)
                 return
-            if int(vuart_id) == 1 and vuarts[uos_id][1]['base'] != "INVALID_PCI_BASE":
-                if uos_id in vuart1_setting.keys() and vuart1_setting[uos_id]['base'] != "INVALID_COM_BASE":
-                    ERR_LIST[vuart_key] = "uos {}'s communication_vuart 1 and legacy_vuart 1 should " \
-                        "not be configured at the same time.".format(uos_id)
+            if int(vuart_id) == 1 and vuarts[user_vmid][1]['base'] != "INVALID_PCI_BASE":
+                if user_vmid in vuart1_setting.keys() and vuart1_setting[user_vmid]['base'] != "INVALID_COM_BASE":
+                    ERR_LIST[vuart_key] = "user_vm {}'s communication_vuart 1 and legacy_vuart 1 should " \
+                        "not be configured at the same time.".format(user_vmid)
                 return
 
 def check_enable_ptm(launch_enable_ptm, scenario_info):
     scenario_etree = lxml.etree.parse(scenario_info)
     enable_ptm_vm_list = scenario_etree.xpath("//vm[PTM = 'y']/@id")
-    for uos_id, enable_ptm in launch_enable_ptm.items():
-        key = 'uos:id={},enable_ptm'.format(uos_id)
-        if enable_ptm == 'y' and str(uos_id) not in enable_ptm_vm_list:
-            ERR_LIST[key] = "PTM of uos:{} set to 'n' in scenario xml".format(uos_id)
+    for user_vmid, enable_ptm in launch_enable_ptm.items():
+        key = 'user_vm:id={},enable_ptm'.format(user_vmid)
+        if enable_ptm == 'y' and str(user_vmid) not in enable_ptm_vm_list:
+            ERR_LIST[key] = "PTM of user_vm:{} set to 'n' in scenario xml".format(user_vmid)

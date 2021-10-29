@@ -108,10 +108,10 @@ enum acrnd_msgid {
 	ACRND_REASON,		/* DM ask for updating wakeup reason */
 	DM_NOTIFY,		/* DM notify Acrnd that state is changed */
 
-	/* SOS-LCS ->Acrnd */
-	ACRND_STOP,		/* SOS-LCS request to Stop all UOS */
-	ACRND_RESUME,		/* SOS-LCS request to Resume UOS */
-	ACRND_SUSPEND,		/* SOS-LCS request to Suspend all UOS */
+	/* Service-VM-LCS ->Acrnd */
+	ACRND_STOP,		/* Service-VM-LCS request to Stop all User VM */
+	ACRND_RESUME,		/* Service-VM-LCS request to Resume User VM */
+	ACRND_SUSPEND,		/* Service-VM-LCS request to Suspend all User VM */
 
 	ACRND_MAX,
 };

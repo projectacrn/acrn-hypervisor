@@ -394,13 +394,13 @@ int main(int argc, char *argv[])
 {
 
 	int ret = 0;
-	char *devname_uos = "";
+	char *devname_user_vm = "";
 	enum process_env env = PROCESS_UNKNOWN;
 	pthread_t sos_socket_pid;
 	/* User VM wait for shutdown from Service VM */
-	pthread_t uos_thread_pid_1;
+	pthread_t user_vm_thread_pid_1;
 	/* User VM wait for shutdown from other process */
-	pthread_t uos_thread_pid_2;
+	pthread_t user_vm_thread_pid_2;
 
 	log_fd = fopen("/var/log/life_mngr.log", "w+");
 	if (log_fd == NULL) {
@@ -416,10 +416,10 @@ int main(int argc, char *argv[])
 
 	if (strncmp("uos", argv[1], NODE_SIZE) == 0) {
 		env = PROCESS_RUN_IN_USER_VM;
-		devname_uos = argv[2];
-		tty_dev_fd = open(devname_uos, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
+		devname_user_vm = argv[2];
+		tty_dev_fd = open(devname_user_vm, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
 		if (tty_dev_fd < 0) {
-			LOG_PRINTF("Error opening %s: %s\n", devname_uos, strerror(errno));
+			LOG_PRINTF("Error opening %s: %s\n", devname_user_vm, strerror(errno));
 			fclose(log_fd);
 			return errno;
 		}
@@ -427,8 +427,8 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 
-		ret = pthread_create(&uos_thread_pid_1, NULL, listener_fn_to_sos, NULL);
-		ret = pthread_create(&uos_thread_pid_2, NULL, listener_fn_to_operator, NULL);
+		ret = pthread_create(&user_vm_thread_pid_1, NULL, listener_fn_to_sos, NULL);
+		ret = pthread_create(&user_vm_thread_pid_2, NULL, listener_fn_to_operator, NULL);
 
 	} else if (strncmp("sos", argv[1], NODE_SIZE) == 0) {
 		env = PROCESS_RUN_IN_SERVICE_VM;
@@ -442,8 +442,8 @@ int main(int argc, char *argv[])
 	if (env == PROCESS_RUN_IN_SERVICE_VM) {
 		pthread_join(sos_socket_pid, NULL);
 	} else if (env == PROCESS_RUN_IN_USER_VM) {
-		pthread_join(uos_thread_pid_1, NULL);
-		pthread_join(uos_thread_pid_2, NULL);
+		pthread_join(user_vm_thread_pid_1, NULL);
+		pthread_join(user_vm_thread_pid_2, NULL);
 		close(tty_dev_fd);
 	}
 	fclose(log_fd);

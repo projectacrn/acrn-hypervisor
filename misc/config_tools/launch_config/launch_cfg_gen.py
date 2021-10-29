@@ -31,29 +31,29 @@ def get_launch_item_values(board_info, scenario_info=None):
     pthru.insert_nun()
 
     # pre passthrough device for ui
-    launch_item_values["uos,passthrough_devices,usb_xdci"] = pthru.avl["usb_xdci"]
-    launch_item_values["uos,passthrough_devices,ipu"] = pthru.avl["ipu"]
-    launch_item_values["uos,passthrough_devices,ipu_i2c"] = pthru.avl["ipu_i2c"]
-    launch_item_values["uos,passthrough_devices,cse"] = pthru.avl["cse"]
-    launch_item_values["uos,passthrough_devices,audio"] = pthru.avl["audio"]
-    launch_item_values["uos,passthrough_devices,audio_codec"] = pthru.avl["audio_codec"]
-    launch_item_values["uos,passthrough_devices,sd_card"] = pthru.avl["sd_card"]
-    launch_item_values["uos,passthrough_devices,wifi"] = pthru.avl["wifi"]
-    launch_item_values["uos,passthrough_devices,ethernet"] = pthru.avl["ethernet"]
-    launch_item_values["uos,passthrough_devices,sata"] = pthru.avl["sata"]
-    launch_item_values["uos,passthrough_devices,nvme"] = pthru.avl["nvme"]
-    launch_item_values["uos,passthrough_devices,bluetooth"] = pthru.avl["bluetooth"]
+    launch_item_values["user_vm,passthrough_devices,usb_xdci"] = pthru.avl["usb_xdci"]
+    launch_item_values["user_vm,passthrough_devices,ipu"] = pthru.avl["ipu"]
+    launch_item_values["user_vm,passthrough_devices,ipu_i2c"] = pthru.avl["ipu_i2c"]
+    launch_item_values["user_vm,passthrough_devices,cse"] = pthru.avl["cse"]
+    launch_item_values["user_vm,passthrough_devices,audio"] = pthru.avl["audio"]
+    launch_item_values["user_vm,passthrough_devices,audio_codec"] = pthru.avl["audio_codec"]
+    launch_item_values["user_vm,passthrough_devices,sd_card"] = pthru.avl["sd_card"]
+    launch_item_values["user_vm,passthrough_devices,wifi"] = pthru.avl["wifi"]
+    launch_item_values["user_vm,passthrough_devices,ethernet"] = pthru.avl["ethernet"]
+    launch_item_values["user_vm,passthrough_devices,sata"] = pthru.avl["sata"]
+    launch_item_values["user_vm,passthrough_devices,nvme"] = pthru.avl["nvme"]
+    launch_item_values["user_vm,passthrough_devices,bluetooth"] = pthru.avl["bluetooth"]
 
     # acrn dm available optargs
-    launch_item_values['uos,uos_type'] = launch_cfg_lib.UOS_TYPES
-    launch_item_values["uos,rtos_type"] = launch_cfg_lib.RTOS_TYPE
+    launch_item_values['user_vm,user_vm_type'] = launch_cfg_lib.USER_VM_TYPES
+    launch_item_values["user_vm,rtos_type"] = launch_cfg_lib.RTOS_TYPE
 
-    launch_item_values["uos,vbootloader"] = launch_cfg_lib.BOOT_TYPE
-    launch_item_values['uos,vuart0'] = launch_cfg_lib.DM_VUART0
-    launch_item_values['uos,poweroff_channel'] = launch_cfg_lib.PM_CHANNEL
-    launch_item_values["uos,cpu_affinity"] = board_cfg_lib.get_processor_info()
-    launch_item_values['uos,enable_ptm'] = launch_cfg_lib.y_n
-    launch_item_values['uos,allow_trigger_s5'] = launch_cfg_lib.y_n
+    launch_item_values["user_vm,vbootloader"] = launch_cfg_lib.BOOT_TYPE
+    launch_item_values['user_vm,vuart0'] = launch_cfg_lib.DM_VUART0
+    launch_item_values['user_vm,poweroff_channel'] = launch_cfg_lib.PM_CHANNEL
+    launch_item_values["user_vm,cpu_affinity"] = board_cfg_lib.get_processor_info()
+    launch_item_values['user_vm,enable_ptm'] = launch_cfg_lib.y_n
+    launch_item_values['user_vm,allow_trigger_s5'] = launch_cfg_lib.y_n
     launch_cfg_lib.set_shm_regions(launch_item_values, scenario_info)
     launch_cfg_lib.set_pci_vuarts(launch_item_values, scenario_info)
 
@@ -99,7 +99,7 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
 def ui_entry_api(board_info, scenario_info, launch_info, out=''):
 
     err_dic = {}
-    arg_list = ['launch_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0', '--out', out]
+    arg_list = ['launch_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--user_vmid', '0', '--out', out]
 
     err_dic = common.prepare()
     if err_dic:
@@ -113,9 +113,9 @@ def get_names():
 
     names = {}
 
-    # get uos name
-    uos_types = launch_cfg_lib.get_uos_type()
-    names['uos_types'] = uos_types
+    # get User Vm name
+    user_vm_types = launch_cfg_lib.get_user_vm_type()
+    names['user_vm_types'] = user_vm_types
 
     # get board name
     (err_dic, board_name) = common.get_board_name()
@@ -134,13 +134,13 @@ def get_names():
 
 def generate_script_file(names, pt_sel, virt_io, dm, vmid, config):
 
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
     board_name = names['board_name']
     scenario_name = names['scenario_name']
 
     header_info = "#!/bin/bash\n" +\
-        "# board: {}, scenario: {}, uos: {}".format(
-            board_name.upper(), scenario_name.upper(), uos_type.upper())
+        "# board: {}, scenario: {}, user_vm: {}".format(
+            board_name.upper(), scenario_name.upper(), user_vm_type.upper())
 
     print("{}".format(header_info), file=config)
     com.gen(names, pt_sel, virt_io, dm, vmid, config)
@@ -179,15 +179,15 @@ def main(args):
     # get toatl post vm number and total vm in launch config file
     (launch_vm_count, post_vm_count) = launch_cfg_lib.get_post_vm_cnt()
     if vm_th < 0 or vm_th > post_vm_count:
-        err_dic['uosid err:'] = "--uosid shoudl be positive and less than total post vm count in scenario"
+        err_dic['user_vmid err:'] = "--user_vmid shoudl be positive and less than total post vm count in scenario"
     if vm_th and vm_th not in post_num_list:
-        err_dic['uosid err:'] = "--uosid generate the {} post vm, but this vm's config not in launch xml".format(vm_th)
+        err_dic['user_vmid err:'] = "--user_vmid generate the {} post vm, but this vm's config not in launch xml".format(vm_th)
     if launch_vm_count > post_vm_count:
         err_dic['xm config err:'] = "too many vms config than scenario"
 
     for post_num in post_num_list:
         if post_num > post_vm_count:
-            err_dic['xm config err:'] = "launch xml uos id config is bigger than scenario post vm count"
+            err_dic['xm config err:'] = "launch xml user vmid config is bigger than scenario post vm count"
 
     if err_dic:
         return err_dic
