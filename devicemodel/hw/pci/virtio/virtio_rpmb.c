@@ -746,7 +746,7 @@ virtio_rpmb_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	rc = get_virt_rpmb_key();
 	if (rc == 0) {
-		DPRINTF(("%s: get uos key failed!\n", __func__));
+		DPRINTF(("%s: get User VM key failed!\n", __func__));
 		goto out;
 	}
 

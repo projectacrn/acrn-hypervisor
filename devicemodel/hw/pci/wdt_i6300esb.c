@@ -134,7 +134,7 @@ wdt_expired_handler(void *arg, uint64_t nexp)
 			wdt_state.stage = 1;
 			wdt_timeout = 1;
 
-			/* watchdog timer out, set the uos to reboot */
+			/* watchdog timer out, set the User VM to reboot */
 #ifdef DM_DEBUG
 			pr_info("%s: setting VM state to %s\n", __func__, vm_state_to_str(VM_SUSPEND_SYSTEM_RESET));
 			vm_set_suspend_mode(VM_SUSPEND_SYSTEM_RESET);
