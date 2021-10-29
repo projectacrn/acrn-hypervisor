@@ -54,7 +54,7 @@ struct hv_timer {
  * @param[in] timer Pointer to timer.
  * @param[in] func irq callback if time reached.
  * @param[in] priv_data func private data.
- * @param[in] fire_tsc tsc deadline to interrupt.
+ * @param[in] timeout tsc deadline to interrupt.
  * @param[in] period_in_cycle period of the periodic timer in unit of TSC cycles.
  *
  * @remark Don't initialize a timer twice if it has been added to the timer list
@@ -64,7 +64,7 @@ struct hv_timer {
  */
 void initialize_timer(struct hv_timer *timer,
 		      timer_handle_t func, void *priv_data,
-		      uint64_t fire_tsc, uint64_t period_in_cycle);
+		      uint64_t timeout, uint64_t period_in_cycle);
 
 /**
  * @brief Check a timer whether expired.
