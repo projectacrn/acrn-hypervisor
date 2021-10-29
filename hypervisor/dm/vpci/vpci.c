@@ -494,8 +494,7 @@ static void write_cfg_header(struct pci_vdev *vdev,
 		 * even this PCI device has no INTx, so emulate INTx Line Register as writable.
 		 */
 		if (offset == PCIR_INTERRUPT_LINE) {
-			val &= 0xfU;
-			pci_vdev_write_vcfg(vdev, offset, bytes, val);
+			pci_vdev_write_vcfg(vdev, offset, bytes, (val & 0xfU));
 		}
 
 	}
