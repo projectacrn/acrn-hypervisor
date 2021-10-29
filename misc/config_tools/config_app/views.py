@@ -492,7 +492,7 @@ def save_launch():
     rename = False
     try:
         if generator is None or not (generator.startswith('add_vm:') or generator.startswith('remove_vm:')):
-            (error_list, pthru_sel, virtio, dm_value) = validate_launch_setting(
+            (error_list, pthru_sel, virtio, dm_value, sriov) = validate_launch_setting(
                 os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1], xml_configs[0]+'.xml'),
                 scenario_file_path,
                 tmp_launch_file)

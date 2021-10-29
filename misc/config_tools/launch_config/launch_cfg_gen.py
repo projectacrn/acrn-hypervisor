@@ -6,7 +6,7 @@
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-from launch_item import AvailablePthru, PthruSelected, VirtioDeviceSelect, AcrnDmArgs
+from launch_item import AvailablePthru, PthruSelected, VirtioDeviceSelect, AcrnDmArgs, SriovDeviceInput
 import board_cfg_lib
 import launch_cfg_lib
 import com
@@ -32,6 +32,7 @@ def get_launch_item_values(board_info, scenario_info=None):
 
     # pre passthrough device for ui
     launch_item_values["uos,passthrough_devices,usb_xdci"] = pthru.avl["usb_xdci"]
+    launch_item_values["uos,passthrough_devices,gpu"] = pthru.avl["gpu"]
     launch_item_values["uos,passthrough_devices,ipu"] = pthru.avl["ipu"]
     launch_item_values["uos,passthrough_devices,ipu_i2c"] = pthru.avl["ipu_i2c"]
     launch_item_values["uos,passthrough_devices,cse"] = pthru.avl["cse"]
@@ -88,12 +89,16 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     virtio.get_virtio()
     virtio.check_virtio()
 
+    sriov = SriovDeviceInput(launch_info)
+    sriov.get_sriov()
+    sriov.check_sriov(pt_sel)
+
     # acrn dm arguments
     dm = AcrnDmArgs(board_info, scenario_info, launch_info)
     dm.get_args()
     dm.check_item()
 
-    return (launch_cfg_lib.ERR_LIST, pt_sel, virtio, dm)
+    return (launch_cfg_lib.ERR_LIST, pt_sel, virtio, dm, sriov)
 
 
 def ui_entry_api(board_info, scenario_info, launch_info, out=''):
@@ -132,7 +137,7 @@ def get_names():
     return (err_dic, names)
 
 
-def generate_script_file(names, pt_sel, virt_io, dm, vmid, config):
+def generate_script_file(names, pt_sel, virt_io, dm, sriov, vmid, config):
 
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
@@ -143,7 +148,7 @@ def generate_script_file(names, pt_sel, virt_io, dm, vmid, config):
             board_name.upper(), scenario_name.upper(), uos_type.upper())
 
     print("{}".format(header_info), file=config)
-    com.gen(names, pt_sel, virt_io, dm, vmid, config)
+    com.gen(names, pt_sel, virt_io, dm, sriov, vmid, config)
     if launch_cfg_lib.ERR_LIST:
         return launch_cfg_lib.ERR_LIST
 
@@ -193,7 +198,7 @@ def main(args):
         return err_dic
 
     # validate launch config file
-    (err_dic, pt_sel, virt_io, dm) = validate_launch_setting(board_info_file, scenario_info_file, launch_info_file)
+    (err_dic, pt_sel, virt_io, dm, sriov) = validate_launch_setting(board_info_file, scenario_info_file, launch_info_file)
     if err_dic:
         return err_dic
 
@@ -222,7 +227,7 @@ def main(args):
         script_name = "launch_uos_id{}.sh".format(vm_th)
         launch_script_file = output + script_name
         with open(launch_script_file, mode = 'w', newline=None, encoding='utf-8') as config:
-            err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, vm_th, config)
+            err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, sriov.dev, vm_th, config)
             if err_dic:
                 return err_dic
     else:
@@ -230,7 +235,7 @@ def main(args):
             script_name = "launch_uos_id{}.sh".format(post_vm_i)
             launch_script_file = output + script_name
             with open(launch_script_file, mode = 'w', newline='\n', encoding='utf-8') as config:
-                err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, post_vm_i, config)
+                err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, sriov.dev, post_vm_i, config)
                 if err_dic:
                     return err_dic
 

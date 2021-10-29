@@ -5,6 +5,8 @@
 
 import os
 import getopt
+import re
+
 import common
 import board_cfg_lib
 import scenario_cfg_lib
@@ -21,6 +23,7 @@ LINUX_LIKE_OS = ['CLEARLINUX', 'PREEMPT-RT LINUX', 'YOCTO', 'UBUNTU', 'GENERIC L
 
 PT_SUB_PCI = {}
 PT_SUB_PCI['usb_xdci'] = ['USB controller']
+PT_SUB_PCI['gpu'] = ['VGA compatible controller']
 PT_SUB_PCI['ipu'] = ['Multimedia controller']
 PT_SUB_PCI['ipu_i2c'] = ['Signal processing controller']
 PT_SUB_PCI['cse'] = ['Communication controller']
@@ -35,7 +38,7 @@ PT_SUB_PCI['sata'] = ['SATA controller']
 PT_SUB_PCI['nvme'] = ['Non-Volatile memory controller']
 
 # passthrough devices for board
-PASSTHRU_DEVS = ['usb_xdci', 'ipu', 'ipu_i2c', 'cse', 'audio', 'sata',
+PASSTHRU_DEVS = ['usb_xdci', 'gpu', 'ipu', 'ipu_i2c', 'cse', 'audio', 'sata',
                     'nvme', 'audio_codec', 'sd_card', 'ethernet', 'wifi', 'bluetooth']
 
 PT_SLOT = {
@@ -483,6 +486,22 @@ def check_block_mount(virtio_blk_dic):
         MOUNT_FLAG_DIC[vmid] = mount_flags
 
 
+def check_sriov_param(sriov_dev, pt_sel):
+    for dev_type in ['gpu', 'network']:
+        for vm_id, dev_bdf in sriov_dev[dev_type].items():
+            if not dev_bdf:
+                continue
+            pt_devname = dev_type
+            if pt_devname == 'network':
+                pt_devname = 'ethernet'
+            if pt_sel.bdf[pt_devname][vm_id]:
+                ERR_LIST[
+                    'vmid:{} sriov {}'.format(vm_id, dev_type)
+                ] = 'this vm has {} passthrough and sriov {} at same time!'.format(pt_devname, dev_type)
+            if not re.match(r'^[\da-fA-F]{2}:[0-3][\da-fA-F]\.[0-7]$', dev_bdf):
+                ERR_LIST['vmid:{} sriov {}'.format(vm_id, dev_type)] = 'sriov {} bdf error'.format(dev_type)
+
+
 def bdf_duplicate_check(bdf_dic):
     """
     Check if exist duplicate slot
@@ -516,15 +535,21 @@ def get_gpu_bdf():
             gpu_bdf = gpu_bdf[0:7]
     return gpu_bdf
 
-def get_gpu_vpid():
 
+def get_vpid_by_bdf(bdf):
     vpid = ''
     vpid_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
-    gpu_bdf = get_gpu_bdf()
+
     for vpid_line in vpid_lines:
-        if gpu_bdf in vpid_line:
+        if bdf in vpid_line:
             vpid = " ".join(vpid_line.split()[2].split(':'))
     return vpid
+
+
+def get_gpu_vpid():
+    gpu_bdf = get_gpu_bdf()
+    return get_vpid_by_bdf(gpu_bdf)
+
 
 
 def uos_cpu_affinity(uosid_cpu_affinity):
@@ -547,6 +572,8 @@ def check_slot(slot_db):
 
     # get slot values for Passthrough devices
     for dev in PASSTHRU_DEVS:
+        if dev == 'gpu':
+            continue
         for uosid,slot_str in slot_db[dev].items():
             if not slot_str:
                 continue
@@ -554,6 +581,8 @@ def check_slot(slot_db):
 
     # update slot values and replace the fun=0 if there is no fun 0 in bdf list
     for dev in PASSTHRU_DEVS:
+        if dev == 'gpu':
+            continue
         for uosid,slot_str in slot_db[dev].items():
             if not slot_str or ':' not in str(slot_str):
                 continue

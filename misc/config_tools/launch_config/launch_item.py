@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
+import re
 
 import common
 import board_cfg_lib
@@ -20,7 +21,6 @@ class AcrnDmArgs:
         self.args["uos_type"] = common.get_leaf_tag_map(self.launch_info, "uos_type")
         self.args["rtos_type"] = common.get_leaf_tag_map(self.launch_info, "rtos_type")
         self.args["mem_size"] = common.get_leaf_tag_map(self.launch_info, "mem_size")
-        self.args["gvt_args"] = common.get_leaf_tag_map(self.launch_info, "gvt_args")
         self.args["vbootloader"] = common.get_leaf_tag_map(self.launch_info, "vbootloader")
         self.args["vuart0"] = common.get_leaf_tag_map(self.launch_info, "vuart0")
         self.args["cpu_sharing"] = common.get_hv_item_tag(self.scenario_info, "FEATURES", "SCHEDULER")
@@ -70,6 +70,7 @@ class AvailablePthru():
 
     def get_pci_dev(self):
         self.avl["usb_xdci"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['usb_xdci'])
+        self.avl["gpu"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['gpu'])
         self.avl["ipu"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['ipu'])
         self.avl["ipu_i2c"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['ipu_i2c'])
         self.avl["cse"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['cse'])
@@ -84,6 +85,7 @@ class AvailablePthru():
 
     def insert_nun(self):
         self.avl["usb_xdci"].insert(0, '')
+        self.avl["gpu"].insert(0, '')
         self.avl["ipu"].insert(0, '')
         self.avl["ipu_i2c"].insert(0, '')
         self.avl["cse"].insert(0, '')
@@ -110,6 +112,7 @@ class PthruSelected():
 
     def get_bdf(self):
         self.bdf["usb_xdci"] = launch_cfg_lib.get_bdf_from_tag(self.launch_info, "passthrough_devices", "usb_xdci")
+        self.bdf["gpu"] = launch_cfg_lib.get_bdf_from_tag(self.launch_info, "passthrough_devices", "gpu")
         self.bdf["ipu"] = launch_cfg_lib.get_bdf_from_tag(self.launch_info, "passthrough_devices", "ipu")
         self.bdf["ipu_i2c"] = launch_cfg_lib.get_bdf_from_tag(self.launch_info, "passthrough_devices", "ipu_i2c")
         self.bdf["cse"] = launch_cfg_lib.get_bdf_from_tag(self.launch_info, "passthrough_devices", "cse")
@@ -124,6 +127,7 @@ class PthruSelected():
 
     def get_vpid(self):
         self.vpid["usb_xdci"] = launch_cfg_lib.get_vpid_from_bdf(self.bdf_vpid_map, self.bdf["usb_xdci"])
+        self.vpid["gpu"] = launch_cfg_lib.get_vpid_from_bdf(self.bdf_vpid_map, self.bdf["gpu"])
         self.vpid["ipu"] = launch_cfg_lib.get_vpid_from_bdf(self.bdf_vpid_map, self.bdf["ipu"])
         self.vpid["ipu_i2c"] = launch_cfg_lib.get_vpid_from_bdf(self.bdf_vpid_map, self.bdf["ipu_i2c"])
         self.vpid["cse"] = launch_cfg_lib.get_vpid_from_bdf(self.bdf_vpid_map, self.bdf["cse"])
@@ -153,6 +157,7 @@ class PthruSelected():
 
     def check_item(self):
         launch_cfg_lib.pt_devs_check(self.bdf["usb_xdci"], self.vpid["usb_xdci"], "usb_xdci")
+        launch_cfg_lib.pt_devs_check(self.bdf["gpu"], self.vpid["gpu"], "gpu")
         launch_cfg_lib.pt_devs_check(self.bdf["ipu"], self.vpid["ipu"], "ipu")
         launch_cfg_lib.pt_devs_check(self.bdf["ipu_i2c"], self.vpid["ipu_i2c"], "ipu_i2c")
         launch_cfg_lib.pt_devs_check(self.bdf["cse"], self.vpid["cse"], "cse")
@@ -185,3 +190,19 @@ class VirtioDeviceSelect():
 
     def check_virtio(self):
         launch_cfg_lib.check_block_mount(self.dev["block"])
+
+
+class SriovDeviceInput():
+
+    dev = {}
+    def __init__(self, launch_info):
+        self.launch_info = launch_info
+
+    def get_sriov(self):
+        self.dev["gpu"] = common.get_leaf_tag_map(self.launch_info, "sriov", "gpu")
+        temp = common.get_leaf_tag_map(self.launch_info, "sriov", "network")
+        temp = {k: v[0] if v[0] else '' for k, v in temp.items()}
+        self.dev["network"] = temp
+
+    def check_sriov(self, pt_sel):
+        launch_cfg_lib.check_sriov_param(self.dev, pt_sel)
