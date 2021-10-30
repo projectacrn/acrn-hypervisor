@@ -399,6 +399,9 @@ install: $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 	@if [ -e "$(HV_OBJDIR)/acpi" ];then \
 		install -D $(HV_OBJDIR)/acpi/*.bin -t $(DESTDIR)$(libdir)/acrn/acpi/; \
 	fi
+	@if [ -e "$(HV_OBJDIR)/serial.conf" ];then \
+		install -D $(HV_OBJDIR)/serial.conf -t $(DESTDIR)$(libdir)/acrn/; \
+	fi
 
 install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
 	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).out
@@ -411,6 +414,8 @@ pre_build: $(HV_CONFIG_H) $(HV_CONFIG_TIMESTAMP)
 	@$(HV_OBJDIR)/hv_prebuild_check.out
 	@echo "generate the binary of ACPI tables for pre-launched VMs ..."
 	python3 ../misc/config_tools/acpi_gen/bin_gen.py --board $(HV_OBJDIR)/.board.xml --scenario $(HV_OBJDIR)/.scenario.xml --asl $(HV_CONFIG_DIR) --out $(HV_OBJDIR)
+	@echo "generate the serial configuration file for service VM ..."
+	python3 ../misc/config_tools/service_vm_config/serial_config.py --allocation $(HV_OBJDIR)/configs/allocation.xml --scenario $(HV_OBJDIR)/.scenario.xml --out $(HV_OBJDIR)/serial.conf
 
 .PHONY: header
 header: $(VERSION) $(HV_CONFIG_H) $(HV_CONFIG_TIMESTAMP)
