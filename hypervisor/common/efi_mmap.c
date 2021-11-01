@@ -11,7 +11,7 @@
 #include <logmsg.h>
 
 static uint32_t hv_memdesc_nr;
-static struct efi_memory_desc hv_memdesc[CONFIG_MAX_EFI_MMAP_ENTRIES];
+static struct efi_memory_desc hv_memdesc[MAX_EFI_MMAP_ENTRIES];
 
 static void sort_efi_mmap_entries(void)
 {
@@ -30,18 +30,19 @@ static void sort_efi_mmap_entries(void)
 	}
 }
 
+/**
+ * @pre (uefi_info->memmap_size / uefi_info->memdesc_size) <= MAX_EFI_MMAP_ENTRIES
+ */
 void init_efi_mmap_entries(struct efi_info *uefi_info)
 {
 	void *efi_memmap = (void *)((uint64_t)uefi_info->memmap | ((uint64_t)uefi_info->memmap_hi << 32U));
 	struct efi_memory_desc *efi_memdesc = (struct efi_memory_desc *)efi_memmap;
 	uint32_t entry = 0U;
+	uint32_t efi_memdesc_nr = uefi_info->memmap_size / uefi_info->memdesc_size;
+
+	ASSERT(efi_memdesc_nr <= MAX_EFI_MMAP_ENTRIES);
 
 	while ((void *)efi_memdesc < (efi_memmap + uefi_info->memmap_size)) {
-		if (entry >= CONFIG_MAX_EFI_MMAP_ENTRIES) {
-			pr_err("Too many efi memmap entries, entries up %d are ignored.", CONFIG_MAX_EFI_MMAP_ENTRIES);
-			break;
-		}
-
 		hv_memdesc[entry] = *efi_memdesc;
 
 		/* Per UEFI spec, EFI_MEMORY_DESCRIPTOR array element returned in MemoryMap.
