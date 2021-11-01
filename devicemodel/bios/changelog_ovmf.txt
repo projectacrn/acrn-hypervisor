@@ -1,3 +1,8 @@
+OVMF release v2.7
+
+- OvmfPkg/PlatformGopPolicy: Add OpRegion 2.1 support
+- OvmfPkg: refine Platform GOP Policy
+
 OVMF release v2.5
 
 - Change 64-bit MMIO BAR window to 256G-512G
