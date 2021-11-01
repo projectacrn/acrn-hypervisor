@@ -85,7 +85,7 @@
             <kern_type>KERNEL_BZIMAGE</kern_type>
             <kern_mod>Linux_bzImage</kern_mod>
             <ramdisk_mod/>
-            <bootargs>SERVICE_VM_BOOTARGS</bootargs>
+            <bootargs>SERVICE_VM_OS_BOOTARGS</bootargs>
         </os_config>
         <legacy_vuart id="0">
             <type>VUART_LEGACY_PIO</type>
