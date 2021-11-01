@@ -57,29 +57,27 @@ static union pci_bdf dmar_path_bdf(int32_t path_len, int32_t busno, const struct
 
 static int32_t handle_dmar_devscope(struct dmar_dev_scope *dev_scope, void *addr, int32_t remaining)
 {
-	int32_t path_len;
+	int32_t path_len, ret = -1;
 	union pci_bdf dmar_bdf;
 	struct acpi_dmar_pci_path *path;
 	struct acpi_dmar_device_scope *apci_devscope = addr;
 
-	if (remaining < (int32_t)sizeof(struct acpi_dmar_device_scope))
-		return -1;
-
-	if (remaining < apci_devscope->length)
-		return -1;
-
-	path = (struct acpi_dmar_pci_path *)(apci_devscope + 1);
-	path_len = (apci_devscope->length -
-			sizeof(struct acpi_dmar_device_scope)) /
+	if ((remaining >= (int32_t)sizeof(struct acpi_dmar_device_scope)) &&
+	    (remaining >= (int32_t)apci_devscope->length)) {
+		path = (struct acpi_dmar_pci_path *)(apci_devscope + 1);
+		path_len = (apci_devscope->length -
+			    sizeof(struct acpi_dmar_device_scope)) /
 			sizeof(struct acpi_dmar_pci_path);
 
-	dmar_bdf = dmar_path_bdf(path_len, apci_devscope->bus, path);
-	dev_scope->id = apci_devscope->enumeration_id;
-	dev_scope->type = apci_devscope->entry_type;
-	dev_scope->bus = dmar_bdf.fields.bus;
-	dev_scope->devfun = dmar_bdf.fields.devfun;
+		dmar_bdf = dmar_path_bdf(path_len, apci_devscope->bus, path);
+		dev_scope->id = apci_devscope->enumeration_id;
+		dev_scope->type = apci_devscope->entry_type;
+		dev_scope->bus = dmar_bdf.fields.bus;
+		dev_scope->devfun = dmar_bdf.fields.devfun;
+		ret = (int32_t)apci_devscope->length;
+	}
 
-	return apci_devscope->length;
+	return ret;
 }
 
 static uint32_t get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
@@ -105,7 +103,7 @@ static uint32_t get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
 /**
  * @Application constraint: The dedicated DMAR unit for Intel integrated GPU
  * shall be available on the physical platform.
- */ 
+ */
 static int32_t handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd, struct dmar_drhd *drhd)
 {
 	struct dmar_dev_scope *dev_scope;
