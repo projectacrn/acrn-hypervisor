@@ -400,34 +400,35 @@
     </xsl:choose>
   </func:function>
 
-  <func:function name="acrn:get-common-clos-max">
+  <func:function name="acrn:get-common-clos-count">
     <xsl:choose>
       <xsl:when test="not(acrn:is-rdt-enabled()) and not(acrn:is-cdp-enabled())">
         <func:result select="0" />
       </xsl:when>
       <xsl:otherwise>
         <xsl:variable name="rdt_resource_list" select="str:split(acrn:get-normalized-closinfo-rdt-res-str(), ',')" />
-        <xsl:variable name="rdt_res_clos_max_list" select="str:split(acrn:get-normalized-closinfo-rdt-clos-max-str(), ',')" />
+        <xsl:variable name="rdt_res_clos_count_list" select="str:split(acrn:get-normalized-closinfo-rdt-clos-max-str(), ',')" />
         <xsl:variable name="cdp_enabled" select="acrn:is-cdp-enabled()"/>
 
-        <xsl:variable name="clos_max_list_rtf">
+        <xsl:variable name="clos_count_list_rtf">
           <xsl:for-each select="$rdt_resource_list">
             <xsl:variable name="pos" select="position()" />
-            <xsl:variable name="res_clos_max" select="number($rdt_res_clos_max_list[$pos])" />
+            <xsl:variable name="res_clos_count" select="number($rdt_res_clos_count_list[$pos])" />
 
             <xsl:choose>
               <xsl:when test=". = 'MBA'">
-                <node><xsl:value-of select="$res_clos_max"/></node>
+                <node><xsl:value-of select="$res_clos_count"/></node>
               </xsl:when>
+              <!-- Some platforms have odd clos counts. Use "floor" to avoid this function returning a float number. -->
               <xsl:otherwise>
-                <node><xsl:value-of select="$res_clos_max div (1 + $cdp_enabled)"/></node>
+                <node><xsl:value-of select="floor($res_clos_count div (1 + $cdp_enabled))"/></node>
               </xsl:otherwise>
             </xsl:choose>
           </xsl:for-each>
         </xsl:variable>
 
-        <xsl:variable name="clos_max_list_it" select="exslt:node-set($clos_max_list_rtf)/node" />
-        <func:result select="math:min($clos_max_list_it)" />
+        <xsl:variable name="clos_count_list_it" select="exslt:node-set($clos_count_list_rtf)/node" />
+        <func:result select="math:min($clos_count_list_it)" />
       </xsl:otherwise>
     </xsl:choose>
   </func:function>
