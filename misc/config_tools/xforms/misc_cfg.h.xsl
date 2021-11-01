@@ -136,7 +136,7 @@
   Max number of MBA delay entries corresponding to each CLOS. -->
 <xsl:template name="rdt">
   <xsl:variable name="rdt_res_clos_max" select="acrn:get-normalized-closinfo-rdt-clos-max-str()" />
-  <xsl:variable name="common_clos_max" select="acrn:get-common-clos-max()"/>
+  <xsl:variable name="common_clos_max" select="acrn:get-common-clos-count()"/>
   <xsl:choose>
     <xsl:when test="acrn:is-cdp-enabled()">
       <xsl:value-of select="acrn:ifdef('CONFIG_RDT_ENABLED')" />
