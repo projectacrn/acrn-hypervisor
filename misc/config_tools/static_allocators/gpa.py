@@ -298,7 +298,8 @@ def get_pt_devs_io_port_passthrough(board_etree, scenario_etree):
 
 def get_pci_hole_native(board_etree):
     resources = board_etree.xpath(f"//bus[@type = 'pci']/device[@address]/resource[@type = 'memory' and @len != '0x0']")
-    resources_hostbridge =  board_etree.xpath("//bus[@address = '0x0']/resource[@type = 'memory' and @len != '0x0' and not(starts-with(@id, 'bar')) and not(@width)]")
+    resources_hostbridge =  board_etree.xpath("//bus/resource[@type = 'memory' and @len != '0x0' and not(starts-with(@id, 'bar')) and not(@width)]")
+
     low_mem = set()
     high_mem = set()
     for resource_hostbridge in resources_hostbridge:
@@ -361,10 +362,10 @@ def create_vuart_node(allocation_etree, vm_id, devdict):
 
 def create_native_pci_hole_node(allocation_etree, low_mem, high_mem):
     common.append_node("/acrn-config/hv/MMIO/MMIO32_START", hex(low_mem[0].start).upper(), allocation_etree)
-    common.append_node("/acrn-config/hv/MMIO/MMIO32_END", hex(low_mem[0].end + 1).upper(), allocation_etree)
+    common.append_node("/acrn-config/hv/MMIO/MMIO32_END", hex(low_mem[-1].end + 1).upper(), allocation_etree)
     if len(high_mem):
         common.append_node("/acrn-config/hv/MMIO/MMIO64_START", hex(high_mem[0].start).upper(), allocation_etree)
-        common.append_node("/acrn-config/hv/MMIO/MMIO64_END", hex(high_mem[0].end + 1).upper(), allocation_etree)
+        common.append_node("/acrn-config/hv/MMIO/MMIO64_END", hex(high_mem[-1].end + 1).upper(), allocation_etree)
         common.append_node("/acrn-config/hv/MMIO/HI_MMIO_START", hex(high_mem[0].start).upper(), allocation_etree)
         common.append_node("/acrn-config/hv/MMIO/HI_MMIO_END", hex(high_mem[0].end + 1).upper(), allocation_etree)
     else:
