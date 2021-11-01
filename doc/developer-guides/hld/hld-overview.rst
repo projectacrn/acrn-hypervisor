@@ -3,8 +3,8 @@
 ACRN High-Level Design Overview
 ###############################
 
-ACRN is an open source reference hypervisor (HV) that runs on top of
-Intel platforms (APL, KBL, etc.) for heterogeneous scenarios such as the
+ACRN is an open-source reference hypervisor (HV) that runs on top of
+:ref:`Intel platforms <hardware>` for heterogeneous scenarios such as the
 Software-defined Cockpit (SDC), or the In-vehicle Experience (IVE) for
 automotive, or HMI & real-time OS for industry. ACRN provides embedded
 hypervisor vendors with a reference I/O mediation solution with a
@@ -73,7 +73,7 @@ indicators for its RT VM:
 Hardware Requirements
 *********************
 
-Mandatory IA CPU features are support for:
+Mandatory IA CPU features:
 
 - Long mode
 - MTRR
@@ -87,17 +87,18 @@ Recommended Memory: 4GB, 8GB preferred.
 ACRN Architecture
 *****************
 
-ACRN is a type-I hypervisor that runs on top of bare metal. It supports
-Intel APL & KBL platforms and can be easily extended to support future
+ACRN is a type 1 hypervisor that runs on top of bare metal. It supports
+certain :ref:`Intel platforms <hardware>` and can be easily extended to support
+future
 platforms. ACRN implements a hybrid VMM architecture, using a privileged
-service VM to manage I/O devices and
-provide I/O mediation. Multiple user VMs can be supported, running Ubuntu
-or Android OS as the User VM.
+Service VM to manage I/O devices and
+provide I/O mediation. Multiple User VMs can be supported, running Ubuntu
+or Android OS.
 
 ACRN 1.0
 ========
 
-ACRN 1.0 is designed mainly for auto use cases such as SDC & IVI.
+ACRN 1.0 is designed mainly for auto use cases such as SDC and IVI.
 
 Instrument cluster applications are critical in the Software Defined
 Cockpit (SDC) use case, and may require functional safety certification
@@ -110,7 +111,8 @@ camera (RVC) within 2 seconds, which is difficult to achieve if a
 separate instrument cluster VM is started after the User VM is booted.
 
 :numref:`overview-arch1.0` shows the architecture of ACRN 1.0 together with
-the IC VM and Service VM. As shown, the Service VM owns most of platform devices and
+the IC VM and Service VM. As shown, the Service VM owns most of the platform
+devices and
 provides I/O mediation to VMs. Some of the PCIe devices function as a
 passthrough mode to User VMs according to VM configuration. In addition,
 the Service VM could run the IC applications and HV helper applications such
@@ -126,20 +128,20 @@ for VM start/stop/pause, virtual CPU pause/resume, etc.
 ACRN 2.0
 ========
 
-ACRN 2.0 is extending ACRN to support pre-launched VM (mainly for safety VM)
+ACRN 2.0 is extending ACRN to support a pre-launched VM (mainly for safety VM)
 and real-time (RT) VM.
 
-:numref:`overview-arch2.0` shows the architecture of ACRN 2.0; the main difference
-compared to ACRN 1.0 is that:
+:numref:`overview-arch2.0` shows the architecture of ACRN 2.0; the main
+differences compared to ACRN 1.0 are that:
 
--  a pre-launched VM is supported in ACRN 2.0, with isolated resources, including
-   CPU, memory, and HW devices, etc.
+-  ACRN 2.0 supports a pre-launched VM, with isolated resources,
+   including CPU, memory, and hardware devices.
 
--  ACRN 2.0 adds a few necessary device emulations in hypervisor like vPCI and vUART to avoid
-   interference between different VMs
+-  ACRN 2.0 adds a few necessary device emulations in the hypervisor, such as
+   vPCI and vUART, to avoid interference between different VMs.
 
--  ACRN 2.0 supports RT VM for a post-launched User VM, with assistant features like LAPIC
-   passthrough and PMD virtio driver
+-  ACRN 2.0 supports an RT VM as a post-launched User VM, with features such as
+   LAPIC passthrough and PMD virtio driver.
 
 ACRN 2.0 is still WIP, and some of its features are already merged in the master.
 
@@ -157,8 +159,8 @@ Device Emulation
 ACRN adopts various approaches for emulating devices for the User VM:
 
 -  **Emulated device**: A virtual device using this approach is emulated in
-   the Service VM by trapping accesses to the device in the User VM. Two sub-categories
-   exist for emulated device:
+   the Service VM by trapping accesses to the device in the User VM. Two
+   sub-categories exist for emulated devices:
 
    -  fully emulated, allowing native drivers to be used
       unmodified in the User VM, and
@@ -172,8 +174,8 @@ ACRN adopts various approaches for emulating devices for the User VM:
 
 -  **Mediated passthrough device**: A mediated passthrough device is a
    hybrid of the previous two approaches. Performance-critical
-   resources (mostly data-plane related) are passed-through to the User VMs and
-   others (mostly control-plane related) are emulated.
+   resources (mostly data-plane related) are passed-through to the User VMs, and
+   other resources (mostly control-plane related) are emulated.
 
 
 .. _ACRN-io-mediator:
@@ -181,7 +183,7 @@ ACRN adopts various approaches for emulating devices for the User VM:
 I/O Emulation
 -------------
 
-The device model (DM) is a place for managing User VM devices: it allocates
+The Device Model (DM) is a place for managing User VM devices: it allocates
 memory for the User VMs, configures and initializes the devices shared by the
 guest, loads the virtual BIOS and initializes the virtual CPU state, and
 invokes the hypervisor service to execute the guest instructions.
@@ -200,18 +202,19 @@ I/O read from the User VM.
 When a guest executes an I/O instruction (port I/O or MMIO), a VM exit
 happens. The HV takes control and executes the request based on the VM exit
 reason ``VMX_EXIT_REASON_IO_INSTRUCTION`` for port I/O access, for
-example. The HV will then fetch the additional guest instructions, if any,
+example. The HV fetches the additional guest instructions, if any,
 and processes the port I/O instructions at a pre-configured port address
-(in ``AL, 20h`` for example), and place the decoded information such as
-the port I/O address, size of access, read/write, and target register
+(in ``AL, 20h``, for example). The HV places the decoded information, such as
+the port I/O address, size of access, read/write, and target register,
 into the I/O request in the I/O request buffer (shown in
-:numref:`overview-io-emu-path`) and then notify/interrupt the Service VM to process.
+:numref:`overview-io-emu-path`) and then notifies/interrupts the Service VM
+to process.
 
 The Hypervisor service module (HSM) in the Service VM intercepts HV interrupts,
-and accesses the I/O request buffer for the port I/O instructions. It will
-then check to see if any kernel device claims ownership of the
+and accesses the I/O request buffer for the port I/O instructions. It
+then checks to see if any kernel device claims ownership of the
 I/O port. The owning device, if any, executes the requested APIs from a
-VM. Otherwise, the HSM module leaves the I/O request in the request buffer
+VM. Otherwise, the HSM leaves the I/O request in the request buffer
 and wakes up the DM thread for processing.
 
 DM follows the same mechanism as HSM. The I/O processing thread of the
@@ -221,9 +224,9 @@ the I/O port. If yes, the owning module is invoked to execute requested
 APIs.
 
 When the DM completes the emulation (port IO 20h access in this example)
-of a device such as uDev1, uDev1 will put the result into the request
-buffer (register AL). The DM will then return the control to HV
-indicating completion of an IO instruction emulation, typically thru
+of a device such as uDev1, uDev1 puts the result into the request
+buffer (register AL). The DM returns the control to the HV
+indicating completion of an I/O instruction emulation, typically through
 HSM/hypercall. The HV then stores the result to the guest register
 context, advances the guest IP to indicate the completion of instruction
 execution, and resumes the guest.
@@ -244,12 +247,12 @@ Hypervisor
 
 ACRN takes advantage of Intel Virtualization Technology (Intel VT).
 The ACRN HV runs in Virtual Machine Extension (VMX) root operation,
-host mode, or VMM mode, while the Service and User VM guests run
+host mode, or VMM mode, while the Service VM and User VM guests run
 in VMX non-root operation, or guest mode. (We'll use "root mode"
-and "non-root mode" for simplicity).
+and "non-root mode" for simplicity.)
 
 The VMM mode has 4 rings. ACRN
-runs HV in ring 0 privilege only, and leaves ring 1-3 unused. A guest
+runs the HV in ring 0 privilege only, and leaves ring 1-3 unused. A guest
 running in non-root mode has its own full rings (ring 0 to 3). The
 guest kernel runs in ring 0 in guest mode, while the guest user land
 applications run in ring 3 of guest mode (ring 1 and 2 are usually not
@@ -260,14 +263,14 @@ used by commercial OS).
    :name: overview-arch-hv
 
 
-   Architecture of ACRN hypervisor
+   Architecture of ACRN Hypervisor
 
 :numref:`overview-arch-hv` shows an overview of the ACRN hypervisor architecture.
 
 -  A platform initialization layer provides an entry
    point, checking hardware capabilities and initializing the
    processors, memory, and interrupts. Relocation of the hypervisor
-   image, derivation of encryption seeds are also supported by this
+   image and derivation of encryption seeds are also supported by this
    component.
 
 -  A hardware management and utilities layer provides services for
@@ -303,7 +306,7 @@ Service VM
 
 The Service VM is an important guest OS in the ACRN architecture. It
 runs in non-root mode, and contains many critical components, including the VM
-manager, the device model (DM), ACRN services, kernel mediation, and virtio
+Manager, the Device Model (DM), ACRN services, kernel mediation, and virtio
 and hypercall modules (HSM). The DM manages the User VM and
 provides device emulation for it. The User VMS also provides services
 for system power lifecycle management through the ACRN service and VM manager,
@@ -316,7 +319,7 @@ DM (Device Model) is a user-level QEMU-like application in the Service VM
 responsible for creating the User VM and then performing devices emulation
 based on command line configurations.
 
-Based on a HSM kernel module, DM interacts with VM manager to create the User
+Based on an HSM kernel module, DM interacts with VM Manager to create the User
 VM. It then emulates devices through full virtualization on the DM user
 level, or para-virtualized based on kernel mediator (such as virtio,
 GVT), or passthrough based on kernel HSM APIs.
@@ -333,14 +336,14 @@ power operations.
 VM Manager creates the User VM based on DM application, and does User VM state
 management by interacting with lifecycle service in ACRN service.
 
-Refer to VM management chapter for more details.
+Refer to VM management chapter for more details. <link?>
 
 ACRN Service
 ============
 
 ACRN service provides
 system lifecycle management based on IOC polling. It communicates with the
-VM manager to handle the User VM state, such as S3 and power-off.
+VM Manager to handle the User VM state, such as S3 and power-off.
 
 HSM
 ===
@@ -351,7 +354,7 @@ the standard Linux char device API (ioctl) to access HSM
 functionalities. HSM communicates with the ACRN hypervisor through
 hypercall or upcall interrupts.
 
-Refer to the HSM chapter for more details.
+Refer to the HSM chapter for more details. <link?>
 
 Kernel Mediators
 ================
@@ -371,17 +374,18 @@ Refer to :ref:`hld-trace-log` for more details.
 User VM
 *******
 
-Currently, ACRN can boot Linux and Android guest OSes. For Android guest OS, ACRN
+Currently, ACRN can boot Linux and Android guest OSes. For an Android guest OS,
+ACRN
 provides a VM environment with two worlds: normal world and trusty
 world. The Android OS runs in the normal world. The trusty OS and
 security sensitive applications run in the trusty world. The trusty
-world can see the memory of normal world, but normal world cannot see
-trusty world.
+world can see the memory of the normal world, but the normal world cannot see
+the trusty world.
 
 Guest Physical Memory Layout - User VM E820
 ===========================================
 
-DM will create E820 table for a User VM based on these simple rules:
+DM creates an E820 table for a User VM based on these simple rules:
 
 - If requested VM memory size < low memory limitation (currently 2 GB,
   defined in DM), then low memory range = [0, requested VM memory
@@ -410,15 +414,15 @@ memory space, as shown in :numref:`overview-mem-layout`:
 
    User VM Physical Memory Layout Based on Hugetlb
 
-The User VM's memory is allocated by Service OS DM application; it may come
-from different huge pages in Service OS as shown in
+The User VM's memory is allocated by the Service VM DM application; it may come
+from different huge pages in the Service VM as shown in
 :numref:`overview-mem-layout`.
 
-As the Service VM has full knowledge of these huge pages size,
+As the Service VM knows the size of these huge pages,
 GPA\ :sup:`SOS` and GPA\ :sup:`UOS`, it works with the hypervisor
 to complete the User VM's host-to-guest mapping using this pseudo code:
 
-.. code-block: none
+.. code-block:: none
 
    for x in allocated huge pages do
       x.hpa = gpa2hpa_for_sos(x.sos_gpa)
@@ -428,13 +432,13 @@ to complete the User VM's host-to-guest mapping using this pseudo code:
 Virtual Slim Bootloader
 =======================
 
-The Virtual Slim bootloader (vSBL) is the virtual bootloader that supports
+The Virtual Slim Bootloader (vSBL) is the virtual bootloader that supports
 booting the User VM on the ACRN hypervisor platform. The vSBL design is
 derived from Slim Bootloader. It follows a staged design approach that
 provides hardware initialization and payload launching that provides the
 boot logic. As shown in :numref:`overview-sbl`, the virtual SBL has an
 initialization unit to initialize virtual hardware, and a payload unit
-to boot Linux or Android guest OS.
+to boot a Linux or Android guest OS.
 
 .. figure:: images/over-image110.png
    :align: center
@@ -442,19 +446,19 @@ to boot Linux or Android guest OS.
 
    vSBL System Context Diagram
 
-The vSBL image is released as a part of the Service OS root
-filesystem (rootfs).  The vSBL is copied to the User VM memory by the VM manager
-in the Service VM while creating the User VM virtual BSP of the User VM. The Service VM passes the
-start of vSBL and related information to HV. HV sets the guest RIP of the User VM's
-virtual BSP as the start of vSBL and related guest registers, and
-launches the User VM virtual BSP. The vSBL starts running in the virtual
-real mode within the User VM. Conceptually, vSBL is part of the User VM runtime.
+The vSBL image is released as a part of the Service VM root filesystem (rootfs).
+The vSBL is copied to the User VM memory by the VM Manager in the Service VM
+while creating the User VM virtual BSP of the User VM. The Service VM passes the
+start of vSBL and related information to HV. HV sets the guest RIP of the User
+VM's virtual BSP as the start of vSBL and related guest registers, and launches
+the User VM virtual BSP. The vSBL starts running in the virtual real mode within
+the User VM. Conceptually, vSBL is part of the User VM runtime.
 
-In the current design, the vSBL supports booting Android guest OS or
+In the current design, the vSBL supports booting an Android guest OS or
 Linux guest OS using the same vSBL image.
 
-For an Android VM, the vSBL will load and verify trusty OS first, and
-trusty OS will then load and verify Android OS according to the Android
+For an Android VM, the vSBL loads and verifies the trusty OS first. The
+trusty OS then loads and verifies the Android OS according to the Android
 OS verification mechanism.
 
 OVMF Bootloader
@@ -463,11 +467,12 @@ OVMF Bootloader
 Open Virtual Machine Firmware (OVMF) is the virtual bootloader that supports
 the EFI boot of the User VM on the ACRN hypervisor platform.
 
-The OVMF is copied to the User VM memory by the VM manager in the Service VM while creating
-the User VM virtual BSP of the User VM. The Service VM passes the start of OVMF and related
-information to HV. HV sets guest RIP of the User VM virtual BSP as the start of OVMF
-and related guest registers, and launches the User VM virtual BSP. The OVMF starts
-running in the virtual real mode within the User VM. Conceptually, OVMF is part of the User VM runtime.
+The OVMF is copied to the User VM memory by the VM Manager in the Service VM
+while creating the User VM virtual BSP of the User VM. The Service VM passes the
+start of OVMF and related information to HV. HV sets the guest RIP of the User
+VM virtual BSP as the start of OVMF and related guest registers, and launches
+the User VM virtual BSP. The OVMF starts running in the virtual real mode within
+the User VM. Conceptually, OVMF is part of the User VM runtime.
 
 Freedom From Interference
 *************************
@@ -484,7 +489,7 @@ the following mechanisms:
    delaying the execution of another. It also requires vCPU
    scheduling in the hypervisor to consider more complexities such as
    scheduling latency and vCPU priority, exposing more opportunities
-   for one VM to interfere another.
+   for one VM to interfere with another.
 
    To prevent such interference, ACRN hypervisor could adopt static
    core partitioning by dedicating each physical CPU to one vCPU. The
@@ -499,9 +504,9 @@ the following mechanisms:
    sets up the memory-related hardware mechanisms to ensure that:
 
    1. The Service VM cannot access the memory of the hypervisor, unless explicitly
-      allowed
+      allowed.
 
-   2. The User VM cannot access the memory of the Service VM and the hypervisor
+   2. The User VM cannot access the memory of the Service VM and the hypervisor.
 
    3. The hypervisor does not unintendedly access the memory of the Service or User VM.
 
@@ -525,7 +530,7 @@ the following mechanisms:
 
 -  Mitigation of DMA storm.
 
-   (To be documented later.)
+   (To be documented later.) <Remove?>
 
 Boot Flow
 *********
@@ -546,14 +551,14 @@ CPU P-State & C-State
 =====================
 
 In ACRN, CPU P-state and C-state (Px/Cx) are controlled by the guest OS.
-The corresponding governors are managed in the Service/User VM for best power
+The corresponding governors are managed in the Service VM/User VM for best power
 efficiency and simplicity.
 
 Guests should be able to process the ACPI P/C-state request from OSPM.
-The needed ACPI objects for P/C-state management should be ready in
+The needed ACPI objects for P/C-state management should be ready in an
 ACPI table.
 
-Hypervisor can restrict guest's P/C-state request (per customer
+The hypervisor can restrict a guest's P/C-state request (per customer
 requirement). MSR accesses of P-state requests could be intercepted by
 the hypervisor and forwarded to the host directly if the requested
 P-state is valid. Guest MWAIT/Port IO accesses of C-state control could
@@ -566,15 +571,15 @@ This diagram shows CPU P/C-state management blocks:
    :align: center
 
 
-   CPU P/C-state management block diagram
+   CPU P/C-state Management Block Diagram
 
 System Power State
 ==================
 
-ACRN supports ACPI standard defined power state: S3 and S5 in system
-level. For each guest, ACRN assumes guest implements OSPM and controls its
+ACRN supports ACPI standard defined power states: S3 and S5 in system
+level. For each guest, ACRN assumes the guest implements OSPM and controls its
 own power state accordingly. ACRN doesn't involve guest OSPM. Instead,
-it traps the power state transition request from guest and emulates it.
+it traps the power state transition request from the guest and emulates it.
 
 .. figure:: images/over-image21.png
    :align: center
@@ -587,18 +592,18 @@ The OSPM in each guest manages the guest power state transition. The
 Device Model running in the Service VM traps and emulates the power state
 transition of the User VM (Linux VM or Android VM in
 :numref:`overview-pm-block`). VM Manager knows all User VM power states and
-notifies the OSPM of the Service VM (Service OS in :numref:`overview-pm-block`) once
-active the User VM is in the required power state.
+notifies the OSPM of the Service VM once
+the User VM is in the required power state.
 
 Then the OSPM of the Service VM starts the power state transition of the Service VM
 trapped to "Sx Agency" in ACRN, and it starts the power state
 transition.
 
-Some details about the ACPI table for the User and Service VMs:
+Some details about the ACPI table for the User VM and Service VM:
 
 -  The ACPI table in the User VM is emulated by the Device Model. The Device Model
    knows which register the User VM writes to trigger power state
-   transitions. Device Model must register an I/O handler for it.
+   transitions. The Device Model must register an I/O handler for it.
 
 -  The ACPI table in the Service VM is passthrough. There is no ACPI parser
    in ACRN HV. The power management related ACPI table is
