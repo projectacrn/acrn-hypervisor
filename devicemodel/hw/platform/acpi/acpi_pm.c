@@ -254,7 +254,7 @@ static void dsdt_write_pct(void)
 
 /* _PSS: Performance Supported States
  */
-static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
+static int dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 {
 	uint8_t vcpu_px_cnt;
 	int i;
@@ -262,12 +262,12 @@ static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 
 	vcpu_px_cnt = get_vcpu_px_cnt(ctx, vcpu_id);
 	if (!vcpu_px_cnt) {
-		return;
+		return -1;
 	}
 
 	vcpu_px_data = malloc(vcpu_px_cnt * sizeof(struct acrn_pstate_data));
 	if (!vcpu_px_data) {
-		return;
+		return -1;
 	}
 
 	/* copy and validate px data first */
@@ -275,7 +275,7 @@ static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 		if (get_vcpu_px_data(ctx, vcpu_id, i, vcpu_px_data + i)) {
 			/* something must be wrong, so skip the write. */
 			free(vcpu_px_data);
-			return;
+			return -1;
 		}
 	}
 
@@ -313,11 +313,13 @@ static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 
 	free(vcpu_px_data);
 
+	return 0;
 }
 
 void pm_write_dsdt(struct vmctx *ctx, int ncpu)
 {
 	int i;
+	int ret;
 
 	/* Scope (_PR) */
 	dsdt_line("");
@@ -339,24 +341,27 @@ void pm_write_dsdt(struct vmctx *ctx, int ncpu)
 		dsdt_line("  {");
 		dsdt_line("");
 
-		dsdt_write_pss(ctx, i);
+		ret = dsdt_write_pss(ctx, i);
 		dsdt_write_cst(ctx, i);
 
-		/* hard code _PPC and _PCT for all vpu */
-		if (i == 0) {
-			dsdt_write_ppc();
-			dsdt_write_pct();
-		} else {
-			dsdt_line("    Method (_PPC, 0, NotSerialized)");
-			dsdt_line("    {");
-			dsdt_line("      Return (^^CPU0._PPC)");
-			dsdt_line("    }");
-			dsdt_line("");
-			dsdt_line("    Method (_PCT, 0, NotSerialized)");
-			dsdt_line("    {");
-			dsdt_line("      Return (^^CPU0._PCT)");
-			dsdt_line("    }");
-			dsdt_line("");
+		/* if the vm can support px, hv will return the right px/cx cnt.
+			then hard code _PPC and _PCT for all vpu */
+		if (ret == 0) {
+			if (i == 0) {
+				dsdt_write_ppc();
+				dsdt_write_pct();
+			} else {
+				dsdt_line("    Method (_PPC, 0, NotSerialized)");
+				dsdt_line("    {");
+				dsdt_line("      Return (^^CPU0._PPC)");
+				dsdt_line("    }");
+				dsdt_line("");
+				dsdt_line("    Method (_PCT, 0, NotSerialized)");
+				dsdt_line("    {");
+				dsdt_line("      Return (^^CPU0._PCT)");
+				dsdt_line("    }");
+				dsdt_line("");
+			}
 		}
 
 		dsdt_line("  }");
