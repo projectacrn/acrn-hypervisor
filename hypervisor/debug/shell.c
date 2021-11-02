@@ -590,8 +590,8 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 	uint16_t vm_id;
 	char state[32];
 
-	shell_puts("\r\nVM_UUID                          VM_ID VM_NAME                          VM_STATE"
-		   "\r\n================================ ===== ================================ ========\r\n");
+	shell_puts("\r\nVM_ID VM_NAME                          VM_STATE"
+		   "\r\n===== ================================ ========\r\n");
 
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm = get_vm_from_vmid(vm_id);
@@ -614,12 +614,7 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 		}
 		vm_config = get_vm_config(vm_id);
 		if (!is_poweroff_vm(vm)) {
-			int8_t i;
-
-			for (i = 0; i < 16; i++) {
-				snprintf(temp_str + 2 * i, 3U, "%02x", vm->uuid[i]);
-			}
-			snprintf(temp_str + 32, MAX_STR_SIZE - 32U, "   %-3d %-32s %-8s\r\n",
+			snprintf(temp_str, MAX_STR_SIZE, "  %-3d %-32s %-8s\r\n",
 				vm_id, vm_config->name, state);
 
 			/* Output information for this task */
