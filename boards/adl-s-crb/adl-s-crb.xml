@@ -15,58 +15,58 @@
 	00:00.0 Host bridge: Intel Corporation Device 4660 (rev 02)
 	Region 3: Memory at &lt;ignored&gt; (32-bit, non-prefetchable)
 	00:02.0 VGA compatible controller: Intel Corporation Device 4680 (rev 0c)
-	Region 0: Memory at 6000000000 (64-bit, non-prefetchable) [size=16M]
+	Region 0: Memory at 60e7000000 (64-bit, non-prefetchable) [size=16M]
 	Region 2: Memory at 4000000000 (64-bit, prefetchable) [size=256M]
-	Region 0: Memory at 0000004010000000 (64-bit, non-prefetchable)
-	Region 2: Memory at 0000004020000000 (64-bit, prefetchable)
+	Region 0: Memory at 00000060e0000000 (64-bit, non-prefetchable)
+	Region 2: Memory at 0000006000000000 (64-bit, prefetchable)
 	00:08.0 System peripheral: Intel Corporation Device 464f (rev 02)
-	Region 0: Memory at 600133c000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 60e833c000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:0a.0 Signal processing controller: Intel Corporation Device 467d (rev 01)
-	Region 0: Memory at 6001320000 (64-bit, non-prefetchable) [size=32K]
+	Region 0: Memory at 60e8320000 (64-bit, non-prefetchable) [size=32K]
 	00:12.0 Serial controller: Intel Corporation Device 7af8 (rev 11)
-	Region 0: Memory at 6001310000 (64-bit, non-prefetchable) [size=64K]
+	Region 0: Memory at 60e8310000 (64-bit, non-prefetchable) [size=64K]
 	00:14.0 USB controller: Intel Corporation Device 7ae0 (rev 11)
-	Region 0: Memory at 6001300000 (64-bit, non-prefetchable) [size=64K]
+	Region 0: Memory at 60e8300000 (64-bit, non-prefetchable) [size=64K]
 	00:14.1 USB controller: Intel Corporation Device 7ae1 (rev 11)
-	Region 0: Memory at 6001000000 (64-bit, non-prefetchable) [size=2M]
-	Region 2: Memory at 600133b000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 60e8000000 (64-bit, non-prefetchable) [size=2M]
+	Region 2: Memory at 60e833b000 (64-bit, non-prefetchable) [size=4K]
 	00:14.2 RAM memory: Intel Corporation Device 7aa7 (rev 11)
-	Region 0: Memory at 600132c000 (64-bit, non-prefetchable) [disabled] [size=16K]
-	Region 2: Memory at 600133a000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 60e832c000 (64-bit, non-prefetchable) [disabled] [size=16K]
+	Region 2: Memory at 60e833a000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:15.0 Serial bus controller [0c80]: Intel Corporation Device 7acc (rev 11)
-	Region 0: Memory at 4017000000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 4010000000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:15.1 Serial bus controller [0c80]: Intel Corporation Device 7acd (rev 11)
-	Region 0: Memory at 4017001000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 4010001000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:15.2 Serial bus controller [0c80]: Intel Corporation Device 7ace (rev 11)
-	Region 0: Memory at 4017002000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 4010002000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:15.3 Serial bus controller [0c80]: Intel Corporation Device 7acf (rev 11)
-	Region 0: Memory at 4017003000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 4010003000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:16.0 Communication controller: Intel Corporation Device 7ae8 (rev 11)
-	Region 0: Memory at 6001335000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 60e8335000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 11)
 	Region 0: Memory at 4f920000 (32-bit, non-prefetchable) [size=8K]
 	Region 1: Memory at 4f924000 (32-bit, non-prefetchable) [size=256]
 	Region 5: Memory at 4f923000 (32-bit, non-prefetchable) [size=2K]
 	00:19.0 Serial bus controller [0c80]: Intel Corporation Device 7afc (rev 11)
-	Region 0: Memory at 4017004000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 4010004000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:19.1 Serial bus controller [0c80]: Intel Corporation Device 7afd (rev 11)
-	Region 0: Memory at 4017005000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 4010005000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:1a.0 PCI bridge: Intel Corporation Device 7ac8 (rev 11)
 	00:1e.0 Communication controller: Intel Corporation Device 7aa8 (rev 11)
-	Region 0: Memory at 4017006000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 4010006000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:1e.3 Serial bus controller [0c80]: Intel Corporation Device 7aab (rev 11)
-	Region 0: Memory at 4017007000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 4010007000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:1f.0 ISA bridge: Intel Corporation Device 7a90 (rev 11)
 	00:1f.3 Multimedia audio controller: Intel Corporation Device 7ad0 (rev 11)
-	Region 0: Memory at 6001328000 (64-bit, non-prefetchable) [disabled] [size=16K]
-	Region 4: Memory at 6001200000 (64-bit, non-prefetchable) [disabled] [size=1M]
+	Region 0: Memory at 60e8328000 (64-bit, non-prefetchable) [disabled] [size=16K]
+	Region 4: Memory at 60e8200000 (64-bit, non-prefetchable) [disabled] [size=1M]
 	00:1f.4 SMBus: Intel Corporation Device 7aa3 (rev 11)
-	Region 0: Memory at 6001330000 (64-bit, non-prefetchable) [disabled] [size=256]
+	Region 0: Memory at 60e8330000 (64-bit, non-prefetchable) [disabled] [size=256]
 	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device 7aa4 (rev 11)
 	Region 0: Memory at 4f922000 (32-bit, non-prefetchable) [size=4K]
 	00:1f.6 Ethernet controller: Intel Corporation Device 1a1d (rev 11)
 	Region 0: Memory at 4f900000 (32-bit, non-prefetchable) [disabled] [size=128K]
-	01:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)
+	02:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)
 	Region 0: Memory at 4f800000 (64-bit, non-prefetchable) [size=16K]
 	</PCI_DEVICE>
   <PCI_VID_PID>
@@ -94,7 +94,7 @@
 	00:1f.4 0c05: 8086:7aa3 (rev 11)
 	00:1f.5 0c80: 8086:7aa4 (rev 11)
 	00:1f.6 0200: 8086:1a1d (rev 11)
-	01:00.0 0108: 126f:2263 (rev 03)
+	02:00.0 0108: 126f:2263 (rev 03)
 	</PCI_VID_PID>
   <WAKE_VECTOR_INFO>
 	#define WAKE_VECTOR_32          0x3FEB900CUL
@@ -209,12 +209,13 @@
 	0009f000-000fffff : Reserved
 	  000a0000-000bffff : PCI Bus 0000:00
 	  000f0000-000fffff : System ROM
-	00100000-39c53fff : System RAM
-	39c54000-39c6efff : Reserved
-	39c6f000-39c72fff : System RAM
+	00100000-39c51fff : System RAM
+	39c52000-39c6cfff : Reserved
+	39c6d000-39c72fff : System RAM
 	39c73000-39c73fff : Reserved
 	39c74000-3cac1fff : System RAM
 	3cac2000-3fe32fff : Reserved
+	  3d7e5000-3d7f4fff : pnp 00:04
 	3fe33000-3ff68fff : ACPI Non-volatile Storage
 	3ff69000-4007efff : ACPI Tables
 	4007f000-4007ffff : System RAM
@@ -223,8 +224,8 @@
 	43c00000-47ffffff : Reserved
 	48c00000-4f7fffff : Reserved
 	4f800000-bfffffff : PCI Bus 0000:00
-	  4f800000-4f8fffff : PCI Bus 0000:01
-	    4f800000-4f803fff : 0000:01:00.0
+	  4f800000-4f8fffff : PCI Bus 0000:02
+	    4f800000-4f803fff : 0000:02:00.0
 	      4f800000-4f803fff : nvme
 	  4f900000-4f91ffff : 0000:00:1f.6
 	  4f920000-4f921fff : 0000:00:17.0
@@ -236,6 +237,7 @@
 	    4f924000-4f9240ff : ahci
 	c0000000-cfffffff : PCI MMCONFIG 0000 [bus 00-ff]
 	  c0000000-cfffffff : Reserved
+	    c0000000-cfffffff : pnp 00:04
 	e0690000-e069ffff : INTC1056:00
 	e06a0000-e06affff : INTC1056:00
 	e06b0000-e06bffff : INTC1056:00
@@ -258,39 +260,39 @@
 	  fee00000-fee00fff : Local APIC
 	ff000000-ffffffff : Reserved
 	100000000-8b07fffff : System RAM
-	  155800000-156600ea0 : Kernel code
-	  156600ea1-15705363f : Kernel data
-	  15731d000-1577fffff : Kernel bss
+	  5c3600000-5c4400ea0 : Kernel code
+	  5c4400ea1-5c4e5363f : Kernel data
+	  5c511d000-5c55fffff : Kernel bss
 	8b0800000-8b3ffffff : RAM buffer
 	4000000000-7fffffffff : PCI Bus 0000:00
 	  4000000000-400fffffff : 0000:00:02.0
 	    4000000000-40007e8fff : efifb
-	  4010000000-4016ffffff : 0000:00:02.0
-	  4017000000-4017000fff : 0000:00:15.0
-	  4017001000-4017001fff : 0000:00:15.1
-	  4017002000-4017002fff : 0000:00:15.2
-	  4017003000-4017003fff : 0000:00:15.3
-	  4017004000-4017004fff : 0000:00:19.0
-	  4017005000-4017005fff : 0000:00:19.1
-	  4017006000-4017006fff : 0000:00:1e.0
-	  4017007000-4017007fff : 0000:00:1e.3
-	  4020000000-40ffffffff : 0000:00:02.0
-	  6000000000-6000ffffff : 0000:00:02.0
-	  6001000000-60011fffff : dwc_usb3
-	    6001000000-60011fffff : 0000:00:14.1
-	      600100c100-60011fffff : dwc3.1.auto dwc_usb3
-	  6001200000-60012fffff : 0000:00:1f.3
-	  6001300000-600130ffff : 0000:00:14.0
-	    6001300000-600130ffff : xhci-hcd
-	  6001310000-600131ffff : 0000:00:12.0
-	  6001320000-6001327fff : 0000:00:0a.0
-	  6001328000-600132bfff : 0000:00:1f.3
-	  600132c000-600132ffff : 0000:00:14.2
-	  6001330000-60013300ff : 0000:00:1f.4
-	  6001335000-6001335fff : 0000:00:16.0
-	  600133a000-600133afff : 0000:00:14.2
-	  600133b000-600133bfff : 0000:00:14.1
-	  600133c000-600133cfff : 0000:00:08.0
+	  4010000000-4010000fff : 0000:00:15.0
+	  4010001000-4010001fff : 0000:00:15.1
+	  4010002000-4010002fff : 0000:00:15.2
+	  4010003000-4010003fff : 0000:00:15.3
+	  4010004000-4010004fff : 0000:00:19.0
+	  4010005000-4010005fff : 0000:00:19.1
+	  4010006000-4010006fff : 0000:00:1e.0
+	  4010007000-4010007fff : 0000:00:1e.3
+	  6000000000-60dfffffff : 0000:00:02.0
+	  60e0000000-60e6ffffff : 0000:00:02.0
+	  60e7000000-60e7ffffff : 0000:00:02.0
+	  60e8000000-60e81fffff : dwc_usb3
+	    60e8000000-60e81fffff : 0000:00:14.1
+	      60e800c100-60e81fffff : dwc3.1.auto dwc_usb3
+	  60e8200000-60e82fffff : 0000:00:1f.3
+	  60e8300000-60e830ffff : 0000:00:14.0
+	    60e8300000-60e830ffff : xhci-hcd
+	  60e8310000-60e831ffff : 0000:00:12.0
+	  60e8320000-60e8327fff : 0000:00:0a.0
+	  60e8328000-60e832bfff : 0000:00:1f.3
+	  60e832c000-60e832ffff : 0000:00:14.2
+	  60e8330000-60e83300ff : 0000:00:1f.4
+	  60e8335000-60e8335fff : 0000:00:16.0
+	  60e833a000-60e833afff : 0000:00:14.2
+	  60e833b000-60e833bfff : 0000:00:14.1
+	  60e833c000-60e833cfff : 0000:00:08.0
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
 	/dev/nvme0n1p3: TYPE="ext4"
@@ -303,7 +305,7 @@
 	3, 5, 6, 7, 10, 11, 12, 13, 14, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	32638220 kB
+	32638224 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
@@ -1468,7 +1470,7 @@
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
           <resource type="io_port" min="0x3000" max="0x303f" len="0x40" id="bar4"/>
           <resource type="memory" min="0x4000000000" max="0x400fffffff" len="0x10000000" id="bar2" width="64" prefetchable="1"/>
-          <resource type="memory" min="0x6000000000" max="0x6000ffffff" len="0x1000000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e7000000" max="0x60e7ffffff" len="0x1000000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Vendor-Specific"/>
           <capability id="PCI Express"/>
           <capability id="MSI">
@@ -1596,7 +1598,7 @@
           <acpi_object>\_SB_.PC00.GNA0</acpi_object>
           <aml_template>5b821a5c2f035f53425f50433030474e4130085f4144520c00000800</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0x600133c000" max="0x600133cfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e833c000" max="0x60e833cfff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="MSI">
             <count>1</count>
           </capability>
@@ -1610,7 +1612,7 @@
           <subsystem_vendor>0x8086</subsystem_vendor>
           <subsystem_identifier>0x7270</subsystem_identifier>
           <class>0x118000</class>
-          <resource type="memory" min="0x6001320000" max="0x6001327fff" len="0x8000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e8320000" max="0x60e8327fff" len="0x8000" id="bar0" width="64" prefetchable="0"/>
           <capability id="PCI Express"/>
           <capability id="Power Management"/>
           <capability id="Designated Vendor-Specific"/>
@@ -1712,32 +1714,32 @@
           <acpi_object>\_SB_.PC00.ISHD</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303049534844085f4144520c00001200</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="26"/>
-          <resource type="memory" min="0x6001310000" max="0x600131ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e8310000" max="0x60e831ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
         </device>
         <device address="0x120006">
           <acpi_object>\_SB_.PC00.SPI2</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303053504932085f4144520c06001200</aml_template>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D7</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DD</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D5</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DB</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D2</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DC</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.FPNT</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D8</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DE</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D4</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DA</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D9</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.FPNT</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI2.TP1_</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.TP2_</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D3</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI2.TP3_</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DE</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DB</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D7</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D4</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D8</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D6</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DC</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D3</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DD</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2DA</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.TP3_</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.TP2_</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI2.S2D5</dependency>
           <device id="DUMY0000">
             <acpi_object>\_SB_.PC00.SPI2.FPNT</acpi_object>
             <aml_template>5b8246085c2f045f53425f504330305350493246504e54085f53544100085f4849440d44554d593030303000085f4352531146050a528e21000100020200000109000000000008000000005c5f53422e504330302e53504932008c2000010101000200000000000017000019002300000000005c5f53422e47504930008906001501730000007900</aml_template>
@@ -1749,8 +1751,8 @@
             <resource type="LargeResourceItemGPIOConnection" id="res1"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
             <resource id="res2" type="irq" int="115"/>
-            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
             <dependency type="consumes resources from">\_SB_.PC00.SPI2</dependency>
+            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
           </device>
           <device id="SPI2001">
             <acpi_object>\_SB_.PC00.SPI2.S2D0</acpi_object>
@@ -1991,7 +1993,7 @@
           <acpi_object>\_SB_.PC00.XHCI</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303058484349085f4144520c00001400</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0x6001300000" max="0x600130ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e8300000" max="0x60e830ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="MSI">
             <count>8</count>
@@ -2118,8 +2120,8 @@
           <acpi_object>\_SB_.PC00.XDCI</acpi_object>
           <aml_template>5b8244055c2f035f53425f5043303058444349085f53545211330a30490043004c00200050004300480020005800440043004900200063006f006e00740072006f006c006c00650072000000085f4144520c01001400</aml_template>
           <resource type="interrupt_pin" pin="INTB#" source="17"/>
-          <resource type="memory" min="0x6001000000" max="0x60011fffff" len="0x200000" id="bar0" width="64" prefetchable="0"/>
-          <resource type="memory" min="0x600133b000" max="0x600133bfff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e8000000" max="0x60e81fffff" len="0x200000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e833b000" max="0x60e833bfff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
         </device>
@@ -2129,8 +2131,8 @@
           <subsystem_vendor>0x8086</subsystem_vendor>
           <subsystem_identifier>0x7270</subsystem_identifier>
           <class>0x050000</class>
-          <resource type="memory" min="0x600132c000" max="0x600132ffff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
-          <resource type="memory" min="0x600133a000" max="0x600133afff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e832c000" max="0x60e832ffff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e833a000" max="0x60e833afff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
         </device>
         <device address="0x140003">
@@ -2146,31 +2148,31 @@
           <acpi_object>\_SB_.PC00.I2C0</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303049324330085f4144520c00001500</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="27"/>
-          <resource type="memory" min="0x4017000000" max="0x4017000fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x4010000000" max="0x4010000fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA07</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.I0D0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.WT02</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.EEP0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.HDAC</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.TPD0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.I0D1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA02</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA05</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C0.PD01</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.I0D2</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.WT01</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA01</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C0.EEP1</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C0.PA04</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA06</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C0.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.WT04</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C0.WT06</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.WT05</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA03</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.I0D2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.WT02</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C0.WT03</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.I0D0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA07</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA03</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA06</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA05</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.WT01</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.EEP0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.WT05</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.HDAC</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.I0D1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.WT04</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA01</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C0.PA02</dependency>
           <device id="EEP0000">
             <acpi_object>\_SB_.PC00.I2C0.EEP0</acpi_object>
             <acpi_uid>1</acpi_uid>
@@ -2369,8 +2371,8 @@
             </status>
             <resource type="LargeResourceItemGPIOConnection" id="res1"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
             <dependency type="consumes resources from">\_SB_.PC00.I2C0</dependency>
+            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
           </device>
           <device id="STK0001">
             <acpi_object>\_SB_.PC00.I2C0.WT01</acpi_object>
@@ -2448,23 +2450,23 @@
           <acpi_object>\_SB_.PC00.I2C1</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303049324331085f4144520c01001500</aml_template>
           <resource type="interrupt_pin" pin="INTB#" source="40"/>
-          <resource type="memory" min="0x4017001000" max="0x4017001fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x4010001000" max="0x4010001fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.PD01</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.EEP3</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.WT13</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.WT16</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.WT12</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.EEP2</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C1.WT14</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.I1D1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.I1D0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C1.I1D2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.WT12</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C1.WT15</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C1.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.I1D2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.EEP3</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.EEP2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.PD01</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C1.WT11</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.WT13</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.WT16</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.I1D1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C1.I1D0</dependency>
           <device id="EEP1000">
             <acpi_object>\_SB_.PC00.I2C1.EEP2</acpi_object>
             <acpi_uid>1</acpi_uid>
@@ -2566,8 +2568,8 @@
             </status>
             <resource type="LargeResourceItemGPIOConnection" id="res1"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
-            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
             <dependency type="consumes resources from">\_SB_.PC00.I2C1</dependency>
+            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
           </device>
           <device id="STK0001">
             <acpi_object>\_SB_.PC00.I2C1.WT11</acpi_object>
@@ -2645,28 +2647,28 @@
           <acpi_object>\_SB_.PC00.I2C2</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303049324332085f4144520c02001500</aml_template>
           <resource type="interrupt_pin" pin="INTC#" source="29"/>
-          <resource type="memory" min="0x4017002000" max="0x4017002fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x4010002000" max="0x4010002fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.I2D2</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.I2D1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PC00.FLM1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.I2D0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.CAM0</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C2.WT23</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.WT25</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.LNK2</dependency>
           <dependency type="provides resources to">\_SB_.PC00.FLM2</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C2.PD01</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.CAM0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.WT24</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.TPD0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.WT21</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.I2D2</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C2.WT22</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C2.PMIC</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.EEP5</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.LNK2</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C2.WT25</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.WT21</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C2.WT26</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.WT24</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.EEP5</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C2.EEP4</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.I2D1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C2.I2D0</dependency>
           <device id="INT3471">
             <acpi_object>\_SB_.PC00.I2C2.CAM0</acpi_object>
             <acpi_uid>0</acpi_uid>
@@ -2874,35 +2876,35 @@
           <acpi_object>\_SB_.PC00.I2C3</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303049324333085f4144520c03001500</aml_template>
           <resource type="interrupt_pin" pin="INTD#" source="30"/>
-          <resource type="memory" min="0x4017003000" max="0x4017003fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x4010003000" max="0x4010003fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.I3D2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP4</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.WT35</dependency>
           <dependency type="provides resources to">\_SB_.PC00.FLM5</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.CLP3</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.CLP0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C3.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.LNK0</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C3.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PC00.CLP5</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.FLM3</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.FLM4</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.EEP7</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.LNK4</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP3</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.WT34</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.LNK3</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.LNK5</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.WT36</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.WT32</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C3.PD01</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C3.EEP6</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.LNK5</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C3.EEP7</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.FLM4</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C3.WT32</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C3.WT35</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C3.I3D1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.LNK3</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.LNK4</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C3.I3D0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.FLM3</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C3.I3D2</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C3.WT34</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.CLP2</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.CLP1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.LNK0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C3.I3D1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP0</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C3.WT33</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.CLP4</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C3.WT36</dependency>
           <device id="EEP3000">
             <acpi_object>\_SB_.PC00.I2C3.EEP6</acpi_object>
             <acpi_uid>1</acpi_uid>
@@ -3081,7 +3083,7 @@
           <acpi_object>\_SB_.PC00.HECI</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303048454349085f4144520c00001600</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0x6001335000" max="0x6001335fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e8335000" max="0x60e8335fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="MSI">
             <count>1</count>
@@ -3155,21 +3157,21 @@
           <acpi_object>\_SB_.PC00.I2C4</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303049324334085f4144520c00001900</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="31"/>
-          <resource type="memory" min="0x4017004000" max="0x4017004fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x4010004000" max="0x4010004fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
-          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT42</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C4.CAM1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT46</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C4.I4D2</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT45</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C4.I4D0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT43</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT41</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C4.EEP9</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C4.EEP8</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.I4D2</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C4.I4D1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT43</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.I4D0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.CAM1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT42</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT45</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.EEP9</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT41</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C4.WT44</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C4.WT46</dependency>
           <device id="INT3474">
             <acpi_object>\_SB_.PC00.I2C4.CAM1</acpi_object>
             <acpi_uid>0</acpi_uid>
@@ -3318,21 +3320,21 @@
           <acpi_object>\_SB_.PC00.I2C5</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303049324335085f4144520c01001900</aml_template>
           <resource type="interrupt_pin" pin="INTB#" source="32"/>
-          <resource type="memory" min="0x4017005000" max="0x4017005fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x4010005000" max="0x4010005fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
-          <dependency type="provides resources to">\_SB_.PC00.I2C5.EEPB</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.EEPA</dependency>
           <dependency type="provides resources to">\_SB_.PC00.FLM0</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C5.WT51</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C5.WT53</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C5.EEPA</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C5.WT55</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C5.I5D1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C5.I5D0</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C5.I5D2</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.I2C5.WT52</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.I5D1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.WT53</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.WT55</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C5.WT56</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.WT52</dependency>
           <dependency type="provides resources to">\_SB_.PC00.I2C5.WT54</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.I5D0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.I2C5.EEPB</dependency>
           <device id="EEP5000">
             <acpi_object>\_SB_.PC00.I2C5.EEPA</acpi_object>
             <acpi_uid>1</acpi_uid>
@@ -3474,9 +3476,9 @@
         <device address="0x190002">
           <acpi_object>\_SB_.PC00.UA02</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303055413032085f4144520c02001900</aml_template>
+          <dependency type="provides resources to">\_SB_.PC00.UA02.SER3</dependency>
           <dependency type="provides resources to">\_SB_.PC00.UA02.UT21</dependency>
           <dependency type="provides resources to">\_SB_.PC00.UA02.SER4</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.UA02.SER3</dependency>
           <device id="SER2002">
             <acpi_object>\_SB_.PC00.UA02.SER3</acpi_object>
             <aml_template>5b8249055c2f045f53425f504330305541303253455233085f53544100085f4849440d5345523230303200085f435253112a0a278e2200010003020800010a0000c201002000200002c05c5f53422e504330302e55413032007900</aml_template>
@@ -3535,7 +3537,7 @@
           <capability id="Data Link Feature"/>
           <capability id="Physical Layer 16.0 GT/s"/>
           <capability id="Lane Margining at the Receiver"/>
-          <bus type="pci" address="0x1">
+          <bus type="pci" address="0x2">
             <interrupt_pin_routing>
               <routing address="0xffff">
                 <mapping pin="INTA#" source="16"/>
@@ -4046,13 +4048,13 @@
           <acpi_object>\_SB_.PC00.UA00</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303055413030085f4144520c00001e00</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0x4017006000" max="0x4017006fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x4010006000" max="0x4010006fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
           <dependency type="provides resources to">\_SB_.PC00.UA00.SER0</dependency>
           <dependency type="provides resources to">\_SB_.PC00.UA00.BTH0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.UA00.SER1</dependency>
           <dependency type="provides resources to">\_SB_.PC00.UA00.UT01</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.UA00.SER1</dependency>
           <device id="INT33E1">
             <acpi_object>\_SB_.PC00.UA00.BTH0</acpi_object>
             <aml_template>5b82400a5c2f045f53425f504330305541303042544830085f53544100085f4849440d494e543333453100085f4352531141070a6d8e2200010003023500010a0000c201002000200000c05c5f53422e504330302e55413030008c20000101010002000000000000170000190023000000a3005c5f53422e47504930008c2000010001001300000000000017000019002300000000005c5f53422e47504930007900</aml_template>
@@ -4105,9 +4107,9 @@
         <device address="0x1e0001">
           <acpi_object>\_SB_.PC00.UA01</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303055413031085f4144520c01001e00</aml_template>
-          <dependency type="provides resources to">\_SB_.PC00.UA01.SER3</dependency>
           <dependency type="provides resources to">\_SB_.PC00.UA01.SER2</dependency>
           <dependency type="provides resources to">\_SB_.PC00.UA01.UT11</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.UA01.SER3</dependency>
           <device id="SER1001">
             <acpi_object>\_SB_.PC00.UA01.SER2</acpi_object>
             <aml_template>5b8249055c2f045f53425f504330305541303153455232085f53544100085f4849440d5345523130303100085f435253112a0a278e2200010003023d00010a00008403002000200002c05c5f53422e504330302e55413031007900</aml_template>
@@ -4146,24 +4148,24 @@
         <device address="0x1e0002">
           <acpi_object>\_SB_.PC00.SPI0</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303053504930085f4144520c02001e00</aml_template>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0DD</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D5</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0DA</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D3</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D9</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.TP2_</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D6</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0DE</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.TP3_</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0DC</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI0.S0DB</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D4</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D8</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D5</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI0.TP1_</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D6</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D3</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0DC</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D8</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D9</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0DA</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D1</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D7</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0DD</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0DE</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.S0D4</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.TP2_</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI0.TP3_</dependency>
           <device id="SPI0001">
             <acpi_object>\_SB_.PC00.SPI0.S0D0</acpi_object>
             <acpi_uid>1</acpi_uid>
@@ -4387,28 +4389,28 @@
           <acpi_object>\_SB_.PC00.SPI1</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303053504931085f4144520c03001e00</aml_template>
           <resource type="interrupt_pin" pin="INTD#" source="37"/>
-          <resource type="memory" min="0x4017007000" max="0x4017007fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x4010007000" max="0x4010007fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1DA</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI1.S1DD</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1DE</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D7</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.TP3_</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D3</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.FPNT</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D2</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D6</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D5</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI1.TP1_</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1DB</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.TP2_</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D1</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D4</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1DC</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D7</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.FPNT</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1DA</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.TP3_</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1DE</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D8</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1DB</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D9</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.SPI1.TP2_</dependency>
           <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D9</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1DC</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.SPI1.S1D6</dependency>
           <device id="DUMY0000">
             <acpi_object>\_SB_.PC00.SPI1.FPNT</acpi_object>
             <aml_template>5b8246085c2f045f53425f504330305350493146504e54085f53544100085f4849440d44554d593030303000085f4352531146050a528e21000100020200000109000000000008000000005c5f53422e504330302e53504931008c2000010101000200000000000017000019002300000000005c5f53422e47504930008906001501730000007900</aml_template>
@@ -4420,8 +4422,8 @@
             <resource type="LargeResourceItemGPIOConnection" id="res1"/>
             <resource type="LargeResourceItemGenericSerialBusConnection" id="res0"/>
             <resource id="res2" type="irq" int="115"/>
-            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
             <dependency type="consumes resources from">\_SB_.PC00.SPI1</dependency>
+            <dependency type="consumes resources from">\_SB_.GPI0</dependency>
           </device>
           <device id="SPI1001">
             <acpi_object>\_SB_.PC00.SPI1.S1D0</acpi_object>
@@ -5137,8 +5139,8 @@
           <acpi_object>\_SB_.PC00.HDAS</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043303048444153085f4144520c03001f00</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0x6001200000" max="0x60012fffff" len="0x100000" id="bar4" width="64" prefetchable="0"/>
-          <resource type="memory" min="0x6001328000" max="0x600132bfff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e8200000" max="0x60e82fffff" len="0x100000" id="bar4" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e8328000" max="0x60e832bfff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
           <capability id="MSI">
@@ -5223,7 +5225,7 @@
           <aml_template>5b821a5c2f035f53425f5043303053425553085f4144520c04001f00</aml_template>
           <resource type="interrupt_pin" pin="INTC#" source="18"/>
           <resource type="io_port" min="0xefa0" max="0xefbf" len="0x20" id="bar4"/>
-          <resource type="memory" min="0x6001330000" max="0x60013300ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0x60e8330000" max="0x60e83300ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
         </device>
         <device address="0x1f0005" id="0x7aa4" description="Serial bus controller: Intel Corporation">
           <vendor>0x8086</vendor>
@@ -5641,21 +5643,21 @@
         <resource id="res3" type="memory" min="0xe06b0000" max="0xe06bffff" len="0x10000"/>
         <resource id="res2" type="memory" min="0xe06d0000" max="0xe06dffff" len="0x10000"/>
         <resource id="res1" type="memory" min="0xe06e0000" max="0xe06effff" len="0x10000"/>
-        <dependency type="provides resources to">\_SB_.PC00.DSC2</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.DSC5</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.DSC3</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.DSC4</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.FLM1</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.FLM5</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.I2C1.TPL1</dependency>
         <dependency type="provides resources to">\_SB_.PC00.FLM0</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.UA00.BTH0</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.SPI1.FPNT</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.I2C2.TPL1</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.FLM1</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.DSC4</dependency>
         <dependency type="provides resources to">\_SB_.PC00.SPI2.FPNT</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.UA00.BTH0</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.DSC3</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.I2C1.TPL1</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.DSC2</dependency>
         <dependency type="provides resources to">\_SB_.PC00.DSC1</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.DSC5</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.FLM5</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.SPI1.FPNT</dependency>
         <dependency type="provides resources to">\_SB_.PC00.FLM4</dependency>
         <dependency type="provides resources to">\_SB_.PC00.I2C0.TPL1</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.I2C2.TPL1</dependency>
         <dependency type="provides resources to">\_SB_.PC00.I2C3.TPL1</dependency>
       </device>
       <device id="INTC1070">
