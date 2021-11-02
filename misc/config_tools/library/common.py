@@ -568,8 +568,12 @@ def round_up(addr, mem_align):
 def mkdir(path):
 
     if not os.path.exists(path):
+        import platform
         try:
-            subprocess.check_call('mkdir -p {}'.format(path), shell=True, stdout=subprocess.PIPE)
+            if platform.system().lower() == 'windows':
+                os.makedirs(path)
+            else:
+                subprocess.check_call('mkdir -p {}'.format(path), shell=True, stdout=subprocess.PIPE)
         except subprocess.CalledProcessError:
             print_red("{} file create failed!".format(path), err=True)
 
