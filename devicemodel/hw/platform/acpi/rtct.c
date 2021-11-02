@@ -400,7 +400,42 @@ static int passthru_rtct_to_guest(struct acpi_table_hdr *vrtct, struct acpi_tabl
 	return  0;
 }
 
-static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint64_t guest_pcpu_bitmask)
+static int get_num_order(uint32_t num)
+{
+	return (num > 0) ? fls(num - 1) : -1;
+}
+
+static void get_cache_threads_sharing_shift(uint32_t *l2_shift, uint32_t *l3_shift)
+{
+	uint32_t subleaf, eax, ebx, ecx, edx;
+	uint32_t cache_type, cache_level, id, shift;
+
+	*l2_shift = 0;
+	*l3_shift = 0;
+
+	/* The 0x04 leaf of cpuid is pass-throughed to service VM. */
+	for (subleaf = 0;; subleaf++) {
+		do_cpuid(0x4, subleaf, &eax, &ebx, &ecx, &edx);
+
+		cache_type = eax & 0x1f;
+		cache_level = (eax >> 5) & 0x7;
+		id = (eax >> 14) & 0xfff;
+		shift = get_num_order(id + 1);
+
+		/* No more caches */
+		if ((cache_type == 0) || (cache_type >= 4)) {
+			break;
+		}
+
+		if (cache_level == 2) {
+			*l2_shift = shift;
+		} else if (cache_level == 3) {
+			*l3_shift = shift;
+		}
+	}
+}
+
+static int init_guest_lapicid_tbl(uint64_t guest_pcpu_bitmask)
 {
 	int pcpu_id = 0, vcpu_id = 0;
 
@@ -453,11 +488,9 @@ uint64_t get_software_sram_size(void)
 uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 {
 #define PTCT_BUF_SIZE 4096
-	struct acrn_vm_config_header vm_cfg;
 	struct acpi_table_hdr *rtct_cfg, *vrtct = NULL;
-	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
+	uint64_t guest_pcpu_bitmask;
 	uint32_t gpu_rsvmem_base_gpa = 0;
-	struct acrn_platform_info platform_info;
 
 	if ((cfg == NULL) || (ctx == NULL))
 		return NULL;
@@ -473,42 +506,20 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 	vrtct->length = sizeof(struct acpi_table_hdr);
 	vrtct->checksum = 0;
 
-	if (vm_get_config(ctx, &vm_cfg, &platform_info)) {
-		pr_err("%s, get VM configuration fail.\n", __func__);
-		goto error;
-	}
-	assert(platform_info.hw.cpu_num <= ACRN_PLATFORM_LAPIC_IDS_MAX);
-
 	/*
-	 * pCPU bitmask of VM is configured in hypervisor by default but can be
-	 * overwritten by '--cpu_affinity' argument of DM if this bitmask is
-	 * the subset of bitmask configured in hypervisor.
-	 *
-	 * FIXME: The cpu_affinity does not only mean the vcpu's pcpu affinity but
-	 * also indicates the maximum vCPU number of guest. Its name should be renamed
-	 * to pu_bitmask to avoid confusing.
+	 * '--cpu_affinity' argument of DM is mandatory if software SRAM is configured.
 	 */
-	hv_cpu_bitmask = vm_cfg.cpu_affinity;
-	dm_cpu_bitmask = vm_get_cpu_affinity_dm();
-	if ((dm_cpu_bitmask != 0) && ((dm_cpu_bitmask & ~hv_cpu_bitmask) == 0)) {
-		guest_pcpu_bitmask = dm_cpu_bitmask;
-	} else {
-		guest_pcpu_bitmask = hv_cpu_bitmask;
-	}
-
+	guest_pcpu_bitmask = vm_get_cpu_affinity_dm();
 	if (guest_pcpu_bitmask == 0) {
 		pr_err("%s,Err: Invalid guest_pcpu_bitmask.\n", __func__);
 		goto error;
 	}
-
-	pr_info("%s, dm_cpu_bitmask:0x%x, hv_cpu_bitmask:0x%x, guest_cpu_bitmask: 0x%x\n",
-		__func__, dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask);
+	pr_info("%s, guest_cpu_bitmask: 0x%x\n", __func__, guest_pcpu_bitmask);
 
 	guest_vcpu_num = bitmap_weight(guest_pcpu_bitmask);
-	guest_l2_cat_shift = platform_info.hw.l2_cat_shift;
-	guest_l3_cat_shift = platform_info.hw.l3_cat_shift;
+	get_cache_threads_sharing_shift(&guest_l2_cat_shift, &guest_l3_cat_shift);
 
-	if (init_guest_lapicid_tbl(&platform_info, guest_pcpu_bitmask) < 0) {
+	if (init_guest_lapicid_tbl(guest_pcpu_bitmask) < 0) {
 		pr_err("%s,init guest lapicid table fail.\n", __func__);
 		goto error;
 	}
