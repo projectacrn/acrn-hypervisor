@@ -33,8 +33,8 @@ class XmlConfig:
         try:
             tree = etree.parse(xml_file)
             root = tree.getroot()
-            if 'uos_launcher' in root.attrib:
-                xml_type = 'uos_launcher'
+            if 'user_vm_launcher' in root.attrib:
+                xml_type = 'user_vm_launcher'
             elif 'scenario' in root.attrib:
                 xml_type = 'scenario'
             elif 'board' in root.attrib:
