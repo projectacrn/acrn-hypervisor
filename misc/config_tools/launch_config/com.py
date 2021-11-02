@@ -221,18 +221,15 @@ def interrupt_storm(pt_sel, config):
     print("", file=config)
 
 
-def gvt_arg_set(dm, vmid, user_vm_type, config):
+def gpu_pt_arg_set(dm, sel, vmid, config):
+    gpu_bdf = sel.bdf["gpu"][vmid]
 
-    gvt_args = dm['gvt_args'][vmid]
-    gpu_bdf = launch_cfg_lib.get_gpu_bdf()
-
-    if gvt_args == "gvtd" and gpu_bdf is not None:
+    if gpu_bdf:
         bus = int(gpu_bdf[0:2], 16)
         dev = int(gpu_bdf[3:5], 16)
         fun = int(gpu_bdf[6:7], 16)
         print('   -s 2,passthru,{}/{}/{}  \\'.format(bus, dev, fun), file=config)
-    elif gvt_args:
-        print('   -s 2,pci-gvt -G "$2"  \\', file=config)
+
 
 def log_level_set(user_vm_type, config):
 
@@ -297,7 +294,6 @@ def mem_size_set(args, vmid, config):
 
 def user_vm_launch(names, args, virt_io, vmid, config):
 
-    gvt_args = args['gvt_args'][vmid]
     user_vm_type = names['user_vm_types'][vmid]
     launch_uos = common.undline_name(user_vm_type).lower()
     board_name = names['board_name']
@@ -317,10 +313,7 @@ def user_vm_launch(names, args, virt_io, vmid, config):
             print("fi", file=config)
             if is_mount_needed(virt_io, vmid):
                 print("", file=config)
-                if gvt_args == "gvtd" or not gvt_args:
-                    print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
-                else:
-                    print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
+                print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
                 print("", file=config)
                 i = 0
                 for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
@@ -332,23 +325,14 @@ def user_vm_launch(names, args, virt_io, vmid, config):
 
         else:
             print("else", file=config)
-            if gvt_args == "gvtd" or not gvt_args:
-                print('    launch_{} {}'.format(launch_uos, vmid), file=config)
-            elif gvt_args:
-                print('    launch_{} {} "{}"'.format(launch_uos, vmid, gvt_args), file=config)
+            print('    launch_{} {}'.format(launch_uos, vmid), file=config)
             print("fi", file=config)
             return
     elif not is_mount_needed(virt_io, vmid):
-        if gvt_args == "gvtd" or not gvt_args:
-            print('launch_{} {}'.format(launch_uos, vmid), file=config)
-        else:
-            print('launch_{} {} "{}"'.format(launch_uos, vmid, gvt_args), file=config)
+        print('launch_{} {}'.format(launch_uos, vmid), file=config)
     else:
         print("", file=config)
-        if gvt_args == "gvtd" or not gvt_args:
-            print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
-        else:
-            print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
+        print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
         print("", file=config)
         i = 0
         for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
@@ -528,6 +512,28 @@ def virtio_args_set(dm, virt_io, vmid, config):
             launch_cfg_lib.virtual_dev_slot("virtio-console"),
                 virt_io['console'][vmid]), file=config)
 
+
+def sriov_args_set(dm, sriov, vmid, config):
+
+    # sriov-gpu
+    gpu_bdf = sriov['gpu'][vmid]
+    if gpu_bdf:
+        bus = int(gpu_bdf[0:2], 16)
+        dev = int(gpu_bdf[3:5], 16)
+        fun = int(gpu_bdf[6:7], 16)
+        print('   -s 2,passthru,{}/{}/{},igd-vf  \\'.format(bus, dev, fun), file=config)
+
+    # sriov-net
+    if sriov['network'][vmid]:
+        net_bdf = sriov['network'][vmid]
+        bus = int(net_bdf[0:2], 16)
+        dev = int(net_bdf[3:5], 16)
+        fun = int(net_bdf[6:7], 16)
+        print("   -s {},passthru,{}/{}/{} \\".format(
+            launch_cfg_lib.virtual_dev_slot("sriov-net{}".format(net_bdf)), bus, dev, fun
+        ), file=config)
+
+
 def get_cpu_affinity_list(cpu_affinity, vmid):
     pcpu_id_list = ''
     for user_vmid,cpus in cpu_affinity.items():
@@ -545,7 +551,7 @@ def pcpu_arg_set(dm, vmid, config):
         print("   --cpu_affinity {} \\".format(','.join(pcpu_id_list)), file=config)
 
 
-def dm_arg_set(names, sel, virt_io, dm, vmid, config):
+def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
 
     user_vm_type = names['user_vm_types'][vmid]
     board_name = names['board_name']
@@ -604,8 +610,11 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     # set logger_setting for all VMs
     print("   $logger_setting \\", file=config)
 
-    # GVT args set
-    gvt_arg_set(dm, vmid, user_vm_type, config)
+    # GPU PT args set
+    gpu_pt_arg_set(dm, sel, vmid, config)
+
+    # SRIOV args set
+    sriov_args_set(dm, sriov, vmid, config)
 
     # XHCI args set
     xhci_args_set(dm, vmid, config)
@@ -631,7 +640,9 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     if user_vm_type == "PREEMPT-RT LINUX" and ssram_enabled == 'y':
         print("   --ssram \\", file=config)
 
-    for value in sel.bdf.values():
+    for key, value in sel.bdf.items():
+        if key == 'gpu':
+            continue
         if value[vmid]:
             print("   $intr_storm_monitor \\", file=config)
             break
@@ -666,27 +677,27 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     print("}", file=config)
 
 
-def gen(names, pt_sel, virt_io, dm, vmid, config):
+def gen(names, pt_sel, virt_io, dm, sriov, vmid, config):
 
     board_name = names['board_name']
     user_vm_type = names['user_vm_types'][vmid]
 
     # passthrough bdf/vpid dictionay
-    pt.gen_pt_head(names, dm, pt_sel, vmid, config)
+    pt.gen_pt_head(names, dm, sriov, pt_sel, vmid, config)
 
     # gen launch header
     launch_begin(names, virt_io, vmid, config)
     tap_user_vm_net(names, virt_io,  vmid, config)
 
     # passthrough device
-    pt.gen_pt(names, dm, pt_sel, vmid, config)
+    pt.gen_pt(names, dm, sriov, pt_sel, vmid, config)
     wa_usage(user_vm_type, config)
     mem_size_set(dm, vmid, config)
     interrupt_storm(pt_sel, config)
     log_level_set(user_vm_type, config)
 
     # gen acrn-dm args
-    dm_arg_set(names, pt_sel, virt_io, dm, vmid, config)
+    dm_arg_set(names, pt_sel, virt_io, dm, sriov, vmid, config)
 
     # gen launch end
     launch_end(names, dm, virt_io, vmid, config)
