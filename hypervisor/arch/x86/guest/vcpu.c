@@ -271,7 +271,7 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 	vlapic = vcpu_vlapic(vcpu);
 	vlapic_reset(vlapic, apicv_ops, mode);
 
-	reset_vcpu_regs(vcpu);
+	reset_vcpu_regs(vcpu, mode);
 
 	for (i = 0; i < VCPU_EVENT_NUM; i++) {
 		reset_event(&vcpu->events[i]);
@@ -467,9 +467,26 @@ bool sanitize_cr0_cr4_pattern(void)
 	return ret;
 }
 
-void reset_vcpu_regs(struct acrn_vcpu *vcpu)
+void reset_vcpu_regs(struct acrn_vcpu *vcpu, enum reset_mode mode)
 {
 	set_vcpu_regs(vcpu, &realmode_init_vregs);
+
+	/*
+	 * According to SDM Vol3 "Table 9-1. IA-32 and Intel 64 Processor States Following Power-up, Reset, or INIT",
+	 * for some registers, the state following INIT is different from the state following Power-up, Reset.
+	 * (For all registers mentioned in Table 9-1, the state following Power-up and following Reset are same.)
+	 *
+	 * To distinguish this kind of case for vCPU:
+	 *  - If the state following INIT is same as the state following Power-up/Reset, handle it in
+	 *    set_vcpu_regs above.
+	 *  - Otherwise, handle it below.
+	 */
+	if (mode != INIT_RESET) {
+		struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
+
+		/* IA32_TSC_AUX: 0 following Power-up/Reset, unchanged following INIT */
+		ectx->tsc_aux = 0UL;
+	}
 }
 
 void init_vcpu_protect_mode_regs(struct acrn_vcpu *vcpu, uint64_t vgdt_base_gpa)
@@ -902,6 +919,7 @@ static void context_switch_out(struct thread_object *prev)
 	ectx->ia32_lstar = msr_read(MSR_IA32_LSTAR);
 	ectx->ia32_fmask = msr_read(MSR_IA32_FMASK);
 	ectx->ia32_kernel_gs_base = msr_read(MSR_IA32_KERNEL_GS_BASE);
+	ectx->tsc_aux = msr_read(MSR_IA32_TSC_AUX);
 
 	save_xsave_area(vcpu, ectx);
 }
@@ -919,6 +937,7 @@ static void context_switch_in(struct thread_object *next)
 	msr_write(MSR_IA32_LSTAR, ectx->ia32_lstar);
 	msr_write(MSR_IA32_FMASK, ectx->ia32_fmask);
 	msr_write(MSR_IA32_KERNEL_GS_BASE, ectx->ia32_kernel_gs_base);
+	msr_write(MSR_IA32_TSC_AUX, ectx->tsc_aux);
 
 	if (pcpu_has_cap(X86_FEATURE_WAITPKG)) {
 		vmsr_val = vcpu_get_guest_msr(vcpu, MSR_IA32_UMWAIT_CONTROL);
