@@ -142,6 +142,7 @@
 #define CPUID_FEATURES          1U
 #define CPUID_TLB               2U
 #define CPUID_SERIALNUM         3U
+#define CPUID_LEAF_CACHE_TOPOLOGY 4U
 #define CPUID_EXTEND_FEATURE    7U
 #define CPUID_XSAVE_FEATURES   0xDU
 #define CPUID_RDT_ALLOCATION   0x10U

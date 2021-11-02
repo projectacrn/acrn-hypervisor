@@ -10,6 +10,7 @@
 #include <logmsg.h>
 #include <misc_cfg.h>
 #include <asm/mmu.h>
+#include <asm/cpuid.h>
 #include <asm/cpu_caps.h>
 #include <asm/rtcm.h>
 
@@ -109,6 +110,35 @@ static void parse_rtct(void)
 	}
 }
 
+/* Reset L2/L3 CAT Capacity BitMask (CBM) MSRs */
+void init_cat_cbm_msrs(void)
+{
+	uint32_t i;
+	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
+	uint32_t l2_ways, l3_ways;
+	uint32_t highest_l2_clos_number;
+
+	cpuid_subleaf(CPUID_RDT_ALLOCATION, 2U, &eax, &ebx, &ecx, &edx);
+	highest_l2_clos_number = (edx & 0xffffU) + 1U;
+
+	cpuid_subleaf(CPUID_LEAF_CACHE_TOPOLOGY, 2U, &eax, &ebx, &ecx, &edx);
+	l2_ways = (ebx >> 22U) + 1U;
+
+	cpuid_subleaf(CPUID_LEAF_CACHE_TOPOLOGY, 3U, &eax, &ebx, &ecx, &edx);
+	l3_ways = (ebx >> 22U) + 1U;
+
+	for (i = 0U; i < highest_l2_clos_number; i++) {
+		/* MSR 0xD10 + i */
+		msr_write(MSR_IA32_L2_MASK_BASE + i, ((1U << l2_ways) - 1U));
+	}
+
+	for (i = 0U; i < 4U; i++) {
+		/* MSR 0xC90 + i */
+		msr_write(MSR_IA32_L3_MASK_BASE + i,  ((1U << l3_ways) - 1U));
+	}
+
+}
+
 /*
  * Function to initialize Software SRAM. Both BSP and APs shall call this function to
  * make sure Software SRAM is initialized, which is required by RTCM.
@@ -127,6 +157,7 @@ bool init_software_sram(bool is_bsp)
 	struct rtcm_header *header;
 	rtcm_abi_func rtcm_command_func = NULL;
 	static uint64_t init_sw_sram_cpus_mask = (1UL << BSP_CPU_ID);
+	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 
 	/*
 	 * When we shut down an RTVM, its pCPUs will be re-initialized
@@ -151,6 +182,11 @@ bool init_software_sram(bool is_bsp)
 				rtcm_binary->address, header->magic, header->version);
 			ASSERT(((header->magic == RTCM_MAGIC_PTCM) || (header->magic == RTCM_MAGIC_RTCM)),
 				"Wrong RTCM magic value!");
+
+			/* Workaround: to clear messy default values for CMB MSRs on ADL platforms. */
+			if ((cpu_info->displayfamily == 6U) && (cpu_info->displaymodel == 0x97U)) {
+				init_cat_cbm_msrs();
+			}
 
 			/* Flush the TLB, so that BSP/AP can execute the RTCM ABI */
 			flush_tlb_range((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size);
