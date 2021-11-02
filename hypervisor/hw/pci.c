@@ -726,11 +726,17 @@ static void pci_enumerate_ext_cap(struct pci_pdev *pdev)
 	uint32_t hdr, pos, pre_pos = 0U;
 	uint8_t pcie_dev_type;
 
+	/* guard against malformed list */
+	int node_limit;
+
 	pos = PCI_ECAP_BASE_PTR;
+
+	/* minimum 8 bytes per cap */
+	node_limit = (PCIE_CONFIG_SPACE_SIZE - PCI_CONFIG_SPACE_SIZE) / 8;
 
 	/* PCI Express Extended Capability must have 4 bytes header */
 	hdr = pci_pdev_read_cfg(pdev->bdf, pos, 4U);
-	while (hdr != 0U) {
+	while ((hdr != 0U) && (node_limit > 0)) {
 		if (PCI_ECAP_ID(hdr) == PCIZ_SRIOV) {
 			pdev->sriov.capoff = pos;
 			pdev->sriov.caplen = PCI_SRIOV_CAP_LEN;
@@ -767,8 +773,20 @@ static void pci_enumerate_ext_cap(struct pci_pdev *pdev)
 		if (pos == 0U) {
 			break;
 		}
+		if (pos < PCI_CONFIG_SPACE_SIZE) {
+			pr_err("pdev %x:%x.%x: Illegal PCIe extended capability offset %x",
+				pdev->bdf.bits.b, pdev->bdf.bits.d, pdev->bdf.bits.f, pos);
+			break;
+		}
 		hdr = pci_pdev_read_cfg(pdev->bdf, pos, 4U);
+		node_limit--;
 	};
+
+	if (node_limit <= 0) {
+		pr_err("%s: pdev[%x:%x.%x] Malformed linked list in PCIe extended \
+			capability region detected\n", __func__, pdev->bdf.bits.b,
+			pdev->bdf.bits.d, pdev->bdf.bits.f);
+	}
 }
 
 /*
