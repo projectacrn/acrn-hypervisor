@@ -42,14 +42,14 @@ steps:
 
    .. code-block:: none
 
-      # systemctl disable acrnlog
+      sudo systemctl disable acrnlog
 
 2. Restart ``acrnlog``, running in the background, and specify the new
    number of log files and their size (in MB).  For example:
 
    .. code-block:: none
 
-      # acrnlog -n 8 -s 4 &
+      sudo acrnlog -n 8 -s 4 &
 
 You can use the ``loglevel`` command in the hypervisor shell (not the Service
 VM shell) to query or dynamically override the hypervisor log level
@@ -90,8 +90,8 @@ and then restart the service with:
 
 .. code-block:: none
 
-   # systemctl daemon-reload
-   # systemctl restart acrnlog
+   sudo systemctl daemon-reload
+   sudo systemctl restart acrnlog
 
 Build and Install
 *****************
@@ -101,11 +101,11 @@ directory.  To build and install the tool from source, run these commands:
 
 .. code-block:: none
 
-   # make
-   # make install
+   make
+   sudo make install
 
 and if you changed the ``acrnlog.service`` file, install it:
 
 .. code-block:: none
 
-   # cp acrnlog.service /usr/lib/systemd/system/
+   sudo cp acrnlog.service /usr/lib/systemd/system/
