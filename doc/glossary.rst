@@ -144,22 +144,18 @@ Glossary of Terms
       developers can use to define a scenario configuration appropriate for
       their own application.
 
-   SOS
-   Service OS
    Service VM
       A special VM, directly launched by the hypervisor. The Service VM can
       access hardware resources directly by running native drivers and provides
       device sharing services to post-launched User VMs through the ACRN Device
       Model (DM). Hardware resources include CPUs, memory, graphics memory, USB
       devices, disk, and network mediation. *(Historically, the Service VM was
-      called the Service OS or SOS. You may still see these terms used in the
-      code and API interfaces.)*
+      called the Service OS or SOS.)*
 
-   Industry
    Shared
       One of three operation scenarios (shared, hybrid, partitioned) that ACRN supports.
       Most of the physical hardware resources are shared across User VMs.
-      *(Industry scenario is being renamed to Shared in the v2.7 release.)*
+      *(In releases prior to 2.7, this was called the "Industry" scenario.)*
 
    Target
       This is the hardware where the configured ACRN hypervisor and
@@ -173,8 +169,6 @@ Glossary of Terms
       important, support Secure Boot, checking the OS validity to ensure no
       malware has tampered with the boot process.
 
-   UOS
-   User OS
    User VM
       A :term:`VM` where user-defined environments and applications run. User VMs can
       run different OSes based on their needs, including for example, Ubuntu for
@@ -182,8 +176,7 @@ Glossary of Terms
       hard real-time control OS such as Zephyr, VxWorks, or RT-Linux for soft or
       hard real-time control. There are three types of ACRN User VMs: pre-launched,
       post-launched standard, and post-launched real-time.  *(Historically, a
-      User VM was also called a User OS, or simply UOS.  You may still see these
-      other terms used in the code and API interfaces.)*
+      User VM was also called a User OS, or simply UOS.)*
 
    VM
    Virtual Machine
