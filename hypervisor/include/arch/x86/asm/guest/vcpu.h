@@ -581,10 +581,11 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_regs *vcpu_regs);
  * Reset target vCPU's all registers in run_context to initial values.
  *
  * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] mode the reset mode
  *
  * @return None
  */
-void reset_vcpu_regs(struct acrn_vcpu *vcpu);
+void reset_vcpu_regs(struct acrn_vcpu *vcpu, enum reset_mode mode);
 
 bool sanitize_cr0_cr4_pattern(void);
 
