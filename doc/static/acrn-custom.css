@@ -150,6 +150,11 @@ th,td {
   padding-left: 0 !important;
 }
 
+/* dbk tweak spacing in breathe api */
+.rst-content dt > span.pre {
+    padding-right: 6px;
+}
+
 /* doxygenXX item color tweaks, light blue background with dark blue top border */
 .rst-content dl:not(.docutils) dl dt {
   background: #e7f2fa !important;
