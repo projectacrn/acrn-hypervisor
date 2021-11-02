@@ -411,6 +411,7 @@ struct ext_context {
 
 	uint64_t dr7;
 	uint64_t tsc_offset;
+	uint64_t tsc_aux;
 
 	struct xsave_area xs_area;
 	uint64_t xcr0;
