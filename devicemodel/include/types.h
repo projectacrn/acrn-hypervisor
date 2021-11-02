@@ -89,6 +89,12 @@ flsl(uint64_t mask)
 	return mask ? 64 - __builtin_clzl(mask) : 0;
 }
 
+static inline int
+fls(uint32_t mask)
+{
+	return mask ? 32 - __builtin_clz(mask) : 0;
+}
+
 /* Returns the number of 1-bits in bits. */
 static inline int
 bitmap_weight(uint64_t bits)
@@ -129,12 +135,14 @@ static inline uint16_t ffs64(uint64_t value)
 #define mb()    ({ asm volatile("mfence" ::: "memory"); (void)0; })
 
 static inline void
-do_cpuid(u_int ax, u_int *p)
+do_cpuid(uint32_t leaf, uint32_t subleaf, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
 	__asm __volatile("cpuid"
-	 : "=a" (p[0]), "=b" (p[1]), "=c" (p[2]), "=d" (p[3])
-	 :  "0" (ax));
+		: "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
+		: "a" (leaf), "c" (subleaf)
+		: "memory");
 }
+
 
 #define UGETW(w)            \
 	((w)[0] |             \
