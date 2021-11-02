@@ -44,9 +44,9 @@ A typical In-vehicle Infotainment (IVI) system supports:
   - connection to IVI front system and mobile devices (cloud
     connectivity)
 
-ACRN supports guest OSes of Linux and Android. OEMs can use the ACRN
-hypervisor and the Linux or Android guest OS reference code to implement their own
-VMs for a customized IC/IVI/RSE.
+ACRN supports guest OSes of Linux and Android. OEMs can use the ACRN hypervisor
+and the Linux or Android guest OS reference code to implement their own VMs for
+a customized IC/IVI/RSE.
 
 Industry Usage
 ==============
@@ -92,23 +92,22 @@ certain :ref:`Intel platforms <hardware>` and can be easily extended to support
 future
 platforms. ACRN implements a hybrid VMM architecture, using a privileged
 Service VM to manage I/O devices and
-provide I/O mediation. Multiple User VMs can be supported, running Ubuntu
-or Android OS.
+provide I/O mediation. Multiple User VMs can be supported, running Ubuntu,
+Android, Windows, or an RTOS such as Zephyr.
 
 ACRN 1.0
 ========
 
 ACRN 1.0 is designed mainly for auto use cases such as SDC and IVI.
 
-Instrument cluster applications are critical in the Software Defined
-Cockpit (SDC) use case, and may require functional safety certification
-in the future. Running the IC system in a separate VM can isolate it from
-other VMs and their applications, thereby reducing the attack surface
-and minimizing potential interference. However, running the IC system in
-a separate VM introduces additional latency for the IC applications.
-Some country regulations require an IVE system to show a rear-view
-camera (RVC) within 2 seconds, which is difficult to achieve if a
-separate instrument cluster VM is started after the User VM is booted.
+Instrument cluster applications are critical in the SDC use case, and may
+require functional safety certification in the future. Running the IC system in
+a separate VM can isolate it from other VMs and their applications, thereby
+reducing the attack surface and minimizing potential interference. However,
+running the IC system in a separate VM introduces additional latency for the IC
+applications. Some country regulations require an IVE system to show a rear-view
+camera (RVC) within 2 seconds, which is difficult to achieve if a separate
+instrument cluster VM is started after the User VM is booted.
 
 :numref:`overview-arch1.0` shows the architecture of ACRN 1.0 together with
 the IC VM and Service VM. As shown, the Service VM owns most of the platform
@@ -128,7 +127,7 @@ for VM start/stop/pause, virtual CPU pause/resume, etc.
 ACRN 2.0
 ========
 
-ACRN 2.0 is extending ACRN to support a pre-launched VM (mainly for safety VM)
+ACRN 2.0 extended ACRN to support a pre-launched VM (mainly for safety VM)
 and real-time (RT) VM.
 
 :numref:`overview-arch2.0` shows the architecture of ACRN 2.0; the main
@@ -142,8 +141,6 @@ differences compared to ACRN 1.0 are that:
 
 -  ACRN 2.0 supports an RT VM as a post-launched User VM, with features such as
    LAPIC passthrough and PMD virtio driver.
-
-ACRN 2.0 is still WIP, and some of its features are already merged in the master.
 
 .. figure:: images/over-image35.png
    :align: center
@@ -223,7 +220,7 @@ checks to see if any (guest) device emulation modules claim ownership of
 the I/O port. If yes, the owning module is invoked to execute requested
 APIs.
 
-When the DM completes the emulation (port IO 20h access in this example)
+When the DM completes the emulation (port I/O 20h access in this example)
 of a device such as uDev1, uDev1 puts the result into the request
 buffer (register AL). The DM returns the control to the HV
 indicating completion of an I/O instruction emulation, typically through
@@ -254,7 +251,7 @@ and "non-root mode" for simplicity.)
 The VMM mode has 4 rings. ACRN
 runs the HV in ring 0 privilege only, and leaves ring 1-3 unused. A guest
 running in non-root mode has its own full rings (ring 0 to 3). The
-guest kernel runs in ring 0 in guest mode, while the guest user land
+guest kernel runs in ring 0 in guest mode, while the guest userland
 applications run in ring 3 of guest mode (ring 1 and 2 are usually not
 used by commercial OS).
 
@@ -447,8 +444,8 @@ to boot a Linux or Android guest OS.
    vSBL System Context Diagram
 
 The vSBL image is released as a part of the Service VM root filesystem (rootfs).
-The vSBL is copied to the User VM memory by the VM Manager in the Service VM
-while creating the User VM virtual BSP of the User VM. The Service VM passes the
+The VM Manager in the Service VM copies the vSBL to the User VM memory
+while creating the User VM virtual BSP. The Service VM passes the
 start of vSBL and related information to HV. HV sets the guest RIP of the User
 VM's virtual BSP as the start of vSBL and related guest registers, and launches
 the User VM virtual BSP. The vSBL starts running in the virtual real mode within
@@ -467,12 +464,12 @@ OVMF Bootloader
 Open Virtual Machine Firmware (OVMF) is the virtual bootloader that supports
 the EFI boot of the User VM on the ACRN hypervisor platform.
 
-The OVMF is copied to the User VM memory by the VM Manager in the Service VM
-while creating the User VM virtual BSP of the User VM. The Service VM passes the
-start of OVMF and related information to HV. HV sets the guest RIP of the User
-VM virtual BSP as the start of OVMF and related guest registers, and launches
-the User VM virtual BSP. The OVMF starts running in the virtual real mode within
-the User VM. Conceptually, OVMF is part of the User VM runtime.
+The VM Manager in the Service VM copies OVMF to the User VM memory while
+creating the User VM virtual BSP. The Service VM passes the start of OVMF and
+related information to HV. HV sets the guest RIP of the User VM virtual BSP as
+the start of OVMF and related guest registers, and launches the User VM virtual
+BSP. The OVMF starts running in the virtual real mode within the User VM.
+Conceptually, OVMF is part of the User VM runtime.
 
 Freedom From Interference
 *************************
@@ -551,27 +548,27 @@ CPU P-State & C-State
 =====================
 
 In ACRN, CPU P-state and C-state (Px/Cx) are controlled by the guest OS.
-The corresponding governors are managed in the Service VM/User VM for best power
-efficiency and simplicity.
+The corresponding governors are managed in the Service VM or User VM for
+best power efficiency and simplicity.
 
-Guests should be able to process the ACPI P/C-state request from OSPM.
-The needed ACPI objects for P/C-state management should be ready in an
-ACPI table.
+Guests should be able to process the ACPI P-state and C-state requests from
+OSPM. The needed ACPI objects for P-state and C-state management should be ready
+in an ACPI table.
 
-The hypervisor can restrict a guest's P/C-state request (per customer
+The hypervisor can restrict a guest's P-state and C-state requests (per customer
 requirement). MSR accesses of P-state requests could be intercepted by
 the hypervisor and forwarded to the host directly if the requested
-P-state is valid. Guest MWAIT/Port IO accesses of C-state control could
+P-state is valid. Guest MWAIT or port I/O accesses of C-state control could
 be passed through to host with no hypervisor interception to minimize
 performance impacts.
 
-This diagram shows CPU P/C-state management blocks:
+This diagram shows CPU P-state and C-state management blocks:
 
 .. figure:: images/over-image4.png
    :align: center
 
 
-   CPU P/C-state Management Block Diagram
+   CPU P-State and C-State Management Block Diagram
 
 System Power State
 ==================
