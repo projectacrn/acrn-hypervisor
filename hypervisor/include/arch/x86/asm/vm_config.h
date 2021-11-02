@@ -12,12 +12,9 @@
 #include <board_info.h>
 #include <boot.h>
 #include <acrn_common.h>
-#include <vm_uuids.h>
 #include <vm_configurations.h>
 #include <asm/sgx.h>
 #include <acrn_hv_defs.h>
-
-#define CONFIG_MAX_VM_NUM	(PRE_VM_NUM + SERVICE_VM_NUM + MAX_POST_VM_NUM)
 
 #define AFFINITY_CPU(n)		(1UL << (n))
 #define MAX_VCPUS_PER_VM	MAX_PCPU_NUM
@@ -38,31 +35,24 @@
 #define MAX_MMIO_DEV_NUM	2U
 
 #define CONFIG_SERVICE_VM	.load_order = SERVICE_VM,	\
-				.uuid = SERVICE_VM_UUID,	\
 				.severity = SEVERITY_SERVICE_VM
 
 #define CONFIG_SAFETY_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
-				.uuid = SAFETY_VM_UUID##idx,	\
 				.severity = SEVERITY_SAFETY_VM
 
 #define CONFIG_PRE_STD_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
-				.uuid = PRE_STANDARD_VM_UUID##idx,	\
 				.severity = SEVERITY_STANDARD_VM
 
 #define CONFIG_PRE_RT_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
-				.uuid = PRE_RTVM_UUID##idx,	\
 				.severity = SEVERITY_RTVM
 
 #define CONFIG_POST_STD_VM(idx)	.load_order = POST_LAUNCHED_VM,	\
-				.uuid = POST_STANDARD_VM_UUID##idx,	\
 				.severity = SEVERITY_STANDARD_VM
 
 #define CONFIG_POST_RT_VM(idx)	.load_order = POST_LAUNCHED_VM,	\
-				.uuid = POST_RTVM_UUID##idx,	\
 				.severity = SEVERITY_RTVM
 
 #define CONFIG_KATA_VM(idx)	.load_order = POST_LAUNCHED_VM,	\
-				.uuid = KATA_VM_UUID##idx,	\
 				.severity = SEVERITY_STANDARD_VM
 
 /* ACRN guest severity */
@@ -154,8 +144,7 @@ struct pt_intx_config {
 
 struct acrn_vm_config {
 	enum acrn_vm_load_order load_order;		/* specify the load order of VM */
-	char name[MAX_VM_OS_NAME_LEN];			/* VM name identifier, useful for debug. */
-	const uint8_t uuid[16];				/* UUID of the VM */
+	char name[MAX_VM_NAME_LEN];				/* VM name identifier */
 	uint8_t reserved[2];				/* Temporarily reserve it so that don't need to update
 							 * the users of get_platform_info frequently.
 							 */
@@ -214,7 +203,8 @@ struct acrn_vm_config {
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
 uint8_t get_vm_severity(uint16_t vm_id);
-bool vm_has_matched_uuid(uint16_t vmid, const uint8_t *uuid);
+bool vm_has_matched_name(uint16_t vmid, const char *name);
+uint16_t get_unused_vmid(void);
 
 extern struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM];
 

@@ -58,6 +58,7 @@
 #define GUEST_FLAG_NVMX_ENABLED			(1UL << 5U)	/* Whether this VM supports nested virtualization */
 #define GUEST_FLAG_SECURITY_VM			(1UL << 6U)	/* Whether this VM needs to do security-vm related fixup (TPM2 and SMBIOS pt) */
 #define GUEST_FLAG_VCAT_ENABLED			(1UL << 7U)	/* Whether this VM supports vCAT */
+#define GUEST_FLAG_DYN_VM_CFG       (1UL << 8U)  /* Whether this VM uses dynamic VM configuration */
 
 /* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
 #define VIRTUAL_SLEEP_CTL_ADDR		0x400U /* Pre-launched VM uses ACPI reduced HW mode and sleep control register */
@@ -66,6 +67,8 @@
 #define VIRTUAL_PM1A_SLP_TYP		0x1c00U
 #define VIRTUAL_PM1A_SLP_EN		0x2000U
 #define	VIRTUAL_PM1A_ALWAYS_ZERO	0xc003
+
+#define MAX_VM_NAME_LEN        (16U)
 
 /**
  * @brief Hypercall
@@ -351,8 +354,8 @@ struct acrn_vm_creation {
 	/** Reserved */
 	uint16_t reserved1;
 
-	/** the UUID of this VM */
-	uint8_t	 uuid[16];
+	/** the name of this VM */
+	uint8_t	 name[MAX_VM_NAME_LEN];
 
 	/* VM flag bits from Guest OS, now used
 	 *  GUEST_FLAG_SECURE_WORLD_ENABLED          (1UL<<0)
@@ -591,12 +594,9 @@ enum acrn_vm_load_order {
 	MAX_LOAD_ORDER
 };
 
-#define MAX_VM_OS_NAME_LEN      32U
-
 struct acrn_vm_config_header {
        enum acrn_vm_load_order load_order;
-       char name[MAX_VM_OS_NAME_LEN];
-       const uint8_t uuid[16];
+       char name[MAX_VM_NAME_LEN];
        uint8_t reserved[2];
        uint8_t severity;
        uint64_t cpu_affinity;
