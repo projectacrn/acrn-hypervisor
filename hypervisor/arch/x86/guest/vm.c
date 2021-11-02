@@ -57,16 +57,19 @@ void *get_sworld_memory_base(void)
 	return post_user_vm_sworld_memory;
 }
 
-uint16_t get_vmid_by_uuid(const uint8_t *uuid)
+uint16_t get_vmid_by_name(const char *name)
 {
-	uint16_t vm_id = 0U;
+	uint16_t vm_id = ACRN_INVALID_VMID;
+	uint16_t matched_cnt = 0;
 
-	while (!vm_has_matched_uuid(vm_id, uuid)) {
-		vm_id++;
-		if (vm_id == CONFIG_MAX_VM_NUM) {
-			break;
+	/* check if there are duplicate VM names in vm configurations */
+	for (uint16_t idx = 0U; idx < CONFIG_MAX_VM_NUM; idx++) {
+		if ((*name != '\0') && vm_has_matched_name(idx, name)) {
+			matched_cnt++;
+			vm_id = (matched_cnt > 1) ? (ACRN_INVALID_VMID) : (idx);
 		}
 	}
+
 	return vm_id;
 }
 
@@ -544,8 +547,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	init_ept_pgtable(&vm->arch_vm.ept_pgtable, vm->vm_id);
 	vm->arch_vm.nworld_eptp = pgtable_create_root(&vm->arch_vm.ept_pgtable);
 
-	(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),
-		&vm_config->uuid[0], sizeof(vm_config->uuid));
+	(void)memcpy_s(&vm->name[0], MAX_VM_NAME_LEN, &vm_config->name[0], MAX_VM_NAME_LEN);
 
 	if (is_service_vm(vm)) {
 		/* Only for Service VM */
@@ -790,6 +792,9 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	/* after guest_flags not used, then clear it */
 	vm_config = get_vm_config(vm->vm_id);
 	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
+	if ((vm_config->guest_flags & GUEST_FLAG_DYN_VM_CFG) != 0UL) {
+		memset(vm_config, 0U, sizeof(struct acrn_vm_config));
+	}
 
 	if (is_ready_for_system_shutdown()) {
 		/* If no any guest running, shutdown system */
@@ -930,8 +935,14 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 #ifdef CONFIG_SECURITY_VM_FIXUP
 	security_vm_fixup(vm_id);
 #endif
+	if (get_vmid_by_name(vm_config->name) == ACRN_INVALID_VMID) {
+		pr_err("Invalid VM name: %s", vm_config->name);
+		err = -1;
+	}
 	/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
-	err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
+	if (err == 0) {
+		err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
+	}
 
 	if (err == 0) {
 		if (is_prelaunched_vm(vm)) {

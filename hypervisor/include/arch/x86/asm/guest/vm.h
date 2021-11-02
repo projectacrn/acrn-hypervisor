@@ -156,7 +156,7 @@ struct acrn_vm {
 
 	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
 
-	uint8_t uuid[16];
+	char name[MAX_VM_NAME_LEN];
 	struct secure_world_control sworld_control;
 
 	/* Secure World's snapshot
@@ -241,7 +241,7 @@ bool is_paused_vm(const struct acrn_vm *vm);
 bool is_service_vm(const struct acrn_vm *vm);
 bool is_postlaunched_vm(const struct acrn_vm *vm);
 bool is_prelaunched_vm(const struct acrn_vm *vm);
-uint16_t get_vmid_by_uuid(const uint8_t *uuid);
+uint16_t get_vmid_by_name(const char *name);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 struct acrn_vm *get_service_vm(void);
 
