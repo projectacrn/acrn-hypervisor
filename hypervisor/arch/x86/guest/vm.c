@@ -58,17 +58,30 @@ void *get_sworld_memory_base(void)
 	return post_user_vm_sworld_memory;
 }
 
-uint16_t get_vmid_by_uuid(const uint8_t *uuid)
+uint16_t get_unused_vmid(void)
 {
-	uint16_t vm_id = 0U;
+	uint16_t vm_id;
+	struct acrn_vm_config *vm_config;
 
-	while (!vm_has_matched_uuid(vm_id, uuid)) {
-		vm_id++;
-		if (vm_id == CONFIG_MAX_VM_NUM) {
+	for (vm_id = 0; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm_config = get_vm_config(vm_id);
+		if ((vm_config->name[0] == '\0') && ((vm_config->guest_flags & GUEST_FLAG_STATIC_VM) == 0U)) {
 			break;
 		}
 	}
-	return vm_id;
+	return (vm_id < CONFIG_MAX_VM_NUM) ? (vm_id) : (ACRN_INVALID_VMID);
+}
+
+uint16_t get_vmid_by_name(const char *name)
+{
+	uint16_t vm_id;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		if ((*name != '\0') && vm_has_matched_name(vm_id, name)) {
+			break;
+		}
+	}
+	return (vm_id < CONFIG_MAX_VM_NUM) ? (vm_id) : (ACRN_INVALID_VMID);
 }
 
 /**
@@ -160,6 +173,16 @@ bool is_vcat_configured(const struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	return ((vm_config->guest_flags & GUEST_FLAG_VCAT_ENABLED) != 0U);
+}
+
+/**
+ * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
+ */
+bool is_static_configured_vm(const struct acrn_vm *vm)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	return ((vm_config->guest_flags & GUEST_FLAG_STATIC_VM) != 0U);
 }
 
 /**
@@ -546,8 +569,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	init_ept_pgtable(&vm->arch_vm.ept_pgtable, vm->vm_id);
 	vm->arch_vm.nworld_eptp = pgtable_create_root(&vm->arch_vm.ept_pgtable);
 
-	(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),
-		&vm_config->uuid[0], sizeof(vm_config->uuid));
+	(void)memcpy_s(&vm->name[0], MAX_VM_NAME_LEN, &vm_config->name[0], MAX_VM_NAME_LEN);
 
 	if (is_service_vm(vm)) {
 		/* Only for Service VM */
@@ -792,6 +814,9 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	/* after guest_flags not used, then clear it */
 	vm_config = get_vm_config(vm->vm_id);
 	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
+	if (!is_static_configured_vm(vm)) {
+		memset(vm_config->name, 0U, MAX_VM_NAME_LEN);
+	}
 
 	if (is_ready_for_system_shutdown()) {
 		/* If no any guest running, shutdown system */
@@ -932,8 +957,13 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 #ifdef CONFIG_SECURITY_VM_FIXUP
 	security_vm_fixup(vm_id);
 #endif
-	/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
-	err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
+	if (get_vmid_by_name(vm_config->name) != vm_id) {
+		pr_err("Invalid VM name: %s", vm_config->name);
+		err = -1;
+	} else {
+		/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
+		err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
+	}
 
 	if (err == 0) {
 		if (is_prelaunched_vm(vm)) {

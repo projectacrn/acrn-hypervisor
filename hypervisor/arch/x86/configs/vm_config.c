@@ -6,6 +6,7 @@
 
 #include <asm/vm_config.h>
 #include <util.h>
+#include <rtl.h>
 
 /*
  * @pre vm_id < CONFIG_MAX_VM_NUM
@@ -25,13 +26,13 @@ uint8_t get_vm_severity(uint16_t vm_id)
 }
 
 /**
- * return true if the input uuid is configured in VM
+ * return true if the input vm-name is configured in VM
  *
  * @pre vmid < CONFIG_MAX_VM_NUM
  */
-bool vm_has_matched_uuid(uint16_t vmid, const uint8_t *uuid)
+bool vm_has_matched_name(uint16_t vmid, const char *name)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vmid);
 
-	return (uuid_is_equal(vm_config->uuid, uuid));
+	return (strncmp(vm_config->name, name, MAX_VM_NAME_LEN) == 0);
 }
