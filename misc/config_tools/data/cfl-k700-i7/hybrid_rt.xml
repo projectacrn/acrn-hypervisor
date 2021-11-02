@@ -116,7 +116,7 @@
     </communication_vuart>
     <pci_devs>
 	<pci_dev>00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (7) I219-LM (rev 10)</pci_dev>
-        <pci_dev>09:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)</pci_dev>
+        <pci_dev>01:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)</pci_dev>
     </pci_devs>
     <mmio_resources>
         <TPM2>n</TPM2>
