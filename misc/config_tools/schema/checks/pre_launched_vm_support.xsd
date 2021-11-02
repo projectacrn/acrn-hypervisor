@@ -52,4 +52,20 @@ https://github.com/projectacrn/acrn-hypervisor/issues if you meet this.</xs:docu
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="(count(vm[vm_type = 'PRE_RT_VM']) = 1 and count(vm[vm_type='POST_RT_VM']) = 0)
+                   or (count(vm[vm_type='PRE_RT_VM']) = 0 and count(vm[vm_type='POST_RT_VM']) &gt;= 0)">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>There should not be both pre-launched RTVM and post-launched RTVM.
+And two or more pre-launched RTVM are not allowed.
+
+This assertion checks below invalid scenario:
+
+- Two or more pre-launched RTVM
+- One pre-launched RTVM and one or more post-launched RTVM
+
+To fix this error, please check the RTVM number to ensure the scenario configuration is valid.</xs:documentation>
+
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
