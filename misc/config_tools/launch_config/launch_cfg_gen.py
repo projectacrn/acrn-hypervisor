@@ -219,7 +219,7 @@ def main(args):
 
     # generate launch script
     if vm_th:
-        script_name = "launch_uos_id{}.sh".format(vm_th)
+        script_name = "launch_user_vm_id{}.sh".format(vm_th)
         launch_script_file = output + script_name
         with open(launch_script_file, mode = 'w', newline=None, encoding='utf-8') as config:
             err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, vm_th, config)
@@ -227,7 +227,7 @@ def main(args):
                 return err_dic
     else:
         for post_vm_i in post_num_list:
-            script_name = "launch_uos_id{}.sh".format(post_vm_i)
+            script_name = "launch_user_vm_id{}.sh".format(post_vm_i)
             launch_script_file = output + script_name
             with open(launch_script_file, mode = 'w', newline='\n', encoding='utf-8') as config:
                 err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, post_vm_i, config)

@@ -1,4 +1,4 @@
-<acrn-config board="whl-ipc-i5" scenario="sdc" uos_launcher="1">
+<acrn-config board="whl-ipc-i5" scenario="sdc" user_vm_launcher="1">
     <user_vm id="1">
 	<user_vm_type desc="User VM type">YOCTO</user_vm_type>
 	<rtos_type desc="User VM Realtime capability">no</rtos_type>

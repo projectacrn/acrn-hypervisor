@@ -1,4 +1,4 @@
-<acrn-config board="whl-ipc-i5" scenario="shared" uos_launcher="2">
+<acrn-config board="whl-ipc-i5" scenario="shared" user_vm_launcher="2">
     <user_vm id="1">
 	<user_vm_type desc="User VM type">WINDOWS</user_vm_type>
 	<rtos_type desc="User VM Realtime capability">no</rtos_type>
