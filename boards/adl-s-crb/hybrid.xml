@@ -149,17 +149,10 @@
         </legacy_vuart>
         <legacy_vuart id="1">
             <type>VUART_LEGACY_PIO</type>
-            <base>CONFIG_COM_BASE</base>
-            <irq>0</irq>
+            <base>SERVICE_VM_COM2_BASE</base>
+            <irq>SERVICE_VM_COM2_IRQ</irq>
             <target_vm_id>0</target_vm_id>
             <target_uart_id>1</target_uart_id>
-        </legacy_vuart>
-        <legacy_vuart id="2">
-            <type>VUART_LEGACY_PIO</type>
-            <base>CONFIG_COM_BASE</base>
-            <irq>0</irq>
-            <target_vm_id>2</target_vm_id>
-            <target_uart_id>2</target_uart_id>
         </legacy_vuart>
         <console_vuart id="0">
             <base>INVALID_PCI_BASE</base>
@@ -175,7 +168,6 @@
         <board_private>
             <rootfs>/dev/nvme0n1p3</rootfs>
             <bootargs>rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 swiotlb=131072 nokaslr
-            8250.nr_uarts=20
             </bootargs>
         </board_private>
     </vm>
@@ -211,13 +203,6 @@
             <irq>COM2_IRQ</irq>
             <target_vm_id>0</target_vm_id>
             <target_uart_id>0</target_uart_id>
-        </legacy_vuart>
-        <legacy_vuart id="2">
-            <type>VUART_LEGACY_PIO</type>
-            <base>COM2_BASE</base>
-            <irq>COM2_IRQ</irq>
-            <target_vm_id>1</target_vm_id>
-            <target_uart_id>2</target_uart_id>
         </legacy_vuart>
         <console_vuart id="0">
             <base>INVALID_PCI_BASE</base>
