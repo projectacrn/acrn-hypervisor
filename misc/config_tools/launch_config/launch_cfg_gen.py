@@ -149,6 +149,7 @@ def generate_script_file(names, pt_sel, virt_io, dm, sriov, vmid, config):
 
     print("{}".format(header_info), file=config)
     com.gen(names, pt_sel, virt_io, dm, sriov, vmid, config)
+    launch_cfg_lib.reset_pt_slot()
     if launch_cfg_lib.ERR_LIST:
         return launch_cfg_lib.ERR_LIST
 
