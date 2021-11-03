@@ -1,0 +1,204 @@
+From 409a14b0082d6c0717e82d23d7fec7529b9d9880 Mon Sep 17 00:00:00 2001
+From: Victor Sun <victor.sun@intel.com>
+Date: Mon, 26 Apr 2021 20:52:41 +0800
+Subject: [PATCH 4/8] config-tool: xml: add fusa poc xml for tgl-rvp
+
+Signed-off-by: Victor Sun <victor.sun@intel.com>
+---
+ misc/config_tools/data/tgl-rvp/fusa_poc.xml | 184 ++++++++++++++++++++
+ 1 file changed, 184 insertions(+)
+ create mode 100644 misc/config_tools/data/tgl-rvp/fusa_poc.xml
+
+diff --git a/misc/config_tools/data/tgl-rvp/fusa_poc.xml b/misc/config_tools/data/tgl-rvp/fusa_poc.xml
+new file mode 100644
+index 000000000..08fceb313
+--- /dev/null
++++ b/misc/config_tools/data/tgl-rvp/fusa_poc.xml
+@@ -0,0 +1,184 @@
++<?xml version='1.0' encoding='utf-8'?>
++
++<acrn-config board="tgl-rvp" scenario="fusa_poc">
++  <hv>
++    <DEBUG_OPTIONS>
++        <RELEASE>n</RELEASE>
++        <SERIAL_CONSOLE>/dev/ttyS0</SERIAL_CONSOLE>
++        <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
++        <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
++        <CONSOLE_LOGLEVEL>3</CONSOLE_LOGLEVEL>
++        <LOG_DESTINATION>7</LOG_DESTINATION>
++        <LOG_BUF_SIZE>0x40000</LOG_BUF_SIZE>
++    </DEBUG_OPTIONS>
++
++    <FEATURES>
++        <RELOC>y</RELOC>
++        <SCHEDULER>SCHED_BVT</SCHEDULER>
++        <MULTIBOOT2>y</MULTIBOOT2>
++        <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
++        <RDT>
++            <RDT_ENABLED>n</RDT_ENABLED>
++            <CDP_ENABLED>n</CDP_ENABLED>
++        </RDT>
++	<NVMX_ENABLED>n</NVMX_ENABLED>
++        <HYPERV_ENABLED>y</HYPERV_ENABLED>
++        <IOMMU_ENFORCE_SNP>n</IOMMU_ENFORCE_SNP>
++        <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
++        <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
++        <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
++        <IVSHMEM>
++            <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
++            <IVSHMEM_REGION>hv:/shm_region_0, 2, 0:1</IVSHMEM_REGION>
++        </IVSHMEM>
++        <SSRAM>
++            <SSRAM_ENABLED>n</SSRAM_ENABLED>
++        </SSRAM>
++    </FEATURES>
++
++    <MEMORY>
++        <STACK_SIZE>0x2000</STACK_SIZE>
++        <HV_RAM_SIZE/>
++        <HV_RAM_START/>
++        <LOW_RAM_SIZE>0x00010000</LOW_RAM_SIZE>
++        <PLATFORM_RAM_SIZE>0x480000000</PLATFORM_RAM_SIZE>
++    </MEMORY>
++
++    <CAPACITIES>
++        <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
++        <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
++        <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
++        <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
++        <MAX_IOAPIC_LINES>120</MAX_IOAPIC_LINES>
++        <MAX_PT_IRQ_ENTRIES>64</MAX_PT_IRQ_ENTRIES>
++        <MAX_MSIX_TABLE_NUM>128</MAX_MSIX_TABLE_NUM>
++        <MAX_EMULATED_MMIO>32</MAX_EMULATED_MMIO>
++    </CAPACITIES>
++
++    <MISC_CFG>
++        <GPU_SBDF>0x00000010</GPU_SBDF>
++    </MISC_CFG>
++  </hv>
++
++  <vm id="0">
++    <vm_type>PRE_RT_VM</vm_type>
++    <name>ACRN PRE-LAUNCHED VM0</name>
++    <guest_flags>
++	<guest_flag>GUEST_FLAG_MCA_ENABLED</guest_flag>
++    </guest_flags>
++    <cpu_affinity>
++        <pcpu_id>2</pcpu_id>
++        <pcpu_id>3</pcpu_id>
++    </cpu_affinity>
++    <clos>
++        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>0</vcpu_clos>
++    </clos>
++    <epc_section>
++        <base>0</base>
++        <size>0</size>
++    </epc_section>
++    <memory>
++        <start_hpa>0x100000000</start_hpa>
++        <size>0x40000000</size>
++        <start_hpa2>0x0</start_hpa2>
++        <size_hpa2>0x0</size_hpa2>
++    </memory>
++    <os_config>
++        <name>PREEMPT-RT</name>
++        <kern_type>KERNEL_BZIMAGE</kern_type>
++        <kern_mod>RT_bzImage</kern_mod>
++        <ramdisk_mod/>
++	<bootargs>rw rootwait root=/dev/sda2 rootfstype=ext4 console=ttyS0,115200 console=tty0 rw nohpet console=hvc0 no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable
++	clocksource=tsc x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0 no_ipi_broadcast=1
++	reboot=acpi
++        </bootargs>
++    </os_config>
++    <legacy_vuart id="0">
++        <type>VUART_LEGACY_PIO</type>
++        <base>COM1_BASE</base>
++        <irq>COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++        <type>VUART_LEGACY_PIO</type>
++        <base>COM2_BASE</base>
++        <irq>COM2_IRQ</irq>
++        <target_vm_id>1</target_vm_id>
++        <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++        <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++        <base>INVALID_PCI_BASE</base>
++        <target_vm_id>1</target_vm_id>
++        <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++    <pci_devs>
++        <pci_dev>00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</pci_dev>
++        <pci_dev>00:1e.2 Serial bus controller [0c80]: Intel Corporation Device a0aa (rev 20)</pci_dev>
++        <pci_dev>00:1e.4 Ethernet controller: Intel Corporation Device a0ac (rev 20)</pci_dev>
++    </pci_devs>
++    <mmio_resources>
++        <p2sb>y</p2sb>
++    </mmio_resources>
++    <pt_intx>
++        (37, 37) (14, 14)
++    </pt_intx>
++  </vm>
++  <vm id="1">
++    <vm_type>SOS_VM</vm_type>
++    <name>ACRN SOS VM</name>
++    <guest_flags>
++        <guest_flag>0</guest_flag>
++    </guest_flags>
++    <clos>
++        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>0</vcpu_clos>
++    </clos>
++    <memory>
++        <start_hpa>0</start_hpa>
++    </memory>
++    <os_config>
++        <name>ACRN Service OS</name>
++        <kern_type>KERNEL_BZIMAGE</kern_type>
++        <kern_mod>Linux_bzImage</kern_mod>
++        <ramdisk_mod/>
++        <bootargs>SOS_VM_BOOTARGS</bootargs>
++    </os_config>
++    <cpu_affinity>
++        <pcpu_id>0</pcpu_id>
++        <pcpu_id>1</pcpu_id>
++    </cpu_affinity>
++    <legacy_vuart id="0">
++        <type>VUART_LEGACY_PIO</type>
++        <base>SOS_COM1_BASE</base>
++        <irq>SOS_COM1_IRQ</irq>
++    </legacy_vuart>
++    <legacy_vuart id="1">
++        <type>VUART_LEGACY_PIO</type>
++        <base>SOS_COM2_BASE</base>
++        <irq>SOS_COM2_IRQ</irq>
++        <target_vm_id>0</target_vm_id>
++        <target_uart_id>1</target_uart_id>
++    </legacy_vuart>
++    <console_vuart id="0">
++        <base>INVALID_PCI_BASE</base>
++    </console_vuart>
++    <communication_vuart id="1">
++        <base>INVALID_PCI_BASE</base>
++        <target_vm_id>1</target_vm_id>
++        <target_uart_id>1</target_uart_id>
++    </communication_vuart>
++    <pci_devs>
++        <pci_dev/>
++    </pci_devs>
++    <board_private>
++        <rootfs>/dev/nvme0n1p3</rootfs>
++        <bootargs>
++        rw rootwait console=ttyS0,115200n8 ignore_loglevel no_timer_check
++        i915.nuclear_pageflip=1 hvlog=2M@0xe00000 memmap=0x200000$0xe00000 initcall_blacklist=tgl_pinctrl_driver_init,intel_pmc_tgpio_init
++        </bootargs>
++    </board_private>
++  </vm>
++</acrn-config>
+-- 
+2.17.1
+

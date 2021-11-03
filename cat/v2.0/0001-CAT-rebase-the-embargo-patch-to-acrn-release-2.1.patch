@@ -1,0 +1,345 @@
+From 3bf981dbf5f4ea1fc7e01c13458a6e5dee60d3fc Mon Sep 17 00:00:00 2001
+From: Binbin Wu <binbin.wu@intel.com>
+Date: Tue, 28 Jul 2020 02:14:30 +0000
+Subject: [PATCH] CAT: rebase the embargo patch to acrn release 2.1
+
+Based on commit ba7680d2a3595107c5462ae50a737003b8d5738a
+
+Signed-off-by: Binbin Wu <binbin.wu@intel.com>
+---
+ hypervisor/arch/x86/rdt.c                     | 33 ++++++++++--
+ hypervisor/include/arch/x86/cat_generic.h     | 51 +++++++++++++++++++
+ misc/vm_configs/boards/nuc7i7dnb/board.c      |  1 +
+ misc/vm_configs/boards/nuc7i7dnb/board_info.h |  2 +-
+ misc/vm_configs/boards/whl-ipc-i5/board.c     |  1 +
+ .../vm_configs/boards/whl-ipc-i5/board_info.h |  2 +-
+ misc/vm_configs/boards/whl-ipc-i7/board.c     |  1 +
+ .../vm_configs/boards/whl-ipc-i7/board_info.h |  2 +-
+ .../scenarios/hybrid_rt/vm_configurations.c   |  1 +
+ .../hybrid_rt/whl-ipc-i5/whl-ipc-i5.config    |  2 +-
+ .../hybrid_rt/whl-ipc-i7/whl-ipc-i7.config    |  2 +-
+ .../industry/nuc7i7dnb/nuc7i7dnb.config       |  2 +-
+ .../scenarios/industry/vm_configurations.c    |  1 +
+ .../industry/whl-ipc-i5/whl-ipc-i5.config     |  2 +-
+ .../industry/whl-ipc-i7/whl-ipc-i7.config     |  2 +-
+ 15 files changed, 92 insertions(+), 13 deletions(-)
+ create mode 100644 hypervisor/include/arch/x86/cat_generic.h
+
+diff --git a/hypervisor/arch/x86/rdt.c b/hypervisor/arch/x86/rdt.c
+index 8dd92e44..be102b3f 100644
+--- a/hypervisor/arch/x86/rdt.c
++++ b/hypervisor/arch/x86/rdt.c
+@@ -16,6 +16,7 @@
+ #include <board.h>
+ #include <vm_config.h>
+ #include <msr.h>
++#include "cat_generic.h"
+ 
+ const uint16_t hv_clos = 0U;
+ /* RDT features can support different numbers of CLOS. Set the lowers numerical
+@@ -35,7 +36,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
+ 		.clos_max = 0U,
+ 		.res_id = RDT_RESID_L3,
+ 		.msr_base = MSR_IA32_L3_MASK_BASE,
+-		.platform_clos_array = platform_l3_clos_array, 
++		.platform_clos_array = platform_l3_clos_array,
+ 	},
+ 	[RDT_RESOURCE_L2] = {
+ 		.res.cache = {
+@@ -56,7 +57,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
+ 		.clos_max = 0U,
+ 		.res_id = RDT_RESID_MBA,
+ 		.msr_base = MSR_IA32_MBA_MASK_BASE,
+-		.platform_clos_array = platform_mba_clos_array, 
++		.platform_clos_array = platform_mba_clos_array,
+ 	},
+ };
+ 
+@@ -78,7 +79,7 @@ static void init_cat_capability(int res)
+ #ifdef CONFIG_CDP_ENABLED
+ 	res_cap_info[res].res.cache.is_cdp_enabled = ((ecx & 0x4U) != 0U);
+ #else
+-	res_cap_info[res].res.cache.is_cdp_enabled = false; 
++	res_cap_info[res].res.cache.is_cdp_enabled = false;
+ #endif
+ 	if (res_cap_info[res].res.cache.is_cdp_enabled) {
+ 		res_cap_info[res].clos_max = (uint16_t)((edx & 0xffffU) >> 1U) + 1U;
+@@ -107,7 +108,7 @@ static void init_mba_capability(int res)
+ }
+ 
+ /*
+- * @pre valid_clos_num > 0U 
++ * @pre valid_clos_num > 0U
+  */
+ void init_rdt_info(void)
+ {
+@@ -143,12 +144,30 @@ void init_rdt_info(void)
+ 			}
+ 		}
+ 	}
++
++	uint32_t ways;
++	/* get the ways of LLC cache  */
++	cpuid_subleaf(0x4U, 3U, &eax, &ebx, &ecx, &edx);
++	ways = (ebx >> 22U) + 1U;
++
++	res_cap_info[RDT_RESOURCE_L3].res.cache.cbm_len = (uint16_t)ways;
++	res_cap_info[RDT_RESOURCE_L3].res.cache.bitmask = 0U;
++	res_cap_info[RDT_RESOURCE_L3].clos_max = 4U;
++
++	if (ways == 16U) {
++		res_cap_info[RDT_RESOURCE_L3].res.cache.cbm_len = 16U;
++		res_cap_info[RDT_RESOURCE_L3].platform_clos_array = platform_l3_way16_clos_array;
++	} else if (ways == 12U) {
++		res_cap_info[RDT_RESOURCE_L3].res.cache.cbm_len = 12U;
++		res_cap_info[RDT_RESOURCE_L3].platform_clos_array = platform_l3_way12_clos_array;
++	}
++
+ }
+ 
+ /*
+  * @pre res < RDT_NUM_RESOURCES
+  * @pre res_clos_info[i].mba_delay <= res_cap_info[res].res.membw.mba_max
+- * @pre length of res_clos_info[i].clos_mask <= cbm_len && all 1's in clos_mask is continuous 
++ * @pre length of res_clos_info[i].clos_mask <= cbm_len && all 1's in clos_mask is continuous
+  */
+ static void setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_clos_info *res_clos_info)
+ {
+@@ -197,8 +216,12 @@ uint64_t clos2pqr_msr(uint16_t clos)
+ {
+ 	uint64_t pqr_assoc;
+ 
++#if 0
+ 	pqr_assoc = msr_read(MSR_IA32_PQR_ASSOC);
+ 	pqr_assoc = (pqr_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
++#else
++	pqr_assoc = (uint64_t)clos;
++#endif
+ 
+ 	return pqr_assoc;
+ }
+diff --git a/hypervisor/include/arch/x86/cat_generic.h b/hypervisor/include/arch/x86/cat_generic.h
+new file mode 100644
+index 00000000..2ef85c8d
+--- /dev/null
++++ b/hypervisor/include/arch/x86/cat_generic.h
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (C) 2019 Intel Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <board.h>
++#include <msr.h>
++
++/* The big core (SKL, KBL, WHL, etc) can support L3 CAT only  */
++struct platform_clos_info platform_l3_way12_clos_array[4] = {
++	{
++		.clos_mask = 0xfc0,
++		.msr_index = MSR_IA32_L3_MASK_BASE,
++	},
++	{
++		.clos_mask = 0x03f,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 1U,
++	},
++	{
++		.clos_mask = 0x03e,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 2U,
++	},
++	{
++		.clos_mask = 0x001,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 3U,
++	},
++};
++
++struct platform_clos_info platform_l3_way16_clos_array[4] = {
++	{
++		.clos_mask = 0xff00,
++		.msr_index = MSR_IA32_L3_MASK_BASE,
++	},
++	{
++		.clos_mask = 0x00ff,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 1U,
++	},
++	{
++		.clos_mask = 0x00fe,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 2U,
++	},
++	{
++		.clos_mask = 0x0001,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 3U,
++	},
++};
++
++uint16_t platform_l2_clos_num = (uint16_t)(sizeof(platform_l2_clos_array)/sizeof(struct platform_clos_info));
++uint16_t platform_l3_way12_clos_num = (uint16_t)(sizeof(platform_l3_way12_clos_array)/sizeof(struct platform_clos_info));
++uint16_t platform_l3_way16_clos_num = (uint16_t)(sizeof(platform_l3_way16_clos_array)/sizeof(struct platform_clos_info));
+\ No newline at end of file
+diff --git a/misc/vm_configs/boards/nuc7i7dnb/board.c b/misc/vm_configs/boards/nuc7i7dnb/board.c
+index 534293a3..8abc4962 100644
+--- a/misc/vm_configs/boards/nuc7i7dnb/board.c
++++ b/misc/vm_configs/boards/nuc7i7dnb/board.c
+@@ -74,6 +74,7 @@ struct dmar_info plat_dmar_info = {
+ struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_mba_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];
++struct platform_clos_info* platform_clos_array = NULL;
+ #endif
+ 
+ static const struct cpu_cx_data board_cpu_cx[3] = {
+diff --git a/misc/vm_configs/boards/nuc7i7dnb/board_info.h b/misc/vm_configs/boards/nuc7i7dnb/board_info.h
+index 38c8417e..440d48a2 100644
+--- a/misc/vm_configs/boards/nuc7i7dnb/board_info.h
++++ b/misc/vm_configs/boards/nuc7i7dnb/board_info.h
+@@ -8,7 +8,7 @@
+ #define BOARD_INFO_H
+ 
+ #define MAX_PCPU_NUM			4U
+-#define MAX_PLATFORM_CLOS_NUM		0U
++#define MAX_PLATFORM_CLOS_NUM		4U
+ #define MAX_MBA_CLOS_NUM_ENTRIES	0U
+ #define MAX_VMSIX_ON_MSI_PDEVS_NUM	0U
+ #define MAX_HIDDEN_PDEVS_NUM		0U
+diff --git a/misc/vm_configs/boards/whl-ipc-i5/board.c b/misc/vm_configs/boards/whl-ipc-i5/board.c
+index 1c70957a..db4a6759 100644
+--- a/misc/vm_configs/boards/whl-ipc-i5/board.c
++++ b/misc/vm_configs/boards/whl-ipc-i5/board.c
+@@ -75,6 +75,7 @@ struct dmar_info plat_dmar_info = {
+ struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_mba_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];
++struct platform_clos_info* platform_clos_array = NULL;
+ #endif
+ 
+ static const struct cpu_cx_data board_cpu_cx[3] = {
+diff --git a/misc/vm_configs/boards/whl-ipc-i5/board_info.h b/misc/vm_configs/boards/whl-ipc-i5/board_info.h
+index 38c8417e..440d48a2 100644
+--- a/misc/vm_configs/boards/whl-ipc-i5/board_info.h
++++ b/misc/vm_configs/boards/whl-ipc-i5/board_info.h
+@@ -8,7 +8,7 @@
+ #define BOARD_INFO_H
+ 
+ #define MAX_PCPU_NUM			4U
+-#define MAX_PLATFORM_CLOS_NUM		0U
++#define MAX_PLATFORM_CLOS_NUM		4U
+ #define MAX_MBA_CLOS_NUM_ENTRIES	0U
+ #define MAX_VMSIX_ON_MSI_PDEVS_NUM	0U
+ #define MAX_HIDDEN_PDEVS_NUM		0U
+diff --git a/misc/vm_configs/boards/whl-ipc-i7/board.c b/misc/vm_configs/boards/whl-ipc-i7/board.c
+index c115b71e..5bb92111 100644
+--- a/misc/vm_configs/boards/whl-ipc-i7/board.c
++++ b/misc/vm_configs/boards/whl-ipc-i7/board.c
+@@ -75,6 +75,7 @@ struct dmar_info plat_dmar_info = {
+ struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_mba_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];
++struct platform_clos_info* platform_clos_array = NULL;
+ #endif
+ 
+ static const struct cpu_cx_data board_cpu_cx[3] = {
+diff --git a/misc/vm_configs/boards/whl-ipc-i7/board_info.h b/misc/vm_configs/boards/whl-ipc-i7/board_info.h
+index 38c8417e..440d48a2 100644
+--- a/misc/vm_configs/boards/whl-ipc-i7/board_info.h
++++ b/misc/vm_configs/boards/whl-ipc-i7/board_info.h
+@@ -8,7 +8,7 @@
+ #define BOARD_INFO_H
+ 
+ #define MAX_PCPU_NUM			4U
+-#define MAX_PLATFORM_CLOS_NUM		0U
++#define MAX_PLATFORM_CLOS_NUM		4U
+ #define MAX_MBA_CLOS_NUM_ENTRIES	0U
+ #define MAX_VMSIX_ON_MSI_PDEVS_NUM	0U
+ #define MAX_HIDDEN_PDEVS_NUM		0U
+diff --git a/misc/vm_configs/scenarios/hybrid_rt/vm_configurations.c b/misc/vm_configs/scenarios/hybrid_rt/vm_configurations.c
+index cfa3e9c2..8cde7c9a 100644
+--- a/misc/vm_configs/scenarios/hybrid_rt/vm_configurations.c
++++ b/misc/vm_configs/scenarios/hybrid_rt/vm_configurations.c
+@@ -14,6 +14,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
+ 		CONFIG_PRE_RT_VM(1),
+ 		.name = "ACRN PRE-LAUNCHED VM0",
+ 		.cpu_affinity = VM0_CONFIG_CPU_AFFINITY,
++		.clos = { 1U, 1U },
+ 		.guest_flags = (GUEST_FLAG_LAPIC_PASSTHROUGH | GUEST_FLAG_RT),
+ 		.memory = {
+ 			.start_hpa = VM0_CONFIG_MEM_START_HPA,
+diff --git a/misc/vm_configs/scenarios/hybrid_rt/whl-ipc-i5/whl-ipc-i5.config b/misc/vm_configs/scenarios/hybrid_rt/whl-ipc-i5/whl-ipc-i5.config
+index cdcaa6f4..63dfbb8b 100644
+--- a/misc/vm_configs/scenarios/hybrid_rt/whl-ipc-i5/whl-ipc-i5.config
++++ b/misc/vm_configs/scenarios/hybrid_rt/whl-ipc-i5/whl-ipc-i5.config
+@@ -13,7 +13,7 @@ CONFIG_UEFI_OS_LOADER_NAME=""
+ CONFIG_SCHED_BVT=y
+ CONFIG_RELOC=y
+ CONFIG_MULTIBOOT2=y
+-CONFIG_RDT_ENABLED=n
++CONFIG_RDT_ENABLED=y
+ CONFIG_CDP_ENABLED=n
+ CONFIG_HYPERV_ENABLED=y
+ CONFIG_IOMMU_ENFORCE_SNP=n
+diff --git a/misc/vm_configs/scenarios/hybrid_rt/whl-ipc-i7/whl-ipc-i7.config b/misc/vm_configs/scenarios/hybrid_rt/whl-ipc-i7/whl-ipc-i7.config
+index 9dfacdc6..a01a4daf 100644
+--- a/misc/vm_configs/scenarios/hybrid_rt/whl-ipc-i7/whl-ipc-i7.config
++++ b/misc/vm_configs/scenarios/hybrid_rt/whl-ipc-i7/whl-ipc-i7.config
+@@ -13,7 +13,7 @@ CONFIG_UEFI_OS_LOADER_NAME=""
+ CONFIG_SCHED_BVT=y
+ CONFIG_RELOC=y
+ CONFIG_MULTIBOOT2=y
+-CONFIG_RDT_ENABLED=n
++CONFIG_RDT_ENABLED=y
+ CONFIG_CDP_ENABLED=n
+ CONFIG_HYPERV_ENABLED=y
+ CONFIG_IOMMU_ENFORCE_SNP=n
+diff --git a/misc/vm_configs/scenarios/industry/nuc7i7dnb/nuc7i7dnb.config b/misc/vm_configs/scenarios/industry/nuc7i7dnb/nuc7i7dnb.config
+index 433bff10..cb369a7c 100644
+--- a/misc/vm_configs/scenarios/industry/nuc7i7dnb/nuc7i7dnb.config
++++ b/misc/vm_configs/scenarios/industry/nuc7i7dnb/nuc7i7dnb.config
+@@ -13,7 +13,7 @@ CONFIG_UEFI_OS_LOADER_NAME="\\EFI\\BOOT\\bootx64.efi"
+ CONFIG_SCHED_BVT=y
+ CONFIG_RELOC=y
+ CONFIG_MULTIBOOT2=y
+-CONFIG_RDT_ENABLED=n
++CONFIG_RDT_ENABLED=y
+ CONFIG_CDP_ENABLED=n
+ CONFIG_HYPERV_ENABLED=y
+ CONFIG_IOMMU_ENFORCE_SNP=n
+diff --git a/misc/vm_configs/scenarios/industry/vm_configurations.c b/misc/vm_configs/scenarios/industry/vm_configurations.c
+index dd96b39b..3c6ea883 100644
+--- a/misc/vm_configs/scenarios/industry/vm_configurations.c
++++ b/misc/vm_configs/scenarios/industry/vm_configurations.c
+@@ -53,6 +53,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
+ 	{	/* VM2 */
+ 		CONFIG_POST_RT_VM(1),
+ 		.cpu_affinity = VM2_CONFIG_CPU_AFFINITY,
++		.clos = { 1U, 1U },
+ 		.vuart[0] = {
+ 			.type = VUART_LEGACY_PIO,
+ 			.addr.port_base = COM1_BASE,
+diff --git a/misc/vm_configs/scenarios/industry/whl-ipc-i5/whl-ipc-i5.config b/misc/vm_configs/scenarios/industry/whl-ipc-i5/whl-ipc-i5.config
+index 7c4f5002..73499807 100644
+--- a/misc/vm_configs/scenarios/industry/whl-ipc-i5/whl-ipc-i5.config
++++ b/misc/vm_configs/scenarios/industry/whl-ipc-i5/whl-ipc-i5.config
+@@ -13,7 +13,7 @@ CONFIG_UEFI_OS_LOADER_NAME="\\EFI\\BOOT\\bootx64.efi"
+ CONFIG_SCHED_BVT=y
+ CONFIG_RELOC=y
+ CONFIG_MULTIBOOT2=y
+-CONFIG_RDT_ENABLED=n
++CONFIG_RDT_ENABLED=y
+ CONFIG_CDP_ENABLED=n
+ CONFIG_HYPERV_ENABLED=y
+ CONFIG_IOMMU_ENFORCE_SNP=n
+diff --git a/misc/vm_configs/scenarios/industry/whl-ipc-i7/whl-ipc-i7.config b/misc/vm_configs/scenarios/industry/whl-ipc-i7/whl-ipc-i7.config
+index 543fb3a2..f927f731 100644
+--- a/misc/vm_configs/scenarios/industry/whl-ipc-i7/whl-ipc-i7.config
++++ b/misc/vm_configs/scenarios/industry/whl-ipc-i7/whl-ipc-i7.config
+@@ -13,7 +13,7 @@ CONFIG_UEFI_OS_LOADER_NAME="\\EFI\\BOOT\\bootx64.efi"
+ CONFIG_SCHED_BVT=y
+ CONFIG_RELOC=y
+ CONFIG_MULTIBOOT2=y
+-CONFIG_RDT_ENABLED=n
++CONFIG_RDT_ENABLED=y
+ CONFIG_CDP_ENABLED=n
+ CONFIG_HYPERV_ENABLED=y
+ CONFIG_IOMMU_ENFORCE_SNP=n
+-- 
+2.20.0
+

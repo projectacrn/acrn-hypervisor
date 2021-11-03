@@ -1,0 +1,228 @@
+From 37db957e613ef0d34f19d02ee8062a45b9b49fe2 Mon Sep 17 00:00:00 2001
+From: Minggui Cao <minggui.cao@intel.com>
+Date: Fri, 29 Oct 2021 11:27:09 +0800
+Subject: [PATCH 2/2] misc: modify configure to enable CAT
+
+enable EHL and WHL configure file to enable CAT.
+
+Signed-off-by: Minggui Cao <minggui.cao@intel.com>
+---
+ .../config_tools/data/ehl-crb-b/ehl-crb-b.xml |  6 ++---
+ .../config_tools/data/ehl-crb-b/hybrid_rt.xml | 26 +++++--------------
+ misc/config_tools/data/ehl-crb-b/industry.xml | 24 +++++------------
+ misc/config_tools/data/tgl-rvp/hybrid_rt.xml  | 18 +++++--------
+ .../data/whl-ipc-i7/hybrid_rt.xml             |  8 ++++--
+ .../config_tools/data/whl-ipc-i7/industry.xml |  8 ++++--
+ .../data/whl-ipc-i7/whl-ipc-i7.xml            |  3 +++
+ 7 files changed, 38 insertions(+), 55 deletions(-)
+
+diff --git a/misc/config_tools/data/ehl-crb-b/ehl-crb-b.xml b/misc/config_tools/data/ehl-crb-b/ehl-crb-b.xml
+index f487a4c80..a6975d8c2 100644
+--- a/misc/config_tools/data/ehl-crb-b/ehl-crb-b.xml
++++ b/misc/config_tools/data/ehl-crb-b/ehl-crb-b.xml
+@@ -205,9 +205,9 @@
+ 	TPM2
+ 	</TPM_INFO>
+   <CLOS_INFO>
+-	rdt resources supported: L2
+-	rdt resource clos max: 16
+-	rdt resource mask max: '0xfff'
++	rdt resources supported: L3
++	rdt resource clos max: 4
++	rdt resource mask max: '0xffff'
+ 	</CLOS_INFO>
+   <IOMEM_INFO>
+ 	00000000-00000fff : Reserved
+diff --git a/misc/config_tools/data/ehl-crb-b/hybrid_rt.xml b/misc/config_tools/data/ehl-crb-b/hybrid_rt.xml
+index 70adac06e..c947c335f 100644
+--- a/misc/config_tools/data/ehl-crb-b/hybrid_rt.xml
++++ b/misc/config_tools/data/ehl-crb-b/hybrid_rt.xml
+@@ -16,24 +16,12 @@
+             <MULTIBOOT2>y</MULTIBOOT2>
+             <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+             <RDT>
+-                <RDT_ENABLED>n</RDT_ENABLED>
+-                <CDP_ENABLED>y</CDP_ENABLED>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
++                <RDT_ENABLED>y</RDT_ENABLED>
++                <CDP_ENABLED>n</CDP_ENABLED>
++                <CLOS_MASK>0x00ff</CLOS_MASK>
++                <CLOS_MASK>0xff00</CLOS_MASK>
++                <CLOS_MASK>0x000f</CLOS_MASK>
++                <CLOS_MASK>0x0001</CLOS_MASK>
+             </RDT>
+             <NVMX_ENABLED>n</NVMX_ENABLED>
+             <HYPERV_ENABLED>y</HYPERV_ENABLED>
+@@ -84,7 +72,7 @@
+         </cpu_affinity>
+         <clos>
+             <vcpu_clos>0</vcpu_clos>
+-            <vcpu_clos>0</vcpu_clos>
++            <vcpu_clos>1</vcpu_clos>
+         </clos>
+         <epc_section>
+             <base>0</base>
+diff --git a/misc/config_tools/data/ehl-crb-b/industry.xml b/misc/config_tools/data/ehl-crb-b/industry.xml
+index e511c7f66..2db9ab88b 100644
+--- a/misc/config_tools/data/ehl-crb-b/industry.xml
++++ b/misc/config_tools/data/ehl-crb-b/industry.xml
+@@ -17,23 +17,11 @@
+             <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+             <RDT>
+                 <RDT_ENABLED>y</RDT_ENABLED>
+-                <CDP_ENABLED>y</CDP_ENABLED>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
+-                <CLOS_MASK>0xfff</CLOS_MASK>
++                <CDP_ENABLED>n</CDP_ENABLED>
++                <CLOS_MASK>0x00ff</CLOS_MASK>
++                <CLOS_MASK>0xff00</CLOS_MASK>
++                <CLOS_MASK>0x000f</CLOS_MASK>
++                <CLOS_MASK>0x0001</CLOS_MASK>
+             </RDT>
+             <NVMX_ENABLED>n</NVMX_ENABLED>
+             <HYPERV_ENABLED>y</HYPERV_ENABLED>
+@@ -170,7 +158,7 @@
+         </cpu_affinity>
+         <clos>
+             <vcpu_clos>0</vcpu_clos>
+-            <vcpu_clos>0</vcpu_clos>
++            <vcpu_clos>1</vcpu_clos>
+         </clos>
+         <epc_section>
+             <base>0</base>
+diff --git a/misc/config_tools/data/tgl-rvp/hybrid_rt.xml b/misc/config_tools/data/tgl-rvp/hybrid_rt.xml
+index 4e8dcf861..e577f3231 100644
+--- a/misc/config_tools/data/tgl-rvp/hybrid_rt.xml
++++ b/misc/config_tools/data/tgl-rvp/hybrid_rt.xml
+@@ -17,16 +17,12 @@
+         <MULTIBOOT2>y</MULTIBOOT2>
+         <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+         <RDT>
+-            <RDT_ENABLED>n</RDT_ENABLED>
+-            <CDP_ENABLED>y</CDP_ENABLED>
+-            <CLOS_MASK>0xfff</CLOS_MASK>
+-            <CLOS_MASK>0xfff</CLOS_MASK>
+-            <CLOS_MASK>0xfff</CLOS_MASK>
+-            <CLOS_MASK>0xfff</CLOS_MASK>
+-            <CLOS_MASK>0xfff</CLOS_MASK>
+-            <CLOS_MASK>0xfff</CLOS_MASK>
+-            <CLOS_MASK>0xfff</CLOS_MASK>
+-            <CLOS_MASK>0xfff</CLOS_MASK>
++            <RDT_ENABLED>y</RDT_ENABLED>
++            <CDP_ENABLED>n</CDP_ENABLED>
++            <CLOS_MASK>0x0ff</CLOS_MASK>
++            <CLOS_MASK>0xf00</CLOS_MASK>
++            <CLOS_MASK>0x0ff</CLOS_MASK>
++            <CLOS_MASK>0x0ff</CLOS_MASK>
+         </RDT>
+         <NVMX_ENABLED>n</NVMX_ENABLED>
+         <HYPERV_ENABLED>y</HYPERV_ENABLED>
+@@ -80,7 +76,7 @@
+     </cpu_affinity>
+     <clos>
+         <vcpu_clos>0</vcpu_clos>
+-        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section>
+         <base>0</base>
+diff --git a/misc/config_tools/data/whl-ipc-i7/hybrid_rt.xml b/misc/config_tools/data/whl-ipc-i7/hybrid_rt.xml
+index dad0d7643..215434575 100644
+--- a/misc/config_tools/data/whl-ipc-i7/hybrid_rt.xml
++++ b/misc/config_tools/data/whl-ipc-i7/hybrid_rt.xml
+@@ -17,8 +17,12 @@
+         <MULTIBOOT2>y</MULTIBOOT2>
+         <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+         <RDT>
+-            <RDT_ENABLED>n</RDT_ENABLED>
++            <RDT_ENABLED>y</RDT_ENABLED>
+             <CDP_ENABLED>n</CDP_ENABLED>
++                <CLOS_MASK>0xff00</CLOS_MASK>
++                <CLOS_MASK>0x00ff</CLOS_MASK>
++                <CLOS_MASK>0x00fe</CLOS_MASK>
++                <CLOS_MASK>0x0001</CLOS_MASK>
+         </RDT>
+         <NVMX_ENABLED>n</NVMX_ENABLED>
+         <HYPERV_ENABLED>y</HYPERV_ENABLED>
+@@ -69,7 +73,7 @@
+     </cpu_affinity>
+     <clos>
+         <vcpu_clos>0</vcpu_clos>
+-        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section>
+         <base>0</base>
+diff --git a/misc/config_tools/data/whl-ipc-i7/industry.xml b/misc/config_tools/data/whl-ipc-i7/industry.xml
+index d7214fc48..163a263d3 100644
+--- a/misc/config_tools/data/whl-ipc-i7/industry.xml
++++ b/misc/config_tools/data/whl-ipc-i7/industry.xml
+@@ -17,8 +17,12 @@
+         <MULTIBOOT2>y</MULTIBOOT2>
+         <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+         <RDT>
+-            <RDT_ENABLED>n</RDT_ENABLED>
++            <RDT_ENABLED>y</RDT_ENABLED>
+             <CDP_ENABLED>n</CDP_ENABLED>
++                <CLOS_MASK>0xff00</CLOS_MASK>
++                <CLOS_MASK>0x00ff</CLOS_MASK>
++                <CLOS_MASK>0x00fe</CLOS_MASK>
++                <CLOS_MASK>0x0001</CLOS_MASK>
+         </RDT>
+         <NVMX_ENABLED>n</NVMX_ENABLED>
+         <HYPERV_ENABLED>y</HYPERV_ENABLED>
+@@ -157,7 +161,7 @@
+     </cpu_affinity>
+     <clos>
+         <vcpu_clos>0</vcpu_clos>
+-        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section>
+         <base>0</base>
+diff --git a/misc/config_tools/data/whl-ipc-i7/whl-ipc-i7.xml b/misc/config_tools/data/whl-ipc-i7/whl-ipc-i7.xml
+index f05b3ca88..1f6243d05 100644
+--- a/misc/config_tools/data/whl-ipc-i7/whl-ipc-i7.xml
++++ b/misc/config_tools/data/whl-ipc-i7/whl-ipc-i7.xml
+@@ -157,6 +157,9 @@
+ 	/* no TPM device */
+ 	</TPM_INFO>
+   <CLOS_INFO>
++	rdt resources supported: L3
++	rdt resource clos max: 4
++	rdt resource mask max: '0xffff'
+ 	</CLOS_INFO>
+   <IOMEM_INFO>
+ 	00000000-00000fff : Reserved
+-- 
+2.17.1
+

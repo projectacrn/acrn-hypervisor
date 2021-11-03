@@ -1,0 +1,31 @@
+From bc6fdd0809ba9736c8e8028267369d6f185f933e Mon Sep 17 00:00:00 2001
+From: Victor Sun <victor.sun@intel.com>
+Date: Tue, 15 Jun 2021 10:42:34 +0800
+Subject: [PATCH 8/8] config-tools: disable clang-format
+
+using clang-format would cause offline patch applied failed, so disable it.
+
+Signed-off-by: Victor Sun <victor.sun@intel.com>
+---
+ hypervisor/scripts/genconf.sh | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/hypervisor/scripts/genconf.sh b/hypervisor/scripts/genconf.sh
+index 65963c2e9..7d158ab1d 100644
+--- a/hypervisor/scripts/genconf.sh
++++ b/hypervisor/scripts/genconf.sh
+@@ -65,8 +65,9 @@ transform pci_dev.c
+ transform_board board_info.h
+ 
+ if which clang-format ; then
+-    find ${out}/scenarios/${scenario} -iname *.h -o -iname *.c \
+-    | xargs clang-format --style=file -i --fallback-style=none
++    echo "bypass formatting the C code with clang-format."
++#    find ${out}/scenarios/${scenario} -iname *.h -o -iname *.c \
++#    | xargs clang-format --style=file -i --fallback-style=none
+ else
+     echo "clang-format cannot be found. The generated files under ${out}/scenarios/${scenario} are not formatted."
+     echo "clang-format is a tool to format the C code automatically and improve the code readability."
+-- 
+2.17.1
+

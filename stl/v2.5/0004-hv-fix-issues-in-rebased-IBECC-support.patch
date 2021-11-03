@@ -1,0 +1,83 @@
+From 101487b1eb00c95383a35ce269931c0510b64764 Mon Sep 17 00:00:00 2001
+From: Junjie Mao <junjie.mao@intel.com>
+Date: Fri, 23 Jul 2021 09:47:18 +0800
+Subject: [PATCH 4/4] hv: fix issues in rebased IBECC support
+
+Commit c2cb0dc6be73 ("hv: handle NMIs due to IBECC errors") has the
+following issues after rebased to v2.5:
+
+  1. The call to check_ibecc_error() originally in handle_nmi() is
+     incorrectly applied to init_irq_descs_arch() due to fuzzing matching.
+  2. The handling of NMI in exception_vmexit_handler misses a call to
+     vcpu_retain_rip(). This will cause the VM to crash whenever it has
+     LAPIC_PT, enables x2APIC and triggers any operation that requires a
+     vCPU notification.
+
+This patch fixes both of the issues.
+
+Signed-off-by: Junjie Mao <junjie.mao@intel.com>
+---
+ hypervisor/arch/x86/guest/virq.c | 1 +
+ hypervisor/arch/x86/irq.c        | 5 -----
+ hypervisor/arch/x86/nmi.c        | 5 +++++
+ 3 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/hypervisor/arch/x86/guest/virq.c b/hypervisor/arch/x86/guest/virq.c
+index e054e03..3c4237e 100644
+--- a/hypervisor/arch/x86/guest/virq.c
++++ b/hypervisor/arch/x86/guest/virq.c
+@@ -545,6 +545,7 @@ int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu)
+ 		 *
+ 		 * Assume a splitlock will never trigger NMIs. */
+ 		check_ibecc_error();
++		vcpu_retain_rip(vcpu);
+ 		break;
+ 	default:
+ 		status = emulate_splitlock(vcpu, exception_vector, &queue_exception);
+diff --git a/hypervisor/arch/x86/irq.c b/hypervisor/arch/x86/irq.c
+index aa16366..2d9337d 100644
+--- a/hypervisor/arch/x86/irq.c
++++ b/hypervisor/arch/x86/irq.c
+@@ -16,7 +16,6 @@
+ #include <dump.h>
+ #include <logmsg.h>
+ #include <asm/vmx.h>
+-#include <asm/ibecc.h>
+ 
+ static spinlock_t x86_irq_spinlock = { .head = 0U, .tail = 0U, };
+ 
+@@ -218,10 +217,6 @@ void init_irq_descs_arch(struct irq_desc descs[])
+ {
+ 	uint32_t i;
+ 
+-	/* Check if the NMI is triggered by an IBECC error. If it is, updates the internal counters and reset IBECC
+-	 * error status. */
+-	check_ibecc_error();
+-
+ 	/*
+ 	 * Fill in #CONFIG_MAX_VM_NUM posted interrupt specific irq and vector pairs
+ 	 * at runtime
+diff --git a/hypervisor/arch/x86/nmi.c b/hypervisor/arch/x86/nmi.c
+index 0b0232c..b66f7b8 100644
+--- a/hypervisor/arch/x86/nmi.c
++++ b/hypervisor/arch/x86/nmi.c
+@@ -6,11 +6,16 @@
+ 
+ #include <asm/irq.h>
+ #include <asm/vmx.h>
++#include <asm/ibecc.h>
+ 
+ void handle_nmi(__unused struct intr_excp_ctx *ctx)
+ {
+ 	uint32_t value32;
+ 
++	/* Check if the NMI is triggered by an IBECC error. If it is, updates the internal counters and reset IBECC
++	 * error status. */
++	check_ibecc_error();
++
+ 	/*
+ 	 * There is a window where we may miss the current request in this
+ 	 * notification period when the work flow is as the following:
+-- 
+2.7.4
+

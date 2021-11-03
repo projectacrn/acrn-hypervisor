@@ -1,0 +1,398 @@
+From 3a998d3671b92f88f6e32c2c240fd38ac3f0528d Mon Sep 17 00:00:00 2001
+From: Tw <wei.tan@intel.com>
+Date: Tue, 3 Nov 2020 13:27:22 +0800
+Subject: [PATCH 2/2] hv: rebase CAT patch for branch 2.3
+ (acrn-2020w45.1-180000p)
+
+This patch enable embargo CAT feature on following boards:
+- WHL-IPC-I5
+- WHL-IPC-I7
+- TGL-RVP
+- CFL-K700-I7
+
+Signed-off-by: Tw <wei.tan@intel.com>
+---
+ hypervisor/arch/x86/guest/vmsr.c              | 10 +++-----
+ hypervisor/arch/x86/rdt.c                     | 23 ++++++++++++++++++-
+ .../xmls/board-xmls/cfl-k700-i7.xml           |  3 +++
+ misc/vm_configs/xmls/board-xmls/tgl-rvp.xml   |  6 ++---
+ .../vm_configs/xmls/board-xmls/whl-ipc-i5.xml |  3 +++
+ .../vm_configs/xmls/board-xmls/whl-ipc-i7.xml |  3 +++
+ .../config-xmls/cfl-k700-i7/hybrid_rt.xml     |  8 +++++--
+ .../xmls/config-xmls/cfl-k700-i7/industry.xml |  8 +++++--
+ .../xmls/config-xmls/tgl-rvp/hybrid_rt.xml    |  8 ++++++-
+ .../xmls/config-xmls/tgl-rvp/industry.xml     |  8 +++++--
+ .../xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml |  8 ++++++-
+ .../xmls/config-xmls/whl-ipc-i5/industry.xml  |  8 +++++--
+ .../xmls/config-xmls/whl-ipc-i7/hybrid_rt.xml |  8 ++++++-
+ .../xmls/config-xmls/whl-ipc-i7/industry.xml  |  8 +++++--
+ 14 files changed, 88 insertions(+), 24 deletions(-)
+
+diff --git a/hypervisor/arch/x86/guest/vmsr.c b/hypervisor/arch/x86/guest/vmsr.c
+index cf5d6dbc..94f1b231 100644
+--- a/hypervisor/arch/x86/guest/vmsr.c
++++ b/hypervisor/arch/x86/guest/vmsr.c
+@@ -321,13 +321,9 @@ static void init_msr_area(struct acrn_vcpu *vcpu)
+ 
+ 	/* only load/restore MSR IA32_PQR_ASSOC when hv and guest have differnt settings */
+ 	if (is_platform_rdt_capable() && (vcpu_clos != hv_clos)) {
+-		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
+-		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
+-		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
+-		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(hv_clos);
+-		vcpu->arch.msr_area.count++;
+-		pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
+-			vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
++		msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2pqr_msr(vcpu_clos), pcpuid_from_vcpu(vcpu));
++		pr_acrnlog("switch clos for VM %u vcpu_id %u: 0x%x",
++			vcpu->vm->vm_id, vcpu->vcpu_id, vcpu_clos);
+ 	}
+ }
+ 
+diff --git a/hypervisor/arch/x86/rdt.c b/hypervisor/arch/x86/rdt.c
+index 8ce54cad..6667a438 100644
+--- a/hypervisor/arch/x86/rdt.c
++++ b/hypervisor/arch/x86/rdt.c
+@@ -25,6 +25,16 @@ const uint16_t hv_clos = 0U;
+ #ifdef CONFIG_RDT_ENABLED
+ uint16_t valid_clos_num = HV_SUPPORTED_MAX_CLOS;
+ 
++static inline bool is_follow_spec()
++{
++	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
++
++	if (cpu_info->displayfamily == 6 &&
++		(cpu_info->displaymodel == 0x8c /* TGL-U */)) {
++		return true;
++	}
++	return false;
++}
+ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
+ 	[RDT_RESOURCE_L3] = {
+ 		.res.cache = {
+@@ -114,7 +124,15 @@ void init_rdt_info(void)
+ 	uint8_t i;
+ 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
+ 
+-	if (pcpu_has_cap(X86_FEATURE_RDT_A)) {
++	if (MAX_CACHE_CLOS_NUM_ENTRIES > 0) {
++		uint32_t ways;
++		/* get the ways of LLC cache  */
++		cpuid_subleaf(0x4U, 3U, &eax, &ebx, &ecx, &edx);
++		ways = (ebx >> 22U) + 1U;
++
++		printf("%d ways LLC CAT enabled, %sfollow spec\n", ways, is_follow_spec() ? "" : "not ");
++		res_cap_info[RDT_RESOURCE_L3].clos_max = MAX_CACHE_CLOS_NUM_ENTRIES;
++	} else if (pcpu_has_cap(X86_FEATURE_RDT_A)) {
+ 		cpuid_subleaf(CPUID_RDT_ALLOCATION, 0U, &eax, &ebx, &ecx, &edx);
+ 
+ 		/* If HW supports L3 CAT, EBX[1] is set */
+@@ -197,6 +215,9 @@ uint64_t clos2pqr_msr(uint16_t clos)
+ {
+ 	uint64_t pqr_assoc;
+ 
++	if (!is_follow_spec()) {
++		return clos;
++	}
+ 	pqr_assoc = msr_read(MSR_IA32_PQR_ASSOC);
+ 	pqr_assoc = (pqr_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
+ 
+diff --git a/misc/vm_configs/xmls/board-xmls/cfl-k700-i7.xml b/misc/vm_configs/xmls/board-xmls/cfl-k700-i7.xml
+index fd23220c..951568e7 100644
+--- a/misc/vm_configs/xmls/board-xmls/cfl-k700-i7.xml
++++ b/misc/vm_configs/xmls/board-xmls/cfl-k700-i7.xml
+@@ -232,6 +232,9 @@
+ 	</MMCFG_BASE_INFO>
+ 
+ 	<CLOS_INFO>
++	rdt resources supported: L3
++	rdt resource clos max: 4
++	rdt resource mask max: '0xfff'
+ 	</CLOS_INFO>
+ 
+ 	<IOMEM_INFO>
+diff --git a/misc/vm_configs/xmls/board-xmls/tgl-rvp.xml b/misc/vm_configs/xmls/board-xmls/tgl-rvp.xml
+index d88fe3e0..693fbea9 100644
+--- a/misc/vm_configs/xmls/board-xmls/tgl-rvp.xml
++++ b/misc/vm_configs/xmls/board-xmls/tgl-rvp.xml
+@@ -280,9 +280,9 @@
+ 	</TPM_INFO>
+ 
+ 	<CLOS_INFO>
+-	rdt resources supported: L2
+-	rdt resource clos max: 8
+-	rdt resource mask max: '0xfffff'
++	rdt resources supported: L3
++	rdt resource clos max: 4
++	rdt resource mask max: '0xfff'
+ 	</CLOS_INFO>
+ 
+ 	<IOMEM_INFO>
+diff --git a/misc/vm_configs/xmls/board-xmls/whl-ipc-i5.xml b/misc/vm_configs/xmls/board-xmls/whl-ipc-i5.xml
+index 4d25b79f..9cd7f822 100644
+--- a/misc/vm_configs/xmls/board-xmls/whl-ipc-i5.xml
++++ b/misc/vm_configs/xmls/board-xmls/whl-ipc-i5.xml
+@@ -179,6 +179,9 @@
+ 	</MMCFG_BASE_INFO>
+ 
+ 	<CLOS_INFO>
++	rdt resources supported: L3
++	rdt resource clos max: 4
++	rdt resource mask max: '0xfff'
+ 	</CLOS_INFO>
+ 
+ 	<IOMEM_INFO>
+diff --git a/misc/vm_configs/xmls/board-xmls/whl-ipc-i7.xml b/misc/vm_configs/xmls/board-xmls/whl-ipc-i7.xml
+index a488a01e..963e7ae1 100644
+--- a/misc/vm_configs/xmls/board-xmls/whl-ipc-i7.xml
++++ b/misc/vm_configs/xmls/board-xmls/whl-ipc-i7.xml
+@@ -183,6 +183,9 @@
+ 	</MMCFG_BASE_INFO>
+ 
+ 	<CLOS_INFO>
++	rdt resources supported: L3
++	rdt resource clos max: 4
++	rdt resource mask max: '0xffff'
+ 	</CLOS_INFO>
+ 
+ 	<IOMEM_INFO>
+diff --git a/misc/vm_configs/xmls/config-xmls/cfl-k700-i7/hybrid_rt.xml b/misc/vm_configs/xmls/config-xmls/cfl-k700-i7/hybrid_rt.xml
+index f2b9b67a..2fd25fba 100644
+--- a/misc/vm_configs/xmls/config-xmls/cfl-k700-i7/hybrid_rt.xml
++++ b/misc/vm_configs/xmls/config-xmls/cfl-k700-i7/hybrid_rt.xml
+@@ -15,8 +15,12 @@
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+-            <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
++            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xfc0</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x03f</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x0fe</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x001</CLOS_MASK>
+         </RDT>
+         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+@@ -69,7 +73,7 @@
+     </cpu_affinity>
+     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
+-        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section configurable="0" desc="epc section">
+         <base desc="SGX EPC section base, must be page aligned">0</base>
+diff --git a/misc/vm_configs/xmls/config-xmls/cfl-k700-i7/industry.xml b/misc/vm_configs/xmls/config-xmls/cfl-k700-i7/industry.xml
+index bf55d183..fd1af4b8 100644
+--- a/misc/vm_configs/xmls/config-xmls/cfl-k700-i7/industry.xml
++++ b/misc/vm_configs/xmls/config-xmls/cfl-k700-i7/industry.xml
+@@ -15,8 +15,12 @@
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+-            <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
++            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xfc0</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x03f</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x0fe</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x001</CLOS_MASK>
+         </RDT>
+         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+@@ -156,7 +160,7 @@
+     </cpu_affinity>
+     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
+-        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section configurable="0" desc="epc section">
+         <base desc="SGX EPC section base, must be page aligned">0</base>
+diff --git a/misc/vm_configs/xmls/config-xmls/tgl-rvp/hybrid_rt.xml b/misc/vm_configs/xmls/config-xmls/tgl-rvp/hybrid_rt.xml
+index 1bc1b2a6..186eb9cd 100644
+--- a/misc/vm_configs/xmls/config-xmls/tgl-rvp/hybrid_rt.xml
++++ b/misc/vm_configs/xmls/config-xmls/tgl-rvp/hybrid_rt.xml
+@@ -15,8 +15,12 @@
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+-            <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
++            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x00f</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
+         </RDT>
+         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+@@ -71,6 +75,7 @@
+     </cpu_affinity>
+     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section configurable="0" desc="epc section">
+         <base desc="SGX EPC section base, must be page aligned">0</base>
+@@ -126,6 +131,7 @@
+     </guest_flags>
+     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <memory>
+         <start_hpa configurable="0" desc="The start physical address in host for the VM">0</start_hpa>
+diff --git a/misc/vm_configs/xmls/config-xmls/tgl-rvp/industry.xml b/misc/vm_configs/xmls/config-xmls/tgl-rvp/industry.xml
+index 5411ab0c..1b1c1e50 100644
+--- a/misc/vm_configs/xmls/config-xmls/tgl-rvp/industry.xml
++++ b/misc/vm_configs/xmls/config-xmls/tgl-rvp/industry.xml
+@@ -15,8 +15,12 @@
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+-            <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
++            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x00f</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xff0</CLOS_MASK>
+         </RDT>
+         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+@@ -154,7 +158,7 @@
+     </cpu_affinity>
+     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
+-        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section configurable="0" desc="epc section">
+         <base desc="SGX EPC section base, must be page aligned">0</base>
+diff --git a/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml b/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml
+index 1369fd14..1fa313ed 100644
+--- a/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml
++++ b/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml
+@@ -15,8 +15,12 @@
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+-            <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
++            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xfc0</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x03f</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x0fe</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x001</CLOS_MASK>
+         </RDT>
+         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+@@ -68,6 +72,7 @@
+     </cpu_affinity>
+     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section configurable="0" desc="epc section">
+         <base desc="SGX EPC section base, must be page aligned">0</base>
+@@ -126,6 +131,7 @@
+     </cpu_affinity>
+     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <memory>
+         <start_hpa configurable="0" desc="The start physical address in host for the VM">0</start_hpa>
+diff --git a/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/industry.xml b/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/industry.xml
+index da3629b5..1a2233e7 100644
+--- a/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/industry.xml
++++ b/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/industry.xml
+@@ -15,8 +15,12 @@
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+-            <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
++            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xfc0</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x03f</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x0fe</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x001</CLOS_MASK>
+         </RDT>
+         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+@@ -155,7 +159,7 @@
+     </cpu_affinity>
+     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
+-        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section configurable="0" desc="epc section">
+         <base desc="SGX EPC section base, must be page aligned">0</base>
+diff --git a/misc/vm_configs/xmls/config-xmls/whl-ipc-i7/hybrid_rt.xml b/misc/vm_configs/xmls/config-xmls/whl-ipc-i7/hybrid_rt.xml
+index 87bf10b2..8dac2371 100644
+--- a/misc/vm_configs/xmls/config-xmls/whl-ipc-i7/hybrid_rt.xml
++++ b/misc/vm_configs/xmls/config-xmls/whl-ipc-i7/hybrid_rt.xml
+@@ -15,8 +15,12 @@
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+-            <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
++            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xff00</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x00ff</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x00fe</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x0001</CLOS_MASK>
+         </RDT>
+         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+@@ -68,6 +72,7 @@
+     </cpu_affinity>
+     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section configurable="0" desc="epc section">
+         <base desc="SGX EPC section base, must be page aligned">0</base>
+@@ -128,6 +133,7 @@
+     </cpu_affinity>
+     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>0</vcpu_clos>
+     </clos>
+     <memory>
+         <start_hpa configurable="0" desc="The start physical address in host for the VM">0</start_hpa>
+diff --git a/misc/vm_configs/xmls/config-xmls/whl-ipc-i7/industry.xml b/misc/vm_configs/xmls/config-xmls/whl-ipc-i7/industry.xml
+index 219f8c3d..47dd09e0 100644
+--- a/misc/vm_configs/xmls/config-xmls/whl-ipc-i7/industry.xml
++++ b/misc/vm_configs/xmls/config-xmls/whl-ipc-i7/industry.xml
+@@ -15,8 +15,12 @@
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+-            <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
++            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0xff00</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x00ff</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x00fe</CLOS_MASK>
++                <CLOS_MASK desc="Cache Capacity Bitmask">0x0001</CLOS_MASK>
+         </RDT>
+         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+@@ -155,7 +159,7 @@
+     </cpu_affinity>
+     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+         <vcpu_clos>0</vcpu_clos>
+-        <vcpu_clos>0</vcpu_clos>
++        <vcpu_clos>1</vcpu_clos>
+     </clos>
+     <epc_section configurable="0" desc="epc section">
+         <base desc="SGX EPC section base, must be page aligned">0</base>
+-- 
+2.26.2
+

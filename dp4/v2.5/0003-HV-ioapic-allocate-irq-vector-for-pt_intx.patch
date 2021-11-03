@@ -1,0 +1,82 @@
+From 5e350483a6ae49d77a0a060d21e4799796a6aecb Mon Sep 17 00:00:00 2001
+From: Victor Sun <victor.sun@intel.com>
+Date: Fri, 23 Apr 2021 14:49:18 +0800
+Subject: [PATCH 3/8] HV: ioapic: allocate irq vector for pt_intx
+
+Allocate irq vector for pre-configured pt_intx to enable legacy INTx passthrough
+in pre-launched VM;
+
+Signed-off-by: Victor Sun <victor.sun@intel.com>
+---
+ hypervisor/arch/x86/ioapic.c | 32 +++++++++++++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
+
+diff --git a/hypervisor/arch/x86/ioapic.c b/hypervisor/arch/x86/ioapic.c
+index 9c7d3b7ca..4cd1b1d1d 100644
+--- a/hypervisor/arch/x86/ioapic.c
++++ b/hypervisor/arch/x86/ioapic.c
+@@ -13,6 +13,7 @@
+ #include <asm/pgtable.h>
+ #include <asm/io.h>
+ #include <asm/mmu.h>
++#include <asm/vm_config.h>
+ #include <acpi.h>
+ #include <logmsg.h>
+ 
+@@ -310,7 +311,7 @@ bool is_ioapic_irq(uint32_t irq)
+ 
+ /*
+  *@pre gsi < NR_MAX_GSI
+- *@pre is_gsi_valid(gsi) == true 
++ *@pre is_gsi_valid(gsi) == true
+  */
+ 
+ uint32_t gsi_to_ioapic_pin(uint32_t gsi)
+@@ -441,6 +442,30 @@ int32_t init_ioapic_id_info(void)
+ 	return ret;
+ }
+ 
++#if PRE_VM_NUM > 0
++static bool is_pre_vm_pt_intx(uint32_t irq)
++{
++	uint16_t vm_id;
++	bool ret = false;
++
++	for (vm_id = 0U; vm_id < PRE_VM_NUM; vm_id++) {
++		uint16_t pt_intx_idx;
++		struct acrn_vm_config *vm_config = get_vm_config(vm_id);
++
++		for (pt_intx_idx = 0U; pt_intx_idx < vm_config->pt_intx_num; pt_intx_idx++) {
++			if (irq == vm_config->pt_intx[pt_intx_idx].phys_gsi) {
++				ret = true;
++				break;
++			}
++		}
++		if (ret == true) {
++			break;
++		}
++	}
++	return ret;
++}
++#endif
++
+ void ioapic_setup_irqs(void)
+ {
+ 	uint8_t ioapic_id;
+@@ -472,8 +497,13 @@ void ioapic_setup_irqs(void)
+ 
+ 			/* assign vector for this GSI
+ 			 * for legacy irq, reserved vector and never free
++			 * so do for pt_intx of pre-launched VM
+ 			 */
++#if PRE_VM_NUM > 0
++			if ((gsi < NR_LEGACY_PIN) || (is_pre_vm_pt_intx(gsi))) {
++#else
+ 			if (gsi < NR_LEGACY_PIN) {
++#endif
+ 				vr = alloc_irq_vector(gsi);
+ 				if (vr == VECTOR_INVALID) {
+ 					pr_err("failed to alloc VR");
+-- 
+2.17.1
+

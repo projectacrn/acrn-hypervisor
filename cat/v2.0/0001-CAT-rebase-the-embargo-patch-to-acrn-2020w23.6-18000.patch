@@ -1,0 +1,291 @@
+From 25d24d7286149f87635b1256592ffe7712d80b2c Mon Sep 17 00:00:00 2001
+From: Binbin Wu <binbin.wu@intel.com>
+Date: Mon, 8 Jun 2020 02:43:08 +0000
+Subject: [PATCH] CAT: rebase the embargo patch to acrn-2020w23.6-180000p
+
+Signed-off-by: Yan, Like <like.yan@intel.com>
+Signed-off-by: Binbin Wu <binbin.wu@intel.com>
+---
+ hypervisor/arch/x86/configs/cat_generic.h     | 51 +++++++++++++++++++
+ hypervisor/arch/x86/configs/nuc7i7dnb.config  |  2 +-
+ hypervisor/arch/x86/configs/nuc7i7dnb/board.c |  1 +
+ .../arch/x86/configs/nuc7i7dnb/misc_cfg.h     |  2 +-
+ hypervisor/arch/x86/configs/whl-ipc-i5.config |  2 +-
+ .../arch/x86/configs/whl-ipc-i5/board.c       |  2 +
+ .../arch/x86/configs/whl-ipc-i5/misc_cfg.h    |  2 +-
+ hypervisor/arch/x86/rdt.c                     | 43 +++++++++++++---
+ .../scenarios/industry/vm_configurations.c    |  2 +
+ 9 files changed, 95 insertions(+), 12 deletions(-)
+ create mode 100644 hypervisor/arch/x86/configs/cat_generic.h
+
+diff --git a/hypervisor/arch/x86/configs/cat_generic.h b/hypervisor/arch/x86/configs/cat_generic.h
+new file mode 100644
+index 00000000..14fa7f18
+--- /dev/null
++++ b/hypervisor/arch/x86/configs/cat_generic.h
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (C) 2019 Intel Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <board.h>
++#include <msr.h>
++
++/* The big core (SKL, KBL, WHL, etc) can support L3 CAT only  */
++struct platform_clos_info platform_l3_way12_clos_array[4] = {
++	{
++		.clos_mask = 0xfc0,
++		.msr_index = MSR_IA32_L3_MASK_BASE,
++	},
++	{
++		.clos_mask = 0x03f,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 1U,
++	},
++	{
++		.clos_mask = 0x03e,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 2U,
++	},
++	{
++		.clos_mask = 0x001,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 3U,
++	},
++};
++
++struct platform_clos_info platform_l3_way16_clos_array[4] = {
++	{
++		.clos_mask = 0xff00,
++		.msr_index = MSR_IA32_L3_MASK_BASE,
++	},
++	{
++		.clos_mask = 0x00ff,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 1U,
++	},
++	{
++		.clos_mask = 0x00fe,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 2U,
++	},
++	{
++		.clos_mask = 0x0001,
++		.msr_index = MSR_IA32_L3_MASK_BASE + 3U,
++	},
++};
++
++uint16_t platform_l2_clos_num = (uint16_t)(sizeof(platform_l2_clos_array)/sizeof(struct platform_clos_info));
++uint16_t platform_l3_way12_clos_num = (uint16_t)(sizeof(platform_l3_way12_clos_array)/sizeof(struct platform_clos_info));
++uint16_t platform_l3_way16_clos_num = (uint16_t)(sizeof(platform_l3_way16_clos_array)/sizeof(struct platform_clos_info));
+diff --git a/hypervisor/arch/x86/configs/nuc7i7dnb.config b/hypervisor/arch/x86/configs/nuc7i7dnb.config
+index 0d91ddd1..85e98abd 100644
+--- a/hypervisor/arch/x86/configs/nuc7i7dnb.config
++++ b/hypervisor/arch/x86/configs/nuc7i7dnb.config
+@@ -2,4 +2,4 @@
+ CONFIG_BOARD="nuc7i7dnb"
+ CONFIG_SERIAL_LEGACY=y
+ CONFIG_HV_RAM_START=0x41000000
+-CONFIG_RDT_ENABLED=n
++CONFIG_RDT_ENABLED=y
+diff --git a/hypervisor/arch/x86/configs/nuc7i7dnb/board.c b/hypervisor/arch/x86/configs/nuc7i7dnb/board.c
+index e68bbacc..b850260e 100644
+--- a/hypervisor/arch/x86/configs/nuc7i7dnb/board.c
++++ b/hypervisor/arch/x86/configs/nuc7i7dnb/board.c
+@@ -60,6 +60,7 @@ struct dmar_info plat_dmar_info = {
+ struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_mba_clos_array[MAX_PLATFORM_CLOS_NUM];
++struct platform_clos_info* platform_clos_array = NULL;
+ #endif
+ 
+ const struct cpu_state_table board_cpu_state_tbl;
+diff --git a/hypervisor/arch/x86/configs/nuc7i7dnb/misc_cfg.h b/hypervisor/arch/x86/configs/nuc7i7dnb/misc_cfg.h
+index 3b4a1555..46640048 100644
+--- a/hypervisor/arch/x86/configs/nuc7i7dnb/misc_cfg.h
++++ b/hypervisor/arch/x86/configs/nuc7i7dnb/misc_cfg.h
+@@ -8,7 +8,7 @@
+ #define MISC_CFG_H
+ 
+ #define MAX_PCPU_NUM	4U
+-#define MAX_PLATFORM_CLOS_NUM	0U
++#define MAX_PLATFORM_CLOS_NUM	4U
+ 
+ #define ROOTFS_0		"root=/dev/sda3 "
+ #define ROOTFS_1		"root=/dev/nvme0n1p3 "
+diff --git a/hypervisor/arch/x86/configs/whl-ipc-i5.config b/hypervisor/arch/x86/configs/whl-ipc-i5.config
+index c4dd956a..bb435531 100644
+--- a/hypervisor/arch/x86/configs/whl-ipc-i5.config
++++ b/hypervisor/arch/x86/configs/whl-ipc-i5.config
+@@ -6,4 +6,4 @@ CONFIG_BOARD="whl-ipc-i5"
+ CONFIG_SERIAL_LEGACY=y
+ CONFIG_SERIAL_PIO_BASE=0x3F8
+ CONFIG_HV_RAM_START=0x11000000
+-CONFIG_RDT_ENABLED=n
++CONFIG_RDT_ENABLED=y
+diff --git a/hypervisor/arch/x86/configs/whl-ipc-i5/board.c b/hypervisor/arch/x86/configs/whl-ipc-i5/board.c
+index 92c4f565..f6fbc1b2 100644
+--- a/hypervisor/arch/x86/configs/whl-ipc-i5/board.c
++++ b/hypervisor/arch/x86/configs/whl-ipc-i5/board.c
+@@ -21,6 +21,7 @@
+ #include <vtd.h>
+ #include <msr.h>
+ #include <pci.h>
++
+ static struct dmar_dev_scope drhd0_dev_scope[DRHD0_DEV_CNT] = {
+ 	{
+ 		.type   = DRHD0_DEVSCOPE0_TYPE,
+@@ -73,6 +74,7 @@ struct dmar_info plat_dmar_info = {
+ struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
+ struct platform_clos_info platform_mba_clos_array[MAX_PLATFORM_CLOS_NUM];
++struct platform_clos_info* platform_clos_array = NULL;
+ #endif
+ 
+ static const struct cpu_cx_data board_cpu_cx[3] = {
+diff --git a/hypervisor/arch/x86/configs/whl-ipc-i5/misc_cfg.h b/hypervisor/arch/x86/configs/whl-ipc-i5/misc_cfg.h
+index fb05eacd..7077be7c 100644
+--- a/hypervisor/arch/x86/configs/whl-ipc-i5/misc_cfg.h
++++ b/hypervisor/arch/x86/configs/whl-ipc-i5/misc_cfg.h
+@@ -9,7 +9,7 @@
+ #define MISC_CFG_H
+ 
+ #define MAX_PCPU_NUM		4U
+-#define MAX_PLATFORM_CLOS_NUM	0U
++#define MAX_PLATFORM_CLOS_NUM	4U
+ 
+ #define ROOTFS_0		"root=/dev/nvme0n1p3 "
+ #define ROOTFS_1		"root=/dev/sda3 "
+diff --git a/hypervisor/arch/x86/rdt.c b/hypervisor/arch/x86/rdt.c
+index 8dd92e44..fc995bb4 100644
+--- a/hypervisor/arch/x86/rdt.c
++++ b/hypervisor/arch/x86/rdt.c
+@@ -16,6 +16,7 @@
+ #include <board.h>
+ #include <vm_config.h>
+ #include <msr.h>
++#include "../cat_generic.h"
+ 
+ const uint16_t hv_clos = 0U;
+ /* RDT features can support different numbers of CLOS. Set the lowers numerical
+@@ -35,7 +36,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
+ 		.clos_max = 0U,
+ 		.res_id = RDT_RESID_L3,
+ 		.msr_base = MSR_IA32_L3_MASK_BASE,
+-		.platform_clos_array = platform_l3_clos_array, 
++		.platform_clos_array = platform_l3_clos_array,
+ 	},
+ 	[RDT_RESOURCE_L2] = {
+ 		.res.cache = {
+@@ -56,10 +57,11 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
+ 		.clos_max = 0U,
+ 		.res_id = RDT_RESID_MBA,
+ 		.msr_base = MSR_IA32_MBA_MASK_BASE,
+-		.platform_clos_array = platform_mba_clos_array, 
++		.platform_clos_array = platform_mba_clos_array,
+ 	},
+ };
+ 
++#if 0
+ /*
+  * @pre res == RDT_RESOURCE_L3 || res == RDT_RESOURCE_L2
+  */
+@@ -78,7 +80,7 @@ static void init_cat_capability(int res)
+ #ifdef CONFIG_CDP_ENABLED
+ 	res_cap_info[res].res.cache.is_cdp_enabled = ((ecx & 0x4U) != 0U);
+ #else
+-	res_cap_info[res].res.cache.is_cdp_enabled = false; 
++	res_cap_info[res].res.cache.is_cdp_enabled = false;
+ #endif
+ 	if (res_cap_info[res].res.cache.is_cdp_enabled) {
+ 		res_cap_info[res].clos_max = (uint16_t)((edx & 0xffffU) >> 1U) + 1U;
+@@ -105,15 +107,19 @@ static void init_mba_capability(int res)
+ 	res_cap_info[res].res.membw.delay_linear = ((ecx & 0x4U) != 0U) ? true : false;
+ 	res_cap_info[res].clos_max = (uint16_t)(edx & 0xffffU) + 1U;
+ }
++#endif
+ 
+ /*
+- * @pre valid_clos_num > 0U 
++ * @pre valid_clos_num > 0U
+  */
+ void init_rdt_info(void)
+ {
+-	uint8_t i;
+ 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
+ 
++
++#if 0
++	uint8_t i;
++
+ 	if (pcpu_has_cap(X86_FEATURE_RDT_A)) {
+ 		cpuid_subleaf(CPUID_RDT_ALLOCATION, 0U, &eax, &ebx, &ecx, &edx);
+ 
+@@ -143,12 +149,31 @@ void init_rdt_info(void)
+ 			}
+ 		}
+ 	}
++#else
++	uint32_t ways;
++	/* get the ways of LLC cache  */
++	cpuid_subleaf(0x4U, 3U, &eax, &ebx, &ecx, &edx);
++	ways = (ebx >> 22U) + 1U;
++
++	res_cap_info[RDT_RESOURCE_L3].res.cache.cbm_len = (uint16_t)ways;
++	res_cap_info[RDT_RESOURCE_L3].res.cache.bitmask = 0U;
++	res_cap_info[RDT_RESOURCE_L3].clos_max = 4U;
++
++	if (ways == 16U) {
++		res_cap_info[RDT_RESOURCE_L3].res.cache.cbm_len = 16U;
++		res_cap_info[RDT_RESOURCE_L3].platform_clos_array = platform_l3_way16_clos_array;
++	} else if (ways == 12U) {
++		res_cap_info[RDT_RESOURCE_L3].res.cache.cbm_len = 12U;
++		res_cap_info[RDT_RESOURCE_L3].platform_clos_array = platform_l3_way12_clos_array;
++	}
++
++#endif
+ }
+ 
+ /*
+  * @pre res < RDT_NUM_RESOURCES
+  * @pre res_clos_info[i].mba_delay <= res_cap_info[res].res.membw.mba_max
+- * @pre length of res_clos_info[i].clos_mask <= cbm_len && all 1's in clos_mask is continuous 
++ * @pre length of res_clos_info[i].clos_mask <= cbm_len && all 1's in clos_mask is continuous
+  */
+ static void setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_clos_info *res_clos_info)
+ {
+@@ -196,10 +221,12 @@ void setup_clos(uint16_t pcpu_id)
+ uint64_t clos2pqr_msr(uint16_t clos)
+ {
+ 	uint64_t pqr_assoc;
+-
++#if 0
+ 	pqr_assoc = msr_read(MSR_IA32_PQR_ASSOC);
+ 	pqr_assoc = (pqr_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
+-
++#else
++	pqr_assoc = (uint64_t)clos;
++#endif
+ 	return pqr_assoc;
+ }
+ 
+diff --git a/hypervisor/scenarios/industry/vm_configurations.c b/hypervisor/scenarios/industry/vm_configurations.c
+index 8a5b23a1..78c0f92b 100644
+--- a/hypervisor/scenarios/industry/vm_configurations.c
++++ b/hypervisor/scenarios/industry/vm_configurations.c
+@@ -40,6 +40,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
+ 	{	/* VM1 */
+ 		CONFIG_POST_STD_VM(1),
+ 		.cpu_affinity = VM1_CONFIG_CPU_AFFINITY,
++		.clos = { 0U },
+ 		.vuart[0] = {
+ 			.type = VUART_LEGACY_PIO,
+ 			.addr.port_base = COM1_BASE,
+@@ -54,6 +55,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
+ 		CONFIG_POST_RT_VM(1),
+ 		.guest_flags = 0UL,
+ 		.cpu_affinity = VM2_CONFIG_CPU_AFFINITY,
++		.clos = { 1U, 1U },
+ 		.vuart[0] = {
+ 			.type = VUART_LEGACY_PIO,
+ 			.addr.port_base = COM1_BASE,
+-- 
+2.20.0
+
