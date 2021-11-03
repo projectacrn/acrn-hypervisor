@@ -32,7 +32,7 @@ def get_launch_item_values(board_info, scenario_info=None):
 
     # pre passthrough device for ui
     launch_item_values["user_vm,passthrough_devices,usb_xdci"] = pthru.avl["usb_xdci"]
-    launch_item_values["uos,passthrough_devices,gpu"] = pthru.avl["gpu"]
+    launch_item_values["user_vm,passthrough_devices,gpu"] = pthru.avl["gpu"]
     launch_item_values["user_vm,passthrough_devices,ipu"] = pthru.avl["ipu"]
     launch_item_values["user_vm,passthrough_devices,ipu_i2c"] = pthru.avl["ipu_i2c"]
     launch_item_values["user_vm,passthrough_devices,cse"] = pthru.avl["cse"]
@@ -225,7 +225,7 @@ def main(args):
 
     # generate launch script
     if vm_th:
-        script_name = "launch_uos_id{}.sh".format(vm_th)
+        script_name = "launch_user_vm_id{}.sh".format(vm_th)
         launch_script_file = os.path.join(output, script_name)
         with open(launch_script_file, mode = 'w', newline=None, encoding='utf-8') as config:
             err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, sriov.dev, vm_th, config)
@@ -233,7 +233,7 @@ def main(args):
                 return err_dic
     else:
         for post_vm_i in post_num_list:
-            script_name = "launch_uos_id{}.sh".format(post_vm_i)
+            script_name = "launch_user_vm_id{}.sh".format(post_vm_i)
             launch_script_file = os.path.join(output, script_name)
             with open(launch_script_file, mode = 'w', newline='\n', encoding='utf-8') as config:
                 err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, sriov.dev, post_vm_i, config)
