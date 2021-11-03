@@ -21,6 +21,7 @@
         <RDT>
             <RDT_ENABLED>n</RDT_ENABLED>
             <CDP_ENABLED>n</CDP_ENABLED>
+            <VCAT_ENABLED>n</VCAT_ENABLED>
         </RDT>
         <NVMX_ENABLED>n</NVMX_ENABLED>
         <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -36,8 +37,6 @@
 
     <MEMORY>
         <STACK_SIZE>0x2000</STACK_SIZE>
-        <HV_RAM_SIZE/>
-        <HV_RAM_START/>
         <LOW_RAM_SIZE>0x00010000</LOW_RAM_SIZE>
         <PLATFORM_RAM_SIZE>0x800000000</PLATFORM_RAM_SIZE>
     </MEMORY>
@@ -124,8 +123,8 @@
     </mmio_resources>
   </vm>
   <vm id="1">
-    <vm_type>SOS_VM</vm_type>
-    <name>ACRN SOS VM</name>
+    <vm_type>SERVICE_VM</vm_type>
+    <name>ACRN Service VM</name>
     <guest_flags>
         <guest_flag>0</guest_flag>
     </guest_flags>
@@ -145,7 +144,7 @@
         <kern_type>KERNEL_BZIMAGE</kern_type>
         <kern_mod>Linux_bzImage</kern_mod>
         <ramdisk_mod/>
-        <bootargs>SOS_VM_BOOTARGS</bootargs>
+        <bootargs>SERVICE_VM_OS_BOOTARGS</bootargs>
     </os_config>
     <cpu_affinity>
         <pcpu_id>0</pcpu_id>
@@ -157,15 +156,29 @@
     </cpu_affinity>
     <legacy_vuart id="0">
         <type>VUART_LEGACY_PIO</type>
-        <base>SOS_COM1_BASE</base>
-        <irq>SOS_COM1_IRQ</irq>
+        <base>SERVICE_VM_COM1_BASE</base>
+        <irq>SERVICE_VM_COM1_IRQ</irq>
     </legacy_vuart>
     <legacy_vuart id="1">
         <type>VUART_LEGACY_PIO</type>
-        <base>SOS_COM2_BASE</base>
-        <irq>SOS_COM2_IRQ</irq>
+        <base>CONFIG_COM_BASE</base>
+        <irq>0</irq>
         <target_vm_id>0</target_vm_id>
         <target_uart_id>1</target_uart_id>
+    </legacy_vuart>
+    <legacy_vuart id="2">
+        <type>VUART_LEGACY_PIO</type>
+        <base>CONFIG_COM_BASE</base>
+        <irq>0</irq>
+        <target_vm_id>2</target_vm_id>
+        <target_uart_id>2</target_uart_id>
+    </legacy_vuart>
+    <legacy_vuart id="3">
+        <type>VUART_LEGACY_PIO</type>
+        <base>CONFIG_COM_BASE</base>
+        <irq>0</irq>
+        <target_vm_id>3</target_vm_id>
+        <target_uart_id>2</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
         <base>INVALID_PCI_BASE</base>
@@ -182,7 +195,7 @@
         <rootfs>/dev/nvme0n1p3</rootfs>
         <bootargs>
         rw rootwait console=ttyS0,115200n8 ignore_loglevel no_timer_check
-        hvlog=2M@0xe00000 memmap=0x200000$0xe00000
+        hvlog=2M@0xe00000 memmap=0x200000$0xe00000 8250.nr_uarts=20
         </bootargs>
     </board_private>
   </vm>
@@ -216,6 +229,13 @@
         <irq>COM2_IRQ</irq>
         <target_vm_id>0</target_vm_id>
         <target_uart_id>0</target_uart_id>
+    </legacy_vuart>
+    <legacy_vuart id="2">
+        <type>VUART_LEGACY_PIO</type>
+        <base>COM2_BASE</base>
+        <irq>COM2_IRQ</irq>
+        <target_vm_id>1</target_vm_id>
+        <target_uart_id>2</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
         <base>INVALID_PCI_BASE</base>
@@ -255,6 +275,13 @@
         <irq>COM2_IRQ</irq>
         <target_vm_id>0</target_vm_id>
         <target_uart_id>0</target_uart_id>
+    </legacy_vuart>
+    <legacy_vuart id="2">
+        <type>VUART_LEGACY_PIO</type>
+        <base>COM2_BASE</base>
+        <irq>COM2_IRQ</irq>
+        <target_vm_id>1</target_vm_id>
+        <target_uart_id>3</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
         <base>INVALID_PCI_BASE</base>

@@ -1889,7 +1889,7 @@ static int32_t inject_msi_for_non_lapic_pt(struct acrn_vm *vm, uint64_t addr, ui
 }
 
 /**
- *@pre Pointer vm shall point to SOS_VM
+ *@pre Pointer vm shall point to Service VM
  */
 static void inject_msi_for_lapic_pt(struct acrn_vm *vm, uint64_t addr, uint64_t data)
 {
@@ -2184,8 +2184,8 @@ void vlapic_create(struct acrn_vcpu *vcpu, uint16_t pcpu_id)
 	if (is_vcpu_bsp(vcpu)) {
 		uint64_t *pml4_page =
 			(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
-		/* only need unmap it from SOS as UOS never mapped it */
-		if (is_sos_vm(vcpu->vm)) {
+		/* only need unmap it from Service VM as User VM never mapped it */
+		if (is_service_vm(vcpu->vm)) {
 			ept_del_mr(vcpu->vm, pml4_page,
 				DEFAULT_APIC_BASE, PAGE_SIZE);
 		}

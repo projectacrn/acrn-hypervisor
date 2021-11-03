@@ -23,24 +23,24 @@ bool is_hypercall_from_ring0(void);
  */
 
 /**
- * @brief offline vcpu from SOS
+ * @brief offline vcpu from Service VM
  *
- * The function offline specific vcpu from SOS.
+ * The function offline specific vcpu from Service VM.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm not used
  * @param param1 lapic id of the vcpu which wants to offline
  * @param param2 not used
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
+int32_t hcall_service_vm_offline_cpu(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
 /**
  * @brief Get hypervisor api version
  *
- * The function only return api version information when VM is SOS_VM.
+ * The function only return api version information when VM is Service VM.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param target_vm not used
@@ -48,7 +48,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  *              will be copied to this gpa
  * @param param2 not used
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_get_api_version(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -64,7 +64,7 @@ int32_t hcall_get_api_version(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  * @param param1 GPA pointer to struct acrn_platform_info.
  * @param param2 not used
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, -1 in case of error.
  */
 int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -82,7 +82,7 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_v
  *              struct acrn_vm_creation
  * @param param2 not used
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -180,7 +180,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, u
  * @param param1 not used
  * @param param2 info for irqline
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_irqline(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -196,7 +196,7 @@ int32_t hcall_set_irqline(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uin
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to struct acrn_msi_entry
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_inject_msi(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -212,7 +212,7 @@ int32_t hcall_inject_msi(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to buffer address
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_ioreq_buffer(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -241,7 +241,7 @@ int32_t hcall_notify_ioreq_finish(struct acrn_vcpu *vcpu, struct acrn_vm *target
  *              struct set_memmaps
  * @param param2 not used
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_vm_memory_regions(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -256,7 +256,7 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vcpu *vcpu, struct acrn_vm *targ
  * @param param2 guest physical address. This gpa points to
  *              struct wp_data
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_write_protect_page(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -272,7 +272,7 @@ int32_t hcall_write_protect_page(struct acrn_vcpu *vcpu, struct acrn_vm *target_
  * @param param1 not used
  * @param param2 guest physical address. This gpa points to struct vm_gpa2hpa
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_gpa_to_hpa(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -286,7 +286,7 @@ int32_t hcall_gpa_to_hpa(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_pcidev including assign PCI device info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -300,7 +300,7 @@ int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, u
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_pcidev including deassign PCI device info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_deassign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -314,7 +314,7 @@ int32_t hcall_deassign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_mmiodev including assign MMIO device info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_assign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -328,7 +328,7 @@ int32_t hcall_assign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, 
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_mmiodev including deassign MMIO device info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_deassign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -342,7 +342,7 @@ int32_t hcall_deassign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_vdev including information about PCI or legacy devices
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -356,7 +356,7 @@ int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_vdev including information about PCI or legacy devices
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_remove_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -370,7 +370,7 @@ int32_t hcall_remove_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uin
  * @param param2 guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -384,7 +384,7 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target
  * @param param2 guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_reset_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -398,7 +398,7 @@ int32_t hcall_reset_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *targ
  * @param param1 cmd to show get which VCPU power state data
  * @param param2 VCPU power state data
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -412,7 +412,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_intr_monitor
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_vm_intr_monitor(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -449,7 +449,7 @@ int32_t hcall_world_switch(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, ui
 /**
  * @brief Initialize environment for Trusty-OS on a vCPU.
  *
- * * It is used by the User OS bootloader (``UOS_Loader``) to request ACRN
+ * * It is used by the User VM OS bootloader (``User VM OS Loader``) to request ACRN
  *   to initialize Trusty
  * * The Trusty memory region range, entry point must be specified
  * * The hypervisor needs to save current vCPU contexts (Normal World)
@@ -487,14 +487,14 @@ int32_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu, struct acrn_vm *ta
  *
  * This is the API that helps to switch the notifer vecotr. If this API is
  * not called, the hypervisor will use the default notifier vector(0xF7)
- * to notify the SOS kernel.
+ * to notify the Service VM OS kernel.
  *
  * @param vcpu not used
  * @param target_vm not used
  * @param param1 the expected notifier vector from guest
  * @param param2 not used
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_callback_vector(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -508,7 +508,7 @@ int32_t hcall_set_callback_vector(struct acrn_vcpu *vcpu, struct acrn_vm *target
  *              struct sbuf_setup_param
  * @param param2 not used
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_setup_sbuf(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -522,7 +522,7 @@ int32_t hcall_setup_sbuf(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint
  *              struct hv_npk_log_param
  * @param param2 not used
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_setup_hv_npk_log(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
@@ -535,7 +535,7 @@ int32_t hcall_setup_hv_npk_log(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
  * @param param1 Guest physical address pointing to struct acrn_hw_info
  * @param param2 not used
  *
- * @pre vm shall point to SOS_VM
+ * @pre vm shall point to Service VM
  * @pre param1 shall be a valid physical address
  *
  * @retval 0 on success
@@ -552,7 +552,7 @@ int32_t hcall_get_hw_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uin
  * @param param2 guest physical address. This gpa points to
  *             data structure required by each command
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_profiling_ops(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);

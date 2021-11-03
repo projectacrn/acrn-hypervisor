@@ -271,7 +271,7 @@ class LoadOrderNum:
 
     def get_info(self, load_vm):
         self.pre_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "PRE_LAUNCHED_VM")
-        self.sos_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "SOS_VM")
+        self.sos_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "SERVICE_VM")
         self.post_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "POST_LAUNCHED_VM")
 
 
@@ -400,7 +400,7 @@ class VmInfo:
         scenario_cfg_lib.load_vm_check(self.load_vm, "load_vm")
         scenario_cfg_lib.guest_flag_check(self.guest_flags, "guest_flags", "guest_flag")
         err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.scenario_info, self.cpus_per_vm, "pcpu_id")
-        scenario_cfg_lib.vcpu_clos_check(self.cpus_per_vm, self.clos_per_vm, "clos", "vcpu_clos")
+        scenario_cfg_lib.vcpu_clos_check(self.cpus_per_vm, self.clos_per_vm, self.guest_flags, "clos", "vcpu_clos")
 
         self.mem_info.check_item()
         self.os_cfg.check_item()

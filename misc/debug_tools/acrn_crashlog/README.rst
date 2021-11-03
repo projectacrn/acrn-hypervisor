@@ -5,10 +5,10 @@ Introduction
 ************
 
 ``ACRN-Crashlog`` is a collective name for various tools (``acrnprobe``,
-``usercrash_s``, ``usercrash_c``, ``debugger``, and more) and a overall
+``usercrash_s``, ``usercrash_c``, ``debugger``, and more) and an overall
 control utility called ``crashlogctl``. Together these tools collect logs
 and information after each crash or event on an ACRN platform, including
-the hypervisor, Service OS (SOS), and Android as a Guest (AaaG).
+the hypervisor, Service VM, and Android as a Guest (AaaG).
 ``ACRN-Crashlog`` provides a flexible way to configure which events are
 of interest, by using an XML configuration file.
 
@@ -39,16 +39,16 @@ To build the ``ACRN-Crashlog``, run:
 
 .. code-block:: none
 
-   $ cd acrn-crashlog
-   $ make
+   cd misc/debug_tools/acrn_crashlog
+   make
 
 To remove all generated files and return the folder to its clean state,
 use:
 
 .. code-block:: none
 
-   $ cd acrn-crashlog
-   $ make clean
+   cd misc/debug_tools/acrn_crashlog
+   make clean
 
 Installing
 **********
@@ -57,8 +57,8 @@ To install the build:
 
 .. code-block:: none
 
-   $ cd acrn-crashlog
-   $ sudo make install
+   cd misc/debug_tools/acrn_crashlog
+   sudo make install
 
 Enabling/Disabling
 ******************
@@ -67,7 +67,7 @@ To enable this tool:
 
 .. code-block:: none
 
-   $ sudo crashlogctl enable
+   sudo crashlogctl enable
 
 Then it will show:
 
@@ -86,13 +86,13 @@ Follow the hints to reboot the system:
 
 .. code-block:: none
 
-   $ sudo reboot
+   sudo reboot
 
 To disable this tool:
 
 .. code-block:: none
 
-   $ sudo crashlogctl disable
+   sudo crashlogctl disable
 
 Then it will show:
 
@@ -108,15 +108,15 @@ Follow the hints to reboot the system:
 
 .. code-block:: none
 
-   $ sudo reboot
+   sudo reboot
 
 To check the status of this tool:
 
 .. code-block:: none
 
-   $ sudo crashlogctl is-active
+   sudo crashlogctl is-active
 
-It will show the status of the related services like:
+It will show the status of the related services. Example:
 
 .. code-block:: console
 
@@ -135,7 +135,9 @@ process information:
 
 .. code-block:: none
 
-   $ debugger <pid>
+   sudo debugger 12
+
+Replace ``12`` with the process ID you want to dump.
 
 .. note::
 
@@ -157,34 +159,33 @@ The source code structure:
    └── usercrash
        └── include
 
-- ``acrnprobe``: to gather all the crash and event logs on the platform, and
-  probe on telemetrics-client. For the logs on hypervisor, it's collected with
-  acrnlog. For the log on SOS, the userspace crash log is collected with
-  usercrash, and the kernel crash log is collected with the inherent mechanism
-  like ``ipanic``, ``pstore`` and etc. For the log on AaaG, it's collected with
-  monitoring the change of related folders on the sos image, like
-  ``/data/logs/``. ``acrnprobe`` also provides a flexible way to allow users to
-  configure which crash or event they want to collect through the XML file
-  easily.
+- ``acrnprobe``: tool that gathers all the crash and event logs on the
+  platform. For the hypervisor, the log is collected with ``acrnlog``. For the
+  Service VM, the userspace crash log is collected with ``usercrash``, and the
+  kernel crash log is collected with the inherent mechanism, such as ``ipanic``
+  or ``pstore``. For an AaaG VM, the log is collected by monitoring the change
+  of related folders on the Service VM image, such as ``/data/logs/``.
+  ``acrnprobe`` also provides a flexible way to configure which crash or event
+  to collect, by using an XML configuration file.
 - ``common``: some utils for logs, command and string.
 - ``data``: configuration file, service files and shell script.
-- ``usercrash``: to implement the tool which get the crash information for the
+- ``usercrash``: tool that gets the crash information for the
   crashing process in userspace.
 
 Acrnprobe
 =========
 
-The ``acrnprobe`` detects all critical events on the platform and collects
-specific information for debug purpose. These information would be saved as
-logs, and the log path would be delivered to telemetrics-client as a record if
-the telemetrics-client existed on the system.
-For more detail on acrnprobe, please refer :ref:`acrnprobe_doc`.
+The ``acrnprobe`` tool detects all critical events on the platform and collects
+specific information for debug purposes. The information is saved as
+logs.
+For more details on ``acrnprobe``, see :ref:`acrnprobe_doc`.
 
 Usercrash
 =========
 
-The ``usercrash`` is a tool to get the crash info of the crashing process in
-userspace. It works in Client/Server model. Server is autostarted, and client is
+The ``usercrash`` tool gets the crash information of the crashing process in
+userspace. It works in a client/server model. The server is autostarted, and
+the client is
 configured in ``core_pattern`` or ``coredump-wrapper``, which will be
-triggered once crash occurs in userspace.
-For more detail on ``usercrash``, please refer :ref:`usercrash_doc`.
+triggered once a crash occurs in userspace.
+For more details on ``usercrash``, see :ref:`usercrash_doc`.

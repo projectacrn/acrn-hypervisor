@@ -26,20 +26,6 @@
   </xs:restriction>
 </xs:simpleType>
 
-<xs:simpleType name="HVRamSizeType">
-  <xs:annotation>
-    <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
-  </xs:annotation>
-  <xs:union memberTypes="None HexFormat" />
-</xs:simpleType>
-
-<xs:simpleType name="HVRamStartType">
-  <xs:annotation>
-    <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
-  </xs:annotation>
-  <xs:union memberTypes="None HexFormat" />
-</xs:simpleType>
-
 <xs:simpleType name="KernLoadAddr">
   <xs:annotation>
     <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
@@ -142,7 +128,7 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 
 <xs:simpleType name="SerialConsoleType">
   <xs:restriction base="xs:string">
-    <xs:pattern value=".*ttyS[0-3]" />
+    <xs:pattern value=".*ttyS[\d]+" />
   </xs:restriction>
 </xs:simpleType>
 
@@ -202,8 +188,14 @@ RDT, setting this option to ``y`` is ignored.</xs:documentation>
       <xs:annotation>
         <xs:documentation>Specify whether to enable Code and Data Prioritization (CDP).
 CDP is an extension of CAT. Set to 'y' to enable the feature or 'n' to disable it.
-The 'y' will be ignored when hardware does not support CDP. Default
-value ``n``.</xs:documentation>
+The 'y' will be ignored when hardware does not support CDP.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="VCAT_ENABLED" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>Specify whether to enable CAT virtualization (vCAT).
+Set to 'y' to enable the feature or 'n' to disable it.
+The 'y' will be ignored when hardware does not support CAT.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CLOS_MASK" type="xs:string"  minOccurs="0" maxOccurs="unbounded">

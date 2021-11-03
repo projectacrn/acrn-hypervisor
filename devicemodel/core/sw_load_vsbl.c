@@ -37,7 +37,7 @@
 #include "log.h"
 
 
-/* If the vsbl is loaded by DM, the UOS memory layout will be like:
+/* If the vsbl is loaded by DM, the User VM memory layout will be like:
  *
  * | ...                                              |
  * +--------------------------------------------------+

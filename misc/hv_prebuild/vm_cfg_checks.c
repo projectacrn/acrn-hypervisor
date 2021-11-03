@@ -84,13 +84,12 @@ static bool check_vm_clos_config(uint16_t vm_id)
 	uint16_t platform_clos_num = HV_SUPPORTED_MAX_CLOS;
 	bool ret = true;
 	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
-	uint16_t vcpu_num = bitmap_weight(vm_config->cpu_affinity);
 
-	for (i = 0U; i < vcpu_num; i++) {
-		if (((platform_clos_num != 0U) && (vm_config->clos[i] == platform_clos_num))
-				|| (vm_config->clos[i] > platform_clos_num)) {
+	for (i = 0U; i < vm_config->num_pclosids; i++) {
+		if (((platform_clos_num != 0U) && (vm_config->pclosids[i] == platform_clos_num))
+				|| (vm_config->pclosids[i] > platform_clos_num)) {
 			printf("vm%u: vcpu%u clos(%u) exceed the max clos(%u).",
-				vm_id, i, vm_config->clos[i], platform_clos_num);
+				vm_id, i, vm_config->pclosids[i], platform_clos_num);
 			ret = false;
 			break;
 		}
@@ -109,7 +108,7 @@ bool sanitize_vm_config(void)
 	struct acrn_vm_config *vm_config;
 
 	/* We need to setup a rule, that the vm_configs[] array should follow
-	 * the order of PRE_LAUNCHED_VM first, and then SOS_VM.
+	 * the order of PRE_LAUNCHED_VM first, and then Service VM.
 	 */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
@@ -130,19 +129,19 @@ bool sanitize_vm_config(void)
 			} else if (is_safety_vm_uuid(vm_config->uuid) && (vm_config->severity != (uint8_t)SEVERITY_SAFETY_VM)) {
 				ret = false;
 			} else {
-#if (SOS_VM_NUM == 1U)
-				if (vm_config->severity <= SEVERITY_SOS) {
-				/* If there are both SOS and Pre-launched VM, make sure pre-launched VM has higher severity than SOS */
-					printf("%s: pre-launched vm doesn't has higher severity than SOS \n", __func__);
+#if (SERVICE_VM_NUM == 1U)
+				if (vm_config->severity <= SEVERITY_SERVICE_VM) {
+				/* If there are both Service VM and Pre-launched VM, make sure pre-launched VM has higher severity than Service VM */
+					printf("%s: pre-launched vm doesn't has higher severity than Service VM \n", __func__);
 					ret = false;
 				}
 #endif
 			}
 			break;
-		case SOS_VM:
+		case SERVICE_VM:
 			break;
 		case POST_LAUNCHED_VM:
-			if ((vm_config->severity == (uint8_t)SEVERITY_SAFETY_VM) || (vm_config->severity == (uint8_t)SEVERITY_SOS)) {
+			if ((vm_config->severity == (uint8_t)SEVERITY_SAFETY_VM) || (vm_config->severity == (uint8_t)SEVERITY_SERVICE_VM)) {
 				ret = false;
 			}
 			break;

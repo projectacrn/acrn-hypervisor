@@ -172,7 +172,7 @@ struct mem_io_node {
 /* External Interfaces */
 
 /**
- * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
+ * @brief Deliver \p io_req to Service VM and suspend \p vcpu till its completion
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  * @param io_req The I/O request holding the details of the MMIO access

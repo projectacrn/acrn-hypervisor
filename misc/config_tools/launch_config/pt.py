@@ -115,7 +115,7 @@ def cse_pt(sel, vmid, config):
         print("", file=config)
 
 
-def audio_pt(uos_type, sel, vmid, config):
+def audio_pt(user_vm_type, sel, vmid, config):
 
     if not sel.bdf['audio'][vmid] and not sel.bdf['audio_codec'][vmid]:
         return
@@ -172,7 +172,7 @@ def audio_pt(uos_type, sel, vmid, config):
             print('    echo ${passthru_bdf["audio_codec"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
             print("", file=config)
 
-            if uos_type == "ANDROID":
+            if user_vm_type == "ANDROID":
                 print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi '.format(
                     slot_audio, bus, dev, fun), end="", file=config)
             else:
@@ -182,7 +182,7 @@ def audio_pt(uos_type, sel, vmid, config):
                 slot_codec, bus_codec, dev_codec, fun_codec), file=config)
         else:
             # only select audio device to pass through to vm
-            if uos_type == "ANDROID":
+            if user_vm_type == "ANDROID":
                 print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi"'.format(
                     slot_audio, bus, dev, fun), file=config)
             else:
@@ -194,24 +194,29 @@ def audio_pt(uos_type, sel, vmid, config):
         print("fi", file=config)
 
 
-def media_pt(uos_type, sel, vmid, config):
+def media_pt(user_vm_type, sel, vmid, config):
     ipu_pt(sel, vmid, config)
     cse_pt(sel, vmid, config)
-    audio_pt(uos_type, sel, vmid, config)
+    audio_pt(user_vm_type, sel, vmid, config)
 
 
-def gen_pt(names, dm, sel, vmid, config):
+def gen_pt(names, dm, sriov, sel, vmid, config):
 
     pt_none = True
     cap_pt = launch_cfg_lib.get_pt_dev()
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
 
     print("modprobe pci_stub", file=config)
-    # pass thru GPU
-    if dm['gvt_args'][vmid] == "gvtd":
+    # SRIOV passthru
+    if sriov['gpu'][vmid]:
         print('echo ${passthru_vpid["gpu"]} > /sys/bus/pci/drivers/pci-stub/new_id', file=config)
         print('echo ${passthru_bdf["gpu"]} > /sys/bus/pci/devices/${passthru_bdf["gpu"]}/driver/unbind', file=config)
         print('echo ${passthru_bdf["gpu"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
+    if sriov['network'][vmid]:
+        print('echo ${passthru_vpid["network"]} > /sys/bus/pci/drivers/pci-stub/new_id', file=config)
+        print('echo ${passthru_bdf["network"]} > /sys/bus/pci/devices/${passthru_bdf["gpu"]}/driver/unbind',
+              file=config)
+        print('echo ${passthru_bdf["network"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
 
     for pt_dev in cap_pt:
         if sel.bdf[pt_dev][vmid]:
@@ -224,13 +229,13 @@ def gen_pt(names, dm, sel, vmid, config):
             pass_through_dev(sel, pt_dev, vmid, config)
             continue
 
-    media_pt(uos_type, sel, vmid, config)
+    media_pt(user_vm_type, sel, vmid, config)
 
 
-def gen_pt_head(names, dm, sel, vmid, config):
+def gen_pt_head(names, dm, sriov, sel, vmid, config):
 
     cap_pt = launch_cfg_lib.get_pt_dev()
-    uos_type = names['uos_types'][vmid]
+    user_vm_type = names['user_vm_types'][vmid]
 
     print("# pci devices for passthru", file=config)
     print("declare -A passthru_vpid", file=config)
@@ -242,9 +247,13 @@ def gen_pt_head(names, dm, sel, vmid, config):
         if not sel.vpid[pt_dev] or not sel.vpid[pt_dev][vmid]:
             continue
         print('["{}"]="{}"'.format(pt_dev, sel.vpid[pt_dev][vmid]), file=config)
-    if dm['gvt_args'][vmid] == "gvtd":
-        gpu_vpid = launch_cfg_lib.get_gpu_vpid()
-        print('["gpu"]="{}"'.format(gpu_vpid), file=config)
+
+    # SRIOV passthru
+    if sriov['gpu'][vmid]:
+        print('["gpu"]="{}"'.format(launch_cfg_lib.get_gpu_vpid()), file=config)
+    if sriov['network'][vmid]:
+        print('["network"]="{}"'.format(launch_cfg_lib.get_vpid_by_bdf(sriov['network'][vmid])), file=config)
+
     print(')', file=config)
 
     print("passthru_bdf=(", file=config)
@@ -252,9 +261,10 @@ def gen_pt_head(names, dm, sel, vmid, config):
         if not sel.bdf[pt_dev] or not sel.bdf[pt_dev][vmid]:
             continue
         print('["{}"]="0000:{}"'.format(pt_dev, sel.bdf[pt_dev][vmid]), file=config)
-    if dm['gvt_args'][vmid] == "gvtd":
-        gpu_bdf = launch_cfg_lib.get_gpu_bdf()
-        print('["gpu"]="0000:{}"'.format(gpu_bdf), file=config)
+    if sriov['gpu'][vmid]:
+        print('["gpu"]="0000:{}"'.format(sriov['gpu'][vmid]), file=config)
+    if sriov['network'][vmid]:
+        print('["network"]="0000:{}"'.format(sriov['network'][vmid]), file=config)
     print(')', file=config)
 
     print("", file=config)

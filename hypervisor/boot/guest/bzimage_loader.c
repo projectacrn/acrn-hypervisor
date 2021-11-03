@@ -68,18 +68,18 @@ static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 		ramdisk_gpa_max = initrd_addr_max;
 	}
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		uint64_t mods_start, mods_end;
 
 		get_boot_mods_range(&mods_start, &mods_end);
-		mods_start = sos_vm_hpa2gpa(mods_start);
-		mods_end = sos_vm_hpa2gpa(mods_end);
+		mods_start = service_vm_hpa2gpa(mods_start);
+		mods_end = service_vm_hpa2gpa(mods_end);
 
 		if (vm->sw.ramdisk_info.src_addr != NULL) {
-			ramdisk_load_gpa = sos_vm_hpa2gpa((uint64_t)vm->sw.ramdisk_info.src_addr);
+			ramdisk_load_gpa = service_vm_hpa2gpa((uint64_t)vm->sw.ramdisk_info.src_addr);
 		}
 
-		/* For SOS VM, the ramdisk has been loaded by bootloader, so in most cases
+		/* For Service VM, the ramdisk has been loaded by bootloader, so in most cases
 		 * there is no need to do gpa copy again. But in the case that the ramdisk is
 		 * loaded by bootloader at a address higher than its limit, we should do gpa
 		 * copy then.
@@ -138,7 +138,7 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 	zeropage = (struct zero_page *)sw_info->kernel_info.kernel_src_addr;
 
 	stac();
-	if ((is_sos_vm(vm)) && (zeropage->hdr.relocatable_kernel != 0U)) {
+	if ((is_service_vm(vm)) && (zeropage->hdr.relocatable_kernel != 0U)) {
 		uint64_t mods_start, mods_end;
 		uint64_t kernel_load_gpa = INVALID_GPA;
 		uint32_t kernel_align = zeropage->hdr.kernel_alignment;
@@ -150,8 +150,8 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 		uint32_t kernel_size = kernel_init_size + kernel_align;
 
 		get_boot_mods_range(&mods_start, &mods_end);
-		mods_start = sos_vm_hpa2gpa(mods_start);
-		mods_end = sos_vm_hpa2gpa(mods_end);
+		mods_start = service_vm_hpa2gpa(mods_start);
+		mods_end = service_vm_hpa2gpa(mods_end);
 
 		/* TODO: support load kernel when modules are beyond 4GB space. */
 		if (mods_end < MEM_4G) {
@@ -167,8 +167,8 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 		}
 	} else {
 		load_addr = (void *)zeropage->hdr.pref_addr;
-		if (is_sos_vm(vm)) {
-			/* The non-relocatable SOS kernel might overlap with boot modules. */
+		if (is_service_vm(vm)) {
+			/* The non-relocatable Servic VM kernel might overlap with boot modules. */
 			pr_err("Non-relocatable kernel found, risk to boot!");
 		}
 	}
@@ -185,13 +185,13 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 /**
  * @pre vm != NULL && efi_mmap_desc != NULL
  */
-static uint16_t create_sos_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_memory_desc *efi_mmap_desc)
+static uint16_t create_service_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_memory_desc *efi_mmap_desc)
 {
 	uint16_t i, desc_idx = 0U;
 	const struct efi_memory_desc *hv_efi_mmap_desc = get_efi_mmap_entry();
 
 	for (i = 0U; i < get_efi_mmap_entries_count(); i++) {
-		/* Below efi mmap desc types in native should be kept as original for SOS VM */
+		/* Below efi mmap desc types in native should be kept as original for Service VM */
 		if ((hv_efi_mmap_desc[i].type == EFI_RESERVED_MEMORYTYPE)
 				|| (hv_efi_mmap_desc[i].type == EFI_UNUSABLE_MEMORY)
 				|| (hv_efi_mmap_desc[i].type == EFI_ACPI_RECLAIM_MEMORY)
@@ -212,9 +212,9 @@ static uint16_t create_sos_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_memor
 
 	for (i = 0U; i < vm->e820_entry_num; i++) {
 		/* The memory region with e820 type of RAM could be acted as EFI_CONVENTIONAL_MEMORY
-		 * for SOS VM, the region which occupied by HV and pre-launched VM has been filtered
-		 * already, so it is safe for SOS VM.
-		 * As SOS VM start to run after efi call ExitBootService(), the type of EFI_LOADER_CODE
+		 * for Service VM, the region which occupied by HV and pre-launched VM has been filtered
+		 * already, so it is safe for Service VM.
+		 * As Service VM start to run after efi call ExitBootService(), the type of EFI_LOADER_CODE
 		 * and EFI_LOADER_DATA which have been mapped to E820_TYPE_RAM are not needed.
 		 */
 		if (vm->e820_entries[i].type == E820_TYPE_RAM) {
@@ -228,7 +228,7 @@ static uint16_t create_sos_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_memor
 	}
 
 	for (i = 0U; i < desc_idx; i++) {
-		pr_dbg("SOS VM efi mmap desc[%d]: addr: 0x%lx, len: 0x%lx, type: %d", i,
+		pr_dbg("Service VM efi mmap desc[%d]: addr: 0x%lx, len: 0x%lx, type: %d", i,
 			efi_mmap_desc[i].phys_addr, efi_mmap_desc[i].num_pages * PAGE_SIZE, efi_mmap_desc[i].type);
 	}
 
@@ -275,23 +275,23 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 	(void)memset(zeropage, 0U, MEM_2K);
 
 #ifdef CONFIG_MULTIBOOT2
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		struct acrn_boot_info *abi = get_acrn_boot_info();
 
 		if (boot_from_uefi(abi)) {
-			struct efi_info *sos_efi_info = &zeropage->boot_efi_info;
+			struct efi_info *service_vm_efi_info = &zeropage->boot_efi_info;
 			uint64_t efi_mmap_gpa = BZIMG_EFIMMAP_GPA(load_params_gpa);
 			struct efi_memory_desc *efi_mmap_desc = (struct efi_memory_desc *)gpa2hva(vm, efi_mmap_gpa);
-			uint16_t efi_mmap_desc_nr = create_sos_vm_efi_mmap_desc(vm, efi_mmap_desc);
+			uint16_t efi_mmap_desc_nr = create_service_vm_efi_mmap_desc(vm, efi_mmap_desc);
 
-			sos_efi_info->loader_signature = 0x34364c45; /* "EL64" */
-			sos_efi_info->memdesc_version = abi->uefi_info.memdesc_version;
-			sos_efi_info->memdesc_size = sizeof(struct efi_memory_desc);
-			sos_efi_info->memmap_size = efi_mmap_desc_nr * sizeof(struct efi_memory_desc);
-			sos_efi_info->memmap = (uint32_t)efi_mmap_gpa;
-			sos_efi_info->memmap_hi = (uint32_t)(efi_mmap_gpa >> 32U);
-			sos_efi_info->systab = abi->uefi_info.systab;
-			sos_efi_info->systab_hi = abi->uefi_info.systab_hi;
+			service_vm_efi_info->loader_signature = 0x34364c45; /* "EL64" */
+			service_vm_efi_info->memdesc_version = abi->uefi_info.memdesc_version;
+			service_vm_efi_info->memdesc_size = sizeof(struct efi_memory_desc);
+			service_vm_efi_info->memmap_size = efi_mmap_desc_nr * sizeof(struct efi_memory_desc);
+			service_vm_efi_info->memmap = (uint32_t)efi_mmap_gpa;
+			service_vm_efi_info->memmap_hi = (uint32_t)(efi_mmap_gpa >> 32U);
+			service_vm_efi_info->systab = abi->uefi_info.systab;
+			service_vm_efi_info->systab_hi = abi->uefi_info.systab_hi;
 		}
 	}
 #endif

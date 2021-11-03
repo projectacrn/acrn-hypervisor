@@ -22,13 +22,14 @@
 #include <asm/tsc.h>
 #include <trace.h>
 #include <logmsg.h>
+#include <asm/guest/vcat.h>
 
 #define INTERCEPT_DISABLE		(0U)
 #define INTERCEPT_READ			(1U << 0U)
 #define INTERCEPT_WRITE			(1U << 1U)
 #define INTERCEPT_READ_WRITE		(INTERCEPT_READ | INTERCEPT_WRITE)
 
-static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
+static uint32_t emulated_guest_msrs[NUM_EMULATED_MSRS] = {
 	/*
 	 * MSRs that trusty may touch and need isolation between secure and normal world
 	 * This may include MSR_IA32_STAR, MSR_IA32_LSTAR, MSR_IA32_FMASK,
@@ -79,6 +80,24 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 #ifdef CONFIG_NVMX_ENABLED
 	LIST_OF_VMX_MSRS,
 #endif
+
+	/* The following range of elements are reserved for vCAT usage and are
+	 * initialized dynamically by init_intercepted_cat_msr_list() during platform initialization:
+	 * [FLEXIBLE_MSR_INDEX ... (NUM_EMULATED_MSRS - 1)] = {
+	 * The following layout of each CAT MSR entry is determined by cat_msr_to_index_of_emulated_msr():
+	 * MSR_IA32_L3_MASK_BASE,
+	 * MSR_IA32_L3_MASK_BASE + 1,
+	 * ...
+	 * MSR_IA32_L3_MASK_BASE + NUM_CAT_L3_MSRS - 1,
+	 *
+	 * MSR_IA32_L2_MASK_BASE + NUM_CAT_L3_MSRS,
+	 * MSR_IA32_L2_MASK_BASE + NUM_CAT_L3_MSRS + 1,
+	 * ...
+	 * MSR_IA32_L2_MASK_BASE + NUM_CAT_L3_MSRS + NUM_CAT_L2_MSRS - 1,
+	 *
+	 * MSR_IA32_PQR_ASSOC + NUM_CAT_L3_MSRS + NUM_CAT_L2_MSRS
+	 * }
+	 */
 };
 
 static const uint32_t mtrr_msrs[] = {
@@ -244,13 +263,13 @@ uint32_t vmsr_get_guest_msr_index(uint32_t msr)
 {
 	uint32_t index;
 
-	for (index = 0U; index < NUM_GUEST_MSRS; index++) {
+	for (index = 0U; index < NUM_EMULATED_MSRS; index++) {
 		if (emulated_guest_msrs[index] == msr) {
 			break;
 		}
 	}
 
-	if (index == NUM_GUEST_MSRS) {
+	if (index == NUM_EMULATED_MSRS) {
 		pr_err("%s, MSR %x is not defined in array emulated_guest_msrs[]", __func__, msr);
 	}
 
@@ -305,24 +324,34 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 }
 
 /**
- * @pre vcpu != NULL
+ * @pre vcpu != NULL && vcpu->vm != NULL && vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
+ * @pre (is_platform_rdt_capable() == false()) || (is_platform_rdt_capable() && get_vm_config(vcpu->vm->vm_id)->pclosids != NULL)
  */
-static void prepare_auto_msr_area (struct acrn_vcpu *vcpu)
+static void prepare_auto_msr_area(struct acrn_vcpu *vcpu)
 {
-	struct acrn_vm_config *cfg = get_vm_config(vcpu->vm->vm_id);
-	uint16_t vcpu_clos = cfg->clos[vcpu->vcpu_id];
-
 	vcpu->arch.msr_area.count = 0U;
 
-	/* only load/restore MSR IA32_PQR_ASSOC when hv and guest have differnt settings */
-	if (is_platform_rdt_capable() && (vcpu_clos != hv_clos)) {
-		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
-		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
-		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
-		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(hv_clos);
-		vcpu->arch.msr_area.count++;
-		pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
-			vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
+	if (is_platform_rdt_capable()) {
+		struct acrn_vm_config *cfg = get_vm_config(vcpu->vm->vm_id);
+		uint16_t vcpu_clos;
+
+		ASSERT(cfg->pclosids != NULL, "error, cfg->pclosids is NULL");
+
+		vcpu_clos = cfg->pclosids[vcpu->vcpu_id%cfg->num_pclosids];
+
+		/* RDT: only load/restore MSR_IA32_PQR_ASSOC when hv and guest have different settings
+		 * vCAT: always load/restore MSR_IA32_PQR_ASSOC
+		 */
+		if (is_vcat_configured(vcpu->vm) || (vcpu_clos != hv_clos)) {
+			vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
+			vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
+			vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
+			vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(hv_clos);
+			vcpu->arch.msr_area.count++;
+
+			pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
+				vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
+		}
 	}
 }
 
@@ -345,7 +374,85 @@ void init_emulated_msrs(struct acrn_vcpu *vcpu)
 	}
 
 	vcpu_set_guest_msr(vcpu, MSR_IA32_FEATURE_CONTROL, val64);
+
+#ifdef CONFIG_VCAT_ENABLED
+	/*
+	 * init_vcat_msrs() will overwrite the vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value
+	 * set by prepare_auto_msr_area()
+	 */
+	init_vcat_msrs(vcpu);
+#endif
 }
+
+#ifdef CONFIG_VCAT_ENABLED
+/**
+ * @brief Map CAT MSR address to zero based index
+ *
+ * @pre  ((msr >= MSR_IA32_L3_MASK_BASE) && msr < (MSR_IA32_L3_MASK_BASE + NUM_CAT_L3_MSRS))
+ *       || ((msr >= MSR_IA32_L2_MASK_BASE) && msr < (MSR_IA32_L2_MASK_BASE + NUM_CAT_L2_MSRS))
+ *       || (msr == MSR_IA32_PQR_ASSOC)
+ */
+static uint32_t cat_msr_to_index_of_emulated_msr(uint32_t msr)
+{
+	uint32_t index = 0U;
+
+	/*  L3 MSRs indices assignment for MSR_IA32_L3_MASK_BASE ~ (MSR_IA32_L3_MASK_BASE + NUM_CAT_L3_MSRS):
+	 *  0
+	 *  1
+	 *  ...
+	 *  (NUM_CAT_L3_MSRS - 1)
+	 *
+	 *  L2 MSRs indices assignment:
+	 *  NUM_CAT_L3_MSRS
+	 *  ...
+	 *  NUM_CAT_L3_MSRS + NUM_CAT_L2_MSRS - 1
+
+	 *  PQR index assignment for MSR_IA32_PQR_ASSOC:
+	 *  NUM_CAT_L3_MSRS
+	 */
+
+	if ((msr >= MSR_IA32_L3_MASK_BASE) && (msr < (MSR_IA32_L3_MASK_BASE + NUM_CAT_L3_MSRS))) {
+		index = msr - MSR_IA32_L3_MASK_BASE;
+	} else if ((msr >= MSR_IA32_L2_MASK_BASE) && (msr < (MSR_IA32_L2_MASK_BASE + NUM_CAT_L2_MSRS))) {
+		index = msr - MSR_IA32_L2_MASK_BASE + NUM_CAT_L3_MSRS;
+	} else if (msr == MSR_IA32_PQR_ASSOC) {
+		index = NUM_CAT_L3_MSRS + NUM_CAT_L2_MSRS;
+	} else {
+		ASSERT(false, "invalid CAT msr address");
+	}
+
+	return index;
+}
+
+static void init_cat_msr_entry(uint32_t msr)
+{
+	/* Get index into the emulated_guest_msrs[] table for a given CAT MSR.
+	 * CAT MSR starts from FLEXIBLE_MSR_INDEX in the emulated MSR list.
+	 */
+	uint32_t index = cat_msr_to_index_of_emulated_msr(msr) + FLEXIBLE_MSR_INDEX;
+
+	emulated_guest_msrs[index] = msr;
+}
+
+/* Init emulated_guest_msrs[] dynamically for CAT MSRs */
+void init_intercepted_cat_msr_list(void)
+{
+	uint32_t msr;
+
+	/* MSR_IA32_L2_MASK_n MSRs */
+	for (msr = MSR_IA32_L2_MASK_BASE; msr < (MSR_IA32_L2_MASK_BASE + NUM_CAT_L2_MSRS); msr++) {
+		init_cat_msr_entry(msr);
+	}
+
+	/* MSR_IA32_L3_MASK_n MSRs */
+	for (msr = MSR_IA32_L3_MASK_BASE; msr < (MSR_IA32_L3_MASK_BASE + NUM_CAT_L3_MSRS); msr++) {
+		init_cat_msr_entry(msr);
+	}
+
+	/* MSR_IA32_PQR_ASSOC */
+	init_cat_msr_entry(MSR_IA32_PQR_ASSOC);
+}
+#endif
 
 /**
  * @pre vcpu != NULL
@@ -356,7 +463,7 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	uint32_t msr, i;
 	uint64_t value64;
 
-	for (i = 0U; i < NUM_GUEST_MSRS; i++) {
+	for (i = 0U; i < NUM_EMULATED_MSRS; i++) {
 		enable_msr_interception(msr_bitmap, emulated_guest_msrs[i], INTERCEPT_READ_WRITE);
 	}
 
@@ -392,7 +499,7 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	pr_dbg("VMX_MSR_BITMAP: 0x%016lx ", value64);
 
 	/* Initialize the MSR save/store area */
-	prepare_auto_msr_area (vcpu);
+	prepare_auto_msr_area(vcpu);
 
 	/* Setup initial value for emulated MSRs */
 	init_emulated_msrs(vcpu);
@@ -598,6 +705,19 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		}
 		break;
 	}
+#ifdef CONFIG_VCAT_ENABLED
+	case MSR_IA32_L2_MASK_BASE ... (MSR_IA32_L2_MASK_BASE +  NUM_CAT_L2_MSRS - 1U):
+	case MSR_IA32_L3_MASK_BASE ... (MSR_IA32_L3_MASK_BASE +  NUM_CAT_L3_MSRS - 1U):
+	{
+		err = read_vcbm(vcpu, msr, &v);
+		break;
+	}
+	case MSR_IA32_PQR_ASSOC:
+	{
+		err = read_vclosid(vcpu, &v);
+		break;
+	}
+#endif
 	default:
 	{
 		if (is_x2apic_msr(msr)) {
@@ -619,9 +739,11 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	}
 
-	/* Store the MSR contents in RAX and RDX */
-	vcpu_set_gpreg(vcpu, CPU_REG_RAX, v & 0xffffffffU);
-	vcpu_set_gpreg(vcpu, CPU_REG_RDX, v >> 32U);
+	if (err == 0) {
+		/* Store the MSR contents in RAX and RDX */
+		vcpu_set_gpreg(vcpu, CPU_REG_RAX, v & 0xffffffffU);
+		vcpu_set_gpreg(vcpu, CPU_REG_RDX, v >> 32U);
+	}
 
 	TRACE_2L(TRACE_VMEXIT_RDMSR, msr, v);
 
@@ -854,8 +976,8 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	case MSR_IA32_BIOS_UPDT_TRIG:
 	{
-		/* We only allow SOS to do uCode update */
-		if (is_sos_vm(vcpu->vm)) {
+		/* We only allow Service VM to do uCode update */
+		if (is_service_vm(vcpu->vm)) {
 			acrn_update_ucode(vcpu, v);
 		}
 		break;
@@ -978,6 +1100,19 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		}
 		break;
 	}
+#ifdef CONFIG_VCAT_ENABLED
+	case MSR_IA32_L2_MASK_BASE ... (MSR_IA32_L2_MASK_BASE +  NUM_CAT_L2_MSRS - 1U):
+	case MSR_IA32_L3_MASK_BASE ... (MSR_IA32_L3_MASK_BASE +  NUM_CAT_L3_MSRS - 1U):
+	{
+		err = write_vcbm(vcpu, msr, v);
+		break;
+	}
+	case MSR_IA32_PQR_ASSOC:
+	{
+		err = write_vclosid(vcpu, v);
+		break;
+	}
+#endif
 	default:
 	{
 		if (is_x2apic_msr(msr)) {

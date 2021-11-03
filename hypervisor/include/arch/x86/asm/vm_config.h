@@ -17,7 +17,7 @@
 #include <asm/sgx.h>
 #include <acrn_hv_defs.h>
 
-#define CONFIG_MAX_VM_NUM	(PRE_VM_NUM + SOS_VM_NUM + MAX_POST_VM_NUM)
+#define CONFIG_MAX_VM_NUM	(PRE_VM_NUM + SERVICE_VM_NUM + MAX_POST_VM_NUM)
 
 #define AFFINITY_CPU(n)		(1UL << (n))
 #define MAX_VCPUS_PER_VM	MAX_PCPU_NUM
@@ -26,20 +26,20 @@
 #define MAX_MOD_TAG_LEN		32U
 
 #ifdef CONFIG_SCHED_NOOP
-#define SOS_IDLE		""
+#define SERVICE_VM_IDLE		""
 #else
-#define SOS_IDLE		"idle=halt "
+#define SERVICE_VM_IDLE		"idle=halt "
 #endif
 
-#define PCI_DEV_TYPE_PTDEV	(1U << 0U)
-#define PCI_DEV_TYPE_HVEMUL	(1U << 1U)
-#define PCI_DEV_TYPE_SOSEMUL	(1U << 2U)
+#define PCI_DEV_TYPE_PTDEV		(1U << 0U)
+#define PCI_DEV_TYPE_HVEMUL		(1U << 1U)
+#define PCI_DEV_TYPE_SERVICE_VM_EMUL	(1U << 2U)
 
 #define MAX_MMIO_DEV_NUM	2U
 
-#define CONFIG_SOS_VM		.load_order = SOS_VM,	\
-				.uuid = SOS_VM_UUID,	\
-				.severity = SEVERITY_SOS
+#define CONFIG_SERVICE_VM	.load_order = SERVICE_VM,	\
+				.uuid = SERVICE_VM_UUID,	\
+				.severity = SEVERITY_SERVICE_VM
 
 #define CONFIG_SAFETY_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
 				.uuid = SAFETY_VM_UUID##idx,	\
@@ -69,7 +69,7 @@
 enum acrn_vm_severity {
 	SEVERITY_SAFETY_VM = 0x40U,
 	SEVERITY_RTVM = 0x30U,
-	SEVERITY_SOS = 0x20U,
+	SEVERITY_SERVICE_VM = 0x20U,
 	SEVERITY_STANDARD_VM = 0x10U,
 };
 
@@ -179,12 +179,27 @@ struct acrn_vm_config {
 
 	/*
 	 * below are variable length members (per build).
-	 * SOS can get the vm_configs[] array through hypercall, but SOS may not
+	 * Service VM can get the vm_configs[] array through hypercall, but Service VM may not
 	 * need to parse these members.
 	 */
-	uint16_t clos[MAX_VCPUS_PER_VM];		/* Class of Service, effective only if CONFIG_RDT_ENABLED
-							 * is defined on CAT capable platforms
-							 */
+
+	uint16_t num_pclosids; /* This defines the number of elements in the array pointed to by pclosids */
+	/* pclosids: a pointer to an array of physical CLOSIDs (pCLOSIDs)) that is defined in vm_configurations.c
+	 * by vmconfig,
+	 * applicable only if CONFIG_RDT_ENABLED is defined on CAT capable platforms.
+	 * The number of elements in the array must be equal to the value given by num_pclosids
+	 */
+	uint16_t *pclosids;
+
+	/* max_type_pcbm (type: l2 or l3) specifies the allocated portion of physical cache
+	 * for the VM and is a contiguous capacity bitmask (CBM) starting at bit position low
+	 * (the lowest assigned physical cache way) and ending at position high
+	 * (the highest assigned physical cache way, inclusive).
+	 * As CBM only allows contiguous '1' combinations, so max_type_pcbm essentially
+	 * is a bitmask that selects/covers all the physical cache ways assigned to the VM.
+	 */
+	uint32_t max_l2_pcbm;
+	uint32_t max_l3_pcbm;
 
 	struct vuart_config vuart[MAX_VUART_NUM_PER_VM];/* vuart configuration for VM */
 

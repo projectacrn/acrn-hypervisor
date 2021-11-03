@@ -492,7 +492,7 @@ def save_launch():
     rename = False
     try:
         if generator is None or not (generator.startswith('add_vm:') or generator.startswith('remove_vm:')):
-            (error_list, pthru_sel, virtio, dm_value) = validate_launch_setting(
+            (error_list, pthru_sel, virtio, dm_value, sriov) = validate_launch_setting(
                 os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1], xml_configs[0]+'.xml'),
                 scenario_file_path,
                 tmp_launch_file)
@@ -986,7 +986,7 @@ def get_post_launch_vms():
 
     vm_list = get_post_launch_vm_list(scenario_name)
 
-    uos_id_list = []
+    user_vmid_list = []
     launch_name = data['launch_name']
     xml_configs = get_xml_configs()
     launch_config = xml_configs[3]
@@ -994,12 +994,12 @@ def get_post_launch_vms():
     if launch_config is not None and launch_config.get_curr_root() is not None:
         for uos in list(launch_config.get_curr_root()):
             if 'id' in uos.attrib:
-                uos_id_list.append(int(uos.attrib['id'])-1)
+                user_vmid_list.append(int(uos.attrib['id'])-1)
 
     vm_list_index = [i for i in range(len(vm_list))]
     vm_list_index = set(vm_list_index)
-    uos_id_list = set(uos_id_list)
-    index = list(vm_list_index - uos_id_list)
+    user_vmid_list = set(user_vmid_list)
+    index = list(vm_list_index - user_vmid_list)
     vm_list = [vm_list[i] for i in index]
 
     return {'vm_list': vm_list}
@@ -1079,7 +1079,7 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             'PRE_STD_VM': ('partitioned', 'vm:id=0'),
             'PRE_RT_VM': ('hybrid_rt', 'vm:id=0'),
             'SAFETY_VM': ('hybrid', 'vm:id=0'),
-            'SOS_VM': ('shared', 'vm:id=0'),
+            'SERVICE_VM': ('shared', 'vm:id=0'),
             'POST_STD_VM': ('shared', 'vm:id=1'),
             'POST_RT_VM': ('shared', 'vm:id=2'),
             'KATA_VM': ('shared', 'vm:id=7'),
@@ -1274,7 +1274,7 @@ def assign_vm_id(scenario_config):
                 if item.tag == 'vm_type':
                     if item.text in ['PRE_STD_VM', 'SAFETY_VM', 'PRE_RT_VM']:
                         pre_launched_vm_num += 1
-                    elif item.text in ['SOS_VM']:
+                    elif item.text in ['SERVICE_VM']:
                         sos_vm_num += 1
                     elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
                         post_launched_vm_num += 1
@@ -1289,7 +1289,7 @@ def assign_vm_id(scenario_config):
                     if item.text in ['PRE_STD_VM', 'SAFETY_VM', 'PRE_RT_VM']:
                         vm.attrib['id'] = str(pre_launched_vm_index)
                         pre_launched_vm_index += 1
-                    elif item.text in ['SOS_VM']:
+                    elif item.text in ['SERVICE_VM']:
                         vm.attrib['id'] = str(sos_vm_index)
                         sos_vm_index += 1
                     elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:

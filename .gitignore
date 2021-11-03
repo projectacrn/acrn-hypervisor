@@ -5,3 +5,4 @@ build
 *.log
 *.warnings
 *.pyc
+/offline-tools/

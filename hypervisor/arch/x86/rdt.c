@@ -61,6 +61,14 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 };
 
 /*
+ * @pre res == RDT_RESOURCE_L3 || res == RDT_RESOURCE_L2 || res == RDT_RESOURCE_MBA
+ */
+const struct rdt_info *get_rdt_res_cap_info(int res)
+{
+	return &res_cap_info[res];
+}
+
+/*
  * @pre res == RDT_RESOURCE_L3 || res == RDT_RESOURCE_L2
  */
 static void init_cat_capability(int res)

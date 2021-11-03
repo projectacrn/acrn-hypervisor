@@ -5,8 +5,8 @@
 
 import ctypes
 
-import lib.cdata as cdata
-import lib.unpack as unpack
+import inspectorlib.cdata as cdata
+import inspectorlib.unpack as unpack
 
 class TableHeader(cdata.Struct):
     _pack_ = 1

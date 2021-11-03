@@ -244,8 +244,6 @@ def walk_pci_bus(tmp_pdf, dmar_tbl, dmar_hw_list, drhd_cnt):
     :param dmar_hw_list: it is a class to describe hardware scope in DMAR table
     :param drhd_cnt: it is a counter to calculate the DRHD in DMAR table
     """
-    # initialize DRHDx_IGNORE to false
-    dmar_hw_list.hw_ignore[drhd_cnt] = 'false'
     # path offset is in end of device spcope
     dmar_tbl.path_offset = dmar_tbl.dev_scope_offset + ctypes.sizeof(DmarDevScope)
     n_cnt = (dmar_tbl.dmar_dev_scope.scope_length - ctypes.sizeof(DmarDevScope)) // 2
@@ -330,6 +328,9 @@ def walk_dmar_table(dmar_tbl, dmar_hw_list, dmar_dev_list, sysnode):
         if dmar_type != ACPI_DMAR_TYPE['ACPI_DMAR_TYPE_HARDWARE_UNIT']:
             dmar_tbl.drhd_offset += dmar_len
             continue
+
+        # initialize DRHDx_IGNORE to false
+        dmar_hw_list.hw_ignore[drhd_cnt] = 'false'
 
         dmar_hw_list.hw_segment_list.append(dmar_tbl.dmar_drhd.segment)
         dmar_hw_list.hw_flags_list.append(dmar_tbl.dmar_drhd.flags)

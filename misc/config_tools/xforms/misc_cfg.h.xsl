@@ -66,7 +66,7 @@
   </xsl:template>
 
 <xsl:template name="sos_rootfs">
-  <xsl:value-of select="acrn:define('SOS_ROOTFS', concat($quot, 'root=', vm/board_private/rootfs[text()], ' ', $quot), '')" />
+  <xsl:value-of select="acrn:define('SERVICE_VM_ROOTFS', concat($quot, 'root=', vm/board_private/rootfs[text()], ' ', $quot), '')" />
 </xsl:template>
 
 <xsl:template name="sos_serial_console">
@@ -84,7 +84,7 @@
       </xsl:if>
     </xsl:if>
   </xsl:variable>
-  <xsl:value-of select="acrn:define('SOS_CONSOLE', $sos_console, '')" />
+  <xsl:value-of select="acrn:define('SERVICE_VM_OS_CONSOLE', $sos_console, '')" />
 </xsl:template>
 
 <xsl:template name="sos_bootargs_diff">
@@ -106,25 +106,19 @@
       <xsl:value-of select="concat('hugepagesz=1G hugepages=', $hugepages)" />
     </xsl:if>
   </xsl:variable>
-  <xsl:value-of select="acrn:define('SOS_BOOTARGS_DIFF', concat($quot, $bootargs, ' ', $maxcpus, ' ', $hugepage_kernelstring, ' ', $quot), '')" />
+  <xsl:value-of select="acrn:define('SERVICE_VM_BOOTARGS_DIFF', concat($quot, $bootargs, ' ', $maxcpus, ' ', $hugepage_kernelstring, ' ', $quot), '')" />
 </xsl:template>
 
 <xsl:template name="cpu_affinity">
   <xsl:for-each select="vm">
     <xsl:choose>
       <xsl:when test="acrn:is-sos-vm(vm_type)">
-        <xsl:value-of select="acrn:define('SOS_VM_CONFIG_CPU_AFFINITY', concat('(', acrn:string-join(//vm[acrn:is-sos-vm(vm_type)]/cpu_affinity/pcpu_id, '|', 'AFFINITY_CPU(', 'U)'),')'), '')" />
+        <xsl:value-of select="acrn:define('SERVICE_VM_CONFIG_CPU_AFFINITY', concat('(', acrn:string-join(//vm[acrn:is-sos-vm(vm_type)]/cpu_affinity/pcpu_id, '|', 'AFFINITY_CPU(', 'U)'),')'), '')" />
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="acrn:define(concat('VM', @id, '_CONFIG_CPU_AFFINITY'), concat('(', acrn:string-join(cpu_affinity/pcpu_id, '|', 'AFFINITY_CPU(', 'U)'),')'), '')" />
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:for-each>
-</xsl:template>
-
-<xsl:template name="vcpu_clos">
-  <xsl:for-each select="vm">
-    <xsl:value-of select="acrn:define(concat('VM', @id, '_VCPU_CLOS'), concat('{', acrn:string-join(clos/vcpu_clos, ',', '', 'U'),'}'), '')" />
   </xsl:for-each>
 </xsl:template>
 
@@ -172,7 +166,6 @@
     <xsl:for-each select="hv/FEATURES/RDT/CLOS_MASK">
       <xsl:value-of select="acrn:define(concat('CLOS_MASK_', position() - 1), current(), 'U')" />
     </xsl:for-each>
-    <xsl:call-template name="vcpu_clos" />
     <xsl:value-of select="$endif" />
   </xsl:if>
 </xsl:template>

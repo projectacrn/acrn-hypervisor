@@ -70,7 +70,7 @@ static inline bool has_complete_ioreq(const struct acrn_vcpu *vcpu)
 }
 
 /**
- * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
+ * @brief Deliver \p io_req to Service VM and suspend \p vcpu till its completion
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  * @param io_req The I/O request holding the details of the MMIO access
@@ -168,7 +168,7 @@ void set_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id, uint32_t state)
 		acrn_io_req = &req_buf->req_slot[vcpu_id];
 		/*
 		 * HV will only set processed to ACRN_IOREQ_STATE_PENDING or ACRN_IOREQ_STATE_FREE.
-		 * we don't need to sfence here is that even if the SOS/DM sees the previous state,
+		 * we don't need to sfence here is that even if the Service-VM/DM sees the previous state,
 		 * the only side effect is that it will defer the processing of the new IOReq.
 		 * It won't lead wrong processing.
 		 */
@@ -404,7 +404,7 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	io_read_fn_t io_read = NULL;
 	io_write_fn_t io_write = NULL;
 
-	if (is_sos_vm(vcpu->vm) || is_prelaunched_vm(vcpu->vm)) {
+	if (is_service_vm(vcpu->vm) || is_prelaunched_vm(vcpu->vm)) {
 		io_read = pio_default_read;
 		io_write = pio_default_write;
 	}
@@ -468,7 +468,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	hv_mem_io_handler_t read_write = NULL;
 	void *handler_private_data = NULL;
 
-	if (is_sos_vm(vcpu->vm) || is_prelaunched_vm(vcpu->vm)) {
+	if (is_service_vm(vcpu->vm) || is_prelaunched_vm(vcpu->vm)) {
 		read_write = mmio_default_access_handler;
 	}
 
@@ -600,7 +600,7 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 		const struct vm_io_range *range, io_read_fn_t io_read_fn_ptr, io_write_fn_t io_write_fn_ptr)
 {
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		deny_guest_pio_access(vm, range->base, range->len);
 	}
 	vm->emul_pio[pio_idx].port_start = range->base;

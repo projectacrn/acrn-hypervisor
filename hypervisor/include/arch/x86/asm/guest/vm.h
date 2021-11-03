@@ -215,13 +215,13 @@ static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_
 }
 
 /* Convert relative vm id to absolute vm id */
-static inline uint16_t rel_vmid_2_vmid(uint16_t sos_vmid, uint16_t rel_vmid) {
-	return (sos_vmid + rel_vmid);
+static inline uint16_t rel_vmid_2_vmid(uint16_t service_vmid, uint16_t rel_vmid) {
+	return (service_vmid + rel_vmid);
 }
 
 /* Convert absolute vm id to relative vm id */
-static inline uint16_t vmid_2_rel_vmid(uint16_t sos_vmid, uint16_t vmid) {
-	return (vmid - sos_vmid);
+static inline uint16_t vmid_2_rel_vmid(uint16_t service_vmid, uint16_t vmid) {
+	return (vmid - service_vmid);
 }
 
 void make_shutdown_vm_request(uint16_t pcpu_id);
@@ -238,14 +238,14 @@ void launch_vms(uint16_t pcpu_id);
 bool is_poweroff_vm(const struct acrn_vm *vm);
 bool is_created_vm(const struct acrn_vm *vm);
 bool is_paused_vm(const struct acrn_vm *vm);
-bool is_sos_vm(const struct acrn_vm *vm);
+bool is_service_vm(const struct acrn_vm *vm);
 bool is_postlaunched_vm(const struct acrn_vm *vm);
 bool is_prelaunched_vm(const struct acrn_vm *vm);
 uint16_t get_vmid_by_uuid(const uint8_t *uuid);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
-struct acrn_vm *get_sos_vm(void);
+struct acrn_vm *get_service_vm(void);
 
-void create_sos_vm_e820(struct acrn_vm *vm);
+void create_service_vm_e820(struct acrn_vm *vm);
 void create_prelaunched_vm_e820(struct acrn_vm *vm);
 uint64_t find_space_from_ve820(struct acrn_vm *vm, uint32_t size, uint64_t min_addr, uint64_t max_addr);
 
@@ -256,6 +256,7 @@ void vrtc_init(struct acrn_vm *vm);
 bool is_lapic_pt_configured(const struct acrn_vm *vm);
 bool is_rt_vm(const struct acrn_vm *vm);
 bool is_nvmx_configured(const struct acrn_vm *vm);
+bool is_vcat_configured(const struct acrn_vm *vm);
 bool is_pi_capable(const struct acrn_vm *vm);
 bool has_rt_vm(void);
 struct acrn_vm *get_highest_severity_vm(bool runtime);

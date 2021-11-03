@@ -16,7 +16,7 @@
 int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {
 	/* Note:
-	 * 1. We don't validate Px request from SOS_VM for now;
+	 * 1. We don't validate Px request from Service VM for now;
 	 * 2. Px request will be rejected if no VM Px data is set, even guest is running intel_pstate driver;
 	 * 3. The Pstate frequency varies from LFM to HFM and then TFM, but not all frequencies between
 	 *     LFM to TFM are mapped in ACPI table. For acpi-cpufreq driver, the target Px value in MSR
@@ -27,7 +27,7 @@ int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 	 */
 	int32_t ret = -1;
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		ret = 0;
 	} else {
 		uint8_t px_cnt = vm->pm.px_cnt;
@@ -157,11 +157,11 @@ static inline void enter_s5(struct acrn_vcpu *vcpu, uint32_t pm1a_cnt_val, uint3
 
 	get_vm_lock(vm);
 	/*
-	 * Currently, we assume SOS has full ACPI power management stack.
-	 * That means the value from SOS should be saved and used to shut
+	 * Currently, we assume Service VM has full ACPI power management stack.
+	 * That means the value from Service VM should be saved and used to shut
 	 * down the system.
 	 */
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		save_s5_reg_val(pm1a_cnt_val, pm1b_cnt_val);
 	}
 	pause_vm(vm);
@@ -183,7 +183,7 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 	guest_wakeup_vec32 = *(vm->pm.sx_state_data->wake_vector_32);
 	clac();
 
-	pause_vm(vm);	/* pause sos_vm before suspend system */
+	pause_vm(vm);	/* pause Service VM before suspend system */
 	host_enter_s3(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
 	resume_vm_from_s3(vm, guest_wakeup_vec32);	/* jump back to vm */
 	put_vm_lock(vm);
@@ -382,8 +382,8 @@ void init_guest_pm(struct acrn_vm *vm)
 
 	/*
 	 * In enter_s5(), it will call save_s5_reg_val() to initialize system_pm1a_cnt_val/system_pm1b_cnt_val when the
-	 * vm is SOS.
-	 * If there is no SOS, save_s5_reg_val() will not be called and these 2 variables will not be initialized properly
+	 * vm is Service VM.
+	 * If there is no Service VM, save_s5_reg_val() will not be called and these 2 variables will not be initialized properly
 	 * so shutdown_system() will fail, explicitly init here to avoid this
 	 */
 	save_s5_reg_val((sx_data->s5_pkg.val_pm1a << BIT_SLP_TYPx) | (1U << BIT_SLP_EN),
@@ -391,7 +391,7 @@ void init_guest_pm(struct acrn_vm *vm)
 
 	vm_setup_cpu_state(vm);
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		/* Load pm S state data */
 		if (vm_load_pm_s_state(vm) == 0) {
 			register_pm1ab_handler(vm);

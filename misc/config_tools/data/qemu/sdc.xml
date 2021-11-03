@@ -21,6 +21,7 @@
         <RDT>
             <RDT_ENABLED>n</RDT_ENABLED>
             <CDP_ENABLED>n</CDP_ENABLED>
+            <VCAT_ENABLED>n</VCAT_ENABLED>
         </RDT>
         <NVMX_ENABLED>n</NVMX_ENABLED>
         <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -36,7 +37,6 @@
 
     <MEMORY>
         <STACK_SIZE>0x2000</STACK_SIZE>
-        <HV_RAM_SIZE>0x07800000</HV_RAM_SIZE>
         <HV_RAM_START>0x11000000</HV_RAM_START>
         <LOW_RAM_SIZE>0x00010000</LOW_RAM_SIZE>
         <PLATFORM_RAM_SIZE>0x100000000</PLATFORM_RAM_SIZE>
@@ -60,8 +60,8 @@
   </hv>
 
   <vm id="0">
-    <vm_type>SOS_VM</vm_type>
-    <name>ACRN SOS VM</name>
+    <vm_type>SERVICE_VM</vm_type>
+    <name>ACRN Service VM</name>
     <guest_flags>
         <guest_flag>0</guest_flag>
     </guest_flags>
@@ -76,17 +76,17 @@
         <kern_type>KERNEL_BZIMAGE</kern_type>
         <kern_mod>Linux_bzImage</kern_mod>
         <ramdisk_mod/>
-        <bootargs>SOS_VM_BOOTARGS</bootargs>
+        <bootargs>SERVICE_VM_OS_BOOTARGS</bootargs>
     </os_config>
     <legacy_vuart id="0">
         <type>VUART_LEGACY_PIO</type>
-        <base>SOS_COM1_BASE</base>
-        <irq>SOS_COM1_IRQ</irq>
+        <base>SERVICE_VM_COM1_BASE</base>
+        <irq>SERVICE_VM_COM1_IRQ</irq>
     </legacy_vuart>
     <legacy_vuart id="1">
         <type>VUART_LEGACY_PIO</type>
-        <base>INVALID_COM_BASE</base>
-        <irq>SOS_COM2_IRQ</irq>
+        <base>CONFIG_COM_BASE</base>
+        <irq>0</irq>
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </legacy_vuart>
@@ -105,7 +105,7 @@
         <rootfs>/dev/vda1</rootfs>
         <bootargs>
         earlyprintk=serial,ttyS0,115200n8 rw rootwait console=tty0 consoleblank=0 no_timer_check ignore_loglevel
-        ignore_loglevel no_timer_check intel_iommu=off tsc=reliable hvlog=2M@0x1FE00000
+        ignore_loglevel no_timer_check intel_iommu=off tsc=reliable hvlog=2M@0x1FE00000 8250.nr_uarts=20
         </bootargs>
     </board_private>
   </vm>
@@ -131,7 +131,7 @@
     </legacy_vuart>
     <legacy_vuart id="1">
         <type>VUART_LEGACY_PIO</type>
-        <base>INVALID_COM_BASE</base>
+        <base>COM2_BASE</base>
         <irq>COM2_IRQ</irq>
         <target_vm_id>0</target_vm_id>
         <target_uart_id>1</target_uart_id>

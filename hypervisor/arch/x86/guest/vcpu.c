@@ -136,7 +136,7 @@ uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr)
 	uint32_t index = vmsr_get_guest_msr_index(msr);
 	uint64_t val = 0UL;
 
-	if (index < NUM_GUEST_MSRS) {
+	if (index < NUM_EMULATED_MSRS) {
 		val = vcpu->arch.guest_msrs[index];
 	}
 
@@ -147,7 +147,7 @@ void vcpu_set_guest_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val)
 {
 	uint32_t index = vmsr_get_guest_msr_index(msr);
 
-	if (index < NUM_GUEST_MSRS) {
+	if (index < NUM_EMULATED_MSRS) {
 		vcpu->arch.guest_msrs[index] = val;
 	}
 }

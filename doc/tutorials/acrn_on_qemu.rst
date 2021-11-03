@@ -3,29 +3,30 @@
 Enable ACRN Over QEMU/KVM
 #########################
 
-Goal of this document is to bring-up ACRN as a nested Hypervisor on top of QEMU/KVM
-with basic functionality such as running Service VM (SOS) and User VM (UOS) for primarily 2 reasons,
+This document shows how to bring up ACRN as a nested hypervisor on top of
+QEMU/KVM with basic functionality such as running a Service VM and User VM.
+Running ACRN as a nested hypervisor gives you an easy way to evaluate ACRN in an
+emulated environment instead of setting up a separate hardware platform
+configuration.
 
-1. Allow users to evaluate ACRN.
-2. Make ACRN platform agnostic and remove hardware-specific platform configurations setup overhead.
+This setup was tested with the following configuration:
 
-This setup was tested with the following configuration,
-
-- ACRN Hypervisor: ``v2.6`` tag
-- ACRN Kernel: ``v2.6`` tag
-- QEMU emulator version 4.2.1
-- Service VM/User VM is Ubuntu 20.04
-- Platforms Tested: Kaby Lake, Skylake
+- ACRN hypervisor: ``v2.6`` tag
+- ACRN kernel: ``v2.6`` tag
+- QEMU emulator version: 4.2.1
+- Service VM/User VM OS: Ubuntu 20.04
+- Platforms tested: Kaby Lake, Skylake
 
 Prerequisites
 *************
+
 1. Make sure the platform supports Intel VMX as well as VT-d
    technologies. On Ubuntu 20.04, this
-   can be checked by installing ``cpu-checker`` tool. If the
-   output displays **KVM acceleration can be used**
+   can be checked by installing the ``cpu-checker`` tool. If the
+   output displays **KVM acceleration can be used**,
    the platform supports it.
 
-   .. code-block:: none
+   .. code-block:: console
 
       kvm-ok
       INFO: /dev/kvm exists
@@ -45,16 +46,17 @@ Prerequisites
 
 Prepare Service VM (L1 Guest)
 *****************************
-1. Use ``virt-install`` command to create Service VM.
+
+1. Use the ``virt-install`` command to create the Service VM.
 
    .. code-block:: none
 
       virt-install \
       --connect qemu:///system \
-      --name ACRNSOS \
+      --name ServiceVM \
       --machine q35 \
       --ram 4096 \
-      --disk path=/var/lib/libvirt/images/acrnsos.img,size=32 \
+      --disk path=/var/lib/libvirt/images/servicevm.img,size=32 \
       --vcpus 4 \
       --virt-type kvm \
       --os-type linux \
@@ -67,24 +69,26 @@ Prepare Service VM (L1 Guest)
 
 #. Walk through the installation steps as prompted. Here are a few things to note:
 
-   a. Make sure to install an OpenSSH server so that once the installation is complete, we can SSH into the system.
+   a. Make sure to install an OpenSSH server so that once the installation is
+      complete, you can SSH into the system.
 
       .. figure:: images/acrn_qemu_1.png
          :align: center
 
-   b. We use Grub to boot ACRN, so make sure you install it when prompted.
+   b. We use GRUB to boot ACRN, so make sure you install it when prompted.
 
       .. figure:: images/acrn_qemu_2.png
          :align: center
 
-   c. The Service VM (guest) will be restarted once the installation is complete.
+   c. After the installation is complete, the Service VM (guest) will restart.
 
-#. Login to the Service VM guest. Find the IP address of the guest and use it to connect
-   via SSH. The IP address can be retrieved using the ``virsh`` command as shown below.
+#. Log in to the Service VM guest. Find the IP address of the guest and use it
+   to connect via SSH. The IP address can be retrieved using the ``virsh``
+   command as shown below.
 
    .. code-block:: console
 
-      virsh domifaddr ACRNSOS
+      virsh domifaddr ServiceVM
        Name       MAC address          Protocol     Address
       -------------------------------------------------------------------------------
        vnet0      52:54:00:72:4e:71    ipv4         192.168.122.31/24
@@ -97,8 +101,8 @@ Prepare Service VM (L1 Guest)
       sudo systemctl enable serial-getty@ttyS0.service
       sudo systemctl start serial-getty@ttyS0.service
 
-#. Enable the Grub menu to choose between Ubuntu and the ACRN hypervisor.
-   Modify :file:`/etc/default/grub` and edit below entries,
+#. Enable the GRUB menu to choose between Ubuntu and the ACRN hypervisor.
+   Modify :file:`/etc/default/grub` and edit these entries:
 
    .. code-block:: none
 
@@ -107,25 +111,27 @@ Prepare Service VM (L1 Guest)
       GRUB_CMDLINE_LINUX_DEFAULT=""
       GRUB_GFXMODE=text
 
-#. The Service VM guest can also be launched again later using ``virsh start ACRNSOS --console``.
-   Make sure to use the domain name you used while creating the VM in case it is different than ``ACRNSOS``.
+#. The Service VM guest can also be launched again later using
+   ``virsh start ServiceVM --console``. Make sure to use the domain name you
+   used while creating the VM in case it is different than ``ServiceVM``.
 
-This concludes the initial configuration of the Service VM, the next steps will install ACRN in it.
+This concludes the initial configuration of the Service VM. The next steps will
+install ACRN in it.
 
 .. _install_acrn_hypervisor:
 
 Install ACRN Hypervisor
 ***********************
 
-1. Launch the ``ACRNSOS`` Service VM guest and log onto it (SSH is recommended but the console is
-   available too).
+1. Launch the ``ServiceVM`` Service VM guest and log into it (SSH is recommended
+   but the console is available too).
 
-   .. important:: All the steps below are performed **inside** the Service VM guest that we built in the
-      previous section.
+   .. important:: All the steps below are performed **inside** the Service VM
+      guest that we built in the previous section.
 
-#. Install the ACRN build tools and dependencies following the :ref:`gsg`
+#. Install the ACRN build tools and dependencies following the :ref:`gsg`.
 
-#. Clone ACRN repo and check out the ``v2.6`` tag.
+#. Switch to the ACRN hypervisor ``v2.6`` tag.
 
    .. code-block:: none
 
@@ -134,15 +140,15 @@ Install ACRN Hypervisor
       cd acrn-hypervisor
       git checkout v2.6
 
-#. Build ACRN for QEMU,
+#. Build ACRN for QEMU:
 
    .. code-block:: none
 
       make BOARD=qemu SCENARIO=sdc
 
-   For more details, refer to :ref:`gsg`.
+   For more details, refer to the :ref:`gsg`.
 
-#. Install the ACRN Device Model and tools
+#. Install the ACRN Device Model and tools:
 
    .. code-block::
 
@@ -154,13 +160,13 @@ Install ACRN Hypervisor
 
       sudo cp build/hypervisor/acrn.32.out /boot
 
-#. Clone and configure the Service VM kernel repository following the instructions at
-   :ref:`gsg` and using the ``v2.6`` tag. The User VM (L2 guest)
-   uses the ``virtio-blk`` driver to mount the rootfs. This driver is included in the default
-   kernel configuration as of the ``v2.6`` tag.
+#. Clone and configure the Service VM kernel repository following the
+   instructions in the :ref:`gsg` and using the ``v2.6`` tag. The User VM (L2
+   guest) uses the ``virtio-blk`` driver to mount the rootfs. This driver is
+   included in the default kernel configuration as of the ``v2.6`` tag.
 
-#. Update Grub to boot the ACRN hypervisor and load the Service VM kernel. Append the following
-   configuration to the :file:`/etc/grub.d/40_custom`.
+#. Update GRUB to boot the ACRN hypervisor and load the Service VM kernel.
+   Append the following configuration to the :file:`/etc/grub.d/40_custom`.
 
    .. code-block:: none
 
@@ -177,26 +183,32 @@ Install ACRN Hypervisor
          module /boot/bzImage Linux_bzImage
       }
 
-#. Update Grub: ``sudo update-grub``.
+#. Update GRUB:
 
-#. Enable networking for the User VMs
+   .. code-block:: none
+
+      sudo update-grub
+
+#. Enable networking for the User VMs:
 
    .. code-block:: none
 
       sudo systemctl enable systemd-networkd
       sudo systemctl start systemd-networkd
 
-#. Shut down the guest and relaunch it using ``virsh start ACRNSOS --console``.
-   Select the ``ACRN hypervisor`` entry from the Grub menu.
+#. Shut down the guest and relaunch it using
+   ``virsh start ServiceVM --console``.
+   Select the ``ACRN hypervisor`` entry from the GRUB menu.
 
    .. note::
-      You may occasionnally run into the following error: ``Assertion failed in file
-      arch/x86/vtd.c,line 256 : fatal error`` occasionally. This is a transient issue,
-      try to restart the VM when that happens. If you need a more stable setup, you
-      can work around the problem by switching your native host to a non-graphical
-      environment (``sudo systemctl set-default multi-user.target``).
+      You may occasionally run into the following error: ``Assertion failed in
+      file arch/x86/vtd.c,line 256 : fatal error``. This is a transient issue;
+      try to restart the VM when that happens. If you need a more stable setup,
+      you can work around the problem by switching your native host to a
+      non-graphical environment (``sudo systemctl set-default
+      multi-user.target``).
 
-#. Verify that you are now running ACRN using ``dmesg``.
+#. Use ``dmesg`` to verify that you are now running ACRN.
 
    .. code-block:: console
 
@@ -204,33 +216,36 @@ Install ACRN Hypervisor
       [    0.000000] Hypervisor detected: ACRN
       [    2.337176] ACRNTrace: Initialized acrn trace module with 4 cpu
       [    2.368358] ACRN HVLog: Initialized hvlog module with 4 cpu
-      [    2.727905] systemd[1]: Set hostname to <ACRNSOS>.
+      [    2.727905] systemd[1]: Set hostname to <ServiceVM>.
 
    .. note::
-      When shutting down the Service VM, make sure to cleanly destroy it with these commands,
-      to prevent crashes in subsequent boots.
+      When shutting down the Service VM, make sure to cleanly destroy it with
+      these commands, to prevent crashes in subsequent boots.
 
       .. code-block:: none
 
-         virsh destroy ACRNSOS # where ACRNSOS is the virsh domain name.
+         virsh destroy ServiceVM # where ServiceVM is the virsh domain name.
 
-Bring-Up User VM (L2 Guest)
+Bring Up User VM (L2 Guest)
 ***************************
 
-1. Build the User VM disk image (``UserVM.img``) following :ref:`build-the-ubuntu-kvm-image` and copy it to the ACRNSOS (L1 Guest).
-   Alternatively you can also use an `Ubuntu Desktop ISO image <https://ubuntu.com/#download>`_.
+1. Build the User VM disk image (``UserVM.img``) following
+   :ref:`build-the-ubuntu-kvm-image` and copy it to the Service VM (L1 guest).
+   Alternatively you can use an
+   `Ubuntu Desktop ISO image <https://ubuntu.com/#download>`_.
    Rename the downloaded ISO image to ``UserVM.iso``.
 
-#. Transfer the ``UserVM.img``  or ``UserVM.iso`` User VM disk image to the Service VM (L1 guest).
+#. Transfer the ``UserVM.img``  or ``UserVM.iso`` User VM disk image to the
+   Service VM (L1 guest).
 
-#. Launch User VM using the ``launch_ubuntu.sh`` script.
+#. Launch the User VM using the ``launch_ubuntu.sh`` script.
 
    .. code-block:: none
 
       cp ~/acrn-hypervisor/misc/config_tools/data/samples_launch_scripts/launch_ubuntu.sh ~/
       cp ~/acrn-hypervisor/devicemodel/bios/OVMF.fd ~/
 
-#. Update the script to use your disk image (``UserVM.img or ``UserVM.iso``).
+#. Update the script to use your disk image (``UserVM.img`` or ``UserVM.iso``).
 
    .. code-block:: none
 

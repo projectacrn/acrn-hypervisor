@@ -133,6 +133,12 @@ void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 	kick_vcpu(vcpu);
 }
 
+/* Return true if an unhandled request is cancelled, false otherwise. */
+bool vcpu_try_cancel_request(struct acrn_vcpu *vcpu, uint16_t eventid)
+{
+	return bitmap_test_and_clear_lock(eventid, &vcpu->arch.pending_req);
+}
+
 /*
  * @retval true when INT is injected to guest.
  * @retval false when otherwise

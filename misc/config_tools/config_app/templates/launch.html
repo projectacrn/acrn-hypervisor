@@ -207,7 +207,7 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                 {% elif elem|list != [] %}
                     {% if 'multiselect' not in elem.attrib or elem.attrib['multiselect'] != 'true' %}
                         {% set first_multi_child = {'block': 0, 'network': 0, 'input': 0, 'pcpu_id': 0, 'shm_region': 0,
-                        'passthrough_devices': 0, 'virtio_devices': 0, 'communication_vuart': 0} %}
+                        'passthrough_devices': 0, 'virtio_devices': 0, 'sriov_devices': 0, 'communication_vuart': 0} %}
                         {% for sub_elem in elem|list %}
                             {% set sub_elem_text = '' if sub_elem.text == None else sub_elem.text %}
                             {% if 'configurable' not in sub_elem.attrib or sub_elem.attrib['configurable'] != '0' %}

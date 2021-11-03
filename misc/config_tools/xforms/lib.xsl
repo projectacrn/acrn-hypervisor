@@ -356,7 +356,7 @@
 
   <func:function name="acrn:is-rdt-enabled">
     <xsl:choose>
-      <xsl:when test="//RDT_ENABLED = 'y'">
+      <xsl:when test="acrn:is-rdt-supported() and //RDT_ENABLED = 'y'">
         <func:result select="true()" />
       </xsl:when>
       <xsl:otherwise>
@@ -368,6 +368,17 @@
   <func:function name="acrn:is-cdp-enabled">
     <xsl:choose>
       <xsl:when test="acrn:is-rdt-enabled() and //CDP_ENABLED = 'y'">
+        <func:result select="true()" />
+      </xsl:when>
+      <xsl:otherwise>
+        <func:result select="false()" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </func:function>
+
+  <func:function name="acrn:is-vcat-enabled">
+    <xsl:choose>
+      <xsl:when test="acrn:is-rdt-enabled() and //VCAT_ENABLED = 'y'">
         <func:result select="true()" />
       </xsl:when>
       <xsl:otherwise>
@@ -424,7 +435,7 @@
   <func:function name="acrn:is-sos-vm">
     <xsl:param name="vm_type" />
     <xsl:choose>
-      <xsl:when test="$vm_type = 'SOS_VM'">
+      <xsl:when test="$vm_type = 'SERVICE_VM'">
         <func:result select="true()" />
       </xsl:when>
       <xsl:otherwise>

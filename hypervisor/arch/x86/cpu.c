@@ -186,6 +186,10 @@ void init_pcpu_pre(bool is_bsp)
 			panic("System IOAPIC info is incorrect!");
 		}
 
+#ifdef CONFIG_VCAT_ENABLED
+		init_intercepted_cat_msr_list();
+#endif
+
 #ifdef CONFIG_RDT_ENABLED
 		init_rdt_info();
 #endif

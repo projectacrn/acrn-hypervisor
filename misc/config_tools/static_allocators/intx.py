@@ -50,6 +50,25 @@ def create_vuart_irq_node(etree, vm_id, vm_type, vuart_id, irq):
 
     common.append_node(f"./legacy_vuart[@id = '{vuart_id}']/irq", irq, allocation_vm_node)
 
+def assign_legacy_vuart_irqs(vm_node, legacy_vuart_id, irq_list):
+    legacy_vuart_node_irq_text = common.get_node(f"legacy_vuart[@id = '{legacy_vuart_id}']/irq/text()", vm_node)
+    legacy_vuart_irq = ''
+    if legacy_vuart_node_irq_text == 'COM1_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM1_IRQ' \
+        or legacy_vuart_node_irq_text == 'COM3_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM3_IRQ':
+        legacy_vuart_irq = '4'
+        if legacy_vuart_irq in irq_list:
+            remove_irq(irq_list, legacy_vuart_irq)
+    elif legacy_vuart_node_irq_text == 'COM2_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM2_IRQ' \
+        or legacy_vuart_node_irq_text == 'COM4_IRQ' or legacy_vuart_node_irq_text == 'SERVICE_VM_COM4_IRQ':
+        legacy_vuart_irq = '3'
+        if legacy_vuart_irq in irq_list:
+            remove_irq(irq_list, legacy_vuart_irq)
+    elif legacy_vuart_node_irq_text == '0':
+        legacy_vuart_irq = '0'
+    else:
+        legacy_vuart_irq = alloc_irq(irq_list)
+    return legacy_vuart_irq
+
 def alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree):
     native_ttys = lib.lib.get_native_ttys()
     hv_debug_console = lib.lib.parse_hv_console(scenario_etree)
@@ -57,34 +76,22 @@ def alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree):
     vm_node_list = scenario_etree.xpath("//vm")
     for vm_node in vm_node_list:
         vm_type = common.get_node("./vm_type/text()", vm_node)
-        irq_list = get_native_valid_irq() if vm_type == "SOS_VM" else [f"{d}" for d in list(range(1,15))]
+        irq_list = get_native_valid_irq() if vm_type == "SERVICE_VM" else [f"{d}" for d in list(range(1,15))]
         legacy_vuart_id_list = vm_node.xpath("legacy_vuart[base != 'INVALID_COM_BASE']/@id")
-        legacy_vuart_irq = -1
+        legacy_vuart_irq = ''
         for legacy_vuart_id in legacy_vuart_id_list:
-            if legacy_vuart_id == '0' and vm_type == "SOS_VM":
+            if legacy_vuart_id == '0' and vm_type == "SERVICE_VM":
                 if hv_debug_console in native_ttys.keys():
                     if native_ttys[hv_debug_console]['irq'] < LEGACY_IRQ_MAX:
                         legacy_vuart_irq = native_ttys[hv_debug_console]['irq']
                         if legacy_vuart_irq in irq_list:
                             remove_irq(irq_list, legacy_vuart_irq)
                     else:
-                        legacy_vuart_irq = alloc_irq(irq_list)
+                        legacy_vuart_irq = assign_legacy_vuart_irqs(vm_node, legacy_vuart_id, irq_list)
                 else:
                     raise lib.error.ResourceError(f"{hv_debug_console} is not in the native environment! The ttyS available are: {native_ttys.keys()}")
             else:
-                legacy_vuart_node_irq_text = common.get_node(f"legacy_vuart[@id = '{legacy_vuart_id}']/irq/text()", vm_node)
-                if legacy_vuart_node_irq_text == 'COM1_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM1_IRQ' \
-                    or legacy_vuart_node_irq_text == 'COM3_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM3_IRQ':
-                    legacy_vuart_irq = '4'
-                    if legacy_vuart_irq in irq_list:
-                        remove_irq(irq_list, legacy_vuart_irq)
-                elif legacy_vuart_node_irq_text == 'COM2_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM2_IRQ' \
-                    or legacy_vuart_node_irq_text == 'COM4_IRQ' or legacy_vuart_node_irq_text == 'SOS_COM4_IRQ':
-                    legacy_vuart_irq = '3'
-                    if legacy_vuart_irq in irq_list:
-                        remove_irq(irq_list, legacy_vuart_irq)
-                else:
-                    legacy_vuart_irq = alloc_irq(irq_list)
+                legacy_vuart_irq = assign_legacy_vuart_irqs(vm_node, legacy_vuart_id, irq_list)
 
             create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), vm_type, legacy_vuart_id, legacy_vuart_irq)
 

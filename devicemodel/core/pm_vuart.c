@@ -8,7 +8,7 @@
  *
  */
 
-/* vuart can be used communication between SOS and UOS, here it is used as power manager control. */
+/* vuart can be used communication between Service VM and User VM, here it is used as power manager control. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@
 #define SHUTDOWN_CMD  "shutdown"
 #define CMD_LEN 16
 #define MAX_NODE_PATH  128
-#define SOS_SOCKET_PORT 0x2000
+#define SERVICE_VM_SOCKET_PORT 0x2000
 
 static const char * const node_name[] = {
 	"pty",
@@ -98,7 +98,7 @@ static int pm_setup_socket(void)
 
 	memset(&socket_addr, 0, sizeof(struct sockaddr_in));
 	socket_addr.sin_family = AF_INET;
-	socket_addr.sin_port = htons(SOS_SOCKET_PORT);
+	socket_addr.sin_port = htons(SERVICE_VM_SOCKET_PORT);
 	socket_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	if (connect(socket_fd, (struct sockaddr *)&socket_addr, sizeof(socket_addr)) == -1) {
@@ -132,7 +132,7 @@ static void *pm_monitor_loop(void *arg)
 			if (FD_ISSET(node_fd, &read_fd)) {
 				if (read_bytes(node_fd, (uint8_t *)buf_node, CMD_LEN,
 						&count_node, &eof)) {
-					pr_info("Received msg[%s] from UOS, count=%d\r\n",
+					pr_info("Received msg[%s] from User VM, count=%d\r\n",
 						buf_node, count_node);
 					rc = write(socket_fd, buf_node, count_node);
 
@@ -147,7 +147,7 @@ static void *pm_monitor_loop(void *arg)
 			if (FD_ISSET(socket_fd, &read_fd)) {
 				if (read_bytes(socket_fd, (uint8_t *)buf_socket, CMD_LEN,
 						&count_socket, &eof)) {
-					pr_info("Received msg[%s] from life_mngr on SOS, count=%d\r\n",
+					pr_info("Received msg[%s] from life_mngr on Service VM, count=%d\r\n",
 						buf_socket, count_socket);
 					pthread_mutex_lock(&pm_vuart_lock);
 					rc = write(node_fd, buf_socket, count_socket);
@@ -196,8 +196,8 @@ static int start_pm_monitor_thread(void)
 /*
  * --pm_vuart configuration is in the following 2 forms:
  * A: pty-link, like: pty,/run/acrn/vuart-vm1, (also set it in -l com2,/run/acrn/vuart-vm1)
- * the SOS and UOS will communicate by: SOS:pty-link-node <--> SOS:com2 <--> UOS: /dev/ttyS1
- * B: tty-node, like: tty,/dev/ttyS1, SOS and UOS communicate by: SOS:ttyS1 <--> HV <-->UOS:ttySn
+ * the Service VM and User VM will communicate by: (Service VM):pty-link-node <--> (Service VM):com2 <--> (User VM): /dev/ttyS1
+ * B: tty-node, like: tty,/dev/ttyS1, (Service VM) and (User VM) communicate by: (Service VM):ttyS1 <--> HV <-->(User VM):ttySn
  */
 int parse_pm_by_vuart(const char *opts)
 {
@@ -332,7 +332,7 @@ static int vm_stop_handler(void *arg)
 	pthread_mutex_unlock(&pm_vuart_lock);
 	if (ret != sizeof(SHUTDOWN_CMD)) {
 		/* no need to resend shutdown here, will resend in pm_monitor thread */
-		pr_err("send shutdown command to uos failed\r\n");
+		pr_err("send shutdown command to User VM failed\r\n");
 	}
 
 	return 0;

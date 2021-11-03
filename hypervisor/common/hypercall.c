@@ -71,21 +71,21 @@ bool is_hypercall_from_ring0(void)
 
 inline static bool is_severity_pass(uint16_t target_vmid)
 {
-	return SEVERITY_SOS >= get_vm_severity(target_vmid);
+	return SEVERITY_SERVICE_VM >= get_vm_severity(target_vmid);
 }
 
 /**
- * @brief offline vcpu from SOS
+ * @brief offline vcpu from Service VM
  *
- * The function offline specific vcpu from SOS.
+ * The function offline specific vcpu from Service VM.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 lapic id of the vcpu which wants to offline
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+int32_t hcall_service_vm_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
 		uint64_t param1, __unused uint64_t param2)
 {
 	struct acrn_vcpu *target_vcpu;
@@ -93,7 +93,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *t
 	int32_t ret = 0;
 	uint64_t lapicid = param1;
 
-	pr_info("sos offline cpu with lapicid %ld", lapicid);
+	pr_info("Service VM offline cpu with lapicid %ld", lapicid);
 
 	foreach_vcpu(i, vcpu->vm, target_vcpu) {
 		if (vlapic_get_apicid(vcpu_vlapic(target_vcpu)) == lapicid) {
@@ -113,13 +113,13 @@ int32_t hcall_sos_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acrn_vm *t
 /**
  * @brief Get hypervisor api version
  *
- * The function only return api version information when VM is SOS_VM.
+ * The function only return api version information when VM is Service VM.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 guest physical memory address. The api version returned
  *              will be copied to this gpa
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_get_api_version(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
@@ -148,7 +148,7 @@ static uint32_t nearest_pow2(uint32_t n)
 	return p;
 }
 
-static void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
+void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
 {
 	uint32_t subleaf;
 
@@ -188,7 +188,7 @@ static void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
  * @param vcpu Pointer to vCPU that initiates the hypercall.
  * @param param1 GPA pointer to struct acrn_platform_info.
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non zero in case of error.
  */
 int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
@@ -243,7 +243,7 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
  * @param param1 guest physical memory address. This gpa points to
  *              struct acrn_vm_creation
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @pre get_vm_config(target_vm->vm_id) != NULL
  * @return 0 on success, non-zero on error.
  */
@@ -283,7 +283,7 @@ int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint6
 					pr_err("Wrong guest flags 0x%lx\n", vm_config->guest_flags);
 				} else {
 					if (create_vm(vmid, pcpu_bitmap, vm_config, &tgt_vm) == 0) {
-						/* return a relative vm_id from SOS view */
+						/* return a relative vm_id from Service VM view */
 						cv.vmid = vmid_2_rel_vmid(vm->vm_id, vmid);
 						cv.vcpu_num = tgt_vm->hw.created_vcpus;
 					} else {
@@ -412,7 +412,7 @@ int32_t hcall_reset_vm(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_v
  * @param param2 guest physical address. This gpa points to
  *              struct acrn_vcpu_regs
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -459,7 +459,7 @@ int32_t hcall_create_vcpu(__unused struct acrn_vcpu *vcpu, __unused struct acrn_
  * @param target_vm Pointer to target VM data structure
  * @param param2 info for irqline
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_irqline(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -500,7 +500,7 @@ int32_t hcall_set_irqline(__unused struct acrn_vcpu *vcpu, struct acrn_vm *targe
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to struct acrn_msi_entry
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_inject_msi(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
@@ -529,7 +529,7 @@ int32_t hcall_inject_msi(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __un
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to buffer address
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_ioreq_buffer(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -605,14 +605,14 @@ int32_t hcall_notify_ioreq_finish(__unused struct acrn_vcpu *vcpu, struct acrn_v
 }
 
 /**
- *@pre is_sos_vm(vm)
- *@pre gpa2hpa(vm, region->sos_vm_gpa) != INVALID_HPA
+ *@pre is_service_vm(vm)
+ *@pre gpa2hpa(vm, region->service_vm_gpa) != INVALID_HPA
  */
 static void add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
 				const struct vm_memory_region *region,uint64_t *pml4_page)
 {
 	uint64_t prot = 0UL, base_paddr;
-	uint64_t hpa = gpa2hpa(vm, region->sos_vm_gpa);
+	uint64_t hpa = gpa2hpa(vm, region->service_vm_gpa);
 
 	/* access right */
 	if ((region->prot & MEM_ACCESS_READ) != 0U) {
@@ -641,7 +641,7 @@ static void add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
 	/* If Software SRAM is initialized, and HV received a request to map Software SRAM
 	 * area to guest, we should add EPT_WB flag to make Software SRAM effective.
 	 * TODO: We can enforce WB for any region has overlap with Software SRAM, for simplicity,
-	 * and leave it to SOS to make sure it won't violate.
+	 * and leave it to Service VM to make sure it won't violate.
 	 */
 	if (is_software_sram_enabled()) {
 		base_paddr = get_software_sram_base();
@@ -656,7 +656,7 @@ static void add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
 }
 
 /**
- *@pre is_sos_vm(vm)
+ *@pre is_service_vm(vm)
  */
 static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	struct acrn_vm *target_vm, const struct vm_memory_region *region)
@@ -667,8 +667,8 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	if ((region->size & (PAGE_SIZE - 1UL)) == 0UL) {
 		pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
 		if (region->type == MR_ADD) {
-			/* if the GPA range is SOS valid GPA or not */
-			if (ept_is_valid_mr(vm, region->sos_vm_gpa, region->size)) {
+			/* if the GPA range is Service VM valid GPA or not */
+			if (ept_is_valid_mr(vm, region->service_vm_gpa, region->size)) {
 				/* FIXME: how to filter the alias mapping ? */
 				add_vm_memory_region(vm, target_vm, region, pml4_page);
 				ret = 0;
@@ -682,9 +682,9 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	}
 
 	dev_dbg((ret == 0) ? DBG_LEVEL_HYCALL : LOG_ERROR,
-			"[vm%d] type=%d gpa=0x%x sos_gpa=0x%x sz=0x%x",
+			"[vm%d] type=%d gpa=0x%x service_vm_gpa=0x%x sz=0x%x",
 			target_vm->vm_id, region->type, region->gpa,
-			region->sos_vm_gpa, region->size);
+			region->service_vm_gpa, region->size);
 	return ret;
 }
 
@@ -696,7 +696,7 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
  * @param param1 guest physical address. This gpa points to
  *              struct set_memmaps
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_vm_memory_regions(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -734,7 +734,7 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vcpu *vcpu, struct acrn_vm *targ
 }
 
 /**
- *@pre is_sos_vm(vm)
+ *@pre is_service_vm(vm)
  */
 static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 {
@@ -785,7 +785,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
  * @param param2 guest physical address. This gpa points to
  *              struct wp_data
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_write_protect_page(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -818,7 +818,7 @@ int32_t hcall_write_protect_page(struct acrn_vcpu *vcpu, struct acrn_vm *target_
  * @param target_vm Pointer to target VM data structure
  * @param param2 guest physical address. This gpa points to struct vm_gpa2hpa
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_gpa_to_hpa(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
@@ -852,7 +852,7 @@ int32_t hcall_gpa_to_hpa(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __un
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_pcidev including assign PCI device info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -882,7 +882,7 @@ int32_t hcall_assign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_pcidev including deassign PCI device info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_deassign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -912,7 +912,7 @@ int32_t hcall_deassign_pcidev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_mmiodev including assign MMIO device info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_assign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -945,7 +945,7 @@ int32_t hcall_assign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_mmiodev including deassign MMIO device info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_deassign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -978,7 +978,7 @@ int32_t hcall_deassign_mmiodev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
  * @param param2 guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -1030,7 +1030,7 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target
  * @param param2 guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_reset_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -1082,7 +1082,7 @@ int32_t hcall_reset_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *targ
  * @param param1 cmd to show get which VCPU power state data
  * @param param2 VCPU power state data
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2)
@@ -1161,7 +1161,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
  * @param param2 guest physical address. This gpa points to data structure of
  *              acrn_intr_monitor
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_vm_intr_monitor(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
@@ -1210,12 +1210,12 @@ int32_t hcall_vm_intr_monitor(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
  *
  * This is the API that helps to switch the notifer vecotr. If this API is
  * not called, the hypervisor will use the default notifier vector(0xF3)
- * to notify the SOS kernel.
+ * to notify the Service VM kernel.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall
  * @param param1 the expected notifier vector from guest
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_callback_vector(__unused struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
@@ -1259,7 +1259,7 @@ static struct emul_dev_ops *find_emul_dev_ops(struct acrn_vdev *dev)
  * @param param guest physical address. This gpa points to data structure of
  *              acrn_vdev including information about PCI or legacy devices
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
@@ -1291,7 +1291,7 @@ int32_t hcall_add_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unus
  * @param param guest physical address. This gpa points to data structure of
  *              acrn_vdev including information about PCI or legacy devices
  *
- * @pre is_sos_vm(vcpu->vm)
+ * @pre is_service_vm(vcpu->vm)
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_remove_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)

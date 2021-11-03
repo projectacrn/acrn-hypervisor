@@ -18,11 +18,7 @@ import parser_lib
 OUTPUT = "./out/"
 PY_CACHE = "__pycache__"
 
-# This file store information which query from hw board
-BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode', 'blkid', 'stty']
-
 CPU_VENDOR = "GenuineIntel"
-
 
 def check_permission():
     """Check if it is root permission"""
@@ -40,37 +36,42 @@ def vendor_check():
                     vendor_name = line.split(':')[1].strip()
                     return vendor_name == CPU_VENDOR
 
+def check_msr_files(cpu_dirs):
+    cpu_list = []
+    for cpu_num in os.listdir(cpu_dirs):
+        if cpu_num.isdigit():
+            if os.path.exists(os.path.join(cpu_dirs, "{}/msr".format(cpu_num))):
+                continue
+            else:
+                cpu_list.append(cpu_num)
+    return cpu_list
 
 def check_env():
     """Check if there is appropriate environment on this system"""
     if os.path.exists(PY_CACHE):
         shutil.rmtree(PY_CACHE)
 
+    # check cpu msr file
+    cpu_dirs = "/dev/cpu"
+    if check_msr_files(cpu_dirs):
+        res = subprocess.Popen("modprobe msr",
+                            shell=True, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, close_fds=True)
+        err_msg = res.stderr.readline().decode('ascii')
+        if err_msg:
+            parser_lib.print_red("{}".format(err_msg), err=True)
+            exit(-1)
+    msr_info = check_msr_files(cpu_dirs)
+    if msr_info:
+        for cpu_num in msr_info:
+            parser_lib.print_red("Missing CPU msr file in the {}/{}/".format(cpu_dirs, cpu_num), err=True)
+        parser_lib.print_red("Missing CPU msr file, please check the value of CONFIG_X86_MSR in the kernel config.", err=True)
+        exit(-1)
+
     # check cpu vendor id
     if not vendor_check():
         parser_lib.print_red("Please run this tools on {}!".format(CPU_VENDOR))
         sys.exit(1)
-
-    # check if required tools are exists
-    for excute in BIN_LIST:
-        res = subprocess.Popen("which {}".format(excute),
-                               shell=True, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, close_fds=True)
-
-        line = res.stdout.readline().decode('ascii')
-        if not line:
-            parser_lib.print_yel("'{}' not found, please install it!".format(excute))
-            sys.exit(1)
-
-        if excute == 'cpuid':
-            res = subprocess.Popen("cpuid -v",
-                                   shell=True, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, close_fds=True)
-            line = res.stdout.readline().decode('ascii')
-            version = line.split()[2]
-            if int(version) < 20170122:
-                parser_lib.print_yel("Need CPUID version >= 20170122")
-                sys.exit(1)
 
     if os.path.exists(OUTPUT):
         shutil.rmtree(OUTPUT)

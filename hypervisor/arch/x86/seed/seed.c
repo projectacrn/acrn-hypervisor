@@ -98,15 +98,15 @@ void fill_seed_arg(char *cmd_dst, size_t cmd_sz)
 	for (i = 0U; seed_arg[i].str != NULL; i++) {
 		if (seed_arg[i].addr != 0UL) {
 
-			snprintf(cmd_dst, cmd_sz, "%s0x%X ", seed_arg[i].str, sos_vm_hpa2gpa(seed_arg[i].addr));
+			snprintf(cmd_dst, cmd_sz, "%s0x%X ", seed_arg[i].str, service_vm_hpa2gpa(seed_arg[i].addr));
 
 			if (seed_arg[i].bootloader_id == BOOTLOADER_SBL) {
 				struct image_boot_params *boot_params =
 					(struct image_boot_params *)hpa2hva(seed_arg[i].addr);
 
-				boot_params->p_seed_list = sos_vm_hpa2gpa(boot_params->p_seed_list);
+				boot_params->p_seed_list = service_vm_hpa2gpa(boot_params->p_seed_list);
 
-				boot_params->p_platform_info = sos_vm_hpa2gpa(boot_params->p_platform_info);
+				boot_params->p_platform_info = service_vm_hpa2gpa(boot_params->p_platform_info);
 			}
 
 			break;

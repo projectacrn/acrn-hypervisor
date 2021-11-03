@@ -120,9 +120,9 @@ vgsi_to_vioapic_and_vpin(const struct acrn_vm *vm, uint32_t vgsi, uint32_t *vpin
 	struct acrn_single_vioapic *vioapic;
 	uint8_t vioapic_index = 0U;
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		/*
-		 * Utilize platform ioapic_info for SOS VM
+		 * Utilize platform ioapic_info for Service VM
 		 */	
 		vioapic_index = get_gsi_to_ioapic_index(vgsi);
 		if (vpin != NULL) {
@@ -532,7 +532,7 @@ vioapic_init(struct acrn_vm *vm)
 	uint8_t vioapic_index;
 	struct acrn_single_vioapic *vioapic = NULL;
 
-	if (is_sos_vm(vm)) {
+	if (is_service_vm(vm)) {
 		vm->arch_vm.vioapics.ioapic_num = get_platform_ioapic_info(&vioapic_info);
 	} else {
 		vm->arch_vm.vioapics.ioapic_num = 1U;

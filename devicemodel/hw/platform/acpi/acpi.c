@@ -1102,8 +1102,8 @@ static struct {
  */
 int create_and_inject_vrtct(struct vmctx *ctx)
 {
-#define RTCT_NATIVE_FILE_PATH_IN_SOS "/sys/firmware/acpi/tables/PTCT"
-#define RTCT_V2_NATIVE_FILE_PATH_IN_SOS "/sys/firmware/acpi/tables/RTCT"
+#define RTCT_NATIVE_FILE_PATH_IN_SERVICE_VM "/sys/firmware/acpi/tables/PTCT"
+#define RTCT_V2_NATIVE_FILE_PATH_IN_SERVICE_VM "/sys/firmware/acpi/tables/RTCT"
 
 
 #define RTCT_BUF_LEN	0x200	/* Otherwise, need to modify DSDT_OFFSET corresponding */
@@ -1122,9 +1122,9 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	};
 
 	/* Name of native RTCT table is "PTCT"(v1) or "RTCT"(v2) */
-	native_rtct_fd = open(RTCT_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
+	native_rtct_fd = open(RTCT_NATIVE_FILE_PATH_IN_SERVICE_VM, O_RDONLY);
 	if (native_rtct_fd < 0) {
-		native_rtct_fd = open(RTCT_V2_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
+		native_rtct_fd = open(RTCT_V2_NATIVE_FILE_PATH_IN_SERVICE_VM, O_RDONLY);
 		if (native_rtct_fd < 0) {
 			pr_err("RTCT file is NOT detected.\n");
 			return -1;

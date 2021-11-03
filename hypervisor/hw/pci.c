@@ -558,7 +558,7 @@ static void pci_parse_iommu_devscopes(struct pci_bdf_mapping_group *const bdfs_f
 }
 
 /*
- * There are some rules to config PCI bridge: try to avoid interference between SOS and RTVM or
+ * There are some rules to config PCI bridge: try to avoid interference between Service VM and RTVM or
  * pre-launched VM; and to support some features like SRIOV by default, so as following:
  *	1. disable interrupt, including INTx and MSI.
  *	2. enable ARI if it's a PCIe bridge and all its sub devices support ARI (need check further).
@@ -600,7 +600,7 @@ static void	config_pci_bridge(const struct pci_pdev *pdev)
 /*
  * @brief: walks through all pdevs that have been initialized and determine
  * which pdevs need to be added to pci dev_config. The pdevs added to pci
- * dev_config will be exposed to SOS finally.
+ * dev_config will be exposed to Service VM finally.
  */
 static void init_all_dev_config(void)
 {

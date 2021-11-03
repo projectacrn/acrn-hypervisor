@@ -413,7 +413,7 @@ Address Space Translation
 .. doxygenfunction:: gpa2hpa
    :project: Project ACRN
 
-.. doxygenfunction:: sos_vm_hpa2gpa
+.. doxygenfunction:: service_vm_hpa2gpa
    :project: Project ACRN
 
 EPT

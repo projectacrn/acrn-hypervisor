@@ -94,10 +94,15 @@
       <xsl:with-param name="value" select="RDT/RDT_ENABLED" />
     </xsl:call-template>
 
-    <xsl:if test="RDT/RDT_ENABLED = 'y'">
+    <xsl:if test="acrn:is-rdt-enabled()">
       <xsl:call-template name="boolean-by-key-value">
-	<xsl:with-param name="key" select="'CDP_ENABLED'" />
-	<xsl:with-param name="value" select="RDT/CDP_ENABLED" />
+        <xsl:with-param name="key" select="'CDP_ENABLED'" />
+        <xsl:with-param name="value" select="RDT/CDP_ENABLED" />
+      </xsl:call-template>
+
+      <xsl:call-template name="boolean-by-key-value">
+        <xsl:with-param name="key" select="'VCAT_ENABLED'" />
+        <xsl:with-param name="value" select="RDT/VCAT_ENABLED" />
       </xsl:call-template>
     </xsl:if>
 
@@ -138,11 +143,6 @@
     <xsl:call-template name="integer-by-key">
       <xsl:with-param name="key" select="'HV_RAM_START'" />
       <xsl:with-param name="default" select="//allocation-data/acrn-config/hv/MEMORY/HV_RAM_START" />
-    </xsl:call-template>
-
-    <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'HV_RAM_SIZE'" />
-      <xsl:with-param name="default" select="//allocation-data/acrn-config/hv/MEMORY/HV_RAM_SIZE" />
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key">

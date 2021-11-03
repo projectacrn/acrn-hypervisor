@@ -7,8 +7,8 @@
 #include <stdio.h>
 
 
-#define SOS_REQ         "shutdown"
-#define UOS_ACK         "acked"
+#define SERVICE_VM_REQ  "shutdown"
+#define USER_VM_ACK     "acked"
 #define BUFF_SIZE       16U
 #define MSG_SIZE        8U
 
@@ -69,9 +69,9 @@ int main()
 			continue;
 		}
 
-		if (strncmp(recvbuf, SOS_REQ, MSG_SIZE) == 0)
+		if (strncmp(recvbuf, SERVICE_VM_REQ, MSG_SIZE) == 0)
 		{
-			WriteFile(hCom, UOS_ACK, sizeof(UOS_ACK), NULL, NULL);
+			WriteFile(hCom, USER_VM_ACK, sizeof(USER_VM_ACK), NULL, NULL);
 			system("shutdown -s -t 0");
 			break;
 		}

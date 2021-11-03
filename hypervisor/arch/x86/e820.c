@@ -16,7 +16,7 @@
 
 /*
  * e820.c contains the related e820 operations; like HV to get memory info for its MMU setup;
- * and hide HV memory from SOS_VM...
+ * and hide HV memory from Service VM...
  */
 
 static uint32_t hv_e820_entries_nr;
@@ -26,7 +26,7 @@ static struct e820_entry hv_e820[E820_MAX_ENTRIES];
 #define DBG_LEVEL_E820	6U
 
 /*
- * @brief reserve some RAM, hide it from sos_vm, return its start address
+ * @brief reserve some RAM, hide it from Service VM, return its start address
  * @param size_arg Amount of memory to be found and marked reserved
  * @param max_addr Maximum address below which memory is to be identified
  *

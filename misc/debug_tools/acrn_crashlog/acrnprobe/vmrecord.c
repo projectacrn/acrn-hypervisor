@@ -119,10 +119,10 @@ int vmrecord_gen_ifnot_exists(struct vmrecord_t *vmrecord)
 		" * This file records VM id synced or about to be synched,\n"
 		" * the tag:\n"
 		" * \"<==\" indicates event waiting to sync.\n"
-		" * \"NOT_FOUND\" indicates event not found in UOS.\n"
-		" * \"MISS_LOGS\" indicates event miss logs in UOS.\n"
+		" * \"NOT_FOUND\" indicates event not found in User VM.\n"
+		" * \"MISS_LOGS\" indicates event miss logs in User VM.\n"
 		" * \"ON_GOING\" indicates event is under syncing.\n"
-		" * \"NO_RESORC\" indicates no enough resources in SOS.\n"
+		" * \"NO_RESORC\" indicates no enough resources in Service VM.\n"
 		" */\n\n";
 
 	if (!vmrecord) {

@@ -81,7 +81,7 @@ void   allow_guest_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_
 void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_t nbytes);
 
 /**
- * @brief Fire HSM interrupt to SOS
+ * @brief Fire HSM interrupt to Service VM
  *
  * @return None
  */
