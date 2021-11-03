@@ -1,4 +1,4 @@
-<acrn-config board="tgl-rvp" scenario="shared" uos_launcher="1">
+<acrn-config board="ehl-crb-b" scenario="shared" user_vm_launcher="1">
 	<user_vm id="1">
 		<user_vm_type desc="User VM type">WINDOWS</user_vm_type>
 		<rtos_type desc="User VM Realtime capability">no</rtos_type>
@@ -21,9 +21,9 @@
 		</communication_vuarts>
 		<passthrough_devices>
 			<usb_xdci desc="vm usb_xdci device"></usb_xdci>
-			<audio desc="vm audio device">00:1f.3 Multimedia audio controller: Intel Corporation Device a0c8 (rev 10)</audio>
+			<audio desc="vm audio device"></audio>
 			<audio_codec desc="vm audio codec device"></audio_codec>
-			<gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation Device 9a49 (rev 01)</gpu>
+			<gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation Device 4571 (rev 01)</gpu>
 			<ipu desc="vm ipu device"></ipu>
 			<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
 			<cse desc="vm cse device"></cse>
