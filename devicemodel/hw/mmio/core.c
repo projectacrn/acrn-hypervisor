@@ -165,7 +165,7 @@ int get_mmio_hpa_resource(char *name, uint64_t *res_start, uint64_t *res_size)
  */
 int get_more_acpi_dev_info(char *hid, uint32_t instance, struct acpi_dev_pt_ops *ops)
 {
-	char pathbuf[128], line[64];
+	char pathbuf[128], line[32];
 	int ret = -1;
 	size_t ch_read;
 	FILE *fp;
