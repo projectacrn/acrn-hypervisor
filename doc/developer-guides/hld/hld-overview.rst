@@ -333,7 +333,7 @@ power operations.
 VM Manager creates the User VM based on DM application, and does User VM state
 management by interacting with lifecycle service in ACRN service.
 
-Refer to VM management chapter for more details. <link?>
+Refer to :ref:`hv-vm-management` for more details.
 
 ACRN Service
 ============
@@ -351,7 +351,7 @@ the standard Linux char device API (ioctl) to access HSM
 functionalities. HSM communicates with the ACRN hypervisor through
 hypercall or upcall interrupts.
 
-Refer to the HSM chapter for more details. <link?>
+Refer to :ref:`hld-devicemodelhsm` for more details.
 
 Kernel Mediators
 ================
@@ -524,10 +524,6 @@ the following mechanisms:
       temporarily block certain virtual interrupts from being injected.
       This allows the Service VM to detect the occurrence of an interrupt storm and
       control the interrupt injection rate when necessary.
-
--  Mitigation of DMA storm.
-
-   (To be documented later.) <Remove?>
 
 Boot Flow
 *********
