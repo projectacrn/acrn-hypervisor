@@ -9,6 +9,7 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/user.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -202,6 +203,14 @@ static void remap_software_sram_regions(struct acpi_table_hdr *vrtct, int rtct_v
 		}
 	}
 	pr_info("%s, hpa_bottom:%lx, hpa_top:%lx.\n", __func__, hpa_bottom, hpa_top);
+
+	if (((hpa_bottom & ~PAGE_MASK) != 0) || ((hpa_top & ~PAGE_MASK) != 0)) {
+		pr_warn("%s, Warning: hpa_bottom:%lx OR hpa_top:%lx is not page-aligned!\n",
+			__func__, hpa_bottom, hpa_top);
+
+		hpa_bottom &= PAGE_MASK;
+		hpa_top &= PAGE_MASK;
+	}
 
 	software_sram_base_hpa = hpa_bottom;
 	software_sram_size = hpa_top - hpa_bottom;
