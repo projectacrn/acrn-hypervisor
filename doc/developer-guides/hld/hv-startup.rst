@@ -21,7 +21,7 @@ Multiboot Header
 The ACRN hypervisor is built with a multiboot header, which presents
 ``MULTIBOOT_HEADER_MAGIC`` and ``MULTIBOOT_HEADER_FLAGS`` at the beginning
 of the image. It sets bit 6 in ``MULTIBOOT_HEADER_FLAGS``, which requests the
-bootloader pass memory map information (such as e820 entries) through the
+bootloader pass memory map information (such as E820 entries) through the
 Multiboot Information (MBI) structure.
 
 Native Startup
@@ -59,7 +59,7 @@ description for the flow:
    through this ``do_IRQ`` infrastructure then distribute to special
    targets (HV or VMs).
 
--  **Start AP:** BSP kicks ``INIT-SIPI-SIPI`` IPI sequence to start other
+-  **Start AP:** BSP triggers the ``INIT-SIPI-SIPI`` IPI sequence to start other
    native APs (application processor). Each AP initializes its
    own memory and interrupts, notifies the BSP on completion, and
    enters the default idle loop.
@@ -109,8 +109,8 @@ Memory
    interrupt stack table (IST) which are different across physical
    processors. LDT is disabled.
 
-Refer to :ref:`physical-interrupt-initialization` for a detailed description of interrupt-related
-initial states, including IDT and physical PICs.
+Refer to :ref:`physical-interrupt-initialization` for a detailed description of
+interrupt-related initial states, including IDT and physical PICs.
 
 After the BSP detects that all APs are up, it continues to enter guest mode.
 Likewise, after one AP completes its initialization, it starts entering guest
@@ -138,18 +138,18 @@ VMs and Service VM are created by the hypervisor, while post-launched User VMs
 are created by the Device Model (DM) in the Service VM. The main steps include:
 
 -  **Create VM**: A VM structure is allocated and initialized. A unique
-   VM ID is picked, EPT is initialized, e820 table for this VM is prepared,
+   VM ID is picked, EPT is initialized, E820 table for this VM is prepared,
    I/O bitmap is set up, virtual PIC/IOAPIC/PCI/UART is initialized, EPC for
    virtual SGX is prepared, guest PM IO is set up, IOMMU for PT dev support
    is enabled, virtual CPUID entries are filled, and vCPUs configured in this VM's
    ``vm config`` are prepared. For a post-launched User VM, the EPT page table
-   and e820 table are prepared by the DM instead of the hypervisor.
+   and E820 table are prepared by the DM instead of the hypervisor.
 
--  **Prepare vCPUs:** Create the vCPUs, assign the physical processor the vCPU
-   is pinned to, a unique-per-VM vCPU ID and a globally unique VPID, initialize
-   its virtual lapic and MTRR, and set up its vCPU thread object for vCPU
-   scheduling. The vCPU number and affinity are defined in the corresponding
-   ``vm config`` for this VM.
+-  **Prepare vCPUs:** Create the vCPUs, assign the physical processor that the
+   vCPU is pinned to (a unique-per-VM vCPU ID and a globally unique VPID),
+   initialize its virtual LAPIC and MTRR, and set up its vCPU thread object for
+   vCPU scheduling. The vCPU number and affinity are defined in the
+   corresponding ``vm config`` for this VM.
 
 -  **Build vACPI:** For the Service VM, the hypervisor customizes a virtual ACPI
    table based on the native ACPI table (this is in the TODO). For a
@@ -157,15 +157,15 @@ are created by the Device Model (DM) in the Service VM. The main steps include:
    necessary information such as MADT. For a post-launched User VM, the DM
    builds its ACPI table dynamically.
 
--  **SW Load:** Prepare for each VM's SW configuration according to guest OS
-   requirements, which may include kernel entry address, ramdisk address,
-   bootargs, or zero page for launching bzImage. This is done by the hypervisor
-   for pre-launched User VMs or Service VM, and the VM will start from the
-   standard real mode or protected mode which is not related to the native
-   environment. For post-launched User VMs, the VM's SW configuration is done by
-   DM.
+-  **Software Load:** Prepare for each VM's software configuration according to
+   guest OS requirements, which may include kernel entry address, ramdisk
+   address, bootargs, or zero page for launching bzImage. This is done by the
+   hypervisor for pre-launched User VMs or Service VM. The VM will start from
+   the standard real mode or protected mode, which is not related to the native
+   environment. For post-launched User VMs, the VM's software configuration is
+   done by DM.
 
--  **Start VM:** The vBSP of vCPUs in this VM is kick to do schedule.
+-  **Start VM:** The vBSP of vCPUs in this VM is triggered to start scheduling.
 
 -  **Schedule vCPUs:** The vCPUs are scheduled to the corresponding
    physical processors for execution.
@@ -174,10 +174,9 @@ are created by the Device Model (DM) in the Service VM. The main steps include:
    state, execution control, entry control, and exit control. It's
    the last configuration before vCPU runs.
 
--  **vCPU thread:** vCPU kicks out to run. For vBSP of vCPUs, it will
-   start running into kernel image which SW Load is configured; for
-   any vAP of vCPUs, it will wait for ``INIT-SIPI-SIPI`` IPI sequence
-   trigger from its vBSP.
+-  **vCPU thread:** vCPU starts to run. For the vBSP of vCPUs, it will
+   start running the configured kernel image. For any vAP of vCPUs, it will wait
+   for the ``INIT-SIPI-SIPI`` IPI sequence trigger from its vBSP.
 
 .. figure:: images/hld-image104.png
    :align: center
@@ -185,19 +184,19 @@ are created by the Device Model (DM) in the Service VM. The main steps include:
 
    Hypervisor VM Startup Flow
 
-SW configuration for Service VM (bzimage SW load as example):
+Software configuration for Service VM (bzimage software load as example):
 
 -  **ACPI**: HV passes the entire ACPI table from the bootloader to the Service
    VM directly. Legacy mode is currently supported as the ACPI table
    is loaded at F-Segment.
 
--  **E820**: HV passes the e820 table from the bootloader through the zero page
-   after the HV reserved (32M, for example) and pre-launched User VM owned
-   memory is filtered out.
+-  **E820**: HV passes the E820 table from the bootloader through the zero page
+   after the HV reserved memory (32M, for example) and pre-launched User VM
+   owned memory are filtered out.
 
 -  **Zero Page**: HV prepares the zero page at the high end of Service
-   VM memory which is determined by the Service VM guest FIT binary build. The
-   zero page includes configuration for ramdisk, bootargs, and e820
+   VM memory, which is determined by the Service VM guest FIT binary build. The
+   zero page includes the configuration for ramdisk, bootargs, and E820
    entries. The zero page address will be set to the vBSP RSI register
    before the vCPU runs.
 
@@ -207,7 +206,8 @@ SW configuration for Service VM (bzimage SW load as example):
    ``kernel_load_addr``, and will be set to the vBSP RIP register before the
    vCPU runs.
 
-SW configuration for post-launched User VMs (OVMF SW load as example):
+Software configuration for post-launched User VMs (OVMF software load as
+example):
 
 -  **ACPI**: the DM builds the virtual ACPI table and puts it at the User VM's
    F-Segment. Refer to :ref:`hld-io-emulation` for details.
@@ -217,18 +217,18 @@ SW configuration for post-launched User VMs (OVMF SW load as example):
 
 -  **Entry address**: the DM copies the User VM OS kernel (OVMF) image to
    ``OVMF_NVSTORAGE_OFFSET`` - normally is @(4G - 2M), and sets the entry
-   address to 0xFFFFFFF0. As the vBSP will kick to run the virtual bootloader
-   (OVMF) from real mode, its CS base will be set to 0xFFFF0000, and
+   address to 0xFFFFFFF0. As the vBSP will trigger the virtual bootloader
+   (OVMF) to run from real mode, its CS base will be set to 0xFFFF0000, and
    RIP register will be set to 0xFFF0.
 
-SW configuration for pre-launched User VMs (raw SW load as example):
+Software configuration for pre-launched User VMs (raw software load as example):
 
 -  **ACPI**: the hypervisor builds the virtual ACPI table and puts it at
    this VM's F-Segment.
 
 -  **E820**: the hypervisor builds the virtual E820 table and passes it to
-   the VM according to different SW loaders. For a raw SW load, it's not
-   used.
+   the VM according to different software loaders. For a raw software load, it's
+   not used.
 
 -  **Entry address**: the hypervisor copies the User VM OS kernel image to
    ``kernel_load_addr`` which is set by ``vm config``, and sets the entry
