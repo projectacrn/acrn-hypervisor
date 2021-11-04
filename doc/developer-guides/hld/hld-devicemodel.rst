@@ -283,6 +283,8 @@ DM Initialization
    thread. mevent dispatch will do polling for potential async
    event.
 
+.. _hld-devicemodelhsm:
+
 HSM
 ***
 
