@@ -900,6 +900,8 @@ def upload_scenario():
                                         + datetime.now().strftime('%Y%m%d%H%M%S')
                     rename = True
 
+            xsd_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'schema', 'config.xsd')
+            default_populator.main(xsd_path, tmp_scenario_file, tmp_scenario_file)
             os.rename(tmp_scenario_file, os.path.join(current_app.config.get('CONFIG_PATH'),
                                                       board_type, new_scenario_name + '.xml'))
 
