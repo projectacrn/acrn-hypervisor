@@ -256,6 +256,11 @@ def get_user_vm_type():
     return user_vm_types
 
 
+def get_user_vm_names():
+    user_vm_names = common.get_leaf_tag_map(common.LAUNCH_INFO_FILE, "vm_name")
+    return user_vm_names
+
+
 def is_bdf_format(bdf_str):
     bdf_len = 7
     status = True

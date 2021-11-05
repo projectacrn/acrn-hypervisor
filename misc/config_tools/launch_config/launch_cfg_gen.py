@@ -4,6 +4,7 @@
 #
 
 import os
+import re
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 from launch_item import AvailablePthru, PthruSelected, VirtioDeviceSelect, AcrnDmArgs, SriovDeviceInput
@@ -123,6 +124,10 @@ def get_names():
     user_vm_types = launch_cfg_lib.get_user_vm_type()
     names['user_vm_types'] = user_vm_types
 
+    # get user_vm name
+    user_vm_names = launch_cfg_lib.get_user_vm_names()
+    names['user_vm_names'] = user_vm_names
+
     # get board name
     (err_dic, board_name) = common.get_board_name()
     if err_dic:
@@ -194,6 +199,17 @@ def main(args):
     for post_num in post_num_list:
         if post_num > post_vm_count:
             err_dic['xm config err:'] = "launch xml user vmid config is bigger than scenario post vm count"
+
+    # validate vm_names
+    scenario_names = common.get_leaf_tag_map(scenario_info_file, "name").values()
+    for user_vm_id, vm_name in launch_cfg_lib.get_user_vm_names().items():
+        if not re.match(r"^\S{1,15}$", vm_name):
+            err_name = 'user_vm id="{}" name error:'.format(user_vm_id)
+            err_dic[err_name] = 'vm_name only allowed 1-15 characters with letters, numbers & symbols ' \
+                                '(not include space)'
+        if vm_name not in scenario_names:
+            err_name = 'user_vm id="{}" name not found error:'.format(user_vm_id)
+            err_dic[err_name] = 'user_vm id="{}" vm_name not found in it scenario file:'.format(user_vm_id)
 
     if err_dic:
         return err_dic
