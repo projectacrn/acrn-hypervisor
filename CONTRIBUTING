@@ -6,8 +6,7 @@ patches directly to the project.  In our collaborative open-source environment,
 standards and methods for submitting changes help reduce the chaos that can result
 from an active development community.
 
-This document briefly summarizes the full `Contribution
-Guidelines <http://projectacrn.github.io/latest/developer-guides/contribute_guidelines.html>`_
+This document briefly summarizes the full :ref:`contribute_acrn`
 documentation.
 
 * ACRN uses the permissive open source `BSD 3-Clause license`_
@@ -35,5 +34,21 @@ documentation.
 * The `ACRN user mailing list`_ is a great place to engage with the
   community, ask questions, discuss issues, and help each other.
 
+
+.. _tsc_members:
+
+Technical Steering Committee (TSC)
+**********************************
+
+As set by the Project's `technical-charter`_, the Technical Steering Committee
+has a chair and a number of members. This is the list of the current members:
+
+- Anthony Xu (chair): anthony.xu@intel.com
+
+- Helmut Buchsbaum: helmut.buchsbaum@tttech-industrial.com
+
+- Thomas Gleixner: tglx@linutronix.de
+
 .. _ACRN user mailing list: https://lists.projectacrn.org/g/acrn-user
 .. _BSD 3-Clause license: https://github.com/projectacrn/acrn-hypervisor/blob/master/LICENSE
+.. _technical-charter: https://projectacrn.org/technical-charter/

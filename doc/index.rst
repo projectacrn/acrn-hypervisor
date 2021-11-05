@@ -63,6 +63,8 @@ an open source platform.
    </ul>
 
 
+.. include:: CONTRIBUTING
+
 Source code for Project ACRN is maintained in the
 `Project ACRN GitHub repo`_, and is provided under the BSD 3-clause
 license.

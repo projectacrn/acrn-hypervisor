@@ -51,6 +51,7 @@ doxy:
 content:
 	$(Q)mkdir -p $(SOURCEDIR)
 	$(Q)rsync -rt --exclude=$(BUILDDIR) . $(SOURCEDIR)
+	$(Q)cp ../CONTRIBUTING $(SOURCEDIR)
 	$(Q)scripts/extract_content.py $(SOURCEDIR) misc
 	$(Q)mkdir -p $(SOURCEDIR)/misc/config_tools/schema
 	$(Q)rsync -rt ../misc/config_tools/schema/*.xsd $(SOURCEDIR)/misc/config_tools/schema

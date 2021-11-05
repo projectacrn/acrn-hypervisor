@@ -37,6 +37,12 @@ project. Here's where you'll find how the development team works and the
 guidelines they (and you) use to contribute code (and documentation) to
 the project.
 
+The project has a Technical Steering Committee (TSC) that is responsible
+for all technical oversight of the open source Project. The role and rules
+governing the operations of the TSC are described in the project's
+`technical-charter`_. Members of the TSC are listed with their contact
+details in the :ref:`tsc_members` paragraph.
+
 .. rst-class:: rst-columns2
 
 .. toctree::
@@ -56,4 +62,4 @@ API Documentation
 
    api/index
 
-
+.. _technical-charter: https://projectacrn.org/technical-charter/
