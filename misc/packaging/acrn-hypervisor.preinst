@@ -22,13 +22,13 @@ then
 
 elif [[ $cputotal -gt $cpunumsexp ]]
 then
-	    echo "Error ! hyper threding config not correct!"
-	    echo "CPU(s) $cputotal should be $cpunumsexp，Thread(s) per core is $percode,please disable hyperthread in bios"
+	    echo "Error ! hyper-threading config is not correct!"
+	    echo "CPU(s) $cputotal should be $cpunumsexp，Thread(s) per core is $percode, please disable hyper-threading in bios"
 
 elif [[ $cputotal -lt $cpunumsexp ]]
 then
-	    echo "Error ! hyper threding config not correct!"
-	    echo "CPU(s) $cputotal should be $cpunumsexp，Thread(s) per core is $percode,please open hyperthread in bios"
+	    echo "Error ! hyper threading config is incorrect!"
+	    echo "CPU(s) $cputotal should be $cpunumsexp，Thread(s) per core is $percode, please enable hyper-threading in bios"
 fi
 
 
@@ -36,18 +36,18 @@ fi
 vtd=$(ls -al /sys/firmware/acpi/tables |grep DMAR || true)
 if [ -z "$vtd" ]
 then
-	echo "Error ! vt-d not enabled!"
-	echo "either hw not support vt-d or bios not enabled"
+	echo "Error ! VT-d not enabled!"
+	echo "This CPU does not support VT-d or it's not enabled through BIOS settings"
 fi
 vtx=$(lscpu |grep VT-x)
 
 if [ -z "$vtx" ]
 then
-	echo "Error ! vt-x not enabled!"
-	echo "either hw not support vt-x or bios not enabled"
+	echo "Error ! VT-x not enabled!"
+	echo "This CPU does not support VT-x or it's not enabled through BIOS settings"
 fi
 
-echo "vt-x/vt-d config is ok"
+echo "VT-x/VT-d config is ok"
 
 #check cpu
 
@@ -55,8 +55,8 @@ cputype=$(lscpu |awk '$1 == "Model"'|grep Core || true)
 if [ -z "$cputype" ]
 then
 	echo "CPU type not Core"
-	echo "Xeon not support!"
-	echo "Waring ! ACRN may not support your hardware!"
+	echo "Xeon Processors are not supported!"
+	echo "Warning ! ACRN may not support your hardware!"
 else
 	echo "cpu type is ok"
 fi
@@ -69,7 +69,7 @@ wholememory=$(cat /proc/meminfo |grep MemTotal:|awk '{print $2}')
 
 if [[ $wholememory -gt $totalmemry ]]
 then
-        echo "Warning ! memory greater than 16G, please rebuild hypervisor"
+        echo "Warning ! memory is greater than 16G, please rebuild hypervisor"
         echo "if you had rebuild version please ignore"
 else
 	echo "memory is ok, $wholememory"
