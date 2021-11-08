@@ -159,13 +159,13 @@ of DMA operations.</xs:documentation>
         <xs:documentation>Enable ACPI runtime parsing.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="n">
+    <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="y">
       <xs:annotation>
         <xs:documentation>Enable L1 cache flush before VM entry. Default
 value ``n``.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="n">
+    <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="y">
       <xs:annotation>
         <xs:documentation>Force disabling software workaround for
 Machine Check Error on Page Size Change.</xs:documentation>
@@ -440,7 +440,7 @@ its ``id`` attribute. When it is enabled, specify which target VM's vUART the cu
       </xs:annotation>
     </xs:element>
     <xs:element name="board_private" type="BoardPrivateConfiguration" minOccurs="0" />
-    <xs:element name="PTM" type="Boolean" default="n" minOccurs="0">
+    <xs:element name="PTM" type="Boolean" default="y" minOccurs="0">
       <xs:annotation>
         <xs:documentation>Enable and disable PTM(Precision Timing Measurement) feature.</xs:documentation>
       </xs:annotation>
