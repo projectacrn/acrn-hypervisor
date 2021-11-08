@@ -56,7 +56,7 @@
     </CAPACITIES>
     <MISC_CFG>
       <GPU_SBDF>0x00000010</GPU_SBDF>
-      <UEFI_OS_LOADER_NAME></UEFI_OS_LOADER_NAME>
+      <UEFI_OS_LOADER_NAME/>
     </MISC_CFG>
   </hv>
   <vm id="0">
@@ -92,7 +92,7 @@
       <name>PREEMPT-RT</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>RT_bzImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
+      <ramdisk_mod/>
       <bootargs>rw rootwait root=/dev/sda3 no_ipi_broadcast=1 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable clocksource=tsc x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0 reboot=acpi </bootargs>
     </os_config>
     <legacy_vuart id="0">
@@ -116,7 +116,7 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-	    <pci_dev>00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 11)</pci_dev>
+      <pci_dev>00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 11)</pci_dev>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>
@@ -143,7 +143,7 @@
       <name>ACRN Service OS</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
+      <ramdisk_mod/>
       <bootargs>SERVICE_VM_OS_BOOTARGS</bootargs>
     </os_config>
     <legacy_vuart id="0">
@@ -167,7 +167,7 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-      <pci_dev></pci_dev>
+      <pci_dev/>
     </pci_devs>
     <board_private>
       <rootfs>/dev/nvme0n1p3</rootfs>

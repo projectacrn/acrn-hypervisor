@@ -36,7 +36,7 @@
       <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
       <IVSHMEM>
         <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
-        <IVSHMEM_REGION></IVSHMEM_REGION>
+        <IVSHMEM_REGION/>
       </IVSHMEM>
       <SSRAM>
         <SSRAM_ENABLED>n</SSRAM_ENABLED>
@@ -78,7 +78,7 @@
       <name>ACRN Service OS</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
+      <ramdisk_mod/>
       <bootargs>SERVICE_VM_OS_BOOTARGS</bootargs>
     </os_config>
     <legacy_vuart id="0">
@@ -102,7 +102,7 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-      <pci_dev></pci_dev>
+      <pci_dev/>
     </pci_devs>
     <board_private>
       <rootfs>/dev/nvme0n1p3</rootfs>
