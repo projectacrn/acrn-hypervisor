@@ -217,7 +217,7 @@ virtqueues, feature mechanisms, configuration space, and buses.
 Virtio Framework Considerations
 ===============================
 
-How to configure the virtio framework is specific to a
+How to implement the virtio framework is specific to a
 hypervisor implementation. In ACRN, the virtio framework implementations
 can be classified into two types, virtio backend service in userland
 (VBS-U) and virtio backend service in kernel-land (VBS-K), according to
@@ -507,7 +507,7 @@ The key data structures for vhost are listed as follows.
 DM APIs
 =======
 
-The DM APIs are exported by DM, and they should be used when configuring
+The DM APIs are exported by DM, and they should be used when implementing
 BE device drivers on ACRN.
 
 .. doxygenfunction:: paddr_guest2host
