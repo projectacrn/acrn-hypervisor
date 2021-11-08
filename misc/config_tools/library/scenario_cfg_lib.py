@@ -361,7 +361,7 @@ def vm_cpu_affinity_check(scenario_file, cpu_affinity):
     for vm_i,cpu in cpu_affinity.items():
         if cpu is not None and cpu in use_cpus and not cpu_sharing_enabled:
             key = "vm:id={},{}".format(vm_i, 'pcpu_id')
-            err_dic[key] = "The same pcpu was configurated in <pcpu_id>/<cpu_affinity>, but CPU sharing is disabled by 'SCHED_NOOP'. Please re-configurate them!"
+            err_dic[key] = "The same pCPU was configured in <pcpu_id>/<cpu_affinity>, but CPU sharing is disabled by 'SCHED_NOOP'. Please enable CPU sharing or update your CPU affinity configuration."
             return err_dic
         else:
             use_cpus.append(cpu)
