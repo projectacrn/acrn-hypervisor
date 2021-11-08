@@ -353,7 +353,7 @@ def vm_cpu_affinity_check(scenario_file, cpu_affinity):
         for vm_cpu in cpu_ids:
             if vm_cpu not in scenario_cpu_aff[vm_id]:
                 key = "vm:id={},{}".format(vm_id, 'pcpu_id')
-                err_dic[key] = "This pcpu is not configured in this vm's scenario file. Please re-configurate them!"
+                err_dic[key] = "This pCPU is not included in this VM's allowed CPU pool. Please update your scenario file accordingly or remove it from this list."
 
     if err_dic:
         return err_dic
