@@ -750,7 +750,7 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 		    enum pcibar_type type, uint64_t size)
 {
 	int error;
-	uint64_t *baseptr, limit, addr, mask, lobits, bar;
+	uint64_t *baseptr = NULL, limit = 0, addr, mask, lobits, bar;
 	struct io_rsvd_rgn *region;
 
 	if ((size & (size - 1)) != 0)
