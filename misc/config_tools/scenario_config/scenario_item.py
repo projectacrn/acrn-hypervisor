@@ -399,7 +399,7 @@ class VmInfo:
         scenario_cfg_lib.vm_name_check(self.name, "name")
         scenario_cfg_lib.load_vm_check(self.load_vm, "load_vm")
         scenario_cfg_lib.guest_flag_check(self.guest_flags, "guest_flags", "guest_flag")
-        err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.scenario_info, self.cpus_per_vm, "pcpu_id")
+        err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.scenario_info, self.cpus_per_vm)
         scenario_cfg_lib.vcpu_clos_check(self.cpus_per_vm, self.clos_per_vm, self.guest_flags, "clos", "vcpu_clos")
 
         self.mem_info.check_item()
