@@ -285,7 +285,9 @@ following rules:
 
 Detailed configurations and policies are out of scope for this document.
 For good references on OS system security hardening and enhancement,
-see `Android security <https://source.android.com/security/>`_.
+see `AGL security
+<https://docs.automotivelinux.org/en/lamprey/#2_Architecture_Guides/2_Security_Blueprint/0_Overview/>`_
+and `Android security <https://source.android.com/security/>`_.
 
 Hypervisor Security Enhancement
 ===============================
@@ -313,7 +315,7 @@ Background
 The ACRN hypervisor has ultimate access control of all the platform
 memory spaces (see :ref:`memmgt-hld`). Note that on the APL platform,
 `SGX <https://www.intel.com/content/www/us/en/developer/tools/software-guard-extensions/overview.html>`_ and `TME
-<https://software.intel.com/en-us/blogs/2017/12/22/intel-releases-new-technology-specification-for-memory-encryption>`_
+<https://itpeernetwork.intel.com/memory-encryption/>`_
 are not currently supported.
 
 The hypervisor can read and write any physical memory space allocated
