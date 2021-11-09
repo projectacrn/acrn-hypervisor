@@ -41,7 +41,8 @@
     <xsl:value-of select="$newline" />
     <xsl:value-of select="acrn:define('PRE_VM_NUM', count(vm[acrn:is-pre-launched-vm(vm_type)]), 'U')" />
     <xsl:value-of select="acrn:define('SERVICE_VM_NUM', count(vm[acrn:is-sos-vm(vm_type)]), 'U')" />
-    <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', count(vm[acrn:is-post-launched-vm(vm_type)]), 'U')" />
+    <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', hv/CAPACITIES/MAX_VM_NUM - count(vm[acrn:is-pre-launched-vm(vm_type)]) - count(vm[acrn:is-sos-vm(vm_type)]) , 'U')" />
+    <xsl:value-of select="acrn:define('CONFIG_MAX_VM_NUM', hv/CAPACITIES/MAX_VM_NUM , 'U')" />
   </xsl:template>
 
   <xsl:template name ="dm_guest_flag">

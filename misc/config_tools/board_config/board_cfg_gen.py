@@ -45,7 +45,8 @@ def main(args):
     common.get_vm_types()
 
     if common.VM_COUNT > common.MAX_VM_NUM:
-        err_dic['vm count'] = "The vm count in config xml should be less or equal {}!".format(common.MAX_VM_NUM)
+        err_dic['vm count'] = "The number of VMs in the scenario XML file should be no greater than " \
+                              "hv.CAPACITIES.MAX_VM_NUM. Its current value is {}.".format(common.MAX_VM_NUM)
         return err_dic
 
     # check if this is the scenario config which matched board info

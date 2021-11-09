@@ -38,7 +38,7 @@ BOARD_INFO_FILE = ""
 SCENARIO_INFO_FILE = ""
 LAUNCH_INFO_FILE = ""
 VM_TYPES = {}
-MAX_VM_NUM = 32
+MAX_VM_NUM = 16
 
 MAX_VUART_NUM = 8
 
@@ -291,7 +291,7 @@ def get_vm_num(config_file):
     :param config_file: it is a file what contains information for script to read from
     :return: total vm number
     """
-    global VM_COUNT
+    global VM_COUNT, MAX_VM_NUM
     vm_count = 0
     root = get_config_root(config_file)
     for item in root:
@@ -299,6 +299,7 @@ def get_vm_num(config_file):
         if item.tag == "vm":
             vm_count += 1
     VM_COUNT = vm_count
+    MAX_VM_NUM = int(root.find(".//MAX_VM_NUM").text)
 
 
 def get_leaf_value(tmp, tag_str, leaf):
