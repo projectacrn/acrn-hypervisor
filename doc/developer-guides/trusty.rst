@@ -32,10 +32,13 @@ Trusty Architecture
 .. figure:: images/trusty-arch.png
    :align: center
    :width: 800px
-   :name: Trusty Architectural diagram
+   :name: trusty-architectural-diagram
+
+   Trusty Architectural Diagram
 
 .. note::
-   Trusty OS is running in Secure World in the architecture drawing above.
+   The Trusty OS is running in the Secure World in the architecture drawing
+   above.
 
 .. _trusty-hypercalls:
 
@@ -51,7 +54,7 @@ There are a few :ref:`hypercall_apis` that are related to Trusty.
 Trusty Boot Flow
 ****************
 
-By design, the User OS bootloader (``UOS_Loader``) will trigger the Trusty
+By design, the User VM OS bootloader will trigger the Trusty
 boot process. The complete boot flow is illustrated below.
 
 .. graphviz:: images/trusty-boot-flow.dot
@@ -62,12 +65,12 @@ boot process. The complete boot flow is illustrated below.
 As shown in the above figure, here are some details about the Trusty
 boot flow processing:
 
-1. UOS_Loader
+1. User VM OS bootloader
 
    a. Load and verify Trusty image from virtual disk
-   #. Allocate runtime memory for trusty
-   #. Do ELF relocation of trusty image and get entry address
-   #. Call ``hcall_initialize_trusty`` with trusty memory base and
+   #. Allocate runtime memory for Trusty
+   #. Do ELF relocation of Trusty image and get entry address
+   #. Call ``hcall_initialize_trusty`` with Trusty memory base and
       entry address
 #. ACRN (``hcall_initialize_trusty``)
 
@@ -83,41 +86,44 @@ boot flow processing:
 
    a. Save World context for the World that caused this ``vmexit``
       (Secure World)
-   #. Restore World context for next World (Normal World (UOS_Loader))
-   #. Resume to next World (UOS_Loader)
-#. UOS_Loader
+   #. Restore World context for next World (Normal World: User VM OS bootloader)
+   #. Resume to next World (User VM OS bootloader)
+#. User VM OS bootloader
 
    a. Continue to boot
 
 EPT Hierarchy
 *************
 
-As per the Trusty design, Trusty can access Normal World's memory, but Normal
-World cannot access Secure World's memory.  Hence it means Secure World EPTP
-page table hierarchy must contain normal world GPA address space, while Trusty
-world's GPA address space must be removed from the Normal world EPTP page
-table hierarchy.
+As per the Trusty design, Trusty can access the Normal World's memory, but the
+Normal World cannot access the Secure World's memory.  Hence it means the Secure
+World EPTP page table hierarchy must contain the Normal World GPA address space,
+while the Trusty world's GPA address space must be removed from the Normal World
+EPTP page table hierarchy.
 
 Design
 ======
 
-Put Secure World's GPA to very high position:  511 GB - 512 GB.  The PML4/PDPT
-for Trusty World are separated from Normal World.  PD/PT for low memory
-(< 511 GB) are shared in both Trusty World's EPT and Normal World's EPT.
-PD/PT for high memory (>= 511 GB) are valid for Trusty World's EPT only.
+Put the Secure World's GPA to a very high position:  511 GB - 512 GB.  The
+PML4/PDPT for the Trusty World are separated from the Normal World.  PD and PT
+for low memory
+(< 511 GB) are shared in both the Trusty World's EPT and the Normal World's EPT.
+PD and PT for high memory (>= 511 GB) are valid for the Trusty World's EPT only.
 
 Benefit
 =======
 
-This design will benefit the EPT changes of Normal World. There are
-requirements to modify Normal World's EPT during runtime such as increasing
-memory, changing attributes, etc. If such behavior happened, only PD and PT
-for Normal World need to be updated.
+This design will benefit the EPT changes of the Normal World. There are
+requirements to modify the Normal World's EPT during runtime such as increasing
+memory and changing attributes. If such behavior happens, only PD and PT
+for the Normal World need to be updated.
 
 .. figure:: images/ept-hierarchy.png
    :align: center
    :width: 800px
-   :name: EPT hierarchy pic
+   :name: ept-hierarchy
+
+   EPT Hierarchy
 
 API
 ===
