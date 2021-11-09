@@ -19,12 +19,12 @@ from flask import request, render_template, Blueprint, redirect, url_for, curren
 # Refer to https://github.com/pallets/werkzeug/blob/master/LICENSE.rst for the permission notice.
 from werkzeug.utils import secure_filename
 
+import common
 from controller import *
 from scenario_config.scenario_cfg_gen import get_scenario_item_values
 from scenario_config.scenario_cfg_gen import validate_scenario_setting
 from launch_config.launch_cfg_gen import get_launch_item_values
 from launch_config.launch_cfg_gen import validate_launch_setting
-from library.common import MAX_VM_NUM
 import scenario_config.default_populator as default_populator
 
 
@@ -245,6 +245,7 @@ def save_scenario():
     board_type = xml_configs[1]
     scenario_config = xml_configs[3]
 
+    common.MAX_VM_NUM = int(scenario_config_data['hv,CAPACITIES,MAX_VM_NUM'])
     if board_type is None or xml_configs[0] is None:
         return {'status': 'fail',
                 'error_list': {'error': 'Please select the board info before this operation.'}}
@@ -304,9 +305,9 @@ def save_scenario():
             for vm in list(scenario_config.get_curr_root()):
                 if vm.tag == 'vm':
                     vm_list.append(vm.attrib['id'])
-            if len(vm_list) >= MAX_VM_NUM:
+            if len(vm_list) >= common.MAX_VM_NUM:
                 return {'status': 'fail',
-                        'error_list': {'error': 'Can not add a new VM. Max VM number is {}.'.format(MAX_VM_NUM)}}
+                        'error_list': {'error': 'Cannot add a new VM. hv.CAPACITIES.MAX_VM_NUM is currently set to {}.'.format(common.MAX_VM_NUM)}}
             curr_vm_id = generator.split(':')[1]
             add_vm_type = scenario_config_data['add_vm_type']
             add_scenario_config = get_generic_scenario_config(scenario_config, add_vm_type)
@@ -320,7 +321,7 @@ def save_scenario():
                         curr_vm_index = i + 2
                         break
             if add_scenario_config is not None and add_scenario_config.tag == 'vm':
-                for i in range(0, MAX_VM_NUM):
+                for i in range(0, common.MAX_VM_NUM):
                     if str(i) not in vm_list:
                         break
                 add_scenario_config.attrib['id'] = str(i)
@@ -394,6 +395,8 @@ def save_launch():
     scenario_file_path = os.path.join(current_app.config.get('CONFIG_PATH'),
                                       current_app.config.get('BOARD_TYPE'),
                                       scenario_name + '.xml')
+    # update VM_COUNT and MAX_VM_NUM
+    common.get_vm_num(scenario_file_path)
 
     for key in launch_config_data:
         if launch_config_data[key] in [None, 'None']:
@@ -411,9 +414,14 @@ def save_launch():
             for vm in list(launch_config.get_curr_root()):
                 if vm.tag == 'user_vm':
                     vm_list.append(vm.attrib['id'])
-            if len(vm_list) >= MAX_VM_NUM:
-                return {'status': 'fail',
-                        'error_list': {'error': 'Can not add a new VM. Max VM number is {}.'.format(MAX_VM_NUM)}}
+            if len(vm_list) >= common.MAX_VM_NUM:
+                return {
+                    'status': 'fail',
+                    'error_list': {
+                        'error': 'Cannot add a new VM. hv.CAPACITIES.MAX_VM_NUM '
+                                 'is currently set to {}.'.format(common.MAX_VM_NUM)
+                    }
+                }
             curr_vm_id = generator.split(':')[1].strip()
             add_launch_type = launch_config_data['add_launch_type']
             if add_launch_type is None or len(add_launch_type.split('ID :')) < 2:
@@ -440,7 +448,7 @@ def save_launch():
                         curr_vm_index = i + 1
                         break
             if add_launch_config is not None and add_launch_config.tag == 'user_vm':
-                for i in range(1, MAX_VM_NUM):
+                for i in range(1, common.MAX_VM_NUM):
                     if str(i) not in vm_list:
                         break
                 add_launch_config.attrib['id'] = str(add_launch_id)
