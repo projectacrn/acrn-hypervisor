@@ -258,9 +258,7 @@ struct acrn_platform_info {
 		 *  store the VM configurations
 		 */
 		void	*vm_configs_addr;
-		/** Maximum number of VM for Kata containers */
-		__u64	max_kata_containers;
-		__u8	reserved[104];
+		__u8	reserved[112];
 	} sw;
 };
 
