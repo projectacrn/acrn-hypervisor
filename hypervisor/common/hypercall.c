@@ -214,7 +214,6 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
 		pi.hw.cpu_num = pcpu_nums;
 		pi.hw.version = 0x100;  /* version 1.0; byte[1:0] = major:minor version */
 		pi.sw.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
-		pi.sw.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
 		pi.sw.max_vms = CONFIG_MAX_VM_NUM;
 		pi.sw.vm_config_size = entry_size;
 

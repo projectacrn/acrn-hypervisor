@@ -52,9 +52,6 @@
 #define CONFIG_POST_RT_VM	.load_order = POST_LAUNCHED_VM,	\
 				.severity = SEVERITY_RTVM
 
-#define CONFIG_KATA_VM	.load_order = POST_LAUNCHED_VM,	\
-				.severity = SEVERITY_STANDARD_VM
-
 /* ACRN guest severity */
 enum acrn_vm_severity {
 	SEVERITY_SAFETY_VM = 0x40U,
