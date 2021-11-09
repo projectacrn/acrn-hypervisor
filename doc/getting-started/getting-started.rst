@@ -161,12 +161,12 @@ To set up the ACRN build environment on the development computer:
    .. code-block:: bash
 
       cd ~/acrn-work
-      git clone https://github.com/projectacrn/acrn-hypervisor
+      git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
       git checkout v2.6
 
       cd ..
-      git clone --depth 1 --branch release_2.6 https://github.com/projectacrn/acrn-kernel
+      git clone --depth 1 --branch release_2.6 https://github.com/projectacrn/acrn-kernel.git
 
 .. _gsg-board-setup:
 
