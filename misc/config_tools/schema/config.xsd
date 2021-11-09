@@ -222,6 +222,11 @@ value ``0x400000000``.</xs:documentation>
 maximum supported resource.</xs:documentation>
   </xs:annotation>
   <xs:all>
+    <xs:element name="MAX_VM_NUM" type="xs:integer" default="16">
+      <xs:annotation>
+        <xs:documentation>Maximum number of User VMs allowed.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="IOMMU_BUS_NUM" type="HexFormat" default="0x100">
       <xs:annotation>
         <xs:documentation>Highest PCI bus ID used during IOMMU

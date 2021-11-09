@@ -217,7 +217,8 @@ def main(args):
         return err_dic
 
     if common.VM_COUNT > common.MAX_VM_NUM:
-        err_dic['vm count'] = "Number of VMs in scenario xml file should be no greater than {}!".format(common.MAX_VM_NUM)
+        err_dic['vm count'] = "Number of VMs in scenario xml file should be no greater than hv/CAPACITIES/MAX_VM_NUM ! " \
+                              "Now this value is {}.".format(common.MAX_VM_NUM)
         return err_dic
 
     # check if this is the scenario config which matches board info
