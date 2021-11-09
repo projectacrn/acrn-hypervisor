@@ -75,7 +75,7 @@ The build flow is:
 1) Use an offline tool (e.g. **iasl**) to parse the Px/Cx data and hard-code to
    a CPU state table in the Hypervisor. The Hypervisor loads the data after
    the system boots.
-2) Before User VM launching, the Device mode queries the Px/Cx data from the Service
+2) Before User VM launching, the Device model queries the Px/Cx data from the Service
    VM HSM via ioctl interface.
 3) HSM transmits the query request to the Hypervisor by hypercall.
 4) The Hypervisor returns the Px/Cx data.
