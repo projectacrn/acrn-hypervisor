@@ -42,9 +42,6 @@
 #define DMAR_ICS_REG    0x9cU    /* Invalidation complete status register */
 #define DMAR_IRTA_REG   0xb8U    /* Interrupt remapping table addr register */
 
-/* Make sure all PT IRQs work w/ interrupt remapping or post interrupt */
-#define MAX_IR_ENTRIES                  CONFIG_MAX_PT_IRQ_ENTRIES
-
 /* Values for entry_type in ACPI_DMAR_DEVICE_SCOPE - device types */
 enum acpi_dmar_scope_type {
 	ACPI_DMAR_SCOPE_TYPE_NOT_USED       = 0,

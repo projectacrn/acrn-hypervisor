@@ -128,8 +128,8 @@ struct dmar_drhd_rt {
 
 	uint64_t root_table_addr;
 	uint64_t ir_table_addr;
-	uint64_t irte_alloc_bitmap[MAX_IR_ENTRIES / 64U];
-	uint64_t irte_reserved_bitmap[MAX_IR_ENTRIES / 64U];
+	uint64_t irte_alloc_bitmap[CONFIG_MAX_IR_ENTRIES / 64U];
+	uint64_t irte_reserved_bitmap[CONFIG_MAX_IR_ENTRIES / 64U];
 	uint64_t qi_queue;
 	uint16_t qi_tail;
 
@@ -152,7 +152,7 @@ struct context_table {
 };
 
 struct intr_remap_table {
-	struct page tables[MAX_IR_ENTRIES/DMAR_NUM_IR_ENTRIES_PER_PAGE];
+	struct page tables[CONFIG_MAX_IR_ENTRIES/DMAR_NUM_IR_ENTRIES_PER_PAGE];
 };
 
 static inline uint8_t *get_root_table(uint32_t dmar_index)
@@ -672,7 +672,7 @@ static void dmar_set_intr_remap_table(struct dmar_drhd_rt *dmar_unit)
 	spinlock_obtain(&(dmar_unit->lock));
 
 	/* Set number of bits needed to represent the entries minus 1 */
-	size = (uint8_t) fls32(MAX_IR_ENTRIES) - 1U;
+	size = (uint8_t) fls32(CONFIG_MAX_IR_ENTRIES) - 1U;
 	address = dmar_unit->ir_table_addr | DMAR_IR_ENABLE_EIM | size;
 
 	iommu_write64(dmar_unit, DMAR_IRTA_REG, address);
@@ -1276,7 +1276,7 @@ static uint16_t alloc_irtes(struct dmar_drhd_rt *dmar_unit, const uint16_t num)
 	ASSERT((bitmap_weight(num) == 1U) && (num <= 32U));
 
 	spinlock_obtain(&dmar_unit->lock);
-	for (irte_idx = 0U; irte_idx < MAX_IR_ENTRIES; irte_idx += num) {
+	for (irte_idx = 0U; irte_idx < CONFIG_MAX_IR_ENTRIES; irte_idx += num) {
 		test_mask = mask << (irte_idx & 0x3FU);
 		if ((dmar_unit->irte_alloc_bitmap[irte_idx >> 6U] & test_mask) == 0UL) {
 			dmar_unit->irte_alloc_bitmap[irte_idx >> 6U] |= test_mask;
@@ -1285,7 +1285,7 @@ static uint16_t alloc_irtes(struct dmar_drhd_rt *dmar_unit, const uint16_t num)
 	}
 	spinlock_release(&dmar_unit->lock);
 
-	return (irte_idx < MAX_IR_ENTRIES) ? irte_idx: INVALID_IRTE_ID;
+	return (irte_idx < CONFIG_MAX_IR_ENTRIES) ? irte_idx: INVALID_IRTE_ID;
 }
 
 static bool is_irte_reserved(const struct dmar_drhd_rt *dmar_unit, uint16_t index)
@@ -1309,7 +1309,7 @@ int32_t dmar_reserve_irte(const struct intr_source *intr_src, uint16_t num, uint
 
 	if (is_dmar_unit_valid(dmar_unit, sid)) {
 		*start_id = alloc_irtes(dmar_unit, num);
-		if (*start_id < MAX_IR_ENTRIES) {
+		if (*start_id < CONFIG_MAX_IR_ENTRIES) {
 			dmar_unit->irte_reserved_bitmap[*start_id >> 6U] |= mask << (*start_id & 0x3FU);
 		}
 		ret = 0;
@@ -1346,7 +1346,7 @@ int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry
 		if (idx_in == INVALID_IRTE_ID) {
 			*idx_out = alloc_irtes(dmar_unit, 1U);
 		}
-		if (*idx_out < MAX_IR_ENTRIES) {
+		if (*idx_out < CONFIG_MAX_IR_ENTRIES) {
 			ir_entry = ir_table + *idx_out;
 
 			if (intr_src->pid_paddr != 0UL) {
@@ -1397,7 +1397,7 @@ void dmar_free_irte(const struct intr_source *intr_src, uint16_t index)
 		dmar_unit = ioapic_to_dmaru(intr_src->src.ioapic_id, &sid);
 	}
 
-	if (is_dmar_unit_valid(dmar_unit, sid) && (index < MAX_IR_ENTRIES)) {
+	if (is_dmar_unit_valid(dmar_unit, sid) && (index < CONFIG_MAX_IR_ENTRIES)) {
 		ir_table = (union dmar_ir_entry *)hpa2hva(dmar_unit->ir_table_addr);
 		ir_entry = ir_table + index;
 		ir_entry->bits.remap.present = 0x0UL;
