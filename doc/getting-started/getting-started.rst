@@ -527,6 +527,7 @@ Build ACRN
          disk="/media/$USER/"$(ls /media/$USER)
          cp linux-5.10.52-acrn-sos-x86.tar.gz $disk/
          cp ~/acrn-work/acrn-hypervisor/build/hypervisor/acrn.bin $disk/
+         cp ~/acrn-work/acrn-hypervisor/build/hypervisor/serial.conf $disk/
          cp ~/acrn-work/my_board/output/launch_uos_id3.sh $disk/
          cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl $disk/
          cp ~/acrn-work/acrn-hypervisor/build/acrn-2.6-unstable.tar.gz $disk/
@@ -534,6 +535,9 @@ Build ACRN
 
       Even though our sample default scenario defines six User VMs, we're only
       going to launch one of them, so we'll only need the one launch script.
+
+      .. note:: The :file:`serial.conf` is only generated if non standard vUARTs (not COM1~COM4)
+               are configured for Service VM in scenario XML file.
 
    #. Insert the USB disk you just used into the target system and run these
       commands to copy the tar files locally:
@@ -567,6 +571,7 @@ Build ACRN
 
          sudo mkdir -p /boot/acrn/
          sudo cp $disk/acrn.bin /boot/acrn
+         sudo cp $disk/serial.conf /etc
          sudo cp $disk/iasl /usr/sbin/
          cp $disk/launch_uos_id3.sh ~/acrn-work
          sudo umount $disk/
@@ -576,7 +581,13 @@ Build ACRN
 Install ACRN
 ************
 
-In the following steps, you will configure GRUB on the target system.
+In the following steps, you will install serial configuration tool and configure GRUB on the target system.
+
+#. Install serial configuration tool in the target system as follows:
+
+   .. code-block:: bash
+
+      sudo apt-get install setserial
 
 #. On the target, find the root filesystem (rootfs) device name by using the
    ``lsblk`` command:
