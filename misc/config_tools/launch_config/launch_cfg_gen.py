@@ -112,6 +112,7 @@ def ui_entry_api(board_info, scenario_info, launch_info, out=''):
         return err_dic
 
     err_dic = main(arg_list)
+    launch_cfg_lib.reset_pt_slot()
     return err_dic
 
 
@@ -154,7 +155,6 @@ def generate_script_file(names, pt_sel, virt_io, dm, sriov, vmid, config):
 
     print("{}".format(header_info), file=config)
     com.gen(names, pt_sel, virt_io, dm, sriov, vmid, config)
-    launch_cfg_lib.reset_pt_slot()
     if launch_cfg_lib.ERR_LIST:
         return launch_cfg_lib.ERR_LIST
 
