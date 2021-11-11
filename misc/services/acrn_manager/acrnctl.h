@@ -29,7 +29,7 @@ struct vmmngr_struct *vmmngr_find(const char *vmname);
 
 /* Per-vm vm managerment struct */
 struct vmmngr_struct {
-	char name[MAX_VMNAME_LEN];
+	char name[MAX_VM_NAME_LEN];
 	unsigned long state;
 	unsigned long state_tmp;
 	unsigned long update;   /* update count, remove a vm if no update for it */
