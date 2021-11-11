@@ -10,13 +10,13 @@
 #include <sys/un.h>
 #include "uart.h"
 
-#define WAIT_USER_VM_POWEROFF (10*SCECOND_TO_US)
+#define WAIT_USER_VM_POWEROFF (10*SECOND_TO_US)
 
 #define CHANNEL_DEV_NAME_MAX 128U
 #define CHANNEL_DEV_BUF_LEN 256U
 
 #define MIN_RESEND_TIME 3U
-#define LISTEN_INTERVAL (5 * SCECOND_TO_US)
+#define LISTEN_INTERVAL (5 * SECOND_TO_US)
 
 typedef void data_handler_f(const char *cmd_name, int fd);
 

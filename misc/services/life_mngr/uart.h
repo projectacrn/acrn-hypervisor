@@ -13,8 +13,8 @@
 
 #define TTY_PATH_MAX 32U
 
-#define SCECOND_TO_US 1000000
-#define WAIT_RECV (SCECOND_TO_US>>2)
+#define SECOND_TO_US 1000000
+#define WAIT_RECV (SECOND_TO_US>>2)
 #define RETRY_RECV_TIMES 20U
 
 struct uart_dev {

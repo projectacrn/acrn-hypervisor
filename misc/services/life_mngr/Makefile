@@ -85,5 +85,5 @@ install:
 	[ -d $(CONF_DIR) ] || mkdir -p $(CONF_DIR)
 	install -d $(DESTDIR)$(bindir)
 	install -t $(DESTDIR)$(bindir) $(OUT_DIR)/life_mngr
-	install -t $(DESTDIR)/etc/life_mngr $(OUT_DIR)/life_mngr.conf
+	install -t $(DESTDIR)$(CONF_DIR) $(OUT_DIR)/life_mngr.conf
 	install -p -D -m 0644 $(OUT_DIR)/life_mngr.service $(DESTDIR)$(systemd_unitdir)/system/
