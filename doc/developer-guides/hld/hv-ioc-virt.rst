@@ -19,7 +19,7 @@ peripherals.
 The main purpose of IOC virtualization is to transfer data between
 native Carrier Board Communication (CBC) char devices and a virtual
 UART. IOC virtualization is implemented as full virtualization so the
-user OS can directly reuse native CBC driver.
+User VM can directly reuse the native CBC driver.
 
 The IOC Mediator has several virtualization requirements, such as S3/S5
 wakeup reason emulation, CBC link frame packing/unpacking, signal
@@ -72,14 +72,14 @@ different serial connections, such as SPI or UART.
    :align: center
    :name: ioc-cbc-frame-def
 
-   IOC Native - CBC frame definition
+   IOC Native - CBC Frame Definition
 
 The CBC protocol is based on a four-layer system:
 
--  The **Physical layer** is a serial interface with full
+-  The **Physical Layer** is a serial interface with full
    duplex capabilities. A hardware handshake is required. The required
-   bit rate depends on the peripherals connected, e.g. UART, and SPI.
--  The **Link layer** handles the length and payload verification.
+   bit rate depends on the peripherals connected, e.g., UART and SPI.
+-  The **Link Layer** handles the length and payload verification.
 -  The **Address Layer** is used to distinguish between the general data
    transferred. It is placed in front of the underlying Service Layer
    and contains Multiplexer (MUX) and Priority fields.
@@ -100,7 +100,7 @@ devices.
    :align: center
    :name: ioc-software-arch
 
-   IOC Native - Software architecture
+   IOC Native - Software Architecture
 
 Virtualization Architecture
 ---------------------------
@@ -120,7 +120,7 @@ device as its backend.
    :align: center
    :name: ioc-virt-software-arch
 
-   IOC Virtualization - Software architecture
+   IOC Virtualization - Software Architecture
 
 High-Level Design
 =================
@@ -131,7 +131,7 @@ There are five parts in this high-level design:
 * State transfer introduces IOC mediator work states
 * CBC protocol illustrates the CBC data packing/unpacking
 * Power management involves boot/resume/suspend/shutdown flows
-* Emulated CBC commands introduces some commands workflow
+* Emulated CBC commands introduce some commands workflow
 
 IOC mediator has three threads to transfer data between User VM and Service VM. The
 core thread is responsible for data reception, and Tx and Rx threads are
@@ -144,7 +144,7 @@ char devices and UART DM immediately.
    :align: center
    :name: ioc-med-sw-data-flow
 
-   IOC Mediator - Software data flow
+   IOC Mediator - Software Data Flow
 
 -  For Tx direction, the data comes from IOC firmware. IOC mediator
    receives service data from native CBC char devices such as
@@ -161,7 +161,7 @@ char devices and UART DM immediately.
    mediator and will not be transferred to IOC
    firmware.
 -  Currently, IOC mediator only cares about lifecycle, signal, and raw data.
-   Others, e.g. diagnosis, are not used by the IOC mediator.
+   Others, e.g., diagnosis, are not used by the IOC mediator.
 
 State Transfer
 --------------
@@ -201,7 +201,7 @@ virtualization, as shown in the detailed flow below:
    :align: center
    :name: ioc-cbc-frame-usage
 
-   IOC Native - CBC frame usage
+   IOC Native - CBC Frame Usage
 
 In the native architecture, the CBC link frame is unpacked by CBC
 driver. The usage services only get the service data from the CBC char
@@ -213,7 +213,7 @@ priority for the frame, then send data to the UART driver.
    :align: center
    :name: ioc-cbc-prot
 
-   IOC Virtualizaton - CBC protocol virtualization
+   IOC Virtualizaton - CBC Protocol Virtualization
 
 The difference between the native and virtualization architectures is
 that the IOC mediator needs to re-compute the checksum and reset
@@ -240,7 +240,7 @@ Boot Flow
    :align: center
    :name: ioc-virt-boot
 
-   IOC Virtualizaton - Boot flow
+   IOC Virtualizaton - Boot Flow
 
 #. Press ignition button for booting.
 #. Service VM lifecycle service gets a "booting" wakeup reason.
@@ -275,7 +275,7 @@ Suspend & Shutdown Flow
 #. PM DM executes User VM suspend/shutdown request based on ACPI.
 #. VM Manager queries each VM state from PM DM. Suspend request maps
    to a paused state and shutdown request maps to a stop state.
-#. VM Manager collects all VMs state, and reports it to Service VM lifecycle
+#. VM Manager collects all VMs' state, and reports it to Service VM lifecycle
    service.
 #. Service VM lifecycle sends inactive heartbeat to IOC firmware with
    suspend/shutdown SUS_STAT, based on the Service VM's own lifecycle service
@@ -289,9 +289,9 @@ Resume Flow
    :align: center
    :name: ioc-resume
 
-   IOC Virtualizaton - Resume flow
+   IOC Virtualizaton - Resume Flow
 
-The resume reason contains both the ignition button and RTC, and have
+The resume reason contains both the ignition button and RTC, and has
 the same flow blocks.
 
 For ignition resume flow:
@@ -324,7 +324,7 @@ For RTC resume flow
 #. PM DM resumes User VM.
 #. User VM lifecycle service gets the wakeup reason 0x000200, and sends
    initial or active heartbeat. The User VM gets wakeup reason 0x800200
-   after resuming..
+   after resuming.
 
 System Control Data
 -------------------
@@ -338,7 +338,7 @@ control includes Wakeup Reasons, Heartbeat, Boot Selector, Suppress
 Heartbeat Check, and Set Wakeup Timer functions. Details are in this
 table:
 
-.. list-table:: System control SVC values
+.. list-table:: System Control SVC Values
    :header-rows: 1
 
    * - System Control
@@ -354,22 +354,22 @@ table:
    * - 2
      - Heartbeat
      - Heartbeat
-     - Soc to IOC
+     - SoC to IOC
 
    * - 3
      - Boot Selector
      - Boot Selector
-     - Soc to IOC
+     - SoC to IOC
 
    * - 4
      - Suppress Heartbeat Check
      - Suppress Heartbeat Check
-     - Soc to IOC
+     - SoC to IOC
 
    * - 5
      - Set Wakeup Timer
      - Set Wakeup Timer in AIOC firmware
-     - Soc to IOC
+     - SoC to IOC
 
 -  IOC mediator only supports wakeup reasons Heartbeat and Set Wakeup
    Timer.
@@ -413,21 +413,21 @@ Currently the wakeup reason bits are supported by sources shown here:
 
    * - wakeup_button
      - 5
-     - Get from IOC FW, forward to User VM
+     - Get from IOC firmware, forward to User VM
 
    * - RTC wakeup
      - 9
-     - Get from IOC FW, forward to User VM
+     - Get from IOC firmware, forward to User VM
 
-   * - car door wakeup
+   * - Car door wakeup
      - 11
-     - Get from IOC FW, forward to User VM
+     - Get from IOC firmware, forward to User VM
 
    * - SoC wakeup
      - 23
      - Emulation (Depends on User VM's heartbeat message
 
--  CBC_WK_RSN_BTN (bit 5): ignition button.
+-  CBC_WK_RSN_BTN (bit 5): Ignition button.
 -  CBC_WK_RSN_RTC (bit 9): RTC timer.
 -  CBC_WK_RSN_DOR (bit 11): Car door.
 -  CBC_WK_RSN_SOC (bit 23): SoC active/inactive.
@@ -437,7 +437,7 @@ Currently the wakeup reason bits are supported by sources shown here:
    :align: center
    :name: ioc-wakeup-flow
 
-   IOC Mediator - Wakeup reason flow
+   IOC Mediator - Wakeup Reason Flow
 
 Bit 23 is for the SoC wakeup indicator and should not be forwarded
 directly because every VM has a different heartbeat status.
@@ -445,7 +445,7 @@ directly because every VM has a different heartbeat status.
 Heartbeat
 +++++++++
 
-The Heartbeat is used for SOC watchdog, indicating the SOC power
+The Heartbeat is used for SoC watchdog, indicating the SoC power
 reset behavior. Heartbeat needs to be sent every 1000 ms by
 the SoC.
 
@@ -454,7 +454,7 @@ the SoC.
    :align: center
    :name: ioc-heartbeat
 
-   System control - Heartbeat
+   System Control - Heartbeat
 
 Heartbeat frame definition is shown here:
 
@@ -513,7 +513,7 @@ Heartbeat frame definition is shown here:
 RTC
 +++
 
-RTC timer is used to wakeup SoC when the timer is expired. (A use
+RTC timer is used to wake up the SoC when the timer is expired. (A use
 case is for an automatic software upgrade with a specific time.) RTC frame
 definition is as below.
 
@@ -530,16 +530,16 @@ definition is as below.
    :align: center
    :name: ioc-rtc-flow
 
-   IOC Mediator - RTC flow
+   IOC Mediator - RTC Flow
 
 Signal Data
 -----------
 
-Signal channel is an API between the SOC and IOC for
+Signal channel is an API between the SoC and IOC for
 miscellaneous requirements. The process data includes all vehicle bus and
 carrier board data (GPIO, sensors, and so on). It supports
 transportation of single signals and group signals. Each signal consists
-of a signal ID (reference), its value, and its length. IOC and SOC need
+of a signal ID (reference), its value, and its length. IOC and SoC need
 agreement on the definition of signal IDs that can be treated as API
 interface definitions.
 
@@ -550,24 +550,24 @@ IOC signal type definitions are as below.
    :align: center
    :name: ioc-process-data-svc-val
 
-   Process Data SVC values
+   Process Data SVC Values
 
 .. figure:: images/ioc-image2.png
    :width: 900px
    :align: center
    :name: ioc-med-signal-flow
 
-   IOC Mediator - Signal flow
+   IOC Mediator - Signal Flow
 
 -  The IOC backend needs to emulate the channel open/reset/close message which
-   shouldn't be forward to the native cbc signal channel. The Service VM signal
-   related services should do a real open/reset/close signal channel.
+   shouldn't be forwarded to the native cbc signal channel. The Service VM
+   signal related services should do a real open/reset/close signal channel.
 -  Every backend should maintain a passlist for different VMs. The
    passlist can be stored in the Service VM file system (Read only) in the
    future, but currently it is hard coded.
 
 IOC mediator has two passlist tables, one is used for rx
-signals(SOC->IOC), and the other one is used for tx signals. The IOC
+signals (SoC->IOC), and the other one is used for tx signals. The IOC
 mediator drops the single signals and group signals if the signals are
 not defined in the passlist. For multi signal, IOC mediator generates a
 new multi signal, which contains the signals in the passlist.
@@ -577,37 +577,37 @@ new multi signal, which contains the signals in the passlist.
    :align: center
    :name: ioc-med-multi-signal
 
-   IOC Mediator - Multi-Signal passlist
+   IOC Mediator - Multi-Signal Passlist
 
 Raw Data
 --------
 
 OEM raw channel only assigns to a specific User VM following that OEM
 configuration. The IOC Mediator will directly forward all read/write
-message from IOC firmware to User VM without any modification.
+messages from IOC firmware to the User VM without any modification.
 
 
 IOC Mediator Usage
 ******************
 
-The device model configuration command syntax for IOC mediator is as
+The Device Model configuration command syntax for IOC mediator is as
 follows::
 
    -i,[ioc_channel_path],[wakeup_reason]
    -l,[lpc_port],[ioc_channel_path]
 
-The "ioc_channel_path" is an absolute path for communication between
+The ``ioc_channel_path`` is an absolute path for communication between
 IOC mediator and UART DM.
 
-The "lpc_port" is "com1" or "com2", IOC mediator needs one unassigned
+The ``lpc_port`` is ``com1`` or ``com2``. IOC mediator needs one unassigned
 lpc port for data transfer between User VM and Service VM.
 
-The "wakeup_reason" is IOC mediator boot reason, each bit represents
+The ``wakeup_reason`` is the IOC mediator boot reason. Each bit represents
 one wakeup reason.
 
-For example, the following commands are used to enable IOC feature, the
+For example, the following commands are used to enable the IOC feature. The
 initial wakeup reason is the ignition button and cbc_attach uses ttyS1
-for TTY line discipline in User VM::
+for TTY line discipline in the User VM::
 
    -i /run/acrn/ioc_$vm_name,0x20
    -l com2,/run/acrn/ioc_$vm_name
