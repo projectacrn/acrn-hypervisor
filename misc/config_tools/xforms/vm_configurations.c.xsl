@@ -70,13 +70,15 @@
     <!-- Definition of vm_configs -->
     <xsl:value-of select="acrn:array-initializer('struct acrn_vm_config', 'vm_configs', 'CONFIG_MAX_VM_NUM')" />
     <xsl:apply-templates select="vm"/>
+    <xsl:value-of select="acrn:vm_fill(count(vm), hv/CAPACITIES/MAX_VM_NUM)"/>
+    <xsl:value-of select="$newline"/>
     <xsl:value-of select="$end_of_array_initializer" />
   </xsl:template>
 
   <xsl:template match="vm">
     <!-- Initializer of a acrn_vm_configs instance -->
     <xsl:text>{</xsl:text>
-    <xsl:value-of select="acrn:comment(concat('VM', @id))" />
+    <xsl:value-of select="acrn:comment(concat('Static configured VM', @id))" />
     <xsl:value-of select="$newline" />
 
     <xsl:apply-templates select="vm_type" />
@@ -105,17 +107,15 @@
     </xsl:if>
 
     <!-- End of the initializer -->
-    <xsl:text>},</xsl:text>
-    <xsl:value-of select="$newline" />
+    <xsl:text>}</xsl:text>
+    <xsl:if test="not(position() = last())">
+      <xsl:text>,</xsl:text>
+      <xsl:value-of select="$newline" />
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="vm_type">
     <xsl:value-of select="concat('CONFIG_', current())" />
-    <xsl:if test="not(acrn:is-sos-vm(current()))">
-      <xsl:text>(</xsl:text>
-      <xsl:value-of select="count(../preceding-sibling::vm[vm_type = current()]) + 1" />
-      <xsl:text>)</xsl:text>
-    </xsl:if>
     <xsl:text>,</xsl:text>
     <xsl:value-of select="$newline" />
   </xsl:template>
