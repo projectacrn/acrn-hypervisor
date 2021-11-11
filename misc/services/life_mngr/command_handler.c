@@ -98,7 +98,7 @@ int socket_req_shutdown_service_vm_handler(void *arg, int fd)
 {
 	int ret;
 
-	usleep(LISTEN_INTERVAL + SCECOND_TO_US);
+	usleep(LISTEN_INTERVAL + SECOND_TO_US);
 	ret = send_socket_ack(arg, fd, ACK_REQ_SYS_SHUTDOWN);
 	if (ret < 0)
 		return 0;
@@ -114,7 +114,7 @@ int socket_req_user_vm_shutdown_handler(void *arg, int fd)
 	struct socket_dev *sock = (struct socket_dev *)arg;
 	struct socket_client *client = NULL;
 
-	usleep(LISTEN_INTERVAL + SCECOND_TO_US);
+	usleep(LISTEN_INTERVAL + SECOND_TO_US);
 	client = find_socket_client(sock, fd);
 	if (client == NULL)
 		return -1;
@@ -143,7 +143,7 @@ int socket_req_system_shutdown_user_vm_handler(void *arg, int fd)
 	int ret;
 	struct channel_dev *c_dev = NULL;
 
-	usleep(LISTEN_INTERVAL + SCECOND_TO_US);
+	usleep(LISTEN_INTERVAL + SECOND_TO_US);
 	c_dev = (struct channel_dev *)LIST_FIRST(&channel->tty_conn_head);
 	if (c_dev == NULL) {
 		(void) send_socket_ack(arg, fd, USER_VM_DISCONNECT);
@@ -219,7 +219,7 @@ int req_shutdown_handler(void *arg, int fd)
 								strlen(ACK_REQ_SYS_SHUTDOWN));
 	if (ret < 0)
 		LOG_WRITE("Send acked message to user VM fail\n");
-	usleep(SCECOND_TO_US);
+	usleep(SECOND_TO_US);
 	LOG_PRINTF("Send acked shutdown request message to user VM (%s)\n", c_dev->name);
 	enable_all_uart_channel_dev_resend(c, POWEROFF_CMD, VM_SHUTDOWN_RETRY_TIMES);
 	notify_all_connected_uart_channel_dev(c, POWEROFF_CMD);
