@@ -69,9 +69,6 @@
 /*
  * Common IOCTL IDs definition for ACRN userspace
  */
-#define ACRN_IOCTL_GET_PLATFORM_INFO	\
-	_IOR(ACRN_IOCTL_TYPE, 0x03, struct acrn_platform_info)
-
 #define ACRN_IOCTL_CREATE_VM		\
 	_IOWR(ACRN_IOCTL_TYPE, 0x10, struct acrn_vm_creation)
 #define ACRN_IOCTL_DESTROY_VM		\
@@ -223,44 +220,6 @@ struct acrn_ioreq_notify {
 };
 
 #define ACRN_PLATFORM_LAPIC_IDS_MAX	64
-/**
- * @brief - Information of a platform from hypervisor
- *
- * If vm_configs_addr is provided, the driver uses a bounce buffer (kmalloced
- * for continuous memory region) to fetch VM configurations data from the
- * hypervisor.
- */
-struct acrn_platform_info {
-	struct {
-		/** Physical CPU number of the platform */
-		__u16	cpu_num;
-		/** Version of this structure */
-		__u16	version;
-		/** Order of the number of threads sharing L2 cache */
-		__u32	l2_cat_shift;
-		/** Order of the number of threads sharing L3 cache */
-		__u32	l3_cat_shift;
-		/** IDs of LAPICs of all threads */
-		__u8	lapic_ids[ACRN_PLATFORM_LAPIC_IDS_MAX];
-		/** Reserved for alignment and should be 0 */
-		__u8	reserved[52];
-	} hw;
-
-	struct {
-		/** Maximum number of vCPU of a VM */
-		__u16	max_vcpus_per_vm;
-		/** Maximum number of VM */
-		__u16	max_vms;
-		/** Size of configuration of a VM */
-		__u32	vm_config_size;
-
-		/** Memory address which user space provided to
-		 *  store the VM configurations
-		 */
-		void	*vm_configs_addr;
-		__u8	reserved[112];
-	} sw;
-};
 
 struct acrn_ioeventfd {
 #define ACRN_IOEVENTFD_FLAG_PIO		0x01
