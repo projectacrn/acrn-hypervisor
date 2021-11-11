@@ -142,7 +142,7 @@ void *poll_and_dispatch_uart_channel_events(void *arg)
 		 */
 		if (num == 0) {
 			if (c_dev->resend_time > 1) {
-				usleep(LISTEN_INTERVAL + SCECOND_TO_US);
+				usleep(LISTEN_INTERVAL + SECOND_TO_US);
 				LOG_PRINTF("Resend (%s) to (%s)\n", c_dev->resend_buf, c_dev->name);
 				ret = send_message_by_uart(c_dev->uart_device, (void *)c_dev->resend_buf,
 								strlen(c_dev->resend_buf));
