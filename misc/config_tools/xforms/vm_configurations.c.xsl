@@ -19,6 +19,8 @@
     <xsl:value-of select="acrn:include('asm/pci_dev.h')" />
     <xsl:value-of select="acrn:include('asm/pgtable.h')" />
     <xsl:value-of select="acrn:include('schedule.h')" />
+    <xsl:value-of select="$newline" />
+    <xsl:value-of select="$newline" />
 
     <xsl:apply-templates select="config-data/acrn-config" />
   </xsl:template>
@@ -139,10 +141,10 @@
     <xsl:if test="guest_flag">
       <xsl:choose>
         <xsl:when test="guest_flag = '' or guest_flag = '0' or guest_flag = '0UL'">
-          <xsl:value-of select="acrn:initializer('guest_flags', '0UL')" />
+          <xsl:value-of select="acrn:initializer('guest_flags', 'GUEST_FLAG_STATIC_VM')" />
         </xsl:when>
         <xsl:otherwise>
-          <xsl:value-of select="acrn:initializer('guest_flags', concat('(', acrn:string-join(guest_flag, '|', '', ''),')'))" />
+          <xsl:value-of select="acrn:initializer('guest_flags', concat('(GUEST_FLAG_STATIC_VM|', acrn:string-join(guest_flag, '|', '', ''),')'))" />
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>
