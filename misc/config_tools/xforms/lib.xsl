@@ -104,6 +104,28 @@
     </func:result>
   </func:function>
 
+    <func:function name="acrn:vm_fill">
+
+        <xsl:param name="cur"/>
+        <xsl:param name="end"/>
+
+        <func:result>
+            <xsl:text>,</xsl:text>
+            <xsl:value-of select="$newline"/>
+            <xsl:text>{</xsl:text>
+            <xsl:value-of select="acrn:comment(concat('Dynamic configured  VM', $cur))"/>
+            <xsl:value-of select="$newline"/>
+            <xsl:text>CONFIG_POST_STD_VM,</xsl:text>
+            <xsl:value-of select="$newline"/>
+            <xsl:text>}</xsl:text>
+            <xsl:value-of select="$newline"/>
+
+            <xsl:if test="not($cur + 1 = $end)">
+                <xsl:value-of select="acrn:vm_fill($cur + 1, $end)"/>
+            </xsl:if>
+        </func:result>
+    </func:function>
+
   <func:function name="acrn:min">
     <xsl:param name="a" />
     <xsl:param name="b" />
