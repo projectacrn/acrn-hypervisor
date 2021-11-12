@@ -478,6 +478,32 @@ int32_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu, struct acrn_vm *ta
 		uint64_t param1, uint64_t param2);
 
 /**
+ * @brief Handle the TEE boot done signal.
+ *
+ * @param vcpu Pointer to VCPU data structure
+ * @param target_vm not used
+ * @param param1 not used
+ * @param param2 not used
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_handle_tee_vcpu_boot_done(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		uint64_t param1, uint64_t param2);
+
+/**
+ * @brief Switch the execution environment.
+ *
+ * @param vcpu Pointer to VCPU data structure
+ * @param target_vm not used
+ * @param param1 not used
+ * @param param2 not used
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_switch_ee(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		uint64_t param1, uint64_t param2);
+
+/**
  * @}
  */
 /* End of trusty_hypercall */

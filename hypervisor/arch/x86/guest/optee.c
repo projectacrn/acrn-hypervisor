@@ -11,6 +11,7 @@
 #include <asm/guest/optee.h>
 #include <asm/trampoline.h>
 #include <reloc.h>
+#include <hypercall.h>
 
 void prepare_tee_vm_memmap(struct acrn_vm *vm, const struct acrn_vm_config *vm_config)
 {
@@ -32,4 +33,16 @@ void prepare_tee_vm_memmap(struct acrn_vm *vm, const struct acrn_vm_config *vm_c
 		hv_hpa = hva2hpa((void *)(get_hv_image_base()));
 		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, hv_hpa, get_hv_ram_size());
 	}
+}
+
+int32_t hcall_handle_tee_vcpu_boot_done(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+		__unused uint64_t param1, __unused uint64_t param2)
+{
+	return 0;
+}
+
+int32_t hcall_switch_ee(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+		__unused uint64_t param1, __unused uint64_t param2)
+{
+	return 0;
 }
