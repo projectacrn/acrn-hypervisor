@@ -88,6 +88,7 @@
       <xsl:value-of select="$newline" />
     </xsl:if>
     <xsl:value-of select="acrn:initializer('vm_prio', priority)" />
+    <xsl:value-of select="acrn:initializer('companion_vm_id', concat(companion_vmid, 'U'))" />
     <xsl:apply-templates select="guest_flags" />
 
     <xsl:if test="acrn:is-rdt-enabled()">
