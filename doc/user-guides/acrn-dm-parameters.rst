@@ -601,8 +601,7 @@ arguments used for configuration.  Here is a table describing these emulated dev
          a FE GPIO, you can set a new name here.
 
    * - ``virtio-rnd``
-     - Virtio random generater type device, with string ``kernel=on`` to
-       select the VBSK virtio backend. The VBSU virtio backend is used by default.
+     - Virtio random generator type device, the VBSU virtio backend is used by default.
 
    * - ``virtio-rpmb``
      - Virtio Replay Protected Memory Block (RPMB) type device, with
