@@ -247,6 +247,7 @@ struct acrn_vm *get_service_vm(void);
 
 void create_service_vm_e820(struct acrn_vm *vm);
 void create_prelaunched_vm_e820(struct acrn_vm *vm);
+void prepare_vm_identical_memmap(struct acrn_vm *vm, uint16_t e820_entry_type, uint64_t prot_orig);
 uint64_t find_space_from_ve820(struct acrn_vm *vm, uint32_t size, uint64_t min_addr, uint64_t max_addr);
 
 int32_t prepare_os_image(struct acrn_vm *vm);

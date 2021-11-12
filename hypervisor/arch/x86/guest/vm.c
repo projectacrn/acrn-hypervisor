@@ -551,6 +551,24 @@ static uint64_t lapic_pt_enabled_pcpu_bitmap(struct acrn_vm *vm)
 	return bitmap;
 }
 
+void prepare_vm_identical_memmap(struct acrn_vm *vm, uint16_t e820_entry_type, uint64_t prot_orig)
+{
+	const struct e820_entry *entry;
+	const struct e820_entry *p_e820 = vm->e820_entries;
+	uint32_t entries_count = vm->e820_entry_num;
+	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
+	uint32_t i;
+
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
+		if (entry->type == e820_entry_type) {
+			ept_add_mr(vm, pml4_page, entry->baseaddr,
+				entry->baseaddr, entry->length,
+				prot_orig);
+		}
+	}
+}
+
 /**
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL
  * @pre vm->state == VM_POWERED_OFF
