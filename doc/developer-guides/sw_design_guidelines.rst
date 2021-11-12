@@ -113,8 +113,8 @@ level are shown below.
 
 **Return error code**
   The hypervisor shall return an error code to the VM when the below cases
-  occur. The error code shall indicate the error type detected (e.g. invalid
-  parameter, device not found, device busy, resource unavailable, etc).
+  occur. The error code shall indicate the error type detected (e.g., invalid
+  parameter, device not found, device busy, and resource unavailable).
 
   This method applies to the following case:
 
@@ -123,8 +123,8 @@ level are shown below.
 **Inform the safety VM through specific register or memory area**
   The hypervisor shall inform the safety VM through a specific register or
   memory area when the below cases occur. The VM will decide how to handle
-  the related error. This shall be done only after the VM (Safety OS or
-  Service OS) dedicated to error handling has started.
+  the related error. This shall be done only after the VM (Safety VM or
+  Service VM) dedicated to error handling has started.
 
   This method applies to the following cases:
 
@@ -273,7 +273,7 @@ The rules of error detection and error handling on a module level are shown in
    | Resource Class     | Failure   | Error Detection via        | Error Handling Policy     | Example                 |
    |                    | Mode      | Hypervisor                 |                           |                         |
    +====================+===========+============================+===========================+=========================+
-   | Internal data of   | N/A       | Partial.                   | The hypervisor shall use  | virtual PCI device      |
+   | Internal data of   | N/A       | Partial.                   | The hypervisor shall use  | Virtual PCI device      |
    | the hypervisor     |           | The related pre-conditions | the internal resource/data| information, defined    |
    |                    |           | are required.              | directly.                 | with array              |
    |                    |           |                            |                           | ``pci_vdevs[]``         |
@@ -570,7 +570,7 @@ The following table shows some use cases of module level configuration design:
      - This module is used to virtualize part of LAPIC functionalities.
        It can be done via APICv or software emulation depending on CPU
        capabilities.
-       For example, KBL Intel NUC doesn't support virtual-interrupt delivery,
+       For example, Kaby Lake NUC doesn't support virtual-interrupt delivery,
        while other platforms support it.
      - If a function pointer is used, the prerequisite is
        "hv_operation_mode == OPERATIONAL".
