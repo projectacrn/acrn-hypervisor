@@ -978,7 +978,7 @@ static uint8_t loaded_pre_vm_nr = 0U;
  *
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL
  */
-void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
+int32_t prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 {
 	int32_t err = 0;
 	struct acrn_vm *vm = NULL;
@@ -1024,17 +1024,9 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 		if (is_prelaunched_vm(vm)) {
 			loaded_pre_vm_nr++;
 		}
-
-		if (err == 0) {
-
-			/* start vm BSP automatically */
-			start_vm(vm);
-
-			pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
-		} else {
-			pr_err("Failed to load VM id: %x name: %s, error = %d", vm_id, vm_config->name, err);
-		}
 	}
+
+	return err;
 }
 
 /**
@@ -1048,12 +1040,35 @@ void launch_vms(uint16_t pcpu_id)
 
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
+
+		if ((vm_config->guest_flags & GUEST_FLAG_REE) != 0U &&
+		    (vm_config->guest_flags & GUEST_FLAG_TEE) != 0U) {
+			ASSERT(false, "%s: Wrong VM (VM id: %u) configuration, can't set both REE and TEE flags",
+				__func__, vm_id);
+		}
+
 		if ((vm_config->load_order == SERVICE_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
 			if (pcpu_id == get_configured_bsp_pcpu_id(vm_config)) {
 				if (vm_config->load_order == SERVICE_VM) {
 					service_vm_ptr = &vm_array[vm_id];
 				}
-				prepare_vm(vm_id, vm_config);
+
+				/*
+				 * We can only start a VM when there is no error in prepare_vm.
+				 * Otherwise, print out the corresponding error.
+				 *
+				 * We can only start REE VM when get the notification from TEE VM.
+				 * so skip "start_vm" here for REE, and start it in TEE hypercall
+				 * HC_TEE_VCPU_BOOT_DONE.
+				 */
+				if (prepare_vm(vm_id, vm_config) == 0) {
+					if ((vm_config->guest_flags & GUEST_FLAG_REE) != 0U) {
+						/* Nothing need to do here, REE will start in TEE hypercall */
+					} else {
+						start_vm(get_vm_from_vmid(vm_id));
+						pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
+					}
+				}
 			}
 		}
 	}

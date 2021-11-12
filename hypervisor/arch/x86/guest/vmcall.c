@@ -104,6 +104,12 @@ static const struct hc_dispatch hc_dispatch_table[] = {
 	[HC_IDX(HC_SAVE_RESTORE_SWORLD_CTX)] = {
 		.handler = hcall_save_restore_sworld_ctx,
 		.permission_flags = GUEST_FLAG_SECURE_WORLD_ENABLED},
+	[HC_IDX(HC_TEE_VCPU_BOOT_DONE)] = {
+		.handler = hcall_handle_tee_vcpu_boot_done,
+		.permission_flags = GUEST_FLAG_TEE},
+	[HC_IDX(HC_SWITCH_EE)] = {
+		.handler = hcall_switch_ee,
+		.permission_flags = (GUEST_FLAG_TEE | GUEST_FLAG_REE)},
 };
 
 uint16_t allocate_dynamical_vmid(struct acrn_vm_creation *cv)
@@ -123,6 +129,18 @@ uint16_t allocate_dynamical_vmid(struct acrn_vm_creation *cv)
 }
 
 #define GUEST_FLAGS_ALLOWING_HYPERCALLS GUEST_FLAG_SECURE_WORLD_ENABLED
+static bool is_guest_hypercall(struct acrn_vm *vm)
+{
+	uint64_t guest_flags = get_vm_config(vm->vm_id)->guest_flags;
+	bool ret = true;
+
+	if ((guest_flags & (GUEST_FLAG_SECURE_WORLD_ENABLED |
+		GUEST_FLAG_TEE | GUEST_FLAG_REE)) == 0UL) {
+		ret = false;
+	}
+
+	return ret;
+}
 
 struct acrn_vm *parse_target_vm(struct acrn_vm *service_vm, uint64_t hcall_id, uint64_t param1, __unused uint64_t param2)
 {
@@ -214,7 +232,7 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 					put_vm_lock(target_vm);
 				}
 			} else if ((permission_flags != 0UL) &&
-					((guest_flags & permission_flags) == permission_flags)) {
+					((guest_flags & permission_flags) != 0UL)) {
 				ret = dispatch->handler(vcpu, vcpu->vm, param1, param2);
 			} else {
 				/* The vCPU is not allowed to invoke the given hypercall. Keep `ret` as -EINVAL and no
@@ -238,7 +256,6 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	struct acrn_vm *vm = vcpu->vm;
 	/* hypercall ID from guest*/
 	uint64_t hypcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
-	uint64_t guest_flags = get_vm_config(vm->vm_id)->guest_flags;
 
 	/*
 	 * The following permission checks are applied to hypercalls.
@@ -251,7 +268,7 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	 *    guest flags. Attempts to invoke an unpermitted hypercall will make a vCPU see -EINVAL as the return
 	 *    value. No exception is triggered in this case.
 	 */
-	if (!is_service_vm(vm) && ((guest_flags & GUEST_FLAGS_ALLOWING_HYPERCALLS) == 0UL)) {
+	if (!is_service_vm(vm) && !is_guest_hypercall(vm)) {
 		vcpu_inject_ud(vcpu);
 		ret = -ENODEV;
 	} else if (!is_hypercall_from_ring0()) {
