@@ -145,3 +145,41 @@ int32_t hcall_switch_ee(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_
 
 	return ret;
 }
+
+void handle_x86_tee_int(struct ptirq_remapping_info *entry, uint16_t pcpu_id)
+{
+	struct acrn_vcpu *tee_vcpu;
+	struct acrn_vcpu *curr_vcpu = get_running_vcpu(pcpu_id);
+
+	if (((get_vm_config(entry->vm->vm_id)->guest_flags & GUEST_FLAG_REE) != 0U) &&
+		((get_vm_config(curr_vcpu->vm->vm_id)->guest_flags & GUEST_FLAG_TEE) != 0U)) {
+		/*
+		 * Non-Secure interrupt (interrupt belongs to REE) comes
+		 * when REE vcpu is running, the interrupt will be injected
+		 * to REE directly. But when TEE vcpu is running at that time,
+		 * we need to inject a predefined vector to TEE for notification
+		 * and continue to switch back to TEE for running.
+		 */
+		tee_vcpu = vcpu_from_pid(get_companion_vm(entry->vm), pcpu_id);
+		vlapic_set_intr(tee_vcpu, TEE_NOTIFICATION_VECTOR, LAPIC_TRIG_EDGE);
+	} else if (((get_vm_config(entry->vm->vm_id)->guest_flags & GUEST_FLAG_TEE) != 0U) &&
+		((get_vm_config(curr_vcpu->vm->vm_id)->guest_flags & GUEST_FLAG_REE) != 0U)) {
+		/*
+		 * Secure interrupt (interrupt belongs to TEE) comes
+		 * when TEE vcpu is running, the interrupt will be
+		 * injected to TEE directly. But when REE vcpu is running
+		 * at that time, we need to switch to TEE for handling,
+		 * and copy 0xB20000FF to RDI to notify OPTEE about this.
+		 */
+		tee_vcpu = vcpu_from_pid(entry->vm, pcpu_id);
+		/*
+		 * Copy 0xB20000FF to RDI to indicate the switch is from secure interrupt
+		 * This is the contract with OPTEE.
+		 */
+		vcpu_set_gpreg(tee_vcpu, CPU_REG_RDI, OPTEE_FIQ_ENTRY);
+
+		wake_thread(&tee_vcpu->thread_obj);
+	} else {
+		/* Nothing need to do for this moment */
+	}
+}
