@@ -148,7 +148,7 @@ struct dmar_drhd_rt {
 };
 
 struct context_table {
-	struct page buses[CONFIG_IOMMU_BUS_NUM];
+	struct page buses[ACFG_MAX_PCI_BUS_NUM];
 };
 
 struct intr_remap_table {
@@ -1000,7 +1000,7 @@ static bool is_dmar_unit_valid(const struct dmar_drhd_rt *dmar_unit, union pci_b
 	return valid;
 }
 
-/* @pre bus < CONFIG_IOMMU_BUS_NUM */
+/* @pre bus < ACFG_MAX_PCI_BUS_NUM */
 static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
@@ -1079,7 +1079,7 @@ static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bu
 	return ret;
 }
 
-/* @pre bus < CONFIG_IOMMU_BUS_NUM */
+/* @pre bus < ACFG_MAX_PCI_BUS_NUM */
 static int32_t iommu_detach_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
@@ -1202,7 +1202,7 @@ int32_t move_pt_device(const struct iommu_domain *from_domain, const struct iomm
 
 	/* TODO: check if the device assigned */
 
-	if (bus_local < CONFIG_IOMMU_BUS_NUM) {
+	if (bus_local < ACFG_MAX_PCI_BUS_NUM) {
 		if (from_domain != NULL) {
 			status = iommu_detach_device(from_domain, bus, devfun);
 		}
