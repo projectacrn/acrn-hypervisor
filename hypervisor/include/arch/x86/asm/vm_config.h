@@ -156,6 +156,7 @@ struct acrn_vm_config {
 							 * We could add more guest flags in future;
 							 */
 	uint32_t vm_prio;				/* The priority for VM vCPU scheduling */
+	uint16_t companion_vm_id;			/* The companion VM id for this VM */
 	struct acrn_vm_mem_config memory;		/* memory configuration of VM */
 	struct epc_section epc;				/* EPC memory configuration of VM */
 	uint16_t pci_dev_num;				/* indicate how many PCI devices in VM */
