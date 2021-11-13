@@ -1,4 +1,5 @@
 .. _using_zephyr_as_uos:
+.. _using_zephyr_as_user_vm:
 
 Run Zephyr as the User VM
 #########################
