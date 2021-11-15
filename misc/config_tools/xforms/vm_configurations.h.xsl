@@ -50,7 +50,7 @@
       <xsl:when test="count(vm[vm_type='SERVICE_VM'])">
         <xsl:value-of select="acrn:comment('Bitmask of guest flags that can be programmed by device model. Other bits are set by hypervisor only.')" />
         <xsl:value-of select="$newline" />
-        <xsl:value-of select="acrn:define('DM_OWNED_GUEST_FLAG_MASK', '(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | GUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING | GUEST_FLAG_SECURITY_VM)', '')" />
+        <xsl:value-of select="acrn:define('DM_OWNED_GUEST_FLAG_MASK', '(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | GUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING)', '')" />
       </xsl:when>
       <xsl:otherwise>
       <xsl:value-of select="acrn:define('DM_OWNED_GUEST_FLAG_MASK', '0', 'UL')" />
