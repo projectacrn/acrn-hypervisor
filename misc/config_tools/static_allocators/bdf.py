@@ -119,7 +119,23 @@ def create_device_node(allocation_etree, vm_id, devdict):
         if common.get_node(f"./func", dev_node) is None:
             common.append_node(f"./func", f"{bdf.func:#04x}", dev_node)
 
+def create_gpu_sbdf(board_etree, allocation_etree):
+    """
+    Extract the integrated GPU bdf from board.xml. If the device is not present, set bdf to "0xFFFF" which indicates the device
+    doesn't exist.
+    """
+    bus = "0x0"
+    device_node = common.get_node(f"//bus[@type='pci' and @address='{bus}']/device[vendor='0x8086' and class='0x030000']", board_etree)
+    if device_node is None:
+        common.append_node("/acrn-config/hv/MISC_CFG/GPU_SBDF", '0xFFFF', allocation_etree)
+    else:
+        address = device_node.get('address')
+        dev = int(address, 16) >> 16
+        func = int(address, 16) & 0xffff
+        common.append_node("/acrn-config/hv/MISC_CFG/GPU_SBDF", f"{(int(bus, 16) << 8) | (dev << 3) | func:#06x}", allocation_etree)
+
 def fn(board_etree, scenario_etree, allocation_etree):
+    create_gpu_sbdf(board_etree, allocation_etree)
     vm_nodes = scenario_etree.xpath("//vm")
     for vm_node in vm_nodes:
         vm_id = vm_node.get('id')

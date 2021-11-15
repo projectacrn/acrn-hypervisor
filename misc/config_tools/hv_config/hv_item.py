@@ -77,20 +77,6 @@ class CapHv:
         hv_cfg_lib.hv_range_check(self.max_pci_dev_num, "CAPACITIES", "MAX_PCI_DEV_NUM", hv_cfg_lib.RANGE_DB['PCI_DEV_NUM'])
         hv_cfg_lib.max_msix_table_num_check(self.max_msix_table_num, "CAPACITIES", "MAX_MSIX_TABLE_NUM")
 
-
-class MisCfg:
-
-    def __init__(self, hv_file):
-        self.hv_file = hv_file
-        self.gpu_sbdf = 0
-
-    def get_info(self):
-        self.gpu_sbdf =  common.get_hv_item_tag(self.hv_file, "MISC_CFG", "GPU_SBDF")
-
-    def check_item(self):
-        hv_cfg_lib.hv_size_check(self.gpu_sbdf, "MISC_CFG", "GPU_SBDF")
-
-
 class Features:
     def __init__(self, hv_file):
         self.hv_file = hv_file
@@ -173,19 +159,16 @@ class HvInfo:
         self.mem = Memory(self.hv_file)
         self.cap = CapHv(self.hv_file)
         self.log = LogOpt(self.hv_file)
-        self.mis = MisCfg(self.hv_file)
         self.features = Features(self.hv_file)
 
     def get_info(self):
         self.mem.get_info()
         self.log.get_info()
         self.cap.get_info()
-        self.mis.get_info()
         self.features.get_info()
 
     def check_item(self):
         self.mem.check_item()
         self.log.check_item()
         self.cap.check_item()
-        self.mis.check_item()
         self.features.check_item()
