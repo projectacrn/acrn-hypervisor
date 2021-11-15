@@ -38,9 +38,8 @@ void init_efi_mmap_entries(struct efi_info *uefi_info)
 	void *efi_memmap = (void *)((uint64_t)uefi_info->memmap | ((uint64_t)uefi_info->memmap_hi << 32U));
 	struct efi_memory_desc *efi_memdesc = (struct efi_memory_desc *)efi_memmap;
 	uint32_t entry = 0U;
-	uint32_t efi_memdesc_nr = uefi_info->memmap_size / uefi_info->memdesc_size;
 
-	ASSERT(efi_memdesc_nr <= MAX_EFI_MMAP_ENTRIES);
+	ASSERT((uefi_info->memmap_size / uefi_info->memdesc_size) <= MAX_EFI_MMAP_ENTRIES);
 
 	while ((void *)efi_memdesc < (efi_memmap + uefi_info->memmap_size)) {
 		hv_memdesc[entry] = *efi_memdesc;
