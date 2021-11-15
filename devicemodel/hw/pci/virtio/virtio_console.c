@@ -283,6 +283,9 @@ virtio_console_control_tx(struct virtio_console_port *port, void *arg,
 	console = port->console;
 	ctrl = (struct virtio_console_control *)iov->iov_base;
 
+	if ((console == NULL) || (ctrl == NULL))
+		return;
+
 	switch (ctrl->event) {
 	case VIRTIO_CONSOLE_DEVICE_READY:
 		console->ready = true;
