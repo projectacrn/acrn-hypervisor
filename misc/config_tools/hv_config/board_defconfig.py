@@ -133,12 +133,6 @@ def get_serial_console(config):
         if serial_value:
             print('CONFIG_SERIAL_MMIO_BASE={}'.format(serial_value), file=config)
 
-
-def get_miscfg(hv_info, config):
-
-    print("CONFIG_GPU_SBDF={}".format(hv_info.mis.gpu_sbdf), file=config)
-
-
 def get_features(hv_info, config):
 
     print("CONFIG_{}=y".format(hv_info.features.scheduler), file=config)
@@ -201,7 +195,6 @@ def generate_file(hv_info, config):
     print('CONFIG_BOARD="{}"'.format(board_name), file=config)
 
     get_memory(hv_info, config)
-    get_miscfg(hv_info, config)
     get_features(hv_info, config)
     get_capacities(hv_info, config)
     get_serial_console(config)

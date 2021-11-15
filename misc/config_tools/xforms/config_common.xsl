@@ -255,8 +255,9 @@
   </xsl:template>
 
   <xsl:template match="MISC_CFG">
-    <xsl:call-template name="integer-by-key">
+    <xsl:call-template name="integer-by-key-value">
       <xsl:with-param name="key" select="'GPU_SBDF'" />
+      <xsl:with-param name="value" select="//allocation-data/acrn-config/hv/MISC_CFG/GPU_SBDF" />
     </xsl:call-template>
   </xsl:template>
 
