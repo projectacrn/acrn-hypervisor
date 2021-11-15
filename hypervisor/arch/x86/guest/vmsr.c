@@ -291,7 +291,7 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, uint32_t 
 		}
 
 		msr &= 0x1FFFU;
-		msr_bit = 1U << (msr & 0x7U);
+		msr_bit = (uint8_t)(1U << (msr & 0x7U));
 		msr_index = msr >> 3U;
 
 		if ((mode & INTERCEPT_READ) == INTERCEPT_READ) {
@@ -871,6 +871,7 @@ static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
 {
 	uint32_t eax, ebx = 0U, ecx = 0U, edx = 0U;
 	bool update_vmsr = true;
+	uint64_t effective_guest_msr = v;
 
 	/* According to SDM Vol4 2.1 & Vol 3A 4.1.4,
 	 * EFER.NXE should be cleared if guest disable XD in IA32_MISC_ENABLE
@@ -895,14 +896,14 @@ static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
 			update_vmsr = false;
 		} else if (vcpu->vm->arch_vm.vm_mwait_cap) {
 			/* guest cpuid.01H will be updated when guest executes 'cpuid' with leaf 01H */
-			v &= ~MSR_IA32_MISC_ENABLE_MONITOR_ENA;
+			effective_guest_msr &= ~MSR_IA32_MISC_ENABLE_MONITOR_ENA;
 		} else {
 			update_vmsr = false;
 		}
 	}
 
 	if (update_vmsr) {
-		vcpu_set_guest_msr(vcpu, MSR_IA32_MISC_ENABLE, v);
+		vcpu_set_guest_msr(vcpu, MSR_IA32_MISC_ENABLE, effective_guest_msr);
 	}
 }
 

@@ -1,13 +1,15 @@
 [Unit]
 Description=ACRN lifemngr daemon
-After=systemd-resolved.service
+After=setserial.service
+After=network.target
+After=systemd-logind.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/life_mngr uos /dev/ttyS1
+ExecStart=@bindir@/life_mngr
 StandardOutput=journal
 StandardError=journal
-Restart=yes
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target

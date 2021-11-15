@@ -159,13 +159,13 @@ of DMA operations.</xs:documentation>
         <xs:documentation>Enable ACPI runtime parsing.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="n">
+    <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="y">
       <xs:annotation>
         <xs:documentation>Enable L1 cache flush before VM entry. Default
 value ``n``.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="n">
+    <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="y">
       <xs:annotation>
         <xs:documentation>Force disabling software workaround for
 Machine Check Error on Page Size Change.</xs:documentation>
@@ -195,7 +195,7 @@ physical core. Each core uses one stack for normal operation and another
 three for specific exceptions.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="HV_RAM_START" type="HexFormat" default="0x00200000">
+    <xs:element name="HV_RAM_START" type="HexFormat" default="0x00400000">
       <xs:annotation>
         <xs:documentation>The 2MB-aligned starting physical address of
 the RAM region used by the hypervisor.</xs:documentation>
@@ -279,11 +279,6 @@ initialization.</xs:documentation>
           <xs:maxInclusive value="120" />
         </xs:restriction>
       </xs:simpleType>
-    </xs:element>
-    <xs:element name="MAX_EFI_MMAP_ENTRIES" type="xs:integer" default="256">
-      <xs:annotation>
-        <xs:documentation>The maximum number of EFI memmap entries.</xs:documentation>
-      </xs:annotation>
     </xs:element>
     <xs:element name="MAX_PT_IRQ_ENTRIES" type="xs:integer" default="256">
       <xs:annotation>
@@ -445,7 +440,7 @@ its ``id`` attribute. When it is enabled, specify which target VM's vUART the cu
       </xs:annotation>
     </xs:element>
     <xs:element name="board_private" type="BoardPrivateConfiguration" minOccurs="0" />
-    <xs:element name="PTM" type="Boolean" default="n" minOccurs="0">
+    <xs:element name="PTM" type="Boolean" default="y" minOccurs="0">
       <xs:annotation>
         <xs:documentation>Enable and disable PTM(Precision Timing Measurement) feature.</xs:documentation>
       </xs:annotation>

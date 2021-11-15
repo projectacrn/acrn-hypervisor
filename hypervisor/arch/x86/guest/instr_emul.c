@@ -266,7 +266,7 @@ static inline uint32_t seg_desc_type(uint32_t access)
 	return (access & 0x001fU);
 }
 
-static inline bool seg_desc_present(uint32_t access)
+__unused static inline bool seg_desc_present(uint32_t access)
 {
 	return ((access & 0x0080U) != 0U);
 }
@@ -276,7 +276,7 @@ static inline bool seg_desc_def32(uint32_t access)
 	return ((access & 0x4000U) != 0U);
 }
 
-static inline bool seg_desc_unusable(uint32_t access)
+__unused static inline bool seg_desc_unusable(uint32_t access)
 {
 	return ((access & 0x10000U) != 0U);
 }
@@ -439,7 +439,7 @@ static uint32_t get_vmcs_field(enum cpu_reg_name ident)
 static uint64_t vm_get_register(const struct acrn_vcpu *vcpu, enum cpu_reg_name reg)
 {
 	uint64_t reg_val = 0UL;
-	
+
 	if ((reg >= CPU_REG_GENERAL_FIRST) && (reg <= CPU_REG_GENERAL_LAST)) {
 		reg_val = vcpu_get_gpreg(vcpu, reg);
 	} else if ((reg >= CPU_REG_NONGENERAL_FIRST) &&
@@ -1333,7 +1333,7 @@ static int32_t emulate_and(struct acrn_vcpu *vcpu, const struct instr_emul_vie *
 		 * perform the operation with the pre-fetched immediate
 		 * operand and write the result
 		 */
-		result = val1 & vie->immediate;
+		result = val1 & (uint64_t)vie->immediate;
 		vie_mmio_write(vcpu, result);
 		break;
 	default:
@@ -2470,4 +2470,3 @@ bool is_current_opcode_xchg(struct acrn_vcpu *vcpu)
 {
 	return (vcpu->inst_ctxt.vie.op.op_type == VIE_OP_TYPE_XCHG);
 }
-

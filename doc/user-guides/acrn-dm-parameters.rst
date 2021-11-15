@@ -67,11 +67,11 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
    peripherals from SoC.  (The ``-i`` and ``-l`` parameters are only available
    on a platform with IOC.)
 
-   IOC DM opens ``/dev/ptmx`` device to create a peer PTY devices, IOC DM uses
-   these to communicate with UART DM since UART DM needs a TTY capable device
-   as its backend.
+   IOC DM opens the ``/dev/ptmx`` device to create peer PTY devices. IOC DM uses
+   these devices to communicate with UART DM since UART DM needs a TTY capable
+   device as its backend.
 
-   The device model configuration command syntax for IOC mediator is::
+   The Device Model configuration command syntax for IOC mediator is::
 
       -i,[ioc_channel_path],[wakeup_reason]
       -l,[lpc_port],[ioc_channel_path]
@@ -79,7 +79,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
    -  ``ioc_channel_path`` is an absolute path for communication between IOC
       mediator and UART DM.
    -  ``lpc_port`` is com1 or com2. IOC mediator needs one unassigned lpc
-      port for data transfer between User OS and Service OS.
+      port for data transfer between the User VM and Service VM.
    -  ``wakeup_reason`` is IOC mediator boot reason, where each bit represents
       one wakeup reason.
 
@@ -226,18 +226,18 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 ----
 
 ``--vsbl <vsbl_file_path>``
-   Virtual Slim bootloader (vSBL) is the virtual bootloader supporting booting
+   Virtual Slim Bootloader (vSBL) is the virtual bootloader supporting booting
    of the User VM on the ACRN hypervisor platform.  The vSBL design is derived
    from Slim Bootloader, which follows a staged design approach that provides
    hardware initialization and launching a payload that provides the boot
    logic.
 
-   The vSBL image is installed on the Service OS root filesystem by the
-   service-os bundle, in ``/usr/share/acrn/bios/``.  In the current design,
-   the vSBL supports booting Android guest OS or Linux guest OS using the same
-   vSBL image.  For Android VM, the vSBL will load and verify trusty OS first,
-   and trusty OS will then load and verify Android OS according to Android OS
-   verification mechanism.
+   The vSBL image is installed on the Service VM root filesystem by the Service
+   VM OS bundle in ``/usr/share/acrn/bios/``.  In the current design, the vSBL
+   supports booting an Android guest OS or Linux guest OS using the same vSBL
+   image.  For an Android VM, the vSBL will load and verify the trusty OS first,
+   and the trusty OS will then load and verify the Android OS according to the
+   Android OS verification mechanism.
 
    .. note::
       vSBL is currently only supported on Apollo Lake processors.
@@ -414,12 +414,12 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 ----
 
 ``--pm_by_vuart [pty|tty],<node_path>``
-   This option is used to set a user OS power management by virtual UART.
+   This option is used to set User VM power management by virtual UART.
    With acrn-dm UART emulation and hypervisor UART emulation and configure,
-   service OS can communicate with user OS through virtual UART. By this
-   option, service OS can notify user OS to shutdown itself by vUART.
+   the Service VM can communicate with the User VM through virtual UART. By this
+   option, the Service VM can notify the User VM to shut down itself by vUART.
 
-   It must work with `--pm_notify_channel` and PCI UART setting (lpc and -l).
+   It must work with ``--pm_notify_channel`` and PCI UART setting (lpc and -l).
 
    Example::
 

@@ -114,7 +114,7 @@ static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf, uint16_t v
 		pr_err("PF %x:%x.%x can't creat VF, unset VF_ENABLE",
 			pf_vdev->bdf.bits.b, pf_vdev->bdf.bits.d, pf_vdev->bdf.bits.f);
 	} else {
-		uint16_t bar_idx;
+		uint32_t bar_idx;
 		struct pci_vbar *vf_vbar;
 
 		/* VF bars information from its PF SRIOV capability, no need to access physical device */

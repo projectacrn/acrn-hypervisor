@@ -327,3 +327,8 @@ a.reference.external::after {
 img.drop-shadow {
    margin-bottom: 2em !important;
 }
+
+/* tweak last updated section of footer to be right-aligned */
+.lastupdated {
+    float:right;
+}

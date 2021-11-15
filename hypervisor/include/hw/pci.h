@@ -137,7 +137,7 @@
 #define PCI_PTM_CAP_LEN				0x04U
 #define PCIR_PTM_CAP				0x04U
 #define PCIM_PTM_CAP_ROOT_CAPABLE	0x4U
-#define PCIM_PTM_GRANULARITY_MASK	0xFF00
+#define PCIM_PTM_GRANULARITY_MASK	0xFF00U
 #define PCIR_PTM_CTRL				0x08U
 #define PCIM_PTM_CTRL_ENABLED		0x1U
 #define PCIM_PTM_CTRL_ROOT_SELECTED	0x2U
@@ -190,11 +190,11 @@
 #define PCIM_PCIE_FLR         (0x1U << 15U)
 
 /* PCI Express Device Type definitions */
-#define PCIER_FLAGS                    0x2
-#define PCIEM_FLAGS_TYPE               0x00F0
-#define PCIEM_TYPE_ENDPOINT            0x0000
-#define PCIEM_TYPE_ROOTPORT            0x0004
-#define PCIEM_TYPE_ROOT_INT_EP         0x0009
+#define PCIER_FLAGS                    0x2U
+#define PCIEM_FLAGS_TYPE               0x00F0U
+#define PCIEM_TYPE_ENDPOINT            0x0000U
+#define PCIEM_TYPE_ROOTPORT            0x0004U
+#define PCIEM_TYPE_ROOT_INT_EP         0x0009U
 
 #define PCIR_PCIE_DEVCAP2     0x24U
 #define PCIM_PCIE_DEVCAP2_ARI (0x1U << 5U)

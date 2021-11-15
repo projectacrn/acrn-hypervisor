@@ -158,7 +158,7 @@ the Service VM since they may rely on its mediation services for device access.
 The Service VM owns most of the devices including the platform devices, and
 provides I/O mediation. The notable exceptions are the devices assigned to the
 pre-launched User VM. Some PCIe devices may be passed through to the
-post-launched User OSes via the VM configuration.
+post-launched User VMs via the VM configuration.
 
 The ACRN hypervisor also runs the ACRN VM manager to collect running
 information of the User VMs, and controls the User VMs such as starting,

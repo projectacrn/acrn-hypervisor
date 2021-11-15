@@ -1,7 +1,7 @@
-<acrn-config board="whl-ipc-i5" scenario="shared" uos_launcher="1">
+<acrn-config board="whl-ipc-i5" scenario="sdc" user_vm_launcher="1">
 	<user_vm id="1">
-		<user_vm_type desc="User VM type">VXWORKS</user_vm_type>
-		<rtos_type desc="User VM Realtime capability">Hard RT</rtos_type>
+		<user_vm_type desc="User VM type">YOCTO</user_vm_type>
+		<rtos_type desc="User VM Realtime capability">no</rtos_type>
 		<mem_size desc="User VM memory size in MByte">2048</mem_size>
 		<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 		<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
@@ -23,7 +23,7 @@
 			<usb_xdci desc="vm usb_xdci device"></usb_xdci>
 			<audio desc="vm audio device"></audio>
 			<audio_codec desc="vm audio codec device"></audio_codec>
-			<gpu desc="vm gpu device"></gpu>
+			<gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation Device 3ea0 (rev 02)</gpu>
 			<ipu desc="vm ipu device"></ipu>
 			<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
 			<cse desc="vm cse device"></cse>
@@ -35,9 +35,9 @@
 			<nvme desc="vm nvme device"></nvme>
 		</passthrough_devices>
 		<virtio_devices>
-			<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."></network>
+			<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">LaaG</network>
 			<input desc="virtio input device"></input>
-			<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./VxWorks.img</block>
+			<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">/home/clear/uos/uos.img</block>
 			<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
 		</virtio_devices>
 		<sriov>

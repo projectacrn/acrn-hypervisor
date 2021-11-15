@@ -29,20 +29,20 @@ static uint8_t get_secondary_bus(uint8_t bus, uint8_t dev, uint8_t func)
 {
 	uint32_t data;
 
-	pio_write32(PCI_CFG_ENABLE | (bus << 16U) | (dev << 11U) |
-		(func << 8U) | 0x18U, PCI_CONFIG_ADDR);
+	pio_write32(PCI_CFG_ENABLE | ((uint32_t)bus << 16U) | ((uint32_t)dev << 11U) |
+		((uint32_t)func << 8U) | 0x18U, PCI_CONFIG_ADDR);
 
 	data = pio_read32(PCI_CONFIG_DATA);
 
 	return (data >> 8U) & 0xffU;
 }
 
-static union pci_bdf dmar_path_bdf(int32_t path_len, int32_t busno, const struct acpi_dmar_pci_path *path)
+static union pci_bdf dmar_path_bdf(int32_t path_len, uint8_t busno, const struct acpi_dmar_pci_path *path)
 {
 	int32_t i;
 	union pci_bdf dmar_bdf;
 
-	dmar_bdf.bits.b = (uint8_t)busno;
+	dmar_bdf.bits.b = busno;
 	dmar_bdf.bits.d = path->device;
 	dmar_bdf.bits.f = path->function;
 
@@ -57,29 +57,26 @@ static union pci_bdf dmar_path_bdf(int32_t path_len, int32_t busno, const struct
 
 static int32_t handle_dmar_devscope(struct dmar_dev_scope *dev_scope, void *addr, int32_t remaining)
 {
-	int32_t path_len;
+	int32_t path_len, ret = -1;
 	union pci_bdf dmar_bdf;
 	struct acpi_dmar_pci_path *path;
 	struct acpi_dmar_device_scope *apci_devscope = addr;
 
-	if (remaining < (int32_t)sizeof(struct acpi_dmar_device_scope))
-		return -1;
+	if ((remaining >= (int32_t)sizeof(struct acpi_dmar_device_scope)) &&
+	    (remaining >= (int32_t)apci_devscope->length)) {
+		path = (struct acpi_dmar_pci_path *)(apci_devscope + 1);
+		path_len = (int32_t)((apci_devscope->length - sizeof(struct acpi_dmar_device_scope)) /
+				sizeof(struct acpi_dmar_pci_path));
 
-	if (remaining < apci_devscope->length)
-		return -1;
+		dmar_bdf = dmar_path_bdf(path_len, apci_devscope->bus, path);
+		dev_scope->id = apci_devscope->enumeration_id;
+		dev_scope->type = apci_devscope->entry_type;
+		dev_scope->bus = dmar_bdf.fields.bus;
+		dev_scope->devfun = dmar_bdf.fields.devfun;
+		ret = (int32_t)apci_devscope->length;
+	}
 
-	path = (struct acpi_dmar_pci_path *)(apci_devscope + 1);
-	path_len = (apci_devscope->length -
-			sizeof(struct acpi_dmar_device_scope)) /
-			sizeof(struct acpi_dmar_pci_path);
-
-	dmar_bdf = dmar_path_bdf(path_len, apci_devscope->bus, path);
-	dev_scope->id = apci_devscope->enumeration_id;
-	dev_scope->type = apci_devscope->entry_type;
-	dev_scope->bus = dmar_bdf.fields.bus;
-	dev_scope->devfun = dmar_bdf.fields.devfun;
-
-	return apci_devscope->length;
+	return ret;
 }
 
 static uint32_t get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
@@ -95,8 +92,9 @@ static uint32_t get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
 	while (start < end) {
 		scope = (struct acpi_dmar_device_scope *)start;
 		if ((scope->entry_type != ACPI_DMAR_SCOPE_TYPE_NOT_USED) &&
-			(scope->entry_type < ACPI_DMAR_SCOPE_TYPE_RESERVED))
+			(scope->entry_type < ACPI_DMAR_SCOPE_TYPE_RESERVED)) {
 			count++;
+		}
 		start += scope->length;
 	}
 	return count;
@@ -105,7 +103,7 @@ static uint32_t get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
 /**
  * @Application constraint: The dedicated DMAR unit for Intel integrated GPU
  * shall be available on the physical platform.
- */ 
+ */
 static int32_t handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd, struct dmar_drhd *drhd)
 {
 	struct dmar_dev_scope *dev_scope;
@@ -123,8 +121,7 @@ static int32_t handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd, struct
 
 	drhd->dev_cnt = dev_count;
 
-	remaining = acpi_drhd->header.length -
-			sizeof(struct acpi_dmar_hardware_unit);
+	remaining = (int32_t)(acpi_drhd->header.length - sizeof(struct acpi_dmar_hardware_unit));
 
 	dev_scope = drhd->devices;
 
@@ -135,15 +132,16 @@ static int32_t handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd, struct
 
 		/* Disable GPU IOMMU due to gvt-d hasn’t been enabled on APL yet. */
 		if (is_apl_platform()) {
-			if (((drhd->segment << 16U) |
-		     	     (dev_scope->bus << 8U) |
+			if ((((uint32_t)drhd->segment << 16U) |
+		     	     ((uint32_t)dev_scope->bus << 8U) |
 		     	     dev_scope->devfun) == CONFIG_GPU_SBDF) {
 				drhd->ignore = true;
 			}
 		}
 
-		if (consumed <= 0)
+		if (consumed <= 0) {
 			break;
+		}
 
 		remaining -= consumed;
 		/* skip IOAPIC & HPET */

@@ -47,7 +47,6 @@
     </MEMORY>
     <CAPACITIES>
       <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
-      <MAX_EFI_MMAP_ENTRIES>256</MAX_EFI_MMAP_ENTRIES>
       <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
       <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
       <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
@@ -88,8 +87,8 @@
       <name>YOCTO</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
-      <bootargs>        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
+      <ramdisk_mod>Ubuntu</ramdisk_mod>
+      <bootargs> rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>
     <legacy_vuart id="0">
@@ -149,8 +148,8 @@
       <name>YOCTO</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
-      <bootargs>        rw rootwait root=/dev/sda2 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
+      <ramdisk_mod>Ubuntu</ramdisk_mod>
+      <bootargs>        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
         consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>

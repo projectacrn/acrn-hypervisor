@@ -488,7 +488,7 @@ static inline uint16_t dma_frcd_up_sid(uint64_t up_sid)
 
 #define DRHD_FLAG_INCLUDE_PCI_ALL_MASK      (1U)
 
-#define DEVFUN(dev, fun)            (((dev & 0x1FU) << 3U) | ((fun & 0x7U)))
+#define DEVFUN(dev, fun)            ((((dev) & 0x1FU) << 3U) | (((fun) & 0x7U)))
 
 struct dmar_dev_scope {
 	enum acpi_dmar_scope_type type;

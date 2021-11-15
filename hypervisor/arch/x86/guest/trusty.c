@@ -149,6 +149,7 @@ static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 	ext_ctx->ia32_lstar = msr_read(MSR_IA32_LSTAR);
 	ext_ctx->ia32_fmask = msr_read(MSR_IA32_FMASK);
 	ext_ctx->ia32_kernel_gs_base = msr_read(MSR_IA32_KERNEL_GS_BASE);
+	ext_ctx->tsc_aux = msr_read(MSR_IA32_TSC_AUX);
 
 	/* XSAVE area */
 	save_xsave_area(vcpu, ext_ctx);
@@ -201,6 +202,7 @@ static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext
 	msr_write(MSR_IA32_LSTAR, ext_ctx->ia32_lstar);
 	msr_write(MSR_IA32_FMASK, ext_ctx->ia32_fmask);
 	msr_write(MSR_IA32_KERNEL_GS_BASE, ext_ctx->ia32_kernel_gs_base);
+	msr_write(MSR_IA32_TSC_AUX, ext_ctx->tsc_aux);
 
 	/* XSAVE area */
 	rstore_xsave_area(vcpu, ext_ctx);

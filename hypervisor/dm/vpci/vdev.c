@@ -140,7 +140,7 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 			* Currently, we don't support the reprogram of PIO bar of pass-thru devs,
 			* If guest tries to reprogram, hv will inject #GP to guest.
 			*/
-			if ((vdev->pdev != NULL) && ((lo & PCI_BASE_ADDRESS_IO_MASK) != vbar->base_hpa)) {
+			if ((vdev->pdev != NULL) && ((lo & PCI_BASE_ADDRESS_IO_MASK) != (uint32_t)vbar->base_hpa)) {
 				struct acrn_vcpu *vcpu = vcpu_from_pid(vpci2vm(vdev->vpci), get_pcpu_id());
 				if (vcpu != NULL) {
 					vcpu_inject_gp(vcpu, 0U);

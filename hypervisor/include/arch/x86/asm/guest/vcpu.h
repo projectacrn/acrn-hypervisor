@@ -142,7 +142,7 @@
 	for ((idx) = 0U, (vcpu) = &((vm)->hw.vcpu_array[(idx)]);	\
 		(idx) < (vm)->hw.created_vcpus;			\
 		(idx)++, (vcpu) = &((vm)->hw.vcpu_array[(idx)])) \
-		if (vcpu->state != VCPU_OFFLINE)
+		if ((vcpu)->state != VCPU_OFFLINE)
 
 enum vcpu_state {
 	VCPU_OFFLINE = 0U,
@@ -581,10 +581,11 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_regs *vcpu_regs);
  * Reset target vCPU's all registers in run_context to initial values.
  *
  * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] mode the reset mode
  *
  * @return None
  */
-void reset_vcpu_regs(struct acrn_vcpu *vcpu);
+void reset_vcpu_regs(struct acrn_vcpu *vcpu, enum reset_mode mode);
 
 bool sanitize_cr0_cr4_pattern(void);
 

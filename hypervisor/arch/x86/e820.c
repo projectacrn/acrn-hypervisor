@@ -27,17 +27,20 @@ static struct e820_entry hv_e820[E820_MAX_ENTRIES];
 
 /*
  * @brief reserve some RAM, hide it from Service VM, return its start address
+ *
+ * e820_alloc_memory requires 4k alignment, so size_arg will be converted
+ * in the function.
+ *
  * @param size_arg Amount of memory to be found and marked reserved
  * @param max_addr Maximum address below which memory is to be identified
  *
  * @pre hv_e820_entries_nr > 0U
- * @pre (size_arg & 0xFFFU) == 0U
  * @return base address of the memory region
  */
 uint64_t e820_alloc_memory(uint64_t size_arg, uint64_t max_addr)
 {
 	int32_t i;
-	uint64_t size = size_arg;
+	uint64_t size = round_page_up(size_arg);
 	uint64_t ret = INVALID_HPA;
 	struct e820_entry *entry, *new_entry;
 

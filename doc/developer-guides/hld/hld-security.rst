@@ -9,7 +9,7 @@ Security High-Level Design
 Introduction
 ************
 
-This document describes security high-level design in ACRN,
+This document describes the security high-level design in ACRN,
 including information about:
 
 -  Secure booting in ACRN
@@ -30,7 +30,7 @@ Background
 
 The ACRN hypervisor is a type-1 hypervisor, built for running multiple
 guest OS instances, typical of an automotive infotainment system, on a
-single Intel Apollo Lake-I SoC platform. See :numref:`security-ACRN`.
+single Apollo Lake-I SoC platform. See :numref:`security-ACRN`.
 
 .. figure:: images/security-image-HV-overview.png
    :width: 900px
@@ -85,20 +85,20 @@ These other VMs provide infotainment services (such as
 navigation, music, and FM/AM radio) for the front seat or rear seat.
 
 The User VM systems can be based on Linux (LaaG, Linux as a Guest) or
-Android\* (AaaG, Android as a Guest) depending on the customer's needs
+Android (AaaG, Android as a Guest) depending on the customer's needs
 and board configuration. It can also be a mix of Linux and Android
 systems.
 
 In each User VM, a "side-car" OS system can accompany the normal OS system. We
 call these two OS systems "secure world" and
 "non-secure world", and they are isolated from each other by the
-hypervisor. Secure world has a higher "privilege level" than non-secure
+hypervisor. The secure world has a higher "privilege level" than the non-secure
 world; for example, the secure world can access the non-secure world's
 physical memory but not vice versa. This document discusses how this
 security works and why it is required.
 
 Careful consideration should be made when evaluating using the Service
-VM as the Trusted Computing Base (TCB). The Service OS may be a
+VM as the Trusted Computing Base (TCB). The Service VM may be a
 fairly large system running many lines of code; thus, treating it as a
 TCB doesn't make sense from a security perspective. To achieve the
 design purpose of "defense in depth", system security designers
@@ -151,8 +151,9 @@ before launching.
 2) Verified Boot Sequence With UEFI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 As shown in :numref:`security-bootflow-uefi`, in this boot sequence, UEFI
-authenticates and starts the ACRN hypervisor firstly,and hypervisor will return
-to UEFI environment to authenticate and load Service VM kernel bootloader.
+authenticates and starts the ACRN hypervisor. Then the hypervisor returns
+to the UEFI environment to authenticate and load the Service VM kernel
+bootloader.
 
 .. figure:: images/security-image-bootflow-uefi.png
    :width: 900px
@@ -163,7 +164,7 @@ to UEFI environment to authenticate and load Service VM kernel bootloader.
 
 As long as the Service VM kernel starts, the Service VM kernel will load all its
 subsystems subsequently. In order to launch a User VM, a DM process is
-started to launch the virtual BIOS (OVMF), and eventually, the OVMF is
+started to launch the virtual BIOS (OVMF). Eventually, the OVMF is
 responsible for verifying and launching the User VM kernel (or the
 Android OS loader for an Android User VM).
 
@@ -178,7 +179,7 @@ signature algorithm.
 The well-known image signing algorithm uses cryptographic hashing and
 public key cryptography with PKCS1.5 padding.
 
-The 2018 minimal requirements for cryptographic strength currently are:
+The 2018 minimal requirements for cryptographic strength are:
 
 #. SHA256 for image cryptographic hashing.
 #. RSA2048 for cryptographic digital signature signing and verification.
@@ -204,7 +205,8 @@ UEFI Secure Boot defines how a platform's firmware can authenticate a digitally
 signed UEFI image, such as an operating system loader or a UEFI driver stored
 in an option ROM. This provides the capability to ensure that those UEFI images
 are only loaded in an owner-authorized fashion and provides a common means to
-ensure platform's security and integrity over systems running UEFI-based firmware.
+ensure the platform's security and integrity over systems running UEFI-based
+firmware.
 UEFI Secure Boot is already supported by OVMF.
 
 :numref:`security-secure-boot-uefi` shows a Secure Boot overview in UEFI.
@@ -221,7 +223,7 @@ the UEFI Secure Boot Policy; the platform manufacturer or the platform owner enr
 policy objects, which include the n-tuple of keys {PK, KEK, db,dbx} as step 1.
 During each successive boot, the UEFI secure boot implementation will assess the
 policy in order to verify the signed images that are discovered in a host-bus adapter
-or on a disk. If the images pass policy, then they are invoked.
+or on a disk. If the images pass the policy, they are invoked.
 
 UEFI Secure Boot implementations use these keys:
 
@@ -236,19 +238,21 @@ And keys and certificates are in multiple formats:
 #. `.crt`  PEM format certificates for sbsign.
 #. `.cer`  DER format certificates for firmware.
 
-In ACRN, User VM Secure Boot can be enabled by below steps.
+In ACRN, User VM Secure Boot can be enabled as follows:
 
-#. Generate keys(PK/KEK/DB) with key generation tool such as Ubuntu KeyGeneration,
-   `PK.der`, `KEK.der` and `db.der` will be enrolled in UEFI BIOS, `db.key` and `db.crt`
-   will be used to sign user VM bootloader/kernel.
-#. Create a virtual disk to hold `PK.der`, `KEK.der` and `db.der`, then launch the User VM with
-   this virtual disk which contains the keys for enrollment.
-#. Start the OVMF in writeback mode to ensure the keys are persistently stored in the OVMF image.
-#. Enroll keys in OVMF GUI by following the Secure Boot configuration flow and enable
-   secure boot mode.
+#. Generate keys (PK/KEK/DB) with a key generation tool such as Ubuntu
+   KeyGeneration. `PK.der`, `KEK.der`, and `db.der` will be enrolled in UEFI
+   BIOS. `db.key` and `db.crt` will be used to sign the User VM
+   bootloader/kernel.
+#. Create a virtual disk to hold `PK.der`, `KEK.der`, and `db.der`, then launch
+   the User VM with this virtual disk.
+#. Start the OVMF in writeback mode to ensure the keys are persistently stored
+   in the OVMF image.
+#. Enroll the keys in the OVMF GUI by following the Secure Boot configuration
+   flow and enable Secure Boot mode.
 #. Perform writeback via reset in OVMF.
-#. Sign user VM images with `db.key` and `db.crt`.
-#. Boot user VM with Secure Boot enabled.
+#. Sign the User VM images with `db.key` and `db.crt`.
+#. Boot the User VM with Secure Boot enabled.
 
 .. _sos_hardening:
 
@@ -259,7 +263,7 @@ In the ACRN project, the reference Service VM is based on Ubuntu.
 Customers may choose to use different open source OSes or their own
 proprietary OS systems. To minimize the attack surfaces and achieve the
 goal of "defense in depth", there are many common guidelines to ensure the
-security of Service VM system.
+security of the Service VM system.
 
 As shown in :numref:`security-bootflow-sbl` and
 :numref:`security-bootflow-uefi` above, the integrity of the User VM
@@ -274,15 +278,15 @@ following rules:
 #. Verify that the Service VM is a closed system and doesn't allow the user to
    install any unauthorized third-party software or components.
 #. Verify that external peripherals are constrained.
-#. Enable kernel-based hardening techniques, for example dm-verity (to
-   ensure integrity of the DM and vBIOS/vOSloaders), and kernel module
+#. Enable kernel-based hardening techniques, for example, dm-verity (to
+   ensure the integrity of the DM and vBIOS/vOSloaders), and kernel module
    signing.
 #. Enable system level hardening such as MAC (Mandatory Access Control).
 
 Detailed configurations and policies are out of scope for this document.
 For good references on OS system security hardening and enhancement,
 see `AGL security
-<https://docs.automotivelinux.org/docs/en/master/architecture/reference/security/part-2/0_Abstract.html>`_
+<https://docs.automotivelinux.org/en/lamprey/#2_Architecture_Guides/2_Security_Blueprint/0_Overview/>`_
 and `Android security <https://source.android.com/security/>`_.
 
 Hypervisor Security Enhancement
@@ -310,8 +314,8 @@ Background
 
 The ACRN hypervisor has ultimate access control of all the platform
 memory spaces (see :ref:`memmgt-hld`). Note that on the APL platform,
-`SGX <https://software.intel.com/sgx>`_ and `TME
-<https://software.intel.com/en-us/blogs/2017/12/22/intel-releases-new-technology-specification-for-memory-encryption>`_
+`SGX <https://www.intel.com/content/www/us/en/developer/tools/software-guard-extensions/overview.html>`_ and `TME
+<https://itpeernetwork.intel.com/memory-encryption/>`_
 are not currently supported.
 
 The hypervisor can read and write any physical memory space allocated
@@ -322,7 +326,7 @@ constrained in some manner to prevent the hypervisor from accessing
 guest memory space either maliciously or accidentally. As a best
 security practice, any memory content from a guest VM memory space must
 not be trusted by the hypervisor. In other words, there must be a trust
-boundary for memory space between the hypervisor and Guest VMs.
+boundary for memory space between the hypervisor and guest VMs.
 
 .. figure:: images/security-image14.png
    :width: 500px
@@ -343,7 +347,7 @@ The fundamental rules of restricting hypervisor memory access are:
 #. By default, prohibit any access to all guest VM memory. This means
    that when the hypervisor initially sets up its own MMU paging tables
    (HVA->HPA mapping), it only grants permissions for hypervisor memory
-   space (excluding guest VM memory)
+   space (excluding guest VM memory).
 #. Grant access permission for the hypervisor to read/write a specific guest
    VM memory region on demand. The hypervisor must never grant execution
    permission for itself to fetch any code instructions from guest
@@ -436,7 +440,7 @@ three typical solutions exist:
 
 3. **Use processor SMEP and SMAP capabilities.**
 
-   This solution is a best solution because SMAP can prevent the
+   This solution is the best solution because SMAP can prevent the
    hypervisor from both reading and writing guest memory, and SMEP can
    prevent the hypervisor from fetching/executing code in guest memory. This
    solution also has minimal performance impact; like the CR0.WP
@@ -530,7 +534,7 @@ write) access to a data area in guest memory page.
 
 The hypervisor can do these steps:
 
-#. Execute STAC instruction to suppress SMAP protection;
+#. Execute STAC instruction to suppress SMAP protection.
 #. Perform read/write access on guest DATA area.
 #. Execute CLAC instruction to restore SMAP protection.
 
@@ -543,11 +547,11 @@ Rules to Access Guest Memory in the Hypervisor
 
 In the ACRN hypervisor, functions ``stac()`` and ``clac()`` wrap
 STAC and CLAC instructions respectively, and functions
-``copy_to_gpa()``, and ``copy_from_gpa()`` can be used to copy
-an arbitrary amount of data to or from VM memory area.
+``copy_to_gpa()`` and ``copy_from_gpa()`` can be used to copy
+an arbitrary amount of data to or from the VM memory area.
 
 Whenever the hypervisor needs to perform legitimate read/write access to
-guest memory pages, one of functions above must be used. Otherwise, the
+guest memory pages, one of the functions above must be used. Otherwise, the
 #PF will be triggered by the processor to prevent malware or
 unintended access from or to the guest memory pages.
 
@@ -562,7 +566,7 @@ Avoidance of Memory Information Leakage
 ---------------------------------------
 
 Protecting the hypervisor's memory is critical to the security of the
-entire platform. The hypervisor must prevent any memory content (e.g.
+entire platform. The hypervisor must prevent any memory content (e.g.,
 stack or heap) from leaking to guest VMs. Some of the hypervisor memory
 content may contain platform secrets such as SEEDs, which are used as
 the root key for its guest VMs. `Xen Advisories
@@ -570,10 +574,10 @@ the root key for its guest VMs. `Xen Advisories
 memory leaks, ACRN developers can refer to this link to understand how
 to avoid this in coding.
 
-Memory content from one guest VM might be leaked to another guest VM. So
-in ACRN and Device Model design, when one guest VM is destroyed or
+Memory content from one guest VM might be leaked to another guest VM.
+In ACRN and Device Model design, when one guest VM is destroyed or
 crashes, its memory content should be scrubbed either by the hypervisor
-or the Service VM device model process, in case its memory content is
+or the Service VM Device Model process, in case its memory content is
 re-allocated to another guest VM that could otherwise leave the
 previous guest VM secrets in memory.
 
@@ -610,15 +614,15 @@ hypercall invocation in the hypervisor design:
    inject ``#UD`` (if the VM cannot issue hypercalls at all) or return ``-EINVAL``
    (if the VM is allowed to issue hypercalls but not this specific one).
 #. For those hypercalls that may result in data inconsistent intra hypervisor
-   when they are executed concurrently, such as ``hcall_create_vm()``
-   ``hcll_destroy_vm()`` etc. spinlock is used to ensure these hypercalls
+   when they are executed concurrently, such as ``hcall_create_vm()`` or
+   ``hcll_destroy_vm()``, spinlock is used to ensure these hypercalls
    are processed in the hypervisor in a serializing way.
 
 In addition to the above rules, there are other regular checks in the
 hypercall implementation to prevent hypercalls from being misused. For
 example, all the parameters must be sanitized, unexpected hypervisor
 memory overwrite must be avoided, any hypervisor memory content/secrets
-must not be leaked to guest, and any memory/code injection must be
+must not be leaked to guests, and any memory/code injection must be
 eliminated.
 
 I/O Emulation Handler
@@ -629,7 +633,7 @@ emulate legacy I/O access behaviors.
 
 Typically, the I/O instructions could be IN, INS/INSB/INSW/INSD, OUT,
 OUTS/OUTSB/OUTSW/OUTSD with arbitrary port (although not all the I/O
-ports are monitored by the hypervisor). As with other interface (e.g.
+ports are monitored by the hypervisor). As with other interfaces (e.g.,
 hypercalls), the hypervisor performs security checks for all the I/O
 access parameters to make sure the emulation behaviors are correct.
 
@@ -637,21 +641,21 @@ EPT Violation Handler
 ~~~~~~~~~~~~~~~~~~~~~
 
 The Extended Page Table (EPT) is typically used by the hypervisor to
-monitor MMIO (or other types of ordinary memory access) operation from
+monitor MMIO (or other types of ordinary memory access) operation from a
 guest VM. The hypervisor then emulates the MMIO instructions with design
 behaviors.
 
 As done for I/O emulation, this interface could also be manipulated by
-malware in guest VM to compromise system security.
+malware in a guest VM to compromise system security.
 
 Other VMEXIT Handlers
 ~~~~~~~~~~~~~~~~~~~~~
 
 There are some other VMEXIT handlers in the hypervisor that might take
-untrusted parameters and registers from guest VM, for example, MSR write
+untrusted parameters and registers from a guest VM, for example, MSR write
 VMEXIT, APIC VMEXIT.
 
-Sanity checks are performed by the hypervisor to avoid security issue when
+Sanity checks are performed by the hypervisor to avoid security issues when
 handling those special VMEXIT.
 
 Guest Instruction Emulation
@@ -665,7 +669,7 @@ have vulnerability bugs.
 
 Security validation process and secure code review must ensure all the
 instruction emulations behave as defined in the `IA32 SDM
-document <https://software.intel.com/en-us/articles/intel-sdm>`_.
+document <https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html>`_.
 
 Virtual Power Life Cycle Management
 -----------------------------------
@@ -673,7 +677,7 @@ Virtual Power Life Cycle Management
 In a virtualization environment, each User VM can have its
 virtual power managed just like native behavior. For example, if a User VM
 is required to enter S3 (Suspend to RAM) for power consumption saving,
-then the hypervisor and DM processor in Service must handle it correctly.
+then the hypervisor and DM processor in the Service VM must handle it correctly.
 Similarly, virtual cold/warm reboot is also supported. How to implement
 virtual power life cycle management is out of scope in this document.
 
@@ -690,21 +694,21 @@ Later on, if there is a new User VM launch event occurring, DM may potentially a
 the same memory content (or some overlaps) for this new User VM.
 
 In the virtualization environment, a security goal is to ensure User VM
-isolation, not only for runtime memory isolation (e.g. w/ EPT),
+isolation, not only for runtime memory isolation (e.g., with EPT),
 but also for data at rest isolation.
 
-Under this situation, if the memory contents of a previous User VM is not
+Under this situation, if the memory content of a previous User VM is not
 scrubbed by either DM or the hypervisor, then the new launched User VM could
 access the previous User VM's secrets by scanning the memory regions
 allocated for the new User VM.
 
-In ACRN, the memory content is scrubbed in Device Model after the guest
+In ACRN, the memory content is scrubbed in the Device Model after the guest
 VM is shut down.
 
 User VM Reboot
 ~~~~~~~~~~~~~~
 
-The behaviors of **cold** boot of virtual User VM reboot are the same as that of
+The behaviors of **cold** boot of virtual User VM reboot are the same as those of
 previous virtual power-on and shutdown events. There is a special case:
 virtual **warm** reboot.
 
@@ -718,13 +722,13 @@ This typically is fine in project ACRN, because in the next virtual
 power cycle, the same memory content won't be re-allocated to another
 User VM.
 
-But there is a new issue when secure world (TEE/Trusty) is considered,
-because the memory content of secure world must not be dumped by a
+But there is a new issue when the secure world (TEE/Trusty) is considered,
+because the memory content of the secure world must not be dumped by a
 non-secure world User VM. More details will be discussed in
 the section on :ref:`platform_root_of_trust`.
 
 Normally, this warm reboot (crashdump) feature is a debug feature, and
-must be disabled in a production release. User who wants to use this
+must be disabled in a production release. Users who want to use this
 feature must possess the private signing key to re-sign the image after
 enabling the configuration.
 
@@ -733,17 +737,17 @@ enabling the configuration.
 User VM Suspend/Resume
 ~~~~~~~~~~~~~~~~~~~~~~
 
-There are no special design considerations for normal User VM without secure
+There are no special design considerations for normal User VMs without secure
 world supported, as long as the EPT/VT-d memory protection/isolation is
 active during the entire suspended time.
 
-Secure world (Trusty/TEE) is a special case for virtual suspend. Unlike
-the non-secure world of User VM, whose memory content can be read/written by
-Service VM, the memory content of secure world of User VM must not be visible to
-Service VM. This is designed for security with defense in depth.
+The secure world (Trusty/TEE) is a special case for virtual suspend. Unlike
+the non-secure world of User VMs, whose memory content can be read/written by
+the Service VM, the memory content of the secure world of User VMs must not be
+visible to the Service VM. This is designed for security with defense in depth.
 
 During the entire process of User VM sleep/suspend, the memory protection
-for secure-world is preserved too. The physical memory region of
+for the secure world is preserved too. The physical memory region of the
 secure world is removed from EPT paging tables of any guest VM,
 even including the Service VM.
 
@@ -760,7 +764,7 @@ can be used to search for known vulnerabilities.
 Platform Root of Trust Key/Seed Derivation
 ==========================================
 
-For security reason, each guest VM requires a root key, which is used to
+For security reasons, each guest VM requires a root key, which is used to
 derive many other individual keys for different purposes, for example,
 secure storage encryption, keystore master key, and HMAC keys.
 
@@ -783,11 +787,11 @@ multiple child SEEDs for multiple guest VMs. A guest VM must not be able
 to know the SEEDs of any other guest VMs.
 
 The algorithm used in the hypervisor to derive keys is HKDF (HMAC-based
-Extract-and-Expand Key Derivation Function, `RFC5869
+Extract-and-Expand Key Derivation Function), `RFC5869
 <https://tools.ietf.org/html/rfc5869>`_.  The crypto library `mbedtls
 <https://github.com/ARMmbed/mbedtls>`_ has been chosen for project ACRN.
 
-The parameters of HDKF derivation in the hypervisor are:
+The parameters of HKDF derivation in the hypervisor are:
 
 #. VMInfo= vm-uuid (from the hypervisor configuration file)
 #. theHash=SHA-256
@@ -809,9 +813,9 @@ information.)
 
 On the APL platform, the secure world is used to run a
 virtualization-based Trusty TEE in an isolated world that serves
-Android as a guest (AaaG,) to get Google's Android relevant certificates
+Android as a Guest (AaaG) to get Google's Android relevant certificates
 by fulfilling Android CDD requirements. Also as a plan, Trusty will be
-supported to provide security services for LaaG User VM as well.
+supported to provide security services for LaaG User VMs as well.
 
 Refer to this Google website for `Trusty details
 <https://source.android.com/security/trusty/>`_ and for `Android CCD
@@ -833,55 +837,55 @@ ACRN, the hypervisor creates an isolated secure world in a User VM.
 In :numref:`security-secure-world`, the Trusty OS runs in the User VM secure
 world and a Linux- or Android-based User VM runs in the non-secure world.
 
-By design, the secure world is able to read and write to all non-secure
+By design, the secure world is able to read and write to all the non-secure
 world's memory space. But non-secure world applications cannot have
-access to secure world's memory. This is guaranteed by switching
+access to the secure world's memory. This is guaranteed by switching
 different EPT tables when a world switch (WS) hypercall is invoked. The
-WS Hypercall can have parameters to specify the services cmd ID
-requested from non-secure world.
+WS hypercall can have parameters to specify the services cmd ID
+requested from the non-secure world.
 
 To design the "one VM, two worlds" architecture, there is a single
 User VM structure per-User VM in the hypervisor, but two vCPU structures that
-save non-secure/secure world virtual logical processor states
+save non-secure world and secure world virtual logical processor states
 respectively.
 
-Whenever there is a WS hypercall from non-secure world, the hypervisor
-will copy non-secure world CPU contexts from Guest VMCS to non-secure
+Whenever there is a WS hypercall from the non-secure world, the hypervisor
+will copy non-secure world CPU contexts from Guest VMCS to the non-secure
 world-vCPU structure for saving contexts, and then copy secure-world CPU
-contexts from secure-world-vCPU structure to Guest VMCS, then do
-VMRESUME to secure-world, and vice versa. The EPTP pointer will also be
+contexts from the secure-world-vCPU structure to Guest VMCS, then do
+VMRESUME to the secure-world, and vice versa. The EPTP pointer will also be
 updated accordingly in VMCS (not shown in
 :numref:`security-secure-world`).
 
 Trusty (Secure World) Memory Mapping View
 -----------------------------------------
 
-As per the secure world design, Trusty can have read/write access to
-non-secure world's memory, but non-secure world cannot access Trusty
+As per the secure world design, Trusty can have read/write access to the
+non-secure world's memory, but the non-secure world cannot access the Trusty
 secure world's memory. In the hypervisor EPT configuration shown in
 :numref:`security-mem-view` below, the secure world EPTP page table
-hierarchy must contain non-secure world address space, while Trusty
+hierarchy must contain the non-secure world address space, while the Trusty
 world's address space must be removed from the non-secure world EPTP
 page table hierarchy.
 
-Since there is no need to allow Trusty to execute memory from non-secure
-world, for security reason, the execution (X) permission must be removed
-for non-secure world address space in secure world EPT table
+Since there is no need to allow Trusty to execute memory from the non-secure
+world, for security reasons, the execution (X) permission must be removed
+for the non-secure world address space in the secure world EPT table
 configuration.
 
-To save page tables and share the mappings for non-secure world address
-space, the hypervisor relocates the Secure World's GPA to a very high
-position: 511G-512G. Hence, the PML4 for Trusty World is separated from
-non-secure World. PDPT/PD/PT for low memory (<511G) are shared in both
-Trusty World's EPT and non-secure World's EPT. PDPT/PD/PT for high
-memory (>=511G) are valid for Trusty World's EPT only.
+To save page tables and share the mappings for the non-secure world address
+space, the hypervisor relocates the secure world's GPA to a very high
+position: 511G-512G. Hence, the PML4 for Trusty World is separated from the
+non-secure world. PDPT/PD/PT for low memory (<511G) are shared in both the
+Trusty World's EPT and non-secure world's EPT. PDPT/PD/PT for high
+memory (>=511G) are valid for the Trusty World's EPT only.
 
 .. figure:: images/security-image8.png
    :width: 900px
    :align: center
    :name: security-mem-view
 
-   Memory View for User VM non-secure World and Secure World
+   Memory View for User VM Non-secure World and Secure World
 
 Trusty/Tee Hypercalls
 ---------------------
@@ -894,7 +898,8 @@ Hypercall - Trusty Initialization
 
 When a User VM is created by the DM in the Service VM, if this User VM
 supports a secure isolated world, then this hypercall will be invoked
-by OSLoader(it could be Android OS loader in :numref:`security-bootflow-sbl` and
+by OSLoader (it could be the Android OS loader in
+:numref:`security-bootflow-sbl` and
 :numref:`security-bootflow-uefi` above) to create or initialize the
 secure world (Trusty/TEE).
 
@@ -906,38 +911,38 @@ secure world (Trusty/TEE).
    Secure World Start Flow
 
 In :numref:`security-start-flow` above, the OSLoader is responsible for
-loading TEE/Trusty image to a dedicated and reserved memory region, and
+loading the TEE/Trusty image to a dedicated and reserved memory region, and
 locating its entry point of TEE/Trusty executable, then executes a
 hypercall that exits to the hypervisor handler.
 
 In the hypervisor, from a security perspective, it removes GPA->HPA
-mapping of secure world from EPT paging tables of both User VM non-secure
-world and even Service VM. This is intended to disallow non-secure world and
-Service VM to access the memory region of secure world for security reasons as
-previously mentioned.
+mapping of the secure world from EPT paging tables of both the User VM
+non-secure world and even the Service VM. This is intended to disallow the
+non-secure world and Service VM to access the memory region of the secure world
+for security reasons as previously mentioned.
 
 After all is set up by the hypervisor, including vCPU context
 initialization, the hypervisor eventually does vmresume (step 4 in
-:numref:`security-start-flow` above) to the entry point of secure world
-TEE/Trusty, then Trusty OS gets started in VMX non-root mode to
+:numref:`security-start-flow` above) to the entry point of the secure world
+TEE/Trusty, then the Trusty OS gets started in VMX non-root mode to
 initialize itself, and loads its TAs (Trusted Applications) so that the
-security services can be ready right before non-secure OS gets started.
+security services can be ready right before the non-secure OS gets started.
 
-After Trusty OS completes its initialization, a world switching (WS, see
+After the Trusty OS completes its initialization, a world switching (WS, see
 subsection below) hypercall is invoked (step 5 in
 :numref:`security-start-flow` above), and then the hypervisor takes
 control back, and resumes to the OSLoader (step 6 in
-:numref:`security-start-flow` above) for continuing execution in guest
+:numref:`security-start-flow` above) to continue execution in the guest
 VM non-secure world context.
 
-Note that this trusty initialization hypercall can only be called once
+Note that this Trusty initialization hypercall can only be called once
 in the User VM life cycle.
 
 Hypercall - Trusty Switching
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There is another special hypercall introduced only for world switching
-between non-secure world and secure world in a User VM.
+between the non-secure world and secure world in a User VM.
 
 .. figure:: images/security-image-world-switching-HC.png
    :width: 900px
@@ -946,31 +951,31 @@ between non-secure world and secure world in a User VM.
 
    World Switching Hypercall
 
-Whenever this hypercall is invoked in User VM, the hypervisor will
+Whenever this hypercall is invoked in a User VM, the hypervisor will
 unconditionally switch to the other world. For example, if it is called
-in non-secure world, the hypervisor will then switch context to secure
-world. After secure world completes its security tasks (or an external
+in the non-secure world, the hypervisor will then switch context to the secure
+world. After the secure world completes its security tasks (or an external
 interrupt occurs), this hypercall will be called again, then the hypervisor
-will switch context back to non-secure world.
+will switch context back to the non-secure world.
 
-During entire world switching process, Service VM is not involved. This
+During the entire world switching process, the Service VM is not involved. This
 hypervisor is only available to a User VM with duo-worlds supported.
 
 Secure Storage Virtualization
 -----------------------------
 
-Secure storage is one of the security services provided by secure world
+Secure storage is one of the security services provided by the secure world
 (TEE/Trusty). In the current implementation, secure storage is built up
 on the RPMB partition in eMMC (or UFS, and NVMe storage). Details of how
 RPMB works are out of scope for this document.
 
-Since currently the eMMC in APL SoC platform only has a single RPMB
+Since currently the eMMC in APL SoC platforms only has a single RPMB
 partition for tamper-resistant and anti-replay secure storage, the
 secure storage (RPMB) should be virtualized in order to support multiple
-guest User VMs. However, although future generation of flash storage
-(e.g. UFS 3.0, and NVMe) supports multiple RPMB partitions, this
+guest User VMs. However, although future generations of flash storage
+(e.g., UFS 3.0 and NVMe) support multiple RPMB partitions, this
 document still only focuses on the virtualization solution for
-single-RPMB flash storage device in APL SoC platform.
+single-RPMB flash storage devices in APL SoC platforms.
 
 The following :numref:`security-storage` illustrates the virtualization
 of secure storage high-level architecture overview.
@@ -986,15 +991,15 @@ In :numref:`security-storage`, the rKey is the physical RPMB
 authentication key used for data authenticated read/write access between
 the Service VM kernel and the physical RPMB controller in eMMC device.  The
 VrKey is the virtual RPMB authentication key used for authentication
-between the DM module in Service VM and its corresponding User VM secure software.
+between the DM module in the Service VM and its corresponding User VM secure software.
 Each User VM (if secure storage is supported) has its own VrKey, generated
-randomly when DM process starts, and is securely distributed to User VM
+randomly when the DM process starts, and is securely distributed to the User VM
 secure world for each reboot. The rKey is fixed on a specific platform
 unless the eMMC is replaced with another one.
 
-The details of physical RPMB key (rKey) provision are out of scope.  In
-the current project ACRN on APL platform, the rKey is provisioned by
-BIOS (SBL) right after production device ends its manufacturing process.
+The details of physical RPMB key (rKey) provisioning are out of scope.  In
+the current project ACRN on APL platforms, the rKey is provisioned by
+BIOS (SBL) right after a production device ends its manufacturing process.
 
 For each reboot, the BIOS/SBL always retrieves the rKey from CSE FW
 (or generated from a special SEED that is retrieved from CSE FW, refer
@@ -1004,20 +1009,20 @@ ACRN hypervisor, and the hypervisor in turn sends it to the Service VM kernel.
 As an example, secure storage virtualization workflow for data write
 access is like this:
 
-#. User VM Secure world (e.g. Trusty) packs the encrypted data and signs it
+#. User VM secure world (e.g., Trusty) packs the encrypted data and signs it
    with the vRPMB authentication key (VrKey), and sends the data along
-   with its signature over the RPMB FE driver in User VM non-secure world.
-#. After DM process in Service VM receives the data and signature, then the
-   vRPMB module in DM verifies them with the shared secret (vRPMB
-   authentication key, VrKey),
+   with its signature over the RPMB FE driver in the User VM non-secure world.
+#. After the DM process in the Service VM receives the data and signature, the
+   vRPMB module in the DM verifies them with the shared secret (vRPMB
+   authentication key, VrKey).
 #. If verification is successful, the vRPMB module does data address remap
    (remembering that the multiple User VMs share a single physical RPMB
    partition), and forwards the data to the Service VM kernel. The kernel packs
    the data and signs it with the physical RPMB authentication key
-   (rKey). Eventually, the data and its signature will be sent to
+   (rKey). Eventually, the data and its signature will be sent to the
    physical eMMC device.
-#. If the verification is successful in eMMC RPMB controller, then the
-   data will be written into storage device.
+#. If the verification is successful in the eMMC RPMB controller, the
+   data will be written into the storage device.
 
 This workflow of authenticated data read is very similar to this flow
 above, but in reverse order.
@@ -1027,10 +1032,11 @@ Note that there are some security considerations in this design:
 #. The rKey protection is very critical in this system. If  it is
    leaked, an attacker can overwrite the data on RPMB, which
    violates the "tamper-resistant & anti-replay" capability.
-#. Typically, the vRPMB module in DM process of Service VM system can filter
-   data access, preventing one User VM to perform read/write access to the
+#. Typically, the vRPMB module in the DM process of the Service VM system can
+   filter
+   data access, preventing one User VM from performing read/write access to the
    data from another User VM. If the vRPMB module in the DM process is
-   compromised, one User VM may also change/overwrite the secure data of
+   compromised, one User VM may also change/overwrite the secure data of the
    other User VM.
 
 Keeping the Service VM system as secure as possible is a very important goal in
@@ -1042,7 +1048,7 @@ SEED Derivation
 
 Refer to the previous section: :ref:`platform_root_of_trust`.
 
-Trusty/Tee S3 (Suspend to RAM)
+Trusty/TEE S3 (Suspend to RAM)
 ------------------------------
 
 Secure world S3 design is not yet finalized. However, there is a
@@ -1052,13 +1058,13 @@ Two new hypercalls are introduced: one saves the secure world processor
 contexts/states; the other one restores the secure world processor
 contexts/states.
 
-The save state hypercall is called only in secure world (Trusty/TEE OS)
+The save state hypercall is called only in the secure world (Trusty/TEE OS)
 as long as the Trusty receives a signal when the entire system (actually
 the non-secure OS issues this power event) is about to enter S3. While
-the restore state hypercall is called only by vBIOS when User VM is ready to
+the restore state hypercall is called only by vBIOS when the User VM is ready to
 resume from suspend state.
 
-For security design consideration of handling secure world S3,
+For security design considerations of handling secure world S3,
 read the previous section: :ref:`uos_suspend_resume`.
 
 Platform Security Feature Virtualization and Enablement
@@ -1071,32 +1077,32 @@ VMs the ability to use those features.
 TPM 2.0 Virtualization (vTPM)
 -----------------------------
 
-On APL platform, Intel |reg| PTT (Platform Trust Technology) implements TPM
-functionalities based on TCG TPM 2.0 industry standard specification.
-PTT exposes TPM hardware interface as CRB (Command Response Buffer)
+On APL platforms, Intel |reg| PTT (Platform Trust Technology) implements TPM
+functionalities based on the TCG TPM 2.0 industry standard specification.
+PTT exposes the TPM hardware interface as CRB (Command Response Buffer)
 defined in the TCG TPM 2.0 spec.
 
 However, in project ACRN, TPM virtualization doesn't assume it is based
 on PTT or discrete TPM; both TPMs (2.0) are supported by design.
 Customers are free to use either PTT or discrete TPM (but not at the same
-time). PTT, however, is a built-in TPM2.0 implementation in Intel APL
-platform, and does not require extra BOM cost (unlike discrete TPM).
+time). PTT, however, is a built-in TPM 2.0 implementation in APL
+platforms and does not require extra BOM cost (unlike discrete TPM).
 
-Note that the underlying CSE FW/HW implements PTT functionalities,
-however, this TPM2.0 feature does not rely on MEI/HECI virtualization.
+Note that the underlying CSE FW/HW implements PTT functionalities;
+however, this TPM 2.0 feature does not rely on MEI/HECI virtualization.
 
 Unlike regular hardware, implementation of virtualizing a TPM must
-address both security and Trust.
+address both security and trust.
 
 The goal of virtualization is to provide TPM functionality to each guest
 VM, such as:
 
 #. Allows programs to interact with a TPM in a virtual system the same
-   way they interact with a TPM on the physical system;
+   way they interact with a TPM on the physical system.
 #. Each User VM gets its own unique, emulated, software TPM, for example,
    vPCR and vNVRAM.
-#. One to one mapping between running vTPM instances and logical vTPM in
-   each VM
+#. One-to-one mapping between running vTPM instances and logical vTPM in
+   each VM.
 
 SGX Virtualization (vSGX)
 -------------------------

@@ -1,3 +1,4 @@
+include ../../../paths.make
 T := $(CURDIR)
 OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
 CC ?= gcc
@@ -40,19 +41,33 @@ LIFEMNGR_LDFLAGS += $(LDFLAGS)
 # set cross compiler for Windows
 MINGWIN_CC := x86_64-w64-mingw32-gcc
 
+CONF_DIR = /etc/life_mngr
+LM_C_SRCS += monitor.c
+LM_C_SRCS += command.c
+LM_C_SRCS += uart_channel.c
+LM_C_SRCS += uart.c
+LM_C_SRCS += socket.c
+LM_C_SRCS += command_handler.c
+LM_C_SRCS += config.c
 all: all-linux all-win
 
-all-linux:
-	$(CC) -g life_mngr.c -o $(OUT_DIR)/life_mngr -lpthread $(LIFEMNGR_CFLAGS) $(LIFEMNGR_LDFLAGS)
-	cp life_mngr.service $(OUT_DIR)/life_mngr.service
+life_mngr.service: life_mngr.service.in
+	sed \
+	    -e 's|[@]bindir[@]|$(bindir)|g' \
+	    < $< > $@-t && \
+	    mv $@-t $(OUT_DIR)/$@
+all-linux: life_mngr.service
+	$(CC) -g $(LM_C_SRCS) -o $(OUT_DIR)/life_mngr -lpthread $(LIFEMNGR_CFLAGS) $(LIFEMNGR_LDFLAGS)
+	cp life_mngr.conf $(OUT_DIR)/life_mngr.conf
+	cp s5_trigger_linux.py $(OUT_DIR)/s5_trigger_linux.py
 
 # only build for Windows if cross compiler is installed
+all-win:
 ifneq ($(shell which $(MINGWIN_CC)),)
-all-win:
-	$(MINGWIN_CC) -g life_mngr_win.c -o $(OUT_DIR)/life_mngr_win.exe -Wall -O2 $(LDFLAGS)
+	$(MINGWIN_CC) -g life_mngr_win.c -o $(OUT_DIR)/life_mngr_win.exe -Wall -O2 $(LDFLAGS) -lwsock32
 	cp COPYING.MinGW-w64-runtime.txt $(OUT_DIR)/COPYING.MinGW-w64-runtime.txt
+	cp s5_trigger_win.py $(OUT_DIR)/s5_trigger_win.py
 else
-all-win:
 	@echo "WARN: $(MINGWIN_CC) not installed, skipping life_mngr_win.exe" >&2
 endif
 
@@ -60,11 +75,15 @@ clean:
 	rm -f $(OUT_DIR)/life_mngr
 ifneq ($(OUT_DIR),.)
 	rm -f $(OUT_DIR)/life_mngr.service
+	rm -f $(OUT_DIR)/life_mngr.conf
+	rm -f $(OUT_DIR)/s5_trigger_linux.py
 	rm -rf $(OUT_DIR)
 endif
 
 .PHONY: install
 install:
-	install -d $(DESTDIR)/usr/bin
-	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/life_mngr
+	[ -d $(CONF_DIR) ] || mkdir -p $(CONF_DIR)
+	install -d $(DESTDIR)$(bindir)
+	install -t $(DESTDIR)$(bindir) $(OUT_DIR)/life_mngr
+	install -t $(DESTDIR)$(CONF_DIR) $(OUT_DIR)/life_mngr.conf
 	install -p -D -m 0644 $(OUT_DIR)/life_mngr.service $(DESTDIR)$(systemd_unitdir)/system/

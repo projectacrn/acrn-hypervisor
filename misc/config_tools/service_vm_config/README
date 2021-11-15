@@ -1,0 +1,7 @@
+Please run serial_config.py to generate serial configuration file for service VM.
+
+usage: python3 serial_config.py [h] --allocation <allocation_info_file> --scenario <scenario_info_file> --out <output_file>
+positional arguments:
+  allocation_info_file  : name of the file summarizing resource allocated by config tool
+  scenario_info_file  : file name of the scenario info XML
+  output_file : file name of serial configuration

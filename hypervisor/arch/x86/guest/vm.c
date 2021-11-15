@@ -42,6 +42,7 @@
 #ifdef CONFIG_SECURITY_VM_FIXUP
 #include <quirks/security_vm_fixup.h>
 #endif
+#include <asm/boot/ld_sym.h>
 
 /* Local variables */
 
@@ -321,9 +322,9 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 
 static void deny_pci_bar_access(struct acrn_vm *service_vm, const struct pci_pdev *pdev)
 {
-	uint32_t idx, mask;
+	uint32_t idx;
 	struct pci_vbar vbar = {};
-	uint64_t base = 0UL, size = 0UL;
+	uint64_t base = 0UL, size = 0UL, mask;
 	uint64_t *pml4_page;
 
 	pml4_page = (uint64_t *)service_vm->arch_vm.nworld_eptp;
@@ -409,6 +410,7 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 	uint32_t entries_count = vm->e820_entry_num;
 	const struct e820_entry *p_e820 = vm->e820_entries;
 	struct pci_mmcfg_region *pci_mmcfg;
+	uint64_t trampoline_memory_size = round_page_up((uint64_t)(&ld_trampoline_end - &ld_trampoline_start));
 
 	pr_dbg("Service VM e820 layout:\n");
 	for (i = 0U; i < entries_count; i++) {
@@ -462,7 +464,7 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 	/* unmap AP trampoline code for security
 	 * This buffer is guaranteed to be page aligned.
 	 */
-	ept_del_mr(vm, pml4_page, get_trampoline_start16_paddr(), CONFIG_LOW_RAM_SIZE);
+	ept_del_mr(vm, pml4_page, get_trampoline_start16_paddr(), trampoline_memory_size);
 
 	/* unmap PCIe MMCONFIG region since it's owned by hypervisor */
 	pci_mmcfg = get_mmcfg_region();
@@ -671,8 +673,8 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	}
 
 	if (status == 0) {
-		uint32_t i;
-		for (i = 0; i < vm_config->pt_intx_num; i++) {
+		uint16_t i;
+		for (i = 0U; i < vm_config->pt_intx_num; i++) {
 			status = ptirq_add_intx_remapping(vm, vm_config->pt_intx[i].virt_gsi,
 								vm_config->pt_intx[i].phys_gsi, false);
 			if (status != 0) {

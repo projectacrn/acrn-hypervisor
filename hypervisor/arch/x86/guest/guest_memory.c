@@ -198,7 +198,7 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 static int32_t local_gva2gpa_pae(struct acrn_vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
-	int32_t index;
+	uint32_t index;
 	uint64_t *base;
 	uint64_t entry;
 	uint64_t addr;
@@ -207,7 +207,7 @@ static int32_t local_gva2gpa_pae(struct acrn_vcpu *vcpu, struct page_walk_info *
 	addr = get_pae_pdpt_addr(pw_info->top_entry);
 	base = (uint64_t *)gpa2hva(vcpu->vm, addr);
 	if (base != NULL) {
-		index = (gva >> 30U) & 0x3UL;
+		index = (uint32_t)gva >> 30U;
 		stac();
 		entry = base[index];
 		clac();

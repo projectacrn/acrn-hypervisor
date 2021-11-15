@@ -4,7 +4,7 @@ Enable Nested Virtualization
 ############################
 
 With nested virtualization enabled in ACRN, you can run virtual machine
-instances inside of a guest VM (also called a user VM) running on the ACRN hypervisor.
+instances inside of a guest VM (also called a User VM) running on the ACRN hypervisor.
 Although both "level 1" guest VMs and nested guest VMs can be launched
 from the Service VM, the following distinction is worth noting:
 
@@ -32,7 +32,7 @@ third level:
    Generic Nested Virtualization
 
 
-High Level ACRN Nested Virtualization Design
+High-Level ACRN Nested Virtualization Design
 ********************************************
 
 The high-level design of nested virtualization in ACRN is shown in :numref:`nested_virt_hld`.
@@ -68,7 +68,7 @@ hypervisor to actually run the L2 guest.
 
 #. L2 guest runs until triggering VMExits to L0
 
-   a. L0 reflects most VMEXits to L1 hypervisor
+   a. L0 reflects most VMExits to L1 hypervisor
    #. L0 runs L1 guest with VMCS01 and VMCS02 as the shadow VMCS
 
 
@@ -76,7 +76,7 @@ Restrictions and Constraints
 ****************************
 
 Nested virtualization is considered an experimental feature, and only tested
-on Tiger Lake and Kaby Lake platforms (See :ref:`hardware`.)
+on Tiger Lake and Kaby Lake platforms (see :ref:`hardware`).
 
 L1 VMs have the following restrictions:
 
@@ -91,7 +91,7 @@ Constraints on L1 guest configuration:
 * Only the ``SCHED_NOOP`` scheduler is supported. ACRN can't receive timer interrupts
   on LAPIC passthrough pCPUs
 
-VPID allocation
+VPID Allocation
 ===============
 
 ACRN doesn't emulate L2 VPIDs and allocates VPIDs for L1 VMs from the reserved top
@@ -99,15 +99,15 @@ ACRN doesn't emulate L2 VPIDs and allocates VPIDs for L1 VMs from the reserved t
 If the L1 hypervisor enables VPID for L2 VMs and allocates L2 VPIDs not in this
 range, ACRN doesn't need to flush L2 VPID during L2 VMX transitions.
 
-This is the expected behavior in most of the time. But in special cases where a
+This is the expected behavior most of the time. But in special cases where a
 L2 VPID allocated by L1 hypervisor is within this reserved range, it's possible
 that this L2 VPID may conflict with a L1 VPID. In this case,  ACRN flushes VPID
 on L2 VMExit/VMEntry that are associated with this L2 VPID, which may significantly
 negatively impact performances of this L2 VM.
 
 
-Service OS VM configuration
-***************************
+Service VM Configuration
+*************************
 
 ACRN only supports enabling the nested virtualization feature on the Service VM, not on pre-launched
 VMs.
@@ -120,7 +120,7 @@ with these settings:
    The tool wasn't updated in time for the v2.5 release, so you'll need to manually edit
    the ACRN scenario XML configuration file to edit the ``SCHEDULER``, ``NVMX_ENABLED``,
    ``pcpu_id`` , ``guest_flags``, ``legacy_vuart``, and ``console_vuart`` settings for
-   the Service VM (SOS), as shown below:
+   the Service VM, as shown below.
 
 #. Configure system level features:
 
@@ -153,7 +153,7 @@ with these settings:
 
 #. In each guest VM configuration:
 
-   - Edit :option:`vm.guest_flags.guest_flag` on the SOS VM section and add ``GUEST_FLAG_NVMX_ENABLED``
+   - Edit :option:`vm.guest_flags.guest_flag` on the Service VM section and add ``GUEST_FLAG_NVMX_ENABLED``
      to enable the nested virtualization feature on the Service VM.
    - Edit :option:`vm.guest_flags.guest_flag` and add ``GUEST_FLAG_LAPIC_PASSTHROUGH`` to enable local
      APIC passthrough on the Service VM.
@@ -165,8 +165,8 @@ with these settings:
         :emphasize-lines: 5,6,7,10,11
 
         <vm id="1">
-          <vm_type>SOS_VM</vm_type>
-          <name>ACRN SOS VM</name>
+          <vm_type>SERVICE_VM</vm_type>
+          <name>ACRN_Service_VM</name>
           <cpu_affinity>
             <pcpu_id>1</pcpu_id>
             <pcpu_id>2</pcpu_id>
@@ -207,8 +207,9 @@ with these settings:
 
 #. Remove CPU sharing VMs
 
-   Since CPU sharing is disabled, you may need to delete all ``POST_STD_VM`` and ``KATA_VM`` VMs
-   from the scenario configuration file, which may share pCPU with the Service OS VM.
+   Since CPU sharing is disabled, you may need to delete all ``POST_STD_VM`` and
+   ``KATA_VM`` VMs from the scenario configuration file, which may share a pCPU
+   with the Service VM.
 
 #. Follow instructions in :ref:`gsg` and build with this XML configuration.
 
@@ -216,7 +217,7 @@ with these settings:
 Prepare for Service VM Kernel and rootfs
 ****************************************
 
-The service VM can run Ubuntu or other Linux distributions.
+The Service VM can run Ubuntu or other Linux distributions.
 Instructions on how to boot Ubuntu as the Service VM can be found in
 :ref:`gsg`.
 
@@ -243,7 +244,7 @@ guests on the Service VM:
    CONFIG_KVM_INTEL=y
    CONFIG_ACRN_GUEST=y
 
-After you made these configuration modifications, build and install the kernel
+After you make these configuration modifications, build and install the kernel
 as described in :ref:`gsg`.
 
 
@@ -327,7 +328,7 @@ on the ACRN hypervisor console because these commands only show level 1 VMs.
 
    VM_UUID                          VM_ID VM_NAME           VM_STATE
    ================================ ===== ==========================
-   dbbbd4347a574216a12c2201f1ab0240   0   ACRN SOS VM       Running
+   dbbbd4347a574216a12c2201f1ab0240   0   ACRN_Service_VM       Running
    ACRN:\>vcpu_list
 
    VM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE    THREAD STATE

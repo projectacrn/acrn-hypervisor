@@ -60,13 +60,13 @@ def scenarios():
         else:
             scenario_list = (
                 generic_config_list[0], xml_config.list_all(xml_type='scenario')[0])
-        if default_xml_config.list_all(xml_type='uos_launcher')[0]:
+        if default_xml_config.list_all(xml_type='user_vm_launcher')[0]:
             launch_list = (
-                default_xml_config.list_all(xml_type='uos_launcher')[0],
-                xml_config.list_all(xml_type='uos_launcher')[0])
+                default_xml_config.list_all(xml_type='user_vm_launcher')[0],
+                xml_config.list_all(xml_type='user_vm_launcher')[0])
         else:
             launch_list = (
-                generic_config_list[1], xml_config.list_all(xml_type='uos_launcher')[0])
+                generic_config_list[1], xml_config.list_all(xml_type='user_vm_launcher')[0])
 
     return render_template('scenario.html', board_info_list=get_board_list(),
                            board_info=board_info, board_type=board_type,
@@ -98,13 +98,13 @@ def scenario(scenario_name):
         else:
             scenario_list = (
                 generic_config_list[0], xml_config.list_all(xml_type='scenario')[0])
-        if default_xml_config.list_all(xml_type='uos_launcher')[0]:
+        if default_xml_config.list_all(xml_type='user_vm_launcher')[0]:
             launch_list = (
-                default_xml_config.list_all(xml_type='uos_launcher')[0],
-                xml_config.list_all(xml_type='uos_launcher')[0])
+                default_xml_config.list_all(xml_type='user_vm_launcher')[0],
+                xml_config.list_all(xml_type='user_vm_launcher')[0])
         else:
             launch_list = (
-                generic_config_list[1], xml_config.list_all(xml_type='uos_launcher')[0])
+                generic_config_list[1], xml_config.list_all(xml_type='user_vm_launcher')[0])
 
     xpath_dict = get_xpath_dict_of_xsd()
 
@@ -154,13 +154,13 @@ def launches():
         else:
             scenario_list = (
                 generic_config_list[0], xml_config.list_all(xml_type='scenario')[0])
-        if default_xml_config.list_all(xml_type='uos_launcher')[0]:
+        if default_xml_config.list_all(xml_type='user_vm_launcher')[0]:
             launch_list = (
-                default_xml_config.list_all(xml_type='uos_launcher')[0],
-                xml_config.list_all(xml_type='uos_launcher')[0])
+                default_xml_config.list_all(xml_type='user_vm_launcher')[0],
+                xml_config.list_all(xml_type='user_vm_launcher')[0])
         else:
             launch_list = (
-                generic_config_list[1], xml_config.list_all(xml_type='uos_launcher')[0])
+                generic_config_list[1], xml_config.list_all(xml_type='user_vm_launcher')[0])
 
     return render_template('launch.html', board_info_list=get_board_list(),
                            board_info=board_info, board_type=board_type,
@@ -191,13 +191,13 @@ def launch(launch_name):
         else:
             scenario_list = (
                 generic_config_list[0], xml_config.list_all(xml_type='scenario')[0])
-        if default_xml_config.list_all(xml_type='uos_launcher')[0]:
+        if default_xml_config.list_all(xml_type='user_vm_launcher')[0]:
             launch_list = (
-                default_xml_config.list_all(xml_type='uos_launcher')[0],
-                xml_config.list_all(xml_type='uos_launcher')[0])
+                default_xml_config.list_all(xml_type='user_vm_launcher')[0],
+                xml_config.list_all(xml_type='user_vm_launcher')[0])
         else:
             launch_list = (
-                generic_config_list[1], xml_config.list_all(xml_type='uos_launcher')[0])
+                generic_config_list[1], xml_config.list_all(xml_type='user_vm_launcher')[0])
 
     launch_config.set_curr(launch_name)
 
@@ -432,7 +432,7 @@ def save_launch():
         if generator.startswith('add_vm:'):
             vm_list = []
             for vm in list(launch_config.get_curr_root()):
-                if vm.tag == 'uos':
+                if vm.tag == 'user_vm':
                     vm_list.append(vm.attrib['id'])
             if len(vm_list) >= MAX_VM_NUM:
                 return {'status': 'fail',
@@ -464,7 +464,7 @@ def save_launch():
                     if curr_vm_id == vm_list[i]:
                         curr_vm_index = i + 1
                         break
-            if add_launch_config is not None and add_launch_config.tag == 'uos':
+            if add_launch_config is not None and add_launch_config.tag == 'user_vm':
                 for i in range(1, MAX_VM_NUM):
                     if str(i) not in vm_list:
                         break
@@ -475,12 +475,12 @@ def save_launch():
                 launch_config.insert_curr_elem(curr_vm_index, vm)
         elif generator.startswith('remove_vm:'):
             remove_vm_id = generator.split(':')[1]
-            launch_config.delete_curr_key('uos:id='+remove_vm_id.strip())
+            launch_config.delete_curr_key('user_vm:id='+remove_vm_id.strip())
 
     launch_config.set_curr_attr('scenario', scenario_name)
     launch_config.set_curr_attr('board', current_app.config.get('BOARD_TYPE'))
 
-    launch_config.set_curr_attr('uos_launcher', str(len(list(launch_config.get_curr_root()))))
+    launch_config.set_curr_attr('user_vm_launcher', str(len(list(launch_config.get_curr_root()))))
 
     tmp_launch_file = os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1],
                                    'tmp_' + launch_config_data['new_launch_name'] + '.xml')
@@ -591,7 +591,7 @@ def create_setting():
         launch_file = os.path.join(setting_path,  create_name + '.xml')
 
         if mode == 'create':
-            template_file_name = 'hybrid_launch_2uos'
+            template_file_name = 'hybrid_launch_2user_vm'
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board', template_file_name + '.xml')
         else: #load
             src_file_name = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), board_type, default_name + '.xml')
@@ -603,8 +603,8 @@ def create_setting():
 
         launch_config.set_curr(create_name)
         if mode == 'create':
-            launch_config.delete_curr_key('uos:id=2')
-            launch_config.delete_curr_key('uos:id=1')
+            launch_config.delete_curr_key('user_vm:id=2')
+            launch_config.delete_curr_key('user_vm:id=1')
         launch_config.save(create_name)
         if os.path.normcase(setting_path) != os.path.normcase(os.path.join(current_app.config.get('CONFIG_PATH'), board_type)):
             copyfile(os.path.join(current_app.config.get('CONFIG_PATH'), board_type, create_name + '.xml'),
@@ -771,7 +771,7 @@ def upload_board_info():
             board_type = None
             if board_info_root is not None and 'board' in board_info_root.attrib \
                 and 'scenario' not in board_info_root.attrib \
-                    and 'uos_launcher' not in board_info_root.attrib:
+                    and 'user_vm_launcher' not in board_info_root.attrib:
                 board_type = board_info_root.attrib['board']
             if not board_type:
                 os.remove(save_tmp_board_path)
@@ -795,7 +795,7 @@ def upload_board_info():
                         xml_config.set_curr(generic_name.rsplit('.', 1)[0])
                         xml_config.set_curr_attr('board', board_type)
                         xml_config_root = xml_config.get_curr_root()
-                        if 'scenario' not in xml_config_root.attrib and 'uos_launcher' not in xml_config_root.attrib:
+                        if 'scenario' not in xml_config_root.attrib and 'user_vm_launcher' not in xml_config_root.attrib:
                             os.remove(new_file)
                             continue
                         # update RDT->CLOS_MASK according to board xml
@@ -877,7 +877,7 @@ def upload_scenario():
             else:
                 tmp_root = tmp_xml_config.get_curr_root()
                 if 'board' not in tmp_root.attrib or 'scenario' not in tmp_root.attrib \
-                        or 'uos_launcher' in tmp_root.attrib:
+                        or 'user_vm_launcher' in tmp_root.attrib:
                     status = 'Invalid scenario xml file, \nonly board and scenario ' \
                              'need to be configured.'
                 elif tmp_root.attrib['board'] != current_app.config.get('BOARD_TYPE'):
@@ -900,6 +900,8 @@ def upload_scenario():
                                         + datetime.now().strftime('%Y%m%d%H%M%S')
                     rename = True
 
+            xsd_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'schema', 'config.xsd')
+            default_populator.main(xsd_path, tmp_scenario_file, tmp_scenario_file)
             os.rename(tmp_scenario_file, os.path.join(current_app.config.get('CONFIG_PATH'),
                                                       board_type, new_scenario_name + '.xml'))
 
@@ -942,9 +944,9 @@ def upload_launch():
             else:
                 tmp_root = tmp_xml_config.get_curr_root()
                 if 'board' not in tmp_root.attrib or 'scenario' not in tmp_root.attrib \
-                        or 'uos_launcher' not in tmp_root.attrib:
+                        or 'user_vm_launcher' not in tmp_root.attrib:
                     status = 'Invalid launch xml file, \nboard, scenario,' \
-                             'and uos_launcher need to be configured.'
+                             'and user_vm_launcher need to be configured.'
                 elif tmp_root.attrib['board'] != current_app.config.get('BOARD_TYPE'):
                     status = 'Current board: {} mismatched with the board in the launch file,' \
                              '\nplease reselect or upload the board info: {}' \
@@ -992,9 +994,9 @@ def get_post_launch_vms():
     launch_config = xml_configs[3]
     launch_config.set_curr(launch_name)
     if launch_config is not None and launch_config.get_curr_root() is not None:
-        for uos in list(launch_config.get_curr_root()):
-            if 'id' in uos.attrib:
-                user_vmid_list.append(int(uos.attrib['id'])-1)
+        for user_vm in list(launch_config.get_curr_root()):
+            if 'id' in user_vm.attrib:
+                user_vmid_list.append(int(user_vm.attrib['id'])-1)
 
     vm_list_index = [i for i in range(len(vm_list))]
     vm_list_index = set(vm_list_index)
@@ -1083,8 +1085,8 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             'POST_STD_VM': ('shared', 'vm:id=1'),
             'POST_RT_VM': ('shared', 'vm:id=2'),
             'KATA_VM': ('shared', 'vm:id=7'),
-            'LAUNCH_POST_STD_VM': ('hybrid_launch_2uos', 'uos:id=1'),
-            'LAUNCH_POST_RT_VM': ('shared_launch_6uos', 'uos:id=2')
+            'LAUNCH_POST_STD_VM': ('hybrid_launch_2user_vm', 'user_vm:id=1'),
+            'LAUNCH_POST_RT_VM': ('shared_launch_6user_vm', 'user_vm:id=2')
         }
         config_path = os.path.join(current_app.config.get('DEFAULT_CONFIG_PATH'), 'generic_board')
         xml_path = os.path.join(config_path, vm_dict[add_vm_type][0] + '.xml')
@@ -1107,7 +1109,7 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             generic_scenario_config.set_curr(os.path.splitext(file)[0])
             generic_scenario_config_root = generic_scenario_config.get_curr_root()
             if 'scenario' in generic_scenario_config_root.attrib \
-                and 'uos_launcher' not in generic_scenario_config_root.attrib \
+                and 'user_vm_launcher' not in generic_scenario_config_root.attrib \
                 and generic_scenario_config_root.attrib['scenario'] == \
                     scenario_config.get_curr_root().attrib['scenario']:
                 return generic_scenario_config
@@ -1338,9 +1340,9 @@ def get_generic_config_list():
         if os.path.isfile(os.path.join(default_config_path, config_name)):
             default_xml_config.set_curr(config_name.rsplit('.', 1)[0])
             xml_config_root = default_xml_config.get_curr_root()
-            if 'scenario' in xml_config_root.attrib and 'uos_launcher' not in xml_config_root.attrib:
+            if 'scenario' in xml_config_root.attrib and 'user_vm_launcher' not in xml_config_root.attrib:
                 secenario_config_list.append(config_name.rsplit('.', 1)[0])
-            elif 'scenario' in xml_config_root.attrib and 'uos_launcher' in xml_config_root.attrib:
+            elif 'scenario' in xml_config_root.attrib and 'user_vm_launcher' in xml_config_root.attrib:
                 launch_config_list.append(config_name.rsplit('.', 1)[0])
 
     return (secenario_config_list, launch_config_list)

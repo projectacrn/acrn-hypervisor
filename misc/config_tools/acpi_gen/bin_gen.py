@@ -13,9 +13,47 @@ import lxml.etree
 from acpi_const import *
 import acpiparser.tpm2
 import inspectorlib.cdata
+import acpiparser.rtct
 import common
 
-def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):
+def move_rtct_ssram_and_bin_entries(rtct, new_base_addr, new_area_max_size):
+    '''
+    move the guest ssram and ctl bin entries to a new base addr. the entries keeps their relative layout
+    :param rtct: parsed rtct bit struct
+    :param new_base_addr: the top address of the new area
+    :param new_area_max_size: max size of the new area. for valid check
+    :return:
+    '''
+    if rtct.version == 1:
+        expect_ssram_type = acpiparser.rtct.ACPI_RTCT_V1_TYPE_SoftwareSRAM
+        expect_bin_type = acpiparser.rtct.ACPI_RTCT_V1_TYPE_CRL_Binary
+    elif rtct.version == 2:
+        expect_ssram_type = acpiparser.rtct.ACPI_RTCT_V2_TYPE_SoftwareSRAM
+        expect_bin_type = acpiparser.rtct.ACPI_RTCT_V2_TYPE_CRL_Binary
+    else:
+        raise Exception("RTCT version error! ", rtct.version)
+    top = 0
+    base = 0
+    for entry in rtct.entries:
+        if entry.type == expect_ssram_type:
+            top = (entry.base + entry.size) if top < (entry.base + entry.size) else top
+            base = entry.base if base == 0 or entry.base < base else base
+        elif entry.type == expect_bin_type:
+            top = (entry.address + entry.size) if top < (entry.address + entry.size) else top
+            base = entry.address if base == 0 or entry.address < base else base
+    if new_area_max_size < (top - base):
+        raise Exception("not enough space in guest VE820 SSRAM area!")
+    rtct_move_offset = new_base_addr - base
+    for entry in rtct.entries:
+        if entry.type == expect_ssram_type:
+            entry.base += rtct_move_offset
+        elif entry.type == expect_bin_type:
+            entry.address += rtct_move_offset
+    # re-calculate checksum
+    rtct.header.checksum = 0
+    rtct.header.checksum = 0 - sum(bytes(rtct))
+
+def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path, scenario_etree, allocation_etree):
     '''
     compile asl code of ACPI table to aml code.
     :param dest_vm_acpi_path: the path of the asl code of ACPI tables
@@ -39,14 +77,20 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):
                         os.remove(os.path.join(dest_vm_acpi_path, acpi_table[1]))
                     rmsg = 'failed to compile {}'.format(acpi_table[0])
                     break
-        elif acpi_table[0] == 'PTCT':
-            if 'PTCT' in os.listdir(dest_vm_acpi_path):
-                shutil.copyfile(os.path.join(dest_vm_acpi_path, acpi_table[0]),
-                                os.path.join(dest_vm_acpi_bin_path, acpi_table[1]))
-        elif acpi_table[0] == 'RTCT':
-            if 'RTCT' in os.listdir(dest_vm_acpi_path):
-                shutil.copyfile(os.path.join(dest_vm_acpi_path, acpi_table[0]),
-                                os.path.join(dest_vm_acpi_bin_path, acpi_table[1]))
+        elif acpi_table[0] in ['PTCT', 'RTCT']:
+            if acpi_table[0] in os.listdir(dest_vm_acpi_path):
+                rtct = acpiparser.rtct.RTCT(os.path.join(dest_vm_acpi_path, acpi_table[0]))
+                outfile = os.path.join(dest_vm_acpi_bin_path, acpi_table[1])
+                # move the guest ssram area to the area next to ACPI region
+                pre_rt_vms = common.get_node("//vm[vm_type ='PRE_RT_VM']", scenario_etree)
+                vm_id = pre_rt_vms.get("id")
+                allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+                ssram_start_gpa = common.get_node("./ssram/start_gpa/text()", allocation_vm_node)
+                ssram_max_size = common.get_node("./ssram/max_size/text()", allocation_vm_node)
+                move_rtct_ssram_and_bin_entries(rtct, int(ssram_start_gpa, 16), int(ssram_max_size, 16))
+                fp = open(outfile, mode='wb')
+                fp.write(rtct)
+                fp.close()
         else:
             if acpi_table[0].endswith(".asl"):
                 rc = exec_command('iasl {}'.format(acpi_table[0]))
@@ -242,7 +286,7 @@ def main(args):
             dest_vm_acpi_path = os.path.join(DEST_ACPI_PATH, config)
             dest_vm_acpi_bin_path = os.path.join(DEST_ACPI_BIN_PATH, config)
             os.makedirs(dest_vm_acpi_bin_path)
-            if asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):
+            if asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path, scenario_etree, allocation_etree):
                 return 1
             aml_to_bin(dest_vm_acpi_path, dest_vm_acpi_bin_path, config+'.bin', board_etree, scenario_etree, allocation_etree)
 

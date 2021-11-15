@@ -333,10 +333,10 @@ def guest_flag_check(guest_flags, branch_tag, leaf_tag):
                 ERR_LIST[key] = "Unknow guest flag"
 
 
-def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
+def vm_cpu_affinity_check(scenario_file, cpu_affinity):
     """
     Check cpu number of per vm
-    :param item: vm pcpu_id item in xml
+    :param : vm cpu_affinity item in xml
     :return: error informations
     """
     err_dic = {}
@@ -347,37 +347,46 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
     if cpu_sharing == "SCHED_NOOP":
         cpu_sharing_enabled = False
 
-    cpu_affinity = common.get_leaf_tag_map(config_file, "cpu_affinity", "pcpu_id")
-    for vm_i in id_cpus_per_vm_dic.keys():
-        for cpu in id_cpus_per_vm_dic[vm_i]:
-            if cpu is not None and cpu in use_cpus and not cpu_sharing_enabled:
-                key = "vm:id={},{}".format(vm_i, item)
-                err_dic[key] = "The same pcpu was configurated in <pcpu_id>/<cpu_affinity>, but CPU sharing is disabled by 'SCHED_NOOP'. Please re-configurate them!"
-                return err_dic
-            else:
-                use_cpus.append(cpu)
+    # validate cpu_affinity config with scenario file
+    scenario_cpu_aff = common.get_leaf_tag_map(scenario_file, "cpu_affinity", "pcpu_id")
+    for vm_id, cpu_ids in cpu_affinity.items():
+        for vm_cpu in cpu_ids:
+            if vm_cpu not in scenario_cpu_aff[vm_id]:
+                key = "vm:id={},{}".format(vm_id, 'pcpu_id')
+                err_dic[key] = "This pCPU is not included in this VM's allowed CPU pool. Please update your scenario file accordingly or remove it from this list."
+
+    if err_dic:
+        return err_dic
+
+    for vm_i,cpu in cpu_affinity.items():
+        if cpu is not None and cpu in use_cpus and not cpu_sharing_enabled:
+            key = "vm:id={},{}".format(vm_i, 'pcpu_id')
+            err_dic[key] = "The same pCPU was configured in <pcpu_id>/<cpu_affinity>, but CPU sharing is disabled by 'SCHED_NOOP'. Please enable CPU sharing or update your CPU affinity configuration."
+            return err_dic
+        else:
+            use_cpus.append(cpu)
 
     sos_vm_cpus = []
     pre_launch_cpus = []
     post_launch_cpus = []
     for vm_i, vm_type in common.VM_TYPES.items():
-        if vm_i not in id_cpus_per_vm_dic.keys():
+        if vm_i not in cpu_affinity.keys():
             continue
         elif VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
-            cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
+            cpus = [x for x in cpu_affinity[vm_i] if not None]
             pre_launch_cpus.extend(cpus)
         elif VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
-            cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
+            cpus = [x for x in cpu_affinity[vm_i] if not None]
             post_launch_cpus.extend(cpus)
         elif VM_DB[vm_type]['load_type'] == "SERVICE_VM":
-            cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
+            cpus = [x for x in cpu_affinity[vm_i] if not None]
             sos_vm_cpus.extend(cpus)
 
         # duplicate cpus assign the same VM check
-        cpus_vm_i = id_cpus_per_vm_dic[vm_i]
+        cpus_vm_i = cpu_affinity[vm_i]
         for cpu_id in cpus_vm_i:
             if cpus_vm_i.count(cpu_id) >= 2:
-                key = "vm:id={},{}".format(vm_i, item)
+                key = "vm:id={},{}".format(vm_i, 'pcpu_id')
                 err_dic[key] = "VM should not use the same pcpu id:{}".format(cpu_id)
                 return err_dic
 

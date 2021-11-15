@@ -6,11 +6,11 @@ Acrnlog
 Description
 ***********
 
-``acrnlog`` is a userland tool used to capture a ACRN hypervisor log. It runs as an
-SOS service at boot, capturing two kinds of logs:
+``acrnlog`` is a userland tool used to capture an ACRN hypervisor log. It runs
+as a Service VM service at boot, capturing two kinds of logs:
 
 - log of the currently running hypervisor
-- log of last running hypervisor if it crashed and the logs remain.
+- log of the last running hypervisor if it crashed and the logs remain
 
 Log files are saved in ``/tmp/acrnlog/``, so the log files would be lost
 after a system reset.
@@ -42,17 +42,23 @@ steps:
 
    .. code-block:: none
 
-      # systemctl disable acrnlog
+      sudo systemctl disable acrnlog
 
 2. Restart ``acrnlog``, running in the background, and specify the new
    number of log files and their size (in MB).  For example:
 
    .. code-block:: none
 
-      # acrnlog -n 8 -s 4 &
+      sudo acrnlog -n 8 -s 4 &
 
-You can use ``loglevel`` command in the hypervisor shell (not the Service
-OS shell) to query and change the hypervisor log level.
+You can use the ``loglevel`` command in the hypervisor shell (not the Service
+VM shell) to query or dynamically override the hypervisor log level
+configuration settings made in the ACRN Configurator tool to the
+:option:`hv.DEBUG_OPTIONS.MEM_LOGLEVEL`,
+:option:`hv.DEBUG_OPTIONS.CONSOLE_LOGLEVEL`, and
+:option:`hv.DEBUG_OPTIONS.NPK_LOGLEVEL` options.  If the
+system is rebooted, these log level settings will return to the
+values set by the ACRN Configurator.
 
 The ``mem_loglevel`` parameter controls the log to be saved using
 ``acrnlog``, while the ``console_loglevel`` parameter controls the log
@@ -71,7 +77,7 @@ can use these commands:
 Permanent Log File Changes
 ==========================
 
-You can also permanently change the log file settings by
+You can permanently change the log file settings by
 editing ``/usr/lib/systemd/system/acrnlog.service`` and use the ``-n``
 and ``-s`` options on the ``ExecStart`` cmd, and restart the service.
 For example, ``acrnlog.service`` could have these parameters added:
@@ -84,22 +90,22 @@ and then restart the service with:
 
 .. code-block:: none
 
-   # systemctl daemon-reload
-   # systemctl restart acrnlog
+   sudo systemctl daemon-reload
+   sudo systemctl restart acrnlog
 
 Build and Install
 *****************
 
-Source code for the ``acrnlog`` tools is in the ``tools/acrnlog``
-folder.  Build and install the tools from source using:
+Source code for the ``acrnlog`` tool is in the ``misc/debug_tools/acrn_log``
+directory.  To build and install the tool from source, run these commands:
 
 .. code-block:: none
 
-   # make
-   # make install
+   make
+   sudo make install
 
-and if you changed the ``acrnlog.service`` file, install it using:
+and if you changed the ``acrnlog.service`` file, install it:
 
 .. code-block:: none
 
-   # cp acrnlog.service /usr/lib/systemd/system/
+   sudo cp acrnlog.service /usr/lib/systemd/system/

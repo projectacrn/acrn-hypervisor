@@ -104,7 +104,7 @@ Refer to the `VT-d spec`_ for more details on device-to-domain
 mapping structures.
 
 .. _VT-d spec:
-   https://software.intel.com/content/www/us/en/develop/download/intel-virtualization-technology-for-directed-io-architecture-specification.html
+   https://cdrdv2.intel.com/v1/dl/getContent/671081
 
 Address Translation Structures
 ==============================

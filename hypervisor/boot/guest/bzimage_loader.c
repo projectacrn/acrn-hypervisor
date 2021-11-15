@@ -18,30 +18,30 @@
 
 #define DBG_LEVEL_VM_BZIMAGE	6U
 
-/* Define a 32KB memory block to store LaaG VM load params in guest address space
+/* Define a memory block to store LaaG VM load params in guest address space
  * The params including:
  *	Init GDT entries : 1KB (must be 8byte aligned)
  *	Linux Zeropage : 4KB
  *	Boot cmdline : 2KB
- *	EFI memory map : 12KB
+ *	EFI memory map : MAX_EFI_MMAP_ENTRIES * sizeof(struct efi_memory_desc)
  *	Reserved region for trampoline code : 8KB
- * Each param should keep 8byte aligned and the total region size should be less than 32KB
- * so that it could be put below MEM_1M.
+ * Each param should keep 8byte aligned and the total region should be able to put below MEM_1M.
  * Please note in Linux VM, the last 8KB space below MEM_1M is for trampoline code. The block
- * should be able to accommodate it and so that avoid the trampoline corruption.
+ * should be able to accommodate it so that avoid the trampoline corruption. So the params size is:
+ * (MEM_1K + MEM_4K + MEM_2K + 40B * MAX_EFI_MMAP_ENTRIES + MEM_8K)
  */
-#define BZIMG_LOAD_PARAMS_SIZE			(MEM_4K * 8)
-#define BZIMG_INITGDT_GPA(load_params_gpa)	(load_params_gpa + 0UL)
-#define BZIMG_ZEROPAGE_GPA(load_params_gpa)	(load_params_gpa + MEM_1K)
-#define BZIMG_CMDLINE_GPA(load_params_gpa)	(load_params_gpa + MEM_1K + MEM_4K)
-#define BZIMG_EFIMMAP_GPA(load_params_gpa)	(load_params_gpa + MEM_1K + MEM_4K + MEM_2K)
+#define BZIMG_LOAD_PARAMS_SIZE			(MEM_1K * 15U + MAX_EFI_MMAP_ENTRIES * sizeof(struct efi_memory_desc))
+#define BZIMG_INITGDT_GPA(load_params_gpa)	((load_params_gpa) + 0UL)
+#define BZIMG_ZEROPAGE_GPA(load_params_gpa)	((load_params_gpa) + MEM_1K)
+#define BZIMG_CMDLINE_GPA(load_params_gpa)	((load_params_gpa) + MEM_1K + MEM_4K)
+#define BZIMG_EFIMMAP_GPA(load_params_gpa)	((load_params_gpa) + MEM_1K + MEM_4K + MEM_2K)
 
 /* TODO:
  * The value is referenced from Linux boot protocal for old kernels,
  * but this should be configurable for different OS. */
 #define DEFAULT_RAMDISK_GPA_MAX		0x37ffffffUL
 
-#define PRE_VM_MAX_RAM_ADDR_BELOW_4GB		(VIRT_ACPI_DATA_ADDR - 1U)
+#define PRE_VM_MAX_RAM_ADDR_BELOW_4GB		(VIRT_ACPI_DATA_ADDR - 1UL)
 
 static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 {
@@ -190,7 +190,7 @@ static uint16_t create_service_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_m
 	uint16_t i, desc_idx = 0U;
 	const struct efi_memory_desc *hv_efi_mmap_desc = get_efi_mmap_entry();
 
-	for (i = 0U; i < get_efi_mmap_entries_count(); i++) {
+	for (i = 0U; i < (uint16_t)get_efi_mmap_entries_count(); i++) {
 		/* Below efi mmap desc types in native should be kept as original for Service VM */
 		if ((hv_efi_mmap_desc[i].type == EFI_RESERVED_MEMORYTYPE)
 				|| (hv_efi_mmap_desc[i].type == EFI_UNUSABLE_MEMORY)
@@ -210,7 +210,7 @@ static uint16_t create_service_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_m
 		}
 	}
 
-	for (i = 0U; i < vm->e820_entry_num; i++) {
+	for (i = 0U; i < (uint16_t)vm->e820_entry_num; i++) {
 		/* The memory region with e820 type of RAM could be acted as EFI_CONVENTIONAL_MEMORY
 		 * for Service VM, the region which occupied by HV and pre-launched VM has been filtered
 		 * already, so it is safe for Service VM.

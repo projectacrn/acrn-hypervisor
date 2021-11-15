@@ -72,7 +72,7 @@ static int32_t init_vm_kernel_info(struct acrn_vm *vm, const struct abi_module *
 }
 
 /* cmdline parsed from abi module string, for pre-launched VMs and Service VM only. */
-static char mod_cmdline[PRE_VM_NUM + SERVICE_VM_NUM][MAX_BOOTARGS_SIZE] = { '\0' };
+static char mod_cmdline[PRE_VM_NUM + SERVICE_VM_NUM][MAX_BOOTARGS_SIZE] = { 0 };
 
 /**
  * @pre vm != NULL && abi != NULL
@@ -126,7 +126,7 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
  */
 struct abi_module *get_mod_by_tag(const struct acrn_boot_info *abi, const char *tag)
 {
-	uint8_t i;
+	uint32_t i;
 	struct abi_module *mod = NULL;
 	struct abi_module *mods = (struct abi_module *)(&abi->mods[0]);
 	uint32_t tag_len = strnlen_s(tag, MAX_MOD_TAG_LEN);

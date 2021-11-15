@@ -74,7 +74,7 @@ static uint64_t	cr4_trap_and_passthru_mask = CR4_TRAP_AND_PASSTHRU_BITS; /* boun
 #define CR4_EMRSV_BITS_PHYS_VALUE	CR4_VMXE
 
 /* The CR4 value guest expected to see for bits of CR4_EMULATED_RESERVE_BITS */
-#define CR4_EMRSV_BITS_VIRT_VALUE	0
+#define CR4_EMRSV_BITS_VIRT_VALUE	0UL
 static uint64_t cr4_rsv_bits_guest_value;
 
 /*

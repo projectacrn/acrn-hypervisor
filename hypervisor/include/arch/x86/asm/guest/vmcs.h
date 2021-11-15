@@ -8,7 +8,7 @@
 #define VMCS_H_
 
 #define VM_SUCCESS	0
-#define VM_FAIL		-1
+#define VM_FAIL		(-1)
 
 #ifndef ASSEMBLER
 #include <types.h>
@@ -41,7 +41,7 @@ static inline uint64_t apic_access_offset(uint64_t qual)
 	return (qual & APIC_ACCESS_OFFSET);
 }
 
-static inline void clear_vmcs_bit(uint32_t vmcs_field, uint32_t bit)
+static inline void clear_vmcs_bit(uint32_t vmcs_field, uint64_t bit)
 {
 	uint64_t val64;
 
@@ -50,7 +50,7 @@ static inline void clear_vmcs_bit(uint32_t vmcs_field, uint32_t bit)
 	exec_vmwrite(vmcs_field, val64);
 }
 
-static inline void set_vmcs_bit(uint32_t vmcs_field, uint32_t bit)
+static inline void set_vmcs_bit(uint32_t vmcs_field, uint64_t bit)
 {
 	uint64_t val64;
 

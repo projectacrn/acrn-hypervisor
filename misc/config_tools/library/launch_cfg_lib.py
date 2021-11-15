@@ -433,6 +433,19 @@ def get_slot(bdf_list, dev):
     return slot_list
 
 
+def reset_pt_slot():
+
+    global PT_SLOT
+
+    PT_SLOT = {
+        "hostbridge":0,
+        "lpc":1,
+        "pci-gvt":2,
+        "virtio-blk":3,
+        "igd-lpc":31,
+    }
+
+
 def get_pt_dev():
     """ Get passthrough device list """
     cap_pt = PASSTHRU_DEVS

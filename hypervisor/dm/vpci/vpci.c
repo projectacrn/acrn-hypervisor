@@ -119,15 +119,15 @@ static bool vpci_pio_cfgdata_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t 
 	struct acrn_vpci *vpci = &vm->vpci;
 	union pci_cfg_addr_reg cfg_addr;
 	union pci_bdf bdf;
-	uint16_t offset = addr - PCI_CONFIG_DATA;
 	uint32_t val = ~0U;
 	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
 	if (cfg_addr.bits.enable != 0U) {
-		if (pci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
+		uint32_t offset = (uint16_t)cfg_addr.bits.reg_num + (addr - PCI_CONFIG_DATA);
+		if (pci_is_valid_access(offset, bytes)) {
 			bdf.value = cfg_addr.bits.bdf;
-			ret = vpci_read_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, &val);
+			ret = vpci_read_cfg(vpci, bdf, offset, bytes, &val);
 		}
 	}
 
@@ -152,13 +152,13 @@ static bool vpci_pio_cfgdata_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 	struct acrn_vpci *vpci = &vm->vpci;
 	union pci_cfg_addr_reg cfg_addr;
 	union pci_bdf bdf;
-	uint16_t offset = addr - PCI_CONFIG_DATA;
 
 	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
 	if (cfg_addr.bits.enable != 0U) {
-		if (pci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
+		uint32_t offset = (uint16_t)cfg_addr.bits.reg_num + (addr - PCI_CONFIG_DATA);
+		if (pci_is_valid_access(offset, bytes)) {
 			bdf.value = cfg_addr.bits.bdf;
-			ret = vpci_write_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, val);
+			ret = vpci_write_cfg(vpci, bdf, offset, bytes, val);
 		}
 	}
 
@@ -494,8 +494,7 @@ static void write_cfg_header(struct pci_vdev *vdev,
 		 * even this PCI device has no INTx, so emulate INTx Line Register as writable.
 		 */
 		if (offset == PCIR_INTERRUPT_LINE) {
-			val &= 0xfU;
-			pci_vdev_write_vcfg(vdev, offset, bytes, val);
+			pci_vdev_write_vcfg(vdev, offset, bytes, (val & 0xfU));
 		}
 
 	}
@@ -673,7 +672,7 @@ struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_c
  */
 static int32_t vpci_init_vdevs(struct acrn_vm *vm)
 {
-	uint32_t idx;
+	uint16_t idx;
 	struct acrn_vpci *vpci = &(vm->vpci);
 	const struct acrn_vm_config *vm_config = get_vm_config(vpci2vm(vpci)->vm_id);
 	int32_t ret = 0;
@@ -844,7 +843,7 @@ uint32_t vpci_add_capability(struct pci_vdev *vdev, uint8_t *capdata, uint8_t ca
 #define CAP_START_OFFSET PCI_CFG_HEADER_LENGTH
 
 	uint8_t capoff, reallen;
-	uint16_t sts;
+	uint32_t sts;
 	uint32_t ret = 0U;
 
 	reallen = roundup(caplen, 4U); /* dword aligned */
