@@ -18,6 +18,6 @@
 [0004]              Asl Compiler ID : "INTL"
 [0004]        Asl Compiler Revision : 20190703
 
-[0008]       ACPI Table Address   0 : 000000007FF00100
-[0008]       ACPI Table Address   1 : 000000007FF00440
-[0008]       ACPI Table Address   2 : 000000007FF00480
+[0008]       ACPI Table Address   0 : 000000007FE00100
+[0008]       ACPI Table Address   1 : 000000007FE00BC0
+[0008]       ACPI Table Address   2 : 000000007FE00C00

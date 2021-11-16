@@ -1,164 +1,201 @@
 /*
- * Copyright (C) 2021 Intel Corporation. All rights reserved.
+ * Copyright (C) 2021 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
+
 #include <asm/vm_config.h>
 #include <vuart.h>
 #include <asm/pci_dev.h>
+#include <asm/pgtable.h>
+#include <schedule.h>
 
 extern struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
-
-extern struct pt_intx_config vm0_pt_intx[1U];
-
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
-	{	/* VM0 */
-		CONFIG_SOS_VM,
-		.name = "ACRN SOS VM",
-
-		/* Allow SOS to reboot the host since there is supposed to be the highest severity guest */
-		.guest_flags = 0UL,
-#ifdef CONFIG_RDT_ENABLED
-		.clos = VM0_VCPU_CLOS,
-#endif
-		.cpu_affinity = SOS_VM_CONFIG_CPU_AFFINITY,
-		.memory = {
-			.start_hpa = 0UL,
-		},
-		.os_config = {
-			.name = "ACRN Service OS",
-			.kernel_type = KERNEL_BZIMAGE,
-			.kernel_mod_tag = "Linux_bzImage",
-			.bootargs = SOS_VM_BOOTARGS,
-		},
-		.vuart[0] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = SOS_COM1_BASE,
-			.irq = SOS_COM1_IRQ,
-		},
-		.vuart[1] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = SOS_COM2_BASE,
-			.irq = SOS_COM2_IRQ,
-			.t_vuart.vm_id = 2U,
-			.t_vuart.vuart_id = 1U,
-		},
+	{
+		/* Static configured VM0 */
+		CONFIG_SERVICE_VM,
+		.name = "ACRN_Service_VM",
+		/* Allow Service VM to reboot the system since it is the highest priority VM. */
+		.vm_prio = PRIO_LOW,
+		.guest_flags = GUEST_FLAG_STATIC_VM,
+		.cpu_affinity = SERVICE_VM_CONFIG_CPU_AFFINITY,
+		.memory =
+			{
+				.start_hpa = 0UL,
+			},
+		.os_config =
+			{
+				.name = "ACRN Service OS",
+				.kernel_type = KERNEL_BZIMAGE,
+				.kernel_mod_tag = "Linux_bzImage",
+				.ramdisk_mod_tag = "",
+				.bootargs = SERVICE_VM_OS_BOOTARGS,
+			},
+		.vuart[0] =
+			{
+				.type = VUART_LEGACY_PIO,
+				.addr.port_base = 0x3F8U,
+				.irq = 4U,
+			},
+		.vuart[1] =
+			{
+				.type = VUART_LEGACY_PIO,
+				.addr.port_base = 0x2F8U,
+				.irq = 3U,
+				.t_vuart.vm_id = 2U,
+				.t_vuart.vuart_id = 1U,
+			},
 		.pci_dev_num = 0U,
 		.pci_devs = sos_pci_devs,
 	},
-	{	/* VM1 */
-		CONFIG_POST_STD_VM(1),
-#ifdef CONFIG_RDT_ENABLED
-		.clos = VM1_VCPU_CLOS,
-#endif
+	{
+		/* Static configured VM1 */
+		CONFIG_POST_STD_VM,
+		.name = "POST_STD_VM1",
+		.vm_prio = PRIO_LOW,
+		.guest_flags = GUEST_FLAG_STATIC_VM,
 		.cpu_affinity = VM1_CONFIG_CPU_AFFINITY,
-		.vuart[0] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = COM1_BASE,
-			.irq = COM1_IRQ,
-		},
-		.vuart[1] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
-		},
+		.vuart[0] =
+			{
+				.type = VUART_LEGACY_PIO,
+				.addr.port_base = 0x3F8U,
+				.irq = 4U,
+			},
+		.vuart[1] =
+			{
+				.type = VUART_LEGACY_PIO,
+			},
 	},
-	{	/* VM2 */
-		CONFIG_POST_RT_VM(1),
-#ifdef CONFIG_RDT_ENABLED
-		.clos = VM2_VCPU_CLOS,
-#endif
+	{
+		/* Static configured VM2 */
+		CONFIG_POST_RT_VM,
+		.name = "POST_RT_VM1",
+		.vm_prio = PRIO_LOW,
+		.guest_flags = (GUEST_FLAG_STATIC_VM | GUEST_FLAG_LAPIC_PASSTHROUGH | GUEST_FLAG_RT),
 		.cpu_affinity = VM2_CONFIG_CPU_AFFINITY,
-		.vuart[0] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = COM1_BASE,
-			.irq = COM1_IRQ,
-		},
-		.vuart[1] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = COM2_BASE,
-			.irq = COM2_IRQ,
-			.t_vuart.vm_id = 0U,
-			.t_vuart.vuart_id = 1U,
-		},
+		.vuart[0] =
+			{
+				.type = VUART_LEGACY_PIO,
+				.addr.port_base = 0x3F8U,
+				.irq = 4U,
+			},
+		.vuart[1] =
+			{
+				.type = VUART_LEGACY_PIO,
+				.addr.port_base = 0x2F8U,
+				.irq = 3U,
+				.t_vuart.vm_id = 0U,
+				.t_vuart.vuart_id = 1U,
+			},
 	},
-	{	/* VM3 */
-		CONFIG_POST_STD_VM(2),
-#ifdef CONFIG_RDT_ENABLED
-		.clos = VM3_VCPU_CLOS,
-#endif
+	{
+		/* Static configured VM3 */
+		CONFIG_POST_STD_VM,
+		.name = "POST_STD_VM2",
+		.vm_prio = PRIO_LOW,
+		.guest_flags = GUEST_FLAG_STATIC_VM,
 		.cpu_affinity = VM3_CONFIG_CPU_AFFINITY,
-		.vuart[0] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = COM1_BASE,
-			.irq = COM1_IRQ,
-		},
-		.vuart[1] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
-		},
+		.vuart[0] =
+			{
+				.type = VUART_LEGACY_PIO,
+				.addr.port_base = 0x3F8U,
+				.irq = 4U,
+			},
+		.vuart[1] =
+			{
+				.type = VUART_LEGACY_PIO,
+			},
 	},
-	{	/* VM4 */
-		CONFIG_POST_STD_VM(3),
-#ifdef CONFIG_RDT_ENABLED
-		.clos = VM4_VCPU_CLOS,
-#endif
+	{
+		/* Static configured VM4 */
+		CONFIG_POST_STD_VM,
+		.name = "POST_STD_VM3",
+		.vm_prio = PRIO_LOW,
+		.guest_flags = GUEST_FLAG_STATIC_VM,
 		.cpu_affinity = VM4_CONFIG_CPU_AFFINITY,
-		.vuart[0] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = COM1_BASE,
-			.irq = COM1_IRQ,
-		},
-		.vuart[1] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
-		},
+		.vuart[0] =
+			{
+				.type = VUART_LEGACY_PIO,
+				.addr.port_base = 0x3F8U,
+				.irq = 4U,
+			},
+		.vuart[1] =
+			{
+				.type = VUART_LEGACY_PIO,
+			},
 	},
-	{	/* VM5 */
-		CONFIG_POST_STD_VM(4),
-#ifdef CONFIG_RDT_ENABLED
-		.clos = VM5_VCPU_CLOS,
-#endif
+	{
+		/* Static configured VM5 */
+		CONFIG_POST_STD_VM,
+		.name = "POST_STD_VM4",
+		.vm_prio = PRIO_LOW,
+		.guest_flags = GUEST_FLAG_STATIC_VM,
 		.cpu_affinity = VM5_CONFIG_CPU_AFFINITY,
-		.vuart[0] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = COM1_BASE,
-			.irq = COM1_IRQ,
-		},
-		.vuart[1] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
-		},
+		.vuart[0] =
+			{
+				.type = VUART_LEGACY_PIO,
+				.addr.port_base = 0x3F8U,
+				.irq = 4U,
+			},
+		.vuart[1] =
+			{
+				.type = VUART_LEGACY_PIO,
+			},
 	},
-	{	/* VM6 */
-		CONFIG_POST_STD_VM(5),
-#ifdef CONFIG_RDT_ENABLED
-		.clos = VM6_VCPU_CLOS,
-#endif
+	{
+		/* Static configured VM6 */
+		CONFIG_POST_STD_VM,
+		.name = "POST_STD_VM5",
+		.vm_prio = PRIO_LOW,
+		.guest_flags = GUEST_FLAG_STATIC_VM,
 		.cpu_affinity = VM6_CONFIG_CPU_AFFINITY,
-		.vuart[0] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = COM1_BASE,
-			.irq = COM1_IRQ,
-		},
-		.vuart[1] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
-		},
+		.vuart[0] =
+			{
+				.type = VUART_LEGACY_PIO,
+				.addr.port_base = 0x3F8U,
+				.irq = 4U,
+			},
+		.vuart[1] =
+			{
+				.type = VUART_LEGACY_PIO,
+			},
 	},
-	{	/* VM7 */
-		CONFIG_KATA_VM(1),
-#ifdef CONFIG_RDT_ENABLED
-		.clos = VM7_VCPU_CLOS,
-#endif
-		.cpu_affinity = VM7_CONFIG_CPU_AFFINITY,
-		.vuart[0] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
-			.irq = COM1_IRQ,
-		},
-		.vuart[1] = {
-			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
-		},
+	{
+		/* Dynamic configured  VM7 */
+		CONFIG_POST_STD_VM,
 	},
+	{
+		/* Dynamic configured  VM8 */
+		CONFIG_POST_STD_VM,
+	},
+	{
+		/* Dynamic configured  VM9 */
+		CONFIG_POST_STD_VM,
+	},
+	{
+		/* Dynamic configured  VM10 */
+		CONFIG_POST_STD_VM,
+	},
+	{
+		/* Dynamic configured  VM11 */
+		CONFIG_POST_STD_VM,
+	},
+	{
+		/* Dynamic configured  VM12 */
+		CONFIG_POST_STD_VM,
+	},
+	{
+		/* Dynamic configured  VM13 */
+		CONFIG_POST_STD_VM,
+	},
+	{
+		/* Dynamic configured  VM14 */
+		CONFIG_POST_STD_VM,
+	},
+	{
+		/* Dynamic configured  VM15 */
+		CONFIG_POST_STD_VM,
+	}
+
 };

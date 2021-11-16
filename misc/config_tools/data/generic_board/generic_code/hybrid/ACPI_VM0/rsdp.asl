@@ -11,6 +11,6 @@
 [0001]                           Revision : 02
 [0004]                       RSDT Address : 0000000000000000
 [0004]                             Length : 00000024
-[0008]                       XSDT Address : 000000007FF00080
+[0008]                       XSDT Address : 000000007FE00080
 [0001]                  Extended Checksum : DC
 [0003]                           Reserved : 000000
