@@ -210,7 +210,7 @@ vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 
 	/* command line arguments specified CPU affinity could overwrite HV's static configuration */
 	create_vm.cpu_affinity = cpu_affinity_bitmap;
-	strncpy((char *)create_vm.name, name, strnlen(name, MAX_VMNAME_LEN));
+	strncpy((char *)create_vm.name, name, strnlen(name, MAX_VM_NAME_LEN));
 
 	if (is_rtvm) {
 		create_vm.vm_flag |= GUEST_FLAG_RT;
