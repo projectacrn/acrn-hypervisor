@@ -259,6 +259,7 @@ int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint6
 		if (is_poweroff_vm(get_vm_from_vmid(vmid))) {
 
 			/* Filter out the bits should not set by DM and then assign it to guest_flags */
+			vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
 			vm_config->guest_flags |= (cv.vm_flag & DM_OWNED_GUEST_FLAG_MASK);
 
 			/* post-launched VM is allowed to choose pCPUs from vm_config->cpu_affinity only */
@@ -298,9 +299,8 @@ int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint6
 
 	}
 
-	if (((ret != 0) || (cv.vmid == ACRN_INVALID_VMID))
-			&& (vm_config->guest_flags & GUEST_FLAG_DYN_VM_CFG) != 0UL) {
-		memset(vm_config, 0U, sizeof(struct acrn_vm_config));
+	if (((ret != 0) || (cv.vmid == ACRN_INVALID_VMID)) && (!is_static_configured_vm(target_vm))) {
+		memset(vm_config->name, 0U, MAX_VM_NAME_LEN);
 	}
 
 	return ret;

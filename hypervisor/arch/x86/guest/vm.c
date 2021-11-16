@@ -57,20 +57,30 @@ void *get_sworld_memory_base(void)
 	return post_user_vm_sworld_memory;
 }
 
-uint16_t get_vmid_by_name(const char *name)
+uint16_t get_unused_vmid(void)
 {
-	uint16_t vm_id = ACRN_INVALID_VMID;
-	uint16_t matched_cnt = 0;
+	uint16_t vm_id;
+	struct acrn_vm_config *vm_config;
 
-	/* check if there are duplicate VM names in vm configurations */
-	for (uint16_t idx = 0U; idx < CONFIG_MAX_VM_NUM; idx++) {
-		if ((*name != '\0') && vm_has_matched_name(idx, name)) {
-			matched_cnt++;
-			vm_id = (matched_cnt > 1) ? (ACRN_INVALID_VMID) : (idx);
+	for (vm_id = 0; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm_config = get_vm_config(vm_id);
+		if ((vm_config->name[0] == '\0') && ((vm_config->guest_flags & GUEST_FLAG_STATIC_VM) == 0U)) {
+			break;
 		}
 	}
+	return (vm_id < CONFIG_MAX_VM_NUM) ? (vm_id) : (ACRN_INVALID_VMID);
+}
 
-	return vm_id;
+uint16_t get_vmid_by_name(const char *name)
+{
+	uint16_t vm_id;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		if ((*name != '\0') && vm_has_matched_name(vm_id, name)) {
+			break;
+		}
+	}
+	return (vm_id < CONFIG_MAX_VM_NUM) ? (vm_id) : (ACRN_INVALID_VMID);
 }
 
 /**
@@ -162,6 +172,16 @@ bool is_vcat_configured(const struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	return ((vm_config->guest_flags & GUEST_FLAG_VCAT_ENABLED) != 0U);
+}
+
+/**
+ * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
+ */
+bool is_static_configured_vm(const struct acrn_vm *vm)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	return ((vm_config->guest_flags & GUEST_FLAG_STATIC_VM) != 0U);
 }
 
 /**
@@ -792,8 +812,8 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	/* after guest_flags not used, then clear it */
 	vm_config = get_vm_config(vm->vm_id);
 	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
-	if ((vm_config->guest_flags & GUEST_FLAG_DYN_VM_CFG) != 0UL) {
-		memset(vm_config, 0U, sizeof(struct acrn_vm_config));
+	if (!is_static_configured_vm(vm)) {
+		memset(vm_config->name, 0U, MAX_VM_NAME_LEN);
 	}
 
 	if (is_ready_for_system_shutdown()) {
@@ -935,12 +955,11 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 #ifdef CONFIG_SECURITY_VM_FIXUP
 	security_vm_fixup(vm_id);
 #endif
-	if (get_vmid_by_name(vm_config->name) == ACRN_INVALID_VMID) {
+	if (get_vmid_by_name(vm_config->name) != vm_id) {
 		pr_err("Invalid VM name: %s", vm_config->name);
 		err = -1;
-	}
-	/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
-	if (err == 0) {
+	} else {
+		/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
 		err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
 	}
 
