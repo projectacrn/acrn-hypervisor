@@ -32,8 +32,7 @@
 #include <stdbool.h>
 #include "types.h"
 #include "dm_string.h"
-
-#define MAX_VMNAME_LEN	16U
+#include "acrn_common.h"
 
 struct vmctx;
 extern uint8_t trusty_enabled;

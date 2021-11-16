@@ -1007,8 +1007,8 @@ main(int argc, char *argv[])
 
 	vmname = argv[0];
 
-	if (strnlen(vmname, MAX_VMNAME_LEN) >= MAX_VMNAME_LEN) {
-		pr_err("The name of the VM exceeds the maximum length: %u\n", MAX_VMNAME_LEN - 1);
+	if (strnlen(vmname, MAX_VM_NAME_LEN) >= MAX_VM_NAME_LEN) {
+		pr_err("The name of the VM exceeds the maximum length: %u\n", MAX_VM_NAME_LEN - 1);
 		exit(1);
 	}
 
