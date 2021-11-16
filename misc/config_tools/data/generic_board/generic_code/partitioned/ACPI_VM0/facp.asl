@@ -19,7 +19,7 @@
 [0004]            Asl Compiler Revision : 20190703
 
 [0004]                     FACS Address : 00000000
-[0004]                     DSDT Address : 7FF00240
+[0004]                     DSDT Address : 7FE00240
 [0001]                            Model : 00
 [0001]                       PM Profile : 00 [Unspecified]
 [0002]                    SCI Interrupt : 0000
