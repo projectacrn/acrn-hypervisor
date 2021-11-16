@@ -37,19 +37,19 @@
 #define CONFIG_SERVICE_VM	.load_order = SERVICE_VM,	\
 				.severity = SEVERITY_SERVICE_VM
 
-#define CONFIG_SAFETY_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
+#define CONFIG_SAFETY_VM	.load_order = PRE_LAUNCHED_VM,	\
 				.severity = SEVERITY_SAFETY_VM
 
-#define CONFIG_PRE_STD_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
+#define CONFIG_PRE_STD_VM	.load_order = PRE_LAUNCHED_VM,	\
 				.severity = SEVERITY_STANDARD_VM
 
-#define CONFIG_PRE_RT_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
+#define CONFIG_PRE_RT_VM	.load_order = PRE_LAUNCHED_VM,	\
 				.severity = SEVERITY_RTVM
 
-#define CONFIG_POST_STD_VM(idx)	.load_order = POST_LAUNCHED_VM,	\
+#define CONFIG_POST_STD_VM	.load_order = POST_LAUNCHED_VM,	\
 				.severity = SEVERITY_STANDARD_VM
 
-#define CONFIG_POST_RT_VM(idx)	.load_order = POST_LAUNCHED_VM,	\
+#define CONFIG_POST_RT_VM	.load_order = POST_LAUNCHED_VM,	\
 				.severity = SEVERITY_RTVM
 
 /* ACRN guest severity */
@@ -201,7 +201,6 @@ struct acrn_vm_config {
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
 uint8_t get_vm_severity(uint16_t vm_id);
 bool vm_has_matched_name(uint16_t vmid, const char *name);
-uint16_t get_unused_vmid(void);
 
 extern struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM];
 

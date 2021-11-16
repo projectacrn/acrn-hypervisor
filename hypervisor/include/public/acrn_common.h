@@ -58,7 +58,7 @@
 #define GUEST_FLAG_NVMX_ENABLED			(1UL << 5U)	/* Whether this VM supports nested virtualization */
 #define GUEST_FLAG_SECURITY_VM			(1UL << 6U)	/* Whether this VM needs to do security-vm related fixup (TPM2 and SMBIOS pt) */
 #define GUEST_FLAG_VCAT_ENABLED			(1UL << 7U)	/* Whether this VM supports vCAT */
-#define GUEST_FLAG_DYN_VM_CFG       (1UL << 8U)  /* Whether this VM uses dynamic VM configuration */
+#define GUEST_FLAG_STATIC_VM       (1UL << 8U)  /* Whether this VM uses static VM configuration */
 
 /* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
 #define VIRTUAL_SLEEP_CTL_ADDR		0x400U /* Pre-launched VM uses ACPI reduced HW mode and sleep control register */

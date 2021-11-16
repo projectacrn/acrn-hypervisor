@@ -116,9 +116,7 @@ uint16_t allocate_dynamical_vmid(struct acrn_vm_creation *cv)
 	if (vm_id != ACRN_INVALID_VMID) {
 		vm_config = get_vm_config(vm_id);
 		memcpy_s(vm_config->name, MAX_VM_NAME_LEN, cv->name, MAX_VM_NAME_LEN);
-		vm_config->guest_flags = (cv->vm_flag | GUEST_FLAG_DYN_VM_CFG);
 		vm_config->cpu_affinity = cv->cpu_affinity;
-		vm_config->load_order = POST_LAUNCHED_VM;
 	}
 	spinlock_release(&vm_id_lock);
 	return vm_id;
@@ -143,12 +141,12 @@ struct acrn_vm *parse_target_vm(struct acrn_vm *service_vm, uint64_t hcall_id, u
 			 */
 			if (vm_id == ACRN_INVALID_VMID) {
 				vm_id = allocate_dynamical_vmid(&cv);
-			}
-			/* it doesn't find the available vm_slot for the given vm_name.
-			 * Maybe the CONFIG_MAX_VM_NUM is too small to start the VM.
-			 */
-			if (vm_id == ACRN_INVALID_VMID) {
-				pr_err("The VM name provided (%s) is invalid, cannot create VM", cv.name);
+				/* it doesn't find the available vm_slot for the given vm_name.
+				 * Maybe the CONFIG_MAX_VM_NUM is too small to start the VM.
+				 */
+				if (vm_id == ACRN_INVALID_VMID) {
+					pr_err("The VM name provided (%s) is invalid, cannot create VM", cv.name);
+				}
 			}
 		}
 		break;
