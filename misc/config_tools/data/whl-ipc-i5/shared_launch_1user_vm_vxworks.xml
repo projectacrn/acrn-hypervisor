@@ -1,48 +1,48 @@
 <acrn-config board="whl-ipc-i5" scenario="shared" user_vm_launcher="1">
-	<user_vm id="1">
-		<user_vm_type desc="User VM type">VXWORKS</user_vm_type>
-		<rtos_type desc="User VM Realtime capability">Hard RT</rtos_type>
-		<mem_size desc="User VM memory size in MByte">2048</mem_size>
-		<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
-		<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-		<poweroff_channel desc="the method of power off User VM"></poweroff_channel>
-		<allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
-		<enable_ptm desc="enable ptm of User VM">n</enable_ptm>
-		<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
-		<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
-			<pcpu_id></pcpu_id>
-		</cpu_affinity>
-		<shm_regions desc="List of shared memory regions for inter-VM communication.">
-			<shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
-		</shm_regions>
-		<console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
-		<communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
-			<communication_vuart></communication_vuart>
-		</communication_vuarts>
-		<passthrough_devices>
-			<usb_xdci desc="vm usb_xdci device"></usb_xdci>
-			<audio desc="vm audio device"></audio>
-			<audio_codec desc="vm audio codec device"></audio_codec>
-			<gpu desc="vm gpu device"></gpu>
-			<ipu desc="vm ipu device"></ipu>
-			<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
-			<cse desc="vm cse device"></cse>
-			<wifi desc="vm wifi device"></wifi>
-			<bluetooth desc="vm bluetooth"></bluetooth>
-			<sd_card desc="vm sd card device"></sd_card>
-			<ethernet desc="vm ethernet device"></ethernet>
-			<sata desc="vm sata device"></sata>
-			<nvme desc="vm nvme device"></nvme>
-		</passthrough_devices>
-		<virtio_devices>
-			<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."></network>
-			<input desc="virtio input device"></input>
-			<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./VxWorks.img</block>
-			<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
-		</virtio_devices>
-		<sriov>
-			<gpu></gpu>
-			<network></network>
-		</sriov>
-	</user_vm>
+  <user_vm id="1">
+    <user_vm_type desc="User VM type">VXWORKS</user_vm_type>
+    <rtos_type desc="User VM Realtime capability">Hard RT</rtos_type>
+    <mem_size desc="User VM memory size in MByte">2048</mem_size>
+    <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
+    <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
+    <poweroff_channel desc="the method of power off User VM"/>
+    <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
+    <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
+    <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"/>
+    <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
+      <pcpu_id/>
+    </cpu_affinity>
+    <shm_regions desc="List of shared memory regions for inter-VM communication.">
+      <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"/>
+    </shm_regions>
+    <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
+    <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
+      <communication_vuart/>
+    </communication_vuarts>
+    <passthrough_devices>
+      <usb_xdci desc="vm usb_xdci device"/>
+      <audio desc="vm audio device"/>
+      <audio_codec desc="vm audio codec device"/>
+      <gpu desc="vm gpu device"/>
+      <ipu desc="vm ipu device"/>
+      <ipu_i2c desc="vm ipu_i2c device"/>
+      <cse desc="vm cse device"/>
+      <wifi desc="vm wifi device"/>
+      <bluetooth desc="vm bluetooth"/>
+      <sd_card desc="vm sd card device"/>
+      <ethernet desc="vm ethernet device"/>
+      <sata desc="vm sata device"/>
+      <nvme desc="vm nvme device"/>
+    </passthrough_devices>
+    <virtio_devices>
+      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."/>
+      <input desc="virtio input device"/>
+      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./VxWorks.img</block>
+      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+    </virtio_devices>
+    <sriov>
+      <gpu/>
+      <network/>
+    </sriov>
+  </user_vm>
 </acrn-config>
