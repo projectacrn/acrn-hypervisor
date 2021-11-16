@@ -37,7 +37,7 @@
       <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
       <IVSHMEM>
         <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
-        <IVSHMEM_REGION></IVSHMEM_REGION>
+        <IVSHMEM_REGION/>
       </IVSHMEM>
     </FEATURES>
     <MEMORY>
@@ -114,7 +114,7 @@
     <pci_devs>
       <pci_dev>00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</pci_dev>
       <pci_dev>58:00.0 Ethernet controller: Intel Corporation Device 15f2 (rev 03)</pci_dev>
-      <pci_dev></pci_dev>
+      <pci_dev/>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>
@@ -175,7 +175,7 @@
     </communication_vuart>
     <pci_devs>
       <pci_dev>00:14.0 USB controller: Intel Corporation Device a0ed (rev 20)</pci_dev>
-      <pci_dev></pci_dev>
+      <pci_dev/>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>
