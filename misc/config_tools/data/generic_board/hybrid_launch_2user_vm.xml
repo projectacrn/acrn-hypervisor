@@ -1,6 +1,7 @@
 <acrn-config board="generic_board" scenario="hybrid" user_vm_launcher="2">
   <user_vm id="1">
     <user_vm_type desc="User VM type">WINDOWS</user_vm_type>
+    <vm_name>POST_STD_VM1</vm_name>
     <rtos_type desc="User VM Realtime capability">no</rtos_type>
     <mem_size desc="User VM memory size in MByte">4096</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
@@ -47,6 +48,7 @@
   </user_vm>
   <user_vm id="2">
     <user_vm_type desc="User VM type">YOCTO</user_vm_type>
+    <vm_name>POST_STD_VM2</vm_name>
     <rtos_type desc="User VM Realtime capability">no</rtos_type>
     <mem_size desc="User VM memory size in MByte">512</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
