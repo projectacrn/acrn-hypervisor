@@ -117,6 +117,11 @@ int parse_madt(void)
 	}
 
 	madt = (struct acpi_table_madt *)malloc(file_state.st_size);
+	if (madt == NULL) {
+		pr_err("Failed to malloc %d bytes for MADT!\n", file_state.st_size);
+		close(fd);
+		return -1;
+	}
 	size = read(fd, madt, file_state.st_size);
 	if (size == file_state.st_size) {
 		ret = local_parse_madt(madt);
