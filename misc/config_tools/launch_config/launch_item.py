@@ -20,6 +20,7 @@ class AcrnDmArgs:
     def get_args(self):
         self.args["user_vm_type"] = common.get_leaf_tag_map(self.launch_info, "user_vm_type")
         self.args["rtos_type"] = common.get_leaf_tag_map(self.launch_info, "rtos_type")
+        self.args['vm_name'] = common.get_leaf_tag_map(self.launch_info, 'vm_name')
         self.args["mem_size"] = common.get_leaf_tag_map(self.launch_info, "mem_size")
         self.args["vbootloader"] = common.get_leaf_tag_map(self.launch_info, "vbootloader")
         self.args["vuart0"] = common.get_leaf_tag_map(self.launch_info, "vuart0")
@@ -27,12 +28,19 @@ class AcrnDmArgs:
         self.args["pm_channel"] = common.get_leaf_tag_map(self.launch_info, "poweroff_channel")
         self.args["cpu_affinity"] = common.get_leaf_tag_map(self.launch_info, "cpu_affinity", "pcpu_id")
         # get default cpu_affinity from scenario file
+        scenario_names = {v: k for k, v in common.get_leaf_tag_map(self.scenario_info, "name").items()}
         scenario_cpu_aff = common.get_leaf_tag_map(self.scenario_info, "cpu_affinity", "pcpu_id")
         for vm_id, cpu_ids in self.args["cpu_affinity"].items():
             cpu_ids = [x for x in cpu_ids if x is not None]
             if cpu_ids:
                 continue
-            self.args["cpu_affinity"][vm_id] = scenario_cpu_aff[vm_id]
+            vm_name = self.args['vm_name'][vm_id]
+            if vm_name not in scenario_names:
+                key = "vm:id={},{}".format(vm_id, 'cpu_affinity')
+                launch_cfg_lib.ERR_LIST[key] = "Dynamic VM needs to configure cpu_affinity parameters"
+                continue
+
+            self.args["cpu_affinity"][vm_id] = scenario_cpu_aff[scenario_names[vm_name]]
 
         self.args["shm_enabled"] = common.get_hv_item_tag(self.scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
         self.args["shm_regions"] = common.get_leaf_tag_map(self.launch_info, "shm_regions", "shm_region")
@@ -57,7 +65,7 @@ class AcrnDmArgs:
         launch_cfg_lib.args_aval_check(self.args["enable_ptm"], "enable_ptm", launch_cfg_lib.y_n)
         launch_cfg_lib.args_aval_check(self.args["allow_trigger_s5"], "allow_trigger_s5", launch_cfg_lib.y_n)
         cpu_affinity = launch_cfg_lib.user_vm_cpu_affinity(self.args["cpu_affinity"])
-        err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.scenario_info, cpu_affinity)
+        err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.scenario_info, self.launch_info, cpu_affinity)
         launch_cfg_lib.ERR_LIST.update(err_dic)
         launch_cfg_lib.check_shm_regions(self.args["shm_regions"], self.scenario_info)
         launch_cfg_lib.check_console_vuart(self.args["console_vuart"], self.args["vuart0"], self.scenario_info)
