@@ -6,6 +6,7 @@
 import math
 import common
 import board_cfg_lib
+import launch_cfg_lib
 
 HEADER_LICENSE = common.open_license()
 SERVICE_VM_UART1_VALID_NUM = ""
@@ -293,7 +294,7 @@ def guest_flag_check(guest_flags, branch_tag, leaf_tag):
                 ERR_LIST[key] = "Unknow guest flag"
 
 
-def vm_cpu_affinity_check(scenario_file, cpu_affinity):
+def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
     """
     Check cpu number of per vm
     :param : vm cpu_affinity item in xml
@@ -308,12 +309,26 @@ def vm_cpu_affinity_check(scenario_file, cpu_affinity):
         cpu_sharing_enabled = False
 
     # validate cpu_affinity config with scenario file
+    sos_vmid = launch_cfg_lib.get_sos_vmid()
     scenario_cpu_aff = common.get_leaf_tag_map(scenario_file, "cpu_affinity", "pcpu_id")
-    for vm_id, cpu_ids in cpu_affinity.items():
-        for vm_cpu in cpu_ids:
-            if vm_cpu not in scenario_cpu_aff[vm_id]:
-                key = "vm:id={},{}".format(vm_id, 'pcpu_id')
-                err_dic[key] = "This pCPU is not included in this VM's allowed CPU pool. Please update your scenario file accordingly or remove it from this list."
+    scenario_vm_names = {v: k for k, v in common.get_leaf_tag_map(scenario_file, 'name').items()}
+    if launch_file:
+        launch_vm_names = common.get_leaf_tag_map(launch_file, 'vm_name')
+        for vm_id, cpu_ids in cpu_affinity.items():
+            launch_vm_name = launch_vm_names[vm_id - sos_vmid]
+            if launch_vm_name not in scenario_vm_names:
+                # Dynamic VM, skip scenario cpu affinity subset check
+                continue
+            abs_vmid = scenario_vm_names[launch_vm_name]
+            for vm_cpu in cpu_ids:
+                if vm_cpu is None:
+                    key = "vm:id={},{}".format(abs_vmid - sos_vmid, 'pcpu_id')
+                    err_dic[key] = "This vm cpu_affinity is empty. " \
+                                   "Please update your launch file accordingly."
+                if vm_cpu not in scenario_cpu_aff[abs_vmid]:
+                    key = "vm:id={},{}".format(abs_vmid - sos_vmid, 'pcpu_id')
+                    err_dic[key] = "This pCPU is not included in this VM's allowed CPU pool. " \
+                                   "Please update your scenario file accordingly or remove it from this list."
 
     if err_dic:
         return err_dic
