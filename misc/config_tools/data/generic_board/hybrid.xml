@@ -37,7 +37,7 @@
       <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
       <IVSHMEM>
         <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
-        <IVSHMEM_REGION></IVSHMEM_REGION>
+        <IVSHMEM_REGION/>
       </IVSHMEM>
     </FEATURES>
     <MEMORY>
@@ -46,13 +46,14 @@
       <PLATFORM_RAM_SIZE>0x400000000</PLATFORM_RAM_SIZE>
     </MEMORY>
     <CAPACITIES>
+      <MAX_VM_NUM>16</MAX_VM_NUM>
       <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
       <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
       <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
       <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
       <MAX_IOAPIC_LINES>120</MAX_IOAPIC_LINES>
       <MAX_PT_IRQ_ENTRIES>256</MAX_PT_IRQ_ENTRIES>
-      <MAX_MSIX_TABLE_NUM></MAX_MSIX_TABLE_NUM>
+      <MAX_MSIX_TABLE_NUM/>
       <MAX_EMULATED_MMIO>16</MAX_EMULATED_MMIO>
     </CAPACITIES>
     <MISC_CFG>
@@ -61,14 +62,14 @@
   </hv>
   <vm id="0">
     <vm_type>SAFETY_VM</vm_type>
-    <name>ACRN PRE-LAUNCHED VM0</name>
+    <name>SAFETY_VM0</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
     </guest_flags>
     <cpu_affinity>
       <pcpu_id>3</pcpu_id>
     </cpu_affinity>
-    <pt_intx>        </pt_intx>
+    <pt_intx> </pt_intx>
     <clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
@@ -86,7 +87,7 @@
       <name>Zephyr</name>
       <kern_type>KERNEL_ELF</kern_type>
       <kern_mod>Zephyr_ElfImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
+      <ramdisk_mod/>
       <bootargs/>
     </os_config>
     <legacy_vuart id="0">
@@ -110,7 +111,7 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-      <pci_dev></pci_dev>
+      <pci_dev/>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>
@@ -119,7 +120,7 @@
   </vm>
   <vm id="1">
     <vm_type>SERVICE_VM</vm_type>
-    <name>ACRN Service VM</name>
+    <name>ACRN_Service_VM</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
     </guest_flags>
@@ -140,7 +141,7 @@
       <name>ACRN Service OS</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
+      <ramdisk_mod/>
       <bootargs>SERVICE_VM_OS_BOOTARGS</bootargs>
     </os_config>
     <legacy_vuart id="0">
@@ -164,7 +165,7 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-      <pci_dev></pci_dev>
+      <pci_dev/>
     </pci_devs>
     <board_private>
       <rootfs>/dev/nvme0n1p3</rootfs>
@@ -175,6 +176,7 @@
   </vm>
   <vm id="2">
     <vm_type>POST_STD_VM</vm_type>
+    <name>POST_STD_VM1</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
     </guest_flags>
@@ -212,6 +214,7 @@
   </vm>
   <vm id="3">
     <vm_type>POST_STD_VM</vm_type>
+    <name>POST_STD_VM2</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
     </guest_flags>

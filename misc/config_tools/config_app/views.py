@@ -19,12 +19,12 @@ from flask import request, render_template, Blueprint, redirect, url_for, curren
 # Refer to https://github.com/pallets/werkzeug/blob/master/LICENSE.rst for the permission notice.
 from werkzeug.utils import secure_filename
 
+import common
 from controller import *
 from scenario_config.scenario_cfg_gen import get_scenario_item_values
 from scenario_config.scenario_cfg_gen import validate_scenario_setting
 from launch_config.launch_cfg_gen import get_launch_item_values
 from launch_config.launch_cfg_gen import validate_launch_setting
-from library.common import MAX_VM_NUM
 import scenario_config.default_populator as default_populator
 
 
@@ -245,6 +245,7 @@ def save_scenario():
     board_type = xml_configs[1]
     scenario_config = xml_configs[3]
 
+    common.MAX_VM_NUM = int(scenario_config_data['hv,CAPACITIES,MAX_VM_NUM'])
     if board_type is None or xml_configs[0] is None:
         return {'status': 'fail',
                 'error_list': {'error': 'Please select the board info before this operation.'}}
@@ -299,37 +300,14 @@ def save_scenario():
 
     generator = scenario_config_data['generator']
     if generator is not None:
-        if generator == 'remove_vm_kata':
-            scenario_config.delete_curr_key('vm:desc=specific for Kata')
-            assign_vm_id(scenario_config)
-        elif generator == 'add_vm_kata':
+        if generator.startswith('add_vm:'):
             vm_list = []
             for vm in list(scenario_config.get_curr_root()):
                 if vm.tag == 'vm':
                     vm_list.append(vm.attrib['id'])
-            if len(vm_list) >= MAX_VM_NUM:
+            if len(vm_list) >= common.MAX_VM_NUM:
                 return {'status': 'fail',
-                        'error_list': {'error': 'Can not add a new VM. Max VM number is {}.'.format(MAX_VM_NUM)}}
-
-            # clone vm kata from generic config
-            generic_scenario_config = get_generic_scenario_config(scenario_config)
-            generic_scenario_config_root = generic_scenario_config.get_curr_root()
-            elem_kata = None
-            for vm in list(generic_scenario_config_root):
-                if 'desc' in vm.attrib and vm.attrib['desc'] == 'specific for Kata':
-                    elem_kata = vm
-                    break
-            if elem_kata is not None:
-                scenario_config.clone_curr_elem(elem_kata)
-            assign_vm_id(scenario_config)
-        elif generator.startswith('add_vm:'):
-            vm_list = []
-            for vm in list(scenario_config.get_curr_root()):
-                if vm.tag == 'vm':
-                    vm_list.append(vm.attrib['id'])
-            if len(vm_list) >= MAX_VM_NUM:
-                return {'status': 'fail',
-                        'error_list': {'error': 'Can not add a new VM. Max VM number is {}.'.format(MAX_VM_NUM)}}
+                        'error_list': {'error': 'Cannot add a new VM. hv.CAPACITIES.MAX_VM_NUM is currently set to {}.'.format(common.MAX_VM_NUM)}}
             curr_vm_id = generator.split(':')[1]
             add_vm_type = scenario_config_data['add_vm_type']
             add_scenario_config = get_generic_scenario_config(scenario_config, add_vm_type)
@@ -343,7 +321,7 @@ def save_scenario():
                         curr_vm_index = i + 2
                         break
             if add_scenario_config is not None and add_scenario_config.tag == 'vm':
-                for i in range(0, MAX_VM_NUM):
+                for i in range(0, common.MAX_VM_NUM):
                     if str(i) not in vm_list:
                         break
                 add_scenario_config.attrib['id'] = str(i)
@@ -417,6 +395,8 @@ def save_launch():
     scenario_file_path = os.path.join(current_app.config.get('CONFIG_PATH'),
                                       current_app.config.get('BOARD_TYPE'),
                                       scenario_name + '.xml')
+    # update VM_COUNT and MAX_VM_NUM
+    common.get_vm_num(scenario_file_path)
 
     for key in launch_config_data:
         if launch_config_data[key] in [None, 'None']:
@@ -434,9 +414,14 @@ def save_launch():
             for vm in list(launch_config.get_curr_root()):
                 if vm.tag == 'user_vm':
                     vm_list.append(vm.attrib['id'])
-            if len(vm_list) >= MAX_VM_NUM:
-                return {'status': 'fail',
-                        'error_list': {'error': 'Can not add a new VM. Max VM number is {}.'.format(MAX_VM_NUM)}}
+            if len(vm_list) >= common.MAX_VM_NUM:
+                return {
+                    'status': 'fail',
+                    'error_list': {
+                        'error': 'Cannot add a new VM. hv.CAPACITIES.MAX_VM_NUM '
+                                 'is currently set to {}.'.format(common.MAX_VM_NUM)
+                    }
+                }
             curr_vm_id = generator.split(':')[1].strip()
             add_launch_type = launch_config_data['add_launch_type']
             if add_launch_type is None or len(add_launch_type.split('ID :')) < 2:
@@ -445,8 +430,6 @@ def save_launch():
                                                 'Please select a scenario with available post launched VMs.'}}
             add_vm_id = add_launch_type.split('ID :')[1].replace(')', '').strip()
             add_launch_type = 'LAUNCH_' + add_launch_type.split()[0]
-            if add_launch_type == 'LAUNCH_KATA_VM':
-                add_launch_type = 'LAUNCH_POST_STD_VM'
             add_launch_id = 1
             post_vm_list = get_post_launch_vm_list(scenario_name)
             for i in range(len(post_vm_list)):
@@ -465,7 +448,7 @@ def save_launch():
                         curr_vm_index = i + 1
                         break
             if add_launch_config is not None and add_launch_config.tag == 'user_vm':
-                for i in range(1, MAX_VM_NUM):
+                for i in range(1, common.MAX_VM_NUM):
                     if str(i) not in vm_list:
                         break
                 add_launch_config.attrib['id'] = str(add_launch_id)
@@ -647,7 +630,7 @@ def create_setting():
                 scenario_config.clone_curr_elem(elem_clos_max, 'hv', 'FEATURES', 'RDT')
             # for i in range(num_mba_delay):
             #    scenario_config.clone_curr_elem(elem_mba_delay, 'hv', 'FEATURES', 'RDT')
-            for i in range(8):
+            for i in range(7):
                 scenario_config.delete_curr_key('vm:id={}'.format(i))
             scenario_config = set_default_config(scenario_config)
         scenario_config.save(create_name)
@@ -1084,7 +1067,6 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             'SERVICE_VM': ('shared', 'vm:id=0'),
             'POST_STD_VM': ('shared', 'vm:id=1'),
             'POST_RT_VM': ('shared', 'vm:id=2'),
-            'KATA_VM': ('shared', 'vm:id=7'),
             'LAUNCH_POST_STD_VM': ('hybrid_launch_2user_vm', 'user_vm:id=1'),
             'LAUNCH_POST_RT_VM': ('shared_launch_6user_vm', 'user_vm:id=2')
         }
@@ -1278,7 +1260,7 @@ def assign_vm_id(scenario_config):
                         pre_launched_vm_num += 1
                     elif item.text in ['SERVICE_VM']:
                         sos_vm_num += 1
-                    elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
+                    elif item.text in ['POST_STD_VM', 'POST_RT_VM']:
                         post_launched_vm_num += 1
 
     pre_launched_vm_index = 0
@@ -1294,7 +1276,7 @@ def assign_vm_id(scenario_config):
                     elif item.text in ['SERVICE_VM']:
                         vm.attrib['id'] = str(sos_vm_index)
                         sos_vm_index += 1
-                    elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
+                    elif item.text in ['POST_STD_VM', 'POST_RT_VM']:
                         vm.attrib['id'] = str(post_launched_vm_index)
                         post_launched_vm_index += 1
 

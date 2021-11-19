@@ -12,7 +12,7 @@ import common, board_cfg_lib
 from collections import namedtuple
 
 PRE_LAUNCHED_VMS_TYPE = ["SAFETY_VM", "PRE_RT_VM", "PRE_STD_VM"]
-POST_LAUNCHED_VMS_TYPE = ["POST_STD_VM", "POST_RT_VM", "KATA_VM"]
+POST_LAUNCHED_VMS_TYPE = ["POST_STD_VM", "POST_RT_VM"]
 SERVICE_VM_TYPE = ["SERVICE_VM"]
 
 class BusDevFunc(namedtuple(

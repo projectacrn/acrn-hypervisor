@@ -37,7 +37,7 @@
       <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
       <IVSHMEM>
         <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
-        <IVSHMEM_REGION></IVSHMEM_REGION>
+        <IVSHMEM_REGION/>
       </IVSHMEM>
     </FEATURES>
     <MEMORY>
@@ -46,6 +46,7 @@
       <PLATFORM_RAM_SIZE>0x400000000</PLATFORM_RAM_SIZE>
     </MEMORY>
     <CAPACITIES>
+      <MAX_VM_NUM>16</MAX_VM_NUM>
       <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
       <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
       <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
@@ -61,7 +62,7 @@
   </hv>
   <vm id="0">
     <vm_type>PRE_STD_VM</vm_type>
-    <name>ACRN PRE-LAUNCHED VM0</name>
+    <name>PRE_STD_VM0</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
     </guest_flags>
@@ -114,7 +115,7 @@
     <pci_devs>
       <pci_dev>00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</pci_dev>
       <pci_dev>58:00.0 Ethernet controller: Intel Corporation Device 15f2 (rev 03)</pci_dev>
-      <pci_dev></pci_dev>
+      <pci_dev/>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>
@@ -122,7 +123,7 @@
   </vm>
   <vm id="1">
     <vm_type>PRE_STD_VM</vm_type>
-    <name>ACRN PRE-LAUNCHED VM1</name>
+    <name>PRE_STD_VM1</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
     </guest_flags>
@@ -175,7 +176,7 @@
     </communication_vuart>
     <pci_devs>
       <pci_dev>00:14.0 USB controller: Intel Corporation Device a0ed (rev 20)</pci_dev>
-      <pci_dev></pci_dev>
+      <pci_dev/>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>

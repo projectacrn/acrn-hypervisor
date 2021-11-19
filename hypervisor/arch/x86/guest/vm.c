@@ -43,6 +43,7 @@
 #include <quirks/security_vm_fixup.h>
 #endif
 #include <asm/boot/ld_sym.h>
+#include <asm/guest/optee.h>
 
 /* Local variables */
 
@@ -58,17 +59,30 @@ void *get_sworld_memory_base(void)
 	return post_user_vm_sworld_memory;
 }
 
-uint16_t get_vmid_by_uuid(const uint8_t *uuid)
+uint16_t get_unused_vmid(void)
 {
-	uint16_t vm_id = 0U;
+	uint16_t vm_id;
+	struct acrn_vm_config *vm_config;
 
-	while (!vm_has_matched_uuid(vm_id, uuid)) {
-		vm_id++;
-		if (vm_id == CONFIG_MAX_VM_NUM) {
+	for (vm_id = 0; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm_config = get_vm_config(vm_id);
+		if ((vm_config->name[0] == '\0') && ((vm_config->guest_flags & GUEST_FLAG_STATIC_VM) == 0U)) {
 			break;
 		}
 	}
-	return vm_id;
+	return (vm_id < CONFIG_MAX_VM_NUM) ? (vm_id) : (ACRN_INVALID_VMID);
+}
+
+uint16_t get_vmid_by_name(const char *name)
+{
+	uint16_t vm_id;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		if ((*name != '\0') && vm_has_matched_name(vm_id, name)) {
+			break;
+		}
+	}
+	return (vm_id < CONFIG_MAX_VM_NUM) ? (vm_id) : (ACRN_INVALID_VMID);
 }
 
 /**
@@ -160,6 +174,16 @@ bool is_vcat_configured(const struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	return ((vm_config->guest_flags & GUEST_FLAG_VCAT_ENABLED) != 0U);
+}
+
+/**
+ * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
+ */
+bool is_static_configured_vm(const struct acrn_vm *vm)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	return ((vm_config->guest_flags & GUEST_FLAG_STATIC_VM) != 0U);
 }
 
 /**
@@ -528,6 +552,24 @@ static uint64_t lapic_pt_enabled_pcpu_bitmap(struct acrn_vm *vm)
 	return bitmap;
 }
 
+void prepare_vm_identical_memmap(struct acrn_vm *vm, uint16_t e820_entry_type, uint64_t prot_orig)
+{
+	const struct e820_entry *entry;
+	const struct e820_entry *p_e820 = vm->e820_entries;
+	uint32_t entries_count = vm->e820_entry_num;
+	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
+	uint32_t i;
+
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
+		if (entry->type == e820_entry_type) {
+			ept_add_mr(vm, pml4_page, entry->baseaddr,
+				entry->baseaddr, entry->length,
+				prot_orig);
+		}
+	}
+}
+
 /**
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL
  * @pre vm->state == VM_POWERED_OFF
@@ -546,8 +588,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	init_ept_pgtable(&vm->arch_vm.ept_pgtable, vm->vm_id);
 	vm->arch_vm.nworld_eptp = pgtable_create_root(&vm->arch_vm.ept_pgtable);
 
-	(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),
-		&vm_config->uuid[0], sizeof(vm_config->uuid));
+	(void)memcpy_s(&vm->name[0], MAX_VM_NAME_LEN, &vm_config->name[0], MAX_VM_NAME_LEN);
 
 	if (is_service_vm(vm)) {
 		/* Only for Service VM */
@@ -574,8 +615,18 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		}
 
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
-			create_prelaunched_vm_e820(vm);
-			prepare_prelaunched_vm_memmap(vm, vm_config);
+			/*
+			 * If a prelaunched VM has the flag GUEST_FLAG_TEE set then it
+			 * is a special prelaunched VM called TEE VM which need special
+			 * memmap, e.g. mapping the REE VM into its space. Otherwise,
+			 * just use the standard preplaunched VM memmap.
+			 */
+			if ((vm_config->guest_flags & GUEST_FLAG_TEE) != 0U) {
+				prepare_tee_vm_memmap(vm, vm_config);
+			} else {
+				create_prelaunched_vm_e820(vm);
+				prepare_prelaunched_vm_memmap(vm, vm_config);
+			}
 			status = init_vm_boot_info(vm);
 		}
 	}
@@ -792,6 +843,9 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	/* after guest_flags not used, then clear it */
 	vm_config = get_vm_config(vm->vm_id);
 	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
+	if (!is_static_configured_vm(vm)) {
+		memset(vm_config->name, 0U, MAX_VM_NAME_LEN);
+	}
 
 	if (is_ready_for_system_shutdown()) {
 		/* If no any guest running, shutdown system */
@@ -924,7 +978,7 @@ static uint8_t loaded_pre_vm_nr = 0U;
  *
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL
  */
-void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
+int32_t prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 {
 	int32_t err = 0;
 	struct acrn_vm *vm = NULL;
@@ -932,8 +986,13 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 #ifdef CONFIG_SECURITY_VM_FIXUP
 	security_vm_fixup(vm_id);
 #endif
-	/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
-	err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
+	if (get_vmid_by_name(vm_config->name) != vm_id) {
+		pr_err("Invalid VM name: %s", vm_config->name);
+		err = -1;
+	} else {
+		/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
+		err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
+	}
 
 	if (err == 0) {
 		if (is_prelaunched_vm(vm)) {
@@ -965,17 +1024,9 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 		if (is_prelaunched_vm(vm)) {
 			loaded_pre_vm_nr++;
 		}
-
-		if (err == 0) {
-
-			/* start vm BSP automatically */
-			start_vm(vm);
-
-			pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
-		} else {
-			pr_err("Failed to load VM id: %x name: %s, error = %d", vm_id, vm_config->name, err);
-		}
 	}
+
+	return err;
 }
 
 /**
@@ -989,12 +1040,35 @@ void launch_vms(uint16_t pcpu_id)
 
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
+
+		if ((vm_config->guest_flags & GUEST_FLAG_REE) != 0U &&
+		    (vm_config->guest_flags & GUEST_FLAG_TEE) != 0U) {
+			ASSERT(false, "%s: Wrong VM (VM id: %u) configuration, can't set both REE and TEE flags",
+				__func__, vm_id);
+		}
+
 		if ((vm_config->load_order == SERVICE_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
 			if (pcpu_id == get_configured_bsp_pcpu_id(vm_config)) {
 				if (vm_config->load_order == SERVICE_VM) {
 					service_vm_ptr = &vm_array[vm_id];
 				}
-				prepare_vm(vm_id, vm_config);
+
+				/*
+				 * We can only start a VM when there is no error in prepare_vm.
+				 * Otherwise, print out the corresponding error.
+				 *
+				 * We can only start REE VM when get the notification from TEE VM.
+				 * so skip "start_vm" here for REE, and start it in TEE hypercall
+				 * HC_TEE_VCPU_BOOT_DONE.
+				 */
+				if (prepare_vm(vm_id, vm_config) == 0) {
+					if ((vm_config->guest_flags & GUEST_FLAG_REE) != 0U) {
+						/* Nothing need to do here, REE will start in TEE hypercall */
+					} else {
+						start_vm(get_vm_from_vmid(vm_id));
+						pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
+					}
+				}
 			}
 		}
 	}

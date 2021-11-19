@@ -222,6 +222,11 @@ value ``0x400000000``.</xs:documentation>
 maximum supported resource.</xs:documentation>
   </xs:annotation>
   <xs:all>
+    <xs:element name="MAX_VM_NUM" type="xs:integer" default="16">
+      <xs:annotation>
+        <xs:documentation>Maximum number of User VMs allowed.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="IOMMU_BUS_NUM" type="HexFormat" default="0x100">
       <xs:annotation>
         <xs:documentation>Highest PCI bus ID used during IOMMU
@@ -246,11 +251,6 @@ initialization.</xs:documentation>
           <xs:maxInclusive value="10" />
         </xs:restriction>
       </xs:simpleType>
-    </xs:element>
-    <xs:element name="MAX_KATA_VM_NUM" type="xs:integer" minOccurs="0" default="0">
-      <xs:annotation>
-        <xs:documentation>Maximum number of KATA VM.</xs:documentation>
-      </xs:annotation>
     </xs:element>
     <xs:element name="MAX_PCI_DEV_NUM" default="96">
       <xs:annotation>
@@ -349,7 +349,7 @@ If this value is empty, then the default value will be calculated from informati
         <xs:documentation>Specify the VM type.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="name" minOccurs="0">
+    <xs:element name="name">
         <xs:annotation>
           <xs:documentation>Specify the VM name shown in the
 hypervisor console ``vm_list`` command.</xs:documentation>
@@ -360,7 +360,8 @@ hypervisor console ``vm_list`` command.</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:minLength value="1" />
-          <xs:maxLength value="32" />
+          <xs:maxLength value="15" />
+          <xs:pattern value="\S+" />
         </xs:restriction>
       </xs:simpleType>
     </xs:element>
@@ -393,6 +394,11 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
     <xs:element name="priority" type="PriorityType"  default="PRIO_LOW">
       <xs:annotation>
         <xs:documentation>Specify the VM vCPU priority for scheduling.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="companion_vmid" type="xs:integer" default="65535">
+      <xs:annotation>
+        <xs:documentation>Specify the companion VM id of this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="os_config" type="OSConfigurations" minOccurs="0">
@@ -557,6 +563,11 @@ to launch post-launched User VMs.</xs:documentation>
 
 </xs:complexType>
 
-<xs:element name="acrn-config" type="ACRNConfigType" />
+<xs:element name="acrn-config" type="ACRNConfigType">
+  <xs:unique name="vmNameUnique">
+    <xs:selector xpath="vm"/>
+    <xs:field xpath="name"/>
+  </xs:unique>
+</xs:element>
 
 </xs:schema>

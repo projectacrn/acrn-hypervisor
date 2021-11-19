@@ -25,10 +25,6 @@ typedef int32_t CAT_(CTA_DummyType,__LINE__)[(expr) ? 1 : -1]
 #error "CONFIG_HV_RAM_START must be aligned to 2MB"
 #endif
 
-#if ((CONFIG_HV_RAM_SIZE & (MEM_2M - 1UL)) != 0UL)
-#error "CONFIG_HV_RAM_SIZE must be integral multiple of 2MB"
-#endif
-
 #if ((MAX_IR_ENTRIES < 256U) || (MAX_IR_ENTRIES > 0x10000U) || (MAX_IR_ENTRIES & (MAX_IR_ENTRIES -1)) != 0U)
 #error "MAX_IR_ENTRIES must in the region of [256,0x10000] and be 2^n"
 #endif

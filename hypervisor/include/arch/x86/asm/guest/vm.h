@@ -156,7 +156,7 @@ struct acrn_vm {
 
 	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
 
-	uint8_t uuid[16];
+	char name[MAX_VM_NAME_LEN];
 	struct secure_world_control sworld_control;
 
 	/* Secure World's snapshot
@@ -233,7 +233,7 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
 void start_vm(struct acrn_vm *vm);
 int32_t reset_vm(struct acrn_vm *vm);
 int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
-void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
+int32_t prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);
 bool is_poweroff_vm(const struct acrn_vm *vm);
 bool is_created_vm(const struct acrn_vm *vm);
@@ -241,12 +241,13 @@ bool is_paused_vm(const struct acrn_vm *vm);
 bool is_service_vm(const struct acrn_vm *vm);
 bool is_postlaunched_vm(const struct acrn_vm *vm);
 bool is_prelaunched_vm(const struct acrn_vm *vm);
-uint16_t get_vmid_by_uuid(const uint8_t *uuid);
+uint16_t get_vmid_by_name(const char *name);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 struct acrn_vm *get_service_vm(void);
 
 void create_service_vm_e820(struct acrn_vm *vm);
 void create_prelaunched_vm_e820(struct acrn_vm *vm);
+void prepare_vm_identical_memmap(struct acrn_vm *vm, uint16_t e820_entry_type, uint64_t prot_orig);
 uint64_t find_space_from_ve820(struct acrn_vm *vm, uint32_t size, uint64_t min_addr, uint64_t max_addr);
 
 int32_t prepare_os_image(struct acrn_vm *vm);
@@ -257,6 +258,8 @@ bool is_lapic_pt_configured(const struct acrn_vm *vm);
 bool is_rt_vm(const struct acrn_vm *vm);
 bool is_nvmx_configured(const struct acrn_vm *vm);
 bool is_vcat_configured(const struct acrn_vm *vm);
+bool is_static_configured_vm(const struct acrn_vm *vm);
+uint16_t get_unused_vmid(void);
 bool is_pi_capable(const struct acrn_vm *vm);
 bool has_rt_vm(void);
 struct acrn_vm *get_highest_severity_vm(bool runtime);

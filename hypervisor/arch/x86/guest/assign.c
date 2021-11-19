@@ -14,6 +14,7 @@
 #include <asm/ioapic.h>
 #include <asm/pgtable.h>
 #include <asm/irq.h>
+#include <asm/guest/optee.h>
 
 /*
  * Check if the IRQ is single-destination and return the destination vCPU if so.
@@ -534,6 +535,8 @@ void ptirq_softirq(uint16_t pcpu_id)
 					vmsi->addr.full, vmsi->data.full);
 			}
 		}
+
+		handle_x86_tee_int(entry, pcpu_id);
 	}
 }
 

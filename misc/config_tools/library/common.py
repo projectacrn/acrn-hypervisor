@@ -23,7 +23,8 @@ DATACHECK_SCHEMA_FILE = SOURCE_ROOT_DIR + 'misc/config_tools/schema/datachecks.x
 PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/__pycache__"]
 GUEST_FLAG = ["0", "0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
               "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_NVMX_ENABLED", "GUEST_FLAG_HIDE_MTRR",
-              "GUEST_FLAG_RT", "GUEST_FLAG_SECURITY_VM", "GUEST_FLAG_VCAT_ENABLED"]
+              "GUEST_FLAG_RT", "GUEST_FLAG_SECURITY_VM", "GUEST_FLAG_VCAT_ENABLED",
+              "GUEST_FLAG_TEE", "GUEST_FLAG_REE"]
 
 MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev", "shm_region", "communication_vuart"]
 
@@ -38,7 +39,7 @@ BOARD_INFO_FILE = ""
 SCENARIO_INFO_FILE = ""
 LAUNCH_INFO_FILE = ""
 VM_TYPES = {}
-MAX_VM_NUM = 8
+MAX_VM_NUM = 16
 
 MAX_VUART_NUM = 8
 
@@ -291,7 +292,7 @@ def get_vm_num(config_file):
     :param config_file: it is a file what contains information for script to read from
     :return: total vm number
     """
-    global VM_COUNT
+    global VM_COUNT, MAX_VM_NUM
     vm_count = 0
     root = get_config_root(config_file)
     for item in root:
@@ -299,6 +300,7 @@ def get_vm_num(config_file):
         if item.tag == "vm":
             vm_count += 1
     VM_COUNT = vm_count
+    MAX_VM_NUM = int(root.find(".//MAX_VM_NUM").text)
 
 
 def get_leaf_value(tmp, tag_str, leaf):

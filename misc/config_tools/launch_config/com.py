@@ -31,7 +31,7 @@ def tap_user_vm_net(names, virt_io, vmid, config):
     user_vm_type = names['user_vm_types'][vmid]
     board_name = names['board_name']
 
-    vm_name = common.undline_name(user_vm_type).lower()
+    vm_name = names['user_vm_names'][vmid]
 
     if launch_cfg_lib.is_linux_like(user_vm_type) or user_vm_type in ("ANDROID", "ALIOS"):
         i = 0
@@ -50,7 +50,7 @@ def tap_user_vm_net(names, virt_io, vmid, config):
 
     print("#vm-name used to generate user-vm-mac address", file=config)
     print("mac=$(cat /sys/class/net/e*/address)", file=config)
-    print("vm_name=post_vm_id$1", file=config)
+    print("vm_name=\"{}\"".format(vm_name), file=config)
     print("mac_seed=${mac:0:17}-${vm_name}", file=config)
     print("", file=config)
 
@@ -558,12 +558,10 @@ def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
 
     boot_image_type(dm, vmid, config)
 
-    # uuid get
     sos_vmid = launch_cfg_lib.get_sos_vmid()
-    scenario_uuid = launch_cfg_lib.get_scenario_uuid(vmid, sos_vmid)
 
     # clearlinux/android/alios
-    print('acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\'.format(scenario_uuid), file=config)
+    print('acrn-dm -A -m $mem_size -s 0:0,hostbridge \\', file=config)
     if launch_cfg_lib.is_linux_like(user_vm_type) or user_vm_type in ("ANDROID", "ALIOS"):
         if user_vm_type in ("ANDROID", "ALIOS"):
             print('   $npk_virt \\', file=config)

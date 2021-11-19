@@ -22,6 +22,7 @@ HW_MOD = $(HV_MODDIR)/hw_mod.a
 VP_BASE_MOD = $(HV_MODDIR)/vp_base_mod.a
 VP_DM_MOD = $(HV_MODDIR)/vp_dm_mod.a
 VP_TRUSTY_MOD = $(HV_MODDIR)/vp_trusty_mod.a
+VP_X86_TEE_MOD = $(HV_MODDIR)/vp_x86_tee_mod.a
 VP_HCALL_MOD = $(HV_MODDIR)/vp_hcall_mod.a
 LIB_DEBUG = $(HV_MODDIR)/libdebug.a
 LIB_RELEASE = $(HV_MODDIR)/librelease.a
@@ -342,6 +343,9 @@ VP_TRUSTY_C_SRCS += arch/x86/seed/seed.c
 VP_TRUSTY_C_SRCS += arch/x86/seed/seed_abl.c
 VP_TRUSTY_C_SRCS += arch/x86/seed/seed_sbl.c
 
+# x86 tee support
+VP_X86_TEE_C_SRCS += arch/x86/guest/optee.c
+
 # virtual platform hypercall
 VP_HCALL_C_SRCS += arch/x86/guest/vmcall.c
 VP_HCALL_C_SRCS += common/hypercall.c
@@ -360,6 +364,7 @@ VP_BASE_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_BASE_C_SRCS))
 VP_BASE_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(VP_BASE_S_SRCS))
 VP_DM_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_DM_C_SRCS))
 VP_TRUSTY_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_TRUSTY_C_SRCS))
+VP_X86_TEE_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_X86_TEE_C_SRCS))
 VP_HCALL_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_HCALL_C_SRCS))
 SYS_INIT_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(SYS_INIT_C_SRCS))
 
@@ -373,6 +378,7 @@ MODULES += $(HW_MOD)
 MODULES += $(VP_BASE_MOD)
 MODULES += $(VP_DM_MOD)
 MODULES += $(VP_TRUSTY_MOD)
+MODULES += $(VP_X86_TEE_MOD)
 MODULES += $(VP_HCALL_MOD)
 ifeq ($(CONFIG_RELEASE),y)
 MODULES += $(LIB_RELEASE)
@@ -420,7 +426,7 @@ pre_build: $(HV_CONFIG_H) $(HV_CONFIG_TIMESTAMP)
 .PHONY: header
 header: $(VERSION) $(HV_CONFIG_H) $(HV_CONFIG_TIMESTAMP)
 
-.PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-hcall-mod sys-init-mod
+.PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-x86tee-mod vp-hcall-mod sys-init-mod
 $(LIB_MOD): $(LIB_C_OBJS) $(LIB_S_OBJS)
 	$(AR) $(ARFLAGS) $(LIB_MOD) $(LIB_C_OBJS) $(LIB_S_OBJS)
 
@@ -450,6 +456,11 @@ $(VP_TRUSTY_MOD): $(VP_TRUSTY_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_TRUSTY_MOD) $(VP_TRUSTY_C_OBJS)
 
 vp-trusty-mod: $(VP_TRUSTY_MOD)
+
+$(VP_X86_TEE_MOD): $(VP_X86_TEE_C_OBJS)
+	$(AR) $(ARFLAGS) $(VP_X86_TEE_MOD) $(VP_X86_TEE_C_OBJS)
+
+vp-x86tee-mod: $(VP_X86_TEE_MOD)
 
 $(VP_HCALL_MOD): $(VP_HCALL_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_HCALL_MOD) $(VP_HCALL_C_OBJS)

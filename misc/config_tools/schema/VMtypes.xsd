@@ -12,8 +12,7 @@
 - ``PRE_RT_VM`` pre-launched real-time capable VM
 - ``SERVICE_VM`` pre-launched Service VM
 - ``POST_STD_VM`` post-launched Standard VM
-- ``POST_RT_VM`` post-launched real-time capable VM
-- ``KATA_VM`` post-launched Kata Container VM</xs:documentation>
+- ``POST_RT_VM`` post-launched real-time capable VM</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="SERVICE_VM" />
@@ -22,7 +21,6 @@
     <xs:enumeration value="PRE_STD_VM" />
     <xs:enumeration value="POST_STD_VM" />
     <xs:enumeration value="POST_RT_VM" />
-    <xs:enumeration value="KATA_VM" />
   </xs:restriction>
 </xs:simpleType>
 
@@ -54,6 +52,8 @@
     <xs:enumeration value="GUEST_FLAG_NVMX_ENABLED" />
     <xs:enumeration value="GUEST_FLAG_SECURITY_VM" />
     <xs:enumeration value="GUEST_FLAG_VCAT_ENABLED" />
+    <xs:enumeration value="GUEST_FLAG_TEE" />
+    <xs:enumeration value="GUEST_FLAG_REE" />
   </xs:restriction>
 </xs:simpleType>
 

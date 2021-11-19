@@ -38,33 +38,20 @@ COMMUNICATE_VM_ID = []
 
 ERR_LIST = {}
 
-KATA_VM_COUNT = 0
 PT_SUB_PCI = {}
 PT_SUB_PCI['ethernet'] = ['Ethernet controller', 'Network controller', '802.1a controller',
                         '802.1b controller', 'Wireless controller']
 PT_SUB_PCI['sata'] = ['SATA controller']
 PT_SUB_PCI['nvme'] = ['Non-Volatile memory controller']
 PT_SUB_PCI['usb'] = ['USB controller']
-UUID_DB = {
-    'SERVICE_VM':['dbbbd434-7a57-4216-a12c-2201f1ab0240'],
-    'SAFETY_VM':['fc836901-8685-4bc0-8b71-6e31dc36fa47'],
-    'PRE_STD_VM':['26c5e0d8-8f8a-47d8-8109-f201ebd61a5e', 'dd87ce08-66f9-473d-bc58-7605837f935e'],
-    'POST_STD_VM':['d2795438-25d6-11e8-864e-cb7a18b34643', '615db82a-e189-4b4f-8dbb-d321343e4ab3',
-        '38158821-5208-4005-b72a-8a609e4190d0', 'a6750180-f87a-48d2-91d9-4e7f62b6519e', 'd1816e4a-a9bb-4cb4-a066-3f1a8a5ce73f'],
-    'POST_RT_VM':['495ae2e5-2603-4d64-af76-d4bc5a8ec0e5'],
-    'KATA_VM':['a7ada506-1ab0-4b6b-a0da-e513ca9b8c2f'],
-    'PRE_RT_VM':['b2a92bec-ca6b-11ea-b106-3716a8ba0bb9'],
-}
-
 VM_DB = {
-    'SERVICE_VM':{'load_type':'SERVICE_VM', 'severity':'SEVERITY_SERVICE_VM', 'uuid':UUID_DB['SERVICE_VM']},
-    'SAFETY_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_SAFETY_VM', 'uuid':UUID_DB['SAFETY_VM']},
-    'PRE_RT_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['PRE_RT_VM']},
-    'PRE_STD_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['PRE_STD_VM']},
-    'POST_STD_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['POST_STD_VM']},
-    'POST_RT_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['POST_RT_VM']},
-    'KATA_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['KATA_VM']},
-    'PRE_RT_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['PRE_RT_VM']},
+    'SERVICE_VM':{'load_type':'SERVICE_VM', 'severity':'SEVERITY_SERVICE_VM'},
+    'SAFETY_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_SAFETY_VM'},
+    'PRE_RT_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_RTVM'},
+    'PRE_STD_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM'},
+    'POST_STD_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM'},
+    'POST_RT_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_RTVM'},
+    'PRE_RT_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_RTVM'},
 }
 LOAD_VM_TYPE = list(VM_DB.keys())
 
@@ -246,11 +233,9 @@ def load_vm_check(load_vms, item):
     :param item: vm name item in xml
     :return: None
     """
-    global KATA_VM_COUNT
     sos_vm_ids = []
     pre_vm_ids = []
     post_vm_ids = []
-    kata_vm_ids = []
     rt_vm_ids = []
     for order_i, load_str in load_vms.items():
         if not load_str:
@@ -271,37 +256,12 @@ def load_vm_check(load_vms, item):
         if "POST_STD_VM" == load_str:
             post_vm_ids.append(order_i)
 
-        if "KATA_VM" == load_str:
-            kata_vm_ids.append(order_i)
-
         if "POST_RT_VM" == load_str:
             rt_vm_ids.append(order_i)
-
-    KATA_VM_COUNT = len(kata_vm_ids)
-    if len(kata_vm_ids) > len(UUID_DB["KATA_VM"]):
-        key = "vm:id={},{}".format(kata_vm_ids[0], item)
-        ERR_LIST[key] = "KATA VM number should not be greater than {}".format(len(UUID_DB["KATA_VM"]))
-        return
-
-    if len(rt_vm_ids) > len(UUID_DB["POST_RT_VM"]):
-        key = "vm:id={},{}".format(rt_vm_ids[0], item)
-        ERR_LIST[key] = "POST RT VM number should not be greater than {}".format(len(UUID_DB["POST_RT_VM"]))
-        return
 
     if len(sos_vm_ids) > 1:
         key = "vm:id={},{}".format(sos_vm_ids[0], item)
         ERR_LIST[key] = "Service VM number should not be greater than 1"
-        return
-
-    if len(post_vm_ids) > len(UUID_DB["POST_STD_VM"]):
-        key = "vm:id={},{}".format(post_vm_ids[0], item)
-        ERR_LIST[key] = "POST Standard vm number should not be greater than {}".format(len(UUID_DB["POST_STD_VM"]))
-        return
-
-    max_pre_launch_vms = len(UUID_DB["PRE_STD_VM"]) + len(UUID_DB["SAFETY_VM"]) + len(UUID_DB["PRE_RT_VM"])
-    if len(pre_vm_ids) > max_pre_launch_vms:
-        key = "vm:id={},{}".format(pre_vm_ids[0], item)
-        ERR_LIST[key] = "PRE Launched VM number should not be greater than {}".format(max_pre_launch_vms)
         return
 
     if post_vm_ids and sos_vm_ids:

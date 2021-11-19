@@ -19,6 +19,8 @@
     <xsl:value-of select="acrn:include('asm/pci_dev.h')" />
     <xsl:value-of select="acrn:include('asm/pgtable.h')" />
     <xsl:value-of select="acrn:include('schedule.h')" />
+    <xsl:value-of select="$newline" />
+    <xsl:value-of select="$newline" />
 
     <xsl:apply-templates select="config-data/acrn-config" />
   </xsl:template>
@@ -68,13 +70,15 @@
     <!-- Definition of vm_configs -->
     <xsl:value-of select="acrn:array-initializer('struct acrn_vm_config', 'vm_configs', 'CONFIG_MAX_VM_NUM')" />
     <xsl:apply-templates select="vm"/>
+    <xsl:value-of select="acrn:vm_fill(count(vm), hv/CAPACITIES/MAX_VM_NUM)"/>
+    <xsl:value-of select="$newline"/>
     <xsl:value-of select="$end_of_array_initializer" />
   </xsl:template>
 
   <xsl:template match="vm">
     <!-- Initializer of a acrn_vm_configs instance -->
     <xsl:text>{</xsl:text>
-    <xsl:value-of select="acrn:comment(concat('VM', @id))" />
+    <xsl:value-of select="acrn:comment(concat('Static configured VM', @id))" />
     <xsl:value-of select="$newline" />
 
     <xsl:apply-templates select="vm_type" />
@@ -84,6 +88,7 @@
       <xsl:value-of select="$newline" />
     </xsl:if>
     <xsl:value-of select="acrn:initializer('vm_prio', priority)" />
+    <xsl:value-of select="acrn:initializer('companion_vm_id', concat(companion_vmid, 'U'))" />
     <xsl:apply-templates select="guest_flags" />
 
     <xsl:if test="acrn:is-rdt-enabled()">
@@ -103,17 +108,15 @@
     </xsl:if>
 
     <!-- End of the initializer -->
-    <xsl:text>},</xsl:text>
-    <xsl:value-of select="$newline" />
+    <xsl:text>}</xsl:text>
+    <xsl:if test="not(position() = last())">
+      <xsl:text>,</xsl:text>
+      <xsl:value-of select="$newline" />
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="vm_type">
     <xsl:value-of select="concat('CONFIG_', current())" />
-    <xsl:if test="not(acrn:is-sos-vm(current()))">
-      <xsl:text>(</xsl:text>
-      <xsl:value-of select="count(../preceding-sibling::vm[vm_type = current()]) + 1" />
-      <xsl:text>)</xsl:text>
-    </xsl:if>
     <xsl:text>,</xsl:text>
     <xsl:value-of select="$newline" />
   </xsl:template>
@@ -139,10 +142,10 @@
     <xsl:if test="guest_flag">
       <xsl:choose>
         <xsl:when test="guest_flag = '' or guest_flag = '0' or guest_flag = '0UL'">
-          <xsl:value-of select="acrn:initializer('guest_flags', '0UL')" />
+          <xsl:value-of select="acrn:initializer('guest_flags', 'GUEST_FLAG_STATIC_VM')" />
         </xsl:when>
         <xsl:otherwise>
-          <xsl:value-of select="acrn:initializer('guest_flags', concat('(', acrn:string-join(guest_flag, '|', '', ''),')'))" />
+          <xsl:value-of select="acrn:initializer('guest_flags', concat('(GUEST_FLAG_STATIC_VM|', acrn:string-join(guest_flag, '|', '', ''),')'))" />
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>

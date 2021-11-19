@@ -51,7 +51,7 @@ struct mngr_msg {
 
 		/* req of ACRND_TIMER */
 		struct req_acrnd_timer {
-			char name[MAX_VMNAME_LEN];
+			char name[MAX_VM_NAME_LEN];
 			time_t t;
 		} acrnd_timer;
 
@@ -75,7 +75,7 @@ struct mngr_msg {
 
 		/* req of RTC_TIMER */
 		struct req_rtc_timer {
-			char vmname[MAX_VMNAME_LEN];
+			char vmname[MAX_VM_NAME_LEN];
 			time_t t;
 		} rtc_timer;
 

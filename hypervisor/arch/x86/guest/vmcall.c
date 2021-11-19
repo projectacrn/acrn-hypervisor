@@ -15,6 +15,7 @@
 #include <trace.h>
 #include <logmsg.h>
 
+static spinlock_t vm_id_lock = { .head = 0U, .tail = 0U };
 struct hc_dispatch {
 	int32_t (*handler)(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
@@ -103,9 +104,43 @@ static const struct hc_dispatch hc_dispatch_table[] = {
 	[HC_IDX(HC_SAVE_RESTORE_SWORLD_CTX)] = {
 		.handler = hcall_save_restore_sworld_ctx,
 		.permission_flags = GUEST_FLAG_SECURE_WORLD_ENABLED},
+	[HC_IDX(HC_TEE_VCPU_BOOT_DONE)] = {
+		.handler = hcall_handle_tee_vcpu_boot_done,
+		.permission_flags = GUEST_FLAG_TEE},
+	[HC_IDX(HC_SWITCH_EE)] = {
+		.handler = hcall_switch_ee,
+		.permission_flags = (GUEST_FLAG_TEE | GUEST_FLAG_REE)},
 };
 
+uint16_t allocate_dynamical_vmid(struct acrn_vm_creation *cv)
+{
+	uint16_t vm_id;
+	struct acrn_vm_config *vm_config;
+
+	spinlock_obtain(&vm_id_lock);
+	vm_id = get_unused_vmid();
+	if (vm_id != ACRN_INVALID_VMID) {
+		vm_config = get_vm_config(vm_id);
+		memcpy_s(vm_config->name, MAX_VM_NAME_LEN, cv->name, MAX_VM_NAME_LEN);
+		vm_config->cpu_affinity = cv->cpu_affinity;
+	}
+	spinlock_release(&vm_id_lock);
+	return vm_id;
+}
+
 #define GUEST_FLAGS_ALLOWING_HYPERCALLS GUEST_FLAG_SECURE_WORLD_ENABLED
+static bool is_guest_hypercall(struct acrn_vm *vm)
+{
+	uint64_t guest_flags = get_vm_config(vm->vm_id)->guest_flags;
+	bool ret = true;
+
+	if ((guest_flags & (GUEST_FLAG_SECURE_WORLD_ENABLED |
+		GUEST_FLAG_TEE | GUEST_FLAG_REE)) == 0UL) {
+		ret = false;
+	}
+
+	return ret;
+}
 
 struct acrn_vm *parse_target_vm(struct acrn_vm *service_vm, uint64_t hcall_id, uint64_t param1, __unused uint64_t param2)
 {
@@ -118,7 +153,19 @@ struct acrn_vm *parse_target_vm(struct acrn_vm *service_vm, uint64_t hcall_id, u
 	switch (hcall_id) {
 	case HC_CREATE_VM:
 		if (copy_from_gpa(service_vm, &cv, param1, sizeof(cv)) == 0) {
-			vm_id = get_vmid_by_uuid(&cv.uuid[0]);
+			vm_id = get_vmid_by_name((char *)cv.name);
+			/* if the vm-name is not found, it indicates that it is not in pre-defined vm_list.
+			 * So try to allocate one free slot to start one vm based on user-requirement
+			 */
+			if (vm_id == ACRN_INVALID_VMID) {
+				vm_id = allocate_dynamical_vmid(&cv);
+				/* it doesn't find the available vm_slot for the given vm_name.
+				 * Maybe the CONFIG_MAX_VM_NUM is too small to start the VM.
+				 */
+				if (vm_id == ACRN_INVALID_VMID) {
+					pr_err("The VM name provided (%s) is invalid, cannot create VM", cv.name);
+				}
+			}
 		}
 		break;
 
@@ -185,7 +232,7 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 					put_vm_lock(target_vm);
 				}
 			} else if ((permission_flags != 0UL) &&
-					((guest_flags & permission_flags) == permission_flags)) {
+					((guest_flags & permission_flags) != 0UL)) {
 				ret = dispatch->handler(vcpu, vcpu->vm, param1, param2);
 			} else {
 				/* The vCPU is not allowed to invoke the given hypercall. Keep `ret` as -EINVAL and no
@@ -209,7 +256,6 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	struct acrn_vm *vm = vcpu->vm;
 	/* hypercall ID from guest*/
 	uint64_t hypcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
-	uint64_t guest_flags = get_vm_config(vm->vm_id)->guest_flags;
 
 	/*
 	 * The following permission checks are applied to hypercalls.
@@ -222,7 +268,7 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	 *    guest flags. Attempts to invoke an unpermitted hypercall will make a vCPU see -EINVAL as the return
 	 *    value. No exception is triggered in this case.
 	 */
-	if (!is_service_vm(vm) && ((guest_flags & GUEST_FLAGS_ALLOWING_HYPERCALLS) == 0UL)) {
+	if (!is_service_vm(vm) && !is_guest_hypercall(vm)) {
 		vcpu_inject_ud(vcpu);
 		ret = -ENODEV;
 	} else if (!is_hypercall_from_ring0()) {

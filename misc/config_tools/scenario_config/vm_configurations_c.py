@@ -31,9 +31,6 @@ def get_pre_vm_type(vm_type, vm_i):
 
 def get_post_vm_type(vm_type, vm_i):
 
-    if vm_type == "KATA_VM":
-        return "CONFIG_KATA_VM(1)"
-
     if vm_type == "POST_RT_VM":
         return "CONFIG_POST_RT_VM(1)"
 

@@ -214,7 +214,6 @@ int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
 		pi.hw.cpu_num = pcpu_nums;
 		pi.hw.version = 0x100;  /* version 1.0; byte[1:0] = major:minor version */
 		pi.sw.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
-		pi.sw.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
 		pi.sw.max_vms = CONFIG_MAX_VM_NUM;
 		pi.sw.vm_config_size = entry_size;
 
@@ -254,14 +253,13 @@ int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint6
 	int32_t ret = -1;
 	struct acrn_vm *tgt_vm = NULL;
 	struct acrn_vm_creation cv;
-	struct acrn_vm_config* vm_config = NULL;
+	struct acrn_vm_config *vm_config = get_vm_config(vmid);
 
 	if (copy_from_gpa(vm, &cv, param1, sizeof(cv)) == 0) {
 		if (is_poweroff_vm(get_vm_from_vmid(vmid))) {
 
-			vm_config = get_vm_config(vmid);
-
 			/* Filter out the bits should not set by DM and then assign it to guest_flags */
+			vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
 			vm_config->guest_flags |= (cv.vm_flag & DM_OWNED_GUEST_FLAG_MASK);
 
 			/* post-launched VM is allowed to choose pCPUs from vm_config->cpu_affinity only */
@@ -299,6 +297,10 @@ int32_t hcall_create_vm(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint6
 			}
 		}
 
+	}
+
+	if (((ret != 0) || (cv.vmid == ACRN_INVALID_VMID)) && (!is_static_configured_vm(target_vm))) {
+		memset(vm_config->name, 0U, MAX_VM_NAME_LEN);
 	}
 
 	return ret;
@@ -1094,9 +1096,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 	if (is_created_vm(target_vm)) {
 		switch (cmd & PMCMD_TYPE_MASK) {
 		case ACRN_PMCMD_GET_PX_CNT: {
-			if (target_vm->pm.px_cnt != 0U) {
-				ret = copy_to_gpa(vm, &(target_vm->pm.px_cnt), param2, sizeof(target_vm->pm.px_cnt));
-			}
+			ret = copy_to_gpa(vm, &(target_vm->pm.px_cnt), param2, sizeof(target_vm->pm.px_cnt));
 			break;
 		}
 		case ACRN_PMCMD_GET_PX_DATA: {
@@ -1121,9 +1121,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 			break;
 		}
 		case ACRN_PMCMD_GET_CX_CNT: {
-			if (target_vm->pm.cx_cnt != 0U) {
-				ret = copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param2, sizeof(target_vm->pm.cx_cnt));
-			}
+			ret = copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param2, sizeof(target_vm->pm.cx_cnt));
 			break;
 		}
 		case ACRN_PMCMD_GET_CX_DATA: {
