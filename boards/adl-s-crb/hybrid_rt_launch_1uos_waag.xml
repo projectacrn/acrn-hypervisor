@@ -1,14 +1,14 @@
-<acrn-config board="tgl-rvp" scenario="sdc" user_vm_launcher="1">
-  <user_vm id="1">
-    <user_vm_type desc="User VM type">ZEPHYR</user_vm_type>
-    <vm_name>POST_STD_VM1</vm_name>
-    <rtos_type desc="User VM Realtime capability">no</rtos_type>
-    <mem_size desc="User VM memory size in MByte">128</mem_size>
+<acrn-config board="adl-s-crb" scenario="hybrid_rt" uos_launcher="1">
+  <uos id="1">
+    <uos_type desc="UOS type">WINDOWS</uos_type>
+    <rtos_type desc="UOS Realtime capability">no</rtos_type>
+    <mem_size desc="UOS memory size in MByte">4096</mem_size>
+    <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-    <poweroff_channel desc="the method of power off User VM"/>
+    <poweroff_channel desc="the method of power off uos"/>
     <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
-    <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
+    <enable_ptm desc="enable ptm of uos">n</enable_ptm>
     <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"/>
     <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
       <pcpu_id/>
@@ -24,7 +24,6 @@
       <usb_xdci desc="vm usb_xdci device"/>
       <audio desc="vm audio device"/>
       <audio_codec desc="vm audio codec device"/>
-      <gpu desc="vm gpu device"/>
       <ipu desc="vm ipu device"/>
       <ipu_i2c desc="vm ipu_i2c device"/>
       <cse desc="vm cse device"/>
@@ -36,14 +35,10 @@
       <nvme desc="vm nvme device"/>
     </passthrough_devices>
     <virtio_devices>
-      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."/>
+      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"/>
+      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">WaaG</network>
       <input desc="virtio input device"/>
-      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./zephyr.img</block>
-      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@pty:pty_port</console>
+      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./win10-ltsc.img</block>
     </virtio_devices>
-    <sriov>
-      <gpu/>
-      <network/>
-    </sriov>
-  </user_vm>
+  </uos>
 </acrn-config>

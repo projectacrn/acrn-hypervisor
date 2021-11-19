@@ -45,8 +45,8 @@
       <PLATFORM_RAM_SIZE>0x880000000</PLATFORM_RAM_SIZE>
     </MEMORY>
     <CAPACITIES>
+      <MAX_VM_NUM>16</MAX_VM_NUM>
       <IOMMU_BUS_NUM>0x100</IOMMU_BUS_NUM>
-      <MAX_EFI_MMAP_ENTRIES>256</MAX_EFI_MMAP_ENTRIES>
       <MAX_IR_ENTRIES>256</MAX_IR_ENTRIES>
       <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
       <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
@@ -57,12 +57,12 @@
     </CAPACITIES>
     <MISC_CFG>
       <GPU_SBDF>0x00000010</GPU_SBDF>
-      <UEFI_OS_LOADER_NAME></UEFI_OS_LOADER_NAME>
+      <UEFI_OS_LOADER_NAME/>
     </MISC_CFG>
   </hv>
   <vm id="0">
     <vm_type>PRE_RT_VM</vm_type>
-    <name>ACRN PRE-LAUNCHED VM0</name>
+    <name>PRE_RT_VM0</name>
     <guest_flags>
       <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
       <guest_flag>GUEST_FLAG_RT</guest_flag>
@@ -93,7 +93,7 @@
       <name>PREEMPT-RT</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>RT_bzImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
+      <ramdisk_mod/>
       <bootargs>rw rootwait root=/dev/sda3 no_ipi_broadcast=1 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable clocksource=tsc x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0 reboot=acpi </bootargs>
     </os_config>
     <legacy_vuart id="0">
@@ -102,11 +102,11 @@
       <irq>COM1_IRQ</irq>
     </legacy_vuart>
     <legacy_vuart id="1">
-        <type>VUART_LEGACY_PIO</type>
-        <base>COM2_BASE</base>
-        <irq>COM2_IRQ</irq>
-        <target_vm_id>1</target_vm_id>
-        <target_uart_id>1</target_uart_id>
+      <type>VUART_LEGACY_PIO</type>
+      <base>COM2_BASE</base>
+      <irq>COM2_IRQ</irq>
+      <target_vm_id>1</target_vm_id>
+      <target_uart_id>1</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
@@ -117,7 +117,7 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-	    <pci_dev>00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 11)</pci_dev>
+      <pci_dev>00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 11)</pci_dev>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>
@@ -125,7 +125,7 @@
   </vm>
   <vm id="1">
     <vm_type>SERVICE_VM</vm_type>
-    <name>ACRN Service VM</name>
+    <name>ACRN_Service_VM</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
     </guest_flags>
@@ -144,7 +144,7 @@
       <name>ACRN Service OS</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
+      <ramdisk_mod/>
       <bootargs>SERVICE_VM_OS_BOOTARGS</bootargs>
     </os_config>
     <legacy_vuart id="0">
@@ -153,25 +153,11 @@
       <irq>SERVICE_VM_COM1_IRQ</irq>
     </legacy_vuart>
     <legacy_vuart id="1">
-        <type>VUART_LEGACY_PIO</type>
-        <base>CONFIG_COM_BASE</base>
-        <irq>0</irq>
-        <target_vm_id>0</target_vm_id>
-        <target_uart_id>1</target_uart_id>
-    </legacy_vuart>
-    <legacy_vuart id="2">
-        <type>VUART_LEGACY_PIO</type>
-        <base>CONFIG_COM_BASE</base>
-        <irq>0</irq>
-        <target_vm_id>2</target_vm_id>
-        <target_uart_id>2</target_uart_id>
-    </legacy_vuart>
-    <legacy_vuart id="3">
-        <type>VUART_LEGACY_PIO</type>
-        <base>CONFIG_COM_BASE</base>
-        <irq>0</irq>
-        <target_vm_id>3</target_vm_id>
-        <target_uart_id>2</target_uart_id>
+      <type>VUART_LEGACY_PIO</type>
+      <base>SERVICE_VM_COM2_BASE</base>
+      <irq>SERVICE_VM_COM2_IRQ</irq>
+      <target_vm_id>0</target_vm_id>
+      <target_uart_id>1</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
@@ -182,17 +168,17 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-      <pci_dev></pci_dev>
+      <pci_dev/>
     </pci_devs>
     <board_private>
       <rootfs>/dev/nvme0n1p3</rootfs>
       <bootargs>rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 swiotlb=131072 nokaslr
-      8250.nr_uarts=20
       </bootargs>
     </board_private>
   </vm>
   <vm id="2">
     <vm_type>POST_STD_VM</vm_type>
+    <name>POST_STD_VM1</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
     </guest_flags>
@@ -224,13 +210,6 @@
       <target_vm_id>0</target_vm_id>
       <target_uart_id>0</target_uart_id>
     </legacy_vuart>
-    <legacy_vuart id="2">
-        <type>VUART_LEGACY_PIO</type>
-        <base>COM2_BASE</base>
-        <irq>COM2_IRQ</irq>
-        <target_vm_id>1</target_vm_id>
-        <target_uart_id>2</target_uart_id>
-    </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
@@ -243,6 +222,7 @@
   </vm>
   <vm id="3">
     <vm_type>POST_STD_VM</vm_type>
+    <name>POST_STD_VM2</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
     </guest_flags>
@@ -281,13 +261,6 @@
       <irq>COM2_IRQ</irq>
       <target_vm_id>0</target_vm_id>
       <target_uart_id>0</target_uart_id>
-    </legacy_vuart>
-    <legacy_vuart id="2">
-        <type>VUART_LEGACY_PIO</type>
-        <base>COM2_BASE</base>
-        <irq>COM2_IRQ</irq>
-        <target_vm_id>1</target_vm_id>
-        <target_uart_id>3</target_uart_id>
     </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
