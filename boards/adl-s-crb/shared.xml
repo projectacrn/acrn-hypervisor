@@ -108,7 +108,7 @@
     </pci_devs>
     <board_private>
       <rootfs>/dev/nvme0n1p3</rootfs>
-      <bootargs> rw rootwait console=ttyS0  earlyprintk=serial,ttyS0,115200 cons_timer_check consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 nokaslr i915.force_probe=* i915.enable_guc=0x7 drm.debug=0x4
+      <bootargs> rw rootwait console=ttyS0  earlyprintk=serial,ttyS0,115200 cons_timer_check consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 nokaslr i915.force_probe=* i915.enable_guc=0x7
     </bootargs>
     </board_private>
   </vm>
