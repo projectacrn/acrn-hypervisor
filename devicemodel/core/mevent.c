@@ -341,7 +341,7 @@ mevent_delete_event(struct mevent *evp, int closefd)
 	evp->closefd = closefd;
 
 	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, evp->me_fd, NULL);
-	if (!is_dispatch_thread() && evp->teardown != NULL) {
+	if (!is_dispatch_thread()) {
 		mevent_add_to_del_list(evp, closefd);
 	} else {
 		if (evp->closefd) {
