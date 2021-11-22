@@ -68,11 +68,12 @@ static void start_system_shutdown(void)
 		LOG_WRITE("UART connection list is empty, will trigger shutdown system\n");
 		close_socket(sock_server);
 		stop_listen_uart_channel_dev(channel);
-		if (wait_post_vms_shutdown())
-			LOG_WRITE("Service VM start to power off here\n");
-		else
-			LOG_WRITE("Timeout waiting for VMs poweroff, will force poweroff VMs\n");
-		system_shutdown_flag = true;
+		if (wait_post_vms_shutdown()) {
+			LOG_WRITE("Service VM starts to power off.\n");
+			system_shutdown_flag = true;
+		} else {
+			LOG_WRITE("Some User VMs failed to power off, cancelled the platform shut down process.\n");
+		}
 	}
 }
 
