@@ -14,10 +14,6 @@
 #define SERVICE_VM_NUM 1U
 #define MAX_POST_VM_NUM 15U
 #define CONFIG_MAX_VM_NUM 16U
-/* Bitmask of guest flags that can be programmed by device model. Other bits are set by hypervisor only. */
-#define DM_OWNED_GUEST_FLAG_MASK                                                                                       \
-	(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | GUEST_FLAG_RT |                              \
-		GUEST_FLAG_IO_COMPLETION_POLLING | GUEST_FLAG_SECURITY_VM)
 /* SERVICE_VM == VM0 */
 #define SERVICE_VM_OS_BOOTARGS SERVICE_VM_ROOTFS SERVICE_VM_OS_CONSOLE SERVICE_VM_IDLE SERVICE_VM_BOOTARGS_DIFF
 
