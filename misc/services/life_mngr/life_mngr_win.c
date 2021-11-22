@@ -179,6 +179,12 @@ int main()
 	snprintf(buf, sizeof(buf), SYNC_FMT, WIN_VM_NAME);
 	enable_uart_resend(buf, MIN_RESEND_TIME);
 	send_message_by_uart(hCom2, buf, strlen(buf));
+	/**
+	 * The lifecycle manager in Service VM checks sync message every 5 seconds
+	 * during listening phase, delay 5 seconds to wait Service VM to receive the
+	 * sync message, then start to read ack message from Service VM.
+	 */
+	Sleep(5U * MS_TO_SECOND);
 	do {
 		do {
 			retry_times = RETRY_RECV_TIMES;
