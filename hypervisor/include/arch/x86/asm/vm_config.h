@@ -52,6 +52,14 @@
 #define CONFIG_POST_RT_VM	.load_order = POST_LAUNCHED_VM,	\
 				.severity = SEVERITY_RTVM
 
+/* Bitmask of guest flags that can be programmed by device model. Other bits are set by hypervisor only. */
+#if (SERVICE_VM_NUM == 0)
+#define DM_OWNED_GUEST_FLAG_MASK	0UL
+#else
+#define DM_OWNED_GUEST_FLAG_MASK	(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH \
+					| GUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING)
+#endif
+
 /* ACRN guest severity */
 enum acrn_vm_severity {
 	SEVERITY_SAFETY_VM = 0x40U,
