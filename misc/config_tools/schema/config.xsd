@@ -177,12 +177,6 @@ three for specific exceptions.</xs:documentation>
 the RAM region used by the hypervisor.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="PLATFORM_RAM_SIZE" type="HexFormat" default="0x400000000">
-      <xs:annotation>
-        <xs:documentation>Size of the physical platform RAM. Default
-value ``0x400000000``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
   </xs:all>
 </xs:complexType>
 
