@@ -152,10 +152,6 @@
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'PLATFORM_RAM_SIZE'" />
-    </xsl:call-template>
-
-    <xsl:call-template name="integer-by-key">
       <xsl:with-param name="key" select="'STACK_SIZE'" />
     </xsl:call-template>
   </xsl:template>

@@ -126,7 +126,6 @@ class Memory:
         self.hv_file = hv_file
         self.stack_size = 0
         self.hv_ram_start = 0
-        self.platform_ram_size = 0
         self.sos_ram_size = 0
         self.uos_ram_size = 0
         self.ivshmem_enable = 'n'
@@ -135,14 +134,12 @@ class Memory:
     def get_info(self):
         self.stack_size = common.get_hv_item_tag(self.hv_file, "MEMORY", "STACK_SIZE")
         self.hv_ram_start = common.get_hv_item_tag(self.hv_file, "MEMORY", "HV_RAM_START")
-        self.platform_ram_size = common.get_hv_item_tag(self.hv_file, "MEMORY", "PLATFORM_RAM_SIZE")
         self.ivshmem_enable = common.get_hv_item_tag(self.hv_file, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
         self.ivshmem_region = common.get_hv_item_tag(self.hv_file, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
 
     def check_item(self):
         hv_cfg_lib.hv_size_check(self.stack_size, "MEMORY", "STACK_SIZE")
         hv_cfg_lib.hv_ram_start_check(self.hv_ram_start, "MEMORY", "HV_RAM_START")
-        hv_cfg_lib.hv_size_check(self.platform_ram_size, "MEMORY", "PLATFORM_RAM_SIZE")
         hv_cfg_lib.ny_support_check(self.ivshmem_enable, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
 
 
