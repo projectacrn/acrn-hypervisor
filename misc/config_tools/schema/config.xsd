@@ -492,6 +492,12 @@ to launch post-launched User VMs.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="count(//vm) &lt;= //MAX_VM_NUM">
+    <xs:annotation>
+      <xs:documentation>The number of VMs in the scenario XML file should be no greater than hv.CAPACITIES.MAX_VM_NUM.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
   <xs:assert test="if (count(//guest_flag[text() = 'GUEST_FLAG_VCAT_ENABLED']) > 0)
                    then //RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y'
                    else true()">
