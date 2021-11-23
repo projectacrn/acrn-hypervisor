@@ -56,10 +56,6 @@
       <xsl:with-param name="key" select="'LOG_DESTINATION'" />
     </xsl:call-template>
 
-    <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'LOG_BUF_SIZE'" />
-    </xsl:call-template>
-
     <xsl:apply-templates select="SERIAL_CONSOLE" />
   </xsl:template>
 

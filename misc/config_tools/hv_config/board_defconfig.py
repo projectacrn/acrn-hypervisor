@@ -170,7 +170,6 @@ def get_capacities(hv_info, config):
 
 def get_log_opt(hv_info, config):
 
-    print("CONFIG_LOG_BUF_SIZE={}".format(hv_info.log.buf_size), file=config)
     print("CONFIG_NPK_LOGLEVEL_DEFAULT={}".format(hv_info.log.level.npk), file=config)
     print("CONFIG_MEM_LOGLEVEL_DEFAULT={}".format(hv_info.log.level.mem), file=config)
     print("CONFIG_LOG_DESTINATION={}".format(hv_info.log.dest), file=config)
