@@ -28,6 +28,7 @@ struct sched_bvt_data {
 	/* effective virtual time in units of mcu */
 	int64_t evt;
 	uint64_t residual;
+	bool unlimit;
 
 	uint64_t start_tsc;
 };
@@ -185,6 +186,7 @@ static void sched_bvt_init_data(struct thread_object *obj)
 	/* TODO: virtual time advance ratio should be proportional to weight. */
 	data->vt_ratio = 1U;
 	data->residual = 0U;
+	data->unlimit = true;
 	data->run_countdown = BVT_CSA_MCU;
 }
 
@@ -200,12 +202,35 @@ static uint64_t p2v(uint64_t phy_time, uint64_t ratio)
 
 static void update_vt(struct thread_object *obj)
 {
-	struct sched_bvt_data *data;
+	struct sched_bvt_data *data, *sec_data;
+	struct list_head *first, *sec;
+	struct thread_object *sec_obj;
 	uint64_t now_tsc = cpu_ticks();
 	uint64_t v_delta, delta_mcu = 0U;
+	struct sched_bvt_control *bvt_ctl =
+		(struct sched_bvt_control *)obj->sched_ctl->priv;
 
 	data = (struct sched_bvt_data *)obj->data;
-
+	/*if this thread is new, need to adjuest its avt refer to other old thread*/
+	if (data->unlimit) {
+		if (is_inqueue(obj)) {
+			first = bvt_ctl->runqueue.next;
+			sec = (first->next == &bvt_ctl->runqueue) ? NULL : first->next;
+			if (sec != NULL) {
+				sec_obj = container_of(sec, struct thread_object, data);
+				sec_data = (struct sched_bvt_data *)sec_obj->data;
+				if (sec_data->avt !=0) {
+					data->avt = sec_data->avt;
+					data->unlimit = false;
+					pr_dbg("update: unlimit turn-off, new avt = %d", data->avt);
+				}
+			}
+		} else {
+			if (!list_empty(&bvt_ctl->runqueue)) {
+				data->avt = get_svt(obj);
+			}
+		}
+	}
 	/* update current thread's avt and evt */
 	if (now_tsc > data->start_tsc) {
 		v_delta = p2v(now_tsc - data->start_tsc, data->vt_ratio) + data->residual;
@@ -279,12 +304,21 @@ static void sched_bvt_wake(struct thread_object *obj)
 {
 	struct sched_bvt_data *data;
 	int64_t svt, threshold;
+	struct sched_bvt_control *bvt_ctl =
+		(struct sched_bvt_control *)obj->sched_ctl->priv;
 
 	data = (struct sched_bvt_data *)obj->data;
 	svt = get_svt(obj);
 	threshold = svt - BVT_CSA_MCU;
 	/* adjusting AVT for a thread after a long sleep */
 	data->avt = (data->avt > threshold) ? data->avt : svt;
+
+	if (data->unlimit && !list_empty(&bvt_ctl->runqueue))
+	{
+		/* new thread is wakeup, and find valid avt, so turn-off unlimit */
+		pr_dbg("wake: unlimit turn-off");
+		data->unlimit = false;
+	}
 	/* TODO: evt = avt - (warp ? warpback : 0U) */
 	data->evt = data->avt;
 	/* add to runqueue in order */
