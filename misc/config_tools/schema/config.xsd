@@ -233,11 +233,6 @@ maximum supported resource.</xs:documentation>
 initialization.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="MAX_IR_ENTRIES" type="xs:integer" default="256">
-      <xs:annotation>
-        <xs:documentation>Maximum number of Interrupt Remapping Entries.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
     <xs:element name="MAX_IOAPIC_NUM" default="1">
       <xs:annotation>
         <xs:documentation>Maximum number of IOAPICs.</xs:documentation>

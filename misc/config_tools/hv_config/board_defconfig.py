@@ -162,7 +162,6 @@ def get_capacities(hv_info, config):
 
     print("CONFIG_IOMMU_BUS_NUM={}".format(hv_info.cap.iommu_bus_num), file=config)
     print("CONFIG_MAX_IOAPIC_NUM={}".format(hv_info.cap.max_ioapic_num), file=config)
-    print("CONFIG_MAX_IR_ENTRIES={}".format(hv_info.cap.max_ir_entries), file=config)
     print("CONFIG_MAX_PCI_DEV_NUM={}".format(hv_info.cap.max_pci_dev_num), file=config)
     print("CONFIG_MAX_IOAPIC_LINES={}".format(hv_info.cap.max_ioapic_lines), file=config)
     print("CONFIG_MAX_PT_IRQ_ENTRIES={}".format(hv_info.cap.max_pt_irq_entries), file=config)
