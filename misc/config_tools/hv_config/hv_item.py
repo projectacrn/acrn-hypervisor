@@ -55,7 +55,6 @@ class CapHv:
         self.max_pt_irq_entries = 0
         self.max_ioapic_num = 0
         self.max_ioapic_lines = 0
-        self.max_ir_entries = 0
         self.iommu_bus_num = 0
         self.max_pci_dev_num = 0
         self.max_msix_table_num = 0
@@ -65,7 +64,6 @@ class CapHv:
         self.max_pt_irq_entries = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_PT_IRQ_ENTRIES")
         self.max_ioapic_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IOAPIC_NUM")
         self.max_ioapic_lines = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IOAPIC_LINES")
-        self.max_ir_entries = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IR_ENTRIES")
         self.iommu_bus_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "IOMMU_BUS_NUM")
         self.max_pci_dev_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_PCI_DEV_NUM")
         self.max_msix_table_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_MSIX_TABLE_NUM")
@@ -75,7 +73,6 @@ class CapHv:
         hv_cfg_lib.hv_range_check(self.max_pt_irq_entries, "CAPACITIES", "MAX_PT_IRQ_ENTRIES", hv_cfg_lib.RANGE_DB['PT_IRQ_ENTRIES'])
         hv_cfg_lib.hv_range_check(self.max_ioapic_num, "CAPACITIES", "MAX_IOAPIC_NUM", hv_cfg_lib.RANGE_DB['IOAPIC_NUM'])
         hv_cfg_lib.hv_range_check(self.max_ioapic_lines, "CAPACITIES", "MAX_IOAPIC_LINES", hv_cfg_lib.RANGE_DB['IOAPIC_LINES'])
-        hv_cfg_lib.ir_entries_check(self.max_ir_entries, "CAPACITIES", "MAX_IR_ENTRIES")
         hv_cfg_lib.hv_size_check(self.iommu_bus_num, "CAPACITIES", "IOMMU_BUS_NUM")
         hv_cfg_lib.hv_range_check(self.max_pci_dev_num, "CAPACITIES", "MAX_PCI_DEV_NUM", hv_cfg_lib.RANGE_DB['PCI_DEV_NUM'])
         hv_cfg_lib.max_msix_table_num_check(self.max_msix_table_num, "CAPACITIES", "MAX_MSIX_TABLE_NUM")

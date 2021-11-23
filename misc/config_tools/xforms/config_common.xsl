@@ -164,10 +164,6 @@
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'MAX_IR_ENTRIES'" />
-    </xsl:call-template>
-
-    <xsl:call-template name="integer-by-key">
       <xsl:with-param name="key" select="'MAX_PCI_DEV_NUM'" />
     </xsl:call-template>
 
