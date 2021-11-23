@@ -50,6 +50,16 @@
   </xs:restriction>
 </xs:simpleType>
 
+<xs:simpleType name="MaxVMNumType">
+  <xs:annotation>
+    <xs:documentation>Integer from 1 to 8.</xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:integer">
+    <xs:minInclusive value="1" />
+    <xs:maxInclusive value="8" />
+  </xs:restriction>
+</xs:simpleType>
+
 <xs:simpleType name="MaxMsixTableSizeType">
   <xs:annotation>
     <xs:documentation>Either empty, or an Integer value between 1 and 2048.</xs:documentation>
