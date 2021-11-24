@@ -6,10 +6,10 @@ Launch Configuration Options
 As explained in :ref:`acrn_configuration_tool`, launch configuration files
 define post-launched User VM settings. This document describes these option settings.
 
-``uos``:
+``user_vm``:
   Specify the User VM ``id`` to the Service VM.
 
-``uos_type``:
+``user_vm_type``:
   Specify the User VM type, such as ``CLEARLINUX``, ``ANDROID``, ``ALIOS``,
   ``PREEMPT-RT LINUX``, ``GENERIC LINUX``, ``WINDOWS``, ``YOCTO``, ``UBUNTU``,
   ``ZEPHYR`` or ``VXWORKS``.
