@@ -100,5 +100,4 @@ SECTIONS
 
    . = ALIGN(0x200000) ;
     _ld_ram_end = . ;
-    ld_ram_size = _ld_ram_end - _ld_ram_start ;
 }
