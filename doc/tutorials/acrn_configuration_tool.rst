@@ -13,9 +13,9 @@ ACRN configuration consists of the following key components.
 * A configuration toolset that helps users to generate and edit configuration
   data. The toolset includes:
 
-  - **Board inspector**: Collects board-specific information on target
+  - **Board Inspector**: Collects board-specific information on target
     machines.
-  - **ACRN configurator**: Enables you to edit configuration data via a
+  - **ACRN Configurator**: Enables you to edit configuration data via a
     web-based UI.
 
 The following sections introduce the concepts and tools of ACRN configuration
@@ -121,8 +121,8 @@ Using ACRN Configuration Toolset
 The ACRN configuration toolset enables you to create
 and edit configuration data. The toolset consists of the following:
 
-* :ref:`Board inspector tool <board_inspector_tool>`
-* :ref:`ACRN configurator tool <acrn_configurator_tool>`
+* :ref:`Board Inspector <board_inspector_tool>`
+* :ref:`ACRN Configurator <acrn_configurator_tool>`
 
 As introduced in :ref:`overview_dev`, configuration takes place at
 :ref:`overview_dev_board_config` and :ref:`overview_dev_config_editor` in
@@ -162,7 +162,7 @@ The ``board`` attribute defines the board name and must match the
 configuration file. The file name of the board configuration file
 (example: ``my_board.xml``) doesn't affect the board name.
 
-Board XML files are input to the ACRN configurator tool and the build system,
+Board XML files are input to the ACRN Configurator tool and the build system,
 and are not intended for end users to modify.
 
 Scenario XML Format
@@ -188,11 +188,11 @@ Launch XML Format
 =================
 
 The launch XML has an ``acrn-config`` root element as well as
-``board``, ``scenario`` and ``uos_launcher`` attributes:
+``board``, ``scenario``, and ``user_vm_launcher`` attributes:
 
 .. code-block:: xml
 
-   <acrn-config board="BOARD" scenario="SCENARIO" uos_launcher="UOS_NUMBER">
+   <acrn-config board="BOARD" scenario="SCENARIO" user_vm_launcher="USER_VM_NUMBER">
 
 The ``board`` attribute specifies the board name and must match the ``board``
 attribute in the board configuration file and the scenario configuration file.
@@ -200,8 +200,8 @@ attribute in the board configuration file and the scenario configuration file.
 The ``scenario`` attribute specifies the scenario name and must match the
 ``scenario`` attribute in the scenario configuration file.
 
-The ``uos_launcher`` attribute specifies the number of post-launched User VMs
-in a scenario.
+The ``user_vm_launcher`` attribute specifies the number of post-launched User
+VMs in a scenario.
 
 See :ref:`launch-config-options` for a full explanation of available launch
 XML elements.
