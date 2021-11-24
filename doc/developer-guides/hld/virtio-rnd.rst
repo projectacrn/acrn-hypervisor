@@ -13,14 +13,14 @@ Architecture
 The green components are parts of the ACRN solution while the gray
 components are parts of Linux software or third party tools.
 
-virtio-rnd is implemented as a virtio legacy device in the ACRN device
-model (DM), and is registered as a PCI virtio device to the guest OS
+virtio-rnd is implemented as a virtio legacy device in the ACRN Device
+Model (DM), and is registered as a PCI virtio device to the guest OS
 (User VM). Tools such as :command:`od` (dump a file in octal or other format) can
 be used to read random values from ``/dev/random``.  This device file in the
 User VM is bound with the frontend virtio-rng driver. (The guest kernel must
 be built with ``CONFIG_HW_RANDOM_VIRTIO=y``). The backend
-virtio-rnd reads the HW random value from ``/dev/random`` in the SOS and sends
-them to the frontend.
+virtio-rnd reads the HW random values from ``/dev/random`` in the Service
+VM and sends them to the frontend.
 
 .. figure:: images/virtio-hld-image61.png
    :align: center
@@ -31,7 +31,7 @@ them to the frontend.
 How to Use
 **********
 
-Add a PCI slot to the device model acrn-dm command line; for example::
+Add a PCI slot to the Device Model acrn-dm command line; for example::
 
    -s <slot_number>,virtio-rnd
 
