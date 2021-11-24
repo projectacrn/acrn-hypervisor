@@ -517,7 +517,7 @@ Trusty
 
 For an Android User OS, there is a secure world named trusty world
 support, whose memory must be secured by the ACRN hypervisor and
-must not be accessible by the Seervice/User VM normal world.
+must not be accessible by the Service/User VM normal world.
 
 .. figure:: images/mem-image18.png
    :align: center

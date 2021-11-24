@@ -1,4 +1,5 @@
 .. _using_vxworks_as_uos:
+.. _using_vxworks_as_user_vm:
 
 Run VxWorks as the User VM
 ##########################

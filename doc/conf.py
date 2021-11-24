@@ -389,4 +389,8 @@ html_redirect_pages = [
    ('getting-started/rt_industry', 'getting-started/getting-started'),
    ('getting-started/rt_industry_ubuntu', 'getting-started/getting-started'),
    ('getting-started/building-from-source', 'getting-started/getting-started'),
+   ('tutorials/using_vx_works_as_uos', 'tutorials/using_vx_works_as_user_vm'),
+   ('tutorials/using_xenomai_as_uos', 'tutorials/using_xenomai_as_user_vm'),
+   ('tutorials/using_zephyr_as_uos', 'tutorials/using_zephyr_as_user_vm'),
+   ('tutorials/using_windows_as_uos', 'tutorials/using_windows_as_user_vm')
    ]

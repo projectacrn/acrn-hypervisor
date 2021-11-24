@@ -74,7 +74,7 @@ New and updated reference documents are available, including:
 
 * :ref:`asa`
 * GVT-g-porting (obsolete with v2.6))
-* :ref:`vbsk-overhead`
+* VBS-K Framework Virtualization Overhead Analysis
 * :ref:`asm_coding_guidelines`
 * :ref:`c_coding_guidelines`
 * :ref:`contribute_guidelines`
