@@ -5,16 +5,16 @@ Enable ACRN Secure Boot With GRUB
 
 This document shows how to enable ACRN secure boot with GRUB including:
 
--  ACRN Secure Boot Sequence
--  Generate GPG Key
--  Setup Standalone GRUB EFI Binary
--  Enable UEFI Secure Boot
+-  `ACRN Secure Boot Sequence`_
+-  `Generate GPG Key`_
+-  `Setup Standalone GRUB EFI Binary`_
+-  `Enable UEFI Secure Boot`_
 
 **Validation Environment:**
 
-- Hardware Platform: TGL-I7, Supported hardware described in
+- Hardware Platform: Tiger Lake, supported hardware described in
   :ref:`hardware`.
-- ACRN Scenario: Industry
+- ACRN Scenario: Shared
 - Service VM: Yocto & Ubuntu
 - GRUB: 2.04
 
@@ -25,7 +25,7 @@ This document shows how to enable ACRN secure boot with GRUB including:
 ACRN Secure Boot Sequence
 *************************
 
-ACRN can be booted by Multiboot compatible bootloader, following diagram
+ACRN can be booted by a multiboot compatible bootloader. The following diagram
 illustrates the boot sequence of ACRN with GRUB:
 
 .. image:: images/acrn_secureboot_flow.png
@@ -35,16 +35,16 @@ illustrates the boot sequence of ACRN with GRUB:
 
 For details on enabling GRUB on ACRN, see :ref:`using_grub`.
 
-From a secureboot point of view:
+From a secure boot point of view:
 
 - UEFI firmware verifies shim/GRUB
 - GRUB verifies ACRN, Service VM kernel, and pre-launched User VM kernel
 - Service VM OS kernel verifies the Device Model (``acrn-dm``) and User
   VM OVMF bootloader (with the help of ``acrn-dm``)
-- User VM virtual bootloader (e.g. OVMF) starts the guest side verified boot process
+- User VM virtual bootloader (e.g., OVMF) starts the guest side verified boot process
 
 This document shows you how to enable GRUB to
-verify ACRN binaries such ``acrn.bin``, Service VM kernel (``bzImage``), and
+verify ACRN binaries such as ``acrn.bin``, Service VM kernel (``bzImage``), and
 if present, a pre-launched User VM kernel image.
 
 .. rst-class:: numbered-step
@@ -185,9 +185,9 @@ For example::
 
 Use the output of the :command:`blkid` to find the right values for the
 UUID (``--set``) and PARTUUID (``root=PARTUUID=`` parameter) of the root
-partition (e.g. `/dev/nvme0n1p2`) according to your your hardware.
+partition (e.g., ``/dev/nvme0n1p2``) according to your hardware.
 
-Copy this new :file:`grub.cfg` to your ESP (e.g. `/boot/efi/EFI/`).
+Copy this new :file:`grub.cfg` to your ESP (e.g., ``/boot/efi/EFI/``).
 
 
 Sign grub.cfg and ACRN Binaries
@@ -196,11 +196,11 @@ Sign grub.cfg and ACRN Binaries
 The :file:`grub.cfg` and all ACRN binaries that will be loaded by GRUB
 **must** be signed with the same GPG key.
 
-Here's sequence example of signing the individual binaries::
+Here's a sequence example of signing the individual binaries::
 
     gpg --homedir keys --detach-sign path/to/grub.cfg
     gpg --homedir keys --detach-sign path/to/acrn.bin
-    gpg --homedir keys --detach-sign path/to/sos_kernel/bzImage
+    gpg --homedir keys --detach-sign path/to/service_vm_kernel/bzImage
 
 Now, you can reboot and the system will boot with the signed GRUB EFI binary.
 GRUB will refuse to boot if any files it attempts to load have been tampered
@@ -215,25 +215,25 @@ Enable UEFI Secure Boot
 Creating UEFI Secure Boot Key
 =============================
 
--Generate your own keys for Secure Boot::
+- Generate your own keys for Secure Boot::
 
     openssl req -new -x509 -newkey rsa:2048 -subj "/CN=PK/"  -keyout PK.key  -out PK.crt  -days 7300 -nodes -sha256
     openssl req -new -x509 -newkey rsa:2048 -subj "/CN=KEK/" -keyout KEK.key -out KEK.crt -days 7300 -nodes -sha256
     openssl req -new -x509 -newkey rsa:2048 -subj "/CN=db/"  -keyout db.key  -out db.crt  -days 7300 -nodes -sha256
 
--Convert ``*.crt`` keys to the ESL format understood for UEFI::
+- Convert ``*.crt`` keys to the ESL format understood for UEFI::
 
     cert-to-efi-sig-list PK.crt PK.esl
     cert-to-efi-sig-list KEK.crt KEK.esl
     cert-to-efi-sig-list db.crt db.esl
 
--Sign ESL files::
+- Sign ESL files::
 
     sign-efi-sig-list -k PK.key -c PK.crt PK PK.esl PK.auth
     sign-efi-sig-list -k PK.key -c PK.crt KEK KEK.esl KEK.auth
     sign-efi-sig-list -k KEK.key -c KEK.crt db db.esl db.auth
 
--Convert to DER format::
+- Convert to DER format::
 
     openssl x509 -outform DER -in PK.crt -out PK.der
     openssl x509 -outform DER -in KEK.crt -out KEK.der
@@ -245,6 +245,8 @@ The keys to sign bootloader image: :file:`grubx64.efi`, :file:`db.key` , :file:`
 
 Sign GRUB Image With db Key
 ===========================
+
+Command example::
 
     sbsign --key db.key --cert db.crt path/to/grubx64.efi
 
