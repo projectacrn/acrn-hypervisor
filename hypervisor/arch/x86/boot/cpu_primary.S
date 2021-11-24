@@ -76,7 +76,7 @@ address_tag_start:
     .short  0
     .long   address_tag_end - address_tag_start
     .long   mb2_header_start  /* address corresponding to the beginning of the Multiboot2 header */
-    .long   _ld_ram_start     /* load_addr: load from the binary's beginning */
+    .long   ld_ram_start     /* load_addr: load from the binary's beginning */
     /*
      * load_end_addr: this includes .bss so that boot loader could reserve the
      * memory that .bss occupies to avoid placing boot modules or other data in that area.
@@ -84,7 +84,7 @@ address_tag_start:
      * However, the boot loader is supposed not to actually load the .bss section because
      * it's beyond the scope of acrn.bin
      */
-    .long   _ld_ram_end
+    .long   ld_ram_end
     .long   0   /* bss_end_addr, don't ask boot loader to clear .bss */
 address_tag_end:
 
