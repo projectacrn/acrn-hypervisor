@@ -509,8 +509,8 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 		vm->vcpuid_level = limit;
 
 		for (i = 1U; i <= limit; i++) {
-			/* cpuid 1/0xb is percpu related */
-			if ((i == 1U) || (i == 0xbU) || (i == 0xdU) || (i == 0x19U)) {
+			/* these are percpu related */
+			if ((i == 1U) || (i == 0xbU) || (i == 0xdU) || (i == 0x19U) || (i == 0x1aU)) {
 				continue;
 			}
 
@@ -606,7 +606,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 
 static inline bool is_percpu_related(uint32_t leaf)
 {
-	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) || (leaf == 0x80000001U));
+	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) || (leaf == 0x1aU) || (leaf == 0x80000001U));
 }
 
 static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
@@ -758,6 +758,12 @@ static void guest_cpuid_19h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 	}
 }
 
+static void guest_cpuid_1ah(uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	/* Hybrid Information Enumeration Leaf (EAX = 1AH, ECX = 0) */
+	cpuid_subleaf(0x1aU, *ecx, eax, ebx, ecx, edx);
+}
+
 static void guest_cpuid_80000001h(const struct acrn_vcpu *vcpu,
 	uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
@@ -839,6 +845,10 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 
 		case 0x19U:
 			guest_cpuid_19h(vcpu, eax, ebx, ecx, edx);
+			break;
+
+		case 0x1aU:
+			guest_cpuid_1ah(eax, ebx, ecx, edx);
 			break;
 
 		case 0x80000001U:
