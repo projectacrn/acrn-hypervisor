@@ -492,7 +492,7 @@ static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 
 static inline bool is_percpu_related(uint32_t leaf)
 {
-	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) || (leaf == 0x80000001U) || (leaf == 0x2U));
+	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) || (leaf == 0x80000001U) || (leaf == 0x2U) || (leaf == 0x1aU));
 }
 
 int32_t set_vcpuid_entries(struct acrn_vm *vm)
