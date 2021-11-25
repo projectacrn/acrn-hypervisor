@@ -793,7 +793,7 @@ Extract-and-Expand Key Derivation Function), `RFC5869
 
 The parameters of HKDF derivation in the hypervisor are:
 
-#. VMInfo= vm-uuid (from the hypervisor configuration file)
+#. VMInfo= vm name (from the hypervisor configuration file)
 #. theHash=SHA-256
 #. OutSeedLen = 64 in bytes
 #. Guest Dev and User SEED (dvSEED/uvSEED)
