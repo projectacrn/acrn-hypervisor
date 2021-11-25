@@ -1,4 +1,4 @@
-<acrn-config board="icx-rvp" scenario="shared" user_vm_launcher="2">
+<acrn-config board="adl-rvp" scenario="shared" user_vm_launcher="2">
   <user_vm id="1">
     <user_vm_type desc="User VM type">WINDOWS</user_vm_type>
     <vm_name>POST_STD_VM1</vm_name>
@@ -24,7 +24,7 @@
       <usb_xdci desc="vm usb_xdci device"/>
       <audio desc="vm audio device"/>
       <audio_codec desc="vm audio codec device"/>
-      <gpu desc="vm gpu device">05:00.0 VGA compatible controller: ASPEED Technology, Inc. ASPEED Graphics Family (rev 41)</gpu>
+      <gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation Device 46a6 (rev 0c)</gpu>
       <ipu desc="vm ipu device"/>
       <ipu_i2c desc="vm ipu_i2c device"/>
       <cse desc="vm cse device"/>
@@ -53,7 +53,7 @@
     <mem_size desc="User VM memory size in MByte">1024</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-    <poweroff_channel desc="the method of power off User VM"/>
+    <poweroff_channel desc="the method of power off Uer VM"/>
     <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
     <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
     <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"/>
