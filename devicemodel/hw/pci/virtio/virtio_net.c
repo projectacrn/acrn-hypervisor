@@ -34,6 +34,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <openssl/md5.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/evp.h>
+#endif
 #include <pthread.h>
 #include <sys/ioctl.h>
 #include <sys/errno.h>
@@ -812,7 +815,7 @@ virtio_net_tap_setup(struct virtio_net *net, char *devname)
 static int
 virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	MD5_CTX mdctx;
+
 	unsigned char digest[16];
 	char nstr[80];
 	char tname[MAXCOMLEN + 1];
@@ -935,10 +938,18 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (!mac_provided) {
 		snprintf(nstr, sizeof(nstr), "%d-%d-%s", dev->slot,
 		    dev->func, mac_seed);
-
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+		EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+		EVP_DigestInit_ex(mdctx, EVP_md5(), NULL);
+		EVP_DigestUpdate(mdctx, nstr, strnlen(nstr, sizeof(nstr)));
+		EVP_DigestFinal_ex(mdctx, digest, NULL);
+		EVP_MD_CTX_free(mdctx);
+#else
+		MD5_CTX mdctx;
 		MD5_Init(&mdctx);
 		MD5_Update(&mdctx, nstr, strnlen(nstr, sizeof(nstr)));
 		MD5_Final(digest, &mdctx);
+#endif
 
 		net->config.mac[0] = 0x00;
 		net->config.mac[1] = 0x16;

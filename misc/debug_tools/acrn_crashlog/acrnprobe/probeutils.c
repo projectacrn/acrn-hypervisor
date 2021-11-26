@@ -26,6 +26,9 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <openssl/sha.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/evp.h>
+#endif
 #include <time.h>
 #include "property.h"
 #include "fsutils.h"
@@ -102,7 +105,6 @@ int get_current_time_long(char *buf)
 static int compute_key(char *key, size_t klen, const char *seed,
 			const size_t slen)
 {
-	SHA256_CTX sha;
 	char buf[VERSION_SIZE];
 	int len;
 	long long time_ns;
@@ -115,17 +117,27 @@ static int compute_key(char *key, size_t klen, const char *seed,
 	if (klen > SHA256_DIGEST_LENGTH * 2 || !klen)
 		return -1;
 
-	SHA256_Init(&sha);
+
 	time_ns = get_uptime();
 	len = snprintf(buf, VERSION_SIZE, "%s%s%lld",
 			gbuildversion, guuid, time_ns);
 	if (s_not_expect(len , VERSION_SIZE))
 		return -1;
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
+	EVP_DigestUpdate(mdctx, (unsigned char *)buf, strnlen(buf, VERSION_SIZE));
+	EVP_DigestUpdate(mdctx, (unsigned char *)seed, strnlen(seed, slen));
+	EVP_DigestFinal_ex(mdctx, results, NULL);
+	EVP_MD_CTX_free(mdctx);
+#else
+	SHA256_CTX sha;
+	SHA256_Init(&sha);
 	SHA256_Update(&sha, (unsigned char *)buf, strnlen(buf, VERSION_SIZE));
 	SHA256_Update(&sha, (unsigned char *)seed, strnlen(seed, slen));
-
 	SHA256_Final(results, &sha);
+#endif
 
 	for (i = 0; i < klen / 2; i++) {
 		len = snprintf(tmp_key, 3, "%02x", results[i]);
