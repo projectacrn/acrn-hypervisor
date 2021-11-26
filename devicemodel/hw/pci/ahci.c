@@ -34,6 +34,9 @@
 #include <pthread.h>
 #include <inttypes.h>
 #include <openssl/md5.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/evp.h>
+#endif
 
 #include "dm.h"
 #include "pci_core.h"
@@ -2354,7 +2357,6 @@ pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 	struct pci_ahci_vdev *ahci_dev;
 	int ret, slots, rc;
 	uint8_t p;
-	MD5_CTX mdctx;
 	u_char digest[16];
 	char *next, *next2;
 
@@ -2418,9 +2420,18 @@ pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 		 * Create an identifier for the backing file.
 		 * Use parts of the md5 sum of the filename
 		 */
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+		EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+		EVP_DigestInit_ex(mdctx, EVP_md5(), NULL);
+		EVP_DigestUpdate(mdctx, opts, strnlen(opts, MAX_OPTS_LEN));
+		EVP_DigestFinal_ex(mdctx, digest, NULL);
+		EVP_MD_CTX_free(mdctx);
+#else
+		MD5_CTX mdctx;
 		MD5_Init(&mdctx);
 		MD5_Update(&mdctx, opts, strnlen(opts, MAX_OPTS_LEN));
 		MD5_Final(digest, &mdctx);
+#endif
 		rc = snprintf(ahci_dev->port[p].ident,
 			sizeof(ahci_dev->port[p].ident),
 			"ACRN--%02X%02X-%02X%02X-%02X%02X", digest[0],

@@ -32,6 +32,9 @@
 #include <unistd.h>
 #include <openssl/hmac.h>
 #include <openssl/opensslv.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/evp.h>
+#endif
 
 #include "rpmb.h"
 #include "rpmb_sim.h"
@@ -56,7 +59,9 @@ static FILE *rpmb_fd = NULL;
 #define TEEDATA_SIZE		(4*1024*1024) //4M
 #define TEEDATA_BLOCK_COUNT		(TEEDATA_SIZE/256)
 
+#ifndef offsetof
 #define offsetof(s, m)		(size_t) &(((s *) 0)->m)
+#endif
 
 static int virtio_rpmb_debug = 1;
 #define DPRINTF(params) do { if (virtio_rpmb_debug) pr_dbg params; } while (0)
@@ -100,6 +105,54 @@ int rpmb_mac(const uint8_t *key, const struct rpmb_frame *frames,
 
 err:
 	HMAC_CTX_cleanup(&hmac_ctx);
+
+	return hmac_ret ? 0 : -1;
+}
+#elif OPENSSL_VERSION_NUMBER >= 0x30000000L
+int rpmb_mac(const uint8_t *key, const struct rpmb_frame *frames,
+			size_t frame_cnt, uint8_t *mac)
+{
+	int i;
+	int hmac_ret;
+	size_t md_len;
+	EVP_MAC_CTX *hmac_ctx;
+	EVP_MAC *hmac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+
+	hmac_ctx = EVP_MAC_CTX_new(hmac);
+	if (hmac_ctx == NULL) {
+		DPRINTF(("get hmac_ctx failed\n"));
+		EVP_MAC_free(hmac);
+		return -1;
+	}
+
+	hmac_ret = EVP_MAC_init(hmac_ctx, key, 32, NULL);
+	if (!hmac_ret) {
+		DPRINTF(("HMAC_Init_ex failed\n"));
+		goto err;
+	}
+
+	for (i = 0; i < frame_cnt; i++) {
+		hmac_ret = EVP_MAC_update(hmac_ctx, frames[i].data, 284);
+		if (!hmac_ret) {
+			DPRINTF(("HMAC_Update failed\n"));
+			goto err;
+		}
+	}
+
+	hmac_ret = EVP_MAC_final(hmac_ctx, mac, &md_len, 32);
+	if (md_len != 32) {
+		DPRINTF(("bad md_len %d != 32.\n", md_len));
+		goto err;
+	}
+
+	if (!hmac_ret) {
+		DPRINTF(("HMAC_Final failed\n"));
+		goto err;
+	}
+
+err:
+	EVP_MAC_CTX_free(hmac_ctx);
+	EVP_MAC_free(hmac);
 
 	return hmac_ret ? 0 : -1;
 }

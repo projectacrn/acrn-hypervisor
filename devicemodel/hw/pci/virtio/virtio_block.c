@@ -33,6 +33,9 @@
 #include <string.h>
 #include <pthread.h>
 #include <openssl/md5.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/evp.h>
+#endif
 
 #include "dm.h"
 #include "pci_core.h"
@@ -438,7 +441,6 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	bool dummy_bctxt;
 	char bident[16];
 	struct blockif_ctxt *bctxt;
-	MD5_CTX mdctx;
 	u_char digest[16];
 	struct virtio_blk *blk;
 	int i;
@@ -521,9 +523,18 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * Create an identifier for the backing file. Use parts of the
 	 * md5 sum of the filename
 	 */
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	EVP_DigestInit_ex(mdctx, EVP_md5(), NULL);
+	EVP_DigestUpdate(mdctx, opts, strnlen(opts, VIRTIO_BLK_MAX_OPTS_LEN));
+	EVP_DigestFinal_ex(mdctx, digest, NULL);
+	EVP_MD_CTX_free(mdctx);
+#else
+	MD5_CTX mdctx;
 	MD5_Init(&mdctx);
 	MD5_Update(&mdctx, opts, strnlen(opts, VIRTIO_BLK_MAX_OPTS_LEN));
 	MD5_Final(digest, &mdctx);
+#endif
 	rc = snprintf(blk->ident, sizeof(blk->ident),
 		"ACRN--%02X%02X-%02X%02X-%02X%02X", digest[0],
 		digest[1], digest[2], digest[3], digest[4], digest[5]);
