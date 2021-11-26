@@ -13,6 +13,9 @@
 #include <string.h>
 #include <pthread.h>
 #include <openssl/md5.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/evp.h>
+#endif
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
@@ -725,7 +728,6 @@ virtio_i2c_notify(void *vdev, struct virtio_vq_info *vq)
 static int
 virtio_i2c_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	MD5_CTX mdctx;
 	u_char digest[16];
 	struct virtio_i2c *vi2c;
 	pthread_mutexattr_t attr;
@@ -771,9 +773,18 @@ virtio_i2c_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	vi2c->vq.qsize = 64;
 	vi2c->native_adapter_num = 0;
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+	EVP_DigestInit_ex(mdctx, EVP_md5(), NULL);
+	EVP_DigestUpdate(mdctx, "vi2c", strlen("vi2c"));
+	EVP_DigestFinal_ex(mdctx, digest, NULL);
+	EVP_MD_CTX_free(mdctx);
+#else
+	MD5_CTX mdctx;
 	MD5_Init(&mdctx);
 	MD5_Update(&mdctx, "vi2c", strlen("vi2c"));
 	MD5_Final(digest, &mdctx);
+#endif
 	rc = snprintf(vi2c->ident, sizeof(vi2c->ident),
 		"ACRN--%02X%02X-%02X%02X-%02X%02X", digest[0],
 		digest[1], digest[2], digest[3], digest[4],
