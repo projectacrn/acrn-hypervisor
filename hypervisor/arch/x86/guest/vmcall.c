@@ -10,6 +10,7 @@
 #include <asm/guest/vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/virq.h>
+#include <asm/guest/optee.h>
 #include <acrn_hv_defs.h>
 #include <hypercall.h>
 #include <trace.h>
@@ -220,9 +221,13 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 			uint64_t param1 = vcpu_get_gpreg(vcpu, CPU_REG_RDI);  /* hypercall param1 from guest */
 			uint64_t param2 = vcpu_get_gpreg(vcpu, CPU_REG_RSI);  /* hypercall param2 from guest */
 
-			if ((permission_flags == 0UL) && is_service_vm(vm)) {
+			if ((permission_flags == 0UL) && is_service_vm(vm) && !is_ree_vm(vm)) {
 				/* A permission_flags of 0 indicates that this hypercall is for Service VM to manage
 				 * post-launched VMs.
+				 *
+				 * Though REE VM has its load order to be Service_VM, it does not offer services as
+				 * Service VM does. The only hypercalls allowed for REE are the ones with permission flag
+				 * GUEST_FLAG_REE.
 				 */
 				struct acrn_vm *target_vm = parse_target_vm(vm, hcall_id, param1, param2);
 
