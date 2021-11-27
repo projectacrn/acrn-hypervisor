@@ -14,6 +14,16 @@
 #include <hypercall.h>
 #include <logmsg.h>
 
+int is_tee_vm(struct acrn_vm *vm)
+{
+	return (get_vm_config(vm->vm_id)->guest_flags & GUEST_FLAG_TEE) != 0;
+}
+
+int is_ree_vm(struct acrn_vm *vm)
+{
+	return (get_vm_config(vm->vm_id)->guest_flags & GUEST_FLAG_REE) != 0;
+}
+
 void prepare_tee_vm_memmap(struct acrn_vm *vm, const struct acrn_vm_config *vm_config)
 {
 	uint64_t hv_hpa;
@@ -137,9 +147,9 @@ int32_t hcall_switch_ee(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_
 {
 	int32_t ret = 0;
 
-	if ((get_vm_config(vcpu->vm->vm_id)->guest_flags & GUEST_FLAG_TEE) != 0U) {
+	if (is_tee_vm(vcpu->vm)) {
 		ret = tee_switch_to_ree(vcpu);
-	} else if ((get_vm_config(vcpu->vm->vm_id)->guest_flags & GUEST_FLAG_REE) != 0U) {
+	} else if (is_ree_vm(vcpu->vm)) {
 		ret = ree_switch_to_tee(vcpu);
 	}
 
@@ -151,8 +161,7 @@ void handle_x86_tee_int(struct ptirq_remapping_info *entry, uint16_t pcpu_id)
 	struct acrn_vcpu *tee_vcpu;
 	struct acrn_vcpu *curr_vcpu = get_running_vcpu(pcpu_id);
 
-	if (((get_vm_config(entry->vm->vm_id)->guest_flags & GUEST_FLAG_REE) != 0U) &&
-		((get_vm_config(curr_vcpu->vm->vm_id)->guest_flags & GUEST_FLAG_TEE) != 0U)) {
+	if (is_ree_vm(entry->vm) && is_tee_vm(curr_vcpu->vm)) {
 		/*
 		 * Non-Secure interrupt (interrupt belongs to REE) comes
 		 * when REE vcpu is running, the interrupt will be injected
@@ -162,8 +171,7 @@ void handle_x86_tee_int(struct ptirq_remapping_info *entry, uint16_t pcpu_id)
 		 */
 		tee_vcpu = vcpu_from_pid(get_companion_vm(entry->vm), pcpu_id);
 		vlapic_set_intr(tee_vcpu, TEE_NOTIFICATION_VECTOR, LAPIC_TRIG_EDGE);
-	} else if (((get_vm_config(entry->vm->vm_id)->guest_flags & GUEST_FLAG_TEE) != 0U) &&
-		((get_vm_config(curr_vcpu->vm->vm_id)->guest_flags & GUEST_FLAG_REE) != 0U)) {
+	} else if (is_tee_vm(entry->vm) && is_ree_vm(curr_vcpu->vm)) {
 		/*
 		 * Secure interrupt (interrupt belongs to TEE) comes
 		 * when TEE vcpu is running, the interrupt will be

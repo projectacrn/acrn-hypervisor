@@ -19,6 +19,8 @@
 /* This value tells OPTEE that this switch to TEE is due to secure interrupt */
 #define OPTEE_FIQ_ENTRY	0xB20000FFUL
 
+int is_tee_vm(struct acrn_vm *vm);
+int is_ree_vm(struct acrn_vm *vm);
 void prepare_tee_vm_memmap(struct acrn_vm *vm, const struct acrn_vm_config *vm_config);
 void handle_x86_tee_int(struct ptirq_remapping_info *entry, uint16_t pcpu_id);
 
