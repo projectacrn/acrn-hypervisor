@@ -76,7 +76,7 @@ ACRN has these key capabilities and benefits:
   non-safety-critical domains coexisting on one SoC using Intel VT-backed
   isolation.
 * **Adaptable and Flexible**: ACRN has multi-OS support with efficient
-  virtualization for VM OSs including Linux, Android, Zephyr, and Windows, as
+  virtualization for VM OSs including Linux, Zephyr, and Windows, as
   needed for a variety of application use cases. ACRN scenario configurations
   support shared, partitioned, and hybrid VM models to support a variety of
   application use cases.
@@ -148,7 +148,7 @@ shared among the Service VM and User VMs. The Service VM is launched by the
 hypervisor after any pre-launched VMs are launched. The Service VM can access
 remaining hardware resources directly by running native drivers and provides
 device sharing services to the User VMs, through the Device Model.  These
-post-launched User VMs can run one of many OSs including Ubuntu, Android,
+post-launched User VMs can run one of many OSs including Ubuntu or
 Windows, or a real-time OS such as Zephyr, VxWorks, or Xenomai. Because of its
 real-time capability, a real-time VM (RTVM) can be used for software
 programmable logic controller (PLC), inter-process communication (IPC), or
