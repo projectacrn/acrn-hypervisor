@@ -6,10 +6,9 @@ Glossary of Terms
 .. glossary::
    :sorted:
 
-   AaaG
    LaaG
    WaaG
-      Acronyms for Android, Linux, and Windows as a Guest VM. ACRN supports a
+      Acronyms for Linux and Windows as a Guest VM. ACRN supports a
       variety of :term:`User VM` OS choices. Your choice depends on the
       needs of your application.  For example, Windows is popular for
       Human-Machine Interface (HMI) applications in industrial applications,
@@ -172,7 +171,7 @@ Glossary of Terms
    User VM
       A :term:`VM` where user-defined environments and applications run. User VMs can
       run different OSes based on their needs, including for example, Ubuntu for
-      an AI application, Android or Windows for a Human-Machine Interface, or a
+      an AI application, Windows for a Human-Machine Interface, or a
       hard real-time control OS such as Zephyr, VxWorks, or RT-Linux for soft or
       hard real-time control. There are three types of ACRN User VMs: pre-launched,
       post-launched standard, and post-launched real-time.  *(Historically, a
