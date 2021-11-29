@@ -10,6 +10,8 @@ This document briefly summarizes the full `Contribution
 Guidelines <http://projectacrn.github.io/latest/developer-guides/contribute_guidelines.html>`_
 documentation.
 
+.. start_include_here
+
 * ACRN uses the permissive open source `BSD 3-Clause license`_
   that allows you to freely use, modify, distribute and sell your own products
   that include such licensed software.
@@ -35,5 +37,21 @@ documentation.
 * The `ACRN user mailing list`_ is a great place to engage with the
   community, ask questions, discuss issues, and help each other.
 
+.. _tsc_members:
+
+Technical Steering Committee (TSC)
+**********************************
+
+The Technical Steering Committee (TSC) is responsible for technical oversight of
+the open source ACRN project.  The role and rules governing the operations of
+the TSC and its membership, are described in the project's `technical-charter`_.
+
+These are the current TSC voting members and chair person:
+
+- Anthony Xu (chair): anthony.xu@intel.com
+- Helmut Buchsbaum: helmut.buchsbaum@tttech-industrial.com
+- Thomas Gleixner: tglx@linutronix.de
+
 .. _ACRN user mailing list: https://lists.projectacrn.org/g/acrn-user
 .. _BSD 3-Clause license: https://github.com/projectacrn/acrn-hypervisor/blob/master/LICENSE
+.. _technical-charter: https://projectacrn.org/technical-charter/
