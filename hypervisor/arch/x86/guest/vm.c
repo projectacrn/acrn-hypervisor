@@ -1041,8 +1041,8 @@ void launch_vms(uint16_t pcpu_id)
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
 
-		if ((vm_config->guest_flags & GUEST_FLAG_REE) != 0U &&
-		    (vm_config->guest_flags & GUEST_FLAG_TEE) != 0U) {
+		if (((vm_config->guest_flags & GUEST_FLAG_REE) != 0U) &&
+		    ((vm_config->guest_flags & GUEST_FLAG_TEE) != 0U)) {
 			ASSERT(false, "%s: Wrong VM (VM id: %u) configuration, can't set both REE and TEE flags",
 				__func__, vm_id);
 		}
