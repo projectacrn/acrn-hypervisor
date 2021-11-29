@@ -99,11 +99,11 @@ static void add_one_pcpu(int pcpu_id)
  */
 int acrn_parse_cpu_affinity(char *opt)
 {
-	char *str, *cp;
+	char *str, *cp, *cp_opt;
 	int pcpu_id;
 	int pcpu_start, pcpu_end;
 
-	cp = strdup(opt);
+	cp_opt = cp = strdup(opt);
 	if (!cp) {
 		pr_err("%s: strdup returns NULL\n", __func__);
 		return -1;
@@ -126,7 +126,7 @@ int acrn_parse_cpu_affinity(char *opt)
 
 				/* parse the entry before ',' */
 				if (dm_strtoi(str, NULL, 10, &pcpu_id)) {
-					return -1;
+					goto err;
 				}
 				add_one_pcpu(pcpu_id);
 			}
@@ -136,11 +136,11 @@ int acrn_parse_cpu_affinity(char *opt)
 
 				/* parse the entry before and after '-' respectively */
 				if (dm_strtoi(str, NULL, 10, &pcpu_start) || dm_strtoi(cp, NULL, 10, &pcpu_end)) {
-					return -1;
+					goto err;
 				}
 
 				if (pcpu_end <= pcpu_start) {
-					return -1;
+					goto err;
 				}
 
 				for (; pcpu_start <= pcpu_end; pcpu_start++) {
@@ -153,7 +153,12 @@ int acrn_parse_cpu_affinity(char *opt)
 		}
 	}
 
+	free(cp_opt);
 	return 0;
+
+err:
+	free(cp_opt);
+	return -1;
 }
 
 uint64_t vm_get_cpu_affinity_dm(void)
