@@ -91,11 +91,11 @@ enum msgid {
 
 /* DM handled message event types */
 enum dm_msgid {
-	DM_STOP = MSG_MAX + 1,	/* Stop this UOS */
-	DM_SUSPEND,		/* Suspend this UOS from running state */
-	DM_RESUME,		/* Resume this UOS from suspend state */
-	DM_QUERY,		/* Ask power state of this UOS */
-	DM_BLKRESCAN,		/* Rescan virtio-blk device for any changes in UOS */
+	DM_STOP = MSG_MAX + 1,	/* Stop this User VM */
+	DM_SUSPEND,		/* Suspend this User VM from running state */
+	DM_RESUME,		/* Resume this User VM from suspend state */
+	DM_QUERY,		/* Ask power state of this User VM */
+	DM_BLKRESCAN,		/* Rescan virtio-blk device for any changes in User VM */
 	DM_MAX,
 };
 
@@ -118,8 +118,8 @@ enum acrnd_msgid {
 
 /* Acrnd handled message req/ack pairs */
 
-/* SOS-LCS handled message event types */
-enum sos_lcs_msgid {
+/* Service-VM-LCS handled message event types */
+enum service_vm_lcs_msgid {
 	WAKEUP_REASON = ACRND_MAX + 1,	/* Acrnd/Acrnctl request wakeup reason */
 	RTC_TIMER,		/* Acrnd request to setup RTC timer */
 	SUSPEND,

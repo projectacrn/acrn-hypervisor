@@ -126,7 +126,7 @@ static void try_do_works(void)
 }
 
 static void acrnd_run_vm(char *name);
-unsigned get_sos_wakeup_reason(void);
+unsigned get_service_vm_wakeup_reason(void);
 
 /* Timer callback to run/resume VM.
  * Will be called with work_mutex hold
@@ -269,7 +269,7 @@ static int active_all_vms(void)
 			break;
 		case VM_SUSPENDED:
 			if (platform_has_hw_ioc) {
-				reason = get_sos_wakeup_reason();
+				reason = get_service_vm_wakeup_reason();
 			}
 			ret += resume_vm(vm->name, reason);
 			break;
@@ -315,7 +315,7 @@ static int wakeup_suspended_vms(unsigned wakeup_reason)
 
 static int acrnd_fd = -1;
 
-unsigned get_sos_wakeup_reason(void)
+unsigned get_service_vm_wakeup_reason(void)
 {
 	int client_fd, ret = 0;
 	struct mngr_msg req;
@@ -376,7 +376,7 @@ static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
 		mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
-static int set_sos_timer(time_t due_time)
+static int set_service_vm_timer(time_t due_time)
 {
 	int client_fd, ret;
 	int retry = 1;
@@ -399,7 +399,7 @@ static int set_sos_timer(time_t due_time)
 	ret =
 	    mngr_send_msg(client_fd, &req, &ack, SOCK_TIMEOUT);
 	while (ret <= 0 && retry < 5) {
-		printf("Fail to set sos wakeup timer(err:%d), retry %d...\n",
+		printf("Fail to set Service VM wakeup timer(err:%d), retry %d...\n",
 		       ret, retry++);
 		goto RETRY;
 	}
@@ -442,7 +442,7 @@ static int store_timer_list(void)
 	/* If any timer is stored
 	 * system must be awake at sys_wakeup */
 	if (sys_wakeup) {
-		set_sos_timer(sys_wakeup);
+		set_service_vm_timer(sys_wakeup);
 	} else {
 		unlink(ACRN_CONF_TIMER_LIST);
 	}
@@ -515,7 +515,7 @@ static void* notify_stop_state(void *arg)
 
 	lcs_fd = mngr_open_un(SERVICE_VM_LCS_SOCK, MNGR_CLIENT);
 	if (lcs_fd < 0) {
-		fprintf(stderr, "cannot open sos-lcs.socket\n");
+		fprintf(stderr, "cannot open service-vm-lcs.socket\n");
 		goto exit;
 	}
 
@@ -594,9 +594,9 @@ void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 	ack.timestamp = msg->timestamp;
 	ack.data.err = -1;
 
-	/* acrnd get wakeup_reason from sos lcs */
+	/* acrnd get wakeup_reason from Service VM lcs */
 	if (platform_has_hw_ioc) {
-		wakeup_reason = get_sos_wakeup_reason();
+		wakeup_reason = get_service_vm_wakeup_reason();
 	}
 
 	if (wakeup_reason & CBC_WK_RSN_RTC) {
@@ -650,7 +650,7 @@ int init_vm(void)
 
 	/* init all User VMs, according wakeup_reason */
 	if (platform_has_hw_ioc) {
-		wakeup_reason = get_sos_wakeup_reason();
+		wakeup_reason = get_service_vm_wakeup_reason();
 	}
 
 	if (wakeup_reason & CBC_WK_RSN_RTC) {

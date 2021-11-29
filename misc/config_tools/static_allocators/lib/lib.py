@@ -122,7 +122,7 @@ def is_post_launched_vm(vm_type):
         return True
     return False
 
-def is_sos_vm(vm_type):
+def is_service_vm(vm_type):
     if vm_type in SERVICE_VM_TYPE:
         return True
     return False

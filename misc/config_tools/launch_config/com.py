@@ -81,9 +81,9 @@ def off_line_cpus(args, vmid, user_vm_type, config):
     """
     pcpu_id_list = get_cpu_affinity_list(args["cpu_affinity"], vmid)
     if not pcpu_id_list:
-        sos_vmid = launch_cfg_lib.get_sos_vmid()
+        service_vmid = launch_cfg_lib.get_service_vmid()
         cpu_affinity = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "cpu_affinity", "pcpu_id")
-        pcpu_id_list = get_cpu_affinity_list(cpu_affinity, sos_vmid+vmid)
+        pcpu_id_list = get_cpu_affinity_list(cpu_affinity, service_vmid+vmid)
 
     if not pcpu_id_list:
         key = "scenario config error"
@@ -160,7 +160,7 @@ def run_container(board_name, user_vm_type, config):
     print("do", file=config)
     print('	if [ "$vm_name" = "${vms[$i]}" ]; then', file=config)
     print('		if [ "stopped" != "${vms[$i+1]}" ]; then', file=config)
-    print('			echo "Uos ${vms[$i]} ${vms[$i+1]}"', file=config)
+    print('			echo "User VM ${vms[$i]} ${vms[$i+1]}"', file=config)
     print("			acrnctl stop ${vms[$i]}", file=config)
     print("		fi", file=config)
     print("	fi", file=config)
@@ -273,10 +273,10 @@ def launch_begin(names, virt_io, vmid, config):
     board_name = names['board_name']
     user_vm_type = names['user_vm_types'][vmid]
 
-    launch_uos = common.undline_name(user_vm_type).lower()
+    launch_user_vm = common.undline_name(user_vm_type).lower()
     tap_network(virt_io, vmid, config)
     run_container(board_name, user_vm_type, config)
-    print("function launch_{}()".format(launch_uos), file=config)
+    print("function launch_{}()".format(launch_user_vm), file=config)
     print("{", file=config)
 
 
@@ -295,7 +295,7 @@ def mem_size_set(args, vmid, config):
 def user_vm_launch(names, args, virt_io, vmid, config):
 
     user_vm_type = names['user_vm_types'][vmid]
-    launch_uos = common.undline_name(user_vm_type).lower()
+    launch_user_vm = common.undline_name(user_vm_type).lower()
     board_name = names['board_name']
     if 'nuc' in board_name:
         board_name = 'nuc'
@@ -313,7 +313,7 @@ def user_vm_launch(names, args, virt_io, vmid, config):
             print("fi", file=config)
             if is_mount_needed(virt_io, vmid):
                 print("", file=config)
-                print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
+                print('launch_{} {} "{}" $debug'.format(launch_user_vm, vmid, vmid), file=config)
                 print("", file=config)
                 i = 0
                 for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
@@ -325,14 +325,14 @@ def user_vm_launch(names, args, virt_io, vmid, config):
 
         else:
             print("else", file=config)
-            print('    launch_{} {}'.format(launch_uos, vmid), file=config)
+            print('    launch_{} {}'.format(launch_user_vm, vmid), file=config)
             print("fi", file=config)
             return
     elif not is_mount_needed(virt_io, vmid):
-        print('launch_{} {}'.format(launch_uos, vmid), file=config)
+        print('launch_{} {}'.format(launch_user_vm, vmid), file=config)
     else:
         print("", file=config)
-        print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
+        print('launch_{} {} "{}" $debug'.format(launch_user_vm, vmid, vmid), file=config)
         print("", file=config)
         i = 0
         for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
@@ -386,8 +386,8 @@ def launch_end(names, args, virt_io, vmid, config):
             print("", file=config)
             i += 1
 
-    sos_vmid = launch_cfg_lib.get_sos_vmid()
-    if args['cpu_sharing'] == "SCHED_NOOP" or common.VM_TYPES[vmid+sos_vmid] == "POST_RT_VM":
+    service_vmid = launch_cfg_lib.get_service_vmid()
+    if args['cpu_sharing'] == "SCHED_NOOP" or common.VM_TYPES[vmid+service_vmid] == "POST_RT_VM":
         off_line_cpus(args, vmid, user_vm_type, config)
 
     user_vm_launch(names, args, virt_io, vmid, config)
@@ -558,7 +558,7 @@ def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
 
     boot_image_type(dm, vmid, config)
 
-    sos_vmid = launch_cfg_lib.get_sos_vmid()
+    service_vmid = launch_cfg_lib.get_service_vmid()
 
     # clearlinux/android/alios
     print('acrn-dm -A -m $mem_size -s 0:0,hostbridge \\', file=config)
@@ -593,12 +593,12 @@ def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
         else:
             pm_vuart = pm_vuart + " "
         if pm_key == "vuart1(tty)":
-            vuart_base = launch_cfg_lib.get_vuart1_from_scenario(sos_vmid + vmid)
+            vuart_base = launch_cfg_lib.get_vuart1_from_scenario(service_vmid + vmid)
             if vuart_base == "INVALID_COM_BASE":
                 err_key = "user_vm:id={}:poweroff_channel".format(vmid)
-                launch_cfg_lib.ERR_LIST[err_key] = "vuart1 of VM{} in scenario file should select 'SERVICE_VM_COM2_BASE'".format(sos_vmid + vmid)
+                launch_cfg_lib.ERR_LIST[err_key] = "vuart1 of VM{} in scenario file should select 'SERVICE_VM_COM2_BASE'".format(service_vmid + vmid)
                 return
-            scenario_cfg_lib.get_sos_vuart_settings()
+            scenario_cfg_lib.get_service_vm_vuart_settings()
             print("   {} \\".format(pm_vuart + launch_cfg_lib.PM_CHANNEL_DIC[pm_key] + scenario_cfg_lib.SERVICE_VM_UART1_VALID_NUM), file=config)
         elif pm_key == "vuart1(pty)":
             print("   {} \\".format(pm_vuart + launch_cfg_lib.PM_CHANNEL_DIC[pm_key]), file=config)

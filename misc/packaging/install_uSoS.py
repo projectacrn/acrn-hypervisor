@@ -174,7 +174,7 @@ def create_acrn_kernel_deb():
 
 	#control file description
 
-	listcontrol=['Package: acrn-kernel-package\n','version: %s \n'% datetime.date.today(),'Section: free \n','Priority: optional \n','Architecture: amd64 \n','Installed-Size: 66666 \n','Maintainer: Intel\n','Description: sos_kernel \n','\n']
+	listcontrol=['Package: acrn-kernel-package\n','version: %s \n'% datetime.date.today(),'Section: free \n','Priority: optional \n','Architecture: amd64 \n','Installed-Size: 66666 \n','Maintainer: Intel\n','Description: service_vm_kernel \n','\n']
 
 
 	with open('acrn_kernel_deb/DEBIAN/control','w',encoding='utf-8') as fr:
@@ -226,7 +226,7 @@ def build_acrn_kernel(acrn_repo,acrn_version):
 			patch_full_name = patch_path + '/' + patch
 			add_cmd_list(cmd_list, 'git am %s/%s' % (patch_path, patch), hv_dir)
 	add_cmd_list(cmd_list, 'make clean', kernel_dir)
-	add_cmd_list(cmd_list, 'cp kernel_config_uefi_sos .config', kernel_dir)
+	add_cmd_list(cmd_list, 'cp kernel_config_service_vm .config', kernel_dir)
 	add_cmd_list(cmd_list, 'make olddefconfig', kernel_dir)
 
 	cpu_cnt = multiprocessing.cpu_count()
@@ -361,7 +361,7 @@ def install_process():
 
 	if load_dict['build_acrn_kernel'] == 'true':
 		print('start build_acrn_kernel')
-		build_acrn_kernel(load_dict['sos_kernel_repo'],load_dict['kernel_release_version'])
+		build_acrn_kernel(load_dict['service_vm_kernel_repo'],load_dict['kernel_release_version'])
 
 	if load_dict['acrn_deb_package'] == 'true':
 		print('start create acrn_deb_package deb')

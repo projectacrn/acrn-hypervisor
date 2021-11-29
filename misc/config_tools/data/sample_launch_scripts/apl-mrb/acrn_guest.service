@@ -1,5 +1,5 @@
 [Unit]
-Description=Start ACRN UOS
+Description=Start ACRN User VM
 After=acrnprobe.service
 After=weston.service
 After=systemd-resolved.service
@@ -10,7 +10,7 @@ ConditionPathExists=/dev/acrn_hsm
 [Service]
 Type=simple
 RemainAfterExit=false
-ExecStart=/bin/sh /usr/share/acrn/samples/apl-mrb/launch_uos.sh -V 6
+ExecStart=/bin/sh /usr/share/acrn/samples/apl-mrb/launch_user_vm.sh -V 6
 
 [Install]
 WantedBy=multi-user.target

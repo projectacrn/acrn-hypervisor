@@ -208,7 +208,7 @@ rcu_nocb_poll isolcpus=1 nohz_full=1 rcu_nocbs=1 \
 tsc=reliable x2apic_phys xenomai.supported_cpus=2 irqaffinity=0 mce=off" hard_rtvm
 }
 
-# offline SOS CPUs except BSP before launch UOS
+# offline Service VM CPUs except BSP before launch User VM
 for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         online=`cat $i/online`
         idx=`echo $i | tr -cd "[1-99]"`

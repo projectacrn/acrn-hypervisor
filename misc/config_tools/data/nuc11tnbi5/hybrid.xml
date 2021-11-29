@@ -138,7 +138,7 @@
       <start_hpa>0</start_hpa>
     </memory>
     <os_config>
-      <name>ACRN Service OS</name>
+      <name>ACRN Service VM OS</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod/>

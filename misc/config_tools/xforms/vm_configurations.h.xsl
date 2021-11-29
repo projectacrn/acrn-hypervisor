@@ -33,15 +33,15 @@
     <xsl:call-template name="vm_count" />
     <xsl:call-template name="dm_guest_flag" />
     <xsl:call-template name="pre_launched_vm_hpa" />
-    <xsl:call-template name="sos_vm_bootarges" />
+    <xsl:call-template name="service_vm_bootarges" />
   </xsl:template>
 
   <xsl:template name ="vm_count">
     <xsl:value-of select="acrn:comment('SERVICE_VM_NUM can only be 0 or 1; When SERVICE_VM_NUM is 1, MAX_POST_VM_NUM must be 0 too.')" />
     <xsl:value-of select="$newline" />
     <xsl:value-of select="acrn:define('PRE_VM_NUM', count(vm[acrn:is-pre-launched-vm(vm_type)]), 'U')" />
-    <xsl:value-of select="acrn:define('SERVICE_VM_NUM', count(vm[acrn:is-sos-vm(vm_type)]), 'U')" />
-    <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', hv/CAPACITIES/MAX_VM_NUM - count(vm[acrn:is-pre-launched-vm(vm_type)]) - count(vm[acrn:is-sos-vm(vm_type)]) , 'U')" />
+    <xsl:value-of select="acrn:define('SERVICE_VM_NUM', count(vm[acrn:is-service-vm(vm_type)]), 'U')" />
+    <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', hv/CAPACITIES/MAX_VM_NUM - count(vm[acrn:is-pre-launched-vm(vm_type)]) - count(vm[acrn:is-service-vm(vm_type)]) , 'U')" />
     <xsl:value-of select="acrn:define('CONFIG_MAX_VM_NUM', hv/CAPACITIES/MAX_VM_NUM , 'U')" />
   </xsl:template>
 
@@ -58,7 +58,7 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template name ="sos_vm_bootarges">
+  <xsl:template name ="service_vm_bootarges">
     <xsl:if test="count(vm[vm_type='SERVICE_VM'])">
       <xsl:value-of select="acrn:comment(concat('SERVICE_VM == VM', vm[vm_type='SERVICE_VM']/@id))" />
       <xsl:value-of select="$newline" />

@@ -174,7 +174,7 @@ static int usercrashd_notify_completion(int usercrashd_socket)
 static void print_usage(void)
 {
 	printf("usercrash - tool to dump crash info for the crashes in the ");
-	printf("userspace on sos. It's the client role of usercrash.\n");
+	printf("userspace on Service VM. It's the client role of usercrash.\n");
 	printf("[Usage]\n");
 	printf("\t--coredump, usercrash_c <pid> <comm> <sig> ");
 	printf("(root role to run)\n");

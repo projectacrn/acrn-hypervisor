@@ -64,7 +64,7 @@ echo ${passthru_bdf["nvme"]} > /sys/bus/pci/drivers/pci-stub/bind
 #isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll \
 #irqaffinity=0
 
-# offline SOS CPUs except BSP before launch UOS
+# offline Service VM CPUs except BSP before launch User VM
 for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         online=`cat $i/online`
         idx=`echo $i | tr -cd "[1-99]"`

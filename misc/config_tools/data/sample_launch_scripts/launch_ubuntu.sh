@@ -20,16 +20,16 @@ fi
 mem_size=1024M
 
 acrn-dm -A -m $mem_size -s 0:0,hostbridge \
-  -s 3,virtio-blk,/home/guestl1/acrn-dm-bins/ubuntuUOS.img \
+  -s 3,virtio-blk,/home/guestl1/acrn-dm-bins/ubuntuUserVM.img \
   -s 4,virtio-net,tap0 \
   -s 5,virtio-console,@stdio:stdio_port \
-  -k /home/guestl1/acrn-dm-bins/bzImage_uos \
+  -k /home/guestl1/acrn-dm-bins/bzImage_user_vm \
   -B "earlyprintk=serial,ttyS0,115200n8 consoleblank=0 root=/dev/vda1 rw rootwait maxcpus=1 nohpet console=tty0 console=hvc0 console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M tsc=reliable" \
   $logger_setting \
   $vm_name
 }
 
-# offline SOS CPUs except BSP before launch UOS
+# offline Service VM CPUs except BSP before launch User VM
 for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         online=`cat $i/online`
         idx=`echo $i | tr -cd "[1-99]"`

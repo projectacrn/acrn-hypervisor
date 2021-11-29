@@ -93,8 +93,8 @@ local_parse_madt(struct acpi_table_madt *madt)
 }
 
 /*
- * There has an assumption. The SOS owned pcpu starts from physical cpu 0,
- * otherwise SOS doesn't know the mapping relationship between its vcpu0
+ * There has an assumption. The Service VM owned pcpu starts from physical cpu 0,
+ * otherwise Service VM doesn't know the mapping relationship between its vcpu0
  * and pcpu_id.
  */
 int parse_madt(void)
@@ -106,7 +106,7 @@ int parse_madt(void)
 
 	int fd = open("/sys/firmware/acpi/tables/APIC", O_RDONLY);
 	if (fd < 0) {
-		pr_err("Fail to open sos APIC file!\n");
+		pr_err("Fail to open Service VM APIC file!\n");
 		return -1;
 	}
 
@@ -126,7 +126,7 @@ int parse_madt(void)
 	if (size == file_state.st_size) {
 		ret = local_parse_madt(madt);
 	} else {
-		pr_err("Fail to read sos madt info!");
+		pr_err("Fail to read Service VM madt info!");
 		ret = -1;
 	}
 

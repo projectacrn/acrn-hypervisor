@@ -34,7 +34,7 @@ for((i=0;i<${#vms[@]};i++))
 do
 	if [ "$vm_name" = "${vms[$i]}" ]; then
 		if [ "stopped" != "${vms[$i+1]}" ]; then
-			echo "Uos ${vms[$i]} ${vms[$i+1]}"
+			echo "User VM ${vms[$i]} ${vms[$i+1]}"
 			acrnctl stop ${vms[$i]}
 	        fi
 	fi
@@ -94,7 +94,7 @@ acrn-dm -A -m $mem_size -s 0:0,hostbridge \
   -s 2,pci-gvt -G "$2" \
   -s 5,virtio-console,@stdio:stdio_port \
   -s 6,virtio-hyper_dmabuf \
-  -s 3,virtio-blk,/home/clear/uos/uos.img \
+  -s 3,virtio-blk,/home/clear/user_vm/user_vm.img \
   -s 4,virtio-net,tap0 \
   -s 7,virtio-rnd \
   --ovmf /usr/share/acrn/bios/OVMF.fd \
@@ -113,7 +113,7 @@ acrn-dm -A -m $mem_size -s 0:0,hostbridge \
 #i915.enable_guc_loading=0
 #i915.enable_guc_submission=0 i915.enable_guc=0
 
-# offline SOS CPUs except BSP before launch UOS
+# offline Service VM CPUs except BSP before launch User VM
 for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         online=`cat $i/online`
         idx=`echo $i | tr -cd "[1-99]"`

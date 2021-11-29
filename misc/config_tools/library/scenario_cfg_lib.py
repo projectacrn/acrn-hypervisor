@@ -32,7 +32,7 @@ VUART_IRQ = ['SERVICE_VM_COM1_IRQ', 'SERVICE_VM_COM2_IRQ', 'SERVICE_VM_COM3_IRQ'
              'COM1_IRQ', 'COM2_IRQ', 'COM3_IRQ', 'COM4_IRQ', 'CONFIG_COM_IRQ', '0']
 
 # Support 512M, 1G, 2G
-# pre launch less then 2G, sos vm less than 24G
+# pre launch less then 2G, Service VM less than 24G
 START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000']
 
 COMMUNICATE_VM_ID = []
@@ -234,7 +234,7 @@ def load_vm_check(load_vms, item):
     :param item: vm name item in xml
     :return: None
     """
-    sos_vm_ids = []
+    service_vm_ids = []
     pre_vm_ids = []
     post_vm_ids = []
     rt_vm_ids = []
@@ -249,7 +249,7 @@ def load_vm_check(load_vms, item):
             ERR_LIST[key] = "VM load order unknown"
 
         if "SERVICE_VM" == VM_DB[load_str]['load_type']:
-            sos_vm_ids.append(order_i)
+            service_vm_ids.append(order_i)
 
         if "PRE_LAUNCHED_VM" == VM_DB[load_str]['load_type']:
             pre_vm_ids.append(order_i)
@@ -260,19 +260,19 @@ def load_vm_check(load_vms, item):
         if "POST_RT_VM" == load_str:
             rt_vm_ids.append(order_i)
 
-    if len(sos_vm_ids) > 1:
-        key = "vm:id={},{}".format(sos_vm_ids[0], item)
+    if len(service_vm_ids) > 1:
+        key = "vm:id={},{}".format(service_vm_ids[0], item)
         ERR_LIST[key] = "Service VM number should not be greater than 1"
         return
 
-    if post_vm_ids and sos_vm_ids:
-        if post_vm_ids[0] < sos_vm_ids[-1]:
+    if post_vm_ids and service_vm_ids:
+        if post_vm_ids[0] < service_vm_ids[-1]:
             key = "vm:id={},{}".format(post_vm_ids[0], item)
             ERR_LIST[key] = "Post vm should be configured after SERVICE_VM"
 
-    if pre_vm_ids and sos_vm_ids:
-        if sos_vm_ids[-1] < pre_vm_ids[-1]:
-            key = "vm:id={},{}".format(sos_vm_ids[0], item)
+    if pre_vm_ids and service_vm_ids:
+        if service_vm_ids[-1] < pre_vm_ids[-1]:
+            key = "vm:id={},{}".format(service_vm_ids[0], item)
             ERR_LIST[key] = "Pre vm should be configured before SERVICE_VM"
 
 
@@ -309,24 +309,24 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
         cpu_sharing_enabled = False
 
     # validate cpu_affinity config with scenario file
-    sos_vmid = launch_cfg_lib.get_sos_vmid()
+    service_vmid = launch_cfg_lib.get_service_vmid()
     scenario_cpu_aff = common.get_leaf_tag_map(scenario_file, "cpu_affinity", "pcpu_id")
     scenario_vm_names = {v: k for k, v in common.get_leaf_tag_map(scenario_file, 'name').items()}
     if launch_file:
         launch_vm_names = common.get_leaf_tag_map(launch_file, 'vm_name')
         for vm_id, cpu_ids in cpu_affinity.items():
-            launch_vm_name = launch_vm_names[vm_id - sos_vmid]
+            launch_vm_name = launch_vm_names[vm_id - service_vmid]
             if launch_vm_name not in scenario_vm_names:
                 # Dynamic VM, skip scenario cpu affinity subset check
                 continue
             abs_vmid = scenario_vm_names[launch_vm_name]
             for vm_cpu in cpu_ids:
                 if vm_cpu is None:
-                    key = "vm:id={},{}".format(abs_vmid - sos_vmid, 'pcpu_id')
+                    key = "vm:id={},{}".format(abs_vmid - service_vmid, 'pcpu_id')
                     err_dic[key] = "This vm cpu_affinity is empty. " \
                                    "Please update your launch file accordingly."
                 if vm_cpu not in scenario_cpu_aff[abs_vmid]:
-                    key = "vm:id={},{}".format(abs_vmid - sos_vmid, 'pcpu_id')
+                    key = "vm:id={},{}".format(abs_vmid - service_vmid, 'pcpu_id')
                     err_dic[key] = "This pCPU is not included in this VM's allowed CPU pool. " \
                                    "Please update your scenario file accordingly or remove it from this list."
 
@@ -341,7 +341,7 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
         else:
             use_cpus.append(cpu)
 
-    sos_vm_cpus = []
+    service_vm_cpus = []
     pre_launch_cpus = []
     post_launch_cpus = []
     for vm_i, vm_type in common.VM_TYPES.items():
@@ -355,7 +355,7 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
             post_launch_cpus.extend(cpus)
         elif VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             cpus = [x for x in cpu_affinity[vm_i] if not None]
-            sos_vm_cpus.extend(cpus)
+            service_vm_cpus.extend(cpus)
 
         # duplicate cpus assign the same VM check
         cpus_vm_i = cpu_affinity[vm_i]
@@ -366,7 +366,7 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
                 return err_dic
 
     if pre_launch_cpus:
-        if "SERVICE_VM" in common.VM_TYPES and not sos_vm_cpus:
+        if "SERVICE_VM" in common.VM_TYPES and not service_vm_cpus:
             key = "Service VM cpu_affinity"
             err_dic[key] = "Should assign CPU id for Service VM"
 
@@ -582,7 +582,7 @@ def cpus_assignment(cpus_per_vm, index):
     vm_cpu_bmp = {}
     if "SERVICE_VM" == common.VM_TYPES[index]:
         if index not in cpus_per_vm or cpus_per_vm[index] == [None]:
-            sos_extend_all_cpus = board_cfg_lib.get_processor_info()
+            service_vm_extend_all_cpus = board_cfg_lib.get_processor_info()
             pre_all_cpus = []
             for vmid, cpu_list in cpus_per_vm.items():
                 if vmid in common.VM_TYPES:
@@ -592,7 +592,7 @@ def cpus_assignment(cpus_per_vm, index):
                         load_type = VM_DB[vm_type]['load_type']
                     if load_type == "PRE_LAUNCHED_VM":
                         pre_all_cpus += cpu_list
-            cpus_per_vm[index] = list(set(sos_extend_all_cpus) - set(pre_all_cpus))
+            cpus_per_vm[index] = list(set(service_vm_extend_all_cpus) - set(pre_all_cpus))
             cpus_per_vm[index].sort()
 
     for i in range(len(cpus_per_vm[index])):
@@ -1239,7 +1239,7 @@ def check_pt_intx(phys_gsi, virt_gsi):
             return
 
 
-def get_valid_ttys_for_sos_vuart(ttys_n):
+def get_valid_ttys_for_service_vm_vuart(ttys_n):
     """
     Get available ttysn list for vuart0/vuart1
     :param ttys_n: the serial port was chosen as hv console
@@ -1272,7 +1272,7 @@ def get_valid_ttys_for_sos_vuart(ttys_n):
     return (vuart0_valid, vuart1_valid)
 
 
-def get_sos_vuart_settings(launch_flag=True):
+def get_service_vm_vuart_settings(launch_flag=True):
     """
     Get vuart setting from scenario setting
     :return: vuart0/vuart1 setting dictionary
@@ -1290,7 +1290,7 @@ def get_sos_vuart_settings(launch_flag=True):
         return err_dic
 
     if ttys_n:
-        (vuart0_valid, vuart1_valid) = get_valid_ttys_for_sos_vuart(ttys_n)
+        (vuart0_valid, vuart1_valid) = get_valid_ttys_for_service_vm_vuart(ttys_n)
 
         # VUART0 setting
         if not launch_flag:

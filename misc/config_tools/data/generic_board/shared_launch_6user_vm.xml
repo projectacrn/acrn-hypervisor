@@ -1,9 +1,9 @@
 <acrn-config board="generic_board" scenario="shared" user_vm_launcher="6">
   <user_vm id="1">
-    <user_vm_type desc="UOS type">WINDOWS</user_vm_type>
+    <user_vm_type desc="User VM type">WINDOWS</user_vm_type>
     <vm_name>POST_STD_VM1</vm_name>
-    <rtos_type desc="UOS Realtime capability">no</rtos_type>
-    <mem_size desc="UOS memory size in MByte">4096</mem_size>
+    <rtos_type desc="User VM Realtime capability">no</rtos_type>
+    <mem_size desc="User VM memory size in MByte">4096</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
     <poweroff_channel desc="the method of power off User VM"/>
@@ -47,10 +47,10 @@
     </sriov>
   </user_vm>
   <user_vm id="2">
-    <user_vm_type desc="UOS type">PREEMPT-RT LINUX</user_vm_type>
+    <user_vm_type desc="User VM type">PREEMPT-RT LINUX</user_vm_type>
     <vm_name>POST_RT_VM1</vm_name>
-    <rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
-    <mem_size desc="UOS memory size in MByte">1024</mem_size>
+    <rtos_type desc="User VM Realtime capability">Hard RT</rtos_type>
+    <mem_size desc="User VM memory size in MByte">1024</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
     <poweroff_channel desc="the method of power off User VM"/>
@@ -94,10 +94,10 @@
     </sriov>
   </user_vm>
   <user_vm id="3">
-    <user_vm_type desc="UOS type">YOCTO</user_vm_type>
+    <user_vm_type desc="User VM type">YOCTO</user_vm_type>
     <vm_name>POST_STD_VM2</vm_name>
-    <rtos_type desc="UOS Realtime capability">no</rtos_type>
-    <mem_size desc="UOS memory size in MByte">512</mem_size>
+    <rtos_type desc="User VM Realtime capability">no</rtos_type>
+    <mem_size desc="User VM memory size in MByte">512</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
     <poweroff_channel desc="the method of power off User VM"/>
@@ -141,10 +141,10 @@
     </sriov>
   </user_vm>
   <user_vm id="4">
-    <user_vm_type desc="UOS type">YOCTO</user_vm_type>
+    <user_vm_type desc="User VM type">YOCTO</user_vm_type>
     <vm_name>POST_STD_VM3</vm_name>
-    <rtos_type desc="UOS Realtime capability">no</rtos_type>
-    <mem_size desc="UOS memory size in MByte">512</mem_size>
+    <rtos_type desc="User VM Realtime capability">no</rtos_type>
+    <mem_size desc="User VM memory size in MByte">512</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
     <poweroff_channel desc="the method of power off User VM"/>
@@ -188,10 +188,10 @@
     </sriov>
   </user_vm>
   <user_vm id="5">
-    <user_vm_type desc="UOS type">YOCTO</user_vm_type>
+    <user_vm_type desc="User VM type">YOCTO</user_vm_type>
     <vm_name>POST_STD_VM4</vm_name>
-    <rtos_type desc="UOS Realtime capability">no</rtos_type>
-    <mem_size desc="UOS memory size in MByte">512</mem_size>
+    <rtos_type desc="User VM Realtime capability">no</rtos_type>
+    <mem_size desc="User VM memory size in MByte">512</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
     <poweroff_channel desc="the method of power off User VM"/>
@@ -235,10 +235,10 @@
     </sriov>
   </user_vm>
   <user_vm id="6">
-    <user_vm_type desc="UOS type">YOCTO</user_vm_type>
+    <user_vm_type desc="User VM type">YOCTO</user_vm_type>
     <vm_name>POST_STD_VM5</vm_name>
-    <rtos_type desc="UOS Realtime capability">no</rtos_type>
-    <mem_size desc="UOS memory size in MByte">512</mem_size>
+    <rtos_type desc="User VM Realtime capability">no</rtos_type>
+    <mem_size desc="User VM memory size in MByte">512</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
     <poweroff_channel desc="the method of power off User VM"/>
