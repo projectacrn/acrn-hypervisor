@@ -266,12 +266,12 @@ class LoadOrderNum:
     """ This is Abstract of VM number for different load order """
     def __init__(self):
         self.pre_vm = 0
-        self.sos_vm = 0
+        self.service_vm = 0
         self.post_vm = 0
 
     def get_info(self, load_vm):
         self.pre_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "PRE_LAUNCHED_VM")
-        self.sos_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "SERVICE_VM")
+        self.service_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "SERVICE_VM")
         self.post_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "POST_LAUNCHED_VM")
 
 

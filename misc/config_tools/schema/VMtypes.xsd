@@ -380,7 +380,7 @@ to the pre-launched VM.</xs:documentation>
     </xs:element>
     <xs:element name="bootargs" type="xs:string">
       <xs:annotation>
-        <xs:documentation>Specify kernel boot arguments for Service OS.</xs:documentation>
+        <xs:documentation>Specify kernel boot arguments for Service VM OS.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>

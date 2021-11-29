@@ -32,7 +32,7 @@ def scenario_vm_num(scenario_items, config):
 
     load_type_cnt = scenario_items['vm'].load_order_cnt
     print("#define PRE_VM_NUM\t\t\t{}U".format(load_type_cnt.pre_vm), file=config)
-    print("#define SERVICE_VM_NUM\t\t\t{}U".format(load_type_cnt.sos_vm), file=config)
+    print("#define SERVICE_VM_NUM\t\t\t{}U".format(load_type_cnt.service_vm), file=config)
     print("#define MAX_POST_VM_NUM\t\t\t{}U".format(load_type_cnt.post_vm), file=config)
 
 
@@ -59,7 +59,7 @@ def gen_pre_launch_vm(scenario_items, config):
         vm_i += 1
 
 
-def gen_sos_header(scenario_items, config):
+def gen_service_vm_header(scenario_items, config):
 
     if 'SERVICE_VM' not in common.VM_TYPES.values():
         return
@@ -79,7 +79,7 @@ def gen_sos_header(scenario_items, config):
 def gen_header_file(scenario_items, config):
 
     gen_pre_launch_vm(scenario_items, config)
-    gen_sos_header(scenario_items, config)
+    gen_service_vm_header(scenario_items, config)
 
 
 def get_dm_owned_guest_flag_mask(vm_info, config):

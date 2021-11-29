@@ -2,8 +2,6 @@
 # Copyright (C) 2019 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
 
-kernel_version=$(uname -r | awk -F. '{ printf("%d.%d", $1,$2) }')
-
 ipu_passthrough=0
 
 # Check the device file of /dev/vbs_ipu to determine the IPU mode
@@ -11,6 +9,14 @@ if [ ! -e "/dev/vbs_ipu" ]; then
 ipu_passthrough=1
 fi
 
+# use the modprobe to force loading snd-soc-skl/sst_bxt_bdf8532
+if [ ! -e $(audio_module)]; then
+modprobe -q snd-soc-skl
+else
+
+modprobe -q snd_soc_skl
+modprobe -q snd_soc_skl_virtio_be
+fi
 audio_passthrough=0
 
 # Check the device file of /dev/vbs_k_audio to determine the audio mode
@@ -36,18 +42,22 @@ passthru_vpid=(
 ["ipu"]="8086 5a88"
 ["ipu_i2c"]="8086 5aac"
 ["cse"]="8086 5a9a"
-["sd_card"]="8086 5acc"
+["sd_card"]="8086 5aca"
 ["audio"]="8086 5a98"
 ["audio_codec"]="8086 5ab4"
+["wifi"]="11ab 2b38"
+["bluetooth"]="8086 5abc"
 )
 passthru_bdf=(
 ["usb_xdci"]="0000:00:15.1"
 ["ipu"]="0000:00:03.0"
 ["ipu_i2c"]="0000:00:16.0"
 ["cse"]="0000:00:0f.0"
-["sd_card"]="0000:00:1c.0"
+["sd_card"]="0000:00:1b.0"
 ["audio"]="0000:00:0e.0"
 ["audio_codec"]="0000:00:17.0"
+["wifi"]="0000:03:00.0"
+["bluetooth"]="0000:00:18.0"
 )
 
 function launch_clearlinux()
@@ -57,10 +67,10 @@ if [ ! -f "/data/$4/$4.img" ]; then
   exit
 fi
 
-#vm-name used to generate uos-mac address
-mac=$(cat /sys/class/net/en*/address)
+#vm-name used to generate User-VM-mac address
+mac=$(cat /sys/class/net/e*/address)
 vm_name=vm$1
-mac_seed=${mac:9:8}-${vm_name} 
+mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
 tap=tap_$5
@@ -94,9 +104,11 @@ echo ${passthru_vpid["usb_xdci"]} > /sys/bus/pci/drivers/pci-stub/new_id
 echo ${passthru_bdf["usb_xdci"]} > /sys/bus/pci/devices/${passthru_bdf["usb_xdci"]}/driver/unbind
 echo ${passthru_bdf["usb_xdci"]} > /sys/bus/pci/drivers/pci-stub/bind
 
+echo 100 > /sys/bus/usb/drivers/usb-storage/module/parameters/delay_use
+
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
-    # for ipu passthrough - ipu device 0:3.0
+    # for ipu passthrough - ipu device
     if [ -d "/sys/bus/pci/devices/${passthru_bdf["ipu"]}" ]; then
         echo ${passthru_vpid["ipu"]} > /sys/bus/pci/drivers/pci-stub/new_id
         echo ${passthru_bdf["ipu"]} > /sys/bus/pci/devices/${passthru_bdf["ipu"]}/driver/unbind
@@ -127,12 +139,12 @@ else
     boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,0/0f/0 "
 fi
 
-# for sd card passthrough - SDXC/MMC Host Controller
-# echo ${passthru_vpid["sd_card"]} > /sys/bus/pci/drivers/pci-stub/new_id
-# echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/devices/${passthru_bdf["sd_card"]}/driver/unbind
-# echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/drivers/pci-stub/bind
+# for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
+echo ${passthru_vpid["sd_card"]} > /sys/bus/pci/drivers/pci-stub/new_id
+echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/devices/${passthru_bdf["sd_card"]}/driver/unbind
+echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/drivers/pci-stub/bind
 
-#for memsize setting, total 8GB(>7.5GB) uos->6GB, 4GB(>3.5GB) uos->2GB
+#for memsize setting, total 8GB(>7.5GB) User-VM->6GB, 4GB(>3.5GB) User-VM->2GB
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
 if [ $memsize -gt 7500000 ];then
     mem_size=6G
@@ -166,8 +178,6 @@ else
   GVT_args=''
 fi
 
-#logger_setting, format: logger_name,level; like following
-logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
 
 acrn-dm -A -m $mem_size $boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 5,virtio-console,@pty:pty_port \
@@ -178,12 +188,16 @@ acrn-dm -A -m $mem_size $boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc
   -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
   -s 9,passthru,0/15/1 \
   $boot_cse_option \
-  $intr_storm_monitor \
-  $logger_setting \
-  $boot_ipu_option      \
   --mac_seed $mac_seed \
-  --pm_notify_channel power_button \
+  -s 27,passthru,0/1b/0 \
+  $intr_storm_monitor \
+  $boot_ipu_option      \
+  -i /run/acrn/ioc_$vm_name,0x20 \
+  -l com2,/run/acrn/ioc_$vm_name \
+  --pm_notify_channel ioc \
   -B "root=/dev/vda2 rw rootwait nohpet console=hvc0 \
+  snd_soc_skl_virtio_fe.domain_id=1 \
+  snd_soc_skl_virtio_fe.domain_name="GuestOS" \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$3 i915.enable_guc_loading=0 \
   i915.enable_hangcheck=0 i915.nuclear_pageflip=1 \
@@ -197,10 +211,10 @@ if [ ! -f "/data/$4/$4.img" ]; then
   exit
 fi
 
-#vm-name used to generate uos-mac address
-mac=$(cat /sys/class/net/en*/address)
+#vm-name used to generate User-VM-mac address
+mac=$(cat /sys/class/net/e*/address)
 vm_name=vm$1
-mac_seed=${mac:9:8}-${vm_name} 
+mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
 tap=tap_$5
@@ -221,8 +235,8 @@ if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then
 fi
 
 #Use MMC name + serial for ADB serial no., same as native android
-mmc_name=`cat /sys/block/mmcblk0/device/name`
-mmc_serial=`cat /sys/block/mmcblk0/device/serial | sed -n 's/^..//p'`
+mmc_name=`cat /sys/block/mmcblk1/device/name`
+mmc_serial=`cat /sys/block/mmcblk1/device/serial | sed -n 's/^..//p'`
 ser=$mmc_name$mmc_serial
 
 #check if the vm is running or not
@@ -255,10 +269,21 @@ if [ $audio_passthrough == 1 ]; then
 else
     boot_audio_option="-s 14,virtio-audio"
 fi
-# # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
-# echo ${passthru_vpid["sd_card"]} > /sys/bus/pci/drivers/pci-stub/new_id
-# echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/devices/${passthru_bdf["sd_card"]}/driver/unbind
-# echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/drivers/pci-stub/bind
+
+# for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
+echo ${passthru_vpid["sd_card"]} > /sys/bus/pci/drivers/pci-stub/new_id
+echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/devices/${passthru_bdf["sd_card"]}/driver/unbind
+echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/drivers/pci-stub/bind
+
+# WIFI
+echo ${passthru_vpid["wifi"]} > /sys/bus/pci/drivers/pci-stub/new_id
+echo ${passthru_bdf["wifi"]} > /sys/bus/pci/devices/${passthru_bdf["wifi"]}/driver/unbind
+echo ${passthru_bdf["wifi"]} > /sys/bus/pci/drivers/pci-stub/bind
+
+# Bluetooth passthrough depends on WIFI
+echo ${passthru_vpid["bluetooth"]} > /sys/bus/pci/drivers/pci-stub/new_id
+echo ${passthru_bdf["bluetooth"]} > /sys/bus/pci/devices/${passthru_bdf["bluetooth"]}/driver/unbind
+echo ${passthru_bdf["bluetooth"]} > /sys/bus/pci/drivers/pci-stub/bind
 
 # Check if the NPK device/driver is present
 ls -d /sys/bus/pci/drivers/intel_th_pci/0000* 2>/dev/null 1>/dev/null
@@ -271,6 +296,8 @@ fi
 # WA for USB role switch hang issue, disable runtime PM of xHCI device
 echo on > /sys/devices/pci0000:00/0000:00:15.0/power/control
 
+echo 100 > /sys/bus/usb/drivers/usb-storage/module/parameters/delay_use
+
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
     # for ipu passthrough - ipu device
@@ -281,10 +308,10 @@ if [ $ipu_passthrough == 1 ];then
         boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
     fi
 
-    # for ipu passthrough - ipu related i2c 0:16.0
-    # please use virtual slot 22 for i2c 0:16.0 to make sure that the i2c controller
+    # for ipu passthrough - ipu related i2c
+    # please use virtual slot 22 for i2c to make sure that the i2c controller
     # could get the same virtaul BDF as physical BDF
-    if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
+    if [ -d "/sys/bus/pci/devices/${passthru_bdf["ipu_i2c"]}" ]; then
         echo ${passthru_vpid["ipu_i2c"]} > /sys/bus/pci/drivers/pci-stub/new_id
         echo ${passthru_bdf["ipu_i2c"]} > /sys/bus/pci/devices/${passthru_bdf["ipu_i2c"]}/driver/unbind
         echo ${passthru_bdf["ipu_i2c"]} > /sys/bus/pci/drivers/pci-stub/bind
@@ -296,7 +323,7 @@ fi
 
 boot_cse_option=""
 if [ $cse_passthrough == 1 ]; then
-    echo ${passthru_vpid["cse"]} > /sys/bus/pci/drivers/pci-stub/new_id
+    echo ${passthru_vpid["cse"]} /sys/bus/pci/drivers/pci-stub/new_id
     echo ${passthru_bdf["cse"]} > /sys/bus/pci/devices/${passthru_bdf["cse"]}/driver/unbind
     echo ${passthru_bdf["cse"]} > /sys/bus/pci/drivers/pci-stub/bind
     boot_cse_option="$boot_cse_option"" -s 15,passthru,0/0f/0 "
@@ -304,7 +331,7 @@ else
     boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,0/0f/0 "
 fi
 
-#for memsize setting, total 8GB(>7.5GB) uos->6GB, 4GB(>3.5GB) uos->2GB
+#for memsize setting, total 8GB(>7.5GB) User-VM->6GB, 4GB(>3.5GB) User-VM->2GB
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
 if [ $memsize -gt 7500000 ];then
     mem_size=6G
@@ -320,6 +347,8 @@ fi
 
 kernel_cmdline_generic="nohpet tsc=reliable intel_iommu=off \
    androidboot.serialno=$ser \
+   snd_soc_skl_virtio_fe.domain_id=1 \
+   snd_soc_skl_virtio_fe.domain_name="GuestOS" \
    i915.enable_rc6=1 i915.enable_fbc=1 i915.enable_guc_loading=0 i915.avail_planes_per_pipe=$3 \
    i915.enable_hangcheck=0 use_nuclear_flip=1 i915.enable_guc_submission=0 i915.enable_guc=0"
 
@@ -357,9 +386,6 @@ else
   GVT_args=''
 fi
 
-#logger_setting, format: logger_name,level; like following
-logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
-
  acrn-dm -A -m $mem_size $boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
    -s 3,virtio-blk$boot_dev_flag,/data/$4/$4.img \
@@ -370,13 +396,17 @@ logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
    -s 11,wdt-i6300esb \
    $boot_audio_option \
    $boot_cse_option \
-   $intr_storm_monitor \
-   $logger_setting \
-   $boot_ipu_option      \
    --mac_seed $mac_seed \
+   -s 27,passthru,0/1b/0 \
+   -s 24,passthru,0/18/0 \
+   -s 18,passthru,3/0/0,keep_gsi \
+   $intr_storm_monitor \
+   $boot_ipu_option      \
+   -i /run/acrn/ioc_$vm_name,0x20 \
+   -l com2,/run/acrn/ioc_$vm_name \
+   --pm_notify_channel ioc \
    $boot_image_option \
    --enable_trusty \
-   --pm_notify_channel power_button \
    -B "$kernel_cmdline" $vm_name
 }
 
@@ -389,20 +419,87 @@ launch_android "$@"
 
 function help()
 {
-echo "Use luanch_uos.sh like that ./launch_uos.sh -V <#>"
-echo "The option -V means the UOSs group to be launched by vsbl as below"
-echo "-V 1 means just launching 1 clearlinux UOS"
-echo "-V 2 means just launching 1 android UOS"
-echo "-V 3 means launching 1 clearlinux UOS + 1 android UOS"
-echo "-V 4 means launching 2 clearlinux UOSs"
-echo "-V 5 means just launching 1 alios UOS"
-echo "-V 6 means auto check android/linux/alios UOS; if exist, launch it"
+echo "Use luanch_user_vm.sh like that ./launch_user_vm.sh -V <#>"
+echo "The option -V means the User VMs group to be launched by vsbl as below"
+echo "-V 1 means just launching 1 clearlinux User VM"
+echo "-V 2 means just launching 1 android User VM"
+echo "-V 3 means launching 1 clearlinux User VM + 1 android User VM"
+echo "-V 4 means launching 2 clearlinux User VMs"
+echo "-V 5 means just launching 1 alios User VM"
+echo "-V 6 means auto check android/linux/alios User VM; if exist, launch it"
+echo "-C means launching acrn-dm in runC container for QoS"
 }
 
 launch_type=1
 debug=0
+runC_enable=0
 
-while getopts "V:M:hd" opt
+function run_container()
+{
+vm_name=vm1
+config_src="/usr/share/acrn/samples/apl-mrb/runC.json"
+shell="/usr/share/acrn/conf/add/$vm_name.sh"
+arg_file="/usr/share/acrn/conf/add/$vm_name.args"
+runc_bundle="/usr/share/acrn/conf/add/runc/$vm_name"
+rootfs_dir="/usr/share/acrn/conf/add/runc/rootfs"
+config_dst="$runc_bundle/config.json"
+
+
+input=$(runc list -f table | awk '{print $1}''{print $3}')
+arr=(${input// / })
+
+for((i=0;i<${#arr[@]};i++))
+do
+	if [ "$vm_name" = "${arr[$i]}" ]; then
+		if [ "running" = "${arr[$i+1]}" ]; then
+			echo "runC instance ${arr[$i]} is running"
+			exit
+		else
+			runc kill ${arr[$i]}
+			runc delete ${arr[$i]}
+		fi
+	fi
+done
+vmsts=$(acrnctl list)
+vms=(${vmsts// / })
+for((i=0;i<${#vms[@]};i++))
+do
+	if [ "$vm_name" = "${vms[$i]}" ]; then
+		if [ "stopped" != "${vms[$i+1]}" ]; then
+			echo "User VM ${vms[$i]} ${vms[$i+1]}"
+			acrnctl stop ${vms[$i]}
+		fi
+	fi
+done
+
+if [ ! -f "$shell" ]; then
+        echo "Pls add the vm at first!"
+        exit
+fi
+
+if [ ! -f "$arg_file" ]; then
+        echo "Pls add the vm args!"
+        exit
+fi
+
+if [ ! -d "$rootfs_dir" ]; then
+        mkdir -p "$rootfs_dir"
+fi
+if [ ! -d "$runc_bundle" ]; then
+	mkdir -p "$runc_bundle"
+fi
+if [ ! -f "$config_dst" ]; then
+        cp  "$config_src"  "$config_dst"
+        args=$(sed '{s/-C//g;s/^[ \t]*//g;s/^/\"/;s/ /\",\"/g;s/$/\"/}' ${arg_file})
+        sed -i "s|\"sh\"|\"$shell\", $args|" $config_dst
+fi
+runc run --bundle $runc_bundle -d $vm_name
+echo "The runC container is running in backgroud"
+echo "'#runc exec <vmname> bash' to login the container bash"
+exit
+}
+
+while getopts "V:M:hdC" opt
 do
 	case $opt in
 		V) launch_type=$[$OPTARG]
@@ -410,6 +507,8 @@ do
 		M) setup_mem=$OPTARG
 			;;
 		d) debug=1
+			;;
+		C) runC_enable=1
 			;;
 		h) help
 			exit 1
@@ -420,13 +519,13 @@ do
 	esac
 done
 
-if [ ! -b "/dev/mmcblk0p1" ]; then
-  echo "no /dev/mmcblk0p1 data partition, exit"
+if [ ! -b "/dev/mmcblk1p3" ]; then
+  echo "no /dev/mmcblk1p3 data partition, exit"
   exit
 fi
 
 mkdir -p /data
-mount /dev/mmcblk0p1 /data
+mount /dev/mmcblk1p3 /data
 
 if [ $launch_type == 6 ]; then
 	if [ -f "/data/android/android.img" ]; then
@@ -438,7 +537,16 @@ if [ $launch_type == 6 ]; then
 	fi
 fi
 
-# offline SOS CPUs except BSP before launch UOS
+if [ $runC_enable == 1 ]; then
+	if [ $(hostname) = "runc" ]; then
+		echo "Already in container exit!"
+		exit
+	fi
+	run_container
+	exit
+fi
+
+# offline Service VM CPUs except BSP before launch User VM
 for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         online=`cat $i/online`
         idx=`echo $i | tr -cd "[1-99]"`
@@ -457,23 +565,23 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
 done
 
 case $launch_type in
-	1) echo "Launch clearlinux UOS"
+	1) echo "Launch clearlinux User VM"
 		launch_clearlinux 1 "64 448 8" 0x070F00 clearlinux "LaaG" $debug
 		;;
-	2) echo "Launch android UOS"
+	2) echo "Launch android User VM"
 		launch_android 1 "64 448 8" 0x070F00 android "AaaG" $debug
 		;;
-	3) echo "Launch clearlinux UOS + android UOS"
+	3) echo "Launch clearlinux User VM + android User VM"
 		launch_android 1 "64 448 4" 0x00000C android "AaaG" $debug &
 		sleep 5
 		launch_clearlinux 2 "64 448 4" 0x070F00 clearlinux "LaaG" $debug
 		;;
-	4) echo "Launch two clearlinux UOSs"
+	4) echo "Launch two clearlinux User VMs"
 		launch_clearlinux 1 "64 448 4" 0x00000C clearlinux "L1aaG" $debug &
 		sleep 5
 		launch_clearlinux 2 "64 448 4" 0x070F00 clearlinux_dup "L2aaG" $debug
 		;;
-	5) echo "Launch alios UOS"
+	5) echo "Launch alios User VM"
 		launch_alios 1 "64 448 8" 0x070F00 alios "AliaaG" $debug
 		;;
 esac

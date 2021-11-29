@@ -202,7 +202,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 
 		/*
 		 * If there's "-C" parameter in acrnctl add command
-		 * check if the SoS support runC container at first, then
+		 * check if the Service VM support runC container at first, then
 		 * strip "-C" and set the flag.
 		*/
 		if (strncmp(argv[i], "-C", 2) == 0) {
@@ -470,7 +470,7 @@ static inline int del_runC(char *argv)
 	char cmd_out[PATH_LEN * 2];
 	char runc_path[PATH_LEN];
 
-	/* The configuration added by launch_uos script */
+	/* The configuration added by launch_user_vm script */
 	if (snprintf(runc_path, sizeof(runc_path), "%s/runc/%s",
 			ACRN_CONF_PATH_ADD, argv) >= sizeof(runc_path)) {
 		printf("ERROR: runC path %s is truncated\n", runc_path);

@@ -1,5 +1,5 @@
 #!/bin/bash
-# board: WHL-IPC-I5, scenario: INDUSTRY, uos: WINDOWS
+# board: WHL-IPC-I5, scenario: INDUSTRY, User VM: WINDOWS
 # pci devices for passthru
 declare -A passthru_vpid
 declare -A passthru_bdf
@@ -35,7 +35,7 @@ fi
 
 function launch_windows()
 {
-#vm-name used to generate uos-mac address
+#vm-name used to generate User-VM-mac address
 mac=$(cat /sys/class/net/e*/address)
 vm_name=post_vm_id$1
 mac_seed=${mac:0:17}-${vm_name}
@@ -53,18 +53,13 @@ echo ${passthru_vpid["gpu"]} > /sys/bus/pci/drivers/pci-stub/new_id
 echo ${passthru_bdf["gpu"]} > /sys/bus/pci/devices/${passthru_bdf["gpu"]}/driver/unbind
 echo ${passthru_bdf["gpu"]} > /sys/bus/pci/drivers/pci-stub/bind
 modprobe pci_stub
-kernel_version=$(uname -r)
-audio_module="/usr/lib/modules/$kernel_version/kernel/sound/soc/intel/boards/snd-soc-sst_bxt_sos_tdf8532.ko"
 
 # use the modprobe to force loading snd-soc-skl/sst_bxt_bdf8532
 if [ ! -e $audio_module ]; then
 modprobe -q snd-soc-skl
-modprobe -q snd-soc-sst_bxt_tdf8532
 else
 
 modprobe -q snd_soc_skl
-modprobe -q snd_soc_tdf8532
-modprobe -q snd_soc_sst_bxt_sos_tdf8532
 modprobe -q snd_soc_skl_virtio_be
 fi
 audio_passthrough=0

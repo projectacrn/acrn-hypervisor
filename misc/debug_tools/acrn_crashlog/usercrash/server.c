@@ -373,7 +373,7 @@ static void sig_handler(int sig)
 static void print_usage(void)
 {
 	printf("usercrash - tool to dump crash info for the crashes in the ");
-	printf("userspace on sos. It's the server role of usercrash.\n");
+	printf("userspace on Service VM. It's the server role of usercrash.\n");
 	printf("[Usage] usercrash_s (root role to run)\n");
 	printf("[Option]\n");
 	printf("\t-h: print this usage message\n");

@@ -10,5 +10,6 @@
 #include <asm/page.h>
 #include <vmcs9900.h>
 #include <ivshmem_cfg.h>
-#define INVALID_PCI_BASE 0U
-struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM] = {};
+#define INVALID_PCI_BASE              0U
+struct acrn_vm_pci_dev_config service_vm_pci_devs[CONFIG_MAX_PCI_DEV_NUM] = {
+};

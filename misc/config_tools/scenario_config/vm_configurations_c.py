@@ -238,10 +238,10 @@ def gen_source_header(config):
     print("{0}".format(C_HEADER), file=config)
 
 
-def gen_sos_vm(vm_type, vm_i, scenario_items, config):
+def gen_service_vm(vm_type, vm_i, scenario_items, config):
 
     vm_info = scenario_items['vm']
-    (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
+    (err_dic, service_vm_guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
     if err_dic:
         return err_dic
 
@@ -251,8 +251,8 @@ def gen_sos_vm(vm_type, vm_i, scenario_items, config):
     print("", file=config)
     print("\t\t/* Allow Service VM to reboot the host since " +
           "there is supposed to be the highest severity guest */", file=config)
-    if sos_guest_flags:
-        print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
+    if service_vm_guest_flags:
+        print("\t\t.guest_flags = {0},".format(service_vm_guest_flags), file=config)
     clos_output(scenario_items, vm_i, config)
     cpu_affinity_output(vm_info, vm_i, config)
     print("\t\t.memory = {", file=config)
@@ -272,9 +272,9 @@ def gen_sos_vm(vm_type, vm_i, scenario_items, config):
     err_dic = vuart_output(vm_type, vm_i, vm_info, config)
     if err_dic:
         return err_dic
-    sos_dev_num = scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i]
-    print("\t\t.pci_dev_num = {}U,".format(sos_dev_num), file=config)
-    print("\t\t.pci_devs = sos_pci_devs,", file=config)
+    service_vm_dev_num = scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i]
+    print("\t\t.pci_dev_num = {}U,".format(service_vm_dev_num), file=config)
+    print("\t\t.pci_devs = service_vm_pci_devs,", file=config)
 
     print("\t},", file=config)
 
@@ -385,7 +385,7 @@ def declare_pci_devs(vm_info, config):
     for vm_i,vm_type in common.VM_TYPES.items():
         if vm_type == "SERVICE_VM":
             print("extern struct acrn_vm_pci_dev_config " +
-                "sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];", file=config)
+                "service_vm_pci_devs[CONFIG_MAX_PCI_DEV_NUM];", file=config)
             continue
         if scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i]:
             print("extern struct acrn_vm_pci_dev_config " +
@@ -416,7 +416,7 @@ def generate_file(scenario_items, config):
     for vm_i, vm_type in common.VM_TYPES.items():
 
         if "SERVICE_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
-            gen_sos_vm(vm_type, vm_i, scenario_items, config)
+            gen_service_vm(vm_type, vm_i, scenario_items, config)
         elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             gen_pre_launch_vm(vm_type, vm_i, scenario_items, config)
         elif "POST_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:

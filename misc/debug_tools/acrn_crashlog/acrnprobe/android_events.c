@@ -351,7 +351,7 @@ static char *setup_loop_dev(void)
 {
 
 	/* Currently User VM image(/data/android/android.img) mounted by
-	 * launch_UOS.sh, we need mount its data partition to loop device
+	 * launch_user_vm.sh, we need mount its data partition to loop device
 	 */
 	char loop_dev_tmp[32];
 	int i;

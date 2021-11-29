@@ -135,18 +135,13 @@ def audio_pt(user_vm_type, sel, vmid, config):
         slot_codec = sel.slot['audio_codec'][vmid]
 
     if bdf_audio:
-        print("kernel_version=$(uname -r)", file=config)
-        print('audio_module="/usr/lib/modules/$kernel_version/kernel/sound/soc/intel/boards/snd-soc-sst_bxt_sos_tdf8532.ko"', file=config)
         print("", file=config)
         print("# use the modprobe to force loading snd-soc-skl/sst_bxt_bdf8532", file=config)
         print("if [ ! -e $audio_module ]; then", file=config)
         print("modprobe -q snd-soc-skl", file=config)
-        print("modprobe -q snd-soc-sst_bxt_tdf8532", file=config)
         print("else", file=config)
         print("", file=config)
         print("modprobe -q snd_soc_skl", file=config)
-        print("modprobe -q snd_soc_tdf8532", file=config)
-        print("modprobe -q snd_soc_sst_bxt_sos_tdf8532", file=config)
         print("modprobe -q snd_soc_skl_virtio_be", file=config)
         print("fi", file=config)
         print("audio_passthrough=0", file=config)

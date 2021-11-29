@@ -97,7 +97,7 @@ def generate_file(vm_info, config):
     board_cfg_lib.parse_mem()
 
     compared_bdf = []
-    sos_used_bdf = []
+    service_vm_used_bdf = []
 
     for cnt_sub_name in board_cfg_lib.SUB_NAME_COUNT.keys():
         i_cnt = 0
@@ -113,11 +113,11 @@ def generate_file(vm_info, config):
 
     for bdf in compared_bdf:
         bdf_tuple = BusDevFunc.from_str(bdf)
-        sos_used_bdf.append(bdf_tuple)
+        service_vm_used_bdf.append(bdf_tuple)
 
     # BDF 00:01.0 cannot be used in tgl
     bdf_tuple = BusDevFunc(bus=0,dev=1,func=0)
-    sos_used_bdf.append(bdf_tuple)
+    service_vm_used_bdf.append(bdf_tuple)
 
     vuarts = common.get_vuart_info(common.SCENARIO_INFO_FILE)
     pci_vuarts_num = scenario_cfg_lib.get_pci_vuart_num(vuarts)
@@ -173,7 +173,7 @@ def generate_file(vm_info, config):
              scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             print("", file=config)
             print("struct acrn_vm_pci_dev_config " +
-                  "sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];", file=config)
+                  "service_vm_pci_devs[CONFIG_MAX_PCI_DEV_NUM];", file=config)
             continue
 
         pci_cnt = 1
@@ -181,7 +181,7 @@ def generate_file(vm_info, config):
         print("", file=config)
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
             print("struct acrn_vm_pci_dev_config " +
-                  "sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM] = {", file=config)
+                  "service_vm_pci_devs[CONFIG_MAX_PCI_DEV_NUM] = {", file=config)
         else:
             print("struct acrn_vm_pci_dev_config " +
                   "vm{}_pci_devs[VM{}_CONFIG_PCI_DEV_NUM] = {{".format(vm_i, vm_i), file=config)
@@ -243,11 +243,11 @@ def generate_file(vm_info, config):
                 print("\t\t.emu_type = {},".format(PCI_DEV_TYPE[0]), file=config)
 
                 if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
-                    free_bdf = find_unused_bdf(sos_used_bdf, "ivshmem", last_bdf)
+                    free_bdf = find_unused_bdf(service_vm_used_bdf, "ivshmem", last_bdf)
                     last_bdf = free_bdf
                     print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02x}U, .f = 0x{:02x}U}}," \
                             .format(free_bdf.dev,free_bdf.func), file=config)
-                    sos_used_bdf.append(free_bdf)
+                    service_vm_used_bdf.append(free_bdf)
                 elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
                     print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{0:02x}U, .f = 0x00U}},".format(pci_cnt), file=config)
                     bdf_tuple = BusDevFunc(0,pci_cnt,0)
@@ -265,7 +265,7 @@ def generate_file(vm_info, config):
                             print("\t\tIVSHMEM_DEVICE_{}_VBAR,".format(index), file=config)
                         elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
                             print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(region), file=config)
-                            print("\t\tSOS_IVSHMEM_DEVICE_{}_VBAR,".format(index), file=config)
+                            print("\t\tSERVICE_VM_IVSHMEM_DEVICE_{}_VBAR,".format(index), file=config)
                         else:
                             print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(region), file=config)
                 pci_cnt += 1
@@ -306,8 +306,8 @@ def generate_file(vm_info, config):
                         free_bdf = find_unused_bdf(vm_used_bdf, "vuart", last_bdf)
                         vm_used_bdf.append(free_bdf)
                     elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
-                        free_bdf = find_unused_bdf(sos_used_bdf, "vuart", last_bdf)
-                        sos_used_bdf.append(free_bdf)
+                        free_bdf = find_unused_bdf(service_vm_used_bdf, "vuart", last_bdf)
+                        service_vm_used_bdf.append(free_bdf)
                     print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02x}U, .f = 0x00U}},".format(free_bdf.dev,free_bdf.func), file=config)
 
                 if vuart_id != 0:

@@ -111,8 +111,8 @@
 			"source":"acrn-hypervisor/devicemodel/samples/nuc/launch_hard_rt_vm.sh",
 			"target":"usr/share/acrn/samples/nuc"
 			},
-"launch_uos.sh":{
-			"source":"acrn-hypervisor/devicemodel/samples/nuc/launch_uos.sh",
+"launch_user_vm.sh":{
+			"source":"acrn-hypervisor/devicemodel/samples/nuc/launch_user_vm.sh",
 			"target":"usr/share/acrn/samples/nuc"
 			},
 "launch_vxworks.sh":{

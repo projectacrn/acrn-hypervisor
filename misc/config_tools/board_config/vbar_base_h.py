@@ -74,7 +74,7 @@ def get_devs_per_vm_with_key(pci_devs, keywords):
 
 
 def write_vbar(i_cnt, bdf, pci_bar_dic, bar_attr, \
-    pci_devs_per_vm, mmiolist_per_vm, sos_mmio_range,config):
+    pci_devs_per_vm, mmiolist_per_vm, service_vm_mmio_range,config):
     """
     Parser and generate vbar
     :param i_cnt: the number of pci devices have the same PCI sub class name
@@ -152,7 +152,7 @@ def find_next_bar(bar_val, bar_list):
     return idx
 
 
-def write_vuart_vbar(mmiolist_per_vm, sos_mmio_range, config):
+def write_vuart_vbar(mmiolist_per_vm, service_vm_mmio_range, config):
     # get legacy vuart information
     vuart0_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 0)
     vuart1_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
@@ -177,14 +177,14 @@ def write_vuart_vbar(mmiolist_per_vm, sos_mmio_range, config):
             free_bar1 = []
             # vuart decice requires 2 bars
             if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
-                free_bar0 = get_free_mmio(sos_mmio_range, mmiolist_per_vm[vm_id], \
+                free_bar0 = get_free_mmio(service_vm_mmio_range, mmiolist_per_vm[vm_id], \
                              PCI_VUART_VBAR0_SIZE + PCI_VUART_VBAR0_ALIGNMENT)
                 free_bar0_start_addr = common.round_up(free_bar0.start, PCI_VUART_VBAR0_ALIGNMENT)
                 free_bar0_end_addr = free_bar0_start_addr + PCI_VUART_VBAR0_SIZE - 1
                 free_bar0 = MmioWindow(free_bar0_start_addr, free_bar0_end_addr)
                 mmiolist_per_vm[vm_id].append(free_bar0)
                 mmiolist_per_vm[vm_id].sort()
-                free_bar1 = get_free_mmio(sos_mmio_range, mmiolist_per_vm[vm_id], \
+                free_bar1 = get_free_mmio(service_vm_mmio_range, mmiolist_per_vm[vm_id], \
                              PCI_VUART_VBAR1_SIZE + PCI_VUART_VBAR1_ALIGNMENT)
                 free_bar1_start_addr = common.round_up(free_bar1.start, PCI_VUART_VBAR1_ALIGNMENT)
                 free_bar1_end_addr = free_bar1_start_addr + PCI_VUART_VBAR1_SIZE - 1
@@ -212,7 +212,7 @@ def write_vuart_vbar(mmiolist_per_vm, sos_mmio_range, config):
             print("", file=config)
 
 
-def write_ivshmem_vbar(mmiolist_per_vm, sos_mmio_range, config):
+def write_ivshmem_vbar(mmiolist_per_vm, service_vm_mmio_range, config):
     for vm_id,vm_type in common.VM_TYPES.items():
         ivshmem_region = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
                     "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
@@ -234,27 +234,27 @@ def write_ivshmem_vbar(mmiolist_per_vm, sos_mmio_range, config):
                 int_size = 0
             if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
                 # vbar[0] for shared memory is 4k
-                free_bar0 = get_free_mmio(sos_mmio_range, mmiolist_per_vm[vm_id], BAR0_SHEMEM_ALIGNMENT + BAR0_SHEMEM_SIZE)
+                free_bar0 = get_free_mmio(service_vm_mmio_range, mmiolist_per_vm[vm_id], BAR0_SHEMEM_ALIGNMENT + BAR0_SHEMEM_SIZE)
                 free_bar0_start_addr = common.round_up(free_bar0.start, BAR0_SHEMEM_ALIGNMENT)
                 free_bar0_end_addr = free_bar0_start_addr + BAR0_SHEMEM_SIZE - 1
                 free_bar0 = MmioWindow(free_bar0_start_addr, free_bar0_end_addr)
                 mmiolist_per_vm[vm_id].append(free_bar0)
                 mmiolist_per_vm[vm_id].sort()
                 # vbar[1] for shared memory is 4K
-                free_bar1 = get_free_mmio(sos_mmio_range, mmiolist_per_vm[vm_id], BAR1_SHEMEM_ALIGNMENT + BAR1_SHEMEM_SIZE)
+                free_bar1 = get_free_mmio(service_vm_mmio_range, mmiolist_per_vm[vm_id], BAR1_SHEMEM_ALIGNMENT + BAR1_SHEMEM_SIZE)
                 free_bar1_start_addr = common.round_up(free_bar1.start, BAR1_SHEMEM_ALIGNMENT)
                 free_bar1_end_addr = free_bar1_start_addr + BAR1_SHEMEM_SIZE - 1
                 free_bar1 = MmioWindow(free_bar1_start_addr, free_bar1_end_addr)
                 mmiolist_per_vm[vm_id].append(free_bar1)
                 mmiolist_per_vm[vm_id].sort()
                 # vbar[2] for shared memory is specified size in MB
-                free_bar2 = get_free_mmio(sos_mmio_range, mmiolist_per_vm[vm_id], BAR2_SHEMEM_ALIGNMENT + int_size)
+                free_bar2 = get_free_mmio(service_vm_mmio_range, mmiolist_per_vm[vm_id], BAR2_SHEMEM_ALIGNMENT + int_size)
                 free_bar2_start_addr = common.round_up(free_bar2.start, BAR2_SHEMEM_ALIGNMENT) + 0xC
                 free_bar2_end_addr = free_bar2_start_addr + int_size - 1
                 free_bar2 = MmioWindow(free_bar2_start_addr, free_bar2_end_addr)
                 mmiolist_per_vm[vm_id].append(free_bar2)
                 mmiolist_per_vm[vm_id].sort()
-                print("#define SOS_IVSHMEM_DEVICE_%-19s" % (str(idx) + "_VBAR"),
+                print("#define SERVICE_VM_IVSHMEM_DEVICE_%-19s" % (str(idx) + "_VBAR"),
                         "       .vbar_base[0] = {:#x}UL, \\".format(free_bar0.start), file=config)
                 print("{}.vbar_base[1] = {:#x}UL, \\".format(' ' * 54, free_bar1.start), file=config)
                 print("{}.vbar_base[2] = {:#x}UL".format(' ' * 54, free_bar2.start), file=config)
@@ -377,7 +377,7 @@ def generate_file(config):
     pci_devs = scenario_cfg_lib.get_pt_pci_devs(pci_items)
     pci_devs_per_vm = get_devs_per_vm_with_key(pci_devs, bdf_list)
     # list Service VM vmsix supported devices without other PRE_LAUNCHED_VMs' in bdf format
-    sos_bdf_list = [
+    service_vm_bdf_list = [
         d for d in bdf_list
         if all((d not in pci_devs_per_vm[i] for i in pci_devs_per_vm))
         ]
@@ -385,7 +385,7 @@ def generate_file(config):
     for vm_i in pci_devs_per_vm:
         vm_type = common.VM_TYPES[vm_i]
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
-            pci_devs_per_vm[vm_i] = sos_bdf_list
+            pci_devs_per_vm[vm_i] = service_vm_bdf_list
 
     mmiolist_per_vm = {}
     for vm_i,vm_type in common.VM_TYPES.items():
@@ -416,14 +416,14 @@ def generate_file(config):
     print(VBAR_INFO_DEFINE, file=config)
     common.get_vm_types()
     pre_vm = False
-    sos_vm = False
+    service_vm = False
     for vm_type in common.VM_TYPES.values():
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
             pre_vm = True
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SERVICE_VM":
-            sos_vm = True
+            service_vm = True
 
-    if not pre_vm and not sos_vm:
+    if not pre_vm and not service_vm:
         print(VBAR_INFO_ENDIF, file=config)
         return
 
