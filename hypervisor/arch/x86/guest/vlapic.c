@@ -2058,6 +2058,11 @@ vlapic_x2apic_pt_icr_access(struct acrn_vcpu *vcpu, uint64_t val)
 	} else {
 		dmask = vlapic_calc_dest(vcpu, shorthand, (dest == 0xffffffffU), dest, phys, false);
 
+		/**
+		 * The hypervisor sets the "Destination Shorthand" field to 00B (No Shorthand)
+		 * since the emulation is done through sending IPI to each VCPU in dmask one by one.
+		 */
+		icr_low = icr_low & (~APIC_DEST_MASK);
 		for (vcpu_id = 0U; vcpu_id < vcpu->vm->hw.created_vcpus; vcpu_id++) {
 			if (((dmask & (1UL << vcpu_id)) != 0UL) &&
 					(vcpu->vm->hw.vcpu_array[vcpu_id].state != VCPU_OFFLINE)) {
