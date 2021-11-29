@@ -70,7 +70,9 @@
     <!-- Definition of vm_configs -->
     <xsl:value-of select="acrn:array-initializer('struct acrn_vm_config', 'vm_configs', 'CONFIG_MAX_VM_NUM')" />
     <xsl:apply-templates select="vm"/>
-    <xsl:value-of select="acrn:vm_fill(count(vm), hv/CAPACITIES/MAX_VM_NUM)"/>
+    <xsl:if test="count(vm) &lt; hv/CAPACITIES/MAX_VM_NUM">
+        <xsl:value-of select="acrn:vm_fill(count(vm), hv/CAPACITIES/MAX_VM_NUM)"/>
+    </xsl:if>
     <xsl:value-of select="$newline"/>
     <xsl:value-of select="$end_of_array_initializer" />
   </xsl:template>
