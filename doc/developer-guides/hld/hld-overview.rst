@@ -416,14 +416,14 @@ from different huge pages in the Service VM as shown in
 :numref:`overview-mem-layout`.
 
 As the Service VM knows the size of these huge pages,
-GPA\ :sup:`SOS` and GPA\ :sup:`UOS`, it works with the hypervisor
+GPA\ :sup:`service_vm` and GPA\ :sup:`user_vm`, it works with the hypervisor
 to complete the User VM's host-to-guest mapping using this pseudo code:
 
 .. code-block:: none
 
    for x in allocated huge pages do
-      x.hpa = gpa2hpa_for_sos(x.sos_gpa)
-      host2guest_map_for_uos(x.hpa, x.uos_gpa, x.size)
+      x.hpa = gpa2hpa_for_service_vm(x.service_vm_gpa)
+      host2guest_map_for_user_vm(x.hpa, x.user_vm_gpa, x.size)
    end
 
 Virtual Slim Bootloader
