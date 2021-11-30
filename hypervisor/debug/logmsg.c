@@ -19,16 +19,14 @@
  */
 
 struct acrn_logmsg_ctl {
-	uint32_t flags;
 	int32_t seq;
 	spinlock_t lock;
 };
 
 static struct acrn_logmsg_ctl logmsg_ctl;
 
-void init_logmsg(uint32_t flags)
+void init_logmsg()
 {
-	logmsg_ctl.flags = flags;
 	logmsg_ctl.seq = 0;
 
 	spinlock_init(&(logmsg_ctl.lock));
@@ -45,9 +43,9 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	char *buffer;
 	struct thread_object *current;
 
-	do_console_log = (((logmsg_ctl.flags & LOG_FLAG_STDOUT) != 0U) && (severity <= console_loglevel));
-	do_mem_log = (((logmsg_ctl.flags & LOG_FLAG_MEMORY) != 0U) && (severity <= mem_loglevel));
-	do_npk_log = ((logmsg_ctl.flags & LOG_FLAG_NPK) != 0U && (severity <= npk_loglevel));
+	do_console_log = (severity <= console_loglevel);
+	do_mem_log = (severity <= mem_loglevel);
+	do_npk_log = (severity <= npk_loglevel);
 
 	if (!do_console_log && !do_mem_log && !do_npk_log) {
 		return;
@@ -76,12 +74,12 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 		- strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE), fmt, args);
 	va_end(args);
 
-	/* Check if flags specify to output to NPK */
+	/* Check whether output to NPK */
 	if (do_npk_log) {
 		npk_log_write(buffer, strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE));
 	}
 
-	/* Check if flags specify to output to stdout */
+	/* Check whether output to stdout */
 	if (do_console_log) {
 		spinlock_irqsave_obtain(&(logmsg_ctl.lock), &rflags);
 
@@ -91,7 +89,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 		spinlock_irqrestore_release(&(logmsg_ctl.lock), rflags);
 	}
 
-	/* Check if flags specify to output to memory */
+	/* Check whether output to memory */
 	if (do_mem_log) {
 		uint32_t i, msg_len;
 		struct shared_buf *sbuf = per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
