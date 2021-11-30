@@ -32,14 +32,18 @@ class PCIConfigSpace(namedtuple("PCIConfigSpace", ["header", "caps", "extcaps"])
         return False
 
 def parse_config_space(path):
-    data = open(os.path.join(path, "config"), mode='rb').read()
-    hdr = header(data)
-    caps = capabilities(data, hdr.capability_pointer)
-    config_space = PCIConfigSpace(hdr, caps, [])
-    # While PCI Express specification requires that a PCIe endpoint must have an extended capability header at offset
-    # 100h of its configuration space, we do see real PCIe endpoints not meeting this requirement occasionally. Thus,
-    # check the length of the configuration space as well before trying to parse its extended capability list.
-    if config_space.has_cap("PCI Express") and len(data) >= 260:
-        extcaps = extended_capabilities(data)
-        config_space = PCIConfigSpace(hdr, caps, extcaps)
-    return config_space
+    try:
+        data = open(os.path.join(path, "config"), mode='rb').read()
+        hdr = header(data)
+        caps = capabilities(data, hdr.capability_pointer)
+        config_space = PCIConfigSpace(hdr, caps, [])
+        # While PCI Express specification requires that a PCIe endpoint must have an extended capability header at
+        # offset 100h of its configuration space, we do see real PCIe endpoints not meeting this requirement
+        # occasionally. Thus, check the length of the configuration space as well before trying to parse its extended
+        # capability list.
+        if config_space.has_cap("PCI Express") and len(data) >= 260:
+            extcaps = extended_capabilities(data)
+            config_space = PCIConfigSpace(hdr, caps, extcaps)
+        return config_space
+    except FileNotFoundError:
+        return None
