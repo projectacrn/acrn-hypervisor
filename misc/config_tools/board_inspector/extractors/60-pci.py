@@ -56,6 +56,13 @@ cap_parsers = {
 
 def parse_device(bus_node, device_path):
     device_name = os.path.basename(device_path)
+    cfg = parse_config_space(device_path)
+
+    # There are cases where Linux creates device-like nodes without a file named "config", e.g. when there is a PCIe
+    # non-transparent bridge (NTB) on the physical platform.
+    if cfg is None:
+        return None
+
     if device_name == "0000:00:00.0":
         device_node = bus_node
     else:
@@ -66,7 +73,6 @@ def parse_device(bus_node, device_path):
         if device_node is None:
             device_node = add_child(bus_node, "device", None, address=adr)
 
-    cfg = parse_config_space(device_path)
     for cap in cfg.caps:
         # If the device is not in D0, power it on and reparse its configuration space.
         if cap.name == "Power Management" and cap.power_state != 0:
@@ -180,7 +186,8 @@ def enum_devices(bus_node, root_path):
     for device_name in device_names:
         p = os.path.join(root_path, device_name)
         device_node = parse_device(bus_node, p)
-        enum_devices(device_node, p)
+        if device_node is not None:
+            enum_devices(device_node, p)
 
 def extract(args, board_etree):
     # Assume we only care about PCI devices under domain 0, as the hypervisor only uses BDF (without domain) for device
