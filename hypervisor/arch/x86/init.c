@@ -38,7 +38,7 @@ static void init_debug_pre(void)
 	console_init();
 
 	/* Enable logging */
-	init_logmsg(CONFIG_LOG_DESTINATION);
+	init_logmsg();
 }
 
 /*TODO: move into debug module */
