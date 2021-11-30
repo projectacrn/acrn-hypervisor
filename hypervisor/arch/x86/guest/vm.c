@@ -158,6 +158,22 @@ bool is_rt_vm(const struct acrn_vm *vm)
 
 /**
  * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
+ *
+ * Stateful VM refers to VM that has its own state (such as internal file cache),
+ * and will experience state loss (file system corruption) if force powered down.
+ */
+bool is_stateful_vm(const struct acrn_vm *vm)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	/* TEE VM doesn't has its own state. The TAs will do the content
+	 * flush by themselves, HV and OS doesn't need to care about the state.
+	 */
+	return ((vm_config->guest_flags & GUEST_FLAG_TEE) == 0U);
+}
+
+/**
+ * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
  */
 bool is_nvmx_configured(const struct acrn_vm *vm)
 {
@@ -751,7 +767,7 @@ static bool is_ready_for_system_shutdown(void)
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm = get_vm_from_vmid(vm_id);
 		/* TODO: Update code to cover hybrid mode */
-		if (!is_poweroff_vm(vm)) {
+		if (!is_poweroff_vm(vm) && is_stateful_vm(vm)) {
 			ret = false;
 			break;
 		}
