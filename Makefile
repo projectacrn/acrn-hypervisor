@@ -83,7 +83,9 @@ ASL_COMPILER ?= $(shell which iasl)
 .PHONY: all hypervisor devicemodel tools life_mngr doc
 all: hypervisor devicemodel tools
 	@cat $(HV_CFG_LOG)
-	@python3 misc/packaging/gen_acrn_deb.py acrn_all $(ROOT_OUT) --version=$(FULL_VERSION) --board_name=$(BOARD) --scenario=$(SCENARIO)
+	@DEB_BOARD=$$(grep "BOARD" $(HV_CFG_LOG) | awk -F '= ' '{print  $$2 }'); \
+	DEB_SCENARIO=$$(grep "SCENARIO" $(HV_CFG_LOG) | awk -F '= ' '{print  $$2 }'); \
+	python3 misc/packaging/gen_acrn_deb.py acrn_all $(ROOT_OUT) --version=$(FULL_VERSION) --board_name="$$DEB_BOARD" --scenario="$$DEB_SCENARIO"
 
 #help functions to build acrn and install acrn/acrn symbols
 define build_acrn
