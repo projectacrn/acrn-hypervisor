@@ -76,7 +76,7 @@ Set-up ACRN on your device
   .. code-block:: none
 
      cd ~/acrn-kernel # Or where your ACRN kernel sources are
-     cp kernel_config_uefi_sos .config
+     cp kernel_config_service_vm .config
      make olddefconfig
      make
      sudo make modules_install
