@@ -17,10 +17,6 @@
 #define LOG_INFO		5U
 #define LOG_DEBUG		6U
 
-/* Logging flags */
-#define LOG_FLAG_STDOUT		0x00000001U
-#define LOG_FLAG_MEMORY		0x00000002U
-#define LOG_FLAG_NPK		0x00000004U
 #define LOG_ENTRY_SIZE	80U
 /* Size of buffer used to store a message being logged,
  * should align to LOG_ENTRY_SIZE.
@@ -49,7 +45,11 @@ void asm_assert(int32_t line, const char *file, const char *txt);
 
 #endif /* HV_DEBUG */
 
-void init_logmsg(uint32_t flags);
+void init_logmsg();
+
+/*
+ * @pre the severity > 0
+ */
 void do_logmsg(uint32_t severity, const char *fmt, ...);
 
 /** The well known printf() function.
@@ -112,7 +112,9 @@ void vprintf(const char *fmt, va_list args);
 
 #define dev_dbg(lvl, ...)					\
 	do {							\
-		do_logmsg((lvl), pr_prefix __VA_ARGS__);	\
+		if ((lvl) > 0) {                                \
+			do_logmsg((lvl), pr_prefix __VA_ARGS__);\
+		}                                               \
 	} while (0)
 
 #define panic(...) 							\
