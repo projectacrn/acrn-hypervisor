@@ -75,7 +75,6 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["hv,DEBUG_OPTIONS,MEM_LOGLEVEL"] = hv_cfg_lib.get_select_range("DEBUG_OPTIONS", "LOG_LEVEL")
     scenario_item_values["hv,DEBUG_OPTIONS,CONSOLE_LOGLEVEL"] = hv_cfg_lib.get_select_range("DEBUG_OPTIONS", "LOG_LEVEL")
     scenario_item_values["hv,DEBUG_OPTIONS,SERIAL_CONSOLE"] = board_cfg_lib.get_native_ttys_info(board_info)
-    scenario_item_values["hv,DEBUG_OPTIONS,LOG_DESTINATION"] = hv_cfg_lib.get_select_range("DEBUG_OPTIONS", "LOG_DESTINATION_BITMAP")
 
     scenario_item_values["hv,CAPACITIES,MAX_IOAPIC_NUM"] = hv_cfg_lib.get_select_range("CAPACITIES", "IOAPIC_NUM")
 

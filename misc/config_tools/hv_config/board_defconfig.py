@@ -172,7 +172,6 @@ def get_log_opt(hv_info, config):
 
     print("CONFIG_NPK_LOGLEVEL_DEFAULT={}".format(hv_info.log.level.npk), file=config)
     print("CONFIG_MEM_LOGLEVEL_DEFAULT={}".format(hv_info.log.level.mem), file=config)
-    print("CONFIG_LOG_DESTINATION={}".format(hv_info.log.dest), file=config)
     print("CONFIG_CONSOLE_LOGLEVEL_DEFAULT={}".format(hv_info.log.level.console), file=config)
 
 
