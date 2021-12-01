@@ -55,29 +55,6 @@ memory. Value can be changed at runtime.</xs:documentation>
 written to the serial console.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="LOG_DESTINATION" default="7">
-      <xs:annotation>
-        <xs:documentation>Bitmap indicating the destination of log messages.
-There are three log destinations available:
-
-- Bit 0 enables the serial console (``0x1``),
-- Bit 1 enables the Service VM log (``0x2``), and
-- Bit 2 enables the NPK log (``0x4``).
-
-For example, a value of ``3`` enables only the
-serial console and Service VM logs. Effective only in debug builds (when
-:option:`hv.DEBUG_OPTIONS.RELEASE` is ``n``).</xs:documentation>
-      </xs:annotation>
-    <xs:simpleType>
-      <xs:annotation>
-        <xs:documentation>Integer value from 0 to 7.</xs:documentation>
-      </xs:annotation>
-      <xs:restriction base="xs:integer">
-        <xs:minInclusive value="0" />
-        <xs:maxInclusive value="7" />
-      </xs:restriction>
-    </xs:simpleType>
-    </xs:element>
   </xs:all>
 </xs:complexType>
 

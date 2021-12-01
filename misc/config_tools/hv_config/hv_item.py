@@ -29,18 +29,15 @@ class LogOpt:
 
     def __init__(self, hv_file):
         self.hv_file = hv_file
-        self.dest = 0
         self.release = ''
         self.level = LogLevel(self.hv_file)
 
     def get_info(self):
         self.release = common.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "RELEASE")
-        self.dest = common.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "LOG_DESTINATION")
         self.level.get_info()
 
     def check_item(self):
         hv_cfg_lib.release_check(self.release, "DEBUG_OPTIONS", "RELEASE")
-        hv_cfg_lib.hv_range_check(self.dest, "DEBUG_OPTIONS", "LOG_DESTINATION", hv_cfg_lib.RANGE_DB['LOG_DESTINATION_BITMAP'])
         self.level.check_item()
 
 
