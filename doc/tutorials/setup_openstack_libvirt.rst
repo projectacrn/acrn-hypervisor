@@ -20,8 +20,8 @@ Install ACRN
 #. Install ACRN using Ubuntu 20.04 as its Service VM. Refer to
    :ref:`gsg`.
 
-#. Make the acrn-kernel using the `kernel_config_uefi_sos
-   <https://raw.githubusercontent.com/projectacrn/acrn-kernel/master/kernel_config_uefi_sos>`_
+#. Make the acrn-kernel using the `kernel_config_service_vm
+   <https://raw.githubusercontent.com/projectacrn/acrn-kernel/master/kernel_config_service_vm>`_
    configuration file (from the ``acrn-kernel`` repo).
 
 #. Append the following kernel boot arguments to the ``multiboot2`` line in
