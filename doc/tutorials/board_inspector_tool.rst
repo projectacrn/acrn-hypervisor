@@ -8,7 +8,7 @@ This guide describes all features and uses of the tool.
 About the Board Inspector Tool
 ******************************
 
-The board inspector tool ``board_inspector.py`` enables you to generate a board
+The Board Inspector tool ``board_inspector.py`` enables you to generate a board
 configuration file on the target system. The board configuration file stores
 hardware-specific information extracted from the target platform and is used to
 customize your :ref:`ACRN configuration <acrn_configuration_tool>`.
@@ -22,19 +22,19 @@ Generate a Board Configuration File
    additional memory, or PCI devices, you must generate a new board
    configuration file.
 
-The following steps describe all options in the board inspector for generating
+The following steps describe all options in the Board Inspector for generating
 a board configuration file.
 
-#. Make sure the target system is set up and ready to run the board inspector,
+#. Make sure the target system is set up and ready to run the Board Inspector,
    according to :ref:`gsg-board-setup` in the Getting Started Guide.
 
-#. Load the ``msr`` driver, used by the board inspector:
+#. Load the ``msr`` driver, used by the Board Inspector:
 
    .. code-block:: bash
 
       sudo modprobe msr
 
-#. Run the board inspector tool (``board_inspector.py``) to generate the board
+#. Run the Board Inspector tool (``board_inspector.py``) to generate the board
    configuration file. This example assumes the tool is in the
    ``~/acrn-work/`` directory and ``my_board`` is the desired file
    name. Feel free to modify the commands as needed.
@@ -44,11 +44,11 @@ a board configuration file.
       cd ~/acrn-work/board_inspector/
       sudo python3 board_inspector.py my_board
 
-   Upon success, the tool displays the following message:
+   Upon success, the tool displays a message similar to this example:
 
    .. code-block:: console
 
-      PTCT table has been saved to PTCT successfully!
+      my_board.xml saved successfully!
 
 #. Confirm that the board configuration file ``my_board.xml`` was generated in
    the current directory.
@@ -58,8 +58,8 @@ a board configuration file.
 Command-Line Options
 ********************
 
-You can configure the board inspector via command-line options. Running the
-board inspector with the ``-h`` option yields the following usage message:
+You can configure the Board Inspector via command-line options. Running the
+Board Inspector with the ``-h`` option yields the following usage message:
 
 .. code-block::
 
@@ -94,11 +94,11 @@ Details about certain arguments:
    * - ``--out``
      - Optional. Specify a file path where the board configuration file will be
        saved (example: ``~/acrn_work``). If only a filename is provided in this
-       option, the board inspector will generate the file in the current
+       option, the Board Inspector will generate the file in the current
        directory.
 
    * - ``--basic``
-     - Optional. By default, the board inspector parses the ACPI namespace when
+     - Optional. By default, the Board Inspector parses the ACPI namespace when
        generating board configuration files. This option provides a way to
        disable ACPI namespace parsing in case the parsing blocks the generation
        of board configuration files.
@@ -110,6 +110,6 @@ Details about certain arguments:
    * - ``--check-device-status``
      - Optional. On some boards, the device status (reported by the _STA
        object) returns 0 while the device object is still useful for
-       pass-through devices. By default, the board inspector includes the
+       pass-through devices. By default, the Board Inspector includes the
        devices in the board configuration file. This option filters out the
        devices, so that they cannot be used.

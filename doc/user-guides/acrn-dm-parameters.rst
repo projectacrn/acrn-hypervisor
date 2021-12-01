@@ -207,19 +207,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
 ----
 
-``-U``, ``--uuid <uuid>``
-   Set UUID for a VM.  Every VM is identified by a UUID.  You can define that
-   UUID with this option.  If you don't use this option, a default one
-   ("d2795438-25d6-11e8-864e-cb7a18b34643") will be used.
-
-   usage::
-
-      -u "42795636-1d31-6512-7432-087d33b34756"
-
-   set the newly created VM's UUID to ``42795636-1d31-6512-7432-087d33b34756``
-
-----
-
 ``-v``, ``--version``
    Show Device Model version.
 

@@ -82,20 +82,6 @@ def gen_header_file(scenario_items, config):
     gen_sos_header(scenario_items, config)
 
 
-def get_dm_owned_guest_flag_mask(vm_info, config):
-
-    print("", file=config)
-    if "SERVICE_VM" not in common.VM_TYPES.values():
-        print("#define DM_OWNED_GUEST_FLAG_MASK        0UL", file=config)
-    else:
-        print("/* Bits mask of guest flags that can be programmed by device model." +
-              " Other bits are set by hypervisor only */", file=config)
-        print("#define DM_OWNED_GUEST_FLAG_MASK        " +
-              "(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | \\\n" +
-              "\t\t\t\t\t\tGUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING)", file=config)
-    print("", file=config)
-
-
 def generate_file(scenario_items, config):
     """
     Start to generate vm_configurations.h
@@ -108,7 +94,6 @@ def generate_file(scenario_items, config):
     print("#include <misc_cfg.h>", file=config)
     print("#include <pci_devices.h>", file=config)
     scenario_vm_num(scenario_items, config)
-    get_dm_owned_guest_flag_mask(vm_info, config)
 
     gen_header_file(scenario_items, config)
     print("{0}".format(VM_END_DEFINE), file=config)

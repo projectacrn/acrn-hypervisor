@@ -74,6 +74,7 @@ Advanced Features
    tutorials/nvmx_virtualization
    tutorials/vuart_configuration
    tutorials/rdt_configuration
+   tutorials/vcat_configuration
    tutorials/waag-secure-boot
    tutorials/enable_s5
    tutorials/cpu_sharing

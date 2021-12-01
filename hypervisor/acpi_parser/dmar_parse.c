@@ -134,7 +134,7 @@ static int32_t handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd, struct
 		if (is_apl_platform()) {
 			if ((((uint32_t)drhd->segment << 16U) |
 		     	     ((uint32_t)dev_scope->bus << 8U) |
-		     	     dev_scope->devfun) == CONFIG_GPU_SBDF) {
+		     	     dev_scope->devfun) == CONFIG_IGD_SBDF) {
 				drhd->ignore = true;
 			}
 		}

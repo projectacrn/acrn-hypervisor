@@ -17,11 +17,11 @@ Makefile                                 @terryzouhao @NanlinXie
 /devicemodel/                            @anthonyzxu @ywan170
 /doc/                                    @dbkinder @amyreye @NanlinXie
 /misc/debug_tools/acrn_crashlog/         @chengangc @dizhang417
-/misc/debug_tools/acrn_log/              @ywan170 @shuox
-/misc/debug_tools/acrn_trace/            @ywan170 @shuox
-/misc/services/acrn_manager/             @ywan170 @shuox
-/misc/services/acrn_bridge/              @ywan170 @shuox
-/misc/services/life_mngr/                @ywan170 @shuox
+/misc/debug_tools/acrn_log/              @ywan170 @lifeix
+/misc/debug_tools/acrn_trace/            @ywan170 @lifeix
+/misc/services/acrn_manager/             @ywan170 @lifeix
+/misc/services/acrn_bridge/              @ywan170 @lifeix
+/misc/services/life_mngr/                @ywan170 @lifeix
 /misc/config_tools/                      @terryzouhao @NanlinXie
 /misc/Makefile                           @terryzouhao @NanlinXie
 /misc/packaging/                         @terryzouhao @NanlinXie

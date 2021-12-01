@@ -208,7 +208,6 @@ Configure RDT for VM Using VM Configuration
       <vm id="0">
          <vm_type readonly="true">PRE_STD_VM</vm_type>
          <name>ACRN PRE-LAUNCHED VM0</name>
-         <uuid configurable="0">26c5e0d8-8f8a-47d8-8109-f201ebd61a5e</uuid>
          <clos>
             <vcpu_clos>0</vcpu_clos>
             <vcpu_clos>1</vcpu_clos>

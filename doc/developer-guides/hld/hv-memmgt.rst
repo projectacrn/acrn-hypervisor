@@ -16,7 +16,7 @@ translate a guest-physical address into a host-physical address. The HV enables
 EPT and VPID hardware virtualization features, establishes EPT page
 tables for Service and User VMs, and provides EPT page tables operation interfaces to others.
 
-In the ACRN hypervisor system, there are few different memory spaces to
+In the ACRN hypervisor system, there are a few different memory spaces to
 consider. From the hypervisor's point of view:
 
 -  **Host Physical Address (HPA)**: the native physical address space.
@@ -42,7 +42,7 @@ From the Guest OS running on a hypervisor:
 :numref:`mem-overview` provides an overview of the ACRN system memory
 mapping, showing:
 
--  GVA to GPA mapping based on vMMU on a VCPU in a VM
+-  GVA to GPA mapping based on vMMU on a vCPU in a VM
 -  GPA to HPA mapping based on EPT for a VM in the hypervisor
 -  HVA to HPA mapping based on MMU in the hypervisor
 
@@ -52,7 +52,8 @@ inside the hypervisor and from a VM:
 
 -  How ACRN hypervisor manages host memory (HPA/HVA)
 -  How ACRN hypervisor manages the Service VM guest memory (HPA/GPA)
--  How ACRN hypervisor and the Service VM DM manage the User MV guest memory (HPA/GPA)
+-  How ACRN hypervisor and the Service VM Device Model (DM) manage the User VM
+   guest memory (HPA/GPA)
 
 Hypervisor Physical Memory Management
 *************************************
@@ -60,8 +61,9 @@ Hypervisor Physical Memory Management
 In ACRN, the HV initializes MMU page tables to manage all physical
 memory and then switches to the new MMU page tables. After MMU page
 tables are initialized at the platform initialization stage, no updates
-are made for MMU page tables except when hv_access_memory_region_update is called.
-However, the memory region updated by hv_access_memory_region_update
+are made for MMU page tables except when ``set_paging_supervisor/nx/x`` is
+called.
+However, the memory region updated by ``set_paging_supervisor/nx/x``
 must not be accessed by the ACRN hypervisor in advance because access could
 make mapping in the TLB and there is no TLB flush mechanism for the ACRN HV memory.
 
@@ -91,12 +93,12 @@ Hypervisor Memory Initialization
 
 The ACRN hypervisor runs in paging mode. After the bootstrap
 processor (BSP) gets the platform E820 table, the BSP creates its MMU page
-table based on it. This is done by the function *init_paging()*.
+table based on it. This is done by the function ``init_paging()``.
 After the application processor (AP) receives the IPI CPU startup
 interrupt, it uses the MMU page tables created by the BSP. In order to bring
 the memory access rights into effect, some other APIs are provided:
-enable_paging will enable IA32_EFER.NXE and CR0.WP, enable_smep will
-enable CR4.SMEP, and enable_smap will enable CR4.SMAP.
+``enable_paging`` will enable IA32_EFER.NXE and CR0.WP, ``enable_smep`` will
+enable CR4.SMEP, and ``enable_smap`` will enable CR4.SMAP.
 :numref:`hv-mem-init`  describes the hypervisor memory initialization for the BSP
 and APs.
 
@@ -114,9 +116,9 @@ The following memory mapping policy used is:
   and execute-disable access right
 - Remap [0, low32_max_ram) regions to WRITE-BACK type
 - Remap [4G, high64_max_ram) regions to WRITE-BACK type
-- set the paging-structure entries' U/S flag to
+- Set the paging-structure entries' U/S flag to
   supervisor-mode for hypervisor-owned memory
-  (exclude the memory reserve for trusty)
+  (exclude the memory reserved for trusty)
 - Remove 'NX' bit for pages that contain the hv code section
 
 .. figure:: images/mem-image69.png
@@ -145,7 +147,7 @@ support map linear addresses to 4-KByte pages.
   address space mapping and 2MB hugepage can be used, the corresponding
   PDT entry shall be set for this 2MB hugepage.
 
-If the memory type or access rights of a page is updated, or some virtual
+If the memory type or access rights of a page are updated, or some virtual
 address space is deleted, it will lead to splitting of the corresponding
 page. The hypervisor will still keep using minimum memory pages to map from
 the virtual address space into the physical address space.
@@ -228,7 +230,7 @@ The hypervisor:
 Memory Virtualization Capability Checking
 =========================================
 
-In the hypervisor, memory virtualization provides EPT/VPID capability
+In the hypervisor, memory virtualization provides an EPT/VPID capability
 checking service and an EPT hugepage supporting checking service. Before the HV
 enables memory virtualization and uses the EPT hugepage, these services need
 to be invoked by other units.
@@ -247,9 +249,10 @@ instruction data.
 Access GPA From Hypervisor
 --------------------------
 
-When the hypervisor needs to access the GPA for data transfer, the caller from guest
+When the hypervisor needs to access the GPA for data transfer, the caller from
+a guest
 must make sure this memory range's GPA is continuous. But for HPA in the
-hypervisor, it could be discontinuous (especially for User VM under hugetlb
+hypervisor, it could be discontinuous (especially for a User VM under hugetlb
 allocation mechanism). For example, a 4M GPA range may map to 2
 different 2M huge host-physical pages. The ACRN hypervisor must take
 care of this kind of data transfer by doing EPT page walking based on
@@ -278,13 +281,13 @@ space.
 - If both 1GB hugepage and 2MB hugepage can't be used for GPA
   space mapping, the corresponding EPT PT entry shall be set.
 
-If memory type or access rights of a page is updated or some GPA space
+If memory type or access rights of a page are updated or some GPA space
 is deleted, it will lead to the corresponding EPT page being split. The
 hypervisor should still keep to using minimum EPT pages to map from GPA
 space into HPA space.
 
-The hypervisor provides EPT guest-physical mappings adding service, EPT
-guest-physical mappings modifying/deleting service and EPT guest-physical
+The hypervisor provides an EPT guest-physical mappings adding service, EPT
+guest-physical mappings modifying/deleting service, and EPT guest-physical
 mappings invalidation service.
 
 Virtual MTRR
@@ -301,14 +304,14 @@ hypervisor uses the default memory type in the MTRR (Write-Back).
 When the guest disables MTRRs, the HV sets the guest address memory type
 as UC.
 
-If the guest physical address is in fixed range (0~1MB), the HV sets
-memory type according to the fixed virtual MTRRs.
+If the guest physical address is in the fixed range (0~1MB), the HV sets
+the memory type according to the fixed virtual MTRRs.
 
-When the guest enable MTRRs, MTRRs have no effect on the memory type
+When the guest enables MTRRs, MTRRs have no effect on the memory type
 used for access to GPA. The HV first intercepts MTRR MSR registers
-access through MSR access VM exit and updates EPT memory type field in EPT
-PTE according to the memory type selected by MTRRs.  This combines with
-PAT entry in the PAT MSR (which is determined by PAT, PCD, and PWT bits
+access through MSR access VM exit and updates the EPT memory type field in EPT
+PTE according to the memory type selected by MTRRs.  This combines with the
+PAT entry in the PAT MSR (which is determined by the PAT, PCD, and PWT bits
 from the guest paging structures) to determine the effective memory
 type.
 
@@ -466,15 +469,16 @@ VPID
 .. doxygenfunction:: flush_vpid_global
    :project: Project ACRN
 
-Service OS Memory Management
+Service VM Memory Management
 ****************************
 
 After the ACRN hypervisor starts, it creates the Service VM as its first
 VM. The Service VM runs all the native device drivers, manages the
-hardware devices, and provides I/O mediation to guest VMs. The Service
-OS is in charge of the memory allocation for Guest VMs as well.
+hardware devices, and provides I/O mediation to post-launched User VMs. The
+Service VM is in charge of the memory allocation for post-launched User VMs as
+well.
 
-ACRN hypervisor passes the whole system memory access (except its own
+The ACRN hypervisor passes the whole system memory access (except its own
 part) to the Service VM. The Service VM must be able to access all of
 the system memory except the hypervisor part.
 
@@ -482,28 +486,28 @@ Guest Physical Memory Layout - E820
 ===================================
 
 The ACRN hypervisor passes the original E820 table to the Service VM
-after filtering out its own part. So from Service VM's view, it sees
+after filtering out its own part. From the Service VM's view, it sees
 almost all the system memory as shown here:
 
 .. figure:: images/mem-image3.png
    :align: center
    :width: 900px
-   :name: sos-mem-layout
+   :name: service-vm-mem-layout
 
    Service VM Physical Memory Layout
 
 Host to Guest Mapping
 =====================
 
-ACRN hypervisor creates the Service OS's guest (GPA) to host (HPA) mapping
-(EPT mapping) through the function ``prepare_sos_vm_memmap()``
+The ACRN hypervisor creates the Service VM's guest (GPA) to host (HPA) mapping
+(EPT mapping) through the function ``prepare_service_vm_memmap()``
 when it creates the Service VM. It follows these rules:
 
 -  Identical mapping
--  Map all memory range with UNCACHED type
+-  Map all memory ranges with UNCACHED type
 -  Remap RAM entries in E820 (revised) with WRITE-BACK type
 -  Unmap ACRN hypervisor memory range
--  Unmap all platform EPC resource
+-  Unmap all platform EPC resources
 -  Unmap ACRN hypervisor emulated vLAPIC/vIOAPIC MMIO range
 
 The guest to host mapping is static for the Service VM; it will not
@@ -515,9 +519,9 @@ in the hypervisor for Service VM.
 Trusty
 ******
 
-For an Android User OS, there is a secure world named trusty world
-support, whose memory must be secured by the ACRN hypervisor and
-must not be accessible by the Service/User VM normal world.
+For an Android User VM, there is a secure world named trusty world,
+whose memory must be secured by the ACRN hypervisor and
+must not be accessible by the Service VM and User VM normal world.
 
 .. figure:: images/mem-image18.png
    :align: center

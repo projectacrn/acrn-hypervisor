@@ -167,7 +167,7 @@ class DmarTbl:
 
 # TODO: Get board information is independent part of acrn-config tools, it does not get the GPU_SBDF default
 # config from the other part of tools, so hard code the GPU_SBDF to gernerate DRHDx_IGNORE macro
-CONFIG_GPU_SBDF = 0x10
+CONFIG_IGD_SBDF = 0x10
 
 PCI_BRIDGE_HEADER = 1
 
@@ -257,7 +257,7 @@ def walk_pci_bus(tmp_pdf, dmar_tbl, dmar_hw_list, drhd_cnt):
         get_secondary_bus(dmar_tbl, tmp_pdf.device, tmp_pdf.function)
 
         if ((dmar_tbl.dmar_drhd.segment << 16) | (
-                dmar_tbl.dmar_dev_scope.bus << 8) | tmp_pdf.path) == CONFIG_GPU_SBDF:
+                dmar_tbl.dmar_dev_scope.bus << 8) | tmp_pdf.path) == CONFIG_IGD_SBDF:
             dmar_hw_list.hw_ignore[drhd_cnt] = 'true'
 
         dmar_tbl.path_offset += ctypes.sizeof(DevScopePath)

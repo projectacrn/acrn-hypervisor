@@ -56,10 +56,6 @@
       <xsl:with-param name="key" select="'LOG_DESTINATION'" />
     </xsl:call-template>
 
-    <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'LOG_BUF_SIZE'" />
-    </xsl:call-template>
-
     <xsl:apply-templates select="SERIAL_CONSOLE" />
   </xsl:template>
 
@@ -150,10 +146,6 @@
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'LOW_RAM_SIZE'" />
-    </xsl:call-template>
-
-    <xsl:call-template name="integer-by-key">
       <xsl:with-param name="key" select="'STACK_SIZE'" />
     </xsl:call-template>
   </xsl:template>
@@ -165,10 +157,6 @@
 
     <xsl:call-template name="integer-by-key">
       <xsl:with-param name="key" select="'MAX_IOAPIC_NUM'" />
-    </xsl:call-template>
-
-    <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'MAX_IR_ENTRIES'" />
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key">
@@ -255,8 +243,9 @@
   </xsl:template>
 
   <xsl:template match="MISC_CFG">
-    <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'GPU_SBDF'" />
+    <xsl:call-template name="integer-by-key-value">
+      <xsl:with-param name="key" select="'IGD_SBDF'" />
+      <xsl:with-param name="value" select="//allocation-data/acrn-config/hv/MISC_CFG/IGD_SBDF" />
     </xsl:call-template>
   </xsl:template>
 

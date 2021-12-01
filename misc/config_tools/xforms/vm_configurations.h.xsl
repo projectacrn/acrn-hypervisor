@@ -31,7 +31,6 @@
 
   <xsl:template match="config-data/acrn-config">
     <xsl:call-template name="vm_count" />
-    <xsl:call-template name="dm_guest_flag" />
     <xsl:call-template name="pre_launched_vm_hpa" />
     <xsl:call-template name="sos_vm_bootarges" />
   </xsl:template>
@@ -43,19 +42,6 @@
     <xsl:value-of select="acrn:define('SERVICE_VM_NUM', count(vm[acrn:is-sos-vm(vm_type)]), 'U')" />
     <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', hv/CAPACITIES/MAX_VM_NUM - count(vm[acrn:is-pre-launched-vm(vm_type)]) - count(vm[acrn:is-sos-vm(vm_type)]) , 'U')" />
     <xsl:value-of select="acrn:define('CONFIG_MAX_VM_NUM', hv/CAPACITIES/MAX_VM_NUM , 'U')" />
-  </xsl:template>
-
-  <xsl:template name ="dm_guest_flag">
-    <xsl:choose>
-      <xsl:when test="count(vm[vm_type='SERVICE_VM'])">
-        <xsl:value-of select="acrn:comment('Bitmask of guest flags that can be programmed by device model. Other bits are set by hypervisor only.')" />
-        <xsl:value-of select="$newline" />
-        <xsl:value-of select="acrn:define('DM_OWNED_GUEST_FLAG_MASK', '(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | GUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING | GUEST_FLAG_SECURITY_VM)', '')" />
-      </xsl:when>
-      <xsl:otherwise>
-      <xsl:value-of select="acrn:define('DM_OWNED_GUEST_FLAG_MASK', '0', 'UL')" />
-      </xsl:otherwise>
-    </xsl:choose>
   </xsl:template>
 
   <xsl:template name ="sos_vm_bootarges">

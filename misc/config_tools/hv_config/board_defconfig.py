@@ -109,7 +109,6 @@ def get_memory(hv_info, config):
         print("CONFIG_HV_RAM_START={}".format(hv_info.mem.hv_ram_start), file=config)
 
     print("CONFIG_PLATFORM_RAM_SIZE={}".format(hv_info.mem.platform_ram_size), file=config)
-    print("CONFIG_LOW_RAM_SIZE={}".format(hv_info.mem.low_ram_size), file=config)
     print("CONFIG_STACK_SIZE={}".format(hv_info.mem.stack_size), file=config)
     print("CONFIG_IVSHMEM_ENABLED={}".format(hv_info.mem.ivshmem_enable), file=config)
 
@@ -132,12 +131,6 @@ def get_serial_console(config):
         print("CONFIG_SERIAL_MMIO=y", file=config)
         if serial_value:
             print('CONFIG_SERIAL_MMIO_BASE={}'.format(serial_value), file=config)
-
-
-def get_miscfg(hv_info, config):
-
-    print("CONFIG_GPU_SBDF={}".format(hv_info.mis.gpu_sbdf), file=config)
-
 
 def get_features(hv_info, config):
 
@@ -162,7 +155,6 @@ def get_capacities(hv_info, config):
 
     print("CONFIG_IOMMU_BUS_NUM={}".format(hv_info.cap.iommu_bus_num), file=config)
     print("CONFIG_MAX_IOAPIC_NUM={}".format(hv_info.cap.max_ioapic_num), file=config)
-    print("CONFIG_MAX_IR_ENTRIES={}".format(hv_info.cap.max_ir_entries), file=config)
     print("CONFIG_MAX_PCI_DEV_NUM={}".format(hv_info.cap.max_pci_dev_num), file=config)
     print("CONFIG_MAX_IOAPIC_LINES={}".format(hv_info.cap.max_ioapic_lines), file=config)
     print("CONFIG_MAX_PT_IRQ_ENTRIES={}".format(hv_info.cap.max_pt_irq_entries), file=config)
@@ -178,7 +170,6 @@ def get_capacities(hv_info, config):
 
 def get_log_opt(hv_info, config):
 
-    print("CONFIG_LOG_BUF_SIZE={}".format(hv_info.log.buf_size), file=config)
     print("CONFIG_NPK_LOGLEVEL_DEFAULT={}".format(hv_info.log.level.npk), file=config)
     print("CONFIG_MEM_LOGLEVEL_DEFAULT={}".format(hv_info.log.level.mem), file=config)
     print("CONFIG_LOG_DESTINATION={}".format(hv_info.log.dest), file=config)
@@ -201,7 +192,6 @@ def generate_file(hv_info, config):
     print('CONFIG_BOARD="{}"'.format(board_name), file=config)
 
     get_memory(hv_info, config)
-    get_miscfg(hv_info, config)
     get_features(hv_info, config)
     get_capacities(hv_info, config)
     get_serial_console(config)

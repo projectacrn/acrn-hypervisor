@@ -255,7 +255,7 @@ void init_paging(void)
 	const struct abi_mmap *p_mmap = abi->mmap_entry;
 
 	pr_dbg("HV MMU Initialization");
-	hv_ram_size = (uint64_t)&ld_ram_size;
+	hv_ram_size = (uint64_t)(&ld_ram_end - &ld_ram_start);
 
 	init_sanitized_page((uint64_t *)sanitized_page, hva2hpa_early(sanitized_page));
 

@@ -78,12 +78,6 @@ serial console and Service VM logs. Effective only in debug builds (when
       </xs:restriction>
     </xs:simpleType>
     </xs:element>
-    <xs:element name="LOG_BUF_SIZE" type="HexFormat" default="0x40000">
-      <xs:annotation>
-        <xs:documentation>Capacity (in bytes) of logbuf for each
-physical CPU, for example, ``0x40000``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
   </xs:all>
 </xs:complexType>
 
@@ -201,12 +195,6 @@ three for specific exceptions.</xs:documentation>
 the RAM region used by the hypervisor.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="LOW_RAM_SIZE" type="HexFormat" default="0x00010000">
-      <xs:annotation>
-        <xs:documentation>Size of the low RAM region below address
-``0x10000``, starting from address ``0x0``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
     <xs:element name="PLATFORM_RAM_SIZE" type="HexFormat" default="0x400000000">
       <xs:annotation>
         <xs:documentation>Size of the physical platform RAM. Default
@@ -231,11 +219,6 @@ maximum supported resource.</xs:documentation>
       <xs:annotation>
         <xs:documentation>Highest PCI bus ID used during IOMMU
 initialization.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="MAX_IR_ENTRIES" type="xs:integer" default="256">
-      <xs:annotation>
-        <xs:documentation>Maximum number of Interrupt Remapping Entries.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MAX_IOAPIC_NUM" default="1">

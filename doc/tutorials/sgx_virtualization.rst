@@ -12,7 +12,7 @@ enclave, which is protected against external software access, including
 privileged malware.
 
 
-High Level ACRN SGX Virtualization Design
+High-Level ACRN SGX Virtualization Design
 *****************************************
 
 ACRN SGX virtualization support can be divided into three parts:
@@ -96,8 +96,8 @@ enable SGX support in the BIOS and in ACRN:
 
    .. code-block:: bash
 
-      $ cd <projectacrn base folder>
-      $ curl https://github.com/binbinwu1/acrn-hypervisor/commit/0153b2b9b9920b61780163f19c6f5318562215ef.patch | git apply
+      cd <projectacrn base folder>
+      curl https://github.com/binbinwu1/acrn-hypervisor/commit/0153b2b9b9920b61780163f19c6f5318562215ef.patch | git apply
 
 #. Enable SGX in Guest:
 
@@ -106,8 +106,8 @@ enable SGX support in the BIOS and in ACRN:
      to build and install the SGX driver and the SGX SDK and PSW packages.
    * **For a Windows Guest**, follow these `Windows SGX build instructions
      <https://software.intel.com/en-us/articles/getting-started-with-sgx-sdk-for-windows>`_
-     for enabling applications with Intel SGX using Microsoft* Visual Studio*
-     2015 on a 64-bit Microsoft Windows* OS.
+     for enabling applications with Intel SGX using Microsoft Visual Studio
+     2015 on a 64-bit Microsoft Windows OS.
 
 SGX Capability Exposure
 ***********************
@@ -190,7 +190,7 @@ EPC Virtualization
   VMs according to the EPC config in VM configurations.
 * If enough EPC resource is allocated for the VM, assign the GPA of the EPC
   section.
-* EPC resource is allocated to the Non-SOS VM; the EPC base GPA is specified
+* EPC resource is allocated to the non-Service VM; the EPC base GPA is specified
   by the EPC config in the VM configuration.
 * The corresponding range of memory space should be marked as reserved in E820.
 * During initialization, the mapping relationship of EPC HPA and GPA is saved

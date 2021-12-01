@@ -31,19 +31,16 @@ class LogOpt:
         self.hv_file = hv_file
         self.dest = 0
         self.release = ''
-        self.buf_size = 0
         self.level = LogLevel(self.hv_file)
 
     def get_info(self):
         self.release = common.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "RELEASE")
         self.dest = common.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "LOG_DESTINATION")
-        self.buf_size = common.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "LOG_BUF_SIZE")
         self.level.get_info()
 
     def check_item(self):
         hv_cfg_lib.release_check(self.release, "DEBUG_OPTIONS", "RELEASE")
         hv_cfg_lib.hv_range_check(self.dest, "DEBUG_OPTIONS", "LOG_DESTINATION", hv_cfg_lib.RANGE_DB['LOG_DESTINATION_BITMAP'])
-        hv_cfg_lib.hv_size_check(self.buf_size, "DEBUG_OPTIONS", "LOG_BUF_SIZE")
         self.level.check_item()
 
 
@@ -55,7 +52,6 @@ class CapHv:
         self.max_pt_irq_entries = 0
         self.max_ioapic_num = 0
         self.max_ioapic_lines = 0
-        self.max_ir_entries = 0
         self.iommu_bus_num = 0
         self.max_pci_dev_num = 0
         self.max_msix_table_num = 0
@@ -65,7 +61,6 @@ class CapHv:
         self.max_pt_irq_entries = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_PT_IRQ_ENTRIES")
         self.max_ioapic_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IOAPIC_NUM")
         self.max_ioapic_lines = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IOAPIC_LINES")
-        self.max_ir_entries = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IR_ENTRIES")
         self.iommu_bus_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "IOMMU_BUS_NUM")
         self.max_pci_dev_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_PCI_DEV_NUM")
         self.max_msix_table_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_MSIX_TABLE_NUM")
@@ -75,24 +70,9 @@ class CapHv:
         hv_cfg_lib.hv_range_check(self.max_pt_irq_entries, "CAPACITIES", "MAX_PT_IRQ_ENTRIES", hv_cfg_lib.RANGE_DB['PT_IRQ_ENTRIES'])
         hv_cfg_lib.hv_range_check(self.max_ioapic_num, "CAPACITIES", "MAX_IOAPIC_NUM", hv_cfg_lib.RANGE_DB['IOAPIC_NUM'])
         hv_cfg_lib.hv_range_check(self.max_ioapic_lines, "CAPACITIES", "MAX_IOAPIC_LINES", hv_cfg_lib.RANGE_DB['IOAPIC_LINES'])
-        hv_cfg_lib.ir_entries_check(self.max_ir_entries, "CAPACITIES", "MAX_IR_ENTRIES")
         hv_cfg_lib.hv_size_check(self.iommu_bus_num, "CAPACITIES", "IOMMU_BUS_NUM")
         hv_cfg_lib.hv_range_check(self.max_pci_dev_num, "CAPACITIES", "MAX_PCI_DEV_NUM", hv_cfg_lib.RANGE_DB['PCI_DEV_NUM'])
         hv_cfg_lib.max_msix_table_num_check(self.max_msix_table_num, "CAPACITIES", "MAX_MSIX_TABLE_NUM")
-
-
-class MisCfg:
-
-    def __init__(self, hv_file):
-        self.hv_file = hv_file
-        self.gpu_sbdf = 0
-
-    def get_info(self):
-        self.gpu_sbdf =  common.get_hv_item_tag(self.hv_file, "MISC_CFG", "GPU_SBDF")
-
-    def check_item(self):
-        hv_cfg_lib.hv_size_check(self.gpu_sbdf, "MISC_CFG", "GPU_SBDF")
-
 
 class Features:
     def __init__(self, hv_file):
@@ -148,7 +128,6 @@ class Memory:
     def __init__(self, hv_file):
         self.hv_file = hv_file
         self.stack_size = 0
-        self.low_ram_size = 0
         self.hv_ram_start = 0
         self.platform_ram_size = 0
         self.sos_ram_size = 0
@@ -158,7 +137,6 @@ class Memory:
 
     def get_info(self):
         self.stack_size = common.get_hv_item_tag(self.hv_file, "MEMORY", "STACK_SIZE")
-        self.low_ram_size = common.get_hv_item_tag(self.hv_file, "MEMORY", "LOW_RAM_SIZE")
         self.hv_ram_start = common.get_hv_item_tag(self.hv_file, "MEMORY", "HV_RAM_START")
         self.platform_ram_size = common.get_hv_item_tag(self.hv_file, "MEMORY", "PLATFORM_RAM_SIZE")
         self.ivshmem_enable = common.get_hv_item_tag(self.hv_file, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
@@ -166,7 +144,6 @@ class Memory:
 
     def check_item(self):
         hv_cfg_lib.hv_size_check(self.stack_size, "MEMORY", "STACK_SIZE")
-        hv_cfg_lib.hv_size_check(self.low_ram_size, "MEMORY", "LOW_RAM_SIZE")
         hv_cfg_lib.hv_ram_start_check(self.hv_ram_start, "MEMORY", "HV_RAM_START")
         hv_cfg_lib.hv_size_check(self.platform_ram_size, "MEMORY", "PLATFORM_RAM_SIZE")
         hv_cfg_lib.ny_support_check(self.ivshmem_enable, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
@@ -179,19 +156,16 @@ class HvInfo:
         self.mem = Memory(self.hv_file)
         self.cap = CapHv(self.hv_file)
         self.log = LogOpt(self.hv_file)
-        self.mis = MisCfg(self.hv_file)
         self.features = Features(self.hv_file)
 
     def get_info(self):
         self.mem.get_info()
         self.log.get_info()
         self.cap.get_info()
-        self.mis.get_info()
         self.features.get_info()
 
     def check_item(self):
         self.mem.check_item()
         self.log.check_item()
         self.cap.check_item()
-        self.mis.check_item()
         self.features.check_item()

@@ -13,7 +13,7 @@ SECTIONS
 {
     .boot :
     {
-        _ld_ram_start = . ;
+        ld_ram_start = . ;
         KEEP(*(multiboot_header)) ;
     } > ram
 
@@ -99,6 +99,5 @@ SECTIONS
     } > ram
 
    . = ALIGN(0x200000) ;
-    _ld_ram_end = . ;
-    ld_ram_size = _ld_ram_end - _ld_ram_start ;
+    ld_ram_end = . ;
 }

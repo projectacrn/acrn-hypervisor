@@ -12,6 +12,11 @@ This document explains how to participate in project conversations, log
 and track bugs and enhancement requests, and submit patches to the
 project so that your patch will be accepted quickly into the codebase.
 
+Here's a quick summary:
+
+.. include:: ../../../../CONTRIBUTING.rst
+   :start-after: start_include_here
+
 Licensing
 *********
 

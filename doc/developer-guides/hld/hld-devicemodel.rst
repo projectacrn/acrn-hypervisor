@@ -54,7 +54,7 @@ options:
   acrn-dm [-hAWYv] [-B bootargs] [-E elf_image_path]
                [-G GVT_args] [-i ioc_mediator_parameters] [-k kernel_image_path]
                [-l lpc] [-m mem] [-r ramdisk_image_path]
-               [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]
+               [-s pci] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]
                [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]
                [--acpidev_pt HID] [--mmiodev_pt MMIO_regions]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
@@ -72,7 +72,6 @@ options:
        -m: memory size in MB
        -r: ramdisk image path
        -s: <slot,driver,configinfo> PCI slot config
-       -U: uuid
        -v: version
        -W: force virtio to use single-vector MSI
        -Y: disable MPtable generation

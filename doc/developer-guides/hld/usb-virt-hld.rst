@@ -12,7 +12,7 @@ and their peripheral devices.
    :align: center
    :name: usb-virt-arch
 
-   USB architecture overview
+   USB Architecture Overview
 
 
 The ACRN USB virtualization includes
@@ -21,54 +21,29 @@ emulation of three components, described here and shown in
 
 - **xHCI DM** (Host Controller Interface) provides multiple
   instances of virtual xHCI controllers to share among multiple User
-  OSes, each USB port can be assigned and dedicated to a VM by user
+  VMs, each USB port can be assigned and dedicated to a VM by user
   settings.
 
 - **xDCI controller** (Device Controller Interface)
   can be passed through to the
-  specific User OS with I/O MMU assistance.
+  specific User VM with I/O MMU assistance.
 
 - **DRD DM** (Dual Role Device) emulates the PHY MUX control
   logic. The sysfs interface in a User VM is used to trap the switch operation
-  into DM, and the the sysfs interface in the Service VM is used to operate on the physical
-  registers to switch between DCI and HCI role.
+  into DM, and the sysfs interface in the Service VM is used to operate on the
+  physical registers to switch between DCI and HCI role.
 
-  On Intel Apollo Lake platform, the sysfs interface path is
-  ``/sys/class/usb_role/intel_xhci_usb_sw/role``. If user echos string
-  ``device`` to role node, the usb phy will be connected with xDCI controller as
-  device mode. Similarly, by echoing ``host``, the usb phy will be
-  connected with xHCI controller as host mode.
+  On Apollo Lake platforms, the sysfs interface path is
+  ``/sys/class/usb_role/intel_xhci_usb_sw/role``. If the user echos the string
+  ``device`` to the role node, the USB PHY will be connected with the xDCI
+  controller as
+  device mode. Similarly, by echoing ``host``, the USB PHY will be
+  connected with the xHCI controller as host mode.
 
-An xHCI register access from a User VM will induce EPT trap from the User VM to
+An xHCI register access from a User VM will induce an EPT trap from the User VM
+to
 DM, and the xHCI DM or DRD DM will emulate hardware behaviors to make
 the subsystem run.
-
-USB Devices Supported by USB Mediator
-*************************************
-
-The following USB devices are supported for the WaaG and LaaG operating systems.
-
-+--------------+---------+---------+
-| Device       | WaaG OS | LaaG OS |
-+==============+=========+=========+
-| USB Storage  |   Y     |   Y     |
-+--------------+---------+---------+
-| USB Mouse    |   Y     |   Y     |
-+--------------+---------+---------+
-| USB Keyboard |   Y     |   Y     |
-+--------------+---------+---------+
-| USB Camera   |   Y     |   Y     |
-+--------------+---------+---------+
-| USB Headset  |   Y     |   Y     |
-+--------------+---------+---------+
-| USB Hub      |   Y     |   Y     |
-| (20 ports max|         |         |
-| per VM)      |         |         |
-+--------------+---------+---------+
-
-.. note::
-   The above information is current as of ACRN 1.4.
-
 
 USB Host Virtualization
 ***********************
@@ -80,28 +55,28 @@ USB host virtualization is implemented as shown in
    :align: center
    :name: xhci-dm-arch
 
-   xHCI DM software architecture
+   xHCI DM Software Architecture
 
-The yellow-colored components make up the ACRN USB stack supporting xHCI
+The following components make up the ACRN USB stack supporting xHCI
 DM:
 
-- **xHCI DM** emulates the xHCI controller logic following the xHCI spec;
+- **xHCI DM** emulates the xHCI controller logic following the xHCI spec.
 
 - **USB core** is a middle abstract layer to isolate the USB controller
   emulators and USB device emulators.
 
 - **USB Port Mapper** maps the specific native physical USB
-       ports to virtual USB ports. It communicate with
-       native USB ports though libusb.
+  ports to virtual USB ports. It communicates with
+  native USB ports though libusb.
 
 All the USB data buffers from a User VM are in the form of TRB
 (Transfer Request Blocks), according to xHCI spec. xHCI DM will fetch
 these data buffers when the related xHCI doorbell registers are set.
-These data will convert to *struct usb_data_xfer* and, through USB core,
-forward to the USB port mapper module which will communicate with native USB
+The data will convert to ``struct usb_data_xfer`` and, through USB core,
+forward to the USB port mapper module which will communicate with the native USB
 stack over libusb.
 
-The device model configuration command syntax for xHCI is as follows::
+The Device Model configuration command syntax for xHCI is as follows::
 
    -s <slot>,xhci,[bus1-port1,bus2-port2]
 
@@ -124,34 +99,34 @@ USB DRD (Dual Role Device) emulation works as shown in this figure:
 .. figure:: images/usb-image31.png
    :align: center
 
-   xHCI DRD DM software architecture
+   xHCI DRD DM Software Architecture
 
-ACRN emulates the DRD hardware logic of an Intel Apollo Lake platform to
-support the dual role requirement. The DRD feature is implemented as xHCI
+ACRN emulates the DRD hardware logic of an Apollo Lake platform to
+support the dual role requirement. The DRD feature is implemented as an xHCI
 vendor extended capability.  ACRN emulates
 the same way, so the native driver can be reused in a User VM. When a User VM DRD
-driver reads or writes the related xHCI extended registers, these access will
+driver reads or writes the related xHCI extended registers, these accesses will
 be captured by xHCI DM. xHCI DM uses the native DRD related
 sysfs interface to do the Host/Device mode switch operations.
 
-The device model configuration command syntax for xHCI DRD is as
+The Device Model configuration command syntax for xHCI DRD is as
 follows::
 
    -s <slot>,xhci,[bus1-port1,bus2-port2],cap=platform
 
 - *cap*: cap means virtual xHCI capability. This parameter
-       indicates virtual xHCI should emulate the named platform's xHCI
-       capabilities.
+  indicates virtual xHCI should emulate the named platform's xHCI
+  capabilities.
 
 A simple example::
 
    -s 7,xhci,1-2,2-2,cap=apl
 
 This configuration means the virtual xHCI should emulate xHCI
-capabilities for the Intel Apollo Lake platform, which supports DRD
+capabilities for the Apollo Lake platform, which supports the DRD
 feature.
 
 Interface Specification
 ***********************
 
-.. note:: reference doxygen-generated API content
+.. note:: Reference the Doxygen-generated API content.

@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
-
+import logging
 import os
 import re
 import sys
@@ -193,12 +193,6 @@ def main(args):
         err_dic['user_vmid err:'] = "--user_vmid shoudl be positive and less than total post vm count in scenario"
     if vm_th and vm_th not in post_num_list:
         err_dic['user_vmid err:'] = "--user_vmid generate the {} post vm, but this vm's config not in launch xml".format(vm_th)
-    if launch_vm_count > post_vm_count:
-        err_dic['xm config err:'] = "too many vms config than scenario"
-
-    for post_num in post_num_list:
-        if post_num > post_vm_count:
-            err_dic['xm config err:'] = "launch xml user vmid config is bigger than scenario post vm count"
 
     # validate vm_names
     scenario_names = common.get_leaf_tag_map(scenario_info_file, "name").values()
@@ -208,8 +202,11 @@ def main(args):
             err_dic[err_name] = 'vm_name only allowed 1-15 characters with letters, numbers & symbols ' \
                                 '(not include space)'
         if vm_name not in scenario_names:
-            err_name = 'user_vm id="{}" name not found error:'.format(user_vm_id)
-            err_dic[err_name] = 'user_vm id="{}" vm_name not found in it scenario file:'.format(user_vm_id)
+            logging.warning(
+                'user_vm id="{}"\'s vm_name ({}) not found in scenario file, set it to dynamic vm.'.format(
+                    user_vm_id, vm_name
+                )
+            )
 
     if err_dic:
         return err_dic
