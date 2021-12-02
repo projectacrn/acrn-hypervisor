@@ -65,8 +65,7 @@ static struct vmx_capability vmx_caps[] = {
 	{
 		MSR_IA32_VMX_PROCBASED_CTLS2, VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |
 					VMX_PROCBASED_CTLS2_VPID | VMX_PROCBASED_CTLS2_RDTSCP |
-					VMX_PROCBASED_CTLS2_UNRESTRICT | VMX_PROCBASED_CTLS2_XSVE_XRSTR |
-					VMX_PROCBASED_CTLS2_PAUSE_LOOP
+					VMX_PROCBASED_CTLS2_UNRESTRICT
 	},
 	{
 		MSR_IA32_VMX_EXIT_CTLS, VMX_EXIT_CTLS_ACK_IRQ | VMX_EXIT_CTLS_SAVE_PAT |
@@ -451,26 +450,6 @@ static inline bool pcpu_has_vmx_unrestricted_guest_cap(void)
 	return ((msr_read(MSR_IA32_VMX_MISC) & MSR_IA32_MISC_UNRESTRICTED_GUEST) != 0UL);
 }
 
-static bool is_valid_xsave_combination(void)
-{
-	uint64_t value64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-	uint32_t high = (uint32_t)(value64 >> 32U);	/* allowed 1-settings */
-	bool ret;
-
-	/* Now we only assume the platform must support XSAVE on CPU side and XSVE_XRSTR on VMX side or not,
-	 * in this case, we could pass through CR4.OSXSAVE bit.
-	 */
-	if (pcpu_has_cap(X86_FEATURE_XSAVE)) {
-		ret = pcpu_has_cap(X86_FEATURE_XSAVES) && pcpu_has_cap(X86_FEATURE_COMPACTION_EXT) &&
-			((high & VMX_PROCBASED_CTLS2_XSVE_XRSTR) != 0U);
-	} else {
-		ret = !pcpu_has_cap(X86_FEATURE_XSAVES) && !pcpu_has_cap(X86_FEATURE_COMPACTION_EXT) &&
-			((high & VMX_PROCBASED_CTLS2_XSVE_XRSTR) == 0U);
-	}
-
-	return ret;
-}
-
 static int32_t check_vmx_mmu_cap(void)
 {
 	int32_t ret = 0;
@@ -519,9 +498,6 @@ static int32_t check_essential_vmx_caps(void)
 		ret = -ENODEV;
 	} else if (pcpu_vmx_set_32bit_addr_width()) {
 		printf("%s, Only support Intel 64 architecture.\n", __func__);
-		ret = -ENODEV;
-	} else if (!is_valid_xsave_combination()) {
-		printf("%s, check XSAVE combined Capability failed\n", __func__);
 		ret = -ENODEV;
 	} else {
 		for (i = 0U; i < ARRAY_SIZE(vmx_caps);	i++) {
