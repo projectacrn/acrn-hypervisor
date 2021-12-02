@@ -114,6 +114,18 @@ void vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool
 bool vlapic_has_pending_delivery_intr(struct acrn_vcpu *vcpu);
 bool vlapic_has_pending_intr(struct acrn_vcpu *vcpu);
 
+/**
+ * Returns the highest priority pending vector on vLAPIC, or
+ * 0 if there is no pending vector.
+ */
+uint32_t vlapic_get_next_pending_intr(struct acrn_vcpu *vcpu);
+
+/**
+ * Clears a pending vector from vIRR. Returns true if
+ * the bit was previously present, false otherwise.
+ */
+bool vlapic_clear_pending_intr(struct acrn_vcpu *vcpu, uint32_t vector);
+
 uint64_t vlapic_get_tsc_deadline_msr(const struct acrn_vlapic *vlapic);
 void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic, uint64_t val_arg);
 uint64_t vlapic_get_apicbase(const struct acrn_vlapic *vlapic);
@@ -131,6 +143,11 @@ void vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level);
 
 #define	LAPIC_TRIG_LEVEL	true
 #define	LAPIC_TRIG_EDGE		false
+
+static inline uint32_t prio(uint32_t x)
+{
+	return (x >> 4U);
+}
 
 /**
  * @brief Triggers LAPIC local interrupt(LVT).
