@@ -44,7 +44,7 @@ in the ``misc/packaging`` folder, so let's go there::
 Configure Debian Packaging Details
 **********************************
 
-The build and packaging script ``install_uSoS.py`` does all the work to
+The build and packaging script ``install_uServiceVM.py`` does all the work to
 build and make the Debian packages.  You configure what the script does
 by editing its configuration file, ``release.json``.  Comments in the
 JSON file document how you can adjust things to your specific needs.  For
@@ -66,7 +66,7 @@ Here's the default ``release.json`` configuration:
 Run the Package-Building Script
 *******************************
 
-The ``install_uSoS.py`` Python script does all the work to install
+The ``install_uServiceVM.py`` Python script does all the work to install
 needed tools (such as make, gnu-efi, libssl-dev, libpciaccess-dev,
 uuid-dev, and more).  It also verifies that tool versions (such as the
 gcc compiler) are appropriate (as configured in the ``release.json``
@@ -75,7 +75,7 @@ file).
 The script runs without further user input, and must be run with
 ``sudo``::
 
-   sudo python3 install_uSoS.py
+   sudo python3 install_uServiceVM.py
 
 With the default ``release.json`` configuration, this script will run
 for about 30 minutes, but could take longer depending on your internet

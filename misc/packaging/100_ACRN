@@ -27,10 +27,10 @@ while IFS= read -r line; do
     fi
 done < <(blkid |grep ext4 |grep ${type})
 
-if ls /boot/vmlinuz*acrn-sos* 1> /dev/null 2>&1;then
-    sos_kernel=$(ls -tr /boot/vmlinuz-*acrn-sos* | tail -1)
+if ls /boot/vmlinuz*acrn-service-vm* 1> /dev/null 2>&1;then
+    service_vm_kernel=$(ls -tr /boot/vmlinuz-*acrn-service-vm* | tail -1)
 else
-    sos_kernel=$(ls /boot/vmlinuz-* | tail -1)
+    service_vm_kernel=$(ls /boot/vmlinuz-* | tail -1)
 fi
 
 if [ -z "$menu" ];then
@@ -51,6 +51,6 @@ EOF
 fi
 
 sed -i '/Linux_bzImage/d' ${filename} || true
-sed -i '/multiboot2 \/boot/a\module2 '$sos_kernel' Linux_bzImage' ${filename}
+sed -i '/multiboot2 \/boot/a\module2 '$service_vm_kernel' Linux_bzImage' ${filename}
 
 sync
