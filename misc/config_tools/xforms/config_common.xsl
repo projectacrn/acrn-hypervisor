@@ -155,8 +155,10 @@
   </xsl:template>
 
   <xsl:template match="CAPACITIES">
-    <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'IOMMU_BUS_NUM'" />
+    <xsl:call-template name="integer-by-key-value">
+      <xsl:with-param name="prefix" select="'ACFG_'" />
+      <xsl:with-param name="key" select="'MAX_PCI_BUS_NUM'" />
+      <xsl:with-param name="value" select="//allocation-data/acrn-config/platform/MAX_PCI_BUS_NUM" />
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key">
@@ -318,6 +320,7 @@
   <!-- Common library routines -->
 
   <xsl:template name="integer-by-key-value">
+    <xsl:param name="prefix" />
     <xsl:param name="key" />
     <xsl:param name="value" />
     <xsl:param name="default" />
@@ -325,18 +328,21 @@
     <xsl:choose>
       <xsl:when test="$value != ''">
 	<xsl:call-template name="entry-by-key-value">
+	  <xsl:with-param name="prefix" select="$prefix" />
 	  <xsl:with-param name="key" select="$key" />
 	  <xsl:with-param name="value" select="concat($value, $integer-suffix)" />
 	</xsl:call-template>
       </xsl:when>
       <xsl:when test="($value = '') and ($default != '')">
 	<xsl:call-template name="entry-by-key-value">
+	  <xsl:with-param name="prefix" select="$prefix" />
 	  <xsl:with-param name="key" select="$key" />
 	  <xsl:with-param name="value" select="concat($default, $integer-suffix)" />
 	</xsl:call-template>
       </xsl:when>
       <xsl:otherwise>
 	<xsl:call-template name="entry-by-key-value">
+	  <xsl:with-param name="prefix" select="$prefix" />
 	  <xsl:with-param name="key" select="$key" />
 	</xsl:call-template>
       </xsl:otherwise>
