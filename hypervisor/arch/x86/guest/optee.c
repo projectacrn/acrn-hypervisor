@@ -10,6 +10,9 @@
 #include <asm/mmu.h>
 #include <asm/guest/optee.h>
 #include <asm/trampoline.h>
+#include <asm/guest/vlapic.h>
+#include <asm/guest/virq.h>
+#include <asm/lapic.h>
 #include <reloc.h>
 #include <hypercall.h>
 #include <logmsg.h>
@@ -56,6 +59,7 @@ static int32_t tee_switch_to_ree(struct acrn_vcpu *vcpu)
 	uint64_t rdi, rsi, rdx, rbx;
 	struct acrn_vm *ree_vm;
 	struct acrn_vcpu *ree_vcpu;
+	uint32_t pending_intr;
 	int32_t ret = -EINVAL;
 
 	rdi = vcpu_get_gpreg(vcpu, CPU_REG_RDI);
@@ -76,6 +80,28 @@ static int32_t tee_switch_to_ree(struct acrn_vcpu *vcpu)
 			vcpu_set_gpreg(ree_vcpu, CPU_REG_RSI, rsi);
 			vcpu_set_gpreg(ree_vcpu, CPU_REG_RDX, rdx);
 			vcpu_set_gpreg(ree_vcpu, CPU_REG_RBX, rbx);
+		}
+
+		pending_intr = vlapic_get_next_pending_intr(vcpu);
+		if (prio(pending_intr) > prio(TEE_FIXED_NONSECURE_VECTOR)) {
+			/* For TEE, all non-secure interrupts are represented as
+			 * TEE_FIXED_NONSECURE_VECTOR that has lower priority than all
+			 * secure interrupts.
+			 *
+			 * If there are secure interrupts pending, we inject TEE's PI
+			 * ANV and schedules REE. This way REE gets trapped immediately
+			 * after VM Entry and will go through the secure interrupt handling
+			 * flow in handle_x86_tee_int.
+			 */
+			send_single_ipi(pcpuid_from_vcpu(ree_vcpu), 
+				(uint32_t)(vcpu->arch.pid.control.bits.nv));
+		} else if (prio(pending_intr) == prio(TEE_FIXED_NONSECURE_VECTOR)) {
+			/* The TEE_FIXED_NONSECURE_VECTOR needs to be cleared as the
+			 * pending non-secure interrupts will be handled immediately
+			 * after resuming to REE. On ARM this is automatically done
+			 * by hardware and ACRN emulates this behavior.
+			 */
+			vlapic_clear_pending_intr(vcpu, TEE_FIXED_NONSECURE_VECTOR);
 		}
 
 		sleep_thread(&vcpu->thread_obj);
