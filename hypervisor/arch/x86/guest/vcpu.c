@@ -891,7 +891,7 @@ void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *e
 		 * 2. "vcpu->arch.xsave_enabled" is true (state restoring for guest)
 		 *
 		 * Before vCPU is launched, condition 1 is satisfied.
-		 * After vCPU is launched, condition 2 is satisfied because is_valid_xsave_combination() guarantees
+		 * After vCPU is launched, condition 2 is satisfied because
 		 * that "vcpu->arch.xsave_enabled" is consistent with pcpu_has_cap(X86_FEATURE_XSAVES).
 		 *
 		 * Therefore, the check against "vcpu->launched" and "vcpu->arch.xsave_enabled" can be eliminated here.
