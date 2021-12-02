@@ -51,11 +51,6 @@
 
 #define VLAPIC_VERBOS 0
 
-static inline uint32_t prio(uint32_t x)
-{
-	return (x >> 4U);
-}
-
 #define VLAPIC_VERSION		(16U)
 #define	APICBASE_BSP		0x00000100UL
 #define	APICBASE_X2APIC		0x00000400UL
@@ -2342,19 +2337,31 @@ bool vlapic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
 	return vlapic->ops->has_pending_delivery_intr(vcpu);
 }
 
-static bool apicv_basic_has_pending_intr(struct acrn_vcpu *vcpu)
+uint32_t vlapic_get_next_pending_intr(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 	uint32_t vector;
 
 	vector = vlapic_find_highest_irr(vlapic);
 
-	return vector != 0UL;
+	return vector;
+}
+
+static bool apicv_basic_has_pending_intr(struct acrn_vcpu *vcpu)
+{
+	return vlapic_get_next_pending_intr(vcpu) != 0UL;
 }
 
 static bool apicv_advanced_has_pending_intr(struct acrn_vcpu *vcpu)
 {
 	return apicv_basic_has_pending_intr(vcpu);
+}
+
+bool vlapic_clear_pending_intr(struct acrn_vcpu *vcpu, uint32_t vector)
+{
+	struct lapic_reg *irrptr = &(vcpu->arch.vlapic.apic_page.irr[0]);
+	uint32_t idx = vector >> 5U;
+	return bitmap32_test_and_clear_lock((uint16_t)(vector & 0x1fU), &irrptr[idx].v);
 }
 
 bool vlapic_has_pending_intr(struct acrn_vcpu *vcpu)
