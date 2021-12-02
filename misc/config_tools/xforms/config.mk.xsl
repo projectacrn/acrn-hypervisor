@@ -21,11 +21,19 @@
   </xsl:template>
 
   <xsl:template name="entry-by-key-value">
+    <xsl:param name="prefix" />
     <xsl:param name="key" />
     <xsl:param name="value" />
     <xsl:param name="default" />
 
-    <xsl:text>CONFIG_</xsl:text>
+    <xsl:choose>
+      <xsl:when test="$prefix != ''">
+        <xsl:value-of select="$prefix" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>CONFIG_</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:value-of select="$key" />
     <xsl:text>=</xsl:text>
     <xsl:choose>
