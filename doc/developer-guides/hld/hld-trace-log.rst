@@ -92,9 +92,6 @@ ACRNTrace application includes a binary to retrieve trace data from
 sbuf, and Python scripts to convert trace data from raw format into
 readable text, and do analysis.
 
-.. note:: There was no Figure showing the sequence of trace
-   initialization and trace data collection.
-
 With a debug build, trace components are initialized at boot
 time. After initialization, HV writes trace event date into sbuf
 until sbuf is full, which can happen easily if the ACRNTrace app is not
@@ -103,9 +100,6 @@ consuming trace data from sbuf on Service VM user space.
 Once ACRNTrace is launched, for each physical CPU a consumer thread is
 created to periodically read RAW trace data from sbuf and write to a
 file.
-
-.. note:: TODO figure is missing
-   Figure 2.2 Sequence of trace init and trace data collection
 
 These are the Python scripts provided:
 
