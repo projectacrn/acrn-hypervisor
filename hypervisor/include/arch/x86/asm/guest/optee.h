@@ -11,7 +11,7 @@
 #include <asm/vm_config.h>
 #include <ptdev.h>
 
-#define TEE_NOTIFICATION_VECTOR 0x29U
+#define TEE_FIXED_NONSECURE_VECTOR 0x29U
 
 /* If the RDI equals to this value, then this is a RETURN after FIQ DONE */
 #define OPTEE_RETURN_FIQ_DONE	0xBE000006UL
