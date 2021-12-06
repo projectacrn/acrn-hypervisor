@@ -85,6 +85,24 @@ Update Scenario Names
      VMs and the Service VM provides resource emulation and sharing for
      post-launched User VMs, all in the same system configuration.
 
+User-Friendly VM names
+   Instead of using a UUID as the User VM identifier, we're now using a
+   user-friendly VM name.
+
+Extend Use of CAT Cache Tuning to VMs
+   In previous releases, Cache Allocation Technology (vCAT) was available only
+   at the hypervisor level and with per-VM granularity.  In this v2.7 release,
+   each VM with exclusive cache resources can partition its cache resources with
+   per-thread granularity and allocate cache resources to prioritized tasks.
+
+Expand Passthrough Device Use Cases to Pre-Launched VMs
+   We now allow pre-launched VMs (in partitioned or hybrid scenarios) to use
+   graphics device passthrough for improved performance, a feature previously
+   available to only post-launched VMs.
+
+   We've extended Trusted Platform Module (TPM) 2.0 and its associated resource
+   passthrough to post-launched VMs.
+
 Upgrading to v2.7 From Previous Releases
 ****************************************
 
@@ -99,18 +117,26 @@ that is essential to build ACRN. Compared to previous versions, ACRN v2.7 adds
 the following hardware information to board XMLs to support new features and
 fixes.
 
-  - list features here
+  - Always initialize ``hw_ignore`` when parsing ``DMAR``.
 
 The new board XML can be generated using the ACRN board inspector in the same
 way as ACRN v2.6. Refer to :ref:`acrn_config_workflow` for a complete list of
 steps to deploy and run the tool.
 
-Add New Configuration Options
-=============================
+Update Configuration Options
+============================
 
 In v2.7, the following elements are added to scenario XML files.
 
-- list elements here
+- :option:`vm.name` (This is a required element. Names must be unique, up to 15
+  characters long, and contain no space characters.)
+- :option:`hv.CAPACITIES.MAX_VM_NUM` (Default value is ``8``)
+- :option:`hv.FEATURES.RDT.VCAT_ENABLED` (Default value is ``n``)
+
+The following elements were removed.
+
+- ``KATA_VM`` VM type.
+- ``hv.CAPACITIES.MAX_EFI_MMAP_ENTRIES``
 
 Document Updates
 ****************
@@ -143,6 +169,9 @@ Fixed Issues Details
 
 .. comment example item
    - :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
+
+- :acrn-issue:`6610` - [ConfigTool]Remove the restriction that SERIAL_CONSOLE needs to be ttys0, ttys1, ttys2 or ttys3
+- :acrn-issue:`6620` - [ConfigTool]pci devices' io-ports passthrough
 
 Known Issues
 ************
