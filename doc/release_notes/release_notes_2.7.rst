@@ -92,7 +92,7 @@ User-Friendly VM names
 Extend Use of CAT Cache Tuning to VMs
    In previous releases, Cache Allocation Technology (vCAT) was available only
    at the hypervisor level and with per-VM granularity.  In this v2.7 release,
-   each VM with exclusive cache resources can partition its cache resources with
+   each VM with exclusive cache resources can partition them with
    per-thread granularity and allocate cache resources to prioritized tasks.
 
 Expand Passthrough Device Use Cases to Pre-Launched VMs
@@ -100,7 +100,7 @@ Expand Passthrough Device Use Cases to Pre-Launched VMs
    graphics device passthrough for improved performance, a feature previously
    available to only post-launched VMs.
 
-   We've extended Trusted Platform Module (TPM) 2.0 and its associated resource
+   Trusted Platform Module (TPM) 2.0 and its associated resource can also be
    passthrough to post-launched VMs.
 
 Upgrading to v2.7 From Previous Releases
@@ -137,6 +137,13 @@ The following elements were removed.
 
 - ``KATA_VM`` VM type.
 - ``hv.CAPACITIES.MAX_EFI_MMAP_ENTRIES``
+
+In v2.7, the ``acrn-dm`` command line parameter ``--cpu_affinity`` is now mandatory
+when launching a User VM. If the launch XML settings, used to generate the launch
+scripts, do not specify a ``cpu_affinity`` value, the ACRN Configurator will look for
+it from the scenario XML settings. Verify that your existing launch scripts
+specify this ``--cpu_affinity`` parameter as ``acrn-dm`` will now complain if it's
+missing.
 
 Document Updates
 ****************
