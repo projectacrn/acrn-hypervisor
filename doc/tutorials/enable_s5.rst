@@ -290,6 +290,7 @@ How to Test
       sudo python3 ~/user_vm_shutdown.py <User VM name>
 
    .. note:: The User VM name is configured in the :file:`life_mngr.conf` of User VM.
+      For the WaaG VM, the User VM name is "windows".
 
 #. Use the ``acrnctl list`` command to check the User VM status.
 
