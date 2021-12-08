@@ -387,24 +387,6 @@ int stop_vm(const char *vmname, int force)
 	return ack.data.err;
 }
 
-int suspend_vm(const char *vmname)
-{
-	struct mngr_msg req;
-	struct mngr_msg ack;
-
-	req.magic = MNGR_MSG_MAGIC;
-	req.msgid = DM_SUSPEND;
-	req.timestamp = time(NULL);
-
-	send_msg(vmname, &req, &ack);
-
-	if (ack.data.err) {
-		printf("Unable to suspend vm. errno(%d)\n", ack.data.err);
-	}
-
-	return ack.data.err;
-}
-
 int resume_vm(const char *vmname, unsigned reason)
 {
 	struct mngr_msg req;

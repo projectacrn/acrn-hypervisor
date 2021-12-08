@@ -32,8 +32,6 @@
 #define STOP_DESC      "Stop virtual machine VM_NAME, [--force/-f, force to stop VM]"
 #define DEL_DESC       "Delete virtual machine VM_NAME"
 #define ADD_DESC       "Add one virtual machine with SCRIPTS and OPTIONS"
-#define SUSPEND_DESC   "Switch virtual machine to suspend state"
-#define RESUME_DESC    "Resume virtual machine from suspend state"
 #define RESET_DESC     "Stop and then start virtual machine VM_NAME"
 #define BLKRESCAN_DESC  "Rescan virtio-blk device attached to a virtual machine"
 
@@ -562,59 +560,6 @@ static int acrnctl_do_start(int argc, char *argv[])
 
 }
 
-static int acrnctl_do_suspend(int argc, char *argv[])
-{
-	struct vmmngr_struct *s;
-	int ret = -1;
-
-	s = vmmngr_find(argv[1]);
-	if (!s) {
-		printf("Can't find vm %s\n", argv[1]);
-		return ret;
-	}
-
-	/* Only send suspend cmd to acrn-dm now when VM_STARTED */
-	switch (s->state) {
-		case VM_STARTED:
-			ret = suspend_vm(argv[1]);
-			break;
-		default:
-			printf("%s current state %s, can't suspend\n", argv[1], state_str[s->state]);
-	}
-
-	return ret;
-}
-
-static int acrnctl_do_resume(int argc, char *argv[])
-{
-	struct vmmngr_struct *s;
-	unsigned reason = CBC_WK_RSN_BTN;
-	int ret = -1;
-
-	s = vmmngr_find(argv[1]);
-	if (!s) {
-		printf("Can't find vm %s\n", argv[1]);
-		return ret;
-	}
-
-	if (argc == 3) {
-		reason = strtoul(argv[2], NULL, 16);
-		reason = (reason & (0xff << 24)) ? 0 : reason;
-	} else
-		printf("No wake up reason, use 0x%x\n", reason);
-
-	switch (s->state) {
-		case VM_SUSPENDED:
-			ret = resume_vm(argv[1], reason);
-			printf("resume %s reason(0x%x\n", argv[1], reason);
-			break;
-		default:
-			printf("%s current state %s, can't resume\n", argv[1], state_str[s->state]);
-	}
-
-	return ret;
-}
-
 static int wait_vm_stop(const char * vmname, unsigned int timeout)
 {
 	unsigned long t = timeout;
@@ -736,8 +681,6 @@ struct acrnctl_cmd acmds[] = {
 	ACMD("stop", acrnctl_do_stop, STOP_DESC, df_valid_args),
 	ACMD("del", acrnctl_do_del, DEL_DESC, df_valid_args),
 	ACMD("add", acrnctl_do_add, ADD_DESC, valid_add_args),
-	ACMD("suspend", acrnctl_do_suspend, SUSPEND_DESC, df_valid_args),
-	ACMD("resume", acrnctl_do_resume, RESUME_DESC, df_valid_args),
 	ACMD("reset", acrnctl_do_reset, RESET_DESC, df_valid_args),
 	ACMD("blkrescan", acrnctl_do_blkrescan, BLKRESCAN_DESC, valid_blkrescan_args),
 };
