@@ -201,7 +201,7 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	write_trampoline_sym(main_entry, (uint64_t)restore_s3_context);
 	clac();
 
-	CPU_IRQ_DISABLE();
+	CPU_IRQ_DISABLE_ON_CONFIG();
 	vmx_off();
 
 	suspend_console();
@@ -216,7 +216,7 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	resume_ioapic();
 
 	vmx_on();
-	CPU_IRQ_ENABLE();
+	CPU_IRQ_ENABLE_ON_CONFIG();
 
 	/* restore the default main entry */
 	stac();
