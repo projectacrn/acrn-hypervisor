@@ -1,4 +1,4 @@
-<acrn-config board="qemu" scenario="sdc">
+<acrn-config board="qemu" scenario="shared">
   <hv>
     <DEBUG_OPTIONS>
       <RELEASE>n</RELEASE>
