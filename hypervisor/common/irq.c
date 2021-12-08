@@ -227,5 +227,5 @@ void init_interrupt(uint16_t pcpu_id)
 		init_softirq();
 	}
 
-	CPU_IRQ_ENABLE();
+	CPU_IRQ_ENABLE_ON_CONFIG();
 }

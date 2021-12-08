@@ -102,6 +102,11 @@ developer only.</xs:documentation>
 Security VM, setting this option to ``n``</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="KEEP_IRQ_DISABLED" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>If ``y``, permanently disables all interrupts in HV root mode.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="RDT" type="RDTType">
       <xs:annotation>
         <xs:documentation>Enable the Intel Resource Director Technology (RDT)
