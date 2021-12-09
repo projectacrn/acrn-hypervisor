@@ -74,6 +74,7 @@ def main(board_name, board_xml, args):
         root_node.append(lxml.etree.Element("processors"))
         root_node.append(lxml.etree.Element("caches"))
         root_node.append(lxml.etree.Element("memory"))
+        root_node.append(lxml.etree.Element("ioapics"))
         root_node.append(lxml.etree.Element("devices"))
 
         extractors_path = os.path.join(script_dir, "extractors")
