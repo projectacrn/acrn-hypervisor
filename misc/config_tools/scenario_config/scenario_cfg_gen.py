@@ -13,11 +13,6 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 from scenario_item import HwInfo, VmInfo
 import board_cfg_lib
 import scenario_cfg_lib
-import vm_configurations_c
-import vm_configurations_h
-import pci_dev_c
-import pt_intx_c
-import ivshmem_cfg_h
 import common
 import hv_cfg_lib
 import board_defconfig
@@ -257,29 +252,6 @@ def main(args):
         err_dic = board_defconfig.generate_file(scenario_items['hv'], config)
         if err_dic:
             return err_dic
-
-    # generate vm_configuration.h
-    with open(vm_config_h, 'w') as config:
-        vm_configurations_h.generate_file(scenario_items, config)
-
-    # generate vm_configuration.c
-    with open(vm_config_c, 'w') as config:
-        err_dic = vm_configurations_c.generate_file(scenario_items, config)
-        if err_dic:
-            return err_dic
-
-    # generate ivshmem_cfg.h
-    with open(ivshmem_config_h, 'w') as config:
-        ivshmem_cfg_h.generate_file(scenario_items, config)
-
-    # generate pci_dev.c
-    with open(pci_config_c, 'w') as config:
-        pci_dev_c.generate_file(scenario_items['vm'], config)
-
-    # generate pt_intx.c
-    with open(pt_intx_config_c, 'w') as config:
-        pt_intx_c.generate_file(scenario_items['vm'], config)
-
 
     # generate ASL code of ACPI tables for Pre-launched VMs
     if not err_dic:
