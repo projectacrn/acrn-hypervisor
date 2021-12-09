@@ -15,6 +15,14 @@
       <xsl:with-param name="key" select="'BOARD'" />
       <xsl:with-param name="value" select="@board" />
     </xsl:call-template>
+    <xsl:call-template name="integer-by-key-value">
+      <xsl:with-param name="key" select="'MAX_IOAPIC_NUM'" />
+      <xsl:with-param name="value" select="count(//ioapic)" />
+    </xsl:call-template>
+    <xsl:call-template name="integer-by-key-value">
+      <xsl:with-param name="key" select="'MAX_IOAPIC_LINES'" />
+      <xsl:with-param name="value" select="math:max(//gsi_number/text() | exslt:node-set(0))" />
+    </xsl:call-template>
     <xsl:call-template name="msi-msix-max" />
   </xsl:template>
 
@@ -158,15 +166,7 @@
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'MAX_IOAPIC_NUM'" />
-    </xsl:call-template>
-
-    <xsl:call-template name="integer-by-key">
       <xsl:with-param name="key" select="'MAX_PCI_DEV_NUM'" />
-    </xsl:call-template>
-
-    <xsl:call-template name="integer-by-key">
-      <xsl:with-param name="key" select="'MAX_IOAPIC_LINES'" />
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key">
