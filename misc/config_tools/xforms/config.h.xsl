@@ -7,6 +7,8 @@
     version="1.0"
     xmlns:xi="http://www.w3.org/2003/XInclude"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:math="http://exslt.org/math"
+    xmlns:exslt="http://exslt.org/common"
     xmlns:acrn="http://projectacrn.org">
   <xsl:include href="lib.xsl" />
   <xsl:output method="text" />
