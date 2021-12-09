@@ -543,9 +543,6 @@ def get_cpu_affinity_list(cpu_affinity, vmid):
 
 
 def pcpu_arg_set(dm, vmid, config):
-
-    if dm['cpu_sharing'] == "SCHED_NOOP":
-        return
     pcpu_id_list = get_cpu_affinity_list(dm["cpu_affinity"], vmid)
     if pcpu_id_list:
         print("   --cpu_affinity {} \\".format(','.join(pcpu_id_list)), file=config)
