@@ -67,9 +67,9 @@ bool sanitize_vm_config(void)
 
 		switch (vm_config->load_order) {
 		case PRE_LAUNCHED_VM:
-			/* GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH set in guest_flags */
-			if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)
-					&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0U)) {
+			/* GUEST_FLAG_LAPIC_PASSTHROUGH must be set if we have GUEST_FLAG_RT set in guest_flags */
+			if (((vm_config->guest_flags & GUEST_FLAG_RT) != 0U)
+				&& ((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH)== 0U)) {
 				ret = false;
 			} else if (vm_config->epc.size != 0UL) {
 				ret = false;
