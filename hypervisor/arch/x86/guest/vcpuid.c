@@ -558,7 +558,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 			/* These features are disabled */
 			/* PMU is not supported except for core partition VM, like RTVM */
 			case 0x0aU:
-				if (is_lapic_pt_configured(vm)) {
+				if (is_pmu_pt_configured(vm)) {
 					init_vcpuid_entry(i, 0U, 0U, &entry);
 					result = set_vcpuid_entry(vm, &entry);
 				}
@@ -625,14 +625,8 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 		*edx &= ~CPUID_EDX_MTRR;
 	}
 
-	/* mask Debug Store feature */
-	*ecx &= ~(CPUID_ECX_DTES64 | CPUID_ECX_DS_CPL);
-
 	/* mask Safer Mode Extension */
 	*ecx &= ~CPUID_ECX_SMX;
-
-	/* mask PDCM: Perfmon and Debug Capability */
-	*ecx &= ~CPUID_ECX_PDCM;
 
 	/* mask SDBG for silicon debug */
 	*ecx &= ~CPUID_ECX_SDBG;
@@ -693,8 +687,17 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 		*edx &= ~CPUID_EDX_FXSR;
 	}
 
-	/* mask Debug Store feature */
-	*edx &= ~CPUID_EDX_DTES;
+	/* DS/PEBS is not supported except for core partition VM, like RTVM */
+	if (!is_pmu_pt_configured(vcpu->vm)) {
+		/* mask Debug Store feature */
+		*ecx &= ~(CPUID_ECX_DTES64 | CPUID_ECX_DS_CPL);
+
+		/* mask PDCM: Perfmon and Debug Capability */
+		*ecx &= ~CPUID_ECX_PDCM;
+
+		/* mask Debug Store feature */
+		*edx &= ~CPUID_EDX_DTES;
+	}
 }
 
 static void guest_cpuid_0bh(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
