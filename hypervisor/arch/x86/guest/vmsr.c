@@ -148,7 +148,13 @@ static const uint32_t pmc_msrs[] = {
 	/* CPUID.0AH.EDX[4:0] */
 	MSR_IA32_FIXED_CTR0,
 	MSR_IA32_FIXED_CTR1,
-	MSR_IA32_FIXED_CTR2
+	MSR_IA32_FIXED_CTR2,
+
+	/* Performance Monitoring: CPUID.01H.ECX[15] X86_FEATURE_PDCM */
+	MSR_IA32_PERF_CAPABILITIES,
+
+	/* Debug Store disabled: CPUID.01H.EDX[21] X86_FEATURE_DTES */
+	MSR_IA32_DS_AREA,
 };
 
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
@@ -222,12 +228,6 @@ static const uint32_t unsupported_msrs[] = {
 
 	/* Silicon Debug Feature: CPUID.01H.ECX[11] (X86_FEATURE_SDBG) */
 	MSR_IA32_DEBUG_INTERFACE,
-
-	/* Performance Monitoring: CPUID.01H.ECX[15] X86_FEATURE_PDCM */
-	MSR_IA32_PERF_CAPABILITIES,
-
-	/* Debug Store disabled: CPUID.01H.EDX[21] X86_FEATURE_DTES */
-	MSR_IA32_DS_AREA,
 
 	/* Machine Check Exception: CPUID.01H.EDX[5] (X86_FEATURE_MCE) */
 	MSR_IA32_MCG_CAP,
@@ -330,6 +330,15 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 static void prepare_auto_msr_area(struct acrn_vcpu *vcpu)
 {
 	vcpu->arch.msr_area.count = 0U;
+
+	/* in HV, disable perf/PMC counting, just count in guest VM */
+	if (is_pmu_pt_configured(vcpu->vm)) {
+		vcpu->arch.msr_area.guest[MSR_AREA_PERF_CTRL].msr_index = MSR_IA32_PERF_GLOBAL_CTRL;
+		vcpu->arch.msr_area.guest[MSR_AREA_PERF_CTRL].value = 0;
+		vcpu->arch.msr_area.host[MSR_AREA_PERF_CTRL].msr_index = MSR_IA32_PERF_GLOBAL_CTRL;
+		vcpu->arch.msr_area.host[MSR_AREA_PERF_CTRL].value = 0;
+		vcpu->arch.msr_area.count++;
+	}
 
 	if (is_platform_rdt_capable()) {
 		struct acrn_vm_config *cfg = get_vm_config(vcpu->vm->vm_id);
@@ -472,7 +481,7 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	}
 
 	/* for core partition VM (like RTVM), passthrou PMC MSRs for performance profiling/tuning; hide to other VMs */
-	if (!is_lapic_pt_configured(vcpu->vm)) {
+	if (!is_pmu_pt_configured(vcpu->vm)) {
 		for (i = 0U; i < ARRAY_SIZE(pmc_msrs); i++) {
 			enable_msr_interception(msr_bitmap, pmc_msrs[i], INTERCEPT_READ_WRITE);
 		}

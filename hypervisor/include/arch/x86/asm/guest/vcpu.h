@@ -214,6 +214,7 @@ struct msr_store_entry {
 
 enum {
 	MSR_AREA_IA32_PQR_ASSOC = 0,
+	MSR_AREA_PERF_CTRL,
 	MSR_AREA_COUNT,
 };
 

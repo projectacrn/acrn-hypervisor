@@ -307,7 +307,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	/*
 	 * Enable VM_EXIT for rdpmc execution except core partition VM, like RTVM
 	 */
-	if (!is_lapic_pt_configured(vcpu->vm)) {
+	if (!is_pmu_pt_configured(vcpu->vm)) {
 		value32 |= VMX_PROCBASED_CTLS_RDPMC;
 	}
 
