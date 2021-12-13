@@ -338,3 +338,8 @@ ack message, and proceeds to shut itself down accordingly.
 #. After receiving the ack message from all user VMs, the Lifecycle Manager
    in the Service VM shuts down VM.
 #. The hypervisor shuts down the system after all VMs have shut down.
+
+.. note:: If one or more virtual functions (VFs) of a SR-IOV device, e.g. GPU on Alder
+   Lake platform, are assigned to User VMs, extra steps should be taken by user to
+   disable all VFs before Service VM shuts down. Otherwise, Service VM may fail to
+   shut down due to some enabled VFs.
