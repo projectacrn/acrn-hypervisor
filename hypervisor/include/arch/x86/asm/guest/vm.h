@@ -255,6 +255,7 @@ int32_t prepare_os_image(struct acrn_vm *vm);
 void vrtc_init(struct acrn_vm *vm);
 
 bool is_lapic_pt_configured(const struct acrn_vm *vm);
+bool is_pmu_pt_configured(const struct acrn_vm *vm);
 bool is_rt_vm(const struct acrn_vm *vm);
 bool is_stateful_vm(const struct acrn_vm *vm);
 bool is_nvmx_configured(const struct acrn_vm *vm);

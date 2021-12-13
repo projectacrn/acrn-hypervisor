@@ -61,6 +61,8 @@
 #define GUEST_FLAG_STATIC_VM       (1UL << 8U)  /* Whether this VM uses static VM configuration */
 #define GUEST_FLAG_TEE				(1UL << 9U)	/* Whether the VM is TEE VM */
 #define GUEST_FLAG_REE				(1UL << 10U)	/* Whether the VM is REE VM */
+#define GUEST_FLAG_PMU_PASSTHROUGH	(1UL << 11U)    /* Whether PMU is passed through */
+
 
 /* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
 #define VIRTUAL_SLEEP_CTL_ADDR		0x400U /* Pre-launched VM uses ACPI reduced HW mode and sleep control register */
