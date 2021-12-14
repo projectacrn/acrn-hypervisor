@@ -317,8 +317,8 @@ Generate a Board Configuration File
 
          cd ~/acrn-work/
          disk="/media/$USER/"$(ls /media/$USER)
-         cp -r acrn-hypervisor/misc/config_tools/board_inspector/ $disk/
-         sync && sudo umount $disk
+         cp -r acrn-hypervisor/misc/config_tools/board_inspector/ "$disk"/
+         sync && sudo umount "$disk"
 
    #. Insert the USB disk into the target system.
 
@@ -328,7 +328,7 @@ Generate a Board Configuration File
 
          mkdir -p ~/acrn-work
          disk="/media/$USER/"$(ls /media/$USER)
-         cp -r $disk/board_inspector ~/acrn-work
+         cp -r "$disk"/board_inspector ~/acrn-work
 
 #. On the target, load the ``msr`` driver, used by the Board Inspector:
 
@@ -360,8 +360,8 @@ Generate a Board Configuration File
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp ~/acrn-work/board_inspector/my_board.xml $disk/
-         sync && sudo umount $disk
+         cp ~/acrn-work/board_inspector/my_board.xml "$disk"/
+         sync && sudo umount "$disk"
 
    #. Insert the USB disk into the development computer.
 
@@ -370,8 +370,8 @@ Generate a Board Configuration File
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp $disk/my_board.xml ~/acrn-work
-         sudo umount $disk
+         cp "$disk"/my_board.xml ~/acrn-work
+         sudo umount "$disk"
 
 .. _gsg-dev-setup:
 
@@ -526,13 +526,13 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp linux-5.10.65-acrn-service-vm-x86.tar.gz $disk/
-         cp ~/acrn-work/acrn-hypervisor/build/hypervisor/acrn.bin $disk/
-         cp ~/acrn-work/acrn-hypervisor/build/hypervisor/serial.conf $disk/
-         cp ~/acrn-work/my_board/output/launch_user_vm_id3.sh $disk/
-         cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl $disk/
-         cp ~/acrn-work/acrn-hypervisor/build/acrn-2.7-unstable.tar.gz $disk/
-         sync && sudo umount $disk/
+         cp linux-5.10.65-acrn-service-vm-x86.tar.gz "$disk"/
+         cp ~/acrn-work/acrn-hypervisor/build/hypervisor/acrn.bin "$disk"/
+         cp ~/acrn-work/acrn-hypervisor/build/hypervisor/serial.conf "$disk"/
+         cp ~/acrn-work/my_board/output/launch_user_vm_id3.sh "$disk"/
+         cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
+         cp ~/acrn-work/acrn-hypervisor/build/acrn-2.7-unstable.tar.gz "$disk"/
+         sync && sudo umount "$disk"/
 
       Even though our sample default scenario defines six User VMs, we're only
       going to launch one of them, so we'll only need the one launch script.
@@ -547,8 +547,8 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp $disk/linux-5.10.65-acrn-service-vm-x86.tar.gz ~/acrn-work
-         cp $disk/acrn-2.7-unstable.tar.gz ~/acrn-work
+         cp "$disk"/linux-5.10.65-acrn-service-vm-x86.tar.gz ~/acrn-work
+         cp "$disk"/acrn-2.7-unstable.tar.gz ~/acrn-work
 
    #. Extract the Service VM files onto the target system:
 
@@ -572,11 +572,11 @@ Build ACRN
       .. code-block:: bash
 
          sudo mkdir -p /boot/acrn/
-         sudo cp $disk/acrn.bin /boot/acrn
-         sudo cp $disk/serial.conf /etc
-         sudo cp $disk/iasl /usr/sbin/
-         cp $disk/launch_user_vm_id3.sh ~/acrn-work
-         sudo umount $disk/
+         sudo cp "$disk"/acrn.bin /boot/acrn
+         sudo cp "$disk"/serial.conf /etc
+         sudo cp "$disk"/iasl /usr/sbin/
+         cp "$disk"/launch_user_vm_id3.sh ~/acrn-work
+         sudo umount "$disk"/
 
 .. rst-class:: numbered-step
 
