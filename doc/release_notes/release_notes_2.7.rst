@@ -90,8 +90,8 @@ User-Friendly VM names
    user-friendly VM name.
 
 Extend Use of CAT Cache Tuning to VMs
-   In previous releases, Cache Allocation Technology (vCAT) was available only
-   at the hypervisor level and with per-VM granularity.  In this v2.7 release,
+   In previous releases, Cache Allocation Technology (CAT) was available only
+   at the hypervisor level and with per-pCPU granularity.  In this v2.7 release,
    each VM with exclusive cache resources can partition them with
    per-thread granularity and allocate cache resources to prioritized tasks.
 
@@ -137,6 +137,15 @@ The following elements were removed.
 
 - ``KATA_VM`` VM type.
 - ``hv.CAPACITIES.MAX_EFI_MMAP_ENTRIES``
+- ``hv.MEMORY.HV_RAM_SIZE``  (Hypervisor RAM size is now computed by the linker)
+
+As part of using consistent names for UOS and SOS, we also change configuration
+option names or values using these obsolete terms:
+
+- The :option:`vm.vm_type` option value ``SOS_VM`` is now ``SERVICE_VM``
+- The :option:`vm.legacy_vuart.base` option value ``SOS_VM_COM1_BASE`` is now
+  ``SERVICE_VM_COM1_BASE``, with the same change for COM2, COM3, and COM4 base
+  and for the :option:`vm.legacy_vuart.irq` option values.
 
 In v2.7, the ``acrn-dm`` command line parameter ``--cpu_affinity`` is now mandatory
 when launching a User VM. If the launch XML settings, used to generate the launch
