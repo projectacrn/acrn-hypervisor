@@ -309,7 +309,7 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 
 	/* check whether need an entry for remaining hpa2 */
 	if (remaining_hpa2_size > 0UL) {
-		gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, remaining_hpa2_size);
+		(void)add_ram_entry((vm->e820_entries + entry_idx), gpa_start, remaining_hpa2_size);
 		entry_idx++;
 	}
 

@@ -787,7 +787,6 @@ static int32_t emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *
 	 * 88/r:	mov r/m8, r8
 	 * REX + 88/r:	mov r/m8, r8 (%ah, %ch, %dh, %bh not available)
 	 */
-		size = 1U;	/* override for byte operation */
 		byte = vie_read_bytereg(vcpu, vie);
 		vie_mmio_write(vcpu, byte);
 		break;
@@ -810,7 +809,6 @@ static int32_t emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *
 		 * 8A/r:	mov r8, r/m8
 		 * REX + 8A/r:	mov r8, r/m8
 		 */
-		size = 1U;	/* override for byte operation */
 		vie_mmio_read(vcpu, &val);
 		vie_write_bytereg(vcpu, vie, (uint8_t)val);
 		break;
@@ -853,7 +851,6 @@ static int32_t emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *
 		 * C6/0		mov r/m8, imm8
 		 * REX + C6/0	mov r/m8, imm8
 		 */
-		size = 1U;	/* override for byte operation */
 		vie_mmio_write(vcpu, (uint64_t)vie->immediate);
 		break;
 	case 0xC7U:
