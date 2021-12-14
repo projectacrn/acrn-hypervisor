@@ -410,7 +410,6 @@ its ``id`` attribute. When it is enabled, specify which target VM's vUART the cu
         <xs:documentation>PCI devices list.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="board_private" type="BoardPrivateConfiguration" minOccurs="0" />
     <xs:element name="PTM" type="Boolean" default="y" minOccurs="0">
       <xs:annotation>
         <xs:documentation>Enable and disable PTM(Precision Timing Measurement) feature.</xs:documentation>
