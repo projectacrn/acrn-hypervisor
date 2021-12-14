@@ -35,7 +35,6 @@
 
   <xsl:template match="config-data/acrn-config">
     <xsl:if test="count(vm[acrn:is-sos-vm(vm_type)])">
-      <xsl:call-template name="sos_rootfs" />
       <xsl:call-template name="sos_serial_console" />
       <xsl:call-template name="sos_bootargs_diff" />
     </xsl:if>
@@ -65,10 +64,6 @@
     </xsl:for-each>
   </xsl:template>
 
-<xsl:template name="sos_rootfs">
-  <xsl:value-of select="acrn:define('SERVICE_VM_ROOTFS', concat($quot, 'root=', vm/board_private/rootfs[text()], ' ', $quot), '')" />
-</xsl:template>
-
 <xsl:template name="sos_serial_console">
   <xsl:variable name="consoleport" select="hv/DEBUG_OPTIONS/SERIAL_CONSOLE" />
   <xsl:variable name="sos_console">
@@ -88,7 +83,17 @@
 </xsl:template>
 
 <xsl:template name="sos_bootargs_diff">
-  <xsl:variable name="bootargs" select="normalize-space(vm[acrn:is-sos-vm(vm_type)]/board_private/bootargs[text()])" />
+  <xsl:variable name="sos_rootfs">
+  <xsl:variable name="bootargs" select="str:split(//vm[acrn:is-sos-vm(vm_type)]/os_config/bootargs[text()], ' ')" />
+  <xsl:for-each select="$bootargs">
+    <xsl:variable name="pos" select="position()" />
+    <xsl:variable name="bootarg" select="$bootargs[$pos]" />
+      <xsl:if test="contains($bootarg, 'root=')">
+        <xsl:value-of select="$bootarg" />
+      </xsl:if>
+  </xsl:for-each>
+  </xsl:variable>
+  <xsl:variable name="sos_bootargs" select="normalize-space(str:replace(//vm[acrn:is-sos-vm(vm_type)]/os_config/bootargs[text()], $sos_rootfs, ''))" />
   <xsl:variable name="maxcpunum" select="count(//vm[acrn:is-sos-vm(vm_type)]/cpu_affinity/pcpu_id)" />
   <xsl:variable name="hugepages" select="round(number(substring-before(//board-data//TOTAL_MEM_INFO, 'kB')) div (1024 * 1024)) - 3" />
   <xsl:variable name="maxcpus">
@@ -106,7 +111,8 @@
       <xsl:value-of select="concat('hugepagesz=1G hugepages=', $hugepages)" />
     </xsl:if>
   </xsl:variable>
-  <xsl:value-of select="acrn:define('SERVICE_VM_BOOTARGS_DIFF', concat($quot, $bootargs, ' ', $maxcpus, ' ', $hugepage_kernelstring, ' ', $quot), '')" />
+  <xsl:value-of select="acrn:define('SERVICE_VM_ROOTFS', concat($quot, $sos_rootfs, ' ', $quot), '')" />
+  <xsl:value-of select="acrn:define('SERVICE_VM_BOOTARGS_DIFF', concat($quot, $sos_bootargs, ' ', $maxcpus, ' ', $hugepage_kernelstring, ' ', $quot), '')" />
 </xsl:template>
 
 <xsl:template name="cpu_affinity">

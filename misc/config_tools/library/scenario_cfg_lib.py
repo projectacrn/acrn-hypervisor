@@ -197,22 +197,6 @@ def get_pci_dev_num_per_vm():
     return pci_dev_num_per_vm
 
 
-def check_board_private_info():
-
-    if 'SERVICE_VM' not in common.VM_TYPES.values():
-        return
-    branch_tag = "board_private"
-    private_info = {}
-    dev_private_tags = ['rootfs']
-    for tag_str in dev_private_tags:
-        dev_setting = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, branch_tag, tag_str)
-        private_info[tag_str] = dev_setting
-
-    if not private_info['rootfs'] and err_dic:
-        ERR_LIST['vm:id=0,boot_private,rootfs'] = "The board have to chose one rootfs partition"
-        ERR_LIST.update(err_dic)
-
-
 def vm_name_check(vm_names, item):
     """
     Check vm name
@@ -471,23 +455,6 @@ def os_kern_mod_check(id_kern_mod_dic, prime_item, item):
         if len(kern_mod) > 32 or len(kern_mod) == 0:
             key = "vm:id={},{},{}".format(id_key, prime_item, item)
             ERR_LIST[key] = "VM os config kernel mod tag should be in range [1,32] bytes"
-
-
-def os_kern_args_check(id_kern_args_dic, prime_item, item):
-    """
-    Check os kernel args
-    :param prime_item: the prime item in xml file
-    :param item: vm os config args item in xml
-    :return: None
-    """
-
-    for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_i not in id_kern_args_dic.keys():
-            continue
-        kern_args = id_kern_args_dic[vm_i]
-        if "SERVICE_" in vm_type and kern_args != "SERVICE_VM_OS_BOOTARGS":
-            key = "vm:id={},{},{}".format(vm_i, prime_item, item)
-            ERR_LIST[key] = "VM os config kernel service os should be SERVICE_VM_OS_BOOTARGS"
 
 
 def os_kern_load_addr_check(kern_type, id_kern_load_addr_dic, prime_item, item):

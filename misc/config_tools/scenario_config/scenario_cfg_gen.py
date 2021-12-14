@@ -63,7 +63,6 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["vm,communication_vuart,base"] = ['INVALID_PCI_BASE', 'PCI_VUART']
 
     # board
-    (scenario_item_values["vm,board_private,rootfs"], num) = board_cfg_lib.get_rootfs(board_info)
 
     scenario_item_values["hv,DEBUG_OPTIONS,RELEASE"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,DEBUG_OPTIONS,NPK_LOGLEVEL"] = hv_cfg_lib.get_select_range("DEBUG_OPTIONS", "LOG_LEVEL")

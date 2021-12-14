@@ -183,7 +183,7 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
       </xs:annotation>
     </xs:element>
     <xs:element name="bootargs" type="xs:string">
-      <xs:annotation acrn:configurable="../../vm_type[starts-with(text(), 'PRE')]">
+      <xs:annotation>
         <xs:documentation>Configurable boot argument for pre-launched VM of hybrid or hybrid_rt mode.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -368,21 +368,6 @@ to the pre-launched VM.</xs:documentation>
     <xs:element name="pci_dev" type="xs:string" maxOccurs="unbounded">
       <xs:annotation>
         <xs:documentation>A passthrough PCI device.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-  </xs:sequence>
-</xs:complexType>
-
-<xs:complexType name="BoardPrivateConfiguration">
-  <xs:sequence>
-    <xs:element name="rootfs" type="xs:string" default="/dev/nvme0n1p3">
-      <xs:annotation>
-        <xs:documentation>Rootfs for the Linux kernel.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="bootargs" type="xs:string">
-      <xs:annotation>
-        <xs:documentation>Specify kernel boot arguments for Service VM OS.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
