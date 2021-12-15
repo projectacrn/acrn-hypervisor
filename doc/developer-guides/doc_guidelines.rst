@@ -522,6 +522,59 @@ Keep the line length for documentation less than 80 characters to make it
 easier for reviewing in GitHub. Long lines due to URL references are an
 allowed exception.
 
+Background Colors
+*****************
+
+We've defined some CSS styles for use as background colors for paragraphs.
+These styles can be applied using the ``.. rst-class`` directive using one of
+these style names.  You can also use the defined ``centered`` style to place the
+text centered within the element, useful for centering text within a table cell
+or column span:
+
+.. rst-class:: bg-acrn-green centered
+
+   \.\. rst-class:: bg-acrn-green centered
+
+.. rst-class:: bg-acrn-lightgreen centered
+
+   \.\. rst-class:: bg-acrn-lightgreen centered
+
+.. rst-class:: bg-acrn-brown centered
+
+   \.\. rst-class:: bg-acrn-brown centered
+
+.. rst-class:: bg-acrn-lightbrown centered
+
+   \.\. rst-class:: bg-acrn-lightbrown centered
+
+.. rst-class:: bg-acrn-blue centered
+
+   \.\. rst-class:: bg-acrn-blue centered
+
+.. rst-class:: bg-acrn-red centered
+
+   \.\. rst-class:: bg-acrn-red centered
+
+.. rst-class:: bg-acrn-gradient centered
+
+   \.\. rst-class:: bg-acrn-gradient centered
+
+.. rst-class:: bg-lightyellow centered
+
+   \.\. rst-class:: bg-lightyellow centered
+
+.. rst-class:: bg-lightgreen centered
+
+   \.\. rst-class:: bg-lightgreen centered
+
+.. rst-class:: bg-lavender centered
+
+   \.\. rst-class:: bg-lavender centered
+
+.. rst-class:: bg-lightgrey centered
+
+   \.\. rst-class:: bg-lightgrey centered
+
 Drawings
 ********
 
