@@ -528,7 +528,6 @@ Build ACRN
          disk="/media/$USER/"$(ls /media/$USER)
          cp linux-5.10.65-acrn-service-vm-x86.tar.gz "$disk"/
          cp ~/acrn-work/acrn-hypervisor/build/hypervisor/acrn.bin "$disk"/
-         cp ~/acrn-work/acrn-hypervisor/build/hypervisor/serial.conf "$disk"/
          cp ~/acrn-work/my_board/output/launch_user_vm_id3.sh "$disk"/
          cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
          cp ~/acrn-work/acrn-hypervisor/build/acrn-2.7-unstable.tar.gz "$disk"/
@@ -540,6 +539,9 @@ Build ACRN
       .. note:: The :file:`serial.conf` is only generated if non-standard
          vUARTs (not COM1-COM4)
          are configured for the Service VM in the scenario XML file.
+         Please copy the ``serial.conf`` file using::
+            
+            cp ~/acrn-work/acrn-hypervisor/build/hypervisor/serial.conf "$disk"/
 
    #. Insert the USB disk you just used into the target system and run these
       commands to copy the tar files locally:
@@ -590,7 +592,7 @@ configure GRUB on the target system.
 
    .. code-block:: bash
 
-      sudo apt-get install setserial
+      sudo apt install setserial
 
 #. On the target, find the root filesystem (rootfs) device name by using the
    ``lsblk`` command:
@@ -778,18 +780,36 @@ Launch the User VM
 #. Look for the line that contains the term ``virtio-blk`` and replace the
    existing image file path with your ISO image file path.  In the following
    example, the ISO image file path is
-   ``/home/acrn/acrn-work/ubuntu-18.04.5-desktop-amd64.iso``.
+   ``/home/acrn/acrn-work/ubuntu-18.04.6-desktop-amd64.iso``.  Here is the
+   ``launch_user_vm_id3.sh`` before editing:
 
    .. code-block:: bash
       :emphasize-lines: 4
 
-      acrn-dm -A -m $mem_size -s 0:0,hostbridge -U 615db82a-e189-4b4f-8dbb-d321343e4ab3 \
+      acrn-dm -A -m $mem_size -s 0:0,hostbridge \
          --mac_seed $mac_seed \
          $logger_setting \
-         -s 7,virtio-blk,/home/acrn/acrn-work/ubuntu-18.04.5-desktop-amd64.iso \
-         -s 8,virtio-net,tap_YaaG3 \
-         -s 6,virtio-console,@stdio:stdio_port \
+         -s 9,virtio-blk,./YaaG.img \
+         -s 10,virtio-net,tap_YaaG3 \
+         -s 8,virtio-console,@stdio:stdio_port \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
+         --cpu_affinity 0,1 \
+         -s 1:0,lpc \
+         $vm_name
+
+   And here is the example ``launch_user_vm_id3.sh`` after editing:
+
+   .. code-block:: bash
+      :emphasize-lines: 4
+
+      acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+         --mac_seed $mac_seed \
+         $logger_setting \
+         -s 9,virtio-blk,/home/acrn/acrn-work/ubuntu-18.04.6-desktop-amd64.iso \
+         -s 10,virtio-net,tap_YaaG3 \
+         -s 8,virtio-console,@stdio:stdio_port \
+         --ovmf /usr/share/acrn/bios/OVMF.fd \
+         --cpu_affinity 0,1 \
          -s 1:0,lpc \
          $vm_name
 
@@ -851,3 +871,4 @@ Next Steps
 
 :ref:`overview_dev` describes the ACRN configuration process, with links to
 additional details.
+
