@@ -18,7 +18,7 @@ Validated Versions
 ******************
 
 - Ubuntu version: **18.04**
-- ACRN hypervisor commit: **9bae63b941**
+- ACRN hypervisor tag: **v2.7**
 
 Prerequisites
 *************
@@ -140,13 +140,13 @@ Update ACRN Hypervisor Image
    Refer to :ref:`gsg` to set up the ACRN build
    environment on your development workstation.
 
-   Clone the ACRN source code and check out to the commit 9bae63b941:
+   Clone the ACRN source code and check out to the tag **v2.7**:
 
    .. code-block:: none
 
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout 9bae63b941
+      git checkout v2.7
 
 #. Check the ``pci_devs`` sections in ``misc/config_tools/data/nuc11tnbi5/partitioned.xml``
    for each pre-launched VM to ensure you are using the right PCI device BDF information (as
