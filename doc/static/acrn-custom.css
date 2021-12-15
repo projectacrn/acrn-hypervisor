@@ -332,3 +332,48 @@ img.drop-shadow {
 .lastupdated {
     float:right;
 }
+
+/* some custom classes used in rst-class directives */
+.centered {
+    text-align: center;
+}
+
+/* colors from ACRN brand pallet */
+.bg-acrn-green {
+    background-color: #006368;
+    color: white;
+}
+.bg-acrn-lightgreen {
+    background-color: #69BFAD;
+}
+.bg-acrn-brown {
+    background-color: #998265;
+    color: white;
+}
+.bg-acrn-lightbrown {
+    background-color: #D7AF96;
+}
+.bg-acrn-blue {
+    background-color: #232256;
+    color: white;
+}
+.bg-acrn-red {
+    background-color: #7F0F24;
+    color: white;
+}
+.bg-acrn-gradient {
+    background: linear-gradient(135deg, #232256 0%, #69BFAD 100%);
+    color: white;
+}
+.bg-lightyellow {
+    background-color: lightyellow;
+}
+.bg-lightgreen {
+    background-color: #D0F0C0; /* tea green */
+}
+.bg-lavender {
+    background-color: lavender;
+}
+.bg-lightgrey {
+    background-color: lightgrey;
+}
