@@ -1836,6 +1836,11 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 
 	erdp = rts->intrreg.erdp & ~0xF;
 	erst = &rts->erstba_p[rts->er_enq_seg];
+	if (erst->dwRingSegSize < 16 || erst->dwRingSegSize > 4096) {
+		UPRINTF(LDBG, "xHCI: ERSTSZ is not valiad: %u\n",
+				erst->dwRingSegSize);
+		return -EINVAL;
+	}
 	erdp_idx = (erdp - erst->qwRingSegBase) / sizeof(struct xhci_trb);
 
 	UPRINTF(LDBG, "insert event 0[%lx] 2[%x] 3[%x]\r\n"
