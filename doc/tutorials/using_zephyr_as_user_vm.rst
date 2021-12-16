@@ -1,4 +1,5 @@
 .. _using_zephyr_as_uos:
+.. _using_zephyr_as_user_vm:
 
 Run Zephyr as the User VM
 #########################
@@ -32,9 +33,7 @@ Steps for Using Zephyr as User VM
    .. code-block:: none
 
       $ cd samples/hello_world
-      $ mkdir build && cd build
-      $ cmake -DBOARD=acrn ..
-      $ make
+      $ west build -p auto -b acrn .
 
    This will build the application ELF binary in ``samples/hello_world/build/zephyr/zephyr.elf``.
 

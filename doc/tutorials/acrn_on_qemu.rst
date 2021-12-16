@@ -11,9 +11,10 @@ configuration.
 
 This setup was tested with the following configuration:
 
-- ACRN hypervisor: ``v2.6`` tag
-- ACRN kernel: ``v2.6`` tag
+- ACRN hypervisor: ``v2.7`` tag
+- ACRN kernel: ``v2.7`` tag
 - QEMU emulator version: 4.2.1
+- Host OS: Ubuntu 20.04
 - Service VM/User VM OS: Ubuntu 20.04
 - Platforms tested: Kaby Lake, Skylake
 
@@ -131,26 +132,26 @@ Install ACRN Hypervisor
 
 #. Install the ACRN build tools and dependencies following the :ref:`gsg`.
 
-#. Switch to the ACRN hypervisor ``v2.6`` tag.
+#. Switch to the ACRN hypervisor ``v2.7`` tag.
 
    .. code-block:: none
 
       cd ~
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout v2.6
+      git checkout v2.7
 
 #. Build ACRN for QEMU:
 
    .. code-block:: none
 
-      make BOARD=qemu SCENARIO=sdc
+      make BOARD=qemu SCENARIO=shared
 
    For more details, refer to the :ref:`gsg`.
 
 #. Install the ACRN Device Model and tools:
 
-   .. code-block::
+   .. code-block:: none
 
       sudo make install
 
@@ -161,9 +162,9 @@ Install ACRN Hypervisor
       sudo cp build/hypervisor/acrn.32.out /boot
 
 #. Clone and configure the Service VM kernel repository following the
-   instructions in the :ref:`gsg` and using the ``v2.6`` tag. The User VM (L2
+   instructions in the :ref:`gsg` and using the ``v2.7`` tag. The User VM (L2
    guest) uses the ``virtio-blk`` driver to mount the rootfs. This driver is
-   included in the default kernel configuration as of the ``v2.6`` tag.
+   included in the default kernel configuration as of the ``v2.7`` tag.
 
 #. Update GRUB to boot the ACRN hypervisor and load the Service VM kernel.
    Append the following configuration to the :file:`/etc/grub.d/40_custom`.
@@ -238,21 +239,55 @@ Bring Up User VM (L2 Guest)
 #. Transfer the ``UserVM.img``  or ``UserVM.iso`` User VM disk image to the
    Service VM (L1 guest).
 
-#. Launch the User VM using the ``launch_ubuntu.sh`` script.
+#. Copy OVMF.fd to launch User VM.
 
    .. code-block:: none
 
-      cp ~/acrn-hypervisor/misc/config_tools/data/samples_launch_scripts/launch_ubuntu.sh ~/
       cp ~/acrn-hypervisor/devicemodel/bios/OVMF.fd ~/
 
 #. Update the script to use your disk image (``UserVM.img`` or ``UserVM.iso``).
 
    .. code-block:: none
 
+      #!/bin/bash
+      # Copyright (C) 2020 Intel Corporation.
+      # SPDX-License-Identifier: BSD-3-Clause
+      function launch_ubuntu()
+      {
+      vm_name=ubuntu_vm$1
+      logger_setting="--logger_setting console,level=5;kmsg,level=6;disk,level=5"
+      #check if the vm is running or not
+      vm_ps=$(pgrep -a -f acrn-dm)
+      result=$(echo $vm_ps | grep "${vm_name}")
+      if [[ "$result" != "" ]]; then
+        echo "$vm_name is running, can't create twice!"
+        exit
+      fi
+      #for memsize setting
+      mem_size=1024M
       acrn-dm -A -m $mem_size -s 0:0,hostbridge \
       -s 3,virtio-blk,~/UserVM.img \
       -s 4,virtio-net,tap0 \
+      --cpu_affinity 1 \
       -s 5,virtio-console,@stdio:stdio_port \
       --ovmf ~/OVMF.fd \
       $logger_setting \
       $vm_name
+      }
+      # offline SOS CPUs except BSP before launch UOS
+      for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
+        online=`cat $i/online`
+        idx=`echo $i | tr -cd "[1-99]"`
+        echo cpu$idx online=$online
+        if [ "$online" = "1" ]; then
+           echo 0 > $i/online
+                # during boot time, cpu hotplug may be disabled by pci_device_probe during a pci module insmod
+                while [ "$online" = "1" ]; do
+                sleep 1
+                echo 0 > $i/online
+                online=`cat $i/online`
+                done
+                echo $idx > /sys/devices/virtual/misc/acrn_hsm/remove_cpu
+        fi
+      done
+      launch_ubuntu 1

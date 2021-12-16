@@ -113,10 +113,10 @@ ACRN only supports enabling the nested virtualization feature on the Service VM,
 VMs.
 
 The nested virtualization feature is disabled by default in ACRN. You can
-enable it using the :ref:`ACRN configurator tool <acrn_configurator_tool>`
+enable it using the :ref:`ACRN Configurator <acrn_configurator_tool>`
 with these settings:
 
-.. note:: Normally you'd use the configurator tool GUI to edit the scenario XML file.
+.. note:: Normally you'd use the ACRN Configurator GUI to edit the scenario XML file.
    The tool wasn't updated in time for the v2.5 release, so you'll need to manually edit
    the ACRN scenario XML configuration file to edit the ``SCHEDULER``, ``NVMX_ENABLED``,
    ``pcpu_id`` , ``guest_flags``, ``legacy_vuart``, and ``console_vuart`` settings for
@@ -232,7 +232,7 @@ Here is a summary of how to modify and build the kernel:
 
    git clone https://github.com/projectacrn/acrn-kernel
    cd acrn-kernel
-   cp kernel_config_uefi_sos .config
+   cp kernel_config_service_vm .config
    make olddefconfig
 
 The following configuration entries are needed to launch nested

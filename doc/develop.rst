@@ -35,12 +35,12 @@ User VM Tutorials
 .. toctree::
    :maxdepth: 1
 
-   tutorials/using_windows_as_uos
+   tutorials/using_windows_as_user_vm
    tutorials/running_ubun_as_user_vm
    tutorials/running_deb_as_user_vm
-   tutorials/using_xenomai_as_uos
-   tutorials/using_vxworks_as_uos
-   tutorials/using_zephyr_as_uos
+   tutorials/using_xenomai_as_user_vm
+   tutorials/using_vxworks_as_user_vm
+   tutorials/using_zephyr_as_user_vm
 
 Configuration Tutorials
 ***********************
@@ -74,6 +74,7 @@ Advanced Features
    tutorials/nvmx_virtualization
    tutorials/vuart_configuration
    tutorials/rdt_configuration
+   tutorials/vcat_configuration
    tutorials/waag-secure-boot
    tutorials/enable_s5
    tutorials/cpu_sharing

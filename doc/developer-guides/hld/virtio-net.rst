@@ -414,7 +414,7 @@ prepared in the Service VM before we start. We need to create a bridge and at
 least one TAP device (two TAP devices are needed to create a dual
 virtual NIC) and attach a physical NIC and TAP device to the bridge.
 
-.. figure:: images/network-virt-sos-infrastruct.png
+.. figure:: images/network-virt-service-vm-infrastruct.png
    :align: center
    :width: 900px
    :name: net-virt-infra

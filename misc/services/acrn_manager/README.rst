@@ -27,8 +27,6 @@ You can see the available ``acrnctl`` commands by running:
      stop [--force/-f]
      del
      add
-     suspend
-     resume
      reset
      blkrescan
    Use acrnctl [cmd] help for details

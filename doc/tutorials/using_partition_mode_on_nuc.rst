@@ -3,12 +3,12 @@
 Getting Started Guide for ACRN Partitioned Mode
 ###############################################
 
-The ACRN hypervisor supports a partitioned scenario in which the User
-OS, running in a pre-launched VM, can bypass the ACRN
+The ACRN hypervisor supports a partitioned scenario in which the OS running in
+a pre-launched VM can bypass the ACRN
 hypervisor and directly access isolated PCI devices. The following
 guidelines provide step-by-step instructions on how to set up the ACRN
-hypervisor partitioned scenario on Intel NUC while running two
-pre-launched VMs.
+hypervisor partitioned scenario running two
+pre-launched VMs on an Intel NUC.
 
 .. contents::
    :local:
@@ -18,11 +18,7 @@ Validated Versions
 ******************
 
 - Ubuntu version: **18.04**
-- ACRN hypervisor tag: **v2.6**
-
-.. note:: After the v2.6 release, the ``logical_partition`` scenario
-   was renamed to ``partitioned``, affecting the file names used in this
-   guide (validated with v2.6).
+- ACRN hypervisor tag: **v2.7**
 
 Prerequisites
 *************
@@ -33,8 +29,8 @@ Prerequisites
 * Storage device with USB interface (such as USB Flash
   or SATA disk connected with a USB 3.0 SATA converter).
 * Disable **Intel Hyper Threading Technology** in the BIOS to avoid
-  interference from logical cores for the logical partition scenario.
-* In the logical partition scenario, two VMs (running Ubuntu OS)
+  interference from logical cores for the partitioned scenario.
+* In the partitioned scenario, two VMs (running Ubuntu OS)
   are started by the ACRN hypervisor. Each VM has its own root
   filesystem. Set up each VM by following the `Ubuntu desktop installation
   <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_ instructions
@@ -49,17 +45,18 @@ Update Kernel Image and Modules of Pre-Launched VM
 #. On the local Ubuntu target machine, find the kernel file,
    copy to your (``/boot`` directory) and name the file ``bzImage``.
    The ``uname -r`` command returns the kernel release, for example,
-   ``4.15.0-55-generic``):
+   ``5.4.0-89-generic``):
 
    .. code-block:: none
 
-      $ sudo cp /boot/vmlinuz-$(uname -r)  /boot/bzImage
+      sudo cp /boot/vmlinuz-$(uname -r)  /boot/bzImage
+      sudo cp /boot/initrd.img-$(uname -r) /boot/initrd_Image
 
-#. The current ACRN logical partition scenario implementation requires a
+#. The current ACRN partitioned scenario implementation requires a
    multi-boot capable bootloader to boot both the ACRN hypervisor and the
    bootable kernel image built from the previous step. Install the Ubuntu OS
    on the onboard NVMe SSD by following the `Ubuntu desktop installation
-   instructions <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_ The
+   instructions <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_. The
    Ubuntu installer creates 3 disk partitions on the onboard NVMe SSD. By
    default, the GRUB bootloader is installed on the EFI System Partition
    (ESP) that's used to bootstrap the ACRN hypervisor.
@@ -76,16 +73,21 @@ Update Kernel Image and Modules of Pre-Launched VM
    commands set up the partition mode loadable kernel modules onto the root
    file systems to be loaded by the pre-launched VMs:
 
+   To mount the Ubuntu OS root filesystem on the SATA disk:
+
    .. code-block:: none
 
-      # Mount the Ubuntu OS root filesystem on the SATA disk
-      $ sudo mount /dev/sda3 /mnt
-      $ sudo cp -r /lib/modules/* /mnt/lib/modules
-      $ sudo umount /mnt
-      # Mount the Ubuntu OS root filesystem on the USB flash disk
-      $ sudo mount /dev/sdb3 /mnt
-      $ sudo cp -r /lib/modules/* /mnt/lib/modules
-      $ sudo umount /mnt
+      sudo mount /dev/sda3 /mnt
+      sudo cp -r /lib/modules/* /mnt/lib/modules
+      sudo umount /mnt
+
+   To mount the Ubuntu OS root filesystem on the USB flash disk:
+
+   .. code-block:: none
+
+      sudo mount /dev/sdb3 /mnt
+      sudo cp -r /lib/modules/* /mnt/lib/modules
+      sudo umount /mnt
 
 
 
@@ -101,7 +103,12 @@ Update ACRN Hypervisor Image
 
    .. code-block:: none
 
-      $ dmesg | grep ttyS0
+      dmesg | grep ttyS0
+
+   Output example:
+
+   .. code-block:: console
+
       [    0.000000] console [ttyS0] enabled
       [    1.562546] 00:01: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is
       a 16550A
@@ -111,7 +118,12 @@ Update ACRN Hypervisor Image
 
    .. code-block:: none
 
-      $ sudo lspci -vv
+      sudo lspci -vv
+
+   Output example:
+
+   .. code-block:: console
+
       00:14.0 USB controller: Intel Corporation Device 9ded (rev 30) (prog-if 30 [XHCI])
               Subsystem: Intel Corporation Device 7270
       00:17.0 SATA controller: Intel Corporation Device 9dd3 (rev 30) (prog-if 01 [AHCI 1.0])
@@ -128,15 +140,15 @@ Update ACRN Hypervisor Image
    Refer to :ref:`gsg` to set up the ACRN build
    environment on your development workstation.
 
-   Clone the ACRN source code and check out to the tag v2.6:
+   Clone the ACRN source code and check out to the tag **v2.7**:
 
    .. code-block:: none
 
-      $ git clone https://github.com/projectacrn/acrn-hypervisor.git
-      $ cd acrn-hypervisor
-      $ git checkout v2.6
+      git clone https://github.com/projectacrn/acrn-hypervisor.git
+      cd acrn-hypervisor
+      git checkout v2.7
 
-#. Check the ``pci_devs`` sections in ``misc/config_tools/data/nuc11tnbi5/logical_partition.xml``
+#. Check the ``pci_devs`` sections in ``misc/config_tools/data/nuc11tnbi5/partitioned.xml``
    for each pre-launched VM to ensure you are using the right PCI device BDF information (as
    reported by ``lspci -vv``). If you need to make changes to this file, create a copy of it and
    use it subsequently when building ACRN (``SCENARIO=/path/to/newfile.xml``).
@@ -145,7 +157,7 @@ Update ACRN Hypervisor Image
 
    .. code-block:: none
 
-      $ make hypervisor BOARD=nuc11tnbi5  SCENARIO=logical_partition RELEASE=0
+      make hypervisor BOARD=nuc11tnbi5 SCENARIO=partitioned 
 
    .. note::
       The ``acrn.bin`` will be generated to ``./build/hypervisor/acrn.bin``.
@@ -153,13 +165,13 @@ Update ACRN Hypervisor Image
 
 #. Check the Ubuntu bootloader name.
 
-   In the current design, the logical partition depends on the GRUB boot
+   In the current design, the partitioned scenario depends on the GRUB boot
    loader; otherwise, the hypervisor will fail to boot. Verify that the
    default bootloader is GRUB:
 
    .. code-block:: none
 
-      $ sudo update-grub -V
+      sudo update-grub -V
 
    The above command output should contain the ``GRUB`` keyword.
 
@@ -181,7 +193,7 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
 
    .. code-block:: none
 
-      menuentry 'ACRN hypervisor Logical Partition Scenario' --id ACRN_Logical_Partition --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
+      menuentry 'ACRN hypervisor Partitioned Scenario' --id ACRN_Partitioned --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
               recordfail
               load_video
               gfxmode $linux_gfx_mode
@@ -190,30 +202,33 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
               insmod ext2
 
               search --no-floppy --fs-uuid --set 9bd58889-add7-410c-bdb7-1fbc2af9b0e1
-              echo 'Loading hypervisor logical partition scenario ...'
+              echo 'Loading hypervisor partitioned scenario ...'
               multiboot2  /boot/acrn.bin root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
               module2 /boot/bzImage XXXXXX
+              module2 /boot/initrd_Image XXXXXX
               module2 /boot/ACPI_VM0.bin ACPI_VM0
               module2 /boot/ACPI_VM1.bin ACPI_VM1
       }
 
    .. note::
       Update the UUID (``--set``) and PARTUUID (``root=`` parameter)
-      (or use the device node directly) of the root partition (e.g.``/dev/nvme0n1p2). Hint: use ``sudo blkid``.
+      (or use the device node directly) of the root partition (e.g., ``/dev/nvme0n1p2``). Hint: use ``sudo blkid``.
       The kernel command-line arguments used to boot the pre-launched VMs is ``bootargs``
-      in the ``misc/config_tools/data/nuc11tnbi5/logical_partition.xml``
+      in the ``misc/config_tools/data/nuc11tnbi5/partitioned.xml`` file.
       The ``module2 /boot/bzImage`` param ``XXXXXX`` is the bzImage tag and must exactly match the ``kern_mod``
-      in the ``misc/config_tools/data/nuc11tnbi5/logical_partition.xml`` file.
-      The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0, the parameter ``ACPI_VM0`` is
+      in the ``misc/config_tools/data/nuc11tnbi5/partitioned.xml`` file.
+      The ``module2 /boot/initrd_Image`` param ``XXXXXX`` is the initrd_Image tag and must exactly match the ``ramdisk_mod``
+      in the ``misc/config_tools/data/nuc11tnbi5/partitioned.xml`` file.
+      The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0. The parameter ``ACPI_VM0`` is
       VM0's ACPI tag and should not be modified.
-      The module ``/boot/ACPI_VM1.bin`` is the binary of ACPI tables for pre-launched VM1 the parameter ``ACPI_VM1`` is
+      The module ``/boot/ACPI_VM1.bin`` is the binary of ACPI tables for pre-launched VM1. The parameter ``ACPI_VM1`` is
       VM1's ACPI tag and should not be modified.
 
 #. Correct example Grub configuration (with ``module2`` image paths set):
 
    .. code-block:: console
 
-      menuentry 'ACRN hypervisor Logical Partition Scenario' --id ACRN_Logical_Partition --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
+      menuentry 'ACRN hypervisor Partitioned Scenario' --id ACRN_Partitioned --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
            recordfail
            load_video
            gfxmode $linux_gfx_mode
@@ -221,9 +236,10 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
            insmod part_gpt
            insmod ext2
            search --no-floppy --fs-uuid --set 9bd58889-add7-410c-bdb7-1fbc2af9b0e1
-           echo 'Loading hypervisor logical partition scenario ...'
+           echo 'Loading hypervisor partitioned scenario ...'
            multiboot2  /boot/acrn.bin root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
            module2 /boot/bzImage Linux_bzImage
+           module2 /boot/initrd_Image Ubuntu
            module2 /boot/ACPI_VM0.bin ACPI_VM0
            module2 /boot/ACPI_VM1.bin ACPI_VM1
       }
@@ -233,7 +249,7 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
 
    .. code-block:: none
 
-      GRUB_DEFAULT=ACRN_Logical_Partition
+      GRUB_DEFAULT=ACRN_Partitioned
       #GRUB_HIDDEN_TIMEOUT=0
       #GRUB_HIDDEN_TIMEOUT_QUIET=true
       GRUB_TIMEOUT=10
@@ -245,17 +261,17 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
 
    .. code-block:: none
 
-      $ sudo update-grub
+      sudo update-grub
 
-#. Reboot the Intel NUC. Select the **ACRN hypervisor Logical Partition
-   Scenario** entry to boot the logical partition of the ACRN hypervisor on
+#. Reboot the Intel NUC. Select the **ACRN hypervisor Partitioned
+   Scenario** entry to boot the partitioned scenario of the ACRN hypervisor on
    the Intel NUC's display. The GRUB loader will boot the hypervisor, and the
    hypervisor will automatically start the two pre-launched VMs.
 
 .. rst-class:: numbered-step
 
-Logical Partition Scenario Startup Check
-****************************************
+Partitioned Scenario Startup Check
+**********************************
 #. Connect to the serial port as described in this :ref:`Connecting to the
    serial port <connect_serial_port>` tutorial.
 

@@ -3,48 +3,32 @@
 Supported Hardware
 ##################
 
-We welcome community contributions to help build Project ACRN support
-for a broad collection of architectures and platforms.
-
-Minimum System Requirements for Installing ACRN
-***********************************************
-
-+------------------------+-----------------------------------+---------------------------------------------------------------------------------+
-| Hardware               | Minimum Requirements              | Recommended                                                                     |
-+========================+===================================+=================================================================================+
-| Processor              | Compatible x86 64-bit processor   | 2 core with Intel Hyper-threading Technology enabled in the BIOS or more cores  |
-+------------------------+-----------------------------------+---------------------------------------------------------------------------------+
-| System memory          | 4GB RAM                           | 8GB or more (< 32G)                                                             |
-+------------------------+-----------------------------------+---------------------------------------------------------------------------------+
-| Storage capabilities   | 20GB                              | 120GB or more                                                                   |
-+------------------------+-----------------------------------+---------------------------------------------------------------------------------+
-
-Minimum Requirements for Processor
-**********************************
-1 GB Large pages
-
-Known Limitations
-*****************
-
-Platforms with multiple PCI segments are not supported.
-
-ACRN assumes the following conditions are satisfied from the Platform BIOS:
-
-* All the PCI device BARs must be assigned resources, including SR-IOV VF BARs if a device supports it.
-
-* Bridge windows for PCI bridge devices and the resources for root bus must be programmed with values
-  that enclose resources used by all the downstream devices.
-
-* There should be no conflict in resources among the PCI devices or with other platform devices.
-
+The ACRN project development team is continually adding support for new hardware
+products, as documented below. As we add new hardware, we also lower our support
+level for older hardware products. We welcome community contributions to help
+build ACRN support for a broad collection of architectures and platforms.
 
 .. _hardware_tested:
 
-Tested Platforms by ACRN Release
-********************************
+Selecting Hardware
+******************
 
-These platforms have been tested by the development team with the noted ACRN
-release version and may not work as expected on later ACRN releases.
+When you are selecting hardware to use with ACRN, consider the
+following:
+
+* When the development team is working on a new ACRN version, we focus our
+  development and testing on one product. The product is typically a board
+  or kit from the latest processor family.
+
+* We also provide a level of maintenance for some older products.
+
+* For all products, we welcome and encourage the community to contribute support
+  by submitting patches for code, documentation, tests, and more.
+
+The following table shows supported processor families, along with the
+products that the development team has tested. The products are categorized
+into three support levels: Release, Maintenance, and Community. Each
+level includes the activities described in the lower levels.
 
 .. _NUC11TNHi5:
    https://ark.intel.com/content/www/us/en/ark/products/205594/intel-nuc-11-pro-kit-nuc11tnhi5.html
@@ -61,10 +45,10 @@ release version and may not work as expected on later ACRN releases.
 .. _NUC7i5DNH:
    https://ark.intel.com/content/www/us/en/ark/products/122488/intel-nuc-kit-nuc7i5dnhe.html
 
-.. _NUC7i7DNH:
+.. _NUC7i7DNHE:
    https://ark.intel.com/content/www/us/en/ark/products/130393/intel-nuc-kit-nuc7i7dnhe.html
 
-.. _WHL-IPC-I7:
+.. _WHL-IPC-I5:
    http://www.maxtangpc.com/industrialmotherboards/142.html#parameters
 
 .. _UP2-N3350:
@@ -73,124 +57,63 @@ release version and may not work as expected on later ACRN releases.
 .. _UP2 Shop:
    https://up-shop.org/home/270-up-squared.html
 
++------------------------+------------------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+
+|                        |                                    | .. rst-class:: centered                                                                                                                             |
+|                        |                                    |                                                                                                                                                     |
+|                        |                                    |    ACRN Version                                                                                                                                     |
++------------------------+------------------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+
+| Intel Processor Family | Tested Product                     | .. rst-class::         | .. rst-class::         | .. rst-class::         | .. rst-class::         | .. rst-class::         | .. rst-class::         |
+|                        |                                    |    centered            |    centered            |    centered            |    centered            |    centered            |    centered            |
+|                        |                                    |                        |                        |                        |                        |                        |                        |
+|                        |                                    |    v1.0                |    v1.6.1              |    v2.0                |    v2.5                |    v2.6                |    v2.7                |
++========================+====================================+========================+========================+========================+========================+========================+========================+
+| Tiger Lake             | `NUC11TNHi5`_                      |                        |                        |                        | .. rst-class::         | .. rst-class::                                  |
+|                        |                                    |                        |                        |                        |    centered            |    centered                                     |
+|                        |                                    |                        |                        |                        |                        |                                                 |
+|                        |                                    |                        |                        |                        |    Release             |    Maintenance                                  |
++------------------------+------------------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+
+| Whiskey Lake           | `WHL-IPC-I5`_                      |                        |                        | .. rst-class::         | .. rst-class::                                  | .. rst-class::         |
+|                        |                                    |                        |                        |    centered            |    centered                                     |    centered            |
+|                        |                                    |                        |                        |                        |                                                 |                        |
+|                        |                                    |                        |                        |    Release             |    Maintenance                                  |    Community           |
++------------------------+------------------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+
+| Kaby Lake              | `NUC7i7DNHE`_                      |                        | .. rst-class::         | .. rst-class::                                  | .. rst-class::                                  |
+|                        |                                    |                        |    centered            |    centered                                     |    centered                                     |
+|                        |                                    |                        |                        |                                                 |                                                 |
+|                        |                                    |                        |    Release             |    Maintenance                                  |    Community                                    |
++------------------------+------------------------------------+------------------------+------------------------+-------------------------------------------------+-------------------------------------------------+
+| Apollo Lake            | | `NUC6CAYH`_,                     | .. rst-class::         | .. rst-class::         | .. rst-class::                                                                                    |
+|                        | | `UP2-N3350`_,                    |    centered            |    centered            |    centered                                                                                       |
+|                        | | `UP2-N4200`_,                    |                        |                        |                                                                                                   |
+|                        | | `UP2-x5-E3940`_                  |    Release             |    Maintenance         |    Community                                                                                      |
++------------------------+------------------------------------+------------------------+------------------------+---------------------------------------------------------------------------------------------------+
 
-For general instructions setting up ACRN on supported hardware platforms, visit the :ref:`gsg` page.
+* **Release**: New ACRN features are complete and tested for the listed product.
+  This product is recommended for this ACRN version. Support for older products
+  will transition to the maintenance category as development continues for newer
+  products.
 
-.. list-table:: Supported Target Platforms
-  :widths: 20 20 12 5 5
-  :header-rows: 1
+* **Maintenance**: For new ACRN versions with maintenance-level support, we
+  verify our :ref:`gsg` instructions to ensure the baseline development workflow
+  works and the hypervisor will boot on the listed products. While we don't
+  verify that all new features will work on this product, we will do best-effort
+  support on reported issues. Maintenance support for a hardware product
+  is typically done for two subsequent ACRN releases (about six months).
 
-  * - Intel x86 Platform Family
-    - Product / Kit Name
-    - Board configuration
-    - ACRN Release
-    - Graphics
-  * - **Tiger Lake**
-    - `NUC11TNHi5`_ |br| (Board: NUC11TNBi5)
-    - :acrn_file:`nuc11tnbi5.xml <misc/config_tools/data/nuc11tnbi5/nuc11tnbi5.xml>`
-    - v2.5
-    - GVT-d
-  * - **Whiskey Lake**
-    - `WHL-IPC-I7`_ |br| (Board: WHL-IPC-I7)
-    -
-    - v2.0
-    - GVT-g
-  * - **Kaby Lake** |br| (Dawson Canyon)
-    - `NUC7i7DNH`_ |br| (board: NUC7i7DNB)
-    -
-    - v1.6.1
-    - GVT-g
-  * - **Apollo Lake**
-    - `NUC6CAYH`_, |br| `UP2-N3350`_, `UP2-N4200`_, |br| `UP2-x5-E3940`_
-    - 
-    - v1.0
-    - GVT-g
+* **Community**: Community responds with best-effort support for that
+  ACRN version to reported bugs for the listed product.
 
-If an XML file is not provided by project ACRN for your board, we recommend you
-use the board inspector tool to generate an XML file specifically for your board.
-Refer to :ref:`board_inspector_tool` for more details on using the board inspector
-tool.
+Urgent bug and security fixes are targeted to the latest release only.
+Developers should either update to the most current release or back-port these
+fixes to their own production release. 
 
-
-Tested Hardware Specifications Detail
-*************************************
-
-+---------------------------+------------------------+------------------------+------------------------------------------------------------+
-|   Platform (Intel x86)    |   Product/Kit Name     |   Hardware Class       |   Description                                              |
-+===========================+========================+========================+============================================================+
-| | **Tiger Lake**          | | NUC11TNHi5           | Processor              | -  Intel |copy| Core |trade| i5-113G7 CPU (8M Cache,       |
-| |                         | | (Board: NUC11TNBi5)  |                        |    up to 4.2 GHz)                                          |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Graphics               | -  Dual HDMI 2.0b w/HDMI CEC, Dual DP 1.4a via Type C      |
-|                           |                        |                        | -  Supports 4 displays                                     |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 64 GB, 3200 MHz), 1.2V  |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Storage capabilities   | -  One M.2 connector for storage                           |
-|                           |                        |                        |    22x80 NVMe (M), 22x42 SATA (B)                          |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Serial Port            | -  Yes                                                     |
-+---------------------------+------------------------+------------------------+------------------------------------------------------------+
-| | **Whiskey Lake**        | | WHL-IPC-I7           | Processor              | -  Intel |copy| Core |trade| i7-8565U CPU @ 1.80GHz (4C8T) |
-| |                         | | (Board: WHL-IPC-I7)  |                        |                                                            |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Graphics               | -  HD Graphics 610/620                                     |
-|                           |                        |                        | -  ONE HDMI\* 1.4a ports supporting 4K at 60 Hz            |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 32 GB, 2400 MHz), 1.2V  |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Storage capabilities   | -  One M.2 connector for Wi-Fi                             |
-|                           |                        |                        | -  One M.2 connector for 3G/4G module, supporting          |
-|                           |                        |                        |    LTE Category 6 and above                                |
-|                           |                        |                        | -  One M.2 connector for 2242 SSD                          |
-|                           |                        |                        | -  TWO SATA3 port (only one if Celeron onboard)            |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Serial Port            | -  Yes                                                     |
-+---------------------------+------------------------+------------------------+------------------------------------------------------------+
-| | **Kaby Lake**           | | NUC7i7DNH            | Processor              | -  Intel |copy| Core |trade| i7-8650U Processor            |
-| | (Dawson Canyon)         | | (Board: NUC7i7DNB)   |                        |    (8M Cache, up to 4.2 GHz)                               |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Graphics               | -  Dual HDMI 2.0a, 4-lane eDP 1.4                          |
-|                           |                        |                        | -  Supports 2 displays                                     |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 32 GB, 2400 MHz), 1.2V  |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Storage capabilities   | -  One M.2 connector supporting 22x80 M.2 SSD              |
-|                           |                        |                        | -  One M.2 connector supporting 22x30 M.2 card             |
-|                           |                        |                        | -  One SATA3 port for connection to 2.5" HDD or SSD        |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Serial Port            | -  Yes                                                     |
-+---------------------------+------------------------+------------------------+------------------------------------------------------------+
-| | **Apollo Lake**         | | NUC6CAYH             | Processor              | -  Intel |copy| Celeron |trade| CPU J3455 @ 1.50GHz (4C4T) |
-| | (Arches Canyon)         | | (Board: NUC6CAYB)    |                        |                                                            |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Graphics               | -  Intel |copy| HD Graphics 500                            |
-|                           |                        |                        | -  VGA (HDB15); HDMI 2.0                                   |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | System memory          | -  Two DDR3L SO-DIMM sockets                               |
-|                           |                        |                        |    (up to 8 GB, 1866 MHz), 1.35V                           |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Storage capabilities   | -  SDXC slot with UHS-I support on the side                |
-|                           |                        |                        | -  One SATA3 port for connection to 2.5" HDD or SSD        |
-|                           |                        |                        |    (up to 9.5 mm thickness)                                |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Serial Port            | -  No                                                      |
-+---------------------------+------------------------+------------------------+------------------------------------------------------------+
-| | **Apollo Lake**         | | UP2 - N3350          | Processor              | -  Intel |copy| Celeron |trade| N3350 (2C2T, up to 2.4 GHz)|
-|                           | | UP2 - N4200          |                        | -  Intel |copy| Pentium |trade| N4200 (4C4T, up to 2.5 GHz)|
-|                           | | UP2 - x5-E3940       |                        | -  Intel |copy| Atom |trade| x5-E3940 (4C4T)               |
-|                           |                        |                        |    (up to 1.8GHz)/x7-E3950 (4C4T, up to 2.0GHz)            |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Graphics               | -  2GB (single channel) LPDDR4                             |
-|                           |                        |                        | -  4GB/8GB (dual channel) LPDDR4                           |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | System memory          | -  Intel |copy| Gen 9 HD, supporting 4K Codec              |
-|                           |                        |                        |    Decode and Encode for HEVC4, H.264, VP8                 |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Storage capabilities   | -  32 GB / 64 GB / 128 GB eMMC                             |
-|                           |                        +------------------------+------------------------------------------------------------+
-|                           |                        | Serial Port            | -  Yes                                                     |
-+---------------------------+------------------------+------------------------+------------------------------------------------------------+
-
+When you start to explore ACRN, we recommend you select
+the latest product from the table above. You can also choose
+other products and give them a try. In either case, use the
+:ref:`board_inspector_tool` to generate a board configuration file
+you will use to configure the ACRN hypervisor, as described in the
+:ref:`gsg`. We encourage your feedback on the
+acrn-user@lists.projectacrn.org mailing list on your findings about
+unlisted products.
 
 .. # vim: tw=200

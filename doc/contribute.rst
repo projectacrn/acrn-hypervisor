@@ -25,8 +25,6 @@ also find details about specific architecture topics.
    developer-guides/sw_design_guidelines
    developer-guides/trusty
    developer-guides/l1tf
-   developer-guides/VBSK-analysis
-
 
 Contribute Guides
 *****************
