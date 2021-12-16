@@ -186,9 +186,73 @@ Fixed Issues Details
 .. comment example item
    - :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
 
-- :acrn-issue:`6610` - [ConfigTool]Remove the restriction that SERIAL_CONSOLE needs to be ttys0, ttys1, ttys2 or ttys3
-- :acrn-issue:`6620` - [ConfigTool]pci devices' io-ports passthrough
+- :acrn-issue:`5112` - ACRN debug shell help output behavior, line length, and misspellings
+- :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
+- :acrn-issue:`5692` - Update config option documentation in schema definition files
+- :acrn-issue:`6012` - [Mainline][PTCM] [ConfigTool]Obsolete terms cleanup for SSRAM
+- :acrn-issue:`6024` - [TGL][Master][IVSHMEM] Only one share memory device in SOS while enabled two from the scenario xml
+- :acrn-issue:`6270` - [ADL-S][Industry][Yocto] WaaG boot up but no UI display with more than 1G memory
+- :acrn-issue:`6284` - [v2.6] vulnerable coding style in hypervisor and DM
+- :acrn-issue:`6340` - [EF]Invalid LPC entry prevents GOP driver from working properly in WaaG for DP3
+- :acrn-issue:`6360` - ACRN Makefile missing dependencies
+- :acrn-issue:`6366` - TPM pass-thru shall be able to support start method 6, not only support Start Method of 7
+- :acrn-issue:`6387` - enable GVT-d for pre-launched linux guest
+- :acrn-issue:`6405` - [ADL-S][Industry][Yocto] WaaG BSOD in startup when run reboot or create/destory stability test.
+- :acrn-issue:`6417` - ACRN ConfigTool improvement from DX view
+- :acrn-issue:`6428` - [acrn-configuration-tool] Fail to generate launch script when disable CPU sharing
+- :acrn-issue:`6431` - virtio_console use-after-free
+- :acrn-issue:`6434` - HV panic when SOS VM boot 5.4 kernel
+- :acrn-issue:`6442` - [EF]Post-launched VMs do not boot with "EFI Network" enabled
+- :acrn-issue:`6461` - [config_tools] kernel load addr/entry addr should not be configurable for kernel type KERNEL_ELF
+- :acrn-issue:`6473` - [HV]HV can't be used after dumpreg rtvm vcpu
+- :acrn-issue:`6476` - [hypercube][TGL][ADL]pci_xhci_insert_event SEGV on read from NULL
+- :acrn-issue:`6481` - ACRN on QEMU can't boot up with v2.6 branch
+- :acrn-issue:`6482` - [ADL-S][RTVM]rtvm poweroff causes sos to crash
+- :acrn-issue:`6494` - acrn_trace build failure with latest e2fsprogs v1.46.2 version
+- :acrn-issue:`6502` - [ADL][HV][UC lock] SoS kernel panic when #GP for UC lock enabled
+- :acrn-issue:`6508` - [HV]Refine pass-thru device PIO BAR handling
+- :acrn-issue:`6518` - [hypercube][ADL]acrn-dm program crash during hypercube testing
+- :acrn-issue:`6528` - [TGL][HV][hybrid_rt] dmidecode Fail on pre-launched RTVM
+- :acrn-issue:`6530` - [ADL-S][EHL][Hybrid]Path of sos rootfs in hybrid.xml is wrong
+- :acrn-issue:`6533` - [hypercube][tgl][ADL] mem leak while poweroff in guest
+- :acrn-issue:`6542` - [hypercube][tgl][ADL] mem leak while poweroff in guest
+- :acrn-issue:`6562` - [ADL-S][Config tool] fail to tpm_getcap -l
+- :acrn-issue:`6565` - [acrn-configuration-tool] "modprobe pci_stub" should be executed before unbinding passthru devices
+- :acrn-issue:`6572` - [ADL-S][Acrntrace]failed to run acrntrace test
+- :acrn-issue:`6584` - HV:check vmx capability
+- :acrn-issue:`6592` - [doc] failed to make hvdiffconfig
+- :acrn-issue:`6610` - [config tool vUART] IRQ of vUART of pnp 8250 is not generated correctly
+- :acrn-issue:`6620` - acrn-config: pass-thru device PIO BAR identical mapping
+- :acrn-issue:`6663` - Current HV_RAM_SIZE calculation algrithom sometimes cause build failure
+- :acrn-issue:`6674` - [TGL][HV][hybrid] (v2.7 only) during boot zephyr64.elf find HV error: "Unable to copy HPA 0x100000 to GPA 0x7fe00000 in VM0"
+- :acrn-issue:`6677` - Service VM shall not have capability to access IOMMU
+- :acrn-issue:`6704` - [ADL-S][Partitioned]Kernel panic when boot Pre-launched RTVM with 8 pci devices passthru
+- :acrn-issue:`6709` - Issues for platform ICX-D HCC enabling
+- :acrn-issue:`6719` - Board Inspector tool crashes if cpuid is not installed
+- :acrn-issue:`6724` - (v2.7 only) Remove the GET_PLATFORM_INFO support in ACRN
+- :acrn-issue:`6736` - Improved readibility desirable for the Board Inspector tool
+- :acrn-issue:`6743` - acrn-crashlog/acrnprobe compilation failure with OpenSSL 3.0
+- :acrn-issue:`6752` - ACRN HV shows multiple PCIe devices with "out of mmio window" warnings - false alert
+- :acrn-issue:`6755` - [icx-d lcc]CAT_capability enable RDT fail
+- :acrn-issue:`6767` - [acrn-configuration-tool] Getting duplicate PT_SLOT value If generate launch script continuously through the UI
+- :acrn-issue:`6769` - [v2.7] vulnerable coding style in hypervisor and DM
+- :acrn-issue:`6778` - [ADL][SSRAM][Master]Error messages output during RTCM unit test
+- :acrn-issue:`6780` - [ADL][SSRAM][Master]ACRN boot crash with SSRAM enabled
+- :acrn-issue:`6799` - [REG][ADL-S][VxWorks] SOS force reboot while launching vxworks
+- :acrn-issue:`6834` - [Acrn-hypervisor][Debug release]Failed to build hypervisor with hv_debug_release enable
+- :acrn-issue:`6848` - [ADL][RTVM]ACPI error while launching rtvm
+- :acrn-issue:`6851` - [DM] segfault on virtio_console_control_tx()
+- :acrn-issue:`6877` - [DM][ASAN] UAF in mevent_handle()
+- :acrn-issue:`6885` - adl-s-shared sos can't get in
+- :acrn-issue:`6888` - [ADL-S]Yaag reboots too slowly
+- :acrn-issue:`6899` - [ADL-S][shared] Core type error when launch RTVM use atom core.
+- :acrn-issue:`6907` - [ADL-S][ICX-D][shared][Regression]Multi RT launch failed with V2.7_RC3 build.
+- :acrn-issue:`6908` - [ADL-S][Multi_RT]Shutdown one RT and others will hang when launch multi RT.
+- :acrn-issue:`6919` - [hypercube][ADL] mem leak while power off in guest (phase-II)
+- :acrn-issue:`6931` - [ADL][CPUID] RTVM CPUID 0x2 EBX value is not equal to HV cpuid 0x2 EBX
 
 Known Issues
 ************
 
+- :acrn-issue:`6631` - [KATA][5.10 Kernel]failed to start docker with Service VM 5.10 kernel
+- :acrn-issue:`6978` - [TGL] openstack failed with ACRN v2.7
