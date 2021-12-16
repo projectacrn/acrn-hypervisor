@@ -163,10 +163,10 @@ To set up the ACRN build environment on the development computer:
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout v2.6
+      git checkout v2.7
 
       cd ..
-      git clone --depth 1 --branch release_2.6 https://github.com/projectacrn/acrn-kernel.git
+      git clone --depth 1 --branch release_2.7 https://github.com/projectacrn/acrn-kernel.git
 
 .. _gsg-board-setup:
 
@@ -180,7 +180,7 @@ information extracted from the target system. The file is used to configure the
 ACRN hypervisor, because each hypervisor instance is specific to your target
 hardware.
 
-You use the **board inspector tool** to generate the board
+You use the **Board Inspector tool** to generate the board
 configuration file.
 
 .. important::
@@ -192,7 +192,7 @@ configuration file.
 Install OS on the Target
 ============================
 
-The target system needs Ubuntu 18.04 to run the board inspector tool.
+The target system needs Ubuntu 18.04 to run the Board Inspector tool.
 
 To install Ubuntu 18.04:
 
@@ -248,7 +248,7 @@ Configure Target BIOS Settings
 Generate a Board Configuration File
 =========================================
 
-#. On the target system, install the board inspector dependencies:
+#. On the target system, install the Board Inspector dependencies:
 
    .. code-block:: bash
 
@@ -281,7 +281,7 @@ Generate a Board Configuration File
 
          GRUB_CMDLINE_LINUX_DEFAULT="quiet splash idle=nomwait iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable"
 
-      These settings allow the board inspector tool to
+      These settings allow the Board Inspector tool to
       gather important information about the board.
 
    #. Save and close the file.
@@ -293,7 +293,7 @@ Generate a Board Configuration File
          sudo update-grub
          reboot
 
-#. Copy the board inspector tool folder from the development computer to the
+#. Copy the Board Inspector tool folder from the development computer to the
    target via USB disk as follows:
 
    a. Move to the development computer.
@@ -311,32 +311,32 @@ Generate a Board Configuration File
       Confirm that only one disk name appears. You'll use that disk name in
       the following steps.
 
-   #. Copy the board inspector tool folder from the acrn-hypervisor source code to the USB disk:
+   #. Copy the Board Inspector tool folder from the acrn-hypervisor source code to the USB disk:
 
       .. code-block:: bash
 
          cd ~/acrn-work/
          disk="/media/$USER/"$(ls /media/$USER)
-         cp -r acrn-hypervisor/misc/config_tools/board_inspector/ $disk/
-         sync && sudo umount $disk
+         cp -r acrn-hypervisor/misc/config_tools/board_inspector/ "$disk"/
+         sync && sudo umount "$disk"
 
    #. Insert the USB disk into the target system.
 
-   #. Copy the board inspector tool from the USB disk to the target:
+   #. Copy the Board Inspector tool from the USB disk to the target:
 
       .. code-block:: bash
 
          mkdir -p ~/acrn-work
          disk="/media/$USER/"$(ls /media/$USER)
-         cp -r $disk/board_inspector ~/acrn-work
+         cp -r "$disk"/board_inspector ~/acrn-work
 
-#. On the target, load the ``msr`` driver, used by the board inspector:
+#. On the target, load the ``msr`` driver, used by the Board Inspector:
 
    .. code-block:: bash
 
       sudo modprobe msr
 
-#. Run the board inspector tool ( ``board_inspector.py``)
+#. Run the Board Inspector tool ( ``board_inspector.py``)
    to generate the board configuration file. This
    example uses the parameter ``my_board`` as the file name.
 
@@ -360,8 +360,8 @@ Generate a Board Configuration File
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp ~/acrn-work/board_inspector/my_board.xml $disk/
-         sync && sudo umount $disk
+         cp ~/acrn-work/board_inspector/my_board.xml "$disk"/
+         sync && sudo umount "$disk"
 
    #. Insert the USB disk into the development computer.
 
@@ -370,8 +370,8 @@ Generate a Board Configuration File
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp $disk/my_board.xml ~/acrn-work
-         sudo umount $disk
+         cp "$disk"/my_board.xml ~/acrn-work
+         sudo umount "$disk"
 
 .. _gsg-dev-setup:
 
@@ -380,7 +380,7 @@ Generate a Board Configuration File
 Generate a Scenario Configuration File and Launch Scripts
 *********************************************************
 
-You use the **ACRN configurator** to generate scenario configuration files and
+You use the **ACRN Configurator** to generate scenario configuration files and
 launch scripts.
 
 A **scenario configuration file** is an XML file that holds the parameters of
@@ -388,18 +388,18 @@ a specific ACRN configuration, such as the number of VMs that can be run,
 their attributes, and the resources they have access to.
 
 A **launch script** is a shell script that is used to configure and create a
-User VM. Each User VM has its own launch script.
+post-launched User VM. Each User VM has its own launch script.
 
 To generate a scenario configuration file and launch scripts:
 
-#. On the development computer, install ACRN configurator dependencies:
+#. On the development computer, install ACRN Configurator dependencies:
 
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-hypervisor/misc/config_tools/config_app
       sudo pip3 install -r requirements
 
-#. Launch the ACRN configurator:
+#. Launch the ACRN Configurator:
 
    .. code-block:: bash
 
@@ -407,7 +407,7 @@ To generate a scenario configuration file and launch scripts:
 
 #. Your web browser should open the website `<http://127.0.0.1:5001/>`__
    automatically, or you may need to visit this website manually.
-   The ACRN configurator is supported on Chrome and Firefox.
+   The ACRN Configurator is supported on Chrome and Firefox.
 
 #. Click the **Import Board XML** button and browse to the board configuration
    file ``my_board.xml`` previously generated. When it is successfully
@@ -461,9 +461,10 @@ To generate a scenario configuration file and launch scripts:
       .. image:: ./images/gsg_config_launch_default.png
          :class: drop-shadow
 
-   #. In the dialog box, select **shared_launch_6uos** as the default launch
-      setting and click **OK**. Because our sample ``shared`` scenario defines six
-      User VMs, we're using this ``shared_launch_6uos`` launch XML configuration.
+   #. In the dialog box, select **shared_launch_6user_vm** as the default launch
+      setting and click **OK**. Because our sample ``shared`` scenario defines
+      six User VMs, we're using this ``shared_launch_6user_vm`` launch XML
+      configuration.
 
       .. image:: ./images/gsg_config_launch_load.png
          :class: drop-shadow
@@ -480,10 +481,10 @@ To generate a scenario configuration file and launch scripts:
       .. image:: ./images/gsg_config_launch_save.png
          :class: drop-shadow
 
-   #. Confirm that ``launch_uos_id3.sh`` appears in the expected output
+   #. Confirm that ``launch_user_vm_id3.sh`` appears in the expected output
       directory::
 
-         ls ~/acrn-work/my_board/output/launch_uos_id3.sh
+         ls ~/acrn-work/my_board/output/launch_user_vm_id3.sh
 
 #. Close the browser and press :kbd:`CTRL` + :kbd:`C` to terminate the
    ``acrn_configurator.py`` program running in the terminal window.
@@ -510,7 +511,7 @@ Build ACRN
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-kernel
-      cp kernel_config_uefi_sos .config
+      cp kernel_config_service_vm .config
       make olddefconfig
       make -j $(nproc) targz-pkg
 
@@ -525,15 +526,22 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp linux-5.10.52-acrn-sos-x86.tar.gz $disk/
-         cp ~/acrn-work/acrn-hypervisor/build/hypervisor/acrn.bin $disk/
-         cp ~/acrn-work/my_board/output/launch_uos_id3.sh $disk/
-         cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl $disk/
-         cp ~/acrn-work/acrn-hypervisor/build/acrn-2.6-unstable.tar.gz $disk/
-         sync && sudo umount $disk/
+         cp linux-5.10.65-acrn-service-vm-x86.tar.gz "$disk"/
+         cp ~/acrn-work/acrn-hypervisor/build/hypervisor/acrn.bin "$disk"/
+         cp ~/acrn-work/my_board/output/launch_user_vm_id3.sh "$disk"/
+         cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
+         cp ~/acrn-work/acrn-hypervisor/build/acrn-2.7-unstable.tar.gz "$disk"/
+         sync && sudo umount "$disk"/
 
       Even though our sample default scenario defines six User VMs, we're only
       going to launch one of them, so we'll only need the one launch script.
+
+      .. note:: The :file:`serial.conf` is only generated if non-standard
+         vUARTs (not COM1-COM4)
+         are configured for the Service VM in the scenario XML file.
+         Please copy the ``serial.conf`` file using::
+            
+            cp ~/acrn-work/acrn-hypervisor/build/hypervisor/serial.conf "$disk"/
 
    #. Insert the USB disk you just used into the target system and run these
       commands to copy the tar files locally:
@@ -541,42 +549,50 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp $disk/linux-5.10.52-acrn-sos-x86.tar.gz ~/acrn-work
-         cp $disk/acrn-2.6-unstable.tar.gz ~/acrn-work
+         cp "$disk"/linux-5.10.65-acrn-service-vm-x86.tar.gz ~/acrn-work
+         cp "$disk"/acrn-2.7-unstable.tar.gz ~/acrn-work
 
    #. Extract the Service VM files onto the target system:
 
       .. code-block:: bash
 
          cd ~/acrn-work
-         sudo tar -zxvf linux-5.10.52-acrn-sos-x86.tar.gz -C / --keep-directory-symlink
+         sudo tar -zxvf linux-5.10.65-acrn-service-vm-x86.tar.gz -C / --keep-directory-symlink
 
       This tar extraction replaces parts of the Ubuntu installation we installed
-      and used for running the board inspector, with the Linux kernel we built
+      and used for running the Board Inspector, with the Linux kernel we built
       based on the board and scenario configuration.
 
    #. Extract the ACRN tools and images:
 
       .. code-block:: bash
 
-         sudo tar -zxvf acrn-2.6-unstable.tar.gz -C / --keep-directory-symlink
+         sudo tar -zxvf acrn-2.7-unstable.tar.gz -C / --keep-directory-symlink
 
    #. Copy a few additional ACRN files to the expected locations:
 
       .. code-block:: bash
 
          sudo mkdir -p /boot/acrn/
-         sudo cp $disk/acrn.bin /boot/acrn
-         sudo cp $disk/iasl /usr/sbin/
-         cp $disk/launch_uos_id3.sh ~/acrn-work
-         sudo umount $disk/
+         sudo cp "$disk"/acrn.bin /boot/acrn
+         sudo cp "$disk"/serial.conf /etc
+         sudo cp "$disk"/iasl /usr/sbin/
+         cp "$disk"/launch_user_vm_id3.sh ~/acrn-work
+         sudo umount "$disk"/
 
 .. rst-class:: numbered-step
 
 Install ACRN
 ************
 
-In the following steps, you will configure GRUB on the target system.
+In the following steps, you will install the serial configuration tool and
+configure GRUB on the target system.
+
+#. Install the serial configuration tool in the target system as follows:
+
+   .. code-block:: bash
+
+      sudo apt install setserial
 
 #. On the target, find the root filesystem (rootfs) device name by using the
    ``lsblk`` command:
@@ -629,15 +645,15 @@ In the following steps, you will configure GRUB on the target system.
 
 #. Add the ACRN Service VM to the GRUB boot menu:
 
-   a. Edit the GRUB 40_custom file. The following command uses ``vi``, but
+   a. Edit the GRUB ``40_custom`` file. The following command uses ``vi``, but
       you can use any text editor.
 
       .. code-block:: bash
 
          sudo vi /etc/grub.d/40_custom
 
-   #. Add the following text at the end of the file. Replace ``<UUID>`` and
-      ``<PARTUUID>`` with the output from the previous step.
+   #. Add the following text at the end of the file. Replace ``UUID`` and
+      ``PARTUUID`` with the output from the previous step.
 
       .. code-block:: bash
          :emphasize-lines: 6,8
@@ -650,12 +666,10 @@ In the following steps, you will configure GRUB on the target system.
            search --no-floppy --fs-uuid --set "UUID"
            echo 'loading ACRN...'
            multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="PARTUUID"
-           module2 /boot/vmlinuz-5.10.52-acrn-sos Linux_bzImage
+           module2 /boot/vmlinuz-5.10.65-acrn-service-vm Linux_bzImage
          }
 
-   #. Save and close the file.
-
-   #. Correct example image
+      Example:
 
       .. code-block:: console
 
@@ -667,8 +681,10 @@ In the following steps, you will configure GRUB on the target system.
            search --no-floppy --fs-uuid --set "3cac5675-e329-4cal-b346-0a3e65f99016"
            echo 'loading ACRN...'
            multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="03db7f45-8a6c-454b-adf7-30343d82c4f4"
-           module2 /boot/vmlinuz-5.10.52-acrn-sos Linux_bzImage
+           module2 /boot/vmlinuz-5.10.65-acrn-service-vm Linux_bzImage
          }
+
+   #. Save and close the file.
 
 #. Make the GRUB menu visible when
    booting and make it load the Service VM kernel by default:
@@ -759,23 +775,41 @@ Launch the User VM
 
    .. code-block:: bash
 
-      vi ~/acrn-work/launch_uos_id3.sh
+      vi ~/acrn-work/launch_user_vm_id3.sh
 
 #. Look for the line that contains the term ``virtio-blk`` and replace the
    existing image file path with your ISO image file path.  In the following
    example, the ISO image file path is
-   ``/home/acrn/acrn-work/ubuntu-18.04.5-desktop-amd64.iso``.
+   ``/home/acrn/acrn-work/ubuntu-18.04.6-desktop-amd64.iso``.  Here is the
+   ``launch_user_vm_id3.sh`` before editing:
 
    .. code-block:: bash
       :emphasize-lines: 4
 
-      acrn-dm -A -m $mem_size -s 0:0,hostbridge -U 615db82a-e189-4b4f-8dbb-d321343e4ab3 \
+      acrn-dm -A -m $mem_size -s 0:0,hostbridge \
          --mac_seed $mac_seed \
          $logger_setting \
-         -s 7,virtio-blk,/home/acrn/acrn-work/ubuntu-18.04.5-desktop-amd64.iso \
-         -s 8,virtio-net,tap_YaaG3 \
-         -s 6,virtio-console,@stdio:stdio_port \
+         -s 9,virtio-blk,./YaaG.img \
+         -s 10,virtio-net,tap_YaaG3 \
+         -s 8,virtio-console,@stdio:stdio_port \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
+         --cpu_affinity 0,1 \
+         -s 1:0,lpc \
+         $vm_name
+
+   And here is the example ``launch_user_vm_id3.sh`` after editing:
+
+   .. code-block:: bash
+      :emphasize-lines: 4
+
+      acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+         --mac_seed $mac_seed \
+         $logger_setting \
+         -s 9,virtio-blk,/home/acrn/acrn-work/ubuntu-18.04.6-desktop-amd64.iso \
+         -s 10,virtio-net,tap_YaaG3 \
+         -s 8,virtio-console,@stdio:stdio_port \
+         --ovmf /usr/share/acrn/bios/OVMF.fd \
+         --cpu_affinity 0,1 \
          -s 1:0,lpc \
          $vm_name
 
@@ -785,10 +819,10 @@ Launch the User VM
 
    .. code-block:: bash
 
-      sudo chmod +x ~/acrn-work/launch_uos_id3.sh
+      sudo chmod +x ~/acrn-work/launch_user_vm_id3.sh
       sudo chmod +x /usr/bin/acrn-dm
       sudo chmod +x /usr/sbin/iasl
-      sudo ~/acrn-work/launch_uos_id3.sh
+      sudo ~/acrn-work/launch_user_vm_id3.sh
 
 #. It will take a few seconds for the User VM to boot and start running the
    Ubuntu image.  Confirm that you see the console of the User VM on the Service
@@ -837,3 +871,4 @@ Next Steps
 
 :ref:`overview_dev` describes the ACRN configuration process, with links to
 additional details.
+

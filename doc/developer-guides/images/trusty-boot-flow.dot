@@ -2,9 +2,10 @@ digraph G {
    rankdir=LR;
    rank=same;
    bgcolor="transparent";
-   uosl1 [label="UOS_Loader"]
+   uservml1 [label="User VM OS\nBootloader"]
    acrn_init [shape=box style="rounded,filled" label="ACRN"]
    acrn_switch [shape=box style="rounded,filled" label="ACRN"]
-   uosl2 [label="UOS_Loader"]
-   uosl1 -> acrn_init -> "Trusty" -> acrn_switch -> uosl2;
+   uservml2 [label="User VM OS\nBootloader"]
+   uservml1 -> acrn_init -> "Trusty" -> acrn_switch -> uservml2;
 }
+

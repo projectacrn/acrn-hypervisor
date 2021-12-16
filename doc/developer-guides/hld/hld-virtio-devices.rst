@@ -214,26 +214,6 @@ virtqueues, feature mechanisms, configuration space, and buses.
 
    Virtio Frontend/Backend Layered Architecture
 
-Virtio Framework Considerations
-===============================
-
-How to implement the virtio framework is specific to a
-hypervisor implementation. In ACRN, the virtio framework implementations
-can be classified into two types, virtio backend service in userland
-(VBS-U) and virtio backend service in kernel-land (VBS-K), according to
-where the virtio backend service (VBS) is located. Although different in BE
-drivers, both VBS-U and VBS-K share the same FE drivers. The reason
-behind the two virtio implementations is to meet the requirement of
-supporting a large number of diverse I/O devices in ACRN project.
-
-When developing a virtio BE device driver, the device owner should choose
-carefully between the VBS-U and VBS-K. Generally VBS-U targets
-non-performance-critical devices, but enables easy development and
-debugging. VBS-K targets performance critical devices.
-
-The next two sections introduce ACRN's two implementations of the virtio
-framework.
-
 Userland Virtio Framework
 ==========================
 
@@ -266,49 +246,15 @@ virtqueue through the user-level vring service API helpers.
 Kernel-Land Virtio Framework
 ============================
 
-ACRN supports two kernel-land virtio frameworks:
+ACRN supports one kernel-land virtio frameworks:
 
-* VBS-K, designed from scratch for ACRN
 * Vhost, compatible with Linux Vhost
-
-VBS-K Framework
----------------
-
-The architecture of ACRN VBS-K is shown in
-:numref:`kernel-virtio-framework` below.
-
-Generally VBS-K provides acceleration towards performance critical
-devices emulated by VBS-U modules by handling the "data plane" of the
-devices directly in the kernel. When VBS-K is enabled for certain
-devices, the kernel-land vring service API helpers, instead of the
-userland helpers, are used to access the virtqueues shared by the FE
-driver.  Compared to VBS-U, this eliminates the overhead of copying data
-back-and-forth between userland and kernel-land within the Service VM, but
-requires the extra implementation complexity of the BE drivers.
-
-Except for the differences mentioned above, VBS-K still relies on VBS-U
-for feature negotiations between FE and BE drivers. This means the
-"control plane" of the virtio device still remains in VBS-U. When
-feature negotiation is done, which is determined by the FE driver setting up
-an indicative flag, the VBS-K module will be initialized by VBS-U.
-Afterward, all request handling will be offloaded to the VBS-K in the
-kernel.
-
-Finally the FE driver is not aware of how the BE driver is implemented,
-either in VBS-U or VBS-K. This saves engineering effort regarding FE
-driver development.
-
-.. figure:: images/virtio-hld-image54.png
-   :align: center
-   :name: kernel-virtio-framework
-
-   ACRN Kernel-Land Virtio Framework
 
 Vhost Framework
 ---------------
 
-Vhost is similar to VBS-K. Vhost is a common solution upstreamed in the
-Linux kernel, with several kernel mediators based on it.
+Vhost is a common solution upstreamed in the Linux kernel,
+with several kernel mediators based on it.
 
 Architecture
 ~~~~~~~~~~~~
@@ -448,51 +394,6 @@ DM, and DM finds other key data structures through it. The ``struct
 virtio_ops`` abstracts a series of virtio callbacks to be provided by the
 device owner.
 
-VBS-K Key Data Structures
-=========================
-
-The key data structures for VBS-K are listed as follows, and their
-relationships are shown in :numref:`VBS-K-data`.
-
-``struct vbs_k_rng``
-  In-kernel VBS-K component handling data plane of a
-  VBS-U virtio device, for example, virtio random_num_generator.
-``struct vbs_k_dev``
-  In-kernel VBS-K component common to all VBS-K.
-``struct vbs_k_vq``
-  In-kernel VBS-K component for working with kernel
-  vring service API helpers.
-``struct vbs_k_dev_inf``
-  Virtio device information to be synchronized
-  from VBS-U to VBS-K kernel module.
-``struct vbs_k_vq_info``
-  A single virtqueue information to be
-  synchronized from VBS-U to VBS-K kernel module.
-``struct vbs_k_vqs_info``
-  Virtqueue information, of a virtio device,
-  to be synchronized from VBS-U to VBS-K kernel module.
-
-.. figure:: images/virtio-hld-image8.png
-   :width: 900px
-   :align: center
-   :name: VBS-K-data
-
-   VBS-K Key Data Structures
-
-In VBS-K, the struct vbs_k_xxx represents the in-kernel component
-handling a virtio device's data plane. It presents a char device for VBS-U
-to open and register device status after feature negotiation with the FE
-driver.
-
-The device status includes negotiated features, number of virtqueues,
-interrupt information, and more. All these statuses will be synchronized
-from VBS-U to VBS-K. In VBS-U, the ``struct vbs_k_dev_info`` and ``struct
-vbs_k_vqs_info`` will collect all the information and notify VBS-K through
-ioctls. In VBS-K, the ``struct vbs_k_dev`` and ``struct vbs_k_vq``, which are
-common to all VBS-K modules, are the counterparts to preserve the
-related information. The related information is necessary to kernel-land
-vring service API helpers.
-
 VHOST Key Data Structures
 =========================
 
@@ -547,8 +448,7 @@ VBS APIs
 ========
 
 The VBS APIs are exported by VBS related modules, including VBS, DM, and
-Service VM kernel modules. They can be classified into VBS-U and VBS-K APIs
-listed as follows.
+Service VM kernel modules.
 
 VBS-U APIs
 ----------
@@ -582,12 +482,6 @@ the virtio framework within DM will invoke them appropriately.
 
 .. doxygenfunction:: virtio_config_changed
    :project: Project ACRN
-
-VBS-K APIs
-----------
-
-The VBS-K APIs are exported by VBS-K related modules. Users can use
-the following APIs to implement their VBS-K modules.
 
 APIs Provided by DM
 ~~~~~~~~~~~~~~~~~~~
@@ -674,10 +568,7 @@ VQ APIs
 The virtqueue APIs, or VQ APIs, are used by a BE device driver to
 access the virtqueues shared by the FE driver. The VQ APIs abstract the
 details of virtqueues so that users don't need to worry about the data
-structures within the virtqueues. In addition, the VQ APIs are designed
-to be identical between VBS-U and VBS-K, so that users don't need to
-learn different APIs when implementing BE drivers based on VBS-U and
-VBS-K.
+structures within the virtqueues.
 
 .. doxygenfunction:: vq_interrupt
    :project: Project ACRN

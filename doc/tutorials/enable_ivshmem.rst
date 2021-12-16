@@ -13,10 +13,10 @@ Enable Ivshmem Support
 **********************
 
 The ``ivshmem`` solution is disabled by default in ACRN. You can enable
-it using the :ref:`ACRN configurator tool <acrn_configurator_tool>` with these
+it using the :ref:`ACRN Configurator <acrn_configurator_tool>` with these
 steps:
 
-- Enable ``ivshmem`` via ACRN configurator tool GUI.
+- Enable ``ivshmem`` via ACRN Configurator GUI.
 
    - Set :option:`hv.FEATURES.IVSHMEM.IVSHMEM_ENABLED` to ``y``
 
@@ -63,21 +63,21 @@ where
 There are two ways to insert the above boot parameter for ``acrn-dm``:
 
 -  Manually edit the launch script file. In this case, ensure that both
-   ``shm_name`` and ``shm_size`` match those defined via the ACRN configurator
+   ``shm_name`` and ``shm_size`` match those defined via the ACRN Configurator
    tool.
 
 -  Use the following command to create a launch script, when IVSHMEM is enabled
    and :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` is properly configured via
-   the ACRN configurator tool.
+   the ACRN Configurator.
 
      .. code-block:: none
         :emphasize-lines: 5
 
         python3 misc/config_tools/launch_config/launch_cfg_gen.py \
-        --board <path_to_your_boardxml> \
-        --scenario <path_to_your_scenarioxml> \
+        --board <path_to_your_board_xml> \
+        --scenario <path_to_your_scenario_xml> \
         --launch <path_to_your_launch_script_xml>  \
-        --uosid <desired_single_vmid_or_0_for_all_vmids>
+        --user_vmid <desired_single_vmid_or_0_for_all_vmids>
 
 .. note:: This device can be used with real-time VM (RTVM) as well.
 
@@ -105,7 +105,7 @@ Hypervisor:
    target VM by target Peer ID and inject MSI interrupt to the target VM.
 
 Notification Receiver (VM):
-   VM receives MSI interrupt and forward it to related application.
+   VM receives MSI interrupt and forwards it to related application.
 
 ACRN supports up to 8 (MSI-X) interrupt vectors for ivshmem device.
 Guest VMs shall implement their own mechanism to forward MSI interrupts
@@ -139,7 +139,7 @@ Linux-based post-launched VMs (VM1 and VM2).
          -s 2,pci-gvt -G "$2" \
          -s 5,virtio-console,@stdio:stdio_port \
          -s 6,virtio-hyper_dmabuf \
-         -s 3,virtio-blk,/home/acrn/uos1.img \
+         -s 3,virtio-blk,/home/acrn/UserVM1.img \
          -s 4,virtio-net,tap0 \
          -s 6,ivshmem,dm:/test,2 \
          -s 7,virtio-rnd \
@@ -154,7 +154,7 @@ Linux-based post-launched VMs (VM1 and VM2).
 
         acrn-dm -A -m $mem_size -s 0:0,hostbridge \
          -s 2,pci-gvt -G "$2" \
-         -s 3,virtio-blk,/home/acrn/uos2.img \
+         -s 3,virtio-blk,/home/acrn/UserVM2.img \
          -s 4,virtio-net,tap0 \
          -s 5,ivshmem,dm:/test,2 \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
@@ -169,9 +169,9 @@ Linux-based post-launched VMs (VM1 and VM2).
    the ``ivshmem`` device vendor ID is ``1af4`` (Red Hat) and device ID is ``1110``
    (Inter-VM shared memory).  Use these commands to probe the device::
 
-     $ sudo modprobe uio
-     $ sudo modprobe uio_pci_generic
-     $ sudo echo "1af4 1110" > /sys/bus/pci/drivers/uio_pci_generic/new_id
+     sudo modprobe uio
+     sudo modprobe uio_pci_generic
+     sudo echo "1af4 1110" > /sys/bus/pci/drivers/uio_pci_generic/new_id
 
 .. note:: These commands are applicable to Linux-based guests with ``CONFIG_UIO`` and ``CONFIG_UIO_PCI_GENERIC`` enabled.
 
@@ -222,7 +222,7 @@ Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
 
         acrn-dm -A -m $mem_size -s 0:0,hostbridge \
          -s 2,pci-gvt -G "$2" \
-         -s 3,virtio-blk,/home/acrn/uos2.img \
+         -s 3,virtio-blk,/home/acrn/UserVM2.img \
          -s 4,virtio-net,tap0 \
          -s 5,ivshmem,hv:/shm_region_0,2 \
          --ovmf /usr/share/acrn/bios/OVMF.fd \

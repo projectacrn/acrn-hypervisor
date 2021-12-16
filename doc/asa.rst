@@ -3,6 +3,21 @@
 Security Advisory
 #################
 
+Addressed in ACRN v2.7
+************************
+
+We recommend that all developers upgrade to this v2.7 release (or later), which
+addresses the following security issue discovered in previous releases:
+
+-----
+
+-  Heap-use-after-free happens in ``MEVENT mevent_handle``
+    The file descriptor of ``mevent`` could be closed in another thread while being
+    monitored by ``epoll_wait``. This causes a heap-use-after-free error in
+    the ``mevent_handle()`` function.
+
+    **Affected Release:** v2.6 and earlier
+
 Addressed in ACRN v2.6
 ************************
 

@@ -20,7 +20,7 @@ relevant for configuring or debugging ACRN-based systems.
    * - Parameter
      - Used in Service VM or User VM
      - Description
-     - Usage example
+     - Usage Example
 
    * - ``module_blacklist``
      - Service VM
@@ -32,14 +32,14 @@ relevant for configuring or debugging ACRN-based systems.
          module_blacklist=dwc3_pci
 
    * - ``no_timer_check``
-     - Service VM,User VM
-     - Disables the code which tests for broken timer IRQ sources.
+     - Service VM, User VM
+     - Disables the code that tests for broken timer IRQ sources.
      - ::
 
          no_timer_check
 
    * - ``console``
-     - Service VM,User VM
+     - Service VM, User VM
      - Output console device and options.
 
        ``tty<n>``
@@ -50,9 +50,9 @@ relevant for configuring or debugging ACRN-based systems.
          ``9600n8`` meaning 9600 baud, no parity, 8 bits. Options are of the form *bbbbpnf*,
          where:
 
-            | *bbbb* is baud rate, for example 9600;
-            | *p* is parity, one of ``n``, ``o``, or ``e`` (for none, odd, or even),
-            | *n* is number of bits (typically 8),
+            | *bbbb* is baud rate, for example, 9600
+            | *p* is parity, one of ``n``, ``o``, or ``e`` (for none, odd, or even)
+            | *n* is number of bits (typically 8)
             | *f* is flow control (``r`` for RTS, or left blank)
 
        ``hvc<n>``
@@ -66,31 +66,31 @@ relevant for configuring or debugging ACRN-based systems.
 
    * - ``loglevel``
      - Service VM
-     - All Kernel messages with a loglevel less than the console loglevel will
+     - All kernel messages with a loglevel less than the console loglevel will
        be printed to the console. The loglevel can also be changed with
        ``klogd`` or other programs. The loglevels are defined as follows:
 
        .. list-table::
           :header-rows: 1
 
-          * - loglevel value
+          * - Loglevel Value
             - Definition
           * - 0 (KERN_EMERG)
-            - system is unusable
+            - System is unusable
           * - 1 (KERN_ALERT)
-            - action must be taken immediately
+            - Action must be taken immediately
           * - 2 (KERN_CRIT)
-            - critical conditions
+            - Critical conditions
           * - 3 (KERN_ERR)
-            - error conditions
+            - Error conditions
           * - 4 (KERN_WARNING)
-            - warning conditions
+            - Warning conditions
           * - 5 (KERN_NOTICE)
-            - normal but significant condition
+            - Normal but significant condition
           * - 6 (KERN_INFO)
-            - informational
+            - Informational
           * - 7 (KERN_DEBUG)
-            - debug-level messages
+            - Debug-level messages
      - ::
 
           loglevel=7
@@ -99,8 +99,8 @@ relevant for configuring or debugging ACRN-based systems.
      - User VM
      - Ignoring loglevel setting will print **all**
        kernel messages to the console. Useful for debugging.
-       We also add it as printk module parameter, so users
-       could change it dynamically, usually by changing
+       We also add it as the ``printk`` module parameter, so users
+       can change it dynamically, usually by changing
        ``/sys/module/printk/parameters/ignore_loglevel``.
      - ::
 
@@ -109,19 +109,19 @@ relevant for configuring or debugging ACRN-based systems.
 
    * - ``log_buf_len``
      - User VM
-     - Sets the size of the printk ring buffer,
+     - Sets the size of the ``printk`` ring buffer,
        in bytes.  n must be a power of two and greater
        than the minimal size. The minimal size is defined
-       by LOG_BUF_SHIFT kernel config parameter. There is
-       also CONFIG_LOG_CPU_MAX_BUF_SHIFT config parameter
+       by the ``LOG_BUF_SHIFT`` kernel config parameter. There is
+       also the ``CONFIG_LOG_CPU_MAX_BUF_SHIFT`` config parameter
        that allows to increase the default size depending on
-       the number of CPUs. See init/Kconfig for more details."
+       the number of CPUs. See ``init/Kconfig`` for more details.
      - ::
 
           log_buf_len=16M
 
    * - ``consoleblank``
-     - Service VM,User VM
+     - Service VM, User VM
      - The console blank (screen saver) timeout in
        seconds. Defaults to 600 (10 minutes). A value of 0
        disables the blank timer.
@@ -130,34 +130,34 @@ relevant for configuring or debugging ACRN-based systems.
           consoleblank=0
 
    * - ``rootwait``
-     - Service VM,User VM
+     - Service VM, User VM
      - Wait (indefinitely) for root device to show up.
        Useful for devices that are detected asynchronously
-       (e.g. USB and MMC devices).
+       (e.g., USB and MMC devices).
      - ::
 
           rootwait
 
    * - ``root``
-     - Service VM,User VM
-     - Define the root filesystem
+     - Service VM, User VM
+     - Define the root filesystem.
 
        ``/dev/<disk_name><decimal>``
           represents the device number of the partition - device
-          number of disk plus the partition number
+          number of disk plus the partition number.
 
        ``/dev/<disk_name>p<decimal>``
-          same as above, this form is used when disk name of
-          the partitioned disk ends with a digit. To separate
-          disk name and partition slot, a 'p' is inserted.
+          same as above, this form is used when the disk name of
+          the partitioned disk ends with a digit. To separate the
+          disk name and partition slot, a ``p`` is inserted.
 
        ``PARTUUID=00112233-4455-6677-8899-AABBCCDDEEFF``
-          representing the unique id of a partition if the
+          represents the unique ID of a partition if the
           partition table provides it.  The UUID may be either
           an EFI/GPT UUID, or refer to an MSDOS
           partition using the format SSSSSSSS-PP, where SSSSSSSS is a
           zero-filled hexadecimal representation of the 32-bit
-          "NT disk signature", and PP is a zero-filled hexadecimal
+          NT disk signature, and PP is a zero-filled hexadecimal
           representation of the 1-based partition number.
      - ::
 
@@ -166,8 +166,8 @@ relevant for configuring or debugging ACRN-based systems.
           root=PARTUUID=00112233-4455-6677-8899-AABBCCDDEEFF
 
    * - ``rw``
-     - Service VM,User VM
-     - Mount root device read/write on boot
+     - Service VM, User VM
+     - Mount the root device read/write on boot.
      - ::
 
           rw
@@ -179,7 +179,7 @@ relevant for configuring or debugging ACRN-based systems.
        Format: <string>, where the only supported value is:
 
        ``reliable``:
-          Mark TSC clocksource as reliable, and disables clocksource
+          Mark TSC clocksource as reliable, and disable clocksource
           verification at runtime, and the stability checks done at boot.
           Used to enable high-resolution timer mode on older hardware, and in
           virtualized environments.
@@ -207,15 +207,17 @@ relevant for configuring or debugging ACRN-based systems.
        from the guest VM.
 
        If hypervisor relocation is disabled, verify that
-       :option:`hv.MEMORY.HV_RAM_START` and the hypervisor RAM size computed by the linker
+       :option:`hv.MEMORY.HV_RAM_START` and the hypervisor RAM size computed by
+       the linker
        do not overlap with the hypervisor's reserved buffer space allocated
        in the Service VM. Service VM GPA and HPA are a 1:1 mapping.
 
        If hypervisor relocation is enabled, reserve the memory below 256MB,
-       since hypervisor could be relocated anywhere between 256MB and 4GB.
+       since the hypervisor could be relocated anywhere between 256MB and 4GB.
 
-       You should enable ASLR on SOS. This ensures that when guest Linux is
-       relocating kernel image, it will avoid this buffer address.
+       Enable address space layout randomization (ASLR) on the Service VM.
+       This ensures that when the guest Linux is relocating the kernel image,
+       it will avoid this buffer address.
 
      - ::
 
@@ -254,7 +256,7 @@ relevant for configuring or debugging ACRN-based systems.
 
    * - ``reboot_panic``
      - Service VM
-     - Reboot in case of panic
+     - Reboot in case of panic.
 
        The comma-delimited parameters are:
 
@@ -281,7 +283,7 @@ relevant for configuring or debugging ACRN-based systems.
 
        ``maxcpus=n`` where n >= 0 limits
        the kernel to bring up ``n`` processors during system boot.
-       Giving n=0 is a special case, equivalent to ``nosmp``,which
+       Giving n=0 is a special case, equivalent to ``nosmp``, which
        also disables the I/O APIC.
 
        After booting, you can bring up additional plugged CPUs by executing
@@ -291,9 +293,9 @@ relevant for configuring or debugging ACRN-based systems.
 
          maxcpus=1
 
-   * - nohpet
+   * - ``nohpet``
      - User VM
-     -  Don't use the HPET timer
+     - Don't use the HPET timer.
      - ::
 
          nohpet
@@ -303,23 +305,23 @@ relevant for configuring or debugging ACRN-based systems.
      - Intel IOMMU driver (DMAR) option
 
        ``on``:
-         Enable intel iommu driver.
+         Enable Intel IOMMU driver.
 
        ``off``:
-         Disable intel iommu driver.
+         Disable Intel IOMMU driver.
 
        ``igfx_off``:
-         By default, gfx is mapped as normal device. If a gfx
+         By default, gfx is mapped as a normal device. If a gfx
          device has a dedicated DMAR unit, the DMAR unit is
          bypassed by not enabling DMAR with this option. In
-         this case, gfx device will use physical address for DMA.
+         this case, the gfx device will use the physical address for DMA.
      - ::
 
          intel_iommu=off
 
    * - ``hugepages``
        ``hugepagesz``
-     - Service VM,User VM
+     - Service VM, User VM
      - ``hugepages``:
          HugeTLB pages to allocate at boot.
 
@@ -335,7 +337,7 @@ relevant for configuring or debugging ACRN-based systems.
          hugepagesz=1G
 
 .. note:: The ``hugepages`` and ``hugepagesz`` parameters are automatically
-   taken care of by ACRN config tool. In case user have customized hugepage
-   settings to satisfy their particular workloads in Service VM, the ``hugepages``
-   and ``hugepagesz`` parameters could be redefined in GRUB menu to override
-   the settings from ACRN config tool.
+   taken care of by the ACRN Configurator tool. If users have customized
+   hugepage settings to satisfy their particular workloads in the Service VM,
+   the ``hugepages`` and ``hugepagesz`` parameters can be redefined in the GRUB
+   menu to override the settings from the ACRN Configurator tool.

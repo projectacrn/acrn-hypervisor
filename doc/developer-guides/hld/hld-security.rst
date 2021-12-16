@@ -254,7 +254,7 @@ In ACRN, User VM Secure Boot can be enabled as follows:
 #. Sign the User VM images with `db.key` and `db.crt`.
 #. Boot the User VM with Secure Boot enabled.
 
-.. _sos_hardening:
+.. _service_vm_hardening:
 
 Service VM Hardening
 --------------------
@@ -732,7 +732,7 @@ must be disabled in a production release. Users who want to use this
 feature must possess the private signing key to re-sign the image after
 enabling the configuration.
 
-.. _uos_suspend_resume:
+.. _user_vm_suspend_resume:
 
 User VM Suspend/Resume
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -793,7 +793,7 @@ Extract-and-Expand Key Derivation Function), `RFC5869
 
 The parameters of HKDF derivation in the hypervisor are:
 
-#. VMInfo= vm-uuid (from the hypervisor configuration file)
+#. VMInfo= vm name (from the hypervisor configuration file)
 #. theHash=SHA-256
 #. OutSeedLen = 64 in bytes
 #. Guest Dev and User SEED (dvSEED/uvSEED)
@@ -1041,7 +1041,7 @@ Note that there are some security considerations in this design:
 
 Keeping the Service VM system as secure as possible is a very important goal in
 the system security design. Follow the recommendations in
-:ref:`sos_hardening`.
+:ref:`service_vm_hardening`.
 
 SEED Derivation
 ---------------
@@ -1065,7 +1065,7 @@ the restore state hypercall is called only by vBIOS when the User VM is ready to
 resume from suspend state.
 
 For security design considerations of handling secure world S3,
-read the previous section: :ref:`uos_suspend_resume`.
+read the previous section: :ref:`user_vm_suspend_resume`.
 
 Platform Security Feature Virtualization and Enablement
 =======================================================

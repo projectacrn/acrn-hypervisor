@@ -6,7 +6,10 @@ Hostbridge Emulation
 Overview
 ********
 
-Hostbridge emulation is based on PCI emulation; however, the hostbridge emulation only sets the PCI configuration space. The device model sets the PCI configuration space for hostbridge in the Service VM and then exposes it to the User VM to detect the PCI hostbridge.
+Hostbridge emulation is based on PCI emulation; however, the hostbridge
+emulation only sets the PCI configuration space. The Device Model (DM) sets the
+PCI configuration space for hostbridge in the Service VM and then exposes it to
+the User VM to detect the PCI hostbridge.
 
 PCI Host Bridge and Hierarchy
 *****************************
@@ -17,7 +20,7 @@ There is PCI host bridge emulation in DM. The bus hierarchy is determined by ``a
         -s 2,pci-gvt -G "$2" \
         -s 5,virtio-console,@stdio:stdio_port \
         -s 6,virtio-hyper_dmabuf \
-        -s 3,virtio-blk,/home/acrn/uos.img \
+        -s 3,virtio-blk,/home/acrn/UserVM.img \
         -s 4,virtio-net,tap0 \
         -s 7,virtio-rnd \
         --ovmf /usr/share/acrn/bios/OVMF.fd \

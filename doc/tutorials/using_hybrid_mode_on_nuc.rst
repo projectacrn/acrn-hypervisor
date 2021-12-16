@@ -44,7 +44,7 @@ Prepare the Zephyr image
 
 Prepare the Zephyr kernel that you will run in VM0 later.
 
-- Follow step 1 from the :ref:`using_zephyr_as_uos` instructions
+- Follow step 1 from the :ref:`using_zephyr_as_user_vm` instructions
 
   .. note:: We only need the ELF binary Zephyr kernel, not the entire ``zephyr.img``
 
@@ -76,7 +76,7 @@ Set-up ACRN on your device
   .. code-block:: none
 
      cd ~/acrn-kernel # Or where your ACRN kernel sources are
-     cp kernel_config_uefi_sos .config
+     cp kernel_config_service_vm .config
      make olddefconfig
      make
      sudo make modules_install

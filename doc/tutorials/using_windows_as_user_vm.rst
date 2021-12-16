@@ -1,5 +1,5 @@
 .. _using_windows_as_uos:
-
+.. _using_windows_as_user_vm:
 
 Launch Windows as the Guest VM on ACRN
 ######################################
@@ -114,7 +114,7 @@ Prepare the Script to Create an Image
      --windows \
      $vm_name
    }
-   # offline SOS CPUs except BSP before launch UOS
+   # offline Service VM CPUs except BSP before launching User VM
    for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
            online=`cat $i/online`
            idx=`echo $i | tr -cd "[1-99]"`

@@ -25,4 +25,5 @@ Hypervisor High-Level Design
    Hypercall / HSM upcall <hv-hypercall>
    Compile-time configuration <hv-config>
    RDT support <hv-rdt>
+   vCAT support <hv-vcat>
    Split-locked Access handling <hld-splitlock>
