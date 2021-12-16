@@ -1,7 +1,7 @@
 .. _release_notes_2.7:
 
-ACRN v2.7 (DRAFT)
-#################
+ACRN v2.7 (Dec 2021)
+####################
 
 We are pleased to announce the release of the Project ACRN hypervisor
 version 2.7.
@@ -197,7 +197,7 @@ Fixed Issues Details
 - :acrn-issue:`6360` - ACRN Makefile missing dependencies
 - :acrn-issue:`6366` - TPM pass-thru shall be able to support start method 6, not only support Start Method of 7
 - :acrn-issue:`6387` - enable GVT-d for pre-launched linux guest
-- :acrn-issue:`6405` - [ADL-S][Industry][Yocto] WaaG BSOD in startup when run reboot or create/destory stability test.
+- :acrn-issue:`6405` - [ADL-S][Industry][Yocto] WaaG BSOD in startup when run reboot or create/destroy stability test.
 - :acrn-issue:`6417` - ACRN ConfigTool improvement from DX view
 - :acrn-issue:`6428` - [acrn-configuration-tool] Fail to generate launch script when disable CPU sharing
 - :acrn-issue:`6431` - virtio_console use-after-free
@@ -223,14 +223,14 @@ Fixed Issues Details
 - :acrn-issue:`6592` - [doc] failed to make hvdiffconfig
 - :acrn-issue:`6610` - [config tool vUART] IRQ of vUART of pnp 8250 is not generated correctly
 - :acrn-issue:`6620` - acrn-config: pass-thru device PIO BAR identical mapping
-- :acrn-issue:`6663` - Current HV_RAM_SIZE calculation algrithom sometimes cause build failure
+- :acrn-issue:`6663` - Current HV_RAM_SIZE calculation algorithm sometimes cause build failure
 - :acrn-issue:`6674` - [TGL][HV][hybrid] (v2.7 only) during boot zephyr64.elf find HV error: "Unable to copy HPA 0x100000 to GPA 0x7fe00000 in VM0"
 - :acrn-issue:`6677` - Service VM shall not have capability to access IOMMU
 - :acrn-issue:`6704` - [ADL-S][Partitioned]Kernel panic when boot Pre-launched RTVM with 8 pci devices passthru
 - :acrn-issue:`6709` - Issues for platform ICX-D HCC enabling
 - :acrn-issue:`6719` - Board Inspector tool crashes if cpuid is not installed
 - :acrn-issue:`6724` - (v2.7 only) Remove the GET_PLATFORM_INFO support in ACRN
-- :acrn-issue:`6736` - Improved readibility desirable for the Board Inspector tool
+- :acrn-issue:`6736` - Improved readability desirable for the Board Inspector tool
 - :acrn-issue:`6743` - acrn-crashlog/acrnprobe compilation failure with OpenSSL 3.0
 - :acrn-issue:`6752` - ACRN HV shows multiple PCIe devices with "out of mmio window" warnings - false alert
 - :acrn-issue:`6755` - [icx-d lcc]CAT_capability enable RDT fail
