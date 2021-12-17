@@ -794,7 +794,7 @@ void kick_vcpu(struct acrn_vcpu *vcpu)
 		(per_cpu(vmcs_run, pcpu_id) == vcpu->arch.vmcs)) {
 		if (is_lapic_pt_enabled(vcpu)) {
 			/* For lapic-pt vCPUs */
-			send_single_nmi(pcpu_id);
+			send_single_init(pcpu_id);
 		} else {
 			send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
 		}

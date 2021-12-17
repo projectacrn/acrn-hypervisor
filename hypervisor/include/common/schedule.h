@@ -12,7 +12,7 @@
 
 #define	NEED_RESCHEDULE		(1U)
 
-#define DEL_MODE_NMI		(1U)
+#define DEL_MODE_INIT		(1U)
 #define DEL_MODE_IPI		(2U)
 
 #define THREAD_DATA_SIZE	(256U)
@@ -24,7 +24,7 @@ enum thread_object_state {
 };
 
 enum sched_notify_mode {
-	SCHED_NOTIFY_NMI,
+	SCHED_NOTIFY_INIT,
 	SCHED_NOTIFY_IPI
 };
 

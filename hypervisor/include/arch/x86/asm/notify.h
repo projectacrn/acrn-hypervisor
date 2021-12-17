@@ -15,7 +15,6 @@ struct smp_call_info_data {
 
 struct acrn_vm;
 void smp_call_function(uint64_t mask, smp_call_func_t func, void *data);
-bool is_notification_nmi(const struct acrn_vm *vm);
 
 void setup_notification(void);
 void setup_pi_notification(void);
