@@ -490,6 +490,25 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 	case 0x4693:
 	case 0x4698:
 	case 0x4699:
+	/* ADL-P GT graphics */
+	case 0x4626:
+	case 0x4628:
+	case 0x462a:
+	case 0x46a0:
+	case 0x46a1:
+	case 0x46a2:
+	case 0x46a3:
+	case 0x46a6:
+	case 0x46a8:
+	case 0x46aa:
+	case 0x46b0:
+	case 0x46b1:
+	case 0x46b2:
+	case 0x46b3:
+	case 0x46c0:
+	case 0x46c1:
+	case 0x46c2:
+	case 0x46c3:
 		/* BDSM register has 64 bits.
 		 * bits 63:20 contains the base address of stolen memory
 		 */
