@@ -7,36 +7,17 @@
 #include <asm/irq.h>
 #include <asm/vmx.h>
 
+#include <asm/guest/vcpu.h>
+#include <asm/guest/virq.h>
+
 void handle_nmi(__unused struct intr_excp_ctx *ctx)
 {
-	uint32_t value32;
+	uint16_t pcpu_id = get_pcpu_id();
+	struct acrn_vcpu *vcpu = get_running_vcpu(pcpu_id);
 
 	/*
-	 * There is a window where we may miss the current request in this
-	 * notification period when the work flow is as the following:
-	 *
-	 *       CPUx +                   + CPUr
-	 *            |                   |
-	 *            |                   +--+
-	 *            |                   |  | Handle pending req
-	 *            |                   <--+
-	 *            +--+                |
-	 *            |  | Set req flag   |
-	 *            <--+                |
-	 *            +------------------>---+
-	 *            |     Send NMI      |  | Handle NMI
-	 *            |                   <--+
-	 *            |                   |
-	 *            |                   |
-	 *            |                   +--> vCPU enter
-	 *            |                   |
-	 *            +                   +
-	 *
-	 * So, here we enable the NMI-window exiting to trigger the next vmexit
-	 * once there is no "virtual-NMI blocking" after vCPU enter into VMX non-root
-	 * mode. Then we can process the pending request on time.
+	 * If NMI occurs, inject it into current vcpu. Now just PMI is verified.
+	 * For other kind of NMI, it may need to be checked further.
 	 */
-	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
-	value32 |= VMX_PROCBASED_CTLS_NMI_WINEXIT;
-	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
+	vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
 }

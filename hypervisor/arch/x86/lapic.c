@@ -278,12 +278,19 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
  *
  * @return None
  */
-void send_single_nmi(uint16_t pcpu_id)
+void send_single_init(uint16_t pcpu_id)
 {
 	union apic_icr icr;
 
+	/*
+	 * Intel SDM Vol3 23.8:
+	 *   The INIT signal is blocked whenever a logical processor is in VMX root operation.
+	 *   It is not blocked in VMX nonroot operation. Instead, INITs cause VM exits
+	 */
+
 	icr.value_32.hi_32 = per_cpu(lapic_id, pcpu_id);
-	icr.value_32.lo_32 = (INTR_LAPIC_ICR_PHYSICAL << 11U) | (INTR_LAPIC_ICR_NMI << 8U);
+	icr.value_32.lo_32 = (INTR_LAPIC_ICR_PHYSICAL << 11U) | (INTR_LAPIC_ICR_INIT << 8U);
 
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
+
 }

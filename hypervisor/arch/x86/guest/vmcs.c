@@ -595,7 +595,6 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 		 * Disable posted interrupt processing
 		 * update x2apic msr bitmap for pass-thru
 		 * enable inteception only for ICR
-		 * enable NMI exit as we will use NMI to kick vCPU thread
 		 * disable pre-emption for TSC DEADLINE MSR
 		 * Disable Register Virtualization and virtual interrupt delivery
 		 * Disable "use TPR shadow"
@@ -607,15 +606,6 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 			value32 &= ~VMX_PINBASED_CTLS_POST_IRQ;
 		}
 
-		/*
-		 * ACRN hypervisor needs to kick vCPU off VMX non-root mode to do some
-		 * operations in hypervisor, such as interrupt/exception injection, EPT
-		 * flush etc. For non lapic-pt vCPUs, we can use IPI to do so. But, it
-		 * doesn't work for lapic-pt vCPUs as the IPI will be injected to VMs
-		 * directly without vmexit. So, here we enable NMI-exiting and use NMI
-		 * as notification signal after passthroughing the lapic to vCPU.
-		 */
-		value32 |= VMX_PINBASED_CTLS_NMI_EXIT | VMX_PINBASED_CTLS_VIRT_NMI;
 		exec_vmwrite32(VMX_PIN_VM_EXEC_CONTROLS, value32);
 
 		value32 = exec_vmread32(VMX_EXIT_CONTROLS);
@@ -640,11 +630,11 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 		update_msr_bitmap_x2apic_passthru(vcpu);
 
 		/*
-		 * After passthroughing lapic to guest, we should use NMI signal to
+		 * After passthroughing lapic to guest, we should use INIT signal to
 		 * notify vcpu thread instead of IPI. Because the IPI will be delivered
 		 * the guest directly without vmexit.
 		 */
-		vcpu->thread_obj.notify_mode = SCHED_NOTIFY_NMI;
+		vcpu->thread_obj.notify_mode = SCHED_NOTIFY_INIT;
 	} else {
 		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS2);
 		value32 &= ~VMX_PROCBASED_CTLS2_VAPIC;
