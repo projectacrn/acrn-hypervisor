@@ -115,7 +115,9 @@ static void _scan_alive_vm(void)
 
 	ret = check_dir(ACRN_DM_SOCK_PATH, CHK_ONLY);
 	if (ret) {
-		printf("%s: Failed to check directory %s, err: %d\n", __func__, ACRN_DM_SOCK_PATH, ret);
+		printf("%s: Failed to check directory %s, err: %d\n\
+			Make sure the acrnd daemon is running ('systemctl status acrnd').\n",
+			__func__, ACRN_DM_SOCK_PATH, ret);
 		return;
 	}
 
