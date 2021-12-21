@@ -38,7 +38,7 @@ struct nept_desc {
 	uint32_t ref_count;
 };
 
-void reserve_buffer_for_sept_pages(void);
+void allocate_buffer_for_sept_pages(void);
 void init_vept(void);
 uint64_t get_shadow_eptp(uint64_t guest_eptp);
 struct nept_desc *get_nept_desc(uint64_t guest_eptp);
@@ -46,6 +46,6 @@ void put_nept_desc(uint64_t guest_eptp);
 bool handle_l2_ept_violation(struct acrn_vcpu *vcpu);
 int32_t invept_vmexit_handler(struct acrn_vcpu *vcpu);
 #else
-static inline void reserve_buffer_for_sept_pages(void) {};
+static inline void allocate_buffer_for_sept_pages(void) {};
 #endif /* CONFIG_NVMX_ENABLED */
 #endif /* VEPT_H */
