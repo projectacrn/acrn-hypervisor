@@ -47,24 +47,19 @@ static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
 /* PPT VA and PA are identical mapping */
 #define PPT_PML4_PAGE_NUM	PML4_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
 #define PPT_PDPT_PAGE_NUM	PDPT_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
-/* Please refer to how the EPT_PD_PAGE_NUM was calculated */
-#define PPT_PD_PAGE_NUM	(PD_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + (MEM_4G)) + \
-			CONFIG_MAX_PCI_DEV_NUM * 6U)
 #define PPT_PT_PAGE_NUM	0UL	/* not support 4K granularity page mapping */
-/* must be a multiple of 64 */
-#define PPT_PAGE_NUM	(roundup((PPT_PML4_PAGE_NUM + PPT_PDPT_PAGE_NUM + \
-			PPT_PD_PAGE_NUM + PPT_PT_PAGE_NUM), 64U))
-static struct page ppt_pages[PPT_PAGE_NUM];
-static uint64_t ppt_page_bitmap[PPT_PAGE_NUM / 64];
+
+/* Please refer to how the ept page num  was calculated */
+uint64_t get_ppt_page_num(void)
+{
+       uint64_t ppt_pd_page_num = PD_PAGE_NUM(get_e820_ram_size() + MEM_4G) + CONFIG_MAX_PCI_DEV_NUM * 6U;
+
+       /* must be a multiple of 64 */
+       return roundup((PPT_PML4_PAGE_NUM + PPT_PDPT_PAGE_NUM + ppt_pd_page_num + PPT_PT_PAGE_NUM), 64U);
+}
 
 /* ppt: primary page pool */
-static struct page_pool ppt_page_pool = {
-	.start_page = ppt_pages,
-	.bitmap_size = PPT_PAGE_NUM / 64,
-	.bitmap = ppt_page_bitmap,
-	.last_hint_id = 0UL,
-	.dummy_page = NULL,
-};
+static struct page_pool ppt_page_pool;
 
 /* @pre: The PPT and EPT have same page granularity */
 static inline bool ppt_large_page_support(enum _page_table_level level, __unused uint64_t prot)
@@ -241,6 +236,18 @@ void set_paging_x(uint64_t base, uint64_t size)
 		base_aligned, size_aligned, 0UL, PAGE_NX, &ppt_pgtable, MR_MODIFY);
 }
 
+void allocate_ppt_pages(void)
+{
+       uint64_t page_base;
+
+       page_base = e820_alloc_memory(sizeof(struct page) * get_ppt_page_num(), MEM_4G);
+       ppt_page_pool.bitmap = (uint64_t *)e820_alloc_memory(get_ppt_page_num()/8, MEM_4G);
+
+       ppt_page_pool.start_page = (struct page *)(void *)page_base;
+       ppt_page_pool.bitmap_size = get_ppt_page_num() / 64;
+       ppt_page_pool.dummy_page = NULL;
+}
+
 void init_paging(void)
 {
 	uint64_t hv_hva;
@@ -248,7 +255,6 @@ void init_paging(void)
 	uint64_t low32_max_ram = 0UL;
 	uint64_t high64_min_ram = ~0UL;
 	uint64_t high64_max_ram = MEM_4G;
-	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 
 	struct acrn_boot_info *abi = get_acrn_boot_info();
 	const struct abi_mmap *entry;
@@ -278,7 +284,6 @@ void init_paging(void)
 	}
 
 	low32_max_ram = round_pde_up(low32_max_ram);
-	high64_max_ram = min(high64_max_ram, top_addr_space);
 	high64_max_ram = round_pde_down(high64_max_ram);
 
 	/* Map [0, low32_max_ram) and [high64_min_ram, high64_max_ram) RAM regions as WB attribute */

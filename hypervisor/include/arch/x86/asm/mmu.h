@@ -200,6 +200,7 @@ void flush_tlb_range(uint64_t addr, uint64_t size);
 void flush_invalidate_all_cache(void);
 void flush_cacheline(const volatile void *p);
 void flush_cache_range(const volatile void *p, uint64_t size);
+void allocate_ppt_pages(void);
 
 /**
  * @}

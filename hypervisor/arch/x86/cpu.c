@@ -158,6 +158,9 @@ void init_pcpu_pre(bool is_bsp)
 
 		init_e820();
 
+		/* reserve ppt buffer from e820 */
+		allocate_ppt_pages();
+
 		/* Initialize the hypervisor paging */
 		init_paging();
 
