@@ -2,8 +2,8 @@
   <BIOS_INFO>
 	BIOS Information
 	Vendor: Intel Corporation
-	Version: SB_EHL.001.001.000.002.000.00018.D-2832972AD6E8F550
-	Release Date: Jul  8 2021
+	Version: SB_EHL.001.001.000.002.000.00017.D-2A36624DBD9343B4-dirty
+	Release Date: Oct  5 2021
 	BIOS Revision: 0.1
 	</BIOS_INFO>
   <BASE_BOARD_INFO>
@@ -19,66 +19,66 @@
 	Region 2: Memory at 90000000 (64-bit, prefetchable) [size=256M]
 	00:08.0 System peripheral: Intel Corporation Device 4511 (rev 01)
 	Region 0: Memory at 813f4000 (64-bit, non-prefetchable) [size=4K]
-	00:10.0 Serial bus controller [0c80]: Intel Corporation Device 4b44 (rev 10)
+	00:10.0 Serial bus controller [0c80]: Intel Corporation Device 4b44 (rev 11)
 	Region 0: Memory at 813f3000 (64-bit, non-prefetchable) [size=4K]
-	00:10.1 Serial bus controller [0c80]: Intel Corporation Device 4b45 (rev 10)
+	00:10.1 Serial bus controller [0c80]: Intel Corporation Device 4b45 (rev 11)
 	Region 0: Memory at 813f2000 (64-bit, non-prefetchable) [size=4K]
-	00:10.5 Host bridge: Intel Corporation Device 4b2f (rev 10)
-	00:11.0 Communication controller: Intel Corporation Device 4b96 (rev 10)
+	00:10.5 Host bridge: Intel Corporation Device 4b2f (rev 11)
+	00:11.0 Communication controller: Intel Corporation Device 4b96 (rev 11)
 	Region 0: Memory at 813e0000 (64-bit, non-prefetchable) [size=8K]
-	00:11.1 Communication controller: Intel Corporation Device 4b97 (rev 10)
+	00:11.1 Communication controller: Intel Corporation Device 4b97 (rev 11)
 	Region 0: Memory at 813de000 (64-bit, non-prefetchable) [size=8K]
-	00:13.0 Serial bus controller [0c80]: Intel Corporation Device 4b84 (rev 10)
+	00:13.0 Serial bus controller [0c80]: Intel Corporation Device 4b84 (rev 11)
 	Region 0: Memory at 813dc000 (64-bit, non-prefetchable) [size=8K]
-	00:14.0 USB controller: Intel Corporation Device 4b7d (rev 10)
+	00:14.0 USB controller: Intel Corporation Device 4b7d (rev 11)
 	Region 0: Memory at 813c0000 (64-bit, non-prefetchable) [size=64K]
-	00:14.2 RAM memory: Intel Corporation Device 4b7f (rev 10)
+	00:14.2 RAM memory: Intel Corporation Device 4b7f (rev 11)
 	Region 0: Memory at 813d0000 (64-bit, non-prefetchable) [size=16K]
 	Region 2: Memory at 813f1000 (64-bit, non-prefetchable) [size=4K]
-	00:15.0 Serial bus controller [0c80]: Intel Corporation Device 4b78 (rev 10)
+	00:15.0 Serial bus controller [0c80]: Intel Corporation Device 4b78 (rev 11)
 	Region 0: Memory at 813f0000 (64-bit, non-prefetchable) [size=4K]
-	00:15.2 Serial bus controller [0c80]: Intel Corporation Device 4b7a (rev 10)
+	00:15.2 Serial bus controller [0c80]: Intel Corporation Device 4b7a (rev 11)
 	Region 0: Memory at 813ef000 (64-bit, non-prefetchable) [size=4K]
-	00:15.3 Serial bus controller [0c80]: Intel Corporation Device 4b7b (rev 10)
+	00:15.3 Serial bus controller [0c80]: Intel Corporation Device 4b7b (rev 11)
 	Region 0: Memory at 813ee000 (64-bit, non-prefetchable) [size=4K]
-	00:16.0 Communication controller: Intel Corporation Device 4b70 (rev 10)
+	00:16.0 Communication controller: Intel Corporation Device 4b70 (rev 11)
 	Region 0: Memory at 813ed000 (64-bit, non-prefetchable) [size=4K]
-	00:17.0 SATA controller: Intel Corporation Device 4b63 (rev 10)
+	00:17.0 SATA controller: Intel Corporation Device 4b63 (rev 11)
 	Region 0: Memory at 813da000 (32-bit, non-prefetchable) [size=8K]
 	Region 1: Memory at 813ec000 (32-bit, non-prefetchable) [size=256]
 	Region 5: Memory at 813eb000 (32-bit, non-prefetchable) [size=2K]
-	00:19.0 Serial bus controller [0c80]: Intel Corporation Device 4b4b (rev 10)
+	00:19.0 Serial bus controller [0c80]: Intel Corporation Device 4b4b (rev 11)
 	Region 0: Memory at 813ea000 (64-bit, non-prefetchable) [size=4K]
-	00:19.2 Communication controller: Intel Corporation Device 4b4d (rev 10)
+	00:19.2 Communication controller: Intel Corporation Device 4b4d (rev 11)
 	Region 0: Memory at 813e9000 (64-bit, non-prefetchable) [size=4K]
 	Region 2: Memory at 813e8000 (64-bit, non-prefetchable) [size=4K]
-	00:1a.0 SD Host controller: Intel Corporation Device 4b47 (rev 10)
+	00:1a.0 SD Host controller: Intel Corporation Device 4b47 (rev 11)
 	Region 0: Memory at 813e7000 (64-bit, non-prefetchable) [size=4K]
-	00:1a.1 SD Host controller: Intel Corporation Device 4b48 (rev 10)
+	00:1a.1 SD Host controller: Intel Corporation Device 4b48 (rev 11)
 	Region 0: Memory at 813e6000 (64-bit, non-prefetchable) [size=4K]
-	00:1a.3 Non-VGA unclassified device: Intel Corporation Device 4b4a (rev 10)
+	00:1a.3 Non-VGA unclassified device: Intel Corporation Device 4b4a (rev 11)
 	Region 0: Memory at 81380000 (64-bit, non-prefetchable) [size=256K]
-	00:1b.0 Serial bus controller [0c80]: Intel Corporation Device 4bb9 (rev 10)
+	00:1b.0 Serial bus controller [0c80]: Intel Corporation Device 4bb9 (rev 11)
 	Region 0: Memory at 813d8000 (64-bit, non-prefetchable) [size=8K]
-	00:1b.1 Serial bus controller [0c80]: Intel Corporation Device 4bba (rev 10)
+	00:1b.1 Serial bus controller [0c80]: Intel Corporation Device 4bba (rev 11)
 	Region 0: Memory at 813d6000 (64-bit, non-prefetchable) [size=8K]
-	00:1b.6 Serial bus controller [0c80]: Intel Corporation Device 4bbf (rev 10)
+	00:1b.6 Serial bus controller [0c80]: Intel Corporation Device 4bbf (rev 11)
 	Region 0: Memory at 813d4000 (64-bit, non-prefetchable) [size=8K]
-	00:1c.0 PCI bridge: Intel Corporation Device 4b38 (rev 10)
-	00:1d.0 System peripheral: Intel Corporation Device 4bb3 (rev 10)
+	00:1c.0 PCI bridge: Intel Corporation Device 4b38 (rev 11)
+	00:1d.0 System peripheral: Intel Corporation Device 4bb3 (rev 11)
 	Region 0: Memory at 81000000 (64-bit, non-prefetchable) [size=2M]
-	00:1d.1 Ethernet controller: Intel Corporation Device 4ba0 (rev 10)
+	00:1d.1 Ethernet controller: Intel Corporation Device 4ba0 (rev 11)
 	Region 0: Memory at 81400000 (64-bit, non-prefetchable) [size=256K]
-	00:1d.2 Ethernet controller: Intel Corporation Device 4bb0 (rev 10)
+	00:1d.2 Ethernet controller: Intel Corporation Device 4bb0 (rev 11)
 	Region 0: Memory at 81440000 (64-bit, non-prefetchable) [size=256K]
-	00:1e.0 Communication controller: Intel Corporation Device 4b28 (rev 10)
+	00:1e.0 Communication controller: Intel Corporation Device 4b28 (rev 11)
 	Region 0: Memory at 813e5000 (64-bit, non-prefetchable) [size=4K]
-	00:1e.1 Communication controller: Intel Corporation Device 4b29 (rev 10)
+	00:1e.1 Communication controller: Intel Corporation Device 4b29 (rev 11)
 	Region 0: Memory at 813e4000 (64-bit, non-prefetchable) [size=4K]
-	00:1f.0 ISA bridge: Intel Corporation Device 4b00 (rev 10)
-	00:1f.4 SMBus: Intel Corporation Device 4b23 (rev 10)
+	00:1f.0 ISA bridge: Intel Corporation Device 4b00 (rev 11)
+	00:1f.4 SMBus: Intel Corporation Device 4b23 (rev 11)
 	Region 0: Memory at 813e3000 (64-bit, non-prefetchable) [size=256]
-	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device 4b24 (rev 10)
+	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device 4b24 (rev 11)
 	Region 0: Memory at 81301000 (32-bit, non-prefetchable) [size=4K]
 	01:00.0 Non-Volatile memory controller: Intel Corporation SSD Pro 7600p/760p/E 6100p Series (rev 03)
 	Region 0: Memory at 81200000 (64-bit, non-prefetchable) [size=16K]
@@ -87,36 +87,36 @@
 	00:00.0 0600: 8086:4532 (rev 01)
 	00:02.0 0300: 8086:4571 (rev 01)
 	00:08.0 0880: 8086:4511 (rev 01)
-	00:10.0 0c80: 8086:4b44 (rev 10)
-	00:10.1 0c80: 8086:4b45 (rev 10)
-	00:10.5 0600: 8086:4b2f (rev 10)
-	00:11.0 0780: 8086:4b96 (rev 10)
-	00:11.1 0780: 8086:4b97 (rev 10)
-	00:13.0 0c80: 8086:4b84 (rev 10)
-	00:14.0 0c03: 8086:4b7d (rev 10)
-	00:14.2 0500: 8086:4b7f (rev 10)
-	00:15.0 0c80: 8086:4b78 (rev 10)
-	00:15.2 0c80: 8086:4b7a (rev 10)
-	00:15.3 0c80: 8086:4b7b (rev 10)
-	00:16.0 0780: 8086:4b70 (rev 10)
-	00:17.0 0106: 8086:4b63 (rev 10)
-	00:19.0 0c80: 8086:4b4b (rev 10)
-	00:19.2 0780: 8086:4b4d (rev 10)
-	00:1a.0 0805: 8086:4b47 (rev 10)
-	00:1a.1 0805: 8086:4b48 (rev 10)
-	00:1a.3 0000: 8086:4b4a (rev 10)
-	00:1b.0 0c80: 8086:4bb9 (rev 10)
-	00:1b.1 0c80: 8086:4bba (rev 10)
-	00:1b.6 0c80: 8086:4bbf (rev 10)
-	00:1c.0 0604: 8086:4b38 (rev 10)
-	00:1d.0 0880: 8086:4bb3 (rev 10)
-	00:1d.1 0200: 8086:4ba0 (rev 10)
-	00:1d.2 0200: 8086:4bb0 (rev 10)
-	00:1e.0 0780: 8086:4b28 (rev 10)
-	00:1e.1 0780: 8086:4b29 (rev 10)
-	00:1f.0 0601: 8086:4b00 (rev 10)
-	00:1f.4 0c05: 8086:4b23 (rev 10)
-	00:1f.5 0c80: 8086:4b24 (rev 10)
+	00:10.0 0c80: 8086:4b44 (rev 11)
+	00:10.1 0c80: 8086:4b45 (rev 11)
+	00:10.5 0600: 8086:4b2f (rev 11)
+	00:11.0 0780: 8086:4b96 (rev 11)
+	00:11.1 0780: 8086:4b97 (rev 11)
+	00:13.0 0c80: 8086:4b84 (rev 11)
+	00:14.0 0c03: 8086:4b7d (rev 11)
+	00:14.2 0500: 8086:4b7f (rev 11)
+	00:15.0 0c80: 8086:4b78 (rev 11)
+	00:15.2 0c80: 8086:4b7a (rev 11)
+	00:15.3 0c80: 8086:4b7b (rev 11)
+	00:16.0 0780: 8086:4b70 (rev 11)
+	00:17.0 0106: 8086:4b63 (rev 11)
+	00:19.0 0c80: 8086:4b4b (rev 11)
+	00:19.2 0780: 8086:4b4d (rev 11)
+	00:1a.0 0805: 8086:4b47 (rev 11)
+	00:1a.1 0805: 8086:4b48 (rev 11)
+	00:1a.3 0000: 8086:4b4a (rev 11)
+	00:1b.0 0c80: 8086:4bb9 (rev 11)
+	00:1b.1 0c80: 8086:4bba (rev 11)
+	00:1b.6 0c80: 8086:4bbf (rev 11)
+	00:1c.0 0604: 8086:4b38 (rev 11)
+	00:1d.0 0880: 8086:4bb3 (rev 11)
+	00:1d.1 0200: 8086:4ba0 (rev 11)
+	00:1d.2 0200: 8086:4bb0 (rev 11)
+	00:1e.0 0780: 8086:4b28 (rev 11)
+	00:1e.1 0780: 8086:4b29 (rev 11)
+	00:1f.0 0601: 8086:4b00 (rev 11)
+	00:1f.4 0c05: 8086:4b23 (rev 11)
+	00:1f.5 0c80: 8086:4b24 (rev 11)
 	01:00.0 0108: 8086:f1a6 (rev 03)
 	</PCI_VID_PID>
   <WAKE_VECTOR_INFO>
@@ -189,7 +189,7 @@
 
 	</DRHD_INFO>
   <CPU_BRAND>
-	"Intel Atom(R) Processor x6427FE @ 1.90GHz"
+	"Intel Atom(R) x6427FE Processor @ 1.90GHz"
 	</CPU_BRAND>
   <CX_INFO>
 	/* Cx data is not available */
@@ -347,6 +347,7 @@
 	  fed00000-fed003ff : PNP0103:00
 	fed20000-fed7ffff : Reserved
 	  fed40000-fed44fff : MSFT0101:00
+	    fed40000-fed44fff : MSFT0101:00
 	fed90000-fed90fff : dmar0
 	fed91000-fed91fff : dmar1
 	feda0000-feda0fff : pnp 00:02
@@ -355,14 +356,14 @@
 	  fee00000-fee00fff : Local APIC
 	ff300000-ffffffff : Reserved
 	100000000-26bffffff : System RAM
-	  10f000000-10fe011b0 : Kernel code
-	  10fe011b1-11059c3ff : Kernel data
-	  110f4d000-1115fffff : Kernel bss
+	  239800000-23a6011b0 : Kernel code
+	  23a6011b1-23ad9c3ff : Kernel data
+	  23b74d000-23bdfffff : Kernel bss
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
 	/dev/nvme0n1p3: TYPE="ext4"
-	/dev/mmcblk0: TYPE="ext4"
-	/dev/sda2: TYPE="ext4"
+	/dev/mmcblk0p3: TYPE="ext4"
+	/dev/sda3: TYPE="ext4"
 	/dev/sdb2: TYPE="ext4"
 	/dev/sdb3: TYPE="ext4"
 	/dev/sdb4: TYPE="ext4"
@@ -375,7 +376,7 @@
 	seri:/dev/ttyS7 type:mmio base:0x813E0000 irq:137 bdf:"00:11.0"
 	</TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
-	3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15
+	3, 4, 5, 6, 7, 10, 11, 12, 13, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
 	7760184 kB
@@ -387,7 +388,7 @@
 	16
 	</MAX_MSIX_TABLE_NUM>
   <processors>
-    <model description="   Intel Atom(R) Processor x6427FE @ 1.90GHz">
+    <model description="   Intel Atom(R) x6427FE Processor @ 1.90GHz">
       <family_id>0x6</family_id>
       <model_id>0x96</model_id>
       <core_type>Atom</core_type>
@@ -697,6 +698,13 @@
     <range start="0x0000000000100000" end="0x00000000781dffff" size="2014183424"/>
     <range start="0x0000000100000000" end="0x000000026bffffff" size="6106906624"/>
   </memory>
+  <ioapics>
+    <ioapic id="0x2">
+      <address>0xfec00000</address>
+      <gsi_base>0x0</gsi_base>
+      <gsi_number>120</gsi_number>
+    </ioapic>
+  </ioapics>
   <devices>
     <device id="PNP0C14">
       <acpi_object>\DWMI</acpi_object>
@@ -1306,12 +1314,12 @@
           <resource type="memory" min="0x813f0000" max="0x813f0fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
-          <dependency type="provides resources to">\_SB_.PC00.CLP4</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.CLP5</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.CLP0</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.CLP1</dependency>
-          <dependency type="provides resources to">\_SB_.PC00.CLP2</dependency>
           <dependency type="provides resources to">\_SB_.PC00.CLP3</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP2</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP1</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP0</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP5</dependency>
+          <dependency type="provides resources to">\_SB_.PC00.CLP4</dependency>
         </device>
         <device address="0x150001">
           <acpi_object>\_SB_.PC00.I2C1</acpi_object>
@@ -2481,8 +2489,8 @@
         <resource id="res2" type="memory" min="0xfd6d0000" max="0xfd6dffff" len="0x10000"/>
         <resource id="res1" type="memory" min="0xfd6e0000" max="0xfd6effff" len="0x10000"/>
         <dependency type="provides resources to">\_SB_.PC00.I2C3.HDAC</dependency>
-        <dependency type="provides resources to">\_SB_.PC00.PSDC</dependency>
         <dependency type="provides resources to">\_SB_.PC00.UA00.BTH0</dependency>
+        <dependency type="provides resources to">\_SB_.PC00.PSDC</dependency>
       </device>
       <device id="INT33D5">
         <acpi_object>\_SB_.HIDD</acpi_object>
@@ -2603,10 +2611,10 @@
         </status>
         <resource id="res0" type="memory" min="0xfed40000" max="0xfed44fff" len="0x5000"/>
         <capability id="control_area">
-          <address_of_control_area>0x0</address_of_control_area>
+          <address_of_control_area>0xfed40040</address_of_control_area>
         </capability>
         <capability id="start_method">
-          <value>0x6</value>
+          <value>0x7</value>
           <parameter>0x0</parameter>
           <parameter>0x0</parameter>
           <parameter>0x0</parameter>
@@ -2622,7 +2630,7 @@
         </capability>
         <capability id="log_area">
           <log_area_minimum_length>0x10000</log_area_minimum_length>
-          <log_area_start_address>0x0</log_area_start_address>
+          <log_area_start_address>0x78bf2000</log_area_start_address>
         </capability>
       </device>
       <device id="PNP0C02">

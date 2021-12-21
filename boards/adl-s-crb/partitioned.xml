@@ -121,7 +121,7 @@
     </communication_vuart>
     <pci_devs>
       <pci_dev>00:17.0 SATA controller: Intel Corporation Device 7ae2 (rev 11)</pci_dev>
-      <pci_dev>00:1f.6 Ethernet controller: Intel Corporation Device 1a1d (rev 11)</pci_dev>
+      <pci_dev>00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (17) I219-LM (rev 11)</pci_dev>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>

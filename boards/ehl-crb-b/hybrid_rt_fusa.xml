@@ -116,8 +116,8 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-      <pci_dev>00:17.0 SATA controller: Intel Corporation Device 4b63</pci_dev>
-      <pci_dev>00:1a.3 Non-VGA unclassified device [0000]: Intel Corporation Device 4b4a</pci_dev>
+      <pci_dev>00:17.0 SATA controller: Intel Corporation Device 4b63 (rev 11)</pci_dev>
+      <pci_dev>00:1a.3 Non-VGA unclassified device: Intel Corporation Device 4b4a (rev 11)</pci_dev>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>

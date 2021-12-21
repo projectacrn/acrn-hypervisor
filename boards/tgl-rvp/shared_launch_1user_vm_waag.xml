@@ -22,7 +22,7 @@
     </communication_vuarts>
     <passthrough_devices>
       <usb_xdci desc="vm usb_xdci device"/>
-      <audio desc="vm audio device">00:1f.3 Multimedia audio controller: Intel Corporation Device a0c8 (rev 10)</audio>
+      <audio desc="vm audio device">00:1f.3 Multimedia audio controller: Intel Corporation Device a0c8 (rev 20)</audio>
       <audio_codec desc="vm audio codec device"/>
       <gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation Device 9a49 (rev 01)</gpu>
       <ipu desc="vm ipu device"/>

@@ -24,7 +24,7 @@
       <usb_xdci desc="vm usb_xdci device"/>
       <audio desc="vm audio device"/>
       <audio_codec desc="vm audio codec device"/>
-      <gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation Device 4680 (rev 0c)</gpu>
+      <gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation AlderLake-S GT1 (rev 0c)</gpu>
       <ipu desc="vm ipu device"/>
       <ipu_i2c desc="vm ipu_i2c device"/>
       <cse desc="vm cse device"/>
