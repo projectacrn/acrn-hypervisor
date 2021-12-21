@@ -13,46 +13,45 @@
 	Version: Type2 - Board Version
 	</BASE_BOARD_INFO>
   <PCI_DEVICE>
-	00:00.0 Host bridge: Intel Corporation 8th Gen Core 8-core Desktop Processor Host Bridge/DRAM Registers [Coffee Lake S] (rev 0d)
-	00:02.0 VGA compatible controller: Intel Corporation UHD Graphics 630 (Desktop 9 Series) (rev 02)
+	00:00.0 Host bridge: Intel Corporation 8th/9th Gen Core 8-core Desktop Processor Host Bridge/DRAM Registers [Coffee Lake S] (rev 0d)
+	00:02.0 VGA compatible controller: Intel Corporation CoffeeLake-S GT2 [UHD Graphics 630] (rev 02)
 	Region 0: Memory at a0000000 (64-bit, non-prefetchable) [size=16M]
 	Region 2: Memory at 90000000 (64-bit, prefetchable) [size=256M]
 	00:08.0 System peripheral: Intel Corporation Xeon E3-1200 v5/v6 / E3-1500 v5 / 6th/7th/8th Gen Core Processor Gaussian Mixture Model
-	Region 0: Memory at a1938000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at a1838000 (64-bit, non-prefetchable) [size=4K]
 	00:12.0 Signal processing controller: Intel Corporation Cannon Lake PCH Thermal Controller (rev 10)
-	Region 0: Memory at a1939000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at a1839000 (64-bit, non-prefetchable) [size=4K]
 	00:14.0 USB controller: Intel Corporation Cannon Lake PCH USB 3.1 xHCI Host Controller (rev 10)
-	Region 0: Memory at a1920000 (64-bit, non-prefetchable) [size=64K]
+	Region 0: Memory at a1820000 (64-bit, non-prefetchable) [size=64K]
 	00:14.2 RAM memory: Intel Corporation Cannon Lake PCH Shared SRAM (rev 10)
-	Region 0: Memory at a1934000 (64-bit, non-prefetchable) [size=8K]
-	Region 2: Memory at a193a000 (64-bit, non-prefetchable) [size=4K]
-	00:15.0 Serial bus controller [0c80]: Intel Corporation Cannon Lake PCH Serial IO I2C Controller #0 (rev 10)
-	Region 0: Memory at 8f800000 (64-bit, non-prefetchable) [virtual] [size=4K]
-	00:15.1 Serial bus controller [0c80]: Intel Corporation Cannon Lake PCH Serial IO I2C Controller #1 (rev 10)
-	Region 0: Memory at 8f801000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	Region 0: Memory at a1834000 (64-bit, non-prefetchable) [size=8K]
+	Region 2: Memory at a183a000 (64-bit, non-prefetchable) [size=4K]
+	00:15.0 Serial bus controller: Intel Corporation Cannon Lake PCH Serial IO I2C Controller #0 (rev 10)
+	Region 0: Memory at 8f800000 (64-bit, non-prefetchable) [size=4K]
+	00:15.1 Serial bus controller: Intel Corporation Cannon Lake PCH Serial IO I2C Controller #1 (rev 10)
+	Region 0: Memory at 8f801000 (64-bit, non-prefetchable) [size=4K]
 	00:17.0 SATA controller: Intel Corporation Cannon Lake PCH SATA AHCI Controller (rev 10)
-	Region 0: Memory at a1936000 (32-bit, non-prefetchable) [size=8K]
-	Region 1: Memory at a1942000 (32-bit, non-prefetchable) [size=256]
-	Region 5: Memory at a1941000 (32-bit, non-prefetchable) [size=2K]
+	Region 0: Memory at a1836000 (32-bit, non-prefetchable) [size=8K]
+	Region 1: Memory at a1842000 (32-bit, non-prefetchable) [size=256]
+	Region 5: Memory at a1841000 (32-bit, non-prefetchable) [size=2K]
 	00:1b.0 PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #17 (rev f0)
 	00:1b.6 PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #23 (rev f0)
-	00:1c.0 PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #3 (rev f0)
-	00:1c.6 PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #7 (rev f0)
+	00:1c.0 PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #7 (rev f0)
 	00:1c.7 PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #8 (rev f0)
 	00:1e.0 Communication controller: Intel Corporation Cannon Lake PCH Serial IO UART Host Controller (rev 10)
-	Region 0: Memory at 8f802000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	Region 0: Memory at 8f802000 (64-bit, non-prefetchable) [size=4K]
 	00:1f.0 ISA bridge: Intel Corporation Cannon Point-LP LPC Controller (rev 10)
 	00:1f.3 Audio device: Intel Corporation Cannon Lake PCH cAVS (rev 10)
-	Region 0: Memory at a1930000 (64-bit, non-prefetchable) [size=16K]
+	Region 0: Memory at a1830000 (64-bit, non-prefetchable) [size=16K]
 	Region 4: Memory at a1000000 (64-bit, non-prefetchable) [size=1M]
 	00:1f.4 SMBus: Intel Corporation Cannon Lake PCH SMBus Controller (rev 10)
-	Region 0: Memory at a193f000 (64-bit, non-prefetchable) [size=256]
-	00:1f.5 Serial bus controller [0c80]: Intel Corporation Cannon Lake PCH SPI Controller (rev 10)
+	Region 0: Memory at a183f000 (64-bit, non-prefetchable) [size=256]
+	00:1f.5 Serial bus controller: Intel Corporation Cannon Lake PCH SPI Controller (rev 10)
 	Region 0: Memory at fe010000 (32-bit, non-prefetchable) [size=4K]
 	00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (7) I219-LM (rev 10)
-	Region 0: Memory at a1900000 (32-bit, non-prefetchable) [size=128K]
-	01:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)
-	Region 0: Memory at a1800000 (64-bit, non-prefetchable) [size=16K]
+	Region 0: Memory at a1800000 (32-bit, non-prefetchable) [size=128K]
+	01:00.0 Non-Volatile memory controller: Silicon Motion, Inc. SM2263EN/SM2263XT SSD Controller (rev 03)
+	Region 0: Memory at a1700000 (64-bit, non-prefetchable) [size=16K]
 	02:00.0 PCI bridge: Pericom Semiconductor PI7C9X2G608GP PCIe2 6-Port/8-Lane Packet Switch
 	03:01.0 PCI bridge: Pericom Semiconductor PI7C9X2G608GP PCIe2 6-Port/8-Lane Packet Switch
 	03:02.0 PCI bridge: Pericom Semiconductor PI7C9X2G608GP PCIe2 6-Port/8-Lane Packet Switch
@@ -60,23 +59,21 @@
 	03:04.0 PCI bridge: Pericom Semiconductor PI7C9X2G608GP PCIe2 6-Port/8-Lane Packet Switch
 	03:05.0 PCI bridge: Pericom Semiconductor PI7C9X2G608GP PCIe2 6-Port/8-Lane Packet Switch
 	04:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
-	Region 0: Memory at a1700000 (32-bit, non-prefetchable) [size=512K]
-	Region 3: Memory at a1780000 (32-bit, non-prefetchable) [size=16K]
-	05:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
 	Region 0: Memory at a1600000 (32-bit, non-prefetchable) [size=512K]
 	Region 3: Memory at a1680000 (32-bit, non-prefetchable) [size=16K]
-	06:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
+	05:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
 	Region 0: Memory at a1500000 (32-bit, non-prefetchable) [size=512K]
 	Region 3: Memory at a1580000 (32-bit, non-prefetchable) [size=16K]
-	07:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
+	06:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
 	Region 0: Memory at a1400000 (32-bit, non-prefetchable) [size=512K]
 	Region 3: Memory at a1480000 (32-bit, non-prefetchable) [size=16K]
-	09:00.0 Non-Volatile memory controller: Marvell Technology Group Ltd. Device 1160 (rev b0)
-	Region 0: Memory at a1300000 (64-bit, non-prefetchable) [size=16K]
-	0a:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
+	07:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
+	Region 0: Memory at a1300000 (32-bit, non-prefetchable) [size=512K]
+	Region 3: Memory at a1380000 (32-bit, non-prefetchable) [size=16K]
+	09:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
 	Region 0: Memory at a1200000 (32-bit, non-prefetchable) [size=512K]
 	Region 3: Memory at a1280000 (32-bit, non-prefetchable) [size=16K]
-	0b:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
+	0a:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
 	Region 0: Memory at a1100000 (32-bit, non-prefetchable) [size=512K]
 	Region 3: Memory at a1180000 (32-bit, non-prefetchable) [size=16K]
 	</PCI_DEVICE>
@@ -92,8 +89,7 @@
 	00:17.0 0106: 8086:a352 (rev 10)
 	00:1b.0 0604: 8086:a340 (rev f0)
 	00:1b.6 0604: 8086:a32e (rev f0)
-	00:1c.0 0604: 8086:a33a (rev f0)
-	00:1c.6 0604: 8086:a33e (rev f0)
+	00:1c.0 0604: 8086:a33e (rev f0)
 	00:1c.7 0604: 8086:a33f (rev f0)
 	00:1e.0 0780: 8086:a328 (rev 10)
 	00:1f.0 0601: 8086:a309 (rev 10)
@@ -112,13 +108,12 @@
 	05:00.0 0200: 8086:1533 (rev 03)
 	06:00.0 0200: 8086:1533 (rev 03)
 	07:00.0 0200: 8086:1533 (rev 03)
-	09:00.0 0108: 1b4b:1160 (rev b0)
+	09:00.0 0200: 8086:1533 (rev 03)
 	0a:00.0 0200: 8086:1533 (rev 03)
-	0b:00.0 0200: 8086:1533 (rev 03)
 	</PCI_VID_PID>
   <WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x89B3000CUL
-	#define WAKE_VECTOR_64          0x89B30018UL
+	#define WAKE_VECTOR_32          0x8BB3000CUL
+	#define WAKE_VECTOR_64          0x8BB30018UL
 	</WAKE_VECTOR_INFO>
   <RESET_REGISTER_INFO>
 	#define RESET_REGISTER_ADDRESS  0xB2UL
@@ -189,10 +184,23 @@
 	"Intel(R) Core(TM) i7-9700TE CPU @ 1.80GHz"
 	</CPU_BRAND>
   <CX_INFO>
-	{{SPACE_FFixedHW, 0x00U, 0x00U, 0x00U, 0x00UL}, 0x01U, 0x00U, 0x00U},	/* C1 */
+	{{SPACE_FFixedHW, 0x00U, 0x00U, 0x00U, 0x00UL}, 0x01U, 0x01U, 0x00U},	/* C1 */
+	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1816UL}, 0x02U, 0x97U, 0x00U},	/* C2 */
+	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1819UL}, 0x03U, 0x40AU, 0x00U},	/* C3 */
 	</CX_INFO>
   <PX_INFO>
-	/* Px data is not available */
+	{0x709UL, 0x00UL, 0x0AUL, 0x0AUL, 0x002600UL, 0x002600UL},	/* P0 */
+	{0x708UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001200UL, 0x001200UL},	/* P1 */
+	{0x6A4UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001100UL, 0x001100UL},	/* P2 */
+	{0x640UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001000UL, 0x001000UL},	/* P3 */
+	{0x5DCUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000F00UL, 0x000F00UL},	/* P4 */
+	{0x578UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000E00UL, 0x000E00UL},	/* P5 */
+	{0x514UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000D00UL, 0x000D00UL},	/* P6 */
+	{0x4B0UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000C00UL, 0x000C00UL},	/* P7 */
+	{0x44CUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000B00UL, 0x000B00UL},	/* P8 */
+	{0x3E8UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000A00UL, 0x000A00UL},	/* P9 */
+	{0x384UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000900UL, 0x000900UL},	/* P10 */
+	{0x320UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000800UL, 0x000800UL},	/* P11 */
 	</PX_INFO>
   <MMCFG_BASE_INFO>
 	/* PCI mmcfg base of MCFG */
@@ -209,96 +217,89 @@
 	0009f000-000fffff : Reserved
 	  000a0000-000bffff : PCI Bus 0000:00
 	  000f0000-000fffff : System ROM
-	00100000-6f170017 : System RAM
-	6f170018-6f180057 : System RAM
-	6f180058-76bdefff : System RAM
-	76bdf000-76c91fff : Reserved
-	76c92000-8738dfff : System RAM
-	8738e000-8878dfff : Reserved
-	8878e000-89b8dfff : ACPI Non-volatile Storage
-	89b8e000-89c0dfff : ACPI Tables
-	89c0e000-89c0efff : System RAM
-	89c0f000-8f7fffff : Reserved
-	  8b800000-8f7fffff : Graphics Stolen Memory
+	00100000-7117c017 : System RAM
+	7117c018-7118c057 : System RAM
+	7118c058-79067fff : System RAM
+	79068000-7911afff : Reserved
+	7911b000-8938dfff : System RAM
+	8938e000-8a78dfff : Reserved
+	8a78e000-8bb8dfff : ACPI Non-volatile Storage
+	8bb8e000-8bc0dfff : ACPI Tables
+	8bc0e000-8bc0efff : System RAM
+	8bc0f000-8f7fffff : Reserved
+	  8d800000-8f7fffff : Graphics Stolen Memory
 	8f800000-dfffffff : PCI Bus 0000:00
 	  8f800000-8f800fff : 0000:00:15.0
 	    8f800000-8f8001ff : lpss_dev
 	      8f800000-8f8001ff : i2c_designware.0 lpss_dev
 	    8f800200-8f8002ff : lpss_priv
 	    8f800800-8f800fff : idma64.0
-	      8f800800-8f800fff : idma64.0 idma64.0
 	  8f801000-8f801fff : 0000:00:15.1
 	    8f801000-8f8011ff : lpss_dev
 	      8f801000-8f8011ff : i2c_designware.1 lpss_dev
 	    8f801200-8f8012ff : lpss_priv
 	    8f801800-8f801fff : idma64.1
-	      8f801800-8f801fff : idma64.1 idma64.1
 	  8f802000-8f802fff : 0000:00:1e.0
 	    8f802000-8f8021ff : lpss_dev
-	      8f802000-8f80201f : serial
 	    8f802200-8f8022ff : lpss_priv
 	    8f802800-8f802fff : idma64.2
-	      8f802800-8f802fff : idma64.2 idma64.2
 	  90000000-9fffffff : 0000:00:02.0
 	  a0000000-a0ffffff : 0000:00:02.0
 	  a1000000-a10fffff : 0000:00:1f.3
 	    a1000000-a10fffff : Audio DSP
-	  a1100000-a11fffff : PCI Bus 0000:0b
-	    a1100000-a117ffff : 0000:0b:00.0
+	  a1100000-a11fffff : PCI Bus 0000:0a
+	    a1100000-a117ffff : 0000:0a:00.0
 	      a1100000-a117ffff : igb
-	    a1180000-a1183fff : 0000:0b:00.0
+	    a1180000-a1183fff : 0000:0a:00.0
 	      a1180000-a1183fff : igb
-	  a1200000-a12fffff : PCI Bus 0000:0a
-	    a1200000-a127ffff : 0000:0a:00.0
+	  a1200000-a12fffff : PCI Bus 0000:09
+	    a1200000-a127ffff : 0000:09:00.0
 	      a1200000-a127ffff : igb
-	    a1280000-a1283fff : 0000:0a:00.0
+	    a1280000-a1283fff : 0000:09:00.0
 	      a1280000-a1283fff : igb
-	  a1300000-a13fffff : PCI Bus 0000:09
-	    a1300000-a1303fff : 0000:09:00.0
-	      a1300000-a1303fff : nvme
-	  a1400000-a17fffff : PCI Bus 0000:02
-	    a1400000-a17fffff : PCI Bus 0000:03
-	      a1400000-a14fffff : PCI Bus 0000:07
-	        a1400000-a147ffff : 0000:07:00.0
+	  a1300000-a16fffff : PCI Bus 0000:02
+	    a1300000-a16fffff : PCI Bus 0000:03
+	      a1300000-a13fffff : PCI Bus 0000:07
+	        a1300000-a137ffff : 0000:07:00.0
+	          a1300000-a137ffff : igb
+	        a1380000-a1383fff : 0000:07:00.0
+	          a1380000-a1383fff : igb
+	      a1400000-a14fffff : PCI Bus 0000:06
+	        a1400000-a147ffff : 0000:06:00.0
 	          a1400000-a147ffff : igb
-	        a1480000-a1483fff : 0000:07:00.0
+	        a1480000-a1483fff : 0000:06:00.0
 	          a1480000-a1483fff : igb
-	      a1500000-a15fffff : PCI Bus 0000:06
-	        a1500000-a157ffff : 0000:06:00.0
+	      a1500000-a15fffff : PCI Bus 0000:05
+	        a1500000-a157ffff : 0000:05:00.0
 	          a1500000-a157ffff : igb
-	        a1580000-a1583fff : 0000:06:00.0
+	        a1580000-a1583fff : 0000:05:00.0
 	          a1580000-a1583fff : igb
-	      a1600000-a16fffff : PCI Bus 0000:05
-	        a1600000-a167ffff : 0000:05:00.0
+	      a1600000-a16fffff : PCI Bus 0000:04
+	        a1600000-a167ffff : 0000:04:00.0
 	          a1600000-a167ffff : igb
-	        a1680000-a1683fff : 0000:05:00.0
+	        a1680000-a1683fff : 0000:04:00.0
 	          a1680000-a1683fff : igb
-	      a1700000-a17fffff : PCI Bus 0000:04
-	        a1700000-a177ffff : 0000:04:00.0
-	          a1700000-a177ffff : igb
-	        a1780000-a1783fff : 0000:04:00.0
-	          a1780000-a1783fff : igb
-	  a1800000-a18fffff : PCI Bus 0000:01
-	    a1800000-a1803fff : 0000:01:00.0
-	      a1800000-a1803fff : nvme
-	  a1900000-a191ffff : 0000:00:1f.6
-	    a1900000-a191ffff : e1000e
-	  a1920000-a192ffff : 0000:00:14.0
-	    a1920000-a192ffff : xhci-hcd
-	  a1930000-a1933fff : 0000:00:1f.3
-	    a1930000-a1933fff : Audio DSP
-	  a1934000-a1935fff : 0000:00:14.2
-	  a1936000-a1937fff : 0000:00:17.0
-	    a1936000-a1937fff : ahci
-	  a1938000-a1938fff : 0000:00:08.0
-	  a1939000-a1939fff : 0000:00:12.0
-	    a1939000-a1939fff : Intel PCH thermal driver
-	  a193a000-a193afff : 0000:00:14.2
-	  a193f000-a193f0ff : 0000:00:1f.4
-	  a1941000-a19417ff : 0000:00:17.0
-	    a1941000-a19417ff : ahci
-	  a1942000-a19420ff : 0000:00:17.0
-	    a1942000-a19420ff : ahci
+	  a1700000-a17fffff : PCI Bus 0000:01
+	    a1700000-a1703fff : 0000:01:00.0
+	      a1700000-a1703fff : nvme
+	  a1800000-a181ffff : 0000:00:1f.6
+	    a1800000-a181ffff : e1000e
+	  a1820000-a182ffff : 0000:00:14.0
+	    a1820000-a182ffff : xhci-hcd
+	  a1830000-a1833fff : 0000:00:1f.3
+	    a1830000-a1833fff : Audio DSP
+	  a1834000-a1835fff : 0000:00:14.2
+	  a1836000-a1837fff : 0000:00:17.0
+	    a1836000-a1837fff : ahci
+	  a1838000-a1838fff : 0000:00:08.0
+	  a1839000-a1839fff : 0000:00:12.0
+	    a1839000-a1839fff : Intel PCH thermal driver
+	  a183a000-a183afff : 0000:00:14.2
+	  a183f000-a183f0ff : 0000:00:1f.4
+	  a1841000-a18417ff : 0000:00:17.0
+	    a1841000-a18417ff : ahci
+	  a1842000-a18420ff : 0000:00:17.0
+	    a1842000-a18420ff : ahci
 	e0000000-efffffff : PCI MMCONFIG 0000 [bus 00-ff]
 	  e0000000-efffffff : Reserved
 	    e0000000-efffffff : pnp 00:08
@@ -332,34 +333,33 @@
 	  fee00000-fee00fff : Reserved
 	ff600000-ffffffff : Reserved
 	100000000-86c7fffff : System RAM
-	  24c000000-24ce025b6 : Kernel code
-	  24d000000-24d554fff : Kernel rodata
-	  24d600000-24d9658bf : Kernel data
-	  24dc2a000-24e1fffff : Kernel bss
+	  644e00000-645a010d6 : Kernel code
+	  645c00000-645f24fff : Kernel rodata
+	  646000000-6461a09bf : Kernel data
+	  6466b0000-6467fffff : Kernel bss
 	86c800000-86fffffff : RAM buffer
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
-	/dev/sda3: TYPE="ext4"
-	/dev/nvme1n1p2: TYPE="ext4"
 	/dev/nvme0n1p3: TYPE="ext4"
 	/dev/nvme0n1p4: TYPE="ext4"
+	/dev/sda2: TYPE="ext4"
+	/dev/sda3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
 	seri:/dev/ttyS1 type:portio base:0x2F8 irq:3
-	seri:/dev/ttyS4 type:mmio base:0x8F802000 irq:20 bdf:"00:1e.0"
 	</TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
 	5, 6, 7, 10, 11, 12, 13, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	32683232 kB
+	32721136 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3, 4, 5, 6, 7
 	</CPU_PROCESSOR_INFO>
   <MAX_MSIX_TABLE_NUM>
-	32
+	16
 	</MAX_MSIX_TABLE_NUM>
   <processors>
     <model description="Intel(R) Core(TM) i7-9700TE CPU @ 1.80GHz">
@@ -942,10 +942,17 @@
   </caches>
   <memory>
     <range start="0x0000000000000000" end="0x000000000009efff" size="651264"/>
-    <range start="0x0000000000100000" end="0x000000008738dfff" size="2267602944"/>
-    <range start="0x0000000089c0e000" end="0x0000000089c0efff" size="4096"/>
+    <range start="0x0000000000100000" end="0x000000008938dfff" size="2301157376"/>
+    <range start="0x000000008bc0e000" end="0x000000008bc0efff" size="4096"/>
     <range start="0x0000000100000000" end="0x000000086c7fffff" size="31885099008"/>
   </memory>
+  <ioapics>
+    <ioapic id="0x2">
+      <address>0xfec00000</address>
+      <gsi_base>0x0</gsi_base>
+      <gsi_number>120</gsi_number>
+    </ioapic>
+  </ioapics>
   <devices>
     <device id="INT339B">
       <acpi_object>\CHUB</acpi_object>
@@ -968,7 +975,7 @@
     </device>
     <bus type="system">
       <acpi_object>\_SB_</acpi_object>
-      <bus id="PNP0A08" type="pci" address="0x0" description="Host bridge: Intel Corporation 8th Gen Core 8-core Desktop Processor Host Bridge/DRAM Registers [Coffee Lake S]">
+      <bus id="PNP0A08" type="pci" address="0x0" description="Host bridge: Intel Corporation 8th/9th Gen Core 8-core Desktop Processor Host Bridge/DRAM Registers [Coffee Lake S]">
         <vendor>0x8086</vendor>
         <identifier>0x3e30</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1127,7 +1134,7 @@
             <aml_template>5b821a5c2f045f53425f504349305045473250454750085f41445200</aml_template>
           </device>
         </device>
-        <device address="0x20000" id="0x3e98" description="VGA compatible controller: Intel Corporation UHD Graphics 630 (Desktop 9 Series)">
+        <device address="0x20000" id="0x3e98" description="VGA compatible controller: Intel Corporation CoffeeLake-S GT2 [UHD Graphics 630]">
           <vendor>0x8086</vendor>
           <identifier>0x3e98</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1237,7 +1244,7 @@
           <subsystem_identifier>0x7270</subsystem_identifier>
           <class>0x088000</class>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0xa1938000" max="0xa1938fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0xa1838000" max="0xa1838fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="MSI">
             <count>1</count>
           </capability>
@@ -1251,7 +1258,7 @@
           <subsystem_identifier>0x7270</subsystem_identifier>
           <class>0x118000</class>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0xa1939000" max="0xa1939fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0xa1839000" max="0xa1839fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="MSI">
             <count>1</count>
@@ -1278,7 +1285,7 @@
           <acpi_object>\_SB_.PCI0.XHC_</acpi_object>
           <aml_template>5b821a5c2f035f53425f504349305848435f085f4144520c00001400</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0xa1920000" max="0xa192ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0xa1820000" max="0xa182ffff" len="0x10000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="MSI">
             <count>8</count>
@@ -1405,8 +1412,8 @@
           <subsystem_vendor>0x8086</subsystem_vendor>
           <subsystem_identifier>0xa36f</subsystem_identifier>
           <class>0x050000</class>
-          <resource type="memory" min="0xa1934000" max="0xa1935fff" len="0x2000" id="bar0" width="64" prefetchable="0"/>
-          <resource type="memory" min="0xa193a000" max="0xa193afff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
+          <resource type="memory" min="0xa1834000" max="0xa1835fff" len="0x2000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0xa183a000" max="0xa183afff" len="0x1000" id="bar2" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
         </device>
         <device address="0x140003">
@@ -1437,10 +1444,10 @@
           <resource type="memory" min="0x8f800000" max="0x8f800fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.UCMX</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.PA01</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.UCMX</dependency>
           <device id="MAX34407">
             <acpi_object>\_SB_.PCI0.I2C0.PA01</acpi_object>
             <compatible_id>MAX34407</compatible_id>
@@ -1512,8 +1519,8 @@
           <resource type="memory" min="0x8f801000" max="0x8f801fff" len="0x1000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C1.UCMX</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C1.TPD0</acpi_object>
@@ -1577,9 +1584,9 @@
           <resource type="io_port" min="0x9060" max="0x907f" len="0x20" id="bar4"/>
           <resource type="io_port" min="0x9080" max="0x9087" len="0x8" id="bar2"/>
           <resource type="io_port" min="0x9088" max="0x908b" len="0x4" id="bar3"/>
-          <resource type="memory" min="0xa1936000" max="0xa1937fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
-          <resource type="memory" min="0xa1941000" max="0xa19417ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
-          <resource type="memory" min="0xa1942000" max="0xa19420ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
+          <resource type="memory" min="0xa1836000" max="0xa1837fff" len="0x2000" id="bar0" width="32" prefetchable="0"/>
+          <resource type="memory" min="0xa1841000" max="0xa18417ff" len="0x800" id="bar5" width="32" prefetchable="0"/>
+          <resource type="memory" min="0xa1842000" max="0xa18420ff" len="0x100" id="bar1" width="32" prefetchable="0"/>
           <capability id="MSI">
             <count>1</count>
           </capability>
@@ -1656,7 +1663,7 @@
           <identifier>0xa340</identifier>
           <class>0x060400</class>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0xa1800000" max="0xa18fffff" len="0x100000"/>
+          <resource type="memory" min="0xa1700000" max="0xa17fffff" len="0x100000"/>
           <capability id="PCI Express"/>
           <capability id="MSI">
             <count>1</count>
@@ -1670,14 +1677,14 @@
           <capability id="Secondary PCI Express"/>
           <capability id="DPC"/>
           <bus type="pci" address="0x1">
-            <device address="0x0" id="0x2263" description="Non-Volatile memory controller: Silicon Motion, Inc.">
+            <device address="0x0" id="0x2263" description="Non-Volatile memory controller: Silicon Motion, Inc. SM2263EN/SM2263XT SSD Controller">
               <vendor>0x126f</vendor>
               <identifier>0x2263</identifier>
               <subsystem_vendor>0x126f</subsystem_vendor>
               <subsystem_identifier>0x2263</subsystem_identifier>
               <class>0x010802</class>
               <resource type="interrupt_pin" pin="INTA#"/>
-              <resource type="memory" min="0xa1800000" max="0xa1803fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+              <resource type="memory" min="0xa1700000" max="0xa1703fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
               <capability id="Power Management"/>
               <capability id="MSI">
                 <count>8</count>
@@ -1706,7 +1713,7 @@
           <class>0x060400</class>
           <resource type="interrupt_pin" pin="INTC#" source="18"/>
           <resource type="io_port" min="0x5000" max="0x8fff" len="0x4000"/>
-          <resource type="memory" min="0xa1400000" max="0xa17fffff" len="0x400000"/>
+          <resource type="memory" min="0xa1300000" max="0xa16fffff" len="0x400000"/>
           <capability id="PCI Express"/>
           <capability id="MSI">
             <count>1</count>
@@ -1725,7 +1732,7 @@
               <identifier>0x2608</identifier>
               <class>0x060400</class>
               <resource type="io_port" min="0x5000" max="0x8fff" len="0x4000"/>
-              <resource type="memory" min="0xa1400000" max="0xa17fffff" len="0x400000"/>
+              <resource type="memory" min="0xa1300000" max="0xa16fffff" len="0x400000"/>
               <capability id="Power Management"/>
               <capability id="VPD"/>
               <capability id="Vendor-Specific"/>
@@ -1742,7 +1749,7 @@
                   <identifier>0x2608</identifier>
                   <class>0x060400</class>
                   <resource type="io_port" min="0x8000" max="0x8fff" len="0x1000"/>
-                  <resource type="memory" min="0xa1700000" max="0xa17fffff" len="0x100000"/>
+                  <resource type="memory" min="0xa1600000" max="0xa16fffff" len="0x100000"/>
                   <capability id="Power Management"/>
                   <capability id="Vendor-Specific"/>
                   <capability id="Subsystem ID and Subsystem Vendor ID"/>
@@ -1761,8 +1768,8 @@
                       <class>0x020000</class>
                       <resource type="interrupt_pin" pin="INTA#"/>
                       <resource type="io_port" min="0x8000" max="0x801f" len="0x20" id="bar2"/>
-                      <resource type="memory" min="0xa1700000" max="0xa177ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
-                      <resource type="memory" min="0xa1780000" max="0xa1783fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
+                      <resource type="memory" min="0xa1600000" max="0xa167ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
+                      <resource type="memory" min="0xa1680000" max="0xa1683fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
                       <capability id="Power Management"/>
                       <capability id="MSI">
                         <count>1</count>
@@ -1788,7 +1795,7 @@
                   <identifier>0x2608</identifier>
                   <class>0x060400</class>
                   <resource type="io_port" min="0x7000" max="0x7fff" len="0x1000"/>
-                  <resource type="memory" min="0xa1600000" max="0xa16fffff" len="0x100000"/>
+                  <resource type="memory" min="0xa1500000" max="0xa15fffff" len="0x100000"/>
                   <capability id="Power Management"/>
                   <capability id="Vendor-Specific"/>
                   <capability id="Subsystem ID and Subsystem Vendor ID"/>
@@ -1807,8 +1814,8 @@
                       <class>0x020000</class>
                       <resource type="interrupt_pin" pin="INTA#"/>
                       <resource type="io_port" min="0x7000" max="0x701f" len="0x20" id="bar2"/>
-                      <resource type="memory" min="0xa1600000" max="0xa167ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
-                      <resource type="memory" min="0xa1680000" max="0xa1683fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
+                      <resource type="memory" min="0xa1500000" max="0xa157ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
+                      <resource type="memory" min="0xa1580000" max="0xa1583fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
                       <capability id="Power Management"/>
                       <capability id="MSI">
                         <count>1</count>
@@ -1834,7 +1841,7 @@
                   <identifier>0x2608</identifier>
                   <class>0x060400</class>
                   <resource type="io_port" min="0x6000" max="0x6fff" len="0x1000"/>
-                  <resource type="memory" min="0xa1500000" max="0xa15fffff" len="0x100000"/>
+                  <resource type="memory" min="0xa1400000" max="0xa14fffff" len="0x100000"/>
                   <capability id="Power Management"/>
                   <capability id="Vendor-Specific"/>
                   <capability id="Subsystem ID and Subsystem Vendor ID"/>
@@ -1853,8 +1860,8 @@
                       <class>0x020000</class>
                       <resource type="interrupt_pin" pin="INTA#"/>
                       <resource type="io_port" min="0x6000" max="0x601f" len="0x20" id="bar2"/>
-                      <resource type="memory" min="0xa1500000" max="0xa157ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
-                      <resource type="memory" min="0xa1580000" max="0xa1583fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
+                      <resource type="memory" min="0xa1400000" max="0xa147ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
+                      <resource type="memory" min="0xa1480000" max="0xa1483fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
                       <capability id="Power Management"/>
                       <capability id="MSI">
                         <count>1</count>
@@ -1880,7 +1887,7 @@
                   <identifier>0x2608</identifier>
                   <class>0x060400</class>
                   <resource type="io_port" min="0x5000" max="0x5fff" len="0x1000"/>
-                  <resource type="memory" min="0xa1400000" max="0xa14fffff" len="0x100000"/>
+                  <resource type="memory" min="0xa1300000" max="0xa13fffff" len="0x100000"/>
                   <capability id="Power Management"/>
                   <capability id="Vendor-Specific"/>
                   <capability id="Subsystem ID and Subsystem Vendor ID"/>
@@ -1899,8 +1906,8 @@
                       <class>0x020000</class>
                       <resource type="interrupt_pin" pin="INTA#"/>
                       <resource type="io_port" min="0x5000" max="0x501f" len="0x20" id="bar2"/>
-                      <resource type="memory" min="0xa1400000" max="0xa147ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
-                      <resource type="memory" min="0xa1480000" max="0xa1483fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
+                      <resource type="memory" min="0xa1300000" max="0xa137ffff" len="0x80000" id="bar0" width="32" prefetchable="0"/>
+                      <resource type="memory" min="0xa1380000" max="0xa1383fff" len="0x4000" id="bar3" width="32" prefetchable="0"/>
                       <capability id="Power Management"/>
                       <capability id="MSI">
                         <count>1</count>
@@ -1940,53 +1947,7 @@
             </device>
           </bus>
         </device>
-        <device address="0x1c0000" id="0xa33a" description="PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #3">
-          <vendor>0x8086</vendor>
-          <identifier>0xa33a</identifier>
-          <class>0x060400</class>
-          <resource type="interrupt_pin" pin="INTC#" source="18"/>
-          <resource type="memory" min="0xa1300000" max="0xa13fffff" len="0x100000"/>
-          <capability id="PCI Express"/>
-          <capability id="MSI">
-            <count>1</count>
-          </capability>
-          <capability id="Subsystem ID and Subsystem Vendor ID"/>
-          <capability id="Power Management"/>
-          <capability id="Advanced Error Reporting"/>
-          <capability id="ACS"/>
-          <capability id="TPM"/>
-          <capability id="L1 PM Substates"/>
-          <capability id="Secondary PCI Express"/>
-          <capability id="DPC"/>
-          <bus type="pci" address="0x9">
-            <device address="0x0" id="0x1160" description="Non-Volatile memory controller: Marvell Technology Group Ltd.">
-              <vendor>0x1b4b</vendor>
-              <identifier>0x1160</identifier>
-              <subsystem_vendor>0x1b4b</subsystem_vendor>
-              <subsystem_identifier>0x1160</subsystem_identifier>
-              <class>0x010802</class>
-              <resource type="interrupt_pin" pin="INTA#"/>
-              <resource type="memory" min="0xa1300000" max="0xa1303fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
-              <capability id="Power Management"/>
-              <capability id="MSI">
-                <count>1</count>
-                <capability id="64-bit address"/>
-              </capability>
-              <capability id="PCI Express"/>
-              <capability id="MSI-X">
-                <table_size>32</table_size>
-                <table_bir>1</table_bir>
-                <table_offset>0x10000000</table_offset>
-                <pba_bir>1</pba_bir>
-                <pba_offset>0x0</pba_offset>
-              </capability>
-              <capability id="Advanced Error Reporting"/>
-              <capability id="Secondary PCI Express"/>
-              <capability id="LTR"/>
-            </device>
-          </bus>
-        </device>
-        <device address="0x1c0006" id="0xa33e" description="PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #7">
+        <device address="0x1c0000" id="0xa33e" description="PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #7">
           <vendor>0x8086</vendor>
           <identifier>0xa33e</identifier>
           <class>0x060400</class>
@@ -2005,7 +1966,7 @@
           <capability id="L1 PM Substates"/>
           <capability id="Secondary PCI Express"/>
           <capability id="DPC"/>
-          <bus type="pci" address="0xa">
+          <bus type="pci" address="0x9">
             <device address="0x0" id="0x1533" description="Ethernet controller: Intel Corporation I210 Gigabit Network Connection">
               <vendor>0x8086</vendor>
               <identifier>0x1533</identifier>
@@ -2055,7 +2016,7 @@
           <capability id="L1 PM Substates"/>
           <capability id="Secondary PCI Express"/>
           <capability id="DPC"/>
-          <bus type="pci" address="0xb">
+          <bus type="pci" address="0xa">
             <device address="0x0" id="0x1533" description="Ethernet controller: Intel Corporation I210 Gigabit Network Connection">
               <vendor>0x8086</vendor>
               <identifier>0x1533</identifier>
@@ -2282,7 +2243,7 @@
           <aml_template>5b821a5c2f035f53425f5043493048444153085f4144520c03001f00</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
           <resource type="memory" min="0xa1000000" max="0xa10fffff" len="0x100000" id="bar4" width="64" prefetchable="0"/>
-          <resource type="memory" min="0xa1930000" max="0xa1933fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0xa1830000" max="0xa1833fff" len="0x4000" id="bar0" width="64" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="Vendor-Specific"/>
           <capability id="MSI">
@@ -2343,7 +2304,7 @@
           <aml_template>5b821a5c2f035f53425f5043493053425553085f4144520c04001f00</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
           <resource type="io_port" min="0x9040" max="0x905f" len="0x20" id="bar4"/>
-          <resource type="memory" min="0xa193f000" max="0xa193f0ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
+          <resource type="memory" min="0xa183f000" max="0xa183f0ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
         </device>
         <device address="0x1f0005" id="0xa324" description="Serial bus controller: Intel Corporation Cannon Lake PCH SPI Controller">
           <vendor>0x8086</vendor>
@@ -2362,7 +2323,7 @@
           <acpi_object>\_SB_.PCI0.GLAN</acpi_object>
           <aml_template>5b821a5c2f035f53425f50434930474c414e085f4144520c06001f00</aml_template>
           <resource type="interrupt_pin" pin="INTA#" source="16"/>
-          <resource type="memory" min="0xa1900000" max="0xa191ffff" len="0x20000" id="bar0" width="32" prefetchable="0"/>
+          <resource type="memory" min="0xa1800000" max="0xa181ffff" len="0x20000" id="bar0" width="32" prefetchable="0"/>
           <capability id="Power Management"/>
           <capability id="MSI">
             <count>1</count>
@@ -2479,8 +2440,8 @@
           <resource id="res2" type="memory" min="0xfd6b0000" max="0xfd6bffff" len="0x10000"/>
           <resource id="res1" type="memory" min="0xfd6d0000" max="0xfd6dffff" len="0x10000"/>
           <resource id="res0" type="memory" min="0xfd6e0000" max="0xfd6effff" len="0x10000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.PSDC</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.DSC1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.PSDC</dependency>
         </device>
         <device id="INT34B4">
           <acpi_object>\_SB_.PCI0.I2C2</acpi_object>
@@ -2492,18 +2453,18 @@
           </status>
           <resource id="res1" type="irq" int="18"/>
           <resource id="res0" type="memory" min="0xfe024000" max="0xfe024fff" len="0x1000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.CAM0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.HDAC</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.CLP2</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.LNK0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.HDAC</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK3</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.CAM0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP3</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.UCMX</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C2.PMIC</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.LNK1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP3</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.LNK3</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.UCMX</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPD0</dependency>
           <device id="INT3471" address="0x0">
             <acpi_object>\_SB_.PCI0.I2C2.CAM0</acpi_object>
             <compatible_id>INT3471</compatible_id>
@@ -2605,10 +2566,10 @@
           </status>
           <resource id="res1" type="irq" int="19"/>
           <resource id="res0" type="memory" min="0xfe026000" max="0xfe026fff" len="0x1000"/>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C3.UCMX</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.CLP1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.LNK2</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C3.TPD0</acpi_object>
