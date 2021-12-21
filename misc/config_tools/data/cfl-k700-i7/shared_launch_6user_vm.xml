@@ -1,11 +1,11 @@
-<acrn-config board="whl-ipc-i5" scenario="shared" user_vm_launcher="6">
+<acrn-config board="cfl-k700-i7" scenario="shared" user_vm_launcher="6">
   <user_vm id="1">
     <user_vm_type desc="User VM type">WINDOWS</user_vm_type>
     <vm_name>POST_STD_VM1</vm_name>
     <rtos_type desc="User VM Realtime capability">no</rtos_type>
     <mem_size desc="User VM memory size in MByte">4096</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
-    <vuart0 desc="vUART0 which emulated by device model">Enable</vuart0>
+    <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
     <poweroff_channel desc="the method of power off User VM"/>
     <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
     <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
@@ -22,9 +22,9 @@
     </communication_vuarts>
     <passthrough_devices>
       <usb_xdci desc="vm usb_xdci device"/>
-      <audio desc="vm audio device">00:1f.3 Audio device: Intel Corporation Cannon Point-LP High Definition Audio Controller (rev 30)</audio>
+      <audio desc="vm audio device"/>
       <audio_codec desc="vm audio codec device"/>
-      <gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation WhiskeyLake-U GT2 [UHD Graphics 620]</gpu>
+      <gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation CoffeeLake-S GT2 [UHD Graphics 630] (rev 02)</gpu>
       <ipu desc="vm ipu device"/>
       <ipu_i2c desc="vm ipu_i2c device"/>
       <cse desc="vm cse device"/>
@@ -54,8 +54,8 @@
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
     <poweroff_channel desc="the method of power off User VM"/>
-    <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
     <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
+    <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
     <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"/>
     <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
       <pcpu_id/>
@@ -130,10 +130,10 @@
       <nvme desc="vm nvme device"/>
     </passthrough_devices>
     <virtio_devices>
-      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"/>
-      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."/>
+      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG3</network>
       <input desc="virtio input device"/>
-      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"/>
+      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
     </virtio_devices>
     <sriov>
       <gpu/>
@@ -177,10 +177,10 @@
       <nvme desc="vm nvme device"/>
     </passthrough_devices>
     <virtio_devices>
-      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"/>
-      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."/>
+      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG4</network>
       <input desc="virtio input device"/>
-      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"/>
+      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
     </virtio_devices>
     <sriov>
       <gpu/>
@@ -224,10 +224,10 @@
       <nvme desc="vm nvme device"/>
     </passthrough_devices>
     <virtio_devices>
-      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"/>
-      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."/>
+      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG5</network>
       <input desc="virtio input device"/>
-      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"/>
+      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
     </virtio_devices>
     <sriov>
       <gpu/>
@@ -271,10 +271,10 @@
       <nvme desc="vm nvme device"/>
     </passthrough_devices>
     <virtio_devices>
-      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"/>
-      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."/>
+      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+      <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG6</network>
       <input desc="virtio input device"/>
-      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"/>
+      <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
     </virtio_devices>
     <sriov>
       <gpu/>

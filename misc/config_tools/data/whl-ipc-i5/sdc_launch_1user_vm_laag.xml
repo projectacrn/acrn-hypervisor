@@ -24,7 +24,7 @@
       <usb_xdci desc="vm usb_xdci device"/>
       <audio desc="vm audio device"/>
       <audio_codec desc="vm audio codec device"/>
-      <gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation Device 3ea0 (rev 02)</gpu>
+      <gpu desc="vm gpu device">00:02.0 VGA compatible controller: Intel Corporation WhiskeyLake-U GT2 [UHD Graphics 620]</gpu>
       <ipu desc="vm ipu device"/>
       <ipu_i2c desc="vm ipu_i2c device"/>
       <cse desc="vm cse device"/>

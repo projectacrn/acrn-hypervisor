@@ -1,4 +1,4 @@
-<acrn-config board="whl-ipc-i5" scenario="partitioned">
+<acrn-config board="cfl-k700-i7" scenario="partitioned">
   <hv>
     <DEBUG_OPTIONS>
       <RELEASE>n</RELEASE>
@@ -18,6 +18,14 @@
         <RDT_ENABLED>n</RDT_ENABLED>
         <CDP_ENABLED>n</CDP_ENABLED>
         <VCAT_ENABLED>n</VCAT_ENABLED>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
+        <CLOS_MASK>0xfffff</CLOS_MASK>
       </RDT>
       <NVMX_ENABLED>n</NVMX_ENABLED>
       <HYPERV_ENABLED>y</HYPERV_ENABLED>
@@ -41,7 +49,7 @@
       <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
       <MAX_IOAPIC_LINES>120</MAX_IOAPIC_LINES>
       <MAX_PT_IRQ_ENTRIES>64</MAX_PT_IRQ_ENTRIES>
-      <MAX_MSIX_TABLE_NUM/>
+      <MAX_MSIX_TABLE_NUM>64</MAX_MSIX_TABLE_NUM>
       <MAX_EMULATED_MMIO>16</MAX_EMULATED_MMIO>
     </CAPACITIES>
     <MISC_CFG>
@@ -76,10 +84,8 @@
       <name>YOCTO</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
-      <ramdisk_mod/>
-      <bootargs>
-        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable
-        reboot=acpi
+      <ramdisk_mod>Ubuntu</ramdisk_mod>
+      <bootargs> rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>
     <legacy_vuart id="0">
@@ -103,8 +109,9 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-      <pci_dev>00:17.0 SATA controller: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode] (rev 30)</pci_dev>
-      <pci_dev>04:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)</pci_dev>
+      <pci_dev>00:17.0 SATA controller: Intel Corporation Cannon Lake PCH SATA AHCI Controller (rev 10)</pci_dev>
+      <pci_dev>00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (7) I219-LM (rev 10)</pci_dev>
+      <pci_dev/>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>
@@ -138,9 +145,8 @@
       <name>YOCTO</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
-      <ramdisk_mod/>
-      <bootargs>
-        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
+      <ramdisk_mod>Ubuntu</ramdisk_mod>
+      <bootargs>        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
         consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>
@@ -165,8 +171,8 @@
       <target_uart_id>1</target_uart_id>
     </communication_vuart>
     <pci_devs>
-      <pci_dev>00:14.0 USB controller: Intel Corporation Cannon Point-LP USB 3.1 xHCI Controller (rev 30)</pci_dev>
-      <pci_dev>03:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)</pci_dev>
+      <pci_dev>00:14.0 USB controller: Intel Corporation Cannon Lake PCH USB 3.1 xHCI Host Controller (rev 10)</pci_dev>
+      <pci_dev/>
     </pci_devs>
     <mmio_resources>
       <TPM2>n</TPM2>

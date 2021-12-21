@@ -2,8 +2,8 @@
   <BIOS_INFO>
 	BIOS Information
 	Vendor: American Megatrends Inc.
-	Version: WL10R109
-	Release Date: 06/05/2020
+	Version: WL10R104
+	Release Date: 09/12/2019
 	BIOS Revision: 5.13
 	</BIOS_INFO>
   <BASE_BOARD_INFO>
@@ -13,38 +13,38 @@
 	Version: V1.0
 	</BASE_BOARD_INFO>
   <PCI_DEVICE>
-	00:00.0 Host bridge: Intel Corporation Device 3e34 (rev 0c)
-	00:02.0 VGA compatible controller: Intel Corporation Device 3ea0 (rev 02)
+	00:00.0 Host bridge: Intel Corporation Coffee Lake HOST and DRAM Controller (rev 0b)
+	00:02.0 VGA compatible controller: Intel Corporation WhiskeyLake-U GT2 [UHD Graphics 620]
 	Region 0: Memory at a0000000 (64-bit, non-prefetchable) [size=16M]
 	Region 2: Memory at 90000000 (64-bit, prefetchable) [size=256M]
-	00:12.0 Signal processing controller: Intel Corporation Device 9df9 (rev 30)
+	00:12.0 Signal processing controller: Intel Corporation Cannon Point-LP Thermal Controller (rev 30)
 	Region 0: Memory at a141e000 (64-bit, non-prefetchable) [size=4K]
-	00:14.0 USB controller: Intel Corporation Device 9ded (rev 30)
+	00:14.0 USB controller: Intel Corporation Cannon Point-LP USB 3.1 xHCI Controller (rev 30)
 	Region 0: Memory at a1400000 (64-bit, non-prefetchable) [size=64K]
-	00:14.2 RAM memory: Intel Corporation Device 9def (rev 30)
+	00:14.2 RAM memory: Intel Corporation Cannon Point-LP Shared SRAM (rev 30)
 	Region 0: Memory at a1416000 (64-bit, non-prefetchable) [disabled] [size=8K]
 	Region 2: Memory at a141d000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:16.0 Communication controller: Intel Corporation Device 9de0 (rev 30)
+	00:16.0 Communication controller: Intel Corporation Cannon Point-LP MEI Controller #1 (rev 30)
 	Region 0: Memory at a141c000 (64-bit, non-prefetchable) [size=4K]
-	00:17.0 SATA controller: Intel Corporation Device 9dd3 (rev 30)
+	00:17.0 SATA controller: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode] (rev 30)
 	Region 0: Memory at a1414000 (32-bit, non-prefetchable) [size=8K]
 	Region 1: Memory at a141b000 (32-bit, non-prefetchable) [size=256]
 	Region 5: Memory at a141a000 (32-bit, non-prefetchable) [size=2K]
 	00:1a.0 SD Host controller: Intel Corporation Device 9dc4 (rev 30)
 	Region 0: Memory at a1419000 (64-bit, non-prefetchable) [size=4K]
-	00:1c.0 PCI bridge: Intel Corporation Device 9db8 (rev f0)
-	00:1c.4 PCI bridge: Intel Corporation Device 9dbc (rev f0)
-	00:1d.0 PCI bridge: Intel Corporation Device 9db0 (rev f0)
-	00:1d.1 PCI bridge: Intel Corporation Device 9db1 (rev f0)
-	00:1f.0 ISA bridge: Intel Corporation Device 9d84 (rev 30)
-	00:1f.3 Audio device: Intel Corporation Device 9dc8 (rev 30)
+	00:1c.0 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #1 (rev f0)
+	00:1c.4 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #5 (rev f0)
+	00:1d.0 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #9 (rev f0)
+	00:1d.1 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #10 (rev f0)
+	00:1f.0 ISA bridge: Intel Corporation Cannon Point-LP LPC Controller (rev 30)
+	00:1f.3 Audio device: Intel Corporation Cannon Point-LP High Definition Audio Controller (rev 30)
 	Region 0: Memory at a1410000 (64-bit, non-prefetchable) [size=16K]
 	Region 4: Memory at a1000000 (64-bit, non-prefetchable) [size=1M]
-	00:1f.4 SMBus: Intel Corporation Device 9da3 (rev 30)
+	00:1f.4 SMBus: Intel Corporation Cannon Point-LP SMBus Controller (rev 30)
 	Region 0: Memory at a1418000 (64-bit, non-prefetchable) [size=256]
-	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device 9da4 (rev 30)
+	00:1f.5 Serial bus controller: Intel Corporation Cannon Point-LP SPI Controller (rev 30)
 	Region 0: Memory at fe010000 (32-bit, non-prefetchable) [size=4K]
-	02:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)
+	02:00.0 Non-Volatile memory controller: Silicon Motion, Inc. SM2263EN/SM2263XT SSD Controller (rev 03)
 	Region 0: Memory at a1300000 (64-bit, non-prefetchable) [size=16K]
 	03:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
 	Region 0: Memory at a1200000 (32-bit, non-prefetchable) [size=128K]
@@ -54,8 +54,8 @@
 	Region 3: Memory at a1120000 (32-bit, non-prefetchable) [size=16K]
 	</PCI_DEVICE>
   <PCI_VID_PID>
-	00:00.0 0600: 8086:3e34 (rev 0c)
-	00:02.0 0300: 8086:3ea0 (rev 02)
+	00:00.0 0600: 8086:3e34 (rev 0b)
+	00:02.0 0300: 8086:3ea0
 	00:12.0 1180: 8086:9df9 (rev 30)
 	00:14.0 0c03: 8086:9ded (rev 30)
 	00:14.2 0500: 8086:9def (rev 30)
@@ -75,8 +75,8 @@
 	04:00.0 0200: 8086:157b (rev 03)
 	</PCI_VID_PID>
   <WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x8C93E08CUL
-	#define WAKE_VECTOR_64          0x8C93E098UL
+	#define WAKE_VECTOR_32          0x8A8A808CUL
+	#define WAKE_VECTOR_64          0x8A8A8098UL
 	</WAKE_VECTOR_INFO>
   <RESET_REGISTER_INFO>
 	#define RESET_REGISTER_ADDRESS  0xCF9UL
@@ -144,7 +144,7 @@
 	"Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz"
 	</CPU_BRAND>
   <CX_INFO>
-	/* Cx data is not available */
+	{{SPACE_FFixedHW, 0x00U, 0x00U, 0x00U, 0x00UL}, 0x01U, 0x00U, 0x00U},	/* C1 */
 	</CX_INFO>
   <PX_INFO>
 	/* Px data is not available */
@@ -166,32 +166,31 @@
 	000a0000-000fffff : Reserved
 	  000a0000-000bffff : PCI Bus 0000:00
 	  000c0000-000cffff : Video ROM
+	  000d0000-000d0fff : Adapter ROM
 	  000f0000-000fffff : System ROM
 	00100000-3fffffff : System RAM
 	40000000-403fffff : Reserved
 	  40000000-403fffff : pnp 00:00
-	40400000-846a2017 : System RAM
-	846a2018-846b2657 : System RAM
-	846b2658-846b3017 : System RAM
-	846b3018-846c3057 : System RAM
-	846c3058-85cbcfff : System RAM
-	85cbd000-85cbdfff : ACPI Non-volatile Storage
-	85cbe000-85cbefff : Reserved
-	85cbf000-88b01fff : System RAM
-	88b02000-88b40fff : Reserved
-	88b41000-8c052fff : System RAM
-	8c053000-8c4b4fff : Reserved
-	8c4b5000-8c531fff : ACPI Tables
-	8c532000-8c93efff : ACPI Non-volatile Storage
-	8c93f000-8cffefff : Reserved
-	8cfff000-8cffffff : System RAM
-	8d000000-8fffffff : Reserved
-	  8e000000-8fffffff : Graphics Stolen Memory
+	40400000-822f7017 : System RAM
+	822f7018-82307657 : System RAM
+	82307658-82308017 : System RAM
+	82308018-82318057 : System RAM
+	82318058-83582fff : System RAM
+	83583000-83583fff : ACPI Non-volatile Storage
+	83584000-83584fff : Reserved
+	83585000-89fbcfff : System RAM
+	89fbd000-8a41efff : Reserved
+	8a41f000-8a49bfff : ACPI Tables
+	8a49c000-8a8a8fff : ACPI Non-volatile Storage
+	8a8a9000-8aefefff : Reserved
+	8aeff000-8aefffff : System RAM
+	8af00000-8fffffff : Reserved
+	  8c000000-8fffffff : Graphics Stolen Memory
 	90000000-dfffffff : PCI Bus 0000:00
 	  90000000-9fffffff : 0000:00:02.0
 	  a0000000-a0ffffff : 0000:00:02.0
 	  a1000000-a10fffff : 0000:00:1f.3
-	    a1000000-a10fffff : ICH HD audio
+	    a1000000-a10fffff : Audio DSP
 	  a1100000-a11fffff : PCI Bus 0000:04
 	    a1100000-a111ffff : 0000:04:00.0
 	      a1100000-a111ffff : igb
@@ -208,7 +207,7 @@
 	  a1400000-a140ffff : 0000:00:14.0
 	    a1400000-a140ffff : xhci-hcd
 	  a1410000-a1413fff : 0000:00:1f.3
-	    a1410000-a1413fff : ICH HD audio
+	    a1410000-a1413fff : Audio DSP
 	  a1414000-a1415fff : 0000:00:17.0
 	    a1414000-a1415fff : ahci
 	  a1416000-a1417fff : 0000:00:14.2
@@ -253,28 +252,29 @@
 	ff000000-ffffffff : Reserved
 	  ff000000-ffffffff : pnp 00:0e
 	100000000-26dffffff : System RAM
-	  262c00000-263a00ea0 : Kernel code
-	  263a00ea1-26445363f : Kernel data
-	  26471d000-264bfffff : Kernel bss
+	  262c00000-2638010d6 : Kernel code
+	  263a00000-263d24fff : Kernel rodata
+	  263e00000-263fa09bf : Kernel data
+	  2644b0000-2645fffff : Kernel bss
 	26e000000-26fffffff : RAM buffer
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
 	/dev/nvme0n1p3: TYPE="ext4"
-	/dev/sda5: TYPE="ext4"
+	/dev/sda3: TYPE="ext4"
+	/dev/sdb2: TYPE="ext4"
+	/dev/sdb3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
 	seri:/dev/ttyS1 type:portio base:0x2F8 irq:3
 	seri:/dev/ttyS2 type:portio base:0x3E8 irq:7
 	seri:/dev/ttyS3 type:portio base:0x2E8 irq:7
-	seri:/dev/ttyS4 type:portio base:0x2F0 irq:7
-	seri:/dev/ttyS5 type:portio base:0x2E0 irq:7
 	</TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
-	6, 10, 11, 13, 14, 15
+	5, 6, 10, 11, 13, 14, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	8050404 kB
+	8019820 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3
@@ -384,7 +384,7 @@
           <x2apic_id>0x0</x2apic_id>
           <family_id>0x6</family_id>
           <model_id>0x8e</model_id>
-          <stepping_id>0xc</stepping_id>
+          <stepping_id>0xb</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -396,7 +396,7 @@
           <x2apic_id>0x2</x2apic_id>
           <family_id>0x6</family_id>
           <model_id>0x8e</model_id>
-          <stepping_id>0xc</stepping_id>
+          <stepping_id>0xb</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -408,7 +408,7 @@
           <x2apic_id>0x4</x2apic_id>
           <family_id>0x6</family_id>
           <model_id>0x8e</model_id>
-          <stepping_id>0xc</stepping_id>
+          <stepping_id>0xb</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -420,7 +420,7 @@
           <x2apic_id>0x6</x2apic_id>
           <family_id>0x6</family_id>
           <model_id>0x8e</model_id>
-          <stepping_id>0xc</stepping_id>
+          <stepping_id>0xb</stepping_id>
           <core_type></core_type>
           <native_model_id></native_model_id>
         </thread>
@@ -631,11 +631,18 @@
     <range start="0x0000000000000000" end="0x000000000005efff" size="389120"/>
     <range start="0x0000000000060000" end="0x000000000009ffff" size="262144"/>
     <range start="0x0000000000100000" end="0x000000003fffffff" size="1072693248"/>
-    <range start="0x0000000040400000" end="0x0000000085cbcfff" size="1166790656"/>
-    <range start="0x0000000085cbf000" end="0x000000008c052fff" size="104415232"/>
-    <range start="0x000000008cfff000" end="0x000000008cffffff" size="4096"/>
+    <range start="0x0000000040400000" end="0x0000000083582fff" size="1125658624"/>
+    <range start="0x0000000083585000" end="0x0000000089fbcfff" size="111378432"/>
+    <range start="0x000000008aeff000" end="0x000000008aefffff" size="4096"/>
     <range start="0x0000000100000000" end="0x000000026dffffff" size="6140461056"/>
   </memory>
+  <ioapics>
+    <ioapic id="0x2">
+      <address>0xfec00000</address>
+      <gsi_base>0x0</gsi_base>
+      <gsi_number>120</gsi_number>
+    </ioapic>
+  </ioapics>
   <devices>
     <device id="ACPI0008">
       <acpi_object>\ALSD</acpi_object>
@@ -667,7 +674,7 @@
     </device>
     <bus type="system">
       <acpi_object>\_SB_</acpi_object>
-      <bus id="PNP0A08" type="pci" address="0x0" description="Host bridge: Intel Corporation">
+      <bus id="PNP0A08" type="pci" address="0x0" description="Host bridge: Intel Corporation Coffee Lake HOST and DRAM Controller">
         <vendor>0x8086</vendor>
         <identifier>0x3e34</identifier>
         <subsystem_vendor>0x8086</subsystem_vendor>
@@ -850,7 +857,7 @@
             <aml_template>5b821a5c2f045f53425f504349305045473250454750085f41445200</aml_template>
           </device>
         </device>
-        <device address="0x20000" id="0x3ea0" description="VGA compatible controller: Intel Corporation">
+        <device address="0x20000" id="0x3ea0" description="VGA compatible controller: Intel Corporation WhiskeyLake-U GT2 [UHD Graphics 620]">
           <vendor>0x8086</vendor>
           <identifier>0x3ea0</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -953,7 +960,7 @@
           <acpi_object>\_SB_.PCI0.IPU0</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043493049505530085f4144520c00000500</aml_template>
         </device>
-        <device address="0x120000" id="0x9df9" description="Signal processing controller: Intel Corporation">
+        <device address="0x120000" id="0x9df9" description="Signal processing controller: Intel Corporation Cannon Point-LP Thermal Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9df9</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -978,7 +985,7 @@
           <acpi_object>\_SB_.PCI0.ISHD</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043493049534844085f4144520c00001300</aml_template>
         </device>
-        <device address="0x140000" id="0x9ded" description="USB controller: Intel Corporation">
+        <device address="0x140000" id="0x9ded" description="USB controller: Intel Corporation Cannon Point-LP USB 3.1 xHCI Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9ded</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1076,7 +1083,7 @@
           <acpi_object>\_SB_.PCI0.XDCI</acpi_object>
           <aml_template>5b8244055c2f035f53425f5043493058444349085f53545211330a3043004e004c00200050004300480020005800440043004900200063006f006e00740072006f006c006c00650072000000085f4144520c01001400</aml_template>
         </device>
-        <device address="0x140002" id="0x9def" description="RAM memory: Intel Corporation">
+        <device address="0x140002" id="0x9def" description="RAM memory: Intel Corporation Cannon Point-LP Shared SRAM">
           <vendor>0x8086</vendor>
           <identifier>0x9def</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1102,7 +1109,7 @@
           <resource type="LargeResourceItemGPIOConnection" id="res1"/>
           <dependency type="consumes resources from">\_SB_.PCI0.GPI0</dependency>
         </device>
-        <device address="0x160000" id="0x9de0" description="Communication controller: Intel Corporation">
+        <device address="0x160000" id="0x9de0" description="Communication controller: Intel Corporation Cannon Point-LP MEI Controller #1">
           <vendor>0x8086</vendor>
           <identifier>0x9de0</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1119,7 +1126,7 @@
           </capability>
           <capability id="Vendor-Specific"/>
         </device>
-        <device address="0x170000" id="0x9dd3" description="SATA controller: Intel Corporation">
+        <device address="0x170000" id="0x9dd3" description="SATA controller: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode]">
           <vendor>0x8086</vendor>
           <identifier>0x9dd3</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1210,7 +1217,7 @@
             <aml_template>5b821b5c2f045f53425f5043493050454d4343415244085f4144520a08</aml_template>
           </device>
         </device>
-        <device address="0x1c0000" id="0x9db8" description="PCI bridge: Intel Corporation">
+        <device address="0x1c0000" id="0x9db8" description="PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #1">
           <vendor>0x8086</vendor>
           <identifier>0x9db8</identifier>
           <class>0x060400</class>
@@ -1222,7 +1229,7 @@
           <capability id="Power Management"/>
           <bus type="pci" address="0x1"/>
         </device>
-        <device address="0x1c0004" id="0x9dbc" description="PCI bridge: Intel Corporation">
+        <device address="0x1c0004" id="0x9dbc" description="PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #5">
           <vendor>0x8086</vendor>
           <identifier>0x9dbc</identifier>
           <class>0x060400</class>
@@ -1240,7 +1247,7 @@
           <capability id="Secondary PCI Express"/>
           <capability id="DPC"/>
           <bus type="pci" address="0x2">
-            <device address="0x0" id="0x2263" description="Non-Volatile memory controller: Silicon Motion, Inc.">
+            <device address="0x0" id="0x2263" description="Non-Volatile memory controller: Silicon Motion, Inc. SM2263EN/SM2263XT SSD Controller">
               <vendor>0x126f</vendor>
               <identifier>0x2263</identifier>
               <subsystem_vendor>0x126f</subsystem_vendor>
@@ -1270,7 +1277,7 @@
             </device>
           </bus>
         </device>
-        <device address="0x1d0000" id="0x9db0" description="PCI bridge: Intel Corporation">
+        <device address="0x1d0000" id="0x9db0" description="PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #9">
           <vendor>0x8086</vendor>
           <identifier>0x9db0</identifier>
           <class>0x060400</class>
@@ -1319,7 +1326,7 @@
             </device>
           </bus>
         </device>
-        <device address="0x1d0001" id="0x9db1" description="PCI bridge: Intel Corporation">
+        <device address="0x1d0001" id="0x9db1" description="PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #10">
           <vendor>0x8086</vendor>
           <identifier>0x9db1</identifier>
           <class>0x060400</class>
@@ -1368,7 +1375,7 @@
             </device>
           </bus>
         </device>
-        <device address="0x1f0000" id="0x9d84" description="ISA bridge: Intel Corporation">
+        <device address="0x1f0000" id="0x9d84" description="ISA bridge: Intel Corporation Cannon Point-LP LPC Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9d84</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1654,7 +1661,7 @@
             <resource id="res1" type="irq" int="7"/>
           </device>
         </device>
-        <device address="0x1f0003" id="0x9dc8" description="Audio device: Intel Corporation">
+        <device address="0x1f0003" id="0x9dc8" description="Audio device: Intel Corporation Cannon Point-LP High Definition Audio Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9dc8</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1715,7 +1722,7 @@
             </device>
           </device>
         </device>
-        <device address="0x1f0004" id="0x9da3" description="SMBus: Intel Corporation">
+        <device address="0x1f0004" id="0x9da3" description="SMBus: Intel Corporation Cannon Point-LP SMBus Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9da3</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1727,7 +1734,7 @@
           <resource type="io_port" min="0xefa0" max="0xefbf" len="0x20" id="bar4"/>
           <resource type="memory" min="0xa1418000" max="0xa14180ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
         </device>
-        <device address="0x1f0005" id="0x9da4" description="Serial bus controller: Intel Corporation">
+        <device address="0x1f0005" id="0x9da4" description="Serial bus controller: Intel Corporation Cannon Point-LP SPI Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9da4</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1844,8 +1851,8 @@
           <resource id="res2" type="memory" min="0xfd6a0000" max="0xfd6affff" len="0x10000"/>
           <resource id="res1" type="memory" min="0xfd6d0000" max="0xfd6dffff" len="0x10000"/>
           <resource id="res0" type="memory" min="0xfd6e0000" max="0xfd6effff" len="0x10000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.PSDC</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.DSC1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.PSDC</dependency>
         </device>
         <device id="INT34B2">
           <acpi_object>\_SB_.PCI0.I2C0</acpi_object>
@@ -1857,11 +1864,11 @@
           </status>
           <resource id="res1" type="irq" int="16"/>
           <resource id="res0" type="memory" min="0xfe020000" max="0xfe020fff" len="0x1000"/>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.HDAC</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.PA01</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.UCMX</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPL1</dependency>
           <device id="INT0000">
             <acpi_object>\_SB_.PCI0.I2C0.HDAC</acpi_object>
             <compatible_id>INT0000</compatible_id>
@@ -1945,9 +1952,9 @@
           </status>
           <resource id="res1" type="irq" int="17"/>
           <resource id="res0" type="memory" min="0xfe022000" max="0xfe022fff" len="0x1000"/>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C1.UCMX</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPD0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C1.UCMX</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C1.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
@@ -2005,16 +2012,16 @@
           <resource id="res1" type="irq" int="18"/>
           <resource id="res0" type="memory" min="0xfe024000" max="0xfe024fff" len="0x1000"/>
           <dependency type="provides resources to">\_SB_.PCI0.LNK3</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C2.CAM0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.LNK0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.PMIC</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.UCMX</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP2</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.LNK1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.UCMX</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.CLP3</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP2</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.PMIC</dependency>
           <device id="INT3471" address="0x0">
             <acpi_object>\_SB_.PCI0.I2C2.CAM0</acpi_object>
             <compatible_id>INT3471</compatible_id>
@@ -2102,11 +2109,11 @@
           </status>
           <resource id="res1" type="irq" int="19"/>
           <resource id="res0" type="memory" min="0xfe026000" max="0xfe026fff" len="0x1000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.LNK2</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C3.UCMX</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C3.UCMX</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK2</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C3.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
@@ -2342,10 +2349,6 @@
           <device address="0x0">
             <acpi_object>\_SB_.PCI0.RP09.PXSX</acpi_object>
             <aml_template>5b821a5c2f045f53425f504349305250303950585358085f41445200</aml_template>
-          </device>
-          <device address="0xff">
-            <acpi_object>\_SB_.PCI0.RP09.SL09</acpi_object>
-            <aml_template>5b821b5c2f045f53425f5043493052503039534c3039085f4144520aff</aml_template>
           </device>
         </device>
         <device>
@@ -2737,13 +2740,13 @@
         <acpi_object>\_SB_.UBTC</acpi_object>
         <compatible_id>PNP0CA0</compatible_id>
         <acpi_uid>0</acpi_uid>
-        <aml_template>5b8243045c2e5f53425f55425443085f4849440c5662c000085f4349440c41d00ca0085f55494400085f41445200085f43525311110a0e860900010010608c001000007900</aml_template>
+        <aml_template>5b8243045c2e5f53425f55425443085f4849440c5662c000085f4349440c41d00ca0085f55494400085f41445200085f43525311110a0e8609000100b0568a001000007900</aml_template>
         <status>
           <present>n</present>
           <enabled>n</enabled>
           <functioning>n</functioning>
         </status>
-        <resource id="res0" type="memory" min="0x8c601000" max="0x8c601fff" len="0x1000"/>
+        <resource id="res0" type="memory" min="0x8a56b000" max="0x8a56bfff" len="0x1000"/>
         <device address="0x0">
           <acpi_object>\_SB_.UBTC.CR01</acpi_object>
           <aml_template>5b82165c2f035f53425f5542544343523031085f41445200</aml_template>
