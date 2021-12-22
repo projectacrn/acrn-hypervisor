@@ -95,13 +95,14 @@ Extend Use of CAT Cache Tuning to VMs
    each VM with exclusive cache resources can partition them with
    per-thread granularity and allocate cache resources to prioritized tasks.
 
-Expand Passthrough Device Use Cases to Pre-Launched VMs
-   We now allow pre-launched VMs (in partitioned or hybrid scenarios) to use
+Expand Passthrough Device Use Cases
+   We now allow *pre-launched* VMs (in partitioned or hybrid scenarios) to use
    graphics device passthrough for improved performance, a feature previously
    available to only post-launched VMs.
 
-   Trusted Platform Module (TPM) 2.0 and its associated resource can also be
-   passthrough to post-launched VMs.
+   Trusted Platform Module (TPM) 2.0 and its associated resource can now be
+   passthrough to *post-launched* VMs, a feature previously available to
+   only pre-launched VMs..
 
 Upgrading to v2.7 From Previous Releases
 ****************************************
@@ -254,5 +255,5 @@ Fixed Issues Details
 Known Issues
 ************
 
-- :acrn-issue:`6631` - [KATA][5.10 Kernel]failed to start docker with Service VM 5.10 kernel
+- :acrn-issue:`6631` - [KATA] Kata support is broken in v2.7
 - :acrn-issue:`6978` - [TGL] openstack failed with ACRN v2.7
