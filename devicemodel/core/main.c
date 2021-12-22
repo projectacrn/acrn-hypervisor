@@ -105,8 +105,6 @@ static bool debugexit_enabled;
 static char mac_seed_str[50];
 static int pm_notify_channel;
 
-static int acpi;
-
 static char *progname;
 static const int BSP;
 
@@ -142,7 +140,7 @@ static void
 usage(int code)
 {
 	fprintf(stderr,
-		"Usage: %s [-hAWYv] [-B bootargs] [-E elf_image_path]\n"
+		"Usage: %s [-hWYv] [-B bootargs] [-E elf_image_path]\n"
 		"       %*s [-k kernel_image_path]\n"
 		"       %*s [-l lpc] [-m mem] [-r ramdisk_image_path]\n"
 		"       %*s [-s pci] [--ovmf ovmf_file_path]\n"
@@ -152,7 +150,6 @@ usage(int code)
 		"       %*s [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]\n"
 		"       %*s [--debugexit] [--logger_setting param_setting]\n"
 		"       %*s [--ssram] <vm>\n"
-		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
 		"       -E: elf image path\n"
 		"       -h: help\n"
@@ -609,9 +606,7 @@ vm_reset_vdevs(struct vmctx *ctx)
 	ioapic_init(ctx);
 	init_pci(ctx);
 
-	if (acpi) {
-		acpi_build(ctx, guest_ncpus);
-	}
+	acpi_build(ctx, guest_ncpus);
 }
 
 static void
@@ -777,7 +772,6 @@ enum {
 };
 
 static struct option long_options[] = {
-	{"acpi",		no_argument,		0, 'A' },
 	{"elf_file",		required_argument,	0, 'E' },
 	{"ioc_node",		required_argument,	0, 'i' },
 	{"lpc",			required_argument,	0, 'l' },
@@ -818,7 +812,7 @@ static struct option long_options[] = {
 	{0,			0,			0,  0  },
 };
 
-static char optstr[] = "hAWYvE:k:r:B:s:m:l:U:G:i:";
+static char optstr[] = "hWYvE:k:r:B:s:m:l:U:G:i:";
 
 int
 main(int argc, char *argv[])
@@ -848,9 +842,6 @@ main(int argc, char *argv[])
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
 		switch (c) {
-		case 'A':
-			acpi = 1;
-			break;
 		case 'E':
 			if (acrn_parse_elf(optarg) != 0)
 				exit(1);
@@ -1075,12 +1066,10 @@ main(int argc, char *argv[])
 			}
 		}
 
-		if (acpi) {
-			error = acpi_build(ctx, guest_ncpus);
-			if (error) {
-				pr_err("acpi_build failed, error=%d\n", error);
-				goto vm_fail;
-			}
+		error = acpi_build(ctx, guest_ncpus);
+		if (error) {
+			pr_err("acpi_build failed, error=%d\n", error);
+			goto vm_fail;
 		}
 
 		pr_notice("acrn_sw_load\n");
