@@ -32,7 +32,8 @@ You can see the available ``acrnctl`` commands by running:
    Use acrnctl [cmd] help for details
 
 .. note::
-   You must run ``acrnctl`` with root privileges.
+   You must run ``acrnctl`` with root privileges, and make sure ``acrnd``
+   service has been started before running ``acrnctl``.
 
 Here are some usage examples:
 
@@ -157,6 +158,9 @@ You can see the available ``acrnd`` commands by running:
        ``RELEASE=1`` build)
    -h: print this message
 
+.. note::
+   You must run ``acrnd`` with root privileges.
+
 Normally, ``acrnd`` runs silently (messages are directed to
 ``/dev/null``).  Use the ``-t`` option to direct messages to ``stdout``,
 useful for debugging.
@@ -166,12 +170,12 @@ and sets an RTC timer to wake up the Service VM or bring the Service VM back up 
 When ``acrnd`` daemon is restarted, it restores the previously saved timer
 list and launches the User VMs at the right time.
 
-A ``systemd`` service file (``acrnd.service``) is installed by default that will
-start the ``acrnd`` daemon when the Service VM (Linux-based) comes up.
-You can restart/stop acrnd service using ``systemctl``
+A ``systemd`` service file (``acrnd.service``) is installed by default.
+You can enable, restart or stop acrnd service using ``systemctl``.
 
-.. note::
-   You must run ``acrnd`` with root privileges.
+.. code-block:: none
+
+   systemctl enable --now acrnd.service
 
 Build and Install
 *****************
