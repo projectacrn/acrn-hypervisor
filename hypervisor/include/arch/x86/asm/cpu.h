@@ -38,6 +38,7 @@
 #ifndef CPU_H
 #define CPU_H
 #include <types.h>
+#include <util.h>
 #include <acrn_common.h>
 #include <asm/msr.h>
 
@@ -482,6 +483,18 @@ void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);
 			: "r"(value));				\
 }
 
+#define CPU_XMM_READ(xmm, result_ptr)						\
+{										\
+	asm volatile ("movdqu %%" STRINGIFY(xmm) ", %0": "=m" (*(result_ptr)));	\
+}
+
+#define CPU_XMM_WRITE(xmm, value)					\
+{								\
+	asm volatile ("movdqu %0, %%" STRINGIFY(xmm)		\
+			: /* No output */			\
+			: "m"(value));				\
+}
+
 static inline uint64_t sgdt(void)
 {
 	struct descriptor_table gdtb = {0U, 0UL};
@@ -728,6 +741,20 @@ static inline void xrstors(const struct xsave_area *region_addr, uint64_t mask)
 static inline void asm_loadiwkey(uint32_t eax)
 {
 	asm volatile(".byte 0xf3, 0x0f, 0x38, 0xdc, 0xd1;": : "a" (eax));
+}
+
+static inline void read_xmm_0_2(uint64_t *xmm0_addr, uint64_t *xmm1_addr, uint64_t *xmm2_addr)
+{
+	CPU_XMM_READ(xmm0, xmm0_addr);
+	CPU_XMM_READ(xmm1, xmm1_addr);
+	CPU_XMM_READ(xmm2, xmm2_addr);
+}
+
+static inline void write_xmm_0_2(uint64_t xmm0_val, uint64_t xmm1_val, uint64_t xmm2_val)
+{
+	CPU_XMM_WRITE(xmm0, xmm0_val);
+	CPU_XMM_WRITE(xmm1, xmm1_val);
+	CPU_XMM_WRITE(xmm2, xmm2_val);
 }
 
 /*

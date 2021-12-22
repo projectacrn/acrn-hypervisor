@@ -225,21 +225,11 @@ void load_iwkey(struct acrn_vcpu *vcpu)
 	if (pcpu_has_cap(X86_FEATURE_KEYLOCKER) && vcpu->arch.cr4_kl_enabled &&
 	    (get_cpu_var(whose_iwkey) != vcpu)) {
 		/* Save/restore xmm0/xmm1/xmm2 during the process */
-		asm volatile (	"movdqu %%xmm0, %0\n"
-				"movdqu %%xmm1, %1\n"
-				"movdqu %%xmm2, %2\n"
-				"movdqu %3, %%xmm0\n"
-				"movdqu %4, %%xmm1\n"
-				"movdqu %5, %%xmm2\n"
-				: "=m"(xmm_save[0]), "=m"(xmm_save[2]), "=m"(xmm_save[4])
-				: "m"(vcpu->arch.IWKey.integrity_key[0]),
-				"m"(vcpu->arch.IWKey.encryption_key[0]),
-				"m"(vcpu->arch.IWKey.encryption_key[2]));
+		read_xmm_0_2(&xmm_save[0], &xmm_save[2], &xmm_save[4]);
+		write_xmm_0_2(vcpu->arch.IWKey.integrity_key[0], vcpu->arch.IWKey.encryption_key[0],
+						vcpu->arch.IWKey.encryption_key[2]);
 		asm_loadiwkey(0);
-		asm volatile (	"movdqu %2, %%xmm2\n"
-				"movdqu %1, %%xmm1\n"
-				"movdqu %0, %%xmm0\n"
-				: : "m"(xmm_save[0]), "m"(xmm_save[2]), "m"(xmm_save[4]));
+		write_xmm_0_2(xmm_save[0], xmm_save[2], xmm_save[4]);
 		get_cpu_var(whose_iwkey) = vcpu;
 	}
 }
