@@ -477,10 +477,7 @@ static int32_t loadiwkey_vmexit_handler(struct acrn_vcpu *vcpu)
 	if ((vcpu_get_gpreg(vcpu, CPU_REG_RAX) != 0UL)) {
 		vcpu_inject_gp(vcpu, 0);
 	} else {
-		asm volatile ("movdqu %%xmm0, %0\n"
-			      "movdqu %%xmm1, %1\n"
-			      "movdqu %%xmm2, %2\n"
-			      : : "m"(xmm[0]), "m"(xmm[2]), "m"(xmm[4]));
+		read_xmm_0_2(&xmm[0], &xmm[2], &xmm[4]);
 		vcpu->arch.IWKey.encryption_key[0] = xmm[2];
 		vcpu->arch.IWKey.encryption_key[1] = xmm[3];
 		vcpu->arch.IWKey.encryption_key[2] = xmm[4];
