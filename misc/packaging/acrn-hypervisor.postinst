@@ -45,6 +45,8 @@ $kernelimg
 
 EOF
 elif [ $SCENARIO == hybrid ];then
+    echo -e "\E[32m Please put zephyr64.elf in the /boot/ directory"
+    tput sgr0
     cat>"${filename}"<<EOF
 #!/bin/sh
 exec tail -n +3 \$0
@@ -57,6 +59,25 @@ menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
 multiboot2 $ACRNBIN root=PARTUUID=$partuuid
 $kernelimg
 module2 /boot/zephyr64.elf Zephyr_ElfImage
+module2 /boot/ACPI_VM0.bin ACPI_VM0
+}
+
+EOF
+elif [ $SCENARIO == hybrid_rt ];then
+    echo -e "\E[32m Please put bzImage_RT in the /boot/ directory"
+    tput sgr0
+    cat>"${filename}"<<EOF
+#!/bin/sh
+exec tail -n +3 \$0
+menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
+    load_video
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid  --set $uuid
+multiboot2 $ACRNBIN root=PARTUUID=$partuuid
+$kernelimg
+module2 /boot/bzImage_RT RT_bzImage
 module2 /boot/ACPI_VM0.bin ACPI_VM0
 }
 
