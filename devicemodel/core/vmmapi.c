@@ -47,6 +47,7 @@
 #include "pci_core.h"
 #include "log.h"
 #include "sw_load.h"
+#include "acpi.h"
 
 #define MAP_NOCORE 0
 #define MAP_ALIGNED_SUPER 0
@@ -93,15 +94,11 @@ static void add_one_pcpu(int pcpu_id)
 /*
  * example options:
  *   --cpu_affinity 1,2,3
- *   --cpu_affinity 1-3
- *   --cpu_affinity 1,3,4-6
- *   --cpu_affinity 1,3,4-6,9
  */
 int acrn_parse_cpu_affinity(char *opt)
 {
 	char *str, *cp, *cp_opt;
-	int pcpu_id;
-	int pcpu_start, pcpu_end;
+	int lapic_id;
 
 	cp_opt = cp = strdup(opt);
 	if (!cp) {
@@ -111,12 +108,12 @@ int acrn_parse_cpu_affinity(char *opt)
 
 	/* white spaces within the commane line are invalid */
 	while (cp && isdigit(cp[0])) {
-		str = strpbrk(cp, ",-");
+		str = strpbrk(cp, ",");
 
-		/* no more entries delimited by ',' or '-' */
+		/* no more entries delimited by ',' */
 		if (!str) {
-			if (!dm_strtoi(cp, NULL, 10, &pcpu_id)) {
-				add_one_pcpu(pcpu_id);
+			if (!dm_strtoi(cp, NULL, 10, &lapic_id)) {
+				add_one_pcpu(lapic_to_pcpu(lapic_id));
 			}
 			break;
 		} else {
@@ -125,30 +122,10 @@ int acrn_parse_cpu_affinity(char *opt)
 				str = strsep(&cp, ",");
 
 				/* parse the entry before ',' */
-				if (dm_strtoi(str, NULL, 10, &pcpu_id)) {
+				if (dm_strtoi(str, NULL, 10, &lapic_id)) {
 					goto err;
 				}
-				add_one_pcpu(pcpu_id);
-			}
-
-			if (*str == '-') {
-				str = strsep(&cp, "-");
-
-				/* parse the entry before and after '-' respectively */
-				if (dm_strtoi(str, NULL, 10, &pcpu_start) || dm_strtoi(cp, NULL, 10, &pcpu_end)) {
-					goto err;
-				}
-
-				if (pcpu_end <= pcpu_start) {
-					goto err;
-				}
-
-				for (; pcpu_start <= pcpu_end; pcpu_start++) {
-					add_one_pcpu(pcpu_start);
-				}
-
-				/* skip the ',' after pcpu_end */
-				str = strsep(&cp, ",");
+				add_one_pcpu(lapic_to_pcpu(lapic_id));
 			}
 		}
 	}
