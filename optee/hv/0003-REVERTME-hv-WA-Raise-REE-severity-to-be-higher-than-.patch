@@ -1,0 +1,37 @@
+From 9ff863df9e27f692ef8074f381f9d831b6de8b78 Mon Sep 17 00:00:00 2001
+From: Yifan Liu <yifan1.liu@intel.com>
+Date: Sat, 20 Nov 2021 00:00:42 +0000
+Subject: [PATCH 3/6] REVERTME: hv: WA: Raise REE severity to be higher than
+ TEE
+
+This adds a WA to raise the severity of REE to be higher than TEE so
+that when REE issues system reset, the platform resets.
+
+Signed-off-by: Yifan Liu <yifan1.liu@intel.com>
+---
+ hypervisor/arch/x86/configs/vm_config.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/hypervisor/arch/x86/configs/vm_config.c b/hypervisor/arch/x86/configs/vm_config.c
+index be947309c..8d469a37f 100644
+--- a/hypervisor/arch/x86/configs/vm_config.c
++++ b/hypervisor/arch/x86/configs/vm_config.c
+@@ -22,7 +22,14 @@ struct acrn_vm_config *get_vm_config(uint16_t vm_id)
+  */
+ uint8_t get_vm_severity(uint16_t vm_id)
+ {
+-	return vm_configs[vm_id].severity;
++	uint8_t sev = vm_configs[vm_id].severity;
++
++	if (vm_configs[vm_id].guest_flags & GUEST_FLAG_TEE) {
++		sev = SEVERITY_SERVICE_VM;
++	} else if (vm_configs[vm_id].guest_flags & GUEST_FLAG_REE) {
++		sev = SEVERITY_SAFETY_VM;
++	}
++	return sev;
+ }
+ 
+ /**
+-- 
+2.25.1
+

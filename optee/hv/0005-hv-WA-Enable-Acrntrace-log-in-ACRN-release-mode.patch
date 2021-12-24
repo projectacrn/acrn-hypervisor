@@ -1,0 +1,244 @@
+From 287f29d3ffb2f52db604654b3657956aceed5fbb Mon Sep 17 00:00:00 2001
+From: Yifan Liu <yifan1.liu@intel.com>
+Date: Tue, 14 Dec 2021 02:02:52 +0000
+Subject: [PATCH 5/6] hv: WA: Enable Acrntrace/log in ACRN release mode
+
+This patch enables Acrntrace/log in ACRN release mode. The acrnlog
+loglevel can be adjusted from MEM_LOGLEVEL in tee_shared.xml but there
+will be no way to change it at runtime since there will be no hv console
+in release mode.
+
+Signed-off-by: Yifan Liu <yifan1.liu@intel.com>
+---
+ hypervisor/include/arch/x86/asm/per_cpu.h |  2 +-
+ hypervisor/release/hypercall.c            | 24 ++++++-
+ hypervisor/release/logmsg.c               | 85 +++++++++++++++++++++--
+ hypervisor/release/printf.c               |  1 +
+ hypervisor/release/sbuf.c                 |  8 +--
+ hypervisor/release/trace.c                | 20 +-----
+ 6 files changed, 107 insertions(+), 33 deletions(-)
+ create mode 120000 hypervisor/release/printf.c
+ mode change 100644 => 120000 hypervisor/release/sbuf.c
+ mode change 100644 => 120000 hypervisor/release/trace.c
+
+diff --git a/hypervisor/include/arch/x86/asm/per_cpu.h b/hypervisor/include/arch/x86/asm/per_cpu.h
+index 25895bfce..fdb9f407f 100644
+--- a/hypervisor/include/arch/x86/asm/per_cpu.h
++++ b/hypervisor/include/arch/x86/asm/per_cpu.h
+@@ -24,9 +24,9 @@ struct per_cpu_region {
+ 	/* vmxon_region MUST be 4KB-aligned */
+ 	uint8_t vmxon_region[PAGE_SIZE];
+ 	void *vmcs_run;
+-#ifdef HV_DEBUG
+ 	struct shared_buf *sbuf[ACRN_SBUF_ID_MAX];
+ 	char logbuf[LOG_MESSAGE_MAX_SIZE];
++#ifdef HV_DEBUG
+ 	uint32_t npk_log_ref;
+ #endif
+ 	uint64_t irq_count[NR_IRQS];
+diff --git a/hypervisor/release/hypercall.c b/hypervisor/release/hypercall.c
+index ce105713e..427cfe7b2 100644
+--- a/hypervisor/release/hypercall.c
++++ b/hypervisor/release/hypercall.c
+@@ -7,11 +7,26 @@
+ #include <types.h>
+ #include <errno.h>
+ #include <asm/guest/vm.h>
++#include <sbuf.h>
+ 
+ int32_t hcall_setup_sbuf(__unused struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+ 		__unused uint64_t param1, __unused uint64_t param2)
+ {
+-	return -EPERM;
++	struct acrn_vm *vm = vcpu->vm;
++	struct sbuf_setup_param ssp;
++	uint64_t *hva;
++
++	if (copy_from_gpa(vm, &ssp, param1, sizeof(ssp)) != 0) {
++		return -1;
++	}
++
++	if (ssp.gpa != 0U) {
++		hva = (uint64_t *)gpa2hva(vm, ssp.gpa);
++	} else {
++		hva = (uint64_t *)NULL;
++	}
++
++	return sbuf_share_setup(ssp.pcpu_id, ssp.sbuf_id, hva);
+ }
+ 
+ int32_t hcall_setup_hv_npk_log(__unused struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+@@ -23,7 +38,12 @@ int32_t hcall_setup_hv_npk_log(__unused struct acrn_vcpu *vcpu, __unused struct
+ int32_t hcall_get_hw_info(__unused struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+ 		__unused uint64_t param1, __unused uint64_t param2)
+ {
+-	return -EPERM;
++	struct acrn_hw_info hw_info;
++
++	(void)memset((void *)&hw_info, 0U, sizeof(hw_info));
++
++	hw_info.cpu_num = get_pcpu_nums();
++	return copy_to_gpa(vcpu->vm, &hw_info, param1, sizeof(hw_info));
+ }
+ 
+ int32_t hcall_profiling_ops(__unused struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
+diff --git a/hypervisor/release/logmsg.c b/hypervisor/release/logmsg.c
+index d656f1afa..64683d65c 100644
+--- a/hypervisor/release/logmsg.c
++++ b/hypervisor/release/logmsg.c
+@@ -5,8 +5,85 @@
+  */
+ 
+ #include <types.h>
++#include <asm/lib/atomic.h>
++#include <sprintf.h>
++#include <asm/lib/spinlock.h>
++#include <asm/per_cpu.h>
++#include <npk_log.h>
++#include <logmsg.h>
++#include <ticks.h>
+ 
+-void init_logmsg() {}
+-void do_logmsg(__unused uint32_t severity, __unused const char *fmt, ...) {}
+-void printf(__unused const char *fmt, ...) {}
+-void vprintf(__unused const char *fmt, __unused va_list args) {}
++/* buf size should be identical to the size in hvlog option, which is
++ * transfered to Service VM:
++ * bsp/uefi/clearlinux/acrn.conf: hvlog=2M@0x1FE00000
++ */
++
++struct acrn_logmsg_ctl {
++	int32_t seq;
++	spinlock_t lock;
++};
++
++static struct acrn_logmsg_ctl logmsg_ctl;
++
++void init_logmsg()
++{
++	logmsg_ctl.seq = 0;
++
++	spinlock_init(&(logmsg_ctl.lock));
++}
++
++void do_logmsg(uint32_t severity, const char *fmt, ...)
++{
++	va_list args;
++	uint64_t timestamp;
++	uint16_t pcpu_id;
++	bool do_mem_log;
++	char *buffer;
++	struct thread_object *current;
++
++	do_mem_log = (severity <= CONFIG_MEM_LOGLEVEL_DEFAULT);
++
++	if (!do_mem_log) {
++		return;
++	}
++
++	/* Get time-stamp value */
++	timestamp = cpu_ticks();
++
++	/* Scale time-stamp appropriately */
++	timestamp = ticks_to_us(timestamp);
++
++	/* Get CPU ID */
++	pcpu_id = get_pcpu_id();
++	buffer = per_cpu(logbuf, pcpu_id);
++	current = sched_get_current(pcpu_id);
++
++	(void)memset(buffer, 0U, LOG_MESSAGE_MAX_SIZE);
++	/* Put time-stamp, CPU ID and severity into buffer */
++	snprintf(buffer, LOG_MESSAGE_MAX_SIZE, "[%luus][cpu=%hu][%s][sev=%u][seq=%u]:",
++			timestamp, pcpu_id, current->name, severity, atomic_inc_return(&logmsg_ctl.seq));
++
++	/* Put message into remaining portion of local buffer */
++	va_start(args, fmt);
++	vsnprintf(buffer + strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE),
++		LOG_MESSAGE_MAX_SIZE
++		- strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE), fmt, args);
++	va_end(args);
++
++	/* Check whether output to memory */
++	if (do_mem_log) {
++		uint32_t i, msg_len;
++		struct shared_buf *sbuf = per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
++
++		/* If sbuf is not ready, we just drop the massage */
++		if (sbuf != NULL) {
++			msg_len = strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE);
++
++			for (i = 0U; i < (((msg_len - 1U) / LOG_ENTRY_SIZE) + 1U);
++					i++) {
++				(void)sbuf_put(sbuf, (uint8_t *)buffer +
++							(i * LOG_ENTRY_SIZE));
++			}
++		}
++	}
++}
+\ No newline at end of file
+diff --git a/hypervisor/release/printf.c b/hypervisor/release/printf.c
+new file mode 120000
+index 000000000..453dc06c4
+--- /dev/null
++++ b/hypervisor/release/printf.c
+@@ -0,0 +1 @@
++../debug/printf.c
+\ No newline at end of file
+diff --git a/hypervisor/release/sbuf.c b/hypervisor/release/sbuf.c
+deleted file mode 100644
+index ada7abe50..000000000
+--- a/hypervisor/release/sbuf.c
++++ /dev/null
+@@ -1,7 +0,0 @@
+-/*
+- * Copyright (C) 2019 Intel Corporation. All rights reserved.
+- *
+- * SPDX-License-Identifier: BSD-3-Clause
+- */
+-
+-void sbuf_reset(void) {}
+diff --git a/hypervisor/release/sbuf.c b/hypervisor/release/sbuf.c
+new file mode 120000
+index 000000000..ce3d08cdb
+--- /dev/null
++++ b/hypervisor/release/sbuf.c
+@@ -0,0 +1 @@
++../debug/sbuf.c
+\ No newline at end of file
+diff --git a/hypervisor/release/trace.c b/hypervisor/release/trace.c
+deleted file mode 100644
+index ef14532a7..000000000
+--- a/hypervisor/release/trace.c
++++ /dev/null
+@@ -1,19 +0,0 @@
+-/*
+- * Copyright (C) 2018 Intel Corporation. All rights reserved.
+- *
+- * SPDX-License-Identifier: BSD-3-Clause
+- */
+-
+-#include <types.h>
+-
+-void TRACE_2L(__unused uint32_t evid, __unused uint64_t e, __unused uint64_t f) {}
+-
+-void TRACE_4I(__unused uint32_t evid, __unused uint32_t a, __unused uint32_t b,
+-		__unused uint32_t c, __unused uint32_t d)
+-{
+-}
+-
+-void TRACE_6C(__unused uint32_t evid, __unused uint8_t a1, __unused uint8_t a2,
+-		__unused uint8_t a3, __unused uint8_t a4, __unused uint8_t b1, __unused uint8_t b2)
+-{
+-}
+diff --git a/hypervisor/release/trace.c b/hypervisor/release/trace.c
+new file mode 120000
+index 000000000..4b84dc554
+--- /dev/null
++++ b/hypervisor/release/trace.c
+@@ -0,0 +1 @@
++../debug/trace.c
+\ No newline at end of file
+-- 
+2.25.1
+

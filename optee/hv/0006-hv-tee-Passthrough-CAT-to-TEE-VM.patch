@@ -1,0 +1,130 @@
+From 82f78b5f2a401eb527eee715fa0c50ede0fb4fa7 Mon Sep 17 00:00:00 2001
+From: Yifan Liu <yifan1.liu@intel.com>
+Date: Tue, 21 Dec 2021 01:08:01 +0000
+Subject: [PATCH 6/6] hv: tee: Passthrough CAT to TEE VM
+
+[Status: Under mailinglist review. Will drop when merged to master]
+
+TEE VM needs to control CAT capability for security reason. It needs to
+satisfy below two requirements:
+1, Shared memories do not fill cachelines allocated to TEE OS
+2, TEE sensitive data do not fill cachelines allocated to REE OS
+
+Using vCAT for this purpose does not satisfy performance requirement
+since there will be two CLOS switch (at least two VMEXITs) from TEE for
+each shared memory access, and the shared memory access may be frequent.
+
+Signed-off-by: Yifan Liu <yifan1.liu@intel.com>
+Signed-off-by: Jie Deng <jie.deng@intel.com>
+---
+ hypervisor/arch/x86/guest/vcpuid.c      | 23 +++++++++++++++++++++++
+ hypervisor/arch/x86/guest/vmsr.c        | 13 +++++++++----
+ hypervisor/include/arch/x86/asm/cpuid.h |  6 ++++++
+ 3 files changed, 38 insertions(+), 4 deletions(-)
+
+diff --git a/hypervisor/arch/x86/guest/vcpuid.c b/hypervisor/arch/x86/guest/vcpuid.c
+index 1ff942cfa..092e432f2 100644
+--- a/hypervisor/arch/x86/guest/vcpuid.c
++++ b/hypervisor/arch/x86/guest/vcpuid.c
+@@ -17,6 +17,7 @@
+ #include <logmsg.h>
+ #include <asm/rdt.h>
+ #include <asm/guest/vcat.h>
++#include <asm/guest/optee.h>
+ 
+ static inline const struct vcpuid_entry *local_find_vcpuid_entry(const struct acrn_vcpu *vcpu,
+ 					uint32_t leaf, uint32_t subleaf)
+@@ -549,6 +550,11 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
+ 					/* Bit 15: Supports Intel Resource Director Technology (Intel RDT) Allocation capability if 1 */
+ 					entry.ebx |= CPUID_EBX_PQE;
+ 				}
++#else
++				/* passthrough CAT to TEE VM */
++				if (is_tee_vm(vm) && pcpu_has_cap(X86_FEATURE_RDT_A)) {
++					entry.ebx |= CPUID_EBX_PQE;
++				}
+ #endif
+ 				result = set_vcpuid_entry(vm, &entry);
+ 				break;
+@@ -573,6 +579,23 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
+ 				if (is_vcat_configured(vm)) {
+ 					result = set_vcpuid_vcat_10h(vm);
+ 				}
++#else
++				if (is_tee_vm(vm)) {
++					init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
++					result = set_vcpuid_entry(vm, &entry);
++					if ((entry.ebx & CPUID_EBX_RDT_L3) != 0) {
++						init_vcpuid_entry(i, 1U, CPUID_CHECK_SUBLEAF, &entry);
++						result = set_vcpuid_entry(vm, &entry);
++					}
++					if ((entry.ebx & CPUID_EBX_RDT_L2) != 0) {
++						init_vcpuid_entry(i, 2U, CPUID_CHECK_SUBLEAF, &entry);
++						result = set_vcpuid_entry(vm, &entry);
++					}
++					if ((entry.ebx & CPUID_EBX_RDT_MBA) != 0) {
++						init_vcpuid_entry(i, 3U, CPUID_CHECK_SUBLEAF, &entry);
++						result = set_vcpuid_entry(vm, &entry);
++					}
++				}
+ #endif
+ 				break;
+ 
+diff --git a/hypervisor/arch/x86/guest/vmsr.c b/hypervisor/arch/x86/guest/vmsr.c
+index 06f6f4523..99b1f1d34 100644
+--- a/hypervisor/arch/x86/guest/vmsr.c
++++ b/hypervisor/arch/x86/guest/vmsr.c
+@@ -23,6 +23,7 @@
+ #include <trace.h>
+ #include <logmsg.h>
+ #include <asm/guest/vcat.h>
++#include <asm/guest/optee.h>
+ 
+ #define INTERCEPT_DISABLE		(0U)
+ #define INTERCEPT_READ			(1U << 0U)
+@@ -196,7 +197,6 @@ static const uint32_t unsupported_msrs[] = {
+ 	/* RDT-M disabled: CPUID.07H.EBX[12], CPUID.07H.EBX[15] */
+ 	MSR_IA32_QM_EVTSEL,
+ 	MSR_IA32_QM_CTR,
+-	MSR_IA32_PQR_ASSOC,
+ 
+ 	/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
+ 	/* MSR 0xC90 ... 0xD8F, not in this array */
+@@ -484,9 +484,14 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
+ 		enable_msr_interception(msr_bitmap, unsupported_msrs[i], INTERCEPT_READ_WRITE);
+ 	}
+ 
+-	/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
+-	for (msr = MSR_IA32_L3_MASK_BASE; msr < MSR_IA32_BNDCFGS; msr++) {
+-		enable_msr_interception(msr_bitmap, msr, INTERCEPT_READ_WRITE);
++	/* For TEE VM, passthrough CAT related MSRs */
++	if (!is_tee_vm(vcpu->vm)) {
++		/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
++		for (msr = MSR_IA32_L3_MASK_BASE; msr < MSR_IA32_BNDCFGS; msr++) {
++			enable_msr_interception(msr_bitmap, msr, INTERCEPT_READ_WRITE);
++		}
++
++		enable_msr_interception(msr_bitmap, MSR_IA32_PQR_ASSOC, INTERCEPT_READ_WRITE);
+ 	}
+ 
+ 	/* don't need to intercept rdmsr for these MSRs */
+diff --git a/hypervisor/include/arch/x86/asm/cpuid.h b/hypervisor/include/arch/x86/asm/cpuid.h
+index 1d2cea53a..9e5cc209d 100644
+--- a/hypervisor/include/arch/x86/asm/cpuid.h
++++ b/hypervisor/include/arch/x86/asm/cpuid.h
+@@ -112,6 +112,12 @@
+ #define CPUID_EBX_PQE           (1U<<15U)
+ /* CPUID.07H:EBX.INTEL_PROCESSOR_TRACE */
+ #define CPUID_EBX_PROC_TRC      (1U<<25U)
++/* CPUID.10H.EBX.RDT_L3 */
++#define CPUID_EBX_RDT_L3        (1U<<1U)
++/* CPUID.10H.EBX.RDT_L2 */
++#define CPUID_EBX_RDT_L2        (1U<<2U)
++/* CPUID.10H.EBX.RDT_MBA */
++#define CPUID_EBX_RDT_MBA       (1U<<3U)
+ /* CPUID.01H:ECX.PCID*/
+ #define CPUID_ECX_PCID          (1U<<17U)
+ /* CPUID.0DH.EAX.XCR0_BNDREGS */
+-- 
+2.25.1
+

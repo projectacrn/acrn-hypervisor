@@ -1,0 +1,36 @@
+From 0842039ea0e0aa6fcddabd38c80c9d3b5caa1b37 Mon Sep 17 00:00:00 2001
+From: Yifan Liu <yifan1.liu@intel.com>
+Date: Mon, 13 Sep 2021 16:16:35 +0800
+Subject: [PATCH 2/6] misc: efi-stub: Build efi-stub as boot.efi by default
+
+Add build option to top-level makefile to build efi-stub by default.
+
+Signed-off-by: Yifan Liu <yifan1.liu@intel.com>
+---
+ Makefile | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index 1e09956d4..d9d4a431c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -71,6 +71,7 @@ O ?= build
+ ROOT_OUT := $(shell mkdir -p $(O);cd $(O);pwd)
+ HV_OUT := $(ROOT_OUT)/hypervisor
+ DM_OUT := $(ROOT_OUT)/devicemodel
++EFI_OUT := $(HV_OUT)/misc/efi-stub
+ TOOLS_OUT := $(ROOT_OUT)/misc
+ DOC_OUT := $(ROOT_OUT)/doc
+ TARBALL_OUT := $(ROOT_OUT)/tarball
+@@ -110,6 +111,8 @@ hypervisor: hvdefconfig
+ 	@echo -e "ACRN Configuration Summary:" > $(HV_CFG_LOG)
+ 	@$(MAKE) showconfig $(HV_MAKEOPTS) -s >> $(HV_CFG_LOG)
+ 	@cat $(HV_CFG_LOG)
++	@echo "Building efi-stub as EFI executable"
++	@$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) EFI_OBJDIR=$(EFI_OUT)
+ 
+ # Targets that manipulate hypervisor configurations
+ hvdefconfig:
+-- 
+2.25.1
+

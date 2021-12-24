@@ -1,0 +1,104 @@
+From b14d899d8feb657c7f148bb7b6c14f1f22b2167e Mon Sep 17 00:00:00 2001
+From: Jie Deng <jie.deng@intel.com>
+Date: Thu, 2 Sep 2021 13:19:43 +0800
+Subject: [PATCH 1/6] hv: cpu: Offline big core 0 and not wakeup big core 1
+
+1. Do not assign big cores for REE/TEE.
+2. Hv will never launch big cores APs, no SIPI will be sent.
+3. Hv will let big core BSP to enter deepest Cx after finished the initialization.
+4. Move Uart Timer Interrupt to REE's BSP
+
+Signed-off-by: Fei Li <fei1.li@intel.com>
+Signed-off-by: Jie Deng <jie.deng@intel.com>
+---
+ hypervisor/arch/x86/cpu.c             | 30 +++++++++++++++++++++++++++
+ hypervisor/arch/x86/init.c            |  2 +-
+ hypervisor/include/arch/x86/asm/cpu.h |  4 ++--
+ 3 files changed, 33 insertions(+), 3 deletions(-)
+
+diff --git a/hypervisor/arch/x86/cpu.c b/hypervisor/arch/x86/cpu.c
+index 18c33c7d1..53d73666b 100644
+--- a/hypervisor/arch/x86/cpu.c
++++ b/hypervisor/arch/x86/cpu.c
+@@ -54,6 +54,7 @@ static void set_current_pcpu_id(uint16_t pcpu_id);
+ static void print_hv_banner(void);
+ static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
+ static uint64_t start_tick __attribute__((__section__(".bss_noinit")));
++static void mwait_dead(void);
+ 
+ /**
+  * @pre phys_cpu_num <= MAX_PCPU_NUM
+@@ -295,6 +296,8 @@ void init_pcpu_post(uint16_t pcpu_id)
+ 			panic("Failed to start all secondary cores!");
+ 		}
+ 
++		mwait_dead();
++
+ 		ASSERT(get_pcpu_id() == BSP_CPU_ID, "");
+ 	} else {
+ 		pr_dbg("Core %hu is up", pcpu_id);
+@@ -536,6 +539,33 @@ void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync)
+ 	}
+ }
+ 
++static void mwait_dead(void)
++{
++	uint32_t eax, ecx, edx, unused, i;
++	uint32_t highest_cstate = 0, highest_subcstate = 0;
++
++	cpuid_subleaf(0x5U, 0x0U, &eax, &unused, &ecx, &edx);
++
++	if (!(ecx & 0x1U)) {	/* Enumeration of Monitor-Mwait extensions (beyond EAX and EBX registers) supported */
++		eax = 0;
++	} else {
++		edx >>= 4U;
++		for (i = 0U; i < 7U && edx; i++, edx >>= 4U) {
++			if (edx & 0xfU) {
++				highest_cstate = i;
++				highest_subcstate = edx & 0xfU;
++			}
++		}
++		eax = (highest_cstate << 4U) | (highest_subcstate - 1);
++	}
++
++	CPU_IRQ_DISABLE_ON_CONFIG();
++	while (1) {
++		asm_monitor((volatile const uint64_t *)&pcpu_sync, 0UL, 0UL);
++		asm_mwait(eax, 0UL);
++	}
++}
++
+ static void init_pcpu_xsave(void)
+ {
+ 	uint64_t val64;
+diff --git a/hypervisor/arch/x86/init.c b/hypervisor/arch/x86/init.c
+index 0b30da41b..25cbe9e26 100644
+--- a/hypervisor/arch/x86/init.c
++++ b/hypervisor/arch/x86/init.c
+@@ -44,7 +44,7 @@ static void init_debug_pre(void)
+ /*TODO: move into debug module */
+ static void init_debug_post(uint16_t pcpu_id)
+ {
+-	if (pcpu_id == BSP_CPU_ID) {
++	if (pcpu_id == 2U) {	/* REE's BSP */
+ 		/* Initialize the shell */
+ 		shell_init();
+ 		console_setup_timer();
+diff --git a/hypervisor/include/arch/x86/asm/cpu.h b/hypervisor/include/arch/x86/asm/cpu.h
+index e92216327..af1ca9831 100644
+--- a/hypervisor/include/arch/x86/asm/cpu.h
++++ b/hypervisor/include/arch/x86/asm/cpu.h
+@@ -200,8 +200,8 @@
+ 
+ #ifndef ASSEMBLER
+ 
+-#define ALL_CPUS_MASK		((1UL << get_pcpu_nums()) - 1UL)
+-#define AP_MASK			(ALL_CPUS_MASK & ~(1UL << BSP_CPU_ID))
++#define AP_MASK			(((1UL << get_pcpu_nums()) - 1UL) & ~(3UL))
++#define ALL_CPUS_MASK		AP_MASK
+ 
+ /**
+  *
+-- 
+2.25.1
+

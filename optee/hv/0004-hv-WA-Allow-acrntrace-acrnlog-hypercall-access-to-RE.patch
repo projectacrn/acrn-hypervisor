@@ -1,0 +1,39 @@
+From 4e485764de788e1ce8b2055c17e083be165ff45c Mon Sep 17 00:00:00 2001
+From: Yifan Liu <yifan1.liu@intel.com>
+Date: Thu, 9 Dec 2021 05:19:07 +0000
+Subject: [PATCH 4/6] hv: WA: Allow acrntrace/acrnlog hypercall access to REE
+
+This patch allows hcall_setup_sbuf from REE.
+
+Signed-off-by: Yifan Liu <yifan1.liu@intel.com>
+---
+ hypervisor/arch/x86/guest/vmcall.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/hypervisor/arch/x86/guest/vmcall.c b/hypervisor/arch/x86/guest/vmcall.c
+index 3852c78ac..b32d40ed5 100644
+--- a/hypervisor/arch/x86/guest/vmcall.c
++++ b/hypervisor/arch/x86/guest/vmcall.c
+@@ -39,7 +39,8 @@ static const struct hc_dispatch hc_dispatch_table[] = {
+ 	[HC_IDX(HC_SET_CALLBACK_VECTOR)] = {
+ 		.handler = hcall_set_callback_vector},
+ 	[HC_IDX(HC_GET_PLATFORM_INFO)] = {
+-		.handler = hcall_get_platform_info},
++		.handler = hcall_get_platform_info,
++		.permission_flags = GUEST_FLAG_REE},
+ 	[HC_IDX(HC_CREATE_VM)] = {
+ 		.handler = hcall_create_vm},
+ 	[HC_IDX(HC_DESTROY_VM)] = {
+@@ -89,7 +90,8 @@ static const struct hc_dispatch hc_dispatch_table[] = {
+ 	[HC_IDX(HC_VM_INTR_MONITOR)] = {
+ 		.handler = hcall_vm_intr_monitor},
+ 	[HC_IDX(HC_SETUP_SBUF)] = {
+-		.handler = hcall_setup_sbuf},
++		.handler = hcall_setup_sbuf,
++		.permission_flags = GUEST_FLAG_REE},
+ 	[HC_IDX(HC_SETUP_HV_NPK_LOG)] = {
+ 		.handler = hcall_setup_hv_npk_log},
+ 	[HC_IDX(HC_PROFILING_OPS)] = {
+-- 
+2.25.1
+
