@@ -822,7 +822,10 @@ struct ioc_state_info {
 	int32_t (*handler)(struct ioc_dev *ioc);
 };
 
-/* Parse IOC parameters */
+/*
+ * obsolete interface
+ * Parse IOC parameters
+ */
 int ioc_parse(const char *opts);
 
 struct vmctx;

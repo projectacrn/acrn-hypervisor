@@ -142,22 +142,19 @@ usage(int code)
 {
 	fprintf(stderr,
 		"Usage: %s [-hAWYv] [-B bootargs] [-E elf_image_path]\n"
-		"       %*s [-G GVT_args] [-i ioc_mediator_parameters] [-k kernel_image_path]\n"
+		"       %*s [-k kernel_image_path]\n"
 		"       %*s [-l lpc] [-m mem] [-r ramdisk_image_path]\n"
-		"       %*s [-s pci] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]\n"
-		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
+		"       %*s [-s pci] [--ovmf ovmf_file_path]\n"
+		"       %*s [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--acpidev_pt HID] [--mmiodev_pt MMIO_Regions]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
 		"       %*s [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]\n"
 		"       %*s [--debugexit] [--logger_setting param_setting]\n"
-		"       %*s [--pm_notify_channel channel] [--pm_by_vuart vuart_node]\n"
 		"       %*s [--ssram] <vm>\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
 		"       -E: elf image path\n"
-		"       -G: GVT args: low_gm_size, high_gm_size, fence_sz\n"
 		"       -h: help\n"
-		"       -i: ioc boot parameters\n"
 		"       -k: kernel image path\n"
 		"       -l: LPC device configuration\n"
 		"       -m: memory size in MB\n"
@@ -165,13 +162,10 @@ usage(int code)
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
 		"       -v: version\n"
 		"       -W: force virtio to use single-vector MSI\n"
-		"       -Y: disable MPtable generation\n"
 		"       --mac_seed: set a platform unique string as a seed for generate mac address\n"
-		"       --vsbl: vsbl file path\n"
 		"       --ovmf: ovmf file path\n"
 		"       --ssram: Enable Software SRAM passthrough\n"
 		"       --cpu_affinity: list of pCPUs assigned to this VM\n"
-		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
 		"       --debugexit: enable debug exit function\n"
 		"       --intr_monitor: enable interrupt storm monitor\n"
@@ -183,15 +177,13 @@ usage(int code)
 		"       --lapic_pt: enable local apic passthrough\n"
 		"       --rtvm: indicate that the guest is rtvm\n"
 		"       --logger_setting: params like console,level=4;kmsg,level=3\n"
-		"       --pm_notify_channel: define the channel used to notify guest about power event\n"
-		"       --pm_by_vuart:pty,/run/acrn/vuart_vmname or tty,/dev/ttySn\n"
 		"       --windows: support Oracle virtio-blk, virtio-net and virtio-input devices\n"
 		"            for windows guest with secure boot\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
-		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "");
+		(int)strnlen(progname, PATH_MAX), "");
 
 	exit(code);
 }
@@ -849,7 +841,7 @@ main(int argc, char *argv[])
 			else
 				break;
 			break;
-		case 'i':
+		case 'i': /* obsolete parameter */
 			ioc_parse(optarg);
 			break;
 
@@ -872,7 +864,7 @@ main(int argc, char *argv[])
 		case 'W':
 			virtio_msix = 0;
 			break;
-		case 'Y':
+		case 'Y': /* obsolete parameter */
 			mptgen = 0;
 			break;
 		case 'k':
@@ -891,14 +883,14 @@ main(int argc, char *argv[])
 			else
 				break;
 			break;
-		case 'G':
+		case 'G': /* obsolete parameter */
 			if (acrn_parse_gvtargs(optarg) != 0)
 				errx(EX_USAGE, "invalid GVT param %s", optarg);
 			break;
 		case 'v':
 			print_version();
 			break;
-		case CMD_OPT_VSBL:
+		case CMD_OPT_VSBL: /* obsolete parameter */
 			if (high_bios_size() == 0 && acrn_parse_vsbl(optarg) != 0)
 				errx(EX_USAGE, "invalid vsbl param %s", optarg);
 			break;
@@ -911,7 +903,7 @@ main(int argc, char *argv[])
 			if (acrn_parse_cpu_affinity(optarg) != 0)
 				errx(EX_USAGE, "invalid pcpu param %s", optarg);
 			break;
-		case CMD_OPT_PART_INFO:
+		case CMD_OPT_PART_INFO: /* obsolete parameter */
 			if (acrn_parse_guest_part_info(optarg) != 0) {
 				errx(EX_USAGE,
 					"invalid guest partition info param %s",
@@ -968,7 +960,7 @@ main(int argc, char *argv[])
 			if (init_logger_setting(optarg) != 0)
 				errx(EX_USAGE, "invalid logger setting params %s", optarg);
 			break;
-		case CMD_OPT_PM_NOTIFY_CHANNEL:
+		case CMD_OPT_PM_NOTIFY_CHANNEL: /* obsolete parameter */
 			if (strncmp("ioc", optarg, sizeof("ioc")) == 0)
 				pm_notify_channel = PWR_EVENT_NOTIFY_IOC;
 			else if (strncmp("power_button", optarg, sizeof("power_button")) == 0)
@@ -984,7 +976,7 @@ main(int argc, char *argv[])
 			} else
 				errx(EX_USAGE, "invalid pm_notify_channel: %s", optarg);
 			break;
-		case CMD_OPT_PM_BY_VUART:
+		case CMD_OPT_PM_BY_VUART: /* obsolete parameter */
 			if (parse_pm_by_vuart(optarg) != 0)
 				errx(EX_USAGE, "invalid pm-by-vuart params %s", optarg);
 			break;

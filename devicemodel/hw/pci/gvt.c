@@ -5,6 +5,11 @@
  *
  */
 
+/*
+ * The interface of gvt is obsoleted.
+ * We reserve these code for future.
+ */
+
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
