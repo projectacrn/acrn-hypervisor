@@ -63,11 +63,11 @@ size_t ovmf_image_size(void);
 int acrn_parse_kernel(char *arg);
 int acrn_parse_ramdisk(char *arg);
 int acrn_parse_bootargs(char *arg);
-int acrn_parse_gvtargs(char *arg);
-int acrn_parse_vsbl(char *arg);
+int acrn_parse_gvtargs(char *arg);         /* obsolete interface */
+int acrn_parse_vsbl(char *arg);            /* obsolete interface */
 int acrn_parse_ovmf(char *arg);
 int acrn_parse_elf(char *arg);
-int acrn_parse_guest_part_info(char *arg);
+int acrn_parse_guest_part_info(char *arg); /* obsolete interface */
 char *get_bootargs(void);
 void vsbl_set_bdf(int bnum, int snum, int fnum);
 

@@ -6,6 +6,11 @@
  */
 
 /*
+ * The interface of virtio_coreu is obsoleted.
+ * We reserve these code for future.
+ */
+
+/*
  * CoreU Virtualization
  *
  * CoreU is for PAVP session management. CoreU contains two parts, the daemon

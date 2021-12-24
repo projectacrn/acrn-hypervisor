@@ -4,6 +4,11 @@
  */
 
 /*
+ * The interface of npk is obsoleted.
+ * We reserve these code for future.
+ */
+
+/*
  * The Intel Trace Hub (aka. North Peak, NPK) is a trace aggregator for
  * Software, Firmware, and Hardware. On the virtualization platform, it
  * can be used to output the traces from Service VM/User VM/Hypervisor/FW together

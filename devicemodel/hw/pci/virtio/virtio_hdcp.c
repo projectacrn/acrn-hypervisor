@@ -5,6 +5,11 @@
  *
  */
 
+ /*
+ * The interface of virtio_hdcp is obsoleted.
+ * We reserve these code for future.
+ */
+
 /*
  * HDCP Virtualization
  *
