@@ -130,7 +130,7 @@ fi
 #threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)
 intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
-acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+acrn-dm -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 5,virtio-console,@pty:pty_port \
   -s 6,virtio-hyper_dmabuf \
   -s 8,wdt-i6300esb \
@@ -312,7 +312,7 @@ ACRN project
 #threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)
 intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
- acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
+ acrn-dm -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
    -s 3,virtio-blk,/data/$5/$5.img \
    -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \

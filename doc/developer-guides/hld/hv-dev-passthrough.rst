@@ -434,7 +434,7 @@ passthrough and enables PTM on it:
    echo ${passthru_bdf["ethptm"]} > /sys/bus/pci/devices/${passthru_bdf["ethptm"]}/driver/unbind
    echo ${passthru_bdf["ethptm"]} > /sys/bus/pci/drivers/pci-stub/bind
 
-   acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+   acrn-dm -m $mem_size -s 0:0,hostbridge \
       -s 3,virtio-blk,user-vm-test.img \
       -s 4,virtio-net,tap0 \
       -s 5,virtio-console,@stdio:stdio_port \
@@ -504,7 +504,7 @@ If supported, follow these steps to enable PTM in the post-launched VM:
    .. code-block:: bash
       :emphasize-lines: 5
 
-      $ acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+      $ acrn-dm -m $mem_size -s 0:0,hostbridge \
           -s 3,virtio-blk,user-vm-test.img \
           -s 4,virtio-net,tap0 \
           -s 5,virtio-console,@stdio:stdio_port \
