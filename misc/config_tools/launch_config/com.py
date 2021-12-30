@@ -563,27 +563,6 @@ def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
     if user_vm_type == "WINDOWS":
         print("   --windows \\", file=config)
 
-    # pm_channel set
-    if dm['pm_channel'][vmid] and dm['pm_channel'][vmid] != None:
-        pm_key = dm['pm_channel'][vmid]
-        pm_vuart = "--pm_notify_channel uart"
-        if vmid in dm["allow_trigger_s5"] and dm["allow_trigger_s5"][vmid] == 'y':
-            pm_vuart = pm_vuart + ",allow_trigger_s5 "
-        else:
-            pm_vuart = pm_vuart + " "
-        if pm_key == "vuart1(tty)":
-            vuart_base = launch_cfg_lib.get_vuart1_from_scenario(sos_vmid + vmid)
-            if vuart_base == "INVALID_COM_BASE":
-                err_key = "user_vm:id={}:poweroff_channel".format(vmid)
-                launch_cfg_lib.ERR_LIST[err_key] = "vuart1 of VM{} in scenario file should select 'SERVICE_VM_COM2_BASE'".format(sos_vmid + vmid)
-                return
-            scenario_cfg_lib.get_sos_vuart_settings()
-            print("   {} \\".format(pm_vuart + launch_cfg_lib.PM_CHANNEL_DIC[pm_key] + scenario_cfg_lib.SERVICE_VM_UART1_VALID_NUM), file=config)
-        elif pm_key == "vuart1(pty)":
-            print("   {} \\".format(pm_vuart + launch_cfg_lib.PM_CHANNEL_DIC[pm_key]), file=config)
-        else:
-            print("   {} \\".format(launch_cfg_lib.PM_CHANNEL_DIC[pm_key]), file=config)
-
     # set logger_setting for all VMs
     print("   $logger_setting \\", file=config)
 
