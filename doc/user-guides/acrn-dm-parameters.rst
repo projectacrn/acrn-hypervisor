@@ -10,15 +10,6 @@ emulation based on command line configurations, as introduced in
 
 Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
-``-A``, ``--acpi``
-   Create ACPI tables.  With this option, DM will build an ACPI table into its
-   VMs F-Segment (0xf2400).  This ACPI table includes full tables for RSDP,
-   RSDT, XSDT, MADT, FADT, HPET, MCFG, FACS, and DSDT.  All these items are
-   programmed according to acrn-dm command line configuration and derived from
-   their default value.
-
-----
-
 ``-B``, ``--bootargs <bootargs>``
    Set the User VM kernel command-line arguments. The maximum length is 1023.
    The bootargs string will be passed to the kernel as its cmdline.

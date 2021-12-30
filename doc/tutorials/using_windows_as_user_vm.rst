@@ -103,7 +103,7 @@ Prepare the Script to Create an Image
    echo "0000:00:02.0" > /sys/bus/pci/drivers/pci-stub/bind
    #for memsize setting
    mem_size=4096M
-   acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+   acrn-dm -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
      -s 2,passthru,0/2/0 \
      -s 8,virtio-net,tap0 \
      -s 4,virtio-blk,/home/acrn/work/win10-ltsc.img

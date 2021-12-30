@@ -784,7 +784,7 @@ Launch the User VM
    .. code-block:: bash
       :emphasize-lines: 4
 
-      acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+      acrn-dm -m $mem_size -s 0:0,hostbridge \
          --mac_seed $mac_seed \
          $logger_setting \
          -s 9,virtio-blk,./YaaG.img \
@@ -800,7 +800,7 @@ Launch the User VM
    .. code-block:: bash
       :emphasize-lines: 4
 
-      acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+      acrn-dm -m $mem_size -s 0:0,hostbridge \
          --mac_seed $mac_seed \
          $logger_setting \
          -s 9,virtio-blk,/home/acrn/acrn-work/ubuntu-18.04.6-desktop-amd64.iso \

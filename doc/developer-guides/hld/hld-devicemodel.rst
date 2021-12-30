@@ -51,7 +51,7 @@ options:
 
 .. code-block:: none
 
-   acrn-dm [-hAWYv] [-B bootargs] [-E elf_image_path]
+   acrn-dm [-hWYv] [-B bootargs] [-E elf_image_path]
                [-k kernel_image_path]
                [-l lpc] [-m mem] [-r ramdisk_image_path]
                [-s pci] [--ovmf ovmf_file_path]
@@ -61,7 +61,6 @@ options:
                [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]
                [--debugexit] [--logger-setting param_setting]
                [--ssram] <vm>
-       -A: create ACPI tables
        -B: bootargs for kernel
        -E: elf image path
        -h: help
@@ -105,7 +104,7 @@ Here's an example showing how to run a VM with:
 
 .. code-block:: bash
 
-   acrn-dm -A -m 2048M \
+   acrn-dm -m 2048M \
      -s 0:0,hostbridge \
      -s 1:0,lpc -l com1,stdio \
      -s 5,virtio-console,@pty:pty_port \
@@ -166,11 +165,9 @@ DM Initialization
    dedicated ``vdev_init()`` function. For more details on the DM PCI
    emulation, refer to `PCI Emulation`_.
 
--  **ACPI Build**: If there is an "-A" option in the ``acrn-dm`` command line,
-   the DM
-   will build an ACPI table into its VM's F-Segment (0xf2400). This
-   ACPI table includes full tables for RSDP, RSDT, XSDT, MADT, FADT,
-   HPET, MCFG, FACS, and DSDT. All these items are programed
+-  **ACPI Build**: The DM will build an ACPI table into its VM's
+   F-Segment (0xf2400). This ACPI table includes full tables for RSDP, RSDT,
+   XSDT, MADT, FADT, HPET, MCFG, FACS, and DSDT. All these items are programed
    according to the ``acrn-dm`` command-line configuration and derived from
    their default value.
 
@@ -770,7 +767,7 @@ example:
 
 .. code-block:: bash
 
-   acrn-dm -A -m 2048M \
+   acrn-dm -m 2048M \
      -s 0:0,hostbridge \
      -s 1:0,lpc -l com1,stdio \
      -s 5,virtio-console,@pty:pty_port \

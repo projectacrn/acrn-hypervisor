@@ -79,7 +79,7 @@ Passthrough the GPU to Guest
 
 3. Modify the ``install_win.sh`` script to enable GVT-d:
 
-   Add the following commands before ``acrn-dm -A -m $mem_size -s 0:0,hostbridge \``
+   Add the following commands before ``acrn-dm -m $mem_size -s 0:0,hostbridge \``
 
    ::
 
