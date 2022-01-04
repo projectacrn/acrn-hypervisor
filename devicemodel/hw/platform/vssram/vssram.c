@@ -21,7 +21,7 @@
 #include "vmmapi.h"
 #include "acpi.h"
 #include "log.h"
-#include "rtct.h"
+#include "vssram.h"
 
 #define RTCT_V1 1
 #define RTCT_V2 2
