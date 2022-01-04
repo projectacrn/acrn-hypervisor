@@ -34,7 +34,7 @@
 #include "sw_load.h"
 #include "dm.h"
 #include "pci_core.h"
-#include "rtct.h"
+#include "vssram.h"
 
 int with_bootargs;
 static char bootargs[BOOT_ARG_LEN];

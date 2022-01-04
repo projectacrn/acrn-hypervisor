@@ -71,7 +71,7 @@
 #include "vmmapi.h"
 #include "hpet.h"
 #include "log.h"
-#include "rtct.h"
+#include "vssram.h"
 #include "vmmapi.h"
 #include "mmio_dev.h"
 
