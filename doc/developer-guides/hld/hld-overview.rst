@@ -426,38 +426,6 @@ to complete the User VM's host-to-guest mapping using this pseudo code:
       host2guest_map_for_user_vm(x.hpa, x.user_vm_gpa, x.size)
    end
 
-Virtual Slim Bootloader
-=======================
-
-The Virtual Slim Bootloader (vSBL) is the virtual bootloader that supports
-booting the User VM on the ACRN hypervisor platform. The vSBL design is
-derived from Slim Bootloader. It follows a staged design approach that
-provides hardware initialization and payload launching that provides the
-boot logic. As shown in :numref:`overview-sbl`, the virtual SBL has an
-initialization unit to initialize virtual hardware, and a payload unit
-to boot a Linux or Android guest OS.
-
-.. figure:: images/over-image110.png
-   :align: center
-   :name: overview-sbl
-
-   vSBL System Context Diagram
-
-The vSBL image is released as a part of the Service VM root filesystem (rootfs).
-The VM Manager in the Service VM copies the vSBL to the User VM memory
-while creating the User VM virtual BSP. The Service VM passes the
-start of vSBL and related information to HV. HV sets the guest RIP of the User
-VM's virtual BSP as the start of vSBL and related guest registers, and launches
-the User VM virtual BSP. The vSBL starts running in the virtual real mode within
-the User VM. Conceptually, vSBL is part of the User VM runtime.
-
-In the current design, the vSBL supports booting an Android guest OS or
-Linux guest OS using the same vSBL image.
-
-For an Android VM, the vSBL loads and verifies the trusty OS first. The
-trusty OS then loads and verifies the Android OS according to the Android
-OS verification mechanism.
-
 OVMF Bootloader
 =======================
 

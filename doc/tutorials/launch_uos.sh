@@ -126,33 +126,16 @@ if [ "$setup_mem" != "" ];then
     mem_size=$setup_mem
 fi
 
-boot_dev_flag=",b"
-if [ $7 == 1 ];then
-  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
-else
-  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
-fi
-
 #interrupt storm monitor for pass-through devices, params order: 
 #threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)
 intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
-acrn-dm --help 2>&1 | grep 'GVT args'
-if [ $? == 0 ];then
-  GVT_args=$3
-  boot_GVT_option=" -s 0:2:0,pci-gvt -G "
-else
-  boot_GVT_option=''
-  GVT_args=''
-fi
-
-
-acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 5,virtio-console,@pty:pty_port \
   -s 6,virtio-hyper_dmabuf \
   -s 8,wdt-i6300esb \
-  -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
-  -s 4,virtio-net,$tap $boot_image_option \
+  -s 3,virtio-blk,/data/$5/$5.img \
+  -s 4,virtio-net,$tap \
   -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
   -s 9,passthru,0/15/1 \
   $boot_cse_option \
@@ -310,12 +293,6 @@ kernel_cmdline_generic="maxcpus=$2 nohpet tsc=reliable intel_iommu=off \
    i915.enable_rc6=1 i915.enable_fbc=1 i915.enable_guc_loading=0 i915.avail_planes_per_pipe=$4 \
    i915.enable_hangcheck=0 use_nuclear_flip=1 i915.enable_guc_submission=0 i915.enable_guc=0"
 
-boot_dev_flag=",b"
-if [ $7 == 1 ];then
-  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
-else
-  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
-fi
 kernel_cmdline="$kernel_cmdline_generic"
 
 : '
@@ -335,18 +312,9 @@ ACRN project
 #threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)
 intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
-acrn-dm --help 2>&1 | grep 'GVT args'
-if [ $? == 0 ];then
-  GVT_args=$3
-  boot_GVT_option=" -s 2,pci-gvt -G "
-else
-  boot_GVT_option=''
-  GVT_args=''
-fi
-
- acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
+ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
-   -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
+   -s 3,virtio-blk,/data/$5/$5.img \
    -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
    -s 8,passthru,0/15/1 \
    -s 13,virtio-rpmb \
@@ -361,21 +329,13 @@ fi
    $intr_storm_monitor \
    $boot_ipu_option      \
    -i /run/acrn/ioc_$vm_name,0x20 \
-   -l com2,/run/acrn/ioc_$vm_name \
-   $boot_image_option \
    --enable_trusty \
    -B "$kernel_cmdline" $vm_name
 }
 
 function help()
 {
-echo "Use launch_uos.sh like that ./launch_uos.sh -V <#>"
-echo "The option -V means the UOSs group to be launched by vsbl as below"
-echo "-V 1 means just launching 1 clearlinux UOS"
-echo "-V 2 means just launching 1 android UOS"
-echo "-V 3 means launching 1 clearlinux UOS + 1 android UOS"
-echo "-V 4 means launching 2 clearlinux UOSs"
-echo "-V 5 means auto check android/linux UOS; if exist, launch it"
+echo "Use launch_uos.sh like that ./launch_uos.sh <#>"
 }
 
 launch_type=1

@@ -20,10 +20,6 @@ define post-launched User VM settings. This document describes these option sett
 ``mem_size``:
   Specify the User VM memory size in megabytes.
 
-``gvt_args``:
-  GVT arguments for the VM. Set it to ``gvtd`` for GVT-d. Leave it blank
-  to disable the GVT.
-
 ``vbootloader``:
   Virtual bootloader type; currently only supports OVMF.
 
