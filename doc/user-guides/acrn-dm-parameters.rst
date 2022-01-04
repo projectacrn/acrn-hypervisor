@@ -60,45 +60,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
 ----
 
-``-i``, ``--ioc_node <ioc_mediator_parameters>``
-   IOC (IO Controller) is a bridge of an SoC to communicate with Vehicle Bus.
-   It routes Vehicle Bus signals, for example extracted from CAN messages,
-   from IOC to the SoC and back, as well as controlling the onboard
-   peripherals from SoC.  (The ``-i`` and ``-l`` parameters are only available
-   on a platform with IOC.)
-
-   IOC DM opens the ``/dev/ptmx`` device to create peer PTY devices. IOC DM uses
-   these devices to communicate with UART DM since UART DM needs a TTY capable
-   device as its backend.
-
-   The Device Model configuration command syntax for IOC mediator is::
-
-      -i,[ioc_channel_path],[wakeup_reason]
-      -l,[lpc_port],[ioc_channel_path]
-
-   -  ``ioc_channel_path`` is an absolute path for communication between IOC
-      mediator and UART DM.
-   -  ``lpc_port`` is com1 or com2. IOC mediator needs one unassigned lpc
-      port for data transfer between the User VM and Service VM.
-   -  ``wakeup_reason`` is IOC mediator boot reason, where each bit represents
-      one wakeup reason.
-
-   Currently the wakeup reason bits supported by IOC firmware are:
-
-   -  ``CBC_WK_RSN_BTN`` (bit 5): ignition button.
-   -  ``CBC_WK_RSN_RTC`` (bit 9): RTC timer.
-   -  ``CBC_WK_RSN_DOR`` (bit 11): Car door.
-   -  ``CBC_WK_RSN_SOC`` (bit 23): SoC active/inactive.
-
-   As an example, the following commands are used to enable IOC feature, the
-   initial wakeup reason is ignition button, and cbc_attach uses ttyS1 for TTY
-   line discipline in User VM::
-
-      -i /run/acrn/ioc_$vm_name,0x20
-      -l com2,/run/acrn/ioc_$vm_name
-
-----
-
 ``--intr_monitor <intr_monitor_params>``
    Enable interrupt storm monitor for User VM. Use this option to prevent an
    interrupt storm from the User VM.
@@ -155,11 +116,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
 ----
 
-``--part_info <part_info_name>``
-   Set guest partition info path.
-
-----
-
 ``-r``, ``--ramdisk <ramdisk_image_path>``
    Set the ramdisk (full path) for the User VM. The maximum length is 1023.
    The supported ramdisk format depends on your User VM kernel configuration.
@@ -209,31 +165,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
 ``-v``, ``--version``
    Show Device Model version.
-
-----
-
-``--vsbl <vsbl_file_path>``
-   Virtual Slim Bootloader (vSBL) is the virtual bootloader supporting booting
-   of the User VM on the ACRN hypervisor platform.  The vSBL design is derived
-   from Slim Bootloader, which follows a staged design approach that provides
-   hardware initialization and launching a payload that provides the boot
-   logic.
-
-   The vSBL image is installed on the Service VM root filesystem by the Service
-   VM OS bundle in ``/usr/share/acrn/bios/``.  In the current design, the vSBL
-   supports booting an Android guest OS or Linux guest OS using the same vSBL
-   image.  For an Android VM, the vSBL will load and verify the trusty OS first,
-   and the trusty OS will then load and verify the Android OS according to the
-   Android OS verification mechanism.
-
-   .. note::
-      vSBL is currently only supported on Apollo Lake processors.
-
-   usage::
-
-      --vsbl /usr/share/acrn/bios/VSBL.bin
-
-   uses ``/usr/share/acrn/bios/VSBL.bin`` as the vSBL image.
 
 ----
 
@@ -336,18 +267,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
 ----
 
-``-Y, --mptgen``
-   Disable MPtable generation.  The MultiProcessor Specification (MPS) for the
-   x86 architecture is an open standard describing enhancements to both
-   operating systems and firmware that allows them to work with x86-compatible
-   processors in a multi-processor configuration.  MPS covers Advanced
-   Programmable Interrupt Controller (APIC) architectures.
-
-   By default, DM will create the MPtable for you.  Use this option to disable
-   it.
-
-----
-
 ``--lapic_pt``
    This option is to create a VM with the local APIC (LAPIC) passed-through.
    With this option, a VM is created with ``LAPIC_PASSTHROUGH`` and
@@ -379,44 +298,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
    level ranges from 1 (``error``) up to 5 (``debug``).
 
    By default, the log severity level is set to 4 (``info``).
-
-----
-
-``--pm_notify_channel <channel>``
-   This option is used to define which channel could be used DM to
-   communicate with VM about power management event.
-
-   ACRN supports three channels: ``ioc``, ``power_button`` and ``uart``.
-
-   For ``uart``, an additional option, ``,allow_trigger_s5``, can be added.
-   A user can use this option to indicate the User VM is allowed to trigger
-   system S5.
-
-   usage::
-
-      --pm_notify_channel ioc
-
-   Use ioc as power management event notify channel.
-
-----
-
-``--pm_by_vuart [pty|tty],<node_path>``
-   This option is used to set User VM power management by virtual UART.
-   With acrn-dm UART emulation and hypervisor UART emulation and configure,
-   the Service VM can communicate with the User VM through virtual UART. By this
-   option, the Service VM can notify the User VM to shut down itself by vUART.
-
-   It must work with ``--pm_notify_channel`` and PCI UART setting (lpc and -l).
-
-   Example::
-
-      for general User VM, such as LaaG or WaaG, it must set:
-         --pm_notify_channel uart --pm_by_vuart pty,/run/acrn/life_mngr_vm1
-         -l com2,/run/acrn/life_mngr_vm1
-      for RTVM, like RT-Linux:
-         --pm_notify_channel uart --pm_by_vuart tty,/dev/ttyS1
-
-      For a different User VM, it can be configured as needed.
 
 ----
 
@@ -527,10 +408,6 @@ arguments used for configuration.  Here is a table describing these emulated dev
          * ``range``: configured as ``range=<start lba in file>/<sub file size>`` meaning the virtio-blk will
            only access part of the file, from the ``<start lba in file>`` to ``<start lba in file>`` + ``<sub file site>``.
 
-   * - ``virtio-coreu``
-     - Used for Protected Audio Visual Path (PAVP) session management to provide
-       a User VM with Protected Audio Visual Path service.
-
    * - ``virtio-input``
      - Virtio type device to emulate input device. ``evdev`` char device node
        should be appended, e.g., ``-s
@@ -547,11 +424,6 @@ arguments used for configuration.  Here is a table describing these emulated dev
    * - ``virtio-hyper_dmabuf``
      - Virtio device that allows sharing data buffers between VMs using a
        dmabuf-like interface.
-
-   * - ``virtio-hdcp``
-     - Virtio High-bandwidth Digital Content Protection (HDCP) type device. HDCP
-       is technology intended to protect unauthorized duplication of high
-       definition (HD) video and audio as it travels across connections.
 
    * - ``virtio-heci``
      - Virtio Host Embedded Controller Interface, parameters should be appended
@@ -626,14 +498,6 @@ arguments used for configuration.  Here is a table describing these emulated dev
    * - ``uart``
      - Emulated PCI UART. Use the parameter with the format
        ``uart,vuart_idx:<0~9>`` to specify hypervisor-emulated PCI vUART index.
-
-   * - ``npk``
-     - Intel Trace Hub (known as North Peak or NPK) is a set of hardware blocks
-       that produce, switch, and output trace data from multiple hardware,
-       firmware, and software sources, used to perform full system debugging.
-       Parameter with the format ``npk,<master_offset>/<master number>``
-       specifies the master offset in the physical STMR of the host, and the
-       master number owned by the User VM.
 
    * - ``wdt-i6300esb``
      - Emulated i6300ESB PCI Watch Dog Timer (WDT) Intel processors use to

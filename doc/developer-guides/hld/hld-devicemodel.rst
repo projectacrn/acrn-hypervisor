@@ -52,21 +52,19 @@ options:
 .. code-block:: none
 
    acrn-dm [-hAWYv] [-B bootargs] [-E elf_image_path]
-               [-G GVT_args] [-i ioc_mediator_parameters] [-k kernel_image_path]
+               [-k kernel_image_path]
                [-l lpc] [-m mem] [-r ramdisk_image_path]
-               [-s pci] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]
-               [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]
+               [-s pci] [--ovmf ovmf_file_path]
+               [--enable_trusty] [--intr_monitor param_setting]
                [--acpidev_pt HID] [--mmiodev_pt MMIO_regions]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
                [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]
-               [--debugexit] [--logger-setting param_setting] [--pm_notify_channel channel]
-               [--pm_by_vuart vuart_node] [--ssram] <vm>
+               [--debugexit] [--logger-setting param_setting]
+               [--ssram] <vm>
        -A: create ACPI tables
        -B: bootargs for kernel
        -E: elf image path
-       -G: GVT args: low_gm_size, high_gm_size, fence_sz
        -h: help
-       -i: ioc boot parameters
        -k: kernel image path
        -l: LPC device configuration
        -m: memory size in MB
@@ -76,11 +74,9 @@ options:
        -W: force virtio to use single-vector MSI
        -Y: disable MPtable generation
        --mac_seed: set a platform unique string as a seed for generate mac address
-       --vsbl: vsbl file path
        --ovmf: ovmf file path
        --ssram: Enable Software SRAM
        --cpu_affinity: list of pCPUs assigned to this VM
-       --part_info: guest partition info file path
        --enable_trusty: enable trusty for guest
        --debugexit: enable debug exit function
        --intr_monitor: enable interrupt storm monitor
@@ -92,8 +88,6 @@ options:
        --lapic_pt: enable local apic passthrough
        --rtvm: indicate that the guest is rtvm
        --logger_setting: params like console,level=4;kmsg,level=3
-       --pm_notify_channel: define the channel used to notify guest about power event
-       --pm_by_vuart:pty,/run/acrn/vuart_vmname or tty,/dev/ttySn
        --windows: support Oracle virtio-blk, virtio-net, and virtio-input devices
             for windows guest with secure boot
 
@@ -117,7 +111,7 @@ Here's an example showing how to run a VM with:
      -s 1:0,lpc -l com1,stdio \
      -s 5,virtio-console,@pty:pty_port \
      -s 3,virtio-blk,b,/home/acrn/UserVM.img \
-     -s 4,virtio-net,tap_LaaG --vsbl /usr/share/acrn/bios/VSBL.bin \
+     -s 4,virtio-net,tap_LaaG \
      --acpidev_pt MSFT0101 \
      --intr_monitor 10000,10,1,100 \
      -B "root=/dev/vda2 rw rootwait maxcpus=3 nohpet console=hvc0 \

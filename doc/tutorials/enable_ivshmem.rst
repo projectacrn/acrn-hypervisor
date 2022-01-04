@@ -136,7 +136,6 @@ Linux-based post-launched VMs (VM1 and VM2).
         :emphasize-lines: 7
 
         acrn-dm -A -m $mem_size -s 0:0,hostbridge \
-         -s 2,pci-gvt -G "$2" \
          -s 5,virtio-console,@stdio:stdio_port \
          -s 6,virtio-hyper_dmabuf \
          -s 3,virtio-blk,/home/acrn/UserVM1.img \
@@ -153,7 +152,6 @@ Linux-based post-launched VMs (VM1 and VM2).
         :emphasize-lines: 5
 
         acrn-dm -A -m $mem_size -s 0:0,hostbridge \
-         -s 2,pci-gvt -G "$2" \
          -s 3,virtio-blk,/home/acrn/UserVM2.img \
          -s 4,virtio-net,tap0 \
          -s 5,ivshmem,dm:/test,2 \
@@ -221,7 +219,6 @@ Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
         :emphasize-lines: 5
 
         acrn-dm -A -m $mem_size -s 0:0,hostbridge \
-         -s 2,pci-gvt -G "$2" \
          -s 3,virtio-blk,/home/acrn/UserVM2.img \
          -s 4,virtio-net,tap0 \
          -s 5,ivshmem,hv:/shm_region_0,2 \
