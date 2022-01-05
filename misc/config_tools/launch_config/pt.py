@@ -74,8 +74,6 @@ def ipu_pt(sel, vmid, config):
         print("    fi", file=config)
 
     if bdf_ipu or bdf_ipu_i2c:
-        print("else", file=config)
-        print('    boot_ipu_option="$boot_ipu_option"" -s {},virtio-ipu "'.format(launch_cfg_lib.virtual_dev_slot("virtio-ipu")), file=config)
         print("fi", file=config)
         print("", file=config)
 
@@ -189,8 +187,6 @@ def audio_pt(user_vm_type, sel, vmid, config):
                 print('    boot_audio_option="-s {},passthru,{}/{}/{}"'.format(
                     slot_audio, bus, dev, fun), file=config)
 
-        print("else", file=config)
-        print('    boot_audio_option="-s {},virtio-audio"'.format(slot_audio), file=config)
         print("fi", file=config)
 
 
