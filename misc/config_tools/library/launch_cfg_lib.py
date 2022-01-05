@@ -14,7 +14,7 @@ import lxml
 import lxml.etree
 
 ERR_LIST = {}
-BOOT_TYPE = ['no', 'vsbl', 'ovmf']
+BOOT_TYPE = ['no', 'ovmf']
 RTOS_TYPE = ['no', 'Soft RT', 'Hard RT']
 DM_VUART0 = ['Disable', 'Enable']
 y_n = ['y', 'n']
