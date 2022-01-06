@@ -25,6 +25,7 @@
 #include "dm_string.h"
 #include "log.h"
 #include "vssram.h"
+#include "tcc_buffer.h"
 
 #define RTCT_V1 1
 #define RTCT_V2 2
@@ -77,6 +78,7 @@ static uint64_t vssram_size;
 static uint64_t vssram_gpa_base;
 static struct acpi_table_hdr  *vrtct_table;
 
+static int	tcc_buffer_fd = INVALID_FD;
 static struct	vssram_buf *vssram_buffers;
 static struct   vssram_buf_param *vssram_buf_params;
 
@@ -120,7 +122,7 @@ static inline void add_rtct_entry(struct acpi_table_hdr *rtct, struct rtct_entry
 }
 
 /**
- * @brief  Pass-through a native entry to virtual RTCT.
+ * @brief  Add a native entry to virtual RTCT.
  *
  * @param vrtct  Pointer to virtual RTCT.
  * @param entry  Pointer to native RTCT entry.
@@ -136,6 +138,88 @@ int vrtct_add_native_entry(struct acpi_table_hdr *vrtct, struct rtct_entry *entr
 
 	add_rtct_entry(vrtct, rtct_entry);
 	return 0;
+}
+
+/**
+ * @brief  Initialize file descriptor of TCC buffer driver interface.
+ *
+ * @param void.
+ *
+ * @return 0 on success and non-zero on fail.
+ *
+ * @note Global variable 'tcc_buffer_fd' is initialized.
+ */
+static int tcc_driver_init_buffer_fd(void)
+{
+	int fd;
+
+	if (tcc_buffer_fd != INVALID_FD)
+		return tcc_buffer_fd;
+
+	fd = open(TCC_BUFFER_DEVNODE, O_RDWR);
+	if (fd == INVALID_FD) {
+		pr_err("%s failed: %s: %s(%i)", __func__,
+			TCC_BUFFER_DEVNODE, strerror(errno), errno);
+		return INVALID_FD;
+	}
+	tcc_buffer_fd = fd;
+
+	return 0;
+}
+
+/**
+ * @brief  Get count of TCC software SRAM regions.
+ *
+ * @param void.
+ *
+ * @return Count of software SRAM regions on success
+ *         and -1 on fail.
+ */
+static int tcc_driver_get_region_count(void)
+{
+	int buffer_count = 0;
+
+	if (ioctl(tcc_buffer_fd, TCC_GET_REGION_COUNT, &buffer_count) < 0) {
+		pr_err("%s failed: fd=%d: %s(%i)\n",
+			__func__, tcc_buffer_fd, strerror(errno), errno);
+		return -1;
+	}
+
+	return buffer_count;
+}
+
+/**
+ * @brief  Get configurations of given TCC software SRAM region.
+ *
+ * @param region_id Target software region index.
+ * @param config    Pointer to buffer to be filled with structure
+ *                  tcc_buf_mem_config_s instance.
+ *
+ * @return 0 on success and non-zero on fail.
+ */
+static int tcc_driver_get_memory_config(int region_id, struct tcc_mem_region_config *config)
+{
+	config->id = region_id;
+	CPU_ZERO((cpu_set_t *)config->cpu_mask_p);
+	if ((ioctl(tcc_buffer_fd, TCC_GET_MEMORY_CONFIG, config)) < 0) {
+		pr_err("%s failed: fd=%d, region_id=%u, error: %s(%i)\n",
+			__func__, tcc_buffer_fd, region_id, strerror(errno), errno);
+		return -1;
+	}
+	return 0;
+}
+
+/**
+ * @brief Release all vSSRAM buffers and close file
+ *        descriptors of TCC cache buffers.
+ *
+ * @param void
+ *
+ * @return void
+ */
+static void vssram_close_buffers(void)
+{
+	/* to be implemented */
 }
 
 static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint64_t guest_pcpu_bitmask)
@@ -351,6 +435,58 @@ static void vssram_extend_l3buf_for_l2buf(struct vssram_buf *vbuf_tbl)
 }
 
 /**
+ * @brief  Load configurations of all TCC software SRAM regions configured
+ *         on current platform.
+ *
+ * @param config Pointer to configuration information of all sofware SRAM memory regions.
+ *
+ * @return 0 on success and -1 on fail.
+ *
+ * @note   The returned pointers 'config' and 'cpuset' must be passed to free
+ *         to avoid a memory leak.
+ */
+static int load_tcc_memory_info(struct tcc_memory_info *mem_info)
+{
+	int i, rgn_cnt = -1;
+	cpu_set_t *cpuset_p = NULL;
+	struct tcc_mem_region_config *config_p = NULL;
+
+	rgn_cnt = tcc_driver_get_region_count();
+	if (rgn_cnt <= 0)
+		return rgn_cnt;
+
+	config_p = calloc(rgn_cnt, sizeof(struct tcc_mem_region_config));
+	if (config_p == NULL)
+		return -1;
+
+	cpuset_p = calloc(rgn_cnt, sizeof(cpu_set_t));
+	if (cpuset_p == NULL)
+		goto err;
+
+	for (i = 0; i < rgn_cnt; i++) {
+		config_p[i].cpu_mask_p = (void *)(cpuset_p + i);
+		if (tcc_driver_get_memory_config(i, config_p + i) < 0) {
+			goto err;
+		}
+	}
+
+	mem_info->region_cnt = rgn_cnt;
+	mem_info->cpuset = cpuset_p;
+	mem_info->region_configs = config_p;
+
+	return 0;
+
+err:
+	if (config_p != NULL)
+		free(config_p);
+
+	if (cpuset_p != NULL)
+		free(cpuset_p);
+
+	return -1;
+}
+
+/**
  * @brief  Initialize L2 & L3 vSSRAM buffer context table.
  *
  * @param void
@@ -511,9 +647,15 @@ uint8_t *get_vssram_vrtct(void)
  */
 int init_vssram(struct vmctx *ctx)
 {
+	int status = -1;
+	struct tcc_memory_info mem_info;
+
 	init_vssram_gpa_range();
 
 	if (init_guest_cpu_info(ctx) < 0)
+		return -1;
+
+	if (tcc_driver_init_buffer_fd() < 0)
 		return -1;
 
 	if (vssram_init_buffers() < 0) {
@@ -521,7 +663,27 @@ int init_vssram(struct vmctx *ctx)
 		return -1;
 	}
 
-	return 0;
+	memset(&mem_info, 0, sizeof(struct tcc_memory_info));
+	if (load_tcc_memory_info(&mem_info) < 0) {
+		pr_err("%s, load TCC memory configurations failed.\n", __func__);
+		goto exit;
+	}
+
+exit:
+	if (mem_info.region_configs)
+		free(mem_info.region_configs);
+
+	if (mem_info.cpuset)
+		free(mem_info.cpuset);
+
+	if (status < 0) {
+		vssram_close_buffers();
+		if (vssram_buffers) {
+			free(vssram_buffers);
+			vssram_buffers = NULL;
+		}
+	}
+	return status;
 }
 /**
  * @brief Cleanup vSSRAM configurations resource.
