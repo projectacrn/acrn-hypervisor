@@ -51,7 +51,7 @@ to the pCPU with lowest pCPU ID, vCPU1 maps to the second lowest pCPU ID, and
 so on.
 
 For post-launched VMs, acrn-dm could choose to launch a subset of pCPUs that
-are defined in cpu_affinity by specifying the assigned pCPUs
+are defined in cpu_affinity by specifying the assigned Service VM vCPU's lapic_id
 (``--cpu_affinity`` option). But it can't assign any pCPUs that are not
 included in the VM's cpu_affinity.
 
