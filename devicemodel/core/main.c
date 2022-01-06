@@ -484,6 +484,9 @@ vm_init_vdevs(struct vmctx *ctx)
 	if (debugexit_enabled)
 		init_debugexit();
 
+	if ((ssram) && (init_vssram(ctx) < 0))
+		goto ssram_fail;
+
 	ret = monitor_init(ctx);
 	if (ret < 0)
 		goto monitor_fail;
@@ -505,6 +508,9 @@ pci_fail:
 	deinit_mmio_devs(ctx);
 mmio_dev_fail:
 	monitor_close();
+ssram_fail:
+	if (ssram)
+		deinit_vssram(ctx);
 monitor_fail:
 	if (debugexit_enabled)
 		deinit_debugexit();
@@ -538,6 +544,9 @@ vm_deinit_vdevs(struct vmctx *ctx)
 
 	if (debugexit_enabled)
 		deinit_debugexit();
+
+	if (ssram)
+		deinit_vssram(ctx);
 
 	vhpet_deinit(ctx);
 	vpit_deinit(ctx);
@@ -574,6 +583,9 @@ vm_reset_vdevs(struct vmctx *ctx)
 	if (debugexit_enabled)
 		deinit_debugexit();
 
+	if (ssram)
+		deinit_vssram(ctx);
+
 	vhpet_deinit(ctx);
 	vpit_deinit(ctx);
 	vrtc_deinit(ctx);
@@ -590,6 +602,9 @@ vm_reset_vdevs(struct vmctx *ctx)
 
 	if (debugexit_enabled)
 		init_debugexit();
+
+	if (ssram)
+		init_vssram(ctx);
 
 	ioapic_init(ctx);
 	init_pci(ctx);

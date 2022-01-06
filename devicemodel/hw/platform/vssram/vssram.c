@@ -1302,6 +1302,28 @@ exit:
 	}
 	return status;
 }
+
+/**
+ * @brief De-initialize software SRAM device
+ *
+ * @param ctx  Pointer to context of user VM.
+ *
+ * @return void
+ */
+void deinit_vssram(struct vmctx *ctx)
+{
+	vssram_close_buffers();
+	if (vssram_buffers) {
+		free(vssram_buffers);
+		vssram_buffers = NULL;
+	}
+
+	if (vrtct_table != NULL) {
+		free(vrtct_table);
+		vrtct_table = NULL;
+	}
+}
+
 /**
  * @brief Cleanup vSSRAM configurations resource.
  *
