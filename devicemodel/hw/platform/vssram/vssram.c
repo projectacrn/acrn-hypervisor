@@ -142,6 +142,73 @@ int vrtct_add_native_entry(struct acpi_table_hdr *vrtct, struct rtct_entry *entr
 }
 
 /**
+ * @brief  Add a software SRAM cache way mask entry
+ *         associated with software SRAM to virtual RTCT.
+ *
+ * @param vrtct     Pointer to virtual RTCT.
+ * @param cache_id  Cache ID.
+ * @param level     Cache level.
+ * @param waymask   The cache ways bitmap.
+ *
+ * @return 0 on success and non-zero on fail.
+ */
+static int vrtct_add_ssram_waymask(struct acpi_table_hdr *vrtct, int cache_id,
+			int level, uint32_t waymask)
+{
+	struct rtct_entry *entry;
+	struct rtct_entry_data_ssram_waymask *ssram_waymask;
+
+	entry = get_free_rtct_entry(vrtct);
+	entry->format_version = 1;
+	entry->type = RTCT_V2_SSRAM_WAYMASK;
+
+	ssram_waymask = (struct rtct_entry_data_ssram_waymask *)entry->data;
+	ssram_waymask->cache_level = level;
+	ssram_waymask->cache_id = cache_id;
+	ssram_waymask->waymask = waymask;
+
+	entry->size = RTCT_ENTRY_HEADER_SIZE + sizeof(*ssram_waymask);
+	add_rtct_entry(vrtct, entry);
+
+	return 0;
+}
+
+/**
+ * @brief  Add a software SRAM entry associated with
+ *         software SRAM to virtual RTCT table.
+ *
+ * @param vrtct     Pointer to virtual RTCT.
+ * @param cache_id  Cache ID.
+ * @param level     Cache level.
+ * @param base      Base address (GPA) to this software SRAM region.
+ * @param size      Size of this software SRAM region.
+ *
+ * @return 0 on success and non-zero on fail.
+ */
+static int vrtct_add_ssram_v2_entry(struct acpi_table_hdr *vrtct, int cache_id,
+			int level, uint64_t base, size_t size)
+{
+	struct rtct_entry *entry;
+	struct rtct_entry_data_ssram_v2 *ssram_v2;
+
+	entry = get_free_rtct_entry(vrtct);
+	entry->format_version = 2;
+	entry->type = RTCT_V2_SSRAM;
+
+	ssram_v2 = (struct rtct_entry_data_ssram_v2 *)entry->data;
+	ssram_v2->cache_level = level;
+	ssram_v2->cache_id = cache_id;
+	ssram_v2->base = base;
+	ssram_v2->size = size;
+	ssram_v2->shared = 0;
+
+	entry->size = RTCT_ENTRY_HEADER_SIZE + sizeof(*ssram_v2);
+	add_rtct_entry(vrtct, entry);
+
+	return 0;
+}
+
+/**
  * @brief  Initialize file descriptor of TCC buffer driver interface.
  *
  * @param void.
@@ -923,7 +990,7 @@ static void vrtct_add_compat_entry(struct acpi_table_hdr *vrtct)
 }
 
 /**
- * @brief  Map both L2 and L3 cache buffers to RTCT software SRAM
+ * @brief  Add both L2 and L3 vSSRAM buffers to RTCT software SRAM
  *         and way mask entries.
  *
  * @param vrtct  Pointer to virtual RTCT.
@@ -932,7 +999,25 @@ static void vrtct_add_compat_entry(struct acpi_table_hdr *vrtct)
  */
 static void vrtct_add_ssram_entries(struct acpi_table_hdr *vrtct)
 {
-	/* to be implemented. */
+	int i;
+	uint64_t inclusive_size;
+	struct vssram_buf *vbuf;
+
+	for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+		vbuf = &vssram_buffers[i];
+
+		if (vbuf->cache_id == INVALID_CACHE_ID)
+			break;
+
+		/* add SSRAM & WAYMASK entries of this buffer to vRTCT */
+		vrtct_add_ssram_waymask(vrtct, vbuf->cache_id, vbuf->level, vbuf->waymask);
+
+		inclusive_size = ((is_l3_inclusive_of_l2) && (vbuf->level == L3_CACHE)) ?
+			vbuf->l3_inclusive_of_l2_size : 0;
+
+		vrtct_add_ssram_v2_entry(vrtct, vbuf->cache_id, vbuf->level,
+			vbuf->gpa_base - inclusive_size, vbuf->size + inclusive_size);
+	}
 }
 
 /**
