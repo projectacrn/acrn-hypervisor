@@ -67,6 +67,7 @@
 #include "pm_vuart.h"
 #include "log.h"
 #include "pci_util.h"
+#include "vssram.h"
 
 #define	VM_MAXCPU		16	/* maximum virtual cpus */
 
@@ -164,7 +165,7 @@ usage(int code)
 		"       -W: force virtio to use single-vector MSI\n"
 		"       --mac_seed: set a platform unique string as a seed for generate mac address\n"
 		"       --ovmf: ovmf file path\n"
-		"       --ssram: Enable Software SRAM passthrough\n"
+		"       --ssram: Congfiure Software SRAM parameters\n"
 		"       --cpu_affinity: list of pCPUs assigned to this VM\n"
 		"       --enable_trusty: enable trusty for guest\n"
 		"       --debugexit: enable debug exit function\n"
@@ -794,7 +795,7 @@ static struct option long_options[] = {
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
 	{"rtvm",		no_argument,		0, CMD_OPT_RTVM},
-	{"ssram",		no_argument,		0, CMD_OPT_SOFTWARE_SRAM},
+	{"ssram",		required_argument,	0, CMD_OPT_SOFTWARE_SRAM},
 	{"logger_setting",	required_argument,	0, CMD_OPT_LOGGER_SETTING},
 	{"pm_notify_channel",	required_argument,	0, CMD_OPT_PM_NOTIFY_CHANNEL},
 	{"pm_by_vuart",	required_argument,	0, CMD_OPT_PM_BY_VUART},
@@ -936,7 +937,8 @@ main(int argc, char *argv[])
 			is_rtvm = true;
 			break;
 		case CMD_OPT_SOFTWARE_SRAM:
-			/* TODO: we need to support parameter to specify Software SRAM size in the future */
+			if (parse_vssram_buf_params(optarg) != 0)
+				errx(EX_USAGE, "invalid vSSRAM buffer size param %s", optarg);
 			ssram = true;
 			break;
 		case CMD_OPT_ACPIDEV_PT:
@@ -1116,6 +1118,9 @@ main(int argc, char *argv[])
 
 vm_fail:
 	vm_deinit_vdevs(ctx);
+	if (ssram)
+		clean_vssram_configs();
+
 dev_fail:
 	mevent_deinit();
 mevent_fail:
