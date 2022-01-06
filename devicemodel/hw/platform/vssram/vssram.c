@@ -307,6 +307,32 @@ static int tcc_driver_req_buffer(unsigned int region_id, unsigned int size)
 }
 
 /**
+ * @brief  Read native RTCT table from TCC buffer driver.
+ *
+ * @param void
+ *
+ * @return Poiner to RTCT data buffer on success and NULL on fail.
+ *
+ * @note The returned pointer must be passed to free to avoid a memory leak.
+ */
+static void *tcc_driver_read_rtct(void)
+{
+	void *buffer;
+
+	buffer = calloc(1, 4096);
+	if (buffer == NULL) {
+		pr_err("%s, calloc failed.\n", __func__);
+		return NULL;
+	}
+
+	if (ioctl(tcc_buffer_fd, TCC_GET_RTCT, (unsigned int *)buffer) < 0) {
+		free(buffer);
+		return NULL;
+	}
+	return buffer;
+}
+
+/**
  * @brief  Get file descriptor handler to TCC cache buffer.
  *
  * @param devnode_id  Device node ID of TCC buffer.
@@ -1036,7 +1062,40 @@ static void vrtct_add_ssram_entries(struct acpi_table_hdr *vrtct)
  */
 static int vrtct_add_memory_hierarchy_entries(struct acpi_table_hdr *vrtct)
 {
-	/* to be implemented. */
+	int rtct_ver = RTCT_V1;
+	struct rtct_entry *entry;
+	struct acpi_table_hdr *tcc_rtct;
+	struct rtct_entry_data_compatibility *compat;
+
+	tcc_rtct = (struct acpi_table_hdr *)tcc_driver_read_rtct();
+	if (tcc_rtct == NULL) {
+		pr_err("%s, Read TCC RTCT table failed.\n", __func__);
+		return -1;
+	}
+
+	/* get TCC RTCT version */
+	foreach_rtct_entry(tcc_rtct, entry) {
+		if (entry->type == RTCT_V2_COMPATIBILITY) {
+			compat =  (struct rtct_entry_data_compatibility *)entry->data;
+			rtct_ver = compat->rtct_ver_major;
+			break;
+		}
+	}
+
+	/* support RTCT V2 only */
+	if (rtct_ver != RTCT_V2) {
+		pr_err("%s, Warning: Unsupported RTCT version.\n", __func__);
+		free(tcc_rtct);
+		return -1;
+	}
+
+	foreach_rtct_entry(tcc_rtct, entry) {
+		if (entry->type == RTCT_V2_MEMORY_HIERARCHY_LATENCY) {
+			vrtct_add_native_entry(vrtct, entry);
+		}
+	}
+
+	free(tcc_rtct);
 	return 0;
 }
 
