@@ -101,7 +101,7 @@ static inline int vcpuid2cacheid(int vcpuid, int level)
 	return  lapicid2cacheid(vcpuid2lapicid(vcpuid), level);
 }
 
-uint8_t vrtct_checksum(uint8_t *vrtct, uint32_t length)
+static uint8_t vrtct_checksum(uint8_t *vrtct, uint32_t length)
 {
 	uint8_t sum = 0;
 	uint32_t i;
@@ -874,6 +874,128 @@ err:
 }
 
 /**
+ * @brief  Initialize ACPI header information of RTCT.
+ *
+ * @param vrtct Pointer to virtual RTCT.
+ *
+ * @return void
+ */
+static void vrtct_init_acpi_header(struct acpi_table_hdr *vrtct)
+{
+	/* initialize ACPI RTCT header information. */
+	strncpy(vrtct->signature, "RTCT", 4);
+	vrtct->length = sizeof(struct acpi_table_hdr);
+	vrtct->revision = 1;
+	strncpy(vrtct->oem_id, "INTEL", 6);
+	strncpy(vrtct->oem_table_id, "EDK2", 8);
+	vrtct->oem_revision = 0x5;
+	strncpy(vrtct->asl_compiler_id, "INTL", 4);
+	vrtct->asl_compiler_revision = 0x100000d;
+}
+
+/**
+ * @brief  Add RTCT compatibility entry to virtual RTCT,
+ *	   compatibility entry provides the version of RTCT
+ *         and the supported RTCD version, this entry is hardcoded
+ *         to support RTCT V2 only.
+ *
+ * @param vrtct  Pointer to virtual RTCT.
+ *
+ * @return void
+ */
+static void vrtct_add_compat_entry(struct acpi_table_hdr *vrtct)
+{
+	struct rtct_entry *entry;
+	struct rtct_entry_data_compatibility *compat;
+
+	entry = get_free_rtct_entry(vrtct);
+	entry->format_version = 1;
+	entry->type = RTCT_V2_COMPATIBILITY;
+
+	compat = (struct rtct_entry_data_compatibility *)entry->data;
+	compat->rtct_ver_major = 2;
+	compat->rtct_ver_minor = 0;
+	compat->rtcd_ver_major = 0;
+	compat->rtcd_ver_Minor = 0;
+
+	entry->size = RTCT_ENTRY_HEADER_SIZE + sizeof(*compat);
+	add_rtct_entry(vrtct, entry);
+}
+
+/**
+ * @brief  Map both L2 and L3 cache buffers to RTCT software SRAM
+ *         and way mask entries.
+ *
+ * @param vrtct  Pointer to virtual RTCT.
+ *
+ * @return void.
+ */
+static void vrtct_add_ssram_entries(struct acpi_table_hdr *vrtct)
+{
+	/* to be implemented. */
+}
+
+/**
+ * @brief  Add memory hierarchy latency entries to virtual RTCT,
+ *         these entries describe the "worst case" access latency
+ *         to a particular memory hierarchy.
+ *
+ * @param vrtct Pointer to virtual RTCT.
+ *
+ * @return 0 on success and non-zero on fail.
+ *
+ * @note   1) Pass-through TCC native memory hierarchy latency entries
+ *            to ACRN guests.
+ *         2) From the user VM point of view, the actual latency will
+ *            be worse as the cost of virtualization.
+ */
+static int vrtct_add_memory_hierarchy_entries(struct acpi_table_hdr *vrtct)
+{
+	/* to be implemented. */
+	return 0;
+}
+
+/**
+ * @brief Initialize all virtual RTCT entries.
+ *
+ * @param vrtct Pointer to virtual RTCT.
+ *
+ * @return 0 on success and non-zero on fail.
+ */
+static struct acpi_table_hdr *create_vrtct(void)
+{
+#define RTCT_BUF_SIZE 4096
+	struct acpi_table_hdr  *vrtct;
+
+	vrtct = malloc(RTCT_BUF_SIZE);
+	if (vrtct == NULL) {
+		pr_err("%s, allocate vRTCT buffer failed.\n", __func__);
+		return NULL;
+	}
+	vrtct_init_acpi_header(vrtct);
+
+	/* add compatibility entry */
+	vrtct_add_compat_entry(vrtct);
+
+	/* add SSRAM entries */
+	vrtct_add_ssram_entries(vrtct);
+
+	/* add memory hierarchy entries */
+	if (vrtct_add_memory_hierarchy_entries(vrtct) < 0) {
+		pr_err("%s, add ssram latency failed.\n", __func__);
+		goto err;
+	}
+
+	vrtct->checksum = vrtct_checksum((uint8_t *)vrtct, vrtct->length);
+	pr_info("%s, rtct len:%d\n", __func__, vrtct->length);
+	return vrtct;
+
+err:
+	free(vrtct);
+	return NULL;
+}
+
+/**
  * @brief Initialize guest GPA maximum space of vSSRAM ,
  *        including GPA base and maximum size.
  *
@@ -1012,6 +1134,14 @@ int init_vssram(struct vmctx *ctx)
 		pr_err("%s, setup EPT mapping for vssram buffers failed.\n", __func__);
 		goto exit;
 	}
+
+	vrtct_table = create_vrtct();
+	if (vrtct_table == NULL) {
+		pr_err("%s, create vRTCT failed.", __func__);
+		goto exit;
+	}
+	status = 0;
+
 exit:
 	if (mem_info.region_configs)
 		free(mem_info.region_configs);
