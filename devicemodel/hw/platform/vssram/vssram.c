@@ -33,8 +33,9 @@
 		e = (struct rtct_entry *)((uint64_t)e + e->size))
 
 static uint16_t guest_vcpu_num;
-static uint32_t guest_l2_cat_shift;
-static uint32_t guest_l3_cat_shift;
+static uint64_t guest_pcpumask;
+uint32_t guest_l2_cat_shift;
+uint32_t guest_l3_cat_shift;
 static uint32_t guest_lapicid_tbl[ACRN_PLATFORM_LAPIC_IDS_MAX];
 
 static uint64_t vssram_size;
@@ -84,8 +85,9 @@ int vrtct_add_native_entry(struct acpi_table_hdr *vrtct, struct rtct_entry *entr
 static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint64_t guest_pcpu_bitmask)
 {
 	int pcpu_id = 0, vcpu_id = 0;
+	int vcpu_num = bitmap_weight(guest_pcpu_bitmask);
 
-	for (vcpu_id = 0; vcpu_id < guest_vcpu_num; vcpu_id++) {
+	for (vcpu_id = 0; vcpu_id < vcpu_num; vcpu_id++) {
 		pcpu_id = pcpuid_from_vcpuid(guest_pcpu_bitmask, vcpu_id);
 		if (pcpu_id < 0)
 			return -1;
@@ -95,6 +97,80 @@ static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint
 	return 0;
 }
 
+/**
+ * @brief Initialize guest GPA maximum space of vSSRAM ,
+ *        including GPA base and maximum size.
+ *
+ * @param void.
+ *
+ * @return void.
+ */
+static void init_vssram_gpa_range(void)
+{
+	uint64_t gpu_rsvmem_base_gpa = get_gpu_rsvmem_base_gpa();
+
+	vssram_size = VSSRAM_MAX_SIZE;
+	/* TODO: It is better to put one boundary between GPU region and SW SRAM
+	 * for protection.
+	 */
+	vssram_gpa_base = ((gpu_rsvmem_base_gpa ? gpu_rsvmem_base_gpa : 0x80000000UL) -
+			vssram_size) &  ~vssram_size;
+}
+
+/**
+ * @brief Initialize guest CPU information, including pCPU
+ *        bitmask, number of vCPU and local APIC IDs of vCPUs.
+ *
+ * @param ctx  Pointer to context of user VM.
+ *
+ * @return 0 on success and -1 on fail.
+ */
+static int init_guest_cpu_info(struct vmctx *ctx)
+{
+	struct acrn_vm_config_header vm_cfg;
+	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
+	struct acrn_platform_info platform_info;
+
+	if (vm_get_config(ctx, &vm_cfg, &platform_info)) {
+		pr_err("%s, get VM configuration fail.\n", __func__);
+		return -1;
+	}
+	assert(platform_info.hw.cpu_num <= ACRN_PLATFORM_LAPIC_IDS_MAX);
+
+	/*
+	 * pCPU bitmask of VM is configured in hypervisor by default but can be
+	 * overwritten by '--cpu_affinity' argument of DM if this bitmask is
+	 * the subset of bitmask configured in hypervisor.
+	 *
+	 * FIXME: The cpu_affinity does not only mean the vcpu's pcpu affinity but
+	 * also indicates the maximum vCPU number of guest. Its name should be renamed
+	 * to pu_bitmask to avoid confusing.
+	 */
+	hv_cpu_bitmask = vm_cfg.cpu_affinity;
+	dm_cpu_bitmask = vm_get_cpu_affinity_dm();
+	if ((dm_cpu_bitmask != 0) && ((dm_cpu_bitmask & ~hv_cpu_bitmask) == 0)) {
+		guest_pcpu_bitmask = dm_cpu_bitmask;
+	} else {
+		guest_pcpu_bitmask = hv_cpu_bitmask;
+	}
+
+	if (guest_pcpu_bitmask == 0) {
+		pr_err("%s,Err: Invalid guest_pcpu_bitmask.\n", __func__);
+		return -1;
+	}
+
+	pr_info("%s, dm_cpu_bitmask:0x%x, hv_cpu_bitmask:0x%x, guest_cpu_bitmask: 0x%x\n",
+		__func__, dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask);
+
+	if (init_guest_lapicid_tbl(&platform_info, guest_pcpu_bitmask) < 0) {
+		pr_err("%s,init guest lapicid table fail.\n", __func__);
+		return -1;
+	}
+
+	guest_vcpu_num = bitmap_weight(guest_pcpu_bitmask);
+	guest_pcpumask = guest_pcpu_bitmask;
+	return 0;
+}
 
 /*
  * @pre init_vssram(ctx) == 0
@@ -129,61 +205,10 @@ uint8_t *get_vssram_vrtct(void)
  */
 int init_vssram(struct vmctx *ctx)
 {
-#define PTCT_BUF_SIZE 4096
-	struct acrn_vm_config_header vm_cfg;
-	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
-	uint32_t gpu_rsvmem_base_gpa = 0;
-	struct acrn_platform_info platform_info;
+	init_vssram_gpa_range();
 
-	if (vm_get_config(ctx, &vm_cfg, &platform_info)) {
-		pr_err("%s, get VM configuration fail.\n", __func__);
-		goto error;
-	}
-	assert(platform_info.hw.cpu_num <= ACRN_PLATFORM_LAPIC_IDS_MAX);
-
-	/*
-	 * pCPU bitmask of VM is configured in hypervisor by default but can be
-	 * overwritten by '--cpu_affinity' argument of DM if this bitmask is
-	 * the subset of bitmask configured in hypervisor.
-	 *
-	 * FIXME: The cpu_affinity does not only mean the vcpu's pcpu affinity but
-	 * also indicates the maximum vCPU number of guest. Its name should be renamed
-	 * to pu_bitmask to avoid confusing.
-	 */
-	hv_cpu_bitmask = vm_cfg.cpu_affinity;
-	dm_cpu_bitmask = vm_get_cpu_affinity_dm();
-	if ((dm_cpu_bitmask != 0) && ((dm_cpu_bitmask & ~hv_cpu_bitmask) == 0)) {
-		guest_pcpu_bitmask = dm_cpu_bitmask;
-	} else {
-		guest_pcpu_bitmask = hv_cpu_bitmask;
-	}
-
-	if (guest_pcpu_bitmask == 0) {
-		pr_err("%s,Err: Invalid guest_pcpu_bitmask.\n", __func__);
-		goto error;
-	}
-
-	pr_info("%s, dm_cpu_bitmask:0x%x, hv_cpu_bitmask:0x%x, guest_cpu_bitmask: 0x%x\n",
-		__func__, dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask);
-
-	guest_vcpu_num = bitmap_weight(guest_pcpu_bitmask);
-	if (init_guest_lapicid_tbl(&platform_info, guest_pcpu_bitmask) < 0) {
-		pr_err("%s,init guest lapicid table fail.\n", __func__);
-		goto error;
-	}
-
-	printf("%s, vcpu_num:%d, l2_shift:%d, l3_shift:%d.\n", __func__,
-		guest_vcpu_num, guest_l2_cat_shift, guest_l3_cat_shift);
-
-	gpu_rsvmem_base_gpa = get_gpu_rsvmem_base_gpa();
-	vssram_size = VSSRAM_MAX_SIZE;
-	/* TODO: It is better to put one boundary between GPU region and SW SRAM
-	 * for protection.
-	 */
-	vssram_gpa_base = ((gpu_rsvmem_base_gpa ? gpu_rsvmem_base_gpa : 0x80000000UL) -
-			vssram_size) &  ~vssram_size;
+	if (init_guest_cpu_info(ctx) < 0)
+		return -1;
 
 	return 0;
-error:
-	return -1;
 }
