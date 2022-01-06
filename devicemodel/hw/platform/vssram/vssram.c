@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/user.h>
+#include <sys/mman.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -210,6 +211,58 @@ static int tcc_driver_get_memory_config(int region_id, struct tcc_mem_region_con
 }
 
 /**
+ * @brief  Request TCC software SRAM buffer from region specified by region ID.
+ *
+ * @param region_id  Target software SRAM region ID.
+ * @param size       Request buffer size in bytes.
+ *
+ * @return device node ID on success and -1 on fail.
+ */
+static int tcc_driver_req_buffer(unsigned int region_id, unsigned int size)
+{
+	struct tcc_buf_mem_req req;
+
+	memset(&req, 0, sizeof(req));
+	req.devnode_id = -1;
+	req.id = region_id;
+	req.size = size;
+
+	if (ioctl(tcc_buffer_fd, TCC_REQ_BUFFER, &req) < 0) {
+		pr_err("%s failed: fd=%d, region_id=%u, size=%ld KB.\n",
+			__func__, tcc_buffer_fd, req.id, req.size);
+		return -1;
+	}
+
+	pr_info("%s succ: region_id: %d, size: %ld KB, dev_node=%d.\n",
+		__func__, region_id, req.size >> 10, req.devnode_id);
+
+	return (int)req.devnode_id;
+}
+
+/**
+ * @brief  Get file descriptor handler to TCC cache buffer.
+ *
+ * @param devnode_id  Device node ID of TCC buffer.
+ *
+ * @return         File descriptor on success and -1 on fail.
+ */
+static int vssram_open_buffer(int devnode_id)
+{
+	int fd;
+	char buffer_file_name[256];
+
+	sprintf(buffer_file_name, "%s%i", TCC_BUFFER_DEVNODE, devnode_id);
+
+	fd = open(buffer_file_name, O_RDWR);
+	if (fd == INVALID_FD) {
+		pr_err("%s, Failure open('%s', O_RDRW):error: %s(%i)",
+			__func__, buffer_file_name, strerror(errno), errno);
+	}
+
+	return fd;
+}
+
+/**
  * @brief Release all vSSRAM buffers and close file
  *        descriptors of TCC cache buffers.
  *
@@ -219,7 +272,45 @@ static int tcc_driver_get_memory_config(int region_id, struct tcc_mem_region_con
  */
 static void vssram_close_buffers(void)
 {
-	/* to be implemented */
+	int i;
+	struct vssram_buf *vbuf;
+
+	if (!vssram_buffers)
+		return;
+
+	for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+		vbuf = &vssram_buffers[i];
+		if (vbuf->fd != -1) {
+			munmap((void *)vbuf->vma_base, vbuf->size);
+			close(vbuf->fd);
+		}
+	}
+
+	if (tcc_buffer_fd != INVALID_FD) {
+		close(tcc_buffer_fd);
+		tcc_buffer_fd = INVALID_FD;
+	}
+}
+
+/**
+ * @brief        Creates a memory mapping for cache buffer.
+ *
+ * @param fd     File descriptor of cache buffer device node.
+ * @param size   Size of cache buffer
+ *
+ * @return       Pointer to the mapped area on success and NULL on fail.
+ */
+static void *vssram_mmap_buffer(int fd, size_t size)
+{
+	void *memory;
+
+	memory = mmap(NULL, size, 0, MAP_FILE | MAP_SHARED, fd, 0);
+	if (memory == MAP_FAILED) {
+		pr_err("%s, Failure mmap on fd:%d, size:%ld.\n", __func__, fd, size);
+		return NULL;
+	}
+
+	return memory;
 }
 
 static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint64_t guest_pcpu_bitmask)
@@ -487,6 +578,118 @@ err:
 }
 
 /**
+ * @brief  Request cache buffer based on the TCC software SRAM regions configurations.
+ *
+ * @param vbuf     Pointer to cache buffer description.
+ * @param mem_info Pointer to memory region configurations .
+ *
+ * @return device node of cache buffer on success and -1 on fail.
+ */
+static int vssram_request_buffer(struct vssram_buf *vbuf,
+		struct tcc_memory_info *mem_info)
+{
+	int i, pcpuid = 0, devnode_id = -1;
+	struct tcc_mem_region_config *config;
+
+	if (CPU_COUNT(&vbuf->pcpumask) == 0) {
+		pr_err("%s pCPU mask is not configured in cache buffer description.\n", __func__);
+		return -1;
+	}
+
+	/* get pCPU ID that has affinity with current cache buffer, use 0 for L3 cache buffer,
+	 * all CPUs in this pcpumask can access current cache buffer, so select anyone inside.
+	 */
+	for (pcpuid = 0; pcpuid < ACRN_PLATFORM_LAPIC_IDS_MAX; pcpuid++) {
+		if (CPU_ISSET(pcpuid, &vbuf->pcpumask))
+			break;
+	}
+	assert((pcpuid > 0) && (pcpuid < ACRN_PLATFORM_LAPIC_IDS_MAX));
+
+	/* Request cache buffer from TCC kernel driver */
+	for (i = 0; i < mem_info->region_cnt; i++) {
+		config = mem_info->region_configs + i;
+		if (CPU_ISSET(pcpuid, (cpu_set_t *)config->cpu_mask_p)
+			&& (config->size >= vbuf->size)
+			&& (config->type == vbuf->level)) {
+			devnode_id = tcc_driver_req_buffer(i, vbuf->size);
+			if (devnode_id > 0) {
+				vbuf->waymask = config->ways;
+				break;
+			}
+		}
+	}
+	return devnode_id;
+}
+
+/**
+ * @brief  Allocate cache buffer from TCC software SRAM regions
+ *         and setup memory mapping.
+ *
+ * @param vbuf     Pointer to cache buffer description.
+ * @param mem_info Pointer to memory region configurations .
+ *
+ * @return 0 on success and -1 on fail.
+ */
+static int vssram_setup_buffer(struct vssram_buf *vbuf,
+		struct tcc_memory_info *mem_info)
+{
+	void *ptr;
+	int devnode_id, fd;
+
+	devnode_id = vssram_request_buffer(vbuf, mem_info);
+	if (devnode_id == -1) {
+		pr_err("%s, request buffer failed, size:%x.\n",
+			__func__, vbuf->size);
+		return -1;
+	}
+
+	fd = vssram_open_buffer(devnode_id);
+	if (fd == INVALID_FD) {
+		pr_err("%s, open buffer device node(%d) failed.\n", __func__, devnode_id);
+		return -1;
+	}
+
+	ptr = vssram_mmap_buffer(fd, vbuf->size);
+	if (ptr == NULL) {
+		pr_err("%s, mmap buffer failed, devnode_id:%.\n", __func__, devnode_id);
+		return -1;
+	}
+
+	vbuf->vma_base = (uint64_t)ptr;
+	vbuf->fd = fd;
+	return 0;
+}
+
+/**
+ * @brief  Prepare cache buffers according the cache buffer descriptions.
+ *
+ * @param mem_info Pointer to memory region configurations.
+ *
+ * @return 0 on success and -1 on fail.
+ *
+ * @pre vssram_buffers != NULL
+ */
+static int vssram_prepare_buffers(struct tcc_memory_info *mem_info)
+{
+	int i;
+	struct vssram_buf *vbuf;
+
+	for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+		vbuf = &vssram_buffers[i];
+
+		if (vbuf->size == 0)
+			break;
+
+		if (vssram_setup_buffer(vbuf, mem_info) < 0) {
+			pr_err("%s, allocate cache(level:%d, size:%x) failed\n",
+				__func__, vbuf->level, vbuf->size);
+			return -1;
+		}
+	}
+	return 0;
+}
+
+/**
  * @brief  Initialize L2 & L3 vSSRAM buffer context table.
  *
  * @param void
@@ -666,6 +869,11 @@ int init_vssram(struct vmctx *ctx)
 	memset(&mem_info, 0, sizeof(struct tcc_memory_info));
 	if (load_tcc_memory_info(&mem_info) < 0) {
 		pr_err("%s, load TCC memory configurations failed.\n", __func__);
+		goto exit;
+	}
+
+	if (vssram_prepare_buffers(&mem_info) < 0) {
+		pr_err("%s, prepare vssram buffers failed.\n", __func__);
 		goto exit;
 	}
 
