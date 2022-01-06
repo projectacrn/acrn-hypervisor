@@ -47,17 +47,56 @@ struct vssram_buf_param {
 	uint32_t size;
 	uint64_t vcpumask;
 };
+
+struct vssram_buf {
+	int fd;
+	int level;
+	int cache_id;
+	uint32_t size;
+	uint32_t l3_inclusive_of_l2_size;
+	uint64_t vma_base;
+	uint64_t gpa_base;
+	uint32_t waymask;
+	cpu_set_t pcpumask;
+};
+
+struct tcc_memory_info {
+	int region_cnt;
+	cpu_set_t *cpuset;
+	struct tcc_mem_region_config *region_configs;
+};
+
 static uint16_t guest_vcpu_num;
 static uint64_t guest_pcpumask;
-uint32_t guest_l2_cat_shift;
-uint32_t guest_l3_cat_shift;
+static uint32_t guest_l2_cat_shift;
+static uint32_t guest_l3_cat_shift;
+static int      is_l3_inclusive_of_l2;
 static uint32_t guest_lapicid_tbl[ACRN_PLATFORM_LAPIC_IDS_MAX];
 
 static uint64_t vssram_size;
 static uint64_t vssram_gpa_base;
 static struct acpi_table_hdr  *vrtct_table;
 
+static struct	vssram_buf *vssram_buffers;
 static struct   vssram_buf_param *vssram_buf_params;
+
+#define vcpuid2pcpuid(vcpuid) pcpuid_from_vcpuid(guest_pcpumask, vcpuid)
+
+static inline uint64_t vcpuid2lapicid(int vcpuid)
+{
+	return guest_lapicid_tbl[vcpuid];
+}
+
+static inline int lapicid2cacheid(uint64_t lapicid, int level)
+{
+	return ((level == L2_CACHE) ? (lapicid >> guest_l2_cat_shift) :
+		(lapicid >> guest_l3_cat_shift));
+}
+
+static inline int vcpuid2cacheid(int vcpuid, int level)
+{
+	return  lapicid2cacheid(vcpuid2lapicid(vcpuid), level);
+}
 
 uint8_t vrtct_checksum(uint8_t *vrtct, uint32_t length)
 {
@@ -112,6 +151,256 @@ static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint
 		guest_lapicid_tbl[vcpu_id] = lapicid_from_pcpuid(platform_info, pcpu_id);
 	}
 	return 0;
+}
+
+/**
+ * @brief  Get basic cache hierarchy information, including the
+ *          order value of cache threads sharing number and
+ *          the inclusiveness of LLC.
+ *
+ * @param l2_shift: Poiner to a buffer to be filled with the
+ *                  order value of L2 cache threads sharing number.
+ * @param l3_shift: Poiner to a buffer to be filled with the
+ *                  order value of L3 cache threads sharing number.
+ *
+ * @return Inclusiveness status of LLC(Last Level Cache),
+ *         1: LLC is inclusive, 0: LLC is not inclusive.
+ *
+ */
+static int get_cache_hierarchy_info(uint32_t *l2_shift, uint32_t *l3_shift)
+{
+	int llc_inclusive = 0;
+	uint32_t subleaf, eax, ebx, ecx, edx;
+	uint32_t cache_type, cache_level, id, shift;
+
+	*l2_shift = 0;
+	*l3_shift = 0;
+
+	/* The 0x04 leaf of cpuid is pass-throughed to service VM. */
+	for (subleaf = 0;; subleaf++) {
+		do_cpuid(0x4, subleaf, &eax, &ebx, &ecx, &edx);
+
+		cache_type = eax & 0x1f;
+		cache_level = (eax >> 5) & 0x7;
+		id = (eax >> 14) & 0xfff;
+		shift = get_num_order(id + 1);
+
+		/* No more caches */
+		if ((cache_type == 0) || (cache_type >= 4)) {
+			break;
+		}
+
+		if (cache_level == 2) {
+			*l2_shift = shift;
+		} else if (cache_level == 3) {
+			*l3_shift = shift;
+			/* EDX: Bit 01: Cache Inclusiveness.
+			 * 0 = Cache is not inclusive of lower cache levels.
+			 * 1 = Cache is inclusive of lower cache levels.
+			 */
+			llc_inclusive = (edx >> 1) & 0x1;
+		}
+	}
+	return llc_inclusive;
+}
+/**
+ * @brief  Get the L3 cache ID for given L2 vSSRAM buffer
+ *
+ * @param l2_vbuf Pointer to a L2 vSSRAM buffer descripition.
+ *
+ * @return L3 cache ID.
+ */
+static int get_l3_cache_id_from_l2_buffer(struct vssram_buf *l2_vbuf)
+{
+	assert(guest_l3_cat_shift >= guest_l2_cat_shift);
+	assert(l2_vbuf->level == L2_CACHE);
+
+	return (l2_vbuf->cache_id >> (guest_l3_cat_shift - guest_l2_cat_shift));
+}
+
+/**
+ * @brief  Parse a vSSRAM buffer parameter and add it
+ *         to vSSRAM buffer descripition table.
+ *
+ * @param vbuf_tbl Pointer to description table of cache buffers.
+ * @param vbuf_param    Pointer to a cache buffer configuration from user input.
+ *
+ * @return 0 on success and -1 on fail.
+ */
+static int vssram_add_buffer(struct vssram_buf *vbuf_tbl, struct vssram_buf_param *vbuf_param)
+{
+	int i, pcpuid, cacheid = INVALID_CACHE_ID;
+	uint64_t vcpumask = vbuf_param->vcpumask;
+	struct vssram_buf *vbuf;
+
+	/* all vCPUs are configured for this vSSRAM region */
+	if (vcpumask == VSSRAM_VCPUMASK_ALL) {
+		vcpumask = 0;
+		for (i = 0; i < guest_vcpu_num; i++)
+			vcpumask |= (1 << i);
+	}
+
+	/*
+	 * sanity check on vSSRAM region configuration against guest cache hierarchy,
+	 * all vCPUs configured in this region shall share the same level specific cache.
+	 */
+	for (i = 0; i < ACRN_PLATFORM_LAPIC_IDS_MAX; i++) {
+		if ((vcpumask >> i) & 0x1) {
+			if (cacheid == INVALID_CACHE_ID) {
+				cacheid = vcpuid2cacheid(i, vbuf_param->level);
+			} else if (cacheid != vcpuid2cacheid(i, vbuf_param->level)) {
+				pr_err("The vSSRAM param and cache hierarchy are mismatched.\n");
+				return -1;
+			}
+		}
+	}
+	assert(cacheid != INVALID_CACHE_ID);
+
+	for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+		vbuf = &vbuf_tbl[i];
+		if (vbuf->size == 0) {
+			/* fill a new vSSRAM buffer */
+			vbuf->level = vbuf_param->level;
+			vbuf->cache_id = cacheid;
+			vbuf->size = vbuf_param->size;
+			break;
+		}
+
+		if ((vbuf->cache_id == cacheid) && (vbuf->level == vbuf_param->level)) {
+			/* merge it to vSSRAM buffer */
+			vbuf->size += vbuf_param->size;
+			break;
+		}
+	}
+	assert(i < MAX_VSSRAM_BUFFER_NUM);
+
+	/* update pcpumask of vSSRAM buffer */
+	for (i = 0; i < ACRN_PLATFORM_LAPIC_IDS_MAX; i++) {
+		if ((vcpumask >> i) & 0x1) {
+			pcpuid = vcpuid2pcpuid(i);
+			if ((pcpuid < 0) || (pcpuid >= ACRN_PLATFORM_LAPIC_IDS_MAX)) {
+				pr_err("%s, invalid pcpuid(%d) from vcpuid(%d).\n", __func__, pcpuid, i);
+				return -1;
+			}
+			CPU_SET(pcpuid, &vbuf->pcpumask);
+		}
+	}
+	return 0;
+}
+
+/**
+ * @brief  Extend L3 vSSRAM buffer for L3 cache inclusive case when any L2 vSSRAM buffers
+ *         are configured, new L3 vSSRAM buffer will be added when it is not found.
+ *
+ * @param vbuf_tbl Pointer vSSRAM buffer table.
+ *
+ * @return void
+ */
+static void vssram_extend_l3buf_for_l2buf(struct vssram_buf *vbuf_tbl)
+{
+	bool inclusive_l3_found;
+	int i, j, l3_cache_id;
+	struct vssram_buf *vbuf1, *vbuf2;
+
+	for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+		vbuf1 = &vbuf_tbl[i];
+		if (vbuf1->size == 0)
+			break;
+
+		if (vbuf1->level != L2_CACHE)
+			continue;
+
+		/*
+		 * check if L3 vSSRAM buffer that is inclusive
+		 * of this L2 buffer is configured.
+		 */
+		inclusive_l3_found = false;
+		l3_cache_id = get_l3_cache_id_from_l2_buffer(vbuf1);
+		for (j = 0; j < MAX_VSSRAM_BUFFER_NUM; j++) {
+			if (j == i) /* skip itself */
+				continue;
+
+			vbuf2 = &vbuf_tbl[j];
+			if (vbuf2->cache_id == INVALID_CACHE_ID)
+				break;
+
+			if ((vbuf2->level == L3_CACHE)
+				&& (vbuf2->cache_id == l3_cache_id)) {
+				inclusive_l3_found = true;
+				break;
+			}
+		}
+
+		if (j >= MAX_VSSRAM_BUFFER_NUM)
+			return;
+
+		/* 'vbuf2' points to a free vSSRAM buffer if 'inclusive_l3_found' is false,
+		 *  else 'vbuf2' points to a configured L3 vSSRAM buffer.
+		 *  'l3_inclusive_of_l2_size' of 'vbuf2' should be updated for either case.
+		 */
+		vbuf2->l3_inclusive_of_l2_size += vbuf1->size;
+
+		if (inclusive_l3_found) {
+			continue;
+		} else {
+			/* fill the new L3 cache buffer being inclusive of this L2 cache buffer */
+			vbuf2->cache_id = l3_cache_id;
+			vbuf2->level = L3_CACHE;
+		}
+	}
+}
+
+/**
+ * @brief  Initialize L2 & L3 vSSRAM buffer context table.
+ *
+ * @param void
+ *
+ * @return 0 on success and non-zero on fail.
+ */
+static int vssram_init_buffers(void)
+{
+	int i;
+	struct vssram_buf *vbuf_tbl;
+	struct vssram_buf_param *param;
+
+	if ((vssram_buffers != NULL) || (vssram_buf_params == NULL)) {
+		pr_err("descripitions table is already initialized or lack of ssram configurations.\n");
+		return -1;
+	}
+
+	vbuf_tbl = calloc(MAX_VSSRAM_BUFFER_NUM, sizeof(struct vssram_buf));
+	if (vbuf_tbl == NULL)
+		return -1;
+
+	for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+		vbuf_tbl[i].fd = INVALID_FD;
+		vbuf_tbl[i].cache_id = INVALID_CACHE_ID;
+	}
+
+	is_l3_inclusive_of_l2 = get_cache_hierarchy_info(&guest_l2_cat_shift, &guest_l3_cat_shift);
+	pr_info("%s, l2_cat_shift:%d, l3_cat_shift:%d, l3_inclusive:%d.\n", __func__,
+		guest_l2_cat_shift, guest_l3_cat_shift, is_l3_inclusive_of_l2);
+
+	/* parse vSSRAM params and fill vSSRAM buffer table */
+	for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+		param = &vssram_buf_params[i];
+		if (param->size > 0) {
+			if (vssram_add_buffer(vbuf_tbl, param) < 0) {
+				pr_err("%s, failed to add cache buffer.\n", __func__);
+				goto err;
+			}
+		}
+	}
+
+	if (is_l3_inclusive_of_l2) {
+		vssram_extend_l3buf_for_l2buf(vbuf_tbl);
+	}
+
+	vssram_buffers = vbuf_tbl;
+	return 0;
+err:
+	free(vbuf_tbl);
+	return -1;
 }
 
 /**
@@ -226,6 +515,11 @@ int init_vssram(struct vmctx *ctx)
 
 	if (init_guest_cpu_info(ctx) < 0)
 		return -1;
+
+	if (vssram_init_buffers() < 0) {
+		pr_err("%s, initialize vssram buffer description failed.\n", __func__);
+		return -1;
+	}
 
 	return 0;
 }
