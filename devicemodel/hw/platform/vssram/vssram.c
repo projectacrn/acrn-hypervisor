@@ -16,10 +16,13 @@
 #include <string.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <ctype.h>
 
 #include "pci_core.h"
 #include "vmmapi.h"
 #include "acpi.h"
+#include "dm_string.h"
 #include "log.h"
 #include "vssram.h"
 
@@ -32,6 +35,18 @@
 		((uint64_t)e - (uint64_t)rtct) < rtct->length; \
 		e = (struct rtct_entry *)((uint64_t)e + e->size))
 
+#define L2_CACHE 2
+#define L3_CACHE 3
+#define INVALID_CACHE_ID (-1)
+#define INVALID_FD (-1)
+#define VSSRAM_VCPUMASK_ALL ((uint64_t)-1)
+#define MAX_VSSRAM_BUFFER_NUM (ACRN_PLATFORM_LAPIC_IDS_MAX << 1)
+
+struct vssram_buf_param {
+	int level;
+	uint32_t size;
+	uint64_t vcpumask;
+};
 static uint16_t guest_vcpu_num;
 static uint64_t guest_pcpumask;
 uint32_t guest_l2_cat_shift;
@@ -41,6 +56,8 @@ static uint32_t guest_lapicid_tbl[ACRN_PLATFORM_LAPIC_IDS_MAX];
 static uint64_t vssram_size;
 static uint64_t vssram_gpa_base;
 static struct acpi_table_hdr  *vrtct_table;
+
+static struct   vssram_buf_param *vssram_buf_params;
 
 uint8_t vrtct_checksum(uint8_t *vrtct, uint32_t length)
 {
@@ -211,4 +228,149 @@ int init_vssram(struct vmctx *ctx)
 		return -1;
 
 	return 0;
+}
+/**
+ * @brief Cleanup vSSRAM configurations resource.
+ *
+ * @param  void
+ *
+ * @return void
+ */
+void clean_vssram_configs(void)
+{
+	if (vssram_buf_params) {
+		free(vssram_buf_params);
+		vssram_buf_params = NULL;
+	}
+}
+
+/**
+ * @brief Parse input args for software SRAM configurations.
+ *
+ * @param opt  Pointer input args string.
+ *
+ * @return 0 on success and non-zero on fail.
+ *
+ * @note  Format of args shall be: "--ssram {Ln,vcpu=vcpu_set,size=nK|M;}"
+ *        - "Ln,vcpu=vcpu_set,size=nK|M;" is used to configure one software SRAM region,
+ *               multiple regions can be configured by separating them with semicolons(;).
+ *        - Ln   Cache level of software region, "L2"/"l3" and "L3"/"l3" are valid values
+ *               for L2 and L3 cache respectively.
+ *        - vcpu vCPU set of software region, multiple vCPU IDs can be configured by
+ *               separating them with comma(,), "all"/"ALL" can be used to set all vCPUs.
+ *        - size Size of software SRAM region, suffix of "K"/"k" or "M"/"m" must be used
+ *               to indicate unit of Kilo bytes and Mega bytes respectively, this value
+ *               must be decimal and page size(4Kbytes) aligned.
+ *        - example: --ssram L2,vcpu=0,1,size=4K;L2,vcpu=2,3,size=1M;L3,vcpu=all,size=2M
+ */
+int parse_vssram_buf_params(const char *opt)
+{
+	size_t size;
+	uint32_t vcpu_id;
+	uint64_t vcpumask;
+	int level, shift, error = -1, index = 0;
+	struct vssram_buf_param *params;
+	char *cp_opt, *str, *elem, *s_elem, *level_str, *vcpu_str, *size_str, *endptr;
+
+	cp_opt = str = strdup(opt);
+	if (!str) {
+		fprintf(stderr, "%s: strdup returns NULL.\n", __func__);
+		return -1;
+	}
+
+	params = calloc(MAX_VSSRAM_BUFFER_NUM, sizeof(struct vssram_buf_param));
+	if (params == NULL) {
+		pr_err("%s malloc buffer.\n", __func__);
+		goto exit;
+	}
+
+	/* param example: --ssram L2,vcpu=0,1,size=4K;L2,vcpu=2,3,size=1M;L3,vcpu=all,size=2M */
+	for (elem = strsep(&str, ";"); elem != NULL; elem = strsep(&str, ";")) {
+		if (strlen(elem) == 0)
+			break;
+
+		level_str = strsep(&elem, ",");
+		if (!strcmp(level_str, "L2") || !strcmp(level_str, "l2"))
+			level = L2_CACHE;
+		else if (!strcmp(level_str, "L3") || !strcmp(level_str, "l3"))
+			level = L3_CACHE;
+		else {
+			pr_err("invalid SSRAM buffer level:%s.\n", level_str);
+			goto exit;
+		}
+
+		vcpu_str = strsep(&elem, "=");
+		if (strcmp(vcpu_str, "vcpu")) {
+			pr_err("%s is invalid, 'vcpu' must be specified.\n", vcpu_str);
+			goto exit;
+		}
+		size_str = strstr(elem, "size=");
+		if (size_str == NULL) {
+			pr_err("invalid size parameter: %s\n", elem);
+			goto exit;
+		}
+
+		/* split elem into vcpu ID list string and size string */
+		*(size_str - 1) = '\0';
+		vcpu_str = elem;
+		vcpumask = 0;
+		for (s_elem = strsep(&vcpu_str, ","); s_elem != NULL; s_elem = strsep(&vcpu_str, ",")) {
+			if (strlen(s_elem) == 0)
+				break;
+
+			if (!strcmp(s_elem, "all") || !strcmp(s_elem, "ALL")) {
+				vcpumask = VSSRAM_VCPUMASK_ALL;
+				break;
+			}
+
+			if (dm_strtoui(s_elem, &endptr, 10, &vcpu_id)) {
+				pr_err("invalid '%s' to specify vcpu ID.\n", s_elem);
+				goto exit;
+			}
+			vcpumask |= (1 << vcpu_id);
+		}
+		if (bitmap_weight(vcpumask) == 0) {
+			pr_err("vCPU bitmask of ssram region is not set.\n");
+			goto exit;
+		}
+
+		strsep(&size_str, "=");
+		if (strlen(size_str) == 0) {
+			pr_err("invalid size configuration.\n");
+			goto exit;
+		}
+		size = strtoul(size_str, &endptr, 0);
+		switch (tolower((unsigned char)*endptr)) {
+		case 'm':
+			shift = 20;
+			break;
+		case 'k':
+			shift = 10;
+			break;
+		default:
+			pr_err("invalid size of '%s', only 'K','k'(KB) or 'M','m'(MB) can be suffixed!\n", size_str);
+			goto exit;
+		}
+
+		size <<= shift;
+		if ((size == 0) || ((size & ~PAGE_MASK) != 0) || (size > VSSRAM_MAX_SIZE)) {
+			pr_err("size 0x%lx is invalid, 0 or not page-aligned, or too large.\n", size);
+			goto exit;
+		}
+
+		pr_info("config index[%d]: cache level:%d, size:%lx, vcpumask:%lx\n", index, level, size, vcpumask);
+		params[index].level = level;
+		params[index].size = size;
+		params[index].vcpumask = vcpumask;
+		index++;
+	}
+	vssram_buf_params = params;
+	error = 0;
+
+exit:
+	if (error) {
+		free(params);
+	}
+	free(cp_opt);
+	return error;
 }
