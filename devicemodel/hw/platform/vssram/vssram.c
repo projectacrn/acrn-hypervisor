@@ -313,6 +313,31 @@ static void *vssram_mmap_buffer(int fd, size_t size)
 	return memory;
 }
 
+/**
+ * @brief  Setup EPT mapping of a software SRAM buffer for user VM.
+ *
+ * @param ctx       Pointer to context of user VM.
+ * @param buf_desc  Pointer to software SRAM buffer description.
+ *
+ * @return 0 on success and non-zero on fail.
+ */
+static int vssram_ept_map_buffer(struct vmctx *ctx, struct vssram_buf *buf_desc)
+{
+	struct acrn_vm_memmap memmap = {
+		.type = ACRN_MEMMAP_RAM,
+		.vma_base = 0,
+		.len = 0,
+		.attr = ACRN_MEM_ACCESS_RWX
+	};
+
+	memmap.vma_base = buf_desc->vma_base;
+	memmap.user_vm_pa = buf_desc->gpa_base;
+	memmap.len = buf_desc->size;
+	ioctl(ctx->fd, ACRN_IOCTL_UNSET_MEMSEG, &memmap);
+
+	return ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
+};
+
 static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint64_t guest_pcpu_bitmask)
 {
 	int pcpu_id = 0, vcpu_id = 0;
@@ -690,6 +715,112 @@ static int vssram_prepare_buffers(struct tcc_memory_info *mem_info)
 }
 
 /**
+ * @brief  Set GPA for vSSRAM buffers for inclusive cache hierarchy case,
+ *         GPAs of two kinds of vSSRAM buffers will be updated:
+ *          - Given L3 vSSRAM buffer.
+ *          - All L2 vSSRAM buffers that this given L3 vSSRAM buffer is inclusive of.
+ *
+ * @param l3_vbuf   Pointer to a L3 vSSRAM buffer descripition.
+ * @param gpa_start Start GPA for this mapping.
+ *
+ * @return Size of GPA space consumed by this mapping.
+ */
+static uint64_t vssram_merge_l2l3_gpa_regions(struct vssram_buf *l3_vbuf, uint64_t gpa_start)
+{
+	int i;
+	uint64_t gpa = gpa_start;
+	struct vssram_buf *vbuf;
+
+	assert(l3_vbuf->level == L3_CACHE);
+	for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+		vbuf = &vssram_buffers[i];
+		if ((vbuf->level == L2_CACHE)
+			&& (get_l3_cache_id_from_l2_buffer(vbuf) == l3_vbuf->cache_id)) {
+			vbuf->gpa_base = gpa;
+			gpa += vbuf->size;
+		}
+	}
+	l3_vbuf->gpa_base = gpa;
+
+	return (l3_vbuf->size + l3_vbuf->l3_inclusive_of_l2_size);
+}
+
+/**
+ * @brief  Assign GPA base to all vSSRAM buffers for both inclusive cache
+ *         case and non-inclusive cache case.
+ *
+ * @param void
+ *
+ * @return void
+ */
+static void vssram_config_buffers_gpa(void)
+{
+	int i, level;
+	uint64_t gpa, gpa_size;
+	struct vssram_buf *vbuf;
+
+	gpa = vssram_gpa_base;
+
+	/*
+	 * For the L3 inclusive of L2 case, the L2 vSSRAM buffer and
+	 * its L3 companion buffer need to map to same gpa region.
+	 */
+	if (is_l3_inclusive_of_l2) {
+		for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+			vbuf = &vssram_buffers[i];
+			if (vbuf->level == L3_CACHE) {
+				gpa_size = vssram_merge_l2l3_gpa_regions(vbuf, gpa);
+				gpa += gpa_size;
+			}
+		}
+	} else {
+		/*
+		 * non inclusive cache case, map L2 cache buffers first, and then L3 buffers,
+		 * there is no GPA space overlap between L2 and L3 cache buffers.
+		 */
+		for (level = L2_CACHE; level <= L3_CACHE; level++) {
+			for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+				vbuf = &vssram_buffers[i];
+				if (vbuf->level == level) {
+					vbuf->gpa_base = gpa;
+					gpa += vbuf->size;
+				}
+			}
+		}
+	}
+}
+
+/**
+ * @brief  Setup EPT mapping for all vSSRAM buffers.
+ *
+ * @param ctx   Pointer to context of user VM.
+ *
+ * @return 0 on success and non-zero on fail.
+ */
+static int vssram_ept_map_buffers(struct vmctx *ctx)
+{
+	int i;
+	struct vssram_buf *vbuf;
+
+	/* confiure GPA for vSSRAM buffers */
+	vssram_config_buffers_gpa();
+
+	/* setup EPT mapping for L2 & L3 cache buffers */
+	for (i = 0; i < MAX_VSSRAM_BUFFER_NUM; i++) {
+		vbuf = &vssram_buffers[i];
+
+		if (vbuf->fd == INVALID_FD)
+			break;
+
+		if (vssram_ept_map_buffer(ctx, vbuf) < 0) {
+			pr_err("%s, setup EPT mapping for cache buffer failed.\n", __func__);
+			return -1;
+		}
+	}
+	return 0;
+}
+
+/**
  * @brief  Initialize L2 & L3 vSSRAM buffer context table.
  *
  * @param void
@@ -877,6 +1008,10 @@ int init_vssram(struct vmctx *ctx)
 		goto exit;
 	}
 
+	if (vssram_ept_map_buffers(ctx) < 0) {
+		pr_err("%s, setup EPT mapping for vssram buffers failed.\n", __func__);
+		goto exit;
+	}
 exit:
 	if (mem_info.region_configs)
 		free(mem_info.region_configs);
