@@ -58,7 +58,7 @@ options:
                [--enable_trusty] [--intr_monitor param_setting]
                [--acpidev_pt HID] [--mmiodev_pt MMIO_regions]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
-               [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]
+               [--cpu_affinity lapic_ids] [--lapic_pt] [--rtvm] [--windows]
                [--debugexit] [--logger-setting param_setting]
                [--ssram] <vm>
        -B: bootargs for kernel
@@ -74,7 +74,8 @@ options:
        --mac_seed: set a platform unique string as a seed for generate mac address
        --ovmf: ovmf file path
        --ssram: Enable Software SRAM
-       --cpu_affinity: list of pCPUs assigned to this VM
+       --cpu_affinity: comma-separated of Service VM vCPUs assigned to this VM. A Service VM vCPU is
+            identified by its lapic ID.\n"
        --enable_trusty: enable trusty for guest
        --debugexit: enable debug exit function
        --intr_monitor: enable interrupt storm monitor

@@ -89,7 +89,8 @@ define post-launched User VM settings. This document describes these option sett
   ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
 
 ``cpu_affinity``:
-  List of pCPU that this VM's vCPUs are pinned to.
+  A comma-separated list of Service VM vCPUs assigned to this VM. A Service VM vCPU is identified
+  by its lapic ID.
 
 .. note::
 

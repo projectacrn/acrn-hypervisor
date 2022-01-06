@@ -193,14 +193,17 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
 ----
 
-``--cpu_affinity <list of pCPUs>``
-   list of pCPUs assigned to this VM.
+``--cpu_affinity <list of lapic_ids>``
+   comma-separated list of vCPUs assigned to this VM. Each CPU has a Local Programmable
+   Interrupt Controller (LAPIC). The unique ID of the LAPIC (lapic_id) is used to identify vCPU.
+   The ``lapic_id`` for a vCPU can be found in the service VM file ``/proc/cpuinfo``
+   identified as ``apicid``.
 
    Example::
 
       --cpu_affinity 1,3
 
-   to assign physical CPUs (pCPUs) 1 and 3 to this VM.
+   to assign vCPUs with lapic_id 1 and 3 to this VM.
 
 ----
 
