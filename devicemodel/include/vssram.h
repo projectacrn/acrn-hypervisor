@@ -52,6 +52,7 @@ uint64_t get_vssram_size(void);
 uint8_t *get_vssram_vrtct(void);
 void clean_vssram_configs(void);
 int init_vssram(struct vmctx *ctx);
+void deinit_vssram(struct vmctx *ctx);
 int parse_vssram_buf_params(const char *opt);
 
 #endif  /* RTCT_H */
