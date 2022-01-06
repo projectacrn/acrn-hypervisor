@@ -33,6 +33,12 @@ struct rtct_entry_data_compatibility {
 	uint32_t rtcd_ver_Minor;
 } __packed;
 
+struct rtct_entry_data_ssram_waymask {
+	uint32_t cache_level;
+	uint32_t cache_id;
+	uint32_t waymask;
+} __packed;
+
 struct rtct_entry_data_ssram_v2 {
 	uint32_t cache_level;
 	uint32_t cache_id;
