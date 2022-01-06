@@ -48,7 +48,7 @@ extern char *mac_seed;
 extern bool lapic_pt;
 extern bool is_rtvm;
 extern bool pt_tpm2;
-extern bool pt_rtct;
+extern bool ssram;
 extern bool vtpm2;
 extern bool is_winvm;
 

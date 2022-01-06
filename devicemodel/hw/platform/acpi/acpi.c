@@ -189,7 +189,7 @@ basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
 
-	if (pt_rtct) {
+	if (ssram) {
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 			    basl_acpi_base + RTCT_OFFSET);
 	}
@@ -236,7 +236,7 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
 
-	if (pt_rtct) {
+	if (ssram) {
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 			    basl_acpi_base + RTCT_OFFSET);
 	}
@@ -1097,76 +1097,6 @@ static struct {
 	{ basl_fwrite_dsdt, DSDT_OFFSET, true  }
 };
 
-/*
- * So far, only support passthrough native Software SRAM to single post-launched VM.
- */
-int create_and_inject_vrtct(struct vmctx *ctx)
-{
-#define RTCT_NATIVE_FILE_PATH_IN_SERVICE_VM "/sys/firmware/acpi/tables/PTCT"
-#define RTCT_V2_NATIVE_FILE_PATH_IN_SERVICE_VM "/sys/firmware/acpi/tables/RTCT"
-
-
-#define RTCT_BUF_LEN	0x200	/* Otherwise, need to modify DSDT_OFFSET corresponding */
-	int native_rtct_fd;
-	int rc;
-	size_t native_rtct_len;
-	size_t vrtct_len;
-	uint8_t *buf;
-	uint8_t *vrtct;
-	struct acrn_vm_memmap memmap = {
-		.type = ACRN_MEMMAP_MMIO,
-		/* HPA base and size of Software SRAM shall be parsed from vRTCT. */
-		.service_vm_pa = 0,
-		.len = 0,
-		.attr = ACRN_MEM_ACCESS_RWX
-	};
-
-	/* Name of native RTCT table is "PTCT"(v1) or "RTCT"(v2) */
-	native_rtct_fd = open(RTCT_NATIVE_FILE_PATH_IN_SERVICE_VM, O_RDONLY);
-	if (native_rtct_fd < 0) {
-		native_rtct_fd = open(RTCT_V2_NATIVE_FILE_PATH_IN_SERVICE_VM, O_RDONLY);
-		if (native_rtct_fd < 0) {
-			pr_err("RTCT file is NOT detected.\n");
-			return -1;
-		}
-	}
-	native_rtct_len = lseek(native_rtct_fd, 0, SEEK_END);
-	buf = malloc(native_rtct_len);
-	if (buf == NULL) {
-		pr_err("%s failed to allocate buffer, native_rtct_len = %d\n", __func__, native_rtct_len);
-		return -1;
-	}
-
-	(void)lseek(native_rtct_fd, 0, SEEK_SET);
-	rc = read(native_rtct_fd, buf, native_rtct_len);
-	if (rc < native_rtct_len) {
-		pr_err("Native RTCT is not fully read into buf!!!");
-		free(buf);
-		return -1;
-	}
-	close(native_rtct_fd);
-
-	vrtct = build_vrtct(ctx, (void *)buf);
-	if (vrtct == NULL) {
-		free(buf);
-		return -1;
-	}
-
-	vrtct_len = ((struct acpi_table_hdr *)vrtct)->length;
-	if (vrtct_len > RTCT_BUF_LEN) {
-		pr_err("Warning: Size of vRTCT (%d bytes) overflows, pls update DSDT_OFFSET.\n", vrtct_len);
-	}
-	memcpy(vm_map_gpa(ctx, ACPI_BASE + RTCT_OFFSET, vrtct_len), vrtct, vrtct_len);
-	free(vrtct);
-	free(buf);
-
-	memmap.service_vm_pa = get_software_sram_base_hpa();
-	memmap.user_vm_pa = get_vssram_gpa_base();
-	memmap.len = get_vssram_size();
-	ioctl(ctx->fd, ACRN_IOCTL_UNSET_MEMSEG, &memmap);
-	return ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
-};
-
 void
 acpi_table_enable(int num)
 {
@@ -1199,8 +1129,11 @@ get_acpi_table_length(void)
 int
 acpi_build(struct vmctx *ctx, int ncpu)
 {
+#define RTCT_BUF_LEN	0x200
 	int err;
 	int i;
+	size_t vrtct_len;
+	uint8_t *vrtct;
 
 	basl_ncpu = ncpu;
 
@@ -1237,8 +1170,19 @@ acpi_build(struct vmctx *ctx, int ncpu)
 		i++;
 	}
 
-	if (pt_rtct) {
-		create_and_inject_vrtct(ctx);
+	if (ssram) {
+		vrtct = get_vssram_vrtct();
+		if (vrtct == NULL) {
+			return -1;
+		}
+
+		vrtct_len = ((struct acpi_table_hdr *)vrtct)->length;
+		if (vrtct_len > RTCT_BUF_LEN) {
+			/* need to modify DSDT_OFFSET corresponding */
+			pr_err("Error: Size of vRTCT (%d bytes) overflows.\n", vrtct_len);
+			return -1;
+		}
+		memcpy(vm_map_gpa(ctx, ACPI_BASE + RTCT_OFFSET, vrtct_len), vrtct, vrtct_len);
 	}
 
 	return err;

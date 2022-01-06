@@ -93,7 +93,7 @@ bool stdio_in_use;
 bool lapic_pt;
 bool is_rtvm;
 bool pt_tpm2;
-bool pt_rtct;
+bool ssram;
 bool vtpm2;
 bool is_winvm;
 bool skip_pci_mem64bar_workaround = false;
@@ -937,7 +937,7 @@ main(int argc, char *argv[])
 			break;
 		case CMD_OPT_SOFTWARE_SRAM:
 			/* TODO: we need to support parameter to specify Software SRAM size in the future */
-			pt_rtct = true;
+			ssram = true;
 			break;
 		case CMD_OPT_ACPIDEV_PT:
 			/* FIXME: check acpi TPM device rules in acpi device famework init functions */
