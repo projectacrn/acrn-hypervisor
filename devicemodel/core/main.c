@@ -140,7 +140,7 @@ static void
 usage(int code)
 {
 	fprintf(stderr,
-		"Usage: %s [-hWYv] [-B bootargs] [-E elf_image_path]\n"
+		"Usage: %s [-hYv] [-B bootargs] [-E elf_image_path]\n"
 		"       %*s [-k kernel_image_path]\n"
 		"       %*s [-l lpc] [-m mem] [-r ramdisk_image_path]\n"
 		"       %*s [-s pci] [--ovmf ovmf_file_path]\n"
@@ -159,7 +159,6 @@ usage(int code)
 		"       -r: ramdisk image path\n"
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
 		"       -v: version\n"
-		"       -W: force virtio to use single-vector MSI\n"
 		"       --mac_seed: set a platform unique string as a seed for generate mac address\n"
 		"       --ovmf: ovmf file path\n"
 		"       --ssram: Congfiure Software SRAM parameters\n"
@@ -176,7 +175,8 @@ usage(int code)
 		"       --rtvm: indicate that the guest is rtvm\n"
 		"       --logger_setting: params like console,level=4;kmsg,level=3\n"
 		"       --windows: support Oracle virtio-blk, virtio-net and virtio-input devices\n"
-		"            for windows guest with secure boot\n",
+		"            for windows guest with secure boot\n"
+		"       --virtio_msi: force virtio to use single-vector MSI\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
@@ -769,6 +769,7 @@ enum {
 	CMD_OPT_PM_NOTIFY_CHANNEL,
 	CMD_OPT_PM_BY_VUART,
 	CMD_OPT_WINDOWS,
+	CMD_OPT_FORCE_VIRTIO_MSI,
 };
 
 static struct option long_options[] = {
@@ -777,7 +778,6 @@ static struct option long_options[] = {
 	{"lpc",			required_argument,	0, 'l' },
 	{"pci_slot",		required_argument,	0, 's' },
 	{"memsize",		required_argument,	0, 'm' },
-	{"virtio_msix",		no_argument,		0, 'W' },
 	{"mptgen",		no_argument,		0, 'Y' },
 	{"kernel",		required_argument,	0, 'k' },
 	{"ramdisk",		required_argument,	0, 'r' },
@@ -809,10 +809,11 @@ static struct option long_options[] = {
 	{"pm_notify_channel",	required_argument,	0, CMD_OPT_PM_NOTIFY_CHANNEL},
 	{"pm_by_vuart",	required_argument,	0, CMD_OPT_PM_BY_VUART},
 	{"windows",		no_argument,		0, CMD_OPT_WINDOWS},
+	{"virtio_msi",		no_argument,		0, CMD_OPT_FORCE_VIRTIO_MSI},
 	{0,			0,			0,  0  },
 };
 
-static char optstr[] = "hWYvE:k:r:B:s:m:l:U:G:i:";
+static char optstr[] = "hYvE:k:r:B:s:m:l:U:G:i:";
 
 int
 main(int argc, char *argv[])
@@ -867,9 +868,6 @@ main(int argc, char *argv[])
 		case 'm':
 			if (vm_parse_memsize(optarg, &memsize) != 0)
 				errx(EX_USAGE, "invalid memsize '%s'", optarg);
-			break;
-		case 'W':
-			virtio_msix = 0;
 			break;
 		case 'Y': /* obsolete parameter */
 			mptgen = 0;
@@ -990,6 +988,9 @@ main(int argc, char *argv[])
 			break;
 		case CMD_OPT_WINDOWS:
 			is_winvm = true;
+			break;
+		case CMD_OPT_FORCE_VIRTIO_MSI:
+			virtio_msix = 0;
 			break;
 		case 'h':
 			usage(0);
