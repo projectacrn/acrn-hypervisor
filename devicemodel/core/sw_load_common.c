@@ -54,7 +54,7 @@ static char bootargs[BOOT_ARG_LEN];
  *             Begin    Limit        Type            Length
  * 0:              0 -  0xA0000      RAM             0xA0000
  * 1:       0x100000 -  lowmem part1 RAM             0x0
- * 2:   SW SRAM_bot  -  SW SRAM_top  (reserved)      SOFTWARE_SRAM_MAX_SIZE
+ * 2:   SW SRAM_bot  -  SW SRAM_top  (reserved)      VSSRAM_MAX_SIZE
  * 3:   gpu_rsvd_bot -  gpu_rsvd_top (reserved)      0x4004000
  * 4:   lowmem part2 -  0x80000000   (reserved)      0x0
  * 5:     0xE0000000 -  0x100000000  MCFG, MMIO      512MB
@@ -76,9 +76,9 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	},
 
 	/*
-	 * Software SRAM area: size: 0x800000
-	 * In native, the Software SRAM region should be part of DRAM memory.
-	 * But one fixed Software SRAM gpa is friendly for virtualization due
+	 * VSSRAM area: size: 0x800000
+	 * In native, the VSSRAM region should be part of DRAM memory.
+	 * But one fixed VSSRAM gpa is friendly for virtualization due
 	 * to decoupled with various guest memory size.
 	 */
 	{
@@ -220,11 +220,11 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 {
 	uint32_t removed = 0, k;
 	uint32_t gpu_rsvmem_base_gpa = 0;
-	uint64_t software_sram_base_gpa = 0;
+	uint64_t vssram_gpa = 0;
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
 
-	/* FIXME: Here wastes 8MB memory if SSRAM is enabled, and 64MB+16KB if
+	/* FIXME: Here wastes 8MB memory if VSSRAM is enabled, and 64MB+16KB if
 	 * GPU reserved memory is exist.
 	 *
 	 * Determines the GPU region due to DSM identical mapping.
@@ -237,11 +237,11 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 		e820[LOWRAM_E820_ENTRY + 2].baseaddr = ctx->lowmem_limit;
 	}
 
-	/* Always put SW SRAM before GPU region and keep 1MB boundary for protection. */
-	software_sram_base_gpa = get_software_sram_base_gpa();
-	if (software_sram_base_gpa) {
-		e820[LOWRAM_E820_ENTRY + 1].baseaddr = software_sram_base_gpa;
-		e820[LOWRAM_E820_ENTRY + 1].length = get_software_sram_size();
+	/* Always put VSSRAM before GPU region and keep 1MB boundary for protection. */
+	vssram_gpa = get_vssram_gpa_base();
+	if (vssram_gpa) {
+		e820[LOWRAM_E820_ENTRY + 1].baseaddr = vssram_gpa;
+		e820[LOWRAM_E820_ENTRY + 1].length = get_vssram_size();
 	} else {
 		e820[LOWRAM_E820_ENTRY + 1].baseaddr = e820[LOWRAM_E820_ENTRY + 2].baseaddr;
 	}

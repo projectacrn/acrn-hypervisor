@@ -48,8 +48,8 @@
 #define	PCI_EMUL_MEMBASE64	0x4000000000UL	/* 256GB */
 #define	PCI_EMUL_MEMLIMIT64	0x8000000000UL	/* 512GB */
 
-#define SOFTWARE_SRAM_MAX_SIZE	0x00800000UL
-#define SOFTWARE_SRAM_BASE_GPA	(PCI_EMUL_MEMBASE32 - SOFTWARE_SRAM_MAX_SIZE)
+#define VSSRAM_MAX_SIZE	0x00800000UL
+#define VSSRAM_BASE_GPA	(PCI_EMUL_MEMBASE32 - VSSRAM_MAX_SIZE)
 
 /* GVT BARs + PTDEV IO BARs */
 #define REGION_NUMS 32
@@ -297,8 +297,6 @@ void destory_io_rsvd_rgns(struct pci_vdev *vdev);
  */
 uint32_t get_gpu_rsvmem_base_gpa(void);
 uint32_t get_gpu_rsvmem_size(void);
-uint64_t get_software_sram_base_gpa(void);
-uint64_t get_software_sram_size(void);
 
 typedef void (*pci_lintr_cb)(int b, int s, int pin, int pirq_pin,
 			     int ioapic_irq, void *arg);

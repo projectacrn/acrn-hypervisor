@@ -1161,8 +1161,8 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	free(buf);
 
 	memmap.service_vm_pa = get_software_sram_base_hpa();
-	memmap.user_vm_pa = get_software_sram_base_gpa();
-	memmap.len = get_software_sram_size();
+	memmap.user_vm_pa = get_vssram_gpa_base();
+	memmap.len = get_vssram_size();
 	ioctl(ctx->fd, ACRN_IOCTL_UNSET_MEMSEG, &memmap);
 	return ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
 };

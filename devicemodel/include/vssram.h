@@ -37,10 +37,10 @@ struct rtct_entry {
 } __packed;
 
 struct rtct_entry_data_compatibility {
-	uint32_t RTCT_Ver_Major;
-	uint32_t RTCT_Ver_Minor;
-	uint32_t RTCD_Ver_Major;
-	uint32_t RTCD_Ver_Minor;
+	uint32_t rtct_ver_major;
+	uint32_t rtct_ver_minor;
+	uint32_t rtcd_ver_major;
+	uint32_t rtcd_ver_Minor;
 } __packed;
 
 struct rtct_entry_data_ssram {
@@ -65,8 +65,9 @@ struct rtct_entry_data_mem_hi_latency {
 	uint32_t apic_id_tbl[64];
 } __packed;
 
+uint64_t get_vssram_gpa_base(void);
 uint64_t get_software_sram_base_hpa(void);
-uint64_t get_software_sram_size(void);
+uint64_t get_vssram_size(void);
 uint8_t *build_vrtct(struct vmctx *ctx, void *cfg);
 
 #endif  /* RTCT_H */
