@@ -43,8 +43,8 @@ static uint32_t guest_l3_cat_shift;
 static uint32_t guest_lapicid_tbl[ACRN_PLATFORM_LAPIC_IDS_MAX];
 
 static uint64_t software_sram_base_hpa;
-static uint64_t software_sram_size;
-static uint64_t software_sram_base_gpa;
+static uint64_t vssram_size;
+static uint64_t vssram_gpa_base;
 
 static uint8_t vrtct_checksum(uint8_t *vrtct, uint32_t length)
 {
@@ -213,20 +213,20 @@ static void remap_software_sram_regions(struct acpi_table_hdr *vrtct, int rtct_v
 	}
 
 	software_sram_base_hpa = hpa_bottom;
-	software_sram_size = hpa_top - hpa_bottom;
+	vssram_size = hpa_top - hpa_bottom;
 
 	if (rtct_ver == RTCT_V1) {
 		foreach_rtct_entry(vrtct, entry) {
 			if (entry->type == RTCT_ENTRY_TYPE_SSRAM) {
 				ssram = (struct rtct_entry_data_ssram *)entry->data;
-				ssram->base = software_sram_base_gpa + (ssram->base - hpa_bottom);
+				ssram->base = vssram_gpa_base + (ssram->base - hpa_bottom);
 			}
 		}
 	} else if (rtct_ver == RTCT_V2) {
 		foreach_rtct_entry(vrtct, entry) {
 			if (entry->type == RTCT_V2_SSRAM) {
 				ssram_v2 = (struct rtct_entry_data_ssram_v2 *)entry->data;
-				ssram_v2->base = software_sram_base_gpa + (ssram_v2->base - hpa_bottom);
+				ssram_v2->base = vssram_gpa_base + (ssram_v2->base - hpa_bottom);
 			}
 		}
 	}
@@ -380,7 +380,7 @@ static int passthru_rtct_to_guest(struct acpi_table_hdr *vrtct, struct acpi_tabl
 	foreach_rtct_entry(native_rtct, entry) {
 		if (entry->type == RTCT_V2_COMPATIBILITY) {
 			compat =  (struct rtct_entry_data_compatibility *)entry->data;
-			rtct_ver = compat->RTCT_Ver_Major;
+			rtct_ver = compat->rtct_ver_major;
 			break;
 		}
 	}
@@ -425,17 +425,17 @@ uint64_t get_software_sram_base_hpa(void)
 /*
  * @pre buid_vrtct(ctx, cfg) != NULL
  */
-uint64_t get_software_sram_base_gpa(void)
+uint64_t get_vssram_gpa_base(void)
 {
-	return software_sram_base_gpa;
+	return vssram_gpa_base;
 }
 
 /*
  * @pre buid_vrtct(ctx, cfg) != NULL
  */
-uint64_t get_software_sram_size(void)
+uint64_t get_vssram_size(void)
 {
-	return software_sram_size;
+	return vssram_size;
 }
 
 /**
@@ -513,12 +513,12 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 		guest_vcpu_num, guest_l2_cat_shift, guest_l3_cat_shift);
 
 	gpu_rsvmem_base_gpa = get_gpu_rsvmem_base_gpa();
-	software_sram_size = SOFTWARE_SRAM_MAX_SIZE;
+	vssram_size = VSSRAM_MAX_SIZE;
 	/* TODO: It is better to put one boundary between GPU region and SW SRAM
 	 * for protection.
 	 */
-	software_sram_base_gpa = ((gpu_rsvmem_base_gpa ? gpu_rsvmem_base_gpa : 0x80000000UL) -
-			software_sram_size) &  ~software_sram_size;
+	vssram_gpa_base = ((gpu_rsvmem_base_gpa ? gpu_rsvmem_base_gpa : 0x80000000UL) -
+			vssram_size) &  ~vssram_size;
 
 	if (passthru_rtct_to_guest(vrtct, rtct_cfg)) {
 		pr_err("%s, initialize vRTCT fail.", __func__);
