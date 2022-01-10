@@ -5,6 +5,7 @@
 
 import scenario_cfg_lib
 import launch_cfg_lib
+import lxml.etree
 import common
 import pt
 
@@ -531,10 +532,35 @@ def get_cpu_affinity_list(cpu_affinity, vmid):
     return pcpu_id_list
 
 
+def get_apic_id_list(scenario_pcpu_id_list):
+
+    apic_id_list = []
+    board_etree = lxml.etree.parse(common.BOARD_INFO_FILE)
+    board_root = board_etree.getroot()
+    board_pcpu_list = board_root.find('CPU_PROCESSOR_INFO').text.strip().split(',')
+    if isinstance(board_pcpu_list, list):
+        board_pcpu_list = [cpu.strip() for cpu in board_pcpu_list]
+
+    if scenario_pcpu_id_list is not None:
+        for scenario_pcup_id in scenario_pcpu_id_list:
+            if scenario_pcup_id not in board_pcpu_list:
+                key = "scenario config error"
+                launch_cfg_lib.ERR_LIST[key] = "No available cpu {} in {} file.".format(scenario_pcup_id, common.BOARD_INFO_FILE)
+
+    for pcpu_id in scenario_pcpu_id_list:
+        apic_id = common.get_node(f"//processors/die/core/thread[cpu_id='{pcpu_id}']/apic_id/text()", board_etree)
+        apic_id_list.append(int(apic_id, 16))
+
+    return apic_id_list
+
+
 def pcpu_arg_set(dm, vmid, config):
+
     pcpu_id_list = get_cpu_affinity_list(dm["cpu_affinity"], vmid)
-    if pcpu_id_list:
-        print("   --cpu_affinity {} \\".format(','.join(pcpu_id_list)), file=config)
+    apic_id_list = get_apic_id_list(pcpu_id_list)
+
+    if apic_id_list:
+        print("   --cpu_affinity {} \\".format(','.join([str(id) for id in apic_id_list])), file=config)
 
 
 def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
