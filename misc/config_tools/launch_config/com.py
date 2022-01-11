@@ -463,8 +463,9 @@ def shm_arg_set(dm, vmid, config):
             launch_cfg_lib.virtual_dev_slot("shm_region_{}".format(shm_region)), shm_region), file=config)
 
 
-def virtio_args_set(dm, virt_io, vmid, config):
+def virtio_args_set(dm, names, virt_io, vmid, config):
 
+    user_vm_type = names['user_vm_types'][vmid]
     # virtio-input set, the value type is a list
     for input_val in virt_io['input'][vmid]:
         if input_val:
@@ -489,7 +490,10 @@ def virtio_args_set(dm, virt_io, vmid, config):
     # virtio-net set, the value type is a list
     for net in virt_io['network'][vmid]:
         if net:
-            print("   -s {},virtio-net,tap_{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net{}".format(net)), net), file=config)
+            if launch_cfg_lib.is_linux_like(user_vm_type) or user_vm_type in ("ANDROID", "ALIOS"):
+                print("   -s {},virtio-net,tap={},mac_seed=$mac_seed \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net{}".format(net)), net), file=config)
+            else:
+                print("   -s {},virtio-net,tap={} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net{}".format(net)), net), file=config)
 
     # virtio-console set, the value type is a string
     if virt_io['console'][vmid]:
@@ -546,8 +550,6 @@ def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
         if user_vm_type in ("ANDROID", "ALIOS"):
             print("   -s {},virtio-rpmb \\".format(launch_cfg_lib.virtual_dev_slot("virtio-rpmb")), file=config)
             print("   --enable_trusty \\", file=config)
-        # mac_seed
-        print("   --mac_seed $mac_seed \\", file=config)
 
     if dm['rtos_type'][vmid] != "no":
         if virt_io:
@@ -576,7 +578,7 @@ def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
     xhci_args_set(dm, vmid, config)
 
     # VIRTIO args set
-    virtio_args_set(dm, virt_io, vmid, config)
+    virtio_args_set(dm, names, virt_io, vmid, config)
 
     # vbootloader setting
     vboot_arg_set(dm, vmid, config)
