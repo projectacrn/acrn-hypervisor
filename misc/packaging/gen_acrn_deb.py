@@ -92,7 +92,7 @@ def create_acrn_deb(board, scenario, version, build_dir):
         target = deb_info[i]['target']
         if target == 'boot/':
             continue
-        source = cur_dir + '/../' + source
+        source = cur_dir + source
         target = deb_dir + target
         if os.path.exists(target):
             run_command('cp %s %s' % (source, target), cur_dir)
