@@ -209,7 +209,7 @@ Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
 
 2. Build ACRN based on the XML configuration for hybrid_rt scenario on whl-ipc-i5 board::
 
-      make BOARD=whl-ipc-i5 SCENARIO=<path/to/edited/scenario.xml> TARGET_DIR=xxx
+      make BOARD=whl-ipc-i5 SCENARIO=<path/to/edited/scenario.xml>
 
 3. Add a new virtual PCI device for VM2 (post-launched VM): the device type is
    ``ivshmem``, shared memory name is ``hv:/shm_region_0``, and shared memory
