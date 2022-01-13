@@ -51,7 +51,7 @@ options:
 
 .. code-block:: none
 
-   acrn-dm [-hWYv] [-B bootargs] [-E elf_image_path]
+   acrn-dm [-hYv] [-B bootargs] [-E elf_image_path]
                [-k kernel_image_path]
                [-l lpc] [-m mem] [-r ramdisk_image_path]
                [-s pci] [--ovmf ovmf_file_path]
@@ -70,7 +70,6 @@ options:
        -r: ramdisk image path
        -s: <slot,driver,configinfo> PCI slot config
        -v: version
-       -W: force virtio to use single-vector MSI
        -Y: disable MPtable generation
        --mac_seed: set a platform unique string as a seed for generate mac address
        --ovmf: ovmf file path
@@ -89,6 +88,7 @@ options:
        --logger_setting: params like console,level=4;kmsg,level=3
        --windows: support Oracle virtio-blk, virtio-net, and virtio-input devices
             for windows guest with secure boot
+       --virtio_msi: force virtio to use single-vector MSI
 
 See :ref:`acrn-dm_parameters` for more detailed descriptions of these
 configuration options.
