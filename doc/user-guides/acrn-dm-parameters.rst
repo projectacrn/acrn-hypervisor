@@ -250,7 +250,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
 ----
 
-``-W, --virtio_msix``
+``--virtio_msi``
    This option forces virtio to use single-vector MSI.  By default, any
    virtio-based devices will use MSI-X as its interrupt method.  If you want
    to use single-vector MSI interrupt, you can do so using this option.
