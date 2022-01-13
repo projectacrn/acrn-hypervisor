@@ -1044,18 +1044,21 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		break;
 	}
 	case MSR_IA32_COPY_LOCAL_TO_PLATFORM:
-	{
-		if ((v == 0x1UL) && is_iwkey_backup_support(vcpu)) {
-			vcpu->vm->arch_vm.iwkey_backup_status = 0UL;
-			spinlock_obtain(&vcpu->vm->arch_vm.iwkey_backup_lock);
-			vcpu->vm->arch_vm.iwkey_backup = vcpu->arch.IWKey;
-			spinlock_release(&vcpu->vm->arch_vm.iwkey_backup_lock);
-			/*
-			 * Keylocker spec 0.76 Table 4-1:
-			 * 'Backup/restore valid' bit and 'IWKeyBackup consumed' bit
-			 */
-			vcpu->vm->arch_vm.iwkey_backup_status = 0x9UL;
-			vcpu->arch.iwkey_copy_status = 1UL;
+	{	
+		/* check feature support and avoid setting reserved MSR bits */
+		if (is_iwkey_backup_support(vcpu) && ((v & ~0x1UL) == 0x0UL)) {
+			if (v == 0x1UL) {
+				vcpu->vm->arch_vm.iwkey_backup_status = 0UL;
+				spinlock_obtain(&vcpu->vm->arch_vm.iwkey_backup_lock);
+				vcpu->vm->arch_vm.iwkey_backup = vcpu->arch.IWKey;
+				spinlock_release(&vcpu->vm->arch_vm.iwkey_backup_lock);
+				/*
+				* Keylocker spec 0.76 Table 4-1:
+				* 'Backup/restore valid' bit and 'IWKeyBackup consumed' bit
+				*/
+				vcpu->vm->arch_vm.iwkey_backup_status = 0x9UL;
+				vcpu->arch.iwkey_copy_status = 1UL;
+			}
 		} else {
 			err = -EINVAL;
 		}
@@ -1063,15 +1066,17 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	case MSR_IA32_COPY_PLATFORM_TO_LOCAL:
 	{
-		if ((v == 0x1UL) && is_iwkey_backup_support(vcpu) &&
-				    (vcpu->vm->arch_vm.iwkey_backup_status == 0x9UL)) {
-			spinlock_obtain(&vcpu->vm->arch_vm.iwkey_backup_lock);
-			vcpu->arch.IWKey = vcpu->vm->arch_vm.iwkey_backup;
-			spinlock_release(&vcpu->vm->arch_vm.iwkey_backup_lock);
-			/* Load the new iwkey for this vcpu */
-			get_cpu_var(whose_iwkey) = NULL;
-			load_iwkey(vcpu);
-			vcpu->arch.iwkey_copy_status = 1UL;
+		/* check feature support and avoid setting reserved MSR bits */
+		if (is_iwkey_backup_support(vcpu) && ((v & ~0x1UL) == 0x0UL)) {
+			if ((v == 0x1UL) && (vcpu->vm->arch_vm.iwkey_backup_status == 0x9UL)) {
+				spinlock_obtain(&vcpu->vm->arch_vm.iwkey_backup_lock);
+				vcpu->arch.IWKey = vcpu->vm->arch_vm.iwkey_backup;
+				spinlock_release(&vcpu->vm->arch_vm.iwkey_backup_lock);
+				/* Load the new iwkey for this vcpu */
+				get_cpu_var(whose_iwkey) = NULL;
+				load_iwkey(vcpu);
+				vcpu->arch.iwkey_copy_status = 1UL;
+			}
 		} else {
 			err = -EINVAL;
 		}
