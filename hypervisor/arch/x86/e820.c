@@ -102,6 +102,52 @@ uint64_t e820_alloc_memory(uint64_t size_arg, uint64_t max_addr)
 	return ret;
 }
 
+static void add_e820_entry(uint64_t addr, uint64_t length, uint64_t type)
+{
+	hv_e820_entries_nr++;
+	ASSERT(hv_e820_entries_nr <= E820_MAX_ENTRIES, "e820 entry overflow");
+	hv_e820[hv_e820_entries_nr - 1U].baseaddr = addr;
+	hv_e820[hv_e820_entries_nr - 1U].length = length;
+	hv_e820[hv_e820_entries_nr - 1U].type = type;
+}
+
+static uint64_t e820_alloc_region(uint64_t addr, uint64_t size)
+{
+	uint32_t i;
+	uint64_t entry_start;
+	uint64_t entry_end;
+	uint64_t start_pa = round_page_down(addr);
+	uint64_t end_pa = round_page_up(addr + size);
+	struct e820_entry *entry;
+
+	for (i = 0U; i < hv_e820_entries_nr; i++) {
+		entry = &hv_e820[i];
+		entry_start = entry->baseaddr;
+		entry_end = entry->baseaddr + entry->length;
+
+		/* No need handle in these cases*/
+		if ((entry->type != E820_TYPE_RAM) || (entry_end <= start_pa) || (entry_start >= end_pa)) {
+			continue;
+		}
+
+		if ((entry_start <= start_pa) && (entry_end >= end_pa)) {
+			entry->length = start_pa - entry_start;
+			/*
+			 * .......|start_pa... ....................End_pa|.....
+			 * |entry_start..............................entry_end|
+			 */
+			if (end_pa < entry_end) {
+				add_e820_entry(end_pa, entry_end - end_pa, E820_TYPE_RAM);
+				break;
+			}
+		} else {
+			pr_err("This region not in one entry!");
+		}
+	}
+
+	return addr;
+}
+
 static void init_e820_from_efi_mmap(void)
 {
 	uint32_t i, e820_idx = 0U;
@@ -215,6 +261,19 @@ static void init_e820_from_mmap(struct acrn_boot_info *abi)
 	}
 }
 
+static void alloc_mods_memory(void)
+{
+	uint32_t i;
+	int64_t mod_start = 0UL;
+	struct acrn_boot_info *abi = get_acrn_boot_info();
+
+	for (i = 0; i < abi->mods_count; i++) {
+		mod_start = hva2hpa(abi->mods[i].start);
+		e820_alloc_region(mod_start, abi->mods[i].size);
+	}
+}
+
+
 void init_e820(void)
 {
 	struct acrn_boot_info *abi = get_acrn_boot_info();
@@ -225,6 +284,9 @@ void init_e820(void)
 	} else {
 		init_e820_from_mmap(abi);
 	}
+
+	/* reserve multiboot modules memory */
+	alloc_mods_memory();
 }
 
 uint32_t get_e820_entries_count(void)
