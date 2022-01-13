@@ -1,0 +1,107 @@
+From 914c1124c5a2e84778ea40b78866972b250f93a7 Mon Sep 17 00:00:00 2001
+From: Liu Long <long.liu@linux.intel.com>
+Date: Wed, 29 Dec 2021 00:44:19 +0800
+Subject: [PATCH 7/9] ACRN:HV: Add the enhanced IBRS support
+
+Add the enhanced IBRS support in acrn hypervisor, set the IBRS in
+bringup if the enhanced IBRS is supported. In vmexit if the guest
+clear the IBRS(passthrough MSR), set the IBRS bit.
+
+Signed-off-by: Liu Long <long.liu@linux.intel.com>
+Reviewed-by: Wang, Yu1 <yu1.wang@intel.com>
+---
+ hypervisor/arch/x86/guest/vcpu.c           |  3 ++-
+ hypervisor/arch/x86/guest/vmx_asm.S        | 14 ++++++++++++++
+ hypervisor/arch/x86/security.c             |  9 ++++++++-
+ hypervisor/include/arch/x86/asm/security.h |  1 +
+ 4 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/hypervisor/arch/x86/guest/vcpu.c b/hypervisor/arch/x86/guest/vcpu.c
+index a343227a9..0f6a97087 100644
+--- a/hypervisor/arch/x86/guest/vcpu.c
++++ b/hypervisor/arch/x86/guest/vcpu.c
+@@ -727,7 +727,8 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
+ 			 * currently, there is no other place to do vmcs switch
+ 			 * Please add IBPB set for future vmcs switch case(like trusty)
+ 			 */
+-			if (ibrs_type == IBRS_RAW) {
++			/*FIXME: IBPB is really needed here ?*/
++			if (ibrs_type == IBRS_RAW || ibrs_type == IBRS_ENHANCED) {
+ 				msr_write(MSR_IA32_PRED_CMD, PRED_SET_IBPB);
+ 			}
+ 
+diff --git a/hypervisor/arch/x86/guest/vmx_asm.S b/hypervisor/arch/x86/guest/vmx_asm.S
+index 19b232c9b..ee00c250b 100644
+--- a/hypervisor/arch/x86/guest/vmx_asm.S
++++ b/hypervisor/arch/x86/guest/vmx_asm.S
+@@ -215,6 +215,7 @@ vm_eval_error:
+     /* IBRS_NONE: no ibrs setting, just flush rsb
+      * IBRS_RAW: set IBRS then flush rsb
+      * IBRS_OPT: set STIBP & IBPB then flush rsb
++     * IBRS_ENHANCED: set IBRS if it is not set & skip flush rsb.
+      */
+     cmp         $IBRS_NONE,%rdx
+     je          stuff_rsb
+@@ -230,6 +231,10 @@ vm_eval_error:
+     rdmsr
+     /*168U=0xa8=CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
+     mov         %rax,0xa8(%rsi)
++
++    cmp         $IBRS_ENHANCED,%rdx
++    je          ibrs_enhanced
++
+     /* 0x1 = SPEC_ENABLE_IBRS */
+     movl        $0x1,%eax
+     movl        $0,%edx
+@@ -284,7 +289,16 @@ stuff_rsb:
+     jnz         3b
+     /* stuff 32 RSB, rsp += 8*32 */
+     add         $(8*32),%rsp
++    jmp         vm_success
++
++ibrs_enhanced:
++    testb       $0x1,%al
++    jnz         vm_success
++    movl        $0x1,%eax
++    movl        $0,%edx
++    wrmsr
+ 
++vm_success:
+     mov         $VM_SUCCESS,%rax
+ 
+ vm_return:
+diff --git a/hypervisor/arch/x86/security.c b/hypervisor/arch/x86/security.c
+index 29f69156e..db1773cf4 100644
+--- a/hypervisor/arch/x86/security.c
++++ b/hypervisor/arch/x86/security.c
+@@ -35,7 +35,14 @@ static void detect_ibrs(void)
+ 	 * should be set all the time instead of relying on retpoline
+ 	 */
+ #ifndef CONFIG_RETPOLINE
+-	if (pcpu_has_cap(X86_FEATURE_IBRS_IBPB)) {
++	uint64_t x86_arch_capabilities;
++	if (pcpu_has_cap(X86_FEATURE_ARCH_CAP)) {
++		x86_arch_capabilities = msr_read(MSR_IA32_ARCH_CAPABILITIES);
++		if (x86_arch_capabilities & IA32_ARCH_CAP_IBRS_ALL) {
++			msr_write(MSR_IA32_SPEC_CTRL, SPEC_ENABLE_IBRS);
++			ibrs_type = IBRS_ENHANCED;
++		}
++	} else if (pcpu_has_cap(X86_FEATURE_IBRS_IBPB)) {
+ 		ibrs_type = IBRS_RAW;
+ 		if (pcpu_has_cap(X86_FEATURE_STIBP)) {
+ 			ibrs_type = IBRS_OPT;
+diff --git a/hypervisor/include/arch/x86/asm/security.h b/hypervisor/include/arch/x86/asm/security.h
+index 2f54f1a58..538d05d91 100644
+--- a/hypervisor/include/arch/x86/asm/security.h
++++ b/hypervisor/include/arch/x86/asm/security.h
+@@ -15,6 +15,7 @@
+ #define IBRS_NONE	0
+ #define IBRS_RAW	1
+ #define IBRS_OPT	2
++#define IBRS_ENHANCED	3
+ 
+ #ifndef ASSEMBLER
+ int32_t get_ibrs_type(void);
+-- 
+2.25.1
+

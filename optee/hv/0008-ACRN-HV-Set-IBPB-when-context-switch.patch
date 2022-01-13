@@ -1,0 +1,42 @@
+From 70e309ba776292a9912c787affb6ac41d1c1c6bf Mon Sep 17 00:00:00 2001
+From: Liu Long <long.liu@linux.intel.com>
+Date: Wed, 29 Dec 2021 10:44:15 +0800
+Subject: [PATCH 8/9] ACRN:HV: Set IBPB when context switch
+
+For cpu sharing, the BTB(brach target buffer) needs to be flushed during
+vcpu context switch.
+
+This patch programs the IBPB in the context switch due to it is not a
+predictor mode switch case.
+
+Signed-off-by: Liu Long <long.liu@linux.intel.com>
+Reviewed-by: Wang, Yu1 <yu1.wang@intel.com>
+---
+ hypervisor/common/schedule.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hypervisor/common/schedule.c b/hypervisor/common/schedule.c
+index 1aabc9567..edd2c40c0 100644
+--- a/hypervisor/common/schedule.c
++++ b/hypervisor/common/schedule.c
+@@ -161,6 +161,7 @@ void schedule(void)
+ 	struct thread_object *next = &per_cpu(idle, pcpu_id);
+ 	struct thread_object *prev = ctl->curr_obj;
+ 	uint64_t rflag;
++	int32_t ibrs_type = get_ibrs_type();
+ 
+ 	obtain_schedule_lock(pcpu_id, &rflag);
+ 	if (ctl->scheduler->pick_next != NULL) {
+@@ -177,6 +178,9 @@ void schedule(void)
+ 			set_thread_status(prev, prev->be_blocking ? THREAD_STS_BLOCKED : THREAD_STS_RUNNABLE);
+ 			prev->be_blocking = false;
+ 		}
++		 /*In context switch set IBPB*/
++		if (ibrs_type != IBRS_NONE)
++			msr_write(MSR_IA32_PRED_CMD, PRED_SET_IBPB);
+ 
+ 		if (next->switch_in != NULL) {
+ 			next->switch_in(next);
+-- 
+2.25.1
+

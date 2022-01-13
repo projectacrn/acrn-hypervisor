@@ -1,0 +1,54 @@
+From ea0fe02b536a1fd25d1ab5762ec34aeff33ed128 Mon Sep 17 00:00:00 2001
+From: Yifan Liu <yifan1.liu@intel.com>
+Date: Sat, 1 Jan 2022 04:55:32 +0000
+Subject: [PATCH 9/9] hv: WA: Reserve TEE/REE shared memory region from REE
+ ve820
+
+Signed-off-by: Yifan Liu <yifan1.liu@intel.com>
+---
+ hypervisor/arch/x86/guest/ve820.c             | 9 +++++++++
+ hypervisor/include/arch/x86/asm/guest/optee.h | 3 +++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/hypervisor/arch/x86/guest/ve820.c b/hypervisor/arch/x86/guest/ve820.c
+index 140a5a56f..185b94d84 100644
+--- a/hypervisor/arch/x86/guest/ve820.c
++++ b/hypervisor/arch/x86/guest/ve820.c
+@@ -13,6 +13,7 @@
+ #include <logmsg.h>
+ #include <asm/rtcm.h>
+ #include <ptdev.h>
++#include <asm/guest/optee.h>
+ 
+ #define ENTRY_HPA1		2U
+ #define ENTRY_HPA1_HI		8U
+@@ -164,6 +165,14 @@ void create_service_vm_e820(struct acrn_vm *vm)
+ 				filter_mem_from_service_vm_e820(vm, vm_config->memory.start_hpa2,
+ 					vm_config->memory.start_hpa2 + vm_config->memory.size_hpa2);
+ 			}
++
++			/*
++			 * WA: Currently the <memory> tag does not support segments more than 3.
++			 * Directly remove the shared memory region from ve820.
++			 * TODO: Add one more region to <memory> segment.
++			 */
++			filter_mem_from_service_vm_e820(vm, TEE_SMC_CALL_SHARED_PAGE_GPA,
++				TEE_SMC_CALL_SHARED_PAGE_GPA + TEE_SMC_CALL_SHARED_PAGE_SIZE);
+ 		}
+ 	}
+ 
+diff --git a/hypervisor/include/arch/x86/asm/guest/optee.h b/hypervisor/include/arch/x86/asm/guest/optee.h
+index 6b3e2a560..4307aca99 100644
+--- a/hypervisor/include/arch/x86/asm/guest/optee.h
++++ b/hypervisor/include/arch/x86/asm/guest/optee.h
+@@ -24,4 +24,7 @@ int is_ree_vm(struct acrn_vm *vm);
+ void prepare_tee_vm_memmap(struct acrn_vm *vm, const struct acrn_vm_config *vm_config);
+ void handle_x86_tee_int(struct ptirq_remapping_info *entry, uint16_t pcpu_id);
+ 
++#define TEE_SMC_CALL_SHARED_PAGE_GPA	0x100100000UL
++#define TEE_SMC_CALL_SHARED_PAGE_SIZE	0x400000UL
++
+ #endif /* TEE_H_ */
+-- 
+2.25.1
+
