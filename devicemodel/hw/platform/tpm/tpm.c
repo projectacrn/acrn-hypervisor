@@ -74,11 +74,22 @@ static int is_tpm2_eventlog_supported(struct acpi_table_tpm2 *tpm2)
 	return ((tpm2->header.length == 76) && tpm2->lasa && tpm2->laml);
 }
 
-static int is_hid_tpm2_device(char *hid)
+static int is_hid_tpm2_device(char *opts)
 {
 	int ret;
 	struct acpi_dev_pt_ops *ops = &pt_acpi_dev;
-	ret = get_more_acpi_dev_info(hid, 0, ops);
+	uint32_t uid = 0;
+	char *devopts, *hid, *vtopts;
+
+	if (!opts || !*opts)
+		return false;
+
+	devopts = vtopts = strdup(opts);
+	hid = strsep(&vtopts, ",");
+	uid = (vtopts != NULL) ? atoi(vtopts) : 0;
+
+	ret = get_more_acpi_dev_info(hid, uid, ops);
+	free(devopts);
 	if (ret)
 		return false;
 	return (strstr(ops->modalias, "MSFT0101") != NULL);
@@ -92,23 +103,39 @@ static int is_hid_tpm2_device(char *hid)
  * @pre: hid should be a valid HID of the TPM2 device being passed-through.
  * @pre: tpm2dev != NULL
  */
-static int init_tpm2_pt(char *hid, struct mmio_dev *tpm2dev)
+static int init_tpm2_pt(char *opts, struct mmio_dev *tpm2dev)
 {
 	int err = 0;
 	uint64_t tpm2_buffer_hpa, tpm2_buffer_size;
 	uint32_t base = 0;
 	struct acpi_table_tpm2 tpm2 = { 0 };
+	char *devopts, *vtopts;
 
-	/* TODO: Currently we did not validate if the hid is a valid one.
+	/* TODO: Currently we did not validate if the opts is a valid one.
 	 * We trust it to be valid as specifying --acpidev_pt is regarded
 	 * as root user operation.
 	 */
-	if (!hid || !*hid)
+	if (!opts || !*opts) {
 		return -EINVAL;
+	}
+
+	devopts = strdup(opts);
+	vtopts = strstr(devopts,",");
+
+	/* Check whether user set the uid to identify same hid devices for
+	 * several instances.
+	 */
+	if (vtopts != NULL ){
+		vtopts[0] = ':';
+	}
 
 	/* parse /proc/iomem to find the address and size of tpm buffer */
-	if (!get_mmio_hpa_resource(hid, &tpm2_buffer_hpa, &tpm2_buffer_size))
+	if (!get_mmio_hpa_resource(devopts, &tpm2_buffer_hpa, &tpm2_buffer_size)) {
+		free(devopts);
 		return -ENODEV;
+	}
+
+	free(devopts);
 
 	err = read_sysfs_tpm2_table(&tpm2);
 	if (err)
