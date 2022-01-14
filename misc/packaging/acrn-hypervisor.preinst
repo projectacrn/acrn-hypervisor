@@ -10,27 +10,6 @@ else
 	echo "You are in acrn already, no need pre-check "
 	exit 0
 fi
-#check  mem/cpu
-cpunumsexp=4
-percode=$(lscpu |awk '$1 == "Thread(s)" {print $NF}')
-cputotal=$(lscpu |awk '$1 == "CPU(s):" {print $NF}')
-
-
-if [[ $cputotal -eq $cpunumsexp ]]
-then
-        echo "CPU cores config is ok"
-
-elif [[ $cputotal -gt $cpunumsexp ]]
-then
-	    echo "Error ! hyper-threading config is not correct!"
-	    echo "CPU(s) $cputotal should be $cpunumsexp，Thread(s) per core is $percode, please disable hyper-threading in bios"
-
-elif [[ $cputotal -lt $cpunumsexp ]]
-then
-	    echo "Error ! hyper threading config is incorrect!"
-	    echo "CPU(s) $cputotal should be $cpunumsexp，Thread(s) per core is $percode, please enable hyper-threading in bios"
-fi
-
 
 #check vt
 vtd=$(ls -al /sys/firmware/acpi/tables |grep DMAR || true)
