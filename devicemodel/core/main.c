@@ -1127,6 +1127,5 @@ fail:
 create_fail:
 	uninit_hugetlb();
 	deinit_loggers();
-	clean_pci_cache();
 	exit(ret);
 }

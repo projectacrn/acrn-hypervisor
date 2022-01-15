@@ -116,18 +116,11 @@ add_vroot_port(struct vmctx *ctx, struct passthru_dev *ptdev, struct pci_device 
 /* Probe whether device and its root port support PTM */
 int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 {
-	int error = 0;
 	int pos, pcie_type, cap, rp_ptm_offset;
 	struct pci_device *phys_dev = ptdev->phys_dev;
 	struct pci_device *rp;
-	struct pci_device_info rp_info = {};
 
 	*vrp_sec_bus = 0;
-
-	/* build pci hierarch */
-	error = scan_pci();
-	if (error)
-		return error;
 
 	if (!ptdev->pcie_cap) {
 		pr_err("%s Error: %x:%x.%x is not a pci-e device.\n", __func__,
@@ -161,8 +154,9 @@ int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 			return -EINVAL;
 		}
 
-		rp = pci_find_root_port(phys_dev);
-		if (rp == NULL) {
+		/* Do not support switch */
+		rp = pci_device_get_parent_bridge(phys_dev);
+		if ((rp == NULL) || !is_root_port(rp)) {
 			pr_err("%s Error: Cannot find root port of %x:%x.%x.\n", __func__,
 					phys_dev->bus, phys_dev->dev, phys_dev->func);
 			return -ENODEV;
@@ -177,16 +171,11 @@ int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 			return -EINVAL;
 		}
 
-		/* check whether more than one devices are connected to the root port.
-		 * if more than one devices are connected to the root port, we flag
-		 * this as error and won't enable PTM.  We do this just because we
-		 * don't have this hw configuration and won't be able to test this case.
+		/* TODO: Support multiple PFs device later as it needs to consider to prevent P2P
+		 * attack through ACS or passthrough all PFs together.
 		 */
-		error = pci_device_get_bridge_buses(rp, &(rp_info.primary_bus),
-					&(rp_info.secondary_bus), &(rp_info.subordinate_bus));
-
-		if (error || (get_device_count_on_bridge(&rp_info) != 1)) {
-			pr_err("%s Error: Failed to enable PTM on root port [%x:%x.%x] that has multiple children.\n",
+		if (is_mfdev(phys_dev)) {
+			pr_err("%s: Failed to enable PTM on root port [%x:%x.%x], multi-func dev is not supported.\n",
 					__func__, rp->bus, rp->dev, rp->func);
 			return -EINVAL;
 		}
@@ -211,8 +200,7 @@ int ptm_probe(struct vmctx *ctx, struct passthru_dev *ptdev, int *vrp_sec_bus)
 		*vrp_sec_bus = add_vroot_port(ctx, ptdev, rp, rp_ptm_offset);
 	} else if (pcie_type == PCIEM_TYPE_ROOT_INT_EP) {
 		/* Do NOT emulate root port if ptm requestor is RCIE */
-		pr_notice("%s: ptm requestor is root complex integrated device.\n",
-					__func__);
+		pr_notice("%s: ptm requestor is root complex integrated device.\n", __func__);
 	} else {
 		pr_err("%s Error: PTM can only be enabled on pci root complex integrated device or endpoint device.\n",
 					__func__);
