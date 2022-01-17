@@ -84,7 +84,8 @@
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod/>
-      <bootargs>SERVICE_VM_OS_BOOTARGS</bootargs>
+      <bootargs>root=/dev/nvme0n1p3 rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
+        i915.nuclear_pageflip=1 swiotlb=131072</bootargs>
     </os_config>
     <legacy_vuart id="0">
       <type>VUART_LEGACY_PIO</type>
@@ -109,13 +110,6 @@
     <pci_devs>
       <pci_dev/>
     </pci_devs>
-    <board_private>
-      <rootfs>/dev/nvme0n1p3</rootfs>
-      <bootargs>
-        rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
-        i915.nuclear_pageflip=1 swiotlb=131072
-        </bootargs>
-    </board_private>
   </vm>
   <vm id="1">
     <vm_type>POST_STD_VM</vm_type>
