@@ -6,8 +6,6 @@
     <mem_size desc="User VM memory size in MByte">4096</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-    <poweroff_channel desc="the method of power off User VM"/>
-    <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
     <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
     <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"/>
     <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
@@ -53,8 +51,6 @@
     <mem_size desc="User VM memory size in MByte">1024</mem_size>
     <vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
     <vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-    <poweroff_channel desc="the method of power off Uer VM"/>
-    <allow_trigger_s5 desc="allow this vm to trigger s5 shutdown flow, this flag works with poweroff_channel 'vuart1(pty)' and 'vuart1(tty)' only.">n</allow_trigger_s5>
     <enable_ptm desc="enable ptm of User VM">n</enable_ptm>
     <usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"/>
     <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
