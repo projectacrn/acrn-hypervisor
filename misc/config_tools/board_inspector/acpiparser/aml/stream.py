@@ -3,15 +3,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import logging
+
 from .exception import *
 from .grammar import AML_EXT_OP_PREFIX
 
 class Stream:
     def print_binary(self, base):
-        acc = f"[{hex(base)}/{hex(len(self.data))}]"
+        acc = f"[{hex(base):>8s}/{hex(len(self.data)):>8s}]"
         converted = ""
         for i in range(base, base + 16):
-            code = ord(self.data[i])
+            code = self.data[i]
             acc += " %02x" % code
             if code >= 0x20 and code <= 0x7E:
                 converted += chr(code)
@@ -21,7 +23,7 @@ class Stream:
                 acc += " "
                 converted += " "
         acc += f"    '{converted}'"
-        print(acc)
+        logging.debug(acc)
 
     def __init__(self, data):
         self.data = data
