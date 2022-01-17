@@ -217,9 +217,9 @@ $(HV_ALLOCATION_XML): $(HV_BOARD_XML) $(HV_SCENARIO_XML) | $(HV_CONFIG_DIR)
 	@echo "$@ generated"
 
 $(HV_UNIFIED_XML): $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_ALLOCATION_XML) | $(HV_CONFIG_DIR)
-	@sed "s@{BOARD_FILE}@$(realpath $(HV_BOARD_XML))@g" $(HV_UNIFIED_XML_IN) | \
-	 sed "s@{SCENARIO_FILE}@$(HV_SCENARIO_XML)@g" | \
-	 sed "s@{ALLOCATION_FILE}@$(HV_ALLOCATION_XML)@g" > $@
+	@sed "s/{BOARD_FILE}/$(subst /,\\/,$(realpath $(HV_BOARD_XML)))/g" $(HV_UNIFIED_XML_IN) | \
+	 sed "s/{SCENARIO_FILE}/$(subst /,\\/,$(HV_SCENARIO_XML))/g" | \
+	 sed "s/{ALLOCATION_FILE}/$(subst /,\\/,$(HV_ALLOCATION_XML))/g" > $@
 	@echo "$@ generated"
 
 $(HV_CONFIG_MK): $(HV_UNIFIED_XML) | $(HV_CONFIG_DIR)
