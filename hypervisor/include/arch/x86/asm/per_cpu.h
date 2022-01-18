@@ -30,8 +30,8 @@ struct per_cpu_region {
 	struct shared_buf *sbuf[ACRN_SBUF_ID_MAX];
 	char logbuf[LOG_MESSAGE_MAX_SIZE];
 
-	uint64_t vmexit_cnt[64][TOTAL_ARRAY_LEVEL];
-	uint64_t vmexit_time[64][2]; /*0 for total latency, 1 for max latency */
+	uint64_t vmexit_cnt[NR_VMX_EXIT_REASONS][TOTAL_ARRAY_LEVEL];
+	uint64_t vmexit_time[NR_VMX_EXIT_REASONS][2]; /*0 for total latency, 1 for max latency */
 
 	uint32_t npk_log_ref;
 #endif
