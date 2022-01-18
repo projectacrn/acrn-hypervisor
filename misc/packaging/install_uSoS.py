@@ -339,7 +339,6 @@ def create_acrn_deb():
 	add_cmd_list(cmd_list, 'chmod +x acrn_release_deb/DEBIAN/postinst', cur_dir)
 	add_cmd_list(cmd_list, 'sed -i \'s/\r//\' acrn_release_deb/DEBIAN/postinst', cur_dir)
 
-	add_cmd_list(cmd_list, 'cp acrn-hypervisor.preinst acrn_release_deb/DEBIAN/preinst', cur_dir)
 	add_cmd_list(cmd_list, 'chmod +x acrn_release_deb/DEBIAN/preinst', cur_dir)
 	add_cmd_list(cmd_list, 'sed -i \'s/\r//\' acrn_release_deb/DEBIAN/preinst', cur_dir)
 
