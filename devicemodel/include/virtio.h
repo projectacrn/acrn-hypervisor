@@ -477,8 +477,15 @@ vq_ring_ready(struct virtio_vq_info *vq)
 static inline bool
 vq_has_descs(struct virtio_vq_info *vq)
 {
-	return (vq_ring_ready(vq) && vq->last_avail !=
-	    vq->avail->idx);
+	bool ret = false;
+	if (vq_ring_ready(vq) && vq->last_avail != vq->avail->idx) {
+		if ((uint16_t)((u_int)vq->avail->idx - vq->last_avail) > vq->qsize)
+			pr_err ("%s: no valid descriptor\n", vq->base->vops->name);
+		else
+			ret = true;
+	}
+	return ret;
+
 }
 
 /**

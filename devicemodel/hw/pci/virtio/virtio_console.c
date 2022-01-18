@@ -392,7 +392,10 @@ virtio_console_notify_tx(void *vdev, struct virtio_vq_info *vq)
 	port = virtio_console_vq_to_port(console, vq);
 
 	while (vq_has_descs(vq)) {
-		vq_getchain(vq, &idx, iov, 1, flags);
+		if (vq_getchain(vq, &idx, iov, 1, flags) < 1) {
+			pr_err("%s: fail to getchain!\n", __func__);
+			break;
+		}
 		if ((port != NULL) && (port->cb != NULL))
 			port->cb(port, port->arg, iov, 1);
 
@@ -481,6 +484,10 @@ virtio_console_backend_read(int fd __attribute__((unused)),
 
 	do {
 		n = vq_getchain(vq, &idx, &iov, 1, NULL);
+		if (n < 1){
+			pr_err("%s: fail to getchain!\n", __func__);
+			break;
+		}
 		len = readv(be->fd, &iov, n);
 		if (len <= 0) {
 			vq_retchain(vq);

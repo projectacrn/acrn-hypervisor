@@ -322,7 +322,10 @@ virtio_rnd_get_entropy(void *param)
 		pthread_mutex_unlock(&rnd->rx_mtx);
 
 		do {
-			vq_getchain(vq, &idx, &iov, 1, NULL);
+			if (vq_getchain(vq, &idx, &iov, 1, NULL) < 1) {
+				pr_err("%s: fail to getchain!\n", __func__);
+				break;
+			}
 			len = read(rnd->fd, iov.iov_base, iov.iov_len);
 			if (len <= 0) {
 				vq_retchain(vq);
