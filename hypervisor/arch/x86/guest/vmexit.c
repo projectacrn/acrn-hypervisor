@@ -27,7 +27,6 @@
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",
  * there are 65 Basic Exit Reasons.
  */
-#define NR_VMX_EXIT_REASONS	70U
 
 static int32_t triple_fault_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu);

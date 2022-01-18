@@ -2026,7 +2026,7 @@ static int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
 /* to sample vmexit tsc data */
 void sample_vmexit_end(uint32_t basic_exit_reason, struct acrn_vcpu *vcpu)
 {
-	if (!sample_vmexit_enabled)
+	if (!sample_vmexit_enabled || (basic_exit_reason >= NR_VMX_EXIT_REASONS))
 		return;
 
 	if (vcpu->vmexit_begin != 0UL) {
@@ -2060,7 +2060,7 @@ void sample_vmexit_end(uint32_t basic_exit_reason, struct acrn_vcpu *vcpu)
 
 void sample_vmexit_begin(uint32_t basic_exit_reason, struct acrn_vcpu *vcpu)
 {
-	if (!sample_vmexit_enabled)
+	if (!sample_vmexit_enabled || (basic_exit_reason >= NR_VMX_EXIT_REASONS))
 		return;
 
 	vcpu->vmexit_begin = rdtsc();

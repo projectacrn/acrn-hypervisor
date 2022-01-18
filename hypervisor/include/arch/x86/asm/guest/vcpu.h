@@ -21,6 +21,7 @@
 #include <asm/guest/virtual_cr.h>
 #include <asm/guest/vlapic.h>
 #include <asm/guest/vmtrr.h>
+#include <asm/guest/vmexit.h>
 #include <schedule.h>
 #include <event.h>
 #include <io_req.h>
@@ -311,8 +312,8 @@ struct acrn_vcpu {
 #ifdef HV_DEBUG
 	uint64_t vmexit_begin;
 
-	uint64_t vmexit_cnt[64][TOTAL_ARRAY_LEVEL];
-	uint64_t vmexit_time[64][2]; /*0 for total latency, 1 for max latency */
+	uint64_t vmexit_cnt[NR_VMX_EXIT_REASONS][TOTAL_ARRAY_LEVEL];
+	uint64_t vmexit_time[NR_VMX_EXIT_REASONS][2]; /*0 for total latency, 1 for max latency */
 #endif
 
 } __aligned(PAGE_SIZE);
