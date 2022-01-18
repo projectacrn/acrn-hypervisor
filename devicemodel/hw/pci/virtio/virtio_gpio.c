@@ -688,7 +688,7 @@ virtio_gpio_notify(void *vdev, struct virtio_vq_info *vq)
 	gpio = (struct virtio_gpio *)vdev;
 	if (vq_has_descs(vq)) {
 		n = vq_getchain(vq, &idx, iov, 2, NULL);
-		if (n >= 3) {
+		if (n < 1 || n >= 3) {
 			WPRINTF(("virtio gpio, invalid chain number %d\n", n));
 			virtio_gpio_abort(vq, idx);
 			return;
