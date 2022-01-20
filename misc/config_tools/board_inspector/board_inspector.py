@@ -16,6 +16,8 @@ from cpuparser import parse_cpuid, get_online_cpu_ids, get_offline_cpu_ids
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir))
 
+from inspectorlib import validator
+
 def check_deps():
     # Check that the required tools are installed on the system
     BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode', 'blkid', 'stty']
@@ -111,6 +113,11 @@ def main(board_name, board_xml, args):
             if args.basic and getattr(module, "advanced", False):
                 continue
             module.extract(args, board_etree)
+
+        # Validate the XML against XSD assertions
+        count = validator.validate_board("schema/boardchecks.xsd", board_etree)
+        if count == 0:
+            logging.info("All board checks passed.")
 
         # Finally overwrite the output with the updated XML
         board_etree.write(board_xml, pretty_print=True)
