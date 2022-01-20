@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<xs:schema xml:id="root"
+	   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	   xmlns:acrn="https://projectacrn.org">
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>Intel(R) Virtualization Technology Extension shall be enabled in BIOS.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+</xs:schema>
