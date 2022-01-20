@@ -932,10 +932,10 @@ main(int argc, char *argv[])
 			break;
 		case CMD_OPT_LAPIC_PT:
 			lapic_pt = true;
-			is_rtvm = true;
 			break;
 		case CMD_OPT_RTVM:
 			is_rtvm = true;
+			lapic_pt = true;
 			break;
 		case CMD_OPT_SOFTWARE_SRAM:
 			if (parse_vssram_buf_params(optarg) != 0)
@@ -1003,6 +1003,10 @@ main(int argc, char *argv[])
 		usage(1);
         }
 
+	if (lapic_pt == true && is_rtvm == false) {
+		lapic_pt = false;
+		pr_warn("Only a Realtime VM can use local APIC pass through, '--lapic_pt' is invalid here.\n");
+	}
 	vmname = argv[0];
 
 	if (strnlen(vmname, MAX_VM_NAME_LEN) >= MAX_VM_NAME_LEN) {
