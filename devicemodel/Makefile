@@ -171,6 +171,10 @@ SRCS += core/main.c
 SRCS += core/hugetlb.c
 SRCS += core/vrpmb.c
 SRCS += core/timer.c
+SRCS += core/cmd_monitor/socket.c
+SRCS += core/cmd_monitor/command.c
+SRCS += core/cmd_monitor/command_handler.c
+SRCS += core/cmd_monitor/cmd_monitor.c
 
 # arch
 SRCS += arch/x86/pm.c
