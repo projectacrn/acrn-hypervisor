@@ -81,6 +81,7 @@ LIBS += -lpciaccess
 LIBS += -luuid
 LIBS += -lusb-1.0
 LIBS += -lacrn-mngr
+LIBS += -lcjson
 
 # lib
 SRCS += lib/dm_string.c
