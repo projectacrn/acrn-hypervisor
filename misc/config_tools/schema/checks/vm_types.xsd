@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2022 Intel Corporation. -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<xs:schema xml:id="root"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:acrn="https://projectacrn.org">
+
+  <xs:assert test="count(/acrn-config/vm[.//load_order = 'SERVICE_VM']) &lt; 2">
+    <xs:annotation acrn:severity="error" acrn:report-on="//vm[.//load_order = 'SERVICE_VM']">
+      <xs:documentation>There can be at most one service VM, but more than one was configured. Verify there is only one VM with vm_type set to SERVICE_VM. </xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $pre_vm in /acrn-config/vm[.//load_order = 'PRE_LAUNCHED_VM'] satisfies
+                   every $svm in /acrn-config/vm[.//load_order = 'SERVICE_VM'] satisfies
+                   $pre_vm/@id &lt; $svm/@id">
+    <xs:annotation acrn:severity="error" acrn:report-on="$pre_vm">
+      <xs:documentation>This pre-launched VM "{$pre_vm/name}" (ID: {$pre_vm/@id}) must have a VM ID value less than the service VM (ID: {$svm/@id}). Adjust the VM ID values to fix this.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $post_vm in /acrn-config/vm[.//load_order = 'POST_LAUNCHED_VM'] satisfies
+                   every $svm in /acrn-config/vm[.//load_order = 'SERVICE_VM'] satisfies
+                   $post_vm/@id &gt; $svm/@id">
+    <xs:annotation acrn:severity="error" acrn:report-on="$post_vm">
+      <xs:documentation>This post-launched VM "{$post_vm/name}" (ID: {$post_vm/@id}) must have a VM ID value greater than the service VM (ID: {$svm/@id}). Adjust the VM ID values to fix this.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="count(vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']) &lt;= 1">
+    <xs:annotation acrn:severity="warning" acrn:report-on="//vm[load_order = 'PRE_LAUNCHED_VM']/vm_type[text() = 'RTVM']">
+      <xs:documentation>Multiple pre-launched VMs {//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']/name} are defined as RT VMs, but ACRN supports at most one pre-launched RT VM in one scenario. Adjust the VM types of those VMs to STANDARD_VM to fix this.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="count(distinct-values(vm[vm_type = 'RTVM']/load_order)) &lt;= 1">
+    <xs:annotation acrn:severity="warning" acrn:report-on="//vm/vm_type[text() = 'RTVM']">
+      <xs:documentation>Pre-launched RT VM(s) {//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']/name} and post-launched RT VMs {//vm[load_order = 'POST_LAUNCHED_VM' and vm_type = 'RTVM']/name} cannot coexist. Adjust the VM types of those VMs to STANDARD_VM to fix this.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+</xs:schema>

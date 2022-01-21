@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2022 Intel Corporation. -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<xs:schema xml:id="root"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:acrn="https://projectacrn.org">
+
+  <xs:assert test="every $cpu in vm//cpu_affinity/pcpu_id satisfies count(processors//thread[cpu_id = $cpu]) = 1">
+    <xs:annotation acrn:severity="warning" acrn:report-on="$cpu">
+      <xs:documentation>The physical CPU {$cpu} allocated to VM "{$cpu/ancestor::vm/name}" does not exist on the target board. Remove this CPU from the CPU affinity setting.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in /acrn-config/vm satisfies
+                   count(distinct-values($vm//cpu_affinity/pcpu_id)) = count($vm//cpu_affinity/pcpu_id)">
+    <xs:annotation acrn:severity="warning" acrn:report-on="$vm/cpu_affinity">
+      <xs:documentation>VM "{$vm/name}" repeats a physical CPU affinity assignment: {$vm//cpu_affinity/pcpu_id}. Remove the duplicates.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $pcpu in /acrn-config/vm[load_order = 'PRE_LAUNCHED_VM']//cpu_affinity/pcpu_id satisfies
+                   count(/acrn-config/vm[@id != $pcpu/ancestor::vm//companion_vmid ]//cpu_affinity[pcpu_id = $pcpu]) &lt;= 1">
+    <xs:annotation acrn:severity="error" acrn:report-on="//vm//cpu_affinity[pcpu_id = $pcpu]">
+      <xs:documentation>Physical CPU {$pcpu} is assigned to pre-launched VM "{$pcpu/ancestor::vm/name}" and thus cannot be shared among multiple VMs. Look for, and probably remove any affinity assignments to {$pcpu} in these VM's settings: {//vm[cpu_affinity/pcpu_id = $pcpu]/name}.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in vm satisfies
+                   count(distinct-values(processors//thread[cpu_id = $vm//cpu_affinity/pcpu_id]/core_type)) &lt;= 1">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm//cpu_affinity">
+      <xs:documentation>The physical CPUs allocated to the VM "{$vm/name}" have both performance cores {processors//thread[cpu_id = $vm//cpu_affinity/pcpu_id and core_type = 'Core']/cpu_id} and efficient cores {processors//thread[cpu_id = $vm//cpu_affinity/pcpu_id and core_type = 'Atom']/cpu_id}, which is unsupported. Remove either all performance or all efficient cores from the CPU affinity.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+</xs:schema>
