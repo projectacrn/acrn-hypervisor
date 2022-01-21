@@ -12,8 +12,7 @@ configuration is based on the ACRN predefined **shared** scenario and consists
 of an ACRN hypervisor, Service VM, and six User VMs, but we'll launch only one
 User VM, as illustrated in this figure:
 
-.. image:: ./images/gsg_scenario.png
-   :scale: 80%
+.. image:: ./images/gsg_scenario-1-0.75x.png
 
 Throughout this guide, you will be exposed to some of the tools, processes, and
 components of the ACRN project. Let's get started.
@@ -26,7 +25,6 @@ development computer is where you configure and build ACRN and your application.
 The target system is where you deploy and run ACRN and your application.
 
 .. image:: ./images/gsg_host_target.png
-   :scale: 60%
 
 Before you begin, make sure your machines have the following prerequisites:
 

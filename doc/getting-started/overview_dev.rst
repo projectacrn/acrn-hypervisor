@@ -32,7 +32,6 @@ The recommended development environment for ACRN consists of two machines:
 * **Target system** where you install and run ACRN images
 
 .. image:: ./images/overview_host_target.png
-   :scale: 60%
 
 ACRN requires a serial output from the target system to the development computer
 for :ref:`debugging and system messaging <acrn-debug>`. If your target doesn't
@@ -49,7 +48,7 @@ General Process for Building an ACRN Hypervisor
 The general process for configuring and building an ACRN hypervisor is
 illustrated in the following figure. Additional details follow.
 
-.. image:: ./images/overview_flow.png
+.. image:: ./images/overview_flow-1-0.6x.png
 
 .. _overview_dev_hw_scenario:
 
@@ -57,7 +56,6 @@ illustrated in the following figure. Additional details follow.
 *************************************************
 
 .. |icon_light| image:: ./images/icon_light.png
-   :scale: 75%
 
 ACRN configuration is hardware and scenario specific. You will need to learn
 about supported ACRN hardware and scenarios, and select the right ones for your
@@ -80,8 +78,7 @@ VMs that can be run, their attributes, and the resources they have access to.
 This image shows an example of an ACRN scenario to illustrate the types of VMs
 that ACRN offers:
 
-.. image:: ./images/acrn_terms.png
-   :scale: 75%
+.. image:: ./images/ACRN_terms-1-0.75x.png
 
 ACRN offers three types of VMs:
 
@@ -147,7 +144,6 @@ later in :ref:`overview_dev_config_editor`.
 ****************************************************
 
 .. |icon_host| image:: ./images/icon_host.png
-   :scale: 75%
 
 Your development computer requires certain dependencies to configure and build
 ACRN:
@@ -163,7 +159,6 @@ ACRN:
 *********************************************************
 
 .. |icon_target| image:: ./images/icon_target.png
-   :scale: 75%
 
 The :ref:`board_inspector_tool` ``board_inspector.py``, found in the ACRN
 hypervisor source code, enables you to generate a board configuration file on
