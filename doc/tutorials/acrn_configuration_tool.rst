@@ -128,7 +128,7 @@ As introduced in :ref:`overview_dev`, configuration takes place at
 :ref:`overview_dev_board_config` and :ref:`overview_dev_config_editor` in
 the overall development process:
 
-.. image:: ../getting-started/images/overview_flow.png
+.. image:: ../getting-started/images/overview_flow-1-0.6x.png
 
 ACRN source also includes makefile targets to aid customization. See
 :ref:`hypervisor-make-options`.

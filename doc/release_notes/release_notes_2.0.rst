@@ -70,8 +70,7 @@ May 2019.  The new hybrid mode architecture has the flexibility to
 support both partition mode and sharing mode simultaneously, as shown in
 this architecture diagram:
 
-.. figure:: ../introduction/images/ACRN-V2-high-level-arch.png
-   :width: 700px
+.. figure:: ../introduction/images/ACRN-V2-high-level-arch-1-0.75x.png
    :align: center
 
    ACRN V2 high-level architecture

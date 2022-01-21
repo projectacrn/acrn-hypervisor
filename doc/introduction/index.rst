@@ -126,8 +126,7 @@ software (or mediator) in the Service VM inherits the User VM priority.
 As mentioned earlier, hardware resources used by VMs can be configured into
 two parts, as shown in this hybrid VM sample configuration:
 
-.. figure:: images/ACRN-V2-high-level-arch.png
-   :width: 700px
+.. figure:: images/ACRN-V2-high-level-arch-1-0.75x.png
    :align: center
    :name: V2-hl-arch
 
@@ -327,8 +326,7 @@ can define your own configuration scenarios.
   device drivers to access the hardware and provides I/O mediation to the User
   VMs.
 
-  .. figure:: images/ACRN-industry-example.png
-     :width: 700px
+  .. figure:: images/ACRN-industry-example-1-0.75x.png
      :align: center
      :name: arch-shared-example
 
@@ -346,15 +344,15 @@ can define your own configuration scenarios.
 
   In this example, one post-launched User VM provides Human Machine Interface
   (HMI) capability, another provides Artificial Intelligence (AI) capability,
-  some compute function is run the Kata Container, and the RTVM runs the soft
+  some compute function is run in the Kata Container, and the RTVM runs the soft
   Programmable Logic Controller (PLC) that requires hard real-time
   characteristics.
 
-  - The Service VM, provides device sharing functionalities, such as disk and
+  - The Service VM provides device sharing functionalities, such as disk and
     network mediation, to other virtual machines.  It can also run an
     orchestration agent allowing User VM orchestration with tools such as
     Kubernetes.
-  - The HMI Application OS can be Windows* or Linux*. Windows is dominant in
+  - The HMI Application OS can be Windows or Linux. Windows is dominant in
     Industrial HMI environments.
   - ACRN can support a soft real-time OS such as preempt-rt Linux for soft-PLC
     control, or a hard real-time OS that offers less jitter.
@@ -367,8 +365,7 @@ can define your own configuration scenarios.
   since all partitioned VMs run native device drivers and directly access their
   configured resources.
 
-  .. figure:: images/ACRN-partitioned-example.png
-     :width: 700px
+  .. figure:: images/ACRN-partitioned-example-1-0.75x.png
      :align: center
      :name: arch-partitioned-example
 
@@ -386,8 +383,7 @@ can define your own configuration scenarios.
   VMs are started by the Device Model in the Service VM and share the remaining
   resources.
 
-  .. figure:: images/ACRN-hybrid-rt-example.png
-     :width: 700px
+  .. figure:: images/ACRN-hybrid-rt-example-1-0.75x.png
      :align: center
      :name: arch-hybrid-rt-example
 
