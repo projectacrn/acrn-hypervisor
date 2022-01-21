@@ -98,9 +98,16 @@ def parse_device(bus_node, device_path):
     cfg = parse_config_space(device_path)
     physfn_cfg = parse_config_space(os.path.join(device_path, "physfn"))
 
-    # There are cases where Linux creates device-like nodes without a file named "config", e.g. when there is a PCIe
-    # non-transparent bridge (NTB) on the physical platform.
-    if cfg is None:
+    # The following kinds of PCIe functions are not supported by ACRN.
+    #
+    # 1. There are cases where Linux creates device-like nodes without a file named "config", e.g. when there is a PCIe
+    #    non-transparent bridge (NTB) on the physical platform.
+    #
+    # 2. Some PCIe functions may have a configuration header type other than 0 or 1, which is not yet defined in PCIe
+    #    specifications.
+    #
+    # Such PCIe functions are ignored by the board inspector and won't be able to passthrough to any VM.
+    if cfg is None or hasattr(cfg.header, "unparsed_data"):
         return None
 
     if device_name == "0000:00:00.0":

@@ -173,7 +173,7 @@ def header_field_list(addr):
     elif common_header.header_type == 0x01:
         return header_type_1_field_list(addr + ctypes.sizeof(Common))
     else:
-        return [('data', ctypes.c_uint8 * 0x30)]
+        return [('unparsed_data', ctypes.c_uint8 * 0x30)]
 
 def header_factory(field_list):
     class Header(cdata.Struct):
