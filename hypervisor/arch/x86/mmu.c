@@ -246,6 +246,7 @@ void init_paging(void)
 	uint64_t hv_hva;
 	uint32_t i;
 	uint64_t low32_max_ram = 0UL;
+	uint64_t high64_min_ram = ~0UL;
 	uint64_t high64_max_ram = MEM_4G;
 	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 
@@ -270,6 +271,7 @@ void init_paging(void)
 			if (end < MEM_4G) {
 				low32_max_ram = max(end, low32_max_ram);
 			} else {
+				high64_min_ram = min(entry->baseaddr, high64_min_ram);
 				high64_max_ram = max(end, high64_max_ram);
 			}
 		}
@@ -279,12 +281,14 @@ void init_paging(void)
 	high64_max_ram = min(high64_max_ram, top_addr_space);
 	high64_max_ram = round_pde_down(high64_max_ram);
 
-	/* Map [0, low32_max_ram) and [4G, high64_max_ram) RAM regions as WB attribute */
+	/* Map [0, low32_max_ram) and [high64_min_ram, high64_max_ram) RAM regions as WB attribute */
 	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL,
 			low32_max_ram, PAGE_ATTR_USER | PAGE_CACHE_WB, &ppt_pgtable);
-	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, MEM_4G, MEM_4G,
-			high64_max_ram - MEM_4G, PAGE_ATTR_USER | PAGE_CACHE_WB, &ppt_pgtable);
 
+	if (high64_max_ram > high64_min_ram) {
+		pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, high64_min_ram, high64_min_ram,
+				high64_max_ram - high64_min_ram, PAGE_ATTR_USER | PAGE_CACHE_WB, &ppt_pgtable);
+	}
 	/* Map [low32_max_ram, 4G) and [HI_MMIO_START, HI_MMIO_END) MMIO regions as UC attribute */
 	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, low32_max_ram, low32_max_ram,
 		MEM_4G - low32_max_ram, PAGE_ATTR_USER | PAGE_CACHE_UC, &ppt_pgtable);
