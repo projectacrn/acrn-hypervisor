@@ -329,12 +329,6 @@ Generate a Board Configuration File
          disk="/media/$USER/"$(ls /media/$USER)
          cp -r "$disk"/board_inspector ~/acrn-work
 
-#. On the target, load the ``msr`` driver, used by the Board Inspector:
-
-   .. code-block:: bash
-
-      sudo modprobe msr
-
 #. Run the Board Inspector tool ( ``board_inspector.py``)
    to generate the board configuration file. This
    example uses the parameter ``my_board`` as the file name.
