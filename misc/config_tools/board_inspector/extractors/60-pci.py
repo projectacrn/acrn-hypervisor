@@ -148,6 +148,8 @@ def parse_device(bus_node, device_path):
         mapping = device_node.xpath(f"../interrupt_pin_routing/routing[@address='{prt_address}']/mapping[@pin='{pin_name}']")
         if len(mapping) > 0:
             res_node.set("source", mapping[0].get("source"))
+            if "index" in mapping[0].keys():
+                res_node.set("index", mapping[0].get("index"))
 
     # Secondary bus
     if cfg.header.header_type == 1:
