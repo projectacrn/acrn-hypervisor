@@ -281,30 +281,15 @@ static int
 basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 {
 	int i;
-	struct acrn_vm_config_header vm_cfg;
-	struct acrn_platform_info plat_info;
-	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
+	uint64_t guest_pcpu_bitmask;
 
-	if (vm_get_config(ctx, &vm_cfg, &plat_info)) {
-		pr_err("%s, get VM configuration fail.\n", __func__);
-		return -1;
-	}
-
-	hv_cpu_bitmask = vm_cfg.cpu_affinity;
-	dm_cpu_bitmask = vm_get_cpu_affinity_dm();
-	if ((dm_cpu_bitmask != 0) && ((dm_cpu_bitmask & ~hv_cpu_bitmask) == 0)) {
-		guest_pcpu_bitmask = dm_cpu_bitmask;
-	} else {
-		guest_pcpu_bitmask = hv_cpu_bitmask;
-	}
-
+	guest_pcpu_bitmask = vm_get_cpu_affinity_dm();
 	if (guest_pcpu_bitmask == 0) {
 		pr_err("%s,Err: Invalid guest_pcpu_bitmask.\n", __func__);
 		return -1;
 	}
 
-	pr_info("%s, dm_cpu_bitmask:0x%x, hv_cpu_bitmask:0x%x, guest_cpu_bitmask: 0x%x\n",
-		__func__, dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask);
+	pr_info("%s, guest_cpu_bitmask: 0x%x\n", __func__, guest_pcpu_bitmask);
 
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm MADT template\n");

@@ -431,7 +431,7 @@ static int vssram_ept_map_buffer(struct vmctx *ctx, struct vssram_buf *buf_desc)
 	return ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
 };
 
-static int init_guest_lapicid_tbl(struct acrn_platform_info *platform_info, uint64_t guest_pcpu_bitmask)
+static int init_guest_lapicid_tbl(uint64_t guest_pcpu_bitmask)
 {
 	int pcpu_id = 0, vcpu_id = 0;
 	int vcpu_num = bitmap_weight(guest_pcpu_bitmask);
@@ -1169,42 +1169,16 @@ static void init_vssram_gpa_range(void)
  */
 static int init_guest_cpu_info(struct vmctx *ctx)
 {
-	struct acrn_vm_config_header vm_cfg;
-	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
-	struct acrn_platform_info platform_info;
+	uint64_t guest_pcpu_bitmask;
 
-	if (vm_get_config(ctx, &vm_cfg, &platform_info)) {
-		pr_err("%s, get VM configuration fail.\n", __func__);
-		return -1;
-	}
-	assert(platform_info.hw.cpu_num <= ACRN_PLATFORM_LAPIC_IDS_MAX);
-
-	/*
-	 * pCPU bitmask of VM is configured in hypervisor by default but can be
-	 * overwritten by '--cpu_affinity' argument of DM if this bitmask is
-	 * the subset of bitmask configured in hypervisor.
-	 *
-	 * FIXME: The cpu_affinity does not only mean the vcpu's pcpu affinity but
-	 * also indicates the maximum vCPU number of guest. Its name should be renamed
-	 * to pu_bitmask to avoid confusing.
-	 */
-	hv_cpu_bitmask = vm_cfg.cpu_affinity;
-	dm_cpu_bitmask = vm_get_cpu_affinity_dm();
-	if ((dm_cpu_bitmask != 0) && ((dm_cpu_bitmask & ~hv_cpu_bitmask) == 0)) {
-		guest_pcpu_bitmask = dm_cpu_bitmask;
-	} else {
-		guest_pcpu_bitmask = hv_cpu_bitmask;
-	}
-
+	guest_pcpu_bitmask = vm_get_cpu_affinity_dm();
 	if (guest_pcpu_bitmask == 0) {
 		pr_err("%s,Err: Invalid guest_pcpu_bitmask.\n", __func__);
 		return -1;
 	}
+	pr_info("%s, guest_cpu_bitmask: 0x%x\n", __func__, guest_pcpu_bitmask);
 
-	pr_info("%s, dm_cpu_bitmask:0x%x, hv_cpu_bitmask:0x%x, guest_cpu_bitmask: 0x%x\n",
-		__func__, dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask);
-
-	if (init_guest_lapicid_tbl(&platform_info, guest_pcpu_bitmask) < 0) {
+	if (init_guest_lapicid_tbl(guest_pcpu_bitmask) < 0) {
 		pr_err("%s,init guest lapicid table fail.\n", __func__);
 		return -1;
 	}
