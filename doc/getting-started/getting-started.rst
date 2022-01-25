@@ -401,7 +401,7 @@ To generate a scenario configuration file and launch scripts:
 
    .. code-block:: bash
 
-      python3 acrn_configurator.py
+      ./acrn_configurator.py
 
 #. Your web browser should open the website `<http://127.0.0.1:5001/>`__
    automatically, or you may need to visit this website manually.

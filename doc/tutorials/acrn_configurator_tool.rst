@@ -56,7 +56,7 @@ a custom scenario configuration file and launch scripts.
 
    .. code-block:: bash
 
-      python3 ~/acrn-work/acrn-hypervisor/misc/config_tools/config_app/acrn_configurator.py
+      ~/acrn-work/acrn-hypervisor/misc/config_tools/config_app/acrn_configurator.py
 
 #. Your web browser should open the website `<http://127.0.0.1:5001/>`_
    automatically, or you may need to visit this website manually. The ACRN
