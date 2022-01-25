@@ -104,9 +104,17 @@ def get_irqs_of_device(device_node):
 
     # PCI interrupt pin
     for res in device_node.xpath("resource[@type='interrupt_pin']"):
-        irq = res.get("source", None)
-        if irq is not None:
-            irqs.add(int(irq))
+        source = res.get("source", None)
+        if source is not None:
+            if source.isdigit():
+                # Interrupts from the global interrupt pool
+                irqs.add(int(source))
+            else:
+                # Interrupts from another device
+                index = res.get("index", "0")
+                irq = common.get_node(f"//device[acpi_object='{source}']/resource[@id='res{index}' and @type='irq']/@int", device_node.getroottree())
+                if irq is not None:
+                    irqs.add(int(irq))
 
     return irqs
 
