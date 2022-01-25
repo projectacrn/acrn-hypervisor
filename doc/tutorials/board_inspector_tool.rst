@@ -28,12 +28,6 @@ a board configuration file.
 #. Make sure the target system is set up and ready to run the Board Inspector,
    according to :ref:`gsg-board-setup` in the Getting Started Guide.
 
-#. Load the ``msr`` driver, used by the Board Inspector:
-
-   .. code-block:: bash
-
-      sudo modprobe msr
-
 #. Run the Board Inspector tool (``board_inspector.py``) to generate the board
    configuration file. This example assumes the tool is in the
    ``~/acrn-work/`` directory and ``my_board`` is the desired file
