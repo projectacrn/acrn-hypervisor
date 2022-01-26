@@ -817,7 +817,11 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char nstr[80];
 	char tname[MAXCOMLEN + 1];
 	struct virtio_net *net;
-	char *devname = NULL;
+	char fname[IFNAMSIZ];
+	char *devopts = NULL;
+	char *name = NULL;
+	char *type = NULL;
+	char *tmp;
 	char *vtopts;
 	char *opt;
 	int mac_provided;
@@ -852,8 +856,8 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (opts != NULL) {
 		int err;
 
-		devname = vtopts = strdup(opts);
-		if (!devname) {
+		devopts = vtopts = strdup(opts);
+		if (!devopts) {
 			WPRINTF(("virtio_net: strdup returns NULL\n"));
 			free(net);
 			return -1;
@@ -868,7 +872,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				err = virtio_net_parsemac(opt,
 					net->config.mac);
 				if (err != 0) {
-					free(devname);
+					free(devopts);
 					free(net);
 					return err;
 				}
@@ -896,17 +900,27 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 */
 	net->tapfd = -1;
 
-	if (!devname) {
-		WPRINTF(("virtio_net: devname NULL\n"));
+	if (!devopts) {
+		WPRINTF(("virtio_net: invalid optional argument\n"));
 		free(net);
 		return -1;
 	}
 
-	if ((strstr(devname, "tap") != NULL) ||
-	    (strncmp(devname, "vmnet", 5) == 0))
-		virtio_net_tap_setup(net, devname);
+	vtopts = tmp = strdup(opts);
+	if ((strstr(tmp, "tap") != NULL)
+			|| (strncmp(tmp, "vmnet",5) == 0)) {
+		type = strsep(&tmp, "=");
+		name = strsep(&tmp, ",");
+	}
 
-	free(devname);
+	if ((type != NULL) && (name != NULL)) {
+		snprintf(fname, IFNAMSIZ, "%s_%s", type, name);
+
+		if ((strstr(type, "tap") != NULL) ||
+				(strncmp(type, "vmnet", 5) == 0)){
+			virtio_net_tap_setup(net, fname);
+		}
+	}
 
 	/*
 	 * The default MAC address is the standard NetApp OUI of 00-a0-98,
@@ -927,6 +941,9 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		net->config.mac[4] = digest[1];
 		net->config.mac[5] = digest[2];
 	}
+
+	free(vtopts);
+	free(devopts);
 
 	/* initialize config space */
 	pci_set_cfgdata16(dev, PCIR_DEVICE, VIRTIO_DEV_NET);
