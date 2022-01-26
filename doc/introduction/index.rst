@@ -85,6 +85,10 @@ ACRN has these key capabilities and benefits:
   cost saving, code transparency, and collaborative software development with
   industry leaders.
 
+.. include:: ../../../../README.rst
+   :start-after: start_include_here
+
+
 Background
 **********
 
