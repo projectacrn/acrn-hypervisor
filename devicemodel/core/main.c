@@ -89,7 +89,6 @@ char *ovmf_vars_file_name;
 char *kernel_file_name;
 char *elf_file_name;
 uint8_t trusty_enabled;
-char *mac_seed;
 bool stdio_in_use;
 bool lapic_pt;
 bool is_rtvm;
@@ -102,7 +101,6 @@ bool skip_pci_mem64bar_workaround = false;
 static int guest_ncpus;
 static int virtio_msix = 1;
 static bool debugexit_enabled;
-static char mac_seed_str[50];
 static int pm_notify_channel;
 
 static char *progname;
@@ -146,7 +144,7 @@ usage(int code)
 		"       %*s [-s pci] [--ovmf ovmf_file_path]\n"
 		"       %*s [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--acpidev_pt HID] [--mmiodev_pt MMIO_Regions]\n"
-		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
+		"       %*s [--vtpm2 sock_path] [--virtio_poll interval]\n"
 		"       %*s [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]\n"
 		"       %*s [--debugexit] [--logger_setting param_setting]\n"
 		"       %*s [--ssram] <vm>\n"
@@ -159,7 +157,6 @@ usage(int code)
 		"       -r: ramdisk image path\n"
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
 		"       -v: version\n"
-		"       --mac_seed: set a platform unique string as a seed for generate mac address\n"
 		"       --ovmf: ovmf file path\n"
 		"       --ssram: Congfiure Software SRAM parameters\n"
 		"       --cpu_affinity: list of pCPUs assigned to this VM\n"
@@ -796,7 +793,6 @@ static struct option long_options[] = {
 	{"enable_trusty",	no_argument,		0,
 					CMD_OPT_TRUSTY_ENABLE},
 	{"virtio_poll",		required_argument,	0, CMD_OPT_VIRTIO_POLL_ENABLE},
-	{"mac_seed",		required_argument,	0, CMD_OPT_MAC_SEED},
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
 	{"acpidev_pt",		required_argument,	0, CMD_OPT_ACPIDEV_PT},
@@ -924,11 +920,6 @@ main(int argc, char *argv[])
 					"invalid virtio poll interval %s",
 					optarg);
 			}
-			break;
-		case CMD_OPT_MAC_SEED:
-			strncpy(mac_seed_str, optarg, sizeof(mac_seed_str));
-			mac_seed_str[sizeof(mac_seed_str) - 1] = '\0';
-			mac_seed = mac_seed_str;
 			break;
 		case CMD_OPT_DEBUGEXIT:
 			debugexit_enabled = true;
