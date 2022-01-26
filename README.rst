@@ -34,7 +34,7 @@ through the community's forums such as mailing lists and IRC channels. Anyone
 can join the developer community and the community is always willing to help
 its members and the User Community to get the most out of Project ACRN.
 
-Welcome to the project ARCN community!
+Welcome to the project ACRN community!
 
 We're now holding monthly Technical Community Meetings and encourage you
 to call in and learn more about the project. Meeting information is on
@@ -53,7 +53,7 @@ ACRN support systems:
   central source of information about the project. On this site, you'll
   find background and current information about the project as well as
   relevant links to project material.  For a quick start, refer to the
-  `Introduction`_ and `Getting Started Guide`_.
+  `ACRN Introduction`_ and `Getting Started Guide`_.
 
 * **Source Code in GitHub**: Project ACRN source code is maintained on a
   public GitHub repository at https://github.com/projectacrn/acrn-hypervisor.
@@ -88,7 +88,7 @@ ACRN support systems:
   project.
 
 
-.. _Introduction: https://projectacrn.github.io/latest/introduction/
+.. _ACRN Introduction: https://projectacrn.github.io/latest/introduction/
 .. _Getting Started Guide: https://projectacrn.github.io/latest/getting-started/
 .. _Contribution Guide: https://projectacrn.github.io/latest/contribute.html
 .. _Project ACRN GitHub wiki: https://github.com/projectacrn/acrn-hypervisor/wiki
