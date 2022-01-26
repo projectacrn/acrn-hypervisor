@@ -766,6 +766,8 @@ static void pci_enumerate_ext_cap(struct pci_pdev *pdev)
 				pr_err("%s: Do NOT enable PTM on [%x:%x.%x].\n", __func__,
 					pdev->bdf.bits.b, pdev->bdf.bits.d, pdev->bdf.bits.f);
 			}
+		} else {
+			/* reserved for future use */
 		}
 
 		pre_pos = pos;

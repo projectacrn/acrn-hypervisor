@@ -86,6 +86,8 @@ int32_t init_multiboot_info(uint32_t *registers)
 			ret = 0;
 		}
 #endif
+	} else {
+		/* Currently there are only multiboot and multiboot2 */
 	}
 	return ret;
 }

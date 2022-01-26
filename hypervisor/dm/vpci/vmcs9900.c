@@ -75,6 +75,8 @@ static void map_vmcs9900_vbar(struct pci_vdev *vdev, uint32_t idx)
 			(vbar->base_gpa + vbar->size), vdev, false);
 		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
 		vdev->msix.mmio_gpa = vbar->base_gpa;
+	} else {
+		/* No action required. */
 	}
 
 }

@@ -90,8 +90,10 @@ uint32_t rw_vmsix_table(struct pci_vdev *vdev, struct io_request *io_req)
 				(void)memcpy_s((void *)entry + entry_offset, (size_t)mmio->size,
 					&mmio->value, (size_t)mmio->size);
 			}
-		} else if (mmio->direction == ACRN_IOREQ_DIR_READ) {
-			mmio->value = 0UL;
+		} else {
+			if (mmio->direction == ACRN_IOREQ_DIR_READ) {
+				mmio->value = 0UL;
+			}
 		}
 	} else {
 		pr_err("%s, Only DWORD and QWORD are permitted", __func__);

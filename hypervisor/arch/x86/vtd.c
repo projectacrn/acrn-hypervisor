@@ -1072,8 +1072,10 @@ static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bu
 			iommu_flush_cache(context_entry, sizeof(struct dmar_entry));
 			ret = 0;
 		}
-	} else if (is_dmar_unit_ignored(dmar_unit)) {
-	       ret = 0;
+	} else {
+		if (is_dmar_unit_ignored(dmar_unit)) {
+			ret = 0;
+		}
 	}
 
 	return ret;
@@ -1127,8 +1129,10 @@ static int32_t iommu_detach_device(const struct iommu_domain *domain, uint8_t bu
 			dmar_invalid_iotlb(dmar_unit, vmid_to_domainid(domain->vm_id), 0UL, 0U, false,
 							DMAR_IIRG_DOMAIN);
 		}
-	} else if (is_dmar_unit_ignored(dmar_unit)) {
-	       ret = 0;
+	} else {
+		if (is_dmar_unit_ignored(dmar_unit)) {
+			ret = 0;
+		}
 	}
 
 	return ret;

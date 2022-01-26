@@ -333,8 +333,10 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 				base_hpa += entry->length;
 				remaining_hpa_size -= entry->length;
 			}
-		} else if (entry->type == E820_TYPE_RAM) {
-			pr_warn("%s: HPA size incorrectly configured in v820\n", __func__);
+		} else {
+			if (entry->type == E820_TYPE_RAM) {
+				pr_warn("%s: HPA size incorrectly configured in v820\n", __func__);
+			}
 		}
 
 		if ((remaining_hpa_size == 0UL) && (is_hpa1)) {

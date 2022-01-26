@@ -212,6 +212,8 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 					enter_s3(vm, v, 0U);
 				} else if (vm->pm.sx_state_data->s5_pkg.val_pm1a == val) {
 					enter_s5(vcpu, v, 0U);
+				} else {
+					/* other Sx value should be ignored */
 				}
 			}
 
@@ -226,6 +228,8 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 					enter_s3(vm, pm1a_cnt_val, v);
 				} else if (vm->pm.sx_state_data->s5_pkg.val_pm1b == val) {
 					enter_s5(vcpu, pm1a_cnt_val, v);
+				} else {
+					/* other Sx value should be ignored */
 				}
 			} else {
 				/* the case broke ACPI spec */
@@ -396,10 +400,12 @@ void init_guest_pm(struct acrn_vm *vm)
 		if (vm_load_pm_s_state(vm) == 0) {
 			register_pm1ab_handler(vm);
 		}
-	} else if (is_postlaunched_vm(vm) && is_rt_vm(vm)) {
-		/* Intercept the virtual pm port for post launched RTVM */
-		register_rt_vm_pm1a_ctl_handler(vm);
-	} else if (is_prelaunched_vm(vm)) {
+	} else if (is_postlaunched_vm(vm)) {
+		if (is_rt_vm(vm)) {
+			/* Intercept the virtual pm port for post launched RTVM */
+			register_rt_vm_pm1a_ctl_handler(vm);
+		}
+	} else { /* prelaunched vm */
 		/* Intercept the virtual sleep control/status registers for pre-launched VM */
 		register_prelaunched_vm_sleep_handler(vm);
 	}
