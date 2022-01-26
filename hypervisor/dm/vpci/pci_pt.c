@@ -295,7 +295,8 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 
 	if (is_pci_io_bar(vbar)) {
 		vpci_update_one_vbar(vdev, idx, val, vdev_pt_allow_io_vbar, vdev_pt_deny_io_vbar);
-	} else if (is_pci_mem_bar(vbar)) {
+	} else {
+		/* pci mem bar */
 		vpci_update_one_vbar(vdev, idx, val, vdev_pt_map_mem_vbar, vdev_pt_unmap_mem_vbar);
 	}
 }

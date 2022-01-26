@@ -175,6 +175,8 @@ void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
 			*l2_shift = shift;
 		} else if (cache_level == 3U) {
 			*l3_shift = shift;
+		} else {
+			/* this api only for L2 & L3 cache */
 		}
 	}
 }

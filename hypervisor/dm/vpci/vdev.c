@@ -151,17 +151,21 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 					vdev->vbars[idx].base_hpa, lo & PCI_BASE_ADDRESS_IO_MASK);
 				base = 0UL;
 			}
-		} else if ((!is_pci_mem_bar_base_valid(vpci2vm(vdev->vpci), base))
+		} else {
+			if ((!is_pci_mem_bar_base_valid(vpci2vm(vdev->vpci), base))
 					|| (!mem_aligned_check(base, vdev->vbars[idx].size))) {
-			res = (base < (1UL << 32UL)) ? &(vdev->vpci->res32): &(vdev->vpci->res64);
-			/* VM tries to reprogram vbar address out of pci mmio bar window, it can be caused by:
-			 * 1. For Service VM, <board>.xml is misaligned with the actual native platform, and we get wrong mmio window.
-			 * 2. Malicious operation from VM, it tries to reprogram vbar address out of pci mmio bar window
-			 */
-			pr_err("%s reprogram PCI:%02x:%02x.%x BAR%d to addr:0x%lx,"
-				" which is out of mmio window[0x%lx - 0x%lx] or not aligned with size: 0x%lx",
-				__func__, vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, base, res->start,
-				res->end, vdev->vbars[idx].size);
+				res = (base < (1UL << 32UL)) ? &(vdev->vpci->res32) : &(vdev->vpci->res64);
+				/* VM tries to reprogram vbar address out of pci mmio bar window, it can be caused by:
+				 * 1. For Service VM, <board>.xml is misaligned with the actual native platform,
+				 *    and we get wrong mmio window.
+				 * 2. Malicious operation from VM, it tries to reprogram vbar address out of
+				 *    pci mmio bar window
+				 */
+				pr_err("%s reprogram PCI:%02x:%02x.%x BAR%d to addr:0x%lx,"
+					" which is out of mmio window[0x%lx - 0x%lx] or not aligned with size: 0x%lx",
+					__func__, vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, base,
+					res->start, res->end, vdev->vbars[idx].size);
+			}
 		}
 	}
 
