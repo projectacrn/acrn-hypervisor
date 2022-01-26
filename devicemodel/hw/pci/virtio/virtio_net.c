@@ -821,6 +821,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char *devopts = NULL;
 	char *name = NULL;
 	char *type = NULL;
+	char *mac_seed = NULL;
 	char *tmp;
 	char *vtopts;
 	char *opt;
@@ -911,6 +912,11 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			|| (strncmp(tmp, "vmnet",5) == 0)) {
 		type = strsep(&tmp, "=");
 		name = strsep(&tmp, ",");
+	}
+
+	if (strncmp(tmp, "mac_seed",8) == 0) {
+		strsep(&tmp, "=");
+		mac_seed = tmp;
 	}
 
 	if ((type != NULL) && (name != NULL)) {
