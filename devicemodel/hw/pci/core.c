@@ -341,6 +341,10 @@ pci_parse_slot(char *opt)
 	/* saved fi param in case reboot */
 	si->si_funcs[fnum].fi_param_saved = config;
 
+	if (strcmp("virtio-net", emul) == 0) {
+		si->si_funcs[fnum].fi_param_saved = cp;
+	}
+
 	if (b != NULL) {
 		if ((strcmp("virtio-blk", emul) == 0) &&  (b != NULL) &&
 			(strchr(b, 'b') != NULL)) {
