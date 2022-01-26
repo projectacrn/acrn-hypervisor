@@ -82,7 +82,7 @@
       <network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">YaaG</network>
       <input desc="virtio input device"/>
       <block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./YaaG.img</block>
-      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"/>
+      <console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
     </virtio_devices>
     <sriov>
       <gpu/>
