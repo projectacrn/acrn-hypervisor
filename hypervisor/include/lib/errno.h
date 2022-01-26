@@ -23,6 +23,10 @@
 #define ENODEV		19
 /** Indicates that argument is not valid. */
 #define EINVAL		22
+/** Indicates the operation is undefined. */
+#define ENOTTY		25
+/** Indicates the operation is obsoleted. */
+#define ENOSYS		38
 /** Indicates that timeout occurs. */
 #define ETIMEDOUT	110
 
