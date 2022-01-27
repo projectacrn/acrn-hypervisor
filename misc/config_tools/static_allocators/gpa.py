@@ -301,25 +301,17 @@ def get_pt_devs_io_port_passthrough(board_etree, scenario_etree):
     return dev_list
 
 def get_pci_hole_native(board_etree):
-    resources = board_etree.xpath(f"//bus[@type = 'pci']/device[@address]/resource[@type = 'memory' and @len != '0x0']")
     resources_hostbridge =  board_etree.xpath("//bus/resource[@type = 'memory' and @len != '0x0' and not(starts-with(@id, 'bar')) and not(@width)]")
-
     low_mem = set()
     high_mem = set()
     for resource_hostbridge in resources_hostbridge:
         start = resource_hostbridge.get('min')
         end = resource_hostbridge.get('max')
         if start is not None and end is not None and int(start, 16) >= PCI_HOLE_THRESHOLD:
-            for resource in resources:
-                resource_start = int(resource.get('min'), 16)
-                resource_end = int(resource.get('max'), 16)
-                if resource_start >= int(start, 16) and resource_end <= int(end, 16):
-                    if resource_end < 4 * SIZE_G:
-                        low_mem.add(AddrWindow(int(start, 16), int(end, 16)))
-                        break
-                    else:
-                        high_mem.add(AddrWindow(int(start, 16), int(end, 16)))
-                        break
+            if int(end,16) < 4 * SIZE_G:
+                low_mem.add(AddrWindow(int(start, 16), int(end, 16)))
+            else:
+                high_mem.add(AddrWindow(int(start, 16), int(end, 16)))
     return list(sorted(low_mem)), list(sorted(high_mem))
 
 def get_io_port_range_native(board_etree):
