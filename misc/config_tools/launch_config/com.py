@@ -213,10 +213,7 @@ def gpu_pt_arg_set(dm, sel, vmid, config):
     gpu_bdf = sel.bdf["gpu"][vmid]
 
     if gpu_bdf:
-        bus = int(gpu_bdf[0:2], 16)
-        dev = int(gpu_bdf[3:5], 16)
-        fun = int(gpu_bdf[6:7], 16)
-        print('   -s 2,passthru,{}/{}/{}  \\'.format(bus, dev, fun), file=config)
+        print('   -s 2,passthru,{}/{}/{}  \\'.format(gpu_bdf[0:2], gpu_bdf[3:5], gpu_bdf[6:7]), file=config)
 
 
 def log_level_set(user_vm_type, config):
