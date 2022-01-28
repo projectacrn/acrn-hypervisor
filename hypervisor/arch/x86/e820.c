@@ -102,13 +102,20 @@ uint64_t e820_alloc_memory(uint64_t size_arg, uint64_t max_addr)
 	return ret;
 }
 
-static void add_e820_entry(uint64_t addr, uint64_t length, uint64_t type)
+static void insert_e820_entry(uint32_t index, uint64_t addr, uint64_t length, uint64_t type)
 {
+	uint32_t i;
+
 	hv_e820_entries_nr++;
 	ASSERT(hv_e820_entries_nr <= E820_MAX_ENTRIES, "e820 entry overflow");
-	hv_e820[hv_e820_entries_nr - 1U].baseaddr = addr;
-	hv_e820[hv_e820_entries_nr - 1U].length = length;
-	hv_e820[hv_e820_entries_nr - 1U].type = type;
+
+	for (i = hv_e820_entries_nr - 1; i > index; i--) {
+		hv_e820[i] = hv_e820[i-1];
+	}
+
+	hv_e820[index].baseaddr = addr;
+	hv_e820[index].length = length;
+	hv_e820[index].type = type;
 }
 
 static uint64_t e820_alloc_region(uint64_t addr, uint64_t size)
@@ -137,7 +144,7 @@ static uint64_t e820_alloc_region(uint64_t addr, uint64_t size)
 			 * |entry_start..............................entry_end|
 			 */
 			if (end_pa < entry_end) {
-				add_e820_entry(end_pa, entry_end - end_pa, E820_TYPE_RAM);
+				insert_e820_entry(i + 1, end_pa, entry_end - end_pa, E820_TYPE_RAM);
 				break;
 			}
 		} else {
