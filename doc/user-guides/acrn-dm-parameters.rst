@@ -218,16 +218,20 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
 ----
 
-``--acpidev_pt <HID>``
+``--acpidev_pt <HID>[,<UID>]``
    This option is to enable ACPI device passthrough support. The ``HID`` is a
    mandatory parameter for this option which is the Hardware ID of the ACPI
    device.
 
+   The ``UID`` is an option and used to specify a particular instance of the
+   HID device, the default is 00.
+
    Example::
 
-      --acpidev_pt MSFT0101
+      --acpidev_pt MSFT0101,00
 
-   To pass through a TPM (which HID is MSFT0101) ACPI device to a User VM.
+   To pass through a TPM (which HID is MSFT0101 and UID is 00) ACPI device to
+   a User VM.
 
 ----
 

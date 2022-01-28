@@ -20,7 +20,7 @@ Here is how ACRN supports MMIO device passthrough:
   pre-launched VM, plus we use the command line to tell which MMIO
   device we want to pass through to the post-launched VM.
 
-  If the MMIO device has ACPI Tables, use ``--acpidev_pt HID`` and
+  If the MMIO device has ACPI Tables, use ``--acpidev_pt HID[,UID]`` and
   if not, use ``--mmiodev_pt MMIO_regions``.
 
 .. note::

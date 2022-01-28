@@ -56,7 +56,7 @@ options:
                [-l lpc] [-m mem] [-r ramdisk_image_path]
                [-s pci] [--ovmf ovmf_file_path]
                [--enable_trusty] [--intr_monitor param_setting]
-               [--acpidev_pt HID] [--mmiodev_pt MMIO_regions]
+               [--acpidev_pt HID[,UID]] [--mmiodev_pt MMIO_regions]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
                [--cpu_affinity lapic_ids] [--lapic_pt] [--rtvm] [--windows]
                [--debugexit] [--logger-setting param_setting]
@@ -81,7 +81,7 @@ options:
        --intr_monitor: enable interrupt storm monitor
             its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms),
        --virtio_poll: enable virtio poll mode with poll interval with ns
-       --acpidev_pt: ACPI device ID args: HID in ACPI Table
+       --acpidev_pt: ACPI device ID args: HID,UID from the ACPI tables
        --mmiodev_pt: MMIO resources args: physical MMIO regions
        --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET
        --lapic_pt: enable local apic passthrough
@@ -111,7 +111,7 @@ Here's an example showing how to run a VM with:
      -s 5,virtio-console,@pty:pty_port \
      -s 3,virtio-blk,/home/acrn/UserVM.img \
      -s 4,virtio-net,tap_LaaG \
-     --acpidev_pt MSFT0101 \
+     --acpidev_pt MSFT0101,00 \
      --intr_monitor 10000,10,1,100 \
      -B "root=/dev/vda2 rw rootwait maxcpus=3 nohpet console=hvc0 \
      console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
