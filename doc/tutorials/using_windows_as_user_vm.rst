@@ -109,7 +109,7 @@ Prepare the Script to Create an Image
      -s 4,virtio-blk,/home/acrn/work/win10-ltsc.img
      -s 5,ahci,cd:/home/acrn/work/Windows10.iso \
      -s 6,ahci,cd:/home/acrn/work/winvirtio.iso \
-     -s 7,passthru,0/14/0,d3hot_reset \
+     -s 7,passthru,0/14/0 \
      --ovmf /home/acrn/work/OVMF.fd \
      --windows \
      $vm_name
@@ -284,8 +284,8 @@ Explanation for acrn-dm Popular Command Lines
 * ``-s 6,ahci,cd:/home/acrn/work/winvirtio.iso``:
   This is CD-ROM device to install the virtio Windows driver. Make sure it points to your VirtIO ISO path.
 
-* ``-s 7,passthru,0/14/0,d3hot_reset``:
-  This is to passthrough the USB controller to Windows;d3hot_reset is needed for WaaG reboot when USB controller is passthroughed to Windows.
+* ``-s 7,passthru,0/14/0``:
+  This is to passthrough the USB controller to Windows.
   You may need to change ``0/14/0`` to match the BDF of the USB controller on
   your platform.
 

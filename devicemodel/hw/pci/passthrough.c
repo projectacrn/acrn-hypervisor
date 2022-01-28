@@ -593,7 +593,6 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char *opt;
 	bool keep_gsi = false;
 	bool need_reset = true;
-	bool d3hot_reset = false;
 	bool enable_ptm = false;
 	int vrp_sec_bus = 0;
 	int vmsix_on_msi_bar_id = -1;
@@ -620,8 +619,6 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			keep_gsi = true;
 		else if (!strncmp(opt, "no_reset", 8))
 			need_reset = false;
-		else if (!strncmp(opt, "d3hot_reset", 11))
-			d3hot_reset = true;
 		else if (!strncmp(opt, "vmsix_on_msi", 12)) {
 			opt = strsep(&opts, ",");
 			if (parse_vmsix_on_msi_bar_id(opt, &vmsix_on_msi_bar_id, 10) != 0) {
@@ -644,7 +641,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	ptdev->phys_bdf = PCI_BDF(bus, slot, func);
 	ptdev->need_reset = need_reset;
-	ptdev->d3hot_reset = d3hot_reset;
+	ptdev->d3hot_reset = is_winvm;
 	update_pt_info(ptdev->phys_bdf);
 
 	error = pciaccess_init();

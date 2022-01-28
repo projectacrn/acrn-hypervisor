@@ -477,8 +477,6 @@ arguments used for configuration.  Here is a table describing these emulated dev
        * ``no_reset``: passthrough PCI devices are reset by default when
          assigning them to a post-launched VM. This parameter prevents this
          reset for debugging purposes.
-       * ``d3hot_reset``: when launching a  Windows post-launched VM, this
-         parameter should be appended to enable a Windows UEFI ACPI bug fix.
        * ``gpu``: create the dedicated ``igd-lpc`` on ``00:1f.0`` for IGD
          passthrough.
        * ``vmsix_on_msi,<bar_id>``: enables vMSI-X emulation based on MSI
