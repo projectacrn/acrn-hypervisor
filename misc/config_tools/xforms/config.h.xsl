@@ -43,18 +43,17 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:value-of select="$key" />
-    <xsl:text> </xsl:text>
     <xsl:choose>
       <xsl:when test="$value != ''">
+	<xsl:text> </xsl:text>
 	<xsl:value-of select="$value" />
-	<xsl:text>&#xa;</xsl:text>
       </xsl:when>
       <xsl:when test="$default != ''">
 	<xsl:text> </xsl:text>
 	<xsl:value-of select="$default" />
-	<xsl:text>&#xa;</xsl:text>
       </xsl:when>
     </xsl:choose>
+    <xsl:value-of select="$newline" />
   </xsl:template>
 
   <xsl:template name="boolean-by-key-value">
