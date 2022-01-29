@@ -74,8 +74,8 @@ def extract_topology(processors_node):
         while True:
             leaf_topo = parse_cpuid(topo_leaf, subleaf, cpu_id)
             if leaf_topo.level_type == 0:
-                if last_node.tag != "package":
-                    n, _ = get_or_create_parent(processors_node, "die", "0")
+                if last_node.tag != level_types[-1]:
+                    n, _ = get_or_create_parent(processors_node, level_types[-1], "0x0")
                     n.append(last_node)
                     last_node = n
                 processors_node.append(last_node)
