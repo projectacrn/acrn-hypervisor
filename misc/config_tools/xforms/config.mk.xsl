@@ -43,7 +43,7 @@
 	<xsl:value-of select="$value" />
 	<xsl:text>&#xa;</xsl:text>
       </xsl:when>
-      <xsl:when test="($value = '') and ($default != '')">
+      <xsl:when test="$default != ''">
 	<xsl:value-of select="$default" />
 	<xsl:text>&#xa;</xsl:text>
       </xsl:when>
