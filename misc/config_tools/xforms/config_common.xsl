@@ -17,11 +17,13 @@
     </xsl:call-template>
     <xsl:call-template name="integer-by-key-value">
       <xsl:with-param name="key" select="'MAX_IOAPIC_NUM'" />
-      <xsl:with-param name="value" select="count(//ioapic)" />
+      <xsl:with-param name="value" select="//config-data//MAX_IOAPIC_NUM/text()" />
+      <xsl:with-param name="default" select="count(.//ioapic)" />
     </xsl:call-template>
     <xsl:call-template name="integer-by-key-value">
       <xsl:with-param name="key" select="'MAX_IOAPIC_LINES'" />
-      <xsl:with-param name="value" select="math:max(//gsi_number/text() | exslt:node-set(0))" />
+      <xsl:with-param name="value" select="//config-data//MAX_IOAPIC_LINES/text()" />
+      <xsl:with-param name="default" select="math:max(.//ioapic/gsi_number/text() | exslt:node-set(0))" />
     </xsl:call-template>
     <xsl:call-template name="msi-msix-max" />
   </xsl:template>
