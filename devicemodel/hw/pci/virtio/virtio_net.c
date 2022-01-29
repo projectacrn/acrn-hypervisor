@@ -869,7 +869,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		while ((opt = strsep(&vtopts, ",")) != NULL) {
 			if (strcmp("vhost", opt) == 0)
 				net->use_vhost = true;
-			else {
+			else if (!strncmp(opt, "mac=", 4)) {
 				err = virtio_net_parsemac(opt,
 					net->config.mac);
 				if (err != 0) {
@@ -914,7 +914,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		name = strsep(&tmp, ",");
 	}
 
-	if (strncmp(tmp, "mac_seed",8) == 0) {
+	if ((tmp != NULL) && (strncmp(tmp, "mac_seed",8) == 0)) {
 		strsep(&tmp, "=");
 		mac_seed = tmp;
 	}
