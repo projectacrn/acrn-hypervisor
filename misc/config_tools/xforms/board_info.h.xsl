@@ -61,7 +61,7 @@
   </xsl:template>
 
   <xsl:template name="MAX_PCPU_NUM">
-    <xsl:value-of select="acrn:define('MAX_PCPU_NUM', count(//processors/die/core/thread), 'U')" />
+    <xsl:value-of select="acrn:define('MAX_PCPU_NUM', count(//processors//thread), 'U')" />
   </xsl:template>
 
   <xsl:template name="MAX_VMSIX_ON_MSI_PDEVS_NUM">
