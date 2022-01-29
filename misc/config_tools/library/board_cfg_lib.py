@@ -435,7 +435,11 @@ def parser_pci():
             if "size=" not in line:
                  continue
 
-            bar_addr = int(get_value_after_str(line, "at"), 16)
+            try:
+                bar_addr = int(get_value_after_str(line, "at"), 16)
+            except ValueError:
+                continue
+
             bar_num = line.split()[1].strip(':')
             if bar_addr >= common.SIZE_4G or bar_addr < common.SIZE_2G:
                 if not tmp_bar_attr.remappable:
