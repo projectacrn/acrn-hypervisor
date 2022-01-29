@@ -329,7 +329,7 @@
 	  <xsl:with-param name="value" select="concat($value, $integer-suffix)" />
 	</xsl:call-template>
       </xsl:when>
-      <xsl:when test="($value = '') and ($default != '')">
+      <xsl:when test="$default != ''">
 	<xsl:call-template name="entry-by-key-value">
 	  <xsl:with-param name="prefix" select="$prefix" />
 	  <xsl:with-param name="key" select="$key" />
