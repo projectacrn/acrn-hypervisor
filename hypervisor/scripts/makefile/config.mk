@@ -200,7 +200,7 @@ $(HV_BOARD_XML):
 $(HV_SCENARIO_XML):
 	@if [ ! -f $(HV_SCENARIO_XML) ]; then \
 	  if [ -f $(SCENARIO_FILE) ]; then \
-	    echo "Scneario XML is configuration fetched from $(realpath $(SCENARIO_FILE))"; \
+	    echo "Scenario XML is being fetched from $(realpath $(SCENARIO_FILE))"; \
 	    mkdir -p $(dir $(HV_SCENARIO_XML)); \
 	    python3 $(HV_CONFIG_TOOL_DIR)/scenario_config/default_populator.py $(HV_SCENARIO_XSD) $(SCENARIO_FILE) $(HV_SCENARIO_XML); \
 	  else \
