@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2022 Intel Corporation. -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	   targetNamespace="https://projectacrn.org">
+
+  <xs:attribute name="severity">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+	<xs:enumeration value="error" />
+	<xs:enumeration value="warning" />
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:attribute>
+
+  <xs:attribute name="report-on" type="xs:string" />
+
+</xs:schema>

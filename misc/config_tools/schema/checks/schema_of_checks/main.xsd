@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2022 Intel Corporation. -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	   xmlns:acrn="https://projectacrn.org"
+	   targetNamespace="http://www.w3.org/2001/XMLSchema">
+
+  <xs:import namespace="https://projectacrn.org" schemaLocation="custom_annot.xsd" />
+
+  <xs:element name="documentation" type="xs:string" />
+
+  <xs:element name="annotation">
+    <xs:complexType>
+      <xs:sequence>
+	<xs:element ref="xs:documentation" />
+      </xs:sequence>
+      <xs:attribute ref="acrn:severity" />
+      <xs:attribute ref="acrn:report-on" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="assert">
+    <xs:complexType>
+      <xs:sequence>
+	<xs:element ref="xs:annotation" />
+      </xs:sequence>
+      <xs:attribute name="test" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="schema">
+    <xs:complexType>
+      <xs:sequence>
+	<xs:element ref="xs:assert" maxOccurs="unbounded" />
+      </xs:sequence>
+
+      <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>
