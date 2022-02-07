@@ -18,7 +18,7 @@ except ImportError:
                   "To enable the validation, install the python package by executing: pip3 install xmlschema.")
     sys.exit(0)
 
-from default_populator import get_node, populate
+from default_populator import DefaultValuePopulator
 
 def existing_file_type(parser):
     def aux(arg):
@@ -40,12 +40,11 @@ def log_level_type(parser):
     return aux
 
 def load_schema(xsd_xml, datachecks_xml):
-    global schema, schema_etree, schema_root, datachecks
+    global schema, schema_etree, datachecks
 
     schema_etree = etree.parse(xsd_xml)
     schema_etree.xinclude()
     schema = xmlschema.XMLSchema11(etree.tostring(schema_etree, encoding="unicode"))
-    schema_root = get_node(schema_etree, f"/xs:schema/xs:element")
 
     datachecks_etree = etree.parse(datachecks_xml)
     datachecks_etree.xinclude()
@@ -55,7 +54,6 @@ config_tools_dir = os.path.join(os.path.dirname(__file__), "..")
 schema_dir = os.path.join(config_tools_dir, "schema")
 schema = None
 schema_etree = None
-schema_root = None
 datachecks = None
 load_schema(os.path.join(schema_dir, "config.xsd"), os.path.join(schema_dir, "datachecks.xsd"))
 
@@ -67,7 +65,7 @@ def validate_one(board_xml, scenario_xml):
     scenario_name = os.path.basename(scenario_xml)
 
     scenario_etree = etree.parse(scenario_xml, etree.XMLParser(remove_blank_text=True))
-    populate(schema_etree, schema_root, scenario_etree.getroot(), False)
+    DefaultValuePopulator(schema_etree).transform(scenario_etree)
 
     it = schema.iter_errors(scenario_etree)
     for error in it:
