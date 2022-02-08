@@ -487,6 +487,8 @@ To generate a scenario configuration file and launch scripts:
 #. Close the browser and press :kbd:`CTRL` + :kbd:`C` to terminate the
    ``acrn_configurator.py`` program running in the terminal window.
 
+.. _gsg_build:
+
 .. rst-class:: numbered-step
 
 Build ACRN
