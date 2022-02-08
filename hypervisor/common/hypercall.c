@@ -180,57 +180,6 @@ void get_cache_shift(uint32_t *l2_shift, uint32_t *l3_shift)
 }
 
 /**
- * @brief Get basic platform information.
- *
- * The function returns basic hardware or configuration information
- * for the current platform.
- *
- * @param vcpu Pointer to vCPU that initiates the hypercall.
- * @param param1 GPA pointer to struct acrn_platform_info.
- *
- * @pre is_service_vm(vcpu->vm)
- * @return 0 on success, non zero in case of error.
- */
-int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, __unused struct acrn_vm *target_vm,
-		uint64_t param1, __unused uint64_t param2)
-{
-	struct acrn_vm *vm = vcpu->vm;
-	struct acrn_platform_info pi = { 0 };
-	uint32_t entry_size = sizeof(struct acrn_vm_config);
-	int32_t ret;
-
-	/* to get the vm_config_info pointer */
-	ret = copy_from_gpa(vm, &pi, param1, sizeof(pi));
-	if (ret == 0) {
-		uint16_t i;
-		uint16_t pcpu_nums = get_pcpu_nums();
-
-		get_cache_shift(&pi.hw.l2_cat_shift, &pi.hw.l3_cat_shift);
-
-		for (i = 0U; i < min(pcpu_nums, ACRN_PLATFORM_LAPIC_IDS_MAX); i++) {
-			pi.hw.lapic_ids[i] = (uint8_t)per_cpu(lapic_id, i);
-		}
-
-		pi.hw.cpu_num = pcpu_nums;
-		pi.hw.version = 0x100;  /* version 1.0; byte[1:0] = major:minor version */
-		pi.sw.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
-		pi.sw.max_vms = CONFIG_MAX_VM_NUM;
-		pi.sw.vm_config_size = entry_size;
-
-		/* If it wants to get the vm_configs info */
-		if (pi.sw.vm_configs_addr != 0UL) {
-			ret = copy_to_gpa(vm, (void *)get_vm_config(0U), pi.sw.vm_configs_addr, entry_size * pi.sw.max_vms);
-		}
-
-		if (ret == 0) {
-			ret = copy_to_gpa(vm, &pi, param1, sizeof(pi));
-		}
-	}
-
-	return ret;
-}
-
-/**
  * @brief create virtual machine
  *
  * Create a virtual machine based on parameter, currently there is no

@@ -53,21 +53,6 @@ int32_t hcall_service_vm_offline_cpu(struct acrn_vcpu *vcpu, struct acrn_vm *tar
  */
 int32_t hcall_get_api_version(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
-/**
- * @brief Get basic platform information.
- *
- * The function returns basic hardware or configuration information
- * for the current platform.
- *
- * @param vcpu Pointer to vCPU that initiates the hypercall.
- * @param target_vm not used
- * @param param1 GPA pointer to struct acrn_platform_info.
- * @param param2 not used
- *
- * @pre is_service_vm(vcpu->vm)
- * @return 0 on success, -1 in case of error.
- */
-int32_t hcall_get_platform_info(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
 /**
  * @brief create virtual machine
