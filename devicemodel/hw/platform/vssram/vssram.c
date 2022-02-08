@@ -236,6 +236,38 @@ static int tcc_driver_init_buffer_fd(void)
 }
 
 /**
+ * @brief  Disable CPU affinity check in TCC driver.
+ *
+ * @param void.
+ *
+ * @return 0 on success and -1 on fail.
+ */
+static int disable_tcc_strict_affinity_check(void)
+{
+#define AFFINITY_CHECK_PARAM "/sys/module/tcc_buffer/parameters/strict_affinity_check"
+	int fd, ret = 0U;
+
+	fd = open(AFFINITY_CHECK_PARAM, O_WRONLY);
+	if (fd < 0) {
+		pr_err("%s: Failed to open %s: %s(%i), please check its availability.\n",
+			__func__, AFFINITY_CHECK_PARAM, strerror(errno), errno);
+		return -1;
+	}
+
+	/* Value of 0 means turning off CPU affinity check. */
+	if (write(fd, "0", 1) < 0) {
+		pr_err("%s: Failed to turn off affinity checking in the TCC driver"
+			"(could not write to: %s: %s(%i)", __func__,
+			AFFINITY_CHECK_PARAM, strerror(errno), errno);
+		ret = -1;
+	}
+
+	close(fd);
+	return ret;
+}
+
+
+/**
  * @brief  Get count of TCC software SRAM regions.
  *
  * @param void.
@@ -1230,6 +1262,20 @@ int init_vssram(struct vmctx *ctx)
 		return -1;
 
 	if (tcc_driver_init_buffer_fd() < 0)
+		return -1;
+
+	/*
+	 * By default, pCPU is allowed to request software SRAM buffer
+	 * from given region in TCC buffer driver only if this pCPU is
+	 * set in the target region's CPU affinity configuration.
+	 *
+	 * This check shall be disabled for software SRAM virtualization
+	 * usage in ACRN service VM, because software SRAM buffers are
+	 * requested by ACRN DM on behalf of user VM, but ACRN DM and
+	 * user VM may run on different CPUs while the target software
+	 * SRAM region may be configured only for pCPUs that user VM runs on.
+	 */
+	if (disable_tcc_strict_affinity_check() < 0)
 		return -1;
 
 	if (vssram_init_buffers() < 0) {
