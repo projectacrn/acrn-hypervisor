@@ -38,8 +38,6 @@ static const struct hc_dispatch hc_dispatch_table[] = {
 		.handler = hcall_service_vm_offline_cpu},
 	[HC_IDX(HC_SET_CALLBACK_VECTOR)] = {
 		.handler = hcall_set_callback_vector},
-	[HC_IDX(HC_GET_PLATFORM_INFO)] = {
-		.handler = hcall_get_platform_info},
 	[HC_IDX(HC_CREATE_VM)] = {
 		.handler = hcall_create_vm},
 	[HC_IDX(HC_DESTROY_VM)] = {
@@ -183,7 +181,6 @@ struct acrn_vm *parse_target_vm(struct acrn_vm *service_vm, uint64_t hcall_id, u
 	case HC_GET_API_VERSION:
 	case HC_SERVICE_VM_OFFLINE_CPU:
 	case HC_SET_CALLBACK_VECTOR:
-	case HC_GET_PLATFORM_INFO:
 	case HC_SETUP_SBUF:
 	case HC_SETUP_HV_NPK_LOG:
 	case HC_PROFILING_OPS:
