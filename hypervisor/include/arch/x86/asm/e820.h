@@ -38,6 +38,7 @@ struct mem_range {
 void init_e820(void);
 
 uint64_t e820_alloc_memory(uint64_t size_arg, uint64_t max_addr);
+uint64_t get_e820_ram_size(void);
 /* get total number of the e820 entries */
 uint32_t get_e820_entries_count(void);
 
