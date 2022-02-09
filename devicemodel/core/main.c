@@ -68,6 +68,7 @@
 #include "log.h"
 #include "pci_util.h"
 #include "vssram.h"
+#include "cmd_monitor.h"
 
 #define	VM_MAXCPU		16	/* maximum virtual cpus */
 
@@ -102,6 +103,7 @@ static int guest_ncpus;
 static int virtio_msix = 1;
 static bool debugexit_enabled;
 static int pm_notify_channel;
+static bool cmd_monitor;
 
 static char *progname;
 static const int BSP;
@@ -165,6 +167,8 @@ usage(int code)
 		"       --debugexit: enable debug exit function\n"
 		"       --intr_monitor: enable interrupt storm monitor\n"
 		"            its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n"
+		"       --cmd_monitor: enable command monitor\n"
+		"            its params: unix domain socket path\n"
 		"       --virtio_poll: enable virtio poll mode with poll interval with ns\n"
 		"       --acpidev_pt: acpi device ID args: HID in ACPI Table\n"
 		"       --mmiodev_pt: MMIO resources args: physical MMIO regions\n"
@@ -486,6 +490,9 @@ vm_init_vdevs(struct vmctx *ctx)
 	if (ret < 0)
 		goto monitor_fail;
 
+	if ((cmd_monitor) && init_cmd_monitor(ctx) < 0)
+		goto monitor_fail;
+
 	ret = init_mmio_devs(ctx);
 	if (ret < 0)
 		goto mmio_dev_fail;
@@ -757,6 +764,7 @@ enum {
 	CMD_OPT_VMCFG,
 	CMD_OPT_DUMP,
 	CMD_OPT_INTR_MONITOR,
+	CMD_OPT_CMD_MONITOR,
 	CMD_OPT_ACPIDEV_PT,
 	CMD_OPT_MMIODEV_PT,
 	CMD_OPT_VTPM2,
@@ -796,6 +804,7 @@ static struct option long_options[] = {
 	{"virtio_poll",		required_argument,	0, CMD_OPT_VIRTIO_POLL_ENABLE},
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
+	{"cmd_monitor",		required_argument,	0, CMD_OPT_CMD_MONITOR},
 	{"acpidev_pt",		required_argument,	0, CMD_OPT_ACPIDEV_PT},
 	{"mmiodev_pt",		required_argument,	0, CMD_OPT_MMIODEV_PT},
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
@@ -958,6 +967,11 @@ main(int argc, char *argv[])
 		case CMD_OPT_INTR_MONITOR:
 			if (acrn_parse_intr_monitor(optarg) != 0)
 				errx(EX_USAGE, "invalid intr-monitor params %s", optarg);
+			break;
+		case CMD_OPT_CMD_MONITOR:
+			if (acrn_parse_cmd_monitor(optarg) != 0)
+				errx(EX_USAGE, "invalid command monitor params %s", optarg);
+			cmd_monitor = true;
 			break;
 		case CMD_OPT_LOGGER_SETTING:
 			if (init_logger_setting(optarg) != 0)
@@ -1135,6 +1149,8 @@ fail:
 	vm_pause(ctx);
 	vm_destroy(ctx);
 create_fail:
+	if (cmd_monitor)
+		deinit_cmd_monitor();
 	uninit_hugetlb();
 	deinit_loggers();
 	exit(ret);
