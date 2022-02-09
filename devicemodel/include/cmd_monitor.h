@@ -7,4 +7,5 @@
 
 int init_cmd_monitor(struct vmctx *ctx);
 void deinit_cmd_monitor(void);
+int acrn_parse_cmd_monitor(char *arg);
 #endif

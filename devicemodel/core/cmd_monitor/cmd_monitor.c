@@ -115,3 +115,15 @@ void deinit_cmd_monitor(void)
 		deinit_socket(sock_server);
 	}
 }
+int acrn_parse_cmd_monitor(char *arg)
+{
+	int err = -1;
+	size_t len = strnlen(arg, UNIX_SOCKET_PATH_MAX);
+
+	if (len < UNIX_SOCKET_PATH_MAX) {
+		strncpy(socket_path, arg, len + 1);
+		pr_notice("Command monitor: using soket path %s\n", socket_path);
+		err = 0;
+	}
+	return err;
+}
