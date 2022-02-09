@@ -243,7 +243,7 @@ def setup(app):
 html_show_sphinx = False
 
 # If true, links to the reST sources are added to the pages.
-html_show_sourcelink = False
+html_show_sourcelink = True
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page
 # bottom,
