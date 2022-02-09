@@ -61,6 +61,7 @@ Configuration Tutorials
    user-guides/kernel-parameters
    user-guides/acrn-dm-parameters
    misc/packaging/README
+   tutorials/tar_installation
 
 Advanced Features
 ********************
