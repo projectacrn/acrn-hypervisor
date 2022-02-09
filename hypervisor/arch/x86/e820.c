@@ -20,6 +20,7 @@
  */
 
 static uint32_t hv_e820_entries_nr;
+static uint64_t hv_e820_ram_size;
 /* Describe the memory layout the hypervisor uses */
 static struct e820_entry hv_e820[E820_MAX_ENTRIES];
 
@@ -158,7 +159,6 @@ static uint64_t e820_alloc_region(uint64_t addr, uint64_t size)
 static void init_e820_from_efi_mmap(void)
 {
 	uint32_t i, e820_idx = 0U;
-	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 	const struct efi_memory_desc *efi_mmap_entry = get_efi_mmap_entry();
 
 	for (i = 0U; i < get_efi_mmap_entries_count(); i++) {
@@ -169,13 +169,6 @@ static void init_e820_from_efi_mmap(void)
 
 		hv_e820[e820_idx].baseaddr = efi_mmap_entry[i].phys_addr;
 		hv_e820[e820_idx].length = efi_mmap_entry[i].num_pages * PAGE_SIZE;
-		if (hv_e820[e820_idx].baseaddr >= top_addr_space) {
-			hv_e820[e820_idx].length = 0UL;
-		} else {
-			if ((hv_e820[e820_idx].baseaddr + hv_e820[e820_idx].length) > top_addr_space) {
-				hv_e820[e820_idx].length = top_addr_space - hv_e820[e820_idx].baseaddr;
-			}
-		}
 
 		/* The EFI BOOT Service releated regions need to be set to reserved and avoid being touched by
 		 * hypervisor, because at least below software modules rely on them:
@@ -241,7 +234,6 @@ static void init_e820_from_efi_mmap(void)
 static void init_e820_from_mmap(struct acrn_boot_info *abi)
 {
 	uint32_t i;
-	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 
 	struct abi_mmap *mmap = abi->mmap_entry;
 
@@ -251,13 +243,6 @@ static void init_e820_from_mmap(struct acrn_boot_info *abi)
 		abi->mmap_entry, hv_e820_entries_nr);
 
 	for (i = 0U; i < hv_e820_entries_nr; i++) {
-		if (mmap[i].baseaddr >= top_addr_space) {
-			mmap[i].length = 0UL;
-		} else {
-			if ((mmap[i].baseaddr + mmap[i].length) > top_addr_space) {
-				mmap[i].length = top_addr_space - mmap[i].baseaddr;
-			}
-		}
 
 		hv_e820[i].baseaddr = mmap[i].baseaddr;
 		hv_e820[i].length = mmap[i].length;
@@ -266,6 +251,22 @@ static void init_e820_from_mmap(struct acrn_boot_info *abi)
 		dev_dbg(DBG_LEVEL_E820, "mmap hv_e820[%d]: type: 0x%x Base: 0x%016lx length: 0x%016lx", i,
 			mmap[i].type, mmap[i].baseaddr, mmap[i].length);
 	}
+}
+
+static void calculate_e820_ram_size(void)
+{
+        uint32_t i;
+
+        for(i = 0; i < hv_e820_entries_nr; i++){
+                dev_dbg(DBG_LEVEL_E820, "hv_e820[%d]:type: 0x%x Base: 0x%016lx length: 0x%016lx", i,
+                                hv_e820[i].type, hv_e820[i].baseaddr, hv_e820[i].length);
+
+                if (hv_e820[i].type == E820_TYPE_RAM) {
+                        hv_e820_ram_size += hv_e820[i].baseaddr + hv_e820[i].length;
+                }
+        }
+
+        dev_dbg(DBG_LEVEL_E820, "ram size: 0x%016lx ",hv_e820_ram_size);
 }
 
 static void alloc_mods_memory(void)
@@ -292,8 +293,14 @@ void init_e820(void)
 		init_e820_from_mmap(abi);
 	}
 
+	calculate_e820_ram_size();
 	/* reserve multiboot modules memory */
 	alloc_mods_memory();
+}
+
+uint64_t get_e820_ram_size(void)
+{
+        return hv_e820_ram_size;
 }
 
 uint32_t get_e820_entries_count(void)
