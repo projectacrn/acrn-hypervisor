@@ -454,13 +454,19 @@ static int vssram_ept_map_buffer(struct vmctx *ctx, struct vssram_buf *buf_desc)
 		.len = 0,
 		.attr = ACRN_MEM_ACCESS_RWX
 	};
-
+	int error;
 	memmap.vma_base = buf_desc->vma_base;
 	memmap.user_vm_pa = buf_desc->gpa_base;
 	memmap.len = buf_desc->size;
-	ioctl(ctx->fd, ACRN_IOCTL_UNSET_MEMSEG, &memmap);
-
-	return ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
+	error = ioctl(ctx->fd, ACRN_IOCTL_UNSET_MEMSEG, &memmap);
+	if (error) {
+		pr_err("ACRN_IOCTL_UNSET_MEMSEG ioctl() returned an error: %s\n", errormsg(errno));
+	}
+	error = ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
+	if (error) {
+		pr_err("ACRN_IOCTL_SET_MEMSEG ioctl() returned an error: %s\n", errormsg(errno));
+	}
+	return error;
 };
 
 static int init_guest_lapicid_tbl(uint64_t guest_pcpu_bitmask)
