@@ -1,0 +1,256 @@
+From 1c2065346d8e0ad16ae93f3ec7bbc2fc02e09f17 Mon Sep 17 00:00:00 2001
+From: Yifan Liu <yifan1.liu@intel.com>
+Date: Wed, 9 Feb 2022 05:34:04 +0000
+Subject: [PATCH] virt: acrn: Remove dependency of get platform info
+
+This patch removes dependency of hcall_get_platform_info in hvtrace and
+hvlog. It was replaced by use of total_cpus variable.
+
+Signed-off-by: Yifan Liu <yifan1.liu@intel.com>
+---
+ drivers/virt/acrn/hsm.c       | 56 +----------------------------------
+ drivers/virt/acrn/hvlog.c     |  7 +----
+ drivers/virt/acrn/hvtrace.c   |  7 +----
+ drivers/virt/acrn/hypercall.h | 12 --------
+ include/uapi/linux/acrn.h     | 44 ---------------------------
+ 5 files changed, 3 insertions(+), 123 deletions(-)
+
+diff --git a/drivers/virt/acrn/hsm.c b/drivers/virt/acrn/hsm.c
+index ff9047fefec8..5a28845f5343 100644
+--- a/drivers/virt/acrn/hsm.c
++++ b/drivers/virt/acrn/hsm.c
+@@ -108,7 +108,6 @@ static long acrn_dev_ioctl(struct file *filp, unsigned int cmd,
+ 			   unsigned long ioctl_param)
+ {
+ 	struct acrn_vm *vm = filp->private_data;
+-	struct acrn_platform_info *plat_info;
+ 	struct acrn_vm_creation *vm_param;
+ 	struct acrn_vcpu_regs *cpu_regs;
+ 	struct acrn_ioreq_notify notify;
+@@ -116,74 +115,21 @@ static long acrn_dev_ioctl(struct file *filp, unsigned int cmd,
+ 	struct acrn_ioeventfd ioeventfd;
+ 	struct acrn_vm_memmap memmap;
+ 	struct acrn_mmiodev *mmiodev;
+-	void __user *vm_configs_user;
+ 	struct acrn_msi_entry *msi;
+ 	struct acrn_pcidev *pcidev;
+ 	struct acrn_irqfd irqfd;
+-	void *vm_configs = NULL;
+-	size_t vm_configs_size;
+ 	struct acrn_vdev *vdev;
+ 	struct page *page;
+ 	u64 cstate_cmd;
+ 	int i, ret = 0;
+ 
+-	if ((vm->vmid == ACRN_INVALID_VMID) && (cmd != ACRN_IOCTL_CREATE_VM) &&
+-	    (cmd != ACRN_IOCTL_GET_PLATFORM_INFO)) {
++	if (vm->vmid == ACRN_INVALID_VMID && cmd != ACRN_IOCTL_CREATE_VM) {
+ 		dev_dbg(acrn_dev.this_device,
+ 			"ioctl 0x%x: Invalid VM state!\n", cmd);
+ 		return -EINVAL;
+ 	}
+ 
+ 	switch (cmd) {
+-	case ACRN_IOCTL_GET_PLATFORM_INFO:
+-		plat_info = memdup_user((void __user *)ioctl_param,
+-					sizeof(struct acrn_platform_info));
+-		if (IS_ERR(plat_info))
+-			return PTR_ERR(plat_info);
+-
+-		for (i = 0; i < ARRAY_SIZE(plat_info->sw.reserved); i++)
+-			if (plat_info->sw.reserved[i])
+-				return -EINVAL;
+-
+-		for (i = 0; i < ARRAY_SIZE(plat_info->hw.reserved); i++)
+-			if (plat_info->hw.reserved[i])
+-				return -EINVAL;
+-
+-		vm_configs_size = plat_info->sw.vm_config_size *
+-						plat_info->sw.max_vms;
+-		if (plat_info->sw.vm_configs_addr && vm_configs_size) {
+-			vm_configs_user = plat_info->sw.vm_configs_addr;
+-			vm_configs = kzalloc(vm_configs_size, GFP_KERNEL);
+-			if (IS_ERR(vm_configs)) {
+-				kfree(plat_info);
+-				return PTR_ERR(vm_configs);
+-			}
+-			plat_info->sw.vm_configs_addr =
+-					(void __user *)virt_to_phys(vm_configs);
+-		}
+-
+-		ret = hcall_get_platform_info(virt_to_phys(plat_info));
+-		if (ret < 0) {
+-			kfree(vm_configs);
+-			kfree(plat_info);
+-			dev_dbg(acrn_dev.this_device,
+-				"Failed to get info of VM %u!\n", vm->vmid);
+-			break;
+-		}
+-
+-		if (vm_configs) {
+-			if (copy_to_user(vm_configs_user, vm_configs,
+-					 vm_configs_size))
+-				ret = -EFAULT;
+-			plat_info->sw.vm_configs_addr = vm_configs_user;
+-		}
+-		if (!ret && copy_to_user((void __user *)ioctl_param, plat_info,
+-					 sizeof(*plat_info)))
+-			ret = -EFAULT;
+-
+-		kfree(vm_configs);
+-		kfree(plat_info);
+-		break;
+ 	case ACRN_IOCTL_CREATE_VM:
+ 		vm_param = memdup_user((void __user *)ioctl_param,
+ 				       sizeof(struct acrn_vm_creation));
+diff --git a/drivers/virt/acrn/hvlog.c b/drivers/virt/acrn/hvlog.c
+index cd0f361d86af..2bbdfe743f97 100644
+--- a/drivers/virt/acrn/hvlog.c
++++ b/drivers/virt/acrn/hvlog.c
+@@ -359,8 +359,6 @@ int acrn_hvlog_init(void)
+ 	int idx, ret = 0;
+ 	uint64_t cur_logbuf, last_logbuf;
+ 
+-	struct acrn_platform_info *plat_info;
+-
+ 	if (x86_hyper_type != X86_HYPER_ACRN) {
+ 		pr_err("acrn_trace: not support acrn hypervisor!\n");
+ 		return -EINVAL;
+@@ -377,10 +375,7 @@ int acrn_hvlog_init(void)
+ 		return 0;
+ 	}
+ 
+-	plat_info = kzalloc(sizeof(*plat_info), GFP_KERNEL);
+-	ret = hcall_get_platform_info(virt_to_phys(plat_info));
+-	if (!ret)
+-		pcpu_nr = plat_info->hw.cpu_num;
++	pcpu_nr = total_cpus;
+ 
+ 	foreach_hvlog_type(idx, SBUF_HVLOG_TYPES) {
+ 		acrn_hvlog_devs[idx] = kcalloc(pcpu_nr,
+diff --git a/drivers/virt/acrn/hvtrace.c b/drivers/virt/acrn/hvtrace.c
+index f5a81670ff89..e8ff13afb9aa 100644
+--- a/drivers/virt/acrn/hvtrace.c
++++ b/drivers/virt/acrn/hvtrace.c
+@@ -179,17 +179,13 @@ int acrn_trace_init(void)
+ 	int i, cpu;
+ 	shared_buf_t *sbuf;
+ 	struct miscdevice *miscdev;
+-	struct acrn_platform_info *plat_info;
+ 
+ 	if (x86_hyper_type != X86_HYPER_ACRN) {
+ 		pr_err("acrn_trace: not support acrn hypervisor!\n");
+ 		return -EINVAL;
+ 	}
+ 
+-	plat_info = kzalloc(sizeof(*plat_info), GFP_KERNEL);
+-	ret = hcall_get_platform_info(virt_to_phys(plat_info));
+-	if (!ret)
+-		pcpu_num = plat_info->hw.cpu_num;
++	pcpu_num = total_cpus;
+ 
+ 	acrn_trace_devs = kcalloc(pcpu_num, sizeof(struct acrn_trace),
+ 				GFP_KERNEL);
+@@ -236,7 +232,6 @@ int acrn_trace_init(void)
+ 	}
+ 
+ 	pr_info("Initialized acrn trace module with %u cpu\n", pcpu_num);
+-	kfree(plat_info);
+ 	return ret;
+ 
+ out_dereg:
+diff --git a/drivers/virt/acrn/hypercall.h b/drivers/virt/acrn/hypercall.h
+index e2c09452b815..d410cfa16d2e 100644
+--- a/drivers/virt/acrn/hypercall.h
++++ b/drivers/virt/acrn/hypercall.h
+@@ -15,7 +15,6 @@
+ 
+ #define HC_ID_GEN_BASE			0x0UL
+ #define HC_SOS_REMOVE_CPU		_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x01)
+-#define HC_GET_PLATFORM_INFO		_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x03)
+ 
+ #define HC_ID_VM_BASE			0x10UL
+ #define HC_CREATE_VM			_HC_ID(HC_ID, HC_ID_VM_BASE + 0x00)
+@@ -64,17 +63,6 @@ static inline long hcall_sos_remove_cpu(u64 cpu)
+ 	return acrn_hypercall1(HC_SOS_REMOVE_CPU, cpu);
+ }
+ 
+-/**
+- * hcall_get_platform_info() - Get platform information from the hypervisor
+- * @platform_info: Service VM GPA of the &struct acrn_platform_info
+- *
+- * Return: 0 on success, <0 on failure
+- */
+-static inline long hcall_get_platform_info(u64 platform_info)
+-{
+-	return acrn_hypercall1(HC_GET_PLATFORM_INFO, platform_info);
+-}
+-
+ /**
+  * hcall_create_vm() - Create a User VM
+  * @vminfo:	Service VM GPA of info of User VM creation
+diff --git a/include/uapi/linux/acrn.h b/include/uapi/linux/acrn.h
+index 9701c877a26b..a94a2fe112da 100644
+--- a/include/uapi/linux/acrn.h
++++ b/include/uapi/linux/acrn.h
+@@ -580,47 +580,6 @@ struct acrn_irqfd {
+ 	struct acrn_msi_entry	msi;
+ };
+ 
+-#define ACRN_PLATFORM_LAPIC_IDS_MAX	64
+-/**
+- * struct acrn_platform_info - Information of a platform from hypervisor
+- * @hw.cpu_num:			Physical CPU number of the platform
+- * @hw.version:			Version of this structure
+- * @hw.l2_cat_shift:		Order of the number of threads sharing L2 cache
+- * @hw.l3_cat_shift:		Order of the number of threads sharing L3 cache
+- * @hw.lapic_ids:		IDs of LAPICs of all threads
+- * @hw.reserved:		Reserved for alignment and should be 0
+- * @sw.max_vcpus_per_vm:	Maximum number of vCPU of a VM
+- * @sw.max_vms:			Maximum number of VM
+- * @sw.vm_config_size:		Size of configuration of a VM
+- * @sw.vm_configss_addr:	Memory address which user space provided to
+- *				store the VM configurations
+- * @sw.max_kata_containers:	Maximum number of VM for Kata containers
+- * @sw.reserved:		Reserved for alignment and should be 0
+- *
+- * If vm_configs_addr is provided, the driver uses a bounce buffer (kmalloced
+- * for continuous memory region) to fetch VM configurations data from the
+- * hypervisor.
+- */
+-struct acrn_platform_info {
+-	struct {
+-		__u16	cpu_num;
+-		__u16	version;
+-		__u32	l2_cat_shift;
+-		__u32	l3_cat_shift;
+-		__u8	lapic_ids[ACRN_PLATFORM_LAPIC_IDS_MAX];
+-		__u8	reserved[52];
+-	} hw;
+-
+-	struct {
+-		__u16	max_vcpus_per_vm;
+-		__u16	max_vms;
+-		__u32	vm_config_size;
+-		void	__user *vm_configs_addr;
+-		__u64	max_kata_containers;
+-		__u8	reserved[104];
+-	} sw;
+-};
+-
+ struct sbuf_setup_param {
+ 	__u32	pcpu_id;
+ 	__u32	sbuf_id;
+@@ -633,9 +592,6 @@ struct sbuf_setup_param {
+ /*
+  * Common IOCTL IDs definition for ACRN userspace
+  */
+-#define ACRN_IOCTL_GET_PLATFORM_INFO	\
+-	_IOR(ACRN_IOCTL_TYPE, 0x03, struct acrn_platform_info)
+-
+ #define ACRN_IOCTL_CREATE_VM		\
+ 	_IOWR(ACRN_IOCTL_TYPE, 0x10, struct acrn_vm_creation)
+ #define ACRN_IOCTL_DESTROY_VM		\
+-- 
+2.25.1
+
