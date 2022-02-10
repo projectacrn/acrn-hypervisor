@@ -414,6 +414,7 @@ static int mk_dir(const char *path)
 			} else
 				remove(acrnlog_file);
 		}
+		closedir(dir);
 	}
 
 	return 0;
