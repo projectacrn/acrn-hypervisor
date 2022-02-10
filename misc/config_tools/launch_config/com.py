@@ -582,6 +582,7 @@ def dm_arg_set(names, sel, virt_io, dm, sriov, vmid, config):
             print("   --rtvm \\", file=config)
 
         if dm['rtos_type'][vmid] == "Hard RT":
+            print("   --rtvm \\", file=config)
             print("   --lapic_pt \\", file=config)
 
     # windows
