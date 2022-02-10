@@ -96,6 +96,7 @@ static int probe_disk_log_file(void)
 			index = tmp;
 		}
 	}
+	closedir(dir);
 
 	snprintf(file_name, FILE_NAME_LENGTH - 1, LOG_NAME_FMT, LOG_PATH_NODE, vmname, index);
 	disk_fd = open(file_name, O_RDWR | O_CREAT | O_APPEND, 0644);
