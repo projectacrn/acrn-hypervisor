@@ -11,7 +11,7 @@ import subprocess # nosec
 import lxml.etree
 import argparse
 from importlib import import_module
-from cpuparser import parse_cpuid, get_online_cpu_ids
+from cpuparser import parse_cpuid, get_online_cpu_ids, get_offline_cpu_ids
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir))
@@ -48,12 +48,24 @@ def native_check():
         logging.warning(f"Board inspector is running inside a Virtual Machine (VM). Running ACRN inside a VM is only" \
         "supported under KVM/QEMU. Unexpected results may occur when deviating from that combination.")
 
+def bring_up_cores():
+    cpu_ids = get_offline_cpu_ids()
+    for id in cpu_ids:
+        try:
+            with open("/sys/devices/system/cpu/cpu{}/online".format(id), "w") as f:
+                f.write("1")
+        except :
+            logging.warning("Cannot bring up core with cpu id {}.".format(id))
+
 def main(board_name, board_xml, args):
     # Check that the dependencies are met
     check_deps()
 
     # Check if this is native os
     native_check()
+
+    # Bring up all cores
+    bring_up_cores()
 
     try:
         # First invoke the legacy board parser to create the board XML ...
