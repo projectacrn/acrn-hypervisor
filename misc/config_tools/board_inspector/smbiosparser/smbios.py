@@ -9,6 +9,7 @@ import sys
 import ctypes
 import struct
 import uuid
+import logging
 import inspectorlib.bitfields as bitfields
 import inspectorlib.unpack as unpack
 
@@ -48,7 +49,7 @@ class SMBIOS(unpack.Struct):
                         matrix[types_present[index]] = [self.structures[index]]
             return matrix[num]
         except:
-            print("Failure: Type {} - not found".format(num))
+            logging.debug("Failure: Type {} - not found".format(num))
 
 class Header_2_1(unpack.Struct):
     def __new__(cls, u):
@@ -171,7 +172,7 @@ class BIOSInformation(SmbiosBaseStructure):
                 self.add_field('ec_minor_release', u.unpack_one("B"))
         except:
             self.decode_failure = True
-            print("Error parsing BIOSInformation")
+            logging.debug("Error parsing BIOSInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -206,7 +207,7 @@ class SystemInformation(SmbiosBaseStructure):
                 self.add_field('family', u.unpack_one("B"), self.fmtstr)
         except:
             self.decode_failure = True
-            print("Error parsing SystemInformation")
+            logging.debug("Error parsing SystemInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -265,7 +266,7 @@ class BaseboardInformation(SmbiosBaseStructure):
                     self.add_field('contained_object_handles', tuple(u.unpack_one("<H") for i in range(self.handle_count)))
         except:
             self.decode_failure = True
-            print("Error parsing BaseboardInformation")
+            logging.debug("Error parsing BaseboardInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -349,7 +350,7 @@ class SystemEnclosure(SmbiosBaseStructure):
                 self.add_field('sku_number', u.unpack_one("B"), self.fmtstr)
         except:
             self.decode_failure = True
-            print("Error parsing SystemEnclosure")
+            logging.debug("Error parsing SystemEnclosure")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -470,7 +471,7 @@ class ProcessorInformation(SmbiosBaseStructure):
                 self.add_field('thread_count2', u.unpack_one("<H"))
         except:
             self.decode_failure = True
-            print("Error parsing Processor Information")
+            logging.debug("Error parsing Processor Information")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -517,7 +518,7 @@ class MemoryControllerInformation(SmbiosBaseStructure): #obsolete starting with 
             self.add_field('enabled_error_correcting_capabilities', u.unpack_one("B"))
         except:
             self.decode_failure = True
-            print("Error parsing MemoryControllerInformation")
+            logging.debug("Error parsing MemoryControllerInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -549,7 +550,7 @@ class MemoryModuleInformation(SmbiosBaseStructure): #obsolete starting with v2.1
             self.add_field('uncorrectable_errors_received', bool(bitfields.getbits(self.error_status, 0)), unpack.format_table("error_status[0]={}", _mem_connection))
         except:
             self.decode_failure = True
-            print("Error parsing MemoryModuleInformation")
+            logging.debug("Error parsing MemoryModuleInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -643,7 +644,7 @@ class CacheInformation(SmbiosBaseStructure):
 
         except:
             self.decode_failure = True
-            print("Error parsing CacheInformation")
+            logging.debug("Error parsing CacheInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -744,7 +745,7 @@ class PortConnectorInfo(SmbiosBaseStructure):
             self.add_field('port_type', u.unpack_one("B"), unpack.format_table("{}", port_types))
         except:
             self.decodeFailure = True
-            print("Error parsing PortConnectorInfo")
+            logging.debug("Error parsing PortConnectorInfo")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -856,7 +857,7 @@ class SystemSlots(SmbiosBaseStructure):
                 self.add_field('function_number', bitfields.getbits(self.device_function_number, 2, 0), "device_function_number[2:0]={}")
         except:
             self.decodeFailure = True
-            print("Error parsing SystemSlots")
+            logging.debug("Error parsing SystemSlots")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -886,7 +887,7 @@ class OnBoardDevicesInformation(SmbiosBaseStructure):
             self.add_field('description_string', u.unpack_one("B"), self.fmtstr)
         except:
             self.decodeFailure = True
-            print("Error parsing OnBoardDevicesInformation")
+            logging.debug("Error parsing OnBoardDevicesInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -901,7 +902,7 @@ class OEMStrings(SmbiosBaseStructure):
             self.add_field('count', u.unpack_one("B"))
         except:
             self.decodeFailure = True
-            print("Error parsing OEMStrings")
+            logging.debug("Error parsing OEMStrings")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -916,7 +917,7 @@ class SystemConfigOptions(SmbiosBaseStructure):
             self.add_field('count', u.unpack_one("B"))
         except:
             self.decodeFailure = True
-            print("Error parsing SystemConfigOptions")
+            logging.debug("Error parsing SystemConfigOptions")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -937,7 +938,7 @@ class BIOSLanguageInformation(SmbiosBaseStructure):
                 self.add_field('current_language', u.unpack_one('B'), self.fmtstr)
         except:
             self.decodeFailure = True
-            print("Error parsing BIOSLanguageInformation")
+            logging.debug("Error parsing BIOSLanguageInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -954,7 +955,7 @@ class GroupAssociations(SmbiosBaseStructure):
             self.add_field('item_handle', u.unpack_one('<H'))
         except:
             self.decodeFailure = True
-            print("Error parsing GroupAssociations")
+            logging.debug("Error parsing GroupAssociations")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -997,15 +998,15 @@ class SystemEventLog(SmbiosBaseStructure):
             if self.length > 0x16:
                 self.add_field('length_log_type_descriptor', u.unpack_one('B'))
             if self.length != (0x17 + (self.num_supported_log_type_descriptors * self.length_log_type_descriptor)):
-                print("Error: structure length ({}) != 0x17 + (num_supported_log_type_descriptors ({}) * length_log_type_descriptor({}))".format(self.length, self.num_supported_log_type_descriptors, self.length_log_type_descriptor))
-                print("structure length = {}".format(self.length))
-                print("num_supported_log_type_descriptors = {}".format(self.num_supported_log_type_descriptors))
-                print("length_log_type_descriptor = {}".format(self.length_log_type_descriptor))
+                logging.debug(f"Error: structure length ({self.length}) != 0x17 + (num_supported_log_type_descriptors ({self.num_supported_log_type_descriptors}) * length_log_type_descriptor({self.length_log_type_descriptor}))")
+                logging.debug("structure length = {}".format(self.length))
+                logging.debug("num_supported_log_type_descriptors = {}".format(self.num_supported_log_type_descriptors))
+                logging.debug("length_log_type_descriptor = {}".format(self.length_log_type_descriptor))
                 self.decodeFailure = True
             self.add_field('descriptors', tuple(EventLogDescriptor.unpack(u) for i in range(self.num_supported_log_type_descriptors)), unpack.format_each("\n{!r}"))
         except:
             self.decodeFailure = True
-            print("Error parsing SystemEventLog")
+            logging.debug("Error parsing SystemEventLog")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1112,7 +1113,7 @@ class PhysicalMemoryArray(SmbiosBaseStructure):
                 self.add_field('extended_maximum_capacity', u.unpack_one('<Q'))
         except:
             self.decodeFailure = True
-            print("Error parsing PhysicalMemoryArray")
+            logging.debug("Error parsing PhysicalMemoryArray")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1217,7 +1218,7 @@ class MemoryDevice(SmbiosBaseStructure):
                 self.add_field('configured_voltage', u.unpack_one("<H"))
         except:
             self.decodeFailure = True
-            print("Error parsing MemoryDevice")
+            logging.debug("Error parsing MemoryDevice")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1274,7 +1275,7 @@ class MemoryErrorInfo32Bit(SmbiosBaseStructure):
                 self.add_field('error_resolution', u.unpack_one("<I"))
         except:
             self.decodeFailure = True
-            print("Error parsing MemoryErrorInfo32Bit")
+            logging.debug("Error parsing MemoryErrorInfo32Bit")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1306,7 +1307,7 @@ class MemoryArrayMappedAddress(SmbiosBaseStructure):
 
         except:
             self.decodeFailure = True
-            print("Error parsing MemoryArrayMappedAddress")
+            logging.debug("Error parsing MemoryArrayMappedAddress")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1343,7 +1344,7 @@ class MemoryDeviceMappedAddress(SmbiosBaseStructure):
                     u.skip(16)
         except:
             self.decodeFailure = True
-            print("Error parsing MemoryDeviceMappedAddress")
+            logging.debug("Error parsing MemoryDeviceMappedAddress")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1387,7 +1388,7 @@ class BuiltInPointingDevice(SmbiosBaseStructure):
                 self.add_field('num_buttons', u.unpack_one("B"))
         except:
             self.decodeFailure = True
-            print("Error parsing BuiltInPointingDevice")
+            logging.debug("Error parsing BuiltInPointingDevice")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1453,7 +1454,7 @@ class PortableBattery(SmbiosBaseStructure):
                 self.add_field('oem_specific', u.unpack_one("<I"))
         except:
             self.decodeFailure = True
-            print("Error parsing PortableBattery")
+            logging.debug("Error parsing PortableBattery")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1487,7 +1488,7 @@ class SystemReset(SmbiosBaseStructure):
                 self.add_field('timeout', u.unpack_one("<H"))
         except:
             self.decodeFailure = True
-            print("Error parsing SystemReset")
+            logging.debug("Error parsing SystemReset")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1513,7 +1514,7 @@ class HardwareSecurity(SmbiosBaseStructure):
                 self.add_field('front_panel_reset_status', bitfields.getbits(self.hardware_security_settings, 1, 0), unpack.format_table("hardware_security_settings[1:0]={}", _status))
         except:
             self.decodeFailure = True
-            print("Error parsing HardwareSecurity")
+            logging.debug("Error parsing HardwareSecurity")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1533,7 +1534,7 @@ class SystemPowerControls(SmbiosBaseStructure):
                 self.add_field('next_scheduled_poweron_second', u.unpack_one("B"))
         except:
             self.decodeFailure = True
-            print("Error parsing SystemPowerControls")
+            logging.debug("Error parsing SystemPowerControls")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1588,7 +1589,7 @@ class VoltageProbe(SmbiosBaseStructure):
                 self.add_field('nominal_value', u.unpack_one("<H"))
         except:
             self.decodeFailure = True
-            print("Error parsing VoltageProbe")
+            logging.debug("Error parsing VoltageProbe")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1637,7 +1638,7 @@ class CoolingDevice(SmbiosBaseStructure):
                self.add_field('description', u.unpack_one("B"), self.fmtstr)
         except:
             self.decodeFailure = True
-            print("Error parsing CoolingDevice")
+            logging.debug("Error parsing CoolingDevice")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1696,7 +1697,7 @@ class TemperatureProbe(SmbiosBaseStructure):
                 self.add_field('nominal_value', u.unpack_one("<H"))
         except:
             self.decodeFailure = True
-            print("Error parsing TemperatureProbe")
+            logging.debug("Error parsing TemperatureProbe")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1755,7 +1756,7 @@ class ElectricalCurrentProbe(SmbiosBaseStructure):
                 self.add_field('nominal_value', u.unpack_one("<H"))
         except:
             self.decodeFailure = True
-            print("Error parsing ElectricalCurrentProbe")
+            logging.debug("Error parsing ElectricalCurrentProbe")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1775,7 +1776,7 @@ class OutOfBandRemoteAccess(SmbiosBaseStructure):
                 self.add_field('inbound_connection_enabled', bool(bitfields.getbits(self.connections, 0)), "connections[0]={}")
         except:
             self.decodeFailure = True
-            print("Error parsing OutOfBandRemoteAccess")
+            logging.debug("Error parsing OutOfBandRemoteAccess")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1809,7 +1810,7 @@ class SystemBootInformation(SmbiosBaseStructure):
                 self.add_field('boot_status', u.unpack_one("B"), unpack.format_table("{}", _boot_status))
         except:
             self.decodeFailure = True
-            print("Error parsing SystemBootInformation")
+            logging.debug("Error parsing SystemBootInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1866,7 +1867,7 @@ class MemoryErrorInfo64Bit(SmbiosBaseStructure):
                 self.add_field('error_resolution', u.unpack_one("<Q"))
         except:
             self.decodeFailure = True
-            print("Error parsing MemoryErrorInfo64Bit")
+            logging.debug("Error parsing MemoryErrorInfo64Bit")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1910,7 +1911,7 @@ class ManagementDevice(SmbiosBaseStructure):
                  self.add_field('address_type', u.unpack_one("B"), unpack.format_table("{}", _address_type))
         except:
             self.decodeFailure = True
-            print("Error parsing ManagementDevice")
+            logging.debug("Error parsing ManagementDevice")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1932,7 +1933,7 @@ class ManagementDeviceComponent(SmbiosBaseStructure):
                 self.add_field('threshold_handle', u.unpack_one("<H"))
         except:
             self.decodeFailure = True
-            print("Error parsing ManagementDeviceComponent")
+            logging.debug("Error parsing ManagementDeviceComponent")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1958,7 +1959,7 @@ class ManagementDeviceThresholdData(SmbiosBaseStructure):
                 self.add_field('upper_threshold_nonrecoverable', u.unpack_one("<H"))
         except:
             self.decodeFailure = True
-            print("Error parsing ManagementDeviceThresholdData")
+            logging.debug("Error parsing ManagementDeviceThresholdData")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -1988,7 +1989,7 @@ class MemoryChannel(SmbiosBaseStructure):
                 self.add_field('memory_device_handle', u.unpack_one("<H"))
         except:
             self.decodeFailure = True
-            print("Error parsing MemoryChannel")
+            logging.debug("Error parsing MemoryChannel")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -2039,7 +2040,7 @@ class IPMIDeviceInformation(SmbiosBaseStructure):
             self.add_field('interrupt_number', u.unpack_one("B"))
         except:
             self.decodeFailure = True
-            print("Error parsing IPMIDeviceInformation")
+            logging.debug("Error parsing IPMIDeviceInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -2112,7 +2113,7 @@ class SystemPowerSupply(SmbiosBaseStructure):
                 self.add_field('input_current_probe_handle', u.unpack_one("<H"))
         except:
             self.decodeFailure = True
-            print("Error parsing SystemPowerSupply")
+            logging.debug("Error parsing SystemPowerSupply")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -2134,7 +2135,7 @@ class AdditionalInformation(SmbiosBaseStructure):
                 self.add_field('value', u.unpack_rest())
         except:
             self.decodeFailure = True
-            print("Error parsing AdditionalInformation")
+            logging.debug("Error parsing AdditionalInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -2176,7 +2177,7 @@ class OnboardDevicesExtendedInformation(SmbiosBaseStructure):
                 self.add_field('function_number', bitfields.getbits(self.device_type, 2, 0), "device_and_function_number[2:0]={}")
         except:
             self.decodeFailure = True
-            print("Error parsing OnboardDevicesExtendedInformation")
+            logging.debug("Error parsing OnboardDevicesExtendedInformation")
             import traceback
             traceback.print_exc()
         self.fini()
@@ -2206,7 +2207,7 @@ class ManagementControllerHostInterface(SmbiosBaseStructure):
                 self.add_field('mc_host_interface_data', u.unpack_rest(), self.fmtstr)
         except:
             self.decodeFailure = True
-            print("Error parsing ManagementControllerHostInterface")
+            logging.debug("Error parsing ManagementControllerHostInterface")
             import traceback
             traceback.print_exc()
         self.fini()

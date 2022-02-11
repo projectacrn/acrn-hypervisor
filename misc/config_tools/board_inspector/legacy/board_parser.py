@@ -14,6 +14,7 @@ import acpi
 import clos
 import misc
 import parser_lib
+import logging
 
 OUTPUT = "./out/"
 PY_CACHE = "__pycache__"
@@ -23,7 +24,7 @@ CPU_VENDOR = "GenuineIntel"
 def check_permission():
     """Check if it is root permission"""
     if os.getuid():
-        parser_lib.print_red("You need run this tool with root privileges (sudo)!")
+        logging.critical("Run this tool with root privileges (sudo).")
         sys.exit(1)
 
 def vendor_check():
@@ -59,18 +60,19 @@ def check_env():
                             stderr=subprocess.PIPE, close_fds=True)
         err_msg = res.stderr.readline().decode('ascii')
         if err_msg:
-            parser_lib.print_red("{}".format(err_msg), err=True)
+            logging.critical("{}".format(err_msg))
             exit(-1)
     msr_info = check_msr_files(cpu_dirs)
     if msr_info:
         for cpu_num in msr_info:
-            parser_lib.print_red("Missing CPU msr file in the {}/{}/".format(cpu_dirs, cpu_num), err=True)
-        parser_lib.print_red("Missing CPU msr file, please check the value of CONFIG_X86_MSR in the kernel config.", err=True)
+            logging.critical("Missing CPU MSR file at {}/{}/msr".format(cpu_dirs, cpu_num))
+        logging.critical("Missing CPU MSR file /dev/cpu/#/msr. Check the value of CONFIG_X86_MSR in the kernel config." \
+        "  Set it to 'Y' and rebuild the OS. Then rerun the Board Inspector.")
         exit(-1)
 
     # check cpu vendor id
     if not vendor_check():
-        parser_lib.print_red("Please run this tools on {}!".format(CPU_VENDOR))
+        logging.critical(f"Unsupported processor {CPU_VENDOR} found.  ACRN requires using a {CPU_VENDOR} processor.")
         sys.exit(1)
 
     if os.path.exists(OUTPUT):

@@ -107,7 +107,7 @@ def parse_device(bus_node, device_path):
         base = bar.base
         if os.path.exists(resource_path):
             if bar.base == 0:
-                logging.warning(f"PCI {device_name}: BAR {idx} exists but is programmed with all 0. This device cannot be passed through to any VM.")
+                logging.debug(f"PCI {device_name}: BAR {idx} exists but is programmed with all 0. This device cannot be passed through to any VM.")
             else:
                 resource_node = get_node(device_node, f"./resource[@type = '{resource_type}' and @min = '{hex(base)}']")
                 if resource_node is None:
@@ -121,7 +121,7 @@ def parse_device(bus_node, device_path):
                     resource_node.set("width", "64")
                     resource_node.set("prefetchable", str(bar.prefetchable))
         elif bar.base != 0:
-            logging.warning(f"PCI {device_name}: Cannot detect the size of BAR {idx}")
+            logging.debug(f"PCI {device_name}: Cannot detect the size of BAR {idx}")
         if isinstance(bar, MemoryBar64):
             idx += 2
         else:

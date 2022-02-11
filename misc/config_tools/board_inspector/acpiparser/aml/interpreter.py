@@ -302,7 +302,7 @@ class ConcreteInterpreter(Interpreter):
         return Device(sym)
 
     def DefExternal(self, tree):
-        logging.info(f"The loaded tables do not have a definition of {tree.children[0].value}")
+        logging.debug(f"The loaded tables do not have a definition of {tree.children[0].value}")
         return None
 
     def DefField(self, tree):
@@ -502,7 +502,7 @@ class ConcreteInterpreter(Interpreter):
         if isinstance(ref, ObjectReference):
             return ref.get()
         else:
-            logging.warn(f"Attempt to dereference an object of type {ref.__class__.__name__}")
+            logging.debug(f"Attempt to dereference an object of type {ref.__class__.__name__}")
             return ref
 
     def DefDivide(self, tree):

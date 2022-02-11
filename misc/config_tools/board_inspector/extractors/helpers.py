@@ -15,5 +15,8 @@ def add_child(element, tag, text=None, **kwargs):
 
 def get_node(etree, xpath):
     result = etree.xpath(xpath)
-    assert len(result) <= 1, "Internal error: cannot get texts from multiple nodes at a time"
+    assert len(result) <= 1, \
+        "Internal error: cannot get texts from multiple nodes at a time.  " \
+        "Rerun the Board Inspector with `--loglevel debug`.  If this issue persists, " \
+        "log a new issue at https://github.com/projectacrn/acrn-hypervisor/issues and attach the full logs."
     return result[0] if len(result) == 1 else None

@@ -28,14 +28,10 @@ class Factory:
         self.label = "unknown"
 
     def mark_begin(self):
-        if hasattr(self, "seq") and len(self.seq) > 1:
-            logging.debug(f"%s-> {self.label}" % ("  " * self.level))
         self.level += 1
 
     def mark_end(self):
         self.level -= 1
-        if hasattr(self, "seq") and len(self.seq) > 1:
-            logging.debug(f"%s<- {self.label}" % ("  " * self.level))
 
     def match(self, context, stream, tree):
         raise NotImplementedError
@@ -431,7 +427,7 @@ class DeferredExpansion(Transformer):
                 tree.factory = None
                 tree.complete_parsing()
             except (DecodeError, DeferLater, ScopeMismatch, UndefinedSymbol) as e:
-                logging.info(f"expansion of {tree.label} at {hex(tree.deferred_range[0])} failed due to: " + str(e))
+                logging.debug(f"expansion of {tree.label} at {hex(tree.deferred_range[0])} failed due to: " + str(e))
 
             self.context.pop_scope()
 
