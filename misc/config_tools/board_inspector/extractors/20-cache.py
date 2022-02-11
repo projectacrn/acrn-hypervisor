@@ -75,7 +75,7 @@ def extract_tcc_capabilities(caches_node):
                 if entry.type == acpiparser.rtct.ACPI_RTCT_V1_TYPE_SoftwareSRAM:
                     cache_node = get_node(caches_node, f"cache[@level='{entry.cache_level}' and processors/processor='{hex(entry.apic_id_tbl[0])}']")
                     if cache_node is None:
-                        logging.warning(f"Cannot find the level {entry.cache_level} cache of physical processor with apic ID {entry.apic_id_tbl[0]}")
+                        logging.debug(f"Cannot find the level {entry.cache_level} cache of physical processor with apic ID {entry.apic_id_tbl[0]}")
                         continue
                     cap = add_child(cache_node, "capability", None, id="Software SRAM")
                     add_child(cap, "start", "0x{:08x}".format(entry.base))
@@ -86,7 +86,7 @@ def extract_tcc_capabilities(caches_node):
                 if entry.type == acpiparser.rtct.ACPI_RTCT_V2_TYPE_SoftwareSRAM:
                     cache_node = get_node(caches_node, f"cache[@level='{entry.level}' and @id='{hex(entry.cache_id)}']")
                     if cache_node is None:
-                        logging.warning(f"Cannot find the level {entry.level} cache with cache ID {entry.cache_id}")
+                        logging.debug(f"Cannot find the level {entry.level} cache with cache ID {entry.cache_id}")
                         continue
                     cap = add_child(cache_node, "capability", None, id="Software SRAM")
                     add_child(cap, "start", "0x{:08x}".format(entry.base))

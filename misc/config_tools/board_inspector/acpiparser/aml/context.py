@@ -253,7 +253,7 @@ class Context:
                 elif new_tree.label == "DefExternal":
                     pass
                 else:
-                    logging.warning(f"{symbol.name} is redefined as {new_tree.label} (previously was {old_tree.label})")
+                    logging.debug(f"{symbol.name} is redefined as {new_tree.label} (previously was {old_tree.label})")
                     self.__register_symbol(symbol)
         else:
             self.__register_symbol(symbol)

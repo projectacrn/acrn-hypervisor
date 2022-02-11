@@ -203,7 +203,9 @@ class msrfield(property):
                     field = "[{0}]".format(msb)
                 else:
                     field = "[{0}:{1}]".format(msb, lsb)
-                raise OverflowError("Value {value:#x} too big for MSR {self.addr:#x} field {field}".format(**locals()))
+                raise OverflowError("Internal error: Value {value:#x} too big for MSR {self.addr:#x} field {field}.  " \
+                "Rerun the Board Inspector with `--loglevel debug`.  If this issue persists," \
+                "log a new issue at https://github.com/projectacrn/acrn-hypervisor/issues and attach the full logs.".format(**locals()))
             self.value = (self.value & ~field_mask) | (value << lsb)
 
         super(msrfield, self).__init__(getter, setter, doc=doc)

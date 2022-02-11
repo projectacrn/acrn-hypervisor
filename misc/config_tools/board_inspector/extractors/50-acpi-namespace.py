@@ -130,8 +130,8 @@ def parse_tpm(elem):
             add_child(log_area, "log_area_minimum_length", hex(tpm2.log_area_minimum_length))
             add_child(log_area, "log_area_start_address", hex(tpm2.log_area_start_address))
     except Exception as e:
-        logging.info(f"Parse ACPI TPM2 failed: {str(e)}")
-        logging.info(f"Will not extract information from ACPI TPM2")
+        logging.debug(f"Parse ACPI TPM2 failed: {str(e)}")
+        logging.debug(f"Will not extract information from ACPI TPM2")
         return
 
 resource_parsers = {
@@ -338,7 +338,7 @@ def add_object_to_device(interpreter, device_path, obj_name, result):
             evaluated = (result != None)
             need_global = ("global" in deps.all.keys())
             formatter = lambda x: '+' if x else '-'
-            logging.info(f"{device_path}.{obj_name}: Evaluated{formatter(evaluated)} Copy{formatter(copy_object)} NeedGlobal{formatter(need_global)}")
+            logging.debug(f"{device_path}.{obj_name}: Evaluated{formatter(evaluated)} Copy{formatter(copy_object)} NeedGlobal{formatter(need_global)}")
             if result == None or copy_object:
                 if need_global:
                     global_objs = ', '.join(map(lambda x: x.name, deps.all["global"]))
@@ -402,7 +402,7 @@ def add_object_to_device(interpreter, device_path, obj_name, result):
                     except:
                         pass
     except NotImplementedError as e:
-        logging.info(f"{device_path}.{obj_name}: will not be added to vACPI, reason: {str(e)}")
+        logging.debug(f"{device_path}.{obj_name}: will not be added to vACPI, reason: {str(e)}")
 
 def fetch_device_info(devices_node, interpreter, namepath, args):
     logging.info(f"Fetch information about device object {namepath}")
@@ -493,7 +493,7 @@ def fetch_device_info(devices_node, interpreter, namepath, args):
             if isinstance(adr, int):
                 adr = hex(adr)
             if len(element.xpath(f"../*[@address='{adr}']")) > 0:
-                logging.info(f"{namepath} has siblings with duplicated address {adr}.")
+                logging.debug(f"{namepath} has siblings with duplicated address {adr}.")
             else:
                 element.set("address", hex(adr) if isinstance(adr, int) else adr)
             add_object_to_device(interpreter, namepath, "_ADR", result)
@@ -544,7 +544,7 @@ def fetch_device_info(devices_node, interpreter, namepath, args):
                 elif isinstance(mapping.source, context.DeviceDecl):
                     prt_info[mapping.address][mapping.pin] = (mapping.source.name, mapping.source_index)
                 else:
-                    logging.warning(f"The _PRT of {namepath} has a mapping with invalid source {mapping.source}")
+                    logging.debug(f"The _PRT of {namepath} has a mapping with invalid source {mapping.source}")
 
             pin_routing_element = add_child(element, "interrupt_pin_routing")
             for address, pins in prt_info.items():
@@ -570,8 +570,8 @@ def extract(args, board_etree):
     try:
         namespace = parse_dsdt()
     except Exception as e:
-        logging.warning(f"Parse ACPI DSDT/SSDT failed: {str(e)}")
-        logging.warning(f"Will not extract information from ACPI DSDT/SSDT")
+        logging.debug(f"Parse ACPI DSDT/SSDT failed: {str(e)}")
+        logging.debug(f"Will not extract information from ACPI DSDT/SSDT")
         return
 
     interpreter = ConcreteInterpreter(namespace)
@@ -587,7 +587,7 @@ def extract(args, board_etree):
         try:
             fetch_device_info(devices_node, interpreter, device.name, args)
         except Exception as e:
-            logging.info(f"Fetch information about device object {device.name} failed: {str(e)}")
+            logging.debug(f"Fetch information about device object {device.name} failed: {str(e)}")
 
     visitor = GenerateBinaryVisitor()
     for dev, objs in device_objects.items():

@@ -20,6 +20,7 @@ def check_deps():
     # Check that the required tools are installed on the system
     BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode', 'blkid', 'stty']
     cpuid_min_ver = 20170122
+    had_error = False
     for execute in BIN_LIST:
         res = subprocess.Popen("which {}".format(execute),
                                shell=True, stdout=subprocess.PIPE,
@@ -27,8 +28,8 @@ def check_deps():
 
         line = res.stdout.readline().decode('ascii')
         if not line:
-            logging.warning("'{}' cannot be found, please install it!".format(execute))
-            sys.exit(1)
+            logging.critical("'{}' cannot be found. Please install it and run the Board Inspector again.".format(execute))
+            had_error = True
 
         if execute == 'cpuid':
             res = subprocess.Popen("cpuid -v",
@@ -37,16 +38,20 @@ def check_deps():
             line = res.stdout.readline().decode('ascii')
             version = line.split()[2]
             if int(version) < cpuid_min_ver:
-                logging.warning("This tool requires CPUID version >= {}".format(cpuid_min_ver))
-                sys.exit(1)
+                logging.critical("This tool requires CPUID version >= {}.  Try updating and upgrading the OS" \
+                "on this system and reruning the Board Inspector.  If that fails, install a newer CPUID tool" \
+                "from https://github.com/tycho/cpuid.".format(cpuid_min_ver))
+                had_error = True
+    if had_error:
+        sys.exit(1)
 
 def native_check():
     cpu_ids = get_online_cpu_ids()
     cpu_id = cpu_ids.pop(0)
     leaf_1 = parse_cpuid(1, 0, cpu_id)
     if leaf_1.hypervisor != 0:
-        logging.warning(f"Board inspector is running inside a Virtual Machine (VM). Running ACRN inside a VM is only" \
-        "supported under KVM/QEMU. Unexpected results may occur when deviating from that combination.")
+        logging.error("Board inspector is running inside an unsupported Virtual Machine (VM). " \
+        "Only KVM or QEMU is supported. Unexpected results may occur.")
 
 def main(board_name, board_xml, args):
     # Check that the dependencies are met
@@ -88,10 +93,11 @@ def main(board_name, board_xml, args):
 
         # Finally overwrite the output with the updated XML
         board_etree.write(board_xml, pretty_print=True)
-        print("{} saved successfully!".format(board_xml))
+        print("SUCCESS: Board configuration file {} generated successfully and saved to {}" \
+              .format(board_xml, os.path.dirname(os.path.abspath(board_xml))))
 
     except subprocess.CalledProcessError as e:
-        print(e)
+        logging.critical(e)
         sys.exit(1)
 
 if __name__ == "__main__":

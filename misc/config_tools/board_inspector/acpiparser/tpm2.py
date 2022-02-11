@@ -19,8 +19,8 @@ def tpm2_optional_data(data_len):
         has_log_area = True
     else:
         start_method_data_len = 12
-        logging.warning(f"TPM2 data length: {data_len + 52} is greater than 64 bytes but less than 76 bytes.")
-        logging.warning(f"The TPM2 data is still processed but the 65 to {data_len + 52} bytes are discard.")
+        logging.debug(f"TPM2 data length: {data_len + 52} is greater than 64 bytes but less than 76 bytes.")
+        logging.debug(f"The TPM2 data is still processed but the 65 to {data_len + 52} bytes are discard.")
     return start_method_data_len, has_log_area
 
 def tpm2_factory(start_method_data_len, has_log_area):

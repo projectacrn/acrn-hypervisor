@@ -4,6 +4,7 @@
 #
 
 import parser_lib
+import logging
 
 RDT_TYPE = {
         "L2":4,
@@ -64,7 +65,7 @@ def get_clos_info():
     rdt_res = dump_cpuid_reg(cmd, "ebx")
 
     if len(rdt_res) == 0:
-        parser_lib.print_yel("Resource Allocation is not supported!")
+        logging.debug("Resource Allocation is not supported!")
     else:
         for i in range(len(rdt_res)):
             if rdt_res[i] == "L2":

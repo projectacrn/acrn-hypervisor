@@ -10,7 +10,7 @@ import shutil
 from collections import defaultdict
 import dmar
 import parser_lib
-
+import logging
 
 SYS_PATH = ['/proc/cpuinfo', '/sys/firmware/acpi/tables/', '/sys/devices/system/cpu/']
 
@@ -438,17 +438,22 @@ def store_cx_data(sysnode1, sysnode2, config):
             idle_driver = acpi_idle.read(32)
 
             if idle_driver.find("acpi_idle") == -1:
-                parser_lib.print_yel("The Cx data for ACRN relies on " +\
-                     "acpi_idle driver but it is not found, ", warn=True, end=False)
+                logging.info("Failed to collect processor power states because the current CPU idle driver " \
+                "does not expose C-state data. If you need ACPI C-states in post-launched VMs, append 'idle=nomwait' " \
+                "to the kernel command line in GRUB config file.")
                 if idle_driver.find("intel_idle") == 0:
-                    print("please add idle=nomwait in kernel " +\
-                        "cmdline to fall back to acpi_idle driver")
+                    logging.info("Failed to collect processor power states because the current CPU idle driver " \
+                    "does not expose C-state data. If you need ACPI C-states in post-launched VMs, append 'idle=nomwait' " \
+                    "to the kernel command line in GRUB config file.")
                 else:
-                    parser_lib.print_yel("please make sure ACPI Cstate is enabled in BIOS.", warn=True)
+                    logging.info("Failed to collect processor power states because the platform does not provide " \
+                    "C-state data. If you need ACPI C-states in post-launched VMs, enable C-state support in BIOS.")
                 print("\t/* Cx data is not available */", file=config)
                 return
     except IOError:
-        parser_lib.print_yel("No idle driver found.", warn=True)
+        logging.info("Failed to collect processor power states because CPU idle PM support is disabled " \
+        "in the current kernel. If you need ACPI C-states in post-launched VMs, rebuild the current kernel " \
+        "with CONFIG_CPU_IDLE set to 'y' or 'm'.")
         print("\t/* Cx data is not available */", file=config)
         return
 
@@ -512,17 +517,15 @@ def store_px_data(sysnode, config):
         with open(sysnode+'cpu0/cpufreq/scaling_driver', 'r') as f_node:
             freq_driver = f_node.read()
             if freq_driver.find("acpi-cpufreq") == -1:
-                parser_lib.print_yel("The Px data for ACRN relies on " +\
-                     "acpi-cpufreq driver but it is not found, ", warn=True, end=False)
+                logging.info("The Px data for ACRN relies on acpi-cpufreq driver but it is not found, ")
                 if freq_driver.find("intel_pstate") == 0:
-                    print("please add intel_pstate=disable in kernel " +\
-                        "cmdline to fall back to acpi-cpufreq driver")
+                    logging.info("please add intel_pstate=disable in kernel cmdline to fall back to acpi-cpufreq driver")
                 else:
-                    parser_lib.print_yel("please make sure ACPI Pstate is enabled in BIOS.", warn=True)
+                    logging.info("Enable ACPI Pstate in BIOS.")
                 print("\t/* Px data is not available */", file=config)
                 return
     except IOError:
-        parser_lib.print_yel("No scaling_driver found.", warn=True)
+        logging.info("No scaling_driver found.", warn=True)
         print("\t/* Px data is not available */", file=config)
         return
 
@@ -531,7 +534,7 @@ def store_px_data(sysnode, config):
             boost = f_node.read()
     except IOError:
         boost = 0
-        parser_lib.print_yel("CPU turbo is not enabled!")
+        logging.info("Enable CPU turbo in BIOS.")
 
     with open(sysnode + 'cpu0/cpufreq/scaling_available_frequencies', 'r') as f_node:
         freqs = f_node.read()
@@ -546,8 +549,8 @@ def store_px_data(sysnode, config):
             try:
                 subprocess.check_call('/usr/sbin/rdmsr 0x1ad', shell=True, stdout=subprocess.PIPE)
             except subprocess.CalledProcessError:
-                parser_lib.print_red("MSR 0x1ad not support in this platform!", err=True)
-                sys.exit(1)
+                logging.debug("MSR 0x1ad not support in this platform!")
+                return
 
             res = subprocess.Popen('/usr/sbin/rdmsr 0x1ad', shell=True,
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
@@ -583,8 +586,8 @@ def store_mmcfg_base_data(mmcfg_node, config):
         mmcfg_len_int = int.from_bytes(mmcfg_len_obj, 'little')
 
         if mmcfg_len_int > MCFG_ENTRY1_OFFSET:
-            parser_lib.print_red("Multiple PCI segment groups is not supported!", err=True)
-            sys.exit(1)
+            logging.debug("Multiple PCI segment groups is not supported!")
+            return
 
         mmcfg.seek(MCFG_ENTRY0_BASE_OFFSET, 0)
         mmcfg_base_addr_obj = mmcfg.read(DWORD_LEN)
@@ -658,7 +661,7 @@ def generate_info(board_file):
     out_dir = os.path.dirname(board_file)
     if os.path.isfile(SYS_PATH[1] + 'PTCT'):
         shutil.copy(SYS_PATH[1] + 'PTCT', out_dir if out_dir != "" else "./")
-        print("PTCT table has been saved to {} successfully!".format(os.path.join(out_dir, 'PTCT')))
+        logging.info("PTCT table has been saved to {} successfully!".format(os.path.join(out_dir, 'PTCT')))
     if os.path.isfile(SYS_PATH[1] + 'RTCT'):
         shutil.copy(SYS_PATH[1] + 'RTCT', out_dir if out_dir != "" else "./")
-        print("RTCT table has been saved to {} successfully!".format(os.path.join(out_dir, 'RTCT')))
+        logging.info("RTCT table has been saved to {} successfully!".format(os.path.join(out_dir, 'RTCT')))
