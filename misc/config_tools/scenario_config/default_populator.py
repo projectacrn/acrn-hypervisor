@@ -11,6 +11,7 @@ import argparse
 from scenario_transformer import ScenarioTransformer
 
 from pipeline import PipelineObject, PipelineStage, PipelineEngine
+from schema_slicer import SlicingSchemaByVMTypeStage
 
 class DefaultValuePopulator(ScenarioTransformer):
     def add_missing_nodes(self, xsd_element_node, xml_parent_node, new_node_index):
@@ -51,6 +52,7 @@ def main(args):
     pipeline.add_stages([
         LXMLLoadStage("schema"),
         XMLLoadStage("scenario"),
+        SlicingSchemaByVMTypeStage(),
         DefaultValuePopulatingStage(),
     ])
 

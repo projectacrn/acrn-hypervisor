@@ -20,6 +20,7 @@ except ImportError:
     sys.exit(0)
 
 from pipeline import PipelineObject, PipelineStage, PipelineEngine
+from schema_slicer import SlicingSchemaByVMTypeStage
 from default_populator import DefaultValuePopulatingStage
 
 def existing_file_type(parser):
@@ -174,6 +175,7 @@ def main(args):
     validator_construction_pipeline.add_stages([
         LXMLLoadStage("schema"),
         LXMLLoadStage("datachecks"),
+        SlicingSchemaByVMTypeStage(),
         ValidatorConstructionStage(),
     ])
 
