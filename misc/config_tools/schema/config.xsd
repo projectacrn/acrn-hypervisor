@@ -450,7 +450,7 @@ board by configuring the hypervisor image features and capabilities such as
 setting up the log and the serial port.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="vm" type="VMConfigType" maxOccurs="unbounded">
+    <xs:element name="vm" maxOccurs="unbounded">
       <xs:annotation>
         <xs:documentation>VM configuration includes **scenario-based** VM configuration
 information that is used to describe the characteristics and attributes for
@@ -458,6 +458,9 @@ all VMs in a user scenario. It also includes **launch script-based** VM
 configuration information, where parameters are passed to the device model
 to launch post-launched User VMs.</xs:documentation>
       </xs:annotation>
+      <xs:alternative test=".//load_order = 'PRE_LAUNCHED_VM'" type="VMConfigType" />
+      <xs:alternative test=".//load_order = 'SERVICE_VM'" type="VMConfigType" />
+      <xs:alternative test=".//load_order = 'POST_LAUNCHED_VM'" type="VMConfigType" />
     </xs:element>
   </xs:all>
   <xs:attribute name="board" type="xs:string" use="required" />

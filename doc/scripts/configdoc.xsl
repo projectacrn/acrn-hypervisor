@@ -39,7 +39,16 @@
     <xsl:param name="level"/>
     <xsl:param name="prefix"/>
 
-    <xsl:variable name="ty" select="@type"/>
+    <xsl:variable name="ty">
+      <xsl:choose>
+	<xsl:when test="@type">
+	  <xsl:value-of select="@type" />
+	</xsl:when>
+	<xsl:otherwise>
+	  <xsl:value-of select=".//xs:alternative[1]/@type" />
+	</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
 
     <!-- Only visit elements having complex types. Those having simple types are
          described as an option.. -->
