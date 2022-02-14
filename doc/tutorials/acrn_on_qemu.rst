@@ -16,7 +16,7 @@ This setup was tested with the following configuration:
 - QEMU emulator version: 4.2.1
 - Host OS: Ubuntu 20.04
 - Service VM/User VM OS: Ubuntu 20.04
-- Platforms tested: Kaby Lake, Skylake
+- Platforms tested: Kaby Lake, Skylake, Whiskey Lake, Tiger Lake
 
 Prerequisites
 *************
@@ -64,7 +64,7 @@ Prepare Service VM (L1 Guest)
       --os-variant ubuntu18.04 \
       --graphics none \
       --clock offset=utc,tsc_present=yes,kvmclock_present=no \
-      --qemu-commandline="-machine kernel-irqchip=split -cpu Denverton,+invtsc,+lm,+nx,+smep,+smap,+mtrr,+clflushopt,+vmx,+x2apic,+popcnt,-xsave,+sse,+rdrand,+vmx-apicv-xapic,+vmx-apicv-x2apic,+vmx-flexpriority,+tsc-deadline,+pdpe1gb -device intel-iommu,intremap=on,caching-mode=on,aw-bits=48" \
+      --qemu-commandline="-machine kernel-irqchip=split -cpu Denverton,+invtsc,+lm,+nx,+smep,+smap,+mtrr,+clflushopt,+vmx,+x2apic,+popcnt,-xsave,+sse,+rdrand,-vmx-apicv-vid,+vmx-apicv-xapic,+vmx-apicv-x2apic,+vmx-flexpriority,+tsc-deadline,+pdpe1gb -device intel-iommu,intremap=on,caching-mode=on,aw-bits=48" \
       --location 'http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/' \
       --extra-args "console=tty0 console=ttyS0,115200n8"
 
