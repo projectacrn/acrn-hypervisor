@@ -820,7 +820,6 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char nstr[80];
 	char tname[MAXCOMLEN + 1];
 	struct virtio_net *net;
-	char fname[IFNAMSIZ];
 	char *devopts = NULL;
 	char *name = NULL;
 	char *type = NULL;
@@ -911,23 +910,20 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	vtopts = tmp = strdup(opts);
-	if ((strstr(tmp, "tap") != NULL)
-			|| (strncmp(tmp, "vmnet",5) == 0)) {
+	if (strncmp(tmp, "tap", 3) == 0) {
 		type = strsep(&tmp, "=");
 		name = strsep(&tmp, ",");
 	}
 
-	if ((tmp != NULL) && (strncmp(tmp, "mac_seed",8) == 0)) {
+	if ((tmp != NULL) && (strncmp(tmp, "mac_seed", 8) == 0)) {
 		strsep(&tmp, "=");
 		mac_seed = tmp;
 	}
 
 	if ((type != NULL) && (name != NULL)) {
-		snprintf(fname, IFNAMSIZ, "%s_%s", type, name);
 
-		if ((strstr(type, "tap") != NULL) ||
-				(strncmp(type, "vmnet", 5) == 0)){
-			virtio_net_tap_setup(net, fname);
+		if (strcmp(type, "tap") == 0) {
+			virtio_net_tap_setup(net, name);
 		}
 	}
 
