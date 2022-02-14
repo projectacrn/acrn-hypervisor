@@ -89,29 +89,35 @@ def get_native_ttys():
             native_ttys[tty] = tmp_dic
     return native_ttys
 
-def get_shmem_regions(etree):
-    ivshmem_enabled = common.get_node("//IVSHMEM_ENABLED/text()", etree)
+def get_ivshmem_regions_by_tree(etree):
+    ivshmem_enabled = get_ivshmem_enabled_by_tree(etree)
     if ivshmem_enabled == 'n':
         return {}
 
-    # <IVSHMEM_REGION> format is shm_name, shm_size, VM IDs
-    # example: hv:/shm_region_0, 2, 0:2
     ivshmem_regions = etree.xpath("//IVSHMEM_REGION")
     shmem_regions = {}
     for idx in range(len(ivshmem_regions)):
-        shm_string = ivshmem_regions[idx].text
-        if shm_string is None:
+        shm_name = ivshmem_regions[idx].get('name')
+        if shm_name is None:
             continue
-        shm_string_list = shm_string.split(',')
-        shm_name = shm_string_list[0].strip()
-        shm_size = shm_string_list[1].strip()
-        vmid_list = [vm_id.strip() for vm_id in shm_string_list[2].split(':')]
-        for vm_id in vmid_list:
+        shm_size = common.get_node("./IVSHMEM_SIZE/text()", ivshmem_regions[idx])
+        shm_vm_list = ivshmem_regions[idx].xpath(".//IVSHMEM_VM")
+        for shm_vm in shm_vm_list:
+            vm_name = common.get_node("./VM_NAME/text()", shm_vm)
+            vm_id = common.get_node(f"//vm[name = '{vm_name}']/@id", etree)
+            vbdf =  common.get_node("./VBDF/text()", shm_vm)
             if vm_id not in shmem_regions:
                 shmem_regions[vm_id] = {}
-            shmem_regions[vm_id][shm_name] = {'id' : str(idx), 'size' : shm_size}
+            shmem_regions[vm_id][shm_name] = {'id' : str(idx), 'size' : shm_size, 'vbdf' : vbdf}
     return shmem_regions
 
+def get_ivshmem_enabled_by_tree(etree):
+    ivshmem_vms = etree.xpath("//IVSHMEM_VM")
+    shmem_enabled = 'n'
+    if len(ivshmem_vms) != 0:
+        shmem_enabled = 'y'
+    return shmem_enabled
+ 
 def is_pre_launched_vm(vm_type):
     if vm_type in PRE_LAUNCHED_VMS_TYPE:
         return True

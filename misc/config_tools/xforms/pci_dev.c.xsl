@@ -141,29 +141,28 @@
 
   <xsl:template name="ivshmem_shm_mem">
     <xsl:variable name="vm_id" select="@id" />
+    <xsl:variable name="vm_name" select="name" />
     <xsl:variable name="vm_type" select="vm_type" />
-    <xsl:for-each select="//hv/FEATURES/IVSHMEM/IVSHMEM_REGION/text()">
-      <xsl:if test="contains(substring-after(substring-after(current(), ','), ','), $vm_id)">
-        <xsl:variable name="dev_name" select="concat('IVSHMEM_', position() - 1)" />
-        <xsl:text>{</xsl:text>
-        <xsl:value-of select="$newline" />
-        <xsl:value-of select="acrn:initializer('emu_type', 'PCI_DEV_TYPE_HVEMUL', '')" />
-        <xsl:value-of select="acrn:initializer('vdev_ops', '&amp;vpci_ivshmem_ops', '')" />
-        <xsl:choose>
-          <xsl:when test="acrn:is-post-launched-vm($vm_type)">
-            <xsl:value-of select="acrn:initializer('vbdf.value', 'UNASSIGNED_VBDF', '')" />
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:value-of select="acrn:initializer('vbdf.bits', acrn:get-vbdf($vm_id, $dev_name), '')" />
-            <xsl:for-each select="//vm[@id = $vm_id]/device[@name = $dev_name]/bar">
-              <xsl:value-of select="acrn:initializer(concat('vbar_base[', @id,']'), concat(text(), 'UL'), '')" />
-            </xsl:for-each>
-          </xsl:otherwise>
-        </xsl:choose>
-        <xsl:value-of select="acrn:initializer('shm_region_name', concat('IVSHMEM_SHM_REGION_', position() - 1), '')" />
-        <xsl:text>},</xsl:text>
-        <xsl:value-of select="$newline" />
-      </xsl:if>
+    <xsl:for-each select="//hv//IVSHMEM/IVSHMEM_REGION/IVSHMEM_VMS/IVSHMEM_VM[VM_NAME = $vm_name]">
+      <xsl:text>{</xsl:text>
+      <xsl:value-of select="$newline" />
+      <xsl:value-of select="acrn:initializer('emu_type', 'PCI_DEV_TYPE_HVEMUL', '')" />
+      <xsl:value-of select="acrn:initializer('vdev_ops', '&amp;vpci_ivshmem_ops', '')" />
+      <xsl:choose>
+        <xsl:when test="acrn:is-post-launched-vm($vm_type)">
+          <xsl:value-of select="acrn:initializer('vbdf.value', 'UNASSIGNED_VBDF', '')" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:variable name="dev_name" select="concat('IVSHMEM_', acrn:shmem-index(../../@name))" />
+          <xsl:value-of select="acrn:initializer('vbdf.bits', acrn:get-vbdf($vm_id, $dev_name), '')" />
+          <xsl:for-each select="//vm[@id = $vm_id]/device[@name = $dev_name]/bar">
+            <xsl:value-of select="acrn:initializer(concat('vbar_base[', @id,']'), concat(text(), 'UL'), '')" />
+          </xsl:for-each>
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:value-of select="acrn:initializer('shm_region_name', concat('IVSHMEM_SHM_REGION_', acrn:shmem-index(../../@name)), '')" />
+      <xsl:text>},</xsl:text>
+      <xsl:value-of select="$newline" />
     </xsl:for-each>
   </xsl:template>
 

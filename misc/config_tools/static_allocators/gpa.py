@@ -126,7 +126,7 @@ def insert_legacy_vuart_to_dev_dict(vm_node, devdict_io_port):
         devdict_io_port[(f"{LEGACY_VUART}_{vuart_id}", "base")] = LEGACY_VUART_IO_PORT_SIZE
 
 def insert_ivsheme_to_dev_dict(scenario_etree, devdict_32bits, devdict_64bits, vm_id):
-    shmem_regions = lib.lib.get_shmem_regions(scenario_etree)
+    shmem_regions = lib.lib.get_ivshmem_regions_by_tree(scenario_etree)
     if vm_id not in shmem_regions:
         return
     shmems = shmem_regions.get(vm_id)
