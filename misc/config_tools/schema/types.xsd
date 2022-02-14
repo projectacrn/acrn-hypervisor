@@ -139,39 +139,83 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
   <xs:union memberTypes="None SerialConsoleType" />
 </xs:simpleType>
 
-<xs:simpleType name="IVSHMEMRegionType">
-  <xs:annotation>
-    <xs:documentation>Either empty or a string naming the shared region,
-its size, and the VM IDs that can access it, such as ``hv:/shm_region_0, 2, 0:2``.
-See :ref:`ivshmem-hv` for more information.</xs:documentation>
-  </xs:annotation>
+<xs:simpleType name="VMNameType">
   <xs:restriction base="xs:string">
-    <xs:pattern value="|((hv)|(dm)):/\w+,\s?\d+\s?,\s?\d\s?(:\s?\d\s?)+" />
+    <xs:pattern value="([a-zA-Z0-9_\-]){1,15}" />
+  </xs:restriction>     
+</xs:simpleType>
+
+<xs:simpleType name="VBDFType">
+  <xs:restriction base="xs:string">
+    <xs:pattern value="[0-9A-Fa-f]{1,2}:[0-1][0-9A-Fa-f].[0-7]" />
   </xs:restriction>
 </xs:simpleType>
 
+<xs:complexType name="IVSHMEMVM">
+  <xs:sequence>
+   <xs:element name="VM_NAME" type="VMNameType">
+     <xs:annotation>       
+       <xs:documentation>Name of the VM which use this IVSHMEM.</xs:documentation>
+     </xs:annotation>
+   </xs:element>
+   <xs:element name="VBDF" type = "VBDFType">
+     <xs:annotation>
+       <xs:documentation>Bus, Device and function of the virtual
+device in VM . Set in hex.</xs:documentation>
+     </xs:annotation>
+   </xs:element>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="IVSHMEMVMS">
+  <xs:sequence>
+   <xs:element name="IVSHMEM_VM" type="IVSHMEMVM" maxOccurs="unbounded">
+     <xs:annotation>
+       <xs:documentation>Set each VM which use this IVSHMEM.</xs:documentation>
+     </xs:annotation>
+   </xs:element>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:simpleType name="IVSHMEMSize">
+  <xs:restriction base="xs:integer">
+    <xs:enumeration value="2" />
+    <xs:enumeration value="4" />
+    <xs:enumeration value="8" />
+    <xs:enumeration value="16" />
+    <xs:enumeration value="32" />
+    <xs:enumeration value="64" />
+    <xs:enumeration value="128" />
+    <xs:enumeration value="256" />
+    <xs:enumeration value="512" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="IVSHMEMRegionType">
+  <xs:sequence>
+    <xs:element name="IVSHMEM_SIZE" type="IVSHMEMSize" default="2">
+      <xs:annotation>
+        <xs:documentation>Memory size of inter-VM shared memory (IVSHMEM)
+in megabytes. The value should be a power of 2
+and no more than 512.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="IVSHMEM_VMS" type="IVSHMEMVMS">
+      <xs:annotation>
+        <xs:documentation>Set all VMs which use this IVSHMEM.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+  </xs:sequence>
+  <xs:attribute name="name" type="xs:string" use="required"/>
+</xs:complexType>
+
 <xs:complexType name="IVSHMEMInfo">
   <xs:sequence>
-   <xs:element name="IVSHMEM_ENABLED" type="Boolean" default="n">
-     <xs:annotation>
-       <xs:documentation>Enable inter-VM shared memory (IVSHMEM)
-feature.</xs:documentation>
-     </xs:annotation>
-   </xs:element>
-   <xs:element name="IVSHMEM_REGION" type="IVSHMEMRegionType" maxOccurs="unbounded">
-     <xs:annotation>
-       <xs:documentation>A comma-separated list with the inter-VM shared memory region name,
-size, and VM IDs that may communicate using this shared region:
-
-* Prefix the region ``name`` with ``hv:/`` (for an hv-land solution).
-  (See :ref:`ivshmem-hld` for details.)
-* Specify the region ``size`` in MB.  Must be a power of 2, e.g., 2, 4,
-  8, 16, up to 512.
-* Specify all VM IDs that may use this shared memory area,
-  separated by a ``:``. For example, use ``0:2`` to share this area between
-  VMs 0 and 2, or ``0:1:2`` (to let VMs 0, 1, and 2 share this area).</xs:documentation>
-     </xs:annotation>
-   </xs:element>
+    <xs:element name="IVSHMEM_REGION" type="IVSHMEMRegionType" minOccurs="0" maxOccurs="unbounded">
+      <xs:annotation>
+        <xs:documentation>Set a inter-VM shared memory.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
   </xs:sequence>
 </xs:complexType>
 

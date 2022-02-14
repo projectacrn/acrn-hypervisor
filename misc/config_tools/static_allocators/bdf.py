@@ -38,14 +38,14 @@ def insert_vuart_to_dev_dict(scenario_etree, devdict, used):
         used.append(free_bdf)
 
 def insert_ivsheme_to_dev_dict(scenario_etree, devdict, vm_id, used):
-    shmem_regions = lib.lib.get_shmem_regions(scenario_etree)
+    shmem_regions = lib.lib.get_ivshmem_regions_by_tree(scenario_etree)
     if vm_id not in shmem_regions:
         return
     shmems = shmem_regions.get(vm_id)
     for shm in shmems.values():
-        free_bdf = find_unused_bdf(used)
-        devdict[f"{IVSHMEM}_{shm.get('id')}"] = free_bdf
-        used.append(free_bdf)
+        bdf = lib.lib.BusDevFunc.from_str(shm.get('vbdf'))
+        devdict[f"{IVSHMEM}_{shm.get('id')}"] = bdf
+        used.append(bdf)
 
 def insert_pt_devs_to_dev_dict(vm_node_etree, devdict, used):
     """

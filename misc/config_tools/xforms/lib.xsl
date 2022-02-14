@@ -304,17 +304,16 @@
   </func:function>
   <!-- End of C code templates-->
 
-  <!-- Scenario-specific functions-->
-  <func:function name="acrn:parse-shmem-size">
+  <func:function name="acrn:shmem-index">
     <xsl:param name="v" />
-    <xsl:if test="$v and $v != 'n' and $v != 'y'">
-      <func:result select="acrn:string-to-num(substring-before(substring-after($v, ','), ','), 10)" />
-    </xsl:if>
-  </func:function>
-
-  <func:function name="acrn:count-shmem-dev-num">
-    <xsl:param name="v" />
-    <func:result select="string-length($v) - string-length(translate($v, ':', ''))" />
+    <xsl:variable name="idx">
+      <xsl:for-each select="//hv//IVSHMEM/IVSHMEM_REGION">
+        <xsl:if test="@name = $v">
+          <xsl:value-of select="position() - 1" />
+        </xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    <func:result select="$idx" />
   </func:function>
 
   <func:function name="acrn:pci-dev-num">
@@ -323,8 +322,9 @@
       <xsl:variable name="vmtype" select="./vm_type" />
       <xsl:variable name="ivshmem">
         <xsl:choose>
-          <xsl:when test="../hv/FEATURES/IVSHMEM/IVSHMEM_ENABLED = 'y'">
-            <xsl:value-of select="count(../hv/FEATURES/IVSHMEM/IVSHMEM_REGION[contains(substring-after(substring-after(text(), ','), ','), $vmid)])" />
+          <xsl:when test="count(//hv//IVSHMEM/IVSHMEM_REGION) > 0">
+            <xsl:variable name="vm_name" select="./name" />
+            <xsl:value-of select="count(//hv//IVSHMEM/IVSHMEM_REGION/IVSHMEM_VMS/IVSHMEM_VM/VM_NAME[text() = $vm_name])" />
           </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="0" />

@@ -141,7 +141,7 @@
 
     <xsl:call-template name="boolean-by-key-value">
       <xsl:with-param name="key" select="'IVSHMEM_ENABLED'" />
-      <xsl:with-param name="value" select="IVSHMEM/IVSHMEM_ENABLED" />
+      <xsl:with-param name="value" select="count(//hv//IVSHMEM/IVSHMEM_REGION) > 0" />
     </xsl:call-template>
   </xsl:template>
 
