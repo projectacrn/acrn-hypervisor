@@ -23,9 +23,15 @@ Prerequisites
 
 1. Make sure the platform supports Intel VMX as well as VT-d
    technologies. On Ubuntu 20.04, this
-   can be checked by installing the ``cpu-checker`` tool. If the
-   output displays **KVM acceleration can be used**,
-   the platform supports it.
+   can be checked by installing the ``kvm-ok`` tool found in the ``cpu-checker`` package.
+
+
+   .. code-block:: bash
+
+      sudo apt install cpu-checker
+
+   Run the ``kvm-ok`` tool and If the output displays **KVM acceleration can be used**,
+   the platform supports Intel VMX and VT-d technologies.
 
    .. code-block:: console
 
