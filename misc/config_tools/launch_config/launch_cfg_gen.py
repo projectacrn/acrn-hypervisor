@@ -1,269 +1,366 @@
-# Copyright (C) 2019 Intel Corporation. All rights reserved.
+#!/usr/bin/env python3
+#
+# Copyright (C) 2022 Intel Corporation.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
+
+import sys, os
+import argparse
+import lxml.etree as etree
 import logging
-import os
 import re
-import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-from launch_item import AvailablePthru, PthruSelected, VirtioDeviceSelect, AcrnDmArgs, SriovDeviceInput
-import board_cfg_lib
-import launch_cfg_lib
-import com
-import common
+import copy
 
-ACRN_PATH = common.SOURCE_ROOT_DIR
-ACRN_CONFIG_DEF = ACRN_PATH + '/misc/config_tools/data/'
+def eval_xpath(element, xpath, default_value=None):
+    return next(iter(element.xpath(xpath)), default_value)
 
+class LaunchScript:
+    script_template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "launch_script_template.sh")
 
-def get_launch_item_values(board_info, scenario_info=None):
-    """
-    Get items which capable multi select for user
-    :param board_info: it is a file what contains board information for script to read from
-    :param sceanrio_info: it is a file what contains scenario information for script to read from
-    """
-    common.BOARD_INFO_FILE = board_info
-    launch_item_values = {}
+    class VirtualBDFAllocator:
+        def __init__(self):
+            # Reserved slots:
+            #    0 - For (virtual) hostbridge
+            #    1 - For (virtual) LPC
+            #    2 - For passthrough integarted GPU (either PF or VF)
+            #   31 - For LPC bridge needed by integrated GPU
+            self._free_slots = list(range(3, 30))
 
-    # passthrough devices
-    pthru = AvailablePthru(board_info)
-    pthru.get_pci_dev()
-    pthru.insert_nun()
+        def get_virtual_bdf(self, device_etree = None, options = None):
+            if device_etree is not None:
+                bus = eval_xpath(device_etree, "../@address")
+                vendor_id = eval_xpath(device_etree, "vendor/text()")
+                class_code = eval_xpath(device_etree, "class/text()")
 
-    # pre passthrough device for ui
-    launch_item_values["user_vm,passthrough_devices,usb_xdci"] = pthru.avl["usb_xdci"]
-    launch_item_values["user_vm,passthrough_devices,gpu"] = pthru.avl["gpu"]
-    launch_item_values["user_vm,passthrough_devices,ipu"] = pthru.avl["ipu"]
-    launch_item_values["user_vm,passthrough_devices,ipu_i2c"] = pthru.avl["ipu_i2c"]
-    launch_item_values["user_vm,passthrough_devices,cse"] = pthru.avl["cse"]
-    launch_item_values["user_vm,passthrough_devices,audio"] = pthru.avl["audio"]
-    launch_item_values["user_vm,passthrough_devices,audio_codec"] = pthru.avl["audio_codec"]
-    launch_item_values["user_vm,passthrough_devices,sd_card"] = pthru.avl["sd_card"]
-    launch_item_values["user_vm,passthrough_devices,wifi"] = pthru.avl["wifi"]
-    launch_item_values["user_vm,passthrough_devices,ethernet"] = pthru.avl["ethernet"]
-    launch_item_values["user_vm,passthrough_devices,sata"] = pthru.avl["sata"]
-    launch_item_values["user_vm,passthrough_devices,nvme"] = pthru.avl["nvme"]
-    launch_item_values["user_vm,passthrough_devices,bluetooth"] = pthru.avl["bluetooth"]
+                # VGA-compatible controller, either integrated or discrete GPU
+                if class_code == "0x030000":
+                    return 2
 
-    # acrn dm available optargs
-    launch_item_values['user_vm,user_vm_type'] = launch_cfg_lib.USER_VM_TYPES
-    launch_item_values["user_vm,rtos_type"] = launch_cfg_lib.RTOS_TYPE
+            if options:
+                if "igd" in options:
+                    return 2
 
-    launch_item_values["user_vm,vbootloader"] = launch_cfg_lib.BOOT_TYPE
-    launch_item_values['user_vm,vuart0'] = launch_cfg_lib.DM_VUART0
-    launch_item_values["user_vm,cpu_affinity"] = board_cfg_lib.get_processor_info()
-    launch_item_values['user_vm,enable_ptm'] = launch_cfg_lib.y_n
-    launch_cfg_lib.set_shm_regions(launch_item_values, scenario_info)
-    launch_cfg_lib.set_pci_vuarts(launch_item_values, scenario_info)
+            next_vbdf = self._free_slots.pop(0)
+            return next_vbdf
 
-    return launch_item_values
+    class PassThruDeviceOptions:
+        passthru_device_options = {
+            # "0x0200": ["enable_ptm"],  # Ethernet controller, added if PTM is enabled for the VM
+        }
 
+        def _add_option(self, class_code, option):
+            current_option = self._options.setdefault(class_code, [])
+            self._options[class_code] = current_option.append("enable_ptm")
 
-def validate_launch_setting(board_info, scenario_info, launch_info):
-    """
-    This is validate the data setting from scenario xml
-    :param board_info: it is a file what contains board information for script to read from
-    :param scenario_info: it is a file what user have already setting to
-    :return: return a dictionary contain errors
-    """
-    common.SCENARIO_INFO_FILE = scenario_info
-    common.get_vm_types()
+        def __init__(self, vm_launch_etree):
+            self._options = copy.copy(self.passthru_device_options)
+            if eval_xpath(vm_launch_etree, ".//enable_ptm/text()") == "y":
+                self._add_option("0x0200", "enable_ptm")
 
-    launch_cfg_lib.ERR_LIST = {}
-    common.BOARD_INFO_FILE = board_info
-    common.SCENARIO_INFO_FILE = scenario_info
-    common.LAUNCH_INFO_FILE = launch_info
+        def get_option(self, device_etree):
+            passthru_options = []
+            if device_etree is not None:
+                class_code = eval_xpath(device_etree, "class/text()", "")
+                for k,v in self._options.items():
+                    if class_code.startswith(k):
+                        passthru_options.extend(v)
+            return ",".join(passthru_options)
 
-    # init available pt devices and get selected pt devices
-    pt_avl = AvailablePthru(board_info)
-    pt_sel = PthruSelected(launch_info, pt_avl.bdf_desc_map, pt_avl.bdf_vpid_map)
-    pt_sel.get_bdf()
-    pt_sel.get_vpid()
-    pt_sel.get_slot()
-    pt_sel.check_item()
+    def __init__(self, board_etree, vm_name, vm_launch_etree):
+        self._board_etree = board_etree
+        self._vm_launch_etree = vm_launch_etree
 
-    # virt-io devices
-    virtio = VirtioDeviceSelect(launch_info)
-    virtio.get_virtio()
-    virtio.check_virtio()
+        self._vm_name = vm_name
+        self._vm_descriptors = {}
+        self._init_commands = []
+        self._dm_parameters = []
+        self._deinit_commands = []
 
-    sriov = SriovDeviceInput(launch_info)
-    sriov.get_sriov()
-    sriov.check_sriov(pt_sel)
+        self._vbdf_allocator = self.VirtualBDFAllocator()
+        self._passthru_options = self.PassThruDeviceOptions(vm_launch_etree)
 
-    # acrn dm arguments
-    dm = AcrnDmArgs(board_info, scenario_info, launch_info)
-    dm.get_args()
-    dm.check_item()
+    def add_vm_descriptor(self, name, value):
+        self._vm_descriptors[name] = value
 
-    return (launch_cfg_lib.ERR_LIST, pt_sel, virtio, dm, sriov)
+    def add_init_command(self, command):
+        if command not in self._init_commands:
+            self._init_commands.append(command)
 
+    def add_deinit_command(self, command):
+        if command not in self._deinit_commands:
+            self._deinit_commands.append(command)
 
-def ui_entry_api(board_info, scenario_info, launch_info, out=''):
+    def add_plain_dm_parameter(self, opt):
+        full_opt = f"\"{opt}\""
+        if full_opt not in self._dm_parameters:
+            self._dm_parameters.append(full_opt)
 
-    err_dic = {}
-    arg_list = ['launch_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--user_vmid', '0', '--out', out]
+    def add_dynamic_dm_parameter(self, cmd, opt=""):
+        full_cmd = f"{cmd:40s} {opt}".strip()
+        full_opt = f"`{full_cmd}`"
+        if full_opt not in self._dm_parameters:
+            self._dm_parameters.append(full_opt)
 
-    err_dic = common.prepare()
-    if err_dic:
-        return err_dic
+    def to_string(self):
+        s = ""
 
-    err_dic = main(arg_list)
-    launch_cfg_lib.reset_pt_slot()
-    return err_dic
+        with open(self.script_template_path, "r") as f:
+            s += f.read()
 
+        s += """
+###
+# The followings are generated by launch_cfg_gen.py
+###
+"""
+        s += "\n"
 
-def get_names():
+        s += "# Defining variables that describe VM types\n"
+        for name, value in self._vm_descriptors.items():
+            s += f"{name}={value}\n"
+        s += "\n"
 
-    names = {}
+        s += "# Initializing\n"
+        for command in self._init_commands:
+            s += f"{command}\n"
+        s += "\n"
 
-    # get User Vm name
-    user_vm_types = launch_cfg_lib.get_user_vm_type()
-    names['user_vm_types'] = user_vm_types
+        s += "# Invoking ACRN device model\n"
+        s += "dm_params=(\n"
+        for param in self._dm_parameters:
+            s += f"    {param}\n"
+        s += ")\n\n"
 
-    # get user_vm name
-    user_vm_names = launch_cfg_lib.get_user_vm_names()
-    names['user_vm_names'] = user_vm_names
+        s += "echo \"Launch device model with parameters: ${dm_params[*]}\"\n"
+        s += "acrn-dm ${dm_params[*]}\n\n"
 
-    # get board name
-    (err_dic, board_name) = common.get_board_name()
-    if err_dic:
-        return (err_dic, names)
-    names['board_name'] = board_name
+        s += "# Deinitializing\n"
+        for command in self._deinit_commands:
+            s += f"{command}\n"
 
-    # get scenario name
-    (err_dic, scenario_name) = common.get_scenario_name()
-    if err_dic:
-        return (err_dic, names)
-    names['scenario_name'] = scenario_name
+        return s
 
-    return (err_dic, names)
+    def write_to_file(self, path):
+        with open(path, "w") as f:
+            f.write(self.to_string())
+            logging.info(f"Successfully generated launch script {path} for VM '{self._vm_name}'.")
 
+    def add_virtual_device(self, kind, vbdf=None, options=""):
+        if "virtio" in kind and eval_xpath(self._vm_launch_etree, ".//rtos_type/text()", "no") != "no":
+            self.add_plain_dm_parameter("--virtio_poll 1000000")
 
-def generate_script_file(names, pt_sel, virt_io, dm, sriov, vmid, config):
+        if vbdf is None:
+            vbdf = self._vbdf_allocator.get_virtual_bdf()
+        self.add_dynamic_dm_parameter("add_virtual_device", f"{vbdf} {kind} {options}")
 
-    user_vm_type = names['user_vm_types'][vmid]
-    board_name = names['board_name']
-    scenario_name = names['scenario_name']
+    def add_passthru_device(self, bus, dev, fun, options=""):
+        device_etree = eval_xpath(self._board_etree, f"//bus[@type='pci' and @address='0x{bus:x}']/device[@address='0x{(dev << 16) | fun:x}']")
+        if not options:
+            options = self._passthru_options.get_option(device_etree)
 
-    header_info = "#!/bin/bash\n" +\
-        "# board: {}, scenario: {}, user_vm: {}".format(
-            board_name.upper(), scenario_name.upper(), user_vm_type.upper())
+        vbdf = self._vbdf_allocator.get_virtual_bdf(device_etree, options)
+        self.add_dynamic_dm_parameter("add_passthrough_device", f"{vbdf} 0000:{bus:02x}:{dev:02x}.{fun} {options}")
 
-    print("{}".format(header_info), file=config)
-    com.gen(names, pt_sel, virt_io, dm, sriov, vmid, config)
-    if launch_cfg_lib.ERR_LIST:
-        return launch_cfg_lib.ERR_LIST
+        # Enable interrupt storm monitoring if the VM has any passthrough device other than the integrated GPU (whose
+        # vBDF is fixed to 2)
+        if vbdf != 2:
+            self.add_dynamic_dm_parameter("add_interrupt_storm_monitor", "10000 10 1 100")
 
+    def has_dm_parameter(self, fn):
+        try:
+            next(filter(fn, self._dm_parameters))
+            return True
+        except StopIteration:
+            return False
 
-def main(args):
-    """
-    This is main function to start generate launch script
-    :param args: it is a command line args for the script
-    """
-    # get parameters
-    (err_dic, board_info_file, scenario_info_file, launch_info_file, vm_th, output_folder) = launch_cfg_lib.get_param(args)
-    if err_dic:
-        return err_dic
+def cpu_id_to_lapic_id(board_etree, vm_name, cpus):
+    ret = []
 
-    # check env
-    err_dic = common.prepare()
-    if err_dic:
-        return err_dic
-
-    # vm_th =[0..post_vm_max]
-    # 0: generate all launch script for all post vm launch script
-    # 1: generate launch script for 1st post vm launch script
-    # 2: generate launch script for 2nd post vm launch script
-
-    common.BOARD_INFO_FILE = board_info_file
-    common.SCENARIO_INFO_FILE = scenario_info_file
-    common.LAUNCH_INFO_FILE = launch_info_file
-    common.get_vm_types()
-
-    # get post vm dic
-    post_num_list = launch_cfg_lib.get_post_num_list()
-
-    # get toatl post vm number and total vm in launch config file
-    (launch_vm_count, post_vm_count) = launch_cfg_lib.get_post_vm_cnt()
-    if vm_th < 0 or vm_th > post_vm_count:
-        err_dic['user_vmid err:'] = "--user_vmid shoudl be positive and less than total post vm count in scenario"
-    if vm_th and vm_th not in post_num_list:
-        err_dic['user_vmid err:'] = "--user_vmid generate the {} post vm, but this vm's config not in launch xml".format(vm_th)
-
-    # validate vm_names
-    scenario_names = common.get_leaf_tag_map(scenario_info_file, "name").values()
-    for user_vm_id, vm_name in launch_cfg_lib.get_user_vm_names().items():
-        if not re.match(r"^\S{1,15}$", vm_name):
-            err_name = 'user_vm id="{}" name error:'.format(user_vm_id)
-            err_dic[err_name] = 'vm_name only allowed 1-15 characters with letters, numbers & symbols ' \
-                                '(not include space)'
-        if vm_name not in scenario_names:
-            logging.warning(
-                'user_vm id="{}"\'s vm_name ({}) not found in scenario file, set it to dynamic vm.'.format(
-                    user_vm_id, vm_name
-                )
-            )
-
-    if err_dic:
-        return err_dic
-
-    # validate launch config file
-    (err_dic, pt_sel, virt_io, dm, sriov) = validate_launch_setting(board_info_file, scenario_info_file, launch_info_file)
-    if err_dic:
-        return err_dic
-
-    # check if this is the scenario config which matched board info
-    (err_dic, status) = launch_cfg_lib.is_config_file_match()
-    if not status:
-        return err_dic
-
-    (err_dic, names) = get_names()
-    if err_dic:
-        return err_dic
-
-    # create output directory
-    board_name = names['board_name']
-    if output_folder:
-        if os.path.isabs(output_folder):
-            output = os.path.join(output_folder, board_name, 'output')
+    for cpu in cpus:
+        lapic_id = eval_xpath(board_etree, f"//processors//thread[cpu_id='{cpu}']/apic_id/text()", None)
+        if lapic_id is not None:
+            ret.append(int(lapic_id, 16))
         else:
-            output = os.path.join(ACRN_PATH, output_folder, board_name, 'output')
+            logging.warning(f"CPU {cpu} is not defined in the board XML, so it can't be available to VM {vm_name}")
+
+    return ret
+
+def generate_for_one_vm(board_etree, vm_scenario_etree, vm_launch_etree, vm_id):
+    vm_name = eval_xpath(vm_launch_etree, ".//vm_name/text()", f"ACRN Post-Launched VM")
+    script = LaunchScript(board_etree, vm_name, vm_launch_etree)
+
+    script.add_init_command("probe_modules")
+
+    ###
+    # VM types and guest OSes
+    ###
+
+    if eval_xpath(vm_launch_etree, ".//user_vm_type/text()") == "WINDOWS":
+        script.add_plain_dm_parameter("--windows")
+    script.add_vm_descriptor("rtos_type", f"'{eval_xpath(vm_launch_etree, './/rtos_type/text()', 'no')}'")
+
+    ###
+    # CPU and memory resources
+    ###
+    cpus_in_launch_xml = set(vm_launch_etree.xpath(".//cpu_affinity/pcpu_id[text() != '']/text()"))
+    cpus_in_scenario_xml = set(vm_scenario_etree.xpath(".//cpu_affinity/pcpu_id[text() != '']/text()"))
+    if cpus_in_launch_xml:
+        cpus = cpus_in_scenario_xml & cpus_in_launch_xml
+        if not cpus:
+            logging.error(f"CPUs assigned to VM '{vm_name}' in the launch XML are outside of those allowed by the scenario XML.")
     else:
-        output = os.path.join(ACRN_CONFIG_DEF, board_name, 'output')
-    output = os.path.abspath(output)
-    common.mkdir(output)
+        cpus = cpus_in_scenario_xml
+        if not cpus:
+            logging.error(f"VM '{vm_name}' has no CPU assigned in either the scenario or the launch XML.")
+    lapic_ids = cpu_id_to_lapic_id(board_etree, vm_name, cpus)
+    if lapic_ids:
+        script.add_dynamic_dm_parameter("add_cpus", f"{' '.join([str(x) for x in sorted(lapic_ids)])}")
 
-    # generate launch script
-    if vm_th:
-        script_name = "launch_user_vm_id{}.sh".format(vm_th)
-        launch_script_file = os.path.join(output, script_name)
-        with open(launch_script_file, mode = 'w', newline=None, encoding='utf-8') as config:
-            err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, sriov.dev, vm_th, config)
-            if err_dic:
-                return err_dic
+    script.add_plain_dm_parameter(f"-m {eval_xpath(vm_launch_etree, './/mem_size/text()')}M")
+
+    if eval_xpath(vm_scenario_etree, "//SSRAM_ENABLED") == "y" and \
+       eval_xpath(vm_launch_etree, ".//user_vm_type/text()") == "PREEMPT-RT LINUX":
+        script.add_plain_dm_parameter("--ssram")
+
+    ###
+    # Guest BIOS
+    ###
+    if eval_xpath(vm_launch_etree, ".//vbootloader/text()") == "ovmf":
+        script.add_plain_dm_parameter("--ovmf /usr/share/acrn/bios/OVMF.fd")
+
+    ###
+    # Devices
+    ###
+
+    # Emulated platform devices
+    if eval_xpath(vm_launch_etree, ".//user_vm_type/text()") != "PREEMPT-RT LINUX":
+        script.add_virtual_device("lpc", vbdf="1:0")
+
+    if eval_xpath(vm_launch_etree, ".//vuart0/text()") == "Enable":
+        script.add_plain_dm_parameter("-l com1,stdio")
+
+    # Emulated PCI devices
+    script.add_virtual_device("hostbridge", vbdf="0:0")
+
+    if eval_xpath(vm_scenario_etree, "//IVSHMEM_ENABLED/text()") == "y":
+        for ivshmem in vm_launch_etree.xpath("//shm_region[text() != '']/text()"):
+            script.add_virtual_device("ivshmem", options=ivshmem)
+
+    if eval_xpath(vm_launch_etree, ".//console_vuart/text()") == "Enable":
+        script.add_virtual_device("uart", options="vuart_idx:0")
+
+    for comm_vuart in vm_launch_etree.xpath(".//communication_vuart/@id"):
+        script.add_virtual_device("uart", options=f"vuart_idx:{comm_vuart}")
+
+    # Mediated PCI devices, including virtio
+    for usb_xhci in vm_launch_etree.xpath(".//usb_xhci[text() != '']/text()"):
+        script.add_virtual_device("xhci", options=usb_xhci)
+
+    for virtio_input in vm_launch_etree.xpath(".//virtio_devices/input[text() != '']/text()"):
+        script.add_virtual_device("virtio-input", options=virtio_input)
+
+    for virtio_console in vm_launch_etree.xpath(".//virtio_devices/console[text() != '']/text()"):
+        script.add_virtual_device("virtio-console", options=virtio_console)
+
+    for virtio_network in vm_launch_etree.xpath(".//virtio_devices/network[text() != '']/text()"):
+        params = virtio_network.split(",", maxsplit=1)
+        tap_conf = f"tap={params[0]}"
+        params = [tap_conf] + params[1:]
+        script.add_init_command(f"mac=$(cat /sys/class/net/e*/address)")
+        params.append(f"mac_seed=${{mac:0:17}}-{vm_name}")
+        script.add_virtual_device("virtio-net", options=",".join(params))
+
+    for virtio_block in vm_launch_etree.xpath(".//virtio_devices/block[text() != '']/text()"):
+        params = virtio_block.split(":", maxsplit=1)
+        if len(params) == 1:
+            script.add_virtual_device("virtio-blk", options=virtio_block)
+        else:
+            block_device = params[0]
+            rootfs_img = params[1]
+            var = f"dir_{os.path.basename(block_device)}"
+            script.add_init_command(f"{var}=`mount_partition {block_device}`")
+            script.add_virtual_device("virtio-blk", options=os.path.join(f"${{{var}}}", rootfs_img))
+            script.add_deinit_command(f"unmount_partition ${{{var}}}")
+
+    # Passthrough PCI devices
+    bdf_regex = re.compile("([0-9a-f]{2}):([0-1][0-9a-f]).([0-7])")
+    for passthru_device in vm_launch_etree.xpath(".//passthrough_devices/*/text()"):
+        m = bdf_regex.match(passthru_device)
+        if not m:
+            continue
+        script.add_passthru_device(int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16))
+
+    for sriov_gpu_device in vm_launch_etree.xpath(".//sriov/gpu/text()"):
+        m = bdf_regex.match(sriov_gpu_device)
+        if not m:
+            continue
+        script.add_passthru_device(int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16), options="igd-vf")
+
+    ###
+    # Miscellaneous
+    ###
+    script.add_dynamic_dm_parameter("add_rtvm_options")
+    script.add_dynamic_dm_parameter("add_logger_settings", "console=4 kmsg=3 disk=5")
+
+    ###
+    # Lastly, conclude the device model parameters with the VM name
+    ###
+    script.add_plain_dm_parameter(f"{vm_name}")
+
+    return script
+
+def main(board_xml, scenario_xml, launch_xml, user_vm_id, out_dir):
+    board_etree = etree.parse(board_xml)
+    scenario_etree = etree.parse(scenario_xml)
+    launch_etree = etree.parse(launch_xml)
+
+    service_vm_id = eval_xpath(scenario_etree, "//vm[vm_type='SERVICE_VM']/@id")
+    post_vms = scenario_etree.xpath("//vm[starts-with(vm_type, 'POST_')]")
+    if service_vm_id is None and len(post_vms) > 0:
+        logging.error("The scenario does not define a service VM so no launch scripts will be generated for the post-launched VMs in the scenario.")
+        return 1
+    service_vm_id = int(service_vm_id)
+
+    try:
+        os.mkdir(out_dir)
+    except FileExistsError:
+        if os.path.isfile(out_dir):
+            logging.error(f"Cannot create output directory {out_dir}: File exists")
+            return 1
+    except Exception as e:
+        logging.error(f"Cannot create output directory: {e}")
+        return 1
+
+    if user_vm_id == 0:
+        post_vm_ids = [int(vm_scenario_etree.get("id")) - service_vm_id for vm_scenario_etree in post_vms]
     else:
-        for post_vm_i in post_num_list:
-            script_name = "launch_user_vm_id{}.sh".format(post_vm_i)
-            launch_script_file = os.path.join(output, script_name)
-            with open(launch_script_file, mode = 'w', newline='\n', encoding='utf-8') as config:
-                err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, sriov.dev, post_vm_i, config)
-                if err_dic:
-                    return err_dic
+        post_vm_ids = [user_vm_id]
 
-    if not err_dic:
-        print("Launch files in {} is generated successfully!".format(output))
-    else:
-        print("Launch files generate failed".format(output))
+    for post_vm_id in post_vm_ids:
+        vm_scenario_etree = eval_xpath(scenario_etree, f"//vm[@id = {service_vm_id + post_vm_id}]")
+        vm_launch_etree = eval_xpath(launch_etree, f"//user_vm[@id='{post_vm_id}']")
+        if vm_scenario_etree is None:
+            logging.warning(f"Post-launched VM {post_vm_id} is not specified in the scenario XML, so no launch script will be generated.")
+            continue
 
-    return err_dic
+        if vm_launch_etree is None:
+            logging.warning(f"Post-launched VM {post_vm_id} is not specified in the launch XML, so no launch script will be generated.")
+            continue
 
+        script = generate_for_one_vm(board_etree, vm_scenario_etree, vm_launch_etree, post_vm_id)
+        script.write_to_file(os.path.join(out_dir, f"launch_user_vm_id{post_vm_id}.sh"))
 
-if __name__ == '__main__':
+    return 0
 
-    ARGS = sys.argv
-    err_dic = main(ARGS)
-    if err_dic:
-        for err_k, err_v in err_dic.items():
-            common.print_red("{}: {}".format(err_k, err_v), err=True)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--board", help="the XML file summarizing characteristics of the target board")
+    parser.add_argument("--scenario", help="the XML file specifying the scenario to be set up")
+    parser.add_argument("--launch", help="the XML file specifying the parameters of post-launched VMs")
+    parser.add_argument("--user_vmid", type=int, default=0, help="the post-launched VM ID (as is specified in the launch XML) whose launch script is to be generated, or 0 if all post-launched VMs shall be processed")
+    parser.add_argument("--out", default="output", help="path to the directory where generated scripts are placed")
+    args = parser.parse_args()
+
+    logging.basicConfig(level="INFO")
+
+    sys.exit(main(args.board, args.scenario, args.launch, args.user_vmid, args.out))
