@@ -54,7 +54,7 @@
 static int epoll_fd;
 static pthread_t mevent_tid;
 static int mevent_pipefd[2];
-static pthread_mutex_t mevent_lmutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mevent_lmutex;
 
 struct mevent {
 	void			(*run)(int, enum ev_type, void *);
@@ -376,6 +376,13 @@ mevent_set_name(void)
 int
 mevent_init(void)
 {
+	pthread_mutexattr_t attr;
+
+	pthread_mutexattr_init(&attr);
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&mevent_lmutex, &attr);
+	pthread_mutexattr_destroy(&attr);
+
 	epoll_fd = epoll_create1(0);
 
 	if (epoll_fd >= 0)
@@ -391,6 +398,8 @@ mevent_deinit(void)
 	close(epoll_fd);
 	if (mevent_pipefd[1] != 0)
 		close(mevent_pipefd[1]);
+
+	pthread_mutex_destroy(&mevent_lmutex);
 }
 
 void
