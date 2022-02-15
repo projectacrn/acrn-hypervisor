@@ -79,13 +79,16 @@ BUILD_TAG ?=
 HV_CFG_LOG = $(HV_OUT)/cfg.log
 VM_CONFIGS_DIR = $(T)/misc/config_tools
 ASL_COMPILER ?= $(shell which iasl)
+DPKG_BIN ?= $(shell which dpkg)
 
 .PHONY: all hypervisor devicemodel tools life_mngr doc
 all: hypervisor devicemodel tools
 	@cat $(HV_CFG_LOG)
-	@DEB_BOARD=$$(grep "BOARD" $(HV_CFG_LOG) | awk -F '= ' '{print  $$2 }'); \
-	DEB_SCENARIO=$$(grep "SCENARIO" $(HV_CFG_LOG) | awk -F '= ' '{print  $$2 }'); \
-	python3 misc/packaging/gen_acrn_deb.py acrn_all $(ROOT_OUT) --version=$(FULL_VERSION) --board_name="$$DEB_BOARD" --scenario="$$DEB_SCENARIO"
+	@if [ -x "$(DPKG_BIN)" ]; then \
+	  DEB_BOARD=$$(grep "BOARD" $(HV_CFG_LOG) | awk -F '= ' '{print  $$2 }'); \
+	  DEB_SCENARIO=$$(grep "SCENARIO" $(HV_CFG_LOG) | awk -F '= ' '{print  $$2 }'); \
+	  python3 misc/packaging/gen_acrn_deb.py acrn_all $(ROOT_OUT) --version=$(FULL_VERSION) --board_name="$$DEB_BOARD" --scenario="$$DEB_SCENARIO"; \
+	fi
 
 #help functions to build acrn and install acrn/acrn symbols
 define build_acrn
@@ -102,8 +105,13 @@ define install_acrn_debug
 endef
 
 HV_MAKEOPTS := -C $(T)/hypervisor BOARD=$(BOARD) SCENARIO=$(SCENARIO) HV_OBJDIR=$(HV_OUT) RELEASE=$(RELEASE)
+
 board_inspector:
-	@python3 misc/packaging/gen_acrn_deb.py board_inspector $(ROOT_OUT) --version=$(FULL_VERSION)
+	@if [ -x "$(DPKG_BIN)" ]; then \
+	  python3 misc/packaging/gen_acrn_deb.py board_inspector $(ROOT_OUT) --version=$(FULL_VERSION); \
+	else \
+	  echo -e "The 'dpkg' utility is not available. Unable to create Debian package for board_inspector."; \
+	fi
 
 hypervisor: hvdefconfig
 	$(MAKE) $(HV_MAKEOPTS)
