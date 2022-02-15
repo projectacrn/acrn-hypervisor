@@ -10,7 +10,7 @@
 # Additional reviewers can be assigned manually
 
 # Default/global reviewers (if not overridden later)
-*                                        @anthonyzxu @dongyaozu
+*                                        @anthonyzxu @dongyaozu @NanlinXie
 
 Makefile                                 @terryzouhao @NanlinXie
 /hypervisor/                             @anthonyzxu @dongyaozu
