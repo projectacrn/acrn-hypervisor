@@ -41,8 +41,19 @@
       <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
       <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
       <IVSHMEM>
-        <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
-        <IVSHMEM_REGION>hv:/shmem,2,0:1</IVSHMEM_REGION>
+        <IVSHMEM_REGION name="shmem">
+          <IVSHMEM_SIZE>2</IVSHMEM_SIZE>
+          <IVSHMEM_VMS>
+            <IVSHMEM_VM>
+              <VM_NAME>PRE_STD_VM0</VM_NAME>
+              <VBDF>00:08.0</VBDF>
+            </IVSHMEM_VM>
+            <IVSHMEM_VM>
+              <VM_NAME>PRE_RT_VM1</VM_NAME>
+              <VBDF>00:08.0</VBDF>
+            </IVSHMEM_VM>
+          </IVSHMEM_VMS>
+        </IVSHMEM_REGION>
       </IVSHMEM>
     </FEATURES>
     <MEMORY>

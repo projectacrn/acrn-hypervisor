@@ -12,7 +12,7 @@
       <pcpu_id/>
     </cpu_affinity>
     <shm_regions desc="List of shared memory regions for inter-VM communication.">
-      <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"/>
+      <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2">dm:/looking_glass_waag,32</shm_region>
     </shm_regions>
     <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
     <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
@@ -102,7 +102,7 @@
       <pcpu_id/>
     </cpu_affinity>
     <shm_regions desc="List of shared memory regions for inter-VM communication.">
-      <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"/>
+      <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2">dm:/looking_glass_yaag,32</shm_region>
     </shm_regions>
     <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
     <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
