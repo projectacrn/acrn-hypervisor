@@ -78,7 +78,6 @@ license.
    contribute
    release_notes/index
    asa
-   FAQ <faq>
    glossary
    genindex
 
