@@ -70,6 +70,7 @@ def create_acrn_deb(board, scenario, version, build_dir):
 
     listcontrol=['Package: acrn-hypervisor\n',
                 'version: %s \n'% version,
+		'Depends: libcjson1\n',
                 'Section: free \n',
                 'Priority: optional \n',
                 'Architecture: amd64 \n',
