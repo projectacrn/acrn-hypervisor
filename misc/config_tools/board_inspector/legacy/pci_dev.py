@@ -7,6 +7,7 @@ import parser_lib
 
 CMDS = {
     'PCI_DEVICE':"lspci -vv",
+    'PCI_DEVICE':"lspci -vv -q",
     'PCI_VID_PID':"lspci -n",
     }
 

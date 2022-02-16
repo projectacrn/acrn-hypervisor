@@ -45,6 +45,16 @@ def check_deps():
     if had_error:
         sys.exit(1)
 
+    # Try updating pci.ids for latest PCI device descriptions
+    try:
+        logging.info("Updating pci.ids for latest PCI device descriptions.")
+        res = subprocess.Popen(["update-pciids", "-q"])
+        if res.wait() != 0:
+            logging.warning(f"Failed to invoke update-pciids. No functional impact is foreseen, but descriptions of PCI devices may be inaccurate.")
+            sys.exit(1)
+    except Exception as e:
+        logging.warning(f"Failed to invoke update-pciids: {e}. No functional impact is foreseen, but descriptions of PCI devices may be unavailable.")
+
 def native_check():
     cpu_ids = get_online_cpu_ids()
     cpu_id = cpu_ids.pop(0)
