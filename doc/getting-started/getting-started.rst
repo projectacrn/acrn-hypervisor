@@ -126,6 +126,7 @@ To set up the ACRN build environment on the development computer:
            e2fslibs-dev \
            pkg-config \
            libnuma-dev \
+           libcjson-dev \
            liblz4-tool \
            flex \
            bison \
