@@ -35,7 +35,6 @@
 
   <xsl:template match="config-data/acrn-config">
     <xsl:if test="count(vm[acrn:is-service-vm(load_order)])">
-      <xsl:call-template name="sos_serial_console" />
       <xsl:call-template name="sos_bootargs_diff" />
     </xsl:if>
     <xsl:call-template name="cpu_affinity" />
@@ -63,24 +62,6 @@
       </xsl:if>
     </xsl:for-each>
   </xsl:template>
-
-<xsl:template name="sos_serial_console">
-  <xsl:variable name="consoleport" select="hv/DEBUG_OPTIONS/SERIAL_CONSOLE" />
-  <xsl:variable name="sos_console">
-    <xsl:if test="$consoleport = ''">
-      <xsl:text>" "</xsl:text>
-    </xsl:if>
-    <xsl:if test="$consoleport != ''">
-      <xsl:if test="contains($consoleport, '/')">
-        <xsl:value-of select="concat($quot, 'console=', substring-after(substring-after($consoleport,'/'), '/'), ' ', $quot)" />
-      </xsl:if>
-      <xsl:if test="not(contains($consoleport, '/'))">
-        <xsl:value-of select="concat($quot, 'console=', $consoleport, ' ', $quot)" />
-      </xsl:if>
-    </xsl:if>
-  </xsl:variable>
-  <xsl:value-of select="acrn:define('SERVICE_VM_OS_CONSOLE', $sos_console, '')" />
-</xsl:template>
 
 <xsl:template name="sos_bootargs_diff">
   <xsl:variable name="sos_rootfs">
