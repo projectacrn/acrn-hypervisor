@@ -74,85 +74,16 @@ Offline Analysis
 Collecting Performance Monitoring Counters Data
 ***********************************************
 
-Enable Performance Monitoring Unit (PMU) Support in VM
+Performance Monitoring Unit (PMU) Support for the RTVM
 ======================================================
 
-By default, the ACRN hypervisor doesn't expose the PMU-related CPUID and
-MSRs to the guest VM. In order to use Performance Monitoring Counters (PMCs)
-in the guest VM, modify the ACRN hypervisor code in order to expose the
-capability to the RTVM.
-
+By default, the ACRN hypervisor exposes the PMU-related CPUID and MSRs to the RTVM.
 Note that Precise Event Based Sampling (PEBS) is not yet enabled in the VM.
-
-#. Expose the CPUID leaf 0xA as below:
-
-   .. code-block:: none
-
-      --- a/hypervisor/arch/x86/guest/vcpuid.c
-      +++ b/hypervisor/arch/x86/guest/vcpuid.c
-      @@ -345,7 +345,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
-      break;
-      /* These features are disabled */
-      /* PMU is not supported */
-      - case 0x0aU:
-      + //case 0x0aU:
-      /* Intel RDT */
-      case 0x0fU:
-      case 0x10U:
-
-#. Expose the PMU-related MSRs to the VM as below:
-
-   .. code-block:: none
-
-      --- a/hypervisor/arch/x86/guest/vmsr.c
-      +++ b/hypervisor/arch/x86/guest/vmsr.c
-      @@ -337,6 +337,41 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
-      /* don't need to intercept rdmsr for these MSRs */
-      enable_msr_interception(msr_bitmap, MSR_IA32_TIME_STAMP_COUNTER, INTERCEPT_WRITE);
-
-      +
-      + /* Passthru PMU related MSRs to guest */
-      + enable_msr_interception(msr_bitmap, MSR_IA32_FIXED_CTR_CTL, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_CTRL, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_STATUS, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_OVF_CTRL, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_STATUS_SET, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_INUSE, INTERCEPT_DISABLE);
-      +
-      + enable_msr_interception(msr_bitmap, MSR_IA32_FIXED_CTR0, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_FIXED_CTR1, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_FIXED_CTR2, INTERCEPT_DISABLE);
-      +
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PMC0, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PMC1, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PMC2, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PMC3, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PMC4, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PMC5, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PMC6, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PMC7, INTERCEPT_DISABLE);
-      +
-      + enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC0, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC1, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC2, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC3, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC4, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC5, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC6, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC7, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PERFEVTSEL0, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PERFEVTSEL1, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PERFEVTSEL2, INTERCEPT_DISABLE);
-      + enable_msr_interception(msr_bitmap, MSR_IA32_PERFEVTSEL3, INTERCEPT_DISABLE);
-      +
-      /* Setup MSR bitmap - Intel SDM Vol3 24.6.9 */
-      value64 = hva2hpa(vcpu->arch.msr_bitmap);
-      exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 
 Perf/PMU Tools in Performance Analysis
 ======================================
 
-After exposing PMU-related CPUID/MSRs to the VM, performance analysis tools
+Since users no longer need to expose PMU-related CPUID/MSRs to the VM, performance analysis tools
 such as ``perf`` and ``PMU`` can be used inside the VM to locate
 the bottleneck of the application.
 
