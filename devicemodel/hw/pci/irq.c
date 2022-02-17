@@ -147,13 +147,13 @@ void pci_irq_deinit(struct vmctx *ctx)
 void
 pci_irq_assert(struct pci_vdev *dev)
 {
-	vm_set_gsi_irq(dev->vmctx, dev->lintr.ioapic_irq, GSI_SET_HIGH);
+	vm_set_gsi_irq(dev->vmctx, dev->lintr.ioapic_irq, GSI_SET_LOW);
 }
 
 void
 pci_irq_deassert(struct pci_vdev *dev)
 {
-	vm_set_gsi_irq(dev->vmctx, dev->lintr.ioapic_irq, GSI_SET_LOW);
+	vm_set_gsi_irq(dev->vmctx, dev->lintr.ioapic_irq, GSI_SET_HIGH);
 }
 
 int

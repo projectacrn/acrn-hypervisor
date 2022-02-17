@@ -2031,6 +2031,8 @@ pci_lintr_route(struct pci_vdev *dev)
 	dev->lintr.ioapic_irq = ii->ii_ioapic_irq;
 	dev->lintr.pirq_pin = ii->ii_pirq_pin;
 	pci_set_cfgdata8(dev, PCIR_INTLINE, pirq_irq(ii->ii_pirq_pin));
+	/* Initialize it to High */
+	vm_set_gsi_irq(dev->vmctx, ii->ii_ioapic_irq, GSI_SET_HIGH);
 }
 
 /**
