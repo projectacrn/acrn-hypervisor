@@ -63,7 +63,8 @@
     </MISC_CFG>
   </hv>
   <vm id="0">
-    <vm_type>SAFETY_VM</vm_type>
+    <vm_type>TEE_VM</vm_type>
+    <load_order>PRE_LAUNCHED_VM</load_order>
     <name>SAFETY_VM1</name>
     <guest_flags>
       <guest_flag>GUEST_FLAG_TEE</guest_flag>
@@ -138,7 +139,8 @@
     </mmio_resources>
   </vm>
   <vm id="1">
-    <vm_type>SERVICE_VM</vm_type>
+    <vm_type>REE_VM</vm_type>
+    <load_order>SERVICE_VM</load_order>
     <name>ACRN_SERVICE_VM</name>
     <guest_flags>
       <guest_flag>GUEST_FLAG_REE</guest_flag>

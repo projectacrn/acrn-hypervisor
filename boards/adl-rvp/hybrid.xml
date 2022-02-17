@@ -53,7 +53,8 @@
     </MISC_CFG>
   </hv>
   <vm id="0">
-    <vm_type>SAFETY_VM</vm_type>
+    <vm_type>STANDARD_VM</vm_type>
+    <load_order>PRE_LAUNCHED_VM</load_order>
     <name>SAFETY_VM1</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
@@ -116,7 +117,8 @@
     </mmio_resources>
   </vm>
   <vm id="1">
-    <vm_type>SERVICE_VM</vm_type>
+    <vm_type>STANDARD_VM</vm_type>
+    <load_order>SERVICE_VM</load_order>
     <name>ACRN_Service_VM</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
@@ -162,7 +164,8 @@
     </pci_devs>
   </vm>
   <vm id="2">
-    <vm_type>POST_STD_VM</vm_type>
+    <vm_type>STANDARD_VM</vm_type>
+    <load_order>POST_LAUNCHED_VM</load_order>
     <name>POST_STD_VM1</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
