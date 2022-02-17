@@ -54,7 +54,8 @@
     </MISC_CFG>
   </hv>
   <vm id="0">
-    <vm_type>SERVICE_VM</vm_type>
+    <vm_type>STANDARD_VM</vm_type>
+    <load_order>SERVICE_VM</load_order>
     <name>ACRN_Service_VM</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
@@ -107,7 +108,8 @@
     </pci_devs>
   </vm>
   <vm id="1">
-    <vm_type>POST_STD_VM</vm_type>
+    <vm_type>STANDARD_VM</vm_type>
+    <load_order>POST_LAUNCHED_VM</load_order>
     <name>POST_STD_VM1</name>
     <guest_flags>
       <guest_flag>0</guest_flag>
@@ -155,7 +157,8 @@
     <priority>PRIO_LOW</priority>
   </vm>
   <vm id="2">
-    <vm_type>POST_RT_VM</vm_type>
+    <vm_type>RTVM</vm_type>
+    <load_order>POST_LAUNCHED_VM</load_order>
     <name>POST_RT_VM1</name>
     <guest_flags>
       <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
