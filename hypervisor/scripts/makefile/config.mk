@@ -19,7 +19,7 @@ else
 endif
 endef
 
-# usage: determine_config <symbol> <default>
+# usage: determine_config <symbol>
 #
 # BOARD and SCENARIO can be specified in the following places.
 #
@@ -27,8 +27,6 @@ endef
 #      file.
 #
 #   2. Variables defined on the command line when invoking 'make'.
-#
-#   3. Default values in this script.
 #
 # In place #2 it can be either a board/scenario name or path to an XML file. Depending on where these variables are
 # defined and their values, this script behaves as follows.
@@ -39,7 +37,7 @@ endef
 #
 #   * If a variable is defined in either #1 or #2 (but not both), that value is effective for the build.
 #
-#   * If a variable is defined in neither #1 nor #2, the default value is effective for the build.
+#   * If a variable is defined in neither #1 nor #2, the build terminates with an error message.
 #
 # If #2 gives a path to an XML file, the board/scenario defined in that file is used for the comparison above.
 #
@@ -73,10 +71,10 @@ ifneq ($($(1)),)
 else
   ifdef CONFIG_$(1)
     override $(1) := $(CONFIG_$(1))
+    override $(1)_FILE := $(HV_PREDEFINED_DATA_DIR)/$$(BOARD)/$$($(1)).xml
   else
-    override $(1) := $(2)
+    $$(error There is no $(1) parameter specified on the command-line and none from a previous build. Please provide a valid $(1) parameter)
   endif
-  override $(1)_FILE := $(HV_PREDEFINED_DATA_DIR)/$$(BOARD)/$$($(1)).xml
 endif
 endef
 
@@ -180,8 +178,8 @@ endif
 # file. SCENARIO/SCENARIO_FILE are used in the same way. The following block translates the user-visible BOARD/SCENARIO
 # (which is multiplexed) to the internal representation.
 
-$(eval $(call determine_config,BOARD,nuc11tnbi5))
-$(eval $(call determine_config,SCENARIO,shared))
+$(eval $(call determine_config,BOARD))
+$(eval $(call determine_config,SCENARIO))
 $(eval $(call determine_build_type,n))
 
 $(HV_BOARD_XML):
