@@ -800,8 +800,8 @@ def main(args):
     dict_pcpu_list = collections.OrderedDict()
     for vm in scenario_root.findall('vm'):
         vm_id = vm.attrib['id']
-        vm_type_node = vm.find('vm_type')
-        if (vm_type_node is not None) and (vm_type_node.text in ['PRE_STD_VM', 'SAFETY_VM', 'PRE_RT_VM']):
+        load_order_node = vm.find('load_order')
+        if (load_order_node is not None) and (load_order_node.text == 'PRE_LAUNCHED_VM'):
             dict_passthru_devices[vm_id] = []
             for pci_dev_node in vm.findall('pci_devs/pci_dev'):
                 if pci_dev_node is not None and pci_dev_node.text is not None and pci_dev_node.text.strip():
@@ -824,7 +824,8 @@ def main(args):
         for vm in scenario_root.findall('vm'):
             vm_id = vm.attrib['id']
             vm_type_node = vm.find('vm_type')
-            if (vm_type_node is not None) and (vm_type_node.text in ['PRE_RT_VM']):
+            load_order_node = vm.find('load_order')
+            if (load_order_node is not None) and (load_order_node.text == 'PRE_LAUNCHED_VM') and (vm_type_node.text == 'RTVM'):
                 PRELAUNCHED_RTVM_ID = vm_id
                 break
     except:

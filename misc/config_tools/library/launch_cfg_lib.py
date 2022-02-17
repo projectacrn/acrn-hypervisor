@@ -163,8 +163,8 @@ def post_vm_cnt(config_file):
     """
     post_launch_cnt = 0
 
-    for vm_type in common.VM_TYPES.values():
-        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
+    for load_order in common.LOAD_ORDER.values():
+        if load_order == "POST_LAUNCHED_VM":
             post_launch_cnt += 1
 
     return post_launch_cnt
@@ -202,8 +202,8 @@ def is_config_file_match():
 def get_sos_vmid():
 
     sos_id = ''
-    for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_type == "SERVICE_VM":
+    for vm_i,load_order in common.LOAD_ORDER.items():
+        if load_order == "SERVICE_VM":
             sos_id = vm_i
             break
 
@@ -592,16 +592,16 @@ def set_shm_regions(launch_item_values, scenario_info):
 
     try:
         raw_shmem_regions = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
-        vm_types = common.get_leaf_tag_map(scenario_info, "vm_type")
+        load_orders = common.get_leaf_tag_map(scenario_info, "load_order")
         shm_enabled = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
     except:
         return
 
     sos_vm_id = 0
-    for vm_id, vm_type in vm_types.items():
-        if vm_type in ['SERVICE_VM']:
+    for vm_id,load_order in load_orders.items():
+        if load_order in ['SERVICE_VM']:
             sos_vm_id = vm_id
-        elif vm_type in ['POST_STD_VM', 'POST_RT_VM']:
+        elif load_order in ['POST_LAUNCHED_VM']:
             user_vmid = vm_id - sos_vm_id
             shm_region_key = 'user_vm:id={},shm_regions,shm_region'.format(user_vmid)
             launch_item_values[shm_region_key] = ['']
@@ -623,13 +623,13 @@ def set_shm_regions(launch_item_values, scenario_info):
 def set_pci_vuarts(launch_item_values, scenario_info):
     try:
         launch_item_values['user_vm,console_vuart'] = DM_VUART0
-        vm_types = common.get_leaf_tag_map(scenario_info, 'vm_type')
+        load_orders = common.get_leaf_tag_map(scenario_info, 'load_order')
         sos_vm_id = 0
-        for vm_id, vm_type in vm_types.items():
-            if vm_type in ['SERVICE_VM']:
+        for vm_id,load_order in load_orders.items():
+            if load_order in ['SERVICE_VM']:
                 sos_vm_id = vm_id
         for vm in list(common.get_config_root(scenario_info)):
-            if vm.tag == 'vm' and scenario_cfg_lib.VM_DB[vm_types[int(vm.attrib['id'])]]['load_type'] == 'POST_LAUNCHED_VM':
+            if vm.tag == 'vm' and load_orders[int(vm.attrib['id'])] == 'POST_LAUNCHED_VM':
                 user_vmid = int(vm.attrib['id']) - sos_vm_id
                 pci_vuart_key = 'user_vm:id={},communication_vuarts,communication_vuart'.format(user_vmid)
                 for elem in list(vm):

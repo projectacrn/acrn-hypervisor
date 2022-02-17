@@ -38,15 +38,15 @@
   <xsl:template name ="vm_count">
     <xsl:value-of select="acrn:comment('SERVICE_VM_NUM can only be 0 or 1; When SERVICE_VM_NUM is 1, MAX_POST_VM_NUM must be 0 too.')" />
     <xsl:value-of select="$newline" />
-    <xsl:value-of select="acrn:define('PRE_VM_NUM', count(vm[acrn:is-pre-launched-vm(vm_type)]), 'U')" />
-    <xsl:value-of select="acrn:define('SERVICE_VM_NUM', count(vm[acrn:is-sos-vm(vm_type)]), 'U')" />
-    <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', hv/CAPACITIES/MAX_VM_NUM - count(vm[acrn:is-pre-launched-vm(vm_type)]) - count(vm[acrn:is-sos-vm(vm_type)]) , 'U')" />
+    <xsl:value-of select="acrn:define('PRE_VM_NUM', count(vm[acrn:is-pre-launched-vm(load_order)]), 'U')" />
+    <xsl:value-of select="acrn:define('SERVICE_VM_NUM', count(vm[acrn:is-service-vm(load_order)]), 'U')" />
+    <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', hv/CAPACITIES/MAX_VM_NUM - count(vm[acrn:is-pre-launched-vm(load_order)]) - count(vm[acrn:is-service-vm(load_order)]) , 'U')" />
     <xsl:value-of select="acrn:define('CONFIG_MAX_VM_NUM', hv/CAPACITIES/MAX_VM_NUM , 'U')" />
   </xsl:template>
 
   <xsl:template name ="sos_vm_bootarges">
-    <xsl:if test="count(vm[vm_type='SERVICE_VM'])">
-      <xsl:value-of select="acrn:comment(concat('SERVICE_VM == VM', vm[vm_type='SERVICE_VM']/@id))" />
+    <xsl:if test="count(vm[load_order='SERVICE_VM'])">
+      <xsl:value-of select="acrn:comment(concat('SERVICE_VM == VM', vm[load_order='SERVICE_VM']/@id))" />
       <xsl:value-of select="$newline" />
       <xsl:value-of select="acrn:define('SERVICE_VM_OS_BOOTARGS', 'SERVICE_VM_ROOTFS SERVICE_VM_OS_CONSOLE SERVICE_VM_IDLE SERVICE_VM_BOOTARGS_DIFF', '')" />
     </xsl:if>
@@ -54,7 +54,7 @@
 
   <xsl:template name ="pre_launched_vm_hpa">
     <xsl:for-each select="vm">
-      <xsl:if test="acrn:is-pre-launched-vm(vm_type)">
+      <xsl:if test="acrn:is-pre-launched-vm(load_order)">
         <xsl:value-of select="acrn:define(concat('VM', @id, '_CONFIG_MEM_START_HPA'), memory/start_hpa, 'UL')" />
         <xsl:value-of select="acrn:define(concat('VM', @id, '_CONFIG_MEM_SIZE'), memory/size, 'UL')" />
         <xsl:value-of select="acrn:define(concat('VM', @id, '_CONFIG_MEM_START_HPA2'), memory/start_hpa2, 'UL')" />

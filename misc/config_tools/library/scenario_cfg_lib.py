@@ -139,9 +139,9 @@ def get_pci_vuart_num(vuarts):
                 vuarts_num[vm_i] += 1
 
     for vm_i in vuart0_setting:
-        vm_type = common.VM_TYPES[vm_i]
+        load_order = common.LOAD_ORDER[vm_i]
         # Skip post-launched vm's pci base vuart0
-        if "POST_LAUNCHED_VM" == VM_DB[vm_type]['load_type'] and 0 in vuarts[vm_i].keys() \
+        if "POST_LAUNCHED_VM" == load_order and 0 in vuarts[vm_i].keys() \
              and vuarts[vm_i][0]['base'] != "INVALID_PCI_BASE":
             vuarts_num[vm_i] -= 1
             continue
@@ -176,19 +176,19 @@ def get_pci_dev_num_per_vm():
     vuarts = common.get_vuart_info(common.SCENARIO_INFO_FILE)
     vuarts_num = get_pci_vuart_num(vuarts)
 
-    for vm_i,vm_type in common.VM_TYPES.items():
-        if "POST_LAUNCHED_VM" == VM_DB[vm_type]['load_type']:
+    for vm_i,load_order in common.LOAD_ORDER.items():
+        if "POST_LAUNCHED_VM" == load_order:
             shmem_num_i = 0
             vuart_num = vuarts_num[vm_i]
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
             pci_dev_num_per_vm[vm_i] = shmem_num_i + vuart_num
-        elif "PRE_LAUNCHED_VM" == VM_DB[vm_type]['load_type']:
+        elif "PRE_LAUNCHED_VM" == load_order:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
             pci_dev_num_per_vm[vm_i] = pt_pci_num[vm_i] + shmem_num_i + vuarts_num[vm_i]
-        elif "SERVICE_VM" == VM_DB[vm_type]['load_type']:
+        elif "SERVICE_VM" == load_order:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
@@ -328,16 +328,16 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
     sos_vm_cpus = []
     pre_launch_cpus = []
     post_launch_cpus = []
-    for vm_i, vm_type in common.VM_TYPES.items():
+    for vm_i, load_order in common.LOAD_ORDER.items():
         if vm_i not in cpu_affinity.keys():
             continue
-        elif VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
+        elif VM_DB[load_order]['load_type'] == "PRE_LAUNCHED_VM":
             cpus = [x for x in cpu_affinity[vm_i] if not None]
             pre_launch_cpus.extend(cpus)
-        elif VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
+        elif VM_DB[load_order]['load_type'] == "POST_LAUNCHED_VM":
             cpus = [x for x in cpu_affinity[vm_i] if not None]
             post_launch_cpus.extend(cpus)
-        elif VM_DB[vm_type]['load_type'] == "SERVICE_VM":
+        elif VM_DB[load_order]['load_type'] == "SERVICE_VM":
             cpus = [x for x in cpu_affinity[vm_i] if not None]
             sos_vm_cpus.extend(cpus)
 
@@ -350,7 +350,7 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
                 return err_dic
 
     if pre_launch_cpus:
-        if "SERVICE_VM" in common.VM_TYPES and not sos_vm_cpus:
+        if "SERVICE_VM" in common.LOAD_ORDER and not sos_vm_cpus:
             key = "Service VM cpu_affinity"
             err_dic[key] = "Should assign CPU id for Service VM"
 
@@ -523,7 +523,7 @@ def get_vuart1_vmid(vm_vuart1):
     """
     vm_id_dic = {}
     new_vm_id_dic = {}
-    for i in list(common.VM_TYPES.keys()):
+    for i in list(common.LOAD_ORDER.keys()):
         for key in vm_vuart1[i].keys():
             if key == "target_vm_id":
                 vm_id_dic[i] = vm_vuart1[i][key]
@@ -547,16 +547,16 @@ def cpus_assignment(cpus_per_vm, index):
     :return: cpu assignment string
     """
     vm_cpu_bmp = {}
-    if "SERVICE_VM" == common.VM_TYPES[index]:
+    if "SERVICE_VM" == common.LOAD_ORDER[index]:
         if index not in cpus_per_vm or cpus_per_vm[index] == [None]:
             sos_extend_all_cpus = board_cfg_lib.get_processor_info()
             pre_all_cpus = []
             for vmid, cpu_list in cpus_per_vm.items():
-                if vmid in common.VM_TYPES:
-                    vm_type = common.VM_TYPES[vmid]
+                if vmid in common.LOAD_ORDER:
+                    load_order = common.LOAD_ORDER[vmid]
                     load_type = ''
-                    if vm_type in VM_DB:
-                        load_type = VM_DB[vm_type]['load_type']
+                    if load_order in VM_DB:
+                        load_type = VM_DB[load_order]['load_type']
                     if load_type == "PRE_LAUNCHED_VM":
                         pre_all_cpus += cpu_list
             cpus_per_vm[index] = list(set(sos_extend_all_cpus) - set(pre_all_cpus))
@@ -605,9 +605,9 @@ def clos_assignment(clos_per_vm, index):
 
 def avl_vuart_ui_select(scenario_info):
     tmp_vuart = {}
-    for vm_i,vm_type in common.VM_TYPES.items():
+    for vm_i,load_order in common.LOAD_ORDER.items():
 
-        if "SERVICE_VM" == VM_DB[vm_type]['load_type']:
+        if "SERVICE_VM" == VM_DB[load_order]['load_type']:
             key = "vm={},legacy_vuart=0,base".format(vm_i)
             tmp_vuart[key] = ['SERVICE_VM_COM1_BASE', 'INVALID_COM_BASE']
             key = "vm={},legacy_vuart=1,base".format(vm_i)
@@ -624,8 +624,8 @@ def avl_vuart_ui_select(scenario_info):
 def get_first_post_vm():
 
     i = 0
-    for vm_i,vm_type in common.VM_TYPES.items():
-        if "POST_LAUNCHED_VM" == VM_DB[vm_type]['load_type']:
+    for vm_i,load_order in common.LOAD_ORDER.items():
+        if "POST_LAUNCHED_VM" == VM_DB[load_order]['load_type']:
             i = vm_i
             break
 
@@ -678,7 +678,7 @@ def check_vuart(v0_vuart, v1_vuart):
     target_id_keys = list(vm_target_id_dic.keys())
     i = 0
     for vm_i,t_vm_id in vm_target_id_dic.items():
-        if t_vm_id.isnumeric() and int(t_vm_id) not in common.VM_TYPES.keys():
+        if t_vm_id.isnumeric() and int(t_vm_id) not in common.LOAD_ORDER.keys():
             key = "vm:id={},legacy_vuart:id=1,target_vm_id".format(vm_i)
             ERR_LIST[key] = "target_vm_id which specified does not exist"
 
@@ -808,10 +808,10 @@ def get_target_vm_id(vuart, vm_id):
             "target_vm_id should be present and numeric: {!r}".format(
                 target_vm_id_str))
 
-    if target_vm_id not in common.VM_TYPES:
+    if target_vm_id not in common.LOAD_ORDER:
         raise XmlError(
             'invalid target_vm_id: target_vm_id={!r}, vm_ids={}'.format(
-                target_vm_id, common.VM_TYPES.keys()))
+                target_vm_id, common.LOAD_ORDER.keys()))
 
     if target_vm_id == vm_id:
         raise XmlError(
@@ -950,7 +950,7 @@ def is_target_vm_available(target_vm_id, vm_visited, legacy_vuart1_visited):
         raise TypeError('legacy_vuart1_visited should be a dict: {}, {!r}' \
                  .format(type(legacy_vuart1_visited), legacy_vuart1_visited))
 
-    if target_vm_id not in common.VM_TYPES:
+    if target_vm_id not in common.LOAD_ORDER:
         raise TargetError("target vm {} is not present".format(target_vm_id))
     if target_vm_id in vm_visited:
         pass
@@ -1151,7 +1151,7 @@ def check_p2sb(enable_p2sb):
             ERR_LIST[key] = "Can only specify p2sb passthru for VM0"
             return
 
-        if p2sb and not VM_DB[common.VM_TYPES[0]]['load_type'] == "PRE_LAUNCHED_VM":
+        if p2sb and not VM_DB[common.LOAD_ORDER[0]]['load_type'] == "PRE_LAUNCHED_VM":
             ERR_LIST["vm:id=0,p2sb"] = "p2sb passthru can only be enabled for Pre-launched VM"
             return
 
@@ -1176,7 +1176,7 @@ def check_pt_intx(phys_gsi, virt_gsi):
         ERR_LIST["pt_intx"] = "only board ehl-crb-b/generic_board is supported"
         return
 
-    if not VM_DB[common.VM_TYPES[0]]['load_type'] == "PRE_LAUNCHED_VM":
+    if not VM_DB[common.LOAD_ORDER[0]]['load_type'] == "PRE_LAUNCHED_VM":
        ERR_LIST["pt_intx"] = "pt_intx can only be specified for pre-launched VM"
        return
 

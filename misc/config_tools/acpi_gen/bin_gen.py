@@ -82,7 +82,7 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path, scenario_etree, allocat
                 rtct = acpiparser.rtct.RTCT(os.path.join(dest_vm_acpi_path, acpi_table[0]))
                 outfile = os.path.join(dest_vm_acpi_bin_path, acpi_table[1])
                 # move the guest ssram area to the area next to ACPI region
-                pre_rt_vms = common.get_node("//vm[vm_type ='PRE_RT_VM']", scenario_etree)
+                pre_rt_vms = common.get_node("//vm[load_order ='PRE_LAUNCHED_VM' and vm_type ='RTVM']", scenario_etree)
                 vm_id = pre_rt_vms.get("id")
                 allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
                 ssram_start_gpa = common.get_node("./ssram/start_gpa/text()", allocation_vm_node)

@@ -36,7 +36,7 @@ or little cores are assigned, but not both.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
-  <xs:assert test="hv//SSRAM_ENABLED = 'n' or empty(vm[vm_type='PRE_RT_VM']) or
+  <xs:assert test="hv//SSRAM_ENABLED = 'n' or empty(vm[load_order ='PRE_LAUNCHED_VM' and vm_type='RTVM']) or
 		   every $cap in caches/cache[@level=3]/capability[@id='Software SRAM'] satisfies
 		   (compare($cap/end, '0x80000000') &lt; 0 or compare($cap/start, '0xf8000000') &gt;= 0)">
     <xs:annotation acrn:severity="warning">
@@ -52,8 +52,8 @@ https://github.com/projectacrn/acrn-hypervisor/issues if you meet this.</xs:docu
     </xs:annotation>
   </xs:assert>
 
-  <xs:assert test="(count(vm[vm_type = 'PRE_RT_VM']) = 1 and count(vm[vm_type='POST_RT_VM']) = 0)
-                   or (count(vm[vm_type='PRE_RT_VM']) = 0 and count(vm[vm_type='POST_RT_VM']) &gt;= 0)">
+  <xs:assert test="(count(vm[load_order ='PRE_LAUNCHED_VM' and vm_type ='RTVM']) = 1 and count(vm[load_order ='POST_LAUNCHED_VM' and vm_type ='RTVM']) = 0)
+                   or (count(vm[load_order ='PRE_LAUNCHED_VM' and vm_type ='RTVM']) = 0 and count(vm[load_order ='POST_LAUNCHED_VM' and vm_type ='RTVM']) &gt;= 0)">
     <xs:annotation acrn:severity="error">
       <xs:documentation>There should not be both pre-launched RTVM and post-launched RTVM.
 And two or more pre-launched RTVM are not allowed.

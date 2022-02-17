@@ -38,7 +38,8 @@ VM_COUNT = 0
 BOARD_INFO_FILE = ""
 SCENARIO_INFO_FILE = ""
 LAUNCH_INFO_FILE = ""
-VM_TYPES = {}
+LOAD_ORDER = {}
+RTVM = {}
 MAX_VM_NUM = 16
 
 MAX_VUART_NUM = 8
@@ -595,9 +596,13 @@ def num2int(str_value):
     return val
 
 
-def get_vm_types():
-    global VM_TYPES
-    VM_TYPES = get_leaf_tag_map(SCENARIO_INFO_FILE, "vm_type")
+def get_load_order():
+    global LOAD_ORDER
+    LOAD_ORDER = get_leaf_tag_map(SCENARIO_INFO_FILE, "load_order")
+
+def get_RTVM():
+    global RTVM
+    RTVM = get_leaf_tag_map(SCENARIO_INFO_FILE, "vm_type")
 
 
 def get_avl_dev_info(bdf_desc_map, pci_sub_class):

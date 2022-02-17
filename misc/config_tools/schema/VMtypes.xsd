@@ -3,24 +3,37 @@
 	   xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	   xmlns:acrn="https://projectacrn.org">
 
-<xs:simpleType name="VMOptionsType">
+<xs:simpleType name="LoadOrderType">
   <xs:annotation>
     <xs:documentation>Current supported VM types are:
 
-- ``SAFETY_VM`` pre-launched Safety VM
-- ``PRE_STD_VM`` pre-launched Standard VM
-- ``PRE_RT_VM`` pre-launched real-time capable VM
-- ``SERVICE_VM`` pre-launched Service VM
-- ``POST_STD_VM`` post-launched Standard VM
-- ``POST_RT_VM`` post-launched real-time capable VM</xs:documentation>
+- ``PRE_LAUNCHED_VM`` pre-launched VM
+- ``SERVICE_VM`` Service VM
+- ``POST_LAUNCHED_VM`` post-launched VM</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="SERVICE_VM" />
-    <xs:enumeration value="SAFETY_VM" />
-    <xs:enumeration value="PRE_RT_VM" />
-    <xs:enumeration value="PRE_STD_VM" />
-    <xs:enumeration value="POST_STD_VM" />
-    <xs:enumeration value="POST_RT_VM" />
+    <xs:enumeration value="PRE_LAUNCHED_VM" />
+    <xs:enumeration value="POST_LAUNCHED_VM" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="VMType">
+  <xs:annotation>
+    <xs:documentation>Current supported VM types are:
+
+- ``RTVM`` Read-time VM
+- ``STANDARD_VM`` Service VM
+- ``TEE_VM`` VM with Trusted Execution Environment, which could provide high level
+  security of code execution
+- ``REE_VM`` VM with Rich Execution Environment, which is a companion VM with TEE_VM,
+  and could provide more features and applications, but is vulnerable to attacks</xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="RTVM" />
+    <xs:enumeration value="STANDARD_VM" />
+    <xs:enumeration value="TEE_VM" />
+    <xs:enumeration value="REE_VM" />
   </xs:restriction>
 </xs:simpleType>
 

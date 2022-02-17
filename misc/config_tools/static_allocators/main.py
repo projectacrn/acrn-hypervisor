@@ -17,7 +17,7 @@ def main(args):
     common.BOARD_INFO_FILE = args.board
     common.SCENARIO_INFO_FILE = args.scenario
     common.get_vm_num(args.scenario)
-    common.get_vm_types()
+    common.get_load_order()
 
     scripts_path = os.path.dirname(os.path.realpath(__file__))
     current = os.path.basename(__file__)

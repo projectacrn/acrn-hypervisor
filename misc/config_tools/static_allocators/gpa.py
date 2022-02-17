@@ -252,19 +252,18 @@ def get_devs_mem_passthrough(board_etree, scenario_etree):
     return: list of passtrhough devices' mmio windows.
     """
     dev_list = []
-    for vm_type in lib.lib.PRE_LAUNCHED_VMS_TYPE:
-        pt_devs = scenario_etree.xpath(f"//vm[vm_type = '{vm_type}']/pci_devs/pci_dev/text()")
-        for pt_dev in pt_devs:
-            bdf = pt_dev.split()[0]
-            bus = int(bdf.split(':')[0], 16)
-            dev = int(bdf.split(":")[1].split('.')[0], 16)
-            func = int(bdf.split(":")[1].split('.')[1], 16)
-            resources = board_etree.xpath(f"//bus[@address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}'] \
-                            /resource[@type = 'memory' and @len != '0x0' and @width]")
-            for resource in resources:
-                start = resource.get('min')
-                end = resource.get('max')
-                dev_list.append(AddrWindow(int(start, 16), int(end, 16)))
+    pt_devs = scenario_etree.xpath(f"//vm[load_order = 'PRE_LAUNCHED_VM']/pci_devs/pci_dev/text()")
+    for pt_dev in pt_devs:
+        bdf = pt_dev.split()[0]
+        bus = int(bdf.split(':')[0], 16)
+        dev = int(bdf.split(":")[1].split('.')[0], 16)
+        func = int(bdf.split(":")[1].split('.')[1], 16)
+        resources = board_etree.xpath(f"//bus[@address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}'] \
+                        /resource[@type = 'memory' and @len != '0x0' and @width]")
+        for resource in resources:
+            start = resource.get('min')
+            end = resource.get('max')
+            dev_list.append(AddrWindow(int(start, 16), int(end, 16)))
     return dev_list
 
 def get_pt_devs_io_port_passthrough_per_vm(board_etree, vm_node):
@@ -293,11 +292,10 @@ def get_pt_devs_io_port_passthrough(board_etree, scenario_etree):
     return: list of passtrhough devices' io port addresses.
     """
     dev_list = []
-    for vm_type in lib.lib.PRE_LAUNCHED_VMS_TYPE:
-        vm_nodes = scenario_etree.xpath(f"//vm[vm_type = '{vm_type}']")
-        for vm_node in vm_nodes:
-            dev_list_per_vm = get_pt_devs_io_port_passthrough_per_vm(board_etree, vm_node)
-            dev_list = dev_list + dev_list_per_vm
+    vm_nodes = scenario_etree.xpath(f"//vm[load_order = 'PRE_LAUNCHED_VM']")
+    for vm_node in vm_nodes:
+        dev_list_per_vm = get_pt_devs_io_port_passthrough_per_vm(board_etree, vm_node)
+        dev_list = dev_list + dev_list_per_vm
     return dev_list
 
 def get_pci_hole_native(board_etree):
@@ -421,11 +419,11 @@ def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
         used_low_mem = []
         used_high_mem = []
 
-        vm_type = common.get_node("./vm_type/text()", vm_node)
-        if vm_type is not None and lib.lib.is_pre_launched_vm(vm_type):
+        load_order = common.get_node("./load_order/text()", vm_node)
+        if load_order is not None and lib.lib.is_pre_launched_vm(load_order):
             low_mem = [AddrWindow(start = PRE_LAUNCHED_VM_LOW_MEM_START, end = PRE_LAUNCHED_VM_LOW_MEM_END - 1)]
             high_mem = [AddrWindow(start = PRE_LAUNCHED_VM_HIGH_MEM_START, end = PRE_LAUNCHED_VM_HIGH_MEM_END - 1)]
-        elif vm_type is not None and lib.lib.is_sos_vm(vm_type):
+        elif load_order is not None and lib.lib.is_service_vm(load_order):
             low_mem = native_low_mem
             high_mem = native_high_mem
             mem_passthrough = get_devs_mem_passthrough(board_etree, scenario_etree)
@@ -435,7 +433,7 @@ def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
             used_low_mem = [mem for mem in used_low_mem_native if mem not in mem_passthrough]
             used_high_mem = [mem for mem in used_high_mem_native if mem not in mem_passthrough]
         else:
-            # fall into else when the vm_type is post-launched vm, no mmio allocation is needed
+            # fall into else when the load_order is post-launched vm, no mmio allocation is needed
             continue
 
         devdict_base_32_bits = alloc_addr(low_mem, devdict_32bits, used_low_mem, VBAR_ALIGNMENT)
@@ -456,8 +454,8 @@ def allocate_io_port(board_etree, scenario_etree, allocation_etree):
         io_port_range_list = []
         used_io_port_list = []
 
-        vm_type = common.get_node("./vm_type/text()", vm_node)
-        if vm_type is not None and lib.lib.is_sos_vm(vm_type):
+        load_order = common.get_node("./load_order/text()", vm_node)
+        if load_order is not None and lib.lib.is_service_vm(load_order):
             io_port_range_list = io_port_range_list_native
             io_port_passthrough = get_pt_devs_io_port_passthrough(board_etree, scenario_etree)
             used_io_port_list_native = get_devs_io_port_native(board_etree, io_port_range_list_native)
@@ -474,7 +472,7 @@ def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
     # Guest physical address of the SW SRAM allocated to a pre-launched VM
     enabled = common.get_node("//SSRAM_ENABLED/text()", scenario_etree)
     if enabled == "y":
-        pre_rt_vms = common.get_node("//vm[vm_type ='PRE_RT_VM']", scenario_etree)
+        pre_rt_vms = common.get_node("//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']", scenario_etree)
         if pre_rt_vms is not None:
             vm_id = pre_rt_vms.get("id")
             l3_sw_sram = board_etree.xpath("//cache[@level='3']/capability[@id='Software SRAM']")

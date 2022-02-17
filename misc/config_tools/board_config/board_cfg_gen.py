@@ -13,7 +13,6 @@ import board_info_h
 import pci_devices_h
 import acpi_platform_h
 import common
-import vbar_base_h
 
 ACRN_PATH = common.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + "misc/config_tools/data/"
@@ -42,7 +41,7 @@ def main(args):
     common.BOARD_INFO_FILE = params['--board']
     common.SCENARIO_INFO_FILE = params['--scenario']
     common.get_vm_num(params['--scenario'])
-    common.get_vm_types()
+    common.get_load_order()
 
     if common.VM_COUNT > common.MAX_VM_NUM:
         err_dic['vm count'] = "The number of VMs in the scenario XML file should be no greater than " \
@@ -84,7 +83,6 @@ def main(args):
     config_board = board_fix_dir + GEN_FILE[1]
     config_acpi =  board_fix_dir + GEN_FILE[2]
     config_board_h =  board_fix_dir + GEN_FILE[4]
-    config_vbar_base = scen_board_dir + GEN_FILE[5]
 
     # generate pci_devices.h
     with open(config_pci, 'w+') as config:
@@ -101,10 +99,6 @@ def main(args):
         err_dic = board_c.generate_file(config)
         if err_dic:
             return err_dic
-
-    # generate vbar_base.h
-    with open(config_vbar_base, 'w+') as config:
-        vbar_base_h.generate_file(config)
 
     # generate platform_acpi_info.h
     with open(config_acpi, 'w+') as config:

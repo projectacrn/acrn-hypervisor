@@ -33,7 +33,7 @@
   <xsl:template match="config-data/acrn-config/vm">
     <!-- Initializer of a acrn_vm_pci_dev_config instance -->
     <xsl:choose>
-      <xsl:when test="acrn:is-sos-vm(vm_type)">
+      <xsl:when test="acrn:is-service-vm(load_order)">
         <xsl:value-of select="acrn:array-initializer('struct acrn_vm_pci_dev_config', 'sos_pci_devs', 'CONFIG_MAX_PCI_DEV_NUM')" />
       </xsl:when>
       <xsl:when test="acrn:pci-dev-num(@id)">
@@ -41,18 +41,18 @@
       </xsl:when>
     </xsl:choose>
 
-    <xsl:if test="acrn:is-pre-launched-vm(vm_type) and acrn:pci-dev-num(@id)">
+    <xsl:if test="acrn:is-pre-launched-vm(load_order) and acrn:pci-dev-num(@id)">
       <xsl:call-template name="virtual_pci_hostbridge" />
     </xsl:if>
     <xsl:call-template name="ivshmem_shm_mem" />
     <xsl:apply-templates select="console_vuart" />
     <xsl:apply-templates select="communication_vuart" />
     <xsl:apply-templates select="pci_devs" />
-    <xsl:if test="acrn:is-post-launched-vm(vm_type)">
+    <xsl:if test="acrn:is-post-launched-vm(load_order)">
       <xsl:apply-templates select="PTM" />
     </xsl:if>
 
-    <xsl:if test="acrn:is-sos-vm(vm_type) or acrn:pci-dev-num(@id)">
+    <xsl:if test="acrn:is-service-vm(load_order) or acrn:pci-dev-num(@id)">
       <xsl:value-of select="$end_of_array_initializer" />
     </xsl:if>
   </xsl:template>
@@ -77,7 +77,7 @@
         <xsl:value-of select="acrn:initializer('emu_type', 'PCI_DEV_TYPE_HVEMUL', '')" />
         <xsl:value-of select="acrn:initializer('vdev_ops', '&amp;vmcs9900_ops', '')" />
         <xsl:choose>
-          <xsl:when test="acrn:is-post-launched-vm(../vm_type)">
+          <xsl:when test="acrn:is-post-launched-vm(../load_order)">
             <xsl:value-of select="acrn:initializer('vbar_base[0]', 'INVALID_PCI_BASE', '')" />
             <xsl:value-of select="acrn:initializer('vbdf.value', 'UNASSIGNED_VBDF', '')" />
           </xsl:when>
@@ -103,7 +103,7 @@
       <xsl:value-of select="acrn:initializer('emu_type', 'PCI_DEV_TYPE_HVEMUL', '')" />
       <xsl:value-of select="acrn:initializer('vdev_ops', '&amp;vmcs9900_ops', '')" />
       <xsl:choose>
-        <xsl:when test="acrn:is-post-launched-vm(../vm_type)">
+        <xsl:when test="acrn:is-post-launched-vm(../load_order)">
           <xsl:value-of select="acrn:initializer('vbar_base[0]', 'INVALID_PCI_BASE', '')" />
           <xsl:value-of select="acrn:initializer('vbdf.value', 'UNASSIGNED_VBDF', '')" />
         </xsl:when>
@@ -142,14 +142,14 @@
   <xsl:template name="ivshmem_shm_mem">
     <xsl:variable name="vm_id" select="@id" />
     <xsl:variable name="vm_name" select="name" />
-    <xsl:variable name="vm_type" select="vm_type" />
+    <xsl:variable name="load_order" select="load_order" />
     <xsl:for-each select="//hv//IVSHMEM/IVSHMEM_REGION/IVSHMEM_VMS/IVSHMEM_VM[VM_NAME = $vm_name]">
       <xsl:text>{</xsl:text>
       <xsl:value-of select="$newline" />
       <xsl:value-of select="acrn:initializer('emu_type', 'PCI_DEV_TYPE_HVEMUL', '')" />
       <xsl:value-of select="acrn:initializer('vdev_ops', '&amp;vpci_ivshmem_ops', '')" />
       <xsl:choose>
-        <xsl:when test="acrn:is-post-launched-vm($vm_type)">
+        <xsl:when test="acrn:is-post-launched-vm($load_order)">
           <xsl:value-of select="acrn:initializer('vbdf.value', 'UNASSIGNED_VBDF', '')" />
         </xsl:when>
         <xsl:otherwise>
