@@ -12,7 +12,7 @@ only works on a single function.
 
 Only two vUART configurations are added to the predefined scenarios,
 but you can customize the scenarios to enable more using the :ref:`ACRN
-configurator tool <acrn_configurator_tool>`.
+Configurator <acrn_configurator_tool>`.
 
 Console Enable List
 ===================
@@ -20,16 +20,13 @@ Console Enable List
 +-----------------+-----------------------+--------------------+----------------+----------------+
 | Scenarios       | vm0                   | vm1                | vm2            | vm3            |
 +=================+=======================+====================+================+================+
-| SDC             | Service VM            | Post-launched      | Post-launched  |                |
-|                 | (vUART enable)        |                    |                |                |
-+-----------------+-----------------------+--------------------+----------------+----------------+
 | Hybrid          | Pre-launched (Zephyr) | Service VM         | Post-launched  |                |
 |                 | (vUART enable)        | (vUART enable)     |                |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
-| Industry        | Service VM            | Post-launched      | Post-launched  | Post-launched  |
+| Shared          | Service VM            | Post-launched      | Post-launched  | Post-launched  |
 |                 | (vUART enable)        |                    | (vUART enable) |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
-| Logic_partition | Pre-launched          | Pre-launched RTVM  | Post-launched  |                |
+| Partitioned     | Pre-launched          | Pre-launched RTVM  | Post-launched  |                |
 |                 | (vUART enable)        | (vUART enable)     | RTVM           |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
 
@@ -102,15 +99,13 @@ Communication vUART Enable List
 +-----------------+-----------------------+--------------------+---------------------+----------------+
 | Scenarios       | vm0                   | vm1                | vm2                 | vm3            |
 +=================+=======================+====================+=====================+================+
-| SDC             | Service VM            | Post-launched      | Post-launched       |                |
-+-----------------+-----------------------+--------------------+---------------------+----------------+
 | Hybrid          | Pre-launched (Zephyr) | Service VM         | Post-launched       |                |
 |                 | (vUART enable COM2)   | (vUART enable COM2)|                     |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
-| Industry        | Service VM            | Post-launched      | Post-launched RTVM  | Post-launched  |
+| Shared          | Service VM            | Post-launched      | Post-launched RTVM  | Post-launched  |
 |                 | (vUART enable COM2)   |                    | (vUART enable COM2) |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
-| Logic_partition | Pre-launched          | Pre-launched RTVM  |                     |                |
+| Partitioned     | Pre-launched          | Pre-launched RTVM  |                     |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
 
 Launch Script
@@ -155,7 +150,7 @@ access the corresponding port. For example, in Linux OS:
 
    -  The msg cannot be longer than 256 bytes.
    -  This cannot be used to transfer files because flow control is
-       not supported so data may be lost.
+      not supported so data may be lost.
 
 vUART Design
 ============
@@ -179,7 +174,7 @@ For a post-launched VM, the ``acrn-dm`` cmdline also provides a COM port configu
 
   ``-s 1:0,lpc -l com1,stdio``
 
-This adds ``com1 (0x3f8)`` and ``com2 (0x2f8)`` modules in the Guest VM, including the ACPI info for these two ports.
+This adds ``com1 (0x3f8)`` and ``com2 (0x2f8)`` modules in the post-launched VM, including the ACPI info for these two ports.
 
 **Data Flows**
 
@@ -225,7 +220,7 @@ Index of vUART
 
 ACRN hypervisor supports PCI-vUARTs and legacy vUARTs as ACRN vUARTs.
 Each vUART port has its own ``vuart_idx``.  ACRN hypervisor supports up
-to 8 vUART for each VM, from ``vuart_idx=0`` to ``vuart_idx=7``.
+to 8 vUARTs for each VM, from ``vuart_idx=0`` to ``vuart_idx=7``.
 Suppose we use vUART0 for a port with ``vuart_idx=0``, vUART1 for
 ``vuart_idx=1``, and so on.
 
@@ -235,7 +230,7 @@ Pay attention to these points:
 * Each communication port must set the connection to another communication vUART port of another VM.
 * When legacy ``vuart[0]`` is available, it is vUART0. A PCI-vUART can't
   be vUART0 unless ``vuart[0]`` is not set.
-* When legacy ``vuart[1]`` is available, it is vUART1. PCI-vUART can't
+* When legacy ``vuart[1]`` is available, it is vUART1. A PCI-vUART can't
   be vUART1 unless ``vuart[1]`` is not set.
 
 Setup ACRN vUART Using Configuration Tools
@@ -305,7 +300,7 @@ The ACRN vUART related XML fields:
  - ``type`` in ``<legacy_vuart>``, type is always ``VUART_LEGACY_PIO``
    for legacy vUART.
  - ``base`` in ``<legacy_vuart>``, if using the legacy vUART port, set
-   COM1_BASE for ``vuart[0]``, set ``COM2_BASE`` for ``vuart[1]``.
+   ``COM1_BASE`` for ``vuart[0]``, set ``COM2_BASE`` for ``vuart[1]``.
    ``INVALID_COM_BASE`` means do not use the legacy vUART port.
  - ``irq`` in ``<legacy_vuart>``, if you use the legacy vUART port, set
    ``COM1_IRQ`` for ``vuart[0]``, set ``COM2_IRQ`` for ``vuart[1]``.
