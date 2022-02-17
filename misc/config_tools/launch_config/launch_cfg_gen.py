@@ -314,8 +314,8 @@ def main(board_xml, scenario_xml, launch_xml, user_vm_id, out_dir):
     scenario_etree = etree.parse(scenario_xml)
     launch_etree = etree.parse(launch_xml)
 
-    service_vm_id = eval_xpath(scenario_etree, "//vm[vm_type='SERVICE_VM']/@id")
-    post_vms = scenario_etree.xpath("//vm[starts-with(vm_type, 'POST_')]")
+    service_vm_id = eval_xpath(scenario_etree, "//vm[load_order='SERVICE_VM']/@id")
+    post_vms = scenario_etree.xpath("//vm[starts-with(load_order, 'POST_')]")
     if service_vm_id is None and len(post_vms) > 0:
         logging.error("The scenario does not define a service VM so no launch scripts will be generated for the post-launched VMs in the scenario.")
         return 1

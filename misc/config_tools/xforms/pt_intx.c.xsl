@@ -42,7 +42,7 @@
   </xsl:template>
 
   <xsl:template match="config-data/acrn-config/vm">
-    <xsl:if test="acrn:is-pre-launched-vm(vm_type)">
+    <xsl:if test="acrn:is-pre-launched-vm(load_order)">
       <xsl:variable name="vm_id" select="@id" />
       <xsl:variable name="pt_intx" select="acrn:get-intx-mapping(//vm[@id=$vm_id]//pt_intx)" />
       <xsl:variable name="length" select="count($pt_intx)" />

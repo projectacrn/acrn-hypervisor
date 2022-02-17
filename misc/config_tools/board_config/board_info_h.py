@@ -92,8 +92,7 @@ def generate_file(config):
     find_hi_mmio_window(config)
 
     p2sb = common.get_leaf_tag_map_bool(common.SCENARIO_INFO_FILE, "mmio_resources", "p2sb")
-    if (common.VM_TYPES.get(0) is not None and
-        scenario_cfg_lib.VM_DB[common.VM_TYPES[0]]['load_type'] == "PRE_LAUNCHED_VM"
+    if (common.LOAD_ORDER.get(0) == "PRE_LAUNCHED_VM"
         and board_cfg_lib.is_p2sb_passthru_possible()
         and p2sb.get(0, False)):
         print("", file=config)

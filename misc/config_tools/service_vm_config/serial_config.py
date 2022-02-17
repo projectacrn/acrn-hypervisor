@@ -30,7 +30,7 @@ def main(args):
     allocation_etree = lxml.etree.parse(args.allocation)
     vuart_target_vmid = [0] * VUART_DEV_NAME_NUM
 
-    vm_list = scenario_etree.xpath("//vm[vm_type = 'SERVICE_VM']")
+    vm_list = scenario_etree.xpath("//vm[load_order = 'SERVICE_VM']")
     for vm in vm_list:
         for legacy_vuart in vm.iter(tag = 'legacy_vuart'):
             if legacy_vuart.find('target_vm_id') != None:
@@ -38,7 +38,7 @@ def main(args):
                 legacy_vuartid = int(legacy_vuart.attrib["id"])
                 vuart_target_vmid[legacy_vuartid] = user_vm_id
 
-    vm_list = allocation_etree.xpath("//vm[vm_type = 'SERVICE_VM']")
+    vm_list = allocation_etree.xpath("//vm[load_order = 'SERVICE_VM']")
     for vm in vm_list:
         vuart_list = find_non_standard_uart(vm)
         if len(vuart_list) != 0:

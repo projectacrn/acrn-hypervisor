@@ -29,7 +29,7 @@
     <!-- Declaration of pci_devs -->
     <xsl:for-each select="vm">
       <xsl:choose>
-        <xsl:when test="acrn:is-sos-vm(vm_type)">
+        <xsl:when test="acrn:is-service-vm(load_order)">
           <xsl:value-of select="acrn:extern('struct acrn_vm_pci_dev_config', 'sos_pci_devs', 'CONFIG_MAX_PCI_DEV_NUM')" />
         </xsl:when>
         <xsl:when test="acrn:pci-dev-num(@id)">
@@ -38,7 +38,7 @@
       </xsl:choose>
 
       <!-- Declaration of pt_intx -->
-      <xsl:if test="acrn:is-pre-launched-vm(vm_type)">
+      <xsl:if test="acrn:is-pre-launched-vm(load_order)">
 	<xsl:variable name="vm_id" select="@id" />
 	<xsl:variable name="length" select="count(acrn:get-intx-mapping(//vm[@id=$vm_id]//pt_intx))" />
 	<xsl:choose>
@@ -83,9 +83,9 @@
     <xsl:value-of select="acrn:comment(concat('Static configured VM', @id))" />
     <xsl:value-of select="$newline" />
 
-    <xsl:apply-templates select="vm_type" />
+    <xsl:call-template name="load_order" />
     <xsl:apply-templates select="name" />
-    <xsl:if test="acrn:is-sos-vm(vm_type)">
+    <xsl:if test="acrn:is-service-vm(load_order)">
       <xsl:value-of select="acrn:comment('Allow Service VM to reboot the system since it is the highest priority VM.')" />
       <xsl:value-of select="$newline" />
     </xsl:if>
@@ -105,7 +105,7 @@
     <xsl:call-template name="legacy_vuart" />
     <xsl:call-template name="pci_dev_num" />
     <xsl:call-template name="pci_devs" />
-    <xsl:if test="acrn:is-pre-launched-vm(vm_type)">
+    <xsl:if test="acrn:is-pre-launched-vm(load_order)">
       <xsl:call-template name="pre_launched" />
     </xsl:if>
 
@@ -117,9 +117,25 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="vm_type">
-    <xsl:value-of select="concat('CONFIG_', current())" />
-    <xsl:text>,</xsl:text>
+  <xsl:template name="load_order">
+    <xsl:variable name="vm_type" select="vm_type" />
+    <xsl:choose>
+      <xsl:when test="load_order = 'SERVICE_VM'">
+        <xsl:value-of select="'CONFIG_SERVICE_VM,'" />
+      </xsl:when>
+      <xsl:when test="load_order = 'PRE_LAUNCHED_VM' and $vm_type = 'RTVM'">
+        <xsl:value-of select="'CONFIG_PRE_RT_VM,'" />
+      </xsl:when>
+      <xsl:when test="load_order = 'PRE_LAUNCHED_VM' and $vm_type != 'RTVM'">
+        <xsl:value-of select="'CONFIG_PRE_STD_VM,'" />
+      </xsl:when>
+      <xsl:when test="load_order = 'POST_LAUNCHED_VM' and $vm_type = 'RTVM'">
+        <xsl:value-of select="'CONFIG_POST_RT_VM,'" />
+      </xsl:when>
+      <xsl:when test="load_order = 'POST_LAUNCHED_VM' and $vm_type != 'RTVM'">
+        <xsl:value-of select="'CONFIG_POST_STD_VM,'" />
+      </xsl:when>
+    </xsl:choose>
     <xsl:value-of select="$newline" />
   </xsl:template>
 
@@ -129,7 +145,7 @@
 
   <xsl:template name="cpu_affinity">
     <xsl:choose>
-      <xsl:when test="acrn:is-sos-vm(vm_type)">
+      <xsl:when test="acrn:is-service-vm(load_order)">
         <xsl:value-of select="acrn:initializer('cpu_affinity', 'SERVICE_VM_CONFIG_CPU_AFFINITY')" />
       </xsl:when>
       <xsl:otherwise>
@@ -178,7 +194,7 @@
   <xsl:template match="memory">
     <xsl:value-of select="acrn:initializer('memory', '{', true())" />
     <xsl:choose>
-      <xsl:when test="acrn:is-sos-vm(../vm_type)">
+      <xsl:when test="acrn:is-service-vm(../load_order)">
         <xsl:value-of select="acrn:initializer('start_hpa', concat(start_hpa, 'UL'))" />
       </xsl:when>
       <xsl:otherwise>
@@ -216,10 +232,10 @@
     </xsl:if>
     <xsl:if test="normalize-space(bootargs)">
       <xsl:choose>
-        <xsl:when test="acrn:is-sos-vm(../vm_type)">
+        <xsl:when test="acrn:is-service-vm(../load_order)">
           <xsl:value-of select="acrn:initializer('bootargs', 'SERVICE_VM_OS_BOOTARGS')" />
         </xsl:when>
-        <xsl:when test="acrn:is-pre-launched-vm(../vm_type)">
+        <xsl:when test="acrn:is-pre-launched-vm(../load_order)">
             <xsl:value-of select="acrn:initializer('bootargs', concat('VM', ../@id, '_BOOT_ARGS'))" />
         </xsl:when>
       </xsl:choose>
@@ -229,7 +245,7 @@
   </xsl:template>
 
   <xsl:template name="acpi_config">
-    <xsl:if test="acrn:is-pre-launched-vm(vm_type)">
+    <xsl:if test="acrn:is-pre-launched-vm(load_order)">
       <xsl:value-of select="acrn:initializer('acpi_config', '{', true())" />
       <xsl:value-of select="acrn:initializer('acpi_mod_tag', concat($quot,'ACPI_VM', @id, $quot))" />
       <xsl:text>},</xsl:text>
@@ -258,7 +274,7 @@
 
   <xsl:template name="pci_dev_num">
     <xsl:choose>
-      <xsl:when test="acrn:is-sos-vm(vm_type)">
+      <xsl:when test="acrn:is-service-vm(load_order)">
         <xsl:value-of select="acrn:initializer('pci_dev_num', concat(acrn:pci-dev-num(@id), 'U'))" />
       </xsl:when>
       <xsl:otherwise>
@@ -271,7 +287,7 @@
 
   <xsl:template name="pci_devs">
     <xsl:choose>
-      <xsl:when test="acrn:is-sos-vm(vm_type)">
+      <xsl:when test="acrn:is-service-vm(load_order)">
         <xsl:value-of select="acrn:initializer('pci_devs', 'sos_pci_devs')" />
       </xsl:when>
       <xsl:when test="acrn:pci-dev-num(@id)">

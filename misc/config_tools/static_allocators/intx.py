@@ -39,12 +39,12 @@ def remove_irq(irq_list, irq):
     except ValueError as e:
         raise ValueError("Cannot remove irq:{} from available irq list:{}, {}". format(irq, e, irq_list)) from e
 
-def create_vuart_irq_node(etree, vm_id, vm_type, vuart_id, irq):
+def create_vuart_irq_node(etree, vm_id, load_order, vuart_id, irq):
     allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", etree)
     if allocation_vm_node is None:
         allocation_vm_node = common.append_node("/acrn-config/vm", None, etree, id = vm_id)
-    if common.get_node("./vm_type", allocation_vm_node) is None:
-        common.append_node("./vm_type", vm_type, allocation_vm_node)
+    if common.get_node("./load_order", allocation_vm_node) is None:
+        common.append_node("./load_order", load_order, allocation_vm_node)
     if common.get_node(f"./legacy_vuart[@id = '{vuart_id}']", allocation_vm_node) is None:
         common.append_node("./legacy_vuart", None, allocation_vm_node, id = vuart_id)
 
@@ -75,12 +75,12 @@ def alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree):
 
     vm_node_list = scenario_etree.xpath("//vm")
     for vm_node in vm_node_list:
-        vm_type = common.get_node("./vm_type/text()", vm_node)
-        irq_list = get_native_valid_irq() if vm_type == "SERVICE_VM" else [f"{d}" for d in list(range(1,15))]
+        load_order = common.get_node("./load_order/text()", vm_node)
+        irq_list = get_native_valid_irq() if load_order == "SERVICE_VM" else [f"{d}" for d in list(range(1,15))]
         legacy_vuart_id_list = vm_node.xpath("legacy_vuart[base != 'INVALID_COM_BASE']/@id")
         legacy_vuart_irq = ''
         for legacy_vuart_id in legacy_vuart_id_list:
-            if legacy_vuart_id == '0' and vm_type == "SERVICE_VM":
+            if legacy_vuart_id == '0' and load_order == "SERVICE_VM":
                 if hv_debug_console in native_ttys.keys():
                     if native_ttys[hv_debug_console]['irq'] < LEGACY_IRQ_MAX:
                         legacy_vuart_irq = native_ttys[hv_debug_console]['irq']
@@ -93,7 +93,7 @@ def alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree):
             else:
                 legacy_vuart_irq = assign_legacy_vuart_irqs(vm_node, legacy_vuart_id, irq_list)
 
-            create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), vm_type, legacy_vuart_id, legacy_vuart_irq)
+            create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, legacy_vuart_id, legacy_vuart_irq)
 
 def get_irqs_of_device(device_node):
     irqs = set()
@@ -131,9 +131,9 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
     # Identify the interrupt lines each pre-launched VM uses
     #
     for vm in scenario_etree.xpath("//vm"):
-        vm_type = vm.find("vm_type").text
+        load_order = vm.find("load_order").text
         vm_id = int(vm.get("id"))
-        if lib.lib.is_pre_launched_vm(vm_type):
+        if lib.lib.is_pre_launched_vm(load_order):
             pt_intx_text = common.get_node("pt_intx/text()", vm)
             if pt_intx_text is not None:
                 pt_intx_mapping = dict(eval(f"[{pt_intx_text.replace(')(', '), (')}]"))
@@ -157,7 +157,7 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
                     for device in devices:
                         print(f"\t{device}")
                 raise lib.error.ResourceError(f"Pre-launched VM {vm_id} with LAPIC_PASSTHROUGH flag cannot use interrupt lines.")
-        elif lib.lib.is_sos_vm(vm_type):
+        elif lib.lib.is_service_vm(load_order):
             service_vm_id = vm_id
 
     #

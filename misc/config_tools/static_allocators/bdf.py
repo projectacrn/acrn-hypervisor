@@ -95,11 +95,10 @@ def get_devs_bdf_passthrough(scenario_etree):
     return: list of passtrhough devices' bdf.
     """
     dev_list = []
-    for vm_type in lib.lib.PRE_LAUNCHED_VMS_TYPE:
-        pt_devs = scenario_etree.xpath(f"//vm[vm_type = '{vm_type}']/pci_devs/pci_dev/text()")
-        for pt_dev in pt_devs:
-            bdf = lib.lib.BusDevFunc.from_str(pt_dev.split()[0])
-            dev_list.append(bdf)
+    pt_devs = scenario_etree.xpath(f"//vm[load_order = 'PRE_LAUNCHED_VM']/pci_devs/pci_dev/text()")
+    for pt_dev in pt_devs:
+        bdf = lib.lib.BusDevFunc.from_str(pt_dev.split()[0])
+        dev_list.append(bdf)
     return dev_list
 
 def create_device_node(allocation_etree, vm_id, devdict):
@@ -141,11 +140,11 @@ def fn(board_etree, scenario_etree, allocation_etree):
         vm_id = vm_node.get('id')
         devdict = {}
         used = []
-        vm_type = common.get_node("./vm_type/text()", vm_node)
-        if vm_type is not None and lib.lib.is_post_launched_vm(vm_type):
+        load_order = common.get_node("./load_order/text()", vm_node)
+        if load_order is not None and lib.lib.is_post_launched_vm(load_order):
             continue
 
-        if vm_type is not None and lib.lib.is_sos_vm(vm_type):
+        if load_order is not None and lib.lib.is_service_vm(load_order):
             native_used = get_devs_bdf_native(board_etree)
             passthrough_used = get_devs_bdf_passthrough(scenario_etree)
             used = [bdf for bdf in native_used if bdf not in passthrough_used]

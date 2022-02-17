@@ -52,11 +52,11 @@ def fn(board_etree, scenario_etree, allocation_etree):
 
     vm_node_list = scenario_etree.xpath("//vm")
     for vm_node in vm_node_list:
-        vm_type = common.get_node("./vm_type/text()", vm_node)
+        load_order = common.get_node("./load_order/text()", vm_node)
         legacy_vuart_base = ""
         legacy_vuart_id_list = vm_node.xpath("legacy_vuart[base != 'INVALID_COM_BASE']/@id")
         for legacy_vuart_id in legacy_vuart_id_list:
-            if legacy_vuart_id == '0' and  vm_type == "SERVICE_VM":
+            if legacy_vuart_id == '0' and  load_order == "SERVICE_VM":
                 if hv_debug_console in native_ttys.keys():
                     if native_ttys[hv_debug_console]['type'] == "portio":
                         legacy_vuart_base = native_ttys[hv_debug_console]['base']

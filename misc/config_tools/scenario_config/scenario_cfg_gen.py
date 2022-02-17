@@ -45,7 +45,7 @@ def get_scenario_item_values(board_info, scenario_info):
     common.BOARD_INFO_FILE = board_info
     common.SCENARIO_INFO_FILE = scenario_info
     common.get_vm_num(scenario_info)
-    common.get_vm_types()
+    common.get_load_order()
 
     # per scenario
     guest_flags = copy.deepcopy(common.GUEST_FLAG)
@@ -199,7 +199,7 @@ def main(args):
     common.BOARD_INFO_FILE = params['--board']
     common.SCENARIO_INFO_FILE = params['--scenario']
     common.get_vm_num(params['--scenario'])
-    common.get_vm_types()
+    common.get_load_order()
 
     # get board name
     (err_dic, board_name) = common.get_board_name()
