@@ -30,7 +30,7 @@ Prerequisites
 
       sudo apt install cpu-checker
 
-   Run the ``kvm-ok`` tool and If the output displays **KVM acceleration can be used**,
+   Run the ``kvm-ok`` tool and if the output displays **KVM acceleration can be used**,
    the platform supports Intel VMX and VT-d technologies.
 
    .. code-block:: console
@@ -185,7 +185,7 @@ Install ACRN Hypervisor
          insmod part_msdos
          insmod ext2
 
-         echo 'Loading ACRN hypervisor with SDC scenario ...'
+         echo 'Loading ACRN hypervisor ...'
          multiboot --quirk-modules-after-kernel /boot/acrn.32.out
          module /boot/bzImage Linux_bzImage
       }
@@ -280,7 +280,7 @@ Bring Up User VM (L2 Guest)
       $logger_setting \
       $vm_name
       }
-      # offline SOS CPUs except BSP before launch UOS
+      # offline Service VM CPUs except BSP before launching User VM
       for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         online=`cat $i/online`
         idx=`echo $i | tr -cd "[1-99]"`
