@@ -18,9 +18,9 @@ steps:
 
 - Enable ``ivshmem`` via ACRN Configurator GUI.
 
-   - Set :option:`hv.FEATURES.IVSHMEM.IVSHMEM_ENABLED` to ``y``
+   - Set ``hv.FEATURES.IVSHMEM.IVSHMEM_ENABLED`` to ``y``
 
-   - Edit :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` to specify the shared
+   - Edit ``hv.FEATURES.IVSHMEM.IVSHMEM_REGION`` to specify the shared
      memory name, size and
      communication VMs. The ``IVSHMEM_REGION`` format is ``shm_name,shm_size,VM IDs``:
 
@@ -55,7 +55,7 @@ where
 -  ``ivshmem``  - Virtual PCI device emulating the Shared Memory
 
 -  ``shm_name`` - Specify a shared memory name. This ``shm_name`` must be listed
-   in :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` in `Enable Ivshmem Support`_ section and needs to start
+   in ``hv.FEATURES.IVSHMEM.IVSHMEM_REGION`` in `Enable Ivshmem Support`_ section and needs to start
    with ``dm:/`` prefix.
 
 -  ``shm_size`` - Shared memory size of selected ``shm_name``.
@@ -67,7 +67,7 @@ There are two ways to insert the above boot parameter for ``acrn-dm``:
    tool.
 
 -  Use the following command to create a launch script, when IVSHMEM is enabled
-   and :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION` is properly configured via
+   and ``hv.FEATURES.IVSHMEM.IVSHMEM_REGION`` is properly configured via
    the ACRN Configurator.
 
      .. code-block:: none
