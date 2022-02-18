@@ -14,9 +14,14 @@ class DefaultValuePopulator(ScenarioTransformer):
         element_name = xsd_element_node.get("name")
         default_value = xsd_element_node.get("default")
 
+        # If the node is neither of a complex type (i.e. it does not have an child node) nor has a default value, do not
+        # create the node at all. Users are required to fill in proper values in such nodes, and missing any of them
+        # shall trigger a validation error.
+        if self.complex_type_of_element(xsd_element_node) is None and default_value is None:
+            return []
+
         new_node = etree.Element(element_name)
-        if default_value is not None:
-            new_node.text = default_value
+        new_node.text = default_value
 
         if new_node_index is not None:
             xml_parent_node.insert(new_node_index, new_node)
