@@ -350,7 +350,7 @@ arguments used for configuration.  Here is a table describing these emulated dev
      - Inter-VM shared memory (ivshmem) virtualized PCI device used specifically
        for shared memory between VMs. Parameters should be added with the format
        ``ivshmem,<shm_name>,<shm_size>``. ``<shm-name>`` specifies a shared memory
-       name, and must be listed in :option:`hv.FEATURES.IVSHMEM.IVSHMEM_REGION`
+       name, and must be listed in ``hv.FEATURES.IVSHMEM.IVSHMEM_REGION``
        as configured using the ACRN configurator tool UI, and needs to start
        with a ``dm:/`` prefix.
 
