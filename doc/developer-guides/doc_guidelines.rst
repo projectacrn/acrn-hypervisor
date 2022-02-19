@@ -166,7 +166,7 @@ Multi-Column Lists
 If you have a long bullet list of items, where each item is short, you can
 indicate that the list items should be rendered in multiple columns with a
 special ``.. rst-class:: rst-columns`` directive.  The directive will apply to
-the next non-comment element (e.g., paragraph) or to content indented under
+the next non-comment element (for example, paragraph) or to content indented under
 the directive. For example, this unordered list::
 
    .. rst-class:: rst-columns
@@ -300,11 +300,11 @@ use double backticks: ````word````.
 Branch-Specific File Links
 **************************
 
-Links in the documentation to specific files in the GitHub tree should also be
-to the branch for that version of the documentation (e.g., links in the v2.5
-release of the documentation should be to files in the v2.5 branch).  You should
-not link to files in the master branch because files in that branch could change
-or even be deleted after the release is made.
+You can add a link in the documentation to a specific file in the GitHub tree.
+Be sure the link points to the branch for that version of the documentation. For
+example, links in the v2.5 release of the documentation should be to files in
+the v2.5 branch. Do not link to files in the master branch because files in that
+branch could change or even be deleted after the release is made.
 
 To make this kind of file linking possible, use a special role that
 creates a hyperlink to that file in the current branch.  For example, a GitHub
@@ -314,12 +314,12 @@ appear as :acrn_file:`doc/developer-guides/doc_guidelines.rst`, a link to
 the "blob" file in the GitHub repo as displayed by GitHub. There's also an
 ``:acrn_raw:`doc/developer-guides/doc_guidelines.rst``` role that will link
 to the "raw" uninterpreted file,
-:acrn_raw:`doc/developer-guides/doc_guidelines.rst` file. (Click these links
-to see the difference.)
+:acrn_raw:`doc/developer-guides/doc_guidelines.rst`. Click these links
+to see the difference.
 
 If you don't want the whole path to the file name to
 appear in the text, you use the usual linking notation to define what link text
-is shown, for example ``:acrn_file:`Guidelines <doc/developer-guides/doc_guidelines.rst>```
+is shown, for example, ``:acrn_file:`Guidelines <doc/developer-guides/doc_guidelines.rst>```
 would show up as simply :acrn_file:`Guidelines <doc/developer-guides/doc_guidelines.rst>`.
 
 .. _internal-linking:
@@ -342,7 +342,7 @@ Note the use of a trailing underscore to indicate an outbound link. In this
 example, the label was added immediately before a heading, so the text that's
 displayed is the heading text itself.
 
-With Sphinx however, we can create link-references to any tagged text within
+With Sphinx, however, we can create link-references to any tagged text within
 the project documentation.
 
 Target locations within documents are defined with a label directive:
@@ -355,9 +355,9 @@ Note the leading underscore indicating an inbound link. The content
 immediately following this label is the target for a ``:ref:`my label name```
 reference from anywhere within the documentation set. The label **must** be
 added immediately before a heading so that there's a natural phrase to show
-when referencing this label (e.g., the heading text).
+when referencing this label (for example, the heading text).
 
-This is the same directive used to define a label that's a reference to a URL:
+This directive is also used to define a label that's a reference to a URL:
 
 .. code-block:: rest
 
@@ -435,7 +435,7 @@ Note that there is a blank line between the ``code-block`` directive and the
 first line of the code-block body, and the body content is indented three
 spaces (to the first non-blank space of the directive name).
 
-This would be rendered as:
+This example would render as:
 
 .. code-block:: c
 
@@ -456,14 +456,14 @@ If you want no syntax highlighting, specify ``none``. For example:
 
    .. code-block:: none
 
-      This would be a block of text styled with a background
+      This block of text would be styled with a background
       and box, but with no syntax highlighting.
 
 Would display as:
 
 .. code-block:: none
 
-  This would be a block of text styled with a background
+  This block of text would be styled with a background
   and box, but with no syntax highlighting.
 
 There's a shorthand for writing code blocks, too: end the introductory
@@ -471,7 +471,7 @@ paragraph with a double colon (``::``) and indent the code block content
 by three spaces.  On output, only one colon will appear.
 
 .. note:: The highlighting package makes a best guess at the type of content
-   in the block for highlighting purposes.  This can lead to some odd
+   in the block, which can lead to odd
    highlighting in the generated output.
 
 Images
@@ -518,7 +518,7 @@ in the preceding line.  For example:
       The text within a directive block should align with the
       first character of the directive name.
 
-Keep the line length for documentation less than 80 characters to make it
+Keep the line length for documentation fewer than 80 characters to make it
 easier for reviewing in GitHub. Long lines due to URL references are an
 allowed exception.
 
@@ -617,7 +617,7 @@ Alternative Tabbed Content
 
 Instead of creating multiple documents with common material except for some
 specific sections, you can write one document and provide alternative content
-to the reader via a tabbed interface. When the reader clicks on a tab, the
+to the reader via a tabbed interface. When the reader clicks a tab, the
 content for that tab is displayed. For example::
 
    .. tabs::
@@ -761,7 +761,7 @@ to specific option descriptions using an ``:option:`` role, for example,
 The transformed option documentation is
 created in the ``_build/rst/reference/configdoc.txt`` file and included by
 ``doc/reference/config-options.rst`` to create the final published
-:ref:`scenario-config-options` document.  You make changes to the option
+:ref:`scenario-config-options` document.  You modify the option
 descriptions by editing the documentation found in one of the ``.xsd`` files.
 
 
