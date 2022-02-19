@@ -3,7 +3,7 @@
 Drawings Using Graphviz
 #######################
 
-We support using the Sphinx `graphviz extension`_ for creating simple
+We support using the Sphinx `Graphviz extension`_ for creating simple
 graphs and line drawings using the dot language.  The advantage of using
 Graphviz for drawings is that the source for a drawing is a text file that
 can be edited and maintained in the repo along with the documentation.
@@ -24,7 +24,7 @@ where the boot-flow.dot file contains the drawing commands:
 
 .. literalinclude:: images/boot-flow.dot
 
-and the generated output would appear as this:
+and the generated output would appear as:
 
 .. graphviz:: images/boot-flow.dot
   :name: boot-flow-example
@@ -51,7 +51,7 @@ graph (digraph) with two nodes connected by an arrow, you can write:
           "a" -> "b"
        }
 
-and get this:
+and get this drawing:
 
 .. graphviz::
 
@@ -60,10 +60,16 @@ and get this:
    }
 
 
-You can change the graph layout (from top-to-bottom to left-to-right), node
-shapes (rectangles, circles, house, star, etc.), style (filled, rounded),
-and colors, along with the text displayed in the node, and the resulting
-image placement on the page (centered):
+You can change the following attributes:
+
+* Graph layout (from top-to-bottom to left-to-right)
+* Node shapes (rectangles, circles, houses, stars, etc.)
+* Style (filled, rounded)
+* Colors
+* Text displayed in the node
+* Placement of the resulting image on the page (centered)
+
+Example: 
 
 .. literalinclude:: images/circle-square.dot
 
