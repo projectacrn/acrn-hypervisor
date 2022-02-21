@@ -116,8 +116,9 @@
       <xsl:with-param name="key" select="'HYPERV_ENABLED'" />
     </xsl:call-template>
 
-    <xsl:call-template name="boolean-by-key">
+    <xsl:call-template name="boolean-by-key-value">
       <xsl:with-param name="key" select="'NVMX_ENABLED'" />
+      <xsl:with-param name="value" select="count(//vm[nested_virtualization_support = 'y']) > 0" />
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key">

@@ -150,13 +150,13 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
                     device_nodes.discard(device_node)
 
             # Raise error when any pre-launched VM with LAPIC passthrough requires any interrupt line.
-            lapic_passthru_flag = common.get_node("guest_flags[guest_flag='GUEST_FLAG_LAPIC_PASSTHROUGH']", vm)
+            lapic_passthru_flag = common.get_node("lapic_passthrough[text() = 'y']", vm)
             if lapic_passthru_flag is not None and irq_allocation[vm_id]:
                 for irq, devices in irq_allocation[vm_id].items():
                     print(f"Interrupt line {irq} is used by the following device(s).")
                     for device in devices:
                         print(f"\t{device}")
-                raise lib.error.ResourceError(f"Pre-launched VM {vm_id} with LAPIC_PASSTHROUGH flag cannot use interrupt lines.")
+                raise lib.error.ResourceError(f"Pre-launched VM {vm_id} with lapic_passthrough flag cannot use interrupt lines.")
         elif lib.lib.is_service_vm(load_order):
             service_vm_id = vm_id
 

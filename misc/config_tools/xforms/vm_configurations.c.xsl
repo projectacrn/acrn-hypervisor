@@ -91,7 +91,7 @@
     </xsl:if>
     <xsl:value-of select="acrn:initializer('vm_prio', priority)" />
     <xsl:value-of select="acrn:initializer('companion_vm_id', concat(companion_vmid, 'U'))" />
-    <xsl:apply-templates select="guest_flags" />
+    <xsl:call-template name="guest_flags" />
 
     <xsl:if test="acrn:is-rdt-enabled()">
       <xsl:apply-templates select="clos" />
@@ -156,17 +156,9 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="guest_flags">
-    <xsl:if test="guest_flag">
-      <xsl:choose>
-        <xsl:when test="guest_flag = '' or guest_flag = '0' or guest_flag = '0UL'">
-          <xsl:value-of select="acrn:initializer('guest_flags', 'GUEST_FLAG_STATIC_VM')" />
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="acrn:initializer('guest_flags', concat('(GUEST_FLAG_STATIC_VM|', acrn:string-join(guest_flag, '|', '', ''),')'))" />
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:if>
+  <xsl:template name="guest_flags">
+    <xsl:variable name="vm_id" select="@id" />
+    <xsl:value-of select="acrn:initializer('guest_flags', concat('(', acrn:string-join(//allocation-data/acrn-config/vm[@id=$vm_id]/guest_flags/guest_flag, '|', '', ''),')'))" />
   </xsl:template>
 
   <xsl:template match="clos">
@@ -175,7 +167,7 @@
 
     <xsl:value-of select="acrn:initializer('num_pclosids', concat(count(vcpu_clos), 'U'))" />
 
-    <xsl:if test="acrn:is-vcat-enabled() and ../guest_flags[guest_flag = 'GUEST_FLAG_VCAT_ENABLED']">
+    <xsl:if test="acrn:is-vcat-enabled() and ../virtual_cat_support[text() = 'y']">
       <xsl:variable name="rdt_res_str" select="acrn:get-normalized-closinfo-rdt-res-str()" />
       <xsl:variable name="closid" select="vcpu_clos[1]" />
 

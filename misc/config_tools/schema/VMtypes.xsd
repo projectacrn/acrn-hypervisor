@@ -37,54 +37,6 @@
   </xs:restriction>
 </xs:simpleType>
 
-<xs:simpleType name="GuestFlagsOptionsType">
-  <xs:annotation>
-    <xs:documentation>
-- ``0``, ``0UL``, or an empty string means no guest flags are enabled.
-- ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify that the secure world is
-  enabled
-- ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify that LAPIC is passed through
-- ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify that the hypervisor needs
-  IO polling to completion
-- ``GUEST_FLAG_HIDE_MTRR`` specify that MTRR is hidden from the VM
-- ``GUEST_FLAG_RT`` specify that the VM is an RT-VM (real-time)
-- ``GUEST_FLAG_NVMX_ENABLED`` specify that the VM supports nested virtualization
-- ``GUEST_FLAG_SECURITY_VM`` specify that the VM needs to do security-vm related
-- ``GUEST_FLAG_VCAT_ENABLED`` specify that the VM supports CAT virtualization
-  fixup (TPM2 passthrough and SMBIOS passthrough)</xs:documentation>
-  </xs:annotation>
-  <xs:restriction base="xs:string">
-    <xs:enumeration value="" />
-    <xs:enumeration value="0" />
-    <xs:enumeration value="0UL" />
-    <xs:enumeration value="GUEST_FLAG_SECURE_WORLD_ENABLED" />
-    <xs:enumeration value="GUEST_FLAG_LAPIC_PASSTHROUGH" />
-    <xs:enumeration value="GUEST_FLAG_IO_COMPLETION_POLLING" />
-    <xs:enumeration value="GUEST_FLAG_HIDE_MTRR" />
-    <xs:enumeration value="GUEST_FLAG_RT" />
-    <xs:enumeration value="GUEST_FLAG_NVMX_ENABLED" />
-    <xs:enumeration value="GUEST_FLAG_SECURITY_VM" />
-    <xs:enumeration value="GUEST_FLAG_VCAT_ENABLED" />
-    <xs:enumeration value="GUEST_FLAG_TEE" />
-    <xs:enumeration value="GUEST_FLAG_REE" />
-  </xs:restriction>
-</xs:simpleType>
-
-<xs:complexType name="GuestFlagsInfo">
-  <xs:sequence>
-    <xs:element name="guest_flag" type="GuestFlagsOptionsType" maxOccurs="unbounded">
-      <xs:annotation>
-        <xs:documentation>Select all applicable flags for the VM.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-  </xs:sequence>
-  <xs:assert test="count(guest_flag[text() = 'GUEST_FLAG_NVMX_ENABLED']) = 0 or count(guest_flag[text() = 'GUEST_FLAG_LAPIC_PASSTHROUGH']) > 0">
-    <xs:annotation>
-      <xs:documentation>If the GUEST_FLAG_NVMX_ENABLED is set, GUEST_FLAG_LAPIC_PASSTHROUGH must be set as well.</xs:documentation>
-    </xs:annotation>
-  </xs:assert>
-</xs:complexType>
-
 <xs:complexType name="CPUAffinityConfiguration">
   <xs:sequence>
     <xs:element name="pcpu_id" type="xs:integer" default="2" maxOccurs="unbounded">
@@ -100,11 +52,11 @@ to.</xs:documentation>
   <xs:sequence>
     <xs:element name="vcpu_clos" type="xs:integer" default="0" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>By default (``GUEST_FLAG_VCAT_ENABLED`` is not specified):
+        <xs:documentation>By default (``virtual_cat_support`` is not specified):
 vcpu_clos is per-CPU and it configures each CPU in VMs to a desired CLOS ID in the ``VM`` section of the
 scenario file. Follow :ref:`rdt_detection_capabilities` to identify the maximum supported CLOS ID that can be used.
 
-If ``GUEST_FLAG_VCAT_ENABLED`` is specified:
+If ``virtual_cat_support`` is specified:
 vcpu_clos is not per-CPU anymore, just a list of physical CLOSIDs (minimum 2) that are assigned to VMs
 for vCAT use. Each vcpu_clos will be mapped to a virtual CLOSID, the first vcpu_clos is mapped to virtual
 CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>

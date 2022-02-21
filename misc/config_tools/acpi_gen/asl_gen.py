@@ -737,12 +737,7 @@ def gen_dsdt(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
                 builder.build_value(0))))
     objects.add_object("\\", s5_object)
 
-    rtvm = False
-    for guest_flag in scenario_etree.xpath(f"//vm[@id='{vm_id}']/guest_flags/guest_flag/text()"):
-        if guest_flag == 'GUEST_FLAG_LAPIC_PASSTHROUGH':
-            rtvm = True
-            break
-
+    rtvm = bool(scenario_etree.xpath(f"//vm[@id='{vm_id}']//lapic_passthrough[text()='y']"))
     # RTVM cannot set IRQ because no INTR is sent with LAPIC PT
     if rtvm is False:
         objects.add_object("\\_SB_", pnp_uart("UAR0", 0, "COM1", 0x3f8, 4))
