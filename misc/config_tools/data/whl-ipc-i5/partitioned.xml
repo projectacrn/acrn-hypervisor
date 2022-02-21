@@ -24,8 +24,7 @@
       <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
       <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
       <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
-      <IVSHMEM>
-      </IVSHMEM>
+      <IVSHMEM/>
     </FEATURES>
     <MEMORY>
       <STACK_SIZE>0x2000</STACK_SIZE>
@@ -59,8 +58,8 @@
     </vuart_connections>
   </hv>
   <vm id="0">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>PRE_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>PRE_STD_VM0</name>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -98,17 +97,17 @@
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
+    <mmio_resources>
+      <TPM2>n</TPM2>
+    </mmio_resources>
     <pci_devs>
       <pci_dev>00:17.0 SATA controller: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode] (rev 30)</pci_dev>
       <pci_dev>04:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)</pci_dev>
     </pci_devs>
-    <mmio_resources>
-      <TPM2>n</TPM2>
-    </mmio_resources>
   </vm>
   <vm id="1">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>PRE_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>PRE_STD_VM1</name>
     <cpu_affinity>
       <pcpu_id>1</pcpu_id>
@@ -146,12 +145,12 @@
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
+    <mmio_resources>
+      <TPM2>n</TPM2>
+    </mmio_resources>
     <pci_devs>
       <pci_dev>00:14.0 USB controller: Intel Corporation Cannon Point-LP USB 3.1 xHCI Controller (rev 30)</pci_dev>
       <pci_dev>03:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)</pci_dev>
     </pci_devs>
-    <mmio_resources>
-      <TPM2>n</TPM2>
-    </mmio_resources>
   </vm>
 </acrn-config>

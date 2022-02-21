@@ -32,8 +32,7 @@
       <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
       <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
       <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
-      <IVSHMEM>
-      </IVSHMEM>
+      <IVSHMEM/>
     </FEATURES>
     <MEMORY>
       <STACK_SIZE>0x2000</STACK_SIZE>
@@ -67,8 +66,8 @@
     </vuart_connections>
   </hv>
   <vm id="0">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>PRE_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>PRE_STD_VM0</name>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -104,18 +103,18 @@
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
+    <mmio_resources>
+      <TPM2>n</TPM2>
+    </mmio_resources>
     <pci_devs>
       <pci_dev>00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</pci_dev>
       <pci_dev>00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (13) I219-LM (rev 20)</pci_dev>
       <pci_dev/>
     </pci_devs>
-    <mmio_resources>
-      <TPM2>n</TPM2>
-    </mmio_resources>
   </vm>
   <vm id="1">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>PRE_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>PRE_STD_VM1</name>
     <cpu_affinity>
       <pcpu_id>1</pcpu_id>
@@ -139,7 +138,7 @@
       <name>YOCTO</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
-      <ramdisk_mod></ramdisk_mod>
+      <ramdisk_mod/>
       <bootargs>        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
         consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
@@ -152,12 +151,12 @@
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
+    <mmio_resources>
+      <TPM2>n</TPM2>
+    </mmio_resources>
     <pci_devs>
       <pci_dev>00:14.0 USB controller: Intel Corporation Tiger Lake-LP USB 3.2 Gen 2x1 xHCI Host Controller (rev 20)</pci_dev>
       <pci_dev/>
     </pci_devs>
-    <mmio_resources>
-      <TPM2>n</TPM2>
-    </mmio_resources>
   </vm>
 </acrn-config>

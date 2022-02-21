@@ -24,8 +24,7 @@
       <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
       <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
       <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
-      <IVSHMEM>
-      </IVSHMEM>
+      <IVSHMEM/>
     </FEATURES>
     <MEMORY>
       <STACK_SIZE>0x2000</STACK_SIZE>
@@ -43,10 +42,11 @@
     <MISC_CFG>
       <GPU_SBDF>0x00000010</GPU_SBDF>
     </MISC_CFG>
+    <vuart_connections/>
   </hv>
   <vm id="0">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>SERVICE_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>ACRN_Service_VM</name>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -75,8 +75,8 @@
     </pci_devs>
   </vm>
   <vm id="1">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM1</name>
     <cpu_affinity>
       <pcpu_id>1</pcpu_id>

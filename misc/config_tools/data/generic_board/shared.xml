@@ -32,8 +32,7 @@
       <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
       <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
       <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
-      <IVSHMEM>
-      </IVSHMEM>
+      <IVSHMEM/>
     </FEATURES>
     <MEMORY>
       <STACK_SIZE>0x2000</STACK_SIZE>
@@ -67,8 +66,8 @@
     </vuart_connections>
   </hv>
   <vm id="0">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>SERVICE_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>ACRN_Service_VM</name>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -98,8 +97,8 @@
     </pci_devs>
   </vm>
   <vm id="1">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM1</name>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -124,8 +123,8 @@
     <PTM>n</PTM>
   </vm>
   <vm id="2">
-    <vm_type>RTVM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>RTVM</vm_type>
     <name>POST_RT_VM1</name>
     <lapic_passthrough>y</lapic_passthrough>
     <cpu_affinity>
@@ -151,8 +150,8 @@
     <PTM>n</PTM>
   </vm>
   <vm id="3">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM2</name>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -177,8 +176,8 @@
     <PTM>n</PTM>
   </vm>
   <vm id="4">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM3</name>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -203,8 +202,8 @@
     <PTM>n</PTM>
   </vm>
   <vm id="5">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM4</name>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
@@ -229,8 +228,8 @@
     <PTM>n</PTM>
   </vm>
   <vm id="6">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM5</name>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
