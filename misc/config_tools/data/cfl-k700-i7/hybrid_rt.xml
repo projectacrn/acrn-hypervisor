@@ -73,8 +73,8 @@
     </vuart_connections>
   </hv>
   <vm id="0">
-    <vm_type>RTVM</vm_type>
     <load_order>PRE_LAUNCHED_VM</load_order>
+    <vm_type>RTVM</vm_type>
     <name>PRE_RT_VM0</name>
     <lapic_passthrough>y</lapic_passthrough>
     <cpu_affinity>
@@ -113,18 +113,26 @@
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
+    <mmio_resources>
+      <TPM2>n</TPM2>
+    </mmio_resources>
     <pci_devs>
       <pci_dev>00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (7) I219-LM (rev 10)</pci_dev>
       <pci_dev>01:00.0 Non-Volatile memory controller: Silicon Motion, Inc. SM2263EN/SM2263XT SSD Controller (rev 03)</pci_dev>
     </pci_devs>
-    <mmio_resources>
-      <TPM2>n</TPM2>
-    </mmio_resources>
   </vm>
   <vm id="1">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>SERVICE_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>ACRN_Service_VM</name>
+    <cpu_affinity>
+      <pcpu_id>0</pcpu_id>
+      <pcpu_id>1</pcpu_id>
+      <pcpu_id>2</pcpu_id>
+      <pcpu_id>3</pcpu_id>
+      <pcpu_id>4</pcpu_id>
+      <pcpu_id>5</pcpu_id>
+    </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
@@ -143,14 +151,6 @@
       <ramdisk_mod/>
       <bootargs>root=/dev/nvme0n1p3 rw rootwait console=ttyS0,115200n8 ignore_loglevel no_timer_check</bootargs>
     </os_config>
-    <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
-      <pcpu_id>2</pcpu_id>
-      <pcpu_id>3</pcpu_id>
-      <pcpu_id>4</pcpu_id>
-      <pcpu_id>5</pcpu_id>
-    </cpu_affinity>
     <legacy_vuart id="0">
       <type>VUART_LEGACY_PIO</type>
       <base>SERVICE_VM_COM1_BASE</base>
@@ -164,8 +164,8 @@
     </pci_devs>
   </vm>
   <vm id="2">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM1</name>
     <cpu_affinity>
       <pcpu_id>1</pcpu_id>
@@ -192,8 +192,8 @@
     <PTM>n</PTM>
   </vm>
   <vm id="3">
-    <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM2</name>
     <cpu_affinity>
       <pcpu_id>4</pcpu_id>
