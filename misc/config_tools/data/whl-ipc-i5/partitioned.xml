@@ -19,7 +19,6 @@
         <CDP_ENABLED>n</CDP_ENABLED>
         <VCAT_ENABLED>n</VCAT_ENABLED>
       </RDT>
-      <NVMX_ENABLED>n</NVMX_ENABLED>
       <HYPERV_ENABLED>y</HYPERV_ENABLED>
       <IOMMU_ENFORCE_SNP>n</IOMMU_ENFORCE_SNP>
       <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
@@ -49,9 +48,6 @@
     <vm_type>STANDARD_VM</vm_type>
     <load_order>PRE_LAUNCHED_VM</load_order>
     <name>PRE_STD_VM0</name>
-    <guest_flags>
-      <guest_flag>0</guest_flag>
-    </guest_flags>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
       <pcpu_id>2</pcpu_id>
@@ -112,9 +108,6 @@
     <vm_type>STANDARD_VM</vm_type>
     <load_order>PRE_LAUNCHED_VM</load_order>
     <name>PRE_STD_VM1</name>
-    <guest_flags>
-      <guest_flag>0</guest_flag>
-    </guest_flags>
     <cpu_affinity>
       <pcpu_id>1</pcpu_id>
       <pcpu_id>3</pcpu_id>
