@@ -764,8 +764,6 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		} else {
 			pr_fatal("vmexit fail err_inst=%x", exec_vmread32(VMX_INSTR_ERROR));
 		}
-
-		ASSERT(status == 0, "vm fail");
 	}
 
 	return status;
