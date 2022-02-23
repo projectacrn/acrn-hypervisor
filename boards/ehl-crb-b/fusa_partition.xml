@@ -166,7 +166,7 @@
       <kern_mod>RT_bzImage</kern_mod>
       <ramdisk_mod/>
       <bootargs>
-            rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
+            rw rootwait root=/dev/sda3 console=ttyS0 console=tty0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
             consoleblank=0 tsc=reliable reboot=acpi
             </bootargs>
     </os_config>

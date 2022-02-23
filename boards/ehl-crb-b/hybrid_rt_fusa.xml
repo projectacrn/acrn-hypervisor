@@ -91,7 +91,7 @@
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>RT_bzImage</kern_mod>
       <ramdisk_mod/>
-      <bootargs>rw rootwait root=/dev/sda2 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable reboot=acpi</bootargs>
+      <bootargs>rw rootwait root=/dev/sda2 console=ttyS0 console=tty0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable reboot=acpi</bootargs>
     </os_config>
     <legacy_vuart id="0">
       <type>VUART_LEGACY_PIO</type>

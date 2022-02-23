@@ -146,7 +146,7 @@
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod/>
       <bootargs>
-        root=/dev/nvme0n1p3 rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
+        root=/dev/nvme0n1p3 rw rootwait console=ttyS0 console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
 	i915.nuclear_pageflip=1 swiotlb=131072
 	</bootargs>
     </os_config>
