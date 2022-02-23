@@ -208,6 +208,7 @@ enum {
 #define	VIRTIO_TYPE_COREU	0xFFF8
 #define	VIRTIO_TYPE_GPIO	0xFFF7
 #define	VIRTIO_TYPE_I2C		0xFFF6
+#define	VIRTIO_TYPE_GPU		0x1100
 
 /*
  * PCI vendor/device IDs
@@ -219,6 +220,7 @@ enum {
 #define	VIRTIO_DEV_BLOCK	0x1001
 #define	VIRTIO_DEV_CONSOLE	0x1003
 #define	VIRTIO_DEV_RANDOM	0x1005
+#define	VIRTIO_DEV_GPU		0x1050
 
 /*
  * ACRN virtio device IDs
