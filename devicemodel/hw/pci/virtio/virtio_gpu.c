@@ -14,6 +14,7 @@
 #include "dm.h"
 #include "pci_core.h"
 #include "virtio.h"
+#include "vdisplay.h"
 
 /*
  * Queue definitions.
@@ -120,6 +121,7 @@ struct virtio_gpu {
 	struct virtio_vq_info vq[VIRTIO_GPU_QNUM];
 	struct virtio_gpu_config cfg;
 	pthread_mutex_t	mtx;
+	int vdpy_handle;
 };
 
 struct virtio_gpu_command {
@@ -397,6 +399,7 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pr_err("%s, set modern bar failed.\n", __func__);
 		return rc;
 	}
+	gpu->vdpy_handle = vdpy_init();
 
 	return 0;
 }
@@ -412,6 +415,7 @@ virtio_gpu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		free(gpu);
 	}
 	virtio_gpu_device_cnt--;
+	vdpy_deinit(gpu->vdpy_handle);
 }
 
 static void

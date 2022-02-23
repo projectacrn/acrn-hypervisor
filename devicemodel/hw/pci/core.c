@@ -47,6 +47,7 @@
 #include "lpc.h"
 #include "sw_load.h"
 #include "log.h"
+#include "vdisplay.h"
 
 #define CONF1_ADDR_PORT    0x0cf8
 #define CONF1_DATA_PORT    0x0cfc
@@ -91,6 +92,7 @@ static uint64_t pci_emul_membase32;
 static uint64_t pci_emul_membase64;
 
 extern bool skip_pci_mem64bar_workaround;
+extern bool gfx_ui;
 
 struct io_rsvd_rgn reserved_bar_regions[REGION_NUMS];
 
@@ -350,6 +352,13 @@ pci_parse_slot(char *opt)
 			(strchr(b, 'b') != NULL)) {
 			vsbl_set_bdf(bnum, snum, fnum);
 		}
+	}
+
+	if ((strcmp("virtio-gpu", emul) == 0)) {
+		pr_info("%s: virtio-gpu device found, activating virtual display.\n",
+				__func__);
+		gfx_ui = true;
+		vdpy_parse_cmd_option(config);
 	}
 done:
 	if (error)

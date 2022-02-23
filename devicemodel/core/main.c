@@ -69,6 +69,7 @@
 #include "pci_util.h"
 #include "vssram.h"
 #include "cmd_monitor.h"
+#include "vdisplay.h"
 
 #define	VM_MAXCPU		16	/* maximum virtual cpus */
 
@@ -98,6 +99,7 @@ bool ssram;
 bool vtpm2;
 bool is_winvm;
 bool skip_pci_mem64bar_workaround = false;
+bool gfx_ui = false;
 
 static int guest_ncpus;
 static int virtio_msix = 1;
@@ -1038,6 +1040,10 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+	if (gfx_ui) {
+		gfx_ui_init();
+	}
+
 	for (;;) {
 		pr_notice("vm_create: %s\n", vmname);
 		ctx = vm_create(vmname, (unsigned long)ioreq_buf, &guest_ncpus);
@@ -1156,6 +1162,9 @@ fail:
 create_fail:
 	if (cmd_monitor)
 		deinit_cmd_monitor();
+	if (gfx_ui) {
+		gfx_ui_deinit();
+	}
 	uninit_hugetlb();
 	deinit_loggers();
 	exit(ret);
