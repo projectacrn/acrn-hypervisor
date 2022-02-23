@@ -39,6 +39,10 @@ CFLAGS += -I$(BASEDIR)/include
 CFLAGS += -I$(BASEDIR)/include/public
 CFLAGS += -I$(DM_OBJDIR)/include
 CFLAGS += -I$(TOOLS_OUT)/services
+CFLAGS += -I/usr/include/pixman-1
+CFLAGS += -I/usr/include/glib-2.0
+CFLAGS += -I/usr/include/SDL2
+CFLAGS += -I/usr/include/EGL
 
 ifneq (, $(DM_ASL_COMPILER))
 CFLAGS += -DASL_COMPILER=\"$(DM_ASL_COMPILER)\"
@@ -82,6 +86,9 @@ LIBS += -luuid
 LIBS += -lusb-1.0
 LIBS += -lacrn-mngr
 LIBS += -lcjson
+LIBS += -lpixman-1
+LIBS += -lSDL2
+LIBS += -lEGL
 
 # lib
 SRCS += lib/dm_string.c
@@ -90,6 +97,7 @@ SRCS += lib/dm_string.c
 SRCS += hw/block_if.c
 SRCS += hw/usb_core.c
 SRCS += hw/uart_core.c
+SRCS += hw/vdisplay_sdl.c
 SRCS += hw/pci/virtio/virtio.c
 SRCS += hw/pci/virtio/virtio_kernel.c
 SRCS += hw/pci/virtio/vhost.c
