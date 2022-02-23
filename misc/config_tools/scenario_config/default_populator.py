@@ -5,9 +5,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import os
 import argparse
-import lxml.etree as etree
+
 from scenario_transformer import ScenarioTransformer
+
+from pipeline import PipelineObject, PipelineStage, PipelineEngine
 
 class DefaultValuePopulator(ScenarioTransformer):
     def add_missing_nodes(self, xsd_element_node, xml_parent_node, new_node_index):
@@ -20,7 +23,7 @@ class DefaultValuePopulator(ScenarioTransformer):
         if self.complex_type_of_element(xsd_element_node) is None and default_value is None:
             return []
 
-        new_node = etree.Element(element_name)
+        new_node = xml_parent_node.makeelement(element_name, {})
         new_node.text = default_value
 
         if new_node_index is not None:
@@ -30,15 +33,30 @@ class DefaultValuePopulator(ScenarioTransformer):
 
         return [new_node]
 
+class DefaultValuePopulatingStage(PipelineStage):
+    uses = {"schema_etree", "scenario_etree"}
+    provides = {"scenario_etree"}
+
+    def run(self, obj):
+        populator = DefaultValuePopulator(obj.get("schema_etree"))
+        etree = obj.get("scenario_etree")
+        populator.transform(etree)
+        obj.set("scenario_etree", etree)
+
 def main(xsd_file, xml_file, out_file):
-    xsd_etree = etree.parse(xsd_file)
-    xsd_etree.xinclude()
-    populator = DefaultValuePopulator(xsd_etree)
+    from xml_loader import XMLLoadStage
+    from lxml_loader import LXMLLoadStage
 
-    xml_etree = etree.parse(xml_file, etree.XMLParser(remove_blank_text=True))
-    populator.transform(xml_etree)
+    pipeline = PipelineEngine(["schema_path", "scenario_path"])
+    pipeline.add_stages([
+        LXMLLoadStage("schema"),
+        XMLLoadStage("scenario"),
+        DefaultValuePopulatingStage(),
+    ])
 
-    xml_etree.write(out_file, pretty_print=True)
+    obj = PipelineObject(schema_path = xsd_file, scenario_path = xml_file)
+    pipeline.run(obj)
+    obj.get("scenario_etree").write(out_file)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Populate a given scenario XML with default values of nonexistent nodes")
