@@ -126,13 +126,20 @@ To set up the ACRN build environment on the development computer:
            e2fslibs-dev \
            pkg-config \
            libnuma-dev \
-           libcjson-dev \
            liblz4-tool \
            flex \
            bison \
            xsltproc \
            clang-format \
            bc
+         
+   .. note:: You need to follow these steps if you are on Ubuntu 18.04 as ``libcjson-dev`` is not available in the default repositories.
+
+      .. code-block:: bash
+
+         sudo add-apt-repository ppa:jrtc27/cjson
+         sudo apt-get update
+         sudo apt install libcjson-dev
 
 #. Install Python package dependencies:
 
