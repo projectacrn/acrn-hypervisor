@@ -89,7 +89,7 @@
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>RT_bzImage</kern_mod>
       <ramdisk_mod/>
-      <bootargs>rw rootwait root=/dev/sda3 rootfstype=ext4 console=ttyS0,115200 console=tty0 rw nohpet console=hvc0 no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable
+      <bootargs>rw rootwait root=/dev/sda3 rootfstype=ext4 console=ttyS0,115200 console=tty0 console=ttyS0 rw nohpet console=hvc0 no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable
 	clocksource=tsc x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0 no_ipi_broadcast=1
 	reboot=acpi
         </bootargs>
