@@ -31,8 +31,6 @@
 
 #include "types.h"
 
-struct gfx_ctx;
-
 struct gfx_ctx_image {
 	int		vgamode;
 	int		width;
@@ -40,6 +38,15 @@ struct gfx_ctx_image {
 	uint32_t	*data;
 };
 
+struct gfx_ctx {
+	struct gfx_ctx_image    *gc_image;
+	int raw;
+};
+
 struct gfx_ctx_image *gc_get_image(struct gfx_ctx *gc);
+struct gfx_ctx *gc_init(int width, int height, void *fbaddr);
+void gc_deinit(struct gfx_ctx *gc);
+void gc_set_fbaddr(struct gfx_ctx *gc, void *fbaddr);
+void gc_resize(struct gfx_ctx *gc, int width, int height);
 
 #endif /* _GC_H_ */

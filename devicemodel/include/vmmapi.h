@@ -53,6 +53,7 @@ struct vmctx {
 	uint32_t lowmem_limit;
 	uint64_t highmem_gpa_base;
 	size_t  lowmem;
+	size_t  fbmem;
 	size_t  biosmem;
 	size_t  highmem;
 	char    *baseaddr;
@@ -64,6 +65,7 @@ struct vmctx {
 	void *vpit;
 	void *ioc_dev;
 	void *tpm_dev;
+	void *fb_base;
 
 	/* BSP state. guest loader needs to fill it */
 	struct acrn_vcpu_regs bsp_regs;

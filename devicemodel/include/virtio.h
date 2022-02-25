@@ -745,5 +745,22 @@ int virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio);
 /**
  * @}
  */
+/* FIXME: Fix the assumption about the zero offset in virtio_pci_cap.
+ * Should not export the internal virtio APIs.
+ */
+void virtio_common_cfg_write(struct pci_vdev *dev,
+		uint64_t offset, int size, uint64_t value);
+void virtio_device_cfg_write(struct pci_vdev *dev,
+		uint64_t offset, int size, uint64_t value);
+void virtio_notify_cfg_write(struct pci_vdev *dev,
+		uint64_t offset, int size, uint64_t value);
+uint32_t virtio_common_cfg_read(
+		struct pci_vdev *dev, uint64_t offset, int size);
+uint32_t virtio_isr_cfg_read(
+		struct pci_vdev *dev, uint64_t offset, int size);
+uint32_t virtio_device_cfg_read(
+		struct pci_vdev *dev, uint64_t offset, int size);
+int virtio_set_modern_pio_bar(
+		struct virtio_base *base, int barnum);
 
 #endif	/* _VIRTIO_H_ */

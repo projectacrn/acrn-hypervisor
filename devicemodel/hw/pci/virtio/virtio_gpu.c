@@ -10,11 +10,16 @@
 #include <string.h>
 #include <pthread.h>
 #include <sys/mman.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <vmmapi.h>
 
 #include "dm.h"
 #include "pci_core.h"
 #include "virtio.h"
 #include "vdisplay.h"
+#include "console.h"
+#include "vga.h"
 
 /*
  * Queue definitions.
@@ -54,6 +59,18 @@
 #define VIRTIO_GPU_MAX_SCANOUTS 16
 #define VIRTIO_GPU_FLAG_FENCE (1 << 0)
 #define VIRTIO_GPU_FLAG_INFO_RING_IDX (1 << 1)
+#define VIRTIO_GPU_FLAG_FENCE	(1 << 0)
+#define VIRTIO_GPU_VGA_FB_SIZE	16 * MB
+#define VIRTIO_GPU_VGA_DMEMSZ	128
+#define VIRTIO_GPU_EDID_SIZE	384
+#define VIRTIO_GPU_VGA_IOPORT_OFFSET	0x400
+#define VIRTIO_GPU_VGA_IOPORT_SIZE	(0x3e0 - 0x3c0)
+#define VIRTIO_GPU_VGA_VBE_OFFSET	0x500
+#define VIRTIO_GPU_VGA_VBE_SIZE	(0xb * 2)
+#define VIRTIO_GPU_CAP_COMMON_OFFSET	0x1000
+#define VIRTIO_GPU_CAP_COMMON_SIZE	0x800
+#define VIRTIO_GPU_CAP_ISR_OFFSET	0x1800
+#define VIRTIO_GPU_CAP_ISR_SIZE	0x800
 
 /*
  * Config space "registers"
@@ -282,6 +299,9 @@ struct virtio_gpu {
 	LIST_HEAD(,virtio_gpu_resource_2d) r2d_list;
 	struct vdpy_display_bh ctrl_bh;
 	struct vdpy_display_bh cursor_bh;
+	struct vdpy_display_bh vga_bh;
+	struct vga vga;
+	uint8_t edid[VIRTIO_GPU_EDID_SIZE];
 };
 
 struct virtio_gpu_command {
@@ -299,6 +319,7 @@ static int virtio_gpu_cfgread(void *, int, int, uint32_t *);
 static int virtio_gpu_cfgwrite(void *, int, int, uint32_t);
 static void virtio_gpu_neg_features(void *, uint64_t);
 static void virtio_gpu_set_status(void *, uint64_t);
+static void * virtio_gpu_vga_render(void *param);
 
 static struct virtio_ops virtio_gpu_ops = {
 	"virtio-gpu",			/* our name */
@@ -347,6 +368,11 @@ virtio_gpu_reset(void *vdev)
 		}
 	}
 	LIST_INIT(&gpu->r2d_list);
+	gpu->vga.enable = true;
+	vdpy_surface_set(gpu->vdpy_handle, &gpu->vga.surf);
+	gpu->vga.surf.width = 0;
+	gpu->vga.surf.stride = 0;
+	pthread_create(&gpu->vga.tid, NULL, virtio_gpu_vga_render, (void*)gpu);
 	virtio_reset_dev(&gpu->base);
 }
 
@@ -693,6 +719,10 @@ virtio_gpu_cmd_set_scanout(struct virtio_gpu_command *cmd)
 
 	cmd->iolen = sizeof(resp);
 	memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
+
+	if(cmd->gpu->vga.enable) {
+		cmd->gpu->vga.enable = false;
+	}
 }
 
 static void
@@ -981,12 +1011,63 @@ virtio_gpu_notify_cursorq(void *vdev, struct virtio_vq_info *vq)
 	vdpy_submit_bh(gpu->vdpy_handle, &gpu->cursor_bh);
 }
 
+static void
+virtio_gpu_vga_bh(void *param)
+{
+	struct virtio_gpu *gpu;
+
+	gpu = (struct virtio_gpu*)param;
+
+	if ((gpu->vga.surf.width != gpu->vga.gc->gc_image->width) ||
+		(gpu->vga.surf.height != gpu->vga.gc->gc_image->height)) {
+		gpu->vga.surf.width = gpu->vga.gc->gc_image->width;
+		gpu->vga.surf.height = gpu->vga.gc->gc_image->height;
+		gpu->vga.surf.stride = gpu->vga.gc->gc_image->width * 4;
+	        gpu->vga.surf.pixel = gpu->vga.gc->gc_image->data;
+		gpu->vga.surf.surf_format = PIXMAN_a8r8g8b8;
+		gpu->vga.surf.surf_type = SURFACE_PIXMAN;
+		vdpy_surface_set(gpu->vdpy_handle, &gpu->vga.surf);
+	}
+
+	vdpy_surface_update(gpu->vdpy_handle, &gpu->vga.surf);
+}
+
+static void *
+virtio_gpu_vga_render(void *param)
+{
+	struct virtio_gpu *gpu;
+
+	gpu = (struct virtio_gpu*)param;
+
+	/* The below logic needs to be refined */
+	while(gpu->vga.enable) {
+		if(gpu->vga.gc->gc_image->vgamode) {
+			vga_render(gpu->vga.gc, gpu->vga.dev);
+			break;
+		}
+
+		if(gpu->vga.gc->gc_image->width != gpu->vga.vberegs.xres ||
+		   gpu->vga.gc->gc_image->height != gpu->vga.vberegs.yres) {
+			gc_resize(gpu->vga.gc, gpu->vga.vberegs.xres, gpu->vga.vberegs.yres);
+		}
+		vdpy_submit_bh(gpu->vdpy_handle, &gpu->vga_bh);
+		usleep(33000);
+	}
+
+	return NULL;
+}
+
 static int
 virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct virtio_gpu *gpu;
 	pthread_mutexattr_t attr;
 	int rc = 0;
+	struct display_info info;
+	int prot;
+	struct virtio_pci_cap cap;
+	struct virtio_pci_notify_cap notify;
+	struct virtio_pci_cfg_cap cfg;
 
 	if (virtio_gpu_device_cnt) {
 		pr_err("%s: only 1 virtio-gpu device can be created.\n", __func__);
@@ -1038,11 +1119,13 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	gpu->vq[VIRTIO_GPU_CURSORQ].qsize = VIRTIO_GPU_RINGSZ;
 	gpu->vq[VIRTIO_GPU_CURSORQ].notify = virtio_gpu_notify_cursorq;
 
-	/* Initialize the ctrl/cursor bh_task */
+	/* Initialize the ctrl/cursor/vga bh_task */
 	gpu->ctrl_bh.task_cb = virtio_gpu_ctrl_bh;
 	gpu->ctrl_bh.data = &gpu->vq[VIRTIO_GPU_CONTROLQ];
 	gpu->cursor_bh.task_cb = virtio_gpu_cursor_bh;
 	gpu->cursor_bh.data = &gpu->vq[VIRTIO_GPU_CURSORQ];
+	gpu->vga_bh.task_cb = virtio_gpu_vga_bh;
+	gpu->vga_bh.data = gpu;
 
 	/* prepare the config space */
 	gpu->cfg.events_read = 0;
@@ -1055,24 +1138,91 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_VENDOR, VIRTIO_VENDOR);
 	pci_set_cfgdata16(dev, PCIR_REVID, 1);
 	pci_set_cfgdata8(dev, PCIR_CLASS, PCIC_DISPLAY);
-	pci_set_cfgdata8(dev, PCIR_SUBCLASS, PCIS_DISPLAY_OTHER);
+	pci_set_cfgdata8(dev, PCIR_SUBCLASS, PCIS_DISPLAY_VGA);
 	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, VIRTIO_TYPE_GPU);
 	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
 
 	LIST_INIT(&gpu->r2d_list);
+	vdpy_get_display_info(gpu->vdpy_handle, &info);
 
 	/*** PCI Config BARs setup ***/
-	rc = virtio_interrupt_init(&gpu->base, virtio_uses_msix());
+	/** BAR0: VGA framebuffer **/
+	pci_emul_alloc_bar(dev, 0, PCIBAR_MEM32, VIRTIO_GPU_VGA_FB_SIZE);
+	prot = PROT_READ | PROT_WRITE;
+	if (vm_map_memseg_vma(ctx, VIRTIO_GPU_VGA_FB_SIZE, dev->bar[0].addr,
+				(uint64_t)ctx->fb_base, prot) != 0) {
+		pr_err("%s: fail to map VGA framebuffer to bar0.\n", __func__);
+	}
+
+	/** BAR2: VGA & Virtio Modern regs **/
+	/* EDID data blob [0x000~0x3ff] */
+	vdpy_get_edid(gpu->vdpy_handle, gpu->edid, VIRTIO_GPU_EDID_SIZE);
+	/* VGA ioports regs [0x400~0x41f] */
+	gpu->vga.gc = gc_init(info.width, info.height, ctx->fb_base);
+	gpu->vga.dev = vga_init(gpu->vga.gc, 0);
+	/* Bochs Display regs [0x500~0x516]*/
+	gpu->vga.vberegs.xres = info.width;
+	gpu->vga.vberegs.yres = info.height;
+	gpu->vga.vberegs.bpp = 32;
+	gpu->vga.vberegs.id = VBE_DISPI_ID0;
+	gpu->vga.vberegs.video_memory_64k = VIRTIO_GPU_VGA_FB_SIZE >> 16;
+	/* Virtio Modern capability regs*/
+	cap.cap_vndr = PCIY_VENDOR;
+	cap.cap_next = 0;
+	cap.cap_len = sizeof(cap);
+	cap.bar = 2;
+	/* Common configuration regs [0x1000~0x17ff]*/
+	cap.cfg_type = VIRTIO_PCI_CAP_COMMON_CFG;
+	cap.offset = VIRTIO_GPU_CAP_COMMON_OFFSET;
+	cap.length = VIRTIO_GPU_CAP_COMMON_SIZE;
+	pci_emul_add_capability(dev, (u_char *)&cap, sizeof(cap));
+	/* ISR status regs [0x1800~0x1fff]*/
+	cap.cfg_type = VIRTIO_PCI_CAP_ISR_CFG;
+	cap.offset = VIRTIO_GPU_CAP_ISR_OFFSET;
+	cap.length = VIRTIO_GPU_CAP_ISR_SIZE;
+	pci_emul_add_capability(dev, (u_char *)&cap, sizeof(cap));
+	/* Device configuration regs [0x2000~0x2fff]*/
+	cap.cfg_type = VIRTIO_PCI_CAP_DEVICE_CFG;
+	cap.offset = VIRTIO_CAP_DEVICE_OFFSET;
+	cap.length = VIRTIO_CAP_DEVICE_SIZE;
+	pci_emul_add_capability(dev, (u_char *)&cap, sizeof(cap));
+	/* Notification regs [0x3000~0x3fff]*/
+	notify.cap.cap_vndr = PCIY_VENDOR;
+	notify.cap.cap_next = 0;
+	notify.cap.cap_len = sizeof(notify);
+	notify.cap.cfg_type = VIRTIO_PCI_CAP_NOTIFY_CFG;
+	notify.cap.bar = 2;
+	notify.cap.offset = VIRTIO_CAP_NOTIFY_OFFSET;
+	notify.cap.length = VIRTIO_CAP_NOTIFY_SIZE;
+	notify.notify_off_multiplier = VIRTIO_MODERN_NOTIFY_OFF_MULT;
+	pci_emul_add_capability(dev, (u_char *)&notify, sizeof(notify));
+	/* Alternative configuration access regs */
+	cfg.cap.cap_vndr = PCIY_VENDOR;
+	cfg.cap.cap_next = 0;
+	cfg.cap.cap_len = sizeof(cfg);
+	cfg.cap.cfg_type = VIRTIO_PCI_CAP_PCI_CFG;
+	pci_emul_add_capability(dev, (u_char *)&cfg, sizeof(cfg));
+	pci_emul_alloc_bar(dev, 2, PCIBAR_MEM64, VIRTIO_MODERN_MEM_BAR_SIZE);
+
+	rc = virtio_intr_init(&gpu->base, 4, virtio_uses_msix());
 	if (rc) {
 		pr_err("%s, interrupt_init failed.\n", __func__);
 		return rc;
 	}
-	rc = virtio_set_modern_bar(&gpu->base, true);
+	rc = virtio_set_modern_pio_bar(&gpu->base, 5);
 	if (rc) {
-		pr_err("%s, set modern bar failed.\n", __func__);
+		pr_err("%s, set modern io bar(BAR5) failed.\n", __func__);
 		return rc;
 	}
 	gpu->vdpy_handle = vdpy_init();
+
+	/* VGA Compablility */
+	gpu->vga.enable = true;
+	gpu->vga.surf.width = 0;
+	gpu->vga.surf.stride = 0;
+	gpu->vga.surf.height = 0;
+	gpu->vga.surf.pixel = 0;
+	pthread_create(&gpu->vga.tid, NULL, virtio_gpu_vga_render, (void*)gpu);
 
 	return 0;
 }
@@ -1109,18 +1259,133 @@ virtio_gpu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	vdpy_deinit(gpu->vdpy_handle);
 }
 
+uint64_t
+virtio_gpu_edid_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+			uint64_t offset, int size)
+{
+	struct virtio_gpu *gpu;
+	uint8_t *p;
+	uint64_t value;
+
+	gpu = (struct virtio_gpu *)dev->arg;
+	p = (uint8_t *)gpu->edid + offset;
+	value = 0;
+	switch (size) {
+	case 1:
+		value = *p;
+		break;
+	case 2:
+		value = *(uint16_t *)p;
+		break;
+	case 4:
+		value = *(uint32_t *)p;
+		break;
+	case 8:
+		value = *(uint64_t *)p;
+		break;
+	default:
+		pr_dbg("%s: read unknown size %d\n", __func__, size);
+		break;
+	}
+
+	return (value);
+}
+
 static void
 virtio_gpu_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		int baridx, uint64_t offset, int size, uint64_t value)
 {
-	virtio_pci_write(ctx, vcpu, dev, baridx, offset, size, value);
+	struct virtio_gpu *gpu;
+
+	gpu = (struct virtio_gpu *)dev->arg;
+	if (baridx == 0) {
+		pr_err("%s: vgafb offset=%d size=%d value=%d.\n", __func__, offset, size, value);
+	} else if (baridx == 2) {
+		if ((offset >= 0) && (offset <= VIRTIO_GPU_EDID_SIZE)) {
+			pr_dbg("%s: EDID region is read-only.\n", __func__);
+		} else if ((offset >= VIRTIO_GPU_VGA_IOPORT_OFFSET) &&
+			   (offset < (VIRTIO_GPU_VGA_IOPORT_OFFSET +
+				       VIRTIO_GPU_VGA_IOPORT_SIZE))) {
+			offset -= VIRTIO_GPU_VGA_IOPORT_OFFSET;
+			vga_ioport_write(ctx, vcpu, &gpu->vga, offset, size,
+					value);
+		} else if ((offset >= VIRTIO_GPU_VGA_VBE_OFFSET) &&
+			   (offset < (VIRTIO_GPU_VGA_VBE_OFFSET +
+				       VIRTIO_GPU_VGA_VBE_SIZE))) {
+			offset -= VIRTIO_GPU_VGA_VBE_OFFSET;
+			vga_vbe_write(ctx, vcpu, &gpu->vga, offset, size, value);
+			if (offset == VBE_DISPI_INDEX_ENABLE) {
+				pthread_create(&gpu->vga.tid, NULL, virtio_gpu_vga_render, (void*)gpu);
+			}
+		} else if ((offset >= VIRTIO_GPU_CAP_COMMON_OFFSET) &&
+			   (offset < (VIRTIO_GPU_CAP_COMMON_OFFSET +
+				       VIRTIO_GPU_CAP_COMMON_SIZE))) {
+			offset -= VIRTIO_GPU_CAP_COMMON_OFFSET;
+			virtio_common_cfg_write(dev, offset, size, value);
+		} else if ((offset >= VIRTIO_CAP_DEVICE_OFFSET) &&
+			   (offset < (VIRTIO_CAP_DEVICE_OFFSET +
+				       VIRTIO_CAP_DEVICE_SIZE))) {
+			offset -= VIRTIO_CAP_DEVICE_OFFSET;
+			virtio_device_cfg_write(dev, offset, size, value);
+		} else if ((offset >= VIRTIO_CAP_NOTIFY_OFFSET) &&
+			   (offset < (VIRTIO_CAP_NOTIFY_OFFSET +
+				       VIRTIO_CAP_NOTIFY_SIZE))) {
+			offset -= VIRTIO_CAP_NOTIFY_OFFSET;
+			virtio_notify_cfg_write(dev, offset, size, value);
+		} else {
+			virtio_pci_write(ctx, vcpu, dev, baridx, offset, size,
+					value);
+		}
+	} else {
+		virtio_pci_write(ctx, vcpu, dev, baridx, offset, size, value);
+	}
 }
 
 static uint64_t
 virtio_gpu_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		int baridx, uint64_t offset, int size)
 {
-	return virtio_pci_read(ctx, vcpu, dev, baridx, offset, size);
+	struct virtio_gpu *gpu;
+
+	gpu = (struct virtio_gpu *)dev->arg;
+	if (baridx == 0) {
+		pr_err("%s: vgafb offset=%d size=%d.\n", __func__, offset, size);
+		return 0;
+	} else if (baridx == 2) {
+		if ((offset >= 0) && (offset <= VIRTIO_GPU_EDID_SIZE)) {
+			return virtio_gpu_edid_read(ctx, vcpu, dev, offset, size);
+		} else if ((offset >= VIRTIO_GPU_VGA_IOPORT_OFFSET) &&
+			   (offset < (VIRTIO_GPU_VGA_IOPORT_OFFSET +
+				       VIRTIO_GPU_VGA_IOPORT_SIZE))) {
+			offset -= VIRTIO_GPU_VGA_IOPORT_OFFSET;
+			return vga_ioport_read(ctx, vcpu, &gpu->vga, offset, size);
+		} else if ((offset >= VIRTIO_GPU_VGA_VBE_OFFSET) &&
+			   (offset < (VIRTIO_GPU_VGA_VBE_OFFSET +
+				       VIRTIO_GPU_VGA_VBE_SIZE))) {
+			offset -= VIRTIO_GPU_VGA_VBE_OFFSET;
+			return vga_vbe_read(ctx, vcpu, &gpu->vga, offset, size);
+		} else if ((offset >= VIRTIO_GPU_CAP_COMMON_OFFSET) &&
+			   (offset < (VIRTIO_GPU_CAP_COMMON_OFFSET +
+				       VIRTIO_GPU_CAP_COMMON_SIZE))) {
+			offset -= VIRTIO_GPU_CAP_COMMON_OFFSET;
+			return virtio_common_cfg_read(dev, offset, size);
+		} else if ((offset >= VIRTIO_GPU_CAP_ISR_OFFSET) &&
+			   (offset < (VIRTIO_GPU_CAP_ISR_OFFSET +
+				       VIRTIO_GPU_CAP_ISR_SIZE))) {
+			offset -= VIRTIO_GPU_CAP_ISR_OFFSET;
+			return virtio_isr_cfg_read(dev, offset, size);
+		} else if ((offset >= VIRTIO_CAP_DEVICE_OFFSET) &&
+			   (offset < (VIRTIO_CAP_DEVICE_OFFSET +
+				       VIRTIO_CAP_DEVICE_SIZE))) {
+			offset -= VIRTIO_CAP_DEVICE_OFFSET;
+			return virtio_device_cfg_read(dev, offset, size);
+		} else {
+			return virtio_pci_read(ctx, vcpu, dev, baridx, offset,
+					size);
+		}
+	} else {
+		return virtio_pci_read(ctx, vcpu, dev, baridx, offset, size);
+	}
 }
 
 
