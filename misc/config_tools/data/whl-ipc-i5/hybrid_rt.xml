@@ -137,9 +137,6 @@
         i915.nuclear_pageflip=1</bootargs>
     </os_config>
     <console_vuart>COM Port 1</console_vuart>
-    <pci_devs>
-      <pci_dev/>
-    </pci_devs>
   </vm>
   <vm id="2">
     <load_order>POST_LAUNCHED_VM</load_order>
@@ -153,10 +150,6 @@
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
-    <epc_section>
-      <base>0</base>
-      <size>0</size>
-    </epc_section>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
   </vm>
@@ -170,10 +163,6 @@
     <clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
-    <epc_section>
-      <base>0</base>
-      <size>0</size>
-    </epc_section>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
   </vm>

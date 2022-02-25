@@ -518,7 +518,6 @@ class UpgradingScenarioStage(PipelineStage):
         DiscardedDataFilter("vm/guest_flags/guest_flag", "0", None),
         DiscardedDataFilter("vm/epc_section/base", "0", "Post-launched VMs cannot have EPC sections."),
         DiscardedDataFilter("vm/epc_section/size", "0", "Post-launched VMs cannot have EPC sections."),
-        DiscardedDataFilter("vm/cpu_affinity/pcpu_id", None, "CPU affinity of the service VM is no longer needed."),
         DiscardedDataFilter("vm/os_config/name", None, "Guest OS names are no longer needed in scenario definitions."),
     ]
 

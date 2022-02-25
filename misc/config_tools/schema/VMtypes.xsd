@@ -32,8 +32,12 @@
   <xs:restriction base="xs:string">
     <xs:enumeration value="RTVM" />
     <xs:enumeration value="STANDARD_VM" />
-    <xs:enumeration value="TEE_VM" />
-    <xs:enumeration value="REE_VM" />
+    <xs:enumeration value="TEE_VM">
+      <xs:annotation acrn:views="" />
+    </xs:enumeration>
+    <xs:enumeration value="REE_VM">
+      <xs:annotation acrn:views="" />
+    </xs:enumeration>
   </xs:restriction>
 </xs:simpleType>
 
@@ -66,75 +70,65 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:complexType>
 
 <xs:complexType name="EPCSection">
-  <xs:annotation acrn:configurable="n">
-    <xs:documentation>epc section.</xs:documentation>
-  </xs:annotation>
   <xs:sequence>
     <xs:element name="base" type="HexFormat" default="0">
-      <xs:annotation>
-        <xs:documentation>SGX EPC section base, must be page aligned.</xs:documentation>
+      <xs:annotation acrn:applicable-vms="pre-launched">
+        <xs:documentation>Specify SGX EPC section base, must be page aligned. (Default value is 0)</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size" type="HexFormat" default="0">
-      <xs:annotation>
-        <xs:documentation>SGX EPC section size in Bytes, must be page
-aligned.</xs:documentation>
+      <xs:annotation acrn:applicable-vms="pre-launched">
+        <xs:documentation>Specify SGX EPC section size in Bytes, must be page aligned. (Default value is 0)</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
 </xs:complexType>
 
 <xs:complexType name="MemoryInfo">
-  <xs:sequence>
+  <xs:all>
     <xs:element name="start_hpa" type="HexFormat" default="0x100000000">
-      <xs:annotation>
-        <xs:documentation>The starting physical address in host for the
-VM.</xs:documentation>
+      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
+        <xs:documentation>The starting physical address in host for the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size" type="MemorySizeType" default="0x20000000" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>The memory size in bytes for the VM. Default
-value is ``0x200000000``.</xs:documentation>
+      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
+        <xs:documentation>The memory size in bytes for the VM. Default value is ``0x200000000``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="start_hpa2" type="HexFormat" default="0x0" minOccurs="0">
-      <xs:annotation acrn:configurable="n">
-        <xs:documentation>Start of second HPA for non-contiguous
-allocations in host for the VM.</xs:documentation>
+      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
+        <xs:documentation>Start of second HPA for non-contiguous allocations in host for the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size_hpa2" type="MemorySizeType" default="0x0" minOccurs="0">
-      <xs:annotation acrn:configurable="n">
-        <xs:documentation>Memory size of second HPA for non-contiguous
-allocations in Bytes for the VM.</xs:documentation>
+      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
+        <xs:documentation>Memory size of second HPA for non-contiguous allocations in Bytes for the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-  </xs:sequence>
+  </xs:all>
 </xs:complexType>
 
 <xs:complexType name="OSConfigurations">
   <xs:all>
     <xs:element name="kern_type" type="VMKernelType">
-      <xs:annotation>
+      <xs:annotation acrn:title="Kernel image type">
         <xs:documentation>Specify the kernel image type so the hypervisor can load it correctly.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="kern_mod" type="xs:string">
-      <xs:annotation>
-        <xs:documentation>The tag for the kernel image that acts as a multiboot module; it must
-exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
+      <xs:annotation acrn:title="Kernel module tag">
+        <xs:documentation>Enter the tag for the kernel image that is used as a multiboot module. It must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="ramdisk_mod" type="xs:string">
-      <xs:annotation>
-        <xs:documentation>The tag for the ramdisk image, which acts as a multiboot module; it
-must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
+    <xs:element name="ramdisk_mod" type="xs:string" minOccurs="0">
+      <xs:annotation acrn:title="RAMdisk module tag">
+        <xs:documentation>Specify the tag for the ramdisk image that is used as a multiboot module. It must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="bootargs" type="xs:string">
-      <xs:annotation>
-        <xs:documentation>Configurable boot argument for pre-launched VM of hybrid or hybrid_rt mode.</xs:documentation>
+    <xs:element name="bootargs" type="xs:string" minOccurs="0">
+      <xs:annotation acrn:title="Kernel boot arguments">
+        <xs:documentation>Specify configurable boot argument for pre-launched or Service VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="kern_load_addr" type="KernLoadAddr" minOccurs="0">
@@ -208,14 +202,13 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
 <xs:complexType name="MMIOResourcesConfiguration">
   <xs:sequence>
     <xs:element name="TPM2" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>Specify TPM2 device to passthrough.</xs:documentation>
+      <xs:annotation acrn:title="Trusted Platform Module passthrough" acrn:applicable-vms="pre-launched, post-launched">
+        <xs:documentation>Passthrough the Trusted Platform Module (TPM2) device to this VM. (Optional) (Default value is n)</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="p2sb" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>Expose the P2SB (Primary-to-Sideband) bridge
-to the pre-launched VM.</xs:documentation>
+      <xs:annotation acrn:title="Primary-to-Sideband bridge passthrough" acrn:applicable-vms="pre-launched">
+        <xs:documentation>Passthrough the P2SB (Primary-to-Sideband) bridge register access BAR to the this VM. (Optional) (Default value is n)</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -223,9 +216,9 @@ to the pre-launched VM.</xs:documentation>
 
 <xs:complexType name="PCIDevsConfiguration">
   <xs:sequence>
-    <xs:element name="pci_dev" type="xs:string" maxOccurs="unbounded">
-      <xs:annotation>
-        <xs:documentation>A passthrough PCI device.</xs:documentation>
+    <xs:element name="pci_dev" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+      <xs:annotation acrn:title="PCI device assignment">
+        <xs:documentation>Select the PCI devices you want to assign to this virtual machine.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
