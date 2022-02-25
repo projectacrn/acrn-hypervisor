@@ -1167,7 +1167,7 @@ virtio_set_modern_mmio_bar(struct virtio_base *base, int barnum)
 /*
  * Set virtio modern PIO BAR (usually 2) to map notify capability.
  */
-static int
+int
 virtio_set_modern_pio_bar(struct virtio_base *base, int barnum)
 {
 	int rc;
@@ -1264,7 +1264,7 @@ virtio_get_cap_id(uint64_t offset, int size)
 	return rc;
 }
 
-static uint32_t
+uint32_t
 virtio_common_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 {
 	struct virtio_base *base = dev->arg;
@@ -1378,7 +1378,7 @@ virtio_common_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 	return value;
 }
 
-static void
+void
 virtio_common_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 			uint64_t value)
 {
@@ -1511,7 +1511,7 @@ bad_qindex:
 }
 
 /* ignore driver writes to ISR region, and only support ISR region read */
-static uint32_t
+uint32_t
 virtio_isr_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 {
 	struct virtio_base *base = dev->arg;
@@ -1525,7 +1525,7 @@ virtio_isr_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 	return value;
 }
 
-static uint32_t
+uint32_t
 virtio_device_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 {
 	struct virtio_base *base = dev->arg;
@@ -1558,7 +1558,7 @@ virtio_device_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 	return value;
 }
 
-static void
+void
 virtio_device_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 			uint64_t value)
 {
@@ -1590,7 +1590,7 @@ virtio_device_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
  * ignore driver reads from notify region, and only support notify region
  * write
  */
-static void
+void
 virtio_notify_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 			uint64_t value)
 {

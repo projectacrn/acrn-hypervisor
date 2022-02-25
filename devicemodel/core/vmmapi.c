@@ -371,6 +371,7 @@ vm_setup_memory(struct vmctx *ctx, size_t memsize)
 	}
 
 	ctx->biosmem = high_bios_size();
+	ctx->fbmem = (16 * 1024 * 1024);
 
 	ret = hugetlb_setup_memory(ctx);
 	if (ret == 0) {
