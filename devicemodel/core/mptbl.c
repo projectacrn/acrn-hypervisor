@@ -34,6 +34,7 @@
 #include "acpi.h"
 #include "dm.h"
 #include "pci_core.h"
+#include "vmmapi.h"
 
 #define MPTABLE_BASE		0xF0000
 
@@ -117,11 +118,39 @@ static void
 mpt_build_proc_entries(proc_entry_ptr mpep, int ncpu)
 {
 	int i;
+	uint64_t guest_pcpu_bitmask = vm_get_cpu_affinity_dm();
+
+	if (guest_pcpu_bitmask == 0) {
+		pr_err("%s,Err: Invalid guest_pcpu_bitmask.\n", __func__);
+		return;
+	}
+
+	pr_info("%s, guest_cpu_bitmask: 0x%x\n", __func__, guest_pcpu_bitmask);
 
 	for (i = 0; i < ncpu; i++) {
+		int pcpu_id = pcpuid_from_vcpuid(guest_pcpu_bitmask, i);
+		int lapic_id;
+
+		if (pcpu_id < 0) {
+			pr_err("%s,Err: pcpu id is not found in guest_pcpu_bitmask.\n", __func__);
+			return;
+		}
+
+		assert(pcpu_id < ACRN_PLATFORM_LAPIC_IDS_MAX);
+		if (pcpu_id >= ACRN_PLATFORM_LAPIC_IDS_MAX) {
+			pr_err("%s,Err: pcpu id %u should be less than ACRN_PLATFORM_LAPIC_IDS_MAX.\n", __func__, pcpu_id);
+			return;
+		}
+
+		lapic_id = lapicid_from_pcpuid(pcpu_id);
+		if (lapic_id == -1) {
+			pr_err("Failed to retrieve the local APIC ID for pCPU %u\n", pcpu_id);
+			return;
+		}
+
 		memset(mpep, 0, sizeof(*mpep));
 		mpep->type = MPCT_ENTRY_PROCESSOR;
-		mpep->apic_id = i; /* XXX */
+		mpep->apic_id = lapic_id;
 		mpep->apic_version = LAPIC_VERSION;
 		mpep->cpu_flags = PROCENTRY_FLAG_EN;
 		if (i == 0)
