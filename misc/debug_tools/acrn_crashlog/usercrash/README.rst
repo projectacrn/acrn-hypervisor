@@ -6,22 +6,22 @@ Usercrash
 Description
 ***********
 
-The ``usercrash`` tool gets the crash info for the crashing process in
-userspace. The collected information is saved as usercrash_xx under
+The ``usercrash`` tool gets the crash information for the crashing process in
+user space. The collected information is saved as usercrash_xx under
 ``/var/log/usercrashes/``.
 
 Design
 ******
 
-``usercrash`` is designed using a  Client/Server model. The server is
+``usercrash`` is designed using a  client/server model. The server is
 autostarted at boot. The client is configured in ``core_pattern``, which
-will be triggered when a crash occurs in userspace. The client then
+will be triggered when a crash occurs in user space. The client then
 sends the crash event to the server. The server checks the files under
-``/var/log/usercrashes/`` and creates a new file usercrash_xx (xx means
+``/var/log/usercrashes/`` and creates a file usercrash_xx (xx means
 the index of the crash file).  Then it sends the file descriptor (fd) to
-the client. The client is responsible for collecting crash information
-and saving it in the crashlog file. After the saving work is done, the
-client notifies server and the server will clean up.
+the client. The client collects the crash information
+and saves it in the crash file. After the saving work is done, the
+client notifies the server. The server cleans up.
 
 The workflow diagram:
 
@@ -60,9 +60,9 @@ Usage
   client and default app. Once a crash occurs in user space, the client and
   default app will be invoked separately.
 
-- The ``debugger`` is an independent tool to dump the debug information of the
-  specific process, including backtrace, stack, opened files, registers value,
-  memory content around registers, and etc.
+- The ``debugger`` is an independent tool to dump the debugging information of the
+  specific process, including backtrace, stack, opened files, register values,
+  and memory content around registers.
 
 .. code-block:: none
 
@@ -75,14 +75,15 @@ Usage
 Source Code
 ***********
 
-- client.c : This file is the implementation for client of ``usercrash``, which
-  is responsible for delivering the ``usercrash`` event to the server, and
-  collecting crash information and saving it to the crashfile.
+- client.c : This file is the implementation for the client of ``usercrash``.
+  The client is responsible for delivering the ``usercrash`` event to the
+  server, and collecting crash information and saving it to the crash file.
 - crash_dump.c : This file is the implementation for dumping the crash
-  information, including backtrace stack, opened files, registers value, memory
-  content around registers, and etc.
-- debugger.c : This file is to implement a tool, which runs in command line to
-  dump the process information list above.
-- protocol.c : This file is the socket protocol implement file.
-- server.c : This file is the implement file for server of ``usercrash``, which
-  is responsible for creating the crashfile and handle the events from client.
+  information, including backtrace stack, opened files, register values, and
+  memory content around registers.
+- debugger.c : This file implements a tool, which runs in command line to
+  dump the process information listed above.
+- protocol.c : This file is the socket protocol implementation file.
+- server.c : This file is the implementation file for the server of
+  ``usercrash``. The server is responsible for creating the crash file and
+  handling the events from the client.

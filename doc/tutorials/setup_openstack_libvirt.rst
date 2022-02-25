@@ -7,11 +7,11 @@ Introduction
 ************
 
 This document provides instructions for setting up libvirt to configure
-ACRN. We use OpenStack to use libvirt and we'll install OpenStack in a container
-to avoid crashing your system and to take advantage of easy
-snapshots/restores so that you can quickly roll back your system in the
+ACRN. We use OpenStack to use libvirt. We'll show how to install OpenStack in a
+container to avoid crashing your system and to take advantage of easy
+snapshots and restores so that you can quickly roll back your system in the
 event of setup failure. (You should only install OpenStack directly on Ubuntu if
-you have a dedicated testing machine). This setup utilizes LXC/LXD on
+you have a dedicated testing machine.) This setup utilizes LXC/LXD on
 Ubuntu 20.04.
 
 Install ACRN
@@ -81,8 +81,8 @@ Set Up and Launch LXC/LXD
       .. note::
 
          Make sure to respect the indentation as to keep these options within
-         the **config** section. It is a good idea after saving your changes
-         to check that they have been correctly recorded (``lxc config show openstack``).
+         the **config** section. After saving your changes,
+         check that they have been correctly recorded (``lxc config show openstack``).
 
    b. Run the following commands to configure ``openstack``::
 
@@ -102,7 +102,7 @@ Set Up and Launch LXC/LXD
 6. Let ``systemd`` manage **eth1** in the container, with **eth0** as the
    default route:
 
-   Edit ``/etc/netplan/50-cloud-init.yaml``
+   Edit ``/etc/netplan/50-cloud-init.yaml`` as follows:
 
    .. code-block:: none
 
@@ -132,7 +132,7 @@ Set Up and Launch LXC/LXD
 
      no_proxy=xcompany.com,.xcompany.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16
 
-10. Add a new user named **stack** and set permissions
+10. Add a new user named **stack** and set permissions:
 
     .. code-block:: none
 
@@ -203,7 +203,7 @@ Set Up Libvirt
      $ make
      $ sudo make install
 
-   .. note:: The ``dev-acrn-v6.1.0`` branch is used in this tutorial. It is
+   .. note:: The ``dev-acrn-v6.1.0`` branch is used in this tutorial and is
       the default branch.
 
 4. Edit and enable these options in ``/etc/libvirt/libvirtd.conf``::
@@ -293,8 +293,8 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 
    a. Inside the container, use the command ``ip a`` to identify the ``br-ex`` bridge
       interface. ``br-ex`` should have two IPs. One should be visible to
-      the native Ubuntu's ``acrn-br0`` interface (e.g. iNet 192.168.1.104/24).
-      The other one is internal to OpenStack (e.g. iNet 172.24.4.1/24). The
+      the native Ubuntu's ``acrn-br0`` interface (for example, iNet 192.168.1.104/24).
+      The other one is internal to OpenStack (for example, iNet 172.24.4.1/24). The
       latter corresponds to the public network in OpenStack.
 
    b. Set up SNAT to establish a link between ``acrn-br0`` and OpenStack.
@@ -315,7 +315,7 @@ Use the OpenStack management interface URL reported in a previous step
 to finish setting up the network and configure and create an OpenStack
 instance.
 
-1. Begin by using your browser to login as **admin** to the OpenStack management
+1. Begin by using your browser to log in as **admin** to the OpenStack management
    dashboard (using the URL reported previously). Use the admin
    password you set in the ``devstack/local.conf`` file:
 
@@ -324,7 +324,7 @@ instance.
       :width: 1200px
       :name: os-01-login
 
-   Click on the **Project / Network Topology** and then the **Topology** tab
+   Click **Project / Network Topology** and then the **Topology** tab
    to view the existing **public** (external) and **shared** (internal) networks:
 
    .. figure:: images/OpenStack-02-topology.png
@@ -342,7 +342,7 @@ instance.
       :name: os-03-router
 
    Give it a name (**acrn_router**), select **public** for the external network,
-   and select create router:
+   and select **Create Router**:
 
    .. figure:: images/OpenStack-03a-create-router.png
       :align: center
@@ -350,21 +350,21 @@ instance.
       :name: os-03a-router
 
    That added the external network to the router.  Now add
-   the internal network too. Click on the acrn_router name:
+   the internal network too. Click the acrn_router name:
 
    .. figure:: images/OpenStack-03b-created-router.png
       :align: center
       :width: 1200px
       :name: os-03b-router
 
-   Go to the interfaces tab, and click on **+Add interface**:
+   Go to the **Interfaces** tab, and click **+Add interface**:
 
    .. figure:: images/OpenStack-04a-add-interface.png
       :align: center
       :width: 1200px
       :name: os-04a-add-interface
 
-   Select the subnet of the shared (private) network and click submit:
+   Select the subnet of the shared (private) network and click **Submit**:
 
    .. figure:: images/OpenStack-04b-add-interface.png
       :align: center
@@ -379,7 +379,7 @@ instance.
       :width: 1200px
       :name: os-04c-add-interface
 
-   View the router graphically by clicking on the "Network Topology" tab:
+   View the router graphically by clicking the **Network Topology** tab:
 
    .. figure:: images/OpenStack-05-topology.png
       :align: center
@@ -390,8 +390,8 @@ instance.
    networking.
 
 #. Next, we'll prepare for launching an OpenStack instance.
-   Click on the **Admin / Compute/ Image** tab and then the **+Create
-   image** button:
+   Click the **Admin / Compute / Image** tab and then the **+Create
+   Image** button:
 
    .. figure:: images/OpenStack-06-create-image.png
       :align: center
@@ -411,17 +411,17 @@ instance.
       :name: os-06b-create-image
 
    Give the image a name (**Ubuntu20.04**), select the **QCOW2 - QEMU
-   Emulator** format, and click on **Create Image**:
+   Emulator** format, and click **Create Image**:
 
    .. figure:: images/OpenStack-06e-create-image.png
       :align: center
       :width: 900px
       :name: os-063-create-image
 
-   This will take a few minutes to complete.
+   This task will take a few minutes to complete.
 
-#. Next, click on the **Admin / Computer / Flavors** tabs and then the
-   **+Create Flavor** button.  This is where you'll define a machine flavor name
+#. Next, click the **Admin / Compute / Flavors** tab and then the
+   **+Create Flavor** button.  Define a machine flavor name
    (**UbuntuCloud**), and specify its resource requirements: the number of vCPUs (**2**), RAM size
    (**512MB**), and root disk size (**4GB**):
 
@@ -430,7 +430,7 @@ instance.
       :width: 700px
       :name: os-07a-create-flavor
 
-   Click on **Create Flavor** and you'll return to see a list of
+   Click **Create Flavor** and you'll return to see a list of
    available flavors plus the new one you created (**UbuntuCloud**):
 
    .. figure:: images/OpenStack-07b-flavor-created.png
@@ -439,11 +439,11 @@ instance.
       :name: os-07b-create-flavor
 
 #. OpenStack security groups act as a virtual firewall controlling
-   connections between instances, allowing connections such as SSH, and
+   connections between instances, allowing connections such as SSH and
    HTTPS. These next steps create a security group allowing SSH and ICMP
    connections.
 
-   Go to **Project / Network / Security Groups** and click on the **+Create
+   Go to **Project / Network / Security Groups** and click the **+Create
    Security Group** button:
 
    .. figure:: images/OpenStack-08-security-group.png
@@ -460,7 +460,7 @@ instance.
       :name: os-08a-security-group
 
    You'll return to a rule management screen for this new group.  Click
-   on the **+Add Rule** button:
+   the **+Add Rule** button:
 
    .. figure:: images/OpenStack-08b-add-rule.png
       :align: center
@@ -474,7 +474,7 @@ instance.
       :width: 1200px
       :name: os-08c-security-group
 
-   Similarly, add another rule to add a **All ICMP** rule too:
+   Similarly, add another rule to add an **All ICMP** rule too:
 
    .. figure:: images/OpenStack-08d-add-All-ICMP-rule.png
       :align: center
@@ -482,16 +482,16 @@ instance.
       :name: os-08d-security-group
 
 #. Create a public/private keypair used to access the created instance.
-   Go to **Project / Compute / Key Pairs** and click on **+Create Key
+   Go to **Project / Compute / Key Pairs** and click **+Create Key
    Pair**, give the keypair a name (**acrnKeyPair**) and Key Type
-   (**SSH Key**) and click on **Create Key Pair**:
+   (**SSH Key**) and click **Create Key Pair**:
 
    .. figure:: images/OpenStack-09a-create-key-pair.png
       :align: center
       :width: 1200px
       :name: os-09a-key-pair
 
-   You should save the **private** keypair file safely,
+   Save the **private** keypair file safely,
    for future use:
 
    .. figure:: images/OpenStack-09c-key-pair-private-key.png
@@ -500,7 +500,7 @@ instance.
       :name: os-09c-key-pair
 
 #. Now we're ready to launch an instance.  Go to **Project / Compute /
-   Instance**, click on the **Launch Instance** button, give it a name
+   Instance**, click the **Launch Instance** button, give it a name
    (**UbuntuOnACRN**) and click **Next**:
 
    .. figure:: images/OpenStack-10a-launch-instance-name.png
@@ -525,7 +525,7 @@ instance.
       :width: 900px
       :name: os-10c-launch
 
-   Click on **>** next to the Allocated **UbuntuCloud** flavor and see
+   Click **>** next to the Allocated **UbuntuCloud** flavor and see
    details about your choice:
 
    .. figure:: images/OpenStack-10d-flavor-selected.png
@@ -533,7 +533,7 @@ instance.
       :width: 900px
       :name: os-10d-launch
 
-   Click on the **Networks** tab, and select the internal **shared**
+   Click the **Networks** tab, and select the internal **shared**
    network from the "Available" list:
 
    .. figure:: images/OpenStack-10e-select-network.png
@@ -541,7 +541,7 @@ instance.
       :width: 1200px
       :name: os-10e-launch
 
-   Click on the **Security Groups** tab and select
+   Click the **Security Groups** tab and select
    the **acrnSecuGroup**  security group you created earlier. Remove the
    **default** security group if it's in the "Allocated" list:
 
@@ -550,8 +550,8 @@ instance.
       :width: 1200px
       :name: os-10d-security
 
-   Click on the **Key Pair** tab and verify the **acrnKeyPair** you
-   created earlier is in the "Allocated" list, and click on **Launch
+   Click the **Key Pair** tab and verify the **acrnKeyPair** you
+   created earlier is in the "Allocated" list, and click **Launch
    Instance**:
 
    .. figure:: images/OpenStack-10g-show-keypair-launch.png
@@ -561,7 +561,7 @@ instance.
 
    It will take a few minutes to complete launching the instance.
 
-#. Click on the **Project / Compute / Instances** tab to monitor
+#. Click the **Project / Compute / Instances** tab to monitor
    progress. When the instance status is "Active" and power state is
    "Running", associate a floating IP to the instance
    so you can access it:
@@ -571,7 +571,7 @@ instance.
       :width: 1200px
       :name: os-11-running
 
-   On the **Manage Floating IP Associations** screen, click on the **+**
+   On the **Manage Floating IP Associations** screen, click the **+**
    to add an association:
 
    .. figure:: images/OpenStack-11a-manage-floating-ip.png
@@ -579,7 +579,7 @@ instance.
       :width: 700px
       :name: os-11a-running
 
-   Select **public** pool, and click on **Allocate IP**:
+   Select **public** pool, and click **Allocate IP**:
 
    .. figure:: images/OpenStack-11b-allocate-floating-ip.png
       :align: center
@@ -597,8 +597,8 @@ instance.
 Final Steps
 ***********
 
-With that, the OpenStack instance is running and connected to the
-network.  You can graphically see this by returning to the **Project /
+The OpenStack instance is now running and connected to the
+network.  You can confirm by returning to the **Project /
 Network / Network Topology** view:
 
 .. figure:: images/OpenStack-12b-running-topology-instance.png
@@ -606,7 +606,7 @@ Network / Network Topology** view:
    :width: 1200px
    :name: os-12b-running
 
-You can also see a hypervisor summary by clicking on **Admin / Compute /
+You can also see a hypervisor summary by clicking **Admin / Compute /
 Hypervisors**:
 
 .. figure:: images/OpenStack-12d-compute-hypervisor.png

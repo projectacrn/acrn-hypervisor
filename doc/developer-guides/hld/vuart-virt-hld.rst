@@ -17,7 +17,7 @@ port base and IRQ.
 
    UART virtualization architecture
 
-Each vUART has two FIFOs: 8192 bytes Tx FIFO and 256 bytes Rx FIFO.
+Each vUART has two FIFOs: 8192 bytes TX FIFO and 256 bytes RX FIFO.
 Currently, we only provide 4 ports for use.
 
 -  COM1 (port base: 0x3F8, irq: 4)
@@ -34,14 +34,14 @@ Console vUART
 *************
 
 A vUART can be used as a console port, and it can be activated by
-a ``vm_console <vm_id>`` command in the hypervisor console. From
-:numref:`console-uart-arch`,  there is only one physical UART, but four
-console vUARTs (green color blocks). A hypervisor console is implemented
-above the physical UART, and it works in polling mode. There is a timer
-in the hv console. The timer handler dispatches the input from physical UART
-to the vUART or the hypervisor shell process and gets data from vUART's
-Tx FIFO and sends it to the physical UART. The data in vUART's FIFOs will be
-overwritten when it is not taken out in time.
+a ``vm_console <vm_id>`` command in the hypervisor console. 
+:numref:`console-uart-arch` shows only one physical UART, but four console
+vUARTs (green color blocks). A hypervisor console is implemented above the
+physical UART, and it works in polling mode. The hypervisor console has a
+timer. The timer handler sends input from the physical UART to the
+vUART or the hypervisor shell process. The timer handler also gets data from
+the vUART's TX FIFO and sends it to the physical UART. The data in the vUART's
+FIFOs is overwritten if it is not taken out in time.
 
 .. figure:: images/uart-virt-hld-2.png
    :align: center
@@ -66,7 +66,7 @@ Operations in VM0
 
 -  VM traps to hypervisor, and the vUART PIO handler is called.
 
--  Puts the data to its target vUART's Rx FIFO.
+-  Puts the data to its target vUART's RX FIFO.
 
 -  Injects a Data Ready interrupt to VM1.
 
@@ -80,9 +80,9 @@ Operations in VM1
 
 -  Reads LSR register, finds a Data Ready interrupt.
 
--  Reads data from Rx FIFO.
+-  Reads data from RX FIFO.
 
--  If Rx FIFO is not full, injects THRE interrupt to VM0.
+-  If RX FIFO is not full, injects THRE interrupt to VM0.
 
 .. figure:: images/uart-virt-hld-3.png
    :align: center
@@ -120,7 +120,7 @@ Usage
                   }
 
    The kernel bootargs ``console=ttySx`` should be the same with
-   vuart[0]; otherwise, the kernel console log can not be captured by
+   vuart[0]; otherwise, the kernel console log cannot be captured by the
    hypervisor. Then, after bringing up the system, you can switch the console
    to the target VM by:
 
@@ -131,8 +131,8 @@ Usage
 
 -  For communication vUART
 
-   To enable the communication port, you should configure vuart[1] in
-   the two VMs which want to communicate. The port_base and IRQ should
+   To enable the communication port, configure vuart[1] in
+   the two VMs that need to communicate. The port_base and IRQ should
    not repeat with the vuart[0] in the same VM. t_vuart.vm_id is the
    target VM's vm_id, start from 0 (0 means VM0). t_vuart.vuart_id is the
    target vUART index in the target VM, start from 1 (1 means vuart[1]).
@@ -159,13 +159,13 @@ Usage
                         .t_vuart.vuart_id = 1U,
                   },
 
-.. note:: The device mode also has a virtual UART, and also uses 0x3F8
+.. note:: The Device Model also has a virtual UART and uses 0x3F8
    and 0x2F8 as port base. If you add ``-s <slot>, lpc`` in the launch
-   script, the device model will create COM0 and COM1 for the post
-   launched VM. It will also add the port info to the ACPI table. This is
-   useful for Windows and vxworks as they probe the driver according to the ACPI
-   table.
+   script, the Device Model will create COM0 and COM1 for the post-launched VM.
+   It will also add the port information to the ACPI table. This configuration
+   is useful for Windows and VxWorks as they probe the driver according to the
+   ACPI table.
 
-   If the user enables both the device model UART and the hypervisor vUART at the
-   same port address, access to the port address will be responded to
-   by the hypervisor vUART directly, and will not pass to the device model.
+   If you enable the Device Model UART and the hypervisor vUART at the
+   same port address, access to the port address will be responded to by the
+   hypervisor vUART directly, and will not pass to the Device Model.

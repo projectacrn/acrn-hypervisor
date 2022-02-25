@@ -21,10 +21,9 @@ Trusty consists of:
    communication with trusted applications executed within the Trusty OS using
    the kernel drivers
 
-LK (`Little Kernel`_) is a tiny operating system suited for small embedded
-devices, bootloaders, and other environments where OS primitives such as
-threads, mutexes, and timers are needed, but there's a desire to keep things
-small and lightweight.  LK has been chosen as the Trusty OS kernel.
+LK (`Little Kernel`_) is a tiny operating system for small embedded
+devices, bootloaders, and other environments that need OS primitives such as
+threads, mutexes, and timers.  LK has been chosen as the Trusty OS kernel.
 
 Trusty Architecture
 *******************
@@ -45,7 +44,7 @@ Trusty Architecture
 Trusty Specific Hypercalls
 **************************
 
-There are a few :ref:`hypercall_apis` that are related to Trusty.
+The following :ref:`hypercall_apis` are related to Trusty.
 
 .. doxygengroup:: trusty_hypercall
    :project: Project ACRN
@@ -96,7 +95,7 @@ EPT Hierarchy
 *************
 
 As per the Trusty design, Trusty can access the Normal World's memory, but the
-Normal World cannot access the Secure World's memory.  Hence it means the Secure
+Normal World cannot access the Secure World's memory.  The Secure
 World EPTP page table hierarchy must contain the Normal World GPA address space,
 while the Trusty world's GPA address space must be removed from the Normal World
 EPTP page table hierarchy.
@@ -113,10 +112,9 @@ PD and PT for high memory (>= 511 GB) are valid for the Trusty World's EPT only.
 Benefit
 =======
 
-This design will benefit the EPT changes of the Normal World. There are
-requirements to modify the Normal World's EPT during runtime such as increasing
-memory and changing attributes. If such behavior happens, only PD and PT
-for the Normal World need to be updated.
+The Normal World's EPT can be modified during runtime. Examples include
+increasing memory and changing attributes. If such behavior happens, only PD and
+PT for the Normal World need to be updated.
 
 .. figure:: images/ept-hierarchy.png
    :align: center
