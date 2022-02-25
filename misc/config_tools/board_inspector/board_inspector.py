@@ -51,7 +51,6 @@ def check_deps():
         res = subprocess.Popen(["update-pciids", "-q"])
         if res.wait() != 0:
             logging.warning(f"Failed to invoke update-pciids. No functional impact is foreseen, but descriptions of PCI devices may be inaccurate.")
-            sys.exit(1)
     except Exception as e:
         logging.warning(f"Failed to invoke update-pciids: {e}. No functional impact is foreseen, but descriptions of PCI devices may be unavailable.")
 
