@@ -26,6 +26,16 @@
   </xs:restriction>
 </xs:simpleType>
 
+<xs:simpleType name="BuildType">
+  <xs:annotation>
+    <xs:documentation>A string that indicates the build type of the hypervisor.</xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="release" />
+    <xs:enumeration value="debug" />
+  </xs:restriction>
+</xs:simpleType>
+
 <xs:simpleType name="KernLoadAddr">
   <xs:annotation>
     <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>

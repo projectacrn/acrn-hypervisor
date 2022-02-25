@@ -60,7 +60,7 @@
     <xsl:param name="key" />
     <xsl:param name="value" />
 
-    <xsl:if test="$value = 'y'">
+    <xsl:if test="($value = 'true') or ($value = 'y')">
       <xsl:call-template name="entry-by-key-value">
 	<xsl:with-param name="key" select="$key" />
 	<xsl:with-param name="value" select="1" />

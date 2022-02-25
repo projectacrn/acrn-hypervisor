@@ -1,7 +1,7 @@
 <acrn-config board="nuc11tnbi5" scenario="hybrid">
   <hv>
     <DEBUG_OPTIONS>
-      <RELEASE>n</RELEASE>
+      <BUILD_TYPE>debug</BUILD_TYPE>
       <SERIAL_CONSOLE>/dev/ttyS0</SERIAL_CONSOLE>
       <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
       <NPK_LOGLEVEL>5</NPK_LOGLEVEL>

@@ -220,6 +220,17 @@ class ScenarioUpgrader(ScenarioTransformer):
         old_data_node = old_hv_vm_node.xpath(xpath)
         return old_data_node
 
+    def move_build_type(self, xsd_element_node, xml_parent_node, new_nodes):
+        old_data_node = self.get_node(self.old_xml_etree, f"//hv//RELEASE")
+        if old_data_node is not None:
+            new_node = etree.Element(xsd_element_node.get("name"))
+            new_node.text = "release" if old_data_node.text == "y" else "debug"
+            new_nodes.append(new_node)
+            self.old_data_nodes.discard(old_data_node)
+        else:
+            self.move_data_by_xpath(".//BUILD_TYPE", xsd_element_node, xml_parent_node, new_nodes)
+        return False
+
     def move_legacy_vuart(self, xsd_element_node, xml_parent_node, new_nodes):
         # Preserve the legacy vuart for console only.
         legacy_vuart = self.get_from_old_data(xml_parent_node, ".//legacy_vuart[@id = '0']")
@@ -357,6 +368,7 @@ class ScenarioUpgrader(ScenarioTransformer):
         "hide_mtrr_support": partialmethod(move_guest_flag, "GUEST_FLAG_HIDE_MTRR"),
         "security_vm": partialmethod(move_guest_flag, "GUEST_FLAG_SECURITY_VM"),
 
+        "BUILD_TYPE": move_build_type,
         "legacy_vuart": move_legacy_vuart,
         "vuart_connections": move_vuart_connections,
         "IVSHMEM": move_ivshmem,

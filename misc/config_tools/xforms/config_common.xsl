@@ -43,8 +43,9 @@
   </xsl:template>
 
   <xsl:template match="DEBUG_OPTIONS">
-    <xsl:call-template name="boolean-by-key">
+    <xsl:call-template name="boolean-by-key-value">
       <xsl:with-param name="key" select="'RELEASE'" />
+      <xsl:with-param name="value" select="BUILD_TYPE = 'release'" />
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key-value">
