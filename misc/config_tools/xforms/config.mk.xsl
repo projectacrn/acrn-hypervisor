@@ -63,7 +63,7 @@
       <xsl:when test="($key = 'RELEASE')">
 	<xsl:call-template name="entry-by-key-value">
 	  <xsl:with-param name="key" select="$key" />
-	  <xsl:with-param name="value" select="$value" />
+	  <xsl:with-param name="value" select="'n'" />
         </xsl:call-template>
       </xsl:when>
       <xsl:otherwise>

@@ -92,7 +92,11 @@ ifdef RELEASE
     ifneq ($(RELEASE),$(CONFIG_RELEASE))
       $$(warning The command line sets RELEASE to be '$(RELEASE)', but an existing build is configured with '$(CONFIG_RELEASE)')
       $$(warning The configuration will be modified for RELEASE=$(RELEASE))
-      $$(shell sed -i "s@\(<RELEASE.*>\)[yn]\(</RELEASE>\)@\1$(RELEASE)\2@g" $(HV_SCENARIO_XML))
+      ifeq ($(RELEASE),y)
+        $$(shell sed -i "s@\(<BUILD_TYPE.*>\).*\(</BUILD_TYPE>\)@\1release\2@g" $(HV_SCENARIO_XML))
+      else
+        $$(shell sed -i "s@\(<BUILD_TYPE.*>\).*\(</BUILD_TYPE>\)@\1debug\2@g" $(HV_SCENARIO_XML))
+      endif
     endif
   endif
 else

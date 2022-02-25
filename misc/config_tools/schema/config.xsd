@@ -13,8 +13,8 @@
   </xs:annotation>
 
   <xs:all>
-    <xs:element name="RELEASE" type="Boolean" default="n">
-      <xs:annotation>
+    <xs:element name="BUILD_TYPE" type="BuildType" default="debug">
+      <xs:annotation acrn:title="Build type" acrn:views="basic">
         <xs:documentation>Build an image for release (``y``) or debug (``n``).
 In a **release** image, assertions are not enforced and debugging
 features are disabled, including logs, serial console, and the

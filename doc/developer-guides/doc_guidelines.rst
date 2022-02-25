@@ -741,12 +741,9 @@ example:
 
 .. code-block:: xml
 
-    <xs:element name="RELEASE" type="Boolean" default="n">
-      <xs:annotation>
-        <xs:documentation>Build an image for release (``y``) or debug (``n``).
-    In a **release** image, assertions are not enforced and debugging
-    features are disabled, including logs, serial console, and the
-    hypervisor shell.</xs:documentation>
+    <xs:element name="BUILD_TYPE" type="BuildType" default="debug">
+      <xs:annotation acrn:title="Build type" acrn:views="basic">
+        <xs:documentation>Identify build type.  Debug mode enables debug shell, prints, and logs.  Release mode optimizes the ACRN binary for deployment and turns off all debug infrastructure.  These can only be changed at build time.</xs:documentation>
       </xs:annotation>
     </xs:element>
 
@@ -755,8 +752,8 @@ in the ``.xsd`` files are extracted and transformed into reStructuredText using
 an XSLT transformation found in ``doc/scripts/configdoc.xsl``. The generated
 option documentation is organized and formatted to make it easy to create links
 to specific option descriptions using an ``:option:`` role, for example,
-``:option:`hv.DEBUG_OPTIONS.RELEASE``` would link to
-:option:`hv.DEBUG_OPTIONS.RELEASE`.
+``:option:`hv.DEBUG_OPTIONS.BUILD_TYPE``` would link to
+:option:`hv.DEBUG_OPTIONS.BUILD_TYPE`.
 
 The transformed option documentation is
 created in the ``_build/rst/reference/configdoc.txt`` file and included by
