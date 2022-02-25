@@ -54,6 +54,8 @@ static struct display {
 	int guest_width, guest_height;
 	int screen;
 	struct surface surf;
+	struct cursor cur;
+	SDL_Texture *cursor_tex;
 	/* Add one UI_timer(33ms) to render the buffers from guest_vm */
 	struct acrn_timer ui_timer;
 	struct vdpy_display_bh ui_timer_bh;
@@ -631,8 +633,19 @@ vdpy_surface_set(int handle, struct surface *surf)
 }
 
 void
+vdpy_cursor_position_transformation(struct display *vdpy, SDL_Rect *rect)
+{
+	rect->x = (vdpy->cur.x * vdpy->width) / vdpy->guest_width;
+	rect->y = (vdpy->cur.y * vdpy->height) / vdpy->guest_height;
+	rect->w = (vdpy->cur.width * vdpy->width) / vdpy->guest_width;
+	rect->h = (vdpy->cur.height * vdpy->height) / vdpy->guest_height;
+}
+
+void
 vdpy_surface_update(int handle, struct surface *surf)
 {
+	SDL_Rect cursor_rect;
+
 	if (handle != vdpy.s.n_connect) {
 		return;
 	}
@@ -648,10 +661,62 @@ vdpy_surface_update(int handle, struct surface *surf)
 
 	SDL_RenderClear(vdpy.dpy_renderer);
 	SDL_RenderCopy(vdpy.dpy_renderer, vdpy.dpy_texture, NULL, NULL);
+
+	/* This should be handled after rendering the surface_texture.
+	 * Otherwise it will be hidden
+	 */
+	if (vdpy.cursor_tex) {
+		vdpy_cursor_position_transformation(&vdpy, &cursor_rect);
+		SDL_RenderCopy(vdpy.dpy_renderer, vdpy.cursor_tex,
+				NULL, &cursor_rect);
+	}
+
 	SDL_RenderPresent(vdpy.dpy_renderer);
 
 	/* update the rendering time */
 	clock_gettime(CLOCK_MONOTONIC, &vdpy.last_time);
+}
+
+void
+vdpy_cursor_define(int handle, struct cursor *cur)
+{
+	if (handle != vdpy.s.n_connect) {
+		return;
+	}
+
+	if (cur->data == NULL)
+		return;
+
+	if (vdpy.cursor_tex)
+		SDL_DestroyTexture(vdpy.cursor_tex);
+
+	vdpy.cursor_tex = SDL_CreateTexture(
+			vdpy.dpy_renderer,
+			SDL_PIXELFORMAT_ARGB8888,
+			SDL_TEXTUREACCESS_STREAMING,
+			cur->width, cur->height);
+	if (vdpy.cursor_tex == NULL) {
+		pr_err("Failed to create sdl_cursor surface for %p.\n", cur);
+		return;
+	}
+
+	SDL_SetTextureBlendMode(vdpy.cursor_tex, SDL_BLENDMODE_BLEND);
+	vdpy.cur = *cur;
+	SDL_UpdateTexture(vdpy.cursor_tex, NULL, cur->data, cur->width * 4);
+}
+
+void
+vdpy_cursor_move(int handle, uint32_t x, uint32_t y)
+{
+	if (handle != vdpy.s.n_connect) {
+		return;
+	}
+
+	/* Only move the position of the cursor. The cursor_texture
+	 * will be handled in surface_update
+	 */
+	vdpy.cur.x = x;
+	vdpy.cur.y = y;
 }
 
 static void
@@ -660,6 +725,7 @@ vdpy_sdl_ui_refresh(void *data)
 	struct display *ui_vdpy;
 	struct timespec cur_time;
 	uint64_t elapsed_time;
+	SDL_Rect cursor_rect;
 
 	ui_vdpy = (struct display *)data;
 
@@ -678,6 +744,16 @@ vdpy_sdl_ui_refresh(void *data)
 
 	SDL_RenderClear(ui_vdpy->dpy_renderer);
 	SDL_RenderCopy(ui_vdpy->dpy_renderer, ui_vdpy->dpy_texture, NULL, NULL);
+
+	/* This should be handled after rendering the surface_texture.
+	 * Otherwise it will be hidden
+	 */
+	if (ui_vdpy->cursor_tex) {
+		vdpy_cursor_position_transformation(ui_vdpy, &cursor_rect);
+		SDL_RenderCopy(ui_vdpy->dpy_renderer, ui_vdpy->cursor_tex,
+				NULL, &cursor_rect);
+	}
+
 	SDL_RenderPresent(ui_vdpy->dpy_renderer);
 }
 
@@ -816,6 +892,10 @@ vdpy_sdl_display_thread(void *data)
 	if (vdpy.dpy_texture) {
 		SDL_DestroyTexture(vdpy.dpy_texture);
 		vdpy.dpy_texture = NULL;
+	}
+	if (vdpy.cursor_tex) {
+		SDL_DestroyTexture(vdpy.cursor_tex);
+		vdpy.cursor_tex = NULL;
 	}
 
 sdl_fail:

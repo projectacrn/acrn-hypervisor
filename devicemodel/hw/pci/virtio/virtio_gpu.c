@@ -251,6 +251,26 @@ struct virtio_gpu_resource_flush {
 };
 
 /*
+ * Command: VIRTIO_GPU_CMD_UPDATE_CURSOR
+ * Command: VIRTIO_GPU_CMD_MOVE_CURSOR
+ */
+struct virtio_gpu_cursor_pos {
+	uint32_t scanout_id;
+	uint32_t x;
+	uint32_t y;
+	uint32_t padding;
+};
+
+struct virtio_gpu_update_cursor {
+	struct virtio_gpu_ctrl_hdr hdr;
+	struct virtio_gpu_cursor_pos pos;
+	uint32_t resource_id;
+	uint32_t hot_x;
+	uint32_t hot_y;
+	uint32_t padding;
+};
+
+/*
  * Per-device struct
  */
 struct virtio_gpu {
@@ -261,6 +281,7 @@ struct virtio_gpu {
 	int vdpy_handle;
 	LIST_HEAD(,virtio_gpu_resource_2d) r2d_list;
 	struct vdpy_display_bh ctrl_bh;
+	struct vdpy_display_bh cursor_bh;
 };
 
 struct virtio_gpu_command {
@@ -866,16 +887,62 @@ virtio_gpu_notify_controlq(void *vdev, struct virtio_vq_info *vq)
 }
 
 static void
-virtio_gpu_notify_cursorq(void *vdev, struct virtio_vq_info *vq)
+virtio_gpu_cmd_update_cursor(struct virtio_gpu_command *cmd)
 {
+	struct virtio_gpu_update_cursor req;
+	struct virtio_gpu_resource_2d *r2d;
+	struct cursor cur;
+	struct virtio_gpu *gpu;
+
+	gpu = cmd->gpu;
+	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
+	if (req.resource_id > 0) {
+		r2d = virtio_gpu_find_resource_2d(cmd->gpu, req.resource_id);
+		if (r2d == NULL) {
+			pr_err("%s: Illegal resource id %d\n", __func__,
+					req.resource_id);
+			return;
+		}
+		cur.x = req.pos.x;
+		cur.y = req.pos.y;
+		cur.hot_x = req.hot_x;
+		cur.hot_y = req.hot_y;
+		cur.width = r2d->width;
+		cur.height = r2d->height;
+		pixman_image_ref(r2d->image);
+		cur.data = pixman_image_get_data(r2d->image);
+		vdpy_cursor_define(gpu->vdpy_handle, &cur);
+		pixman_image_unref(r2d->image);
+	}
+}
+
+static void
+virtio_gpu_cmd_move_cursor(struct virtio_gpu_command *cmd)
+{
+	struct virtio_gpu_update_cursor req;
+	struct virtio_gpu *gpu;
+
+	gpu = cmd->gpu;
+	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
+	vdpy_cursor_move(gpu->vdpy_handle, req.pos.x, req.pos.y);
+}
+
+static void
+virtio_gpu_cursor_bh(void *data)
+{
+	struct virtio_gpu *vdev;
+	struct virtio_vq_info *vq;
 	struct virtio_gpu_command cmd;
 	struct virtio_gpu_ctrl_hdr hdr;
 	struct iovec iov[VIRTIO_GPU_MAXSEGS];
 	int n;
 	uint16_t idx;
 
+	vq = (struct virtio_vq_info *)data;
+	vdev = (struct virtio_gpu *)(vq->base);
 	cmd.gpu = vdev;
 	cmd.iolen = 0;
+
 	while (vq_has_descs(vq)) {
 		n = vq_getchain(vq, &idx, iov, VIRTIO_GPU_MAXSEGS, NULL);
 		if (n < 0) {
@@ -890,14 +957,28 @@ virtio_gpu_notify_cursorq(void *vdev, struct virtio_vq_info *vq)
 		cmd.iov = iov;
 		memcpy(&hdr, iov[0].iov_base, sizeof(hdr));
 		switch (hdr.type) {
+		case VIRTIO_GPU_CMD_UPDATE_CURSOR:
+			virtio_gpu_cmd_update_cursor(&cmd);
+			break;
+		case VIRTIO_GPU_CMD_MOVE_CURSOR:
+			virtio_gpu_cmd_move_cursor(&cmd);
+			break;
 		default:
-			virtio_gpu_cmd_unspec(&cmd);
 			break;
 		}
 
 		vq_relchain(vq, idx, cmd.iolen); /* Release the chain */
 	}
 	vq_endchains(vq, 1);	/* Generate interrupt if appropriate. */
+}
+
+static void
+virtio_gpu_notify_cursorq(void *vdev, struct virtio_vq_info *vq)
+{
+	struct virtio_gpu *gpu;
+
+	gpu = (struct virtio_gpu *)vdev;
+	vdpy_submit_bh(gpu->vdpy_handle, &gpu->cursor_bh);
 }
 
 static int
@@ -957,9 +1038,11 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	gpu->vq[VIRTIO_GPU_CURSORQ].qsize = VIRTIO_GPU_RINGSZ;
 	gpu->vq[VIRTIO_GPU_CURSORQ].notify = virtio_gpu_notify_cursorq;
 
-	/* Initialize the ctrl bh_task */
+	/* Initialize the ctrl/cursor bh_task */
 	gpu->ctrl_bh.task_cb = virtio_gpu_ctrl_bh;
 	gpu->ctrl_bh.data = &gpu->vq[VIRTIO_GPU_CONTROLQ];
+	gpu->cursor_bh.task_cb = virtio_gpu_cursor_bh;
+	gpu->cursor_bh.data = &gpu->vq[VIRTIO_GPU_CURSORQ];
 
 	/* prepare the config space */
 	gpu->cfg.events_read = 0;

@@ -66,6 +66,19 @@ struct surface {
 	void *pixel;
 };
 
+struct cursor {
+	enum surface_type surf_type;
+	/* use pixman_format as the intermediate-format */
+	pixman_format_code_t surf_format;
+	uint32_t x;
+	uint32_t y;
+	uint32_t hot_x;
+	uint32_t hot_y;
+	uint32_t width;
+	uint32_t height;
+	void *data;
+};
+
 int vdpy_parse_cmd_option(const char *opts);
 void gfx_ui_init();
 int vdpy_init();
@@ -74,6 +87,8 @@ void vdpy_surface_set(int handle, struct surface *surf);
 void vdpy_surface_update(int handle, struct surface *surf);
 bool vdpy_submit_bh(int handle, struct vdpy_display_bh *bh);
 void vdpy_get_edid(int handle, uint8_t *edid, size_t size);
+void vdpy_cursor_define(int handle, struct cursor *cur);
+void vdpy_cursor_move(int handle, uint32_t x, uint32_t y);
 int vdpy_deinit(int handle);
 void gfx_ui_deinit();
 
