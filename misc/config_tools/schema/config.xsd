@@ -15,44 +15,27 @@
   <xs:all>
     <xs:element name="BUILD_TYPE" type="BuildType" default="debug">
       <xs:annotation acrn:title="Build type" acrn:views="basic">
-        <xs:documentation>Build an image for release (``y``) or debug (``n``).
-In a **release** image, assertions are not enforced and debugging
-features are disabled, including logs, serial console, and the
-hypervisor shell.</xs:documentation>
+        <xs:documentation>Identify build type.  Debug mode enables debug shell, prints, and logs.  Release mode optimizes the ACRN binary for deployment and turns off all debug infrastructure.  These can only be changed at build time.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="SERIAL_CONSOLE" type="SerialConsoleOptions" default="/dev/ttyS0">
-      <xs:annotation>
-        <xs:documentation>Specify the host serial device used for hypervisor debugging.
-This option is only valid if :option:`hv.DEBUG_OPTIONS.RELEASE` is set to ``n``.
-This option impacts the content of ``vm.(legacy_vuart id="0").base`` when :option:`vm.load_order` is ``SERVICE_VM``,
-which specifies the PIO base for Service VM legacy vUART 0 (used for the console).
-The PIO base for the Service VM's legacy vUART 0 is determined using these rules:
-
-- If :option:`hv.DEBUG_OPTIONS.SERIAL_CONSOLE` is any available ttyS# in the native environment,
-  the PIO base of the Service VM legacy vUART 0 would be the same as the PIO base
-  corresponding to :option:`hv.DEBUG_OPTIONS.SERIAL_CONSOLE` in the native environment.
-- Otherwise, a PIO base would be assigned to the Service VM legacy vUART 0 from the available PIO list.
-
-This logic is implemented in the configuration tools.</xs:documentation>
+    <xs:element name="SERIAL_CONSOLE" type="SerialConsoleOptions">
+      <xs:annotation acrn:title="Serial console port" acrn:views="basic">
+        <xs:documentation>Specify the host serial device used for hypervisor debugging.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="MEM_LOGLEVEL" type="LogLevelType" default="5">
-      <xs:annotation>
-        <xs:documentation>Default loglevel for log messages stored in
-memory. Value can be changed at runtime.</xs:documentation>
+    <xs:element name="MEM_LOGLEVEL" type="LogLevelType" default="0">
+      <xs:annotation acrn:title="ACRN log level" acrn:views="basic">
+        <xs:documentation>Specify default log level for log messages stored in memory. Value can be changed at runtime.  Log messages with the selected value or lower are displayed.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="NPK_LOGLEVEL" type="LogLevelType" default="5">
-      <xs:annotation>
-        <xs:documentation>Default loglevel for the hypervisor North Peak
-(NPK) log. Value can be changed at runtime.</xs:documentation>
+    <xs:element name="NPK_LOGLEVEL" type="LogLevelType" default="0">
+      <xs:annotation acrn:title="Intel Trace Hub log level" acrn:views="basic">
+        <xs:documentation>Specify default log level for the hypervisor via Intel Trace Hub log.  Use the Intel Trace Hub's memory to record log messages.  Value can be changed at runtime.   Log messages with the selected value or lower are displayed.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="CONSOLE_LOGLEVEL" type="LogLevelType" default="3">
-      <xs:annotation>
-        <xs:documentation>Default loglevel for log messages
-written to the serial console.</xs:documentation>
+    <xs:element name="CONSOLE_LOGLEVEL" type="LogLevelType" default="0">
+      <xs:annotation acrn:title="Serial console log level" acrn:views="basic">
+        <xs:documentation>Specify default log level for log messages written to the serial console.  Log messages with the selected value or lower are displayed.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -65,91 +48,78 @@ written to the serial console.</xs:documentation>
 
   <xs:all>
     <xs:element name="RELOC" type="Boolean" default="y">
-      <xs:annotation>
-        <xs:documentation>Specify if hypervisor relocation is enabled on
-booting.</xs:documentation>
+      <xs:annotation acrn:title="Hypervisor relocation in memory" acrn:views="advanced">
+        <xs:documentation>Enable hypervisor relocation in memory.  The boot loader may need to change the location of the hypervisor because of other firmware.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SCHEDULER" type="SchedulerType" default="SCHED_BVT">
-      <xs:annotation>
-        <xs:documentation>The CPU scheduler used by the hypervisor.</xs:documentation>
+      <xs:annotation acrn:title="Scheduler and workload prioritization" acrn:views="advanced">
+        <xs:documentation>Choose scheduling algorithm used for determining which User VM runs on a shared virtual CPU.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MULTIBOOT2" type="Boolean" default="y">
-      <xs:annotation>
-        <xs:documentation>Specify if the ACRN hypervisor image can be booted using the
-multiboot2 protocol. If set to ``n``, GRUB's multiboot2 is not available as a
-boot option.</xs:documentation>
+      <xs:annotation acrn:title="Enable Multiboot2" acrn:views="advanced">
+        <xs:documentation>Enable multiboot2 boot protocol support and multiboot1 downward compatibility.  Disable this feature if multiboot1 meets your requirements and to reduce lines of code.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="ENFORCE_TURNOFF_AC" type="Boolean" default="y">
-      <xs:annotation>
-        <xs:documentation>Force to disable #AC for Split-locked Access. If CPU has #AC for
-split-locked access, HV enables it and VMs can't disable. Set this to enforce turning off that
-#AC, for debugging purposes only.</xs:documentation>
+      <xs:annotation acrn:title="Split lock detection" acrn:views="advanced">
+        <xs:documentation>Enable split lock detection for real-time application. This prevents alignment check exceptions from impacting hypervisor real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="ENFORCE_TURNOFF_GP" type="Boolean" default="n">
-      <xs:annotation>
-        <xs:documentation>Force to disable #GP for Split-locked Access. If CPU has #GP for
-UC lock, HV enable it and VMs can't disable. Set this to enforce turn off that #GP, for community
-developer only.</xs:documentation>
+      <xs:annotation acrn:title="Prevent system bus locking" acrn:views="advanced">
+        <xs:documentation>Enable UC lock detection for real-time application. This prevents general protection faults from impacting hypervisor real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SECURITY_VM_FIXUP" type="Boolean" default="n">
-      <xs:annotation>
-        <xs:documentation>Enable to do fixup for TPM2 and SMBIOS for Security VM. If no
-Security VM, setting this option to ``n``</xs:documentation>
+      <xs:annotation acrn:views="">
+        <xs:documentation>Enable to do fixup for TPM2 and SMBIOS for Security VM. If no Security VM, setting this option to ``n``</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="KEEP_IRQ_DISABLED" type="Boolean" default="n">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>If ``y``, permanently disables all interrupts in HV root mode.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="RDT" type="RDTType">
-      <xs:annotation>
-        <xs:documentation>Enable the Intel Resource Director Technology (RDT)
-allocation feature and Code and Data Prioritization (CDP). If the board hardware does not
-support RDT or CDP, setting this option to ``y`` is ignored.</xs:documentation>
+      <xs:annotation acrn:title="Intel Resource Director Technology" acrn:views="advanced">
+        <xs:documentation>Enable Intel Resource Director Technology (RDT). The technology provides cache and memory allocation features to improve time performance of real-time VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="HYPERV_ENABLED" type="Boolean" default="y">
-      <xs:annotation>
-        <xs:documentation>Enable Hyper-V.</xs:documentation>
+      <xs:annotation acrn:title="TLFS support for Windows" acrn:views="advanced">
+        <xs:documentation>Enable Microsoft(R) Hypervisor Top-Level Functional Specification for Windows hyper-v support.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="IOMMU_ENFORCE_SNP" type="Boolean" default="n">
-      <xs:annotation>
-        <xs:documentation>Specify if the IOMMU enforces snoop behavior
-of DMA operations.</xs:documentation>
+      <xs:annotation acrn:views="">
+        <xs:documentation>Specify if the IOMMU enforces snoop behavior of DMA operations.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="ACPI_PARSE_ENABLED" type="Boolean" default="y">
-      <xs:annotation>
-        <xs:documentation>Enable ACPI runtime parsing.</xs:documentation>
+      <xs:annotation acrn:title="Parse ACPI tables at runtime" acrn:views="advanced">
+        <xs:documentation>Enable ACPI runtime parsing to get DMAR (DMA remapping) configuration data from the APCI tables. Otherwise, use existing, static information from the associated board.xml file.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="y">
-      <xs:annotation>
-        <xs:documentation>Enable L1 cache flush before VM entry. Default
-value ``n``.</xs:documentation>
+      <xs:annotation acrn:title="Mitigate L1 terminal fault" acrn:views="advanced">
+        <xs:documentation>Enable L1 cache flush before VM entry,Determine the enabling of mitigation solution for L1 Terminal Fault (L1TF). The L1 data cache will be flushed before each VMENTRY.L1TF is a speculative execution side channel cache timing vulnerability. Each variety of L1TF could potentially allow unauthorized disclosure of information residing in the L1 data cache.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="y">
-      <xs:annotation>
-        <xs:documentation>Force disabling software workaround for
-Machine Check Error on Page Size Change.</xs:documentation>
+      <xs:annotation acrn:title="MCE workaround" acrn:views="advanced">
+        <xs:documentation>Enable software workaround for Machine Check Error on Page Size Change (silicon bug in some processor families).</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="IVSHMEM" type="IVSHMEMInfo">
-      <xs:annotation>
-        <xs:documentation>Enable Inter-VM Shared memory feature.</xs:documentation>
+      <xs:annotation acrn:title="Inter-VM shared memory" acrn:views="basic">
+        <xs:documentation/>
       </xs:annotation>
     </xs:element>
     <xs:element name="SSRAM" minOccurs="0" type="SSRAMInfo">
-      <xs:annotation>
-        <xs:documentation>Pseudo SRAM configuration.</xs:documentation>
+      <xs:annotation acrn:title="Software SRAM (for real-time apps)" acrn:views="advanced">
+        <xs:documentation />
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -158,16 +128,13 @@ Machine Check Error on Page Size Change.</xs:documentation>
 <xs:complexType name="MemoryOptionsType">
   <xs:all>
     <xs:element name="STACK_SIZE" type="HexFormat" default="0x2000">
-      <xs:annotation>
-        <xs:documentation>Capacity of one stack (in bytes) used by a
-physical core. Each core uses one stack for normal operation and another
-three for specific exceptions.</xs:documentation>
+      <xs:annotation acrn:title="Stack size (in byte)" acrn:views="advanced">
+        <xs:documentation>Capacity of one stack (in bytes) used by a physical core. Each core uses one stack for normal operation and another three for specific exceptions.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="HV_RAM_START" type="HexFormat" default="0x00400000">
-      <xs:annotation>
-        <xs:documentation>The 2MB-aligned starting physical address of
-the RAM region used by the hypervisor.</xs:documentation>
+      <xs:annotation acrn:views="">
+        <xs:documentation>The 2MB-aligned starting physical address of the RAM region used by the hypervisor.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -175,23 +142,21 @@ the RAM region used by the hypervisor.</xs:documentation>
 
 <xs:complexType name="CapacitiesOptionsType">
   <xs:annotation>
-    <xs:documentation>Capacity limits for static assigned data structure or
-maximum supported resource.</xs:documentation>
+    <xs:documentation>Capacity limits for static assigned data structure or maximum supported resource.</xs:documentation>
   </xs:annotation>
   <xs:all>
     <xs:element name="MAX_VM_NUM" type="xs:integer" default="16">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>Maximum number of User VMs allowed.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="IOMMU_BUS_NUM" type="HexFormat" default="0x100">
-      <xs:annotation>
-        <xs:documentation>Highest PCI bus ID used during IOMMU
-initialization.</xs:documentation>
+      <xs:annotation acrn:views="">
+        <xs:documentation>Highest PCI bus ID used during IOMMU initialization.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MAX_IOAPIC_NUM" default="1">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>Maximum number of IOAPICs.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
@@ -205,8 +170,8 @@ initialization.</xs:documentation>
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_PCI_DEV_NUM" default="96">
-      <xs:annotation>
-        <xs:documentation>Maximum number of PCI devices.</xs:documentation>
+      <xs:annotation acrn:title="Maximum number of PCI devices" acrn:views="advanced">
+        <xs:documentation>Specify the static memory allocation of maximum number of PCI devices. (Default value is 96)</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
          <xs:annotation>
@@ -219,7 +184,7 @@ initialization.</xs:documentation>
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_IOAPIC_LINES" default="120">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>Maximum number of interrupt lines per IOAPIC.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
@@ -233,14 +198,13 @@ initialization.</xs:documentation>
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_PT_IRQ_ENTRIES" type="xs:integer" default="256">
-      <xs:annotation>
+      <xs:annotation acrn:views="advanced">
         <xs:documentation>The pre-defined number of interrupt sources of all pass-through devices.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MAX_MSIX_TABLE_NUM" default="64">
-        <xs:annotation>
-          <xs:documentation>Pre-defined maximum number of virtual MSI-X table entries per device.
-If this value is empty, then the default value will be calculated from information in the board XML file.</xs:documentation>
+        <xs:annotation acrn:views="advanced">
+          <xs:documentation>Specify maximum number of MSI-X tables per device. If this value is empty, then the default value will be calculated from the board XML file. (Default value is 64)</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
@@ -253,8 +217,8 @@ If this value is empty, then the default value will be calculated from informati
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_EMULATED_MMIO" default="16">
-        <xs:annotation>
-          <xs:documentation>Maximum number of emulated MMIO regions.</xs:documentation>
+        <xs:annotation acrn:views="advanced">
+          <xs:documentation>Specify maximum number of emulated MMIO regions. (Default value is 16)</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
@@ -272,7 +236,7 @@ If this value is empty, then the default value will be calculated from informati
 <xs:complexType name="MiscCfgOptionsType">
   <xs:all>
     <xs:element name="GPU_SBDF" type="HexFormat" default="0x00000010">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>Segment, Bus, Device, and function of the GPU.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -281,13 +245,33 @@ If this value is empty, then the default value will be calculated from informati
 
 <xs:complexType name="HVConfigType">
   <xs:all>
-    <xs:element name="DEBUG_OPTIONS" type="DebugOptionsType" />
-    <xs:element name="FEATURES" type="FeatureOptionsType" />
-    <xs:element name="MEMORY" type="MemoryOptionsType" />
-    <xs:element name="CAPACITIES" type="CapacitiesOptionsType" />
-    <xs:element name="MISC_CFG" type="MiscCfgOptionsType" />
-    <xs:element name="vuart_connections" type="VuartConnectionsType" minOccurs="0" maxOccurs="8">
-      <xs:annotation>
+    <xs:element name="DEBUG_OPTIONS" type="DebugOptionsType">
+      <xs:annotation acrn:title="Debug options" acrn:views="basic">
+	<xs:documentation>Configure the debug facilities.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="FEATURES" type="FeatureOptionsType">
+      <xs:annotation acrn:title="Hypervisor features" acrn:views="basic, advanced">
+	<xs:documentation>Enable hypervisor features.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="MEMORY" type="MemoryOptionsType">
+      <xs:annotation acrn:title="Memory options" acrn:views="advanced">
+	<xs:documentation>Configure memory used by the hypervisor.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="CAPACITIES" type="CapacitiesOptionsType">
+      <xs:annotation acrn:title="Hypervisor capacities" acrn:views="advanced">
+	<xs:documentation>Configure the capacities of the hypervisor.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="MISC_CFG" type="MiscCfgOptionsType">
+      <xs:annotation acrn:views="">
+	<xs:documentation>Miscellaneous options for workarounds.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="vuart_connections" type="VuartConnectionsType">
+      <xs:annotation acrn:title="Virtual UART connection" acrn:views="basic">
         <xs:documentation>Specify the vUART connection setting.
 Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
@@ -297,20 +281,19 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
 
 <xs:complexType name="VMConfigType">
   <xs:all>
-    <xs:element name="vm_type" type="VMType">
-      <xs:annotation>
-        <xs:documentation>Specify the VM type.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
     <xs:element name="load_order" type="LoadOrderType">
-      <xs:annotation>
+      <xs:annotation acrn:title="Load order" acrn:views="">
         <xs:documentation>Specify the load_order.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="vm_type" type="VMType">
+      <xs:annotation acrn:title="VM type" acrn:views="basic">
+        <xs:documentation>Specify the VM type.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="name">
-        <xs:annotation>
-          <xs:documentation>Specify the VM name shown in the
-hypervisor console ``vm_list`` command.</xs:documentation>
+        <xs:annotation acrn:title="VM name" acrn:views="basic">
+          <xs:documentation>Type in the name used to identify each VM.  The VM name will be shown in the hypervisor console vm_list command.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
@@ -324,101 +307,101 @@ hypervisor console ``vm_list`` command.</xs:documentation>
       </xs:simpleType>
     </xs:element>
     <xs:element name="lapic_passthrough" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:title="LAPIC passthrough" acrn:views="advanced">
         <xs:documentation>Specify LAPIC to passthrough.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="io_completion_polling" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:title="I/O completion polling" acrn:views="advanced">
         <xs:documentation>Specify Polling mode for IO Completion.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="nested_virtualization_support" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:title="Nested virtualization support" acrn:views="advanced">
         <xs:documentation>Specify nested virtualization support for KVM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="virtual_cat_support" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:title="Virtual CAT support" acrn:views="advanced">
         <xs:documentation>Specify virtual CAT support for VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="secure_world_support" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>Specify secure world support for trustry OS.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="hide_mtrr_support" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>Specify MTRR capability to hide for VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="security_vm" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>Specify TPM2 FIXUP for VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="cpu_affinity" type="CPUAffinityConfiguration" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:title="Physical CPU affinity" acrn:views="basic">
         <xs:documentation>List of pCPU that this VM's vCPUs are pinned to.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="clos" type="CLOSConfiguration">
-      <xs:annotation>
+      <xs:annotation acrn:views="advanced">
         <xs:documentation>Class of Service for Cache Allocation Technology.
 Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="epc_section" type="EPCSection" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched">
         <xs:documentation>Specify SGX Enclave Page Cache section base and size in byte. It must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="memory" type="MemoryInfo" minOccurs="0">
-      <xs:annotation>
+    <xs:element name="memory" type="MemoryInfo">
+      <xs:annotation acrn:views="basic, advanced">
         <xs:documentation>Specify memory information for Service and User VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="priority" type="PriorityType"  default="PRIO_LOW">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>Specify the VM vCPU priority for scheduling.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="companion_vmid" type="xs:integer" default="65535">
-      <xs:annotation>
+      <xs:annotation acrn:views="">
         <xs:documentation>Specify the companion VM id of this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="os_config" type="OSConfigurations" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:applicable-vms="pre-launched, service-vm" acrn:views="basic">
         <xs:documentation>General information for host kernel, boot
 argument and memory.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="console_vuart" type="ConsoleVuartConfiguration" default="None">
-      <xs:annotation>
+      <xs:annotation acrn:views="basic">
         <xs:documentation>Specify the console vUART (aka PCI based vUART) with the vUART ID by
 its ``id`` attribute.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
-      <xs:annotation>
+      <xs:annotation acrn:views="basic">
         <xs:documentation>MMIO resources to passthrough.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="pt_intx" type="xs:string" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>pt intx mapping.</xs:documentation>
+      <xs:annotation acrn:applicable-vms="pre-launched" acrn:views="advanced">
+        <xs:documentation>Determine the static memory size of pt_intx array. It is used to describe the pre-launched VM owned ioapic pins and the corresponding mapping between physical GSI and virtual GSI.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="pci_devs" type="PCIDevsConfiguration" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>PCI devices list.</xs:documentation>
+      <xs:annotation acrn:title="PCI device assignment" acrn:applicable-vms="pre-launched, post-launched" acrn:views="basic">
+        <xs:documentation />
       </xs:annotation>
     </xs:element>
     <xs:element name="PTM" type="Boolean" default="y" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>Enable and disable PTM(Precision Timing Measurement) feature.</xs:documentation>
+      <xs:annotation acrn:title="Precision Time Measurement" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
+        <xs:documentation>Enable virtualization of PCIE Precision Time Measurement (PTM) mechanism for devices with PTM capability and for real-time application. HV provides PCIE root port emulation instead of host bridge emulation for VM , PTM could coordinate timing between device and root port with device’s local timebases without relying on software.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>

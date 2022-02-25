@@ -81,19 +81,35 @@
     <xs:documentation>An Integer from 0 to 7 representing log message
 severity and intent:
 
+- 0 no log at all
 - 1 (LOG_FATAL) system is unusable
-- 2 (LOG_ACRN) hypervisor failure
-- 3 (LOG_ERROR) error conditions
-- 4 (LOG_WARNING) warning conditions
-- 5 (LOG_INFO) informational
-- 6 (LOG_DEBUG) debug-level messages
+- 2 (LOG_ERROR) error conditions
+- 3 (LOG_WARNING) warning conditions
+- 4 (LOG_INFO) informational
+- 5 (LOG_DEBUG) debug-level messages
 
 A lower value has a higher severity. Log messages with a
 higher value (lower severity) are discarded.</xs:documentation>
   </xs:annotation>
-  <xs:restriction base="xs:integer">
-    <xs:minInclusive value="0" />
-    <xs:maxInclusive value="7" />
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="0">
+      <xs:annotation acrn:title="0: None" />
+    </xs:enumeration>
+    <xs:enumeration value="1">
+      <xs:annotation acrn:title="1: Critical" />
+    </xs:enumeration>
+    <xs:enumeration value="2">
+      <xs:annotation acrn:title="2: Error" />
+    </xs:enumeration>
+    <xs:enumeration value="3">
+      <xs:annotation acrn:title="3: Warning" />
+    </xs:enumeration>
+    <xs:enumeration value="4">
+      <xs:annotation acrn:title="4: Information" />
+    </xs:enumeration>
+    <xs:enumeration value="5">
+      <xs:annotation acrn:title="5: Debug" />
+    </xs:enumeration>
   </xs:restriction>
 </xs:simpleType>
 
@@ -255,14 +271,14 @@ and no more than 512.</xs:documentation>
 <xs:complexType name="RDTType">
   <xs:sequence>
     <xs:element name="RDT_ENABLED" type="Boolean" default="n">
-      <xs:annotation>
+      <xs:annotation acrn:title="Intel Resource Director Technology">
         <xs:documentation>Enable the Intel Resource Director Technology (RDT)
 allocation feature. If the board hardware does not support
 RDT, setting this option to ``y`` is ignored.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CDP_ENABLED" type="Boolean" default="n">
-      <xs:annotation>
+      <xs:annotation acrn:title="Code and Data Prioritization">
         <xs:documentation>Specify whether to enable Code and Data Prioritization (CDP).
 CDP is an extension of CAT. Set to 'y' to enable the feature or 'n' to disable it.
 The 'y' will be ignored when hardware does not support CDP.</xs:documentation>
@@ -295,9 +311,8 @@ As :option:`vm.clos.vcpu_clos` specifies the index of the CLOS to be associated 
 <xs:complexType name="SSRAMInfo">
   <xs:sequence>
     <xs:element name="SSRAM_ENABLED" type="Boolean" default="n">
-      <xs:annotation>
-        <xs:documentation>Enable PTCM (Platform Tuning Configuration
-Manager).</xs:documentation>
+      <xs:annotation acrn:title="Software SRAM">
+        <xs:documentation>Enable the Software SRAM feature for real-time VMs. This feature reserves memory buffers as always-cached memory for improved VM performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>

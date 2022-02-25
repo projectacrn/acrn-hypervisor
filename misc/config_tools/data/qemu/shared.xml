@@ -76,9 +76,6 @@
         ignore_loglevel no_timer_check intel_iommu=off tsc=reliable</bootargs>
     </os_config>
     <console_vuart>COM Port 1</console_vuart>
-    <pci_devs>
-      <pci_dev/>
-    </pci_devs>
   </vm>
   <vm id="1">
     <load_order>POST_LAUNCHED_VM</load_order>
@@ -90,10 +87,6 @@
     <clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
-    <epc_section>
-      <base>0</base>
-      <size>0</size>
-    </epc_section>
     <console_vuart>None</console_vuart>
   </vm>
 </acrn-config>
