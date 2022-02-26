@@ -7,8 +7,8 @@ We usually emulate devices in the Device Model. However, in some cases, we
 need to emulate devices in the ACRN Hypervisor. For example, the
 post-launched RTVM needs to emulate passthrough PCI(e) devices in the ACRN
 Hypervisor so that it can continue to run even if the Device Model is
-no longer working. In spite of this, the Device Model still owns the overall
-resource management such as memory/MMIO space, interrupt pin, etc.
+no longer working. Nevertheless, the Device Model still owns the overall
+resource management such as memory/MMIO space and interrupt pins.
 
 One communication method provided by the ACRN Hypervisor aligns the resource information for the Device Model with the ACRN Hypervisor emulated device.
 
