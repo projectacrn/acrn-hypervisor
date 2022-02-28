@@ -860,9 +860,9 @@ def main(args):
 
             apic_ids = []
             for id in dict_pcpu_list[vm_id]:
-                apic_id = common.get_node(f"//processors/die/core/thread[cpu_id='{id}']/apic_id/text()", board_etree)
+                apic_id = common.get_node(f"//processors//thread[cpu_id='{id}']/apic_id/text()", board_etree)
                 if apic_id is None:
-                    emsg = 'some or all of the processors/die/core/thread/cpu_id tags are missing in board xml file for cpu {}, please run board_inspector.py to regenerate the board xml file!'.format(id)
+                    emsg = 'some or all of the processors//thread/cpu_id tags are missing in board xml file for cpu {}, please run board_inspector.py to regenerate the board xml file!'.format(id)
                     print(emsg)
                     err_dic['board config: processors'] = emsg
                     return err_dic
