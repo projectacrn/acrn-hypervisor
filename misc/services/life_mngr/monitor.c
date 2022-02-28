@@ -93,6 +93,8 @@ int init_socket_server_and_shutdown_commands(bool service_vm)
 						sock_server, REQ_SYS_SHUTDOWN);
 		register_command_handler(socket_req_user_vm_shutdown_handler,
 						sock_server, USER_VM_SHUTDOWN);
+		register_command_handler(socket_req_user_vm_reboot_handler,
+				sock_server, USER_VM_REBOOT);
 	} else {
 		register_command_handler(socket_req_system_shutdown_user_vm_handler,
 						sock_server, REQ_SYS_SHUTDOWN);
@@ -118,6 +120,7 @@ int init_uart_channel_devs_and_shutdown_commands(bool service_vm, char *uart_dev
 		register_command_handler(ack_poweroff_handler, channel, ACK_POWEROFF);
 		register_command_handler(ack_timeout_handler, channel, ACK_TIMEOUT);
 		register_command_handler(ack_user_vm_shutdown_cmd_handler, channel, ACK_USER_VM_SHUTDOWN);
+		register_command_handler(ack_user_vm_reboot_cmd_handler, channel, ACK_USER_VM_REBOOT);
 
 		ret = create_service_vm_uart_channel_dev(uart_dev_name);
 		if (ret < 0)
@@ -126,6 +129,7 @@ int init_uart_channel_devs_and_shutdown_commands(bool service_vm, char *uart_dev
 		register_command_handler(acked_sync_handler, channel, ACK_SYNC);
 		register_command_handler(poweroff_cmd_handler, channel, POWEROFF_CMD);
 		register_command_handler(user_vm_shutdown_cmd_handler, channel, USER_VM_SHUTDOWN);
+		register_command_handler(user_vm_reboot_cmd_handler, channel, USER_VM_REBOOT);
 		register_command_handler(acked_req_shutdown_handler, channel, ACK_REQ_SYS_SHUTDOWN);
 		register_command_handler(ack_timeout_default_handler, channel, ACK_TIMEOUT);
 
@@ -213,6 +217,11 @@ int main(int argc, char *argv[])
 	if (get_system_shutdown_flag()) {
 		do {
 			ret = system(POWEROFF);
+		} while (ret < 0);
+	}
+	if (get_user_vm_reboot_flag()) {
+		do {
+			ret = system(REBOOT);
 		} while (ret < 0);
 	}
 	return 0;

@@ -17,9 +17,13 @@
 #define ACK_TIMEOUT "ack_timeout"
 #define REQ_USER_VM_SHUTDOWN  "req_user_vm_shutdown"
 #define USER_VM_SHUTDOWN  "user_vm_shutdown"
+#define REQ_USER_VM_REBOOT  "req_user_vm_reboot"
+#define USER_VM_REBOOT  "user_vm_reboot"
 
 #define ACK_REQ_USER_VM_SHUTDOWN  "ack_req_user_vm_shutdown"
 #define ACK_USER_VM_SHUTDOWN "ack_user_vm_shutdown"
+#define ACK_REQ_USER_VM_REBOOT  "ack_req_user_vm_reboot"
+#define ACK_USER_VM_REBOOT "ack_user_vm_reboot"
 #define FAIL_CONNECT "fail_connect"
 #define USER_VM_DISCONNECT "user_vm_disconnect"
 #define S5_REJECTED	"system shutdown request is rejected"
@@ -27,6 +31,7 @@
 #define SYNC_LEN (sizeof(SYNC_CMD))
 
 #define POWEROFF "poweroff"
+#define REBOOT "reboot"
 
 #define CMD_NAME_MAX 32U
 
@@ -41,6 +46,9 @@ enum command_id {
 	REQ_USER_VM_SHUTDOWN_ID,
 	USER_VM_SHUTDOWN_ID,
 	ACK_USER_VM_SHUTDOWN_ID,
+	REQ_USER_VM_REBOOT_ID,
+	USER_VM_REBOOT_ID,
+	ACK_USER_VM_REBOOT_ID,
 	CMD_END,
 };
 

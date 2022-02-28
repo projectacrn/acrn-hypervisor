@@ -24,6 +24,12 @@ bool get_system_shutdown_flag(void)
 {
 	return system_shutdown_flag;
 }
+
+bool user_vm_reboot_flag;
+bool get_user_vm_reboot_flag(void)
+{
+	return user_vm_reboot_flag;
+}
 /**
  * @brief check whether all acrn-dm instance have been exit or not
  *
@@ -103,12 +109,12 @@ int socket_req_shutdown_service_vm_handler(void *arg, int fd)
 	ret = send_socket_ack(arg, fd, ACK_REQ_SYS_SHUTDOWN);
 	if (ret < 0)
 		return 0;
-	enable_all_uart_channel_dev_resend(channel, POWEROFF_CMD, VM_SHUTDOWN_RETRY_TIMES);
+	start_all_uart_channel_dev_resend(channel, POWEROFF_CMD, VM_SHUTDOWN_RETRY_TIMES);
 	notify_all_connected_uart_channel_dev(channel, POWEROFF_CMD);
 	start_system_shutdown();
 	return 0;
 }
-int socket_req_user_vm_shutdown_handler(void *arg, int fd)
+static int req_user_vm_shutdown_reboot(void *arg, int fd, char *msg, char *ack_msg)
 {
 	int ret;
 	struct channel_dev *c_dev = NULL;
@@ -127,17 +133,25 @@ int socket_req_user_vm_shutdown_handler(void *arg, int fd)
 					client->name);
 		return 0;
 	}
-	ret = send_socket_ack(arg, fd, ACK_REQ_USER_VM_SHUTDOWN);
+	ret = send_socket_ack(arg, fd, ack_msg);
 	if (ret < 0) {
 		LOG_WRITE("Failed to send ACK by socket\n");
 		return 0;
 	}
-	LOG_PRINTF("Foward guest shutdown request to user VM (%s) by UART\n", c_dev->name);
-	enable_uart_channel_dev_resend(c_dev, USER_VM_SHUTDOWN, MIN_RESEND_TIME);
-	ret = send_message_by_uart(c_dev->uart_device, USER_VM_SHUTDOWN, strlen(USER_VM_SHUTDOWN));
+	LOG_PRINTF("Foward (%s) to user VM (%s) by UART\n", msg, c_dev->name);
+	start_uart_channel_dev_resend(c_dev, msg, MIN_RESEND_TIME);
+	ret = send_message_by_uart(c_dev->uart_device, msg, strlen(msg));
 	if (ret < 0)
-		LOG_WRITE("Failed to foward guest shutdown request to user VM by UART\n");
+		LOG_PRINTF("Failed to foward (%s) to user VM by UART\n", msg);
 	return ret;
+}
+int socket_req_user_vm_shutdown_handler(void *arg, int fd)
+{
+	return req_user_vm_shutdown_reboot(arg, fd, USER_VM_SHUTDOWN, ACK_REQ_USER_VM_SHUTDOWN);
+}
+int socket_req_user_vm_reboot_handler(void *arg, int fd)
+{
+	return req_user_vm_shutdown_reboot(arg, fd, USER_VM_REBOOT, ACK_REQ_USER_VM_REBOOT);
 }
 int socket_req_system_shutdown_user_vm_handler(void *arg, int fd)
 {
@@ -158,7 +172,7 @@ int socket_req_system_shutdown_user_vm_handler(void *arg, int fd)
 		return 0;
 	}
 	LOG_WRITE("Foward shutdown req to service VM by UART\n");
-	enable_uart_channel_dev_resend(c_dev, REQ_SYS_SHUTDOWN, MIN_RESEND_TIME);
+	start_uart_channel_dev_resend(c_dev, REQ_SYS_SHUTDOWN, MIN_RESEND_TIME);
 	ret = send_message_by_uart(c_dev->uart_device, REQ_SYS_SHUTDOWN, strlen(REQ_SYS_SHUTDOWN));
 	if (ret < 0)
 		LOG_WRITE("Failed to foward system shutdown request to service VM by UART\n");
@@ -222,7 +236,7 @@ int req_shutdown_handler(void *arg, int fd)
 		LOG_WRITE("Send acked message to user VM fail\n");
 	usleep(SECOND_TO_US);
 	LOG_PRINTF("Send acked shutdown request message to user VM (%s)\n", c_dev->name);
-	enable_all_uart_channel_dev_resend(c, POWEROFF_CMD, VM_SHUTDOWN_RETRY_TIMES);
+	start_all_uart_channel_dev_resend(c, POWEROFF_CMD, VM_SHUTDOWN_RETRY_TIMES);
 	notify_all_connected_uart_channel_dev(c, POWEROFF_CMD);
 	usleep(2 * WAIT_RECV);
 	return ret;
@@ -244,7 +258,7 @@ int ack_poweroff_handler(void *arg, int fd)
 	if (c_dev == NULL)
 		return 0;
 	LOG_PRINTF("Receive poweroff ACK from user VM (%s)\n", c_dev->name);
-	disable_uart_channel_dev_resend(c_dev);
+	stop_uart_channel_dev_resend(c_dev);
 	disconnect_uart_channel_dev(c_dev, c);
 	usleep(WAIT_USER_VM_POWEROFF);
 	start_system_shutdown();
@@ -268,10 +282,10 @@ int ack_timeout_handler(void *arg, int fd)
 	if (strncmp(c_dev->resend_buf, POWEROFF_CMD, strlen(POWEROFF_CMD)) == 0)
 		ack_poweroff_handler(arg, fd);
 	else
-		disable_uart_channel_dev_resend(c_dev);
+		stop_uart_channel_dev_resend(c_dev);
 	return 0;
 }
-int ack_user_vm_shutdown_cmd_handler(void *arg, int fd)
+static int ack_user_vm_cmd(void *arg, int fd, char *ack_msg)
 {
 	struct channel_dev *c_dev = NULL;
 	struct uart_channel *c = (struct uart_channel *)arg;
@@ -279,9 +293,18 @@ int ack_user_vm_shutdown_cmd_handler(void *arg, int fd)
 	c_dev = find_uart_channel_dev(c, fd);
 	if (c_dev == NULL)
 		return 0;
-	LOG_PRINTF("Receive user VM shutdown ACK from user VM (%s)\n", c_dev->name);
-	disable_uart_channel_dev_resend(c_dev);
+	LOG_PRINTF("Receive (%s) from user VM (%s)\n", ack_msg, c_dev->name);
+	stop_uart_channel_dev_resend(c_dev);
 	return 0;
+}
+int ack_user_vm_shutdown_cmd_handler(void *arg, int fd)
+{
+	return ack_user_vm_cmd(arg, fd, ACK_USER_VM_SHUTDOWN);
+}
+
+int ack_user_vm_reboot_cmd_handler(void *arg, int fd)
+{
+	return ack_user_vm_cmd(arg, fd, ACK_USER_VM_REBOOT);
 }
 /**
  * @brief The handler of acked sync command of lifecycle manager in user VM
@@ -317,11 +340,11 @@ int acked_req_shutdown_handler(void *arg, int fd)
 	c_dev = find_uart_channel_dev(c, fd);
 	if (c_dev == NULL)
 		return 0;
-	disable_uart_channel_dev_resend(c_dev);
+	stop_uart_channel_dev_resend(c_dev);
 	LOG_WRITE("Receive shutdown request ACK from service VM\n");
 	return 0;
 }
-static int user_vm_shutdown(struct uart_channel *c, int fd, char *ack)
+static int user_vm_shutdown_reboot(struct uart_channel *c, int fd, char *ack, bool reboot)
 {
 	int ret;
 	struct channel_dev *c_dev = NULL;
@@ -330,14 +353,18 @@ static int user_vm_shutdown(struct uart_channel *c, int fd, char *ack)
 	if (c_dev == NULL)
 		return 0;
 
-	LOG_WRITE("Receive poweroff message from service VM\n");
 	ret = send_message_by_uart(c_dev->uart_device, ack, strlen(ack));
-	if (ret < 0)
-		LOG_WRITE("Failed to send poweroff ACK to service VM\n");
+	if (ret < 0) {
+		LOG_PRINTF("Failed to send (%s) to service VM\n", ack);
+	}
 	disconnect_uart_channel_dev(c_dev, c);
 	usleep(2 * WAIT_RECV);
 	close_socket(sock_server);
-	system_shutdown_flag = true;
+	if (reboot) {
+		user_vm_reboot_flag = true;
+	} else {
+		system_shutdown_flag = true;
+	}
 	return 0;
 }
 /**
@@ -351,13 +378,19 @@ int poweroff_cmd_handler(void *arg, int fd)
 {
 
 	struct uart_channel *c = (struct uart_channel *)arg;
-	(void) user_vm_shutdown(c, fd, ACK_POWEROFF);
+	(void) user_vm_shutdown_reboot(c, fd, ACK_POWEROFF, false);
 	return 0;
 }
 int user_vm_shutdown_cmd_handler(void *arg, int fd)
 {
 	struct uart_channel *c = (struct uart_channel *)arg;
-	(void) user_vm_shutdown(c, fd, ACK_USER_VM_SHUTDOWN);
+	(void) user_vm_shutdown_reboot(c, fd, ACK_USER_VM_SHUTDOWN, false);
+	return 0;
+}
+int user_vm_reboot_cmd_handler(void *arg, int fd)
+{
+	struct uart_channel *c = (struct uart_channel *)arg;
+	(void) user_vm_shutdown_reboot(c, fd, ACK_USER_VM_REBOOT, true);
 	return 0;
 }
 /**
@@ -375,7 +408,7 @@ int ack_timeout_default_handler(void *arg, int fd)
 	c_dev = find_uart_channel_dev(c, fd);
 	if (c_dev == NULL)
 		return 0;
-	disable_uart_channel_dev_resend(c_dev);
+	stop_uart_channel_dev_resend(c_dev);
 	disconnect_uart_channel_dev(c_dev, c);
 	close_socket(sock_server);
 	LOG_PRINTF("Failed to receive ACK message from service VM (fd = %d)\n", fd);

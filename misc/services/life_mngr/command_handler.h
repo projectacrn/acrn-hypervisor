@@ -14,6 +14,10 @@ extern struct socket_dev *sock_server;
  */
 bool get_system_shutdown_flag(void);
 /**
+ * @brief Get the reboot flag
+ */
+bool get_user_vm_reboot_flag(void);
+/**
  * @brief The handler of request system shutdown command on socket in service VM
  */
 int socket_req_shutdown_service_vm_handler(void *arg, int fd);
@@ -21,6 +25,10 @@ int socket_req_shutdown_service_vm_handler(void *arg, int fd);
  * @brief The handler of request user shutdown command on socket in service VM
  */
 int socket_req_user_vm_shutdown_handler(void *arg, int fd);
+/**
+ * @brief The handler of request user reboot command on socket in service VM
+ */
+int socket_req_user_vm_reboot_handler(void *arg, int fd);
 /**
  * @brief The handler of request system shutdown command on socket in user VM
  */
@@ -68,6 +76,15 @@ int ack_timeout_handler(void *arg, int fd);
  */
 int ack_user_vm_shutdown_cmd_handler(void *arg, int fd);
 /**
+ * @brief The handler of ACK user vm reboot command of
+ * lifecycle manager in service VM
+ *
+ * @param arg uart channel instance
+ * @param fd the file directory of the uart which receives message
+ * @return indicate this command is handled successful or not
+ */
+int ack_user_vm_reboot_cmd_handler(void *arg, int fd);
+/**
  * @brief The handler of acked sync command of lifecycle manager in user VM
  *
  * @param arg uart channel device instance
@@ -95,6 +112,10 @@ int poweroff_cmd_handler(void *arg, int fd);
  * @brief The handler of user VM shutdown command of lifecycle manager in user VM
  */
 int user_vm_shutdown_cmd_handler(void *arg, int fd);
+/**
+ * @brief The handler of user VM reboot command of lifecycle manager in user VM
+ */
+int user_vm_reboot_cmd_handler(void *arg, int fd);
 /**
  * @brief The handler of ACK timeout command of lifecycle manager in user VM
  *
