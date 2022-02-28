@@ -74,6 +74,451 @@ static struct display {
 	.s.n_connect = 0
 };
 
+typedef enum {
+	ESTT = 1, // Established Timings I & II
+	STDT,    // Standard Timings
+	ESTT3,   // Established Timings III
+} TIMING_MODE;
+
+static const struct timing_entry {
+	uint32_t hpixel;// Horizontal pixels
+	uint32_t vpixel;// Vertical pixels
+	uint32_t byte;  // byte idx in the Established Timings I & II
+	uint32_t byte_t3;// byte idx in the Established Timings III Descriptor
+	uint32_t bit;   // bit idx
+	uint8_t hz;     // frequency
+} timings[] = {
+	/* Established Timings I & II (all @ 60Hz) */
+	{ .hpixel = 1024, .vpixel =  768, .byte  = 36, .bit = 3, .hz = 60},
+	{ .hpixel =  800, .vpixel =  600, .byte  = 35, .bit = 0, .hz = 60 },
+	{ .hpixel =  640, .vpixel =  480, .byte  = 35, .bit = 5, .hz = 60 },
+
+	/* Standard Timings */
+	{ .hpixel = 1920, .vpixel = 1080, .hz = 60 },
+	{ .hpixel = 1280, .vpixel =  720, .hz = 60 },
+};
+
+typedef struct frame_param{
+	uint32_t hav_pixel;     // Horizontal Addressable Video in pixels
+	uint32_t hb_pixel;      // Horizontal Blanking in pixels
+	uint32_t hfp_pixel;     // Horizontal Front Porch in pixels
+	uint32_t hsp_pixel;     // Horizontal Sync Pulse Width in pixels
+	uint32_t lhb_pixel;     // Left Horizontal Border or Right Horizontal
+	                        // Border in pixels
+
+	uint32_t vav_line;      // Vertical Addressable Video in lines
+	uint32_t vb_line;       // Vertical Blanking in lines
+	uint32_t vfp_line;      // Vertical Front Porch in Lines
+	uint32_t vsp_line;      // Vertical Sync Pulse Width in Lines
+	uint32_t tvb_line;      // Top Vertical Border or Bottom Vertical
+	                        // Border in Lines
+
+	uint64_t pixel_clock;   // Hz
+	uint32_t width;         // mm
+	uint32_t height;        // mm
+}frame_param;
+
+typedef struct base_param{
+	uint32_t h_pixel;       // pixels
+	uint32_t v_pixel;       // lines
+	uint32_t h_pixelmax;
+	uint32_t v_pixelmax;
+	uint32_t rate;          // Hz
+	uint32_t width;         // mm
+	uint32_t height;        // mm
+
+	const char *id_manuf;   // ID Manufacturer Name, ISA 3-character ID Code
+	uint16_t id_product;    // ID Product Code
+	uint32_t id_sn;         // ID Serial Number and it is a number only.
+
+	const char *sn;         // Serial number.
+	const char *product_name;// Product name.
+}base_param;
+
+static void
+vdpy_edid_set_baseparam(base_param *b_param, uint32_t width, uint32_t height)
+{
+	b_param->h_pixel = width;
+	b_param->v_pixel = height;
+	b_param->h_pixelmax = 0;
+	b_param->v_pixelmax = 0;
+	b_param->rate = 60;
+	b_param->width = width;
+	b_param->height = height;
+
+	b_param->id_manuf = "ACRN";
+	b_param->id_product = 4321;
+	b_param->id_sn = 12345678;
+
+	b_param->sn = "A0123456789";
+	b_param->product_name = "ACRN_Monitor";
+}
+
+static void
+vdpy_edid_set_frame(frame_param *frame, const base_param *b_param)
+{
+	frame->hav_pixel = b_param->h_pixel;
+	frame->hb_pixel = b_param->h_pixel * 35 / 100;
+	frame->hfp_pixel = b_param->h_pixel * 25 / 100;
+	frame->hsp_pixel = b_param->h_pixel * 3 / 100;
+	frame->lhb_pixel = 0;
+	frame->vav_line = b_param->v_pixel;
+	frame->vb_line = b_param->v_pixel * 35 / 1000;
+	frame->vfp_line = b_param->v_pixel * 5 / 1000;
+	frame->vsp_line = b_param->v_pixel * 5 / 1000;
+	frame->tvb_line = 0;
+	frame->pixel_clock = b_param->rate *
+			(frame->hav_pixel + frame->hb_pixel + frame->lhb_pixel * 2) *
+			(frame->vav_line + frame->vb_line + frame->tvb_line * 2);
+	frame->width = b_param->width;
+	frame->height = b_param->height;
+}
+
+static void
+vdpy_edid_set_color(uint8_t *edid, float red_x, float red_y,
+				   float green_x, float green_y,
+				   float blue_x, float blue_y,
+				   float white_x, float white_y)
+{
+	uint8_t *color;
+	uint16_t rx, ry, gx, gy, bx, by, wx, wy;
+
+	rx = transto_10bits(red_x);
+	ry = transto_10bits(red_y);
+	gx = transto_10bits(green_x);
+	gy = transto_10bits(green_y);
+	bx = transto_10bits(blue_x);
+	by = transto_10bits(blue_y);
+	wx = transto_10bits(white_x);
+	wy = transto_10bits(white_y);
+
+	color = edid + 25;
+	color[0] = ((rx & 0x03) << 6) |
+		   ((ry & 0x03) << 4) |
+		   ((gx & 0x03) << 2) |
+		    (gy & 0x03);
+	color[1] = ((bx & 0x03) << 6) |
+		   ((by & 0x03) << 4) |
+		   ((wx & 0x03) << 2) |
+		    (wy & 0x03);
+	color[2] = rx >> 2;
+	color[3] = ry >> 2;
+	color[4] = gx >> 2;
+	color[5] = gy >> 2;
+	color[6] = bx >> 2;
+	color[7] = by >> 2;
+	color[8] = wx >> 2;
+	color[9] = wy >> 2;
+}
+
+static void
+vdpy_edid_set_timing(uint8_t *addr, const base_param *b_param, TIMING_MODE mode)
+{
+	static uint16_t idx;
+	static uint16_t size;
+	const struct timing_entry *timing;
+	uint8_t stdcnt;
+	uint16_t hpixel;
+	int16_t AR;
+
+	stdcnt = 0;
+
+	if(mode == STDT) {
+		addr += 38;
+	}
+
+	idx = 0;
+	size = sizeof(timings) / sizeof(timings[0]);
+	for(; idx < size; idx++){
+		timing = timings + idx;
+		if ((b_param->h_pixelmax && b_param->h_pixelmax < timing->hpixel) ||
+		    (b_param->v_pixelmax && b_param->v_pixelmax < timing->vpixel)) {
+			continue;
+		}
+		switch(mode){
+		case ESTT: // Established Timings I & II
+			if(timing->byte) {
+				addr[timing->byte] |= (1 << timing->bit);
+				break;
+			} else {
+				return;
+			}
+		case ESTT3: // Established Timings III
+			if(timing->byte_t3){
+				addr[timing->byte_t3] |= (1 << timing->bit);
+				break;
+			} else {
+				return;
+			}
+		case STDT: // Standard Timings
+			if(stdcnt < 8 && (timing->hpixel == b_param->h_pixel)) {
+				hpixel = (timing->hpixel >> 3) - 31;
+				if (timing->hpixel == 0 ||
+				    timing->vpixel == 0) {
+					AR = -1;
+				} else if (hpixel & 0xff00) {
+					AR = -2;
+				} else if (timing->hpixel * 10 ==
+				    timing->vpixel * 16) {
+					AR = 0;
+				} else if (timing->hpixel * 3 ==
+				    timing->vpixel * 4) {
+					AR = 1;
+				} else if (timing->hpixel * 4 ==
+				    timing->vpixel * 5) {
+					AR = 2;
+				} else if (timing->hpixel * 9 ==
+				    timing->vpixel * 16) {
+					AR = 3;
+				} else {
+					AR = -2;
+				}
+				if (AR >= 0) {
+					addr[0] = hpixel & 0xff;
+					addr[1] = (AR << 6) | ((timing->hz - 60) & 0x3f);
+					addr += 2;
+					stdcnt++;
+				} else if (AR == -1){
+					addr[0] = 0x01;
+					addr[1] = 0x01;
+					addr += 2;
+					stdcnt++;
+				}
+				break;
+			} else {
+				return;
+			}
+
+		default:
+			return;
+		}
+	}
+	while(mode == STDT && stdcnt < 8){
+		addr[0] = 0x01;
+		addr[1] = 0x01;
+		addr += 2;
+		stdcnt++;
+	}
+}
+
+static void
+vdpy_edid_set_dtd(uint8_t *dtd, const frame_param *frame)
+{
+	uint16_t pixel_clk;
+
+	// Range: 10 kHz to 655.35 MHz in 10 kHz steps
+	pixel_clk = frame->pixel_clock / 10000;
+	memcpy(dtd, &pixel_clk, sizeof(pixel_clk));
+	dtd[2] = frame->hav_pixel & 0xff;
+	dtd[3] = frame->hb_pixel & 0xff;
+	dtd[4] = ((frame->hav_pixel & 0xf00) >> 4) |
+		 ((frame->hb_pixel & 0xf00) >> 8);
+	dtd[5] = frame->vav_line & 0xff;
+	dtd[6] = frame->vb_line & 0xff;
+	dtd[7] = ((frame->vav_line & 0xf00) >> 4) |
+		 ((frame->vb_line & 0xf00) >> 8);
+	dtd[8] = frame->hfp_pixel & 0xff;
+	dtd[9] = frame->hsp_pixel & 0xff;
+	dtd[10] = ((frame->vfp_line & 0xf) << 4) |
+		   (frame->vsp_line & 0xf);
+	dtd[11] = ((frame->hfp_pixel & 0x300) >> 2) |
+		  ((frame->hsp_pixel & 0x300) >> 4) |
+		  ((frame->vfp_line & 0x030) >> 6) |
+		  ((frame->vsp_line & 0x030) >> 8);
+	dtd[12] = frame->width & 0xff;
+	dtd[13] = frame->height & 0xff;
+	dtd[14] = ((frame->width & 0xf00) >> 4) |
+		  ((frame->height & 0xf00) >> 8);
+	dtd[15] = frame->lhb_pixel & 0xff;
+	dtd[16] = frame->tvb_line & 0xff;
+	dtd[17] = 0x18;
+}
+
+static void
+vdpy_edid_set_descripter(uint8_t *edid, uint8_t is_dtd,
+		uint8_t tag, const base_param *b_param)
+{
+	static uint8_t offset;
+	uint8_t *desc;
+	frame_param frame;
+	const char* text;
+	uint16_t len;
+
+	offset = 54;
+	desc = edid + offset;
+
+	if (is_dtd) {
+		vdpy_edid_set_frame(&frame, b_param);
+		vdpy_edid_set_dtd(desc, &frame);
+		offset += 18;
+		return;
+	}
+	desc[3] = tag;
+	text = NULL;
+	switch(tag){
+	// Established Timings III Descriptor (tag #F7h)
+	case 0xf7:
+		desc[5] = 0x0a; // Revision Number
+		vdpy_edid_set_timing(desc, b_param, ESTT3);
+		break;
+	// Display Range Limits & Additional Timing Descriptor (tag #FDh)
+	case 0xfd:
+		desc[5] =  50; // Minimum Vertical Rate. (50 -> 125 Hz)
+		desc[6] = 125; // Maximum Vertical Rate.
+		desc[7] =  30; // Minimum Horizontal Rate.(30 -> 160 kHz)
+		desc[8] = 160; // Maximum Horizontal Rate.
+		desc[9] = 2550 / 10; // Max Pixel Clock. (2550 MHz)
+		desc[10] = 0x01; // no extended timing information
+		desc[11] = '\n'; // padding
+		break;
+	// Display Product Name (ASCII) String Descriptor (tag #FCh)
+	case 0xfc:
+	// Display Product Serial Number Descriptor (tag #FFh)
+	case 0xff:
+		text = (tag == 0xff) ? b_param->sn : b_param->product_name;
+		memset(desc + 5, ' ', 13);
+		if (text == NULL)
+			break;
+		len = strlen(text);
+		if (len > 12)
+			len = 12;
+		memcpy(desc + 5, text, len);
+		desc[len + 5] = '\n';
+		break;
+	// Dummy Descriptor (Tag #10h)
+	case 0x10:
+	default:
+		break;
+	}
+	offset += 18;
+}
+
+static uint8_t
+vdpy_edid_get_checksum(uint8_t *edid)
+{
+	uint8_t sum;
+	int i;
+
+	sum = 0;
+	for (i = 0; i < 127; i++) {
+		sum += edid[i];
+	}
+
+	return 0x100 - sum;
+}
+
+static void
+vdpy_edid_generate(uint8_t *edid, size_t size, struct edid_info *info)
+{
+	uint16_t id_manuf;
+	uint16_t id_product;
+	uint32_t serial;
+	base_param b_param, c_param;
+
+	vdpy_edid_set_baseparam(&b_param, info->prefx, info->prefy);
+
+	memset(edid, 0, size);
+	/* edid[7:0], fixed header information, (00 FF FF FF FF FF FF 00)h */
+	memset(edid + 1, 0xff, 6);
+
+	/* edid[17:8], Vendor & Product Identification */
+	// Manufacturer ID is a big-endian 16-bit value.
+	id_manuf = ((((b_param.id_manuf[0] - '@') & 0x1f) << 10) |
+		    (((b_param.id_manuf[1] - '@') & 0x1f) << 5) |
+		    (((b_param.id_manuf[2] - '@') & 0x1f) << 0));
+	edid[8] = id_manuf >> 8;
+	edid[9] = id_manuf & 0xff;
+
+	// Manufacturer product code is a little-endian 16-bit number.
+	id_product = b_param.id_product;
+	memcpy(edid+10, &id_product, sizeof(id_product));
+
+	// Serial number is a little-endian 32-bit value.
+	serial = b_param.id_sn;
+	memcpy(edid+12, &serial, sizeof(serial));
+
+	edid[16] = 0;           // Week of Manufacture
+	edid[17] = 2018 - 1990; // Year of Manufacture or Model Year.
+				// Acrn is released in 2018.
+
+	edid[18] = 1;   // Version Number
+	edid[19] = 4;   // Revision Number
+
+	/* edid[24:20], Basic Display Parameters & Features */
+	// Video Input Definition: 1 Byte
+	edid[20] = 0xa5; // Digital input;
+			 // 8 Bits per Primary Color;
+			 // DisplayPort is supported
+
+	// Horizontal and Vertical Screen Size or Aspect Ratio: 2 Bytes
+	// screen size, in centimetres
+	edid[21] = info->prefx / 10;
+	edid[22] = info->prefy / 10;
+
+	// Display Transfer Characteristics (GAMMA): 1 Byte
+	// Stored Value = (GAMMA x 100) - 100
+	edid[23] = 120; // display gamma: 2.2
+
+	// Feature Support: 1 Byte
+	edid[24] = 0x06; // sRGB Standard is the default color space;
+			 // Preferred Timing Mode includes the native
+			 // pixel format and preferred.
+
+	/* edid[34:25], Display x, y Chromaticity Coordinates */
+	vdpy_edid_set_color(edid, 0.6400, 0.3300,
+				  0.3000, 0.6000,
+				  0.1500, 0.0600,
+				  0.3127, 0.3290);
+
+	/* edid[37:35], Established Timings */
+	vdpy_edid_set_timing(edid, &b_param, ESTT);
+
+	/* edid[53:38], Standard Timings: Identification 1 -> 8 */
+	vdpy_edid_set_timing(edid, &b_param, STDT);
+
+	/* edid[125:54], Detailed Timing Descriptor - 18 bytes x 4 */
+	// Detailed Timing Descriptor 1
+	vdpy_edid_set_baseparam(&c_param, VDPY_MAX_WIDTH, VDPY_MAX_HEIGHT);
+	vdpy_edid_set_descripter(edid, 0x1, 0, &c_param);
+	// Detailed Timing Descriptor 2
+	vdpy_edid_set_baseparam(&c_param, VDPY_DEFAULT_WIDTH, VDPY_DEFAULT_HEIGHT);
+	vdpy_edid_set_descripter(edid, 0x1, 0, &c_param);
+	// Display Product Name (ASCII) String Descriptor (tag #FCh)
+	vdpy_edid_set_descripter(edid, 0, 0xfc, &b_param);
+	// Display Product Serial Number Descriptor (tag #FFh)
+	vdpy_edid_set_descripter(edid, 0, 0xff, &b_param);
+
+	/* EDID[126], Extension Block Count */
+	edid[126] = 0;  // no Extension Block
+
+	/* Checksum */
+	edid[127] = vdpy_edid_get_checksum(edid);
+}
+
+void
+vdpy_get_edid(int handle, uint8_t *edid, size_t size)
+{
+	struct edid_info edid_info;
+
+	if (handle == vdpy.s.n_connect) {
+		edid_info.prefx = vdpy.info.width;
+		edid_info.prefy = vdpy.info.height;
+		edid_info.maxx = VDPY_MAX_WIDTH;
+		edid_info.maxy = VDPY_MAX_HEIGHT;
+	} else {
+		edid_info.prefx = 0;
+		edid_info.prefy = 0;
+		edid_info.maxx = 0;
+		edid_info.maxy = 0;
+	}
+	edid_info.refresh_rate = 0;
+	edid_info.vendor = NULL;
+	edid_info.name = NULL;
+	edid_info.sn = NULL;
+
+	vdpy_edid_generate(edid, size, &edid_info);
+}
+
 void
 vdpy_get_display_info(int handle, struct display_info *info)
 {
