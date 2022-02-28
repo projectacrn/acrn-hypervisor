@@ -6,7 +6,7 @@ Timer
 Because ACRN is a flexible, lightweight reference hypervisor, we provide
 limited timer management services:
 
-- Only the lapic tsc-deadline timer is supported as the clock source.
+- Only the LAPIC tsc-deadline timer is supported as the clock source.
 
 - A timer can only be added on the logical CPU for a process or thread. Timer
   scheduling or timer migrating is not supported.
@@ -14,11 +14,11 @@ limited timer management services:
 How It Works
 ************
 
-When the system boots, we check that the hardware supports lapic
+When the system boots, we check that the hardware supports the LAPIC
 tsc-deadline timer by checking CPUID.01H:ECX.TSC_Deadline[bit 24]. If
 support is missing, we output an error message and panic the hypervisor.
 If supported, we register the timer interrupt callback that raises a
-timer softirq on each logical CPU and sets the lapic timer mode to
+timer softirq on each logical CPU and sets the LAPIC timer mode to
 tsc-deadline timer mode by writing the local APIC LVT register.
 
 Data Structures and APIs
