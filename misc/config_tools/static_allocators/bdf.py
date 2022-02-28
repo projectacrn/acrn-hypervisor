@@ -27,12 +27,7 @@ def find_unused_bdf(used_bdf):
 
 def insert_vuart_to_dev_dict(scenario_etree, devdict, used):
     console_vuart =  scenario_etree.xpath(f"./console_vuart[base != 'INVALID_PCI_BASE']/@id")
-    communication_vuarts = scenario_etree.xpath(f".//communication_vuart[base != 'INVALID_PCI_BASE']/@id")
     for vuart_id in console_vuart:
-        free_bdf = find_unused_bdf(used)
-        devdict[f"{VUART}_{vuart_id}"] = free_bdf
-        used.append(free_bdf)
-    for vuart_id in communication_vuarts:
         free_bdf = find_unused_bdf(used)
         devdict[f"{VUART}_{vuart_id}"] = free_bdf
         used.append(free_bdf)

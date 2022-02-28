@@ -95,6 +95,26 @@ def alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree):
 
             create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, legacy_vuart_id, legacy_vuart_irq)
 
+def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
+    native_ttys = lib.lib.get_native_ttys()
+    hv_debug_console = lib.lib.parse_hv_console(scenario_etree)
+
+    vm_node_list = scenario_etree.xpath("//vm")
+    for vm_node in vm_node_list:
+        load_order = common.get_node("./load_order/text()", vm_node)
+        irq_list = get_native_valid_irq() if load_order == "SERVICE_VM" else [f"{d}" for d in list(range(1,15))]
+        vuart_id = '1'
+        vmname = common.get_node("./name/text()", vm_node)
+        vuart_connections = scenario_etree.xpath("//vuart_connection")
+        for connection in vuart_connections:
+            endpoint_list = connection.xpath(".//endpoint")
+            for endpoint in endpoint_list:
+                vm_name = common.get_node("./vm_name/text()",endpoint)
+                if vm_name == vmname:
+                    legacy_vuart_irq = alloc_irq(irq_list)
+                    create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, vuart_id, legacy_vuart_irq)
+                    vuart_id = str(int(vuart_id) + 1)
+
 def get_irqs_of_device(device_node):
     irqs = set()
 
@@ -231,4 +251,5 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
 
 def fn(board_etree, scenario_etree, allocation_etree):
     alloc_legacy_vuart_irqs(board_etree, scenario_etree, allocation_etree)
+    alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree)
     alloc_device_irqs(board_etree, scenario_etree, allocation_etree)
