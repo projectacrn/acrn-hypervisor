@@ -225,6 +225,38 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
   </xs:restriction>
 </xs:simpleType>
 
+<xs:simpleType name="VuartType">
+  <xs:annotation>
+    <xs:documentation>vCOM type</xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="legacy" />
+    <xs:enumeration value="pci" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="VuartEndpointType">
+  <xs:sequence>
+    <xs:element name="vm_name" type="xs:string"/>
+    <xs:element name="io_port" type="HexFormat" default="0x3F" />
+    <xs:element name="vbdf" type="VBDFType" minOccurs="0" maxOccurs="1"  />
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="VuartConnectionType">
+  <xs:sequence>
+    <xs:element name="name" type="xs:string" />
+    <xs:element name="type" type="VuartType" default="legacy" />
+    <xs:element name="endpoint" type="VuartEndpointType" minOccurs="2" maxOccurs="2" />
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="VuartConnectionsType">
+  <xs:sequence>
+    <xs:element name="vuart_connection" type="VuartConnectionType"  minOccurs="0" maxOccurs="unbounded"/>
+  </xs:sequence>
+</xs:complexType>
+
 <xs:simpleType name="LegacyVuartType">
   <xs:annotation acrn:configurable="n">
     <xs:documentation>vCOM type</xs:documentation>

@@ -298,6 +298,12 @@ If this value is empty, then the default value will be calculated from informati
     <xs:element name="MEMORY" type="MemoryOptionsType" />
     <xs:element name="CAPACITIES" type="CapacitiesOptionsType" />
     <xs:element name="MISC_CFG" type="MiscCfgOptionsType" />
+    <xs:element name="vuart_connections" type="VuartConnectionsType" minOccurs="0" maxOccurs="8">
+      <xs:annotation>
+        <xs:documentation>Specify the vUART connection setting.
+Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
   </xs:all>
 </xs:complexType>
 
@@ -371,7 +377,7 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
 argument and memory.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="legacy_vuart" type="LegacyVuartConfiguration" minOccurs="2" maxOccurs="8">
+    <xs:element name="legacy_vuart" type="LegacyVuartConfiguration" minOccurs="1" maxOccurs="8">
       <xs:annotation>
         <xs:documentation>Specify the vUART (aka COM) with the vUART ID by its ``id`` attribute.
 Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
@@ -381,12 +387,6 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       <xs:annotation>
         <xs:documentation>Specify the console vUART (aka PCI based vUART) with the vUART ID by
 its ``id`` attribute.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="communication_vuart" type="CommunicationVuartConfiguration" maxOccurs="unbounded">
-      <xs:annotation>
-        <xs:documentation>Specify the communication vUART (aka PCI based vUART) with the vUART ID by
-its ``id`` attribute. When it is enabled, specify which target VM's vUART the current VM connects to.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
