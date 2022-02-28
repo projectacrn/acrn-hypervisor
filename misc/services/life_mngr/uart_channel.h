@@ -125,15 +125,15 @@ void stop_listen_uart_channel_dev(struct uart_channel *c);
  * If ACK message is not received during specified time, resend
  * message.
  */
-void enable_uart_channel_dev_resend(struct channel_dev *c_dev, char *resend_buf, unsigned int resend_time);
+void start_uart_channel_dev_resend(struct channel_dev *c_dev, char *resend_buf, unsigned int resend_time);
 /**
- * @brief Enable resend for all connected uart channel devices
+ * @brief Start to resend for all connected uart channel devices
  */
-void enable_all_uart_channel_dev_resend(struct uart_channel *c, char *msg, unsigned int resend_time);
+void start_all_uart_channel_dev_resend(struct uart_channel *c, char *msg, unsigned int resend_time);
 /**
- * @brief Clear the uart channel device resending buffer and resending time
+ * @brief Stop the uart channel device resending buffer and resending time
  */
-void disable_uart_channel_dev_resend(struct channel_dev *c_dev);
+void stop_uart_channel_dev_resend(struct channel_dev *c_dev);
 /**
  * @brief Broadcast message to each connected uart channel device
  */

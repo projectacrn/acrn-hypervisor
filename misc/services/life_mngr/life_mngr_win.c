@@ -18,6 +18,8 @@
 #define ACK_POWEROFF	"ack_poweroff"
 #define USER_VM_SHUTDOWN  "user_vm_shutdown"
 #define ACK_USER_VM_SHUTDOWN "ack_user_vm_shutdown"
+#define USER_VM_REBOOT  "user_vm_reboot"
+#define ACK_USER_VM_REBOOT "ack_user_vm_reboot"
 #define SYNC_FMT	"sync:%s"
 #define S5_REJECTED	"system shutdown request is rejected"
 
@@ -44,14 +46,14 @@ void send_message_by_uart(HANDLE hCom, char *buf, unsigned int len)
 
 	WriteFile(hCom, "\n", 1, &written, NULL);
 }
-void enable_uart_resend(char *buf, unsigned int time)
+void start_uart_resend(char *buf, unsigned int time)
 {
 	if (resend_time < MIN_RESEND_TIME)
 		resend_time = MIN_RESEND_TIME;
 	strncpy(resend_buf, buf, BUFF_SIZE - 1);
 	resend_time = time + 1U;
 }
-void diable_uart_resend(void)
+void stop_uart_resend(void)
 {
 	memset(resend_buf, 0x0, BUFF_SIZE);
 	resend_time = 0U;
@@ -108,7 +110,7 @@ DWORD WINAPI open_socket_server(LPVOID lpParam)
 	} while (strncmp(revData, REQ_SYS_SHUTDOWN, sizeof(REQ_SYS_SHUTDOWN)) != 0);
 	Sleep(6U * MS_TO_SECOND);
 	send(sClient, sendData, strlen(sendData), 0);
-	enable_uart_resend(REQ_SYS_SHUTDOWN, MIN_RESEND_TIME);
+	start_uart_resend(REQ_SYS_SHUTDOWN, MIN_RESEND_TIME);
 	send_message_by_uart(hCom2, REQ_SYS_SHUTDOWN, sizeof(REQ_SYS_SHUTDOWN));
 	Sleep(2 * READ_INTERVAL);
 	closesocket(sClient);
@@ -165,6 +167,7 @@ int main()
 	DWORD dwError;
 	DWORD threadId;
 	bool poweroff = false;
+	bool reboot = false;
 	unsigned int retry_times;
 
 	hCom2 = initCom("COM2");
@@ -177,7 +180,7 @@ int main()
 		PurgeComm(hCom2, PURGE_TXABORT | PURGE_TXCLEAR);
 	}
 	snprintf(buf, sizeof(buf), SYNC_FMT, WIN_VM_NAME);
-	enable_uart_resend(buf, MIN_RESEND_TIME);
+	start_uart_resend(buf, MIN_RESEND_TIME);
 	send_message_by_uart(hCom2, buf, strlen(buf));
 	/**
 	 * The lifecycle manager in Service VM checks sync message every 5 seconds
@@ -216,10 +219,10 @@ int main()
 
 		if (strncmp(recvbuf, ACK_SYNC, sizeof(ACK_SYNC)) == 0)
 		{
-			diable_uart_resend();
+			stop_uart_resend();
 			printf("Received acked sync message from service VM\n");
 		} else if (strncmp(recvbuf, ACK_REQ_SYS_SHUTDOWN, sizeof(ACK_REQ_SYS_SHUTDOWN)) == 0) {
-			diable_uart_resend();
+			stop_uart_resend();
 			printf("Received acked system shutdown request from service VM\n");
 		} else if (strncmp(recvbuf, POWEROFF_CMD, sizeof(POWEROFF_CMD)) == 0) {
 			printf("Received system shutdown message from service VM\n");
@@ -235,6 +238,13 @@ int main()
 			printf("Windows VM will shutdown.\n");
 			poweroff = true;
 			break;
+		} else if (strncmp(recvbuf, USER_VM_REBOOT, sizeof(USER_VM_REBOOT)) == 0) {
+			printf("Received guest reboot message from service VM\n");
+			send_message_by_uart(hCom2, ACK_USER_VM_REBOOT, sizeof(ACK_USER_VM_REBOOT));
+			Sleep(2 * READ_INTERVAL);
+			printf("Windows VM will reboot.\n");
+			reboot = true;
+			break;
 		} else {
 			printf("Received invalid message (%s) from service VM.\n", recvbuf);
 		}
@@ -242,5 +252,7 @@ int main()
 	CloseHandle(hCom2);
 	if (poweroff)
 		system("shutdown -s -t 0");
+	if (reboot)
+		system("shutdown -r -t 0");
 	return 0;
 }

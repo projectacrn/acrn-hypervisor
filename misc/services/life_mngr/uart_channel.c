@@ -221,25 +221,25 @@ void stop_listen_uart_channel_dev(struct uart_channel *c)
 		}
 	}
 }
-void enable_uart_channel_dev_resend(struct channel_dev *c_dev, char *resend_buf, unsigned int resend_time)
+void start_uart_channel_dev_resend(struct channel_dev *c_dev, char *resend_buf, unsigned int resend_time)
 {
 	if (resend_time < MIN_RESEND_TIME)
 		resend_time = MIN_RESEND_TIME;
 	strncpy(c_dev->resend_buf, resend_buf, CHANNEL_DEV_BUF_LEN - 1);
 	c_dev->resend_time = resend_time + 1;
 }
-void enable_all_uart_channel_dev_resend(struct uart_channel *c, char *msg, unsigned int resend_time)
+void start_all_uart_channel_dev_resend(struct uart_channel *c, char *msg, unsigned int resend_time)
 {
 	struct channel_dev *c_dev;
 
 	/* Enable resend for all connected uart channel devices */
 	pthread_mutex_lock(&c->tty_conn_list_lock);
 	LIST_FOREACH(c_dev, &c->tty_conn_head, list) {
-		enable_uart_channel_dev_resend(c_dev, msg, resend_time);
+		start_uart_channel_dev_resend(c_dev, msg, resend_time);
 	}
 	pthread_mutex_unlock(&c->tty_conn_list_lock);
 }
-void disable_uart_channel_dev_resend(struct channel_dev *c_dev)
+void stop_uart_channel_dev_resend(struct channel_dev *c_dev)
 {
 	if (c_dev->resend_time == 1U)
 		LOG_PRINTF("Timeout of receiving ACK message from (%s)\n", c_dev->name);
