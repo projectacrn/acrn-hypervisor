@@ -152,6 +152,24 @@ class SharedMemoryRegions:
             return cls(provided_by, name, size, shared_vms)
 
         @classmethod
+        def from_launch_xml_node(cls, node):
+            text = node.text
+            provided_by = "Device Model"
+            parts = [p.strip() for p in text[text.find("/") + 1 :].split(",")]
+            name = parts[0]
+            size = parts[1]
+
+            shared_vms = []
+            vm_name = node.xpath("ancestor::user_vm/vm_name/text()")
+            if vm_name:
+                vm_name = vm_name[0]
+                dev = cls.next_dev[vm_name]
+                cls.next_dev[vm_name] += 1
+                shared_vms.append((vm_name, f"00:{dev:02x}.0"))
+
+            return cls(provided_by, name, size, shared_vms)
+
+        @classmethod
         def from_xml_node(cls, node):
             cls.nr_regions += 1
             name = node.get("name") if "name" in node.keys() else \
@@ -165,6 +183,9 @@ class SharedMemoryRegions:
                 vbdf = shared_vm_node.find("VBDF").text
                 shared_vms.append((vm_name, vbdf))
             return cls(provided_by, name, size, shared_vms)
+
+        def extend(self, region):
+            self.shared_vms.extend(region.shared_vms)
 
         def format_xml_element(self):
             node = etree.Element("IVSHMEM_REGION")
@@ -188,9 +209,18 @@ class SharedMemoryRegions:
         """Parse IVSHMEM_REGION nodes in either v2.x and v3.x format."""
 
         if len(ivshmem_region_node) == 0:
-            # ACRN v2.x format
-            region = self.SharedMemoryRegion.from_encoding(ivshmem_region_node.text, self.old_xml_etree)
-            self.regions[region.name] = region
+            if ivshmem_region_node.tag == "IVSHMEM_REGION":
+                # ACRN v2.x scenario XML format
+                region = self.SharedMemoryRegion.from_encoding(ivshmem_region_node.text, self.old_xml_etree)
+                self.regions[region.name] = region
+            elif ivshmem_region_node.tag == "shm_region":
+                # ACRN v2.x launch XML format
+                if ivshmem_region_node.text:
+                    region = self.SharedMemoryRegion.from_launch_xml_node(ivshmem_region_node)
+                    if region.name in self.regions.keys():
+                        self.regions[region.name].extend(region)
+                    else:
+                        self.regions[region.name] = region
         else:
             # ACRN v3.x format
             region = self.SharedMemoryRegion.from_xml_node(ivshmem_region_node)
@@ -207,15 +237,26 @@ class ScenarioUpgrader(ScenarioTransformer):
     def get_node(cls, element, xpath):
         return next(iter(element.xpath(xpath, namespaces=cls.xpath_ns)), None)
 
-    def __init__(self, xsd_etree, old_xml_etree):
+    def __init__(self, xsd_etree, old_xml_etree, old_launch_etree = None):
         super().__init__(xsd_etree, visit_optional_node=True)
         self.old_xml_etree = old_xml_etree
+        self.old_launch_etree = old_launch_etree
+        if old_launch_etree is not None:
+            service_vm_id = old_xml_etree.xpath("//vm[.//load_order = 'SERVICE_VM' or .//vm_type = 'SERVICE_VM']/@id")
+            if not service_vm_id:
+                self.old_launch_etree = None
+            else:
+                self.service_vm_id = int(service_vm_id[0])
 
         # Collect all nodes in old_xml_etree which will be used to track data not moved
         self.old_data_nodes = set()
         for node in old_xml_etree.iter():
             if node.text:
                 self.old_data_nodes.add(node)
+        if self.old_launch_etree is not None:
+            for node in self.old_launch_etree.iter():
+                if node.text:
+                    self.old_data_nodes.add(node)
 
         self.hv_vm_node_map = {}
 
@@ -225,6 +266,22 @@ class ScenarioUpgrader(ScenarioTransformer):
             hv_vm_node = next(new_parent_node.iterancestors(["vm", "hv"]), None)
         old_hv_vm_node = self.hv_vm_node_map[hv_vm_node]
         old_data_node = old_hv_vm_node.xpath(xpath)
+        return old_data_node
+
+    def get_from_old_launch_data(self, new_parent_node, xpath):
+        if self.old_launch_etree is None:
+            return []
+
+        vm_node = new_parent_node
+        if vm_node.tag != "vm":
+            vm_node = next(new_parent_node.iterancestors("vm"), None)
+        if vm_node is None:
+            return []
+
+        old_vm_node = self.hv_vm_node_map[vm_node]
+        user_vm_id = int(old_vm_node.get("id")) - self.service_vm_id
+        user_vm_node = self.old_launch_etree.xpath(f"//user_vm[@id = '{user_vm_id}']")
+        old_data_node = user_vm_node[0].xpath(xpath) if user_vm_node else []
         return old_data_node
 
     def move_build_type(self, xsd_element_node, xml_parent_node, new_nodes):
@@ -248,8 +305,10 @@ class ScenarioUpgrader(ScenarioTransformer):
         legacy_vuart = legacy_vuart[0] if legacy_vuart else None
         console_vuart = self.get_from_old_data(xml_parent_node, ".//console_vuart")
         console_vuart = console_vuart[0] if console_vuart else None
+        launch_console_vuart = self.get_from_old_launch_data(xml_parent_node, ".//console_vuart")
+        launch_console_vuart = launch_console_vuart[0] if launch_console_vuart else None
 
-        if legacy_vuart is None and console_vuart is None:
+        if legacy_vuart is None and console_vuart is None and launch_console_vuart is None:
             return False
 
         if console_vuart is not None and console_vuart.text:
@@ -270,7 +329,12 @@ class ScenarioUpgrader(ScenarioTransformer):
 
             if vm_load_order == "SERVICE_VM":
                 logging.info(f"The console virtual UART of the service VM is moved to {new_node.text}. Please double check the console= command line option in the OS bootargs of the service VM.")
-        elif console_vuart is not None and console_vuart.find("base") != "INVALID_PCI_BASE":
+        elif console_vuart is not None:
+            if console_vuart.find("base") == "PCI_VUART":
+                new_node.text = "PCI"
+            else:
+                new_node.text = console_vuart.text
+        elif launch_console_vuart and launch_console_vuart.text != "Disable":
             new_node.text = "PCI"
 
         if legacy_vuart is not None:
@@ -278,6 +342,9 @@ class ScenarioUpgrader(ScenarioTransformer):
                 self.old_data_nodes.discard(n)
         if console_vuart is not None:
             for n in console_vuart.iter():
+                self.old_data_nodes.discard(n)
+        if launch_console_vuart is not None:
+            for n in launch_console_vuart.iter():
                 self.old_data_nodes.discard(n)
 
         return False
@@ -315,6 +382,12 @@ class ScenarioUpgrader(ScenarioTransformer):
             regions.add_ivshmem_region(old_region)
             for child in old_region.iter():
                 self.old_data_nodes.discard(child)
+        if self.old_launch_etree:
+            for old_region in self.old_launch_etree.xpath("//shm_region"):
+                regions.add_ivshmem_region(old_region)
+                for child in old_region.iter():
+                    self.old_data_nodes.discard(child)
+
         new_nodes.append(regions.format_xml_element())
 
         return False
@@ -322,9 +395,12 @@ class ScenarioUpgrader(ScenarioTransformer):
     def move_vm_type(self, xsd_element_node, xml_parent_node, new_nodes):
         old_vm_type_node = self.get_from_old_data(xml_parent_node, ".//vm_type").pop()
         old_guest_flag_nodes = self.get_from_old_data(xml_parent_node, ".//guest_flag[text() = 'GUEST_FLAG_RT']")
+        old_rtos_type_nodes = self.get_from_old_launch_data(xml_parent_node, ".//rtos_type")
 
         new_node = etree.Element(xsd_element_node.get("name"))
-        if old_vm_type_node.text in ["PRE_RT_VM", "POST_RT_VM"] or old_guest_flag_nodes:
+        if old_vm_type_node.text in ["PRE_RT_VM", "POST_RT_VM"] or \
+           old_guest_flag_nodes or \
+           (old_rtos_type_nodes and old_rtos_type_nodes[0].text in ["Soft RT", "Hard RT"]):
             new_node.text = "RTVM"
         elif old_vm_type_node.text in ["SAFETY_VM", "PRE_STD_VM", "POST_STD_VM"]:
             new_node.text = "STANDARD_VM"
@@ -334,6 +410,25 @@ class ScenarioUpgrader(ScenarioTransformer):
         self.old_data_nodes.discard(old_vm_type_node)
         for n in old_guest_flag_nodes:
             self.old_data_nodes.discard(n)
+        for n in old_rtos_type_nodes:
+            self.old_data_nodes.discard(n)
+
+        return False
+
+    def move_os_type(self, xsd_element_node, xml_parent_node, new_nodes):
+        old_os_type_nodes = self.get_from_old_launch_data(xml_parent_node, ".//user_vm_type")
+
+        if old_os_type_nodes:
+            new_node = etree.Element(xsd_element_node.get("name"))
+            if old_os_type_nodes[0].text == "WINDOWS":
+                new_node.text = "Windows OS"
+            else:
+                new_node.text = "Non-Windows OS"
+            new_nodes.append(new_node)
+            for n in old_os_type_nodes:
+                self.old_data_nodes.discard(n)
+        else:
+            self.move_data_by_same_tag(xsd_element_node, xml_parent_node, new_nodes)
 
         return False
 
@@ -350,10 +445,36 @@ class ScenarioUpgrader(ScenarioTransformer):
 
         return False
 
-    def move_data_by_xpath(self, xpath, xsd_element_node, xml_parent_node, new_nodes):
+    def move_lapic_passthrough(self, xsd_element_node, xml_parent_node, new_nodes):
+        old_rtos_type_nodes = self.get_from_old_launch_data(xml_parent_node, ".//rtos_type")
+        if old_rtos_type_nodes and old_rtos_type_nodes[0].text == "Hard RT":
+            new_node = etree.Element(xsd_element_node.get("name"))
+            new_node.text = "y"
+            new_nodes.append(new_node)
+            # The rtos_type node will be consumed by the vm_type mover
+        else:
+            self.move_guest_flag("GUEST_FLAG_LAPIC_PASSTHROUGH", xsd_element_node, xml_parent_node, new_nodes)
+
+        return False
+
+    def move_enablement(self, xpath, xsd_element_node, xml_parent_node, new_nodes, values_as_enabled = ["y"], values_as_disabled = ["n"]):
+        ret = self.move_data_by_xpath(xpath, xsd_element_node, xml_parent_node, new_nodes)
+        for n in new_nodes:
+            if n.text in values_as_enabled:
+                n.text = "Enable"
+            elif n.text in values_as_disabled:
+                n.text = "Disable"
+        return ret
+
+    def move_data_by_xpath(self, xpath, xsd_element_node, xml_parent_node, new_nodes, scenario_xml_only = False, launch_xml_only = False):
         element_tag = xsd_element_node.get("name")
 
-        old_data_nodes = self.get_from_old_data(xml_parent_node, xpath)
+        old_data_nodes = []
+        if not launch_xml_only:
+            old_data_nodes = self.get_from_old_data(xml_parent_node, xpath)
+        if not scenario_xml_only and not old_data_nodes and self.old_launch_etree is not None:
+            old_data_nodes = self.get_from_old_launch_data(xml_parent_node, xpath)
+
         if self.complex_type_of_element(xsd_element_node) is None:
             max_occurs_raw = xsd_element_node.get("maxOccurs")
 
@@ -369,7 +490,8 @@ class ScenarioUpgrader(ScenarioTransformer):
                     new_node = etree.Element(element_tag)
                     new_node.text = n.text
                     for k, v in n.items():
-                        new_node.set(k, v)
+                        if k in ["id", "name"]:
+                            new_node.set(k, v)
                     new_nodes.append(new_node)
                     self.old_data_nodes.discard(n)
 
@@ -389,20 +511,53 @@ class ScenarioUpgrader(ScenarioTransformer):
         element_tag = xsd_element_node.get("name")
         return self.move_data_by_xpath(f".//{element_tag}", xsd_element_node, xml_parent_node, new_nodes)
 
+    def rename_data(self, old_xpath, new_xpath, xsd_element_node, xml_parent_node, new_nodes):
+        ret = self.move_data_by_xpath(old_xpath, xsd_element_node, xml_parent_node, new_nodes)
+        if not new_nodes:
+            ret = self.move_data_by_xpath(new_xpath, xsd_element_node, xml_parent_node, new_nodes)
+        return ret
+
+    def move_data_from_either_xml(self, scenario_xpath, launch_xpath, xsd_element_node, xml_parent_node, new_nodes):
+        # When moving data from either XML files, data in the launch XML take precedence.
+        ret = self.move_data_by_xpath(launch_xpath, xsd_element_node, xml_parent_node, new_nodes, launch_xml_only = True)
+        if not new_nodes:
+            ret = self.move_data_by_xpath(scenario_xpath, xsd_element_node, xml_parent_node, new_nodes, scenario_xml_only = True)
+        else:
+            self.move_data_by_xpath(scenario_xpath, xsd_element_node, xml_parent_node, list(), scenario_xml_only = True)
+        return ret
+
+    def move_data_from_both_xmls(self, scenario_xpath, launch_xpath, xsd_element_node, xml_parent_node, new_nodes):
+        ret_scenario = self.move_data_by_xpath(scenario_xpath, xsd_element_node, xml_parent_node, new_nodes, scenario_xml_only = True)
+        ret_launch = self.move_data_by_xpath(launch_xpath, xsd_element_node, xml_parent_node, new_nodes, launch_xml_only = True)
+        return ret_scenario or ret_launch
+
+    def create_node_if(self, scenario_xpath, launch_xpath, xsd_element_node, xml_parent_node, new_nodes):
+        if self.get_from_old_data(xml_parent_node, scenario_xpath) or \
+           self.get_from_old_launch_data(xml_parent_node, launch_xpath):
+            new_node = etree.Element(xsd_element_node.get("name"))
+            new_nodes.append(new_node)
+            return True
+        return False
+
     def move_data_null(self, xsd_element_node, xml_parent_node, new_nodes):
         return False
 
     data_movers = {
+        "vm/name": partialmethod(move_data_from_either_xml, "name", "vm_name"),
+        "pcpu_id": partialmethod(move_data_from_either_xml, "cpu_affinity/pcpu_id[text() != '']", "cpu_affinity/pcpu_id[text() != '']"),
+        "pci_dev": partialmethod(move_data_from_both_xmls, ".//pci_devs/pci_dev[text()]", "passthrough_devices/*[text()] | sriov/*[text()]"),
+        "PTM": partialmethod(move_data_from_either_xml, ".//PTM", "enable_ptm"),
+
         # Configuration items with the same name but under different parents
-        "vm/name": partialmethod(move_data_by_xpath, "./name"),
         "os_config/name": partialmethod(move_data_by_xpath, ".//os_config/name"),
         "epc_section/base": partialmethod(move_data_by_xpath, ".//epc_section/base"),
         "console_vuart/base": partialmethod(move_data_by_xpath, ".//console_vuart/base"),
         "epc_section/size": partialmethod(move_data_by_xpath, ".//epc_section/size"),
         "memory/size": partialmethod(move_data_by_xpath, ".//memory/size"),
+        "virtio_devices/network": partialmethod(move_data_by_xpath, ".//virtio_devices/network"),
 
         # Guest flags
-        "lapic_passthrough": partialmethod(move_guest_flag, "GUEST_FLAG_LAPIC_PASSTHROUGH"),
+        "lapic_passthrough": move_lapic_passthrough,
         "io_completion_polling": partialmethod(move_guest_flag, "GUEST_FLAG_IO_COMPLETION_POLLING"),
         "nested_virtualization_support": partialmethod(move_guest_flag, "GUEST_FLAG_NVMX_ENABLED"),
         "virtual_cat_support": partialmethod(move_guest_flag, "GUEST_FLAG_VCAT_ENABLED"),
@@ -410,11 +565,21 @@ class ScenarioUpgrader(ScenarioTransformer):
         "hide_mtrr_support": partialmethod(move_guest_flag, "GUEST_FLAG_HIDE_MTRR"),
         "security_vm": partialmethod(move_guest_flag, "GUEST_FLAG_SECURITY_VM"),
 
+        # Feature enabling or disabling
+        "vuart0": partialmethod(move_enablement, ".//vuart0"),
+        "vbootloader": partialmethod(move_enablement, ".//vbootloader", values_as_enabled = ["ovmf"], values_as_disabled = ["no"]),
+
+        # Intermediate nodes
+        "memory": partialmethod(create_node_if, ".//memory", ".//mem_size"),
+        "pci_devs": partialmethod(create_node_if, ".//pci_devs", ".//passthrough_devices/*[text() != ''] | .//sriov/*[text() != '']"),
+
         "BUILD_TYPE": move_build_type,
         "console_vuart": move_console_vuart,
         "vuart_connections": move_vuart_connections,
         "IVSHMEM": move_ivshmem,
         "vm_type": move_vm_type,
+        "os_type": move_os_type,
+        "memory/whole": partialmethod(rename_data, "memory/whole", ".//mem_size"),
 
         "default": move_data_by_same_tag,
     }
@@ -499,6 +664,11 @@ class UpgradingScenarioStage(PipelineStage):
     uses = {"schema_etree", "scenario_etree"}
     provides = {"scenario_etree"}
 
+    def __init__(self, has_launch_xml = False):
+        self.has_launch_xml = has_launch_xml
+        if has_launch_xml:
+            self.uses.add("launch_etree")
+
     class DiscardedDataFilter(namedtuple("DiscardedDataFilter", ["path", "data", "info"])):
         def filter(self, path, data):
             simp_path = re.sub(r"\[[^\]]*\]", "", path)
@@ -522,10 +692,13 @@ class UpgradingScenarioStage(PipelineStage):
     ]
 
     def run(self, obj):
-        upgrader = ScenarioUpgrader(obj.get("schema_etree"), obj.get("scenario_etree"))
+        if self.has_launch_xml:
+            upgrader = ScenarioUpgrader(obj.get("schema_etree"), obj.get("scenario_etree"), obj.get("launch_etree"))
+        else:
+            upgrader = ScenarioUpgrader(obj.get("schema_etree"), obj.get("scenario_etree"))
         new_scenario_etree = upgrader.upgraded_etree
 
-        discarded_data = [(obj.get("scenario_etree").getelementpath(n), n.text) for n in upgrader.old_data_nodes]
+        discarded_data = [(n.getroottree().getelementpath(n), n.text) for n in upgrader.old_data_nodes]
         for path, data in sorted(discarded_data):
             if not any(map(lambda x: x.filter(path, data), self.filters)):
                 escaped_data = data.replace("\n", "\\n")
@@ -534,15 +707,25 @@ class UpgradingScenarioStage(PipelineStage):
         obj.set("scenario_etree", new_scenario_etree)
 
 def main(args):
-    pipeline = PipelineEngine(["schema_path", "scenario_path"])
-    pipeline.add_stages([
-        LXMLLoadStage("schema"),
-        LXMLLoadStage("scenario"),
-        SlicingSchemaByVMTypeStage(),
-        UpgradingScenarioStage(),
-    ])
+    if args.launch:
+        pipeline = PipelineEngine(["schema_path", "scenario_path", "launch_path"])
+        pipeline.add_stages([
+            LXMLLoadStage("schema"),
+            LXMLLoadStage("scenario"),
+            LXMLLoadStage("launch"),
+            SlicingSchemaByVMTypeStage(),
+            UpgradingScenarioStage(has_launch_xml=True),
+        ])
+    else:
+        pipeline = PipelineEngine(["schema_path", "scenario_path"])
+        pipeline.add_stages([
+            LXMLLoadStage("schema"),
+            LXMLLoadStage("scenario"),
+            SlicingSchemaByVMTypeStage(),
+            UpgradingScenarioStage(),
+        ])
 
-    obj = PipelineObject(schema_path = args.schema, scenario_path = args.scenario)
+    obj = PipelineObject(schema_path = args.schema, scenario_path = args.scenario, launch_path=args.launch)
     pipeline.run(obj)
     # We know we are using lxml to parse the scenario XML, so it is ok to use lxml specific write options here.
     obj.get("scenario_etree").write(args.out, pretty_print=True)
@@ -555,6 +738,7 @@ if __name__ == "__main__":
     parser.add_argument("scenario", help="Path to the scenario XML file from users")
     parser.add_argument("out", nargs="?", default="out.xml", help="Path where the output is placed")
     parser.add_argument("--schema", default=os.path.join(schema_dir, "config.xsd"), help="the XML schema that defines the syntax of scenario XMLs")
+    parser.add_argument("--launch", default=None, help="Path to the launch XML file")
     args = parser.parse_args()
 
     logging.basicConfig(level="INFO")

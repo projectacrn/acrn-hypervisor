@@ -90,20 +90,12 @@ function add_cpus() {
     # Each parameter of this function is considered the processor ID (as is reported in /proc/cpuinfo) of a CPU assigned
     # to a post-launched RTVM.
 
-    if [ "${rtos_type}" != "no" ] || [ "${scheduler}" = "SCHED_NOOP" ]; then
+    if [ "${vm_type}" = "RTVM" ] || [ "${scheduler}" = "SCHED_NOOP" ]; then
         offline_cpus $*
     fi
 
     cpu_list=$(local IFS=, ; echo "$*")
     echo -n "--cpu_affinity ${cpu_list}"
-}
-
-function add_rtvm_options() {
-    if [ "${rtos_type}" = "Soft RT" ]; then
-        echo -n "--rtvm"
-    elif [ "${rtos_type}" = "Hard RT" ]; then
-        echo -n "--rtvm --lapic_pt"
-    fi
 }
 
 function add_interrupt_storm_monitor() {

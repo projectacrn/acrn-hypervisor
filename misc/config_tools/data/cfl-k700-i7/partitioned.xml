@@ -101,7 +101,6 @@
     <pci_devs>
       <pci_dev>00:17.0 SATA controller: Intel Corporation Cannon Lake PCH SATA AHCI Controller (rev 10)</pci_dev>
       <pci_dev>00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (7) I219-LM (rev 10)</pci_dev>
-      <pci_dev/>
     </pci_devs>
   </vm>
   <vm id="1">
@@ -140,7 +139,6 @@
     </mmio_resources>
     <pci_devs>
       <pci_dev>00:14.0 USB controller: Intel Corporation Cannon Lake PCH USB 3.1 xHCI Host Controller (rev 10)</pci_dev>
-      <pci_dev/>
     </pci_devs>
   </vm>
 </acrn-config>

@@ -86,6 +86,11 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 
 <xs:complexType name="MemoryInfo">
   <xs:all>
+    <xs:element name="whole" type="xs:integer" default="256">
+      <xs:annotation acrn:title="VM physical memory allocation (MB)" acrn:views="basic" acrn:applicable-vms="post-launched">
+	<xs:documentation>Specify the physical memory allocated to this VM in Megabytes.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="start_hpa" type="HexFormat" default="0x100000000">
       <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
         <xs:documentation>The starting physical address in host for the VM.</xs:documentation>
@@ -223,5 +228,12 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
     </xs:element>
   </xs:sequence>
 </xs:complexType>
+
+<xs:simpleType name="OSType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Non-Windows OS" />
+    <xs:enumeration value="Windows OS" />
+  </xs:restriction>
+</xs:simpleType>
 
 </xs:schema>

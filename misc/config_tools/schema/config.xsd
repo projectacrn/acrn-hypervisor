@@ -404,6 +404,70 @@ its ``id`` attribute.</xs:documentation>
         <xs:documentation>Enable virtualization of PCIE Precision Time Measurement (PTM) mechanism for devices with PTM capability and for real-time application. HV provides PCIE root port emulation instead of host bridge emulation for VM , PTM could coordinate timing between device and root port with device’s local timebases without relying on software.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="os_type" type="OSType" default="Non-Windows OS">
+      <xs:annotation acrn:title="OS type" acrn:applicable-vms="post-launched" acrn:views="basic">
+	<xs:documentation>Specify user VM OS type, for config tool to format the DM commandline. If it is windows, then add -windows to DM parameter. It supports Oracle virtio-blk, virtio-net and virtio-input devices for Windows guests with secure boot. For windows guest vm this option is mandatory for running Windows in a User VM. If it is not used, Windows will not recognize the virtual disk. When it is linux like OS , config tool also format the related parameters in the same way.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="vbootloader" type="EnablementType" default="Enable">
+      <xs:annotation acrn:title="OVMF (Open Virtual Machine Firmware)" acrn:applicable-vms="post-launched" acrn:views="basic">
+        <xs:documentation>Specify if to use virtual boot loader OVMF (Open Virtual Machine Firmware) to boot User VM, right now ovmf is the only virtual boot loader supported. User could also disable this to use another boot protocol with parameter -K set.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="vuart0" type="EnablementType" default="Enable">
+      <xs:annotation acrn:title="Emulate COM1 as standard I/O" acrn:applicable-vms="post-launched" acrn:views="basic">
+	<xs:documentation>Enable ACRN Device Model to emulate COM1 as a User VM standard IO.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="usb_xhci" minOccurs="0">
+      <xs:annotation acrn:views="basic" acrn:applicable-vms="post-launched">
+        <xs:documentation>Device model emulates USB controller used to support USB 3.0 devices, (also supports USB 2.0 and USB 1.0 devices). The physical USB devices attached on the specified bus and port in service VM will be detected by User VM and used as expected as parameters setting.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:annotation>
+          <xs:documentation>Input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:pattern value="([\d]+-[\d]+){0,1}(:[\d]+-[\d]+)*" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
+    <xs:element name="virtio_devices">
+      <xs:annotation acrn:title="Virt-IO devices" acrn:views="basic" acrn:applicable-vms="post-launched">
+	<xs:documentation>Enable virt-IO devices in post-launched VMs.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+        <xs:all>
+          <xs:element name="console" type="xs:string" minOccurs="0">
+            <xs:annotation acrn:views="basic">
+              <xs:documentation>The virtio console device setting.Input format:
+              ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="network" type="xs:string" minOccurs="0">
+            <xs:annotation acrn:views="basic">
+              <xs:documentation>The virtio network device setting.
+              Input format: ``device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]``.
+              The ``device_name`` is the name of the TAP (or MacVTap) device.
+              It must include the keyword ``tap``. ``vhost`` specifies the
+              vhost backend; otherwise, the VBSU backend is used. The ``mac``
+              address is optional.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="input" type="xs:string" minOccurs="0">
+	    <xs:annotation acrn:views="basic">
+	      <xs:documentation>The virtio input device setting.</xs:documentation>
+	    </xs:annotation>
+	  </xs:element>
+          <xs:element name="block" type="xs:string" minOccurs="0">
+            <xs:annotation acrn:views="basic">
+              <xs:documentation>The virtio block device setting.
+              Format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:all>
+      </xs:complexType>
+    </xs:element>
   </xs:all>
   <xs:attribute name="id" type="xs:integer" />
 </xs:complexType>
