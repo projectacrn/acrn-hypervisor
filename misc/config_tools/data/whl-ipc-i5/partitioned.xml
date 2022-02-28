@@ -89,14 +89,7 @@
         reboot=acpi
         </bootargs>
     </os_config>
-    <legacy_vuart id="0">
-      <type>VUART_LEGACY_PIO</type>
-      <base>COM1_BASE</base>
-      <irq>COM1_IRQ</irq>
-    </legacy_vuart>
-    <console_vuart id="0">
-      <base>INVALID_PCI_BASE</base>
-    </console_vuart>
+    <console_vuart>COM Port 1</console_vuart>
     <mmio_resources>
       <TPM2>n</TPM2>
     </mmio_resources>
@@ -137,14 +130,7 @@
         consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>
-    <legacy_vuart id="0">
-      <type>VUART_LEGACY_PIO</type>
-      <base>COM1_BASE</base>
-      <irq>COM1_IRQ</irq>
-    </legacy_vuart>
-    <console_vuart id="0">
-      <base>INVALID_PCI_BASE</base>
-    </console_vuart>
+    <console_vuart>COM Port 1</console_vuart>
     <mmio_resources>
       <TPM2>n</TPM2>
     </mmio_resources>

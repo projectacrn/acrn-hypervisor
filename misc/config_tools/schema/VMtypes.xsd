@@ -177,6 +177,17 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
   </xs:restriction>
 </xs:simpleType>
 
+<xs:simpleType name="ConsoleVuartConfiguration">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="None" />
+    <xs:enumeration value="COM Port 1" />
+    <xs:enumeration value="COM Port 2" />
+    <xs:enumeration value="COM Port 3" />
+    <xs:enumeration value="COM Port 4" />
+    <xs:enumeration value="PCI" />
+  </xs:restriction>
+</xs:simpleType>
+
 <xs:simpleType name="VuartType">
   <xs:annotation>
     <xs:documentation>vCOM type</xs:documentation>
@@ -207,141 +218,6 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
   <xs:sequence>
     <xs:element name="vuart_connection" type="VuartConnectionType"  minOccurs="0" maxOccurs="unbounded"/>
   </xs:sequence>
-</xs:complexType>
-
-<xs:simpleType name="LegacyVuartType">
-  <xs:annotation acrn:configurable="n">
-    <xs:documentation>vCOM type</xs:documentation>
-  </xs:annotation>
-  <xs:restriction base="xs:string">
-    <xs:enumeration value="VUART_LEGACY_PIO" />
-    <xs:enumeration value="VUART_PCI" />
-  </xs:restriction>
-</xs:simpleType>
-
-<xs:simpleType name="LegacyVuartBase">
-  <xs:annotation>
-    <xs:documentation>A string with either ``SERVICE_VM_COM1_BASE``,
-``SERVICE_VM_COM2_BASE``, ``SERVICE_VM_COM3_BASE``, ``SERVICE_VM_COM4_BASE``,
-``COM1_BASE``, ``COM2_BASE``, ``COM3_BASE``, ``COM4_BASE``,
-``CONFIG_COM_BASE``, or indicating it's disabled with ``INVALID_COM_BASE``.</xs:documentation>
-  </xs:annotation>
-  <xs:restriction base="xs:string">
-    <xs:enumeration value="SERVICE_VM_COM1_BASE" />
-    <xs:enumeration value="SERVICE_VM_COM2_BASE" />
-    <xs:enumeration value="SERVICE_VM_COM3_BASE" />
-    <xs:enumeration value="SERVICE_VM_COM4_BASE" />
-    <xs:enumeration value="COM1_BASE" />
-    <xs:enumeration value="COM2_BASE" />
-    <xs:enumeration value="COM3_BASE" />
-    <xs:enumeration value="COM4_BASE" />
-    <xs:enumeration value="CONFIG_COM_BASE" />
-    <xs:enumeration value="INVALID_COM_BASE" />
-  </xs:restriction>
-</xs:simpleType>
-
-<xs:simpleType name="LegacyVuartIrq">
-  <xs:annotation acrn:configurable="n">
-    <xs:documentation>A string with either ``SERVICE_VM_COM1_IRQ``,
-``SERVICE_VM_COM2_IRQ``, ``SERVICE_VM_COM3_IRQ``, ``SERVICE_VM_COM4_IRQ``,
-``COM1_IRQ``, ``COM2_IRQ``, ``COM3_IRQ``, ``COM4_IRQ``,
-``CONFIG_COM_IRQ`` or ``0``. If ``0`` is set, the vuart will
-use polling mode.</xs:documentation>
-  </xs:annotation>
-  <xs:restriction base="xs:string">
-    <xs:enumeration value="SERVICE_VM_COM1_IRQ" />
-    <xs:enumeration value="SERVICE_VM_COM2_IRQ" />
-    <xs:enumeration value="SERVICE_VM_COM3_IRQ" />
-    <xs:enumeration value="SERVICE_VM_COM4_IRQ" />
-    <xs:enumeration value="COM1_IRQ" />
-    <xs:enumeration value="COM2_IRQ" />
-    <xs:enumeration value="COM3_IRQ" />
-    <xs:enumeration value="COM4_IRQ" />
-    <xs:enumeration value="CONFIG_COM_IRQ" />
-    <xs:enumeration value="0" />
-  </xs:restriction>
-</xs:simpleType>
-
-<xs:complexType name="LegacyVuartConfiguration">
-  <xs:sequence>
-    <xs:element name="type" type="LegacyVuartType" default="VUART_LEGACY_PIO">
-      <xs:annotation>
-        <xs:documentation>vUART (COM) type; only legacy PIO mode is
-supported.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="base" type="LegacyVuartBase">
-      <xs:annotation>
-        <xs:documentation>vUART (COM) enabling switch. Enable by exposing its COM_BASE
-(e.b., ``SERVICE_VM_COM1_BASE`` for Service VM); disable by returning
-``INVALID_COM_BASE``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="irq" type="LegacyVuartIrq">
-      <xs:annotation>
-        <xs:documentation>vCOM IRQ.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="target_vm_id" type="xs:integer" default="1" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>COM2 is used for VM communications. When it is enabled, specify which
-target VM the current VM connects to.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="target_uart_id" type="xs:integer" default="1" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>Target vUART ID to which the vCOM2 connects.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-  </xs:sequence>
-  <xs:attribute name="id" type="xs:integer" use="required"/>
-</xs:complexType>
-
-<xs:simpleType name="PCIVuartBase">
-  <xs:annotation>
-    <xs:documentation>A string with ``PCI_VUART`` or indicating its
-disabled using ``INVALID_PCI_BASE``.</xs:documentation>
-  </xs:annotation>
-  <xs:restriction base="xs:string">
-    <xs:enumeration value="PCI_VUART" />
-    <xs:enumeration value="INVALID_PCI_BASE" />
-  </xs:restriction>
-</xs:simpleType>
-
-<xs:complexType name="ConsoleVuartConfiguration">
-  <xs:sequence>
-    <xs:element name="base" type="PCIVuartBase" default="INVALID_PCI_BASE">
-      <xs:annotation>
-        <xs:documentation>Console vUART (A.K.A PCI based vUART) enabling switch.
-Enable by specifying PCI_VUART; disable by specifying
-``INVALID_PCI_BASE``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-  </xs:sequence>
-  <xs:attribute name="id" type="xs:integer" use="required" />
-</xs:complexType>
-
-<xs:complexType name="CommunicationVuartConfiguration">
-  <xs:sequence>
-    <xs:element name="base" type="PCIVuartBase" default="INVALID_PCI_BASE">
-      <xs:annotation>
-        <xs:documentation>Communication vUART (A.K.A PCI based vUART) enabling switch.
-Enable by specifying PCI_VUART; disable by specifying
-``INVALID_PCI_BASE``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="target_vm_id" type="xs:integer">
-      <xs:annotation>
-        <xs:documentation>specify which target VM the current VM connects to.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="target_uart_id" type="xs:integer">
-      <xs:annotation>
-        <xs:documentation>Target vUART ID to which the ``communication_vuart`` connects.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-  </xs:sequence>
-  <xs:attribute name="id" type="xs:integer" use="required" />
 </xs:complexType>
 
 <xs:complexType name="MMIOResourcesConfiguration">

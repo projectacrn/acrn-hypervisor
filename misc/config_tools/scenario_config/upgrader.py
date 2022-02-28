@@ -231,13 +231,48 @@ class ScenarioUpgrader(ScenarioTransformer):
             self.move_data_by_xpath(".//BUILD_TYPE", xsd_element_node, xml_parent_node, new_nodes)
         return False
 
-    def move_legacy_vuart(self, xsd_element_node, xml_parent_node, new_nodes):
-        # Preserve the legacy vuart for console only.
+    def move_console_vuart(self, xsd_element_node, xml_parent_node, new_nodes):
+        new_node = etree.Element(xsd_element_node.get("name"))
+        new_node.text = "None"
+        new_nodes.append(new_node)
+
+        vm_load_order = next(iter(self.get_from_old_data(xml_parent_node, ".//load_order/text()")), None)
         legacy_vuart = self.get_from_old_data(xml_parent_node, ".//legacy_vuart[@id = '0']")
-        if legacy_vuart:
-            new_nodes.append(legacy_vuart[0])
-            for child in legacy_vuart[0].iter():
-                self.old_data_nodes.discard(child)
+        legacy_vuart = legacy_vuart[0] if legacy_vuart else None
+        console_vuart = self.get_from_old_data(xml_parent_node, ".//console_vuart")
+        console_vuart = console_vuart[0] if console_vuart else None
+
+        if legacy_vuart is None and console_vuart is None:
+            return False
+
+        if console_vuart is not None and console_vuart.text:
+            new_node.text = console_vuart.text
+        elif legacy_vuart is not None and legacy_vuart.find("type").text == "VUART_LEGACY_PIO":
+            vuart_base = legacy_vuart.find("base").text
+            if vuart_base == "CONFIG_COM_BASE":
+                # The new schema does not support arbitrary configuration of console vUART bases. Report the data as lost.
+                return False
+            elif vuart_base.endswith("COM1_BASE"):
+                new_node.text = "COM Port 1"
+            elif vuart_base.endswith("COM2_BASE"):
+                new_node.text = "COM Port 2"
+            elif vuart_base.endswith("COM3_BASE"):
+                new_node.text = "COM Port 3"
+            elif vuart_base.endswith("COM4_BASE"):
+                new_node.text = "COM Port 4"
+
+            if vm_load_order == "SERVICE_VM":
+                logging.info(f"The console virtual UART of the service VM is moved to {new_node.text}. Please double check the console= command line option in the OS bootargs of the service VM.")
+        elif console_vuart is not None and console_vuart.find("base") != "INVALID_PCI_BASE":
+            new_node.text = "PCI"
+
+        if legacy_vuart is not None:
+            for n in legacy_vuart.iter():
+                self.old_data_nodes.discard(n)
+        if console_vuart is not None:
+            for n in console_vuart.iter():
+                self.old_data_nodes.discard(n)
+
         return False
 
     def move_vuart_connections(self, xsd_element_node, xml_parent_node, new_nodes):
@@ -369,7 +404,7 @@ class ScenarioUpgrader(ScenarioTransformer):
         "security_vm": partialmethod(move_guest_flag, "GUEST_FLAG_SECURITY_VM"),
 
         "BUILD_TYPE": move_build_type,
-        "legacy_vuart": move_legacy_vuart,
+        "console_vuart": move_console_vuart,
         "vuart_connections": move_vuart_connections,
         "IVSHMEM": move_ivshmem,
         "vm_type": move_vm_type,
