@@ -62,14 +62,7 @@
       <bootargs>root=/dev/sda3 rw rootwait console=tty0 console=ttyS0 consoleblank=0 no_timer_check quiet loglevel=3
         i915.nuclear_pageflip=1</bootargs>
     </os_config>
-    <legacy_vuart id="0">
-      <type>VUART_LEGACY_PIO</type>
-      <base>SERVICE_VM_COM1_BASE</base>
-      <irq>SERVICE_VM_COM1_IRQ</irq>
-    </legacy_vuart>
-    <console_vuart id="0">
-      <base>INVALID_PCI_BASE</base>
-    </console_vuart>
+    <console_vuart>COM Port 1</console_vuart>
     <pci_devs>
       <pci_dev/>
     </pci_devs>
@@ -90,14 +83,7 @@
       <base>0</base>
       <size>0</size>
     </epc_section>
-    <legacy_vuart id="0">
-      <type>VUART_LEGACY_PIO</type>
-      <base>INVALID_COM_BASE</base>
-      <irq>COM1_IRQ</irq>
-    </legacy_vuart>
-    <console_vuart id="0">
-      <base>INVALID_PCI_BASE</base>
-    </console_vuart>
+    <console_vuart>None</console_vuart>
     <PTM>n</PTM>
   </vm>
 </acrn-config>

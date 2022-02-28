@@ -179,28 +179,12 @@ with these settings:
      the PCI-vUART for the Service VM. Refer to :ref:`Enable vUART Configurations <vuart_config>`
      for more details about VUART configuration.
 
-   - Edit ``vm.legacy_vuart.base`` in ``legacy_vuart 0`` and set it to ``INVALID_LEGACY_PIO``
-
-   - Edit :option:`vm.console_vuart.base` in ``console_vuart 0`` and set it to ``PCI_VUART``
+   - Set :option:`vm.console_vuart` to ``PCI``
 
      .. code-block:: xml
-        :emphasize-lines: 3, 14
+        :emphasize-lines: 1
 
-        <legacy_vuart id="0">
-            <type>VUART_LEGACY_PIO</type>
-            <base>INVALID_COM_BASE</base>
-            <irq>COM1_IRQ</irq>
-        </legacy_vuart>
-        <legacy_vuart id="1">
-            <type>VUART_LEGACY_PIO</type>
-            <base>INVALID_COM_BASE</base>
-            <irq>COM2_IRQ</irq>
-            <target_vm_id>1</target_vm_id>
-            <target_uart_id>1</target_uart_id>
-        </legacy_vuart>
-        <console_vuart id="0">
-            <base>PCI_VUART</base>
-        </console_vuart>
+        <console_vuart>PCI</console_vuart>
 
 #. Remove CPU sharing VMs
 
