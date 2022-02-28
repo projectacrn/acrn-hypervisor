@@ -118,13 +118,11 @@ with these settings:
 
 .. note:: Normally you'd use the ACRN Configurator GUI to edit the scenario XML file.
    The tool wasn't updated in time for the v2.5 release, so you'll need to manually edit
-   the ACRN scenario XML configuration file to edit the ``SCHEDULER``, ``NVMX_ENABLED``,
-   ``pcpu_id`` , ``guest_flags``, ``legacy_vuart``, and ``console_vuart`` settings for
+   the ACRN scenario XML configuration file to edit the ``SCHEDULER``, ``pcpu_id``,
+   ``guest_flags``, ``legacy_vuart``, and ``console_vuart`` settings for
    the Service VM, as shown below.
 
 #. Configure system level features:
-
-   - Edit :option:`hv.FEATURES.NVMX_ENABLED` to `y` to enable nested virtualization
 
    - Edit :option:`hv.FEATURES.SCHEDULER` to ``SCHED_NOOP`` to disable CPU sharing
 
@@ -148,14 +146,13 @@ with these settings:
                 <CLOS_MASK>0xfff</CLOS_MASK>
                 <CLOS_MASK>0xfff</CLOS_MASK>
             </RDT>
-            <NVMX_ENABLED>y</NVMX_ENABLED>
             <HYPERV_ENABLED>y</HYPERV_ENABLED>
 
 #. In each guest VM configuration:
 
-   - Edit :option:`vm.guest_flags.guest_flag` on the Service VM section and add ``GUEST_FLAG_NVMX_ENABLED``
+   - Edit :option:`vm.nested_virtualization_support` on the Service VM section and set it to `y`
      to enable the nested virtualization feature on the Service VM.
-   - Edit :option:`vm.guest_flags.guest_flag` and add ``GUEST_FLAG_LAPIC_PASSTHROUGH`` to enable local
+   - Edit :option:`vm.lapic_passthrough` and set it to `y` to enable local
      APIC passthrough on the Service VM.
    - Edit :option:`vm.cpu_affinity.pcpu_id` to assign ``pCPU`` IDs to run the Service VM. If you are
      using debug build and need the hypervisor console, don't assign

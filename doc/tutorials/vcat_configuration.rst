@@ -34,8 +34,7 @@ into XML in the scenario file:
 
 #. In each Guest VM configuration:
 
-   - Edit :option:`vm.guest_flags.guest_flag` and add ``GUEST_FLAG_VCAT_ENABLED``
-     to enable the vCAT feature on the VM.
+   - Edit :option:`vm.virtual_cat_support` to 'y' to enable the vCAT feature on the VM.
 
    - Edit :option:`vm.clos.vcpu_clos` to assign COS IDs to the VM.
 
