@@ -87,9 +87,7 @@
     <mmio_resources>
       <TPM2>n</TPM2>
     </mmio_resources>
-    <pci_devs>
-      <pci_dev/>
-    </pci_devs>
+    <pci_devs/>
   </vm>
   <vm id="1">
     <load_order>SERVICE_VM</load_order>

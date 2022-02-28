@@ -101,7 +101,6 @@
     <pci_devs>
       <pci_dev>00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</pci_dev>
       <pci_dev>58:00.0 Ethernet controller: Intel Corporation Device 15f2 (rev 03)</pci_dev>
-      <pci_dev/>
     </pci_devs>
   </vm>
   <vm id="1">
@@ -140,7 +139,6 @@
     </mmio_resources>
     <pci_devs>
       <pci_dev>00:14.0 USB controller: Intel Corporation Device a0ed (rev 20)</pci_dev>
-      <pci_dev/>
     </pci_devs>
   </vm>
 </acrn-config>

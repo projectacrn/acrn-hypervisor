@@ -97,9 +97,7 @@
       <p2sb>n</p2sb>
     </mmio_resources>
     <pt_intx> </pt_intx>
-    <pci_devs>
-      <pci_dev/>
-    </pci_devs>
+    <pci_devs/>
   </vm>
   <vm id="1">
     <load_order>SERVICE_VM</load_order>

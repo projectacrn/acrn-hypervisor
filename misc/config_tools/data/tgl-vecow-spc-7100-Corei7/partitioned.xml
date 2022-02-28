@@ -101,7 +101,6 @@
     <pci_devs>
       <pci_dev>00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</pci_dev>
       <pci_dev>00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (13) I219-LM (rev 20)</pci_dev>
-      <pci_dev/>
     </pci_devs>
   </vm>
   <vm id="1">
@@ -140,7 +139,6 @@
     </mmio_resources>
     <pci_devs>
       <pci_dev>00:14.0 USB controller: Intel Corporation Tiger Lake-LP USB 3.2 Gen 2x1 xHCI Host Controller (rev 20)</pci_dev>
-      <pci_dev/>
     </pci_devs>
   </vm>
 </acrn-config>

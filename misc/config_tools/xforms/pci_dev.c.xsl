@@ -47,7 +47,9 @@
     <xsl:call-template name="ivshmem_shm_mem" />
     <xsl:apply-templates select="console_vuart" />
     <xsl:apply-templates select="communication_vuart" />
-    <xsl:apply-templates select="pci_devs" />
+    <xsl:if test="acrn:is-pre-launched-vm(load_order)">
+      <xsl:apply-templates select="pci_devs" />
+    </xsl:if>
     <xsl:if test="acrn:is-post-launched-vm(load_order)">
       <xsl:apply-templates select="PTM" />
     </xsl:if>
