@@ -73,6 +73,7 @@ void vdpy_get_display_info(int handle, struct display_info *info);
 void vdpy_surface_set(int handle, struct surface *surf);
 void vdpy_surface_update(int handle, struct surface *surf);
 bool vdpy_submit_bh(int handle, struct vdpy_display_bh *bh);
+void vdpy_get_edid(int handle, uint8_t *edid, size_t size);
 int vdpy_deinit(int handle);
 void gfx_ui_deinit();
 

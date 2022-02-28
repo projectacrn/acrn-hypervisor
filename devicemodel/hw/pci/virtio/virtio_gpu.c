@@ -114,6 +114,22 @@ struct virtio_gpu_ctrl_hdr {
 };
 
 /*
+ * Command: VIRTIO_GPU_CMD_GET_EDID
+ */
+struct virtio_gpu_get_edid {
+	struct virtio_gpu_ctrl_hdr hdr;
+	uint32_t scanout;
+	uint32_t padding;
+};
+
+struct virtio_gpu_resp_edid {
+	struct virtio_gpu_ctrl_hdr hdr;
+	uint32_t size;
+	uint32_t padding;
+	uint8_t edid[1024];
+};
+
+/*
  * Per-device struct
  */
 struct virtio_gpu {
@@ -243,14 +259,49 @@ virtio_gpu_cmd_unspec(struct virtio_gpu_command *cmd)
 }
 
 static void
-virtio_gpu_notify_controlq(void *vdev, struct virtio_vq_info *vq)
+virtio_gpu_update_resp_fence(struct virtio_gpu_ctrl_hdr *hdr,
+			struct virtio_gpu_ctrl_hdr *resp)
 {
+	if ((hdr == NULL ) || (resp == NULL))
+		return;
+
+	if(hdr->flags & VIRTIO_GPU_FLAG_FENCE) {
+		resp->flags |= VIRTIO_GPU_FLAG_FENCE;
+		resp->fence_id = hdr->fence_id;
+	}
+}
+
+static void
+virtio_gpu_cmd_get_edid(struct virtio_gpu_command *cmd)
+{
+	struct virtio_gpu_get_edid req;
+	struct virtio_gpu_resp_edid resp;
+	struct virtio_gpu *gpu;
+
+	gpu = cmd->gpu;
+	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
+	cmd->iolen = sizeof(resp);
+	memset(&resp, 0, sizeof(resp));
+	/* Only one EDID block is enough */
+	resp.size = 128;
+	virtio_gpu_update_resp_fence(&cmd->hdr, &resp.hdr);
+	vdpy_get_edid(gpu->vdpy_handle, resp.edid, resp.size);
+	memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
+}
+
+static void
+virtio_gpu_ctrl_bh(void *data)
+{
+	struct virtio_gpu *vdev;
+	struct virtio_vq_info *vq;
 	struct virtio_gpu_command cmd;
 	struct iovec iov[VIRTIO_GPU_MAXSEGS];
 	uint16_t flags[VIRTIO_GPU_MAXSEGS];
 	int n;
 	uint16_t idx;
 
+	vq = (struct virtio_vq_info *)data;
+	vdev = (struct virtio_gpu *)(vq->base);
 	cmd.gpu = vdev;
 	cmd.iolen = 0;
 
@@ -271,6 +322,8 @@ virtio_gpu_notify_controlq(void *vdev, struct virtio_vq_info *vq)
 			sizeof(struct virtio_gpu_ctrl_hdr));
 
 		switch (cmd.hdr.type) {
+		case VIRTIO_GPU_CMD_GET_EDID:
+			virtio_gpu_cmd_get_edid(&cmd);
 		default:
 			virtio_gpu_cmd_unspec(&cmd);
 			break;
@@ -279,6 +332,12 @@ virtio_gpu_notify_controlq(void *vdev, struct virtio_vq_info *vq)
 		vq_relchain(vq, idx, cmd.iolen); /* Release the chain */
 	}
 	vq_endchains(vq, 1);	/* Generate interrupt if appropriate. */
+}
+
+static void
+virtio_gpu_notify_controlq(void *vdev, struct virtio_vq_info *vq)
+{
+	virtio_gpu_ctrl_bh(vq);
 }
 
 static void
