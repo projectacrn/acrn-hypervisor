@@ -34,7 +34,6 @@
         <CLOS_MASK>0xfff</CLOS_MASK>
         <CLOS_MASK>0xfff</CLOS_MASK>
       </RDT>
-      <NVMX_ENABLED>n</NVMX_ENABLED>
       <HYPERV_ENABLED>y</HYPERV_ENABLED>
       <IOMMU_ENFORCE_SNP>n</IOMMU_ENFORCE_SNP>
       <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
@@ -81,10 +80,7 @@
     <vm_type>RTVM</vm_type>
     <load_order>PRE_LAUNCHED_VM</load_order>
     <name>PRE_RT_VM0</name>
-    <guest_flags>
-      <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
-      <guest_flag>GUEST_FLAG_RT</guest_flag>
-    </guest_flags>
+    <lapic_passthrough>y</lapic_passthrough>
     <cpu_affinity>
       <pcpu_id>2</pcpu_id>
       <pcpu_id>3</pcpu_id>
@@ -142,9 +138,6 @@
     <vm_type>STANDARD_VM</vm_type>
     <load_order>SERVICE_VM</load_order>
     <name>ACRN_Service_VM</name>
-    <guest_flags>
-      <guest_flag>0</guest_flag>
-    </guest_flags>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
       <pcpu_id>1</pcpu_id>
@@ -193,9 +186,6 @@
     <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
     <name>POST_STD_VM1</name>
-    <guest_flags>
-      <guest_flag>0</guest_flag>
-    </guest_flags>
     <cpu_affinity>
       <pcpu_id>0</pcpu_id>
       <pcpu_id>1</pcpu_id>
@@ -234,9 +224,6 @@
     <vm_type>STANDARD_VM</vm_type>
     <load_order>POST_LAUNCHED_VM</load_order>
     <name>POST_STD_VM2</name>
-    <guest_flags>
-      <guest_flag>0</guest_flag>
-    </guest_flags>
     <cpu_affinity>
       <pcpu_id>1</pcpu_id>
     </cpu_affinity>

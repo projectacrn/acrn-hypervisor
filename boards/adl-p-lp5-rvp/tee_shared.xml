@@ -66,9 +66,6 @@
     <vm_type>TEE_VM</vm_type>
     <load_order>PRE_LAUNCHED_VM</load_order>
     <name>SAFETY_VM1</name>
-    <guest_flags>
-      <guest_flag>GUEST_FLAG_TEE</guest_flag>
-    </guest_flags>
     <cpu_affinity>
       <pcpu_id>2</pcpu_id>
       <pcpu_id>3</pcpu_id>
@@ -142,9 +139,6 @@
     <vm_type>REE_VM</vm_type>
     <load_order>SERVICE_VM</load_order>
     <name>ACRN_SERVICE_VM</name>
-    <guest_flags>
-      <guest_flag>GUEST_FLAG_REE</guest_flag>
-    </guest_flags>
     <cpu_affinity>
       <pcpu_id>2</pcpu_id>
       <pcpu_id>3</pcpu_id>
