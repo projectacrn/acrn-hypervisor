@@ -164,14 +164,10 @@ Set Up ACRN Prerequisites Inside the Container
       $ cd ~
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
-      $ git checkout v2.4
       $ make
       $ sudo make devicemodel-install
-      $ sudo cp build/misc/debug_tools/acrnd /usr/bin/
-      $ sudo cp build/misc/debug_tools/acrnctl /usr/bin/
 
-   Install only the user-space components: ``acrn-dm``, ``acrnctl``, and
-   ``acrnd`` as shown above.
+   Install only the user-space component: ``acrn-dm`` as shown above.
 
    .. note:: Use the tag that matches the version of the ACRN hypervisor (``acrn.bin``)
       that runs on your system.
@@ -183,7 +179,7 @@ Set Up Libvirt
 
      $ sudo apt install libdevmapper-dev libnl-route-3-dev libnl-3-dev python \
        automake autoconf autopoint libtool xsltproc libxml2-utils gettext \
-       libxml2-dev libpciaccess-dev gnutls-dev python3-docutils
+       libxml2-dev libpciaccess-dev gnutls-dev python3-docutils libyajl-dev
 
 
 2. Download libvirt/ACRN::
@@ -198,7 +194,7 @@ Set Up Libvirt
      $ cd build
      $ ../autogen.sh --prefix=/usr --disable-werror --with-test-suite=no \
        --with-qemu=no --with-openvz=no --with-vmware=no --with-phyp=no \
-       --with-vbox=no --with-lxc=no --with-uml=no --with-esx=no
+       --with-vbox=no --with-lxc=no --with-uml=no --with-esx=no --with-yajl
 
      $ make
      $ sudo make install
