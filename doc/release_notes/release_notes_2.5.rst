@@ -109,7 +109,7 @@ Add New Configuration Options
 
 In v2.5, the following elements are added to scenario XML files:
 
-- :option:`hv.FEATURES.NVMX_ENABLED`
+- ``hv.FEATURES.NVMX_ENABLED``
 - :option:`vm.PTM`
 
 The following element is renamed:
@@ -118,7 +118,7 @@ The following element is renamed:
 
 Constraints on values of the following element have changed:
 
-- :option:`vm.guest_flags.guest_flag` no longer accepts an empty text. For VMs
+- ``vm.guest_flags.guest_flag`` no longer accepts an empty text. For VMs
   with no guest flag set, set the value to ``0``.
 
 Document Updates
