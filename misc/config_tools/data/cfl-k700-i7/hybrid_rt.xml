@@ -57,6 +57,20 @@
       <GPU_SBDF>0x00000010</GPU_SBDF>
       <UEFI_OS_LOADER_NAME/>
     </MISC_CFG>
+    <vuart_connections>
+      <vuart_connection>
+        <name>vUART connection 1</name>
+        <type>legacy</type>
+        <endpoint>
+          <vm_name>PRE_RT_VM0</vm_name>
+          <io_port>0x2F8</io_port>
+        </endpoint>
+        <endpoint>
+          <vm_name>ACRN_Service_VM</vm_name>
+          <io_port>0x2F8</io_port>
+        </endpoint>
+      </vuart_connection>
+    </vuart_connections>
   </hv>
   <vm id="0">
     <vm_type>RTVM</vm_type>
@@ -96,21 +110,9 @@
       <base>COM1_BASE</base>
       <irq>COM1_IRQ</irq>
     </legacy_vuart>
-    <legacy_vuart id="1">
-      <type>VUART_LEGACY_PIO</type>
-      <base>COM2_BASE</base>
-      <irq>COM2_IRQ</irq>
-      <target_vm_id>1</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
-    <communication_vuart id="1">
-      <base>INVALID_PCI_BASE</base>
-      <target_vm_id>1</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </communication_vuart>
     <pci_devs>
       <pci_dev>00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (7) I219-LM (rev 10)</pci_dev>
       <pci_dev>01:00.0 Non-Volatile memory controller: Silicon Motion, Inc. SM2263EN/SM2263XT SSD Controller (rev 03)</pci_dev>
@@ -154,21 +156,9 @@
       <base>SERVICE_VM_COM1_BASE</base>
       <irq>SERVICE_VM_COM1_IRQ</irq>
     </legacy_vuart>
-    <legacy_vuart id="1">
-      <type>VUART_LEGACY_PIO</type>
-      <base>SERVICE_VM_COM2_BASE</base>
-      <irq>SERVICE_VM_COM2_IRQ</irq>
-      <target_vm_id>0</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
-    <communication_vuart id="1">
-      <base>INVALID_PCI_BASE</base>
-      <target_vm_id>1</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </communication_vuart>
     <pci_devs>
       <pci_dev/>
     </pci_devs>
@@ -196,21 +186,9 @@
       <base>COM1_BASE</base>
       <irq>COM1_IRQ</irq>
     </legacy_vuart>
-    <legacy_vuart id="1">
-      <type>VUART_LEGACY_PIO</type>
-      <base>INVALID_COM_BASE</base>
-      <irq>COM2_IRQ</irq>
-      <target_vm_id>0</target_vm_id>
-      <target_uart_id>0</target_uart_id>
-    </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
-    <communication_vuart id="1">
-      <base>INVALID_PCI_BASE</base>
-      <target_vm_id>1</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </communication_vuart>
     <PTM>n</PTM>
   </vm>
   <vm id="3">
@@ -234,21 +212,9 @@
       <base>COM1_BASE</base>
       <irq>COM1_IRQ</irq>
     </legacy_vuart>
-    <legacy_vuart id="1">
-      <type>VUART_LEGACY_PIO</type>
-      <base>INVALID_COM_BASE</base>
-      <irq>COM2_IRQ</irq>
-      <target_vm_id>0</target_vm_id>
-      <target_uart_id>0</target_uart_id>
-    </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
-    <communication_vuart id="1">
-      <base>INVALID_PCI_BASE</base>
-      <target_vm_id>1</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </communication_vuart>
     <PTM>n</PTM>
   </vm>
 </acrn-config>
