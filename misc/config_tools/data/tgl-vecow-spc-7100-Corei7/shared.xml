@@ -52,6 +52,32 @@
     <MISC_CFG>
       <GPU_SBDF>0x00000010</GPU_SBDF>
     </MISC_CFG>
+    <vuart_connections>
+      <vuart_connection>
+        <name>vUART connection 1</name>
+        <type>legacy</type>
+        <endpoint>
+          <vm_name>ACRN_Service_VM</vm_name>
+          <io_port>0x2F8</io_port>
+        </endpoint>
+        <endpoint>
+          <vm_name>POST_STD_VM1</vm_name>
+          <io_port>0x2F8</io_port>
+        </endpoint>
+      </vuart_connection>
+      <vuart_connection>
+        <name>vUART connection 2</name>
+        <type>legacy</type>
+        <endpoint>
+          <vm_name>ACRN_Service_VM</vm_name>
+          <io_port>0x3E8</io_port>
+        </endpoint>
+        <endpoint>
+          <vm_name>POST_RT_VM1</vm_name>
+          <io_port>0x3E8</io_port>
+        </endpoint>
+      </vuart_connection>
+    </vuart_connections>
   </hv>
   <vm id="0">
     <vm_type>STANDARD_VM</vm_type>
@@ -81,28 +107,9 @@
       <base>SERVICE_VM_COM1_BASE</base>
       <irq>SERVICE_VM_COM1_IRQ</irq>
     </legacy_vuart>
-    <legacy_vuart id="1">
-      <type>VUART_LEGACY_PIO</type>
-      <base>SERVICE_VM_COM2_BASE</base>
-      <irq>SERVICE_VM_COM2_IRQ</irq>
-      <target_vm_id>1</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </legacy_vuart>
-    <legacy_vuart id="2">
-      <type>VUART_LEGACY_PIO</type>
-      <base>SERVICE_VM_COM3_BASE</base>
-      <irq>SERVICE_VM_COM3_IRQ</irq>
-      <target_vm_id>2</target_vm_id>
-      <target_uart_id>2</target_uart_id>
-    </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
-    <communication_vuart id="1">
-      <base>INVALID_PCI_BASE</base>
-      <target_vm_id>1</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </communication_vuart>
     <pci_devs>
       <pci_dev/>
     </pci_devs>
@@ -131,28 +138,9 @@
       <base>COM1_BASE</base>
       <irq>COM1_IRQ</irq>
     </legacy_vuart>
-    <legacy_vuart id="1">
-      <type>VUART_LEGACY_PIO</type>
-      <base>COM2_BASE</base>
-      <irq>COM2_IRQ</irq>
-      <target_vm_id>0</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </legacy_vuart>
-    <legacy_vuart id="2">
-      <type>VUART_LEGACY_PIO</type>
-      <base>INVALID_COM_BASE</base>
-      <irq>COM2_IRQ</irq>
-      <target_vm_id>0</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
-    <communication_vuart id="1">
-      <base>INVALID_PCI_BASE</base>
-      <target_vm_id>1</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </communication_vuart>
     <PTM>n</PTM>
     <priority>PRIO_LOW</priority>
   </vm>
@@ -181,28 +169,9 @@
       <base>COM1_BASE</base>
       <irq>COM1_IRQ</irq>
     </legacy_vuart>
-    <legacy_vuart id="1">
-      <type>VUART_LEGACY_PIO</type>
-      <base>INVALID_COM_BASE</base>
-      <irq>COM3_IRQ</irq>
-      <target_vm_id>0</target_vm_id>
-      <target_uart_id>2</target_uart_id>
-    </legacy_vuart>
-    <legacy_vuart id="2">
-      <type>VUART_LEGACY_PIO</type>
-      <base>COM3_BASE</base>
-      <irq>COM3_IRQ</irq>
-      <target_vm_id>0</target_vm_id>
-      <target_uart_id>2</target_uart_id>
-    </legacy_vuart>
     <console_vuart id="0">
       <base>INVALID_PCI_BASE</base>
     </console_vuart>
-    <communication_vuart id="1">
-      <base>INVALID_PCI_BASE</base>
-      <target_vm_id>1</target_vm_id>
-      <target_uart_id>1</target_uart_id>
-    </communication_vuart>
     <PTM>n</PTM>
     <priority>PRIO_LOW</priority>
   </vm>
