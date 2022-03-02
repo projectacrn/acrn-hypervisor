@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<xs:schema xml:id="root" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema xml:id="root"
+	   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	   xmlns:acrn="https://projectacrn.org">
 
 <xs:simpleType name="Boolean">
   <xs:annotation>
@@ -152,7 +154,7 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 <xs:simpleType name="VMNameType">
   <xs:restriction base="xs:string">
     <xs:pattern value="([a-zA-Z0-9_\-]){1,15}" />
-  </xs:restriction>     
+  </xs:restriction>
 </xs:simpleType>
 
 <xs:simpleType name="VBDFType">
@@ -161,10 +163,17 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
   </xs:restriction>
 </xs:simpleType>
 
+<xs:simpleType name="ProviderType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Hypervisor" />
+    <xs:enumeration value="Device Model" />
+  </xs:restriction>
+</xs:simpleType>
+
 <xs:complexType name="IVSHMEMVM">
   <xs:sequence>
    <xs:element name="VM_NAME" type="VMNameType">
-     <xs:annotation>       
+     <xs:annotation>
        <xs:documentation>Name of the VM which use this IVSHMEM.</xs:documentation>
      </xs:annotation>
    </xs:element>
@@ -202,21 +211,35 @@ device in VM . Set in hex.</xs:documentation>
 </xs:simpleType>
 
 <xs:complexType name="IVSHMEMRegionType">
-  <xs:sequence>
+  <xs:all>
+    <xs:element name="NAME">
+      <xs:annotation acrn:title="Name">
+        <xs:documentation>Name of the shared memory region.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+	<xs:restriction base="xs:string">
+	  <xs:pattern value="\w+" />
+	</xs:restriction>
+      </xs:simpleType>
+    </xs:element>
+    <xs:element name="PROVIDED_BY" type="ProviderType" default="Hypervisor">
+      <xs:annotation acrn:title="Emulated by">
+        <xs:documentation>Whether the shared memory region is emulated by the hypervisor or device model.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="IVSHMEM_SIZE" type="IVSHMEMSize" default="2">
-      <xs:annotation>
+      <xs:annotation acrn:title="Size">
         <xs:documentation>Memory size of inter-VM shared memory (IVSHMEM)
 in megabytes. The value should be a power of 2
 and no more than 512.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="IVSHMEM_VMS" type="IVSHMEMVMS">
-      <xs:annotation>
+      <xs:annotation acrn:title="Shared VMs">
         <xs:documentation>Set all VMs which use this IVSHMEM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-  </xs:sequence>
-  <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:all>
 </xs:complexType>
 
 <xs:complexType name="IVSHMEMInfo">

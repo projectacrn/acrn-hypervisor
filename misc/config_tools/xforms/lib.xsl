@@ -307,8 +307,8 @@
   <func:function name="acrn:shmem-index">
     <xsl:param name="v" />
     <xsl:variable name="idx">
-      <xsl:for-each select="//hv//IVSHMEM/IVSHMEM_REGION">
-        <xsl:if test="@name = $v">
+      <xsl:for-each select="//hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']">
+        <xsl:if test="NAME = $v">
           <xsl:value-of select="position() - 1" />
         </xsl:if>
       </xsl:for-each>
@@ -322,9 +322,9 @@
       <xsl:variable name="vmtype" select="./load_order" />
       <xsl:variable name="ivshmem">
         <xsl:choose>
-          <xsl:when test="count(//hv//IVSHMEM/IVSHMEM_REGION) > 0">
+          <xsl:when test="count(//hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']) > 0">
             <xsl:variable name="vm_name" select="./name" />
-            <xsl:value-of select="count(//hv//IVSHMEM/IVSHMEM_REGION/IVSHMEM_VMS/IVSHMEM_VM/VM_NAME[text() = $vm_name])" />
+            <xsl:value-of select="count(//hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']/IVSHMEM_VMS/IVSHMEM_VM/VM_NAME[text() = $vm_name])" />
           </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="0" />

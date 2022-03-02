@@ -97,7 +97,10 @@ def get_ivshmem_regions_by_tree(etree):
     ivshmem_regions = etree.xpath("//IVSHMEM_REGION")
     shmem_regions = {}
     for idx in range(len(ivshmem_regions)):
-        shm_name = ivshmem_regions[idx].get('name')
+        provided_by = common.get_node("./PROVIDED_BY/text()", ivshmem_regions[idx])
+        if provided_by != "Hypervisor":
+            continue
+        shm_name = common.get_node("./NAME/text()", ivshmem_regions[idx])
         if shm_name is None:
             continue
         shm_size = common.get_node("./IVSHMEM_SIZE/text()", ivshmem_regions[idx])
@@ -117,7 +120,7 @@ def get_ivshmem_enabled_by_tree(etree):
     if len(ivshmem_vms) != 0:
         shmem_enabled = 'y'
     return shmem_enabled
- 
+
 def is_pre_launched_vm(vm_type):
     if vm_type == 'PRE_LAUNCHED_VM':
         return True

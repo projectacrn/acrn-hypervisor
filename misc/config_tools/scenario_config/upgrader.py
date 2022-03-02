@@ -124,12 +124,14 @@ class VirtualUartConnections:
         return [new_parent_node]
 
 class SharedMemoryRegions:
-    class SharedMemoryRegion(namedtuple("SharedMemoryRegion", ["name", "size", "shared_vms"])):
+    class SharedMemoryRegion(namedtuple("SharedMemoryRegion", ["provided_by", "name", "size", "shared_vms"])):
         # The BDF of IVSHMEM PCI functions starts from 00:08.0
         next_dev = defaultdict(lambda: 8)
+        nr_regions = 0
 
         @classmethod
-        def from_hypervisor_encoding(cls, text, old_xml_etree):
+        def from_encoding(cls, text, old_xml_etree):
+            provided_by = "Device Model" if text.startswith("dm:/") else "Hypervisor"
             parts = [p.strip() for p in text[text.find("/") + 1 :].split(",")]
             name = parts[0]
             size = parts[1]
@@ -147,22 +149,27 @@ class SharedMemoryRegions:
                 cls.next_dev[vm_name] += 1
                 shared_vms.append((vm_name, f"00:{dev:02x}.0"))
 
-            return cls(name, size, shared_vms)
+            return cls(provided_by, name, size, shared_vms)
 
         @classmethod
         def from_xml_node(cls, node):
-            name = node.get("name")
+            cls.nr_regions += 1
+            name = node.get("name") if "name" in node.keys() else \
+                node.find("NAME").text if node.find("NAME") is not None else \
+                f"shared_memory_region_{nr_regions}"
+            provided_by = node.find("PROVIDED_BY").text if node.find("PROVIDED_BY") is not None else "Hypervisor"
             size = node.find("IVSHMEM_SIZE").text
             shared_vms = []
             for shared_vm_node in node.find("IVSHMEM_VMS"):
                 vm_name = shared_vm_node.find("VM_NAME").text
                 vbdf = shared_vm_node.find("VBDF").text
                 shared_vms.append((vm_name, vbdf))
-            return cls(name, size, shared_vms)
+            return cls(provided_by, name, size, shared_vms)
 
         def format_xml_element(self):
             node = etree.Element("IVSHMEM_REGION")
-            node.set("name", self.name)
+            etree.SubElement(node, "NAME").text = self.name
+            etree.SubElement(node, "PROVIDED_BY").text = self.provided_by
             etree.SubElement(node, "IVSHMEM_SIZE").text = self.size
 
             vms_node = etree.SubElement(node, "IVSHMEM_VMS")
@@ -182,7 +189,7 @@ class SharedMemoryRegions:
 
         if len(ivshmem_region_node) == 0:
             # ACRN v2.x format
-            region = self.SharedMemoryRegion.from_hypervisor_encoding(ivshmem_region_node.text, self.old_xml_etree)
+            region = self.SharedMemoryRegion.from_encoding(ivshmem_region_node.text, self.old_xml_etree)
             self.regions[region.name] = region
         else:
             # ACRN v3.x format
