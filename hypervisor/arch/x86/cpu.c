@@ -286,10 +286,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 		 */
 		reserve_buffer_for_ept_pages();
 
-		/*
-		 * Reserve memory from platform E820 for shadow EPT 4K pages
-		 */
-		allocate_buffer_for_sept_pages();
+		init_vept();
 
 		pcpu_sync = ALL_CPUS_MASK;
 		/* Start all secondary cores */

@@ -16,8 +16,8 @@
 
 #define VETP_LOG_LEVEL			LOG_DEBUG
 #define CONFIG_MAX_GUEST_EPT_NUM	(MAX_ACTIVE_VVMCS_NUM * MAX_VCPUS_PER_VM)
-static struct nept_desc nept_desc_bucket[CONFIG_MAX_GUEST_EPT_NUM];
-static spinlock_t nept_desc_bucket_lock;
+static struct vept_desc vept_desc_bucket[CONFIG_MAX_GUEST_EPT_NUM];
+static spinlock_t vept_desc_bucket_lock;
 
 /*
  * For simplicity, total platform RAM size is considered to calculate the
@@ -29,39 +29,34 @@ static spinlock_t nept_desc_bucket_lock;
  * Total number of bytes = (get_e820_ram_size() / PAGE_SIZE) * 8
  * Number of pages needed = Total number of bytes needed/PAGE_SIZE
  */
-static uint64_t get_total_vept_4k_page_size(void)
+static uint64_t calc_sept_size(void)
 {
 	return (get_e820_ram_size() * 8UL) / PAGE_SIZE;
 }
 
-static uint64_t get_total_vept_4k_page_num(void)
+static uint64_t calc_sept_page_num(void)
 {
-	return get_total_vept_4k_page_size() / PAGE_SIZE;
+	return calc_sept_size() / PAGE_SIZE;
 }
 
 static struct page_pool sept_page_pool;
 static struct page *sept_pages;
 static uint64_t *sept_page_bitmap;
 
-static void allocate_vept_bitmap(void)
-{
-	sept_page_bitmap = e820_alloc_memory((get_total_4k_page_num() / 64U), ~0UL);
-}
-
 /*
- * @brief Reserve space for SEPT 4K pages from platform E820 table
+ * @brief Reserve space for SEPT pages from platform E820 table
  * 	  At moment, we only support nested VMX for Service VM.
  */
-void allocate_buffer_for_sept_pages(void)
+static void init_vept_pool(void)
 {
 	uint64_t page_base;
 
-	page_base = e820_alloc_memory(get_total_vept_4k_page_size(), ~0UL);
+	page_base = e820_alloc_memory(calc_sept_size(), ~0UL);
 
-	set_paging_supervisor(page_base, get_total_vept_4k_page_size());
+	set_paging_supervisor(page_base, calc_sept_size());
 
 	sept_pages = (struct page *)page_base;
-	allocate_vept_bitmap();
+	sept_page_bitmap = (uint64_t*)e820_alloc_memory((calc_sept_page_num() / 64U), ~0UL);
 }
 
 static bool is_present_ept_entry(uint64_t ept_entry)
@@ -111,25 +106,25 @@ static void free_sept_table(uint64_t *shadow_eptp)
 }
 
 /*
- * @brief Convert a guest EPTP to the associated nept_desc.
- * @return struct nept_desc * if existed.
+ * @brief Convert a guest EPTP to the associated vept_desc.
+ * @return struct vept_desc * if existed.
  * @return NULL if non-existed.
  */
-static struct nept_desc *find_nept_desc(uint64_t guest_eptp)
+static struct vept_desc *find_vept_desc(uint64_t guest_eptp)
 {
 	uint32_t i;
-	struct nept_desc *desc = NULL;
+	struct vept_desc *desc = NULL;
 
 	if (guest_eptp) {
-		spinlock_obtain(&nept_desc_bucket_lock);
+		spinlock_obtain(&vept_desc_bucket_lock);
 		for (i = 0L; i < CONFIG_MAX_GUEST_EPT_NUM; i++) {
-			/* Find an existed nept_desc of the guest EPTP */
-			if (nept_desc_bucket[i].guest_eptp == guest_eptp) {
-				desc = &nept_desc_bucket[i];
+			/* Find an existed vept_desc of the guest EPTP */
+			if (vept_desc_bucket[i].guest_eptp == guest_eptp) {
+				desc = &vept_desc_bucket[i];
 				break;
 			}
 		}
-		spinlock_release(&nept_desc_bucket_lock);
+		spinlock_release(&vept_desc_bucket_lock);
 	}
 
 	return desc;
@@ -141,74 +136,74 @@ static struct nept_desc *find_nept_desc(uint64_t guest_eptp)
  */
 uint64_t get_shadow_eptp(uint64_t guest_eptp)
 {
-	struct nept_desc *desc = NULL;
+	struct vept_desc *desc = NULL;
 
-	desc = find_nept_desc(guest_eptp);
+	desc = find_vept_desc(guest_eptp);
 	return (desc != NULL) ? hva2hpa((void *)desc->shadow_eptp) : 0UL;
 }
 
 /*
- * @brief Get a nept_desc to cache a guest EPTP
+ * @brief Get a vept_desc to cache a guest EPTP
  *
- * If there is already an existed nept_desc associated with given guest_eptp,
- * increase its ref_count and return it. If there is not existed nept_desc
+ * If there is already an existed vept_desc associated with given guest_eptp,
+ * increase its ref_count and return it. If there is not existed vept_desc
  * for guest_eptp, create one and initialize it.
  *
- * @return a nept_desc which associate the guest EPTP with a shadow EPTP
+ * @return a vept_desc which associate the guest EPTP with a shadow EPTP
  */
-struct nept_desc *get_nept_desc(uint64_t guest_eptp)
+struct vept_desc *get_vept_desc(uint64_t guest_eptp)
 {
 	uint32_t i;
-	struct nept_desc *desc = NULL;
+	struct vept_desc *desc = NULL;
 
 	if (guest_eptp != 0UL) {
-		spinlock_obtain(&nept_desc_bucket_lock);
+		spinlock_obtain(&vept_desc_bucket_lock);
 		for (i = 0L; i < CONFIG_MAX_GUEST_EPT_NUM; i++) {
-			/* Find an existed nept_desc of the guest EPTP address bits */
-			if (nept_desc_bucket[i].guest_eptp == guest_eptp) {
-				desc = &nept_desc_bucket[i];
+			/* Find an existed vept_desc of the guest EPTP address bits */
+			if (vept_desc_bucket[i].guest_eptp == guest_eptp) {
+				desc = &vept_desc_bucket[i];
 				desc->ref_count++;
 				break;
 			}
-			/* Get the first empty nept_desc for the guest EPTP */
-			if (!desc && (nept_desc_bucket[i].ref_count == 0UL)) {
-				desc = &nept_desc_bucket[i];
+			/* Get the first empty vept_desc for the guest EPTP */
+			if (!desc && (vept_desc_bucket[i].ref_count == 0UL)) {
+				desc = &vept_desc_bucket[i];
 			}
 		}
-		ASSERT(desc != NULL, "Get nept_desc failed!");
+		ASSERT(desc != NULL, "Get vept_desc failed!");
 
-		/* A new nept_desc, initialize it */
+		/* A new vept_desc, initialize it */
 		if (desc->shadow_eptp == 0UL) {
 			desc->shadow_eptp = (uint64_t)alloc_page(&sept_page_pool) | (guest_eptp & ~PAGE_MASK);
 			desc->guest_eptp = guest_eptp;
 			desc->ref_count = 1UL;
 
-			dev_dbg(VETP_LOG_LEVEL, "[%s], nept_desc[%llx] ref[%d] shadow_eptp[%llx] guest_eptp[%llx]",
+			dev_dbg(VETP_LOG_LEVEL, "[%s], vept_desc[%llx] ref[%d] shadow_eptp[%llx] guest_eptp[%llx]",
 					__func__, desc, desc->ref_count, desc->shadow_eptp, desc->guest_eptp);
 		}
 
-		spinlock_release(&nept_desc_bucket_lock);
+		spinlock_release(&vept_desc_bucket_lock);
 	}
 
 	return desc;
 }
 
 /*
- * @brief Put a nept_desc who associate with a guest_eptp
+ * @brief Put a vept_desc who associate with a guest_eptp
  *
- * If ref_count of the nept_desc, then release all resources used by it.
+ * If ref_count of the vept_desc, then release all resources used by it.
  */
-void put_nept_desc(uint64_t guest_eptp)
+void put_vept_desc(uint64_t guest_eptp)
 {
-	struct nept_desc *desc = NULL;
+	struct vept_desc *desc = NULL;
 
 	if (guest_eptp != 0UL) {
-		desc = find_nept_desc(guest_eptp);
-		spinlock_obtain(&nept_desc_bucket_lock);
+		desc = find_vept_desc(guest_eptp);
+		spinlock_obtain(&vept_desc_bucket_lock);
 		if (desc) {
 			desc->ref_count--;
 			if (desc->ref_count == 0UL) {
-				dev_dbg(VETP_LOG_LEVEL, "[%s], nept_desc[%llx] ref[%d] shadow_eptp[%llx] guest_eptp[%llx]",
+				dev_dbg(VETP_LOG_LEVEL, "[%s], vept_desc[%llx] ref[%d] shadow_eptp[%llx] guest_eptp[%llx]",
 						__func__, desc, desc->ref_count, desc->shadow_eptp, desc->guest_eptp);
 				free_sept_table((void *)(desc->shadow_eptp & PAGE_MASK));
 				free_page(&sept_page_pool, (struct page *)(desc->shadow_eptp & PAGE_MASK));
@@ -218,7 +213,7 @@ void put_nept_desc(uint64_t guest_eptp)
 				desc->guest_eptp = 0UL;
 			}
 		}
-		spinlock_release(&nept_desc_bucket_lock);
+		spinlock_release(&vept_desc_bucket_lock);
 	}
 }
 
@@ -399,7 +394,7 @@ static bool is_access_violation(uint64_t ept_entry)
 bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 {
 	uint64_t guest_eptp = vcpu->arch.nested.current_vvmcs->vmcs12.ept_pointer;
-	struct nept_desc *desc = find_nept_desc(guest_eptp);
+	struct vept_desc *desc = find_vept_desc(guest_eptp);
 	uint64_t l2_ept_violation_gpa = exec_vmread(VMX_GUEST_PHYSICAL_ADDR_FULL);
 	enum _page_table_level pt_level;
 	uint64_t guest_ept_entry, shadow_ept_entry;
@@ -409,7 +404,7 @@ bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 
 	ASSERT(desc != NULL, "Invalid shadow EPTP!");
 
-	spinlock_obtain(&nept_desc_bucket_lock);
+	spinlock_obtain(&vept_desc_bucket_lock);
 	stac();
 
 	p_shadow_ept_page = (uint64_t *)(desc->shadow_eptp & PAGE_MASK);
@@ -485,7 +480,7 @@ bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 	}
 
 	clac();
-	spinlock_release(&nept_desc_bucket_lock);
+	spinlock_release(&vept_desc_bucket_lock);
 
 	return is_l1_vmexit;
 }
@@ -496,7 +491,7 @@ bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 int32_t invept_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint32_t i;
-	struct nept_desc *desc;
+	struct vept_desc *desc;
 	struct invept_desc operand_gla_ept;
 	uint64_t type, ept_cap_vmsr;
 
@@ -507,10 +502,10 @@ int32_t invept_vmexit_handler(struct acrn_vcpu *vcpu)
 			nested_vmx_result(VMfailValid, VMXERR_INVEPT_INVVPID_INVALID_OPERAND);
 		} else if (type == 1 && (ept_cap_vmsr & VMX_EPT_INVEPT_SINGLE_CONTEXT) != 0UL) {
 			/* Single-context invalidation */
-			/* Find corresponding nept_desc of the invalidated EPTP */
-			desc = get_nept_desc(operand_gla_ept.eptp);
+			/* Find corresponding vept_desc of the invalidated EPTP */
+			desc = get_vept_desc(operand_gla_ept.eptp);
 			if (desc) {
-				spinlock_obtain(&nept_desc_bucket_lock);
+				spinlock_obtain(&vept_desc_bucket_lock);
 				if (desc->shadow_eptp != 0UL) {
 					/*
 					 * Since ACRN does not know which paging entries are changed,
@@ -519,25 +514,25 @@ int32_t invept_vmexit_handler(struct acrn_vcpu *vcpu)
 					free_sept_table((void *)(desc->shadow_eptp & PAGE_MASK));
 					invept((void *)(desc->shadow_eptp & PAGE_MASK));
 				}
-				spinlock_release(&nept_desc_bucket_lock);
-				put_nept_desc(operand_gla_ept.eptp);
+				spinlock_release(&vept_desc_bucket_lock);
+				put_vept_desc(operand_gla_ept.eptp);
 			}
 			nested_vmx_result(VMsucceed, 0);
 		} else if ((type == 2) && (ept_cap_vmsr & VMX_EPT_INVEPT_GLOBAL_CONTEXT) != 0UL) {
 			/* Global invalidation */
-			spinlock_obtain(&nept_desc_bucket_lock);
+			spinlock_obtain(&vept_desc_bucket_lock);
 			/*
 			 * Invalidate all shadow EPTPs of L1 VM
 			 * TODO: Invalidating all L2 vCPU associated EPTPs is enough. How?
 			 */
 			for (i = 0L; i < CONFIG_MAX_GUEST_EPT_NUM; i++) {
-				if (nept_desc_bucket[i].guest_eptp != 0UL) {
-					desc = &nept_desc_bucket[i];
+				if (vept_desc_bucket[i].guest_eptp != 0UL) {
+					desc = &vept_desc_bucket[i];
 					free_sept_table((void *)(desc->shadow_eptp & PAGE_MASK));
 					invept((void *)(desc->shadow_eptp & PAGE_MASK));
 				}
 			}
-			spinlock_release(&nept_desc_bucket_lock);
+			spinlock_release(&vept_desc_bucket_lock);
 			nested_vmx_result(VMsucceed, 0);
 		} else {
 			nested_vmx_result(VMfailValid, VMXERR_INVEPT_INVVPID_INVALID_OPERAND);
@@ -549,13 +544,14 @@ int32_t invept_vmexit_handler(struct acrn_vcpu *vcpu)
 
 void init_vept(void)
 {
+	init_vept_pool();
 	sept_page_pool.start_page = sept_pages;
-	sept_page_pool.bitmap_size = get_total_vept_4k_page_num() / 64U;
+	sept_page_pool.bitmap_size = calc_sept_page_num() / 64U;
 	sept_page_pool.bitmap = sept_page_bitmap;
-	sept_page_pool.dummy_page = NULL;
+        sept_page_pool.dummy_page = NULL;
 	spinlock_init(&sept_page_pool.lock);
 	memset((void *)sept_page_pool.bitmap, 0, sept_page_pool.bitmap_size * sizeof(uint64_t));
 	sept_page_pool.last_hint_id = 0UL;
 
-	spinlock_init(&nept_desc_bucket_lock);
+	spinlock_init(&vept_desc_bucket_lock);
 }

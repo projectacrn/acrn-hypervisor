@@ -960,8 +960,8 @@ int32_t vmwrite_vmexit_handler(struct acrn_vcpu *vcpu)
 
 					if (vmcs_field == VMX_EPT_POINTER_FULL) {
 						if (cur_vvmcs->vmcs12.ept_pointer != vmcs_value) {
-							put_nept_desc(cur_vvmcs->vmcs12.ept_pointer);
-							get_nept_desc(vmcs_value);
+							put_vept_desc(cur_vvmcs->vmcs12.ept_pointer);
+							get_vept_desc(vmcs_value);
 						}
 					}
 				}
@@ -1136,7 +1136,7 @@ static void clear_vvmcs(struct acrn_vcpu *vcpu, struct acrn_vvmcs *vvmcs)
 	clear_va_vmcs(vvmcs->vmcs02);
 
 	/* This VMCS can no longer refer to any shadow EPT */
-	put_nept_desc(vvmcs->vmcs12.ept_pointer);
+	put_vept_desc(vvmcs->vmcs12.ept_pointer);
 
 	/* This vvmcs[] entry doesn't cache a VMCS12 any more */
 	vvmcs->vmcs12_gpa = INVALID_GPA;
@@ -1189,7 +1189,7 @@ int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu)
 					sizeof(struct acrn_vmcs12));
 
 				/* if needed, create nept_desc and allocate shadow root for the EPTP */
-				get_nept_desc(vvmcs->vmcs12.ept_pointer);
+				get_vept_desc(vvmcs->vmcs12.ept_pointer);
 
 				/* Need to load shadow fields from this new VMCS12 to VMCS02 */
 				sync_vmcs12_to_vmcs02(vcpu, &vvmcs->vmcs12);
@@ -1624,7 +1624,5 @@ void init_nested_vmx(__unused struct acrn_vm *vm)
 		/* Cache the value of physical MSR_IA32_VMX_BASIC */
 		vmx_basic = (uint32_t)msr_read(MSR_IA32_VMX_BASIC);
 		setup_vmcs_shadowing_bitmap();
-
-		init_vept();
 	}
 }
