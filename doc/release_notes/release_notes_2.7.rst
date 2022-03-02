@@ -144,9 +144,9 @@ As part of using consistent names for UOS and SOS, we also change configuration
 option names or values using these obsolete terms:
 
 - The :option:`vm.vm_type` option value ``SOS_VM`` is now ``SERVICE_VM``
-- The :option:`vm.legacy_vuart.base` option value ``SOS_VM_COM1_BASE`` is now
+- The ``vm.legacy_vuart.base`` option value ``SOS_VM_COM1_BASE`` is now
   ``SERVICE_VM_COM1_BASE``, with the same change for COM2, COM3, and COM4 base
-  and for the :option:`vm.legacy_vuart.irq` option values.
+  and for the ``vm.legacy_vuart.irq`` option values.
 
 In v2.7, the ``acrn-dm`` command line parameter ``--cpu_affinity`` is now mandatory
 when launching a User VM. If the launch XML settings, used to generate the launch

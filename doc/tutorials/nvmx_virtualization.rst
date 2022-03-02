@@ -182,7 +182,7 @@ with these settings:
      the PCI-vUART for the Service VM. Refer to :ref:`Enable vUART Configurations <vuart_config>`
      for more details about VUART configuration.
 
-   - Edit :option:`vm.legacy_vuart.base` in ``legacy_vuart 0`` and set it to ``INVALID_LEGACY_PIO``
+   - Edit ``vm.legacy_vuart.base`` in ``legacy_vuart 0`` and set it to ``INVALID_LEGACY_PIO``
 
    - Edit :option:`vm.console_vuart.base` in ``console_vuart 0`` and set it to ``PCI_VUART``
 
