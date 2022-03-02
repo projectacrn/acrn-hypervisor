@@ -185,7 +185,7 @@ def cpu_id_to_lapic_id(board_etree, vm_name, cpus):
 
     return ret
 
-def generate_for_one_vm(board_etree, vm_scenario_etree, vm_launch_etree, vm_id):
+def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_launch_etree, vm_id):
     vm_name = eval_xpath(vm_launch_etree, ".//vm_name/text()", f"ACRN Post-Launched VM")
     script = LaunchScript(board_etree, vm_name, vm_launch_etree)
 
@@ -198,6 +198,7 @@ def generate_for_one_vm(board_etree, vm_scenario_etree, vm_launch_etree, vm_id):
     if eval_xpath(vm_launch_etree, ".//user_vm_type/text()") == "WINDOWS":
         script.add_plain_dm_parameter("--windows")
     script.add_vm_descriptor("rtos_type", f"'{eval_xpath(vm_launch_etree, './/rtos_type/text()', 'no')}'")
+    script.add_vm_descriptor("scheduler", f"'{eval_xpath(hv_scenario_etree, './/SCHEDULER/text()')}'")
 
     ###
     # CPU and memory resources
@@ -315,6 +316,7 @@ def main(board_xml, scenario_xml, launch_xml, user_vm_id, out_dir):
     launch_etree = etree.parse(launch_xml)
 
     service_vm_id = eval_xpath(scenario_etree, "//vm[load_order='SERVICE_VM']/@id")
+    hv_scenario_etree = eval_xpath(scenario_etree, "//hv")
     post_vms = scenario_etree.xpath("//vm[starts-with(load_order, 'POST_')]")
     if service_vm_id is None and len(post_vms) > 0:
         logging.error("The scenario does not define a service VM so no launch scripts will be generated for the post-launched VMs in the scenario.")
@@ -347,7 +349,7 @@ def main(board_xml, scenario_xml, launch_xml, user_vm_id, out_dir):
             logging.warning(f"Post-launched VM {post_vm_id} is not specified in the launch XML, so no launch script will be generated.")
             continue
 
-        script = generate_for_one_vm(board_etree, vm_scenario_etree, vm_launch_etree, post_vm_id)
+        script = generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_launch_etree, post_vm_id)
         script.write_to_file(os.path.join(out_dir, f"launch_user_vm_id{post_vm_id}.sh"))
 
     return 0
