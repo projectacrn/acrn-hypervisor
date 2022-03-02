@@ -143,7 +143,7 @@
     <xsl:variable name="vm_id" select="@id" />
     <xsl:variable name="vm_name" select="name" />
     <xsl:variable name="load_order" select="load_order" />
-    <xsl:for-each select="//hv//IVSHMEM/IVSHMEM_REGION/IVSHMEM_VMS/IVSHMEM_VM[VM_NAME = $vm_name]">
+    <xsl:for-each select="//hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']/IVSHMEM_VMS/IVSHMEM_VM[VM_NAME = $vm_name]">
       <xsl:text>{</xsl:text>
       <xsl:value-of select="$newline" />
       <xsl:value-of select="acrn:initializer('emu_type', 'PCI_DEV_TYPE_HVEMUL', '')" />
@@ -153,14 +153,14 @@
           <xsl:value-of select="acrn:initializer('vbdf.value', 'UNASSIGNED_VBDF', '')" />
         </xsl:when>
         <xsl:otherwise>
-          <xsl:variable name="dev_name" select="concat('IVSHMEM_', acrn:shmem-index(../../@name))" />
+          <xsl:variable name="dev_name" select="concat('IVSHMEM_', acrn:shmem-index(ancestor::IVSHMEM_REGION/NAME))" />
           <xsl:value-of select="acrn:initializer('vbdf.bits', acrn:get-vbdf($vm_id, $dev_name), '')" />
           <xsl:for-each select="//vm[@id = $vm_id]/device[@name = $dev_name]/bar">
             <xsl:value-of select="acrn:initializer(concat('vbar_base[', @id,']'), concat(text(), 'UL'), '')" />
           </xsl:for-each>
         </xsl:otherwise>
       </xsl:choose>
-      <xsl:value-of select="acrn:initializer('shm_region_name', concat('IVSHMEM_SHM_REGION_', acrn:shmem-index(../../@name)), '')" />
+      <xsl:value-of select="acrn:initializer('shm_region_name', concat('IVSHMEM_SHM_REGION_', acrn:shmem-index(ancestor::IVSHMEM_REGION/NAME)), '')" />
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
     </xsl:for-each>

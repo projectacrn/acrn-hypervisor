@@ -26,7 +26,7 @@
   </xsl:template>
 
   <xsl:template match="config-data/acrn-config">
-    <xsl:if test="count(//hv//IVSHMEM/IVSHMEM_REGION) > 0">
+    <xsl:if test="count(//hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']) > 0">
       <!-- Included headers -->
       <xsl:value-of select="acrn:include('ivshmem.h')" />
       <xsl:value-of select="acrn:include('asm/pgtable.h')" />
@@ -39,9 +39,8 @@
   </xsl:template>
 
   <xsl:template name ="ivshmem_shm_region_name">
-    <xsl:for-each select="hv//IVSHMEM/IVSHMEM_REGION">
-      <xsl:variable name="region" select="@name" />
-      <xsl:value-of select="acrn:define(concat('IVSHMEM_SHM_REGION_', position() - 1), concat($quot, 'hv:/', $region, $quot), '')" />
+    <xsl:for-each select="hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']">
+      <xsl:value-of select="acrn:define(concat('IVSHMEM_SHM_REGION_', position() - 1), concat($quot, 'hv:/', NAME, $quot), '')" />
     </xsl:for-each>
     <xsl:value-of select="$newline" />
   </xsl:template>
@@ -49,12 +48,12 @@
   <xsl:template name ="ivshmem_shm_mem">
     <xsl:value-of select="acrn:comment('The IVSHMEM_SHM_SIZE is the sum of all memory regions. The size range of each memory region is [2MB, 512MB] and is a power of 2.')" />
     <xsl:value-of select="$newline" />
-    <xsl:variable name="memsize" select="sum(//IVSHMEM_REGION/IVSHMEM_SIZE)" />
+    <xsl:variable name="memsize" select="sum(//IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']/IVSHMEM_SIZE)" />
     <xsl:value-of select="acrn:define('IVSHMEM_SHM_SIZE', concat('0x', acrn:convert-num-base(string($memsize), 10, 16), '00000UL'))" />
   </xsl:template>
 
   <xsl:template match="IVSHMEM">
-    <xsl:variable name="dev" select="count(//hv//IVSHMEM/IVSHMEM_REGION/IVSHMEM_VMS/IVSHMEM_VM)" />
+    <xsl:variable name="dev" select="count(//hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']/IVSHMEM_VMS/IVSHMEM_VM)" />
     <xsl:value-of select="acrn:define('IVSHMEM_DEV_NUM', string($dev), 'UL')" />
   </xsl:template>
 
@@ -62,7 +61,7 @@
     <xsl:value-of select="acrn:comment('All user defined memory regions')" />
     <xsl:value-of select="$newline" />
     <xsl:value-of select="acrn:define('IVSHMEM_SHM_REGIONS', '', ' \')" />
-    <xsl:for-each select="hv//IVSHMEM/IVSHMEM_REGION">
+    <xsl:for-each select="hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']">
       <xsl:if test="text()">
         <xsl:variable name="memsize" select="IVSHMEM_SIZE" />
         <xsl:text>{ \</xsl:text>
