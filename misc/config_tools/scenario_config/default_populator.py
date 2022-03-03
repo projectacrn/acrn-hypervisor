@@ -43,7 +43,7 @@ class DefaultValuePopulatingStage(PipelineStage):
         populator.transform(etree)
         obj.set("scenario_etree", etree)
 
-def main(xsd_file, xml_file, out_file):
+def main(args):
     from xml_loader import XMLLoadStage
     from lxml_loader import LXMLLoadStage
 
@@ -54,15 +54,18 @@ def main(xsd_file, xml_file, out_file):
         DefaultValuePopulatingStage(),
     ])
 
-    obj = PipelineObject(schema_path = xsd_file, scenario_path = xml_file)
+    obj = PipelineObject(schema_path = args.schema, scenario_path = args.scenario)
     pipeline.run(obj)
-    obj.get("scenario_etree").write(out_file)
+    obj.get("scenario_etree").write(args.out)
 
 if __name__ == "__main__":
+    config_tools_dir = os.path.join(os.path.dirname(__file__), "..")
+    schema_dir = os.path.join(config_tools_dir, "schema")
+
     parser = argparse.ArgumentParser(description="Populate a given scenario XML with default values of nonexistent nodes")
-    parser.add_argument("xsd", help="Path to the schema of scenario XMLs")
-    parser.add_argument("xml", help="Path to the scenario XML file from users")
+    parser.add_argument("scenario", help="Path to the scenario XML file from users")
     parser.add_argument("out", nargs="?", default="out.xml", help="Path where the output is placed")
+    parser.add_argument("--schema", default=os.path.join(schema_dir, "config.xsd"), help="the XML schema that defines the syntax of scenario XMLs")
     args = parser.parse_args()
 
-    main(args.xsd, args.xml, args.out)
+    main(args)
