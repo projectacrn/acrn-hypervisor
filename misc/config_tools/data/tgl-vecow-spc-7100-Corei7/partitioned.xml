@@ -88,7 +88,6 @@
       <size_hpa2>0x0</size_hpa2>
     </memory>
     <os_config>
-      <name>YOCTO</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod>Ubuntu</ramdisk_mod>
@@ -128,7 +127,6 @@
       <size_hpa2>0x0</size_hpa2>
     </memory>
     <os_config>
-      <name>YOCTO</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod/>

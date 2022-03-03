@@ -276,11 +276,6 @@ If this value is empty, then the default value will be calculated from informati
         <xs:documentation>Segment, Bus, Device, and function of the GPU.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="UEFI_OS_LOADER_NAME" type="xs:string" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>UEFI OS loader name.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
   </xs:all>
 </xs:complexType>
 
@@ -409,11 +404,6 @@ its ``id`` attribute.</xs:documentation>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
       <xs:annotation>
         <xs:documentation>MMIO resources to passthrough.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="pci_dev_num" type="xs:string" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>PCI devices number of the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="pt_intx" type="xs:string" minOccurs="0">

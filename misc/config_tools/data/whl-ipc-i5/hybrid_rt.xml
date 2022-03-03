@@ -95,7 +95,6 @@
       <size_hpa2>0x0</size_hpa2>
     </memory>
     <os_config>
-      <name>PREEMPT-RT</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>RT_bzImage</kern_mod>
       <ramdisk_mod/>
@@ -129,7 +128,6 @@
       <start_hpa>0</start_hpa>
     </memory>
     <os_config>
-      <name>ACRN Service OS</name>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod/>

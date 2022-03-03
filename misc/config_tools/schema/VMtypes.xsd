@@ -114,22 +114,7 @@ allocations in Bytes for the VM.</xs:documentation>
 </xs:complexType>
 
 <xs:complexType name="OSConfigurations">
-  <xs:sequence>
-    <xs:element name="name">
-        <xs:annotation>
-          <xs:documentation>Specify the OS name of VM.
-Is not referenced by the hypervisor code. </xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-        <xs:annotation>
-          <xs:documentation>A string with 1 to 32 characters.</xs:documentation>
-        </xs:annotation>
-        <xs:restriction base="xs:string">
-          <xs:minLength value="1" />
-          <xs:maxLength value="32" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:element>
+  <xs:all>
     <xs:element name="kern_type" type="VMKernelType">
       <xs:annotation>
         <xs:documentation>Specify the kernel image type so the hypervisor can load it correctly.</xs:documentation>
@@ -162,7 +147,7 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
         <xs:documentation>The entry address in host memory for the VM kernel.</xs:documentation>
       </xs:annotation>
     </xs:element>
-  </xs:sequence>
+  </xs:all>
 </xs:complexType>
 
 <xs:simpleType name="VMKernelType">
