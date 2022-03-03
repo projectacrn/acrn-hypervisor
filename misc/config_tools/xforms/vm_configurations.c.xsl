@@ -187,15 +187,15 @@
   <xsl:template match="memory">
     <xsl:value-of select="acrn:initializer('memory', '{', true())" />
     <xsl:choose>
-      <xsl:when test="acrn:is-service-vm(../load_order)">
-        <xsl:value-of select="acrn:initializer('start_hpa', concat(start_hpa, 'UL'))" />
-      </xsl:when>
-      <xsl:otherwise>
+      <xsl:when test="acrn:is-pre-launched-vm(../load_order)">
         <xsl:value-of select="acrn:initializer('start_hpa', concat('VM', ../@id, '_CONFIG_MEM_START_HPA'))" />
         <xsl:value-of select="acrn:initializer('size', concat('VM', ../@id, '_CONFIG_MEM_SIZE'))" />
         <xsl:value-of select="acrn:initializer('start_hpa2', concat('VM', ../@id, '_CONFIG_MEM_START_HPA2'))" />
         <xsl:value-of select="acrn:initializer('size_hpa2', concat('VM', ../@id, '_CONFIG_MEM_SIZE_HPA2'))" />
-      </xsl:otherwise>
+      </xsl:when>
+      <xsl:when test="acrn:is-service-vm(../load_order)">
+        <xsl:value-of select="acrn:initializer('start_hpa', concat(start_hpa, 'UL'))" />
+      </xsl:when>
     </xsl:choose>
     <xsl:text>},</xsl:text>
     <xsl:value-of select="$newline" />
