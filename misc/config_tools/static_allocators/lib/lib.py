@@ -119,16 +119,16 @@ def get_ivshmem_enabled_by_tree(etree):
     return shmem_enabled
  
 def is_pre_launched_vm(vm_type):
-    if vm_type is 'PRE_LAUNCHED_VM':
+    if vm_type == 'PRE_LAUNCHED_VM':
         return True
     return False
 
 def is_post_launched_vm(vm_type):
-    if vm_type is 'POST_LAUNCHED_VM':
+    if vm_type == 'POST_LAUNCHED_VM':
         return True
     return False
 
 def is_service_vm(vm_type):
-    if vm_type is 'SERVICE_VM':
+    if vm_type == 'SERVICE_VM':
         return True
     return False
