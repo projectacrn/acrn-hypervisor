@@ -22,8 +22,8 @@ policies = [
     GuestFlagPolicy(".//nested_virtualization_support = 'y'", "GUEST_FLAG_NVMX_ENABLED"),
     GuestFlagPolicy(".//security_vm = 'y'", "GUEST_FLAG_SECURITY_VM"),
     GuestFlagPolicy(".//vm_type = 'RTVM'", "GUEST_FLAG_RT"),
-    GuestFlagPolicy(".//vm_type = 'TEE'", "GUEST_FLAG_TEE"),
-    GuestFlagPolicy(".//vm_type = 'REE'", "GUEST_FLAG_REE"),
+    GuestFlagPolicy(".//vm_type = 'TEE_VM'", "GUEST_FLAG_TEE"),
+    GuestFlagPolicy(".//vm_type = 'REE_VM'", "GUEST_FLAG_REE"),
 ]
 
 def fn(board_etree, scenario_etree, allocation_etree):
