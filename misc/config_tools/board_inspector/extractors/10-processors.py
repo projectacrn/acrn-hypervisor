@@ -7,6 +7,7 @@ import logging
 import lxml.etree
 
 from cpuparser import parse_cpuid, get_online_cpu_ids
+from cpuparser.msr import *
 from extractors.helpers import add_child, get_node
 
 level_types = {
@@ -52,7 +53,16 @@ def extract_model(processors_node, cpu_id, family_id, model_id, core_type, nativ
                 if getattr(leaf_data, cap) == 1:
                     add_child(n, "capability", id=cap)
 
-        leaves = [(0x80000008, 0)]
+        msr_regs = [MSR_IA32_MISC_ENABLE, MSR_IA32_VMX_BASIC, MSR_IA32_VMX_PINBASED_CTLS,
+                    MSR_IA32_VMX_PROCBASED_CTLS, MSR_IA32_VMX_EXIT_CTLS, MSR_IA32_VMX_ENTRY_CTLS,
+                    MSR_IA32_VMX_MISC, MSR_IA32_VMX_PROCBASED_CTLS2, MSR_IA32_VMX_EPT_VPID_CAP]
+        for msr_reg in msr_regs:
+            msr_data = msr_reg.rdmsr(cpu_id)
+            for cap in msr_data.capability_bits:
+                if getattr(msr_data, cap) == 1:
+                    add_child(n, "capability", id=cap)
+
+        leaves = [(0, 0), (0x80000008, 0)]
         for leaf in leaves:
             leaf_data = parse_cpuid(leaf[0], leaf[1], cpu_id)
             for cap in leaf_data.attribute_bits:
