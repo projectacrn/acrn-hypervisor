@@ -5,7 +5,262 @@
 
   <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx'])">
     <xs:annotation acrn:severity="error">
-      <xs:documentation>Intel(R) Virtualization Technology Extension shall be enabled in BIOS.</xs:documentation>
+      <xs:documentation>Virtual Machine Extensions (VMX) feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='intel_64'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>Long mode (x86-64, 64-bit) feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies not($model/capability[@id='set_32bit_addr_width'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>The width of the physical addresses used for the VMXON region is limited to 32bit. "Intel 64 architecture" feature is not enabled. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies compare($model/attribute[@id='cpuid_level'], '0x15') &gt;= 0">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>Instruction CPUID time stamp counter, nominal core crystal clock information leaf and processor frequency information leaf are not supported. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model
+	  satisfies (($model/attribute[@id='physical_address_bits']) != 0 and ($model/attribute[@id='linear_address_bits']) != 0)">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>"Zero linear/physical address size" feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model
+	  satisfies not(($model/attribute[@id='physical_address_bits']) > 39 and (not($model/capability[@id='gbyte_pages'])
+	  or not($model/capability[@id='vmx_ept_1gb_page'])))">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>"1GB large page(Physical-address width > 39)" feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='fast_string'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>"Fast string" feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='erms'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>Enhanced rep movsb/stosb feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='invariant_tsc'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>Invariant TSC feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='tsc_deadline'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>TSC deadline feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='execute_disable'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>NX feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='smep'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>SMEP feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='smap'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>SMAP feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='mtrr'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>MTRR feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='clflushopt'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>CLFLUSHOPT feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='x2apic'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>x2APIC feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='popcnt'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>POPCNT feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='sse'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>SSE feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='rdrand'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>RDRAND feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='invept'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>INVEPT is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='unrestricted_guest'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>Unrestricted guest is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='ept'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>EPT feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='ept_2mb_page'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>EPT does not support 2MB large pages on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='invvpid'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>INVVPID feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='apicv'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>APICV feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_pinbased_ctls_irq_exit'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability External-interrupt exiting for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls_tsc_off'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Use TSC offsetting for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls_tpr_shadow'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Use TPR shadow for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls_io_bitmap'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Use I/O bitmaps for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls_msr_bitmap'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Use MSR bitmaps for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls_hlt'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability HLT exiting for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls_secondary'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Activate secondary controls for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_exit_ctls_ack_irq'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability acknowledge interrupt on exit feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_exit_ctls_save_pat'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability save IA32_PAT on VM exit feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_exit_ctls_load_pat'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability load IA32_PAT on VM exit feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_exit_ctls_host_addr64'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Host address-space size on VM exit feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_entry_ctls_load_pat'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability IA32_PAT MSR load on VM entry feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_entry_ctls_ia32e_mode'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability IA-32e mode guest support after VM entry feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls2_vapic'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Virtualize APIC accesses for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls2_ept'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Enable EPT for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls2_vpid'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Enable VPID for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls2_rdtscp'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Enable RDTSCP for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx_procbased_ctls2_unrestrict'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>VMX capability Unrestricted guest for VM execution controls feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 

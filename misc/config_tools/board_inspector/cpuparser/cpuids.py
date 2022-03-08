@@ -20,9 +20,17 @@ class LEAF_0(CPUID):
     max_leaf = cpuidfield(EAX, 31, 0, doc="Highest value the CPUID recognizes for returning basic processor information")
 
     @property
+    def cpuid_level(self):
+        return hex(self.regs.eax)
+
+    @property
     def vendor(self):
         """Vendor identification string"""
         return struct.pack('III', self.regs.ebx, self.regs.edx, self.regs.ecx)
+
+    attribute_bits = [
+        "cpuid_level",
+    ]
 
 class LEAF_1(CPUID):
     """Basic CPUID Information
