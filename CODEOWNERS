@@ -10,13 +10,13 @@
 # Additional reviewers can be assigned manually
 
 # Default/global reviewers (if not overridden later)
-*                                        @anthonyzxu @dongyaozu @NanlinXie
+*                                        @dongyaozu @NanlinXie
 
 Makefile                                 @terryzouhao @NanlinXie
-/hypervisor/                             @anthonyzxu @dongyaozu
-/devicemodel/                            @anthonyzxu @ywan170
+/hypervisor/                             @dongyaozu @lifeix
+/devicemodel/                            @ywan170
 /doc/                                    @dbkinder @amyreye @NanlinXie
-/misc/debug_tools/acrn_crashlog/         @chengangc @dizhang417
+/misc/debug_tools/acrn_crashlog/         @ywan170 @lifeix
 /misc/debug_tools/acrn_log/              @ywan170 @lifeix
 /misc/debug_tools/acrn_trace/            @ywan170 @lifeix
 /misc/services/acrn_manager/             @ywan170 @lifeix
