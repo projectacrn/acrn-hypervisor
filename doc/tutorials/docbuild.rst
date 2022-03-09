@@ -72,10 +72,9 @@ recommended folder setup for documentation contributions and generation:
 The parent ``projectacrn folder`` is there because, if you have repo publishing
 rights, we'll also be creating a publishing area later in these steps.
 
-It's best if the ``acrn-hypervisor`` folder is an ssh clone of your personal
-fork of the upstream project repos (though ``https`` clones work too and won't
-require you to
-`register your public SSH key with GitHub <https://github.com/settings/keys>`_):
+In the following steps, you'll create a fork of the upstream ``acrn-hypervisor``
+repo to your personal GitHub account, clone your personal fork to your local
+development computer, and then link that to the upstream repo as well:
 
 #. Use your browser to visit https://github.com/projectacrn and do a
    fork of the **acrn-hypervisor** repo to your personal GitHub account.)
@@ -83,23 +82,21 @@ require you to
    .. image:: images/acrn-doc-fork.png
       :align: center
 
-#. At a command prompt, create the working folder and clone the acrn-hypervisor
-   repository to your local computer (and if you have publishing rights, the
-   ``projectacrn.github.io`` repo).  If you don't have publishing rights
-   you'll still be able to generate the documentation files locally, but not publish them:
+#. At a command prompt, create a working folder on your development computer and
+   clone your personal acrn-hypervisor repository:
 
    .. code-block:: bash
 
       cd ~
       mkdir projectacrn && cd projectacrn
-      git clone git@github.com:<github-username>/projectacrn/acrn-hypervisor.git
+      git clone https://github.com/<github-username>/acrn-hypervisor.git
 
-#. For the cloned local repos, tell git about the upstream repo:
+#. For the cloned local repo, tell git about the upstream repo:
 
    .. code-block:: bash
 
       cd acrn-hypervisor
-      git remote add upstream git@github.com:projectacrn/acrn-hypervisor.git
+      git remote add upstream https://github.com/projectacrn/acrn-hypervisor.git
 
    After that, you'll have ``origin`` pointing to your cloned personal repo and
    ``upstream`` pointing to the project repo.
@@ -115,15 +112,15 @@ require you to
 Install the Documentation Tools
 *******************************
 
-Our documentation processing has been tested to run with Python 3.6.3
+Our documentation processing has been tested to run with Python 3.8.10
 and these other tools:
 
-* breathe                   version: 4.23.0
-* sphinx                    version: 3.2.1
+* breathe                   version: 4.31.0
+* sphinx                    version: 3.5.4
 * docutils                  version: 0.16
-* sphinx-rtd-theme          version: 0.5.0
+* sphinx-rtd-theme          version: 1.0.0
 * sphinx-tabs               version: 1.3.0
-* doxygen                   version: 1.8.13
+* doxygen                   version: 1.8.17
 
 Depending on your Linux version, install the needed tools. You may get a
 different (newer) version of doxygen noted above that may also work.
@@ -135,7 +132,8 @@ For Ubuntu use:
    sudo apt install doxygen python3-pip \
      python3-wheel make graphviz xsltproc
 
-Then use ``pip3`` to install the remaining Python-based tools:
+Then use ``pip3`` to install the remaining Python-based tools specified in the
+``requirements.txt`` file:
 
 .. code-block:: bash
 
@@ -161,7 +159,8 @@ And with that you're ready to generate the documentation.
 
    We've provided a script you can run to show what versions of the
    documentation building tools are installed and compare with the
-   tool versions shown above.::
+   tool versions shown above. This tool will also verify you're using tool
+   versions known to work together::
 
       doc/scripts/show-versions.py
 
@@ -241,7 +240,7 @@ with the ``-silent`` options, like this (after you've run ``make html``:
 
    make latexpdf LATEXMKOPTS="-silent"
 
-For convenience, we've also created a make target called ``pdf`` that will first
+For convenience, we've also created a make target called ``pdf`` that will
 generate the HTML content and then make the PDF file in one step:
 
 .. code-block:: bash
@@ -266,7 +265,7 @@ directly to the upstream repo rather than to a personal forked copy):
 .. code-block:: bash
 
    cd ~/projectacrn
-   git clone git@github.com:projectacrn/projectacrn.github.io.git
+   git clone https://projectacrn/projectacrn.github.io.git
 
 Then, after you've verified the generated HTML from ``make html`` looks
 good, you can push directly to the publishing site with:
@@ -300,17 +299,15 @@ specifically:
       'docs_title': docs_title,
       'is_release': is_release,
       'versions': ( ("latest", "/latest/"),
-                    ("2.3", "/2.3/"),
-                    ("2.2", "/2.2/"),
-                    ("2.1", "/2.1/"),
+                    ("2.7", "/2.7/"),
+                    ("2.6", "/2.6/"),
+                    ("2.5", "/2.5/"),
                     ("2.0", "/2.0/"),
                     ("1.6.1", "/1.6.1/"),
-                    ("1.6", "/1.6/"),
-                    ("1.5", "/1.5/"),
-                    ("1.4", "/1.4/"),
                     ("1.0", "/1.0/"),   # keep 1.0
                   )
        }
+
 
 As new versions of ACRN documentation are added, update this
 ``versions`` selection list to include the version number and publishing
@@ -320,16 +317,16 @@ from an older one, without going to ``latest`` first.
 By default, documentation build and publishing both assume we're generating
 documentation for the main branch and publishing to the ``/latest/``
 area on https://projectacrn.github.io. When we're generating the
-documentation for a tagged version (e.g., 2.3), check out that version
+documentation for a tagged version (e.g., 2.7), check out that version
 of the repo, and add some extra flags to the ``make`` commands:
 
 .. code-block:: bash
 
    cd ~/projectacrn/acrn-hypervisor/doc
-   git checkout v2.3
+   git checkout v2.7
    make clean
-   make DOC_TAG=release RELEASE=2.3 html
-   make DOC_TAG=release RELEASE=2.3 publish
+   make DOC_TAG=release RELEASE=2.7 html
+   make DOC_TAG=release RELEASE=2.7 publish
 
 .. _filter_expected:
 
