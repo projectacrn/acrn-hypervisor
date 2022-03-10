@@ -779,6 +779,7 @@ enum {
 };
 
 static struct option long_options[] = {
+	{"acpi",		no_argument,	        0, 'A' },
 	{"elf_file",		required_argument,	0, 'E' },
 	{"ioc_node",		required_argument,	0, 'i' },
 	{"lpc",			required_argument,	0, 'l' },
@@ -819,7 +820,7 @@ static struct option long_options[] = {
 	{0,			0,			0,  0  },
 };
 
-static char optstr[] = "hYvE:k:r:B:s:m:l:U:G:i:";
+static char optstr[] = "AhYvE:k:r:B:s:m:l:U:G:i:";
 
 int
 main(int argc, char *argv[])
@@ -854,6 +855,10 @@ main(int argc, char *argv[])
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
 		switch (c) {
+		case 'A':
+			pr_info("The '-A' parameter is obsolete and ignored. "
+                                "Virtual ACPI tables are always enabled.\n");
+			break;
 		case 'E':
 			if (acrn_parse_elf(optarg) != 0)
 				exit(1);
