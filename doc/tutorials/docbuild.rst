@@ -265,7 +265,7 @@ directly to the upstream repo rather than to a personal forked copy):
 .. code-block:: bash
 
    cd ~/projectacrn
-   git clone https://projectacrn/projectacrn.github.io.git
+   git clone https://github.com/projectacrn/projectacrn.github.io.git
 
 Then, after you've verified the generated HTML from ``make html`` looks
 good, you can push directly to the publishing site with:
