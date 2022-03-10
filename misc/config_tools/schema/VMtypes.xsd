@@ -205,7 +205,7 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:complexType>
 
 <xs:complexType name="MMIOResourcesConfiguration">
-  <xs:sequence>
+  <xs:all>
     <xs:element name="TPM2" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:title="Trusted Platform Module passthrough" acrn:applicable-vms="pre-launched, post-launched">
         <xs:documentation>Passthrough the Trusted Platform Module (TPM2) device to this VM. (Optional) (Default value is n)</xs:documentation>
@@ -216,7 +216,7 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
         <xs:documentation>Passthrough the P2SB (Primary-to-Sideband) bridge register access BAR to the this VM. (Optional) (Default value is n)</xs:documentation>
       </xs:annotation>
     </xs:element>
-  </xs:sequence>
+  </xs:all>
 </xs:complexType>
 
 <xs:complexType name="PCIDevsConfiguration">
