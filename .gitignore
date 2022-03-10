@@ -6,3 +6,5 @@ build
 *.warnings
 *.pyc
 /offline-tools/
+*.egg-info
+/misc/config_tools/dist
