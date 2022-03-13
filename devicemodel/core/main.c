@@ -190,6 +190,11 @@ usage(int code)
 	exit(code);
 }
 
+static void outdate(char *msg)
+{
+	pr_warn("The \"%s\" parameter is obsolete and ignored\n", msg);
+}
+
 static void
 print_version(void)
 {
@@ -868,7 +873,7 @@ main(int argc, char *argv[])
 				break;
 			break;
 		case 'i': /* obsolete parameter */
-			ioc_parse(optarg);
+			outdate("-i, --ioc_node");
 			break;
 
 		case 'l':
@@ -888,7 +893,7 @@ main(int argc, char *argv[])
 				errx(EX_USAGE, "invalid memsize '%s'", optarg);
 			break;
 		case 'Y': /* obsolete parameter */
-			mptgen = 0;
+			outdate("-Y, --mptgen");
 			break;
 		case 'k':
 			if (acrn_parse_kernel(optarg) != 0)
@@ -907,15 +912,13 @@ main(int argc, char *argv[])
 				break;
 			break;
 		case 'G': /* obsolete parameter */
-			if (acrn_parse_gvtargs(optarg) != 0)
-				errx(EX_USAGE, "invalid GVT param %s", optarg);
+			outdate("-G, --gvtargs");
 			break;
 		case 'v':
 			print_version();
 			break;
 		case CMD_OPT_VSBL: /* obsolete parameter */
-			if (high_bios_size() == 0 && acrn_parse_vsbl(optarg) != 0)
-				errx(EX_USAGE, "invalid vsbl param %s", optarg);
+			outdate("--vsbl");
 			break;
 		case CMD_OPT_OVMF:
 			if (!vsbl_file_name && acrn_parse_ovmf(optarg) != 0)
@@ -927,11 +930,7 @@ main(int argc, char *argv[])
 				errx(EX_USAGE, "invalid pcpu param %s", optarg);
 			break;
 		case CMD_OPT_PART_INFO: /* obsolete parameter */
-			if (acrn_parse_guest_part_info(optarg) != 0) {
-				errx(EX_USAGE,
-					"invalid guest partition info param %s",
-					optarg);
-			}
+			outdate("--part_info");
 			break;
 		case CMD_OPT_TRUSTY_ENABLE:
 			trusty_enabled = 1;
@@ -999,10 +998,10 @@ main(int argc, char *argv[])
 					errx(EX_USAGE, "invalid pm_notify_channel: %s", optarg);
 			} else
 				errx(EX_USAGE, "invalid pm_notify_channel: %s", optarg);
+			pr_warn("The \"--pm_notify_channel\" parameter is obsolete\n");
 			break;
 		case CMD_OPT_PM_BY_VUART: /* obsolete parameter */
-			if (parse_pm_by_vuart(optarg) != 0)
-				errx(EX_USAGE, "invalid pm-by-vuart params %s", optarg);
+			outdate("--pm_by_vuart");
 			break;
 		case CMD_OPT_WINDOWS:
 			is_winvm = true;
