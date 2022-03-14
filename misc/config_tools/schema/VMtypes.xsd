@@ -253,6 +253,108 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
   </xs:sequence>
 </xs:complexType>
 
+<xs:simpleType name="VirtioNetworkFrameworkType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Kernel based (Virtual Host)" />
+    <xs:enumeration value="User space based (VBSU)" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="VirtioNetworkConfiguration">
+  <xs:sequence>
+    <xs:element name="virtio_framework" type="VirtioNetworkFrameworkType" default="User space based (VBSU)" minOccurs="0">
+      <xs:annotation acrn:title="Virtio framework">
+        <xs:documentation>Specify the virtio framework for specific virtio network device implemented in the Service VM.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="interface_name" minOccurs="0">
+      <xs:annotation acrn:title="Network interface name">
+        <xs:documentation>Specify the network interface name that will appear in the Service VM. Use the `ip a` command in the Service VM to display the network interface names.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:pattern value="[a-zA-Z0-9_\-]+" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:simpleType name="VirtioConsoleUseType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Virtio console" />
+    <xs:enumeration value="Virtio serial port" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="VirtioConsoleBackendType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="pty" />
+    <xs:enumeration value="stdio" />
+    <xs:enumeration value="file" />
+    <xs:enumeration value="sock client">
+      <xs:annotation acrn:views="" />
+    </xs:enumeration>
+    <xs:enumeration value="sock server">
+      <xs:annotation acrn:views="" />
+    </xs:enumeration>
+    <xs:enumeration value="tty" >
+      <xs:annotation acrn:views="" />
+    </xs:enumeration>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="VirtioConsoleConfiguration">
+  <xs:sequence>
+    <xs:element name="use_type" type="VirtioConsoleUseType" minOccurs="0">
+      <xs:annotation acrn:title="Use type">
+        <xs:documentation>Specify device type in guest, ether HVC console when user config it as virtio console or /dev/vportXpY
+        device file when user config it as virtio serial port, which can be read and written from the user space.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="backend_type" type="VirtioConsoleBackendType" minOccurs="0">
+      <xs:annotation acrn:title="Backend type">
+        <xs:documentation>Specify backend device type in service VM.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="output_file_path" type="xs:string" minOccurs="0" maxOccurs="1">
+      <xs:annotation acrn:title="Output file path">
+        <xs:documentation>The output file path for the file backend type.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="sock_file_path" type="xs:string" minOccurs="0" maxOccurs="1">
+      <xs:annotation acrn:title="Sock file path">
+        <xs:documentation>The sock file path for the sock server or client backend type.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="tty_device_path" type="xs:string" minOccurs="0" maxOccurs="1">
+      <xs:annotation acrn:title="TTY device path">
+        <xs:documentation>The device path for the tty backend type.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="VirtioInputConfiguration">
+  <xs:sequence>
+    <xs:element name="backend_device_file" type="xs:string" minOccurs="0">
+      <xs:annotation acrn:title="Backend device file">
+        <xs:documentation>Specifying backend device in service vm with device description.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="id" minOccurs="0">
+      <xs:annotation acrn:title="Guest virtio input device unique identifier">
+        <xs:documentation>Specifying unique identifier to distinguish same devices in guest.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:pattern value="[a-zA-Z0-9_\-]*" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
+  </xs:sequence>
+</xs:complexType>
+
 <xs:simpleType name="OSType">
   <xs:restriction base="xs:string">
     <xs:enumeration value="Non-Windows OS" />
