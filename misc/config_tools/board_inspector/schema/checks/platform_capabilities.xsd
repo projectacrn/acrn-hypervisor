@@ -3,6 +3,27 @@
 	   xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	   xmlns:acrn="https://projectacrn.org">
 
+  <xs:assert test="contains(//DRHD_INFO[text()], 'DRHD0')">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>Intel Virtualization Technology for Directed I/O (VT-d) feature is not enabled.
+ACRN requires this feature to function properly. Please enable it in your BIOS settings.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="//processors//core[count(thread) = 1]">
+    <xs:annotation acrn:severity="warning">
+      <xs:documentation>Hyper-Threading (HT) is enabled. While this feature can provide more overall processing power,
+hyperthreading can adversely impact predictable real-time performance behavior.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $model in processors/model satisfies not($model/capability[@id='disable_vmx'])">
+    <xs:annotation acrn:severity="error">
+      <xs:documentation>Virtual Machine Extensions (VMX) feature is not enabled.
+ACRN requires this feature to function properly. Please enable it in BIOS.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
   <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='vmx'])">
     <xs:annotation acrn:severity="error">
       <xs:documentation>Virtual Machine Extensions (VMX) feature is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
