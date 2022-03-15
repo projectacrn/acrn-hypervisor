@@ -13,6 +13,19 @@ class MSR_IA32_MISC_ENABLE(MSR):
         "fast_string",
     ]
 
+class MSR_IA32_FEATURE_CONTROL(MSR):
+    addr = 0x03a
+    msr_ia32_feature_control_lock = msrfield(1, 0, doc=None)
+    msr_ia32_feature_control_vmx_no_smx = msrfield(1, 2, doc=None)
+
+    @property
+    def disable_vmx(self):
+        return self.msr_ia32_feature_control_lock and not self.msr_ia32_feature_control_vmx_no_smx
+
+    capability_bits = [
+        "disable_vmx",
+    ]
+
 class MSR_IA32_VMX_PROCBASED_CTLS2(MSR):
     addr = 0x0000048B
 
