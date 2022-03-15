@@ -212,15 +212,12 @@ struct msr_store_entry {
 	uint64_t value;
 } __aligned(16);
 
-enum {
-	MSR_AREA_IA32_PQR_ASSOC = 0,
-	MSR_AREA_PERF_CTRL,
-	MSR_AREA_COUNT,
-};
+#define MSR_AREA_COUNT 2 /* the max MSRs in auto load/store area */
 
 struct msr_store_area {
 	struct msr_store_entry guest[MSR_AREA_COUNT];
 	struct msr_store_entry host[MSR_AREA_COUNT];
+	uint32_t index_of_pqr_assoc;
 	uint32_t count;	/* actual count of entries to be loaded/restored during VMEntry/VMExit */
 };
 

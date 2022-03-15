@@ -409,10 +409,10 @@ int32_t write_vclosid(struct acrn_vcpu *vcpu, uint64_t val)
 			 * Write the new pCLOSID value to the guest msr area
 			 *
 			 * The prepare_auto_msr_area() function has already initialized the vcpu->arch.msr_area.
-			 * Here we only need to update the vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value field,
+			 * Here we only need to update the vcpu->arch.msr_area.guest[].value field for IA32_PQR_ASSOC,
 			 * all other vcpu->arch.msr_area fields remains unchanged at runtime.
 			 */
-			vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(pclosid);
+			vcpu->arch.msr_area.guest[vcpu->arch.msr_area.index_of_pqr_assoc].value = clos2pqr_msr(pclosid);
 
 			ret = 0;
 		}

@@ -333,10 +333,10 @@ static void prepare_auto_msr_area(struct acrn_vcpu *vcpu)
 
 	/* in HV, disable perf/PMC counting, just count in guest VM */
 	if (is_pmu_pt_configured(vcpu->vm)) {
-		vcpu->arch.msr_area.guest[MSR_AREA_PERF_CTRL].msr_index = MSR_IA32_PERF_GLOBAL_CTRL;
-		vcpu->arch.msr_area.guest[MSR_AREA_PERF_CTRL].value = 0;
-		vcpu->arch.msr_area.host[MSR_AREA_PERF_CTRL].msr_index = MSR_IA32_PERF_GLOBAL_CTRL;
-		vcpu->arch.msr_area.host[MSR_AREA_PERF_CTRL].value = 0;
+		vcpu->arch.msr_area.guest[vcpu->arch.msr_area.count].msr_index = MSR_IA32_PERF_GLOBAL_CTRL;
+		vcpu->arch.msr_area.guest[vcpu->arch.msr_area.count].value = 0;
+		vcpu->arch.msr_area.host[vcpu->arch.msr_area.count].msr_index = MSR_IA32_PERF_GLOBAL_CTRL;
+		vcpu->arch.msr_area.host[vcpu->arch.msr_area.count].value = 0;
 		vcpu->arch.msr_area.count++;
 	}
 
@@ -352,16 +352,19 @@ static void prepare_auto_msr_area(struct acrn_vcpu *vcpu)
 		 * vCAT: always load/restore MSR_IA32_PQR_ASSOC
 		 */
 		if (is_vcat_configured(vcpu->vm) || (vcpu_clos != hv_clos)) {
-			vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
-			vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
-			vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
-			vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(hv_clos);
+			vcpu->arch.msr_area.guest[vcpu->arch.msr_area.count].msr_index = MSR_IA32_PQR_ASSOC;
+			vcpu->arch.msr_area.guest[vcpu->arch.msr_area.count].value = clos2pqr_msr(vcpu_clos);
+			vcpu->arch.msr_area.host[vcpu->arch.msr_area.count].msr_index = MSR_IA32_PQR_ASSOC;
+			vcpu->arch.msr_area.host[vcpu->arch.msr_area.count].value = clos2pqr_msr(hv_clos);
+			vcpu->arch.msr_area.index_of_pqr_assoc = vcpu->arch.msr_area.count;
 			vcpu->arch.msr_area.count++;
 
 			pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
 				vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
 		}
 	}
+
+	ASSERT(vcpu->arch.msr_area.count <= MSR_AREA_COUNT, "error, please check MSR_AREA_COUNT!");
 }
 
 /**
@@ -386,7 +389,7 @@ void init_emulated_msrs(struct acrn_vcpu *vcpu)
 
 #ifdef CONFIG_VCAT_ENABLED
 	/*
-	 * init_vcat_msrs() will overwrite the vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value
+	 * init_vcat_msrs() will overwrite the vcpu->arch.msr_area.guest[].value for MSR_IA32_PQR_ASSOC
 	 * set by prepare_auto_msr_area()
 	 */
 	init_vcat_msrs(vcpu);
