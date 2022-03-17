@@ -684,6 +684,7 @@ class UpgradingScenarioStage(PipelineStage):
     filters = [
         DiscardedDataFilter("hv/FEATURES/IVSHMEM", None, "IVSHMEM is now automatically enabled if any IVSHMEM region is specified."),
         DiscardedDataFilter("hv/FEATURES/NVMX_ENABLED", None, "Nest virtualization support is now automatically included if enabled for any VM."),
+        DiscardedDataFilter("hv/CAPACITIES/IOMMU_BUS_NUM", None, "The maximum bus number to be supported by ACRN IOMMU configuration is now inferred from board data."),
         DiscardedDataFilter("hv/MISC_CFG/UEFI_OS_LOADER_NAME", None, None),
         DiscardedDataFilter("vm/guest_flags/guest_flag", "0", None),
         DiscardedDataFilter("vm/epc_section/base", "0", "Post-launched VMs cannot have EPC sections."),
