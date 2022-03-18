@@ -135,8 +135,10 @@ function add_virtual_device() {
 
     if [ "${kind}" = "virtio-net" ]; then
         # Create the tap device
-        tap_conf=${options%,*}
-        create_tap "${tap_conf#tap=}" >> /dev/stderr
+        if [[ ${options} =~ tap=([^,]+) ]]; then
+            tap_conf="${BASH_REMATCH[1]}"
+            create_tap "${tap_conf}" >> /dev/stderr
+        fi
     fi
 
     echo -n "-s ${slot},${kind}"
