@@ -1,0 +1,10 @@
+.form-area {
+    mix-blend-mode: normal;
+    border: 1px solid #373A77;
+    box-sizing: border-box;
+    border-radius: 5px;
+}
+
+.object-property-expand {
+    display: none;
+}
