@@ -40,7 +40,7 @@ No Enclave in a Hypervisor
 --------------------------
 
 ACRN does not support running an enclave in a hypervisor since the whole
-hypervisor is currently running in VMX root mode, ring 0, and an enclave must
+hypervisor is running in VMX root mode, ring 0, and an enclave must
 run in ring 3. ACRN SGX virtualization provides the capability to
 non-Service VMs.
 
@@ -124,7 +124,7 @@ CPUID Leaf 07H
 * CPUID_07H.EAX[2] SGX: Supports Intel Software Guard Extensions if 1. If SGX
   is supported in Guest, this bit will be set.
 
-* CPUID_07H.ECX[30] SGX_LC: Supports SGX Launch Configuration if 1. Currently,
+* CPUID_07H.ECX[30] SGX_LC: Supports SGX Launch Configuration if 1.
   ACRN does not support the SGX Launch Configuration. This bit will not be
   set. Thus, the Launch Enclave must be signed by the Intel SGX Launch Enclave
   Key.
@@ -172,7 +172,7 @@ The hypervisor will opt in to SGX for VM if SGX is enabled for VM.
 IA32_SGXLEPUBKEYHASH[0-3]
 -------------------------
 
-This is read-only since SGX LC is currently not supported.
+This is read-only since SGX LC is not supported.
 
 SGXOWNEREPOCH[0-1]
 ------------------
@@ -245,7 +245,8 @@ PAUSE Exiting
 
 Future Development
 ******************
-Following are some currently unplanned areas of interest for future
+
+Following are some unplanned areas of interest for future
 ACRN development around SGX virtualization.
 
 Launch Configuration Support

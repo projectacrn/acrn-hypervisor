@@ -39,7 +39,7 @@ interrupt to the specific RT VM with passthrough LAPIC.
    :width: 600px
    :name: interrupt-sw-modules
 
-   ACRN Interrupt SW Modules Overview
+   ACRN Interrupt Software Modules Overview
 
 
 The hypervisor implements the following functionalities for handling
@@ -146,7 +146,7 @@ Native PIC is not used in the system.
    :align: center
    :name: hv-pic-config
 
-   HV PIC/IOAPIC/LAPIC configuration
+   Hypervisor PIC/IOAPIC/LAPIC Configuration
 
 LAPIC Initialization
 ====================
@@ -224,8 +224,8 @@ The interrupt vectors are assigned as shown here:
      - SPURIOUS_APIC_VECTOR
 
 Interrupts from either IOAPIC or MSI can be delivered to a target CPU.
-By default they are configured as Lowest Priority (FLAT mode), i.e. they
-are delivered to a CPU core that is currently idle or executing lowest
+By default, they are configured as Lowest Priority (FLAT mode), meaning they
+are delivered to a CPU core that is idle or executing the lowest
 priority ISR. There is no guarantee a device's interrupt will be
 delivered to a specific Guest's CPU. Timer interrupts are an exception -
 these are always delivered to the CPU which programs the LAPIC timer.
@@ -237,7 +237,7 @@ allocation for CPUs is shown here:
 .. figure:: images/interrupt-image89.png
    :align: center
 
-   FLAT mode vector allocation
+   FLAT Mode Vector Allocation
 
 IRQ Descriptor Table
 ====================
@@ -290,7 +290,7 @@ Interrupt and IRQ processing flow diagrams are shown below:
    :align: center
    :name: phy-interrupt-processing
 
-   Processing of physical interrupts
+   Processing of Physical Interrupts
 
 When a physical interrupt is raised and delivered to a physical CPU, the
 CPU may be running under either VMX root mode or non-root mode.
@@ -341,7 +341,7 @@ conditions:
    :align: center
    :name: request-irq
 
-   Request IRQ for different conditions
+   Request IRQ for Different Conditions
 
 .. _ipi-management:
 

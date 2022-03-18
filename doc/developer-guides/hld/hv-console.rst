@@ -15,7 +15,7 @@ The hypervisor console is a text-based terminal accessible from UART.
    :align: center
    :name: console-processing
 
-   Periodic console processing
+   Periodic Console Processing
 
 A periodic timer is set on initialization to trigger console processing every 40ms.
 Processing behavior depends on whether the vUART
@@ -43,7 +43,7 @@ the physical UART only when the vUART is deactivated. See
 Virtual UART
 ************
 
-Currently UART 16550 is owned by the hypervisor itself and used for
+UART 16550 is owned by the hypervisor itself and used for
 debugging purposes. Properties are configured by hypervisor command
 line. Hypervisor emulates a UART device with 0x3F8 address to Service VM that
 acts as the console of Service VM with these features:
@@ -61,7 +61,7 @@ The following diagram shows the activation state transition of vUART.
 .. figure:: images/console-image41.png
    :align: center
 
-   Periodic console processing
+   Periodic Console Processing
 
 Specifically:
 

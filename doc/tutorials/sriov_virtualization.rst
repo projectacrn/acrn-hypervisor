@@ -135,7 +135,7 @@ SR-IOV Passthrough VF Architecture in ACRN
    :align: center
    :name: SR-IOV-vf-passthrough
 
-   SR-IOV VF Passthrough Architecture In ACRN
+   SR-IOV VF Passthrough Architecture in ACRN
 
 1. The SR-IOV VF device needs to bind the PCI-stud driver instead of the
    vendor-specific VF driver before the device passthrough.
@@ -213,7 +213,7 @@ SR-IOV VF Assignment Policy
 
 1. All SR-IOV PF devices are managed by the Service VM.
 
-2. Currently, the SR-IOV PF cannot passthrough to the User VM.
+2. The SR-IOV PF cannot passthrough to the User VM.
 
 3. All VFs can passthrough to the User VM, but we do not recommend
    a passthrough to high privilege VMs because the PF device may impact
@@ -236,7 +236,7 @@ only support LaaG (Linux as a Guest).
       :align: center
       :name: 82576-pf
 
-      82576 SR-IOV PF devices
+      82576 SR-IOV PF Devices
 
 #. Input the ``echo n > /sys/class/net/enp109s0f0/device/sriov\_numvfs``
    command in the Service VM to enable n VF devices for the first PF
@@ -249,7 +249,7 @@ only support LaaG (Linux as a Guest).
       :align: center
       :name: 82576-vf
 
-      82576 SR-IOV VF devices
+      82576 SR-IOV VF Devices
 
    .. figure:: images/sriov-image11.png
       :align: center

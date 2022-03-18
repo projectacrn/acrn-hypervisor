@@ -4,7 +4,7 @@ Watchdog Virtualization in Device Model
 #######################################
 
 This document describes the watchdog virtualization implementation in
-ACRN device model.
+ACRN Device Model.
 
 Overview
 ********
@@ -27,7 +27,7 @@ Model following the PCI device framework. The following
    :width: 900px
    :name: watchdog-device
 
-   Watchdog device flow
+   Watchdog Device Flow
 
 The DM in the Service VM treats the watchdog as a passive device.
 It receives read/write commands from the watchdog driver, does the
@@ -56,7 +56,7 @@ from a User VM to the Service VM and return back:
    :width: 900px
    :name: watchdog-workflow
 
-   Watchdog operation workflow
+   Watchdog Operation Workflow
 
 Implementation in ACRN and How to Use It
 ****************************************

@@ -993,7 +993,7 @@ An alternative ACPI resource abstraction option is for the Service VM to
 own all devices and emulate a set of virtual devices for the User VM
 (POST_LAUNCHED_VM).
 This is the most popular ACPI resource model for virtualization,
-as shown in the picture below. ACRN currently
+as shown in the picture below. ACRN
 uses device emulation plus some device passthrough for the User VM.
 
 .. figure:: images/dm-image52.png

@@ -15,7 +15,7 @@ Inter-VM Communication Overview
    :align: center
    :name: ivshmem-architecture-overview
 
-   ACRN shared memory based inter-VM communication architecture
+   ACRN Shared Memory Based Inter-VM Communication Architecture
 
 ACRN can emulate the ``ivshmem`` device in two ways:
 
@@ -117,7 +117,7 @@ MMIO Registers Definition
      - 0x8
      - RO
      - Inter-VM Position register is used to identify the VM ID.
-       Currently its value is zero.
+       Its value is zero.
    * - IVSHMEM\_DOORBELL\_REG
      - 0xC
      - WO

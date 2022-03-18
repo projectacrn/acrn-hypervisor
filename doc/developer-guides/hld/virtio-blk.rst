@@ -17,7 +17,7 @@ virtqueue, the size of which is 64, configurable in the source code.
    :width: 900px
    :name: virtio-blk-arch
 
-   Virtio-blk architecture
+   Virtio-blk Architecture
 
 The feature bits supported by the BE device are shown as follows:
 
@@ -63,7 +63,7 @@ asynchronously.
 Usage:
 ******
 
-The device model configuration command syntax for virtio-blk is::
+The Device Model configuration command syntax for virtio-blk is::
 
    -s <slot>,virtio-blk,<filepath>[,options]
 

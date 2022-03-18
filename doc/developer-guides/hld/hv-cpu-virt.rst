@@ -120,7 +120,7 @@ The physical CPU assignment is predefined by ``cpu_affinity`` in
 ``vm config``, while post-launched VMs could be launched on pCPUs that are
 a subset of it.
 
-Currently, the ACRN hypervisor does not support virtual CPU migration to
+The ACRN hypervisor does not support virtual CPU migration to
 different physical CPUs. No changes to the mapping of the virtual CPU to
 physical CPU can happen without first calling ``offline_vcpu``.
 
@@ -457,7 +457,7 @@ A bitmap in the vCPU structure lists the different requests:
 
 ACRN provides the function *vcpu_make_request* to make different
 requests, set the bitmap of the corresponding request, and notify the target
-vCPU through the IPI if necessary (when the target vCPU is not currently
+vCPU through the IPI if necessary (when the target vCPU is not
 running). See :ref:`vcpu-request-interrupt-injection` for details.
 
 .. code-block:: c
@@ -471,7 +471,7 @@ running). See :ref:`vcpu-request-interrupt-injection` for details.
        * if current hostcpu is not the target vcpu's hostcpu, we need
        * to invoke IPI to wake up target vcpu
        *
-       * TODO: Here we just compare with cpuid, since cpuid currently is
+       * TODO: Here we just compare with cpuid, since cpuid is
        *  global under pCPU / vCPU 1:1 mapping. If later we enabled vcpu
        *  scheduling, we need change here to determine it target vcpu is
        *  VMX non-root or root mode
@@ -821,16 +821,16 @@ This table describes details for CPUID emulation:
        - EBX, ECX, EDX: reserved to 0
 
    * - 0AH
-     - - PMU currently disabled
+     - - PMU disabled
 
    * - 0FH, 10H
-     - - Intel RDT currently disabled
+     - - Intel RDT disabled
 
    * - 12H
      - - Fill according to SGX virtualization
 
    * - 14H
-     - - Intel Processor Trace currently disabled
+     - - Intel Processor Trace disabled
 
    * - Others
      - - Get from per-vm CPUID entries cache
@@ -969,7 +969,7 @@ ACRN emulates ``mov to cr0``, ``mov to cr4``, ``mov to cr8``, and ``mov
 from cr8`` through *cr_access_vmexit_handler* based on
 *VMX_EXIT_REASON_CR_ACCESS*.
 
-.. note::  Currently ``mov to cr8`` and ``mov from cr8`` are actually
+.. note::  ``mov to cr8`` and ``mov from cr8`` are
    not valid as ``CR8-load/store exiting`` bits are set as 0 in
    *VMX_PROC_VM_EXEC_CONTROLS*.
 
@@ -1134,7 +1134,7 @@ MMIO (EPT) and APIC access emulation. When such a VM exit is triggered, the
 hypervisor needs to decode the instruction from RIP then attempt the
 corresponding emulation based on its instruction and read/write direction.
 
-ACRN currently supports emulating instructions for ``mov``, ``movx``,
+ACRN supports emulating instructions for ``mov``, ``movx``,
 ``movs``, ``stos``, ``test``, ``and``, ``or``, ``cmp``, ``sub``, and
 ``bittest`` without support for lock prefix.  Real mode emulation is not
 supported.

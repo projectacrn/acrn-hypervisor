@@ -57,7 +57,7 @@ SoC in-vehicle platform.
    :align: center
    :name: security-vehicle
 
-   SDC and IVE system In-Vehicle
+   SDC and IVE System In-Vehicle
 
 
 In this system, the ACRN hypervisor is running at the most privileged
@@ -125,7 +125,7 @@ launched.
 Note that measured boot (as described well in this `boot security
 technologies document
 <https://firmwaresecurity.com/2015/07/29/survey-of-boot-security-technologies/>`_)
-is not currently supported for ACRN and its guest VMs.
+is not supported for ACRN and its guest VMs.
 
 Boot Flow
 ---------
@@ -137,7 +137,7 @@ As shown in :numref:`security-bootflow-sbl`, the Converged Security Engine
 Firmware (CSE FW) behaves as the root of trust in this platform boot
 flow. It authenticates and starts the BIOS (SBL), whereupon the SBL is
 responsible for authenticating and verifying the ACRN hypervisor image.
-Currently the Service VM kernel is built together with the ACRN hypervisor as
+The Service VM kernel is built together with the ACRN hypervisor as
 one image bundle, so this whole image signature is verified by SBL
 before launching.
 
@@ -316,7 +316,7 @@ The ACRN hypervisor has ultimate access control of all the platform
 memory spaces (see :ref:`memmgt-hld`). Note that on the APL platform,
 `SGX <https://www.intel.com/content/www/us/en/developer/tools/software-guard-extensions/overview.html>`_ and `TME
 <https://itpeernetwork.intel.com/memory-encryption/>`_
-are not currently supported.
+are not supported.
 
 The hypervisor can read and write any physical memory space allocated
 to any guest VM, and can even fetch instructions and execute the code in
@@ -969,7 +969,7 @@ Secure storage is one of the security services provided by the secure world
 on the RPMB partition in eMMC (or UFS, and NVMe storage). Details of how
 RPMB works are out of scope for this document.
 
-Since currently the eMMC in APL SoC platforms only has a single RPMB
+Since the eMMC in APL SoC platforms only has a single RPMB
 partition for tamper-resistant and anti-replay secure storage, the
 secure storage (RPMB) should be virtualized in order to support multiple
 guest User VMs. However, although future generations of flash storage

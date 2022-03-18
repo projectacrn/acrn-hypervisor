@@ -44,7 +44,7 @@ devices such as audio, eAVB/TSN, IPU, and CSMU devices. This section gives
 an overview about virtio history, motivation, and advantages, and then
 highlights virtio key concepts. Second, this section will describe
 ACRN's virtio architectures and elaborate on ACRN virtio APIs. Finally
-this section will introduce all the virtio devices currently supported
+this section will introduce all the virtio devices supported
 by ACRN.
 
 Virtio Introduction
@@ -99,7 +99,7 @@ Straightforward: virtio devices as standard devices on existing buses
   interrupt the FE driver, on behalf of the BE driver, in case something of
   interest is happening.
 
-  Currently virtio supports PCI/PCIe bus and MMIO bus. In ACRN, only
+  The virtio supports PCI/PCIe bus and MMIO bus. In ACRN, only
   PCI/PCIe bus is supported, and all the virtio devices share the same
   vendor ID 0x1AF4.
 
@@ -308,7 +308,7 @@ general workflow of ioeventfd.
    :align: center
    :name: ioeventfd-workflow
 
-   ioeventfd general workflow
+   Ioeventfd General Workflow
 
 The workflow can be summarized as:
 
@@ -334,7 +334,7 @@ signaled. :numref:`irqfd-workflow` shows the general flow for irqfd.
    :align: center
    :name: irqfd-workflow
 
-   irqfd general flow
+   Irqfd General Flow
 
 The workflow can be summarized as:
 
@@ -641,7 +641,7 @@ their temporary IDs are listed in the following table.
    | GPIO         | 0x8086      | 0x8609      | 0x8086      | 0xFFF7      |
    +--------------+-------------+-------------+-------------+-------------+
 
-The following sections introduce the status of virtio devices currently
+The following sections introduce the status of virtio devices
 supported in ACRN.
 
 .. toctree::

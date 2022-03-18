@@ -7,7 +7,7 @@ The Virtio-console is a simple device for data input and output.  The
 console's virtio device ID is ``3`` and can have from 1 to 16 ports.
 Each port has a pair of input and output virtqueues used to communicate
 information between the Front End (FE) and Back end (BE) drivers.
-Currently the size of each virtqueue is 64 (configurable in the source
+The size of each virtqueue is 64 (configurable in the source
 code).  The FE driver will place empty buffers for incoming data onto
 the receiving virtqueue, and enqueue outgoing characters onto the
 transmitting virtqueue.
@@ -27,11 +27,11 @@ The virtio-console architecture diagram in ACRN is shown below.
    :width: 700px
    :name: virtio-console-arch
 
-   Virtio-console architecture diagram
+   Virtio-console Architecture Diagram
 
 
 Virtio-console is implemented as a virtio legacy device in the ACRN
-device model (DM), and is registered as a PCI virtio device to the guest
+Device Model (DM), and is registered as a PCI virtio device to the guest
 OS. No changes are required in the frontend Linux virtio-console except
 that the guest (User VM) kernel should be built with
 ``CONFIG_VIRTIO_CONSOLE=y``.
@@ -52,7 +52,7 @@ mevent to poll the available data from the backend file descriptor. When
 new data is available, the BE driver reads it to the receiving virtqueue
 of the FE, followed by an interrupt injection.
 
-The feature bits currently supported by the BE device are:
+The feature bits supported by the BE device are:
 
 .. list-table:: Feature bits supported by BE drivers
    :widths: 30 50
@@ -66,10 +66,10 @@ The feature bits currently supported by the BE device are:
      - device supports emergency write.
 
 Virtio-console supports redirecting guest output to various backend
-devices. Currently the following backend devices are supported in ACRN
-device model: STDIO, TTY, PTY and regular file.
+devices. The following backend devices are supported in the ACRN
+Device Model: STDIO, TTY, PTY and regular file.
 
-The device model configuration command syntax for virtio-console is::
+The Device Model configuration command syntax for virtio-console is::
 
    virtio-console,[@]stdio|tty|pty|file:portname[=portpath]\
       [,[@]stdio|tty|pty|file:portname[=portpath][:socket_type]]
@@ -109,7 +109,7 @@ The following sections elaborate on each backend.
 STDIO
 =====
 
-1. Add a PCI slot to the device model (``acrn-dm``) command line::
+1. Add a PCI slot to the Device Model (``acrn-dm``) command line::
 
         -s n,virtio-console,@stdio:stdio_port
 
@@ -120,7 +120,7 @@ STDIO
 PTY
 ===
 
-1. Add a PCI slot to the device model (``acrn-dm``) command line::
+1. Add a PCI slot to the Device Model (``acrn-dm``) command line::
 
         -s n,virtio-console,@pty:pty_port
 
@@ -185,7 +185,7 @@ TTY
 
      and detach the TTY by pressing :kbd:`CTRL-A` :kbd:`d`.
 
-#. Add a PCI slot to the device model (``acrn-dm``)  command line
+#. Add a PCI slot to the Device Model (``acrn-dm``)  command line
    (changing the ``dev/pts/X`` to match your use case)::
 
         -s n,virtio-console,@tty:tty_port=/dev/pts/X
@@ -207,7 +207,7 @@ FILE
 
 The File backend only supports console output to a file (no input).
 
-1. Add a PCI slot to the device model (``acrn-dm``) command line,
+1. Add a PCI slot to the Device Model (``acrn-dm``) command line,
    adjusting the ``</path/to/file>`` to your use case::
 
         -s n,virtio-console,@file:file_port=</path/to/file>
@@ -219,30 +219,31 @@ The File backend only supports console output to a file (no input).
 SOCKET
 ======
 
-The virtio-console socket-type can be set as socket server or client. Device model will
-create a Unix domain socket if appointed the socket_type as server, then server VM or
-another user VM can bind and listen for communication requirement. If appointed to
-client, make sure the socket server is ready prior to launch device model.
+The virtio-console socket-type can be set as socket server or client. The Device
+Model creates a Unix domain socket if appointed the socket_type as server. Then
+the Service VM or another User VM can bind and listen for communication
+requirements. If appointed to client, make sure the socket server is ready
+before launching the Device Model.
 
-1. Add a PCI slot to the device model (``acrn-dm``) command line, adjusting
+1. Add a PCI slot to the Device Model (``acrn-dm``) command line, adjusting
    the ``</path/to/file.sock>`` to your use case in the VM1 configuration::
 
         -s n,virtio-console,socket:socket_file_name=</path/to/file.sock>:server
 
-#. Add a PCI slot to the device model (``acrn-dm``) command line, adjusting
+#. Add a PCI slot to the Device Model (``acrn-dm``) command line, adjusting
    the ``</path/to/file.sock>`` to your use case in the VM2 configuration::
 
         -s n,virtio-console,socket:socket_file_name=</path/to/file.sock>:client
 
-#. Login to VM1, connect to the virtual port(vport1p0, 1 is decided
-   by front-end driver):
+#. Log in to VM1, connect to the virtual port (vport1p0, 1 is decided
+   by the front-end driver):
 
    .. code-block:: console
 
         # minicom -D /dev/vport1p0
 
-#. Login to VM2, connect to the virtual port(vport3p0, 3 is decided
-   by front-end driver):
+#. Log in to VM2, connect to the virtual port (vport3p0, 3 is decided
+   by the front-end driver):
 
    .. code-block:: console
 

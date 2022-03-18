@@ -6,7 +6,7 @@ Virtio-GPIO
 Virtio-gpio provides a virtual general-purpose input/output (GPIO) controller
 that can map native GPIOs to a User VM. The User VM can perform GPIO operations
 through it, including set value, get value, set direction, get direction, and
-set configuration. Only Open Source and Open Drain types are currently
+set configuration. Only Open Source and Open Drain types are
 supported. GPIOs are often used as IRQs, typically for wakeup events.
 Virtio-gpio supports level and edge interrupt trigger modes.
 
@@ -40,7 +40,7 @@ GPIO Mapping
    :align: center
    :name: virtio-gpio-2
 
-   GPIO mapping
+   GPIO Mapping
 
 -  Each User VM has only one GPIO chip instance. The number of GPIOs is
    based on the acrn-dm command line. The GPIO base always starts from 0.

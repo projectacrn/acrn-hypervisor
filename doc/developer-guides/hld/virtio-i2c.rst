@@ -17,8 +17,8 @@ the client device driver in the guest OS does not need to change.
 
    Virtio-i2c Architecture
 
-Virtio-i2c is implemented as a virtio legacy device in the ACRN device
-model (DM) and is registered as a PCI virtio device to the guest OS. The
+Virtio-i2c is implemented as a virtio legacy device in the ACRN Device
+Model (DM) and is registered as a PCI virtio device to the guest OS. The
 Device ID of virtio-i2c is ``0x860A`` and the Sub Device ID is
 ``0xFFF6``.
 
@@ -63,8 +63,8 @@ notifies the frontend. The msg process flow is shown in
 
 ``node``:
    The ACPI node name supported in the current code. You can find the
-   supported name in the ``acpi_node_table[]`` from the source code. Currently,
-   only ``cam1``, ``cam2``, and ``hdac`` are supported for MRB. These nodes are
+   supported name in the ``acpi_node_table[]`` from the source code.
+   Only ``cam1``, ``cam2``, and ``hdac`` are supported for MRB. These nodes are
    platform-specific.
 
 

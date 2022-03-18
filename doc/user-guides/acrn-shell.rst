@@ -85,11 +85,11 @@ state (init, paused, running, zombie, or unknown).
 vcpu_dumpreg
 ============
 
-The ``vcpu_dumpreg <vm_id> <vcpu_id>`` command provides vCPU-related 
+The ``vcpu_dumpreg <vm_id> <vcpu_id>`` command provides vCPU-related
 information such as register values.
 
 In the following example, we dump the vCPU0 RIP register value and get into
-the Service VM to search for the currently running function, using these
+the Service VM to search for the running function, using these
 commands::
 
    cat /proc/kallsyms | grep RIP_value
@@ -185,7 +185,7 @@ IRQ vector number, etc.
 pt
 ==
 
-The ``pt`` command provides passthrough detailed information, such as the 
+The ``pt`` command provides passthrough detailed information, such as the
 virtual machine number, interrupt type, interrupt request, interrupt vector,
 and trigger mode.
 
@@ -197,7 +197,7 @@ and trigger mode.
 int
 ===
 
-The ``int`` command provides interrupt information on all CPUs and their 
+The ``int`` command provides interrupt information on all CPUs and their
 corresponding interrupt vector.
 
 .. figure:: images/shell_image17.png

@@ -24,7 +24,7 @@ Here is how ACRN supports MMIO device passthrough:
   if not, use ``--mmiodev_pt MMIO_regions``.
 
 .. note::
-   Currently, the vTPM and PT TPM in the ACRN-DM have the same HID so we
+   The vTPM and PT TPM in the ACRN-DM have the same HID so we
    can't support them both at the same time. The VM will fail to boot if
    both are used.
 

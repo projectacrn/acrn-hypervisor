@@ -62,7 +62,7 @@ Download Win10 Image and Drivers
    - Check **I accept the terms in the license agreement**. Click **Continue**.
    - From the list, right check the item labeled **Oracle VirtIO Drivers
      Version for Microsoft Windows 1.1.x, yy MB**, and then **Save link as
-     ...**.  Currently, it is named ``V982789-01.zip``.
+     ...**. It is named ``V982789-01.zip``.
    - Click **Download**. When the download is complete, unzip the file. You
      will see an ISO named ``winvirtio.iso``.
 

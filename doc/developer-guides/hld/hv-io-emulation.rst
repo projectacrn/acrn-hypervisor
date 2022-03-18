@@ -5,7 +5,7 @@ I/O Emulation High-Level Design
 
 As discussed in :ref:`intro-io-emulation`, there are multiple ways and
 places to handle I/O emulation, including HV, Service VM Kernel HSM, and Service VM
-user-land device model (acrn-dm).
+user-land Device Model (acrn-dm).
 
 I/O emulation in the hypervisor provides these functionalities:
 
@@ -32,7 +32,7 @@ inside the hypervisor:
    :align: center
    :name: io-control-flow
 
-   Control flow of I/O emulation in the hypervisor
+   Control Flow of I/O Emulation in the Hypervisor
 
 I/O emulation does not rely on any calibration data.
 
@@ -219,7 +219,7 @@ Post-Work
 =========
 
 After an I/O request is completed, some more work needs to be done for
-I/O reads to update guest registers accordingly. Currently the
+I/O reads to update guest registers accordingly. The
 hypervisor re-enters the vCPU thread every time a vCPU is scheduled back
 in, rather than switching to where the vCPU is scheduled out. As a result,
 post-work is introduced for this purpose.
@@ -233,7 +233,7 @@ updating the vCPU guest state to reflect the effect of the I/O reads.
 .. figure:: images/ioem-image100.png
    :align: center
 
-   Workflow of MMIO I/O request completion
+   Workflow of MMIO I/O Request Completion
 
 The figure above illustrates the workflow to complete an I/O
 request for MMIO. Once the I/O request is completed, Service VM makes a
@@ -247,7 +247,7 @@ request slot to FREE, and continues execution of the vCPU.
    :align: center
    :name: port-io-completion
 
-   Workflow of port I/O request completion
+   Workflow of Port I/O Request Completion
 
 Completion of a port I/O request (shown in :numref:`port-io-completion`
 above) is

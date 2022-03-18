@@ -307,7 +307,7 @@ processor does not take interrupts when it is executing in VMX root
 mode. ACRN configures the processor to take vmexit upon external
 interrupt if the processor is executing in VMX non-root mode. Upon an
 external interrupt, after sending EOI to the physical LAPIC, ACRN
-injects the vector into the vLAPIC of the vCPU currently running on the
+injects the vector into the vLAPIC of the vCPU running on the
 processor. Guests using a Linux kernel use vectors less than 0xECh
 for device interrupts.
 

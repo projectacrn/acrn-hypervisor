@@ -15,18 +15,18 @@ System timer virtualization architecture
 -  In the User VM, vRTC, vHPET, and vPIT are used by the clock event module and the clock
    source module in the kernel space.
 
--  In the Service VM, all vRTC, vHPET, and vPIT devices are created by the device
-   model in the initialization phase and uses timer\_create and
+-  In the Service VM, the Device Model creates all vRTC, vHPET, and vPIT devices
+   in the initialization phase. The Device Model uses timer\_create and
    timerfd\_create interfaces to set up native timers for the trigger timeout
    mechanism.
 
 System Timer Initialization
 ===========================
 
-The device model initializes vRTC, vHEPT, and vPIT devices automatically when
-the ACRN device model starts the booting initialization, and the initialization
-flow goes from vrtc\_init to vpit\_init and ends with vhept\_init, see
-below code snippets.::
+The Device Model initializes vRTC, vHEPT, and vPIT devices automatically when
+it starts the booting initialization. The initialization
+flow goes from vrtc\_init to vpit\_init and ends with vhept\_init. See
+the code snippets below.::
 
 	static int
 	vm_init_vdevs(struct vmctx ctx)*

@@ -64,9 +64,9 @@ Px/Cx data for User VM P/C-state management:
    :align: center
    :name: vACPItable
 
-   System block for building vACPI table with Px/Cx data
+   System Block for Building vACPI Table with Px/Cx Data
 
-Some ioctl APIs are defined for the Device model to query Px/Cx data from
+Some ioctl APIs are defined for the Device Model to query Px/Cx data from
 the Service VM HSM. The Hypervisor needs to provide hypercall APIs to transit
 Px/Cx data from the CPU state table to the Service VM HSM.
 
@@ -75,11 +75,11 @@ The build flow is:
 1) Use an offline tool (e.g. **iasl**) to parse the Px/Cx data and hard-code to
    a CPU state table in the Hypervisor. The Hypervisor loads the data after
    the system boots.
-2) Before User VM launching, the Device model queries the Px/Cx data from the Service
+2) Before User VM launching, the Device Model queries the Px/Cx data from the Service
    VM HSM via ioctl interface.
 3) HSM transmits the query request to the Hypervisor by hypercall.
 4) The Hypervisor returns the Px/Cx data.
-5) The Device model builds the virtual ACPI table with these Px/Cx data
+5) The Device Model builds the virtual ACPI table with these Px/Cx data
 
 Intercept Policy
 ================
@@ -124,7 +124,7 @@ could customize it according to their hardware/software requirements.
    :align: center
    :name: systempmdiag
 
-   ACRN System S3/S5 diagram
+   ACRN System S3/S5 Diagram
 
 
 System Low Power State Entry Process
@@ -156,7 +156,7 @@ with typical ISD configuration(S3 follows very similar process)
    :align: center
    :name: pmworkflow
 
-   ACRN system S5 entry workflow
+   ACRN System S5 Entry Workflow
 
 For system power state entry:
 

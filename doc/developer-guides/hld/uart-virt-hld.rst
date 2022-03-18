@@ -26,7 +26,7 @@ The ACRN DM architecture for UART virtualization is shown here:
    :name: uart-arch
    :width: 800px
 
-   Device Model's UART virtualization architecture
+   Device Model's UART Virtualization Architecture
 
 There are three objects used to emulate one UART device in DM:
 UART registers, rxFIFO, and backend tty devices.
@@ -39,19 +39,19 @@ handler of each register depends on the register's functionality.
 A **FIFO** is implemented to emulate RX. Normally characters are read
 from the backend tty device when available, then put into the rxFIFO.
 When the Guest application tries to read from the UART, the access to
-register ``com_data`` causes a ``vmexit``. Device model catches the
+register ``com_data`` causes a ``vmexit``. Device Model catches the
 ``vmexit`` and emulates the UART by returning one character from rxFIFO.
 
 .. note:: When ``com_fcr`` is available, the Guest application can write
    ``0`` to this register to disable rxFIFO. In this case the rxFIFO in
-   device model degenerates to a buffer containing only one character.
+   the Device Model degenerates to a buffer containing only one character.
 
 When the Guest application tries to send a character to the UART, it
 writes to the ``com_data`` register, which will cause a ``vmexit`` as
-well.  Device model catches the ``vmexit`` and emulates the UART by
+well.  Device Model catches the ``vmexit`` and emulates the UART by
 redirecting the character to the **backend tty device**.
 
-The UART device emulated by the ACRN device model is connected to the system by
+The UART device emulated by the ACRN Device Model is connected to the system by
 the LPC bus. In the current implementation, two channel LPC UARTs are I/O mapped to
 the traditional COM port addresses of 0x3F8 and 0x2F8. These are defined in
 global variable ``uart_lres``.
@@ -90,11 +90,11 @@ In the case of UART emulation, the registered handlers are ``uart_read``
 and ``uart_write``.
 
 A similar virtual UART device is implemented in the hypervisor.
-Currently UART16550 is owned by the hypervisor itself and is used for
+UART16550 is owned by the hypervisor itself and is used for
 debugging purposes.  (The UART properties are configured by parameters
 to the hypervisor command line.) The hypervisor emulates a UART device
-with 0x3F8 address to the Service VM and acts as the Service VM console. The general
-emulation is the same as used in the device model, with the following
+with 0x3F8 address to the Service VM and acts as the Service VM console. The
+general emulation is the same as used in the Device Model, with the following
 differences:
 
 -  PIO region is directly registered to the vmexit handler dispatcher via

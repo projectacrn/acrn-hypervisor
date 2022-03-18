@@ -20,7 +20,7 @@ and :ref:`vuart_config`).
    :align: center
    :name: Inter-VM vUART communication
 
-   Inter-VM vUART communication
+   Inter-VM vUART Communication
 
 - Pros:
    - POSIX APIs; development-friendly (easily used programmatically
@@ -37,7 +37,7 @@ Inter-VM network communication
 
 Inter-VM network communication is based on the network stack. ACRN supports
 both pass-through NICs to VMs and Virtio-Net solutions. (Refer to :ref:`virtio-net`
-background introductions of ACRN Virtio-Net Architecture and Design). 
+background introductions of ACRN Virtio-Net Architecture and Design).
 
 :numref:`Inter-VM network communication` shows the Inter-VM network communication overview:
 
@@ -45,7 +45,7 @@ background introductions of ACRN Virtio-Net Architecture and Design).
    :align: center
    :name: Inter-VM network communication
 
-   Inter-VM network communication
+   Inter-VM Network Communication
 
 - Pros:
    - Socket-based APIs; development-friendly (easily used programmatically
@@ -61,7 +61,7 @@ Inter-VM shared memory communication (ivshmem)
 **********************************************
 
 Inter-VM shared memory communication is based on a shared memory mechanism
-to transfer data between VMs. The ACRN device model or hypervisor emulates
+to transfer data between VMs. The ACRN Device Model or hypervisor emulates
 a virtual PCI device (called an ``ivshmem device``) to expose this shared memory's
 base address and size. (Refer to :ref:`ivshmem-hld` and :ref:`enable_ivshmem` for the
 background introductions).
@@ -72,7 +72,7 @@ background introductions).
    :align: center
    :name: Inter-VM shared memory communication
 
-   Inter-VM shared memory communication
+   Inter-VM Shared Memory Communication
 
 - Pros:
    - Shared memory is exposed to VMs via PCI MMIO Bar and is mapped and accessed directly.
@@ -224,7 +224,7 @@ a data transfer notification mechanism between the VMs.
              /* set eventfds of msix to kernel driver by ioctl */
              p_ivsh_dev_ctx->irq_data[i].vector = i;
              p_ivsh_dev_ctx->irq_data[i].fd = evt_fd;
-             ioctl(p_ivsh_dev_ctx->uio_dev_fd, UIO_IRQ_DATA, &p_ivsh_dev_ctx->irq_data[i]) 
+             ioctl(p_ivsh_dev_ctx->uio_dev_fd, UIO_IRQ_DATA, &p_ivsh_dev_ctx->irq_data[i])
 
              /* create epoll */
              p_ivsh_dev_ctx->epfds_irq[i] = epoll_create1(0);
@@ -323,7 +323,7 @@ after ivshmem device is initialized.
    :align: center
    :name: Inter-VM ivshmem data transfer state machine
 
-   Inter-VM ivshmem data transfer state machine
+   Inter-VM Ivshmem Data Transfer State Machine
 
 :numref:`Inter-VM ivshmem handshake communication` shows the handshake communication between two machines:
 
@@ -331,7 +331,7 @@ after ivshmem device is initialized.
    :align: center
    :name: Inter-VM ivshmem handshake communication
 
-   Inter-VM ivshmem handshake communication
+   Inter-VM Ivshmem Handshake Communication
 
 
 Reference Sender and Receiver Sample Code Based Doorbell Mode
