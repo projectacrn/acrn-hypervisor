@@ -1,0 +1,13 @@
+{% extends "!footer.html" %}
+{% block contentinfo %}
+    <p>
+    {%- if show_copyright %}
+      {%- if hasdoc('copyright') %}
+        {%- trans path=pathto('copyright'), copyright=copyright|e %}&#169; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}
+      {%- else %}
+        {%- trans copyright=copyright|e %}&#169; Copyright {{ copyright }}.{% endtrans %}
+      {%- endif %}
+    {%- endif %}
+
+<span class="lastupdated">Last updated on {{last_updated}}. Published on {{last_published}}</span>
+{% endblock %}

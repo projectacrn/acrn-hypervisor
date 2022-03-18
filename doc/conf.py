@@ -40,7 +40,7 @@ sys.path.insert(0, os.path.join(os.path.abspath('.'), 'extensions'))
 extensions = [
    'breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks',
    'eager_only', 'html_redirects', 'link_roles',
-   'sphinx_tabs.tabs'
+   'sphinx_tabs.tabs', 'last_updated'
 ]
 
 # extlinks provides a macro template
@@ -388,3 +388,9 @@ html_redirect_pages = [
    ('tutorials/using_zephyr_as_uos', 'tutorials/using_zephyr_as_user_vm'),
    ('tutorials/using_windows_as_uos', 'tutorials/using_windows_as_user_vm')
    ]
+
+# Custom last_updated extension for updating last updated date based on git information
+# needs to know the folders where the cloned files can be found, relative to
+# where the Sphinx .rst build folder
+
+last_updated_git_path = ['../..', '../../..', '../../../doc/']
