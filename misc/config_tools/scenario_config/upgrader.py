@@ -402,7 +402,7 @@ class ScenarioUpgrader(ScenarioTransformer):
            old_guest_flag_nodes or \
            (old_rtos_type_nodes and old_rtos_type_nodes[0].text in ["Soft RT", "Hard RT"]):
             new_node.text = "RTVM"
-        elif old_vm_type_node.text in ["SAFETY_VM", "PRE_STD_VM", "POST_STD_VM"]:
+        elif old_vm_type_node.text in ["SAFETY_VM", "PRE_STD_VM", "POST_STD_VM", "SERVICE_VM"]:
             new_node.text = "STANDARD_VM"
         else:
             new_node.text = old_vm_type_node.text
