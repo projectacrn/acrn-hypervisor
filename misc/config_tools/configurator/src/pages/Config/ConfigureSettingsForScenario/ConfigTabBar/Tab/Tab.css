@@ -1,0 +1,17 @@
+div.TabBox{
+    overflow-x: auto;
+}
+.TabBox .Tab {
+    background: #E1F2EF;
+    border-radius: 5px;
+    color: #007B81;
+    border: 1px solid #007B81;
+    margin: 0 0.5rem 0 0;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.TabBox .Tab.Active {
+    background: #373A77;
+    color: white;
+}

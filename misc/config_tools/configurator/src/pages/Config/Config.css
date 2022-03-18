@@ -1,0 +1,8 @@
+.card, .card-header {
+    background-color: #F5F5F5;
+}
+
+.configBody {
+    height: calc(100vh - 80px);
+    overflow: auto;
+}

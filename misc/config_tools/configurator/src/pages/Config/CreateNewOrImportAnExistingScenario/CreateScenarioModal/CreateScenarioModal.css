@@ -1,0 +1,17 @@
+.vmNum input[type="number"] {
+    max-width: 69px;
+    text-align: center;
+}
+.vmNum b{
+    padding: 0 0;
+}
+
+.vmNum b, .vmNum input {
+    flex: 0 1 50%;
+}
+
+.modal-header .btn-close{
+    margin-right: 15px;
+    color: white;
+    font-weight: bolder;
+}

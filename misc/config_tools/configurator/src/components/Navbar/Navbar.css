@@ -1,0 +1,44 @@
+body {
+    -webkit-app-region: no-drag
+}
+
+.bg-navbar {
+    height: 80px;
+    background: #007B81;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    -webkit-user-select: none;
+    -webkit-app-region: drag;
+}
+
+.logo-text {
+    cursor: default;
+    font-family: Roboto, serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 26px;
+    line-height: 30px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+
+    color: #9ADFD1;
+}
+
+.controlButtons {
+    margin-right: 30px;
+    width: 130px;
+    filter: drop-shadow(3px 3px 2px rgb(0 0 0 / 0.4));
+}
+
+
+.wmb {
+    cursor: pointer;
+    -webkit-app-region: no-drag;
+}
+
+.wmb:hover {
+    opacity: 0.7;
+}
+
+.btn-close {
+    -webkit-app-region: no-drag;
+}
