@@ -12,13 +12,13 @@ documented in this section.
    :maxdepth: 1
 
    usb-virt-hld
-   UART virtualization <uart-virt-hld>
-   Watchdog virtualization <watchdog-hld>
-   AHCI virtualization <ahci-hld>
-   System timer virtualization <system-timer-hld>
-   UART emulation in hypervisor <vuart-virt-hld>
-   RTC emulation in hypervisor <rtc-virt-hld>
-   Hostbridge emulation <hostbridge-virt-hld>
-   AT keyboard controller emulation <atkbdc-virt-hld>
+   UART Virtualization <uart-virt-hld>
+   Watchdog Virtualization <watchdog-hld>
+   AHCI Virtualization <ahci-hld>
+   System Timer Virtualization <system-timer-hld>
+   UART Emulation in Hypervisor <vuart-virt-hld>
+   RTC Emulation in Hypervisor <rtc-virt-hld>
+   hostbridge-virt-hld
+   AT Keyboard Controller Emulation <atkbdc-virt-hld>
    Split Device Model <split-dm>
-   Shared memory based inter-VM communication <ivshmem-hld>
+   Shared Memory Based Inter-VM Communication <ivshmem-hld>
