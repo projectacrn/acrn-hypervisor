@@ -1,0 +1,55 @@
+.nav-tabs .nav-link {
+    font-family: Roboto, serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 26px;
+
+    background: #E1F2EF;
+    border: 1px solid #007B81;
+    box-sizing: border-box;
+    box-shadow: inset 0 -1px 0 #D7D7D7;
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+
+    color: #007B81;
+    margin-right: 4px;
+    padding: 1rem 1.5rem;
+}
+
+.nav-tabs .nav-link.active {
+    mix-blend-mode: normal;
+    border: 1px solid #373A77;
+    border-bottom: none;
+    box-sizing: border-box;
+    border-radius: 5px 5px 0 0;
+
+
+    font-weight: 600;
+
+    color: #373A77;
+}
+
+.nav-tabs .nav-link.active:after {
+    display: block;
+    content: "";
+    height: 3px;
+    background: white;
+    position: relative;
+    top: calc(1rem + 1px);
+    left: -1.5rem;
+    width: calc(100% + 3rem + 1px);
+}
+
+.tab-content {
+    margin-top: -2px;
+}
+.nav-tabs{
+    border-bottom: none;
+}
+
+.deleteVM {
+    height: 52px;
+    max-width: 210px;
+    width: 100%;
+}

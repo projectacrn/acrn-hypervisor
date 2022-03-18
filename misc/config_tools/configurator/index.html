@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="icon" type="image/svg+xml" href="/src/favicon.svg"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Vite App</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.19.1/full/pyodide.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/javascript">
+    async function main() {
+        window.pyodide = await loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.19.1/full/"
+        })
+        pyodide.loadPackage(['micropip', 'lxml', 'beautifulsoup4'])
+    }
+
+    main();
+</script>
+<script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

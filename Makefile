@@ -80,6 +80,8 @@ HV_CFG_LOG = $(HV_OUT)/cfg.log
 VM_CONFIGS_DIR = $(T)/misc/config_tools
 ASL_COMPILER ?= $(shell which iasl)
 DPKG_BIN ?= $(shell which dpkg)
+YARN_BIN ?= $(shell which yarn)
+CARGO_BIN ?= $(shell which cargo)
 
 .PHONY: all hypervisor devicemodel tools life_mngr doc
 all: hypervisor devicemodel tools
@@ -111,6 +113,13 @@ board_inspector:
 	  python3 misc/packaging/gen_acrn_deb.py board_inspector $(ROOT_OUT) --version=$(FULL_VERSION); \
 	else \
 	  echo -e "The 'dpkg' utility is not available. Unable to create Debian package for board_inspector."; \
+	fi
+
+configurator:
+	@if [ -x "$(YARN_BIN)" ] && [ -x "$(CARGO_BIN)" ]; then \
+	  python3 misc/packaging/gen_acrn_deb.py configurator $(ROOT_OUT) ; \
+	else \
+	  echo -e "'yarn' or 'cargo' utility is not available. Unable to create Debian package for configurator."; \
 	fi
 
 hypervisor: hvdefconfig
