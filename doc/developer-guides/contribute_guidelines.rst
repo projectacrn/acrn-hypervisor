@@ -126,7 +126,7 @@ To clone the ACRN hypervisor repository (including the ``hypervisor``,
 
    $ git clone https://github.com/projectacrn/acrn-hypervisor
 
-In addition to the ACRN hypervisor and device model itself, you'll also find
+In addition to the ACRN hypervisor and Device Model itself, you'll also find
 the sources for technical documentation available from the
 `ACRN documentation site`_.  All of these are available for developers to
 contribute to and enhance.

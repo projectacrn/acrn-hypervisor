@@ -4,7 +4,7 @@ Virtio-Net
 ##########
 
 Virtio-net is the para-virtualization solution used in ACRN for
-networking. The ACRN device model emulates virtual NICs for User VM and the
+networking. The ACRN Device Model emulates virtual NICs for User VM and the
 frontend virtio network driver, simulating the virtual NIC and following
 the virtio specification. (Refer to :ref:`introduction` and
 :ref:`virtio-hld` background introductions to ACRN and Virtio.)
@@ -39,7 +39,7 @@ components are parts of the Linux kernel.)
 Let's explore these components further.
 
 Service VM/User VM Network Stack:
-   This is the standard Linux TCP/IP stack, currently the most
+   This is the standard Linux TCP/IP stack and the most
    feature-rich TCP/IP implementation.
 
 virtio-net Frontend Driver:
@@ -61,7 +61,7 @@ ACRN Hypervisor:
 
 HSM Module:
    The Hypervisor Service Module (HSM) is a kernel module in the
-   Service VM acting as a middle layer to support the device model
+   Service VM acting as a middle layer to support the Device Model
    and hypervisor. The HSM forwards a IOREQ to the virtio-net backend
    driver for processing.
 
@@ -81,7 +81,7 @@ IGB Driver:
    NIC.
 
 The virtual network card (NIC) is implemented as a virtio legacy device
-in the ACRN device model (DM). It is registered as a PCI virtio device
+in the ACRN Device Model (DM). It is registered as a PCI virtio device
 to the guest OS (User VM) and uses the standard virtio-net in the Linux kernel as
 its driver (the guest kernel should be built with
 ``CONFIG_VIRTIO_NET=y``).
@@ -479,7 +479,7 @@ Run ``brctl show`` to see the bridge ``acrn-br0`` and attached devices:
    acrn-br0      8000.b25041fef7a3   no        tap0
                                                enp3s0
 
-Add a PCI slot to the device model acrn-dm command line (mac address is
+Add a PCI slot to the Device Model acrn-dm command line (mac address is
 optional):
 
 .. code-block:: none
@@ -529,7 +529,7 @@ where ``eth0`` is the name of the physical network interface, and
 sure the MacVTap interface name includes the keyword ``tap``.)
 
 Once the MacVTap interface is created, the User VM can be launched by adding
-a PCI slot to the device model acrn-dm as shown below.
+a PCI slot to the Device Model acrn-dm as shown below.
 
 .. code-block:: none
 
@@ -539,11 +539,11 @@ Performance Estimation
 ======================
 
 We've introduced the network virtualization solution in ACRN, from the
-top level architecture to the detailed TX and RX flow.  Currently, the
-control plane and data plane are all processed in ACRN device model,
+top level architecture to the detailed TX and RX flow. The
+control plane and data plane are all processed in ACRN Device Model,
 which may bring some overhead. But this is not a bottleneck for 1000Mbit
 NICs or below. Network bandwidth for virtualization can be very close to
-the native bandwidth. For high speed NIC (e.g.  10Gb or above), it is
+the native bandwidth. For a high-speed NIC (for example, 10Gb or above), it is
 necessary to separate the data plane from the control plane. We can use
 vhost for acceleration. For most IoT scenarios, processing in user space
 is simple and reasonable.

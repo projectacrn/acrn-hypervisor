@@ -261,7 +261,7 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 
       Now is a great time to take a snapshot of the container using ``lxc
       snapshot``. If the OpenStack installation fails, manually rolling back
-      to the previous state can be difficult. Currently, no step exists to
+      to the previous state can be difficult. No step exists to
       reliably restart OpenStack after restarting the container.
 
 5. Install OpenStack::

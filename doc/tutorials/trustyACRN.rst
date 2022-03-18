@@ -140,7 +140,7 @@ details in this `Android keymaster functions document
    :width: 600px
    :name: keymaster-app
 
-   Keystore service and Keymaster HAL
+   Keystore Service and Keymaster HAL
 
 As shown in :numref:`keymaster-app` above, the Keymaster HAL is a
 dynamically-loadable library used by the Keystore service to provide
@@ -318,7 +318,7 @@ provided by secure world (TEE/Trusty). In the current ACRN
 implementation, secure storage is built in the RPMB partition in eMMC
 (or UFS storage).
 
-Currently the eMMC in the APL SoC platform only has a single RPMB
+The eMMC in the APL SoC platform only has a single RPMB
 partition for tamper-resistant and anti-replay secure storage. The
 secure storage (RPMB) is virtualized to support multiple guest User VM VMs.
 Although newer generations of flash storage (e.g. UFS 3.0, and NVMe)

@@ -76,7 +76,7 @@ Glossary of Terms
       Interrupt Service Routine: Also known as an interrupt handler, an ISR
       is a callback function whose execution is triggered by a hardware
       interrupt (or software interrupt instructions) and is used to handle
-      high-priority conditions that require interrupting the code currently
+      high-priority conditions that require interrupting the code that is
       executing on the processor.
 
    Passthrough Device

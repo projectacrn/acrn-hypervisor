@@ -34,7 +34,7 @@ Ubuntu as the ACRN Service VM.
 Supported Hardware Platform
 ***************************
 
-Currently, ACRN has enabled GVT-d on the following platforms:
+ACRN has enabled GVT-d on the following platforms:
 
 * Kaby Lake
 * Whiskey Lake

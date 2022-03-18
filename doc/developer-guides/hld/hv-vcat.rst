@@ -17,7 +17,7 @@ corresponds to one cache way.
 
 On current generation systems, normally L3 cache is shared by all CPU cores on the same socket and
 L2 cache is generally just shared by the hyperthreads on a core. But when dealing with ACRN
-vCAT COS IDs assignment, it is currently assumed that all the L2/L3 caches (and therefore all COS IDs)
+vCAT COS IDs assignment, it is assumed that all the L2/L3 caches (and therefore all COS IDs)
 are system-wide caches shared by all cores in the system, this is done for convenience and to simplify
 the vCAT configuration process. If vCAT is enabled for a VM (abbreviated as vCAT VM), there should not
 be any COS ID overlap between a vCAT VM and any other VMs. e.g. the vCAT VM has exclusive use of the

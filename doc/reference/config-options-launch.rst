@@ -21,12 +21,12 @@ define post-launched User VM settings. This document describes these option sett
   Specify the User VM memory size in megabytes.
 
 ``vbootloader``:
-  Virtual bootloader type; currently only supports OVMF.
+  Virtual bootloader type; only supports OVMF.
 
 ``vuart0``:
-  Specify whether the device model emulates the vUART0 (vCOM1); refer to
+  Specify whether the Device Model emulates the vUART0 (vCOM1); refer to
   :ref:`vuart_config` for details.  If set to ``Enable``, the vUART0 is
-  emulated by the device model; if set to ``Disable``, the vUART0 is
+  emulated by the Device Model; if set to ``Disable``, the vUART0 is
   emulated by the hypervisor if it is configured in the scenario XML.
 
 ``enable_ptm``:
@@ -57,7 +57,7 @@ define post-launched User VM settings. This document describes these option sett
   :ref:`vuart_config` for details.
 
 ``passthrough_devices``:
-  Select the passthrough device from the PCI device list. Currently we support:
+  Select the passthrough device from the PCI device list. We support:
   ``usb_xdci``, ``audio``, ``audio_codec``, ``ipu``, ``ipu_i2c``,
   ``cse``, ``wifi``, ``bluetooth``, ``sd_card``,
   ``ethernet``, ``sata``, and ``nvme``.

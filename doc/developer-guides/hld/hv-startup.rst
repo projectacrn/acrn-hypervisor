@@ -187,7 +187,7 @@ are created by the Device Model (DM) in the Service VM. The main steps include:
 Software configuration for Service VM (bzimage software load as example):
 
 -  **ACPI**: HV passes the entire ACPI table from the bootloader to the Service
-   VM directly. Legacy mode is currently supported as the ACPI table
+   VM directly. Legacy mode is supported as the ACPI table
    is loaded at F-Segment.
 
 -  **E820**: HV passes the E820 table from the bootloader through the zero page

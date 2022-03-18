@@ -7,7 +7,7 @@ Introduction
 ************
 
 The goal of CPU Sharing is to fully utilize the physical CPU resource to
-support more virtual machines. Currently, ACRN only supports 1 to 1
+support more virtual machines. ACRN only supports 1 to 1
 mapping mode between virtual CPUs (vCPUs) and physical CPUs (pCPUs).
 Because of the lack of CPU sharing ability, the number of VMs is
 limited. To support CPU Sharing, we have introduced a scheduling
@@ -40,7 +40,7 @@ Scheduling initialization is invoked in the hardware management layer.
 CPU Affinity
 *************
 
-Currently, we do not support vCPU migration; the assignment of vCPU mapping to
+We do not support vCPU migration; the assignment of vCPU mapping to
 pCPU is fixed at the time the VM is launched. The statically configured
 cpu_affinity in the VM configuration defines a superset of pCPUs that
 the VM is allowed to run on. One bit in this bitmap indicates that one pCPU

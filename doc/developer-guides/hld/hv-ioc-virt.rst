@@ -160,8 +160,8 @@ char devices and UART DM immediately.
    is done except that the heartbeat and RTC are only used by the IOC
    mediator and will not be transferred to IOC
    firmware.
--  Currently, IOC mediator only cares about lifecycle, signal, and raw data.
-   Others, e.g., diagnosis, are not used by the IOC mediator.
+-  IOC mediator only cares about lifecycle, signal, and raw data.
+   Others, such as diagnosis, are not used by the IOC mediator.
 
 State Transfer
 --------------
@@ -217,7 +217,7 @@ priority for the frame, then send data to the UART driver.
 
 The difference between the native and virtualization architectures is
 that the IOC mediator needs to re-compute the checksum and reset
-priority. Currently, priority is not supported by IOC firmware; the
+priority. Priority is not supported by IOC firmware; the
 priority setting by the IOC mediator is based on the priority setting of
 the CBC driver. The Service VM and User VM use the same CBC driver.
 
@@ -388,8 +388,8 @@ table:
 Wakeup Reason
 +++++++++++++
 
-The wakeup reasons command contains a bit mask of all reasons, which is
-currently keeping the SoC/IOC active. The SoC itself also has a wakeup
+The wakeup reasons command contains a bitmask of all reasons that are
+keeping the SoC/IOC active. The SoC itself also has a wakeup
 reason, which allows the SoC to keep the IOC active. The wakeup reasons
 should be sent every 1000 ms by the IOC.
 
@@ -402,7 +402,7 @@ Wakeup reason frame definition is as below:
 
    Wakeup Reason Frame Definition
 
-Currently the wakeup reason bits are supported by sources shown here:
+The wakeup reason bits are supported by sources shown here:
 
 .. list-table:: Wakeup Reason Bits
    :header-rows: 1
@@ -563,8 +563,7 @@ IOC signal type definitions are as below.
    shouldn't be forwarded to the native cbc signal channel. The Service VM
    signal related services should do a real open/reset/close signal channel.
 -  Every backend should maintain a passlist for different VMs. The
-   passlist can be stored in the Service VM file system (Read only) in the
-   future, but currently it is hard coded.
+   passlist is hard coded.
 
 IOC mediator has two passlist tables, one is used for rx
 signals (SoC->IOC), and the other one is used for tx signals. The IOC

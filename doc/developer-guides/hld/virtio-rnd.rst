@@ -42,7 +42,7 @@ Check to see if the frontend virtio_rng driver is available in the User VM:
    # cat /sys/class/misc/hw_random/rng_available
    virtio_rng.0
 
-Check to see if the frontend virtio_rng is currently connected to ``/dev/random``:
+Check to see if the frontend virtio_rng is connected to ``/dev/random``:
 
 .. code-block:: console
 

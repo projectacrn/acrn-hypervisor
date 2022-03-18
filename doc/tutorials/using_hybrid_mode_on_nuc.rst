@@ -5,14 +5,14 @@ Getting Started Guide for ACRN Hybrid Mode
 
 ACRN hypervisor supports a hybrid scenario where the User VM (such as Zephyr
 or Ubuntu) runs in a pre-launched VM or in a post-launched VM that is
-launched by a Device model in the Service VM.
+launched by a Device Model in the Service VM.
 
 .. figure:: images/ACRN-Hybrid.png
    :align: center
    :width: 600px
    :name: hybrid_scenario_on_nuc
 
-   The Hybrid scenario on the Intel NUC
+   The Hybrid Scenario on the Intel NUC
 
 The following guidelines
 describe how to set up the ACRN hypervisor hybrid scenario on the Intel NUC,
@@ -109,7 +109,7 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
 
       }
 
-     
+
    .. note:: The module ``/boot/zephyr.elf`` is the VM0 (Zephyr) kernel file.
       The param ``xxxxxx`` is VM0's kernel file tag and must exactly match the
       ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``
@@ -138,7 +138,7 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
          module2 /boot/zephyr.elf Zephyr_ElfImage
          module2 /boot/bzImage Linux_bzImage
          module2 /boot/ACPI_VM0.bin ACPI_VM0
-         
+
       }
 
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
@@ -177,7 +177,7 @@ Hybrid Scenario Startup Check
    #. Enter :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN hypervisor shell.
    #. Use the ``vm_console 1`` command to switch to the VM1 (Service VM) console.
    #. Verify that the VM1's Service VM can boot and you can log in.
-   #. ssh to VM1 and launch the post-launched VM2 using the ACRN device model launch script.
+   #. ssh to VM1 and launch the post-launched VM2 using the ACRN Device Model launch script.
    #. Go to the Service VM console, and enter :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN hypervisor shell.
    #. Use the ``vm_console 2`` command to switch to the VM2 (User VM) console.
    #. Verify that VM2 can boot and you can log in.

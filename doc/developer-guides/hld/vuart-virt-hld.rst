@@ -7,7 +7,7 @@ Architecture
 ************
 
 A vUART is a virtual 16550 UART implemented in the hypervisor. It can work as a
-console or a communication port. Currently, the vUART is mapped to the
+console or a communication port. The vUART is mapped to the
 traditional COM port address. A UART driver in the kernel can auto detect the
 port base and IRQ.
 
@@ -15,10 +15,10 @@ port base and IRQ.
    :align: center
    :name: uart-arch-pic
 
-   UART virtualization architecture
+   UART Virtualization Architecture
 
 Each vUART has two FIFOs: 8192 bytes TX FIFO and 256 bytes RX FIFO.
-Currently, we only provide 4 ports for use.
+We only provide 4 ports for use.
 
 -  COM1 (port base: 0x3F8, irq: 4)
 
@@ -34,7 +34,7 @@ Console vUART
 *************
 
 A vUART can be used as a console port, and it can be activated by
-a ``vm_console <vm_id>`` command in the hypervisor console. 
+a ``vm_console <vm_id>`` command in the hypervisor console.
 :numref:`console-uart-arch` shows only one physical UART, but four console
 vUARTs (green color blocks). A hypervisor console is implemented above the
 physical UART, and it works in polling mode. The hypervisor console has a
@@ -47,7 +47,7 @@ FIFOs is overwritten if it is not taken out in time.
    :align: center
    :name: console-uart-arch
 
-   console vUART architecture
+   Console vUART Architecture
 
 Communication vUART
 *******************
@@ -88,7 +88,7 @@ Operations in VM1
    :align: center
    :name: communication-uart-arch
 
-   communication vUART architecture
+   Communication vUART Architecture
 
 Usage
 *****

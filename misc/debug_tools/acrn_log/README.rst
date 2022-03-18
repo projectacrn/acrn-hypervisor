@@ -9,7 +9,7 @@ Description
 ``acrnlog`` is a userland tool used to capture an ACRN hypervisor log. It runs
 as a Service VM service at boot, capturing two kinds of logs:
 
-- log of the currently running hypervisor
+- log of the running hypervisor
 - log of the last running hypervisor if it crashed and the logs remain
 
 Log files are saved in ``/tmp/acrnlog/``, so the log files would be lost

@@ -33,7 +33,7 @@ RTVM With HV Emulated Device
 ****************************
 
 ACRN uses hypervisor emulated virtual UART (vUART) devices for inter-VM synchronization such as
-logging output or command send/receive.  Currently, the vUART only works in polling mode, but
+logging output or command send/receive.  The vUART only works in polling mode, but
 may be extended to support interrupt mode in a future release. In the meantime, for better RT
 behavior, the RT application using the vUART shall reserve a margin of CPU cycles to accommodate
 for the additional latency introduced by the VM-Exit to the vUART I/O registers (~2000-3000 cycles

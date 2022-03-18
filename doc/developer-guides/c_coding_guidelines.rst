@@ -821,8 +821,8 @@ C-FN-14: All defined functions shall be used
 All defined functions shall be used, either called explicitly or indirectly
 via the address. Otherwise, the function shall be removed. The following case
 is an exception: Some extra functions may be kept in order to provide a more
-complete library of APIs. These functions may be implemented but not used
-currently. These functions will come in handy in the future. In this case,
+complete library of APIs. These functions may be implemented but not used.
+These functions will come in handy in the future. In this case,
 these functions may remain.
 
 Compliant example::

@@ -16,7 +16,7 @@ into XML in the scenario file:
    - Edit :option:`hv.FEATURES.RDT.RDT_ENABLED` to `y` to enable RDT
 
    - Edit :option:`hv.FEATURES.RDT.CDP_ENABLED` to `n` to disable CDP.
-     Currently vCAT requires CDP to be disabled.
+     vCAT requires CDP to be disabled.
 
    - Edit :option:`hv.FEATURES.RDT.VCAT_ENABLED` to `y` to enable vCAT
 

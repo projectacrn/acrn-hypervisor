@@ -113,10 +113,8 @@ the Android guest.
 Affected Processors
 ===================
 
-L1TF affects a range of Intel processors, but Intel Atom |reg|  processors
-(including Apollo Lake) are immune to it. Currently, ACRN hypervisor
-supports only Apollo Lake. Support for other core-based platforms is
-planned, so we still need a mitigation plan in ACRN.
+L1TF affects a range of Intel processors, but Intel Atom |reg| processors
+are immune to it.
 
 Processors that have the RDCL_NO bit set to one (1) in the
 IA32_ARCH_CAPABILITIES MSR are not susceptible to the L1TF
@@ -165,7 +163,7 @@ EPT Sanitization
 EPT is sanitized to avoid pointing to valid host memory in PTEs that have
 the present bit cleared or reserved bits set.
 
-For non-present PTEs, ACRN currently sets PFN bits to ZERO, which means
+For non-present PTEs, ACRN sets PFN bits to ZERO, which means
 that page ZERO might fall into risk if it contains security information.
 ACRN reserves page ZERO (0~4K) from page allocator; thus page ZERO won't
 be used by anybody for a valid purpose. This sanitization logic is always

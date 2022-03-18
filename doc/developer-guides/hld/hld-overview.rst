@@ -235,9 +235,9 @@ the hypervisor.
 DMA Emulation
 -------------
 
-Currently the only fully virtualized devices to the User VM are USB xHCI, UART,
+The only fully virtualized devices to the User VM are USB xHCI, UART,
 and Automotive I/O controller. None of these require emulating
-DMA transactions. ACRN does not currently support virtual DMA.
+DMA transactions. ACRN does not support virtual DMA.
 
 Hypervisor
 **********
@@ -371,8 +371,7 @@ Refer to :ref:`hld-trace-log` for more details.
 User VM
 *******
 
-Currently, ACRN can boot Linux and Android guest OSes. For an Android guest OS,
-ACRN
+ACRN can boot Linux and Android guest OSes. For an Android guest OS, ACRN
 provides a VM environment with two worlds: normal world and trusty
 world. The Android OS runs in the normal world. The trusty OS and
 security sensitive applications run in the trusty world. The trusty
@@ -384,7 +383,7 @@ Guest Physical Memory Layout - User VM E820
 
 DM creates an E820 table for a User VM based on these simple rules:
 
-- If requested VM memory size < low memory limitation (currently 2 GB,
+- If requested VM memory size < low memory limitation (2 GB,
   defined in DM), then low memory range = [0, requested VM memory
   size]
 

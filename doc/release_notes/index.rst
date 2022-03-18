@@ -10,7 +10,7 @@ embedded development through an open source platform. Check out the
 
 The project ACRN reference code can be found on GitHub in
 https://github.com/projectacrn.  It includes the ACRN hypervisor, the
-ACRN device model, and documentation.
+ACRN Device Model, and documentation.
 
 .. rst-class:: rst-columns
 

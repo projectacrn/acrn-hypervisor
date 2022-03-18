@@ -21,7 +21,7 @@ discussed here.
 --------
 
 In the ACRN project, device emulation means emulating all existing
-hardware resources through a software component device model running in
+hardware resources through the Device Model, a software component running in
 the Service VM. Device emulation must maintain the same SW
 interface as a native device, providing transparency to the VM software
 stack. Passthrough implemented in the hypervisor assigns a physical device
@@ -38,7 +38,7 @@ can't support device sharing.
    :align: center
    :name: emu-passthru-diff
 
-   Difference between emulation and passthrough
+   Difference Between Emulation and Passthrough
 
 Passthrough in the hypervisor provides the following functionalities to
 allow the VM to access PCI devices directly:
@@ -59,7 +59,7 @@ ACRN for a post-launched VM:
 .. figure:: images/passthru-image22.png
    :align: center
 
-   Passthrough devices initialization control flow
+   Passthrough Devices Initialization Control Flow
 
 Passthrough Device Status
 *************************
@@ -70,7 +70,7 @@ passthrough, as detailed here:
 .. figure:: images/passthru-image77.png
    :align: center
 
-   Passthrough device status
+   Passthrough Device Status
 
 Owner of Passthrough Devices
 ****************************
@@ -129,12 +129,12 @@ passthrough device to/from a post-launched VM is shown in the following figures:
 .. figure:: images/passthru-image86.png
    :align: center
 
-   ptdev assignment control flow
+   Ptdev Assignment Control Flow
 
 .. figure:: images/passthru-image42.png
    :align: center
 
-   ptdev deassignment control flow
+   Ptdev Deassignment Control Flow
 
 .. _vtd-posted-interrupt:
 
@@ -199,7 +199,7 @@ Consider this scenario:
 
 If an external interrupt from an assigned device destined to vCPU0
 happens at this time, we do not want this interrupt to be incorrectly
-consumed by vCPU1 currently running on pCPU0. This would happen if we
+consumed by vCPU1 running on pCPU0. This would happen if we
 allocate the same Activation Notification Vector (ANV) to all vCPUs.
 
 To circumvent this issue, ACRN allocates unique ANVs for each vCPU that
@@ -301,7 +301,7 @@ virtual destination, etc. See the following figure for details:
 .. figure:: images/passthru-image91.png
    :align: center
 
-   Remapping of physical interrupts
+   Remapping of Physical Interrupts
 
 There are two different types of interrupt sources: IOAPIC and MSI.
 The hypervisor will record different information for interrupt
@@ -315,7 +315,7 @@ done on-demand rather than on hypervisor initialization.
    :align: center
    :name: init-remapping
 
-   Initialization of remapping of virtual IOAPIC interrupts for Service VM
+   Initialization of Remapping of Virtual IOAPIC Interrupts for Service VM
 
 :numref:`init-remapping` above illustrates how remapping of (virtual) IOAPIC
 interrupts are remapped for the Service VM. VM exit occurs whenever the Service
@@ -330,7 +330,7 @@ Remapping of (virtual) MSI interrupts are set up in a similar sequence:
 .. figure:: images/passthru-image98.png
    :align: center
 
-   Initialization of remapping of virtual MSI for Service VM
+   Initialization of Remapping of Virtual MSI for Service VM
 
 This figure illustrates how mappings of MSI or MSI-X are set up for the
 Service VM. The Service VM is responsible for issuing a hypercall to notify the
@@ -465,7 +465,7 @@ For a post-launched VM, you enable PTM by setting the
    :width: 700
    :name: ptm-flow
 
-   PTM-enabling workflow in post-launched VM
+   PTM-enabling Workflow in Post-launched VM
 
 As shown in :numref:`ptm-flow`, PTM is enabled in the root port during the
 hypervisor startup. The Device Model (DM) then checks whether the passthrough
@@ -483,7 +483,7 @@ passing through the device to the post-launched VM.
    :width: 700
    :name: ptm-vrp
 
-   PTM-enabled PCI device passthrough to post-launched VM
+   PTM-enabled PCI Device Passthrough to Post-launched VM
 
 :numref:`ptm-vrp` shows that, after enabling PTM, the passthrough device
 connects to the virtual root port instead of the virtual host bridge.
