@@ -436,7 +436,7 @@ passthrough and enables PTM on it:
 
    acrn-dm -m $mem_size -s 0:0,hostbridge \
       -s 3,virtio-blk,user-vm-test.img \
-      -s 4,virtio-net,tap0 \
+      -s 4,virtio-net,tap=tap0 \
       -s 5,virtio-console,@stdio:stdio_port \
       -s 6,passthru,a9/00/0,enable_ptm \
       --ovmf /usr/share/acrn/bios/OVMF.fd
@@ -506,7 +506,7 @@ If supported, follow these steps to enable PTM in the post-launched VM:
 
       $ acrn-dm -m $mem_size -s 0:0,hostbridge \
           -s 3,virtio-blk,user-vm-test.img \
-          -s 4,virtio-net,tap0 \
+          -s 4,virtio-net,tap=tap0 \
           -s 5,virtio-console,@stdio:stdio_port \
           -s 6,passthru,a9/00/0,enable_ptm \
           --ovmf /usr/share/acrn/bios/OVMF.fd \

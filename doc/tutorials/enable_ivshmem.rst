@@ -139,7 +139,7 @@ Linux-based post-launched VMs (VM1 and VM2).
          -s 5,virtio-console,@stdio:stdio_port \
          -s 6,virtio-hyper_dmabuf \
          -s 3,virtio-blk,/home/acrn/UserVM1.img \
-         -s 4,virtio-net,tap0 \
+         -s 4,virtio-net,tap=tap0 \
          -s 6,ivshmem,dm:/test,2 \
          -s 7,virtio-rnd \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
@@ -153,7 +153,7 @@ Linux-based post-launched VMs (VM1 and VM2).
 
         acrn-dm -m $mem_size -s 0:0,hostbridge \
          -s 3,virtio-blk,/home/acrn/UserVM2.img \
-         -s 4,virtio-net,tap0 \
+         -s 4,virtio-net,tap=tap0 \
          -s 5,ivshmem,dm:/test,2 \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          $vm_name
@@ -220,7 +220,7 @@ Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
 
         acrn-dm -m $mem_size -s 0:0,hostbridge \
          -s 3,virtio-blk,/home/acrn/UserVM2.img \
-         -s 4,virtio-net,tap0 \
+         -s 4,virtio-net,tap=tap0 \
          -s 5,ivshmem,hv:/shm_region_0,2 \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          $vm_name

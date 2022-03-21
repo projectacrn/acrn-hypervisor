@@ -110,7 +110,7 @@ Here's an example showing how to run a VM with:
      -s 1:0,lpc -l com1,stdio \
      -s 5,virtio-console,@pty:pty_port \
      -s 3,virtio-blk,/home/acrn/UserVM.img \
-     -s 4,virtio-net,tap_LaaG \
+     -s 4,virtio-net,tap=LaaG \
      --acpidev_pt MSFT0101,00 \
      --intr_monitor 10000,10,1,100 \
      -B "root=/dev/vda2 rw rootwait maxcpus=3 nohpet console=hvc0 \
@@ -773,7 +773,7 @@ example:
      -s 1:0,lpc -l com1,stdio \
      -s 5,virtio-console,@pty:pty_port \
      -s 3,virtio-blk,/home/acrn/UserVM.img \
-     -s 4,virtio-net,tap_LaaG \
+     -s 4,virtio-net,tap=LaaG \
      -B "root=/dev/vda2 rw rootwait maxcpus=3 nohpet console=hvc0 \
      console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
      consoleblank=0 tsc=reliable \

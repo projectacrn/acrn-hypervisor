@@ -43,7 +43,7 @@ vm_name=vm$1
 mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
-tap=tap_$6
+tap=$6
 tap_exist=$(ip a | grep "$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
   echo "tap device existed, reuse $tap"
@@ -135,11 +135,10 @@ acrn-dm -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 6,virtio-hyper_dmabuf \
   -s 8,wdt-i6300esb \
   -s 3,virtio-blk,/data/$5/$5.img \
-  -s 4,virtio-net,$tap \
+  -s 4,virtio-net,tap=$tap,mac_seed=$mac_seed \
   -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
   -s 9,passthru,0/15/1 \
   $boot_cse_option \
-  --mac_seed $mac_seed \
   $intr_storm_monitor \
   $boot_ipu_option      \
   -B "root=/dev/vda2 rw rootwait maxcpus=$2 nohpet console=hvc0 \
@@ -162,7 +161,7 @@ vm_name=vm$1
 mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
-tap=tap_$6
+tap=$6
 tap_exist=$(ip a | grep "$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
   echo "tap device existed, reuse $tap"
@@ -313,7 +312,7 @@ ACRN project
 intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
  acrn-dm -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
-   -s 9,virtio-net,$tap \
+   -s 9,virtio-net,tap=$tap,mac_seed=$mac_seed  \
    -s 3,virtio-blk,/data/$5/$5.img \
    -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
    -s 8,passthru,0/15/1 \
@@ -322,7 +321,6 @@ intr_storm_monitor="--intr_monitor 10000,10,1,100"
    -s 11,wdt-i6300esb \
    $boot_audio_option \
    $boot_cse_option \
-   --mac_seed $mac_seed \
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
    -s 18,passthru,3/0/0,keep_gsi \

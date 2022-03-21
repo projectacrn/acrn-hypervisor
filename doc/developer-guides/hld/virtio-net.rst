@@ -484,7 +484,7 @@ optional):
 
 .. code-block:: none
 
-    -s 4,virtio-net,<tap_name>,[mac=<XX:XX:XX:XX:XX:XX>]
+    -s 4,virtio-net,tap=<name>,[mac=<XX:XX:XX:XX:XX:XX>]
 
 When the User VM is launched, run ``ifconfig`` to check the network. enp0s4r
 is the virtual NIC created by acrn-dm:
@@ -525,15 +525,14 @@ Create a MacVTap interface in the Service VM as shown here:
    sudo ip link add link eth0 name macvtap0 type macvtap
 
 where ``eth0`` is the name of the physical network interface, and
-``macvtap0`` is the name of the MacVTap interface being created. (Make
-sure the MacVTap interface name includes the keyword ``tap``.)
+``macvtap0`` is the name of the MacVTap interface being created.
 
 Once the MacVTap interface is created, the User VM can be launched by adding
 a PCI slot to the Device Model acrn-dm as shown below.
 
 .. code-block:: none
 
-   -s 4,virtio-net,<macvtap_name>,[mac=<XX:XX:XX:XX:XX:XX>]
+   -s 4,virtio-net,tap=macvtap0,[mac=<XX:XX:XX:XX:XX:XX>]
 
 Performance Estimation
 ======================
