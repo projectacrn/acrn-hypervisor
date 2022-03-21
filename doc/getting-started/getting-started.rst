@@ -710,7 +710,14 @@ Launch the User VM
       acrn@vecow:~$ uname -r
       5.10.78-acrn-service-vm
 
-The User VM has launched successfully. You have completed this ACRN setup.
+   The User VM has launched successfully. You have completed this ACRN setup.
+
+#. (Optional) To shut down the User VM, run this command in the terminal that is
+   connected to the User VM:
+
+   .. code-block:: bash
+
+      sudo poweroff
 
 Next Steps
 **************
