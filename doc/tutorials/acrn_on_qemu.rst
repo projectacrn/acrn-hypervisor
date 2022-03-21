@@ -273,7 +273,7 @@ Bring Up User VM (L2 Guest)
       mem_size=1024M
       acrn-dm -m $mem_size -s 0:0,hostbridge \
       -s 3,virtio-blk,~/UserVM.img \
-      -s 4,virtio-net,tap0 \
+      -s 4,virtio-net,tap=tap0 \
       --cpu_affinity 1 \
       -s 5,virtio-console,@stdio:stdio_port \
       --ovmf ~/OVMF.fd \

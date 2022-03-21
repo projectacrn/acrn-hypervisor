@@ -21,11 +21,10 @@ command line input. Using this command line, as an example::
         -s 5,virtio-console,@stdio:stdio_port \
         -s 6,virtio-hyper_dmabuf \
         -s 3,virtio-blk,/home/acrn/UserVM.img \
-        -s 4,virtio-net,tap0 \
+        -s 4,virtio-net,tap=tap0,mac_seed=$mac_seed \
         -s 7,virtio-rnd \
         --ovmf /usr/share/acrn/bios/OVMF.fd \
         $logger_setting \
-        --mac_seed $mac_seed \
         $vm_name
 
 the bus hierarchy would be:
