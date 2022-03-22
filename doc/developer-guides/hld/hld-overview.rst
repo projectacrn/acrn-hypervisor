@@ -4,17 +4,17 @@ ACRN High-Level Design Overview
 ###############################
 
 ACRN is an open-source reference hypervisor (HV) that runs on top of
-:ref:`Intel platforms <hardware>` for heterogeneous scenarios such as the
-Software-defined Cockpit (SDC), or the In-vehicle Experience (IVE) for
-automotive, or HMI & real-time OS for industry. ACRN provides embedded
-hypervisor vendors with a reference I/O mediation solution with a
-permissive license and provides auto makers and industry users a
+:ref:`Intel platforms <hardware>` for heterogeneous use cases such as
+Software-defined Cockpit (SDC), or In-vehicle Experience (IVE) for
+automotive, or human-machine interface (HMI) and real-time OS for industry.
+ACRN provides embedded hypervisor vendors with a reference I/O mediation
+solution with a permissive license and provides auto makers and industry users a
 reference software stack for corresponding use.
 
-ACRN Supported Use Cases
-************************
+ACRN Use Cases
+**************
 
-Software Defined Cockpit
+Software-Defined Cockpit
 ========================
 
 The SDC system consists of multiple systems: the instrument cluster (IC)
@@ -51,15 +51,15 @@ a customized IC/IVI/RSE.
 Industry Usage
 ==============
 
-A typical industry usage would include one Windows HMI + one RT VM:
+A typical industry usage includes one Windows HMI + one real-time VM (RTVM):
 
-- Windows HMI as a guest OS with display to provide Human Machine Interface
-- RT VM that runs a specific RTOS on it to handle
+- Windows HMI as a guest OS with display to provide human-machine interface
+- RTVM that runs a specific RTOS on it to handle
   real-time workloads such as PLC control
 
 ACRN supports a Windows* Guest OS for such HMI capability. ACRN continues to add
 features to enhance its real-time performance to meet hard-RT key performance
-indicators for its RT VM:
+indicators for its RTVM:
 
 - Cache Allocation Technology (CAT)
 - Memory Bandwidth Allocation (MBA)
@@ -139,7 +139,7 @@ differences compared to ACRN 1.0 are that:
 -  ACRN 2.0 adds a few necessary device emulations in the hypervisor, such as
    vPCI and vUART, to avoid interference between different VMs.
 
--  ACRN 2.0 supports an RT VM as a post-launched User VM, with features such as
+-  ACRN 2.0 supports an RTVM as a post-launched User VM, with features such as
    LAPIC passthrough and PMD virtio driver.
 
 .. figure:: images/over-image35.png
