@@ -104,9 +104,9 @@ New and updated reference documents are available, including:
 * :ref:`rt_performance_tuning`
 * :ref:`rt_perf_tips_rtvm`
 * :ref:`run-kata-containers`
-* :ref:`running_deb_as_serv_vm`
-* :ref:`running_deb_as_user_vm`
-* :ref:`running_ubun_as_user_vm`
+* Run Debian as the Service VM
+* Run Debian as the User VM
+* Run Ubuntu as the User VM
 * :ref:`setup_openstack_libvirt`
 * :ref:`sgx_virt`
 * :ref:`sriov_virtualization`

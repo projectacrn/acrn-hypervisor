@@ -241,14 +241,14 @@ Many new and updated `reference documents <https://projectacrn.github.io>`_ are 
 
 * Service VM Tutorials
 
-  * :ref:`running_deb_as_serv_vm`
+  * Run Debian as the Service VM
 
 * User VM Tutorials
 
   .. rst-class:: rst-columns2
 
   * :ref:`using_zephyr_as_uos`
-  * :ref:`running_deb_as_user_vm`
+  * Run Debian as the User VM
   * Run Celadon as the User VM
   * :ref:`using_windows_as_uos`
   * :ref:`using_vxworks_as_uos`

@@ -1,3 +1,5 @@
+:orphan:
+
 .. _using_yp:
 
 Using Yocto Project With ACRN

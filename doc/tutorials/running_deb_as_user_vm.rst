@@ -1,3 +1,5 @@
+:orphan:
+
 .. _running_deb_as_user_vm:
 
 Run Debian as the User VM
@@ -18,7 +20,7 @@ We are using a Kaby Lake Intel NUC (NUC7i7DNHE) and Debian 10 as the User VM in 
 
 Before you start this tutorial, make sure the KVM tools are installed on the
 development machine and set **IGD Aperture Size to 512** in the BIOS
-settings (refer to :numref:`intel-bios-deb`). Connect two monitors to your
+settings. Connect two monitors to your
 Intel NUC:
 
 .. code-block:: none
@@ -84,7 +86,7 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
       $ sudo virt-manager
 
-#. Verify that you can see the main menu as shown in :numref:`vmmanager-debian` below.
+#. Verify that you can see the main menu as shown in the figure below.
 
    .. figure:: images/debian-uservm-1.png
       :align: center
@@ -96,7 +98,7 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
    a. Choose **Local install media (ISO image or CD-ROM)** and then click
       **Forward**. A **Create a new virtual machine** box displays, as shown
-      in :numref:`newVM-debian` below.
+      in the figure below.
 
       .. figure:: images/debian-uservm-2.png
          :align: center
@@ -117,7 +119,8 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
    #. Rename the image if you desire. You must check the **customize
       configuration before install** option before you finish all stages.
 
-#. Verify that you can see the Overview screen has been set up, shown in :numref:`debian10-setup` below:
+#. Verify that you can see the Overview screen has been set up, shown in the
+   figure below:
 
     .. figure:: images/debian-uservm-3.png
        :align: center
@@ -126,7 +129,7 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
        Debian Setup Overview
 
 #. Complete the Debian installation. Verify that you have set up a
-   Virtual Disk (VDA) partition, as shown in :numref:`partition-vda` below:
+   Virtual Disk (VDA) partition, as shown in the figure below:
 
     .. figure:: images/debian-uservm-4.png
        :align: center
@@ -199,7 +202,8 @@ Re-use and modify the `launch_win.sh` script in order to launch the new Debian 1
 
       $ sudo ./launch_debian.sh
 
-#. View the Debian desktop on the secondary monitor, as shown in :numref:`debian-display2` below:
+#. View the Debian desktop on the secondary monitor, as shown in the figure
+   below:
 
     .. figure:: images/debian-uservm-5.png
        :align: center
@@ -247,7 +251,7 @@ console so you can make command-line entries directly from it.
       -s 9,virtio-console,@stdio:stdio_port \
 
 #. Launch Debian using the modified script. Verify that you see the
-   console output shown in :numref:`console output-debian` below:
+   console output shown in the figure below:
 
     .. figure:: images/debian-uservm-7.png
        :align: center

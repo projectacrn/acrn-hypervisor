@@ -159,7 +159,7 @@ formatting, and presentation throughout the ACRN documentation:
 * :ref:`acrn_on_qemu`
 * :ref:`acrn_doc`
 * :ref:`enable_ivshmem`
-* :ref:`running_deb_as_serv_vm`
+* Run Debian as the Service VM
 * :ref:`trusty-security-services`
 * :ref:`using_hybrid_mode_on_nuc`
 * :ref:`connect_serial_port`
@@ -194,7 +194,7 @@ Fixed Issues Details
 - :acrn-issue:`6147` - ASAN reports UAF + SEGV when fuzzing exposed PIO with Hypercube guest VM.
 - :acrn-issue:`6157` - coding style fix on v2.5 branch
 - :acrn-issue:`6162` - [REG][EHL][SBL] Fail to boot sos
-- :acrn-issue:`6168` - SOS failed to boot with nest enabled 
+- :acrn-issue:`6168` - SOS failed to boot with nest enabled
 - :acrn-issue:`6172` - member access within null pointer of type 'struct xhci_trb'
 - :acrn-issue:`6178` - config-tools: adding an empty node <pt_intx> for a pre-launched VM causing check_pt_intx throw out an error
 - :acrn-issue:`6185` - [TGL][Industry]yaag can't get ip after SRIVO VF passthru

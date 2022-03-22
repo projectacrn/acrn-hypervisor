@@ -46,9 +46,9 @@ We have many new `reference documents available <https://projectacrn.github.io>`
 * :ref:`ACRN Configuration Tool Manual <acrn_configuration_tool>`
 * :ref:`Trace and Data Collection for ACRN real-time (RT) Performance Tuning <rt_performance_tuning>`
 * Building ACRN in Docker
-* :ref:`Running Ubuntu as the User VM <running_ubun_as_user_vm>`
-* :ref:`Running Debian as the User VM <running_deb_as_user_vm>`
-* :ref:`Running Debian as the Service VM <running_deb_as_serv_vm>`
+* Running Ubuntu as the User VM
+* Running Debian as the User VM
+* Running Debian as the Service VM
 * :ref:`vUART configuration <vuart_config>`
 * :ref:`Enable virtio-i2c <virtio-i2c>`
 
