@@ -1,3 +1,5 @@
+:orphan:
+
 .. _running_deb_as_serv_vm:
 
 Run Debian as the Service VM

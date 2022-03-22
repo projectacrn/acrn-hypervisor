@@ -100,7 +100,7 @@ New and updated reference documents are available, including:
 * :ref:`using_grub`
 * :ref:`using_partition_mode_on_nuc`
 * :ref:`connect_serial_port`
-* :ref:`using_yp`
+* Using Yocto Project With ACRN
 * :ref:`acrn-dm_parameters`
 * :ref:`hv-parameters`
 * :ref:`acrnctl`

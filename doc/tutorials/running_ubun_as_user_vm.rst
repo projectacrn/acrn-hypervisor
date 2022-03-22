@@ -1,3 +1,5 @@
+:orphan:
+
 .. _running_ubun_as_user_vm:
 
 Run Ubuntu as the User VM
@@ -17,7 +19,7 @@ Intel NUC Kit. If you have not, refer to the following instructions:
 
 Before you start this tutorial, make sure the KVM tools are installed on the
 development machine and set **IGD Aperture Size to 512** in the BIOS
-settings (refer to :numref:`intel-bios-ubun`). Connect two monitors to your
+settings. Connect two monitors to your
 Intel NUC:
 
 .. code-block:: none
@@ -80,7 +82,7 @@ This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 
       $ sudo virt-manager
 
-#. Verify that you can see the main menu as shown in :numref:`vmmanager-ubun` below.
+#. Verify that you can see the main menu as shown in the figure below.
 
    .. figure:: images/ubuntu-uservm-1.png
       :align: center
@@ -92,7 +94,7 @@ This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 
    a. Choose **Local install media (ISO image or CD-ROM)** and then click
       **Forward**. A **Create a new virtual machine** box displays, as shown
-      in :numref:`newVM-ubun` below.
+      in the figure below.
 
       .. figure:: images/ubuntu-uservm-2.png
          :align: center
@@ -113,7 +115,8 @@ This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
    #. Rename the image if you desire. You must check the
       **customize configuration before install** option before you finish all stages.
 
-#. Verify that you can see the Overview screen as set up, as shown in :numref:`ubun-setup` below:
+#. Verify that you can see the Overview screen as set up, as shown in the figure
+   below:
 
     .. figure:: images/ubuntu-uservm-3.png
        :align: center
@@ -182,7 +185,8 @@ Modify the ``launch_win.sh`` script in order to launch Ubuntu as the User VM.
 
       $ sudo sh launch_ubuntu.sh
 
-#. View the Ubuntu desktop on the secondary monitor, as shown in :numref:`ubun-display1` below:
+#. View the Ubuntu desktop on the secondary monitor, as shown in the figure
+   below:
 
     .. figure:: images/ubuntu-uservm-4.png
        :align: center
@@ -217,7 +221,7 @@ VM console so you can make command-line entries directly from it.
       -s 9,virtio-console,@stdio:stdio_port \
 
 #. Log in to the Service VM and launch Ubuntu. Verify that you see the
-   console output shown in :numref:`console output-ubun` below:
+   console output shown in the figure below:
 
     .. figure:: images/ubuntu-uservm-5.png
        :align: center
