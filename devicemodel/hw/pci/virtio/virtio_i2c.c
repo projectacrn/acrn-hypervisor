@@ -827,6 +827,8 @@ virtio_i2c_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pthread_mutex_destroy(&vi2c->req_mtx);
 		pthread_mutex_destroy(&vi2c->mtx);
 		virtio_i2c_reset(vi2c);
+		acpi_i2c_adapter_num--;
+		assert(acpi_i2c_adapter_num >= 0);
 		free(vi2c);
 		dev->arg = NULL;
 	}
