@@ -247,19 +247,19 @@ device in VM . Set in hex.</xs:documentation>
     </xs:element>
     <xs:element name="PROVIDED_BY" type="ProviderType" default="Hypervisor">
       <xs:annotation acrn:title="Emulated by">
-        <xs:documentation>Whether the shared memory region is emulated by the hypervisor or device model.</xs:documentation>
+        <xs:documentation>Whether the shared memory region is emulated by the hypervisor or Device Model.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="IVSHMEM_SIZE" type="IVSHMEMSize" default="2">
-      <xs:annotation acrn:title="Size">
-        <xs:documentation>Memory size of inter-VM shared memory (IVSHMEM)
+      <xs:annotation acrn:title="Size (MB)">
+        <xs:documentation>Select the size of the shared memory region
 in megabytes. The value should be a power of 2
 and no more than 512.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="IVSHMEM_VMS" type="IVSHMEMVMS">
       <xs:annotation acrn:title="Shared VMs">
-        <xs:documentation>Set all VMs which use this IVSHMEM.</xs:documentation>
+        <xs:documentation>Select all VMs that use the shared memory region.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -286,16 +286,12 @@ RDT, setting this option to ``y`` is ignored.</xs:documentation>
     </xs:element>
     <xs:element name="CDP_ENABLED" type="Boolean" default="n">
       <xs:annotation acrn:title="Code and Data Prioritization">
-        <xs:documentation>Specify whether to enable Code and Data Prioritization (CDP).
-CDP is an extension of CAT. Set to 'y' to enable the feature or 'n' to disable it.
-The 'y' will be ignored when hardware does not support CDP.</xs:documentation>
+        <xs:documentation>Enable Code and Data Prioritization (CDP). CDP provides control over code and data placement in cache to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="VCAT_ENABLED" type="Boolean" default="n">
       <xs:annotation>
-        <xs:documentation>Specify whether to enable CAT virtualization (vCAT).
-Set to 'y' to enable the feature or 'n' to disable it.
-The 'y' will be ignored when hardware does not support CAT.</xs:documentation>
+        <xs:documentation>Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CLOS_MASK" type="xs:string"  minOccurs="0" maxOccurs="unbounded">
@@ -318,8 +314,8 @@ As :option:`vm.clos.vcpu_clos` specifies the index of the CLOS to be associated 
 <xs:complexType name="SSRAMInfo">
   <xs:sequence>
     <xs:element name="SSRAM_ENABLED" type="Boolean" default="n">
-      <xs:annotation acrn:title="Software SRAM">
-        <xs:documentation>Enable the Software SRAM feature for real-time VMs. This feature reserves memory buffers as always-cached memory for improved VM performance.</xs:documentation>
+      <xs:annotation acrn:title="Software SRAM (for real-time apps)">
+        <xs:documentation>Enable Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>

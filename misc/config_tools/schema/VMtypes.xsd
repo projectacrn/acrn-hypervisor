@@ -72,13 +72,13 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 <xs:complexType name="EPCSection">
   <xs:sequence>
     <xs:element name="base" type="HexFormat" default="0">
-      <xs:annotation acrn:applicable-vms="pre-launched">
-        <xs:documentation>Specify SGX EPC section base, must be page aligned. (Default value is 0)</xs:documentation>
+      <xs:annotation acrn:title="Intel Software Guard Extensions (SGX) EPC section base" acrn:applicable-vms="pre-launched">
+        <xs:documentation>Specify the enclave page cache (EPC) section base for Intel Software Guard Extensions (SGX). Must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size" type="HexFormat" default="0">
-      <xs:annotation acrn:applicable-vms="pre-launched">
-        <xs:documentation>Specify SGX EPC section size in Bytes, must be page aligned. (Default value is 0)</xs:documentation>
+      <xs:annotation acrn:title="Intel Software Guard Extensions (SGX) EPC section size (bytes)" acrn:applicable-vms="pre-launched">
+        <xs:documentation>Specify the enclave page cache (EPC) section size in bytes for Intel Software Guard Extensions (SGX). Must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -118,22 +118,22 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
   <xs:all>
     <xs:element name="kern_type" type="VMKernelType">
       <xs:annotation acrn:title="Kernel image type">
-        <xs:documentation>Specify the kernel image type so the hypervisor can load it correctly.</xs:documentation>
+        <xs:documentation>Select the kernel image type so that the hypervisor can load it correctly.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="kern_mod" type="xs:string">
       <xs:annotation acrn:title="Kernel module tag">
-        <xs:documentation>Enter the tag for the kernel image that is used as a multiboot module. It must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
+        <xs:documentation>Specify the tag for the kernel image that is used as a multiboot module. The tag's spelling must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="ramdisk_mod" type="xs:string" minOccurs="0">
       <xs:annotation acrn:title="RAMdisk module tag">
-        <xs:documentation>Specify the tag for the ramdisk image that is used as a multiboot module. It must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
+        <xs:documentation>Specify the tag for the RAMdisk image that is used as a multiboot module. The tag's spelling must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="bootargs" type="xs:string" minOccurs="0">
-      <xs:annotation acrn:title="Kernel boot arguments">
-        <xs:documentation>Specify configurable boot argument for pre-launched or Service VM.</xs:documentation>
+      <xs:annotation acrn:title="Kernel command-line parameters">
+        <xs:documentation>Specify the command-line parameters that will be used to boot the kernel for this VM. See `Linux documentation &lt;https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html&gt;`__ for a list of parameters.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="kern_load_addr" type="KernLoadAddr" minOccurs="0">
@@ -207,13 +207,13 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 <xs:complexType name="MMIOResourcesConfiguration">
   <xs:all>
     <xs:element name="TPM2" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="Trusted Platform Module passthrough" acrn:applicable-vms="pre-launched, post-launched">
-        <xs:documentation>Passthrough the Trusted Platform Module (TPM2) device to this VM. (Optional) (Default value is n)</xs:documentation>
+      <xs:annotation acrn:title="Trusted platform module (TPM2) passthrough" acrn:applicable-vms="pre-launched, post-launched">
+        <xs:documentation>Pass through the trusted platform module (TPM2) device to this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="p2sb" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:title="Primary-to-Sideband bridge passthrough" acrn:applicable-vms="pre-launched">
-        <xs:documentation>Passthrough the P2SB (Primary-to-Sideband) bridge register access BAR to the this VM. (Optional) (Default value is n)</xs:documentation>
+        <xs:documentation>Pass through the Primary-to-Sideband (P2SB) bridge register access BAR to this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
