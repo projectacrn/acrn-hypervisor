@@ -294,12 +294,12 @@ void init_paging(void)
 		pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, high64_min_ram, high64_min_ram,
 				high64_max_ram - high64_min_ram, PAGE_ATTR_USER | PAGE_CACHE_WB, &ppt_pgtable);
 	}
-	/* Map [low32_max_ram, 4G) and [HI_MMIO_START, HI_MMIO_END) MMIO regions as UC attribute */
+	/* Map [low32_max_ram, 4G) and [MMIO64_START, MMIO64_END) MMIO regions as UC attribute */
 	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, low32_max_ram, low32_max_ram,
 		MEM_4G - low32_max_ram, PAGE_ATTR_USER | PAGE_CACHE_UC, &ppt_pgtable);
-	if ((HI_MMIO_START != ~0UL) && (HI_MMIO_END != 0UL)) {
-		pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, HI_MMIO_START, HI_MMIO_START,
-			(HI_MMIO_END - HI_MMIO_START), PAGE_ATTR_USER | PAGE_CACHE_UC, &ppt_pgtable);
+	if ((MMIO64_START != ~0UL) && (MMIO64_END != 0UL)) {
+		pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, MMIO64_START, MMIO64_START,
+			(MMIO64_END - MMIO64_START), PAGE_ATTR_USER | PAGE_CACHE_UC, &ppt_pgtable);
 	}
 
 	/*
