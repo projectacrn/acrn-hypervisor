@@ -102,6 +102,7 @@ def main(board_name, board_xml, args):
         root_node.append(lxml.etree.Element("memory"))
         root_node.append(lxml.etree.Element("ioapics"))
         root_node.append(lxml.etree.Element("devices"))
+        root_node.append(lxml.etree.Element("device-classes"))
 
         extractors_path = os.path.join(script_dir, "extractors")
         extractors = [f for f in os.listdir(extractors_path) if f[:2].isdigit()]
