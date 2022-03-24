@@ -20,6 +20,8 @@
 #define ACK_USER_VM_SHUTDOWN "ack_user_vm_shutdown"
 #define USER_VM_REBOOT  "user_vm_reboot"
 #define ACK_USER_VM_REBOOT "ack_user_vm_reboot"
+#define REQ_SYS_REBOOT "req_sys_reboot"
+#define ACK_REQ_SYS_REBOOT "ack_req_sys_reboot"
 #define SYNC_FMT	"sync:%s"
 #define S5_REJECTED	"system shutdown request is rejected"
 
@@ -120,6 +122,10 @@ DWORD WINAPI open_socket_server(LPVOID lpParam)
 		Sleep(READ_INTERVAL);
 		if (strncmp(revData, REQ_SYS_SHUTDOWN, sizeof(REQ_SYS_SHUTDOWN)) == 0) {
 			handle_socket_request(sClient, REQ_SYS_SHUTDOWN);
+			break;
+		}
+		if (strncmp(revData, REQ_SYS_REBOOT, sizeof(REQ_SYS_REBOOT)) == 0) {
+			handle_socket_request(sClient, REQ_SYS_REBOOT);
 			break;
 		}
 	} while (1);
@@ -234,6 +240,9 @@ int main()
 		} else if (strncmp(recvbuf, ACK_REQ_SYS_SHUTDOWN, sizeof(ACK_REQ_SYS_SHUTDOWN)) == 0) {
 			stop_uart_resend();
 			printf("Received acked system shutdown request from service VM\n");
+		} else if (strncmp(recvbuf, ACK_REQ_SYS_REBOOT, sizeof(ACK_REQ_SYS_REBOOT)) == 0) {
+			stop_uart_resend();
+			printf("Received acked system reboot request from service VM\n");
 		} else if (strncmp(recvbuf, POWEROFF_CMD, sizeof(POWEROFF_CMD)) == 0) {
 			printf("Received system shutdown message from service VM\n");
 			send_message_by_uart(hCom2, ACK_POWEROFF, sizeof(ACK_POWEROFF));

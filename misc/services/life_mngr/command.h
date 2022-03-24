@@ -19,6 +19,8 @@
 #define USER_VM_SHUTDOWN  "user_vm_shutdown"
 #define REQ_USER_VM_REBOOT  "req_user_vm_reboot"
 #define USER_VM_REBOOT  "user_vm_reboot"
+#define REQ_SYS_REBOOT "req_sys_reboot"
+#define ACK_REQ_SYS_REBOOT "ack_req_sys_reboot"
 
 #define ACK_REQ_USER_VM_SHUTDOWN  "ack_req_user_vm_shutdown"
 #define ACK_USER_VM_SHUTDOWN "ack_user_vm_shutdown"
@@ -49,6 +51,7 @@ enum command_id {
 	REQ_USER_VM_REBOOT_ID,
 	USER_VM_REBOOT_ID,
 	ACK_USER_VM_REBOOT_ID,
+	REQ_SYS_REBOOT_ID,
 	CMD_END,
 };
 

@@ -16,7 +16,7 @@ bool get_system_shutdown_flag(void);
 /**
  * @brief Get the reboot flag
  */
-bool get_user_vm_reboot_flag(void);
+bool get_vm_reboot_flag(void);
 /**
  * @brief The handler of request system shutdown command on socket in service VM
  */
@@ -50,6 +50,14 @@ int sync_cmd_handler(void *arg, int fd);
  * @return indicate this command is handled successful or not
  */
 int req_shutdown_handler(void *arg, int fd);
+/**
+ * @brief The handler of system reboot request command of lifecycle manager in service VM
+ *
+ * @param arg uart channel device instance
+ * @param fd the file directory of the uart which receives message
+ * @return indicate this command is handled successful or not
+ */
+int req_reboot_handler(void *arg, int fd);
 /**
  * @brief The handler of acked poweroff command of lifecycle manager in service VM
  *
