@@ -117,6 +117,7 @@ int init_uart_channel_devs_and_shutdown_commands(bool service_vm, char *uart_dev
 	if (service_vm) {
 		register_command_handler(sync_cmd_handler, channel, SYNC_CMD);
 		register_command_handler(req_shutdown_handler, channel, REQ_SYS_SHUTDOWN);
+		register_command_handler(req_reboot_handler, channel, REQ_SYS_REBOOT);
 		register_command_handler(ack_poweroff_handler, channel, ACK_POWEROFF);
 		register_command_handler(ack_timeout_handler, channel, ACK_TIMEOUT);
 		register_command_handler(ack_user_vm_shutdown_cmd_handler, channel, ACK_USER_VM_SHUTDOWN);
@@ -219,7 +220,7 @@ int main(int argc, char *argv[])
 			ret = system(POWEROFF);
 		} while (ret < 0);
 	}
-	if (get_user_vm_reboot_flag()) {
+	if (get_vm_reboot_flag()) {
 		do {
 			ret = system(REBOOT);
 		} while (ret < 0);
