@@ -163,7 +163,8 @@ int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 	struct acpi_dmar_header *dmar_header;
 	struct acpi_dmar_hardware_unit *acpi_drhd;
 	char *ptr, *ptr_end;
-	bool is_include_all_emulated = false;
+	uint32_t include_all_idx = ~0U;
+	uint16_t segment = 0;
 
 	dmar_tbl = (struct acpi_table_dmar *)get_dmar_table();
 	ASSERT(dmar_tbl != NULL, "");
@@ -174,32 +175,37 @@ int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 	plat_dmar_info->drhd_units = drhd_info_array;
 	for (; ptr < ptr_end; ptr += dmar_header->length) {
 		dmar_header = (struct acpi_dmar_header *)ptr;
-		if (dmar_header->length <= 0U) {
-			pr_err("drhd: corrupted DMAR table, l %d\n", dmar_header->length);
-			break;
-		}
+		ASSERT(dmar_header->length >= sizeof(struct acpi_dmar_header), "corrupted DMAR table");
 
 		if (dmar_header->type == ACPI_DMAR_TYPE_HARDWARE_UNIT) {
 			acpi_drhd = (struct acpi_dmar_hardware_unit *)dmar_header;
 			/* Treat a valid DRHD has a non-zero base address */
-			if (acpi_drhd->address == 0UL) {
-				pr_warn("drhd: a zero base address DRHD. Please fix the BIOS!");
-				continue;
-			}
-			dmar_unit_cnt++;
+			ASSERT(acpi_drhd->address != 0UL, "a zero base address DRHD. Please fix the BIOS.");
 
-			/* Only support single PCI Segment */
-			if (acpi_drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) {
-				if (!is_include_all_emulated) {
-					pr_warn("DRHD with INCLUDE_PCI_ALL flag is NOT the last one!");
+			if (dmar_unit_cnt == 0U) {
+				segment = acpi_drhd->segment;
+			} else {
+				/* Only support single PCI Segment */
+				if (segment != acpi_drhd->segment) {
+					panic("Only support single PCI Segment.");
 				}
-				is_include_all_emulated = true;
 			}
 
+			if (acpi_drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) {
+				/* Check more than one DRHD with INCLUDE_PCI_ALL flag ? */
+				include_all_idx = dmar_unit_cnt;
+			}
+
+			dmar_unit_cnt++;
 			plat_dmar_info->drhd_units[dmar_unit_cnt - 1].devices = drhd_dev_scope[dmar_unit_cnt - 1];
 			handle_one_drhd(acpi_drhd, &(plat_dmar_info->drhd_units[dmar_unit_cnt - 1]));
 		}
 	}
+
+	if ((include_all_idx != ~0U) && (dmar_unit_cnt != (include_all_idx + 1U))) {
+		pr_err("DRHD%d with INCLUDE_PCI_ALL flag is NOT the last one. Please fix the BIOS.", include_all_idx);
+	}
+
 	ASSERT(dmar_unit_cnt <= MAX_DRHDS, "parsed dmar_unit_cnt > MAX_DRHDS");
 	plat_dmar_info->drhd_count = dmar_unit_cnt;
 
