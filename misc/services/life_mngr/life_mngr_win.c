@@ -23,8 +23,8 @@
 #define SYNC_FMT	"sync:%s"
 #define S5_REJECTED	"system shutdown request is rejected"
 
-#define BUFF_SIZE       (32U)
-#define MSG_SIZE        (8U)
+#define BUFF_SIZE	(32U)
+#define MSG_SIZE	(8U)
 #define VM_NAME_LEN	(sizeof(WIN_VM_NAME))
 #define UVM_SOCKET_PORT (0x2001U)
 #define READ_INTERVAL	(100U) /* The time unit is microsecond */
@@ -58,6 +58,18 @@ void stop_uart_resend(void)
 	memset(resend_buf, 0x0, BUFF_SIZE);
 	resend_time = 0U;
 }
+void handle_socket_request(SOCKET sClient, char *req_message)
+{
+	char ack_message[BUFF_SIZE];
+
+	snprintf(ack_message, sizeof(ack_message), "ack_%s", req_message);
+	Sleep(6U * MS_TO_SECOND);
+	send(sClient, ack_message, sizeof(ack_message), 0);
+	start_uart_resend(req_message, MIN_RESEND_TIME);
+	send_message_by_uart(hCom2, req_message, sizeof(req_message));
+	Sleep(2U * READ_INTERVAL);
+	return;
+}
 DWORD WINAPI open_socket_server(LPVOID lpParam)
 {
 	WORD sockVersion = MAKEWORD(2, 2);
@@ -67,7 +79,6 @@ DWORD WINAPI open_socket_server(LPVOID lpParam)
 	SOCKET sClient;
 	struct sockaddr_in remoteAddr;
 	int nAddrlen = sizeof(remoteAddr);
-	char *sendData = ACK_REQ_SYS_SHUTDOWN;
 	int ret;
 
 	ret = WSAStartup(sockVersion, &wsaData);
@@ -107,12 +118,11 @@ DWORD WINAPI open_socket_server(LPVOID lpParam)
 			printf(revData);
 		}
 		Sleep(READ_INTERVAL);
-	} while (strncmp(revData, REQ_SYS_SHUTDOWN, sizeof(REQ_SYS_SHUTDOWN)) != 0);
-	Sleep(6U * MS_TO_SECOND);
-	send(sClient, sendData, strlen(sendData), 0);
-	start_uart_resend(REQ_SYS_SHUTDOWN, MIN_RESEND_TIME);
-	send_message_by_uart(hCom2, REQ_SYS_SHUTDOWN, sizeof(REQ_SYS_SHUTDOWN));
-	Sleep(2 * READ_INTERVAL);
+		if (strncmp(revData, REQ_SYS_SHUTDOWN, sizeof(REQ_SYS_SHUTDOWN)) == 0) {
+			handle_socket_request(sClient, REQ_SYS_SHUTDOWN);
+			break;
+		}
+	} while (1);
 	closesocket(sClient);
 sock_exit:
 	closesocket(slisten);
