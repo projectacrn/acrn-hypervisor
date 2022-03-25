@@ -136,7 +136,11 @@ To set up the ACRN build environment on the development computer:
            bison \
            xsltproc \
            clang-format \
-           bc
+           bc \
+           libpixman-1-dev \
+           libsdl2-dev \
+           libegl-dev \
+           libgles-dev
 
 #. Install Python package dependencies:
 
