@@ -222,7 +222,8 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 <xs:complexType name="PCIDevsConfiguration">
   <xs:sequence>
     <xs:element name="pci_dev" type="xs:string" minOccurs="0" maxOccurs="unbounded">
-      <xs:annotation acrn:title="PCI device assignment">
+      <xs:annotation acrn:title="PCI device assignment"
+		     acrn:options="//device[class]/@description" acrn:options-sorted-by="lambda s: (s.split(' ', maxsplit=1)[-1].split(':')[0], s.split(' ')[0])">
         <xs:documentation>Select the PCI devices you want to assign to this virtual machine.</xs:documentation>
       </xs:annotation>
     </xs:element>

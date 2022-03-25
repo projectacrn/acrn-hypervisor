@@ -98,10 +98,22 @@ def lookup_pci_device(element, ids):
     class_code = get_node(element, "class/text()")
 
     args = [vendor_id, device_id, subsystem_vendor_id, subsystem_device_id, class_code]
-    desc = ids.lookup(*list(map(lambda x: int(x, base=16) if x else None, args)))
 
-    if desc:
-        element.set("description", desc)
+    desc = ids.lookup(*list(map(lambda x: int(x, base=16) if x else None, args))) if ids else ""
+
+    bus_id = int(get_node(element, "ancestor-or-self::bus[1]/@address"), base=16)
+    dev_func_id = int(get_node(element, "./@address"), base=16)
+    dev_id = dev_func_id >> 16
+    func_id = dev_func_id & 0xf
+
+    if element.tag == "bus":
+        if desc:
+            element.set("description", desc)
+    else:
+        if desc:
+            element.set("description", f"{bus_id:02x}:{dev_id:02x}.{func_id} {desc}")
+        else:
+            element.set("description", f"{bus_id:02x}:{dev_id:02x}.{func_id}")
 
 def lookup_pci_devices(board_etree):
     # Lookup names of PCI devices from pci.ids if possible
@@ -114,16 +126,17 @@ def lookup_pci_devices(board_etree):
         opener = gzip.open if pci_id_path.endswith(".gz") else open
         with opener(pci_id_path, "r") as f:
             ids = PCI_IDs(f)
-
-            devices = board_etree.xpath("//device")
-            for device in devices:
-                lookup_pci_device(device, ids)
-
-            buses = board_etree.xpath("//bus")
-            for bus in buses:
-                lookup_pci_device(bus, ids)
     else:
         logging.info(f"Cannot find pci.ids under /usr/share. PCI device names will not be available.")
+        ids = None
+
+    devices = board_etree.xpath("//device[vendor and class]")
+    for device in devices:
+        lookup_pci_device(device, ids)
+
+    buses = board_etree.xpath("//bus[@type = 'pci']")
+    for bus in buses:
+        lookup_pci_device(bus, ids)
 
 def extract(args, board_etree):
     lookup_pci_devices(board_etree)
