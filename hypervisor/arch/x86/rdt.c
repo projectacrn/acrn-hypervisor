@@ -23,98 +23,72 @@ const uint16_t hv_clos = 0U;
  * each resource's clos max value to have consistent allocation.
  */
 #ifdef CONFIG_RDT_ENABLED
-static uint16_t common_num_closids = HV_SUPPORTED_MAX_CLOS;
-
-static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
-	[RDT_RESOURCE_L3] = {
-		.res.cache = {
-			.bitmask = 0U,
-			.cbm_len = 0U,
-			.msr_qos_cfg = MSR_IA32_L3_QOS_CFG,
-		},
-		.num_closids = 0U,
-		.res_id = RDT_RESID_L3,
-		.msr_base = MSR_IA32_L3_MASK_BASE,
-		.platform_clos_array = platform_l3_clos_array,
-	},
-	[RDT_RESOURCE_L2] = {
-		.res.cache = {
-			.bitmask = 0U,
-			.cbm_len = 0U,
-			.msr_qos_cfg = MSR_IA32_L2_QOS_CFG,
-		},
-		.num_closids = 0U,
-		.res_id = RDT_RESID_L2,
-		.msr_base = MSR_IA32_L2_MASK_BASE,
-		.platform_clos_array = platform_l2_clos_array,
-	},
-	[RDT_RESOURCE_MBA] = {
-		.res.membw = {
-			.mba_max = 0U,
-			.delay_linear = true,
-		},
-		.num_closids = 0U,
-		.res_id = RDT_RESID_MBA,
-		.msr_base = MSR_IA32_MBA_MASK_BASE,
-		.platform_clos_array = platform_mba_clos_array,
-	},
-};
+/* TODO: once config-tool is ready to generate this information for us, we could remove these static definitions */
+extern struct rdt_type res_cap_info[RDT_NUM_RESOURCES];
 
 /*
  * @pre res == RDT_RESOURCE_L3 || res == RDT_RESOURCE_L2 || res == RDT_RESOURCE_MBA
  */
-const struct rdt_info *get_rdt_res_cap_info(int res)
+const struct rdt_ins *get_rdt_res_ins(int res, uint16_t pcpu_id)
 {
-	return &res_cap_info[res];
+	uint32_t i;
+	struct rdt_type *info = &res_cap_info[res];
+	struct rdt_ins *ins = NULL;
+
+	for (i = 0U; i < info->num_ins; i++) {
+		if (bitmap_test(pcpu_id, &info->ins_array[i].cpu_mask)) {
+			ins = &info->ins_array[i];
+			break;
+		}
+	}
+	return ins;
 }
 
-/*
- * @pre res < RDT_NUM_RESOURCES
- * @pre res_clos_info[i].mba_delay <= res_cap_info[res].res.membw.mba_max
- * @pre length of res_clos_info[i].clos_mask <= cbm_len && all 1's in clos_mask is continuous
- */
-static void setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_clos_info *res_clos_info)
+static void setup_res_clos_msr(uint16_t pcpu_id, struct rdt_type *info, struct rdt_ins *ins)
 {
-	uint16_t i, mask_array_size = common_num_closids;
+	uint16_t i;
 	uint32_t msr_index;
-	uint64_t val;
+	uint64_t val = 0;
+	uint32_t res = info->res_id;
+	union clos_config *cfg = ins->clos_config_array;
 
-	if (res != RDT_RESOURCE_MBA && res_cap_info[res].res.cache.is_cdp_enabled) {
-		mask_array_size = mask_array_size << 1U;
-
+	if (res != RDT_RESID_MBA && ins->res.cache.is_cdp_enabled) {
 		/* enable CDP before setting COS to simplify CAT mask remapping
 		 * and prevent unintended behavior.
 		 */
-		msr_write(res_cap_info[res].res.cache.msr_qos_cfg, 0x1UL);
+		msr_write(info->msr_qos_cfg, 0x1UL);
 	}
 
-	for (i = 0U; i < mask_array_size; i++) {
+	for (i = 0U; i < ins->num_clos_config; i++) {
 		switch (res) {
 		case RDT_RESOURCE_L3:
 		case RDT_RESOURCE_L2:
-			val = (uint64_t)res_clos_info[i].value.clos_mask;
+			val = (uint64_t)cfg[i].clos_mask;
 			break;
 		case RDT_RESOURCE_MBA:
-			val = (uint64_t)res_clos_info[i].value.mba_delay;
+			val = (uint64_t)cfg[i].mba_delay;
 			break;
 		default:
 			ASSERT(res < RDT_NUM_RESOURCES, "Support only 3 RDT resources. res=%d is invalid", res);
 		}
-		msr_index = res_cap_info[res].msr_base + i;
+		msr_index = info->msr_base + i;
 		msr_write_pcpu(msr_index, val, pcpu_id);
 	}
 }
 
 void setup_clos(uint16_t pcpu_id)
 {
-	uint16_t i;
+	uint16_t i, j;
+	struct rdt_type *info;
+	struct rdt_ins *ins;
 
 	for (i = 0U; i < RDT_NUM_RESOURCES; i++) {
-		/* If num_closids == 0, the resource is not supported
-		 * so skip setting up resource MSR.
-		 */
-		if (res_cap_info[i].num_closids > 0U) {
-			setup_res_clos_msr(pcpu_id, i, res_cap_info[i].platform_clos_array);
+		info = &res_cap_info[i];
+		for (j = 0U; j < info->num_ins; j++) {
+			ins = &info->ins_array[j];
+			if (bitmap_test(pcpu_id, &ins->cpu_mask)) {
+				setup_res_clos_msr(pcpu_id, info, ins);
+			}
 		}
 	}
 
@@ -132,13 +106,32 @@ uint64_t clos2pqr_msr(uint16_t clos)
 	return pqr_assoc;
 }
 
+static bool is_rdt_type_capable(struct rdt_type *info)
+{
+	uint32_t i;
+	struct rdt_ins *ins;
+	bool ret = false;
+
+	if (info->num_ins > 0U) {
+		for (i = 0U; i < info->num_ins; i++) {
+			ins = &info->ins_array[i];
+			if (ins->num_closids > 0U) {
+				ret = true;
+				break;
+			}
+		}
+	}
+
+	return ret;
+}
+
 bool is_platform_rdt_capable(void)
 {
 	bool ret = false;
 
-	if ((res_cap_info[RDT_RESOURCE_L3].num_closids > 0U) ||
-	    (res_cap_info[RDT_RESOURCE_L2].num_closids > 0U) ||
-	    (res_cap_info[RDT_RESOURCE_MBA].num_closids > 0U)) {
+	if (is_rdt_type_capable(&res_cap_info[RDT_RESOURCE_L3]) ||
+	    is_rdt_type_capable(&res_cap_info[RDT_RESOURCE_L2]) ||
+	    is_rdt_type_capable(&res_cap_info[RDT_RESOURCE_MBA])) {
 		ret = true;
 	}
 

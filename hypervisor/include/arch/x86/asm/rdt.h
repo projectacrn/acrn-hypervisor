@@ -22,15 +22,14 @@ enum {
 
 extern const uint16_t hv_clos;
 
-/* The intel Resource Director Tech(RDT) based Allocation Tech support */
-struct rdt_info {
+/* The instance of one RES_ID */
+struct rdt_ins {
 	union {
 		struct {
 			uint32_t bitmask;	/* A bitmask where each set bit indicates the corresponding cache way
 						   may be used by other entities in the platform (e.g. GPU) */
 			uint16_t cbm_len;	/* Length of Cache mask in bits */
 			bool is_cdp_enabled;	/* True if support CDP */
-			uint32_t msr_qos_cfg;	/* MSR addr to IA32_L3/L2_QOS_CFG */
 		} cache;
 		struct rdt_membw {
 			uint16_t mba_max;	/* Max MBA delay throttling value supported */
@@ -38,14 +37,25 @@ struct rdt_info {
 		} membw;
 	} res;
 	uint16_t num_closids;	/* Number of CLOSIDs available, 0 indicates resource is not supported.*/
-	uint32_t res_id;
+
+	uint32_t num_clos_config; /* Number of element in clos_config_array */
+	union clos_config *clos_config_array;
+	uint64_t cpu_mask; /* the CPUs this RDT applies */
+};
+
+/* The intel Resource Director Tech(RDT) based Allocation Tech support */
+struct rdt_type {
+	uint32_t res_id; /* RDT_RESID_L3/RDT_RESID_L2/RDT_RESID_MBA */
+	uint32_t msr_qos_cfg;	/* MSR addr to IA32_L3/L2_QOS_CFG */
 	uint32_t msr_base;	/* MSR base to program clos value */
-	struct platform_clos_info *platform_clos_array; /* user configured mask and MSR info for each CLOS*/
+
+	uint32_t num_ins; /* Number of element in ins_array */
+	struct rdt_ins *ins_array;
 };
 
 void setup_clos(uint16_t pcpu_id);
 uint64_t clos2pqr_msr(uint16_t clos);
 bool is_platform_rdt_capable(void);
-const struct rdt_info *get_rdt_res_cap_info(int res);
+const struct rdt_ins *get_rdt_res_ins(int res, uint16_t pcpu_id);
 
 #endif	/* RDT_H */
