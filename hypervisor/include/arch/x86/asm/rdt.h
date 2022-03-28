@@ -43,7 +43,6 @@ struct rdt_info {
 	struct platform_clos_info *platform_clos_array; /* user configured mask and MSR info for each CLOS*/
 };
 
-void init_rdt_info(void);
 void setup_clos(uint16_t pcpu_id);
 uint64_t clos2pqr_msr(uint16_t clos);
 bool is_platform_rdt_capable(void);
