@@ -24,7 +24,10 @@
  */
 bool is_l2_vcat_configured(const struct acrn_vm *vm)
 {
-	return is_vcat_configured(vm) && (get_rdt_res_cap_info(RDT_RESOURCE_L2)->num_closids > 0U);
+	uint16_t pcpu = ffs64(vm->hw.cpu_affinity);
+	const struct rdt_ins *ins = get_rdt_res_ins(RDT_RESOURCE_L2, pcpu);
+
+	return is_vcat_configured(vm) && ins != NULL && (ins->num_closids > 0U);
 }
 
 /**
@@ -32,7 +35,10 @@ bool is_l2_vcat_configured(const struct acrn_vm *vm)
  */
 bool is_l3_vcat_configured(const struct acrn_vm *vm)
 {
-	return is_vcat_configured(vm) && (get_rdt_res_cap_info(RDT_RESOURCE_L3)->num_closids > 0U);
+	uint16_t pcpu = ffs64(vm->hw.cpu_affinity);
+	const struct rdt_ins *ins = get_rdt_res_ins(RDT_RESOURCE_L3, pcpu);
+
+	return is_vcat_configured(vm) && ins != NULL && (ins->num_closids > 0U);
 }
 
 /**
@@ -175,7 +181,7 @@ static bool is_l2_vcbm_msr(const struct acrn_vm *vm, uint32_t vmsr)
 	/* num_vcbm_msrs = num_vclosids */
 	uint16_t num_vcbm_msrs = vcat_get_num_vclosids(vm);
 
-	return ((get_rdt_res_cap_info(RDT_RESOURCE_L2)->num_closids > 0U)
+	return (is_l2_vcat_configured(vm)
 		&& (vmsr >= MSR_IA32_L2_MASK_BASE) && (vmsr < (MSR_IA32_L2_MASK_BASE + num_vcbm_msrs)));
 }
 
@@ -187,7 +193,7 @@ static bool is_l3_vcbm_msr(const struct acrn_vm *vm, uint32_t vmsr)
 	/* num_vcbm_msrs = num_vclosids */
 	uint16_t num_vcbm_msrs = vcat_get_num_vclosids(vm);
 
-	return ((get_rdt_res_cap_info(RDT_RESOURCE_L3)->num_closids > 0U)
+	return (is_l3_vcat_configured(vm)
 		&& (vmsr >= MSR_IA32_L3_MASK_BASE) && (vmsr < (MSR_IA32_L3_MASK_BASE + num_vcbm_msrs)));
 }
 
