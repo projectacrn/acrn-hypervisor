@@ -39,10 +39,10 @@ CFLAGS += -I$(BASEDIR)/include
 CFLAGS += -I$(BASEDIR)/include/public
 CFLAGS += -I$(DM_OBJDIR)/include
 CFLAGS += -I$(TOOLS_OUT)/services
-CFLAGS += -I/usr/include/pixman-1
-CFLAGS += -I/usr/include/glib-2.0
-CFLAGS += -I/usr/include/SDL2
-CFLAGS += -I/usr/include/EGL
+CFLAGS += -I$(SYSROOT)/usr/include/pixman-1
+CFLAGS += -I$(SYSROOT)/usr/include/glib-2.0
+CFLAGS += -I$(SYSROOT)/usr/include/SDL2
+CFLAGS += -I$(SYSROOT)/usr/include/EGL
 
 ifneq (, $(DM_ASL_COMPILER))
 CFLAGS += -DASL_COMPILER=\"$(DM_ASL_COMPILER)\"
