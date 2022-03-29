@@ -79,7 +79,7 @@
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod/>
-      <bootargs>root=/dev/nvme0n1p3 rw rootwait console=tty0 console=ttyS0 consoleblank=0 no_timer_check quiet loglevel=3
+      <bootargs>root=/dev/nvme0n1p2 rw rootwait console=tty0 console=ttyS0 consoleblank=0 no_timer_check quiet loglevel=3
         i915.nuclear_pageflip=1 swiotlb=131072</bootargs>
     </os_config>
     <console_vuart>COM Port 1</console_vuart>
@@ -101,7 +101,7 @@
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <pci_devs>
-      <pci_dev>00:02.0 VGA compatible controller: Intel Corporation Device 9a49 (rev 01)</pci_dev>
+      <pci_dev>00:02.0 VGA compatible controller: Intel Corporation TigerLake-LP GT2 [Iris Xe Graphics] (rev 01)</pci_dev>
     </pci_devs>
     <PTM>n</PTM>
     <os_type>Windows OS</os_type>

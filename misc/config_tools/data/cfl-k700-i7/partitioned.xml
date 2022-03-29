@@ -90,7 +90,7 @@
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod>Ubuntu</ramdisk_mod>
-      <bootargs> rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
+      <bootargs> rw rootwait root=/dev/sda3 console=ttyS0 console=tty0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>
     <console_vuart>COM Port 1</console_vuart>
@@ -128,7 +128,7 @@
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod>Ubuntu</ramdisk_mod>
-      <bootargs>        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
+      <bootargs>        rw rootwait root=/dev/sda3 console=ttyS0 console=tty0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
         consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>

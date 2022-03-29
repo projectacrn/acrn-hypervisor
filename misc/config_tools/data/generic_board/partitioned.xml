@@ -90,7 +90,7 @@
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod/>
-      <bootargs>        rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
+      <bootargs>        rw rootwait root=/dev/sda3 console=ttyS0 console=tty0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>
     <console_vuart>COM Port 1</console_vuart>
@@ -99,7 +99,7 @@
     </mmio_resources>
     <pci_devs>
       <pci_dev>00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</pci_dev>
-      <pci_dev>58:00.0 Ethernet controller: Intel Corporation Device 15f2 (rev 03)</pci_dev>
+      <pci_dev>58:00.0 Ethernet controller: Intel Corporation Ethernet Controller I225-LM (rev 03)</pci_dev>
     </pci_devs>
   </vm>
   <vm id="1">
@@ -128,7 +128,7 @@
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod/>
-      <bootargs>        rw rootwait root=/dev/sda2 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
+      <bootargs>        rw rootwait root=/dev/sda2 console=ttyS0 console=tty0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
         consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>
@@ -137,7 +137,7 @@
       <TPM2>n</TPM2>
     </mmio_resources>
     <pci_devs>
-      <pci_dev>00:14.0 USB controller: Intel Corporation Device a0ed (rev 20)</pci_dev>
+      <pci_dev>00:14.0 USB controller: Intel Corporation Tiger Lake-LP USB 3.2 Gen 2x1 xHCI Host Controller (rev 20)</pci_dev>
     </pci_devs>
   </vm>
 </acrn-config>
