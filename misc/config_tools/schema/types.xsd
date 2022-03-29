@@ -40,8 +40,12 @@
     <xs:documentation>A string that indicates the build type of the hypervisor.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
-    <xs:enumeration value="release" />
-    <xs:enumeration value="debug" />
+    <xs:enumeration value="release">
+      <xs:annotation acrn:title="Release" />
+    </xs:enumeration>
+    <xs:enumeration value="debug">
+      <xs:annotation acrn:title="Debug" />
+    </xs:enumeration>
   </xs:restriction>
 </xs:simpleType>
 
@@ -85,15 +89,15 @@
 
 <xs:simpleType name="LogLevelType">
   <xs:annotation>
-    <xs:documentation>An Integer from 0 to 7 representing log message
+    <xs:documentation>An Integer from 0 to 5 representing log message
 severity and intent:
 
-- 0 no log at all
-- 1 (LOG_FATAL) system is unusable
-- 2 (LOG_ERROR) error conditions
-- 3 (LOG_WARNING) warning conditions
-- 4 (LOG_INFO) informational
-- 5 (LOG_DEBUG) debug-level messages
+- ``0: None``: No log at all.
+- ``1: Critical``: Messages about critical errors that cause the hypervisor to crash or hang (almost) immediately.
+- ``2: Error``: Messages about significant errors that affect the main functions (for example, launch of VMs) of ACRN hypervisor.
+- ``3: Warning``: Messages about detected abnormalities that have local effects on certain features.
+- ``4: Information``: Informational messages
+- ``5: Debug``: Debug-level messages
 
 A lower value has a higher severity. Log messages with a
 higher value (lower severity) are discarded.</xs:documentation>
@@ -122,28 +126,31 @@ higher value (lower severity) are discarded.</xs:documentation>
 
 <xs:simpleType name="SchedulerType">
   <xs:annotation>
-    <xs:documentation>Four scheduler options are supported:
+    <xs:documentation>Options:
 
-- ``SCHED_NOOP``: The NOOP (No-Operation) scheduler means there is a
-  strict 1 to 1 mapping between vCPUs and pCPUs.
-- ``SCHED_IORR``: The IORR (IO sensitive Round Robin) scheduler supports
-  multiple vCPUs running on one pCPU, scheduled by
-  a IO sensitive round robin policy.
-- ``SCHED_BVT``: The BVT (Borrowed Virtual Time) scheduler is a virtual time based
-  scheduling algorithm, it dispatches the runnable thread with the
+- ``No-Operation (NOOP)``: The No-Operation (NOOP) scheduler means there is a
+  strict one-to-one mapping between vCPUs and pCPUs.
+- ``Borrowed Virtual Time``: The Borrowed Virtual Time (BVT) scheduler is a
+  virtual time-based
+  scheduling algorithm. It dispatches the runnable thread with the
   earliest effective virtual time. *TODO: BVT scheduler will be built on
   top of a prioritized scheduling mechanism, i.e. higher priority threads
   get scheduled first, and same priority tasks are scheduled per BVT.*
-- ``SCHED_PRIO``: The priority based scheduler. vCPU scheduling will be based on
-  their pre-configured priorities.
+- ``Priority Based Scheduling``: The priority based scheduler supports vCPU scheduling based on their pre-configured priorities.
 
 Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
-    <xs:enumeration value="SCHED_NOOP" />
+    <xs:enumeration value="SCHED_NOOP">
+      <xs:annotation acrn:title="No-Operation (NOOP)" />
+    </xs:enumeration>
     <xs:enumeration value="SCHED_IORR" />
-    <xs:enumeration value="SCHED_BVT" />
-    <xs:enumeration value="SCHED_PRIO" />
+    <xs:enumeration value="SCHED_BVT">
+      <xs:annotation acrn:title="Borrowed Virtual Time" />
+    </xs:enumeration>
+    <xs:enumeration value="SCHED_PRIO">
+      <xs:annotation acrn:title="Priority Based Scheduling" />
+    </xs:enumeration>
   </xs:restriction>
 </xs:simpleType>
 
@@ -196,14 +203,13 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 <xs:complexType name="IVSHMEMVM">
   <xs:sequence>
    <xs:element name="VM_NAME" type="VMNameType">
-     <xs:annotation acrn:title="Shared VMS">
-       <xs:documentation>Name of the VM which use this IVSHMEM.</xs:documentation>
+     <xs:annotation acrn:title="Shared VMs">
+       <xs:documentation>Name of the VM that uses this shared memory region.</xs:documentation>
      </xs:annotation>
    </xs:element>
    <xs:element name="VBDF" type = "VBDFType">
-     <xs:annotation>
-       <xs:documentation>Bus, Device and function of the virtual
-device in VM . Set in hex.</xs:documentation>
+     <xs:annotation acrn:title="Virtual BDF">
+       <xs:documentation>Virtual BDF (Bus Device Function) is automatically assigned and can be changed if needed. Set in Hex.</xs:documentation>
      </xs:annotation>
    </xs:element>
   </xs:sequence>
@@ -213,7 +219,7 @@ device in VM . Set in hex.</xs:documentation>
   <xs:sequence>
    <xs:element name="IVSHMEM_VM" type="IVSHMEMVM" maxOccurs="unbounded">
      <xs:annotation>
-       <xs:documentation>Set each VM which use this IVSHMEM.</xs:documentation>
+       <xs:documentation>Select all VMs that use the shared memory region.</xs:documentation>
      </xs:annotation>
    </xs:element>
   </xs:sequence>
@@ -269,7 +275,7 @@ and no more than 512.</xs:documentation>
   <xs:sequence>
     <xs:element name="IVSHMEM_REGION" type="IVSHMEMRegionType" minOccurs="0" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>Set a inter-VM shared memory.</xs:documentation>
+        <xs:documentation>Create a memory region for VMs to share: specify its name, size, and associated VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -278,9 +284,9 @@ and no more than 512.</xs:documentation>
 <xs:complexType name="RDTType">
   <xs:sequence>
     <xs:element name="RDT_ENABLED" type="Boolean" default="n">
-      <xs:annotation acrn:title="Intel Resource Director Technology">
-        <xs:documentation>Enable the Intel Resource Director Technology (RDT)
-allocation feature. If the board hardware does not support
+      <xs:annotation acrn:title="Intel Resource Director Tech">
+        <xs:documentation>Enable Intel Resource Director Technology (RDT). If
+the board hardware does not support
 RDT, setting this option to ``y`` is ignored.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -290,7 +296,7 @@ RDT, setting this option to ``y`` is ignored.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="VCAT_ENABLED" type="Boolean" default="n">
-      <xs:annotation>
+      <xs:annotation acrn:title="Virtual Cache Allocation Tech">
         <xs:documentation>Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -314,7 +320,7 @@ As :option:`vm.clos.vcpu_clos` specifies the index of the CLOS to be associated 
 <xs:complexType name="SSRAMInfo">
   <xs:sequence>
     <xs:element name="SSRAM_ENABLED" type="Boolean" default="n">
-      <xs:annotation acrn:title="Software SRAM (for real-time apps)">
+      <xs:annotation acrn:title="Software SRAM">
         <xs:documentation>Enable Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
