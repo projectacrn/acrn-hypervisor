@@ -193,16 +193,22 @@ static void ptirq_interrupt_handler(__unused uint32_t irq, void *data)
 /* active intr with irq registering */
 int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_irq)
 {
-	int32_t retval;
+	int32_t ret = 0;
+	uint32_t irq = IRQ_INVALID;
 	uint64_t key;
 
-	/* register and allocate host vector/irq */
-	retval = request_irq(phys_irq, ptirq_interrupt_handler, (void *)entry, IRQF_PT);
+	if ((entry->intr_type == PTDEV_INTR_INTX) || !is_pi_capable(entry->vm)) {
+		/* register and allocate host vector/irq */
+		ret = request_irq(phys_irq, ptirq_interrupt_handler, (void *)entry, IRQF_PT);
+		if (ret >=0) {
+			irq = (uint32_t)ret;
+		} else {
+			pr_err("request irq failed, please check!, phys-irq=%d", phys_irq);
+		}
+	}
 
-	if (retval < 0) {
-		pr_err("request irq failed, please check!, phys-irq=%d", phys_irq);
-	} else {
-		entry->allocated_pirq = (uint32_t)retval;
+	if (ret >=0) {
+		entry->allocated_pirq = irq;
 		entry->active = true;
 
 		key = hash64(entry->phys_sid.value, PTIRQ_ENTRY_HASHBITS);
@@ -211,7 +217,7 @@ int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_i
 		hlist_add_head(&entry->virt_link, &(ptirq_entry_heads[key].list));
 	}
 
-	return retval;
+	return ret;
 }
 
 void ptirq_deactivate_entry(struct ptirq_remapping_info *entry)
@@ -219,7 +225,9 @@ void ptirq_deactivate_entry(struct ptirq_remapping_info *entry)
 	hlist_del(&entry->phys_link);
 	hlist_del(&entry->virt_link);
 	entry->active = false;
-	free_irq(entry->allocated_pirq);
+	if (entry->allocated_pirq != IRQ_INVALID) {
+		free_irq(entry->allocated_pirq);
+	}
 }
 
 void ptdev_init(void)
@@ -259,7 +267,7 @@ uint32_t ptirq_get_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer, 
 
 	for (i = 0U; i < CONFIG_MAX_PT_IRQ_ENTRIES; i++) {
 		entry = &ptirq_entries[i];
-		if (!is_entry_active(entry)) {
+		if (!is_entry_active(entry) || (entry->allocated_pirq == IRQ_INVALID)) {
 			continue;
 		}
 		if (entry->vm == target_vm) {
