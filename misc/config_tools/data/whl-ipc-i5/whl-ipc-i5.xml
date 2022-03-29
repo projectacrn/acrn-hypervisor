@@ -30,7 +30,7 @@
 	Region 0: Memory at a1414000 (32-bit, non-prefetchable) [size=8K]
 	Region 1: Memory at a141b000 (32-bit, non-prefetchable) [size=256]
 	Region 5: Memory at a141a000 (32-bit, non-prefetchable) [size=2K]
-	00:1a.0 SD Host controller: Intel Corporation Device 9dc4 (rev 30)
+	00:1a.0 SD Host controller: Intel Corporation Cannon Point-LP SD Host Controller (rev 30)
 	Region 0: Memory at a1419000 (64-bit, non-prefetchable) [size=4K]
 	00:1c.0 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #1 (rev f0)
 	00:1c.4 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #5 (rev f0)
@@ -171,11 +171,11 @@
 	00100000-3fffffff : System RAM
 	40000000-403fffff : Reserved
 	  40000000-403fffff : pnp 00:00
-	40400000-822f7017 : System RAM
-	822f7018-82307657 : System RAM
-	82307658-82308017 : System RAM
-	82308018-82318057 : System RAM
-	82318058-83582fff : System RAM
+	40400000-82343017 : System RAM
+	82343018-82353657 : System RAM
+	82353658-82354017 : System RAM
+	82354018-82364057 : System RAM
+	82364058-83582fff : System RAM
 	83583000-83583fff : ACPI Non-volatile Storage
 	83584000-83584fff : Reserved
 	83585000-89fbcfff : System RAM
@@ -190,7 +190,7 @@
 	  90000000-9fffffff : 0000:00:02.0
 	  a0000000-a0ffffff : 0000:00:02.0
 	  a1000000-a10fffff : 0000:00:1f.3
-	    a1000000-a10fffff : Audio DSP
+	    a1000000-a10fffff : ICH HD audio
 	  a1100000-a11fffff : PCI Bus 0000:04
 	    a1100000-a111ffff : 0000:04:00.0
 	      a1100000-a111ffff : igb
@@ -207,7 +207,7 @@
 	  a1400000-a140ffff : 0000:00:14.0
 	    a1400000-a140ffff : xhci-hcd
 	  a1410000-a1413fff : 0000:00:1f.3
-	    a1410000-a1413fff : Audio DSP
+	    a1410000-a1413fff : ICH HD audio
 	  a1414000-a1415fff : 0000:00:17.0
 	    a1414000-a1415fff : ahci
 	  a1416000-a1417fff : 0000:00:14.2
@@ -252,29 +252,29 @@
 	ff000000-ffffffff : Reserved
 	  ff000000-ffffffff : pnp 00:0e
 	100000000-26dffffff : System RAM
-	  262c00000-2638010d6 : Kernel code
-	  263a00000-263d24fff : Kernel rodata
-	  263e00000-263fa09bf : Kernel data
-	  2644b0000-2645fffff : Kernel bss
+	  169c00000-16ac02556 : Kernel code
+	  16ae00000-16b83cfff : Kernel rodata
+	  16ba00000-16bd6637f : Kernel data
+	  16c02c000-16c5fffff : Kernel bss
 	26e000000-26fffffff : RAM buffer
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
-	/dev/nvme0n1p3: TYPE="ext4"
+	/dev/nvme0n1p2: TYPE="ext4"
 	/dev/sda3: TYPE="ext4"
-	/dev/sdb2: TYPE="ext4"
-	/dev/sdb3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
   <TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
 	seri:/dev/ttyS1 type:portio base:0x2F8 irq:3
 	seri:/dev/ttyS2 type:portio base:0x3E8 irq:7
 	seri:/dev/ttyS3 type:portio base:0x2E8 irq:7
+	seri:/dev/ttyS4 type:portio base:0x2F0 irq:7
+	seri:/dev/ttyS5 type:portio base:0x2E0 irq:7
 	</TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
-	5, 6, 10, 11, 13, 14, 15
+	6, 10, 11, 13, 14, 15
 	</AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
-	8019820 kB
+	8007680 kB
 	</TOTAL_MEM_INFO>
   <CPU_PROCESSOR_INFO>
 	0, 1, 2, 3
@@ -376,7 +376,7 @@
       <attribute id="physical_address_bits">39</attribute>
       <attribute id="linear_address_bits">48</attribute>
     </model>
-    <die id="0">
+    <die id="0x0">
       <core id="0x0">
         <thread id="0x0">
           <cpu_id>0</cpu_id>
@@ -857,7 +857,7 @@
             <aml_template>5b821a5c2f045f53425f504349305045473250454750085f41445200</aml_template>
           </device>
         </device>
-        <device address="0x20000" id="0x3ea0" description="VGA compatible controller: Intel Corporation WhiskeyLake-U GT2 [UHD Graphics 620]">
+        <device address="0x20000" id="0x3ea0" description="00:02.0 VGA compatible controller: Intel Corporation WhiskeyLake-U GT2 [UHD Graphics 620]">
           <vendor>0x8086</vendor>
           <identifier>0x3ea0</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -960,7 +960,7 @@
           <acpi_object>\_SB_.PCI0.IPU0</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043493049505530085f4144520c00000500</aml_template>
         </device>
-        <device address="0x120000" id="0x9df9" description="Signal processing controller: Intel Corporation Cannon Point-LP Thermal Controller">
+        <device address="0x120000" id="0x9df9" description="00:12.0 Signal processing controller: Intel Corporation Cannon Point-LP Thermal Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9df9</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -985,7 +985,7 @@
           <acpi_object>\_SB_.PCI0.ISHD</acpi_object>
           <aml_template>5b821a5c2f035f53425f5043493049534844085f4144520c00001300</aml_template>
         </device>
-        <device address="0x140000" id="0x9ded" description="USB controller: Intel Corporation Cannon Point-LP USB 3.1 xHCI Controller">
+        <device address="0x140000" id="0x9ded" description="00:14.0 USB controller: Intel Corporation Cannon Point-LP USB 3.1 xHCI Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9ded</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1083,7 +1083,7 @@
           <acpi_object>\_SB_.PCI0.XDCI</acpi_object>
           <aml_template>5b8244055c2f035f53425f5043493058444349085f53545211330a3043004e004c00200050004300480020005800440043004900200063006f006e00740072006f006c006c00650072000000085f4144520c01001400</aml_template>
         </device>
-        <device address="0x140002" id="0x9def" description="RAM memory: Intel Corporation Cannon Point-LP Shared SRAM">
+        <device address="0x140002" id="0x9def" description="00:14.2 RAM memory: Intel Corporation Cannon Point-LP Shared SRAM">
           <vendor>0x8086</vendor>
           <identifier>0x9def</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1109,7 +1109,7 @@
           <resource type="LargeResourceItemGPIOConnection" id="res1"/>
           <dependency type="consumes resources from">\_SB_.PCI0.GPI0</dependency>
         </device>
-        <device address="0x160000" id="0x9de0" description="Communication controller: Intel Corporation Cannon Point-LP MEI Controller #1">
+        <device address="0x160000" id="0x9de0" description="00:16.0 Communication controller: Intel Corporation Cannon Point-LP MEI Controller #1">
           <vendor>0x8086</vendor>
           <identifier>0x9de0</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1126,7 +1126,7 @@
           </capability>
           <capability id="Vendor-Specific"/>
         </device>
-        <device address="0x170000" id="0x9dd3" description="SATA controller: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode]">
+        <device address="0x170000" id="0x9dd3" description="00:17.0 SATA controller: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode]">
           <vendor>0x8086</vendor>
           <identifier>0x9dd3</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1195,7 +1195,7 @@
             <aml_template>5b821e5c2f045f53425f50434930534154304e564d33085f4144520cffffc300</aml_template>
           </device>
         </device>
-        <device address="0x1a0000" id="0x9dc4" description="SD Host controller: Intel Corporation">
+        <device address="0x1a0000" id="0x9dc4" description="00:1a.0 SD Host controller: Intel Corporation Cannon Point-LP SD Host Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9dc4</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1217,7 +1217,7 @@
             <aml_template>5b821b5c2f045f53425f5043493050454d4343415244085f4144520a08</aml_template>
           </device>
         </device>
-        <device address="0x1c0000" id="0x9db8" description="PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #1">
+        <device address="0x1c0000" id="0x9db8" description="00:1c.0 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #1">
           <vendor>0x8086</vendor>
           <identifier>0x9db8</identifier>
           <class>0x060400</class>
@@ -1229,7 +1229,7 @@
           <capability id="Power Management"/>
           <bus type="pci" address="0x1"/>
         </device>
-        <device address="0x1c0004" id="0x9dbc" description="PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #5">
+        <device address="0x1c0004" id="0x9dbc" description="00:1c.4 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #5">
           <vendor>0x8086</vendor>
           <identifier>0x9dbc</identifier>
           <class>0x060400</class>
@@ -1247,7 +1247,7 @@
           <capability id="Secondary PCI Express"/>
           <capability id="DPC"/>
           <bus type="pci" address="0x2">
-            <device address="0x0" id="0x2263" description="Non-Volatile memory controller: Silicon Motion, Inc. SM2263EN/SM2263XT SSD Controller">
+            <device address="0x0" id="0x2263" description="02:00.0 Non-Volatile memory controller: Silicon Motion, Inc. SM2263EN/SM2263XT SSD Controller">
               <vendor>0x126f</vendor>
               <identifier>0x2263</identifier>
               <subsystem_vendor>0x126f</subsystem_vendor>
@@ -1277,7 +1277,7 @@
             </device>
           </bus>
         </device>
-        <device address="0x1d0000" id="0x9db0" description="PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #9">
+        <device address="0x1d0000" id="0x9db0" description="00:1d.0 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #9">
           <vendor>0x8086</vendor>
           <identifier>0x9db0</identifier>
           <class>0x060400</class>
@@ -1296,7 +1296,7 @@
           <capability id="Secondary PCI Express"/>
           <capability id="DPC"/>
           <bus type="pci" address="0x3">
-            <device address="0x0" id="0x157b" description="Ethernet controller: Intel Corporation I210 Gigabit Network Connection">
+            <device address="0x0" id="0x157b" description="03:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection">
               <vendor>0x8086</vendor>
               <identifier>0x157b</identifier>
               <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1326,7 +1326,7 @@
             </device>
           </bus>
         </device>
-        <device address="0x1d0001" id="0x9db1" description="PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #10">
+        <device address="0x1d0001" id="0x9db1" description="00:1d.1 PCI bridge: Intel Corporation Cannon Point-LP PCI Express Root Port #10">
           <vendor>0x8086</vendor>
           <identifier>0x9db1</identifier>
           <class>0x060400</class>
@@ -1345,7 +1345,7 @@
           <capability id="Secondary PCI Express"/>
           <capability id="DPC"/>
           <bus type="pci" address="0x4">
-            <device address="0x0" id="0x157b" description="Ethernet controller: Intel Corporation I210 Gigabit Network Connection">
+            <device address="0x0" id="0x157b" description="04:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection">
               <vendor>0x8086</vendor>
               <identifier>0x157b</identifier>
               <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1375,7 +1375,7 @@
             </device>
           </bus>
         </device>
-        <device address="0x1f0000" id="0x9d84" description="ISA bridge: Intel Corporation Cannon Point-LP LPC Controller">
+        <device address="0x1f0000" id="0x9d84" description="00:1f.0 ISA bridge: Intel Corporation Cannon Point-LP LPC Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9d84</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1498,11 +1498,11 @@
             <acpi_object>\_SB_.PCI0.LPCB.LPTE</acpi_object>
             <compatible_id>PNP0400</compatible_id>
             <acpi_uid>0</acpi_uid>
-            <aml_template>5b824e045c2f045f53425f504349304c5043424c505445085f53544100085f4849440c41d00401085f4349440c41d00400085f55494400085f43525311130a104701e002e00201082280002a00007900</aml_template>
+            <aml_template>5b824f045c2f045f53425f504349304c5043424c505445085f5354410a0f085f4849440c41d00401085f4349440c41d00400085f55494400085f43525311130a104701e002e00201082280002a00007900</aml_template>
             <status>
-              <present>n</present>
-              <enabled>n</enabled>
-              <functioning>n</functioning>
+              <present>y</present>
+              <enabled>y</enabled>
+              <functioning>y</functioning>
             </status>
             <resource type="SmallResourceItemDMA" id="res2"/>
             <resource id="res0" type="io_port" min="0x2e0" max="0x2e0" len="0x8"/>
@@ -1661,7 +1661,7 @@
             <resource id="res1" type="irq" int="7"/>
           </device>
         </device>
-        <device address="0x1f0003" id="0x9dc8" description="Audio device: Intel Corporation Cannon Point-LP High Definition Audio Controller">
+        <device address="0x1f0003" id="0x9dc8" description="00:1f.3 Audio device: Intel Corporation Cannon Point-LP High Definition Audio Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9dc8</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1722,7 +1722,7 @@
             </device>
           </device>
         </device>
-        <device address="0x1f0004" id="0x9da3" description="SMBus: Intel Corporation Cannon Point-LP SMBus Controller">
+        <device address="0x1f0004" id="0x9da3" description="00:1f.4 SMBus: Intel Corporation Cannon Point-LP SMBus Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9da3</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1734,7 +1734,7 @@
           <resource type="io_port" min="0xefa0" max="0xefbf" len="0x20" id="bar4"/>
           <resource type="memory" min="0xa1418000" max="0xa14180ff" len="0x100" id="bar0" width="64" prefetchable="0"/>
         </device>
-        <device address="0x1f0005" id="0x9da4" description="Serial bus controller: Intel Corporation Cannon Point-LP SPI Controller">
+        <device address="0x1f0005" id="0x9da4" description="00:1f.5 Serial bus controller: Intel Corporation Cannon Point-LP SPI Controller">
           <vendor>0x8086</vendor>
           <identifier>0x9da4</identifier>
           <subsystem_vendor>0x8086</subsystem_vendor>
@@ -1864,11 +1864,11 @@
           </status>
           <resource id="res1" type="irq" int="16"/>
           <resource id="res0" type="memory" min="0xfe020000" max="0xfe020fff" len="0x1000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPD0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.HDAC</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.PA01</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.UCMX</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.HDAC</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.UCMX</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.PA01</dependency>
           <device id="INT0000">
             <acpi_object>\_SB_.PCI0.I2C0.HDAC</acpi_object>
             <compatible_id>INT0000</compatible_id>
@@ -1953,8 +1953,8 @@
           <resource id="res1" type="irq" int="17"/>
           <resource id="res0" type="memory" min="0xfe022000" max="0xfe022fff" len="0x1000"/>
           <dependency type="provides resources to">\_SB_.PCI0.I2C1.UCMX</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPL1</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C1.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
@@ -2011,17 +2011,17 @@
           </status>
           <resource id="res1" type="irq" int="18"/>
           <resource id="res0" type="memory" min="0xfe024000" max="0xfe024fff" len="0x1000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.LNK3</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.CAM0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.LNK1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.LNK0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.UCMX</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPD0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP3</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP2</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.CAM0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C2.PMIC</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK3</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP3</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP2</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.UCMX</dependency>
           <device id="INT3471" address="0x0">
             <acpi_object>\_SB_.PCI0.I2C2.CAM0</acpi_object>
             <compatible_id>INT3471</compatible_id>
@@ -2109,11 +2109,11 @@
           </status>
           <resource id="res1" type="irq" int="19"/>
           <resource id="res0" type="memory" min="0xfe026000" max="0xfe026fff" len="0x1000"/>
+          <dependency type="provides resources to">\_SB_.PCI0.CLP1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPD0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C3.UCMX</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.CLP1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.LNK2</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C3.UCMX</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C3.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
@@ -2796,4 +2796,190 @@
       </device>
     </thermalzone>
   </devices>
+  <device-classes>
+    <inputs>
+      <input>
+        <name>Sleep Button</name>
+        <phys>PNP0C0E/button/input0</phys>
+      </input>
+      <input>
+        <name>Power Button</name>
+        <phys>PNP0C0C/button/input0</phys>
+      </input>
+      <input>
+        <name>Power Button</name>
+        <phys>LNXPWRBN/button/input0</phys>
+      </input>
+      <input>
+        <name>Video Bus</name>
+        <phys>LNXVIDEO/video/input0</phys>
+      </input>
+      <input>
+        <name>HDA Intel PCH Front Mic</name>
+        <phys>ALSA</phys>
+      </input>
+      <input>
+        <name>HDA Intel PCH Rear Mic</name>
+        <phys>ALSA</phys>
+      </input>
+      <input>
+        <name>HDA Intel PCH Line Out</name>
+        <phys>ALSA</phys>
+      </input>
+      <input>
+        <name>HDA Intel PCH Front Headphone</name>
+        <phys>ALSA</phys>
+      </input>
+      <input>
+        <name>HDA Intel PCH HDMI/DP,pcm=3</name>
+        <phys>ALSA</phys>
+      </input>
+      <input>
+        <name>HDA Intel PCH HDMI/DP,pcm=7</name>
+        <phys>ALSA</phys>
+      </input>
+      <input>
+        <name>HDA Intel PCH HDMI/DP,pcm=8</name>
+        <phys>ALSA</phys>
+      </input>
+      <input>
+        <name>HDA Intel PCH HDMI/DP,pcm=9</name>
+        <phys>ALSA</phys>
+      </input>
+      <input>
+        <name>HDA Intel PCH HDMI/DP,pcm=10</name>
+        <phys>ALSA</phys>
+      </input>
+    </inputs>
+    <ttys>
+      <serial>
+        <dev_path>/dev/ttyS0</dev_path>
+        <type>4</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS1</dev_path>
+        <type>4</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS2</dev_path>
+        <type>4</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS3</dev_path>
+        <type>4</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS4</dev_path>
+        <type>4</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS5</dev_path>
+        <type>4</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS6</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS7</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS8</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS9</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS10</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS11</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS12</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS13</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS14</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS15</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS16</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS17</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS18</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS19</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS20</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS21</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS22</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS23</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS24</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS25</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS26</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS27</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS28</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS29</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS30</dev_path>
+        <type>0</type>
+      </serial>
+      <serial>
+        <dev_path>/dev/ttyS31</dev_path>
+        <type>0</type>
+      </serial>
+    </ttys>
+  </device-classes>
 </acrn-config>
