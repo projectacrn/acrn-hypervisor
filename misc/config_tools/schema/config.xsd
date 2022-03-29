@@ -15,7 +15,12 @@
   <xs:all>
     <xs:element name="BUILD_TYPE" type="BuildType" default="debug">
       <xs:annotation acrn:title="Build type" acrn:views="basic">
-        <xs:documentation>Select the build type. Debug mode enables debug shell, prints, and logs. Release mode optimizes the ACRN binary for deployment and turns off all debug infrastructure. These settings can only be changed at build time.</xs:documentation>
+        <xs:documentation>Select the build type:
+
+* ``Debug`` enables the debug shell, prints, and logs.
+* ``Release`` optimizes the ACRN binary for deployment and turns off all debug infrastructure.
+
+These settings can only be changed at build time.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SERIAL_CONSOLE" type="SerialConsoleOptions">
@@ -49,28 +54,28 @@
 
   <xs:all>
     <xs:element name="RELOC" type="Boolean" default="y">
-      <xs:annotation acrn:title="Hypervisor relocation in memory" acrn:views="advanced">
+      <xs:annotation acrn:title="Hypervisor relocation" acrn:views="advanced">
         <xs:documentation>Enable hypervisor relocation in memory. The bootloader may need to change the location of the hypervisor because of other firmware.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SCHEDULER" type="SchedulerType" default="SCHED_BVT">
       <xs:annotation acrn:title="Virtual CPU scheduler" acrn:views="advanced">
-        <xs:documentation>Select the scheduling algorithm used to determine which User VM runs on a shared virtual CPU.</xs:documentation>
+        <xs:documentation>Select the scheduling algorithm for determining the priority of User VMs running on a shared virtual CPU.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MULTIBOOT2" type="Boolean" default="y">
       <xs:annotation acrn:title="Multiboot2" acrn:views="advanced">
-        <xs:documentation>Enable multiboot2 protocol support and multiboot1 downward compatibility. Disable this feature if multiboot1 meets your requirements and to reduce lines of code.</xs:documentation>
+        <xs:documentation>Enable multiboot2 protocol support (with multiboot1 downward compatibility). If multiboot1 meets your requirements, disable this feature to reduce hypervisor code size.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="ENFORCE_TURNOFF_AC" type="Boolean" default="y">
       <xs:annotation acrn:title="Split lock detection" acrn:views="advanced">
-        <xs:documentation>Enable detection of split locks, which can negatively affect an application's real-time performance. If a lock is detected, an alignment check exception #AC occurs.</xs:documentation>
+        <xs:documentation>Enable detection of split locks. A split lock can negatively affect an application's real-time performance. If a lock is detected, an alignment check exception #AC occurs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="ENFORCE_TURNOFF_GP" type="Boolean" default="n">
-      <xs:annotation acrn:title="Uncacheable-memory lock detection" acrn:views="advanced">
-        <xs:documentation>Enable detection of uncacheable-memory locks, which can negatively affect an application's real-time performance. If a lock is detected, a general-protection exception #GP occurs.</xs:documentation>
+      <xs:annotation acrn:title="UC lock detection" acrn:views="advanced">
+        <xs:documentation>Enable detection of uncacheable-memory (UC) locks. A UC lock can negatively affect an application's real-time performance. If a lock is detected, a general-protection exception #GP occurs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SECURITY_VM_FIXUP" type="Boolean" default="n">
@@ -84,13 +89,13 @@
       </xs:annotation>
     </xs:element>
     <xs:element name="RDT" type="RDTType">
-      <xs:annotation acrn:title="Intel Resource Director Technology (RDT)" acrn:views="advanced">
+      <xs:annotation acrn:title="Intel Resource Director Tech" acrn:views="advanced">
         <xs:documentation>Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="HYPERV_ENABLED" type="Boolean" default="y">
-      <xs:annotation acrn:title="Hyper-V virtualization technology" acrn:views="advanced">
-        <xs:documentation>Enable Microsoft Hyper-V Hypervisor Top-Level Functional Specification (TFLS) for Windows User VMs.</xs:documentation>
+      <xs:annotation acrn:title="Hyper-V" acrn:views="advanced">
+        <xs:documentation>Enable Microsoft Hyper-V Hypervisor Top-Level Functional Specification (TFLS) for User VMs running Windows.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="IOMMU_ENFORCE_SNP" type="Boolean" default="n">
@@ -99,28 +104,28 @@
       </xs:annotation>
     </xs:element>
     <xs:element name="ACPI_PARSE_ENABLED" type="Boolean" default="y">
-      <xs:annotation acrn:title="Parse ACPI tables at runtime" acrn:views="advanced">
+      <xs:annotation acrn:title="Parse ACPI tables" acrn:views="advanced">
         <xs:documentation>Enable ACPI runtime parsing to get DMAR (DMA remapping) configuration data from the APCI tables. Otherwise, use existing, static information from the associated board configuration file.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="y">
       <xs:annotation acrn:title="Mitigate L1 terminal fault" acrn:views="advanced">
-        <xs:documentation>Enable L1 cache flush before VM entry to prevent L1 terminal fault. L1 terminal fault is a hardware vulnerability that allows unauthorized disclosure of information residing in the L1 data cache.</xs:documentation>
+        <xs:documentation>Enable L1 cache flush before VM entry to prevent L1 terminal fault. L1 terminal fault is a hardware vulnerability that could allow unauthorized disclosure of information residing in the L1 data cache.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="y">
-      <xs:annotation acrn:title="Machine Check Error (MCE) workaround" acrn:views="advanced">
-        <xs:documentation>Enable the software workaround for Machine Check Error on Page Size Change (hardware bug in some processor families).</xs:documentation>
+      <xs:annotation acrn:title="MCE workaround" acrn:views="advanced">
+        <xs:documentation>Enable the software workaround for Machine Check Error on Page Size Change (erratum in some processor families).</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="IVSHMEM" type="IVSHMEMInfo">
       <xs:annotation acrn:title="Inter-VM shared memory" acrn:views="basic">
-        <xs:documentation/>
+        <xs:documentation>Configure shared memory regions for inter-VM communication.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SSRAM" minOccurs="0" type="SSRAMInfo">
-      <xs:annotation acrn:title="Software SRAM (for real-time apps)" acrn:views="advanced">
-        <xs:documentation />
+      <xs:annotation acrn:title="Software SRAM" acrn:views="advanced">
+        <xs:documentation>Configure Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -129,7 +134,7 @@
 <xs:complexType name="MemoryOptionsType">
   <xs:all>
     <xs:element name="STACK_SIZE" type="HexFormat" default="0x2000">
-      <xs:annotation acrn:title="CPU memory stack size (bytes per CPU)" acrn:views="advanced">
+      <xs:annotation acrn:title="CPU memory stack size (bytes)" acrn:views="advanced">
         <xs:documentation>Specify the size of the memory stack in bytes for each physical CPU. For example, if you specify 8 kilobytes, each CPU will get its own 8-kilobyte stack.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -166,7 +171,7 @@
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_PCI_DEV_NUM" default="96">
-      <xs:annotation acrn:title="Maximum number of PCI devices" acrn:views="advanced">
+      <xs:annotation acrn:title="Max PCI devices" acrn:views="advanced">
         <xs:documentation>Specify the maximum number of PCI devices. This impacts the amount of memory used to maintain information about these PCI devices. The default value is calculated from the board configuration file. If you have PCI devices that were not detected by the Board Inspector, you may need to change this maximum value.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
@@ -194,12 +199,12 @@
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_PT_IRQ_ENTRIES" type="xs:integer" default="256">
-      <xs:annotation acrn:title="Maximum number of IRQ entries for passthrough devices" acrn:views="advanced">
+      <xs:annotation acrn:title="Max passthrough IRQ entries" acrn:views="advanced">
         <xs:documentation>Specify the maximum number of interrupt request (IRQ) entries from all passthrough devices.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MAX_MSIX_TABLE_NUM" default="64">
-        <xs:annotation acrn:title="Maximum number of MSI-X tables per device" acrn:views="advanced">
+        <xs:annotation acrn:title="Max MSI-X tables" acrn:views="advanced">
           <xs:documentation>Specify the maximum number of Message Signaled Interrupt MSI-X tables per device. The default value is calculated from the board configuration file.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
@@ -213,7 +218,7 @@
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_EMULATED_MMIO" default="16">
-        <xs:annotation acrn:title="Maximum number of emulated MMIO regions" acrn:views="advanced">
+        <xs:annotation acrn:title="Max emulated MMIO regions" acrn:views="advanced">
           <xs:documentation>Specify the maximum number of emulated MMIO regions for device virtualization. The default value is calculated from the board configuration file.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
@@ -267,7 +272,7 @@
       </xs:annotation>
     </xs:element>
     <xs:element name="vuart_connections" type="VuartConnectionsType">
-      <xs:annotation acrn:title="Virtual UART connection" acrn:views="basic">
+      <xs:annotation acrn:title="Inter-VM virtual UART connection" acrn:views="basic">
         <xs:documentation>Specify the vUART connection settings.
 Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
@@ -318,13 +323,13 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="virtual_cat_support" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="Virtual Cache Allocation Technology (vCAT)" acrn:views="advanced">
+      <xs:annotation acrn:title="Virtual Cache Allocation Tech" acrn:views="advanced">
         <xs:documentation>Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="secure_world_support" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:views="">
-        <xs:documentation>Specify secure world support for trustry OS.</xs:documentation>
+        <xs:documentation>Specify secure world support for trusty OS.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="hide_mtrr_support" type="Boolean" default="n" minOccurs="0">
@@ -405,17 +410,17 @@ argument and memory.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="vbootloader" type="EnablementType" default="Enable">
-      <xs:annotation acrn:title="OVMF (Open Virtual Machine Firmware)" acrn:applicable-vms="post-launched" acrn:views="basic">
+      <xs:annotation acrn:title="Open Virtual Machine Firmware" acrn:applicable-vms="post-launched" acrn:views="basic">
         <xs:documentation>Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="vuart0" type="EnablementType" default="Enable">
-      <xs:annotation acrn:title="Emulate COM1 as stdio I/O in Device Model" acrn:applicable-vms="post-launched" acrn:views="basic">
+      <xs:annotation acrn:title="Emulate COM1 as stdio I/O" acrn:applicable-vms="post-launched" acrn:views="basic">
 	<xs:documentation>Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="usb_xhci" minOccurs="0">
-      <xs:annotation acrn:title="Virtual USB host controller interface" acrn:views="basic" acrn:applicable-vms="post-launched">
+      <xs:annotation acrn:title="Virtual USB HCI" acrn:views="basic" acrn:applicable-vms="post-launched">
         <xs:documentation>Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
@@ -435,18 +440,18 @@ argument and memory.</xs:documentation>
         <xs:all>
           <xs:element name="console" type="xs:string" minOccurs="0">
             <xs:annotation acrn:views="basic">
-              <xs:documentation>The virtio console device setting.Input format:
-              ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``</xs:documentation>
+              <xs:documentation>The virtio console device setting. Input format:
+``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="network" type="xs:string" minOccurs="0">
             <xs:annotation acrn:views="basic">
               <xs:documentation>The virtio network device setting.
-              Input format: ``device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]``.
-              The ``device_name`` is the name of the TAP (or MacVTap) device.
-              It must include the keyword ``tap``. ``vhost`` specifies the
-              vhost backend; otherwise, the VBSU backend is used. The ``mac``
-              address is optional.</xs:documentation>
+Input format: ``device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]``.
+The ``device_name`` is the name of the TAP (or MacVTap) device.
+It must include the keyword ``tap``. ``vhost`` specifies the
+vhost backend; otherwise, the VBSU backend is used. The ``mac``
+address is optional.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="input" type="xs:string" minOccurs="0">
@@ -457,7 +462,7 @@ argument and memory.</xs:documentation>
           <xs:element name="block" type="xs:string" minOccurs="0">
             <xs:annotation acrn:views="basic">
               <xs:documentation>The virtio block device setting.
-              Format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img</xs:documentation>
+Format: ``[blk partition:][img path]``. Example: ``/dev/sda3:./a/b.img``.</xs:documentation>
             </xs:annotation>
           </xs:element>
         </xs:all>

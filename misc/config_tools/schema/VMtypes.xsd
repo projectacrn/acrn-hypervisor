@@ -22,16 +22,17 @@
   <xs:annotation>
     <xs:documentation>Current supported VM types are:
 
-- ``RTVM`` Read-time VM
-- ``STANDARD_VM`` Service VM
-- ``TEE_VM`` VM with Trusted Execution Environment, which could provide high level
-  security of code execution
-- ``REE_VM`` VM with Rich Execution Environment, which is a companion VM with TEE_VM,
-  and could provide more features and applications, but is vulnerable to attacks</xs:documentation>
+- ``Real-time`` for time-sensitive applications.
+- ``Standard`` for general-purpose applications, such as human-machine interface (HMI).
+</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
-    <xs:enumeration value="RTVM" />
-    <xs:enumeration value="STANDARD_VM" />
+    <xs:enumeration value="RTVM">
+      <xs:annotation acrn:title="Real-time" />
+    </xs:enumeration>
+    <xs:enumeration value="STANDARD_VM">
+      <xs:annotation acrn:title="Standard" />
+    </xs:enumeration>
     <xs:enumeration value="TEE_VM">
       <xs:annotation acrn:views="" />
     </xs:enumeration>
@@ -72,12 +73,12 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 <xs:complexType name="EPCSection">
   <xs:sequence>
     <xs:element name="base" type="HexFormat" default="0">
-      <xs:annotation acrn:title="Intel Software Guard Extensions (SGX) EPC section base" acrn:applicable-vms="pre-launched">
+      <xs:annotation acrn:title="EPC section base" acrn:applicable-vms="pre-launched">
         <xs:documentation>Specify the enclave page cache (EPC) section base for Intel Software Guard Extensions (SGX). Must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size" type="HexFormat" default="0">
-      <xs:annotation acrn:title="Intel Software Guard Extensions (SGX) EPC section size (bytes)" acrn:applicable-vms="pre-launched">
+      <xs:annotation acrn:title="EPC section size (bytes)" acrn:applicable-vms="pre-launched">
         <xs:documentation>Specify the enclave page cache (EPC) section size in bytes for Intel Software Guard Extensions (SGX). Must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -87,8 +88,8 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 <xs:complexType name="MemoryInfo">
   <xs:all>
     <xs:element name="whole" type="xs:integer" default="256">
-      <xs:annotation acrn:title="VM physical memory allocation (MB)" acrn:views="basic" acrn:applicable-vms="post-launched">
-	<xs:documentation>Specify the physical memory allocated to this VM in Megabytes.</xs:documentation>
+      <xs:annotation acrn:title="Memory size (MB)" acrn:views="basic" acrn:applicable-vms="post-launched">
+	<xs:documentation>Specify the physical memory size allocated to this VM in megabytes.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="start_hpa" type="HexFormat" default="0x100000000">
@@ -177,8 +178,12 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
     <xs:documentation>vCOM type</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
-    <xs:enumeration value="legacy" />
-    <xs:enumeration value="pci" />
+    <xs:enumeration value="legacy">
+      <xs:annotation acrn:title="Legacy" />
+    </xs:enumeration>
+    <xs:enumeration value="pci">
+      <xs:annotation acrn:title="PCI" />
+    </xs:enumeration>
   </xs:restriction>
 </xs:simpleType>
 
@@ -191,17 +196,25 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
     </xs:element>
     <xs:element name="io_port" type="HexFormat" default="0x3F">
       <xs:annotation acrn:title="Virtual I/O address">
-        <xs:documentation>Virtual I/O address</xs:documentation>
+        <xs:documentation>Specify the COM base for each legacy virtual UART.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="vbdf" type="VBDFType" minOccurs="0" maxOccurs="1"  />
+    <xs:element name="vbdf" type="VBDFType" minOccurs="0" maxOccurs="1">
+      <xs:annotation acrn:title="Virtual BDF">
+        <xs:documentation>Specify the virtual Bus:Device.Function (BDF) for each PCI virtual UART. Virtual BDF is automatically assigned when the configuration is saved and can be changed if needed.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
   </xs:sequence>
 </xs:complexType>
 
 <xs:complexType name="VuartConnectionType">
   <xs:sequence>
     <xs:element name="name" type="xs:string" />
-    <xs:element name="type" type="VuartType" default="legacy" />
+    <xs:element name="type" type="VuartType" default="legacy">
+      <xs:annotation acrn:title="Type">
+        <xs:documentation>Select the communication virtual UART (vUART) type.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="endpoint" type="VuartEndpointType" minOccurs="2" maxOccurs="2" />
   </xs:sequence>
 </xs:complexType>
@@ -215,13 +228,13 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 <xs:complexType name="MMIOResourcesConfiguration">
   <xs:all>
     <xs:element name="TPM2" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="Trusted platform module (TPM2) passthrough" acrn:applicable-vms="pre-launched, post-launched">
-        <xs:documentation>Pass through the trusted platform module (TPM2) device to this VM.</xs:documentation>
+      <xs:annotation acrn:title="TPM2 passthrough" acrn:applicable-vms="pre-launched, post-launched">
+        <xs:documentation>Enable passthrough of the trusted platform module (TPM2) device to this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="p2sb" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="Primary-to-Sideband bridge passthrough" acrn:applicable-vms="pre-launched">
-        <xs:documentation>Pass through the Primary-to-Sideband (P2SB) bridge register access BAR to this VM.</xs:documentation>
+      <xs:annotation acrn:title="P2SB bridge passthrough" acrn:applicable-vms="pre-launched">
+        <xs:documentation>Enable passthrough of the Primary-to-Sideband (P2SB) bridge register access BAR to this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
