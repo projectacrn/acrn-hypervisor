@@ -571,7 +571,7 @@
 
 /* PCI Message Signalled Interrupts (MSI) */
 #define	PCIR_MSI_CTRL		0x2
-#define	PCIM_MSICTRL_VECTOR		0x0100
+#define	PCIM_MSICTRL_PVMC		0x0100
 #define	PCIM_MSICTRL_64BIT		0x0080
 #define	PCIM_MSICTRL_MME_MASK		0x0070
 #define	PCIM_MSICTRL_MME_1		0x0000
