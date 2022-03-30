@@ -24,6 +24,7 @@
 #define VM_NAME "VM_NAME"
 #define DEV_NAME "DEV_NAME"
 #define ALLOW_TRIGGER_S5 "ALLOW_TRIGGER_S5"
+#define ALLOW_TRIGGER_SYSREBOOT "ALLOW_TRIGGER_SYSREBOOT"
 #define MAX_CONFIG_VALUE_LEN 128
 
 #define CHK_CREAT 1             /* create a directory, if it does not exist */
@@ -34,6 +35,7 @@ struct life_mngr_config {
 	char vm_name[MAX_CONFIG_VALUE_LEN];
 	char dev_names[MAX_CONFIG_VALUE_LEN];
 	char allow_trigger_s5[MAX_CONFIG_VALUE_LEN];
+	char allow_trigger_sysreboot[MAX_CONFIG_VALUE_LEN];
 };
 extern struct life_mngr_config life_conf;
 
@@ -43,6 +45,13 @@ extern struct life_mngr_config life_conf;
 static inline char *get_allow_s5_config(struct life_mngr_config *conf)
 {
 	return conf->allow_trigger_s5;
+}
+/**
+ * @brief Get the name of the device which is allowed to trigger system reboot
+ */
+static inline char *get_allow_sysreboot_config(struct life_mngr_config *conf)
+{
+	return conf->allow_trigger_sysreboot;
 }
 /**
  * @brief Load configuration item from config file

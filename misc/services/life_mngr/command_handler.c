@@ -205,6 +205,12 @@ static int is_allowed_s5_channel_dev(struct life_mngr_config *conf, struct chann
 					TTY_PATH_MAX);
 }
 
+static int is_allowed_sysreboot_channel_dev(struct life_mngr_config *conf, struct channel_dev *c_dev)
+{
+	return strncmp(get_allow_sysreboot_config(conf), get_uart_dev_path(c_dev->uart_device),
+					TTY_PATH_MAX);
+}
+
 /**
  * @brief The handler of sync command of lifecycle manager in service VM
  *
@@ -237,7 +243,7 @@ int req_reboot_handler(void *arg, int fd)
 	if (c_dev == NULL)
 		return 0;
 
-	if (is_allowed_s5_channel_dev(&life_conf, c_dev)) {
+	if (is_allowed_sysreboot_channel_dev(&life_conf, c_dev)) {
 		LOG_PRINTF("The user VM (%s) is not allowed to trigger system reboot\n",
 			c_dev->name);
 		return 0;

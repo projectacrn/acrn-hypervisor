@@ -84,6 +84,9 @@ bool load_config(char *conf_path)
 		else if (strncmp(ALLOW_TRIGGER_S5, (const char *)key_str,
 				sizeof(ALLOW_TRIGGER_S5)) == 0)
 			memcpy(life_conf.allow_trigger_s5, value_str, strlen(value_str));
+		else if (strncmp(ALLOW_TRIGGER_SYSREBOOT, (const char *)key_str,
+				sizeof(ALLOW_TRIGGER_SYSREBOOT)) == 0)
+			memcpy(life_conf.allow_trigger_sysreboot, value_str, strlen(value_str));
 		else
 			LOG_PRINTF("Invalid item in the configuration file, key=%s, value=%s\n",
 					key_str, value_str);
