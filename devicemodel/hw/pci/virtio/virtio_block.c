@@ -224,10 +224,12 @@ virtio_blk_done(struct blockif_req *br, int err)
 static void
 virtio_blk_abort(struct virtio_vq_info *vq, uint16_t idx)
 {
+	pthread_mutex_lock(&blk->mtx);
 	if (idx < vq->qsize) {
 		vq_relchain(vq, idx, 1);
 		vq_endchains(vq, 0);
 	}
+	pthread_mutex_unlock(&blk->mtx);
 }
 
 static void
