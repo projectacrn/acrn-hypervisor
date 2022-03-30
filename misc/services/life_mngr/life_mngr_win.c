@@ -31,7 +31,7 @@
 #define UVM_SOCKET_PORT (0x2001U)
 #define READ_INTERVAL	(100U) /* The time unit is microsecond */
 #define MIN_RESEND_TIME (3U)
-#define MS_TO_SECOND	(1000U)
+#define SECOND_TO_MS	(1000U)
 #define RETRY_RECV_TIMES	(8U)
 
 HANDLE hCom2;
@@ -65,7 +65,12 @@ void handle_socket_request(SOCKET sClient, char *req_message)
 	char ack_message[BUFF_SIZE];
 
 	snprintf(ack_message, sizeof(ack_message), "ack_%s", req_message);
-	Sleep(6U * MS_TO_SECOND);
+	/**
+	 * The lifecycle manager in Service VM checks sync message every 5 seconds
+	 * during listening phase, delay 6 seconds to wait Service VM to receive the
+	 * sync message, then start to send message to Service VM.
+	 */
+	Sleep(6U * SECOND_TO_MS);
 	send(sClient, ack_message, sizeof(ack_message), 0);
 	start_uart_resend(req_message, MIN_RESEND_TIME);
 	send_message_by_uart(hCom2, req_message, sizeof(req_message));
@@ -203,7 +208,7 @@ int main()
 	 * during listening phase, delay 5 seconds to wait Service VM to receive the
 	 * sync message, then start to read ack message from Service VM.
 	 */
-	Sleep(5U * MS_TO_SECOND);
+	Sleep(5U * SECOND_TO_MS);
 	do {
 		do {
 			retry_times = RETRY_RECV_TIMES;
@@ -215,7 +220,7 @@ int main()
 			} while ((recvsize < MSG_SIZE) && (retry_times > 0));
 			if (recvsize < MSG_SIZE) {
 				if (resend_time > 1U) {
-					Sleep(6U * MS_TO_SECOND);
+					Sleep(6U * SECOND_TO_MS);
 					printf("Resend command (%s) service VM\n", resend_buf);
 					send_message_by_uart(hCom2, resend_buf, strlen(resend_buf));
 					resend_time--;
