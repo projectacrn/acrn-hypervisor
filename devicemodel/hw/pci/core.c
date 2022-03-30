@@ -1059,6 +1059,78 @@ pci_emul_deinit(struct vmctx *ctx, struct pci_vdev_ops *ops, int bus, int slot,
 	}
 }
 
+static int
+pci_access_msi(struct pci_vdev *dev, int msi_cap, uint32_t *val, bool is_write)
+{
+	uint16_t msgctrl;
+	int rc, offset;
+
+	if (msi_cap > PCIR_MSI_PENDING) {
+		pr_err("%s: Msi capability length is out of msi length!\n", __func__);
+		return -1;
+	}
+	rc = pci_emul_find_capability(dev, PCIY_MSI, &offset);
+	if (rc)
+		return -1;
+
+	msgctrl = pci_get_cfgdata16(dev, offset);
+	if (msgctrl & PCIM_MSICTRL_64BIT)
+		offset = offset + msi_cap;
+	else
+		offset = offset + msi_cap - 0x04;
+
+	if (is_write)
+		pci_set_cfgdata32(dev, offset, *val);
+	else
+		*val = pci_get_cfgdata16(dev, offset);
+
+	return 0;
+}
+
+static bool
+pci_is_msi_masked(struct pci_vdev *dev, uint32_t index)
+{
+	uint32_t val = 0;
+	int rc;
+
+	rc = pci_access_msi(dev, PCIR_MSI_MASK, &val, false);
+	if (rc)
+		return 0;
+	return val & (1 << index);
+}
+
+static bool
+pci_is_msi_pending(struct pci_vdev *dev, uint32_t index)
+{
+	uint32_t val = 0;
+	int rc;
+
+	rc = pci_access_msi(dev, PCIR_MSI_PENDING, &val, false);
+	if (rc)
+		return 0;
+	return val & (1 << index);
+}
+
+static void
+pci_set_msi_pending(struct pci_vdev *dev, uint32_t index, bool set)
+{
+	uint32_t val;
+	int rc;
+
+	rc = pci_access_msi(dev, PCIR_MSI_PENDING,
+			&val, false);
+	if (rc) {
+		pr_err("%s: Pci access msi capability failed!\n", __func__);
+		return;
+	}
+
+	if (set)
+		val = (1 << index) | val;
+	else
+		val = (~(1 << index)) | val;
+	pci_access_msi(dev, PCIR_MSI_PENDING, &val, true);
+}
+
 int
 pci_populate_msicap(struct msicap *msicap, int msgnum, int nextptr)
 {
@@ -1074,7 +1146,7 @@ pci_populate_msicap(struct msicap *msicap, int msgnum, int nextptr)
 	bzero(msicap, sizeof(struct msicap));
 	msicap->capid = PCIY_MSI;
 	msicap->nextptr = nextptr;
-	msicap->msgctrl = PCIM_MSICTRL_64BIT | (mmc << 1);
+	msicap->msgctrl = PCIM_MSICTRL_64BIT | PCIM_MSICTRL_PVMC | (mmc << 1);
 
 	return 0;
 }
@@ -1208,6 +1280,7 @@ msicap_cfgwrite(struct pci_vdev *dev, int capoff, int offset,
 {
 	uint16_t msgctrl, rwmask, msgdata, mme;
 	uint32_t addrlo;
+	int i;
 
 	/*
 	 * If guest is writing to the message control register make sure
@@ -1239,6 +1312,14 @@ msicap_cfgwrite(struct pci_vdev *dev, int capoff, int offset,
 	}
 
 	CFGWRITE(dev, offset, val, bytes);
+	if (dev->msi.enabled) {
+		for (i = 0; i < dev->msi.maxmsgnum; i++) {
+			if (!pci_is_msi_masked(dev, i)
+				&& pci_is_msi_pending(dev, i)) {
+				pci_generate_msi(dev, i);
+			}
+		}
+	}
 }
 
 void
@@ -1938,8 +2019,13 @@ void
 pci_generate_msi(struct pci_vdev *dev, int index)
 {
 	if (pci_msi_enabled(dev) && index < pci_msi_maxmsgnum(dev)) {
+		if (pci_is_msi_masked(dev, index)) {
+			pci_set_msi_pending(dev, index, true);
+			return;
+		}
 		vm_lapic_msi(dev->vmctx, dev->msi.addr,
 			     dev->msi.msg_data + index);
+		pci_set_msi_pending(dev, index, false);
 	}
 }
 
