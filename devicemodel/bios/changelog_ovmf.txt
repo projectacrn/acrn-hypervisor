@@ -1,3 +1,9 @@
+OVMF release v3.0
+
+- VGA interface of virtio-gpu adapter support
+- Ovmf:ACRN: Fix the building error
+- acrn: fix how to get memory below 4G
+
 OVMF release v2.7
 
 - OvmfPkg/PlatformGopPolicy: Add OpRegion 2.1 support
