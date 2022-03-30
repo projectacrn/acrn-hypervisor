@@ -246,7 +246,7 @@ int req_reboot_handler(void *arg, int fd)
 	ret = send_message_by_uart(c_dev->uart_device, ACK_REQ_SYS_REBOOT,
 								strlen(ACK_REQ_SYS_REBOOT));
 	if (ret < 0)
-		LOG_WRITE("Send acked message to user VM fail\n");
+		LOG_WRITE("Sending a reboot acknowledgement message to user VM failed.\n");
 	system_reboot_request_flag = true;
 	usleep(SECOND_TO_US);
 	LOG_PRINTF("Send acked shutdown request message to user VM (%s)\n", c_dev->name);
@@ -282,7 +282,7 @@ int req_shutdown_handler(void *arg, int fd)
 	ret = send_message_by_uart(c_dev->uart_device, ACK_REQ_SYS_SHUTDOWN,
 								strlen(ACK_REQ_SYS_SHUTDOWN));
 	if (ret < 0)
-		LOG_WRITE("Send acked message to user VM fail\n");
+		LOG_WRITE("Sending a shutdown acknowledgement message to user VM failed.\n");
 	usleep(SECOND_TO_US);
 	LOG_PRINTF("Send acked shutdown request message to user VM (%s)\n", c_dev->name);
 	start_all_uart_channel_dev_resend(c, POWEROFF_CMD, VM_SHUTDOWN_RETRY_TIMES);

@@ -1,5 +1,5 @@
 [Unit]
-Description=ACRN manager deamon
+Description=ACRN manager daemon
 After=systemd-resolved.service
 After=life_mngr.service
 ConditionPathExists=/dev/acrn_hsm
