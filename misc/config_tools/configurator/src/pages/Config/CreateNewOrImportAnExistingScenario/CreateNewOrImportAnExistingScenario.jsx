@@ -66,21 +66,29 @@ export default class CreateNewOrImportAnExistingScenario extends Component {
         let {configurator} = this.context
         return configurator.programLayer.loadScenario(this.scenarioXMLSelect.current.value)
             .then(() => {
-                let printPath = configurator.WorkingFolder;
-                if (_.endsWith(configurator.WorkingFolder, "/") || _.endsWith(configurator.WorkingFolder, "\\")) {
-                    printPath = printPath + 'scenario.xml'
-                } else {
-                    printPath = printPath + (configurator.WorkingFolder[1] === ":" ? "\\" : '/') + 'scenario.xml'
-                }
-                this.setState({selected: printPath})
+                this.setState({selected: this.getScenarioPath()})
             }).then(() => {
-                document.querySelectorAll(".accordion-button")[2].click()
+                let tabButton = document.querySelectorAll(".accordion-button")[2];
+                if (tabButton.className.indexOf('collapsed') >= 0) {
+                    tabButton.click()
+                }
             })
             .catch((reason) => {
                 console.log(reason)
                 alert(reason)
             })
     };
+
+    getScenarioPath = () => {
+        let {configurator} = this.context
+        let printPath = configurator.WorkingFolder;
+        if (_.endsWith("/", configurator.WorkingFolder) || _.endsWith("\\", configurator.WorkingFolder)) {
+            printPath = printPath + 'scenario.xml'
+        } else {
+            printPath = printPath + (configurator.WorkingFolder[1] === ":" ? "\\" : '/') + 'scenario.xml'
+        }
+        return printPath;
+    }
 
     render = () => {
         let {configurator} = this.context
@@ -101,7 +109,7 @@ export default class CreateNewOrImportAnExistingScenario extends Component {
                                 {this.state.selected ? this.state.selected : "none selected"}</p>
                             <div className="py-4 text-center">
                                 <CreateScenarioModal cb={() => {
-                                    this.setState({selected: configurator.WorkingFolder + '/scenario.xml'})
+                                    this.setState({selected: this.getScenarioPath()})
                                 }}/>
                             </div>
                         </Col>
