@@ -204,6 +204,9 @@ $(HV_SCENARIO_XML):
 	    echo "Scenario XML is being fetched from $(realpath $(SCENARIO_FILE))"; \
 	    mkdir -p $(dir $(HV_SCENARIO_XML)); \
 	    python3 $(HV_CONFIG_TOOL_DIR)/scenario_config/default_populator.py $(SCENARIO_FILE) $(HV_SCENARIO_XML); \
+	    if [ -z $$(xmllint --xpath 'string(//@scenario)' $(HV_SCENARIO_XML)) ]; then \
+	      sed "s#<acrn-config#<acrn-config scenario=\"$(subst .xml,,$(notdir $(SCENARIO_FILE)))\"#g" -i $(HV_SCENARIO_XML); \
+	    fi; \
 	  else \
 	    echo "No pre-defined scenario available at $(SCENARIO_FILE)"; \
 	    echo "Try setting another predefined BOARD or SCENARIO or specifying a scenario XML file"; \

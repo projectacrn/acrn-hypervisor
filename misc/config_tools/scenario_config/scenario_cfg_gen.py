@@ -214,12 +214,6 @@ def main(args):
                               "Now this value is {}.".format(common.MAX_VM_NUM)
         return err_dic
 
-    # check if this is the scenario config which matches board info
-    (err_dic, status) = common.is_config_file_match()
-    if not status:
-        err_dic['scenario config'] = "The board xml file does not match scenario xml file!"
-        return err_dic
-
     if params['--out']:
         if os.path.isabs(params['--out']):
             scen_output = params['--out'] + "/scenarios/" + scenario + "/"

@@ -248,17 +248,6 @@ def get_scenario_name():
     return (err_dic, scenario)
 
 
-def is_config_file_match():
-
-    (err_dic, scenario_for_board) = get_xml_attrib(SCENARIO_INFO_FILE, "board")
-    (err_dic, board_name) = get_xml_attrib(BOARD_INFO_FILE, "board")
-
-    if scenario_for_board == board_name:
-        return (err_dic, True)
-    else:
-        return (err_dic, False)
-
-
 def find_tmp_flag(flag):
     """
     Find the index in GUEST_FLAG by flag
