@@ -156,13 +156,13 @@ type of an existing build:
 
 .. code-block:: none
 
-   $ make BOARD=tgl-rvp SCENARIO=hybrid_rt hypervisor
+   $ make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/shared.xml hypervisor
    ...
    $ make hvshowconfig
    Build directory: /path/to/acrn-hypervisor/build/hypervisor
    This build directory is configured with the settings below.
-   - BOARD = tgl-rvp
-   - SCENARIO = hybrid_rt
+   - BOARD = my_board
+   - SCENARIO = shared
    - RELEASE = n
 
 Example of ``hvdefconfig`` to generate the configuration files in the
