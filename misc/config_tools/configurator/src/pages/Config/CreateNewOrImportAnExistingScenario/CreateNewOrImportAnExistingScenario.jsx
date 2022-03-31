@@ -2,9 +2,10 @@ import React, {Component} from "react";
 import {Accordion, Button, Col, Form, Row} from "react-bootstrap";
 
 import CreateScenarioModal from "./CreateScenarioModal/CreateScenarioModal";
-import Banner from "../../../components/Banner";
 import {dialog} from "@tauri-apps/api";
 import {ACRNContext} from "../../../ACRNContext";
+import {invoke} from "@tauri-apps/api/tauri";
+import _ from "lodash/fp";
 
 export default class CreateNewOrImportAnExistingScenario extends Component {
     constructor(props) {
@@ -21,7 +22,22 @@ export default class CreateNewOrImportAnExistingScenario extends Component {
     }
 
     componentDidMount() {
+        let {configurator} = this.context
         this.scenarioHistoryUpdate()
+        invoke('fs_read_dir', {
+            path: configurator.WorkingFolder,
+            recursive: false
+        }).then((files) => {
+            for (let i = 0; i < files.length; i++) {
+                let isScenario = _.endsWith("/scenario.xml", files[i].path.replace(/\\/g, '/'));
+                console.log("files", isScenario, files[i].path)
+                if (isScenario) {
+                    this.scenarioChange(files[i].path).then(() => {
+                        this.importScenario()
+                    })
+                }
+            }
+        })
     }
 
     scenarioHistoryUpdate() {
@@ -39,7 +55,7 @@ export default class CreateNewOrImportAnExistingScenario extends Component {
     scenarioChange = (filepath) => {
         console.log(filepath)
         let {configurator} = this.context
-        configurator.addHistory('scenario', filepath).then(() => {
+        return configurator.addHistory('scenario', filepath).then(() => {
             this.scenarioHistoryUpdate().then(() => {
                 this.scenarioXMLSelect.current.value = filepath
             })
@@ -48,9 +64,17 @@ export default class CreateNewOrImportAnExistingScenario extends Component {
 
     importScenario = () => {
         let {configurator} = this.context
-        configurator.programLayer.loadScenario(this.scenarioXMLSelect.current.value)
+        return configurator.programLayer.loadScenario(this.scenarioXMLSelect.current.value)
             .then(() => {
-                this.setState({selected: configurator.WorkingFolder + '/scenario.xml'})
+                let printPath = configurator.WorkingFolder;
+                if (_.endsWith(configurator.WorkingFolder, "/") || _.endsWith(configurator.WorkingFolder, "\\")) {
+                    printPath = printPath + 'scenario.xml'
+                } else {
+                    printPath = printPath + (configurator.WorkingFolder[1] === ":" ? "\\" : '/') + 'scenario.xml'
+                }
+                this.setState({selected: printPath})
+            }).then(() => {
+                document.querySelectorAll(".accordion-button")[2].click()
             })
             .catch((reason) => {
                 console.log(reason)

@@ -1,8 +1,9 @@
 import React, {Component} from "react";
 import {Accordion, Button, Col, Form, Row} from "react-bootstrap";
-import Banner from "../../../components/Banner";
 import {dialog} from "@tauri-apps/api";
 import {ACRNContext} from "../../../ACRNContext";
+import {invoke} from "@tauri-apps/api/tauri";
+import _ from "lodash/fp";
 
 export default class ImportABoardConfigurationFile extends Component {
     constructor(props) {
@@ -19,11 +20,24 @@ export default class ImportABoardConfigurationFile extends Component {
         }
     }
 
-    componentDidMount() {
+    componentDidMount = () => {
         let {configurator} = this.context
         configurator.getHistory('board').then((boardFiles) => {
             let disableImport = boardFiles.length === 0
             this.setState({boardFiles, disableImport})
+        })
+        invoke('fs_read_dir', {
+            path: configurator.WorkingFolder,
+            recursive: false
+        }).then((files) => {
+            for (let i = 0; i < files.length; i++) {
+                console.log("files", files[i].path)
+                if (_.endsWith(".board.xml", files[i].path)) {
+                    this.boardChange(files[i].path).then(() => {
+                        this.importBoard()
+                    })
+                }
+            }
         })
     }
 
@@ -37,7 +51,7 @@ export default class ImportABoardConfigurationFile extends Component {
 
     boardChange = (filepath) => {
         let {configurator} = this.context
-        configurator.addHistory('board', filepath).then(() => {
+        return configurator.addHistory('board', filepath).then(() => {
             return configurator.getHistory('board')
         }).then((boardFiles) => {
             console.log(boardFiles)
