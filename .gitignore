@@ -10,4 +10,3 @@ build
 venv
 *.egg-info
 /misc/config_tools/dist
-/misc/config_tools/configurator/src-tauri/tauri.conf.json
