@@ -26,10 +26,8 @@ def move_rtct_ssram_and_bin_entries(rtct, new_base_addr, new_area_max_size):
     '''
     if rtct.version == 1:
         expect_ssram_type = acpiparser.rtct.ACPI_RTCT_V1_TYPE_SoftwareSRAM
-        expect_bin_type = acpiparser.rtct.ACPI_RTCT_V1_TYPE_CRL_Binary
     elif rtct.version == 2:
         expect_ssram_type = acpiparser.rtct.ACPI_RTCT_V2_TYPE_SoftwareSRAM
-        expect_bin_type = acpiparser.rtct.ACPI_RTCT_V2_TYPE_CRL_Binary
     else:
         raise Exception("RTCT version error! ", rtct.version)
     top = 0
@@ -38,17 +36,12 @@ def move_rtct_ssram_and_bin_entries(rtct, new_base_addr, new_area_max_size):
         if entry.type == expect_ssram_type:
             top = (entry.base + entry.size) if top < (entry.base + entry.size) else top
             base = entry.base if base == 0 or entry.base < base else base
-        elif entry.type == expect_bin_type:
-            top = (entry.address + entry.size) if top < (entry.address + entry.size) else top
-            base = entry.address if base == 0 or entry.address < base else base
     if new_area_max_size < (top - base):
         raise Exception("not enough space in guest VE820 SSRAM area!")
     rtct_move_offset = new_base_addr - base
     for entry in rtct.entries:
         if entry.type == expect_ssram_type:
             entry.base += rtct_move_offset
-        elif entry.type == expect_bin_type:
-            entry.address += rtct_move_offset
     # re-calculate checksum
     rtct.header.checksum = 0
     rtct.header.checksum = 0 - sum(bytes(rtct))

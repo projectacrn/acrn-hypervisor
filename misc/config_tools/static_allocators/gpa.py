@@ -7,7 +7,7 @@
 
 import sys, os, re
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common, lib.error, lib.lib
+import common, lib.error, lib.lib, math
 from collections import namedtuple
 
 # VMSIX devices list
@@ -72,14 +72,13 @@ VMSIX_VBAR_SIZE = 4 * SIZE_K
 
 # Constant for VIRT_ACPI_NVS_ADDR
 """
-VIRT_ACPI_NVS_ADDR, PRE_RTVM_SW_SRAM_BASE_GPA and PRE_RTVM_SW_SRAM_MAX_SIZE
+VIRT_ACPI_NVS_ADDR and PRE_RTVM_SW_SRAM_END_GPA
 need to be consistant with the layout of hypervisor\arch\x86\guest\ve820.c
 """
 VIRT_ACPI_NVS_ADDR = 0x7FF00000
 RESERVED_NVS_AREA = 0xB0000
 
-PRE_RTVM_SW_SRAM_BASE_GPA = 0x7F5FB000
-PRE_RTVM_SW_SRAM_MAX_SIZE = 0x800000
+PRE_RTVM_SW_SRAM_END_GPA = (0x7FDFB000 - 1)
 
 class AddrWindow(namedtuple(
         "AddrWindow", [
@@ -470,6 +469,7 @@ def allocate_io_port(board_etree, scenario_etree, allocation_etree):
 
 def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
     # Guest physical address of the SW SRAM allocated to a pre-launched VM
+    ssram_area_max_size = 0
     enabled = common.get_node("//SSRAM_ENABLED/text()", scenario_etree)
     if enabled == "y":
         pre_rt_vms = common.get_node("//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']", scenario_etree)
@@ -477,15 +477,22 @@ def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
             vm_id = pre_rt_vms.get("id")
             l3_sw_sram = board_etree.xpath("//cache[@level='3']/capability[@id='Software SRAM']")
             if l3_sw_sram:
-                start = min(map(lambda x: int(x.find("start").text, 16), l3_sw_sram))
-                end = max(map(lambda x: int(x.find("end").text, 16), l3_sw_sram))
+                # Calculate SSRAM area size. Containing all cache parts
+                top = 0
+                base = 0
+                for ssram in board_etree.xpath("//cache/capability[@id='Software SRAM']"):
+                    entry_base = int(common.get_node("./start/text()", ssram), 16)
+                    entry_size = int(common.get_node("./size/text()", ssram))
+                    top = (entry_base + entry_size) if top < (entry_base + entry_size) else top
+                    base = entry_base if base == 0 or entry_base < base else base
+                ssram_area_max_size = math.ceil((top - base)/0x1000) * 0x1000
 
-                allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
-                if allocation_vm_node is None:
-                    allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
-                common.append_node("./ssram/start_gpa", hex(PRE_RTVM_SW_SRAM_BASE_GPA), allocation_vm_node)
-                common.append_node("./ssram/end_gpa", hex(PRE_RTVM_SW_SRAM_BASE_GPA + (end - start)), allocation_vm_node)
-                common.append_node("./ssram/max_size", hex(PRE_RTVM_SW_SRAM_MAX_SIZE), allocation_vm_node)
+            allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+            if allocation_vm_node is None:
+                allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
+            common.append_node("./ssram/start_gpa", hex(PRE_RTVM_SW_SRAM_END_GPA - ssram_area_max_size + 1), allocation_vm_node)
+            common.append_node("./ssram/end_gpa", hex(PRE_RTVM_SW_SRAM_END_GPA), allocation_vm_node)
+            common.append_node("./ssram/max_size", str(ssram_area_max_size), allocation_vm_node)
 
 def allocate_log_area(board_etree, scenario_etree, allocation_etree):
     tpm2_enabled = common.get_node(f"//vm[@id = '0']/mmio_resources/TPM2/text()", scenario_etree)
@@ -523,7 +530,10 @@ def pt_dev_io_port_passthrough(board_etree, scenario_etree, allocation_etree):
 ...                                                ...
  |            TPM2 log area at  0x7FFB0000          |
 ...                                                ...
- |            SSRAM area at  0x7F5FB000             |
+ +--------------------------------------------------+ <--End of SSRAM area, at Offset 0x7FDFB000
+ |            SSRAM area                            |
+ +--------------------------------------------------+ <--Start of SSRAM area
+ |                                                  |    (Depends on the host SSRAM area size)
 ...                                                ...
  |                                                  |
  +--------------------------------------------------+ <--Offset 0
