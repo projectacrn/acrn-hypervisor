@@ -180,25 +180,6 @@ def get_post_vm_cnt():
     return (launch_vm_count, post_vm_count)
 
 
-def is_config_file_match():
-
-    match = True
-    # check if the board config match scenario config
-    (err_dic, scenario_for_board) = common.get_xml_attrib(common.SCENARIO_INFO_FILE, "board")
-    (err_dic, board_name) = common.get_xml_attrib(common.BOARD_INFO_FILE, "board")
-    if scenario_for_board != board_name:
-        err_dic['scenario config'] = "The board xml file does not match scenario xml file!"
-        match = False
-
-    # check if the board config match launch config
-    (err_dic, launch_for_board) = common.get_xml_attrib(common.LAUNCH_INFO_FILE, "board")
-    if launch_for_board != board_name:
-        err_dic['launch config'] = "The board xml file does not match scenario xml file!"
-        match = False
-
-    return (err_dic, match)
-
-
 def get_sos_vmid():
 
     sos_id = ''
