@@ -89,6 +89,12 @@ struct vm_isa_irq {
 	int		ioapic_irq;
 };
 
+struct vm_mem_region {
+	uint64_t fd_offset;
+	int fd;
+};
+bool	vm_find_memfd_region(struct vmctx *ctx, vm_paddr_t gpa,
+			     struct vm_mem_region *ret_region);
 /*
  * Create a device memory segment identified by 'segid'.
  *

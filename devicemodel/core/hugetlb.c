@@ -128,6 +128,17 @@ static struct hugetlb_info hugetlb_priv[HUGETLB_LV_MAX] = {
 	},
 };
 
+struct vm_mmap_mem_region {
+	vm_paddr_t gpa_start;
+	vm_paddr_t gpa_end;
+	vm_paddr_t fd_offset;
+	char *hva_base;
+	int fd;
+};
+
+static struct vm_mmap_mem_region mmap_mem_regions[16];
+static int mem_idx;
+
 static void *ptr;
 static size_t total_size;
 static int hugetlb_lv_max;
@@ -207,6 +218,10 @@ static int mmap_hugetlbfs_from_level(struct vmctx *ctx, int level, size_t len,
 		pr_err("exceed max hugetlb level");
 		return -EINVAL;
 	}
+	if (mem_idx >= ARRAY_SIZE(mmap_mem_regions)) {
+		pr_err("exceed supported regions.\n");
+		return -EFAULT;
+	}
 
 	fd = hugetlb_priv[level].fd;
 	addr = mmap(ctx->baseaddr + offset, len, PROT_READ | PROT_WRITE,
@@ -217,6 +232,13 @@ static int mmap_hugetlbfs_from_level(struct vmctx *ctx, int level, size_t len,
 	if (addr_out)
 		*addr_out = addr;
 
+	/* add the mapping into mmap_mem_region */
+	mmap_mem_regions[mem_idx].gpa_start = offset;
+	mmap_mem_regions[mem_idx].gpa_end = offset + len;
+	mmap_mem_regions[mem_idx].fd = fd;
+	mmap_mem_regions[mem_idx].fd_offset = skip;
+	mmap_mem_regions[mem_idx].hva_base = addr;
+	mem_idx++;
 	pr_info("mmap 0x%lx@%p\n", len, addr);
 
 	/* pre-allocate hugepages by touch them */
@@ -586,6 +608,8 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	unsigned int seal_flag = F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_SEAL;
 	size_t mem_size_level;
 
+	mem_idx = 0;
+	memset(&mmap_mem_regions, 0, sizeof(mmap_mem_regions));
 	if (ctx->lowmem == 0) {
 		pr_err("vm requests 0 memory");
 		goto err;
@@ -828,4 +852,32 @@ void hugetlb_unsetup_memory(struct vmctx *ctx)
 	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
 		close_hugetlbfs(level);
 	}
+}
+
+bool
+vm_find_memfd_region(struct vmctx *ctx, vm_paddr_t gpa,
+			struct vm_mem_region *ret_region)
+{
+	int i;
+	uint64_t offset;
+	struct vm_mmap_mem_region *mmap_region;
+	bool ret;
+
+	mmap_region = NULL;
+	for (i = 0; i < mem_idx; i++) {
+		if ((gpa >= mmap_mem_regions[i].gpa_start) &&
+			(gpa < mmap_mem_regions[i].gpa_end)) {
+			mmap_region = &mmap_mem_regions[i];
+			break;
+		}
+	}
+	if (mmap_region && ret_region) {
+		ret = true;
+		offset = gpa - mmap_region->gpa_start;
+		ret_region->fd = mmap_region->fd;
+		ret_region->fd_offset = offset + mmap_region->fd_offset;
+	} else
+		ret = false;
+
+	return ret;
 }
