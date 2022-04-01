@@ -60,16 +60,16 @@ content:
 html: content doxy
 	@echo making HTML content
 	$(Q)./scripts/show-versions.py
-	$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
+	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
 
 singlehtml: content doxy
-	$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b singlehtml -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
+	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b singlehtml -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
 
 pdf: html
 	@echo now making $(BUILDDIR)/latex/acrn.pdf
-	$(Q)make -silent latexpdf LATEXMKOPTS=$(LATEXMKOPTS) >> $(BUILDDIR)/doc.log 2>&1
+	-$(Q)make -silent latexpdf LATEXMKOPTS=$(LATEXMKOPTS) >> $(BUILDDIR)/doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
 
 
