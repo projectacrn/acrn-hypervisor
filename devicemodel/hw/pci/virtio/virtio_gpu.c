@@ -17,6 +17,8 @@
 #include <vmmapi.h>
 #include <drm/drm_fourcc.h>
 #include <linux/udmabuf.h>
+#include <sys/stat.h>
+#include <stdio.h>
 
 #include "dm.h"
 #include "pci_core.h"
@@ -1467,6 +1469,40 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	gpu->base.mtx = &gpu->mtx;
 	gpu->base.device_caps = VIRTIO_GPU_S_HOSTCAPS;
+
+	if (vm_allow_dmabuf(gpu->base.dev->vmctx)) {
+		FILE *fp;
+		char buf[16];
+		int list_limit;
+
+		gpu->is_blob_supported = true;
+		/* Now the memfd is used by default and it
+		 * is based on Huge_tlb.
+		 * But if both 2M and 1G are used for memory,
+		 * it can't support dmabuf as it is difficult to
+		 * determine whether one memory region is based on 2M or 1G.
+		 */
+		fp = fopen("/sys/module/udmabuf/parameters/list_limit", "r");
+		if (fp) {
+			memset(buf, 0, sizeof(buf));
+			rc = fread(buf, sizeof(buf), 1, fp);
+			fclose(fp);
+			list_limit = atoi(buf);
+			if (list_limit < 4096) {
+				pr_info("udmabuf.list_limit=%d in kernel is too small. "
+					"Please add udmabuf.list_limit=4096 in kernel "
+					"boot option to use GPU zero-copy.\n",
+					list_limit);
+				gpu->is_blob_supported = false;
+			}
+		} else {
+			pr_info("Zero-copy is disabled. Please check that "
+				"CONFIG_UDMABUF is enabled in the kernel config.\n");
+			gpu->is_blob_supported = false;
+		}
+		if (gpu->is_blob_supported)
+			gpu->base.device_caps |= (1UL << VIRTIO_GPU_F_RESOURCE_BLOB);
+	}
 
 	/* set queue size */
 	gpu->vq[VIRTIO_GPU_CONTROLQ].qsize = VIRTIO_GPU_RINGSZ;
