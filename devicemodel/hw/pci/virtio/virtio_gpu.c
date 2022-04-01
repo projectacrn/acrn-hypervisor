@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <vmmapi.h>
-#include <drm/drm_fourcc.h>
+#include <libdrm/drm_fourcc.h>
 #include <linux/udmabuf.h>
 #include <sys/stat.h>
 #include <stdio.h>
