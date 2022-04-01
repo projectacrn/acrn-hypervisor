@@ -1,5 +1,8 @@
 /*
+ * Copyright (C) OASIS Open 2018. All rights reserved.
  * Copyright (C) 2022 Intel Corporation.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * virtio-gpu device
  *
@@ -488,7 +491,7 @@ virtio_gpu_cfgwrite(void *vdev, int offset, int size, uint32_t value)
 		gpu->cfg.events_read &= ~value;
 		gpu->cfg.events_clear &= ~value;
 	}
-	pr_err("%s: write to read-only regisiters.\n", __func__);
+	pr_err("%s: write to read-only registers.\n", __func__);
 
 	return 0;
 }
@@ -1442,19 +1445,19 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* init mutex attribute properly to avoid deadlock */
 	rc = pthread_mutexattr_init(&attr);
 	if (rc) {
-		pr_err("%s: mutexattr init failed with erro %d!\n",
+		pr_err("%s: mutexattr init failed with error %d.\n",
 			       __func__, rc);
 		return rc;
 	}
 	rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	if (rc) {
-		pr_err("%s: mutexattr_settype failed with error %d!\n",
+		pr_err("%s: mutexattr_settype failed with error %d.\n",
 			       __func__, rc);
 		return rc;
 	}
 	rc = pthread_mutex_init(&gpu->mtx, &attr);
 	if (rc) {
-		pr_err("%s: pthread_mutex_init failed with error %d!\n",
+		pr_err("%s: pthread_mutex_init failed with error %d.\n",
 			       __func__,rc);
 		return rc;
 	}

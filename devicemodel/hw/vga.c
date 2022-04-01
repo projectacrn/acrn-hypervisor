@@ -777,7 +777,7 @@ vga_port_in_handler(struct vmctx *ctx, int in, int port, int bytes,
 			*val = vd->vga_crtc.crtc_line_compare;
 			break;
 		default:
-			pr_err("VGA CRTC: inb 0x%04x at index %d\n", port, vd->vga_crtc.crtc_index);
+			pr_err("VGA CRTC: port 0x%04x at index %d\n", port, vd->vga_crtc.crtc_index);
 			assert(0);
 			break;
 		}
@@ -1391,14 +1391,14 @@ vga_vbe_write(struct vmctx *ctx, int vcpu, struct vga *vga,
 	if (!vga->gc->gc_image->vgamode &&
 	    vga->vberegs.xres == 0 &&
 	    vga->vberegs.yres == 0) {
-		pr_dbg("switching to VGA mode\r\n");
+		pr_dbg("Switching to VGA mode\n");
 		vga->gc->gc_image->vgamode = 1;
 		vga->gc->gc_image->width = 0;
 		vga->gc->gc_image->height = 0;
 	} else if (vga->gc->gc_image->vgamode &&
 		   vga->vberegs.xres != 0 &&
 		   vga->vberegs.yres != 0) {
-		pr_dbg("switching to VESA mode\r\n");
+		pr_dbg("Switching to VESA mode\n");
 		vga->gc->gc_image->vgamode = 0;
 	}
 }
