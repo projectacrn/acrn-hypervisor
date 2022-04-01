@@ -43,6 +43,7 @@ CFLAGS += -I$(SYSROOT)/usr/include/pixman-1
 CFLAGS += -I$(SYSROOT)/usr/include/glib-2.0
 CFLAGS += -I$(SYSROOT)/usr/include/SDL2
 CFLAGS += -I$(SYSROOT)/usr/include/EGL
+CFLAGS += -I$(SYSROOT)/usr/include/GLES2
 
 ifneq (, $(DM_ASL_COMPILER))
 CFLAGS += -DASL_COMPILER=\"$(DM_ASL_COMPILER)\"
@@ -89,6 +90,8 @@ LIBS += -lcjson
 LIBS += -lpixman-1
 LIBS += -lSDL2
 LIBS += -lEGL
+LIBS += -lGLESv2
+
 
 # lib
 SRCS += lib/dm_string.c
