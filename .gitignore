@@ -12,3 +12,9 @@ venv
 /misc/config_tools/dist
 /misc/config_tools/schema/sliced.xsd
 /misc/config_tools/schema/allchecks.xsd
+
+# ignore Eclipse project config
+.cproject
+.project
+.pydevproject
+/.settings/
