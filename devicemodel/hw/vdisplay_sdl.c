@@ -20,6 +20,10 @@
 #include "vdisplay.h"
 #include "atomic.h"
 #include "timer.h"
+#include <egl.h>
+#include <eglext.h>
+#include <gl2.h>
+#include <gl2ext.h>
 
 #define VDPY_MAX_WIDTH 1920
 #define VDPY_MAX_HEIGHT 1080
@@ -39,6 +43,12 @@ struct state {
 	bool is_fullscreen;
 	uint64_t updates;
 	int n_connect;
+};
+
+struct egl_display_ops {
+	PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
+	PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
+	PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
 };
 
 static struct display {
@@ -66,6 +76,12 @@ static struct display {
 	// receive the signal that request is submitted
 	pthread_cond_t  vdisplay_signal;
 	TAILQ_HEAD(display_list, vdpy_display_bh) request_list;
+	/* add the below two fields for calling eglAPI directly */
+	bool egl_dmabuf_supported;
+	SDL_GLContext eglContext;
+	EGLDisplay eglDisplay;
+	struct egl_display_ops gl_ops;
+	EGLImage cur_egl_img;
 } vdpy = {
 	.s.is_ui_realized = false,
 	.s.is_active = false,
@@ -537,11 +553,44 @@ vdpy_get_display_info(int handle, struct display_info *info)
 	}
 }
 
+static void
+sdl_gl_display_init(void)
+{
+	struct egl_display_ops *gl_ops = &vdpy.gl_ops;
+
+	/* obtain the eglDisplay/eglContext */
+	vdpy.eglDisplay = eglGetCurrentDisplay();
+	vdpy.eglContext = SDL_GL_GetCurrentContext();
+
+	/* Try to use the eglGetProcaddress to obtain callback API for
+	 * eglCreateImageKHR/eglDestroyImageKHR
+	 * glEGLImageTargetTexture2DOES
+	 */
+	gl_ops->eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC)
+				eglGetProcAddress("eglCreateImageKHR");
+	gl_ops->eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC)
+				eglGetProcAddress("eglDestroyImageKHR");
+	gl_ops->glEGLImageTargetTexture2DOES = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)
+				eglGetProcAddress("glEGLImageTargetTexture2DOES");
+
+	vdpy.cur_egl_img = EGL_NO_IMAGE_KHR;
+	if ((gl_ops->eglCreateImageKHR == NULL) ||
+		(gl_ops->eglDestroyImageKHR == NULL) ||
+		(gl_ops->glEGLImageTargetTexture2DOES == NULL)) {
+		pr_info("DMABuf is not supported.\n");
+		vdpy.egl_dmabuf_supported = false;
+	} else
+		vdpy.egl_dmabuf_supported = true;
+
+	return;
+}
+
 void
 vdpy_surface_set(int handle, struct surface *surf)
 {
 	pixman_image_t *src_img;
 	int format;
+	int access, i;
 
 	if (handle != vdpy.s.n_connect) {
 		return;
@@ -561,7 +610,7 @@ vdpy_surface_set(int handle, struct surface *surf)
 		}
 		vdpy.guest_width = VDPY_MIN_WIDTH;
 		vdpy.guest_height = VDPY_MIN_HEIGHT;
-	} else {
+	} else if (surf->surf_type == SURFACE_PIXMAN) {
 		src_img = pixman_image_create_bits(surf->surf_format,
 			surf->width, surf->height, surf->pixel,
 			surf->stride);
@@ -572,35 +621,50 @@ vdpy_surface_set(int handle, struct surface *surf)
 		vdpy.surf = *surf;
 		vdpy.guest_width = surf->width;
 		vdpy.guest_height = surf->height;
+	} else if (surf->surf_type == SURFACE_DMABUF) {
+		src_img = NULL;
+		vdpy.surf = *surf;
+		vdpy.guest_width = surf->width;
+		vdpy.guest_height = surf->height;
+	} else {
+		/* Unsupported type */
+		return;
 	}
+
 	if (vdpy.dpy_texture) {
 		SDL_DestroyTexture(vdpy.dpy_texture);
 	}
-	format = SDL_PIXELFORMAT_ARGB8888;
-	switch (pixman_image_get_format(src_img)) {
-	case PIXMAN_a8r8g8b8:
-	case PIXMAN_x8r8g8b8:
+	if (surf && (surf->surf_type == SURFACE_DMABUF)) {
+		access = SDL_TEXTUREACCESS_STATIC;
+		format = SDL_PIXELFORMAT_EXTERNAL_OES;
+	} else {
+		access = SDL_TEXTUREACCESS_STREAMING;
 		format = SDL_PIXELFORMAT_ARGB8888;
-		break;
-	case PIXMAN_a8b8g8r8:
-	case PIXMAN_x8b8g8r8:
-		format = SDL_PIXELFORMAT_ABGR8888;
-		break;
-	case PIXMAN_r8g8b8a8:
-		format = SDL_PIXELFORMAT_RGBA8888;
-	case PIXMAN_r8g8b8x8:
-		format = SDL_PIXELFORMAT_RGBX8888;
-		break;
-	case PIXMAN_b8g8r8a8:
-	case PIXMAN_b8g8r8x8:
-		format = SDL_PIXELFORMAT_BGRA8888;
-		break;
-	default:
-		pr_err("Unsupported format. %x\n",
-				pixman_image_get_format(src_img));
+		switch (pixman_image_get_format(src_img)) {
+		case PIXMAN_a8r8g8b8:
+		case PIXMAN_x8r8g8b8:
+			format = SDL_PIXELFORMAT_ARGB8888;
+			break;
+		case PIXMAN_a8b8g8r8:
+		case PIXMAN_x8b8g8r8:
+			format = SDL_PIXELFORMAT_ABGR8888;
+			break;
+		case PIXMAN_r8g8b8a8:
+			format = SDL_PIXELFORMAT_RGBA8888;
+		case PIXMAN_r8g8b8x8:
+			format = SDL_PIXELFORMAT_RGBX8888;
+			break;
+		case PIXMAN_b8g8r8a8:
+		case PIXMAN_b8g8r8x8:
+			format = SDL_PIXELFORMAT_BGRA8888;
+			break;
+		default:
+			pr_err("Unsupported format. %x\n",
+					pixman_image_get_format(src_img));
+		}
 	}
 	vdpy.dpy_texture = SDL_CreateTexture(vdpy.dpy_renderer,
-			format, SDL_TEXTUREACCESS_STREAMING,
+			format, access,
 			vdpy.guest_width, vdpy.guest_height);
 
 	if (vdpy.dpy_texture == NULL) {
@@ -616,6 +680,47 @@ vdpy_surface_set(int handle, struct surface *surf)
 		SDL_RenderClear(vdpy.dpy_renderer);
 		SDL_RenderCopy(vdpy.dpy_renderer, vdpy.dpy_texture, NULL, NULL);
 		SDL_RenderPresent(vdpy.dpy_renderer);
+	} else if (surf->surf_type == SURFACE_DMABUF) {
+		EGLImageKHR egl_img = EGL_NO_IMAGE_KHR;
+		EGLint attrs[64];
+		struct egl_display_ops *gl_ops;
+
+		gl_ops = &vdpy.gl_ops;
+		i = 0;
+		attrs[i++] = EGL_WIDTH;
+		attrs[i++] = surf->width;
+		attrs[i++] = EGL_HEIGHT;
+		attrs[i++] = surf->height;
+		attrs[i++] = EGL_LINUX_DRM_FOURCC_EXT;
+		attrs[i++] = surf->dma_info.surf_fourcc;
+		attrs[i++] = EGL_DMA_BUF_PLANE0_FD_EXT;
+		attrs[i++] = surf->dma_info.dmabuf_fd;
+		attrs[i++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
+		attrs[i++] = surf->stride;
+		attrs[i++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
+		attrs[i++] = 0;
+		attrs[i++] = EGL_NONE;
+
+		egl_img = gl_ops->eglCreateImageKHR(vdpy.eglDisplay,
+				EGL_NO_CONTEXT,
+				EGL_LINUX_DMA_BUF_EXT,
+				NULL, attrs);
+		if (egl_img == EGL_NO_IMAGE_KHR) {
+			pr_err("Failed in eglCreateImageKHR.\n");
+			return;
+		}
+
+		SDL_GL_BindTexture(vdpy.dpy_texture, NULL, NULL);
+		gl_ops->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_img);
+		if (vdpy.cur_egl_img != EGL_NO_IMAGE_KHR)
+			gl_ops->eglDestroyImageKHR(vdpy.eglDisplay,
+					vdpy.cur_egl_img);
+
+		/* In theory the created egl_img can be released after it is bound
+		 * to texture.
+		 * Now it is released next time so that it is controlled correctly
+		 */
+		vdpy.cur_egl_img = egl_img;
 	}
 
 	if (vdpy.dpy_img)
@@ -655,7 +760,8 @@ vdpy_surface_update(int handle, struct surface *surf)
 	        return;
 	}
 
-	SDL_UpdateTexture(vdpy.dpy_texture, NULL,
+	if (surf->surf_type == SURFACE_PIXMAN)
+		SDL_UpdateTexture(vdpy.dpy_texture, NULL,
 			  surf->pixel,
 			  surf->stride);
 
@@ -830,6 +936,7 @@ vdpy_sdl_display_thread(void *data)
 		pr_err("Failed to Create GL_Renderer \n");
 		goto sdl_fail;
 	}
+	sdl_gl_display_init();
 	pthread_mutex_init(&vdpy.vdisplay_mutex, NULL);
 	pthread_cond_init(&vdpy.vdisplay_signal, NULL);
 	TAILQ_INIT(&vdpy.request_list);
@@ -898,7 +1005,12 @@ vdpy_sdl_display_thread(void *data)
 		vdpy.cursor_tex = NULL;
 	}
 
+	if (vdpy.egl_dmabuf_supported && (vdpy.cur_egl_img != EGL_NO_IMAGE_KHR))
+		vdpy.gl_ops.eglDestroyImageKHR(vdpy.eglDisplay,
+					vdpy.cur_egl_img);
+
 sdl_fail:
+
 	if (vdpy.dpy_renderer) {
 		SDL_DestroyRenderer(vdpy.dpy_renderer);
 		vdpy.dpy_renderer = NULL;

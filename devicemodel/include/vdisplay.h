@@ -64,6 +64,10 @@ struct surface {
 	uint32_t bpp;
 	uint32_t stride;
 	void *pixel;
+	struct  {
+		int dmabuf_fd;
+		uint32_t surf_fourcc;
+	} dma_info;
 };
 
 struct cursor {
