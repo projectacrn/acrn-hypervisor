@@ -171,7 +171,12 @@ class XS2JS:
                 if enum and '@acrn:title' in restriction['xs:enumeration'][0].get('xs:annotation', {}):
                     enum_names = []
                     for enum_element in restriction['xs:enumeration']:
-                        enum_names.append(enum_element['xs:annotation']['@acrn:title'])
+                        if 'xs:annotation' in enum_element and '@acrn:title' in enum_element.get('xs:annotation', {}):
+                            enum_names.append(enum_element['xs:annotation']['@acrn:title'])
+                        else:
+                            enum_name = enum_element['@value']
+                            print('Warning!: enum element {} does not provide a enumName'.format(str(enum_element)))
+                            enum_names.append(enum_name)
                     js_st["enumNames"] = enum_names
 
             js_st.update(self.xsa2jsa(restriction))
