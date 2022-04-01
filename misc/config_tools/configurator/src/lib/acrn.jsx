@@ -268,22 +268,34 @@ export class ProgramLayer extends EventBase {
         let scenarioConfig = await this.xmlLayer.loadScenario(scenarioXMLPath)
         this.initScenario()
         this.scenarioData.hv = scenarioConfig.hv;
-        scenarioConfig.vm.map((vmConfig, index) => {
-            let vmType = vmConfig.load_order
-            if (!this.scenarioData.vm.hasOwnProperty(vmType)) {
-                try {
-                    ThrowError('VM @id=' + index + ' VMType Does Not Exist')
-                } catch (e) {
-
+        if (scenarioConfig.hasOwnProperty('vm')) {
+            if (!_.isArray(scenarioConfig.vm)) {
+                if (_.isObject(scenarioConfig.vm)) {
+                    scenarioConfig.vm = [scenarioConfig.vm]
+                } else {
+                    console.log(scenarioConfig.vm);
+                    debugger;
+                    this.onScenarioDataUpdateEvent()
+                    return
                 }
-            } else {
-                //fix pci_devs is object issue
-                if (vmConfig.hasOwnProperty("pci_devs") && vmConfig.pci_devs.hasOwnProperty("pci_dev") && _.isString(vmConfig.pci_devs.pci_dev)) {
-                    vmConfig.pci_devs.pci_dev = [vmConfig.pci_devs.pci_dev]
-                }
-                this.addVM(vmType, vmConfig)
             }
-        })
+            scenarioConfig.vm.map((vmConfig, index) => {
+                let vmType = vmConfig.load_order
+                if (!this.scenarioData.vm.hasOwnProperty(vmType)) {
+                    try {
+                        ThrowError('VM @id=' + index + ' VMType Does Not Exist')
+                    } catch (e) {
+
+                    }
+                } else {
+                    //fix pci_devs is object issue
+                    if (vmConfig.hasOwnProperty("pci_devs") && vmConfig.pci_devs.hasOwnProperty("pci_dev") && _.isString(vmConfig.pci_devs.pci_dev)) {
+                        vmConfig.pci_devs.pci_dev = [vmConfig.pci_devs.pci_dev]
+                    }
+                    this.addVM(vmType, vmConfig)
+                }
+            })
+        }
         this.onScenarioDataUpdateEvent()
     }
 
