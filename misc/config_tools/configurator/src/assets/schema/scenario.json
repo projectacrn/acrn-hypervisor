@@ -38,6 +38,10 @@
 			"enum": [
 				"release",
 				"debug"
+			],
+			"enumNames": [
+				"Release",
+				"Debug"
 			]
 		},
 		"KernLoadAddr": {
@@ -123,6 +127,12 @@
 				"SCHED_IORR",
 				"SCHED_BVT",
 				"SCHED_PRIO"
+			],
+			"enumNames": [
+				"No-Operation (NOOP)",
+				"SCHED_IORR",
+				"Borrowed Virtual Time",
+				"Priority Based Scheduling"
 			]
 		},
 		"PriorityType": {
@@ -194,6 +204,12 @@
 				"STANDARD_VM",
 				"TEE_VM",
 				"REE_VM"
+			],
+			"enumNames": [
+				"Real-time",
+				"Standard",
+				"TEE_VM",
+				"REE_VM"
 			]
 		},
 		"VMKernelType": {
@@ -220,6 +236,10 @@
 			"enum": [
 				"legacy",
 				"pci"
+			],
+			"enumNames": [
+				"Legacy",
+				"PCI"
 			]
 		},
 		"OSType": {
@@ -234,6 +254,10 @@
 			"enum": [
 				"RTVM",
 				"STANDARD_VM"
+			],
+			"enumNames": [
+				"Real-time",
+				"Standard"
 			]
 		},
 		"IVSHMEMVM": {
@@ -245,13 +269,13 @@
 			"properties": {
 				"VM_NAME": {
 					"$ref": "#/definitions/VMNameType",
-					"title": "Shared VMS",
-					"description": "<div class=\"document\">\n <p>\n  Name of the VM which use this IVSHMEM.\n </p>\n</div>\n"
+					"title": "Shared VMs",
+					"description": "<div class=\"document\">\n <p>\n  Name of the VM that uses this shared memory region.\n </p>\n</div>\n"
 				},
 				"VBDF": {
 					"$ref": "#/definitions/VBDFType",
-					"title": "VBDF",
-					"description": "<div class=\"document\">\n <p>\n  Bus, Device and function of the virtual\ndevice in VM . Set in hex.\n </p>\n</div>\n"
+					"title": "Virtual BDF",
+					"description": "<div class=\"document\">\n <p>\n  Virtual BDF (Bus Device Function) is automatically assigned and can be changed if needed. Set in Hex.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -267,7 +291,7 @@
 					},
 					"type": "array",
 					"title": "IVSHMEM_VM",
-					"description": "<div class=\"document\">\n <p>\n  Set each VM which use this IVSHMEM.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Select all VMs that use the shared memory region.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -314,7 +338,7 @@
 					},
 					"type": "array",
 					"title": "IVSHMEM_REGION",
-					"description": "<div class=\"document\">\n <p>\n  Set a inter-VM shared memory.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Create a memory region for VMs to share: specify its name, size, and associated VMs.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -329,8 +353,8 @@
 				"RDT_ENABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Intel Resource Director Technology",
-					"description": "<div class=\"document\">\n <p>\n  Enable the Intel Resource Director Technology (RDT)\nallocation feature. If the board hardware does not support\nRDT, setting this option to\n  <span class=\"docutils literal\">\n   y\n  </span>\n  is ignored.\n </p>\n</div>\n"
+					"title": "Intel Resource Director Tech",
+					"description": "<div class=\"document\">\n <p>\n  Enable Intel Resource Director Technology (RDT). If\nthe board hardware does not support\nRDT, setting this option to\n  <span class=\"docutils literal\">\n   y\n  </span>\n  is ignored.\n </p>\n</div>\n"
 				},
 				"CDP_ENABLED": {
 					"$ref": "#/definitions/Boolean",
@@ -341,7 +365,7 @@
 				"VCAT_ENABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "VCAT_ENABLED",
+					"title": "Virtual Cache Allocation Tech",
 					"description": "<div class=\"document\">\n <p>\n  Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.\n </p>\n</div>\n"
 				},
 				"CLOS_MASK": {
@@ -371,7 +395,7 @@
 				"SSRAM_ENABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Software SRAM (for real-time apps)",
+					"title": "Software SRAM",
 					"description": "<div class=\"document\">\n <p>\n  Enable Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.\n </p>\n</div>\n"
 				}
 			}
@@ -420,13 +444,13 @@
 				"base": {
 					"$ref": "#/definitions/HexFormat",
 					"default": 0,
-					"title": "Intel Software Guard Extensions (SGX) EPC section base",
+					"title": "EPC section base",
 					"description": "<div class=\"document\">\n <p>\n  Specify the enclave page cache (EPC) section base for Intel Software Guard Extensions (SGX). Must be page aligned.\n </p>\n</div>\n"
 				},
 				"size": {
 					"$ref": "#/definitions/HexFormat",
 					"default": 0,
-					"title": "Intel Software Guard Extensions (SGX) EPC section size (bytes)",
+					"title": "EPC section size (bytes)",
 					"description": "<div class=\"document\">\n <p>\n  Specify the enclave page cache (EPC) section size in bytes for Intel Software Guard Extensions (SGX). Must be page aligned.\n </p>\n</div>\n"
 				}
 			}
@@ -441,8 +465,8 @@
 				"whole": {
 					"type": "integer",
 					"default": 256,
-					"title": "VM physical memory allocation (MB)",
-					"description": "<div class=\"document\">\n <p>\n  Specify the physical memory allocated to this VM in Megabytes.\n </p>\n</div>\n"
+					"title": "Memory size (MB)",
+					"description": "<div class=\"document\">\n <p>\n  Specify the physical memory size allocated to this VM in megabytes.\n </p>\n</div>\n"
 				},
 				"start_hpa": {
 					"$ref": "#/definitions/HexFormat",
@@ -525,14 +549,16 @@
 					"$ref": "#/definitions/HexFormat",
 					"default": "0x3F",
 					"title": "Virtual I/O address",
-					"description": "<div class=\"document\">\n <p>\n  Virtual I/O address\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Specify the COM base for each legacy virtual UART.\n </p>\n</div>\n"
 				},
 				"vbdf": {
 					"items": {
 						"$ref": "#/definitions/VBDFType"
 					},
 					"type": "array",
-					"maxItems": 1
+					"maxItems": 1,
+					"title": "Virtual BDF",
+					"description": "<div class=\"document\">\n <p>\n  Specify the virtual Bus:Device.Function (BDF) for each PCI virtual UART. Virtual BDF is automatically assigned when the configuration is saved and can be changed if needed.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -549,7 +575,9 @@
 				},
 				"type": {
 					"$ref": "#/definitions/VuartType",
-					"default": "legacy"
+					"default": "legacy",
+					"title": "Type",
+					"description": "<div class=\"document\">\n <p>\n  Select the communication virtual UART (vUART) type.\n </p>\n</div>\n"
 				},
 				"endpoint": {
 					"minItems": 2,
@@ -578,14 +606,14 @@
 				"TPM2": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Trusted platform module (TPM2) passthrough",
-					"description": "<div class=\"document\">\n <p>\n  Pass through the trusted platform module (TPM2) device to this VM.\n </p>\n</div>\n"
+					"title": "TPM2 passthrough",
+					"description": "<div class=\"document\">\n <p>\n  Enable passthrough of the trusted platform module (TPM2) device to this VM.\n </p>\n</div>\n"
 				},
 				"p2sb": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Primary-to-Sideband bridge passthrough",
-					"description": "<div class=\"document\">\n <p>\n  Pass through the Primary-to-Sideband (P2SB) bridge register access BAR to this VM.\n </p>\n</div>\n"
+					"title": "P2SB bridge passthrough",
+					"description": "<div class=\"document\">\n <p>\n  Enable passthrough of the Primary-to-Sideband (P2SB) bridge register access BAR to this VM.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -623,7 +651,7 @@
 					"$ref": "#/definitions/BuildType",
 					"default": "debug",
 					"title": "Build type",
-					"description": "<div class=\"document\">\n <p>\n  Select the build type. Debug mode enables debug shell, prints, and logs. Release mode optimizes the ACRN binary for deployment and turns off all debug infrastructure. These settings can only be changed at build time.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Select the build type:\n </p>\n <ul class=\"simple\">\n  <li>\n   <p>\n    <span class=\"docutils literal\">\n     Debug\n    </span>\n    enables the debug shell, prints, and logs.\n   </p>\n  </li>\n  <li>\n   <p>\n    <span class=\"docutils literal\">\n     Release\n    </span>\n    optimizes the ACRN binary for deployment and turns off all debug infrastructure.\n   </p>\n  </li>\n </ul>\n <p>\n  These settings can only be changed at build time.\n </p>\n</div>\n"
 				},
 				"SERIAL_CONSOLE": {
 					"$ref": "#/definitions/SerialConsoleOptions",
@@ -679,32 +707,32 @@
 				"RELOC": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
-					"title": "Hypervisor relocation in memory",
+					"title": "Hypervisor relocation",
 					"description": "<div class=\"document\">\n <p>\n  Enable hypervisor relocation in memory. The bootloader may need to change the location of the hypervisor because of other firmware.\n </p>\n</div>\n"
 				},
 				"SCHEDULER": {
 					"$ref": "#/definitions/SchedulerType",
 					"default": "SCHED_BVT",
 					"title": "Virtual CPU scheduler",
-					"description": "<div class=\"document\">\n <p>\n  Select the scheduling algorithm used to determine which User VM runs on a shared virtual CPU.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Select the scheduling algorithm for determining the priority of User VMs running on a shared virtual CPU.\n </p>\n</div>\n"
 				},
 				"MULTIBOOT2": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
 					"title": "Multiboot2",
-					"description": "<div class=\"document\">\n <p>\n  Enable multiboot2 protocol support and multiboot1 downward compatibility. Disable this feature if multiboot1 meets your requirements and to reduce lines of code.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Enable multiboot2 protocol support (with multiboot1 downward compatibility). If multiboot1 meets your requirements, disable this feature to reduce hypervisor code size.\n </p>\n</div>\n"
 				},
 				"ENFORCE_TURNOFF_AC": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
 					"title": "Split lock detection",
-					"description": "<div class=\"document\">\n <p>\n  Enable detection of split locks, which can negatively affect an application's real-time performance. If a lock is detected, an alignment check exception #AC occurs.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Enable detection of split locks. A split lock can negatively affect an application's real-time performance. If a lock is detected, an alignment check exception #AC occurs.\n </p>\n</div>\n"
 				},
 				"ENFORCE_TURNOFF_GP": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Uncacheable-memory lock detection",
-					"description": "<div class=\"document\">\n <p>\n  Enable detection of uncacheable-memory locks, which can negatively affect an application's real-time performance. If a lock is detected, a general-protection exception #GP occurs.\n </p>\n</div>\n"
+					"title": "UC lock detection",
+					"description": "<div class=\"document\">\n <p>\n  Enable detection of uncacheable-memory (UC) locks. A UC lock can negatively affect an application's real-time performance. If a lock is detected, a general-protection exception #GP occurs.\n </p>\n</div>\n"
 				},
 				"SECURITY_VM_FIXUP": {
 					"$ref": "#/definitions/Boolean",
@@ -720,14 +748,14 @@
 				},
 				"RDT": {
 					"$ref": "#/definitions/RDTType",
-					"title": "Intel Resource Director Technology (RDT)",
+					"title": "Intel Resource Director Tech",
 					"description": "<div class=\"document\">\n <p>\n  Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.\n </p>\n</div>\n"
 				},
 				"HYPERV_ENABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
-					"title": "Hyper-V virtualization technology",
-					"description": "<div class=\"document\">\n <p>\n  Enable Microsoft Hyper-V Hypervisor Top-Level Functional Specification (TFLS) for Windows User VMs.\n </p>\n</div>\n"
+					"title": "Hyper-V",
+					"description": "<div class=\"document\">\n <p>\n  Enable Microsoft Hyper-V Hypervisor Top-Level Functional Specification (TFLS) for User VMs running Windows.\n </p>\n</div>\n"
 				},
 				"IOMMU_ENFORCE_SNP": {
 					"$ref": "#/definitions/Boolean",
@@ -738,30 +766,30 @@
 				"ACPI_PARSE_ENABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
-					"title": "Parse ACPI tables at runtime",
+					"title": "Parse ACPI tables",
 					"description": "<div class=\"document\">\n <p>\n  Enable ACPI runtime parsing to get DMAR (DMA remapping) configuration data from the APCI tables. Otherwise, use existing, static information from the associated board configuration file.\n </p>\n</div>\n"
 				},
 				"L1D_VMENTRY_ENABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
 					"title": "Mitigate L1 terminal fault",
-					"description": "<div class=\"document\">\n <p>\n  Enable L1 cache flush before VM entry to prevent L1 terminal fault. L1 terminal fault is a hardware vulnerability that allows unauthorized disclosure of information residing in the L1 data cache.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Enable L1 cache flush before VM entry to prevent L1 terminal fault. L1 terminal fault is a hardware vulnerability that could allow unauthorized disclosure of information residing in the L1 data cache.\n </p>\n</div>\n"
 				},
 				"MCE_ON_PSC_DISABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
-					"title": "Machine Check Error (MCE) workaround",
-					"description": "<div class=\"document\">\n <p>\n  Enable the software workaround for Machine Check Error on Page Size Change (hardware bug in some processor families).\n </p>\n</div>\n"
+					"title": "MCE workaround",
+					"description": "<div class=\"document\">\n <p>\n  Enable the software workaround for Machine Check Error on Page Size Change (erratum in some processor families).\n </p>\n</div>\n"
 				},
 				"IVSHMEM": {
 					"$ref": "#/definitions/IVSHMEMInfo",
 					"title": "Inter-VM shared memory",
-					"description": ""
+					"description": "<div class=\"document\">\n <p>\n  Configure shared memory regions for inter-VM communication.\n </p>\n</div>\n"
 				},
 				"SSRAM": {
 					"$ref": "#/definitions/SSRAMInfo",
-					"title": "Software SRAM (for real-time apps)",
-					"description": ""
+					"title": "Software SRAM",
+					"description": "<div class=\"document\">\n <p>\n  Configure Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -775,7 +803,7 @@
 				"STACK_SIZE": {
 					"$ref": "#/definitions/HexFormat",
 					"default": "0x2000",
-					"title": "CPU memory stack size (bytes per CPU)",
+					"title": "CPU memory stack size (bytes)",
 					"description": "<div class=\"document\">\n <p>\n  Specify the size of the memory stack in bytes for each physical CPU. For example, if you specify 8 kilobytes, each CPU will get its own 8-kilobyte stack.\n </p>\n</div>\n"
 				},
 				"HV_RAM_START": {
@@ -817,7 +845,7 @@
 					"minimum": 1,
 					"maximum": 1024,
 					"default": 96,
-					"title": "Maximum number of PCI devices",
+					"title": "Max PCI devices",
 					"description": "<div class=\"document\">\n <p>\n  Specify the maximum number of PCI devices. This impacts the amount of memory used to maintain information about these PCI devices. The default value is calculated from the board configuration file. If you have PCI devices that were not detected by the Board Inspector, you may need to change this maximum value.\n </p>\n</div>\n"
 				},
 				"MAX_IOAPIC_LINES": {
@@ -831,7 +859,7 @@
 				"MAX_PT_IRQ_ENTRIES": {
 					"type": "integer",
 					"default": 256,
-					"title": "Maximum number of IRQ entries for passthrough devices",
+					"title": "Max passthrough IRQ entries",
 					"description": "<div class=\"document\">\n <p>\n  Specify the maximum number of interrupt request (IRQ) entries from all passthrough devices.\n </p>\n</div>\n"
 				},
 				"MAX_MSIX_TABLE_NUM": {
@@ -839,7 +867,7 @@
 					"minimum": 1,
 					"maximum": 2048,
 					"default": 64,
-					"title": "Maximum number of MSI-X tables per device",
+					"title": "Max MSI-X tables",
 					"description": "<div class=\"document\">\n <p>\n  Specify the maximum number of Message Signaled Interrupt MSI-X tables per device. The default value is calculated from the board configuration file.\n </p>\n</div>\n"
 				},
 				"MAX_EMULATED_MMIO": {
@@ -847,7 +875,7 @@
 					"minimum": 1,
 					"maximum": 128,
 					"default": 16,
-					"title": "Maximum number of emulated MMIO regions",
+					"title": "Max emulated MMIO regions",
 					"description": "<div class=\"document\">\n <p>\n  Specify the maximum number of emulated MMIO regions for device virtualization. The default value is calculated from the board configuration file.\n </p>\n</div>\n"
 				}
 			}
@@ -904,7 +932,7 @@
 				},
 				"vuart_connections": {
 					"$ref": "#/definitions/VuartConnectionsType",
-					"title": "Virtual UART connection",
+					"title": "Inter-VM virtual UART connection",
 					"description": "<div class=\"document\">\n <p>\n  Specify the vUART connection settings.\nRefer to\n  <a class=\"reference external\" href=\"https://projectacrn.github.io/latest/tutorials/vuart_configuration.html#vuart-config\" target=\"_blank\">\n   Enable vUART Configurations\n  </a>\n  for detailed vUART settings.\n </p>\n</div>\n"
 				}
 			}
@@ -965,14 +993,14 @@
 				"virtual_cat_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Virtual Cache Allocation Technology (vCAT)",
+					"title": "Virtual Cache Allocation Tech",
 					"description": "<div class=\"document\">\n <p>\n  Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.\n </p>\n</div>\n"
 				},
 				"secure_world_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
 					"title": "secure_world_support",
-					"description": "<div class=\"document\">\n <p>\n  Specify secure world support for trustry OS.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Specify secure world support for trusty OS.\n </p>\n</div>\n"
 				},
 				"hide_mtrr_support": {
 					"$ref": "#/definitions/Boolean",
@@ -1059,19 +1087,19 @@
 				"vbootloader": {
 					"$ref": "#/definitions/EnablementType",
 					"default": "Enable",
-					"title": "OVMF (Open Virtual Machine Firmware)",
+					"title": "Open Virtual Machine Firmware",
 					"description": "<div class=\"document\">\n <p>\n  Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.\n </p>\n</div>\n"
 				},
 				"vuart0": {
 					"$ref": "#/definitions/EnablementType",
 					"default": "Enable",
-					"title": "Emulate COM1 as stdio I/O in Device Model",
+					"title": "Emulate COM1 as stdio I/O",
 					"description": "<div class=\"document\">\n <p>\n  Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.\n </p>\n</div>\n"
 				},
 				"usb_xhci": {
 					"type": "string",
 					"pattern": "^([\\d]+-[\\d]+){0,1}(:[\\d]+-[\\d]+)*$",
-					"title": "Virtual USB host controller interface",
+					"title": "Virtual USB HCI",
 					"description": "<div class=\"document\">\n <p>\n  Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.\n </p>\n</div>\n"
 				},
 				"virtio_devices": {
@@ -1080,12 +1108,12 @@
 						"console": {
 							"type": "string",
 							"title": "console",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio console device setting.Input format:\n  </dt>\n  <dd>\n   <p>\n    <span class=\"docutils literal\">\n     <span class=\"pre\">\n      [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]\n     </span>\n    </span>\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio console device setting. Input format:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]\n   </span>\n  </span>\n </p>\n</div>\n"
 						},
 						"network": {
 							"type": "string",
 							"title": "network",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio network device setting.\n  </dt>\n  <dd>\n   <p>\n    Input format:\n    <span class=\"docutils literal\">\n     <span class=\"pre\">\n      device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]\n     </span>\n    </span>\n    .\nThe\n    <span class=\"docutils literal\">\n     device_name\n    </span>\n    is the name of the TAP (or MacVTap) device.\nIt must include the keyword\n    <span class=\"docutils literal\">\n     tap\n    </span>\n    .\n    <span class=\"docutils literal\">\n     vhost\n    </span>\n    specifies the\nvhost backend; otherwise, the VBSU backend is used. The\n    <span class=\"docutils literal\">\n     mac\n    </span>\n    address is optional.\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio network device setting.\nInput format:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]\n   </span>\n  </span>\n  .\nThe\n  <span class=\"docutils literal\">\n   device_name\n  </span>\n  is the name of the TAP (or MacVTap) device.\nIt must include the keyword\n  <span class=\"docutils literal\">\n   tap\n  </span>\n  .\n  <span class=\"docutils literal\">\n   vhost\n  </span>\n  specifies the\nvhost backend; otherwise, the VBSU backend is used. The\n  <span class=\"docutils literal\">\n   mac\n  </span>\n  address is optional.\n </p>\n</div>\n"
 						},
 						"input": {
 							"type": "string",
@@ -1095,7 +1123,7 @@
 						"block": {
 							"type": "string",
 							"title": "block",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio block device setting.\n  </dt>\n  <dd>\n   <p>\n    Format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio block device setting.\nFormat:\n  <span class=\"docutils literal\">\n   [blk\n   <span class=\"pre\">\n    partition:][img\n   </span>\n   path]\n  </span>\n  . Example:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    /dev/sda3:./a/b.img\n   </span>\n  </span>\n  .\n </p>\n</div>\n"
 						}
 					},
 					"title": "Virt-IO devices",
@@ -1200,14 +1228,14 @@
 				"virtual_cat_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Virtual Cache Allocation Technology (vCAT)",
+					"title": "Virtual Cache Allocation Tech",
 					"description": "<div class=\"document\">\n <p>\n  Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.\n </p>\n</div>\n"
 				},
 				"secure_world_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
 					"title": "secure_world_support",
-					"description": "<div class=\"document\">\n <p>\n  Specify secure world support for trustry OS.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Specify secure world support for trusty OS.\n </p>\n</div>\n"
 				},
 				"hide_mtrr_support": {
 					"$ref": "#/definitions/Boolean",
@@ -1371,14 +1399,14 @@
 				"virtual_cat_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Virtual Cache Allocation Technology (vCAT)",
+					"title": "Virtual Cache Allocation Tech",
 					"description": "<div class=\"document\">\n <p>\n  Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.\n </p>\n</div>\n"
 				},
 				"secure_world_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
 					"title": "secure_world_support",
-					"description": "<div class=\"document\">\n <p>\n  Specify secure world support for trustry OS.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Specify secure world support for trusty OS.\n </p>\n</div>\n"
 				},
 				"hide_mtrr_support": {
 					"$ref": "#/definitions/Boolean",
@@ -1441,8 +1469,8 @@
 				"whole": {
 					"type": "integer",
 					"default": 256,
-					"title": "VM physical memory allocation (MB)",
-					"description": "<div class=\"document\">\n <p>\n  Specify the physical memory allocated to this VM in Megabytes.\n </p>\n</div>\n"
+					"title": "Memory size (MB)",
+					"description": "<div class=\"document\">\n <p>\n  Specify the physical memory size allocated to this VM in megabytes.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -1452,8 +1480,8 @@
 				"TPM2": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Trusted platform module (TPM2) passthrough",
-					"description": "<div class=\"document\">\n <p>\n  Pass through the trusted platform module (TPM2) device to this VM.\n </p>\n</div>\n"
+					"title": "TPM2 passthrough",
+					"description": "<div class=\"document\">\n <p>\n  Enable passthrough of the trusted platform module (TPM2) device to this VM.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -1513,14 +1541,14 @@
 				"virtual_cat_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Virtual Cache Allocation Technology (vCAT)",
+					"title": "Virtual Cache Allocation Tech",
 					"description": "<div class=\"document\">\n <p>\n  Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.\n </p>\n</div>\n"
 				},
 				"secure_world_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
 					"title": "secure_world_support",
-					"description": "<div class=\"document\">\n <p>\n  Specify secure world support for trustry OS.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Specify secure world support for trusty OS.\n </p>\n</div>\n"
 				},
 				"hide_mtrr_support": {
 					"$ref": "#/definitions/Boolean",
@@ -1592,19 +1620,19 @@
 				"vbootloader": {
 					"$ref": "#/definitions/EnablementType",
 					"default": "Enable",
-					"title": "OVMF (Open Virtual Machine Firmware)",
+					"title": "Open Virtual Machine Firmware",
 					"description": "<div class=\"document\">\n <p>\n  Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.\n </p>\n</div>\n"
 				},
 				"vuart0": {
 					"$ref": "#/definitions/EnablementType",
 					"default": "Enable",
-					"title": "Emulate COM1 as stdio I/O in Device Model",
+					"title": "Emulate COM1 as stdio I/O",
 					"description": "<div class=\"document\">\n <p>\n  Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.\n </p>\n</div>\n"
 				},
 				"usb_xhci": {
 					"type": "string",
 					"pattern": "^([\\d]+-[\\d]+){0,1}(:[\\d]+-[\\d]+)*$",
-					"title": "Virtual USB host controller interface",
+					"title": "Virtual USB HCI",
 					"description": "<div class=\"document\">\n <p>\n  Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.\n </p>\n</div>\n"
 				},
 				"virtio_devices": {
@@ -1613,12 +1641,12 @@
 						"console": {
 							"type": "string",
 							"title": "console",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio console device setting.Input format:\n  </dt>\n  <dd>\n   <p>\n    <span class=\"docutils literal\">\n     <span class=\"pre\">\n      [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]\n     </span>\n    </span>\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio console device setting. Input format:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]\n   </span>\n  </span>\n </p>\n</div>\n"
 						},
 						"network": {
 							"type": "string",
 							"title": "network",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio network device setting.\n  </dt>\n  <dd>\n   <p>\n    Input format:\n    <span class=\"docutils literal\">\n     <span class=\"pre\">\n      device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]\n     </span>\n    </span>\n    .\nThe\n    <span class=\"docutils literal\">\n     device_name\n    </span>\n    is the name of the TAP (or MacVTap) device.\nIt must include the keyword\n    <span class=\"docutils literal\">\n     tap\n    </span>\n    .\n    <span class=\"docutils literal\">\n     vhost\n    </span>\n    specifies the\nvhost backend; otherwise, the VBSU backend is used. The\n    <span class=\"docutils literal\">\n     mac\n    </span>\n    address is optional.\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio network device setting.\nInput format:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]\n   </span>\n  </span>\n  .\nThe\n  <span class=\"docutils literal\">\n   device_name\n  </span>\n  is the name of the TAP (or MacVTap) device.\nIt must include the keyword\n  <span class=\"docutils literal\">\n   tap\n  </span>\n  .\n  <span class=\"docutils literal\">\n   vhost\n  </span>\n  specifies the\nvhost backend; otherwise, the VBSU backend is used. The\n  <span class=\"docutils literal\">\n   mac\n  </span>\n  address is optional.\n </p>\n</div>\n"
 						},
 						"input": {
 							"type": "string",
@@ -1628,7 +1656,7 @@
 						"block": {
 							"type": "string",
 							"title": "block",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio block device setting.\n  </dt>\n  <dd>\n   <p>\n    Format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio block device setting.\nFormat:\n  <span class=\"docutils literal\">\n   [blk\n   <span class=\"pre\">\n    partition:][img\n   </span>\n   path]\n  </span>\n  . Example:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    /dev/sda3:./a/b.img\n   </span>\n  </span>\n  .\n </p>\n</div>\n"
 						}
 					},
 					"title": "Virt-IO devices",
@@ -1645,8 +1673,8 @@
 				"whole": {
 					"type": "integer",
 					"default": 256,
-					"title": "VM physical memory allocation (MB)",
-					"description": "<div class=\"document\">\n <p>\n  Specify the physical memory allocated to this VM in Megabytes.\n </p>\n</div>\n"
+					"title": "Memory size (MB)",
+					"description": "<div class=\"document\">\n <p>\n  Specify the physical memory size allocated to this VM in megabytes.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -1716,19 +1744,19 @@
 				"vbootloader": {
 					"$ref": "#/definitions/EnablementType",
 					"default": "Enable",
-					"title": "OVMF (Open Virtual Machine Firmware)",
+					"title": "Open Virtual Machine Firmware",
 					"description": "<div class=\"document\">\n <p>\n  Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.\n </p>\n</div>\n"
 				},
 				"vuart0": {
 					"$ref": "#/definitions/EnablementType",
 					"default": "Enable",
-					"title": "Emulate COM1 as stdio I/O in Device Model",
+					"title": "Emulate COM1 as stdio I/O",
 					"description": "<div class=\"document\">\n <p>\n  Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.\n </p>\n</div>\n"
 				},
 				"usb_xhci": {
 					"type": "string",
 					"pattern": "^([\\d]+-[\\d]+){0,1}(:[\\d]+-[\\d]+)*$",
-					"title": "Virtual USB host controller interface",
+					"title": "Virtual USB HCI",
 					"description": "<div class=\"document\">\n <p>\n  Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.\n </p>\n</div>\n"
 				},
 				"virtio_devices": {
@@ -1737,12 +1765,12 @@
 						"console": {
 							"type": "string",
 							"title": "console",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio console device setting.Input format:\n  </dt>\n  <dd>\n   <p>\n    <span class=\"docutils literal\">\n     <span class=\"pre\">\n      [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]\n     </span>\n    </span>\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio console device setting. Input format:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]\n   </span>\n  </span>\n </p>\n</div>\n"
 						},
 						"network": {
 							"type": "string",
 							"title": "network",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio network device setting.\n  </dt>\n  <dd>\n   <p>\n    Input format:\n    <span class=\"docutils literal\">\n     <span class=\"pre\">\n      device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]\n     </span>\n    </span>\n    .\nThe\n    <span class=\"docutils literal\">\n     device_name\n    </span>\n    is the name of the TAP (or MacVTap) device.\nIt must include the keyword\n    <span class=\"docutils literal\">\n     tap\n    </span>\n    .\n    <span class=\"docutils literal\">\n     vhost\n    </span>\n    specifies the\nvhost backend; otherwise, the VBSU backend is used. The\n    <span class=\"docutils literal\">\n     mac\n    </span>\n    address is optional.\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio network device setting.\nInput format:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]\n   </span>\n  </span>\n  .\nThe\n  <span class=\"docutils literal\">\n   device_name\n  </span>\n  is the name of the TAP (or MacVTap) device.\nIt must include the keyword\n  <span class=\"docutils literal\">\n   tap\n  </span>\n  .\n  <span class=\"docutils literal\">\n   vhost\n  </span>\n  specifies the\nvhost backend; otherwise, the VBSU backend is used. The\n  <span class=\"docutils literal\">\n   mac\n  </span>\n  address is optional.\n </p>\n</div>\n"
 						},
 						"input": {
 							"type": "string",
@@ -1752,7 +1780,7 @@
 						"block": {
 							"type": "string",
 							"title": "block",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio block device setting.\n  </dt>\n  <dd>\n   <p>\n    Format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio block device setting.\nFormat:\n  <span class=\"docutils literal\">\n   [blk\n   <span class=\"pre\">\n    partition:][img\n   </span>\n   path]\n  </span>\n  . Example:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    /dev/sda3:./a/b.img\n   </span>\n  </span>\n  .\n </p>\n</div>\n"
 						}
 					},
 					"title": "Virt-IO devices",
@@ -1909,19 +1937,19 @@
 				"vbootloader": {
 					"$ref": "#/definitions/EnablementType",
 					"default": "Enable",
-					"title": "OVMF (Open Virtual Machine Firmware)",
+					"title": "Open Virtual Machine Firmware",
 					"description": "<div class=\"document\">\n <p>\n  Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.\n </p>\n</div>\n"
 				},
 				"vuart0": {
 					"$ref": "#/definitions/EnablementType",
 					"default": "Enable",
-					"title": "Emulate COM1 as stdio I/O in Device Model",
+					"title": "Emulate COM1 as stdio I/O",
 					"description": "<div class=\"document\">\n <p>\n  Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.\n </p>\n</div>\n"
 				},
 				"usb_xhci": {
 					"type": "string",
 					"pattern": "^([\\d]+-[\\d]+){0,1}(:[\\d]+-[\\d]+)*$",
-					"title": "Virtual USB host controller interface",
+					"title": "Virtual USB HCI",
 					"description": "<div class=\"document\">\n <p>\n  Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.\n </p>\n</div>\n"
 				},
 				"virtio_devices": {
@@ -1930,12 +1958,12 @@
 						"console": {
 							"type": "string",
 							"title": "console",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio console device setting.Input format:\n  </dt>\n  <dd>\n   <p>\n    <span class=\"docutils literal\">\n     <span class=\"pre\">\n      [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]\n     </span>\n    </span>\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio console device setting. Input format:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]\n   </span>\n  </span>\n </p>\n</div>\n"
 						},
 						"network": {
 							"type": "string",
 							"title": "network",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio network device setting.\n  </dt>\n  <dd>\n   <p>\n    Input format:\n    <span class=\"docutils literal\">\n     <span class=\"pre\">\n      device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]\n     </span>\n    </span>\n    .\nThe\n    <span class=\"docutils literal\">\n     device_name\n    </span>\n    is the name of the TAP (or MacVTap) device.\nIt must include the keyword\n    <span class=\"docutils literal\">\n     tap\n    </span>\n    .\n    <span class=\"docutils literal\">\n     vhost\n    </span>\n    specifies the\nvhost backend; otherwise, the VBSU backend is used. The\n    <span class=\"docutils literal\">\n     mac\n    </span>\n    address is optional.\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio network device setting.\nInput format:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    device_name[,vhost][,mac=XX:XX:XX:XX:XX:XX]\n   </span>\n  </span>\n  .\nThe\n  <span class=\"docutils literal\">\n   device_name\n  </span>\n  is the name of the TAP (or MacVTap) device.\nIt must include the keyword\n  <span class=\"docutils literal\">\n   tap\n  </span>\n  .\n  <span class=\"docutils literal\">\n   vhost\n  </span>\n  specifies the\nvhost backend; otherwise, the VBSU backend is used. The\n  <span class=\"docutils literal\">\n   mac\n  </span>\n  address is optional.\n </p>\n</div>\n"
 						},
 						"input": {
 							"type": "string",
@@ -1945,7 +1973,7 @@
 						"block": {
 							"type": "string",
 							"title": "block",
-							"description": "<div class=\"document\">\n <dl class=\"simple\">\n  <dt>\n   The virtio block device setting.\n  </dt>\n  <dd>\n   <p>\n    Format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img\n   </p>\n  </dd>\n </dl>\n</div>\n"
+							"description": "<div class=\"document\">\n <p>\n  The virtio block device setting.\nFormat:\n  <span class=\"docutils literal\">\n   [blk\n   <span class=\"pre\">\n    partition:][img\n   </span>\n   path]\n  </span>\n  . Example:\n  <span class=\"docutils literal\">\n   <span class=\"pre\">\n    /dev/sda3:./a/b.img\n   </span>\n  </span>\n  .\n </p>\n</div>\n"
 						}
 					},
 					"title": "Virt-IO devices",
@@ -1962,7 +1990,7 @@
 				"IVSHMEM": {
 					"$ref": "#/definitions/IVSHMEMInfo",
 					"title": "Inter-VM shared memory",
-					"description": ""
+					"description": "<div class=\"document\">\n <p>\n  Configure shared memory regions for inter-VM communication.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -1986,7 +2014,7 @@
 				},
 				"vuart_connections": {
 					"$ref": "#/definitions/VuartConnectionsType",
-					"title": "Virtual UART connection",
+					"title": "Inter-VM virtual UART connection",
 					"description": "<div class=\"document\">\n <p>\n  Specify the vUART connection settings.\nRefer to\n  <a class=\"reference external\" href=\"https://projectacrn.github.io/latest/tutorials/vuart_configuration.html#vuart-config\" target=\"_blank\">\n   Enable vUART Configurations\n  </a>\n  for detailed vUART settings.\n </p>\n</div>\n"
 				}
 			}
@@ -2051,7 +2079,7 @@
 				"virtual_cat_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Virtual Cache Allocation Technology (vCAT)",
+					"title": "Virtual Cache Allocation Tech",
 					"description": "<div class=\"document\">\n <p>\n  Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.\n </p>\n</div>\n"
 				},
 				"clos": {
@@ -2110,7 +2138,7 @@
 				"virtual_cat_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Virtual Cache Allocation Technology (vCAT)",
+					"title": "Virtual Cache Allocation Tech",
 					"description": "<div class=\"document\">\n <p>\n  Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.\n </p>\n</div>\n"
 				},
 				"clos": {
@@ -2169,7 +2197,7 @@
 				"virtual_cat_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Virtual Cache Allocation Technology (vCAT)",
+					"title": "Virtual Cache Allocation Tech",
 					"description": "<div class=\"document\">\n <p>\n  Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.\n </p>\n</div>\n"
 				},
 				"clos": {
@@ -2211,7 +2239,7 @@
 				"virtual_cat_support": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Virtual Cache Allocation Technology (vCAT)",
+					"title": "Virtual Cache Allocation Tech",
 					"description": "<div class=\"document\">\n <p>\n  Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.\n </p>\n</div>\n"
 				},
 				"clos": {
@@ -2245,66 +2273,66 @@
 				"RELOC": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
-					"title": "Hypervisor relocation in memory",
+					"title": "Hypervisor relocation",
 					"description": "<div class=\"document\">\n <p>\n  Enable hypervisor relocation in memory. The bootloader may need to change the location of the hypervisor because of other firmware.\n </p>\n</div>\n"
 				},
 				"SCHEDULER": {
 					"$ref": "#/definitions/SchedulerType",
 					"default": "SCHED_BVT",
 					"title": "Virtual CPU scheduler",
-					"description": "<div class=\"document\">\n <p>\n  Select the scheduling algorithm used to determine which User VM runs on a shared virtual CPU.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Select the scheduling algorithm for determining the priority of User VMs running on a shared virtual CPU.\n </p>\n</div>\n"
 				},
 				"MULTIBOOT2": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
 					"title": "Multiboot2",
-					"description": "<div class=\"document\">\n <p>\n  Enable multiboot2 protocol support and multiboot1 downward compatibility. Disable this feature if multiboot1 meets your requirements and to reduce lines of code.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Enable multiboot2 protocol support (with multiboot1 downward compatibility). If multiboot1 meets your requirements, disable this feature to reduce hypervisor code size.\n </p>\n</div>\n"
 				},
 				"ENFORCE_TURNOFF_AC": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
 					"title": "Split lock detection",
-					"description": "<div class=\"document\">\n <p>\n  Enable detection of split locks, which can negatively affect an application's real-time performance. If a lock is detected, an alignment check exception #AC occurs.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Enable detection of split locks. A split lock can negatively affect an application's real-time performance. If a lock is detected, an alignment check exception #AC occurs.\n </p>\n</div>\n"
 				},
 				"ENFORCE_TURNOFF_GP": {
 					"$ref": "#/definitions/Boolean",
 					"default": "n",
-					"title": "Uncacheable-memory lock detection",
-					"description": "<div class=\"document\">\n <p>\n  Enable detection of uncacheable-memory locks, which can negatively affect an application's real-time performance. If a lock is detected, a general-protection exception #GP occurs.\n </p>\n</div>\n"
+					"title": "UC lock detection",
+					"description": "<div class=\"document\">\n <p>\n  Enable detection of uncacheable-memory (UC) locks. A UC lock can negatively affect an application's real-time performance. If a lock is detected, a general-protection exception #GP occurs.\n </p>\n</div>\n"
 				},
 				"RDT": {
 					"$ref": "#/definitions/RDTType",
-					"title": "Intel Resource Director Technology (RDT)",
+					"title": "Intel Resource Director Tech",
 					"description": "<div class=\"document\">\n <p>\n  Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.\n </p>\n</div>\n"
 				},
 				"HYPERV_ENABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
-					"title": "Hyper-V virtualization technology",
-					"description": "<div class=\"document\">\n <p>\n  Enable Microsoft Hyper-V Hypervisor Top-Level Functional Specification (TFLS) for Windows User VMs.\n </p>\n</div>\n"
+					"title": "Hyper-V",
+					"description": "<div class=\"document\">\n <p>\n  Enable Microsoft Hyper-V Hypervisor Top-Level Functional Specification (TFLS) for User VMs running Windows.\n </p>\n</div>\n"
 				},
 				"ACPI_PARSE_ENABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
-					"title": "Parse ACPI tables at runtime",
+					"title": "Parse ACPI tables",
 					"description": "<div class=\"document\">\n <p>\n  Enable ACPI runtime parsing to get DMAR (DMA remapping) configuration data from the APCI tables. Otherwise, use existing, static information from the associated board configuration file.\n </p>\n</div>\n"
 				},
 				"L1D_VMENTRY_ENABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
 					"title": "Mitigate L1 terminal fault",
-					"description": "<div class=\"document\">\n <p>\n  Enable L1 cache flush before VM entry to prevent L1 terminal fault. L1 terminal fault is a hardware vulnerability that allows unauthorized disclosure of information residing in the L1 data cache.\n </p>\n</div>\n"
+					"description": "<div class=\"document\">\n <p>\n  Enable L1 cache flush before VM entry to prevent L1 terminal fault. L1 terminal fault is a hardware vulnerability that could allow unauthorized disclosure of information residing in the L1 data cache.\n </p>\n</div>\n"
 				},
 				"MCE_ON_PSC_DISABLED": {
 					"$ref": "#/definitions/Boolean",
 					"default": "y",
-					"title": "Machine Check Error (MCE) workaround",
-					"description": "<div class=\"document\">\n <p>\n  Enable the software workaround for Machine Check Error on Page Size Change (hardware bug in some processor families).\n </p>\n</div>\n"
+					"title": "MCE workaround",
+					"description": "<div class=\"document\">\n <p>\n  Enable the software workaround for Machine Check Error on Page Size Change (erratum in some processor families).\n </p>\n</div>\n"
 				},
 				"SSRAM": {
 					"$ref": "#/definitions/SSRAMInfo",
-					"title": "Software SRAM (for real-time apps)",
-					"description": ""
+					"title": "Software SRAM",
+					"description": "<div class=\"document\">\n <p>\n  Configure Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.\n </p>\n</div>\n"
 				}
 			}
 		},
@@ -2317,7 +2345,7 @@
 				"STACK_SIZE": {
 					"$ref": "#/definitions/HexFormat",
 					"default": "0x2000",
-					"title": "CPU memory stack size (bytes per CPU)",
+					"title": "CPU memory stack size (bytes)",
 					"description": "<div class=\"document\">\n <p>\n  Specify the size of the memory stack in bytes for each physical CPU. For example, if you specify 8 kilobytes, each CPU will get its own 8-kilobyte stack.\n </p>\n</div>\n"
 				}
 			}
@@ -2336,13 +2364,13 @@
 					"minimum": 1,
 					"maximum": 1024,
 					"default": 96,
-					"title": "Maximum number of PCI devices",
+					"title": "Max PCI devices",
 					"description": "<div class=\"document\">\n <p>\n  Specify the maximum number of PCI devices. This impacts the amount of memory used to maintain information about these PCI devices. The default value is calculated from the board configuration file. If you have PCI devices that were not detected by the Board Inspector, you may need to change this maximum value.\n </p>\n</div>\n"
 				},
 				"MAX_PT_IRQ_ENTRIES": {
 					"type": "integer",
 					"default": 256,
-					"title": "Maximum number of IRQ entries for passthrough devices",
+					"title": "Max passthrough IRQ entries",
 					"description": "<div class=\"document\">\n <p>\n  Specify the maximum number of interrupt request (IRQ) entries from all passthrough devices.\n </p>\n</div>\n"
 				},
 				"MAX_MSIX_TABLE_NUM": {
@@ -2350,7 +2378,7 @@
 					"minimum": 1,
 					"maximum": 2048,
 					"default": 64,
-					"title": "Maximum number of MSI-X tables per device",
+					"title": "Max MSI-X tables",
 					"description": "<div class=\"document\">\n <p>\n  Specify the maximum number of Message Signaled Interrupt MSI-X tables per device. The default value is calculated from the board configuration file.\n </p>\n</div>\n"
 				},
 				"MAX_EMULATED_MMIO": {
@@ -2358,7 +2386,7 @@
 					"minimum": 1,
 					"maximum": 128,
 					"default": 16,
-					"title": "Maximum number of emulated MMIO regions",
+					"title": "Max emulated MMIO regions",
 					"description": "<div class=\"document\">\n <p>\n  Specify the maximum number of emulated MMIO regions for device virtualization. The default value is calculated from the board configuration file.\n </p>\n</div>\n"
 				}
 			}
