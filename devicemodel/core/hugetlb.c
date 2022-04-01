@@ -37,6 +37,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <log.h>
+#include <linux/memfd.h>
 
 #include "vmmapi.h"
 
@@ -50,13 +51,7 @@ extern char *vmname;
 
 #define MAX_PATH_LEN 256
 
-#define HUGETLBFS_MAGIC       0x958458f6
-
 /* HugePage Level 1 for 2M page, Level 2 for 1G page*/
-#define PATH_HUGETLB_LV1 "/run/hugepage/acrn/huge_lv1/"
-#define OPT_HUGETLB_LV1 "pagesize=2M"
-#define PATH_HUGETLB_LV2 "/run/hugepage/acrn/huge_lv2/"
-#define OPT_HUGETLB_LV2 "pagesize=1G"
 
 #define SYS_PATH_LV1  "/sys/kernel/mm/hugepages/hugepages-2048kB/"
 #define SYS_PATH_LV2  "/sys/kernel/mm/hugepages/hugepages-1048576kB/"
@@ -70,6 +65,7 @@ extern char *vmname;
  *
  * We use file range (0..9) for hugetlbfs access lock.
  */
+#define	ACRN_HUGETLB_LOCK_DIR  "/run/hugepage/acrn"
 #define	ACRN_HUGETLB_LOCK_FILE "/run/hugepage/acrn/lock"
 #define	LOCK_OFFSET_START	0
 #define	LOCK_OFFSET_END		10
@@ -88,17 +84,13 @@ extern char *vmname;
  *.- free_pages_path: sys path for number of free pages
  */
 struct hugetlb_info {
-	bool mounted;
-	char *mount_path;
-	char *mount_opt;
-
-	char node_path[MAX_PATH_LEN];
 	int fd;
 	int pg_size;
 	size_t lowmem;
 	size_t fbmem;
 	size_t biosmem;
 	size_t highmem;
+	unsigned int flags;
 
 	int pages_delta;
 	char *nr_pages_path;
@@ -107,30 +99,28 @@ struct hugetlb_info {
 
 static struct hugetlb_info hugetlb_priv[HUGETLB_LV_MAX] = {
 	{
-		.mounted = false,
-		.mount_path = PATH_HUGETLB_LV1,
-		.mount_opt = OPT_HUGETLB_LV1,
 		.fd = -1,
-		.pg_size = 0,
+		.pg_size = 2048 * 1024,
 		.lowmem = 0,
 		.fbmem = 0,
 		.biosmem = 0,
 		.highmem = 0,
+		.flags = MFD_CLOEXEC | MFD_ALLOW_SEALING |
+			 MFD_HUGETLB | MFD_HUGE_2MB,
 
 		.pages_delta = 0,
 		.nr_pages_path = SYS_PATH_LV1 SYS_NR_HUGEPAGES,
 		.free_pages_path = SYS_PATH_LV1 SYS_FREE_HUGEPAGES,
 	},
 	{
-		.mounted = false,
-		.mount_path = PATH_HUGETLB_LV2,
-		.mount_opt = OPT_HUGETLB_LV2,
 		.fd = -1,
-		.pg_size = 0,
+		.pg_size = 1024 * 1024 * 1024,
 		.lowmem = 0,
 		.fbmem = 0,
 		.biosmem = 0,
 		.highmem = 0,
+		.flags = MFD_CLOEXEC | MFD_ALLOW_SEALING |
+			 MFD_HUGETLB | MFD_HUGE_1GB,
 
 		.pages_delta = 0,
 		.nr_pages_path = SYS_PATH_LV2 SYS_NR_HUGEPAGES,
@@ -171,53 +161,6 @@ static int unlock_acrn_hugetlb(void)
 	return 0;
 }
 
-static int open_hugetlbfs(struct vmctx *ctx, int level)
-{
-	char *path;
-	size_t len;
-	struct statfs fs;
-
-	if (level >= HUGETLB_LV_MAX) {
-		pr_err("exceed max hugetlb level");
-		return -EINVAL;
-	}
-
-	path = hugetlb_priv[level].node_path;
-	memset(path, '\0', MAX_PATH_LEN);
-	snprintf(path, MAX_PATH_LEN, "%s%s", hugetlb_priv[level].mount_path, ctx->name);
-
-	len = strnlen(path, MAX_PATH_LEN);
-	if (len > MAX_PATH_LEN) {
-		pr_err("PATH overflow");
-		return -ENOMEM;
-	}
-
-	pr_info("open hugetlbfs file %s\n", path);
-
-	hugetlb_priv[level].fd = open(path, O_CREAT | O_RDWR, 0644);
-	if (hugetlb_priv[level].fd  < 0) {
-		pr_err("Open hugtlbfs failed");
-		return -EINVAL;
-	}
-
-	/* get the pagesize */
-	if (fstatfs(hugetlb_priv[level].fd, &fs) != 0) {
-		pr_err("Failed to get statfs fo hugetlbfs");
-		return -EINVAL;
-	}
-
-	if (fs.f_type == HUGETLBFS_MAGIC) {
-		/* get hugepage size from fstat*/
-		hugetlb_priv[level].pg_size = fs.f_bsize;
-	} else {
-		close(hugetlb_priv[level].fd);
-		unlink(hugetlb_priv[level].node_path);
-		hugetlb_priv[level].fd = -1;
-		return -EINVAL;
-	}
-
-	return 0;
-}
 
 static void close_hugetlbfs(int level)
 {
@@ -229,8 +172,6 @@ static void close_hugetlbfs(int level)
 	if (hugetlb_priv[level].fd >= 0) {
 		close(hugetlb_priv[level].fd);
 		hugetlb_priv[level].fd = -1;
-		unlink(hugetlb_priv[level].node_path);
-		hugetlb_priv[level].pg_size = 0;
 	}
 }
 
@@ -240,6 +181,8 @@ static bool should_enable_hugetlb_level(int level)
 		pr_err("exceed max hugetlb level");
 		return false;
 	}
+	if (hugetlb_priv[level].fd < 0)
+		return false;
 
 	return (hugetlb_priv[level].lowmem > 0 ||
 		hugetlb_priv[level].fbmem > 0 ||
@@ -390,98 +333,6 @@ static size_t adj_fbmem_param(struct hugetlb_info *htlb,
 	return htlb->fbmem;
 }
 
-static int rm_hugetlb_dirs(int level)
-{
-	char path[MAX_PATH_LEN]={0};
-
-	if (level >= HUGETLB_LV_MAX) {
-		pr_err("exceed max hugetlb level");
-		return -EINVAL;
-	}
-
-	snprintf(path,MAX_PATH_LEN, "%s/",hugetlb_priv[level].mount_path);
-
-	if (access(path, F_OK) == 0) {
-		if (rmdir(path) < 0) {
-			pr_err("rmdir failed");
-			return -1;
-		}
-	}
-	return 0;
-}
-
-static int create_hugetlb_dirs(int level)
-{
-	char path[MAX_PATH_LEN]={0};
-	int i;
-	size_t len;
-
-	if (level >= HUGETLB_LV_MAX) {
-		pr_err("exceed max hugetlb level");
-		return -EINVAL;
-	}
-
-	snprintf(path,MAX_PATH_LEN, "%s/",hugetlb_priv[level].mount_path);
-
-	len = strnlen(path, MAX_PATH_LEN);
-	for (i = 1; i < len; i++) {
-		if (path[i] == '/') {
-			path[i] = 0;
-			if (access(path, F_OK) != 0) {
-				if (mkdir(path, 0755) < 0) {
-					pr_err("mkdir failed");
-					return -1;
-				}
-			}
-			path[i] = '/';
-		}
-	}
-
-	return 0;
-}
-
-static int mount_hugetlbfs(int level)
-{
-	int ret;
-	char path[MAX_PATH_LEN];
-
-	if (level >= HUGETLB_LV_MAX) {
-		pr_err("exceed max hugetlb level");
-		return -EINVAL;
-	}
-
-	if (hugetlb_priv[level].mounted)
-		return 0;
-
-	snprintf(path, MAX_PATH_LEN, "%s", hugetlb_priv[level].mount_path);
-
-	/* only support x86 as HUGETLB level-1 2M page, level-2 1G page*/
-	ret = mount("none", path, "hugetlbfs",
-		0, hugetlb_priv[level].mount_opt);
-	if (ret == 0)
-		hugetlb_priv[level].mounted = true;
-
-	return ret;
-}
-
-static void umount_hugetlbfs(int level)
-{
-	char path[MAX_PATH_LEN];
-
-	if (level >= HUGETLB_LV_MAX) {
-		pr_err("exceed max hugetlb level");
-		return;
-	}
-
-	snprintf(path, MAX_PATH_LEN, "%s", hugetlb_priv[level].mount_path);
-
-
-	if (hugetlb_priv[level].mounted) {
-		umount(path);
-		hugetlb_priv[level].mounted = false;
-	}
-}
-
 static int read_sys_info(const char *sys_path)
 {
 	FILE *fp;
@@ -514,6 +365,10 @@ static bool hugetlb_check_memgap(void)
 	bool has_gap = false;
 
 	for (lvl = HUGETLB_LV1; lvl < hugetlb_lv_max; lvl++) {
+		if (hugetlb_priv[lvl].fd < 0) {
+			hugetlb_priv[lvl].pages_delta = 0;
+			continue;
+		}
 		free_pages = read_sys_info(hugetlb_priv[lvl].free_pages_path);
 		need_pages = (hugetlb_priv[lvl].lowmem + hugetlb_priv[lvl].fbmem +
 			hugetlb_priv[lvl].biosmem + hugetlb_priv[lvl].highmem) /
@@ -663,16 +518,36 @@ static bool hugetlb_reserve_pages(void)
 
 bool init_hugetlb(void)
 {
+	char path[MAX_PATH_LEN] = {0};
+	int i;
 	int level;
+	int fd;
+	size_t len;
 
-	for (level = HUGETLB_LV1; level < HUGETLB_LV_MAX; level++) {
-		if (create_hugetlb_dirs(level) < 0)
-			return false;
+	/* Try to create the dir of /run/hugetlb/acrn */
+	snprintf(path, MAX_PATH_LEN, "%s/", ACRN_HUGETLB_LOCK_DIR);
+	len = strnlen(path, MAX_PATH_LEN);
+	for (i = 1; i < len; i++) {
+		if (path[i] == '/') {
+			path[i] = 0;
+			if (access(path, F_OK) != 0) {
+				if (mkdir(path, 0755) < 0) {
+					pr_err("mkdir %s failed.\n", path);
+					return -1;
+				}
+			}
+			path[i] = '/';
+		}
 	}
 
-	for (level = HUGETLB_LV1; level < HUGETLB_LV_MAX; level++)
-		if (mount_hugetlbfs(level) < 0)
+	for (level = HUGETLB_LV1; level < HUGETLB_LV_MAX; level++) {
+		hugetlb_priv[level].fd = -1;
+		fd = memfd_create("acrn_memfd", hugetlb_priv[level].flags);
+		if (fd == -1)
 			break;
+
+		hugetlb_priv[level].fd = fd;
+	}
 
 	if (level == HUGETLB_LV1) /* mount fail for level 1 */
 		return false;
@@ -694,8 +569,9 @@ void uninit_hugetlb(void)
 {
 	int level;
 	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
-		umount_hugetlbfs(level);
-		rm_hugetlb_dirs(level);
+		if (hugetlb_priv[level].fd > 0)
+			close(hugetlb_priv[level].fd);
+		hugetlb_priv[level].fd = -1;
 	}
 
 	close(lock_fd);
@@ -706,18 +582,29 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	int level;
 	size_t lowmem, fbmem, biosmem, highmem;
 	bool has_gap;
+	int fd;
+	unsigned int seal_flag = F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_SEAL;
+	size_t mem_size_level;
 
 	if (ctx->lowmem == 0) {
 		pr_err("vm requests 0 memory");
 		goto err;
 	}
 
-	/* open hugetlbfs and get pagesize for two level */
-	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
-		if (open_hugetlbfs(ctx, level) < 0) {
-			pr_err("failed to open hugetlbfs");
-			goto err;
+	/* In course of reboot sequence, the memfd is closed. So it
+	 * needs to recreate the memfd if it is closed.
+	 */
+	for (level = HUGETLB_LV1; level < HUGETLB_LV_MAX; level++) {
+		if (hugetlb_priv[level].fd > 0)
+			continue;
+
+		fd = memfd_create("acrn_memfd", hugetlb_priv[level].flags);
+		if (fd == -1) {
+			pr_err("Fail to create memfd for %d.\n",
+				level);
+			break;
 		}
+		hugetlb_priv[level].fd = fd;
 	}
 
 	if (ALIGN_CHECK(ctx->lowmem, hugetlb_priv[HUGETLB_LV1].pg_size) ||
@@ -747,6 +634,13 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	highmem = ctx->highmem;
 
 	for (level = hugetlb_lv_max - 1; level >= HUGETLB_LV1; level--) {
+		if (hugetlb_priv[level].fd < 0) {
+			hugetlb_priv[level].lowmem = 0;
+			hugetlb_priv[level].highmem = 0;
+			hugetlb_priv[level].biosmem = 0;
+			hugetlb_priv[level].fbmem = 0;
+			continue;
+		}
 		hugetlb_priv[level].lowmem =
 			ALIGN_DOWN(lowmem, hugetlb_priv[level].pg_size);
 		hugetlb_priv[level].fbmem =
@@ -841,6 +735,32 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 		pr_err("fbmem mmap failed");
 		goto err_lock;
 	}
+
+	/* resize the memfd to meet with the size requirement and add the
+	 * F_SEAL_SEAL flag
+	 */
+	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
+		if (hugetlb_priv[level].fd > 0) {
+			mem_size_level = hugetlb_priv[level].lowmem +
+					 hugetlb_priv[level].highmem +
+					 hugetlb_priv[level].biosmem +
+					 hugetlb_priv[level].fbmem;
+			if (ftruncate(hugetlb_priv[level].fd, mem_size_level) == -1) {
+				pr_err("Fail to set mem_size for level %d.\n",
+					level);
+				goto err_lock;
+			}
+
+			if (fcntl(hugetlb_priv[level].fd, F_ADD_SEALS,
+				seal_flag) == -1) {
+				pr_err("Fail to set seal flag for level %d.\n",
+					level);
+				goto err_lock;
+			}
+		}
+	}
+
+
 	unlock_acrn_hugetlb();
 
 	/* dump hugepage really setup */
