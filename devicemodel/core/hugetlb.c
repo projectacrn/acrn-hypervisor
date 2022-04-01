@@ -881,3 +881,35 @@ vm_find_memfd_region(struct vmctx *ctx, vm_paddr_t gpa,
 
 	return ret;
 }
+
+bool vm_allow_dmabuf(struct vmctx *ctx)
+{
+	uint32_t mem_flags;
+
+	mem_flags = 0;
+	if (ctx->highmem) {
+		/* Check the highmem is used by HUGETLB_LV1/HUGETLB_LV2 */
+		if ((hugetlb_priv[HUGETLB_LV1].fd > 0) &&
+			(hugetlb_priv[HUGETLB_LV1].highmem))
+			mem_flags |= 1;
+		if ((hugetlb_priv[HUGETLB_LV2].fd > 0) &&
+			(hugetlb_priv[HUGETLB_LV2].highmem))
+			mem_flags |= 0x02;
+		if (mem_flags == 0x03)
+			return false;
+	}
+
+	if (ctx->lowmem) {
+		/* Check the lowhmem is used by HUGETLB_LV1/HUGETLB_LV2 */
+		mem_flags = 0;
+		if ((hugetlb_priv[HUGETLB_LV1].fd > 0) &&
+			(hugetlb_priv[HUGETLB_LV1].lowmem))
+			mem_flags |= 1;
+		if ((hugetlb_priv[HUGETLB_LV2].fd > 0) &&
+			(hugetlb_priv[HUGETLB_LV2].lowmem))
+			mem_flags |= 0x02;
+		if (mem_flags == 0x03)
+			return false;
+	}
+	return true;
+}

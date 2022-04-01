@@ -95,6 +95,7 @@ struct vm_mem_region {
 };
 bool	vm_find_memfd_region(struct vmctx *ctx, vm_paddr_t gpa,
 			     struct vm_mem_region *ret_region);
+bool    vm_allow_dmabuf(struct vmctx *ctx);
 /*
  * Create a device memory segment identified by 'segid'.
  *
