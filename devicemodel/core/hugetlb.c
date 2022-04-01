@@ -42,6 +42,8 @@
 
 extern char *vmname;
 
+#define ALIGN_CHECK(x, align)	(((x) & ((align)-1)) ? 1 : 0)
+
 #define HUGETLB_LV1		0
 #define HUGETLB_LV2		1
 #define HUGETLB_LV_MAX		2
@@ -718,6 +720,13 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 		}
 	}
 
+	if (ALIGN_CHECK(ctx->lowmem, hugetlb_priv[HUGETLB_LV1].pg_size) ||
+		ALIGN_CHECK(ctx->highmem, hugetlb_priv[HUGETLB_LV1].pg_size) ||
+		ALIGN_CHECK(ctx->biosmem, hugetlb_priv[HUGETLB_LV1].pg_size) ||
+		ALIGN_CHECK(ctx->fbmem, hugetlb_priv[HUGETLB_LV1].pg_size)) {
+		pr_err("Memory size is not aligned to 2M.\n");
+		goto err;
+	}
 	/* all memory should be at least aligned with
 	 * hugetlb_priv[HUGETLB_LV1].pg_size */
 	ctx->lowmem =
