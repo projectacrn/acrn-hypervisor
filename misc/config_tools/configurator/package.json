@@ -1,7 +1,7 @@
 {
   "name": "acrn-configurator",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": {
     "name": "Feng, Weiyi",
     "email": "weiyix.feng@intel.com",
