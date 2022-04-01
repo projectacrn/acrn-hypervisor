@@ -5,6 +5,8 @@
  *
  */
 #include <fcntl.h>
+#include <sys/ioctl.h>
+#include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +15,8 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <vmmapi.h>
+#include <drm/drm_fourcc.h>
+#include <linux/udmabuf.h>
 
 #include "dm.h"
 #include "pci_core.h"
@@ -20,6 +24,7 @@
 #include "vdisplay.h"
 #include "console.h"
 #include "vga.h"
+#include "atomic.h"
 
 /*
  * Queue definitions.
@@ -47,6 +52,8 @@
  */
 #define VIRTIO_GPU_S_HOSTCAPS	(1UL << VIRTIO_F_VERSION_1) | \
 				(1UL << VIRTIO_GPU_F_EDID)
+
+
 
 /*
  * Device events
@@ -192,6 +199,11 @@ struct virtio_gpu_resource_create_2d {
 	uint32_t height;
 };
 
+struct dma_buf_info {
+	int32_t ref_count;
+	int dmabuf_fd;
+};
+
 struct virtio_gpu_resource_2d {
 	uint32_t resource_id;
 	uint32_t width;
@@ -200,6 +212,8 @@ struct virtio_gpu_resource_2d {
 	pixman_image_t *image;
 	struct iovec *iov;
 	uint32_t iovcnt;
+	bool blob;
+	struct dma_buf_info *dma_info;
 	LIST_ENTRY(virtio_gpu_resource_2d) link;
 };
 
@@ -287,6 +301,44 @@ struct virtio_gpu_update_cursor {
 	uint32_t padding;
 };
 
+/* If the blob size is less than 16K, it is regarded as the
+ * cursor_buffer.
+ * So it is not mapped as dma-buf.
+ */
+#define CURSOR_BLOB_SIZE	(16 * 1024)
+/* VIRTIO_GPU_CMD_RESOURCE_CREATE_BLOB */
+struct virtio_gpu_resource_create_blob {
+	struct virtio_gpu_ctrl_hdr hdr;
+	uint32_t resource_id;
+#define VIRTIO_GPU_BLOB_MEM_GUEST             0x0001
+
+#define VIRTIO_GPU_BLOB_FLAG_USE_SHAREABLE    0x0002
+	/* blob_mem/blob_id is not used */
+	uint32_t blob_mem;
+	uint32_t blob_flags;
+	uint32_t nr_entries;
+
+	uint64_t blob_id;
+	uint64_t size;
+	/*
+	 * sizeof(nr_entries * virtio_gpu_mem_entry) bytes follow
+	 */
+};
+
+/* VIRTIO_GPU_CMD_SET_SCANOUT_BLOB */
+struct virtio_gpu_set_scanout_blob {
+	struct virtio_gpu_ctrl_hdr hdr;
+	struct virtio_gpu_rect r;
+	uint32_t scanout_id;
+	uint32_t resource_id;
+	uint32_t width;
+	uint32_t height;
+	uint32_t format;
+	uint32_t padding;
+	uint32_t strides[4];
+	uint32_t offsets[4];
+};
+
 /*
  * Per-device struct
  */
@@ -302,6 +354,7 @@ struct virtio_gpu {
 	struct vdpy_display_bh vga_bh;
 	struct vga vga;
 	uint8_t edid[VIRTIO_GPU_EDID_SIZE];
+	bool is_blob_supported;
 };
 
 struct virtio_gpu_command {
@@ -334,6 +387,31 @@ static struct virtio_ops virtio_gpu_ops = {
 };
 static int virtio_gpu_device_cnt = 0;
 
+static inline bool virtio_gpu_blob_supported(struct virtio_gpu *gpu)
+{
+	return gpu->is_blob_supported;
+}
+
+static void virtio_gpu_dmabuf_ref(struct dma_buf_info *info)
+{
+	if (!info)
+		return;
+
+	atomic_add_fetch(&info->ref_count, 1);
+}
+
+static void virtio_gpu_dmabuf_unref(struct dma_buf_info *info)
+{
+	if (!info)
+		return;
+
+	if (atomic_sub_fetch(&info->ref_count, 1) == 0) {
+		if (info->dmabuf_fd > 0)
+			close(info->dmabuf_fd);
+		free(info);
+	}
+}
+
 static void
 virtio_gpu_set_status(void *vdev, uint64_t status)
 {
@@ -358,6 +436,11 @@ virtio_gpu_reset(void *vdev)
 			if (r2d->image) {
 				pixman_image_unref(r2d->image);
 				r2d->image = NULL;
+			}
+			if (r2d->blob) {
+				virtio_gpu_dmabuf_unref(r2d->dma_info);
+				r2d->dma_info = NULL;
+				r2d->blob = false;
 			}
 			LIST_REMOVE(r2d, link);
 			if (r2d->iov) {
@@ -591,6 +674,11 @@ virtio_gpu_cmd_resource_unref(struct virtio_gpu_command *cmd)
 			pixman_image_unref(r2d->image);
 			r2d->image = NULL;
 		}
+		if (r2d->blob) {
+			virtio_gpu_dmabuf_unref(r2d->dma_info);
+			r2d->dma_info = NULL;
+			r2d->blob = false;
+		}
 		LIST_REMOVE(r2d, link);
 		if (r2d->iov) {
 			free(r2d->iov);
@@ -749,6 +837,13 @@ virtio_gpu_cmd_transfer_to_host_2d(struct virtio_gpu_command *cmd)
 		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 		return;
 	}
+
+	if (r2d->blob) {
+		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
+		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
+		return;
+	}
+
 	if ((req.r.x > r2d->width) ||
 	    (req.r.y > r2d->height) ||
 	    (req.r.width > r2d->width) ||
@@ -821,6 +916,16 @@ virtio_gpu_cmd_resource_flush(struct virtio_gpu_command *cmd)
 		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 		return;
 	}
+	if (r2d->blob) {
+		virtio_gpu_dmabuf_ref(r2d->dma_info);
+		surf.dma_info.dmabuf_fd = r2d->dma_info->dmabuf_fd;
+		surf.surf_type = SURFACE_DMABUF;
+		vdpy_surface_update(gpu->vdpy_handle, &surf);
+		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
+		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
+		virtio_gpu_dmabuf_unref(r2d->dma_info);
+		return;
+	}
 	pixman_image_ref(r2d->image);
 	surf.pixel = pixman_image_get_data(r2d->image);
 	surf.x = req.r.x;
@@ -836,6 +941,242 @@ virtio_gpu_cmd_resource_flush(struct virtio_gpu_command *cmd)
 	cmd->iolen = sizeof(resp);
 	resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 	memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
+}
+
+static int udmabuf_fd(void)
+{
+	static bool first = true;
+	static int udmabuf;
+
+	if (!first)
+		return udmabuf;
+
+	first = false;
+
+	udmabuf = open("/dev/udmabuf", O_RDWR);
+	if (udmabuf < 0) {
+		pr_err("Could not open /dev/udmabuf: %s.", strerror(errno));
+	}
+	return udmabuf;
+}
+
+static struct dma_buf_info *virtio_gpu_create_udmabuf(struct virtio_gpu *gpu,
+					struct virtio_gpu_mem_entry *entries,
+					int nr_entries)
+{
+	struct udmabuf_create_list *list;
+	int udmabuf, i, dmabuf_fd;
+	struct vm_mem_region ret_region;
+	bool fail_flag;
+	struct dma_buf_info *info;
+
+	udmabuf = udmabuf_fd();
+	if (udmabuf < 0) {
+		return NULL;
+	}
+
+	fail_flag = false;
+	list = malloc(sizeof(*list) + sizeof(struct udmabuf_create_item) * nr_entries);
+	info = malloc(sizeof(*info));
+	if ((info == NULL) || (list == NULL)) {
+		free(list);
+		free(info);
+		return NULL;
+	}
+	for (i = 0; i < nr_entries; i++) {
+		if (vm_find_memfd_region(gpu->base.dev->vmctx,
+					entries[i].addr,
+					&ret_region) == false) {
+			fail_flag = true;
+			pr_err("%s : Failed to find memfd for %llx.\n",
+					__func__, entries[i].addr);
+			break;
+		}
+		list->list[i].memfd  = ret_region.fd;
+		list->list[i].offset = ret_region.fd_offset;
+		list->list[i].size   = entries[i].length;
+	}
+	list->count = nr_entries;
+	list->flags = UDMABUF_FLAGS_CLOEXEC;
+	if (fail_flag) {
+		dmabuf_fd = -1;
+	} else {
+		dmabuf_fd = ioctl(udmabuf, UDMABUF_CREATE_LIST, list);
+	}
+	if (dmabuf_fd < 0) {
+		free(info);
+		info = NULL;
+		pr_err("%s : Failed to create the dmabuf. %s\n",
+			__func__, strerror(errno));
+	}
+	if (info) {
+		info->dmabuf_fd = dmabuf_fd;
+		atomic_store(&info->ref_count, 1);
+	}
+	return info;
+}
+
+static void
+virtio_gpu_cmd_create_blob(struct virtio_gpu_command *cmd)
+{
+	struct virtio_gpu_resource_create_blob req;
+	struct virtio_gpu_mem_entry *entries;
+	struct virtio_gpu_resource_2d *r2d;
+	struct virtio_gpu_ctrl_hdr resp;
+	int i;
+	uint8_t *pbuf;
+
+	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
+	cmd->iolen = sizeof(resp);
+	memset(&resp, 0, sizeof(resp));
+	virtio_gpu_update_resp_fence(&cmd->hdr, &resp);
+
+	if (req.resource_id == 0) {
+		pr_dbg("%s : invalid resource id in cmd.\n", __func__);
+		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_RESOURCE_ID;
+		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+		return;
+
+	}
+
+	if ((req.blob_mem != VIRTIO_GPU_BLOB_MEM_GUEST) ||
+		(req.blob_flags != VIRTIO_GPU_BLOB_FLAG_USE_SHAREABLE)) {
+		pr_dbg("%s : invalid create_blob parameter for %d.\n",
+				__func__, req.resource_id);
+		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_PARAMETER;
+		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+		return;
+
+	}
+	r2d = virtio_gpu_find_resource_2d(cmd->gpu, req.resource_id);
+	if (r2d) {
+		pr_dbg("%s : resource %d already exists.\n",
+				__func__, req.resource_id);
+		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_RESOURCE_ID;
+		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+		return;
+	}
+
+	r2d = (struct virtio_gpu_resource_2d *)calloc(1,
+			sizeof(struct virtio_gpu_resource_2d));
+	r2d->resource_id = req.resource_id;
+
+	entries = malloc(req.nr_entries * sizeof(struct virtio_gpu_mem_entry));
+	pbuf = (uint8_t *)entries;
+	for (i = 1; i < (cmd->iovcnt - 1); i++) {
+		memcpy(pbuf, cmd->iov[i].iov_base, cmd->iov[i].iov_len);
+		pbuf += cmd->iov[i].iov_len;
+	}
+	if (req.size > CURSOR_BLOB_SIZE) {
+		/* Try to create the dma buf */
+		r2d->dma_info = virtio_gpu_create_udmabuf(cmd->gpu,
+							  entries,
+							  req.nr_entries);
+		if (r2d->dma_info == NULL) {
+			free(entries);
+			resp.type = VIRTIO_GPU_RESP_ERR_UNSPEC;
+			memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+			return;
+		}
+		r2d->blob = true;
+	} else {
+		/* Cursor resource with 64x64 and PIXMAN_a8r8g8b8 format.
+		 * Or when it fails to create dmabuf
+		 */
+		r2d->width = 64;
+		r2d->height = 64;
+		r2d->format = PIXMAN_a8r8g8b8;
+		r2d->image = pixman_image_create_bits(
+				r2d->format, r2d->width, r2d->height, NULL, 0);
+
+		r2d->iov = malloc(req.nr_entries * sizeof(struct iovec));
+		r2d->iovcnt = req.nr_entries;
+		for (i = 0; i < req.nr_entries; i++) {
+			r2d->iov[i].iov_base = paddr_guest2host(
+					cmd->gpu->base.dev->vmctx,
+					entries[i].addr,
+					entries[i].length);
+			r2d->iov[i].iov_len = entries[i].length;
+		}
+	}
+
+	free(entries);
+	resp.type = VIRTIO_GPU_RESP_OK_NODATA;
+	LIST_INSERT_HEAD(&cmd->gpu->r2d_list, r2d, link);
+	memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+}
+
+static void
+virtio_gpu_cmd_set_scanout_blob(struct virtio_gpu_command *cmd)
+{
+	struct virtio_gpu_set_scanout_blob req;
+	struct virtio_gpu_resource_2d *r2d;
+	struct virtio_gpu_ctrl_hdr resp;
+	struct surface surf;
+	uint32_t drm_fourcc;
+	struct virtio_gpu *gpu;
+
+	gpu = cmd->gpu;
+	memset(&surf, 0, sizeof(surf));
+	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
+	cmd->iolen = sizeof(resp);
+	memset(&resp, 0, sizeof(resp));
+	virtio_gpu_update_resp_fence(&cmd->hdr, &resp);
+	if (cmd->gpu->vga.enable) {
+		cmd->gpu->vga.enable = false;
+	}
+	if (req.resource_id == 0) {
+		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
+		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+		vdpy_surface_set(gpu->vdpy_handle, NULL);
+		return;
+	}
+	r2d = virtio_gpu_find_resource_2d(cmd->gpu, req.resource_id);
+	if (r2d == NULL) {
+		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_RESOURCE_ID;
+		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+		return;
+	}
+
+	if (r2d->blob == false) {
+		/* Maybe the resource  is not blob, fallback to set_scanout */
+		virtio_gpu_cmd_set_scanout(cmd);
+		return;
+	}
+
+	virtio_gpu_dmabuf_ref(r2d->dma_info);
+	surf.width = req.width;
+	surf.height = req.height;
+	surf.x = 0;
+	surf.y = 0;
+	surf.stride = req.strides[0];
+	surf.dma_info.dmabuf_fd = r2d->dma_info->dmabuf_fd;
+	surf.surf_type = SURFACE_DMABUF;
+	switch (req.format) {
+	case VIRTIO_GPU_FORMAT_B8G8R8X8_UNORM:
+		drm_fourcc = DRM_FORMAT_XRGB8888;
+		break;
+	case VIRTIO_GPU_FORMAT_B8G8R8A8_UNORM:
+		drm_fourcc = DRM_FORMAT_ARGB8888;
+		break;
+	case VIRTIO_GPU_FORMAT_R8G8B8A8_UNORM:
+		drm_fourcc = DRM_FORMAT_ABGR8888;
+		break;
+	case VIRTIO_GPU_FORMAT_R8G8B8X8_UNORM:
+		drm_fourcc = DRM_FORMAT_XBGR8888;
+		break;
+	default:
+		pr_err("%s : unuspported surface format %d.\n",
+			__func__, req.format);
+		drm_fourcc = DRM_FORMAT_ARGB8888;
+		break;
+	}
+	surf.dma_info.surf_fourcc = drm_fourcc;
+	vdpy_surface_set(gpu->vdpy_handle, &surf);
+	resp.type = VIRTIO_GPU_RESP_OK_NODATA;
+	memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+	virtio_gpu_dmabuf_unref(r2d->dma_info);
+	return;
 }
 
 static void
@@ -896,6 +1237,20 @@ virtio_gpu_ctrl_bh(void *data)
 			break;
 		case VIRTIO_GPU_CMD_RESOURCE_FLUSH:
 			virtio_gpu_cmd_resource_flush(&cmd);
+			break;
+		case VIRTIO_GPU_CMD_RESOURCE_CREATE_BLOB:
+			if (!virtio_gpu_blob_supported(vdev)) {
+				virtio_gpu_cmd_unspec(&cmd);
+				break;
+			}
+			virtio_gpu_cmd_create_blob(&cmd);
+			break;
+		case VIRTIO_GPU_CMD_SET_SCANOUT_BLOB:
+			if (!virtio_gpu_blob_supported(vdev)) {
+				virtio_gpu_cmd_unspec(&cmd);
+				break;
+			}
+			virtio_gpu_cmd_set_scanout_blob(&cmd);
 			break;
 		default:
 			virtio_gpu_cmd_unspec(&cmd);
@@ -1241,6 +1596,11 @@ virtio_gpu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			if (r2d->image) {
 				pixman_image_unref(r2d->image);
 				r2d->image = NULL;
+			}
+			if (r2d->blob) {
+				virtio_gpu_dmabuf_unref(r2d->dma_info);
+				r2d->dma_info = NULL;
+				r2d->blob = false;
 			}
 			LIST_REMOVE(r2d, link);
 			if (r2d->iov) {
