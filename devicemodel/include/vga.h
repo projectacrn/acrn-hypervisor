@@ -2,6 +2,9 @@
  * Copyright (C) 2022 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+ *
+ * Copyright (c) 2015 Tycho Nightingale <tycho.nightingale@pluribusnetworks.com>
+ * All rights reserved.
  */
 
 #ifndef _VGA_H_
