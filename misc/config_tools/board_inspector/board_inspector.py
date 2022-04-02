@@ -116,7 +116,7 @@ def main(board_name, board_xml, args):
             module.extract(args, board_etree)
 
         # Validate the XML against XSD assertions
-        count = validator.validate_board("schema/boardchecks.xsd", board_etree)
+        count = validator.validate_board(os.path.join(script_dir, 'schema', 'boardchecks.xsd'), board_etree)
         if count == 0:
             logging.info("All board checks passed.")
 
