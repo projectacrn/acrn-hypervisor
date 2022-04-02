@@ -289,7 +289,13 @@ export class ProgramLayer extends EventBase {
                     }
                 } else {
                     //fix pci_devs is object issue
-                    if (vmConfig.hasOwnProperty("pci_devs") && vmConfig.pci_devs.hasOwnProperty("pci_dev") && _.isString(vmConfig.pci_devs.pci_dev)) {
+                    if (
+                        vmConfig.hasOwnProperty("pci_devs") &&
+                        vmConfig.pci_devs != null &&
+                        vmConfig.pci_devs.hasOwnProperty("pci_dev") &&
+                        vmConfig.pci_devs != null &&
+                        _.isString(vmConfig.pci_devs.pci_dev)
+                    ) {
                         vmConfig.pci_devs.pci_dev = [vmConfig.pci_devs.pci_dev]
                     }
                     this.addVM(vmType, vmConfig)
