@@ -39,7 +39,7 @@ if "RELEASE" in os.environ:
 sys.path.insert(0, os.path.join(os.path.abspath('.'), 'extensions'))
 extensions = [
    'breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks',
-   'eager_only', 'html_redirects', 'link_roles',
+   'eager_only', 'html_redirects', 'link_roles','sphinx.ext.intersphinx',
    'sphinx_tabs.tabs', 'last_updated'
 ]
 
@@ -49,6 +49,12 @@ extlinks = {'acrn-commit': ('https://github.com/projectacrn/acrn-hypervisor/comm
             'acrn-issue': ('https://github.com/projectacrn/acrn-hypervisor/issues/%s', '')
            }
 
+# use intersphinx linking to link to previous version release notes
+# (We only need to link to an archive that has the older release notes)
+
+intersphinx_mapping = {
+        'v2.7': ('https://projectacrn.github.io/2.7', None),
+        }
 
 graphviz_output_format='png'
 graphviz_dot_args=[
