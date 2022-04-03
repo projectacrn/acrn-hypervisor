@@ -134,9 +134,10 @@ def on_html_page_context(app, pagename, templatename, context, doctree):
                                                         git_repo=app.config.last_updated_git_path,
                                                         doc_root=app.srcdir)
         if last_updated_value is None:
-            app.logger.warning(f'Could not get the last updated value from git for the following file:\
-                    \n {rst_file_path}\n Ensure that you specified the correct folder in last_updated_git_path.')
-            context['last_updated'] = None
+            #app.logger.warning(f'Could not get the last updated value from git for the following file:\
+            #        \n {rst_file_path}\n Ensure that you specified the correct folder in last_updated_git_path.')
+            #context['last_updated'] = None
+            context['last_updated'] = context['last_published']
         else:
             context['last_updated'] = last_updated_value.strftime(date_fmt)
 
