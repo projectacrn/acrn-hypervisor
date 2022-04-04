@@ -1,0 +1,2 @@
+# manpages are missing in upstream
+acrn-lifemngr: binary-without-manpage usr/bin/acrn-lifemngr

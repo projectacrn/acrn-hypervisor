@@ -1,0 +1,5 @@
+# ???
+source-is-missing doc/static/js/modernizr.min.js
+
+# we do not (yet) translate templates
+untranslatable-debconf-templates

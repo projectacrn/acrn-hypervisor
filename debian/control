@@ -1,0 +1,151 @@
+Source: acrn-hypervisor
+Priority: optional
+Maintainer: Helmut Buchsbaum <helmut.buchsbaum@opensource.tttech-industrial.com>
+Section: admin
+Build-Depends:
+   debhelper (>= 12),
+   dh-python,
+   python3,
+   python3-setuptools,
+   git,
+   libssl-dev,
+   libpciaccess-dev,
+   libsystemd-dev,
+   libevent-dev,
+   libxml2-dev,
+   libxml2-utils,
+   libusb-1.0-0-dev,
+   libblkid-dev,
+   e2fslibs-dev,
+   pkg-config,
+   libnuma-dev,
+   libsdl2-dev,
+   libpixman-1-dev,
+   liblz4-tool,
+   linux-libc-dev (>= 4.20),
+   libdrm-dev,
+   libcjson-dev,
+   flex,
+   bison,
+   xsltproc,
+   clang-format,
+   bc,
+   acpica-tools (>= 20200326),
+   python3-lxml,
+   python3-defusedxml,
+   python3-xmlschema
+Standards-Version: 4.3.0
+Homepage: https://projectacrn.org/
+Vcs-Browser: https://github.com/projectacrn/acrn-hypervisor
+Vcs-Git: https://github.com/projectacrn/acrn-hypervisor.git
+
+Package: acrn-system
+Section: admin
+Architecture: amd64
+Depends:
+   acrn-hypervisor,
+   acrnd,
+   ${misc:Depends}
+Suggests: acrn-doc
+Description: ACRN System on AMD64 (metapackage)
+ This package depends on the ACRN hypervisor for use on AMD64 and the
+ its devicemodel utils.
+
+Package: acrn-hypervisor
+Section: kernel
+Architecture: amd64
+Depends:
+   ${misc:Depends},
+   grub-acrn,
+   acrn-devicemodel,
+   debconf (>=1.5.71)
+Suggests: acrn-doc
+Recommends: setserial
+Description: ACRN Hypervisor for IoT
+ ACRN is an open source reference hypervisor, built to meet the unique
+ needs of embedded IoT development.
+ .
+ In order to boot an ACRN system along with this package you also need a
+ kernel specifically crafted to work as the Service OS. This build provides
+ binaries for the given board/scenario configurations and installs the
+ respective binary at install time controlled via environment variables.
+
+Package: grub-acrn
+Section: admin
+Architecture: any-amd64
+Depends: ${misc:Depends}, grub-efi-amd64
+Description: Grub setup scripts for ACRN Hypervisor
+ This package provides additional scripts to fit into the Grub bootloader config
+ creation. It supports generating the respective Grub boot entries for an ACRN
+ system.
+
+Package: acrn-devicemodel
+Section: otherosfs
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, acpica-tools (>= 20200326)
+Suggests: acrn-doc
+Description: Devicemodel for ACRN Hypervisor
+ ACRN is an open source reference hypervisor, built to meet the unique
+ needs of embedded IoT development. This is the ACRN specific devicemodel for
+ ACRN only.
+
+Package: acrnd
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: acrn-doc
+Description: ACRN Hypervisor control daemon
+ ACRN is an open source reference hypervisor, built to meet the unique
+ needs of embedded IoT development. This is the ACRN daemon for hypervisor
+ control.
+
+Package: acrn-tools
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: acrn-doc
+Description: Supplementary tools for ACRN Hypervisor on AMD64
+ ACRN is an open source reference hypervisor, built to meet the unique
+ needs of embedded IoT development. These are ACRN specific additional
+ tools meant for debug use only.
+
+Package: acrn-dev
+Section: libdevel
+Architecture: amd64
+Depends: ${misc:Depends}
+Suggests: acrn-doc
+Description: Public headers and libs for ACRN
+ ACRN is an open source reference hypervisor, built to meet the unique
+ needs of embedded IoT development. This package contains the public
+ headers and static libraries for ACRN.
+
+Package: acrn-lifemngr
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: acrn-doc
+Description: ACRN life manager
+ ACRN is an open source reference hypervisor, built to meet the unique
+ needs of embedded IoT development. This package contains the helper
+ service for Linux VMs to provide proper shutdown/suspend
+
+Package: acrn-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: ACRN Documentation
+ ACRN is an open source reference hypervisor, built to meets the unique
+ needs of embedded IoT development. This is the documentation for ACRN and
+ its tools, how to install, configure and use.
+
+Package: python3-acrn-board-inspector
+Section: admin
+Architecture: all
+Depends:
+   cpuid,
+   msr-tools,
+   pciutils,
+   dmidecode,
+   ${misc:Depends},
+   ${python3:Depends},
+Suggests: acrn-doc
+Description: Generate Board Configuration for ACRN
+ This package collects all board related info to generate a board
+ configuration file for ACRN.

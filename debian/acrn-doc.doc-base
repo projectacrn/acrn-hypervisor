@@ -1,0 +1,10 @@
+Document: acrn-doc-html
+Section: System/Administration
+Title: ACRN HTML documentation
+Abstract: ACRN interfaces, howtos and much more
+ ACRN upstream provides much of its documentation in HTML form.
+ This entry referes to the top-level index of the ACRN HTML docs.
+
+Format: HTML
+Index: /usr/share/doc/acrn/html/index.html
+Files: /usr/share/doc/acrn/html

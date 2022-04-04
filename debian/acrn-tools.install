@@ -1,0 +1,12 @@
+usr/bin/acrnlog
+usr/bin/acrnprobe
+usr/bin/acrntrace
+usr/bin/crashlogctl
+usr/bin/debugger
+usr/bin/usercrash_c
+usr/bin/usercrash_s
+usr/bin/usercrash-wrapper
+usr/share/acrn/crashlog/*
+lib/systemd/system/acrnlog.service
+lib/systemd/system/acrnprobe.service
+lib/systemd/system/usercrash.service
