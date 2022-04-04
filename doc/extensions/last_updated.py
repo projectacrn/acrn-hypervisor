@@ -80,14 +80,20 @@ def _get_last_updated_from_git(file_path, git_repo, doc_root):
                     # folder on the list
                     continue
             else:
+                # we found the .rst file in one of the git_repo paths, either
+                # use the date of the last commit (from git) or today's date if
+                # there is no git history for this file.
                 try:
                     last_updated = datetime.strptime(output.decode('utf-8'), time_format).date()
                     return last_updated
                 except:
-                    continue
+                    return date.today()
         else:
+            # can't find a .rst file on that git_repo path, try the next
             continue
 
+    # falling out of the loop means we can't find that file in any of the
+    # git_repo paths
     return None
 
 
@@ -134,9 +140,9 @@ def on_html_page_context(app, pagename, templatename, context, doctree):
                                                         git_repo=app.config.last_updated_git_path,
                                                         doc_root=app.srcdir)
         if last_updated_value is None:
-            #app.logger.warning(f'Could not get the last updated value from git for the following file:\
-            #        \n {rst_file_path}\n Ensure that you specified the correct folder in last_updated_git_path.')
-            #context['last_updated'] = None
+            app.logger.warning(f'Could not get the last updated value from git for the following file:\
+                    \n {rst_file_path}\n Ensure that you specified the correct folder(s) in last_updated_git_path:\
+                    \n {app.config.last_updated_git_path}\n')
             context['last_updated'] = context['last_published']
         else:
             context['last_updated'] = last_updated_value.strftime(date_fmt)
