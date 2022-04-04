@@ -1,0 +1,328 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+include /usr/share/dpkg/vendor.mk
+
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
+
+# python packages do not contain any tests
+export PYBUILD_DISABLE=test
+
+export MAKEFLAGS = --no-print-directory
+
+# set these variables to restrict build to certain boards/scenarios, e.g.
+ACRN_BOARDLIST := whl-ipc-i5 nuc11tnbi5 cfl-k700-i7 tgl-vecow-spc-7100-Corei7
+ACRN_SCENARIOLIST := partitioned shared hybrid hybrid_rt
+# alternatively, unset ACRN_BOARDLIST to build for all boards,
+# ACRN_SCENARIOLIST must be set explicitly: scenario configs must be located
+# in the same directory as the board config, since there are no board and
+# scenario attributes any more in the scenario configs since
+# commit c25de24a92c26faa59e7d5e23966dd54215b66e4
+#
+# undefine ACRN_BOARDLIST
+# undefine ACRN_SCENARIOLIST
+
+# helper to compare strings
+strequ=$(if $(subst x$1,,x$2)$(subst x$2,,x$1),,1)
+
+bold := $(shell which tput >/dev/null 2>&1 && tput bold 2>/dev/null)
+sgr0 := $(shell which tput >/dev/null 2>&1 && tput sgr0 2>/dev/null)
+
+# special characters
+empty :=
+space := $(empty) $(empty)
+comma := ,
+
+# helper to create comma separated list from space separated list
+commasep = $(subst $(space),$(comma)$(space),$1)
+# recursive wildcard
+rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+
+# add builtin and eventually explicitely provided config directories
+# misc/config_tools/data: contains ACRN supported configuration
+# debian/configs: add additional configurations here!
+CONFIGDIRS = misc/config_tools/data debian/configs
+CONFIGXMLS := $(call rwildcard,$(CONFIGDIRS),*.xml)
+
+# remove double quotes
+unquote = $(subst $\",,$1)
+
+# get relevant data from acrn-config attributes of an XML
+#
+# This evaluates the attributes of acn-config tag got from xmllint (after unquoting).
+# It create the following variables:
+#  * boardlist: accumulated list of all board configurations detected
+#  * scenariolist_<board>: accumulated list of sceanrios for the given <board>
+#  * config_<board>: respective board configuration file
+#  * config_<board>_<scenario>: respective scenario configuration file
+# Launcher configurations are not used and therefore ignored
+define get-xml-data
+$(eval $(call unquote,$(shell xmllint --xpath '/acrn-config/@board' $1)))
+$(foreach expr,$(shell xmllint --xpath '/acrn-config/@*' $1),$(eval $(call unquote,$(expr))))
+$(eval $(if $(user_vm_launcher),,          \
+  $(if $(scenario),                    \
+    config_$(board)_$(scenario) := $1, \
+    config_$(board) := $1              \
+  )                                    \
+))
+$(eval $(if $(user_vm_launcher),,                                              \
+  $(if $(scenario),                                                        \
+    scenariolist_$(board) := $(sort $(scenariolist_$(board)) $(scenario)), \
+    boardlist := $(sort $(boardlist) $(board))                             \
+  )                                                                        \
+))
+$(eval undefine user_vm_launcher)
+$(eval undefine scenario)
+$(eval undefine board)
+endef
+
+# get all XML data
+$(foreach xml,$(CONFIGXMLS),$(call get-xml-data,$(xml)))
+
+# honor variable ACRN_BOARDLIST
+ifneq ($(ACRN_BOARDLIST),)
+boardlist := $(sort $(ACRN_BOARDLIST))
+endif
+
+# honor variable ACRN_SCENARIOLIST
+ifneq ($(ACRN_SCENARIOLIST),)
+$(foreach b,$(boardlist),$(eval scenariolist_$(b) := $(filter $(scenariolist_$(b)),$(ACRN_SCENARIOLIST))))
+endif
+
+# board config name -> board config file
+bfile = $(abspath $(config_$1))
+# board/scenario config name -> scenario config file
+sfile = $(abspath $(config_$1_$2))
+
+# uncomment for debugging purposes
+# $(info boardlist: $(boardlist))
+# $(foreach b,$(boardlist),$(info scenariolist_$(b): $(scenariolist_$(b))))
+# $(foreach b,$(boardlist),$(info config_$(b): $(config_$(b))))
+# $(foreach b,$(boardlist),$(foreach s,$(scenariolist_$(b)),$(info config_$(b)_$(s): $(config_$(b)_$(s)))))
+
+# get version data for ACRN
+include VERSION
+export ACRNVERSION := $(MAJOR_VERSION).$(MINOR_VERSION)
+
+# for now build the debug versions
+export RELEASE ?= 0
+
+# set paths (see also paths.make)
+export prefix = /usr
+export bindir = $(prefix)/bin
+export libdir = $(prefix)/lib/$(DEB_HOST_MULTIARCH)
+export nonarchlibdir = $(prefix)/lib
+export datadir = $(prefix)/share
+export includedir = $(prefix)/include
+export systemd_unitdir = /lib/systemd
+export docdir = $(datadir)/doc
+export sysconfdir = /etc
+
+export BUILD_VERSION = "$(DEB_VERSION_UPSTREAM)"
+export BUILD_TAG = "$(DEB_VENDOR)/$(DEB_VERSION)"
+
+# set iASL compiler
+ifeq ($(ASL_COMPILER),)
+export ASL_COMPILER:=$(shell which iasl)
+ifeq ($(ASL_COMPILER),)
+$(error ASL_COMPILER missing)
+endif
+endif
+
+# let make verbosity be controlled by DH_VERBOSE
+ifeq ($(DH_VERBOSE),1)
+  Q=
+  echo-verbose = echo "   $@$(if $1,: $(bold)$1$(sgr0))"
+  echo-silent = true
+  devnull =
+else
+  Q=@
+  echo-verbose = true
+  echo-silent = echo "   $@$(if $1,: $(bold)$1$(sgr0))"
+  devnull = >/dev/null
+endif
+
+### dh_installdeb ############################################################
+debian/acrn-hypervisor.postinst: debian/acrn-hypervisor.postinst.in
+	@$(call echo-verbose)
+	@$(call echo-silent,CREATE $@)
+	$(Q)sed -e 's/@acrnversion@/$(ACRNVERSION)/g' \
+		-e 's%@acrndir@%$(libdir)/acrn%g' $< > $@
+
+debian/acrn-hypervisor.postrm: debian/acrn-hypervisor.postrm.in
+	@$(call echo-verbose)
+	@$(call echo-silent,CREATE $@)
+	$(Q)sed -e 's/@acrnversion@/$(ACRNVERSION)/g' $< > $@
+
+debian/acrn-hypervisor.prerm: debian/acrn-hypervisor.prerm.in
+	@$(call echo-verbose)
+	@$(call echo-silent,CREATE $@)
+	$(Q)sed -e 's/@acrnversion@/$(ACRNVERSION)/g' $< > $@
+
+override_dh_installdeb: debian/acrn-hypervisor.postinst debian/acrn-hypervisor.postrm debian/acrn-hypervisor.prerm
+	$(Q)dh_installdeb
+
+### dh_installdebconf-arch ###################################################
+debian/acrn-hypervisor.templates: debian/acrn-hypervisor.templates.in
+	@$(call echo-verbose)
+	@$(call echo-silent,CREATE $@)
+	$(Q)sed -e 's/@boardlist@/$(call commasep,$(boardlist))/g' $< > $@
+
+override_dh_installdebconf-arch: debian/acrn-hypervisor.templates
+	$(Q)dh_installdebconf -a
+
+### build-arch ###############################################################
+override_dh_auto_build-arch: O=build
+override_dh_auto_build-arch:
+	@$(call echo-verbose)
+	@# Only build lifemngr here, since other parts are built during
+	@# dh_auto_install (even if built here). This is deficiency
+	@# of ACRN's makefile structure, e.g. make hypervisor-install
+	@# always rebuilds the hypervisor, even if built with
+	@# make hypervisor in a previous step.
+	$(Q)set -e; $(call echo-silent,BUILD life_mngr)
+	$(Q)mkdir -p $(O)/common/misc
+	$(Q)$(MAKE) -C misc						\
+		OUT_DIR=$(abspath $(O)/common/misc)			\
+		life_mngr $(devnull)
+
+### build-indep ##############################################################
+ifeq ($(EXTRA_VERSION),)
+ACRN_DOC_VERSION := $(DEB_VERSION_UPSTREAM)
+else
+ACRN_DOC_VERSION := latest
+endif
+
+build/documentation/html/index.html: debian/acrn-doc-index-html.in
+	@$(call echo-verbose)
+	@$(call echo-silent,BUILD documentation)
+	$(Q)mkdir -p $(@D)
+	$(Q)sed -e 's/@acrnversion@/$(ACRN_DOC_VERSION)/g' $< > $@
+
+override_dh_auto_build-indep: build/documentation/html/index.html
+	@$(call echo-verbose)
+	@$(call echo-silent,BUILD acrn-board-inspector)
+	$(Q)export PYBUILD_NAME=acrn_board_inspector; \
+	dh_auto_build \
+	    --buildsystem=pybuild \
+	    --package=python3-acrn-board-inspector \
+	    --sourcedirectory=debian/acrn-board-inspector $(devnull)
+
+### binary-arch ##############################################################
+override_dh_auto_install-arch: O=build
+override_dh_auto_install-arch: DESTDIR=$(abspath debian/tmp)
+override_dh_auto_install-arch:
+	@$(call echo-verbose)
+	$(Q)set -e;$(foreach b,$(boardlist),$(foreach s,$(scenariolist_$b),\
+		$(call echo-silent,BUILD & INSTALL hypervisor for $b:$s); \
+		$(MAKE) O=$(O)/$b/$s					\
+			BOARD=$(call bfile,$b)				\
+			SCENARIO=$(call sfile,$b,$s)			\
+			DESTDIR=$(DESTDIR)				\
+			hypervisor-install $(devnull);			\
+		install -d $(DESTDIR)$(libdir)/acrn/$b/$s;		\
+		rm -f $(DESTDIR)$(libdir)/acrn/*.out;			\
+		mv $(DESTDIR)$(libdir)/acrn/*.bin			\
+			$(DESTDIR)$(libdir)/acrn/$b/$s;			\
+		if [ -d $(DESTDIR)$(sysconfdir) ]; then			\
+			mv $(DESTDIR)$(sysconfdir)			\
+				$(DESTDIR)$(libdir)/acrn/$b/$s;		\
+		fi;							\
+		if [ -d $(DESTDIR)$(libdir)/acrn/acpi ]; then		\
+			mv $(DESTDIR)$(libdir)/acrn/acpi		\
+				$(DESTDIR)$(libdir)/acrn/$b/$s;		\
+		fi;							\
+		cp $(O)/$b/$s/hypervisor/configs/config.mk		\
+			$(DESTDIR)$(libdir)/acrn/$b/$s/acrn.$b.$s.config;\
+		cp $(O)/$b/$s/hypervisor/acrn.map			\
+			$(DESTDIR)$(libdir)/acrn/$b/$s/acrn.$b.$s.map;	\
+		chmod 644 $(DESTDIR)$(libdir)/acrn/$b/$s/*.bin;		\
+		if [ -d $(DESTDIR)$(libdir)/acrn/$b/$s/acpi ]; then	\
+			chmod 644 $(DESTDIR)$(libdir)/acrn/$b/$s/acpi/*;\
+		fi;							\
+	))
+	@:
+	@# install devicemodel & tools
+	@$(call echo-silent,BUILD & INSTALL devicemodel & tools)
+	$(Q)$(MAKE) O=$(O)/common DESTDIR=$(DESTDIR) devicemodel-install $(devnull)
+	$(Q)$(MAKE) O=$(O)/common DESTDIR=$(DESTDIR) tools-install $(devnull)
+	@:
+	@# install life_mngr
+	@$(call echo-silent,INSTALL devicemodel & tools)
+	$(Q)install -d $(DESTDIR)$(bindir)
+	@# install life_mngr as acrn-lifemngr
+	$(Q)install -m 0755 -T $(O)/common/misc/services/life_mngr $(DESTDIR)$(bindir)/acrn-lifemngr
+	@# install invocation helper and config
+	$(Q)install -d $(DESTDIR)$(datadir)/acrn-lifemngr
+	$(Q)install -m 0755 debian/lifemngr/start-acrn-lifemngr.sh $(DESTDIR)$(datadir)/acrn-lifemngr
+	$(Q)install -m 0644 debian/lifemngr/acrn-lifemngr.conf $(DESTDIR)$(datadir)/acrn-lifemngr
+	@:
+	@# move/adapt network configs as examples only
+	$(Q)mkdir -p $(DESTDIR)$(docdir)/acrnd/examples
+	$(Q)cp $(DESTDIR)$(systemd_unitdir)/network/*				\
+		$(DESTDIR)$(docdir)/acrnd/examples
+	$(Q)sed -i 's/acrn_tap\* //g'						\
+		$(DESTDIR)$(docdir)/acrnd/examples/50-acrn.network
+	@:
+	@# remove acrnd.service, use explicitly provided service file instead
+	$(Q)rm -f $(DESTDIR)$(systemd_unitdir)/system/acrnd.service
+	@:
+	@# move devicemodel samples
+	$(Q)mkdir -p $(DESTDIR)$(docdir)/acrn-devicemodel
+	$(Q)mv $(DESTDIR)$(datadir)/acrn/samples				\
+		$(DESTDIR)$(docdir)/acrn-devicemodel
+	@:
+	@# adapt systemd services for tools (available in DEBUG build only)
+	$(if $(call strequ,${RELEASE},0),					\
+		$(Q)sed -i -e '/telemd.socket/d' -e '/prepare.service/d'	\
+			$(DESTDIR)$(systemd_unitdir)/system/acrnprobe.service;	\
+		sed -i '/telemd/d'						\
+			$(DESTDIR)$(systemd_unitdir)/system/usercrash.service;	\
+	)
+
+### binary-indep #############################################################
+override_dh_auto_install-indep: O=build
+override_dh_auto_install-indep: DESTDIR=$(abspath debian/tmp)
+override_dh_auto_install-indep:
+	@$(call echo-verbose)
+	@$(call echo-silent,INSTALL acrn-board-inspector)
+	$(Q)export PYBUILD_NAME=acrn_board_inspector; \
+	dh_auto_install \
+	    --buildsystem=pybuild \
+	    --package=python3-acrn-board-inspector \
+	    --sourcedirectory=debian/acrn-board-inspector $(devnull)
+	@:
+	@$(call echo-silent,INSTALL documentation)
+	$(Q)mkdir -p ${DESTDIR}$(docdir)/acrn/
+	$(Q)cp -a $(O)/documentation/html ${DESTDIR}$(docdir)/acrn/
+
+### dh_missing ###############################################################
+# there is no libtelemetry used
+override_dh_missing:
+	$(Q)dh_missing --fail-missing -Xusr/share/defaults/telemetrics/acrnprobe.xml
+
+### dh_strip #################################################################
+# only strip release variant binaries
+override_dh_strip: DESTDIR=$(abspath debian/tmp)
+override_dh_strip:
+	$(Q)dh_strip -X.out -X.bin
+	$(Q)strip --strip-debug							\
+		--remove-section=.comment					\
+		--remove-section=.note						\
+		--enable-deterministic-archiv				\
+		$(DESTDIR)$(libdir)/libacrn-mngr.a;
+
+### clean ####################################################################
+override_dh_auto_clean:
+	@echo "Building ACRN $(ACRNVERSION) for boards: $(bold)$(call commasep,$(boardlist))$(sgr0)"
+	@echo "The scenarios used are:"
+	@$(foreach b,$(boardlist),echo "  $b: $(bold)$(call commasep,$(scenariolist_$b))$(sgr0)";)
+	@$(call echo-verbose)
+	@$(call echo-silent,CLEAN)
+	$(Q)dh_auto_clean $(devnull)
+
+### others ###################################################################
+%:
+	$(Q)dh $@ --with python3

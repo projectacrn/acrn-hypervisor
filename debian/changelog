@@ -1,0 +1,5 @@
+acrn-hypervisor (3.0~0.gbpXXXXXX) UNRELEASED; urgency=medium
+
+  * Initial native packaging release for ACRN.
+
+ -- Helmut Buchsbaum <helmut.buchsbaum@opensource.tttech-industrial.com>  Tue, 26 Apr 2022 10:18:30 +0200

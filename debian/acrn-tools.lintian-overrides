@@ -1,0 +1,9 @@
+# manpages are missing in upstream
+acrn-tools: binary-without-manpage usr/bin/acrnlog
+acrn-tools: binary-without-manpage usr/bin/acrnprobe
+acrn-tools: binary-without-manpage usr/bin/acrntrace
+acrn-tools: binary-without-manpage usr/bin/crashlogctl
+acrn-tools: binary-without-manpage usr/bin/debugger
+acrn-tools: binary-without-manpage usr/bin/usercrash-wrapper
+acrn-tools: binary-without-manpage usr/bin/usercrash_c
+acrn-tools: binary-without-manpage usr/bin/usercrash_s

@@ -1,0 +1,2 @@
+debian/grub/acrn.cfg etc/default/grub.d
+debian/grub/25_linux_acrn /etc/grub.d
