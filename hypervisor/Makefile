@@ -406,7 +406,7 @@ install: $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 		install -D $(HV_OBJDIR)/acpi/*.bin -t $(DESTDIR)$(libdir)/acrn/acpi/; \
 	fi
 	@if [ -e "$(HV_OBJDIR)/serial.conf" ];then \
-		install -D -b $(HV_OBJDIR)/serial.conf -t $(DESTDIR)$(sysconfdir)/; \
+		install -D -b -m 0644 $(HV_OBJDIR)/serial.conf -t $(DESTDIR)$(sysconfdir)/; \
 	fi
 
 install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
