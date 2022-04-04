@@ -1,0 +1,3 @@
+# manpages are missing in upstream
+acrnd: binary-without-manpage usr/bin/acrnctl
+acrnd: binary-without-manpage usr/bin/acrnd

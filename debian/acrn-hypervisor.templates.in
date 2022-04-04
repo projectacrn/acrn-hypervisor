@@ -1,0 +1,13 @@
+Template: acrn-hypervisor/board
+Type: select
+Choices: @boardlist@
+Description: ACRN hypervisor board selection
+ Define the board ACRN will be running on. Selecting the wrong board
+ might render your board unusable!
+
+Template: acrn-hypervisor/scenario
+Type: select
+Choices: ${scenariolist}
+Description: ACRN hypervisor scenario selection
+ Define the appropriate VM configuration (aka scenario) for the ACRN
+ hypervisor.
