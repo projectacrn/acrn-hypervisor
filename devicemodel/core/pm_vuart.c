@@ -2,7 +2,7 @@
  * Project Acrn
  * Acrn-dm: pm-vuart
  *
- * Copyright (C) 2019 Intel Corporation. All rights reserved.
+ * Copyright (C) 2019 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
