@@ -30,7 +30,6 @@
 #define	_VMMAPI_H_
 
 #include <sys/param.h>
-#include <uuid/uuid.h>
 #include "types.h"
 #include "macros.h"
 #include "pm.h"
