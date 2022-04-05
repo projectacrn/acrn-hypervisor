@@ -83,7 +83,6 @@ LIBS = -lrt
 LIBS += -lpthread
 LIBS += -lcrypto
 LIBS += -lpciaccess
-LIBS += -luuid
 LIBS += -lusb-1.0
 LIBS += -lacrn-mngr
 LIBS += -lcjson
