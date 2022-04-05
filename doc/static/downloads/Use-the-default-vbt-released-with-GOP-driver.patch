@@ -48,7 +48,7 @@ Index: acrn-edk2/OvmfPkg/Vbt/Vbt.inf
 +## @file
 +#  Vbt Binary
 +#
-+#  Copyright (c) 2006 - 2011, Intel Corporation. All rights reserved.<BR>
++#  Copyright (c) 2006 - 2011, Intel Corporation.<BR>
 +#  SPDX-License-Identifier: BSD-2-Clause-Patent
 +#
 +##

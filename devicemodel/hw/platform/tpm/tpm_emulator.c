@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2018 Intel Corporation
  * Copyright (C) 2014, 2015 IBM Corporation.
- * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */

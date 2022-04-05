@@ -1,5 +1,5 @@
 #!/bin/bash
-#* Copyright (c) 2020 Intel Corporation All rights reserved.
+#* Copyright (c) 2020 Intel Corporation.
 # postinst script for acrn kernel
 filename="/etc/grub.d/40_custom"
 menu=$(grep ACRN_deb_multiboot2 ${filename}) || true
