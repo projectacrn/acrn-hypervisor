@@ -6,6 +6,7 @@
 #ifndef _TIMER_H_
 #define _TIMER_H_
 
+#include <time.h>  // for struct itimerspec
 #include <sys/param.h>
 
 struct acrn_timer {
