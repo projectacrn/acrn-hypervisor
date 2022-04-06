@@ -148,7 +148,10 @@
     <usb_xhci/>
     <virtio_devices>
       <console/>
-      <network>WaaG</network>
+      <network>
+        <virtio_framework/>
+        <interface_name>WaaG</interface_name>
+      </network>
       <input/>
       <block>./win10-ltsc.img</block>
     </virtio_devices>
@@ -173,8 +176,14 @@
     <vuart0>Disable</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console>@stdio:stdio_port</console>
-      <network>YaaG</network>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <virtio_framework/>
+        <interface_name>YaaG</interface_name>
+      </network>
       <input/>
       <block>./YaaG.img</block>
     </virtio_devices>
