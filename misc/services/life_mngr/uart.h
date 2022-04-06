@@ -15,7 +15,7 @@
 
 #define SECOND_TO_US 1000000
 #define WAIT_RECV (SECOND_TO_US>>2)
-#define RETRY_RECV_TIMES 20U
+#define RETRY_RECV_TIMES 100U
 
 struct uart_dev {
 	char tty_path[TTY_PATH_MAX]; /**< UART device name */
