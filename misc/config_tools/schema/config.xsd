@@ -308,22 +308,22 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:simpleType>
     </xs:element>
     <xs:element name="lapic_passthrough" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="LAPIC passthrough" acrn:views="advanced">
+      <xs:annotation acrn:title="LAPIC passthrough" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
         <xs:documentation>Enable LAPIC passthrough for this VM. This feature is required for VMs with stringent real-time performance needs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="io_completion_polling" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="I/O completion polling" acrn:views="advanced">
+      <xs:annotation acrn:title="I/O completion polling" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
         <xs:documentation>Enable polling mode for I/O completion for this VM.  This feature is required for VMs with stringent real-time performance needs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="nested_virtualization_support" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="Nested virtualization" acrn:views="advanced">
+      <xs:annotation acrn:title="Nested virtualization" acrn:applicable-vms="service-vm" acrn:views="advanced">
         <xs:documentation>Enable nested virtualization for KVM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="virtual_cat_support" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="Virtual Cache Allocation Tech" acrn:views="advanced">
+      <xs:annotation acrn:title="Virtual Cache Allocation Tech" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
         <xs:documentation>Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -385,7 +385,7 @@ argument and memory.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
-      <xs:annotation acrn:views="basic">
+      <xs:annotation acrn:applicable-vms="pre-launched" acrn:views="basic">
         <xs:documentation>MMIO resources to passthrough.</xs:documentation>
       </xs:annotation>
     </xs:element>
