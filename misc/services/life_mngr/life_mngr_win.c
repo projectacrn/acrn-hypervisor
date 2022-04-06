@@ -32,7 +32,7 @@
 #define READ_INTERVAL	(100U) /* The time unit is microsecond */
 #define MIN_RESEND_TIME (3U)
 #define SECOND_TO_MS	(1000U)
-#define RETRY_RECV_TIMES	(8U)
+#define RETRY_RECV_TIMES	(100U)
 
 HANDLE hCom2;
 unsigned int resend_time;
@@ -73,7 +73,7 @@ void handle_socket_request(SOCKET sClient, char *req_message)
 	Sleep(6U * SECOND_TO_MS);
 	send(sClient, ack_message, sizeof(ack_message), 0);
 	start_uart_resend(req_message, MIN_RESEND_TIME);
-	send_message_by_uart(hCom2, req_message, sizeof(req_message));
+	send_message_by_uart(hCom2, req_message, strnlen(req_message, BUFF_SIZE));
 	Sleep(2U * READ_INTERVAL);
 	return;
 }

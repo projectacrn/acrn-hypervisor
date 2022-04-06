@@ -26,6 +26,7 @@ static ssize_t try_receive_message_by_uart(int fd, void *buffer, size_t buf_len)
 	char *tmp;
 
 	do {
+		/* NOTE: Now we can't handle multi command message at one time. */
 		rc = read(fd, buffer + count, buf_len - count);
 		if (rc > 0) {
 			count += rc;
