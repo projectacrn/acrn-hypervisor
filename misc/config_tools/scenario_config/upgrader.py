@@ -232,6 +232,73 @@ class SharedMemoryRegions:
             node.append(region.format_xml_element())
         return node
 
+class VirtioDevices(object):
+
+    def __init__(self, old_xml_etree):
+        self.blocks = []
+        self.inputs = []
+        self.networks = []
+        self.console = namedtuple("console", ["use_type", "backend_type", "file_path"])
+        self.old_xml_etree = old_xml_etree
+
+    def console_encoding(self, text):
+        if text is not None:
+            self.console.use_type = "Virtio console" if text.startswith("@") else "Virtio serial port"
+            self.console.backend_type = text.split(":")[0].replace("@", "")
+            self.console.file_path = text.split("=")[1].split(":")[0] if "=" in text else None
+        else:
+            self.console = self.console(use_type=None, backend_type=None, file_path=None)
+        return self.console
+
+    def format_console_element(self):
+        node = etree.Element("console")
+        etree.SubElement(node, "use_type").text = self.console.use_type
+        etree.SubElement(node, "backend_type").text = self.console.backend_type
+        if self.console.backend_type == "socket":
+            etree.SubElement(node, "sock_file_path").text = self.console.file_path
+        if self.console.backend_type == "tty":
+            etree.SubElement(node, "tty_device_path").text = self.console.file_path
+        if self.console.backend_type == "file":
+            etree.SubElement(node, "output_file_path").text = self.console.file_path
+        return node
+
+    def format_network_element(self, network):
+        node = etree.Element("network")
+        etree.SubElement(node, "virtio_framework")
+        etree.SubElement(node, "interface_name").text = network
+        return node
+
+    def format_input_element(self, input):
+        node = etree.Element("input")
+        etree.SubElement(node, "backend_device_file").text = input
+        etree.SubElement(node, "id")
+        return node
+
+    def format_block_element(self, block):
+        node = etree.Element("block")
+        node.text = block
+        return node
+
+    def format_xml_element(self):
+        node = etree.Element("virtio_devices")
+        node.append(self.format_console_element())
+        for network in self.networks:
+            node.append(self.format_network_element(network))
+        for input in self.inputs:
+            node.append(self.format_input_element(input))
+        for block in self.blocks:
+            node.append(self.format_block_element(block))
+        return node
+
+    def add_virtio_devices(self, virtio_device_node):
+        self.console = self.console_encoding(virtio_device_node.xpath("./console")[0].text)
+        for virtio_network in virtio_device_node.xpath("./network"):
+            self.networks.append(virtio_network.text)
+        for virtio_input in virtio_device_node.xpath("./input"):
+            self.inputs.append(virtio_input.text)
+        for virtio_block in virtio_device_node.xpath("./block"):
+            self.blocks.append(virtio_block.text)
+
 class ScenarioUpgrader(ScenarioTransformer):
     @classmethod
     def get_node(cls, element, xpath):
@@ -293,6 +360,22 @@ class ScenarioUpgrader(ScenarioTransformer):
             self.old_data_nodes.discard(old_data_node)
         else:
             self.move_data_by_xpath(".//BUILD_TYPE", xsd_element_node, xml_parent_node, new_nodes)
+        return False
+
+    def move_virtio_devices(self, xsd_element_node, xml_parent_node, new_nodes):
+        virtio = VirtioDevices(self.old_xml_etree)
+
+        try:
+            old_data_virtio = self.get_from_old_data(xml_parent_node, ".//virtio_devices").pop()
+        except IndexError as e:
+            logging.debug(e)
+            return
+        old_data_virtio = self.get_from_old_data(xml_parent_node, ".//virtio_devices").pop()
+        virtio.add_virtio_devices(old_data_virtio)
+        for child in old_data_virtio.iter():
+            self.old_data_nodes.discard(child)
+
+        new_nodes.append(virtio.format_xml_element())
         return False
 
     def move_console_vuart(self, xsd_element_node, xml_parent_node, new_nodes):
@@ -554,7 +637,6 @@ class ScenarioUpgrader(ScenarioTransformer):
         "console_vuart/base": partialmethod(move_data_by_xpath, ".//console_vuart/base"),
         "epc_section/size": partialmethod(move_data_by_xpath, ".//epc_section/size"),
         "memory/size": partialmethod(move_data_by_xpath, ".//memory/size"),
-        "virtio_devices/network": partialmethod(move_data_by_xpath, ".//virtio_devices/network"),
 
         # Guest flags
         "lapic_passthrough": move_lapic_passthrough,
@@ -579,6 +661,7 @@ class ScenarioUpgrader(ScenarioTransformer):
         "IVSHMEM": move_ivshmem,
         "vm_type": move_vm_type,
         "os_type": move_os_type,
+        "virtio_devices": move_virtio_devices,
         "memory/whole": partialmethod(rename_data, "memory/whole", ".//mem_size"),
 
         "default": move_data_by_same_tag,

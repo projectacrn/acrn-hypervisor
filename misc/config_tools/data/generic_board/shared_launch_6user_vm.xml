@@ -110,7 +110,10 @@
     <usb_xhci/>
     <virtio_devices>
       <console/>
-      <network>WaaG</network>
+      <network>
+        <virtio_framework/>
+        <interface_name>WaaG</interface_name>
+      </network>
       <input/>
       <block>./win10-ltsc.img</block>
     </virtio_devices>
@@ -138,8 +141,14 @@
     <vuart0>Disable</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console>@stdio:stdio_port</console>
-      <network>RT</network>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <virtio_framework/>
+        <interface_name>RT</interface_name>
+      </network>
       <input/>
       <block>./core-image-weston-intel-corei7-64.wic</block>
     </virtio_devices>
@@ -166,8 +175,14 @@
     <vuart0>Disable</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console>@stdio:stdio_port</console>
-      <network>YaaG3</network>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <virtio_framework/>
+        <interface_name>YaaG3</interface_name>
+      </network>
       <input/>
       <block>./YaaG.img</block>
     </virtio_devices>
@@ -194,8 +209,14 @@
     <vuart0>Disable</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console>@stdio:stdio_port</console>
-      <network>YaaG4</network>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <virtio_framework/>
+        <interface_name>YaaG4</interface_name>
+      </network>
       <input/>
       <block>./YaaG.img</block>
     </virtio_devices>
@@ -222,8 +243,14 @@
     <vuart0>Disable</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console>@stdio:stdio_port</console>
-      <network>YaaG5</network>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <virtio_framework/>
+        <interface_name>YaaG5</interface_name>
+      </network>
       <input/>
       <block>./YaaG.img</block>
     </virtio_devices>
@@ -250,8 +277,14 @@
     <vuart0>Disable</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console>@stdio:stdio_port</console>
-      <network>YaaG6</network>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <virtio_framework/>
+        <interface_name>YaaG6</interface_name>
+      </network>
       <input/>
       <block>./YaaG.img</block>
     </virtio_devices>

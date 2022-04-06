@@ -113,8 +113,14 @@
     <vuart0>Disable</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console>@stdio:stdio_port</console>
-      <network>RT</network>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <virtio_framework/>
+        <interface_name>RT</interface_name>
+      </network>
       <input/>
       <block>./core-image-weston-intel-corei7-64.wic</block>
     </virtio_devices>

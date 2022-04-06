@@ -99,7 +99,10 @@
     <vuart0>Disable</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console>@stdio:stdio_port</console>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
       <network/>
       <input/>
       <block>./VxWorks.img</block>
