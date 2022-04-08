@@ -24,6 +24,7 @@ static ssize_t try_receive_message_by_uart(int fd, void *buffer, size_t buf_len)
 {
 	ssize_t rc = 0U, count = 0U;
 	char *tmp;
+	unsigned int retry_times = RETRY_RECV_TIMES;
 
 	do {
 		/* NOTE: Now we can't handle multi command message at one time. */
@@ -37,8 +38,15 @@ static ssize_t try_receive_message_by_uart(int fd, void *buffer, size_t buf_len)
 					tmp[count - 1] = '\0';
 				break;
 			}
+		} else {
+			if (errno == EAGAIN) {
+				usleep(WAIT_RECV);
+				retry_times--;
+			} else {
+				break;
+			}
 		}
-	} while (rc > 0U);
+	} while (retry_times != 0U);
 
 	return count;
 }
@@ -48,17 +56,10 @@ static ssize_t try_receive_message_by_uart(int fd, void *buffer, size_t buf_len)
  */
 ssize_t receive_message_by_uart(struct uart_dev *dev, void *buf, size_t len)
 {
-	ssize_t count = 0;
-	unsigned int retry_times = RETRY_RECV_TIMES;
-
 	if ((dev == NULL) || (buf == NULL) || (len == 0))
 		return -EINVAL;
-	do {
-		usleep(WAIT_RECV);
-		count = try_receive_message_by_uart(dev->tty_fd, buf, len);
-		retry_times--;
-	} while ((count == 0) && (retry_times != 0U));
-	return count;
+
+	return try_receive_message_by_uart(dev->tty_fd, buf, len);
 }
 ssize_t send_message_by_uart(struct uart_dev *dev, const void *buf, size_t len)
 {
@@ -66,7 +67,7 @@ ssize_t send_message_by_uart(struct uart_dev *dev, const void *buf, size_t len)
 
 	if ((dev == NULL) || (buf == NULL) || (len == 0))
 		return -EINVAL;
-	ret = write(dev->tty_fd, buf, len);
+	ret = write(dev->tty_fd, buf, len + 1);
 
 	return ret;
 }
