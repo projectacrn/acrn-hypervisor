@@ -133,6 +133,45 @@ function add_virtual_device() {
         fi
     fi
 
+    if [ "${kind}" = "virtio-input" ]; then
+        if [[ "${options}" =~ id=([a-zA-Z0-9_\-]*) ]]; then
+            unique_identifier="${BASH_REMATCH[1]}"
+            options=${options/",id=${unique_identifier}"/''}
+        fi
+
+        local IFS=$'\n'
+        device_name_path=$(grep -r "${options%:*}" /sys/class/input/event*/device/name)
+        if [ -n "${device_name_path}" ]; then
+            for device_path in ${device_name_path}; do
+                if [ "${options%:*}" = "${options#*:}" ]; then
+                    options="/dev/input/${device_path:17:6}"
+                    break
+                else
+                    phys_path=$(grep -r "${options#*:}" /sys/class/input/event*/device/phys)
+                    if [ "${device_path%/device*}" = "${phys_path%/device*}" ]; then
+                        options="/dev/input/${device_path:17:6}"
+                        break
+                    fi
+                fi
+            done
+        else
+            echo "${options%:*} device path is not found in the service vm." >> /dev/stderr
+            return
+        fi
+
+        if [[ ${options} =~ event([0-9]+) ]]; then
+            echo "${options} input device path is available in the service vm." >> /dev/stderr
+        else
+            echo "${options#*:} input phys path is not found in the service vm." >> /dev/stderr
+            return
+        fi
+
+        if [ -n "${options}" ] && [ -n "${unique_identifier}" ]; then
+            options="${options},${unique_identifier}"
+        fi
+
+    fi
+
     echo -n "-s ${slot},${kind}"
     if [ -n "${options}" ]; then
         echo -n ",${options}"
