@@ -13,7 +13,7 @@ def sos_cpu_affinity(etree):
     if common.get_node("//vm[load_order = 'SERVICE_VM']", etree) is None:
         return None
 
-    if common.get_node("//vm[load_order = 'SERVICE_VM' and count(cpu_affinity)]", etree) is not None:
+    if common.get_node("//vm[load_order = 'SERVICE_VM' and count(cpu_affinity/pcpu_id)]", etree) is not None:
         return None
 
     sos_extend_all_cpus = board_cfg_lib.get_processor_info()
