@@ -254,14 +254,34 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     for usb_xhci in eval_xpath_all(vm_scenario_etree, ".//usb_xhci[text() != '']/text()"):
         script.add_virtual_device("xhci", options=usb_xhci)
 
-    for virtio_input in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/input[text() != '']/text()"):
-        script.add_virtual_device("virtio-input", options=virtio_input)
+    for virtio_input_etree in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/input"):
+        backend_device_file = eval_xpath(virtio_input_etree, "./backend_device_file[text() != '']/text()")
+        unique_identifier = eval_xpath(virtio_input_etree, "./id[text() != '']/text()")
+        if backend_device_file is not None and unique_identifier is not None:
+            script.add_virtual_device("virtio-input", options=f"{backend_device_file},id={unique_identifier}")
+        elif backend_device_file is not None:
+            script.add_virtual_device("virtio-input", options=backend_device_file)
 
-    for virtio_console in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/console[text() != '']/text()"):
-        script.add_virtual_device("virtio-console", options=virtio_console)
+    for backend_type in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/console/backend_type[text() != '']/text()"):
+        preceding_mask = ""
+        use_type = eval_xpath(vm_scenario_etree, ".//virtio_devices/console/use_type/text()")
+        if use_type == "Virtio console":
+            preceding_mask = "@"
 
-    for virtio_network in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/network[text() != '']/text()"):
-        params = virtio_network.split(",", maxsplit=1)
+        if backend_type == "file":
+            output_file_path = eval_xpath(vm_scenario_etree, ".//virtio_devices/console/output_file_path/text()")
+            script.add_virtual_device("virtio-console", options=f"{preceding_mask}file:file_port={output_file_path}")
+        elif backend_type == "tty":
+            tty_file_path = eval_xpath(vm_scenario_etree, ".//virtio_devices/console/tty_device_path/text()")
+            script.add_virtual_device("virtio-console", options=f"{preceding_mask}tty:tty_port={tty_file_path}")
+        elif backend_type == "sock server" or backend_type == "sock client":
+            sock_file_path = eval_xpath(vm_scenario_etree, ".//virtio_devices/console/sock_file_path/text()")
+            script.add_virtual_device("virtio-console", options=f"socket:{os.path.basename(sock_file_path).split('.')[0]}={sock_file_path}:{backend_type.replace('sock ', '')}")
+        else:
+            script.add_virtual_device("virtio-console", options=f"{preceding_mask}{backend_type}:{backend_type}_port")
+
+    for interface_name in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/network/interface_name[text() != '']/text()"):
+        params = interface_name.split(",", maxsplit=1)
         tap_conf = f"tap={params[0]}"
         params = [tap_conf] + params[1:]
         script.add_init_command(f"mac=$(cat /sys/class/net/e*/address)")
