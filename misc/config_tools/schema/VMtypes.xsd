@@ -44,7 +44,7 @@
 
 <xs:complexType name="CPUAffinityConfiguration">
   <xs:sequence>
-    <xs:element name="pcpu_id" type="xs:integer" default="2" maxOccurs="unbounded">
+    <xs:element name="pcpu_id" type="xs:integer" default="2" minOccurs="0" maxOccurs="unbounded">
       <xs:annotation>
         <xs:documentation>A pCPU that this VM's vCPU is allowed to pin
 to.</xs:documentation>
