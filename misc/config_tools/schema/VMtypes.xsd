@@ -157,7 +157,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="KERNEL_BZIMAGE" />
-    <xs:enumeration value="KERNEL_RAWIMAGE" />
+    <xs:enumeration value="KERNEL_RAWIMAGE" >
+      <xs:annotation acrn:views="" />
+    </xs:enumeration>
     <xs:enumeration value="KERNEL_ELF" />
   </xs:restriction>
 </xs:simpleType>

@@ -144,7 +144,9 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
     <xs:enumeration value="SCHED_NOOP">
       <xs:annotation acrn:title="No-Operation (NOOP)" />
     </xs:enumeration>
-    <xs:enumeration value="SCHED_IORR" />
+    <xs:enumeration value="SCHED_IORR">
+      <xs:annotation acrn:views="" />
+    </xs:enumeration>
     <xs:enumeration value="SCHED_BVT">
       <xs:annotation acrn:title="Borrowed Virtual Time" />
     </xs:enumeration>

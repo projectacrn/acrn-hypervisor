@@ -100,11 +100,6 @@ the BVT (Borrowed Virtual Time) scheduler. By default, BVT is used.
   tries to keep resources busy, and will run once it is ready. The idle thread
   can run when the vCPU thread is blocked.
 
-- **IO sensitive Round Robin scheduler**:
-
-  The IORR (IO sensitive Round Robin) scheduler supports multiple vCPUs running
-  on one pCPU, scheduled by a IO sensitive round robin policy.
-
 - **Priority based scheduler**:
 
   The priority based scheduler can support vCPU scheduling based on their
