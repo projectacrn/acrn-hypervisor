@@ -95,6 +95,10 @@
 			"source":"acrn-hypervisor/devicemodel/bios/OVMF.fd",
 			"target":"usr/share/acrn/bios"
 			},
+"OVMF_debug.fd":{
+			"source":"acrn-hypervisor/devicemodel/bios/OVMF_debug.fd",
+			"target":"usr/share/acrn/bios"
+			},
 "40-watchdog.conf":{
 			"source":"acrn-hypervisor/misc/tools/acrn-crashlog/data/40-watchdog.conf",
 			"target":"usr/share/acrn/crashlog"
