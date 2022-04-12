@@ -211,7 +211,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     if lapic_ids:
         script.add_dynamic_dm_parameter("add_cpus", f"{' '.join([str(x) for x in sorted(lapic_ids)])}")
 
-    script.add_plain_dm_parameter(f"-m {eval_xpath(vm_scenario_etree, './/memory/whole/text()')}M")
+    script.add_plain_dm_parameter(f"-m {eval_xpath(vm_scenario_etree, './/memory/size/text()')}M")
 
     if eval_xpath(vm_scenario_etree, "//SSRAM_ENABLED") == "y" and \
        eval_xpath(vm_scenario_etree, ".//vm_type/text()") == "RTVM":

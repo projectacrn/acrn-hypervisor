@@ -100,31 +100,32 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
   </xs:sequence>
 </xs:complexType>
 
+<xs:complexType name="HPARegionType">
+  <xs:sequence>
+    <xs:element name="start_hpa" type="HexFormat">
+      <xs:annotation acrn:title="Start physical address">
+        <xs:documentation>Specify the starting address for non-contiguous allocation.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="size_hpa" type="xs:integer">
+      <xs:annotation acrn:title="Size (MB)">
+        <xs:documentation>Specify the physical memory size for non-contiguous allocation in megabytes.
+The size is a subset of the VM's total memory size specified on the Basic tab.</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+  </xs:sequence>
+</xs:complexType>
+
 <xs:complexType name="MemoryInfo">
   <xs:all>
-    <xs:element name="whole" type="xs:integer" default="256">
-      <xs:annotation acrn:title="Memory size (MB)" acrn:views="basic" acrn:applicable-vms="post-launched">
-	<xs:documentation>Specify the physical memory size allocated to this VM in megabytes.</xs:documentation>
+    <xs:element name="size" type="xs:integer" minOccurs="0" default="256">
+      <xs:annotation acrn:title="Memory size (MB)" acrn:views="basic" acrn:applicable-vms="pre-launched, post-launched">
+       <xs:documentation>Specify the physical memory size allocated to this VM in megabytes.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="start_hpa" type="HexFormat" default="0x100000000">
-      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
-        <xs:documentation>The starting physical address in host for the VM.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="size" type="MemorySizeType" default="0x20000000" minOccurs="0">
-      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
-        <xs:documentation>The memory size in bytes for the VM. Default value is ``0x200000000``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="start_hpa2" type="HexFormat" default="0x0" minOccurs="0">
-      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
-        <xs:documentation>Start of second HPA for non-contiguous allocations in host for the VM.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="size_hpa2" type="MemorySizeType" default="0x0" minOccurs="0">
-      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
-        <xs:documentation>Memory size of second HPA for non-contiguous allocations in Bytes for the VM.</xs:documentation>
+    <xs:element name="hpa_region" type="HPARegionType" minOccurs="0" maxOccurs="unbounded">
+      <xs:annotation acrn:title="Physical memory segmentation" acrn:views="advanced" acrn:applicable-vms="pre-launched" >
+        <xs:documentation>Specify Physical memory information for Prelaunched VM </xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>

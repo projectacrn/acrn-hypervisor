@@ -28,6 +28,7 @@
   <xsl:template match="config-data/acrn-config">
     <!-- Declaration of pci_devs -->
     <xsl:for-each select="vm">
+      <xsl:variable name="vm_id" select="@id" />
       <xsl:choose>
         <xsl:when test="acrn:is-service-vm(load_order)">
           <xsl:value-of select="acrn:extern('struct acrn_vm_pci_dev_config', 'sos_pci_devs', 'CONFIG_MAX_PCI_DEV_NUM')" />
@@ -39,7 +40,6 @@
 
       <!-- Declaration of pt_intx -->
       <xsl:if test="acrn:is-pre-launched-vm(load_order)">
-	<xsl:variable name="vm_id" select="@id" />
 	<xsl:variable name="length" select="count(acrn:get-intx-mapping(//vm[@id=$vm_id]//pt_intx))" />
 	<xsl:choose>
 	  <xsl:when test="$length">
@@ -49,6 +49,17 @@
             <xsl:value-of select="acrn:extern('struct pt_intx_config', concat('vm', @id, '_pt_intx'), '1U')" />
 	  </xsl:otherwise>
 	</xsl:choose>
+
+        <!-- Initializer of memory  -->
+        <xsl:value-of select="concat('static struct vm_hpa_regions ', concat('vm', @id, '_hpa'), '[] = {')" />
+        <xsl:for-each select="//allocation-data/acrn-config/vm[@id=$vm_id]/memory/hpa_region" >
+          <xsl:variable name="pos" select="position()" />
+          <xsl:variable name="start_hpa" select="acrn:initializer('start_hpa', ./start_hpa, 'UL')" />
+          <xsl:variable name="size_hpa" select="acrn:initializer('size_hpa', ./size_hpa, 'UL')" />
+          <xsl:value-of select="concat('{', $start_hpa, ', ',  $size_hpa, '}', ',')" />
+        </xsl:for-each>
+        <xsl:text>};</xsl:text>
+        <xsl:value-of select="$newline" />
       </xsl:if>
     </xsl:for-each>
 
@@ -99,7 +110,9 @@
 
     <xsl:call-template name="cpu_affinity" />
     <xsl:apply-templates select="epc_section" />
-    <xsl:apply-templates select="memory" />
+    <xsl:if test="acrn:is-pre-launched-vm(load_order)">
+      <xsl:apply-templates select="memory" />
+    </xsl:if>
     <xsl:apply-templates select="os_config" />
     <xsl:call-template name="acpi_config" />
     <xsl:apply-templates select="console_vuart" />
@@ -185,18 +198,10 @@
   </xsl:template>
 
   <xsl:template match="memory">
+    <xsl:variable name="vm_id" select="../@id" />
     <xsl:value-of select="acrn:initializer('memory', '{', true())" />
-    <xsl:choose>
-      <xsl:when test="acrn:is-pre-launched-vm(../load_order)">
-        <xsl:value-of select="acrn:initializer('start_hpa', concat('VM', ../@id, '_CONFIG_MEM_START_HPA'))" />
-        <xsl:value-of select="acrn:initializer('size', concat('VM', ../@id, '_CONFIG_MEM_SIZE'))" />
-        <xsl:value-of select="acrn:initializer('start_hpa2', concat('VM', ../@id, '_CONFIG_MEM_START_HPA2'))" />
-        <xsl:value-of select="acrn:initializer('size_hpa2', concat('VM', ../@id, '_CONFIG_MEM_SIZE_HPA2'))" />
-      </xsl:when>
-      <xsl:when test="acrn:is-service-vm(../load_order)">
-        <xsl:value-of select="acrn:initializer('start_hpa', concat(start_hpa, 'UL'))" />
-      </xsl:when>
-    </xsl:choose>
+    <xsl:value-of select="acrn:initializer('region_num', count(//allocation-data/acrn-config/vm[@id=$vm_id]/memory/hpa_region))" />
+    <xsl:value-of select="acrn:initializer('host_regions', concat('vm', ../@id, '_hpa'))" />
     <xsl:text>},</xsl:text>
     <xsl:value-of select="$newline" />
   </xsl:template>
