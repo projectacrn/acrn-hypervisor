@@ -64,9 +64,8 @@ are not used by any other VMs.
 Flexible CPU Sharing
 ********************
 
-To enable CPU sharing, the ACRN hypervisor can configure the IORR
-(IO sensitive Round-Robin) or the BVT (Borrowed Virtual Time) scheduler
-policy.
+To enable CPU sharing, the ACRN hypervisor can configure the BVT
+(Borrowed Virtual Time) scheduler policy.
 
 The ``cpu_affinity`` parameter in ``vm config`` indicates all the physical CPUs
 on which this VM is allowed to run. A pCPU can be shared among a Service VM and
