@@ -12,7 +12,6 @@ Advanced Scenario Tutorials
    :maxdepth: 1
 
    tutorials/using_hybrid_mode_on_nuc
-   tutorials/using_partition_mode_on_nuc
 
 .. _develop_acrn_user_vm:
 
@@ -58,7 +57,6 @@ Advanced Features
 .. toctree::
    :maxdepth: 1
 
-   tutorials/sgx_virtualization
    tutorials/nvmx_virtualization
    tutorials/vuart_configuration
    tutorials/rdt_configuration
@@ -69,7 +67,6 @@ Advanced Features
    tutorials/sriov_virtualization
    tutorials/gpu-passthru
    tutorials/run_kata_containers
-   tutorials/trustyACRN
    tutorials/rtvm_workload_design_guideline
    tutorials/setup_openstack_libvirt
    tutorials/acrn_on_qemu

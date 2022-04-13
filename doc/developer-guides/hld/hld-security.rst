@@ -1104,6 +1104,4 @@ VM, such as:
 #. One-to-one mapping between running vTPM instances and logical vTPM in
    each VM.
 
-SGX Virtualization (vSGX)
--------------------------
- Refer to :ref:`sgx_virt`
+
