@@ -12,8 +12,8 @@
 #include "vpci_priv.h"
 #include <errno.h>
 
-#define MCS9900_MMIO_BAR        0U
-#define MCS9900_MSIX_BAR        1U
+#define MCS9900_MMIO_BAR	0U
+#define MCS9900_MSIX_BAR	1U
 
 /*
  * @pre vdev != NULL
@@ -32,12 +32,10 @@ void trigger_vmcs9900_msix(struct pci_vdev *vdev)
 	}
 }
 
-static int32_t read_vmcs9900_cfg(const struct pci_vdev *vdev,
-				       uint32_t offset, uint32_t bytes,
-				       uint32_t * val)
+static int32_t read_vmcs9900_cfg(struct pci_vdev *vdev,
+		uint32_t offset, uint32_t bytes, uint32_t * val)
 {
 	*val = pci_vdev_read_vcfg(vdev, offset, bytes);
-
 	return 0;
 }
 

@@ -48,6 +48,21 @@ static inline struct msix_table_entry *get_msix_table_entry(const struct pci_vde
 }
 
 /**
+ * @brief Reading MSI-X Capability Structure
+ *
+ * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
+ */
+void read_pt_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+{
+	if (vdev->msix.is_vmsix_on_msi) {
+		*val = pci_vdev_read_vcfg(vdev, offset, bytes);
+	} else {
+		read_vmsix_cap_reg(vdev, offset, bytes, val);
+	}
+}
+
+/**
  * @brief Writing MSI-X Capability Structure
  *
  * @pre vdev != NULL
