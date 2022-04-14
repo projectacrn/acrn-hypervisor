@@ -9,7 +9,7 @@ Overview
 Refer to `Intel Analysis of L1TF`_ and `Linux L1TF document`_ for details.
 
 .. _Intel Analysis of L1TF:
-   https://software.intel.com/security-software-guidance/insights/deep-dive-intel-analysis-l1-terminal-fault
+   https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/advisory-guidance/l1-terminal-fault.html
 
 .. _Linux L1TF document:
    https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/l1tf.html
@@ -130,15 +130,15 @@ providing necessary capability for VMM to use for further mitigation.
 
 ACRN will check the platform capability based on `CPUID enumeration
 and architectural MSR`_. For an L1TF affected platform (CPUID.07H.EDX.29
-with MSR_IA32_ARCH_CAPABILITIES), L1D_FLUSH capability(CPUID.07H.EDX.28)
+with MSR_IA32_ARCH_CAPABILITIES), L1D_FLUSH capability (CPUID.07H.EDX.28)
 must be supported.
 
 .. _CPUID enumeration and architectural MSR:
-   https://software.intel.com/security-software-guidance/insights/deep-dive-cpuid-enumeration-and-architectural-msrs
+   https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/technical-documentation/cpuid-enumeration-and-architectural-msrs.html
 
 Not all the mitigations below will be implemented in ACRN, and not all of
-them apply to a specific ACRN deployment. Check the 'Mitigation Status'_ and
-'Mitigation Recommendations'_ sections for guidance.
+them apply to a specific ACRN deployment. Check the `Mitigation Status`_ and
+`Mitigation Recommendations`_ sections for guidance.
 
 L1D Flush on VMENTRY
 ====================

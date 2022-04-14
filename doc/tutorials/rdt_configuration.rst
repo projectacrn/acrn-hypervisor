@@ -28,10 +28,10 @@ Steps #2 and #3 configure RDT resources for a VM and can be done in two ways:
 The following sections discuss how to detect, enumerate capabilities, and
 configure RDT resources for VMs in the ACRN hypervisor.
 
-For further details, refer to the ACRN RDT high-level design
-:ref:`hv_rdt` and `Intel 64 and IA-32 Architectures Software Developer's
-Manual, (Section 17.19 Intel Resource Director Technology Allocation Features)
-<https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-sdm-combined-volumes-3a-3b-3c-and-3d-system-programming-guide>`_
+For further details, refer to the ACRN RDT high-level design :ref:`hv_rdt` and
+`Intel 64 and IA-32 Architectures Software Developer's Manual (SDM), Volume 3,
+(Section 17.19 Intel Resource Director Technology Allocation Features)
+<https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html>`_.
 
 .. _rdt_detection_capabilities:
 
