@@ -60,25 +60,7 @@ void vcpu_complete_lock_instr_emulation(struct acrn_vcpu *cur_vcpu)
 	if (cur_vcpu->vm->hw.created_vcpus > 1U) {
 		foreach_vcpu(i, cur_vcpu->vm, other) {
 			if ((other != cur_vcpu) && (other->state == VCPU_RUNNING)) {
-				/*
-				 * When we vcpu_make_request above, there is a time window between kick_vcpu and
-				 * the target vcpu actually does acrn_handle_pending_request (and eventually wait_event).
-				 * It is possible that the issuing vcpu has already completed lock emulation and
-				 * calls signal_event, while the target vcpu has not yet reaching acrn_handle_pending_request.
-				 *
-				 * This causes problem: Say we have vcpuA make request to vcpuB.
-				 * During the above said time window, if A does kick_lock/complete_lock pair multiple times,
-				 * or some other vcpu C makes request to B after A releases the vm lock below, then the bit
-				 * in B's pending_req will be cleared only once, and B will call wait_event only once,
-				 * while other vcpu may call signal_event many times to B. I.e., one bit is not enough
-				 * to cache multiple requests.
-				 *
-				 * To work this around, we try to cancel the request (clear the bit in pending_req) if it
-				 * is unhandled, and signal_event only when the request was already handled.
-				 */
-				if (!vcpu_try_cancel_request(other, ACRN_REQUEST_SPLIT_LOCK)) {
-					signal_event(&other->events[VCPU_EVENT_SPLIT_LOCK]);
-				}
+				signal_event(&other->events[VCPU_EVENT_SPLIT_LOCK]);
 			}
 		}
 
