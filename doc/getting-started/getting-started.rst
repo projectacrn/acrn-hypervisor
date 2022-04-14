@@ -106,7 +106,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo apt upgrade -y
+      sudo apt upgrade -y #optional command to upgrade system
 
 #. Install the necessary ACRN build tools:
 
