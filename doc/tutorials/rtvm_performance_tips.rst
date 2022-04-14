@@ -72,11 +72,11 @@ using LAPIC passthrough. A few exceptions exist:
 
 - NMI - ACRN uses NMI for system-level notification.
 
-You should avoid VM-exits triggered by operations initiated by the
-vCPU. Refer to the `Intel Software Developer Manuals (SDM)
-<https://software.intel.com/en-us/articles/intel-sdm>`_ "Instructions
-Cause VM-exits Unconditionally" (SDM V3, 25.1.2) and "Instructions That
-Cause VM-exits Conditionally" (SDM V3, 25.1.3).
+You should avoid VM-exits triggered by operations initiated by the vCPU. Refer
+to the `Intel 64 and IA-32 Architectures Software Developer's Manual (SDM)
+<https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html>`_
+"Instructions That Cause VM Exits Unconditionally" (SDM V3, 25.1.2) and
+"Instructions That Cause VM Exits Conditionally" (SDM V3, 25.1.3).
 
 Tip: Do not use CPUID in a real-time critical section.
    The CPUID instruction causes VM-exits unconditionally. You should

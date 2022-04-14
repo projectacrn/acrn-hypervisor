@@ -11,7 +11,7 @@ resources, ACRN can optimize RTVM performance over regular VMs. In ACRN, the
 CAT and MBA are configured via the "VM-Configuration". The resources
 allocated for VMs are determined in the VM configuration (:ref:`rdt_vm_configuration`).
 
-For further details on the Intel RDT, refer to `Intel 64 and IA-32 Architectures Software Developer's Manual, (Section 17.19 Intel Resource Director Technology Allocation Features) <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-sdm-combined-volumes-3a-3b-3c-and-3d-system-programming-guide>`_.
+For further details on the Intel RDT, refer to `Intel 64 and IA-32 Architectures Software Developer's Manual (SDM), Volume 3, (Section 17.19 Intel Resource Director Technology Allocation Features) <https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html>`_.
 
 
 Objective of CAT

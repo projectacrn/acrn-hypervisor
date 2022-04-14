@@ -32,7 +32,7 @@ ways:
 
    This atomic operation is called a Split-locked Access. For this situation,
    the LOCK# bus signal is asserted to lock the system bus, to ensure
-   the operation is atomic. See `Intel 64 and IA-32 Architectures Software Developer's Manual(SDM), Volume 3, (Section 8.1.2 Bus Locking) <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-sdm-combined-volumes-3a-3b-3c-and-3d-system-programming-guide>`_.
+   the operation is atomic. See `Intel 64 and IA-32 Architectures Software Developer's Manual (SDM), Volume 3, (Section 8.1.2 Bus Locking) <https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html>`_.
 
 Split-locked Access can cause unexpected long latency to ordinary memory
 operations by other CPUs while the bus is locked. This degraded system
@@ -51,9 +51,7 @@ an opportunity to decide how to handle this instruction:
 - It can allow the instruction to run with LOCK# bus signal potentially
   impacting performance of other CPUs.
 - It can disable LOCK# assertion for split locked access, but
-  improperly makes the instruction non-atomic. (Intel plans to remove this CPU feature
-  from upcoming products as documented in
-  `SDM, Volume 1, (Section 2.4 PROPOSED REMOVAL FROM UPCOMING PRODUCTS.) <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-software-developers-manual-volume-1-basic-architecture>`_
+  improperly makes the instruction non-atomic.
 - It can terminate the software at this instruction.
 
 Feature Enumeration and Control
