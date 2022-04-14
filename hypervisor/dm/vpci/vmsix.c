@@ -35,6 +35,34 @@
 #include "vpci_priv.h"
 
 /**
+ * @brief Reading MSI-X Capability Structure
+ *
+ * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
+ */
+void read_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+{
+	static const uint8_t msix_pt_mask[12U] = {
+		0x0U, 0x0U, 0xffU, 0xffU };	/* Only PT MSI-X Message Control Register */
+	uint32_t virt, phy = 0U, ctrl, pt_mask = 0U;
+
+	virt = pci_vdev_read_vcfg(vdev, offset, bytes);
+	(void)memcpy_s((void *)&pt_mask, bytes, (void *)&msix_pt_mask[offset - vdev->msix.capoff], bytes);
+	if (pt_mask != 0U) {
+		phy = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+		ctrl = pci_pdev_read_cfg(vdev->pdev->bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
+		if (((ctrl & PCIM_MSIXCTRL_TABLE_SIZE) + 1U) != vdev->msix.table_count) {
+			vdev->msix.table_count = (ctrl & PCIM_MSIXCTRL_TABLE_SIZE) + 1U;
+			pr_info("%s reprogram MSI-X Table Size to %d\n", __func__, vdev->msix.table_count);
+			/*In this case, we don't need to unmap msix EPT mapping again. */
+			ASSERT(vdev->msix.table_count <= (PAGE_SIZE/ MSIX_TABLE_ENTRY_SIZE), "");
+		}
+	}
+
+	*val = (virt & ~pt_mask) | (phy & pt_mask);
+}
+
+/**
  * @brief Writing MSI-X Capability Structure
  *
  * @pre vdev != NULL

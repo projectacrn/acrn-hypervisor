@@ -153,7 +153,9 @@ void deinit_vmsi(const struct pci_vdev *vdev);
 
 void init_vmsix_pt(struct pci_vdev *vdev);
 int32_t add_vmsix_capability(struct pci_vdev *vdev, uint32_t entry_num, uint8_t bar_num);
+void read_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 bool write_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
+void read_pt_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 void write_pt_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 uint32_t rw_vmsix_table(struct pci_vdev *vdev, struct io_request *io_req);
 int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *priv_data);

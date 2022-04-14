@@ -104,7 +104,7 @@ struct pci_vdev_ops {
        void    (*init_vdev)(struct pci_vdev *vdev);
        void    (*deinit_vdev)(struct pci_vdev *vdev);
        int32_t (*write_vdev_cfg)(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-       int32_t (*read_vdev_cfg)(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
+       int32_t (*read_vdev_cfg)(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 };
 
 struct pci_vdev {

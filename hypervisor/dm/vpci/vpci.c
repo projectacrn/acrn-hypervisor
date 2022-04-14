@@ -532,15 +532,17 @@ static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	return ret;
 }
 
-static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
+static int32_t read_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t *val)
 {
 	int32_t ret = 0;
 
 	if (cfg_header_access(offset)) {
 		read_cfg_header(vdev, offset, bytes, val);
-	} else if (msicap_access(vdev, offset) || msixcap_access(vdev, offset)) {
+	} else if (msicap_access(vdev, offset)) {
 		*val = pci_vdev_read_vcfg(vdev, offset, bytes);
+	} else if (msixcap_access(vdev, offset)) {
+		read_pt_vmsix_cap_reg(vdev, offset, bytes, val);
 	} else if (sriovcap_access(vdev, offset)) {
 		read_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
