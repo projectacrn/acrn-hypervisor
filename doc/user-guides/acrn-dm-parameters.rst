@@ -342,7 +342,7 @@ arguments used for configuration.  Here is a table describing these emulated dev
        for shared memory between VMs. Parameters should be added with the format
        ``ivshmem,<shm_name>,<shm_size>``. ``<shm-name>`` specifies a shared memory
        name, and must be listed in ``hv.FEATURES.IVSHMEM.IVSHMEM_REGION``
-       as configured using the ACRN configurator tool UI, and needs to start
+       as configured using the ACRN Configurator UI, and needs to start
        with a ``dm:/`` prefix.
 
    * - ``ahci``
@@ -370,13 +370,13 @@ arguments used for configuration.  Here is a table describing these emulated dev
        (PCI) bus.
 
    * - ``virtio-blk``
-     - Virtio block type device, a string could be appended with the format 
+     - Virtio block type device, a string could be appended with the format
        ``virtio-blk,<filepath>[,options]``
 
-       * ``<filepath>`` specifies the path of a file or disk partition. 
+       * ``<filepath>`` specifies the path of a file or disk partition.
          You can also could use ``nodisk`` to create a virtio-blk device with a dummy backend.
-         ``nodisk`` is used for hot-plugging a rootfs after the User VM has been launched. It is 
-         achieved by triggering a rescan of the ``virtio-blk`` device by the User VM. The empty file 
+         ``nodisk`` is used for hot-plugging a rootfs after the User VM has been launched. It is
+         achieved by triggering a rescan of the ``virtio-blk`` device by the User VM. The empty file
          will be updated to valid file after rescan.
        * ``[,options]`` includes:
 
@@ -434,7 +434,7 @@ arguments used for configuration.  Here is a table describing these emulated dev
          represent the ``controller_name`` that you can use. You can also use
          the command ``cat /sys/bus/gpio/device/XXX/dev`` to get the device id
          that can be used to match ``/dev/XXX``, and then use ``XXX`` as the
-         ``controller_name``. On Intel platforms, ``controller_name`` may be 
+         ``controller_name``. On Intel platforms, ``controller_name`` may be
          ``gpiochip0``, ``gpiochip1``, ``gpiochip2``, and ``gpiochip3``.
        * ``offset|name``: use GPIO offset or its name to locate one native GPIO
          within the GPIO controller.

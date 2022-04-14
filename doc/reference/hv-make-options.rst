@@ -181,7 +181,7 @@ Thus, there is no need to duplicate ``BOARD`` and ``SCENARIO`` in the second
 ``make`` above.
 
 While the scenario configuration files can be changed manually, we recommend
-you use the :ref:`ACRN configurator tool <acrn_configurator_tool>`, which
+you use the :ref:`ACRN Configurator tool <acrn_configurator_tool>`, which
 provides valid options and descriptions of the configuration entries.
 
 The targets ``hvdiffconfig`` and ``hvapplydiffconfig`` are provided for users

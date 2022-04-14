@@ -287,7 +287,7 @@ Scenarios are a way to describe the system configuration settings of the ACRN
 hypervisor, VMs, and resources they have access to that meet your specific
 application's needs such as compute, memory, storage, graphics, networking, and
 other devices.  Scenario configurations are stored in an XML format file and
-edited using the ACRN configurator.
+edited using the ACRN Configurator.
 
 Following a general embedded-system programming model, the ACRN hypervisor is
 designed to be statically customized at build time per hardware and scenario,
@@ -307,9 +307,9 @@ parsing is not used in the ACRN hypervisor for these reasons:
 
 The scenario XML file together with a target board XML file are used to build
 the ACRN hypervisor image tailored to your hardware and application needs. The ACRN
-project provides a board inspector tool to automatically create the board XML
-file by inspecting the target hardware. ACRN also provides a
-:ref:`configurator tool <acrn_configuration_tool>`
+project provides the Board Inspector tool to automatically create the board XML
+file by inspecting the target hardware. ACRN also provides the
+:ref:`ACRN Configurator tool <acrn_configuration_tool>`
 to create and edit a tailored scenario XML file based on predefined sample
 scenario configurations.
 
@@ -400,7 +400,7 @@ can define your own configuration scenarios.
 You can find the predefined scenario XML files in the
 :acrn_file:`misc/config_tools/data` folder in the hypervisor source code. The
 :ref:`acrn_configuration_tool` tutorial explains how to use the ACRN
-configurator to create your own scenario, or to view and modify an existing one.
+Configurator to create your own scenario, or to view and modify an existing one.
 
 Boot Sequence
 *************
