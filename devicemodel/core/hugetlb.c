@@ -245,6 +245,8 @@ static int mmap_hugetlbfs_from_level(struct vmctx *ctx, int level, size_t len,
 
 	pr_info("touch %ld pages with pagesz 0x%lx\n", len/pagesz, pagesz);
 
+	/* Access to the address will trigger hugetlb_fault() in kernel,
+	 * it will allocate and clear the huge page.*/
 	for (i = 0; i < len/pagesz; i++) {
 		*(volatile char *)addr = *addr;
 		addr += pagesz;
