@@ -90,6 +90,7 @@ def create_acrn_deb(board, scenario, version, build_dir):
         'Package: acrn-hypervisor\n',
         'version: %s \n' % version,
         'Depends: libcjson1\n',
+        'Pre-Depends: libsdl2-dev\n',
         'Section: free \n',
         'Priority: optional \n',
         'Architecture: amd64 \n',
