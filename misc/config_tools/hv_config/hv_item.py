@@ -86,13 +86,13 @@ class Features:
         self.ssram_enabled = ''
 
     def get_info(self):
-        self.multiboot2 = common.get_hv_item_tag(self.hv_file, "FEATURES", "MULTIBOOT2")
+        self.multiboot2 = common.get_hv_item_tag(self.hv_file, "FEATURES", "MULTIBOOT2_ENABLED")
         self.rdt_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "RDT_ENABLED")
         self.cdp_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "CDP_ENABLED")
         self.cat_max_mask = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "CLOS_MASK")
         self.mba_delay = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "MBA_DELAY")
         self.scheduler = common.get_hv_item_tag(self.hv_file, "FEATURES", "SCHEDULER")
-        self.reloc = common.get_hv_item_tag(self.hv_file, "FEATURES", "RELOC")
+        self.reloc = common.get_hv_item_tag(self.hv_file, "FEATURES", "RELOC_ENABLED")
         self.hyperv_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "HYPERV_ENABLED")
         self.acpi_parse_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "ACPI_PARSE_ENABLED")
         self.l1d_flush_vmentry_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "L1D_VMENTRY_ENABLED")
@@ -101,13 +101,13 @@ class Features:
         self.ssram_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "SSRAM", "SSRAM_ENABLED")
 
     def check_item(self):
-        hv_cfg_lib.ny_support_check(self.multiboot2, "FEATURES", "MULTIBOOT2")
+        hv_cfg_lib.ny_support_check(self.multiboot2, "FEATURES", "MULTIBOOT2_ENABLED")
         hv_cfg_lib.ny_support_check(self.rdt_enabled, "FEATURES", "RDT", "RDT_ENABLED")
         hv_cfg_lib.ny_support_check(self.cdp_enabled, "FEATURES", "RDT", "CDP_ENABLED")
         hv_cfg_lib.cat_max_mask_check(self.cat_max_mask, "FEATURES", "RDT", "CLOS_MASK")
         hv_cfg_lib.mba_delay_check(self.mba_delay, "FEATURES", "RDT", "MBA_DELAY")
         hv_cfg_lib.scheduler_check(self.scheduler, "FEATURES", "SCHEDULER")
-        hv_cfg_lib.ny_support_check(self.reloc, "FEATURES", "RELOC")
+        hv_cfg_lib.ny_support_check(self.reloc, "FEATURES", "RELOC_ENABLED")
         hv_cfg_lib.ny_support_check(self.hyperv_enabled, "FEATURES", "HYPERV_ENABLED")
         hv_cfg_lib.ny_support_check(self.acpi_parse_enabled, "FEATURES", "ACPI_PARSE_ENABLED")
         hv_cfg_lib.ny_support_check(self.l1d_flush_vmentry_enabled, "FEATURES", "L1D_VMENTRY_ENABLED")

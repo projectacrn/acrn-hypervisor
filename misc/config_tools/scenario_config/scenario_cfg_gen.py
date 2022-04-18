@@ -72,11 +72,11 @@ def get_scenario_item_values(board_info, scenario_info):
 
     scenario_item_values["hv,CAPACITIES,MAX_IOAPIC_NUM"] = hv_cfg_lib.get_select_range("CAPACITIES", "IOAPIC_NUM")
 
-    scenario_item_values["hv,FEATURES,MULTIBOOT2"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,MULTIBOOT2_ENABLED"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,RDT,RDT_ENABLED"] = board_cfg_lib.get_rdt_select_opt()
     scenario_item_values["hv,FEATURES,RDT,CDP_ENABLED"] = board_cfg_lib.get_rdt_select_opt()
     scenario_item_values["hv,FEATURES,SCHEDULER"] = hv_cfg_lib.SCHEDULER_TYPE
-    scenario_item_values["hv,FEATURES,RELOC"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,RELOC_ENABLED"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,HYPERV_ENABLED"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,ACPI_PARSE_ENABLED"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,L1D_VMENTRY_ENABLED"] = hv_cfg_lib.N_Y

@@ -53,7 +53,7 @@ These settings can only be changed at build time.</xs:documentation>
   </xs:annotation>
 
   <xs:all>
-    <xs:element name="RELOC" type="Boolean" default="y">
+    <xs:element name="RELOC_ENABLED" type="Boolean" default="y">
       <xs:annotation acrn:title="Hypervisor relocation" acrn:views="advanced">
         <xs:documentation>Enable hypervisor relocation in memory. The bootloader may need to change the location of the hypervisor because of other firmware.</xs:documentation>
       </xs:annotation>
@@ -63,7 +63,7 @@ These settings can only be changed at build time.</xs:documentation>
         <xs:documentation>Select the scheduling algorithm for determining the priority of User VMs running on a shared virtual CPU.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="MULTIBOOT2" type="Boolean" default="y">
+    <xs:element name="MULTIBOOT2_ENABLED" type="Boolean" default="y">
       <xs:annotation acrn:title="Multiboot2" acrn:views="advanced">
         <xs:documentation>Enable multiboot2 protocol support (with multiboot1 downward compatibility). If multiboot1 meets your requirements, disable this feature to reduce hypervisor code size.</xs:documentation>
       </xs:annotation>

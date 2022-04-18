@@ -73,14 +73,6 @@
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key">
-      <xsl:with-param name="key" select="'RELOC'" />
-    </xsl:call-template>
-
-    <xsl:call-template name="boolean-by-key">
-      <xsl:with-param name="key" select="'MULTIBOOT2'" />
-    </xsl:call-template>
-
-    <xsl:call-template name="boolean-by-key">
       <xsl:with-param name="key" select="'ENFORCE_TURNOFF_AC'" />
     </xsl:call-template>
 
@@ -134,6 +126,16 @@
     <xsl:call-template name="boolean-by-key-value">
       <xsl:with-param name="key" select="'MCE_ON_PSC_WORKAROUND_DISABLED'" />
       <xsl:with-param name="value" select="MCE_ON_PSC_DISABLED" />
+    </xsl:call-template>
+
+    <xsl:call-template name="boolean-by-key-value">
+      <xsl:with-param name="key" select="'RELOC'" />
+      <xsl:with-param name="value" select="RELOC_ENABLED" />
+    </xsl:call-template>
+
+    <xsl:call-template name="boolean-by-key-value">
+      <xsl:with-param name="key" select="'MULTIBOOT2'" />
+      <xsl:with-param name="value" select="MULTIBOOT2_ENABLED" />
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key-value">
