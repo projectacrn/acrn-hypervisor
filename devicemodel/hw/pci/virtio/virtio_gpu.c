@@ -1644,6 +1644,20 @@ virtio_gpu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	gpu = (struct virtio_gpu *)dev->arg;
 	gpu->vga.enable = false;
 
+	pthread_mutex_lock(&gpu->vga_thread_mtx);
+	if (atomic_load(&gpu->vga_thread_status) != VGA_THREAD_EOL) {
+		pthread_mutex_unlock(&gpu->vga_thread_mtx);
+		pthread_join(gpu->vga.tid, NULL);
+	} else
+		pthread_mutex_unlock(&gpu->vga_thread_mtx);
+
+	if (gpu->vga.dev)
+		vga_deinit(&gpu->vga);
+	if (gpu->vga.gc) {
+		gc_deinit(gpu->vga.gc);
+		gpu->vga.gc = NULL;
+	}
+
 	pthread_mutex_destroy(&gpu->vga_thread_mtx);
 	while (LIST_FIRST(&gpu->r2d_list)) {
 		r2d = LIST_FIRST(&gpu->r2d_list);
