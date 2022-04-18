@@ -131,11 +131,8 @@ higher value (lower severity) are discarded.</xs:documentation>
 - ``No-Operation (NOOP)``: The No-Operation (NOOP) scheduler means there is a
   strict one-to-one mapping between vCPUs and pCPUs.
 - ``Borrowed Virtual Time``: The Borrowed Virtual Time (BVT) scheduler is a
-  virtual time-based
-  scheduling algorithm. It dispatches the runnable thread with the
-  earliest effective virtual time. *TODO: BVT scheduler will be built on
-  top of a prioritized scheduling mechanism, i.e. higher priority threads
-  get scheduled first, and same priority tasks are scheduled per BVT.*
+  virtual time-based scheduling algorithm. It dispatches the runnable thread with the
+  earliest effective virtual time.
 - ``Priority Based Scheduling``: The priority based scheduler supports vCPU scheduling based on their pre-configured priorities.
 
 Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:documentation>
