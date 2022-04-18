@@ -344,6 +344,10 @@ struct virtio_gpu_set_scanout_blob {
 	uint32_t offsets[4];
 };
 
+enum vga_thread_status {
+	VGA_THREAD_EOL = 0,
+	VGA_THREAD_RUNNING
+};
 /*
  * Per-device struct
  */
@@ -358,6 +362,8 @@ struct virtio_gpu {
 	struct vdpy_display_bh cursor_bh;
 	struct vdpy_display_bh vga_bh;
 	struct vga vga;
+	pthread_mutex_t	vga_thread_mtx;
+	int32_t vga_thread_status;
 	uint8_t edid[VIRTIO_GPU_EDID_SIZE];
 	bool is_blob_supported;
 };
@@ -460,7 +466,12 @@ virtio_gpu_reset(void *vdev)
 	vdpy_surface_set(gpu->vdpy_handle, &gpu->vga.surf);
 	gpu->vga.surf.width = 0;
 	gpu->vga.surf.stride = 0;
-	pthread_create(&gpu->vga.tid, NULL, virtio_gpu_vga_render, (void*)gpu);
+	pthread_mutex_lock(&gpu->vga_thread_mtx);
+	if (atomic_load(&gpu->vga_thread_status) == VGA_THREAD_EOL) {
+		atomic_store(&gpu->vga_thread_status, VGA_THREAD_RUNNING);
+		pthread_create(&gpu->vga.tid, NULL, virtio_gpu_vga_render, (void *)gpu);
+	}
+	pthread_mutex_unlock(&gpu->vga_thread_mtx);
 	virtio_reset_dev(&gpu->base);
 }
 
@@ -1398,7 +1409,6 @@ virtio_gpu_vga_render(void *param)
 	struct virtio_gpu *gpu;
 
 	gpu = (struct virtio_gpu*)param;
-
 	/* The below logic needs to be refined */
 	while(gpu->vga.enable) {
 		if(gpu->vga.gc->gc_image->vgamode) {
@@ -1414,6 +1424,9 @@ virtio_gpu_vga_render(void *param)
 		usleep(33000);
 	}
 
+	pthread_mutex_lock(&gpu->vga_thread_mtx);
+	atomic_store(&gpu->vga_thread_status, VGA_THREAD_EOL);
+	pthread_mutex_unlock(&gpu->vga_thread_mtx);
 	return NULL;
 }
 
@@ -1610,12 +1623,14 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 	gpu->vdpy_handle = vdpy_init();
 
+	pthread_mutex_init(&gpu->vga_thread_mtx, NULL);
 	/* VGA Compablility */
 	gpu->vga.enable = true;
 	gpu->vga.surf.width = 0;
 	gpu->vga.surf.stride = 0;
 	gpu->vga.surf.height = 0;
 	gpu->vga.surf.pixel = 0;
+	atomic_store(&gpu->vga_thread_status, VGA_THREAD_RUNNING);
 	pthread_create(&gpu->vga.tid, NULL, virtio_gpu_vga_render, (void*)gpu);
 
 	return 0;
@@ -1628,7 +1643,9 @@ virtio_gpu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct virtio_gpu_resource_2d *r2d;
 
 	gpu = (struct virtio_gpu *)dev->arg;
+	gpu->vga.enable = false;
 
+	pthread_mutex_destroy(&gpu->vga_thread_mtx);
 	while (LIST_FIRST(&gpu->r2d_list)) {
 		r2d = LIST_FIRST(&gpu->r2d_list);
 		if (r2d) {
@@ -1713,8 +1730,16 @@ virtio_gpu_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 				       VIRTIO_GPU_VGA_VBE_SIZE))) {
 			offset -= VIRTIO_GPU_VGA_VBE_OFFSET;
 			vga_vbe_write(ctx, vcpu, &gpu->vga, offset, size, value);
-			if (offset == VBE_DISPI_INDEX_ENABLE) {
-				pthread_create(&gpu->vga.tid, NULL, virtio_gpu_vga_render, (void*)gpu);
+			if ((offset == VBE_DISPI_INDEX_ENABLE) && (value & VBE_DISPI_ENABLED)) {
+				pthread_mutex_lock(&gpu->vga_thread_mtx);
+				if (atomic_load(&gpu->vga_thread_status) == VGA_THREAD_EOL) {
+					atomic_store(&gpu->vga_thread_status,
+							VGA_THREAD_RUNNING);
+					pthread_create(&gpu->vga.tid, NULL,
+							virtio_gpu_vga_render,
+							(void *)gpu);
+				}
+				pthread_mutex_unlock(&gpu->vga_thread_mtx);
 			}
 		} else if ((offset >= VIRTIO_GPU_CAP_COMMON_OFFSET) &&
 			   (offset < (VIRTIO_GPU_CAP_COMMON_OFFSET +
