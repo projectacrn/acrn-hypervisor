@@ -463,9 +463,6 @@ virtio_gpu_reset(void *vdev)
 	}
 	LIST_INIT(&gpu->r2d_list);
 	gpu->vga.enable = true;
-	vdpy_surface_set(gpu->vdpy_handle, &gpu->vga.surf);
-	gpu->vga.surf.width = 0;
-	gpu->vga.surf.stride = 0;
 	pthread_mutex_lock(&gpu->vga_thread_mtx);
 	if (atomic_load(&gpu->vga_thread_status) == VGA_THREAD_EOL) {
 		atomic_store(&gpu->vga_thread_status, VGA_THREAD_RUNNING);
@@ -1409,6 +1406,8 @@ virtio_gpu_vga_render(void *param)
 	struct virtio_gpu *gpu;
 
 	gpu = (struct virtio_gpu*)param;
+	gpu->vga.surf.width = 0;
+	gpu->vga.surf.stride = 0;
 	/* The below logic needs to be refined */
 	while(gpu->vga.enable) {
 		if(gpu->vga.gc->gc_image->vgamode) {
