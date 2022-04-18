@@ -117,8 +117,8 @@
     </pci_devs>
     <PTM>n</PTM>
     <os_type>Windows OS</os_type>
-    <vbootloader>Enable</vbootloader>
-    <vuart0>Disable</vuart0>
+    <vbootloader>y</vbootloader>
+    <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
       <console/>
@@ -155,8 +155,8 @@
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
     <os_type>Non-Windows OS</os_type>
-    <vbootloader>Enable</vbootloader>
-    <vuart0>Disable</vuart0>
+    <vbootloader>y</vbootloader>
+    <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
       <console>
@@ -193,8 +193,8 @@
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
     <os_type>Non-Windows OS</os_type>
-    <vbootloader>Enable</vbootloader>
-    <vuart0>Disable</vuart0>
+    <vbootloader>y</vbootloader>
+    <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
       <console>
@@ -231,8 +231,8 @@
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
     <os_type>Non-Windows OS</os_type>
-    <vbootloader>Enable</vbootloader>
-    <vuart0>Disable</vuart0>
+    <vbootloader>y</vbootloader>
+    <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
       <console>
@@ -269,8 +269,8 @@
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
     <os_type>Non-Windows OS</os_type>
-    <vbootloader>Enable</vbootloader>
-    <vuart0>Disable</vuart0>
+    <vbootloader>y</vbootloader>
+    <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
       <console>
@@ -307,8 +307,8 @@
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
     <os_type>Non-Windows OS</os_type>
-    <vbootloader>Enable</vbootloader>
-    <vuart0>Disable</vuart0>
+    <vbootloader>y</vbootloader>
+    <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
       <console>

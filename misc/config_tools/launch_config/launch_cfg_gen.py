@@ -220,7 +220,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     ###
     # Guest BIOS
     ###
-    if eval_xpath(vm_scenario_etree, ".//vbootloader/text()") == "Enable":
+    if eval_xpath(vm_scenario_etree, ".//vbootloader/text()") == "y":
         script.add_plain_dm_parameter("--ovmf /usr/share/acrn/bios/OVMF.fd")
 
     ###
@@ -231,7 +231,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     if eval_xpath(vm_scenario_etree, ".//vm_type/text()") != "RTVM":
         script.add_virtual_device("lpc", vbdf="1:0")
 
-    if eval_xpath(vm_scenario_etree, ".//vuart0/text()") == "Enable":
+    if eval_xpath(vm_scenario_etree, ".//vuart0/text()") == "y":
         script.add_plain_dm_parameter("-l com1,stdio")
 
     # Emulated PCI devices

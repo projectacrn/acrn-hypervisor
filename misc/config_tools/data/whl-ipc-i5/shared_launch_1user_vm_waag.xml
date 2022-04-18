@@ -98,8 +98,8 @@
     </pci_devs>
     <PTM>n</PTM>
     <os_type>Windows OS</os_type>
-    <vbootloader>Enable</vbootloader>
-    <vuart0>Enable</vuart0>
+    <vbootloader>y</vbootloader>
+    <vuart0>y</vuart0>
     <usb_xhci/>
     <virtio_devices>
       <console/>

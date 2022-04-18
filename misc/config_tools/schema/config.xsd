@@ -409,12 +409,12 @@ argument and memory.</xs:documentation>
 	<xs:documentation>Select the OS type for this VM. This is required to run Windows in a User VM. See :ref:`acrn-dm_parameters` for how to include this in the Device Model arguments.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="vbootloader" type="EnablementType" default="Enable">
-      <xs:annotation acrn:title="Open Virtual Machine Firmware" acrn:applicable-vms="post-launched" acrn:views="basic">
+    <xs:element name="vbootloader" type="Boolean" default="y">
+      <xs:annotation acrn:title="Enable Open Virtual Machine FW" acrn:applicable-vms="post-launched" acrn:views="basic">
         <xs:documentation>Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="vuart0" type="EnablementType" default="Enable">
+    <xs:element name="vuart0" type="Boolean" default="y">
       <xs:annotation acrn:title="Emulate COM1 as stdio I/O" acrn:applicable-vms="post-launched" acrn:views="basic">
 	<xs:documentation>Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.</xs:documentation>
       </xs:annotation>
