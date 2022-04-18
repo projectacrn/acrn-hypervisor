@@ -464,6 +464,12 @@ mouse, and tablet.  It sends Linux input layer events over virtio.</xs:documenta
               <xs:documentation>The virtio-blk device presents a block device to the VM. Each virtio-blk device appears as a disk inside the VM.</xs:documentation>
             </xs:annotation>
           </xs:element>
+          <xs:element name="gpu" type="xs:string" minOccurs="0">
+            <xs:annotation acrn:title="Virtio GPU device" acrn:views="basic">
+              <xs:documentation>The virtio GPU device presents a GPU device to the VM.
+              This feature enables you to view the VM's GPU output in the Service VM.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
         </xs:all>
       </xs:complexType>
     </xs:element>
