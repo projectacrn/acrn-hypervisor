@@ -199,4 +199,5 @@ void vga_vbe_write(struct vmctx *ctx, int vcpu, struct vga *vga,
 uint64_t vga_vbe_read(struct vmctx *ctx, int vcpu, struct vga *vga,
 		uint64_t offset, int size);
 
+void vga_deinit(struct vga *vga);
 #endif /* _VGA_H_ */

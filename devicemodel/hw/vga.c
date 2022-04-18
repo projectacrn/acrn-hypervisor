@@ -1426,3 +1426,32 @@ vga_vbe_read(struct vmctx *ctx, int vcpu, struct vga *vga,
 
 	return (value);
 }
+
+void vga_deinit(struct vga *vga)
+{
+	struct vga_vdev *vd;
+	struct inout_port iop;
+	int port;
+
+	vd = (struct vga_vdev *)vga->dev;
+
+	for (port = VGA_IOPORT_START; port <= VGA_IOPORT_END; port++) {
+		iop.port = port;
+		iop.size = 1;
+		iop.flags = IOPORT_F_INOUT;
+		iop.handler = NULL;
+		iop.arg = NULL;
+
+		unregister_inout(&iop);
+		//error = unregister_inout(&iop);
+		//assert(error == 0);
+	}
+
+	unregister_mem_fallback(&vd->mr);
+
+	free(vd->vga_ram);
+	vd->vga_ram = NULL;
+
+	free(vd);
+	vga->dev = NULL;
+}
