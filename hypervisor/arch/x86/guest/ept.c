@@ -146,11 +146,6 @@ static inline bool use_large_page(enum _page_table_level level, uint64_t prot)
 	return ret;
 }
 
-static inline uint64_t ept_pgentry_present(uint64_t pte)
-{
-	return pte & EPT_RWX;
-}
-
 static inline void ept_clflush_pagewalk(const void* etry)
 {
 	iommu_flush_cache(etry, sizeof(uint64_t));
@@ -188,7 +183,7 @@ void init_ept_pgtable(struct pgtable *table, uint16_t vm_id)
 
 	table->pool = &ept_page_pool[vm_id];
 	table->default_access_right = EPT_RWX;
-	table->pgentry_present = ept_pgentry_present;
+	table->pgentry_present_mask = EPT_RWX;
 	table->clflush_pagewalk = ept_clflush_pagewalk;
 	table->large_page_support = ept_large_page_support;
 
@@ -439,12 +434,12 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 
 	for (i = 0UL; i < PTRS_PER_PML4E; i++) {
 		pml4e = pml4e_offset((uint64_t *)get_eptp(vm), i << PML4E_SHIFT);
-		if (table->pgentry_present(*pml4e) == 0UL) {
+		if (!pgentry_present(table, (*pml4e))) {
 			continue;
 		}
 		for (j = 0UL; j < PTRS_PER_PDPTE; j++) {
 			pdpte = pdpte_offset(pml4e, j << PDPTE_SHIFT);
-			if (table->pgentry_present(*pdpte) == 0UL) {
+			if (!pgentry_present(table, (*pdpte))) {
 				continue;
 			}
 			if (pdpte_large(*pdpte) != 0UL) {
@@ -453,7 +448,7 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 			}
 			for (k = 0UL; k < PTRS_PER_PDE; k++) {
 				pde = pde_offset(pdpte, k << PDE_SHIFT);
-				if (table->pgentry_present(*pde) == 0UL) {
+				if (!pgentry_present(table, (*pde))) {
 					continue;
 				}
 				if (pde_large(*pde) != 0UL) {
@@ -462,7 +457,7 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 				}
 				for (m = 0UL; m < PTRS_PER_PTE; m++) {
 					pte = pte_offset(pde, m << PTE_SHIFT);
-					if (table->pgentry_present(*pte) != 0UL) {
+					if (pgentry_present(table, (*pte))) {
 						cb(pte, PTE_SIZE);
 					}
 				}
