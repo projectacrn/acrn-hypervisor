@@ -596,6 +596,12 @@ vdpy_surface_set(int handle, struct surface *surf)
 		return;
 	}
 
+	if (vdpy.tid != pthread_self()) {
+		pr_err("%s: unexpected code path as unsafe 3D ops in multi-threads env.\n",
+			__func__);
+		return;
+	}
+
 	if (surf == NULL ) {
 		vdpy.surf.width = 0;
 		vdpy.surf.height = 0;
@@ -755,6 +761,12 @@ vdpy_surface_update(int handle, struct surface *surf)
 		return;
 	}
 
+	if (vdpy.tid != pthread_self()) {
+		pr_err("%s: unexpected code path as unsafe 3D ops in multi-threads env.\n",
+			__func__);
+		return;
+	}
+
 	if (!surf) {
 		pr_err("Incorrect order of submitting Virtio-GPU cmd.\n");
 	        return;
@@ -787,6 +799,12 @@ void
 vdpy_cursor_define(int handle, struct cursor *cur)
 {
 	if (handle != vdpy.s.n_connect) {
+		return;
+	}
+
+	if (vdpy.tid != pthread_self()) {
+		pr_err("%s: unexpected code path as unsafe 3D ops in multi-threads env.\n",
+			__func__);
 		return;
 	}
 
