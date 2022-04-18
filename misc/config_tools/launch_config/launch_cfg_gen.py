@@ -300,6 +300,10 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
             script.add_virtual_device("virtio-blk", options=os.path.join(f"${{{var}}}", rootfs_img))
             script.add_deinit_command(f"unmount_partition ${{{var}}}")
 
+    for virtio_gpu in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/gpu[text() != '']/text()"):
+        if virtio_gpu is not None:
+            script.add_virtual_device("virtio-gpu", options=virtio_gpu)
+
     # Passthrough PCI devices
     bdf_regex = re.compile("([0-9a-f]{2}):([0-1][0-9a-f]).([0-7])")
     for passthru_device in eval_xpath_all(vm_scenario_etree, ".//pci_devs/*/text()"):
