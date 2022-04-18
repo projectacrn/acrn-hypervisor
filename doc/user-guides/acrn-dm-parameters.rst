@@ -478,12 +478,18 @@ arguments used for configuration.  Here is a table describing these emulated dev
      - Virtio GPU type device, parameters format is:
        ``virtio-gpu[,geometry=<width>x<height>+<x_off>+<y_off> | fullscreen]``
 
-       * ``<geometry>`` specifies the mode of virtual display, windowed or fullscreen. 
+       * ``<geometry>`` specifies the mode of virtual display, windowed or fullscreen.
          If it is not set, the virtual display will use 1280x720 resolution in windowed mode.
        * ``width`` specifies the width of the virtual display window in pixels.
        * ``height`` specifies the height of the virtual display window in pixels.
-       * ``x_off`` specifies the x offfset of the virtual display window from the upper-left corner of screen.
-       * ``y_off`` specifies the y offfset of the virtual display window from the upper-left corner of screen.
+       * ``x_off`` specifies the x offset of the virtual display window from the
+         upper-left corner of the screen.
+       * ``y_off`` specifies the y offset of the virtual display window from the
+         upper-left corner of the screen.
+
+       For example: ``geometry=1280x720+100+50`` specifies a window 1280 pixels
+       wide by 720 high, with the top left corner 100 pixels right and 50 pixels
+       down from the top left corner of the screen.
 
    * - ``passthru``
      - Indicates a passthrough device. Use the parameter with the format
