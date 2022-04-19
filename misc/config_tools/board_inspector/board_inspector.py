@@ -6,10 +6,12 @@
 #
 
 import sys, os
+import re
 import logging
 import subprocess # nosec
 import lxml.etree
 import argparse
+from collections import namedtuple
 from importlib import import_module
 from cpuparser import parse_cpuid, get_online_cpu_ids, get_offline_cpu_ids
 
@@ -17,6 +19,20 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir))
 
 from inspectorlib import validator
+
+class AddLLCCATAction(argparse.Action):
+    CATInfo = namedtuple("CATInfo", ["capacity_mask_length", "clos_number", "has_CDP"])
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        pattern = re.compile("([0-9]+),([0-9]+),(true|false|y|n|yes|no)")
+        if option_string:
+            m = pattern.match(values.lower())
+            if not m:
+                parser.error(f"{values} is ill-formed. The expected format is: <capacity_mask_length:int>,<clos_number:int>,<has_CDP:bool>")
+            v = self.CATInfo(int(m.group(1)), int(m.group(2)), m.group(3) in ["true", "y", "yes"])
+        else:
+            v = None
+        setattr(namespace, self.dest, v)
 
 def check_deps():
     # Check that the required tools are installed on the system
@@ -136,6 +152,8 @@ if __name__ == "__main__":
     parser.add_argument("--basic", action="store_true", default=False, help="do not extract advanced information such as ACPI namespace")
     parser.add_argument("--loglevel", default="warning", help="choose log level, e.g. info, warning or error")
     parser.add_argument("--check-device-status", action="store_true", default=False, help="filter out devices whose _STA object evaluates to 0")
+    parser.add_argument("--add-llc-cat", default=None, action=AddLLCCATAction,
+                        metavar="<capacity_mask_length:int>,<clos_number:int>,<has_CDP:bool>", help="manually set the Cache Allocation Technology capability of the last level cache")
     args = parser.parse_args()
     try:
         logging.basicConfig(level=args.loglevel.upper())
