@@ -203,8 +203,8 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
         <xs:documentation>Specify the COM base for each legacy virtual UART.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="vbdf" type="VBDFType" minOccurs="0" maxOccurs="1">
-      <xs:annotation acrn:title="Virtual BDF">
+    <xs:element name="vbdf" type="VBDFType">
+      <xs:annotation acrn:title="Virtual BDF" acrn:defaults="[f'00:{i:02x}.0' for i in range(16, 24)]" acrn:unique-among="//vuart_connection/endpoint[vm_name=$parent/vm_name]/vbdf/text()">
         <xs:documentation>Specify the virtual Bus:Device.Function (BDF) for each PCI virtual UART. Virtual BDF is automatically assigned when the configuration is saved and can be changed if needed.</xs:documentation>
       </xs:annotation>
     </xs:element>

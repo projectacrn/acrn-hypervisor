@@ -18,6 +18,7 @@ class ScenarioTransformer:
 
     def __init__(self, xsd_etree, visit_optional_node=False):
         self.xsd_etree = xsd_etree
+        self.xml_etree = None
 
         self._visit_optional_node = visit_optional_node
 
@@ -92,7 +93,11 @@ class ScenarioTransformer:
         return []
 
     def transform(self, xml_etree):
+        self.xml_etree = xml_etree
+
         xml_root_node = xml_etree.getroot()
         xsd_root_node = self.get_node(self.xsd_etree, f".//xs:element[@name='{xml_root_node.tag}']")
         if xsd_root_node is not None:
             self.transform_node(xsd_root_node, xml_root_node)
+
+        self.xml_etree = None
