@@ -310,6 +310,12 @@ pci_parse_slot(char *opt)
 		goto done;
 	}
 
+	if ((strcmp("pci-gvt", emul) == 0) || (strcmp("virtio-hdcp", emul) == 0)
+			|| (strcmp("npk", emul) == 0) || (strcmp("virtio-coreu", emul) == 0)) {
+		pr_warn("The \"%s\" parameter is obsolete and ignored\n", emul);
+		goto done;
+	}
+
 	/* <bus>:<slot>:<func> */
 	if (parse_bdf(str, &bnum, &snum, &fnum, 10) != 0)
 		snum = -1;

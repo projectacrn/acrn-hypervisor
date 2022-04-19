@@ -799,6 +799,7 @@ static struct option long_options[] = {
 	{"version",		no_argument,		0, 'v' },
 	{"gvtargs",		required_argument,	0, 'G' },
 	{"help",		no_argument,		0, 'h' },
+	{"mac_seed",		required_argument,	0, CMD_OPT_MAC_SEED},
 
 	/* Following cmd option only has long option */
 #ifdef CONFIG_VM_CFG
@@ -941,6 +942,10 @@ main(int argc, char *argv[])
 					"invalid virtio poll interval %s",
 					optarg);
 			}
+			break;
+		case CMD_OPT_MAC_SEED:
+			pr_warn("The \"--mac_seed\" parameter is obsolete\n");
+			pr_warn("Please use the \"virtio-net,<device_type>=<name> mac_seed=<seed_string>\"\n");
 			break;
 		case CMD_OPT_DEBUGEXIT:
 			debugexit_enabled = true;
