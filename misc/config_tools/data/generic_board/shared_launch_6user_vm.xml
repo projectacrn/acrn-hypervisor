@@ -89,8 +89,12 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM1</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -124,8 +128,14 @@
     <name>POST_RT_VM1</name>
     <lapic_passthrough>y</lapic_passthrough>
     <cpu_affinity>
-      <pcpu_id>2</pcpu_id>
-      <pcpu_id>3</pcpu_id>
+      <pcpu>
+        <pcpu_id>2</pcpu_id>
+        <real_time_vcpu>y</real_time_vcpu>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>3</pcpu_id>
+        <real_time_vcpu>y</real_time_vcpu>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -158,8 +168,12 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM2</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -192,8 +206,12 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM3</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -226,8 +244,12 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM4</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -260,8 +282,12 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM5</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
