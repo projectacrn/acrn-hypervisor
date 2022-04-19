@@ -152,7 +152,7 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 
 <xs:simpleType name="VMKernelType">
   <xs:annotation>
-    <xs:documentation>A string with either ``KERNEL_BZIMAGE``, ``KERNEL_ELF`` or
+    <xs:documentation>A string with either ``KERNEL_BZIMAGE`` or
 ``KERNEL_RAWIMAGE``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
@@ -165,6 +165,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:simpleType>
 
 <xs:simpleType name="ConsoleVuartConfiguration">
+  <xs:annotation>
+    <xs:documentation>A string with either ``None``, ``COM Port 1``, ``COM Port 2``, ``COM Port 3``, or ``PCI``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="None" />
     <xs:enumeration value="COM Port 1" />
@@ -309,7 +312,7 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
     <xs:element name="use_type" type="VirtioConsoleUseType" minOccurs="0">
       <xs:annotation acrn:title="Use type">
         <xs:documentation>Specify device type in guest, ether HVC console when user config it as virtio console or /dev/vportXpY
-        device file when user config it as virtio serial port, which can be read and written from the user space.</xs:documentation>
+device file when user config it as virtio serial port, which can be read and written from the user space.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="backend_type" type="VirtioConsoleBackendType" minOccurs="0">
@@ -356,6 +359,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:complexType>
 
 <xs:simpleType name="OSType">
+  <xs:annotation>
+    <xs:documentation>A string with either ``Non-Windows OS`` or  ``Windows OS``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="Non-Windows OS" />
     <xs:enumeration value="Windows OS" />

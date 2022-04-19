@@ -381,7 +381,7 @@ argument and memory.</xs:documentation>
     </xs:element>
     <xs:element name="console_vuart" type="ConsoleVuartConfiguration" default="None">
       <xs:annotation acrn:title="Console virtual UART type" acrn:views="basic">
-        <xs:documentation>Select the console virtual UART (vUART) type. Add the console settings to the kernel command line by typing them in the "Linux kernel command-line parameters" text box (for example, console=ttyS0 for COM port 1).</xs:documentation>
+        <xs:documentation>Select the console virtual UART (vUART) type. Add the console settings to the kernel command line by typing them in the "Linux kernel command-line parameters" text box (for example, ``console=ttyS0`` for COM port 1).</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
@@ -425,7 +425,7 @@ argument and memory.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
-          <xs:documentation>Input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4</xs:documentation>
+          <xs:documentation>Input format: ``bus#-port#[:bus#-port#: ...]``, for example, ``1-2:2-4``.</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:pattern value="([\d]+-[\d]+){0,1}(:[\d]+-[\d]+)*" />
@@ -441,28 +441,27 @@ argument and memory.</xs:documentation>
           <xs:element name="console" type="VirtioConsoleConfiguration" minOccurs="0">
             <xs:annotation acrn:title="Virtio console device" acrn:views="basic">
               <xs:documentation>Virtio console device for data input and output.
-              The virtio console BE driver copies data from the frontend's transmitting virtqueue when it receives a kick on virtqueue (implemented as a vmexit).
-              The BE driver then writes the data to backend, and can be implemented as PTY, TTY, STDIO, and regular file.
-              For details, reference to https://projectacrn.github.io/latest/developer-guides/hld/virtio-console.html.</xs:documentation>
+The virtio console BE driver copies data from the frontend's transmitting virtqueue when it receives a kick on virtqueue (implemented as a vmexit).
+The BE driver then writes the data to backend, and can be implemented as PTY, TTY, STDIO, and regular file.
+For details, see :ref:`virtio-console`.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="network" type="VirtioNetworkConfiguration" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation acrn:title="Virtio network device" acrn:views="basic">
-              <xs:documentation>The virtio network device emulates a virtual network interface card (NIC) for the VM.
-              The frontend is the virtio network driver, simulating the virtual NIC. The backend could be:
-              1. ``tap`` device /dev/net/tun; 2. ``MacVTap`` device (/dev/tapx); 3. ``vhost`` device /dev/vhost-net.</xs:documentation>
+                <xs:documentation>The virtio network device emulates a virtual network interface card (NIC) for the VM.  The frontend
+is the virtio network driver, simulating the virtual NIC. The backend could be: ``tap`` device /dev/net/tun,
+``MacVTap`` device /dev/tapx, or ``vhost`` device /dev/vhost-net</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="input" type="VirtioInputConfiguration" minOccurs="0" maxOccurs="unbounded">
 	        <xs:annotation acrn:title="Virtio input device" acrn:views="basic">
-	          <xs:documentation>The virtio input device creates a virtual human interface device such as a keyboard, mouse, and tablet.
-              It sends Linux input layer events over virtio.</xs:documentation>
+                <xs:documentation>The virtio input device creates a virtual human interface device such as a keyboard,
+mouse, and tablet.  It sends Linux input layer events over virtio.</xs:documentation>
 	        </xs:annotation>
 	      </xs:element>
           <xs:element name="block" type="xs:string" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation acrn:title="Virtio block device" acrn:views="basic">
-              <xs:documentation>The virtio-blk device presents a block device to the VM.
-              Each virtio-blk device appears as a disk inside the VM.</xs:documentation>
+              <xs:documentation>The virtio-blk device presents a block device to the VM. Each virtio-blk device appears as a disk inside the VM.</xs:documentation>
             </xs:annotation>
           </xs:element>
         </xs:all>
