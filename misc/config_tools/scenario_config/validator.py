@@ -101,7 +101,7 @@ class ScenarioValidator:
 
     @staticmethod
     def format_paths(unified_node, parent_map, report_on, variables):
-        elems = elementpath.select(unified_node, report_on, variables = variables)
+        elems = elementpath.select(unified_node, report_on, variables = variables, parser = elementpath.XPath2Parser)
         paths = []
         for elem in elems:
             path = []
@@ -156,7 +156,7 @@ class ScenarioValidator:
         expr_regex = re.compile("{[^{}]*}")
         exprs = set(expr_regex.findall(description))
         for expr in exprs:
-            result = elementpath.select(unified_node, expr.strip("{}"), variables = variables)
+            result = elementpath.select(unified_node, expr.strip("{}"), variables = variables, parser = elementpath.XPath2Parser)
             if isinstance(result, list):
                 if len(result) == 1:
                     value = format_node(result[0])

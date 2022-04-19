@@ -16,7 +16,10 @@ BaseParser = elementpath.XPath2Parser
 class CustomParser(BaseParser):
     SYMBOLS = BaseParser.SYMBOLS | {
         # Bit-wise operations
-        'bitwise-and'
+        'bitwise-and',
+
+        'has',
+        'duplicate-values',
         }
 
 method = CustomParser.method
@@ -52,6 +55,34 @@ def evaluate(self, context=None):
                 raise self.error('XPTY0004', err)
 
     return aux(OPERATORS_MAP[self.symbol])
+
+@method(function('has', nargs=2))
+def evaluate_has_function(self, context=None):
+    arg2 = self.get_argument(context, index=1, cls=str)
+    for item in self[0].select(context):
+        value = self.data_value(item)
+        if value == arg2:
+            return True
+    return False
+
+@method(function('duplicate-values', nargs=1))
+def select_duplicate_values_function(self, context=None):
+    def duplicate_values():
+        results = []
+        reported = []
+        for item in self[0].select(context):
+            value = self.data_value(item)
+            if context is not None:
+                context.item = value
+
+            if value in results:
+                if value not in reported:
+                    yield value
+                    reported.append(value)
+            else:
+                results.append(value)
+
+    yield from duplicate_values()
 
 ###
 # Collection of counter examples
