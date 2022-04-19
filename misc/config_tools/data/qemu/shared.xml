@@ -81,7 +81,9 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM1</name>
     <cpu_affinity>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>

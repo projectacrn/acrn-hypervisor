@@ -807,7 +807,7 @@ def main(args):
                     if mmio_dev_node is not None and mmio_dev_node.text.strip() == 'y':
                         dict_passthru_devices[vm_id].append(mmio_dev_node.tag)
             dict_pcpu_list[vm_id] = []
-            for pcpu_id in vm.findall('cpu_affinity/pcpu_id'):
+            for pcpu_id in vm.findall('cpu_affinity//pcpu_id'):
                 if pcpu_id is not None and pcpu_id.text.strip() in pcpu_list:
                     dict_pcpu_list[vm_id].append(int(pcpu_id.text))
 

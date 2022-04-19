@@ -206,7 +206,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     ###
     # CPU and memory resources
     ###
-    cpus = set(eval_xpath_all(vm_scenario_etree, ".//cpu_affinity/pcpu_id[text() != '']/text()"))
+    cpus = set(eval_xpath_all(vm_scenario_etree, ".//cpu_affinity//pcpu_id[text() != '']/text()"))
     lapic_ids = cpu_id_to_lapic_id(board_etree, vm_name, cpus)
     if lapic_ids:
         script.add_dynamic_dm_parameter("add_cpus", f"{' '.join([str(x) for x in sorted(lapic_ids)])}")

@@ -78,8 +78,14 @@
     <name>PRE_RT_VM0</name>
     <lapic_passthrough>y</lapic_passthrough>
     <cpu_affinity>
-      <pcpu_id>6</pcpu_id>
-      <pcpu_id>7</pcpu_id>
+      <pcpu>
+        <pcpu_id>6</pcpu_id>
+        <real_time_vcpu>y</real_time_vcpu>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>7</pcpu_id>
+        <real_time_vcpu>y</real_time_vcpu>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -118,12 +124,24 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>ACRN_Service_VM</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
-      <pcpu_id>2</pcpu_id>
-      <pcpu_id>3</pcpu_id>
-      <pcpu_id>4</pcpu_id>
-      <pcpu_id>5</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>2</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>3</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>4</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>5</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -149,9 +167,15 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM1</name>
     <cpu_affinity>
-      <pcpu_id>1</pcpu_id>
-      <pcpu_id>2</pcpu_id>
-      <pcpu_id>3</pcpu_id>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>2</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>3</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
@@ -166,8 +190,12 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM2</name>
     <cpu_affinity>
-      <pcpu_id>4</pcpu_id>
-      <pcpu_id>5</pcpu_id>
+      <pcpu>
+        <pcpu_id>4</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>5</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>

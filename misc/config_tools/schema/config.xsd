@@ -342,7 +342,7 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Specify TPM2 FIXUP for VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="cpu_affinity" type="CPUAffinityConfiguration" minOccurs="0">
+    <xs:element name="cpu_affinity" type="CPUAffinityConfigurations" minOccurs="0">
       <xs:annotation acrn:title="Physical CPU affinity" acrn:views="basic">
         <xs:documentation>Select a subset of physical CPUs that this VM can use. More than one can be selected.</xs:documentation>
       </xs:annotation>

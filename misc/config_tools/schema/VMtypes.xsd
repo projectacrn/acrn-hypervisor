@@ -43,8 +43,24 @@
 </xs:simpleType>
 
 <xs:complexType name="CPUAffinityConfiguration">
+  <xs:all>
+    <xs:element name="pcpu_id" type="xs:integer" default="2">
+      <xs:annotation acrn:title="pCPU ID"
+		     acrn:options="//processors//thread/cpu_id/text()" acrn:options-sorted-by="int">
+        <xs:documentation>ID of the pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="real_time_vcpu" type="Boolean" default="n">
+      <xs:annotation acrn:title="Real-time vCPU">
+        <xs:documentation>Whether this vCPU is used for real-time-critical workloads.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+  </xs:all>
+</xs:complexType>
+
+<xs:complexType name="CPUAffinityConfigurations">
   <xs:sequence>
-    <xs:element name="pcpu_id" type="xs:integer" default="2" minOccurs="0" maxOccurs="unbounded">
+    <xs:element name="pcpu" type="CPUAffinityConfiguration" minOccurs="0" maxOccurs="unbounded">
       <xs:annotation>
         <xs:documentation>A pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
       </xs:annotation>
