@@ -219,7 +219,7 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
      </xs:annotation>
    </xs:element>
    <xs:element name="VBDF" type = "VBDFType">
-     <xs:annotation acrn:title="Virtual BDF">
+     <xs:annotation acrn:title="Virtual BDF" acrn:defaults="[f'00:{i:02x}.0' for i in range(8, 16)]" acrn:unique-among="//IVSHMEM_VM[VM_NAME=$parent/VM_NAME]/VBDF/text()">
        <xs:documentation>Virtual BDF (Bus Device Function) is automatically assigned and can be changed if needed. Set in Hex.</xs:documentation>
      </xs:annotation>
    </xs:element>
