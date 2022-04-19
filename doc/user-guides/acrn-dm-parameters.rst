@@ -478,7 +478,7 @@ arguments used for configuration.  Here is a table describing these emulated dev
      - Virtio GPU type device, parameters format is:
        ``virtio-gpu[,geometry=<width>x<height>+<x_off>+<y_off> | fullscreen]``
 
-       * ``<geometry>`` specifies the mode of virtual display, windowed or fullscreen.
+       * ``geometry`` specifies the mode of virtual display, windowed or fullscreen.
          If it is not set, the virtual display will use 1280x720 resolution in windowed mode.
        * ``width`` specifies the width of the virtual display window in pixels.
        * ``height`` specifies the height of the virtual display window in pixels.
