@@ -377,3 +377,15 @@ img.drop-shadow {
 .bg-lightgrey {
     background-color: lightgrey;
 }
+
+/* The style in theme.css for tables uses a slightly smaller font size, but was
+   only affecting paragraphs where the immediate parent was a th or td tag.  Fix
+   this so that all paragraphs within a th or td tag have this style applied.
+   (This shows up if you have a table with a bullet list: the bullet list paragraph
+   fontsize went back to the default.) */
+
+html.writer-html5 .rst-content table.docutils td p {
+   line-height: 1rem;
+   margin-bottom: 0;
+   font-size: .9rem;
+}
