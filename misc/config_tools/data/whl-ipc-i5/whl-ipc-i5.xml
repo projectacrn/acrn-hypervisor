@@ -252,10 +252,10 @@
 	ff000000-ffffffff : Reserved
 	  ff000000-ffffffff : pnp 00:0e
 	100000000-26dffffff : System RAM
-	  169c00000-16ac02556 : Kernel code
-	  16ae00000-16b83cfff : Kernel rodata
-	  16ba00000-16bd6637f : Kernel data
-	  16c02c000-16c5fffff : Kernel bss
+	  162400000-163402556 : Kernel code
+	  163600000-16403cfff : Kernel rodata
+	  164200000-16456637f : Kernel data
+	  16482c000-164dfffff : Kernel bss
 	26e000000-26fffffff : RAM buffer
 	</IOMEM_INFO>
   <BLOCK_DEVICE_INFO>
@@ -373,6 +373,33 @@
       <capability id="rdtscp_ia32_tsc_aux"/>
       <capability id="intel_64"/>
       <capability id="invariant_tsc"/>
+      <capability id="fast_string"/>
+      <capability id="vmx_pinbased_ctls_irq_exit"/>
+      <capability id="ept"/>
+      <capability id="apicv"/>
+      <capability id="vmx_procbased_ctls_tsc_off"/>
+      <capability id="vmx_procbased_ctls_tpr_shadow"/>
+      <capability id="vmx_procbased_ctls_io_bitmap"/>
+      <capability id="vmx_procbased_ctls_msr_bitmap"/>
+      <capability id="vmx_procbased_ctls_hlt"/>
+      <capability id="vmx_procbased_ctls_secondary"/>
+      <capability id="vmx_exit_ctls_ack_irq"/>
+      <capability id="vmx_exit_ctls_save_pat"/>
+      <capability id="vmx_exit_ctls_load_pat"/>
+      <capability id="vmx_exit_ctls_host_addr64"/>
+      <capability id="vmx_entry_ctls_load_pat"/>
+      <capability id="vmx_entry_ctls_ia32e_mode"/>
+      <capability id="unrestricted_guest"/>
+      <capability id="vmx_procbased_ctls2_vapic"/>
+      <capability id="vmx_procbased_ctls2_ept"/>
+      <capability id="vmx_procbased_ctls2_vpid"/>
+      <capability id="vmx_procbased_ctls2_rdtscp"/>
+      <capability id="vmx_procbased_ctls2_unrestrict"/>
+      <capability id="invept"/>
+      <capability id="invvpid"/>
+      <capability id="ept_2mb_page"/>
+      <capability id="vmx_ept_1gb_page"/>
+      <attribute id="cpuid_level">0x16</attribute>
       <attribute id="physical_address_bits">39</attribute>
       <attribute id="linear_address_bits">48</attribute>
     </model>
@@ -1864,10 +1891,10 @@
           </status>
           <resource id="res1" type="irq" int="16"/>
           <resource id="res0" type="memory" min="0xfe020000" max="0xfe020fff" len="0x1000"/>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.UCMX</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.HDAC</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.TPD0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C0.UCMX</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C0.PA01</dependency>
           <device id="INT0000">
             <acpi_object>\_SB_.PCI0.I2C0.HDAC</acpi_object>
@@ -1953,8 +1980,8 @@
           <resource id="res1" type="irq" int="17"/>
           <resource id="res0" type="memory" min="0xfe022000" max="0xfe022fff" len="0x1000"/>
           <dependency type="provides resources to">\_SB_.PCI0.I2C1.UCMX</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPL1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C1.TPD0</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C1.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
@@ -2011,17 +2038,17 @@
           </status>
           <resource id="res1" type="irq" int="18"/>
           <resource id="res0" type="memory" min="0xfe024000" max="0xfe024fff" len="0x1000"/>
-          <dependency type="provides resources to">\_SB_.PCI0.LNK1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.LNK0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.CAM0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.CLP0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.PMIC</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.LNK3</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.CLP3</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPD0</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.CLP2</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.CAM0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.PMIC</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPL1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C2.UCMX</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK1</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK3</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C2.TPD0</dependency>
           <device id="INT3471" address="0x0">
             <acpi_object>\_SB_.PCI0.I2C2.CAM0</acpi_object>
             <compatible_id>INT3471</compatible_id>
@@ -2109,11 +2136,11 @@
           </status>
           <resource id="res1" type="irq" int="19"/>
           <resource id="res0" type="memory" min="0xfe026000" max="0xfe026fff" len="0x1000"/>
+          <dependency type="provides resources to">\_SB_.PCI0.LNK2</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPD0</dependency>
+          <dependency type="provides resources to">\_SB_.PCI0.I2C3.UCMX</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.CLP1</dependency>
           <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPL1</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C3.TPD0</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.LNK2</dependency>
-          <dependency type="provides resources to">\_SB_.PCI0.I2C3.UCMX</dependency>
           <device id="XXXX0000">
             <acpi_object>\_SB_.PCI0.I2C3.TPD0</acpi_object>
             <compatible_id>PNP0C50</compatible_id>
