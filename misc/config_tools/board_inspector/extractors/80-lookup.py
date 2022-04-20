@@ -134,7 +134,7 @@ def lookup_pci_devices(board_etree):
     for device in devices:
         lookup_pci_device(device, ids)
 
-    buses = board_etree.xpath("//bus[@type = 'pci']")
+    buses = board_etree.xpath("//bus[@type = 'pci' and vendor and class]")
     for bus in buses:
         lookup_pci_device(bus, ids)
 
