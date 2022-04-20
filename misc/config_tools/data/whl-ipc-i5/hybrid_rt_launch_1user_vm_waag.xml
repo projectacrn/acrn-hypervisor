@@ -109,7 +109,7 @@
       <TPM2>n</TPM2>
     </mmio_resources>
     <pci_devs>
-      <pci_dev>00:17.0 SATA controller: Intel Corporation Device 9dd3 (rev 30)</pci_dev>
+      <pci_dev>00:17.0 SATA controller: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode] (rev 30)</pci_dev>
       <pci_dev>03:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)</pci_dev>
     </pci_devs>
   </vm>
