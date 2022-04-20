@@ -298,7 +298,7 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
-          <xs:documentation>string from 1 to 32 characters long.</xs:documentation>
+          <xs:documentation>A string from 1 to 32 characters long (with no spaces).</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:minLength value="1" />
@@ -474,14 +474,14 @@ mouse, and tablet.  It sends Linux input layer events over virtio.</xs:documenta
 <xs:complexType name="ACRNConfigType">
   <xs:all>
     <xs:element name="hv" type="HVConfigType">
-      <xs:annotation>
+      <xs:annotation acrn:title="Hypervisor Options">
         <xs:documentation>The hypervisor configuration defines a working scenario and target
 board by configuring the hypervisor image features and capabilities such as
 setting up the log and the serial port.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="vm" maxOccurs="unbounded">
-      <xs:annotation>
+      <xs:annotation acrn:title="Virtual Machine Options">
         <xs:documentation>VM configuration includes **scenario-based** VM configuration
 information that is used to describe the characteristics and attributes for
 all VMs in a user scenario. It also includes **launch script-based** VM
