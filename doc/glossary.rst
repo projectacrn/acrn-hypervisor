@@ -177,7 +177,6 @@ Glossary of Terms
       post-launched standard, and post-launched real-time.  *(Historically, a
       User VM was also called a User OS, or simply UOS.)*
 
-   VM
    Virtual Machine
      A compute resource that uses software instead of physical hardware to run a
      program. Multiple VMs can run independently on the same physical machine,

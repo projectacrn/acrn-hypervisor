@@ -13,12 +13,12 @@ into XML in the scenario file:
 
 #. Configure system level features:
 
-   - Edit :option:`hv.FEATURES.RDT.RDT_ENABLED` to `y` to enable RDT
+   - Edit ``hv.FEATURES.RDT.RDT_ENABLED`` to `y` to enable RDT
 
-   - Edit :option:`hv.FEATURES.RDT.CDP_ENABLED` to `n` to disable CDP.
+   - Edit ``hv.FEATURES.RDT.CDP_ENABLED`` to `n` to disable CDP.
      vCAT requires CDP to be disabled.
 
-   - Edit :option:`hv.FEATURES.RDT.VCAT_ENABLED` to `y` to enable vCAT
+   - Edit ``hv.FEATURES.RDT.VCAT_ENABLED`` to `y` to enable vCAT
 
      .. code-block:: xml
         :emphasize-lines: 3,4,5
@@ -34,9 +34,9 @@ into XML in the scenario file:
 
 #. In each Guest VM configuration:
 
-   - Edit :option:`vm.virtual_cat_support` to 'y' to enable the vCAT feature on the VM.
+   - Edit ``vm.virtual_cat_support`` to 'y' to enable the vCAT feature on the VM.
 
-   - Edit :option:`vm.clos.vcpu_clos` to assign COS IDs to the VM.
+   - Edit ``vm.clos.vcpu_clos`` to assign COS IDs to the VM.
 
      If ``GUEST_FLAG_VCAT_ENABLED`` is not specified for a VM (abbreviated as RDT VM):
      ``vcpu_clos`` is per CPU in a VM and it configures each CPU in a VM to a desired COS ID.

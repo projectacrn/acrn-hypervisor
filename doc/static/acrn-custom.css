@@ -389,3 +389,31 @@ html.writer-html5 .rst-content table.docutils td p {
    margin-bottom: 0;
    font-size: .9rem;
 }
+
+/* Simulate look of an option directive on glossary items (particularly used on
+ * config option listings so we can use a glossary to sort config options within
+ * a section of options*/
+div#scenario-configuration-options dl.glossary dt  {
+    display: table;
+    margin: 6px 10px;
+    font-weight: bold;
+    color: #000;
+    line-height: normal;
+    background: #e7f2fa;
+    color: #2980b9;
+    border-top: 3px solid #6ab0de;
+    padding: 6px;
+    position: relative;
+}
+div#scenario-configuration-options dl.glossary dt  {
+   float: left;
+   clear: left;
+}
+div#scenario-configuration-options dl.glossary dd>p  {
+   padding-top: 12px;
+   line-height: normal;
+   clear: right;
+}
+div#scenario-configuration-options dl.glossary dd ul  {
+   clear: both;
+}
