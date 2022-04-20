@@ -6,4 +6,9 @@ $(document).ready(function(){
 
    /* open external links in a new tab */
    $('a[class*=external]').attr({target: '_blank', rel: 'noopener'});
+
+   /* copy image alt tags in config option page as title for hover text tool tip by browser */
+   $("div#scenario-configuration-options img[alt]").each(function(){
+       $(this).attr('title', $(this).attr('alt'));
+   });
 });

@@ -751,9 +751,9 @@ During the documentation ``make html`` processing, the documentation annotations
 in the ``.xsd`` files are extracted and transformed into reStructuredText using
 an XSLT transformation found in ``doc/scripts/configdoc.xsl``. The generated
 option documentation is organized and formatted to make it easy to create links
-to specific option descriptions using an ``:option:`` role, for example,
-``:option:`hv.DEBUG_OPTIONS.BUILD_TYPE``` would link to
-:option:`hv.DEBUG_OPTIONS.BUILD_TYPE`.
+to specific option descriptions using an ``:term:`` role, for example,
+``:term::`Build type``` would link to
+:term:`Build type`.
 
 The transformed option documentation is
 created in the ``_build/rst/reference/configdoc.txt`` file and included by

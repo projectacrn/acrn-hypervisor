@@ -124,7 +124,7 @@ with these settings:
 
 #. Configure system level features:
 
-   - Edit :option:`hv.FEATURES.SCHEDULER` to ``SCHED_NOOP`` to disable CPU sharing
+   - Edit ``hv.features.scheduler`` to ``SCHED_NOOP`` to disable CPU sharing
 
      .. code-block:: xml
         :emphasize-lines: 3,18
@@ -150,11 +150,11 @@ with these settings:
 
 #. In each guest VM configuration:
 
-   - Edit :option:`vm.nested_virtualization_support` on the Service VM section and set it to `y`
+   - Edit ``vm.nested_virtualization_support`` on the Service VM section and set it to `y`
      to enable the nested virtualization feature on the Service VM.
-   - Edit :option:`vm.lapic_passthrough` and set it to `y` to enable local
+   - Edit ``vm.lapic_passthrough`` and set it to `y` to enable local
      APIC passthrough on the Service VM.
-   - Edit :option:`vm.cpu_affinity.pcpu_id` to assign ``pCPU`` IDs to run the Service VM. If you are
+   - Edit ``vm.cpu_affinity.pcpu_id`` to assign ``pCPU`` IDs to run the Service VM. If you are
      using debug build and need the hypervisor console, don't assign
      ``pCPU0`` to the Service VM.
 
@@ -179,7 +179,7 @@ with these settings:
      the PCI-vUART for the Service VM. Refer to :ref:`Enable vUART Configurations <vuart_config>`
      for more details about VUART configuration.
 
-   - Set :option:`vm.console_vuart` to ``PCI``
+   - Set ``vm.console_vuart`` to ``PCI``
 
      .. code-block:: xml
         :emphasize-lines: 1
