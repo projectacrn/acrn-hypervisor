@@ -64,9 +64,6 @@
     <clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
-    <memory>
-      <start_hpa>0</start_hpa>
-    </memory>
     <os_config>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>

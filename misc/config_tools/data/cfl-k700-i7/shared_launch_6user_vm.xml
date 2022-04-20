@@ -63,10 +63,6 @@
     <clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
-    <memory>
-      <start_hpa>0</start_hpa>
-      <size>0x20000000</size>
-    </memory>
     <os_config>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
@@ -93,7 +89,7 @@
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>4096</whole>
+      <size>4096</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <pci_devs>
@@ -134,7 +130,7 @@
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>1024</whole>
+      <size>1024</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
@@ -172,7 +168,7 @@
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>512</whole>
+      <size>512</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
@@ -210,7 +206,7 @@
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>512</whole>
+      <size>512</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
@@ -248,7 +244,7 @@
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>512</whole>
+      <size>512</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
@@ -286,7 +282,7 @@
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>512</whole>
+      <size>512</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
