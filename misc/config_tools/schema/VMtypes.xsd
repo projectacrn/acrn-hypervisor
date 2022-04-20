@@ -7,8 +7,8 @@
   <xs:annotation>
     <xs:documentation>Current supported VM types are:
 
-- ``PRE_LAUNCHED_VM`` pre-launched VM
 - ``SERVICE_VM`` Service VM
+- ``PRE_LAUNCHED_VM`` pre-launched VM
 - ``POST_LAUNCHED_VM`` post-launched VM</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
@@ -46,8 +46,7 @@
   <xs:sequence>
     <xs:element name="pcpu_id" type="xs:integer" default="2" minOccurs="0" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>A pCPU that this VM's vCPU is allowed to pin
-to.</xs:documentation>
+        <xs:documentation>A pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -180,7 +179,7 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 
 <xs:simpleType name="VuartType">
   <xs:annotation>
-    <xs:documentation>vCOM type</xs:documentation>
+    <xs:documentation>A string with value: ``legacy`` or ``pci``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="legacy">
@@ -214,7 +213,11 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 
 <xs:complexType name="VuartConnectionType">
   <xs:sequence>
-    <xs:element name="name" type="xs:string" />
+      <xs:element name="name" type="xs:string">
+          <xs:annotation>
+        <xs:documentation>Specify the vUART name.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="type" type="VuartType" default="legacy">
       <xs:annotation acrn:title="Type">
         <xs:documentation>Select the communication virtual UART (vUART) type.</xs:documentation>
@@ -257,6 +260,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:complexType>
 
 <xs:simpleType name="VirtioNetworkFrameworkType">
+  <xs:annotation>
+       <xs:documentation>A string with value: ``Kernel based (Virtual Host)`` or ``User space based (VBSU)``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="Kernel based (Virtual Host)" />
     <xs:enumeration value="User space based (VBSU)" />
@@ -275,6 +281,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
         <xs:documentation>Specify the network interface name that will appear in the Service VM. Use the `ip a` command in the Service VM to display the network interface names.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
+  <xs:annotation>
+       <xs:documentation>A string of letters, digits, ``_``, or ``-``.</xs:documentation>
+  </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:pattern value="[a-zA-Z0-9_\-]+" />
         </xs:restriction>
@@ -284,6 +293,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:complexType>
 
 <xs:simpleType name="VirtioConsoleUseType">
+  <xs:annotation>
+       <xs:documentation>A string with value: ``Virtio console`` or ``Virtio serial port``</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="Virtio console" />
     <xs:enumeration value="Virtio serial port" />
@@ -291,6 +303,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:simpleType>
 
 <xs:simpleType name="VirtioConsoleBackendType">
+  <xs:annotation>
+       <xs:documentation>A string with value: ``pty``, ``stdio``, or ``file``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="pty" />
     <xs:enumeration value="stdio" />
@@ -350,6 +365,9 @@ device file when user config it as virtio serial port, which can be read and wri
         <xs:documentation>Specifying unique identifier to distinguish same devices in guest.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
+         <xs:annotation>
+              <xs:documentation>A string with letters, digits, ``_``, or ``-``.</xs:documentation>
+         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:pattern value="[a-zA-Z0-9_\-]*" />
         </xs:restriction>
