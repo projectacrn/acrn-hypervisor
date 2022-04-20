@@ -233,45 +233,52 @@ class SharedMemoryRegions:
         return node
 
 class VirtioDevices(object):
-
     def __init__(self, old_xml_etree):
+        self.gpus = []
         self.blocks = []
         self.inputs = []
         self.networks = []
-        self.console = namedtuple("console", ["use_type", "backend_type", "file_path"])
-        self.old_xml_etree = old_xml_etree
+        self.consoles = []
 
-    def console_encoding(self, text):
-        if text is not None:
-            self.console.use_type = "Virtio console" if text.startswith("@") else "Virtio serial port"
-            self.console.backend_type = text.split(":")[0].replace("@", "")
-            self.console.file_path = text.split("=")[1].split(":")[0] if "=" in text else None
+    def console_encoding(self, console):
+        if console.text is not None:
+            use_type = "Virtio console" if console.text.startswith("@") else "Virtio serial port"
+            backend_type = console.text.split(":")[0].replace("@", "")
+            file_path = console.text.split("=")[1].split(":")[0] if "=" in console.text else None
         else:
-            self.console = self.console(use_type=None, backend_type=None, file_path=None)
-        return self.console
+            use_type = console.xpath("./use_type")[0].text if console.xpath("./use_type") else None
+            backend_type = console.xpath("./backend_type")[0].text if console.xpath("./backend_type") else None
+            file_path = console.xpath("./file_path")[0].text if console.xpath("./file_path") else None
+        self.consoles.append((use_type, backend_type, file_path))
 
-    def format_console_element(self):
+    def format_console_element(self, console):
         node = etree.Element("console")
-        etree.SubElement(node, "use_type").text = self.console.use_type
-        etree.SubElement(node, "backend_type").text = self.console.backend_type
-        if self.console.backend_type == "socket":
-            etree.SubElement(node, "sock_file_path").text = self.console.file_path
-        if self.console.backend_type == "tty":
-            etree.SubElement(node, "tty_device_path").text = self.console.file_path
-        if self.console.backend_type == "file":
-            etree.SubElement(node, "output_file_path").text = self.console.file_path
+        if console[0] is not None:
+            etree.SubElement(node, "use_type").text = console[0]
+        if console[1] is not None:
+            etree.SubElement(node, "backend_type").text = console[1]
+        if console[1] == "socket":
+            etree.SubElement(node, "sock_file_path").text = console[2]
+        if console[1] == "tty":
+            etree.SubElement(node, "tty_device_path").text = console[2]
+        if console[1] == "file":
+            etree.SubElement(node, "output_file_path").text = console[2]
         return node
 
     def format_network_element(self, network):
         node = etree.Element("network")
-        etree.SubElement(node, "virtio_framework")
-        etree.SubElement(node, "interface_name").text = network
+        if network[0] is not None:
+            etree.SubElement(node, "virtio_framework").text = network[0]
+        if network[1] is not None:
+            etree.SubElement(node, "interface_name").text = network[1]
         return node
 
     def format_input_element(self, input):
         node = etree.Element("input")
-        etree.SubElement(node, "backend_device_file").text = input
-        etree.SubElement(node, "id")
+        if input[0] is not None:
+            etree.SubElement(node, "backend_device_file").text = input[0]
+        if input[1] is not None:
+            etree.SubElement(node, "id").text = input[1]
         return node
 
     def format_block_element(self, block):
@@ -279,25 +286,51 @@ class VirtioDevices(object):
         node.text = block
         return node
 
+    def format_gpu_element(self, gpu):
+        if gpu is not None:
+            node = etree.Element("gpu")
+            node.text = gpu
+        return node
+
     def format_xml_element(self):
         node = etree.Element("virtio_devices")
-        node.append(self.format_console_element())
+        for console in self.consoles:
+            node.append(self.format_console_element(console))
         for network in self.networks:
             node.append(self.format_network_element(network))
         for input in self.inputs:
             node.append(self.format_input_element(input))
         for block in self.blocks:
             node.append(self.format_block_element(block))
+        for gpu in self.gpus:
+            node.append(self.format_gpu_element(gpu))
         return node
 
     def add_virtio_devices(self, virtio_device_node):
-        self.console = self.console_encoding(virtio_device_node.xpath("./console")[0].text)
-        for virtio_network in virtio_device_node.xpath("./network"):
-            self.networks.append(virtio_network.text)
-        for virtio_input in virtio_device_node.xpath("./input"):
-            self.inputs.append(virtio_input.text)
-        for virtio_block in virtio_device_node.xpath("./block"):
-            self.blocks.append(virtio_block.text)
+        if virtio_device_node.xpath("./network")[0].text is not None:
+            for network in virtio_device_node.xpath("./network"):
+                self.networks.append((None, network.text))
+        else:
+            for network in virtio_device_node.xpath("./network"):
+                virtio_framework = network.xpath("./virtio_framework")[0].text if network.xpath("./virtio_framework") else None
+                interface_name = network.xpath("./interface_name")[0].text if network.xpath("./interface_name") else None
+                self.networks.append((virtio_framework, interface_name))
+
+        if virtio_device_node.xpath("./input")[0].text is not None:
+            for input in virtio_device_node.xpath("./input"):
+                self.inputs.append((None, input.text))
+        else:
+            for input in virtio_device_node.xpath("./input"):
+                backend_device_file = input.xpath("./backend_device_file")[0].text if input.xpath("./backend_device_file") else None
+                id = input.xpath("./id")[0].text if input.xpath("./id") else None
+                self.inputs.append((backend_device_file, id))
+
+        for console in virtio_device_node.xpath("./console"):
+            self.console_encoding(console)
+        for block in virtio_device_node.xpath("./block"):
+            self.blocks.append(block.text)
+        for gpu in virtio_device_node.xpath("./gpu"):
+            self.gpus.append(gpu.text)
 
 class ScenarioUpgrader(ScenarioTransformer):
     @classmethod
@@ -364,17 +397,15 @@ class ScenarioUpgrader(ScenarioTransformer):
 
     def move_virtio_devices(self, xsd_element_node, xml_parent_node, new_nodes):
         virtio = VirtioDevices(self.old_xml_etree)
-
         try:
             old_data_virtio = self.get_from_old_data(xml_parent_node, ".//virtio_devices").pop()
         except IndexError as e:
             logging.debug(e)
             return
-        old_data_virtio = self.get_from_old_data(xml_parent_node, ".//virtio_devices").pop()
+
         virtio.add_virtio_devices(old_data_virtio)
         for child in old_data_virtio.iter():
             self.old_data_nodes.discard(child)
-
         new_nodes.append(virtio.format_xml_element())
         return False
 

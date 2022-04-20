@@ -103,7 +103,6 @@
     <virtio_devices>
       <console/>
       <network>
-        <virtio_framework/>
         <interface_name>WaaG</interface_name>
       </network>
       <input/>
@@ -144,7 +143,6 @@
         <backend_type>stdio</backend_type>
       </console>
       <network>
-        <virtio_framework/>
         <interface_name>RT</interface_name>
       </network>
       <input/>

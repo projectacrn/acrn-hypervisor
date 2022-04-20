@@ -114,8 +114,7 @@
     <virtio_devices>
       <console/>
       <network>
-	<virtio_framework/>
-	<interface_name>WaaG</interface_name>
+        <interface_name>WaaG</interface_name>
       </network>
       <input/>
       <block>./win10-ltsc.img</block>
@@ -155,8 +154,7 @@
         <backend_type>stdio</backend_type>
       </console>
       <network>
-	<virtio_framework/>
-	<interface_name>RT</interface_name>
+        <interface_name>RT</interface_name>
       </network>
       <input/>
       <block>./core-image-weston-intel-corei7-64.wic</block>
@@ -193,8 +191,7 @@
         <backend_type>stdio</backend_type>
       </console>
       <network>
-	<virtio_framework/>
-	<interface_name>YaaG3</interface_name>
+        <interface_name>YaaG3</interface_name>
       </network>
       <input/>
       <block>./YaaG.img</block>
@@ -231,8 +228,7 @@
         <backend_type>stdio</backend_type>
       </console>
       <network>
-	<virtio_framework/>
-	<interface_name>YaaG4</interface_name>
+        <interface_name>YaaG4</interface_name>
       </network>
       <input/>
       <block>./YaaG.img</block>
@@ -269,8 +265,7 @@
         <backend_type>stdio</backend_type>
       </console>
       <network>
-	<virtio_framework/>
-	<interface_name>YaaG5</interface_name>
+        <interface_name>YaaG5</interface_name>
       </network>
       <input/>
       <block>./YaaG.img</block>
@@ -307,8 +302,7 @@
         <backend_type>stdio</backend_type>
       </console>
       <network>
-	<virtio_framework/>
-	<interface_name>YaaG6</interface_name>
+        <interface_name>YaaG6</interface_name>
       </network>
       <input/>
       <block>./YaaG.img</block>
