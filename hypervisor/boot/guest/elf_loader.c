@@ -89,7 +89,6 @@ static void *do_load_elf32(struct acrn_vm *vm)
 	void *elf_entry = NULL, *p_elf_bss = NULL;
 	uint32_t i;
 
-	p_elf_header32 = (struct elf32_hdr *)p_elf_img;
 	/* Currently only ET_EXEC is supported */
 	if (p_elf_header32->e_type == ET_EXEC) {
 		p_prg_tbl_head32 = (struct elf32_prog_entry *)(p_elf_img + p_elf_header32->e_phoff);
