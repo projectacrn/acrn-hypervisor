@@ -48,7 +48,7 @@ to enforce the settings.
 
       <RDT>
             <RDT_ENABLED>y</RDT_ENABLED>
-            <CDP_ENABLED</CDP_ENABLED>
+            <CDP_ENABLED>n</CDP_ENABLED>
             <CLOS_MASK>0xF</CLOS_MASK>
 
 Once the cache mask is set of each individual CPU, the respective CLOS ID
