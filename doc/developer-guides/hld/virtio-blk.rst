@@ -81,7 +81,7 @@ The Device Model configuration command syntax for virtio-blk is::
     The default values for sector size and physical sector size are 512
   - ``range``: configured as ``range=<start lba in file>/<sub file size>``
     meaning the virtio-blk will only access part of the file, from the
-    ``<start lba in file>`` to ``<start lba in file> + <sub file site>``.
+    ``<start lba in file>`` to ``<start lba in file> + <sub file size>``.
 
 A simple example for virtio-blk:
 
