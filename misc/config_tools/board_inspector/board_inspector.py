@@ -80,6 +80,13 @@ def native_check():
         logging.error("Board inspector is running inside an unsupported Virtual Machine (VM). " \
         "Only KVM or QEMU is supported. Unexpected results may occur.")
 
+def check_pci_domains():
+    root_buses = filter(lambda x: x.startswith("pci"), os.listdir("/sys/devices"))
+    domain_ids = set(map(lambda x: x.split(":")[0].replace("pci", ""), root_buses))
+    if len(domain_ids) > 1:
+        logging.fatal(f"ACRN does not support platforms with multiple PCI domains {domain_ids}. Check if the BIOS has any configuration that consolidates those domains into one.")
+        sys.exit(1)
+
 def bring_up_cores():
     cpu_ids = get_offline_cpu_ids()
     for id in cpu_ids:
@@ -95,6 +102,9 @@ def main(board_name, board_xml, args):
 
     # Check if this is native os
     native_check()
+
+    # Check if there exists multiple PCI domains (which is not supported)
+    check_pci_domains()
 
     # Bring up all cores
     bring_up_cores()
