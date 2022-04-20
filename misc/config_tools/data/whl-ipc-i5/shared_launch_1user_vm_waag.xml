@@ -103,7 +103,6 @@
     <virtio_devices>
       <console/>
       <network>
-        <virtio_framework/>
         <interface_name>WaaG</interface_name>
       </network>
       <input/>
