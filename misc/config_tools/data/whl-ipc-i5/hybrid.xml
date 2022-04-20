@@ -73,10 +73,10 @@
       <size>0</size>
     </epc_section>
     <memory>
-      <start_hpa>0x100000000</start_hpa>
-      <size>0x20000000</size>
-      <start_hpa2>0x0</start_hpa2>
-      <size_hpa2>0x0</size_hpa2>
+      <hpa_region>
+        <start_hpa>0x100000000</start_hpa>
+        <size_hpa>512</size_hpa>
+      </hpa_region>
     </memory>
     <os_config>
       <kern_type>KERNEL_ELF</kern_type>
@@ -110,9 +110,6 @@
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
-    <memory>
-      <start_hpa>0</start_hpa>
-    </memory>
     <os_config>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
