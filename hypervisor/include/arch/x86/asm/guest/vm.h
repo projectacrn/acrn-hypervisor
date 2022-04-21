@@ -149,6 +149,7 @@ struct acrn_vm {
 	 * the initialization depends on the clear BSS section
 	 */
 	spinlock_t vm_state_lock;
+	spinlock_t wbinvd_lock;		/* Spin-lock used to serialize wbinvd emulation */
 	spinlock_t vlapic_mode_lock;	/* Spin-lock used to protect vlapic_mode modifications for a VM */
 	spinlock_t ept_lock;	/* Spin-lock used to protect ept add/modify/remove for a VM */
 	spinlock_t emul_mmio_lock;	/* Used to protect emulation mmio_node concurrent access for a VM */
