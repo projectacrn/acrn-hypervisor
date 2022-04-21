@@ -238,17 +238,58 @@ static time_t rtc_to_secs(const struct acrn_vrtc *vrtc)
 	struct clktime ct;
 	time_t second = VRTC_BROKEN_TIME;
 	const struct rtcdev *rtc= &vrtc->rtcdev;
+	uint32_t hour = 0, pm = 0;
 	uint32_t century = 0, year = 0;
 
 	do {
 		if ((rtcget(rtc, rtc->sec, &ct.sec) < 0) || (rtcget(rtc, rtc->min, &ct.min) < 0) ||
-				(rtcget(rtc, rtc->hour, &ct.hour) < 0) || (rtcget(rtc, rtc->day_of_month, &ct.day) < 0) ||
+				(rtcget(rtc, rtc->day_of_month, &ct.day) < 0) ||
 				(rtcget(rtc, rtc->month, &ct.mon) < 0) || (rtcget(rtc, rtc->year, &year) < 0) ||
 				(rtcget(rtc, rtc->century, &century) < 0)) {
 			pr_err("Invalid RTC sec %#x hour %#x day %#x mon %#x year %#x century %#x\n",
 					rtc->sec, rtc->min, rtc->day_of_month, rtc->month,
 					rtc->year, rtc->century);
 			break;
+		}
+
+		/*
+		 * If 12 hour format is inuse, translate it to 24 hour format here.
+		 */
+		pm = 0;
+		hour = rtc->hour;
+		if ((rtc->reg_b & RTCSB_24HR) == 0) {
+			if (hour & 0x80U) {
+				hour &= ~0x80U;
+				pm = 1;
+			}
+		}
+		if (rtcget(rtc, hour, &ct.hour) != 0) {
+			pr_err("Invalid RTC hour %#x\n", rtc->hour);
+			break;
+		}
+		if ((rtc->reg_b & RTCSB_24HR) == 0) {
+			if ((ct.hour >= 1) && (ct.hour <= 12)) {
+				/*
+				 * Convert from 12-hour format to internal 24-hour
+				 * representation as follows:
+				 *
+				 *    12-hour format		ct.hour
+				 *	12	AM		0
+				 *	1 - 11	AM		1 - 11
+				 *	12	PM		12
+				 *	1 - 11	PM		13 - 23
+				 */
+				if (ct.hour == 12) {
+					ct.hour = 0;
+				}
+				if (pm) {
+					ct.hour += 12;
+				}
+			} else {
+				pr_err("Invalid RTC 12-hour format %#x/%d\n",
+						rtc->hour, ct.hour);
+				break;
+			}
 		}
 
 		/*
@@ -285,12 +326,41 @@ static void secs_to_rtc(time_t rtctime, struct acrn_vrtc *vrtc)
 {
 	struct clktime ct;
 	struct rtcdev *rtc;
+	uint32_t hour;
 
 	if ((rtctime > 0) && (clk_ts_to_ct(rtctime, &ct) == 0)) {
 		rtc = &vrtc->rtcdev;
 		rtc->sec = rtcset(rtc, ct.sec);
 		rtc->min = rtcset(rtc, ct.min);
-		rtc->hour = rtcset(rtc, ct.hour);
+
+		if (rtc->reg_b & RTCSB_24HR) {
+			hour = ct.hour;
+		} else {
+			/*
+			 * Convert to the 12-hour format.
+			 */
+			switch (ct.hour) {
+			case 0:			/* 12 AM */
+			case 12:		/* 12 PM */
+				hour = 12;
+				break;
+			default:
+				/*
+				 * The remaining 'ct.hour' values are interpreted as:
+				 * [1  - 11] ->  1 - 11 AM
+				 * [13 - 23] ->  1 - 11 PM
+				 */
+				hour = ct.hour % 12;
+				break;
+			}
+		}
+
+		rtc->hour = rtcset(rtc, hour);
+
+		if (((rtc->reg_b & RTCSB_24HR) == 0) && (ct.hour >= 12)) {
+			rtc->hour |= 0x80;	    /* set MSB to indicate PM */
+		}
+
 		rtc->day_of_week = rtcset(rtc, ct.dow + 1);
 		rtc->day_of_month = rtcset(rtc, ct.day);
 		rtc->month = rtcset(rtc, ct.mon);
