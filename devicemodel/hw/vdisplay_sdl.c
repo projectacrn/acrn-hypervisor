@@ -1090,7 +1090,7 @@ vdpy_init()
 		pr_err("Failed to create the sdl_display_thread.\n");
 		return 0;
 	}
-
+	pthread_setname_np(vdpy.tid, "acrn_vdisplay");
 	count = 0;
 	/* Wait up to 200ms so that the vdpy_sdl_display_thread is ready to
 	 * handle the 3D request
