@@ -58,6 +58,8 @@
 #define RTCSA_TUP	0x80U	/* time update, don't look now */
 
 #define RTC_STATUSB	0x0b	/* status register B */
+#define RTCSB_BCD	0x04U	/* 0 = BCD, 1 =	Binary coded time */
+
 #define RTC_INTR	0x0c	/* status register C (R) interrupt source */
 #define RTC_STATUSD	0x0d	/* status register D (R) Lost Power */
 

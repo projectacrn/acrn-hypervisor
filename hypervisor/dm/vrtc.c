@@ -103,6 +103,51 @@ static inline uint32_t day_of_week(uint32_t days)
         return ((days) + 4U) % 7U;
 }
 
+uint8_t const bin2bcd_data[] = {
+	0x00U, 0x01U, 0x02U, 0x03U, 0x04U, 0x05U, 0x06U, 0x07U, 0x08U, 0x09U,
+	0x10U, 0x11U, 0x12U, 0x13U, 0x14U, 0x15U, 0x16U, 0x17U, 0x18U, 0x19U,
+	0x20U, 0x21U, 0x22U, 0x23U, 0x24U, 0x25U, 0x26U, 0x27U, 0x28U, 0x29U,
+	0x30U, 0x31U, 0x32U, 0x33U, 0x34U, 0x35U, 0x36U, 0x37U, 0x38U, 0x39U,
+	0x40U, 0x41U, 0x42U, 0x43U, 0x44U, 0x45U, 0x46U, 0x47U, 0x48U, 0x49U,
+	0x50U, 0x51U, 0x52U, 0x53U, 0x54U, 0x55U, 0x56U, 0x57U, 0x58U, 0x59U,
+	0x60U, 0x61U, 0x62U, 0x63U, 0x64U, 0x65U, 0x66U, 0x67U, 0x68U, 0x69U,
+	0x70U, 0x71U, 0x72U, 0x73U, 0x74U, 0x75U, 0x76U, 0x77U, 0x78U, 0x79U,
+	0x80U, 0x81U, 0x82U, 0x83U, 0x84U, 0x85U, 0x86U, 0x87U, 0x88U, 0x89U,
+	0x90U, 0x91U, 0x92U, 0x93U, 0x94U, 0x95U, 0x96U, 0x97U, 0x98U, 0x99U
+};
+
+/*
+ * @pre val < 100
+ */
+static inline uint8_t rtcset(struct rtcdev *rtc, uint32_t val)
+{
+	return ((rtc->reg_b & RTCSB_BCD) ? val : bin2bcd_data[val]);
+}
+
+/*
+ * Get rtc time register binary value.
+ * If BCD data mode is enabled, translate BCD to binary.
+ */
+static int32_t rtcget(const struct rtcdev *rtc, uint8_t val, uint32_t *retval)
+{
+	uint8_t upper, lower;
+	int32_t errno = 0;
+
+	if (rtc->reg_b & RTCSB_BCD) {
+		*retval = val;
+	} else {
+		lower = val & 0xfU;
+		upper = (val >> 4) & 0xfU;
+
+		if ((lower > 9U) || (upper > 9U)) {
+			errno = -EINVAL;
+		} else {
+			*retval = upper * 10U + lower;
+		}
+	}
+	return errno;
+}
+
 /*
  * Translate clktime (such as year, month, day) to time_t.
  */
@@ -193,13 +238,18 @@ static time_t rtc_to_secs(const struct acrn_vrtc *vrtc)
 	struct clktime ct;
 	time_t second = VRTC_BROKEN_TIME;
 	const struct rtcdev *rtc= &vrtc->rtcdev;
+	uint32_t century = 0, year = 0;
 
 	do {
-		ct.sec = rtc->sec;
-		ct.min = rtc->min;
-		ct.hour = rtc->hour;
-		ct.day = rtc->day_of_month;
-		ct.mon = rtc->month;
+		if ((rtcget(rtc, rtc->sec, &ct.sec) < 0) || (rtcget(rtc, rtc->min, &ct.min) < 0) ||
+				(rtcget(rtc, rtc->hour, &ct.hour) < 0) || (rtcget(rtc, rtc->day_of_month, &ct.day) < 0) ||
+				(rtcget(rtc, rtc->month, &ct.mon) < 0) || (rtcget(rtc, rtc->year, &year) < 0) ||
+				(rtcget(rtc, rtc->century, &century) < 0)) {
+			pr_err("Invalid RTC sec %#x hour %#x day %#x mon %#x year %#x century %#x\n",
+					rtc->sec, rtc->min, rtc->day_of_month, rtc->month,
+					rtc->year, rtc->century);
+			break;
+		}
 
 		/*
 		 * Ignore 'rtc->dow' because some guests like Linux don't bother
@@ -209,7 +259,7 @@ static time_t rtc_to_secs(const struct acrn_vrtc *vrtc)
 		 */
 		ct.dow = -1;
 
-		ct.year = rtc->century * 100 + rtc->year;
+		ct.year = century * 100 + year;
 		if (ct.year < POSIX_BASE_YEAR) {
 			pr_err("Invalid RTC century %x/%d\n", rtc->century,
 					ct.year);
@@ -238,14 +288,14 @@ static void secs_to_rtc(time_t rtctime, struct acrn_vrtc *vrtc)
 
 	if ((rtctime > 0) && (clk_ts_to_ct(rtctime, &ct) == 0)) {
 		rtc = &vrtc->rtcdev;
-		rtc->sec = ct.sec;
-		rtc->min = ct.min;
-		rtc->hour = ct.hour;
-		rtc->day_of_week = ct.dow + 1;
-		rtc->day_of_month = ct.day;
-		rtc->month = ct.mon;
-		rtc->year = ct.year % 100;
-		rtc->century = ct.year / 100;
+		rtc->sec = rtcset(rtc, ct.sec);
+		rtc->min = rtcset(rtc, ct.min);
+		rtc->hour = rtcset(rtc, ct.hour);
+		rtc->day_of_week = rtcset(rtc, ct.dow + 1);
+		rtc->day_of_month = rtcset(rtc, ct.day);
+		rtc->month = rtcset(rtc, ct.mon);
+		rtc->year = rtcset(rtc, ct.year % 100);
+		rtc->century = rtcset(rtc, ct.year / 100);
 	}
 }
 
