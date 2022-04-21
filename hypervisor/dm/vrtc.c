@@ -379,7 +379,7 @@ static time_t vrtc_get_current_time(struct acrn_vrtc *vrtc)
 
 	if (vrtc->base_rtctime > 0) {
 		offset = (cpu_ticks() - vrtc->base_tsc) / (get_tsc_khz() * 1000U);
-		second = vrtc->base_rtctime + (time_t)offset;
+		second = vrtc->base_rtctime + vrtc->offset_rtctime + (time_t)offset;
 	}
 	return second;
 }
@@ -527,7 +527,9 @@ static bool vrtc_read(struct acrn_vcpu *vcpu, uint16_t addr, __unused size_t wid
 static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 			uint32_t value)
 {
+	time_t current, after;
 	struct acrn_vrtc *vrtc = &vcpu->vm->vrtc;
+	uint8_t mask = 0xFFU;
 
 	if ((width == 1U) && (addr == CMOS_ADDR_PORT)) {
 		vrtc->addr = (uint8_t)(value & 0x7FU);
@@ -552,7 +554,18 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 				*((uint8_t *)&vrtc->rtcdev + vrtc->addr) = (uint8_t)(value & 0x7FU);
 				RTC_DEBUG("RTC alarm reg(%d) set to %#x (ignored)\n", vrtc->addr, value);
 				break;
+			case RTC_SEC:
+				/*
+				 * High order bit of 'seconds' is readonly.
+				 */
+				mask = 0x7FU;
+				/* FALLTHRU */
 			default:
+				RTC_DEBUG("RTC offset %#x set to %#x\n", vrtc->addr, value);
+				*((uint8_t *)&vrtc->rtcdev + vrtc->addr) = (uint8_t)(value & mask);
+				current = vrtc_get_current_time(vrtc);
+				after = rtc_to_secs(vrtc);
+				vrtc->offset_rtctime += after - current;
 				break;
 			}
 		}
