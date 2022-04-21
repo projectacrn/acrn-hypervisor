@@ -34,6 +34,8 @@ struct acrn_vrtc {
 	uint32_t	addr;           /* RTC register to read or write */
 
 	time_t		base_rtctime;	/* Base time calulated from physical rtc register. */
+	time_t		offset_rtctime;	/* RTC offset against base time. */
+
 	uint64_t	base_tsc;	/* Base tsc value */
 
 	struct rtcdev	rtcdev;		/* RTC register */
