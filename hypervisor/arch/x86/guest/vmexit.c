@@ -438,6 +438,7 @@ static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
 		if (is_rt_vm(vcpu->vm)) {
 			walk_ept_table(vcpu->vm, ept_flush_leaf_page);
 		} else {
+			spinlock_obtain(&vcpu->vm->wbinvd_lock);
 			/* Pause other vcpus and let them wait for the wbinvd completion */
 			foreach_vcpu(i, vcpu->vm, other) {
 				if (other != vcpu) {
@@ -452,6 +453,7 @@ static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
 					signal_event(&other->events[VCPU_EVENT_SYNC_WBINVD]);
 				}
 			}
+			spinlock_release(&vcpu->vm->wbinvd_lock);
 		}
 	}
 
