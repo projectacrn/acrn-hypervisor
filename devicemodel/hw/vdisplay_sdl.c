@@ -941,6 +941,7 @@ vdpy_sdl_display_thread(void *data)
 	}
 	vdpy.dpy_win = NULL;
 	vdpy.dpy_renderer = NULL;
+	vdpy.dpy_img = NULL;
 	vdpy.dpy_win = SDL_CreateWindow("ACRN_DM",
 					vdpy.org_x, vdpy.org_y,
 					vdpy.width, vdpy.height,
@@ -1010,8 +1011,10 @@ vdpy_sdl_display_thread(void *data)
 	/* SDL display_thread will exit because of DM request */
 	pthread_mutex_destroy(&vdpy.vdisplay_mutex);
 	pthread_cond_destroy(&vdpy.vdisplay_signal);
-	if (vdpy.dpy_img)
+	if (vdpy.dpy_img) {
 		pixman_image_unref(vdpy.dpy_img);
+		vdpy.dpy_img = NULL;
+	}
 	/* Continue to thread cleanup */
 
 	if (vdpy.dpy_texture) {
