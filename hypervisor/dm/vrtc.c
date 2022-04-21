@@ -418,6 +418,45 @@ static uint8_t cmos_get_reg_val(uint8_t addr)
 	return reg;
 }
 
+#define TRIGGER_ALARM	(RTCIR_ALARM | RTCIR_INT)
+#define RTC_DELTA	1	/* For RTC and system time may out of sync for no more than 1s */
+static inline bool rtc_halted(struct acrn_vrtc *rtc)
+{
+        return ((rtc->rtcdev.reg_b & RTCSB_HALT) != 0U);
+}
+
+static uint8_t vrtc_get_reg_c(struct acrn_vrtc *vrtc)
+{
+	uint8_t	ret = vrtc->rtcdev.reg_c;
+	struct rtcdev *rtc = &vrtc->rtcdev;
+	time_t current, alarm;
+
+	if ((rtc->reg_b & RTCSB_AINTR) != 0U) {
+		current = rtc->hour * 3600 + rtc->min * 60 + rtc->sec;
+		alarm = rtc->alarm_hour * 3600 + rtc->alarm_min * 60 + rtc->alarm_sec;
+
+		if ((current >= (alarm - RTC_DELTA)) && (current <= (alarm + RTC_DELTA))) {
+			/*
+			 * Linux RTC driver will trigger alarm interrupt when getting
+			 * RTC time, and then read the interrupt flag register. If the value was not
+			 * correct, read failure will occurs. So if alarm interrupt is enabled
+			 * and rtc time is in alarm time scale, set the interrupt flag. The
+			 * interrupt is not acturally triggered for driver will read the register
+			 * proactively.
+			 */
+			ret |= TRIGGER_ALARM;
+		}
+	}
+
+	vrtc->rtcdev.reg_c = 0;
+	return ret;
+}
+
+static void vrtc_set_reg_b(struct acrn_vrtc *vrtc, uint8_t newval)
+{
+	vrtc->rtcdev.reg_b = newval;
+}
+
 /**
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
@@ -431,7 +470,7 @@ static bool vrtc_read(struct acrn_vcpu *vcpu, uint16_t addr, __unused size_t wid
 	struct acrn_vm *vm = vcpu->vm;
 	bool ret = true;
 
-	offset = vm->vrtc.addr;
+	offset = vrtc->addr;
 
 	if (addr == CMOS_ADDR_PORT) {
 		pio_req->value = offset;
@@ -443,7 +482,11 @@ static bool vrtc_read(struct acrn_vcpu *vcpu, uint16_t addr, __unused size_t wid
 				current = vrtc_get_current_time(vrtc);
 				secs_to_rtc(current, vrtc);
 
-				pio_req->value = *((uint8_t *)&vm->vrtc.rtcdev + offset);
+				if(offset == 0xCU) {
+					pio_req->value = vrtc_get_reg_c(vrtc);
+				} else {
+					pio_req->value = *((uint8_t *)&vrtc->rtcdev + offset);
+				}
 				RTC_DEBUG("read 0x%x, 0x%x", offset, pio_req->value);
 			} else {
 				pr_err("vrtc read invalid addr 0x%x", offset);
@@ -462,8 +505,33 @@ static bool vrtc_read(struct acrn_vcpu *vcpu, uint16_t addr, __unused size_t wid
 static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 			uint32_t value)
 {
+	struct acrn_vrtc *vrtc = &vcpu->vm->vrtc;
+
 	if ((width == 1U) && (addr == CMOS_ADDR_PORT)) {
-		vcpu->vm->vrtc.addr = (uint8_t)value & 0x7FU;
+		vrtc->addr = (uint8_t)(value & 0x7FU);
+	} else {
+		if (!is_service_vm(vcpu->vm)) {
+			switch (vrtc->addr) {
+			case RTC_STATUSA:
+			case RTC_INTR:
+			case RTC_STATUSD:
+				RTC_DEBUG("RTC reg_%x set to %#x (ignored)\n", vrtc->addr, value);
+				break;
+			case RTC_STATUSB:
+				vrtc_set_reg_b(vrtc, value);
+				RTC_DEBUG("RTC reg_b set to %#x\n", value);
+				break;
+			case RTC_SECALRM:
+			case RTC_MINALRM:
+				/* FALLTHRU */
+			case RTC_HRSALRM:
+				*((uint8_t *)&vrtc->rtcdev + vrtc->addr) = (uint8_t)(value & 0x7FU);
+				RTC_DEBUG("RTC alarm reg(%d) set to %#x (ignored)\n", vrtc->addr, value);
+				break;
+			default:
+				break;
+			}
+		}
 	}
 
 	return true;

@@ -60,8 +60,13 @@
 #define RTC_STATUSB	0x0b	/* status register B */
 #define RTCSB_24HR	0x02U	/* 0 = 12 hours, 1 = 24	hours */
 #define RTCSB_BCD	0x04U	/* 0 = BCD, 1 =	Binary coded time */
+#define RTCSB_AINTR	0x20U	/* 1 = enable alarm interrupt */
+#define RTCSB_HALT	0x80U	/* stop clock updates */
 
 #define RTC_INTR	0x0c	/* status register C (R) interrupt source */
+#define RTCIR_ALARM	0x20U	/* alarm intr */
+#define RTCIR_INT	0x80U	/* interrupt output signal */
+
 #define RTC_STATUSD	0x0d	/* status register D (R) Lost Power */
 
 #endif /* _MC146818_RTC_H_ */
