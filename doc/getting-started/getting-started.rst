@@ -16,6 +16,8 @@ Service VM, and one post-launched User VM as illustrated in this figure:
 Throughout this guide, you will be exposed to some of the tools, processes, and
 components of the ACRN project. Let's get started.
 
+.. _gsg-prereq:
+
 Prerequisites
 **************
 
@@ -56,6 +58,8 @@ Before you begin, make sure your machines have the following prerequisites:
     copying via USB disk, but you can use another method if you prefer)
   - Local storage device (NVMe or SATA drive, for example)
 
+.. _gsg-target-hardware:
+
 .. rst-class:: numbered-step
 
 Set Up the Target Hardware
@@ -72,6 +76,8 @@ Example of a target system with cables connected:
 
 .. image:: ./images/gsg_nuc.png
    :scale: 25%
+
+.. _gsg-dev-computer:
 
 .. rst-class:: numbered-step
 
@@ -148,12 +154,17 @@ To set up the ACRN build environment on the development computer:
 
       sudo pip3 install lxml xmlschema defusedxml
 
+#. Create a working directory:
+
+   .. code-block:: bash
+
+      mkdir ~/acrn-work
+
 #. Install the iASL compiler/disassembler used for advanced power management,
    device discovery, and configuration (ACPI) within the host OS:
 
    .. code-block:: bash
 
-      mkdir ~/acrn-work
       cd ~/acrn-work
       wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
       tar zxvf acpica-unix-20210105.tar.gz
@@ -170,10 +181,10 @@ To set up the ACRN build environment on the development computer:
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout v2.7
+      git checkout acrn-2022w18.4-180000p
 
       cd ..
-      git clone --depth 1 --branch release_2.7 https://github.com/projectacrn/acrn-kernel.git
+      git clone --depth 1 --branch acrn-2022w18.4-180000p https://github.com/projectacrn/acrn-kernel.git
 
 .. _gsg-board-setup:
 
@@ -378,121 +389,162 @@ their attributes, and the resources they have access to.
 A **launch script** is a shell script that is used to configure and create a
 post-launched User VM. Each User VM has its own launch script.
 
-To generate a scenario configuration file and launch script:
+First, you will install dependencies, build the ACRN Configurator Debian
+package, and install it on your development computer. Then you will use the ACRN
+Configurator to generate a scenario configuration file and launch script.
 
-#. On the development computer, install ACRN Configurator dependencies:
+#. On the development computer, install the ACRN Configurator build tools:
 
    .. code-block:: bash
 
-      cd ~/acrn-work/acrn-hypervisor/misc/config_tools/config_app
-      sudo pip3 install -r requirements
+      sudo apt install -y libwebkit2gtk-4.0-dev \
+         build-essential \
+         curl \
+         wget \
+         libssl-dev \
+         libgtk-3-dev \
+         libappindicator3-dev \
+         librsvg2-dev \
+         python3-venv
+
+#. Install Node.js (npm included) as follows:
+
+   a. We recommend using nvm to manage your Node.js runtime. It allows you to
+      switch versions and update Node.js easily.
+
+      .. code-block:: bash
+
+         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+
+   #. Rerun your ``.bashrc`` initialization script and then install the latest
+      version of Node.js and npm:
+
+      .. code-block:: bash
+
+         source ~/.bashrc
+         nvm install node --latest-npm
+         nvm use node
+
+#. Install and upgrade Yarn:
+
+   .. code-block:: bash
+
+      npm install --global yarn
+
+#. Install rustup, the official installer for Rust:
+
+   .. code-block:: bash
+
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+   When prompted by the Rust installation script, type ``1`` and press
+   :kbd:`Enter`.
+
+   .. code-block:: console
+
+      1) Proceed with installation (default)
+      2) Customize installation
+      3) Cancel installation
+      >1
+
+#. Configure the current shell:
+
+   .. code-block:: bash
+
+      source $HOME/.cargo/env
+
+#. Install additional ACRN Configurator dependencies:
+
+   .. code-block:: bash
+
+      cd ~/acrn-work/acrn-hypervisor/misc/config_tools
+      python3 -m pip install -r requirements.txt
+      cd configurator
+      python3 -m pip install -r requirements.txt
+      yarn
+
+#. Build the ACRN Configurator Debian package:
+
+   .. code-block:: bash
+
+      cd ~/acrn-work/acrn-hypervisor
+      make configurator
+
+#. Install the ACRN Configurator:
+
+   .. code-block:: bash
+
+      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator_*_amd64.deb
 
 #. Launch the ACRN Configurator:
 
    .. code-block:: bash
 
-      python3 acrn_configurator.py
+      acrn-configurator
 
-#. Your web browser should open the website `<http://127.0.0.1:5001/>`__
-   automatically, or you may need to visit this website manually.
-   The ACRN Configurator is supported on Chrome and Firefox.
+#. On the left-hand side, look for **Start a new configuration**.
+   Confirm that the working folder is ``<path to>/acrn-work/MyConfiguration``. Click **Use This Folder**.
 
-#. Click the **Import Board XML** button and browse to the board configuration
-   file ``my_board.xml`` previously generated. When it is successfully
-   imported, the board information appears.
-   Example:
+   TODO add screenshots to Configurator steps
 
-   .. image:: ./images/gsg_config_board.png
-      :class: drop-shadow
+#. Import your board configuration file as follows:
 
-#. Generate the scenario configuration file:
+   a. Under **Import a board configuration file**, click **Browse for file**.
 
-   a. Click the **Scenario Settings** menu on the top banner of the UI and
-      select **Load a default scenario**. Example:
+   #. Browse to ``~/acrn-work/my_board.xml`` and click **Open**.
 
-      .. image:: ./images/gsg_config_scenario_default.png
-         :class: drop-shadow
+   #. Click **Import Board File**.
 
-   #. In the dialog box, select **shared** as the default scenario setting and
-      then click **OK**. This sample default scenario defines six User VMs.
+   The ACRN Configurator makes a copy of your board file, changes the file
+   extension to ``.board.xml``, and saves the file to the working folder.
 
-      .. image:: ./images/gsg_config_scenario_load.png
-         :class: drop-shadow
+#. Create a new scenario as follows:
 
-   #. The scenario's configurable items appear. Feel free to look through all
-      the available configuration settings used in this sample scenario. This
-      is where you can change the sample scenario to meet your application's
-      particular needs. But for now, leave them as they're set in the
-      sample.
+   a. Under **Create new or import an existing scenario**, click **Create
+      Scenario**.
 
-   #. Click the **Export XML** button to save the scenario configuration file
-      that will be
-      used in the build process.
+   #. In the dialog box, confirm that **Shared (Post-launched VMs only)** is
+      selected.
 
-   #. In the dialog box, keep the default name as is. Type
-      ``/home/<username>/acrn-work`` in the Scenario XML Path field. In the
-      following example, ``acrn`` is the username. Click **Submit** to save the
-      file.
+   #. Confirm that one Service VM and one post-launched VM are selected.
 
-      .. image:: ./images/gsg_config_scenario_save.png
-         :class: drop-shadow
+   #. Click **Create**.
 
-#. Generate the launch script:
+#. Generate the scenario configuration file and launch script:
 
-   a. Click the **Launch Settings** menu on the top banner of the UI and select
-      **Load a default launch script**.
+   a. Under **Configure settings for scenario and launch scripts**, the
+      scenario's configurable items appear. Feel free to look through all the
+      available configuration settings. This is where you can change the
+      settings to meet your application's particular needs. But for now, you will update only a few settings to make this example work.
 
-      .. image:: ./images/gsg_config_launch_default.png
-         :class: drop-shadow
+   #. Click the **VM1 Post-launched** tab to access the post-launched VM's
+      settings.
 
-   #. In the dialog box, select **shared_launch_6user_vm** as the default launch
-      setting and click **OK**. Because our sample ``shared`` scenario defines
-      six User VMs, we're using this ``shared_launch_6user_vm`` launch XML
-      configuration.
+   #. Confirm that the Basic Parameters tab is selected, and scroll down to
+      **Memory size (MB)**. Change the value to ``1024``. For this example, we
+      will use Ubuntu 20.04 to boot the post-launched VM. Ubuntu 20.04 needs at
+      least 1024 MB to boot.
 
-      .. image:: ./images/gsg_config_launch_load.png
-         :class: drop-shadow
-
-      Of the six User VMs, we will use User VM 3 and modify its default settings to run Ubuntu 20.04.
-
-   #. Scroll down, find **User VM 3**, and change the **mem_size** to **1024**.
-      Ubuntu 20.04 needs at least 1024 megabytes of memory to boot.
-
-      .. image:: ./images/gsg_config_mem.png
-         :class: drop-shadow
-
-   #. Under virtio_devices, change the **block** to
-      **/home/acrn/acrn-work/ubuntu-20.04.4-desktop-amd64.iso**. The parameter
+   #. Scroll down to **Virtio block device**, click **+**, and enter
+      ``~/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
       in this guide, you will save the ISO file to that directory.
 
-      .. image:: ./images/gsg_config_blk.png
-         :class: drop-shadow
+   #. Click **Save Scenario And Launch Scripts** to generate the scenario
+      configuration file and launch script.
 
-   #. Click the **Generate Launch Script** button.
+#. Click the **x** in the upper-right corner to close the ACRN
+   Configurator.
 
-      .. image:: ./images/gsg_config_launch_generate.png
-         :class: drop-shadow
+#. Confirm that the scenario configuration file ``scenario.xml`` appears in your
+   ``acrn-work/MyConfiguration`` directory::
 
-   #. In the dialog box, type ``/home/<username>/acrn-work/`` in the Launch XML
-      Path field. In the following example, ``acrn`` is the username. Click
-      **Submit** to save the script.
+         ls ~/acrn-work/MyConfiguration/scenario.xml
 
-      .. image:: ./images/gsg_config_launch_save.png
-         :class: drop-shadow
-
-#. Close the browser and press :kbd:`CTRL` + :kbd:`C` to terminate the
-   ``acrn_configurator.py`` program running in the terminal window.
-
-#. Confirm that the scenario configuration file ``shared.xml`` appears in your
-   ``acrn-work`` directory::
-
-         ls ~/acrn-work/shared.xml
-
-#. Confirm that the launch script ``launch_user_vm_id3.sh`` appears in the
+#. Confirm that the launch script ``TODO`` appears in the
    expected output directory::
 
-         ls ~/acrn-work/my_board/output/launch_user_vm_id3.sh
+         ls ~/acrn-work/MyConfiguration/TODO
 
 .. _gsg_build:
 
@@ -506,7 +558,7 @@ Build ACRN
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-hypervisor
-      make clean && make BOARD=~/acrn-work/my_board.xml SCENARIO=~/acrn-work/shared.xml
+      make clean && make BOARD=~/acrn-work/MyConfiguration/my_board.board.xml SCENARIO=~/acrn-work/MyConfiguration/scenario.xml
 
    The build typically takes a few minutes. When done, the build generates a
    Debian package in the ``./build`` directory:
@@ -515,7 +567,7 @@ Build ACRN
 
       cd ./build
       ls *.deb
-         acrn-my_board-shared-2.7.deb
+         acrn-my_board-shared-2.7.deb # TODO update file name
 
    The Debian package contains the ACRN hypervisor and tools to ease installing
    ACRN on the target.
@@ -561,7 +613,7 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-shared-2.7.deb "$disk"/
+         cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-shared-2.7.deb "$disk"/ # TODO update file name
          cp ~/acrn-work/*acrn-service-vm*.deb "$disk"/
          cp ~/acrn-work/my_board/output/launch_user_vm_id3.sh "$disk"/
          cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
@@ -576,11 +628,13 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp "$disk"/acrn-my_board-shared-2.7.deb ~/acrn-work
+         cp "$disk"/acrn-my_board-shared-2.7.deb ~/acrn-work # TODO update file name
          cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
          cp "$disk"/launch_user_vm_id3.sh ~/acrn-work
          sudo cp "$disk"/iasl /usr/sbin/
          sync && sudo umount "$disk"
+
+.. _gsg-install-acrn:
 
 .. rst-class:: numbered-step
 
@@ -593,7 +647,7 @@ Install ACRN
    .. code-block:: bash
 
       cd ~/acrn-work
-      sudo apt install ./acrn-my_board-shared-2.7.deb
+      sudo apt install ./acrn-my_board-shared-2.7.deb # TODO update file name
       sudo apt install ./*acrn-service-vm*.deb
 
 #. Reboot the system:
@@ -614,6 +668,8 @@ Install ACRN
       Advanced options for Ubuntu
       UEFI Firmware Settings
       *ACRN multiboot2
+
+.. _gsg-run-acrn:
 
 .. rst-class:: numbered-step
 
@@ -639,6 +695,8 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
 
       [  0.000000] Hypervisor detected: ACRN
 
+.. _gsg-user-vm:
+
 .. rst-class:: numbered-step
 
 Launch the User VM
@@ -655,8 +713,8 @@ Launch the User VM
 
    .. code-block:: bash
 
-      sudo chmod +x ~/acrn-work/launch_user_vm_id3.sh
-      sudo ~/acrn-work/launch_user_vm_id3.sh
+      sudo chmod +x ~/acrn-work/launch_user_vm_id3.sh # TODO update file name
+      sudo ~/acrn-work/launch_user_vm_id3.sh # TODO update file name
 
 #. It may take about one minute for the User VM to boot and start running the
    Ubuntu image. You will see a lot of output, then the console of the User VM
@@ -722,6 +780,8 @@ Launch the User VM
    .. code-block:: bash
 
       sudo poweroff
+
+.. _gsg-next-steps:
 
 Next Steps
 **************
