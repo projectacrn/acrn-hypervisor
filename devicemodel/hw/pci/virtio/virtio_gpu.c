@@ -1026,6 +1026,7 @@ static struct dma_buf_info *virtio_gpu_create_udmabuf(struct virtio_gpu *gpu,
 		info->dmabuf_fd = dmabuf_fd;
 		atomic_store(&info->ref_count, 1);
 	}
+	free(list);
 	return info;
 }
 
