@@ -1680,12 +1680,13 @@ virtio_gpu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		}
 	}
 
+	vdpy_deinit(gpu->vdpy_handle);
+
 	if (gpu) {
 		pthread_mutex_destroy(&gpu->mtx);
 		free(gpu);
 	}
 	virtio_gpu_device_cnt--;
-	vdpy_deinit(gpu->vdpy_handle);
 }
 
 uint64_t
