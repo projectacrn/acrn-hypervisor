@@ -16,7 +16,7 @@ def extract_topology(root_node, caches_node):
     for thread in threads:
         subleaf = 0
         while True:
-            cpu_id = int(get_node(thread, "cpu_id/text()"), base=16)
+            cpu_id = int(get_node(thread, "cpu_id/text()"))
             leaf_4 = parse_cpuid(4, subleaf, cpu_id)
             cache_type = leaf_4.cache_type
             if cache_type == 0:
