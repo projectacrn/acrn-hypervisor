@@ -46,7 +46,7 @@ ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
   endif
 
   override BOARD := $(realpath $(BOARD_FILE))
-  override SCENARIO := $(realpath $(SCENARIO_FILE))
+  override SCENARIO := $(abspath $(SCENARIO_FILE))
 else
   # BOARD/SCENARIO pointing to XML files must be converted to absolute paths before being passed to hypervisor/Makefile
   # because paths relative to acrn-hypervisor/ are typically invalid when relative to acrn-hypervisor/Makefile
@@ -54,7 +54,7 @@ else
     override BOARD := $(realpath $(BOARD))
   endif
   ifneq ($(realpath $(SCENARIO)),)
-    override SCENARIO := $(realpath $(SCENARIO))
+    override SCENARIO := $(abspath $(SCENARIO))
   endif
 endif
 
