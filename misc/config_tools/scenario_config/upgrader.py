@@ -731,8 +731,6 @@ class ScenarioUpgrader(ScenarioTransformer):
     def upgraded_etree(self):
         new_xml_etree = etree.ElementTree(etree.Element(self.old_xml_etree.getroot().tag))
         root_node = new_xml_etree.getroot()
-        for k, v in self.old_xml_etree.getroot().items():
-            new_xml_etree.getroot().set(k, v)
 
         # Migrate the HV and VM nodes, which are needed to kick off a thorough traversal of the existing scenario.
         for old_node in self.old_xml_etree.getroot():
