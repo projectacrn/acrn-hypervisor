@@ -7,8 +7,8 @@
   <xs:annotation>
     <xs:documentation>Current supported VM types are:
 
-- ``PRE_LAUNCHED_VM`` pre-launched VM
 - ``SERVICE_VM`` Service VM
+- ``PRE_LAUNCHED_VM`` pre-launched VM
 - ``POST_LAUNCHED_VM`` post-launched VM</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
@@ -43,11 +43,26 @@
 </xs:simpleType>
 
 <xs:complexType name="CPUAffinityConfiguration">
+  <xs:all>
+    <xs:element name="pcpu_id" type="xs:integer" default="2">
+      <xs:annotation acrn:title="pCPU ID"
+		     acrn:options="//processors//thread/cpu_id/text()" acrn:options-sorted-by="int">
+        <xs:documentation>ID of the pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="real_time_vcpu" type="Boolean" default="n">
+      <xs:annotation acrn:title="Real-time vCPU">
+        <xs:documentation>Whether this vCPU is used for real-time-critical workloads.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+  </xs:all>
+</xs:complexType>
+
+<xs:complexType name="CPUAffinityConfigurations">
   <xs:sequence>
-    <xs:element name="pcpu_id" type="xs:integer" default="2" minOccurs="0" maxOccurs="unbounded">
+    <xs:element name="pcpu" type="CPUAffinityConfiguration" minOccurs="0" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>A pCPU that this VM's vCPU is allowed to pin
-to.</xs:documentation>
+        <xs:documentation>A pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -85,31 +100,32 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
   </xs:sequence>
 </xs:complexType>
 
+<xs:complexType name="HPARegionType">
+  <xs:sequence>
+    <xs:element name="start_hpa" type="HexFormat">
+      <xs:annotation acrn:title="Start physical address">
+        <xs:documentation>Specify the starting address for non-contiguous allocation.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="size_hpa" type="xs:integer">
+      <xs:annotation acrn:title="Size (MB)">
+        <xs:documentation>Specify the physical memory size for non-contiguous allocation in megabytes.
+The size is a subset of the VM's total memory size specified on the Basic tab.</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+  </xs:sequence>
+</xs:complexType>
+
 <xs:complexType name="MemoryInfo">
   <xs:all>
-    <xs:element name="whole" type="xs:integer" default="256">
-      <xs:annotation acrn:title="Memory size (MB)" acrn:views="basic" acrn:applicable-vms="post-launched">
-	<xs:documentation>Specify the physical memory size allocated to this VM in megabytes.</xs:documentation>
+    <xs:element name="size" type="xs:integer" minOccurs="0" default="256">
+      <xs:annotation acrn:title="Memory size (MB)" acrn:views="basic" acrn:applicable-vms="pre-launched, post-launched">
+       <xs:documentation>Specify the physical memory size allocated to this VM in megabytes.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="start_hpa" type="HexFormat" default="0x100000000">
-      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
-        <xs:documentation>The starting physical address in host for the VM.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="size" type="MemorySizeType" default="0x20000000" minOccurs="0">
-      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
-        <xs:documentation>The memory size in bytes for the VM. Default value is ``0x200000000``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="start_hpa2" type="HexFormat" default="0x0" minOccurs="0">
-      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
-        <xs:documentation>Start of second HPA for non-contiguous allocations in host for the VM.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="size_hpa2" type="MemorySizeType" default="0x0" minOccurs="0">
-      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched, service-vm">
-        <xs:documentation>Memory size of second HPA for non-contiguous allocations in Bytes for the VM.</xs:documentation>
+    <xs:element name="hpa_region" type="HPARegionType" minOccurs="0" maxOccurs="unbounded">
+      <xs:annotation acrn:title="Physical memory segmentation" acrn:views="advanced" acrn:applicable-vms="pre-launched" >
+        <xs:documentation>Specify Physical memory information for Prelaunched VM </xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -152,7 +168,7 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 
 <xs:simpleType name="VMKernelType">
   <xs:annotation>
-    <xs:documentation>A string with either ``KERNEL_BZIMAGE``, ``KERNEL_ELF`` or
+    <xs:documentation>A string with either ``KERNEL_BZIMAGE`` or
 ``KERNEL_RAWIMAGE``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
@@ -165,6 +181,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:simpleType>
 
 <xs:simpleType name="ConsoleVuartConfiguration">
+  <xs:annotation>
+    <xs:documentation>A string with either ``None``, ``COM Port 1``, ``COM Port 2``, ``COM Port 3``, or ``PCI``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="None" />
     <xs:enumeration value="COM Port 1" />
@@ -177,7 +196,7 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 
 <xs:simpleType name="VuartType">
   <xs:annotation>
-    <xs:documentation>vCOM type</xs:documentation>
+    <xs:documentation>A string with value: ``legacy`` or ``pci``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="legacy">
@@ -201,8 +220,8 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
         <xs:documentation>Specify the COM base for each legacy virtual UART.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="vbdf" type="VBDFType" minOccurs="0" maxOccurs="1">
-      <xs:annotation acrn:title="Virtual BDF">
+    <xs:element name="vbdf" type="VBDFType">
+      <xs:annotation acrn:title="Virtual BDF" acrn:defaults="[f'00:{i:02x}.0' for i in range(16, 24)]" acrn:unique-among="//vuart_connection/endpoint[vm_name=$parent/vm_name]/vbdf/text()">
         <xs:documentation>Specify the virtual Bus:Device.Function (BDF) for each PCI virtual UART. Virtual BDF is automatically assigned when the configuration is saved and can be changed if needed.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -211,7 +230,11 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 
 <xs:complexType name="VuartConnectionType">
   <xs:sequence>
-    <xs:element name="name" type="xs:string" />
+      <xs:element name="name" type="xs:string">
+          <xs:annotation>
+        <xs:documentation>Specify the vUART name.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="type" type="VuartType" default="legacy">
       <xs:annotation acrn:title="Type">
         <xs:documentation>Select the communication virtual UART (vUART) type.</xs:documentation>
@@ -254,6 +277,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:complexType>
 
 <xs:simpleType name="VirtioNetworkFrameworkType">
+  <xs:annotation>
+       <xs:documentation>A string with value: ``Kernel based (Virtual Host)`` or ``User space based (VBSU)``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="Kernel based (Virtual Host)" />
     <xs:enumeration value="User space based (VBSU)" />
@@ -272,6 +298,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
         <xs:documentation>Specify the network interface name that will appear in the Service VM. Use the `ip a` command in the Service VM to display the network interface names.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
+  <xs:annotation>
+       <xs:documentation>A string of letters, digits, ``_``, or ``-``.</xs:documentation>
+  </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:pattern value="[a-zA-Z0-9_\-]+" />
         </xs:restriction>
@@ -281,6 +310,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:complexType>
 
 <xs:simpleType name="VirtioConsoleUseType">
+  <xs:annotation>
+       <xs:documentation>A string with value: ``Virtio console`` or ``Virtio serial port``</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="Virtio console" />
     <xs:enumeration value="Virtio serial port" />
@@ -288,6 +320,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:simpleType>
 
 <xs:simpleType name="VirtioConsoleBackendType">
+  <xs:annotation>
+       <xs:documentation>A string with value: ``pty``, ``stdio``, or ``file``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="pty" />
     <xs:enumeration value="stdio" />
@@ -309,7 +344,7 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
     <xs:element name="use_type" type="VirtioConsoleUseType" minOccurs="0">
       <xs:annotation acrn:title="Use type">
         <xs:documentation>Specify device type in guest, ether HVC console when user config it as virtio console or /dev/vportXpY
-        device file when user config it as virtio serial port, which can be read and written from the user space.</xs:documentation>
+device file when user config it as virtio serial port, which can be read and written from the user space.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="backend_type" type="VirtioConsoleBackendType" minOccurs="0">
@@ -347,6 +382,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
         <xs:documentation>Specifying unique identifier to distinguish same devices in guest.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
+         <xs:annotation>
+              <xs:documentation>A string with letters, digits, ``_``, or ``-``.</xs:documentation>
+         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:pattern value="[a-zA-Z0-9_\-]*" />
         </xs:restriction>
@@ -356,6 +394,9 @@ CLOSID 0 and the second is mapped to virtual CLOSID 1, etc.</xs:documentation>
 </xs:complexType>
 
 <xs:simpleType name="OSType">
+  <xs:annotation>
+    <xs:documentation>A string with either ``Non-Windows OS`` or  ``Windows OS``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="Non-Windows OS" />
     <xs:enumeration value="Windows OS" />

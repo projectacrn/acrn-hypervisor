@@ -80,19 +80,15 @@ static inline void ppt_clflush_pagewalk(const void* entry __attribute__((unused)
 {
 }
 
-static inline uint64_t ppt_pgentry_present(uint64_t pte)
-{
-	return pte & PAGE_PRESENT;
-}
 
 static inline void ppt_nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
 static inline void ppt_nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
 
 static const struct pgtable ppt_pgtable = {
 	.default_access_right = (PAGE_PRESENT | PAGE_RW | PAGE_USER),
+	.pgentry_present_mask = PAGE_PRESENT,
 	.pool = &ppt_page_pool,
 	.large_page_support = ppt_large_page_support,
-	.pgentry_present = ppt_pgentry_present,
 	.clflush_pagewalk = ppt_clflush_pagewalk,
 	.tweak_exe_right = ppt_nop_tweak_exe_right,
 	.recover_exe_right = ppt_nop_recover_exe_right,

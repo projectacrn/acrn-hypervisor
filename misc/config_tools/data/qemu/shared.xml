@@ -64,9 +64,6 @@
     <clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
-    <memory>
-      <start_hpa>0</start_hpa>
-    </memory>
     <os_config>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
@@ -81,7 +78,9 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM1</name>
     <cpu_affinity>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>

@@ -298,7 +298,7 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
-          <xs:documentation>string from 1 to 32 characters long.</xs:documentation>
+          <xs:documentation>A string from 1 to 32 characters long (with no spaces).</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:minLength value="1" />
@@ -342,7 +342,7 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Specify TPM2 FIXUP for VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="cpu_affinity" type="CPUAffinityConfiguration" minOccurs="0">
+    <xs:element name="cpu_affinity" type="CPUAffinityConfigurations" minOccurs="0">
       <xs:annotation acrn:title="Physical CPU affinity" acrn:views="basic">
         <xs:documentation>Select a subset of physical CPUs that this VM can use. More than one can be selected.</xs:documentation>
       </xs:annotation>
@@ -358,9 +358,9 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
         <xs:documentation>Specify the Intel Software Guard Extensions (SGX) enclave page cache (EPC) section settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="memory" type="MemoryInfo">
-      <xs:annotation acrn:views="basic, advanced">
-        <xs:documentation>Specify memory information for Service and User VMs.</xs:documentation>
+    <xs:element name="memory" type="MemoryInfo" minOccurs="0">
+      <xs:annotation acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
+        <xs:documentation>Specify memory information for User VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="priority" type="PriorityType"  default="PRIO_LOW">
@@ -381,7 +381,7 @@ argument and memory.</xs:documentation>
     </xs:element>
     <xs:element name="console_vuart" type="ConsoleVuartConfiguration" default="None">
       <xs:annotation acrn:title="Console virtual UART type" acrn:views="basic">
-        <xs:documentation>Select the console virtual UART (vUART) type. Add the console settings to the kernel command line by typing them in the "Linux kernel command-line parameters" text box (for example, console=ttyS0 for COM port 1).</xs:documentation>
+        <xs:documentation>Select the console virtual UART (vUART) type. Add the console settings to the kernel command line by typing them in the "Linux kernel command-line parameters" text box (for example, ``console=ttyS0`` for COM port 1).</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
@@ -425,7 +425,7 @@ argument and memory.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
-          <xs:documentation>Input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4</xs:documentation>
+          <xs:documentation>Input format: ``bus#-port#[:bus#-port#: ...]``, for example, ``1-2:2-4``.</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:pattern value="([\d]+-[\d]+){0,1}(:[\d]+-[\d]+)*" />
@@ -441,28 +441,33 @@ argument and memory.</xs:documentation>
           <xs:element name="console" type="VirtioConsoleConfiguration" minOccurs="0">
             <xs:annotation acrn:title="Virtio console device" acrn:views="basic">
               <xs:documentation>Virtio console device for data input and output.
-              The virtio console BE driver copies data from the frontend's transmitting virtqueue when it receives a kick on virtqueue (implemented as a vmexit).
-              The BE driver then writes the data to backend, and can be implemented as PTY, TTY, STDIO, and regular file.
-              For details, reference to https://projectacrn.github.io/latest/developer-guides/hld/virtio-console.html.</xs:documentation>
+The virtio console BE driver copies data from the frontend's transmitting virtqueue when it receives a kick on virtqueue (implemented as a vmexit).
+The BE driver then writes the data to backend, and can be implemented as PTY, TTY, STDIO, and regular file.
+For details, see :ref:`virtio-console`.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="network" type="VirtioNetworkConfiguration" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation acrn:title="Virtio network device" acrn:views="basic">
-              <xs:documentation>The virtio network device emulates a virtual network interface card (NIC) for the VM.
-              The frontend is the virtio network driver, simulating the virtual NIC. The backend could be:
-              1. ``tap`` device /dev/net/tun; 2. ``MacVTap`` device (/dev/tapx); 3. ``vhost`` device /dev/vhost-net.</xs:documentation>
+                <xs:documentation>The virtio network device emulates a virtual network interface card (NIC) for the VM.  The frontend
+is the virtio network driver, simulating the virtual NIC. The backend could be: ``tap`` device /dev/net/tun,
+``MacVTap`` device /dev/tapx, or ``vhost`` device /dev/vhost-net</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="input" type="VirtioInputConfiguration" minOccurs="0" maxOccurs="unbounded">
 	        <xs:annotation acrn:title="Virtio input device" acrn:views="basic">
-	          <xs:documentation>The virtio input device creates a virtual human interface device such as a keyboard, mouse, and tablet.
-              It sends Linux input layer events over virtio.</xs:documentation>
+                <xs:documentation>The virtio input device creates a virtual human interface device such as a keyboard,
+mouse, and tablet.  It sends Linux input layer events over virtio.</xs:documentation>
 	        </xs:annotation>
 	      </xs:element>
           <xs:element name="block" type="xs:string" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation acrn:title="Virtio block device" acrn:views="basic">
-              <xs:documentation>The virtio-blk device presents a block device to the VM.
-              Each virtio-blk device appears as a disk inside the VM.</xs:documentation>
+              <xs:documentation>The virtio-blk device presents a block device to the VM. Each virtio-blk device appears as a disk inside the VM.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="gpu" type="xs:string" minOccurs="0">
+            <xs:annotation acrn:title="Virtio GPU device" acrn:views="basic">
+              <xs:documentation>The virtio GPU device presents a GPU device to the VM.
+              This feature enables you to view the VM's GPU output in the Service VM.</xs:documentation>
             </xs:annotation>
           </xs:element>
         </xs:all>
@@ -475,14 +480,14 @@ argument and memory.</xs:documentation>
 <xs:complexType name="ACRNConfigType">
   <xs:all>
     <xs:element name="hv" type="HVConfigType">
-      <xs:annotation>
+      <xs:annotation acrn:title="Hypervisor Options">
         <xs:documentation>The hypervisor configuration defines a working scenario and target
 board by configuring the hypervisor image features and capabilities such as
 setting up the log and the serial port.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="vm" maxOccurs="unbounded">
-      <xs:annotation>
+      <xs:annotation acrn:title="Virtual Machine Options">
         <xs:documentation>VM configuration includes **scenario-based** VM configuration
 information that is used to describe the characteristics and attributes for
 all VMs in a user scenario. It also includes **launch script-based** VM

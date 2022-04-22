@@ -11,6 +11,7 @@
       <xs:anyAttribute processContents="skip"/>
 
       <xi:include href="checks/cpu_assignment.xsd" xpointer="xpointer(id('root')/*)" />
+      <xi:include href="checks/vbdf_assignment.xsd" xpointer="xpointer(id('root')/*)" />
       <xi:include href="checks/vm_types.xsd" xpointer="xpointer(id('root')/*)" />
       <xi:include href="checks/passthrough_devices.xsd" xpointer="xpointer(id('root')/*)" />
 

@@ -1026,6 +1026,7 @@ static struct dma_buf_info *virtio_gpu_create_udmabuf(struct virtio_gpu *gpu,
 		info->dmabuf_fd = dmabuf_fd;
 		atomic_store(&info->ref_count, 1);
 	}
+	free(list);
 	return info;
 }
 
@@ -1680,12 +1681,13 @@ virtio_gpu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		}
 	}
 
+	vdpy_deinit(gpu->vdpy_handle);
+
 	if (gpu) {
 		pthread_mutex_destroy(&gpu->mtx);
 		free(gpu);
 	}
 	virtio_gpu_device_cnt--;
-	vdpy_deinit(gpu->vdpy_handle);
 }
 
 uint64_t

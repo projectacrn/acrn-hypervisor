@@ -71,10 +71,6 @@
     <clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
-    <memory>
-      <start_hpa>0</start_hpa>
-      <size>0x20000000</size>
-    </memory>
     <os_config>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
@@ -89,15 +85,19 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM1</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>4096</whole>
+      <size>4096</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <pci_devs>
@@ -124,15 +124,21 @@
     <name>POST_RT_VM1</name>
     <lapic_passthrough>y</lapic_passthrough>
     <cpu_affinity>
-      <pcpu_id>2</pcpu_id>
-      <pcpu_id>3</pcpu_id>
+      <pcpu>
+        <pcpu_id>2</pcpu_id>
+        <real_time_vcpu>y</real_time_vcpu>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>3</pcpu_id>
+        <real_time_vcpu>y</real_time_vcpu>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>1024</whole>
+      <size>1024</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
@@ -158,15 +164,19 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM2</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>512</whole>
+      <size>512</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
@@ -192,15 +202,19 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM3</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>512</whole>
+      <size>512</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
@@ -226,15 +240,19 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM4</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>512</whole>
+      <size>512</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
@@ -260,15 +278,19 @@
     <vm_type>STANDARD_VM</vm_type>
     <name>POST_STD_VM5</name>
     <cpu_affinity>
-      <pcpu_id>0</pcpu_id>
-      <pcpu_id>1</pcpu_id>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+      </pcpu>
     </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
-      <whole>512</whole>
+      <size>512</size>
     </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>

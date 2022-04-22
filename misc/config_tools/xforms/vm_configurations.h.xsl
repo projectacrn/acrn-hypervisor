@@ -31,7 +31,6 @@
 
   <xsl:template match="config-data/acrn-config">
     <xsl:call-template name="vm_count" />
-    <xsl:call-template name="pre_launched_vm_hpa" />
     <xsl:call-template name="sos_vm_bootarges" />
   </xsl:template>
 
@@ -50,17 +49,6 @@
       <xsl:value-of select="$newline" />
       <xsl:value-of select="acrn:define('SERVICE_VM_OS_BOOTARGS', 'SERVICE_VM_ROOTFS SERVICE_VM_IDLE SERVICE_VM_BOOTARGS_DIFF', '')" />
     </xsl:if>
-  </xsl:template>
-
-  <xsl:template name ="pre_launched_vm_hpa">
-    <xsl:for-each select="vm">
-      <xsl:if test="acrn:is-pre-launched-vm(load_order)">
-        <xsl:value-of select="acrn:define(concat('VM', @id, '_CONFIG_MEM_START_HPA'), memory/start_hpa, 'UL')" />
-        <xsl:value-of select="acrn:define(concat('VM', @id, '_CONFIG_MEM_SIZE'), memory/size, 'UL')" />
-        <xsl:value-of select="acrn:define(concat('VM', @id, '_CONFIG_MEM_START_HPA2'), memory/start_hpa2, 'UL')" />
-        <xsl:value-of select="acrn:define(concat('VM', @id, '_CONFIG_MEM_SIZE_HPA2'), memory/size_hpa2, 'UL')" />
-      </xsl:if>
-    </xsl:for-each>
   </xsl:template>
 
 </xsl:stylesheet>

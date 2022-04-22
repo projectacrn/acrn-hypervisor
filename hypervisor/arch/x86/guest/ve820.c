@@ -14,8 +14,8 @@
 #include <asm/rtcm.h>
 #include <ptdev.h>
 
-#define ENTRY_HPA1		2U
-#define ENTRY_HPA1_HI		8U
+#define ENTRY_GPA_L		2U
+#define ENTRY_GPA_HI		8U
 
 static struct e820_entry service_vm_e820[E820_MAX_ENTRIES];
 static struct e820_entry pre_vm_e820[PRE_VM_NUM][E820_MAX_ENTRIES];
@@ -156,13 +156,10 @@ void create_service_vm_e820(struct acrn_vm *vm)
 		struct acrn_vm_config *vm_config = get_vm_config(vm_id);
 
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
-			filter_mem_from_service_vm_e820(vm, vm_config->memory.start_hpa,
-					vm_config->memory.start_hpa + vm_config->memory.size);
-
-			/* if HPA2 is available, filter it out as well*/
-			if (vm_config->memory.size_hpa2 != 0UL) {
-				filter_mem_from_service_vm_e820(vm, vm_config->memory.start_hpa2,
-					vm_config->memory.start_hpa2 + vm_config->memory.size_hpa2);
+			for (i = 0; i < vm_config->memory.region_num; i++) {
+				filter_mem_from_service_vm_e820(vm, vm_config->memory.host_regions[i].start_hpa,
+						vm_config->memory.host_regions[i].start_hpa
+						+ vm_config->memory.host_regions[i].size_hpa);
 			}
 		}
 	}
@@ -219,6 +216,18 @@ static const struct e820_entry pre_ve820_template[E820_MAX_ENTRIES] = {
 	},
 };
 
+static inline uint64_t calculate_memory_size(struct vm_hpa_regions *regions, uint64_t num)
+{
+	uint64_t i;
+	uint64_t size = 0;
+
+	for(i = 0; i < num; i++) {
+		size += regions[i].size_hpa;
+	}
+
+	return size;
+}
+
 /**
  * @pre entry != NULL
  */
@@ -273,44 +282,22 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	uint64_t gpa_start = 0x100000000UL;
-	uint64_t hpa1_hi_size, hpa2_lo_size;
+	uint64_t gpa_hi_size;
 	uint64_t lowmem_max_length = MEM_2G - PRE_RTVM_SW_SRAM_MAX_SIZE - GPU_OPREGION_SIZE;
-	uint64_t remaining_hpa2_size = vm_config->memory.size_hpa2;
-	uint32_t entry_idx = ENTRY_HPA1_HI;
+	uint32_t entry_idx = ENTRY_GPA_HI;
+	uint64_t memory_size = calculate_memory_size(vm_config->memory.host_regions, vm_config->memory.region_num);
 
 	vm->e820_entries = pre_vm_e820[vm->vm_id];
 	(void)memcpy_s((void *)vm->e820_entries,  E820_MAX_ENTRIES * sizeof(struct e820_entry),
 		(const void *)pre_ve820_template, E820_MAX_ENTRIES * sizeof(struct e820_entry));
 
-	/* sanitize entry for hpa1 */
-	if (vm_config->memory.size > lowmem_max_length) {
-		/* need to split hpa1 and add an entry for hpa1_hi */
-		hpa1_hi_size = vm_config->memory.size - lowmem_max_length;
-		gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa1_hi_size);
+	if (memory_size > lowmem_max_length) {
+		gpa_hi_size = memory_size - lowmem_max_length;
+		add_ram_entry((vm->e820_entries + entry_idx), gpa_start, gpa_hi_size);
 		entry_idx++;
 	} else {
 		/* need to revise length of hpa1 entry to its actual size, excluding size of used space */
-		vm->e820_entries[ENTRY_HPA1].length = vm_config->memory.size - MEM_1M - VIRT_ACPI_DATA_LEN - VIRT_ACPI_NVS_LEN;
-		if (remaining_hpa2_size > 0UL) {
-			/* need to set gpa_start for hpa2 */
-			gpa_start = vm->e820_entries[ENTRY_HPA1].baseaddr + vm->e820_entries[ENTRY_HPA1].length;
-			if (remaining_hpa2_size > (lowmem_max_length - vm_config->memory.size)) {
-				/* need to split hpa2 and add an entry for hpa2_lo */
-				hpa2_lo_size = lowmem_max_length - vm_config->memory.size;
-			} else {
-				hpa2_lo_size = remaining_hpa2_size;
-			}
-			(void)add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa2_lo_size);
-			gpa_start = MEM_4G;
-			remaining_hpa2_size -= hpa2_lo_size;
-			entry_idx++;
-		}
-	}
-
-	/* check whether need an entry for remaining hpa2 */
-	if (remaining_hpa2_size > 0UL) {
-		(void)add_ram_entry((vm->e820_entries + entry_idx), gpa_start, remaining_hpa2_size);
-		entry_idx++;
+		vm->e820_entries[ENTRY_GPA_L].length = memory_size - MEM_1M - VIRT_ACPI_DATA_LEN - VIRT_ACPI_NVS_LEN;
 	}
 
 	vm->e820_entry_num = entry_idx;

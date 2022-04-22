@@ -16,7 +16,7 @@ def extract_topology(root_node, caches_node):
     for thread in threads:
         subleaf = 0
         while True:
-            cpu_id = int(get_node(thread, "cpu_id/text()"), base=16)
+            cpu_id = int(get_node(thread, "cpu_id/text()"))
             leaf_4 = parse_cpuid(4, subleaf, cpu_id)
             cache_type = leaf_4.cache_type
             if cache_type == 0:
@@ -100,3 +100,16 @@ def extract(args, board_etree):
     caches_node = get_node(board_etree, "//caches")
     extract_topology(root_node, caches_node)
     extract_tcc_capabilities(caches_node)
+
+    # Inject the explicitly specified CAT capability if exists
+    if args.add_llc_cat:
+        llc_node = get_node(root_node, "//caches/cache[@level='3']")
+        llc_cat_node = get_node(llc_node, "capability[@id='CAT']")
+        if llc_cat_node is None:
+            llc_cat_node = add_child(llc_node, "capability", None, id="CAT")
+            add_child(llc_cat_node, "capacity_mask_length", str(args.add_llc_cat.capacity_mask_length))
+            add_child(llc_cat_node, "clos_number", str(args.add_llc_cat.clos_number))
+            if args.add_llc_cat.has_CDP:
+                add_child(llc_node, "capability", None, id="CDP")
+        else:
+            logging.warning("The last level cache already reports CAT capability. The explicit settings from the command line options are ignored.")

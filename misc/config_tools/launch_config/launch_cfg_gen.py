@@ -206,12 +206,12 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     ###
     # CPU and memory resources
     ###
-    cpus = set(eval_xpath_all(vm_scenario_etree, ".//cpu_affinity/pcpu_id[text() != '']/text()"))
+    cpus = set(eval_xpath_all(vm_scenario_etree, ".//cpu_affinity//pcpu_id[text() != '']/text()"))
     lapic_ids = cpu_id_to_lapic_id(board_etree, vm_name, cpus)
     if lapic_ids:
         script.add_dynamic_dm_parameter("add_cpus", f"{' '.join([str(x) for x in sorted(lapic_ids)])}")
 
-    script.add_plain_dm_parameter(f"-m {eval_xpath(vm_scenario_etree, './/memory/whole/text()')}M")
+    script.add_plain_dm_parameter(f"-m {eval_xpath(vm_scenario_etree, './/memory/size/text()')}M")
 
     if eval_xpath(vm_scenario_etree, "//SSRAM_ENABLED") == "y" and \
        eval_xpath(vm_scenario_etree, ".//vm_type/text()") == "RTVM":
@@ -299,6 +299,10 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
             script.add_init_command(f"{var}=`mount_partition {block_device}`")
             script.add_virtual_device("virtio-blk", options=os.path.join(f"${{{var}}}", rootfs_img))
             script.add_deinit_command(f"unmount_partition ${{{var}}}")
+
+    for virtio_gpu in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/gpu[text() != '']/text()"):
+        if virtio_gpu is not None:
+            script.add_virtual_device("virtio-gpu", options=virtio_gpu)
 
     # Passthrough PCI devices
     bdf_regex = re.compile("([0-9a-f]{2}):([0-1][0-9a-f]).([0-7])")

@@ -6,6 +6,7 @@
 """Base classes and infrastructure for CPUID and MSR decoding"""
 
 from __future__ import print_function
+import sys
 import subprocess # nosec
 import re
 import functools

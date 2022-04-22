@@ -14,6 +14,9 @@
 </xs:simpleType>
 
 <xs:simpleType name="EnablementType">
+  <xs:annotation>
+    <xs:documentation>A string with value: ``Enable`` or ``Disable``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="Enable" />
     <xs:enumeration value="Disable" />
@@ -22,7 +25,7 @@
 
 <xs:simpleType name="HexFormat">
   <xs:annotation>
-    <xs:documentation>An Integer value in hexadecimal format.</xs:documentation>
+    <xs:documentation>An Integer value in hexadecimal format (with a leading ``0x``).</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:pattern value="0[Xx][0-9A-Fa-f]+|0" />
@@ -37,7 +40,7 @@
 
 <xs:simpleType name="BuildType">
   <xs:annotation>
-    <xs:documentation>A string that indicates the build type of the hypervisor.</xs:documentation>
+    <xs:documentation>A string with value ``Release`` or ``Debug`` that indicates the build type of the hypervisor.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="release">
@@ -126,14 +129,14 @@ higher value (lower severity) are discarded.</xs:documentation>
 
 <xs:simpleType name="SchedulerType">
   <xs:annotation>
-    <xs:documentation>Options:
+    <xs:documentation>A string specifying the scheduling option:
 
 - ``No-Operation (NOOP)``: The No-Operation (NOOP) scheduler means there is a
   strict one-to-one mapping between vCPUs and pCPUs.
 - ``Borrowed Virtual Time``: The Borrowed Virtual Time (BVT) scheduler is a
   virtual time-based scheduling algorithm. It dispatches the runnable thread with the
   earliest effective virtual time.
-- ``Priority Based Scheduling``: The priority based scheduler supports vCPU scheduling based on their pre-configured priorities.
+- ``Priority Based Scheduling``: The priority based scheduler supports vCPU scheduling based on pre-configured priorities.
 
 Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:documentation>
   </xs:annotation>
@@ -181,18 +184,27 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 </xs:simpleType>
 
 <xs:simpleType name="VMNameType">
+  <xs:annotation>
+    <xs:documentation>A string of up to 15 letters, digits, ``_``, or ``-``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:pattern value="([a-zA-Z0-9_\-]){1,15}" />
   </xs:restriction>
 </xs:simpleType>
 
 <xs:simpleType name="VBDFType">
+  <xs:annotation>
+    <xs:documentation>A string with up to two hex digits, a ``:``, two hex digits, a ``.``, and one digit between 0-7.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:pattern value="[0-9A-Fa-f]{1,2}:[0-1][0-9A-Fa-f].[0-7]" />
   </xs:restriction>
 </xs:simpleType>
 
 <xs:simpleType name="ProviderType">
+  <xs:annotation>
+    <xs:documentation>A string with value ``Hypervisor`` or ``Device Model``.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="Hypervisor" />
     <xs:enumeration value="Device Model" />
@@ -207,7 +219,7 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
      </xs:annotation>
    </xs:element>
    <xs:element name="VBDF" type = "VBDFType">
-     <xs:annotation acrn:title="Virtual BDF">
+     <xs:annotation acrn:title="Virtual BDF" acrn:defaults="[f'00:{i:02x}.0' for i in range(8, 16)]" acrn:unique-among="//IVSHMEM_VM[VM_NAME=$parent/VM_NAME]/VBDF/text()">
        <xs:documentation>Virtual BDF (Bus Device Function) is automatically assigned and can be changed if needed. Set in Hex.</xs:documentation>
      </xs:annotation>
    </xs:element>
@@ -215,6 +227,9 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 </xs:complexType>
 
 <xs:complexType name="IVSHMEMVMS">
+  <xs:annotation>
+    <xs:documentation>A sequence of Shared VM names and their Virtual BDF values.</xs:documentation>
+  </xs:annotation>
   <xs:sequence>
    <xs:element name="IVSHMEM_VM" type="IVSHMEMVM" maxOccurs="unbounded">
      <xs:annotation>
@@ -225,6 +240,9 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 </xs:complexType>
 
 <xs:simpleType name="IVSHMEMSize">
+  <xs:annotation>
+    <xs:documentation>An Integer with value a power of 2 between 2 and 512.</xs:documentation>
+  </xs:annotation>
   <xs:restriction base="xs:integer">
     <xs:enumeration value="2" />
     <xs:enumeration value="4" />
@@ -245,6 +263,9 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
         <xs:documentation>Name of the shared memory region.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
+  <xs:annotation>
+    <xs:documentation>A string with no spaces.</xs:documentation>
+  </xs:annotation>
 	<xs:restriction base="xs:string">
 	  <xs:pattern value="\w+" />
 	</xs:restriction>

@@ -306,13 +306,20 @@ static inline uint16_t get_configured_bsp_pcpu_id(const struct acrn_vm_config *v
  */
 static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_vm_config *vm_config)
 {
-	bool is_hpa1 = true;
-	uint64_t base_hpa = vm_config->memory.start_hpa;
-	uint64_t remaining_hpa_size = vm_config->memory.size;
+	uint64_t base_hpa;
+	uint64_t base_gpa;
+	uint64_t remaining_entry_size;
+	uint32_t hpa_index;
+	uint64_t base_size;
 	uint32_t i;
+	struct vm_hpa_regions tmp_vm_hpa;
+	const struct e820_entry *entry;
+
+	hpa_index = 0U;
+	tmp_vm_hpa = vm_config->memory.host_regions[0];
 
 	for (i = 0U; i < vm->e820_entry_num; i++) {
-		const struct e820_entry *entry = &(vm->e820_entries[i]);
+		entry = &(vm->e820_entries[i]);
 
 		if (entry->length == 0UL) {
 			continue;
@@ -327,33 +334,39 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 			}
 		}
 
-		if (remaining_hpa_size >= entry->length) {
-			/* Do EPT mapping for GPAs that are backed by physical memory */
-			if ((entry->type == E820_TYPE_RAM) || (entry->type == E820_TYPE_ACPI_RECLAIM)
-					|| (entry->type == E820_TYPE_ACPI_NVS)) {
-				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
-					entry->length, EPT_RWX | EPT_WB);
-				base_hpa += entry->length;
-				remaining_hpa_size -= entry->length;
-			}
-
-			/* GPAs under 1MB are always backed by physical memory */
-			if ((entry->type != E820_TYPE_RAM) && (entry->baseaddr < (uint64_t)MEM_1M)) {
-				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
-					entry->length, EPT_RWX | EPT_UNCACHED);
-				base_hpa += entry->length;
-				remaining_hpa_size -= entry->length;
-			}
-		} else {
-			if (entry->type == E820_TYPE_RAM) {
-				pr_warn("%s: HPA size incorrectly configured in v820\n", __func__);
-			}
+		if ((entry->type == E820_TYPE_RESERVED) && (entry->baseaddr > MEM_1M)) {
+			continue;
 		}
 
-		if ((remaining_hpa_size == 0UL) && (is_hpa1)) {
-			is_hpa1 = false;
-			base_hpa = vm_config->memory.start_hpa2;
-			remaining_hpa_size = vm_config->memory.size_hpa2;
+		base_gpa = entry->baseaddr;
+		remaining_entry_size = entry->length;
+
+		while ((hpa_index < vm_config->memory.region_num) && (remaining_entry_size > 0)) {
+
+			base_hpa = tmp_vm_hpa.start_hpa;
+			base_size = min(remaining_entry_size, tmp_vm_hpa.size_hpa);
+
+			if (tmp_vm_hpa.size_hpa > remaining_entry_size) {
+				/* from low to high */
+				tmp_vm_hpa.start_hpa  += base_size;
+				tmp_vm_hpa.size_hpa -= base_size;
+			} else {
+				hpa_index++;
+				if (hpa_index < vm_config->memory.region_num) {
+					tmp_vm_hpa = vm_config->memory.host_regions[hpa_index];
+				}
+			}
+
+			if (entry->type != E820_TYPE_RESERVED) {
+				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, base_gpa,
+						base_size, EPT_RWX | EPT_WB);
+			} else {
+				/* GPAs under 1MB are always backed by physical memory */
+				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, base_gpa,
+						base_size, EPT_RWX | EPT_UNCACHED);
+			}
+			remaining_entry_size -= base_size;
+			base_gpa += base_size;
 		}
 	}
 
@@ -504,7 +517,9 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
-			ept_del_mr(vm, pml4_page, vm_config->memory.start_hpa, vm_config->memory.size);
+			for (i = 0; i < vm_config->memory.region_num; i++){
+				ept_del_mr(vm, pml4_page, vm_config->memory.host_regions[i].start_hpa, vm_config->memory.host_regions[i].size_hpa);
+			}
 			/* Remove MMIO/IO bars of pre-launched VM's ptdev */
 			deny_pdevs(vm, vm_config->pci_devs, vm_config->pci_dev_num);
 		}

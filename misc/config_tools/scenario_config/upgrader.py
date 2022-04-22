@@ -498,6 +498,29 @@ class ScenarioUpgrader(ScenarioTransformer):
 
         return False
 
+    def move_pcpu(self, xsd_element_node, xml_parent_node, new_nodes):
+        vm_type = self.get_node(xml_parent_node, "parent::vm/vm_type/text()")
+
+        pcpus = self.get_from_old_launch_data(xml_parent_node, "cpu_affinity/pcpu_id[text() != '']")
+        if not pcpus:
+            pcpus = self.get_from_old_data(xml_parent_node, "cpu_affinity/pcpu_id[text() != '']")
+
+        if pcpus:
+            for n in pcpus:
+                new_node = etree.Element(xsd_element_node.get("name"))
+                etree.SubElement(new_node, "pcpu_id").text = n.text
+                if vm_type == "RTVM":
+                    etree.SubElement(new_node, "real_time_vcpu").text = "y"
+                new_nodes.append(new_node)
+                self.old_data_nodes.discard(n)
+        else:
+            for n in self.get_from_old_data(xml_parent_node, "cpu_affinity/pcpu"):
+                new_nodes.append(n)
+                for child in n.iter():
+                    self.old_data_nodes.discard(child)
+
+        return False
+
     def move_os_type(self, xsd_element_node, xml_parent_node, new_nodes):
         old_os_type_nodes = self.get_from_old_launch_data(xml_parent_node, ".//user_vm_type")
 
@@ -627,6 +650,7 @@ class ScenarioUpgrader(ScenarioTransformer):
 
     data_movers = {
         "vm/name": partialmethod(move_data_from_either_xml, "name", "vm_name"),
+        "pcpu": move_pcpu,
         "pcpu_id": partialmethod(move_data_from_either_xml, "cpu_affinity/pcpu_id[text() != '']", "cpu_affinity/pcpu_id[text() != '']"),
         "pci_dev": partialmethod(move_data_from_both_xmls, ".//pci_devs/pci_dev[text()]", "passthrough_devices/*[text()] | sriov/*[text()]"),
         "PTM": partialmethod(move_data_from_either_xml, ".//PTM", "enable_ptm"),
@@ -670,7 +694,12 @@ class ScenarioUpgrader(ScenarioTransformer):
     def add_missing_nodes(self, xsd_element_node, xml_parent_node, xml_anchor_node):
         new_nodes = []
         def call_mover(mover):
-            if isinstance(mover, partialmethod):
+            if isinstance(mover, list):
+                ret = False
+                for fn in mover:
+                    ret = call_mover(fn)
+                return ret
+            elif isinstance(mover, partialmethod):
                 return mover.__get__(self, type(self))(xsd_element_node, xml_parent_node, new_nodes)
             else:
                 return mover(self, xsd_element_node, xml_parent_node, new_nodes)
