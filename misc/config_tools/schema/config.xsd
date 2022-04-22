@@ -443,7 +443,7 @@ argument and memory.</xs:documentation>
       </xs:annotation>
       <xs:complexType>
         <xs:all>
-          <xs:element name="console" type="VirtioConsoleConfiguration" minOccurs="0">
+          <xs:element name="console" type="VirtioConsoleConfiguration" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation acrn:title="Virtio console device" acrn:views="basic">
               <xs:documentation>Virtio console device for data input and output.
 The virtio console BE driver copies data from the frontend's transmitting virtqueue when it receives a kick on virtqueue (implemented as a vmexit).
