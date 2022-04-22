@@ -262,22 +262,23 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
         elif backend_device_file is not None:
             script.add_virtual_device("virtio-input", options=backend_device_file)
 
-    for backend_type in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/console/backend_type[text() != '']/text()"):
+    for virtio_console_etree in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/console"):
         preceding_mask = ""
-        use_type = eval_xpath(vm_scenario_etree, ".//virtio_devices/console/use_type/text()")
+        use_type = eval_xpath(virtio_console_etree, "./use_type/text()")
+        backend_type = eval_xpath(virtio_console_etree, "./backend_type/text()")
         if use_type == "Virtio console":
             preceding_mask = "@"
 
         if backend_type == "file":
-            output_file_path = eval_xpath(vm_scenario_etree, ".//virtio_devices/console/output_file_path/text()")
+            output_file_path = eval_xpath(virtio_console_etree, "./output_file_path/text()")
             script.add_virtual_device("virtio-console", options=f"{preceding_mask}file:file_port={output_file_path}")
         elif backend_type == "tty":
-            tty_file_path = eval_xpath(vm_scenario_etree, ".//virtio_devices/console/tty_device_path/text()")
+            tty_file_path = eval_xpath(virtio_console_etree, "./tty_device_path/text()")
             script.add_virtual_device("virtio-console", options=f"{preceding_mask}tty:tty_port={tty_file_path}")
         elif backend_type == "sock server" or backend_type == "sock client":
-            sock_file_path = eval_xpath(vm_scenario_etree, ".//virtio_devices/console/sock_file_path/text()")
+            sock_file_path = eval_xpath(virtio_console_etree, "./sock_file_path/text()")
             script.add_virtual_device("virtio-console", options=f"socket:{os.path.basename(sock_file_path).split('.')[0]}={sock_file_path}:{backend_type.replace('sock ', '')}")
-        else:
+        elif backend_type == "pty" or backend_type == "stdio":
             script.add_virtual_device("virtio-console", options=f"{preceding_mask}{backend_type}:{backend_type}_port")
 
     for interface_name in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/network/interface_name[text() != '']/text()"):
