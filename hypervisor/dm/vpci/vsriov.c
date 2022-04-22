@@ -27,6 +27,7 @@
  */
 
 #include <asm/guest/vm.h>
+#include <asm/guest/ept.h>
 #include <ptdev.h>
 #include <vpci.h>
 #include <asm/pci_dev.h>
@@ -123,19 +124,25 @@ static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf, uint16_t v
 			*vf_vbar = vf_vdev->phyfun->sriov.vbars[bar_idx];
 			vf_vbar->base_hpa += (vf_vbar->size * vf_id);
 			vf_vbar->base_gpa = vf_vbar->base_hpa;
+
+			/* Map VF's BARs when it's first created. */
+			if (vf_vbar->base_gpa != 0UL) {
+				struct acrn_vm *vm = vpci2vm(vf_vdev->vpci);
+				ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp), vf_vbar->base_hpa,
+					vf_vbar->base_gpa, vf_vbar->size, EPT_WR | EPT_RD | EPT_UNCACHED);
+			}
+
 			if (has_msix_cap(vf_vdev) && (bar_idx == vf_vdev->msix.table_bar)) {
 				vf_vdev->msix.mmio_hpa = vf_vbar->base_hpa;
 				vf_vdev->msix.mmio_size = vf_vbar->size;
+				vdev_pt_map_msix(vf_vdev, false);
 			}
+
 			/*
 			 * VF BARs value are zero and read only, according to PCI Express
 			 * Base 4.0 chapter 9.3.4.1.11, the VF
 			 */
 			pci_vdev_write_vcfg(vf_vdev, pci_bar_offset(bar_idx), 4U, 0U);
-		}
-
-		if (has_msix_cap(vf_vdev)) {
-			vdev_pt_map_msix(vf_vdev, false);
 		}
 	}
 }

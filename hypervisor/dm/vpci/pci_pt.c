@@ -582,7 +582,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 			pci_vdev_write_vcfg(vdev, PCIR_VENDOR, 2U, vid);
 			pci_vdev_write_vcfg(vdev, PCIR_DEVICE, 2U, did);
 		} else {
-			/* VF is unassinged  */
+			/* VF is unassinged: when VF was first created, the VF's BARs hasn't been assigned */
 			uint32_t bar_idx;
 
 			for (bar_idx = 0U; bar_idx < vdev->nr_bars; bar_idx++) {
