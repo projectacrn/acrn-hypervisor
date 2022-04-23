@@ -101,7 +101,6 @@
   </vm>
   <vm id="1">
     <load_order>SERVICE_VM</load_order>
-    <vm_type>STANDARD_VM</vm_type>
     <name>ACRN_Service_VM</name>
     <cpu_affinity>
       <pcpu>

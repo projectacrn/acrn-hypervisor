@@ -287,7 +287,7 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Specify the load_order.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="vm_type" type="VMType">
+    <xs:element name="vm_type" type="VMType" minOccurs="0">
       <xs:annotation acrn:title="VM type" acrn:views="basic">
         <xs:documentation>Select the VM type. A standard VM (``STANDARD_VM``) is for general-purpose applications, such as human-machine interface (HMI). A real-time VM (``RTVM``) offers special features for time-sensitive applications.</xs:documentation>
       </xs:annotation>
@@ -374,7 +374,7 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="os_config" type="OSConfigurations" minOccurs="0">
-      <xs:annotation acrn:applicable-vms="pre-launched, service-vm" acrn:views="basic">
+      <xs:annotation acrn:title="OS Configuration" acrn:applicable-vms="pre-launched, service-vm" acrn:views="basic">
         <xs:documentation>General information for host kernel, boot
 argument and memory.</xs:documentation>
       </xs:annotation>
@@ -390,7 +390,7 @@ argument and memory.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="pt_intx" type="xs:string" minOccurs="0">
-      <xs:annotation acrn:applicable-vms="pre-launched" acrn:views="advanced">
+      <xs:annotation acrn:applicable-vms="pre-launched" acrn:views="">
         <xs:documentation>Specify the pre-launched VM owned IOAPIC pins and the corresponding mapping between physical GSI and virtual GSI.</xs:documentation>
       </xs:annotation>
     </xs:element>
