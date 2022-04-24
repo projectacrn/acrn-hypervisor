@@ -277,6 +277,11 @@ These settings can only be changed at build time.</xs:documentation>
 Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="CACHE_REGION" type="CacheRegionType" minOccurs="0" maxOccurs="1">
+      <xs:annotation>
+        <xs:documentation>Specify the cache setting.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
   </xs:all>
 </xs:complexType>
 

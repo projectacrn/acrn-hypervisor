@@ -7,6 +7,8 @@ import sys
 import enum
 import board_cfg_lib
 import common
+import lxml.etree
+import os
 
 class RDT(enum.Enum):
     L2 = 0
@@ -17,6 +19,7 @@ INCLUDE_HEADER = """
 #include <asm/board.h>
 #include <asm/vtd.h>
 #include <asm/msr.h>
+#include <asm/rdt.h>
 #include <pci.h>
 #include <misc_cfg.h>
 """
@@ -102,9 +105,7 @@ def populate_clos_mask_msr(rdt_res, cat_mask_list, config):
     idx = 0
     for cat_mask in cat_mask_list:
         print("\t{", file=config)
-        print("\t\t.value.clos_mask = CLOS_MASK_{},".format(idx), file=config)
-        print("\t\t.msr_index = MSR_IA32_{0}_MASK_BASE + {1},".format(
-              rdt_res, idx), file=config)
+        print("\t\t.clos_mask = {},".format(cat_mask), file=config)
         print("\t},", file=config)
         idx += 1
 
@@ -118,58 +119,148 @@ def populate_mba_delay_mask(rdt_res, mba_delay_list, config):
     idx = 0
     for mba_delay_mask in mba_delay_list:
         print("\t{", file=config)
-        print("\t\t.value.mba_delay = MBA_MASK_{},".format(idx), file=config)
-        print("\t\t.msr_index = MSR_IA32_{0}_MASK_BASE + {1},".format(
-              rdt_res, idx), file=config)
+        print("\t\t.mba_delay = ,".format(mba_delay_mask), file=config)
         print("\t},", file=config)
         idx += 1
 
-
-def gen_rdt_res(config):
-    """
-    Get RDT resource (L2, L3, MBA) information
-    :param config: it is a file pointer of board information for writing to
-    """
-    err_dic = {}
-    rdt_res_str =""
-    res_present = [0, 0, 0]
-    (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
-    common_clos_max = board_cfg_lib.get_common_clos_max()
-
-    cat_mask_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CLOS_MASK")
-    mba_delay_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "MBA_DELAY")
-
-    if common_clos_max > MSR_IA32_L2_MASK_END - MSR_IA32_L2_MASK_BASE or\
-        common_clos_max > MSR_IA32_L3_MASK_END - MSR_IA32_L3_MASK_BASE:
-        err_dic["board config: generate board.c failed"] = "CLOS MAX should be less than reserved adress region length of L2/L3 cache"
-        return err_dic
-
-    print("\n#ifdef CONFIG_RDT_ENABLED", file=config)
-    if len(rdt_resources) == 0 or common_clos_max == 0:
-        print("struct platform_clos_info platform_{0}_clos_array[MAX_CACHE_CLOS_NUM_ENTRIES];".format("l2"), file=config)
-        print("struct platform_clos_info platform_{0}_clos_array[MAX_CACHE_CLOS_NUM_ENTRIES];".format("l3"), file=config)
-        print("struct platform_clos_info platform_{0}_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];".format("mba"), file=config)
+def get_rdt_enabled():
+    scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
+    enable = scenario_etree.xpath(f"//RDT_ENABLED/text()")
+    if enable[0] == "y":
+        return "true"
     else:
-        for idx, rdt_res in enumerate(rdt_resources):
-            if rdt_res == "L2":
-                rdt_res_str = "l2"
-                print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
-                      "MAX_CACHE_CLOS_NUM_ENTRIES"), file=config)
-                populate_clos_mask_msr(rdt_res, cat_mask_list, config)
+        return "false"
+
+def get_cdp_enabled():
+    scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
+    enable = scenario_etree.xpath(f"//CDP_ENABLED/text()")
+    if enable[0] == "y":
+        return "true"
+    else:
+        return "false"
+
+def get_common_clos_max(clos_number, capability_id):
+
+    common_clos_max = 0
+    if get_rdt_enabled() and not get_cdp_enabled():
+        common_clos_max = clos_number
+    if get_cdp_enabled() and capability_id != 'MBA':
+        common_clos_max = clos_number / 2
+
+    return common_clos_max
+
+def gen_rdt_str(cache, config):
+    err_dic = {}
+    cat_mask_list = {}
+
+    board_etree = lxml.etree.parse(common.BOARD_INFO_FILE)
+    mask_length = common.get_node(f"./capability[@id='CAT']/capacity_mask_length/text()", cache)
+    clos_number = common.get_node(f"./capability[@id='CAT']/clos_number/text()", cache)
+
+    bitmask = (1 << int(mask_length)) - 1
+    cache_level = common.get_node(f"./@level", cache)
+    cache_id = common.get_node(f"./@id", cache)
+    processor_list = board_etree.xpath(f"//cache[@level = '{cache_level}' and @id = '{cache_id}']/processors/processor/text()")
+    capability_list = board_etree.xpath(f"//cache[@level = '{cache_level}' and @id = '{cache_id}']/capability/@id")
+
+    for capability_id in capability_list:
+
+        common_clos_max = get_common_clos_max(int(clos_number), capability_id)
+        if capability_id == "CAT":
+            if common_clos_max > MSR_IA32_L2_MASK_END - MSR_IA32_L2_MASK_BASE or\
+                common_clos_max > MSR_IA32_L3_MASK_END - MSR_IA32_L3_MASK_BASE:
+                err_dic["board config: Failed to generate board.c"] = "CLOS Mask Number is more then the reserved address region length of L2/L3 cache"
+                return err_dic
+
+            cdp_enable = get_cdp_enabled()
+            cat_mask_list = get_mask_list(cache_level, int(cache_id, 16))
+            if len(cat_mask_list) > int(clos_number):
+                    err_dic['board config: Failed to generate board.c'] = "CLOS Mask Number too bigger then the supported of L2/L3 cache"
+                    return err_dic;
+
+            if cache_level == "2":
+                rdt_res = "l2"
+            elif cache_level == "3":
+                rdt_res = "l3"
+
+            clos_config_array = "platform_l{0}_clos_array_{1}".format(cache_level, int(cache_id, 16))
+
+            print("\t{", file=config)
+            print("\t\t.res.cache = {", file=config)
+            print("\t\t\t.bitmask = {0},".format(hex(bitmask)), file=config)
+            print("\t\t\t.cbm_len = {0},".format(mask_length), file=config)
+            print("\t\t\t.is_cdp_enabled = {0},".format(cdp_enable), file=config)
+            print("\t\t},", file=config)
+        elif capability_id == "MBA":
+            max_throttling_value = common.get_node(f"./capability/max_throttling_value/text()", cache)
+            rdt_res = "mba"
+            clos_config_array = "platform_mba_clos_array"
+            print("\t{", file=config)
+            print("\t\t.res.membw = {", file=config)
+            print("\t\t\t.mba_max = {0},".format(clos_number), file=config)
+            print("\t\t\t.delay_linear = {0}".format(max_throttling_value), file=config)
+            print("\t\t},", file=config)
+
+    print("\t\t.num_closids = {0},".format(clos_number), file=config)
+    print("\t\t.num_clos_config = {0},".format(len(cat_mask_list)), file=config)
+    print("\t\t.clos_config_array = {0},".format(clos_config_array), file=config)
+
+    cpu_mask = 0
+    for processor in processor_list:
+        core_id = common.get_node(f"//core[@id = '{processor}']/thread/cpu_id/text()", board_etree)
+        if core_id is None:
+            continue
+        else:
+            cpu_mask = cpu_mask | (1 << int(core_id))
+    print("\t\t.cpu_mask = {0},".format(hex(cpu_mask)), file=config)
+    print("\t},", file=config)
+
+    return err_dic;
+
+def get_mask_list(cache_level, cache_id):
+    allocation_dir = os.path.split(common.SCENARIO_INFO_FILE)[0] + "/configs/allocation.xml"
+    allocation_etree = lxml.etree.parse(allocation_dir)
+    if cache_level == "3":
+        clos_list = allocation_etree.xpath(f"//clos_mask[@id = 'l3']/clos/text()")
+    else:
+        clos_list = allocation_etree.xpath(f"//clos_mask[@id = '{cache_id}']/clos/text()")
+    return clos_list
+def gen_clos_array(cache_list, config):
+    err_dic = {}
+    res_present = [0, 0, 0]
+    if len(cache_list) == 0:
+        print("union clos_config platform_{0}_clos_array[MAX_CACHE_CLOS_NUM_ENTRIES];".format("l2"), file=config)
+        print("union clos_config platform_{0}_clos_array[MAX_CACHE_CLOS_NUM_ENTRIES];".format("l3"), file=config)
+        print("union clos_config platform_{0}_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];".format("mba"), file=config)
+        print("struct rdt_info res_infos[RDT_INFO_NUMBER];", file=config)
+    else:
+        for idx, cache in enumerate(cache_list):
+            cache_level = common.get_node(f"./@level", cache)
+            cache_id = common.get_node(f"./@id", cache)
+            clos_number = common.get_node(f"./capability/clos_number/text()", cache)
+            if cache_level == "2":
+
+                cat_mask_list = get_mask_list(cache_level, int(cache_id, 16))
+                array_size = len(cat_mask_list)
+
+                print("union clos_config platform_l2_clos_array_{0}[{1}] = {{".format(int(cache_id, 16), clos_number), file=config)
+
+                populate_clos_mask_msr("L2", cat_mask_list, config)
+
                 print("};\n", file=config)
-                res_present[RDT.L2.value] = 1
-            elif rdt_res == "L3":
-                rdt_res_str = "l3"
-                print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
-                      "MAX_CACHE_CLOS_NUM_ENTRIES"), file=config)
-                populate_clos_mask_msr(rdt_res, cat_mask_list, config)
+                res_present[RDT.L2.value] += 1
+            elif cache_level == "3":
+                cat_mask_list = get_mask_list(cache_level, int(cache_id, 16))
+
+                print("union clos_config platform_l3_clos_array_{0}[{1}] = {{".format(int(cache_id, 16), clos_number), file=config)
+
+                populate_clos_mask_msr("L3", cat_mask_list, config)
+
                 print("};\n", file=config)
-                res_present[RDT.L3.value] = 1
-            elif rdt_res == "MBA":
-                rdt_res_str = "mba"
-                print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
-                      "MAX_MBA_CLOS_NUM_ENTRIES"), file=config)
-                err_dic = populate_mba_delay_mask(rdt_res, mba_delay_list, config)
+                res_present[RDT.L3.value] += 1
+            elif cache_level == "MBA":
+                print("union clos_config platform_mba_clos_array[MAX_MBA_CLOS_NUM_ENTRIES] = {", file=config)
+                err_dic = populate_mba_delay_mask("mba", mba_delay_list, config)
                 print("};\n", file=config)
                 res_present[RDT.MBA.value] = 1
             else:
@@ -177,17 +268,92 @@ def gen_rdt_res(config):
                 return err_dic
 
         if res_present[RDT.L2.value] == 0:
-            print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("l2", "MAX_CACHE_CLOS_NUM_ENTRIES"), file=config)
+            print("union clos_config platform_l2_clos_array[MAX_CACHE_CLOS_NUM_ENTRIES];", file=config)
         if res_present[RDT.L3.value] == 0:
-            print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("l3", "MAX_CACHE_CLOS_NUM_ENTRIES"), file=config)
+            print("union clos_config platform_l3_clos_array[MAX_CACHE_CLOS_NUM_ENTRIES];", file=config)
         if res_present[RDT.MBA.value] == 0:
-            print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("mba", "MAX_MBA_CLOS_NUM_ENTRIES"), file=config)
+            print("union clos_config platform_mba_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];", file=config)
+    return 0
 
-    print("#endif", file=config)
+def gen_rdt_res(config):
+    """
+    Get RDT resource (L2, L3, MBA) information
+    :param config: it is a file pointer of board information for writing to
+    """
+    print("\n#ifdef CONFIG_RDT_ENABLED", file=config)
+    err_dic = {}
+    res_present = [0, 0, 0]
 
-    print("", file=config)
+    scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
+    allocation_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
+    board_etree = lxml.etree.parse(common.BOARD_INFO_FILE)
+
+    cache_list = board_etree.xpath(f"//cache[capability/@id = 'CAT' or capability/@id = 'MBA']")
+    gen_clos_array(cache_list, config)
+
+    cache_list = board_etree.xpath(f"//cache[capability/@id = 'CAT' and @level = '2']")
+    if len(cache_list) > 0:
+        res_present[RDT.L2.value] = len(cache_list)
+        rdt_ins_name = "rdt_ins_l2[" + str(len(cache_list)) + "] = {"
+        print("struct rdt_ins {}".format(rdt_ins_name), file=config)
+        for idx, cache in enumerate(cache_list):
+            err_dic = gen_rdt_str(cache, config)
+            if err_dic:
+                return err_dic;
+        print("};\n", file=config)
+
+    cache_list = board_etree.xpath(f"//cache[capability/@id = 'CAT' and @level = '3']")
+    if len(cache_list) > 0:
+        res_present[RDT.L3.value] = len(cache_list)
+        rdt_ins_name = "rdt_ins_l3[" + str(len(cache_list)) + "] = {"
+        print("struct rdt_ins {}".format(rdt_ins_name), file=config)
+        for idx, cache in enumerate(cache_list):
+            err_dic = gen_rdt_str(cache, config)
+            if err_dic:
+                return err_dic;
+        print("};\n", file=config)
+
+    cache_list = board_etree.xpath(f"//cache[capability/@id = 'MBA']")
+    if len(cache_list) > 0:
+        res_present[RDT.L2.value] = 1
+        rdt_ins_name = "rdt_ins_mba[" + str(len(cache_list)) + "] = {"
+        print("struct rdt_ins {}".format(rdt_ins_name), file=config)
+        for idx, cache in enumerate(cache_list):
+            err_dic = gen_rdt_str(cache, config)
+            if err_dic:
+                return err_dic;
+        print("};\n", file=config)
+
+    print("struct rdt_type res_cap_info[RDT_NUM_RESOURCES] = {", file=config)
+    if res_present[RDT.L2.value] > 0:
+        print("\t{", file=config)
+        print("\t\t.res_id = RDT_RESID_L2,", file=config)
+        print("\t\t.msr_qos_cfg = MSR_IA32_L2_QOS_CFG,", file=config)
+        print("\t\t.msr_base = MSR_IA32_L2_MASK_BASE,", file=config)
+        print("\t\t.num_ins = {},".format(res_present[RDT.L2.value]), file=config)
+        print("\t\t.ins_array = rdt_ins_l2,", file=config)
+        print("\t},", file=config)
+    if res_present[RDT.L3.value] > 0:
+        print("\t{", file=config)
+        print("\t\t.res_id = RDT_RESID_L3,", file=config)
+        print("\t\t.msr_qos_cfg = MSR_IA32_L3_QOS_CFG,", file=config)
+        print("\t\t.msr_base = MSR_IA32_L3_MASK_BASE,", file=config)
+        print("\t\t.num_ins = {},".format(res_present[RDT.L3.value]), file=config)
+        print("\t\t.ins_array = rdt_ins_l3,", file=config)
+        print("\t},", file=config)
+    if res_present[RDT.MBA.value] > 0:
+        print("\t{", file=config)
+        print("\t\t.res_id = RDT_RESID_MBA,", file=config)
+        print("\t\t.msr_qos_cfg = MSR_IA32_MBA_QOS_CFG,", file=config)
+        print("\t\t.msr_base = MSR_IA32_MBA_MASK_BASE,", file=config)
+        print("\t\t.num_ins = {},".format(res_present[RDT.MBA.value]), file=config)
+        print("\t\t.ins_array = rdt_ins_mba,", file=config)
+        print("\t},", file=config)
+    print("};\n", file=config)
+
+    print("#endif\n", file=config)
+
     return err_dic
-
 
 def gen_single_data(data_lines, domain_str, config):
     line_i = 0

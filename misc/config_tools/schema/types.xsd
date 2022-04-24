@@ -320,20 +320,6 @@ RDT, setting this option to ``y`` is ignored.</xs:documentation>
         <xs:documentation>Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="CLOS_MASK" type="xs:string"  minOccurs="0" maxOccurs="unbounded">
-      <xs:annotation>
-        <xs:documentation>Specify the cache capacity bitmask for the CLOS; only continuous '1' bits
-are allowed. The value will be ignored when hardware does not support RDT.
-This option takes effect only if :option:`hv.FEATURES.RDT.RDT_ENABLED` is set to ``y``.
-As :option:`vm.clos.vcpu_clos` specifies the index of the CLOS to be associated with the given vCPU,
-:option:`hv.FEATURES.RDT.CLOS_MASK` of that CLOS would impact the performance of the given vCPU.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="MBA_DELAY" type="xs:string" minOccurs="0"  maxOccurs="unbounded">
-      <xs:annotation>
-        <xs:documentation>Memory Bandwidth Allocation delay value.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
   </xs:sequence>
 </xs:complexType>
 
@@ -344,6 +330,40 @@ As :option:`vm.clos.vcpu_clos` specifies the index of the CLOS to be associated 
         <xs:documentation>Enable Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:simpleType name="CacheType">
+  <xs:annotation>
+    <xs:documentation>Option: Unified, Code, Data</xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Unified"/>
+    <xs:enumeration value="Code" />
+    <xs:enumeration value="Data" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="CachePolicyType">
+  <xs:sequence>
+    <xs:element name="VM" type="xs:string" />
+    <xs:element name="VCPU" type="xs:integer" />
+    <xs:element name="TYPE" type="CacheType" minOccurs="1"/>
+    <xs:element name="CLOS_MASK" type="HexFormat" />
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="CacheAllocationType">
+  <xs:sequence>
+    <xs:element name="CACHE_ID" type="xs:integer"/>
+    <xs:element name="CACHE_LEVEL" type="xs:integer"/>
+    <xs:element name="POLICY" type="CachePolicyType"  minOccurs="1" maxOccurs="unbounded"/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="CacheRegionType">
+  <xs:sequence>
+    <xs:element name="CACHE_ALLOCATION" type="CacheAllocationType"  minOccurs="1" maxOccurs="unbounded"/>
   </xs:sequence>
 </xs:complexType>
 
