@@ -152,12 +152,6 @@
     </xsl:otherwise>
   </xsl:choose>
   <xsl:if test="acrn:is-rdt-supported()">
-    <xsl:for-each select="hv/FEATURES/RDT/MBA_DELAY">
-      <xsl:value-of select="acrn:define(concat('MBA_MASK_', position() - 1), current(), 'U')" />
-    </xsl:for-each>
-    <xsl:for-each select="hv/FEATURES/RDT/CLOS_MASK">
-      <xsl:value-of select="acrn:define(concat('CLOS_MASK_', position() - 1), current(), 'U')" />
-    </xsl:for-each>
     <xsl:value-of select="$endif" />
   </xsl:if>
 </xsl:template>

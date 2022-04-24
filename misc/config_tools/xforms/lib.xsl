@@ -564,12 +564,12 @@
 
   <!-- Board-specific functions-->
   <func:function name="acrn:get-normalized-closinfo-rdt-res-str">
-    <xsl:variable name="rdt_resource" select="translate(substring-before(substring-after(//CLOS_INFO, 'rdt resources supported:'), 'rdt resource clos max:'), $whitespaces, '')" />
+    <xsl:variable name="rdt_resource" select="acrn:string-join(//cache[capability/@id='CAT']/@level, ', ', 'L', '')" />
     <func:result select="$rdt_resource" />
   </func:function>
 
   <func:function name="acrn:get-normalized-closinfo-rdt-clos-max-str">
-    <xsl:variable name="rdt_res_clos_max" select="translate(substring-before(substring-after(//CLOS_INFO, 'rdt resource clos max:'), 'rdt resource mask max:'), $whitespaces, '')" />
+    <xsl:variable name="rdt_res_clos_max" select="acrn:string-join(//cache[capability/@id='CAT']/capability/clos_number, ', ', '', '')"/>
     <func:result select="$rdt_res_clos_max" />
   </func:function>
 

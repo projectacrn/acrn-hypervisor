@@ -68,8 +68,9 @@
       <xsl:value-of select="acrn:ifdef('CONFIG_RDT_ENABLED')" />
 
       <xsl:for-each select="vm">
-          <xsl:value-of select="concat('static uint16_t ', concat('vm', @id, '_vcpu_clos'), '[', count(clos/vcpu_clos), 'U] = {')" />
-          <xsl:value-of select="acrn:string-join(clos/vcpu_clos, ', ', '', 'U')" />
+          <xsl:variable name="vm_id" select="@id" />
+          <xsl:value-of select="concat('static uint16_t ', concat('vm', @id, '_vcpu_clos'), '[', count(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U] = {')" />
+          <xsl:value-of select="acrn:string-join(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos, ', ', '', 'U')" />
           <xsl:text>};</xsl:text>
           <xsl:value-of select="$newline" />
       </xsl:for-each>
@@ -179,18 +180,17 @@
     <xsl:value-of select="acrn:ifdef('CONFIG_RDT_ENABLED')" />
     <xsl:value-of select="acrn:initializer('pclosids', concat('vm', ../@id, '_vcpu_clos'))" />
 
-    <xsl:value-of select="acrn:initializer('num_pclosids', concat(count(vcpu_clos), 'U'))" />
-
+    <xsl:variable name="vm_id" select="../@id" />
+    <xsl:value-of select="acrn:initializer('num_pclosids', concat(count(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U'))" />
     <xsl:if test="acrn:is-vcat-enabled() and ../virtual_cat_support[text() = 'y']">
       <xsl:variable name="rdt_res_str" select="acrn:get-normalized-closinfo-rdt-res-str()" />
-      <xsl:variable name="closid" select="vcpu_clos[1]" />
 
       <xsl:if test="contains($rdt_res_str, 'L2')">
-        <xsl:value-of select="acrn:initializer('max_l2_pcbm', concat(../../hv/FEATURES/RDT/CLOS_MASK[$closid + 1], 'U'))" />
+        <xsl:value-of select="acrn:initializer('max_l2_pcbm', concat(math:max(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U'))" />
       </xsl:if>
 
       <xsl:if test="contains($rdt_res_str, 'L3')">
-        <xsl:value-of select="acrn:initializer('max_l3_pcbm', concat(../../hv/FEATURES/RDT/CLOS_MASK[$closid + 1], 'U'))" />
+        <xsl:value-of select="acrn:initializer('max_l3_pcbm', concat(math:max(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U'))" />
       </xsl:if>
     </xsl:if>
 
