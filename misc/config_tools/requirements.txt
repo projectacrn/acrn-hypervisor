@@ -1,0 +1,4 @@
+defusedxml
+lxml
+elementpath == 2.4.0
+xmlschema == 1.9.2
