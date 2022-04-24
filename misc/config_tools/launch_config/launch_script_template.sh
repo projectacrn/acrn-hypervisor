@@ -52,7 +52,7 @@ function unbind_device() {
 function create_tap() {
     # create a unique tap device for each VM
     tap=$1
-    tap_exist=$(ip a | grep "$tap" | awk '{print $1}')
+    tap_exist=$(ip a | grep "$tap: " | awk '{print $1}')
     if [ "$tap_exist"x != "x" ]; then
         echo "$tap TAP device already available, reusing it."
     else
