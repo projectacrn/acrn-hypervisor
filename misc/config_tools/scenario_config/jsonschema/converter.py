@@ -27,6 +27,7 @@ open(output_file, 'w', encoding='utf-8').write(json_schema)
 """
 import os
 import json
+import re
 
 from collections import OrderedDict
 from pathlib import Path
@@ -109,9 +110,16 @@ class XS2JS:
         'xs:maxInclusive': ('maximum', int),
     }
 
-    def __init__(self, schema_filename):
+    def __init__(self, schema_filename, features=None):
         self.xs = XS(schema_filename)
         self.desc_conv = ACRNDocumentStringConvertor()
+        if features is None:
+            self.features = []
+        else:
+            if isinstance(features, list):
+                self.features = features
+            else:
+                self.features = [features]
 
     def _get_definitions(self):
         """convert xml schema types to json schema definitions"""
@@ -192,6 +200,27 @@ class XS2JS:
         print(obj)
         raise NotImplementedError
 
+    def get_tester(self, element):
+        if "@test" not in element:
+            raise ValueError
+        test_command = re.search(r'\.//(\S+)\s*=\s*[\'"](\S+)[\'"]', element['@test'])
+        if not test_command:
+            raise ValueError
+        test_attr_name = test_command.group(1)
+        test_attr_const = test_command.group(2)
+        test_obj = {
+            "if": {
+                "properties": {
+                    test_attr_name: {
+                        "const": test_attr_const
+                    }
+                }
+            },
+            "then": True,
+            "else": False
+        }
+        return test_obj
+
     def get_element_define(self, element):
         basic_define = {}
         if 'xs:simpleType' in element:
@@ -204,6 +233,15 @@ class XS2JS:
                 basic_define["$ref"] = "#/definitions/%s" % element_type
         elif 'xs:complexType' in element:
             basic_define = self.xse2jse(element['xs:complexType'])
+        elif 'xs:alternative' in element:
+            possible_types = []
+            for possible_type in element['xs:alternative']:
+                temp_obj = self.get_element_define(possible_type)
+                if '@test' in possible_type:
+                    temp_obj.update(self.get_tester(possible_type))
+                possible_types.append(temp_obj)
+
+            basic_define = {'oneOf': possible_types}
         else:
             print(json.dumps(element, indent=2))
             raise NotImplementedError
@@ -221,11 +259,8 @@ class XS2JS:
             name = element['@name']
 
             # get element basic define (basic/simple type? $ref?)
-            try:
-                basic_define = self.get_element_define(element)
-            except NotImplementedError:
-                print(f"{name} not translated")
-                continue
+
+            basic_define = self.get_element_define(element)
 
             # build element json schema
             js_ele = OrderedDict(basic_define)
@@ -250,12 +285,16 @@ class XS2JS:
                 required.append(name)
 
             if '@maxOccurs' in element:
-                if 'type' in js_ele:
-                    js_ele['items'] = {'type': js_ele['type']}
-                elif '$ref' in js_ele:
-                    js_ele['items'] = {'$ref': js_ele['$ref']}
-                    del js_ele['$ref']
-                else:
+                possible_keys = ['type', '$ref', 'oneOf']
+                convert_to_items_success = False
+                for possible_key in possible_keys:
+                    if possible_key not in js_ele:
+                        continue
+                    js_ele['items'] = {possible_key: js_ele[possible_key]}
+                    del js_ele[possible_key]
+                    convert_to_items_success = True
+
+                if not convert_to_items_success:
                     raise NotImplementedError
 
                 if element['@maxOccurs'] == "unbounded":
@@ -283,7 +322,7 @@ class XS2JS:
                 js_ele['description'] = documentation
 
                 # dynamic enum
-                if '@acrn:options' in element['xs:annotation']:
+                if '@acrn:options' in element['xs:annotation'] and 'dynamicEnum' in self.features:
                     dynamic_enum = {
                         'type': 'dynamicEnum',
                         'function': 'get_enum',
@@ -324,26 +363,22 @@ class XS2JS:
         return all_elements
 
 
-def main(manual_call=False):
-    """
-    if you call this function in your
-    module must set params `manual_call=True`
-    else this function will not run
-    """
-    # for pyodide run check.
-    if __name__ != '__main__' and not manual_call:
-        return
-
+def main():
     # find acrn-hypervisor/misc/config_tools folder
     config_tools = Path(__file__).absolute()
     while config_tools.name != "config_tools":
         config_tools = config_tools.parent
 
-    schema_file = config_tools / 'configurator' / 'build' / 'sliced.xsd'
+    schema_file = config_tools / 'schema' / 'sliced.xsd'
     json_schema_file = config_tools / 'configurator' / 'src' / 'assets' / 'schema' / 'scenario.json'
 
     # Convert XSD to JSON Schema
-    json_schema = XS2JS(schema_file).get_json_schema()
+    # Todo: turn off it
+    stand_json_schema = False
+    features = []
+    if not stand_json_schema:
+        features.append('dynamicEnum')
+    json_schema = XS2JS(schema_file, features).get_json_schema()
     json_schema = json.dumps(json_schema, indent='\t')
 
     # Write file and print successful message
@@ -351,5 +386,5 @@ def main(manual_call=False):
     print("File %s Convert Success. JSON Schema Write To: %s" % (repr(schema_file), repr(json_schema_file)))
 
 
-# for pyodide
-main()
+if __name__ == '__main__':
+    main()

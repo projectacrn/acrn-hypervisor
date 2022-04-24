@@ -5,18 +5,26 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import sys, os
-import argparse
-import lxml.etree as etree
-import logging
 import re
+
+import os
+import sys
+
 import copy
+import argparse
+
+import logging
+
+import lxml.etree as etree
+
 
 def eval_xpath(element, xpath, default_value=None):
     return next(iter(element.xpath(xpath)), default_value)
 
+
 def eval_xpath_all(element, xpath):
     return element.xpath(xpath)
+
 
 class LaunchScript:
     script_template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "launch_script_template.sh")
@@ -30,7 +38,7 @@ class LaunchScript:
             #   31 - For LPC bridge needed by integrated GPU
             self._free_slots = list(range(3, 30))
 
-        def get_virtual_bdf(self, device_etree = None, options = None):
+        def get_virtual_bdf(self, device_etree=None, options=None):
             if device_etree is not None:
                 bus = eval_xpath(device_etree, "../@address")
                 vendor_id = eval_xpath(device_etree, "vendor/text()")
@@ -65,7 +73,7 @@ class LaunchScript:
             passthru_options = []
             if device_etree is not None:
                 class_code = eval_xpath(device_etree, "class/text()", "")
-                for k,v in self._options.items():
+                for k, v in self._options.items():
                     if class_code.startswith(k):
                         passthru_options.extend(v)
             return ",".join(passthru_options)
@@ -157,7 +165,10 @@ class LaunchScript:
         self.add_dynamic_dm_parameter("add_virtual_device", f"{vbdf} {kind} {options}")
 
     def add_passthru_device(self, bus, dev, fun, options=""):
-        device_etree = eval_xpath(self._board_etree, f"//bus[@type='pci' and @address='0x{bus:x}']/device[@address='0x{(dev << 16) | fun:x}']")
+        device_etree = eval_xpath(
+            self._board_etree,
+            f"//bus[@type='pci' and @address='0x{bus:x}']/device[@address='0x{(dev << 16) | fun:x}']"
+        )
         if not options:
             options = self._passthru_options.get_option(device_etree)
 
@@ -176,6 +187,7 @@ class LaunchScript:
         except StopIteration:
             return False
 
+
 def cpu_id_to_lapic_id(board_etree, vm_name, cpus):
     ret = []
 
@@ -187,6 +199,7 @@ def cpu_id_to_lapic_id(board_etree, vm_name, cpus):
             logging.warning(f"CPU {cpu} is not defined in the board XML, so it can't be available to VM {vm_name}")
 
     return ret
+
 
 def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id):
     vm_name = eval_xpath(vm_scenario_etree, "./name/text()", f"ACRN Post-Launched VM")
@@ -214,7 +227,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     script.add_plain_dm_parameter(f"-m {eval_xpath(vm_scenario_etree, './/memory/size/text()')}M")
 
     if eval_xpath(vm_scenario_etree, "//SSRAM_ENABLED") == "y" and \
-       eval_xpath(vm_scenario_etree, ".//vm_type/text()") == "RTVM":
+            eval_xpath(vm_scenario_etree, ".//vm_type/text()") == "RTVM":
         script.add_plain_dm_parameter("--ssram")
 
     ###
@@ -314,10 +327,11 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
         bus = int(m.group(1), 16)
         dev = int(m.group(2), 16)
         func = int(m.group(3), 16)
-        device_node = eval_xpath(board_etree, f"//bus[@type='pci' and @address='{hex(bus)}']/device[@address='hex((dev << 16) | func)']")
+        device_node = eval_xpath(board_etree,
+                                 f"//bus[@type='pci' and @address='{hex(bus)}']/device[@address='hex((dev << 16) | func)']")
         if device_node and \
-           eval_xpath(device_node, "class/text()") == "0x030000" and \
-           eval_xpath(device_node, "resource[@type='memory'") is None:
+                eval_xpath(device_node, "class/text()") == "0x030000" and \
+                eval_xpath(device_node, "resource[@type='memory'") is None:
             script.add_passthru_device(bus, dev, func, options="igd-vf")
         else:
             script.add_passthru_device(bus, dev, func)
@@ -337,6 +351,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     script.add_plain_dm_parameter(f"{vm_name}")
 
     return script
+
 
 def main(board_xml, scenario_xml, user_vm_id, out_dir):
     board_etree = etree.parse(board_xml)
@@ -375,12 +390,14 @@ def main(board_xml, scenario_xml, user_vm_id, out_dir):
 
     return 0
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--board", help="the XML file summarizing characteristics of the target board")
     parser.add_argument("--scenario", help="the XML file specifying the scenario to be set up")
     parser.add_argument("--launch", default=None, help="(obsoleted. DO NOT USE)")
-    parser.add_argument("--user_vmid", type=int, default=0, help="the post-launched VM ID (as is specified in the launch XML) whose launch script is to be generated, or 0 if all post-launched VMs shall be processed")
+    parser.add_argument("--user_vmid", type=int, default=0,
+                        help="the post-launched VM ID (as is specified in the launch XML) whose launch script is to be generated, or 0 if all post-launched VMs shall be processed")
     parser.add_argument("--out", default="output", help="path to the directory where generated scripts are placed")
     args = parser.parse_args()
 

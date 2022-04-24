@@ -21,7 +21,3 @@ build
 *.njsproj
 *.sln
 *.sw?
-
-# TS temp file
-tauri-plugin.js.map
-tauri-plugin.js

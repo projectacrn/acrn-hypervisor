@@ -1,5 +1,4 @@
 {
-  "$schema": "types/schema.json",
   "package": {
     "productName": "acrn-configurator",
     "version": "../package.json"
@@ -11,18 +10,10 @@
     "beforeBuildCommand": ""
   },
   "tauri": {
-    "cli": {
-      "args": [
-        {
-          "name": "debug",
-          "takesValue": false
-        }
-      ]
-    },
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "com.projectacrn.configurator",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -42,7 +33,6 @@
       },
       "macOS": {
         "frameworks": [],
-        "minimumSystemVersion": "",
         "useBootstrapper": false,
         "exceptionDomain": "",
         "signingIdentity": null,

@@ -1,11 +1,16 @@
 use std::borrow::Borrow;
-use std::fs;
 use std::ops::Add;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use glob::{glob_with, MatchOptions};
 use itertools::Itertools;
+
+
+use std::fs::{self, File};
+use std::io;
+use std::io::prelude::*;
+
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(u16)]
@@ -178,8 +183,8 @@ impl Configurator {
         }
     }
 
-    pub fn add_history(&mut self, history_type: HistoryType, path: &Path) {
-        let path_string: String = path.to_string_lossy().parse().unwrap();
+    pub fn add_history(&mut self, history_type: HistoryType, history_path: &Path) {
+        let path_string: String = history_path.to_string_lossy().parse().unwrap();
         match history_type {
             HistoryType::WorkingFolder => {
                 self.config_data.history.working_folder.insert(0, path_string);
@@ -266,8 +271,8 @@ pub fn get_history(history_type: HistoryType) -> Result<String, ()> {
 }
 
 #[tauri::command]
-pub fn add_history(history_type: HistoryType, path: String) -> Result<(), &'static str> {
-    let path_buf = Path::new(&path);
+pub fn add_history(history_type: HistoryType, history_path: String) -> Result<(), &'static str> {
+    let path_buf = Path::new(&history_path);
     if !(path_buf.is_dir() || path_buf.is_file()) {
         return Err("Not a validate dir or file path.");
     }
@@ -314,3 +319,68 @@ pub fn get_home() -> Result<String, ()> {
         }
     }
 }
+
+#[derive(Serialize)]
+pub struct DirEntry {
+    path: String,
+    children: Option<Vec<DirEntry>>,
+}
+
+#[tauri::command]
+pub fn acrn_read(file_path: &str) -> Result<String, String> {
+    let mut file = File::open(file_path).map_err(|e| e.to_string())?;
+    let mut contents = String::new();
+    file
+        .read_to_string(&mut contents)
+        .map_err(|e| e.to_string())?;
+    Ok(contents)
+}
+
+#[tauri::command]
+pub fn acrn_write(file_path: &str, contents: &str) -> Result<(), String> {
+    let mut file = File::create(file_path).map_err(|e| e.to_string())?;
+    file
+        .write_all(contents.as_bytes())
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn acrn_is_file(path: &str) -> bool {
+    fs::metadata(path)
+        .map(|metadata| metadata.is_file())
+        .unwrap_or(false)
+}
+
+#[tauri::command]
+pub fn acrn_create_dir(path: &str) -> Result<(), String> {
+    fs::create_dir(path).map_err(|e| e.to_string())
+}
+
+fn read_dir<P: AsRef<Path>>(
+    path: P,
+    recursive: bool,
+) -> io::Result<Vec<DirEntry>> {
+    let path = path.as_ref();
+    let mut entries = Vec::new();
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let path = entry.path().to_str().unwrap().to_string();
+        let children = if recursive && entry.file_type()?.is_dir() {
+            Some(read_dir(&path, true)?)
+        } else {
+            None
+        };
+        entries.push(DirEntry { path, children });
+    }
+    Ok(entries)
+}
+
+#[tauri::command]
+pub fn acrn_read_dir(
+    path: &str,
+    recursive: bool,
+) -> Result<Vec<DirEntry>, String> {
+    read_dir(path, recursive).map_err(|e| e.to_string())
+}
+

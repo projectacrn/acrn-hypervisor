@@ -1,6 +1,6 @@
 # ACRN Configurator
 
-This version based on tauri, WIP.
+This version is based on Tauri, WIP.
 
 ## Features
 
@@ -17,6 +17,10 @@ This version based on tauri, WIP.
 
 Please follow [this guide](https://tauri.studio/docs/getting-started/prerequisites)
 to install system dependencies **(including yarn)**.
+
+In Windows, [chocolatey](https://chocolatey.org/) is a Windows package manager,
+you can use `choco install xsltproc` to install `xsltproc` package,
+which provide `xmllint` command.
 
 ### 2. Clone Project And Install Project Dependencies.
 
@@ -36,7 +40,7 @@ Similar to Linux.
 
 On macOS, you may need to install git and python3 via `brew`.
 
-In Windows environment maybe you need to install git and python3 via chocolatey or manually,
+In the Windows environment maybe you need to install git and python3 via chocolatey or manually,
 and replace the command line `python3` with `py -3`.
 
 ### 3. How To Build
@@ -51,12 +55,18 @@ make configurator
 
 #### Windows/macOS
 
-Run follow command in the 'acrn-hypervisor' directory.
+Run following command in the 'acrn-hypervisor' directory.
 
 ```shell
-python3 misc/config_tools/scenario_config/schema_slicer.py
-python3 misc/config_tools/scenario_config/xs2js.py
-cd misc/config_tools/configurator
+cd misc/config_tools
+python scenario_config/schema_slicer.py
+python scenario_config/xs2js.py
+xmllint --xinclude schema/datachecks.xsd > schema/allchecks.xsd
+
+python -m build
+
+cd configurator
+python thirdLib/manager.py install
 yarn build
 ```
 
@@ -75,5 +85,4 @@ acrn-configurator
 
 You can find msi(Windows)/dmg(macOS) folder under the
 `misc/config_tools/configurator/src-tauri/target/release/bundle`
-
 directory, the installer in the folder.

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <xs:schema
-    xmlns:xi="http://www.w3.org/2003/XInclude"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:acrn="https://projectacrn.org">
 
