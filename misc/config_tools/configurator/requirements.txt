@@ -1,7 +1,3 @@
-lxml
-xmltodict
-xmlschema
-defusedxml
+build
+tqdm
 requests
-bs4
-sphinx

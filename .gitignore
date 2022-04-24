@@ -10,3 +10,5 @@ build
 venv
 *.egg-info
 /misc/config_tools/dist
+/misc/config_tools/schema/sliced.xsd
+/misc/config_tools/schema/allchecks.xsd

@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
+# pyodide support status: Yes
 """
 This program support run in pyodide env.
 In js side you can pass params by add follow code before this script.
@@ -11,11 +12,8 @@ In js side you can pass params by add follow code before this script.
 params = "${Base64.encode(params)}"
 ```
 """
-
 import re
 import sys
-import json
-import base64
 
 from urllib.parse import urljoin
 from subprocess import check_output
@@ -144,24 +142,10 @@ class ACRNDocumentStringConvertor:
         return fragment
 
 
-doc_html = ''
-if __name__ == '__main__':
-    WEB = False
-    if 'params' in globals():
-        WEB = True
-        # noinspection PyUnboundLocalVariable,PyUnresolvedReferences
-        params_data = base64.b64decode(params)
-        params = json.loads(params_data)
-    else:
-        params = {
-            "text": open('configdoc.txt').read(),
-            "objectsInv": None
-        }
-
-    print(params)
+def main():
+    params = {
+        "text": open('configdoc.txt').read(),
+        "objectsInv": None
+    }
     doc_html = ACRNDocumentStringConvertor(params['objectsInv']).convert(params['text'])
-    if not WEB:
-        print(doc_html)
-
-# for pyodide
-(lambda x: x)(doc_html)
+    return doc_html
