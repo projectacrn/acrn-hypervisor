@@ -241,4 +241,4 @@ if __name__ == "__main__":
     elif args.deb_mode == 'configurator':
         create_configurator_deb(args.build_dir)
     else:
-        print("ERROR: Please check the value of deb_mode: the value shall be acrn_all or board_inspector.")
+        print("ERROR: Please check the value of deb_mode: the value shall be acrn_all, board_inspector or configurator.")
