@@ -47,6 +47,7 @@ export default class ConfigureSettingsForScenario extends Component {
 
     render = () => {
         let {configurator} = this.context
+        let scenarioData = configurator.programLayer.scenarioData
         return (<Accordion.Item eventKey="2">
             <Accordion.Header>
                 <div className="p-1 w-100 d-flex justify-content-between align-items-center">
@@ -74,7 +75,21 @@ export default class ConfigureSettingsForScenario extends Component {
                         </ul>
                         <Button className={'deleteVM ' + (this.state.VMID === -1 ? 'd-none' : '')}
                                 size='lg' onClick={() => {
-                            configurator.programLayer.deleteVM(this.state.VMID)
+                            if (configurator.programLayer.isServiceVM(this.state.VMID) == true) {
+                                confirm("All post-launched VMs will be deleted together!!")
+                                    .then((r) => {
+                                        if (r) {
+                                            configurator.programLayer.deleteVM(this.state.VMID)
+                                            var len=scenarioData.vm.POST_LAUNCHED_VM.length
+                                            for (var idx=len-1; idx>=0; idx--) {
+                                                    let postvm = scenarioData.vm.POST_LAUNCHED_VM[idx]
+                                                    configurator.programLayer.deleteVM(postvm['@id'])
+                                            }
+                                        }
+                                    })
+                            } else {
+                                configurator.programLayer.deleteVM(this.state.VMID)
+                            }
                         }}>
                             <FontAwesomeIcon icon={faMinus} color="white" size="lg"/> Delete VM
                         </Button>

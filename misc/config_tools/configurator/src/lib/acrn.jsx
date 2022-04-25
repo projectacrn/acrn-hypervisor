@@ -217,6 +217,15 @@ export class ProgramLayer extends EventBase {
         this.onScenarioDataUpdateEvent()
     }
 
+    isServiceVM = (vmID) => {
+        for (var idx in this.scenarioData.vm.SERVICE_VM) {
+            if (this.scenarioData.vm.SERVICE_VM[idx]['@id'] === vmID) {
+                return true
+            }
+        }
+        return false
+    }
+
     deleteVM = (vmID) => {
         // call by view
         for (let vmType in this.scenarioData.vm) {
