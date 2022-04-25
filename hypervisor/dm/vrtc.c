@@ -395,6 +395,12 @@ static uint8_t cmos_read(uint8_t addr)
 	return pio_read8(CMOS_DATA_PORT);
 }
 
+static void cmos_write(uint8_t addr, uint8_t value)
+{
+	pio_write8(addr, CMOS_ADDR_PORT);
+	pio_write8(value, CMOS_DATA_PORT);
+}
+
 static bool cmos_update_in_progress(void)
 {
 	return (cmos_read(RTC_STATUSA) & RTCSA_TUP) ? 1 : 0;
@@ -416,6 +422,22 @@ static uint8_t cmos_get_reg_val(uint8_t addr)
 
 	spinlock_release(&cmos_lock);
 	return reg;
+}
+
+static void cmos_set_reg_val(uint8_t addr, uint8_t value)
+{
+	int32_t tries = 2000;
+
+	spinlock_obtain(&cmos_lock);
+
+	/* Make sure an update isn't in progress */
+	while (cmos_update_in_progress() && (tries != 0)) {
+		tries -= 1;
+	}
+
+	cmos_write(addr, value);
+
+	spinlock_release(&cmos_lock);
 }
 
 #define TRIGGER_ALARM	(RTCIR_ALARM | RTCIR_INT)
@@ -510,7 +532,9 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 	if ((width == 1U) && (addr == CMOS_ADDR_PORT)) {
 		vrtc->addr = (uint8_t)(value & 0x7FU);
 	} else {
-		if (!is_service_vm(vcpu->vm)) {
+		if (is_service_vm(vcpu->vm)) {
+			cmos_set_reg_val(vrtc->addr, (uint8_t)(value & 0xFFU));
+		} else {
 			switch (vrtc->addr) {
 			case RTC_STATUSA:
 			case RTC_INTR:
