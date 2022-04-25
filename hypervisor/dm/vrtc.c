@@ -50,6 +50,8 @@ struct clktime {
 	uint32_t	dow;	/* day of week (0 - 6; 0 = Sunday) */
 };
 
+static spinlock_t vrtc_rebase_lock = { .head = 0U, .tail = 0U };
+
 #define POSIX_BASE_YEAR	1970
 #define SECDAY		(24 * 60 * 60)
 #define SECYR		(SECDAY * 365)
@@ -377,10 +379,12 @@ static time_t vrtc_get_current_time(struct acrn_vrtc *vrtc)
 	uint64_t offset;
 	time_t second = VRTC_BROKEN_TIME;
 
+	spinlock_obtain(&vrtc_rebase_lock);
 	if (vrtc->base_rtctime > 0) {
 		offset = (cpu_ticks() - vrtc->base_tsc) / (get_tsc_khz() * 1000U);
 		second = vrtc->base_rtctime + vrtc->offset_rtctime + (time_t)offset;
 	}
+	spinlock_release(&vrtc_rebase_lock);
 	return second;
 }
 
@@ -565,7 +569,9 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 				*((uint8_t *)&vrtc->rtcdev + vrtc->addr) = (uint8_t)(value & mask);
 				current = vrtc_get_current_time(vrtc);
 				after = rtc_to_secs(vrtc);
+				spinlock_obtain(&vrtc_rebase_lock);
 				vrtc->offset_rtctime += after - current;
+				spinlock_release(&vrtc_rebase_lock);
 				break;
 			}
 		}
@@ -574,9 +580,70 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 	return true;
 }
 
+#define CALIBRATE_PERIOD	(3 * 3600 * 1000)	/* By ms, totally 3 hours. */
+static struct hv_timer calibrate_timer;
+
+static time_t vrtc_get_physical_rtc_time(struct acrn_vrtc *vrtc)
+{
+	struct rtcdev *vrtcdev = &vrtc->rtcdev;
+
+	vrtcdev->sec = cmos_get_reg_val(RTC_SEC);
+	vrtcdev->min = cmos_get_reg_val(RTC_MIN);
+	vrtcdev->hour = cmos_get_reg_val(RTC_HRS);
+	vrtcdev->day_of_month = cmos_get_reg_val(RTC_DAY);
+	vrtcdev->month = cmos_get_reg_val(RTC_MONTH);
+	vrtcdev->year = cmos_get_reg_val(RTC_YEAR);
+	vrtcdev->century = cmos_get_reg_val(RTC_CENTURY);
+	vrtcdev->reg_b = cmos_get_reg_val(RTC_STATUSB);
+
+	return rtc_to_secs(vrtc);
+}
+
+static void vrtc_update_basetime(time_t physical_time, time_t offset)
+{
+	struct acrn_vm *vm;
+	uint32_t vm_id;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm = get_vm_from_vmid(vm_id);
+		if (is_rt_vm(vm) || is_prelaunched_vm(vm)) {
+			spinlock_obtain(&vrtc_rebase_lock);
+			vm->vrtc.base_tsc = cpu_ticks();
+			vm->vrtc.base_rtctime = physical_time;
+			vm->vrtc.offset_rtctime += offset;
+			spinlock_release(&vrtc_rebase_lock);
+		}
+	}
+}
+
+static void calibrate_timer_callback(__unused void *data)
+{
+	struct acrn_vrtc temp_vrtc;
+	time_t physical_time = vrtc_get_physical_rtc_time(&temp_vrtc);
+
+	vrtc_update_basetime(physical_time, 0);
+}
+
+static void calibrate_setup_timer(void)
+{
+	uint64_t period_in_cycle, fire_tsc;
+
+	period_in_cycle = TICKS_PER_MS * CALIBRATE_PERIOD;
+	fire_tsc = cpu_ticks() + period_in_cycle;
+	initialize_timer(&calibrate_timer,
+			calibrate_timer_callback, NULL,
+			fire_tsc, period_in_cycle);
+
+	/* Start an periodic timer */
+	if (add_timer(&calibrate_timer) != 0) {
+		pr_err("Failed to add calibrate timer");
+	}
+}
+
 static void vrtc_set_basetime(struct acrn_vrtc *vrtc)
 {
 	struct rtcdev *vrtcdev = &vrtc->rtcdev;
+	time_t current;
 
 	/*
 	 * Read base time from physical rtc.
@@ -593,7 +660,10 @@ static void vrtc_set_basetime(struct acrn_vrtc *vrtc)
 	vrtcdev->reg_c = cmos_get_reg_val(RTC_INTR);
 	vrtcdev->reg_d = cmos_get_reg_val(RTC_STATUSD);
 
-	vrtc->base_rtctime = rtc_to_secs(vrtc);
+	current = rtc_to_secs(vrtc);
+	spinlock_obtain(&vrtc_rebase_lock);
+	vrtc->base_rtctime = current;
+	spinlock_release(&vrtc_rebase_lock);
 }
 
 void vrtc_init(struct acrn_vm *vm)
@@ -607,6 +677,10 @@ void vrtc_init(struct acrn_vm *vm)
 	vm->vrtc.vm = vm;
 	register_pio_emulation_handler(vm, RTC_PIO_IDX, &range, vrtc_read, vrtc_write);
 
-	vrtc_set_basetime(&vm->vrtc);
-	vm->vrtc.base_tsc = cpu_ticks();
+	if (is_service_vm(vm)) {
+		calibrate_setup_timer();
+	} else {
+		vrtc_set_basetime(&vm->vrtc);
+		vm->vrtc.base_tsc = cpu_ticks();
+	}
 }
