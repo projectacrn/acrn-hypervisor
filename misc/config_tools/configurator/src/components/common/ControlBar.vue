@@ -48,8 +48,7 @@ export default {
       })
     },
     close: () => {
-      console.log("close")
-      alert("close")
+      appWindow.close()
     }
   }
 }

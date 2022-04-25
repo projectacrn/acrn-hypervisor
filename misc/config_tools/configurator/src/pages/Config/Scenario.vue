@@ -67,7 +67,7 @@ export default {
   },
   methods: {
     newScenario(data) {
-      this.$emit('update:scenario', data)
+      this.$emit('scenarioUpdate', data)
     },
     loadScenario() {
       if (this.currentSelectedScenario.length > 0) {
