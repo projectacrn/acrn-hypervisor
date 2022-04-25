@@ -81,7 +81,6 @@
   </xsl:variable>
   <xsl:variable name="sos_bootargs" select="normalize-space(str:replace(//vm[acrn:is-service-vm(load_order)]/os_config/bootargs[text()], $sos_rootfs, ''))" />
   <xsl:variable name="maxcpunum" select="count(//vm[acrn:is-service-vm(load_order)]/cpu_affinity//pcpu_id)" />
-  <xsl:variable name="hugepages" select="round(number(substring-before(//board-data//TOTAL_MEM_INFO, 'kB')) div (1024 * 1024)) - 3" />
   <xsl:variable name="maxcpus">
     <xsl:choose>
       <xsl:when test="$maxcpunum != 0">
@@ -94,7 +93,7 @@
   </xsl:variable>
   <xsl:variable name="hugepage_kernelstring">
     <xsl:if test="//board-data//processors//capability[@id='gbyte_pages']">
-      <xsl:value-of select="concat('hugepagesz=1G hugepages=', $hugepages)" />
+      <xsl:value-of select="concat('hugepagesz=1G hugepages=', //allocation-data//vm[acrn:is-service-vm(load_order)]/hugepages/gb, ' hugepagesz=2M hugepages=', //allocation-data//vm[acrn:is-service-vm(load_order)]/hugepages/mb)" />
     </xsl:if>
   </xsl:variable>
   <xsl:value-of select="acrn:define('SERVICE_VM_ROOTFS', concat($quot, $sos_rootfs, ' ', $quot), '')" />
