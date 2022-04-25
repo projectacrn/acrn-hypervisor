@@ -21,6 +21,7 @@
 #include <vpic.h>
 #include <asm/guest/vmx_io.h>
 #include <vuart.h>
+#include <vrtc.h>
 #include <asm/guest/trusty.h>
 #include <asm/guest/vcpuid.h>
 #include <vpci.h>
@@ -169,7 +170,7 @@ struct acrn_vm {
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
 	struct acrn_vpci vpci;
-	uint8_t vrtc_offset;
+	struct acrn_vrtc vrtc;
 
 	uint64_t intr_inject_delay_delta; /* delay of intr injection */
 } __aligned(PAGE_SIZE);
