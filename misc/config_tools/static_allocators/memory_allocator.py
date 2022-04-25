@@ -9,7 +9,7 @@ import os
 import sys
 import lib.error
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common
+import common, math, logging
 
 def import_memory_info(board_etree):
     ram_range = {}
@@ -151,5 +151,37 @@ def alloc_vm_memory(board_etree, scenario_etree, allocation_etree):
     ram_range_info, mem_info_list, vm_node_index_list = alloc_memory(scenario_etree, ram_range_info)
     write_hpa_info(allocation_etree, mem_info_list, vm_node_index_list)
 
+def allocate_hugepages(board_etree, scenario_etree, allocation_etree):
+    hugepages_1gb = 0
+    hugepages_2mb = 0
+    ram_range_info = import_memory_info(board_etree)
+    total_hugepages = sum(ram_range_info[i] for i in ram_range_info if i >= 0x100000000)/(1024*1024*1024) \
+                      - sum(int(i) for i in scenario_etree.xpath("//vm[load_order = 'PRE_LAUNCHED_VM']/memory/hpa_region/size_hpa/text()"))/1024 \
+                      - 4 - 300/1024 * len(scenario_etree.xpath("//virtio_devices/gpu"))
+
+    post_launch_vms = scenario_etree.xpath("//vm[load_order = 'POST_LAUNCHED_VM']")
+    if len(post_launch_vms) > 0:
+        for post_launch_vm in post_launch_vms:
+            size = common.get_node("./memory/size/text()", post_launch_vm)
+            if size is not None:
+                mb, gb = math.modf(int(size)/1024)
+                hugepages_1gb = int(hugepages_1gb + gb)
+                hugepages_2mb = int(hugepages_2mb + math.ceil(mb * 1024 / 2))
+
+    post_vms_memory = sum(int(i) for i in scenario_etree.xpath("//vm[load_order = 'POST_LAUNCHED_VM']/memory/size/text()")) / 1024
+    correction_mb, correction_gb = math.modf(total_hugepages - post_vms_memory)
+    if total_hugepages - post_vms_memory < 0:
+        logging.warning(f"The sum {post_vms_memory} of memory configured in post launch VMs should not be larger than " \
+        f"the calculated total hugepages {total_hugepages} of service VMs. Please update the configuration in post launch VMs")
+
+    hugepages_1gb = hugepages_1gb + correction_gb
+    hugepages_2mb = hugepages_2mb + math.ceil(correction_mb * 1024 / 2)
+
+    allocation_service_vm_node = common.get_node("/acrn-config/vm[load_order = 'SERVICE_VM']", allocation_etree)
+    if allocation_service_vm_node is not None:
+        common.append_node("./hugepages/gb", int(hugepages_1gb), allocation_service_vm_node)
+        common.append_node("./hugepages/mb", int(hugepages_2mb), allocation_service_vm_node)
+
 def fn(board_etree, scenario_etree, allocation_etree):
     alloc_vm_memory(board_etree, scenario_etree, allocation_etree)
+    allocate_hugepages(board_etree, scenario_etree, allocation_etree)
