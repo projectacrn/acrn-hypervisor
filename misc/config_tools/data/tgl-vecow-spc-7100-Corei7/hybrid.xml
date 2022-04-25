@@ -1,4 +1,4 @@
-<acrn-config board="tgl-vecow-spc-7100-Corei7" scenario="hybrid">
+<acrn-config>
   <hv>
     <DEBUG_OPTIONS>
       <BUILD_TYPE>debug</BUILD_TYPE>
