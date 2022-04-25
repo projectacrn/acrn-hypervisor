@@ -5,6 +5,7 @@
 
 import logging
 import lxml.etree
+import re
 
 from cpuparser import parse_cpuid, get_online_cpu_ids
 from cpuparser.msr import *
@@ -44,7 +45,7 @@ def extract_model(processors_node, cpu_id, family_id, model_id, core_type, nativ
         for leaf in [0x80000002, 0x80000003, 0x80000004]:
             leaf_data = parse_cpuid(leaf, 0, cpu_id)
             brandstring += leaf_data.brandstring
-        n.set("description", brandstring.decode())
+        n.set("description", re.sub('[^!-~]+', ' ', brandstring.decode()).strip())
 
         leaves = [(1, 0), (7, 0), (0x80000001, 0), (0x80000007, 0)]
         for leaf in leaves:
