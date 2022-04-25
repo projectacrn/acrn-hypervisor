@@ -58,7 +58,9 @@ if (!isTauri) {
 async function main() {
     console.log("Pyodide Load Begin")
     let t1 = Date.now();
-    let pyodide = await loadPyodide();
+    let pyodide = await loadPyodide({
+        indexURL: '/thirdLib/pyodide/'
+    });
     await pyodide.loadPackage(['micropip', 'lxml', 'beautifulsoup4'])
     await pyodide.runPythonAsync(`
         import micropip

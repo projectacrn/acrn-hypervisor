@@ -25,6 +25,7 @@ open(output_file, 'w', encoding='utf-8').write(json_schema)
 ```
 
 """
+__package__ = 'scenario_config.jsonschema'
 import os
 import json
 import re

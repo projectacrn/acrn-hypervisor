@@ -8,7 +8,6 @@ This version is based on Tauri, WIP.
 
 - [x] Linux (.deb, AppImage)
 - [x] Windows 7,8,10 (.exe, .msi)
-- [x] macOS (.app, .dmg)
 
 
 ## Setting Up
@@ -17,6 +16,12 @@ This version is based on Tauri, WIP.
 
 Please follow [this guide](https://tauri.studio/docs/getting-started/prerequisites)
 to install system dependencies **(including yarn)**.
+
+#### Linux
+
+In Linux, 
+
+#### Windows
 
 In Windows, [chocolatey](https://chocolatey.org/) is a Windows package manager,
 you can use `choco install xsltproc` to install `xsltproc` package,
@@ -29,16 +34,16 @@ which provide `xmllint` command.
 ```bash
 sudo apt install git
 git clone https://github.com/projectacrn/acrn-hypervisor
-cd acrn-hypervisor/misc/config_tools/configurator
+cd acrn-hypervisor/misc/config_tools
+python3 -m pip install -r requirements.txt
+cd configurator
 python3 -m pip install -r requirements.txt
 yarn
 ```
 
-#### Windows && macOS
+#### Windows
 
 Similar to Linux.
-
-On macOS, you may need to install git and python3 via `brew`.
 
 In the Windows environment maybe you need to install git and python3 via chocolatey or manually,
 and replace the command line `python3` with `py -3`.
@@ -53,7 +58,7 @@ Run this command in the acrn-hypervisor directory.
 make configurator
 ```
 
-#### Windows/macOS
+#### Windows
 
 Run following command in the 'acrn-hypervisor' directory.
 
@@ -81,7 +86,7 @@ sudo apt install ./build/acrn-configurator_*.deb
 acrn-configurator
 ```
 
-#### Windows/macOS
+#### Windows
 
 You can find msi(Windows)/dmg(macOS) folder under the
 `misc/config_tools/configurator/src-tauri/target/release/bundle`
