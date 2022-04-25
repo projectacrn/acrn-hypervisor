@@ -1,4 +1,4 @@
-<acrn-config board="generic_board" scenario="shared">
+<acrn-config>
   <hv>
     <DEBUG_OPTIONS>
       <BUILD_TYPE>debug</BUILD_TYPE>

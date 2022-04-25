@@ -1,4 +1,4 @@
-<acrn-config board="cfl-k700-i7" scenario="hybrid_rt">
+<acrn-config>
   <hv>
     <DEBUG_OPTIONS>
       <BUILD_TYPE>debug</BUILD_TYPE>

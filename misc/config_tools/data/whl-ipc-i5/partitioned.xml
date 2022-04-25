@@ -1,4 +1,4 @@
-<acrn-config board="whl-ipc-i5" scenario="partitioned">
+<acrn-config>
   <hv>
     <DEBUG_OPTIONS>
       <BUILD_TYPE>debug</BUILD_TYPE>
