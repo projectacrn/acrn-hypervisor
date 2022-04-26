@@ -116,11 +116,12 @@ def create_acrn_deb(board, scenario, version, build_dir):
             continue
         source = cur_dir + source
         target = deb_dir + target
-        if os.path.exists(target):
-            run_command('cp %s %s' % (source, target), cur_dir)
-        else:
-            run_command('mkdir -p %s' % target, cur_dir)
-            run_command('cp %s %s' % (source, target), cur_dir)
+        if os.path.exists(source):
+            if os.path.exists(target):
+                run_command('cp %s %s' % (source, target), cur_dir)
+            else:
+                run_command('mkdir -p %s' % target, cur_dir)
+                run_command('cp %s %s' % (source, target), cur_dir)
 
     run_command('cp ./misc/packaging/acrn-hypervisor.postinst ./build/acrn_release_deb/DEBIAN/postinst', cur_dir)
     run_command('chmod +x ./build/acrn_release_deb/etc/grub.d/100_ACRN', cur_dir)
