@@ -7,13 +7,6 @@
   resolved "https://registry.yarnpkg.com/@babel/parser/-/parser-7.17.9.tgz#9c94189a6062f0291418ca021077983058e171ef"
   integrity sha512-vqUSBLP8dQHFPdPi9bc5GK9vRkYHJ49fsZdtoJ8EQ8ibpwk5rPKfvNIwChB0KVXcIjcepEBBd2VHC5r9Gy8ueg==
 
-"@babel/runtime@^7.17.2":
-  version "7.17.9"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.17.9.tgz#d19fbf802d01a8cb6cf053a64e472d42c434ba72"
-  integrity sha512-lSiBBvodq29uShpWGNbgFdKYNiFDo5/HIYsaCEY9ff4sb10x9jizo2+pRrSyF4jKZCXqgzuqBOQKbUm90gQwJg==
-  dependencies:
-    regenerator-runtime "^0.13.4"
-
 "@css-render/plugin-bem@^0.15.9":
   version "0.15.9"
   resolved "https://registry.yarnpkg.com/@css-render/plugin-bem/-/plugin-bem-0.15.9.tgz#204ccdb65fdfd293b8cbcf587c8f31633f41f513"
@@ -174,11 +167,6 @@
   version "17.0.25"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.25.tgz#527051f3c2f77aa52e5dc74e45a3da5fb2301448"
   integrity sha512-wANk6fBrUwdpY4isjWrKTufkrXdu1D2YHCot2fD/DfWxF5sMrVSA+KN7ydckvaTCh0HiqX9IVl0L5/ZoXg5M7w==
-
-"@vicons/carbon@^0.12.0":
-  version "0.12.0"
-  resolved "https://registry.yarnpkg.com/@vicons/carbon/-/carbon-0.12.0.tgz#dfcc5d6283662eccee55700b2d5c29e688a70f5a"
-  integrity sha512-kCOgr/ZOhZzoiFLJ8pwxMa2TMxrkCUOA22qExPabus35F4+USqzcsxaPoYtqRd9ROOYiHrSqwapak/ywF0D9bg==
 
 "@vicons/fa@^0.12.0":
   version "0.12.0"
@@ -403,20 +391,10 @@ color-name@~1.1.4:
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.4.tgz#c2a09a87acbde69543de6f63fa3995c826c536a2"
   integrity sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
 
-copy-text-to-clipboard@^3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/copy-text-to-clipboard/-/copy-text-to-clipboard-3.0.1.tgz#8cbf8f90e0a47f12e4a24743736265d157bce69c"
-  integrity sha512-rvVsHrpFcL4F2P8ihsoLdFHmd404+CMg71S756oRSeQgqk51U3kicGdnvfkrxva0xXH92SjGS62B0XIJsbh+9Q==
-
 core-js@3.x.x:
   version "3.22.1"
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.22.1.tgz#1936e4f1da82675fe22ae10ee60ef638cd9752fd"
   integrity sha512-l6CwCLq7XgITOQGhv1dIUmwCFoqFjyQ6zQHUCQlS0xKmb9d6OHIg8jDiEoswhaettT21BSF5qKr6kbvE+aKwxw==
-
-core-js@^3.11.0:
-  version "3.22.2"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.22.2.tgz#3ea0a245b0895fa39d1faa15fe75d91ade504a01"
-  integrity sha512-Z5I2vzDnEIqO2YhELVMFcL1An2CIsFe9Q7byZhs8c/QxummxZlAHw33TUHbIte987LkisOgL0LwQ1P9D6VISnA==
 
 css-render@^0.13.2:
   version "0.13.9"
@@ -741,11 +719,6 @@ magic-string@^0.25.7:
   dependencies:
     sourcemap-codec "^1.4.8"
 
-mutation-observer@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/mutation-observer/-/mutation-observer-1.0.3.tgz#42e9222b101bca82e5ba9d5a7acf4a14c0f263d0"
-  integrity sha512-M/O/4rF2h776hV7qGMZUH3utZLO/jK7p8rnNgGkjKUw8zCGjRQPxB8z6+5l8+VjRUQ3dNYu4vjqXYLr+U8ZVNA==
-
 naive-ui@^2.28.1:
   version "2.28.1"
   resolved "https://registry.yarnpkg.com/naive-ui/-/naive-ui-2.28.1.tgz#73739f6bedfaf96a1cb47ed3ec87f5c96554c458"
@@ -836,11 +809,6 @@ readdirp@~3.6.0:
   integrity sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==
   dependencies:
     picomatch "^2.2.1"
-
-regenerator-runtime@^0.13.4:
-  version "0.13.9"
-  resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.13.9.tgz#8925742a98ffd90814988d7566ad30ca3b263b52"
-  integrity sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==
 
 resize-observer-polyfill@^1.5.1:
   version "1.5.1"
@@ -934,16 +902,6 @@ uri-js@^4.2.2:
   integrity sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==
   dependencies:
     punycode "^2.1.0"
-
-vconsole@^3.14.6:
-  version "3.14.6"
-  resolved "https://registry.yarnpkg.com/vconsole/-/vconsole-3.14.6.tgz#74cbbf9c14e66d26325958cee8a9e8c4086a5115"
-  integrity sha512-8Ffk2SfNe6EzKqZ0aNnNjpAVBVT7zgJo81lYEJdKySYLVYBeSawdSkWi9fSjDg3WsQhgS1vNPmRqJDTuwdVbnQ==
-  dependencies:
-    "@babel/runtime" "^7.17.2"
-    copy-text-to-clipboard "^3.0.1"
-    core-js "^3.11.0"
-    mutation-observer "^1.0.3"
 
 vdirs@^0.1.4, vdirs@^0.1.8:
   version "0.1.8"

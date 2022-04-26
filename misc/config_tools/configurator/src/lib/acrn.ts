@@ -77,8 +77,8 @@ class Configurator {
         return invoke('acrn_read_dir', {path, recursive})
     }
 
-    creatDir(path: String) {
-        return invoke('acrn_create_dir', {path})
+    creatDir(path: String, recursive = true) {
+        return invoke('acrn_create_dir', {path, recursive})
     }
 
     runPython(code: String, isJSON = false): String | Object {

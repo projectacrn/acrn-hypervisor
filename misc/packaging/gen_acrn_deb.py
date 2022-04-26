@@ -206,6 +206,7 @@ def create_configurator_deb(build_dir):
     # build command, if you update this, please update misc/config_tools/configurator/README.md#L55
     add_cmd_list(cmd_list, 'python3 schema_slicer.py', scenario_config_path)
     add_cmd_list(cmd_list, 'python3 converter.py', scenario_config_path / "jsonschema")
+    add_cmd_list(cmd_list, 'bash -c "xmllint --xinclude schema/datachecks.xsd > schema/allchecks.xsd"', config_tools_path)
     add_cmd_list(cmd_list, 'python3 -m build', config_tools_path)
     add_cmd_list(cmd_list, 'python3 thirdLib/manager.py install', configurator_path)
     add_cmd_list(cmd_list, 'yarn', configurator_path)

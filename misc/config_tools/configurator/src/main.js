@@ -1,11 +1,18 @@
 const isTauri = !!window.__TAURI_IPC__;
-const isRelease = location.host === 'tauri.localhost';
-import VConsole from 'vconsole';
 
-if (isRelease) {
-    const vConsole = new VConsole();
+if (isTauri) {
+    let openCount = 0
+
+    function openDevTools() {
+        openCount++;
+        console.log(`openCount ${openCount} of 5`)
+        if (openCount >= 5) {
+            invoke('open_devtools', {})
+        }
+    }
+
+    window.openDevTools = openDevTools;
 }
-
 
 import {createApp} from 'vue'
 import App from './App.vue'
