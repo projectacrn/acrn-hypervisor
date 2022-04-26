@@ -22,7 +22,6 @@ ACRN_SCENARIOLIST := partitioned shared hybrid hybrid_rt
 # commit c25de24a92c26faa59e7d5e23966dd54215b66e4
 #
 # undefine ACRN_BOARDLIST
-# undefine ACRN_SCENARIOLIST
 
 # helper to compare strings
 strequ=$(if $(subst x$1,,x$2)$(subst x$2,,x$1),,1)
@@ -57,23 +56,19 @@ unquote = $(subst $\",,$1)
 #  * scenariolist_<board>: accumulated list of sceanrios for the given <board>
 #  * config_<board>: respective board configuration file
 #  * config_<board>_<scenario>: respective scenario configuration file
-# Launcher configurations are not used and therefore ignored
 define get-xml-data
-$(eval $(call unquote,$(shell xmllint --xpath '/acrn-config/@board' $1)))
-$(foreach expr,$(shell xmllint --xpath '/acrn-config/@*' $1),$(eval $(call unquote,$(expr))))
-$(eval $(if $(user_vm_launcher),,          \
-  $(if $(scenario),                    \
-    config_$(board)_$(scenario) := $1, \
-    config_$(board) := $1              \
-  )                                    \
+$(eval $(call unquote,$(shell xmllint --xpath '/acrn-config/@board' $1 2>/dev/null)))
+$(eval $(if $(board),                                                                     \
+    $(eval config_$(board) := $1)                                                         \
+    $(eval boardlist := $(sort $(boardlist) $(board)))                                    \
+    $(foreach f,$(wildcard $(addprefix $(dir $1),*)),                                     \
+        $(if $(strip $(shell xmllint --xpath '/acrn-config/@board' $f 2>/dev/null)),,     \
+            $(eval scenario = $(basename $(notdir $f)))                                   \
+            $(eval config_$(board)_$(scenario) := $f)                                     \
+            $(eval scenariolist_$(board) := $(sort $(scenariolist_$(board)) $(scenario))) \
+        )                                                                                 \
+    )                                                                                     \
 ))
-$(eval $(if $(user_vm_launcher),,                                              \
-  $(if $(scenario),                                                        \
-    scenariolist_$(board) := $(sort $(scenariolist_$(board)) $(scenario)), \
-    boardlist := $(sort $(boardlist) $(board))                             \
-  )                                                                        \
-))
-$(eval undefine user_vm_launcher)
 $(eval undefine scenario)
 $(eval undefine board)
 endef
