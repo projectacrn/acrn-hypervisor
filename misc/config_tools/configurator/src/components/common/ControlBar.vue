@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-expand navbar-dark bg-navbar">
+  <nav class="navbar navbar-expand navbar-dark bg-navbar" data-tauri-drag-region="true">
     <div data-tauri-drag-region="true" class="container-fluid">
       <span class="navbar-brand">
       <img alt="ACRN"
@@ -10,6 +10,9 @@
         <text class="d-inline align-bottom logo-text" data-tauri-drag-region="true">Configurator</text>
       </span>
       <div class="controlButtons d-flex justify-content-between align-items-center" data-tauri-drag-region="true">
+        <Icon @click="openDevtools" size="20px" color="white">
+          <Cog/>
+        </Icon>
         <Icon @click="minus" size="20px" color="white">
           <Minus/>
         </Icon>
@@ -27,13 +30,14 @@
 
 <script>
 import {Icon} from '@vicons/utils'
-import {Minus, WindowMaximizeRegular, Times} from '@vicons/fa'
+import {Minus, WindowMaximizeRegular, Times, Cog} from '@vicons/fa'
 import {appWindow} from "@tauri-apps/api/window";
+import {invoke} from "@tauri-apps/api";
 
 
 export default {
   name: "ControlBar",
-  components: {Icon, Minus, WindowMaximizeRegular, Times},
+  components: {Icon, Minus, WindowMaximizeRegular, Times, Cog},
   methods: {
     minus() {
       appWindow.minimize()
@@ -49,6 +53,9 @@ export default {
     },
     close: () => {
       appWindow.close()
+    },
+    openDevtools: () => {
+      invoke('open_devtools', {});
     }
   }
 }
@@ -83,7 +90,7 @@ export default {
 
 .controlButtons {
   margin-right: 30px;
-  width: 130px;
+  width: 9rem;
   filter: drop-shadow(3px 3px 2px rgb(0 0 0 / 0.4));
 }
 

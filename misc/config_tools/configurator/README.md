@@ -19,20 +19,37 @@ to install system dependencies **(including yarn)**.
 
 #### Linux
 
-In Linux, 
+In Linux, make sure your already install `git`, `python3`(version>=3.6) and `python3-venv` library,
+
+```bash
+$ sudo apt install git python3 python3-venv
+# check python3 version
+$ python3 --version
+Python 3.8.10
+```
 
 #### Windows
 
-In Windows, [chocolatey](https://chocolatey.org/) is a Windows package manager,
+[Chocolatey](https://chocolatey.org/) is a package manager tool for windows,
 you can use `choco install xsltproc` to install `xsltproc` package,
 which provide `xmllint` command.
+
+Make sure your system have python which version>3.6,
+you can check it by following command line:
+
+```bash
+$ python --version
+Python 3.8.10
+```
+
+If your system doesn't have git and python, you can install it by
+`choco install git python3`.
 
 ### 2. Clone Project And Install Project Dependencies.
 
 #### Linux
 
 ```bash
-sudo apt install git
 git clone https://github.com/projectacrn/acrn-hypervisor
 cd acrn-hypervisor/misc/config_tools
 python3 -m pip install -r requirements.txt
@@ -43,10 +60,8 @@ yarn
 
 #### Windows
 
-Similar to Linux.
-
-In the Windows environment maybe you need to install git and python3 via chocolatey or manually,
-and replace the command line `python3` with `py -3`.
+Similar to Linux, in the Windows environment,
+you need replace the command line `python3` with `python`.
 
 ### 3. How To Build
 
@@ -65,7 +80,7 @@ Run following command in the 'acrn-hypervisor' directory.
 ```shell
 cd misc/config_tools
 python scenario_config/schema_slicer.py
-python scenario_config/xs2js.py
+python scenario_config/jsnoschema/convert.py
 xmllint --xinclude schema/datachecks.xsd > schema/allchecks.xsd
 
 python -m build
@@ -88,6 +103,6 @@ acrn-configurator
 
 #### Windows
 
-You can find msi(Windows)/dmg(macOS) folder under the
-`misc/config_tools/configurator/src-tauri/target/release/bundle`
+You can find installer under the
+`misc/config_tools/configurator/src-tauri/target/release/bundle/msi`
 directory, the installer in the folder.

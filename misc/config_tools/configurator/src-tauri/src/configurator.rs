@@ -2,15 +2,14 @@ use std::borrow::Borrow;
 use std::ops::Add;
 use std::path::{Path, PathBuf};
 
-use serde::{Deserialize, Serialize};
 use glob::{glob_with, MatchOptions};
 use itertools::Itertools;
-
+use serde::{Deserialize, Serialize};
+use tauri::Window;
 
 use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
-
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(u16)]
@@ -40,9 +39,7 @@ pub struct Configurator {
 
     pub config_data: ConfigData,
     pub working_folder: String,
-
 }
-
 
 pub fn write_file(path: PathBuf, content: String) -> Result<(), String> {
     fs::write(path, content).map_err(|e| e.to_string())
@@ -50,7 +47,11 @@ pub fn write_file(path: PathBuf, content: String) -> Result<(), String> {
 
 impl ConfigData {
     fn new() -> ConfigData {
-        let history = History { working_folder: vec![], board_file: vec![], scenario_file: vec![] };
+        let history = History {
+            working_folder: vec![],
+            board_file: vec![],
+            scenario_file: vec![],
+        };
         ConfigData { history }
     }
 
@@ -65,11 +66,10 @@ impl ConfigData {
     fn deserialize(config_json: String) -> Result<ConfigData, String> {
         match serde_json::from_str(&config_json.to_string()) {
             Ok(config_data) => Ok(config_data),
-            Err(e) => Err(e.to_string())
+            Err(e) => Err(e.to_string()),
         }
     }
 }
-
 
 impl Configurator {
     pub fn new() -> Self {
@@ -101,12 +101,11 @@ impl Configurator {
                     None => {
                         return Err("get config_dir and home_dir error!".to_string());
                     }
-                    Some(path) => path
+                    Some(path) => path,
                 }
             }
-            Some(path) => path
+            Some(path) => path,
         };
-
 
         // get acrn-configurator dir path and check it exist
         let config_dir = config_base.join(".acrn-configurator");
@@ -122,14 +121,13 @@ impl Configurator {
             }
         }
 
-
         // get config.json file path and check it exist
         let default_config_path = config_dir.join("config.json");
         if !default_config_path.is_file() {
             let empty_config = ConfigData::new();
             match fs::write(&default_config_path, empty_config.serialize()) {
                 Ok(_) => {}
-                Err(e) => return Err(e.to_string())
+                Err(e) => return Err(e.to_string()),
             };
         }
         Ok(default_config_path)
@@ -137,7 +135,7 @@ impl Configurator {
 
     pub fn init(config_file_path: PathBuf) -> Configurator {
         let config_json = match fs::read_to_string(&config_file_path) {
-            Ok(data) => { data }
+            Ok(data) => data,
             Err(e) => {
                 log::warn!("read config error! error: {}", e.to_string());
                 log::warn!("Use default blank config to start due to read config failed.");
@@ -170,7 +168,6 @@ impl Configurator {
         }
     }
 
-
     pub fn save_config(&self) {
         if !self.config_write_enable {
             return;
@@ -178,7 +175,7 @@ impl Configurator {
         match fs::write(&self.config_path, self.config_data.serialize()) {
             Ok(_) => {}
             Err(e) => {
-                log::warn!("Write config error! error:{}",e.to_string())
+                log::warn!("Write config error! error:{}", e.to_string())
             }
         }
     }
@@ -187,31 +184,52 @@ impl Configurator {
         let path_string: String = history_path.to_string_lossy().parse().unwrap();
         match history_type {
             HistoryType::WorkingFolder => {
-                self.config_data.history.working_folder.insert(0, path_string);
-                self.config_data.history.working_folder = self.config_data.history.working_folder.clone().into_iter().unique().collect()
+                self.config_data
+                    .history
+                    .working_folder
+                    .insert(0, path_string);
+                self.config_data.history.working_folder = self
+                    .config_data
+                    .history
+                    .working_folder
+                    .clone()
+                    .into_iter()
+                    .unique()
+                    .collect()
             }
             HistoryType::Board => {
                 self.config_data.history.board_file.insert(0, path_string);
-                self.config_data.history.board_file = self.config_data.history.board_file.clone().into_iter().unique().collect()
+                self.config_data.history.board_file = self
+                    .config_data
+                    .history
+                    .board_file
+                    .clone()
+                    .into_iter()
+                    .unique()
+                    .collect()
             }
             HistoryType::Scenario => {
-                self.config_data.history.scenario_file.insert(0, path_string);
-                self.config_data.history.scenario_file = self.config_data.history.scenario_file.clone().into_iter().unique().collect()
+                self.config_data
+                    .history
+                    .scenario_file
+                    .insert(0, path_string);
+                self.config_data.history.scenario_file = self
+                    .config_data
+                    .history
+                    .scenario_file
+                    .clone()
+                    .into_iter()
+                    .unique()
+                    .collect()
             }
         };
     }
 
     pub fn get_history(&self, history_type: HistoryType) -> &[String] {
         match history_type {
-            HistoryType::WorkingFolder => {
-                self.config_data.history.working_folder.borrow()
-            }
-            HistoryType::Board => {
-                self.config_data.history.board_file.borrow()
-            }
-            HistoryType::Scenario => {
-                self.config_data.history.scenario_file.borrow()
-            }
+            HistoryType::WorkingFolder => self.config_data.history.working_folder.borrow(),
+            HistoryType::Board => self.config_data.history.board_file.borrow(),
+            HistoryType::Scenario => self.config_data.history.scenario_file.borrow(),
         }
     }
 
@@ -231,24 +249,23 @@ impl Configurator {
         };
         let pattern = self.working_folder.clone().add("/.*\\.board\\.xml");
         let files = match glob_with(&pattern, options).map_err(|e| e.to_string()) {
-            Ok(files) => { files }
-            Err(e) => return Err(e.to_string())
+            Ok(files) => files,
+            Err(e) => return Err(e.to_string()),
         };
         for entry in files {
             match entry {
-                Ok(filepath) => {
-                    match fs::remove_file(&filepath) {
-                        Ok(_) => {}
-                        Err(e) => {
-                            let err_msg = format!(
-                                "Can not delete file:{} error: {}",
-                                filepath.to_str().unwrap_or_else(|| "").to_string(), e.to_string()
-                            );
-                            log::warn!("{}",err_msg);
-                            return Err(err_msg);
-                        }
+                Ok(filepath) => match fs::remove_file(&filepath) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        let err_msg = format!(
+                            "Can not delete file:{} error: {}",
+                            filepath.to_str().unwrap_or_else(|| "").to_string(),
+                            e.to_string()
+                        );
+                        log::warn!("{}", err_msg);
+                        return Err(err_msg);
                     }
-                }
+                },
                 Err(e) => {
                     log::error!("find old board error! error:{}", e.to_string())
                 }
@@ -266,7 +283,8 @@ static mut WORKING_FOLDER: String = String::new();
 #[tauri::command]
 pub fn get_history(history_type: HistoryType) -> Result<String, ()> {
     let configurator = Configurator::new();
-    let history = serde_json::to_string(configurator.get_history(history_type)).unwrap_or_else(|_| String::from("[]"));
+    let history = serde_json::to_string(configurator.get_history(history_type))
+        .unwrap_or_else(|_| String::from("[]"));
     Ok(history)
 }
 
@@ -290,7 +308,6 @@ pub fn set_working_folder(working_folder: String) -> Result<(), ()> {
     Ok(())
 }
 
-
 #[tauri::command]
 pub fn write_board(board_name: String, contents: String) -> Result<(), String> {
     let mut configurator = Configurator::new();
@@ -299,7 +316,6 @@ pub fn write_board(board_name: String, contents: String) -> Result<(), String> {
     }
     configurator.write_board(board_name, contents)
 }
-
 
 #[tauri::command]
 pub fn force_reset() -> Result<(), ()> {
@@ -311,12 +327,8 @@ pub fn force_reset() -> Result<(), ()> {
 #[tauri::command]
 pub fn get_home() -> Result<String, ()> {
     match dirs::home_dir() {
-        None => {
-            Ok(String::new())
-        }
-        Some(path) => {
-            Ok(path.to_str().unwrap().to_string())
-        }
+        None => Ok(String::new()),
+        Some(path) => Ok(path.to_str().unwrap().to_string()),
     }
 }
 
@@ -330,8 +342,7 @@ pub struct DirEntry {
 pub fn acrn_read(file_path: &str) -> Result<String, String> {
     let mut file = File::open(file_path).map_err(|e| e.to_string())?;
     let mut contents = String::new();
-    file
-        .read_to_string(&mut contents)
+    file.read_to_string(&mut contents)
         .map_err(|e| e.to_string())?;
     Ok(contents)
 }
@@ -339,8 +350,7 @@ pub fn acrn_read(file_path: &str) -> Result<String, String> {
 #[tauri::command]
 pub fn acrn_write(file_path: &str, contents: &str) -> Result<(), String> {
     let mut file = File::create(file_path).map_err(|e| e.to_string())?;
-    file
-        .write_all(contents.as_bytes())
+    file.write_all(contents.as_bytes())
         .map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -353,14 +363,15 @@ pub fn acrn_is_file(path: &str) -> bool {
 }
 
 #[tauri::command]
-pub fn acrn_create_dir(path: &str) -> Result<(), String> {
-    fs::create_dir(path).map_err(|e| e.to_string())
+pub fn acrn_create_dir(path: &str, recursive: bool) -> Result<(), String> {
+    if recursive {
+        fs::create_dir_all(path).map_err(|e| e.to_string())
+    } else {
+        fs::create_dir(path).map_err(|e| e.to_string())
+    }
 }
 
-fn read_dir<P: AsRef<Path>>(
-    path: P,
-    recursive: bool,
-) -> io::Result<Vec<DirEntry>> {
+fn read_dir<P: AsRef<Path>>(path: P, recursive: bool) -> io::Result<Vec<DirEntry>> {
     let path = path.as_ref();
     let mut entries = Vec::new();
     for entry in fs::read_dir(path)? {
@@ -377,10 +388,11 @@ fn read_dir<P: AsRef<Path>>(
 }
 
 #[tauri::command]
-pub fn acrn_read_dir(
-    path: &str,
-    recursive: bool,
-) -> Result<Vec<DirEntry>, String> {
+pub fn acrn_read_dir(path: &str, recursive: bool) -> Result<Vec<DirEntry>, String> {
     read_dir(path, recursive).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub fn open_devtools(window: Window) {
+    window.open_devtools()
+}
