@@ -23,8 +23,6 @@ const uint16_t hv_clos = 0U;
  * each resource's clos max value to have consistent allocation.
  */
 #ifdef CONFIG_RDT_ENABLED
-/* TODO: once config-tool is ready to generate this information for us, we could remove these static definitions */
-extern struct rdt_type res_cap_info[RDT_NUM_RESOURCES];
 
 /*
  * @pre res == RDT_RESOURCE_L3 || res == RDT_RESOURCE_L2 || res == RDT_RESOURCE_MBA
