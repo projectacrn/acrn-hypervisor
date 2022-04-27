@@ -1217,5 +1217,9 @@ int vdpy_parse_cmd_option(const char *opts)
 		pr_info("virtual display: windowed.\n");
 	}
 
+	vdpy.info.xoff = 0;
+	vdpy.info.yoff = 0;
+	vdpy.info.width = vdpy.width;
+	vdpy.info.height = vdpy.height;
 	return error;
 }
