@@ -122,7 +122,7 @@ def alloc_clos_index(board_etree, scenario_etree, allocation_etree, mask_list):
 def creat_mask_list_node(board_etree, scenario_etree, allocation_etree, mask_list):
     allocation_hv_node = common.get_node(f"//hv", allocation_etree)
     if allocation_hv_node is None:
-        allocation_hv_node = common.append_node("//hv", None, allocation_etree, id = vm_id)
+        allocation_hv_node = common.append_node(f"/acrn-config/hv", None, allocation_etree)
     cache2_id_list = scenario_etree.xpath("//CACHE_ALLOCATION[CACHE_LEVEL = 2]/CACHE_ID/text()")
     cache2_id_list.sort()
     if common.get_node("./clos_mask[@id = l3]", allocation_hv_node) is None:
