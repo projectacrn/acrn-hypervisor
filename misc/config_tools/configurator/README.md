@@ -80,7 +80,7 @@ Run following command in the 'acrn-hypervisor' directory.
 ```shell
 cd misc/config_tools
 python scenario_config/schema_slicer.py
-python scenario_config/jsnoschema/convert.py
+python scenario_config/jsonschema/convert.py
 xmllint --xinclude schema/datachecks.xsd > schema/allchecks.xsd
 
 python -m build
