@@ -198,7 +198,20 @@ export default {
       }
       this.updateCurrentFormData()
     },
+    assignVMID() {
+      let vm_priority = {
+        'PRE_LAUNCHED_VM': 0,
+        'SERVICE_VM': 1,
+        'POST_LAUNCHED_VM': 2
+      }
+      this.scenario.vm.sort((a, b) => {
+        return vm_priority[a['load_order']] - vm_priority[b['load_order']]
+      }).map((vmConfig, vmIndex) => {
+        vmConfig['@id'] = vmIndex
+      })
+    },
     saveScenario(event) {
+      this.assignVMID()
       let scenarioXMLData = configurator.convertScenarioToXML(
           {
             // simple deep copy
