@@ -439,12 +439,12 @@ def store_cx_data(sysnode1, sysnode2, config):
 
             if idle_driver.find("acpi_idle") == -1:
                 logging.info("Failed to collect processor power states because the current CPU idle driver " \
-                "does not expose C-state data. If you need ACPI C-states in post-launched VMs, append 'idle=nomwait' " \
-                "to the kernel command line in GRUB config file.")
+                "does not expose C-state data. If you need ACPI C-states in post-launched VMs, append " \
+                "'intel_idle.max_cstate=0' to the kernel command line in GRUB config file.")
                 if idle_driver.find("intel_idle") == 0:
                     logging.info("Failed to collect processor power states because the current CPU idle driver " \
-                    "does not expose C-state data. If you need ACPI C-states in post-launched VMs, append 'idle=nomwait' " \
-                    "to the kernel command line in GRUB config file.")
+                    "does not expose C-state data. If you need ACPI C-states in post-launched VMs, append " \
+                    "'intel_idle.max_cstate=0' to the kernel command line in GRUB config file.")
                 else:
                     logging.info("Failed to collect processor power states because the platform does not provide " \
                     "C-state data. If you need ACPI C-states in post-launched VMs, enable C-state support in BIOS.")
