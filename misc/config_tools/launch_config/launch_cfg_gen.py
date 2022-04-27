@@ -298,10 +298,14 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
         elif backend_type == "pty" or backend_type == "stdio":
             script.add_virtual_device("virtio-console", options=f"{preceding_mask}{backend_type}:{backend_type}_port")
 
-    for interface_name in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/network/interface_name[text() != '']/text()"):
+    for virtio_network_etree in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/network"):
+        virtio_framework = eval_xpath(virtio_network_etree, "./virtio_framework/text()")
+        interface_name = eval_xpath(virtio_network_etree, "./interface_name/text()")
         params = interface_name.split(",", maxsplit=1)
         tap_conf = f"tap={params[0]}"
         params = [tap_conf] + params[1:]
+        if virtio_framework == "Kernel based (Virtual Host)":
+            params.append("vhost")
         script.add_init_command(f"mac=$(cat /sys/class/net/e*/address)")
         params.append(f"mac_seed=${{mac:0:17}}-{vm_name}")
         script.add_virtual_device("virtio-net", options=",".join(params))
