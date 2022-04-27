@@ -127,8 +127,9 @@ def create_acrn_deb(board, scenario, version, build_dir):
     run_command('chmod +x ./build/acrn_release_deb/etc/grub.d/100_ACRN', cur_dir)
     run_command('chmod +x ./build/acrn_release_deb/DEBIAN/postinst', cur_dir)
     run_command('sed -i \'s/\r//\' ./build/acrn_release_deb/DEBIAN/postinst', cur_dir)
-    run_command('chmod +x ./build/acrn_release_deb/DEBIAN/preinst', cur_dir)
-    run_command('sed -i \'s/\r//\' ./build/acrn_release_deb/DEBIAN/preinst', cur_dir)
+    if os.path.exists("./build/acrn_release_deb/DEBIAN/preinst"):
+        run_command('chmod +x ./build/acrn_release_deb/DEBIAN/preinst', cur_dir)
+        run_command('sed -i \'s/\r//\' ./build/acrn_release_deb/DEBIAN/preinst', cur_dir)
 
     ret = run_command('dpkg -b acrn_release_deb acrn-%s-%s-%s.deb' % (board, scenario, version), build_dir)
     if ret != 0:
