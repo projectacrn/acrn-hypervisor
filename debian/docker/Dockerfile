@@ -225,6 +225,7 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
     equivs \
     git-buildpackage \
     lintian \
+    apt-utils \
     sudo
 
 
@@ -237,8 +238,6 @@ WORKDIR /source/
 # Get default settings and helper scripts
 ADD gbp.conf /etc/git-buildpackage/
 ADD debian-pkg-build.sh /usr/local/bin/debian-pkg-build.sh
+ADD create-apt-repo.sh /usr/local/bin/create-apt-repo.sh
 ADD lintian.sh /usr/local/bin/lintian.sh
 
-###############################################################################
-# build Debian packages
-ENTRYPOINT ["/usr/local/bin/debian-pkg-build.sh"]

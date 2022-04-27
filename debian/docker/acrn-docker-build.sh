@@ -39,6 +39,13 @@ ${DOCKER} run \
     --rm \
     -e UID=$(id -u) \
     -e GID=$(id -g) \
-    -v $(pwd):/source acrn-pkg-builder:${DISTRO} -F --no-sign --git-export-dir=build/${DISTRO} "$@"
+    -v $(pwd):/source --entrypoint /usr/local/bin/debian-pkg-build.sh acrn-pkg-builder:${DISTRO} -F --no-sign --git-export-dir=build/${DISTRO} "$@"
+
+# create local apt repository
+${DOCKER} run \
+    --rm \
+    -e UID=$(id -u) \
+    -e GID=$(id -g) \
+    -v $(pwd):/source --entrypoint create-apt-repo.sh acrn-pkg-builder:${DISTRO} build/${DISTRO}
 
 popd >/dev/null
