@@ -108,8 +108,6 @@ static inline int32_t set_vcpuid_entry(struct acrn_vm *vm,
 static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 			uint32_t flags, struct vcpuid_entry *entry)
 {
-	struct cpuinfo_x86 *cpu_info;
-
 	entry->leaf = leaf;
 	entry->subleaf = subleaf;
 	entry->flags = flags;
@@ -171,21 +169,6 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 			entry->eax = 0U;
 			entry->ebx = 0U;
 			entry->ecx = 0U;
-			entry->edx = 0U;
-		}
-		break;
-
-	case 0x16U:
-		cpu_info = get_pcpu_info();
-		if (cpu_info->cpuid_level >= 0x16U) {
-			/* call the cpuid when 0x16 is supported */
-			cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
-		} else {
-			/* Use the tsc to derive the emulated 0x16U cpuid. */
-			entry->eax = (uint32_t) (get_tsc_khz() / 1000U);
-			entry->ebx = entry->eax;
-			/* Bus frequency: hard coded to 100M */
-			entry->ecx = 100U;
 			entry->edx = 0U;
 		}
 		break;
@@ -492,7 +475,7 @@ static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 
 static inline bool is_percpu_related(uint32_t leaf)
 {
-	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) || (leaf == 0x80000001U) || (leaf == 0x2U) || (leaf == 0x1aU));
+	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) || (leaf == 0x80000001U) || (leaf == 0x2U) || (leaf == 0x1aU) || (leaf == 0x16U));
 }
 
 int32_t set_vcpuid_entries(struct acrn_vm *vm)
@@ -743,6 +726,22 @@ static void guest_cpuid_0dh(__unused struct acrn_vcpu *vcpu, uint32_t *eax, uint
 	}
 }
 
+static void guest_cpuid_16h(__unused struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
+	if (cpu_info->cpuid_level >= 0x16U) {
+		/* call the cpuid when 0x16 is supported */
+		cpuid_subleaf(0x16U, 0U, eax, ebx, ecx, edx);
+	} else {
+		/* Use the tsc to derive the emulated 0x16U cpuid. */
+		*eax = (uint32_t) (get_tsc_khz() / 1000U);
+		*ebx = *eax;
+		/* Bus frequency: hard coded to 100M */
+		*ecx = 100U;
+		*edx = 0U;
+	}
+}
+
 static void guest_cpuid_19h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
 	if (pcpu_has_cap(X86_FEATURE_KEYLOCKER)) {
@@ -837,6 +836,10 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 
 		case 0x0dU:
 			guest_cpuid_0dh(vcpu, eax, ebx, ecx, edx);
+			break;
+
+		case 0x16U:
+			guest_cpuid_16h(vcpu, eax, ebx, ecx, edx);
 			break;
 
 		case 0x19U:
