@@ -554,6 +554,7 @@ virtio_gpu_cmd_get_edid(struct virtio_gpu_command *cmd)
 	memset(&resp, 0, sizeof(resp));
 	/* Only one EDID block is enough */
 	resp.size = 128;
+	resp.hdr.type = VIRTIO_GPU_RESP_OK_EDID;
 	virtio_gpu_update_resp_fence(&cmd->hdr, &resp.hdr);
 	vdpy_get_edid(gpu->vdpy_handle, resp.edid, resp.size);
 	memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
@@ -1228,6 +1229,7 @@ virtio_gpu_ctrl_bh(void *data)
 		switch (cmd.hdr.type) {
 		case VIRTIO_GPU_CMD_GET_EDID:
 			virtio_gpu_cmd_get_edid(&cmd);
+			break;
 		case VIRTIO_GPU_CMD_GET_DISPLAY_INFO:
 			virtio_gpu_cmd_get_display_info(&cmd);
 			break;
