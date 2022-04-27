@@ -92,7 +92,7 @@ export default {
         multiple: false
       }).then((folderPath) => {
         if (folderPath.length > 0)
-          this.WorkingFolder = folderPath
+          this.WorkingFolder = folderPath + window.systemInfo.pathSplit
       })
     }
   }
