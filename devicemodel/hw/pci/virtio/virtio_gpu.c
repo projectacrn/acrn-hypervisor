@@ -1485,6 +1485,7 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			gpu->vq,
 			BACKEND_VBSU);
 
+	gpu->vdpy_handle = vdpy_init();
 	gpu->base.mtx = &gpu->mtx;
 	gpu->base.device_caps = VIRTIO_GPU_S_HOSTCAPS;
 
@@ -1623,7 +1624,6 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pr_err("%s, set modern io bar(BAR5) failed.\n", __func__);
 		return rc;
 	}
-	gpu->vdpy_handle = vdpy_init();
 
 	pthread_mutex_init(&gpu->vga_thread_mtx, NULL);
 	/* VGA Compablility */
