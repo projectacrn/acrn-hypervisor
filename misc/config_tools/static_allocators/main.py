@@ -25,7 +25,7 @@ def main(args):
     board_etree = lxml.etree.parse(args.board)
     scenario_etree = lxml.etree.parse(args.scenario)
     allocation_etree = lxml.etree.ElementTree(element=lxml.etree.fromstring("<acrn-config></acrn-config>"))
-    for script in [f for f in os.listdir(scripts_path) if f.endswith(".py") and f != current]:
+    for script in sorted([f for f in os.listdir(scripts_path) if f.endswith(".py") and f != current]):
         module_name = os.path.splitext(script)[0]
         module = import_module(f"{module_name}")
         module.fn(board_etree, scenario_etree, allocation_etree)
