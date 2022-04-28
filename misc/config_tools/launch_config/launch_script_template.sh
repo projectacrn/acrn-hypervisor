@@ -134,35 +134,39 @@ function add_virtual_device() {
     fi
 
     if [ "${kind}" = "virtio-input" ]; then
-        if [[ "${options}" =~ id=([a-zA-Z0-9_\-]*) ]]; then
+        options=$*
+        if [[ "${options}" =~ id:([a-zA-Z0-9_\-]*) ]]; then
             unique_identifier="${BASH_REMATCH[1]}"
-            options=${options/",id=${unique_identifier}"/''}
+            options=${options/",id:${unique_identifier}"/''}
         fi
 
-        local IFS=$'\n'
-        device_name_path=$(grep -r "${options%:*}" /sys/class/input/event*/device/name)
-        if [ -n "${device_name_path}" ]; then
-            for device_path in ${device_name_path}; do
-                if [ "${options%:*}" = "${options#*:}" ]; then
-                    options="/dev/input/${device_path:17:6}"
-                    break
-                else
-                    phys_path=$(grep -r "${options#*:}" /sys/class/input/event*/device/phys)
+        if [[ "${options}" =~ (Device name: )(.*),( Device physical path: )(.*) ]]; then
+            device_name="${BASH_REMATCH[2]}"
+            phys_name="${BASH_REMATCH[4]}"
+            local IFS=$'\n'
+            device_name_paths=$(grep -r "${device_name}" /sys/class/input/event*/device/name)
+            phys_paths=$(grep -r "${phys_name}" /sys/class/input/event*/device/phys)
+        fi
+
+        if [ -n "${device_name_paths}" ] && [ -n "${phys_paths}" ]; then
+            for device_path in ${device_name_paths}; do
+                for phys_path in ${phys_paths}; do
                     if [ "${device_path%/device*}" = "${phys_path%/device*}" ]; then
-                        options="/dev/input/${device_path:17:6}"
-                        break
+                        event_path=${device_path}
+                        if [[ ${event_path} =~ event([0-9]+) ]]; then
+                            event_num="${BASH_REMATCH[1]}"
+                            options="/dev/input/event${event_num}"
+                            break
+                        fi
                     fi
-                fi
+                done
             done
-        else
-            echo "${options%:*} device path is not found in the service vm." >> /dev/stderr
-            return
         fi
 
         if [[ ${options} =~ event([0-9]+) ]]; then
             echo "${options} input device path is available in the service vm." >> /dev/stderr
         else
-            echo "${options#*:} input phys path is not found in the service vm." >> /dev/stderr
+            echo "${options} input device path is not found in the service vm." >> /dev/stderr
             return
         fi
 
