@@ -274,7 +274,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
         backend_device_file = eval_xpath(virtio_input_etree, "./backend_device_file[text() != '']/text()")
         unique_identifier = eval_xpath(virtio_input_etree, "./id[text() != '']/text()")
         if backend_device_file is not None and unique_identifier is not None:
-            script.add_virtual_device("virtio-input", options=f"{backend_device_file},id={unique_identifier}")
+            script.add_virtual_device("virtio-input", options=f"{backend_device_file},id:{unique_identifier}")
         elif backend_device_file is not None:
             script.add_virtual_device("virtio-input", options=backend_device_file)
 
