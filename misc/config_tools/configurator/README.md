@@ -86,7 +86,7 @@ xmllint --xinclude schema/datachecks.xsd > schema/allchecks.xsd
 python -m build
 
 cd configurator
-python thirdLib/manager.py install
+python packages/configurator/thirdLib/manager.py install
 yarn build
 ```
 

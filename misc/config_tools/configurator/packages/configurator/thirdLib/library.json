@@ -1,0 +1,129 @@
+{
+  "title": "ACRN Third Part Library List",
+  "library": [
+    {
+      "name": "acrn_config_tools@3.0",
+      "check": {
+        "type": "file",
+        "path": "acrn_config_tools-3.0-py3-none-any.whl"
+      },
+      "clean": [
+        "acrn_config_tools-3.0-py3-none-any.whl"
+      ],
+      "install": [
+        {
+          "type": "copy",
+          "from": "../../../../dist/acrn_config_tools-3.0-py3-none-any.whl",
+          "to": "acrn_config_tools-3.0-py3-none-any.whl"
+        }
+      ]
+    },
+    {
+      "name": "pyodide@0.20.0",
+      "check": {
+        "type": "file",
+        "path": "pyodide/pyodide.js"
+      },
+      "clean": [
+        "pyodide-build-0.20.0.tar.bz2",
+        "pyodide"
+      ],
+      "install": [
+        {
+          "type": "download",
+          "from": "https://github.com/pyodide/pyodide/releases/download/0.20.0/pyodide-build-0.20.0.tar.bz2",
+          "to": "pyodide-build-0.20.0.tar.bz2"
+        },
+        {
+          "type": "extract",
+          "from": "pyodide-build-0.20.0.tar.bz2",
+          "to": "."
+        },
+        {
+          "type": "remove",
+          "path": "pyodide-build-0.20.0.tar.bz2"
+        },
+        {
+          "type": "replaceText",
+          "file": "pyodide/pyodide.mjs",
+          "old": "yield import(url)",
+          "new": "yield import(/* @vite-ignore */url)"
+        },
+        {
+          "type": "replaceText",
+          "file": "pyodide/pyodide.mjs",
+          "old": "yield import(nodePathMod.resolve(url))",
+          "new": "yield import(/* @vite-ignore */nodePathMod.resolve(url))"
+        }
+      ]
+    },
+    {
+      "name": "xmltodict@0.12.0",
+      "check": {
+        "type": "file",
+        "path": "xmltodict-0.12.0-py2.py3-none-any.whl"
+      },
+      "clean": [
+        "xmltodict-0.12.0-py2.py3-none-any.whl"
+      ],
+      "install": [
+        {
+          "type": "download",
+          "from": "https://files.pythonhosted.org/packages/28/fd/30d5c1d3ac29ce229f6bdc40bbc20b28f716e8b363140c26eff19122d8a5/xmltodict-0.12.0-py2.py3-none-any.whl",
+          "to": "xmltodict-0.12.0-py2.py3-none-any.whl"
+        }
+      ]
+    },
+    {
+      "name": "elementpath@2.5.0",
+      "check": {
+        "type": "file",
+        "path": "elementpath-2.4.0-py3-none-any.whl"
+      },
+      "clean": [
+        "elementpath-2.4.0-py3-none-any.whl"
+      ],
+      "install": [
+        {
+          "type": "download",
+          "from": "https://files.pythonhosted.org/packages/7e/35/55a92f54f018c20e717223a0561bb60bf5053170c86b4b3624368f2da137/elementpath-2.4.0-py3-none-any.whl",
+          "to": "elementpath-2.4.0-py3-none-any.whl"
+        }
+      ]
+    },
+    {
+      "name": "xmlschema@1.9.2",
+      "check": {
+        "type": "file",
+        "path": "xmlschema-1.9.2-py3-none-any.whl"
+      },
+      "clean": [
+        "xmlschema-1.9.2-py3-none-any.whl"
+      ],
+      "install": [
+        {
+          "type": "download",
+          "from": "https://files.pythonhosted.org/packages/25/65/fda28ac5228759d203cc2bac85337b4449a235b1b12b9a3fd6cd4dc7a892/xmlschema-1.9.2-py3-none-any.whl",
+          "to": "xmlschema-1.9.2-py3-none-any.whl"
+        }
+      ]
+    },
+    {
+      "name": "defusedxml-0.7.1-py2.py3-none-any.whl",
+      "check": {
+        "type": "file",
+        "path": "defusedxml-0.7.1-py2.py3-none-any.whl"
+      },
+      "clean": [
+        "defusedxml-0.7.1-py2.py3-none-any.whl"
+      ],
+      "install": [
+        {
+          "type": "download",
+          "from": "https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl",
+          "to": "defusedxml-0.7.1-py2.py3-none-any.whl"
+        }
+      ]
+    }
+  ]
+}
