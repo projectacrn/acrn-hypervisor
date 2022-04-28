@@ -5,7 +5,18 @@ import json
 
 import xmltodict
 
-from . import convert_result, nuc11_scenario, scenario_json_schema
+from . import convert_result, nuc11_scenario, IS_WEB
+
+if IS_WEB:
+    # load js function from
+    # misc/config_tools/configurator/packages/configurator/src/pyodide.js
+    # by pyodide js library
+    # noinspection PyUnresolvedReferences
+    from js import __dynamic__load__scenario__from__pyodide__
+
+    scenario_json_schema = __dynamic__load__scenario__from__pyodide__()
+else:
+    from . import scenario_json_schema
 
 
 def get_array_and_int_keys():

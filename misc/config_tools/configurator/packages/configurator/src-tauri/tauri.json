@@ -1,0 +1,66 @@
+{
+  "package": {
+    "productName": "acrn-configurator",
+    "version": "../package.json"
+  },
+  "build": {
+    "distDir": "../build",
+    "devPath": "http://localhost:3000",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": ""
+  },
+  "tauri": {
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.projectacrn.configurator",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "resources": [],
+      "externalBin": [],
+      "copyright": "",
+      "category": "DeveloperTool",
+      "shortDescription": "",
+      "longDescription": "",
+      "deb": {
+        "depends": []
+      },
+      "macOS": {
+        "frameworks": [],
+        "exceptionDomain": "",
+        "signingIdentity": null,
+        "providerShortName": null,
+        "entitlements": null
+      },
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "updater": {
+      "active": false
+    },
+    "allowlist": {
+      "all": true
+    },
+    "windows": [
+      {
+        "title": "ACRN Configurator",
+        "width": 1366,
+        "height": 768,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  }
+}

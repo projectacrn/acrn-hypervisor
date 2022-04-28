@@ -58,6 +58,11 @@ class DefaultValuePopulator(ScenarioTransformer):
 
         return [new_node]
 
+    def fill_empty_node(self, xsd_element_node, xml_parent_node, xml_empty_node):
+        default_value = self.get_default_value(xsd_element_node, xml_parent_node)
+        if default_value is not None:
+            xml_empty_node.text = default_value
+
 class DefaultValuePopulatingStage(PipelineStage):
     uses = {"schema_etree", "scenario_etree"}
     provides = {"scenario_etree"}

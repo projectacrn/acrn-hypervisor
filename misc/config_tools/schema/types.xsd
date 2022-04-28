@@ -4,7 +4,7 @@
 	   xmlns:acrn="https://projectacrn.org">
 
 <xs:simpleType name="Boolean">
-  <xs:annotation>
+  <xs:annotation acrn:widget="b-form-checkbox" acrn:widget-options="'value' = 'y', 'unchecked-value' = 'n'">
     <xs:documentation>A Boolean value, written as ``y`` or ``n``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
