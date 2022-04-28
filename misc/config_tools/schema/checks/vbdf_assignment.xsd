@@ -7,7 +7,7 @@
 
   <xs:assert test="every $root in /acrn-config satisfies
                    every $vm in $root/vm satisfies
-		   every $vbdf in distinct-values($root/hv//vuart_connection[type='pci']/endpoint[vm_name=$vm/name]/vbdf/text() | $root/hv//IVSHMEM_VM[VM_NAME=$vm/name]/VBDF/text()) satisfies
+		   every $vbdf in $root/hv//vuart_connection[type='pci']/endpoint[vm_name=$vm/name]/vbdf/text() | $root/hv//IVSHMEM_VM[VM_NAME=$vm/name]/VBDF/text() satisfies
 		   count($root/hv//vuart_connection[type='pci']/endpoint[vm_name=$vm/name and vbdf=$vbdf] | $root/hv//IVSHMEM_VM[VM_NAME=$vm/name and VBDF=$vbdf]) = 1">
     <xs:annotation acrn:severity="error" acrn:report-on="$root/hv//vuart_connection[type='pci']/endpoint[vm_name=$vm/name and vbdf=$vbdf] | $root/hv//IVSHMEM_VM[VM_NAME=$vm/name and VBDF=$vbdf]">
       <xs:documentation>VM "{$vm/name}" contains multiple virtual UART controllers and/or IVSHMEM interfaces using BDF {$vbdf}. Adjust the BDF of those devices.</xs:documentation>
