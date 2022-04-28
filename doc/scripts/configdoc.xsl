@@ -108,14 +108,17 @@
             </xsl:when>
             <xsl:otherwise>
               <xsl:choose>
+                  <xsl:when test="count(xs:annotation/@acrn:applicable-vms)=0 and count($parent/xs:annotation/@acrn:applicable-vms)=0 and count($parent/../xs:annotation/@acrn:applicable-vms)=0 and count($parent/../../xs:annotation/@acrn:applicable-vms)=0 and count($parent/../../../xs:annotation/@acrn:applicable-vms)=0">
+                      <xsl:text>|icon-pre-launched-vm| |icon-post-launched-vm| |icon-service-vm| </xsl:text>
+                  </xsl:when>
                 <xsl:when test="count(xs:annotation/@acrn:applicable-vms)=0">
-                  <xsl:if test="contains($parent/xs:annotation/@acrn:applicable-vms,'pre-launched') or contains($parent/../xs:annotation/@acrn:applicable-vms,'pre-launched') or    contains($parent/../../xs:annotation/@acrn:applicable-vms,'pre-launched')">
+                    <xsl:if test="contains($parent/xs:annotation/@acrn:applicable-vms,'pre-launched') or contains($parent/../xs:annotation/@acrn:applicable-vms,'pre-launched') or    contains($parent/../../xs:annotation/@acrn:applicable-vms,'pre-launched') or contains($parent/../../../xs:annotation/@acrn:applicable-vms,'pre-launched')">
                     <xsl:text>|icon-pre-launched-vm| </xsl:text>
                   </xsl:if>
-                  <xsl:if test="contains($parent/xs:annotation/@acrn:applicable-vms,'post-launched') or  contains($parent/../xs:annotation/@acrn:applicable-vms,'post-launched') or  contains($parent/../../xs:annotation/@acrn:applicable-vms,'post-launched')">
+                  <xsl:if test="contains($parent/xs:annotation/@acrn:applicable-vms,'post-launched') or  contains($parent/../xs:annotation/@acrn:applicable-vms,'post-launched') or  contains($parent/../../xs:annotation/@acrn:applicable-vms,'post-launched') or contains($parent/../../../xs:annotation/@acrn:applicable-vms,'post-launched')">
                     <xsl:text>|icon-post-launched-vm| </xsl:text>
                   </xsl:if>
-                  <xsl:if test="contains($parent/xs:annotation/@acrn:applicable-vms,'service-vm') or  contains($parent/../xs:annotation/@acrn:applicable-vms,'service-vm') or      contains($parent/../../xs:annotation/@acrn:applicable-vms,'service-vm')">
+                  <xsl:if test="contains($parent/xs:annotation/@acrn:applicable-vms,'service-vm') or  contains($parent/../xs:annotation/@acrn:applicable-vms,'service-vm') or      contains($parent/../../xs:annotation/@acrn:applicable-vms,'service-vm') or contains($parent/../../../xs:annotation/@acrn:applicable-vms,'service-vm')">
                     <xsl:text>|icon-service-vm| </xsl:text>
                   </xsl:if>
                 </xsl:when>
@@ -134,23 +137,30 @@
             </xsl:otherwise>
           </xsl:choose>
           <xsl:text>/ </xsl:text>
-          <xsl:if test="xs:annotation/@acrn:views=''">
-            <xsl:text>|icon-not-available| </xsl:text>
-          </xsl:if>
-          <xsl:if test="count(xs:annotation/@acrn:views)=0">
-            <xsl:if test="contains($parent/xs:annotation/@acrn:views,'basic') or  contains($parent/../xs:annotation/@acrn:views,'basic') or contains($parent/../../xs:annotation/@acrn:views,'basic')">
-              <xsl:text>|icon-basic| </xsl:text>
-            </xsl:if>
-            <xsl:if test="contains($parent/xs:annotation/@acrn:views,'advanced') or  contains($parent/../xs:annotation/@acrn:views,'advanced') or contains($parent/../../xs:annotation/@acrn:views,'advanced')">
-              <xsl:text>|icon-advanced| </xsl:text>
-            </xsl:if>
-          </xsl:if>
-          <xsl:if test="contains(xs:annotation/@acrn:views,'basic')">
-            <xsl:text>|icon-basic| </xsl:text>
-          </xsl:if>
-          <xsl:if test="contains(xs:annotation/@acrn:views,'advanced')">
-            <xsl:text>|icon-advanced| </xsl:text>
-          </xsl:if>
+          <xsl:choose>
+              <xsl:when test="count(xs:annotation/@acrn:views)=0 and count($parent/xs:annotation/@acrn:views)=0 and count($parent/../xs:annotation/@acrn:views)=0 and count($parent/../../xs:annotation/@acrn:views)=0 and count($parent/../../../xs:annotation/@acrn:views)=0">
+                <xsl:text>|icon-basic| |icon-advanced|</xsl:text>
+              </xsl:when>
+              <xsl:when test="xs:annotation/@acrn:views=''">
+                <xsl:text>|icon-not-available| </xsl:text>
+              </xsl:when>
+              <xsl:when test="count(xs:annotation/@acrn:views)=0">
+                <xsl:if test="contains($parent/xs:annotation/@acrn:views,'basic') or  contains($parent/../xs:annotation/@acrn:views,'basic') or contains($parent/../../xs:annotation/@acrn:views,'basic') or contains($parent/../../../xs:annotation/@acrn:views,'basic')">
+                  <xsl:text>|icon-basic| </xsl:text>
+                </xsl:if>
+                <xsl:if test="contains($parent/xs:annotation/@acrn:views,'advanced') or  contains($parent/../xs:annotation/@acrn:views,'advanced') or contains($parent/../../xs:annotation/@acrn:views,'advanced') or contains($parent/../../../xs:annotation/@acrn:views,'advanced')">
+                  <xsl:text>|icon-advanced| </xsl:text>
+                </xsl:if>
+              </xsl:when>
+            <xsl:otherwise>
+              <xsl:if test="contains(xs:annotation/@acrn:views,'basic')">
+                <xsl:text>|icon-basic| </xsl:text>
+              </xsl:if>
+              <xsl:if test="contains(xs:annotation/@acrn:views,'advanced')">
+                <xsl:text>|icon-advanced| </xsl:text>
+              </xsl:if>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:variable>
         <xsl:if test="$option-icons!=''">
           <xsl:value-of select="concat('   ',$option-icons,$newline)"/>
