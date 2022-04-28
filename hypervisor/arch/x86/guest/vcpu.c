@@ -226,10 +226,10 @@ void load_iwkey(struct acrn_vcpu *vcpu)
 	    (get_cpu_var(whose_iwkey) != vcpu)) {
 		/* Save/restore xmm0/xmm1/xmm2 during the process */
 		read_xmm_0_2(&xmm_save[0], &xmm_save[2], &xmm_save[4]);
-		write_xmm_0_2(vcpu->arch.IWKey.integrity_key[0], vcpu->arch.IWKey.encryption_key[0],
-						vcpu->arch.IWKey.encryption_key[2]);
+		write_xmm_0_2(&vcpu->arch.IWKey.integrity_key[0], &vcpu->arch.IWKey.encryption_key[0],
+						&vcpu->arch.IWKey.encryption_key[2]);
 		asm_loadiwkey(0);
-		write_xmm_0_2(xmm_save[0], xmm_save[2], xmm_save[4]);
+		write_xmm_0_2(&xmm_save[0], &xmm_save[2], &xmm_save[4]);
 		get_cpu_var(whose_iwkey) = vcpu;
 	}
 }
