@@ -153,8 +153,26 @@
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
+    <memory>
+      <size>4096</size>
+    </memory>
     <console_vuart>COM Port 1</console_vuart>
+    <pci_devs>
+      <pci_dev>00:02.0 VGA compatible controller: Intel Corporation TigerLake-LP GT2 [Iris Xe Graphics] (rev 01)</pci_dev>
+    </pci_devs>
     <PTM>n</PTM>
+    <os_type>Windows OS</os_type>
+    <vbootloader>y</vbootloader>
+    <vuart0>n</vuart0>
+    <usb_xhci/>
+    <virtio_devices>
+      <console/>
+      <network>
+        <interface_name>WaaG</interface_name>
+      </network>
+      <input/>
+      <block>./win10-ltsc.img</block>
+    </virtio_devices>
   </vm>
   <vm id="3">
     <load_order>POST_LAUNCHED_VM</load_order>
@@ -168,7 +186,25 @@
     <clos>
       <vcpu_clos>0</vcpu_clos>
     </clos>
+    <memory>
+      <size>512</size>
+    </memory>
     <console_vuart>COM Port 1</console_vuart>
     <PTM>n</PTM>
+    <os_type>Non-Windows OS</os_type>
+    <vbootloader>y</vbootloader>
+    <vuart0>n</vuart0>
+    <usb_xhci/>
+    <virtio_devices>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <interface_name>YaaG</interface_name>
+      </network>
+      <input/>
+      <block>./YaaG.img</block>
+    </virtio_devices>
   </vm>
 </acrn-config>

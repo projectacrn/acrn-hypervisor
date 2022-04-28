@@ -98,7 +98,7 @@
     <PTM>n</PTM>
     <os_type>Windows OS</os_type>
     <vbootloader>y</vbootloader>
-    <vuart0>y</vuart0>
+    <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
       <console/>
@@ -175,10 +175,15 @@
     <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console/>
-      <network/>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <interface_name>YaaG3</interface_name>
+      </network>
       <input/>
-      <block/>
+      <block>./YaaG.img</block>
     </virtio_devices>
   </vm>
   <vm id="4">
@@ -207,10 +212,15 @@
     <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console/>
-      <network/>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <interface_name>YaaG4</interface_name>
+      </network>
       <input/>
-      <block/>
+      <block>./YaaG.img</block>
     </virtio_devices>
   </vm>
   <vm id="5">
@@ -239,10 +249,15 @@
     <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console/>
-      <network/>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <interface_name>YaaG5</interface_name>
+      </network>
       <input/>
-      <block/>
+      <block>./YaaG.img</block>
     </virtio_devices>
   </vm>
   <vm id="6">
@@ -271,10 +286,15 @@
     <vuart0>n</vuart0>
     <usb_xhci/>
     <virtio_devices>
-      <console/>
-      <network/>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <interface_name>YaaG6</interface_name>
+      </network>
       <input/>
-      <block/>
+      <block>./YaaG.img</block>
     </virtio_devices>
   </vm>
 </acrn-config>
