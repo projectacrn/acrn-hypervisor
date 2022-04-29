@@ -173,7 +173,7 @@ def gen_rdt_str(cache, config):
                 return err_dic
 
             cdp_enable = get_cdp_enabled()
-            cat_mask_list = get_mask_list(cache_level, int(cache_id, 16))
+            cat_mask_list = get_mask_list(cache_level, cache_id)
             if len(cat_mask_list) > int(clos_number):
                     err_dic['board config: Failed to generate board.c'] = "CLOS Mask Number too bigger then the supported of L2/L3 cache"
                     return err_dic;
@@ -207,7 +207,7 @@ def gen_rdt_str(cache, config):
 
     cpu_mask = 0
     for processor in processor_list:
-        core_id = common.get_node(f"//core[@id = '{processor}']/thread/cpu_id/text()", board_etree)
+        core_id = common.get_node(f"//thread[apic_id = '{processor}']/cpu_id/text()", board_etree)
         if core_id is None:
             continue
         else:
@@ -240,7 +240,7 @@ def gen_clos_array(cache_list, config):
             clos_number = common.get_node(f"./capability/clos_number/text()", cache)
             if cache_level == "2":
 
-                cat_mask_list = get_mask_list(cache_level, int(cache_id, 16))
+                cat_mask_list = get_mask_list(cache_level, cache_id)
                 array_size = len(cat_mask_list)
 
                 print("union clos_config platform_l2_clos_array_{0}[{1}] = {{".format(int(cache_id, 16), clos_number), file=config)
@@ -250,7 +250,7 @@ def gen_clos_array(cache_list, config):
                 print("};\n", file=config)
                 res_present[RDT.L2.value] += 1
             elif cache_level == "3":
-                cat_mask_list = get_mask_list(cache_level, int(cache_id, 16))
+                cat_mask_list = get_mask_list(cache_level, cache_id)
 
                 print("union clos_config platform_l3_clos_array_{0}[{1}] = {{".format(int(cache_id, 16), clos_number), file=config)
 

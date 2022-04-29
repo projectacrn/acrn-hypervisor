@@ -355,7 +355,7 @@ RDT, setting this option to ``y`` is ignored.</xs:documentation>
 
 <xs:complexType name="CacheAllocationType">
   <xs:sequence>
-    <xs:element name="CACHE_ID" type="xs:integer"/>
+    <xs:element name="CACHE_ID" type="HexFormat"/>
     <xs:element name="CACHE_LEVEL" type="xs:integer"/>
     <xs:element name="POLICY" type="CachePolicyType"  minOccurs="1" maxOccurs="unbounded"/>
   </xs:sequence>
