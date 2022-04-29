@@ -13,8 +13,8 @@ export PYBUILD_DISABLE=test
 export MAKEFLAGS = --no-print-directory
 
 # set these variables to restrict build to certain boards/scenarios, e.g.
-ACRN_BOARDLIST := whl-ipc-i5 nuc11tnbi5 cfl-k700-i7 tgl-vecow-spc-7100-Corei7
-ACRN_SCENARIOLIST := partitioned shared hybrid hybrid_rt
+ACRN_BOARDLIST := whl-ipc-i5 nuc11tnbi5 cfl-k700-i7 tgl-vecow-spc-7100-Corei7 nuc7i7dnh
+ACRN_SCENARIOLIST := partitioned shared hybrid hybrid_rt shared+initrd
 # alternatively, unset ACRN_BOARDLIST to build for all boards,
 # ACRN_SCENARIOLIST must be set explicitly: scenario configs must be located
 # in the same directory as the board config, since there are no board and
