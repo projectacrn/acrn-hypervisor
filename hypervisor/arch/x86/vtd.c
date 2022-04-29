@@ -445,7 +445,7 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 	 * register to control remapping hardware. Global Status Register is the corresponding read-only register to
 	 * report remapping hardware status.
 	 */
-	dmar_unit->gcmd = iommu_read32(dmar_unit, DMAR_GSTS_REG);
+	dmar_unit->gcmd = iommu_read32(dmar_unit, DMAR_GSTS_REG) & 0x96FFFFFFU; // Reset the one-shot bits;
 
 	dmar_unit->cap_msagaw = dmar_unit_get_msagw(dmar_unit);
 
