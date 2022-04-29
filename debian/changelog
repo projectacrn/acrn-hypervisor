@@ -1,5 +1,14 @@
-acrn-hypervisor (3.0~0.gbpXXXXXX) UNRELEASED; urgency=medium
+acrn-hypervisor (3.0~1.gbpfdd2db) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @fdd2db4944b87677df4690a703aaf07f1969bb2c **
 
   * Initial native packaging release for ACRN.
+  * d/rules: Update regarding config detection
+  * d/control: Pin elementpath and xmlschema
+  * debian: Add docker build helpers
+  * debian: Create local apt repo after build
+  * debian: Update and rename README.md
+  * debian: Add nuc7i7dnh/shared+initrd
+  * debian: Add kontron-COMe-mAL10/shared+initrd
 
- -- Helmut Buchsbaum <helmut.buchsbaum@opensource.tttech-industrial.com>  Tue, 26 Apr 2022 10:18:30 +0200
+ -- Helmut Buchsbaum <helmut.buchsbaum@opensource.tttech-industrial.com>  Fri, 29 Apr 2022 12:35:46 +0200
