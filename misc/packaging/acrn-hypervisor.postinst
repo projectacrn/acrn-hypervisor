@@ -26,7 +26,12 @@ done < <(blkid |grep ext4 |grep ${type})
 
 filename="/etc/grub.d/40_custom"
 
-kernelimg=$(grep module ${filename} | tail -1 || true)
+if ls /boot/vmlinuz*acrn-service-vm* 1> /dev/null 2>&1;then
+    service_vm_kernel=$(ls -tr /boot/vmlinuz-*acrn-service-vm* | tail -1)
+else
+    service_vm_kernel=$(ls /boot/vmlinuz-* | tail -1)
+fi
+kernelimg="module2 $service_vm_kernel Linux_bzImage"
 
 if [ $SCENARIO == shared ];then
     cat>"${filename}"<<EOF
