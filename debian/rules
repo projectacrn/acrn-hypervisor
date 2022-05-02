@@ -274,9 +274,6 @@ override_dh_auto_install-arch:
 	$(Q)sed -i 's/acrn_tap\* //g'						\
 		$(DESTDIR)$(docdir)/acrnd/examples/50-acrn.network
 	@:
-	@# remove acrnd.service, use explicitly provided service file instead
-	$(Q)rm -f $(DESTDIR)$(systemd_unitdir)/system/acrnd.service
-	@:
 	@# move devicemodel samples
 	$(Q)mkdir -p $(DESTDIR)$(docdir)/acrn-devicemodel
 	$(Q)mv $(DESTDIR)$(datadir)/acrn/samples				\
