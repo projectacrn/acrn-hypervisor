@@ -210,34 +210,35 @@ override_dh_auto_install-arch: O=build
 override_dh_auto_install-arch: DESTDIR=$(abspath debian/tmp)
 override_dh_auto_install-arch:
 	@$(call echo-verbose)
-	$(Q)set -e;$(foreach b,$(boardlist),$(foreach s,$(scenariolist_$b),\
-		$(call echo-silent,BUILD & INSTALL hypervisor for $b:$s); \
-		$(MAKE) O=$(O)/$b/$s					\
-			BOARD=$(call bfile,$b)				\
-			SCENARIO=$(call sfile,$b,$s)			\
-			DESTDIR=$(DESTDIR)				\
-			hypervisor-install $(devnull);			\
-		install -d $(DESTDIR)$(libdir)/acrn/$b/$s;		\
-		rm -f $(DESTDIR)$(libdir)/acrn/*.out;			\
-		mv $(DESTDIR)$(libdir)/acrn/*.bin			\
-			$(DESTDIR)$(libdir)/acrn/$b/$s;			\
-		if [ -d $(DESTDIR)$(sysconfdir) ]; then			\
-			mv $(DESTDIR)$(sysconfdir)			\
-				$(DESTDIR)$(libdir)/acrn/$b/$s;		\
-		fi;							\
-		if [ -d $(DESTDIR)$(libdir)/acrn/acpi ]; then		\
-			mv $(DESTDIR)$(libdir)/acrn/acpi		\
-				$(DESTDIR)$(libdir)/acrn/$b/$s;		\
-		fi;							\
-		cp $(O)/$b/$s/hypervisor/configs/config.mk		\
-			$(DESTDIR)$(libdir)/acrn/$b/$s/acrn.$b.$s.config;\
-		cp $(O)/$b/$s/hypervisor/acrn.map			\
-			$(DESTDIR)$(libdir)/acrn/$b/$s/acrn.$b.$s.map;	\
-		chmod 644 $(DESTDIR)$(libdir)/acrn/$b/$s/*.bin;		\
-		if [ -d $(DESTDIR)$(libdir)/acrn/$b/$s/acpi ]; then	\
-			chmod 644 $(DESTDIR)$(libdir)/acrn/$b/$s/acpi/*;\
-		fi;							\
-	))
+	$(Q)set -e;$(foreach b,$(boardlist),$(foreach s,$(scenariolist_$b),         \
+		$(call echo-silent,BUILD & INSTALL hypervisor for $b:$s);           \
+		$(MAKE) O=$(O)/$b/$s                                                \
+			BOARD=$(call bfile,$b)                                      \
+			SCENARIO=$(call sfile,$b,$s)                                \
+			DESTDIR=$(DESTDIR)				            \
+			hypervisor-install $(devnull);			            \
+		install -d $(DESTDIR)$(libdir)/acrn/$b/$s;		            \
+		rm -f $(DESTDIR)$(libdir)/acrn/*.out;			            \
+		mv $(DESTDIR)$(libdir)/acrn/*.bin			            \
+			$(DESTDIR)$(libdir)/acrn/$b/$s;			            \
+		if [ -d $(DESTDIR)$(sysconfdir) ]; then			            \
+			mv $(DESTDIR)$(sysconfdir)			            \
+				$(DESTDIR)$(libdir)/acrn/$b/$s;		            \
+		fi;							            \
+		if [ -d $(DESTDIR)$(libdir)/acrn/acpi ]; then		            \
+			mv $(DESTDIR)$(libdir)/acrn/acpi		            \
+				$(DESTDIR)$(libdir)/acrn/$b/$s;		            \
+		fi;							            \
+		cp $(O)/$b/$s/hypervisor/configs/config.mk		            \
+			$(DESTDIR)$(libdir)/acrn/$b/$s/acrn.$b.$s.config;           \
+		cp $(O)/$b/$s/hypervisor/acrn.map			            \
+			$(DESTDIR)$(libdir)/acrn/$b/$s/acrn.$b.$s.map;	            \
+		chmod 644 $(DESTDIR)$(libdir)/acrn/$b/$s/*.bin;		            \
+		if [ -d $(DESTDIR)$(libdir)/acrn/$b/$s/acpi ]; then                 \
+			chmod 644 $(DESTDIR)$(libdir)/acrn/$b/$s/acpi/*;            \
+		fi;                                                                 \
+		cp $(call sfile,$b,$s) $(DESTDIR)$(libdir)/acrn/$b/$s/scenario.xml; \
+	) cp $(call bfile,$b) $(DESTDIR)$(libdir)/acrn/$b/board.xml;)
 	@:
 	@# install devicemodel & tools
 	@$(call echo-silent,BUILD & INSTALL devicemodel & tools)
