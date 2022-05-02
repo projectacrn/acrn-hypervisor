@@ -29,6 +29,40 @@ export TEXTDOMAINDIR="${datarootdir}/locale"
 CLASS="--class gnu-linux --class gnu --class os --class acrn"
 SUPPORTED_INITS="systemd:/lib/systemd/systemd"
 
+# read ACRN config (board/scenario)
+ACRN_BOARD=$(echo "get acrn-hypervisor/board" | debconf-communicate || true)
+if [ "$(echo "${ACRN_BOARD}" | awk '{print $1}')" != "0" ]; then
+    gettext_printf "ACRN: Cannot access debconf acrn-hypervisor/board: %s" "${ACRN_BOARD}\n" >&2
+    exit 0
+fi
+ACRN_BOARD="$(echo "${ACRN_BOARD}" | awk '{print $2}')"
+
+ACRN_SCENARIO=$(echo "get acrn-hypervisor/scenario" | debconf-communicate || true)
+if [ "$(echo "${ACRN_SCENARIO}" | awk '{print $1}')" != "0" ]; then
+    gettext_printf "ACRN: Cannot access debconf acrn-hypervisor/:scenario %s" "${ACRN_SCENARIO}\n" >&2
+    exit 0
+fi
+ACRN_SCENARIO="$(echo "${ACRN_SCENARIO}" | awk '{print $2}')"
+
+# we obtain any data from scenario config
+ACRN_SCENARIO_FILE=/usr/lib/x86_64-linux-gnu/acrn/${ACRN_BOARD}/${ACRN_SCENARIO}/scenario.xml
+if [ ! -f ${ACRN_SCENARIO_FILE} ]; then
+    gettext_printf "ACRN: Missing scenario config %s" "${ACRN_SCENARIO_FILE}\n" >&2
+    exit 0
+fi
+
+ACRN_KERN_MOD=$(xmllint --xpath '//vm[load_order="SERVICE_VM"]/os_config/kern_mod/text()' ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
+# skip if no kern_mod tag given
+[ -z "${ACRN_KERN_MOD}" ] && exit 0
+ACRN_RAMDISK_MOD=$(xmllint --xpath '//vm[load_order="SERVICE_VM"]/os_config/ramdisk_mod/text()' ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
+ACRN_BOOTARGS=$(xmllint --xpath '//vm[load_order="SERVICE_VM"]/os_config/bootargs/text()' ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
+# normalize
+ACRN_BOOTARGS=$(echo "${ACRN_BOOTARGS}" | tr -d '\n' | tr -s ' ')
+# eventually remove root=XXX parameter, since this is automatically detected below
+ACRN_BOOTARGS=$(for arg in ${ACRN_BOOTARGS}; do if [ "${arg##root=}" = "${arg}" ]; then echo -n "${arg} "; fi; done)
+# special handling for memmap: make sure $ is escaped to \$. This is a GRUB requirement
+ACRN_BOOTARGS="$(echo "${ACRN_BOOTARGS}" | sed 's/\(.*memmap=[^\$]*\)\$\(.*\)/\1\\\$\2/')"
+
 if [ "x${GRUB_DISTRIBUTOR}" = "x" ] ; then
   OS=GNU/Linux
 else
@@ -127,14 +161,14 @@ linux_entry ()
 	echo	'$(echo "$xmessage" | grub_quote)'
 	${acrn_loader}	${rel_acrn_dirname}/${acrn_basename} ${acrn_args}
 	echo	'$(echo "$lmessage" | grub_quote)'
-	${module_loader}	${rel_dirname}/${basename} Linux_bzImage root=${linux_root_device_thisversion} ro ${args}
+	${module_loader}	${rel_dirname}/${basename} ${ACRN_KERN_MOD} root=${linux_root_device_thisversion} ro ${ACRN_BOOTARGS} ${args}
 EOF
-  if test -n "${initrd}" ; then
+  if test -n "${initrd}" && test -n "${ACRN_RAMDISK_MOD}"; then
     # TRANSLATORS: ramdisk isn't identifier. Should be translated.
     message="$(gettext_printf "Loading initial ramdisk ...")"
     sed "s/^/$submenu_indentation/" << EOF
 	echo	'$(echo "$message" | grub_quote)'
-	${module_loader} --nounzip	${rel_dirname}/${initrd} Linux_initrd
+	${module_loader} --nounzip	${rel_dirname}/${initrd} ${ACRN_RAMDISK_MOD}
 EOF
   fi
   sed "s/^/$submenu_indentation/" << EOF
@@ -237,19 +271,24 @@ while [ "x${acrn_list}" != "x" ] ; do
 	linux_root_device_thisversion="${LINUX_ROOT_DEVICE}"
 
 	initrd=
-	for i in "initrd.img-${version}" "initrd-${version}.img" "initrd-${version}.gz" \
-	   "initrd-${version}" "initramfs-${version}.img" \
-	   "initrd.img-${alt_version}" "initrd-${alt_version}.img" \
-	   "initrd-${alt_version}" "initramfs-${alt_version}.img" \
-	   "initramfs-genkernel-${version}" \
-	   "initramfs-genkernel-${alt_version}" \
-	   "initramfs-genkernel-${GENKERNEL_ARCH}-${version}" \
-	   "initramfs-genkernel-${GENKERNEL_ARCH}-${alt_version}" ; do
-	    if test -e "${dirname}/${i}" ; then
-		initrd="$i"
-		break
-	    fi
-	done
+	# only use initrd when needed by  scenarioconfig (even when generated at image install)
+	if test -n "${ACRN_RAMDISK_MOD}"; then
+	    for i in "initrd.img-${version}" "initrd-${version}.img" "initrd-${version}.gz" \
+	       "initrd-${version}" "initramfs-${version}.img" \
+	       "initrd.img-${alt_version}" "initrd-${alt_version}.img" \
+	       "initrd-${alt_version}" "initramfs-${alt_version}.img" \
+	       "initramfs-genkernel-${version}" \
+	       "initramfs-genkernel-${alt_version}" \
+	       "initramfs-genkernel-${GENKERNEL_ARCH}-${version}" \
+	       "initramfs-genkernel-${GENKERNEL_ARCH}-${alt_version}" ; do
+	        if test -e "${dirname}/${i}" ; then
+		    initrd="$i"
+		    break
+	        fi
+	    done
+        else
+            gettext_printf "Skipped initrd image for ${ACRN_BOARD}:${ACRN_SCENARIO}\n" >&2
+        fi
 	if test -n "${initrd}" ; then
 	    gettext_printf "Found initrd image: %s\n" "${dirname}/${initrd}" >&2
 	else
@@ -262,14 +301,13 @@ while [ "x${acrn_list}" != "x" ] ; do
 		"${GRUB_CMDLINE_LINUX} ${GRUB_CMDLINE_LINUX_DEFAULT}" "${GRUB_CMDLINE_ACRN} ${GRUB_CMDLINE_ACRN_DEFAULT}"
 
 	    submenu_indentation="$grub_tab$grub_tab"
-    
+
 	    if [ -z "$boot_device_id" ]; then
 		boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
 	    fi
             # TRANSLATORS: %s is replaced with an OS name
 	    echo "submenu '$(gettext_printf "Advanced options for %s (with ACRN hypervisor)" "${OS}" | grub_quote)' \$menuentry_id_option 'gnulinux-advanced-$boot_device_id' {"
-	echo "	submenu '$(gettext_printf "ACRN hypervisor, version %s" "${acrn_version}" | grub_quote)' \$menuentry_id_option 'acrn-hypervisor-$acrn_version-$boot_device_id' {"
-	   is_top_level=false
+	    is_top_level=false
 	fi
 
 	linux_entry "${OS}" "${version}" "${acrn_version}" advanced \
@@ -289,9 +327,6 @@ while [ "x${acrn_list}" != "x" ] ; do
 
 	list=`echo $list | tr ' ' '\n' | fgrep -vx "$linux" | tr '\n' ' '`
     done
-    if [ x"$is_top_level" != xtrue ]; then
-	echo '	}'
-    fi
     acrn_list=`echo $acrn_list | tr ' ' '\n' | fgrep -vx "$current_acrn" | tr '\n' ' '`
 done
 

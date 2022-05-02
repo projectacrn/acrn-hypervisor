@@ -74,7 +74,7 @@ Description: ACRN Hypervisor for IoT
 Package: grub-acrn
 Section: admin
 Architecture: any-amd64
-Depends: ${misc:Depends}, grub-efi-amd64
+Depends: ${misc:Depends}, grub-efi-amd64, libxml2-utils
 Description: Grub setup scripts for ACRN Hypervisor
  This package provides additional scripts to fit into the Grub bootloader config
  creation. It supports generating the respective Grub boot entries for an ACRN
