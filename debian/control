@@ -92,7 +92,7 @@ Description: Devicemodel for ACRN Hypervisor
 
 Package: acrnd
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, acrn-lifemngr
 Suggests: acrn-doc
 Description: ACRN Hypervisor control daemon
  ACRN is an open source reference hypervisor, built to meet the unique

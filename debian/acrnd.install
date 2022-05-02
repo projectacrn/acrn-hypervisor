@@ -1,3 +1,4 @@
 usr/bin/acrnd
 usr/bin/acrnctl
 usr/share/doc/acrnd/examples/
+lib/systemd/system/acrnd.service
