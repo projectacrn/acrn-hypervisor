@@ -1,4 +1,4 @@
-# ???
+# we do not package it, so don't care
 source-is-missing doc/static/js/modernizr.min.js
 
 # we do not (yet) translate templates
