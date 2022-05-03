@@ -82,7 +82,7 @@ endif
 
 .PHONY: install
 install:
-	[ -d $(CONF_DIR) ] || mkdir -p $(CONF_DIR)
+	install -d $(DESTDIR)$(CONF_DIR)
 	install -d $(DESTDIR)$(bindir)
 	install -t $(DESTDIR)$(bindir) $(OUT_DIR)/life_mngr
 	install -t $(DESTDIR)$(CONF_DIR) $(OUT_DIR)/life_mngr.conf
