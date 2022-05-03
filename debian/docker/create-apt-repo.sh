@@ -14,8 +14,8 @@ if [ ! -d $1 ]; then
 fi
 
 if [[ -n ${UID} && -n ${GID} ]]; then
-    addgroup --gid ${GID} docker-build
-    adduser --uid=${UID} --gid=${GID} --disabled-password --gecos '' docker-build
+    addgroup --gid ${GID} --quiet docker-build
+    adduser --uid=${UID} --gid=${GID} --disabled-password --gecos '' --quiet docker-build
 else
     echo "UID/GID not set. Use docker run -e UID=$(id -u) -e GID=$(id -g)" >&2
     exit 1
