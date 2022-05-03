@@ -41,7 +41,7 @@ LIFEMNGR_LDFLAGS += $(LDFLAGS)
 # set cross compiler for Windows
 MINGWIN_CC := x86_64-w64-mingw32-gcc
 
-CONF_DIR = /etc/life_mngr
+CONF_DIR = $(sysconfdir)/life_mngr
 LM_C_SRCS += monitor.c
 LM_C_SRCS += command.c
 LM_C_SRCS += uart_channel.c
