@@ -209,6 +209,9 @@ RUN NEEDEDVERSION="20200925"; \
 # the final image
 FROM ${VENDOR}:${DISTRO}
 
+ARG VENDOR
+ARG DISTRO
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -y update && \
@@ -227,6 +230,17 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
     lintian \
     apt-utils \
     sudo
+
+###############################################################################
+# pre-install build dependencies
+COPY debian-control-${VENDOR}-${DISTRO} /tmp/debian-control
+RUN tmpdir=$(mktemp -d) && cd ${tmpdir} && \
+    mk-build-deps --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' --install /tmp/debian-control && \
+    cd / && rm -rf ${tmpdir}
+
+###############################################################################
+# cleanup apt cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
 ###############################################################################
