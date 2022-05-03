@@ -540,11 +540,14 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 
 	/* remove Software SRAM region from Service VM EPT, to prevent Service VM from using clflush to
 	 * flush the Software SRAM cache.
-	 * This is applicable to prelaunch RTVM case only, for post-launch RTVM, Service VM is trusted.
-	 * When system don't have Software SRAM or not enabled, get_software_sram_size() will return 0.
-	 * In this case no mem region will be removed.
+	 * This is applicable to prelaunch RTVM case only. And only the part that prelaunch RTVM uses needs
+	 * to be removed from Service VM EPT.
+	 *
+	 * PRE_RTVM_SW_SRAM_MAX_SIZE is the size of Software SRAM that prelaunch RTVM uses, presumed to be
+	 * starting from Software SRAM base. For other cases, PRE_RTVM_SW_SRAM_MAX_SIZE should be defined
+	 * as 0, and no region is removed from Service VM EPT.
 	 */
-	ept_del_mr(vm, pml4_page, service_vm_hpa2gpa(get_software_sram_base()), get_software_sram_size());
+	ept_del_mr(vm, pml4_page, service_vm_hpa2gpa(get_software_sram_base()), PRE_RTVM_SW_SRAM_MAX_SIZE);
 
 	/* unmap Intel IOMMU register pages for below reason:
 	 * Service VM can detect IOMMU capability in its ACPI table hence it may access
