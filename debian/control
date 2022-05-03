@@ -3,7 +3,7 @@ Priority: optional
 Maintainer: Helmut Buchsbaum <helmut.buchsbaum@opensource.tttech-industrial.com>
 Section: admin
 Build-Depends:
-   debhelper (>= 12),
+   debhelper-compat (= 12),
    dh-python,
    python3,
    python3-setuptools,
