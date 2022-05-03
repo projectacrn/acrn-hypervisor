@@ -10,3 +10,4 @@ usr/share/acrn/crashlog/*
 lib/systemd/system/acrnlog.service
 lib/systemd/system/acrnprobe.service
 lib/systemd/system/usercrash.service
+usr/share/defaults/telemetrics/acrnprobe.xml
