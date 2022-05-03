@@ -28,11 +28,13 @@ fi
 
 set -e
 # create docker image for Debian package build
+cp debian/control debian/docker/debian-control-${VENDOR}-${DISTRO}
 ${DOCKER} build \
     -f debian/docker/Dockerfile \
     --build-arg DISTRO=${DISTRO} \
     --build-arg VENDOR=${VENDOR} \
     -t acrn-pkg-builder:${DISTRO} debian/docker
+rm debian/docker/debian-control-${VENDOR}-${DISTRO}
 
 # build ACRN packages
 ${DOCKER} run \
