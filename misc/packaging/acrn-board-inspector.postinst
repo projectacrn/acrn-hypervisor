@@ -9,7 +9,34 @@ sed -i '/GRUB_DEFAULT/d' ${filename}
 sed -i '/GRUB_TIMEOUT/d' ${filename}
 sed -i '/GRUB_HIDDEN_TIMEOUT/d' ${filename}
 sed -i '/GRUB_CMDLINE_LINUX_DEFAULT/d' ${filename}
-sed -i '$a GRUB_CMDLINE_LINUX_DEFAULT="quiet splash iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable"' ${filename}
+
+#this is the kernel cmdline we are appending to the GRUB_CMDLINE_LINUX_DEFAULT
+add_cmdline="quiet splash iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable"
+
+origin_cmdline=`sed -n 's/GRUB_CMDLINE_LINUX_DEFAULT*=//'p ${filename} | xargs echo | sed -n 's/ /\n/g'p`
+add_cmdline=`echo ${add_cmdline} | sed -n 's/ /\n/g'p`
+
+#remove the duplicated args after appending, while keep the args in origin order
+cmdline=''
+for line in $add_cmdline
+do
+	duplicated_word=0
+	for line1 in ${origin_cmdline}
+	do
+		if [ ${line} = ${line1} ];then
+			duplicated_word=1
+		fi
+	done
+
+	if [ ${duplicated_word} = 0 ];then
+		cmdline+=${line}' '
+	fi
+done
+
+cmdline=${origin_cmdline}' '${cmdline}
+
+echo \''$a GRUB_CMDLINE_LINUX_DEFAULT="'${cmdline}'"'\' ${filename} | xargs sed -i
+
 sed -i '$a GRUB_TIMEOUT=20' ${filename}
 
 sync
