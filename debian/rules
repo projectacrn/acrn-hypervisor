@@ -318,7 +318,7 @@ override_dh_strip:
 	$(Q)strip --strip-debug							\
 		--remove-section=.comment					\
 		--remove-section=.note						\
-		--enable-deterministic-archiv				\
+		--enable-deterministic-archives					\
 		$(DESTDIR)$(libdir)/libacrn-mngr.a;
 
 ### clean ####################################################################
