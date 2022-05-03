@@ -120,7 +120,7 @@ Description: Public headers and libs for ACRN
 
 Package: acrn-lifemngr
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, setserial
 Suggests: acrn-doc
 Description: ACRN life manager
  ACRN is an open source reference hypervisor, built to meet the unique

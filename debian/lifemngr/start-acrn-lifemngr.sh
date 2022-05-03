@@ -1,14 +1,16 @@
 #!/bin/sh
 # helper to start ACRN lifemnr according to VM type
 
-LIFEMNGR_CONF=/usr/share/acrn-lifemngr/acrn-lifemngr.conf
+# must coincide with fixed coding in
+# misc/services/life_mngr/config.h
+LIFE_MNGR_CONFIG_PATH="/etc/life_mngr/life_mngr.conf"
+# distinguish service/user VM
+LIFEMNGR_VM=${LIFEMNGR_VM:-$(if [ -c /dev/acrn_hsm ]; then echo service_vm; else echo user_vm; fi)}
 
-# eventually include configuration for overriding default configuration
-if [ -f ${LIFEMNGR_CONF} ]; then
-    . ${LIFEMNGR_CONF}
+# eventually install default configuration
+if [ ! -f ${LIFE_MNGR_CONFIG_PATH} ]; then
+    mkdir -p $(dirname ${LIFE_MNGR_CONFIG_PATH})
+    cp /usr/share/acrn-lifemngr/life_mngr.conf.${LIFEMNGR_VM} ${LIFE_MNGR_CONFIG_PATH}
 fi
 
-LIFEMNGR_VM=${LIFEMNGR_VM:-$(if [ -c /dev/acrn_hsm ]; then echo sos; else echo uos; fi)}
-LIFEMNGR_TTY=${LIFEMNGR_TTY:-/dev/ttyS1}
-
-/usr/bin/acrn-lifemngr ${LIFEMNGR_VM} ${LIFEMNGR_TTY}
+exec /usr/bin/acrn-lifemngr

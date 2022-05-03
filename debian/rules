@@ -245,14 +245,26 @@ override_dh_auto_install-arch:
 	$(Q)$(MAKE) O=$(O)/common DESTDIR=$(DESTDIR) tools-install $(devnull)
 	@:
 	@# install life_mngr
-	@$(call echo-silent,INSTALL devicemodel & tools)
-	$(Q)install -d $(DESTDIR)$(bindir)
-	@# install life_mngr as acrn-lifemngr
-	$(Q)install -m 0755 -T $(O)/common/misc/services/life_mngr $(DESTDIR)$(bindir)/acrn-lifemngr
-	@# install invocation helper and config
+	@$(call echo-silent,INSTALL life_mngr)
+	$(Q)mkdir -p $(O)/common/misc
+	$(Q)$(MAKE) -C misc                             \
+		DESTDIR=$(DESTDIR)                      \
+		OUT_DIR=$(abspath $(O)/common/misc)     \
+		acrn-life-mngr-install $(devnull)
+	@# rename to acrn-lifemngr
+	$(Q)mv $(DESTDIR)$(bindir)/life_mngr $(DESTDIR)$(bindir)/acrn-lifemngr
+	@# install config file templates
 	$(Q)install -d $(DESTDIR)$(datadir)/acrn-lifemngr
+	$(Q)mv $(DESTDIR)$(sysconfdir)/life_mngr/life_mngr.conf \
+	       $(DESTDIR)$(datadir)/acrn-lifemngr/life_mngr.conf.service_vm
+	$(Q)install -m 0644 debian/lifemngr/life_mngr.conf.user_vm $(DESTDIR)$(datadir)/acrn-lifemngr
+	@# install invocation helper
 	$(Q)install -m 0755 debian/lifemngr/start-acrn-lifemngr.sh $(DESTDIR)$(datadir)/acrn-lifemngr
-	$(Q)install -m 0644 debian/lifemngr/acrn-lifemngr.conf $(DESTDIR)$(datadir)/acrn-lifemngr
+	@# adapt life_mngr.service
+	$(Q)mv $(DESTDIR)$(systemd_unitdir)/system/life_mngr.service \
+	       $(DESTDIR)$(systemd_unitdir)/system/acrn-lifemngr.service
+	$(Q)sed -i -e 's#^ExecStart=.*#ExecStart=$(datadir)/acrn-lifemngr/start-acrn-lifemngr.sh#' \
+	        $(DESTDIR)$(systemd_unitdir)/system/acrn-lifemngr.service
 	@:
 	@# move/adapt network configs as examples only
 	$(Q)mkdir -p $(DESTDIR)$(docdir)/acrnd/examples
