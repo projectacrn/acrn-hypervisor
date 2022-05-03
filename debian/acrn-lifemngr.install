@@ -1,2 +1,3 @@
 usr/bin/acrn-lifemngr
 usr/share/acrn-lifemngr/*
+lib/systemd/system/acrn-lifemngr.service
