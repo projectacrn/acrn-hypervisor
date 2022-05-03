@@ -285,6 +285,9 @@ override_dh_auto_install-arch:
 			$(DESTDIR)$(systemd_unitdir)/system/acrnprobe.service;	\
 		sed -i '/telemd/d'						\
 			$(DESTDIR)$(systemd_unitdir)/system/usercrash.service;	\
+		install -d $(DESTDIR)$(datadir)/defaults/telemetrics;		\
+		install -m 0644 -t $(DESTDIR)$(datadir)/defaults/telemetrics	\
+			misc/debug_tools/acrn_crashlog/data/acrnprobe.xml;	\
 	)
 
 ### binary-indep #############################################################
@@ -304,9 +307,8 @@ override_dh_auto_install-indep:
 	$(Q)cp -a $(O)/documentation/html ${DESTDIR}$(docdir)/acrn/
 
 ### dh_missing ###############################################################
-# there is no libtelemetry used
 override_dh_missing:
-	$(Q)dh_missing --fail-missing -Xusr/share/defaults/telemetrics/acrnprobe.xml
+	$(Q)dh_missing --fail-missing
 
 ### dh_strip #################################################################
 # only strip release variant binaries
