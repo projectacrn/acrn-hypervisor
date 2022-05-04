@@ -165,7 +165,14 @@ debian/acrn-hypervisor.templates: debian/acrn-hypervisor.templates.in
 	@$(call echo-silent,CREATE $@)
 	$(Q)sed -e 's/@boardlist@/$(call commasep,$(boardlist))/g' $< > $@
 
-override_dh_installdebconf-arch: debian/acrn-hypervisor.templates
+debian/acrn-hypervisor.config: debian/acrn-hypervisor.config.in
+	@$(call echo-verbose)
+	@$(call echo-silent,CREATE $@)
+	@# create scenarios as bash associative array
+	$(Q)sed -e 's%@acrndir@%$(libdir)/acrn%g' \
+	        -e 's%@scenarios@%($(foreach b,$(boardlist),[$b]="$(call commasep,$(scenariolist_$b))"))%g' $< > $@
+
+override_dh_installdebconf-arch: debian/acrn-hypervisor.templates debian/acrn-hypervisor.config
 	$(Q)dh_installdebconf -a
 
 ### build-arch ###############################################################

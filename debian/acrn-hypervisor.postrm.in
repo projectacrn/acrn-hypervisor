@@ -30,9 +30,12 @@ rm_acrn()
 
 
 case "$1" in
-    remove|purge)
+    remove)
         rm_acrn
-	db_purge acrn-hypervisor || :
+    ;;
+    purge)
+        rm_acrn
+        db_purge acrn-hypervisor || :
     ;;
     upgrade)
         rm_acrn
