@@ -44,9 +44,6 @@ case "$1" in
                 cat ${ACRNETC}/serial.conf >> /etc/serial.conf
                 echo "# END - ACRN HYPERVISOR INSTALL" >> /etc/serial.conf
             fi
-            if command -v update-grub > /dev/null && [ -d /boot/grub ]; then
-                update-grub || :
-            fi
         fi
     ;;
 
