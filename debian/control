@@ -59,7 +59,8 @@ Depends:
    ${misc:Depends},
    grub-acrn,
    acrn-devicemodel,
-   debconf (>=1.5.71)
+   debconf (>=1.5.71),
+   bash (>=4)
 Suggests: acrn-doc
 Recommends: setserial
 Description: ACRN Hypervisor for IoT

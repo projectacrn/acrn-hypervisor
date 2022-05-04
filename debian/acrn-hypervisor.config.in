@@ -1,0 +1,44 @@
+#!/bin/bash
+# inspired by http://www.fifi.org/doc/debconf-doc/tutorial.html
+
+# Exit on error
+set -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+db_version 2.0
+
+# This conf script is capable of backing up
+db_capb backup
+
+ACRNDIR=@acrndir@
+declare -A SCENARIOS=@scenarios@
+STATE="board"
+while [ "$STATE" != "quit" -a "$STATE" != "done" ]; do
+    case "$STATE" in
+        board)
+            # query board
+            db_input critical acrn-hypervisor/board || true
+            if db_go; then
+                STATE="scenario"
+            else
+                STATE="quit"
+            fi
+            ;;
+        scenario)
+            db_get acrn-hypervisor/board
+            db_subst acrn-hypervisor/scenario scenariolist ${SCENARIOS[${RET}]}
+            db_clear
+            db_input critical acrn-hypervisor/scenario || true
+            if db_go; then
+                STATE="done"
+            else
+                STATE="board"
+            fi
+        ;;
+    esac
+done
+
+# trigger grub update
+dpkg-trigger --await --by-package=acrn-hypervisor grub-acrn-update
+
