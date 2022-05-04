@@ -101,7 +101,7 @@ Description: ACRN Hypervisor control daemon
 
 Package: acrn-tools
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3
 Suggests: acrn-doc
 Description: Supplementary tools for ACRN Hypervisor on AMD64
  ACRN is an open source reference hypervisor, built to meet the unique
