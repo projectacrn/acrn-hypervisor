@@ -6,7 +6,7 @@
 set -e
 
 case "$1" in
-    configure)
+    configure|triggered)
         if command -v update-grub > /dev/null && [ -d /boot/grub ]; then
             update-grub || :
         fi

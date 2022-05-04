@@ -5,6 +5,8 @@
 
 set -e
 
+. /usr/share/debconf/confmodule
+
 rm_acrn()
 {
     rm -f /boot/acrn-@acrnversion@.config
@@ -30,9 +32,7 @@ rm_acrn()
 case "$1" in
     remove|purge)
         rm_acrn
-        if command -v update-grub > /dev/null && [ -d /boot/grub ]; then
-            update-grub || :
-        fi
+	db_purge acrn-hypervisor || :
     ;;
     upgrade)
         rm_acrn
