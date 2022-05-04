@@ -288,6 +288,9 @@ override_dh_auto_install-arch:
 		install -d $(DESTDIR)$(datadir)/defaults/telemetrics;		\
 		install -m 0644 -t $(DESTDIR)$(datadir)/defaults/telemetrics	\
 			misc/debug_tools/acrn_crashlog/data/acrnprobe.xml;	\
+		install -d $(DESTDIR)$(datadir)/acrn/scripts;			\
+		cp -a misc/debug_tools/acrn_trace/scripts/*			\
+			$(DESTDIR)$(datadir)/acrn/scripts			\
 	)
 
 ### binary-indep #############################################################
