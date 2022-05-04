@@ -310,6 +310,12 @@ override_dh_auto_install-indep:
 override_dh_missing:
 	$(Q)dh_missing --fail-missing
 
+### dh_installsystemd ########################################################
+# do not start services at install, since they are most likely installed on a
+# non-ACRN system
+override_dh_installsystemd:
+	$(Q)dh_installsystemd --no-start
+
 ### dh_strip #################################################################
 # only strip release variant binaries
 override_dh_strip: DESTDIR=$(abspath debian/tmp)
