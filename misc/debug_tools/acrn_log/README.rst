@@ -12,7 +12,7 @@ as a Service VM service at boot, capturing two kinds of logs:
 - log of the running hypervisor
 - log of the last running hypervisor if it crashed and the logs remain
 
-Log files are saved in ``/tmp/acrnlog/``, so the log files would be lost
+Log files are saved in ``/var/log/acrnlog/``, so the log files would be lost
 after a system reset.
 
 Usage

@@ -48,7 +48,7 @@
 		<trigger id="5" enable="true">
 			<name>t_acrnlog_last</name>
 			<type>file</type>
-			<path>/tmp/acrnlog/acrnlog_last.[*]</path>
+			<path>/var/log/acrnlog/acrnlog_last.[*]</path>
 		</trigger>
 	</triggers>
 
@@ -89,13 +89,13 @@
 		<log id='5' enable='true'>
 			<name>acrnlog_cur</name>
 			<type>file</type>
-			<path>/tmp/acrnlog/acrnlog_cur.[-1]</path>
+			<path>/var/log/acrnlog/acrnlog_cur.[-1]</path>
 			<lines>500</lines>
 		</log>
 		<log id='6' enable='true'>
 			<name>acrnlog_last</name>
 			<type>file</type>
-			<path>/tmp/acrnlog/acrnlog_last.[*]</path>
+			<path>/var/log/acrnlog/acrnlog_last.[*]</path>
 		</log>
 	</logs>
 

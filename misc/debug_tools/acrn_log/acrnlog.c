@@ -43,7 +43,7 @@ struct hvlog_file {
 };
 
 static struct hvlog_file cur_log = {
-	.path = "/tmp/acrnlog/acrnlog_cur",
+	.path = "/var/log/acrnlog/acrnlog_cur",
 	.fd = -1,
 	.left_space = 0,
 	.index = ~0,
@@ -51,7 +51,7 @@ static struct hvlog_file cur_log = {
 };
 
 static struct hvlog_file last_log = {
-	.path = "/tmp/acrnlog/acrnlog_last",
+	.path = "/var/log/acrnlog/acrnlog_last",
 	.fd = -1,
 	.left_space = 0,
 	.index = ~0,
@@ -433,7 +433,7 @@ static void display_usage(void)
 	       "\t-s: size limitation for each log file, in MB.\n"
 	       "\t    0 means no limitation.\n"
 	       "\t-n: how many files you would like to keep on disk\n"
-	       "[Output] capatured log files under /tmp/acrnlog/\n");
+	       "[Output] capatured log files under /var/log/acrnlog/\n");
 }
 
 static int parse_opt(int argc, char *argv[])
@@ -495,9 +495,9 @@ int main(int argc, char *argv[])
 	if (parse_opt(argc, argv))
 		return -1;
 
-	ret = mk_dir("/tmp/acrnlog");
+	ret = mk_dir("/var/log/acrnlog");
 	if (ret) {
-		printf("Cannot create /tmp/acrnlog. Error: %s\n",
+		printf("Cannot create /var/log/acrnlog. Error: %s\n",
 			strerror(errno));
 		return ret;
 	}
