@@ -112,6 +112,14 @@ class LaunchScript:
         s = ""
 
         with open(self.script_template_path, "r") as f:
+            s += f.read(99)
+
+        s += "# Launch script for VM name: "
+        s += f"{self._vm_name}\n"
+        s += "\n"
+
+        with open(self.script_template_path, "r") as f:
+            f.seek(99,0)
             s += f.read()
 
         s += """
