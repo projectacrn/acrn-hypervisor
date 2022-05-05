@@ -1,0 +1,4 @@
+# Customizations for the acrnlog.service systemd unit
+# e.g. ACRNLOG_ARGS="-n 8 -s 4"
+ACRNLOG_ARGS=""
+
