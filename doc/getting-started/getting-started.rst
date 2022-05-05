@@ -132,6 +132,7 @@ To set up the ACRN build environment on the development computer:
            libusb-1.0-0-dev \
            python3 \
            python3-pip \
+           python3.8-venv \
            libblkid-dev \
            e2fslibs-dev \
            pkg-config \
