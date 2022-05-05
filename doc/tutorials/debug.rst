@@ -112,7 +112,7 @@ Then we use the command, on the ACRN console::
 
 to switch to the Service VM console. Then we use the command::
 
-   cat /tmp/acrnlog/acrnlog_cur.0
+   cat /var/log/acrnlog/acrnlog_cur.0
 
 and we will see the following log:
 
