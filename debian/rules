@@ -12,17 +12,6 @@ export PYBUILD_DISABLE=test
 
 export MAKEFLAGS = --no-print-directory
 
-# set these variables to restrict build to certain boards/scenarios, e.g.
-ACRN_BOARDLIST := whl-ipc-i5 nuc11tnbi5 cfl-k700-i7 tgl-vecow-spc-7100-Corei7 nuc7i7dnh kontron-COMe-mAL10 simatic-ipc227g
-ACRN_SCENARIOLIST := partitioned shared hybrid hybrid_rt shared+initrd
-# alternatively, unset ACRN_BOARDLIST to build for all boards,
-# ACRN_SCENARIOLIST must be set explicitly: scenario configs must be located
-# in the same directory as the board config, since there are no board and
-# scenario attributes any more in the scenario configs since
-# commit c25de24a92c26faa59e7d5e23966dd54215b66e4
-#
-# undefine ACRN_BOARDLIST
-
 # helper to compare strings
 strequ=$(if $(subst x$1,,x$2)$(subst x$2,,x$1),,1)
 
@@ -39,14 +28,16 @@ commasep = $(subst $(space),$(comma)$(space),$1)
 # recursive wildcard
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
-# add builtin and eventually explicitely provided config directories
-# misc/config_tools/data: contains ACRN supported configuration
-# debian/configs: add additional configurations here!
-CONFIGDIRS = misc/config_tools/data debian/configs
-CONFIGXMLS := $(call rwildcard,$(CONFIGDIRS),*.xml)
-
 # remove double quotes
 unquote = $(subst $\",,$1)
+
+include debian/acrn-hypervisor.conf.mk
+ifeq ($(ACRN_SCENARIOLIST),)
+$(error No scenarios defined. Please set ACRN_SCENARIOLIST)
+endif
+# defaults to config_tools provided data
+CONFIGDIRS ?= misc/config_tools/data
+CONFIGXMLS := $(call rwildcard,$(CONFIGDIRS),*.xml)
 
 # get relevant data from acrn-config attributes of an XML
 #
@@ -82,9 +73,7 @@ boardlist := $(sort $(ACRN_BOARDLIST))
 endif
 
 # honor variable ACRN_SCENARIOLIST
-ifneq ($(ACRN_SCENARIOLIST),)
 $(foreach b,$(boardlist),$(eval scenariolist_$(b) := $(filter $(scenariolist_$(b)),$(ACRN_SCENARIOLIST))))
-endif
 
 # board config name -> board config file
 bfile = $(abspath $(config_$1))
@@ -100,9 +89,6 @@ sfile = $(abspath $(config_$1_$2))
 # get version data for ACRN
 include VERSION
 export ACRNVERSION := $(MAJOR_VERSION).$(MINOR_VERSION)
-
-# for now build the debug versions
-export RELEASE ?= 0
 
 # set paths (see also paths.make)
 export prefix = /usr
