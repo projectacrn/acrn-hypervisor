@@ -12,3 +12,4 @@ lib/systemd/system/acrnprobe.service
 lib/systemd/system/usercrash.service
 usr/share/defaults/telemetrics/acrnprobe.xml
 usr/share/acrn/scripts/*
+etc/default/acrnlog

@@ -297,7 +297,12 @@ override_dh_auto_install-arch:
 			misc/debug_tools/acrn_crashlog/data/acrnprobe.xml;	\
 		install -d $(DESTDIR)$(datadir)/acrn/scripts;			\
 		cp -a misc/debug_tools/acrn_trace/scripts/*			\
-			$(DESTDIR)$(datadir)/acrn/scripts			\
+			$(DESTDIR)$(datadir)/acrn/scripts;			\
+		install -d $(DESTDIR)$(sysconfdir)/default;			\
+		cp debian/acrnlog/acrnlog.default				\
+			$(DESTDIR)$(sysconfdir)/default/acrnlog;		\
+		sed -i -e 's#ExecStart=.*#EnvironmentFile=$(sysconfdir)/default/acrnlog\nExecStart=$(bindir)/acrnlog $${ACRNLOG_ARGS}#' \
+			$(DESTDIR)$(systemd_unitdir)/system/acrnlog.service	\
 	)
 
 ### binary-indep #############################################################
