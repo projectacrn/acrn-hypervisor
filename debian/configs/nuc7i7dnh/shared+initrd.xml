@@ -78,7 +78,7 @@
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
       <ramdisk_mod>Linux_initrd</ramdisk_mod>
-      <bootargs/>
+      <bootargs>console=tty0 console=ttyS0,115200n8 hvlog=2M@0x100000 memmap=2M$0x100000</bootargs>
     </os_config>
     <console_vuart>COM Port 1</console_vuart>
   </vm>
