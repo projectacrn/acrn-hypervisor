@@ -193,7 +193,7 @@ Example:
    <trigger id="2" enable="true">
            <name>t_acrnlog_last</name>
            <type>file</type>
-           <path>/tmp/acrnlog/acrnlog_last.[*]</path>
+           <path>/var/log/acrnlog/acrnlog_last.[*]</path>
    </trigger>
 
 * ``name``:
@@ -232,9 +232,9 @@ Example:
   If there are 4 files under ``/tmp``:
   ``acrnlog_last.1`` ``acrnlog_last.2`` ``acrnlog_last.3`` ``other.txt``
 
-  + ``/tmp/acrnlog_last.[-1]`` indicates ``acrnlog_last.3``.
-  + ``/tmp/acrnlog_last.[0]`` indicates ``acrnlog_last.1``.
-  + ``/tmp/acrnlog_last.[*]`` indicates the file set including
+  + ``/var/log/acrnlog/acrnlog_last.[-1]`` indicates ``acrnlog_last.3``.
+  + ``/var/log/acrnlog/acrnlog_last.[0]`` indicates ``acrnlog_last.1``.
+  + ``/var/log/acrnlog/acrnlog_last.[*]`` indicates the file set including
     ``acrnlog_last.1``, ``acrnlog_last.2`` and ``acrnlog_last.3``.
 
 
