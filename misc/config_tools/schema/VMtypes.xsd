@@ -118,10 +118,18 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
 
 <xs:complexType name="MemoryInfo">
   <xs:all>
-    <xs:element name="size" type="xs:integer" minOccurs="0" default="256">
+    <xs:element name="size" minOccurs="0" default="256">
       <xs:annotation acrn:title="Memory size (MB)" acrn:views="basic" acrn:applicable-vms="pre-launched, post-launched">
        <xs:documentation>Specify the physical memory size allocated to this VM in megabytes.</xs:documentation>
       </xs:annotation>
+      <xs:simpleType>
+        <xs:annotation>
+          <xs:documentation>Integer value is not below zero.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="0" />
+        </xs:restriction>
+      </xs:simpleType>
     </xs:element>
     <xs:element name="hpa_region" type="HPARegionType" minOccurs="0" maxOccurs="unbounded">
       <xs:annotation acrn:title="Physical memory segmentation" acrn:views="advanced" acrn:applicable-vms="pre-launched" >

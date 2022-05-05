@@ -198,10 +198,19 @@ These settings can only be changed at build time.</xs:documentation>
         </xs:restriction>
       </xs:simpleType>
     </xs:element>
-    <xs:element name="MAX_PT_IRQ_ENTRIES" type="xs:integer" default="256">
+    <xs:element name="MAX_PT_IRQ_ENTRIES" default="256">
       <xs:annotation acrn:title="Max passthrough IRQ entries" acrn:views="advanced">
         <xs:documentation>Specify the maximum number of interrupt request (IRQ) entries from all passthrough devices.</xs:documentation>
       </xs:annotation>
+      <xs:simpleType>
+         <xs:annotation>
+           <xs:documentation>Integer from 1 to 1024.</xs:documentation>
+         </xs:annotation>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="1" />
+          <xs:maxInclusive value="1024" />
+        </xs:restriction>
+      </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_MSIX_TABLE_NUM" default="64">
         <xs:annotation acrn:title="Max MSI-X tables" acrn:views="advanced">
