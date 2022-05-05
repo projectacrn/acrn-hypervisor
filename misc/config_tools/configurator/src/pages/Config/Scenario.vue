@@ -76,9 +76,10 @@ export default {
               console.log(scenarioConfig)
               this.$emit('scenarioUpdate', scenarioConfig['acrn-config'])
               alert(`Scenario ${this.currentSelectedScenario} loaded success!`)
+            }).catch((err) => {
+              console.log(err)
+              alert(`Failed to open ${this.currentSelectedScenario}, file may not exist`)
             })
-
-
       }
     },
     openScenarioFileSelectDialog() {
