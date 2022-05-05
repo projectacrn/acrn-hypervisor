@@ -26,6 +26,13 @@
   </xs:assert>
 
   <xs:assert test="every $vm in /acrn-config/vm[load_order != 'SERVICE_VM'] satisfies
+	  count(/acrn-config/vm/cpu_affinity/pcpu/pcpu_id) > 0">
+  <xs:annotation acrn:severity="error" acrn:report-on="//vm//cpu_affinity/pcpu">
+      <xs:documentation>The physical CPUs must be allocated to the VM "{$vm/name}".</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in /acrn-config/vm[load_order != 'SERVICE_VM'] satisfies
                    count(distinct-values(processors//thread[cpu_id = $vm//cpu_affinity//pcpu_id]/core_type)) &lt;= 1">
     <xs:annotation acrn:severity="error" acrn:report-on="$vm//cpu_affinity">
       <xs:documentation>The physical CPUs allocated to the VM "{$vm/name}" have both performance cores {processors//thread[cpu_id = $vm//cpu_affinity//pcpu_id and core_type = 'Core']/cpu_id} and efficient cores {processors//thread[cpu_id = $vm//cpu_affinity//pcpu_id and core_type = 'Atom']/cpu_id}, which is unsupported. Remove either all performance or all efficient cores from the CPU affinity.</xs:documentation>
