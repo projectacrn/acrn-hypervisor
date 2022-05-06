@@ -538,16 +538,34 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 	pci_mmcfg = get_mmcfg_region();
 	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, pci_mmcfg->address, get_pci_mmcfg_size(pci_mmcfg));
 
-	/* remove Software SRAM region from Service VM EPT, to prevent Service VM from using clflush to
-	 * flush the Software SRAM cache.
-	 * This is applicable to prelaunch RTVM case only. And only the part that prelaunch RTVM uses needs
-	 * to be removed from Service VM EPT.
-	 *
-	 * PRE_RTVM_SW_SRAM_MAX_SIZE is the size of Software SRAM that prelaunch RTVM uses, presumed to be
-	 * starting from Software SRAM base. For other cases, PRE_RTVM_SW_SRAM_MAX_SIZE should be defined
-	 * as 0, and no region is removed from Service VM EPT.
-	 */
-	ept_del_mr(vm, pml4_page, service_vm_hpa2gpa(get_software_sram_base()), PRE_RTVM_SW_SRAM_MAX_SIZE);
+	if (is_software_sram_enabled()) {
+		/*
+		 * Native Software SRAM resources shall be assigned to either Pre-launched RTVM
+		 * or Service VM. Software SRAM support for Post-launched RTVM is virtualized
+		 * in Service VM.
+		 *
+		 * 1) Native Software SRAM resources are assigned to Pre-launched RTVM:
+		 *     - Remove Software SRAM regions from Service VM EPT, to prevent
+		 *       Service VM from using clflush to flush the Software SRAM cache.
+		 *     - PRE_RTVM_SW_SRAM_MAX_SIZE is the size of Software SRAM that
+		 *       Pre-launched RTVM uses, presumed to be starting from Software SRAM base.
+		 *       For other cases, PRE_RTVM_SW_SRAM_MAX_SIZE should be defined as 0,
+		 *       and no region will be removed from Service VM EPT.
+		 *
+		 * 2) Native Software SRAM resources are assigned to Service VM:
+		 *     - Software SRAM regions are added to EPT of Service VM by default
+		 *       with memory type UC.
+		 *     - But, Service VM need to access Software SRAM regions
+		 *       when virtualizing them for Post-launched RTVM.
+		 *     - So memory type of Software SRAM regions in EPT shall be updated to EPT_WB.
+		 */
+#if (PRE_RTVM_SW_SRAM_MAX_SIZE > 0U)
+		ept_del_mr(vm, pml4_page, service_vm_hpa2gpa(get_software_sram_base()), PRE_RTVM_SW_SRAM_MAX_SIZE);
+#else
+		ept_modify_mr(vm, pml4_page, service_vm_hpa2gpa(get_software_sram_base()),
+			get_software_sram_size(), EPT_WB, EPT_MT_MASK);
+#endif
+	}
 
 	/* unmap Intel IOMMU register pages for below reason:
 	 * Service VM can detect IOMMU capability in its ACPI table hence it may access
