@@ -8,6 +8,7 @@
 import sys, os
 import re
 import logging
+import tempfile
 import subprocess # nosec
 import lxml.etree
 import argparse
@@ -46,7 +47,7 @@ def check_deps():
 
         line = res.stdout.readline().decode('ascii')
         if not line:
-            logging.critical("'{}' cannot be found. Please install it and run the Board Inspector again.".format(execute))
+            logger.critical("'{}' cannot be found. Please install it and run the Board Inspector again.".format(execute))
             had_error = True
 
         if execute == 'cpuid':
@@ -56,7 +57,7 @@ def check_deps():
             line = res.stdout.readline().decode('ascii')
             version = line.split()[2]
             if int(version) < cpuid_min_ver:
-                logging.critical("This tool requires CPUID version >= {}.  Try updating and upgrading the OS" \
+                logger.critical("This tool requires CPUID version >= {}.  Try updating and upgrading the OS" \
                 "on this system and reruning the Board Inspector.  If that fails, install a newer CPUID tool" \
                 "from https://github.com/tycho/cpuid.".format(cpuid_min_ver))
                 had_error = True
@@ -65,26 +66,26 @@ def check_deps():
 
     # Try updating pci.ids for latest PCI device descriptions
     try:
-        logging.info("Updating pci.ids for latest PCI device descriptions.")
+        logger.info("Updating pci.ids for latest PCI device descriptions.")
         res = subprocess.Popen(["update-pciids", "-q"])
         if res.wait() != 0:
-            logging.warning(f"Failed to invoke update-pciids. No functional impact is foreseen, but descriptions of PCI devices may be inaccurate.")
+            logger.warning(f"Failed to invoke update-pciids. No functional impact is foreseen, but descriptions of PCI devices may be inaccurate.")
     except Exception as e:
-        logging.warning(f"Failed to invoke update-pciids: {e}. No functional impact is foreseen, but descriptions of PCI devices may be unavailable.")
+        logger.warning(f"Failed to invoke update-pciids: {e}. No functional impact is foreseen, but descriptions of PCI devices may be unavailable.")
 
 def native_check():
     cpu_ids = get_online_cpu_ids()
     cpu_id = cpu_ids.pop(0)
     leaf_1 = parse_cpuid(1, 0, cpu_id)
     if leaf_1.hypervisor != 0:
-        logging.error("Board inspector is running inside an unsupported Virtual Machine (VM). " \
+        logger.error("Board inspector is running inside an unsupported Virtual Machine (VM). " \
         "Only KVM or QEMU is supported. Unexpected results may occur.")
 
 def check_pci_domains():
     root_buses = filter(lambda x: x.startswith("pci"), os.listdir("/sys/devices"))
     domain_ids = set(map(lambda x: x.split(":")[0].replace("pci", ""), root_buses))
     if len(domain_ids) > 1:
-        logging.fatal(f"ACRN does not support platforms with multiple PCI domains {domain_ids}. Check if the BIOS has any configuration that consolidates those domains into one.")
+        logger.fatal(f"ACRN does not support platforms with multiple PCI domains {domain_ids}. Check if the BIOS has any configuration that consolidates those domains into one.")
         sys.exit(1)
 
 def bring_up_cores():
@@ -94,7 +95,59 @@ def bring_up_cores():
             with open("/sys/devices/system/cpu/cpu{}/online".format(id), "w") as f:
                 f.write("1")
         except :
-            logging.warning("Cannot bring up core with cpu id {}.".format(id))
+            logger.warning("Cannot bring up core with cpu id {}.".format(id))
+
+def summary_loginfo(board_xml):
+    length = 120
+    warning_list = []
+    error_list = []
+    critical_list = []
+    log_line = open(str(tmpfile.name), "r", encoding='UTF-8')
+    for line in log_line:
+        if "DEBUG" in line:
+            warning_list.append(line)
+        elif "ERROR" in line:
+            error_list.append(line)
+        elif "CRITICAL" in line:
+            critical_list.append(line)
+
+    print("="*length)
+    print("\033[1;37mWARNING\033[0m")
+    print("These issues affect optional features. You can ignore them if they don't apply to you.\n")
+    if len(warning_list) != 0:
+        for warning in warning_list:
+            print("\033[1;33m{0}\033[0m".format(warning.strip('\n')))
+    else:
+        print("None")
+
+    print("="*length)
+    print("\033[1;37mERROR\033[0m")
+    print("You must resolve these issues to generate a VALID board configuration file for building and boot ACRN.\n")
+    if len(error_list) != 0:
+        for error in error_list:
+            print("\033[1;31m{0}\033[0m".format(error.strip('\n')))
+    else:
+        print("None")
+
+    print("="*length)
+    print("\033[1;37mCRITICAL\033[0m")
+    print("You must resolve these issues to generate a board configuration file.\n")
+    if len(critical_list) != 0:
+        for critical in critical_list:
+            print("\033[1;31m{0}\033[0m".format(critical.strip('\n')))
+    else:
+        print("None")
+
+    print("="*length)
+    if len(error_list) != 0 and len(critical_list) == 0:
+        print(
+            f"\033[1;32mSUCCESS: Board configuration file {board_xml} generated successfully and saved to {os.path.dirname(os.path.abspath(board_xml))}\033[0m\n")
+        print("\033[1;36mNOTE: Board configuration file lacks important features, which will cause ACRN to fail build or boot. Resolve ERROR messages then run the tool again.\033[0m")
+
+    elif len(warning_list) != 0 and len(error_list) == 0 and len(critical_list) == 0:
+        print(
+            f"\033[1;32mSUCCESS: Board configuration file {board_xml} generated successfully and saved to {os.path.dirname(os.path.abspath(board_xml))}\033[0m\n")
+    tmpfile.close()
 
 def main(board_name, board_xml, args):
     # Check that the dependencies are met
@@ -144,7 +197,10 @@ def main(board_name, board_xml, args):
         # Validate the XML against XSD assertions
         count = validator.validate_board(os.path.join(script_dir, 'schema', 'boardchecks.xsd'), board_etree)
         if count == 0:
-            logging.info("All board checks passed.")
+            logger.info("All board checks passed.")
+
+        #Format and out put the log info
+        summary_loginfo(board_xml)
 
         # Finally overwrite the output with the updated XML
         board_etree.write(board_xml, pretty_print=True)
@@ -152,7 +208,7 @@ def main(board_name, board_xml, args):
               .format(board_xml, os.path.dirname(os.path.abspath(board_xml))))
 
     except subprocess.CalledProcessError as e:
-        logging.critical(e)
+        logger.critical(e)
         sys.exit(1)
 
 if __name__ == "__main__":
@@ -160,13 +216,27 @@ if __name__ == "__main__":
     parser.add_argument("board_name", help="the name of the board that runs the ACRN hypervisor")
     parser.add_argument("--out", help="the name of board info file")
     parser.add_argument("--basic", action="store_true", default=False, help="do not extract advanced information such as ACPI namespace")
-    parser.add_argument("--loglevel", default="warning", help="choose log level, e.g. info, warning or error")
+    parser.add_argument("--loglevel", default="info", help="choose log level, e.g. info, warning or error")
     parser.add_argument("--check-device-status", action="store_true", default=False, help="filter out devices whose _STA object evaluates to 0")
     parser.add_argument("--add-llc-cat", default=None, action=AddLLCCATAction,
                         metavar="<capacity_mask_length:int>,<clos_number:int>,<has_CDP:bool>", help="manually set the Cache Allocation Technology capability of the last level cache")
     args = parser.parse_args()
     try:
-        logging.basicConfig(level=args.loglevel.upper())
+        tmpfile = tempfile.NamedTemporaryFile(delete=True)
+        logger = logging.getLogger()
+        logger.setLevel(args.loglevel.upper())
+        formatter = logging.Formatter('%(asctime)s-%(name)s-%(levelname)s:-%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        fh = logging.FileHandler(str(tmpfile.name))
+        fh.setLevel(args.loglevel.upper())
+        fh.setFormatter(formatter)
+
+        sh = logging.StreamHandler()
+        sh.setLevel(args.loglevel.upper())
+
+        sh.setFormatter(formatter)
+        logger.addHandler(fh)
+        logger.addHandler(sh)
+
     except ValueError:
         print(f"{args.loglevel} is not a valid log level")
         print(f"Valid log levels (non case-sensitive): critical, error, warning, info, debug")
