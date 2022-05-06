@@ -15,7 +15,7 @@
             </td>
             <td>
               <a class="ps-3 text-nowrap" style="cursor: pointer;"
-                 @click="openBoardFileSelectDialog">
+                 @click="browseForFile">
                 {{ !this.imported ? 'Browse for file…' : '' }}
               </a>
             </td>
@@ -23,6 +23,7 @@
           <tr>
             <td>
               <div class="py-4 text-right">
+                <NewBoard v-model:show-modal="showBoardOverwrite"/>
                 <button type="button" class="wel-btn btn btn-primary btn-lg"
                         @click="importBoardButton">
                   {{ this.imported ? 'Use a Different Board…' : 'Import Board File' }}
@@ -58,9 +59,11 @@
 <script>
 import _ from 'lodash'
 import configurator from "../../lib/acrn";
+import NewBoard from "./NewBoard.vue";
 
 export default {
   name: "Board",
+  components: { NewBoard },
   props: {
     WorkingFolder: {
       type: String
@@ -78,7 +81,9 @@ export default {
   data() {
     return {
       boardHistory: [],
-      currentSelectedBoard: ''
+      currentSelectedBoard: '',
+      showBoardOverwrite: false,
+      newFilePath: '',
     }
   },
   mounted() {
@@ -94,14 +99,29 @@ export default {
     importBoardButton() {
       if (this.imported) {
         this.openBoardFileSelectDialog()
-            .then(() => this.importBoard())
+        .then((filePath) => {
+          if (filePath.length > 0) {
+            if (this.currentSelectedBoard.length > 0) {
+                if (filePath != this.currentSelectedBoard) {
+                    this.showBoardOverwrite = true;
+                }
+            }
+          }
+          this.newFilePath = filePath
+        })
       } else {
         this.importBoard()
       }
     },
-    importBoard() {
-      if (this.currentSelectedBoard.length > 0) {
-        configurator.loadBoard(this.currentSelectedBoard)
+    importBoard(useNewFile = false) {
+      let filepath = ''
+      if (useNewFile) {
+        filepath = this.newFilePath
+      } else {
+        filepath = this.currentSelectedBoard
+      }
+      if (filepath.length > 0) {
+        configurator.loadBoard(filepath)
             .then(({scenarioJSONSchema, boardInfo}) => {
               this.$emit('boardUpdate', boardInfo,scenarioJSONSchema);
               let boardFileNewPath = this.WorkingFolder + boardInfo.name;
@@ -118,11 +138,12 @@ export default {
         directory: false,
         multiple: false,
         filters: [{name: "Board XML", extensions: ['xml']}]
-      }).then((filePath) => {
-        if (filePath.length > 0) {
-          return configurator.addHistory("Board", filePath)
-        }
-      }).then(() => this.getBoardHistory())
+      })
+    },
+    browseForFile() {
+      this.openBoardFileSelectDialog()
+         .then((filePath) => configurator.addHistory('Board', filePath))
+         .then(() => this.getBoardHistory())
     },
     getBoardHistory() {
       return configurator.getHistory("Board")
