@@ -181,18 +181,24 @@
     <xsl:value-of select="acrn:initializer('pclosids', concat('vm', ../@id, '_vcpu_clos'))" />
 
     <xsl:variable name="vm_id" select="../@id" />
-    <xsl:value-of select="acrn:initializer('num_pclosids', concat(count(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U'))" />
-    <xsl:if test="acrn:is-vcat-enabled() and ../virtual_cat_support[text() = 'y']">
-      <xsl:variable name="rdt_res_str" select="acrn:get-normalized-closinfo-rdt-res-str()" />
+    <xsl:variable name="vm_name" select="../name/text()" />
+    <xsl:choose>
+      <xsl:when test="acrn:is-vcat-enabled() and ../virtual_cat_support[text() = 'y']">
+        <xsl:value-of select="acrn:initializer('num_pclosids', concat(count(//vm[@id=$vm_id]/virtual_cat_number), 'U'))" />
+        <xsl:variable name="rdt_res_str" select="acrn:get-normalized-closinfo-rdt-res-str()" />
 
-      <xsl:if test="contains($rdt_res_str, 'L2')">
-        <xsl:value-of select="acrn:initializer('max_l2_pcbm', concat(math:max(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U'))" />
-      </xsl:if>
+        <xsl:if test="contains($rdt_res_str, 'L2')">
+          <xsl:value-of select="acrn:initializer('max_l2_pcbm', //CACHE_ALLOCATION[CACHE_LEVEL='2']/POLICY[VM=$vm_name]/CLOS_MASK)" />
+        </xsl:if>
 
-      <xsl:if test="contains($rdt_res_str, 'L3')">
-        <xsl:value-of select="acrn:initializer('max_l3_pcbm', concat(math:max(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U'))" />
-      </xsl:if>
-    </xsl:if>
+        <xsl:if test="contains($rdt_res_str, 'L3')">
+          <xsl:value-of select="acrn:initializer('max_l3_pcbm', //CACHE_ALLOCATION[CACHE_LEVEL='3']/POLICY[VM=$vm_name]/CLOS_MASK)" />
+        </xsl:if>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="acrn:initializer('num_pclosids', concat(count(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U'))" />
+      </xsl:otherwise>
+    </xsl:choose>
 
     <xsl:value-of select="$endif" />
   </xsl:template>
