@@ -336,6 +336,11 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Enable nested virtualization for KVM.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="virtual_cat_number" type="xs:integer" default="0" minOccurs="0">
+      <xs:annotation acrn:title="Maximum virtual CLOS" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
+        <xs:documentation>Max number of virtual CLOS MASK</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="virtual_cat_support" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:title="VM Virtual Cache Allocation Tech" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
         <xs:documentation>Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.</xs:documentation>
