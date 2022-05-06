@@ -331,7 +331,11 @@ class XS2JS:
                         'selector': element['xs:annotation']['@acrn:options'],
                         'sorted': element['xs:annotation'].get('@acrn:options-sorted-by', None)
                     }
-                    js_ele['enum'] = dynamic_enum
+                    # enum should be applied to array items instead of array itself
+                    if 'items' in js_ele:
+                        js_ele['items']['enum'] = dynamic_enum
+                    else:
+                        js_ele['enum'] = dynamic_enum
 
             properties[name] = js_ele
 
