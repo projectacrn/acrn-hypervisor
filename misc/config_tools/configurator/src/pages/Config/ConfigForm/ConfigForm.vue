@@ -120,6 +120,7 @@ export default {
 .nav-tabs .nav-link.active {
   mix-blend-mode: normal;
   border: 1px solid #373A77;
+  background: #007B81;
   border-bottom: none;
   box-sizing: border-box;
   border-radius: 5px 5px 0 0;
@@ -127,7 +128,7 @@ export default {
 
   font-weight: 600;
 
-  color: #373A77;
+  color: white;
 }
 
 .tab-pane {
