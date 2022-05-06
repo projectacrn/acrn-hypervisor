@@ -36,16 +36,18 @@ def get_memory_info(vm_node_info):
     size_hpa = []
     hpa_info = {}
 
-    whole_node_list = vm_node_info.xpath("./memory/size")
-    if len(whole_node_list) != 0:
-        hpa_info[0] = int(whole_node_list[0].text, 16)
+    size_node = common.get_node("./memory/size", vm_node_info)
+    if size_node is not None:
+        size_byte = int(size_node.text) * 0x100000
+        hpa_info[0] = size_byte
     hpa_node_list = check_hpa(vm_node_info)
     if len(hpa_node_list) != 0:
         for hpa_node in hpa_node_list:
             if hpa_node.tag == "start_hpa":
                 start_hpa.append(int(hpa_node.text, 16))
             elif hpa_node.tag == "size_hpa":
-                size_hpa.append(int(hpa_node.text))
+                size_byte = int(hpa_node.text) * 0x100000
+                size_hpa.append(size_byte)
     if len(start_hpa) != 0 and len(start_hpa) == len(start_hpa):
         for i in range(len(start_hpa)):
             hpa_info[start_hpa[i]] = size_hpa[i]
@@ -53,12 +55,12 @@ def get_memory_info(vm_node_info):
     return hpa_info
 
 def alloc_memory(scenario_etree, ram_range_info):
-    vm_node_list = scenario_etree.xpath("/acrn-config/vm[load_order = 'PRE_LAUNCHED_VM']")
+    vm_node_list = scenario_etree.xpath("/acrn-config/vm[load_order = 'POST_LAUNCHED_VM']")
     mem_info_list = []
     vm_node_index_list = []
     dic_key = sorted(ram_range_info)
     for key in dic_key:
-        if key <= 0x100000000:
+        if key < 0x100000000:
             ram_range_info.pop(key)
 
     for vm_node in vm_node_list:
@@ -72,9 +74,9 @@ def alloc_memory(scenario_etree, ram_range_info):
     return ram_range_info, mem_info_list, vm_node_index_list
 
 def alloc_hpa_region(ram_range_info, mem_info_list, vm_node_index_list):
-    mem_key = sorted(ram_range_info)
     for vm_index in range(len(vm_node_index_list)):
         hpa_key = sorted(mem_info_list[vm_index])
+        mem_key = sorted(ram_range_info)
         for mem_start in mem_key:
             mem_size = ram_range_info[mem_start]
             for hpa_start in hpa_key:
@@ -143,7 +145,7 @@ def write_hpa_info(allocation_etree, mem_info_list, vm_node_index_list):
 
                 size_hpa_node = common.get_node("./size_hpa", hpa_region_node)
                 if size_hpa_node is None:
-                    common.append_node("./size_hpa", hex(hpa_info[start_hpa] * 0x100000), hpa_region_node)
+                    common.append_node("./size_hpa", hex(hpa_info[start_hpa]), hpa_region_node)
             region_index = region_index + 1
 
 def alloc_vm_memory(board_etree, scenario_etree, allocation_etree):
