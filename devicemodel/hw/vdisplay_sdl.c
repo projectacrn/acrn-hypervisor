@@ -353,22 +353,17 @@ vdpy_edid_set_dtd(uint8_t *dtd, const frame_param *frame)
 }
 
 static void
-vdpy_edid_set_descripter(uint8_t *edid, uint8_t is_dtd,
+vdpy_edid_set_descripter(uint8_t *desc, uint8_t is_dtd,
 		uint8_t tag, const base_param *b_param)
 {
-	static uint8_t offset;
-	uint8_t *desc;
 	frame_param frame;
 	const char* text;
 	uint16_t len;
 
-	offset = 54;
-	desc = edid + offset;
 
 	if (is_dtd) {
 		vdpy_edid_set_frame(&frame, b_param);
 		vdpy_edid_set_dtd(desc, &frame);
-		offset += 18;
 		return;
 	}
 	desc[3] = tag;
@@ -408,7 +403,6 @@ vdpy_edid_set_descripter(uint8_t *edid, uint8_t is_dtd,
 	default:
 		break;
 	}
-	offset += 18;
 }
 
 static uint8_t
@@ -431,6 +425,7 @@ vdpy_edid_generate(uint8_t *edid, size_t size, struct edid_info *info)
 	uint16_t id_manuf;
 	uint16_t id_product;
 	uint32_t serial;
+	uint8_t *desc;
 	base_param b_param, c_param;
 
 	vdpy_edid_set_baseparam(&b_param, info->prefx, info->prefy);
@@ -496,15 +491,19 @@ vdpy_edid_generate(uint8_t *edid, size_t size, struct edid_info *info)
 
 	/* edid[125:54], Detailed Timing Descriptor - 18 bytes x 4 */
 	// Detailed Timing Descriptor 1
+	desc = edid + 54;
 	vdpy_edid_set_baseparam(&c_param, VDPY_MAX_WIDTH, VDPY_MAX_HEIGHT);
-	vdpy_edid_set_descripter(edid, 0x1, 0, &c_param);
+	vdpy_edid_set_descripter(desc, 0x1, 0, &c_param);
 	// Detailed Timing Descriptor 2
+	desc += 18;
 	vdpy_edid_set_baseparam(&c_param, VDPY_DEFAULT_WIDTH, VDPY_DEFAULT_HEIGHT);
-	vdpy_edid_set_descripter(edid, 0x1, 0, &c_param);
+	vdpy_edid_set_descripter(desc, 0x1, 0, &c_param);
 	// Display Product Name (ASCII) String Descriptor (tag #FCh)
-	vdpy_edid_set_descripter(edid, 0, 0xfc, &b_param);
+	desc += 18;
+	vdpy_edid_set_descripter(desc, 0, 0xfc, &b_param);
 	// Display Product Serial Number Descriptor (tag #FFh)
-	vdpy_edid_set_descripter(edid, 0, 0xff, &b_param);
+	desc += 18;
+	vdpy_edid_set_descripter(desc, 0, 0xff, &b_param);
 
 	/* EDID[126], Extension Block Count */
 	edid[126] = 0;  // no Extension Block
