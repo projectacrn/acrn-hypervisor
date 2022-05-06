@@ -177,14 +177,27 @@ export default {
     },
     deleteVM() {
       let currentVMIndex = -1;
+      let vmConfigcurrent = []
+      let msg=''
       this.scenario.vm.map((vmConfig, vmIndex) => {
         if (vmConfig['@id'] === this.activeVMID) {
           currentVMIndex = vmIndex
+          vmConfigcurrent = vmConfig
         }
       })
-      this.scenario.vm.splice(currentVMIndex, 1);
-      this.updateCurrentFormSchema()
-      this.updateCurrentFormData()
+      if (vmConfigcurrent['load_order'] === 'SERVICE_VM') {
+        msg = "Post-launched VMs require the Service VM. If you proceed, all post-launched VMs and their settings will also be deleted. Are you sure you want to proceed?"
+      } else {
+        msg = `Delete this virtual machine VM${this.activeVMID}?`
+      }
+      confirm(msg).then((r) => {
+        if (r) {
+          console.log("remove VM")
+          this.scenario.vm.splice(currentVMIndex, 1);
+          this.updateCurrentFormSchema()
+          this.updateCurrentFormData()
+        }
+      })
     },
     scenarioConfigFormDataUpdate(vmid, data) {
       if (vmid === -1) {
