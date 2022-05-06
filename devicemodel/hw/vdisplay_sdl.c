@@ -105,6 +105,7 @@ static const struct timing_entry {
 	uint32_t byte_t3;// byte idx in the Established Timings III Descriptor
 	uint32_t bit;   // bit idx
 	uint8_t hz;     // frequency
+	bool	is_std; // the flag of standard mode
 } timings[] = {
 	/* Established Timings I & II (all @ 60Hz) */
 	{ .hpixel = 1024, .vpixel =  768, .byte  = 36, .bit = 3, .hz = 60},
@@ -112,8 +113,10 @@ static const struct timing_entry {
 	{ .hpixel =  640, .vpixel =  480, .byte  = 35, .bit = 5, .hz = 60 },
 
 	/* Standard Timings */
-	{ .hpixel = 1920, .vpixel = 1080, .hz = 60 },
-	{ .hpixel = 1280, .vpixel =  720, .hz = 60 },
+	{ .hpixel = 1920, .vpixel = 1080, .hz = 60,  .is_std = true },
+	{ .hpixel = 1280, .vpixel =  720, .hz = 60,  .is_std = true },
+	{ .hpixel = 1440, .vpixel =  900, .hz = 60,  .is_std = true },
+	{ .hpixel = 1680, .vpixel =  1050, .hz = 60, .is_std = true },
 };
 
 typedef struct frame_param{
@@ -269,7 +272,7 @@ vdpy_edid_set_timing(uint8_t *addr, const base_param *b_param, TIMING_MODE mode)
 				return;
 			}
 		case STDT: // Standard Timings
-			if(stdcnt < 8 && (timing->hpixel == b_param->h_pixel)) {
+			if(stdcnt < 8 && timing->is_std) {
 				hpixel = (timing->hpixel >> 3) - 31;
 				if (timing->hpixel == 0 ||
 				    timing->vpixel == 0) {
@@ -304,9 +307,9 @@ vdpy_edid_set_timing(uint8_t *addr, const base_param *b_param, TIMING_MODE mode)
 				}
 				break;
 			} else {
-				return;
+				continue;
 			}
-
+			break;
 		default:
 			return;
 		}
