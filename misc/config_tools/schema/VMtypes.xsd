@@ -284,6 +284,18 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
   </xs:sequence>
 </xs:complexType>
 
+<xs:complexType name="USBDevsConfiguration">
+  <xs:sequence>
+    <xs:element name="usb_dev" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+      <xs:annotation acrn:title="USB device assignment"
+	  acrn:options="//usb_device/@description" acrn:options-sorted-by="lambda s: s">
+        <xs:documentation>Select the USB devices you want to assign to this virtual machine.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+  </xs:sequence>
+</xs:complexType>
+
+
 <xs:simpleType name="VirtioNetworkFrameworkType">
   <xs:annotation>
        <xs:documentation>A string with value: ``Kernel based (Virtual Host)`` or ``User space based (VBSU)``.</xs:documentation>

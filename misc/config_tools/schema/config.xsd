@@ -433,18 +433,10 @@ argument and memory.</xs:documentation>
 	<xs:documentation>Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="usb_xhci" minOccurs="0">
+    <xs:element name="usb_xhci" type="USBDevsConfiguration" minOccurs="0">
       <xs:annotation acrn:title="Virtual USB HCI" acrn:views="basic" acrn:applicable-vms="post-launched">
         <xs:documentation>Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.</xs:documentation>
       </xs:annotation>
-      <xs:simpleType>
-        <xs:annotation>
-          <xs:documentation>Input format: ``bus#-port#[:bus#-port#: ...]``, for example, ``1-2:2-4``.</xs:documentation>
-        </xs:annotation>
-        <xs:restriction base="xs:string">
-          <xs:pattern value="([\d]+-[\d]+){0,1}(:[\d]+-[\d]+)*" />
-        </xs:restriction>
-      </xs:simpleType>
     </xs:element>
     <xs:element name="virtio_devices">
       <xs:annotation acrn:title="Virt-IO devices" acrn:views="basic" acrn:applicable-vms="post-launched">
