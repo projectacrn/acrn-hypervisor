@@ -113,7 +113,7 @@ export default {
 }
 
 .TabBox .Tab.Active {
-  background: #373A77;
+  background: #007B81;
   color: white;
 }
 
