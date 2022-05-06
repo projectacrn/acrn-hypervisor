@@ -68,98 +68,93 @@ RUN mkdir -p /opt/apt && cd /opt/apt && \
 RUN git config --global user.name "ACRN Debian Package Build" && \
     git config --global user.email "acrn-dev@lists.projectacrn.org"
 
-# elementpath 2.4.0
-# Attention: 2.4.0 not available at Debian package repos, so
-# import the upstream version and repackage
-RUN NEEDEDVERSION="2.4.0" && \
-    srcpkg="elementpath" && \
-    url="https://salsa.debian.org/debian/${srcpkg}.git" && \
-    upstream_tag="upstream/2.3.1" && \
-    debian_tag="debian/2.3.1-1" && \
-    debian_branch="master" && \
-    upstream_branch="upstream" && \
-    mkdir -p /usr/src/${srcpkg} && cd /usr/src/${srcpkg} && \
-    git init && git remote add origin ${url} && \
-    git fetch origin --depth 1 refs/tags/${upstream_tag}:refs/tags/${upstream_tag} && \
-    git fetch origin --depth 1 refs/tags/${debian_tag}:refs/tags/${debian_tag} && \
-    if git show ${debian_tag}:debian | grep -qw gbp.conf; then \
-        pristine_tar=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/pristine-tar/ {print $2}' | tr '[:upper:]' '[:lower:]' | xargs); \
-        if [ "${pristine_tar}" = "true" ]; then \
-            git fetch origin pristine-tar; git branch -t pristine-tar origin/pristine-tar; \
-        fi; \
-        debian_branch=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/debian-branch/ {print $2}' | xargs) && \
-        if [ -z "${debian_branch}" ]; then \
-            debian_branch="master"; \
-        fi; \
-        upstream_branch=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/upstream-branch/ {print $2}' | xargs) && \
-        if [ -z "${upstream_branch}" ]; then \
-            upstream_branch="upstream"; \
-        fi; \
-    fi && \
-    git checkout -b ${upstream_branch} ${upstream_tag} && \
-    git checkout -b ${debian_branch} ${debian_tag} && \
-    sed -i 's#/latest##g' debian/watch && git add -u && git commit -m "d/watch: Fix watch url to get arbitrary versions" && \
-    gbp import-orig --uscan --upstream-version ${NEEDEDVERSION} && \
-    EDITOR=true DEBEMAIL=$(git config user.email) DEBFULLNAME=$(git config user.name) gbp dch -R -N ${NEEDEDVERSION}-1  --commit && \
-    mk-build-deps --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' --install debian/control --remove && \
-    rm -f $(dpkg-parsechangelog -Ssource)-build-deps_$(dpkg-parsechangelog -Sversion)_*.* && \
-    DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -b -us -uc  && \
-    for p in $(grep -E '^Package:' debian/control | awk '{print $2}'); do \
-        echo "Package: $p" >> /etc/apt/preferences.d/pin-acrn; \
-        echo "Pin: release l=acrn-local-build" >> /etc/apt/preferences.d/pin-acrn; \
-        echo "Pin-Priority: 900" >> /etc/apt/preferences.d/pin-acrn; \
-        echo "" >> /etc/apt/preferences.d/pin-acrn; \
-    done && \
-    cd /usr/src && mv *.deb /opt/apt && \
-    cd /opt/apt && apt-ftparchive packages . > Packages && cp .Release.header Release && apt-ftparchive release . >> Release && \
-    ls -al /opt/apt && \
-    cat /etc/apt/preferences.d/pin-acrn && \
-    apt-get update -y
+# elementpath >=2.5.0
+RUN NEEDEDVERSION="2.5.0"; \
+    PKGVERSION=$(apt-cache policy python3-elementpath | grep "Candidate:" | awk '{ print $2}'); \
+    if [ -z "${PKGVERSION}" -o "${NEEDEDVERSION}" != "$(echo ${NEEDEDVERSION}\\n${PKGVERSION} | sort -V | head -n1)" ]; then \
+        srcpkg="elementpath" && \
+        url="https://salsa.debian.org/debian/${srcpkg}.git" && \
+        upstream_tag="upstream/${NEEDEDVERSION}" && \
+        debian_tag="debian/${NEEDEDVERSION}-1" && \
+        debian_branch="master" && \
+        upstream_branch="upstream" && \
+        mkdir -p /usr/src/${srcpkg} && cd /usr/src/${srcpkg} && \
+        git init && git remote add origin ${url} && \
+        git fetch origin --depth 1 refs/tags/${upstream_tag}:refs/tags/${upstream_tag} && \
+        git fetch origin --depth 1 refs/tags/${debian_tag}:refs/tags/${debian_tag} && \
+        if git show ${debian_tag}:debian | grep -qw gbp.conf; then \
+            pristine_tar=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/pristine-tar/ {print $2}' | tr '[:upper:]' '[:lower:]' | xargs); \
+            if [ "${pristine_tar}" = "true" ]; then \
+                git fetch origin pristine-tar; git branch -t pristine-tar origin/pristine-tar; \
+            fi; \
+            debian_branch=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/debian-branch/ {print $2}' | xargs) && \
+            if [ -z "${debian_branch}" ]; then \
+                debian_branch="master"; \
+            fi; \
+            upstream_branch=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/upstream-branch/ {print $2}' | xargs) && \
+            if [ -z "${upstream_branch}" ]; then \
+                upstream_branch="upstream"; \
+            fi; \
+        fi && \
+        git checkout -b ${upstream_branch} ${upstream_tag} && \
+        git checkout -b ${debian_branch} ${debian_tag} && \
+        mk-build-deps --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' --install debian/control --remove && \
+        rm -f $(dpkg-parsechangelog -Ssource)-build-deps_$(dpkg-parsechangelog -Sversion)_*.* && \
+        DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -b -us -uc  && \
+        for p in $(grep -E '^Package:' debian/control | awk '{print $2}'); do \
+            echo "Package: $p" >> /etc/apt/preferences.d/pin-acrn; \
+            echo "Pin: release l=acrn-local-build" >> /etc/apt/preferences.d/pin-acrn; \
+            echo "Pin-Priority: 900" >> /etc/apt/preferences.d/pin-acrn; \
+            echo "" >> /etc/apt/preferences.d/pin-acrn; \
+        done && \
+        cd /usr/src && mv *.deb /opt/apt && \
+        cd /opt/apt && apt-ftparchive packages . > Packages && cp .Release.header Release && apt-ftparchive release . >> Release && \
+        apt-get update -y; \
+    fi
 
-# xmlschema 1.9.2
-# Again we need to repackage. This the upstream version is already available, but no debian version.
-# Use 1.4.2-1 as base
-RUN NEEDEDVERSION="1.9.2"; \
-    srcpkg="xmlschema" && \
-    url="https://salsa.debian.org/python-team/packages/python-xmlschema.git" && \
-    upstream_tag="upstream/${NEEDEDVERSION}" && \
-    debian_tag="debian/1.4.2-1" && \
-    debian_branch="master" && \
-    upstream_branch="upstream" && \
-    mkdir -p /usr/src/${srcpkg} && cd /usr/src/${srcpkg} && \
-    git init && git remote add origin ${url} && \
-    git fetch origin refs/tags/${upstream_tag}:refs/tags/${upstream_tag} && \
-    git fetch origin refs/tags/${debian_tag}:refs/tags/${debian_tag} && \
-    if git show ${debian_tag}:debian | grep -qw gbp.conf; then \
-        pristine_tar=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/pristine-tar/ {print $2}' | tr '[:upper:]' '[:lower:]' | xargs); \
-        if [ "${pristine_tar}" = "true" ]; then \
-            git fetch origin pristine-tar; git branch -t pristine-tar origin/pristine-tar; \
-        fi; \
-        debian_branch=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/debian-branch/ {print $2}' | xargs) && \
-        if [ -z "${debian_branch}" ]; then \
-            debian_branch="master"; \
-        fi; \
-        upstream_branch=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/upstream-branch/ {print $2}' | xargs) && \
-        if [ -z "${upstream_branch}" ]; then \
-            upstream_branch="upstream"; \
-        fi; \
-    fi && \
-    git checkout -b ${upstream_branch} ${upstream_tag} && \
-    git checkout -b ${debian_branch} ${debian_tag} && \
-    git merge --no-edit ${upstream_tag} && \
-    EDITOR=true DEBEMAIL=$(git config user.email) DEBFULLNAME=$(git config user.name) gbp dch -R -N ${NEEDEDVERSION}-1  --commit && \
-    mk-build-deps --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' --install debian/control --remove && \
-    rm -f $(dpkg-parsechangelog -Ssource)-build-deps_$(dpkg-parsechangelog -Sversion)_*.* && \
-    DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -b -us -uc  && \
-    for p in $(grep -E '^Package:' debian/control | awk '{print $2}'); do \
-        echo "Package: $p" >> /etc/apt/preferences.d/pin-acrn; \
-        echo "Pin: release l=acrn-local-build" >> /etc/apt/preferences.d/pin-acrn; \
-        echo "Pin-Priority: 900" >> /etc/apt/preferences.d/pin-acrn; \
-        echo "" >> /etc/apt/preferences.d/pin-acrn; \
-    done && \
-    cd /usr/src && mv *.deb /opt/apt && \
-    cd /opt/apt && apt-ftparchive packages . > Packages && cp .Release.header Release && apt-ftparchive release . >> Release && \
-    apt-get update
+# xmlschema >=1.10.0
+RUN NEEDEDVERSION="1.10.0"; \
+    PKGVERSION=$(apt-cache policy python3-xmlschema | grep "Candidate:" | awk '{ print $2}'); \
+    if [ -z "${PKGVERSION}" -o "${NEEDEDVERSION}" != "$(echo ${NEEDEDVERSION}\\n${PKGVERSION} | sort -V | head -n1)" ]; then \
+        srcpkg="xmlschema" && \
+        url="https://salsa.debian.org/python-team/packages/python-${srcpkg}.git" && \
+        upstream_tag="upstream/${NEEDEDVERSION}" && \
+        debian_tag="debian/${NEEDEDVERSION}-1" && \
+        debian_branch="master" && \
+        upstream_branch="upstream" && \
+        mkdir -p /usr/src/${srcpkg} && cd /usr/src/${srcpkg} && \
+        git init && git remote add origin ${url} && \
+        git fetch origin --depth 1 refs/tags/${upstream_tag}:refs/tags/${upstream_tag} && \
+        git fetch origin --depth 1 refs/tags/${debian_tag}:refs/tags/${debian_tag} && \
+        if git show ${debian_tag}:debian | grep -qw gbp.conf; then \
+            pristine_tar=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/pristine-tar/ {print $2}' | tr '[:upper:]' '[:lower:]' | xargs); \
+            if [ "${pristine_tar}" = "true" ]; then \
+                git fetch origin pristine-tar; git branch -t pristine-tar origin/pristine-tar; \
+            fi; \
+            debian_branch=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/debian-branch/ {print $2}' | xargs) && \
+            if [ -z "${debian_branch}" ]; then \
+                debian_branch="master"; \
+            fi; \
+            upstream_branch=$(git show ${debian_tag}:debian/gbp.conf | awk -F "=" '/upstream-branch/ {print $2}' | xargs) && \
+            if [ -z "${upstream_branch}" ]; then \
+                upstream_branch="upstream"; \
+            fi; \
+        fi && \
+        git checkout -b ${upstream_branch} ${upstream_tag} && \
+        git checkout -b ${debian_branch} ${debian_tag} && \
+        mk-build-deps --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' --install debian/control --remove && \
+        rm -f $(dpkg-parsechangelog -Ssource)-build-deps_$(dpkg-parsechangelog -Sversion)_*.* && \
+        DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -b -us -uc  && \
+        for p in $(grep -E '^Package:' debian/control | awk '{print $2}'); do \
+            echo "Package: $p" >> /etc/apt/preferences.d/pin-acrn; \
+            echo "Pin: release l=acrn-local-build" >> /etc/apt/preferences.d/pin-acrn; \
+            echo "Pin-Priority: 900" >> /etc/apt/preferences.d/pin-acrn; \
+            echo "" >> /etc/apt/preferences.d/pin-acrn; \
+        done && \
+        cd /usr/src && mv *.deb /opt/apt && \
+        cd /opt/apt && apt-ftparchive packages . > Packages && cp .Release.header Release && apt-ftparchive release . >> Release && \
+        apt-get update -y; \
+    fi
 
 # acpica-unix >= 20200925
 RUN NEEDEDVERSION="20200925"; \
