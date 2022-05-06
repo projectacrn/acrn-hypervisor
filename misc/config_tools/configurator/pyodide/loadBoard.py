@@ -19,11 +19,15 @@ def get_dynamic_scenario(board):
     """
     board_xml = etree.fromstring(board)
 
-    def get_enum(source, options):
+    def get_enum(source, options, obj_type):
         elements = [str(x) for x in elementpath.select(source, options) if x]
         elements = list(set(elements))
         if not elements:
             elements = ['']
+        # TODO: Add more converters if needed
+        enum_type_convert = {'integer': int}
+        if obj_type in enum_type_convert.keys():
+            elements = [enum_type_convert[obj_type](x) for x in elements]
         return elements
 
     def dynamic_enum(**enum_setting):
@@ -33,10 +37,10 @@ def get_dynamic_scenario(board):
             for key in ['function', 'source']
         ]
         # value from given
-        selector, sorted_func = [enum_setting[key] for key in ['selector', 'sorted']]
+        selector, sorted_func, obj_type = [enum_setting[key] for key in ['selector', 'sorted', 'type']]
 
         # get enum data
-        enum = function(source, selector)
+        enum = function(source, selector, obj_type)
         if sorted_func:
             enum = sorted(enum, key=eval(sorted_func))
         return enum
@@ -47,7 +51,7 @@ def get_dynamic_scenario(board):
             enum_setting = obj['enum']
             # check enum obj type
             if enum_setting['type'] == 'dynamicEnum':
-                del enum_setting['type']
+                enum_setting['type'] = obj.get('type', '')
                 # replace json schema obj enum field data
                 obj['enum'] = dynamic_enum(**enum_setting)
         return obj
