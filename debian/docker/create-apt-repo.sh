@@ -24,8 +24,8 @@ fi
 # copy all Debian packages in local APT repo and create local APT repository
 export HOME=$(echo ~docker-build)
 sudo -E -u docker-build /bin/bash -c "\
-    cd $1 && if ls -A /opt/apt/*.deb >/dev/null 2>&1; then cp /opt/apt/*.deb .; fi && \
+    cd $1 && if ls -A /opt/apt/*.deb >/dev/null 2>&1; then cp -a /opt/apt/. .; fi && \
     apt-ftparchive packages . > Packages && \
-    cp /opt/apt/.Release.header Release && \
-    apt-ftparchive release . >> Release"
+    apt-ftparchive sources . > Sources 2>/dev/null && \
+    (cat /opt/apt/.Release.header && apt-ftparchive release .) > Release"
 
