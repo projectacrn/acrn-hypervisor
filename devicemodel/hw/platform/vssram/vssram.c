@@ -449,7 +449,6 @@ static void *vssram_mmap_buffer(int fd, size_t size)
 static int vssram_ept_map_buffer(struct vmctx *ctx, struct vssram_buf *buf_desc)
 {
 	struct acrn_vm_memmap memmap = {
-		.type = ACRN_MEMMAP_RAM,
 		.vma_base = 0,
 		.len = 0,
 		.attr = ACRN_MEM_ACCESS_RWX
@@ -458,10 +457,19 @@ static int vssram_ept_map_buffer(struct vmctx *ctx, struct vssram_buf *buf_desc)
 	memmap.vma_base = buf_desc->vma_base;
 	memmap.user_vm_pa = buf_desc->gpa_base;
 	memmap.len = buf_desc->size;
+
+	/*
+	 * This is a Walk-around:
+	 * - As only MMIO type can be supported when doing EPT unmap in HSM driver,
+	 *   so hardcoding of 'type' to be MMIO type.
+	 */
+	memmap.type = ACRN_MEMMAP_MMIO;
 	error = ioctl(ctx->fd, ACRN_IOCTL_UNSET_MEMSEG, &memmap);
 	if (error) {
 		pr_err("ACRN_IOCTL_UNSET_MEMSEG ioctl() returned an error: %s\n", errormsg(errno));
 	}
+
+	memmap.type = ACRN_MEMMAP_RAM;
 	error = ioctl(ctx->fd, ACRN_IOCTL_SET_MEMSEG, &memmap);
 	if (error) {
 		pr_err("ACRN_IOCTL_SET_MEMSEG ioctl() returned an error: %s\n", errormsg(errno));
