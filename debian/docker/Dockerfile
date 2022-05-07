@@ -60,8 +60,10 @@ RUN mkdir -p /opt/apt && cd /opt/apt && \
     echo "Origin: ACRN Local Build" > .Release.header && \
     echo "Label: acrn-local-build" >> .Release.header && \
     apt-ftparchive packages . > Packages && \
-    cp .Release.header Release && apt-ftparchive release . >> Release && \
-    echo "deb [trusted=yes] file:/opt/apt ./" > /etc/apt/sources.list.d/local-apt.list && \
+    apt-ftparchive sources . > Sources && \
+    (cat .Release.header && apt-ftparchive release .) > Release && \
+    echo "deb [trusted=yes] file:/opt/apt ./" > /etc/apt/sources.list.d/acrn-local.list && \
+    echo "deb-src [trusted=yes] file:/opt/apt ./" >> /etc/apt/sources.list.d/acrn-local.list && \
     touch /etc/apt/preferences.d/pin-acrn
 
 # setup git config for temporary use
@@ -100,15 +102,21 @@ RUN NEEDEDVERSION="2.5.0"; \
         git checkout -b ${debian_branch} ${debian_tag} && \
         mk-build-deps --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' --install debian/control --remove && \
         rm -f $(dpkg-parsechangelog -Ssource)-build-deps_$(dpkg-parsechangelog -Sversion)_*.* && \
-        DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -b -us -uc  && \
+        DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -F -us -uc  && \
         for p in $(grep -E '^Package:' debian/control | awk '{print $2}'); do \
             echo "Package: $p" >> /etc/apt/preferences.d/pin-acrn; \
             echo "Pin: release l=acrn-local-build" >> /etc/apt/preferences.d/pin-acrn; \
             echo "Pin-Priority: 900" >> /etc/apt/preferences.d/pin-acrn; \
             echo "" >> /etc/apt/preferences.d/pin-acrn; \
         done && \
-        cd /usr/src && mv *.deb /opt/apt && \
-        cd /opt/apt && apt-ftparchive packages . > Packages && cp .Release.header Release && apt-ftparchive release . >> Release && \
+        cd /usr/src && \
+        mv *.deb /opt/apt && \
+        mv ${srcpkg}_*.dsc /opt/apt && \
+        mv ${srcpkg}_*.tar.* /opt/apt && \
+        cd /opt/apt && \
+        apt-ftparchive packages . > Packages && \
+        apt-ftparchive sources . > Sources && \
+        (cat .Release.header && apt-ftparchive release .) > Release && \
         apt-get update -y; \
     fi
 
@@ -144,15 +152,21 @@ RUN NEEDEDVERSION="1.10.0"; \
         git checkout -b ${debian_branch} ${debian_tag} && \
         mk-build-deps --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' --install debian/control --remove && \
         rm -f $(dpkg-parsechangelog -Ssource)-build-deps_$(dpkg-parsechangelog -Sversion)_*.* && \
-        DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -b -us -uc  && \
+        DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -F -us -uc  && \
         for p in $(grep -E '^Package:' debian/control | awk '{print $2}'); do \
             echo "Package: $p" >> /etc/apt/preferences.d/pin-acrn; \
             echo "Pin: release l=acrn-local-build" >> /etc/apt/preferences.d/pin-acrn; \
             echo "Pin-Priority: 900" >> /etc/apt/preferences.d/pin-acrn; \
             echo "" >> /etc/apt/preferences.d/pin-acrn; \
         done && \
-        cd /usr/src && mv *.deb /opt/apt && \
-        cd /opt/apt && apt-ftparchive packages . > Packages && cp .Release.header Release && apt-ftparchive release . >> Release && \
+        cd /usr/src && \
+        mv *.deb /opt/apt && \
+        mv python-${srcpkg}_*.dsc /opt/apt && \
+        mv python-${srcpkg}_*.tar.* /opt/apt && \
+        cd /opt/apt && \
+        apt-ftparchive packages . > Packages && \
+        apt-ftparchive sources . > Sources && \
+        (cat .Release.header && apt-ftparchive release .) > Release && \
         apt-get update -y; \
     fi
 
@@ -188,15 +202,21 @@ RUN NEEDEDVERSION="20200925"; \
         git checkout -b ${debian_branch} ${debian_tag} && \
         mk-build-deps --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' --install debian/control --remove && \
         rm -f $(dpkg-parsechangelog -Ssource)-build-deps_$(dpkg-parsechangelog -Sversion)_*.* && \
-        DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -b -us -uc  && \
+        DEB_BUILD_OPTIONS="nocheck" gbp buildpackage -F -us -uc  && \
         for p in $(grep -E '^Package:' debian/control | awk '{print $2}'); do \
             echo "Package: $p" >> /etc/apt/preferences.d/pin-acrn; \
             echo "Pin: release l=acrn-local-build" >> /etc/apt/preferences.d/pin-acrn; \
             echo "Pin-Priority: 900" >> /etc/apt/preferences.d/pin-acrn; \
             echo "" >> /etc/apt/preferences.d/pin-acrn; \
         done && \
-        cd /usr/src && mv *.deb /opt/apt && \
-        cd /opt/apt && apt-ftparchive packages . > Packages && cp .Release.header Release && apt-ftparchive release . >> Release && \
+        cd /usr/src && \
+        mv *.deb /opt/apt && \
+        mv ${srcpkg}_*.dsc /opt/apt && \
+        mv ${srcpkg}_*.tar.* /opt/apt && \
+        cd /opt/apt && \
+        apt-ftparchive packages . > Packages && \
+        apt-ftparchive sources . > Sources && \
+        (cat .Release.header && apt-ftparchive release .) > Release && \
         apt-get update -y; \
     fi
 
