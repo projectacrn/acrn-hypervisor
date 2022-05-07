@@ -30,17 +30,17 @@
           </div>
         </div>
       </template>
-      <Scenario :scenario="scenario" @scenarioUpdate="scenarioUpdate"/>
+      <Scenario v-if="boardHaveData" :scenario="scenario" @scenarioUpdate="scenarioUpdate"/>
     </b-accordion-item>
     <Banner>
       <div style="position: relative">
-        <button type="button" class="btn btn-primary btn-lg SaveButton" @click="saveScenario">
+        <button type="button" :disabled="!scenarioHaveData" class="btn btn-primary btn-lg SaveButton" @click="saveScenario">
           Save Scenario and Launch Scripts
         </button>
       </div>
     </Banner>
 
-    <b-accordion-item visible>
+    <b-accordion-item>
       <template #title>
         <div class="p-1 ps-3 d-flex w-100 justify-content-between align-items-center">
           <div class="fs-4">3. Configure settings for scenario and launch scripts</div>
@@ -111,6 +111,9 @@ export default {
   computed: {
     scenarioHaveData() {
       return !_.isEmpty(this.scenario);
+    },
+    boardHaveData() {
+      return !_.isEmpty(this.board);
     }
   },
   methods: {
