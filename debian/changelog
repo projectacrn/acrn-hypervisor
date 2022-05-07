@@ -1,6 +1,6 @@
-acrn-hypervisor (3.0~1.gbpfdd2db) UNRELEASED; urgency=medium
+acrn-hypervisor (3.0~2.gbpa1453f) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @fdd2db4944b87677df4690a703aaf07f1969bb2c **
+  ** SNAPSHOT build @a1453fbe8022b44e95596e6a94ac42167bd60ffb **
 
   * Initial native packaging release for ACRN.
   * d/rules: Update regarding config detection
@@ -10,5 +10,39 @@ acrn-hypervisor (3.0~1.gbpfdd2db) UNRELEASED; urgency=medium
   * debian: Update and rename README.md
   * debian: Add nuc7i7dnh/shared+initrd
   * debian: Add kontron-COMe-mAL10/shared+initrd
+  * debian: Update changelog for UNRELEASED package build
+  * debian: Preinstall build requirements in docker helper
+  * debian: Silence build user creation
+  * life_mngr: Makefile: Use sysconfdir
+  * life_mngr: Makefile: Fix install path creation of CONF_DIR
+  * life_mngr: Makefile: Fix permission of life_mngr.conf
+  * debian: Fixup ACRN lifemngr package build
+  * debian/rules: Store board and scenario xml
+  * debian/grub: Adapt Linux commandline to ACRN scenario settings
+  * debian/grub: Remove override variable support
+  * debian: Use original acrnd.service
+  * acrn_log: Fix log path to comply with Linux FSSTD
+  * doc: Adapt documentation to change of acrnlog log path
+  * debian: Install acrnprobe.xml
+  * debian: linitian suppression rule update
+  * debian/control: Use compat level 12
+  * debian/rules: override_dh_strip: Fix wrong parameter
+  * debian: Trigger grub-acrn on acrn-hypervisor install
+  * debian/rules: Do not start services on install
+  * debian: acrn-tools: Add helper scripts
+  * debian: acrn-hypervisor: Refactor debconf
+  * debian: nuc7i7dnh/shared+initrd: Add  boot parameters
+  * debian/configs: Add simatic-ipc227g/shared+initrd
+  * debian/rules: Add simatic-ipc227g
+  * debian: Add default configuration for acrnlog
+  * debian/configs: Add kontron-COMe-mAL10:shared
+  * debian/configs: Add nuc7i7dnh:shared
+  * debian/configs: Add simatic-ipc227g:shared
+  * debian: Separate build config items to acrn-hypervisor.conf.mk
+  * debian/rules: Generate launch scripts
+  * debian: Switch to elementpath 2.5.0-1 and xmlschema 1.10.0-1
+  * debian/docker: Add source package handling for local apt repository
+  * debian: Add build and installation description
+  * debian: Update README.md
 
- -- Helmut Buchsbaum <helmut.buchsbaum@opensource.tttech-industrial.com>  Fri, 29 Apr 2022 12:35:46 +0200
+ -- Helmut Buchsbaum <helmut.buchsbaum@opensource.tttech-industrial.com>  Sat, 07 May 2022 14:36:37 +0200
