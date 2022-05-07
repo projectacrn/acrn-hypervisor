@@ -38,7 +38,7 @@
       <template #title>
         <div class="p-1 ps-3 d-flex w-100 justify-content-between align-items-center">
           <div class="fs-4">3. Configure settings for scenario and launch scripts</div>
-          <button type="button" class="btn btn-primary btn-lg" @click.stop.prevent="saveScenario">
+          <button type="button" class="btn btn-primary btn-lg" @click="saveScenario">
             Save Scenario and Launch Scripts
           </button>
         </div>
@@ -210,8 +210,15 @@ export default {
         vmConfig['@id'] = vmIndex
       })
     },
-    saveScenario(event) {
+    saveScenario() {
       this.assignVMID()
+      let msg = ["Scenario xml saved\n",
+        ".xml settings validated\n",
+        "launch scripts generated\n"];
+      let errmsg = ["Scenario xml save failed\n",
+        ".xml settings validate failed\n",
+        "launch scripts generate failed\n"];
+      let step = 0
       let scenarioXMLData = configurator.convertScenarioToXML(
           {
             // simple deep copy
@@ -219,18 +226,29 @@ export default {
           }
       );
       configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
-          .then(() => configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData))
-          .then((result) => {
-            this.errors = result;
-            if (result.length === 0) {
-              let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-              for (let filename in launchScripts) {
-                configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
-              }
+        .then(() => {
+          step = 1
+          configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+        })
+        .then(() => {
+            step = 2
+            let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
+            for (let filename in launchScripts) {
+              configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
             }
-          })
-      event.stopPropagation()
-      event.preventDefault()
+        })
+        .then(() => {
+            alert(`${msg.join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
+        })
+        .catch((err) => {
+          console.log(err)
+          let outmsg = ''
+          for (var i = 0; i < step; i++)
+            outmsg += msg[i]
+          for (i = step; i < 3; i++)
+            outmsg += errmsg[i]
+          alert(`${outmsg} \n Please check your configuration`)
+        })
     }
   }
 }
