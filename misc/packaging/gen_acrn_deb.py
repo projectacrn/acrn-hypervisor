@@ -198,7 +198,7 @@ def create_configurator_deb(build_dir):
     config_tools_path = Path(__file__).parent.parent / 'config_tools'
     configurator_path = config_tools_path / 'configurator'
     scenario_config_path = project_base / "misc" / "config_tools" / "scenario_config"
-    deb_dir = configurator_path / 'src-tauri' / 'target' / 'release' / 'bundle' / 'deb'
+    deb_dir = configurator_path / 'packages' / 'configurator' / 'src-tauri' / 'target' / 'release' / 'bundle' / 'deb'
 
     # clean old directory
     if os.path.isdir(deb_dir):
