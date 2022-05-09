@@ -171,4 +171,8 @@ export default {
   position: absolute;
   right: 0;
 }
+
+.n-popover {
+  max-width: 50%;
+}
 </style>
