@@ -55,11 +55,30 @@ def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
     hv_debug_console = lib.lib.parse_hv_console(scenario_etree)
 
     vm_node_list = scenario_etree.xpath("//vm")
+    user_vm_list = scenario_etree.xpath("//vm[load_order != 'SERVICE_VM']/name/text()")
+    service_vm_id = common.get_node(f"//vm[load_order = 'SERVICE_VM']/@id", scenario_etree)
+    if service_vm_id is not None:
+        for index in range(0, len(user_vm_list)):
+            vuart_id = index + 1
+            create_vuart_irq_node(allocation_etree, service_vm_id, "SERVICE_VM", str(vuart_id), "0")
+
     for vm_node in vm_node_list:
         load_order = common.get_node("./load_order/text()", vm_node)
         irq_list = get_native_valid_irq() if load_order == "SERVICE_VM" else [f"{d}" for d in list(range(1,15))]
-        vuart_id = '1'
+
+        if load_order != "SERVICE_VM":
+            vuart_id = 1
+        else:
+            vuart_id = 1 + len(user_vm_list)
+
         vmname = common.get_node("./name/text()", vm_node)
+
+        # Allocate irq for S5 vuart
+        if load_order != "SERVICE_VM":
+            legacy_vuart_irq = alloc_irq(irq_list)
+            create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
+            vuart_id = vuart_id + 1
+
         vuart_connections = scenario_etree.xpath("//vuart_connection")
         for connection in vuart_connections:
             endpoint_list = connection.xpath(".//endpoint")
@@ -67,8 +86,8 @@ def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
                 vm_name = common.get_node("./vm_name/text()",endpoint)
                 if vm_name == vmname:
                     legacy_vuart_irq = alloc_irq(irq_list)
-                    create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, vuart_id, legacy_vuart_irq)
-                    vuart_id = str(int(vuart_id) + 1)
+                    create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
+                    vuart_id = vuart_id + 1
 
 def get_irqs_of_device(device_node):
     irqs = set()

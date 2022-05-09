@@ -17,7 +17,7 @@ VUART_DEV_NAME_NUM = 8
 stadard_uart_port = {'0x3F8', '0x2F8', '0x3E8', '0x2E8'}
 UART_IRQ_BAUD = " irq 0 uart 16550A baud_base 115200"
 
-def find_non_standard_uart(vm, scenario_etree):
+def find_non_standard_uart(vm, scenario_etree, allocation_etree):
     uart_list = []
     vmname = common.get_node("./name/text()", vm)
 
@@ -30,7 +30,17 @@ def find_non_standard_uart(vm, scenario_etree):
 
         port = common.get_node(f".//endpoint[vm_name = '{vmname}']/io_port/text()", connection)
         if port not in stadard_uart_port:
-           uart_list.append(connection)
+            target_vm_name = common.get_node(f".//endpoint[vm_name != '{vmname}']/vm_name/text()", connection)
+            target_vm_id = common.get_node(f"//vm[name = '{target_vm_name}']/@id", scenario_etree)
+            uart_list.append({"io_port" : port, "target_vm_id" : target_vm_id})
+
+    legacy_uart_list = allocation_etree.xpath(f"//vm[load_order = 'SERVICE_VM']/legacy_vuart")
+    for legacy_uart in legacy_uart_list:
+        port = common.get_node(f"./addr.port_base/text()", legacy_uart)
+        if port is None:
+            continue
+        elif port not in stadard_uart_port:
+            uart_list.append({"io_port" : port, "target_vm_id": common.get_node(f"./t_vuart.vm_id/text()", legacy_uart)})
 
     return uart_list
 
@@ -45,23 +55,13 @@ def main(args):
 
     vm_list = scenario_etree.xpath("//vm[load_order = 'SERVICE_VM']")
     for vm in vm_list:
-        vmname = common.get_node("./name/text()", vm)
-        for connection in scenario_etree.xpath(f"//vuart_connection[endpoint/vm_name = '{vmname}']"):
-            vm_name = common.get_node(f".//endpoint[vm_name != '{vmname}']/vm_name/text()", connection)
-            for target_vm in scenario_etree.xpath(f"//vm[name = '{vm_name}']"):
-                vuart_target_vmid[connection.find('name').text] = target_vm.attrib["id"]
-
-    vm_list = scenario_etree.xpath("//vm[load_order = 'SERVICE_VM']")
-    for vm in vm_list:
-        vuart_list = find_non_standard_uart(vm, scenario_etree)
+        vuart_list = find_non_standard_uart(vm, scenario_etree, allocation_etree)
         vmname = common.get_node("./name/text()", vm)
         if len(vuart_list) != 0:
             with open(args.out, "w+") as config_f:
                 for uart_start_num, vuart in enumerate(vuart_list, start=START_VUART_DEV_NAME_NO):
-                    port = common.get_node(f".//endpoint[vm_name = '{vmname}']/io_port/text()", vuart)
-                    base = " port " + str(port)
-                    connection_name = vuart.find('name').text
-                    vm_id_note = "# User_VM_id: " + str(vuart_target_vmid[connection_name]) + '\n'
+                    base = " port " + vuart["io_port"]
+                    vm_id_note = "# User_VM_id: " + str(vuart["target_vm_id"])+ '\n'
                     config_f.write(vm_id_note)
                     conf = "/dev/ttyS" + str(uart_start_num) + base + UART_IRQ_BAUD + '\n'
                     config_f.write(conf)
