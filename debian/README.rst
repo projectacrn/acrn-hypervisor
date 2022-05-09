@@ -119,15 +119,17 @@ of supported board. Many thanks to Pirouf for bringing in this idea!
    apt-get build-dep acrn-hypervisor
    cd acrn-hypervisor-<version>
 
-Now you can make your changes, e.g. use a new board and scenario:
+Now you can make your changes, e.g. use a new board and scenario, preferrably using ``debian/config`` as a hook directory for proprietary configurations, see also `debian/configs/README.rst <configs/README.rst>`__:
 
 ::
 
-   mkdir -p misc/config_tools/data/newboard
-   cp <user>/newboard.xml misc/config_tools/data/newboard/newboard.xml
-   cp <user>/newscenario.xml misc/config_tools/data/newboard/newscenario.xml
-   sed "s/ACRN_BOARDLIST \:\=.*/ACRN_BOARDLIST \:\= newboard/" -i debian/acrn-hypervisor.conf.mk
-   sed "s/ACRN_SCENARIOLIST \:\=.*/ACRN_SCENARIOLIST \:\= newscenario/" -i debian/acrn-hypervisor.conf.mk
+   mkdir -p debian/config/newboard
+   cp <user>/newboard.xml debian/config/newboard/newboard.xml
+   cp <user>/newscenario.xml debian/config/newboard/newscenario.xml
+   cat << EOF > debian/config/configurations.mk
+   ACRN_BOARDLIST += newboard
+   ACRN_SCENARIOLIST += newscenario
+   EOF
    dpkg-buildpackage
 
 The resulting packages are then located in ``<working dir>``.
