@@ -35,6 +35,7 @@ struct acrn_vrtc {
 
 	time_t		base_rtctime;	/* Base time calulated from physical rtc register. */
 	time_t		offset_rtctime;	/* RTC offset against base time. */
+	time_t		last_rtctime;	/* Last RTC time, to keep monotonicity. */
 
 	uint64_t	base_tsc;	/* Base tsc value */
 

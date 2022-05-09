@@ -386,6 +386,11 @@ static time_t vrtc_get_current_time(struct acrn_vrtc *vrtc)
 	if (vrtc->base_rtctime > 0) {
 		offset = (cpu_ticks() - vrtc->base_tsc) / (get_tsc_khz() * 1000U);
 		second = vrtc->base_rtctime + vrtc->offset_rtctime + (time_t)offset;
+		if (second < vrtc->last_rtctime) {
+			second = vrtc->last_rtctime;
+		} else {
+			vrtc->last_rtctime = second;
+		}
 	}
 	spinlock_release(&vrtc_rebase_lock);
 	return second;
@@ -590,6 +595,7 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 				after = rtc_to_secs(vrtc);
 				spinlock_obtain(&vrtc_rebase_lock);
 				vrtc->offset_rtctime += after - current;
+				vrtc->last_rtctime = VRTC_BROKEN_TIME;
 				spinlock_release(&vrtc_rebase_lock);
 				break;
 			}
@@ -682,6 +688,7 @@ static void vrtc_set_basetime(struct acrn_vrtc *vrtc)
 	current = rtc_to_secs(vrtc);
 	spinlock_obtain(&vrtc_rebase_lock);
 	vrtc->base_rtctime = current;
+	vrtc->last_rtctime = VRTC_BROKEN_TIME;
 	spinlock_release(&vrtc_rebase_lock);
 }
 
