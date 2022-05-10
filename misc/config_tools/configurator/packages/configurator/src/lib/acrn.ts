@@ -72,7 +72,7 @@ class Configurator {
         return invoke("acrn_write", {filePath, contents})
     }
 
-    isFile(filePath: String): Promise<boolean> {
+    isFile(filePath: String): Promise<Boolean> {
         return invoke("acrn_is_file", {path: filePath})
     }
 
@@ -82,6 +82,14 @@ class Configurator {
 
     creatDir(path: String, recursive = true) {
         return invoke('acrn_create_dir', {path, recursive})
+    }
+
+    removeDir(path: String) {
+        return invoke('acrn_remove_dir', {path})
+    }
+
+    removeFile(path: String) {
+        return invoke('acrn_remove_file', {path})
     }
 
     runPython(code: String, isJSON = false): String | Object {

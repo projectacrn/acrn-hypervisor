@@ -57,17 +57,30 @@ export default {
     }
   },
   props: {
+     WorkingFolder: {
+      type: String
+    },
     scenario: {
       type: Object
     }
   },
   mounted() {
-    this.getScenarioHistory().then(() => {
-      // delay 2s for board loading
-      setTimeout(() => {
-        this.loadScenario(true)
-      }, 2000);
-    })
+    //get init scenario if it exist, add to history
+    this.getExistScenarioPath()
+      .then((filePath) => {
+        if (filePath.length > 0) {
+          configurator.addHistory('Scenario', filePath)
+          .then(()=>{
+            this.getScenarioHistory().then(() => {
+              // delay 2s for board loading
+              setTimeout(() => {
+                this.loadScenario(true)
+              }, 2000);
+            })
+          })
+        }
+      })
+      this.getScenarioHistory()
     // Todo: auto load scenario
   },
   methods: {
@@ -88,6 +101,20 @@ export default {
               alert(`Failed to open ${this.currentSelectedScenario}, file may not exist`)
             })
       }
+    },
+    getExistScenarioPath() {
+      // only return filename when using exist configuration.
+        return configurator.readDir(this.WorkingFolder, false)
+          .then((res) => {
+            let scenarioPath = ''
+            res.map((filepath) => {
+              if (filepath.path.search('scenario') != -1) {
+                scenarioPath = filepath.path
+              }
+            })
+            // only return the last vaild boardPath
+            return scenarioPath
+          })
     },
     openScenarioFileSelectDialog() {
       configurator.openDialog({

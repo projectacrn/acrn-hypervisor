@@ -53,10 +53,10 @@ export default {
   },
   methods: {
     nextPage(folderPath) {
-      this.$router.push({name: 'Config', params: {WorkingFolder: folderPath}})
+      this.$router.push({name: 'Config', params: {WorkingFolder: folderPath, isNewConfig:false}})
     },
     usingWorkingFolder() {
-      this.nextPage(this.currentSelected)
+      this.nextPage(this.currentSelected, true)
     },
     getHistory() {
       configurator.getHistory("WorkingFolder")
@@ -75,7 +75,7 @@ export default {
         directory: true,
         multiple: false
       }).then(
-          (folderPath) => configurator.addHistory("WorkingFolder", folderPath)
+          (folderPath) => configurator.addHistory("WorkingFolder", folderPath + window.systemInfo.pathSplit)
       ).then(() => {
         this.getHistory()
       })

@@ -52,7 +52,7 @@ export default {
   },
   methods: {
     nextPage(folderPath) {
-      this.$router.push({name: 'Config', params: {WorkingFolder: folderPath}})
+      this.$router.push({name: 'Config', params: {WorkingFolder: folderPath, isNewConfig: true}})
     },
     usingWorkingFolder() {
       let folderPath = this.WorkingFolder.length ? this.WorkingFolder : this.defaultWorkingFolder;
@@ -65,9 +65,16 @@ export default {
           .then((files) => {
             console.log("Directory exists.", files)
             if (files.length > 0) {
-              confirm("Directory exists, overwrite it?")
+              confirm(`Warning: all existing files in the following working folder will be deleted: \n${folderPath}`)
                   .then((r) => {
-                    if (r) this.nextPage(folderPath)
+                    if (r) {
+                      configurator.removeDir(folderPath)
+                      .then(()=> {
+                        configurator.creatDir(folderPath)
+                        this.nextPage(folderPath)
+                      })
+                      .catch((err) => alert(`${err}`))
+                    }
                   })
             } else {
               this.nextPage(folderPath)
