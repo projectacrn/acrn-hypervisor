@@ -34,7 +34,8 @@
     </b-accordion-item>
     <Banner>
       <div style="position: relative">
-        <button type="button" :disabled="!scenarioHaveData" class="btn btn-primary btn-lg SaveButton" @click="saveScenario">
+        <button type="button" :disabled="!scenarioHaveData" class="btn btn-primary btn-lg SaveButton"
+                @click="saveScenario">
           Save Scenario and Launch Scripts
         </button>
       </div>
@@ -94,6 +95,7 @@ export default {
   props: ['WorkingFolder'],
   mounted() {
     this.updateCurrentFormSchema()
+    window.getCurrentFormSchemaData = this.getCurrentFormSchemaData
     window.getCurrentScenarioData = this.getCurrentScenarioData
   },
   data() {
@@ -147,6 +149,9 @@ export default {
       this.updateCurrentFormSchema()
       this.updateCurrentFormData()
     },
+    getCurrentFormSchemaData() {
+      return this.currentFormSchema
+    },
     getCurrentScenarioData() {
       return this.scenario
     },
@@ -189,7 +194,7 @@ export default {
       let vmConfigcurrent = []
       let postvmlist = []
       let isserivevm = false
-      let msg=''
+      let msg = ''
       this.scenario.vm.map((vmConfig, vmIndex) => {
         if (vmConfig['@id'] === this.activeVMID) {
           currentVMIndex = vmIndex
@@ -209,7 +214,7 @@ export default {
       confirm(msg).then((r) => {
         if (r) {
           if (isserivevm) {
-            for (let i=postvmlist.length-1; i>=0; i--) {
+            for (let i = postvmlist.length - 1; i >= 0; i--) {
               this.scenario.vm.splice(postvmlist[i], 1);
             }
           }
@@ -283,29 +288,29 @@ export default {
       debugger
       // begin write down and verify
       configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
-        .then(() => {
-          step = 1
-          configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-        })
-        .then(() => {
+          .then(() => {
+            step = 1
+            configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+          })
+          .then(() => {
             step = 2
             let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
             for (let filename in launchScripts) {
               configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
             }
-        })
-        .then(() => {
+          })
+          .then(() => {
             alert(`${msg.join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
-        })
-        .catch((err) => {
-          console.log(err)
-          let outmsg = ''
-          for (var i = 0; i < step; i++)
-            outmsg += msg[i]
-          for (i = step; i < 3; i++)
-            outmsg += errmsg[i]
-          alert(`${outmsg} \n Please check your configuration`)
-        })
+          })
+          .catch((err) => {
+            console.log(err)
+            let outmsg = ''
+            for (var i = 0; i < step; i++)
+              outmsg += msg[i]
+            for (i = step; i < 3; i++)
+              outmsg += errmsg[i]
+            alert(`${outmsg} \n Please check your configuration`)
+          })
     }
   }
 }
@@ -316,7 +321,7 @@ export default {
   position: absolute;
   right: 1rem;
   top: 64px;
-  z-index: 3;
+  z-index: 5;
 }
 
 </style>

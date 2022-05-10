@@ -57,6 +57,7 @@ import {Icon} from "@vicons/utils";
 import {Minus} from "@vicons/fa"
 import localizeEn from 'ajv-i18n/localize/en';
 import IVSHMEM_REGION from "./ConfigForm/CustomWidget/IVSHMEM_REGION.vue";
+import cpu_affinity from "./ConfigForm/CustomWidget/cpu_affinity.vue";
 
 i18n.useLocal(localizeEn);
 export default {
@@ -78,6 +79,9 @@ export default {
         "labelSuffix": "："
       },
       uiSchema: {
+        "cpu_affinity": {
+          'ui:field': cpu_affinity
+        },
         "FEATURES": {
           "IVSHMEM": {
             "ui:title": "InterVM shared memory",
