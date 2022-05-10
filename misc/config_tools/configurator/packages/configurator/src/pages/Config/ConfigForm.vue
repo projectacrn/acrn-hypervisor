@@ -62,7 +62,7 @@ i18n.useLocal(localizeEn);
 export default {
   name: "ConfigForm",
   components: {Icon, Minus, VueForm},
-  emits: ['scenarioConfigFormDataUpdate', 'deleteVM'],
+  emits: ['scenarioConfigFormDataUpdate', 'deleteVM', 'vmNameChange'],
   props: {
     currentActiveVMID: {type: Number},
     currentFormSchema: {type: Object},
@@ -109,6 +109,10 @@ export default {
       let newID = newValue.hasOwnProperty('@id') ? newValue['@id'] : -1;
       let oldID = oldValue.hasOwnProperty('@id') ? oldValue['@id'] : -1;
       if (newID === oldID) {
+        if (oldValue.name != newValue.name) {
+          this.$emit('vmNameChange', newValue.name, oldValue.name)
+        }
+
         this.$emit('scenarioConfigFormDataUpdate', newID, newValue)
       }
       // this.$emit('update:scenarioData', this.formData)
