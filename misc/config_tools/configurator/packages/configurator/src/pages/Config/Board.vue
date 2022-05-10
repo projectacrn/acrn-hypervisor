@@ -87,10 +87,22 @@ export default {
     }
   },
   mounted() {
-    this.getBoardHistory()
-        .then(() => {
-          this.importBoard()
-        })
+    //get init board if it exist, add to history
+    this.getExistBoardPath()
+      .then((filePath) => {
+        if (filePath.length > 0) {
+          console.log("add exist board to history!")
+          configurator.addHistory('Board', filePath)
+          .then(() => {
+            this.getBoardHistory()
+            .then(() => {
+              this.importBoard()
+            })
+          })
+        }
+      })
+      this.getBoardHistory()
+
     // Todo: auto load board
   },
   computed: {
@@ -133,7 +145,25 @@ export default {
                   .then(() => configurator.addHistory('Board', boardFileNewPath))
                   .then(() => this.getBoardHistory())
             })
+            .catch((err)=> {
+              alert(`Failed to load the file ${filepath}, it may not exist`)
+              console.log(err)
+            })
       }
+    },
+    getExistBoardPath() {
+    // only return filename when using exist configuration.
+    return configurator.readDir(this.WorkingFolder, false)
+      .then((res) => {
+        let boardPath = ''
+        res.map((filepath) => {
+          if (filepath.path.search('board') != -1) {
+            boardPath = filepath.path
+          }
+        })
+        // only return the last vaild boardPath
+        return boardPath
+      })
     },
     openBoardFileSelectDialog() {
       return configurator.openDialog({

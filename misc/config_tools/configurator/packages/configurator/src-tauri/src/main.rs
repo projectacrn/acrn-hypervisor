@@ -19,6 +19,8 @@ fn main() {
             configurator::acrn_is_file,
             configurator::acrn_read_dir,
             configurator::acrn_create_dir,
+            configurator::acrn_remove_dir,
+            configurator::acrn_remove_file,
             configurator::open_devtools
         ])
         .run(tauri::generate_context!())

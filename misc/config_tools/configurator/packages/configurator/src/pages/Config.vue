@@ -11,9 +11,17 @@
 
   <b-accordion free>
 
-    <b-accordion-item visible>
+    <b-accordion-item :visible='showFlag'>
       <template #title>
-        <div class="p-1 ps-3 fs-4">1. Import a board configuration file</div>
+        <div class="d-flex flex-column">
+          <div class="p-1 ps-3 fs-4">1. Import a board configuration file</div>
+          <div class="py-2" style="letter-spacing: 0.49px;">
+            {{currentBoardFile}}
+          </div>
+          <div class="py-2" style="letter-spacing: 0.49px;">
+            {{currentBoardManu}}  {{CurrentBoardProd}}
+          </div>
+        </div>
       </template>
       <Board v-model:WorkingFolder="WorkingFolder" v-model:board="board" v-model:schemas="schemas"
              @boardUpdate="boardUpdate"/>
@@ -21,16 +29,16 @@
 
     <Banner/>
 
-    <b-accordion-item>
+    <b-accordion-item :visible='showFlag'>
       <template #title>
         <div class="d-flex flex-column">
           <div class="p-1 ps-3 fs-4">2. Create new or import an existing scenario</div>
           <div class="py-2" style="letter-spacing: 0.49px;">
-            Current scenario: {{ scenarioHaveData ? 'scenario.xml' : 'none selected' }}
+            {{ scenarioHaveData ? 'Current scenario: scenario.xml' : '' }}
           </div>
         </div>
       </template>
-      <Scenario v-if="boardHaveData" :scenario="scenario" @scenarioUpdate="scenarioUpdate"/>
+      <Scenario v-if="boardHaveData" :scenario="scenario" :WorkingFolder="WorkingFolder" @scenarioUpdate="scenarioUpdate"/>
     </b-accordion-item>
     <Banner>
       <div style="position: relative">
@@ -41,7 +49,7 @@
       </div>
     </Banner>
 
-    <b-accordion-item>
+    <b-accordion-item visible>
       <template #title>
         <div class="p-1 ps-3 d-flex w-100 justify-content-between align-items-center">
           <div class="fs-4">3. Configure settings for scenario and launch scripts</div>
@@ -92,11 +100,14 @@ import configurator from "../lib/acrn";
 export default {
   name: "Config",
   components: {ConfigForm, TabBox, Scenario, Icon, Board, Banner, AngleLeft},
-  props: ['WorkingFolder'],
+  props: { WorkingFolder: {type: String},
+           isNewConfig: {type: String}
+         },
   mounted() {
     this.updateCurrentFormSchema()
     window.getCurrentFormSchemaData = this.getCurrentFormSchemaData
     window.getCurrentScenarioData = this.getCurrentScenarioData
+    this.showFlag = this.isNewConfig === 'true'
   },
   data() {
     return {
@@ -108,6 +119,10 @@ export default {
       scenario: {},
       currentFormSchema: {},
       currentFormData: {},
+      currentBoardFile: '',
+      currentBoardManu: '',
+      CurrentBoardProd: '',
+      showFlag: false,
       errors: []
     }
   },
@@ -123,10 +138,26 @@ export default {
     back() {
       this.$router.back()
     },
+    updateCurrentBoardInfo() {
+      // update the info in title
+      this.currentBoardFile = 'Current file: ' + this.board['name']
+      let boardContent = this.board.content
+      let reg = /(?<=Manufacturer).+(?=\\n)/
+      let result = boardContent.match(/Manufacturer.+\n/gm)
+      console.log(result)
+      if (result.length > 0) {
+        this.currentBoardManu = result[0]
+      }
+      var result_p = boardContent.match(/Product Name.+\n/gm)
+      if (result_p.length > 0) {
+        this.CurrentBoardProd = result_p[0]
+      }
+    },
     boardUpdate(boardInfo, scenarioJSONSchema) {
       this.board = boardInfo;
       this.schemas = scenarioJSONSchema
       this.updateCurrentFormSchema()
+      this.updateCurrentBoardInfo()
     },
     updateCurrentFormSchema() {
       if (this.activeVMID === -1) {
@@ -146,6 +177,7 @@ export default {
     },
     scenarioUpdate(scenarioData) {
       this.scenario = scenarioData;
+      this.showFlag = false;
       this.updateCurrentFormSchema()
       this.updateCurrentFormData()
     },
@@ -209,19 +241,34 @@ export default {
         msg = "Post-launched VMs require the Service VM. If you proceed, all post-launched VMs and their settings will also be deleted. Are you sure you want to proceed?"
         isserivevm = true
       } else {
-        msg = `Delete this virtual machine VM${this.activeVMID}?`
+        msg = `Delete this virtual machine VM${this.activeVMID}, launch script will alse be deleted if it exists.`
       }
       confirm(msg).then((r) => {
         if (r) {
           if (isserivevm) {
-            for (let i = postvmlist.length - 1; i >= 0; i--) {
+            for (let i=postvmlist.length-1; i>=0; i--) {
+              let launchScriptsname = this.WorkingFolder + `launch_user_vm_id${postvmlist[i]}.sh`
+              this.removeLaunchScript(launchScriptsname);
               this.scenario.vm.splice(postvmlist[i], 1);
             }
+          } else {
+            let launchScriptsname = this.WorkingFolder + `launch_user_vm_id${currentVMIndex}.sh`
+            this.removeLaunchScript(launchScriptsname);
           }
           this.vmNameChange('', this.scenario.vm[currentVMIndex].name)
           this.scenario.vm.splice(currentVMIndex, 1);
           this.updateCurrentFormSchema()
           this.updateCurrentFormData()
+        }
+      })
+    },
+    removeLaunchScript(filePath) {
+      console.log(filePath)
+      configurator.isFile(filePath)
+      .then((isFile) => {
+        if (isFile) {
+          configurator.removeFile(filePath)
+          .catch((err) => alert(`Launch script is not exist: ${filePath}`))
         }
       })
     },
@@ -285,7 +332,6 @@ export default {
       this.updateCurrentFormData()
       // get scenario XML with defaults
       scenarioXMLData = scenarioWithDefault.xml
-      debugger
       // begin write down and verify
       configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
           .then(() => {

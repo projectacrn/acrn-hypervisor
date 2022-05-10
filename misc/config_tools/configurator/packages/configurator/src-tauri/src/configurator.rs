@@ -393,6 +393,16 @@ pub fn acrn_read_dir(path: &str, recursive: bool) -> Result<Vec<DirEntry>, Strin
 }
 
 #[tauri::command]
+pub fn acrn_remove_dir(path: &str) -> Result<(), String> {
+    fs::remove_dir_all(path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn acrn_remove_file(path: &str) -> Result<(), String> {
+    fs::remove_file(path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn open_devtools(window: Window) {
     window.open_devtools()
 }
