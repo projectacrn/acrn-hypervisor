@@ -67,6 +67,7 @@
 
               @deleteVM="deleteVM"
               @scenarioConfigFormDataUpdate="scenarioConfigFormDataUpdate"
+              @vmNameChange="vmNameChange"
           />
         </div>
       </div>
@@ -209,6 +210,7 @@ export default {
               this.scenario.vm.splice(postvmlist[i], 1);
             }
           }
+          this.vmNameChange('', this.scenario.vm[currentVMIndex].name)
           this.scenario.vm.splice(currentVMIndex, 1);
           this.updateCurrentFormSchema()
           this.updateCurrentFormData()
@@ -226,6 +228,18 @@ export default {
         })
       }
       this.updateCurrentFormData()
+    },
+    vmNameChange(newname, oldname) {
+      let hvdata = this.scenario.hv
+      for (let key in hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION) {
+        let region = hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION[key]
+        for (let key1 in region.IVSHMEM_VMS.IVSHMEM_VM) {
+          let ivshmem_vm = region.IVSHMEM_VMS.IVSHMEM_VM[key1];
+          if (ivshmem_vm.VM_NAME === oldname) {
+            ivshmem_vm.VM_NAME = newname
+          }
+        }
+      }
     },
     assignVMID() {
       let vm_priority = {
