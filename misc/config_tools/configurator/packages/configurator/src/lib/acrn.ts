@@ -110,7 +110,15 @@ class Configurator {
         return {
             '@id': vmid,
             load_order: load_order,
-            name: `VM${vmid}`
+            name: `VM${vmid}`,
+            cpu_affinity: {
+                pcpu: [
+                    {
+                        pcpu_id: null,
+                        real_time_vcpu: false
+                    }
+                ]
+            }
         }
     }
 
