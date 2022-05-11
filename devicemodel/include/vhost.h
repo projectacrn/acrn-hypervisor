@@ -20,7 +20,7 @@
  * @brief vhost APIs
  *
  * @addtogroup acrn_virtio
- * @{
+ *
  */
 
 struct vhost_vq {
@@ -132,15 +132,15 @@ int vhost_dev_start(struct vhost_dev *vdev);
 int vhost_dev_stop(struct vhost_dev *vdev);
 
 /**
- * @brief vhost kernel dev ioctrl function
+ * @brief vhost kernel dev ioctrl function.
  *
  * This interface is used to operation the vhost dev kernel.
  *
- * @param vdev Pointer to struct vhost_dev
- * @param The request to vhost kernel
- * @param The arguments of vhost kernel operation
+ * @param vdev Pointer to struct vhost_dev.
+ * @param request to vhost kernel.
+ * @param arg of vhost kernel operation.
  *
- * @return 0 on success and -1 on failure
+ * @return 0 on success and -1 on failure.
  */
 int vhost_kernel_ioctl(struct vhost_dev *vdev, unsigned long int request, void *arg);
-#endif
+#endif /* __VHOST_H__ */
