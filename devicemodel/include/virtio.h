@@ -221,6 +221,7 @@ enum {
 #define	VIRTIO_DEV_CONSOLE	0x1003
 #define	VIRTIO_DEV_RANDOM	0x1005
 #define	VIRTIO_DEV_GPU		0x1050
+#define	VIRTIO_DEV_VSOCK	0x1053
 
 /*
  * ACRN virtio device IDs
