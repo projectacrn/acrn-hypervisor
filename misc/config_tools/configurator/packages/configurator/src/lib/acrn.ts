@@ -123,7 +123,7 @@ class Configurator {
                 pcpu: [
                     {
                         pcpu_id: null,
-                        real_time_vcpu: false
+                        real_time_vcpu: 'n'
                     }
                 ]
             }
