@@ -78,15 +78,17 @@ make configurator
 Run following command in the 'acrn-hypervisor' directory.
 
 ```shell
-cd misc/config_tools
+cd misc\config_tools
 python scenario_config/schema_slicer.py
 python scenario_config/jsonschema/convert.py
 xmllint --xinclude schema/datachecks.xsd > schema/allchecks.xsd
 
 python -m build
+del configurator/packages/configurator/thirdLib/acrn_config_tools-3.0-py3-none-any.whl
 
 cd configurator
 python packages/configurator/thirdLib/manager.py install
+yarn
 yarn build
 ```
 

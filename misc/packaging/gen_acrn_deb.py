@@ -209,6 +209,7 @@ def create_configurator_deb(build_dir):
     add_cmd_list(cmd_list, 'python3 converter.py', scenario_config_path / "jsonschema")
     add_cmd_list(cmd_list, 'bash -c "xmllint --xinclude schema/datachecks.xsd > schema/allchecks.xsd"', config_tools_path)
     add_cmd_list(cmd_list, 'python3 -m build', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "rm -f ./configurator/packages/configurator/thirdLib/acrn_config_tools-3.0-py3-none-any.whl"', config_tools_path)
     add_cmd_list(cmd_list, 'python3 packages/configurator/thirdLib/manager.py install', configurator_path)
     add_cmd_list(cmd_list, 'yarn', configurator_path)
     add_cmd_list(cmd_list, 'yarn build', configurator_path)
