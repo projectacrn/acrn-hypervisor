@@ -389,7 +389,7 @@ def main():
         config_tools = config_tools.parent
 
     schema_file = config_tools / 'schema' / 'sliced.xsd'
-    json_schema_file = config_tools / 'configurator' / 'packages' / 'configurator' / 'src' / 'assets' / 'schema' / 'scenario.json'
+    json_schema_file = config_tools / 'configurator' / 'packages' / 'configurator' / 'build' / 'assets' / 'scenario.json'
 
     # Convert XSD to JSON Schema
     # Todo: turn off it
