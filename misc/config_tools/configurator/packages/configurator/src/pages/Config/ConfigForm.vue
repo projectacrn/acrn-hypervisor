@@ -58,6 +58,7 @@ import {Minus} from "@vicons/fa"
 import localizeEn from 'ajv-i18n/localize/en';
 import IVSHMEM_REGION from "./ConfigForm/CustomWidget/IVSHMEM_REGION.vue";
 import cpu_affinity from "./ConfigForm/CustomWidget/cpu_affinity.vue";
+import VUART from "./ConfigForm/CustomWidget/VUART.vue";
 
 i18n.useLocal(localizeEn);
 export default {
@@ -93,13 +94,10 @@ export default {
           }
         },
         "vuart_connections": {
+          "ui:title": "InterVM Virtual UART Connection",
           "vuart_connection": {
             "ui:sortable": false,
-            "items": {
-              "endpoint": {
-                "ui:sortable": false
-              }
-            }
+            "ui:field": VUART,
           }
         }
       }
