@@ -22,7 +22,7 @@
             </div>
           </b-col>
           <b-col class="p-3">
-            <b-form-checkbox v-model="cpu.real_time_vcpu"/>
+            <b-form-checkbox v-model="cpu.real_time_vcpu" :value="'y'" :uncheckedValue="'n'"/>
           </b-col>
           <b-col>
             <div class="ToolSet">
