@@ -1,5 +1,5 @@
 import {loadPyodide} from "/thirdLib/pyodide/pyodide";
-import scenarioJSONSchema from './assets/schema/scenario.json';
+import scenarioJSONSchema from '../build/assets/scenario.json';
 
 window.__dynamic__load__scenario__from__pyodide__ = () => {
     return JSON.stringify(scenarioJSONSchema)
