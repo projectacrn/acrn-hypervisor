@@ -1387,6 +1387,7 @@ virtio_common_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 	struct virtio_ops *vops;
 	const struct config_reg *cr;
 	const char *name;
+	uint64_t features = 0;
 
 	vops = base->vops;
 	name = vops->name;
@@ -1421,9 +1422,15 @@ virtio_common_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 			break;
 		if (base->driver_feature_select < 2) {
 			value &= 0xffffffff;
-			base->negotiated_caps =
-				(value << (base->driver_feature_select * 32))
-				& base->device_caps;
+			if (base->driver_feature_select == 0) {
+				features = base->device_caps & value;
+				base->negotiated_caps &= ~0xffffffffULL;
+			} else {
+				features = (value << 32)
+					& base->device_caps;
+				base->negotiated_caps &= 0xffffffffULL;
+			}
+			base->negotiated_caps |= features;
 			if (vops->apply_features)
 				(*vops->apply_features)(DEV_STRUCT(base),
 					base->negotiated_caps);
