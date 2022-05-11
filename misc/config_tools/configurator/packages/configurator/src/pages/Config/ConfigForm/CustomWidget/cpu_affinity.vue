@@ -2,37 +2,50 @@
   <div style="border:1px solid gray;background: #F5F5F5;padding: 1rem">
     <b>{{ uiOptions.title }}</b>
     <div class="p-4">
-      <b-row>
-        <b-col></b-col>
-        <b-col></b-col>
-        <b-col>Virtual CPU ID</b-col>
-        <b-col class="ps-5">Real-time vCPU:</b-col>
-        <b-col></b-col>
-      </b-row>
-      <b-row class="align-items-center"
-             v-for="(cpu,index) in defaultVal.pcpu">
-        <b-col>pCPU ID</b-col>
-        <b-col>
-          <b-form-select v-model="cpu.pcpu_id" :options="pcpuid_enum"></b-form-select>
-        </b-col>
-        <b-col class="p-3 col-3">
-          <div style="padding:9px;border-radius: 9px;width: 100%;border: 1px solid dimgray;background: lightgray;">
-            {{ vCPUName(index) }}
-          </div>
-        </b-col>
-        <b-col class="p-3">
-          <b-form-checkbox v-model="cpu.real_time_vcpu"/>
-        </b-col>
+      <div v-if="defaultVal.pcpu && defaultVal.pcpu.length>0">
+        <b-row>
+          <b-col></b-col>
+          <b-col></b-col>
+          <b-col>Virtual CPU ID</b-col>
+          <b-col class="ps-5">Real-time vCPU:</b-col>
+          <b-col></b-col>
+        </b-row>
+        <b-row class="align-items-center"
+               v-for="(cpu,index) in defaultVal.pcpu">
+          <b-col>pCPU ID</b-col>
+          <b-col>
+            <b-form-select v-model="cpu.pcpu_id" :options="pcpuid_enum"></b-form-select>
+          </b-col>
+          <b-col class="p-3 col-3">
+            <div style="padding:9px;border-radius: 9px;width: 100%;border: 1px solid dimgray;background: lightgray;">
+              {{ vCPUName(index) }}
+            </div>
+          </b-col>
+          <b-col class="p-3">
+            <b-form-checkbox v-model="cpu.real_time_vcpu"/>
+          </b-col>
+          <b-col>
+            <div class="ToolSet">
+              <div @click="addPCPU(index)" :class="{'d-none': (this.defaultVal.pcpu.length-1)!==index}">
+                <Icon size="18px">
+                  <Plus/>
+                </Icon>
+              </div>
+              <div @click="removePCPU(index)">
+                <Icon size="18px">
+                  <Minus/>
+                </Icon>
+              </div>
+            </div>
+          </b-col>
+        </b-row>
+      </div>
+      <b-row v-else>
         <b-col>
           <div class="ToolSet">
-            <div @click="addPCPU(index)" :class="{'d-none': (this.defaultVal.pcpu.length-1)!==index}">
+            <div @click="addPCPU(-1)">
               <Icon size="18px">
                 <Plus/>
-              </Icon>
-            </div>
-            <div @click="removePCPU(index)">
-              <Icon size="18px">
-                <Minus/>
               </Icon>
             </div>
           </div>
@@ -52,11 +65,11 @@ import {
 import _ from 'lodash'
 import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
-import {BFormInput} from "bootstrap-vue-3";
+import {BFormInput, BRow} from "bootstrap-vue-3";
 
 export default {
   name: "cpu_affinity",
-  components: {BFormInput, Icon, Plus, Minus},
+  components: {BRow, BFormInput, Icon, Plus, Minus},
   props: {
     ...fieldProps,
   },
