@@ -9,6 +9,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:dyn="http://exslt.org/dynamic"
     xmlns:math="http://exslt.org/math"
+    xmlns:str="http://exslt.org/strings"
     xmlns:acrn="http://projectacrn.org">
   <xsl:include href="lib.xsl" />
   <xsl:output method="text" />
@@ -32,6 +33,21 @@
   <xsl:template match="config-data/acrn-config">
     <xsl:call-template name="vm_count" />
     <xsl:call-template name="sos_vm_bootarges" />
+    <xsl:call-template name="vm_vuart_num" />
+  </xsl:template>
+
+  <xsl:template name ="vm_vuart_num">
+    <xsl:variable name="vuart_nums">
+      <xsl:for-each select = "//config-data//vm">
+        <xsl:variable name = "vm_name" select = "./name/text()" />
+        <xsl:variable name = "vuart_num" select = "count(//endpoint[vm_name = $vm_name]) + 1" />
+        <xsl:value-of select = "$vuart_num" />
+        <xsl:if test = "position() != last()">
+          <xsl:value-of select = "','" />
+        </xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:value-of select = "acrn:define('MAX_VUART_NUM_PER_VM', math:max(str:split($vuart_nums, ',')), 'U')" />
   </xsl:template>
 
   <xsl:template name ="vm_count">
