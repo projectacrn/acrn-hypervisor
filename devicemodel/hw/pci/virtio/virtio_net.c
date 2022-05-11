@@ -43,6 +43,7 @@
 #include <net/if.h>
 #include <linux/if_tun.h>
 #include <sys/socket.h>
+#include <linux/vhost.h>
 
 #include "dm.h"
 #include "pci_core.h"
@@ -76,8 +77,6 @@
 #define	VIRTIO_NET_F_CTRL_VLAN	(1 << 19) /* control channel VLAN filtering */
 #define	VIRTIO_NET_F_GUEST_ANNOUNCE \
 				(1 << 21) /* guest can send gratuitous pkts */
-#define	VHOST_NET_F_VIRTIO_NET_HDR \
-				(1 << 27) /* vhost provides virtio_net_hdr */
 
 #define VIRTIO_NET_S_HOSTCAPS      \
 	(VIRTIO_NET_F_MAC | VIRTIO_NET_F_MRG_RXBUF | VIRTIO_NET_F_STATUS | \
@@ -201,6 +200,38 @@ static struct virtio_ops virtio_net_ops = {
 	virtio_net_neg_features,	/* apply negotiated features */
 	virtio_net_set_status,		/* called on guest set status */
 };
+
+static int
+vhost_kernel_net_set_backend(struct vhost_dev *vdev,
+                             struct vhost_vring_file *file)
+{
+	return vhost_kernel_ioctl(vdev, VHOST_NET_SET_BACKEND, file);
+}
+
+int
+vhost_net_set_backend(struct vhost_dev *vdev, int backend_fd)
+{
+	struct vhost_vring_file file;
+	int rc, i;
+
+	file.fd = backend_fd;
+	for (i = 0; i < vdev->nvqs; i++) {
+		file.index = i;
+		rc = vhost_kernel_net_set_backend(vdev, &file);
+		if (rc < 0)
+			goto fail;
+	}
+
+	return 0;
+fail:
+	file.fd = -1;
+	while (--i >= 0) {
+		file.index = i;
+		vhost_kernel_net_set_backend(vdev, &file);
+	}
+
+	return -1;
+}
 
 static struct ether_addr *
 ether_aton(const char *a, struct ether_addr *e)

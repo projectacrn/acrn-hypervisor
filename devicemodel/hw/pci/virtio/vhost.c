@@ -31,7 +31,7 @@ static int vhost_debug;
        do { if (vhost_debug) pr_dbg(LOG_TAG fmt, ##args); } while (0)
 #define WPRINTF(fmt, args...) pr_err(LOG_TAG fmt, ##args)
 
-static inline
+inline
 int vhost_kernel_ioctl(struct vhost_dev *vdev,
 		       unsigned long int request,
 		       void *arg)
@@ -152,13 +152,6 @@ static int
 vhost_kernel_reset_device(struct vhost_dev *vdev)
 {
 	return vhost_kernel_ioctl(vdev, VHOST_RESET_OWNER, NULL);
-}
-
-static int
-vhost_kernel_net_set_backend(struct vhost_dev *vdev,
-			     struct vhost_vring_file *file)
-{
-	return vhost_kernel_ioctl(vdev, VHOST_NET_SET_BACKEND, file);
 }
 
 static int
@@ -771,40 +764,4 @@ vhost_dev_stop(struct vhost_dev *vdev)
 
 	vdev->started = false;
 	return rc;
-}
-
-/**
- * @brief set backend fd of vhost net.
- *
- * This interface is called to set the backend fd (for example tap fd)
- * to vhost.
- *
- * @param vdev Pointer to struct vhost_dev.
- * @param backend_fd fd of backend (for example tap fd).
- *
- * @return 0 on success and -1 on failure.
- */
-int
-vhost_net_set_backend(struct vhost_dev *vdev, int backend_fd)
-{
-	struct vhost_vring_file file;
-	int rc, i;
-
-	file.fd = backend_fd;
-	for (i = 0; i < vdev->nvqs; i++) {
-		file.index = i;
-		rc = vhost_kernel_net_set_backend(vdev, &file);
-		if (rc < 0)
-			goto fail;
-	}
-
-	return 0;
-fail:
-	file.fd = -1;
-	while (--i >= 0) {
-		file.index = i;
-		vhost_kernel_net_set_backend(vdev, &file);
-	}
-
-	return -1;
 }
