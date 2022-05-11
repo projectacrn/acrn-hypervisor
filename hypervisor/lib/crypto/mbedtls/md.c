@@ -83,7 +83,7 @@ int32_t mbedtls_md_hmac_starts(mbedtls_md_context_t *ctx, const uint8_t *key, si
     const uint8_t *temp_key = key;
     size_t i;
 
-    if ((ctx == NULL) || (ctx->md_info == NULL) || (ctx->hmac_ctx == NULL) || (temp_key == NULL)) {
+    if ((ctx == NULL) || (ctx->md_info == NULL) || (temp_key == NULL)) {
         ret = MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
 
@@ -131,7 +131,7 @@ int32_t mbedtls_md_hmac_update(mbedtls_md_context_t *ctx, const uint8_t *input, 
 {
     int32_t ret;
 
-    if ((ctx == NULL) || (ctx->md_info == NULL) || (ctx->hmac_ctx == NULL)) {
+    if ((ctx == NULL) || (ctx->md_info == NULL)) {
         ret = MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     } else {
         ret = ctx->md_info->update_func((void *) ctx->md_ctx, input, ilen);
@@ -146,7 +146,7 @@ int32_t mbedtls_md_hmac_finish(mbedtls_md_context_t *ctx, uint8_t *output)
     uint8_t tmp[MBEDTLS_MD_MAX_SIZE];
     uint8_t *opad;
 
-    if ((ctx == NULL) || (ctx->md_info == NULL) || (ctx->hmac_ctx == NULL)) {
+    if ((ctx == NULL) || (ctx->md_info == NULL)) {
         ret = MBEDTLS_ERR_MD_BAD_INPUT_DATA;
     }
 
