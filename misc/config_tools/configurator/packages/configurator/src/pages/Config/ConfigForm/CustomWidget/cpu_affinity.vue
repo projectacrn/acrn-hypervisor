@@ -114,7 +114,7 @@ export default {
       return `${this.rootFormData.name} vCPU ${index}`
     },
     addPCPU(index) {
-      this.defaultVal.pcpu.splice(index + 1, 0, {pcpu_id: null, real_time_vcpu: false})
+      this.defaultVal.pcpu.splice(index + 1, 0, {pcpu_id: null, real_time_vcpu: "n"})
     },
     removePCPU(index) {
       if (this.defaultVal.pcpu.length === 1) {

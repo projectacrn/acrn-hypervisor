@@ -356,7 +356,10 @@ export default {
         configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
             .then(() => {
               step = 1
-              configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+              this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+              if (this.errors.length != 0) {
+                  throw "validation failed"
+              }
             })
             .then(() => {
               step = 2
