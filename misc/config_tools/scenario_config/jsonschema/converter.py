@@ -390,6 +390,7 @@ def main():
 
     schema_file = config_tools / 'schema' / 'sliced.xsd'
     json_schema_file = config_tools / 'configurator' / 'packages' / 'configurator' / 'build' / 'assets' / 'scenario.json'
+    json_schema_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Convert XSD to JSON Schema
     # Todo: turn off it
@@ -401,7 +402,8 @@ def main():
     json_schema = json.dumps(json_schema, indent='\t')
 
     # Write file and print successful message
-    open(json_schema_file, 'w', encoding='utf-8').write(json_schema)
+    with open(json_schema_file, 'w', encoding='utf-8') as f:
+        f.write(json_schema)
     print("File %s Convert Success. JSON Schema Write To: %s" % (repr(schema_file), repr(json_schema_file)))
 
 
