@@ -147,7 +147,8 @@ To set up the ACRN build environment on the development computer:
            libpixman-1-dev \
            libsdl2-dev \
            libegl-dev \
-           libgles-dev
+           libgles-dev \
+           libdrm-dev
 
 #. Install Python package dependencies:
 
