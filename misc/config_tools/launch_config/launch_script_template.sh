@@ -52,7 +52,7 @@ function unbind_device() {
 function create_tap() {
     # create a unique tap device for each VM
     tap=$1
-    tap_exist=$(ip a | grep "$tap: " | awk '{print $1}')
+    tap_exist=$(ip a show dev $tap)
     if [ "$tap_exist"x != "x" ]; then
         echo "$tap TAP device already available, reusing it."
     else
@@ -187,7 +187,7 @@ function add_passthrough_device() {
     physical_bdf=$2
     options=$3
 
-    unbind_device $physical_bdf
+    unbind_device ${physical_bdf%,*}
 
     # bus, device and function as decimal integers
     bus_temp=${physical_bdf#*:};     bus=$((16#${bus_temp%:*}))
