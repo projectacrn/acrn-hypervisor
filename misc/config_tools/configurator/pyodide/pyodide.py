@@ -30,7 +30,7 @@ nuc11_folder = LazyPath(config_tools_dir / 'data' / 'nuc11tnbi5')
 # file define
 nuc11_board = file_text(nuc11_folder / 'nuc11tnbi5.xml')
 nuc11_scenario = file_text(nuc11_folder / 'shared_launch_6user_vm.xml')
-scenario_json_schema = file_text(configurator_dir / 'src' / 'assets' / 'schema' / 'scenario.json')
+scenario_json_schema = file_text(configurator_dir / 'build' / 'assets' / 'scenario.json')
 
 IS_WEB = sys.platform == 'emscripten'
 
