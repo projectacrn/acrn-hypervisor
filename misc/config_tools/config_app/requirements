@@ -1,5 +1,0 @@
-Flask==1.1.1
-flask_bootstrap==3.3.7.1
-xmlschema==1.4.1
-lxml==4.6.2
-defusedxml==0.7.1
