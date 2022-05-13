@@ -395,7 +395,8 @@ device file when user config it as virtio serial port, which can be read and wri
 <xs:complexType name="VirtioInputConfiguration">
   <xs:sequence>
     <xs:element name="backend_device_file" type="xs:string" minOccurs="0">
-      <xs:annotation acrn:title="Backend device file" acrn:widget-options="'placeholder': '/dev/input/eventX'">
+      <xs:annotation acrn:title="Backend device file" acrn:widget-options="'placeholder': '/dev/input/eventX'" acrn:options="//inputs/input"
+                     acrn:options-sorted-by="lambda s: (s.split('Device name: ')[1].split(', Device physical path')[0], s.split('Device physical path: ')[1])">
         <xs:documentation>Specifying backend device in service vm with device description.</xs:documentation>
       </xs:annotation>
     </xs:element>
