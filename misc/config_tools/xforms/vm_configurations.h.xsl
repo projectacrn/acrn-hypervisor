@@ -34,6 +34,7 @@
     <xsl:call-template name="vm_count" />
     <xsl:call-template name="sos_vm_bootarges" />
     <xsl:call-template name="vm_vuart_num" />
+    <xsl:value-of select = "acrn:define('MAX_IR_ENTRIES', //MAX_IR_ENTRIES, 'U')" />
   </xsl:template>
 
   <xsl:template name ="vm_vuart_num">
