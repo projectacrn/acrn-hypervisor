@@ -20,7 +20,7 @@ Within this option documentation, we refer to some common type
 definitions:
 
 Boolean
-  A true or false value specified as either ``y`` or ``n``.
+  A true or false value displayed as a check box, checked indicating true.
 
 Hexadecimal
   A base-16 (integer) value represented by a leading ``0x`` or ``0X`` followed by

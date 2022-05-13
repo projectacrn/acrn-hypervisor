@@ -5,7 +5,7 @@
 
 <xs:simpleType name="Boolean">
   <xs:annotation acrn:widget="b-form-checkbox" acrn:widget-options="'value': 'y', 'unchecked-value': 'n'">
-    <xs:documentation>A Boolean value, written as ``y`` or ``n``.</xs:documentation>
+    <xs:documentation>A Boolean value, displayed as a check box.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="y" />
@@ -307,7 +307,7 @@ and no more than 512.</xs:documentation>
       <xs:annotation acrn:title="Intel Resource Director Tech">
         <xs:documentation>Enable Intel Resource Director Technology (RDT). If
 the board hardware does not support
-RDT, setting this option to ``y`` is ignored.</xs:documentation>
+RDT, setting this option to checked is ignored.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CDP_ENABLED" type="Boolean" default="n">
