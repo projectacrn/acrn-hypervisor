@@ -147,17 +147,20 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
       </xs:annotation>
     </xs:element>
     <xs:element name="kern_mod" type="xs:string" minOccurs="0">
-      <xs:annotation acrn:title="Kernel module tag">
+      <xs:annotation acrn:title="Kernel module tag"
+                     acrn:widget-options="'placeholder': 'An arbitrary string without white spaces. The same string shall be appended, in grub.conf, to the GRUB module containing the OS kernel.'">
         <xs:documentation>Specify the tag for the kernel image that is used as a multiboot module. The tag's spelling must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="ramdisk_mod" type="xs:string" minOccurs="0">
-      <xs:annotation acrn:title="RAMdisk module tag">
+      <xs:annotation acrn:title="RAMdisk module tag"
+                     acrn:widget-options="'placeholder': '(Optional) An arbitrary string without white spaces. The same string shall be appended, in grub.conf, to the GRUB module containing the OS ramdisk or initrd.'">
         <xs:documentation>Specify the tag for the RAMdisk image that is used as a multiboot module. The tag's spelling must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="bootargs" type="xs:string" minOccurs="0">
-      <xs:annotation acrn:title="Kernel command-line parameters">
+      <xs:annotation acrn:title="Kernel command-line parameters"
+                     acrn:widget-options="'placeholder': '(Optional) The command line options to be passed to the OS kernel.'">
         <xs:documentation>Specify the command-line parameters that will be used to boot the kernel for this VM. See `Linux documentation &lt;https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html&gt;`__ for a list of parameters.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -276,8 +279,7 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
 <xs:complexType name="PCIDevsConfiguration">
   <xs:sequence>
     <xs:element name="pci_dev" type="xs:string" minOccurs="0" maxOccurs="unbounded">
-      <xs:annotation acrn:title="PCI device assignment"
-		     acrn:options="//device[class]/@description" acrn:options-sorted-by="lambda s: (s.split(' ', maxsplit=1)[-1].split(':')[0], s.split(' ')[0])">
+      <xs:annotation acrn:options="//device[class]/@description" acrn:options-sorted-by="lambda s: (s.split(' ', maxsplit=1)[-1].split(':')[0], s.split(' ')[0])">
         <xs:documentation>Select the PCI devices you want to assign to this virtual machine.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -314,13 +316,13 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
       </xs:annotation>
     </xs:element>
     <xs:element name="interface_name" minOccurs="0">
-      <xs:annotation acrn:title="Network interface name">
+      <xs:annotation acrn:title="Network interface name" acrn:widget-options="'placeholder': 'An arbitrary-long string with letters, digits, underscores or dashes.'">
         <xs:documentation>Specify the network interface name that will appear in the Service VM. Use the `ip a` command in the Service VM to display the network interface names.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
-  <xs:annotation>
-       <xs:documentation>A string of letters, digits, ``_``, or ``-``.</xs:documentation>
-  </xs:annotation>
+        <xs:annotation>
+          <xs:documentation>A string of letters, digits, ``_``, or ``-``.</xs:documentation>
+        </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:pattern value="[a-zA-Z0-9_\-]+" />
         </xs:restriction>
@@ -372,18 +374,18 @@ device file when user config it as virtio serial port, which can be read and wri
         <xs:documentation>Specify backend device type in service VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="output_file_path" type="xs:string" minOccurs="0" maxOccurs="1">
-      <xs:annotation acrn:title="Output file path">
+    <xs:element name="output_file_path" type="xs:string" minOccurs="0">
+      <xs:annotation acrn:title="Output file path" acrn:widget-options="'placeholder': '/home/user/path/to/console_output.txt, needed only when backend type is file.'">
         <xs:documentation>The output file path for the file backend type.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="sock_file_path" type="xs:string" minOccurs="0" maxOccurs="1">
-      <xs:annotation acrn:title="Sock file path">
+    <xs:element name="sock_file_path" type="xs:string" minOccurs="0">
+      <xs:annotation acrn:title="Sock file path" acrn:widget-options="'placeholder': '/path/to/file.sock, needed only when backend type is sock client or server.'">
         <xs:documentation>The sock file path for the sock server or client backend type.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="tty_device_path" type="xs:string" minOccurs="0" maxOccurs="1">
-      <xs:annotation acrn:title="TTY device path">
+    <xs:element name="tty_device_path" type="xs:string" minOccurs="0">
+      <xs:annotation acrn:title="TTY device path" acrn:widget-options="'placeholder': '/dev/ttyX, needed only when backend type is tty.'">
         <xs:documentation>The device path for the tty backend type.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -393,12 +395,12 @@ device file when user config it as virtio serial port, which can be read and wri
 <xs:complexType name="VirtioInputConfiguration">
   <xs:sequence>
     <xs:element name="backend_device_file" type="xs:string" minOccurs="0">
-      <xs:annotation acrn:title="Backend device file">
+      <xs:annotation acrn:title="Backend device file" acrn:widget-options="'placeholder': '/dev/input/eventX'">
         <xs:documentation>Specifying backend device in service vm with device description.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="id" minOccurs="0">
-      <xs:annotation acrn:title="Guest virtio input device unique identifier">
+      <xs:annotation acrn:title="Guest virtio input device unique identifier" acrn:widget-options="'placeholder': 'An arbitrary-long string with letters, digits, underscores or dashes.'">
         <xs:documentation>Specifying unique identifier to distinguish same devices in guest.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>

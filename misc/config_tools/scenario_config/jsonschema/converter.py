@@ -148,8 +148,8 @@ class XS2JS:
     def convert_widget_config(self, annotation, js_ele):
         if '@acrn:widget' in annotation:
             js_ele['ui:widget'] = annotation['@acrn:widget']
-            if '@acrn:widget-options' in annotation:
-                js_ele['ui:options'] = {eval(k): eval(v) for k, v in [kv.split('=') for kv in annotation['@acrn:widget-options'].split(',')]}
+        if '@acrn:widget-options' in annotation:
+            js_ele['ui:options'] = eval(f"{{{annotation['@acrn:widget-options']}}}")
 
     def xst2jst(self, type_name) -> str:
         """convert xml schema type name to json schema type name"""
@@ -195,9 +195,9 @@ class XS2JS:
                             enum_names.append(enum_name)
                     js_st["enumNames"] = enum_names
 
-                # widget and its options
-                if 'xs:annotation' in obj:
-                    self.convert_widget_config(obj['xs:annotation'], js_st)
+            # widget and its options
+            if 'xs:annotation' in obj:
+                self.convert_widget_config(obj['xs:annotation'], js_st)
 
             js_st.update(self.xsa2jsa(restriction))
             return js_st
@@ -297,12 +297,14 @@ class XS2JS:
                 required.append(name)
 
             if '@maxOccurs' in element:
-                possible_keys = ['type', '$ref', 'oneOf']
+                # ui:options seen at this moment are copied from the annotation of the type.
+                possible_keys = ['type', '$ref', 'oneOf', 'ui:options']
                 convert_to_items_success = False
+                js_ele['items'] = {}
                 for possible_key in possible_keys:
                     if possible_key not in js_ele:
                         continue
-                    js_ele['items'] = {possible_key: js_ele[possible_key]}
+                    js_ele['items'][possible_key] = js_ele[possible_key]
                     del js_ele[possible_key]
                     convert_to_items_success = True
 

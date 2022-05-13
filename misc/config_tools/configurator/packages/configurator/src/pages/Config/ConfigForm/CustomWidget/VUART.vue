@@ -50,15 +50,15 @@
           <b-row class="justify-content-sm-start align-items-center">
             <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[0].vm_name }} </b-col>
             <b-col sm="4">
-              <b-form-input v-model="VUARTConn.endpoint[0].io_port" v-if="VUARTConn.type === 'legacy'"/>
-              <b-form-input v-model="VUARTConn.endpoint[0].vbdf" v-else-if="VUARTConn.type === 'pci'"/>
+              <b-form-input v-model="VUARTConn.endpoint[0].io_port" v-if="VUARTConn.type === 'legacy'" placeholder="An address in hexadecimal, e.g. 0x4000"/>
+              <b-form-input v-model="VUARTConn.endpoint[0].vbdf" v-else-if="VUARTConn.type === 'pci'" placeholder="00:[device].[function], e.g. 00:1c.0. All fields are in hexadecimal."/>
             </b-col>
           </b-row>
           <b-row class="justify-content-sm-start align-items-center">
             <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[1].vm_name }} </b-col>
             <b-col sm="4">
-              <b-form-input v-model="VUARTConn.endpoint[1].io_port" v-if="VUARTConn.type === 'legacy'"/>
-              <b-form-input v-model="VUARTConn.endpoint[1].vbdf" v-else-if="VUARTConn.type === 'pci'"/>
+              <b-form-input v-model="VUARTConn.endpoint[1].io_port" v-if="VUARTConn.type === 'legacy'" placeholder="An address in hexadecimal, e.g. 0x4000"/>
+              <b-form-input v-model="VUARTConn.endpoint[1].vbdf" v-else-if="VUARTConn.type === 'pci'" placeholder="00:[device].[function], e.g. 00:1c.0. All fields are in hexadecimal."/>
             </b-col>
           </b-row>
         </div>
