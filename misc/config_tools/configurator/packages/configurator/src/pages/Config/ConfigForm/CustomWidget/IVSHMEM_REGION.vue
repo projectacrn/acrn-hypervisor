@@ -9,7 +9,7 @@
             <label>Region name: </label>
           </b-col>
           <b-col md="4">
-            <b-form-input v-model="IVSHMEM_VMO.NAME"/>
+            <b-form-input v-model="IVSHMEM_VMO.NAME" placeholder="Any string with no white spaces."/>
           </b-col>
         </b-row>
 
@@ -48,7 +48,7 @@
               <b-form-select v-model="IVSHMEM_VM.VM_NAME" :options="vmNames"></b-form-select>
             </b-col>
             <b-col sm="3">
-              <b-form-input v-model="IVSHMEM_VM.VBDF"/>
+              <b-form-input v-model="IVSHMEM_VM.VBDF" placeholder="00:[device].[function], e.g. 00:0c.0. All fields are in hexadecimal."/>
             </b-col>
             <b-col sm="3">
               <div class="ToolSet">

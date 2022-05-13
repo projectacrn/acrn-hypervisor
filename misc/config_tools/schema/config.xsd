@@ -286,7 +286,7 @@ These settings can only be changed at build time.</xs:documentation>
 Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="CACHE_REGION" type="CacheRegionType" minOccurs="0" maxOccurs="1">
+    <xs:element name="CACHE_REGION" type="CacheRegionType" minOccurs="0">
       <xs:annotation>
         <xs:documentation>Specify the cache setting.</xs:documentation>
       </xs:annotation>
@@ -306,20 +306,10 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Select the VM type. A standard VM (``STANDARD_VM``) is for general-purpose applications, such as human-machine interface (HMI). A real-time VM (``RTVM``) offers special features for time-sensitive applications.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="name">
+    <xs:element name="name" type="VMNameType">
         <xs:annotation acrn:title="VM name" acrn:views="basic">
           <xs:documentation>Specify the name used to identify this VM. The VM name will be shown in the hypervisor console vm_list command.</xs:documentation>
         </xs:annotation>
-      <xs:simpleType>
-        <xs:annotation>
-          <xs:documentation>A string from 1 to 32 characters long (with no spaces).</xs:documentation>
-        </xs:annotation>
-        <xs:restriction base="xs:string">
-          <xs:minLength value="1" />
-          <xs:maxLength value="15" />
-          <xs:pattern value="\S+" />
-        </xs:restriction>
-      </xs:simpleType>
     </xs:element>
     <xs:element name="lapic_passthrough" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:title="LAPIC passthrough" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
@@ -404,7 +394,7 @@ argument and memory.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
-      <xs:annotation acrn:applicable-vms="pre-launched" acrn:views="basic">
+      <xs:annotation acrn:title="MMIO Resources" acrn:applicable-vms="pre-launched" acrn:views="basic">
         <xs:documentation>MMIO resources to passthrough.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -470,13 +460,18 @@ is the virtio network driver, simulating the virtual NIC. The backend could be: 
 mouse, and tablet.  It sends Linux input layer events over virtio.</xs:documentation>
 	        </xs:annotation>
 	      </xs:element>
-          <xs:element name="block" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+          <xs:element name="block" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation acrn:title="Virtio block device" acrn:views="basic">
               <xs:documentation>The virtio-blk device presents a block device to the VM. Each virtio-blk device appears as a disk inside the VM.</xs:documentation>
             </xs:annotation>
+              <xs:simpleType>
+                  <xs:annotation acrn:widget-options="'placeholder': '/home/user/path/to/disk.image'" />
+                  <xs:restriction base="xs:string" />
+              </xs:simpleType>
           </xs:element>
           <xs:element name="gpu" type="xs:string" minOccurs="0">
-            <xs:annotation acrn:title="Virtio GPU device" acrn:views="basic">
+            <xs:annotation acrn:title="Virtio GPU device" acrn:views="basic"
+                           acrn:widget-options="'placeholder': 'fullscreen or geometry=[width]x[height]+[x offset]+[y offset], e.g. geometry=1280x720+0+0 specifies a 1280 x 720 pixels region at the top left corner of the screan'">
               <xs:documentation>The virtio GPU device presents a GPU device to the VM.
 This feature enables you to view the VM's GPU output in the Service VM.</xs:documentation>
             </xs:annotation>

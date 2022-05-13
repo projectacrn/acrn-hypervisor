@@ -5,7 +5,7 @@
   <xsl:variable name="section_adornment" select="'#*=-%+@`'"/>
   <xsl:variable name="vLower" select="'abcdefghijklmnopqrstuvwxyz'"/>
   <xsl:variable name="vUpper" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
-  <!-- xslt script to autogenerate config option documentation -->  
+  <!-- xslt script to autogenerate config option documentation -->
   <!-- Get things started with the ACRNConfigType element -->
   <xsl:template match="/xs:schema">
     <xsl:apply-templates select="xs:complexType[@name='ACRNConfigType']">
@@ -203,6 +203,11 @@
         <xsl:call-template name="print-annotation">
           <xsl:with-param name="indent" select="'     '"/>
         </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="starts-with(xs:restriction/@base, 'xs:')">
+        <xsl:variable name="ty" select="xs:restriction/@base"/>
+        <xsl:value-of select="concat(translate(substring($ty, 4,1), $vLower, $vUpper), substring($ty,5),' value')"/>
+        <xsl:value-of select="$newline"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:text>No type annotation found</xsl:text>
