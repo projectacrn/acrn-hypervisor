@@ -9,7 +9,7 @@
   },
   "description": "ACRN Configurator",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --force",
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri"
