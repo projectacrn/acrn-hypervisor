@@ -128,6 +128,7 @@ struct dmar_drhd_rt {
 
 	uint64_t root_table_addr;
 	uint64_t ir_table_addr;
+	/* MAX_IR_ENTRIES is roundup (to power of 2) of CONFIG_MAX_PT_IRQ_ENTRIES. */
 	uint64_t irte_alloc_bitmap[MAX_IR_ENTRIES / 64U];
 	uint64_t irte_reserved_bitmap[MAX_IR_ENTRIES / 64U];
 	uint64_t qi_queue;

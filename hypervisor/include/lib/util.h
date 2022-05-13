@@ -25,27 +25,6 @@
 /** Replaces 'x' by the string "x". */
 #define STRINGIFY(x) #x
 
-/*
- * This algorithm get the round up 2^n
- *
- * n = input - 1;    0x1002 ---->  0x1001
- * n |= n >> 1;      0x1001 | 0x800
- * n |= n >> 2;      0x1801 | 0x600
- * n |= n >> 4;      0x1e01 | 0x1e0
- * n |= n >> 8;      0x1fe1 | 0x1f
- * n |= n >> 16;     0x1fff
- * n |= n >> 32;     0x1fff
- * n += 1;           0x2000
- */
-#define ROUND0(x)  ((x)-1)
-#define ROUND1(x)  (ROUND0(x) |(ROUND0(x)>>1))
-#define ROUND2(x)  (ROUND1(x) |(ROUND1(x)>>2))
-#define ROUND4(x)  (ROUND2(x) |(ROUND2(x)>>4))
-#define ROUND8(x)  (ROUND4(x) |(ROUND4(x)>>8))
-#define ROUND16(x) (ROUND8(x) |(ROUND8(x)>>16))
-#define ROUND32(x) (ROUND16(x) |(ROUND16(x)>>32))
-#define powerof2_roundup(x) ((ROUND32(x) == (~0UL)) ? ~0UL : (ROUND32(x) +1))
-
 /* Macro used to check if a value is aligned to the required boundary.
  * Returns TRUE if aligned; FALSE if not aligned
  * NOTE:  The required alignment must be a power of 2 (2, 4, 8, 16, 32, etc)
