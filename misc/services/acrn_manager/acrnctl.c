@@ -657,7 +657,7 @@ static int valid_start_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
 {
 	char df_opt[16] = "VM_NAME";
 
-	if (argc != 2 || ((argv + 1) && !strcmp(argv[1], "help"))) {
+	if (argc != 2 || !strcmp(argv[1], "help")) {
 		printf("acrnctl %s %s\n", cmd->cmd, df_opt);
 		return -1;
 	}
