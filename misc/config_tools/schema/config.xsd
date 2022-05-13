@@ -85,12 +85,7 @@ These settings can only be changed at build time.</xs:documentation>
     </xs:element>
     <xs:element name="KEEP_IRQ_DISABLED" type="Boolean" default="n">
       <xs:annotation acrn:views="">
-        <xs:documentation>If ``y``, permanently disables all interrupts in HV root mode.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="RDT" type="RDTType">
-      <xs:annotation acrn:title="Intel Resource Director Tech" acrn:views="advanced">
-        <xs:documentation>Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.</xs:documentation>
+        <xs:documentation>If checked, permanently disables all interrupts in HV root mode.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="HYPERV_ENABLED" type="Boolean" default="y">
@@ -116,6 +111,11 @@ These settings can only be changed at build time.</xs:documentation>
     <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="y">
       <xs:annotation acrn:title="MCE workaround" acrn:views="advanced">
         <xs:documentation>Enable the software workaround for Machine Check Error on Page Size Change (erratum in some processor families).</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="RDT" type="RDTType">
+      <xs:annotation acrn:title="Intel Resource Director Tech" acrn:views="advanced">
+        <xs:documentation>Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="IVSHMEM" type="IVSHMEMInfo">
@@ -255,14 +255,20 @@ These settings can only be changed at build time.</xs:documentation>
 
 <xs:complexType name="HVConfigType">
   <xs:all>
+    <xs:element name="FEATURES" type="FeatureOptionsType">
+      <xs:annotation acrn:title="Hypervisor features" acrn:views="advanced">
+	<xs:documentation>Enable hypervisor features.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="DEBUG_OPTIONS" type="DebugOptionsType">
       <xs:annotation acrn:title="Debug options" acrn:views="basic">
 	<xs:documentation>Configure the debug facilities.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="FEATURES" type="FeatureOptionsType">
-      <xs:annotation acrn:title="Hypervisor features" acrn:views="basic, advanced">
-	<xs:documentation>Enable hypervisor features.</xs:documentation>
+    <xs:element name="vuart_connections" type="VuartConnectionsType">
+      <xs:annotation acrn:title="Inter-VM virtual UART connection" acrn:views="basic">
+        <xs:documentation>Specify the vUART connection settings.
+Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MEMORY" type="MemoryOptionsType">
@@ -280,12 +286,6 @@ These settings can only be changed at build time.</xs:documentation>
 	<xs:documentation>Miscellaneous options for workarounds.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="vuart_connections" type="VuartConnectionsType">
-      <xs:annotation acrn:title="Inter-VM virtual UART connection" acrn:views="basic">
-        <xs:documentation>Specify the vUART connection settings.
-Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
     <xs:element name="CACHE_REGION" type="CacheRegionType" minOccurs="0">
       <xs:annotation>
         <xs:documentation>Specify the cache setting.</xs:documentation>
@@ -301,15 +301,40 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Specify the VM load order.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="name" type="VMNameType">
+        <xs:annotation acrn:title="VM name" acrn:views="basic">
+          <xs:documentation>Specify the name used to identify this VM. The VM name will be shown in the hypervisor console vm_list command.</xs:documentation>
+        </xs:annotation>
+    </xs:element>
     <xs:element name="vm_type" type="VMType" minOccurs="0">
       <xs:annotation acrn:title="VM type" acrn:views="basic">
         <xs:documentation>Select the VM type. A standard VM (``STANDARD_VM``) is for general-purpose applications, such as human-machine interface (HMI). A real-time VM (``RTVM``) offers special features for time-sensitive applications.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="name" type="VMNameType">
-        <xs:annotation acrn:title="VM name" acrn:views="basic">
-          <xs:documentation>Specify the name used to identify this VM. The VM name will be shown in the hypervisor console vm_list command.</xs:documentation>
-        </xs:annotation>
+    <xs:element name="console_vuart" type="ConsoleVuartConfiguration" default="None">
+      <xs:annotation acrn:title="Console virtual UART type" acrn:views="basic">
+        <xs:documentation>Select the console virtual UART (vUART) type. Add the console settings to the kernel command line by typing them in the "Linux kernel command-line parameters" text box (for example, ``console=ttyS0`` for COM port 1).</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="os_type" type="OSType" default="Non-Windows OS">
+      <xs:annotation acrn:title="OS type" acrn:applicable-vms="post-launched" acrn:views="basic">
+	<xs:documentation>Select the OS type for this VM. This is required to run Windows in a User VM. See :ref:`acrn-dm_parameters` for how to include this in the Device Model arguments.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="vuart0" type="Boolean" default="y">
+      <xs:annotation acrn:title="Emulate COM1 as stdio I/O" acrn:applicable-vms="post-launched" acrn:views="basic">
+	<xs:documentation>Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="vbootloader" type="Boolean" default="y">
+      <xs:annotation acrn:title="Enable Open Virtual Machine FW" acrn:applicable-vms="post-launched" acrn:views="basic">
+        <xs:documentation>Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="usb_xhci" type="USBDevsConfiguration" minOccurs="0">
+      <xs:annotation acrn:title="Virtual USB HCI" acrn:views="basic" acrn:applicable-vms="post-launched">
+        <xs:documentation>Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.</xs:documentation>
+      </xs:annotation>
     </xs:element>
     <xs:element name="lapic_passthrough" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:title="LAPIC passthrough" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
@@ -363,13 +388,12 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="epc_section" type="EPCSection" minOccurs="0">
-      <xs:annotation acrn:views="advanced" acrn:applicable-vms="pre-launched">
+      <xs:annotation acrn:title="SGX Enclave Page Cache" acrn:views="advanced" acrn:applicable-vms="pre-launched">
         <xs:documentation>Specify the Intel Software Guard Extensions (SGX) enclave page cache (EPC) section settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="memory" type="MemoryInfo" minOccurs="0">
-      <xs:annotation acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
-        <xs:documentation>Specify memory information for User VMs.</xs:documentation>
+      <xs:annotation acrn:title="Memory allocation" acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
       </xs:annotation>
     </xs:element>
     <xs:element name="priority" type="PriorityType"  default="PRIO_LOW">
@@ -386,11 +410,6 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
       <xs:annotation acrn:title="OS Configuration" acrn:applicable-vms="pre-launched, service-vm" acrn:views="basic">
         <xs:documentation>General information for host kernel, boot
 argument and memory.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="console_vuart" type="ConsoleVuartConfiguration" default="None">
-      <xs:annotation acrn:title="Console virtual UART type" acrn:views="basic">
-        <xs:documentation>Select the console virtual UART (vUART) type. Add the console settings to the kernel command line by typing them in the "Linux kernel command-line parameters" text box (for example, ``console=ttyS0`` for COM port 1).</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
@@ -413,32 +432,19 @@ argument and memory.</xs:documentation>
         <xs:documentation>Enable virtualization of PCIe Precision Time Measurement (PTM) mechanism for devices with PTM capability and for real-time application. The hypervisor provides PCIe root port emulation instead of host bridge emulation for the VM. PTM coordinates timing between the device and root port with the device's local timebases without relying on software.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="os_type" type="OSType" default="Non-Windows OS">
-      <xs:annotation acrn:title="OS type" acrn:applicable-vms="post-launched" acrn:views="basic">
-	<xs:documentation>Select the OS type for this VM. This is required to run Windows in a User VM. See :ref:`acrn-dm_parameters` for how to include this in the Device Model arguments.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="vbootloader" type="Boolean" default="y">
-      <xs:annotation acrn:title="Enable Open Virtual Machine FW" acrn:applicable-vms="post-launched" acrn:views="basic">
-        <xs:documentation>Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="vuart0" type="Boolean" default="y">
-      <xs:annotation acrn:title="Emulate COM1 as stdio I/O" acrn:applicable-vms="post-launched" acrn:views="basic">
-	<xs:documentation>Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="usb_xhci" type="USBDevsConfiguration" minOccurs="0">
-      <xs:annotation acrn:title="Virtual USB HCI" acrn:views="basic" acrn:applicable-vms="post-launched">
-        <xs:documentation>Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
     <xs:element name="virtio_devices">
       <xs:annotation acrn:title="Virt-IO devices" acrn:views="basic" acrn:applicable-vms="post-launched">
         <xs:documentation>Enable virt-IO devices in post-launched VMs.</xs:documentation>
       </xs:annotation>
       <xs:complexType>
         <xs:all>
+          <xs:element name="gpu" type="xs:string" minOccurs="0">
+            <xs:annotation acrn:title="Virtio GPU device" acrn:views="basic"
+                           acrn:widget-options="'placeholder': 'fullscreen or geometry=[width]x[height]+[x offset]+[y offset], e.g. geometry=1280x720+0+0 specifies a 1280 x 720 pixels region at the top left corner of the screan'">
+              <xs:documentation>The virtio GPU device presents a GPU device to the VM.
+This feature enables you to view the VM's GPU output in the Service VM.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
           <xs:element name="console" type="VirtioConsoleConfiguration" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation acrn:title="Virtio console device" acrn:views="basic">
               <xs:documentation>Virtio console device for data input and output.
@@ -468,13 +474,6 @@ mouse, and tablet.  It sends Linux input layer events over virtio.</xs:documenta
                   <xs:annotation acrn:widget-options="'placeholder': '/home/user/path/to/disk.image'" />
                   <xs:restriction base="xs:string" />
               </xs:simpleType>
-          </xs:element>
-          <xs:element name="gpu" type="xs:string" minOccurs="0">
-            <xs:annotation acrn:title="Virtio GPU device" acrn:views="basic"
-                           acrn:widget-options="'placeholder': 'fullscreen or geometry=[width]x[height]+[x offset]+[y offset], e.g. geometry=1280x720+0+0 specifies a 1280 x 720 pixels region at the top left corner of the screan'">
-              <xs:documentation>The virtio GPU device presents a GPU device to the VM.
-This feature enables you to view the VM's GPU output in the Service VM.</xs:documentation>
-            </xs:annotation>
           </xs:element>
         </xs:all>
       </xs:complexType>

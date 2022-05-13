@@ -61,8 +61,8 @@
 <xs:complexType name="CPUAffinityConfigurations">
   <xs:sequence>
     <xs:element name="pcpu" type="CPUAffinityConfiguration" minOccurs="0" maxOccurs="unbounded">
-      <xs:annotation>
-        <xs:documentation>A pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
+      <xs:annotation acrn:title="pCPU list">
+        <xs:documentation>List of pCPU affinities.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
