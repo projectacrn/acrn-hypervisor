@@ -9,7 +9,10 @@
             <label>Region name: </label>
           </b-col>
           <b-col md="4">
-            <b-form-input v-model="IVSHMEM_VMO.NAME"/>
+              <b-form-input :state="validation(IVSHMEM_VMO.NAME)" v-model="IVSHMEM_VMO.NAME"/>
+              <b-form-invalid-feedback >
+                must have value
+              </b-form-invalid-feedback>                
           </b-col>
         </b-row>
 
@@ -45,10 +48,16 @@
               <label>VM name:</label>
             </b-col>
             <b-col sm="3">
-              <b-form-select v-model="IVSHMEM_VM.VM_NAME" :options="vmNames"></b-form-select>
+              <b-form-select :state="validation(IVSHMEM_VM.VM_NAME)" v-model="IVSHMEM_VM.VM_NAME" :options="vmNames"></b-form-select>
+              <b-form-invalid-feedback >
+                must have value
+              </b-form-invalid-feedback> 
             </b-col>
             <b-col sm="3">
-              <b-form-input v-model="IVSHMEM_VM.VBDF"/>
+              <b-form-input :state="validation(IVSHMEM_VM.VBDF)" v-model="IVSHMEM_VM.VBDF"/>
+              <b-form-invalid-feedback >
+                must have value
+              </b-form-invalid-feedback>               
             </b-col>
             <b-col sm="3">
               <div class="ToolSet">
@@ -148,6 +157,9 @@ export default {
     }
   },
   methods: {
+    validation(value) {
+      return value.length != 0;
+    },
     addSharedVM(vms, index) {
       // add new item after current item
       vms.splice(index + 1, 0, {
@@ -175,11 +187,11 @@ export default {
         "IVSHMEM_VMS": {
           "IVSHMEM_VM": [
             {
-              "VM_NAME": "PRE_RT_VM0",
+              "VM_NAME": "",
               "VBDF": ""
             },
             {
-              "VM_NAME": "POST_STD_VM1",
+              "VM_NAME": "",
               "VBDF": ""
             }
           ]
