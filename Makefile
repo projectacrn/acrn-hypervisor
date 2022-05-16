@@ -8,7 +8,11 @@ T := $(CURDIR)
 
 # ACRN Version Information
 include VERSION
-export FULL_VERSION=$(MAJOR_VERSION).$(MINOR_VERSION)$(EXTRA_VERSION)
+SCM_VERSION := $(shell [ -d .git ] && git describe --exact-match 1>/dev/null 2>&1 || git describe --dirty)
+ifneq ($(SCM_VERSION),)
+	SCM_VERSION := "-"$(SCM_VERSION)
+endif
+export FULL_VERSION=$(MAJOR_VERSION).$(MINOR_VERSION)$(EXTRA_VERSION)$(SCM_VERSION)
 
 ifdef TARGET_DIR
   $(warning TARGET_DIR is obsoleted because generated configuration files are now stored in the build directory)
@@ -117,7 +121,7 @@ board_inspector:
 
 configurator:
 	@if [ -x "$(YARN_BIN)" ] && [ -x "$(CARGO_BIN)" ]; then \
-	  python3 misc/packaging/gen_acrn_deb.py configurator $(ROOT_OUT) ; \
+	  python3 misc/packaging/gen_acrn_deb.py configurator $(ROOT_OUT) --version=$(FULL_VERSION); \
 	else \
 	  echo -e "'yarn' or 'cargo' utility is not available. Unable to create Debian package for configurator."; \
 	fi

@@ -19,17 +19,12 @@ export default {
     }
   },
   mounted() {
-    this.getAppVersion()
+	this.version = packageVersion
   },
   methods: {
     home() {
       this.$router.push('/')
     },
-    getAppVersion() {
-      getVersion().then((version) => {
-        this.version = version
-      })
-    }
   }
 }
 </script>

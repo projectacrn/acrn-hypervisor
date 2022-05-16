@@ -190,7 +190,7 @@ def create_acrn_board_inspector_deb(version, build_dir):
     return
 
 
-def create_configurator_deb(build_dir):
+def create_configurator_deb(version, build_dir):
     cmd_list = []
 
     # get folder path
@@ -214,13 +214,14 @@ def create_configurator_deb(build_dir):
     add_cmd_list(cmd_list, 'yarn build', configurator_path)
     run_cmd_list(cmd_list)
 
-    deb_name = [x for x in os.listdir(deb_dir) if x.endswith('.deb')]
-    if not deb_name:
+    orig_deb_name = [x for x in os.listdir(deb_dir) if x.endswith('.deb')]
+    if not orig_deb_name:
         print('ERROR! No acrn-configurator deb found!')
         return
-    deb_name = deb_name[0]
-    with open(deb_dir / deb_name, 'rb') as src:
-        with open(os.path.join(build_dir, deb_name), 'wb') as dest:
+    orig_deb_name = orig_deb_name[0]
+    dist_deb_name = 'acrn-configurator-{ver}.deb'.format(ver=version)
+    with open(deb_dir / orig_deb_name, 'rb') as src:
+        with open(os.path.join(build_dir, dist_deb_name), 'wb') as dest:
             dest.write(src.read())
     return
 
@@ -242,6 +243,6 @@ if __name__ == "__main__":
     elif args.deb_mode == 'acrn_all':
         create_acrn_deb(args.board_name, args.scenario, args.version, args.build_dir)
     elif args.deb_mode == 'configurator':
-        create_configurator_deb(args.build_dir)
+        create_configurator_deb(args.version, args.build_dir)
     else:
         print("ERROR: Please check the value of deb_mode: the value shall be acrn_all, board_inspector or configurator.")
