@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2022 Intel Corporation. -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+
+<xs:schema xml:id="root"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:acrn="https://projectacrn.org">
+
+  <xs:assert test="every $vuart_connection in /acrn-config//vuart_connection satisfies
+                   every $vm_name in $vuart_connection/endpoint/vm_name/text() satisfies
+                   count($vuart_connection/endpoint[./vm_name/text()=$vm_name]) = 1">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vuart_connection/endpoint">
+      <xs:documentation>VM "{$vm_name}" can't connected to itself</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+</xs:schema>
