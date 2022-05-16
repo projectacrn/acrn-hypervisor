@@ -14,6 +14,7 @@
       <xi:include href="checks/vbdf_assignment.xsd" xpointer="xpointer(id('root')/*)" />
       <xi:include href="checks/vm_types.xsd" xpointer="xpointer(id('root')/*)" />
       <xi:include href="checks/passthrough_devices.xsd" xpointer="xpointer(id('root')/*)" />
+      <xi:include href="checks/vuart_config.xsd" xpointer="xpointer(id('root')/*)" />
 
     </xs:complexType>
   </xs:element>
