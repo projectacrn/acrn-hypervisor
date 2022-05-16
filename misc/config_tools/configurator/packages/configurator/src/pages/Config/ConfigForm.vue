@@ -59,6 +59,9 @@ import localizeEn from 'ajv-i18n/localize/en';
 import IVSHMEM_REGION from "./ConfigForm/CustomWidget/IVSHMEM_REGION.vue";
 import cpu_affinity from "./ConfigForm/CustomWidget/cpu_affinity.vue";
 import VUART from "./ConfigForm/CustomWidget/VUART.vue";
+import Network from "./ConfigForm/CustomWidget/Virtio/Network.vue";
+import Console from "./ConfigForm/CustomWidget/Virtio/Console.vue";
+import Input from "./ConfigForm/CustomWidget/Virtio/Input.vue";
 
 i18n.useLocal(localizeEn);
 export default {
@@ -80,6 +83,20 @@ export default {
         "labelSuffix": "："
       },
       uiSchema: {
+        "virtio_devices": {
+          "network": {
+            "ui:title": "",
+            'ui:field': Network,
+          },
+          "console": {
+            "ui:title": "",
+            'ui:field': Console,
+          },
+          "input": {
+            "ui:title": "",
+            'ui:field': Input,
+          },
+        },
         "cpu_affinity": {
           'ui:field': cpu_affinity
         },
