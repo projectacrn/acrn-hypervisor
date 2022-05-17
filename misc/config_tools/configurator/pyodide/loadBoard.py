@@ -2,7 +2,6 @@
 __package__ = 'configurator.pyodide'
 
 import json
-import logging
 from copy import deepcopy
 
 import elementpath
@@ -21,11 +20,7 @@ def get_dynamic_scenario(board):
     board_xml = etree.fromstring(board)
 
     def get_enum(source, options, obj_type):
-        if options == "//inputs/input":
-            inputs_etree = [x for x in elementpath.select(source, options) if x is not None]
-            elements = [f"Device name: {str(elementpath.select(i, './name/text()')[0])}, Device physical path: {str(elementpath.select(i, './phys/text()')[0])}" for i in inputs_etree]
-        else:
-            elements = [str(x) for x in elementpath.select(source, options) if x]
+        elements = [str(x) for x in elementpath.select(source, options) if x]
         elements = list(set(elements))
         if not elements:
             elements = ['']
@@ -47,10 +42,7 @@ def get_dynamic_scenario(board):
         # get enum data
         enum = function(source, selector, obj_type)
         if sorted_func:
-            try:
-                enum = sorted(enum, key=eval(sorted_func))
-            except IndexError as e:
-                logging.warning(e)
+            enum = sorted(enum, key=eval(sorted_func))
         return enum
 
     def dynamic_enum_apply(obj):
