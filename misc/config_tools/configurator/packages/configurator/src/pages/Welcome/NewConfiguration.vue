@@ -68,16 +68,24 @@ export default {
           .then((files) => {
             console.log("Directory exists.", files)
             if (files.length > 0) {
-              confirm(`Warning: all existing files in the following working folder will be deleted: \n${folderPath}`)
+              confirm(`Warning: delete previous config files in the following working folder: \n${folderPath}?`)
                   .then((r) => {
                     if (r) {
-                      configurator.removeDir(folderPath)
-                      .then(()=> {
-                        configurator.creatDir(folderPath)
-                        this.nextPage(folderPath)
-                      })
-                      .catch((err) => alert(`${err}`))
+                      for (let i = 0; i < files.length; i++) {
+                        console.log("file: ", files[i].path)
+                        let arr = files[i].path.split('.')
+                        let suffix = arr[arr.length - 1]
+                        console.log("suffix:", suffix)
+                        if (suffix == 'sh' || suffix == 'xml') {
+                          console.log("removing: ", files[i].path)
+                          configurator.removeFile(files[i].path)
+                          .catch((err) => alert(`${err}`))
+                        }
+                      }
                     }
+                  })
+                  .then(() => {
+                      this.nextPage(folderPath)
                   })
             } else {
               this.nextPage(folderPath)
