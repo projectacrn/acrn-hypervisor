@@ -54,7 +54,7 @@
               </b-form-invalid-feedback>
             </b-col>
             <b-col sm="3">
-              <b-form-input :state="validation(IVSHMEM_VM.VBDF)" v-model="IVSHMEM_VM.VBDF" placeholder="00:[device].[function], e.g. 00:0c.0. All fields are in hexadecimal./>
+              <b-form-input :state="validation(IVSHMEM_VM.VBDF)" v-model="IVSHMEM_VM.VBDF" placeholder="00:[device].[function], e.g. 00:0c.0. All fields are in hexadecimal."/>
               <b-form-invalid-feedback>
                 must have value
               </b-form-invalid-feedback>
