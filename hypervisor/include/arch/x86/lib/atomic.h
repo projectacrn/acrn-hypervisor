@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 1998 Doug Rabson
- * Copyright (c) 2018 Intel Corporation
- * All rights reserved.
+ * Copyright (c) 2018-2019 Intel Corporation
+
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

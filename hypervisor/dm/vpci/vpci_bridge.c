@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2011 NetApp, Inc.
- * Copyright (c) 2019 Intel Corporation
- * All rights reserved.
+ * Copyright (c) 2019-2020 Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

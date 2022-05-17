@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2013 Neel Natu <neel@freebsd.org>
- * Copyright (c) 2017 Intel Corporation
- * All rights reserved.
+ * Copyright (c) 2017-2019 Intel Corporation
+
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
