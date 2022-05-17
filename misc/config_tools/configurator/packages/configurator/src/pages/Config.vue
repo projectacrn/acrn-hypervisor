@@ -308,7 +308,26 @@ export default {
         vmConfig['@id'] = vmIndex
       })
     },
+    confirmVmName() {
+      let vmNameArr = []
+      let errorFlag = false
+      for (let i = 0; i < this.scenario.vm.length; i++) {
+        vmNameArr.push(this.scenario.vm[i].name)
+      }
+      vmNameArr.sort()
+      console.log(vmNameArr)
+      for (let i = 0; i < vmNameArr.length - 1; i++) {
+        if (vmNameArr[i] === vmNameArr[i + 1]) {
+          alert("There are duplicate VM name with" + vmNameArr[i]
+              + ",\n please your VM name");
+          errorFlag = true
+        }
+      }
+      return errorFlag
+    },
     saveScenario() {
+      let errorFlag = false
+      errorFlag = this.confirmVmName()
       this.assignVMID()
       let msg = ["Scenario xml saved\n",
         ".xml settings validated\n",
@@ -332,31 +351,33 @@ export default {
       this.updateCurrentFormData()
       // get scenario XML with defaults
       scenarioXMLData = scenarioWithDefault.xml
-      // begin write down and verify
-      configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
-          .then(() => {
-            step = 1
-            configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-          })
-          .then(() => {
-            step = 2
-            let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-            for (let filename in launchScripts) {
-              configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
-            }
-          })
-          .then(() => {
-            alert(`${msg.join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
-          })
-          .catch((err) => {
-            console.log(err)
-            let outmsg = ''
-            for (var i = 0; i < step; i++)
-              outmsg += msg[i]
-            for (i = step; i < 3; i++)
-              outmsg += errmsg[i]
-            alert(`${outmsg} \n Please check your configuration`)
-          })
+      if (!errorFlag) {
+        // begin write down and verify
+        configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
+            .then(() => {
+              step = 1
+              configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+            })
+            .then(() => {
+              step = 2
+              let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
+              for (let filename in launchScripts) {
+                configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
+              }
+            })
+            .then(() => {
+              alert(`${msg.join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
+            })
+            .catch((err) => {
+              console.log(err)
+              let outmsg = ''
+              for (var i = 0; i < step; i++)
+                outmsg += msg[i]
+              for (i = step; i < 3; i++)
+                outmsg += errmsg[i]
+              alert(`${outmsg} \n Please check your configuration`)
+            })
+      }
     }
   }
 }
