@@ -59,6 +59,9 @@ export default {
       if (folderPath[0] === '~') {
         folderPath = window.systemInfo.homeDir + window.systemInfo.pathSplit + folderPath.substring(1)
       }
+      if (folderPath.charAt(folderPath.length - 1) !== window.systemInfo.pathSplit) {
+        folderPath = folderPath + window.systemInfo.pathSplit;
+      }
       this.WorkingFolder = folderPath;
 
       configurator.readDir(folderPath, false)
