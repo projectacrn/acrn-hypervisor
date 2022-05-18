@@ -22,8 +22,9 @@ class PythonObject {
         }
     }
 
-    loadBoard(boardXMLText) {
-        return this.api('loadBoard', 'json', boardXMLText)
+    loadBoard(boardXMLText, path) {
+        return this.api('loadBoard', 'json', boardXMLText, path)
+
     }
 
     loadScenario(scenarioXMLText) {
@@ -120,7 +121,7 @@ class Configurator {
                 if (syntactical_errors !== "") {
                     throw Error("The file has broken structure.");
                 }
-                return this.pythonObject.loadBoard(fileContent);
+                return this.pythonObject.loadBoard(fileContent, path);
             })
     }
 

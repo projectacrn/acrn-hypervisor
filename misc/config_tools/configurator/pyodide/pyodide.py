@@ -27,6 +27,7 @@ scenario_xml_schema_path = schema_dir / 'sliced.xsd'
 datachecks_xml_schema_path = schema_dir / 'allchecks.xsd'
 
 nuc11_folder = LazyPath(config_tools_dir / 'data' / 'nuc11tnbi5')
+nuc11_board_path = nuc11_folder / 'nuc11tnbi5.xml'
 
 # file define
 nuc11_board = file_text(nuc11_folder / 'nuc11tnbi5.xml')
