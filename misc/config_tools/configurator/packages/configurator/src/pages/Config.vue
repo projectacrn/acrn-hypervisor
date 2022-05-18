@@ -286,12 +286,14 @@ export default {
     },
     vmNameChange(newname, oldname) {
       let hvdata = this.scenario.hv
-      for (let key in hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION) {
-        let region = hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION[key]
-        for (let key1 in region.IVSHMEM_VMS.IVSHMEM_VM) {
-          let ivshmem_vm = region.IVSHMEM_VMS.IVSHMEM_VM[key1];
-          if (ivshmem_vm.VM_NAME === oldname) {
-            ivshmem_vm.VM_NAME = newname
+      if (hvdata.FEATURES.hasOwnProperty('IVSHMEM')) {
+        for (let key in hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION) {
+          let region = hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION[key]
+          for (let key1 in region.IVSHMEM_VMS.IVSHMEM_VM) {
+            let ivshmem_vm = region.IVSHMEM_VMS.IVSHMEM_VM[key1];
+            if (ivshmem_vm.VM_NAME === oldname) {
+              ivshmem_vm.VM_NAME = newname
+            }
           }
         }
       }
