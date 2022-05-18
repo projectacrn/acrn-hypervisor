@@ -297,6 +297,17 @@ export default {
           }
         }
       }
+      if (hvdata.hasOwnProperty('vuart_connections')) {
+        for (let key in hvdata.vuart_connections.vuart_connection) {
+          let connection = hvdata.vuart_connections.vuart_connection[key]
+          for (let key1 in connection.endpoint) {
+            let ep = connection.endpoint[key1];
+            if (ep.vm_name === oldname) {
+              ep.vm_name = newname
+            }
+          }
+        }
+      }
     },
     assignVMID() {
       let vm_priority = {
