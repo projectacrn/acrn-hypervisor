@@ -164,6 +164,7 @@ clean:
 	$(MAKE) -C $(T)/misc OUT_DIR=$(TOOLS_OUT) clean
 	$(MAKE) -C $(T)/doc BUILDDIR=$(DOC_OUT) clean
 	rm -rf $(ROOT_OUT)
+	python3 misc/packaging/gen_acrn_deb.py clean $(ROOT_OUT) --version=$(FULL_VERSION);
 
 .PHONY: install life_mngr-install
 install: hypervisor-install devicemodel-install tools-install
