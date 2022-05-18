@@ -337,7 +337,7 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="lapic_passthrough" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="LAPIC passthrough" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
+      <xs:annotation acrn:title="LAPIC passthrough" acrn:applicable-vms="pre-launched, post-launched, service-vm" acrn:views="advanced">
         <xs:documentation>Enable LAPIC passthrough for this VM. This feature is required for VMs with stringent real-time performance needs.</xs:documentation>
       </xs:annotation>
     </xs:element>
