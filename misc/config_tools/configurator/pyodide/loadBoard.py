@@ -2,13 +2,15 @@
 __package__ = 'configurator.pyodide'
 
 import json
+import logging
+import re
 from copy import deepcopy
 
 import elementpath
 import lxml.etree as etree
 from bs4 import BeautifulSoup
 
-from . import convert_result, nuc11_board, scenario_json_schema
+from . import convert_result, nuc11_board, scenario_json_schema,nuc11_board_path
 
 
 def get_dynamic_scenario(board):
@@ -73,10 +75,17 @@ def get_dynamic_scenario(board):
     return form_schemas
 
 
-def get_board_info(board):
+def get_board_info(board, path):
     soup = BeautifulSoup(board, 'xml')
+    try:
+        board_name = re.split('[\\\\/.]', path)[-2]
+        if board_name == 'board':
+            board_name = re.split('[\\\\/.]', path)[-3]
+    except IndexError as e:
+        logging.warning(e)
+        board_name = 'default'
     result = {
-        'name': soup.select_one('acrn-config').attrs['board'] + '.board.xml',
+        'name': board_name + '.board.xml',
         'content': board,
         'BIOS_INFO': soup.select_one('BIOS_INFO').text,
         'BASE_BOARD_INFO': soup.select_one('BASE_BOARD_INFO').text
@@ -84,16 +93,16 @@ def get_board_info(board):
     return result
 
 
-def load_board(board):
+def load_board(board, path):
     result = {
         'scenarioJSONSchema': get_dynamic_scenario(board),
-        'boardInfo': get_board_info(board)
+        'boardInfo': get_board_info(board, path)
     }
     return convert_result(result)
 
 
 def test():
-    load_board(nuc11_board)
+    load_board(nuc11_board, nuc11_board_path)
 
 
 main = load_board
