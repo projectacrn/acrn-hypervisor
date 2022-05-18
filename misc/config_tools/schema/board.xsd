@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:complexType name="arbitrary" mixed="true">
+    <xs:all>
+      <xs:any maxOccurs="unbounded" processContents="skip" />
+    </xs:all>
+  </xs:complexType>
+
+  <xs:element name="acrn-config">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="BIOS_INFO" type="xs:string" />
+        <xs:element name="BASE_BOARD_INFO" type="xs:string" />
+        <xs:element name="PCI_DEVICE" type="xs:string" />
+        <xs:element name="PCI_VID_PID" type="xs:string" />
+        <xs:element name="WAKE_VECTOR_INFO" type="xs:string" />
+        <xs:element name="RESET_REGISTER_INFO" type="xs:string" />
+        <xs:element name="PM_INFO" type="xs:string" />
+        <xs:element name="S3_INFO" type="xs:string" />
+        <xs:element name="S5_INFO" type="xs:string" />
+        <xs:element name="DRHD_INFO" type="xs:string" />
+        <xs:element name="CPU_BRAND" type="xs:string" />
+        <xs:element name="CX_INFO" type="xs:string" />
+        <xs:element name="PX_INFO" type="xs:string" />
+        <xs:element name="MMCFG_BASE_INFO" type="xs:string" />
+        <xs:element name="TPM_INFO" type="xs:string" />
+        <xs:element name="CLOS_INFO" type="xs:string" />
+        <xs:element name="IOMEM_INFO" type="xs:string" />
+        <xs:element name="BLOCK_DEVICE_INFO" type="xs:string" />
+        <xs:element name="TTYS_INFO" type="xs:string" />
+        <xs:element name="AVAILABLE_IRQ_INFO" type="xs:string" />
+        <xs:element name="TOTAL_MEM_INFO" type="xs:string" />
+        <xs:element name="CPU_PROCESSOR_INFO" type="xs:string" />
+        <xs:element name="MAX_MSIX_TABLE_NUM" type="xs:string" />
+        <xs:element name="processors" type="arbitrary" />
+        <xs:element name="memory" type="arbitrary" />
+        <xs:element name="caches" type="arbitrary" />
+        <xs:element name="ioapics" type="arbitrary" />
+        <xs:element name="devices" type="arbitrary" />
+        <xs:element name="device-classes" type="arbitrary" minOccurs="0" />
+      </xs:all>
+      <xs:attribute name="board" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -22,6 +22,7 @@ def file_text(path):
 config_tools_dir = Path(__file__).absolute().parent.parent.parent
 configurator_dir = config_tools_dir / 'configurator' / 'packages' / 'configurator'
 schema_dir = config_tools_dir / 'schema'
+board_xml_schema_path = schema_dir / 'board.xsd'
 scenario_xml_schema_path = schema_dir / 'sliced.xsd'
 datachecks_xml_schema_path = schema_dir / 'allchecks.xsd'
 

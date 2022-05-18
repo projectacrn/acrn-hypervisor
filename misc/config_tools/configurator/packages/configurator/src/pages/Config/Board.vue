@@ -146,7 +146,7 @@ export default {
                   .then(() => this.getBoardHistory())
             })
             .catch((err)=> {
-              alert(`Failed to load the file ${filepath}, it may not exist`)
+              alert(`Loading ${filepath} failed: ${err}`)
               console.log(err)
             })
       }

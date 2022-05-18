@@ -11,31 +11,43 @@ enum HistoryType {
 export type HistoryTypeString = keyof typeof HistoryType;
 
 class PythonObject {
-    api(scriptName, ...params) {
+    api(scriptName, output_format, ...params) {
         // @ts-ignore
         let pythonFunction = window.pyodide.pyimport(`configurator.pyodide.${scriptName}`);
         let result = pythonFunction.main(...params);
-        return JSON.parse(result);
+        if (output_format === 'json') {
+            return JSON.parse(result);
+        } else {
+            return result;
+        }
     }
 
     loadBoard(boardXMLText) {
-        return this.api('loadBoard', boardXMLText)
+        return this.api('loadBoard', 'json', boardXMLText)
     }
 
     loadScenario(scenarioXMLText) {
-        return this.api('loadScenario', scenarioXMLText)
+        return this.api('loadScenario', 'json', scenarioXMLText)
+    }
+
+    validateBoardStructure(boardXMLText) {
+        return this.api('validateBoardStructure', 'plaintext', boardXMLText)
+    }
+
+    validateScenarioStructure(scenarioXMLText) {
+        return this.api('validateScenarioStructure', 'plaintext', scenarioXMLText)
     }
 
     validateScenario(boardXMLText, scenarioXMLText) {
-        return this.api('validateScenario', boardXMLText, scenarioXMLText)
+        return this.api('validateScenario', 'json', boardXMLText, scenarioXMLText)
     }
 
     generateLaunchScript(boardXMLText, scenarioXMLText) {
-        return this.api('generateLaunchScript', boardXMLText, scenarioXMLText)
+        return this.api('generateLaunchScript', 'json', boardXMLText, scenarioXMLText)
     }
 
     populateDefaultValues(scenarioXMLText) {
-        return this.api('populateDefaultValues', scenarioXMLText)
+        return this.api('populateDefaultValues', 'json', scenarioXMLText)
     }
 }
 
@@ -104,12 +116,20 @@ class Configurator {
     loadBoard(path: String) {
         return this.readFile(path)
             .then((fileContent) => {
-                return this.pythonObject.loadBoard(fileContent)
+                let syntactical_errors = this.pythonObject.validateBoardStructure(fileContent);
+                if (syntactical_errors !== "") {
+                    throw Error("The file has broken structure.");
+                }
+                return this.pythonObject.loadBoard(fileContent);
             })
     }
 
     loadScenario(path: String): Object {
         return this.readFile(path).then((fileContent) => {
+            let syntactical_errors = this.pythonObject.validateScenarioStructure(fileContent);
+            if (syntactical_errors !== "") {
+                throw Error("The file has broken structure.");
+            }
             return this.pythonObject.loadScenario(fileContent)
         })
     }
