@@ -50,7 +50,7 @@ class PipelineEngine:
 
         all_uses = consumes.union(uses)
         if not all_uses.issubset(self.available_data):
-            raise Exception(f"Data {uses - self.available_data} need by stage {stage.__class__.__name__} but not provided by the pipeline")
+            raise Exception(f"Data {all_uses - self.available_data} need by stage {stage.__class__.__name__} but not provided by the pipeline")
 
         self.stages.append(stage)
         self.available_data = self.available_data.difference(consumes).union(provides)

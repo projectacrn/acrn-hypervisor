@@ -98,7 +98,7 @@ export default {
               }
             }).catch((err) => {
               console.log(err)
-              alert(`Failed to open ${this.currentSelectedScenario}, file may not exist`)
+              alert(`Loading ${this.currentSelectedScenario} failed: ${err}`)
             })
       }
     },

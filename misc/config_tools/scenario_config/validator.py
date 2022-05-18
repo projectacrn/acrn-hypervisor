@@ -71,7 +71,7 @@ class ScenarioValidator:
     def __init__(self, schema_etree, datachecks_etree):
         """Initialize the validator with preprocessed schemas in ElementTree."""
         self.schema = xmlschema.XMLSchema11(schema_etree)
-        self.datachecks = xmlschema.XMLSchema11(datachecks_etree)
+        self.datachecks = xmlschema.XMLSchema11(datachecks_etree) if datachecks_etree else None
 
     def check_syntax(self, scenario_etree):
         errors = []
@@ -88,14 +88,15 @@ class ScenarioValidator:
     def check_semantics(self, board_etree, scenario_etree):
         errors = []
 
-        unified_node = copy(scenario_etree.getroot())
-        parent_map = {c : p for p in unified_node.iter() for c in p}
-        unified_node.extend(board_etree.getroot())
-        it = self.datachecks.iter_errors(unified_node)
-        for error in it:
-            e = self.format_error(unified_node, parent_map, error)
-            e.log()
-            errors.append(e)
+        if self.datachecks:
+            unified_node = copy(scenario_etree.getroot())
+            parent_map = {c : p for p in unified_node.iter() for c in p}
+            unified_node.extend(board_etree.getroot())
+            it = self.datachecks.iter_errors(unified_node)
+            for error in it:
+                e = self.format_error(unified_node, parent_map, error)
+                e.log()
+                errors.append(e)
 
         return errors
 
@@ -190,11 +191,14 @@ class ValidatorConstructionByFileStage(PipelineStage):
         obj.set("validator", validator)
 
 class SyntacticValidationStage(PipelineStage):
-    uses = {"validator", "scenario_etree"}
     provides = {"syntactic_errors"}
 
+    def __init__(self, etree_tag = "scenario"):
+        self.etree_tag = f"{etree_tag}_etree"
+        self.uses = {"validator", self.etree_tag}
+
     def run(self, obj):
-        errors = obj.get("validator").check_syntax(obj.get("scenario_etree"))
+        errors = obj.get("validator").check_syntax(obj.get(self.etree_tag))
         obj.set("syntactic_errors", errors)
 
 class SemanticValidationStage(PipelineStage):
