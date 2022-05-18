@@ -9,7 +9,10 @@
             <label>VM name: </label>
           </b-col>
           <b-col md="4">
-            <b-form-select v-model="VUARTConn.endpoint[0].vm_name" :options="vmNames"></b-form-select>
+            <b-form-select :state="validation(VUARTConn.endpoint[0].vm_name)" v-model="VUARTConn.endpoint[0].vm_name" :options="vmNames"></b-form-select>
+            <b-form-invalid-feedback>
+              must have value
+            </b-form-invalid-feedback>
           </b-col>
         </b-row>
 
@@ -24,7 +27,10 @@
             <label>VM name: </label>
           </b-col>
           <b-col md="4">
-            <b-form-select v-model="VUARTConn.endpoint[1].vm_name" :options="vmNames"></b-form-select>
+            <b-form-select :state="validation(VUARTConn.endpoint[1].vm_name)" v-model="VUARTConn.endpoint[1].vm_name" :options="vmNames"></b-form-select>
+            <b-form-invalid-feedback>
+              must have value
+            </b-form-invalid-feedback>
           </b-col>
         </b-row>
 
@@ -33,7 +39,10 @@
             <label>Type: </label>
           </b-col>
           <b-col md="4">
-            <b-form-select v-model="VUARTConn.type" :options="VuartType"></b-form-select>
+            <b-form-select :state="validation(VUARTConn.type)" v-model="VUARTConn.type" :options="VuartType"></b-form-select>
+            <b-form-invalid-feedback>
+              must have value
+            </b-form-invalid-feedback>
           </b-col>
         </b-row>
 
@@ -143,6 +152,9 @@ export default {
     }
   },
   methods: {
+    validation(value) {
+      return value.length != 0;
+    },
     removeVUARTConnection(index) {
       this.defaultVal.splice(index, 1);
     },
