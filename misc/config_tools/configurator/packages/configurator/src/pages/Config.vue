@@ -145,11 +145,11 @@ export default {
       let reg = /(?<=Manufacturer).+(?=\\n)/
       let result = boardContent.match(/Manufacturer.+\n/gm)
       console.log(result)
-      if (result.length > 0) {
+      if (result && result.length > 0) {
         this.currentBoardManu = result[0]
       }
       var result_p = boardContent.match(/Product Name.+\n/gm)
-      if (result_p.length > 0) {
+      if (result_p && result_p.length > 0) {
         this.CurrentBoardProd = result_p[0]
       }
     },
