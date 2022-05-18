@@ -226,6 +226,23 @@ def create_configurator_deb(version, build_dir):
             dest.write(src.read())
     return
 
+def clean_configurator_deb(version, build_dir):
+    cmd_list = []
+
+    # get folder path
+    project_base = Path(__file__).parent.parent.parent
+    config_tools_path = Path(__file__).parent.parent / 'config_tools'
+
+    add_cmd_list(cmd_list, 'bash -c "find -name "*.log" -delete"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "find -name "*.whl" -delete"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "find -name "*.egg-info" -prune -exec rm -rf {} \;"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "find -name "node_modules" -prune -exec rm -rf {} \;"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "find -name "build" -prune -exec rm -rf {} \;"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "find -name "target" -prune -exec rm -rf {} \;"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "rm -rf dist"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "python ./configurator/packages/configurator/thirdLib/manager.py clean"', config_tools_path)
+    run_cmd_list(cmd_list)
+    return
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -245,5 +262,7 @@ if __name__ == "__main__":
         create_acrn_deb(args.board_name, args.scenario, args.version, args.build_dir)
     elif args.deb_mode == 'configurator':
         create_configurator_deb(args.version, args.build_dir)
+    elif args.deb_mode == 'clean':
+        clean_configurator_deb(args.version, args.build_dir)
     else:
         print("ERROR: Please check the value of deb_mode: the value shall be acrn_all, board_inspector or configurator.")
