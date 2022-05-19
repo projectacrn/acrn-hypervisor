@@ -342,13 +342,13 @@ export default {
       let errorFlag = false
       errorFlag = this.confirmVmName()
       this.assignVMID()
-      let msg = ["Scenario xml saved\n",
-        ".xml settings validated\n",
+      let msg = [ "Settings validated\n",
+	      "scenario xml saved\n",
         "launch scripts generated\n"];
-      let errmsg = ["Scenario xml save failed\n",
-        ".xml settings validate failed\n",
+      let errmsg = [ "Settings validate failed\n",
+		    "scenario xml save failed\n",
         "launch scripts generate failed\n"];
-      let step = 0
+      let stepDone = 0
       let scenarioXMLData = configurator.convertScenarioToXML(
           {
             // simple deep copy
@@ -365,34 +365,34 @@ export default {
       // get scenario XML with defaults
       scenarioXMLData = scenarioWithDefault.xml
       if (!errorFlag) {
-        // begin write down and verify
-        configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
-            .then(() => {
-              step = 1
-              this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-              if (this.errors.length != 0) {
-                  throw "validation failed"
-              }
-            })
-            .then(() => {
-              step = 2
-              let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-              for (let filename in launchScripts) {
-                configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
-              }
-            })
-            .then(() => {
-              alert(`${msg.join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
-            })
-            .catch((err) => {
-              console.log(err)
-              let outmsg = ''
-              for (var i = 0; i < step; i++)
-                outmsg += msg[i]
-              for (i = step; i < 3; i++)
-                outmsg += errmsg[i]
-              alert(`${outmsg} \n Please check your configuration`)
-            })
+        // begin verify and write down
+        console.log("validate settings...")
+        try {
+          this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+          if (this.errors.length != 0) {
+              throw "validation failed"
+          }
+          console.log("validation ok")
+          stepDone = 1
+
+          configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
+          stepDone = 2
+
+          let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
+          for (let filename in launchScripts) {
+            configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
+          }
+          stepDone = 3
+          alert(`${msg.join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
+        } catch(err) {
+          console.log("error" + err)
+          let outmsg = ''
+          for (var i = 0; i < stepDone; i++)
+            outmsg += msg[i]
+          for (i = stepDone; i < 3; i++)
+            outmsg += errmsg[i]
+          alert(`${outmsg} \n Please check your configuration`)
+        }
       }
     }
   }
