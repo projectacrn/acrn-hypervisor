@@ -256,7 +256,7 @@ These settings can only be changed at build time.</xs:documentation>
 <xs:complexType name="HVConfigType">
   <xs:all>
     <xs:element name="FEATURES" type="FeatureOptionsType">
-      <xs:annotation acrn:title="Hypervisor features" acrn:views="advanced">
+      <xs:annotation acrn:title="Hypervisor features" acrn:views="basic, advanced">
 	<xs:documentation>Enable hypervisor features.</xs:documentation>
       </xs:annotation>
     </xs:element>
