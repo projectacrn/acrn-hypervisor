@@ -548,21 +548,19 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 	time_t current, after;
 	struct acrn_vrtc *vrtc = &vcpu->vm->vrtc;
 	struct acrn_vrtc temp_vrtc;
-	bool is_time_register;
 	uint8_t mask = 0xFFU;
 
 	if ((width == 1U) && (addr == CMOS_ADDR_PORT)) {
 		vrtc->addr = (uint8_t)(value & 0x7FU);
 	} else {
 		if (is_service_vm(vcpu->vm)) {
-			is_time_register = vrtc_is_time_register(vrtc->addr);
-			if (is_time_register) {
+			if (vrtc_is_time_register(vrtc->addr)) {
 				current = vrtc_get_physical_rtc_time(&temp_vrtc);
-			}
-			cmos_set_reg_val(vcpu->vm->vrtc.addr, (uint8_t)(value & 0xFFU));
-			if (is_time_register) {
+				cmos_set_reg_val(vcpu->vm->vrtc.addr, (uint8_t)(value & 0xFFU));
 				after = vrtc_get_physical_rtc_time(&temp_vrtc);
 				vrtc_update_basetime(after, current - after);
+			} else {
+				cmos_set_reg_val(vcpu->vm->vrtc.addr, (uint8_t)(value & 0xFFU));
 			}
 		} else {
 			switch (vrtc->addr) {
