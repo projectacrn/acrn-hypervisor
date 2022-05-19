@@ -350,6 +350,9 @@ export default {
 		    "scenario xml save failed\n",
         "launch scripts generate failed\n"];
       let stepDone = 0
+      let totalMsg = msg.length // msg and errMsg must be same length.
+      let needSaveLaunchScript = false
+
       let scenarioXMLData = configurator.convertScenarioToXML(
           {
             // simple deep copy
@@ -366,6 +369,14 @@ export default {
       // get scenario XML with defaults
       scenarioXMLData = scenarioWithDefault.xml
       if (!errorFlag) {
+        this.scenario.vm.map((vmConfig) => {
+          if (vmConfig['load_order'] === 'POST_LAUNCHED_VM') {
+            needSaveLaunchScript = true
+          }
+        })
+        if (!needSaveLaunchScript) {
+            totalMsg = totalMsg - 1 // remove the 'launch script' related mssage.
+        }
         // begin verify and write down
         console.log("validate settings...")
         try {
@@ -379,18 +390,20 @@ export default {
           configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
           stepDone = 2
 
-          let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-          for (let filename in launchScripts) {
-            configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
+          if (needSaveLaunchScript) {
+            let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
+            for (let filename in launchScripts) {
+              configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
+            }
+            stepDone = 3
           }
-          stepDone = 3
-          alert(`${msg.join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
+          alert(`${msg.slice(0,stepDone).join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
         } catch(err) {
           console.log("error" + err)
           let outmsg = ''
           for (var i = 0; i < stepDone; i++)
             outmsg += msg[i]
-          for (i = stepDone; i < 3; i++)
+          for (i = stepDone; i < totalMsg; i++)
             outmsg += errmsg[i]
           alert(`${outmsg} \n Please check your configuration`)
         }
