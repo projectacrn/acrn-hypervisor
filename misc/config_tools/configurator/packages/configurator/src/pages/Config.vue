@@ -318,8 +318,8 @@ export default {
       console.log(vmNameArr)
       for (let i = 0; i < vmNameArr.length - 1; i++) {
         if (vmNameArr[i] === vmNameArr[i + 1]) {
-          alert("There are duplicate VM name with" + vmNameArr[i]
-              + ",\n please your VM name");
+          alert("ERROR\n" + `Multiple VMs have the same name: ${vmNameArr[i]}.` +
+              "Your configuration cannot be saved." + "Make sure each VM has a unique name.");
           errorFlag = true
         }
       }
