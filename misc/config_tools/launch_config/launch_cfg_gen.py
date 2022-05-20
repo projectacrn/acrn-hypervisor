@@ -98,7 +98,7 @@ class LaunchScript:
             self._deinit_commands.append(command)
 
     def add_plain_dm_parameter(self, opt):
-        full_opt = f"\"{opt}\""
+        full_opt = f"{opt}"
         if full_opt not in self._dm_parameters:
             self._dm_parameters.append(full_opt)
 
@@ -145,8 +145,8 @@ class LaunchScript:
             s += f"    {param}\n"
         s += ")\n\n"
 
-        s += "echo \"Launch device model with parameters: ${dm_params[*]}\"\n"
-        s += "acrn-dm ${dm_params[*]}\n\n"
+        s += "echo \"Launch device model with parameters: ${dm_params[@]}\"\n"
+        s += "acrn-dm \"${dm_params[@]}\"\n\n"
 
         s += "# Deinitializing\n"
         for command in self._deinit_commands:
