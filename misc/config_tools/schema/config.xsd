@@ -351,10 +351,18 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Enable nested virtualization for KVM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="virtual_cat_number" type="xs:integer" default="0" minOccurs="0">
+    <xs:element name="virtual_cat_number" default="0" minOccurs="0">
       <xs:annotation acrn:title="Maximum virtual CLOS" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
         <xs:documentation>Max number of virtual CLOS MASK</xs:documentation>
       </xs:annotation>
+      <xs:simpleType>
+        <xs:annotation>
+          <xs:documentation>Integer value is not below zero.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="0" />
+        </xs:restriction>
+      </xs:simpleType>
     </xs:element>
     <xs:element name="virtual_cat_support" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:title="VM Virtual Cache Allocation Tech" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
