@@ -307,7 +307,7 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         </xs:annotation>
     </xs:element>
     <xs:element name="vm_type" type="VMType" minOccurs="0">
-      <xs:annotation acrn:title="VM type" acrn:views="basic">
+      <xs:annotation acrn:title="VM type" acrn:applicable-vms="pre-launched, post-launched" acrn:views="basic">
         <xs:documentation>Select the VM type. A standard VM (``STANDARD_VM``) is for general-purpose applications, such as human-machine interface (HMI). A real-time VM (``RTVM``) offers special features for time-sensitive applications.</xs:documentation>
       </xs:annotation>
     </xs:element>
