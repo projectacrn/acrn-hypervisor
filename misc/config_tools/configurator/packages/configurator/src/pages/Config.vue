@@ -241,7 +241,7 @@ export default {
         msg = "Post-launched VMs require the Service VM. If you proceed, all post-launched VMs and their settings will also be deleted. Are you sure you want to proceed?"
         isserivevm = true
       } else {
-        msg = `Delete this virtual machine VM${this.activeVMID}, launch script will also be deleted if it exists.`
+        msg = `Delete this virtual machine? VM${this.activeVMID}\nThe associated launch script will also be deleted if it exists.`
       }
       confirm(msg).then((r) => {
         if (r) {
