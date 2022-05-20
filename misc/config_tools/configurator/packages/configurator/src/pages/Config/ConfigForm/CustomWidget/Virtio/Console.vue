@@ -96,7 +96,7 @@ export default {
   data() {
     return {
       ConsoleUseType: this.rootSchema.definitions['VirtioConsoleUseType']['enum'],
-      ConsoleBackendType: this.rootSchema.definitions['VirtioConsoleBackendType']['enum'],
+      ConsoleBackendType: this.rootSchema.definitions['BasicVirtioConsoleBackendType']['enum'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
     };
   },
