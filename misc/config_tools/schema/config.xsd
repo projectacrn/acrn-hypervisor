@@ -393,7 +393,7 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="memory" type="MemoryInfo" minOccurs="0">
-      <xs:annotation acrn:title="Memory allocation" acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
+      <xs:annotation acrn:title="" acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
       </xs:annotation>
     </xs:element>
     <xs:element name="priority" type="PriorityType"  default="PRIO_LOW">
