@@ -72,11 +72,12 @@ export default {
                   .then((r) => {
                     if (r) {
                       for (let i = 0; i < files.length; i++) {
-                        console.log("file: ", files[i].path)
-                        let arr = files[i].path.split('.')
-                        let suffix = arr[arr.length - 1]
-                        console.log("suffix:", suffix)
-                        if (suffix == 'sh' || suffix == 'xml') {
+                        let arr = files[i].path.split(window.systemInfo.pathSplit)
+                        let basename = arr[arr.length-1]
+                        console.log("file: ", basename)
+                        if (basename === 'scenario.xml' ||
+                            /^.*\.board\.xml$/.test(basename) ||
+                            /^launch.*\.sh$/.test(basename)) {
                           console.log("removing: ", files[i].path)
                           configurator.removeFile(files[i].path)
                           .catch((err) => alert(`${err}`))
