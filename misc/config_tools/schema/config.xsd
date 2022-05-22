@@ -114,7 +114,7 @@ These settings can only be changed at build time.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="RDT" type="RDTType">
-      <xs:annotation acrn:title="Intel Resource Director Tech" acrn:views="advanced">
+      <xs:annotation acrn:title="Intel Resource Director Tech" acrn:views="">
         <xs:documentation>Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -124,7 +124,7 @@ These settings can only be changed at build time.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SSRAM" minOccurs="0" type="SSRAMInfo">
-      <xs:annotation acrn:title="Software SRAM" acrn:views="advanced">
+      <xs:annotation acrn:title="Software SRAM" acrn:views="">
         <xs:documentation>Configure Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>

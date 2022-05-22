@@ -268,6 +268,11 @@
   resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.2.33.tgz#69a8c99ceb37c1b031d5cc4aec2ff1dc77e1161e"
   integrity sha512-UBc1Pg1T3yZ97vsA2ueER0F6GbJebLHYlEi4ou1H5YL4KWvMOOWwpYo9/QpWq93wxKG6Wo13IY74Hcn/f7c7Bg==
 
+"@vueform/slider@^2.0.10":
+  version "2.0.10"
+  resolved "https://registry.yarnpkg.com/@vueform/slider/-/slider-2.0.10.tgz#f72358c8528cac000dc739d5d9355bce37ce9537"
+  integrity sha512-FRFKEdICDWWrK7P+rzQiqryFlAnDgy+ZYha9zaFg8Z/9dsSby5DAF4TaaqnUxezkAT22j7O0Ho7Eft+oaViieA==
+
 "@xicons/utils@^0.1.4":
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/@xicons/utils/-/utils-0.1.4.tgz#cece50613b34d4b4c71e73bb0be92981067e11e1"
