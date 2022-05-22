@@ -1,5 +1,5 @@
 <template>
-  <b-modal title="Board XML overwrite!!" fade
+  <b-modal title="Board XML overwrite" fade
            v-model="showModal"
            @cancel="cancel"
            @abort="cancel"
@@ -8,8 +8,9 @@
            @submit="overWrite"
   >
   <div>
-    <p>If you continue, the board XML file in the working folder will be replaced:</p>
-    <p align="center">{{this.$parent.currentSelectedBoard}}</p>
+    <p><b>Are you sure you want to overwrite the board XML file in this working folder?</b></p>
+    <p>If you continue, the board XML file in the following working folder will be overwritten:</p>
+    <p>{{this.$parent.currentSelectedBoard}}</p>
     <p>(You may need to change your configuration settings to be compatible with the new board XML file.)</p>
   </div>
   </b-modal>
