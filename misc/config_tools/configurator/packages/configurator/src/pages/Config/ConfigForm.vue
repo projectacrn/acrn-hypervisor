@@ -62,11 +62,12 @@ import VUART from "./ConfigForm/CustomWidget/VUART.vue";
 import Network from "./ConfigForm/CustomWidget/Virtio/Network.vue";
 import Console from "./ConfigForm/CustomWidget/Virtio/Console.vue";
 import Input from "./ConfigForm/CustomWidget/Virtio/Input.vue";
-
+import CAT from "./ConfigForm/CustomWidget/CAT.vue";
 i18n.useLocal(localizeEn);
+
 export default {
   name: "ConfigForm",
-  components: {Icon, Minus, VueForm},
+  components: {Icon, Minus, VueForm, CAT, VUART, cpu_affinity, IVSHMEM_REGION},
   emits: ['scenarioConfigFormDataUpdate', 'deleteVM', 'vmNameChange'],
   props: {
     currentActiveVMID: {type: Number},
@@ -100,6 +101,9 @@ export default {
         "cpu_affinity": {
           'ui:field': cpu_affinity
         },
+        CACHE_REGION: {
+          "ui:field": CAT
+        },
         "FEATURES": {
           "IVSHMEM": {
             "ui:title": "InterVM shared memory",
@@ -128,7 +132,7 @@ export default {
       let newID = newValue.hasOwnProperty('@id') ? newValue['@id'] : -1;
       let oldID = oldValue.hasOwnProperty('@id') ? oldValue['@id'] : -1;
       if (newID === oldID) {
-        if (oldValue.name != newValue.name) {
+        if (oldValue.name !== newValue.name) {
           this.$emit('vmNameChange', newValue.name, oldValue.name)
         }
 

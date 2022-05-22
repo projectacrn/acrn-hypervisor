@@ -16,10 +16,12 @@
         <div class="d-flex flex-column">
           <div class="p-1 ps-3 fs-4">1. Import a board configuration file</div>
           <div class="py-2" style="letter-spacing: 0.49px;">
-            {{currentBoardFile}}
+            {{ currentBoardFile }}
           </div>
           <div class="py-2" style="letter-spacing: 0.49px;">
-            {{currentBoardManu}}  {{CurrentBoardProd}}
+            {{ currentBoardManu }}
+            <br/>
+            {{ CurrentBoardProd }}
           </div>
         </div>
       </template>
@@ -38,7 +40,8 @@
           </div>
         </div>
       </template>
-      <Scenario v-if="boardHaveData" :scenario="scenario" :WorkingFolder="WorkingFolder" @scenarioUpdate="scenarioUpdate"/>
+      <Scenario v-if="boardHaveData" :scenario="scenario" :WorkingFolder="WorkingFolder"
+                @scenarioUpdate="scenarioUpdate"/>
     </b-accordion-item>
     <Banner>
       <div style="position: relative">
@@ -66,7 +69,7 @@
           />
         </div>
         <div v-if="errors">
-          <div class="px-4" style="color: red" v-for="error in errors">{{ error.message }}</div>
+          <div class="px-4" style="color: red" v-for="error in errors">{{ error }}</div>
         </div>
         <div class="p-4">
           <ConfigForm
@@ -100,13 +103,15 @@ import configurator from "../lib/acrn";
 export default {
   name: "Config",
   components: {ConfigForm, TabBox, Scenario, Icon, Board, Banner, AngleLeft},
-  props: { WorkingFolder: {type: String},
-           isNewConfig: {type: String}
-         },
+  props: {
+    WorkingFolder: {type: String},
+    isNewConfig: {type: String}
+  },
   mounted() {
     this.updateCurrentFormSchema()
     window.getCurrentFormSchemaData = this.getCurrentFormSchemaData
     window.getCurrentScenarioData = this.getCurrentScenarioData
+    window.getBoardData = this.getBoardData
     this.showFlag = this.isNewConfig === 'true'
   },
   data() {
@@ -176,6 +181,7 @@ export default {
       }
     },
     scenarioUpdate(scenarioData) {
+      this.errors = []
       this.scenario = scenarioData;
       this.showFlag = false;
       this.updateCurrentFormSchema()
@@ -186,6 +192,9 @@ export default {
     },
     getCurrentScenarioData() {
       return this.scenario
+    },
+    getBoardData() {
+      return this.board
     },
     updateCurrentFormData() {
       if (this.activeVMID === -1) {
@@ -246,7 +255,7 @@ export default {
       confirm(msg).then((r) => {
         if (r) {
           if (isserivevm) {
-            for (let i=postvmlist.length-1; i>=0; i--) {
+            for (let i = postvmlist.length - 1; i >= 0; i--) {
               let launchScriptsname = this.WorkingFolder + `launch_user_vm_id${postvmlist[i]}.sh`
               this.removeLaunchScript(launchScriptsname);
               this.scenario.vm.splice(postvmlist[i], 1);
@@ -266,12 +275,12 @@ export default {
     removeLaunchScript(filePath) {
       console.log(filePath)
       configurator.isFile(filePath)
-      .then((isFile) => {
-        if (isFile) {
-          configurator.removeFile(filePath)
-          .catch((err) => alert(`Launch script is not exist: ${filePath}`))
-        }
-      })
+          .then((isFile) => {
+            if (isFile) {
+              configurator.removeFile(filePath)
+                  .catch((err) => alert(`Launch script is not exist: ${filePath}`))
+            }
+          })
     },
     scenarioConfigFormDataUpdate(vmid, data) {
       if (vmid === -1) {
@@ -343,11 +352,11 @@ export default {
       let errorFlag = false
       errorFlag = this.confirmVmName()
       this.assignVMID()
-      let msg = [ "Settings validated\n",
-	      "scenario xml saved\n",
+      let msg = ["Settings validated\n",
+        "scenario xml saved\n",
         "launch scripts generated\n"];
-      let errmsg = [ "Settings validate failed\n",
-		    "scenario xml save failed\n",
+      let errmsg = ["Settings validate failed\n",
+        "scenario xml save failed\n",
         "launch scripts generate failed\n"];
       let stepDone = 0
       let totalMsg = msg.length // msg and errMsg must be same length.
@@ -381,8 +390,8 @@ export default {
         console.log("validate settings...")
         try {
           this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-          if (this.errors.length != 0) {
-              throw "validation failed"
+          if (this.errors.length !== 0) {
+            throw "validation failed"
           }
           console.log("validation ok")
           stepDone = 1
@@ -398,7 +407,7 @@ export default {
             stepDone = 3
           }
           alert(`${msg.slice(0,stepDone).join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
-        } catch(err) {
+        } catch (err) {
           console.log("error" + err)
           let outmsg = ''
           for (var i = 0; i < stepDone; i++)

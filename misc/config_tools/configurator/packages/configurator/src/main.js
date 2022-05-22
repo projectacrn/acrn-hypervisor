@@ -1,4 +1,5 @@
 const isTauri = !!window.__TAURI_IPC__;
+window.isDev = process.env.NODE_ENV === 'development';
 
 if (isTauri) {
     let openCount = 0

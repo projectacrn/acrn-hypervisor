@@ -10,7 +10,7 @@ import elementpath
 import lxml.etree as etree
 from bs4 import BeautifulSoup
 
-from . import convert_result, nuc11_board, scenario_json_schema,nuc11_board_path
+from . import convert_result, nuc11_board, scenario_json_schema, nuc11_board_path
 
 
 def get_dynamic_scenario(board):
@@ -27,7 +27,7 @@ def get_dynamic_scenario(board):
         if not elements:
             elements = ['']
         # TODO: Add more converters if needed
-        enum_type_convert = {'integer': int}
+        enum_type_convert = {'integer': lambda x: int(x) if x else 0}
         if obj_type in enum_type_convert.keys():
             elements = [enum_type_convert[obj_type](x) for x in elements]
         return elements
@@ -75,6 +75,40 @@ def get_dynamic_scenario(board):
     return form_schemas
 
 
+def get_cat_info(soup):
+    threads = soup.select('core thread')
+    threads = {thread.attrs['id']: thread.select_one('cpu_id').text for thread in threads}
+    caches = soup.select('caches cache')
+    cat_info = []
+    for cache in caches:
+        cache_level = int(cache.attrs['level'])
+
+        if cache_level == 1 or len(processors := cache.select('processors processor')) <= 1:
+            # ignore cache_level 1 and single core cache region
+            continue
+
+        capacity_mask_length = cache.select_one('capability capacity_mask_length')
+        if not capacity_mask_length:
+            # some region not have capacity_mask_length
+            capacity_mask_length = cache.select_one('ways')
+        capacity_mask_length = int(capacity_mask_length.text)
+
+        processors = [int(threads[processor.text]) for processor in processors]
+        processors.sort()
+        cache_info = {
+            'id': cache.attrs['id'],
+            'level': cache_level,
+            'type': cache.attrs['type'],
+            'cache_size': int(cache.select_one('cache_size').text),
+            'capacity_mask_length': capacity_mask_length,
+            'processors': processors,
+        }
+        cat_info.append(cache_info)
+    cat_info.sort(key=lambda x: int(x['id'], 16))
+    cat_info.sort(key=lambda x: x['level'], reverse=True)
+    return cat_info
+
+
 def get_board_info(board, path):
     soup = BeautifulSoup(board, 'xml')
     try:
@@ -87,6 +121,7 @@ def get_board_info(board, path):
     result = {
         'name': board_name + '.board.xml',
         'content': board,
+        'CAT_INFO': get_cat_info(soup),
         'BIOS_INFO': soup.select_one('BIOS_INFO').text,
         'BASE_BOARD_INFO': soup.select_one('BASE_BOARD_INFO').text
     }

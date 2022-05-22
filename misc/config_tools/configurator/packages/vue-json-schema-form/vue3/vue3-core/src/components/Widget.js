@@ -6,10 +6,10 @@ import {
     computed, h, ref, watch, inject
 } from 'vue';
 
-import { IconInfo } from '@lljj/vjsf-utils/icons';
+import {IconInfo} from '@lljj/vjsf-utils/icons';
 
-import { validateFormDataAndTransformMsg } from '@lljj/vjsf-utils/schema/validate';
-import { fallbackLabel } from '@lljj/vjsf-utils/formUtils';
+import {validateFormDataAndTransformMsg} from '@lljj/vjsf-utils/schema/validate';
+import {fallbackLabel} from '@lljj/vjsf-utils/formUtils';
 
 import {
     isRootNodePath, path2prop, getPathVal, setPathVal, resolveComponent
@@ -131,7 +131,7 @@ export default {
     },
     emits: ['otherDataChange'],
     inheritAttrs: true,
-    setup(props, { emit }) {
+    setup(props, {emit}) {
         const genFormProvide = inject('genFormProvide');
         const widgetValue = computed({
             get() {
@@ -191,7 +191,7 @@ export default {
                 },
             ) : null;
 
-            const { COMPONENT_MAP } = props.globalOptions;
+            const {COMPONENT_MAP} = props.globalOptions;
             const miniDescriptionVNode = (miniDesModel && descriptionVNode) ? h(resolveComponent(COMPONENT_MAP.popover), {
                 style: {
                     margin: '0 2px',
@@ -227,7 +227,7 @@ export default {
                     style: formItemStyle,
                     ...props.fieldAttrs,
 
-                    ...props.labelWidth ? { labelWidth: props.labelWidth } : {},
+                    ...props.labelWidth ? {labelWidth: props.labelWidth} : {},
                     ...props.isFormData ? {
                         // 这里对根节点打特殊标志，绕过elementUi无prop属性不校验
                         prop: isRootNode ? '__$$root' : path2prop(props.curNodePath),
@@ -295,6 +295,13 @@ export default {
                             },
                         }, [
                             ...miniDescriptionVNode ? [miniDescriptionVNode] : [],
+                            (window.isDev ?
+                                    h('div', {style: {position: 'relative'}}, [
+                                        h('div', {style: {position: 'absolute'}},
+                                            `${props.curNodePath}`)
+                                    ]) :
+                                    ''
+                            ),
                             `${label}`,
                             `${(props.formProps && props.formProps.labelSuffix) || ''}`
                         ])
