@@ -27,13 +27,13 @@
 
 #define VDPY_MAX_WIDTH 1920
 #define VDPY_MAX_HEIGHT 1080
-#define VDPY_DEFAULT_WIDTH 1280
-#define VDPY_DEFAULT_HEIGHT 720
+#define VDPY_DEFAULT_WIDTH 1024
+#define VDPY_DEFAULT_HEIGHT 768
 #define VDPY_MIN_WIDTH 640
 #define VDPY_MIN_HEIGHT 480
 #define transto_10bits(color) (uint16_t)(color * 1024 + 0.5)
 
-static unsigned char default_raw_argb[640 * 480 * 4];
+static unsigned char default_raw_argb[VDPY_DEFAULT_WIDTH * VDPY_DEFAULT_HEIGHT * 4];
 
 struct state {
 	bool is_ui_realized;
@@ -114,7 +114,6 @@ static const struct timing_entry {
 
 	/* Standard Timings */
 	{ .hpixel = 1920, .vpixel = 1080, .hz = 60,  .is_std = true },
-	{ .hpixel = 1280, .vpixel =  720, .hz = 60,  .is_std = true },
 	{ .hpixel = 1440, .vpixel =  900, .hz = 60,  .is_std = true },
 	{ .hpixel = 1680, .vpixel =  1050, .hz = 60, .is_std = true },
 };
@@ -422,7 +421,7 @@ vdpy_edid_generate(uint8_t *edid, size_t size, struct edid_info *info)
 	uint16_t id_product;
 	uint32_t serial;
 	uint8_t *desc;
-	base_param b_param, c_param;
+	base_param b_param;
 
 	vdpy_edid_set_baseparam(&b_param, info->prefx, info->prefy);
 
@@ -486,14 +485,12 @@ vdpy_edid_generate(uint8_t *edid, size_t size, struct edid_info *info)
 	vdpy_edid_set_timing(edid, STDT);
 
 	/* edid[125:54], Detailed Timing Descriptor - 18 bytes x 4 */
-	// Detailed Timing Descriptor 1
+	// Preferred Timing Mode
 	desc = edid + 54;
-	vdpy_edid_set_baseparam(&c_param, VDPY_MAX_WIDTH, VDPY_MAX_HEIGHT);
-	vdpy_edid_set_descripter(desc, 0x1, 0, &c_param);
-	// Detailed Timing Descriptor 2
+	vdpy_edid_set_descripter(desc, 0x1, 0, &b_param);
+	// Display Range Limits & Additional Timing Descriptor (tag #FDh)
 	desc += 18;
-	vdpy_edid_set_baseparam(&c_param, VDPY_DEFAULT_WIDTH, VDPY_DEFAULT_HEIGHT);
-	vdpy_edid_set_descripter(desc, 0x1, 0, &c_param);
+	vdpy_edid_set_descripter(desc, 0, 0xfd, &b_param);
 	// Display Product Name (ASCII) String Descriptor (tag #FCh)
 	desc += 18;
 	vdpy_edid_set_descripter(desc, 0, 0xfc, &b_param);
@@ -519,10 +516,10 @@ vdpy_get_edid(int handle, uint8_t *edid, size_t size)
 		edid_info.maxx = VDPY_MAX_WIDTH;
 		edid_info.maxy = VDPY_MAX_HEIGHT;
 	} else {
-		edid_info.prefx = 0;
-		edid_info.prefy = 0;
-		edid_info.maxx = 0;
-		edid_info.maxy = 0;
+		edid_info.prefx = VDPY_DEFAULT_WIDTH;
+		edid_info.prefy = VDPY_DEFAULT_HEIGHT;
+		edid_info.maxx = VDPY_MAX_WIDTH;
+		edid_info.maxy = VDPY_MAX_HEIGHT;
 	}
 	edid_info.refresh_rate = 0;
 	edid_info.vendor = NULL;
