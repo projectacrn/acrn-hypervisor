@@ -53,15 +53,16 @@ class BusDevFunc(namedtuple(
 
 def parse_hv_console(scenario_etree):
     """
-    There may be 3 types in the console item
+    There may be 4 types in the console item
     1. BDF:(00:18.2) seri:/dev/ttyS2
     2. /dev/ttyS2
     3. ttyS2
+    4. "None"
     """
     ttys_n = ''
     ttys = common.get_node("//SERIAL_CONSOLE/text()", scenario_etree)
 
-    if not ttys or ttys == None:
+    if not ttys or ttys == None or ttys == 'None':
         return ttys_n
 
     if ttys and 'BDF' in ttys or '/dev' in ttys:

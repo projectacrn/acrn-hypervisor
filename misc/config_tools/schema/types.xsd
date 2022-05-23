@@ -172,15 +172,8 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 
 <xs:simpleType name="SerialConsoleType">
   <xs:restriction base="xs:string">
-    <xs:pattern value=".*ttyS[\d]+" />
+    <xs:pattern value="(.*ttyS[\d]+)|None" />
   </xs:restriction>
-</xs:simpleType>
-
-<xs:simpleType name="SerialConsoleOptions">
-  <xs:annotation>
-    <xs:documentation>Either empty or a string, such as ``/dev/ttyS0``.</xs:documentation>
-  </xs:annotation>
-  <xs:union memberTypes="None SerialConsoleType" />
 </xs:simpleType>
 
 <xs:simpleType name="VMNameType">
