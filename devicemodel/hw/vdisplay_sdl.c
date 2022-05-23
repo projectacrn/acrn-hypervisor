@@ -108,14 +108,18 @@ static const struct timing_entry {
 	bool	is_std; // the flag of standard mode
 } timings[] = {
 	/* Established Timings I & II (all @ 60Hz) */
+	{ .hpixel = 1280, .vpixel = 1024, .byte  = 36, .bit = 0, .hz = 75},
+	{ .hpixel = 1024, .vpixel =  768, .byte  = 36, .bit = 1, .hz = 75},
 	{ .hpixel = 1024, .vpixel =  768, .byte  = 36, .bit = 3, .hz = 60},
 	{ .hpixel =  800, .vpixel =  600, .byte  = 35, .bit = 0, .hz = 60 },
 	{ .hpixel =  640, .vpixel =  480, .byte  = 35, .bit = 5, .hz = 60 },
 
 	/* Standard Timings */
 	{ .hpixel = 1920, .vpixel = 1080, .hz = 60,  .is_std = true },
+	{ .hpixel = 1680, .vpixel = 1050, .hz = 60,  .is_std = true },
+	{ .hpixel = 1600, .vpixel = 1200, .hz = 60,  .is_std = true },
+	{ .hpixel = 1600, .vpixel =  900, .hz = 60,  .is_std = true },
 	{ .hpixel = 1440, .vpixel =  900, .hz = 60,  .is_std = true },
-	{ .hpixel = 1680, .vpixel =  1050, .hz = 60, .is_std = true },
 };
 
 typedef struct frame_param{
