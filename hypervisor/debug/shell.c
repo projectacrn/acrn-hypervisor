@@ -1050,7 +1050,7 @@ static int32_t shell_show_cpu_int(__unused int32_t argc, __unused char **argv)
 
 static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
-		uint32_t *pgsi, uint32_t *vgsi, uint32_t *bdf, uint32_t *vbdf)
+		uint32_t *pgsi, uint32_t *vgsi, union pci_bdf *bdf, union pci_bdf *vbdf)
 {
 	if (is_entry_active(entry)) {
 		if (entry->intr_type == PTDEV_INTR_MSI) {
@@ -1063,8 +1063,8 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 			}
 			*pgsi = INVALID_INTERRUPT_PIN;
 			*vgsi = INVALID_INTERRUPT_PIN;
-			*bdf = entry->phys_sid.msi_id.bdf;
-			*vbdf = entry->virt_sid.msi_id.bdf;
+			bdf->value = entry->phys_sid.msi_id.bdf;
+			vbdf->value = entry->virt_sid.msi_id.bdf;
 		} else {
 			uint32_t phys_irq = entry->allocated_pirq;
 			union ioapic_rte rte;
@@ -1083,8 +1083,8 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 			}
 			*pgsi = entry->phys_sid.intx_id.gsi;
 			*vgsi = entry->virt_sid.intx_id.gsi;
-			*bdf = 0U;
-			*vbdf = 0U;
+			bdf->value = 0U;
+			vbdf->value = 0U;
 		}
 		*irq = entry->allocated_pirq;
 		*vector = irq_to_vector(entry->allocated_pirq);
@@ -1096,8 +1096,8 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 		*lvl_tm = 0;
 		*pgsi = ~0U;
 		*vgsi = ~0U;
-		*bdf = 0U;
-		*vbdf = 0U;
+		bdf->value = 0U;
+		vbdf->value = 0U;
 	}
 }
 
@@ -1125,7 +1125,7 @@ static void get_ptdev_info(char *str_arg, size_t str_max)
 		entry = &ptirq_entries[idx];
 		if (is_entry_active(entry)) {
 			get_entry_info(entry, type, &irq, &vector, &dest, &lvl_tm, &pgsi, &vgsi,
-					(uint32_t *)&bdf, (uint32_t *)&vbdf);
+					&bdf, &vbdf);
 			len = snprintf(str, size, "\r\n%d\t%s\t%d\t0x%X\t0x%X",
 					entry->vm->vm_id, type, irq, vector, dest);
 			if (len >= size) {
