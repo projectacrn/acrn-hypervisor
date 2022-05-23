@@ -142,8 +142,6 @@ typedef struct frame_param{
 typedef struct base_param{
 	uint32_t h_pixel;       // pixels
 	uint32_t v_pixel;       // lines
-	uint32_t h_pixelmax;
-	uint32_t v_pixelmax;
 	uint32_t rate;          // Hz
 	uint32_t width;         // mm
 	uint32_t height;        // mm
@@ -161,8 +159,6 @@ vdpy_edid_set_baseparam(base_param *b_param, uint32_t width, uint32_t height)
 {
 	b_param->h_pixel = width;
 	b_param->v_pixel = height;
-	b_param->h_pixelmax = 0;
-	b_param->v_pixelmax = 0;
 	b_param->rate = 60;
 	b_param->width = width;
 	b_param->height = height;
@@ -233,7 +229,7 @@ vdpy_edid_set_color(uint8_t *edid, float red_x, float red_y,
 }
 
 static void
-vdpy_edid_set_timing(uint8_t *addr, const base_param *b_param, TIMING_MODE mode)
+vdpy_edid_set_timing(uint8_t *addr, TIMING_MODE mode)
 {
 	static uint16_t idx;
 	static uint16_t size;
@@ -252,24 +248,21 @@ vdpy_edid_set_timing(uint8_t *addr, const base_param *b_param, TIMING_MODE mode)
 	size = sizeof(timings) / sizeof(timings[0]);
 	for(; idx < size; idx++){
 		timing = timings + idx;
-		if ((b_param->h_pixelmax && b_param->h_pixelmax < timing->hpixel) ||
-		    (b_param->v_pixelmax && b_param->v_pixelmax < timing->vpixel)) {
-			continue;
-		}
+
 		switch(mode){
 		case ESTT: // Established Timings I & II
 			if(timing->byte) {
 				addr[timing->byte] |= (1 << timing->bit);
 				break;
 			} else {
-				return;
+				continue;
 			}
 		case ESTT3: // Established Timings III
 			if(timing->byte_t3){
 				addr[timing->byte_t3] |= (1 << timing->bit);
 				break;
 			} else {
-				return;
+				continue;
 			}
 		case STDT: // Standard Timings
 			if(stdcnt < 8 && timing->is_std) {
@@ -311,7 +304,7 @@ vdpy_edid_set_timing(uint8_t *addr, const base_param *b_param, TIMING_MODE mode)
 			}
 			break;
 		default:
-			return;
+			continue;
 		}
 	}
 	while(mode == STDT && stdcnt < 8){
@@ -375,7 +368,7 @@ vdpy_edid_set_descripter(uint8_t *desc, uint8_t is_dtd,
 	// Established Timings III Descriptor (tag #F7h)
 	case 0xf7:
 		desc[5] = 0x0a; // Revision Number
-		vdpy_edid_set_timing(desc, b_param, ESTT3);
+		vdpy_edid_set_timing(desc, ESTT3);
 		break;
 	// Display Range Limits & Additional Timing Descriptor (tag #FDh)
 	case 0xfd:
@@ -487,10 +480,10 @@ vdpy_edid_generate(uint8_t *edid, size_t size, struct edid_info *info)
 				  0.3127, 0.3290);
 
 	/* edid[37:35], Established Timings */
-	vdpy_edid_set_timing(edid, &b_param, ESTT);
+	vdpy_edid_set_timing(edid, ESTT);
 
 	/* edid[53:38], Standard Timings: Identification 1 -> 8 */
-	vdpy_edid_set_timing(edid, &b_param, STDT);
+	vdpy_edid_set_timing(edid, STDT);
 
 	/* edid[125:54], Detailed Timing Descriptor - 18 bytes x 4 */
 	// Detailed Timing Descriptor 1
