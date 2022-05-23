@@ -57,7 +57,6 @@ Advanced Features
 .. toctree::
    :maxdepth: 1
 
-   tutorials/nvmx_virtualization
    tutorials/vuart_configuration
    tutorials/rdt_configuration
    tutorials/vcat_configuration
