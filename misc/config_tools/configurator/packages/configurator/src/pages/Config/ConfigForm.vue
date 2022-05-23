@@ -196,6 +196,6 @@ export default {
 }
 
 .n-popover {
-  max-width: 50%;
+  max-width: 60%;
 }
 </style>
