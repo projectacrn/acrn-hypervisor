@@ -22,7 +22,7 @@ def create_s5_vuart_connection(allocation_etree, service_vm_name, service_vm_por
 
     vuart_connection_node = common.append_node(f"./vuart_connection", None, vuart_connections_node)
     common.append_node(f"./name", connection_name, vuart_connection_node)
-    common.append_node(f"./type", "type", vuart_connection_node)
+    common.append_node(f"./type", "legacy", vuart_connection_node)
 
     service_vm_endpoint = common.append_node(f"./endpoint", None, vuart_connection_node)
     common.append_node(f"./vm_name", service_vm_name, service_vm_endpoint)
@@ -57,9 +57,11 @@ def alloc_free_port(scenario_etree, load_order, vm_name):
         for port in port_list:
             tmp_list.append(int(port, 16))
 
-        port_list = list(set(service_port_list) - set(tmp_list))
+        global service_port_list
+        service_port_list = list(set(service_port_list) - set(tmp_list))
+        service_port_list.sort()
         port = hex(service_port_list[0])
-        service_port_list.remove(port_list[0])
+        service_port_list.remove(service_port_list[0])
         return str(port).upper()
     else:
         tmp_list = list(set(standard_uart_port) - set(port_list))

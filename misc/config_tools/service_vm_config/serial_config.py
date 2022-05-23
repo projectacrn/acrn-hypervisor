@@ -21,27 +21,18 @@ def find_non_standard_uart(vm, scenario_etree, allocation_etree):
     uart_list = []
     vmname = common.get_node("./name/text()", vm)
 
-    connection_list = scenario_etree.xpath(f"//vuart_connection[endpoint/vm_name = '{vmname}']")
-    for connection in connection_list:
+    connection_list0 = scenario_etree.xpath(f"//vuart_connection[endpoint/vm_name = '{vmname}']")
+    connection_list1 = allocation_etree.xpath(f"//vuart_connection[endpoint/vm_name = '{vmname}']")
+    for connection in (connection_list0 + connection_list1):
         type = common.get_node(f"./type/text()", connection)
 
         if (type != "legacy") :
             continue
-
         port = common.get_node(f".//endpoint[vm_name = '{vmname}']/io_port/text()", connection)
         if port not in stadard_uart_port:
             target_vm_name = common.get_node(f".//endpoint[vm_name != '{vmname}']/vm_name/text()", connection)
             target_vm_id = common.get_node(f"//vm[name = '{target_vm_name}']/@id", scenario_etree)
             uart_list.append({"io_port" : port, "target_vm_id" : target_vm_id})
-
-    legacy_uart_list = allocation_etree.xpath(f"//vm[load_order = 'SERVICE_VM']/legacy_vuart")
-    for legacy_uart in legacy_uart_list:
-        port = common.get_node(f"./addr.port_base/text()", legacy_uart)
-        if port is None:
-            continue
-        elif port not in stadard_uart_port:
-            uart_list.append({"io_port" : port, "target_vm_id": common.get_node(f"./t_vuart.vm_id/text()", legacy_uart)})
-
     return uart_list
 
 def main(args):
