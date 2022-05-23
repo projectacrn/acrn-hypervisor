@@ -23,9 +23,9 @@
 These settings can only be changed at build time.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="SERIAL_CONSOLE" type="SerialConsoleOptions">
+    <xs:element name="SERIAL_CONSOLE" type="SerialConsoleType" default="None">
       <xs:annotation acrn:title="Serial console port" acrn:views="basic"
-		     acrn:options="//ttys/serial[type != '0']/dev_path/text()">
+		     acrn:options="//ttys/serial[type != '0']/dev_path/text(), 'None' ">
         <xs:documentation>Select the host serial device used for hypervisor debugging.</xs:documentation>
       </xs:annotation>
     </xs:element>
