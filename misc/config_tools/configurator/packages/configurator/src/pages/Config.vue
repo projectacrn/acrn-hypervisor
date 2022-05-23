@@ -349,6 +349,10 @@ export default {
       return errorFlag
     },
     saveScenario() {
+      if (_.isEmpty(this.scenario.vm)) {
+        alert("Please add at least one VM")
+        return
+      }
       let errorFlag = false
       errorFlag = this.confirmVmName()
       this.assignVMID()
@@ -408,7 +412,7 @@ export default {
             }
           })
           .then(() => {
-            alert(`${msg.slice(0,stepDone).join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
+            alert(`${msg.slice(0,stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`)
           })
         } catch(err) {
           console.log("error" + err)
