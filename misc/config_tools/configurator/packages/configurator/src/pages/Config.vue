@@ -250,19 +250,14 @@ export default {
         msg = "Post-launched VMs require the Service VM. If you proceed, all post-launched VMs and their settings will also be deleted. Are you sure you want to proceed?"
         isserivevm = true
       } else {
-        msg = `Delete this virtual machine? VM${this.activeVMID}\nThe associated launch script will also be deleted if it exists.`
+        msg = `Delete this virtual machine? VM${this.activeVMID}\n\nThe associated launch script will also be deleted if it exists.`
       }
       confirm(msg).then((r) => {
         if (r) {
           if (isserivevm) {
             for (let i = postvmlist.length - 1; i >= 0; i--) {
-              let launchScriptsname = this.WorkingFolder + `launch_user_vm_id${postvmlist[i]}.sh`
-              this.removeLaunchScript(launchScriptsname);
               this.scenario.vm.splice(postvmlist[i], 1);
             }
-          } else {
-            let launchScriptsname = this.WorkingFolder + `launch_user_vm_id${currentVMIndex}.sh`
-            this.removeLaunchScript(launchScriptsname);
           }
           this.vmNameChange('', this.scenario.vm[currentVMIndex].name)
           this.scenario.vm.splice(currentVMIndex, 1);
@@ -272,15 +267,20 @@ export default {
         }
       })
     },
-    removeLaunchScript(filePath) {
-      console.log(filePath)
-      configurator.isFile(filePath)
-          .then((isFile) => {
-            if (isFile) {
-              configurator.removeFile(filePath)
-                  .catch((err) => alert(`Launch script is not exist: ${filePath}`))
+    cleanLaunchScript() {
+      configurator.readDir(this.WorkingFolder, false)
+        .then((files) => {
+          if (files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+              let arr = files[i].path.split('.')
+              let suffix = arr[arr.length - 1]
+              if (suffix == 'sh') {
+                configurator.removeFile(files[i].path)
+                .catch((err) => alert(`${err}`))
+              }
             }
-          })
+          }
+        })
     },
     scenarioConfigFormDataUpdate(vmid, data) {
       if (vmid === -1) {
@@ -395,19 +395,22 @@ export default {
           }
           console.log("validation ok")
           stepDone = 1
-
+          this.cleanLaunchScript()
           configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
-          stepDone = 2
-
-          if (needSaveLaunchScript) {
-            let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-            for (let filename in launchScripts) {
-              configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
+          .then(()=> {
+            stepDone = 2
+            if (needSaveLaunchScript) {
+              let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
+              for (let filename in launchScripts) {
+                configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
+              }
+              stepDone = 3
             }
-            stepDone = 3
-          }
-          alert(`${msg.slice(0,stepDone).join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
-        } catch (err) {
+          })
+          .then(() => {
+            alert(`${msg.slice(0,stepDone).join('')} \n All files successfully saved to your working folder ${this.WorkingFolder}`)
+          })
+        } catch(err) {
           console.log("error" + err)
           let outmsg = ''
           for (var i = 0; i < stepDone; i++)
