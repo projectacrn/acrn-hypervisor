@@ -1,85 +1,97 @@
 <template>
-  <b>Memory Isolation for Performance</b>
-
   <div class="py-3">
-    <b-form-checkbox v-model="SSRAM_ENABLED" :value="'y'" :uncheckedValue="'n'">Software SRAM (for real-time apps)</b-form-checkbox>
-  </div>
-  <div class="d-flex gap-2 flex-column">
-    <text>Intel Resource Director Technology</text>
-    <b-form-checkbox v-model="RDT_ENABLED" :value="'y'" :uncheckedValue="'n'">
-      Cache Allocation Technology (requires CPU Afinity configuration in each desired VM)
-    </b-form-checkbox>
-    <div class="d-flex flex-column gap-2 ps-3 pb-3">
-      <b-form-checkbox v-model="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'">
-        Code and Data Prioritization
-      </b-form-checkbox>
-      <b-form-checkbox v-model="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'">
-        Virtual Cache Allocation Technology (VCAT)
-      </b-form-checkbox>
-    </div>
-  </div>
-  <p>
-    L3 Cache Allocation Technology
-    <br/>
-    Drag the ends of the boxes to cover the cache chunks you want to allocate to specific VMs. If you have a real-time
-    VM,ensure its cache chunks do not overlap with any other VM's cache chunks.
-  </p>
-  <div class="py-4" v-for="CACHE_ALLOCATION in CAT_INFO" v-if="RDT_ENABLED==='y'">
-    <div class="d-flex justify-content-between py-2 align-items-center">
-      <text>
-        L{{ CACHE_ALLOCATION.level }} Cache Allocation Technology {{
-          cat_level_region_sum[CACHE_ALLOCATION.level].count > 1 ? ' Module ' + cat_level_region_sum[CACHE_ALLOCATION.level][CACHE_ALLOCATION.id] : ''
-        }}
-        (pCPU : {{ Math.min(...CACHE_ALLOCATION.processors) }}~{{ Math.max(...CACHE_ALLOCATION.processors) }})
-      </text>
-      <b-button>
-        Apply basic real-time defaults
-      </b-button>
-    </div>
-    <div class="d-flex">
-      <div class="leftTitle">
-        <!--left title-->
-        <div v-for="(POLICY,index) in CACHE_ALLOCATION.data.POLICY">
-          <div v-if="index===0&&CACHE_ALLOCATION.real_time_count>0">Real-time</div>
-          <div v-if="index===CACHE_ALLOCATION.real_time_count">Standard</div>
-          {{ POLICY.VM }} vCPU {{ POLICY.VCPU }}{{ POLICY.TYPE === 'Unified' ? '' : "_" + POLICY.TYPE }}
-        </div>
-      </div>
-      <div class="flex-grow-1">
-        <div class="d-flex rightTitle">
-          <!--right title-->
-          <div v-for="n in CACHE_ALLOCATION.capacity_mask_length" class="chunkTitle"
-               :style="{width: (100/(CACHE_ALLOCATION.capacity_mask_length))+'%'}"
-          >
-            chunk{{ CACHE_ALLOCATION.capacity_mask_length - n }}
-          </div>
-        </div>
-        <div>
-          <!--right table-->
-          <div v-for="(POLICY,index) in CACHE_ALLOCATION.data.POLICY">
-            <div style="height: 33px;width: 100%;background: #bfbfbf"
-                 v-if="index===CACHE_ALLOCATION.real_time_count && CACHE_ALLOCATION.real_time_count>0"></div>
-            <HexBlockRangeSelector
-                v-model="POLICY.CLOS_MASK"
-                :max="CACHE_ALLOCATION.capacity_mask_length"
-            />
-          </div>
-        </div>
-        <div class="pt-4 ps-2">
-          Note: each chunk is {{ CACHE_ALLOCATION.cache_size / CACHE_ALLOCATION.capacity_mask_length / 1024 }}KB
-        </div>
-      </div>
+    <b>Memory Isolation for Performance</b>
 
+    <div class="py-3">
+      <b-form-checkbox
+          v-model="SSRAM_ENABLED" :value="'y'" :uncheckedValue="'n'"
+          :disabled="RDT_ENABLED==='y'"
+      >
+        Software SRAM (for real-time apps)
+      </b-form-checkbox>
+    </div>
+    <div class="d-flex gap-2 flex-column">
+      <text>Intel Resource Director Technology</text>
+      <b-form-checkbox
+          v-model="RDT_ENABLED" :value="'y'" :uncheckedValue="'n'"
+          :disabled="SSRAM_ENABLED==='y'"
+      >
+        Cache Allocation Technology (requires CPU Afinity configuration in each desired VM)
+      </b-form-checkbox>
+      <div class="d-flex flex-column gap-2 ps-3 pb-3">
+        <b-form-checkbox
+            v-model="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'"
+            :disabled="SSRAM_ENABLED==='y'||VCAT_ENABLED==='y'">
+          Code and Data Prioritization
+        </b-form-checkbox>
+        <b-form-checkbox
+            v-model="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'"
+            :disabled="SSRAM_ENABLED==='y'||CDP_ENABLED==='y'">
+          Virtual Cache Allocation Technology (VCAT)
+        </b-form-checkbox>
+      </div>
+    </div>
+    <p>
+      L3 Cache Allocation Technology
+      <br/>
+      Drag the ends of the boxes to cover the cache chunks you want to allocate to specific VMs. If you have a real-time
+      VM,ensure its cache chunks do not overlap with any other VM's cache chunks.
+    </p>
+    <div class="py-4" v-for="CACHE_ALLOCATION in CAT_INFO" v-if="RDT_ENABLED==='y'">
+      <div class="d-flex justify-content-between py-2 align-items-center">
+        <text>
+          L{{ CACHE_ALLOCATION.level }} Cache Allocation Technology {{
+            cat_level_region_sum[CACHE_ALLOCATION.level].count > 1 ? ' Module ' + cat_level_region_sum[CACHE_ALLOCATION.level][CACHE_ALLOCATION.id] : ''
+          }}
+          (pCPU : {{ Math.min(...CACHE_ALLOCATION.processors) }}~{{ Math.max(...CACHE_ALLOCATION.processors) }})
+        </text>
+        <b-button @click="setDefaultClosMask(CACHE_ALLOCATION)">
+          Apply basic real-time defaults
+        </b-button>
+      </div>
+      <div class="d-flex">
+        <div class="leftTitle">
+          <!--left title-->
+          <div v-for="(POLICY,index) in CACHE_ALLOCATION.data.POLICY">
+            <div v-if="index===0&&CACHE_ALLOCATION.real_time_count>0">Real-time</div>
+            <div v-if="index===CACHE_ALLOCATION.real_time_count">Standard</div>
+            {{ POLICY.VM }} vCPU {{ POLICY.VCPU }}{{ POLICY.TYPE === 'Unified' ? '' : "_" + POLICY.TYPE }}
+          </div>
+        </div>
+        <div class="flex-grow-1">
+          <div class="d-flex rightTitle">
+            <!--right title-->
+            <div v-for="n in CACHE_ALLOCATION.capacity_mask_length" class="chunkTitle"
+                 :style="{width: (100/(CACHE_ALLOCATION.capacity_mask_length))+'%'}"
+            >
+              chunk{{ CACHE_ALLOCATION.capacity_mask_length - n }}
+            </div>
+          </div>
+          <div>
+            <!--right table-->
+            <div v-for="(POLICY,index) in CACHE_ALLOCATION.data.POLICY">
+              <div style="height: 33px;width: 100%;background: #bfbfbf"
+                   v-if="index===CACHE_ALLOCATION.real_time_count && CACHE_ALLOCATION.real_time_count>0"></div>
+              <HexBlockRangeSelector
+                  v-model="POLICY.CLOS_MASK"
+                  :max="CACHE_ALLOCATION.capacity_mask_length"
+              />
+            </div>
+          </div>
+          <div class="pt-4 ps-2">
+            Note: each chunk is {{ CACHE_ALLOCATION.cache_size / CACHE_ALLOCATION.capacity_mask_length / 1024 }}KB
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-
-import {vueUtils, fieldProps} from "@lljj/vue3-form-naive";
 import _ from "lodash";
+import {vueUtils, fieldProps} from "@lljj/vue3-form-naive";
 import HexBlockRangeSelector from "./CAT/HexBlockRangeSelector.vue";
-
 
 // noinspection JSUnusedLocalSymbols
 export default {
@@ -92,7 +104,7 @@ export default {
     this.updateCatInfo()
   },
   computed: {
-    VCAT_ENABLED:{
+    VCAT_ENABLED: {
       get() {
         return vueUtils.getPathVal(this.rootFormData, 'FEATURES.RDT.VCAT_ENABLED')
       },
@@ -114,6 +126,7 @@ export default {
       },
       set(value) {
         vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.RDT_ENABLED', value)
+        this.updateCatInfo()
       }
     },
     CDP_ENABLED: {
@@ -122,30 +135,59 @@ export default {
       },
       set(value) {
         vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.CDP_ENABLED', value)
-        this.updateCatInfo()
+        this.SSRAM_ENABLED = 'n'
+        this.VCAT_ENABLED = 'n'
+        if (this.RDT_ENABLED !== value) {
+          this.RDT_ENABLED = value
+        } else {
+          this.updateCatInfo()
+        }
       }
     }
   },
   watch: {
     CAT_INFO: {
       handler(newValue, _) {
+        if (newValue === null) {
+          // set formData CACHE_REGION to null
+          vueUtils.setPathVal(this.rootFormData, this.curNodePath, newValue)
+          return;
+        }
         let data = [];
         for (let i = 0; i < newValue.length; i++) {
           data.push(newValue[i].data)
         }
-        this.defaultVal.CACHE_ALLOCATION = data
+        // set formData CACHE_REGION.CACHE_ALLOCATION to data
+        let CACHE_REGION = {CACHE_ALLOCATION: data}
+        vueUtils.setPathVal(this.rootFormData, this.curNodePath, CACHE_REGION)
       },
       deep: true
     },
   },
   data() {
     return {
-      defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath),
-      CAT_INFO: {},
+      CAT_INFO: null,
       cat_level_region_sum: {}
     }
   },
   methods: {
+    setDefaultClosMask(CACHE_REGION) {
+      if (CACHE_REGION.capacity_mask_length < (CACHE_REGION.real_time_count + 1)) {
+        alert('Can\'t generate default settings for this region(due to too many realtime cpu)')
+        return;
+      }
+      for (let policyKey in CACHE_REGION.data.POLICY) {
+        if (policyKey < CACHE_REGION.real_time_count) {
+          CACHE_REGION.data.POLICY[policyKey].CLOS_MASK = '0x' + parseInt(
+              '0'.repeat(policyKey) + '1' + '0'.repeat(CACHE_REGION.capacity_mask_length - policyKey - 1),
+              2).toString(16)
+        } else {
+          CACHE_REGION.data.POLICY[policyKey].CLOS_MASK = '0x' + parseInt(
+              '0'.repeat(CACHE_REGION.real_time_count) + '1'.repeat(CACHE_REGION.capacity_mask_length - CACHE_REGION.real_time_count),
+              2).toString(16)
+        }
+      }
+    },
     updateCatInfo() {
       // Intel Resource Director Tech
       // Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.
@@ -167,6 +209,12 @@ export default {
       // FEATURES.SSRAM.SSRAM_ENABLED
       // Software SRAM：
       // get CAT info from board xml
+      let RDT_ENABLED = this.RDT_ENABLED === 'y'
+      if (!RDT_ENABLED) {
+        this.CAT_INFO = null
+        return
+      }
+
       let board_cat_info = window.getBoardData().CAT_INFO;
       let CDP_ENABLED = this.CDP_ENABLED === 'y'
 
@@ -218,9 +266,9 @@ export default {
         })
       })
 
-
+      let scenarioHVCACHE_REGIONData = vueUtils.getPathVal(this.rootFormData, this.curNodePath);
       // noinspection JSUnusedLocalSymbols
-      let defaultVal_data_example = {
+      let scenarioHVCACHE_REGIONData_data_example = {
         "CACHE_ALLOCATION": [
           {
             "CACHE_ID": "0x8", "CACHE_LEVEL": 2, "POLICY": [
@@ -244,9 +292,13 @@ export default {
       // load data from scenario
       let scenario_cat_data = {}
       // noinspection JSUnresolvedVariable
-      if (this.defaultVal.hasOwnProperty('CACHE_ALLOCATION') && _.isArray(this.defaultVal.CACHE_ALLOCATION)) {
+      if (
+          scenarioHVCACHE_REGIONData !== null &&
+          scenarioHVCACHE_REGIONData.hasOwnProperty('CACHE_ALLOCATION') &&
+          _.isArray(scenarioHVCACHE_REGIONData.CACHE_ALLOCATION)
+      ) {
         // noinspection JSUnresolvedVariable
-        this.defaultVal.CACHE_ALLOCATION.map((cache_region) => {
+        scenarioHVCACHE_REGIONData.CACHE_ALLOCATION.map((cache_region) => {
           if (!scenario_cat_data.hasOwnProperty(cache_region['CACHE_LEVEL'])) {
             scenario_cat_data[cache_region['CACHE_LEVEL']] = {}
           }
@@ -319,8 +371,7 @@ export default {
             if (!vmCPUClosMasks[current_policies.VM].hasOwnProperty(current_policies.VCPU)) {
               vmCPUClosMasks[current_policies.VM][current_policies.VCPU] = {}
             }
-            if (["Unified", "Code", "Data"].indexOf(current_policies.TYPE) > 0) {
-              console.log(current_policies.TYPE, current_policies.CLOS_MASK)
+            if (["Unified", "Code", "Data"].indexOf(current_policies.TYPE) >= 0) {
               vmCPUClosMasks[current_policies.VM][current_policies.VCPU][current_policies.TYPE] = current_policies.CLOS_MASK
             }
           }
@@ -334,15 +385,13 @@ export default {
 
         function addCATPolicy(cpu_policies_line, line_type) {
           cpu_policies_line['TYPE'] = line_type;
-          let clos_mask = "";
+          let clos_mask = "0x" + parseInt('1'.repeat(cat_region_info.capacity_mask_length), 2).toString(16);
           if (
               vmCPUClosMasks.hasOwnProperty(cpu_policies_line.VM) &&
               vmCPUClosMasks[cpu_policies_line.VM].hasOwnProperty(cpu_policies_line.VCPU) &&
               vmCPUClosMasks[cpu_policies_line.VM][cpu_policies_line.VCPU].hasOwnProperty(line_type)
           ) {
             clos_mask = vmCPUClosMasks[cpu_policies_line.VM][cpu_policies_line.VCPU][line_type];
-          } else {
-            clos_mask = "0x" + parseInt('1'.repeat(cat_region_info.capacity_mask_length), 2).toString(16);
           }
           cpu_policies_line['CLOS_MASK'] = clos_mask;
           cat_region_info.data.POLICY.push(cpu_policies_line)
@@ -410,6 +459,7 @@ export default {
   font-size: 12px;
 }
 
+/*noinspection CssUnusedSymbol*/
 .form-check {
   display: flex;
   align-items: center;
