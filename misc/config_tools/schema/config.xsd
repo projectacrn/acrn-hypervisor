@@ -445,6 +445,22 @@ argument and memory.</xs:documentation>
 This feature enables you to view the VM's GPU output in the Service VM.</xs:documentation>
             </xs:annotation>
           </xs:element>
+          <xs:element name="vsock" minOccurs="0">
+            <xs:annotation acrn:title="Virtio vsock CID" acrn:views="basic"
+                          acrn:widget-options="'placeholder': '3 ~ (-2U)'">
+              <xs:documentation>vsock is the new socket address family for host/guest communication.
+CID is the identifier for this VM.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:integer">
+                <xs:annotation>
+                  <xs:documentation>Integer between 3 ~ (-2U).</xs:documentation>
+                </xs:annotation>
+                <xs:minInclusive value="3" />
+                <xs:maxInclusive value="4294967294" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
           <xs:element name="console" type="VirtioConsoleConfiguration" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation acrn:title="Virtio console device" acrn:views="basic">
               <xs:documentation>Virtio console device for data input and output.
