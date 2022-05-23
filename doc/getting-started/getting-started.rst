@@ -154,7 +154,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo pip3 install lxml xmlschema defusedxml
+      sudo pip3 install lxml xmlschema defusedxml tqbm
 
 #. Create a working directory:
 
