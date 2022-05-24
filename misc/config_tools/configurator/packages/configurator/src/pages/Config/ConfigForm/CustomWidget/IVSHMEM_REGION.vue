@@ -6,13 +6,10 @@
 
         <b-row class="align-items-center my-2 mt-4">
           <b-col md="2">
-            <label>Region name: </label>
+            Region name:
           </b-col>
           <b-col md="4">
-              <b-form-input :state="validation(IVSHMEM_VMO.NAME)" v-model="IVSHMEM_VMO.NAME" placeholder="Any string with no white spaces."/>
-              <b-form-invalid-feedback>
-                must have value
-              </b-form-invalid-feedback>
+              <b-form-input v-model="IVSHMEM_VMO.NAME" placeholder="Any string with no white spaces."/>
           </b-col>
         </b-row>
 
@@ -181,7 +178,7 @@ export default {
         this.defaultVal = []
       }
       this.defaultVal.splice(index + 1, 0, {
-        "NAME": "shm_region_" + this.defaultVal.length,
+        "NAME": "",
         "PROVIDED_BY": "Hypervisor",
         "IVSHMEM_SIZE": "2",
         "IVSHMEM_VMS": {
