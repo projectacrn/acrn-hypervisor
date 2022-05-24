@@ -339,8 +339,12 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
        <xs:documentation>A string with value: ``Virtio console`` or ``Virtio serial port``</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
-    <xs:enumeration value="Virtio console" />
-    <xs:enumeration value="Virtio serial port" />
+    <xs:enumeration value="Virtio console" >
+      <xs:annotation acrn:title="virtio serial port (as console)" />
+    </xs:enumeration>
+    <xs:enumeration value="Virtio serial port" >
+      <xs:annotation acrn:title="virtio serial port" />
+    </xs:enumeration>
   </xs:restriction>
 </xs:simpleType>
 
