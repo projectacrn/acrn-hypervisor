@@ -8,7 +8,7 @@
             <label>Use type: </label>
           </b-col>
           <b-col md="4">
-            <b-form-select v-model="console.use_type" :options="ConsoleUseType"/>
+            <b-form-select v-model="console.use_type" :options="getUseTypes"/>
           </b-col>
         </b-row>
 
@@ -95,7 +95,8 @@ export default {
   },
   data() {
     return {
-      ConsoleUseType: this.rootSchema.definitions['VirtioConsoleUseType']['enum'],
+      enumNames: this.rootSchema.definitions['VirtioConsoleUseType']['enumNames'],
+      enum: this.rootSchema.definitions['VirtioConsoleUseType']['enum'],
       ConsoleBackendType: this.rootSchema.definitions['BasicVirtioConsoleBackendType']['enum'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
     };
@@ -116,6 +117,16 @@ export default {
       },
       deep: true
     }
+  },
+  computed: {
+    getUseTypes() {
+      let enumOptions = []
+      for (let i = 0; i < this.enumNames.length; i++) {
+        let enumOption = {text: this.enumNames[i], value: this.enum[i]}
+        enumOptions.push(enumOption)
+      }
+      return enumOptions
+    },
   },
   methods: {
     removeVirtioConsole(index) {
