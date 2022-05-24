@@ -240,7 +240,7 @@ def clean_configurator_deb(version, build_dir):
     add_cmd_list(cmd_list, 'bash -c "find -name "build" -prune -exec rm -rf {} \;"', config_tools_path)
     add_cmd_list(cmd_list, 'bash -c "find -name "target" -prune -exec rm -rf {} \;"', config_tools_path)
     add_cmd_list(cmd_list, 'bash -c "rm -rf dist"', config_tools_path)
-    add_cmd_list(cmd_list, 'bash -c "python ./configurator/packages/configurator/thirdLib/manager.py clean"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "python3 ./configurator/packages/configurator/thirdLib/manager.py clean"', config_tools_path)
     run_cmd_list(cmd_list)
     return
 
