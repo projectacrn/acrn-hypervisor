@@ -6,7 +6,7 @@
 
         <b-row class="align-items-center my-2 mt-4">
           <b-col md="2">
-            <label>VM name: </label>
+            <label>{{vmNameTitle}}: </label>
           </b-col>
           <b-col md="4">
             <b-form-select :state="validation(VUARTConn.endpoint[0].vm_name)" v-model="VUARTConn.endpoint[0].vm_name" :options="vmNames"></b-form-select>
@@ -24,7 +24,7 @@
 
         <b-row class="align-items-center my-2">
           <b-col md="2">
-            <label>VM name: </label>
+            <label>{{vmNameTitle}}: </label>
           </b-col>
           <b-col md="4">
             <b-form-select :state="validation(VUARTConn.endpoint[1].vm_name)" v-model="VUARTConn.endpoint[1].vm_name" :options="vmNames"></b-form-select>
@@ -36,7 +36,7 @@
 
         <b-row class="align-items-center my-2">
           <b-col md="2">
-            <label>Type: </label>
+            <label>{{vuartConnectionTypeTitle}}: </label>
           </b-col>
           <b-col md="4">
             <b-form-select :state="validation(VUARTConn.type)" v-model="VUARTConn.type" :options="VuartType"></b-form-select>
@@ -51,23 +51,23 @@
           <p></p>
           <b-row class="justify-content-sm-start">
             <b-col sm="4">
-              Virtual UART port:
+              {{vuartEndpointTitle}}:
             </b-col>
-            <b-col sm="4" v-if="VUARTConn.type === 'legacy'"> I/O address: </b-col>
-            <b-col sm="4" v-else-if="VUARTConn.type === 'pci'"> VBDF </b-col>
+            <b-col sm="4" v-if="VUARTConn.type === 'legacy'"> {{vuartVIoPortTitle}}: </b-col>
+            <b-col sm="4" v-else-if="VUARTConn.type === 'pci'"> {{vuartVBDFTitle}}: </b-col>
           </b-row>
           <b-row class="justify-content-sm-start align-items-center">
             <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[0].vm_name }} </b-col>
             <b-col sm="4">
-              <b-form-input v-model="VUARTConn.endpoint[0].io_port" v-if="VUARTConn.type === 'legacy'" placeholder="An address in hexadecimal, e.g. 0x4000"/>
-              <b-form-input v-model="VUARTConn.endpoint[0].vbdf" v-else-if="VUARTConn.type === 'pci'" placeholder="00:[device].[function], e.g. 00:1c.0. All fields are in hexadecimal."/>
+              <b-form-input v-model="VUARTConn.endpoint[0].io_port" v-if="VUARTConn.type === 'legacy'" :placeholder="vIoPortPlaceholder"/>
+              <b-form-input v-model="VUARTConn.endpoint[0].vbdf" v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
             </b-col>
           </b-row>
           <b-row class="justify-content-sm-start align-items-center">
             <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[1].vm_name }} </b-col>
             <b-col sm="4">
-              <b-form-input v-model="VUARTConn.endpoint[1].io_port" v-if="VUARTConn.type === 'legacy'" placeholder="An address in hexadecimal, e.g. 0x4000"/>
-              <b-form-input v-model="VUARTConn.endpoint[1].vbdf" v-else-if="VUARTConn.type === 'pci'" placeholder="00:[device].[function], e.g. 00:1c.0. All fields are in hexadecimal."/>
+              <b-form-input v-model="VUARTConn.endpoint[1].io_port" v-if="VUARTConn.type === 'legacy'" :placeholder="vIoPortPlaceholder"/>
+              <b-form-input v-model="VUARTConn.endpoint[1].vbdf" v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
             </b-col>
           </b-row>
         </div>
@@ -128,8 +128,23 @@ export default {
     }
   },
   data() {
+    let enumValue = this.rootSchema.definitions['VuartType']['enum']
+    let enumNames = this.rootSchema.definitions['VuartType']['enumNames']
+    let VuartType = []
+    enumValue.forEach((item, i) => {
+      VuartType.push({value:item, text:enumNames[i]})
+    })
+    let epTypeProp = this.rootSchema.definitions.VuartEndpointType.properties
+    let conTypeProp = this.rootSchema.definitions.VuartConnectionType.properties
     return {
-      VuartType: this.rootSchema.definitions['VuartType']['enum'],
+      vmNameTitle: epTypeProp.vm_name.title,
+      vuartConnectionTypeTitle: conTypeProp.type.title,
+      vuartEndpointTitle: conTypeProp.endpoint['title'],
+      vuartVIoPortTitle: epTypeProp.io_port.title,
+      vuartVBDFTitle: epTypeProp.vbdf.title,
+      vIoPortPlaceholder: epTypeProp.io_port['ui:options']['placeholder'],
+      vBDFPlaceholder: epTypeProp.vbdf['ui:options']['placeholder'],
+      VuartType,
       IOPortDefault: this.rootSchema.definitions['VuartEndpointType']['properties']['io_port']['default'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
     };
