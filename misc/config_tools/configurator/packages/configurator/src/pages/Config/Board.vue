@@ -157,7 +157,7 @@ export default {
       .then((res) => {
         let boardPath = ''
         res.map((filepath) => {
-          if (filepath.path.search('board') != -1) {
+          if (filepath.path.search('\\.board\\.xml') != -1) {
             boardPath = filepath.path
           }
         })
