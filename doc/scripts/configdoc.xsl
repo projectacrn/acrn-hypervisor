@@ -56,6 +56,9 @@
     <!-- Only visit elements having complex types. Those having simple types are
          described as an option -->
     <xsl:choose>
+      <xsl:when test="xs:annotation/@acrn:views=''">
+        <!-- don't document elements if not viewable -->
+      </xsl:when>
       <xsl:when test="//xs:complexType[@name=$ty]">
         <!-- The section header -->
         <xsl:if test="$level &lt;= 4">
@@ -79,9 +82,6 @@
           <xsl:with-param name="name" select="concat($prefix, $dxname)"/>
           <xsl:with-param name="parent" select="."/>
       </xsl:apply-templates>
-      </xsl:when>
-      <xsl:when test="xs:annotation/@acrn:views=''">
-        <!-- don't document elements if not viewable -->
       </xsl:when>
       <xsl:otherwise>
         <xsl:if test="$level = 3">
@@ -135,12 +135,24 @@
               <xsl:text>|icon-not-available| </xsl:text>
             </xsl:when>
             <xsl:otherwise>
-              <xsl:if test="count((ancestor-or-self::node()|$parent)[xs:annotation[contains(@acrn:views,'basic')]][1])!=0">
-                <xsl:text>|icon-basic| </xsl:text>
-              </xsl:if>
-              <xsl:if test="count((ancestor-or-self::node()|$parent)[xs:annotation[contains(@acrn:views,'advanced')]][1])!=0">
-                <xsl:text>|icon-advanced| </xsl:text>
-              </xsl:if>
+                <xsl:choose>
+                    <xsl:when test="count(ancestor-or-self::node()[xs:annotation[@acrn:views]])!=0">
+                      <xsl:if test="count((ancestor-or-self::node())[xs:annotation[contains(@acrn:views,'basic')]][1])!=0">
+                        <xsl:text>|icon-basic| </xsl:text>
+                      </xsl:if>
+                      <xsl:if test="count((ancestor-or-self::node())[xs:annotation[contains(@acrn:views,'advanced')]][1])!=0">
+                        <xsl:text>|icon-advanced| </xsl:text>
+                      </xsl:if>
+                    </xsl:when>
+                  <xsl:otherwise>
+                      <xsl:if test="count(($parent)[xs:annotation[contains(@acrn:views,'basic')]][1])!=0">
+                        <xsl:text>|icon-basic| </xsl:text>
+                      </xsl:if>
+                      <xsl:if test="count(($parent)[xs:annotation[contains(@acrn:views,'advanced')]][1])!=0">
+                        <xsl:text>|icon-advanced| </xsl:text>
+                      </xsl:if>
+                  </xsl:otherwise>
+              </xsl:choose>
             </xsl:otherwise>
           </xsl:choose>
         </xsl:variable>
