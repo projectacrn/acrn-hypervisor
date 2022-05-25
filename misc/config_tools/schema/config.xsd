@@ -124,7 +124,8 @@
 <xs:complexType name="MemoryOptionsType">
   <xs:all>
     <xs:element name="STACK_SIZE" type="HexFormat" default="0x2000">
-      <xs:annotation acrn:title="CPU memory stack size (bytes)" acrn:views="advanced">
+      <xs:annotation acrn:title="CPU memory stack size (bytes)" acrn:views="advanced"
+                     acrn:errormsg="'required': 'Stack size is required.'">
         <xs:documentation>Specify the size of the memory stack in bytes for each physical CPU. For example, if you specify 8 kilobytes, each CPU will get its own 8-kilobyte stack.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -299,9 +300,10 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="name" type="VMNameType">
-        <xs:annotation acrn:title="VM name" acrn:views="basic">
-          <xs:documentation>Specify the name used to identify this VM. The VM name will be shown in the hypervisor console vm_list command.</xs:documentation>
-        </xs:annotation>
+      <xs:annotation acrn:title="VM name" acrn:views="basic"
+                     acrn:errormsg="'required': 'VM name is required.'">
+        <xs:documentation>Specify the name used to identify this VM. The VM name will be shown in the hypervisor console vm_list command.</xs:documentation>
+      </xs:annotation>
     </xs:element>
     <xs:element name="vm_type" type="VMType" minOccurs="0">
       <xs:annotation acrn:title="VM type" acrn:views="basic">
@@ -484,8 +486,9 @@ mouse, and tablet.  It sends Linux input layer events over virtio.</xs:documenta
               <xs:documentation>The virtio-blk device presents a block device to the VM. Each virtio-blk device appears as a disk inside the VM.</xs:documentation>
             </xs:annotation>
               <xs:simpleType>
-                  <xs:annotation acrn:widget-options="'placeholder': '/home/user/path/to/disk.image'" />
-                  <xs:restriction base="xs:string" />
+                <xs:annotation acrn:widget-options="'placeholder': '/home/user/path/to/disk.image'"
+                               acrn:errormsg="'required': 'Path to a disk image required.'"/>
+                <xs:restriction base="xs:string" />
               </xs:simpleType>
           </xs:element>
         </xs:all>

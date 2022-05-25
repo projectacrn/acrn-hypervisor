@@ -151,6 +151,17 @@ class XS2JS:
         if '@acrn:widget-options' in annotation:
             js_ele['ui:options'] = eval(f"{{{annotation['@acrn:widget-options']}}}")
 
+    def convert_errormsg_config(self, annotation, js_ele):
+        if '@acrn:errormsg' in annotation:
+            opts = eval(f"{{{annotation['@acrn:errormsg']}}}")
+
+            # An items of an error schema requires an "err:" prefix.
+            keys = list(opts.keys())
+            for key in keys:
+                opts[f"err:{key}"] = opts.pop(key)
+
+            js_ele.update(opts)
+
     def xst2jst(self, type_name) -> str:
         """convert xml schema type name to json schema type name"""
         if type_name in self.xst2jst_mapping:
@@ -195,9 +206,10 @@ class XS2JS:
                             enum_names.append(enum_name)
                     js_st["enumNames"] = enum_names
 
-            # widget and its options
+            # widget configs and error messages
             if 'xs:annotation' in obj:
                 self.convert_widget_config(obj['xs:annotation'], js_st)
+                self.convert_errormsg_config(obj['xs:annotation'], js_st)
 
             js_st.update(self.xsa2jsa(restriction))
             return js_st
@@ -298,7 +310,7 @@ class XS2JS:
 
             if '@maxOccurs' in element:
                 # ui:options seen at this moment are copied from the annotation of the type.
-                possible_keys = ['type', '$ref', 'oneOf', 'ui:options']
+                possible_keys = ['type', '$ref', 'oneOf', 'ui:options', 'err:required', 'err:pattern']
                 convert_to_items_success = False
                 js_ele['items'] = {}
                 for possible_key in possible_keys:
@@ -352,6 +364,9 @@ class XS2JS:
 
                 # widget and its options
                 self.convert_widget_config(element['xs:annotation'], js_ele)
+
+                # Error messages
+                self.convert_errormsg_config(element['xs:annotation'], js_ele)
 
             properties[name] = js_ele
 
