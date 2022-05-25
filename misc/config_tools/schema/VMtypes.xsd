@@ -284,8 +284,7 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
 <xs:complexType name="PCIDevsConfiguration">
   <xs:sequence>
     <xs:element name="pci_dev" type="xs:string" minOccurs="0" maxOccurs="unbounded">
-      <xs:annotation acrn:options="//device[class]/@description" acrn:options-sorted-by="lambda s: (s.split(' ', maxsplit=1)[-1].split(':')[0], s.split(' ')[0])">
-        <xs:documentation>Select the PCI devices you want to assign to this virtual machine.</xs:documentation>
+      <xs:annotation acrn:title="PCI devices" acrn:options="//device[class]/@description" acrn:options-sorted-by="lambda s: (s.split(' ', maxsplit=1)[-1].split(':')[0], s.split(' ')[0])">
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -296,7 +295,6 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
     <xs:element name="usb_dev" type="xs:string" minOccurs="0" maxOccurs="unbounded">
       <xs:annotation acrn:title="USB device assignment"
 	  acrn:options="//usb_device/@description" acrn:options-sorted-by="lambda s: s">
-        <xs:documentation>Select the USB devices you want to assign to this virtual machine.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
