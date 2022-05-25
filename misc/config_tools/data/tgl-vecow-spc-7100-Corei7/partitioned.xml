@@ -68,10 +68,6 @@
         <pcpu_id>2</pcpu_id>
       </pcpu>
     </cpu_affinity>
-    <clos>
-      <vcpu_clos>0</vcpu_clos>
-      <vcpu_clos>0</vcpu_clos>
-    </clos>
     <epc_section>
       <base>0</base>
       <size>0</size>
@@ -110,10 +106,6 @@
         <pcpu_id>3</pcpu_id>
       </pcpu>
     </cpu_affinity>
-    <clos>
-      <vcpu_clos>0</vcpu_clos>
-      <vcpu_clos>0</vcpu_clos>
-    </clos>
     <epc_section>
       <base>0</base>
       <size>0</size>

@@ -59,9 +59,6 @@
   <vm id="0">
     <load_order>SERVICE_VM</load_order>
     <name>ACRN_Service_VM</name>
-    <clos>
-      <vcpu_clos>0</vcpu_clos>
-    </clos>
     <os_config>
       <kern_type>KERNEL_BZIMAGE</kern_type>
       <kern_mod>Linux_bzImage</kern_mod>
@@ -83,10 +80,6 @@
         <pcpu_id>1</pcpu_id>
       </pcpu>
     </cpu_affinity>
-    <clos>
-      <vcpu_clos>0</vcpu_clos>
-      <vcpu_clos>0</vcpu_clos>
-    </clos>
     <memory>
       <size>4096</size>
     </memory>
@@ -123,10 +116,6 @@
         <real_time_vcpu>y</real_time_vcpu>
       </pcpu>
     </cpu_affinity>
-    <clos>
-      <vcpu_clos>0</vcpu_clos>
-      <vcpu_clos>0</vcpu_clos>
-    </clos>
     <memory>
       <size>1024</size>
     </memory>
@@ -160,10 +149,6 @@
         <pcpu_id>1</pcpu_id>
       </pcpu>
     </cpu_affinity>
-    <clos>
-      <vcpu_clos>0</vcpu_clos>
-      <vcpu_clos>0</vcpu_clos>
-    </clos>
     <memory>
       <size>512</size>
     </memory>
@@ -197,10 +182,6 @@
         <pcpu_id>1</pcpu_id>
       </pcpu>
     </cpu_affinity>
-    <clos>
-      <vcpu_clos>0</vcpu_clos>
-      <vcpu_clos>0</vcpu_clos>
-    </clos>
     <memory>
       <size>512</size>
     </memory>
@@ -234,10 +215,6 @@
         <pcpu_id>1</pcpu_id>
       </pcpu>
     </cpu_affinity>
-    <clos>
-      <vcpu_clos>0</vcpu_clos>
-      <vcpu_clos>0</vcpu_clos>
-    </clos>
     <memory>
       <size>512</size>
     </memory>
@@ -271,10 +248,6 @@
         <pcpu_id>1</pcpu_id>
       </pcpu>
     </cpu_affinity>
-    <clos>
-      <vcpu_clos>0</vcpu_clos>
-      <vcpu_clos>0</vcpu_clos>
-    </clos>
     <memory>
       <size>512</size>
     </memory>
