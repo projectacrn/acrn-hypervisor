@@ -1,11 +1,15 @@
 <template>
   <div>
-    <Slider v-model="hexField" :merge="-1" :max="max" :tooltips="false"/>
+    <Slider v-model="hexField" :max="max" :tooltips="false" :options="sliderOptions"/>
   </div>
 </template>
 
 <script>
 import Slider from '@vueform/slider'
+
+function count(source, target) {
+  return (source.match(new RegExp(target, 'g')) || []).length;
+}
 
 export default {
   name: "HexBlockRangeSelector",
@@ -13,43 +17,52 @@ export default {
     Slider,
   },
   computed: {
+    sliderOptions() {
+      let options = {}
+      if (this.isVcat) {
+        options['behaviour'] = 'drag-fixed'
+      }
+      return options
+    },
     hexField: {
       get() {
-        let strBin = parseInt(this.modelValue).toString(2)
-        let rangeStart = 0;
-        for (let i = strBin.length - 1; i >= 0; i--) {
-          if (strBin[i] === '0') {
-            rangeStart++
+        let str_bin = Number.parseInt(this.modelValue).toString(2);
+        let block_length = str_bin.length;
+        let block_enabled_length = count(str_bin, "1");
+
+        let start = 0
+        let end = 0
+
+        if (block_length > this.max) {
+          if (block_enabled_length >= this.max) {
+            str_bin = "1".repeat(this.max);
           } else {
-            break
+            str_bin = "0".repeat(this.max - block_enabled_length) + "1".repeat(block_enabled_length);
+          }
+        } else {
+          if (block_length < this.max) {
+            str_bin = "0".repeat(this.max - block_length) + str_bin;
           }
         }
-        let rangeEnd = strBin.length;
-        return [this.max - rangeEnd, this.max - rangeStart]
+
+        start = str_bin.indexOf("1") !== -1 ? str_bin.indexOf("1") : 0;
+        end = start + count(str_bin, "1");
+
+        // noinspection UnnecessaryLocalVariableJS
+        let result = [start, end]
+        return result
+
       },
       set(value) {
         if (value[0] - value[1] === 0) {
           this.hexField = this.lastVal;
           return;
         }
-        this.lastVal = value;
-        let result = ""
-        for (let i = 0; i < this.max; i++) {
-          let tmp = null;
-          if (i < value[0]) {
-            tmp = '0'
-          } else if (i < value[1]) {
-            tmp = '1'
-          } else if (i >= value[1]) {
-            tmp = '0'
-          } else {
-            debugger
-            throw new Error('???')
-          }
-          result += tmp;
-        }
-        console.log(result)
-        result = '0x' + (parseInt(result, 2).toString(16))
+        this.lastVal = this.hexField
+        let result = '0'.repeat(value[0]) + '1'.repeat(value[1] - value[0]) + '0'.repeat(this.max - value[1])
+        result = (parseInt(result, 2).toString(16))
+        let zeroPadding = '0'.repeat(Number.parseInt('1'.repeat(this.max), 2).toString(16).length - result.length)
+        result = '0x' + zeroPadding + result
         console.log(result)
         this.$emit("update:modelValue", result);
       }
@@ -59,6 +72,9 @@ export default {
     return {lastVal: [0, 1]}
   },
   props: {
+    isVcat: {
+      type: Boolean
+    },
     modelValue: {
       type: String
     },
