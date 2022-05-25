@@ -21,14 +21,14 @@
   <xs:assert test="every $pcpu in /acrn-config/vm[load_order = 'PRE_LAUNCHED_VM']//cpu_affinity//pcpu_id satisfies
                    count(/acrn-config/vm[@id != $pcpu/ancestor::vm//companion_vmid ]//cpu_affinity[.//pcpu_id = $pcpu]) &lt;= 1">
     <xs:annotation acrn:severity="error" acrn:report-on="//vm//cpu_affinity[.//pcpu_id = $pcpu]">
-      <xs:documentation>Physical CPU {$pcpu} is assigned to Pre-launched VM "{$pcpu/ancestor::vm/name}" and thus cannot be shared among multiple VMs. Look for, and probably remove, any affinity assignments to {$pcpu} in this VM's settings: {//vm[cpu_affinity//pcpu_id = $pcpu]/name}.</xs:documentation>
+      <xs:documentation>Physical CPU {$pcpu} is assigned to Pre-launched VM [{$pcpu/ancestor::vm/name}] and thus cannot be shared among multiple VMs. Look for, and probably remove, any affinity assignments to {$pcpu} in this VM's settings: {//vm[cpu_affinity//pcpu_id = $pcpu]/name}.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
   <xs:assert test="every $pcpu in /acrn-config/vm[vm_type = 'RTVM']//cpu_affinity//pcpu_id satisfies
                    count(/acrn-config/vm[@id != $pcpu/ancestor::vm//companion_vmid ]//cpu_affinity[.//pcpu_id = $pcpu]) &lt;= 1">
     <xs:annotation acrn:severity="error" acrn:report-on="//vm//cpu_affinity[.//pcpu_id = $pcpu]">
-      <xs:documentation>Physical CPU {$pcpu} is assigned to real-time VM (RTVM) "{$pcpu/ancestor::vm/name}" and thus cannot be shared among multiple VMs. Look for, and probably remove, any affinity assignments to {$pcpu} in this VM's settings: {//vm[cpu_affinity//pcpu_id = $pcpu]/name}.</xs:documentation>
+      <xs:documentation>Physical CPU {$pcpu} is assigned to real-time VM (RTVM) [{$pcpu/ancestor::vm/name}] and thus cannot be shared among multiple VMs. Look for, and probably remove, any affinity assignments to {$pcpu} in this VM's settings: {//vm[cpu_affinity//pcpu_id = $pcpu]/name}.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
