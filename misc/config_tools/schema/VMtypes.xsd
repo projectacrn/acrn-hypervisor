@@ -216,7 +216,7 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
       </xs:annotation>
     </xs:element>
     <xs:element name="io_port" type="HexFormat">
-      <xs:annotation acrn:title="Virtual I/O address" acrn:defaults="[hex(i) for i in range(0x9200, 0x9280, 8)]" acrn:unique-among="//vuart_connection/endpoint[vm_name=$parent/vm_name]/io_port/text()">
+      <xs:annotation acrn:title="Virtual I/O address" acrn:defaults="[hex(i) for i in range(0x9200, 0x9280, 8)]" acrn:unique-among="//vuart_connection/endpoint[vm_name=$parent/vm_name]/io_port/text()" acrn:widget-options="'placeholder':'An address in hexadecimal, e.g. 0x4000'">
         <xs:documentation>Specify the COM base for each legacy virtual UART.</xs:documentation>
       </xs:annotation>
     </xs:element>
