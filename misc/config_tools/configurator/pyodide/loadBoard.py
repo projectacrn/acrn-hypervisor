@@ -4,6 +4,7 @@ __package__ = 'configurator.pyodide'
 import json
 import logging
 import re
+import os
 from copy import deepcopy
 
 import elementpath
@@ -114,15 +115,20 @@ def get_cat_info(soup):
 
 def get_board_info(board, path):
     soup = BeautifulSoup(board, 'xml')
+    # Workaround: The pyodide thinks it runs under os.name == posix.
+    # So os.path.basename will not work on windows.
+    # Here we replace all '\' with '/' to make it work (most of the time).
     try:
-        board_name = re.split('[\\\\/.]', path)[-2]
-        if board_name == 'board':
-            board_name = re.split('[\\\\/.]', path)[-3]
-    except IndexError as e:
+        path = path.replace('\\', '/')
+        fname = os.path.basename(path)
+        basename, _ = os.path.splitext(fname)
+        board_name = basename + '.xml' if basename.endswith('.board') \
+            else basename + '.board.xml'
+    except Exception as e:
         logging.warning(e)
         board_name = 'default'
     result = {
-        'name': board_name + '.board.xml',
+        'name': board_name,
         'content': board,
         'CAT_INFO': get_cat_info(soup),
         'BIOS_INFO': soup.select_one('BIOS_INFO').text,
