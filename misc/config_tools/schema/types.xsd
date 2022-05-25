@@ -14,7 +14,8 @@
 </xs:simpleType>
 
 <xs:simpleType name="HexFormat">
-  <xs:annotation acrn:widget-options="'placeholder': 'A hexadecimal number with a leading 0x, e.g. 0x1000.'">
+  <xs:annotation acrn:widget-options="'placeholder': 'A hexadecimal number with a leading 0x, e.g. 0x1000.'"
+                 acrn:errormsg="'pattern': 'Must be a hexadecimal integer (case-insensitive).'">
     <xs:documentation>An Integer value in hexadecimal format (with a leading ``0x``).</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
@@ -167,7 +168,8 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 </xs:simpleType>
 
 <xs:simpleType name="VMNameType">
-  <xs:annotation acrn:widget-options="'placeholder': 'A string with at most 15 non-space characters, e.g. Linux-VM-1.'">
+  <xs:annotation acrn:widget-options="'placeholder': 'A string with at most 15 non-space characters, e.g. Linux-VM-1.'"
+                 acrn:errormsg="'pattern': 'Must NOT be longer than 15 characters or contain characters other than letters, digits, \'_\' and \'-\'.'">
     <xs:documentation>A string of up to 15 letters, digits, ``_``, or ``-``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
