@@ -46,20 +46,20 @@ vhost_vsock_start(struct vhost_vsock *vhost_vsock)
 	int rc;
 
 	if (vhost_vsock->vhost_started) {
-		pr_err("vhost vsock is already started!\n");
+		pr_err("The vhost vsock is already started, re-using it.\n");
 		return 0;
 	}
 
 	rc = vhost_dev_start(&vhost_vsock->vdev);
 	if (rc < 0) {
-		pr_err("vhost_dev_start is failed!\n");
+		pr_err("vhost_dev_start is failed.\n");
 		return -1;
 	}
 
 	rc = vhost_vsock_set_running(&vhost_vsock->vdev, 1);
 	if (rc < 0) {
 		vhost_dev_stop(&vhost_vsock->vdev);
-		pr_err("vhost_vsock_set_running is failed %d!\n", rc);
+		pr_err("vhost_vsock_set_running is failed with %d.\n", rc);
 		return -1;
 	}
 
@@ -73,7 +73,7 @@ vhost_vsock_stop(struct vhost_vsock *vhost_vsock)
 	int rc;
 
 	if (!vhost_vsock->vhost_started) {
-		pr_err("vhost vsock is not started!\n");
+		pr_err("vhost vsock is not started.\n");
 		return 0;
 	}
 
@@ -85,7 +85,7 @@ vhost_vsock_stop(struct vhost_vsock *vhost_vsock)
 
 	rc = vhost_dev_stop(&vhost_vsock->vdev);
 	if (rc < 0) {
-		pr_err("vhost_dev_stop is failed!\n");
+		pr_err("vhost_dev_stop is failed.\n");
 		return -1;
 	}
 
@@ -101,21 +101,21 @@ virtio_vsock_set_status(void *vdev, uint64_t status)
 	int rc;
 
 	if (!vsock->vhost_vsock) {
-		pr_err("virtio_vsock_set_status vhost is NULL!\n");
+		pr_err("virtio_vsock_set_status vhost is NULL.\n");
 		return;
 	}
 
 	if (should_start) {
 		rc = vhost_vsock_start(vsock->vhost_vsock);
 		if (rc < 0) {
-			pr_err("vhost_vsock_start is failed!\n");
+			pr_err("vhost_vsock_start is failed.\n");
 			return;
 		}
 	} else if (vsock->vhost_vsock->vhost_started &&
 		should_start == 0) {
 		rc = vhost_vsock_stop(vsock->vhost_vsock);
 		if (rc < 0) {
-			pr_err("vhost_vsock_stop is failed!\n");
+			pr_err("vhost_vsock_stop is failed.\n");
 			return;
 		}
 	}
@@ -146,7 +146,7 @@ virtio_vsock_reset(void *vdev)
 {
 	struct virtio_vsock *vsock = vdev;
 
-	pr_dbg(("vsock: device reset requested!\n"));
+	pr_dbg(("vsock: device reset requested.\n"));
 	/* now reset rings, MSI-X vectors, and negotiated capabilities */
 	virtio_reset_dev(&vsock->base);
 }
@@ -172,7 +172,7 @@ vhost_vsock_init(struct virtio_base *base, int vq_idx)
 
 	vhost_vsock = calloc(1, sizeof(struct vhost_vsock));
 	if (!vhost_vsock) {
-		pr_err(("vhost init out of memory!\n"));
+		pr_err(("vhost init out of memory.\n"));
 		goto fail;
 	}
 
@@ -181,23 +181,23 @@ vhost_vsock_init(struct virtio_base *base, int vq_idx)
 	vhost_vsock->vdev.vqs = vhost_vsock->vqs;
 	vhost_vsock->vhost_fd = open("/dev/vhost-vsock", O_RDWR);;
 	if (vhost_vsock->vhost_fd < 0) {
-		pr_err(("Open vhost-vsock fail, pls open vsock kernel config!\n"));
+		pr_err(("Open vhost-vsock fail, pls open vsock kernel config.\n"));
 		goto fail;
 	}
 	rc = fcntl(vhost_vsock->vhost_fd, F_GETFL);
 	if (rc == -1) {
-		pr_err(("fcntl vhost node fail!\n"));
+		pr_err(("fcntl vhost node fail.\n"));
 		goto fail;
 	}
 	if (fcntl(vhost_vsock->vhost_fd, F_SETFL, rc | O_NONBLOCK) == -1) {
-		pr_err(("fcntl set NONBLOCK fail!\n"));
+		pr_err(("fcntl set NONBLOCK fail.\n"));
 		goto fail;
 	}
 
 	rc = vhost_dev_init(&vhost_vsock->vdev, base, vhost_vsock->vhost_fd, vq_idx,
 		vhost_features, 0, 0);
 	if (rc < 0) {
-		pr_err(("vhost_dev_init failed!\n"));
+		pr_err(("vhost_dev_init failed.\n"));
 		goto fail;
 	}
 
@@ -215,13 +215,13 @@ vhost_vsock_deinit(struct vhost_vsock *vhost_vsock)
 
 	rc = vhost_vsock_stop(vhost_vsock);
 	if (rc < 0) {
-		pr_err("vhost_dev_stop is failed!\n");
+		pr_err("vhost_dev_stop is failed.\n");
 		return -1;
 	}
 
 	rc = vhost_dev_deinit(&vhost_vsock->vdev);
 	if (rc < 0) {
-		pr_err("vhost_dev_deinit is failed!\n");
+		pr_err("vhost_dev_deinit is failed.\n");
 		return -1;
 	}
 	close(vhost_vsock->vhost_fd);
@@ -244,12 +244,12 @@ virtio_vhost_vsock_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char *tmp = NULL;
 
 	if (opts == NULL) {
-		pr_err(("vsock: must have a valid guest_cid!\n"));
+		pr_err(("vsock: must have a valid guest_cid.\n"));
 		return -1;
 	}
 	devopts = tmp = strdup(opts);
 	if (!devopts) {
-		pr_err(("vsock: The vsock parameter is NULL!\n"));
+		pr_err(("vsock: The vsock parameter is NULL.\n"));
 		return -1;
 	}
 	if (!strncmp(tmp, "cid=", 4)) {
@@ -259,13 +259,13 @@ virtio_vhost_vsock_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	free(devopts);
 
 	if (cid <= VMADDR_CID_HOST || cid >= U32_MAX) {
-		pr_err("vsock: guest_cid has to be 0x2~0xffffffff!\n");
+		pr_err("vsock: guest_cid has to be 0x2~0xffffffff.\n");
 		return -1;
 	}
 
 	vsock = calloc(1, sizeof(struct virtio_vsock));
 	if (!vsock) {
-		pr_err("vosck: memory allocate failed!");
+		pr_err("vosck: memory allocate failed.");
 		return -1;
 	}
 
@@ -327,7 +327,7 @@ virtio_vhost_vsock_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		}
 			pr_dbg("%s: done\n", __func__);
 	} else
-		pr_err("%s: NULL!\n", __func__);
+		pr_err("%s: NULL.\n", __func__);
 }
 
 struct pci_vdev_ops pci_ops_vhost_vsock = {
