@@ -205,6 +205,9 @@ export default {
           this.currentFormData = this.scenario.vm[i]
         }
       }
+      if (this.currentFormData['load_order'] === 'SERVICE_VM') {
+        delete this.currentFormSchema.BasicConfigType.properties.vm_type
+      }
     },
     switchTab(tabVMID) {
       this.activeVMID = tabVMID;
