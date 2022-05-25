@@ -594,13 +594,13 @@ class ScenarioUpgrader(ScenarioTransformer):
 
         return False
 
-    def move_enablement(self, xpath, xsd_element_node, xml_parent_node, new_nodes, values_as_enabled = ["y"], values_as_disabled = ["n"]):
+    def move_enablement(self, xpath, xsd_element_node, xml_parent_node, new_nodes, values_as_enabled = ["Enable"], values_as_disabled = ["Disable"]):
         ret = self.move_data_by_xpath(xpath, xsd_element_node, xml_parent_node, new_nodes)
         for n in new_nodes:
             if n.text in values_as_enabled:
-                n.text = "Enable"
+                n.text = "y"
             elif n.text in values_as_disabled:
-                n.text = "Disable"
+                n.text = "n"
         return ret
 
     def move_data_by_xpath(self, xpath, xsd_element_node, xml_parent_node, new_nodes, scenario_xml_only = False, launch_xml_only = False):
