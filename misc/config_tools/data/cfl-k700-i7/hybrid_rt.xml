@@ -122,26 +122,6 @@
   <vm id="1">
     <load_order>SERVICE_VM</load_order>
     <name>ACRN_Service_VM</name>
-    <cpu_affinity>
-      <pcpu>
-        <pcpu_id>0</pcpu_id>
-      </pcpu>
-      <pcpu>
-        <pcpu_id>1</pcpu_id>
-      </pcpu>
-      <pcpu>
-        <pcpu_id>2</pcpu_id>
-      </pcpu>
-      <pcpu>
-        <pcpu_id>3</pcpu_id>
-      </pcpu>
-      <pcpu>
-        <pcpu_id>4</pcpu_id>
-      </pcpu>
-      <pcpu>
-        <pcpu_id>5</pcpu_id>
-      </pcpu>
-    </cpu_affinity>
     <clos>
       <vcpu_clos>0</vcpu_clos>
       <vcpu_clos>0</vcpu_clos>
