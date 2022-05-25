@@ -125,4 +125,7 @@ sed -i '$a GRUB_TIMEOUT=20' ${filename}
 sync
 update-grub
 
+# Enable "systemd-networkd" service
+systemctl enable systemd-networkd
+
 exit 0
