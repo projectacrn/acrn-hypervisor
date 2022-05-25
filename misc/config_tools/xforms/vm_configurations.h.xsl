@@ -64,7 +64,7 @@
     <xsl:if test="count(vm[load_order='SERVICE_VM'])">
       <xsl:value-of select="acrn:comment(concat('SERVICE_VM == VM', vm[load_order='SERVICE_VM']/@id))" />
       <xsl:value-of select="$newline" />
-      <xsl:value-of select="acrn:define('SERVICE_VM_OS_BOOTARGS', 'SERVICE_VM_ROOTFS SERVICE_VM_IDLE SERVICE_VM_BOOTARGS_DIFF', '')" />
+      <xsl:value-of select="acrn:define('SERVICE_VM_OS_BOOTARGS', 'SERVICE_VM_ROOTFS SERVICE_VM_IDLE SERVICE_VM_BOOTARGS_DIFF SERVICE_VM_BOOTARGS_MISC', '')" />
     </xsl:if>
   </xsl:template>
 
