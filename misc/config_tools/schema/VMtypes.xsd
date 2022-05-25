@@ -71,12 +71,14 @@
 <xs:complexType name="EPCSection">
   <xs:sequence>
     <xs:element name="base" type="HexFormat" default="0">
-      <xs:annotation acrn:title="EPC section base" acrn:applicable-vms="pre-launched">
+      <xs:annotation acrn:title="EPC section base" acrn:applicable-vms="pre-launched"
+                     acrn:errormsg="'required': 'EPC section base is required.'">
         <xs:documentation>Specify the enclave page cache (EPC) section base for Intel Software Guard Extensions (SGX). Must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size" type="HexFormat" default="0">
-      <xs:annotation acrn:title="EPC section size (bytes)" acrn:applicable-vms="pre-launched">
+      <xs:annotation acrn:title="EPC section size (bytes)" acrn:applicable-vms="pre-launched"
+                     acrn:errormsg="'required': 'EPC section size is required.'">
         <xs:documentation>Specify the enclave page cache (EPC) section size in bytes for Intel Software Guard Extensions (SGX). Must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -86,12 +88,14 @@
 <xs:complexType name="HPARegionType">
   <xs:sequence>
     <xs:element name="start_hpa" type="HexFormat">
-      <xs:annotation acrn:title="Start physical address">
+      <xs:annotation acrn:title="Start physical address"
+                     acrn:errormsg="'required': 'Physical memory base address is required.'">
         <xs:documentation>Specify the starting address for non-contiguous allocation.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size_hpa" type="xs:integer">
-      <xs:annotation acrn:title="Size (MB)">
+      <xs:annotation acrn:title="Size (MB)"
+                     acrn:errormsg="'required': 'Physical memory size is required.'">
         <xs:documentation>Specify the physical memory size for non-contiguous allocation in megabytes.
 The size is a subset of the VM's total memory size specified on the Basic tab.</xs:documentation>
         </xs:annotation>
@@ -275,7 +279,8 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
   <xs:sequence>
     <xs:element name="usb_dev" type="xs:string" minOccurs="0" maxOccurs="unbounded">
       <xs:annotation acrn:title="USB device assignment"
-	  acrn:options="//usb_device/@description" acrn:options-sorted-by="lambda s: s">
+                     acrn:options="//usb_device/@description" acrn:options-sorted-by="lambda s: s"
+                     acrn:errormsg="'required': 'USB device required. If no USB device is available, click the X at the top right corner of this entry to remove.'">
         <xs:documentation>Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.</xs:documentation>
       </xs:annotation>
     </xs:element>
