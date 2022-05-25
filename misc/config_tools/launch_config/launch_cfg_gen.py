@@ -263,8 +263,8 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
         script.add_virtual_device("uart", options="vuart_idx:0")
 
     for idx, conn in enumerate(eval_xpath_all(hv_scenario_etree, f".//vuart_connection[endpoint/vm_name = '{vm_name}']"), start=1):
-        if eval_xpath(conn, "./type") == "pci":
-            script.add_virtual_device("uart", options="vuart_idx:{idx}")
+        if eval_xpath(conn, "./type/text()") == "pci":
+            script.add_virtual_device("uart", options=f"vuart_idx:{idx}")
 
     # Mediated PCI devices, including virtio
     for usb_xhci in eval_xpath_all(vm_scenario_etree, ".//usb_xhci/usb_dev[text() != '']/text()"):
