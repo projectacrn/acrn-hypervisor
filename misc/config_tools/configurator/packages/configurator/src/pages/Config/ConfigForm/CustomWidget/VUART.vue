@@ -12,7 +12,7 @@
                     <IconInfo/>
                 </template>
                 <span v-html="this.VMConfigType.properties.name.description"></span>
-              </n-popover>VM name:
+              </n-popover>{{vmNameTitle}}
             </label>
           </b-col>
           <b-col md="4">
@@ -37,7 +37,7 @@
                     <IconInfo/>
                 </template>
                 <span v-html="this.VMConfigType.properties.name.description"></span>
-              </n-popover>VM name:
+              </n-popover>{{vmNameTitle}}:
             </label>
           </b-col>
           <b-col md="4">
@@ -56,7 +56,7 @@
                     <IconInfo/>
                 </template>
                 <span v-html="this.VuartConnectionType.properties.type.description"></span>
-              </n-popover>Type: 
+              </n-popover>{{vuartConnectionTypeTitle}}:
             </label>
           </b-col>
           <b-col md="4">
@@ -81,7 +81,7 @@
                 </template>
                 <span v-html="this.VuartEndpointType.io_port.description"></span>
               </n-popover>
-              I/O address:
+              {{vuartVIoPortTitle}}:
             </b-col>
             <b-col sm="4" v-else-if="VUARTConn.type === 'pci'">
               <n-popover trigger="hover" placement="top-start">
@@ -89,7 +89,7 @@
                       <IconInfo/>
                   </template>
                   <span>{{this.VuartEndpointType.vbdf.description}}</span>
-                </n-popover>VBDF
+                </n-popover>{{vuartVBDFTitle}}
             </b-col>
           </b-row>
           <b-row class="justify-content-sm-start align-items-center">
@@ -174,8 +174,15 @@ export default {
     let epTypeProp = this.rootSchema.definitions.VuartEndpointType.properties
     let conTypeProp = this.rootSchema.definitions.VuartConnectionType.properties
     return {
-      VuartType: this.rootSchema.definitions['VuartType']['enum'],
       VuartEndpointType: this.rootSchema.definitions['VuartEndpointType']['properties'],
+      vmNameTitle: epTypeProp.vm_name.title,
+      vuartConnectionTypeTitle: conTypeProp.type.title,
+      vuartEndpointTitle: conTypeProp.endpoint['title'],
+      vuartVIoPortTitle: epTypeProp.io_port.title,
+      vuartVBDFTitle: epTypeProp.vbdf.title,
+      vIoPortPlaceholder: epTypeProp.io_port['ui:options']['placeholder'],
+      vBDFPlaceholder: epTypeProp.vbdf['ui:options']['placeholder'],
+      VuartType,
       IOPortDefault: this.rootSchema.definitions['VuartEndpointType']['properties']['io_port']['default'],
       VMConfigType: this.rootSchema.definitions['VMConfigType'],
       VuartConnectionType: this.rootSchema.definitions['VuartConnectionType'],
