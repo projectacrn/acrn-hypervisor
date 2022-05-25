@@ -54,8 +54,14 @@
           <!--left title-->
           <div v-for="(POLICY,index) in CACHE_ALLOCATION.data.POLICY">
             <div v-if="index===0&&CACHE_ALLOCATION.real_time_count>0">Real-time</div>
-            <div v-if="index===CACHE_ALLOCATION.real_time_count">Standard</div>
-            {{ POLICY.VM }} vCPU {{ POLICY.VCPU }}{{ POLICY.TYPE === 'Unified' ? '' : "_" + POLICY.TYPE }}
+            <div v-if="index===CACHE_ALLOCATION.real_time_count&&CACHE_ALLOCATION.cat_count>0">Standard</div>
+            <div v-if="index===CACHE_ALLOCATION.cat_count">Virtual CAT</div>
+            <text v-if="index<CACHE_ALLOCATION.cat_count">
+              {{ POLICY.VM }} vCPU {{ POLICY.VCPU }}{{ POLICY.TYPE === 'Unified' ? '' : "_" + POLICY.TYPE }}
+            </text>
+            <text v-else>
+              {{ POLICY.VM }}
+            </text>
           </div>
         </div>
         <div class="flex-grow-1">
@@ -70,10 +76,13 @@
           <div>
             <!--right table-->
             <div v-for="(POLICY,index) in CACHE_ALLOCATION.data.POLICY">
-              <div style="height: 33px;width: 100%;background: #bfbfbf"
+              <div class="policyDisabledBlock"
                    v-if="index===CACHE_ALLOCATION.real_time_count && CACHE_ALLOCATION.real_time_count>0"></div>
+              <div class="policyDisabledBlock"
+                   v-if="index===CACHE_ALLOCATION.cat_count && CACHE_ALLOCATION.cat_count>0"></div>
               <HexBlockRangeSelector
                   v-model="POLICY.CLOS_MASK"
+                  :isVcat="index>=CACHE_ALLOCATION.cat_count"
                   :max="CACHE_ALLOCATION.capacity_mask_length"
               />
             </div>
@@ -93,6 +102,10 @@ import _ from "lodash";
 import {vueUtils, fieldProps} from "@lljj/vue3-form-naive";
 import HexBlockRangeSelector from "./CAT/HexBlockRangeSelector.vue";
 
+function count(source, target) {
+  return (source.match(new RegExp(target, 'g')) || []).length;
+}
+
 // noinspection JSUnusedLocalSymbols
 export default {
   name: "CAT",
@@ -110,6 +123,7 @@ export default {
       },
       set(value) {
         vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.VCAT_ENABLED', value)
+        this.updateCatInfo()
       }
     },
     SSRAM_ENABLED: {
@@ -176,13 +190,13 @@ export default {
         alert('Can\'t generate default settings for this region(due to too many realtime cpu)')
         return;
       }
-      for (let policyKey in CACHE_REGION.data.POLICY) {
-        if (policyKey < CACHE_REGION.real_time_count) {
-          CACHE_REGION.data.POLICY[policyKey].CLOS_MASK = '0x' + parseInt(
-              '0'.repeat(policyKey) + '1' + '0'.repeat(CACHE_REGION.capacity_mask_length - policyKey - 1),
+      for (let policyIndex = 0; policyIndex < CACHE_REGION.data.POLICY.length; policyIndex++) {
+        if (policyIndex < CACHE_REGION.real_time_count) {
+          CACHE_REGION.data.POLICY[policyIndex].CLOS_MASK = '0x' + parseInt(
+              '0'.repeat(policyIndex) + '1' + '0'.repeat(CACHE_REGION.capacity_mask_length - policyIndex - 1),
               2).toString(16)
         } else {
-          CACHE_REGION.data.POLICY[policyKey].CLOS_MASK = '0x' + parseInt(
+          CACHE_REGION.data.POLICY[policyIndex].CLOS_MASK = '0x' + parseInt(
               '0'.repeat(CACHE_REGION.real_time_count) + '1'.repeat(CACHE_REGION.capacity_mask_length - CACHE_REGION.real_time_count),
               2).toString(16)
         }
@@ -208,15 +222,20 @@ export default {
       //
       // FEATURES.SSRAM.SSRAM_ENABLED
       // Software SRAM：
-      // get CAT info from board xml
+
+
+      // get settings from formData
       let RDT_ENABLED = this.RDT_ENABLED === 'y'
+      let CDP_ENABLED = this.CDP_ENABLED === 'y'
+      let VCAT_ENABLED = this.VCAT_ENABLED === 'y'
+
       if (!RDT_ENABLED) {
         this.CAT_INFO = null
         return
       }
 
+      // get CAT info from board xml
       let board_cat_info = window.getBoardData().CAT_INFO;
-      let CDP_ENABLED = this.CDP_ENABLED === 'y'
 
       // noinspection JSUnusedLocalSymbols
       let board_cat_info_example = [
@@ -226,7 +245,7 @@ export default {
         }
       ]
 
-      // get scenario   pcpu config
+      // get scenario pcpu config
       let pcpu_vms = {}
       // noinspection JSUnusedLocalSymbols
       let pcpu_vms_example = {
@@ -239,6 +258,13 @@ export default {
           {"VM": "POST_VM_5", "VCPU": 2}
         ]
       }
+
+      let vCats = []
+      // noinspection JSUnusedLocalSymbols
+      let vCatsExample = [
+        {"VM": "VM_C", "VCPU": 0, "CLOS_MASK": 2}
+      ]
+
       window.getCurrentScenarioData().vm.map((vmConfig) => {
         if (
             !vmConfig.hasOwnProperty('cpu_affinity') ||
@@ -246,6 +272,18 @@ export default {
             !_.isArray(vmConfig.cpu_affinity.pcpu)
         ) {
           return
+        }
+
+        // noinspection JSUnresolvedVariable
+        if (
+            VCAT_ENABLED &&
+            vmConfig.hasOwnProperty('virtual_cat_support') &&
+            vmConfig.virtual_cat_support === "y"
+        ) {
+          // noinspection JSUnresolvedVariable
+          vCats.push({"VM": vmConfig.name, "VCPU": 0, "CLOS_MASK": vmConfig.virtual_cat_number})
+          // for enabled virtual_cat_support vm, it doesn't need set CAT
+          return;
         }
 
         vmConfig.cpu_affinity.pcpu.map((pcpu, index) => {
@@ -355,7 +393,10 @@ export default {
             1: {"Code": '0xff0', "Data": '0x00f'} // CDP_ENABLED
           }
         }
-        if (scenario_cat_data.hasOwnProperty(cat_region_info.level) && scenario_cat_data[cat_region_info.level].hasOwnProperty(cat_region_info.id)) {
+        if (
+            scenario_cat_data.hasOwnProperty(cat_region_info.level) &&
+            scenario_cat_data[cat_region_info.level].hasOwnProperty(cat_region_info.id)
+        ) {
           let current_region_scenario_cat_data = scenario_cat_data[cat_region_info.level][cat_region_info.id];
           // noinspection JSUnusedLocalSymbols
           let current_region_scenario_cat_data_example = {
@@ -364,15 +405,15 @@ export default {
             ]
           }
           for (let i = 0; i < current_region_scenario_cat_data.POLICY.length; i++) {
-            let current_policies = current_region_scenario_cat_data.POLICY[i]
-            if (!vmCPUClosMasks.hasOwnProperty(current_policies.VM)) {
-              vmCPUClosMasks[current_policies.VM] = {}
+            let currentRegionScenarioPolicy = current_region_scenario_cat_data.POLICY[i]
+            if (!vmCPUClosMasks.hasOwnProperty(currentRegionScenarioPolicy.VM)) {
+              vmCPUClosMasks[currentRegionScenarioPolicy.VM] = {}
             }
-            if (!vmCPUClosMasks[current_policies.VM].hasOwnProperty(current_policies.VCPU)) {
-              vmCPUClosMasks[current_policies.VM][current_policies.VCPU] = {}
+            if (!vmCPUClosMasks[currentRegionScenarioPolicy.VM].hasOwnProperty(currentRegionScenarioPolicy.VCPU)) {
+              vmCPUClosMasks[currentRegionScenarioPolicy.VM][currentRegionScenarioPolicy.VCPU] = {}
             }
-            if (["Unified", "Code", "Data"].indexOf(current_policies.TYPE) >= 0) {
-              vmCPUClosMasks[current_policies.VM][current_policies.VCPU][current_policies.TYPE] = current_policies.CLOS_MASK
+            if (["Unified", "Code", "Data"].indexOf(currentRegionScenarioPolicy.TYPE) >= 0) {
+              vmCPUClosMasks[currentRegionScenarioPolicy.VM][currentRegionScenarioPolicy.VCPU][currentRegionScenarioPolicy.TYPE] = currentRegionScenarioPolicy.CLOS_MASK
             }
           }
         }
@@ -383,15 +424,25 @@ export default {
           "POLICY": []
         }
 
-        function addCATPolicy(cpu_policies_line, line_type) {
+        function addCATPolicy(cpu_policies_line, line_type, vcat_mask_length = null) {
           cpu_policies_line['TYPE'] = line_type;
-          let clos_mask = "0x" + parseInt('1'.repeat(cat_region_info.capacity_mask_length), 2).toString(16);
+          let clos_mask = "0x" + parseInt('1'.repeat(
+              // if vcat_mask_length is null
+              vcat_mask_length === null ?
+                  // filled by capacity_mask_length
+                  cat_region_info.capacity_mask_length :
+                  // filled by vcat_mask_length
+                  vcat_mask_length
+          ), 2).toString(16);
           if (
               vmCPUClosMasks.hasOwnProperty(cpu_policies_line.VM) &&
               vmCPUClosMasks[cpu_policies_line.VM].hasOwnProperty(cpu_policies_line.VCPU) &&
               vmCPUClosMasks[cpu_policies_line.VM][cpu_policies_line.VCPU].hasOwnProperty(line_type)
           ) {
-            clos_mask = vmCPUClosMasks[cpu_policies_line.VM][cpu_policies_line.VCPU][line_type];
+            let scenario_clos_mask = vmCPUClosMasks[cpu_policies_line.VM][cpu_policies_line.VCPU][line_type];
+            if (vcat_mask_length === null || count(Number.parseInt(scenario_clos_mask).toString(2), '1') === vcat_mask_length) {
+              clos_mask = scenario_clos_mask
+            }
           }
           cpu_policies_line['CLOS_MASK'] = clos_mask;
           cat_region_info.data.POLICY.push(cpu_policies_line)
@@ -415,15 +466,28 @@ export default {
           return CDP_ENABLED ? 2 * cpu_policies.length : cpu_policies.length
         }
 
+        // add rt vm policy
         cat_region_info.real_time_count = 0
         for (let i = 0; i < cat_region_info.processors.length; i++) {
-          let cpu_policies = _.cloneDeep(pcpu_vms[cat_region_info.processors[i]] ? pcpu_vms[cat_region_info.processors[i]]['y'] || [] : []);
+          let pcpu_id = cat_region_info.processors[i];
+          let cpu_policies = _.cloneDeep(pcpu_vms[pcpu_id] ? pcpu_vms[pcpu_id]['y'] || [] : []);
           cat_region_info.real_time_count += addPolicy(cpu_policies)
         }
+        // add std vm policy
+        cat_region_info.cat_count = _.cloneDeep(cat_region_info.real_time_count)
         for (let i = 0; i < cat_region_info.processors.length; i++) {
-          let cpu_policies = _.cloneDeep(pcpu_vms[cat_region_info.processors[i]] ? pcpu_vms[cat_region_info.processors[i]]['n'] || [] : []);
-          addPolicy(cpu_policies)
+          let pcpu_id = cat_region_info.processors[i];
+          let cpu_policies = _.cloneDeep(pcpu_vms[pcpu_id] ? pcpu_vms[pcpu_id]['n'] || [] : []);
+          cat_region_info.cat_count += addPolicy(cpu_policies)
         }
+
+        // add cat vm policy
+        if (cat_region_info.processors.indexOf(0) !== -1) {
+          for (let i = 0; i < vCats.length; i++) {
+            addCATPolicy(_.cloneDeep(vCats[i]), 'Unified', vCats[i].CLOS_MASK)
+          }
+        }
+
       })
 
       this.CAT_INFO = board_cat_info;
@@ -457,6 +521,12 @@ export default {
   color: white;
   text-align: center;
   font-size: 12px;
+}
+
+.policyDisabledBlock {
+  height: 33px;
+  width: 100%;
+  background: #bfbfbf
 }
 
 /*noinspection CssUnusedSymbol*/
