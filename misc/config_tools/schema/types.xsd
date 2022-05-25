@@ -13,16 +13,6 @@
   </xs:restriction>
 </xs:simpleType>
 
-<xs:simpleType name="EnablementType">
-  <xs:annotation>
-    <xs:documentation>A string with value: ``Enable`` or ``Disable``.</xs:documentation>
-  </xs:annotation>
-  <xs:restriction base="xs:string">
-    <xs:enumeration value="Enable" />
-    <xs:enumeration value="Disable" />
-  </xs:restriction>
-</xs:simpleType>
-
 <xs:simpleType name="HexFormat">
   <xs:annotation acrn:widget-options="'placeholder': 'A hexadecimal number with a leading 0x, e.g. 0x1000.'"
                  acrn:errormsg="'pattern': 'Must be a hexadecimal integer (case-insensitive).'">
