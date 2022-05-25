@@ -69,7 +69,7 @@
           />
         </div>
         <div v-if="errors">
-          <div class="px-4" style="color: red" v-for="error in errors">{{ error }}</div>
+          <div class="px-4" style="color: red" v-for="error in errors">{{ error.message }}</div>
         </div>
         <div class="p-4">
           <ConfigForm
