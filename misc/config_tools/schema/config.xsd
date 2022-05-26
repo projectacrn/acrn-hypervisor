@@ -390,12 +390,6 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Specify TPM2 FIXUP for VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="clos" type="CLOSConfiguration">
-      <xs:annotation acrn:views="advanced">
-        <xs:documentation>Class of Service for Cache Allocation Technology.
-Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
     <xs:element name="epc_section" type="EPCSection" minOccurs="0">
       <xs:annotation acrn:title="SGX Enclave Page Cache" acrn:views="advanced" acrn:applicable-vms="pre-launched">
         <xs:documentation>Specify the Intel Software Guard Extensions (SGX) enclave page cache (EPC) section settings.</xs:documentation>

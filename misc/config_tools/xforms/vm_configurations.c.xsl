@@ -106,7 +106,7 @@
     <xsl:call-template name="guest_flags" />
 
     <xsl:if test="acrn:is-rdt-enabled()">
-      <xsl:apply-templates select="clos" />
+      <xsl:call-template name="clos" />
     </xsl:if>
 
     <xsl:call-template name="cpu_affinity" />
@@ -176,14 +176,14 @@
     <xsl:value-of select="acrn:initializer('guest_flags', concat('(', acrn:string-join(//allocation-data/acrn-config/vm[@id=$vm_id]/guest_flags/guest_flag, '|', '', ''),')'))" />
   </xsl:template>
 
-  <xsl:template match="clos">
+  <xsl:template name="clos">
     <xsl:value-of select="acrn:ifdef('CONFIG_RDT_ENABLED')" />
-    <xsl:value-of select="acrn:initializer('pclosids', concat('vm', ../@id, '_vcpu_clos'))" />
+    <xsl:value-of select="acrn:initializer('pclosids', concat('vm', @id, '_vcpu_clos'))" />
 
-    <xsl:variable name="vm_id" select="../@id" />
-    <xsl:variable name="vm_name" select="../name/text()" />
+    <xsl:variable name="vm_id" select="@id" />
+    <xsl:variable name="vm_name" select="name/text()" />
     <xsl:choose>
-      <xsl:when test="acrn:is-vcat-enabled() and ../virtual_cat_support[text() = 'y']">
+      <xsl:when test="acrn:is-vcat-enabled() and virtual_cat_support[text() = 'y']">
         <xsl:value-of select="acrn:initializer('num_pclosids', concat(count(//vm[@id=$vm_id]/virtual_cat_number), 'U'))" />
         <xsl:variable name="rdt_res_str" select="acrn:get-normalized-closinfo-rdt-res-str()" />
 
