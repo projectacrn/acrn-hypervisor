@@ -14,4 +14,26 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $io_port in /acrn-config//endpoint/io_port satisfies
+                   count(//endpoint[./vm_name=$io_port/ancestor::endpoint/vm_name and io_port=$io_port]) = 1">
+    <xs:annotation acrn:severity="error" acrn:report-on="$io_port">
+      <xs:documentation>VM "{$io_port/ancestor::endpoint/vm_name}" use duplicate "{$io_port}"</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $console_port in /acrn-config//console_vuart satisfies
+                   if ($console_port = 'COM Port 1')
+                   then count(//endpoint[./vm_name=$console_port/ancestor::vm/name and io_port='0x3F8']) &lt; 1
+                   else if ($console_port = 'COM Port 2')
+                   then count(//endpoint[./vm_name=$console_port/ancestor::vm/name and io_port='0x2F8']) &lt; 1
+                   else if ($console_port = 'COM Port 3')
+                   then count(//endpoint[./vm_name=$console_port/ancestor::vm/name and io_port='0x3E8']) &lt; 1
+                   else if ($console_port = 'COM Port 4')
+                   then count(//endpoint[./vm_name=$console_port/ancestor::vm/name and io_port='0x2E8']) &lt; 1
+                   else true()">
+    <xs:annotation acrn:severity="error" acrn:report-on="$console_port">
+      <xs:documentation>VM "{$console_port/ancestor::vm/name}" use duplicate "{$console_port}"</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
