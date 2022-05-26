@@ -100,7 +100,7 @@ These settings can only be changed at build time.</xs:documentation>
     </xs:element>
     <xs:element name="ACPI_PARSE_ENABLED" type="Boolean" default="y">
       <xs:annotation acrn:title="Parse ACPI tables" acrn:views="advanced">
-        <xs:documentation>Enable ACPI runtime parsing to get DMAR (DMA remapping) configuration data from the APCI tables. Otherwise, use existing, static information from the associated board configuration file.</xs:documentation>
+        <xs:documentation>Enable ACPI runtime parsing to get DMAR (DMA remapping) configuration data from the ACPI tables. Otherwise, use existing, static information from the associated board configuration file.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="y">
@@ -257,12 +257,6 @@ These settings can only be changed at build time.</xs:documentation>
   <xs:all>
     <xs:element name="FEATURES" type="FeatureOptionsType">
       <xs:annotation acrn:title="Hypervisor features" acrn:views="basic, advanced">
-	<xs:documentation>Enable hypervisor features.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="DEBUG_OPTIONS" type="DebugOptionsType">
-      <xs:annotation acrn:title="Debug options" acrn:views="basic">
-	<xs:documentation>Configure the debug facilities.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="vuart_connections" type="VuartConnectionsType">
@@ -271,14 +265,17 @@ These settings can only be changed at build time.</xs:documentation>
 Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="DEBUG_OPTIONS" type="DebugOptionsType">
+      <xs:annotation acrn:title="Debug options" acrn:views="basic">
+	<xs:documentation>Configure the debug facilities.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="MEMORY" type="MemoryOptionsType">
       <xs:annotation acrn:title="Memory options" acrn:views="advanced">
-	<xs:documentation>Configure memory used by the hypervisor.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CAPACITIES" type="CapacitiesOptionsType">
       <xs:annotation acrn:title="Hypervisor capacities" acrn:views="advanced">
-	<xs:documentation>Configure the capacities of the hypervisor.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MISC_CFG" type="MiscCfgOptionsType">
@@ -321,6 +318,10 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
 	<xs:documentation>Select the OS type for this VM. This is required to run Windows in a User VM. See :ref:`acrn-dm_parameters` for how to include this in the Device Model arguments.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="memory" type="MemoryInfo" minOccurs="0">
+      <xs:annotation acrn:title="Memory" acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
+      </xs:annotation>
+    </xs:element>
     <xs:element name="vuart0" type="Boolean" default="y">
       <xs:annotation acrn:title="Emulate COM1 as stdio I/O" acrn:applicable-vms="post-launched" acrn:views="basic">
 	<xs:documentation>Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.</xs:documentation>
@@ -331,8 +332,13 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="cpu_affinity" type="CPUAffinityConfigurations" minOccurs="0">
+      <xs:annotation acrn:title="Physical CPU affinity" acrn:views="basic" acrn:applicable-vms="pre-launched, post-launched">
+        <xs:documentation>Select a subset of physical CPUs that this VM can use. More than one can be selected.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="usb_xhci" type="USBDevsConfiguration" minOccurs="0">
-      <xs:annotation acrn:title="Virtual USB HCI" acrn:views="basic" acrn:applicable-vms="post-launched">
+        <xs:annotation acrn:title="Virtual USB HCI device assignment" acrn:views="basic" acrn:applicable-vms="post-launched">
         <xs:documentation>Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -384,11 +390,6 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Specify TPM2 FIXUP for VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="cpu_affinity" type="CPUAffinityConfigurations" minOccurs="0">
-      <xs:annotation acrn:title="Physical CPU affinity" acrn:views="basic" acrn:applicable-vms="pre-launched, post-launched">
-        <xs:documentation>Select a subset of physical CPUs that this VM can use. More than one can be selected.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
     <xs:element name="clos" type="CLOSConfiguration">
       <xs:annotation acrn:views="advanced">
         <xs:documentation>Class of Service for Cache Allocation Technology.
@@ -398,10 +399,6 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
     <xs:element name="epc_section" type="EPCSection" minOccurs="0">
       <xs:annotation acrn:title="SGX Enclave Page Cache" acrn:views="advanced" acrn:applicable-vms="pre-launched">
         <xs:documentation>Specify the Intel Software Guard Extensions (SGX) enclave page cache (EPC) section settings.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="memory" type="MemoryInfo" minOccurs="0">
-      <xs:annotation acrn:title="" acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
       </xs:annotation>
     </xs:element>
     <xs:element name="priority" type="PriorityType"  default="PRIO_LOW">
@@ -422,7 +419,7 @@ argument and memory.</xs:documentation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
       <xs:annotation acrn:title="MMIO Resources" acrn:applicable-vms="pre-launched" acrn:views="basic">
-        <xs:documentation>MMIO resources to passthrough.</xs:documentation>
+        <xs:documentation>Memory-mapped IO (MMIO) resources to passthrough.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="pt_intx" type="xs:string" minOccurs="0">
@@ -432,7 +429,7 @@ argument and memory.</xs:documentation>
     </xs:element>
     <xs:element name="pci_devs" type="PCIDevsConfiguration" minOccurs="0">
       <xs:annotation acrn:title="PCI device assignment" acrn:applicable-vms="pre-launched, post-launched" acrn:views="basic">
-        <xs:documentation />
+        <xs:documentation>Select the PCI devices you want to assign to this virtual machine.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="PTM" type="Boolean" default="y" minOccurs="0">
@@ -448,7 +445,7 @@ argument and memory.</xs:documentation>
         <xs:all>
           <xs:element name="gpu" type="xs:string" minOccurs="0">
             <xs:annotation acrn:title="Virtio GPU device" acrn:views="basic"
-                           acrn:widget-options="'placeholder': 'fullscreen or geometry=[width]x[height]+[x offset]+[y offset], e.g. geometry=1280x720+0+0 specifies a 1280 x 720 pixels region at the top left corner of the screan'">
+                           acrn:widget-options="'placeholder': 'fullscreen or geometry=[width]x[height]+[x offset]+[y offset], e.g. geometry=1280x720+0+0 specifies a 1280 x 720 pixels region at the top left corner of the screen'">
               <xs:documentation>The virtio GPU device presents a GPU device to the VM.
 This feature enables you to view the VM's GPU output in the Service VM.</xs:documentation>
             </xs:annotation>
