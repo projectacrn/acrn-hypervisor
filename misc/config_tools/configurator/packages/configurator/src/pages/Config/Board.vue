@@ -132,6 +132,10 @@ export default {
       let filepath = ''
       if (useNewFile) {
         filepath = this.newFilePath
+        if (filepath != this.currentSelectedBoard) {
+          configurator.removeFile(this.currentSelectedBoard)
+          .catch((err) => alert(`${err}`))
+        }
       } else {
         filepath = this.currentSelectedBoard
       }
