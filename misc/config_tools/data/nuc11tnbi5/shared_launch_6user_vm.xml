@@ -54,18 +54,6 @@
           <io_port>0x3F</io_port>
         </endpoint>
       </vuart_connection>
-      <vuart_connection>
-        <name>Connection_2</name>
-        <type>pci</type>
-        <endpoint>
-          <vm_name>ACRN_Service_VM</vm_name>
-          <vbdf>00:10.0</vbdf>
-        </endpoint>
-        <endpoint>
-          <vm_name>POST_RT_VM1</vm_name>
-          <vbdf>00:10.0</vbdf>
-        </endpoint>
-      </vuart_connection>
     </vuart_connections>
   </hv>
   <vm id="0">
