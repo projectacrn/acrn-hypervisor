@@ -137,8 +137,8 @@ export default {
         this.defaultVal = []
       }
       this.defaultVal.push({
-        "use_type": this.ConsoleUseType,
-        "backend_type": this.ConsoleBackendType,
+        "use_type": "",
+        "backend_type": "",
         "output_file_path": "",
         "sock_file_path": "",
         "tty_device_path": "",
