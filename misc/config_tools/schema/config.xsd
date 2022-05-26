@@ -357,6 +357,11 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Enable nested virtualization for KVM.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="virtual_cat_support" type="Boolean" default="n" minOccurs="0">
+      <xs:annotation acrn:title="VM Virtual Cache Allocation Tech" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
+        <xs:documentation>Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="virtual_cat_number" default="0" minOccurs="0">
       <xs:annotation acrn:title="Maximum virtual CLOS" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
         <xs:documentation>Max number of virtual CLOS MASK</xs:documentation>
@@ -369,11 +374,6 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
           <xs:minInclusive value="0" />
         </xs:restriction>
       </xs:simpleType>
-    </xs:element>
-    <xs:element name="virtual_cat_support" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:title="VM Virtual Cache Allocation Tech" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
-        <xs:documentation>Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.</xs:documentation>
-      </xs:annotation>
     </xs:element>
     <xs:element name="secure_world_support" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:views="">
@@ -388,12 +388,6 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
     <xs:element name="security_vm" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:views="">
         <xs:documentation>Specify TPM2 FIXUP for VM.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="clos" type="CLOSConfiguration">
-      <xs:annotation acrn:views="advanced">
-        <xs:documentation>Class of Service for Cache Allocation Technology.
-Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="epc_section" type="EPCSection" minOccurs="0">
