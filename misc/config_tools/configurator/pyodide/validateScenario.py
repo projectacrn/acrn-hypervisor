@@ -6,18 +6,21 @@ from tempfile import TemporaryDirectory
 
 from scenario_config.default_populator import DefaultValuePopulatingStage
 from scenario_config.pipeline import PipelineObject, PipelineEngine
-from scenario_config.validator import ValidatorConstructionByFileStage, SemanticValidationStage
+from scenario_config.validator import ValidatorConstructionByFileStage, SemanticValidationStage, \
+    SyntacticValidationStage
 from scenario_config.xml_loader import XMLLoadStage
 
 from .pyodide import (
     convert_result, write_temp_file,
+    # Todo: add debug switch
+    # is_debug,
     nuc11_board, nuc11_scenario, scenario_xml_schema_path, datachecks_xml_schema_path
 )
 
 
 def main(board, scenario):
     pipeline = PipelineEngine(["board_path", "scenario_path", "schema_path", "datachecks_path"])
-    pipeline.add_stages([
+    stages = [
         ValidatorConstructionByFileStage(),
         XMLLoadStage("schema"),
 
@@ -25,7 +28,12 @@ def main(board, scenario):
         XMLLoadStage("scenario"),
         DefaultValuePopulatingStage(),
         SemanticValidationStage(),
-    ])
+    ]
+    #
+    # if is_debug:
+    #     stages.append(SyntacticValidationStage())
+
+    pipeline.add_stages(stages)
     with TemporaryDirectory() as tmpdir:
         write_temp_file(tmpdir, {
             'board.xml': board,
