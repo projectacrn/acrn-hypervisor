@@ -201,7 +201,9 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
     <xs:enumeration value="COM Port 2" />
     <xs:enumeration value="COM Port 3" />
     <xs:enumeration value="COM Port 4" />
-    <xs:enumeration value="PCI" />
+    <xs:enumeration value="PCI" >
+      <xs:annotation acrn:views="" />
+    </xs:enumeration>
   </xs:restriction>
 </xs:simpleType>
 
