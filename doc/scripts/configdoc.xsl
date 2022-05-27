@@ -61,20 +61,22 @@
       </xsl:when>
       <xsl:when test="//xs:complexType[@name=$ty]">
         <!-- The section header -->
-        <xsl:if test="$level &lt;= 4">
-          <xsl:call-template name="section-header">
-            <xsl:with-param name="title" select="$dxnamePure"/>
-            <xsl:with-param name="label" select="concat($prefix, $dxname)"/>
-            <xsl:with-param name="level" select="$level"/>
-          </xsl:call-template>
-          <!-- Description of this menu / entry -->
-          <xsl:call-template name="print-annotation">
-            <xsl:with-param name="indent" select="''"/>
-          </xsl:call-template>
-          <xsl:value-of select="$newline"/>
-          <!-- use a glossary to show a (sorted) list of config options in this section -->
-          <xsl:value-of select="concat('.. glossary::',$newline,$newline)"/>
-              <!-- <xsl:value-of select="concat('.. glossary::',$newline,' :sorted:',$newline,$newline)"/> -->
+          <xsl:if test="$level &lt;= 4">
+              <xsl:if test="$dxnamePure!=''">
+              <xsl:call-template name="section-header">
+                <xsl:with-param name="title" select="$dxnamePure"/>
+                <xsl:with-param name="label" select="concat($prefix, $dxname)"/>
+                <xsl:with-param name="level" select="$level"/>
+              </xsl:call-template>
+              <!-- Description of this menu / entry -->
+              <xsl:call-template name="print-annotation">
+                <xsl:with-param name="indent" select="''"/>
+              </xsl:call-template>
+              <xsl:value-of select="$newline"/>
+              <!-- use a glossary to show a (sorted) list of config options in this section -->
+              <xsl:value-of select="concat('.. glossary::',$newline,$newline)"/>
+                      <!-- <xsl:value-of select="concat('.. glossary::',$newline,' :sorted:',$newline,$newline)"/> -->
+                  </xsl:if>
         </xsl:if>
         <!-- Visit the complex type to generate menus and/or entries -->
         <xsl:apply-templates select="//xs:complexType[@name=$ty]">
@@ -201,9 +203,17 @@
     <xsl:param name="level"/>
     <xsl:param name="name"/>
     <xsl:param name="parent"/>
-    <!-- Visit the sub-menus -->
+        <!-- Visit the sub-menus -->
+    <xsl:variable name="newLevel">
+      <xsl:choose>
+        <xsl:when test=".//descendant::xs:annotation/@acrn:title=''">
+          <xsl:value-of select="$level"/>
+        </xsl:when>
+        <xsl:otherwise><xsl:value-of select="$level + 1"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:apply-templates select="descendant::xs:element">
-      <xsl:with-param name="level" select="$level + 1"/>
+      <xsl:with-param name="level" select="$newLevel"/>
       <xsl:with-param name="prefix" select="concat($name, '.')"/>
       <xsl:with-param name="parent" select="$parent"/>
     </xsl:apply-templates>
