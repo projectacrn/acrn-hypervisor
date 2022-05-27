@@ -129,7 +129,7 @@ class Configurator {
         return this.readFile(path).then((fileContent) => {
             let syntactical_errors = this.pythonObject.validateScenarioStructure(fileContent);
             if (syntactical_errors !== "") {
-                throw Error("The file has broken structure.");
+                throw Error("The file has broken structure.\n" + syntactical_errors);
             }
             return this.pythonObject.loadScenario(fileContent)
         })
@@ -140,14 +140,7 @@ class Configurator {
             '@id': vmid,
             load_order: load_order,
             name: `VM${vmid}`,
-            cpu_affinity: {
-                pcpu: [
-                    {
-                        pcpu_id: null,
-                        real_time_vcpu: 'n'
-                    }
-                ]
-            }
+            cpu_affinity: null
         }
     }
 
