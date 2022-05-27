@@ -425,8 +425,13 @@ export default {
           addPolicy(cpu_policies)
         }
       })
-
-      this.CAT_INFO = board_cat_info;
+      this.CAT_INFO = _.cloneDeep(board_cat_info);
+      // remove cache entries that has no policy
+      for (let i = 0; i < this.CAT_INFO.length; i++) {
+        if (this.CAT_INFO[i].data.POLICY.length == 0) {
+          this.CAT_INFO.splice(i--, 1)
+        }
+      }
     }
   }
 }
