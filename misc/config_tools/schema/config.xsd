@@ -256,7 +256,7 @@ These settings can only be changed at build time.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="FEATURES" type="FeatureOptionsType">
-      <xs:annotation acrn:title="Hypervisor features" acrn:views="basic, advanced">
+      <xs:annotation acrn:title="" acrn:views="basic, advanced">
       </xs:annotation>
     </xs:element>
     <xs:element name="vuart_connections" type="VuartConnectionsType">
@@ -318,10 +318,6 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
 	<xs:documentation>Select the OS type for this VM. This is required to run Windows in a User VM. See :ref:`acrn-dm_parameters` for how to include this in the Device Model arguments.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="memory" type="MemoryInfo" minOccurs="0">
-      <xs:annotation acrn:title="Memory" acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
-      </xs:annotation>
-    </xs:element>
     <xs:element name="vuart0" type="Boolean" default="y">
       <xs:annotation acrn:title="Emulate COM1 as stdio I/O" acrn:applicable-vms="post-launched" acrn:views="basic">
 	<xs:documentation>Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.</xs:documentation>
@@ -332,14 +328,17 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Use virtual bootloader OVMF (Open Virtual Machine Firmware) to boot this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="memory" type="MemoryInfo" minOccurs="0">
+      <xs:annotation acrn:title="" acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
+      </xs:annotation>
+    </xs:element>
     <xs:element name="cpu_affinity" type="CPUAffinityConfigurations" minOccurs="0">
       <xs:annotation acrn:title="Physical CPU affinity" acrn:views="basic" acrn:applicable-vms="pre-launched, post-launched">
         <xs:documentation>Select a subset of physical CPUs that this VM can use. More than one can be selected.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="usb_xhci" type="USBDevsConfiguration" minOccurs="0">
-        <xs:annotation acrn:title="Virtual USB HCI device assignment" acrn:views="basic" acrn:applicable-vms="post-launched">
-        <xs:documentation>Select the USB physical bus and port number that will be emulated by the ACRN Device Model for this VM. USB 3.0, 2.0, and 1.0 are supported.</xs:documentation>
+        <xs:annotation acrn:title="" acrn:views="basic" acrn:applicable-vms="post-launched">
       </xs:annotation>
     </xs:element>
     <xs:element name="lapic_passthrough" type="Boolean" default="n" minOccurs="0">
@@ -422,8 +421,7 @@ argument and memory.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="pci_devs" type="PCIDevsConfiguration" minOccurs="0">
-      <xs:annotation acrn:title="PCI device assignment" acrn:applicable-vms="pre-launched, post-launched" acrn:views="basic">
-        <xs:documentation>Select the PCI devices you want to assign to this virtual machine.</xs:documentation>
+      <xs:annotation acrn:title="" acrn:applicable-vms="pre-launched, post-launched" acrn:views="basic">
       </xs:annotation>
     </xs:element>
     <xs:element name="PTM" type="Boolean" default="y" minOccurs="0">
