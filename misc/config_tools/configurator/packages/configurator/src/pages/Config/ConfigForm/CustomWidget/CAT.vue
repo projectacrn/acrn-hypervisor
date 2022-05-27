@@ -31,13 +31,14 @@
         </b-form-checkbox>
       </div>
     </div>
-    <p>
-      L3 Cache Allocation Technology
-      <br/>
-      Drag the ends of the boxes to cover the cache chunks you want to allocate to specific VMs. If you have a real-time
-      VM,ensure its cache chunks do not overlap with any other VM's cache chunks.
-    </p>
     <div class="py-4" v-for="CACHE_ALLOCATION in CAT_INFO" v-if="RDT_ENABLED==='y'">
+      <p v-if="CACHE_ALLOCATION.level===3">
+        L3 Cache Allocation Technology
+        <br/>
+        Drag the ends of the boxes to cover the cache chunks you want to allocate to specific VMs. If you have a
+        real-time
+        VM,ensure its cache chunks do not overlap with any other VM's cache chunks.
+      </p>
       <div class="d-flex justify-content-between py-2 align-items-center">
         <text>
           L{{ CACHE_ALLOCATION.level }} Cache Allocation Technology {{
@@ -106,7 +107,8 @@ function count(source, target) {
   return (source.match(new RegExp(target, 'g')) || []).length;
 }
 
-// noinspection JSUnusedLocalSymbols
+
+// noinspection JSUnresolvedVariable
 export default {
   name: "CAT",
   components: {HexBlockRangeSelector},
@@ -117,21 +119,17 @@ export default {
     this.updateCatInfo()
   },
   computed: {
-    VCAT_ENABLED: {
-      get() {
-        return vueUtils.getPathVal(this.rootFormData, 'FEATURES.RDT.VCAT_ENABLED')
-      },
-      set(value) {
-        vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.VCAT_ENABLED', value)
-        this.updateCatInfo()
-      }
-    },
     SSRAM_ENABLED: {
       get() {
         return vueUtils.getPathVal(this.rootFormData, 'FEATURES.SSRAM.SSRAM_ENABLED')
       },
       set(value) {
         vueUtils.setPathVal(this.rootFormData, 'FEATURES.SSRAM.SSRAM_ENABLED', value)
+        if (value === 'y') {
+          if (this.RDT_ENABLED === 'y') {
+            this.RDT_ENABLED = 'n'
+          }
+        }
       }
     },
     RDT_ENABLED: {
@@ -140,6 +138,19 @@ export default {
       },
       set(value) {
         vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.RDT_ENABLED', value)
+        if (value === 'y') {
+          if (this.SSRAM_ENABLED === 'y') {
+            this.SSRAM_ENABLED = 'n'
+          }
+        }
+        if (value === 'n') {
+          if (this.CDP_ENABLED === 'y') {
+            this.CDP_ENABLED = 'n'
+          }
+          if (this.VCAT_ENABLED === 'y') {
+            this.VCAT_ENABLED = 'n'
+          }
+        }
         this.updateCatInfo()
       }
     },
@@ -149,15 +160,38 @@ export default {
       },
       set(value) {
         vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.CDP_ENABLED', value)
-        this.SSRAM_ENABLED = 'n'
-        this.VCAT_ENABLED = 'n'
+        if (value === 'y') {
+          if (this.SSRAM_ENABLED === 'y') {
+            this.SSRAM_ENABLED = 'n'
+          }
+          if (this.VCAT_ENABLED === 'y') {
+            this.VCAT_ENABLED = 'n'
+          }
+        }
         if (this.RDT_ENABLED !== value) {
           this.RDT_ENABLED = value
-        } else {
-          this.updateCatInfo()
         }
       }
-    }
+    },
+    VCAT_ENABLED: {
+      get() {
+        return vueUtils.getPathVal(this.rootFormData, 'FEATURES.RDT.VCAT_ENABLED')
+      },
+      set(value) {
+        vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.VCAT_ENABLED', value)
+        if (value === 'y') {
+          if (this.SSRAM_ENABLED === 'y') {
+            this.SSRAM_ENABLED = 'n'
+          }
+          if (this.CDP_ENABLED === 'y') {
+            this.CDP_ENABLED = 'n'
+          }
+        }
+        if (this.RDT_ENABLED !== value) {
+          this.RDT_ENABLED = value
+        }
+      }
+    },
   },
   watch: {
     CAT_INFO: {
@@ -203,299 +237,377 @@ export default {
       }
     },
     updateCatInfo() {
-      // Intel Resource Director Tech
-      // Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.
-      //
-      //
-      // FEATURES.RDT.RDT_ENABLED
-      // Intel Resource Director Tech：
-      //
-      // FEATURES.RDT.CDP_ENABLED
-      // Code and Data Prioritization：
-      //
-      // FEATURES.RDT.VCAT_ENABLED
-      // Virtual Cache Allocation Tech：
-      //
-      // Software SRAM
-      // Configure Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.
-      //
-      //
-      // FEATURES.SSRAM.SSRAM_ENABLED
-      // Software SRAM：
-
-
       // get settings from formData
       let RDT_ENABLED = this.RDT_ENABLED === 'y'
       let CDP_ENABLED = this.CDP_ENABLED === 'y'
       let VCAT_ENABLED = this.VCAT_ENABLED === 'y'
 
       if (!RDT_ENABLED) {
-        this.CAT_INFO = null
+        // keep CAT_INFO
         return
       }
 
-      // get CAT info from board xml
-      let board_cat_info = window.getBoardData().CAT_INFO;
+      // get vmConfig from formData
+      // let getCPUAffinity = () => {
+      //   // vmName: {pcpu_id:0, vcpu_id:0, isRT:false}
+      //   let vmCpuAffinity = {};
+      //   window.getCurrentScenarioData().vm.map((vmConfig) => {
+      //     // if this vm is service vm, skip it
+      //     if (vmConfig.load_order === 'SERVICE_VM') {
+      //       return;
+      //     }
+      //
+      //   })
+      // }
 
-      // noinspection JSUnusedLocalSymbols
-      let board_cat_info_example = [
-        {
-          "id": "0x0", "level": 3, "type": "3", "cache_size": 31457280, "capacity_mask_length": 12,
-          "processors": [0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15]
-        }
-      ]
 
-      // get scenario pcpu config
-      let pcpu_vms = {}
-      // noinspection JSUnusedLocalSymbols
-      let pcpu_vms_example = {
-        0: [
-          {"VM": "POST_VM_1", "VCPU": 0},
-          {"VM": "POST_VM_2", "VCPU": 2}
-        ],
-        1: [
-          {"VM": "POST_VM_1", "VCPU": 1},
-          {"VM": "POST_VM_5", "VCPU": 2}
-        ]
-      }
+      let getCurrentFormDataCPUAffinitySettings = () => {
+        /**
+         * let vCatsExample = [
+         *   // VCPU is force set to 0
+         *   // CLOS_MASK is force set to width of capacity_mask_length (for vcat only)
+         *   {"VM": "VM_C", "VCPU": 0, "CLOS_MASK": 2},
+         *   {"VM": "VM_D", "VCPU": 0, "CLOS_MASK": 5},
+         * ]
+         */
+        let vCats = []
+        /**
+         * get pcpu config from current formData
+         * let pcpu_vms_example = {
+         *   0: {
+         *     'y': [],
+         *     'n': [
+         *       {"VM": "POST_VM_1", "VCPU": 0},
+         *       {"VM": "POST_VM_2", "VCPU": 2}
+         *     ]
+         *   },
+         *   1: {
+         *     'y': [
+         *       {"VM": "POST_VM_1", "VCPU": 1}
+         *     ],
+         *     'n': [
+         *       {"VM": "POST_VM_2", "VCPU": 2}
+         *     ]
+         *   }
+         * }
+         */
+        let pcpu_vms = {}
+        let serviceVM = null;
 
-      let vCats = []
-      // noinspection JSUnusedLocalSymbols
-      let vCatsExample = [
-        {"VM": "VM_C", "VCPU": 0, "CLOS_MASK": 2}
-      ]
-
-      window.getCurrentScenarioData().vm.map((vmConfig) => {
-        if (
-            !vmConfig.hasOwnProperty('cpu_affinity') ||
-            !vmConfig.cpu_affinity.hasOwnProperty('pcpu') ||
-            !_.isArray(vmConfig.cpu_affinity.pcpu)
-        ) {
-          return
-        }
-
-        // noinspection JSUnresolvedVariable
-        if (
-            VCAT_ENABLED &&
-            vmConfig.hasOwnProperty('virtual_cat_support') &&
-            vmConfig.virtual_cat_support === "y"
-        ) {
-          // noinspection JSUnresolvedVariable
-          vCats.push({"VM": vmConfig.name, "VCPU": 0, "CLOS_MASK": vmConfig.virtual_cat_number})
-          // for enabled virtual_cat_support vm, it doesn't need set CAT
-          return;
-        }
-
-        vmConfig.cpu_affinity.pcpu.map((pcpu, index) => {
-          if (!pcpu_vms.hasOwnProperty(pcpu.pcpu_id)) {
-            pcpu_vms[pcpu.pcpu_id] = {'y': [], 'n': []}
+        window.getCurrentScenarioData().vm.map((vmConfig) => {
+          // if this vm is service vm, we got it and skip it
+          if (vmConfig.load_order === 'SERVICE_VM') {
+            serviceVM = vmConfig;
+            return;
           }
-          pcpu_vms[pcpu.pcpu_id][
-              // old scenario may not have this attr
-              pcpu.real_time_vcpu ?
-                  // if it had this attr, use it
-                  pcpu.real_time_vcpu :
-                  // doesn't have it, auto set to no
-                  'n'
-              ].push({
-            "VM": vmConfig.name,
-            "VCPU": index
+
+          // no cpu affinity, skip it
+          if (
+              !vmConfig.hasOwnProperty('cpu_affinity') ||
+              !vmConfig.cpu_affinity.hasOwnProperty('pcpu') ||
+              !_.isArray(vmConfig.cpu_affinity.pcpu)
+          ) {
+            return
+          }
+
+          // now, we got pre/post vm config with cpu affinity data here
+
+          // if vcat is enabled in hv, we need to check current vm is enabled vcat
+          // noinspection JSUnresolvedVariable
+          if (
+              VCAT_ENABLED &&
+              vmConfig.hasOwnProperty('virtual_cat_support') &&
+              vmConfig.virtual_cat_support === "y"
+          ) {
+            // if enabled vcat in vmConfig, add vm's vcat config to vCats
+            // noinspection JSUnresolvedVariable
+            vCats.push({"VM": vmConfig.name, "VCPU": 0, "CLOS_MASK": vmConfig.virtual_cat_number})
+            // for enabled virtual_cat_support vm, it doesn't need set CAT
+            return;
+          }
+
+          // get cpu affinity settings from pre/post vms which are not enabled vCAT
+          vmConfig.cpu_affinity.pcpu.map((pcpu, index) => {
+            if (!pcpu_vms.hasOwnProperty(pcpu.pcpu_id)) {
+              pcpu_vms[pcpu.pcpu_id] = {'y': [], 'n': []}
+            }
+            pcpu_vms[pcpu.pcpu_id][
+                // old scenario may not have this attr
+                pcpu.real_time_vcpu ?
+                    // if it had this attr, use it
+                    pcpu.real_time_vcpu :
+                    // doesn't have it, auto set to no
+                    'n'
+                ].push({
+              // '@id': vmConfig['@id'],
+              "VM": vmConfig.name,
+              "VCPU": index,
+            })
           })
         })
-      })
-
-      let scenarioHVCACHE_REGIONData = vueUtils.getPathVal(this.rootFormData, this.curNodePath);
-      // noinspection JSUnusedLocalSymbols
-      let scenarioHVCACHE_REGIONData_data_example = {
-        "CACHE_ALLOCATION": [
-          {
-            "CACHE_ID": "0x8", "CACHE_LEVEL": 2, "POLICY": [
-              {"VM": "POST_RT_VM1", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
-              {"VM": "POST_RT_VM1", "VCPU": 1, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
-              {"VM": "VM4-RTVM2", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
-              {"VM": "VM4-RTVM2", "VCPU": 1, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
-            ]
-          },
-          {
-            "CACHE_ID": "0x9", "CACHE_LEVEL": 2, "POLICY": [
-              {"VM": "VM5-RTVM3", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
-              {"VM": "VM5-RTVM3", "VCPU": 1, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
-              {"VM": "VM6-RTVM4", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
-              {"VM": "VM6-RTVM4", "VCPU": 1, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
-            ]
-          }
-        ]
+        // generate service vm cpu affinity setting
+        if (serviceVM !== null) {
+          let serviceVMCPUIndex = 0;
+          Object.keys(pcpu_vms).map((pcpu_id) => {
+            // if this core is not used as rt core,
+            // use it as service vm cpu
+            if (pcpu_vms[pcpu_id].y.length === 0) {
+              pcpu_vms[pcpu_id].n.push({
+                // '@id': serviceVM['@id'],
+                "VM": serviceVM.name,
+                "VCPU": serviceVMCPUIndex
+              })
+              serviceVMCPUIndex++;
+            }
+          })
+        }
+        return {
+          vCats: vCats,
+          pcpu_vms: pcpu_vms,
+          serviceVM: serviceVM
+        }
       }
 
-      // load data from scenario
-      let scenario_cat_data = {}
-      // noinspection JSUnresolvedVariable
-      if (
-          scenarioHVCACHE_REGIONData !== null &&
-          scenarioHVCACHE_REGIONData.hasOwnProperty('CACHE_ALLOCATION') &&
-          _.isArray(scenarioHVCACHE_REGIONData.CACHE_ALLOCATION)
-      ) {
+      let getScenarioCATData = () => {
+        /**
+         *  load data from scenario
+         *  let scenarioHVCACHE_REGIONData_data_example = {
+         *   "CACHE_ALLOCATION": [
+         *     {
+         *       "CACHE_ID": "0x8", "CACHE_LEVEL": 2, "POLICY": [
+         *         {"VM": "POST_RT_VM1", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
+         *         {"VM": "POST_RT_VM1", "VCPU": 1, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
+         *         {"VM": "VM4-RTVM2", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
+         *         {"VM": "VM4-RTVM2", "VCPU": 1, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
+         *       ]
+         *     },
+         *     {
+         *       "CACHE_ID": "0x9", "CACHE_LEVEL": 2, "POLICY": [
+         *         {"VM": "VM5-RTVM3", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
+         *         {"VM": "VM5-RTVM3", "VCPU": 1, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
+         *         {"VM": "VM6-RTVM4", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"},
+         *         {"VM": "VM6-RTVM4", "VCPU": 1, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
+         *       ]
+         *     }
+         *   ]
+         * }
+         */
+        let scenarioHVCACHE_REGIONData = vueUtils.getPathVal(this.rootFormData, this.curNodePath);
+
+        /**
+         * let scenario_cat_data_example = {
+         *   2: {
+         *     '0x7': {
+         *       "CACHE_ID": "0x7", "CACHE_LEVEL": 2, "POLICY": [
+         *         {"VM": "POST_RT_VM1", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
+         *       ]
+         *     },
+         *     '0x8': {
+         *       "CACHE_ID": "0x8", "CACHE_LEVEL": 2, "POLICY": [
+         *         {"VM": "POST_RT_VM1", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
+         *       ]
+         *     }
+         *   },
+         *   3: {
+         *     '0x0': {}
+         *   }
+         * }
+         */
+        let scenario_cat_data = {}
         // noinspection JSUnresolvedVariable
-        scenarioHVCACHE_REGIONData.CACHE_ALLOCATION.map((cache_region) => {
-          if (!scenario_cat_data.hasOwnProperty(cache_region['CACHE_LEVEL'])) {
-            scenario_cat_data[cache_region['CACHE_LEVEL']] = {}
-          }
-          scenario_cat_data[cache_region['CACHE_LEVEL']][cache_region['CACHE_ID']] = cache_region
-        })
-      }
-
-      // noinspection JSUnusedLocalSymbols
-      let scenario_cat_data_example = {
-        2: {
-          '0x7': {
-            "CACHE_ID": "0x7", "CACHE_LEVEL": 2, "POLICY": [
-              {"VM": "POST_RT_VM1", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
-            ]
-          },
-          '0x8': {
-            "CACHE_ID": "0x8", "CACHE_LEVEL": 2, "POLICY": [
-              {"VM": "POST_RT_VM1", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
-            ]
-          }
-        },
-        3: {
-          '0x0': {}
-        }
-      }
-
-      this.cat_level_region_sum = {}
-      // noinspection JSUnusedLocalSymbols
-      let cat_level_region_sum_example = {
-        2: {
-          count: 2,
-          '0x8': 1,
-          '0x9': 2
-        },
-        3: {
-          count: 1,
-          '0x0': 1
-        }
-      }
-      board_cat_info.map((cat_region_info) => {
-        // count regions for each cat level
-        if (!this.cat_level_region_sum.hasOwnProperty(cat_region_info.level)) {
-          this.cat_level_region_sum[cat_region_info.level] = {count: 0};
-        }
-        this.cat_level_region_sum[cat_region_info.level].count += 1
-        this.cat_level_region_sum[cat_region_info.level][cat_region_info.id] = this.cat_level_region_sum[cat_region_info.level].count;
-
-        // get vm cpu clos_mask from scenario
-        let vmCPUClosMasks = {}
-        // noinspection JSUnusedLocalSymbols
-        let vmCPUClosMasks_example = {
-          'VM_NAME': {
-            0: {"Unified": '0xfff'},
-            1: {"Code": '0xff0', "Data": '0x00f'} // CDP_ENABLED
-          }
-        }
         if (
-            scenario_cat_data.hasOwnProperty(cat_region_info.level) &&
-            scenario_cat_data[cat_region_info.level].hasOwnProperty(cat_region_info.id)
+            scenarioHVCACHE_REGIONData !== null &&
+            scenarioHVCACHE_REGIONData.hasOwnProperty('CACHE_ALLOCATION') &&
+            _.isArray(scenarioHVCACHE_REGIONData.CACHE_ALLOCATION)
         ) {
-          let current_region_scenario_cat_data = scenario_cat_data[cat_region_info.level][cat_region_info.id];
-          // noinspection JSUnusedLocalSymbols
-          let current_region_scenario_cat_data_example = {
-            "CACHE_ID": "0x7", "CACHE_LEVEL": 2, "POLICY": [
-              {"VM": "POST_RT_VM1", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
-            ]
-          }
-          for (let i = 0; i < current_region_scenario_cat_data.POLICY.length; i++) {
-            let currentRegionScenarioPolicy = current_region_scenario_cat_data.POLICY[i]
-            if (!vmCPUClosMasks.hasOwnProperty(currentRegionScenarioPolicy.VM)) {
-              vmCPUClosMasks[currentRegionScenarioPolicy.VM] = {}
+          // noinspection JSUnresolvedVariable
+          scenarioHVCACHE_REGIONData.CACHE_ALLOCATION.map((cache_region) => {
+            if (!scenario_cat_data.hasOwnProperty(cache_region['CACHE_LEVEL'])) {
+              scenario_cat_data[cache_region['CACHE_LEVEL']] = {}
             }
-            if (!vmCPUClosMasks[currentRegionScenarioPolicy.VM].hasOwnProperty(currentRegionScenarioPolicy.VCPU)) {
-              vmCPUClosMasks[currentRegionScenarioPolicy.VM][currentRegionScenarioPolicy.VCPU] = {}
-            }
-            if (["Unified", "Code", "Data"].indexOf(currentRegionScenarioPolicy.TYPE) >= 0) {
-              vmCPUClosMasks[currentRegionScenarioPolicy.VM][currentRegionScenarioPolicy.VCPU][currentRegionScenarioPolicy.TYPE] = currentRegionScenarioPolicy.CLOS_MASK
-            }
-          }
+            scenario_cat_data[cache_region['CACHE_LEVEL']][cache_region['CACHE_ID']] = cache_region
+          })
         }
-
-        cat_region_info['data'] = {
-          "CACHE_ID": cat_region_info.id,
-          "CACHE_LEVEL": cat_region_info.level,
-          "POLICY": []
-        }
-
-        function addCATPolicy(cpu_policies_line, line_type, vcat_mask_length = null) {
-          cpu_policies_line['TYPE'] = line_type;
-          let clos_mask = "0x" + parseInt('1'.repeat(
-              // if vcat_mask_length is null
-              vcat_mask_length === null ?
-                  // filled by capacity_mask_length
-                  cat_region_info.capacity_mask_length :
-                  // filled by vcat_mask_length
-                  vcat_mask_length
-          ), 2).toString(16);
-          if (
-              vmCPUClosMasks.hasOwnProperty(cpu_policies_line.VM) &&
-              vmCPUClosMasks[cpu_policies_line.VM].hasOwnProperty(cpu_policies_line.VCPU) &&
-              vmCPUClosMasks[cpu_policies_line.VM][cpu_policies_line.VCPU].hasOwnProperty(line_type)
-          ) {
-            let scenario_clos_mask = vmCPUClosMasks[cpu_policies_line.VM][cpu_policies_line.VCPU][line_type];
-            if (vcat_mask_length === null || count(Number.parseInt(scenario_clos_mask).toString(2), '1') === vcat_mask_length) {
-              clos_mask = scenario_clos_mask
-            }
-          }
-          cpu_policies_line['CLOS_MASK'] = clos_mask;
-          cat_region_info.data.POLICY.push(cpu_policies_line)
-        }
-
-        function addPolicy(cpu_policies) {
-          // noinspection JSUnusedLocalSymbols
-          let cpu_policies_example = [
-            {"VM": "POST_VM_1", "VCPU": 0},
-            {"VM": "POST_VM_2", "VCPU": 2}
-          ]
-          for (let j = 0; j < cpu_policies.length; j++) {
-            let cpu_policies_line = cpu_policies[j];
-            if (CDP_ENABLED) {
-              addCATPolicy(cpu_policies_line, "Code")
-              addCATPolicy(_.cloneDeep(cpu_policies_line), "Data")
-            } else {
-              addCATPolicy(cpu_policies_line, "Unified")
-            }
-          }
-          return CDP_ENABLED ? 2 * cpu_policies.length : cpu_policies.length
-        }
-
-        // add rt vm policy
-        cat_region_info.real_time_count = 0
-        for (let i = 0; i < cat_region_info.processors.length; i++) {
-          let pcpu_id = cat_region_info.processors[i];
-          let cpu_policies = _.cloneDeep(pcpu_vms[pcpu_id] ? pcpu_vms[pcpu_id]['y'] || [] : []);
-          cat_region_info.real_time_count += addPolicy(cpu_policies)
-        }
-        // add std vm policy
-        cat_region_info.cat_count = _.cloneDeep(cat_region_info.real_time_count)
-        for (let i = 0; i < cat_region_info.processors.length; i++) {
-          let pcpu_id = cat_region_info.processors[i];
-          let cpu_policies = _.cloneDeep(pcpu_vms[pcpu_id] ? pcpu_vms[pcpu_id]['n'] || [] : []);
-          cat_region_info.cat_count += addPolicy(cpu_policies)
-        }
-
-        // add cat vm policy
-        if (cat_region_info.processors.indexOf(0) !== -1) {
-          for (let i = 0; i < vCats.length; i++) {
-            addCATPolicy(_.cloneDeep(vCats[i]), 'Unified', vCats[i].CLOS_MASK)
-          }
-        }
-
-      })
-      this.CAT_INFO = _.cloneDeep(board_cat_info);
-      // remove cache entries that has no policy
-      for (let i = 0; i < this.CAT_INFO.length; i++) {
-        if (this.CAT_INFO[i].data.POLICY.length == 0) {
-          this.CAT_INFO.splice(i--, 1)
-        }
+        return scenario_cat_data
       }
+
+
+      let mergeAndGenerateData = (currentFormDataCPUAffinitySettings, scenarioCatData) => {
+
+        /**
+         * get CAT info from board xml
+         * let board_cat_info_example = [
+         *   {
+         *     "id": "0x0", "level": 3, "type": "3", "cache_size": 31457280, "capacity_mask_length": 12,
+         *     "processors": [0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15]
+         *   }
+         * ]
+         */
+
+        /**
+         * let cat_level_region_sum_example = {
+         *   2: {
+         *     count: 2,
+         *     '0x8': 1,
+         *     '0x9': 2
+         *   },
+         *   3: {
+         *     count: 1,
+         *     '0x0': 1
+         *   }
+         * }
+         */
+
+        let scenario_cat_data = scenarioCatData
+        let {pcpu_vms, vCats} = currentFormDataCPUAffinitySettings;
+
+        this.cat_level_region_sum = {}
+
+        let board_cat_info = _.cloneDeep(window.getBoardData().CAT_INFO);
+
+        board_cat_info.map((
+            cat_region_info
+        ) => {
+
+          // count regions for each cat level
+          if (!this.cat_level_region_sum.hasOwnProperty(cat_region_info.level)) {
+            this.cat_level_region_sum[cat_region_info.level] = {count: 0};
+          }
+          this.cat_level_region_sum[cat_region_info.level].count += 1
+          this.cat_level_region_sum[cat_region_info.level][cat_region_info.id] = this.cat_level_region_sum[cat_region_info.level].count;
+
+          /**
+           * get vm cpu clos_mask from scenario
+           * let vmCPUClosMasks_example = {
+           *   'VM_NAME': {
+           *     // vcpu_id: {type: clos_mask}
+           *     0: {"Unified": '0xfff'},
+           *     1: {"Code": '0xff0', "Data": '0x00f'} // CDP_ENABLED
+           *   }
+           * }
+           */
+          let vmCPUClosMasks = {}
+          if (
+              scenario_cat_data.hasOwnProperty(cat_region_info.level) &&
+              scenario_cat_data[cat_region_info.level].hasOwnProperty(cat_region_info.id)
+          ) {
+            /**
+             *  let current_region_scenario_cat_data_example = {
+             *   "CACHE_ID": "0x7", "CACHE_LEVEL": 2, "POLICY": [
+             *     {"VM": "POST_RT_VM1", "VCPU": 0, "TYPE": "Unified", "CLOS_MASK": "0x0fff"}
+             *   ]
+             * }
+             */
+            let current_region_scenario_cat_data = scenario_cat_data[cat_region_info.level][cat_region_info.id];
+
+            for (let i = 0; i < current_region_scenario_cat_data.POLICY.length; i++) {
+              let currentRegionScenarioPolicy = current_region_scenario_cat_data.POLICY[i]
+              if (!vmCPUClosMasks.hasOwnProperty(currentRegionScenarioPolicy.VM)) {
+                vmCPUClosMasks[currentRegionScenarioPolicy.VM] = {}
+              }
+              if (!vmCPUClosMasks[currentRegionScenarioPolicy.VM].hasOwnProperty(currentRegionScenarioPolicy.VCPU)) {
+                vmCPUClosMasks[currentRegionScenarioPolicy.VM][currentRegionScenarioPolicy.VCPU] = {}
+              }
+              if (["Unified", "Code", "Data"].indexOf(currentRegionScenarioPolicy.TYPE) >= 0) {
+                vmCPUClosMasks[currentRegionScenarioPolicy.VM][currentRegionScenarioPolicy.VCPU][currentRegionScenarioPolicy.TYPE] = currentRegionScenarioPolicy.CLOS_MASK
+              }
+            }
+          }
+
+          cat_region_info['data'] = {
+            "CACHE_ID": cat_region_info.id,
+            "CACHE_LEVEL": cat_region_info.level,
+            "POLICY": []
+          }
+
+          function addCATPolicy(cpu_policy_line, line_type, vcat_mask_length = null) {
+            let cpu_policy = _.cloneDeep(cpu_policy_line)
+            cpu_policy['TYPE'] = line_type;
+            // noinspection JSUnresolvedVariable
+            let clos_mask = "0x" + parseInt('1'.repeat(
+                // if vcat_mask_length is not null
+                vcat_mask_length !== null ?
+                    // filled by vcat_mask_length
+                    vcat_mask_length :
+                    // filled by capacity_mask_length
+                    cat_region_info.capacity_mask_length
+            ), 2).toString(16);
+            if (
+                vmCPUClosMasks.hasOwnProperty(cpu_policy.VM) &&
+                vmCPUClosMasks[cpu_policy.VM].hasOwnProperty(cpu_policy.VCPU) &&
+                vmCPUClosMasks[cpu_policy.VM][cpu_policy.VCPU].hasOwnProperty(line_type)
+            ) {
+              let scenario_clos_mask = vmCPUClosMasks[cpu_policy.VM][cpu_policy.VCPU][line_type];
+              if (vcat_mask_length === null || count(Number.parseInt(scenario_clos_mask).toString(2), '1') === vcat_mask_length) {
+                clos_mask = scenario_clos_mask
+              }
+            }
+            cpu_policy['CLOS_MASK'] = clos_mask;
+            cat_region_info.data.POLICY.push(cpu_policy)
+          }
+
+          /**
+           * let cpu_policies_example = [
+           *   {"VM": "POST_VM_1", "VCPU": 0},
+           *   {"VM": "POST_VM_2", "VCPU": 2}
+           * ]
+           */
+          function addPolicy(cpu_policies) {
+            for (let j = 0; j < cpu_policies.length; j++) {
+              let cpu_policies_line = cpu_policies[j];
+              if (CDP_ENABLED) {
+                addCATPolicy(cpu_policies_line, "Code")
+                addCATPolicy(cpu_policies_line, "Data")
+              } else {
+                addCATPolicy(cpu_policies_line, "Unified")
+              }
+            }
+            return CDP_ENABLED ? 2 * cpu_policies.length : cpu_policies.length
+          }
+
+          // add rt vm policy
+          cat_region_info.real_time_count = 0
+          // noinspection JSUnresolvedVariable
+          for (let i = 0; i < cat_region_info.processors.length; i++) {
+            // noinspection JSUnresolvedVariable
+            let pcpu_id = cat_region_info.processors[i];
+            let cpu_policies = pcpu_vms[pcpu_id] ? pcpu_vms[pcpu_id]['y'] : [];
+            cat_region_info.real_time_count += addPolicy(cpu_policies)
+          }
+          // add std vm policy
+          cat_region_info.cat_count = _.cloneDeep(cat_region_info.real_time_count)
+          // noinspection JSUnresolvedVariable
+          for (let i = 0; i < cat_region_info.processors.length; i++) {
+            // noinspection JSUnresolvedVariable
+            let pcpu_id = cat_region_info.processors[i];
+            let cpu_policies = pcpu_vms[pcpu_id] ? pcpu_vms[pcpu_id]['n'] : [];
+            cat_region_info.cat_count += addPolicy(cpu_policies)
+          }
+
+          // add vcat vm policy
+          // noinspection JSUnresolvedVariable
+          if (cat_region_info.processors.indexOf(0) !== -1) {
+            for (let i = 0; i < vCats.length; i++) {
+              addCATPolicy(vCats[i], 'Unified', vCats[i].CLOS_MASK)
+            }
+          }
+
+          // order policy by @id
+          // cat_region_info.data.POLICY.sort(function (a, b) {
+          //   return a['@id'] - b['@id']
+          // });
+        })
+        return board_cat_info;
+      }
+
+      let generate = () => {
+        let currentFormDataCPUAffinitySettings = getCurrentFormDataCPUAffinitySettings();
+        let scenarioCatData = getScenarioCATData();
+        this.CAT_INFO = mergeAndGenerateData(currentFormDataCPUAffinitySettings, scenarioCatData);
+      }
+
+
+      generate()
     }
   }
 }
