@@ -57,8 +57,8 @@ class LaunchScript:
 
     class PassThruDeviceOptions:
         passthru_device_options = {
-            "0x0200": [".//PTM[text()='y']", ",enable_ptm"],  # Ethernet controller, added if PTM is enabled for the VM
-            "0x0c0330": [".//os_type[text()='Windows OS']", ",d3hot_reset"],
+            "0x0200": [".//PTM[text()='y']", "enable_ptm"],  # Ethernet controller, added if PTM is enabled for the VM
+            "0x0c0330": [".//os_type[text()='Windows OS']", "d3hot_reset"],
         }
 
         def __init__(self, vm_scenario_etree):
@@ -176,7 +176,7 @@ class LaunchScript:
             options = self._passthru_options.get_option(device_etree, self._vm_scenario_etree)
 
         vbdf = self._vbdf_allocator.get_virtual_bdf(device_etree, options)
-        self.add_dynamic_dm_parameter("add_passthrough_device", f"{vbdf} 0000:{bus:02x}:{dev:02x}.{fun}{options}")
+        self.add_dynamic_dm_parameter("add_passthrough_device", f"{vbdf} 0000:{bus:02x}:{dev:02x}.{fun} {options}")
 
         # Enable interrupt storm monitoring if the VM has any passthrough device other than the integrated GPU (whose
         # vBDF is fixed to 2)
@@ -338,14 +338,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
         bus = int(m.group(1), 16)
         dev = int(m.group(2), 16)
         func = int(m.group(3), 16)
-        device_node = eval_xpath(board_etree,
-                                 f"//bus[@type='pci' and @address='{hex(bus)}']/device[@address='hex((dev << 16) | func)']")
-        if device_node and \
-           eval_xpath(device_node, "class/text()") == "0x030000" and \
-           eval_xpath(device_node, "resource[@type='memory']") is None:
-            script.add_passthru_device(bus, dev, func, options="igd-vf")
-        else:
-            script.add_passthru_device(bus, dev, func)
+        script.add_passthru_device(bus, dev, func)
 
     ###
     # Miscellaneous
