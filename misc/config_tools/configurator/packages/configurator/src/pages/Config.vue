@@ -250,7 +250,7 @@ export default {
         msg = "Post-launched VMs require the Service VM. If you proceed, all post-launched VMs and their settings will also be deleted. Are you sure you want to proceed?"
         isserivevm = true
       } else {
-        let vmName= this.scenario.vm[this.activeVMID].name
+        let vmName = this.scenario.vm[this.activeVMID].name
         msg = `Delete this virtual machine? ${vmName}\n\nThe associated launch script will also be deleted if it exists.`
       }
       confirm(msg).then((r) => {
@@ -270,18 +270,18 @@ export default {
     },
     cleanLaunchScript() {
       configurator.readDir(this.WorkingFolder, false)
-        .then((files) => {
-          if (files.length > 0) {
-            for (let i = 0; i < files.length; i++) {
-              let arr = files[i].path.split('.')
-              let suffix = arr[arr.length - 1]
-              if (suffix == 'sh') {
-                configurator.removeFile(files[i].path)
-                .catch((err) => alert(`${err}`))
+          .then((files) => {
+            if (files.length > 0) {
+              for (let i = 0; i < files.length; i++) {
+                let arr = files[i].path.split('.')
+                let suffix = arr[arr.length - 1]
+                if (suffix == 'sh') {
+                  configurator.removeFile(files[i].path)
+                      .catch((err) => alert(`${err}`))
+                }
               }
             }
-          }
-        })
+          })
     },
     scenarioConfigFormDataUpdate(vmid, data) {
       if (vmid === -1) {
@@ -357,12 +357,16 @@ export default {
       let errorFlag = false
       errorFlag = this.confirmVmName()
       this.assignVMID()
-      let msg = ["Settings validated\n",
+      let msg = [
         "scenario xml saved\n",
-        "launch scripts generated\n"];
-      let errmsg = ["Settings validate failed\n",
+        "Settings validated\n",
+        "launch scripts generated\n"
+      ];
+      let errmsg = [
         "scenario xml save failed\n",
-        "launch scripts generate failed\n"];
+        "Settings validate failed\n",
+        "launch scripts generate failed\n"
+      ];
       let stepDone = 0
       let totalMsg = msg.length // msg and errMsg must be same length.
       let needSaveLaunchScript = false
@@ -379,54 +383,69 @@ export default {
       console.log(scenarioWithDefault)
       // write defaults to frontend
       this.scenario = scenarioWithDefault.json['acrn-config']
+
+      console.log(this.scenario.hv.FEATURES)
+      if (this.scenario.hv.FEATURES.RDT.RDT_ENABLED === 'n') {
+        delete this.scenario.hv.CACHE_REGION
+      }
       this.updateCurrentFormData()
       // get scenario XML with defaults
-      scenarioXMLData = scenarioWithDefault.xml
-      if (!errorFlag) {
-        this.scenario.vm.map((vmConfig) => {
-          if (vmConfig['load_order'] === 'POST_LAUNCHED_VM') {
-            needSaveLaunchScript = true
+      scenarioXMLData = configurator.convertScenarioToXML(
+          {
+            // simple deep copy
+            "acrn-config": JSON.parse(JSON.stringify(this.scenario))
           }
-        })
-        if (!needSaveLaunchScript) {
-            totalMsg = totalMsg - 1 // remove the 'launch script' related mssage.
+      );
+      console.log(scenarioXMLData)
+
+      this.scenario.vm.map((vmConfig) => {
+        if (vmConfig['load_order'] === 'POST_LAUNCHED_VM') {
+          needSaveLaunchScript = true
         }
-        // begin verify and write down
-        console.log("validate settings...")
-        try {
-          this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-          if (this.errors.length !== 0) {
-            throw "validation failed"
-          }
-          console.log("validation ok")
-          stepDone = 1
-          this.cleanLaunchScript()
-          configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
-          .then(()=> {
-            stepDone = 2
-            if (needSaveLaunchScript) {
-              let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-              for (let filename in launchScripts) {
-                configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
+      })
+      if (!needSaveLaunchScript) {
+        totalMsg = totalMsg - 1 // remove the 'launch script' related mssage.
+      }
+      // begin write down and verify
+      try {
+        configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
+            .then(() => {
+              stepDone = 1
+              if (!errorFlag) {
+                console.log("validate settings...")
+                this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+                // noinspection ExceptionCaughtLocallyJS
+                if (this.errors.length !== 0) {
+                  throw new Error("validation failed")
+                }
+                console.log("validation ok")
+                stepDone = 2
+                this.cleanLaunchScript()
+                if (needSaveLaunchScript) {
+                  let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
+                  for (let filename in launchScripts) {
+                    configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
+                  }
+                  stepDone = 3
+                }
               }
-              stepDone = 3
-            }
-          })
-          .then(() => {
-            alert(`${msg.slice(0,stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`)
-          })
-        } catch(err) {
-          console.log("error" + err)
-          let outmsg = ''
-          for (var i = 0; i < stepDone; i++)
-            outmsg += msg[i]
-          for (i = stepDone; i < totalMsg; i++)
-            outmsg += errmsg[i]
-          alert(`${outmsg} \n Please check your configuration`)
-        }
+
+            })
+            .then(() => {
+              alert(`${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`)
+            })
+      } catch (err) {
+        console.log("error" + err)
+        let outmsg = ''
+        for (var i = 0; i < stepDone; i++)
+          outmsg += msg[i]
+        for (i = stepDone; i < totalMsg; i++)
+          outmsg += errmsg[i]
+        alert(`${outmsg} \n Please check your configuration`)
       }
     }
   }
+
 }
 </script>
 
