@@ -55,17 +55,19 @@ class L2Policy:
     def get_clos_mask(self, index):
         return self.policy_list[index].get_clos_mask()
 
-    def merge_policy(self, src):
-        could_merge = True
+    def match_policy(self, src):
         for index in range(0, len(self.policy_list)):
             if not self.policy_list[index].match_policy(src.policy_list[index]):
-                could_merge = False
-                break
-        if could_merge:
+                return False
+        return True
+
+    def merge_policy(self, src):
+        if self.match_policy(src):
             for index in range(0, len(self.policy_list)):
                 if self.policy_list[index].clos_mask is None:
                     self.policy_list[index].clos_mask = src.policy_list[index].clos_mask
-        return could_merge
+            return True
+        return False
 
 class RdtPolicy:
     def __init__(self, policy_list, policy_owner):
@@ -89,9 +91,14 @@ class RdtPolicy:
         # a list stored the vCPU or VM info
         self.policy_owner_list = [policy_owner]
 
+    def match_policy(self, src):
+        return self.l2policy.match_policy(src.l2policy) and self.l3policy.match_policy(src.l3policy)
+
     #check whether the src could be merged, if yes, add the src owner to policy_owner_list list and return True
     def merge_policy(self, src):
-        if self.l2policy.merge_policy(src.l2policy) and self.l3policy.merge_policy(src.l3policy):
+        if self.match_policy(src):
+            self.l2policy.merge_policy(src.l2policy)
+            self.l3policy.merge_policy(src.l3policy)
             self.policy_owner_list += src.policy_owner_list
             return True
         return False
