@@ -111,6 +111,18 @@ class vCatPolicy(RdtPolicy):
     def merge_policy(self, src):
         return False
 
+class CdpPolicy():
+    def __init__(self,data_list, code_list, owner):
+        self.data_policy = RdtPolicy(data_list, policy_owner(owner.vm_name, owner.vcpu, "Data"))
+        self.code_policy = RdtPolicy(code_list, policy_owner(owner.vm_name, owner.vcpu, "Code"))
+
+    def merge_policy(self, src):
+        if self.code_policy.match_policy(src.code_policy) and self.data_policy.match_policy(src.data_policy):
+            self.code_policy.merge_policy(src.code_policy)
+            self.data_policy.merge_policy(src.data_policy)
+            return True
+        return False
+
 def create_clos_node(scenario_etree, vm_id, index_list):
     allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", scenario_etree)
     if allocation_vm_node is None:
@@ -147,18 +159,41 @@ def vm_vcat_enable(scenario_etree, vm_name):
     virtual_cat_support = common.get_node(f"//vm[name = '{vm_name}']/virtual_cat_support/text()", scenario_etree)
     return (vcat_enable == "y") and (virtual_cat_support == "y")
 
+def cdp_enable(scenario_etree):
+    cdp_enable = common.get_node(f"//CDP_ENABLED/text()", scenario_etree)
+    return cdp_enable == "y"
+
+def convert_cdp_to_normal(cdp_policy_list):
+    policy_list = []
+    for cdp_policy in cdp_policy_list:
+        policy_list.append(cdp_policy.data_policy)
+        policy_list.append(cdp_policy.code_policy)
+    return policy_list
+
 def get_policy_list(board_etree, scenario_etree, allocation_etree):
     policy_owner_list = gen_policy_owner_list(scenario_etree)
 
     result_list = []
     for policy_owner in policy_owner_list:
         dict_tmp = {}
-        policy_list = scenario_etree.xpath(f"//POLICY[VM = '{policy_owner.vm_name}' and VCPU = '{policy_owner.vcpu}' and TYPE = '{policy_owner.cache_type}']")
-        if vm_vcat_enable(scenario_etree, policy_owner.vm_name):
+        policy_list = scenario_etree.xpath(f"//POLICY[VM = '{policy_owner.vm_name}' and VCPU = '{policy_owner.vcpu}']")
+        if cdp_enable(scenario_etree):
+            data_list = scenario_etree.xpath(f"//POLICY[VM = '{policy_owner.vm_name}' and VCPU = '{policy_owner.vcpu}' and TYPE = 'Data']")
+            code_list = scenario_etree.xpath(f"//POLICY[VM = '{policy_owner.vm_name}' and VCPU = '{policy_owner.vcpu}' and TYPE = 'Code']")
+            if policy_owner.cache_type == "Code":
+                continue
+            elif policy_owner.cache_type == "Data":
+                result_list.append(CdpPolicy(data_list, code_list, policy_owner))
+        elif vm_vcat_enable(scenario_etree, policy_owner.vm_name):
             result_list.append(vCatPolicy(policy_list, policy_owner))
         else:
             result_list.append(RdtPolicy(policy_list, policy_owner))
-    return merge_policy_list(result_list)
+    result_list = merge_policy_list(result_list)
+
+    if cdp_enable(scenario_etree):
+        result_list = convert_cdp_to_normal(result_list)
+
+    return result_list
 
 def get_clos_id(rdt_list, policy_owner):
     for index,rdt in enumerate(rdt_list):
@@ -173,12 +208,11 @@ def alloc_clos_index(board_etree, scenario_etree, allocation_etree, mask_list):
         vcpu_list = scenario_etree.xpath(f"//POLICY[VM = '{vm_name}']/VCPU/text()")
         index_list = []
         for vcpu in sorted(list(set(vcpu_list))):
-            type_list = scenario_etree.xpath(f"//POLICY[VM = '{vm_name}' and VCPU = '{vcpu}']/TYPE/text()")
-            for cache_type in sorted(list(set(type_list))):
-                if cache_type == "Data":
-                    continue
-                index = get_clos_id(mask_list, policy_owner(vm_name, vcpu, cache_type))
-                index_list.append(index)
+            if cdp_enable(scenario_etree):
+                index = get_clos_id(mask_list, policy_owner(vm_name, vcpu, "Data")) // 2
+            else:
+                index = get_clos_id(mask_list, policy_owner(vm_name, vcpu, "Unified"))
+            index_list.append(index)
         create_clos_node(allocation_etree, common.get_node("./@id", vm_node), index_list)
 
 def create_mask_list_node(board_etree, scenario_etree, allocation_etree, rdt_policy_list):
@@ -190,21 +224,29 @@ def create_mask_list_node(board_etree, scenario_etree, allocation_etree, rdt_pol
         clos_mask = common.append_node("./clos_mask", None, allocation_hv_node, id="l3")
         length = common.get_node(f"//cache[@level='3']/capability/capacity_mask_length/text()", board_etree)
         if length is not None:
-            value = hex((1 << int(length)) - 1)
+            default_l3_value = hex((1 << int(length)) - 1)
         else:
-            value = "0xffff"
+            default_l3_value = "0xffff"
         for i in range(0, len(rdt_policy_list)):
             if rdt_policy_list[i].l3policy.get_clos_mask() is not None:
                 value = str(rdt_policy_list[i].l3policy.get_clos_mask())
+            else:
+                value = default_l3_value
             common.append_node(f"./clos", value, clos_mask)
         for index,cache2 in enumerate(L2Policy.cache2_id_list):
             length = common.get_node(f"//cache[@level='2' and @id = '{cache2}']/capability/capacity_mask_length/text()", board_etree)
-            value = hex((1 << int(length)) - 1)
+            if length is not None:
+                default_l2_value = hex((1 << int(length)) - 1)
+            else:
+                default_l2_value = "0xffff"
+
             if common.get_node("./clos_mask[@id = '{cache2}']", allocation_hv_node) is None:
                 clos_mask = common.append_node("./clos_mask", None, allocation_hv_node, id=cache2)
             for i in range(0, len(rdt_policy_list)):
                 if rdt_policy_list[i].l2policy.get_clos_mask(index) is not None:
                     value = str(rdt_policy_list[i].l2policy.get_clos_mask(index))
+                else:
+                    value = default_l2_value
                 common.append_node(f"./clos", value, clos_mask)
 
 def init_cache2_id_list(scenario_etree):
