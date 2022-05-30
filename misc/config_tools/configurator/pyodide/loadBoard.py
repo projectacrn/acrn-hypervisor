@@ -86,14 +86,14 @@ def get_cat_info(soup):
     for cache in caches:
         cache_level = int(cache.attrs['level'])
 
+        # ignore cache_level 1 and single core cache region
         if cache_level == 1 or len(processors := cache.select('processors processor')) <= 1:
-            # ignore cache_level 1 and single core cache region
+            continue
+        # ignore no CAT capability cache region
+        if cache.select_one('#CAT') is None:
             continue
 
         capacity_mask_length = cache.select_one('capability capacity_mask_length')
-        if not capacity_mask_length:
-            # some region not have capacity_mask_length
-            capacity_mask_length = cache.select_one('ways')
         capacity_mask_length = int(capacity_mask_length.text)
 
         processors = [int(threads[processor.text]) for processor in processors]
