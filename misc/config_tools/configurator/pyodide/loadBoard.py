@@ -70,6 +70,7 @@ def get_dynamic_scenario(board):
             current_form_type_schema_obj = form_schema['definitions'][f'{tab_type}{form_type}']
             for key in ['type', 'required', 'properties']:
                 if key == 'required' and key not in current_form_type_schema_obj:
+                    form_schema[key] = []
                     continue
                 form_schema[key] = current_form_type_schema_obj[key]
             form_schemas[tab_type][form_type] = form_schema

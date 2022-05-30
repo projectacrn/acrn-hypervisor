@@ -13,42 +13,32 @@
       Delete VM
     </b-button>
   </div>
-  <b-tabs>
-    <b-tab title="Basic Parameters">
-      <p>
-        <text style="color: red">*</text>
-        are required fields
-      </p>
-      <VueForm
-          v-model="currentFormData"
-          :form-props="formProps"
-          :ui-schema="uiSchema"
-          :schema="currentFormSchema.BasicConfigType"
-          @change="dataChange"
-      >
-        <template>
 
-        </template>
-      </VueForm>
-    </b-tab>
-    <b-tab title="Advanced Parameters">
-      <p>
-        <text style="color: red">*</text>
-        are required fields
-      </p>
-      <VueForm
-          v-model="currentFormData"
-          :form-props="formProps"
-          :ui-schema="uiSchema"
-          :schema="currentFormSchema.AdvancedConfigType"
-          @change="dataChange"
-      >
-        <template>
-
-        </template>
-      </VueForm>
-    </b-tab>
-  </b-tabs>
+  <div class="abTabs">
+    <div class="bTab" @click="this.currentFormMode='BasicConfigType'"
+         :class="{Active:this.currentFormMode==='BasicConfigType'}">
+      Basic Parameters
+    </div>
+    <div class="aTab" @click="this.currentFormMode='AdvancedConfigType'"
+         :class="{Active:this.currentFormMode==='AdvancedConfigType'}">
+      Advanced Parameters
+    </div>
+  </div>
+  <div class="tabContent">
+    <div class="notice">
+      <text style="color: red">*</text>
+      are required fields
+    </div>
+    <VueForm
+        v-model="currentFormData"
+        :form-props="formProps"
+        :ui-schema="uiSchema"
+        :schema="currentFormSchema[currentFormMode]"
+        @change="dataChange"
+    >
+      <template></template>
+    </VueForm>
+  </div>
 </template>
 
 <script>
@@ -63,6 +53,7 @@ import Network from "./ConfigForm/CustomWidget/Virtio/Network.vue";
 import Console from "./ConfigForm/CustomWidget/Virtio/Console.vue";
 import Input from "./ConfigForm/CustomWidget/Virtio/Input.vue";
 import CAT from "./ConfigForm/CustomWidget/CAT.vue";
+
 i18n.useLocal(localizeEn);
 
 export default {
@@ -76,6 +67,7 @@ export default {
   },
   data() {
     return {
+      currentFormMode: 'BasicConfigType',
       formProps: {
         "inline": false,
         "inlineFooter": false,
@@ -144,7 +136,7 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
 .nav-tabs .nav-link {
   /*noinspection CssNoGenericFontName*/
   font-family: Roboto;
@@ -201,5 +193,41 @@ export default {
 
 .n-popover {
   max-width: 60%;
+}
+
+.abTabs {
+  display: flex;
+  gap: 3px;
+  z-index: 1;
+
+  & .aTab, & .bTab {
+    cursor: pointer;
+    border: 1px solid #007B81;
+    border-bottom: none;
+    border-radius: 5px 5px 0 0;
+    background: #E1F2EF;
+    padding: 1rem;
+    color: #007B81;
+    font-size: 1.2rem;
+
+    &.Active {
+      background: #007B81;
+      border: 1px solid #373A77;
+      border-bottom: none;
+      color: white;
+      font-weight: 800;
+    }
+  }
+}
+
+
+.tabContent {
+  border: 1px solid purple;
+  padding: 1rem;
+  background: white;
+}
+
+.notice{
+  padding: 1rem 0;
 }
 </style>
