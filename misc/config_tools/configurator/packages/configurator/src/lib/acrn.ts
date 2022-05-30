@@ -136,12 +136,23 @@ class Configurator {
     }
 
     newVM(vmid, load_order) {
-        return {
+        let newVMData = {
             '@id': vmid,
             load_order: load_order,
             name: `VM${vmid}`,
             cpu_affinity: null
         }
+        if (load_order !== 'SERVICE_VM') {
+            newVMData['cpu_affinity'] = {
+                pcpu: [
+                    {
+                        pcpu_id: null,
+                        real_time_vcpu: 'n'
+                    }
+                ]
+            }
+        }
+        return newVMData
     }
 
     createNewScenario(pre, service, post) {
