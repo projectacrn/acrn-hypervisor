@@ -6,7 +6,12 @@
 
         <b-row class="align-items-center my-2 mt-4">
           <b-col md="2">
-            Region name:
+            <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                  <IconInfo/>
+              </template>
+              <span v-html="this.IVSHMEMRegionType.properties.NAME.description"></span>
+            </n-popover>Region name:
           </b-col>
           <b-col md="4">
               <b-form-input v-model="IVSHMEM_VMO.NAME" placeholder="Any string with no white spaces."/>
@@ -15,7 +20,14 @@
 
         <b-row class="align-items-center my-2">
           <b-col md="2">
-            <label>Emulated by: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                    <IconInfo/>
+                </template>
+                <span v-html="this.IVSHMEMRegionType.properties.PROVIDED_BY.description"></span>
+              </n-popover>Emulated by:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-select v-model="IVSHMEM_VMO.PROVIDED_BY" :options="providerType"></b-form-select>
@@ -24,7 +36,14 @@
 
         <b-row class="align-items-center my-2">
           <b-col md="2">
-            <label>Size (MB): </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                    <IconInfo/>
+                </template>
+                <span v-html="this.IVSHMEMRegionType.properties.IVSHMEM_SIZE.description"></span>
+              </n-popover>Size (MB):
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-select v-model="IVSHMEM_VMO.IVSHMEM_SIZE" :options="IVSHMEMSize"></b-form-select>
@@ -36,13 +55,25 @@
           <p>Select all VMs that will use this shared memory region</p>
           <b-row>
             <b-col sm="2" offset-sm="6">
-              Virtual BDF:
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                    <IconInfo/>
+                </template>
+                <span v-html="this.IVSHMEMVM.properties.VBDF.description"></span>
+              </n-popover>Virtual BDF:
             </b-col>
           </b-row>
           <b-row class="justify-content-between align-items-center"
                  v-for="(IVSHMEM_VM,index) in IVSHMEM_VMO.IVSHMEM_VMS.IVSHMEM_VM">
-            <b-col sm="1">
-              <label>VM name:</label>
+            <b-col sm="2">
+              <label>
+                <n-popover trigger="hover" placement="top-start">
+                  <template #trigger>
+                      <IconInfo/>
+                  </template>
+                  <span v-html="this.VMConfigType.properties.name.description"></span>
+                </n-popover>VM name:
+              </label>
             </b-col>
             <b-col sm="3">
               <b-form-select :state="validation(IVSHMEM_VM.VM_NAME)" v-model="IVSHMEM_VM.VM_NAME" :options="vmNames"></b-form-select>
@@ -106,11 +137,11 @@ import _ from 'lodash';
 import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
 import {fieldProps, vueUtils} from '@lljj/vue3-form-naive';
-
+import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
 
 export default {
   name: 'IVSHMEM_REGION',
-  components: {Icon, Plus, Minus},
+  components: {Icon, Plus, Minus, IconInfo},
   props: {
     ...fieldProps,
     // Todo: use ui:fieldProps to pass getScenarioData function
@@ -132,7 +163,9 @@ export default {
   data() {
     return {
       providerType: this.rootSchema.definitions['ProviderType']['enum'],
-      IVSHMEMSize: this.rootSchema.definitions['IVSHMEMSize']['enum'],
+      IVSHMEMRegionType: this.rootSchema.definitions['IVSHMEMRegionType'],
+      IVSHMEMVM: this.rootSchema.definitions['IVSHMEMVM'],
+      VMConfigType: this.rootSchema.definitions['VMConfigType'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
     };
   },
