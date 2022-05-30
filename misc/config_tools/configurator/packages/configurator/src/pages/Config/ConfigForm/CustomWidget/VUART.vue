@@ -153,7 +153,7 @@ export default {
   },
   methods: {
     validation(value) {
-      return value.length != 0;
+      return (value != null) && (value.length != 0);
     },
     removeVUARTConnection(index) {
       this.defaultVal.splice(index, 1);
