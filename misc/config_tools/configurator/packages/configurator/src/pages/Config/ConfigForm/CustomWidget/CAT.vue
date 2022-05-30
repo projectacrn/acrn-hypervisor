@@ -7,7 +7,12 @@
           v-model="SSRAM_ENABLED" :value="'y'" :uncheckedValue="'n'"
           :disabled="RDT_ENABLED==='y'"
       >
-        Software SRAM (for real-time apps)
+        <n-popover trigger="hover" placement="top-start">
+          <template #trigger>
+              <IconInfo/>
+          </template>
+          <span v-html="this.SSRAMInfo.properties.SSRAM_ENABLED.description"></span>
+        </n-popover>Software SRAM (for real-time apps)
       </b-form-checkbox>
     </div>
     <div class="d-flex gap-2 flex-column">
@@ -16,18 +21,33 @@
           v-model="RDT_ENABLED" :value="'y'" :uncheckedValue="'n'"
           :disabled="SSRAM_ENABLED==='y'"
       >
-        Cache Allocation Technology (requires CPU Afinity configuration in each desired VM)
+        <n-popover trigger="hover" placement="top-start">
+          <template #trigger>
+              <IconInfo/>
+          </template>
+          <span v-html="this.RDTType.properties.RDT_ENABLED.description"></span>
+        </n-popover>Cache Allocation Technology (requires CPU Afinity configuration in each desired VM)
       </b-form-checkbox>
       <div class="d-flex flex-column gap-2 ps-3 pb-3">
         <b-form-checkbox
             v-model="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'"
             :disabled="SSRAM_ENABLED==='y'||VCAT_ENABLED==='y'">
-          Code and Data Prioritization
+            <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                  <IconInfo/>
+              </template>
+              <span v-html="this.RDTType.properties.CDP_ENABLED.description"></span>
+            </n-popover>Code and Data Prioritization
         </b-form-checkbox>
         <b-form-checkbox
             v-model="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'"
             :disabled="SSRAM_ENABLED==='y'||CDP_ENABLED==='y'">
-          Virtual Cache Allocation Technology (VCAT)
+            <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                  <IconInfo/>
+              </template>
+              <span v-html="this.RDTType.properties.VCAT_ENABLED.description"></span>
+            </n-popover>Virtual Cache Allocation Technology (VCAT)
         </b-form-checkbox>
       </div>
     </div>
@@ -102,6 +122,7 @@
 import _ from "lodash";
 import {vueUtils, fieldProps} from "@lljj/vue3-form-naive";
 import HexBlockRangeSelector from "./CAT/HexBlockRangeSelector.vue";
+import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
 
 function count(source, target) {
   return (source.match(new RegExp(target, 'g')) || []).length;
@@ -111,7 +132,7 @@ function count(source, target) {
 // noinspection JSUnresolvedVariable
 export default {
   name: "CAT",
-  components: {HexBlockRangeSelector},
+  components: {HexBlockRangeSelector, IconInfo},
   props: {
     ...fieldProps
   },
@@ -174,7 +195,9 @@ export default {
   data() {
     return {
       CAT_INFO: null,
-      cat_level_region_sum: {}
+      cat_level_region_sum: {},
+      SSRAMInfo: this.rootSchema.definitions['SSRAMInfo'],
+      RDTType: this.rootSchema.definitions['RDTType']
     }
   },
   methods: {
