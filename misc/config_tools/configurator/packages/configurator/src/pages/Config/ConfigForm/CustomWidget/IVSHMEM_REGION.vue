@@ -155,7 +155,7 @@ export default {
   },
   methods: {
     validation(value) {
-      return value.length != 0;
+      return (value != null) && (value.length != 0);
     },
     addSharedVM(vms, index) {
       // add new item after current item
