@@ -121,75 +121,34 @@ export default {
   computed: {
     SSRAM_ENABLED: {
       get() {
-        return vueUtils.getPathVal(this.rootFormData, 'FEATURES.SSRAM.SSRAM_ENABLED')
+        return this.formDataProxy('SSRAM_ENABLED');
       },
       set(value) {
-        vueUtils.setPathVal(this.rootFormData, 'FEATURES.SSRAM.SSRAM_ENABLED', value)
-        if (value === 'y') {
-          if (this.RDT_ENABLED === 'y') {
-            this.RDT_ENABLED = 'n'
-          }
-        }
+        return this.formDataProxy('SSRAM_ENABLED', value, true);
       }
     },
     RDT_ENABLED: {
       get() {
-        return vueUtils.getPathVal(this.rootFormData, 'FEATURES.RDT.RDT_ENABLED')
+        return this.formDataProxy('RDT_ENABLED');
       },
       set(value) {
-        vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.RDT_ENABLED', value)
-        if (value === 'y') {
-          if (this.SSRAM_ENABLED === 'y') {
-            this.SSRAM_ENABLED = 'n'
-          }
-        }
-        if (value === 'n') {
-          if (this.CDP_ENABLED === 'y') {
-            this.CDP_ENABLED = 'n'
-          }
-          if (this.VCAT_ENABLED === 'y') {
-            this.VCAT_ENABLED = 'n'
-          }
-        }
-        this.updateCatInfo()
+        return this.formDataProxy('RDT_ENABLED', value, true);
       }
     },
     CDP_ENABLED: {
       get() {
-        return vueUtils.getPathVal(this.rootFormData, 'FEATURES.RDT.CDP_ENABLED')
+        return this.formDataProxy('CDP_ENABLED');
       },
       set(value) {
-        vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.CDP_ENABLED', value)
-        if (value === 'y') {
-          if (this.SSRAM_ENABLED === 'y') {
-            this.SSRAM_ENABLED = 'n'
-          }
-          if (this.VCAT_ENABLED === 'y') {
-            this.VCAT_ENABLED = 'n'
-          }
-        }
-        if (this.RDT_ENABLED !== value) {
-          this.RDT_ENABLED = value
-        }
+        return this.formDataProxy('CDP_ENABLED', value, true);
       }
     },
     VCAT_ENABLED: {
       get() {
-        return vueUtils.getPathVal(this.rootFormData, 'FEATURES.RDT.VCAT_ENABLED')
+        return this.formDataProxy('VCAT_ENABLED');
       },
       set(value) {
-        vueUtils.setPathVal(this.rootFormData, 'FEATURES.RDT.VCAT_ENABLED', value)
-        if (value === 'y') {
-          if (this.SSRAM_ENABLED === 'y') {
-            this.SSRAM_ENABLED = 'n'
-          }
-          if (this.CDP_ENABLED === 'y') {
-            this.CDP_ENABLED = 'n'
-          }
-        }
-        if (this.RDT_ENABLED !== value) {
-          this.RDT_ENABLED = value
-        }
+        return this.formDataProxy('VCAT_ENABLED', value, true);
       }
     },
   },
@@ -219,6 +178,61 @@ export default {
     }
   },
   methods: {
+    formDataProxy(name, data = null, update = false) {
+      let path = {
+        'SSRAM_ENABLED': 'FEATURES.SSRAM.SSRAM_ENABLED',
+        'RDT_ENABLED': 'FEATURES.RDT.RDT_ENABLED',
+        'CDP_ENABLED': 'FEATURES.RDT.CDP_ENABLED',
+        'VCAT_ENABLED': 'FEATURES.RDT.VCAT_ENABLED',
+      }[name]
+
+      // check parent node exists
+      let oldValue = vueUtils.getPathVal(this.rootFormData, path);
+      if (oldValue === undefined) {
+        let t = path.split('.');
+        let parentPath = t.splice(0, t.length - 1).join('.');
+        vueUtils.setPathVal(this.rootFormData, parentPath, {});
+      }
+      // if data is not empty, set value
+      if (data !== null) {
+        vueUtils.setPathVal(this.rootFormData, path, data)
+
+        // if data is not empty, set value as expected and update CAT_INFO
+        if (update) {
+          switch (name) {
+            case 'SSRAM_ENABLED':
+              this.formDataProxy('RDT_ENABLED', 'n');
+              this.formDataProxy('CDP_ENABLED', 'n');
+              this.formDataProxy('VCAT_ENABLED', 'n');
+              break;
+            case 'RDT_ENABLED':
+              this.formDataProxy('SSRAM_ENABLED', 'n');
+              if (data === 'n') {
+                this.formDataProxy('CDP_ENABLED', 'n');
+                this.formDataProxy('VCAT_ENABLED', 'n');
+              }
+              break;
+            case 'CDP_ENABLED':
+              this.formDataProxy('SSRAM_ENABLED', 'n');
+              this.formDataProxy('RDT_ENABLED', data);
+              if (data === 'y') {
+                this.formDataProxy('VCAT_ENABLED', 'n');
+              }
+              break;
+            case 'VCAT_ENABLED':
+              this.formDataProxy('SSRAM_ENABLED', 'n');
+              this.formDataProxy('RDT_ENABLED', data);
+              if (data === 'y') {
+                this.formDataProxy('CDP_ENABLED', 'n');
+              }
+              break;
+          }
+          // do update
+          this.updateCatInfo()
+        }
+      }
+      return vueUtils.getPathVal(this.rootFormData, path)
+    },
     setDefaultClosMask(CACHE_REGION) {
       if (CACHE_REGION.capacity_mask_length < (CACHE_REGION.real_time_count + 1)) {
         alert('Can\'t generate default settings for this region(due to too many realtime cpu)')
