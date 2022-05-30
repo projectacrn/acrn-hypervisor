@@ -597,6 +597,12 @@ export default {
           //   return a['@id'] - b['@id']
           // });
         })
+
+        for (let i = 0; i < board_cat_info.length; i++) {
+          if (board_cat_info[i].data.POLICY.length == 0) {
+            board_cat_info.splice(i--, 1)
+          }
+        }
         return board_cat_info;
       }
 
