@@ -110,7 +110,7 @@ def main():
     library_json = Path(__file__).parent / 'library.json'
 
     parser = argparse.ArgumentParser(
-        description='ACRN Configurator third part library manager.'
+        description='ACRN Configurator third party library manager.'
     )
     parser.add_argument('operation', choices=['check', 'install', 'clean'])
     parser.add_argument('-c', '--config', dest='config', default=library_json)
