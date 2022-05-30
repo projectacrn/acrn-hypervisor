@@ -147,7 +147,6 @@ export default {
       // update the info in title
       this.currentBoardFile = 'Current file: ' + this.board['name']
       let boardContent = this.board.content
-      let reg = /(?<=Manufacturer).+(?=\\n)/
       let result = boardContent.match(/Manufacturer.+\n/gm)
       console.log(result)
       if (result && result.length > 0) {
