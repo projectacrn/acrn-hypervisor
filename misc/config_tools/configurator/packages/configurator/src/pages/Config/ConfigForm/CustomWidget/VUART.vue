@@ -6,7 +6,14 @@
 
         <b-row class="align-items-center my-2 mt-4">
           <b-col md="2">
-            <label>{{vmNameTitle}}: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                    <IconInfo/>
+                </template>
+                <span v-html="this.VMConfigType.properties.name.description"></span>
+              </n-popover>VM name:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-select :state="validation(VUARTConn.endpoint[0].vm_name)" v-model="VUARTConn.endpoint[0].vm_name" :options="vmNames"></b-form-select>
@@ -24,7 +31,14 @@
 
         <b-row class="align-items-center my-2">
           <b-col md="2">
-            <label>{{vmNameTitle}}: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                    <IconInfo/>
+                </template>
+                <span v-html="this.VMConfigType.properties.name.description"></span>
+              </n-popover>VM name:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-select :state="validation(VUARTConn.endpoint[1].vm_name)" v-model="VUARTConn.endpoint[1].vm_name" :options="vmNames"></b-form-select>
@@ -36,7 +50,14 @@
 
         <b-row class="align-items-center my-2">
           <b-col md="2">
-            <label>{{vuartConnectionTypeTitle}}: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                    <IconInfo/>
+                </template>
+                <span v-html="this.VuartConnectionType.properties.type.description"></span>
+              </n-popover>Type: 
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-select :state="validation(VUARTConn.type)" v-model="VUARTConn.type" :options="VuartType"></b-form-select>
@@ -53,8 +74,23 @@
             <b-col sm="4">
               {{vuartEndpointTitle}}:
             </b-col>
-            <b-col sm="4" v-if="VUARTConn.type === 'legacy'"> {{vuartVIoPortTitle}}: </b-col>
-            <b-col sm="4" v-else-if="VUARTConn.type === 'pci'"> {{vuartVBDFTitle}}: </b-col>
+            <b-col sm="4" v-if="VUARTConn.type === 'legacy'">
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                    <IconInfo/>
+                </template>
+                <span v-html="this.VuartEndpointType.io_port.description"></span>
+              </n-popover>
+              I/O address:
+            </b-col>
+            <b-col sm="4" v-else-if="VUARTConn.type === 'pci'">
+              <n-popover trigger="hover" placement="top-start">
+                  <template #trigger>
+                      <IconInfo/>
+                  </template>
+                  <span>{{this.VuartEndpointType.vbdf.description}}</span>
+                </n-popover>VBDF
+            </b-col>
           </b-row>
           <b-row class="justify-content-sm-start align-items-center">
             <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[0].vm_name }} </b-col>
@@ -104,11 +140,12 @@ import _ from 'lodash';
 import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
 import {fieldProps, vueUtils} from '@lljj/vue3-form-naive';
+import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
 
 
 export default {
   name: 'VUART',
-  components: {Icon, Plus, Minus},
+  components: {Icon, Plus, Minus, IconInfo},
   props: {
     ...fieldProps,
     // Todo: use ui:fieldProps to pass getScenarioData function
@@ -137,15 +174,11 @@ export default {
     let epTypeProp = this.rootSchema.definitions.VuartEndpointType.properties
     let conTypeProp = this.rootSchema.definitions.VuartConnectionType.properties
     return {
-      vmNameTitle: epTypeProp.vm_name.title,
-      vuartConnectionTypeTitle: conTypeProp.type.title,
-      vuartEndpointTitle: conTypeProp.endpoint['title'],
-      vuartVIoPortTitle: epTypeProp.io_port.title,
-      vuartVBDFTitle: epTypeProp.vbdf.title,
-      vIoPortPlaceholder: epTypeProp.io_port['ui:options']['placeholder'],
-      vBDFPlaceholder: epTypeProp.vbdf['ui:options']['placeholder'],
-      VuartType,
+      VuartType: this.rootSchema.definitions['VuartType']['enum'],
+      VuartEndpointType: this.rootSchema.definitions['VuartEndpointType']['properties'],
       IOPortDefault: this.rootSchema.definitions['VuartEndpointType']['properties']['io_port']['default'],
+      VMConfigType: this.rootSchema.definitions['VMConfigType'],
+      VuartConnectionType: this.rootSchema.definitions['VuartConnectionType'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
     };
   },
@@ -183,12 +216,12 @@ export default {
         "endpoint": [
           {
             "vm_name": "",
-            "io_port": this.IOPortDefault,
+            "io_port": "",
             "vbdf": "",
           },
           {
             "vm_name": "",
-            "io_port": this.IOPortDefault,
+            "io_port": "",
             "vbdf": "",
           }
         ]
