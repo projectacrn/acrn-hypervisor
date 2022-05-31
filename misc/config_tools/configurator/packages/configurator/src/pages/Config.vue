@@ -276,7 +276,7 @@ export default {
       })
     },
     cleanLaunchScript() {
-      configurator.readDir(this.WorkingFolder, false)
+      return configurator.readDir(this.WorkingFolder, false)
           .then((files) => {
             if (files.length > 0) {
               for (let i = 0; i < files.length; i++) {
@@ -382,6 +382,7 @@ export default {
       }
       let errorFlag = false
       errorFlag = this.confirmVmName()
+      if (errorFlag) {return}
       this.assignVMID()
       let msg = [
         "scenario xml saved\n",
@@ -411,34 +412,38 @@ export default {
         totalMsg = totalMsg - 1 // remove the 'launch script' related mssage.
       }
       // begin write down and verify
-      try {
-        configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
-            .then(() => {
-              stepDone = 1
-              if (!errorFlag) {
-                console.log("validate settings...")
-                this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-                // noinspection ExceptionCaughtLocallyJS
-                if (this.errors.length !== 0) {
-                  throw new Error("validation failed")
-                }
-                console.log("validation ok")
-                stepDone = 2
-                this.cleanLaunchScript()
-                if (needSaveLaunchScript) {
-                  let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-                  for (let filename in launchScripts) {
-                    configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename])
-                  }
-                  stepDone = 3
-                }
-              }
 
-            })
-            .then(() => {
-              alert(`${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`)
-            })
-      } catch (err) {
+      configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
+      .then(() => {
+        stepDone = 1
+          console.log("validate settings...")
+          this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+          // noinspection ExceptionCaughtLocallyJS
+          if (this.errors.length !== 0) {
+            throw new Error("validation failed")
+          }
+          console.log("validation ok")
+          stepDone = 2
+          return this.cleanLaunchScript()
+      }).then(() => {
+            if (needSaveLaunchScript) {
+              let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
+              let writeDone = []
+              for (let filename in launchScripts) {
+                writeDone.push(configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename]))
+              }
+              return Promise.all(writeDone)
+            } else {
+              return
+            }
+      })
+      .then((result) => {
+        if (!_.isEmpty(result)) {
+          stepDone = 3
+        }
+        alert(`${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`)
+      })
+      .catch((err)=>{
         console.log("error" + err)
         let outmsg = ''
         for (var i = 0; i < stepDone; i++)
@@ -446,10 +451,9 @@ export default {
         for (i = stepDone; i < totalMsg; i++)
           outmsg += errmsg[i]
         alert(`${outmsg} \n Please check your configuration`)
-      }
+      })
     }
   }
-
 }
 </script>
 
