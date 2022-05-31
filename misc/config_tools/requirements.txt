@@ -1,4 +1,0 @@
-defusedxml
-lxml
-elementpath
-xmlschema
