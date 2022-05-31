@@ -246,7 +246,7 @@ def clean_configurator_deb(version, build_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("deb_mode", help="choose deb mode, e.g. acrn_all or board_inspector")
+    parser.add_argument("deb_mode", help="choose deb mode, e.g. acrn_all, board_inspector, configurator or clean")
     parser.add_argument("build_dir", help="the absolute address of the acrn-hypervisor build directory")
     parser.add_argument("--version", default="1.0", help="the acrn-hypervisor version")
     parser.add_argument("--board_name", default="board", help="the name of the board that runs the ACRN hypervisor")
@@ -265,4 +265,4 @@ if __name__ == "__main__":
     elif args.deb_mode == 'clean':
         clean_configurator_deb(args.version, args.build_dir)
     else:
-        print("ERROR: Please check the value of deb_mode: the value shall be acrn_all, board_inspector or configurator.")
+        print("ERROR: Please check the value of the first argument: the value shall be acrn_all, board_inspector, configurator or clean.")
