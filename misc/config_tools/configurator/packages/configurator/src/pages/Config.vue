@@ -180,7 +180,8 @@ export default {
       }
     },
     scenarioUpdate(scenarioData) {
-      this.errors = []
+      let scenarioXMLData = this.scenarioToXML(scenarioData)
+      this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
       this.scenario = scenarioData;
       this.showFlag = false;
       this.updateCurrentFormSchema()
@@ -277,7 +278,7 @@ export default {
               for (let i = 0; i < files.length; i++) {
                 let arr = files[i].path.split('.')
                 let suffix = arr[arr.length - 1]
-                if (suffix == 'sh') {
+                if (suffix === 'sh') {
                   configurator.removeFile(files[i].path)
                       .catch((err) => alert(`${err}`))
                 }
@@ -351,6 +352,25 @@ export default {
       }
       return errorFlag
     },
+    scenarioToXML(scenarioData) {
+      return configurator.convertScenarioToXML(
+          {
+            // simple deep copy
+            "acrn-config": JSON.parse(JSON.stringify(scenarioData))
+          }
+      )
+    },
+    applyScenarioDefaults(scenarioData) {
+      let scenarioXMLData = this.scenarioToXML(scenarioData)
+      // get scenario Defaults
+      let scenarioWithDefault = configurator.pythonObject.populateDefaultValues(scenarioXMLData)
+      scenarioWithDefault = scenarioWithDefault.json['acrn-config']
+
+      if (scenarioWithDefault.hv.FEATURES.RDT.RDT_ENABLED === 'n') {
+        delete scenarioWithDefault.hv.CACHE_REGION
+      }
+      return scenarioWithDefault
+    },
     saveScenario() {
       if (_.isEmpty(this.scenario.vm)) {
         alert("Please add at least one VM")
@@ -373,32 +393,10 @@ export default {
       let totalMsg = msg.length // msg and errMsg must be same length.
       let needSaveLaunchScript = false
 
-      let scenarioXMLData = configurator.convertScenarioToXML(
-          {
-            // simple deep copy
-            "acrn-config": JSON.parse(JSON.stringify(this.scenario))
-          }
-      );
-      console.log(scenarioXMLData)
-      // get scenario Defaults
-      let scenarioWithDefault = configurator.pythonObject.populateDefaultValues(scenarioXMLData)
-      console.log(scenarioWithDefault)
-      // write defaults to frontend
-      this.scenario = scenarioWithDefault.json['acrn-config']
-
-      console.log(this.scenario.hv.FEATURES)
-      if (this.scenario.hv.FEATURES.RDT.RDT_ENABLED === 'n') {
-        delete this.scenario.hv.CACHE_REGION
-      }
+      let scenarioWithDefaults = this.applyScenarioDefaults(this.scenario)
+      let scenarioXMLData = this.scenarioToXML(scenarioWithDefaults)
+      this.scenario = scenarioWithDefaults
       this.updateCurrentFormData()
-      // get scenario XML with defaults
-      scenarioXMLData = configurator.convertScenarioToXML(
-          {
-            // simple deep copy
-            "acrn-config": JSON.parse(JSON.stringify(this.scenario))
-          }
-      );
-      console.log(scenarioXMLData)
 
       this.scenario.vm.map((vmConfig) => {
         if (vmConfig['load_order'] === 'POST_LAUNCHED_VM') {
