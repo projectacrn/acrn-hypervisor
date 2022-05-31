@@ -48,9 +48,9 @@ the TSC and its membership, are described in the project's `technical-charter`_.
 
 These are the current TSC voting members and chair person:
 
-- Anthony Xu (chair): anthony.xu@intel.com
+- Junjie Mao (chair): junjie.mao@intel.com
 - Helmut Buchsbaum: helmut.buchsbaum@tttech-industrial.com
-- Thomas Gleixner: tglx@linutronix.de
+- Thomas Gleixner: thomas.gleixner@intel.com
 
 .. _ACRN user mailing list: https://lists.projectacrn.org/g/acrn-user
 .. _BSD 3-Clause license: https://github.com/projectacrn/acrn-hypervisor/blob/master/LICENSE
