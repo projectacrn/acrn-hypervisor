@@ -334,6 +334,7 @@ export default {
          */
         let pcpu_vms = {}
         let serviceVM = null;
+        let preLaunchedVMCPUIDs = [];
 
         window.getCurrentScenarioData().vm.map((vmConfig) => {
           // if this vm is service vm, we got it and skip it
@@ -352,6 +353,11 @@ export default {
           }
 
           // now, we got pre/post vm config with cpu affinity data here
+
+          if (vmConfig.load_order === 'PRE_LAUNCHED_VM') {
+            preLaunchedVMCPUIDs = preLaunchedVMCPUIDs.concat(vmConfig.cpu_affinity.pcpu)
+            return;
+          }
 
           // if vcat is enabled in hv, we need to check current vm is enabled vcat
           // noinspection JSUnresolvedVariable
@@ -391,12 +397,11 @@ export default {
           let serviceVMCPUIndex = 0;
           let schemaData = window.getSchemaData()
           schemaData.HV.BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id.enum.map((pcpu_id) => {
-            if (pcpu_vms.hasOwnProperty(pcpu_id)) {
-              if (pcpu_vms[pcpu_id].y.length !== 0) {
-                // ignore pcpu_id which has rt vm enabled
-                return
-              }
-            } else {
+            // if pcpu_id in preLaunchedVMCPUIDs, it's used by pre launched vm, we need skip it
+            if (preLaunchedVMCPUIDs.indexOf(pcpu_id) !== -1) {
+              return;
+            }
+            if (!pcpu_vms.hasOwnProperty(pcpu_id)) {
               pcpu_vms[pcpu_id] = {'y': [], 'n': []}
             }
             pcpu_vms[pcpu_id].n.push({
