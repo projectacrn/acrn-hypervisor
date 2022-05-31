@@ -51,9 +51,7 @@ If your system doesn't have git and python, you can install it by
 
 ```bash
 git clone https://github.com/projectacrn/acrn-hypervisor
-cd acrn-hypervisor/misc/config_tools
-python3 -m pip install -r requirements.txt
-cd configurator
+cd acrn-hypervisor/misc/config_tools/configurator
 python3 -m pip install -r requirements.txt
 yarn
 ```
