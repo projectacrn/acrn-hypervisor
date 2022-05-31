@@ -414,6 +414,14 @@ device file when user config it as virtio serial port, which can be read and wri
   </xs:sequence>
 </xs:complexType>
 
+<xs:simpleType name="vsockCIDType">
+    <xs:annotation acrn:widget-options="'placeholder': 'integer greater than 2'" />
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="3" />
+      <xs:maxInclusive value="4294967294" />
+    </xs:restriction>
+</xs:simpleType>
+
 <xs:simpleType name="OSType">
   <xs:annotation>
     <xs:documentation>A string with either ``Non-Windows OS`` or  ``Windows OS``.</xs:documentation>
