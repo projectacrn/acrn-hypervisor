@@ -238,7 +238,8 @@ static int
 virtio_vhost_vsock_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct virtio_vsock *vsock;
-	int rc, cid;
+	int rc;
+	uint64_t cid;
 	pthread_mutexattr_t attr;
 	char *devopts = NULL;
 	char *tmp = NULL;
@@ -254,7 +255,7 @@ virtio_vhost_vsock_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 	if (!strncmp(tmp, "cid=", 4)) {
 		strsep(&tmp, "=");
-		dm_strtoi(tmp, NULL, 10, &cid);
+		dm_strtoul(tmp, NULL, 10, &cid);
 	}
 	free(devopts);
 
