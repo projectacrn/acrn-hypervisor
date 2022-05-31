@@ -96,20 +96,6 @@ all: hypervisor devicemodel tools
 	  python3 misc/packaging/gen_acrn_deb.py acrn_all $(ROOT_OUT) --version=$(FULL_VERSION) --board_name="$$DEB_BOARD" --scenario="$$DEB_SCENARIO"; \
 	fi
 
-#help functions to build acrn and install acrn/acrn symbols
-define build_acrn
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)/$(1) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)/$(1) BOARD=$(1) SCENARIO=$(2) RELEASE=$(RELEASE)
-endef
-
-define install_acrn
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)/$(1) BOARD=$(1) SCENARIO=$(2) RELEASE=$(RELEASE) install
-endef
-
-define install_acrn_debug
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)/$(1) BOARD=$(1) SCENARIO=$(2) RELEASE=$(RELEASE) install-debug
-endef
-
 HV_MAKEOPTS := -C $(T)/hypervisor BOARD=$(BOARD) SCENARIO=$(SCENARIO) HV_OBJDIR=$(HV_OUT) RELEASE=$(RELEASE)
 
 board_inspector:
@@ -174,30 +160,6 @@ hypervisor-install: hypervisor
 
 hypervisor-install-debug:
 	$(MAKE) $(HV_MAKEOPTS) install-debug
-
-kbl-nuc-i7-industry:
-	$(call build_acrn,nuc7i7dnb,industry)
-apl-up2-hybrid:
-	$(call build_acrn,apl-up2,hybrid)
-
-sbl-hypervisor: kbl-nuc-i7-industry \
-                apl-up2-hybrid
-
-kbl-nuc-i7-industry-install:
-	$(call install_acrn,nuc7i7dnb,industry)
-apl-up2-hybrid-install:
-	$(call install_acrn,apl-up2,hybrid)
-
-sbl-hypervisor-install: kbl-nuc-i7-industry-install \
-                        apl-up2-hybrid-install
-
-kbl-nuc-i7-industry-install-debug:
-	$(call install_acrn_debug,nuc7i7dnb,industry)
-apl-up2-hybrid-install-debug:
-	$(call install_acrn_debug,apl-up2,hybrid)
-
-sbl-hypervisor-install-debug: kbl-nuc-i7-industry-install-debug \
-			      apl-up2-hybrid-install-debug
 
 devicemodel-install: tools-install devicemodel
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
