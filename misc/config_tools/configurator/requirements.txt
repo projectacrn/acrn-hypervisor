@@ -1,7 +1,10 @@
+defusedxml
+lxml
+elementpath
+xmlschema
 build
 tqdm
 requests
-lxml
 xmltodict
 sphinx
 bs4
