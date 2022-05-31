@@ -9,10 +9,11 @@
       >
         <n-popover trigger="hover" placement="top-start">
           <template #trigger>
-              <IconInfo/>
+            <IconInfo/>
           </template>
           <span v-html="this.SSRAMInfo.properties.SSRAM_ENABLED.description"></span>
-        </n-popover>Software SRAM (for real-time apps)
+        </n-popover>
+        Software SRAM (for real-time apps)
       </b-form-checkbox>
     </div>
     <div class="d-flex gap-2 flex-column">
@@ -23,31 +24,34 @@
       >
         <n-popover trigger="hover" placement="top-start">
           <template #trigger>
-              <IconInfo/>
+            <IconInfo/>
           </template>
           <span v-html="this.RDTType.properties.RDT_ENABLED.description"></span>
-        </n-popover>Cache Allocation Technology (requires CPU Afinity configuration in each desired VM)
+        </n-popover>
+        Cache Allocation Technology (requires CPU Afinity configuration in each desired VM)
       </b-form-checkbox>
       <div class="d-flex flex-column gap-2 ps-3 pb-3">
         <b-form-checkbox
             v-model="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'"
             :disabled="SSRAM_ENABLED==='y'||VCAT_ENABLED==='y'">
-            <n-popover trigger="hover" placement="top-start">
-              <template #trigger>
-                  <IconInfo/>
-              </template>
-              <span v-html="this.RDTType.properties.CDP_ENABLED.description"></span>
-            </n-popover>Code and Data Prioritization
+          <n-popover trigger="hover" placement="top-start">
+            <template #trigger>
+              <IconInfo/>
+            </template>
+            <span v-html="this.RDTType.properties.CDP_ENABLED.description"></span>
+          </n-popover>
+          Code and Data Prioritization
         </b-form-checkbox>
         <b-form-checkbox
             v-model="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'"
             :disabled="SSRAM_ENABLED==='y'||CDP_ENABLED==='y'">
-            <n-popover trigger="hover" placement="top-start">
-              <template #trigger>
-                  <IconInfo/>
-              </template>
-              <span v-html="this.RDTType.properties.VCAT_ENABLED.description"></span>
-            </n-popover>Virtual Cache Allocation Technology (VCAT)
+          <n-popover trigger="hover" placement="top-start">
+            <template #trigger>
+              <IconInfo/>
+            </template>
+            <span v-html="this.RDTType.properties.VCAT_ENABLED.description"></span>
+          </n-popover>
+          Virtual Cache Allocation Technology (VCAT)
         </b-form-checkbox>
       </div>
     </div>
@@ -385,17 +389,22 @@ export default {
         // generate service vm cpu affinity setting
         if (serviceVM !== null) {
           let serviceVMCPUIndex = 0;
-          Object.keys(pcpu_vms).map((pcpu_id) => {
-            // if this core is not used as rt core,
-            // use it as service vm cpu
-            if (pcpu_vms[pcpu_id].y.length === 0) {
-              pcpu_vms[pcpu_id].n.push({
-                // '@id': serviceVM['@id'],
-                "VM": serviceVM.name,
-                "VCPU": serviceVMCPUIndex
-              })
-              serviceVMCPUIndex++;
+          let schemaData = window.getSchemaData()
+          schemaData.HV.BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id.enum.map((pcpu_id) => {
+            if (pcpu_vms.hasOwnProperty(pcpu_id)) {
+              if (pcpu_vms[pcpu_id].y.length !== 0) {
+                // ignore pcpu_id which has rt vm enabled
+                return
+              }
+            } else {
+              pcpu_vms[pcpu_id] = {'y': [], 'n': []}
             }
+            pcpu_vms[pcpu_id].n.push({
+              // '@id': serviceVM['@id'],
+              "VM": serviceVM.name,
+              "VCPU": serviceVMCPUIndex
+            })
+            serviceVMCPUIndex++;
           })
         }
         return {
@@ -634,6 +643,12 @@ export default {
           //   return a['@id'] - b['@id']
           // });
         })
+
+        for (let i = 0; i < board_cat_info.length; i++) {
+          if (board_cat_info[i].data.POLICY.length === 0) {
+            board_cat_info.splice(i--, 1)
+          }
+        }
         return board_cat_info;
       }
 
@@ -667,7 +682,8 @@ export default {
 
 .chunkTitle {
   border: 1px solid white;
-  padding: 7px 0 12px;
+  padding: 7px 0 0;
+  min-height: 36px;
 }
 
 .rightTitle {

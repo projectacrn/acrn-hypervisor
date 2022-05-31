@@ -109,6 +109,7 @@ export default {
   },
   mounted() {
     this.updateCurrentFormSchema()
+    window.getSchemaData = this.getSchemaData
     window.getCurrentFormSchemaData = this.getCurrentFormSchemaData
     window.getCurrentScenarioData = this.getCurrentScenarioData
     window.getBoardData = this.getBoardData
@@ -186,6 +187,9 @@ export default {
       this.showFlag = false;
       this.updateCurrentFormSchema()
       this.updateCurrentFormData()
+    },
+    getSchemaData() {
+      return this.schemas
     },
     getCurrentFormSchemaData() {
       return this.currentFormSchema
