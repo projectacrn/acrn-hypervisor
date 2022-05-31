@@ -5,8 +5,7 @@
     <div class="py-3">
       <b-form-checkbox
           v-model="SSRAM_ENABLED" :value="'y'" :uncheckedValue="'n'"
-          :disabled="RDT_ENABLED==='y'"
-      >
+          :disabled="RDT_ENABLED==='y'">
         <n-popover trigger="hover" placement="top-start">
           <template #trigger>
             <IconInfo/>
@@ -21,7 +20,7 @@
       <b-form-checkbox
           v-model="RDT_ENABLED" :value="'y'" :uncheckedValue="'n'"
           :disabled="SSRAM_ENABLED==='y'"
-      >
+          @click="(event)=>checkboxController('RDT_ENABLED',event)">
         <n-popover trigger="hover" placement="top-start">
           <template #trigger>
             <IconInfo/>
@@ -33,7 +32,8 @@
       <div class="d-flex flex-column gap-2 ps-3 pb-3">
         <b-form-checkbox
             v-model="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'"
-            :disabled="SSRAM_ENABLED==='y'||VCAT_ENABLED==='y'">
+            :disabled="SSRAM_ENABLED==='y'||VCAT_ENABLED==='y'"
+            @click="(event)=>checkboxController('CDP_ENABLED',event)">
           <n-popover trigger="hover" placement="top-start">
             <template #trigger>
               <IconInfo/>
@@ -44,7 +44,8 @@
         </b-form-checkbox>
         <b-form-checkbox
             v-model="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'"
-            :disabled="SSRAM_ENABLED==='y'||CDP_ENABLED==='y'">
+            :disabled="SSRAM_ENABLED==='y'||CDP_ENABLED==='y'"
+            @click="(event)=>checkboxController('VCAT_ENABLED',event)">
           <n-popover trigger="hover" placement="top-start">
             <template #trigger>
               <IconInfo/>
@@ -205,6 +206,26 @@ export default {
     }
   },
   methods: {
+    checkboxController(name, event) {
+      let oldValue = this.formDataProxy(name);
+      let newValue = oldValue === 'y' ? 'n' : 'y';
+      let message = newValue === 'y' ? "Selecting Cache Allocation Technology, Code and Data Prioritization, " +
+          "or Virtual Cache Allocation Technology will remove any prior configurations. " +
+          "To see your current configuration, go to the Hypervisor’s Advanced tab, " +
+          "Memory Isolation for Performance section.\n\n" +
+          "Are you sure you want to continue?" : "Deselecting Cache Allocation Technology, " +
+          "Code and Data Prioritization, or Virtual Cache Allocation Technology will remove any prior configurations. " +
+          "To see your current configuration, go to the Hypervisor’s Advanced tab, " +
+          "Memory Isolation for Performance section.\n\n" +
+          "Are you sure you want to continue?";
+      // noinspection JSUnresolvedFunction
+      confirm(message)
+          .then((confirmed) => {
+            this.formDataProxy(name, confirmed ? newValue : oldValue, true)
+          })
+      event.preventDefault()
+      event.stopPropagation()
+    },
     formDataProxy(name, data = null, update = false) {
       let path = {
         'SSRAM_ENABLED': 'FEATURES.SSRAM.SSRAM_ENABLED',
@@ -267,10 +288,12 @@ export default {
       }
       for (let policyIndex = 0; policyIndex < CACHE_REGION.data.POLICY.length; policyIndex++) {
         if (policyIndex < CACHE_REGION.real_time_count) {
+          // noinspection JSUnresolvedVariable
           CACHE_REGION.data.POLICY[policyIndex].CLOS_MASK = '0x' + parseInt(
               '0'.repeat(policyIndex) + '1' + '0'.repeat(CACHE_REGION.capacity_mask_length - policyIndex - 1),
               2).toString(16)
         } else {
+          // noinspection JSUnresolvedVariable
           CACHE_REGION.data.POLICY[policyIndex].CLOS_MASK = '0x' + parseInt(
               '0'.repeat(CACHE_REGION.real_time_count) + '1'.repeat(CACHE_REGION.capacity_mask_length - CACHE_REGION.real_time_count),
               2).toString(16)
@@ -396,6 +419,7 @@ export default {
         if (serviceVM !== null) {
           let serviceVMCPUIndex = 0;
           let schemaData = window.getSchemaData()
+          // noinspection JSUnresolvedVariable
           schemaData.HV.BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id.enum.map((pcpu_id) => {
             // if pcpu_id in preLaunchedVMCPUIDs, it's used by pre launched vm, we need skip it
             if (preLaunchedVMCPUIDs.indexOf(pcpu_id) !== -1) {
