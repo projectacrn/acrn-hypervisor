@@ -29,7 +29,7 @@
 	(1ULL << VIRTIO_RING_F_EVENT_IDX) | (1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VIRTIO_F_ANY_LAYOUT) | (1ULL << VIRTIO_F_VERSION_1)
 
-#define U32_MAX                 65535
+#define U32_MAX                 ((uint32_t)~0U)
 #define VMADDR_CID_HOST         2
 
 struct virtio_vsock_config {
