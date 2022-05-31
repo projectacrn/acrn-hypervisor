@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2022 Intel Corporation. -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<xs:schema xml:id="root"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:acrn="https://projectacrn.org">
+
+  <xs:assert test="every $vm in /acrn-config/vm satisfies
+                   every $vsock in $vm/virtio_devices/vsock satisfies
+                   count(//virtio_devices/vsock[text()=$vsock]) = 1
+                   ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>"{$vm/name}" repeats a vsock CID assignment: {$vsock}, either with this VM or with other VMs. Remove the duplicates.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+</xs:schema>
