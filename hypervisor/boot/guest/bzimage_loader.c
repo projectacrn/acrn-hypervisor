@@ -182,6 +182,7 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 	return load_addr;
 }
 
+#ifdef CONFIG_MULTIBOOT2
 /**
  * @pre vm != NULL && efi_mmap_desc != NULL
  */
@@ -234,6 +235,7 @@ static uint16_t create_service_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_m
 
 	return desc_idx;
 }
+#endif
 
 /**
  * @pre zp != NULL && vm != NULL
