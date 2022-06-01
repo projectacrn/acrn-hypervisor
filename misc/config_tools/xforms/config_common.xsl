@@ -156,6 +156,11 @@
     </xsl:call-template>
 
     <xsl:call-template name="integer-by-key">
+      <xsl:with-param name="key" select="'HV_RAM_SIZE'" />
+      <xsl:with-param name="default" select="//allocation-data/acrn-config/hv/MEMORY/HV_RAM_SIZE" />
+    </xsl:call-template>
+
+    <xsl:call-template name="integer-by-key">
       <xsl:with-param name="key" select="'STACK_SIZE'" />
     </xsl:call-template>
   </xsl:template>
