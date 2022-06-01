@@ -104,39 +104,33 @@ def summary_loginfo(board_xml):
     critical_list = []
     log_line = open(str(tmpfile.name), "r", encoding='UTF-8')
     for line in log_line:
-        if "DEBUG" in line:
+        if "WARNING" in line:
             warning_list.append(line)
         elif "ERROR" in line:
             error_list.append(line)
         elif "CRITICAL" in line:
             critical_list.append(line)
 
-    print("="*length)
-    print("\033[1;37mWARNING\033[0m")
-    print("These issues affect optional features. You can ignore them if they don't apply to you.\n")
     if len(warning_list) != 0:
+        print("="*length)
+        print("\033[1;37mWARNING\033[0m")
+        print("These issues affect optional features. You can ignore them if they don't apply to you.\n")
         for warning in warning_list:
             print("\033[1;33m{0}\033[0m".format(warning.strip('\n')))
-    else:
-        print("None")
 
-    print("="*length)
-    print("\033[1;37mERROR\033[0m")
-    print("You must resolve these issues to generate a VALID board configuration file for building and boot ACRN.\n")
     if len(error_list) != 0:
+        print("="*length)
+        print("\033[1;37mERROR\033[0m")
+        print("You must resolve these issues to generate a VALID board configuration file for building and boot ACRN.\n")
         for error in error_list:
             print("\033[1;31m{0}\033[0m".format(error.strip('\n')))
-    else:
-        print("None")
 
-    print("="*length)
-    print("\033[1;37mCRITICAL\033[0m")
-    print("You must resolve these issues to generate a board configuration file.\n")
     if len(critical_list) != 0:
+        print("="*length)
+        print("\033[1;37mCRITICAL\033[0m")
+        print("You must resolve these issues to generate a board configuration file.\n")
         for critical in critical_list:
             print("\033[1;31m{0}\033[0m".format(critical.strip('\n')))
-    else:
-        print("None")
 
     print("="*length)
     if len(error_list) != 0 and len(critical_list) == 0:
@@ -150,6 +144,8 @@ def summary_loginfo(board_xml):
     tmpfile.close()
 
 def main(board_name, board_xml, args):
+    print(f"Generating board XML {board_name}. This may take a few minutes...")
+
     # Check that the dependencies are met
     check_deps()
 
@@ -204,8 +200,6 @@ def main(board_name, board_xml, args):
 
         # Finally overwrite the output with the updated XML
         board_etree.write(board_xml, pretty_print=True)
-        print("SUCCESS: Board configuration file {} generated successfully and saved to {}" \
-              .format(board_xml, os.path.dirname(os.path.abspath(board_xml))))
 
     except subprocess.CalledProcessError as e:
         logger.critical(e)
@@ -216,7 +210,7 @@ if __name__ == "__main__":
     parser.add_argument("board_name", help="the name of the board that runs the ACRN hypervisor")
     parser.add_argument("--out", help="the name of board info file")
     parser.add_argument("--basic", action="store_true", default=False, help="do not extract advanced information such as ACPI namespace")
-    parser.add_argument("--loglevel", default="info", help="choose log level, e.g. debug, info, warning, error or critical")
+    parser.add_argument("--loglevel", default="warning", help="choose log level, e.g. debug, info, warning, error or critical")
     parser.add_argument("--check-device-status", action="store_true", default=False, help="filter out devices whose _STA object evaluates to 0")
     parser.add_argument("--add-llc-cat", default=None, action=AddLLCCATAction,
                         metavar="<capacity_mask_length:int>,<clos_number:int>,<has_CDP:bool>", help="manually set the Cache Allocation Technology capability of the last level cache")
