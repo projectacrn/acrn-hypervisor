@@ -154,7 +154,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo pip3 install lxml xmlschema defusedxml
+      sudo pip3 install lxml xmlschema defusedxml tqbm
 
 #. Create a working directory:
 
@@ -459,9 +459,7 @@ Configurator to generate a scenario configuration file and launch script.
 
    .. code-block:: bash
 
-      cd ~/acrn-work/acrn-hypervisor/misc/config_tools
-      python3 -m pip install -r requirements.txt
-      cd configurator
+      cd ~/acrn-work/acrn-hypervisor/misc/config_tools/configurator
       python3 -m pip install -r requirements.txt
       yarn
 

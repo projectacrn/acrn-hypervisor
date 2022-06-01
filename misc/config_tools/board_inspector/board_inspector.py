@@ -218,7 +218,7 @@ if __name__ == "__main__":
     parser.add_argument("board_name", help="the name of the board that runs the ACRN hypervisor")
     parser.add_argument("--out", help="the name of board info file")
     parser.add_argument("--basic", action="store_true", default=False, help="do not extract advanced information such as ACPI namespace")
-    parser.add_argument("--loglevel", default="warning", help="choose log level, e.g. info, warning or error")
+    parser.add_argument("--loglevel", default="warning", help="choose log level, e.g. debug, info, warning, error or critical")
     parser.add_argument("--check-device-status", action="store_true", default=False, help="filter out devices whose _STA object evaluates to 0")
     parser.add_argument("--add-llc-cat", default=None, action=AddLLCCATAction,
                         metavar="<capacity_mask_length:int>,<clos_number:int>,<has_CDP:bool>", help="manually set the Cache Allocation Technology capability of the last level cache")

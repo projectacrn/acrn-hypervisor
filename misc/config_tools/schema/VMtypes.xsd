@@ -216,12 +216,12 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
       </xs:annotation>
     </xs:element>
     <xs:element name="io_port" type="HexFormat">
-      <xs:annotation acrn:title="Virtual I/O address" acrn:defaults="[hex(i) for i in range(0x9200, 0x9280, 8)]" acrn:unique-among="//vuart_connection/endpoint[vm_name=$parent/vm_name]/io_port/text()">
+      <xs:annotation acrn:title="Virtual I/O address" acrn:defaults="[hex(i) for i in range(0x9200, 0x9280, 8)]" acrn:unique-among="//vuart_connection/endpoint[vm_name=$parent/vm_name]/io_port/text()" acrn:widget-options="'placeholder':'An address in hexadecimal, e.g. 0x4000'">
         <xs:documentation>Specify the COM base for each legacy virtual UART.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="vbdf" type="VBDFType">
-      <xs:annotation acrn:title="Virtual UART BDF" acrn:defaults="[f'00:{i:02x}.0' for i in range(16, 24)]" acrn:unique-among="//vuart_connection/endpoint[vm_name=$parent/vm_name]/vbdf/text()">
+      <xs:annotation acrn:title="Virtual UART BDF" acrn:defaults="[f'00:{i:02x}.0' for i in range(16, 24)]" acrn:unique-among="//vuart_connection/endpoint[vm_name=$parent/vm_name]/vbdf/text()" acrn:widget-options="'placeholder':'00:[device].[function], e.g. 00:1c.0. All fields are in hexadecimal.'">
         <xs:documentation>Specify the virtual Bus:Device.Function (BDF) for each PCI virtual UART. Virtual BDF is automatically assigned when the configuration is saved and can be changed if needed.</xs:documentation>
       </xs:annotation>
     </xs:element>
@@ -240,7 +240,10 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
         <xs:documentation>Select the communication virtual UART (vUART) type.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="endpoint" type="VuartEndpointType" minOccurs="2" maxOccurs="2" />
+    <xs:element name="endpoint" type="VuartEndpointType" minOccurs="2" maxOccurs="2">
+      <xs:annotation acrn:title="Virtual UART port">
+      </xs:annotation>
+    </xs:element>
   </xs:sequence>
 </xs:complexType>
 
