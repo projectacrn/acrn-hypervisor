@@ -245,14 +245,14 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
   <xs:all>
     <xs:element name="NAME" minOccurs="1">
       <xs:annotation acrn:title="Region Name">
-        <xs:documentation>Name of the shared memory region.</xs:documentation>
+        <xs:documentation>Name of the shared memory region. The name must be between 1-27 characters and contain only letters, digits and "_".</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
   <xs:annotation>
-    <xs:documentation>A string with no spaces.</xs:documentation>
+    <xs:documentation>Must be 1-27 characters and only letters, digits and "_".</xs:documentation>
   </xs:annotation>
 	<xs:restriction base="xs:string">
-	  <xs:pattern value="\w+" />
+	  <xs:pattern value="\w{1,27}" />
 	</xs:restriction>
       </xs:simpleType>
     </xs:element>
