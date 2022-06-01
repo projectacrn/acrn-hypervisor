@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 1989, 1990 William F. Jolitz
  * Copyright (c) 1990 The Regents of the University of California.
- * Copyright (c) 2017 Intel Corporation
+ * Copyright (c) 2017-2020 Intel Corporation
  *
  * This code is derived from software contributed to Berkeley by
  * William Jolitz.
