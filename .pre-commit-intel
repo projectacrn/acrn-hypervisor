@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# A pre-commit hook script to check that an existing Intel copyright line within
+# the first 15 lines, contains the current year, which would be the last commit
+# date for this file..
+#
+# Create a symbolic link to this file from .git/hooks/pre-commit to enable it:
+#   cd acrn-hypervisor/.git/hooks; ln -s ../.pre-commit-intel pre-commit
+
+# Redirect output to stderr.
+exec 1>&2
+
+# Don't run this pre-commit if the submitter's email is not from intel.com
+EMAIL=$(git config user.email)
+[[ ! "$EMAIL" == *"intel.com" ]] && {  exit 0; }
+
+RED='\033[0;31m'
+NOCOLOR='\033[0m'
+
+found_mismatch=""
+commit_year=$(date +%Y)
+for filename in $(git diff --cached --name-only --diff-filter=ACM)
+do
+   wrong_year=$(head -15 "$filename" | grep -i ".*Copyright.*Intel" | grep -v "$commit_year")
+   [ ! -z "$wrong_year" ] && [ -z "$found_mismatch" ] && { found_mismatch="yes"; \
+       echo -e "\n${RED}ERROR: As an Intel contributor ($EMAIL), " \
+       "keep the Intel copyright year updated: ${NOCOLOR}\n"; }
+
+   [ ! -z "$wrong_year" ] && { echo -e "  ${RED}$filename${NOCOLOR}: $wrong_year "\
+       "${RED}must be updated to contain ${NOCOLOR}$commit_year."; }
+done
+
+# if we had a mismatch hit, exit with an error
+[ ! -z "$found_mismatch" ] && exit -1;
+exit 0;
