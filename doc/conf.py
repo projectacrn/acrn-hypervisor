@@ -319,7 +319,7 @@ VerbatimBorderColor={HTML}{00285A}',
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'acrn.tex', u'Project ACRN Documentation',
-     u'Project ACRN', 'manual'),
+     u'Project ACRN', 'manual',True),
 ]
 
 latex_logo = 'images/ACRN_Logo_PrimaryLockup_COLOR-300x300-1.png'

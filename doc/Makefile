@@ -13,7 +13,7 @@ SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = "Project ACRN"
 BUILDDIR      ?= _build
 SOURCEDIR     = $(BUILDDIR)/rst
-LATEXMKOPTS   = -silent
+LATEXMKOPTS   = "-silent -interaction=nonstopmode -f"
 
 # document publication assumes the folder structure is setup
 # with the acrn-hypervisor and projectacrn.github.io repos as
@@ -69,7 +69,7 @@ singlehtml: content doxy
 
 pdf: html
 	@echo now making $(BUILDDIR)/latex/acrn.pdf
-	-$(Q)make -silent latexpdf LATEXMKOPTS=$(LATEXMKOPTS) >> $(BUILDDIR)/doc.log 2>&1
+	$(Q)make -silent latexpdf LATEXMKOPTS=$(LATEXMKOPTS) >> $(BUILDDIR)/doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
 
 
