@@ -163,6 +163,7 @@ export default {
   data() {
     return {
       providerType: this.rootSchema.definitions['ProviderType']['enum'],
+      IVSHMEMSize: this.rootSchema.definitions['IVSHMEMSize']['enum'],
       IVSHMEMRegionType: this.rootSchema.definitions['IVSHMEMRegionType'],
       IVSHMEMVM: this.rootSchema.definitions['IVSHMEMVM'],
       VMConfigType: this.rootSchema.definitions['VMConfigType'],
