@@ -88,7 +88,7 @@
                   <template #trigger>
                       <IconInfo/>
                   </template>
-                  <span>{{this.VuartEndpointType.vbdf.description}}</span>
+                  <span v-html="this.VuartEndpointType.vbdf.description"></span>
                 </n-popover>{{vuartVBDFTitle}}
             </b-col>
           </b-row>
