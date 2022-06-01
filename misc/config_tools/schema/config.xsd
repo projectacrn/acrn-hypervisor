@@ -129,7 +129,7 @@
         <xs:documentation>Specify the size of the memory stack in bytes for each physical CPU. For example, if you specify 8 kilobytes, each CPU will get its own 8-kilobyte stack.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="HV_RAM_START" type="HexFormat" default="0x00400000">
+    <xs:element name="HV_RAM_START" type="HexFormat" minOccurs="0">
       <xs:annotation acrn:views="">
         <xs:documentation>The 2MB-aligned starting physical address of the RAM region used by the hypervisor.</xs:documentation>
       </xs:annotation>
