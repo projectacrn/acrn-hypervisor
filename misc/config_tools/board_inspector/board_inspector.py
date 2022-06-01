@@ -104,7 +104,7 @@ def summary_loginfo(board_xml):
     critical_list = []
     log_line = open(str(tmpfile.name), "r", encoding='UTF-8')
     for line in log_line:
-        if "DEBUG" in line:
+        if "WARNING" in line:
             warning_list.append(line)
         elif "ERROR" in line:
             error_list.append(line)
@@ -150,6 +150,8 @@ def summary_loginfo(board_xml):
     tmpfile.close()
 
 def main(board_name, board_xml, args):
+    print(f"Generating board XML {board_name}. This may take a few minutes...")
+
     # Check that the dependencies are met
     check_deps()
 
@@ -216,7 +218,7 @@ if __name__ == "__main__":
     parser.add_argument("board_name", help="the name of the board that runs the ACRN hypervisor")
     parser.add_argument("--out", help="the name of board info file")
     parser.add_argument("--basic", action="store_true", default=False, help="do not extract advanced information such as ACPI namespace")
-    parser.add_argument("--loglevel", default="info", help="choose log level, e.g. info, warning or error")
+    parser.add_argument("--loglevel", default="warning", help="choose log level, e.g. info, warning or error")
     parser.add_argument("--check-device-status", action="store_true", default=False, help="filter out devices whose _STA object evaluates to 0")
     parser.add_argument("--add-llc-cat", default=None, action=AddLLCCATAction,
                         metavar="<capacity_mask_length:int>,<clos_number:int>,<has_CDP:bool>", help="manually set the Cache Allocation Technology capability of the last level cache")
