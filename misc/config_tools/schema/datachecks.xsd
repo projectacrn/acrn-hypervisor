@@ -16,6 +16,7 @@
       <xi:include href="checks/passthrough_devices.xsd" xpointer="xpointer(id('root')/*)" />
       <xi:include href="checks/virtio_devices.xsd" xpointer="xpointer(id('root')/*)" />
       <xi:include href="checks/vuart_config.xsd" xpointer="xpointer(id('root')/*)" />
+      <xi:include href="checks/ivsh_memory.xsd" xpointer="xpointer(id('root')/*)" />
 
     </xs:complexType>
   </xs:element>
