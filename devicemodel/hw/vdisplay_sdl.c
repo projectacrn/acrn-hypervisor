@@ -1128,7 +1128,7 @@ vdpy_deinit(int handle)
 	return 0;
 }
 
-void
+int
 gfx_ui_init()
 {
 	SDL_SysWMinfo info;
@@ -1141,6 +1141,7 @@ gfx_ui_init()
 
 	if (SDL_Init(SDL_INIT_VIDEO)) {
 		pr_err("Failed to Init SDL2 system");
+		return -1;
 	}
 
 	SDL_GetDisplayBounds(0, &disp_rect);
@@ -1150,6 +1151,7 @@ gfx_ui_init()
 		pr_err("Too small resolutions. Please check the "
 		       " graphics system\n");
 		SDL_Quit();
+		return -1;
 	}
 
 	SDL_SetHint(SDL_HINT_GRAB_KEYBOARD, "1");
@@ -1170,6 +1172,8 @@ gfx_ui_init()
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 
 	vdpy.s.is_ui_realized = true;
+
+	return 0;
 }
 
 void

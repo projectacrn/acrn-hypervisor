@@ -84,7 +84,7 @@ struct cursor {
 };
 
 int vdpy_parse_cmd_option(const char *opts);
-void gfx_ui_init();
+int gfx_ui_init();
 int vdpy_init();
 void vdpy_get_display_info(int handle, struct display_info *info);
 void vdpy_surface_set(int handle, struct surface *surf);
