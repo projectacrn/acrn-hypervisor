@@ -6,12 +6,14 @@
 
         <b-row class="align-items-center my-2 mt-4">
           <b-col md="2">
-            <n-popover trigger="hover" placement="top-start">
+            <label>
+              <n-popover trigger="hover" placement="top-start">
               <template #trigger>
                   <IconInfo/>
               </template>
               <span v-html="this.IVSHMEMRegionType.properties.NAME.description"></span>
             </n-popover>Region name:
+            </label>
           </b-col>
           <b-col md="4">
               <b-form-input v-model="IVSHMEM_VMO.NAME" placeholder="Any string with no white spaces."/>
@@ -59,7 +61,7 @@
                 <template #trigger>
                     <IconInfo/>
                 </template>
-                <span v-html="this.IVSHMEMVM.properties.VBDF.description"></span>
+                <span v-html="this.IVSHMEM_VM.properties.VBDF.description"></span>
               </n-popover>Virtual BDF:
             </b-col>
           </b-row>
@@ -71,7 +73,7 @@
                   <template #trigger>
                       <IconInfo/>
                   </template>
-                  <span v-html="this.VMConfigType.properties.name.description"></span>
+                  <span v-html="this.IVSHMEM_VM.properties.VM_NAME.description"></span>
                 </n-popover>VM name:
               </label>
             </b-col>
@@ -82,7 +84,7 @@
               </b-form-invalid-feedback>
             </b-col>
             <b-col sm="3">
-              <b-form-input :v-model="IVSHMEM_VM.VBDF" placeholder="00:[device].[function], e.g. 00:0c.0. All fields are in hexadecimal."/>
+              <b-form-input v-model="IVSHMEM_VM.VBDF" placeholder="00:[device].[function], e.g. 00:0c.0. All fields are in hexadecimal."/>
               <b-form-invalid-feedback>
                 must have value
               </b-form-invalid-feedback>
@@ -165,8 +167,7 @@ export default {
       providerType: this.rootSchema.definitions['ProviderType']['enum'],
       IVSHMEMSize: this.rootSchema.definitions['IVSHMEMSize']['enum'],
       IVSHMEMRegionType: this.rootSchema.definitions['IVSHMEMRegionType'],
-      IVSHMEMVM: this.rootSchema.definitions['IVSHMEMVM'],
-      VMConfigType: this.rootSchema.definitions['VMConfigType'],
+      IVSHMEM_VM: this.rootSchema.definitions['IVSHMEMVM'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
     };
   },
