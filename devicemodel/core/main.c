@@ -1045,7 +1045,10 @@ main(int argc, char *argv[])
 	}
 
 	if (gfx_ui) {
-		gfx_ui_init();
+		if(gfx_ui_init()) {
+			pr_err("gfx ui initialize failed\n");
+			exit(1);
+		}
 	}
 
 	for (;;) {
