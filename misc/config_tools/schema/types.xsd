@@ -243,7 +243,7 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 
 <xs:complexType name="IVSHMEMRegionType">
   <xs:all>
-    <xs:element name="NAME">
+    <xs:element name="NAME" minOccurs="1">
       <xs:annotation acrn:title="Region Name">
         <xs:documentation>Name of the shared memory region.</xs:documentation>
       </xs:annotation>
