@@ -69,7 +69,7 @@
           L{{ CACHE_ALLOCATION.level }} Cache Allocation Technology {{
             cat_level_region_sum[CACHE_ALLOCATION.level].count > 1 ? ' Module ' + cat_level_region_sum[CACHE_ALLOCATION.level][CACHE_ALLOCATION.id] : ''
           }}
-          (pCPU : {{ Math.min(...CACHE_ALLOCATION.processors) }}~{{ Math.max(...CACHE_ALLOCATION.processors) }})
+          (requires CPU affinity to cores {{ Math.min(...CACHE_ALLOCATION.processors) }}~{{ Math.max(...CACHE_ALLOCATION.processors) }} in each desired VM)
         </text>
         <b-button @click="setDefaultClosMask(CACHE_ALLOCATION)">
           Apply basic real-time defaults
