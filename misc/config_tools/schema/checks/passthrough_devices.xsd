@@ -8,7 +8,7 @@
   <xs:assert test="every $vm in /acrn-config/vm satisfies
                    not($vm//mmio_resources/TPM2 = 'y') or not($vm//mmio_resources/p2sb = 'y')">
     <xs:annotation acrn:severity="error" acrn:report-on="$vm//mmio_resources">
-      <xs:documentation>VM "{$vm/name}" is assigned both a TPM2 and P2SB (Primary-to-Sideband bridge), which is not a supported configuration. Remove one of these choices.</xs:documentation>
+      <xs:documentation>VM "{$vm/name}" is assigned both a TPM2 (Trusted Platform Module) and P2SB (Primary-to-Sideband Bridge), which is not a supported configuration. Remove one of these choices.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 

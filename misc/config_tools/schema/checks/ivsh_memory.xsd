@@ -10,7 +10,7 @@
                   every $REGION_NAME in /acrn-config//IVSHMEM_REGION[IVSHMEM_VMS/IVSHMEM_VM/VM_NAME=$VM_NAME]/NAME satisfies
                   count(/acrn-config//IVSHMEM_REGION[NAME=$REGION_NAME]/IVSHMEM_VMS/IVSHMEM_VM[VM_NAME=$VM_NAME]) = 1">
     <xs:annotation acrn:severity="error" acrn:report-on="$REGION_NAME">
-      <xs:documentation>InterVM shared memory region name "{$REGION_NAME}" should be different for the same VM "{$VM_NAME}"</xs:documentation>
+        <xs:documentation>VM "{$VM_NAME}" may not be duplicated in the list of VMs that have access to the Inter-VM shared memory region "{$REGION_NAME}".</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
