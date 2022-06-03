@@ -1468,7 +1468,7 @@ static void
 atapi_start_stop_unit(struct ahci_port *p, int slot, uint8_t *cfis)
 {
 	uint8_t *acmd = cfis + 0x40;
-	uint32_t tfd;
+	uint32_t tfd = ATA_S_ERROR;
 
 	switch (acmd[4] & 3) {
 	case 0:
