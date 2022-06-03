@@ -10,7 +10,7 @@
                    count(//virtio_devices/vsock[text()=$vsock]) = 1
                    ">
     <xs:annotation acrn:severity="error" acrn:report-on="$vm">
-      <xs:documentation>"{$vm/name}" repeats a vsock CID assignment: {$vsock}, either with this VM or with other VMs. Remove the duplicates.</xs:documentation>
+      <xs:documentation>VM "{$vm/name}" repeats a vsock CID assignment: {$vsock}, used in this VM or another VM. Make all vsock CID values unique.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
