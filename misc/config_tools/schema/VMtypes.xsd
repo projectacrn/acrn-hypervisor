@@ -44,7 +44,7 @@
 
 <xs:complexType name="CPUAffinityConfiguration">
   <xs:all>
-    <xs:element name="pcpu_id" type="xs:integer" default="2">
+    <xs:element name="pcpu_id" type="xs:integer">
       <xs:annotation acrn:title="pCPU ID"
 		     acrn:options="//processors//thread/cpu_id/text()" acrn:options-sorted-by="int">
         <xs:documentation>ID of the pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
