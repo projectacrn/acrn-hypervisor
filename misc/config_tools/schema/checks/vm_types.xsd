@@ -7,7 +7,7 @@
 
   <xs:assert test="count(/acrn-config/vm[.//load_order = 'SERVICE_VM']) &lt; 2">
     <xs:annotation acrn:severity="error" acrn:report-on="//vm[.//load_order = 'SERVICE_VM']">
-      <xs:documentation>There can be at most one service VM, but more than one was configured. Verify there is only one VM with vm_type set to SERVICE_VM. </xs:documentation>
+      <xs:documentation>There may be at most one Service VM, but more than one was configured. Verify only one VM's VM type is set to SERVICE_VM. </xs:documentation>
     </xs:annotation>
   </xs:assert>
 
@@ -29,13 +29,13 @@
 
   <xs:assert test="count(vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']) &lt;= 1">
     <xs:annotation acrn:severity="warning" acrn:report-on="//vm[load_order = 'PRE_LAUNCHED_VM']/vm_type[text() = 'RTVM']">
-      <xs:documentation>Multiple pre-launched VMs {//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']/name} are defined as RT VMs, but ACRN supports at most one pre-launched RT VM in one scenario. Adjust the VM types of those VMs to STANDARD_VM to fix this.</xs:documentation>
+      <xs:documentation>ACRN supports at most one pre-launched RTVM. Multiple pre-launched VMs {//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']/name} are defined as RTVMs. Adjust the VM type of these VMs to Standard to fix this.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
   <xs:assert test="count(distinct-values(vm[vm_type = 'RTVM']/load_order)) &lt;= 1">
     <xs:annotation acrn:severity="warning" acrn:report-on="//vm/vm_type[text() = 'RTVM']">
-      <xs:documentation>Pre-launched RT VM(s) {//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']/name} and post-launched RT VMs {//vm[load_order = 'POST_LAUNCHED_VM' and vm_type = 'RTVM']/name} cannot coexist. Adjust the VM types of those VMs to STANDARD_VM to fix this.</xs:documentation>
+      <xs:documentation>Pre-launched RTVM(s) {//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']/name} and post-launched RTVMs {//vm[load_order = 'POST_LAUNCHED_VM' and vm_type = 'RTVM']/name} may not coexist. Adjust the VM type of these VMs to Standard to fix this.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
