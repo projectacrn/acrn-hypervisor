@@ -63,7 +63,7 @@ import NewBoard from "./NewBoard.vue";
 
 export default {
   name: "Board",
-  components: { NewBoard },
+  components: {NewBoard},
   props: {
     WorkingFolder: {
       type: String
@@ -89,19 +89,19 @@ export default {
   mounted() {
     //get init board if it exist, add to history
     this.getExistBoardPath()
-      .then((filePath) => {
-        if (filePath.length > 0) {
-          console.log("add exist board to history!")
-          configurator.addHistory('Board', filePath)
-          .then(() => {
-            this.getBoardHistory()
-            .then(() => {
-              this.importBoard()
-            })
-          })
-        }
-      })
-      this.getBoardHistory()
+        .then((filePath) => {
+          if (filePath.length > 0) {
+            console.log("add exist board to history!")
+            configurator.addHistory('Board', filePath)
+                .then(() => {
+                  this.getBoardHistory()
+                      .then(() => {
+                        this.importBoard()
+                      })
+                })
+          }
+        })
+    this.getBoardHistory()
 
     // Todo: auto load board
   },
@@ -114,16 +114,16 @@ export default {
     importBoardButton() {
       if (this.imported) {
         this.openBoardFileSelectDialog()
-        .then((filePath) => {
-          if (filePath.length > 0) {
-            if (this.currentSelectedBoard.length > 0) {
-                if (filePath != this.currentSelectedBoard) {
+            .then((filePath) => {
+              if (filePath.length > 0) {
+                if (this.currentSelectedBoard.length > 0) {
+                  if (filePath !== this.currentSelectedBoard) {
                     this.showBoardOverwrite = true;
+                  }
                 }
-            }
-          }
-          this.newFilePath = filePath
-        })
+              }
+              this.newFilePath = filePath
+            })
       } else {
         this.importBoard()
       }
@@ -132,9 +132,9 @@ export default {
       let filepath = ''
       if (useNewFile) {
         filepath = this.newFilePath
-        if (filepath != this.currentSelectedBoard) {
+        if (filepath !== this.currentSelectedBoard) {
           configurator.removeFile(this.currentSelectedBoard)
-          .catch((err) => alert(`${err}`))
+              .catch((err) => alert(`${err}`))
         }
       } else {
         filepath = this.currentSelectedBoard
@@ -149,25 +149,25 @@ export default {
                   .then(() => configurator.addHistory('Board', boardFileNewPath))
                   .then(() => this.getBoardHistory())
             })
-            .catch((err)=> {
+            .catch((err) => {
               alert(`Loading ${filepath} failed: ${err}`)
               console.log(err)
             })
       }
     },
     getExistBoardPath() {
-    // only return filename when using exist configuration.
-    return configurator.readDir(this.WorkingFolder, false)
-      .then((res) => {
-        let boardPath = ''
-        res.map((filepath) => {
-          if (filepath.path.search('\\.board\\.xml') != -1) {
-            boardPath = filepath.path
-          }
-        })
-        // only return the last vaild boardPath
-        return boardPath
-      })
+      // only return filename when using exist configuration.
+      return configurator.readDir(this.WorkingFolder, false)
+          .then((res) => {
+            let boardPath = ''
+            res.map((filepath) => {
+              if (filepath.path.search('\\.board\\.xml') !== -1) {
+                boardPath = filepath.path
+              }
+            })
+            // only return the last vaild boardPath
+            return boardPath
+          })
     },
     openBoardFileSelectDialog() {
       return configurator.openDialog({
@@ -179,8 +179,8 @@ export default {
     },
     browseForFile() {
       this.openBoardFileSelectDialog()
-         .then((filePath) => configurator.addHistory('Board', filePath))
-         .then(() => this.getBoardHistory())
+          .then((filePath) => configurator.addHistory('Board', filePath))
+          .then(() => this.getBoardHistory())
     },
     getBoardHistory() {
       return configurator.getHistory("Board")
