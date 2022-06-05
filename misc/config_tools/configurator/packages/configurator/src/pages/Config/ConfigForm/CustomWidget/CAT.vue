@@ -135,6 +135,8 @@ function count(source, target) {
   return (source.match(new RegExp(target, 'g')) || []).length;
 }
 
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 
 // noinspection JSUnresolvedVariable
 export default {
@@ -209,13 +211,21 @@ export default {
   },
   methods: {
     checkboxController(name, event) {
+      // prevent default event
+      event.preventDefault()
+      event.stopPropagation()
       let oldValue = this.formDataProxy(name);
       let newValue = oldValue === 'y' ? 'n' : 'y';
-      let message = newValue === 'y' ? "Selecting Cache Allocation Technology, Code and Data Prioritization, " +
-          "or Virtual Cache Allocation Technology will remove any prior configurations. " +
-          "To see your current configuration, go to the Hypervisor’s Advanced tab, " +
-          "Memory Isolation for Performance section.\n\n" +
-          "Are you sure you want to continue?" : "Deselecting Cache Allocation Technology, " +
+      if (newValue === 'y') {
+        wait(50).then(() => {
+          this.formDataProxy(name, newValue, true);
+        })
+        return
+      }
+
+      // newValue === 'n'
+      // show confirm dialog to confirm disable CAT feature
+      let message = "Deselecting Cache Allocation Technology, " +
           "Code and Data Prioritization, or Virtual Cache Allocation Technology will remove any prior configurations. " +
           "To see your current configuration, go to the Hypervisor’s Advanced tab, " +
           "Memory Isolation for Performance section.\n\n" +
@@ -225,8 +235,6 @@ export default {
           .then((confirmed) => {
             this.formDataProxy(name, confirmed ? newValue : oldValue, true)
           })
-      event.preventDefault()
-      event.stopPropagation()
     },
     formDataProxy(name, data = null, update = false) {
       let path = {
@@ -241,7 +249,7 @@ export default {
       if (oldValue === undefined) {
         let t = path.split('.');
         let parentPath = t.splice(0, t.length - 1).join('.');
-        if(!vueUtils.getPathVal(this.rootFormData, parentPath)) {
+        if (!vueUtils.getPathVal(this.rootFormData, parentPath)) {
           vueUtils.setPathVal(this.rootFormData, parentPath, {});
         }
         // set to checkbox default value
