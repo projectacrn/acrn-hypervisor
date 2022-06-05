@@ -69,7 +69,9 @@
           L{{ CACHE_ALLOCATION.level }} Cache Allocation Technology {{
             cat_level_region_sum[CACHE_ALLOCATION.level].count > 1 ? ' Module ' + cat_level_region_sum[CACHE_ALLOCATION.level][CACHE_ALLOCATION.id] : ''
           }}
-          (requires CPU affinity to cores {{ Math.min(...CACHE_ALLOCATION.processors) }}~{{ Math.max(...CACHE_ALLOCATION.processors) }} in each desired VM)
+          (requires CPU affinity to cores {{
+            Math.min(...CACHE_ALLOCATION.processors)
+          }}~{{ Math.max(...CACHE_ALLOCATION.processors) }} in each desired VM)
         </text>
         <b-button @click="setDefaultClosMask(CACHE_ALLOCATION)">
           Apply basic real-time defaults
@@ -239,7 +241,11 @@ export default {
       if (oldValue === undefined) {
         let t = path.split('.');
         let parentPath = t.splice(0, t.length - 1).join('.');
-        vueUtils.setPathVal(this.rootFormData, parentPath, {});
+        if(!vueUtils.getPathVal(this.rootFormData, parentPath)) {
+          vueUtils.setPathVal(this.rootFormData, parentPath, {});
+        }
+        // set to checkbox default value
+        vueUtils.setPathVal(this.rootFormData, path, 'n');
       }
       // if data is not empty, set value
       if (data !== null) {
