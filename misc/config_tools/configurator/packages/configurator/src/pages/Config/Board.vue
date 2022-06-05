@@ -148,6 +148,11 @@ export default {
               configurator.writeFile(boardFileNewPath, boardInfo.content)
                   .then(() => configurator.addHistory('Board', boardFileNewPath))
                   .then(() => this.getBoardHistory())
+                  .then(()=>{
+                    if(!!window.boardUpdate){
+                      window.boardUpdate(boardInfo)
+                    }
+                  })
             })
             .catch((err) => {
               alert(`Loading ${filepath} failed: ${err}`)
