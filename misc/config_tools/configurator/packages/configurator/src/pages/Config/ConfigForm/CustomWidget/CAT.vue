@@ -147,6 +147,9 @@ export default {
   },
   mounted() {
     this.updateCatInfo()
+    window.boardUpdate = () => {
+      this.boardUpdate()
+    }
   },
   computed: {
     SSRAM_ENABLED: {
@@ -210,6 +213,9 @@ export default {
     }
   },
   methods: {
+    boardUpdate() {
+      this.updateCatInfo()
+    },
     checkboxController(name, event) {
       // prevent default event
       event.preventDefault()
@@ -439,6 +445,7 @@ export default {
             if (preLaunchedVMCPUIDs.indexOf(pcpu_id) !== -1) {
               return;
             }
+            // noinspection JSCheckFunctionSignatures
             if (!pcpu_vms.hasOwnProperty(pcpu_id)) {
               pcpu_vms[pcpu_id] = {'y': [], 'n': []}
             }
