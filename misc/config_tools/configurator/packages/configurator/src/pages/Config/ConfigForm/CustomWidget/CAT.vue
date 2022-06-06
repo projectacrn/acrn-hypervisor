@@ -282,8 +282,8 @@ export default {
               break;
             case 'CDP_ENABLED':
               this.formDataProxy('SSRAM_ENABLED', 'n');
-              this.formDataProxy('RDT_ENABLED', data);
               if (data === 'y') {
+                this.formDataProxy('RDT_ENABLED', 'y');
                 this.formDataProxy('VCAT_ENABLED', 'n');
               }
               break;
