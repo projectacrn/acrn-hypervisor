@@ -8,7 +8,7 @@
 import sys
 import common, lib.error
 
-standard_uart_port = ['0x3F8', '0x2F8', '0x3E8', '0x2E8']
+standard_uart_port = ['0x3E8', '0x2E8']
 
 # The COM1 was used for console vUART, so we alloc io_port frome COM2~COM4
 service_port_list = list(range(0x9000, 0x9100, 8))
