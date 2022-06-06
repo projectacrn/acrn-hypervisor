@@ -81,7 +81,11 @@
     </xs:annotation>
   </xs:assert>
 
-  <xs:assert test="not (//hv//RDT/RDT_ENABLED = 'y' and //hv//SSRAM/SSRAM_ENABLED = 'y')"/>
+  <xs:assert test="not (//hv//RDT/RDT_ENABLED = 'y' and //hv//SSRAM/SSRAM_ENABLED = 'y')">
+    <xs:annotation>
+      <xs:documentation>RDT_ENABLED and SSRAM_ENABLED can't both be enabled</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
 
   <xs:assert test="hv//SSRAM_ENABLED = 'n' or empty(vm[load_order ='PRE_LAUNCHED_VM' and vm_type='RTVM']) or
 		   every $cap in caches/cache[@level=3]/capability[@id='Software SRAM'] satisfies
