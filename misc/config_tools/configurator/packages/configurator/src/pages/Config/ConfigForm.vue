@@ -67,6 +67,7 @@ export default {
   },
   data() {
     return {
+      vmNameCache: '',
       currentFormMode: 'BasicConfigType',
       formProps: {
         "inline": false,
@@ -123,14 +124,21 @@ export default {
     dataChange({newValue, oldValue}) {
       let newID = newValue.hasOwnProperty('@id') ? newValue['@id'] : -1;
       let oldID = oldValue.hasOwnProperty('@id') ? oldValue['@id'] : -1;
-      if (newID === oldID) {
-        if (oldValue.name !== newValue.name) {
-          this.$emit('vmNameChange', newValue.name, oldValue.name)
-        }
 
+      if (newID === oldID) {
+        // skip hv settings
+        if (newID !== -1) {
+          if (this.vmNameCache !== newValue.name) {
+            this.$emit('vmNameChange', newValue.name, this.vmNameCache)
+            this.vmNameCache = newValue.name;
+          }
+        }
         this.$emit('scenarioConfigFormDataUpdate', newID, newValue)
+      } else {
+        if (newID !== -1) {
+          this.vmNameCache = newValue.name
+        }
       }
-      // this.$emit('update:scenarioData', this.formData)
     }
   }
 }
@@ -227,7 +235,7 @@ export default {
   background: white;
 }
 
-.notice{
+.notice {
   padding: 1rem 0;
 }
 </style>

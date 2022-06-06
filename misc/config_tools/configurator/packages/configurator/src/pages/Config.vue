@@ -304,7 +304,7 @@ export default {
     },
     vmNameChange(newname, oldname) {
       let hvdata = this.scenario.hv
-      if (hvdata.FEATURES.hasOwnProperty('IVSHMEM')) {
+      if (hvdata.hasOwnProperty('FEATURES') && hvdata.FEATURES.hasOwnProperty('IVSHMEM')) {
         for (let key in hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION) {
           let region = hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION[key]
           for (let key1 in region.IVSHMEM_VMS.IVSHMEM_VM) {
@@ -382,7 +382,9 @@ export default {
       }
       let errorFlag = false
       errorFlag = this.confirmVmName()
-      if (errorFlag) {return}
+      if (errorFlag) {
+        return
+      }
       this.assignVMID()
       let msg = [
         "scenario xml saved\n",
@@ -414,44 +416,44 @@ export default {
       // begin write down and verify
 
       configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
-      .then(() => {
-        stepDone = 1
-          console.log("validate settings...")
-          this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-          // noinspection ExceptionCaughtLocallyJS
-          if (this.errors.length !== 0) {
-            throw new Error("validation failed")
-          }
-          console.log("validation ok")
-          stepDone = 2
-          return this.cleanLaunchScript()
-      }).then(() => {
-            if (needSaveLaunchScript) {
-              let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-              let writeDone = []
-              for (let filename in launchScripts) {
-                writeDone.push(configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename]))
-              }
-              return Promise.all(writeDone)
-            } else {
-              return
+          .then(() => {
+            stepDone = 1
+            console.log("validate settings...")
+            this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+            // noinspection ExceptionCaughtLocallyJS
+            if (this.errors.length !== 0) {
+              throw new Error("validation failed")
             }
-      })
-      .then((result) => {
-        if (!_.isEmpty(result)) {
-          stepDone = 3
+            console.log("validation ok")
+            stepDone = 2
+            return this.cleanLaunchScript()
+          }).then(() => {
+        if (needSaveLaunchScript) {
+          let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
+          let writeDone = []
+          for (let filename in launchScripts) {
+            writeDone.push(configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename]))
+          }
+          return Promise.all(writeDone)
+        } else {
+          return
         }
-        alert(`${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`)
       })
-      .catch((err)=>{
-        console.log("error" + err)
-        let outmsg = ''
-        for (var i = 0; i < stepDone; i++)
-          outmsg += msg[i]
-        for (i = stepDone; i < totalMsg; i++)
-          outmsg += errmsg[i]
-        alert(`${outmsg} \n Please check your configuration`)
-      })
+          .then((result) => {
+            if (!_.isEmpty(result)) {
+              stepDone = 3
+            }
+            alert(`${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`)
+          })
+          .catch((err) => {
+            console.log("error" + err)
+            let outmsg = ''
+            for (var i = 0; i < stepDone; i++)
+              outmsg += msg[i]
+            for (i = stepDone; i < totalMsg; i++)
+              outmsg += errmsg[i]
+            alert(`${outmsg} \n Please check your configuration`)
+          })
     }
   }
 }
