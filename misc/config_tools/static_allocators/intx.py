@@ -76,7 +76,7 @@ def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
         # Allocate irq for S5 vuart
         if load_order != "SERVICE_VM":
             legacy_vuart_irq = alloc_irq(irq_list)
-            create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
+            create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, str(vuart_id), "0")
             vuart_id = vuart_id + 1
 
         vuart_connections = scenario_etree.xpath("//vuart_connection")
