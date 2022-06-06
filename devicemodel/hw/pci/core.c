@@ -1069,7 +1069,7 @@ static int
 pci_access_msi(struct pci_vdev *dev, int msi_cap, uint32_t *val, bool is_write)
 {
 	uint16_t msgctrl;
-	int rc, offset;
+	int rc, offset = 0;
 
 	if (msi_cap > PCIR_MSI_PENDING) {
 		pr_err("%s: Msi capability length is out of msi length!\n", __func__);
@@ -1133,7 +1133,7 @@ pci_set_msi_pending(struct pci_vdev *dev, uint32_t index, bool set)
 	if (set)
 		val = (1 << index) | val;
 	else
-		val = (~(1 << index)) | val;
+		val = (~(1 << index)) & val;
 	pci_access_msi(dev, PCIR_MSI_PENDING, &val, true);
 }
 
