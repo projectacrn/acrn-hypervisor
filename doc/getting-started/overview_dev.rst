@@ -72,8 +72,9 @@ See :ref:`hardware`.
 Select Your Scenario
 ====================
 
-A scenario defines a specific ACRN configuration, such as the type and number of
-VMs that can be run, their attributes, and the resources they have access to.
+A scenario defines a specific ACRN configuration, such as hypervisor
+capabilities, the type and number of VMs that can be run, their attributes, and
+the resources they have access to.
 
 This image shows an example of an ACRN scenario to illustrate the types of VMs
 that ACRN offers:
@@ -82,13 +83,12 @@ that ACRN offers:
 
 ACRN offers three types of VMs:
 
-* **Pre-launched User VMs**: These VMs are automatically launched at boot time
-  by the hypervisor. They run independently of other VMs and own dedicated
-  hardware resources, such as a CPU core, memory, and I/O devices. Other VMs,
-  including the Service VM, may not even be aware of a pre-launched VM's
-  existence. The configuration of pre-launched VMs is static and must be defined
-  at build time. They are well-suited for safety-critical applications and where
-  very strict isolation, including from the Service VM, is desirable.
+* **Pre-launched User VMs**: These VMs run independently of other VMs and own
+  dedicated hardware resources, such as CPU cores, memory, and I/O devices.
+  Other VMs, including the Service VM, may not even be aware of a pre-launched
+  VM's existence. The configuration of pre-launched VMs is static and must be
+  defined at build time. They are well-suited for safety-critical applications
+  and where very strict isolation, including from the Service VM, is desirable.
 
 * **Service VM**: A special VM, required for scenarios that have post-launched
   User VMs. The Service VM can access hardware resources directly by running
@@ -116,29 +116,29 @@ meet their requirements without pre-launched VMs. Even if your application has
 stringent real-time requirements, start by testing the application on a
 post-launched VM before considering a pre-launched VM.
 
-Predefined Scenarios
----------------------
+Scenario Types
+---------------
 
-To help accelerate the configuration process, ACRN offers the following
-:ref:`predefined sample scenarios <usage-scenarios>`:
+ACRN categorizes scenarios into :ref:`three types <usage-scenarios>`:
 
 * **Shared scenario:** This scenario represents a traditional computing, memory,
   and device resource sharing model among VMs. It has post-launched User VMs and
   the required Service VM. There are no pre-launched VMs in this scenario.
 
-* **Partitioned scenario:** This scenario has pre-launched User VMs to
-  demonstrate VM partitioning: the User VMs are independent and isolated, and
-  they do not share resources. There is no need for the Service VM or Device
-  Model because all partitioned VMs run native device drivers and directly
-  access their configured resources.
+* **Partitioned scenario:** This scenario has pre-launched User VMs only. It
+  demonstrates VM partitioning: the User VMs are independent and isolated, and
+  they do not share resources. For example, a pre-launched VM may not share a
+  storage device with any other VM, so each pre-launched VM requires its own
+  boot device. There is no need for the Service VM or Device Model because all
+  partitioned VMs run native device drivers and directly access their configured
+  resources.
 
 * **Hybrid scenario:** This scenario simultaneously supports both sharing and
-  partitioning on the consolidated system. It has pre-launched and
+  partitioning on the consolidated system. It has pre-launched VMs and
   post-launched VMs, along with the Service VM.
 
-ACRN provides predefined configuration files and documentation to help you set
-up these scenarios. You can customize the files for your use case, as described
-later in :ref:`overview_dev_config_editor`.
+While designing your scenario, keep these concepts in mind as you will see them
+mentioned in ACRN components and documentation.
 
 |icon_host| Step 2: Prepare the Development Computer
 ****************************************************
@@ -160,7 +160,7 @@ ACRN:
 
 .. |icon_target| image:: ./images/icon_target.png
 
-The :ref:`board_inspector_tool` ``board_inspector.py``, found in the ACRN
+The :ref:`board_inspector_tool`, found in the ACRN
 hypervisor source code, enables you to generate a board configuration file on
 the target system.
 
@@ -181,8 +181,8 @@ You must configure all of your target's BIOS settings before running the Board
 Inspector tool, because the tool records the current BIOS settings in the board
 configuration file.
 
-ACRN requires the BIOS settings listed in :ref:`gsg-board-setup` of the Getting
-Started Guide.
+ACRN requires the BIOS settings listed in :ref:`gsg-board-setup` of
+the Getting Started Guide.
 
 Use the Board Inspector to Generate a Board Configuration File
 ==============================================================
@@ -208,67 +208,22 @@ and :ref:`overview_dev_build`.
 |icon_host| Step 4: Generate a Scenario Configuration File and Launch Scripts
 *****************************************************************************
 
-The :ref:`acrn_configurator_tool` ``acrn_configurator.py`` enables you to
-configure your ACRN hypervisor and VMs via a web-based user interface on your
-development computer. Using the tool, you define your scenario settings and save
-them to a scenario configuration file. For scenarios with post-launched User
-VMs, you must also configure and generate launch scripts.
+The :ref:`acrn_configurator_tool` lets you configure your scenario settings via
+a graphical user interface (GUI) on your development computer.
 
-The following sections provide an overview and important information to keep
-in mind when using the ACRN Configurator.
+The tool imports the board configuration file that you generated in
+:ref:`overview_dev_board_config`. Then you can configure your scenario, such as
+set hypervisor capabilities, add VMs, modify their attributes, and delete VMs.
+The tool validates your inputs against your board configuration file to ensure
+the scenario is supported by the target hardware. The tool saves your settings
+to a **scenario configuration file** in XML format. You will need this file in
+:ref:`overview_dev_build`.
 
-Generate a Scenario Configuration File
-======================================
-
-A **scenario configuration file** defines a working scenario by configuring
-hypervisor capabilities and defining some VM attributes and resources. We call
-these settings "static" because they are used to build the hypervisor. The file
-contains:
-
-* All hypervisor settings
-* All pre-launched User VM settings
-* All Service VM settings
-* Some post-launched User VM settings, while other settings are in
-  the launch script
-
-Before using the ACRN Configurator to generate a scenario configuration
-file, be sure you have the board configuration file that you generated in
-:ref:`overview_dev_board_config`. The tool needs the board configuration file to
-validate that your custom scenario is supported by the target hardware.
-
-You can use the tool to create a new scenario configuration file or modify an
-existing one, such as a predefined scenario described in
-:ref:`overview_dev_hw_scenario`. The tool's GUI enables you to edit the
-configurable items in the file, such as adding VMs, modifying VM attributes, or
-deleting VMs. The tool validates your inputs against your board configuration
-file. After validation is successful, the tool generates your custom scenario
-configuration file in XML format.
-
-Generate Launch Scripts
-=======================
-
-A **launch script** invokes the Service VM's Device Model to create a
-post-launched User VM. The launch script defines settings needed to launch the
-User VM and emulate the devices configured for sharing with that User VM. We
-call these settings "dynamic" because they are used at runtime.
-
-Before using the ACRN Configurator to generate a launch script, be sure
-you have your board configuration file and scenario configuration file. The tool
-needs both files to validate your launch script configuration.
-
-The process of generating launch scripts begins by choosing to create a new
-launch configuration or modify an existing one. You then use the GUI to
-edit the configurable settings of each post-launched User VM in your scenario.
-The tool validates your inputs against your board configuration file and
-scenario configuration file. After validation is successful, the tool generates
-your custom launch configuration file in XML format. You then use the tool to
-generate the launch scripts. The tool creates one launch script for each VM
-defined in the launch configuration file.
-
-.. note::
-   The ACRN Configurator may not show all editable
-   parameters for scenario configuration files and launch scripts. You can edit
-   the parameters manually. See :ref:`acrn_config_data`.
+If your scenario configuration has post-launched User VMs, the tool also
+generates a **launch script** for each of those VMs. The launch script contains
+the settings needed to launch the User VM and emulate the devices configured for
+sharing with that User VM. You will run this script in the Service VM in
+:ref:`overview_dev_install`.
 
 .. _overview_dev_build:
 
@@ -284,8 +239,7 @@ If your scenario has a Service VM, you also need to build the ACRN kernel for
 the Service VM. The ACRN kernel source code provides a predefined configuration
 file and a makefile to build the ACRN kernel binary and associated components.
 The kernel build can take 15 minutes or less on a fast computer, but could take
-an hour or more depending on the performance of your development computer. For
-more information about the kernel parameters, see :ref:`kernel-parameters`.
+an hour or more depending on the performance of your development computer.
 
 .. _overview_dev_install:
 
@@ -303,9 +257,10 @@ At a high level, you will:
 * Configure GRUB to boot the ACRN hypervisor, pre-launched VMs, and Service VM.
   Reboot the target, and launch ACRN.
 
-* If your scenario contains a post-launched VM, install an OS image for the
+* If your scenario contains a post-launched User VM, install an OS image for the
   post-launched VM and run the launch script you created in
-  :ref:`overview_dev_config_editor`.
+  :ref:`overview_dev_config_editor`. The script invokes the Service VM's Device
+  Model to create the User VM.
 
 Learn More
 **********
@@ -313,6 +268,5 @@ Learn More
 * To get ACRN up and running for the first time, see the :ref:`gsg` for
   step-by-step instructions.
 
-* If you have already completed the :ref:`gsg` , see the
-  :ref:`develop_acrn` for more information about complex scenarios, advanced
-  features, and debugging.
+* If you have already completed the :ref:`gsg` , see the :ref:`develop_acrn` for
+  more information about configuring and debugging ACRN.
