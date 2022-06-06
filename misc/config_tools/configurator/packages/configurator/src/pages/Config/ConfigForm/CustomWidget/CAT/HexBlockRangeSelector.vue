@@ -11,6 +11,16 @@ function count(source, target) {
   return (source.match(new RegExp(target, 'g')) || []).length;
 }
 
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+let getHexValue = (value, max) => {
+  let newHexValue = '0'.repeat(value[0]) + '1'.repeat(value[1] - value[0]) + '0'.repeat(max - value[1])
+  newHexValue = (parseInt(newHexValue, 2).toString(16))
+  let zeroPadding = '0'.repeat(Number.parseInt('1'.repeat(max), 2).toString(16).length - newHexValue.length)
+  newHexValue = '0x' + zeroPadding + newHexValue;
+  return newHexValue;
+}
+
 export default {
   name: "HexBlockRangeSelector",
   components: {
@@ -54,22 +64,19 @@ export default {
 
       },
       set(value) {
-        if (value[0] - value[1] === 0) {
-          this.hexField = this.lastVal;
-          return;
+        if (value[1] - value[0] === 0) {
+          wait(50).then(() => {
+            this.hexField = this.lastValue
+          })
+        } else {
+          this.lastValue = JSON.parse(JSON.stringify(value))
         }
-        this.lastVal = this.hexField
-        let result = '0'.repeat(value[0]) + '1'.repeat(value[1] - value[0]) + '0'.repeat(this.max - value[1])
-        result = (parseInt(result, 2).toString(16))
-        let zeroPadding = '0'.repeat(Number.parseInt('1'.repeat(this.max), 2).toString(16).length - result.length)
-        result = '0x' + zeroPadding + result
-        console.log(result)
-        this.$emit("update:modelValue", result);
+        this.$emit("update:modelValue", getHexValue(value, this.max))
       }
     }
   },
   data() {
-    return {lastVal: [0, 1]}
+    return {lastValue: [0, 1]}
   },
   props: {
     isVcat: {
