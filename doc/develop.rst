@@ -42,7 +42,6 @@ Configuration Tutorials
    tutorials/acrn_configurator_tool
    tutorials/upgrading_configuration
    reference/config-options
-   reference/config-options-launch
    reference/hv-make-options
    user-guides/hv-parameters
    user-guides/kernel-parameters
