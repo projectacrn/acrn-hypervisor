@@ -132,24 +132,22 @@ export default {
       let filepath = ''
       if (useNewFile) {
         filepath = this.newFilePath
-        if (filepath !== this.currentSelectedBoard) {
-          configurator.removeFile(this.currentSelectedBoard)
-              .catch((err) => alert(`${err}`))
-        }
       } else {
         filepath = this.currentSelectedBoard
       }
       if (filepath.length > 0) {
         configurator.loadBoard(filepath)
-            .then(({scenarioJSONSchema, boardInfo}) => {
+            .then(async ({scenarioJSONSchema, boardInfo}) => {
               this.$emit('boardUpdate', boardInfo, scenarioJSONSchema);
               let boardFileNewPath = this.WorkingFolder + boardInfo.name;
-              // Todo: use rust command writeBoard to fix bugs.
+              if (useNewFile && filepath !== this.currentSelectedBoard) {
+                await configurator.removeFile(this.currentSelectedBoard)
+              }
               configurator.writeFile(boardFileNewPath, boardInfo.content)
                   .then(() => configurator.addHistory('Board', boardFileNewPath))
                   .then(() => this.getBoardHistory())
-                  .then(()=>{
-                    if(!!window.boardUpdate){
+                  .then(() => {
+                    if (!!window.boardUpdate) {
                       window.boardUpdate(boardInfo)
                     }
                   })
