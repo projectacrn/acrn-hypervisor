@@ -290,9 +290,8 @@ and no more than 512.</xs:documentation>
   <xs:sequence>
     <xs:element name="RDT_ENABLED" type="Boolean" default="n">
       <xs:annotation acrn:title="Intel Resource Director Tech">
-        <xs:documentation>Enable Intel Resource Director Technology (RDT). If
-the board hardware does not support
-RDT, setting this option to checked is ignored.</xs:documentation>
+        <xs:documentation>Enable Cache Allocation Technology of Intel Resource Director Technology (RDT). If
+the board hardware does not support RDT, enabling this option is ignored.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CDP_ENABLED" type="Boolean" default="n">
