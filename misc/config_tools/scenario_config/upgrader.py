@@ -409,6 +409,57 @@ class ScenarioUpgrader(ScenarioTransformer):
         new_nodes.append(virtio.format_xml_element())
         return False
 
+    def move_memory(self, xsd_element_node, xml_parent_node, new_nodes):
+        new_node = etree.Element(xsd_element_node.get("name"))
+        memory_node = self.hv_vm_node_map[xml_parent_node].xpath("./memory")
+        old_data_start_hpa = []
+        old_data_size_hpa = []
+        old_data_whole = []
+        if len(memory_node) != 0:
+            for element in memory_node[0]:
+                if "start_hpa" in element.tag:
+                    old_data_start_hpa.append(element)
+                elif "size" in element.tag:
+                    old_data_size_hpa.append(element)
+                elif "whole" in element.tag:
+                    old_data_whole.append(element)
+                elif "hpa_region" in element.tag:
+                    for subelement in element:
+                        if "start_hpa" in subelement.tag:
+                            old_data_start_hpa.append(subelement)
+                        elif "size" in subelement.tag:
+                            old_data_size_hpa.append(subelement)
+                        elif "whole" in subelement.tag:
+                            old_data_whole.append(subelement)
+
+        if len(old_data_start_hpa) != 0 and len(old_data_size_hpa) != 0:
+            for i in range(len(old_data_start_hpa)):
+                if int(old_data_start_hpa[i].text, 16) != 0 and int(old_data_size_hpa[i].text, 16) != 0:
+                    hpa_region_node = etree.SubElement(new_node, 'hpa_region')
+                    old_data_size_hpa[i].tag = "size_hpa"
+                    hpa_region_node.append(old_data_start_hpa[i])
+                    hpa_region_node.append(old_data_size_hpa[i])
+        elif len(old_data_whole) != 0 or (len(old_data_start_hpa) == 0 and len(old_data_size_hpa) != 0):
+            if len(old_data_whole) != 0:
+                for i in range(len(old_data_whole)):
+                    old_data_whole[i].tag = "size"
+                    new_node.append(old_data_whole[i])
+            else:
+                for i in range(len(old_data_size_hpa)):
+                    old_data_size_hpa[i].tag = "size"
+                    new_node.append(old_data_size_hpa[i])
+
+        new_nodes.append(new_node)
+
+        for n in old_data_start_hpa:
+            self.old_data_nodes.discard(n)
+        for n in old_data_size_hpa:
+            self.old_data_nodes.discard(n)
+        for n in old_data_whole:
+            self.old_data_nodes.discard(n)
+
+        return False
+
     def move_console_vuart(self, xsd_element_node, xml_parent_node, new_nodes):
         new_node = etree.Element(xsd_element_node.get("name"))
         new_node.text = "None"
@@ -707,17 +758,18 @@ class ScenarioUpgrader(ScenarioTransformer):
         "vbootloader": partialmethod(move_enablement, ".//vbootloader", values_as_enabled = ["ovmf"], values_as_disabled = ["no"]),
 
         # Intermediate nodes
-        "memory": partialmethod(create_node_if, ".//memory", ".//mem_size"),
         "pci_devs": partialmethod(create_node_if, ".//pci_devs", ".//passthrough_devices/*[text() != ''] | .//sriov/*[text() != '']"),
 
         "BUILD_TYPE": move_build_type,
+        "RELOC_ENABLED": partialmethod(rename_data, "FEATURES/RELOC", "FEATURES/RELOC_ENABLED"),
+        "MULTIBOOT2_ENABLED": partialmethod(rename_data, "FEATURES/MULTIBOOT2", "FEATURES/MULTIBOOT2_ENABLED"),
         "console_vuart": move_console_vuart,
         "vuart_connections": move_vuart_connections,
         "IVSHMEM": move_ivshmem,
         "vm_type": move_vm_type,
         "os_type": move_os_type,
         "virtio_devices": move_virtio_devices,
-        "memory/whole": partialmethod(rename_data, "memory/whole", ".//mem_size"),
+        "memory": move_memory,
 
         "default": move_data_by_same_tag,
     }
@@ -828,6 +880,7 @@ class UpgradingScenarioStage(PipelineStage):
         DiscardedDataFilter("hv/CAPACITIES/IOMMU_BUS_NUM", None, "The maximum bus number to be supported by ACRN IOMMU configuration is now inferred from board data."),
         DiscardedDataFilter("hv/MISC_CFG/UEFI_OS_LOADER_NAME", None, None),
         DiscardedDataFilter("vm/guest_flags/guest_flag", "0", None),
+        DiscardedDataFilter("vm/clos/vcpu_clos", None, "clos nodes are no longer needed in scenario definitions."),
         DiscardedDataFilter("vm/epc_section/base", "0", "Post-launched VMs cannot have EPC sections."),
         DiscardedDataFilter("vm/epc_section/size", "0", "Post-launched VMs cannot have EPC sections."),
         DiscardedDataFilter("vm/os_config/name", None, "Guest OS names are no longer needed in scenario definitions."),
