@@ -43,6 +43,8 @@ def get_console_vuart_port(scenario_etree, vm_name):
         port = "0x3E8U"
     elif port == "COM Port 4":
         port = "0x2E8U"
+    else:
+        port = "0x0U"
 
     return port
 
