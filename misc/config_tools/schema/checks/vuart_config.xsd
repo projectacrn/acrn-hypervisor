@@ -36,4 +36,10 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="not (//BUILD_TYPE = 'debug' and //SERIAL_CONSOLE = 'None')">
+    <xs:annotation acrn:severity="error" acrn:report-on="//BUILD_TYPE">
+      <xs:documentation>You can't use debug Build type when there is no serial console config</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
