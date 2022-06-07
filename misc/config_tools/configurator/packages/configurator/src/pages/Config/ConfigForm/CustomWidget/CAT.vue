@@ -27,7 +27,7 @@
           </template>
           <span v-html="this.RDTType.properties.RDT_ENABLED.description"></span>
         </n-popover>
-        Cache Allocation Technology (requires CPU Afinity configuration in each desired VM)
+        Cache Allocation Technology (requires CPU Affinity configuration in each desired VM)
       </b-form-checkbox>
       <div class="d-flex flex-column gap-2 ps-3 pb-3">
         <b-form-checkbox
