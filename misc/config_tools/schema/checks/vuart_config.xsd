@@ -36,4 +36,11 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $NAME in /acrn-config//vuart_connection//endpoint//vm_name satisfies
+                  not(/acrn-config//vuart_connection//endpoint//vm_name = '')">
+    <xs:annotation acrn:severity="error" acrn:report-on="$NAME">
+      <xs:documentation>VM name in "{$NAME/ancestor::vuart_connection/name}" must be set </xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
