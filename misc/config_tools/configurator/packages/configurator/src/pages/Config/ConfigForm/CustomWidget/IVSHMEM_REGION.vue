@@ -16,7 +16,10 @@
             </label>
           </b-col>
           <b-col md="4">
-              <b-form-input v-model="IVSHMEM_VMO.NAME" placeholder="Any string with no white spaces."/>
+              <b-form-input :state="validateIvshrgName(IVSHMEM_VMO.NAME)" v-model="IVSHMEM_VMO.NAME" placeholder="Must be 1-27 characters and only letters, digits and '_'."/>
+              <b-form-invalid-feedback>
+                Name must be between 1-27 characters and contain only letters, digits and "_".
+              </b-form-invalid-feedback>
           </b-col>
         </b-row>
 
@@ -189,6 +192,10 @@ export default {
     }
   },
   methods: {
+    validateIvshrgName(value) {
+      var regexp = new RegExp(this.IVSHMEMRegionType.properties.NAME.pattern);
+      return regexp.test(value);
+    },
     validation(value) {
       return (value != null) && (value.length != 0);
     },
