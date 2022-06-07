@@ -76,6 +76,7 @@
               :currentActiveVMID="activeVMID"
               :currentFormSchema="currentFormSchema"
               :currentFormData="currentFormData"
+              ref="ConfigForm"
 
               @deleteVM="deleteVM"
               @scenarioConfigFormDataUpdate="scenarioConfigFormDataUpdate"
@@ -215,6 +216,7 @@ export default {
     },
     switchTab(tabVMID) {
       this.activeVMID = tabVMID;
+      this.$refs.ConfigForm.currentFormMode = 'BasicConfigType'
       this.updateCurrentFormSchema()
       this.updateCurrentFormData()
     },
