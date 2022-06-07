@@ -14,4 +14,11 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $NAME in /acrn-config//IVSHMEM_REGION//NAME satisfies
+                  not(/acrn-config//IVSHMEM_REGION//NAME = '')">
+    <xs:annotation acrn:severity="error" acrn:report-on="$NAME">
+      <xs:documentation>InterVM shared memory region name must be set </xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>

@@ -211,8 +211,8 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
 <xs:complexType name="VuartEndpointType">
   <xs:sequence>
     <xs:element name="vm_name" type="xs:string">
-      <xs:annotation acrn:title="Virtual UART port">
-        <xs:documentation>Virtual UART port</xs:documentation>
+      <xs:annotation acrn:title="vUART connection VM name">
+        <xs:documentation>vUART connection VM name</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="io_port" type="HexFormat">
