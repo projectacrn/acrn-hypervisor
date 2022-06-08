@@ -31,20 +31,19 @@ def fn(board_etree, scenario_etree, allocation_etree):
             print(e)
     hv_ram_size += 2 * max(total_shm_size, 0x200000)
     assert(hv_ram_size <= HV_RAM_SIZE_MAX)
-    # reseve 16M memory for hv sbuf, ramoops, etc.
-    reserved_ram = 0x1000000
-    # We recommend to put hv ram start address high than 0x2000000 to
-    # reduce memory conflict with GRUB/SOS Kernel.
-    hv_start_offset = 0x2000000
-    total_size = reserved_ram + hv_ram_size
+
+    # We recommend to put hv ram start address high than 0x400000 to
+    # reduce memory conflict with hv log.
+    hv_start_offset = 0x400000
+
     for start_addr in list(board_cfg_lib.USED_RAM_RANGE):
         if hv_start_offset <= start_addr < 0x80000000:
             del board_cfg_lib.USED_RAM_RANGE[start_addr]
     ram_range = board_cfg_lib.get_ram_range()
 
-    avl_start_addr = board_cfg_lib.find_avl_memory(ram_range, str(total_size), hv_start_offset)
-    hv_start_addr = int(avl_start_addr, 16) + int(hex(reserved_ram), 16)
+    avl_start_addr = board_cfg_lib.find_avl_memory(ram_range, str(hv_ram_size), hv_start_offset)
+    hv_start_addr = int(avl_start_addr, 16)
     hv_start_addr = common.round_up(hv_start_addr, MEM_ALIGN)
-    board_cfg_lib.USED_RAM_RANGE[hv_start_addr] = total_size
+    board_cfg_lib.USED_RAM_RANGE[hv_start_addr] = hv_ram_size
     common.append_node("/acrn-config/hv/MEMORY/HV_RAM_START", hex(hv_start_addr), allocation_etree)
     common.append_node("/acrn-config/hv/MEMORY/HV_RAM_SIZE", hex(hv_ram_size), allocation_etree)
