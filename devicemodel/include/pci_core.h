@@ -200,8 +200,11 @@ struct msicap {
 	uint32_t	addrlo;
 	uint32_t	addrhi;
 	uint16_t	msgdata;
+	uint16_t	reserve;
+	uint32_t	maskbit;
+	uint32_t	pendbit;
 } __attribute__((packed));
-static_assert(sizeof(struct msicap) == 14, "compile-time assertion failed");
+static_assert(sizeof(struct msicap) == 24, "compile-time assertion failed");
 
 struct msixcap {
 	uint8_t		capid;
