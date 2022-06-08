@@ -5,6 +5,8 @@
   <xsl:variable name="section_adornment" select="'#*=-%+@`'"/>
   <xsl:variable name="vLower" select="'abcdefghijklmnopqrstuvwxyz'"/>
   <xsl:variable name="vUpper" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
+  <!-- Default is to not show hidden options (acrn:views='') overridded by passing - -paramstring showHidden 'y' to xsltproc -->
+  <xsl:param name="showHidden" select="n" />
   <!-- xslt script to autogenerate config option documentation -->
   <!-- Get things started with the ACRNConfigType element -->
   <xsl:template match="/xs:schema">
@@ -56,9 +58,9 @@
     <!-- Only visit elements having complex types. Those having simple types are
          described as an option -->
     <xsl:choose>
-      <xsl:when test="xs:annotation/@acrn:views=''">
         <!-- don't document elements if not viewable -->
-      </xsl:when>
+        <xsl:when test="xs:annotation/@acrn:views='' and $showHidden='n'">
+        </xsl:when>
       <xsl:when test="//xs:complexType[@name=$ty]">
         <!-- The section header -->
           <xsl:if test="$level &lt;= 4">
@@ -134,6 +136,9 @@
               <xsl:text>|icon-basic| |icon-advanced|</xsl:text>
             </xsl:when>
             <xsl:when test="xs:annotation/@acrn:views=''">
+              <xsl:text>|icon-not-available| </xsl:text>
+            </xsl:when>
+            <xsl:when test="$parent/xs:annotation/@acrn:views=''">
               <xsl:text>|icon-not-available| </xsl:text>
             </xsl:when>
             <xsl:otherwise>
