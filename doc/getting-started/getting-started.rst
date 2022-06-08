@@ -695,6 +695,12 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
 
       [  0.000000] Hypervisor detected: ACRN
 
+#. Start systemd service required by device model:
+
+   .. code-block:: bash
+
+      systemctl enable --now systemd-networkd
+
 .. _gsg-user-vm:
 
 .. rst-class:: numbered-step
