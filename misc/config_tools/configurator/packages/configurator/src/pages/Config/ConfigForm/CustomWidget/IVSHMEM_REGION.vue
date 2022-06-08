@@ -194,7 +194,7 @@ export default {
   methods: {
     validateIvshrgName(value) {
       var regexp = new RegExp(this.IVSHMEMRegionType.properties.NAME.pattern);
-      return regexp.test(value);
+      return (value != null) && regexp.test(value);
     },
     validation(value) {
       return (value != null) && (value.length != 0);
