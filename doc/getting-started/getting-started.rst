@@ -695,6 +695,14 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
 
       [  0.000000] Hypervisor detected: ACRN
 
+#. Start the ServiceVM's system daemon for managing network configurations,
+   so the Device Model can create a bridge device that provides User VMs with
+   wired network access:
+
+   .. code-block:: bash
+
+      systemctl enable --now systemd-networkd
+
 .. _gsg-user-vm:
 
 .. rst-class:: numbered-step
