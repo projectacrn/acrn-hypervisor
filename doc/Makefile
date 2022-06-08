@@ -13,7 +13,10 @@ SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = "Project ACRN"
 BUILDDIR      ?= _build
 SOURCEDIR     = $(BUILDDIR)/rst
-LATEXMKOPTS   = "-silent -interaction=nonstopmode -f"
+LATEXMKOPTS   = -silent
+
+# should the config option doc show hidden config options?
+XSLTPARAM     ?= --stringparam showHidden 'n'
 
 # document publication assumes the folder structure is setup
 # with the acrn-hypervisor and projectacrn.github.io repos as
@@ -54,7 +57,7 @@ content:
 	$(Q)scripts/extract_content.py $(SOURCEDIR) misc
 	$(Q)mkdir -p $(SOURCEDIR)/misc/config_tools/schema
 	$(Q)rsync -rt ../misc/config_tools/schema/*.xsd $(SOURCEDIR)/misc/config_tools/schema
-	$(Q)xsltproc -xinclude ./scripts/configdoc.xsl $(SOURCEDIR)/misc/config_tools/schema/config.xsd > $(SOURCEDIR)/reference/configdoc.txt
+	$(Q)xsltproc $(XSLTPARAM) -xinclude ./scripts/configdoc.xsl $(SOURCEDIR)/misc/config_tools/schema/config.xsd > $(SOURCEDIR)/reference/configdoc.txt
 
 
 html: content doxy
