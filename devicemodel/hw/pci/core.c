@@ -961,7 +961,7 @@ pci_emul_add_capability(struct pci_vdev *dev, u_char *capdata, int caplen)
 int
 pci_emul_find_capability(struct pci_vdev *dev, uint8_t capid, int *p_capoff)
 {
-	int coff;
+	int coff = 0;
 	uint16_t sts;
 
 	sts = pci_get_cfgdata16(dev, PCIR_STATUS);
@@ -1079,7 +1079,7 @@ pci_access_msi(struct pci_vdev *dev, int msi_cap, uint32_t *val, bool is_write)
 	if (rc)
 		return -1;
 
-	msgctrl = pci_get_cfgdata16(dev, offset);
+	msgctrl = pci_get_cfgdata16(dev, offset + 2);
 	if (msgctrl & PCIM_MSICTRL_64BIT)
 		offset = offset + msi_cap;
 	else
@@ -1088,7 +1088,7 @@ pci_access_msi(struct pci_vdev *dev, int msi_cap, uint32_t *val, bool is_write)
 	if (is_write)
 		pci_set_cfgdata32(dev, offset, *val);
 	else
-		*val = pci_get_cfgdata16(dev, offset);
+		*val = pci_get_cfgdata32(dev, offset);
 
 	return 0;
 }
@@ -1160,7 +1160,7 @@ pci_populate_msicap(struct msicap *msicap, int msgnum, int nextptr)
 int
 pci_emul_add_msicap(struct pci_vdev *dev, int msgnum)
 {
-	struct msicap msicap;
+	struct msicap msicap = {0};
 
 	return pci_populate_msicap(&msicap, msgnum, 0) ||
 		pci_emul_add_capability(dev, (u_char *)&msicap, sizeof(msicap));
