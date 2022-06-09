@@ -689,6 +689,8 @@ class ScenarioUpgrader(ScenarioTransformer):
             # single node, as there is no way for the default data movers to migrate multiple pieces of data of the same
             # type to the new XML.
             if old_data_nodes:
+                if old_data_nodes[0].tag == "usb_xhci":
+                    old_data_nodes[0].attrib.clear()
                 new_node = etree.Element(element_tag)
                 for k, v in old_data_nodes[0].items():
                     new_node.set(k, v)
@@ -755,7 +757,7 @@ class ScenarioUpgrader(ScenarioTransformer):
 
         # Feature enabling or disabling
         "vuart0": partialmethod(move_enablement, ".//vuart0"),
-        "vbootloader": partialmethod(move_enablement, ".//vbootloader", values_as_enabled = ["ovmf"], values_as_disabled = ["no"]),
+        "vbootloader": partialmethod(move_enablement, ".//vbootloader", values_as_enabled = ["ovmf", "Enable"], values_as_disabled = ["no", "Disable"]),
 
         # Intermediate nodes
         "pci_devs": partialmethod(create_node_if, ".//pci_devs", ".//passthrough_devices/*[text() != ''] | .//sriov/*[text() != '']"),
