@@ -70,6 +70,7 @@
   </hv>
   <vm id="0">
     <load_order>SERVICE_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
     <name>ACRN_Service_VM</name>
     <os_config>
       <kern_type>KERNEL_BZIMAGE</kern_type>
