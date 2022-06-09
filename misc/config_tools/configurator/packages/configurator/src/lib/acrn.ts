@@ -39,8 +39,8 @@ class PythonObject {
         return this.api('validateScenarioStructure', 'plaintext', scenarioXMLText)
     }
 
-    validateScenario(boardXMLText, scenarioXMLText) {
-        return this.api('validateScenario', 'json', boardXMLText, scenarioXMLText)
+    validateScenario(boardXMLText, scenarioXMLText, completed_verify = false) {
+        return this.api('validateScenario', 'json', boardXMLText, scenarioXMLText, completed_verify)
     }
 
     generateLaunchScript(boardXMLText, scenarioXMLText) {
