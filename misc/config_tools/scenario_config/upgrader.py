@@ -209,7 +209,7 @@ class SharedMemoryRegions:
         """Parse IVSHMEM_REGION nodes in either v2.x and v3.x format."""
 
         if len(ivshmem_region_node) == 0:
-            if ivshmem_region_node.tag == "IVSHMEM_REGION":
+            if ivshmem_region_node.tag == "IVSHMEM_REGION" and ivshmem_region_node.text is not None:
                 # ACRN v2.x scenario XML format
                 region = self.SharedMemoryRegion.from_encoding(ivshmem_region_node.text, self.old_xml_etree)
                 self.regions[region.name] = region
@@ -420,6 +420,8 @@ class ScenarioUpgrader(ScenarioTransformer):
                 if "start_hpa" in element.tag:
                     old_data_start_hpa.append(element)
                 elif "size" in element.tag:
+                    if "0x" in element.text:
+                        element.text = str(int(element.text, 16) // 1024 // 1024)
                     old_data_size_hpa.append(element)
                 elif "whole" in element.tag:
                     old_data_whole.append(element)
@@ -558,7 +560,11 @@ class ScenarioUpgrader(ScenarioTransformer):
         return False
 
     def move_vm_type(self, xsd_element_node, xml_parent_node, new_nodes):
-        old_vm_type_node = self.get_from_old_data(xml_parent_node, ".//vm_type").pop()
+        try:
+            old_vm_type_node = self.get_from_old_data(xml_parent_node, ".//vm_type").pop()
+        except IndexError as e:
+            logging.debug(e)
+            return
         old_guest_flag_nodes = self.get_from_old_data(xml_parent_node, ".//guest_flag[text() = 'GUEST_FLAG_RT']")
         old_rtos_type_nodes = self.get_from_old_launch_data(xml_parent_node, ".//rtos_type")
 
