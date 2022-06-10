@@ -39,9 +39,9 @@ Configuration Tutorials
 
    tutorials/acrn_configuration_tool
    tutorials/board_inspector_tool
+   tutorials/acrn_configurator_tool
    tutorials/upgrading_configuration
    reference/config-options
-   reference/config-options-launch
    reference/hv-make-options
    user-guides/hv-parameters
    user-guides/kernel-parameters
@@ -57,7 +57,6 @@ Advanced Features
 .. toctree::
    :maxdepth: 1
 
-   tutorials/nvmx_virtualization
    tutorials/vuart_configuration
    tutorials/rdt_configuration
    tutorials/vcat_configuration

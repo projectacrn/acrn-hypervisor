@@ -37,19 +37,19 @@ String
 
 .. comment These images are used in generated option documentation
 
-.. |icon-advanced| image:: images/Advanced.svg
+.. |icon-advanced| image:: images/Advanced.png
    :alt: Find this option on the Configurator's Advanced Parameters tab
-.. |icon-basic| image:: images/Basic.svg
+.. |icon-basic| image:: images/Basic.png
    :alt: Find this option on the Configurator's Basic Parameters tab
-.. |icon-not-available| image:: images/Not-available.svg
+.. |icon-not-available| image:: images/Not-available.png
    :alt: This is a hidden option and not user-editable using the Configurator
-.. |icon-post-launched-vm| image:: images/Post-launched-VM.svg
+.. |icon-post-launched-vm| image:: images/Post-launched-VM.png
    :alt: Find this option on a Configurator Post-launched VM tab
-.. |icon-pre-launched-vm| image:: images/Pre-launched-VM.svg
+.. |icon-pre-launched-vm| image:: images/Pre-launched-VM.png
    :alt: Find this option on a Configurator Pre-launched VM tab
-.. |icon-service-vm| image:: images/Service-VM.svg
+.. |icon-service-vm| image:: images/Service-VM.png
    :alt: Find this option on the Configurator Service VM tab
-.. |icon-hypervisor| image:: images/Hypervisor.svg
+.. |icon-hypervisor| image:: images/Hypervisor.png
    :alt: Find this option on the Configurator's Hypervisor Global Settings tab
 
 We use icons within an option description to indicate where the option can be

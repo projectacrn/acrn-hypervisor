@@ -202,6 +202,3 @@ The ``scenario`` attribute specifies the scenario name and must match the
 
 The ``user_vm_launcher`` attribute specifies the number of post-launched User
 VMs in a scenario.
-
-See :ref:`launch-config-options` for a full explanation of available launch
-XML elements.

@@ -5,6 +5,8 @@
   <xsl:variable name="section_adornment" select="'#*=-%+@`'"/>
   <xsl:variable name="vLower" select="'abcdefghijklmnopqrstuvwxyz'"/>
   <xsl:variable name="vUpper" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
+  <!-- Default is to not show hidden options (acrn:views='') overridded by passing - -paramstring showHidden 'y' to xsltproc -->
+  <xsl:param name="showHidden" select="n" />
   <!-- xslt script to autogenerate config option documentation -->
   <!-- Get things started with the ACRNConfigType element -->
   <xsl:template match="/xs:schema">
@@ -57,7 +59,7 @@
          described as an option -->
     <xsl:choose>
         <!-- don't document elements if not viewable -->
-        <xsl:when test="xs:annotation/@acrn:views=''">
+        <xsl:when test="xs:annotation/@acrn:views='' and $showHidden='n'">
         </xsl:when>
       <xsl:when test="//xs:complexType[@name=$ty]">
         <!-- The section header -->
