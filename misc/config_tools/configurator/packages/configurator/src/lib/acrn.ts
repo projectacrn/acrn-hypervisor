@@ -129,7 +129,8 @@ class Configurator {
         return this.readFile(path).then((fileContent) => {
             let syntactical_errors = this.pythonObject.validateScenarioStructure(fileContent);
             if (syntactical_errors !== "") {
-                throw Error("The file has broken structure.\n" + syntactical_errors);
+                throw Error("The loaded file does not look like a valid ACRN scenario XML.\n\n" +
+                    "If that file is used with ACRN 2.x, try upgrading it following the instructions at https://projectacrn.github.io/latest/tutorials/upgrading_configuration.html.\n");
             }
             return this.pythonObject.loadScenario(fileContent)
         })

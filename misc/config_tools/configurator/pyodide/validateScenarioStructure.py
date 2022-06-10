@@ -11,7 +11,7 @@ from scenario_config.xml_loader import XMLLoadStage
 
 from .pyodide import (
     convert_result, write_temp_file,
-    nuc11_scenario, scenario_xml_schema_path, datachecks_xml_schema_path
+    nuc11_scenario, schema_dir
 )
 
 
@@ -34,7 +34,7 @@ def main(scenario):
 
             obj = PipelineObject(
                 scenario_path=scenario_file_path,
-                schema_path=scenario_xml_schema_path,
+                schema_path=schema_dir / 'scenario_structure.xsd',
                 datachecks_path=None
             )
             pipeline.run(obj)
