@@ -1,0 +1,360 @@
+.. _acrn_configurator_tool:
+
+ACRN Configurator Tool
+######################
+
+This guide describes all features and uses of the tool.
+
+About the ACRN Configurator Tool
+*********************************
+
+The ACRN Configurator ``acrn_configurator.py`` provides a user interface to help
+you customize your :ref:`ACRN configuration <acrn_configuration_tool>`.
+Capabilities:
+
+* Reads board information from the specified board configuration file
+* Helps you configure a scenario of hypervisor and VM settings
+* Generates a scenario configuration file that stores the configured settings in
+  XML format
+* Generates a launch script for each post-launched User VM
+
+Prerequisites
+*************
+
+This guide assumes you have a board configuration file and have successfully
+launched the ACRN Configurator. For steps, see the following Getting Started
+Guide sections:
+
+* :ref:`gsg-target-hardware`
+* :ref:`gsg-dev-computer`
+* :ref:`gsg-board-setup`
+* :ref:`gsg-dev-setup`
+
+Start with a New or Existing Configuration
+******************************************
+
+When the ACRN Configurator opens, the introduction screen appears.
+
+.. image:: images/configurator-intro.png
+   :align: center
+   :class: drop-shadow
+
+The introduction screen lets you start a new configuration or use an existing
+one by selecting a working folder.
+
+As described in :ref:`acrn_configuration_tool`, a configuration defines one
+ACRN instance, and its data is stored in a set of configuration files:
+
+* One board configuration file
+* One scenario configuration file
+* One launch script per post-launched VM
+
+When you use the ACRN Configurator, it saves these files in the selected working
+folder.
+
+Each configuration must have a unique working folder. For example, imagine you
+want to create three configurations. Perhaps you want to create a configuration
+for three different boards, or you have one board but want to create three sets
+of hypervisor settings to test on it. You would need to select a different
+working folder for each configuration. After you have selected the working
+folder in the ACRN Configurator, it saves the configuration files there. The
+following figure shows an example file system consisting of a top-level folder,
+``acrn-work``, and a working folder for each configuration, ``ConfigA``,
+``ConfigB``, and ``ConfigC``.
+
+.. image:: images/config-file.png
+   :align: center
+
+Start a New Configuration
+==========================
+
+You can start by selecting a new working folder. The tool assumes you are
+starting from scratch. It checks the folder for existing configuration files,
+such as a board configuration file, scenario configuration file, and launch
+scripts. If it finds any, it will delete them.
+
+1. Under **Start a new configuration**, use the displayed working folder or
+   select a different folder by clicking **Browse for folder**.
+
+   .. image:: images/configurator-newconfig.png
+      :align: center
+      :class: drop-shadow
+
+#. If the folder contains configuration files, the tool displays a message about
+   deleting the files. Click **OK** to delete the files.
+
+#. Click **Use This Folder**.
+
+Use an Existing Configuration
+=============================
+
+You can use an existing configuration by selecting a working folder that has one
+or more configuration files in it. For example, the folder can contain a board
+configuration file alone, or a board configuration file and scenario
+configuration file. The tool uses the information in the files to populate the
+UI, so that you can continue working on the configuration where you left off.
+
+1. Under **Use an existing configuration**, use the displayed working folder or
+   select a different folder by clicking **Browse for folder**.
+
+   .. image:: images/configurator-exconfig.png
+      :align: center
+      :class: drop-shadow
+
+#. Click **Open Folder**.
+
+Navigate the Configuration Screen
+*********************************
+
+After you have selected a working folder, the tool opens the second (and final)
+screen, where you can customize your configuration. The following figure shows
+an example:
+
+.. image:: images/configurator-configscreen.png
+   :align: center
+   :class: drop-shadow
+
+At the top of the screen, the tool shows the selected working folder. To return
+to the introduction screen, click the arrow next to the working folder path:
+
+.. image:: images/configurator-backintro.png
+   :align: center
+   :class: drop-shadow
+
+The rest of the configuration screen is divided into three panels:
+
+1. Import a board configuration file
+#. Create new or import an existing scenario
+#. Configure settings for scenario and launch scripts
+
+The panels are labeled 1, 2, and 3 to guide you through the configuration steps.
+The tool also enforces this order of operation by enabling each panel only after
+you have completed the preceding panel.
+
+The title bar of each panel has an arrow icon. Click the icon to expand
+or collapse the panel.
+
+.. image:: images/configurator-expand.png
+   :align: center
+   :class: drop-shadow
+
+Import a Board Configuration File
+**********************************
+
+The first step in the configuration process is to import the board configuration
+file generated via the :ref:`board_inspector_tool`. You can import a board configuration file for the first time, or replace the existing file.
+
+Import a Board Configuration File for the First Time
+====================================================
+
+If the working folder doesn't have a board configuration file, the tool shows
+that no board information has been imported yet.
+
+To import a board configuration file for the first time:
+
+1. Under **Import a board configuration file**, select a scenario configuration
+   file from the dropdown menu or click **Browse for file** to select a
+   different file.
+
+   .. image:: images/configurator-board01.png
+      :align: center
+      :class: drop-shadow
+
+#. Click **Import Board File**.
+
+The tool makes a copy of your board configuration file, changes the
+file extension to ``.board.xml``, and saves the file in the working folder.
+
+The tool displays the current board information. Example:
+
+.. image:: images/configurator-board02.png
+   :align: center
+   :class: drop-shadow
+
+Replace an Existing Board Configuration File
+============================================
+
+After a board configuration file has been imported, you can choose to replace it
+at any time. This option is useful, for example, when you need to iterate your
+board's configuration while you are customizing your hypervisor settings.
+Whenever you change the configuration of your board, you must generate a new
+board configuration file via the :ref:`board_inspector_tool`. Examples include
+changing any BIOS setting such as hyper-threading, adding or removing a physical
+device, or adding or removing memory. If this happens after you've started
+customizing your hypervisor in the ACRN Configurator, you can import the new
+board file into your existing configuration and continue editing.
+
+To replace an existing board configuration file:
+
+1. Under **Import a board configuration file**, click **Use a Different Board**.
+
+   .. image:: images/configurator-board03.png
+      :align: center
+      :class: drop-shadow
+
+#. Browse to the board configuration file and click **Open**.
+
+#. The tool displays a warning message about overwriting the existing file.
+   Click **Ok** to proceed.
+
+The tool replaces the file and displays the new board information.
+
+Create New or Import an Existing Scenario
+*******************************************
+
+After importing the board configuration file, the next step is to specify an
+initial scenario. You can create a new scenario, or import an existing scenario
+configuration file. In both cases, this step is a starting point for configuring
+your hypervisor and VMs. Later, you can choose to change the configuration, such
+as adding or deleting VMs.
+
+Create a Scenario
+=================
+
+You can create a scenario by specifying an initial number of VMs.
+
+1. Under **Create new or import an existing scenario**, click **Create
+   Scenario**.
+
+   .. image:: images/configurator-newscenario01.png
+      :align: center
+      :class: drop-shadow
+
+#. In the dialog box, select a scenario type and number of VMs. The tool
+   enforces dependencies. For example, a scenario with post-launched VMs must
+   have a Service VM, so the tool adds a Service VM and doesn't allow you to
+   delete it here.
+
+   .. image:: images/configurator-newscenario02.png
+      :align: center
+      :class: drop-shadow
+
+#. Click **Ok**.
+
+The tool displays the name of the scenario configuration file, but it doesn't
+save it to the working folder until you click **Save Scenario And Launch
+Scripts** in the third panel.
+
+Import a Scenario Configuration File
+====================================
+
+You can import an existing scenario configuration file. The tool uses the
+information in the file to populate the UI, so that you can continue working on
+the configuration where you left off.
+
+1. Due to the strict validation ACRN adopts, scenario configuration files for a
+   former release may not work for a latter if they are not upgraded. Starting
+   from v3.0, upgrade an older scenario XML per the steps in
+   :ref:`upgrading_configuration` then import the upgraded file into the tool in
+   the next step.
+
+#. Under **Create new or import an existing scenario**, go to the right side of
+   the screen and select a scenario configuration file from the dropdown menu or
+   click **Browse for scenario file** to select a different file.
+
+   .. image:: images/configurator-exscenario.png
+      :align: center
+      :class: drop-shadow
+
+#. Click **Import Scenario**.
+
+The tool displays the name of the scenario configuration file, but it doesn't
+save it to the working folder until you click **Save Scenario And Launch
+Scripts** in the third panel.
+
+Configure Settings for Scenario and Launch Scripts
+**************************************************
+
+After creating a scenario or importing an existing one, you can configure
+hypervisor and VM parameters, as well as add or delete VMs.
+
+Configure the Hypervisor and VM Parameters
+==========================================
+
+1. Click the hypervisor or VM tab in the selector menu. The selected tab is
+   darker in color.
+
+   .. image:: images/configurator-selecthypervisor.png
+      :align: center
+      :class: drop-shadow
+
+#. Click the Basic Parameters tab or Advanced Parameters tab and make updates.
+   To learn more about each parameter, hover over the |tooltip| icon for a short
+   description or go to :ref:`scenario-config-options` for documentation.
+
+   .. |tooltip| image:: images/tooltip.png
+
+Basic parameters are generally defined as:
+
+* Parameters that are necessary for ACRN configuration, compilation, and
+  execution.
+
+* Parameters that are common for software like ACRN.
+
+Advanced parameters are generally defined as:
+
+* Parameters that are optional for ACRN configuration, compilation, and
+  execution.
+
+* Parameters that are used for fine-grained tuning, such as reducing code
+  lines or optimizing performance. Default values cover most use cases.
+
+Add a VM
+=========
+
+In the selector menu, click **+** to add a pre-launched VM or post-launched VM.
+
+.. image:: images/configurator-addvm.png
+   :align: center
+   :class: drop-shadow
+
+Delete a VM
+============
+
+1. In the selector menu, click the VM tab. The selected tab is darker in color.
+
+#. Click **Delete VM**.
+
+   .. image:: images/configurator-deletevm.png
+      :align: center
+      :class: drop-shadow
+
+Save and Check for Errors
+=========================
+
+#. To save your configuration, click **Save Scenario And Launch Scripts** at the
+   top of the panel.
+
+   .. image:: images/configurator-save.png
+      :align: center
+      :class: drop-shadow
+
+   The tool saves your configuration data in a set of files in the working folder:
+
+   * Scenario configuration file (``scenario.xml``): Raw format of all
+     hypervisor and VM settings. You will need this file to build ACRN.
+
+   * One launch script per post-launched VM (``launch_user_vm_id*.sh``): This
+     file is used to start the post-launched VM in the Service VM. You can find
+     the VM's name inside the script:
+
+     .. code-block:: bash
+
+        # Launch script for VM name: <name>
+
+   The tool validates hypervisor and VM settings whenever you save. If an error
+   occurs, such as an empty required field, the tool saves the changes to the
+   files, but prompts you to correct the error. Error messages appear below the
+   applicable settings. Example:
+
+   .. image:: images/configurator-rederror.png
+      :align: center
+      :class: drop-shadow
+
+#. Fix the errors and save again to generate a valid configuration.
+
+Next Steps
+==========
+
+After generating a valid scenario configuration file, you can build ACRN. See
+:ref:`gsg_build`.

@@ -15,6 +15,9 @@ BUILDDIR      ?= _build
 SOURCEDIR     = $(BUILDDIR)/rst
 LATEXMKOPTS   = -silent
 
+# should the config option doc show hidden config options?
+XSLTPARAM     ?= --stringparam showHidden 'n'
+
 # document publication assumes the folder structure is setup
 # with the acrn-hypervisor and projectacrn.github.io repos as
 # sibling folders and make is run inside the acrn-hypervisor/docs
@@ -54,7 +57,7 @@ content:
 	$(Q)scripts/extract_content.py $(SOURCEDIR) misc
 	$(Q)mkdir -p $(SOURCEDIR)/misc/config_tools/schema
 	$(Q)rsync -rt ../misc/config_tools/schema/*.xsd $(SOURCEDIR)/misc/config_tools/schema
-	$(Q)xsltproc -xinclude ./scripts/configdoc.xsl $(SOURCEDIR)/misc/config_tools/schema/config.xsd > $(SOURCEDIR)/reference/configdoc.txt
+	$(Q)xsltproc $(XSLTPARAM) -xinclude ./scripts/configdoc.xsl $(SOURCEDIR)/misc/config_tools/schema/config.xsd > $(SOURCEDIR)/reference/configdoc.txt
 
 
 html: content doxy
@@ -69,7 +72,7 @@ singlehtml: content doxy
 
 pdf: html
 	@echo now making $(BUILDDIR)/latex/acrn.pdf
-	-$(Q)make -silent latexpdf LATEXMKOPTS=$(LATEXMKOPTS) >> $(BUILDDIR)/doc.log 2>&1
+	$(Q)make -silent latexpdf LATEXMKOPTS=$(LATEXMKOPTS) >> $(BUILDDIR)/doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
 
 
