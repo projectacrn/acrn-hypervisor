@@ -9,6 +9,7 @@
 from decimal import Decimal
 from copy import copy
 import operator
+import rdt
 import elementpath
 
 BaseParser = elementpath.XPath2Parser
@@ -20,6 +21,8 @@ class CustomParser(BaseParser):
 
         'has',
         'duplicate-values',
+
+        'number-of-clos-id-needed',
         }
 
 method = CustomParser.method
@@ -83,6 +86,14 @@ def select_duplicate_values_function(self, context=None):
                 results.append(value)
 
     yield from duplicate_values()
+
+@method(function('number-of-clos-id-needed', nargs=1))
+def evaluate_number_of_clos_id_needed(self, context=None):
+    op = self.get_argument(context, index=0)
+    try:
+        return len(rdt.get_policy_list(op.elem)) if op else 0
+    except AttributeError as err:
+        raise self.error('XPTY0004', err)
 
 ###
 # Collection of counter examples
