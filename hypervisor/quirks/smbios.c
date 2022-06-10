@@ -165,6 +165,15 @@ static void recalc_checksum(uint8_t *byte_start, uint8_t nbytes, uint8_t *checks
     *checksum_pos = -sum;
 }
 
+static void reserve_smbios_region(struct acrn_vm *vm, uint64_t addr, uint64_t size)
+{
+    struct e820_entry *entry = &vm->e820_entries[vm->e820_entry_num];
+    entry->baseaddr = round_page_down(addr);
+    entry->length = round_page_up(addr + size) - entry->baseaddr;
+    entry->type = E820_TYPE_RESERVED;
+    vm->e820_entry_num++;
+}
+
 static int copy_smbios_to_guest(struct acrn_vm *vm)
 {
     uint64_t gpa;
@@ -185,6 +194,7 @@ static int copy_smbios_to_guest(struct acrn_vm *vm)
         if (gpa != INVALID_GPA) {
             ret = copy_to_gpa(vm, smbios_table, gpa, smbios_table_size);
             if (ret == 0) {
+                reserve_smbios_region(vm, gpa, smbios_table_size);
                 if (smbios_eps.eps.anchor[3] == '_') {
                     /* SMBIOS (_SM_) */
                     struct smbios_entry_point *eps = &smbios_eps.eps;
