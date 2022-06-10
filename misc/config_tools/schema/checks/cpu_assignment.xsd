@@ -5,12 +5,6 @@
            xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns:acrn="https://projectacrn.org">
 
-  <xs:assert test="every $vm in /acrn-config/vm[load_order != 'SERVICE_VM'] satisfies count($vm//cpu_affinity//pcpu_id) &gt;= 1">
-    <xs:annotation acrn:severity="error" acrn:report-on="$vm//cpu_affinity">
-      <xs:documentation>VM "{$vm/name}" needs at least one vCPU assigned.</xs:documentation>
-    </xs:annotation>
-  </xs:assert>
-
   <xs:assert test="every $cpu in vm//cpu_affinity//pcpu_id satisfies count(processors//thread[cpu_id = $cpu]) = 1">
     <xs:annotation acrn:severity="warning" acrn:report-on="$cpu">
       <xs:documentation>The physical CPU {$cpu} allocated to VM "{$cpu/ancestor::vm/name}" does not exist on the target board. Remove this CPU from the CPU affinity setting.</xs:documentation>
@@ -34,7 +28,7 @@
   <xs:assert test="every $vm in /acrn-config/vm[load_order != 'SERVICE_VM'] satisfies
 	  count(/acrn-config/vm/cpu_affinity/pcpu/pcpu_id) > 0">
   <xs:annotation acrn:severity="error" acrn:report-on="//vm//cpu_affinity/pcpu">
-      <xs:documentation>At least one physical CPU must be allocated to VM "{$vm/name}".</xs:documentation>
+      <xs:documentation>Assign at least one physical CPU affinity (pCPU ID) for VM "{$vm/name}".</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
