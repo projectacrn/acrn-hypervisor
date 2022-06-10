@@ -114,7 +114,6 @@ export default {
     window.getCurrentFormSchemaData = this.getCurrentFormSchemaData
     window.getCurrentScenarioData = this.getCurrentScenarioData
     window.getBoardData = this.getBoardData
-    window.getErrors = this.getErrors
     this.showFlag = this.isNewConfig === 'true'
   },
   data() {
@@ -143,9 +142,6 @@ export default {
     }
   },
   methods: {
-    getErrors() {
-      return this.errors
-    },
     back() {
       this.$router.back()
     },
@@ -220,11 +216,7 @@ export default {
         } else {
           if (this.schemas.ServiceVM.BasicConfigType.properties.hasOwnProperty('vm_type') === false) {
             this.schemas.ServiceVM.BasicConfigType.properties.vm_type =
-                {
-                  $ref: '#/definitions/BasicVMType',
-                  title: 'VM type',
-                  description: '<p>Select the VM type. A standard VM (<span class=…ial features for time-sensitive applications.</p>'
-                }
+              {$ref: '#/definitions/BasicVMType', title: 'VM type', description: '<p>Select the VM type. A standard VM (<span class=…ial features for time-sensitive applications.</p>'}
           }
         }
       }
@@ -387,32 +379,10 @@ export default {
       let scenarioWithDefault = configurator.pythonObject.populateDefaultValues(scenarioXMLData)
       scenarioWithDefault = scenarioWithDefault.json['acrn-config']
 
-      if ((!scenarioWithDefault.hv.FEATURES.hasOwnProperty('RDT')) || scenarioWithDefault.hv.FEATURES.RDT.RDT_ENABLED === 'n') {
+      if (scenarioWithDefault.hv.FEATURES.RDT.RDT_ENABLED === 'n') {
         delete scenarioWithDefault.hv.CACHE_REGION
       }
       return scenarioWithDefault
-    },
-    translateErrors() {
-      let messageRegex = [
-        {
-          regex: /The content of element '(.+?)' is not complete. Tag '(.+?)' expected./,
-          replace: '"$2" field in "$1" is required.'
-        },
-        {
-          regex: /Unexpected child with tag 'VBDF' at position 1. Tag 'VM_NAME' expected./,
-          replace: '"VM name" in "InterVM shared memory region" is required.'
-        }
-      ]
-      const translate = (error) => {
-        for (const messageRegexKey in messageRegex) {
-          if (messageRegex[messageRegexKey].regex.test(error.message)) {
-            error.message = error.message.replace(messageRegex[messageRegexKey].regex, messageRegex[messageRegexKey].replace)
-          }
-        }
-      }
-      this.errors.map((error) => {
-        translate(error)
-      })
     },
     saveScenario() {
       if (_.isEmpty(this.scenario.vm)) {
@@ -454,21 +424,13 @@ export default {
       }
       // begin write down and verify
 
-      this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData, false)
-      // noinspection ExceptionCaughtLocallyJS
-      if (this.errors.length !== 0) {
-        this.translateErrors()
-        alert('Scenario have struct error, save failed!')
-        return;
-      }
       configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
           .then(() => {
             stepDone = 1
             console.log("validate settings...")
-            this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData, true)
+            this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
             // noinspection ExceptionCaughtLocallyJS
             if (this.errors.length !== 0) {
-              this.translateErrors()
               throw new Error("validation failed")
             }
             console.log("validation ok")
@@ -482,6 +444,8 @@ export default {
             writeDone.push(configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename]))
           }
           return Promise.all(writeDone)
+        } else {
+          return
         }
       })
           .then((result) => {
