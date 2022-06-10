@@ -12,11 +12,13 @@ from scenario_config.xml_loader import XMLLoadStage
 
 from .pyodide import (
     convert_result, write_temp_file,
+    # Todo: add debug switch
+    # is_debug,
     nuc11_board, nuc11_scenario, scenario_xml_schema_path, datachecks_xml_schema_path
 )
 
 
-def main(board, scenario, completed_verify=False):
+def main(board, scenario):
     pipeline = PipelineEngine(["board_path", "scenario_path", "schema_path", "datachecks_path"])
     stages = [
         ValidatorConstructionByFileStage(),
@@ -25,10 +27,11 @@ def main(board, scenario, completed_verify=False):
         XMLLoadStage("board"),
         XMLLoadStage("scenario"),
         DefaultValuePopulatingStage(),
-        SyntacticValidationStage()
+        SemanticValidationStage(),
     ]
-    if completed_verify:
-        stages.append(SemanticValidationStage())
+    #
+    # if is_debug:
+    #     stages.append(SyntacticValidationStage())
 
     pipeline.add_stages(stages)
     with TemporaryDirectory() as tmpdir:
@@ -47,9 +50,7 @@ def main(board, scenario, completed_verify=False):
         )
         pipeline.run(obj)
 
-        validate_result: list = obj.get("syntactic_errors")
-        if completed_verify:
-            validate_result.extend(obj.get("semantic_errors"))
+        validate_result = obj.get("semantic_errors")
         return convert_result(validate_result)
 
 
