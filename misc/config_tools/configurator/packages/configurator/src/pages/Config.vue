@@ -183,7 +183,8 @@ export default {
     },
     scenarioUpdate(scenarioData) {
       let scenarioXMLData = this.scenarioToXML(scenarioData)
-      this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+      let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+      this.errors = all_errors.semantic_errors
       this.scenario = scenarioData;
       this.showFlag = false;
       this.updateCurrentFormSchema()
@@ -428,9 +429,10 @@ export default {
           .then(() => {
             stepDone = 1
             console.log("validate settings...")
-            this.errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+            let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+            this.errors = all_errors.semantic_errors
             // noinspection ExceptionCaughtLocallyJS
-            if (this.errors.length !== 0) {
+            if (all_errors.syntactic_errors.length !== 0 || all_errors.semantic_errors.length !== 0) {
               throw new Error("validation failed")
             }
             console.log("validation ok")
