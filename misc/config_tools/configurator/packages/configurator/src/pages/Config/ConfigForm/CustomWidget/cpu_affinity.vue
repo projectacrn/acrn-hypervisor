@@ -12,7 +12,10 @@
         </b-row>
         <b-row class="align-items-center"
                v-for="(cpu,index) in defaultVal.pcpu">
-          <b-col>pCPU ID</b-col>
+          <b-col>
+            <span v-if="index===0" style="color: red; margin-left: -10px;margin-right: 4px">*</span>
+            pCPU ID
+          </b-col>
           <b-col>
             <b-form-select v-model="cpu.pcpu_id" :options="pcpuid_enum"></b-form-select>
           </b-col>
