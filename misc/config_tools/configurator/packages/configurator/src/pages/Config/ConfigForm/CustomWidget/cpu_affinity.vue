@@ -17,7 +17,10 @@
             pCPU ID
           </b-col>
           <b-col>
-            <b-form-select v-model="cpu.pcpu_id" :options="pcpuid_enum"></b-form-select>
+            <b-form-select :state="validateCPUAffinity(cpu.pcpu_id)" v-model="cpu.pcpu_id" :options="pcpuid_enum"></b-form-select>
+            <b-form-invalid-feedback>
+              pCPU ID is required!
+            </b-form-invalid-feedback>
           </b-col>
           <b-col class="p-3 col-3">
             <div style="padding:9px;border-radius: 9px;width: 100%;border: 1px solid dimgray;background: lightgray;">
@@ -113,6 +116,9 @@ export default {
     }
   },
   methods: {
+    validateCPUAffinity(pcpu_id){
+      return !!pcpu_id;
+    },
     vCPUName(index) {
       return `${this.rootFormData.name} vCPU ${index}`
     },
