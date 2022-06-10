@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <!-- This is a tailored version of the schema of scenario XML files and is used by the configurator to ensure files
+       from users have the basic structure of a valid scenario XML. We do not use the full-fledged schema here because
+       users are allowed to save a scenario XML with some data inconsistencies. -->
+  <xs:element name="acrn-config">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="hv">
+          <xs:complexType>
+            <xs:all>
+              <xs:any maxOccurs="unbounded" processContents="skip" />
+            </xs:all>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="vm" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:all>
+              <xs:element name="load_order" type="xs:string" />
+              <xs:any maxOccurs="unbounded" processContents="skip" />
+            </xs:all>
+            <xs:attribute name="id" type="xs:integer" />
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
