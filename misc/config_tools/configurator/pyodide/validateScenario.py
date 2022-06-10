@@ -27,11 +27,9 @@ def main(board, scenario):
         XMLLoadStage("board"),
         XMLLoadStage("scenario"),
         DefaultValuePopulatingStage(),
+        SyntacticValidationStage(), 
         SemanticValidationStage(),
     ]
-    #
-    # if is_debug:
-    #     stages.append(SyntacticValidationStage())
 
     pipeline.add_stages(stages)
     with TemporaryDirectory() as tmpdir:
@@ -50,8 +48,9 @@ def main(board, scenario):
         )
         pipeline.run(obj)
 
-        validate_result = obj.get("semantic_errors")
-        return convert_result(validate_result)
+        syntactic_errors = obj.get("syntactic_errors")
+        semantic_errors = obj.get("semantic_errors")
+        return convert_result({"syntactic_errors": syntactic_errors, "semantic_errors": semantic_errors})
 
 
 def test():
