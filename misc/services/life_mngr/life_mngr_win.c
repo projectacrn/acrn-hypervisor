@@ -34,7 +34,7 @@
 #define SECOND_TO_MS	(1000U)
 #define RETRY_RECV_TIMES	(100U)
 
-HANDLE hCom2;
+HANDLE hCom3;
 unsigned int resend_time;
 char resend_buf[BUFF_SIZE];
 
@@ -73,7 +73,7 @@ void handle_socket_request(SOCKET sClient, char *req_message)
 	Sleep(6U * SECOND_TO_MS);
 	send(sClient, ack_message, sizeof(ack_message), 0);
 	start_uart_resend(req_message, MIN_RESEND_TIME);
-	send_message_by_uart(hCom2, req_message, strnlen(req_message, BUFF_SIZE));
+	send_message_by_uart(hCom3, req_message, strnlen(req_message, BUFF_SIZE));
 	Sleep(2U * READ_INTERVAL);
 	return;
 }
@@ -191,18 +191,18 @@ int main()
 	bool reboot = false;
 	unsigned int retry_times;
 
-	hCom2 = initCom("COM2");
-	if (hCom2 == INVALID_HANDLE_VALUE)
+	hCom3 = initCom("COM3");
+	if (hCom3 == INVALID_HANDLE_VALUE)
 		return -1;
 	memset(buf, 0, sizeof(buf));
 	memset(resend_buf, 0, sizeof(resend_buf));
 	CreateThread(NULL, 0, open_socket_server, NULL, 0, &threadId);
-	if (ClearCommError(hCom2, &dwError, NULL)) {
-		PurgeComm(hCom2, PURGE_TXABORT | PURGE_TXCLEAR);
+	if (ClearCommError(hCom3, &dwError, NULL)) {
+		PurgeComm(hCom3, PURGE_TXABORT | PURGE_TXCLEAR);
 	}
 	snprintf(buf, sizeof(buf), SYNC_FMT, WIN_VM_NAME);
 	start_uart_resend(buf, MIN_RESEND_TIME);
-	send_message_by_uart(hCom2, buf, strlen(buf));
+	send_message_by_uart(hCom3, buf, strlen(buf));
 	/**
 	 * The lifecycle manager in Service VM checks sync message every 5 seconds
 	 * during listening phase, delay 5 seconds to wait Service VM to receive the
@@ -214,7 +214,7 @@ int main()
 			retry_times = RETRY_RECV_TIMES;
 			memset(recvbuf, 0, sizeof(recvbuf));
 			do {
-				ReadFile(hCom2, recvbuf, sizeof(recvbuf), &recvsize, NULL);
+				ReadFile(hCom3, recvbuf, sizeof(recvbuf), &recvsize, NULL);
 				Sleep(READ_INTERVAL);
 				retry_times--;
 			} while ((recvsize < MSG_SIZE) && (retry_times > 0));
@@ -222,7 +222,7 @@ int main()
 				if (resend_time > 1U) {
 					Sleep(6U * SECOND_TO_MS);
 					printf("Resend command (%s) service VM\n", resend_buf);
-					send_message_by_uart(hCom2, resend_buf, strlen(resend_buf));
+					send_message_by_uart(hCom3, resend_buf, strlen(resend_buf));
 					resend_time--;
 				} else if (resend_time == 1U) {
 					printf("Failed to resend command (%s)\n", resend_buf);
@@ -250,21 +250,21 @@ int main()
 			printf("Received acked system reboot request from service VM\n");
 		} else if (strncmp(recvbuf, POWEROFF_CMD, sizeof(POWEROFF_CMD)) == 0) {
 			printf("Received system shutdown message from service VM\n");
-			send_message_by_uart(hCom2, ACK_POWEROFF, sizeof(ACK_POWEROFF));
+			send_message_by_uart(hCom3, ACK_POWEROFF, sizeof(ACK_POWEROFF));
 			Sleep(2 * READ_INTERVAL);
 			printf("Windows VM will shutdown.\n");
 			poweroff = true;
 			break;
 		} else if (strncmp(recvbuf, USER_VM_SHUTDOWN, sizeof(USER_VM_SHUTDOWN)) == 0) {
 			printf("Received guest shutdown message from service VM\n");
-			send_message_by_uart(hCom2, ACK_USER_VM_SHUTDOWN, sizeof(ACK_USER_VM_SHUTDOWN));
+			send_message_by_uart(hCom3, ACK_USER_VM_SHUTDOWN, sizeof(ACK_USER_VM_SHUTDOWN));
 			Sleep(2 * READ_INTERVAL);
 			printf("Windows VM will shutdown.\n");
 			poweroff = true;
 			break;
 		} else if (strncmp(recvbuf, USER_VM_REBOOT, sizeof(USER_VM_REBOOT)) == 0) {
 			printf("Received guest reboot message from service VM\n");
-			send_message_by_uart(hCom2, ACK_USER_VM_REBOOT, sizeof(ACK_USER_VM_REBOOT));
+			send_message_by_uart(hCom3, ACK_USER_VM_REBOOT, sizeof(ACK_USER_VM_REBOOT));
 			Sleep(2 * READ_INTERVAL);
 			printf("Windows VM will reboot.\n");
 			reboot = true;
@@ -273,7 +273,7 @@ int main()
 			printf("Received invalid message (%s) from service VM.\n", recvbuf);
 		}
 	} while (1);
-	CloseHandle(hCom2);
+	CloseHandle(hCom3);
 	if (poweroff)
 		system("shutdown -s -t 0");
 	if (reboot)
