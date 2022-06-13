@@ -8,8 +8,6 @@
 import sys
 import common, lib.error
 
-standard_uart_port = ['0x3E8', '0x2E8']
-
 # The COM1 was used for console vUART, so we alloc io_port frome COM2~COM4
 service_port_list = list(range(0x9000, 0x9100, 8))
 
@@ -66,12 +64,7 @@ def alloc_free_port(scenario_etree, load_order, vm_name):
         service_port_list.remove(service_port_list[0])
         return str(port).upper()
     else:
-        tmp_list = list(set(standard_uart_port) - set(port_list))
-        try:
-            port = tmp_list[0]
-            return port
-        except IndexError as e:
-            raise lib.error.ResourceError("Cannot allocate legacy io port: {}, {}".format(e, port_list)) from e
+        return "0x2F8"
 
 def alloc_vuart_connection_info(board_etree, scenario_etree, allocation_etree):
     user_vm_list = scenario_etree.xpath(f"//vm[load_order != 'SERVICE_VM']")
