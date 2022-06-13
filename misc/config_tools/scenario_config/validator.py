@@ -262,7 +262,6 @@ def validate_all(validation_pipeline, pipeline_obj, data_dir):
     return nr_all_errors
 
 def main(args):
-    from xml_loader import XMLLoadStage
     from lxml_loader import LXMLLoadStage
 
     validator_construction_pipeline = PipelineEngine(["schema_path", "datachecks_path"])
@@ -275,8 +274,8 @@ def main(args):
 
     validation_pipeline = PipelineEngine(["board_path", "scenario_path", "schema_etree", "validator"])
     validation_pipeline.add_stages([
-        XMLLoadStage("board"),
-        XMLLoadStage("scenario"),
+        LXMLLoadStage("board"),
+        LXMLLoadStage("scenario"),
         DefaultValuePopulatingStage(),
         SyntacticValidationStage(),
         SemanticValidationStage(),

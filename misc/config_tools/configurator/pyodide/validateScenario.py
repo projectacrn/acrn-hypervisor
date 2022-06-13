@@ -8,7 +8,7 @@ from scenario_config.default_populator import DefaultValuePopulatingStage
 from scenario_config.pipeline import PipelineObject, PipelineEngine
 from scenario_config.validator import ValidatorConstructionByFileStage, SemanticValidationStage, \
     SyntacticValidationStage
-from scenario_config.xml_loader import XMLLoadStage
+from scenario_config.xml_loader import LXMLLoadStage
 
 from .pyodide import (
     convert_result, write_temp_file,
@@ -22,12 +22,12 @@ def main(board, scenario):
     pipeline = PipelineEngine(["board_path", "scenario_path", "schema_path", "datachecks_path"])
     stages = [
         ValidatorConstructionByFileStage(),
-        XMLLoadStage("schema"),
+        LXMLLoadStage("schema"),
 
-        XMLLoadStage("board"),
-        XMLLoadStage("scenario"),
+        LXMLLoadStage("board"),
+        LXMLLoadStage("scenario"),
         DefaultValuePopulatingStage(),
-        SyntacticValidationStage(), 
+        SyntacticValidationStage(),
         SemanticValidationStage(),
     ]
 
