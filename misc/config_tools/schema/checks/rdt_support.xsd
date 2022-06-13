@@ -91,7 +91,7 @@ This error cannot be fixed by adjusting the configuration. Report a `GitHub issu
 
   <xs:assert test="every $needed in number-of-clos-id-needed(/acrn-config) satisfies
                    every $capacity in min(//caches/cache/capability[@id='CAT']/clos_number) satisfies
-                   $needed &lt; 0">
+                   $needed &lt; $capacity">
     <xs:annotation acrn:severity="error" acrn:report-on="/acrn-config/hv/CACHE_REGION">
       <xs:documentation>The current CAT configuration requires {string($needed)} CLOS IDs, which exceeds the capacity of the platform which supports {string($capacity)} at most.</xs:documentation>
     </xs:annotation>

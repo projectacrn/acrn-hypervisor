@@ -6,11 +6,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import sys, os
 from decimal import Decimal
 from copy import copy
 import operator
-import rdt
 import elementpath
+
+# Allow this script to find the library module at misc/config_tools/library.
+#
+# TODO: Reshuffle the module structure of the configuration toolset for clearer imports.
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+import library.rdt as rdt
 
 BaseParser = elementpath.XPath2Parser
 
