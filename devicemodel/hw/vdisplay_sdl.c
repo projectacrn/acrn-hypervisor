@@ -1140,7 +1140,7 @@ gfx_ui_init()
 	setenv("SDL_RENDER_SCALE_QUALITY", "linear", 1);
 
 	if (SDL_Init(SDL_INIT_VIDEO)) {
-		pr_err("Failed to Init SDL2 system");
+		pr_err("Failed to init SDL2 system\n");
 		return -1;
 	}
 
