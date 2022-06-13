@@ -25,6 +25,14 @@ def get_native_valid_irq():
         val_irq = [int(x.strip()) for x in irq_string.split(',')]
     return val_irq
 
+def alloc_standard_irq(io_port):
+    if io_port == "0x3F8" or io_port == "0x3E8":
+        return "4"
+    elif io_port == "0x2F8" or io_port == "0x2E8":
+        return "3"
+    else:
+        return "0"
+
 def alloc_irq(irq_list):
     try:
         irq = irq_list[0]
@@ -55,39 +63,55 @@ def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
     hv_debug_console = lib.lib.parse_hv_console(scenario_etree)
 
     vm_node_list = scenario_etree.xpath("//vm")
-    user_vm_list = scenario_etree.xpath("//vm[load_order != 'SERVICE_VM']/name/text()")
-    service_vm_id = common.get_node(f"//vm[load_order = 'SERVICE_VM']/@id", scenario_etree)
-    if service_vm_id is not None:
-        for index in range(0, len(user_vm_list)):
-            vuart_id = index + 1
-            create_vuart_irq_node(allocation_etree, service_vm_id, "SERVICE_VM", str(vuart_id), "0")
 
     for vm_node in vm_node_list:
         load_order = common.get_node("./load_order/text()", vm_node)
-        irq_list = get_native_valid_irq() if load_order == "SERVICE_VM" else [f"{d}" for d in list(range(1,15))]
+        irq_list = get_native_valid_irq() if load_order == "SERVICE_VM" else [f"{d}" for d in list(range(5,15))]
 
-        if load_order != "SERVICE_VM":
-            vuart_id = 1
-        else:
-            vuart_id = 1 + len(user_vm_list)
-
+        if load_order == "SERVICE_VM":
+            if 3 in irq_list:
+                remove_irq(irq_list, 3)
+            if 4 in irq_list:
+                remove_irq(irq_list, 4)
+        vuart_id = 1
+        legacy_vuart_irq = "0"
         vmname = common.get_node("./name/text()", vm_node)
-
-        # Allocate irq for S5 vuart
-        if load_order != "SERVICE_VM":
-            legacy_vuart_irq = alloc_irq(irq_list)
-            create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, str(vuart_id), "0")
-            vuart_id = vuart_id + 1
 
         vuart_connections = scenario_etree.xpath("//vuart_connection")
         for connection in vuart_connections:
             endpoint_list = connection.xpath(".//endpoint")
             for endpoint in endpoint_list:
-                vm_name = common.get_node("./vm_name/text()",endpoint)
+                vm_name = common.get_node("./vm_name/text()", endpoint)
                 if vm_name == vmname:
-                    legacy_vuart_irq = alloc_irq(irq_list)
+                    vuart_type = common.get_node("./type/text()", connection)
+                    if vuart_type == "legacy":
+                        io_port = common.get_node("./io_port/text()", endpoint)
+                        legacy_vuart_irq = alloc_standard_irq(io_port)
+                        if legacy_vuart_irq == "0" and load_order != "SERVICE_VM":
+                            legacy_vuart_irq = alloc_irq(irq_list)
+                    else:
+                        legacy_vuart_irq = alloc_irq(irq_list)
+
                     create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
                     vuart_id = vuart_id + 1
+        # Allocate irq for S5 vuart, we have to use the irq of COM2
+        if load_order != "SERVICE_VM":
+            legacy_vuart_irq = alloc_standard_irq("0x2F8")
+            create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
+            vuart_id = vuart_id + 1
+
+    user_vm_list = scenario_etree.xpath(f"//vm[load_order != 'SERVICE_VM']/name/text()")
+    service_vm_id = common.get_node(f"//vm[load_order = 'SERVICE_VM']/@id", scenario_etree)
+    service_vm_name = common.get_node(f"//vm[load_order = 'SERVICE_VM']/name/text()", scenario_etree)
+    service_vuart_list = scenario_etree.xpath(f"//endpoint[vm_name = '{service_vm_name}']")
+    if service_vm_id is not None:
+        for index in range(0, len(user_vm_list)):
+            if service_vuart_list is not None:
+                vuart_id = index + len(service_vuart_list) + 1
+            else:
+                vuart_id = index + 1
+
+            create_vuart_irq_node(allocation_etree, service_vm_id, "SERVICE_VM", str(vuart_id), "0")
 
 def get_irqs_of_device(device_node):
     irqs = set()
