@@ -157,9 +157,9 @@ def allocate_hugepages(board_etree, scenario_etree, allocation_etree):
     hugepages_1gb = 0
     hugepages_2mb = 0
     ram_range_info = import_memory_info(board_etree)
-    total_hugepages = sum(ram_range_info[i] for i in ram_range_info if i >= 0x100000000)/(1024*1024*1024) \
+    total_hugepages = int(sum(ram_range_info[i] for i in ram_range_info if i >= 0x100000000)*0.98/(1024*1024*1024) \
                       - sum(int(i) for i in scenario_etree.xpath("//vm[load_order = 'PRE_LAUNCHED_VM']/memory/hpa_region/size_hpa/text()"))/1024 \
-                      - 4 - 300/1024 * len(scenario_etree.xpath("//virtio_devices/gpu"))
+                      - 5 - 300/1024 * len(scenario_etree.xpath("//virtio_devices/gpu")))
 
     post_launch_vms = scenario_etree.xpath("//vm[load_order = 'POST_LAUNCHED_VM']")
     if len(post_launch_vms) > 0:
@@ -171,13 +171,9 @@ def allocate_hugepages(board_etree, scenario_etree, allocation_etree):
                 hugepages_2mb = int(hugepages_2mb + math.ceil(mb * 1024 / 2))
 
     post_vms_memory = sum(int(i) for i in scenario_etree.xpath("//vm[load_order = 'POST_LAUNCHED_VM']/memory/size/text()")) / 1024
-    correction_mb, correction_gb = math.modf(total_hugepages - post_vms_memory)
     if total_hugepages - post_vms_memory < 0:
         logging.warning(f"The sum {post_vms_memory} of memory configured in post launch VMs should not be larger than " \
         f"the calculated total hugepages {total_hugepages} of service VMs. Please update the configuration in post launch VMs")
-
-    hugepages_1gb = hugepages_1gb + correction_gb
-    hugepages_2mb = hugepages_2mb + math.ceil(correction_mb * 1024 / 2)
 
     allocation_service_vm_node = common.get_node("/acrn-config/vm[load_order = 'SERVICE_VM']", allocation_etree)
     if allocation_service_vm_node is not None:
