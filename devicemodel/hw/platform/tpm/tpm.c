@@ -119,9 +119,10 @@ static int init_tpm2_pt(char *opts, struct mmio_dev *tpm2dev)
 	}
 
 	devopts = strdup(opts);
-	if (devopts != NULL) {
-		vtopts = strstr(devopts,",");
+	if (devopts == NULL) {
+		return -ENODEV;
 	}
+	vtopts = strstr(devopts,",");
 
 	/* Check whether user set the uid to identify same hid devices for
 	 * several instances.
@@ -131,7 +132,7 @@ static int init_tpm2_pt(char *opts, struct mmio_dev *tpm2dev)
 	}
 
 	/* parse /proc/iomem to find the address and size of tpm buffer */
-	if ((devopts != NULL) && (!get_mmio_hpa_resource(devopts, &tpm2_buffer_hpa, &tpm2_buffer_size))) {
+	if (!get_mmio_hpa_resource(devopts, &tpm2_buffer_hpa, &tpm2_buffer_size)) {
 		free(devopts);
 		return -ENODEV;
 	}
