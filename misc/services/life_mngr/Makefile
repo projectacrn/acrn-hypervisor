@@ -67,6 +67,7 @@ ifneq ($(shell which $(MINGWIN_CC)),)
 	$(MINGWIN_CC) -g life_mngr_win.c -o $(OUT_DIR)/life_mngr_win.exe -Wall -O2 $(LDFLAGS) -lwsock32
 	cp COPYING.MinGW-w64-runtime.txt $(OUT_DIR)/COPYING.MinGW-w64-runtime.txt
 	cp s5_trigger_win.py $(OUT_DIR)/s5_trigger_win.py
+	cp system_reboot_trigger_win.py $(OUT_DIR)/system_reboot_trigger_win.py
 else
 	@echo "WARN: $(MINGWIN_CC) not installed, skipping life_mngr_win.exe" >&2
 endif
