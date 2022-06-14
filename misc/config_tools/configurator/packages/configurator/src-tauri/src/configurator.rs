@@ -283,9 +283,24 @@ static mut WORKING_FOLDER: String = String::new();
 #[tauri::command]
 pub fn get_history(history_type: HistoryType) -> Result<String, ()> {
     let configurator = Configurator::new();
-    let history = serde_json::to_string(configurator.get_history(history_type))
-        .unwrap_or_else(|_| String::from("[]"));
-    Ok(history)
+    let history = configurator.get_history(history_type);
+    // filter out empty string and not exist history path
+    let clean_history: Vec<&String> = match history_type {
+        HistoryType::WorkingFolder => history
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .filter(|s| Path::new(s).is_dir())
+            .collect::<Vec<_>>(),
+        _ => history
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .filter(|s| Path::new(s).is_file())
+            .collect::<Vec<_>>(),
+    };
+
+    let history_json_text =
+        serde_json::to_string(&clean_history).unwrap_or_else(|_| String::from("[]"));
+    Ok(history_json_text)
 }
 
 #[tauri::command]
