@@ -93,7 +93,7 @@
   </xsl:variable>
   <xsl:variable name="hugepage_kernelstring">
     <xsl:if test="//board-data//processors//capability[@id='gbyte_pages']">
-      <xsl:value-of select="concat('hugepagesz=1G hugepages=', //allocation-data//vm[acrn:is-service-vm(load_order)]/hugepages/gb, ' hugepagesz=2M hugepages=', //allocation-data//vm[acrn:is-service-vm(load_order)]/hugepages/mb)" />
+      <xsl:value-of select="concat('hugepagesz=1G hugepages=', //allocation-data//vm[acrn:is-service-vm(load_order)]/hugepages/gb)" />
     </xsl:if>
   </xsl:variable>
   <xsl:value-of select="acrn:define('SERVICE_VM_ROOTFS', concat($quot, $sos_rootfs, ' ', $quot), '')" />
