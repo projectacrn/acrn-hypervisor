@@ -239,7 +239,7 @@ virtio_vhost_vsock_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct virtio_vsock *vsock;
 	int rc;
-	uint64_t cid;
+	uint64_t cid = 0;
 	pthread_mutexattr_t attr;
 	char *devopts = NULL;
 	char *tmp = NULL;
