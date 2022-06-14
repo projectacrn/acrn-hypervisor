@@ -3419,6 +3419,11 @@ pci_xhci_dbregs_write(struct pci_xhci_vdev *xdev,
 		UPRINTF(LWRN, "pci_xhci: controller halted\r\n");
 		return;
 	}
+	if (XHCI_DB_TARGET_GET(value) > XHCI_MAX_ENDPOINTS) {
+		UPRINTF(LWRN, "pci_xhci: invalid doorbell target %d!\n",
+						XHCI_DB_TARGET_GET(value));
+		return;
+	}
 
 	if (offset == 0)
 		pci_xhci_complete_commands(xdev);
