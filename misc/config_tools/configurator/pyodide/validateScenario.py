@@ -8,7 +8,7 @@ from scenario_config.default_populator import DefaultValuePopulatingStage
 from scenario_config.pipeline import PipelineObject, PipelineEngine
 from scenario_config.validator import ValidatorConstructionByFileStage, SemanticValidationStage, \
     SyntacticValidationStage
-from scenario_config.xml_loader import LXMLLoadStage
+from scenario_config.lxml_loader import LXMLLoadStage
 
 from .pyodide import (
     convert_result, write_temp_file,
