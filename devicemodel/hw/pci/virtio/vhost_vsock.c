@@ -208,25 +208,21 @@ fail:
 	return NULL;
 }
 
-static int
+static void
 vhost_vsock_deinit(struct vhost_vsock *vhost_vsock)
 {
 	int rc;
 
 	rc = vhost_vsock_stop(vhost_vsock);
-	if (rc < 0) {
+	if (rc < 0)
 		pr_err("vhost_dev_stop is failed.\n");
-		return -1;
-	}
 
 	rc = vhost_dev_deinit(&vhost_vsock->vdev);
-	if (rc < 0) {
+	if (rc < 0)
 		pr_err("vhost_dev_deinit is failed.\n");
-		return -1;
-	}
+
 	close(vhost_vsock->vhost_fd);
 	free(vhost_vsock);
-	return 0;
 }
 
 static void
@@ -323,10 +319,9 @@ virtio_vhost_vsock_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (dev->arg) {
 		vsock = (struct virtio_vsock *) dev->arg;
 
-		if (vsock->vhost_vsock) {
+		if (vsock->vhost_vsock)
 			vhost_vsock_deinit(vsock->vhost_vsock);
-		}
-			pr_dbg("%s: done\n", __func__);
+		pr_dbg("%s: done\n", __func__);
 	} else
 		pr_err("%s: NULL.\n", __func__);
 }
