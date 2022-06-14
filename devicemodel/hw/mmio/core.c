@@ -137,6 +137,9 @@ int get_mmio_hpa_resource(char *name, uint64_t *res_start, uint64_t *res_size)
 					pr_err("Please run acrn-dm with superuser privilege\n");
 					break;
 				}
+			} else {
+				pr_err("Parsing /proc/iomem failed\n");
+				break;
 			}
 
 			*res_start = start;
