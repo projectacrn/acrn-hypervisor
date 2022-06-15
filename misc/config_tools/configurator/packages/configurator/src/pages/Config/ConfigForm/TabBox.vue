@@ -1,8 +1,13 @@
 <template>
   <div class="p-2 w-100 d-flex align-items-center TabBox">
-    <div class="d-inline-block p-3 pt-2 Tab"
+    <div class="d-inline-block p-3 pt-2 Tab position-relative"
          :class="{Active:activeVMID===-1}"
          @click="active(-1)">
+      <div class="position-absolute" style="right: 3px;top:5px;" v-if="errors.hasOwnProperty(-1)">
+        <Icon size="18px" color="red" style="cursor: pointer;">
+          <ExclamationCircle/>
+        </Icon>
+      </div>
       <div style="font-size: 22px;">Hypervisor</div>
       <div>Global Settings</div>
     </div>
