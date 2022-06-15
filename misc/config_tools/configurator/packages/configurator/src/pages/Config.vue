@@ -211,16 +211,6 @@ export default {
           this.currentFormData = this.scenario.vm[i]
         }
       }
-      if (this.currentFormData['load_order'] === 'SERVICE_VM') {
-        if (this.currentFormData.hasOwnProperty('vm_type')) {
-          delete this.schemas.ServiceVM.BasicConfigType.properties.vm_type
-        } else {
-          if (this.schemas.ServiceVM.BasicConfigType.properties.hasOwnProperty('vm_type') === false) {
-            this.schemas.ServiceVM.BasicConfigType.properties.vm_type =
-              {$ref: '#/definitions/BasicVMType', title: 'VM type', description: '<p>Select the VM type. A standard VM (<span class=…ial features for time-sensitive applications.</p>'}
-          }
-        }
-      }
     },
     switchTab(tabVMID) {
       this.activeVMID = tabVMID;

@@ -189,15 +189,19 @@ class XS2JS:
             if 'xs:enumeration' in restriction:
                 type_func = {"string": str, "integer": int}.get(js_st['type'], str)
                 # enum
+                enum_elements = restriction['xs:enumeration']
+                if not isinstance(enum_elements, list):
+                    enum_elements = [enum_elements]
+
                 enum = []
-                for enum_element in restriction['xs:enumeration']:
+                for enum_element in enum_elements:
                     enum.append(type_func(enum_element['@value']))
                 js_st["enum"] = enum
 
                 # enumNames
-                if enum and '@acrn:title' in restriction['xs:enumeration'][0].get('xs:annotation', {}):
+                if enum and '@acrn:title' in enum_elements[0].get('xs:annotation', {}):
                     enum_names = []
-                    for enum_element in restriction['xs:enumeration']:
+                    for enum_element in enum_elements:
                         if 'xs:annotation' in enum_element and '@acrn:title' in enum_element.get('xs:annotation', {}):
                             enum_names.append(enum_element['xs:annotation']['@acrn:title'])
                         else:
