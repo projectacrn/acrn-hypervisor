@@ -64,12 +64,15 @@
           <TabBox
               :scenario="scenario"
               :activeVMID="activeVMID"
+              :errors="errors"
               @tabActive="switchTab"
               @addVM="addVM"
           />
         </div>
-        <div v-if="errors">
-          <div class="px-4" style="color: red" v-for="error in errors">{{ error.message }}</div>
+        <div v-if="errors.hasOwnProperty(activeVMID)">
+          <div class="px-4" style="color: red" v-for="error in errors[activeVMID]">
+            {{ error.severity }}: {{ error.message }}
+          </div>
         </div>
         <div class="p-4">
           <ConfigForm
@@ -184,7 +187,7 @@ export default {
     scenarioUpdate(scenarioData) {
       let scenarioXMLData = this.scenarioToXML(scenarioData)
       let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-      this.errors = all_errors.semantic_errors
+      this.errors = this.translateErrors(all_errors, scenarioData)
       this.scenario = scenarioData;
       this.showFlag = false;
       this.updateCurrentFormSchema()
@@ -385,6 +388,39 @@ export default {
       }
       return scenarioWithDefault
     },
+    translateErrors(errors, scenarioData) {
+      let formErrors = {}
+
+      let translate = error => {
+        error.paths.forEach(path => {
+          let formPath = path.split('/')[2];
+          // translate form path to scenario vmid
+          let vmid = -1
+          if (formPath === 'hv') {
+            vmid = -1
+          } else if (formPath === 'vm') {
+            vmid = scenarioData.vm[0]['@id']
+          } else if (/vm\[\d+]/.test(formPath)) {
+            let vmIndex = /vm\[(\d+)]/.exec(formPath)[1]
+            vmIndex = parseInt(vmIndex) - 1
+            vmid = scenarioData.vm[vmIndex]['@id']
+          }
+          if (!formErrors.hasOwnProperty(vmid)) {
+            formErrors[vmid] = []
+          }
+          formErrors[vmid].push(error)
+        })
+      }
+
+      if (errors.syntactic_errors.length > 0) {
+        errors.syntactic_errors.forEach(translate)
+      }
+      if (errors.semantic_errors.length !== 0) {
+        errors.semantic_errors.forEach(translate)
+      }
+
+      return formErrors
+    },
     saveScenario() {
       if (_.isEmpty(this.scenario.vm)) {
         alert("Please add at least one VM")
@@ -427,36 +463,40 @@ export default {
 
       configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
           .then(() => {
+            // validate scenario and clean up the launch script
             stepDone = 1
             console.log("validate settings...")
             let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-            this.errors = all_errors.semantic_errors
-            // noinspection ExceptionCaughtLocallyJS
+            // noinspection JSUnresolvedVariable
+            this.errors = this.translateErrors(all_errors, this.scenario)
+            // noinspection JSUnresolvedVariable
             if (all_errors.syntactic_errors.length !== 0 || all_errors.semantic_errors.length !== 0) {
               throw new Error("validation failed")
             }
             console.log("validation ok")
             stepDone = 2
             return this.cleanLaunchScript()
-          }).then(() => {
-        if (needSaveLaunchScript) {
-          let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-          let writeDone = []
-          for (let filename in launchScripts) {
-            writeDone.push(configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename]))
-          }
-          return Promise.all(writeDone)
-        } else {
-          return
-        }
-      })
+          })
+          .then(() => {
+            // generate launch script
+            if (needSaveLaunchScript) {
+              let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
+              let writeDone = []
+              for (let filename in launchScripts) {
+                writeDone.push(configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename]))
+              }
+              return Promise.all(writeDone)
+            }
+          })
           .then((result) => {
+            // show success message
             if (!_.isEmpty(result)) {
               stepDone = 3
             }
             alert(`${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`)
           })
           .catch((err) => {
+            // show error message
             console.log("error" + err)
             let outmsg = ''
             for (var i = 0; i < stepDone; i++)
