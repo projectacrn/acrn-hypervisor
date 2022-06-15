@@ -22,13 +22,13 @@
   <xs:annotation>
     <xs:documentation>Current supported VM types are:
 
-- ``Real-time`` for time-sensitive applications.
+- ``Real-time`` for time-sensitive applications (not applicable to the service VM).
 - ``Standard`` for general-purpose applications, such as human-machine interface (HMI).
 </xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
-    <xs:enumeration value="RTVM">
-      <xs:annotation acrn:title="Real-time" />
+    <xs:enumeration value="RTVM" >
+      <xs:annotation acrn:title="Real-time" acrn:applicable-vms="pre-launched, post-launched" />
     </xs:enumeration>
     <xs:enumeration value="STANDARD_VM">
       <xs:annotation acrn:title="Standard" />
