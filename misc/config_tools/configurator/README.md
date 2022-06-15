@@ -9,13 +9,14 @@ This version is based on Tauri, WIP.
 - [x] Linux (.deb, AppImage)
 - [x] Windows 7,8,10 (.exe, .msi)
 
-
 ## Setting Up
 
 ### 1. Install System Dependencies
 
-Please follow [this guide](https://tauri.studio/docs/getting-started/prerequisites)
-to install system dependencies **(including yarn)**.
+1. Please follow [this guide](https://tauri.studio/v1/guides/getting-started/prerequisites)
+to install system dependencies.
+2. Download and install [Nodejs](https://nodejs.org/en/download/).
+3. Please follow [this guide](https://yarnpkg.com/lang/en/docs/install/) to install yarn.
 
 #### Linux
 
@@ -78,11 +79,11 @@ Run following command in the 'acrn-hypervisor' directory.
 ```shell
 cd misc\config_tools
 python scenario_config/schema_slicer.py
-python scenario_config/jsonschema/convert.py
+python scenario_config/jsonschema/converter.py
 xmllint --xinclude schema/datachecks.xsd > schema/allchecks.xsd
 
 python -m build
-del configurator/packages/configurator/thirdLib/acrn_config_tools-3.0-py3-none-any.whl
+del configurator\packages\configurator\thirdLib\acrn_config_tools-3.0-py3-none-any.whl
 
 cd configurator
 python packages/configurator/thirdLib/manager.py install
