@@ -8,8 +8,13 @@
     </div>
     <div class="TabSplitter"></div>
 
-    <div class="d-inline-block p-3 pt-2 Tab" :class="{Active:activeVMID===pre.id}"
+    <div class="d-inline-block p-3 pt-2 Tab position-relative" :class="{Active:activeVMID===pre.id}"
          :key="pre.id" v-for="pre in vms.PRE_LAUNCHED_VM" @click="active(pre.id)">
+      <div class="position-absolute" style="right: 3px;top:5px;" v-if="errors.hasOwnProperty(pre.id)">
+        <Icon size="18px" color="red" style="cursor: pointer;">
+          <ExclamationCircle/>
+        </Icon>
+      </div>
       <div style="font-size:22px">
         {{ pre.name }}
       </div>
@@ -24,9 +29,14 @@
     </div>
 
 
-    <div class="d-inline-block p-3 pt-2 Tab" :class="{Active:activeVMID===service.id}"
+    <div class="d-inline-block p-3 pt-2 Tab position-relative" :class="{Active:activeVMID===service.id}"
          :key="service.id" v-for="service in vms.SERVICE_VM"
          @click="active(service.id)">
+      <div class="position-absolute" style="right: 3px;top:5px;" v-if="errors.hasOwnProperty(service.id)">
+        <Icon size="18px" color="red" style="cursor: pointer;">
+          <ExclamationCircle/>
+        </Icon>
+      </div>
       <div style="font-size:22px">
         {{ service.name }}
       </div>
@@ -34,9 +44,14 @@
     </div>
 
 
-    <div class="d-inline-block p-3 pt-2 Tab" :class="{Active:activeVMID===post.id}"
+    <div class="d-inline-block p-3 pt-2 Tab position-relative" :class="{Active:activeVMID===post.id}"
          :key="post.id" v-for="post in vms.POST_LAUNCHED_VM"
          @click="active(post.id)">
+      <div class="position-absolute" style="right: 3px;top:5px;" v-if="errors.hasOwnProperty(post.id)">
+        <Icon size="18px" color="red" style="cursor: pointer;">
+          <ExclamationCircle/>
+        </Icon>
+      </div>
       <div style="font-size:22px">
         {{ post.name }}
       </div>
@@ -53,10 +68,17 @@
 </template>
 
 <script>
+import {Icon} from "@vicons/utils";
+import {ExclamationCircle} from "@vicons/fa";
+
 export default {
   name: "TabBox",
+  components: {Icon, ExclamationCircle},
   props: {
     scenario: {
+      type: Object
+    },
+    errors: {
       type: Object
     },
     activeVMID: {type: Number}
