@@ -6,71 +6,27 @@
   <xs:assert test="if (//VCAT_ENABLED = 'y')
                    then (//CDP_ENABLED = 'n' and //RDT_ENABLED = 'y')
                    else true()">
-    <xs:annotation>
+    <xs:annotation acrn:severity="error" acrn:report-on="//CDP_ENABLED">
       <xs:documentation>Hypervisor Virtual Cache Allocation Technology may be enabled only when hypervisor Code and Data Prioritization is disabled.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
   <xs:assert test="if (count(//virtual_cat_support[text() = 'y']) > 0)
-                   then //RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y'
+                   then (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y')
                    else true()">
-    <xs:annotation>
+    <xs:annotation acrn:severity="error" acrn:report-on="//VCAT_ENABLED">
       <xs:documentation>VM Virtual Cache Allocation Technology may be enabled only when hypervisor Virtual Cache Allocation Technology is enabled.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
-  <xs:assert test="if (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y')
-                   then count(vm[virtual_cat_support[text() = 'y'] and count(clos/vcpu_clos[. = 0])]) = 0
-                   else true()">
-    <xs:annotation>
-      <xs:documentation>CLOSID 0 is reserved for the hypervisor and may not be used as a vcpu_clos by a VM.</xs:documentation>
-    </xs:annotation>
-  </xs:assert>
-
-  <xs:assert test="every $vm in vm satisfies
-                  (
-                    if (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y' and $vm/virtual_cat_support[text() = 'y'])
-                    then count($vm[clos/vcpu_clos[. &gt;= count($vm/..//CLOS_MASK)]]) = 0
-                    else true()
-                  )
-                  ">
-    <xs:annotation>
-      <xs:documentation>Each clos/vcpu_clos must be less than L2/L3 CLOS_MAX.</xs:documentation>
-    </xs:annotation>
-  </xs:assert>
-
-  <xs:assert test="every $vm in vm satisfies
-                  (
-                    if (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y' and $vm/virtual_cat_support[text() = 'y'])
-                    then count($vm/clos/vcpu_clos) = count(distinct-values($vm/clos/vcpu_clos))
-                    else true()
-                  )
-                  ">
-    <xs:annotation>
-      <xs:documentation>A VM's clos/vcpu_clos settings may not contain duplicate values.</xs:documentation>
-    </xs:annotation>
-  </xs:assert>
-
-  <xs:assert test="every $vm1 in vm, $vm2 in $vm1/following-sibling::vm satisfies
-                  (
-                    if (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y' and ($vm1/virtual_cat_support[text() = 'y'] or $vm2/virtual_cat_support[text() = 'y']))
-                    then count($vm1/clos/vcpu_clos[. = $vm2/clos/vcpu_clos]) = 0
-                    else true()
-                  )
-                  ">
-    <xs:annotation>
-      <xs:documentation>When Virtual Cache Allocation Technology is enabled, CLOS IDs may not overlap between any VMs.</xs:documentation>
-    </xs:annotation>
-  </xs:assert>
-
   <xs:assert test="every $vm in //vm satisfies $vm//load_order != 'SERVICE_VM' or count($vm//lapic_passthrough[text() = 'y']) = 0 or count(//nested_virtualization_support[text() = 'y']) > 0">
-    <xs:annotation>
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm//lapic_passthrough">
       <xs:documentation>The Service VM may not use LAPIC passthrough unless hypervisor Nested Virtualization is enabled.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
   <xs:assert test="not (//hv//RDT/RDT_ENABLED = 'y' and //hv//SSRAM/SSRAM_ENABLED = 'y')">
-    <xs:annotation>
+    <xs:annotation acrn:severity="error" acrn:report-on="//hv//SSRAM/SSRAM_ENABLED">
       <xs:documentation>The hypervisor Intel Resource Director Technology and Software SRAM settings may not be enabled at the same time.</xs:documentation>
     </xs:annotation>
   </xs:assert>
@@ -78,7 +34,7 @@
   <xs:assert test="hv//SSRAM_ENABLED = 'n' or empty(vm[load_order ='PRE_LAUNCHED_VM' and vm_type='RTVM']) or
 		   every $cap in caches/cache[@level=3]/capability[@id='Software SRAM'] satisfies
 		   (compare($cap/end, '0x80000000') &lt; 0 or compare($cap/start, '0xf8000000') &gt;= 0)">
-    <xs:annotation acrn:severity="warning">
+    <xs:annotation acrn:severity="warning" acrn:report-on="hv//SSRAM_ENABLED">
       <xs:documentation>The physical software SRAM region may not overlap with pre-defined regions in any VM.
 
 When a pre-launched RTVM is enabled, the physical software SRAM is allocated to it at the same guest physical
