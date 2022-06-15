@@ -2,16 +2,4 @@
 # wrapper to call board_inspector.py
 
 modprobe msr
-IA32_FEATURE_CONTROL=0x3A
-
-if [ "$(($(rdmsr ${IA32_FEATURE_CONTROL}) & 0x6))" = "0" ]; then
-   echo "VMX is not enabled, update your BIOS settings" >&2
-   exit 1
-fi
-
-if [ ! -f /sys/firmware/acpi/tables/DMAR ]; then
-   echo "Cannot find ACPI DMAR table. Is VT-d enabled/supported?" >&2
-   exit 1
-fi
-
 python3 -m acrn_board_inspector.board_inspector "$@"
