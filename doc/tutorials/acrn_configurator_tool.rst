@@ -18,6 +18,8 @@ Capabilities:
   XML format
 * Generates a launch script for each post-launched User VM
 
+.. _acrn_configurator_tool_prerequisites:
+
 Prerequisites
 *************
 
@@ -28,6 +30,10 @@ Guide sections:
 * :ref:`gsg-dev-computer`
 * :ref:`gsg-board-setup`
 * :ref:`gsg-dev-setup`
+
+The above Getting Started Guide steps use a prebuilt Debian package to install
+the ACRN Configurator. :ref:`acrn_configurator_tool_source` describes how to
+build the Debian package.
 
 Start with a New or Existing Configuration
 ******************************************
@@ -73,7 +79,8 @@ such as a board configuration file, scenario configuration file, and launch
 scripts. If it finds any, it will delete them.
 
 1. Under **Start a new configuration**, use the displayed working folder or
-   select a different folder by clicking **Browse for folder**.
+   select a different folder by clicking **Browse for folder**. Use a
+   folder name that is meaningful to you.
 
    .. image:: images/configurator-newconfig.png
       :align: center
@@ -328,7 +335,10 @@ Save and Check for Errors
       :align: center
       :class: drop-shadow
 
-   The tool saves your configuration data in a set of files in the working folder:
+   The tool validates hypervisor and VM settings whenever you save.
+
+   If no errors occur, the tool saves your configuration data in a set of files
+   in the working folder:
 
    * Scenario configuration file (``scenario.xml``): Raw format of all
      hypervisor and VM settings. You will need this file to build ACRN.
@@ -341,19 +351,123 @@ Save and Check for Errors
 
         # Launch script for VM name: <name>
 
-   The tool validates hypervisor and VM settings whenever you save. If an error
-   occurs, such as an empty required field, the tool saves the changes to the
-   files, but prompts you to correct the error. Error messages appear below the
-   applicable settings. Example:
+   If an error occurs, such as an empty required field, the tool saves the
+   changes to the scenario configuration file, but prompts you to correct the
+   error.
 
-   .. image:: images/configurator-rederror.png
+#. On the selector menu, check for error messages on all tabs that have an error
+   icon. The following figure shows that the Hypervisor tab and the VM1 tab
+   contain errors.
+
+   .. image:: images/configurator-erroricon.png
       :align: center
       :class: drop-shadow
 
-#. Fix the errors and save again to generate a valid configuration.
+   Error messages appear below the selector menu or below the applicable
+   parameter.
+
+#. Fix all errors and save again to generate a valid configuration.
 
 Next Steps
 ==========
 
 After generating a valid scenario configuration file, you can build ACRN. See
 :ref:`gsg_build`.
+
+.. _acrn_configurator_tool_source:
+
+Build ACRN Configurator From Source Code
+*****************************************
+
+The :ref:`prerequisites<acrn_configurator_tool_prerequisites>` use a prebuilt
+Debian package to install the ACRN Configurator. The following steps describe
+how to build the Debian package from source code. 
+
+#. On the development computer, complete the steps in :ref:`gsg-dev-computer`.
+
+#. Install the ACRN Configurator build tools:
+
+   .. code-block:: bash
+
+      sudo apt install -y libwebkit2gtk-4.0-dev \
+         build-essential \
+         curl \
+         wget \
+         libssl-dev \
+         libgtk-3-dev \
+         libappindicator3-dev \
+         librsvg2-dev \
+         python3-venv
+
+#. Install Node.js (npm included) as follows:
+
+   a. We recommend using nvm to manage your Node.js runtime. It allows you to
+      switch versions and update Node.js easily.
+
+      .. code-block:: bash
+
+         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+
+   #. Rerun your ``.bashrc`` initialization script and then install the latest
+      version of Node.js and npm:
+
+      .. code-block:: bash
+
+         source ~/.bashrc
+         nvm install node --latest-npm
+         nvm use node
+
+#. Install and upgrade Yarn:
+
+   .. code-block:: bash
+
+      npm install --global yarn
+
+#. Install rustup, the official installer for Rust:
+
+   .. code-block:: bash
+
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+   When prompted by the Rust installation script, type ``1`` and press
+   :kbd:`Enter`.
+
+   .. code-block:: console
+
+      1) Proceed with installation (default)
+      2) Customize installation
+      3) Cancel installation
+      >1
+
+#. Configure the current shell:
+
+   .. code-block:: bash
+
+      source $HOME/.cargo/env
+
+#. Install additional ACRN Configurator dependencies:
+
+   .. code-block:: bash
+
+      cd ~/acrn-work/acrn-hypervisor/misc/config_tools/configurator
+      python3 -m pip install -r requirements.txt
+      yarn
+
+#. Build the ACRN Configurator Debian package:
+
+   .. code-block:: bash
+
+      cd ~/acrn-work/acrn-hypervisor
+      make configurator
+
+#. Install the ACRN Configurator:
+
+   .. code-block:: bash
+
+      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator_*_amd64.deb
+
+#. Launch the ACRN Configurator:
+
+   .. code-block:: bash
+
+      acrn-configurator
