@@ -381,7 +381,7 @@ export default {
     translateErrors(errors, scenarioData) {
       let formErrors = {}
 
-      let translate = error => {
+      let translate = errorType => error => {
         error.paths.forEach(path => {
           let formPath = path.split('/')[2];
           // translate form path to scenario vmid
@@ -398,15 +398,17 @@ export default {
           if (!formErrors.hasOwnProperty(vmid)) {
             formErrors[vmid] = []
           }
-          formErrors[vmid].push(error)
+          if (errorType === 'semantic') {
+            formErrors[vmid].push(error)
+          }
         })
       }
 
       if (errors.syntactic_errors.length > 0) {
-        errors.syntactic_errors.forEach(translate)
+        errors.syntactic_errors.forEach(translate('syntactic'))
       }
-      if (errors.semantic_errors.length !== 0) {
-        errors.semantic_errors.forEach(translate)
+      if (errors.semantic_errors.length > 0) {
+        errors.semantic_errors.forEach(translate('semantic'))
       }
 
       return formErrors
