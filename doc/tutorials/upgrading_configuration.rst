@@ -3,7 +3,7 @@
 Upgrading ACRN Configurations to Recent Releases
 ################################################
 
-The configuration files, introduced in :ref:`acrn_config_data`, are refined
+The configuration files, introduced in :ref:`acrn_config_types`, are refined
 every release for richer features, clearer organization, and more user-friendly
 presentation. Due to the strict validation ACRN adopts, configuration files
 for a former release may not work for a latter if they are not upgraded. This

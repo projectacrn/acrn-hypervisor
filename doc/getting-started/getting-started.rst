@@ -58,25 +58,6 @@ Before you begin, make sure your machines have the following prerequisites:
     copying via USB disk, but you can use another method if you prefer)
   - Local storage device (NVMe or SATA drive, for example)
 
-.. _gsg-target-hardware:
-
-.. rst-class:: numbered-step
-
-Set Up the Target Hardware
-**************************
-
-To set up the target hardware environment:
-
-#. Connect the mouse, keyboard, monitor, and power supply cable to the target
-   system.
-
-#. Connect the target system to the LAN with the Ethernet cable.
-
-Example of a target system with cables connected:
-
-.. image:: ./images/gsg_nuc.png
-   :scale: 25%
-
 .. _gsg-dev-computer:
 
 .. rst-class:: numbered-step
@@ -154,7 +135,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo pip3 install lxml xmlschema defusedxml tqbm
+      sudo pip3 install lxml xmlschema defusedxml tqdm
 
 #. Create a working directory:
 
@@ -183,10 +164,10 @@ To set up the ACRN build environment on the development computer:
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout acrn-2022w18.4-180000p
+      git checkout release_3.0
 
       cd ..
-      git clone --depth 1 --branch acrn-2022w18.4-180000p https://github.com/projectacrn/acrn-kernel.git
+      git clone --depth 1 --branch release_3.0 https://github.com/projectacrn/acrn-kernel.git
 
 .. _gsg-board-setup:
 
@@ -205,9 +186,29 @@ hardware.
 
 .. important::
 
-   Whenever you change the configuration of the board, such as peripherals, BIOS
-   settings, additional memory, or PCI devices, you must generate a new board
-   configuration file.
+   Before running the Board Inspector, you must set up your target hardware and
+   BIOS exactly as you want it, including connecting all peripherals,
+   configuring BIOS settings, and adding memory and PCI devices. For example,
+   you must connect all USB devices; otherwise, the Board Inspector will not
+   detect the USB devices for passthrough. If you change the hardware or BIOS
+   configuration, or add or remove USB devices, you must run the Board Inspector
+   again to generate a new board configuration file.
+
+Set Up the Target Hardware
+============================
+
+To set up the target hardware environment:
+
+#. Connect all USB devices, such as a mouse and keyboard.
+
+#. Connect the monitor and power supply cable.
+
+#. Connect the target system to the LAN with the Ethernet cable.
+
+Example of a target system with cables connected:
+
+.. image:: ./images/gsg_nuc.png
+   :scale: 25%
 
 Install OS on the Target
 ============================
@@ -323,7 +324,7 @@ Generate a Board Configuration File
    .. code-block:: bash
 
       cd  ~/acrn-work
-      sudo apt install ./acrn-board-inspector*.deb
+      sudo apt install -y ./acrn-board-inspector*.deb
 
 #. Reboot the system:
 
@@ -391,90 +392,11 @@ their attributes, and the resources they have access to.
 A **launch script** is a shell script that is used to configure and create a
 post-launched User VM. Each User VM has its own launch script.
 
-First, you will install dependencies, build the ACRN Configurator Debian
-package, and install it on your development computer. Then you will use the ACRN
-Configurator to generate a scenario configuration file and launch script.
-
-#. On the development computer, install the ACRN Configurator build tools:
+#. On the development computer, install the ACRN Configurator:
 
    .. code-block:: bash
 
-      sudo apt install -y libwebkit2gtk-4.0-dev \
-         build-essential \
-         curl \
-         wget \
-         libssl-dev \
-         libgtk-3-dev \
-         libappindicator3-dev \
-         librsvg2-dev \
-         python3-venv
-
-#. Install Node.js (npm included) as follows:
-
-   a. We recommend using nvm to manage your Node.js runtime. It allows you to
-      switch versions and update Node.js easily.
-
-      .. code-block:: bash
-
-         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
-
-   #. Rerun your ``.bashrc`` initialization script and then install the latest
-      version of Node.js and npm:
-
-      .. code-block:: bash
-
-         source ~/.bashrc
-         nvm install node --latest-npm
-         nvm use node
-
-#. Install and upgrade Yarn:
-
-   .. code-block:: bash
-
-      npm install --global yarn
-
-#. Install rustup, the official installer for Rust:
-
-   .. code-block:: bash
-
-      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-   When prompted by the Rust installation script, type ``1`` and press
-   :kbd:`Enter`.
-
-   .. code-block:: console
-
-      1) Proceed with installation (default)
-      2) Customize installation
-      3) Cancel installation
-      >1
-
-#. Configure the current shell:
-
-   .. code-block:: bash
-
-      source $HOME/.cargo/env
-
-#. Install additional ACRN Configurator dependencies:
-
-   .. code-block:: bash
-
-      cd ~/acrn-work/acrn-hypervisor/misc/config_tools/configurator
-      python3 -m pip install -r requirements.txt
-      yarn
-
-#. Build the ACRN Configurator Debian package:
-
-   .. code-block:: bash
-
-      cd ~/acrn-work/acrn-hypervisor
-      make configurator
-
-#. Install the ACRN Configurator:
-
-   .. code-block:: bash
-
-      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator_*_amd64.deb
+      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator_*_amd64.deb # TODO update file path
 
 #. Launch the ACRN Configurator:
 
@@ -482,69 +404,111 @@ Configurator to generate a scenario configuration file and launch script.
 
       acrn-configurator
 
-#. On the left-hand side, look for **Start a new configuration**.
-   Confirm that the working folder is ``<path to>/acrn-work/MyConfiguration``. Click **Use This Folder**.
+#. Under **Start a new configuration**, confirm that the working folder is
+   ``<path to>/acrn-work/MyConfiguration``. Click **Use This Folder**.
 
-   TODO add screenshots to Configurator steps
+   .. image:: images/configurator-newconfig.png
+      :align: center
+      :class: drop-shadow
 
 #. Import your board configuration file as follows:
 
-   a. Under **Import a board configuration file**, click **Browse for file**.
+   a. In the **1. Import a board configuration file** panel, click **Browse for
+      file**.
 
    #. Browse to ``~/acrn-work/my_board.xml`` and click **Open**.
 
    #. Click **Import Board File**.
+
+   .. image:: images/configurator-board01.png
+      :align: center
+      :class: drop-shadow
 
    The ACRN Configurator makes a copy of your board file, changes the file
    extension to ``.board.xml``, and saves the file to the working folder.
 
 #. Create a new scenario as follows:
 
-   a. Under **Create new or import an existing scenario**, click **Create
-      Scenario**.
+   a. In the **2. Create new or import an existing scenario** panel, click
+      **Create Scenario**.
+
+      .. image:: images/configurator-newscenario01.png
+         :align: center
+         :class: drop-shadow
 
    #. In the dialog box, confirm that **Shared (Post-launched VMs only)** is
       selected.
 
    #. Confirm that one Service VM and one post-launched VM are selected.
 
-   #. Click **Create**.
+   #. Click **Ok**.
 
-#. Generate the scenario configuration file and launch script:
+      .. image:: images/configurator-newscenario02.png
+         :align: center
+         :class: drop-shadow
 
-   a. Under **Configure settings for scenario and launch scripts**, the
-      scenario's configurable items appear. Feel free to look through all the
-      available configuration settings. This is where you can change the
-      settings to meet your application's particular needs. But for now, you will update only a few settings to make this example work.
+#. In the **3. Configure settings for scenario and launch scripts** panel,
+   the scenario's configurable items appear. Feel free to look through all
+   the available configuration settings. This is where you can change the
+   settings to meet your application's particular needs. But for now, you
+   will update only a few settings for functional and educational purposes.
 
-   #. Click the **VM1 Post-launched** tab to access the post-launched VM's
-      settings.
+#. Click the **Hypervisor Global Settings > Basic Parameters** tab, select the
+   ``Debug`` build type, and select the serial console port (the example shows
+   ``/dev/ttyS0``, but yours may be different). If your board doesn't have a
+   serial console port, select the ``Release`` build type. The Debug build type
+   requires a serial console port.
 
-   #. Confirm that the Basic Parameters tab is selected, and scroll down to
-      **Memory size (MB)**. Change the value to ``1024``. For this example, we
-      will use Ubuntu 20.04 to boot the post-launched VM. Ubuntu 20.04 needs at
-      least 1024 MB to boot.
+   .. image:: images/configurator-buildtype.png
+      :align: center
+      :class: drop-shadow
 
-   #. Scroll down to **Virtio block device**, click **+**, and enter
+#. Click the **VM0 ServiceVM > Basic Parameters** tab and change the VM name
+   to ``ACRN_Service_VM`` for this example.
+
+   .. image:: images/configurator-servicevm.png
+      :align: center
+      :class: drop-shadow
+
+#. Configure the post-launched VM as follows:
+
+   #. Click the **VM1 Post-launched > Basic Parameters** tab and change the VM
+      name to ``POST_STD_VM1`` for this example.
+
+   #. Confirm that the **OS type** is ``Standard``. In the previous step,
+      ``STD`` in the VM name is short for Standard. 
+
+   #. Scroll down to **Memory size (MB)** and change the value to ``1024``. For
+      this example, we will use Ubuntu 20.04 to boot the post-launched VM.
+      Ubuntu 20.04 needs at least 1024 MB to boot.
+
+   #. For **Physical CPU affinity**, select pCPU ID ``0``, then click **+** and
+      select pCPU ID ``1`` to affine the VM to CPU cores 0 and 1.
+
+   #. For **Virtio block device**, click **+** and enter
       ``~/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
       in this guide, you will save the ISO file to that directory.
 
-   #. Click **Save Scenario And Launch Scripts** to generate the scenario
-      configuration file and launch script.
+   .. image:: images/configurator-postvm.png
+      :align: center
+      :class: drop-shadow
+
+#. Scroll up to the top of the panel and click **Save Scenario And Launch
+   Scripts** to generate the scenario configuration file and launch script.
 
 #. Click the **x** in the upper-right corner to close the ACRN
    Configurator.
 
-#. Confirm that the scenario configuration file ``scenario.xml`` appears in your
-   ``acrn-work/MyConfiguration`` directory::
+#. Confirm that the scenario configuration file ``scenario.xml`` appears in the
+   working directory::
 
          ls ~/acrn-work/MyConfiguration/scenario.xml
 
-#. Confirm that the launch script ``TODO`` appears in the
-   expected output directory::
+#. Confirm that the launch script appears in the
+   working directory::
 
-         ls ~/acrn-work/MyConfiguration/TODO
+         ls ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh
 
 .. _gsg_build:
 
@@ -694,6 +658,14 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
    .. code-block:: console
 
       [  0.000000] Hypervisor detected: ACRN
+
+#. Enable and start the Service VM's system daemon for managing network configurations,
+   so the Device Model can create a bridge device (acrn-br0) that provides User VMs with
+   wired network access:
+
+   .. code-block:: bash
+
+      sudo systemctl enable --now systemd-networkd
 
 .. _gsg-user-vm:
 

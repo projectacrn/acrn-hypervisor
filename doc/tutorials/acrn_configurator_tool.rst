@@ -25,7 +25,6 @@ This guide assumes you have a board configuration file and have successfully
 launched the ACRN Configurator. For steps, see the following Getting Started
 Guide sections:
 
-* :ref:`gsg-target-hardware`
 * :ref:`gsg-dev-computer`
 * :ref:`gsg-board-setup`
 * :ref:`gsg-dev-setup`
