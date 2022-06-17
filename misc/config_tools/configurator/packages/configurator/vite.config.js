@@ -9,7 +9,7 @@ let versionMatcher = /release_([\d.]+)/;
 
 let branchVersion = child_process.execSync('git rev-parse --abbrev-ref HEAD').toString()
 if (versionMatcher.test(branchVersion)) {
-    branchVersion = versionMatcher.exec(branchVersion)[1]
+    branchVersion = versionMatcher.exec(branchVersion)[1].toString()
 } else {
     branchVersion = 'latest'
 }
@@ -30,7 +30,7 @@ export default defineConfig({
         outDir: path.resolve(__dirname, 'build')
     },
     define: {
-        packageVersion: JSON.stringify(packageVersion.toString()),
-        branchVersion
+        branchVersion: JSON.stringify(branchVersion),
+        packageVersion: JSON.stringify(packageVersion.toString())
     }
 })
