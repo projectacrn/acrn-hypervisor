@@ -5,8 +5,19 @@ import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tauri from "./thirdLib/tauri-plugin";
 
+let versionMatcher = /release_([\d.]+)/;
+
+let branchVersion = child_process.execSync('git rev-parse --abbrev-ref HEAD').toString()
+if (versionMatcher.test(branchVersion)) {
+    branchVersion = versionMatcher.exec(branchVersion)[1]
+} else {
+    branchVersion = 'latest'
+}
+
 const packageVersion = child_process.execSync('git describe --dirty')
+console.log('branchVersion: ' + branchVersion)
 console.log("packageVersion: " + packageVersion)
+
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -19,6 +30,7 @@ export default defineConfig({
         outDir: path.resolve(__dirname, 'build')
     },
     define: {
-        packageVersion: JSON.stringify(packageVersion.toString())
+        packageVersion: JSON.stringify(packageVersion.toString()),
+        branchVersion
     }
 })

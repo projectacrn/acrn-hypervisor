@@ -19,7 +19,8 @@
         <div class="form-group pb-4">
           <p class="d-flex justify-content-between">
             <b>Choose a scenario type:</b>
-            <a class="fs-6" style="cursor: pointer">
+            <a class="fs-6"
+               :href="'https://projectacrn.github.io/'+version+'/introduction/index.html#static-configuration-based-on-scenarios'">
               Learn about scenarios
             </a>
           </p>
@@ -77,6 +78,7 @@ export default {
   },
   data() {
     return {
+      version: branchVersion,
       scenarioTemplate: "shared",
       preLaunch: 1,
       postLaunch: 1
