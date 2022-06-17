@@ -33,23 +33,7 @@ else
 fi
 kernelimg="module2 $service_vm_kernel Linux_bzImage"
 
-if [ $SCENARIO == shared ];then
-    cat>"${filename}"<<EOF
-#!/bin/sh
-exec tail -n +3 \$0
-menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
-    load_video
-    insmod gzio
-    insmod part_gpt
-    insmod ext2
-    search --no-floppy --fs-uuid  --set $uuid
-multiboot2 $ACRNBIN root=PARTUUID=$partuuid
-$kernelimg
-
-}
-
-EOF
-elif [ $SCENARIO == hybrid ];then
+if [ $SCENARIO == hybrid ];then
     echo -e "\E[32m Please put zephyr64.elf in the /boot/ directory"
     tput sgr0
     cat>"${filename}"<<EOF
@@ -102,6 +86,22 @@ multiboot2 $ACRNBIN root=PARTUUID=$partuuid
 $kernelimg
 module2 /boot/ACPI_VM0.bin ACPI_VM0
 module2 /boot/ACPI_VM1.bin ACPI_VM1
+}
+
+EOF
+else
+    cat>"${filename}"<<EOF
+#!/bin/sh
+exec tail -n +3 \$0
+menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
+    load_video
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid  --set $uuid
+multiboot2 $ACRNBIN root=PARTUUID=$partuuid
+$kernelimg
+
 }
 
 EOF
