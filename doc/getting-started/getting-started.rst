@@ -207,8 +207,8 @@ To set up the target hardware environment:
 
 Example of a target system with cables connected:
 
-.. image:: ./images/gsg_nuc.png
-   :scale: 25%
+.. image:: ./images/gsg_vecow.png
+   :align: center
 
 Install OS on the Target
 ============================
@@ -231,12 +231,14 @@ To install Ubuntu 20.04:
    updates requires the target to have an Internet connection).
 
    .. image:: ./images/gsg_ubuntu_install_01.png
+      :align: center
 
 #. Use the check boxes to choose whether you'd like to install Ubuntu alongside
    another operating system, or delete your existing operating system and
    replace it with Ubuntu:
 
    .. image:: ./images/gsg_ubuntu_install_02.png
+      :align: center
 
 #. Complete the Ubuntu installation and create a new user account ``acrn`` and
    set a password.
@@ -475,7 +477,7 @@ post-launched User VM. Each User VM has its own launch script.
    #. Click the **VM1 Post-launched > Basic Parameters** tab and change the VM
       name to ``POST_STD_VM1`` for this example.
 
-   #. Confirm that the **OS type** is ``Standard``. In the previous step,
+   #. Confirm that the **VM type** is ``Standard``. In the previous step,
       ``STD`` in the VM name is short for Standard. 
 
    #. Scroll down to **Memory size (MB)** and change the value to ``1024``. For
