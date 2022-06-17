@@ -71,7 +71,7 @@
         </div>
         <div v-if="errors.hasOwnProperty(activeVMID)">
           <div class="px-4" style="color: red" v-for="error in errors[activeVMID]">
-            {{ error.severity }}: {{ error.message }}
+            {{ error.message }}
           </div>
         </div>
         <div class="p-4">
