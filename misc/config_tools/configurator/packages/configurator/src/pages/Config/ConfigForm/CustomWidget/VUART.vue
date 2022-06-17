@@ -219,7 +219,7 @@ export default {
       }
       this.defaultVal.splice(index + 1, 0, {
         "name": "Connection_" + this.defaultVal.length,
-        "type": "legacy",
+        "type": "pci",
         "endpoint": [
           {
             "vm_name": "",
