@@ -20,6 +20,7 @@
           <p class="d-flex justify-content-between">
             <b>Choose a scenario type:</b>
             <a class="fs-6"
+               target="_blank"
                :href="'https://projectacrn.github.io/'+version+'/introduction/index.html#static-configuration-based-on-scenarios'">
               Learn about scenarios
             </a>
