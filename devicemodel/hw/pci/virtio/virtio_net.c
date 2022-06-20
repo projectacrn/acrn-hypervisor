@@ -1172,7 +1172,7 @@ vhost_net_init(struct virtio_base *base, int vhostfd, int tapfd, int vq_idx)
 {
 	struct vhost_net *vhost_net = NULL;
 	uint64_t vhost_features = VIRTIO_NET_S_VHOSTCAPS;
-	uint64_t vhost_ext_features = VHOST_NET_F_VIRTIO_NET_HDR;
+	uint64_t vhost_ext_features =  1 << VHOST_NET_F_VIRTIO_NET_HDR;
 	uint32_t busyloop_timeout = 0;
 	int rc;
 
