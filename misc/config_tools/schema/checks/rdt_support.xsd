@@ -53,4 +53,13 @@ This error cannot be fixed by adjusting the configuration. Report a `GitHub issu
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $vm_name in //vm/name satisfies
+                  if (//RDT_ENABLED = 'y')
+                  then count(//POLICY/VM[text() = $vm_name]) > 0
+                  else true()">
+    <xs:annotation acrn:severity="error" acrn:report-on="/acrn-config/hv/CACHE_REGION">
+      <xs:documentation>Need config the CLOS MASK for VM '{$vm_name}''.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
