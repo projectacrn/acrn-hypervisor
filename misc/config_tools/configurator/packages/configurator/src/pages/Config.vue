@@ -192,6 +192,7 @@ export default {
       this.showFlag = false;
       this.updateCurrentFormSchema()
       this.updateCurrentFormData()
+      configurator.cat.scenarioLoaded()
     },
     getSchemaData() {
       return this.schemas
@@ -437,6 +438,8 @@ export default {
       let stepDone = 0
       let totalMsg = msg.length // msg and errMsg must be same length.
       let needSaveLaunchScript = false
+
+      this.scenario.hv.CACHE_REGION = configurator.cat.getScenarioDataFromCAT()
 
       let scenarioWithDefaults = this.applyScenarioDefaults(this.scenario)
       let scenarioXMLData = this.scenarioToXML(scenarioWithDefaults)
