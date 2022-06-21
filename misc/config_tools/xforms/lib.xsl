@@ -331,8 +331,13 @@
           </xsl:otherwise>
         </xsl:choose>
       </xsl:variable>
+
       <xsl:variable name="console_vuart" select="count(./console_vuart/base[text() = 'PCI_VUART'])" />
-      <xsl:variable name="communication_vuart" select="count(./communication_vuart/base[text() = 'PCI_VUART'])" />
+      <xsl:variable name="vm_name" select="./name" />
+      <xsl:variable name="communication_vuart">
+        <xsl:value-of select="count(//vuart_connection[type = 'pci']/endpoint[vm_name/text() = $vm_name])" />
+      </xsl:variable>
+
       <xsl:variable name="pci_devs" select="count(./pci_devs/pci_dev[text() != ''])" />
       <xsl:variable name="pci_hostbridge" select="1" />
       <xsl:variable name="virtual_root_port">

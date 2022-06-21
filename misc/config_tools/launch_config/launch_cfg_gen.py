@@ -55,6 +55,10 @@ class LaunchScript:
             next_vbdf = self._free_slots.pop(0)
             return next_vbdf
 
+        def remove_virtual_bdf(self, slot):
+            if slot in self._free_slots:
+                self._free_slots.remove(slot)
+
     class PassThruDeviceOptions:
         passthru_device_options = {
             "0x0200": [".//PTM[text()='y']", "enable_ptm"],  # Ethernet controller, added if PTM is enabled for the VM
@@ -165,6 +169,8 @@ class LaunchScript:
 
         if vbdf is None:
             vbdf = self._vbdf_allocator.get_virtual_bdf()
+        else:
+            self._vbdf_allocator.remove_virtual_bdf(vbdf)
         self.add_dynamic_dm_parameter("add_virtual_device", f"{vbdf} {kind} {options}")
 
     def add_passthru_device(self, bus, dev, fun, options=""):
@@ -253,6 +259,9 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     # Emulated PCI devices
     script.add_virtual_device("hostbridge", vbdf="0:0")
 
+    #ivshmem and vuart must be the first virtual devices generated before the others except hostbridge and LPC
+    #ivshmem and vuart own reserved slots which setting by user
+
     for ivshmem in eval_xpath_all(vm_scenario_etree, f"//IVSHMEM_REGION[PROVIDED_BY = 'Device Model' and .//VM_NAME = '{vm_name}']"):
         script.add_virtual_device("ivshmem", options=f"dm:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text}")
 
@@ -262,9 +271,14 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     if eval_xpath(vm_scenario_etree, ".//console_vuart/text()") == "PCI":
         script.add_virtual_device("uart", options="vuart_idx:0")
 
-    for idx, conn in enumerate(eval_xpath_all(hv_scenario_etree, f".//vuart_connection[endpoint/vm_name = '{vm_name}']"), start=1):
-        if eval_xpath(conn, "./type/text()") == "pci":
-            script.add_virtual_device("uart", options=f"vuart_idx:{idx}")
+    for idx, conn in enumerate(eval_xpath_all(hv_scenario_etree, f"//vuart_connection[endpoint/vm_name/text() = '{vm_name}']"), start=1):
+        if eval_xpath(conn, f"./type/text()") == "pci":
+            vbdf = eval_xpath(conn, f"./endpoint[vm_name/text() = '{vm_name}']/vbdf/text()")
+            if vbdf is not None:
+                slot = int((vbdf.split(":")[1].split(".")[0]), 16)
+            else:
+                slot = None
+            script.add_virtual_device("uart", slot, options=f"vuart_idx:{idx}")
 
     # Mediated PCI devices, including virtio
     for usb_xhci in eval_xpath_all(vm_scenario_etree, ".//usb_xhci/usb_dev[text() != '']/text()"):
