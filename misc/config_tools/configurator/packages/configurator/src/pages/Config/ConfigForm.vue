@@ -30,6 +30,7 @@
       are required fields
     </div>
     <VueForm
+        :key="currentFormData.hasOwnProperty('@id')?'vm'+currentFormData['@id']:'hv'"
         v-model="currentFormData"
         :form-props="formProps"
         :ui-schema="uiSchema"
