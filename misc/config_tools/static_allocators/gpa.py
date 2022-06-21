@@ -109,15 +109,20 @@ class AddrWindow(namedtuple(
             return False
         return True
 
-def insert_vuart_to_dev_dict(scenario_etree, devdict_32bits):
+def insert_vuart_to_dev_dict(scenario_etree, vm_id, devdict_32bits):
+
     console_vuart =  scenario_etree.xpath(f"./console_vuart[base != 'INVALID_PCI_BASE']/@id")
-    communication_vuarts = scenario_etree.xpath(f".//communication_vuart[base != 'INVALID_PCI_BASE']/@id")
     for vuart_id in console_vuart:
         devdict_32bits[(f"{VUART}_{vuart_id}", "bar0")] = PCI_VUART_VBAR0_SIZE
         devdict_32bits[(f"{VUART}_{vuart_id}", "bar1")] = PCI_VUART_VBAR1_SIZE
-    for vuart_id in communication_vuarts:
-        devdict_32bits[(f"{VUART}_{vuart_id}", "bar0")] = PCI_VUART_VBAR0_SIZE
-        devdict_32bits[(f"{VUART}_{vuart_id}", "bar1")] = PCI_VUART_VBAR1_SIZE
+
+    vm_name = common.get_node(f"//vm[@id = '{vm_id}']/name/text()", scenario_etree)
+    communication_vuarts = scenario_etree.xpath(f"//vuart_connection[endpoint/vm_name/text() = '{vm_name}']")
+    for vuart_id, vuart in enumerate(communication_vuarts, start=1):
+        connection_type = common.get_node(f"./type/text()", vuart)
+        if connection_type == "pci":
+            devdict_32bits[(f"{VUART}_{vuart_id}", "bar0")] = PCI_VUART_VBAR0_SIZE
+            devdict_32bits[(f"{VUART}_{vuart_id}", "bar1")] = PCI_VUART_VBAR1_SIZE
 
 def insert_legacy_vuart_to_dev_dict(vm_node, devdict_io_port):
     legacy_vuart =  vm_node.xpath(f".//legacy_vuart[base = 'CONFIG_COM_BASE']/@id")
@@ -409,7 +414,7 @@ def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
 
         devdict_32bits = {}
         devdict_64bits = {}
-        insert_vuart_to_dev_dict(vm_node, devdict_32bits)
+        insert_vuart_to_dev_dict(scenario_etree, vm_id, devdict_32bits)
         insert_ivsheme_to_dev_dict(scenario_etree, devdict_32bits, devdict_64bits, vm_id)
         insert_pt_devs_to_dev_dict(board_etree, vm_node, devdict_32bits, devdict_64bits)
 
