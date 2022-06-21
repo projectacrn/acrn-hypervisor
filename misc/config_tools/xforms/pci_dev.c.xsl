@@ -46,7 +46,7 @@
     </xsl:if>
     <xsl:call-template name="ivshmem_shm_mem" />
     <xsl:apply-templates select="console_vuart" />
-    <xsl:apply-templates select="communication_vuart" />
+    <xsl:call-template name="communication_vuart" />
     <xsl:if test="acrn:is-pre-launched-vm(load_order)">
       <xsl:apply-templates select="pci_devs" />
     </xsl:if>
@@ -95,32 +95,55 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="communication_vuart">
-    <xsl:if test="base != 'INVALID_PCI_BASE'">
-      <xsl:variable name="vm_id" select="../@id" />
-      <xsl:variable name="dev_name" select="concat('VUART_', @id)" />
-      <xsl:text>{</xsl:text>
-      <xsl:value-of select="$newline" />
-      <xsl:value-of select="acrn:initializer('vuart_idx', @id, '')" />
-      <xsl:value-of select="acrn:initializer('emu_type', 'PCI_DEV_TYPE_HVEMUL', '')" />
-      <xsl:value-of select="acrn:initializer('vdev_ops', '&amp;vmcs9900_ops', '')" />
-      <xsl:choose>
-        <xsl:when test="acrn:is-post-launched-vm(../load_order)">
-          <xsl:value-of select="acrn:initializer('vbar_base[0]', 'INVALID_PCI_BASE', '')" />
-          <xsl:value-of select="acrn:initializer('vbdf.value', 'UNASSIGNED_VBDF', '')" />
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:for-each select="//vm[@id = $vm_id]/device[@name = $dev_name]/bar">
-            <xsl:value-of select="acrn:initializer(concat('vbar_base[', @id,']'), concat(text(), 'UL'), '')" />
-          </xsl:for-each>
-          <xsl:value-of select="acrn:initializer('vbdf.bits', acrn:get-vbdf(../@id, $dev_name), '')" />
-        </xsl:otherwise>
-      </xsl:choose>
-      <xsl:value-of select="acrn:initializer('t_vuart.vm_id', target_vm_id, '')" />
-      <xsl:value-of select="acrn:initializer('t_vuart.vuart_id', target_uart_id, '')" />
+  <xsl:template name="communication_vuart">
+    <xsl:variable name="vm_id" select="@id" />
+    <xsl:variable name="vm_name" select="name/text()" />
+    <xsl:variable name="load_order" select="load_order/text()" />
+    <xsl:for-each select="//vuart_connection[endpoint/vm_name/text() = $vm_name]">
+      <xsl:variable name="connection_name" select="name/text()" />
+      <xsl:if test="./type/text() = 'pci'">
+        <xsl:variable name="vuart_id" select="position()"/>
+        <xsl:variable name="dev_name" select="concat('VUART_', $vuart_id)" />
+        <xsl:text>{</xsl:text>
+        <xsl:value-of select="$newline" />
+        <xsl:value-of select="acrn:initializer('vuart_idx', $vuart_id, '')" />
+        <xsl:value-of select="acrn:initializer('emu_type', 'PCI_DEV_TYPE_HVEMUL', '')" />
+        <xsl:value-of select="acrn:initializer('vdev_ops', '&amp;vmcs9900_ops', '')" />
+        <xsl:for-each select="endpoint">
+          <xsl:choose>
+            <xsl:when test="vm_name = $vm_name">
+              <xsl:choose>
+                <xsl:when test="acrn:is-post-launched-vm($load_order)">
+                  <xsl:value-of select="acrn:initializer('vbar_base[0]', 'INVALID_PCI_BASE', '')" />
+                  <xsl:value-of select="acrn:initializer('vbdf.value', 'UNASSIGNED_VBDF')" />
+                </xsl:when>
+                <xsl:otherwise>
+                  <xsl:for-each select="//vm[@id = $vm_id]/device[@name = $dev_name]/bar">
+                    <xsl:value-of select="acrn:initializer(concat('vbar_base[', @id,']'), concat(text(), 'UL'), '')" />
+                  </xsl:for-each>
+                  <xsl:variable name="b" select="substring-before(vbdf/text(), ':')" />
+                  <xsl:variable name="d" select="substring-before(substring-after(vbdf/text(), ':'), '.')" />
+                  <xsl:variable name="f" select="substring-after(vbdf/text(), '.')" />
+                  <xsl:value-of select="acrn:initializer('vbdf.bits', concat('{', '0x', $b, ', ', '0x', $d, ', ', '0x', $f, '}'))" />
+                </xsl:otherwise>
+              </xsl:choose>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:variable name="target_name" select="vm_name" />
+              <xsl:value-of select="acrn:initializer('t_vuart.vm_id', concat(//vm[name = $target_name]/@id, 'U'))" />
+              <xsl:for-each select="//vuart_connection[endpoint/vm_name = $target_name]">
+                <xsl:variable name="uart_num" select="position()"/>
+                <xsl:if test="name = $connection_name">
+                  <xsl:value-of select="acrn:initializer('t_vuart.vuart_id', concat($uart_num, 'U'))" />
+                </xsl:if>
+              </xsl:for-each>
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:for-each>
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
-    </xsl:if>
+      </xsl:if>
+    </xsl:for-each>
   </xsl:template>
 
   <xsl:template match="pci_devs">
