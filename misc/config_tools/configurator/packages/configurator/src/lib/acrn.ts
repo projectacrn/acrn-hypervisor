@@ -460,7 +460,7 @@ class CAT {
     getRTCoreData(regionData): Policy[] {
         let RTCoreData: Policy[] = [];
         this.scenario.vm.map(vmConfig => {
-            if (this.haveCPUAffinity(vmConfig)) {
+            if (vmConfig.vm_type === 'RTVM' && this.haveCPUAffinity(vmConfig)) {
                 vmConfig.cpu_affinity.pcpu.map(
                     (pcpu, index) => {
                         if (
@@ -492,17 +492,17 @@ class CAT {
             if (this.haveCPUAffinity(vmConfig)) {
                 vmConfig.cpu_affinity.pcpu.map(
                     (pcpu, index) => {
-                        if (
-                            regionData.processors.indexOf(pcpu.pcpu_id) !== -1 && (
-                                !pcpu.hasOwnProperty('real_time_vcpu') ||
-                                pcpu.real_time_vcpu === 'n'
-                            )
-                        ) {
-                            if (!this.switches.CDP_ENABLED) {
-                                StandardData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, 'Unified', regionData.capacity_mask_length))
-                            } else {
-                                StandardData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, "Code", regionData.capacity_mask_length))
-                                StandardData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, "Data", regionData.capacity_mask_length))
+                        if (regionData.processors.indexOf(pcpu.pcpu_id) !== -1) {
+                            if (!pcpu.hasOwnProperty('real_time_vcpu') ||
+                                (pcpu.real_time_vcpu === 'n') ||
+                                (pcpu.real_time_vcpu === 'y' && vmConfig.vm_type !== 'RTVM')
+                            ) {
+                                if (!this.switches.CDP_ENABLED) {
+                                    StandardData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, 'Unified', regionData.capacity_mask_length))
+                                } else {
+                                    StandardData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, "Code", regionData.capacity_mask_length))
+                                    StandardData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, "Data", regionData.capacity_mask_length))
+                                }
                             }
                         }
                     })
