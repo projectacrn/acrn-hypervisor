@@ -29,7 +29,7 @@
             </div>
           </b-col>
           <b-col class="p-3">
-            <b-form-checkbox v-model="cpu.real_time_vcpu" :value="'y'" :uncheckedValue="'n'"/>
+            <b-form-checkbox v-model="cpu.real_time_vcpu" :value="'y'" :uncheckedValue="'n'" :disabled="!isRTVM"/>
           </b-col>
           <b-col>
             <div class="ToolSet">
@@ -95,6 +95,9 @@ export default {
     }
   },
   computed: {
+    isRTVM() {
+      return vueUtils.getPathVal(this.rootFormData, 'vm_type') === 'RTVM'
+    },
     pcpuid_enum() {
       return window.getCurrentFormSchemaData().BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id.enum
     },
