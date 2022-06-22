@@ -322,6 +322,7 @@ virtio_vhost_vsock_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		if (vsock->vhost_vsock)
 			vhost_vsock_deinit(vsock->vhost_vsock);
 		pr_dbg("%s: done\n", __func__);
+		free(vsock);
 	} else
 		pr_err("%s: NULL.\n", __func__);
 }
