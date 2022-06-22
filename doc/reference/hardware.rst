@@ -51,42 +51,51 @@ level includes the activities described in the lower levels.
 .. _WHL-IPC-I5:
    http://www.maxtangpc.com/industrialmotherboards/142.html#parameters
 
+.. _Vecow SPC-7100:
+   https://marketplace.intel.com/s/offering/a5b3b000000PReMAAW/vecow-spc7100-series-11th-gen-intel-core-i7i5i3-processor-ultracompact-f
+
 .. _UP2-N3350:
 .. _UP2-N4200:
 .. _UP2-x5-E3940:
 .. _UP2 Shop:
    https://up-shop.org/home/270-up-squared.html
 
-+------------------------+------------------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+
-|                        |                                    | .. rst-class:: centered                                                                                                                             |
-|                        |                                    |                                                                                                                                                     |
-|                        |                                    |    ACRN Version                                                                                                                                     |
-+------------------------+------------------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+
-| Intel Processor Family | Tested Product                     | .. rst-class::         | .. rst-class::         | .. rst-class::         | .. rst-class::         | .. rst-class::         | .. rst-class::         |
-|                        |                                    |    centered            |    centered            |    centered            |    centered            |    centered            |    centered            |
-|                        |                                    |                        |                        |                        |                        |                        |                        |
-|                        |                                    |    v1.0                |    v1.6.1              |    v2.0                |    v2.5                |    v2.6                |    v2.7                |
-+========================+====================================+========================+========================+========================+========================+========================+========================+
-| Tiger Lake             | `NUC11TNHi5`_                      |                        |                        |                        | .. rst-class::         | .. rst-class::                                  |
-|                        |                                    |                        |                        |                        |    centered            |    centered                                     |
-|                        |                                    |                        |                        |                        |                        |                                                 |
-|                        |                                    |                        |                        |                        |    Release             |    Maintenance                                  |
-+------------------------+------------------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+
-| Whiskey Lake           | `WHL-IPC-I5`_                      |                        |                        | .. rst-class::         | .. rst-class::                                  | .. rst-class::         |
-|                        |                                    |                        |                        |    centered            |    centered                                     |    centered            |
-|                        |                                    |                        |                        |                        |                                                 |                        |
-|                        |                                    |                        |                        |    Release             |    Maintenance                                  |    Community           |
-+------------------------+------------------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+------------------------+
-| Kaby Lake              | `NUC7i7DNHE`_                      |                        | .. rst-class::         | .. rst-class::                                  | .. rst-class::                                  |
-|                        |                                    |                        |    centered            |    centered                                     |    centered                                     |
-|                        |                                    |                        |                        |                                                 |                                                 |
-|                        |                                    |                        |    Release             |    Maintenance                                  |    Community                                    |
-+------------------------+------------------------------------+------------------------+------------------------+-------------------------------------------------+-------------------------------------------------+
-| Apollo Lake            | | `NUC6CAYH`_,                     | .. rst-class::         | .. rst-class::         | .. rst-class::                                                                                    |
-|                        | | `UP2-N3350`_,                    |    centered            |    centered            |    centered                                                                                       |
-|                        | | `UP2-N4200`_,                    |                        |                        |                                                                                                   |
-|                        | | `UP2-x5-E3940`_                  |    Release             |    Maintenance         |    Community                                                                                      |
-+------------------------+------------------------------------+------------------------+------------------------+---------------------------------------------------------------------------------------------------+
++------------------------+----------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+|                        |                      | .. rst-class::                                                                                                                            |
+|                        |                      |    centered                                                                                                                               |
+|                        |                      |                                                                                                                                           |
+|                        |                      |    ACRN Version                                                                                                                           |
+|                        |                      +-------------------+-------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
+| Intel Processor Family | Tested Products      | .. rst-class::    | .. rst-class::    | .. rst-class::    | .. rst-class::    | .. rst-class::    | .. rst-class::    | .. rst-class::    |
+|                        |                      |    centered       |    centered       |    centered       |    centered       |    centered       |    centered       |    centered       |
+|                        |                      |                   |                   |                   |                   |                   |                   |                   |
+|                        |                      |    v1.0           |    v1.6.1         |    v2.0           |    v2.5           |    v2.6           |    v2.7           |    v3.0           |
++========================+======================+===================+===================+===================+===================+===================+===================+===================+
+| Tiger Lake             | `Vecow SPC-7100`_    |                                                                                                                       | .. rst-class::    |
+|                        |                      |                                                                                                                       |    centered       |
+|                        |                      |                                                                                                                       |                   |
+|                        |                      |                                                                                                                       |    Maintenance    |
++------------------------+----------------------+-------------------+-------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
+| Tiger Lake             | `NUC11TNHi5`_        |                   |                   |                   | .. rst-class::    | .. rst-class::                        | .. rst-class::    |
+|                        |                      |                   |                   |                   |    centered       |    centered                           |    centered       |
+|                        |                      |                   |                   |                   |                   |                                       |                   |
+|                        |                      |                   |                   |                   |    Release        |    Maintenance                        |    Community      |
++------------------------+----------------------+-------------------+-------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
+| Whiskey Lake           | `WHL-IPC-I5`_        |                   |                   | .. rst-class::    | .. rst-class::                        | .. rst-class::                        |
+|                        |                      |                   |                   |    centered       |    centered                           |    centered                           |
+|                        |                      |                   |                   |                   |                                       |                                       |
+|                        |                      |                   |                   |    Release        |    Maintenance                        |    Community                          |
++------------------------+----------------------+-------------------+-------------------+-------------------+-------------------+-------------------+---------------------------------------+
+| Kaby Lake              | `NUC7i7DNHE`_        |                   | .. rst-class::    | .. rst-class::                        | .. rst-class::                                            |
+|                        |                      |                   |    centered       |    centered                           |    centered                                               |
+|                        |                      |                   |                   |                                       |                                                           |
+|                        |                      |                   |    Release        |    Maintenance                        |    Community                                              |
++------------------------+----------------------+-------------------+-------------------+---------------------------------------+-----------------------------------------------------------+
+| Apollo Lake            | | `NUC6CAYH`_,       | .. rst-class::    | .. rst-class::    | .. rst-class::                                                                                    |
+|                        | | `UP2-N3350`_,      |    centered       |    centered       |    centered                                                                                       |
+|                        | | `UP2-N4200`_,      |                   |                   |                                                                                                   |
+|                        | | `UP2-x5-E3940`_    |    Release        |    Maintenance    |    Community                                                                                      |
++------------------------+----------------------+-------------------+-------------------+---------------------------------------------------------------------------------------------------+
 
 * **Release**: New ACRN features are complete and tested for the listed product.
   This product is recommended for this ACRN version. Support for older products
@@ -97,7 +106,7 @@ level includes the activities described in the lower levels.
   verify our :ref:`gsg` instructions to ensure the baseline development workflow
   works and the hypervisor will boot on the listed products. While we don't
   verify that all new features will work on this product, we will do best-effort
-  support on reported issues. Maintenance support for a hardware product
+  support on reported issues. Maintenance-level support for a hardware product
   is typically done for two subsequent ACRN releases (about six months).
 
 * **Community**: Community responds with best-effort support for that
