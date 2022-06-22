@@ -210,8 +210,6 @@ DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 PROGRAM := acrn-dm
 
 SAMPLES_NUC := $(wildcard samples/nuc/*)
-SAMPLES_MRB := $(wildcard samples/apl-mrb/*)
-SAMPLES_UP2 := $(wildcard samples/apl-up2/*)
 
 BIOS_BIN := $(wildcard bios/*)
 
@@ -262,19 +260,11 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MT $@
 
-install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios install-samples-up2
+install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-bios
 	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)$(bindir)/$(PROGRAM)
-
-install-samples-up2: $(SAMPLES_UP2)
-	install -D -t $(DESTDIR)$(datadir)/acrn/samples/apl-up2 $^
 
 install-samples-nuc: $(SAMPLES_NUC)
 	install -D -t $(DESTDIR)$(datadir)/acrn/samples/nuc $^
-
-install-samples-mrb: $(SAMPLES_MRB)
-	install -D -t $(DESTDIR)$(datadir)/acrn/samples/apl-mrb $^
-	install -d $(DESTDIR)$(systemd_unitdir)/system/
-	install -p -D -m 0644 ./samples/apl-mrb/acrn_guest.service $(DESTDIR)$(systemd_unitdir)/system
 
 install-bios: $(BIOS_BIN)
 	install -d $(DESTDIR)$(datadir)/acrn/bios
