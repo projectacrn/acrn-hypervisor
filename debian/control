@@ -35,6 +35,8 @@ Build-Depends:
    python3-defusedxml,
    python3-xmlschema (>= 1.10.0),
    python3-elementpath (>= 2.5.0)
+   python3-requests,
+   python3-tqdm
 Standards-Version: 4.3.0
 Homepage: https://projectacrn.org/
 Vcs-Browser: https://github.com/projectacrn/acrn-hypervisor
@@ -144,6 +146,7 @@ Depends:
    cpuid,
    msr-tools,
    pciutils,
+   usbutils,
    dmidecode,
    ${misc:Depends},
    ${python3:Depends},
