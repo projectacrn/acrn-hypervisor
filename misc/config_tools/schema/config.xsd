@@ -19,17 +19,17 @@
         <xs:documentation>Select the host serial device used for hypervisor debugging.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="MEM_LOGLEVEL" type="LogLevelType" default="0">
+    <xs:element name="MEM_LOGLEVEL" type="LogLevelType" default="5">
       <xs:annotation acrn:title="ACRN log level" acrn:views="basic">
         <xs:documentation>Select the default log level for log messages stored in memory. Value can be changed at runtime. Log messages with the selected value or lower are displayed.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="NPK_LOGLEVEL" type="LogLevelType" default="0">
+    <xs:element name="NPK_LOGLEVEL" type="LogLevelType" default="5">
       <xs:annotation acrn:title="Intel Trace Hub log level" acrn:views="basic">
         <xs:documentation>Select the default log level for the hypervisor via Intel Trace Hub log. Use the Intel Trace Hub's memory to record log messages. Value can be changed at runtime. Log messages with the selected value or lower are displayed.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="CONSOLE_LOGLEVEL" type="LogLevelType" default="0">
+    <xs:element name="CONSOLE_LOGLEVEL" type="LogLevelType" default="5">
       <xs:annotation acrn:title="Serial console log level" acrn:views="basic">
         <xs:documentation>Select the default log level for log messages written to the serial console. Log messages with the selected value or lower are displayed.</xs:documentation>
       </xs:annotation>
@@ -93,12 +93,12 @@
         <xs:documentation>Enable ACPI runtime parsing to get DMAR (DMA remapping) configuration data from the ACPI tables. Otherwise, use existing, static information from the associated board configuration file.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="y">
+    <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="n">
       <xs:annotation acrn:title="Mitigate L1 terminal fault" acrn:views="advanced">
         <xs:documentation>Enable L1 cache flush before VM entry to prevent L1 terminal fault. L1 terminal fault is a hardware vulnerability that could allow unauthorized disclosure of information residing in the L1 data cache.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="y">
+    <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="n">
       <xs:annotation acrn:title="Disable MCE workaround" acrn:views="advanced">
         <xs:documentation>Disable the software workaround for Machine Check Error on Page Size Change (erratum in some processor families).</xs:documentation>
       </xs:annotation>
@@ -320,7 +320,7 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
 	<xs:documentation>Select the OS type for this VM. This is required to run Windows in a User VM. See :ref:`acrn-dm_parameters` for how to include this in the Device Model arguments.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="vuart0" type="Boolean" default="y">
+    <xs:element name="vuart0" type="Boolean" default="n">
       <xs:annotation acrn:title="Emulate COM1 as stdio I/O" acrn:applicable-vms="post-launched" acrn:views="basic">
 	<xs:documentation>Enable the ACRN Device Model to emulate COM1 as a User VM stdio I/O. Hypervisor global emulation will take priority over this VM setting.</xs:documentation>
       </xs:annotation>
