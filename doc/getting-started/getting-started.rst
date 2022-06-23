@@ -398,7 +398,7 @@ post-launched User VM. Each User VM has its own launch script.
 
    .. code-block:: bash
 
-      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator_*_amd64.deb # TODO update file path
+      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator_*_amd64.deb 
 
 #. Launch the ACRN Configurator:
 
@@ -487,6 +487,9 @@ post-launched User VM. Each User VM has its own launch script.
    #. For **Physical CPU affinity**, select pCPU ID ``0``, then click **+** and
       select pCPU ID ``1`` to affine the VM to CPU cores 0 and 1.
 
+   #. For Virt-IO devices, select the Virtio console device and click + for a 
+      default option.   
+
    #. For **Virtio block device**, click **+** and enter
       ``~/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
@@ -533,10 +536,11 @@ Build ACRN
 
       cd ./build
       ls *.deb
-         acrn-my_board-shared-2.7.deb # TODO update file name
+         acrn-my_board-MyConfiguration-3.0-acrn-*.deb 
 
    The Debian package contains the ACRN hypervisor and tools to ease installing
-   ACRN on the target.
+   ACRN on the target. The Debian file name contains the board name (``my_board``) 
+   and the working folder name (``MyConfiguration``).
 
 #. Build the ACRN kernel for the Service VM:
 
@@ -566,10 +570,10 @@ Build ACRN
 
       cd ..
       ls *.deb
-         linux-headers-5.10.78-acrn-service-vm_5.10.78-acrn-service-vm-1_amd64.deb
-         linux-image-5.10.78-acrn-service-vm_5.10.78-acrn-service-vm-1_amd64.deb
-         linux-image-5.10.78-acrn-service-vm-dbg_5.10.78-acrn-service-vm-1_amd64.deb
-         linux-libc-dev_5.10.78-acrn-service-vm-1_amd64.deb
+         linux-headers-5.10.115-acrn-service-vm_5.10.115-acrn-service-vm-1_amd64.deb
+         linux-image-5.10.115-acrn-service-vm_5.10.115-acrn-service-vm-1_amd64.deb
+         linux-image-5.10.115-acrn-service-vm-dbg_5.10.115-acrn-service-vm-1_amd64.deb
+         linux-libc-dev_5.10.115-acrn-service-vm-1_amd64.deb
 
 #. Copy all the necessary files generated on the development computer to the
    target system by USB disk as follows:
@@ -579,9 +583,9 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-shared-2.7.deb "$disk"/ # TODO update file name
+         cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration-3.0-acrn-*.deb "$disk"/ 
          cp ~/acrn-work/*acrn-service-vm*.deb "$disk"/
-         cp ~/acrn-work/my_board/output/launch_user_vm_id3.sh "$disk"/
+         cp ~/acrn-work/my_board/output/launch_user_vm_id1.sh "$disk"/
          cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
          sync && sudo umount "$disk"
 
@@ -594,9 +598,9 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp "$disk"/acrn-my_board-shared-2.7.deb ~/acrn-work # TODO update file name
+         cp "$disk"/acrn-my_board-MyConfiguration-3.0-acrn-*.deb ~/acrn-work 
          cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
-         cp "$disk"/launch_user_vm_id3.sh ~/acrn-work
+         cp "$disk"/launch_user_vm_id1.sh ~/acrn-work
          sudo cp "$disk"/iasl /usr/sbin/
          sync && sudo umount "$disk"
 
@@ -613,7 +617,7 @@ Install ACRN
    .. code-block:: bash
 
       cd ~/acrn-work
-      sudo apt install ./acrn-my_board-shared-2.7.deb # TODO update file name
+      sudo apt install ./acrn-my_board-MyConfiguration-3.0-acrn-*.deb 
       sudo apt install ./*acrn-service-vm*.deb
 
 #. Reboot the system:
@@ -687,8 +691,8 @@ Launch the User VM
 
    .. code-block:: bash
 
-      sudo chmod +x ~/acrn-work/launch_user_vm_id3.sh # TODO update file name
-      sudo ~/acrn-work/launch_user_vm_id3.sh # TODO update file name
+      sudo chmod +x ~/acrn-work/launch_user_vm_id1.sh 
+      sudo ~/acrn-work/launch_user_vm_id1.sh 
 
 #. It may take about one minute for the User VM to boot and start running the
    Ubuntu image. You will see a lot of output, then the console of the User VM
@@ -707,7 +711,7 @@ Launch the User VM
 
    .. code-block:: console
 
-      Welcome to Ubuntu 20.04.4 LTS (GNU/Linux 5.11.0-27-generic x86_64)
+      Welcome to Ubuntu 20.04.4 LTS (GNU/Linux 5.13.0-30-generic x86_64)
 
       * Documentation:  https://help.ubuntu.com
       * Management:     https://landscape.canonical.com
@@ -736,7 +740,7 @@ Launch the User VM
    .. code-block:: console
 
       ubuntu@ubuntu:~$ uname -r
-      5.11.0-27-generic
+      5.13.0-30-generic
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
@@ -744,7 +748,7 @@ Launch the User VM
    .. code-block:: console
 
       acrn@vecow:~$ uname -r
-      5.10.78-acrn-service-vm
+      5.10.115-acrn-service-vm
 
    The User VM has launched successfully. You have completed this ACRN setup.
 
