@@ -133,7 +133,7 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
         <xs:documentation>Select the kernel image type so that the hypervisor can load it correctly.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="kern_mod" type="xs:string" default="Linux_bzImage" minOccurs="0">
+    <xs:element name="kern_mod" type="xs:string" default="Linux_bzImage">
       <xs:annotation acrn:title="Kernel module tag"
                      acrn:widget-options="'placeholder': 'An arbitrary string without white spaces. The same string shall be appended, in grub.conf, to the GRUB module containing the OS kernel.'">
         <xs:documentation>Specify the tag for the kernel image that is used as a multiboot module. The tag's spelling must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
@@ -145,7 +145,7 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
         <xs:documentation>Specify the tag for the RAMdisk image that is used as a multiboot module. The tag's spelling must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="bootargs" type="xs:string" default="rw rootwait root=/dev/nvme0n1p2 console=tty0 console=ttyS0 consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 swiotlb=131072" minOccurs="0">
+    <xs:element name="bootargs" type="xs:string" default="rw rootwait root=/dev/nvme0n1p2 console=tty0 console=ttyS0 consoleblank=0 no_timer_check quiet loglevel=3 i915.nuclear_pageflip=1 swiotlb=131072">
       <xs:annotation acrn:title="Kernel command-line parameters"
                      acrn:widget-options="'placeholder': '(Optional) The command line options to be passed to the OS kernel.'">
         <xs:documentation>Specify the command-line parameters that will be used to boot the kernel for this VM. See `Linux documentation &lt;https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html&gt;`__ for a list of parameters.</xs:documentation>
@@ -360,13 +360,13 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
 
 <xs:complexType name="VirtioConsoleConfiguration">
   <xs:all>
-    <xs:element name="use_type" type="VirtioConsoleUseType" default="Virtio console" minOccurs="0">
+    <xs:element name="use_type" type="VirtioConsoleUseType" default="Virtio console">
       <xs:annotation acrn:title="Use type">
         <xs:documentation>Specify device type in guest, ether HVC console when user config it as virtio console or /dev/vportXpY
 device file when user config it as virtio serial port, which can be read and written from the user space.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="backend_type" type="VirtioConsoleBackendType" default="stdio" minOccurs="0">
+    <xs:element name="backend_type" type="VirtioConsoleBackendType" default="stdio">
       <xs:annotation acrn:title="Backend type">
         <xs:documentation>Specify backend device type in service VM.</xs:documentation>
       </xs:annotation>
