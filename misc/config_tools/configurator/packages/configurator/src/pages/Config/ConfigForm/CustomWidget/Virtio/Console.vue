@@ -137,8 +137,8 @@ export default {
         this.defaultVal = []
       }
       this.defaultVal.push({
-        "use_type": "",
-        "backend_type": "",
+        "use_type": "Virtio console",
+        "backend_type": "stdio",
         "output_file_path": "",
         "sock_file_path": "",
         "tty_device_path": "",
