@@ -67,7 +67,6 @@ Advanced Features
    tutorials/gpu-passthru
    tutorials/run_kata_containers
    tutorials/rtvm_workload_design_guideline
-   tutorials/setup_openstack_libvirt
    tutorials/acrn_on_qemu
    tutorials/using_grub
    tutorials/acrn-secure-boot-with-grub
