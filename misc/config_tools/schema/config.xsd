@@ -406,7 +406,7 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
         <xs:documentation>Specify the companion VM id of this VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="os_config" type="OSConfigurations" minOccurs="0">
+    <xs:element name="os_config" type="OSConfigurations">
       <xs:annotation acrn:title="OS Configuration" acrn:applicable-vms="pre-launched, service-vm" acrn:views="basic">
         <xs:documentation>General information for host kernel, boot
 argument and memory.</xs:documentation>
