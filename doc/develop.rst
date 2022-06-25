@@ -23,6 +23,8 @@ User VM Tutorials
 .. toctree::
    :maxdepth: 1
 
+   tutorials/user_vm_guide
+   tutorials/using_ubuntu_as_user_vm
    tutorials/using_windows_as_user_vm
    tutorials/using_xenomai_as_user_vm
    tutorials/using_vxworks_as_user_vm

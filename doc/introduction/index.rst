@@ -170,6 +170,8 @@ stopping, and pausing a VM, and pausing or resuming a virtual CPU.
 See the :ref:`hld-overview` developer reference material for more in-depth
 information.
 
+.. _static-configuration-scenarios:
+
 Static Configuration Based on Scenarios
 ***************************************
 
@@ -290,6 +292,7 @@ can define your own configuration scenarios.
 The :ref:`acrn_configuration_tool` tutorial explains how to use the ACRN
 Configurator to create your own scenario, or to view and modify an existing one.
 
+.. _dm_architecture_intro:
 
 ACRN Device Model Architecture
 ******************************
@@ -399,7 +402,6 @@ including Xen, KVM, and ACRN hypervisor.  In most cases, the User VM OS
 must be compiled to support passthrough by using kernel
 build-time options.
 
-.. _static-conmbfiguration-scenarios:
 
 
 Boot Sequence
