@@ -1,8 +1,8 @@
 .. _using_vxworks_as_uos:
 .. _using_vxworks_as_user_vm:
 
-Run VxWorks as the User VM
-##########################
+Run VxWorks as the User RTVM OS
+###############################
 
 `VxWorks`_\* is a real-time proprietary OS designed for use in embedded systems requiring real-time, deterministic
 performance. This tutorial describes how to run VxWorks as the User VM on the ACRN hypervisor
