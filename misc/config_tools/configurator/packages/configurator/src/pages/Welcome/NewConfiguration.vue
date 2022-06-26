@@ -54,6 +54,27 @@ export default {
     nextPage(folderPath) {
       this.$router.push({name: 'Config', params: {WorkingFolder: folderPath, isNewConfig: true}})
     },
+    cleanOldFiles(files) {
+      let promises = [];
+      for (let i = 0; i < files.length; i++) {
+        let arr = files[i].path.split(window.systemInfo.pathSplit)
+        let basename = arr[arr.length - 1]
+        console.log("file: ", basename)
+        if (basename === 'scenario.xml' ||
+            /^.*\.board\.xml$/.test(basename) ||
+            /^launch.*\.sh$/.test(basename)) {
+          console.log("removing: ", files[i].path)
+          promises.push(
+              configurator.removeFile(files[i].path)
+                  .then(() => {
+                    console.log("removed: ", files[i].path)
+                  })
+                  .catch((err) => alert(`${err}`))
+          )
+        }
+      }
+      return Promise.all(promises);
+    },
     usingWorkingFolder() {
       let folderPath = this.WorkingFolder.length ? this.WorkingFolder : this.defaultWorkingFolder;
       if (folderPath[0] === '~') {
@@ -66,33 +87,29 @@ export default {
 
       configurator.readDir(folderPath, false)
           .then((files) => {
+            // dir exists, check dir files exists
             console.log("Directory exists.", files)
             if (files.length > 0) {
+              // confirm clean old files
               confirm(`Warning: delete previous config files in the following working folder: \n${folderPath}?`)
                   .then((r) => {
-                    if (r) {
-                      for (let i = 0; i < files.length; i++) {
-                        let arr = files[i].path.split(window.systemInfo.pathSplit)
-                        let basename = arr[arr.length-1]
-                        console.log("file: ", basename)
-                        if (basename === 'scenario.xml' ||
-                            /^.*\.board\.xml$/.test(basename) ||
-                            /^launch.*\.sh$/.test(basename)) {
-                          console.log("removing: ", files[i].path)
-                          configurator.removeFile(files[i].path)
-                          .catch((err) => alert(`${err}`))
-                        }
-                      }
+                    // user cancel the operation
+                    if (!r) {
+                      return
                     }
-                  })
-                  .then(() => {
-                      this.nextPage(folderPath)
+                    // user confirm the operation
+                    this.cleanOldFiles(files)
+                        .then(() => {
+                          this.nextPage(folderPath)
+                        })
                   })
             } else {
+              // dir is empty, no operation
               this.nextPage(folderPath)
             }
           })
           .catch((error) => {
+            // dir not exists, create dir
             console.log(error)
             configurator.creatDir(folderPath)
                 .then(() => {
