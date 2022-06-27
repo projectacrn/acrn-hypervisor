@@ -76,6 +76,7 @@
         </div>
         <div class="p-4">
           <ConfigForm
+              :key="(activeVMID===-1?'HV':`VM${activeVMID}`)+'ConfigForm'"
               :currentActiveVMID="activeVMID"
               :currentFormSchema="currentFormSchema"
               :currentFormData="currentFormData"
