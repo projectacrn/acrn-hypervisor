@@ -170,6 +170,127 @@ stopping, and pausing a VM, and pausing or resuming a virtual CPU.
 See the :ref:`hld-overview` developer reference material for more in-depth
 information.
 
+Static Configuration Based on Scenarios
+***************************************
+
+Scenarios are a way to describe the system configuration settings of the ACRN
+hypervisor, VMs, and resources they have access to that meet your specific
+application's needs such as compute, memory, storage, graphics, networking, and
+other devices.  Scenario configurations are stored in an XML format file and
+edited using the ACRN Configurator.
+
+Following a general embedded-system programming model, the ACRN hypervisor is
+designed to be statically customized at build time per hardware and scenario,
+rather than providing one binary for all scenarios.  Dynamic configuration
+parsing is not used in the ACRN hypervisor for these reasons:
+
+* **Reduce complexity**. ACRN is a lightweight reference hypervisor, built for
+  embedded IoT and Edge. As new platforms for embedded systems are rapidly introduced,
+  support for one binary could require more and more complexity in the
+  hypervisor, which is something we strive to avoid.
+* **Maintain small footprint**. Implementing dynamic parsing introduces hundreds or
+  thousands of lines of code. Avoiding dynamic parsing helps keep the
+  hypervisor's Lines of Code (LOC) in a desirable range (less than 40K).
+* **Improve boot time**. Dynamic parsing at runtime increases the boot time. Using a
+  static build-time configuration and not dynamic parsing helps improve the boot
+  time of the hypervisor.
+
+The scenario XML file together with a target board XML file are used to build
+the ACRN hypervisor image tailored to your hardware and application needs. The ACRN
+project provides the Board Inspector tool to automatically create the board XML
+file by inspecting the target hardware. ACRN also provides the
+:ref:`ACRN Configurator tool <acrn_configuration_tool>`
+to create and edit a tailored scenario XML file based on predefined sample
+scenario configurations.
+
+.. _usage-scenarios:
+
+Scenario Types
+**************
+
+Here are three sample scenario types and diagrams to illustrate how you
+can define your own configuration scenarios.
+
+
+* **Shared** is a traditional
+  computing, memory, and device resource sharing
+  model among VMs. The ACRN hypervisor launches the Service VM. The Service VM
+  then launches any post-launched User VMs and provides device and resource
+  sharing mediation through the Device Model.  The Service VM runs the native
+  device drivers to access the hardware and provides I/O mediation to the User
+  VMs.
+
+  .. figure:: images/ACRN-industry-example-1-0.75x.png
+     :align: center
+     :name: arch-shared-example
+
+     ACRN High-Level Architecture Shared Example
+
+  Virtualization is especially important in industrial environments because of
+  device and application longevity. Virtualization enables factories to
+  modernize their control system hardware by using VMs to run older control
+  systems and operating systems far beyond their intended retirement dates.
+
+  The ACRN hypervisor needs to run different workloads with little-to-no
+  interference, increase security functions that safeguard the system, run hard
+  real-time sensitive workloads together with general computing workloads, and
+  conduct data analytics for timely actions and predictive maintenance.
+
+  In this example, one post-launched User VM provides Human Machine Interface
+  (HMI) capability, another provides Artificial Intelligence (AI) capability,
+  some compute function is run in the Kata Container, and the RTVM runs the soft
+  Programmable Logic Controller (PLC) that requires hard real-time
+  characteristics.
+
+  - The Service VM provides device sharing functionalities, such as disk and
+    network mediation, to other virtual machines.  It can also run an
+    orchestration agent allowing User VM orchestration with tools such as
+    Kubernetes.
+  - The HMI Application OS can be Windows or Linux. Windows is dominant in
+    Industrial HMI environments.
+  - ACRN can support a soft real-time OS such as preempt-rt Linux for soft-PLC
+    control, or a hard real-time OS that offers less jitter.
+
+* **Partitioned** is a VM resource partitioning model when a User VM requires
+  independence and isolation from other VMs.  A partitioned VM's resources are
+  statically configured and are not shared with other VMs.  Partitioned User VMs
+  can be Real-Time VMs, Safety VMs, or standard VMs and are launched at boot
+  time by the hypervisor. There is no need for the Service VM or Device Model
+  since all partitioned VMs run native device drivers and directly access their
+  configured resources.
+
+  .. figure:: images/ACRN-partitioned-example-1-0.75x.png
+     :align: center
+     :name: arch-partitioned-example
+
+     ACRN High-Level Architecture Partitioned Example
+
+  This scenario is a simplified configuration showing VM partitioning: both
+  User VMs are independent and isolated, they do not share resources, and both
+  are automatically launched at boot time by the hypervisor.  The User VMs can
+  be Real-Time VMs (RTVMs), Safety VMs, or standard User VMs.
+
+* **Hybrid** scenario simultaneously supports both sharing and partitioning on
+  the consolidated system. The pre-launched (partitioned) User VMs, with their
+  statically configured and unshared resources, are started by the hypervisor.
+  The hypervisor then launches the Service VM. The post-launched (shared) User
+  VMs are started by the Device Model in the Service VM and share the remaining
+  resources.
+
+  .. figure:: images/ACRN-hybrid-rt-example-1-0.75x.png
+     :align: center
+     :name: arch-hybrid-rt-example
+
+     ACRN High-Level Architecture Hybrid-RT Example
+
+  In this Hybrid real-time (RT) scenario, a pre-launched RTVM is started by the
+  hypervisor. The Service VM runs a post-launched User VM that runs non-safety or
+  non-real-time tasks.
+
+The :ref:`acrn_configuration_tool` tutorial explains how to use the ACRN
+Configurator to create your own scenario, or to view and modify an existing one.
+
+
 ACRN Device Model Architecture
 ******************************
 
@@ -278,129 +399,8 @@ including Xen, KVM, and ACRN hypervisor.  In most cases, the User VM OS
 must be compiled to support passthrough by using kernel
 build-time options.
 
-.. _static-configuration-scenarios:
+.. _static-conmbfiguration-scenarios:
 
-Static Configuration Based on Scenarios
-***************************************
-
-Scenarios are a way to describe the system configuration settings of the ACRN
-hypervisor, VMs, and resources they have access to that meet your specific
-application's needs such as compute, memory, storage, graphics, networking, and
-other devices.  Scenario configurations are stored in an XML format file and
-edited using the ACRN Configurator.
-
-Following a general embedded-system programming model, the ACRN hypervisor is
-designed to be statically customized at build time per hardware and scenario,
-rather than providing one binary for all scenarios.  Dynamic configuration
-parsing is not used in the ACRN hypervisor for these reasons:
-
-* **Reduce complexity**. ACRN is a lightweight reference hypervisor, built for
-  embedded IoT and Edge. As new platforms for embedded systems are rapidly introduced,
-  support for one binary could require more and more complexity in the
-  hypervisor, which is something we strive to avoid.
-* **Maintain small footprint**. Implementing dynamic parsing introduces hundreds or
-  thousands of lines of code. Avoiding dynamic parsing helps keep the
-  hypervisor's Lines of Code (LOC) in a desirable range (less than 40K).
-* **Improve boot time**. Dynamic parsing at runtime increases the boot time. Using a
-  static build-time configuration and not dynamic parsing helps improve the boot
-  time of the hypervisor.
-
-The scenario XML file together with a target board XML file are used to build
-the ACRN hypervisor image tailored to your hardware and application needs. The ACRN
-project provides the Board Inspector tool to automatically create the board XML
-file by inspecting the target hardware. ACRN also provides the
-:ref:`ACRN Configurator tool <acrn_configuration_tool>`
-to create and edit a tailored scenario XML file based on predefined sample
-scenario configurations.
-
-.. _usage-scenarios:
-
-Predefined Sample Scenarios
-***************************
-
-Project ACRN provides some predefined sample scenarios to illustrate how you
-can define your own configuration scenarios.
-
-
-* **Shared** (called **Industry** in previous releases) is a traditional
-  computing, memory, and device resource sharing
-  model among VMs. The ACRN hypervisor launches the Service VM. The Service VM
-  then launches any post-launched User VMs and provides device and resource
-  sharing mediation through the Device Model.  The Service VM runs the native
-  device drivers to access the hardware and provides I/O mediation to the User
-  VMs.
-
-  .. figure:: images/ACRN-industry-example-1-0.75x.png
-     :align: center
-     :name: arch-shared-example
-
-     ACRN High-Level Architecture Shared Example
-
-  Virtualization is especially important in industrial environments because of
-  device and application longevity. Virtualization enables factories to
-  modernize their control system hardware by using VMs to run older control
-  systems and operating systems far beyond their intended retirement dates.
-
-  The ACRN hypervisor needs to run different workloads with little-to-no
-  interference, increase security functions that safeguard the system, run hard
-  real-time sensitive workloads together with general computing workloads, and
-  conduct data analytics for timely actions and predictive maintenance.
-
-  In this example, one post-launched User VM provides Human Machine Interface
-  (HMI) capability, another provides Artificial Intelligence (AI) capability,
-  some compute function is run in the Kata Container, and the RTVM runs the soft
-  Programmable Logic Controller (PLC) that requires hard real-time
-  characteristics.
-
-  - The Service VM provides device sharing functionalities, such as disk and
-    network mediation, to other virtual machines.  It can also run an
-    orchestration agent allowing User VM orchestration with tools such as
-    Kubernetes.
-  - The HMI Application OS can be Windows or Linux. Windows is dominant in
-    Industrial HMI environments.
-  - ACRN can support a soft real-time OS such as preempt-rt Linux for soft-PLC
-    control, or a hard real-time OS that offers less jitter.
-
-* **Partitioned** is a VM resource partitioning model when a User VM requires
-  independence and isolation from other VMs.  A partitioned VM's resources are
-  statically configured and are not shared with other VMs.  Partitioned User VMs
-  can be Real-Time VMs, Safety VMs, or standard VMs and are launched at boot
-  time by the hypervisor. There is no need for the Service VM or Device Model
-  since all partitioned VMs run native device drivers and directly access their
-  configured resources.
-
-  .. figure:: images/ACRN-partitioned-example-1-0.75x.png
-     :align: center
-     :name: arch-partitioned-example
-
-     ACRN High-Level Architecture Partitioned Example
-
-  This scenario is a simplified configuration showing VM partitioning: both
-  User VMs are independent and isolated, they do not share resources, and both
-  are automatically launched at boot time by the hypervisor.  The User VMs can
-  be Real-Time VMs (RTVMs), Safety VMs, or standard User VMs.
-
-* **Hybrid** scenario simultaneously supports both sharing and partitioning on
-  the consolidated system. The pre-launched (partitioned) User VMs, with their
-  statically configured and unshared resources, are started by the hypervisor.
-  The hypervisor then launches the Service VM. The post-launched (shared) User
-  VMs are started by the Device Model in the Service VM and share the remaining
-  resources.
-
-  .. figure:: images/ACRN-hybrid-rt-example-1-0.75x.png
-     :align: center
-     :name: arch-hybrid-rt-example
-
-     ACRN High-Level Architecture Hybrid-RT Example
-
-  In this Hybrid real-time (RT) scenario, a pre-launched RTVM is started by the
-  hypervisor. The Service VM runs a post-launched User VM that runs non-safety or
-  non-real-time tasks.
-
-You can find the predefined scenario XML files in the
-:acrn_file:`misc/config_tools/data` folder in the hypervisor source code. The
-:ref:`acrn_configuration_tool` tutorial explains how to use the ACRN
-Configurator to create your own scenario, or to view and modify an existing one.
 
 Boot Sequence
 *************
