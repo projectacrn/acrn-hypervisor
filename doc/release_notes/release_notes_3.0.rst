@@ -146,6 +146,102 @@ Fixed Issues Details
 .. comment example item
    - :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
 
+- :acrn-issue:`7712` - [config_tool] Make Basic tab the default view
+- :acrn-issue:`7657` - [acrn-configuration-tool] Failed to build acrn with make BOARD=xx SCENARIO=shared RELEASE=y
+- :acrn-issue:`7641` - config-tools: No launch scripts is generated when clicking save
+- :acrn-issue:`7637` - config-tools: vsock refine
+- :acrn-issue:`7634` - [DX][TeamFooding][ADL-S] Failed to build acrn when disable multiboot2 in configurator
+- :acrn-issue:`7623` - [config_tool] igd-vf para is no longer needed in launch script
+- :acrn-issue:`7609` - [Config-Tool][UI]build acrn failed after delete VMs via UI
+- :acrn-issue:`7606` - uninitialized variables are used in hpet.c
+- :acrn-issue:`7597` - [config_tool] Use Different Board - delete old board file
+- :acrn-issue:`7592` - [acrn-configuration-tool] Hide PCI option for Console virtual UART type
+- :acrn-issue:`7581` - [ADL-S][shared]The SOS cmdline parameter shouldn't be added manually and should be changed in Debian package.
+- :acrn-issue:`7571` - [config_tool] Working folder with my_board.xml behavior
+- :acrn-issue:`7563` - [ADL-S][SSRAM]RTCM Unit run failed with 2G memory size
+- :acrn-issue:`7556` - [config_tool] VUART is configured to PCI and generate launch script without relevant parameters
+- :acrn-issue:`7546` - [acrn-configuration-tool]Scenario files generated with acrn-configurator for boards without serial ports ACRN debug build fails
+- :acrn-issue:`7540` - [config_tool]: rename virtio console as virtio serial port(as console)
+- :acrn-issue:`7538` - configurator: CPU Affinity should be hidden from service vm
+- :acrn-issue:`7535` - config-tools: add vhost vsock in v3.0
+- :acrn-issue:`7532` - [config_tool] dialog box and deleting VM related issues
+- :acrn-issue:`7530` - [configurator] Maximum Virtual CLOS configuration value should not allow negative numbers
+- :acrn-issue:`7526` - [configurator] Assigning one cpu to multiple Pre-launched VMs is not reported as error
+- :acrn-issue:`7519` - [config_tool] Duplicate VM name
+- :acrn-issue:`7514` - fix FEATURES to restore basic view
+- :acrn-issue:`7506` - config-tools: configurator widget vuart connection needs validation
+- :acrn-issue:`7500` - [config_tool] Failed to delete post-launched VM due to IVSHMEM
+- :acrn-issue:`7498` - board_inspector.py fails to run on target with clean Ubuntu installation
+- :acrn-issue:`7495` - [config_tool] Starting new configuration deletes all files in existing working folder
+- :acrn-issue:`7492` - configurator: fix configurator build issue
+- :acrn-issue:`7488` - Configurator version confusion
+- :acrn-issue:`7486` - [config_tool] Duplicate VM name
+- :acrn-issue:`7484` - configurator: User-input working directory not working
+- :acrn-issue:`7481` - [config_tool] No validation for required fields in widgets
+- :acrn-issue:`7470` - [config_tool][UI] scenario.xml is still generated even though there are setting errors
+- :acrn-issue:`7469` - [config_tool][UI] No promption on save button if there are wrong settings
+- :acrn-issue:`7455` - configurator: vUART widget not working
+- :acrn-issue:`7450` - config-tools: bugfix for file related issues in UI
+- :acrn-issue:`7445` - [Config-Tool][UI]The shared VMs_name for IVSHMEM is not consistent with the VM_name modification
+- :acrn-issue:`7442` - [config_tool] Tooltip runs off screen
+- :acrn-issue:`7435` - configurator: Steps should be inactive until prior step complete
+- :acrn-issue:`7425` - Cache was not locked after post-RTVM power off and restart
+- :acrn-issue:`7424` - [config_tool] Virtual USB HCI should be a dropdown menu
+- :acrn-issue:`7421` - configurator: Unable to display PCI devices droplist
+- :acrn-issue:`7420` - configurator: Unable to set physical CPU affinity
+- :acrn-issue:`7419` - configurator: prelaunched VM assigned wrong VMID
+- :acrn-issue:`7418` - configurator: open folder path incorrect
+- :acrn-issue:`7413` - config-tools: bugfix for UI
+- :acrn-issue:`7402` - [acrn-deb] install board_inspector overwrites grub cmdline
+- :acrn-issue:`7401` - Post-RTVM boot failure with SSRAM enabled
+- :acrn-issue:`7400` - [acrn-configuration-tool][acrn-deb] grub is not update correctly after install the acrn-deb
+- :acrn-issue:`7392` - There is no virtio_devices node in generic scenario xml
+- :acrn-issue:`7383` - [acrn-configuration tool] make scenario shared file error cp error
+- :acrn-issue:`7376` - Virtio-GPU in guest_vm fails to get the EDID
+- :acrn-issue:`7370` - [acrn-deb] install_compile_package function is not consistent with gsg
+- :acrn-issue:`7366` - [acrn-configuration tool] make scenario shared file error cp error
+- :acrn-issue:`7365` - [config_tool] Get errors running board_inspector
+- :acrn-issue:`7361` - config_tool: Add check for RTVM pCPU assignment
+- :acrn-issue:`7356` - [UI]  Board info not updated when user changed the board XML
+- :acrn-issue:`7349` - [UI]Not delete all VMs while delete Service_VM on UI
+- :acrn-issue:`7345` - Build will fail when using absolute path
+- :acrn-issue:`7337` - Memory leak after creating udmabuf for virtio-gpu zero_copy
+- :acrn-issue:`7330` - [PCI UART] Fail to build hypervisor without pci uart bdf value
+- :acrn-issue:`7327` - refine pgentry_present field in struct pgtable
+- :acrn-issue:`7301` - [Virtio-GPU]Not enough free memory reserved in SOS
+- :acrn-issue:`7298` - boot time issue for acrn-dm
+- :acrn-issue:`7297` - update parameter in schema
+- :acrn-issue:`7296` - Segment fault is triggered in course of Virtio-gpu rebooting test
+- :acrn-issue:`7270` - combined cpu_affinity warning for service vm
+- :acrn-issue:`7267` - service vm cpu affinity issue
+- :acrn-issue:`7265` - About 20s after booting uaag with usb mediator,usb disk isn't recognized
+- :acrn-issue:`7261` - Hide PTM in Configurator UI
+- :acrn-issue:`7256` - Remove SCHED_IORR and KERNEL_RAWIMAGE
+- :acrn-issue:`7249` - doc: Exception in Sphinx processing doesn't display error message
+- :acrn-issue:`7248` - restore copyright notice of original author of some files.
+- :acrn-issue:`7246` - Can't fully parse the xml content that was saved by the same version configurator
+- :acrn-issue:`7241` - need copyright notice and license in virtio_gpu.c
+- :acrn-issue:`7212` - Exception"not enough space in guest VE820 SSRAM area" showed when built ACRN with RTCT table
+- :acrn-issue:`7208` - iasl segfault when reboot user VM with virtio-i2c devices
+- :acrn-issue:`7197` - The error message is found after adding the specific mac address in the launch script
+- :acrn-issue:`7172` - [acrn-configuration-tool] offline_cpus won't be executed in NOOP mode
+- :acrn-issue:`7171` - Link to instead of including old release notes in the current release
+- :acrn-issue:`7159` - acrn-config: config tool get_node apic_id failed
+- :acrn-issue:`7136` - [acrn-configuration-tool] Share memory should never support 512M since the HV_RAM_SIZE_MAX is limited to 0x40000000 but not a platform specific problem
+- :acrn-issue:`7133` - Guest VM system reset may fail and ACRN DM program hang
+- :acrn-issue:`7127` - config-tools: remove SERIAL_CONSOLE extracion for bootargs of SOS
+- :acrn-issue:`7124` - [DM]:  Fail to boot the Laag guest if the boot option of "pci=nomsi" is added for Guest kernel
+- :acrn-issue:`7119` - config-tools: bring all cores online
+- :acrn-issue:`7109` - Python traceback if the 'dpkg' tool is not available
+- :acrn-issue:`7098` - Memory leakage bug induced by opendir() in ACRN applications
+- :acrn-issue:`7084` - config_tools:  append passthrough gpu bdf in hexadecimal format
+- :acrn-issue:`7077` - config-tools: find pci hole based on all pci hostbridge
+- :acrn-issue:`7058` - config_tools: board_inspector cannot generate compliable xml for Qemu
+- :acrn-issue:`7045` - [ICX-D] Segmentation fault when passthrough TSN to post_launched VM with enable_ptm option
+- :acrn-issue:`7022` - ACRN debian package not complete when source is not cloned to standard folder
+- :acrn-issue:`7018` - No expected exception generated on some platform.
+
+
 
 Known Issues
 ************
