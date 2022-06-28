@@ -164,7 +164,7 @@ To set up the ACRN build environment on the development computer:
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout release_3.0
+      git checkout v3.0
 
       cd ..
       git clone --depth 1 --branch release_3.0 https://github.com/projectacrn/acrn-kernel.git
@@ -487,8 +487,9 @@ post-launched User VM. Each User VM has its own launch script.
    #. For **Physical CPU affinity**, select pCPU ID ``0``, then click **+** and
       select pCPU ID ``1`` to affine the VM to CPU cores 0 and 1.
 
-   #. For Virt-IO devices, select the Virtio console device and click + for a 
-      default option.   
+   #. For **Virtio console device**, click **+** to add a device and keep the
+      default options. This parameter specifies the console that you will use to
+      log in to the User VM later in this guide.
 
    #. For **Virtio block device**, click **+** and enter
       ``~/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
