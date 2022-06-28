@@ -75,6 +75,12 @@ For the connection:
    leave it blank. If the field is blank, the tool provides an address when the
    configuration is saved.
 
+   .. note::
+
+      The release v3.0 ACRN Configurator has an issue where you need to save the
+      configuration twice to see the generated I/O or BDF address in the vUART
+      setting. (:acrn-issue:`7831`)
+
 To add another connection, click **+** on the right side of an existing
 connection. Or click **-** to delete a connection.
 
@@ -150,6 +156,9 @@ connection between two VMs. The example extends the information provided in the
 
 Learn More
 ==========
+
+ACRN supports multiple inter-VM communication methods. For a comparison, see
+:ref:`inter-vm_communication`.
 
 For details on ACRN vUART high-level design, see:
 
