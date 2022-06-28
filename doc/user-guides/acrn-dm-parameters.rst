@@ -379,9 +379,6 @@ arguments used for configuration.  Here is a table describing these emulated dev
        Packet Interface device (for CD-ROM emulation). ``ahci-cd`` supports the same
        parameters than ``ahci``.
 
-   * - ``amd_hostbridge``
-     - Virtualized PCI AMD hostbridge
-
    * - ``hostbridge``
      - Virtualized PCI hostbridge, a hardware bridge between the CPU's
        high-speed system local bus and the Peripheral Component Interconnect
@@ -414,16 +411,8 @@ arguments used for configuration.  Here is a table describing these emulated dev
        n,virtio-input,/dev/input/eventX[,serial]``. ``serial`` is an optional
        string used as the unique identification code of guest virtio input device.
 
-   * - ``virtio-ipu``
-     - Virtio image processing unit (IPU), it is used to connect
-       camera device to system, to convert the raw Bayer image into YUV domain.
-
    * - ``virtio-console``
      - Virtio console type device for data input and output.
-
-   * - ``virtio-hyper_dmabuf``
-     - Virtio device that allows sharing data buffers between VMs using a
-       dmabuf-like interface.
 
    * - ``virtio-heci``
      - Virtio Host Embedded Controller Interface, parameters should be appended
@@ -466,9 +455,6 @@ arguments used for configuration.  Here is a table describing these emulated dev
      - Virtio Replay Protected Memory Block (RPMB) type device, with
        ``physical_rpmb`` to specify RPMB in physical mode,
        otherwise RPMB is in simulated mode.
-
-   * - ``virtio-audio``
-     - Virtio audio type device
 
    * - ``virtio-net``
      - Virtio network type device, parameter should be appended with the format:
