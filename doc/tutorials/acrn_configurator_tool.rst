@@ -8,7 +8,7 @@ This guide describes all features and uses of the tool.
 About the ACRN Configurator Tool
 *********************************
 
-The ACRN Configurator ``acrn_configurator.py`` provides a user interface to help
+The ACRN Configurator provides a user interface to help
 you customize your :ref:`ACRN configuration <acrn_configuration_tool>`.
 Capabilities:
 
@@ -159,7 +159,7 @@ that no board information has been imported yet.
 
 To import a board configuration file for the first time:
 
-1. Under **Import a board configuration file**, select a scenario configuration
+1. Under **Import a board configuration file**, select a
    file from the dropdown menu or click **Browse for file** to select a
    different file.
 
@@ -372,6 +372,8 @@ Save and Check for Errors
 
 #. Fix all errors and save again to generate a valid configuration.
 
+#. Click the **x** in the upper-right corner to close the ACRN Configurator.
+
 Next Steps
 ==========
 
@@ -468,7 +470,7 @@ how to build the Debian package from source code.
 
    .. code-block:: bash
 
-      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator_*_amd64.deb
+      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator*.deb
 
 #. Launch the ACRN Configurator:
 
