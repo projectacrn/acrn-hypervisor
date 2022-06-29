@@ -1,7 +1,7 @@
 .. _hv_vcat:
 
-Enable vCAT
-###########
+Virtual Cache Allocation Technology (vCAT)
+###########################################
 
 vCAT refers to the virtualization of Cache Allocation Technology (CAT), one of the
 RDT (Resource Director Technology) technologies.
@@ -26,7 +26,7 @@ When assigning cache ways, however, the VM can be given exclusive, shared, or mi
 ways depending on particular performance needs. For example, use dedicated cache ways for RTVM, and use
 shared cache ways between low priority VMs.
 
-In ACRN, the CAT resources allocated for vCAT VMs are determined in :ref:`vcat_configuration`.
+In ACRN, the CAT resources allocated for vCAT VMs are determined in :ref:`rdt_configuration`.
 
 For further details on the RDT, refer to the ACRN RDT high-level design :ref:`hv_rdt`.
 

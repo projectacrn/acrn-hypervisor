@@ -1,99 +1,93 @@
 .. _gpu-passthrough:
 
-Enable GVT-d in ACRN
-####################
+Enable GPU Passthrough (GVT-d)
+##############################
 
-This tutorial describes how to enable GVT-d in ACRN.
+About GVT-d
+************
+
+GVT-d is a graphics virtualization approach that is also known as the
+Intel-Graphics-Device passthrough feature. It allows for direct assignment of a
+GPU to a single VM, passing the native driver capabilities through to the
+hypervisor without any limitations. For example, you can pass through a VGA
+controller to a VM, allowing users to access a Windows or Ubuntu desktop.
+
+A typical use of GVT-d is to give a post-launched VM full control to the
+graphics card when that VM serves as the main user interface while all the other
+VMs are in the background and headless.
+
+Dependencies and Constraints
+****************************
+
+Consider the following dependencies and constraints:
+
+* GVT-d applies only to an Intel integrated graphics card. Discrete graphics
+  cards are passed through to VMs as a standard PCI device.
+
+* When a device is assigned to a VM via GVT-d, no other VMs can use it.
 
 .. note:: After GVT-d is enabled, have either a serial port
    or SSH session open in the Service VM to interact with it.
 
-Introduction
-************
+Configuration Overview
+**********************
 
-Intel GVT-d is a graphics virtualization approach that is also known as
-the Intel-Graphics-Device passthrough feature. Based on Intel VT-d
-technology, it offers useful special graphics-related configurations.
-It allows for direct assignment of an entire GPU's prowess to a single
-user, passing the native driver capabilities through to the hypervisor
-without any limitations.
+The :ref:`acrn_configurator_tool` lets you select PCI devices, such as VGA
+controllers, as passthrough devices for a VM. The following documentation is a
+general overview of the configuration process.
 
-Verified Version
-*****************
+To select a passthrough device for a VM, select the VM and go to **Basic
+Parameters > PCI devices**. Click **+** to add a device.
 
-- ACRN-hypervisor tag: **acrn-2020w17.4-140000p**
-- ACRN-Kernel (Service VM kernel): **master** branch, commit ID **095509221660daf82584ebdd8c50ea0078da3c2d**
-- ACRN-EDK2 (OVMF): **ovmf-acrn** branch, commit ID **0ff86f6b9a3500e4c7ea0c1064e77d98e9745947**
+.. image:: images/configurator-gvtd02.png
+   :align: center
+   :class: drop-shadow
 
-Prerequisites
-*************
+Select the device from the list.
 
-Follow :ref:`these instructions <gsg>` to set up
-Ubuntu as the ACRN Service VM.
+.. image:: images/configurator-gvtd01.png
+   :align: center
+   :class: drop-shadow
 
-Supported Hardware Platform
-***************************
+To add another passthrough device, click **+**. Or click **x** to delete a
+device.
 
-ACRN has enabled GVT-d on the following platforms:
+Example Configuration
+*********************
 
-* Kaby Lake
-* Whiskey Lake
-* Elkhart Lake
+The following steps show how to select and verify a passthrough VGA controller.
+The example extends the information provided in the :ref:`gsg`.
 
-BIOS Settings
-*************
+#. In the ACRN Configurator, create a shared scenario with a Service VM and one
+   post-launched User VM.
 
-Kaby Lake Platform
-==================
+#. Select the post-launched User VM and go to **Basic Parameters > PCI
+   devices**.
 
-* Set **IGD Minimum Memory** to **64MB** in **Devices** |rarr|
-  **Video** |rarr| **IGD Minimum Memory**.
+#. Click **+** to add a device, and select the VGA controller.
 
-Whiskey Lake Platform
-=====================
+   .. image:: images/configurator-gvtd01.png
+      :align: center
+      :class: drop-shadow
 
-* Set **PM Support**  to **Enabled** in **Chipset** |rarr| **System
-  Agent (SA) Configuration** |rarr| **Graphics Configuration** |rarr|
-  **PM support**.
-* Set **DVMT Pre-Allocated** to **64MB** in **Chipset** |rarr|
-  **System Agent (SA) Configuration**
-  |rarr| **Graphics Configuration** |rarr| **DVMT Pre-Allocated**.
+#. Save the scenario and launch script.
 
-Elkhart Lake Platform
-=====================
+#. Build ACRN, copy all the necessary files from the development computer to the
+   target system, and launch the Service VM and post-launched User VM.
 
-* Set **DMVT Pre-Allocated** to **64MB** in **Intel Advanced Menu**
-  |rarr| **System Agent(SA) Configuration** |rarr|
-  **Graphics Configuration** |rarr| **DMVT Pre-Allocated**.
+#. Verify that the VM can access the VGA controller: Run the following command
+   in the post-launched User VM:
 
-Passthrough the GPU to Guest
-****************************
+   .. code-block:: console
 
-1. Copy ``/usr/share/acrn/samples/nuc/launch_win.sh`` to ``install_win.sh``
+      root@acrn-Standard-PC-i440FX-PIIX-1996:~# lspci |grep VGA
+      00:02.0 VGA compatible controller: Intel Corporation Device 4680 (rev 0c)
 
-   ::
-
-     cp /usr/share/acrn/samples/nuc/launch_win.sh ~/install_win.sh
-
-2. Modify the ``install_win.sh`` script to specify the Windows image you use.
-
-3. Modify the ``install_win.sh`` script to enable GVT-d:
-
-   Add the following commands before ``acrn-dm -m $mem_size -s 0:0,hostbridge \``
-
-   ::
-
-     gpudevice=`cat /sys/bus/pci/devices/0000:00:02.0/device`
-
-     echo "8086 $gpudevice" > /sys/bus/pci/drivers/pci-stub/new_id
-     echo "0000:00:02.0" > /sys/bus/pci/devices/0000:00:02.0/driver/unbind
-     echo "0000:00:02.0" > /sys/bus/pci/drivers/pci-stub/bind
-
-
-4. Run ``launch_win.sh``.
+Troubleshooting
+***************
 
 Enable the GVT-d GOP Driver
-***************************
+===========================
 
 When enabling GVT-d, the Guest OS cannot light up the physical screen
 before the OS driver loads. As a result, the Guest BIOS and the Grub UI
@@ -107,7 +101,7 @@ passthrough environment. The physical display can be initialized
 by the GOP and used by the Guest BIOS and Guest Grub.
 
 Steps
-=====
+-----
 
 1. Fetch the ACRN OVMF:
 
@@ -166,7 +160,7 @@ Keep in mind the following:
    -  Modify the launch script to specify the OVMF you built just now.
 
 Script
-======
+------
 
 Once you've installed the Docker environment, you can use this
 `script <../_static/downloads/build_acrn_ovmf.sh>`_ to build ACRN OVMF

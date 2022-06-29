@@ -1,8 +1,8 @@
 .. _using_zephyr_as_uos:
 .. _using_zephyr_as_user_vm:
 
-Run Zephyr as the User VM
-#########################
+Run Zephyr as the User RTVM OS
+##############################
 
 This tutorial describes how to run Zephyr as the User VM on the ACRN hypervisor. We are using
 Kaby Lake-based Intel NUC (model NUC7i5DNHE) in this tutorial.

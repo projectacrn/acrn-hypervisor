@@ -135,7 +135,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo pip3 install lxml xmlschema defusedxml tqdm
+      sudo pip3 install "elementpath<=2.5.0" lxml xmlschema defusedxml tqdm
 
 #. Create a working directory:
 
@@ -155,19 +155,19 @@ To set up the ACRN build environment on the development computer:
       make clean && make iasl
       sudo cp ./generate/unix/bin/iasl /usr/sbin
 
-#. Get the ACRN hypervisor and kernel source code. (Because the ``acrn-kernel`` repo
-   has a lot of Linux kernel history, you can clone the relevant release branch
-   with minimal history, as shown here.)
+#. Get the ACRN hypervisor and kernel source code.
 
    .. code-block:: bash
 
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout release_3.0
+      git checkout v3.0
 
       cd ..
-      git clone --depth 1 --branch release_3.0 https://github.com/projectacrn/acrn-kernel.git
+      git clone https://github.com/projectacrn/acrn-kernel.git
+      cd acrn-kernel
+      git checkout acrn-v3.0
 
 .. _gsg-board-setup:
 
@@ -207,8 +207,8 @@ To set up the target hardware environment:
 
 Example of a target system with cables connected:
 
-.. image:: ./images/gsg_nuc.png
-   :scale: 25%
+.. image:: ./images/gsg_vecow.png
+   :align: center
 
 Install OS on the Target
 ============================
@@ -231,12 +231,14 @@ To install Ubuntu 20.04:
    updates requires the target to have an Internet connection).
 
    .. image:: ./images/gsg_ubuntu_install_01.png
+      :align: center
 
 #. Use the check boxes to choose whether you'd like to install Ubuntu alongside
    another operating system, or delete your existing operating system and
    replace it with Ubuntu:
 
    .. image:: ./images/gsg_ubuntu_install_02.png
+      :align: center
 
 #. Complete the Ubuntu installation and create a new user account ``acrn`` and
    set a password.
@@ -382,8 +384,9 @@ Generate a Board Configuration File
 Generate a Scenario Configuration File and Launch Script
 ********************************************************
 
-In this step, you will use the **ACRN Configurator** to generate a scenario
-configuration file and launch script.
+In this step, you will download, install, and use the `ACRN Configurator
+<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb>`__
+to generate a scenario configuration file and launch script.
 
 A **scenario configuration file** is an XML file that holds the parameters of
 a specific ACRN configuration, such as the number of VMs that can be run,
@@ -392,11 +395,26 @@ their attributes, and the resources they have access to.
 A **launch script** is a shell script that is used to configure and create a
 post-launched User VM. Each User VM has its own launch script.
 
-#. On the development computer, install the ACRN Configurator:
+#. On the development computer, download and install the ACRN Configurator
+   Debian package:
 
    .. code-block:: bash
 
-      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator_*_amd64.deb # TODO update file path
+      cd ~/acrn-work
+      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb
+
+   If you already have a previous version of the acrn-configurator installed,
+   you should first remove it:
+
+   .. code-block:: bash
+
+      sudo apt purge acrn-configurator
+
+   Then you can install this new version:
+
+   .. code-block:: bash
+
+      sudo apt install -y ./acrn-configurator-3.0.deb
 
 #. Launch the ACRN Configurator:
 
@@ -475,7 +493,7 @@ post-launched User VM. Each User VM has its own launch script.
    #. Click the **VM1 Post-launched > Basic Parameters** tab and change the VM
       name to ``POST_STD_VM1`` for this example.
 
-   #. Confirm that the **OS type** is ``Standard``. In the previous step,
+   #. Confirm that the **VM type** is ``Standard``. In the previous step,
       ``STD`` in the VM name is short for Standard. 
 
    #. Scroll down to **Memory size (MB)** and change the value to ``1024``. For
@@ -484,6 +502,10 @@ post-launched User VM. Each User VM has its own launch script.
 
    #. For **Physical CPU affinity**, select pCPU ID ``0``, then click **+** and
       select pCPU ID ``1`` to affine the VM to CPU cores 0 and 1.
+
+   #. For **Virtio console device**, click **+** to add a device and keep the
+      default options. This parameter specifies the console that you will use to
+      log in to the User VM later in this guide.
 
    #. For **Virtio block device**, click **+** and enter
       ``~/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
@@ -531,10 +553,11 @@ Build ACRN
 
       cd ./build
       ls *.deb
-         acrn-my_board-shared-2.7.deb # TODO update file name
+         acrn-my_board-MyConfiguration*.deb
 
    The Debian package contains the ACRN hypervisor and tools to ease installing
-   ACRN on the target.
+   ACRN on the target. The Debian file name contains the board name (``my_board``) 
+   and the working folder name (``MyConfiguration``).
 
 #. Build the ACRN kernel for the Service VM:
 
@@ -564,10 +587,10 @@ Build ACRN
 
       cd ..
       ls *.deb
-         linux-headers-5.10.78-acrn-service-vm_5.10.78-acrn-service-vm-1_amd64.deb
-         linux-image-5.10.78-acrn-service-vm_5.10.78-acrn-service-vm-1_amd64.deb
-         linux-image-5.10.78-acrn-service-vm-dbg_5.10.78-acrn-service-vm-1_amd64.deb
-         linux-libc-dev_5.10.78-acrn-service-vm-1_amd64.deb
+         linux-headers-5.10.115-acrn-service-vm_5.10.115-acrn-service-vm-1_amd64.deb
+         linux-image-5.10.115-acrn-service-vm_5.10.115-acrn-service-vm-1_amd64.deb
+         linux-image-5.10.115-acrn-service-vm-dbg_5.10.115-acrn-service-vm-1_amd64.deb
+         linux-libc-dev_5.10.115-acrn-service-vm-1_amd64.deb
 
 #. Copy all the necessary files generated on the development computer to the
    target system by USB disk as follows:
@@ -577,9 +600,9 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-shared-2.7.deb "$disk"/ # TODO update file name
+         cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb "$disk"/
          cp ~/acrn-work/*acrn-service-vm*.deb "$disk"/
-         cp ~/acrn-work/my_board/output/launch_user_vm_id3.sh "$disk"/
+         cp ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh "$disk"/
          cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
          sync && sudo umount "$disk"
 
@@ -592,9 +615,9 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp "$disk"/acrn-my_board-shared-2.7.deb ~/acrn-work # TODO update file name
+         cp "$disk"/acrn-my_board-MyConfiguration*.deb ~/acrn-work
          cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
-         cp "$disk"/launch_user_vm_id3.sh ~/acrn-work
+         cp "$disk"/launch_user_vm_id1.sh ~/acrn-work
          sudo cp "$disk"/iasl /usr/sbin/
          sync && sudo umount "$disk"
 
@@ -611,7 +634,7 @@ Install ACRN
    .. code-block:: bash
 
       cd ~/acrn-work
-      sudo apt install ./acrn-my_board-shared-2.7.deb # TODO update file name
+      sudo apt install ./acrn-my_board-MyConfiguration*.deb
       sudo apt install ./*acrn-service-vm*.deb
 
 #. Reboot the system:
@@ -685,8 +708,8 @@ Launch the User VM
 
    .. code-block:: bash
 
-      sudo chmod +x ~/acrn-work/launch_user_vm_id3.sh # TODO update file name
-      sudo ~/acrn-work/launch_user_vm_id3.sh # TODO update file name
+      sudo chmod +x ~/acrn-work/launch_user_vm_id1.sh 
+      sudo ~/acrn-work/launch_user_vm_id1.sh 
 
 #. It may take about one minute for the User VM to boot and start running the
    Ubuntu image. You will see a lot of output, then the console of the User VM
@@ -705,7 +728,7 @@ Launch the User VM
 
    .. code-block:: console
 
-      Welcome to Ubuntu 20.04.4 LTS (GNU/Linux 5.11.0-27-generic x86_64)
+      Welcome to Ubuntu 20.04.4 LTS (GNU/Linux 5.13.0-30-generic x86_64)
 
       * Documentation:  https://help.ubuntu.com
       * Management:     https://landscape.canonical.com
@@ -734,7 +757,7 @@ Launch the User VM
    .. code-block:: console
 
       ubuntu@ubuntu:~$ uname -r
-      5.11.0-27-generic
+      5.13.0-30-generic
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
@@ -742,7 +765,7 @@ Launch the User VM
    .. code-block:: console
 
       acrn@vecow:~$ uname -r
-      5.10.78-acrn-service-vm
+      5.10.115-acrn-service-vm
 
    The User VM has launched successfully. You have completed this ACRN setup.
 
