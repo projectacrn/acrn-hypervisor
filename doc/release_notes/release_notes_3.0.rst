@@ -1,7 +1,7 @@
 .. _release_notes_3.0:
 
-ACRN v3.0
-#########
+ACRN v3.0 (Jun 2002)
+####################
 
 We are pleased to announce the release of the Project ACRN hypervisor
 version 3.0.
@@ -39,7 +39,7 @@ Redesigned ACRN Configuration
   We heard your feedback: ACRN configuration is difficult, confusing, and had
   too many parameters that were not easy to understand.  Release v3.0 features a
   new ACRN Configurator UI tool with a more intuitive design and workflow that
-  simplifies getting the setup for the ACRN hypervisor right.  You'll also see a
+  simplifies getting the setup for the ACRN hypervisor right.  You'll also see
   changes for configuring individual VMs.  We've greatly reduced the number of
   parameters needing your attention,  organized them into basic and advanced
   categories, provided practical defaults, and added error checking so you can
@@ -53,7 +53,7 @@ Redesigned ACRN Configuration
   the `ACRN users mailing list <https://lists.projectacrn.org/g/acrn-users>`_.
 
   We've also simplified installation of the Configurator by providing a Debian
-  package you can download and install.  See the :ref:`gsg` for more
+  package that you can download and install.  See the :ref:`gsg` for more
   information.
 
 Improved Board Inspector Collection and Reporting
@@ -75,7 +75,7 @@ Commercial off-the-shelf Tiger Lake machine support
   Lake) from Vecow. Read more in the :ref:`hardware` documentation.
 
 Refined shutdown & reset sequence
-  A Windows User VM can now shutdown or reset the system gracefully. This
+  A Windows User VM can now shut down or reset the system gracefully. This
   supports a user model where a Windows-based VM provides a system management
   interface. This shutdown capability is achieved by lifecycle managers in each
   VM that talk to each other via a virtual UART channel.
@@ -93,7 +93,7 @@ ACRN Debianization
   :acrn_file:`debian/README.rst`.
 
 
-Upgrading to v3.0 From Previous Releases
+Upgrading to v3.0 from Previous Releases
 ****************************************
 
 With the introduction of the Configurator UI tool, the need for manually editing
@@ -108,7 +108,22 @@ We recommend you generate a new board XML for your target system with the v3.0
 Board Inspector.  You should also use the v3.0 Configurator to generate a new
 scenario XML file and launch scripts. Scenario XML files and launch scripts
 created by previous ACRN versions will not work with the v3.0 ACRN hypervisor
-build process and could produce unexpected errors during the build..
+build process and could produce unexpected errors during the build.
+
+Given the scope of changes for the v3.0 release, we have recommendations for how
+to upgrade from prior ACRN versions:
+
+1. Start fresh from our :ref:`gsg`. This is the best way to ensure you have a
+   v3.0-ready board XML file from your target system and generate a new scenario
+   XML and launch scripts from the new ACRN Configurator that are consistent and
+   will work for the v3.0 build system.
+#. Use the :ref:`upgrade tool <upgrading_configuration>` to attempt
+   upgrading configuration files that worked with a release before v3.0.  You’ll
+   need the matched pair of scenario XML and launch XML files from a prior
+   configuration, and use them to create a new merged scenario XML file.  See
+   :ref:`upgrading_configuration` for details.
+#. Manually edit your prior scenario XML and launch XML files to make them
+   compatible with v3.0.  This is not our recommended approach.
 
 Here are some additional details about upgrading to the v3.0 release.
 
@@ -127,7 +142,7 @@ XML file for supporting new features and fixes:
     <https://github.com/projectacrn/acrn-hypervisor/pull/7331>`_.
   - Collect all information about SR-IOV devices: see PR `#7302 <https://github.com/projectacrn/acrn-hypervisor/pull/7302>`_.
   - Extract all serial TTYs and virtio input devices: see PR `#7219 <https://github.com/projectacrn/acrn-hypervisor/pull/7219>`_.
-  - Extract common ioapic information such as ioapic id, address, gsi base and gsi num:
+  - Extract common ioapic information such as ioapic id, address, gsi base, and gsi num:
     see PR `#6987 <https://github.com/projectacrn/acrn-hypervisor/pull/6987>`_.
   - Add another level of `die` node even though the hardware reports die topology in CPUID:
     see PR `#7080 <https://github.com/projectacrn/acrn-hypervisor/pull/7080>`_.
@@ -149,8 +164,8 @@ scripts by using the Configurator.
 
 As explained in this :ref:`upgrading_configuration` document, we do provide a
 tool that can assist upgrading your existing pre-v3.0 scenario and launch XML
-files in the the new merged v3.0 format. From there, you can use the v3.0 ACRN
-Configurator to open upgraded scenario file for viewing and further edits if the
+files in the new merged v3.0 format. From there, you can use the v3.0 ACRN
+Configurator to open upgraded scenario file for viewing and further editing if the
 upgrader tool lost meaningful data during the conversion.
 
 As part of the developer experience improvements to ACRN configuration, the following XML elements
@@ -288,7 +303,7 @@ release (in the `latest documentation <https://docs.projectacrn.org>`_).
 
 Some obsolete documents were removed from the v3.0 documentation, but can still
 be found in the archived versions of previous release documentation, such as for
-`v2.7 <https://docs.projectacrn.org/2.7/>`_..
+`v2.7 <https://docs.projectacrn.org/2.7/>`_.
 
 
 Fixed Issues Details
