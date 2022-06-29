@@ -1,7 +1,7 @@
 .. _release_notes_3.0:
 
-ACRN v3.0 (DRAFT)
-#################
+ACRN v3.0
+#########
 
 We are pleased to announce the release of the Project ACRN hypervisor
 version 3.0.
@@ -35,67 +35,128 @@ ACRN v3.0 requires Ubuntu 20.04.  Follow the instructions in the
 What's New in v3.0
 ******************
 
-Redesigned ACRN Configurator
-  Brand new UI, including reduced and simplified parameters, provides intuitive
-  flow to help users configure.
-  hypervisor and VM capabilities and settings.
-Intel® TCC Tools Cache Configurator support
-  RTVM can reserve a portion of cache (L2 or L3) as software SRAM regions on
-  Tiger Lake platform to achieve extreme low latency. For more about Intel TCC tools,
-  check out https://www.intel.com/content/www/us/en/develop/documentation/tcc-tools-2022-1-developer-guide/top/real-time-configuration-and-optimization-tools/cache-allocation/cache-configurator.html
+Redesigned ACRN Configuration
+  We heard your feedback: ACRN configuration is difficult, confusing, and had
+  too many parameters that were not easy to understand.  Release v3.0 features a
+  new ACRN Configurator UI tool with a more intuitive design and workflow that
+  simplifies getting the setup for the ACRN hypervisor right.  You'll also see a
+  changes for configuring individual VMs.  We've greatly reduced the number of
+  parameters needing your attention,  organized them into basic and advanced
+  categories, provided practical defaults, and added error checking so you can
+  be much more confident in your configuration before building ACRN.  We've also
+  integrated the previously separated scenario and launch options into a merged
+  scenario XML configuration file managed by the new Configurator. Read more
+  in the :ref:`acrn_configurator_tool` page.
+
+  This is our first major step of continued ACRN user experience improvements.
+  If you have feedback on this, or other aspects of ACRN, please share them on
+  the `ACRN users mailing list <https://lists.projectacrn.org/g/acrn-users>`_.
+
+  We've also simplified installation of the Configurator by providing a Debian
+  package you can download and install.  See the :ref:`gsg` for more
+  information.
+
+Improved Board Inspector Collection and Reporting
+  You run the ACRN Board Inspector tool to collect information about your target
+  system's processors, memory, devices, and more. The generated board XML file
+  is used by the ACRN Configurator to determine which ACRN configuration options
+  are possible, as well as possible values for target system resources. The v3.0
+  Board Inspector has improved scanning and provides more messages about
+  potential issues or limitations of your target system that could impact ACRN
+  configuration options.  Read more in :ref:`board_inspector_tool`.
+
+.. _Vecow SPC-7100:
+   https://marketplace.intel.com/s/offering/a5b3b000000PReMAAW/vecow-spc7100-series-11th-gen-intel-core-i7i5i3-processor-ultracompact-f
+
+
 Commercial off-the-shelf Tiger Lake machine support
-  11th Generation Intel® Core™ Processor (codenamed Tiger Lake) has been supported
-  by ACRN hypervisor since v2.3 release. Now a commercially off-the-shelf complete
-  system is validated and supported.
+  The `Vecow SPC-7100`_ system is validated and supported by ACRN. This is a
+  commercially available 11th Generation Intel® Core™ Processor (codenamed Tiger
+  Lake) from Vecow. Read more in the :ref:`hardware` documentation.
+
 Refined shutdown & reset sequence
-  User can shutdown or reset the system gracefully from the Windows User VM.
-  This is achieved by lifecycle managers in each VM which talks to each other
-  via the virtual UART channel.
+  A Windows User VM can now shutdown or reset the system gracefully. This
+  supports a user model where a Windows-based VM provides a system management
+  interface. This shutdown capability is achieved by lifecycle managers in each
+  VM that talk to each other via a virtual UART channel.
+
 Hypervisor Real Time Clock (RTC)
-  Each VM now has its own PC/AT-compatible RTC/CMOS device emulated by the hypervisor.
-  In this way, a sudden jump in VM’s system clock can be avoided which may confuse
-  certain applications.
+  Each VM now has its own PC/AT-compatible RTC/CMOS device emulated by the
+  hypervisor.  With this, we can avoid any sudden jump in a VM's system clock
+  that may confuse certain applications.
+
+ACRN Debianization
+  We appreciate a big contribution from the ACRN community! Helmut Buchsbaum from
+  TTTech Industrial submitted a "debianization" feature that lets developers
+  build and package ACRN into several Debian packages, install them on the target Ubuntu
+  or Debian OS, and reboot the machine with ACRN running. Read more in
+  :acrn_file:`debian/README.rst`.
+
 
 Upgrading to v3.0 From Previous Releases
 ****************************************
 
-We highly recommended that you follow these instructions to
-upgrade to v3.0 from previous ACRN releases.
+With the introduction of the Configurator UI tool, the need for manually editing
+XML files is gone.  While working on this improved Configurator, we've also made
+many adjustments to available options in the underlying XML files, including
+merging the previous scenario and launch XML files into a combined scenario XML
+file.  The board XML file generated by the v3.0 Board Inspector tool includes
+more information about the target system that is needed by the v3.0
+Configurator.
+
+We recommend you generate a new board XML for your target system with the v3.0
+Board Inspector.  You should also use the v3.0 Configurator to generate a new
+scenario XML file and launch scripts. Scenario XML files and launch scripts
+created by previous ACRN versions will not work with the v3.0 ACRN hypervisor
+build process and could produce unexpected errors during the build..
+
+Here are some additional details about upgrading to the v3.0 release.
 
 Generate New Board XML
 ======================
 
 Board XML files, generated by ACRN board inspector, contain board information
-that is essential to build ACRN. Compared to previous versions, ACRN v3.0 adds
-the following information to board XMLs to support new features and fixes.
+that is essential for building the ACRN hypervisor and setting up User VMs.
+Compared to previous versions, ACRN v3.0 adds the following information to the board
+XML file for supporting new features and fixes:
 
-  - Add ``--add-llc-cat`` :ref:`board_inspector_cl` to Board Inspector Tool, reference
-    PR `#7331 <https://github.com/projectacrn/acrn-hypervisor/pull/7331>`_.
-  - Collect all information about SR-IOV devices, reference PR `#7302 <https://github.com/projectacrn/acrn-hypervisor/pull/7302>`_.
-  - Extract all serial ttys and virtio input devices, reference PR `#7219 <https://github.com/projectacrn/acrn-hypervisor/pull/7219>`_.
-  - Extract common ioapic information such as ioapic id, address, gsi base and gsi num,
-    reference PR `#6987 <https://github.com/projectacrn/acrn-hypervisor/pull/6987>`_.
-  - Add another level of `die` node even though the hardware reports die topology in CPUID,
-    reference PR `#7080 <https://github.com/projectacrn/acrn-hypervisor/pull/7080>`_.
-  - Bringing up all cores online so tool can run cpuid to extract all available cores
-    information, reference PR `#7120 <https://github.com/projectacrn/acrn-hypervisor/pull/7120>`_.
-  - Add CPU capability and BIOS invalid setting checks, reference PR `#7216 <https://github.com/projectacrn/acrn-hypervisor/pull/7216>`_.
-  - Summary board inspector log based on the different log levels, reference PR
+  - Add ``--add-llc-cat`` to Board Inspector command line options to manually
+    provide Cache Allocation Technology (CAT) to the generated board XML when
+    the target hardware does not report availability of this feature.  See
+    :ref:`Board Inspector Command-Line Options <board_inspector_cl>` and PR `#7331
+    <https://github.com/projectacrn/acrn-hypervisor/pull/7331>`_.
+  - Collect all information about SR-IOV devices: see PR `#7302 <https://github.com/projectacrn/acrn-hypervisor/pull/7302>`_.
+  - Extract all serial TTYs and virtio input devices: see PR `#7219 <https://github.com/projectacrn/acrn-hypervisor/pull/7219>`_.
+  - Extract common ioapic information such as ioapic id, address, gsi base and gsi num:
+    see PR `#6987 <https://github.com/projectacrn/acrn-hypervisor/pull/6987>`_.
+  - Add another level of `die` node even though the hardware reports die topology in CPUID:
+    see PR `#7080 <https://github.com/projectacrn/acrn-hypervisor/pull/7080>`_.
+  - Bring up all cores online so Board Inspector can run cpuid to extract all available cores'
+    information: see PR `#7120 <https://github.com/projectacrn/acrn-hypervisor/pull/7120>`_.
+  - Add CPU capability and BIOS invalid setting checks: see PR `#7216 <https://github.com/projectacrn/acrn-hypervisor/pull/7216>`_.
+  - Improve Board Inspector summary and logging based on log levels option: see PR
     `#7429 <https://github.com/projectacrn/acrn-hypervisor/pull/7429>`_.
 
-The new board XML can be generated using the ACRN board inspector in the same
-way as ACRN v2.7. Refer to :ref:`board_inspector_tool` for a complete list of
-steps to deploy and run the tool.
+See the :ref:`board_inspector_tool` documentation for a complete list of steps
+to install and run the tool.
 
 Update Configuration Options
 ============================
 
-In v3.0, data in a launch XML are merged into the scenario XML for the new configurator.
-The highly recommended way to use upgrader tool to upgrade a pair of scenario XML and
-launch XML files into a merged file, introduced in https://projectacrn.github.io/latest/tutorials/upgrading_configuration.html.
-Then use the ACRN Configurator to open the upgraded file for further edits in case
-any meaningful data is lost. In detail, the following elements
-are refined in the scenario XML file for user-friendly experience.
+In v3.0, data in a launch XML are now merged into the scenario XML for the new
+Configurator. When practical, we recommend generating a new scenario and launch
+scripts by using the Configurator.
+
+As explained in this :ref:`upgrading_configuration` document, we do provide a
+tool that can assist upgrading your existing pre-v3.0 scenario and launch XML
+files in the the new merged v3.0 format. From there, you can use the v3.0 ACRN
+Configurator to open upgraded scenario file for viewing and further edits if the
+upgrader tool lost meaningful data during the conversion.
+
+As part of the developer experience improvements to ACRN configuration, the following XML elements
+were refined in the scenario XML file:
+
+.. rst-class:: rst-columns3
 
 - ``RDT``
 - ``vUART``
@@ -104,6 +165,8 @@ are refined in the scenario XML file for user-friendly experience.
 - ``virtio devices``
 
 The following elements are added to scenario XML files.
+
+.. rst-class:: rst-columns3
 
 - ``vm.lapic_passthrough``
 - ``vm.io_completion_polling``
@@ -115,6 +178,8 @@ The following elements are added to scenario XML files.
 
 The following elements were removed.
 
+.. rst-class:: rst-columns3
+
 - ``hv.FEATURES.NVMX_ENABLED``
 - ``hv.DEBUG_OPTIONS.LOG_BUF_SIZE``
 - ``hv.MEMORY.PLATFORM_RAM_SIZE``
@@ -124,27 +189,113 @@ The following elements were removed.
 - ``vm.guest_flags``
 - ``vm.board_private``
 
+See the :ref:`scenario-config-options` documentation for details about all the
+available configuration options in the new Configurator.
+
 In v3.0, we refine the structure of the generated scripts so that PCI functions
 are identified only by their BDF. This change serves as a mandatory step to align
-the way how passthrough devices are configured for pre-launched and post-launched VMs,
-which eventually allows us to present a unified view in the the ACRN Configurator for
-assigning passthrough device. Then we remove some obsolete dynamic parameters and update the
-usage of the `--cpu_affinity` parameter in launch script generation logic to use the lapic ID
-instead of pCPU ID. (see the `Device Model parameters
-<https://projectacrn.github.io/latest/user-guides/acrn-dm-parameters.html>`_)
+how passthrough devices are configured for pre-launched and post-launched VMs.
+This allows us to present a unified view in the ACRN Configurator for
+assigning passthrough device. We removed some obsolete dynamic parameters and updated the
+usage of the Device Model (``acrn-dm``) ``--cpu_affinity`` parameter in launch script generation logic to use the lapic ID
+instead of pCPU ID. See :ref:`acrn-dm_parameters-and-launch-script` for details.
 
 Document Updates
 ****************
 
+With the introduction of the improved Configurator, we could improve our
+:ref:`gsg` documentation and let you quickly build a simple ACRN hypervisor and
+User VM configuration from scratch instead of using a contrived pre-defined scenario
+configuration. That also let us reorganize and change configuration option
+documentation to use the newly defined developer-friendly names for
+configuration options.
+
+Check out our improved Getting Started and Configuration documents:
+
+.. rst-class:: rst-columns2
+
+* :ref:`introduction`
+* :ref:`gsg`
+* :ref:`overview_dev`
+* :ref:`scenario-config-options`
+* :ref:`acrn_configuration_tool`
+* :ref:`board_inspector_tool`
+* :ref:`acrn_configurator_tool`
+* :ref:`upgrading_configuration`
+* :ref:`user_vm_guide`
+* :ref:`acrn-dm_parameters-and-launch-script`
+
+
+Here are some of the high-level design documents that were updated since the
+v2.7 release:
+
+.. rst-class:: rst-columns2
+
+* :ref:`hld-overview`
+* :ref:`atkbdc_virt_hld`
+* :ref:`hld-devicemodel`
+* :ref:`hld-emulated-devices`
+* :ref:`hld-power-management`
+* :ref:`hld-security`
+* :ref:`hld-virtio-devices`
+* :ref:`hostbridge_virt_hld`
+* :ref:`hv-cpu-virt`
+* :ref:`hv-device-passthrough`
+* :ref:`hv-hypercall`
+* :ref:`interrupt-hld`
+* :ref:`hld-io-emulation`
+* :ref:`IOC_virtualization_hld`
+* :ref:`virtual-interrupt-hld`
+* :ref:`ivshmem-hld`
+* :ref:`system-timer-hld`
+* :ref:`uart_virtualization`
+* :ref:`virtio-blk`
+* :ref:`virtio-console`
+* :ref:`virtio-input`
+* :ref:`virtio-net`
+* :ref:`vuart_virtualization`
+* :ref:`l1tf`
+* :ref:`trusty_tee`
+
 We've also made edits throughout the documentation to improve clarity,
-formatting, and presentation.
+formatting, and presentation.  We started updating feature enabling tutorials
+based on the new Configurator, and will continue updating them after the v3.0
+release (in the `latest documentation <https://docs.projectacrn.org>`_).
+
+.. rst-class:: rst-columns2
+
+* :ref:`develop_acrn`
+* :ref:`doc_guidelines`
+* :ref:`acrn_doc`
+* :ref:`hardware`
+* :ref:`acrn_on_qemu`
+* :ref:`cpu_sharing`
+* :ref:`enable_ivshmem`
+* :ref:`enable-s5`
+* :ref:`gpu-passthrough`
+* :ref:`inter-vm_communication`
+* :ref:`rdt_configuration`
+* :ref:`rt_performance_tuning`
+* :ref:`rt_perf_tips_rtvm`
+* :ref:`using_hybrid_mode_on_nuc`
+* :ref:`using_ubuntu_as_user_vm`
+* :ref:`using_windows_as_uos`
+* :ref:`vuart_config`
+* :ref:`acrnshell`
+* :ref:`hv-parameters`
+* :ref:`debian_packaging`
+* :ref:`acrnctl`
+
+Some obsolete documents were removed from the v3.0 documentation, but can still
+be found in the archived versions of previous release documentation, such as for
+`v2.7 <https://docs.projectacrn.org/2.7/>`_..
 
 
 Fixed Issues Details
 ********************
 
 .. comment example item
-   - :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
+   - :acrn-issue:`5626` - Host Call Trace once detected
 
 - :acrn-issue:`7712` - [config_tool] Make Basic tab the default view
 - :acrn-issue:`7657` - [acrn-configuration-tool] Failed to build acrn with make BOARD=xx SCENARIO=shared RELEASE=y
@@ -237,16 +388,15 @@ Fixed Issues Details
 - :acrn-issue:`7084` - config_tools:  append passthrough gpu bdf in hexadecimal format
 - :acrn-issue:`7077` - config-tools: find pci hole based on all pci hostbridge
 - :acrn-issue:`7058` - config_tools: board_inspector cannot generate compliable xml for Qemu
-- :acrn-issue:`7045` - [ICX-D] Segmentation fault when passthrough TSN to post_launched VM with enable_ptm option
+- :acrn-issue:`7045` - Segmentation fault when passthrough TSN to post_launched VM with enable_ptm option
 - :acrn-issue:`7022` - ACRN debian package not complete when source is not cloned to standard folder
 - :acrn-issue:`7018` - No expected exception generated on some platform.
-
 
 
 Known Issues
 ************
 
 - :acrn-issue:`6631` - [KATA] Kata support is broken since v2.7
-- :acrn-issue:`6978` - [TGL] openstack failed since ACRN v2.7
-- :acrn-issue:`7827` - [Configurator]Pre_launched standard VMs cannot share CPU with Service VM
+- :acrn-issue:`6978` - openstack failed since ACRN v2.7
+- :acrn-issue:`7827` - [Configurator] Pre_launched standard VMs cannot share CPU with Service VM
 - :acrn-issue:`7831` - [Configurator] Need to save twice to generate vUART and IVSHMEM addresses
