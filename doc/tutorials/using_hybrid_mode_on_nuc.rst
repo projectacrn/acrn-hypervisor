@@ -10,13 +10,13 @@ launched by a Device Model in the Service VM.
 .. figure:: images/ACRN-Hybrid.png
    :align: center
    :width: 600px
-   :name: hybrid_scenario_on_nuc
+   :name: hybrid_scenario_on_Vecow
 
-   The Hybrid Scenario on the Intel NUC
+   The Hybrid Scenario on the Vecow SPC-7100
 
 The following guidelines
-describe how to set up the ACRN hypervisor hybrid scenario on the Intel NUC,
-as shown in :numref:`hybrid_scenario_on_nuc`.
+describe how to set up the ACRN hypervisor hybrid scenario on the Vecow SPC-7100,
+as shown in :numref:`hybrid_scenario_on_Vecow`.
 
 .. note::
 
@@ -32,10 +32,10 @@ as shown in :numref:`hybrid_scenario_on_nuc`.
 Set-up base installation
 ************************
 
-- Use the `Intel NUC Kit NUC11TNBi5 <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_.
+- Use the `Vecow SPC-7100 <https://marketplace.intel.com/s/offering/a5b3b000000PReMAAW/vecow-spc7100-series-11th-gen-intel-core-i7i5i3-processor-ultracompact-f>`_.
 - Connect to the serial port as described in :ref:`Connecting to the serial port <connect_serial_port>`.
-- Install Ubuntu 18.04 on your SATA device or on the NVME disk of your
-  Intel NUC.
+- Install Ubuntu 20.04 on your SATA device or on the NVME disk of your
+  Intel Vecow.
 
 .. rst-class:: numbered-step
 
@@ -58,9 +58,9 @@ Set-up ACRN on your device
 **************************
 
 - Follow the instructions in :Ref:`gsg` to build ACRN using the
-  ``hybrid`` scenario. Here is the build command-line for the `Intel NUC Kit NUC11TNBi5 <https://ark.intel.com/content/www/us/en/ark/products/205596/intel-nuc-11-pro-board-nuc11tnbi5.html>`_::
+  ``hybrid`` scenario. Here is the build command-line for the `Vecow SPC-7100 <https://marketplace.intel.com/s/offering/a5b3b000000PReMAAW/vecow-spc7100-series-11th-gen-intel-core-i7i5i3-processor-ultracompact-f>`_::
 
-   make clean && make BOARD=nuc11tnbi5 SCENARIO=hybrid
+   make clean && make BOARD=tgl-vecow-spc-7100-Corei7 SCENARIO=hybrid
 
 - Install the ACRN hypervisor and tools
 
@@ -112,12 +112,12 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
 
    .. note:: The module ``/boot/zephyr.elf`` is the VM0 (Zephyr) kernel file.
       The param ``xxxxxx`` is VM0's kernel file tag and must exactly match the
-      ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``
+      ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/tgl-vecow-spc-7100-Corei7/hybrid.xml``
       file. The multiboot module ``/boot/bzImage`` is the Service VM kernel
       file. The param ``yyyyyy`` is the bzImage tag and must exactly match the
-      ``kern_mod`` of VM1 in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``
+      ``kern_mod`` of VM1 in the ``misc/config_tools/data/tgl-vecow-spc-7100-Corei7/hybrid.xml``
       file. The kernel command-line arguments used to boot the Service VM are
-      ``bootargs`` of VM1 in the ``misc/config_tools/data/nuc11tnbi5/hybrid.xml``.
+      ``bootargs`` of VM1 in the ``misc/config_tools/data/tgl-vecow-spc-7100-Corei7/hybrid.xml``.
       The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0 (Zephyr).
       The parameter ``ACPI_VM0`` is VM0's ACPI tag and should not be modified.
 

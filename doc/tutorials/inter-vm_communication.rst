@@ -86,6 +86,7 @@ background introductions).
    - Applications need to implement protocols such as a handshake, data transfer, and data
      integrity.
 
+.. _inter-vm_communication_ivshmem_app:
 
 How to implement an Ivshmem application on ACRN
 ***********************************************

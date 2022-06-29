@@ -101,20 +101,21 @@ ACRN offers three types of VMs:
 
 * **Post-launched User VMs**: These VMs typically share hardware resources via
   the Service VM and Device Model. They can also access hardware devices
-  directly if they've been configured as passthrough devices. Unlike
-  pre-launched VMs, you can change the configuration at runtime. They are
-  well-suited for non-safety applications, including human machine interface
-  (HMI), artificial intelligence (AI), computer vision, real-time, and others.
+  directly if they've been configured as passthrough devices. The configuration
+  of a post-launched VM can be static (defined at build time) or dynamic
+  (defined at runtime without rebuilding ACRN). They are well-suited for
+  non-safety applications, including human machine interface (HMI), artificial
+  intelligence (AI), computer vision, real-time, and others.
 
 The names "pre-launched" and "post-launched" refer to the boot order of these
 VMs. The ACRN hypervisor launches the pre-launched VMs first, then launches the
 Service VM. The Service VM launches the post-launched VMs.
 
-Due to the static configuration of pre-launched VMs, they are recommended only
-if you need complete isolation from the rest of the system. Most use cases can
-meet their requirements without pre-launched VMs. Even if your application has
-stringent real-time requirements, start by testing the application on a
-post-launched VM before considering a pre-launched VM.
+Pre-launched VMs are recommended only if you need complete isolation from the
+rest of the system. Most use cases can meet their requirements without
+pre-launched VMs. Even if your application has stringent real-time requirements,
+start by testing the application on a post-launched VM before considering a
+pre-launched VM.
 
 Scenario Types
 ---------------

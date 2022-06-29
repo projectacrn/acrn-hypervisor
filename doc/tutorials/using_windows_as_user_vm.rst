@@ -1,10 +1,10 @@
 .. _using_windows_as_uos:
 .. _using_windows_as_user_vm:
 
-Launch Windows as the Guest VM on ACRN
-######################################
+Run Windows as the User VM OS
+#############################
 
-This tutorial describes how to launch Windows as a Guest (WaaG) VM on the
+This tutorial describes how to launch Windows as a Guest (WaaG) User VM on the
 ACRN hypervisor.
 
 

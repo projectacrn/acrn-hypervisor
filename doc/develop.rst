@@ -23,6 +23,8 @@ User VM Tutorials
 .. toctree::
    :maxdepth: 1
 
+   tutorials/user_vm_guide
+   tutorials/using_ubuntu_as_user_vm
    tutorials/using_windows_as_user_vm
    tutorials/using_xenomai_as_user_vm
    tutorials/using_vxworks_as_user_vm
@@ -59,7 +61,6 @@ Advanced Features
 
    tutorials/vuart_configuration
    tutorials/rdt_configuration
-   tutorials/vcat_configuration
    tutorials/waag-secure-boot
    tutorials/enable_s5
    tutorials/cpu_sharing
@@ -67,7 +68,6 @@ Advanced Features
    tutorials/gpu-passthru
    tutorials/run_kata_containers
    tutorials/rtvm_workload_design_guideline
-   tutorials/setup_openstack_libvirt
    tutorials/acrn_on_qemu
    tutorials/using_grub
    tutorials/acrn-secure-boot-with-grub
