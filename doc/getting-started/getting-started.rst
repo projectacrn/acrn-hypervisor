@@ -384,7 +384,7 @@ Generate a Board Configuration File
 Generate a Scenario Configuration File and Launch Script
 ********************************************************
 
-In this step, you will use the `ACRN Configurator
+In this step, you will download, install, and use the `ACRN Configurator
 <https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb>`__
 to generate a scenario configuration file and launch script.
 
@@ -395,11 +395,26 @@ their attributes, and the resources they have access to.
 A **launch script** is a shell script that is used to configure and create a
 post-launched User VM. Each User VM has its own launch script.
 
-#. On the development computer, install the ACRN Configurator:
+#. On the development computer, download and install the ACRN Configurator
+   Debian package:
 
    .. code-block:: bash
 
-      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator*.deb
+      cd ~/acrn-work
+      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb
+
+   If you already have a previous version of the acrn-configurator installed,
+   you should first remove it:
+
+   .. code-block:: bash
+
+      sudo apt purge acrn-configurator
+
+   Then you can install this new version:
+
+   .. code-block:: bash
+
+      sudo apt install -y ./acrn-configurator-3.0.deb
 
 #. Launch the ACRN Configurator:
 
