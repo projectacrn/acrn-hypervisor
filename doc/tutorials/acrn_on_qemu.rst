@@ -12,7 +12,7 @@ configuration.
 This setup was tested with the following configuration:
 
 - ACRN hypervisor: ``v3.0`` tag
-- ACRN kernel: ``v3.0`` tag
+- ACRN kernel: ``acrn-v3.0`` tag
 - QEMU emulator version: 4.2.1
 - Host OS: Ubuntu 20.04
 - Service VM/User VM OS: Ubuntu 20.04
@@ -175,9 +175,9 @@ Install ACRN Hypervisor
       sudo cp build/hypervisor/acrn.32.out /boot
 
 #. Clone and configure the Service VM kernel repository following the
-   instructions in the :ref:`gsg` and using the ``v3.0`` tag. The User VM (L2
+   instructions in the :ref:`gsg` and using the ``acrn-v3.0`` tag. The User VM (L2
    guest) uses the ``virtio-blk`` driver to mount the rootfs. This driver is
-   included in the default kernel configuration as of the ``v3.0`` tag.
+   included in the default kernel configuration as of the ``acrn-v3.0`` tag.
 
 #. Update GRUB to boot the ACRN hypervisor and load the Service VM kernel.
    Append the following configuration to the :file:`/etc/grub.d/40_custom`.
