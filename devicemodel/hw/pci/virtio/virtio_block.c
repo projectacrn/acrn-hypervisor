@@ -441,8 +441,12 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	bool dummy_bctxt;
 	char bident[16];
 	struct blockif_ctxt *bctxt;
+	char *opts_tmp = NULL;
+	char *opts_start = NULL;
+	char *opt = NULL;
 	u_char digest[16];
 	struct virtio_blk *blk;
+	bool use_iothread;
 	int i;
 	pthread_mutexattr_t attr;
 	int rc;
@@ -450,6 +454,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	bctxt = NULL;
 	/* Assume the bctxt is valid, until identified otherwise */
 	dummy_bctxt = false;
+	use_iothread = false;
 
 	if (opts == NULL) {
 		pr_err("virtio_blk: backing device required\n");
@@ -468,15 +473,28 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * If "nodisk" keyword is found in opts, this is not a valid backend
 	 * file. Skip blockif_open and set dummy bctxt in virtio_blk struct
 	 */
+
+	opts_start = opts_tmp = strdup(opts);
+	if (!opts_start) {
+		WPRINTF(("%s: strdup failed\n", __func__));
+		return -1;
+	}
 	if (strstr(opts, "nodisk") != NULL) {
 		dummy_bctxt = true;
-	} else {
-		bctxt = blockif_open(opts, bident);
+	} else if ((opt = strsep(&opts_tmp, ",")) != NULL) {
+		if (strcmp("iothread", opt) == 0) {
+			use_iothread = true;
+		} else {
+			opts_tmp = opts_start;
+		}
+		bctxt = blockif_open(opts_tmp, bident);
 		if (bctxt == NULL) {
 			pr_err("Could not open backing file");
+			free(opts_start);
 			return -1;
 		}
 	}
+	free(opts_start);
 
 
 	blk = calloc(1, sizeof(struct virtio_blk));
@@ -514,6 +532,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	/* init virtio struct and virtqueues */
 	virtio_linkup(&blk->base, &virtio_blk_ops, blk, dev, &blk->vq, BACKEND_VBSU);
+	blk->base.iothread = use_iothread;
 	blk->base.mtx = &blk->mtx;
 
 	blk->vq.qsize = VIRTIO_BLK_RINGSZ;
