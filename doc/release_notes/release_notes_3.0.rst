@@ -53,8 +53,9 @@ Redesigned ACRN Configuration
   the `ACRN users mailing list <https://lists.projectacrn.org/g/acrn-users>`_.
 
   We've also simplified installation of the Configurator by providing a Debian
-  package that you can download and install.  See the :ref:`gsg` for more
-  information.
+  package that you can download from the `ACRN v3.0 tag assets
+  <https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb>`_
+  and install.  See the :ref:`gsg` for more information.
 
 Improved Board Inspector Collection and Reporting
   You run the ACRN Board Inspector tool to collect information about your target
