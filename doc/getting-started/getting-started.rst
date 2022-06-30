@@ -567,6 +567,7 @@ Build ACRN
 
       .. code-block:: bash
 
+         cd ~/acrn-work/acrn-kernel
          make distclean
 
    #. Build the ACRN kernel:
@@ -605,9 +606,6 @@ Build ACRN
          cp ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh "$disk"/
          cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
          sync && sudo umount "$disk"
-
-      Even though our sample default scenario defines six User VMs, we're only
-      going to launch one of them, so we'll only need the one launch script.
 
    #. Insert the USB disk you just used into the target system and run these
       commands to copy the files locally:
