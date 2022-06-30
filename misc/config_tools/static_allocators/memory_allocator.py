@@ -84,7 +84,7 @@ def alloc_hpa_region(ram_range_info, mem_info_list, vm_node_index_list):
                 if hpa_start != 0:
                     if mem_start < hpa_start and mem_start + mem_size > hpa_start + hpa_size:
                         ram_range_info[mem_start] = hpa_start - mem_start
-                        ram_range_info[hpa_start - mem_start] = mem_start + mem_size - hpa_start - hpa_size
+                        ram_range_info[hpa_start + hpa_size] = mem_start + mem_size - hpa_start - hpa_size
                     elif mem_start == hpa_start and mem_start + mem_size > hpa_start + hpa_size:
                         del ram_range_info[mem_start]
                         ram_range_info[hpa_start + hpa_size] = mem_start + mem_size - hpa_start - hpa_size
