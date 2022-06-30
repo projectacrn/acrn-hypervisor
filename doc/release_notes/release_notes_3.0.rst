@@ -1,6 +1,6 @@
 .. _release_notes_3.0:
 
-ACRN v3.0 (Jun 2002)
+ACRN v3.0 (Jun 2022)
 ####################
 
 We are pleased to announce the release of the Project ACRN hypervisor
