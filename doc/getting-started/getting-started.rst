@@ -135,7 +135,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo pip3 install lxml xmlschema defusedxml tqdm
+      sudo pip3 install "elementpath<=2.5.0" lxml xmlschema defusedxml tqdm
 
 #. Create a working directory:
 
@@ -384,8 +384,9 @@ Generate a Board Configuration File
 Generate a Scenario Configuration File and Launch Script
 ********************************************************
 
-In this step, you will use the **ACRN Configurator** to generate a scenario
-configuration file and launch script.
+In this step, you will use the `ACRN Configurator
+<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb>`__
+to generate a scenario configuration file and launch script.
 
 A **scenario configuration file** is an XML file that holds the parameters of
 a specific ACRN configuration, such as the number of VMs that can be run,
@@ -398,7 +399,7 @@ post-launched User VM. Each User VM has its own launch script.
 
    .. code-block:: bash
 
-      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator_*_amd64.deb 
+      sudo apt install -y ~/acrn-work/acrn-hypervisor/build/acrn-configurator*.deb
 
 #. Launch the ACRN Configurator:
 
@@ -537,7 +538,7 @@ Build ACRN
 
       cd ./build
       ls *.deb
-         acrn-my_board-MyConfiguration-3.0-acrn-*.deb 
+         acrn-my_board-MyConfiguration*.deb
 
    The Debian package contains the ACRN hypervisor and tools to ease installing
    ACRN on the target. The Debian file name contains the board name (``my_board``) 
@@ -584,9 +585,9 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration-3.0-acrn-*.deb "$disk"/ 
+         cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb "$disk"/
          cp ~/acrn-work/*acrn-service-vm*.deb "$disk"/
-         cp ~/acrn-work/my_board/output/launch_user_vm_id1.sh "$disk"/
+         cp ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh "$disk"/
          cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
          sync && sudo umount "$disk"
 
@@ -599,7 +600,7 @@ Build ACRN
       .. code-block:: bash
 
          disk="/media/$USER/"$(ls /media/$USER)
-         cp "$disk"/acrn-my_board-MyConfiguration-3.0-acrn-*.deb ~/acrn-work 
+         cp "$disk"/acrn-my_board-MyConfiguration*.deb ~/acrn-work
          cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
          cp "$disk"/launch_user_vm_id1.sh ~/acrn-work
          sudo cp "$disk"/iasl /usr/sbin/
@@ -618,7 +619,7 @@ Install ACRN
    .. code-block:: bash
 
       cd ~/acrn-work
-      sudo apt install ./acrn-my_board-MyConfiguration-3.0-acrn-*.deb 
+      sudo apt install ./acrn-my_board-MyConfiguration*.deb
       sudo apt install ./*acrn-service-vm*.deb
 
 #. Reboot the system:
