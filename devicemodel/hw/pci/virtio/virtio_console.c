@@ -746,6 +746,7 @@ virtio_console_config_backend(struct virtio_console_backend *be)
 		saved_tio = tio;
 		cfmakeraw(&tio);
 		tio.c_cflag |= CLOCAL;
+		tio.c_oflag |= OPOST;
 		tcsetattr(fd, TCSANOW, &tio);
 
 		if (be->be_type == VIRTIO_CONSOLE_BE_STDIO) {
