@@ -291,7 +291,7 @@ export default {
                         label: () => h('span', {
                             class: {
                                 genFormLabel: true,
-                                genFormItemRequired: props.required,
+                                genFormItemRequired: props.required && props.schema['ui:widget'] !== 'b-form-checkbox' && !props.uiProps.enumOptions,
                             },
                         }, [
                             ...miniDescriptionVNode ? [miniDescriptionVNode] : [],
