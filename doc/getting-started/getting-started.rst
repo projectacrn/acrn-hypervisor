@@ -492,7 +492,7 @@ post-launched User VM. Each User VM has its own launch script.
       log in to the User VM later in this guide.
 
    #. For **Virtio block device**, click **+** and enter
-      ``~/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
+      ``/home/acrn/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
       in this guide, you will save the ISO file to that directory.
 
@@ -603,6 +603,7 @@ Build ACRN
          cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
          cp "$disk"/launch_user_vm_id1.sh ~/acrn-work
          sudo cp "$disk"/iasl /usr/sbin/
+         sudo chmod a+x /usr/sbin/iasl
          sync && sudo umount "$disk"
 
 .. _gsg-install-acrn:
