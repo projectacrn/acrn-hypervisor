@@ -14,7 +14,7 @@
     </xs:annotation>
   </xs:assert>
 
-  <xs:assert test="every $io_port in /acrn-config//endpoint/io_port satisfies
+  <xs:assert test="every $io_port in /acrn-config//endpoint[vm_name != '']/io_port satisfies
                    count(//endpoint[./vm_name=$io_port/ancestor::endpoint/vm_name and io_port=$io_port]) = 1">
     <xs:annotation acrn:severity="error" acrn:report-on="$io_port">
       <xs:documentation>VM "{$io_port/ancestor::endpoint/vm_name}" may not duplicate use of port "{$io_port}."</xs:documentation>
