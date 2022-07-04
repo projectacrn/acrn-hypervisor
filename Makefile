@@ -97,7 +97,7 @@ all: hypervisor devicemodel tools
 	  python3 misc/packaging/gen_acrn_deb.py acrn_all $(ROOT_OUT) --version=$(FULL_VERSION) --board_name="$$DEB_BOARD" --scenario="$$DEB_SCENARIO"; \
 	fi
 
-HV_MAKEOPTS := -C $(T)/hypervisor BOARD=$(BOARD) SCENARIO=$(SCENARIO) HV_OBJDIR=$(HV_OUT) RELEASE=$(RELEASE)
+HV_MAKEOPTS := -C $(T)/hypervisor BOARD=$(BOARD) SCENARIO=$(SCENARIO) HV_OBJDIR=$(HV_OUT) RELEASE=$(RELEASE) ASL_COMPILER=$(ASL_COMPILER)
 
 board_inspector:
 	@if [ -x "$(DPKG_BIN)" ]; then \
