@@ -17,7 +17,10 @@
             Guest virtio input device unique identifier:
           </b-col>
           <b-col md="4">
-            <b-form-input v-model="input.id"/>
+            <b-form-input :state="validateId(input.id)" v-model="input.id" placeholder="An arbitrary-long string with letters, digits, underscores or dashes."/>
+            <b-form-invalid-feedback>
+                An arbitrary-long string with letters, digits, underscores or dashes.
+            </b-form-invalid-feedback>
           </b-col>
         </b-row>
       </div>
@@ -67,6 +70,7 @@ export default {
   },
   data() {
     return {
+      InputConfiguration: this.rootSchema.definitions['VirtioInputConfiguration'],
       BackendDeviceFileType: this.rootSchema.definitions['VirtioInputConfiguration']['properties']['backend_device_file']['enum'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
     };
@@ -89,6 +93,10 @@ export default {
     }
   },
   methods: {
+    validateId(value) {
+      var regexp = new RegExp(this.InputConfiguration.properties.id.pattern);
+      return (value != null) && regexp.test(value);
+    },
     removeVirtioInput(index) {
       this.defaultVal.splice(index, 1);
     },
