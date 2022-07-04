@@ -121,4 +121,7 @@ int lapicid_from_pcpuid(int pcpu_id);
 int lapic_to_pcpu(int lapic);
 
 int parse_madt(void);
+int acrn_parse_iasl(char *arg);
+int get_iasl_compiler(void);
+
 #endif /* _ACPI_H_ */
