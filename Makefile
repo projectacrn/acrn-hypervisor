@@ -86,6 +86,7 @@ ASL_COMPILER ?= $(shell which iasl)
 DPKG_BIN ?= $(shell which dpkg)
 YARN_BIN ?= $(shell which yarn)
 CARGO_BIN ?= $(shell which cargo)
+IASL_MIN_VER = "20190703"
 
 .PHONY: all hypervisor devicemodel tools life_mngr doc
 all: hypervisor devicemodel tools
@@ -132,7 +133,7 @@ hvapplydiffconfig:
 	@$(MAKE) applydiffconfig $(HV_MAKEOPTS) PATCH=$(abspath $(PATCH))
 
 devicemodel: tools
-	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG) TOOLS_OUT=$(TOOLS_OUT) RELEASE=$(RELEASE)
+	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG) TOOLS_OUT=$(TOOLS_OUT) RELEASE=$(RELEASE) IASL_MIN_VER=$(IASL_MIN_VER)
 
 tools:
 	mkdir -p $(TOOLS_OUT)

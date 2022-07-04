@@ -96,6 +96,9 @@
 #define	ASL_TEMPLATE	"dm.XXXXXXX"
 #define ASL_SUFFIX	".aml"
 
+#define ASL_VER_PATTERN	"ASL+ Optimizing Compiler/Disassembler version "
+#define ASL_VER_STR_LEN	256
+
 static char asl_compiler[MAXPATHLEN] = {0};
 
 uint64_t audio_nhlt_len = 0;
@@ -1148,6 +1151,39 @@ acrn_parse_iasl(char *arg)
 		return 0;
 	} else
 		return -1;
+}
+
+int
+check_iasl_version(void)
+{
+	int ret = -1;
+	static char cmd_iasl_ver[MAXPATHLEN + 10];
+	static char buf[ASL_VER_STR_LEN];
+	char *ver_str, *cp;
+	uint32_t ver, min_ver;
+
+	snprintf(cmd_iasl_ver, sizeof(cmd_iasl_ver),
+		 "%s -v", asl_compiler);
+	FILE *fd_iasl_ver = popen(cmd_iasl_ver, "r");
+
+	if (fd_iasl_ver != NULL)
+	{
+		while (fgets(buf, ASL_VER_STR_LEN, fd_iasl_ver) != NULL) {
+			if (strstr(buf, ASL_VER_PATTERN)) {
+				ver_str = buf + strlen(ASL_VER_PATTERN);
+				pr_info("iasl version: %s", ver_str);
+
+				if ((!dm_strtoui(ver_str, &cp, 10, &ver)) &&
+					(!dm_strtoui(IASL_MIN_VER, &cp, 10, &min_ver)) &&
+					(ver >= min_ver)) {
+					ret = 0;
+				}
+			}
+		}
+
+		pclose(fd_iasl_ver);
+	}
+	return ret;
 }
 
 int
