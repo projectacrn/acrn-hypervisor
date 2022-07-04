@@ -17,7 +17,10 @@
             <label>Network interface name: </label>
           </b-col>
           <b-col md="4">
-            <b-form-input v-model="network.interface_name"/>
+            <b-form-input :state="validateInterfaceName(network.interface_name)" v-model="network.interface_name" placeholder="An arbitrary-long string with letters, digits, underscores or dashes."/>
+            <b-form-invalid-feedback>
+                An arbitrary-long string with letters, digits, underscores or dashes.
+            </b-form-invalid-feedback>
           </b-col>
         </b-row>
       </div>
@@ -67,6 +70,7 @@ export default {
   },
   data() {
     return {
+      NetworkConfiguration: this.rootSchema.definitions['VirtioNetworkConfiguration'],
       NetworkFrameworkType: this.rootSchema.definitions['VirtioNetworkFrameworkType']['enum'],
       NetworkFrameworkDefault: this.rootSchema.definitions['VirtioNetworkConfiguration']['properties']['virtio_framework']['default'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
@@ -90,6 +94,10 @@ export default {
     }
   },
   methods: {
+    validateInterfaceName(value) {
+      var regexp = new RegExp(this.NetworkConfiguration.properties.interface_name.pattern);
+      return (value != null) && regexp.test(value);
+    },
     removeVirtioNetwork(index) {
       this.defaultVal.splice(index, 1);
     },
