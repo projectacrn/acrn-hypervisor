@@ -1034,6 +1034,13 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+	if (check_iasl_version() != 0) {
+		pr_err("Please install iasl tool with version >= %s from https://www.acpica.org/downloads, "
+			"and provide the path to iasl (by using --iasl) if it's not on the PATH \n",
+			IASL_MIN_VER);
+		exit(1);
+	}
+
 	argc -= optind;
 	argv += optind;
 
