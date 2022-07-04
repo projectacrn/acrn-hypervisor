@@ -218,20 +218,21 @@ def exec_command(cmd):
     return rc
 
 
-def check_iasl(iasl_path):
+def check_iasl(iasl_path, iasl_min_ver):
     '''
     check iasl installed
     :return: True if iasl installed.
     '''
     try:
         p_version = 'ASL+ Optimizing Compiler/Disassembler version'
-        min_version = 20190703
+        min_version = int(iasl_min_ver)
         output = subprocess.check_output([iasl_path, '-v']).decode('utf8')
         if p_version in output:
             try:
                 for line in output.split('\n'):
                     if line.find(p_version) >= 0:
                         version = int(line.split(p_version)[1].strip())
+                        print('iasl version is {}'.format(version))
                         if version >= min_version:
                             return True
             except:
@@ -269,8 +270,9 @@ def main(args):
     if os.path.isdir(DEST_ACPI_BIN_PATH):
         shutil.rmtree(DEST_ACPI_BIN_PATH)
 
-    if not check_iasl(args.iasl_path):
-        print("Please install iasl tool with version >= 20190703 from https://www.acpica.org/downloads before ACPI generation.")
+    if not check_iasl(args.iasl_path, args.iasl_min_ver):
+        print('Please install iasl tool with version >= {} from https://www.acpica.org/downloads '
+              'before ACPI generation.'.format(args.iasl_min_ver))
         return 1
 
     for config in os.listdir(DEST_ACPI_PATH):
@@ -288,12 +290,14 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage="python3 bin_gen.py --board [board] --scenario [scenario]"
                                            " --iasl_path [the path to the iasl compiler]"
+                                           " --iasl_min_ver [the minimum iasl version]"
                                            "[ --out [output dir of acpi ASL code]]",
                                      description="the tool to generate ACPI binary for Pre-launched VMs")
     parser.add_argument("--board", required=True, help="the XML file summarizing characteristics of the target board")
     parser.add_argument("--scenario", required=True, help="the XML file specifying the scenario to be set up")
     parser.add_argument("--asl", default=None, help="the input folder to store the ACPI ASL code. ")
     parser.add_argument("--iasl_path", default=None, help="the path to the iasl compiler.")
+    parser.add_argument("--iasl_min_ver", default=None, help="the minimum iasl version.")
     parser.add_argument("--out", default=None, help="the output folder to store the ACPI binary code. "
                                                     "If not specified, the path for the binary code is"
                                                     "build/hypervisor/acpi/")
