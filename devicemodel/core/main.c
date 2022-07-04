@@ -146,6 +146,7 @@ usage(int code)
 		"       %*s [-k kernel_image_path]\n"
 		"       %*s [-l lpc] [-m mem] [-r ramdisk_image_path]\n"
 		"       %*s [-s pci] [--ovmf ovmf_file_path]\n"
+		"       %*s [--iasl iasl_compiler_path]\n"
 		"       %*s [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--acpidev_pt HID] [--mmiodev_pt MMIO_Regions]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval]\n"
@@ -162,6 +163,7 @@ usage(int code)
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
 		"       -v: version\n"
 		"       --ovmf: ovmf file path\n"
+		"       --iasl: iasl compiler path\n"
 		"       --ssram: Congfiure Software SRAM parameters\n"
 		"       --cpu_affinity: list of Service VM vCPUs assigned to this User VM, the vCPUs are"
 		"	     identified by their local APIC IDs.\n"
@@ -185,7 +187,7 @@ usage(int code)
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
-		(int)strnlen(progname, PATH_MAX), "");
+		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "");
 
 	exit(code);
 }
@@ -762,6 +764,7 @@ sig_handler_term(int signo)
 enum {
 	CMD_OPT_VSBL = 1000,
 	CMD_OPT_OVMF,
+	CMD_OPT_IASL,
 	CMD_OPT_CPU_AFFINITY,
 	CMD_OPT_PART_INFO,
 	CMD_OPT_TRUSTY_ENABLE,
@@ -806,6 +809,7 @@ static struct option long_options[] = {
 #endif
 	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
 	{"ovmf",		required_argument,	0, CMD_OPT_OVMF},
+	{"iasl",		required_argument,	0, CMD_OPT_IASL},
 	{"cpu_affinity",	required_argument,	0, CMD_OPT_CPU_AFFINITY},
 	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
 	{"enable_trusty",	no_argument,		0,
@@ -926,6 +930,10 @@ main(int argc, char *argv[])
 				errx(EX_USAGE, "invalid ovmf param %s", optarg);
 			skip_pci_mem64bar_workaround = true;
 			break;
+		case CMD_OPT_IASL:
+			if (acrn_parse_iasl(optarg) != 0)
+				errx(EX_USAGE, "invalid iasl param %s", optarg);
+			break;
 		case CMD_OPT_CPU_AFFINITY:
 			if (acrn_parse_cpu_affinity(optarg) != 0)
 				errx(EX_USAGE, "invalid pcpu param %s", optarg);
@@ -1020,6 +1028,12 @@ main(int argc, char *argv[])
 			usage(1);
 		}
 	}
+
+	if (get_iasl_compiler() != 0) {
+		pr_err("Cannot find Intel ACPI ASL compiler tool \"iasl\".\n");
+		exit(1);
+	}
+
 	argc -= optind;
 	argv += optind;
 

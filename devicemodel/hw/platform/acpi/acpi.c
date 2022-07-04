@@ -95,9 +95,8 @@
 
 #define	ASL_TEMPLATE	"dm.XXXXXXX"
 #define ASL_SUFFIX	".aml"
-#ifndef ASL_COMPILER
-#define ASL_COMPILER	"/usr/sbin/iasl"
-#endif
+
+static char asl_compiler[MAXPATHLEN] = {0};
 
 uint64_t audio_nhlt_len = 0;
 
@@ -972,7 +971,7 @@ basl_compile(struct vmctx *ctx,
 		uint64_t offset)
 {
 	struct basl_fio io[2];
-	static char iaslbuf[3*MAXPATHLEN + 10];
+	static char iaslbuf[4*MAXPATHLEN + 10];
 	int err;
 
 	err = basl_start(&io[0], &io[1]);
@@ -990,12 +989,12 @@ basl_compile(struct vmctx *ctx,
 			if (basl_verbose_iasl)
 				snprintf(iaslbuf, sizeof(iaslbuf),
 					 "%s -p %s %s",
-					 ASL_COMPILER,
+					 asl_compiler,
 					 io[1].f_name, io[0].f_name);
 			else
 				snprintf(iaslbuf, sizeof(iaslbuf),
 					 "/bin/sh -c \"%s -p %s %s\" 1> /dev/null",
-					 ASL_COMPILER,
+					 asl_compiler,
 					 io[1].f_name, io[0].f_name);
 
 			err = system(iaslbuf);
@@ -1108,6 +1107,59 @@ uint32_t
 get_acpi_table_length(void)
 {
 	return ACPI_LENGTH;
+}
+
+int
+get_default_iasl_compiler(void)
+{
+	int ret = -1;
+	char c;
+	int i = 0;
+	FILE *fd_iasl = popen("which iasl", "r");
+
+	if (fd_iasl != NULL)
+	{
+		while (i < (MAXPATHLEN - 1)) {
+
+			c = fgetc(fd_iasl);
+			if ((c == EOF) || (c == '\n') || (c == '\r') || (c == 0)) {
+				break;
+			}
+
+			asl_compiler[i++] = c;
+		}
+		if (strlen(asl_compiler) > 0) {
+			pr_info("Found default iasl path: %s\n", asl_compiler);
+			ret = 0;
+		}
+		pclose(fd_iasl);
+	}
+	return ret;
+}
+
+int
+acrn_parse_iasl(char *arg)
+{
+	size_t len = strnlen(arg, MAXPATHLEN);
+
+	if (len < MAXPATHLEN) {
+		strncpy(asl_compiler, arg, len + 1);
+		pr_info("iasl path is given by --iasl at run time: %s\n", asl_compiler);
+		return 0;
+	} else
+		return -1;
+}
+
+int
+get_iasl_compiler(void)
+{
+	int ret = 0;
+
+	if(strlen(asl_compiler) == 0) {
+		ret = get_default_iasl_compiler();
+	}
+
+	return ret;
 }
 
 int

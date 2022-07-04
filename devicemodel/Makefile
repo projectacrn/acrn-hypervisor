@@ -45,10 +45,6 @@ CFLAGS += -I$(SYSROOT)/usr/include/SDL2
 CFLAGS += -I$(SYSROOT)/usr/include/EGL
 CFLAGS += -I$(SYSROOT)/usr/include/GLES2
 
-ifneq (, $(DM_ASL_COMPILER))
-CFLAGS += -DASL_COMPILER=\"$(DM_ASL_COMPILER)\"
-endif
-
 GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
 GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
 
