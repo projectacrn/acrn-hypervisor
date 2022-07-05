@@ -235,6 +235,9 @@ void init_pcpu_post(uint16_t pcpu_id)
 		/* Print Hypervisor Banner */
 		print_hv_banner();
 
+		/* Initialie HPET */
+		hpet_init();
+
 		/* Calibrate TSC Frequency */
 		calibrate_tsc();
 

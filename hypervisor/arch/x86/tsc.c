@@ -10,10 +10,17 @@
 #include <asm/cpu_caps.h>
 #include <asm/io.h>
 #include <asm/tsc.h>
+#include <asm/cpu.h>
+#include <logmsg.h>
+#include <acpi.h>
 
 #define CAL_MS	10U
 
+#define HPET_PERIOD	0x004U
+#define HPET_COUNTER	0x0F0U
+
 static uint32_t tsc_khz;
+static void *hpet_hva;
 
 static uint64_t pit_calibrate_tsc(uint32_t cal_ms_arg)
 {
@@ -65,10 +72,85 @@ static uint64_t pit_calibrate_tsc(uint32_t cal_ms_arg)
 	return (current_tsc / cal_ms) * 1000U;
 }
 
+void hpet_init(void)
+{
+	hpet_hva = parse_hpet();
+}
+
+static inline bool is_hpet_enabled(void)
+{
+	return (hpet_hva != NULL);
+}
+
+static inline uint32_t hpet_read(uint32_t offset)
+{
+	return mmio_read32(hpet_hva + offset);
+}
+
+static inline uint64_t tsc_read_hpet(uint64_t *p)
+{
+	uint64_t current_tsc;
+
+	/* read hpet first */
+	*p = hpet_read(HPET_COUNTER);
+	current_tsc = rdtsc();
+
+	return current_tsc;
+}
+
+static uint64_t hpet_calibrate_tsc(uint32_t cal_ms_arg)
+{
+	uint64_t tsc1, tsc2, hpet1, hpet2;
+	uint64_t delta_tsc, delta_fs;
+	uint64_t rflags, tsc_khz;
+
+	CPU_INT_ALL_DISABLE(&rflags);
+	tsc1 = tsc_read_hpet(&hpet1);
+	pit_calibrate_tsc(cal_ms_arg);
+	tsc2 = tsc_read_hpet(&hpet2);
+	CPU_INT_ALL_RESTORE(rflags);
+
+	/* in case counter wrap happened in the low 32 bits */
+	if (hpet2 <= hpet1) {
+		hpet2 |= (1UL << 32U);
+	}
+	delta_fs = (hpet2 - hpet1) * hpet_read(HPET_PERIOD);
+	delta_tsc = tsc2 - tsc1;
+	/*
+	 * FS_PER_S = 10 ^ 15
+	 *
+	 * tsc_khz = delta_tsc / (delta_fs / FS_PER_S) / 1000UL;
+	 *         = delta_tsc / delta_fs * (10 ^ 12)
+	 *         = (delta_tsc * (10 ^ 6)) / (delta_fs / (10 ^ 6))
+	 */
+	tsc_khz = (delta_tsc * 1000000UL) / (delta_fs / 1000000UL);
+	return tsc_khz * 1000U;
+}
+
+static uint64_t pit_hpet_calibrate_tsc(uint32_t cal_ms_arg, uint64_t tsc_ref_hz)
+{
+	uint64_t tsc_hz, delta;
+
+	if (is_hpet_enabled()) {
+		tsc_hz = hpet_calibrate_tsc(cal_ms_arg);
+	} else {
+		tsc_hz = pit_calibrate_tsc(cal_ms_arg);
+	}
+
+	if (tsc_ref_hz != 0UL) {
+		delta = (tsc_hz * 100UL) / tsc_ref_hz;
+		if ((delta < 95UL) || (delta > 105UL)) {
+			tsc_hz = tsc_ref_hz;
+		}
+	}
+
+	return tsc_hz;
+}
+
 /*
- * Determine TSC frequency via CPUID 0x15 and 0x16.
+ * Determine TSC frequency via CPUID 0x15.
  */
-static uint64_t native_calibrate_tsc(void)
+static uint64_t native_calculate_tsc_cpuid_0x15(void)
 {
 	uint64_t tsc_hz = 0UL;
 	const struct cpuinfo_x86 *cpu_info = get_pcpu_info();
@@ -85,7 +167,18 @@ static uint64_t native_calibrate_tsc(void)
 		}
 	}
 
-	if ((tsc_hz == 0UL) && (cpu_info->cpuid_level >= 0x16U)) {
+	return tsc_hz;
+}
+
+/*
+ * Determine TSC frequency via CPUID 0x16.
+ */
+static uint64_t native_calculate_tsc_cpuid_0x16(void)
+{
+	uint64_t tsc_hz = 0UL;
+	const struct cpuinfo_x86 *cpu_info = get_pcpu_info();
+
+	if (cpu_info->cpuid_level >= 0x16U) {
 		uint32_t eax_base_mhz, ebx_max_mhz, ecx_bus_mhz, edx;
 
 		cpuid_subleaf(0x16U, 0x0U, &eax_base_mhz, &ebx_max_mhz, &ecx_bus_mhz, &edx);
@@ -99,11 +192,12 @@ void calibrate_tsc(void)
 {
 	uint64_t tsc_hz;
 
-	tsc_hz = native_calibrate_tsc();
-	if (tsc_hz == 0U) {
-		tsc_hz = pit_calibrate_tsc(CAL_MS);
+	tsc_hz = native_calculate_tsc_cpuid_0x15();
+	if (tsc_hz == 0UL) {
+		tsc_hz = pit_hpet_calibrate_tsc(CAL_MS, native_calculate_tsc_cpuid_0x16());
 	}
 	tsc_khz = (uint32_t)(tsc_hz / 1000UL);
+	pr_acrnlog("%s: tsc_khz = %ld", __func__, tsc_khz);
 }
 
 uint32_t get_tsc_khz(void)

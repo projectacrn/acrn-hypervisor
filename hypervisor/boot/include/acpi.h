@@ -59,6 +59,7 @@
 #define ACPI_SIG_TPM2            "TPM2" /* Trusted Platform Module hardware interface table */
 #define ACPI_SIG_RTCT            "PTCT" /* Platform Tuning Configuration Table (Real-Time Configuration Table) */
 #define ACPI_SIG_RTCT_V2         "RTCT" /* Platform Tuning Configuration Table (Real-Time Configuration Table) V2 */
+#define ACPI_SIG_HPET            "HPET" /* High Precision Event Timer table */
 
 struct packed_gas {
 	uint8_t 	space_id;
@@ -242,12 +243,22 @@ struct acpi_table_tpm2 {
 #endif
 } __packed;
 
+struct acpi_table_hpet {
+	struct acpi_table_header header;
+	uint32_t id;
+	struct packed_gas address;
+	uint8_t sequence;
+	uint16_t minimum_tick;
+	uint8_t flags;
+} __packed;
+
 void init_acpi(void);
 void *get_acpi_tbl(const char *signature);
 
 struct ioapic_info;
 uint16_t parse_madt(uint32_t lapic_id_array[MAX_PCPU_NUM]);
 uint8_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array);
+void *parse_hpet(void);
 
 #ifdef CONFIG_ACPI_PARSE_ENABLED
 int32_t acpi_fixup(void);

@@ -41,4 +41,11 @@ uint32_t get_tsc_khz(void);
  */
 void calibrate_tsc(void);
 
+/**
+ * @brief Initialize HPET.
+ *
+ * @return None
+ */
+void hpet_init(void);
+
 #endif	/* ARCH_X86_TSC_H */
