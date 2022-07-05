@@ -34,7 +34,7 @@ Build-Depends:
    python3-lxml,
    python3-defusedxml,
    python3-xmlschema (>= 1.10.0),
-   python3-elementpath (>= 2.5.0)
+   python3-elementpath (>= 2.5.0),
    python3-requests,
    python3-tqdm
 Standards-Version: 4.3.0
