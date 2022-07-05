@@ -244,3 +244,15 @@ uint8_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array)
 
 	return ioapic_idx;
 }
+
+void *parse_hpet(void)
+{
+	const struct acpi_table_hpet *hpet = (const struct acpi_table_hpet *)get_acpi_tbl(ACPI_SIG_HPET);
+	uint64_t addr = 0UL;
+
+	if (hpet != NULL) {
+		addr = hpet->address.address;
+	}
+
+	return hpa2hva(addr);
+}
