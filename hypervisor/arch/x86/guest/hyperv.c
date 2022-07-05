@@ -24,6 +24,10 @@
 #define CPUID3A_VP_INDEX_MSR		(1U << 6U)
 /* Partition reference TSC MSR (HV_X64_MSR_REFERENCE_TSC) */
 #define CPUID3A_REFERENCE_TSC_MSR	(1U << 9U)
+/* Partition local APIC and TSC frequency registers (HV_X64_MSR_TSC_FREQUENCY/HV_X64_MSR_APIC_FREQUENCY) */
+#define CPUID3A_ACCESS_FREQUENCY_MSRS	(1U << 11U)
+/* Frequency MSRs available */
+#define CPUID3D_FREQ_MSRS_AVAILABLE	(1U << 8U)
 
 struct HV_REFERENCE_TSC_PAGE {
 	uint32_t tsc_sequence;
@@ -167,6 +171,8 @@ hyperv_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval)
 		break;
 	case HV_X64_MSR_VP_INDEX:
 	case HV_X64_MSR_TIME_REF_COUNT:
+	case HV_X64_MSR_TSC_FREQUENCY:
+	case HV_X64_MSR_APIC_FREQUENCY:
 		/* read only */
 		/* fallthrough */
 	default:
@@ -201,6 +207,13 @@ hyperv_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval)
 		break;
 	case HV_X64_MSR_REFERENCE_TSC:
 		*rval = vcpu->vm->arch_vm.hyperv.ref_tsc_page.val64;
+		break;
+	case HV_X64_MSR_TSC_FREQUENCY:
+		*rval = get_tsc_khz() * 1000UL;
+		break;
+	case HV_X64_MSR_APIC_FREQUENCY:
+		/* both KVM and XEN hardcode the APIC freq as 1GHz ... */
+		*rval = 1000000000UL;
 		break;
 	default:
 		pr_err("hv: %s: unexpected MSR[0x%x] read", __func__, msr);
@@ -264,10 +277,11 @@ hyperv_init_vcpuid_entry(uint32_t leaf, uint32_t subleaf, uint32_t flags,
 		break;
 	case 0x40000003U: /* HV supported feature */
 		entry->eax = CPUID3A_HYPERCALL_MSR | CPUID3A_VP_INDEX_MSR |
-			CPUID3A_TIME_REF_COUNT_MSR | CPUID3A_REFERENCE_TSC_MSR;
+			CPUID3A_TIME_REF_COUNT_MSR | CPUID3A_REFERENCE_TSC_MSR |
+			CPUID3A_ACCESS_FREQUENCY_MSRS;
 		entry->ebx = 0U;
 		entry->ecx = 0U;
-		entry->edx = 0U;
+		entry->edx = CPUID3D_FREQ_MSRS_AVAILABLE;
 		break;
 	case 0x40000004U: /* HV Recommended hypercall usage */
 		entry->eax = 0U;
