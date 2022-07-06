@@ -27,7 +27,7 @@ def histapp():
 
 	#Send the histogram as a webpage to the user
 	return send_file("hist.png", mimetype='image/png')
-	
+
 #Creates the user histogram and saves to hist.png
 def create_hist():
 
@@ -41,7 +41,7 @@ def create_hist():
 
 	#Transform the data into an array that matplotlib can understand
 	dataset = transform_data(data)
-	
+
 	#Clear the figure and recreate from the new data
 	plt.clf()
 
@@ -57,8 +57,10 @@ def create_hist():
 	return figure
 
 def transform_data(data_string):
+
+	#Holds the transformed data
 	transformed_data_values = []
-	
+
 	str_data = data_string.decode("utf-8")
 	str_data = str_data.replace('\n',"")
 
@@ -66,7 +68,7 @@ def transform_data(data_string):
 
 	#Holds the count of latencies that we have
 	total_count = data_values[0]
-	
+
 	#Used for transforming the data values
 	data_percentages = data_values[1:]
 	if (len(data_percentages) % 2 != 0):
@@ -90,4 +92,4 @@ if __name__ == '__main__':
 	web_sem = ipc.Semaphore("/pyserversem", 0, 0o0774)
 
 	#Run the webserver
-	app.run(host="0.0.0.0", port=80, debug=True)
+	app.run(host="0.0.0.0", port=80, debug=False)
