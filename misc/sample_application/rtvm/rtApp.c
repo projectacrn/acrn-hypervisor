@@ -64,7 +64,7 @@ int main(void)
 
 		//Read the data
 		bzero(data_buffer, BUFFERSIZE);
-		read(data_pipe, data_buffer, BUFFERSIZE);
+		read(data_pipe, data_buffer, BUFFERSIZE - 1);
 
 		//Get the sample stat
 		start_stat = strstr(data_buffer, "T:");

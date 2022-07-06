@@ -44,7 +44,7 @@ int main(void)
 			latencies.latenciesCount++;
 
 		//Dump the data if we have enough data points
-		if (latencies.latenciesCount % 100 == 0) {
+		if ((latencies.latenciesCount > 0) && (latencies.latenciesCount % 100 == 0)) {
 
 			dump_data(latencies, shm_addr);
 

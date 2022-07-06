@@ -20,7 +20,7 @@ On failure it returns -1
 */
 int setup_ivshmem_region(const char *f_path)
 {
-	
+
 	//Open the file so we can map it into memory
 	int pci_file = open(f_path, O_RDWR | O_SYNC);
 	if (pci_file == failure) {
@@ -29,18 +29,18 @@ int setup_ivshmem_region(const char *f_path)
 		return failure;
 
 	}
-	
+
 	//Map the file into memory
 	ivshmem_ptr = (char *)mmap(0, REGION_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, pci_file , 0);
 	close(pci_file);
 	if (!ivshmem_ptr) {
 
 		perror("Failed to map the shared memory region into our address space\n");
-		return failure;	
+		return failure;
 
 	}
 
-	return success;	
+	return success;
 }
 
 /*
@@ -61,9 +61,9 @@ int close_ivshmem_region(void)
 
 		ret_val =  munmap(ivshmem_ptr, REGION_SIZE);
 		ivshmem_ptr = NULL;
-		
+
 	}
-		
+
 	else
 
 		printf("Ivshmem region is not set up.");
@@ -92,16 +92,18 @@ size_t read_ivshmem_region(char *user_ptr, size_t size)
 		return ret;
 
 	//Determine if ivshmem region is set up
-	if (ivshmem_ptr) {
-	
+	if ((ivshmem_ptr) && (size < REGION_SIZE - 1)) {
+
 		//Do the copy and zero out the ivshmem region
-		strncpy(user_ptr, ivshmem_ptr, size - 1);
-		user_ptr[size] = 0;
+		bzero(user_ptr, size);
+		strncpy(user_ptr, ivshmem_ptr, size);
+		ivshmem_ptr[size] = '\0';
+		user_ptr[size] = '\0';
 		ret = strlen(user_ptr);
-		bzero(ivshmem_ptr, ret);
+		bzero(ivshmem_ptr, size);
 
 	}
-	
+
 	else
 
 		printf("Ivshmem region is not set up.");
@@ -126,20 +128,22 @@ size_t write_ivshmem_region(char *user_ptr, size_t size)
 
 	//Make sure that we need to actually write something
 	if (size == 0)
-	
+
 		return ret;
 
 	//Determine if ivshmem region is set up
-	if (ivshmem_ptr) {
+	if ((ivshmem_ptr) && (size < REGION_SIZE - 1)) {
 
 		//Do the copy and zero out the user_ptr
-		strncpy(ivshmem_ptr, user_ptr, size - 1);
-		user_ptr[size] = 0;
+		bzero(ivshmem_ptr, size);
+		strncpy(ivshmem_ptr, user_ptr, size);
+		user_ptr[size] = '\0';
+		ivshmem_ptr[size] = '\0';
 		ret = strlen(ivshmem_ptr);
-		bzero(user_ptr, ret);
-		
+		bzero(user_ptr, size);
+
 	}
-	
+
 	else
 
 		printf("Ivshmem region is not set up.");
