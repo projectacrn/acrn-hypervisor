@@ -48,8 +48,7 @@ def create_hist():
 	#Setup the figure and save it
 	figure = plt.hist(dataset)
 
-	#plt.title("Latencies where count = " + str(total_count))
-	plt.title("Latencies percentages")
+	plt.title("Latency percentages")
 	plt.xlabel("Latency Value (ms)")
 	plt.ylabel("Frequency")
 	plt.savefig("hist.png")
@@ -76,7 +75,7 @@ def transform_data(data_string):
 
 	#Transform the data into a list that can be fed to matplotlib
 	for i in range(0, int(len(data_percentages) / 2)):
-		transformed_data_values += ([data_values[i*2]] * data_values[i*2 + 1])
+		transformed_data_values += ([int(data_percentages[i*2])] * int(data_percentages[i*2 + 1]))
 
 	return transformed_data_values
 
