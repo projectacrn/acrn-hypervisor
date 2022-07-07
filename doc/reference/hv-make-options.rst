@@ -34,8 +34,8 @@ The following table shows ACRN-specific command-line options:
        is ``n``.)
 
    * - ``ASL_COMPILER``
-     - Optional. Use an ``iasl`` compiler that is not in the default path
-       (``/usr/sbin``).
+     - Optional. Specify the path to the ``iasl`` compiler on the development machine.
+       (If not provided, the default value is derived from ``which iasl``.)
 
    * - ``O``
      - Optional. Path to the directory where the built files will be stored.

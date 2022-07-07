@@ -325,6 +325,21 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
       --ssram
 
+----
+
+``--iasl <iasl_compiler_path>``
+   Specify the path to ``iasl`` compiler on the target machine.
+
+   If ``--iasl <iasl_compiler_path>`` is specified as the ``acrn-dm`` parameter,
+   acrn-dm uses <iasl_compiler_path> as the path to the ``iasl`` compiler;
+   otherwise, ``which iasl`` is used to detect where the ``iasl`` compiler is located.
+
+   usage::
+
+      --iasl /usr/local/bin/iasl
+
+   uses ``/usr/local/bin/iasl`` as the path to the ``iasl`` compiler
+
 .. _emul_config:
 
 Emulated PCI Device Types
