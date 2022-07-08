@@ -336,6 +336,19 @@ relevant for configuring or debugging ACRN-based systems.
          hugepages=10
          hugepagesz=1G
 
+   * - ``i915.modeset``
+     - Service VM
+     - GPU driver loading option.
+
+       ``0``:
+         Disable the GPU driver loading for Intel GPU device.
+
+       ``1``:
+         Enable the GPU driver loading for Intel GPU device.
+     - ::
+
+          i915.modeset=0
+
 .. note:: The ``hugepages`` and ``hugepagesz`` parameters are automatically
    taken care of by the ACRN Configurator tool. If users have customized
    hugepage settings to satisfy their particular workloads in the Service VM,
