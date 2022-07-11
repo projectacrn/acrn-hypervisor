@@ -738,7 +738,6 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		spinlock_init(&vm->arch_vm.iwkey_backup_lock);
 
 		vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
-		vm->arch_vm.vm_mwait_cap = has_monitor_cap();
 		vm->intr_inject_delay_delta = 0UL;
 		vm->nr_emul_mmio_regions = 0U;
 		vm->vcpuid_entry_nr = 0U;

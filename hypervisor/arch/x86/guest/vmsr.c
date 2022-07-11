@@ -934,7 +934,6 @@ static void set_guest_tsc_adjust(struct acrn_vcpu *vcpu, uint64_t tsc_adjust)
  */
 static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
 {
-	uint32_t eax, ebx = 0U, ecx = 0U, edx = 0U;
 	bool update_vmsr = true;
 	uint64_t effective_guest_msr = v;
 
@@ -945,26 +944,12 @@ static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
 		vcpu_set_efer(vcpu, vcpu_get_efer(vcpu) & ~MSR_IA32_EFER_NXE_BIT);
 	}
 
-	/* Handle MISC_ENABLE_MONITOR_ENA
-	 * - if guest try to set this bit, do nothing.
-	 * - if guest try to clear this bit, MISC_ENABLE_MONITOR_ENA bit of guest MSR_IA32_MISC_ENABLE
-	 *   shall be cleared.
+	/* MONITOR/MWAIT is hide.
+	 * MISC_ENABLE_MONITOR_ENA should not be set.
 	 */
-	if (((v ^ vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE)) & MSR_IA32_MISC_ENABLE_MONITOR_ENA) != 0UL) {
-		eax = 1U;
-		guest_cpuid(vcpu, &eax, &ebx, &ecx, &edx);
-		/* According to SDM Vol4 2.1 Table 2-2,
-		 * Writing this bit when the SSE3 feature flag is set to 0 may generate a #GP exception.
-		 */
-		if ((ecx & CPUID_ECX_SSE3) == 0U) {
-			vcpu_inject_gp(vcpu, 0U);
-			update_vmsr = false;
-		} else if (vcpu->vm->arch_vm.vm_mwait_cap) {
-			/* guest cpuid.01H will be updated when guest executes 'cpuid' with leaf 01H */
-			effective_guest_msr &= ~MSR_IA32_MISC_ENABLE_MONITOR_ENA;
-		} else {
-			update_vmsr = false;
-		}
+	if ((v & MSR_IA32_MISC_ENABLE_MONITOR_ENA) != 0UL) {
+		vcpu_inject_gp(vcpu, 0U);
+		update_vmsr = false;
 	}
 
 	if (update_vmsr) {
