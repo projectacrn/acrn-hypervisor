@@ -46,8 +46,8 @@
         <div class="card-body">
           <div class="card-text text-pre-line">
             <div class="px-3 py-2 row">
-              <div class="py-1 col-sm">{{ this.imported ? this.board.BIOS_INFO : '' }}</div>
               <div class="py-1 col-sm">{{ this.imported ? this.board.BASE_BOARD_INFO : '' }}</div>
+              <div class="py-1 col-sm">{{ this.imported ? this.board.BIOS_INFO : '' }}</div>
             </div>
           </div>
         </div>
@@ -107,6 +107,7 @@ export default {
   },
   computed: {
     imported() {
+      this.reformatBoardInfo()
       return !_.isEmpty(this.board)
     }
   },
@@ -156,6 +157,39 @@ export default {
               alert(`Loading ${filepath} failed: ${err}`)
               console.log(err)
             })
+      }
+    },
+    reformatBoardInfo() {
+      // move BIOS Revision info into the top line
+      if (this.board.BIOS_INFO != null) {
+        let biosinfo = this.board.BIOS_INFO.split('\n')
+        let revindex, infoindex = -1
+        for (let [index, element] of biosinfo.entries()) {
+          if (element.includes("Revision")) {
+            revindex = index
+          }
+          // add a ":" in line "BIOS Information"
+          if (element.includes("Information")) {
+            infoindex = index
+            biosinfo[index] = biosinfo[index] + ":"
+          }
+        }
+        if (revindex !== -1 && infoindex !== -1) {
+          let temp = biosinfo[revindex]
+          biosinfo.splice(revindex, 1)
+          biosinfo.splice(infoindex + 1, 0, temp)
+        }
+        this.board.BIOS_INFO = biosinfo.join('\n')
+      }
+      // add a ":" in line "Base Board Information"
+      if (this.board.BASE_BOARD_INFO != null) {
+        let boardinfo = this.board.BASE_BOARD_INFO.split('\n')
+        for (let [index, element] of boardinfo.entries()) {
+          if (element.includes("Information")) {
+            boardinfo[index] = boardinfo[index] + ":"
+          }
+        }
+        this.board.BASE_BOARD_INFO = boardinfo.join('\n')
       }
     },
     getExistBoardPath() {
