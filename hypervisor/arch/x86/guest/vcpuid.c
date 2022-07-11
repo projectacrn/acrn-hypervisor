@@ -545,6 +545,9 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 					}
 				}
 				break;
+			/* MONITOR/MWAIT */
+			case 0x05U:
+				break;
 			case 0x07U:
 				init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
 				if (entry.eax != 0U) {
@@ -554,6 +557,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 				if (is_vsgx_supported(vm->vm_id)) {
 					entry.ebx |= CPUID_EBX_SGX;
 				}
+				entry.ecx &= ~CPUID_ECX_WAITPKG;
 
 #ifdef CONFIG_VCAT_ENABLED
 				if (is_vcat_configured(vm)) {
@@ -618,7 +622,6 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
 	uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
-	uint64_t guest_ia32_misc_enable = vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE);
 	uint64_t cr4_reserved_mask = get_cr4_reserved_bits();
 
 	cpuid_subleaf(0x1U, 0x0U, eax, ebx, ecx, edx);
@@ -651,15 +654,10 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 		*ecx &= ~CPUID_ECX_PCID;
 	}
 
-	/* guest monitor/mwait is supported only if it is allowed('vm_mwait_cap' is true)
-	 * and MSR_IA32_MISC_ENABLE_MONITOR_ENA bit of guest MSR_IA32_MISC_ENABLE is set,
-	 * else clear cpuid.01h[3].
+	/*
+	 * Hide MONITOR/MWAIT.
 	 */
 	*ecx &= ~CPUID_ECX_MONITOR;
-	if (vcpu->vm->arch_vm.vm_mwait_cap &&
-		((guest_ia32_misc_enable & MSR_IA32_MISC_ENABLE_MONITOR_ENA) != 0UL)) {
-		*ecx |= CPUID_ECX_MONITOR;
-	}
 
 	*ecx &= ~CPUID_ECX_OSXSAVE;
 	if ((*ecx & CPUID_ECX_XSAVE) != 0U) {

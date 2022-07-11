@@ -53,7 +53,8 @@ static void init_guest_vmx(struct acrn_vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 	load_segment(ectx->ldtr, VMX_GUEST_LDTR);
 
 	/* init guest ia32_misc_enable value for guest read */
-	vcpu_set_guest_msr(vcpu, MSR_IA32_MISC_ENABLE, msr_read(MSR_IA32_MISC_ENABLE));
+	vcpu_set_guest_msr(vcpu, MSR_IA32_MISC_ENABLE,
+		(msr_read(MSR_IA32_MISC_ENABLE) & (~MSR_IA32_MISC_ENABLE_MONITOR_ENA)));
 
 	vcpu_set_guest_msr(vcpu, MSR_IA32_PERF_CTL, msr_read(MSR_IA32_PERF_CTL));
 
@@ -313,6 +314,11 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 		value32 |= VMX_PROCBASED_CTLS_RDPMC;
 	}
 
+	/*
+	 * Enable MONITOR/MWAIT cause a VM-EXIT.
+	 */
+	value32 |= VMX_PROCBASED_CTLS_MWAIT | VMX_PROCBASED_CTLS_MONITOR;
+
 	vcpu->arch.proc_vm_exec_ctrls = value32;
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS: 0x%x ", value32);
@@ -334,6 +340,9 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	} else {
 		value32 &= ~VMX_PROCBASED_CTLS2_INVPCID;
 	}
+
+	/* Enable TPAUSE, UMONITOR/UWAIT cause a #UD. */
+	value32 &= ~VMX_PROCBASED_CTLS2_UWAIT_PAUSE;
 
 	if (is_apicv_advanced_feature_supported()) {
 		value32 |= VMX_PROCBASED_CTLS2_VIRQ;

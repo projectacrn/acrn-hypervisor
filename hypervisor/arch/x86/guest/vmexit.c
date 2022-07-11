@@ -40,6 +40,7 @@ static int32_t hlt_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t mtf_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t loadiwkey_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t init_signal_vmexit_handler(__unused struct acrn_vcpu *vcpu);
+static int32_t mwait_monitor_vmexit_handler (struct acrn_vcpu *vcpu);
 
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
@@ -151,11 +152,11 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_ENTRY_FAILURE_MSR_LOADING] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_MWAIT] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = mwait_monitor_vmexit_handler},
 	[VMX_EXIT_REASON_MONITOR_TRAP] = {
 		.handler = mtf_vmexit_handler},
 	[VMX_EXIT_REASON_MONITOR] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = mwait_monitor_vmexit_handler},
 	[VMX_EXIT_REASON_PAUSE] = {
 		.handler = pause_vmexit_handler},
 	[VMX_EXIT_REASON_ENTRY_FAILURE_MACHINE_CHECK] = {
@@ -285,6 +286,16 @@ int32_t vmexit_handler(struct acrn_vcpu *vcpu)
 	console_vmexit_callback(vcpu);
 
 	return ret;
+}
+
+static int32_t mwait_monitor_vmexit_handler (struct acrn_vcpu *vcpu)
+{
+	pr_fatal("Error: Unsupported mwait option from guest at 0x%016lx ",
+		exec_vmread(VMX_GUEST_RIP));
+
+	vcpu_inject_ud(vcpu);
+
+	return 0;
 }
 
 static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu)

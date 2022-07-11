@@ -42,6 +42,8 @@
 #define CPUID_ECX_OSXSAVE       (1U<<27U)
 #define CPUID_ECX_AVX           (1U<<28U)
 #define CPUID_ECX_HV            (1U<<31U)
+#define CPUID_ECX_MWAIT	(1U<<0U)
+#define CPUID_ECX_MWAIT_INT	(1U<<1U)
 #define CPUID_EDX_FPU           (1U<<0U)
 #define CPUID_EDX_VME           (1U<<1U)
 #define CPUID_EDX_DE            (1U<<2U)
@@ -100,6 +102,8 @@
 #define CPUID_ECX_UMIP		(1U<<2U)
 /* CPUID.07H:ECX.PKE */
 #define CPUID_ECX_PKE		(1U<<3U)
+/* CPUID.07H:ECX.WAITPKG */
+#define CPUID_ECX_WAITPKG		(1U<<5U)
 /* CPUID.07H:ECX.CET_SS */
 #define CPUID_ECX_CET_SS        (1U<<7U)
 /* CPUID.07H:ECX.LA57 */
