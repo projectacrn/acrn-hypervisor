@@ -96,10 +96,17 @@ def select_duplicate_values_function(self, context=None):
 @method(function('number-of-clos-id-needed', nargs=1))
 def evaluate_number_of_clos_id_needed(self, context=None):
     op = self.get_argument(context, index=0)
-    try:
-        return len(rdt.get_policy_list(op.elem)) if op else 0
-    except AttributeError as err:
-        raise self.error('XPTY0004', err)
+    if op is not None:
+        if isinstance(op, elementpath.TypedElement):
+            op = op.elem
+
+        # This function may be invoked when the xmlschema library parses the data check schemas, in which case `op` will
+        # be an object of class Xsd11Element. Only attempt to calculate the needed CLOS IDs when a real acrn-config node
+        # is given.
+        if hasattr(op, "xpath"):
+            return len(rdt.get_policy_list(op))
+
+    return 0
 
 ###
 # Collection of counter examples
