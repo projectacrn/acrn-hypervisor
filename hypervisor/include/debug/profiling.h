@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 int32_tel Corporation. All rights reserved.
+ * Copyright (C) 2018-2022 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */

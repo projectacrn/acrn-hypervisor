@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2020 Intel Corporation.
+# Copyright (C) 2020-2022 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
 
 function launch_ubuntu()

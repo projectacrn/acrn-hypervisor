@@ -7,7 +7,7 @@
  */
 /*
  *  Copyright (C) 2006-2018, Arm Limited (or its affiliates), All Rights Reserved
- *  Copyright (C) 2018, Intel Corporation.
+ *  Copyright (C) 2018-2022, Intel Corporation.
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may

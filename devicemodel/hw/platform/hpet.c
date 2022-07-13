@@ -1,7 +1,7 @@
 /*-
  * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
  *
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2019-2022 Intel Corporation.
  * Copyright (c) 2013 Tycho Nightingale <tycho.nightingale@pluribusnetworks.com>
  * Copyright (c) 2013 Neel Natu <neel@freebsd.org>
  * All rights reserved.
