@@ -1,5 +1,5 @@
 #!/bin/bash
-#* Copyright (c) 2020 Intel Corporation SPDX-License-Identifier: BSD-3-Clause
+#* Copyright (c) 2020-2022 Intel Corporation SPDX-License-Identifier: BSD-3-Clause
 # postinst script for acrn-board-inspector
 
 pip3 install xmlschema

@@ -1,7 +1,7 @@
 /*
  * ACRN TRACE
  *
- * Copyright (C) 2017 Intel Corporation.
+ * Copyright (C) 2017-2022 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *

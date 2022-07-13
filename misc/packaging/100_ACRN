@@ -1,5 +1,5 @@
 #!/bin/bash
-#* Copyright (c) 2020 Intel Corporation.
+#* Copyright (c) 2020-2022 Intel Corporation.
 # postinst script for acrn kernel
 set -e
 

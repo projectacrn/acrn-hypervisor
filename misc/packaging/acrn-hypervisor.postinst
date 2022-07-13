@@ -1,5 +1,5 @@
 #!/bin/bash
-#* Copyright (c) 2020 Intel Corporation SPDX-License-Identifier: BSD-3-Clause
+#* Copyright (c) 2020-2022 Intel Corporation SPDX-License-Identifier: BSD-3-Clause
 # postinst script for acrn-hypervisor
 # please NOTE ！！！  scenario_info/board_info changed by python scripts, so do not add content there!!!
 # please NOTE ！！！  scenario_info/board_info please add in release.json if needed !!!

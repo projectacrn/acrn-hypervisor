@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 Intel Corporation.
+# Copyright (C) 2019-2022 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
 # This is an example, if use different HW,the script must be adapted to match the BDF on the actual HW platform
 

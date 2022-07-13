@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014, Neel Natu (neel@freebsd.org)
- * Copyright (c) 2022 Intel Corporation
+ * Copyright (c) 2022 Intel Corporation.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

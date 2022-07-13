@@ -1,7 +1,7 @@
 /*
  * Intel ACPI Component Architecture
  * iASL Compiler/Disassembler version 20190703 (64-bit version)
- * Copyright (c) 2000 - 2019 Intel Corporation
+ * Copyright (c) 2000 - 2022 Intel Corporation
  *
  * Template for [RSDP] ACPI Table (AML byte code table)
  */

@@ -1,6 +1,6 @@
 /*-
  * Copyright (C) 2005-2011 HighPoint Technologies, Inc.
- * Copyright (c) 2017 Intel Corporation
+ * Copyright (c) 2017-2022 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -3,7 +3,7 @@ Upstream-Name: acrn-hypervisor
 Source: https://github.com/projectacrn/acrn-hypervisor
 
 Files: *
-Copyright: 2017-2018, Project ACRN
+Copyright: 2017-2022, Project ACRN
 License: BSD-3-Clause
 
 Files: debian/*
