@@ -67,7 +67,7 @@ def check_deps():
     # Try updating pci.ids for latest PCI device descriptions
     try:
         logger.info("Updating pci.ids for latest PCI device descriptions.")
-        res = subprocess.Popen(["update-pciids", "-q"])
+        res = subprocess.Popen(["update-pciids", "-q"], stderr=subprocess.DEVNULL)
         if res.wait() != 0:
             logger.warning(f"Failed to invoke update-pciids. No functional impact is foreseen, but descriptions of PCI devices may be inaccurate.")
     except Exception as e:
