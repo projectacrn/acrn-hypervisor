@@ -170,6 +170,7 @@ SRCS += core/sw_load_vsbl.c
 SRCS += core/sw_load_ovmf.c
 SRCS += core/sw_load_elf.c
 SRCS += core/mevent.c
+SRCS += core/iothread.c
 SRCS += core/pm.c
 SRCS += core/pm_vuart.c
 SRCS += core/console.c
