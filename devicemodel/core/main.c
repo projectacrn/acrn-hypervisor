@@ -70,6 +70,7 @@
 #include "vssram.h"
 #include "cmd_monitor.h"
 #include "vdisplay.h"
+#include "iothread.h"
 
 #define	VM_MAXCPU		16	/* maximum virtual cpus */
 
@@ -1105,6 +1106,12 @@ main(int argc, char *argv[])
 			goto mevent_fail;
 		}
 
+		error = iothread_init();
+		if (error) {
+			pr_err("Unable to initialize iothread (%d)\n", errno);
+			goto iothread_fail;
+		}
+
 		pr_notice("vm_init_vdevs\n");
 		if (vm_init_vdevs(ctx) < 0) {
 			pr_err("Unable to init vdev (%d)\n", errno);
@@ -1167,6 +1174,7 @@ main(int argc, char *argv[])
 
 		vm_deinit_vdevs(ctx);
 		mevent_deinit();
+		iothread_deinit();
 		vm_unsetup_memory(ctx);
 		vm_destroy(ctx);
 		_ctx = 0;
@@ -1181,6 +1189,8 @@ vm_fail:
 		clean_vssram_configs();
 
 dev_fail:
+	iothread_deinit();
+iothread_fail:
 	mevent_deinit();
 mevent_fail:
 	vm_unsetup_memory(ctx);
