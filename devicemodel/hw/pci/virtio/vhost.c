@@ -181,7 +181,6 @@ vhost_vq_register_eventfd(struct vhost_dev *vdev,
 	struct virtio_base *base;
 	struct vhost_vq *vq;
 	struct virtio_vq_info *vqi;
-	struct pcibar *bar;
 	struct msix_table_entry *mte;
 	struct acrn_msi_entry msi;
 	int rc = -1;
@@ -194,56 +193,10 @@ vhost_vq_register_eventfd(struct vhost_dev *vdev,
 	vq = &vdev->vqs[idx];
 
 	if (!is_register) {
-		ioeventfd.flags = ACRN_IOEVENTFD_FLAG_DEASSIGN;
 		irqfd.flags = ACRN_IRQFD_FLAG_DEASSIGN;
 	}
 
-	/* register ioeventfd for kick */
-	if (base->device_caps & (1UL << VIRTIO_F_VERSION_1)) {
-		/*
-		 * in the current implementation, if virtio 1.0 with pio
-		 * notity, its bar idx should be set to non-zero
-		 */
-		if (base->modern_pio_bar_idx) {
-			bar = &vdev->base->dev->bar[base->modern_pio_bar_idx];
-			ioeventfd.data = vdev->vq_idx + idx;
-			ioeventfd.addr = bar->addr;
-			ioeventfd.len = 2;
-			ioeventfd.flags |= (ACRN_IOEVENTFD_FLAG_DATAMATCH |
-				ACRN_IOEVENTFD_FLAG_PIO);
-		} else if (base->modern_mmio_bar_idx) {
-			bar = &vdev->base->dev->bar[base->modern_mmio_bar_idx];
-			ioeventfd.data = 0;
-			ioeventfd.addr = bar->addr + VIRTIO_CAP_NOTIFY_OFFSET
-				+ (vdev->vq_idx + idx) *
-				VIRTIO_MODERN_NOTIFY_OFF_MULT;
-			ioeventfd.len = 2;
-			/* no additional flag bit should be set for MMIO */
-		} else {
-			WPRINTF("invalid virtio 1.0 parameters, 0x%lx\n",
-				base->device_caps);
-			return -1;
-		}
-	} else {
-		bar = &vdev->base->dev->bar[base->legacy_pio_bar_idx];
-		ioeventfd.data = vdev->vq_idx + idx;
-		ioeventfd.addr = bar->addr + VIRTIO_PCI_QUEUE_NOTIFY;
-		ioeventfd.len = 2;
-		ioeventfd.flags |= (ACRN_IOEVENTFD_FLAG_DATAMATCH |
-			ACRN_IOEVENTFD_FLAG_PIO);
-	}
-
-	ioeventfd.fd = vq->kick_fd;
-	DPRINTF("[ioeventfd: %d][0x%lx@%d][flags: 0x%x][data: 0x%lx]\n",
-		ioeventfd.fd, ioeventfd.addr, ioeventfd.len,
-		ioeventfd.flags, ioeventfd.data);
-	rc = vm_ioeventfd(vdev->base->dev->vmctx, &ioeventfd);
-	if (rc < 0) {
-		WPRINTF("vm_ioeventfd failed rc = %d, errno = %d\n",
-			rc, errno);
-		return -1;
-	}
-
+	virtio_register_ioeventfd(base, idx, is_register);
 	/* register irqfd for notify */
 	mte = &vdev->base->dev->msix.table[vqi->msix_idx];
 	msi.msi_addr = mte->addr;
