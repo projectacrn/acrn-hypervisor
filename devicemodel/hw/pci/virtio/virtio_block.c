@@ -380,8 +380,29 @@ virtio_blk_notify(void *vdev, struct virtio_vq_info *vq)
 {
 	struct virtio_blk *blk = vdev;
 
-	while (vq_has_descs(vq))
-		virtio_blk_proc(blk, vq);
+	if (!vq_has_descs(vq))
+		return;
+
+	/*
+	 * The two while loop here is to avoid the race:
+	 *
+	 * FE could send a request right after the BE break from internal while loop.
+	 * At that time, FE still not aware the NO_NOTIFY is clear, so send the request
+	 * without notification. This request would be lost.
+	 *
+	 * So, after enable NOTIFY, need to check the queue again to dry the
+	 * requests in virtqueue.
+	 * */
+	do {
+		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+		mb();
+		do {
+			virtio_blk_proc(blk, vq);
+		} while (vq_has_descs(vq));
+
+		vq_clear_used_ring_flags(&blk->base, vq);
+		mb();
+	} while (vq_has_descs(vq));
 }
 
 static uint64_t
