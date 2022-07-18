@@ -15,7 +15,6 @@ hypervisor, the Service VM, and a User VM on a supported Intel target platform.
    reference/hardware
    getting-started/overview_dev
    getting-started/getting-started
-   misc/sample_application/README
 
 After getting familiar with ACRN development, check out these
 :ref:`develop_acrn` for information about more-advanced scenarios and enabling

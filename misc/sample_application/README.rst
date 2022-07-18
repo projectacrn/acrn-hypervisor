@@ -1,3 +1,5 @@
+:orphan:
+
 .. _sample-app:
 
 ACRN Sample Application
