@@ -84,9 +84,16 @@ For the connection:
 To add another connection, click **+** on the right side of an existing
 connection. Or click **-** to delete a connection.
 
+   .. note::
+
+      The release v3.0 ACRN Configurator assigns COM2 (I/O address ``0x2F8``) to
+      the S5 feature. A conflict will occur if you assign ``0x2F8`` to another
+      connection. In our example, we'll use COM3 (I/O address ``0x3F8``).
+
 .. image:: images/configurator-vuartconn01.png
    :align: center
    :class: drop-shadow
+
 
 Example Configuration
 =====================
@@ -108,7 +115,7 @@ connection between two VMs. The example extends the information provided in the
 
    #. For the vUART type, this example uses ``Legacy``.
 
-   #. For the virtual I/O address, this example uses ``0x2f8``.
+   #. For the virtual I/O address, this example uses ``0x3E8``.
 
    .. image:: images/configurator-vuartconn01.png
       :align: center
@@ -134,7 +141,7 @@ connection between two VMs. The example extends the information provided in the
          [    0.105303] printk: console [tty0] enabled
          [    0.105319] printk: console [ttyS0] enabled
          [    1.391979] 00:03: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
-         [    1.649819] serial8250: ttyS1 at I/O 0x2f8 (irq = 3, base_baud = 115200) is a 16550A
+         [    1.649819] serial8250: ttyS1 at I/O 0x3e8 (irq = 5, base_baud = 115200) is a 16550A
          [    3.394543] systemd[1]: Created slice system-serial\x2dgetty.slice.
 
    #. Test vUART communication:
