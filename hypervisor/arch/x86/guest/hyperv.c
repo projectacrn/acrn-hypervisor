@@ -212,8 +212,8 @@ hyperv_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval)
 		*rval = get_tsc_khz() * 1000UL;
 		break;
 	case HV_X64_MSR_APIC_FREQUENCY:
-		/* both KVM and XEN hardcode the APIC freq as 1GHz ... */
-		*rval = 1000000000UL;
+		/* vLAPIC freq is the same as TSC freq */
+		*rval = get_tsc_khz() * 1000UL;
 		break;
 	default:
 		pr_err("hv: %s: unexpected MSR[0x%x] read", __func__, msr);
