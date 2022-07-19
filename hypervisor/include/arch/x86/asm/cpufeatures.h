@@ -92,6 +92,9 @@
 #define X86_FEATURE_CORE_CAP	((FEAT_7_0_EDX << 5U) + 30U)
 #define X86_FEATURE_SSBD	((FEAT_7_0_EDX << 5U) + 31U)
 
+/* Intel-defined CPU features, CPUID level 0x00000007, sub 0x2 (EDX)*/
+#define X86_FEATURE_RRSBA_CTRL	((FEAT_7_2_EDX << 5U) + 2U)
+
 /* Intel-defined CPU features, CPUID level 0x80000001 (EDX)*/
 #define X86_FEATURE_NX		((FEAT_8000_0001_EDX << 5U) + 20U)
 #define X86_FEATURE_PAGE1GB	((FEAT_8000_0001_EDX << 5U) + 26U)
