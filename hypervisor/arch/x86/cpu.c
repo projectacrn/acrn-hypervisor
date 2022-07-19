@@ -231,6 +231,10 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 	init_pcpu_xsave();
 
+#ifdef CONFIG_RETPOLINE
+	disable_rrsba();
+#endif
+
 	if (pcpu_id == BSP_CPU_ID) {
 		/* Print Hypervisor Banner */
 		print_hv_banner();
