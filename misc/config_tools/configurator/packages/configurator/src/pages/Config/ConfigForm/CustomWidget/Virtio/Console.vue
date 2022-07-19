@@ -5,7 +5,14 @@
         <b style="margin-bottom: 2rem">Virtio console device</b>
         <b-row class="align-items-center my-2 mt-4">
           <b-col md="2">
-            <label>Use type: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span v-html="this.ConsoleConfiguration.properties.use_type.description"></span>
+              </n-popover>Use type:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-select v-model="console.use_type" :options="getUseTypes"/>
@@ -14,7 +21,14 @@
 
         <b-row class="align-items-center">
           <b-col md="2">
-            <label>Backend type: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span v-html="this.ConsoleConfiguration.properties.backend_type.description"></span>
+              </n-popover>Backend type:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-select v-model="console.backend_type" :options="ConsoleBackendType"/>
@@ -23,7 +37,14 @@
 
         <b-row class="align-items-center my-2" v-if="console.backend_type === 'file'">
           <b-col md="2">
-            <label>Output file path: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span v-html="this.ConsoleConfiguration.properties.output_file_path.description"></span>
+              </n-popover>Output file path:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-input v-model="console.output_file_path"/>
@@ -32,7 +53,14 @@
 
         <b-row class="align-items-center my-2" v-else-if="console.backend_type === 'tty'">
           <b-col md="2">
-            <label>TTY device path: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span v-html="this.ConsoleConfiguration.properties.tty_device_path.description"></span>
+              </n-popover>TTY device path:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-input v-model="console.tty_device_path"/>
@@ -41,7 +69,14 @@
 
         <b-row class="align-items-center my-2" v-else-if="console.backend_type === 'sock client' || console.backend_type === 'sock server'">
           <b-col md="2">
-            <label>Sock file path: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span v-html="this.ConsoleConfiguration.properties.sock_file_path.description"></span>
+              </n-popover>Sock file path:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-input v-model="console.sock_file_path"/>
@@ -82,10 +117,11 @@ import _ from "lodash";
 import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
 import {fieldProps, vueUtils} from '@lljj/vue3-form-naive';
+import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
 
 export default {
   name: "Console",
-  components: {Icon, Plus, Minus},
+  components: {Icon, Plus, Minus, IconInfo},
   props: {
     ...fieldProps,
     fieldProps: {
@@ -95,6 +131,7 @@ export default {
   },
   data() {
     return {
+      ConsoleConfiguration: this.rootSchema.definitions['BasicVirtioConsoleBackendType'],
       enumNames: this.rootSchema.definitions['VirtioConsoleUseType']['enumNames'],
       enum: this.rootSchema.definitions['VirtioConsoleUseType']['enum'],
       ConsoleBackendType: this.rootSchema.definitions['BasicVirtioConsoleBackendType']['enum'],
@@ -176,7 +213,7 @@ export default {
 .virtio_console_demo {
   width: 100%;
   border: 2px solid #cccccc;
-  padding: 8px 2px 12px 6px;
+  padding: 12px 2px 12px 6px;
   border-radius: 5px;
   margin-bottom: 1rem;
 }
