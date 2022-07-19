@@ -471,11 +471,26 @@ post-launched User VM. Each User VM has its own launch script.
    settings to meet your application's particular needs. But for now, you
    will update only a few settings for functional and educational purposes.
 
+   You may see some error messages from the configurator, such as shown here:
+
+   .. image:: images/gsg-config-errors.png
+      :align: center
+      :class: drop-shadow
+
+   The configurator does consistency and validation checks when you load or save
+   a scenario.  Notice the Hypervisor and VM1 tabs both have an error icon,
+   meaning there are issues with configuration options in two areas.  Since the
+   Hypervisor tab is currently highlighted, we're seeing an issue we can resolve
+   on the Hypervisor settings.  Once we resolve all the errors and save the
+   scenario (forcing a full validation of the schema again), these error
+   indicators and messages will go away.
+
 #. Click the **Hypervisor Global Settings > Basic Parameters** tab, select the
    ``Debug`` build type, and select the serial console port (the example shows
    ``/dev/ttyS0``, but yours may be different). If your board doesn't have a
    serial console port, select the ``Release`` build type. The Debug build type
-   requires a serial console port.
+   requires a serial console port (and is reporting an error because a serial
+   console port hasn't been configured yet).
 
    .. image:: images/configurator-buildtype.png
       :align: center
@@ -501,7 +516,8 @@ post-launched User VM. Each User VM has its own launch script.
       Ubuntu 20.04 needs at least 1024 MB to boot.
 
    #. For **Physical CPU affinity**, select pCPU ID ``0``, then click **+** and
-      select pCPU ID ``1`` to affine the VM to CPU cores 0 and 1.
+      select pCPU ID ``1`` to affine (or pin) the VM to CPU cores 0 and 1. (That will
+      resolve the initial physical CPU affinity assignment error.)
 
    #. For **Virtio console device**, click **+** to add a device and keep the
       default options. This parameter specifies the console that you will use to
