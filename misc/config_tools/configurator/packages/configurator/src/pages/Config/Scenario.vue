@@ -3,7 +3,7 @@
     <div class="border-end-sm py-1 col-sm">
       <div class="py-4 text-center">
         <NewScenario v-model:show-modal="showCreateScenario" @newScenario="newScenario"/>
-        <button type="button" class="btn btn-primary btn-lg" @click="showCreateScenario=true">
+        <button type="button" class="btn btn-primary btn-lg" @click="CreateScenario">
           Create Scenario…
         </button>
       </div>
@@ -27,7 +27,7 @@
           <tr>
             <td>
               <div class="py-4 text-right">
-                <button type="button" class="wel-btn btn btn-primary btn-lg" @click="loadScenario(false)">
+                <button type="button" class="wel-btn btn btn-primary btn-lg" @click="checkAndLoadScenario(false)">
                   Import Scenario
                 </button>
               </div>
@@ -44,6 +44,7 @@
 <script>
 import configurator from "../../lib/acrn";
 import NewScenario from "./Scenario/NewScenario.vue";
+import _ from "lodash";
 
 export default {
   name: "Scenario",
@@ -57,7 +58,7 @@ export default {
     }
   },
   props: {
-     WorkingFolder: {
+    WorkingFolder: {
       type: String
     },
     scenario: {
@@ -67,27 +68,55 @@ export default {
   mounted() {
     //get init scenario if it exist, add to history
     this.getExistScenarioPath()
-      .then((filePath) => {
-        if (filePath.length > 0) {
-          configurator.addHistory('Scenario', filePath)
-          .then(()=>{
-            this.getScenarioHistory().then(() => {
-              // delay 2s for board loading
-              setTimeout(() => {
-                this.loadScenario(true)
-              }, 2000);
-            })
-          })
-        }
-      })
-      this.getScenarioHistory()
+        .then((filePath) => {
+          if (filePath.length > 0) {
+            configurator.addHistory('Scenario', filePath)
+                .then(() => {
+                  this.getScenarioHistory().then(() => {
+                    // delay 2s for board loading
+                    setTimeout(() => {
+                      this.loadScenario(true)
+                    }, 2000);
+                  })
+                })
+          }
+        })
+    this.getScenarioHistory()
     // Todo: auto load scenario
   },
+
   methods: {
+    CreateScenario() {
+      if (!_.isEmpty(this.scenario)) {
+        confirm(`Warning: Overwrite the existing scenario file?`)
+            .then((r) => {
+              // user cancel the operation
+              if (!r) {
+                return
+              }
+              // user confirm the operation
+              this.showCreateScenario = true
+            })
+      } else this.showCreateScenario = true
+    },
     newScenario(data) {
+
       this.$emit('scenarioUpdate', data)
     },
-    loadScenario(auto = false) {
+    checkAndLoadScenario(auto = false) {
+      if (!_.isEmpty(this.scenario)) {
+        confirm(`Warning: Overwrite the existing scenario file?`)
+            .then((r) => {
+              // user cancel the operation
+              if (!r) {
+                return
+              }
+              // user confirm the operation
+              this.loadScenario(auto)
+            })
+      } else this.loadScenario(auto)
+    },
+    loadScenario(auto) {
       if (this.currentSelectedScenario.length > 0) {
         configurator.loadScenario(this.currentSelectedScenario)
             .then((scenarioConfig) => {
@@ -97,14 +126,14 @@ export default {
                 alert(`Scenario ${this.currentSelectedScenario} loaded success!`)
               }
             }).catch((err) => {
-              console.log(err)
-              alert(`Loading ${this.currentSelectedScenario} failed: ${err}`)
-            })
+          console.log(err)
+          alert(`Loading ${this.currentSelectedScenario} failed: ${err}`)
+        })
       }
     },
     getExistScenarioPath() {
       // only return filename when using exist configuration.
-        return configurator.readDir(this.WorkingFolder, false)
+      return configurator.readDir(this.WorkingFolder, false)
           .then((res) => {
             let scenarioPath = ''
             res.map((filepath) => {
