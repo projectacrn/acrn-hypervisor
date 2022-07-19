@@ -44,6 +44,42 @@ static void detect_ibrs(void)
 #endif
 }
 
+#ifdef CONFIG_RETPOLINE
+/* For platform that supports RRSBA (Restricted Return Stack Buffer Alternate),
+ * using retpoline may not be sufficient to guard against branch history injection (BHI)
+ * or Intra-mode branch target injection (IMBTI). RRSBA must be disabled to
+ * prevent CPUs from using alternate predictors for RETs.
+ *
+ * Quoting Intel CVE-2022-0001/CVE-2022-0002 documentation:
+ *
+ * Where software is using retpoline as a mitigation for BHI or intra-mode BTI,
+ * and the processor both enumerates RRSBA and enumerates RRSBA_DIS controls,
+ * it should disable this behavior.
+ * ...
+ * Software using retpoline as a mitigation for BHI or intra-mode BTI should use
+ * these new indirect predictor controls to disable alternate predictors for RETs.
+ *
+ * See: https://www.intel.com/content/www/us/en/developer/articles/technical/
+ * software-security-guidance/technical-documentation/branch-history-injection.html
+ */
+void disable_rrsba(void) {
+	uint64_t v, x86_arch_caps;
+	bool rrsba_behavior = false;
+
+	if (pcpu_has_cap(X86_FEATURE_ARCH_CAP)) {
+		x86_arch_caps = msr_read(MSR_IA32_ARCH_CAPABILITIES);
+		rrsba_behavior = ((x86_arch_caps & IA32_ARCH_CAP_RESTRICTED_RSBA) != 0UL);
+	}
+
+	if (rrsba_behavior && pcpu_has_cap(X86_FEATURE_RRSBA_CTRL)) {
+		v = msr_read(MSR_IA32_SPEC_CTRL);
+		/* Setting SPEC_RRSBA_DIS_S disables RRSBA behavior for CPL0/1/2 */
+		v |= SPEC_RRSBA_DIS_S;
+		msr_write(MSR_IA32_SPEC_CTRL, v);
+	}
+}
+#endif
+
 int32_t get_ibrs_type(void)
 {
 	return ibrs_type;
