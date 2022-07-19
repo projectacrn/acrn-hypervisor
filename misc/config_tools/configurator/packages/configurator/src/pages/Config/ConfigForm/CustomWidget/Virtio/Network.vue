@@ -121,13 +121,17 @@ label:after{
 }
 .ToolSet {
   display: flex;
-  flex-direction: row-reverse;
-  gap: 8px;
+  justify-content: space-around;
+  margin: 1rem;
+  gap: 0.5rem;
+  max-width: 5rem;
 }
-.ToolSet div{
-  padding: 8px;
-  border: 1px solid rgb(193,193,193);
-  border-radius: 5px;
+.ToolSet div {
+  cursor: pointer;
+  border: 1px solid gray;
+  border-radius: 3px;
+  background: #f9f9f9;
+  padding: 5px 5px 3px;
 }
 .virtio_networks{
   width: 100%;
