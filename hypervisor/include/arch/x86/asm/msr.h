@@ -657,6 +657,7 @@ void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu);
 /* SPEC & PRED bit */
 #define SPEC_ENABLE_IBRS			(1U << 0U)
 #define SPEC_ENABLE_STIBP			(1U << 1U)
+#define SPEC_RRSBA_DIS_S			(1U << 6U)
 #define PRED_SET_IBPB				(1U << 0U)
 
 /* IA32 ARCH Capabilities bit */
@@ -667,6 +668,7 @@ void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu);
 #define IA32_ARCH_CAP_SSB_NO			(1UL << 4U)
 #define IA32_ARCH_CAP_MDS_NO			(1UL << 5U)
 #define IA32_ARCH_CAP_IF_PSCHANGE_MC_NO		(1UL << 6U)
+#define IA32_ARCH_CAP_RESTRICTED_RSBA		(1UL << 19U)
 
 /* Flush L1 D-cache */
 #define IA32_L1D_FLUSH				(1UL << 0U)

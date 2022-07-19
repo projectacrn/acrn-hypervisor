@@ -355,6 +355,9 @@ void init_pcpu_capabilities(void)
 		&boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
 
+	cpuid_subleaf(CPUID_EXTEND_FEATURE, 0x2U, &unused, &unused, &unused,
+		&boot_cpu_data.cpuid_leaves[FEAT_7_2_EDX]);
+
 	cpuid_subleaf(CPUID_MAX_EXTENDED_FUNCTION, 0x0U,
 		&boot_cpu_data.extended_cpuid_level,
 		&unused, &unused, &unused);

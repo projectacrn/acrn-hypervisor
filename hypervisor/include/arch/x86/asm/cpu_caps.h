@@ -29,7 +29,8 @@
 #define	FEAT_D_1_EAX		11U    /* CPUID[D][1].EAX */
 #define	FEAT_D_1_ECX		13U    /* CPUID[D][1].ECX */
 #define	FEAT_D_1_EDX		14U    /* CPUID[D][1].EDX */
-#define	FEATURE_WORDS		15U
+#define	FEAT_7_2_EDX		15U	/* CPUID[EAX=7,ECX=2].EDX */
+#define	FEATURE_WORDS		16U
 
 struct cpuinfo_x86 {
 	/* SDM 2-2 Vol.4 Table 2-1 uses DisplayFamily_DisplayModel to
