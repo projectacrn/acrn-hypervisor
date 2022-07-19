@@ -4,8 +4,15 @@
       <div class="virtio_input_demo">
         <b style="margin-bottom: 2rem">Virtio input device</b>
         <b-row class="align-items-center my-2 mt-4">
-          <b-col md="2">
-            <label>Backend device file: </label>
+          <b-col md="3">
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span v-html="this.InputConfiguration.properties.backend_device_file.description"></span>
+              </n-popover>Backend device file:
+            </label>
           </b-col>
           <b-col md="8">
             <b-form-select v-model="input.backend_device_file" :options="BackendDeviceFileType"/>
@@ -13,7 +20,13 @@
         </b-row>
 
         <b-row class="align-items-center my-2">
-          <b-col md="2">
+          <b-col md="3">
+            <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span v-html="this.InputConfiguration.properties.id.description"></span>
+            </n-popover>
             Guest virtio input device unique identifier:
           </b-col>
           <b-col md="4">
@@ -57,10 +70,11 @@ import _ from "lodash";
 import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
 import {fieldProps, vueUtils} from '@lljj/vue3-form-naive';
+import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
 
 export default {
   name: "Input",
-  components: {Icon, Plus, Minus},
+  components: {Icon, Plus, Minus, IconInfo},
   props: {
     ...fieldProps,
     fieldProps: {
@@ -114,7 +128,7 @@ export default {
 </script>
 
 <style scoped>
-label:after{
+label:before{
   content: '*';
   color: red;
 }
@@ -145,7 +159,7 @@ label:after{
 .virtio_input_demo {
   width: 100%;
   border: 2px solid #cccccc;
-  padding: 8px 0 12px 6px;
+  padding: 12px 0 12px 6px;
   border-radius: 5px;
   margin-bottom: 1rem;
 }

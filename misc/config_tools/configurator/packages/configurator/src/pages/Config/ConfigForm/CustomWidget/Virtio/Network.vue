@@ -5,7 +5,14 @@
         <b style="margin-bottom: 2rem">Virtio network device</b>
         <b-row class="align-items-center my-2 mt-4">
           <b-col md="2">
-            <label>Virtio framework: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span v-html="this.NetworkConfiguration.properties.virtio_framework.description"></span>
+              </n-popover>Virtio framework:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-select v-model="network.virtio_framework" :options="NetworkFrameworkType"/>
@@ -14,7 +21,14 @@
 
         <b-row class="align-items-center my-2">
           <b-col md="2">
-            <label>Network interface name: </label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span v-html="this.NetworkConfiguration.properties.interface_name.description"></span>
+              </n-popover>Network interface name:
+            </label>
           </b-col>
           <b-col md="4">
             <b-form-input :state="validateInterfaceName(network.interface_name)" v-model="network.interface_name" placeholder="An arbitrary-long string with letters, digits, underscores or dashes."/>
@@ -57,10 +71,11 @@ import _ from "lodash";
 import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
 import {fieldProps, vueUtils} from '@lljj/vue3-form-naive';
+import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
 
 export default {
   name: "Network",
-  components: {Icon, Plus, Minus},
+  components: {Icon, Plus, Minus, IconInfo},
   props: {
     ...fieldProps,
     fieldProps: {
@@ -115,7 +130,7 @@ export default {
 </script>
 
 <style scoped>
-label:after{
+label:before{
   content: '*';
   color: red;
 }
@@ -146,7 +161,7 @@ label:after{
 .virtio_network_demo {
   width: 100%;
   border: 2px solid #cccccc;
-  padding: 8px 0 12px 6px;
+  padding: 12px 0 12px 6px;
   border-radius: 5px;
   margin-bottom: 1rem;
 }
