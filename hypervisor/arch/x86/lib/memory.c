@@ -24,9 +24,18 @@ void *memset(void *base, uint8_t v, size_t n)
 	return base;
 }
 
-static inline void memcpy_erms(void *d, const void *s, size_t slen)
+void memcpy_erms(void *d, const void *s, size_t slen)
 {
 	asm volatile ("rep; movsb"
+		: "=&D"(d), "=&S"(s)
+		: "c"(slen), "0" (d), "1" (s)
+		: "memory");
+}
+
+/* copy data from tail to head (backwards) with ERMS (Enhanced REP MOVSB/STOSB) */
+void memcpy_erms_backwards(void *d, const void *s, size_t slen)
+{
+	asm volatile ("std; rep; movsb; cld"
 		: "=&D"(d), "=&S"(s)
 		: "c"(slen), "0" (d), "1" (s)
 		: "memory");

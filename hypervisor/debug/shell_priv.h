@@ -36,6 +36,7 @@ struct shell {
 	int32_t input_line_active;	/* Active input line index */
 
 	int32_t to_select_index; /* used for up/down key to select former cmds */
+	uint32_t cursor_offset; /* cursor offset position from left input line */
 
 	struct shell_cmd *cmds;	/* cmds supported */
 	uint32_t cmd_count;		/* Count of cmds supported */
