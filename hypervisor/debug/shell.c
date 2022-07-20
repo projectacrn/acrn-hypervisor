@@ -157,12 +157,17 @@ static struct shell_cmd shell_cmds[] = {
 	},
 };
 
-/* for function key: up/down key */
+/* for function key: up/down/right/left/home/end and delete key */
 enum function_key {
 	KEY_NONE,
 
+	KEY_DELETE = 0x5B33,
 	KEY_UP = 0x5B41,
 	KEY_DOWN = 0x5B42,
+	KEY_RIGHT = 0x5B43,
+	KEY_LEFT = 0x5B44,
+	KEY_END = 0x5B46,
+	KEY_HOME = 0x5B48,
 };
 
 /* The initial log level*/
@@ -287,6 +292,40 @@ static void clear_input_line(uint32_t len)
 	}
 }
 
+static void set_cursor_pos(uint32_t left_offset)
+{
+	while (left_offset > 0) {
+		left_offset--;
+		shell_puts("\b");
+	}
+}
+
+static void handle_delete_key(void)
+{
+	if (p_shell->cursor_offset < p_shell->input_line_len) {
+
+		uint32_t delta = p_shell->input_line_len - p_shell->cursor_offset - 1;
+
+		/* Send a space + backspace sequence to delete character */
+		shell_puts(" \b");
+
+		/* display the left input chars and remove former last one */
+		shell_puts(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset + 1);
+		shell_puts(" \b");
+
+		set_cursor_pos(delta);
+
+		memcpy_erms(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset,
+			p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset + 1, delta);
+
+		/* Null terminate the last character to erase it */
+		p_shell->buffered_line[p_shell->input_line_active][p_shell->input_line_len - 1] = 0;
+
+		/* Reduce the length of the string by one */
+		p_shell->input_line_len--;
+	}
+}
+
 static void handle_updown_key(enum function_key key_value)
 {
 	int32_t to_select, current_select = p_shell->to_select_index;
@@ -316,6 +355,10 @@ static void handle_updown_key(enum function_key key_value)
 	}
 
 	if (strcmp(p_shell->buffered_line[current_select], p_shell->buffered_line[p_shell->input_line_active]) != 0) {
+		/* reset cursor pos and clear current input line first, then output selected cmd */
+		if (p_shell->cursor_offset < p_shell->input_line_len) {
+			shell_puts(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset);
+		}
 
 		clear_input_line(p_shell->input_line_len);
 		shell_puts(p_shell->buffered_line[current_select]);
@@ -325,6 +368,7 @@ static void handle_updown_key(enum function_key key_value)
 		memcpy_s(p_shell->buffered_line[p_shell->input_line_active], SHELL_CMD_MAX_LEN,
 			p_shell->buffered_line[current_select], len + 1);
 		p_shell->input_line_len = len;
+		p_shell->cursor_offset = len;
 	}
 }
 
@@ -333,14 +377,45 @@ static void shell_handle_special_char(char ch)
 	enum function_key key_value = KEY_NONE;
 
 	switch (ch) {
-	/* original function key value: ESC + key, so consume the next 2 characters */
+	/* original function key value: ESC + key (2/3 bytes), so consume the next 2/3 characters */
 	case 0x1b:
 		key_value = (shell_getc() << 8) | shell_getc();
+		if (key_value == KEY_DELETE) {
+			(void)shell_getc(); /* delete key has one more byte */
+		}
 
 		switch (key_value) {
+		case KEY_DELETE:
+			handle_delete_key();
+			break;
 		case KEY_UP:
 		case KEY_DOWN:
 			handle_updown_key(key_value);
+			break;
+		case KEY_RIGHT:
+			if (p_shell->cursor_offset < p_shell->input_line_len) {
+				shell_puts(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset);
+				p_shell->cursor_offset++;
+				set_cursor_pos(p_shell->input_line_len - p_shell->cursor_offset);
+			}
+			break;
+		case KEY_LEFT:
+			if (p_shell->cursor_offset > 0) {
+				p_shell->cursor_offset--;
+				shell_puts("\b");
+			}
+			break;
+		case KEY_END:
+			if (p_shell->cursor_offset < p_shell->input_line_len) {
+				shell_puts(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset);
+				p_shell->cursor_offset = p_shell->input_line_len;
+			}
+			break;
+		case KEY_HOME:
+			if (p_shell->cursor_offset > 0) {
+				set_cursor_pos(p_shell->cursor_offset);
+				p_shell->cursor_offset = 0;
+			}
 			break;
 		default:
 			break;
@@ -358,6 +433,57 @@ static void shell_handle_special_char(char ch)
 	}
 }
 
+static void handle_backspace_key(void)
+{
+	/* Ensure length is not 0 */
+	if (p_shell->cursor_offset > 0U) {
+		/* Echo backspace */
+		shell_puts("\b");
+		/* Send a space + backspace sequence to delete character */
+		shell_puts(" \b");
+
+		if (p_shell->cursor_offset < p_shell->input_line_len) {
+			uint32_t delta = p_shell->input_line_len - p_shell->cursor_offset;
+
+			/* display the left input-chars and remove the former last one */
+			shell_puts(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset);
+			shell_puts(" \b");
+
+			set_cursor_pos(delta);
+			memcpy_erms(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset - 1,
+				p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset, delta);
+		}
+
+		/* Null terminate the last character to erase it */
+		p_shell->buffered_line[p_shell->input_line_active][p_shell->input_line_len - 1] = 0;
+
+		/* Reduce the length of the string by one */
+		p_shell->input_line_len--;
+		p_shell->cursor_offset--;
+	}
+}
+
+static void handle_input_char(char ch)
+{
+	uint32_t delta = p_shell->input_line_len - p_shell->cursor_offset;
+
+	/* move the input from cursor offset back first */
+	if (delta > 0) {
+		memcpy_erms_backwards(p_shell->buffered_line[p_shell->input_line_active] + p_shell->input_line_len,
+			p_shell->buffered_line[p_shell->input_line_active] + p_shell->input_line_len - 1, delta);
+	}
+
+	p_shell->buffered_line[p_shell->input_line_active][p_shell->cursor_offset] = ch;
+
+	/* Echo back the input */
+	shell_puts(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset);
+	set_cursor_pos(delta);
+
+	/* Move to next character in string */
+	p_shell->input_line_len++;
+	p_shell->cursor_offset++;
+}
+
 static bool shell_input_line(void)
 {
 	bool done = false;
@@ -369,22 +495,7 @@ static bool shell_input_line(void)
 	switch (ch) {
 	/* Backspace */
 	case '\b':
-		/* Ensure length is not 0 */
-		if (p_shell->input_line_len > 0U) {
-			/* Reduce the length of the string by one */
-			p_shell->input_line_len--;
-
-			/* Null terminate the last character to erase it */
-			p_shell->buffered_line[p_shell->input_line_active][p_shell->input_line_len] = 0;
-
-			/* Echo backspace */
-			shell_puts("\b");
-
-			/* Send a space + backspace sequence to delete
-			 * character
-			 */
-			shell_puts(" \b");
-		}
+		handle_backspace_key();
 		break;
 
 	/* Carriage-return */
@@ -397,6 +508,7 @@ static bool shell_input_line(void)
 
 		/* Reset command length for next command processing */
 		p_shell->input_line_len = 0U;
+		p_shell->cursor_offset = 0U;
 		break;
 
 	/* Line feed */
@@ -410,14 +522,7 @@ static bool shell_input_line(void)
 		if (p_shell->input_line_len < SHELL_CMD_MAX_LEN) {
 			/* See if a "standard" prINTable ASCII character received */
 			if ((ch >= 32) && (ch <= 126)) {
-				/* Add character to string */
-				p_shell->buffered_line[p_shell->input_line_active][p_shell->input_line_len] = ch;
-				/* Echo back the input */
-				shell_puts(&p_shell->buffered_line[p_shell->input_line_active]
-					[p_shell->input_line_len]);
-
-				/* Move to next character in string */
-				p_shell->input_line_len++;
+				handle_input_char(ch);
 			} else {
 				/* call special character handler */
 				shell_handle_special_char(ch);
@@ -431,7 +536,7 @@ static bool shell_input_line(void)
 
 			/* Reset command length for next command processing */
 			p_shell->input_line_len = 0U;
-
+			p_shell->cursor_offset = 0U;
 		}
 		break;
 	}
