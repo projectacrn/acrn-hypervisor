@@ -33,7 +33,6 @@ static char shell_log_buf[SHELL_LOG_BUF_SIZE];
 /* Input Line Other - Switch to the "other" input line (there are only two
  * input lines total).
  */
-#define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1U) & 0x1U)
 
 static int32_t shell_cmd_help(__unused int32_t argc, __unused char **argv);
 static int32_t shell_version(__unused int32_t argc, __unused char **argv);
@@ -158,6 +157,14 @@ static struct shell_cmd shell_cmds[] = {
 	},
 };
 
+/* for function key: up/down key */
+enum function_key {
+	KEY_NONE,
+
+	KEY_UP = 0x5B41,
+	KEY_DOWN = 0x5B42,
+};
+
 /* The initial log level*/
 uint16_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
 uint16_t mem_loglevel = CONFIG_MEM_LOGLEVEL_DEFAULT;
@@ -271,14 +278,74 @@ static uint16_t sanitize_vmid(uint16_t vmid)
 	return sanitized_vmid;
 }
 
+static void clear_input_line(uint32_t len)
+{
+	while (len > 0) {
+		len--;
+		shell_puts("\b");
+		shell_puts(" \b");
+	}
+}
+
+static void handle_updown_key(enum function_key key_value)
+{
+	int32_t to_select, current_select = p_shell->to_select_index;
+
+	/* update current_select and p_shell->to_select_index as up/down key */
+	if (key_value == KEY_UP) {
+		/* if the ring buffer not full, just decrease one until to 0; if full, need handle overflow case */
+		to_select = p_shell->to_select_index - 1;
+		if (to_select < 0) {
+			to_select += MAX_BUFFERED_CMDS;
+		}
+
+		if (p_shell->buffered_line[to_select][0] != '\0') {
+			current_select = to_select;
+		}
+
+	} else {
+		/* if down key and current is active line, not need update */
+		if (p_shell->to_select_index != p_shell->input_line_active) {
+			current_select = (p_shell->to_select_index + 1) % MAX_BUFFERED_CMDS;
+		}
+	}
+
+	/* go up/down until first buffered cmd or current input line: user will know it is end to select */
+	if (current_select != p_shell->input_line_active) {
+		p_shell->to_select_index = current_select;
+	}
+
+	if (strcmp(p_shell->buffered_line[current_select], p_shell->buffered_line[p_shell->input_line_active]) != 0) {
+
+		clear_input_line(p_shell->input_line_len);
+		shell_puts(p_shell->buffered_line[current_select]);
+
+		size_t len = strnlen_s(p_shell->buffered_line[current_select], SHELL_CMD_MAX_LEN);
+
+		memcpy_s(p_shell->buffered_line[p_shell->input_line_active], SHELL_CMD_MAX_LEN,
+			p_shell->buffered_line[current_select], len + 1);
+		p_shell->input_line_len = len;
+	}
+}
+
 static void shell_handle_special_char(char ch)
 {
+	enum function_key key_value = KEY_NONE;
+
 	switch (ch) {
-	/* Escape character */
+	/* original function key value: ESC + key, so consume the next 2 characters */
 	case 0x1b:
-		/* Consume the next 2 characters */
-		(void) shell_getc();
-		(void) shell_getc();
+		key_value = (shell_getc() << 8) | shell_getc();
+
+		switch (key_value) {
+		case KEY_UP:
+		case KEY_DOWN:
+			handle_updown_key(key_value);
+			break;
+		default:
+			break;
+		}
+
 		break;
 	default:
 		/*
@@ -308,8 +375,7 @@ static bool shell_input_line(void)
 			p_shell->input_line_len--;
 
 			/* Null terminate the last character to erase it */
-			p_shell->input_line[p_shell->input_line_active]
-					[p_shell->input_line_len] = 0;
+			p_shell->buffered_line[p_shell->input_line_active][p_shell->input_line_len] = 0;
 
 			/* Echo backspace */
 			shell_puts("\b");
@@ -345,12 +411,10 @@ static bool shell_input_line(void)
 			/* See if a "standard" prINTable ASCII character received */
 			if ((ch >= 32) && (ch <= 126)) {
 				/* Add character to string */
-				p_shell->input_line[p_shell->input_line_active]
-						[p_shell->input_line_len] = ch;
+				p_shell->buffered_line[p_shell->input_line_active][p_shell->input_line_len] = ch;
 				/* Echo back the input */
-				shell_puts(&p_shell->input_line
-						[p_shell->input_line_active]
-						[p_shell->input_line_len]);
+				shell_puts(&p_shell->buffered_line[p_shell->input_line_active]
+					[p_shell->input_line_len]);
 
 				/* Move to next character in string */
 				p_shell->input_line_len++;
@@ -425,33 +489,27 @@ static int32_t shell_process_cmd(const char *p_input_line)
 
 static int32_t shell_process(void)
 {
-	int32_t status;
+	int32_t status, former_index;
 	char *p_input_line;
 
-	/* Check for the repeat command character in active input line.
-	 */
-	if (p_shell->input_line[p_shell->input_line_active][0] == '.') {
-		/* Repeat the last command (using inactive input line).
-		 */
-		p_input_line =
-			&p_shell->input_line[SHELL_INPUT_LINE_OTHER
-				(p_shell->input_line_active)][0];
-	} else {
-		/* Process current command (using active input line). */
-		p_input_line =
-			&p_shell->input_line[p_shell->input_line_active][0];
+	/* Process current command (using active input line). */
+	p_input_line = p_shell->buffered_line[p_shell->input_line_active];
 
-		/* Switch active input line. */
-		p_shell->input_line_active =
-			SHELL_INPUT_LINE_OTHER(p_shell->input_line_active);
+	former_index = (p_shell->input_line_active + MAX_BUFFERED_CMDS - 1) % MAX_BUFFERED_CMDS;
+
+	/* just buffer current cmd if current is not empty and not same with last buffered one */
+	if ((strnlen_s(p_input_line, SHELL_CMD_MAX_LEN) > 0) &&
+		(strcmp(p_input_line, p_shell->buffered_line[former_index]) != 0)) {
+		p_shell->input_line_active = (p_shell->input_line_active + 1) % MAX_BUFFERED_CMDS;
 	}
+
+	p_shell->to_select_index = p_shell->input_line_active;
 
 	/* Process command */
 	status = shell_process_cmd(p_input_line);
 
 	/* Now that the command is processed, zero fill the input buffer */
-	(void)memset((void *) p_shell->input_line[p_shell->input_line_active],
-			0, SHELL_CMD_MAX_LEN + 1U);
+	(void)memset(p_shell->buffered_line[p_shell->input_line_active], 0, SHELL_CMD_MAX_LEN + 1U);
 
 	/* Process command and return result to caller */
 	return status;
@@ -490,9 +548,10 @@ void shell_init(void)
 	p_shell->cmds = shell_cmds;
 	p_shell->cmd_count = ARRAY_SIZE(shell_cmds);
 
+	p_shell->to_select_index = 0;
+
 	/* Zero fill the input buffer */
-	(void)memset((void *)p_shell->input_line[p_shell->input_line_active], 0U,
-			SHELL_CMD_MAX_LEN + 1U);
+	(void)memset(p_shell->buffered_line[p_shell->input_line_active], 0U, SHELL_CMD_MAX_LEN + 1U);
 }
 
 #define SHELL_ROWS	30
