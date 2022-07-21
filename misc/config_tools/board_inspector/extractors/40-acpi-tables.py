@@ -34,7 +34,7 @@ def extract_gsi_number(ioapic_node, apic_id):
                 add_child(ioapic_node, "gsi_number", str(current_max - previous_max))
                 break
         except:
-            add_child(ioapic_node, "gsi_number", DEFAULT_MAX_IOAPIC_LINES)
+            add_child(ioapic_node, "gsi_number", str(DEFAULT_MAX_IOAPIC_LINES))
             break
     os.close(fd)
 
