@@ -45,6 +45,8 @@ void vcpu_thread(struct thread_object *obj)
 		profiling_vmenter_handler(vcpu);
 
 		TRACE_2L(TRACE_VM_ENTER, 0UL, 0UL);
+		sample_vmexit_end(vcpu);
+
 		ret = run_vcpu(vcpu);
 		if (ret != 0) {
 			pr_fatal("vcpu resume failed");
@@ -55,6 +57,7 @@ void vcpu_thread(struct thread_object *obj)
 			continue;
 		}
 		TRACE_2L(TRACE_VM_EXIT, vcpu->arch.exit_reason, vcpu_get_rip(vcpu));
+		sample_vmexit_begin(vcpu);
 
 		profiling_pre_vmexit_handler(vcpu);
 

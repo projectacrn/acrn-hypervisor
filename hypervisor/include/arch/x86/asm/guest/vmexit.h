@@ -7,6 +7,8 @@
 #ifndef VMEXIT_H_
 #define VMEXIT_H_
 
+#define NR_VMX_EXIT_REASONS	70U
+
 struct vm_exit_dispatch {
 	int32_t (*handler)(struct acrn_vcpu *);
 	uint32_t need_exit_qualification;
