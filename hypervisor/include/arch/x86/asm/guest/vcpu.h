@@ -26,6 +26,7 @@
 #include <io_req.h>
 #include <asm/msr.h>
 #include <asm/cpu.h>
+#include <asm/guest/vmexit.h>
 #include <asm/guest/instr_emul.h>
 #include <asm/guest/nested.h>
 #include <asm/vmx.h>
@@ -197,6 +198,11 @@ enum reset_mode;
 
 #define EOI_EXIT_BITMAP_SIZE	256U
 
+#ifdef HV_DEBUG
+	#define MAX_VMEXIT_LEVEL 14 /* from 0 to 14 for counts*/
+	#define TOTAL_ARRAY_LEVEL (MAX_VMEXIT_LEVEL + 1)
+#endif
+
 struct guest_cpu_context {
 	struct run_context run_ctx;
 	struct ext_context ext_ctx;
@@ -321,6 +327,14 @@ struct acrn_vcpu {
 	uint64_t reg_updated;
 
 	struct sched_event events[VCPU_EVENT_NUM];
+
+#ifdef HV_DEBUG
+	uint64_t vmexit_begin;
+
+	uint64_t vmexit_cnt[NR_VMX_EXIT_REASONS][TOTAL_ARRAY_LEVEL];
+	uint64_t vmexit_time[NR_VMX_EXIT_REASONS]; /* for max latency */
+#endif
+
 } __aligned(PAGE_SIZE);
 
 struct vcpu_dump {

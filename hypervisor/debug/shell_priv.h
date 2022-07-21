@@ -106,4 +106,8 @@ struct shell {
 #define SHELL_CMD_WRMSR_PARAM		"[-p<pcpu_id>]	<msr_index> <value>"
 #define SHELL_CMD_WRMSR_HELP		"Write value (in hexadecimal) to the MSR at msr_index (in hexadecimal) for CPU"\
 					" ID pcpu_id"
+#define SHELL_CMD_VMEXIT		"vmexit"
+#define SHELL_CMD_VMEXIT_PARAM		NULL
+#define SHELL_CMD_VMEXIT_HELP	"profiling vmexit, use: vmexit [clear | enable | disable | vm_id] enabled by default"
+
 #endif /* SHELL_PRIV_H */

@@ -22,12 +22,13 @@
 #include <shell.h>
 #include <asm/guest/vmcs.h>
 #include <asm/host_pm.h>
+#include <asm/tsc.h>
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U
 #define SHELL_PROMPT_STR	"ACRN:\\>"
 
-#define SHELL_LOG_BUF_SIZE		(PAGE_SIZE * MAX_PCPU_NUM / 2U)
+#define SHELL_LOG_BUF_SIZE		(PAGE_SIZE * MAX_PCPU_NUM)
 static char shell_log_buf[SHELL_LOG_BUF_SIZE];
 
 /* Input Line Other - Switch to the "other" input line (there are only two
@@ -52,6 +53,7 @@ static int32_t shell_cpuid(int32_t argc, char **argv);
 static int32_t shell_reboot(int32_t argc, char **argv);
 static int32_t shell_rdmsr(int32_t argc, char **argv);
 static int32_t shell_wrmsr(int32_t argc, char **argv);
+static int32_t shell_show_vmexit_profile(__unused int argc, __unused char **argv);
 
 static struct shell_cmd shell_cmds[] = {
 	{
@@ -155,6 +157,12 @@ static struct shell_cmd shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_WRMSR_PARAM,
 		.help_str	= SHELL_CMD_WRMSR_HELP,
 		.fcn		= shell_wrmsr,
+	},
+	{
+		.str		= SHELL_CMD_VMEXIT,
+		.cmd_param	= SHELL_CMD_VMEXIT_PARAM,
+		.help_str	= SHELL_CMD_VMEXIT_HELP,
+		.fcn		= shell_show_vmexit_profile,
 	},
 };
 
@@ -1446,4 +1454,318 @@ static int32_t shell_wrmsr(int32_t argc, char **argv)
 	}
 
 	return ret;
+}
+static const char *level_info[MAX_VMEXIT_LEVEL] = {
+	"   0us -   2us",
+	"   2us -   4us",
+	"   4us -   8us",
+	"   8us -  16us",
+	"  16us -  32us",
+	"  32us -  64us",
+	"  64us - 128us",
+	" 128us - 256us",
+	" 256us - 512us",
+	" 512us -1024us",
+	"1024us -2048us",
+	"2048us -4096us",
+	"4096us -8192us",
+	"8192us -  more",
+};
+
+/* if target_vm_id valid, just check this vm or check all VMs; if count is 0, just ignore it */
+static bool check_vmexit_count_per_reason(uint16_t target_vm_id, uint16_t reason, uint16_t level)
+{
+	bool has_vmexit = false;
+	uint16_t vm_id, vcpu_id;
+	struct acrn_vm *vm;
+	struct acrn_vcpu *vcpu;
+
+	if (target_vm_id != CONFIG_MAX_VM_NUM) {
+		vm = get_vm_from_vmid(target_vm_id);
+		foreach_vcpu(vcpu_id, vm, vcpu) {
+			if (vcpu->vmexit_cnt[reason][level] != 0) {
+				has_vmexit = true;
+				break;
+			}
+		}
+	} else {
+		for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+			vm = get_vm_from_vmid(vm_id);
+			if (is_poweroff_vm(vm))
+				continue;
+
+			foreach_vcpu(vcpu_id, vm, vcpu) {
+				if (vcpu->vmexit_cnt[reason][level] != 0) {
+					has_vmexit = true;
+					break;
+				}
+			}
+
+			if (has_vmexit)
+				break;
+		}
+	}
+
+	return has_vmexit;
+}
+
+/* if target_vm_id valid, just output this vm or output all VMs */
+static bool output_id_per_vm_vcpu(char **str_arg, size_t *size_max, uint16_t target_vm_id)
+{
+	char *str = *str_arg;
+	size_t len, size = *size_max;
+	uint16_t vm_id, vcpu_id;
+	struct acrn_vm *vm;
+	struct acrn_vcpu *vcpu;
+
+	if (target_vm_id != CONFIG_MAX_VM_NUM) {
+		vm = get_vm_from_vmid(target_vm_id);
+		foreach_vcpu(vcpu_id, vm, vcpu) {
+			len = snprintf(str, size, "   VM%u/vCPU%u", target_vm_id, vcpu_id);
+			if (len >= size) {
+				return false;
+			}
+			size -= len;
+			str += len;
+		}
+	} else {
+		for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+			vm = get_vm_from_vmid(vm_id);
+			if (is_poweroff_vm(vm))
+				continue;
+
+			foreach_vcpu(vcpu_id, vm, vcpu) {
+				len = snprintf(str, size, "   VM%u/vCPU%u", vm_id, vcpu_id);
+				if (len >= size) {
+					return false;
+				}
+				size -= len;
+				str += len;
+			}
+		}
+	}
+
+	*str_arg = str;
+	*size_max = size;
+	return true;
+}
+
+static bool output_vmexit_info_per_vcpu(char **str_arg, size_t *size_max, uint16_t target_vm_id,
+	uint16_t reason, uint16_t level)
+{
+	char *str = *str_arg;
+	size_t len, size = *size_max;
+	uint16_t vm_id, vcpu_id;
+	struct acrn_vm *vm;
+	struct acrn_vcpu *vcpu;
+
+	if (target_vm_id != CONFIG_MAX_VM_NUM) {
+		vm = get_vm_from_vmid(target_vm_id);
+
+		foreach_vcpu(vcpu_id, vm, vcpu) {
+			 /* if level is MAX, output the max time */
+			if (level == MAX_VMEXIT_LEVEL) {
+				len = snprintf(str, size, "%12lld", vcpu->vmexit_time[reason]);
+			} else {
+				len = snprintf(str, size, "%12lld", vcpu->vmexit_cnt[reason][level]);
+			}
+
+			if (len >= size) {
+				return false;
+			}
+
+			size -= len;
+			str += len;
+		}
+	} else {
+		for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+			vm = get_vm_from_vmid(vm_id);
+			if (is_poweroff_vm(vm))
+				continue;
+
+			foreach_vcpu(vcpu_id, vm, vcpu) {
+				/* if level is MAX, output the max time */
+				if (level == MAX_VMEXIT_LEVEL) {
+					len = snprintf(str, size, "%12lld", vcpu->vmexit_time[reason]);
+				} else {
+					len = snprintf(str, size, "%12lld", vcpu->vmexit_cnt[reason][level]);
+				}
+
+				if (len >= size) {
+					return false;
+				}
+
+				size -= len;
+				str += len;
+			}
+		}
+	}
+
+	*str_arg = str;
+	*size_max = size;
+	return true;
+}
+
+static void get_vmexit_details_per_vcpu(char *str_arg, size_t str_max, uint16_t target_vm_id)
+{
+	char *str = str_arg;
+	uint16_t reason, level;
+	size_t len, size = str_max;
+
+	len = snprintf(str, size, "\r\nNow=%lldus, for detailed latency of each vmexit on %s VM/vCPU:",
+		ticks_to_us(rdtsc()), (target_vm_id == CONFIG_MAX_VM_NUM) ? "each" : "one");
+	if (len >= size) {
+		goto overflow;
+	}
+	size -= len;
+	str += len;
+
+	for (reason = 0U; reason < NR_VMX_EXIT_REASONS; reason++) {
+
+		if (!check_vmexit_count_per_reason(target_vm_id, reason, TOTAL_ARRAY_LEVEL - 1))
+			continue;
+
+		len = snprintf(str, size, "\r\n\r\n   VMEXIT/0x%02x", reason);
+		if (len >= size) {
+			goto overflow;
+		}
+		size -= len;
+		str += len;
+
+		if (!output_id_per_vm_vcpu(&str, &size, target_vm_id)) {
+			goto overflow;
+		}
+
+		for (level = 0; level < MAX_VMEXIT_LEVEL; level++) {
+
+			if (!check_vmexit_count_per_reason(target_vm_id, reason, level)) {
+				continue;
+			}
+
+			len = snprintf(str, size, "\r\n%s", level_info[level]);
+			if (len >= size) {
+				goto overflow;
+			}
+			size -= len;
+			str += len;
+
+			if (!output_vmexit_info_per_vcpu(&str, &size, target_vm_id, reason, level)) {
+				goto overflow;
+			}
+		}
+
+		len = snprintf(str, size, "\r\n  Max Lat(us):");
+		if (len >= size) {
+			goto overflow;
+		}
+		size -= len;
+		str += len;
+
+		if (!output_vmexit_info_per_vcpu(&str, &size, target_vm_id, reason, MAX_VMEXIT_LEVEL)) {
+			goto overflow;
+		}
+	}
+
+	snprintf(str, size, "\r\n");
+	return;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
+}
+
+static void clear_vmexit_info_buffer(void)
+{
+	uint16_t vm_id, vcpu_id;
+	struct acrn_vm *vm;
+	struct acrn_vcpu *vcpu;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm = get_vm_from_vmid(vm_id);
+		if (!is_poweroff_vm(vm)) {
+			foreach_vcpu(vcpu_id, vm, vcpu) {
+				memset(vcpu->vmexit_cnt, 0, sizeof(vcpu->vmexit_cnt));
+				memset(vcpu->vmexit_time, 0, sizeof(vcpu->vmexit_time));
+			}
+		}
+	}
+}
+
+/* used to control vmexit sample function */
+static bool sample_vmexit_enabled = true;
+
+static int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
+{
+	uint16_t vm_id = CONFIG_MAX_VM_NUM;
+	bool to_continue = true;
+
+	if (argc == 2) {
+		if (strcmp(argv[1], "clear") == 0) {
+			clear_vmexit_info_buffer();
+		} else if (strcmp(argv[1], "enable") == 0) {
+			shell_puts("\tenable vmexit sample!\n");
+			sample_vmexit_enabled = true;
+			to_continue = false;
+		} else if (strcmp(argv[1], "disable") == 0) {
+			shell_puts("\tdisable vmexit sample!\n");
+			sample_vmexit_enabled = false;
+			to_continue = false;
+		} else {
+			vm_id = (uint16_t)strtol_deci(argv[1]);
+			if ((vm_id >= CONFIG_MAX_VM_NUM) || is_poweroff_vm(get_vm_from_vmid(vm_id))) {
+				shell_puts("\tThis vm_id not existed or active! please check!\n");
+				to_continue = false;
+			}
+		}
+	}
+
+	if (to_continue && !sample_vmexit_enabled) {
+		shell_puts("\tvmexit sample is disabled!\n");
+		to_continue = false;
+	}
+
+	if (to_continue) {
+		get_vmexit_details_per_vcpu(shell_log_buf, SHELL_LOG_BUF_SIZE, vm_id);
+		shell_puts(shell_log_buf);
+	}
+
+	return 0;
+}
+
+/* to sample vmexit tsc data */
+void sample_vmexit_end(struct acrn_vcpu *vcpu)
+{
+	uint32_t basic_exit_reason = vcpu->arch.exit_reason & 0xFFFFUL;
+
+	if (!sample_vmexit_enabled)
+		return;
+
+	if (vcpu->vmexit_begin != 0UL) {
+		uint64_t delta = rdtsc() - vcpu->vmexit_begin;
+		uint32_t us = (uint32_t)ticks_to_us(delta);
+		uint16_t fls = (uint16_t)(fls32(us) + 1); /* to avoid us = 0 case, then fls=0xFFFF */
+		uint16_t index = 0;
+
+		if (fls >= MAX_VMEXIT_LEVEL) {
+			index = MAX_VMEXIT_LEVEL - 1;
+		} else if (fls > 0) { /* if fls == 0, it means the us = 0 */
+			index = fls - 1;
+		}
+
+		vcpu->vmexit_cnt[basic_exit_reason][index]++;
+
+		if (us > vcpu->vmexit_time[basic_exit_reason]) {
+			vcpu->vmexit_time[basic_exit_reason] = us;
+		}
+	}
+}
+
+void sample_vmexit_begin(struct acrn_vcpu *vcpu)
+{
+	uint32_t basic_exit_reason = vcpu->arch.exit_reason & 0xFFFFUL;
+
+	if (!sample_vmexit_enabled)
+		return;
+
+	vcpu->vmexit_begin = rdtsc();
+	vcpu->vmexit_cnt[basic_exit_reason][TOTAL_ARRAY_LEVEL - 1]++;
 }
