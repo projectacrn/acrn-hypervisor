@@ -245,6 +245,7 @@ export default {
       }
       maxVMID++;
       this.scenario.vm.push(configurator.newVM(maxVMID, load_order))
+      this.switchTab(maxVMID)
     },
     deleteVM() {
       let currentVMIndex = -1;
