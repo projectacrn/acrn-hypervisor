@@ -188,6 +188,7 @@ export default {
 <style scoped>
 .ToolSet {
   display: flex;
+  flex-direction: row;
   justify-content: space-around;
   margin: 1rem;
   gap: 0.5rem;
