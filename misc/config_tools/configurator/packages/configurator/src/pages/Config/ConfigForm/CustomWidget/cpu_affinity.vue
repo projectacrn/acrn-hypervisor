@@ -33,14 +33,14 @@
           </b-col>
           <b-col>
             <div class="ToolSet">
-              <div @click="addPCPU(index)" :class="{'d-none': (this.defaultVal.pcpu.length-1)!==index}">
-                <Icon size="18px">
-                  <Plus/>
-                </Icon>
-              </div>
               <div @click="removePCPU(index)">
                 <Icon size="18px">
                   <Minus/>
+                </Icon>
+              </div>
+              <div @click="addPCPU(index)" :class="{'d-none': (this.defaultVal.pcpu.length-1)!==index}">
+                <Icon size="18px">
+                  <Plus/>
                 </Icon>
               </div>
             </div>
