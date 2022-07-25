@@ -392,7 +392,7 @@ class CAT {
         return preLaunchedVMCPUs;
     }
 
-    newPolicy(CACHE_ID, CACHE_LEVEL, vmConfig, VCPU, TYPE: PolicyType, maxLength): Policy {
+    newPolicy(CACHE_LEVEL, CACHE_ID, vmConfig, VCPU, TYPE: PolicyType, maxLength): Policy {
         let originPolicy = {
             VM: vmConfig.name,
             VCPU, TYPE,
@@ -587,19 +587,20 @@ class CAT {
         // noinspection JSUnresolvedVariable
         if (
             hv !== null &&
-            hv.hasOwnProperty('CACHE_ALLOCATION') &&
-            _.isArray(hv.CACHE_ALLOCATION)
+            hv.hasOwnProperty('CACHE_REGION') &&
+            hv.CACHE_REGION.hasOwnProperty('CACHE_ALLOCATION') &&
+            _.isArray(hv.CACHE_REGION.CACHE_ALLOCATION)
         ) {
             // noinspection JSUnresolvedVariable
-            hv.CACHE_ALLOCATION.map((cache_region) => {
+            hv.CACHE_REGION.CACHE_ALLOCATION.map((cache_region) => {
                 if (
                     cache_region.hasOwnProperty('POLICY') &&
                     cache_region.POLICY.length > 0
                 ) {
                     cache_region.POLICY.map(policy => {
                         scenarioCATData.push({
-                            CACHE_ID: cache_region.id,
-                            CACHE_LEVEL: cache_region.level,
+                            CACHE_ID: cache_region.CACHE_ID,
+                            CACHE_LEVEL: cache_region.CACHE_LEVEL,
                             CLOS_MASK: policy.CLOS_MASK,
                             META: {vmid: this.vmIDs[policy.VM]},
                             TYPE: policy.TYPE,
