@@ -61,9 +61,7 @@
       {{ CAT_INFO.errorMsg }}
     </div>
     <div class="py-4" v-for="CACHE_ALLOCATION in CAT_INFO.regions" v-if="RDT_ENABLED==='y'">
-      <p v-if="CACHE_ALLOCATION.level===3">
-        L3 Cache Allocation Technology
-        <br/>
+      <p v-if="CACHE_ALLOCATION.level===3||CACHE_ALLOCATION.level===2">
         Drag the ends of the boxes to cover the cache chunks you want to allocate to specific VMs. If you have a
         real-time
         VM,ensure its cache chunks do not overlap with any other VM's cache chunks.
