@@ -3,9 +3,24 @@
 Security Advisory
 #################
 
+Addressed in ACRN v3.0.1
+************************
+We recommend that all developers upgrade to this v3.0.1 release (or later), which
+addresses the following security issue discovered in previous releases:
+
+-----
+
+-  Disable RRSBA on platforms using retpoline
+    For platforms that supports RRSBA (Restricted Return Stack Buffer
+    Alternate), using retpoline may not be sufficient to guard against branch
+    history injection or intra-mode branch target injection. RRSBA must
+    be disabled to prevent CPUs from using alternate predictors for RETs.
+    (Addresses security issue tracked by CVE-2022-29901 and CVE-2022-28693.)
+
+    **Affected Release:** v3.0 and earlier
+
 Addressed in ACRN v2.7
 ************************
-
 We recommend that all developers upgrade to this v2.7 release (or later), which
 addresses the following security issue discovered in previous releases:
 
