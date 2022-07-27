@@ -105,6 +105,8 @@ extern struct acrn_scheduler sched_bvt;
 struct sched_bvt_control {
 	struct list_head runqueue;
 	struct hv_timer tick_timer;
+	/* The minimum AVT of any runnable threads */
+	int64_t svt;
 };
 
 extern struct acrn_scheduler sched_prio;
