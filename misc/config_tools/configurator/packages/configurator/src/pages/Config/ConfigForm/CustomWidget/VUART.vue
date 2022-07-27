@@ -96,14 +96,20 @@
             <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[0].vm_name }} </b-col>
             <b-col sm="4">
               <b-form-input v-model="VUARTConn.endpoint[0].io_port" v-if="VUARTConn.type === 'legacy'" :placeholder="vIoPortPlaceholder"/>
-              <b-form-input v-model="VUARTConn.endpoint[0].vbdf" v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
+              <b-form-input :state="validateVBDF(VUARTConn.endpoint[0].vbdf)" v-model="VUARTConn.endpoint[0].vbdf" v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
+              <b-form-invalid-feedback>
+                {{ this.VBDFType["err:pattern"] }}
+              </b-form-invalid-feedback>
             </b-col>
           </b-row>
           <b-row class="justify-content-sm-start align-items-center">
             <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[1].vm_name }} </b-col>
             <b-col sm="4">
               <b-form-input v-model="VUARTConn.endpoint[1].io_port" v-if="VUARTConn.type === 'legacy'" :placeholder="vIoPortPlaceholder"/>
-              <b-form-input v-model="VUARTConn.endpoint[1].vbdf" v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
+              <b-form-input :state="validateVBDF(VUARTConn.endpoint[1].vbdf)" v-model="VUARTConn.endpoint[1].vbdf" v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
+              <b-form-invalid-feedback>
+                {{ this.VBDFType["err:pattern"] }}
+              </b-form-invalid-feedback>
             </b-col>
           </b-row>
         </div>
@@ -186,6 +192,7 @@ export default {
       IOPortDefault: this.rootSchema.definitions['VuartEndpointType']['properties']['io_port']['default'],
       VMConfigType: this.rootSchema.definitions['VMConfigType'],
       VuartConnectionType: this.rootSchema.definitions['VuartConnectionType'],
+      VBDFType: this.rootSchema.definitions['VBDFType'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
     };
   },
@@ -209,6 +216,10 @@ export default {
   methods: {
     validation(value) {
       return (value != null) && (value.length != 0);
+    },
+    validateVBDF(value) {
+      var regexp = new RegExp(this.VBDFType.pattern);
+      return (value != null) && regexp.test(value);
     },
     removeVUARTConnection(index) {
       this.defaultVal.splice(index, 1);
