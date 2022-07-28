@@ -172,7 +172,7 @@ def allocate_hugepages(board_etree, scenario_etree, allocation_etree):
 
     post_vms_memory = sum(int(i) for i in scenario_etree.xpath("//vm[load_order = 'POST_LAUNCHED_VM']/memory/size/text()")) / 1024
     if total_hugepages - post_vms_memory < 0:
-        logging.warning(f"The sum {post_vms_memory} of memory configured in post launch VMs should not be larger than " \
+        logging.debug(f"The sum {post_vms_memory} of memory configured in post launch VMs should not be larger than " \
         f"the calculated total hugepages {total_hugepages} of service VMs. Please update the configuration in post launch VMs")
 
     allocation_service_vm_node = common.get_node("/acrn-config/vm[load_order = 'SERVICE_VM']", allocation_etree)
