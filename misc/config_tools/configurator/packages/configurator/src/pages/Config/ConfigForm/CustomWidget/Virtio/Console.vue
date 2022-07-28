@@ -131,7 +131,7 @@ export default {
   },
   data() {
     return {
-      ConsoleConfiguration: this.rootSchema.definitions['BasicVirtioConsoleBackendType'],
+      ConsoleConfiguration: this.rootSchema.definitions['VirtioConsoleConfiguration'],
       enumNames: this.rootSchema.definitions['VirtioConsoleUseType']['enumNames'],
       enum: this.rootSchema.definitions['VirtioConsoleUseType']['enum'],
       ConsoleBackendType: this.rootSchema.definitions['BasicVirtioConsoleBackendType']['enum'],
