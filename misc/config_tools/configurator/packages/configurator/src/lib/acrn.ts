@@ -392,7 +392,7 @@ class CAT {
         return preLaunchedVMCPUs;
     }
 
-    newPolicy(CACHE_LEVEL, CACHE_ID, vmConfig, VCPU, TYPE: PolicyType, maxLength): Policy {
+    newPolicy(CACHE_ID, CACHE_LEVEL, vmConfig, VCPU, TYPE: PolicyType, maxLength): Policy {
         let originPolicy = {
             VM: vmConfig.name,
             VCPU, TYPE,
@@ -441,13 +441,13 @@ class CAT {
 
     getCLOSMask(CACHE_ID, CACHE_LEVEL, vmID, vmName, VCPU, TYPE: PolicyType, maxLength: number) {
         let CATData = this.selectCATData(CACHE_ID, CACHE_LEVEL, vmID, vmName, VCPU, TYPE);
+        let CLOS_MASK
         if (CATData !== false) {
-            let CLOS_MASK = CATData.CLOS_MASK;
+            CLOS_MASK = CATData.CLOS_MASK;
             // ensure CLOS_MASK length is shorter or equal to maxLength
             CLOS_MASK = this.rangeToHex(this.hexToRange(CLOS_MASK, maxLength), maxLength);
             return CLOS_MASK;
-        }
-        let CLOS_MASK = "0x" + parseInt('1'.repeat(maxLength), 2).toString(16)
+        } else CLOS_MASK = "0x" + parseInt('1'.repeat(maxLength), 2).toString(16)
         this.CATDB.push({
             META: {vmid: vmID},
             CACHE_ID, CACHE_LEVEL,
@@ -469,10 +469,10 @@ class CAT {
                             pcpu.real_time_vcpu === 'y'
                         ) {
                             if (!this.switches.CDP_ENABLED) {
-                                RTCoreData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, 'Unified', regionData.capacity_mask_length))
+                                RTCoreData.push(this.newPolicy(regionData.id, regionData.level, vmConfig, index, 'Unified', regionData.capacity_mask_length))
                             } else {
-                                RTCoreData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, 'Code', regionData.capacity_mask_length))
-                                RTCoreData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, 'Data', regionData.capacity_mask_length))
+                                RTCoreData.push(this.newPolicy(regionData.id, regionData.level, vmConfig, index, 'Code', regionData.capacity_mask_length))
+                                RTCoreData.push(this.newPolicy(regionData.id, regionData.level, vmConfig, index, 'Data', regionData.capacity_mask_length))
                             }
                         }
                     }
@@ -498,10 +498,10 @@ class CAT {
                                 (pcpu.real_time_vcpu === 'y' && vmConfig.vm_type !== 'RTVM')
                             ) {
                                 if (!this.switches.CDP_ENABLED) {
-                                    StandardData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, 'Unified', regionData.capacity_mask_length))
+                                    StandardData.push(this.newPolicy( regionData.id, regionData.level,vmConfig, index, 'Unified', regionData.capacity_mask_length))
                                 } else {
-                                    StandardData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, "Code", regionData.capacity_mask_length))
-                                    StandardData.push(this.newPolicy(regionData.level, regionData.id, vmConfig, index, "Data", regionData.capacity_mask_length))
+                                    StandardData.push(this.newPolicy(regionData.id, regionData.level, vmConfig, index, "Code", regionData.capacity_mask_length))
+                                    StandardData.push(this.newPolicy( regionData.id, regionData.level,vmConfig, index, "Data", regionData.capacity_mask_length))
                                 }
                             }
                         }
@@ -524,10 +524,10 @@ class CAT {
         this.serviceVMCPUs.map((pcpuID, index) => {
             if (regionData.processors.indexOf(pcpuID) !== -1) {
                 if (!this.switches.CDP_ENABLED) {
-                    ServiceData.push(this.newPolicy(regionData.level, regionData.id, this.serviceVM, index, "Unified", regionData.capacity_mask_length))
+                    ServiceData.push(this.newPolicy(regionData.id, regionData.level, this.serviceVM, index, "Unified", regionData.capacity_mask_length))
                 } else {
-                    ServiceData.push(this.newPolicy(regionData.level, regionData.id, this.serviceVM, index, "Code", regionData.capacity_mask_length))
-                    ServiceData.push(this.newPolicy(regionData.level, regionData.id, this.serviceVM, index, "Data", regionData.capacity_mask_length))
+                    ServiceData.push(this.newPolicy(regionData.id, regionData.level, this.serviceVM, index, "Code", regionData.capacity_mask_length))
+                    ServiceData.push(this.newPolicy(regionData.id, regionData.level, this.serviceVM, index, "Data", regionData.capacity_mask_length))
                 }
             }
         })
@@ -545,7 +545,7 @@ class CAT {
                     vmConfig.virtual_cat_support === "y"
                 ) {
                     VCATData.push(
-                        this.newPolicy(regionData.level, regionData.id, vmConfig, 0, "Unified", vmConfig.virtual_cat_number)
+                        this.newPolicy(regionData.id, regionData.level, vmConfig, 0, "Unified", vmConfig.virtual_cat_number)
                     )
                 }
             })
@@ -582,37 +582,40 @@ class CAT {
 
     private getCATDataFromScenario() {
         let hv = this.scenario.hv;
-        let scenarioCATData: CATDBRecord[] = []
 
-        // noinspection JSUnresolvedVariable
+        let scenarioCATData: CATDBRecord[] = []
+         // noinspection JSUnresolvedVariable
         if (
             hv !== null &&
-            hv.hasOwnProperty('CACHE_REGION') &&
-            hv.CACHE_REGION.hasOwnProperty('CACHE_ALLOCATION') &&
-            _.isArray(hv.CACHE_REGION.CACHE_ALLOCATION)
+            hv.hasOwnProperty('CACHE_REGION')
         ) {
-            // noinspection JSUnresolvedVariable
-            hv.CACHE_REGION.CACHE_ALLOCATION.map((cache_region) => {
-                if (
-                    cache_region.hasOwnProperty('POLICY') &&
-                    cache_region.POLICY.length > 0
-                ) {
-                    cache_region.POLICY.map(policy => {
-                        scenarioCATData.push({
-                            CACHE_ID: cache_region.CACHE_ID,
-                            CACHE_LEVEL: cache_region.CACHE_LEVEL,
-                            CLOS_MASK: policy.CLOS_MASK,
-                            META: {vmid: this.vmIDs[policy.VM]},
-                            TYPE: policy.TYPE,
-                            VCPU: policy.VCPU,
-                            VM: policy.VM
+            let cacheRegion = hv.CACHE_REGION
+            if (cacheRegion !== null && cacheRegion.hasOwnProperty('CACHE_ALLOCATION') &&
+                _.isArray(cacheRegion.CACHE_ALLOCATION)) {
+                // noinspection JSUnresolvedVariable
+
+                cacheRegion.CACHE_ALLOCATION.map((cache_allocation) => {
+                    if (
+                        cache_allocation.hasOwnProperty('POLICY') &&
+                        cache_allocation.POLICY.length > 0
+                    ) {
+                        cache_allocation.POLICY.map(policy => {
+                            scenarioCATData.push({
+                                CACHE_ID: cache_allocation.CACHE_ID,
+                                CACHE_LEVEL: cache_allocation.CACHE_LEVEL,
+                                CLOS_MASK: policy.CLOS_MASK,
+                                META: {vmid: this.vmIDs[policy.VM]},
+                                TYPE: policy.TYPE,
+                                VCPU: policy.VCPU,
+                                VM: policy.VM
+                            })
                         })
-                    })
-                }
+                    }
 
-            })
+                })
+
+            }
         }
-
         return scenarioCATData
     }
 
