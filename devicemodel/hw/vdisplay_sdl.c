@@ -52,6 +52,8 @@ struct egl_display_ops {
 };
 
 static struct display {
+	int pscreen_id;
+	SDL_Rect pscreen_rect;
 	struct display_info info;
 	struct state s;
 	SDL_Texture *dpy_texture;
@@ -62,7 +64,6 @@ static struct display {
 	int width, height; // Width/height of dpy_win
 	int org_x, org_y;
 	int guest_width, guest_height;
-	int screen;
 	struct surface surf;
 	struct cursor cur;
 	SDL_Texture *cursor_tex;
@@ -909,35 +910,48 @@ vdpy_sdl_display_thread(void *data)
 	struct vdpy_display_bh *bh;
 	struct itimerspec ui_timer_spec;
 
-	if (vdpy.width && vdpy.height) {
+	if (vdpy.guest_width && vdpy.guest_height) {
 		/* clip the region between (640x480) and (1920x1080) */
-		if (vdpy.width < VDPY_MIN_WIDTH)
-			vdpy.width = VDPY_MIN_WIDTH;
-		if (vdpy.width > VDPY_MAX_WIDTH)
-			vdpy.width = VDPY_MAX_WIDTH;
-		if (vdpy.height < VDPY_MIN_HEIGHT)
-			vdpy.height = VDPY_MIN_HEIGHT;
-		if (vdpy.height > VDPY_MAX_HEIGHT)
-			vdpy.height = VDPY_MAX_HEIGHT;
+		if (vdpy.guest_width < VDPY_MIN_WIDTH)
+			vdpy.guest_width = VDPY_MIN_WIDTH;
+		if (vdpy.guest_width > VDPY_MAX_WIDTH)
+			vdpy.guest_width = VDPY_MAX_WIDTH;
+		if (vdpy.guest_height < VDPY_MIN_HEIGHT)
+			vdpy.guest_height = VDPY_MIN_HEIGHT;
+		if (vdpy.guest_height > VDPY_MAX_HEIGHT)
+			vdpy.guest_height = VDPY_MAX_HEIGHT;
 	} else {
 		/* the default window(1280x720) is created with undefined pos
 		 * when no geometry info is passed
 		 */
 		vdpy.org_x = 0xFFFF;
 		vdpy.org_y = 0xFFFF;
-		vdpy.width = VDPY_DEFAULT_WIDTH;
-		vdpy.height = VDPY_DEFAULT_HEIGHT;
+		vdpy.guest_width = VDPY_DEFAULT_WIDTH;
+		vdpy.guest_height = VDPY_DEFAULT_HEIGHT;
 	}
+
+	vdpy.info.xoff = vdpy.org_x;
+	vdpy.info.yoff = vdpy.org_y;
+	vdpy.info.width = vdpy.guest_width;
+	vdpy.info.height = vdpy.guest_height;
 
 	win_flags = SDL_WINDOW_OPENGL |
 		    SDL_WINDOW_ALWAYS_ON_TOP |
 		    SDL_WINDOW_SHOWN;
 	if (vdpy.s.is_fullscreen) {
-		win_flags |= SDL_WINDOW_FULLSCREEN;
+		win_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		vdpy.org_x = vdpy.pscreen_rect.x;
+		vdpy.org_y = vdpy.pscreen_rect.y;
+		vdpy.width = vdpy.pscreen_rect.w;
+		vdpy.height = vdpy.pscreen_rect.h;
+	} else {
+		vdpy.width = vdpy.guest_width;
+		vdpy.height = vdpy.guest_height;
 	}
 	vdpy.dpy_win = NULL;
 	vdpy.dpy_renderer = NULL;
 	vdpy.dpy_img = NULL;
+	// Zoom to width and height of pscreen is fullscreen enabled
 	vdpy.dpy_win = SDL_CreateWindow("ACRN_DM",
 					vdpy.org_x, vdpy.org_y,
 					vdpy.width, vdpy.height,
@@ -946,6 +960,9 @@ vdpy_sdl_display_thread(void *data)
 		pr_err("Failed to Create SDL_Window\n");
 		goto sdl_fail;
 	}
+	pr_info("SDL display bind to screen %d: [%d,%d,%d,%d].\n", vdpy.pscreen_id,
+			vdpy.org_x, vdpy.org_y, vdpy.width, vdpy.height);
+
 	vdpy.dpy_renderer = SDL_CreateRenderer(vdpy.dpy_win, -1, 0);
 	if (vdpy.dpy_renderer == NULL) {
 		pr_err("Failed to Create GL_Renderer \n");
@@ -1134,7 +1151,6 @@ int
 gfx_ui_init()
 {
 	SDL_SysWMinfo info;
-	SDL_Rect disp_rect;
 
 	setenv("SDL_VIDEO_X11_FORCE_EGL", "1", 1);
 	setenv("SDL_OPENGL_ES_DRIVER", "1", 1);
@@ -1146,10 +1162,10 @@ gfx_ui_init()
 		return -1;
 	}
 
-	SDL_GetDisplayBounds(0, &disp_rect);
+	SDL_GetDisplayBounds(vdpy.pscreen_id, &vdpy.pscreen_rect);
 
-	if (disp_rect.w < VDPY_MIN_WIDTH ||
-	    disp_rect.h < VDPY_MIN_HEIGHT) {
+	if (vdpy.pscreen_rect.w < VDPY_MIN_WIDTH ||
+	    vdpy.pscreen_rect.h < VDPY_MIN_HEIGHT) {
 		pr_err("Too small resolutions. Please check the "
 		       " graphics system\n");
 		SDL_Quit();
@@ -1198,17 +1214,19 @@ int vdpy_parse_cmd_option(const char *opts)
 
 	str = strcasestr(opts, "geometry=");
 	if (opts && strcasestr(opts, "geometry=fullscreen")) {
-		snum = sscanf(str, "geometry=fullscreen:%d", &vdpy.screen);
+		snum = sscanf(str, "geometry=fullscreen:%d", &vdpy.pscreen_id);
 		if (snum != 1) {
-			vdpy.screen = 0;
+			vdpy.pscreen_id = 0;
 		}
-		vdpy.width = VDPY_MAX_WIDTH;
-		vdpy.height = VDPY_MAX_HEIGHT;
+		vdpy.org_x = 0;
+		vdpy.org_y = 0;
+		vdpy.guest_width = VDPY_MAX_WIDTH;
+		vdpy.guest_height = VDPY_MAX_HEIGHT;
 		vdpy.s.is_fullscreen = true;
 		pr_info("virtual display: fullscreen.\n");
 	} else if (opts && strcasestr(opts, "geometry=")) {
 		snum = sscanf(str, "geometry=%dx%d+%d+%d",
-				&vdpy.width, &vdpy.height,
+				&vdpy.guest_width, &vdpy.guest_height,
 				&vdpy.org_x, &vdpy.org_y);
 		if (snum != 4) {
 			pr_err("incorrect geometry option. Should be"
@@ -1219,9 +1237,5 @@ int vdpy_parse_cmd_option(const char *opts)
 		pr_info("virtual display: windowed.\n");
 	}
 
-	vdpy.info.xoff = 0;
-	vdpy.info.yoff = 0;
-	vdpy.info.width = vdpy.width;
-	vdpy.info.height = vdpy.height;
 	return error;
 }
