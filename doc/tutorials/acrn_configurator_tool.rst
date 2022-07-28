@@ -36,6 +36,54 @@ The above Getting Started Guide steps use a prebuilt Debian package to install
 the ACRN Configurator. :ref:`acrn_configurator_tool_source` describes how to
 build the Debian package.
 
+Scenario Error Checking
+***********************
+
+The configurator includes many validation checks that verify input values, ensure the consistency of
+configuration options, and interactions between options.
+
+Simple data validation checks on values are detected immediately with red
+text indicating the problem, or with an indicator within a data entry field. For
+example, if you type in a value that is out of range, you'll see your value
+crossed out:
+
+.. image:: images/config-out-of-range-error.png
+   :align: center
+   :class: drop-shadow
+
+If you delete a required value, you'll see an error message in red text:
+
+.. image:: images/config-required-value-error.png
+   :align: center
+   :class: drop-shadow
+
+More complex checks, including those that look for conflicting settings, are
+done when you initially open a saved (or newly created) scenario, or when you
+use the "Save Scenario" button. If problems are detected, the response window
+from the save action will indicate that problems were found.  The Hypervisor or
+VM tabs will then display an error icon leading you to the configuration option
+panels where you can resolve the errors. For example, both the Hypervisor and
+VM1 tabs indicate an option setting problem:
+
+.. image:: images/config-tab-errors.png
+   :align: center
+   :class: drop-shadow
+
+Since we're on the Hypervisor (Basic Parameters) options, we see the Hypervisor
+configuration error message.  If we click on the VM1 tab, we'll see what the
+issues are with that VM's configuration options:
+
+.. image:: images/config-tab-errors2.png
+   :align: center
+   :class: drop-shadow
+
+In both cases, you can scroll down to see the specific problem (on either the
+basic or advanced parameters tab), fix the issues,
+and then when all issues are resolved, click on the "Save Scenario" button to
+validate the changes and save the settings.  If all issues were resolved, the
+save scenario response window will indicate no issues were found and all the
+error indicators will be cleared.
+
 Start with a New or Existing Configuration
 ******************************************
 
