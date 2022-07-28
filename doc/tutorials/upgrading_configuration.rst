@@ -68,7 +68,7 @@ XML files into the merged format:
 
 .. code-block:: bash
 
-   misc/config_tools/scenario_config/upgrader.py <your scenario XML> --launch <your launch XML> <out file>
+   misc/config_tools/scenario_config/upgrader.py --launch <your launch XML> <your scenario XML> <out file>
 
 The upgrader migrates all data in both XMLs into the ``<out file>`` and shows
 messages about discarded data in the same way as upgrading a scenario XML alone.

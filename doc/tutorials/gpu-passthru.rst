@@ -61,6 +61,16 @@ The example extends the information provided in the :ref:`gsg`.
 #. In the ACRN Configurator, create a shared scenario with a Service VM and one
    post-launched User VM.
 
+#. Select the Service VM and go to **Basic Parameters > Kernel
+   command-line parameters**.
+
+#. Append ``i915.modeset=0`` in **Kernel command-line parameters** to disable the
+   GPU driver loading for Intel GPU device.
+
+   .. image:: images/kernel_cmd_line.png
+      :align: center
+      :class: drop-shadow
+
 #. Select the post-launched User VM and go to **Basic Parameters > PCI
    devices**.
 
