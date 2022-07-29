@@ -415,7 +415,7 @@ export default {
 
       return formErrors
     },
-    saveScenario() {
+    async saveScenario() {
       if (_.isEmpty(this.scenario.vm)) {
         alert("Please add at least one VM")
         return
@@ -425,7 +425,7 @@ export default {
       if (errorFlag) {
         return
       }
-      this.assignVMID()
+      await this.assignVMID()
       let msg = [
         "scenario xml saved\n",
         "Settings validated\n",
@@ -442,10 +442,9 @@ export default {
 
       this.scenario.hv.CACHE_REGION = configurator.cat.getScenarioDataFromCAT()
 
-      let scenarioWithDefaults = this.applyScenarioDefaults(this.scenario)
+      let scenarioWithDefaults = await this.applyScenarioDefaults(this.scenario)
       let scenarioXMLData = this.scenarioToXML(scenarioWithDefaults)
       this.scenario = scenarioWithDefaults
-      this.updateCurrentFormData()
 
       this.scenario.vm.map((vmConfig) => {
         if (vmConfig['load_order'] === 'POST_LAUNCHED_VM') {
@@ -458,6 +457,9 @@ export default {
       // begin write down and verify
 
       configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
+          .then(() => {
+            this.updateCurrentFormData()
+          })
           .then(() => {
             // validate scenario and clean up the launch script
             stepDone = 1
