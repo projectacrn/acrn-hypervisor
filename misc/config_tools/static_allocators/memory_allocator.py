@@ -13,12 +13,10 @@ import common, math, logging
 
 def import_memory_info(board_etree):
     ram_range = {}
-    start = board_etree.xpath("/acrn-config/memory/range/@start")
-    size = board_etree.xpath("/acrn-config/memory/range/@size")
-    for i in range(len(start)):
-        start_hex = int(start[i], 16)
-        size_hex = int(size[i], 10)
-        ram_range[start_hex] = size_hex
+    for memory_range in board_etree.xpath("/acrn-config/memory/range[not(@id) or @id = 'RAM']"):
+        start = int(memory_range.get("start"), base=16)
+        size = int(memory_range.get("size"), base=10)
+        ram_range[start] = size
 
     return ram_range
 
