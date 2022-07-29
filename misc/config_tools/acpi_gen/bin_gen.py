@@ -70,7 +70,7 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path, scenario_etree, allocat
                         os.remove(os.path.join(dest_vm_acpi_path, acpi_table[1]))
                     rmsg = 'failed to compile {}'.format(acpi_table[0])
                     break
-        elif acpi_table[0] in ['PTCT', 'RTCT']:
+        elif acpi_table[0] in ['ptct.aml', 'rtct.aml']:
             if acpi_table[0] in os.listdir(dest_vm_acpi_path):
                 rtct = acpiparser.rtct.RTCT(os.path.join(dest_vm_acpi_path, acpi_table[0]))
                 outfile = os.path.join(dest_vm_acpi_bin_path, acpi_table[1])
@@ -95,7 +95,7 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path, scenario_etree, allocat
                         os.remove(os.path.join(dest_vm_acpi_path, acpi_table[1]))
                     rmsg = 'failed to compile {}'.format(acpi_table[0])
                     break
-            elif acpi_table[0].endswith(".aml"):
+            elif acpi_table[0].endswith(".aml") and acpi_table[0] in os.listdir(dest_vm_acpi_path):
                 shutil.copy(os.path.join(dest_vm_acpi_path, acpi_table[0]),
                             os.path.join(dest_vm_acpi_bin_path, acpi_table[1]))
 
@@ -171,11 +171,11 @@ def aml_to_bin(dest_vm_acpi_path, dest_vm_acpi_bin_path, acpi_bin_name, board_et
         with open(os.path.join(dest_vm_acpi_bin_path, ACPI_TABLE_LIST[6][1]), 'rb') as asl:
             acpi_bin.write(asl.read())
 
-        if 'PTCT' in os.listdir(dest_vm_acpi_path):
+        if ACPI_TABLE_LIST[7][1] in os.listdir(dest_vm_acpi_path):
             acpi_bin.seek(ACPI_RTCT_ADDR_OFFSET)
             with open(os.path.join(dest_vm_acpi_bin_path, ACPI_TABLE_LIST[7][1]), 'rb') as asl:
                 acpi_bin.write(asl.read())
-        elif 'RTCT' in os.listdir(dest_vm_acpi_path):
+        elif ACPI_TABLE_LIST[8][1] in os.listdir(dest_vm_acpi_path):
             acpi_bin.seek(ACPI_RTCT_ADDR_OFFSET)
             with open(os.path.join(dest_vm_acpi_bin_path, ACPI_TABLE_LIST[8][1]), 'rb') as asl:
                 acpi_bin.write(asl.read())
