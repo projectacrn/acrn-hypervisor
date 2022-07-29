@@ -344,82 +344,89 @@ def encode_eisa_id(s):
     ]
     return int.from_bytes(bytes(encoded), sys.byteorder)
 
+def create_object(cls, **kwargs):
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    obj = cls.from_buffer(data)
+    for key, value in kwargs.items():
+        setattr(obj, key, value)
+    return obj
+
 def gen_root_pci_bus(path, prt_packages):
     resources = []
 
     # Bus number
-    cls = rdt.LargeResourceItemWordAddressSpace_factory()
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 1  # Large type
-    res.name = rdt.LARGE_RESOURCE_ITEM_WORD_ADDRESS_SPACE
-    res.length = length - 3
-    res._TYP = 2  # Bus number range
-    res._DEC = 0  # Positive decoding
-    res._MIF = 1  # Minimum address fixed
-    res._MAF = 1  # Maximum address fixed
-    res.flags = 0
-    res._MAX = 0xff
-    res._LEN = 0x100
-    resources.append(data)
+    word_address_space_cls = rdt.LargeResourceItemWordAddressSpace_factory()
+    res = create_object(
+        word_address_space_cls,
+        type   = 1,    # Large type
+        name   = rdt.LARGE_RESOURCE_ITEM_WORD_ADDRESS_SPACE,
+        length = ctypes.sizeof(word_address_space_cls) - 3,
+        _TYP   = 2,    # Bus number range
+        _DEC   = 0,    # Positive decoding
+        _MIF   = 1,    # Minimum address fixed
+        _MAF   = 1,    # Maximum address fixed
+        flags  = 0,
+        _MAX   = 0xff,
+        _LEN   = 0x100
+    )
+    resources.append(res)
 
     # The PCI hole below 4G
-    cls = rdt.LargeResourceItemDWordAddressSpace_factory()
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 1  # Large type
-    res.name = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE
-    res.length = length - 3
-    res._TYP = 0  # Memory range
-    res._DEC = 0  # Positive decoding
-    res._MIF = 1  # Minimum address fixed
-    res._MAF = 1  # Maximum address fixed
-    res.flags = 1  # read-write, non-cachable, TypeStatic
-    res._MIN = 0x80000000
-    res._MAX = 0xdfffffff
-    res._LEN = 0x60000000
-    resources.append(data)
+    dword_address_space_cls = rdt.LargeResourceItemDWordAddressSpace_factory()
+    res = create_object(
+        dword_address_space_cls,
+        type   = 1,    # Large type
+        name   = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE,
+        length = ctypes.sizeof(dword_address_space_cls) - 3,
+        _TYP   = 0,    # Memory range
+        _DEC   = 0,    # Positive decoding
+        _MIF   = 1,    # Minimum address fixed
+        _MAF   = 1,    # Maximum address fixed
+        flags  = 1,    # read-write, non-cachable, TypeStatic
+        _MIN   = 0x80000000,
+        _MAX   = 0xdfffffff,
+        _LEN   = 0x60000000
+    )
+    resources.append(res)
 
     # The PCI hole above 4G
-    cls = rdt.LargeResourceItemQWordAddressSpace_factory()
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 1  # Large type
-    res.name = rdt.LARGE_RESOURCE_ITEM_QWORD_ADDRESS_SPACE
-    res.length = length - 3
-    res._TYP = 0  # Memory range
-    res._DEC = 0  # Positive decoding
-    res._MIF = 1  # Minimum address fixed
-    res._MAF = 1  # Maximum address fixed
-    res.flags = 1  # read-write, non-cachable, TypeStatic
-    res._MIN = 0x4000000000
-    res._MAX = 0x7fffffffff
-    res._LEN = 0x4000000000
-    resources.append(data)
+    res = create_object(
+        dword_address_space_cls,
+        type   = 1,    # Large type
+        name   = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE,
+        length = ctypes.sizeof(dword_address_space_cls) - 3,
+        _TYP   = 0,    # Memory range
+        _DEC   = 0,    # Positive decoding
+        _MIF   = 1,    # Minimum address fixed
+        _MAF   = 1,    # Maximum address fixed
+        flags  = 1,    # read-write, non-cachable, TypeStatic
+        _MIN = 0x4000000000,
+        _MAX = 0x7fffffffff,
+        _LEN = 0x4000000000
+    )
+    resources.append(res)
 
-    cls = rdt.LargeResourceItemDWordAddressSpace_factory()
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 1  # Large type
-    res.name = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE
-    res.length = length - 3
-    res._TYP = 1 # Memory range
-    res._DEC = 0  # Positive decoding
-    res._MIF = 1  # Minimum address fixed
-    res._MAF = 1  # Maximum address fixed
-    res.flags = 3   # Entire range, TypeStatic
-    res._MIN = 0x0
-    res._MAX = 0xffff
-    res._LEN = 0x10000
-    resources.append(data)
+    # The PCI hole for I/O ports
+    res = create_object(
+        dword_address_space_cls,
+        type   = 1,    # Large type
+        name   = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE,
+        length = ctypes.sizeof(dword_address_space_cls) - 3,
+        _TYP   = 1,    # I/O range
+        _DEC   = 0,    # Positive decoding
+        _MIF   = 1,    # Minimum address fixed
+        _MAF   = 1,    # Maximum address fixed
+        flags  = 3,    # Entire range, TypeStatic
+        _MIN = 0x0,
+        _MAX = 0xffff,
+        _LEN = 0x10000
+    )
+    resources.append(res)
 
     # End tag
     resources.append(bytes([0x79, 0]))
-    resource_buf = bytearray().join(resources)
+    resource_buf = bytearray().join(map(bytearray, resources))
     checksum = (256 - (sum(resource_buf) % 256)) % 256
     resource_buf[-1] = checksum
 
@@ -458,33 +465,32 @@ def gen_root_pci_bus(path, prt_packages):
 def pnp_uart(path, uid, ddn, port, irq):
     resources = []
 
-    cls = rdt.SmallResourceItemIOPort
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 0
-    res.name = rdt.SMALL_RESOURCE_ITEM_IO_PORT
-    res.length = 7
-    res._DEC = 1
-    res._MIN = port
-    res._MAX = port
-    res._ALN = 1
-    res._LEN = 8
-    resources.append(data)
+    res = create_object(
+        rdt.SmallResourceItemIOPort,
+        type   = 0,
+        name   = rdt.SMALL_RESOURCE_ITEM_IO_PORT,
+        length = ctypes.sizeof(rdt.SmallResourceItemIOPort) - 1,
+        _DEC   = 1,
+        _MIN   = port,
+        _MAX   = port,
+        _ALN   = 1,
+        _LEN   = 8
+    )
+    resources.append(res)
 
-    cls = rdt.SmallResourceItemIRQ_factory(2)
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 0
-    res.name = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT
-    res.length = 2
-    res._INT = 1 << irq
-    resources.append(data)
+    cls = rdt.SmallResourceItemIRQ_factory()
+    res = create_object(
+        cls,
+        type   = 0,
+        name   = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT,
+        length = ctypes.sizeof(cls) - 1,
+        _INT   = 1 << irq
+    )
+    resources.append(res)
 
     resources.append(bytes([0x79, 0]))
 
-    resource_buf = bytearray().join(resources)
+    resource_buf = bytearray().join(map(bytearray, resources))
     checksum = (256 - (sum(resource_buf) % 256)) % 256
     resource_buf[-1] = checksum
     uart = builder.DefDevice(
@@ -512,33 +518,32 @@ def pnp_uart(path, uid, ddn, port, irq):
 def pnp_rtc(path):
     resources = []
 
-    cls = rdt.SmallResourceItemIOPort
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 0
-    res.name = rdt.SMALL_RESOURCE_ITEM_IO_PORT
-    res.length = 7
-    res._DEC = 1
-    res._MIN = 0x70
-    res._MAX = 0x70
-    res._ALN = 1
-    res._LEN = 8
-    resources.append(data)
+    res = create_object(
+        rdt.SmallResourceItemIOPort,
+        type   = 0,
+        name   = rdt.SMALL_RESOURCE_ITEM_IO_PORT,
+        length = ctypes.sizeof(rdt.SmallResourceItemIOPort) - 1,
+        _DEC   = 1,
+        _MIN   = 0x70,
+        _MAX   = 0x70,
+        _ALN   = 1,
+        _LEN   = 8
+    )
+    resources.append(res)
 
-    cls = rdt.SmallResourceItemIRQ_factory(2)
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 0
-    res.name = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT
-    res.length = 2
-    res._INT = 1 << 8
-    resources.append(data)
+    cls = rdt.SmallResourceItemIRQ_factory()
+    res = create_object(
+        cls,
+        type   = 0,
+        name   = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT,
+        length = ctypes.sizeof(cls) - 1,
+        _INT   = 1 << 8
+    )
+    resources.append(res)
 
     resources.append(bytes([0x79, 0]))
 
-    resource_buf = bytearray().join(resources)
+    resource_buf = bytearray().join(map(bytearray, resources))
     checksum = (256 - (sum(resource_buf) % 256)) % 256
     resource_buf[-1] = checksum
     rtc = builder.DefDevice(
