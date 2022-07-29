@@ -15,7 +15,7 @@ class RTCTSubtable(cdata.Struct):
     _pack_ = 1
     _fields_ = [
         ('subtable_size', ctypes.c_uint16),
-        ('format', ctypes.c_uint16),
+        ('format_or_version', ctypes.c_uint16),
         ('type', ctypes.c_uint32),
     ]
 
@@ -152,17 +152,15 @@ class RTCTSubtableSSRAMWayMask(cdata.Struct):
         ('waymask', ctypes.c_uint32),
     ]
 
-def RTCTSubtableSoftwareSRAM_v2_factory(data_len):
-    class RTCTSubtableSoftwareSRAM_v2(cdata.Struct):
-        _pack_ = 1
-        _fields_ = copy.copy(RTCTSubtable._fields_) + [
-            ('level', ctypes.c_uint32),
-            ('cache_id', ctypes.c_uint32),
-            ('base', ctypes.c_uint64),
-            ('size', ctypes.c_uint32),
-            ('shared', ctypes.c_uint32),
-        ]
-    return RTCTSubtableSoftwareSRAM_v2
+class RTCTSubtableSoftwareSRAM_v2(cdata.Struct):
+    _pack_ = 1
+    _fields_ = copy.copy(RTCTSubtable._fields_) + [
+        ('level', ctypes.c_uint32),
+        ('cache_id', ctypes.c_uint32),
+        ('base', ctypes.c_uint64),
+        ('size', ctypes.c_uint32),
+        ('shared', ctypes.c_uint32),
+    ]
 
 def RTCTSubtableMemoryHierarchyLatency_v2_factory(data_len):
     class RTCTSubtableMemoryHierarchyLatency_v2(cdata.Struct):
@@ -226,7 +224,9 @@ def rtct_v2_subtable_list(addr, length):
         subtable_num += 1
         subtable = RTCTSubtable.from_address(addr)
         data_len = subtable.subtable_size - ctypes.sizeof(RTCTSubtable)
-        if subtable.type == ACPI_RTCT_V2_TYPE_RTCD_Limits:
+        if subtable.type == ACPI_RTCT_TYPE_COMPATIBILITY:
+            cls = RTCTSubtableCompatibility
+        elif subtable.type == ACPI_RTCT_V2_TYPE_RTCD_Limits:
             cls = RTCTSubtableRTCDLimits
         elif subtable.type == ACPI_RTCT_V2_TYPE_CRL_Binary:
             cls = RTCTSubtableRTCMBinary
@@ -239,7 +239,7 @@ def rtct_v2_subtable_list(addr, length):
         elif subtable.type == ACPI_RTCT_V2_TYPE_SSRAM_WayMask:
             cls = RTCTSubtableSSRAMWayMask
         elif subtable.type == ACPI_RTCT_V2_TYPE_SoftwareSRAM:
-            cls = RTCTSubtableSoftwareSRAM_v2_factory(data_len)
+            cls = RTCTSubtableSoftwareSRAM_v2
         elif subtable.type == ACPI_RTCT_V2_TYPE_MemoryHierarchyLatency:
             cls = RTCTSubtableMemoryHierarchyLatency_v2_factory(data_len)
         elif subtable.type == ACPI_RTCT_V2_TYPE_ErrorLogAddress:
