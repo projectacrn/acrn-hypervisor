@@ -139,11 +139,11 @@ class MSR(object):
     @classmethod
     def rdmsr(cls, cpu_id: int) -> int:
         try:
-            with open(f'/dev/cpu/{cpu_id}/msr', 'rb') as msr_reader:
+            with open(f'/dev/cpu/{cpu_id}/msr', 'rb', buffering=0) as msr_reader:
                 msr_reader.seek(cls.addr)
                 r = msr_reader.read(8)
                 r = cls(int.from_bytes(r, 'little'))
-        except IOError:
+        except FileNotFoundError:
             logging.critical(f"Missing CPU MSR file at /dev/cpu/{cpu_id}/msr. Check the value of CONFIG_X86_MSR " \
                              "in the kernel config.  Set it to 'Y' and rebuild the kernel. Then rerun the Board Inspector.")
             sys.exit(1)
@@ -154,7 +154,14 @@ class MSR(object):
     def wrmsr(self, cpu_id=None):
         if cpu_id is None:
             cpu_id = self.cpu_id
-        bits.wrmsr(cpu_id, self.addr, self.value)
+        try:
+            with open(f'/dev/cpu/{cpu_id}/msr', 'wb', buffering=0) as msr_reader:
+                msr_reader.seek(self.addr)
+                r = msr_reader.write(int.to_bytes(self.value, 8, 'little'))
+        except FileNotFoundError:
+            logging.critical(f"Missing CPU MSR file at /dev/cpu/{cpu_id}/msr. Check the value of CONFIG_X86_MSR " \
+                             "in the kernel config.  Set it to 'Y' and rebuild the kernel. Then rerun the Board Inspector.")
+            sys.exit(1)
 
     def __str__(self):
         T = type(self)
