@@ -255,3 +255,18 @@ class MSR_IA32_VMX_ENTRY_CTLS(VMXCapabilityReportingMSR):
         "vmx_entry_ctls_load_pat",
         "vmx_entry_ctls_ia32e_mode",
     ]
+
+class MSR_IA32_L3_QOS_CFG(MSR):
+    addr = 0x00000c81
+    cdp_enable = msrfield(0, 0, doc="L3 CDP enable")
+
+def MSR_IA32_L3_MASK_n(n):
+    if n >= 128:
+        logging.debug("Attempt to access an out-of-range IA32_L3_MASK_n register. Fall back to 0.")
+        n = 0
+
+    class IA32_L3_MASK_n(MSR):
+        addr = 0x00000c90 + n
+        bit_mask = msrfield(32, 0, doc="Capacity bit mask")
+
+    return IA32_L3_MASK_n
