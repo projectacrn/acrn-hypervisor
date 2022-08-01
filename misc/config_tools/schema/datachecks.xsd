@@ -18,6 +18,7 @@
       <xi:include href="checks/vuart_config.xsd" xpointer="xpointer(id('root')/*)" />
       <xi:include href="checks/ivsh_memory.xsd" xpointer="xpointer(id('root')/*)" />
       <xi:include href="checks/rdt_support.xsd" xpointer="xpointer(id('root')/*)" />
+      <xi:include href="checks/pci_config.xsd" xpointer="xpointer(id('root')/*)" />
 
     </xs:complexType>
   </xs:element>
