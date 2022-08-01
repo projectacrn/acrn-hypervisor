@@ -202,10 +202,12 @@ class msrfield(property):
     def __init__(self, msb, lsb, doc=None):
         self.msb = msb
         self.lsb = lsb
-        bit_mask = self.msb << self.lsb
+
+        max_value = (1 << (msb - lsb + 1)) - 1
+        field_mask = max_value << lsb
 
         def getter(self):
-            return (self.value & bit_mask) != 0
+            return (self.value & field_mask) >> lsb
 
         def setter(self, value):
             if value > max_value:
@@ -219,14 +221,3 @@ class msrfield(property):
             self.value = (self.value & ~field_mask) | (value << lsb)
 
         super(msrfield, self).__init__(getter, setter, doc=doc)
-
-    def is_vmx_cap_supported(self, bits):
-        vmx_msr = self.value
-        vmx_msr_bin = int.to_bytes(vmx_msr, 8, 'big')
-        vmx_msr_low = int.from_bytes(vmx_msr_bin[4:], 'big')
-        vmx_msr_high = int.from_bytes(vmx_msr_bin[:4], 'big')
-        return ((vmx_msr_high & bits) == bits) and ((vmx_msr_low & bits) == 0)
-
-    @staticmethod
-    def is_ctrl_setting_allowed(msr_val, ctrl):
-        return ((msr_val >> 32) & ctrl) == ctrl
