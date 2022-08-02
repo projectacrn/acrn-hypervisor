@@ -850,14 +850,14 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	unsigned char digest[16];
 	char nstr[80];
 	char tname[MAXCOMLEN + 1];
-	struct virtio_net *net;
+	struct virtio_net *net = NULL;
 	char *devopts = NULL;
 	char *name = NULL;
 	char *type = NULL;
 	char *mac_seed = NULL;
-	char *tmp;
-	char *vtopts;
-	char *opt;
+	char *tmp = NULL;
+	char *vtopts = NULL;
+	char *opt = NULL;
 	int mac_provided;
 	pthread_mutexattr_t attr;
 	int rc;
@@ -940,8 +940,11 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		return -1;
 	}
 
-	vtopts = tmp = strdup(opts);
-	if (strncmp(tmp, "tap", 3) == 0) {
+	if (opts != NULL) {
+		vtopts = tmp = strdup(opts);
+	}
+
+	if ((tmp != NULL) && (strncmp(tmp, "tap", 3) == 0)) {
 		type = strsep(&tmp, "=");
 		name = strsep(&tmp, ",");
 	}
@@ -963,8 +966,13 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * followed by an MD5 of the PCI slot/func number and dev name
 	 */
 	if (!mac_provided) {
-		snprintf(nstr, sizeof(nstr), "%d-%d-%s", dev->slot,
-		    dev->func, mac_seed);
+		if (mac_seed != NULL) {
+			snprintf(nstr, sizeof(nstr), "%d-%d-%s", dev->slot,
+				dev->func, mac_seed);
+		} else {
+			snprintf(nstr, sizeof(nstr), "%d-%d", dev->slot,
+				dev->func);
+		}
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 		EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
 		EVP_DigestInit_ex(mdctx, EVP_md5(), NULL);

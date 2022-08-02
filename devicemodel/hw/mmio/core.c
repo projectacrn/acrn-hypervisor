@@ -115,11 +115,11 @@ int create_pt_acpidev(char *opt)
  *
  * @pre (name != NULL) && (strlen(name) > 0)
  */
-int get_mmio_hpa_resource(char *name, uint64_t *res_start, uint64_t *res_size)
+bool get_mmio_hpa_resource(char *name, uint64_t *res_start, uint64_t *res_size)
 {
 	FILE *fp;
 	uint64_t start, end;
-	int found = false;
+	bool found = false;
 	char line[128];
 	char *cp;
 
