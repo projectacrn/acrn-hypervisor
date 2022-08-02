@@ -32,7 +32,7 @@
 #define VDPY_MIN_WIDTH 640
 #define VDPY_MIN_HEIGHT 480
 #define transto_10bits(color) (uint16_t)(color * 1024 + 0.5)
-#define VSCREEN_MAX_NUM 1
+#define VSCREEN_MAX_NUM 2
 
 static unsigned char default_raw_argb[VDPY_DEFAULT_WIDTH * VDPY_DEFAULT_HEIGHT * 4];
 
@@ -1323,7 +1323,7 @@ gfx_ui_deinit()
 
 int vdpy_parse_cmd_option(const char *opts)
 {
-	char *str;
+	char *str, *stropts, *tmp;
 	int snum, error;
 	struct vscreen *vscr;
 
@@ -1331,33 +1331,45 @@ int vdpy_parse_cmd_option(const char *opts)
 	vdpy.vscrs = calloc(VSCREEN_MAX_NUM, sizeof(struct vscreen));
 	vdpy.vscrs_num = 0;
 
-	str = strcasestr(opts, "geometry=");
-	vscr = vdpy.vscrs + vdpy.vscrs_num;
-	if (opts && strcasestr(opts, "geometry=fullscreen")) {
-		snum = sscanf(str, "geometry=fullscreen:%d", &vscr->pscreen_id);
-		if (snum != 1) {
+	stropts = strdup(opts);
+	while ((str = strsep(&stropts, ",")) != NULL) {
+		vscr = vdpy.vscrs + vdpy.vscrs_num;
+		tmp = strcasestr(str, "geometry=");
+		if (str && strcasestr(str, "geometry=fullscreen")) {
+			snum = sscanf(tmp, "geometry=fullscreen:%d", &vscr->pscreen_id);
+			if (snum != 1) {
+				vscr->pscreen_id = 0;
+			}
+			vscr->org_x = 0;
+			vscr->org_y = 0;
+			vscr->guest_width = VDPY_MAX_WIDTH;
+			vscr->guest_height = VDPY_MAX_HEIGHT;
+			vscr->is_fullscreen = true;
+			pr_info("virtual display: fullscreen on monitor %d.\n",
+					vscr->pscreen_id);
+			vdpy.vscrs_num++;
+		} else if (str && strcasestr(str, "geometry=")) {
+			snum = sscanf(tmp, "geometry=%dx%d+%d+%d",
+					&vscr->guest_width, &vscr->guest_height,
+					&vscr->org_x, &vscr->org_y);
+			if (snum != 4) {
+				pr_err("incorrect geometry option. Should be"
+						" WxH+x+y\n");
+				error = -1;
+			}
+			vscr->is_fullscreen = false;
 			vscr->pscreen_id = 0;
+			pr_info("virtual display: windowed on monitor %d.\n",
+					vscr->pscreen_id);
+			vdpy.vscrs_num++;
 		}
-		vscr->org_x = 0;
-		vscr->org_y = 0;
-		vscr->guest_width = VDPY_MAX_WIDTH;
-		vscr->guest_height = VDPY_MAX_HEIGHT;
-		vscr->is_fullscreen = true;
-		vdpy.vscrs_num++;
-		pr_info("virtual display: fullscreen.\n");
-	} else if (opts && strcasestr(opts, "geometry=")) {
-		snum = sscanf(str, "geometry=%dx%d+%d+%d",
-				&vscr->guest_width, &vscr->guest_height,
-				&vscr->org_x, &vscr->org_y);
-		if (snum != 4) {
-			pr_err("incorrect geometry option. Should be"
-					" WxH+x+y\n");
-			error = -1;
+
+		if (vdpy.vscrs_num > VSCREEN_MAX_NUM) {
+			pr_err("%d virtual displays are too many that acrn-dm can't support!\n");
+			break;
 		}
-		vscr->is_fullscreen = false;
-		vdpy.vscrs_num++;
-		pr_info("virtual display: windowed.\n");
 	}
+	free(stropts);
 
 	return error;
 }
