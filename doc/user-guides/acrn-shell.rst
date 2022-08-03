@@ -3,7 +3,17 @@
 ACRN Shell Commands
 ###################
 
-The ACRN hypervisor shell supports the following commands:
+The ACRN shell is a text-based terminal for the hypervisor, accessible via the target system's serial port.
+It is only available when the hypervisor build type is debug, the serial console port is configured, and a
+terminal emulator on your development computer is connected, typically via a serial-to-USB cable.
+
+The ACRN shell provides useful debugging commands for displaying internal system states, environment settings,
+and hypervisor statistics as well as reading and writing CPU model-specific registers (MSR).
+
+A short command history is maintained that lets you use the :kbd:`UP` and :kbd:`DOWN` keys to browse the command
+history and :kbd:`HOME`, :kbd:`END`, :kbd:`LEFT`, and :kbd:`RIGHT` keys to select an edit point within the command.
+
+Here's the list of commands supported by the ACRN shell, followed by example uses of these commands:
 
 .. list-table::
    :header-rows: 1
