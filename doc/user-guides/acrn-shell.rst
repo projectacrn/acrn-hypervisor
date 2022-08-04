@@ -53,6 +53,15 @@ The ACRN hypervisor shell supports the following commands:
    * - wrmsr [-p<pcpu_id>] <msr_index> <value>
      - Write ``value`` (in hexadecimal) to the model-specific register (MSR) at
        index ``msr_index`` (in hexadecimal) for CPU ID ``pcpu_id``.
+   * - vmexit [enable | disable | clear | <vm_id>]
+     - Controls collection and display of vmexit occurrences useful for
+       real-time performance profiling.
+
+       * **enable** and **disable** determine if vmexit data is collected
+         (enabled by default in a debug-mode build).
+       * **clear** resets counters back to zero.
+       * **<vm_id>** displays vmexit data per vmexit reason for all vCPUs for that VM.
+       * If no argument is given, data for all VMs is displayed.
 
 Command Examples
 ****************
@@ -249,3 +258,39 @@ In the following example, we can set the IA32_APIC_BASE value of pCPU 1 through
 the command::
 
    wrmsr -p1 1b 0xfee00c00
+
+vmexit
+======
+
+VMexit data collection is enabled by default in a debug-mode ACRN build. There
+should be little impact on real-time system performance since a tuned RTVM
+should have very few vmexits.
+
+You can disable vmexit data collection using the ACRN shell's ``vmexit disable``
+command.
+
+The ``vmexit`` command with no arguments (or with a <vm_id> argument) shows a
+table of counters for each vmexit reason, for all VM's (or just the
+specified VM's) vCPUs, showing the latency time counts.  For example:
+
+.. figure:: images/vmexit-example.png
+   :align: center
+
+VMexit reason codes are defined in the (ACRN) kernel source code
+:acrn_file:`hypervisor/include/arch/x86/asm/vmx.h` (search for "VM exit
+reasons").  Here are a few examples:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - VMexit reason code
+     - Explanation
+   * - 0x01
+     - An external interrupt (IRQ) arrived
+   * - 0x0a
+     - The guest VM software attempted to execute the CPUID instruction.
+   * - 0x0c
+     - The guest VM attempted to execute HLT instruction.
+   * - 0x12
+     - The execution of VMCALL by the guest VM caused an ordinary VM exit.
