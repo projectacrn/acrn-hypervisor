@@ -73,11 +73,11 @@
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key">
-      <xsl:with-param name="key" select="'ENFORCE_TURNOFF_AC'" />
+      <xsl:with-param name="key" select="'AC_ENABLED'" />
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key">
-      <xsl:with-param name="key" select="'ENFORCE_TURNOFF_GP'" />
+      <xsl:with-param name="key" select="'GP_ENABLED'" />
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key">
@@ -124,8 +124,8 @@
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key-value">
-      <xsl:with-param name="key" select="'MCE_ON_PSC_WORKAROUND_DISABLED'" />
-      <xsl:with-param name="value" select="MCE_ON_PSC_DISABLED" />
+      <xsl:with-param name="key" select="'MCE_ON_PSC_WORKAROUND_ENABLED'" />
+      <xsl:with-param name="value" select="MCE_ON_PSC_ENABLED" />
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key-value">
