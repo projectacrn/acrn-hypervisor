@@ -49,7 +49,7 @@ def create_hist():
 	figure = plt.hist(dataset)
 
 	plt.title("Latency percentages")
-	plt.xlabel("Latency Value (ms)")
+	plt.xlabel("Latency Value (us)")
 	plt.ylabel("Frequency")
 	plt.savefig("hist.png")
 
