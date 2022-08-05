@@ -129,7 +129,8 @@ To set up the ACRN build environment on the development computer:
            libsdl2-dev \
            libegl-dev \
            libgles-dev \
-           libdrm-dev
+           libdrm-dev \
+           gnu-efi
 
 #. Install Python package dependencies:
 
