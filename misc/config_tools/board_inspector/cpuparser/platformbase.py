@@ -139,11 +139,11 @@ class MSR(object):
     @classmethod
     def rdmsr(cls, cpu_id: int) -> int:
         try:
-            with open(f'/dev/cpu/{cpu_id}/msr', 'rb') as msr_reader:
+            with open(f'/dev/cpu/{cpu_id}/msr', 'rb', buffering=0) as msr_reader:
                 msr_reader.seek(cls.addr)
                 r = msr_reader.read(8)
                 r = cls(int.from_bytes(r, 'little'))
-        except IOError:
+        except FileNotFoundError:
             logging.critical(f"Missing CPU MSR file at /dev/cpu/{cpu_id}/msr. Check the value of CONFIG_X86_MSR " \
                              "in the kernel config.  Set it to 'Y' and rebuild the kernel. Then rerun the Board Inspector.")
             sys.exit(1)
@@ -154,7 +154,14 @@ class MSR(object):
     def wrmsr(self, cpu_id=None):
         if cpu_id is None:
             cpu_id = self.cpu_id
-        bits.wrmsr(cpu_id, self.addr, self.value)
+        try:
+            with open(f'/dev/cpu/{cpu_id}/msr', 'wb', buffering=0) as msr_reader:
+                msr_reader.seek(self.addr)
+                r = msr_reader.write(int.to_bytes(self.value, 8, 'little'))
+        except FileNotFoundError:
+            logging.critical(f"Missing CPU MSR file at /dev/cpu/{cpu_id}/msr. Check the value of CONFIG_X86_MSR " \
+                             "in the kernel config.  Set it to 'Y' and rebuild the kernel. Then rerun the Board Inspector.")
+            sys.exit(1)
 
     def __str__(self):
         T = type(self)
@@ -202,10 +209,12 @@ class msrfield(property):
     def __init__(self, msb, lsb, doc=None):
         self.msb = msb
         self.lsb = lsb
-        bit_mask = self.msb << self.lsb
+
+        max_value = (1 << (msb - lsb + 1)) - 1
+        field_mask = max_value << lsb
 
         def getter(self):
-            return (self.value & bit_mask) != 0
+            return (self.value & field_mask) >> lsb
 
         def setter(self, value):
             if value > max_value:
@@ -219,14 +228,3 @@ class msrfield(property):
             self.value = (self.value & ~field_mask) | (value << lsb)
 
         super(msrfield, self).__init__(getter, setter, doc=doc)
-
-    def is_vmx_cap_supported(self, bits):
-        vmx_msr = self.value
-        vmx_msr_bin = int.to_bytes(vmx_msr, 8, 'big')
-        vmx_msr_low = int.from_bytes(vmx_msr_bin[4:], 'big')
-        vmx_msr_high = int.from_bytes(vmx_msr_bin[:4], 'big')
-        return ((vmx_msr_high & bits) == bits) and ((vmx_msr_low & bits) == 0)
-
-    @staticmethod
-    def is_ctrl_setting_allowed(msr_val, ctrl):
-        return ((msr_val >> 32) & ctrl) == ctrl

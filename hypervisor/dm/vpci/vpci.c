@@ -192,9 +192,16 @@ static int32_t vpci_mmio_cfg_access(struct io_request *io_req, void *private_dat
 	bdf.value = (uint16_t)((address - pci_mmcofg_base) >> 12U);
 
 	if (mmio->direction == ACRN_IOREQ_DIR_READ) {
-		ret = vpci_read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t *)&mmio->value);
+		uint32_t val = ~0U;
+
+		if (pci_is_valid_access(reg_num, (uint32_t)mmio->size)) {
+			ret = vpci_read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, &val);
+		}
+		mmio->value = val;
 	} else {
-		ret = vpci_write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
+		if (pci_is_valid_access(reg_num, (uint32_t)mmio->size)) {
+			ret = vpci_write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
+		}
 	}
 
 	return ret;

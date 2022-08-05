@@ -12,6 +12,8 @@ import collections
 import lxml.etree
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'board_inspector'))
+from acpiparser._utils import TableHeader
+from acpiparser import rtct
 from acpiparser import rdt
 from acpiparser.dsdt import parse_tree
 from acpiparser.aml import builder
@@ -344,82 +346,89 @@ def encode_eisa_id(s):
     ]
     return int.from_bytes(bytes(encoded), sys.byteorder)
 
+def create_object(cls, **kwargs):
+    length = ctypes.sizeof(cls)
+    data = bytearray(length)
+    obj = cls.from_buffer(data)
+    for key, value in kwargs.items():
+        setattr(obj, key, value)
+    return obj
+
 def gen_root_pci_bus(path, prt_packages):
     resources = []
 
     # Bus number
-    cls = rdt.LargeResourceItemWordAddressSpace_factory()
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 1  # Large type
-    res.name = rdt.LARGE_RESOURCE_ITEM_WORD_ADDRESS_SPACE
-    res.length = length - 3
-    res._TYP = 2  # Bus number range
-    res._DEC = 0  # Positive decoding
-    res._MIF = 1  # Minimum address fixed
-    res._MAF = 1  # Maximum address fixed
-    res.flags = 0
-    res._MAX = 0xff
-    res._LEN = 0x100
-    resources.append(data)
+    word_address_space_cls = rdt.LargeResourceItemWordAddressSpace_factory()
+    res = create_object(
+        word_address_space_cls,
+        type   = 1,    # Large type
+        name   = rdt.LARGE_RESOURCE_ITEM_WORD_ADDRESS_SPACE,
+        length = ctypes.sizeof(word_address_space_cls) - 3,
+        _TYP   = 2,    # Bus number range
+        _DEC   = 0,    # Positive decoding
+        _MIF   = 1,    # Minimum address fixed
+        _MAF   = 1,    # Maximum address fixed
+        flags  = 0,
+        _MAX   = 0xff,
+        _LEN   = 0x100
+    )
+    resources.append(res)
 
     # The PCI hole below 4G
-    cls = rdt.LargeResourceItemDWordAddressSpace_factory()
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 1  # Large type
-    res.name = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE
-    res.length = length - 3
-    res._TYP = 0  # Memory range
-    res._DEC = 0  # Positive decoding
-    res._MIF = 1  # Minimum address fixed
-    res._MAF = 1  # Maximum address fixed
-    res.flags = 1  # read-write, non-cachable, TypeStatic
-    res._MIN = 0x80000000
-    res._MAX = 0xdfffffff
-    res._LEN = 0x60000000
-    resources.append(data)
+    dword_address_space_cls = rdt.LargeResourceItemDWordAddressSpace_factory()
+    res = create_object(
+        dword_address_space_cls,
+        type   = 1,    # Large type
+        name   = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE,
+        length = ctypes.sizeof(dword_address_space_cls) - 3,
+        _TYP   = 0,    # Memory range
+        _DEC   = 0,    # Positive decoding
+        _MIF   = 1,    # Minimum address fixed
+        _MAF   = 1,    # Maximum address fixed
+        flags  = 1,    # read-write, non-cachable, TypeStatic
+        _MIN   = 0x80000000,
+        _MAX   = 0xdfffffff,
+        _LEN   = 0x60000000
+    )
+    resources.append(res)
 
     # The PCI hole above 4G
-    cls = rdt.LargeResourceItemQWordAddressSpace_factory()
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 1  # Large type
-    res.name = rdt.LARGE_RESOURCE_ITEM_QWORD_ADDRESS_SPACE
-    res.length = length - 3
-    res._TYP = 0  # Memory range
-    res._DEC = 0  # Positive decoding
-    res._MIF = 1  # Minimum address fixed
-    res._MAF = 1  # Maximum address fixed
-    res.flags = 1  # read-write, non-cachable, TypeStatic
-    res._MIN = 0x4000000000
-    res._MAX = 0x7fffffffff
-    res._LEN = 0x4000000000
-    resources.append(data)
+    res = create_object(
+        dword_address_space_cls,
+        type   = 1,    # Large type
+        name   = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE,
+        length = ctypes.sizeof(dword_address_space_cls) - 3,
+        _TYP   = 0,    # Memory range
+        _DEC   = 0,    # Positive decoding
+        _MIF   = 1,    # Minimum address fixed
+        _MAF   = 1,    # Maximum address fixed
+        flags  = 1,    # read-write, non-cachable, TypeStatic
+        _MIN = 0x4000000000,
+        _MAX = 0x7fffffffff,
+        _LEN = 0x4000000000
+    )
+    resources.append(res)
 
-    cls = rdt.LargeResourceItemDWordAddressSpace_factory()
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 1  # Large type
-    res.name = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE
-    res.length = length - 3
-    res._TYP = 1 # Memory range
-    res._DEC = 0  # Positive decoding
-    res._MIF = 1  # Minimum address fixed
-    res._MAF = 1  # Maximum address fixed
-    res.flags = 3   # Entire range, TypeStatic
-    res._MIN = 0x0
-    res._MAX = 0xffff
-    res._LEN = 0x10000
-    resources.append(data)
+    # The PCI hole for I/O ports
+    res = create_object(
+        dword_address_space_cls,
+        type   = 1,    # Large type
+        name   = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE,
+        length = ctypes.sizeof(dword_address_space_cls) - 3,
+        _TYP   = 1,    # I/O range
+        _DEC   = 0,    # Positive decoding
+        _MIF   = 1,    # Minimum address fixed
+        _MAF   = 1,    # Maximum address fixed
+        flags  = 3,    # Entire range, TypeStatic
+        _MIN = 0x0,
+        _MAX = 0xffff,
+        _LEN = 0x10000
+    )
+    resources.append(res)
 
     # End tag
     resources.append(bytes([0x79, 0]))
-    resource_buf = bytearray().join(resources)
+    resource_buf = bytearray().join(map(bytearray, resources))
     checksum = (256 - (sum(resource_buf) % 256)) % 256
     resource_buf[-1] = checksum
 
@@ -458,33 +467,32 @@ def gen_root_pci_bus(path, prt_packages):
 def pnp_uart(path, uid, ddn, port, irq):
     resources = []
 
-    cls = rdt.SmallResourceItemIOPort
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 0
-    res.name = rdt.SMALL_RESOURCE_ITEM_IO_PORT
-    res.length = 7
-    res._DEC = 1
-    res._MIN = port
-    res._MAX = port
-    res._ALN = 1
-    res._LEN = 8
-    resources.append(data)
+    res = create_object(
+        rdt.SmallResourceItemIOPort,
+        type   = 0,
+        name   = rdt.SMALL_RESOURCE_ITEM_IO_PORT,
+        length = ctypes.sizeof(rdt.SmallResourceItemIOPort) - 1,
+        _DEC   = 1,
+        _MIN   = port,
+        _MAX   = port,
+        _ALN   = 1,
+        _LEN   = 8
+    )
+    resources.append(res)
 
-    cls = rdt.SmallResourceItemIRQ_factory(2)
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 0
-    res.name = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT
-    res.length = 2
-    res._INT = 1 << irq
-    resources.append(data)
+    cls = rdt.SmallResourceItemIRQ_factory()
+    res = create_object(
+        cls,
+        type   = 0,
+        name   = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT,
+        length = ctypes.sizeof(cls) - 1,
+        _INT   = 1 << irq
+    )
+    resources.append(res)
 
     resources.append(bytes([0x79, 0]))
 
-    resource_buf = bytearray().join(resources)
+    resource_buf = bytearray().join(map(bytearray, resources))
     checksum = (256 - (sum(resource_buf) % 256)) % 256
     resource_buf[-1] = checksum
     uart = builder.DefDevice(
@@ -512,33 +520,32 @@ def pnp_uart(path, uid, ddn, port, irq):
 def pnp_rtc(path):
     resources = []
 
-    cls = rdt.SmallResourceItemIOPort
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 0
-    res.name = rdt.SMALL_RESOURCE_ITEM_IO_PORT
-    res.length = 7
-    res._DEC = 1
-    res._MIN = 0x70
-    res._MAX = 0x70
-    res._ALN = 1
-    res._LEN = 8
-    resources.append(data)
+    res = create_object(
+        rdt.SmallResourceItemIOPort,
+        type   = 0,
+        name   = rdt.SMALL_RESOURCE_ITEM_IO_PORT,
+        length = ctypes.sizeof(rdt.SmallResourceItemIOPort) - 1,
+        _DEC   = 1,
+        _MIN   = 0x70,
+        _MAX   = 0x70,
+        _ALN   = 1,
+        _LEN   = 8
+    )
+    resources.append(res)
 
-    cls = rdt.SmallResourceItemIRQ_factory(2)
-    length = ctypes.sizeof(cls)
-    data = bytearray(length)
-    res = cls.from_buffer(data)
-    res.type = 0
-    res.name = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT
-    res.length = 2
-    res._INT = 1 << 8
-    resources.append(data)
+    cls = rdt.SmallResourceItemIRQ_factory()
+    res = create_object(
+        cls,
+        type   = 0,
+        name   = rdt.SMALL_RESOURCE_ITEM_IRQ_FORMAT,
+        length = ctypes.sizeof(cls) - 1,
+        _INT   = 1 << 8
+    )
+    resources.append(res)
 
     resources.append(bytes([0x79, 0]))
 
-    resource_buf = bytearray().join(resources)
+    resource_buf = bytearray().join(map(bytearray, resources))
     checksum = (256 - (sum(resource_buf) % 256)) % 256
     resource_buf[-1] = checksum
     rtc = builder.DefDevice(
@@ -759,6 +766,87 @@ def gen_dsdt(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
 
         dest.write(binary)
 
+def gen_rtct(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
+    def cpu_id_to_lapic_id(cpu_id):
+        return common.get_node(f"//thread[cpu_id = '{cpu_id}']/apic_id/text()", board_etree)
+
+    vm_node = common.get_node(f"//vm[@id='{vm_id}']", scenario_etree)
+    if vm_node is None:
+        return False
+
+    vcpus = ",".join(map(cpu_id_to_lapic_id, vm_node.xpath("cpu_affinity//pcpu_id/text()")))
+    rtct_entries = []
+
+    # ACPI table header
+
+    common_header = create_object(
+        TableHeader,
+        signature       = b'RTCT',
+        revision        = 1,
+        oemid           = b'ACRN  ',
+        oemtableid      = b'ACRNRTCT',
+        oemrevision     = 5,
+        creatorid       = b'INTL',
+        creatorrevision = 0x100000d
+    )
+    rtct_entries.append(common_header)
+
+    # Compatibility entry
+
+    compat_entry = create_object(
+        rtct.RTCTSubtableCompatibility,
+        subtable_size      = ctypes.sizeof(rtct.RTCTSubtableCompatibility),
+        format_or_version  = 1,
+        type               = rtct.ACPI_RTCT_TYPE_COMPATIBILITY,
+        rtct_version_major = 2,
+        rtct_version_minor = 0,
+        rtcd_version_major = 0,
+        rtcd_version_minor = 0
+    )
+    rtct_entries.append(compat_entry)
+
+    # SSRAM entries
+
+    # Look for the cache blocks that are visible to this VM and have software SRAM in it. Those software SRAM will be
+    # exposed to the VM in RTCT.
+    for cache in board_etree.xpath(f"//caches/cache[count(processors/processor[contains('{vcpus}', .)]) and capability[@id = 'Software SRAM']]"):
+        ssram_cap = common.get_node("capability[@id = 'Software SRAM']", cache)
+
+        ssram_entry = create_object(
+            rtct.RTCTSubtableSoftwareSRAM_v2,
+            subtable_size     = ctypes.sizeof(rtct.RTCTSubtableSoftwareSRAM_v2),
+            format_or_version = 2,
+            type              = rtct.ACPI_RTCT_V2_TYPE_SoftwareSRAM,
+            level             = int(cache.get("level")),
+            cache_id          = int(cache.get("id"), base=16),
+            base              = int(ssram_cap.find("start").text, base=16),
+            size              = int(ssram_cap.find("size").text),
+            shared            = 0
+        )
+        rtct_entries.append(ssram_entry)
+
+        if ssram_cap.find("waymask") is not None:
+            ssram_waymask_entry = create_object(
+                rtct.RTCTSubtableSSRAMWayMask,
+                subtable_size     = ctypes.sizeof(rtct.RTCTSubtableSSRAMWayMask),
+                format_or_version = 1,
+                type              = rtct.ACPI_RTCT_V2_TYPE_SSRAM_WayMask,
+                level             = int(cache.get("level")),
+                cache_id          = int(cache.get("id"), base=16),
+                waymask           = int(ssram_cap.find("waymask").text, base=16)
+            )
+            rtct_entries.append(ssram_waymask_entry)
+
+    with open(dest_path, "wb") as dest:
+        length = sum(map(ctypes.sizeof, rtct_entries))
+        common_header.length = length
+        binary = bytearray().join(map(bytearray, rtct_entries))
+
+        checksum = (256 - (sum(binary) % 256)) % 256
+        binary[9] = checksum
+
+        dest.write(binary)
+
 def main(args):
 
     err_dic = {}
@@ -841,12 +929,8 @@ def main(args):
         if not os.path.isdir(dest_vm_acpi_path):
             os.makedirs(dest_vm_acpi_path)
         if PASSTHROUGH_RTCT is True and vm_id == PRELAUNCHED_RTVM_ID:
-                for f in RTCT:
-                    if os.path.isfile(os.path.join(VM_CONFIGS_PATH, 'acpi_template', board_type, f)):
-                        passthru_devices.append(f)
-                        shutil.copy(os.path.join(VM_CONFIGS_PATH, 'acpi_template', board_type, f),
-                                    dest_vm_acpi_path)
-                        break
+            passthru_devices.append("RTCT")
+            gen_rtct(board_etree, scenario_etree, allocation_etree, vm_id, os.path.join(dest_vm_acpi_path, "rtct.aml"))
         gen_rsdp(dest_vm_acpi_path)
         gen_xsdt(dest_vm_acpi_path, passthru_devices)
         gen_fadt(dest_vm_acpi_path, board_root)

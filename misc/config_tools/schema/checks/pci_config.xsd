@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2022 Intel Corporation. -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+
+<xs:schema xml:id="root"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:acrn="https://projectacrn.org">
+
+  <xs:assert test="every $pci_device in /acrn-config//pci_dev satisfies
+                   count(/acrn-config//pci_dev[./text()=$pci_device]) = 1">
+    <xs:annotation acrn:severity="error" acrn:report-on="//vm[./pci_devs/pci_dev/text()=$pci_device]">
+      <xs:documentation>The PCI device '{$pci_device}' has been assigned multiple times to VM(s) '{//vm[./pci_devs/pci_dev/text()=$pci_device]/name}'  </xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+</xs:schema>

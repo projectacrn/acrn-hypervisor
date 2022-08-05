@@ -13,12 +13,10 @@ import common, math, logging
 
 def import_memory_info(board_etree):
     ram_range = {}
-    start = board_etree.xpath("/acrn-config/memory/range/@start")
-    size = board_etree.xpath("/acrn-config/memory/range/@size")
-    for i in range(len(start)):
-        start_hex = int(start[i], 16)
-        size_hex = int(size[i], 10)
-        ram_range[start_hex] = size_hex
+    for memory_range in board_etree.xpath("/acrn-config/memory/range[not(@id) or @id = 'RAM']"):
+        start = int(memory_range.get("start"), base=16)
+        size = int(memory_range.get("size"), base=10)
+        ram_range[start] = size
 
     return ram_range
 
@@ -172,7 +170,7 @@ def allocate_hugepages(board_etree, scenario_etree, allocation_etree):
 
     post_vms_memory = sum(int(i) for i in scenario_etree.xpath("//vm[load_order = 'POST_LAUNCHED_VM']/memory/size/text()")) / 1024
     if total_hugepages - post_vms_memory < 0:
-        logging.warning(f"The sum {post_vms_memory} of memory configured in post launch VMs should not be larger than " \
+        logging.debug(f"The sum {post_vms_memory} of memory configured in post launch VMs should not be larger than " \
         f"the calculated total hugepages {total_hugepages} of service VMs. Please update the configuration in post launch VMs")
 
     allocation_service_vm_node = common.get_node("/acrn-config/vm[load_order = 'SERVICE_VM']", allocation_etree)

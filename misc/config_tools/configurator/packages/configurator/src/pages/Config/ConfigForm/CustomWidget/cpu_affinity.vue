@@ -13,8 +13,15 @@
         <b-row class="align-items-center"
                v-for="(cpu,index) in defaultVal.pcpu">
           <b-col>
-            <span v-if="index===0" style="color: red; margin-left: -10px;margin-right: 4px">*</span>
-            pCPU ID
+            <label class="requiredField" v-if="index===0"></label>
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+                <span v-html="this.CPUAffinityConfiguration.properties.pcpu_id.description"></span>
+              </n-popover>pCPU ID
+            </label>
           </b-col>
           <b-col>
             <b-form-select :state="validateCPUAffinity(cpu.pcpu_id)" v-model="cpu.pcpu_id"
@@ -73,10 +80,11 @@ import _ from 'lodash'
 import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
 import {BFormInput, BRow} from "bootstrap-vue-3";
+import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
 
 export default {
   name: "cpu_affinity",
-  components: {BRow, BFormInput, Icon, Plus, Minus},
+  components: {BRow, BFormInput, Icon, Plus, Minus, IconInfo},
   props: {
     ...fieldProps,
   },
@@ -110,6 +118,7 @@ export default {
   },
   data() {
     return {
+      CPUAffinityConfiguration: this.rootSchema.definitions['CPUAffinityConfiguration'],
       defaultVal: vueUtils.getPathVal(this.rootFormData, this.curNodePath)
     }
   },
@@ -141,6 +150,10 @@ export default {
 </script>
 
 <style scoped>
+.requiredField:before {
+  content: '*';
+  color: red;
+}
 
 .ToolSet {
   display: flex;

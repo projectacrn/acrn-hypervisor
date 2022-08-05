@@ -178,7 +178,7 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 </xs:simpleType>
 
 <xs:simpleType name="VBDFType">
-  <xs:annotation>
+  <xs:annotation acrn:errormsg="'pattern': 'A string with up to two hex digits, a ``:``, two hex digits, a ``.``, and one digit between 0-7.'">
     <xs:documentation>A string with up to two hex digits, a ``:``, two hex digits, a ``.``, and one digit between 0-7.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">

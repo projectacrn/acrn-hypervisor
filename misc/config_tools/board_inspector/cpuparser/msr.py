@@ -7,7 +7,7 @@ from cpuparser.platformbase import MSR, msrfield
 
 class MSR_IA32_MISC_ENABLE(MSR):
     addr = 0x1a0
-    fast_string = msrfield(1, 0, doc=None)
+    fast_string = msrfield(0, 0, doc="Fast-strings enable")
 
     capability_bits = [
         "fast_string",
@@ -15,39 +15,76 @@ class MSR_IA32_MISC_ENABLE(MSR):
 
 class MSR_IA32_FEATURE_CONTROL(MSR):
     addr = 0x03a
-    msr_ia32_feature_control_lock = msrfield(1, 0, doc=None)
-    msr_ia32_feature_control_vmx_no_smx = msrfield(1, 2, doc=None)
+    lock = msrfield(0, 0, doc="Lock bit")
+    vmx_outside_smx = msrfield(2, 2, doc="Enable VMX outside SMX operation")
 
     @property
     def disable_vmx(self):
-        return self.msr_ia32_feature_control_lock and not self.msr_ia32_feature_control_vmx_no_smx
+        return self.lock and not self.vmx_outside_smx
 
     capability_bits = [
         "disable_vmx",
     ]
 
-class MSR_IA32_VMX_PROCBASED_CTLS2(MSR):
+class VMXCapabilityReportingMSR(MSR):
+    def get_field_idx(self, field):
+        if isinstance(field, int):
+            return field
+        if isinstance(field, str):
+            return getattr(type(self), field).lsb
+        assert False, f"Invalid field type: {field}, {type(field)}"
+
+    def allows_0_setting(self, field):
+        field_idx = self.get_field_idx(field)
+        if field_idx >= 32:
+            return False
+
+        bit_mask = (1 << field_idx)
+        return (self.value & bit_mask) == 0
+
+    def allows_1_setting(self, field):
+        field_idx = self.get_field_idx(field)
+        if field_idx >= 32:
+            return False
+
+        bit_mask = (1 << field_idx)
+        high = self.value >> 32
+        return (high & bit_mask) == bit_mask
+
+    def allows_flexible_setting(self, field):
+        field_idx = self.get_field_idx(field)
+        return self.allows_0_setting(field_idx) and self.allows_1_setting(field_idx)
+
+class MSR_IA32_VMX_PROCBASED_CTLS2(VMXCapabilityReportingMSR):
     addr = 0x0000048B
+
+    vapic_access = msrfield(0, 0, doc="Virtualize APIC accesses")
+    ept = msrfield(1, 1, doc="Enable EPT")
+    rdtscp = msrfield(3, 3, doc="Enable RDTSCP")
+    vx2apic = msrfield(4, 4, doc="Virtualize x2APIC mode")
+    vpid = msrfield(5, 5, doc="Enable VPID")
+    unrestricted_guest = msrfield(7, 7, doc="Unrestricted guest")
+    apic_reg_virt = msrfield(8, 8, doc="APIC-register virtualization")
 
     @property
     def vmx_procbased_ctls2_vapic(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 0)
+        return self.allows_flexible_setting("vapic_access")
 
     @property
     def vmx_procbased_ctls2_ept(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 1)
+        return self.allows_flexible_setting("ept")
 
     @property
     def vmx_procbased_ctls2_vpid(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 5)
+        return self.allows_flexible_setting("vpid")
 
     @property
     def vmx_procbased_ctls2_rdtscp(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 3)
+        return self.allows_flexible_setting("rdtscp")
 
     @property
     def vmx_procbased_ctls2_unrestrict(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 7)
+        return self.allows_flexible_setting("unrestricted_guest")
 
     capability_bits = [
         "vmx_procbased_ctls2_vapic",
@@ -57,82 +94,69 @@ class MSR_IA32_VMX_PROCBASED_CTLS2(MSR):
         "vmx_procbased_ctls2_unrestrict",
     ]
 
-class MSR_IA32_VMX_PINBASED_CTLS(MSR):
+class MSR_IA32_VMX_PINBASED_CTLS(VMXCapabilityReportingMSR):
     addr = 0x00000481
+
+    irq_exiting = msrfield(0, 0, doc="External-interrupt existing")
 
     @property
     def vmx_pinbased_ctls_irq_exit(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 0)
+        return self.allows_flexible_setting("irq_exiting")
 
     capability_bits = [
         "vmx_pinbased_ctls_irq_exit",
     ]
 
-class MSR_IA32_VMX_PROCBASED_CTLS(MSR):
+class MSR_IA32_VMX_PROCBASED_CTLS(VMXCapabilityReportingMSR):
     addr = 0x00000482
+
+    tsc_offsetting = msrfield(3, 3, doc="Use TSC offsetting")
+    hlt_exiting = msrfield(7, 7, doc="HLT exiting")
+    tpr_shadow = msrfield(21, 21, doc="Use TPR shadow")
+    io_bitmaps = msrfield(25, 25, doc="Use I/O bitmaps")
+    msr_bitmaps = msrfield(28, 28, doc="Use MSR bitmaps")
+    secondary_ctrls = msrfield(31, 31, doc="Activate secondary controls")
 
     @property
     def vmx_procbased_ctls_tsc_off(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 3)
+        return self.allows_flexible_setting("tsc_offsetting")
 
     @property
     def vmx_procbased_ctls_tpr_shadow(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 21)
+        return self.allows_flexible_setting("tpr_shadow")
 
     @property
     def vmx_procbased_ctls_io_bitmap(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 25)
+        return self.allows_flexible_setting("io_bitmaps")
 
     @property
     def vmx_procbased_ctls_msr_bitmap(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 28)
+        return self.allows_flexible_setting("msr_bitmaps")
 
     @property
     def vmx_procbased_ctls_hlt(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 7)
+        return self.allows_flexible_setting("hlt_exiting")
 
     @property
     def vmx_procbased_ctls_secondary(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 31)
+        return self.allows_flexible_setting("secondary_ctrls")
 
     @property
     def ept(self):
-        is_ept_supported = False
-        if ((self.value >> 32) & (1 << 31)) != 0:
-            msr_val = MSR_IA32_VMX_PROCBASED_CTLS2.rdmsr(self.cpu_id)
-            if msrfield.is_ctrl_setting_allowed(msr_val.value, 1 << 1):
-                is_ept_supported = True
-        return is_ept_supported
+        if self.allows_1_setting("secondary_ctrls"):
+            ctls2 = MSR_IA32_VMX_PROCBASED_CTLS2.rdmsr(self.cpu_id)
+            return ctls2.allows_1_setting("ept")
+        return False
 
     @property
     def apicv(self):
-        features = 0
-        vapic_feature_tpr_shadow = 1 << 3
-        vapic_feature_virt_access = 1 << 0
-        vapic_feature_vx2apic_mode = 1 << 5
-        vapic_feature_virt_reg = 1 << 1
-        vapic_feature_intr_delivery = 1 << 2
-        vapic_feature_post_intr = 1 << 4
+        if not self.allows_1_setting("tpr_shadow"):
+            return False
 
-        if msrfield.is_ctrl_setting_allowed(self.value, 1 << 21):
-            features |= vapic_feature_tpr_shadow
-
-        msr_val = MSR_IA32_VMX_PROCBASED_CTLS2.rdmsr(self.cpu_id)
-        if msrfield.is_ctrl_setting_allowed(msr_val.value, 1 << 0):
-            features |= vapic_feature_virt_access
-        if msrfield.is_ctrl_setting_allowed(msr_val.value, 1 << 4):
-            features |= vapic_feature_vx2apic_mode
-        if msrfield.is_ctrl_setting_allowed(msr_val.value, 1 << 8):
-            features |= vapic_feature_virt_reg
-        if msrfield.is_ctrl_setting_allowed(msr_val.value, 1 << 9):
-            features |= vapic_feature_intr_delivery
-
-        msr_val = MSR_IA32_VMX_PINBASED_CTLS.rdmsr(self.cpu_id)
-        if msrfield.is_ctrl_setting_allowed(msr_val.value, 1 << 7):
-            features |= vapic_feature_post_intr
-
-        apicv_basic_feature = (vapic_feature_tpr_shadow | vapic_feature_virt_access | vapic_feature_vx2apic_mode)
-        return (features & apicv_basic_feature) == apicv_basic_feature
+        ctls2 = MSR_IA32_VMX_PROCBASED_CTLS2.rdmsr(self.cpu_id)
+        return \
+            ctls2.allows_1_setting("vapic_access") and \
+            ctls2.allows_1_setting("vx2apic")
 
     capability_bits = [
         "ept",
@@ -148,10 +172,16 @@ class MSR_IA32_VMX_PROCBASED_CTLS(MSR):
 class MSR_IA32_VMX_EPT_VPID_CAP(MSR):
     addr = 0x0000048C
 
-    invept = msrfield(1, 20)
-    ept_2mb_page = msrfield(1, 16)
-    vmx_ept_1gb_page = msrfield(1, 17)
-    invvpid = msrfield(1, 32) and msrfield(1, 41) and msrfield(1, 42)
+    invept = msrfield(20, 20, doc="INVEPT instruction supported")
+    ept_2mb_page = msrfield(16, 16, doc="EPT 2-Mbyte page supported")
+    vmx_ept_1gb_page = msrfield(17, 17, doc="EPT 1-Gbyte page supported")
+    invvpid_inst = msrfield(32, 32, doc="INVVPID instruction supported")
+    invvpid_single_context = msrfield(41, 41, doc="single-context INVVPID type supported")
+    invvpid_all_context = msrfield(42, 42, doc="all-context INVVPID type supported")
+
+    @property
+    def invvpid(self):
+        return self.invvpid_inst and self.invvpid_single_context and self.invvpid_all_context
 
     capability_bits = [
         "invept",
@@ -162,38 +192,43 @@ class MSR_IA32_VMX_EPT_VPID_CAP(MSR):
 
 class MSR_IA32_VMX_MISC(MSR):
     addr = 0x00000485
-    unrestricted_guest = msrfield(1, 5)
+    stores_lma_on_exit = msrfield(5, 5, doc="VM exits stores the value of IA32_EFER.LMA into the 'IA-32e mode guest' VM-entry control")
 
     capability_bits = [
-        "unrestricted_guest",
+        "stores_lma_on_exit",
     ]
 
 class MSR_IA32_VMX_BASIC(MSR):
     addr = 0x00000480
-    set_32bit_addr_width = msrfield(1, 48)
+    set_32bit_addr_width = msrfield(48, 48, doc="Addresses of VMXON, VMCS and referenced structures limited to 32-bit")
 
     capability_bits = [
         "set_32bit_addr_width",
     ]
 
-class MSR_IA32_VMX_EXIT_CTLS(MSR):
+class MSR_IA32_VMX_EXIT_CTLS(VMXCapabilityReportingMSR):
     addr = 0x00000483
+
+    host_addr_size = msrfield(9, 9, doc="Host address-space size")
+    ack_irq_on_exit = msrfield(15, 15, doc="Acknowledge interrupt on exit")
+    save_pat = msrfield(18, 18, doc="Save IA32_PAT")
+    load_pat = msrfield(19, 19, doc="Load IA32_PAT")
 
     @property
     def vmx_exit_ctls_ack_irq(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 15)
+        return self.allows_flexible_setting("ack_irq_on_exit")
 
     @property
     def vmx_exit_ctls_save_pat(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 18)
+        return self.allows_flexible_setting("save_pat")
 
     @property
     def vmx_exit_ctls_load_pat(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 19)
+        return self.allows_flexible_setting("load_pat")
 
     @property
     def vmx_exit_ctls_host_addr64(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 9)
+        return self.allows_flexible_setting("host_addr_size")
 
     capability_bits = [
         "vmx_exit_ctls_ack_irq",
@@ -202,18 +237,36 @@ class MSR_IA32_VMX_EXIT_CTLS(MSR):
         "vmx_exit_ctls_host_addr64",
     ]
 
-class MSR_IA32_VMX_ENTRY_CTLS(MSR):
+class MSR_IA32_VMX_ENTRY_CTLS(VMXCapabilityReportingMSR):
     addr = 0x00000484
+
+    ia32e_mode_guest = msrfield(9, 9, doc="IA-32e mode guest")
+    load_pat = msrfield(14, 14, doc="Load IA32_PAT")
 
     @property
     def vmx_entry_ctls_load_pat(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 14)
+        return self.allows_flexible_setting("load_pat")
 
     @property
     def vmx_entry_ctls_ia32e_mode(self):
-        return msrfield.is_vmx_cap_supported(self, 1 << 9)
+        return self.allows_flexible_setting("ia32e_mode_guest")
 
     capability_bits = [
         "vmx_entry_ctls_load_pat",
         "vmx_entry_ctls_ia32e_mode",
     ]
+
+class MSR_IA32_L3_QOS_CFG(MSR):
+    addr = 0x00000c81
+    cdp_enable = msrfield(0, 0, doc="L3 CDP enable")
+
+def MSR_IA32_L3_MASK_n(n):
+    if n >= 128:
+        logging.debug("Attempt to access an out-of-range IA32_L3_MASK_n register. Fall back to 0.")
+        n = 0
+
+    class IA32_L3_MASK_n(MSR):
+        addr = 0x00000c90 + n
+        bit_mask = msrfield(32, 0, doc="Capacity bit mask")
+
+    return IA32_L3_MASK_n

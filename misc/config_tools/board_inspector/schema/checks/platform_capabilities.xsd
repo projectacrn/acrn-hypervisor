@@ -147,9 +147,9 @@ ACRN requires this feature to function properly. Please enable it in BIOS.</xs:d
     </xs:annotation>
   </xs:assert>
 
-  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='unrestricted_guest'])">
+  <xs:assert test="every $model in processors/model satisfies exists($model/capability[@id='stores_lma_on_exit'])">
     <xs:annotation acrn:severity="error">
-      <xs:documentation>Unrestricted guest is not supported on this processor. ACRN requires this feature to function properly.</xs:documentation>
+      <xs:documentation>The value of IA32_EFER.LMA is not saved upon VM exit on this processor. ACRN requires this feature to function properly.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 

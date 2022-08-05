@@ -209,6 +209,11 @@ def cpu_id_to_lapic_id(board_etree, vm_name, cpus):
 
     return ret
 
+def get_slot_by_vbdf(vbdf):
+    if vbdf is not None:
+        return int((vbdf.split(":")[1].split(".")[0]), 16)
+    else:
+        return None
 
 def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id):
     vm_name = eval_xpath(vm_scenario_etree, "./name/text()", f"ACRN Post-Launched VM")
@@ -263,10 +268,14 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     #ivshmem and vuart own reserved slots which setting by user
 
     for ivshmem in eval_xpath_all(vm_scenario_etree, f"//IVSHMEM_REGION[PROVIDED_BY = 'Device Model' and .//VM_NAME = '{vm_name}']"):
-        script.add_virtual_device("ivshmem", options=f"dm:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text}")
+        vbdf = eval_xpath(ivshmem, f".//VBDF/text()")
+        slot = get_slot_by_vbdf(vbdf)
+        script.add_virtual_device("ivshmem", slot, options=f"dm:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text}")
 
     for ivshmem in eval_xpath_all(vm_scenario_etree, f"//IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor' and .//VM_NAME = '{vm_name}']"):
-        script.add_virtual_device("ivshmem", options=f"hv:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text}")
+        vbdf = eval_xpath(ivshmem, f".//VBDF/text()")
+        slot = get_slot_by_vbdf(vbdf)
+        script.add_virtual_device("ivshmem", slot, options=f"hv:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text}")
 
     if eval_xpath(vm_scenario_etree, ".//console_vuart/text()") == "PCI":
         script.add_virtual_device("uart", options="vuart_idx:0")
@@ -274,10 +283,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     for idx, conn in enumerate(eval_xpath_all(hv_scenario_etree, f"//vuart_connection[endpoint/vm_name/text() = '{vm_name}']"), start=1):
         if eval_xpath(conn, f"./type/text()") == "pci":
             vbdf = eval_xpath(conn, f"./endpoint[vm_name/text() = '{vm_name}']/vbdf/text()")
-            if vbdf is not None:
-                slot = int((vbdf.split(":")[1].split(".")[0]), 16)
-            else:
-                slot = None
+            slot = get_slot_by_vbdf(vbdf)
             script.add_virtual_device("uart", slot, options=f"vuart_idx:{idx}")
 
     # Mediated PCI devices, including virtio
