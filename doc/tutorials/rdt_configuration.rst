@@ -7,59 +7,57 @@ About Intel Resource Director Technology (RDT)
 **********************************************
 
 On x86 platforms that support Intel Resource Director Technology (RDT)
-allocation features, the ACRN hypervisor can partition the shared cache among
-VMs to minimize performance impacts on higher-priority VMs, such as real-time
-VMs (RTVMs). “Shared cache” refers to cache that is shared among multiple CPU
-cores. By default, VMs running on these cores are configured to use the entire
-cache, effectively sharing the cache among all VMs without any partitions. This
-design may cause too many cache misses for applications running in
-higher-priority VMs, negatively affecting their performance. The ACRN hypervisor
-can help minimize cache misses by isolating a portion of the shared cache for
-a specific VM.
+allocation features, the ACRN hypervisor can help minimize cache misses by
+partitioning the shared cache among VMs. “Shared cache” refers to cache that is
+shared among multiple CPU cores. By default, VMs running on these cores are
+configured to use the entire cache, effectively sharing the cache among all VMs
+and without any partitioning. This design choice may cause too many cache misses
+for applications running in higher-priority VMs, such as real-time VMs (RTVM),
+negatively affecting their performance.  The ACRN hypervisor can help minimize
+cache misses and improve performance by isolating a portion of the shared cache
+for a specific VM.
 
 ACRN supports the following features:
 
-* Cache Allocation Technology (CAT)
-* Code and Data Prioritization (CDP)
-* Virtual Cache Allocation Technology (vCAT)
+Cache Allocation Technology (CAT)
+  The CAT support in the hypervisor isolates a portion of the cache for a VM from
+  other VMs. Generally, certain cache resources are allocated for the RTVMs to
+  reduce performance interference by other VMs attempting to use the same cache.
 
-The CAT support in the hypervisor isolates a portion of the cache for a VM from
-other VMs. Generally, certain cache resources are allocated for the RTVMs to
-reduce performance interference by other VMs attempting to use the same cache.
 
-The CDP feature in RDT is an extension of CAT that enables separate control over
-code and data placement in the cache. The CDP support in the hypervisor isolates
-a portion of the cache for code and another portion for data for the same VM.
+Code and Data Prioritization (CDP)
+  The CDP feature in RDT is an extension of CAT that enables separate control over
+  code and data placement in the cache. The CDP support in the hypervisor isolates
+  a portion of the cache for code and another portion for data for the same VM.
 
-ACRN also supports the virtualization of CAT, referred to as vCAT. With
-vCAT enabled, the hypervisor presents CAT to a selected set of VMs to allow the
-guest OSes to further isolate the cache used by higher-priority processes in
-those VMs.
+
+Virtual Cache Allocation Technology (vCAT)
+  ACRN also supports virtualizing CAT, referred to as vCAT. With
+  vCAT enabled, the hypervisor presents CAT to a selected set of VMs, allowing the
+  guest OSs to further isolate the cache used by higher-priority processes in
+  those VMs.
 
 Dependencies and Constraints
 *****************************
 
 Consider the following dependencies and constraints:
 
-* The hardware must support RDT in order for ACRN to enable RDT support in the
+* The hardware must support RDT for ACRN to enable RDT support in the
   hypervisor.
 
-* The cache must be shared cache (cache shared across multiple CPU cores), as
-  opposed to private cache (cache that is owned by only one CPU core). If the
+* The cache must be shared cache (cache shared across multiple CPU cores) and
+  not private cache (cache that is owned by only one CPU core). If the
   cache is private, CAT, CDP, and vCAT have no benefit because the cache is
   already exclusively used by one core. For this reason, the ACRN Configurator
   will not allow you to configure private cache.
 
-* The ACRN Configurator relies on the board configuration file to provide CAT
-  information that it can use to display configuration parameters. On Tiger Lake
-  systems, L3 CAT, also known as LLC CAT, is model specific and
-  non-architectural. For these reasons, the Board Inspector doesn't detect LLC
-  CAT, and therefore doesn't provide LLC CAT information in the board
-  configuration file even if the board has LLC CAT capabilities. The Board
-  Inspector offers a way to manually add LLC CAT information to the board
-  configuration file via a command-line option described in
-  :ref:`board_inspector_tool`. Run the Board Inspector with the command-line
-  option, then import the board configuration file into the ACRN Configurator.
+* The ACRN Configurator displays CAT configuration parameters based on data
+  reported in the board configuration file.  Some Intel platforms are known to
+  have L3 CAT even though it's not reported via the architectural CPUID
+  interface. In this situation, the board inspector detects availability of L3
+  CAT by trying to access the CAT MSRs directly. Versions of the board inspector
+  before v3.1 only used the CPUID interface and would indicate L3 CAT wasn't
+  supported in this circumstance.
 
 * The guest OS in a VM with vCAT enabled requires utilities in that OS for
   further cache allocation configurations. An example is the `resctrl
@@ -159,7 +157,7 @@ The table title shows important information:
 The above example shows an L2 cache table. VMs assigned to any CPU cores 2-6 can
 have cache allocated to them.
 
-The table's y-axis shows the names of all VMs that are assigned to the CPU cores
+The table's columns show the names of all VMs that are assigned to the CPU cores
 noted in the table title, as well as their vCPU IDs. The table categorizes the
 vCPUs as either standard or real-time. The real-time vCPUs are those that are
 set as real-time in the VM's parameters. All other vCPUs are considered
@@ -170,7 +168,7 @@ standard vCPUs (VM0 vCPU 2 and 6).
 
    The Service VM is automatically assigned to all CPUs, so it appears in the standard category in all cache tables. 
 
-The table's x-axis shows the number of available cache chunks. You can see the
+The table's rows show the number of available cache chunks. You can see the
 size of each cache chunk in the note below the table. In the above example, 20
 cache chunks are available to allocate to the VMs, and each cache chunk is 64KB.
 All cache chunks are yellow, which means all of them are allocated to all VMs.
