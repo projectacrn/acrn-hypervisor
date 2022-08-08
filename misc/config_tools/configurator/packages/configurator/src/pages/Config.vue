@@ -45,7 +45,8 @@
     </b-accordion-item>
     <Banner>
       <div style="position: relative">
-        <button type="button" :disabled="!scenarioHaveData" class="btn btn-primary btn-lg SaveButton"
+        <SaveScenario v-model:show-modal="showTotalMessageFlag" :total-msg="totalMsg"/>
+        <button type="button" :disabled="!scenarioHaveData" class="wel-btn btn btn-primary btn-lg SaveButton"
                 @click="saveScenario">
           Save Scenario and Launch Scripts
         </button>
@@ -102,12 +103,13 @@ import Board from "./Config/Board.vue";
 import Scenario from "./Config/Scenario.vue";
 import TabBox from "./Config/ConfigForm/TabBox.vue";
 import ConfigForm from "./Config/ConfigForm.vue";
+import SaveScenario from "./Config/Scenario/SaveScenario.vue";
 
 import configurator from "../lib/acrn";
 
 export default {
   name: "Config",
-  components: {ConfigForm, TabBox, Scenario, Icon, Board, Banner, AngleLeft},
+  components: {SaveScenario,ConfigForm, TabBox, Scenario, Icon, Board, Banner, AngleLeft},
   props: {
     WorkingFolder: {type: String},
     isNewConfig: {type: String}
@@ -134,7 +136,9 @@ export default {
       currentBoardManu: '',
       CurrentBoardProd: '',
       showFlag: false,
-      errors: []
+      errors: [],
+      totalMsg: "",
+      showTotalMessageFlag: false,
     }
   },
   computed: {
@@ -427,17 +431,17 @@ export default {
       }
       await this.assignVMID()
       let msg = [
-        "scenario xml saved\n",
+        "Scenario xml saved\n",
         "Settings validated\n",
-        "launch scripts generated\n"
+        "Launch scripts generated\n"
       ];
       let errmsg = [
-        "scenario xml save failed\n",
+        "Scenario xml save failed\n",
         "Settings validate failed\n",
-        "launch scripts generate failed\n"
+        "Launch scripts generate failed\n"
       ];
       let stepDone = 0
-      let totalMsg = msg.length // msg and errMsg must be same length.
+      let totalMsgLength = msg.length // msg and errMsg must be same length.
       let needSaveLaunchScript = false
 
       this.scenario.hv.CACHE_REGION = configurator.cat.getScenarioDataFromCAT()
@@ -452,7 +456,7 @@ export default {
         }
       })
       if (!needSaveLaunchScript) {
-        totalMsg = totalMsg - 1 // remove the 'launch script' related mssage.
+        totalMsgLength = totalMsgLength - 1 // remove the 'launch script' related mssage.
       }
       // begin write down and verify
 
@@ -491,7 +495,7 @@ export default {
             if (!_.isEmpty(result)) {
               stepDone = 3
             }
-            alert(`${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`)
+            this.totalMsg = `${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`
           })
           .catch((err) => {
             // show error message
@@ -499,10 +503,13 @@ export default {
             let outmsg = ''
             for (var i = 0; i < stepDone; i++)
               outmsg += msg[i]
-            for (i = stepDone; i < totalMsg; i++)
+            for (i = stepDone; i < totalMsgLength; i++)
               outmsg += errmsg[i]
-            alert(`${outmsg} \n Please check your configuration`)
+            this.totalMsg = `${outmsg} \n Please check your configuration`
           })
+
+      this.showTotalMessageFlag = true
+      return this.totalMsg
     }
   }
 }
