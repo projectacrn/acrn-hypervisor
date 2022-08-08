@@ -105,7 +105,7 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
 
 <xs:complexType name="MemoryInfo">
   <xs:all>
-    <xs:element name="size" minOccurs="0" default="256">
+    <xs:element name="size" minOccurs="0" default="1024">
       <xs:annotation acrn:title="Memory size (MB)" acrn:views="basic" acrn:applicable-vms="pre-launched, post-launched">
        <xs:documentation>Specify the physical memory size allocated to this VM in megabytes.</xs:documentation>
       </xs:annotation>
