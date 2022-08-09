@@ -60,8 +60,8 @@
     <div class="py-3" v-if="CAT_INFO.errorMsg">
       {{ CAT_INFO.errorMsg }}
     </div>
-    <div class="py-4" v-for="CACHE_ALLOCATION in CAT_INFO.regions" v-if="RDT_ENABLED==='y'">
-      <p v-if="CACHE_ALLOCATION.level===3||CACHE_ALLOCATION.level===2">
+    <div class="py-4" v-for="(CACHE_ALLOCATION,index) in CAT_INFO.regions" v-if="RDT_ENABLED==='y'">
+      <p v-if="showInstruction(CACHE_ALLOCATION.level,index) ">
         Drag the ends of the boxes to cover the cache chunks you want to allocate to specific VMs. If you have a
         real-time
         VM,ensure its cache chunks do not overlap with any other VM's cache chunks.
@@ -218,10 +218,17 @@ export default {
     return {
       CAT_INFO: {errorMsg: null, regions: [], summary: {}},
       SSRAMInfo: this.rootSchema.definitions['SSRAMInfo'],
-      RDTType: this.rootSchema.definitions['RDTType']
+      RDTType: this.rootSchema.definitions['RDTType'],
+      InstructionLocation: {},
     }
   },
   methods: {
+    showInstruction(level, index) {
+      if (!(level in this.InstructionLocation)) {
+        this.InstructionLocation[level] = index
+      }
+      return this.InstructionLocation[level]===index
+    },
     boardUpdate() {
       this.updateCatInfo()
     },
@@ -333,6 +340,7 @@ export default {
     },
     updateCatInfo() {
       this.CAT_INFO = configurator.cat.getCATUIData()
+      this.InstructionLocation={}
     }
   }
 }
