@@ -32,6 +32,7 @@
 #define VDPY_MIN_WIDTH 640
 #define VDPY_MIN_HEIGHT 480
 #define transto_10bits(color) (uint16_t)(color * 1024 + 0.5)
+#define VSCREEN_MAX_NUM 1
 
 static unsigned char default_raw_argb[VDPY_DEFAULT_WIDTH * VDPY_DEFAULT_HEIGHT * 4];
 
@@ -51,27 +52,39 @@ struct egl_display_ops {
 	PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
 };
 
-static struct display {
+struct vscreen {
+	struct display_info info;
 	int pscreen_id;
 	SDL_Rect pscreen_rect;
-	struct display_info info;
-	struct state s;
-	SDL_Texture *dpy_texture;
-	SDL_Window *dpy_win;
-	SDL_Renderer *dpy_renderer;
-	pixman_image_t *dpy_img;
-	pthread_t tid;
-	int width, height; // Width/height of dpy_win
-	int org_x, org_y;
-	int guest_width, guest_height;
+	bool is_fullscreen;
+	int org_x;
+	int org_y;
+	int width;
+	int height;
+	int guest_width;
+	int guest_height;
 	struct surface surf;
 	struct cursor cur;
-	SDL_Texture *cursor_tex;
+	SDL_Texture *surf_tex;
+	SDL_Texture *cur_tex;
+	int surf_updates;
+	int cur_updates;
+	SDL_Window *win;
+	SDL_Renderer *renderer;
+	pixman_image_t *img;
+	EGLImage egl_img;
+	/* Record the update_time that is activated from guest_vm */
+	struct timespec last_time;
+};
+
+static struct display {
+	struct state s;
+	struct vscreen *vscrs;
+	int vscrs_num;
+	pthread_t tid;
 	/* Add one UI_timer(33ms) to render the buffers from guest_vm */
 	struct acrn_timer ui_timer;
 	struct vdpy_display_bh ui_timer_bh;
-	/* Record the update_time that is activated from guest_vm */
-	struct timespec last_time;
 	// protect the request_list
 	pthread_mutex_t vdisplay_mutex;
 	// receive the signal that request is submitted
@@ -82,14 +95,11 @@ static struct display {
 	SDL_GLContext eglContext;
 	EGLDisplay eglDisplay;
 	struct egl_display_ops gl_ops;
-	EGLImage cur_egl_img;
 } vdpy = {
 	.s.is_ui_realized = false,
 	.s.is_active = false,
 	.s.is_wayland = false,
 	.s.is_x11 = false,
-	.s.is_fullscreen = false,
-	.s.updates = 0,
 	.s.n_connect = 0
 };
 
@@ -514,10 +524,16 @@ void
 vdpy_get_edid(int handle, int scanout_id, uint8_t *edid, size_t size)
 {
 	struct edid_info edid_info;
+	struct vscreen *vscr;
+
+	if (scanout_id >= vdpy.vscrs_num)
+		return;
+
+	vscr = vdpy.vscrs + scanout_id;
 
 	if (handle == vdpy.s.n_connect) {
-		edid_info.prefx = vdpy.info.width;
-		edid_info.prefy = vdpy.info.height;
+		edid_info.prefx = vscr->info.width;
+		edid_info.prefy = vscr->info.height;
 		edid_info.maxx = VDPY_MAX_WIDTH;
 		edid_info.maxy = VDPY_MAX_HEIGHT;
 	} else {
@@ -537,11 +553,18 @@ vdpy_get_edid(int handle, int scanout_id, uint8_t *edid, size_t size)
 void
 vdpy_get_display_info(int handle, int scanout_id, struct display_info *info)
 {
+	struct vscreen *vscr;
+
+	if (scanout_id >= vdpy.vscrs_num)
+		return;
+
+	vscr = vdpy.vscrs + scanout_id;
+
 	if (handle == vdpy.s.n_connect) {
-		info->xoff = vdpy.info.xoff;
-		info->yoff = vdpy.info.yoff;
-		info->width = vdpy.info.width;
-		info->height = vdpy.info.height;
+		info->xoff = vscr->info.xoff;
+		info->yoff = vscr->info.yoff;
+		info->width = vscr->info.width;
+		info->height = vscr->info.height;
 	} else {
 		info->xoff = 0;
 		info->yoff = 0;
@@ -554,6 +577,8 @@ static void
 sdl_gl_display_init(void)
 {
 	struct egl_display_ops *gl_ops = &vdpy.gl_ops;
+	struct vscreen *vscr;
+	int i;
 
 	/* obtain the eglDisplay/eglContext */
 	vdpy.eglDisplay = eglGetCurrentDisplay();
@@ -570,7 +595,11 @@ sdl_gl_display_init(void)
 	gl_ops->glEGLImageTargetTexture2DOES = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)
 				eglGetProcAddress("glEGLImageTargetTexture2DOES");
 
-	vdpy.cur_egl_img = EGL_NO_IMAGE_KHR;
+	for (i = 0; i < vdpy.vscrs_num; i++) {
+		vscr = vdpy.vscrs + i;
+		vscr->egl_img = EGL_NO_IMAGE_KHR;
+	}
+
 	if ((gl_ops->eglCreateImageKHR == NULL) ||
 		(gl_ops->eglDestroyImageKHR == NULL) ||
 		(gl_ops->glEGLImageTargetTexture2DOES == NULL)) {
@@ -588,6 +617,7 @@ vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 	pixman_image_t *src_img;
 	int format;
 	int access, i;
+	struct vscreen *vscr;
 
 	if (handle != vdpy.s.n_connect) {
 		return;
@@ -599,9 +629,15 @@ vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 		return;
 	}
 
+	if (scanout_id >= vdpy.vscrs_num) {
+		return;
+	}
+
+	vscr = vdpy.vscrs + scanout_id;
+
 	if (surf == NULL ) {
-		vdpy.surf.width = 0;
-		vdpy.surf.height = 0;
+		vscr->surf.width = 0;
+		vscr->surf.height = 0;
 		/* Need to use the default 640x480 for the SDL_Texture */
 		src_img = pixman_image_create_bits(PIXMAN_a8r8g8b8,
 			VDPY_MIN_WIDTH, VDPY_MIN_HEIGHT,
@@ -611,8 +647,8 @@ vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 			pr_err("failed to create pixman_image\n");
 			return;
 		}
-		vdpy.guest_width = VDPY_MIN_WIDTH;
-		vdpy.guest_height = VDPY_MIN_HEIGHT;
+		vscr->guest_width = VDPY_MIN_WIDTH;
+		vscr->guest_height = VDPY_MIN_HEIGHT;
 	} else if (surf->surf_type == SURFACE_PIXMAN) {
 		src_img = pixman_image_create_bits(surf->surf_format,
 			surf->width, surf->height, surf->pixel,
@@ -621,21 +657,21 @@ vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 			pr_err("failed to create pixman_image\n");
 			return;
 		}
-		vdpy.surf = *surf;
-		vdpy.guest_width = surf->width;
-		vdpy.guest_height = surf->height;
+		vscr->surf = *surf;
+		vscr->guest_width = surf->width;
+		vscr->guest_height = surf->height;
 	} else if (surf->surf_type == SURFACE_DMABUF) {
 		src_img = NULL;
-		vdpy.surf = *surf;
-		vdpy.guest_width = surf->width;
-		vdpy.guest_height = surf->height;
+		vscr->surf = *surf;
+		vscr->guest_width = surf->width;
+		vscr->guest_height = surf->height;
 	} else {
 		/* Unsupported type */
 		return;
 	}
 
-	if (vdpy.dpy_texture) {
-		SDL_DestroyTexture(vdpy.dpy_texture);
+	if (vscr->surf_tex) {
+		SDL_DestroyTexture(vscr->surf_tex);
 	}
 	if (surf && (surf->surf_type == SURFACE_DMABUF)) {
 		access = SDL_TEXTUREACCESS_STATIC;
@@ -666,23 +702,23 @@ vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 					pixman_image_get_format(src_img));
 		}
 	}
-	vdpy.dpy_texture = SDL_CreateTexture(vdpy.dpy_renderer,
+	vscr->surf_tex = SDL_CreateTexture(vscr->renderer,
 			format, access,
-			vdpy.guest_width, vdpy.guest_height);
+			vscr->guest_width, vscr->guest_height);
 
-	if (vdpy.dpy_texture == NULL) {
+	if (vscr->surf_tex == NULL) {
 		pr_err("Failed to create SDL_texture for surface.\n");
 	}
 
 	/* For the surf_switch, it will be updated in surface_update */
 	if (!surf) {
-		SDL_UpdateTexture(vdpy.dpy_texture, NULL,
+		SDL_UpdateTexture(vscr->surf_tex, NULL,
 				  pixman_image_get_data(src_img),
 				  pixman_image_get_stride(src_img));
 
-		SDL_RenderClear(vdpy.dpy_renderer);
-		SDL_RenderCopy(vdpy.dpy_renderer, vdpy.dpy_texture, NULL, NULL);
-		SDL_RenderPresent(vdpy.dpy_renderer);
+		SDL_RenderClear(vscr->renderer);
+		SDL_RenderCopy(vscr->renderer, vscr->surf_tex, NULL, NULL);
+		SDL_RenderPresent(vscr->renderer);
 	} else if (surf->surf_type == SURFACE_DMABUF) {
 		EGLImageKHR egl_img = EGL_NO_IMAGE_KHR;
 		EGLint attrs[64];
@@ -713,46 +749,54 @@ vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 			return;
 		}
 
-		SDL_GL_BindTexture(vdpy.dpy_texture, NULL, NULL);
+		SDL_GL_BindTexture(vscr->surf_tex, NULL, NULL);
 		gl_ops->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_img);
-		if (vdpy.cur_egl_img != EGL_NO_IMAGE_KHR)
+		if (vscr->egl_img != EGL_NO_IMAGE_KHR)
 			gl_ops->eglDestroyImageKHR(vdpy.eglDisplay,
-					vdpy.cur_egl_img);
+					vscr->egl_img);
 
 		/* In theory the created egl_img can be released after it is bound
 		 * to texture.
 		 * Now it is released next time so that it is controlled correctly
 		 */
-		vdpy.cur_egl_img = egl_img;
+		vscr->egl_img = egl_img;
 	}
 
-	if (vdpy.dpy_img)
-		pixman_image_unref(vdpy.dpy_img);
+	if (vscr->img)
+		pixman_image_unref(vscr->img);
 
 	if (surf == NULL) {
-		SDL_SetWindowTitle(vdpy.dpy_win,
+		SDL_SetWindowTitle(vscr->win,
 				"Not activate display yet!");
 	} else {
-		SDL_SetWindowTitle(vdpy.dpy_win,
+		SDL_SetWindowTitle(vscr->win,
 				"ACRN Virtual Monitor");
 	}
 	/* Replace the cur_img with the created_img */
-	vdpy.dpy_img = src_img;
+	vscr->img = src_img;
 }
 
 void
-vdpy_cursor_position_transformation(struct display *vdpy, SDL_Rect *rect)
+vdpy_cursor_position_transformation(struct display *vdpy, int scanout_id, SDL_Rect *rect)
 {
-	rect->x = (vdpy->cur.x * vdpy->width) / vdpy->guest_width;
-	rect->y = (vdpy->cur.y * vdpy->height) / vdpy->guest_height;
-	rect->w = (vdpy->cur.width * vdpy->width) / vdpy->guest_width;
-	rect->h = (vdpy->cur.height * vdpy->height) / vdpy->guest_height;
+	struct vscreen *vscr;
+
+	if (scanout_id >= vdpy->vscrs_num) {
+		return;
+	}
+
+	vscr = vdpy->vscrs + scanout_id;
+	rect->x = (vscr->cur.x * vscr->width) / vscr->guest_width;
+	rect->y = (vscr->cur.y * vscr->height) / vscr->guest_height;
+	rect->w = (vscr->cur.width * vscr->width) / vscr->guest_width;
+	rect->h = (vscr->cur.height * vscr->height) / vscr->guest_height;
 }
 
 void
 vdpy_surface_update(int handle, int scanout_id, struct surface *surf)
 {
 	SDL_Rect cursor_rect;
+	struct vscreen *vscr;
 
 	if (handle != vdpy.s.n_connect) {
 		return;
@@ -769,32 +813,39 @@ vdpy_surface_update(int handle, int scanout_id, struct surface *surf)
 	        return;
 	}
 
+	if (scanout_id >= vdpy.vscrs_num) {
+		return;
+	}
+
+	vscr = vdpy.vscrs + scanout_id;
 	if (surf->surf_type == SURFACE_PIXMAN)
-		SDL_UpdateTexture(vdpy.dpy_texture, NULL,
+		SDL_UpdateTexture(vscr->surf_tex, NULL,
 			  surf->pixel,
 			  surf->stride);
 
-	SDL_RenderClear(vdpy.dpy_renderer);
-	SDL_RenderCopy(vdpy.dpy_renderer, vdpy.dpy_texture, NULL, NULL);
+	SDL_RenderClear(vscr->renderer);
+	SDL_RenderCopy(vscr->renderer, vscr->surf_tex, NULL, NULL);
 
 	/* This should be handled after rendering the surface_texture.
 	 * Otherwise it will be hidden
 	 */
-	if (vdpy.cursor_tex) {
-		vdpy_cursor_position_transformation(&vdpy, &cursor_rect);
-		SDL_RenderCopy(vdpy.dpy_renderer, vdpy.cursor_tex,
+	if (vscr->cur_tex) {
+		vdpy_cursor_position_transformation(&vdpy, scanout_id, &cursor_rect);
+		SDL_RenderCopy(vscr->renderer, vscr->cur_tex,
 				NULL, &cursor_rect);
 	}
 
-	SDL_RenderPresent(vdpy.dpy_renderer);
+	SDL_RenderPresent(vscr->renderer);
 
 	/* update the rendering time */
-	clock_gettime(CLOCK_MONOTONIC, &vdpy.last_time);
+	clock_gettime(CLOCK_MONOTONIC, &vscr->last_time);
 }
 
 void
 vdpy_cursor_define(int handle, int scanout_id, struct cursor *cur)
 {
+	struct vscreen *vscr;
+
 	if (handle != vdpy.s.n_connect) {
 		return;
 	}
@@ -805,39 +856,52 @@ vdpy_cursor_define(int handle, int scanout_id, struct cursor *cur)
 		return;
 	}
 
+	if (scanout_id >= vdpy.vscrs_num) {
+		return;
+	}
+
 	if (cur->data == NULL)
 		return;
 
-	if (vdpy.cursor_tex)
-		SDL_DestroyTexture(vdpy.cursor_tex);
+	vscr = vdpy.vscrs + scanout_id;
 
-	vdpy.cursor_tex = SDL_CreateTexture(
-			vdpy.dpy_renderer,
+	if (vscr->cur_tex)
+		SDL_DestroyTexture(vscr->cur_tex);
+
+	vscr->cur_tex = SDL_CreateTexture(
+			vscr->renderer,
 			SDL_PIXELFORMAT_ARGB8888,
 			SDL_TEXTUREACCESS_STREAMING,
 			cur->width, cur->height);
-	if (vdpy.cursor_tex == NULL) {
+	if (vscr->cur_tex == NULL) {
 		pr_err("Failed to create sdl_cursor surface for %p.\n", cur);
 		return;
 	}
 
-	SDL_SetTextureBlendMode(vdpy.cursor_tex, SDL_BLENDMODE_BLEND);
-	vdpy.cur = *cur;
-	SDL_UpdateTexture(vdpy.cursor_tex, NULL, cur->data, cur->width * 4);
+	SDL_SetTextureBlendMode(vscr->cur_tex, SDL_BLENDMODE_BLEND);
+	vscr->cur = *cur;
+	SDL_UpdateTexture(vscr->cur_tex, NULL, cur->data, cur->width * 4);
 }
 
 void
 vdpy_cursor_move(int handle, int scanout_id, uint32_t x, uint32_t y)
 {
+	struct vscreen *vscr;
+
 	if (handle != vdpy.s.n_connect) {
 		return;
 	}
 
+	if (scanout_id >= vdpy.vscrs_num) {
+		return;
+	}
+
+	vscr = vdpy.vscrs + scanout_id;
 	/* Only move the position of the cursor. The cursor_texture
 	 * will be handled in surface_update
 	 */
-	vdpy.cur.x = x;
-	vdpy.cur.y = y;
+	vscr->cur.x = x;
+	vscr->cur.y = y;
 }
 
 static void
@@ -847,35 +911,41 @@ vdpy_sdl_ui_refresh(void *data)
 	struct timespec cur_time;
 	uint64_t elapsed_time;
 	SDL_Rect cursor_rect;
+	struct vscreen *vscr;
+	int i;
 
 	ui_vdpy = (struct display *)data;
 
-	/* Skip it if no surface needs to be rendered */
-	if (ui_vdpy->dpy_texture == NULL)
-		return;
+	for (i = 0; i < vdpy.vscrs_num; i++) {
+		vscr = ui_vdpy->vscrs + i;
 
-	clock_gettime(CLOCK_MONOTONIC, &cur_time);
+		/* Skip it if no surface needs to be rendered */
+		if (vscr->surf_tex == NULL)
+			continue;
 
-	elapsed_time = (cur_time.tv_sec - ui_vdpy->last_time.tv_sec) * 1000000000 +
-			cur_time.tv_nsec - ui_vdpy->last_time.tv_nsec;
+		clock_gettime(CLOCK_MONOTONIC, &cur_time);
 
-	/* the time interval is less than 10ms. Skip it */
-	if (elapsed_time < 10000000)
-		return;
+		elapsed_time = (cur_time.tv_sec - vscr->last_time.tv_sec) * 1000000000 +
+				cur_time.tv_nsec - vscr->last_time.tv_nsec;
 
-	SDL_RenderClear(ui_vdpy->dpy_renderer);
-	SDL_RenderCopy(ui_vdpy->dpy_renderer, ui_vdpy->dpy_texture, NULL, NULL);
+		/* the time interval is less than 10ms. Skip it */
+		if (elapsed_time < 10000000)
+			return;
 
-	/* This should be handled after rendering the surface_texture.
-	 * Otherwise it will be hidden
-	 */
-	if (ui_vdpy->cursor_tex) {
-		vdpy_cursor_position_transformation(ui_vdpy, &cursor_rect);
-		SDL_RenderCopy(ui_vdpy->dpy_renderer, ui_vdpy->cursor_tex,
-				NULL, &cursor_rect);
+		SDL_RenderClear(vscr->renderer);
+		SDL_RenderCopy(vscr->renderer, vscr->surf_tex, NULL, NULL);
+
+		/* This should be handled after rendering the surface_texture.
+		 * Otherwise it will be hidden
+		 */
+		if (vscr->cur_tex) {
+			vdpy_cursor_position_transformation(ui_vdpy, i, &cursor_rect);
+			SDL_RenderCopy(vscr->renderer, vscr->cur_tex,
+					NULL, &cursor_rect);
+		}
+
+		SDL_RenderPresent(vscr->renderer);
 	}
-
-	SDL_RenderPresent(ui_vdpy->dpy_renderer);
 }
 
 static void
@@ -903,70 +973,95 @@ vdpy_sdl_ui_timer(void *data, uint64_t nexp)
 	pthread_mutex_unlock(&ui_vdpy->vdisplay_mutex);
 }
 
-static void *
-vdpy_sdl_display_thread(void *data)
+void
+vdpy_calibrate_vscreen_geometry(struct vscreen *vscr)
 {
-	uint32_t win_flags;
-	struct vdpy_display_bh *bh;
-	struct itimerspec ui_timer_spec;
-
-	if (vdpy.guest_width && vdpy.guest_height) {
+	if (vscr->guest_width && vscr->guest_height) {
 		/* clip the region between (640x480) and (1920x1080) */
-		if (vdpy.guest_width < VDPY_MIN_WIDTH)
-			vdpy.guest_width = VDPY_MIN_WIDTH;
-		if (vdpy.guest_width > VDPY_MAX_WIDTH)
-			vdpy.guest_width = VDPY_MAX_WIDTH;
-		if (vdpy.guest_height < VDPY_MIN_HEIGHT)
-			vdpy.guest_height = VDPY_MIN_HEIGHT;
-		if (vdpy.guest_height > VDPY_MAX_HEIGHT)
-			vdpy.guest_height = VDPY_MAX_HEIGHT;
+		if (vscr->guest_width < VDPY_MIN_WIDTH)
+			vscr->guest_width = VDPY_MIN_WIDTH;
+		if (vscr->guest_width > VDPY_MAX_WIDTH)
+			vscr->guest_width = VDPY_MAX_WIDTH;
+		if (vscr->guest_height < VDPY_MIN_HEIGHT)
+			vscr->guest_height = VDPY_MIN_HEIGHT;
+		if (vscr->guest_height > VDPY_MAX_HEIGHT)
+			vscr->guest_height = VDPY_MAX_HEIGHT;
 	} else {
 		/* the default window(1280x720) is created with undefined pos
 		 * when no geometry info is passed
 		 */
-		vdpy.org_x = 0xFFFF;
-		vdpy.org_y = 0xFFFF;
-		vdpy.guest_width = VDPY_DEFAULT_WIDTH;
-		vdpy.guest_height = VDPY_DEFAULT_HEIGHT;
+		vscr->org_x = 0xFFFF;
+		vscr->org_y = 0xFFFF;
+		vscr->guest_width = VDPY_DEFAULT_WIDTH;
+		vscr->guest_height = VDPY_DEFAULT_HEIGHT;
 	}
+}
 
-	vdpy.info.xoff = vdpy.org_x;
-	vdpy.info.yoff = vdpy.org_y;
-	vdpy.info.width = vdpy.guest_width;
-	vdpy.info.height = vdpy.guest_height;
+int
+vdpy_create_vscreen_window(struct vscreen *vscr)
+{
+	uint32_t win_flags;
 
 	win_flags = SDL_WINDOW_OPENGL |
-		    SDL_WINDOW_ALWAYS_ON_TOP |
-		    SDL_WINDOW_SHOWN;
-	if (vdpy.s.is_fullscreen) {
+		    	SDL_WINDOW_ALWAYS_ON_TOP |
+		    	SDL_WINDOW_SHOWN;
+	if (vscr->is_fullscreen) {
 		win_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-		vdpy.org_x = vdpy.pscreen_rect.x;
-		vdpy.org_y = vdpy.pscreen_rect.y;
-		vdpy.width = vdpy.pscreen_rect.w;
-		vdpy.height = vdpy.pscreen_rect.h;
+		vscr->org_x = vscr->pscreen_rect.x;
+		vscr->org_y = vscr->pscreen_rect.y;
+		vscr->width = vscr->pscreen_rect.w;
+		vscr->height = vscr->pscreen_rect.h;
 	} else {
-		vdpy.width = vdpy.guest_width;
-		vdpy.height = vdpy.guest_height;
+		vscr->width = vscr->guest_width;
+		vscr->height = vscr->guest_height;
 	}
-	vdpy.dpy_win = NULL;
-	vdpy.dpy_renderer = NULL;
-	vdpy.dpy_img = NULL;
+	vscr->win = NULL;
+	vscr->renderer = NULL;
+	vscr->img = NULL;
 	// Zoom to width and height of pscreen is fullscreen enabled
-	vdpy.dpy_win = SDL_CreateWindow("ACRN_DM",
-					vdpy.org_x, vdpy.org_y,
-					vdpy.width, vdpy.height,
-					win_flags);
-	if (vdpy.dpy_win == NULL) {
+	vscr->win = SDL_CreateWindow("ACRN_DM",
+				vscr->org_x, vscr->org_y,
+				vscr->width, vscr->height,
+				win_flags);
+	if (vscr->win == NULL) {
 		pr_err("Failed to Create SDL_Window\n");
-		goto sdl_fail;
+		return -1;
 	}
-	pr_info("SDL display bind to screen %d: [%d,%d,%d,%d].\n", vdpy.pscreen_id,
-			vdpy.org_x, vdpy.org_y, vdpy.width, vdpy.height);
+	pr_info("SDL display bind to screen %d: [%d,%d,%d,%d].\n", vscr->pscreen_id,
+			vscr->org_x, vscr->org_y, vscr->width, vscr->height);
 
-	vdpy.dpy_renderer = SDL_CreateRenderer(vdpy.dpy_win, -1, 0);
-	if (vdpy.dpy_renderer == NULL) {
+	vscr->renderer = SDL_CreateRenderer(vscr->win, -1, 0);
+	if (vscr->renderer == NULL) {
 		pr_err("Failed to Create GL_Renderer \n");
-		goto sdl_fail;
+		return -1;
+	}
+
+	return 0;
+}
+
+static void *
+vdpy_sdl_display_thread(void *data)
+{
+	struct vdpy_display_bh *bh;
+	struct itimerspec ui_timer_spec;
+
+	struct vscreen *vscr;
+	int i;
+
+	for (i = 0; i < vdpy.vscrs_num; i++) {
+		vscr = vdpy.vscrs + i;
+	
+		vdpy_calibrate_vscreen_geometry(vscr);
+
+		vscr->info.xoff = vscr->org_x;
+		vscr->info.yoff = vscr->org_y;
+		vscr->info.width = vscr->guest_width;
+		vscr->info.height = vscr->guest_height;
+
+		if (vdpy_create_vscreen_window(vscr)) {
+			goto sdl_fail;
+		}
+		clock_gettime(CLOCK_MONOTONIC, &vscr->last_time);
 	}
 	sdl_gl_display_init();
 	pthread_mutex_init(&vdpy.vdisplay_mutex, NULL);
@@ -976,7 +1071,6 @@ vdpy_sdl_display_thread(void *data)
 
 	vdpy.ui_timer_bh.task_cb = vdpy_sdl_ui_refresh;
 	vdpy.ui_timer_bh.data = &vdpy;
-	clock_gettime(CLOCK_MONOTONIC, &vdpy.last_time);
 	vdpy.ui_timer.clockid = CLOCK_MONOTONIC;
 	acrn_timer_init(&vdpy.ui_timer, vdpy_sdl_ui_timer, &vdpy);
 	ui_timer_spec.it_interval.tv_sec = 0;
@@ -1024,34 +1118,40 @@ vdpy_sdl_display_thread(void *data)
 	/* SDL display_thread will exit because of DM request */
 	pthread_mutex_destroy(&vdpy.vdisplay_mutex);
 	pthread_cond_destroy(&vdpy.vdisplay_signal);
-	if (vdpy.dpy_img) {
-		pixman_image_unref(vdpy.dpy_img);
-		vdpy.dpy_img = NULL;
-	}
-	/* Continue to thread cleanup */
 
-	if (vdpy.dpy_texture) {
-		SDL_DestroyTexture(vdpy.dpy_texture);
-		vdpy.dpy_texture = NULL;
-	}
-	if (vdpy.cursor_tex) {
-		SDL_DestroyTexture(vdpy.cursor_tex);
-		vdpy.cursor_tex = NULL;
-	}
+	for (i = 0; i < vdpy.vscrs_num; i++) {
+		vscr = vdpy.vscrs + i;
+		if (vscr->img) {
+			pixman_image_unref(vscr->img);
+			vscr->img = NULL;
+		}
+		/* Continue to thread cleanup */
 
-	if (vdpy.egl_dmabuf_supported && (vdpy.cur_egl_img != EGL_NO_IMAGE_KHR))
-		vdpy.gl_ops.eglDestroyImageKHR(vdpy.eglDisplay,
-					vdpy.cur_egl_img);
+		if (vscr->surf_tex) {
+			SDL_DestroyTexture(vscr->surf_tex);
+			vscr->surf_tex = NULL;
+		}
+		if (vscr->cur_tex) {
+			SDL_DestroyTexture(vscr->cur_tex);
+			vscr->cur_tex = NULL;
+		}
+
+		if (vdpy.egl_dmabuf_supported && (vscr->egl_img != EGL_NO_IMAGE_KHR))
+			vdpy.gl_ops.eglDestroyImageKHR(vdpy.eglDisplay,
+						vscr->egl_img);
+	}
 
 sdl_fail:
-
-	if (vdpy.dpy_renderer) {
-		SDL_DestroyRenderer(vdpy.dpy_renderer);
-		vdpy.dpy_renderer = NULL;
-	}
-	if (vdpy.dpy_win) {
-		SDL_DestroyWindow(vdpy.dpy_win);
-		vdpy.dpy_win = NULL;
+	for (i = 0; i < vdpy.vscrs_num; i++) {
+		vscr = vdpy.vscrs + i;
+		if (vscr->renderer) {
+			SDL_DestroyRenderer(vscr->renderer);
+			vscr->renderer = NULL;
+		}
+		if (vscr->win) {
+			SDL_DestroyWindow(vscr->win);
+			vscr->win = NULL;
+		}
 	}
 
 	/* This is used to workaround the TLS issue of libEGL + libGLdispatch
@@ -1152,6 +1252,8 @@ gfx_ui_init()
 {
 	SDL_SysWMinfo info;
 	int num_pscreen;
+	struct vscreen *vscr;
+	int i;
 
 	setenv("SDL_VIDEO_X11_FORCE_EGL", "1", 1);
 	setenv("SDL_OPENGL_ES_DRIVER", "1", 1);
@@ -1164,21 +1266,25 @@ gfx_ui_init()
 	}
 
 	num_pscreen = SDL_GetNumVideoDisplays();
-	if (vdpy.pscreen_id >= num_pscreen) {
-		pr_err("Monitor id %d is out of avalble range [0~%d].\n",
-				vdpy.pscreen_id, num_pscreen);
-		SDL_Quit();
-		return -1;
-	}
 
-	SDL_GetDisplayBounds(vdpy.pscreen_id, &vdpy.pscreen_rect);
+	for (i = 0; i < vdpy.vscrs_num; i++) {
+		vscr = vdpy.vscrs + i;
+		if (vscr->pscreen_id >= num_pscreen) {
+			pr_err("Monitor id %d is out of avalble range [0~%d].\n",
+					vscr->pscreen_id, num_pscreen);
+			SDL_Quit();
+			return -1;
+		}
 
-	if (vdpy.pscreen_rect.w < VDPY_MIN_WIDTH ||
-	    vdpy.pscreen_rect.h < VDPY_MIN_HEIGHT) {
-		pr_err("Too small resolutions. Please check the "
-		       " graphics system\n");
-		SDL_Quit();
-		return -1;
+		SDL_GetDisplayBounds(vscr->pscreen_id, &vscr->pscreen_rect);
+
+		if (vscr->pscreen_rect.w < VDPY_MIN_WIDTH ||
+	    	    vscr->pscreen_rect.h < VDPY_MIN_HEIGHT) {
+			pr_err("Too small resolutions. Please check the "
+		       		" graphics system\n");
+			SDL_Quit();
+			return -1;
+		}
 	}
 
 	SDL_SetHint(SDL_HINT_GRAB_KEYBOARD, "1");
@@ -1210,6 +1316,7 @@ gfx_ui_deinit()
 		return;
 	}
 
+	free(vdpy.vscrs);
 	SDL_Quit();
 	pr_info("SDL_Quit\r\n");
 }
@@ -1218,31 +1325,37 @@ int vdpy_parse_cmd_option(const char *opts)
 {
 	char *str;
 	int snum, error;
+	struct vscreen *vscr;
 
 	error = 0;
+	vdpy.vscrs = calloc(VSCREEN_MAX_NUM, sizeof(struct vscreen));
+	vdpy.vscrs_num = 0;
 
 	str = strcasestr(opts, "geometry=");
+	vscr = vdpy.vscrs + vdpy.vscrs_num;
 	if (opts && strcasestr(opts, "geometry=fullscreen")) {
-		snum = sscanf(str, "geometry=fullscreen:%d", &vdpy.pscreen_id);
+		snum = sscanf(str, "geometry=fullscreen:%d", &vscr->pscreen_id);
 		if (snum != 1) {
-			vdpy.pscreen_id = 0;
+			vscr->pscreen_id = 0;
 		}
-		vdpy.org_x = 0;
-		vdpy.org_y = 0;
-		vdpy.guest_width = VDPY_MAX_WIDTH;
-		vdpy.guest_height = VDPY_MAX_HEIGHT;
-		vdpy.s.is_fullscreen = true;
+		vscr->org_x = 0;
+		vscr->org_y = 0;
+		vscr->guest_width = VDPY_MAX_WIDTH;
+		vscr->guest_height = VDPY_MAX_HEIGHT;
+		vscr->is_fullscreen = true;
+		vdpy.vscrs_num++;
 		pr_info("virtual display: fullscreen.\n");
 	} else if (opts && strcasestr(opts, "geometry=")) {
 		snum = sscanf(str, "geometry=%dx%d+%d+%d",
-				&vdpy.guest_width, &vdpy.guest_height,
-				&vdpy.org_x, &vdpy.org_y);
+				&vscr->guest_width, &vscr->guest_height,
+				&vscr->org_x, &vscr->org_y);
 		if (snum != 4) {
 			pr_err("incorrect geometry option. Should be"
 					" WxH+x+y\n");
 			error = -1;
 		}
-		vdpy.s.is_fullscreen = false;
+		vscr->is_fullscreen = false;
+		vdpy.vscrs_num++;
 		pr_info("virtual display: windowed.\n");
 	}
 
