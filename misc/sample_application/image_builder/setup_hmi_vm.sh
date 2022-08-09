@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 logger_prefix="(hmi-vm-rootfs) "
+source ~/.bashrc
 source logger.sh
 
 function umount_directory() {
@@ -11,8 +12,8 @@ function umount_directory() {
 }
 
 function update_package_info() {
-    apt update
-    apt install python3 python3-pip net-tools python3-matplotlib
+    apt update -y && apt install python3 python3-pip \
+        net-tools python3-matplotlib -y
     pip3 install flask numpy pandas posix_ipc
 
 }
