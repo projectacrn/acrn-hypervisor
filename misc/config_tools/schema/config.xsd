@@ -69,8 +69,19 @@
       </xs:annotation>
     </xs:element>
     <xs:element name="SECURITY_VM_FIXUP" type="Boolean" default="n">
-      <xs:annotation acrn:views="">
-        <xs:documentation>Enable to do fixup for TPM2 and SMBIOS for Security VM. If no Security VM, setting this option to ``n``</xs:documentation>
+      <xs:annotation acrn:title="Security VM Features" acrn:views="advanced">
+          <xs:documentation>This option enables hypervisor features potentially needed by a :term:`Security VM`:
+
+- The virtual Trusted Platform Module (vTPM) 2.0 ACPI table, likely
+  used by a security VM, is usually generated statically at build
+  time. Checking this option enables the ACRN hypervisor to update the
+  vTPM 2.0 ACPI table if the physical ACPI table was modified by the BIOS.
+- Data from the system management BIOS (SMBIOS) can replace probing
+  hardware directly to discover what devices are present. Checking
+  this option enables the hypervisor to pass through the physical
+  SMBIOS to a pre-launched security VM.
+
+If your VM is not a security VM, leave this option unchecked. </xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="KEEP_IRQ_DISABLED" type="Boolean" default="n">
@@ -448,7 +459,7 @@ This feature enables you to view the VM's GPU output in the Service VM.</xs:docu
             <xs:annotation acrn:title="Virtio console device" acrn:views="basic">
               <xs:documentation>Virtio console device for data input and output.
 The virtio console BE driver copies data from the frontend's transmitting virtqueue when it receives a kick on virtqueue (implemented as a vmexit).
-The BE driver then writes the data to backend, and can be implemented as PTY, TTY, STDIO, and regular file.
+The BE driver then writes the data to backend, and can be implemented as a PTY, TTY, STDIO, or regular file.
 For details, see :ref:`virtio-console`.</xs:documentation>
             </xs:annotation>
           </xs:element>
@@ -462,7 +473,7 @@ is the virtio network driver, simulating the virtual NIC. The backend could be: 
           <xs:element name="input" type="VirtioInputConfiguration" minOccurs="0" maxOccurs="unbounded">
 	        <xs:annotation acrn:title="Virtio input device" acrn:views="basic">
                 <xs:documentation>The virtio input device creates a virtual human interface device such as a keyboard,
-mouse, and tablet.  It sends Linux input layer events over virtio.</xs:documentation>
+mouse, or tablet.  The device sends Linux input layer events over virtio.</xs:documentation>
 	        </xs:annotation>
 	      </xs:element>
           <xs:element name="block" minOccurs="0" maxOccurs="unbounded">

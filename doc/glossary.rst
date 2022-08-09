@@ -143,6 +143,12 @@ Glossary of Terms
       developers can use to define a scenario configuration appropriate for
       their own application.
 
+   Security VM
+      A special :term:`User VM` providing software-based security services
+      within a dynamic virtualized environment. Such security services are
+      application dependent and can include antivirus and malware detection,
+      virtualized firewalls, resource monitoring, and more.
+
    Service VM
       A special VM, directly launched by the hypervisor. The Service VM can
       access hardware resources directly by running native drivers and provides
