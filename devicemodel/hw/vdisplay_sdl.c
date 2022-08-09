@@ -1151,6 +1151,7 @@ int
 gfx_ui_init()
 {
 	SDL_SysWMinfo info;
+	int num_pscreen;
 
 	setenv("SDL_VIDEO_X11_FORCE_EGL", "1", 1);
 	setenv("SDL_OPENGL_ES_DRIVER", "1", 1);
@@ -1159,6 +1160,14 @@ gfx_ui_init()
 
 	if (SDL_Init(SDL_INIT_VIDEO)) {
 		pr_err("Failed to init SDL2 system\n");
+		return -1;
+	}
+
+	num_pscreen = SDL_GetNumVideoDisplays();
+	if (vdpy.pscreen_id >= num_pscreen) {
+		pr_err("Monitor id %d is out of avalble range [0~%d].\n",
+				vdpy.pscreen_id, num_pscreen);
+		SDL_Quit();
 		return -1;
 	}
 
