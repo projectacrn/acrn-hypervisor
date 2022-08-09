@@ -58,6 +58,14 @@ Before you begin, make sure your machines have the following prerequisites:
     copying via USB disk, but you can use another method if you prefer)
   - Local storage device (NVMe or SATA drive, for example)
 
+.. note::
+   If you’re working behind a corporate firewall, you’ll likely need to
+   configure a proxy for accessing the internet, if you haven’t done so already.
+   While some tools use the environment variables ``http_proxy`` and ``https_proxy`` to
+   get their proxy settings, some use their own configuration files, most
+   notably ``apt`` and ``git``.  If a proxy is needed and not configured, you
+   may see such as, "unable to access ..." or "couldn't resolve host ...".
+
 .. _gsg-dev-computer:
 
 .. rst-class:: numbered-step
