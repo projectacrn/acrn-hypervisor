@@ -145,7 +145,7 @@ iothread_init(void)
 	pthread_mutex_init(&ioctx.mtx, &attr);
 	pthread_mutexattr_destroy(&attr);
 
-	ioctx.tid = -1;
+	ioctx.tid = 0;
 	ioctx.started = false;
 	ioctx.epfd = epoll_create1(0);
 
