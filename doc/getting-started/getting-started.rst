@@ -64,7 +64,7 @@ Before you begin, make sure your machines have the following prerequisites:
    While some tools use the environment variables ``http_proxy`` and ``https_proxy`` to
    get their proxy settings, some use their own configuration files, most
    notably ``apt`` and ``git``.  If a proxy is needed and not configured, you
-   may see such as, "unable to access ..." or "couldn't resolve host ...".
+   may see errors such as, "unable to access ..." or "couldn't resolve host ...".
 
 .. _gsg-dev-computer:
 
@@ -144,7 +144,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo pip3 install "elementpath==2.5.0" lxml xmlschema defusedxml tqdm
+      sudo pip3 install "elementpath==2.5.0" lxml "xmlschema==1.10.0" defusedxml tqdm
 
 #. Create a working directory:
 
