@@ -373,6 +373,82 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
   </xs:restriction>
 </xs:simpleType>
 
+<xs:simpleType name="VirtioGPUDisplayType">
+  <xs:annotation>
+       <xs:documentation>A string with value: ``Window`` and ``Full screen``.</xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Window" />
+    <xs:enumeration value="Full screen" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="WindowResolutionsType">
+  <xs:annotation>
+       <xs:documentation>Values of display window resolutions.</xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="1920x1080" />
+    <xs:enumeration value="1680x1050" />
+    <xs:enumeration value="1600x900" />
+    <xs:enumeration value="1440x900" />
+    <xs:enumeration value="1400x1050" />
+    <xs:enumeration value="1366x768" />
+    <xs:enumeration value="1360x768" />
+    <xs:enumeration value="1280x1024" />
+    <xs:enumeration value="1280x960" />
+    <xs:enumeration value="1280x800" />
+    <xs:enumeration value="1280x768" />
+    <xs:enumeration value="1280x720" />
+    <xs:enumeration value="1280x600" />
+    <xs:enumeration value="1152x864" />
+    <xs:enumeration value="1024x768" />
+    <xs:enumeration value="800x600" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="DisplayConfiguration">
+  <xs:all>
+    <xs:element name="monitor_id" type="xs:integer" minOccurs="0">
+      <xs:annotation acrn:title="Monitor ID" acrn:options="//display/text()" acrn:options-sorted-by="int">
+        <xs:documentation>Monitor id specifies which physical monitor the virtual display locates in full screen mode.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="window_resolutions" type="WindowResolutionsType" minOccurs="0">
+      <xs:annotation acrn:title="Window resolutions">
+        <xs:documentation>Windows resolution specifies the virtual window size of user vm.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="horizontal_offset" type="xs:integer" minOccurs="0">
+      <xs:annotation acrn:title="Horizontal offset (pixels)">
+        <xs:documentation>The abscissa (x-axis coordinate) of the left top point of the virtual window.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="vertical_offset" type="xs:integer" minOccurs="0">
+      <xs:annotation acrn:title="Vertical offset (pixels)">
+        <xs:documentation>The ordinate (x-axis coordinate) of the left top point of the virtual window.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+  </xs:all>
+</xs:complexType>
+
+<xs:complexType name="DisplaysConfiguration">
+  <xs:sequence>
+   <xs:element name="display" type="DisplayConfiguration" maxOccurs="unbounded"/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="VirtioGPUConfiguration">
+  <xs:all>
+    <xs:element name="display_type" type="VirtioGPUDisplayType">
+      <xs:annotation acrn:title="Display type">
+        <xs:documentation>Display type provide virtual display for user vm with either full screen mode or virtual window mode.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="displays" type="DisplaysConfiguration"/>
+  </xs:all>
+</xs:complexType>
+
 <xs:complexType name="VirtioConsoleConfiguration">
   <xs:all>
     <xs:element name="use_type" type="VirtioConsoleUseType" default="Virtio console">
