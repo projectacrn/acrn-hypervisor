@@ -234,7 +234,7 @@ class SharedMemoryRegions:
 
 class VirtioDevices(object):
     def __init__(self, old_xml_etree):
-        self.gpus = []
+        self.gpu = []
         self.blocks = []
         self.inputs = []
         self.networks = []
@@ -250,6 +250,26 @@ class VirtioDevices(object):
             backend_type = console.xpath("./backend_type")[0].text if console.xpath("./backend_type") else None
             file_path = console.xpath("./file_path")[0].text if console.xpath("./file_path") else None
         self.consoles.append((use_type, backend_type, file_path))
+
+    def gpu_encoding(self, gpu):
+        if gpu.text is not None:
+            window_regex = re.compile(f"geometry=([0-9]+x[0-9]+)\+([0-9]+)\+([0-9]+)")
+            m = window_regex.match(gpu.text)
+            if m is not None:
+                self.gpu.append(("Window", m.group(1), m.group(2), m.group(3)))
+            else:
+                self.gpu.append(("Full screen", gpu.text.split(':')[1]))
+        else:
+            display_type = gpu.xpath("./display_type")[0].text
+            for display in gpu.xpath("./displays/display"):
+                if display_type == "Window":
+                    window_resolutions = display.xpath("./window_resolutions")[0].text if display.xpath("./window_resolutions") else None
+                    horizontal_offset = display.xpath("./horizontal_offset")[0].text if display.xpath("./horizontal_offset") else None
+                    vertical_offset = display.xpath("./vertical_offset")[0].text if display.xpath("./vertical_offset") else None
+                    self.gpu.append((display_type, window_resolutions, horizontal_offset, vertical_offset))
+                elif display_type == "Full screen":
+                    monitor_id = display.xpath("./monitor_id")[0].text if display.xpath("./monitor_id") else None
+                    self.gpu.append((display_type, monitor_id))
 
     def format_console_element(self, console):
         node = etree.Element("console")
@@ -286,10 +306,20 @@ class VirtioDevices(object):
         node.text = block
         return node
 
-    def format_gpu_element(self, gpu):
-        if gpu is not None:
-            node = etree.Element("gpu")
-            node.text = gpu
+    def format_gpu_element(self, displays):
+        node = etree.Element("gpu")
+        if len(displays) > 0:
+            etree.SubElement(node, "display_type").text = displays[0][0]
+            displays_node = etree.SubElement(node, "displays")
+            for display in displays:
+                if display[0] == "Window":
+                    display_node = etree.SubElement(displays_node, "display")
+                    etree.SubElement(display_node, "window_resolutions").text = display[1]
+                    etree.SubElement(display_node, "horizontal_offset").text = display[2]
+                    etree.SubElement(display_node, "vertical_offset").text = display[3]
+                elif display[0] == "Full screen":
+                    display_node = etree.SubElement(displays_node, "display")
+                    etree.SubElement(display_node, "monitor_id").text = display[1]
         return node
 
     def format_xml_element(self):
@@ -302,8 +332,8 @@ class VirtioDevices(object):
             node.append(self.format_input_element(input))
         for block in self.blocks:
             node.append(self.format_block_element(block))
-        for gpu in self.gpus:
-            node.append(self.format_gpu_element(gpu))
+
+        node.append(self.format_gpu_element(self.gpu))
         return node
 
     def add_virtio_devices(self, virtio_device_node):
@@ -331,7 +361,7 @@ class VirtioDevices(object):
         for block in virtio_device_node.xpath("./block"):
             self.blocks.append(block.text)
         for gpu in virtio_device_node.xpath("./gpu"):
-            self.gpus.append(gpu.text)
+            self.gpu_encoding(gpu)
 
 class ScenarioUpgrader(ScenarioTransformer):
     @classmethod
