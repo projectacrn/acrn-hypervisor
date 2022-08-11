@@ -49,7 +49,11 @@ function disable_services() {
                   systemd-journal-flush.service \
                   serial-getty@ttyS2.service \
                   apt-daily.service \
-                  apt-daily-upgrade.service)
+                  apt-daily-upgrade.service \
+                  snapd.autoimport.service \
+                  snapd.seeded.service \
+                  snapd.service \
+                  snapd.socket)
     for service in ${services[*]}
     do
         systemctl disable ${service}

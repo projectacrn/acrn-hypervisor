@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 logger_prefix="(hmi-vm-rootfs) "
-source ~/.bashrc
+source /root/.bashrc
 source logger.sh
 
 function umount_directory() {

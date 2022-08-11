@@ -2,10 +2,11 @@
 # Copyright (C) 2020-2022 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
 
-cloud_image=focal-server-cloudimg-amd64.img
+build_dir="$PWD/build"
+cloud_image="${build_dir}/focal-server-cloudimg-amd64.img"
 cloud_image_url=https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
-hmi_vm_image=hmi_vm.img
-rt_vm_image=rt_vm.img
+hmi_vm_image="${build_dir}/hmi_vm.img"
+rt_vm_image="${build_dir}/rt_vm.img"
 rt_kernel=(linux-libc linux-headers linux-image)
 
 vm_type=$1
@@ -30,14 +31,16 @@ if [[ ! -d /etc/schroot/chroot.d ]]; then
     exit 1
 fi
 
-if [[ ! -d ../build ]]; then
-    echo "Please make the SampleApplication at first."
-    exit 1
+if [[ ! -d $(dirname $PWD)/build ]]; then
+    make -C $(dirname $PWD)
 fi
 
-if [ ! -d mnt ]; then
-    mkdir mnt
-fi
+arr=("$PWD/mnt" "$PWD/build")
+for dir in "${arr[@]}"; do
+    if [[ ! -d "$dir" ]]; then
+        mkdir $dir
+    fi
+done
 
 ########################################
 # Helper functions
@@ -144,20 +147,22 @@ function setup_hmi_vm_rootfs() {
     local mount_point=$1
 
     sudo cp setup_hmi_vm.sh logger.sh ${mount_point}/ && \
-	sudo cp ../build/userApp ../build/histapp.py ${mount_point}/root && \
+	sudo cp $(dirname $PWD)/build/userApp $(dirname $PWD)/build/histapp.py ${mount_point}/root && \
 	sudo cp proxy.conf ${mount_point}/etc/apt/apt.conf.d/proxy.conf && \
 	sudo cp bashrc ${mount_point}/root/.bashrc && \
         sudo schroot -c acrn-guest bash /setup_hmi_vm.sh && \
         sudo rm ${mount_point}/setup_hmi_vm.sh ${mount_point}/logger.sh && \
-	sudo rm bashrc
+	sudo rm bashrc proxy.conf
 }
 
 function setup_rt_vm_rootfs() {
     local mount_point=$1
 
-    sudo cp *.deb ${mount_point}/root && \
-	sudo cp ../build/rtApp ${mount_point}/root && \
+    sudo mv ${build_dir}/*rtvm*.deb ${mount_point}/root && \
+	sudo cp $(dirname $PWD)/build/rtApp ${mount_point}/root && \
         sudo mkdir ${mount_point}/root/scripts && \
+	sudo cp proxy.conf ${mount_point}/etc/apt/apt.conf.d/proxy.conf && \
+	sudo cp bashrc ${mount_point}/root/.bashrc && \
         sudo cp configRTcores.sh ${mount_point}/root/scripts/ && \
         sudo cp setup_rt_vm.sh logger.sh ${mount_point}/ && \
         sudo schroot -c acrn-guest bash /setup_rt_vm.sh && \
