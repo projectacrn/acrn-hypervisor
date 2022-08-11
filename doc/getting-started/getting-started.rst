@@ -55,16 +55,19 @@ Before you begin, make sure your machines have the following prerequisites:
   - Ethernet cable and Internet access
   - A second USB disk with minimum 1GB capacity to copy files between the
     development computer and target system (this guide offers steps for
-    copying via USB disk, but you can use another method if you prefer)
-  - Local storage device (NVMe or SATA drive, for example)
+    copying via USB disk, but you can use another method, such as using ``scp``
+    to copy files over the local network, if you prefer)
+  - Local storage device (NVMe or SATA drive, for example).  We recommend having
+    40GB or more of free space.
 
 .. note::
-   If you’re working behind a corporate firewall, you’ll likely need to
-   configure a proxy for accessing the internet, if you haven’t done so already.
+   If you're working behind a corporate firewall, you'll likely need to
+   configure a proxy for accessing the internet, if you haven't done so already.
    While some tools use the environment variables ``http_proxy`` and ``https_proxy`` to
    get their proxy settings, some use their own configuration files, most
-   notably ``apt`` and ``git``.  If a proxy is needed and not configured, you
-   may see errors such as, "unable to access ..." or "couldn't resolve host ...".
+   notably ``apt`` and ``git``.  If a proxy is needed and it's not configured,
+   commands that access the internet may time out and you may see errors such
+   as, "unable to access ..." or "couldn't resolve host ...".
 
 .. _gsg-dev-computer:
 
@@ -86,8 +89,8 @@ To set up the ACRN build environment on the development computer:
    <https://ubuntu.com/tutorials/install-ubuntu-desktop#1-overview>`__ to
    install a new OS on the development computer.
 
-#. Download the information database about all available package updates for
-   your Ubuntu release. We'll need it to get the latest tools and libraries used
+#. Download the apt information database about all available package updates for
+   your Ubuntu release. We'll need it to get the tools and libraries used
    for ACRN builds:
 
    .. code-block:: bash
@@ -103,42 +106,31 @@ To set up the ACRN build environment on the development computer:
 
       sudo apt upgrade -y #optional command to upgrade system
 
+#. Get the ACRN hypervisor and ACRN kernel source code, and check out the
+   current release branch.
+
+   .. code-block:: bash
+
+      cd ~/acrn-work
+      git clone https://github.com/projectacrn/acrn-hypervisor.git
+      cd acrn-hypervisor
+      git checkout v3.0
+
+      cd ..
+      git clone https://github.com/projectacrn/acrn-kernel.git
+      cd acrn-kernel
+      git checkout acrn-v3.0
+
 #. Install the necessary ACRN build tools:
 
    .. code-block:: bash
 
-      sudo apt install -y gcc \
-           git \
-           make \
-           vim \
-           libssl-dev \
-           libpciaccess-dev \
-           uuid-dev \
-           libsystemd-dev \
-           libevent-dev \
-           libxml2-dev \
-           libxml2-utils \
-           libusb-1.0-0-dev \
-           python3 \
-           python3-pip \
-           python3.8-venv \
-           libblkid-dev \
-           e2fslibs-dev \
-           pkg-config \
-           libnuma-dev \
-           libcjson-dev \
-           liblz4-tool \
-           flex \
-           bison \
-           xsltproc \
-           clang-format \
-           bc \
-           libpixman-1-dev \
-           libsdl2-dev \
-           libegl-dev \
-           libgles-dev \
-           libdrm-dev \
-           gnu-efi
+      sudo apt install -y gcc git make vim libssl-dev libpciaccess-dev uuid-dev \
+           libsystemd-dev libevent-dev libxml2-dev libxml2-utils libusb-1.0-0-dev \
+           python3 python3-pip python3.8-venv libblkid-dev e2fslibs-dev \
+           pkg-config libnuma-dev libcjson-dev liblz4-tool flex bison \
+           xsltproc clang-format bc libpixman-1-dev libsdl2-dev libegl-dev \
+           libgles-dev libdrm-dev gnu-efi
 
 #. Install Python package dependencies:
 
@@ -152,7 +144,7 @@ To set up the ACRN build environment on the development computer:
 
       mkdir ~/acrn-work
 
-#. Install the iASL compiler/disassembler used for advanced power management,
+#. Build and install the iASL compiler/disassembler used for advanced power management,
    device discovery, and configuration (ACPI) within the host OS:
 
    .. code-block:: bash
@@ -163,20 +155,6 @@ To set up the ACRN build environment on the development computer:
       cd acpica-unix-20210105
       make clean && make iasl
       sudo cp ./generate/unix/bin/iasl /usr/sbin
-
-#. Get the ACRN hypervisor and kernel source code.
-
-   .. code-block:: bash
-
-      cd ~/acrn-work
-      git clone https://github.com/projectacrn/acrn-hypervisor.git
-      cd acrn-hypervisor
-      git checkout v3.0
-
-      cd ..
-      git clone https://github.com/projectacrn/acrn-kernel.git
-      cd acrn-kernel
-      git checkout acrn-v3.0
 
 .. _gsg-board-setup:
 
@@ -198,8 +176,8 @@ hardware.
    Before running the Board Inspector, you must set up your target hardware and
    BIOS exactly as you want it, including connecting all peripherals,
    configuring BIOS settings, and adding memory and PCI devices. For example,
-   you must connect all USB devices; otherwise, the Board Inspector will not
-   detect the USB devices for passthrough. If you change the hardware or BIOS
+   you must connect all USB devices you intend to access; otherwise, the Board Inspector will not
+   detect these USB devices for passthrough. If you change the hardware or BIOS
    configuration, or add or remove USB devices, you must run the Board Inspector
    again to generate a new board configuration file.
 
@@ -223,7 +201,10 @@ Install OS on the Target
 ============================
 
 The target system needs Ubuntu Desktop 20.04 LTS to run the Board Inspector
-tool.
+tool. You can read the full instructions to download, create a bootable USB
+stick, and `Install Ubuntu desktop
+<https://ubuntu.com/tutorials/install-ubuntu-desktop#1-overview>`_ on the Ubuntu
+site.  We'll provide a summary here:
 
 To install Ubuntu 20.04:
 
@@ -243,16 +224,25 @@ To install Ubuntu 20.04:
       :align: center
 
 #. Use the check boxes to choose whether you'd like to install Ubuntu alongside
-   another operating system, or delete your existing operating system and
+   another operating system (if one already exists), or delete your existing operating system and
    replace it with Ubuntu:
 
    .. image:: ./images/gsg_ubuntu_install_02.png
       :align: center
 
-#. Complete the Ubuntu installation and create a new user account ``acrn`` and
-   set a password.
+#. Complete the Ubuntu installation by choosing your geographical location,
+   and creating your login details. We use ``acrn`` as the username in this guide.
 
-#. The next section shows how to configure BIOS settings.
+   If you choose a username other than ``acrn``, be sure to use
+   that username in the command examples and paths shown in this guide.
+
+#. After the Ubuntu installation completes on the target and you reboot the
+   system, don't forget to update the system software (as Ubuntu recommends):
+
+   .. code-block:: bash
+
+      sudo apt update
+      sudo apt upgrade -y
 
 Configure Target BIOS Settings
 ===============================
@@ -261,7 +251,8 @@ Configure Target BIOS Settings
 
    Tip: When you are booting your target, you'll see an option (quickly) to
    enter the BIOS configuration editor, typically by pressing :kbd:`F2` during
-   the boot and before the GRUB menu (or Ubuntu login screen) appears.
+   the boot and before the GRUB menu (or Ubuntu login screen) appears.  If you
+   are not quick enough, you can reboot the system to try again.
 
 #. Configure these BIOS settings:
 
@@ -293,7 +284,7 @@ Generate a Board Configuration File
 
          make clean && make board_inspector
 
-      When done, the build generates a Debian package in the ``./build``
+      In a few seconds, the build generates a board_inspector Debian package in the ``./build``
       directory.
 
 #. Copy the Board Inspector Debian package from the development computer to the
@@ -320,7 +311,7 @@ Generate a Board Configuration File
          cp -r acrn-hypervisor/build/acrn-board-inspector*.deb "$disk"/
          sync && sudo umount "$disk"
 
-   #. Insert the USB disk into the target system.
+   #. Remove the USB stick from the development computer and insert it into the target system.
 
    #. Copy the Board Inspector Debian package from the USB disk to the target:
 
@@ -344,7 +335,9 @@ Generate a Board Configuration File
       reboot
 
 #. Run the Board Inspector to generate the board configuration file. This
-   example uses the parameter ``my_board`` as the file name.
+   example uses the parameter ``my_board`` as the file name. The Board Inspector
+   can take a few minutes to scan your target system and create the board XML
+   file with your target system's information.
 
    .. code-block:: bash
 
@@ -452,7 +445,8 @@ post-launched User VM. Each User VM has its own launch script.
       :class: drop-shadow
 
    The ACRN Configurator makes a copy of your board file, changes the file
-   extension to ``.board.xml``, and saves the file to the working folder.
+   extension to ``.board.xml``, and saves the file to the working folder as
+   ``my_board.board.xml``.
 
 #. Create a new scenario as follows:
 
@@ -514,11 +508,11 @@ post-launched User VM. Each User VM has its own launch script.
 
 #. Configure the post-launched VM as follows:
 
-   #. Click the **VM1 Post-launched > Basic Parameters** tab and change the VM
+   a. Click the **VM1 Post-launched > Basic Parameters** tab and change the VM
       name to ``POST_STD_VM1`` for this example.
 
    #. Confirm that the **VM type** is ``Standard``. In the previous step,
-      ``STD`` in the VM name is short for Standard. 
+      ``STD`` in the VM name is short for Standard.
 
    #. Scroll down to **Memory size (MB)** and change the value to ``1024``. For
       this example, we will use Ubuntu 20.04 to boot the post-launched VM.
@@ -526,7 +520,7 @@ post-launched User VM. Each User VM has its own launch script.
 
    #. For **Physical CPU affinity**, select pCPU ID ``0``, then click **+** and
       select pCPU ID ``1`` to affine (or pin) the VM to CPU cores 0 and 1. (That will
-      resolve the initial physical CPU affinity assignment error.)
+      resolve the missing physical CPU affinity assignment error.)
 
    #. For **Virtio console device**, click **+** to add a device and keep the
       default options. This parameter specifies the console that you will use to
@@ -535,7 +529,9 @@ post-launched User VM. Each User VM has its own launch script.
    #. For **Virtio block device**, click **+** and enter
       ``/home/acrn/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
-      in this guide, you will save the ISO file to that directory.
+      in this guide, you will save the ISO file to that directory. (If you used
+      a different username when installing Ubuntu on the target system, here's
+      where you'll need to change the ``acrn`` username to the username you used.)
 
    .. image:: images/configurator-postvm.png
       :align: center
@@ -578,10 +574,10 @@ Build ACRN
 
       cd ./build
       ls *.deb
-         acrn-my_board-MyConfiguration*.deb
+         acrn-my_board-MyConfiguration-3.0.deb
 
    The Debian package contains the ACRN hypervisor and tools to ease installing
-   ACRN on the target. The Debian file name contains the board name (``my_board``) 
+   ACRN on the target. The Debian file name contains the board name (``my_board``)
    and the working folder name (``MyConfiguration``).
 
 #. Build the ACRN kernel for the Service VM:
@@ -605,7 +601,7 @@ Build ACRN
          make -j $(nproc) deb-pkg
 
    The kernel build can take 15 minutes or less on a fast computer, but could
-   take an hour or more depending on the performance of your development
+   take two hours or more depending on the performance of your development
    computer. When done, the build generates four Debian packages in the
    directory above the build root directory:
 
@@ -667,11 +663,12 @@ Install ACRN
 
       reboot
 
-#. Confirm that you see the GRUB menu with the “ACRN multiboot2” entry. Select
+#. Confirm that you see the GRUB menu with the "ACRN multiboot2" entry. Select
    it and proceed to booting ACRN. (It may be autoselected, in which case it
    will boot with this option automatically in 5 seconds.)
 
    .. code-block:: console
+      :emphasize-lines: 6
 
                               GNU GRUB version 2.04
       ────────────────────────────────────────────────────────────────────────────────
@@ -689,8 +686,8 @@ Run ACRN and the Service VM
 
 The ACRN hypervisor boots the Ubuntu Service VM automatically.
 
-#. On the target, log in to the Service VM. (It will look like a normal Ubuntu
-   session.)
+#. On the target, log in to the Service VM. (It will look like a normal
+   graphical Ubuntu session.)
 
 #. Verify that the hypervisor is running by checking ``dmesg`` in the Service
    VM:
@@ -721,21 +718,30 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
 Launch the User VM
 *******************
 
-#. Go to the `official Ubuntu website <https://releases.ubuntu.com/focal/>`__ to
+#. On the target system, use the web browser to go to the `official Ubuntu website <https://releases.ubuntu.com/focal/>`__ to
    get the Ubuntu Desktop 20.04 LTS ISO image
    ``ubuntu-20.04.4-desktop-amd64.iso`` for the User VM. (The same image you
-   specified earlier in the ACRN Configurator UI.)
+   specified earlier in the ACRN Configurator UI.  (Alternatively, instead of
+   downloading it again, you can use a USB drive or ``scp`` to copy the ISO
+   image file to the ``~/acrn-work`` directory on the target system.)
 
-#. Put the ISO file in the path ``~/acrn-work/`` on the target system.
+#. If you downloaded the ISO file on the target system, copy it from the
+   Downloads directory to the ``~/acrn-work/`` directory (the location we said
+   in the ACRN Configurator for the scenario configuration for the VM), for
+   example:
+
+   .. code-block:: bash
+
+      cp ~/Downloads/ubuntu-20.04.4-desktop-amd64.iso ~/acrn-work
 
 #. Launch the User VM:
 
    .. code-block:: bash
 
-      sudo chmod +x ~/acrn-work/launch_user_vm_id1.sh 
-      sudo ~/acrn-work/launch_user_vm_id1.sh 
+      sudo chmod +x ~/acrn-work/launch_user_vm_id1.sh
+      sudo ~/acrn-work/launch_user_vm_id1.sh
 
-#. It may take about one minute for the User VM to boot and start running the
+#. It may take about a minute for the User VM to boot and start running the
    Ubuntu image. You will see a lot of output, then the console of the User VM
    will appear as follows:
 
