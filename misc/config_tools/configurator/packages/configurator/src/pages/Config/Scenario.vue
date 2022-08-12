@@ -2,8 +2,10 @@
   <div class="px-3 py-2 row">
     <div class="border-end-sm py-1 col-sm">
       <div class="py-4 text-center">
+        <OverwriteMessage v-model:show-modal="showOverwriteMessage" :usingWorkingFolder="WorkingFolder"
+                          @overWrite="overWriteScenario"/>
         <NewScenario v-model:show-modal="showCreateScenario" @newScenario="newScenario"/>
-        <button type="button" class="btn btn-primary btn-lg" @click="CreateScenario">
+        <button type="button" class="btn btn-primary btn-lg" @click="checkAndCreateScenario">
           Create Scenario…
         </button>
       </div>
@@ -42,19 +44,22 @@
 </template>
 
 <script>
+import OverwriteMessage from "./Scenario/OverwriteMessage";
 import configurator from "../../lib/acrn";
 import NewScenario from "./Scenario/NewScenario.vue";
 import _ from "lodash";
 
 export default {
   name: "Scenario",
-  components: {NewScenario},
+  components: {NewScenario, OverwriteMessage},
   emits: ['scenarioUpdate'],
   data() {
     return {
+      clickedButton: "",
       scenarioHistory: [],
       currentSelectedScenario: '',
-      showCreateScenario: false
+      showCreateScenario: false,
+      showOverwriteMessage: false
     }
   },
   props: {
@@ -86,35 +91,28 @@ export default {
   },
 
   methods: {
-    CreateScenario() {
+    checkAndCreateScenario() {
+      this.clickedButton = "createScenario"
       if (!_.isEmpty(this.scenario)) {
-        confirm(`Warning: Overwrite the existing scenario file?`)
-            .then((r) => {
-              // user cancel the operation
-              if (!r) {
-                return
-              }
-              // user confirm the operation
-              this.showCreateScenario = true
-            })
+        this.showOverwriteMessage = true
       } else this.showCreateScenario = true
     },
     newScenario(data) {
-
       this.$emit('scenarioUpdate', data)
     },
     checkAndLoadScenario(auto = false) {
+      this.clickedButton = "loadScenario"
       if (!_.isEmpty(this.scenario)) {
-        confirm(`Warning: Overwrite the existing scenario file?`)
-            .then((r) => {
-              // user cancel the operation
-              if (!r) {
-                return
-              }
-              // user confirm the operation
-              this.loadScenario(auto)
-            })
+        this.showOverwriteMessage = true
       } else this.loadScenario(auto)
+    },
+    overWriteScenario(auto = false) {
+      if (this.clickedButton === "createScenario") {
+        this.showCreateScenario = true
+      }
+      if (this.clickedButton === "loadScenario") {
+        this.loadScenario(auto)
+      }
     },
     loadScenario(auto) {
       if (this.currentSelectedScenario.length > 0) {
