@@ -111,7 +111,7 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
     </xs:element>
     <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="n">
       <xs:annotation acrn:title="Disable MCE workaround" acrn:views="advanced">
-        <xs:documentation>Disable the software workaround for Machine Check Error on Page Size Change (erratum in some processor families).</xs:documentation>
+        <xs:documentation>Disable the software workaround for Machine Check Error on Page Size Change (erratum in some processor families).  For more information about this workaround and affected processors, see this `MCE Avoidance on Page Size Change White Paper &lt;https://www.intel.com/content/www/us/en/developer/articles/troubleshooting/software-security-guidance/technical-documentation/machine-check-error-avoidance-page-size-change.html&gt;`_.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="RDT" type="RDTType">
