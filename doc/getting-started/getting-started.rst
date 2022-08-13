@@ -130,7 +130,7 @@ To set up the ACRN build environment on the development computer:
            python3 python3-pip python3.8-venv libblkid-dev e2fslibs-dev \
            pkg-config libnuma-dev libcjson-dev liblz4-tool flex bison \
            xsltproc clang-format bc libpixman-1-dev libsdl2-dev libegl-dev \
-           libgles-dev libdrm-dev gnu-efi
+           libgles-dev libdrm-dev gnu-efi libelf-dev
 
 #. Install Python package dependencies:
 
