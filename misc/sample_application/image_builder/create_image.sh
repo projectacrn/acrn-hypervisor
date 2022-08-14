@@ -52,10 +52,19 @@ source logger.sh
 # Actions defined as functions
 ########################################
 
+function copy_rt_kernel() {
+    for file in ~/acrn-work/*rtvm*.deb
+    do
+        if [[ ${file} != *"dbg"* ]]; then
+            cp ${file} ${build_dir}
+	fi
+    done
+}
+
 function check_rt_kernel() {
     for file in ${rt_kernel[@]}
     do
-        ls *.deb | grep ${file}
+        ls ${build_dir}/*.deb | grep ${file}
         if [ $? -eq 1 ]; then
             echo "RT VM kernel package ${file} is not found."
             exit
@@ -198,6 +207,7 @@ fi
 
 try_step "Download Ubuntu Focal cloud image" download_image ${cloud_image} ${cloud_image_url}
 if [[ ${vm_type} == "rt-vm" ]]; then
+    try_step "Copy the RT kernel to build directory" copy_rt_kernel
     try_step "Check availability of RT kernel image" check_rt_kernel
 fi
 try_step "Creating an enlarged copy of ${cloud_image}" copy_and_enlarge_image ${cloud_image} ${target_image} ${size_modifier}
