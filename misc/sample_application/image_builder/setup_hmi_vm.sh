@@ -13,8 +13,10 @@ function umount_directory() {
 
 function update_package_info() {
     apt update -y && apt install python3 python3-pip \
-        net-tools python3-matplotlib -y
-    pip3 install flask numpy pandas posix_ipc
+        net-tools python3-matplotlib \
+	linux-modules-extra-$(uname -r) \
+	openssh-server -y
+    pip3 install flask 'numpy==1.18.5' pandas posix_ipc
 
 }
 
