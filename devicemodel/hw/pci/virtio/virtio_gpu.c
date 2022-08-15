@@ -1485,7 +1485,7 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			gpu->vq,
 			BACKEND_VBSU);
 
-	gpu->vdpy_handle = vdpy_init();
+	gpu->vdpy_handle = vdpy_init(NULL);
 	gpu->base.mtx = &gpu->mtx;
 	gpu->base.device_caps = VIRTIO_GPU_S_HOSTCAPS;
 

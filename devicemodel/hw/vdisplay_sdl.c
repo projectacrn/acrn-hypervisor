@@ -1069,7 +1069,7 @@ bool vdpy_submit_bh(int handle, struct vdpy_display_bh *bh_task)
 }
 
 int
-vdpy_init()
+vdpy_init(int *num_vscreens)
 {
 	int err, count;
 
@@ -1100,6 +1100,8 @@ vdpy_init()
 	}
 
 	vdpy.s.n_connect++;
+	if (num_vscreens)
+		*num_vscreens = 1;
 	return vdpy.s.n_connect;
 }
 
