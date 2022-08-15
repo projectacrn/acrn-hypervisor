@@ -975,6 +975,46 @@ virtio_gpu_cmd_transfer_to_host_2d(struct virtio_gpu_command *cmd)
 	memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 }
 
+static bool
+virtio_gpu_scanout_needs_flush(struct virtio_gpu *gpu,
+			      int scanout_id,
+			      int resource_id,
+			      struct virtio_gpu_rect *flush_rect)
+{
+	struct virtio_gpu_scanout *gpu_scanout;
+	pixman_region16_t flush_region, final_region, scanout_region;
+
+	/* the scanout_id is already checked. So it is ignored in this function */
+	gpu_scanout = gpu->gpu_scanouts + scanout_id;
+
+	/* if the different resource_id is used, flush can be skipped */
+	if (resource_id != gpu_scanout->resource_id)
+		return false;
+
+	pixman_region_init(&final_region);
+	pixman_region_init_rect(&scanout_region,
+				gpu_scanout->scanout_rect.x,
+				gpu_scanout->scanout_rect.y,
+				gpu_scanout->scanout_rect.width,
+				gpu_scanout->scanout_rect.height);
+	pixman_region_init_rect(&flush_region,
+				flush_rect->x, flush_rect->y,
+				flush_rect->width, flush_rect->height);
+
+	/* Check intersect region to determine whether scanout_region
+	 * needs to be flushed.
+	 */
+	pixman_region_intersect(&final_region, &scanout_region, &flush_region);
+
+	/* if intersection_region is empty, it means that the scanout_region is not
+	 * covered by the flushed_region. And it is unnecessary to update
+	 */
+	if (pixman_region_not_empty(&final_region))
+		return true;
+	else
+		return false;
+}
+
 static void
 virtio_gpu_cmd_resource_flush(struct virtio_gpu_command *cmd)
 {
@@ -983,6 +1023,9 @@ virtio_gpu_cmd_resource_flush(struct virtio_gpu_command *cmd)
 	struct virtio_gpu_resource_2d *r2d;
 	struct surface surf;
 	struct virtio_gpu *gpu;
+	int i;
+	struct virtio_gpu_scanout *gpu_scanout;
+	int bytes_pp;
 
 	gpu = cmd->gpu;
 	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
@@ -999,24 +1042,37 @@ virtio_gpu_cmd_resource_flush(struct virtio_gpu_command *cmd)
 	}
 	if (r2d->blob) {
 		virtio_gpu_dmabuf_ref(r2d->dma_info);
-		surf.dma_info.dmabuf_fd = r2d->dma_info->dmabuf_fd;
-		surf.surf_type = SURFACE_DMABUF;
-		vdpy_surface_update(gpu->vdpy_handle, 0, &surf);
+		for (i = 0; i < gpu->scanout_num; i++) {
+			if (!virtio_gpu_scanout_needs_flush(gpu, i, req.resource_id, &req.r))
+				continue;
+
+			surf.dma_info.dmabuf_fd = r2d->dma_info->dmabuf_fd;
+			surf.surf_type = SURFACE_DMABUF;
+			vdpy_surface_update(gpu->vdpy_handle, i, &surf);
+		}
+		virtio_gpu_dmabuf_unref(r2d->dma_info);
 		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
-		virtio_gpu_dmabuf_unref(r2d->dma_info);
 		return;
 	}
 	pixman_image_ref(r2d->image);
-	surf.pixel = pixman_image_get_data(r2d->image);
-	surf.x = req.r.x;
-	surf.y = req.r.y;
-	surf.width = r2d->width;
-	surf.height = r2d->height;
-	surf.stride = pixman_image_get_stride(r2d->image);
-	surf.surf_format = r2d->format;
-	surf.surf_type = SURFACE_PIXMAN;
-	vdpy_surface_update(gpu->vdpy_handle, 0, &surf);
+	bytes_pp = PIXMAN_FORMAT_BPP(r2d->format) / 8;
+	for (i = 0; i < gpu->scanout_num; i++) {
+		if (!virtio_gpu_scanout_needs_flush(gpu, i, req.resource_id, &req.r))
+			continue;
+
+		gpu_scanout = gpu->gpu_scanouts + i;
+		surf.pixel = pixman_image_get_data(r2d->image);
+		surf.x = gpu_scanout->scanout_rect.x;
+		surf.y = gpu_scanout->scanout_rect.y;
+		surf.width = gpu_scanout->scanout_rect.width;
+		surf.height = gpu_scanout->scanout_rect.height;
+		surf.stride = pixman_image_get_stride(r2d->image);
+		surf.surf_format = r2d->format;
+		surf.surf_type = SURFACE_PIXMAN;
+		surf.pixel += bytes_pp * surf.x + surf.y * surf.stride;
+		vdpy_surface_update(gpu->vdpy_handle, i, &surf);
+	}
 	pixman_image_unref(r2d->image);
 
 	cmd->iolen = sizeof(resp);
