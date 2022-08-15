@@ -838,6 +838,7 @@ virtio_gpu_cmd_set_scanout(struct virtio_gpu_command *cmd)
 	struct surface surf;
 	struct virtio_gpu *gpu;
 	struct virtio_gpu_scanout *gpu_scanout;
+	int bytes_pp;
 
 	gpu = cmd->gpu;
 	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
@@ -872,6 +873,7 @@ virtio_gpu_cmd_set_scanout(struct virtio_gpu_command *cmd)
 		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_PARAMETER;
 	} else {
 		virtio_gpu_update_scanout(gpu, req.scanout_id, req.resource_id, &req.r);
+		bytes_pp = PIXMAN_FORMAT_BPP(r2d->format) / 8;
 		pixman_image_ref(r2d->image);
 		surf.pixel = pixman_image_get_data(r2d->image);
 		surf.x = req.r.x;
@@ -881,6 +883,7 @@ virtio_gpu_cmd_set_scanout(struct virtio_gpu_command *cmd)
 		surf.stride = pixman_image_get_stride(r2d->image);
 		surf.surf_format = r2d->format;
 		surf.surf_type = SURFACE_PIXMAN;
+		surf.pixel += bytes_pp * surf.x + surf.y * surf.stride;
 		vdpy_surface_set(gpu->vdpy_handle, req.scanout_id, &surf);
 		pixman_image_unref(r2d->image);
 		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
@@ -1254,6 +1257,7 @@ virtio_gpu_cmd_set_scanout_blob(struct virtio_gpu_command *cmd)
 	uint32_t drm_fourcc;
 	struct virtio_gpu *gpu;
 	struct virtio_gpu_scanout *gpu_scanout;
+	int bytes_pp;
 
 	gpu = cmd->gpu;
 	memset(&surf, 0, sizeof(surf));
@@ -1300,6 +1304,7 @@ virtio_gpu_cmd_set_scanout_blob(struct virtio_gpu_command *cmd)
 	surf.stride = req.strides[0];
 	surf.dma_info.dmabuf_fd = r2d->dma_info->dmabuf_fd;
 	surf.surf_type = SURFACE_DMABUF;
+	bytes_pp = 4;
 	switch (req.format) {
 	case VIRTIO_GPU_FORMAT_B8G8R8X8_UNORM:
 		drm_fourcc = DRM_FORMAT_XRGB8888;
@@ -1319,6 +1324,7 @@ virtio_gpu_cmd_set_scanout_blob(struct virtio_gpu_command *cmd)
 		drm_fourcc = DRM_FORMAT_ARGB8888;
 		break;
 	}
+	surf.dma_info.dmabuf_offset = req.offsets[0] + bytes_pp * surf.x + surf.y * surf.stride;
 	surf.dma_info.surf_fourcc = drm_fourcc;
 	vdpy_surface_set(gpu->vdpy_handle, req.scanout_id, &surf);
 	resp.type = VIRTIO_GPU_RESP_OK_NODATA;
