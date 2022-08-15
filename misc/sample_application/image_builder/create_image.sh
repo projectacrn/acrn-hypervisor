@@ -52,10 +52,19 @@ source logger.sh
 # Actions defined as functions
 ########################################
 
+function copy_rt_kernel() {
+    for file in ~/acrn-work/*rtvm*.deb
+    do
+        if [[ ${file} != *"dbg"* ]]; then
+            cp ${file} ${build_dir}
+       fi
+    done
+}
+
 function check_rt_kernel() {
     for file in ${rt_kernel[@]}
     do
-        ls *.deb | grep ${file}
+        ls ${build_dir}/*.deb | grep ${file}
         if [ $? -eq 1 ]; then
             echo "RT VM kernel package ${file} is not found."
             exit
@@ -166,7 +175,8 @@ function setup_rt_vm_rootfs() {
         sudo cp configRTcores.sh ${mount_point}/root/scripts/ && \
         sudo cp setup_rt_vm.sh logger.sh ${mount_point}/ && \
         sudo schroot -c acrn-guest bash /setup_rt_vm.sh && \
-        sudo rm ${mount_point}/setup_rt_vm.sh ${mount_point}/logger.sh
+        sudo rm ${mount_point}/setup_rt_vm.sh ${mount_point}/logger.sh && \
+        sudo rm bashrc proxy.conf
 }
 
 function cleanup() {
@@ -175,6 +185,7 @@ function cleanup() {
 
     sudo umount ${mount_point}
     sudo rmdir ${mount_point}
+    echo ${mount_point}
     sudo kpartx -vd /dev/${loop_dev}
     sudo losetup -vd /dev/${loop_dev}
     true
@@ -198,6 +209,7 @@ fi
 
 try_step "Download Ubuntu Focal cloud image" download_image ${cloud_image} ${cloud_image_url}
 if [[ ${vm_type} == "rt-vm" ]]; then
+    try_step "Copy the RT kernel to build directory" copy_rt_kernel
     try_step "Check availability of RT kernel image" check_rt_kernel
 fi
 try_step "Creating an enlarged copy of ${cloud_image}" copy_and_enlarge_image ${cloud_image} ${target_image} ${size_modifier}
