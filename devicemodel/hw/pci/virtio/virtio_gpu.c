@@ -564,11 +564,17 @@ virtio_gpu_cmd_get_edid(struct virtio_gpu_command *cmd)
 	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
 	cmd->iolen = sizeof(resp);
 	memset(&resp, 0, sizeof(resp));
+	virtio_gpu_update_resp_fence(&cmd->hdr, &resp.hdr);
+	if (req.scanout >= gpu->scanout_num) {
+		pr_err("%s: Invalid scanout_id %d\n", req.scanout);
+		resp.hdr.type = VIRTIO_GPU_RESP_ERR_INVALID_SCANOUT_ID;
+		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
+		return;
+	}
 	/* Only one EDID block is enough */
 	resp.size = 128;
 	resp.hdr.type = VIRTIO_GPU_RESP_OK_EDID;
-	virtio_gpu_update_resp_fence(&cmd->hdr, &resp.hdr);
-	vdpy_get_edid(gpu->vdpy_handle, 0, resp.edid, resp.size);
+	vdpy_get_edid(gpu->vdpy_handle, req.scanout, resp.edid, resp.size);
 	memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 }
 
@@ -578,18 +584,21 @@ virtio_gpu_cmd_get_display_info(struct virtio_gpu_command *cmd)
 	struct virtio_gpu_resp_display_info resp;
 	struct display_info info;
 	struct virtio_gpu *gpu;
+	int i;
 
 	gpu = cmd->gpu;
 	cmd->iolen = sizeof(resp);
 	memset(&resp, 0, sizeof(resp));
-	vdpy_get_display_info(gpu->vdpy_handle, 0, &info);
 	resp.hdr.type = VIRTIO_GPU_RESP_OK_DISPLAY_INFO;
 	virtio_gpu_update_resp_fence(&cmd->hdr, &resp.hdr);
-	resp.pmodes[0].enabled = 1;
-	resp.pmodes[0].r.x = info.xoff;
-	resp.pmodes[0].r.y = info.yoff;
-	resp.pmodes[0].r.width = info.width;
-	resp.pmodes[0].r.height = info.height;
+	for (i = 0; i < gpu->scanout_num; i++) {
+		vdpy_get_display_info(gpu->vdpy_handle, i, &info);
+		resp.pmodes[i].enabled = 1;
+		resp.pmodes[i].r.x = 0;
+		resp.pmodes[i].r.y = 0;
+		resp.pmodes[i].r.width = info.width;
+		resp.pmodes[i].r.height = info.height;
+	}
 	memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 }
 
@@ -638,6 +647,40 @@ virtio_gpu_get_pixman_format(uint32_t format)
 	default:
 		return 0;
 	}
+}
+
+static void
+virtio_gpu_update_scanout(struct virtio_gpu *gpu, int scanout_id, int resource_id,
+			  struct virtio_gpu_rect *scan_rect)
+{
+	struct virtio_gpu_scanout *gpu_scanout;
+	struct virtio_gpu_resource_2d *r2d;
+
+	/* as it is already checked, this is not checked again */
+	gpu_scanout = gpu->gpu_scanouts + scanout_id;
+	if (gpu_scanout->dma_buf) {
+		virtio_gpu_dmabuf_unref(gpu_scanout->dma_buf);
+		gpu_scanout->dma_buf = NULL;
+	}
+	if (gpu_scanout->cur_img) {
+		pixman_image_unref(gpu_scanout->cur_img);
+		gpu_scanout->cur_img = NULL;
+	}
+	gpu_scanout->resource_id = resource_id;
+	r2d = virtio_gpu_find_resource_2d(gpu, resource_id);
+	if (r2d) {
+		gpu_scanout->is_active = true;
+		if (r2d->blob) {
+			virtio_gpu_dmabuf_ref(r2d->dma_info);
+			gpu_scanout->dma_buf = r2d->dma_info;
+		} else {
+			pixman_image_ref(r2d->image);
+			gpu_scanout->cur_img = r2d->image;
+		}
+	} else {
+		gpu_scanout->is_active = false;
+	}
+	memcpy(&gpu_scanout->scanout_rect, scan_rect, sizeof(*scan_rect));
 }
 
 static void
@@ -812,7 +855,8 @@ virtio_gpu_cmd_set_scanout(struct virtio_gpu_command *cmd)
 
 	r2d = virtio_gpu_find_resource_2d(gpu, req.resource_id);
 	if ((req.resource_id == 0) || (r2d == NULL)) {
-		vdpy_surface_set(gpu->vdpy_handle, 0, NULL);
+		virtio_gpu_update_scanout(gpu, req.scanout_id, 0, &req.r);
+		vdpy_surface_set(gpu->vdpy_handle, req.scanout_id, NULL);
 		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 		return;
@@ -827,16 +871,17 @@ virtio_gpu_cmd_set_scanout(struct virtio_gpu_command *cmd)
 				__func__);
 		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_PARAMETER;
 	} else {
+		virtio_gpu_update_scanout(gpu, req.scanout_id, req.resource_id, &req.r);
 		pixman_image_ref(r2d->image);
 		surf.pixel = pixman_image_get_data(r2d->image);
-		surf.x = 0;
-		surf.y = 0;
-		surf.width = r2d->width;
-		surf.height = r2d->height;
+		surf.x = req.r.x;
+		surf.y = req.r.y;
+		surf.width = req.r.width;
+		surf.height = req.r.height;
 		surf.stride = pixman_image_get_stride(r2d->image);
 		surf.surf_format = r2d->format;
 		surf.surf_type = SURFACE_PIXMAN;
-		vdpy_surface_set(gpu->vdpy_handle, 0, &surf);
+		vdpy_surface_set(gpu->vdpy_handle, req.scanout_id, &surf);
 		pixman_image_unref(r2d->image);
 		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 	}
@@ -1172,9 +1217,10 @@ virtio_gpu_cmd_set_scanout_blob(struct virtio_gpu_command *cmd)
 	gpu_scanout = gpu->gpu_scanouts + req.scanout_id;
 	gpu_scanout->scanout_id = req.scanout_id;
 	if (req.resource_id == 0) {
+		virtio_gpu_update_scanout(gpu, req.scanout_id, 0, &req.r);
 		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
-		vdpy_surface_set(gpu->vdpy_handle, 0, NULL);
+		vdpy_surface_set(gpu->vdpy_handle, req.scanout_id, NULL);
 		return;
 	}
 	r2d = virtio_gpu_find_resource_2d(cmd->gpu, req.resource_id);
@@ -1183,18 +1229,18 @@ virtio_gpu_cmd_set_scanout_blob(struct virtio_gpu_command *cmd)
 		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
 		return;
 	}
-
 	if (r2d->blob == false) {
 		/* Maybe the resource  is not blob, fallback to set_scanout */
 		virtio_gpu_cmd_set_scanout(cmd);
 		return;
 	}
 
+	virtio_gpu_update_scanout(gpu, req.scanout_id, req.resource_id, &req.r);
 	virtio_gpu_dmabuf_ref(r2d->dma_info);
-	surf.width = req.width;
-	surf.height = req.height;
-	surf.x = 0;
-	surf.y = 0;
+	surf.width = req.r.width;
+	surf.height = req.r.height;
+	surf.x = req.r.x;
+	surf.y = req.r.y;
 	surf.stride = req.strides[0];
 	surf.dma_info.dmabuf_fd = r2d->dma_info->dmabuf_fd;
 	surf.surf_type = SURFACE_DMABUF;
@@ -1218,7 +1264,7 @@ virtio_gpu_cmd_set_scanout_blob(struct virtio_gpu_command *cmd)
 		break;
 	}
 	surf.dma_info.surf_fourcc = drm_fourcc;
-	vdpy_surface_set(gpu->vdpy_handle, 0, &surf);
+	vdpy_surface_set(gpu->vdpy_handle, req.scanout_id, &surf);
 	resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 	memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
 	virtio_gpu_dmabuf_unref(r2d->dma_info);
