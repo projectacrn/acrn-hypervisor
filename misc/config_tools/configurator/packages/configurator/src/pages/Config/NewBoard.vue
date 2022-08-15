@@ -1,11 +1,12 @@
 <template>
-  <b-modal title="Board XML overwrite" fade
+  <b-modal title="Board XML overwrite" fade no-close-on-backdrop
            v-model="showModal"
            @cancel="cancel"
            @abort="cancel"
            @close="cancel"
            @ok="overWrite"
            @submit="overWrite"
+           @hidden="cancel"
   >
   <div>
     <p><b>Are you sure you want to overwrite the board XML file in this working folder?</b></p>
