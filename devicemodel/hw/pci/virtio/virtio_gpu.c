@@ -556,7 +556,7 @@ virtio_gpu_cmd_get_edid(struct virtio_gpu_command *cmd)
 	resp.size = 128;
 	resp.hdr.type = VIRTIO_GPU_RESP_OK_EDID;
 	virtio_gpu_update_resp_fence(&cmd->hdr, &resp.hdr);
-	vdpy_get_edid(gpu->vdpy_handle, resp.edid, resp.size);
+	vdpy_get_edid(gpu->vdpy_handle, 0, resp.edid, resp.size);
 	memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 }
 
@@ -570,7 +570,7 @@ virtio_gpu_cmd_get_display_info(struct virtio_gpu_command *cmd)
 	gpu = cmd->gpu;
 	cmd->iolen = sizeof(resp);
 	memset(&resp, 0, sizeof(resp));
-	vdpy_get_display_info(gpu->vdpy_handle, &info);
+	vdpy_get_display_info(gpu->vdpy_handle, 0, &info);
 	resp.hdr.type = VIRTIO_GPU_RESP_OK_DISPLAY_INFO;
 	virtio_gpu_update_resp_fence(&cmd->hdr, &resp.hdr);
 	resp.pmodes[0].enabled = 1;
@@ -790,7 +790,7 @@ virtio_gpu_cmd_set_scanout(struct virtio_gpu_command *cmd)
 
 	r2d = virtio_gpu_find_resource_2d(gpu, req.resource_id);
 	if ((req.resource_id == 0) || (r2d == NULL)) {
-		vdpy_surface_set(gpu->vdpy_handle, NULL);
+		vdpy_surface_set(gpu->vdpy_handle, 0, NULL);
 		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 		return;
@@ -814,7 +814,7 @@ virtio_gpu_cmd_set_scanout(struct virtio_gpu_command *cmd)
 		surf.stride = pixman_image_get_stride(r2d->image);
 		surf.surf_format = r2d->format;
 		surf.surf_type = SURFACE_PIXMAN;
-		vdpy_surface_set(gpu->vdpy_handle, &surf);
+		vdpy_surface_set(gpu->vdpy_handle, 0, &surf);
 		pixman_image_unref(r2d->image);
 		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 	}
@@ -934,7 +934,7 @@ virtio_gpu_cmd_resource_flush(struct virtio_gpu_command *cmd)
 		virtio_gpu_dmabuf_ref(r2d->dma_info);
 		surf.dma_info.dmabuf_fd = r2d->dma_info->dmabuf_fd;
 		surf.surf_type = SURFACE_DMABUF;
-		vdpy_surface_update(gpu->vdpy_handle, &surf);
+		vdpy_surface_update(gpu->vdpy_handle, 0, &surf);
 		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 		virtio_gpu_dmabuf_unref(r2d->dma_info);
@@ -949,7 +949,7 @@ virtio_gpu_cmd_resource_flush(struct virtio_gpu_command *cmd)
 	surf.stride = pixman_image_get_stride(r2d->image);
 	surf.surf_format = r2d->format;
 	surf.surf_type = SURFACE_PIXMAN;
-	vdpy_surface_update(gpu->vdpy_handle, &surf);
+	vdpy_surface_update(gpu->vdpy_handle, 0, &surf);
 	pixman_image_unref(r2d->image);
 
 	cmd->iolen = sizeof(resp);
@@ -1143,7 +1143,7 @@ virtio_gpu_cmd_set_scanout_blob(struct virtio_gpu_command *cmd)
 	if (req.resource_id == 0) {
 		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
-		vdpy_surface_set(gpu->vdpy_handle, NULL);
+		vdpy_surface_set(gpu->vdpy_handle, 0, NULL);
 		return;
 	}
 	r2d = virtio_gpu_find_resource_2d(cmd->gpu, req.resource_id);
@@ -1187,7 +1187,7 @@ virtio_gpu_cmd_set_scanout_blob(struct virtio_gpu_command *cmd)
 		break;
 	}
 	surf.dma_info.surf_fourcc = drm_fourcc;
-	vdpy_surface_set(gpu->vdpy_handle, &surf);
+	vdpy_surface_set(gpu->vdpy_handle, 0, &surf);
 	resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 	memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
 	virtio_gpu_dmabuf_unref(r2d->dma_info);
@@ -1312,7 +1312,7 @@ virtio_gpu_cmd_update_cursor(struct virtio_gpu_command *cmd)
 		cur.height = r2d->height;
 		pixman_image_ref(r2d->image);
 		cur.data = pixman_image_get_data(r2d->image);
-		vdpy_cursor_define(gpu->vdpy_handle, &cur);
+		vdpy_cursor_define(gpu->vdpy_handle, 0, &cur);
 		pixman_image_unref(r2d->image);
 	}
 }
@@ -1325,7 +1325,7 @@ virtio_gpu_cmd_move_cursor(struct virtio_gpu_command *cmd)
 
 	gpu = cmd->gpu;
 	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
-	vdpy_cursor_move(gpu->vdpy_handle, req.pos.x, req.pos.y);
+	vdpy_cursor_move(gpu->vdpy_handle, 0, req.pos.x, req.pos.y);
 }
 
 static void
@@ -1397,10 +1397,10 @@ virtio_gpu_vga_bh(void *param)
 	        gpu->vga.surf.pixel = gpu->vga.gc->gc_image->data;
 		gpu->vga.surf.surf_format = PIXMAN_a8r8g8b8;
 		gpu->vga.surf.surf_type = SURFACE_PIXMAN;
-		vdpy_surface_set(gpu->vdpy_handle, &gpu->vga.surf);
+		vdpy_surface_set(gpu->vdpy_handle, 0, &gpu->vga.surf);
 	}
 
-	vdpy_surface_update(gpu->vdpy_handle, &gpu->vga.surf);
+	vdpy_surface_update(gpu->vdpy_handle, 0, &gpu->vga.surf);
 }
 
 static void *
@@ -1553,7 +1553,7 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
 
 	LIST_INIT(&gpu->r2d_list);
-	vdpy_get_display_info(gpu->vdpy_handle, &info);
+	vdpy_get_display_info(gpu->vdpy_handle, 0, &info);
 
 	/*** PCI Config BARs setup ***/
 	/** BAR0: VGA framebuffer **/
@@ -1566,7 +1566,7 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	/** BAR2: VGA & Virtio Modern regs **/
 	/* EDID data blob [0x000~0x3ff] */
-	vdpy_get_edid(gpu->vdpy_handle, gpu->edid, VIRTIO_GPU_EDID_SIZE);
+	vdpy_get_edid(gpu->vdpy_handle, 0, gpu->edid, VIRTIO_GPU_EDID_SIZE);
 	/* VGA ioports regs [0x400~0x41f] */
 	gpu->vga.gc = gc_init(info.width, info.height, ctx->fb_base);
 	gpu->vga.dev = vga_init(gpu->vga.gc, 0);

@@ -86,13 +86,13 @@ struct cursor {
 int vdpy_parse_cmd_option(const char *opts);
 int gfx_ui_init();
 int vdpy_init();
-void vdpy_get_display_info(int handle, struct display_info *info);
-void vdpy_surface_set(int handle, struct surface *surf);
-void vdpy_surface_update(int handle, struct surface *surf);
+void vdpy_get_display_info(int handle, int scanout_id, struct display_info *info);
+void vdpy_surface_set(int handle, int scanout_id, struct surface *surf);
+void vdpy_surface_update(int handle, int scanout_id, struct surface *surf);
 bool vdpy_submit_bh(int handle, struct vdpy_display_bh *bh);
-void vdpy_get_edid(int handle, uint8_t *edid, size_t size);
-void vdpy_cursor_define(int handle, struct cursor *cur);
-void vdpy_cursor_move(int handle, uint32_t x, uint32_t y);
+void vdpy_get_edid(int handle, int scanout_id, uint8_t *edid, size_t size);
+void vdpy_cursor_define(int handle, int scanout_id, struct cursor *cur);
+void vdpy_cursor_move(int handle, int scanout_id, uint32_t x, uint32_t y);
 int vdpy_deinit(int handle);
 void gfx_ui_deinit();
 
