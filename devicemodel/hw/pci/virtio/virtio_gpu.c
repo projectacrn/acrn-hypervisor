@@ -1389,7 +1389,7 @@ virtio_gpu_cmd_update_cursor(struct virtio_gpu_command *cmd)
 		cur.height = r2d->height;
 		pixman_image_ref(r2d->image);
 		cur.data = pixman_image_get_data(r2d->image);
-		vdpy_cursor_define(gpu->vdpy_handle, 0, &cur);
+		vdpy_cursor_define(gpu->vdpy_handle, req.pos.scanout_id, &cur);
 		pixman_image_unref(r2d->image);
 	}
 }
@@ -1402,7 +1402,7 @@ virtio_gpu_cmd_move_cursor(struct virtio_gpu_command *cmd)
 
 	gpu = cmd->gpu;
 	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
-	vdpy_cursor_move(gpu->vdpy_handle, 0, req.pos.x, req.pos.y);
+	vdpy_cursor_move(gpu->vdpy_handle, req.pos.scanout_id, req.pos.x, req.pos.y);
 }
 
 static void
