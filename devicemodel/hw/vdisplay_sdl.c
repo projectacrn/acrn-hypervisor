@@ -510,7 +510,7 @@ vdpy_edid_generate(uint8_t *edid, size_t size, struct edid_info *info)
 }
 
 void
-vdpy_get_edid(int handle, uint8_t *edid, size_t size)
+vdpy_get_edid(int handle, int scanout_id, uint8_t *edid, size_t size)
 {
 	struct edid_info edid_info;
 
@@ -534,7 +534,7 @@ vdpy_get_edid(int handle, uint8_t *edid, size_t size)
 }
 
 void
-vdpy_get_display_info(int handle, struct display_info *info)
+vdpy_get_display_info(int handle, int scanout_id, struct display_info *info)
 {
 	if (handle == vdpy.s.n_connect) {
 		info->xoff = vdpy.info.xoff;
@@ -582,7 +582,7 @@ sdl_gl_display_init(void)
 }
 
 void
-vdpy_surface_set(int handle, struct surface *surf)
+vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 {
 	pixman_image_t *src_img;
 	int format;
@@ -749,7 +749,7 @@ vdpy_cursor_position_transformation(struct display *vdpy, SDL_Rect *rect)
 }
 
 void
-vdpy_surface_update(int handle, struct surface *surf)
+vdpy_surface_update(int handle, int scanout_id, struct surface *surf)
 {
 	SDL_Rect cursor_rect;
 
@@ -792,7 +792,7 @@ vdpy_surface_update(int handle, struct surface *surf)
 }
 
 void
-vdpy_cursor_define(int handle, struct cursor *cur)
+vdpy_cursor_define(int handle, int scanout_id, struct cursor *cur)
 {
 	if (handle != vdpy.s.n_connect) {
 		return;
@@ -826,7 +826,7 @@ vdpy_cursor_define(int handle, struct cursor *cur)
 }
 
 void
-vdpy_cursor_move(int handle, uint32_t x, uint32_t y)
+vdpy_cursor_move(int handle, int scanout_id, uint32_t x, uint32_t y)
 {
 	if (handle != vdpy.s.n_connect) {
 		return;
