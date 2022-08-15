@@ -1625,11 +1625,11 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			BACKEND_VBSU);
 
 	gpu->scanout_num = 1;
-	gpu->vdpy_handle = vdpy_init(NULL);
+	gpu->vdpy_handle = vdpy_init(&gpu->scanout_num);
 	gpu->base.mtx = &gpu->mtx;
 	gpu->base.device_caps = VIRTIO_GPU_S_HOSTCAPS;
 
-	if (gpu->scanout_num < 0) {
+	if ((gpu->scanout_num < 0) || (gpu->scanout_num > 2)) {
 		pr_err("%s: return incorrect scanout num %d\n", gpu->scanout_num);
 		return -1;
 	}
@@ -1691,7 +1691,7 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* prepare the config space */
 	gpu->cfg.events_read = 0;
 	gpu->cfg.events_clear = 0;
-	gpu->cfg.num_scanouts = 1;
+	gpu->cfg.num_scanouts = gpu->scanout_num;
 	gpu->cfg.num_capsets = 0;
 
 	/* config the device id and vendor id according to spec */
