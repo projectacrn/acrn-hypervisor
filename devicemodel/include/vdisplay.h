@@ -67,6 +67,7 @@ struct surface {
 	struct  {
 		int dmabuf_fd;
 		uint32_t surf_fourcc;
+		uint32_t dmabuf_offset;
 	} dma_info;
 };
 

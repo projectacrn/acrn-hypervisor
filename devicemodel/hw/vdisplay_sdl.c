@@ -700,7 +700,7 @@ vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 		attrs[i++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
 		attrs[i++] = surf->stride;
 		attrs[i++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
-		attrs[i++] = 0;
+		attrs[i++] = surf->dma_info.dmabuf_offset;
 		attrs[i++] = EGL_NONE;
 
 		egl_img = gl_ops->eglCreateImageKHR(vdpy.eglDisplay,
