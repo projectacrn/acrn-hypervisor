@@ -1,11 +1,12 @@
 <template>
-  <b-modal id="newScenarioModal" size="xl" title="Create a new Scenario" fade
+  <b-modal id="newScenarioModal" size="xl" title="Create a new Scenario" fade no-close-on-backdrop
            v-model="showModal"
            @cancel="cancel"
            @abort="cancel"
            @close="cancel"
            @ok="createNewScenario"
            @submit="createNewScenario"
+           @hidden="cancel"
   >
     <template #header-close>
       <Icon @click="cancel">
