@@ -1254,7 +1254,7 @@ vdpy_init(int *num_vscreens)
 
 	vdpy.s.n_connect++;
 	if (num_vscreens)
-		*num_vscreens = 1;
+		*num_vscreens = vdpy.vscrs_num;
 	return vdpy.s.n_connect;
 }
 
