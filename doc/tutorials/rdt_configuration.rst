@@ -8,7 +8,7 @@ About Intel Resource Director Technology (RDT)
 
 On x86 platforms that support Intel Resource Director Technology (RDT)
 allocation features, the ACRN hypervisor can help minimize cache misses by
-partitioning the shared cache among VMs. “Shared cache” refers to cache that is
+partitioning the shared cache among VMs. "Shared cache" refers to cache that is
 shared among multiple CPU cores. By default, VMs running on these cores are
 configured to use the entire cache, effectively sharing the cache among all VMs
 and without any partitioning. This design choice may cause too many cache misses
@@ -99,6 +99,13 @@ Parameters**:
   configurations, as you will see later in this documentation. If you change the
   VM type from Real-time to Standard, the ACRN Configurator disables the
   Real-time vCPU check box.
+
+  Some vCPUs of an RTVM may be used for housekeeping tasks and not need the
+  real-time performance optimization provided by advanced cache configuration
+  isolation.  You indicate this by leaving this Real-time vCPU option unchecked.
+  Housekeeping tasks are generally related to kernel tasks to maintain its
+  internal state and services such as updating internal statistics for the
+  scheduler or timers, and User VM launch or exit.
 
 .. image:: images/configurator-rt01.png
    :align: center
