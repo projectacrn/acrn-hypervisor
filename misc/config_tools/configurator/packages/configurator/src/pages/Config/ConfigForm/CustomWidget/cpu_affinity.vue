@@ -7,7 +7,16 @@
           <b-col></b-col>
           <b-col></b-col>
           <b-col>Virtual CPU ID</b-col>
-          <b-col class="ps-5">Real-time vCPU:</b-col>
+          <b-col class="ps-5">
+            <label>
+              <n-popover trigger="hover" placement="top-start" style="width: 500px">
+                <template #trigger>
+                  <IconInfo/>
+                </template>
+                <span v-html="this.CPUAffinityConfiguration.properties.real_time_vcpu.description"> </span>
+              </n-popover>
+              Real-time vCPU:</label>
+          </b-col>
           <b-col></b-col>
         </b-row>
         <b-row class="align-items-center"
@@ -16,11 +25,12 @@
             <label class="requiredField" v-if="index===0"></label>
             <label>
               <n-popover trigger="hover" placement="top-start">
-              <template #trigger>
-                <IconInfo/>
-              </template>
+                <template #trigger>
+                  <IconInfo/>
+                </template>
                 <span v-html="this.CPUAffinityConfiguration.properties.pcpu_id.description"></span>
-              </n-popover>pCPU ID
+              </n-popover>
+              pCPU ID
             </label>
           </b-col>
           <b-col>
