@@ -106,6 +106,23 @@ To set up the ACRN build environment on the development computer:
 
       sudo apt upgrade -y #optional command to upgrade system
 
+#. Create a working directory:
+
+   .. code-block:: bash
+
+      mkdir ~/acrn-work
+
+#. Install the necessary ACRN build tools:
+
+   .. code-block:: bash
+
+      sudo apt install -y gcc git make vim libssl-dev libpciaccess-dev uuid-dev \
+           libsystemd-dev libevent-dev libxml2-dev libxml2-utils libusb-1.0-0-dev \
+           python3 python3-pip python3.8-venv libblkid-dev e2fslibs-dev \
+           pkg-config libnuma-dev libcjson-dev liblz4-tool flex bison \
+           xsltproc clang-format bc libpixman-1-dev libsdl2-dev libegl-dev \
+           libgles-dev libdrm-dev gnu-efi libelf-dev
+
 #. Get the ACRN hypervisor and ACRN kernel source code, and check out the
    current release branch.
 
@@ -121,28 +138,11 @@ To set up the ACRN build environment on the development computer:
       cd acrn-kernel
       git checkout acrn-v3.0
 
-#. Install the necessary ACRN build tools:
-
-   .. code-block:: bash
-
-      sudo apt install -y gcc git make vim libssl-dev libpciaccess-dev uuid-dev \
-           libsystemd-dev libevent-dev libxml2-dev libxml2-utils libusb-1.0-0-dev \
-           python3 python3-pip python3.8-venv libblkid-dev e2fslibs-dev \
-           pkg-config libnuma-dev libcjson-dev liblz4-tool flex bison \
-           xsltproc clang-format bc libpixman-1-dev libsdl2-dev libegl-dev \
-           libgles-dev libdrm-dev gnu-efi libelf-dev
-
 #. Install Python package dependencies:
 
    .. code-block:: bash
 
       sudo pip3 install "elementpath==2.5.0" lxml "xmlschema==1.10.0" defusedxml tqdm
-
-#. Create a working directory:
-
-   .. code-block:: bash
-
-      mkdir ~/acrn-work
 
 #. Build and install the iASL compiler/disassembler used for advanced power management,
    device discovery, and configuration (ACPI) within the host OS:
