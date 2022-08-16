@@ -52,7 +52,7 @@
     </xs:element>
     <xs:element name="real_time_vcpu" type="Boolean" default="n">
       <xs:annotation acrn:title="Real-time vCPU">
-        <xs:documentation>Whether this vCPU is used for real-time-critical workloads.</xs:documentation>
+          <xs:documentation>Check "Real-time vCPU" for each vCPU used for real-time workloads. Then configure cache usage in the Hypervisor/Advanced/Cache Allocation Technology (CAT) configuration option. There you'll see Real-time vCPUs separated from vCPUs you allocate to other tasks.  See :ref:`rdt_configuration` for more details.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
