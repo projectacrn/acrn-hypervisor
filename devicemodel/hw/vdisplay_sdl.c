@@ -67,6 +67,7 @@ struct vscreen {
 	struct cursor cur;
 	SDL_Texture *surf_tex;
 	SDL_Texture *cur_tex;
+	SDL_Texture *bogus_tex;
 	int surf_updates;
 	int cur_updates;
 	SDL_Window *win;
@@ -611,6 +612,30 @@ sdl_gl_display_init(void)
 	return;
 }
 
+static void sdl_gl_prepare_draw(struct vscreen *vscr)
+{
+	SDL_Rect bogus_rect;
+
+	if (vscr == NULL)
+		return;
+
+	bogus_rect.x = 0;
+	bogus_rect.y = 0;
+	bogus_rect.w = 32;
+	bogus_rect.h = 32;
+	/* The limitation in libSDL causes that ACRN can't display framebuffer
+	 * correctly on one window when using multi SDL_context to displaying
+	 * the framebuffers under multi-display scenario.
+	 * The small texture is added to workaround the display issue caused by
+	 * libSDL limitation.
+	 * Todo: Keep monitoring the libSDL to check whether the limitation is
+	 * fixed.
+	 */
+	SDL_RenderClear(vscr->renderer);
+	SDL_RenderCopy(vscr->renderer, vscr->bogus_tex, NULL, &bogus_rect);
+	return;
+}
+
 void
 vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 {
@@ -715,8 +740,7 @@ vdpy_surface_set(int handle, int scanout_id, struct surface *surf)
 		SDL_UpdateTexture(vscr->surf_tex, NULL,
 				  pixman_image_get_data(src_img),
 				  pixman_image_get_stride(src_img));
-
-		SDL_RenderClear(vscr->renderer);
+		sdl_gl_prepare_draw(vscr);
 		SDL_RenderCopy(vscr->renderer, vscr->surf_tex, NULL, NULL);
 		SDL_RenderPresent(vscr->renderer);
 	} else if (surf->surf_type == SURFACE_DMABUF) {
@@ -823,7 +847,7 @@ vdpy_surface_update(int handle, int scanout_id, struct surface *surf)
 			  surf->pixel,
 			  surf->stride);
 
-	SDL_RenderClear(vscr->renderer);
+	sdl_gl_prepare_draw(vscr);
 	SDL_RenderCopy(vscr->renderer, vscr->surf_tex, NULL, NULL);
 
 	/* This should be handled after rendering the surface_texture.
@@ -932,7 +956,7 @@ vdpy_sdl_ui_refresh(void *data)
 		if (elapsed_time < 10000000)
 			return;
 
-		SDL_RenderClear(vscr->renderer);
+		sdl_gl_prepare_draw(vscr);
 		SDL_RenderCopy(vscr->renderer, vscr->surf_tex, NULL, NULL);
 
 		/* This should be handled after rendering the surface_texture.
@@ -1035,6 +1059,15 @@ vdpy_create_vscreen_window(struct vscreen *vscr)
 		pr_err("Failed to Create GL_Renderer \n");
 		return -1;
 	}
+	vscr->bogus_tex = SDL_CreateTexture(vscr->renderer,
+				SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC,
+				32, 32);
+	if (vscr->bogus_tex == NULL) {
+		pr_err("%s: Failed to create SDL_Texture\n", __func__);
+		return -1;
+	}
+	SDL_SetTextureColorMod(vscr->bogus_tex, 0x80, 0x80, 0x80);
+
 
 	return 0;
 }
@@ -1126,7 +1159,6 @@ vdpy_sdl_display_thread(void *data)
 			vscr->img = NULL;
 		}
 		/* Continue to thread cleanup */
-
 		if (vscr->surf_tex) {
 			SDL_DestroyTexture(vscr->surf_tex);
 			vscr->surf_tex = NULL;
@@ -1144,6 +1176,10 @@ vdpy_sdl_display_thread(void *data)
 sdl_fail:
 	for (i = 0; i < vdpy.vscrs_num; i++) {
 		vscr = vdpy.vscrs + i;
+		if (vscr->bogus_tex) {
+			SDL_DestroyTexture(vscr->bogus_tex);
+			vscr->bogus_tex = NULL;
+		}
 		if (vscr->renderer) {
 			SDL_DestroyRenderer(vscr->renderer);
 			vscr->renderer = NULL;
