@@ -70,7 +70,7 @@
     </xs:element>
     <xs:element name="SECURITY_VM_FIXUP" type="Boolean" default="n">
       <xs:annotation acrn:title="Security VM Features" acrn:views="advanced">
-          <xs:documentation>This option enables hypervisor features potentially needed by a :term:`Security VM`:
+          <xs:documentation>This option enables hypervisor features potentially needed by a Security VM:
 
 - The virtual Trusted Platform Module (vTPM) 2.0 ACPI table, likely
   used by a security VM, is usually generated statically at build
