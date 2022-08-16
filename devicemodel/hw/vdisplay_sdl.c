@@ -1301,6 +1301,10 @@ gfx_ui_init()
 		return -1;
 	}
 
+	if (vdpy.vscrs_num <= 0) {
+		pr_err("Incorrect geometry parameter for virtio-gpu\n");
+		return -1;
+	}
 	num_pscreen = SDL_GetNumVideoDisplays();
 
 	for (i = 0; i < vdpy.vscrs_num; i++) {
