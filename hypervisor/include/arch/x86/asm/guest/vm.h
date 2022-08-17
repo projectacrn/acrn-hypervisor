@@ -69,6 +69,7 @@ struct vm_sw_info {
 	struct sw_module_info acpi_info;
 	/* HVA to IO shared page */
 	void *io_shared_page;
+	void *asyncio_sbuf;
 	/* If enable IO completion polling mode */
 	bool is_polling_ioreq;
 };
