@@ -152,6 +152,25 @@ EOF
         sudo chown root:root /etc/schroot/chroot.d/acrn-guest
 }
 
+function create_uio_config() {
+    local mount_point=$1
+    local temp_file=$(mktemp /tmp/rc.local.XXXX)
+
+    cat << EOF > ${temp_file}
+modprobe uio
+modprobe uio_pci_generic
+
+for i in {0..3}
+do
+bash -c 'echo "1af4 1110" > /sys/bus/pci/drivers/uio_pci_generic/new_id'
+sleep 1
+done
+EOF
+
+    sudo mv ${temp_file} /etc/rc.local && \
+        sudo chown root:root /etc/rc.local
+}
+
 function setup_hmi_vm_rootfs() {
     local mount_point=$1
 
@@ -220,6 +239,7 @@ print_info "Guest image loop-mounted at /dev/${loop_dev}"
 try_step "Resizing guest root file system" resizing_guest_root /dev/mapper/${loop_dev}p1
 try_step "Mounting guest root file system at ${mount_point}" mount_filesystem /dev/mapper/${loop_dev}p1 ${mount_point}
 try_step "Preparing schroot configuration" create_schroot_config ${mount_point}
+try_step "Preparing uio configuration" create_uio_config ${mount_point}
 try_step "Extracting network proxy configurations" dump_proxy
 
 if [[ ${vm_type} == "hmi-vm" ]]; then
