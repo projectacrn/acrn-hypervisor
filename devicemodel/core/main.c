@@ -116,6 +116,7 @@ static cpuset_t cpumask;
 static void vm_loop(struct vmctx *ctx);
 
 static char io_request_page[4096] __aligned(4096);
+static char asyncio_page[4096] __aligned(4096);
 
 static struct acrn_io_request *ioreq_buf =
 				(struct acrn_io_request *)&io_request_page;
@@ -836,6 +837,23 @@ static struct option long_options[] = {
 static char optstr[] = "AhYvE:k:r:B:s:m:l:U:G:i:";
 
 int
+vm_init_asyncio(struct vmctx *ctx, uint64_t base)
+{
+	struct shared_buf *sbuf = (struct shared_buf *)base;
+
+	sbuf->magic = SBUF_MAGIC;
+	sbuf->ele_size = sizeof(uint64_t);
+	sbuf->ele_num = (4096 - SBUF_HEAD_SIZE) / sbuf->ele_size;
+	sbuf->size = sbuf->ele_size * sbuf->ele_num;
+	/* set flag to 0 to make sure not overrun! */
+	sbuf->flags = 0;
+	sbuf->overrun_cnt = 0;
+	sbuf->head = 0;
+	sbuf->tail = 0;
+	return vm_setup_sbuf(ctx, ACRN_ASYNCIO, base);
+}
+
+int
 main(int argc, char *argv[])
 {
 	int c, error, ret=1;
@@ -1091,6 +1109,12 @@ main(int argc, char *argv[])
 			pr_err("%d vCPUs requested but %d available\n",
 				guest_ncpus, max_vcpus);
 			goto fail;
+		}
+
+		pr_notice("vm setup asyncio page\n");
+		error = vm_init_asyncio(ctx, (uint64_t)asyncio_page);
+		if (error) {
+			pr_warn("ASYNIO capability is not supported by kernel or hyperviosr!\n");
 		}
 
 		pr_notice("vm_setup_memory: size=0x%lx\n", memsize);
