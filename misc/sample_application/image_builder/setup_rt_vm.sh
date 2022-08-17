@@ -17,11 +17,11 @@ function disable_os_prober() {
 }
 
 function update_package_info() {
-    apt update
+    apt update -y
 }
 
 function install_tools() {
-    apt install rt-tests
+    apt install rt-tests -y
 }
 
 function update_kernel_cmdline() {
@@ -35,7 +35,7 @@ function install_rt_kernel() {
     search_dir=$1
     for file in $(ls -r ${search_dir}/*acrn-kernel-*.deb)
     do
-        sudo apt install ${file}
+        sudo apt install ${file} -y
     done
 }
 
@@ -45,15 +45,12 @@ function change_root_password() {
 
 function disable_services() {
     services=(systemd-timesyncd.service \
-                  systemd-journald.service \
                   systemd-journal-flush.service \
-                  serial-getty@ttyS2.service \
                   apt-daily.service \
                   apt-daily-upgrade.service \
                   snapd.autoimport.service \
-                  snapd.seeded.service \
-                  snapd.service \
-                  snapd.socket)
+                  snapd.seeded.service)
+
     for service in ${services[*]}
     do
         systemctl disable ${service}
@@ -64,7 +61,7 @@ function disable_services() {
         systemctl disable ${timer}
     done
 
-    apt-get remove unattended-upgrades
+    apt-get remove unattended-upgrades -y
  }
 
 # Change current working directory to the root to avoid "target is busy" errors
