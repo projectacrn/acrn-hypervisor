@@ -17,7 +17,7 @@
 
 int32_t sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
 {
-	if ((pcpu_id >= get_pcpu_nums()) || (sbuf_id >= ACRN_SBUF_ID_MAX)) {
+	if ((pcpu_id >= get_pcpu_nums()) || (sbuf_id >= ACRN_SBUF_PER_PCPU_ID_MAX)) {
 		return -EINVAL;
 	}
 
@@ -33,7 +33,7 @@ void sbuf_reset(void)
 	uint16_t pcpu_id, sbuf_id;
 
 	for (pcpu_id = 0U; pcpu_id < get_pcpu_nums(); pcpu_id++) {
-		for (sbuf_id = 0U; sbuf_id < ACRN_SBUF_ID_MAX; sbuf_id++) {
+		for (sbuf_id = 0U; sbuf_id < ACRN_SBUF_PER_PCPU_ID_MAX; sbuf_id++) {
 			per_cpu(sbuf, pcpu_id)[sbuf_id] = 0U;
 		}
 	}

@@ -77,7 +77,7 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 	return ele_size;
 }
 
-int32_t sbuf_setup_common(__unused struct acrn_vm *vm, uint16_t cpu_id, uint32_t sbuf_id, uint64_t *hva)
+int32_t sbuf_setup_common(struct acrn_vm *vm, uint16_t cpu_id, uint32_t sbuf_id, uint64_t *hva)
 {
 	int32_t ret = 0;
 
@@ -87,6 +87,9 @@ int32_t sbuf_setup_common(__unused struct acrn_vm *vm, uint16_t cpu_id, uint32_t
 		case ACRN_SEP:
 		case ACRN_SOCWATCH:
 			ret = sbuf_share_setup(cpu_id, sbuf_id, hva);
+			break;
+		case ACRN_ASYNCIO:
+			ret = init_asyncio(vm, hva);
 			break;
 		default:
 			pr_err("%s not support sbuf_id %d", __func__, sbuf_id);

@@ -291,6 +291,8 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 void unregister_mmio_emulation_handler(struct acrn_vm *vm,
 					uint64_t start, uint64_t end);
 void deinit_emul_io(struct acrn_vm *vm);
+
+int init_asyncio(struct acrn_vm *vm, uint64_t *hva);
 /**
  * @}
  */

@@ -177,6 +177,23 @@ void set_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id, uint32_t state)
 	}
 }
 
+int init_asyncio(struct acrn_vm *vm, uint64_t *hva)
+{
+	struct shared_buf *sbuf = (struct shared_buf *)hva;
+	int ret = -1;
+
+	stac();
+	if (sbuf != NULL) {
+		if (sbuf->magic == SBUF_MAGIC) {
+			vm->sw.asyncio_sbuf = sbuf;
+			ret = 0;
+		}
+	}
+	clac();
+
+	return ret;
+}
+
 void set_hsm_notification_vector(uint32_t vector)
 {
 	acrn_hsm_notification_vector = vector;
