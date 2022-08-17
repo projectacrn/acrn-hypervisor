@@ -54,6 +54,7 @@ import Network from "./ConfigForm/CustomWidget/Virtio/Network.vue";
 import Console from "./ConfigForm/CustomWidget/Virtio/Console.vue";
 import Input from "./ConfigForm/CustomWidget/Virtio/Input.vue";
 import CAT from "./ConfigForm/CustomWidget/CAT.vue";
+import GPU from "./ConfigForm/CustomWidget/Virtio/GPU.vue";
 
 i18n.useLocal(localizeEn);
 
@@ -90,6 +91,10 @@ export default {
           "input": {
             "ui:title": "",
             'ui:field': Input,
+          },
+          "gpu": {
+            "ui:title": "Virtio GPU device",
+            "ui:field": GPU,
           },
         },
         "cpu_affinity": {
