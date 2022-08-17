@@ -110,7 +110,6 @@ function dump_proxy() {
 	sudo mv ${temp_file} proxy.conf
 
 	echo "$(env | grep -Ei _proxy | sed -e 's/^/export /')" > bashrc
-
 }
 
 function resizing_guest_root() {
@@ -204,9 +203,11 @@ function cleanup() {
 
     sudo umount ${mount_point}
     sudo rmdir ${mount_point}
-    echo ${mount_point}
     sudo kpartx -vd /dev/${loop_dev}
     sudo losetup -vd /dev/${loop_dev}
+    if [[ ${has_error} != 0 ]]; then
+        sudo rm ${target_image}
+    fi
     true
 }
 
@@ -250,3 +251,4 @@ fi
 
 do_step  "Cleaning up" cleanup ${mount_point} ${loop_dev}
 print_info "VM image created at ${target_image}."
+
