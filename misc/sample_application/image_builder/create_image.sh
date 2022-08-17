@@ -146,7 +146,7 @@ profile=desktop
 personality=linux
 preserve-environment=true
 EOF
-
+    sudo sed -i -e '3,9 s/^/#/' /etc/schroot/default/nssdatabases
     sudo mv ${temp_file} /etc/schroot/chroot.d/acrn-guest && \
         sudo chown root:root /etc/schroot/chroot.d/acrn-guest
 }
@@ -156,6 +156,7 @@ function create_uio_config() {
     local temp_file=$(mktemp /tmp/rc.local.XXXX)
 
     cat << EOF > ${temp_file}
+dhclient -q
 modprobe uio
 modprobe uio_pci_generic
 
