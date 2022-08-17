@@ -14,4 +14,65 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Full screen']] satisfies
+                   $vm/virtio_devices/gpu/displays/display/monitor_id/text() != ''
+                   ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>VM "{$vm/name}": monitor ID is required for "full screen" virtual display.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Window']] satisfies
+                   $vm/virtio_devices/gpu/displays/display/window_resolutions/text() != ''
+                   ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>VM "{$vm/name}": window resolution is required for "window" virtual display.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Window']] satisfies
+                   $vm/virtio_devices/gpu/displays/display/horizontal_offset/text() != ''
+                   ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>VM "{$vm/name}": horizontal offset (pixels) is required for "window" virtual displays.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+    <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Window']] satisfies
+                     $vm/virtio_devices/gpu/displays/display/vertical_offset/text() != ''
+                     ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>VM "{$vm/name}" support 2 virtual windows at most. 
+Remove some of the virtual displays so that the total number does not exceed that limit.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Full screen']] satisfies
+                   every $monitor_id in $vm/virtio_devices/gpu/displays/display/monitor_id satisfies
+                   count(//gpu[display_type = 'Full screen']//monitor_id[./text()=$monitor_id]) = 1
+                   ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>The monitor id "{$monitor_id}" has been assigned multiple times to VM "{$vm/name}". 
+Choose a different monitor id or remove some of the virtual displays which have the same monitor id.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in /acrn-config/vm satisfies
+                   count($vm/virtio_devices/gpu[display_type = 'Full screen']/displays/display) &lt; 5
+                   ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>VM "{$vm/name}" support 4 virtual displays at most in the full screen mode. 
+Remove some of the virtual displays so that the total number does not exceed that limit.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in /acrn-config/vm satisfies
+                   count($vm/virtio_devices/gpu[display_type = 'Window']/displays/display) &lt; 3
+                   ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>VM "{$vm/name}" support 2 virtual windows at most. 
+Remove some of the virtual displays so that the total number does not exceed that limit.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
