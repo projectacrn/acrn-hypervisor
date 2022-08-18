@@ -100,7 +100,7 @@ function copy_and_enlarge_image() {
 
     qemu-img convert -f qcow2 -O raw ${source_image} ${dest_image} && \
         qemu-img resize -f raw ${dest_image} ${size_modifier} && \
-        growpart ${dest_image} 1
+        LANG=C growpart ${dest_image} 1
 }
 
 function dump_proxy() {
@@ -147,6 +147,7 @@ personality=linux
 preserve-environment=true
 EOF
 
+    sudo sed -i -e '3,9 s/^/#/' /etc/schroot/default/nssdatabases && \
     sudo mv ${temp_file} /etc/schroot/chroot.d/acrn-guest && \
         sudo chown root:root /etc/schroot/chroot.d/acrn-guest
 }
