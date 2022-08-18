@@ -139,11 +139,11 @@ static void sched_tick_handler(void *param)
 		if (!is_idle_thread(current)) {
 			data->run_countdown -= 1U;
 			if (data->run_countdown == 0U) {
-				make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+				make_reschedule_request(pcpu_id);
 			}
 		} else {
 			if (!list_empty(&bvt_ctl->runqueue)) {
-				make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+				make_reschedule_request(pcpu_id);
 			}
 		}
 	}

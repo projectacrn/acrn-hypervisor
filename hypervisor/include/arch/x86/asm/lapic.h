@@ -126,4 +126,6 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
  */
 void send_single_init(uint16_t pcpu_id);
 
+void kick_pcpu(uint16_t pcpu_id);
+
 #endif /* ARCH_X86_LAPIC_H */

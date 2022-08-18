@@ -255,9 +255,6 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 			sizeof(struct run_context));
 	}
 
-	/* TODO: we may need to add one scheduler->reset_data to reset the thread_obj */
-	vcpu->thread_obj.notify_mode = SCHED_NOTIFY_IPI;
-
 	vlapic = vcpu_vlapic(vcpu);
 	vlapic_reset(vlapic, apicv_ops, mode);
 
@@ -529,6 +526,12 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		vcpu->vcpu_id = vcpu_id;
 		per_cpu(ever_run_vcpu, pcpu_id) = vcpu;
 
+		if (is_lapic_pt_configured(vm)) {
+			per_cpu(mode_to_kick_pcpu, pcpu_id) = DEL_MODE_INIT;
+		} else {
+			per_cpu(mode_to_kick_pcpu, pcpu_id) = DEL_MODE_IPI;
+		}
+
 		/* Initialize the parent VM reference */
 		vcpu->vm = vm;
 
@@ -790,14 +793,8 @@ void kick_vcpu(struct acrn_vcpu *vcpu)
 {
 	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
 
-	if ((get_pcpu_id() != pcpu_id) &&
-		(per_cpu(vmcs_run, pcpu_id) == vcpu->arch.vmcs)) {
-		if (is_lapic_pt_enabled(vcpu)) {
-			/* For lapic-pt vCPUs */
-			send_single_init(pcpu_id);
-		} else {
-			send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
-		}
+	if ((get_pcpu_id() != pcpu_id) && (per_cpu(vmcs_run, pcpu_id) == vcpu->arch.vmcs)) {
+		kick_pcpu(pcpu_id);
 	}
 }
 
@@ -970,7 +967,6 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 		vcpu->thread_obj.sched_ctl = &per_cpu(sched_ctl, pcpu_id);
 		vcpu->thread_obj.thread_entry = vcpu_thread;
 		vcpu->thread_obj.pcpu_id = pcpu_id;
-		/* vcpu->thread_obj.notify_mode is initialized in vcpu_reset_internal() when create vcpu */
 		vcpu->thread_obj.host_sp = build_stack_frame(vcpu);
 		vcpu->thread_obj.switch_out = context_switch_out;
 		vcpu->thread_obj.switch_in = context_switch_in;

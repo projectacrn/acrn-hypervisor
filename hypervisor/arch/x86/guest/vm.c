@@ -1245,7 +1245,7 @@ void make_shutdown_vm_request(uint16_t pcpu_id)
 {
 	bitmap_set_lock(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
 	if (get_pcpu_id() != pcpu_id) {
-		send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
+		kick_pcpu(pcpu_id);
 	}
 }
 

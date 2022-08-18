@@ -127,23 +127,13 @@ struct thread_object *sched_get_current(uint16_t pcpu_id)
 /**
  * @pre delmode == DEL_MODE_IPI || delmode == DEL_MODE_INIT
  */
-void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode)
+void make_reschedule_request(uint16_t pcpu_id)
 {
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
 
 	bitmap_set_lock(NEED_RESCHEDULE, &ctl->flags);
 	if (get_pcpu_id() != pcpu_id) {
-		switch (delmode) {
-		case DEL_MODE_IPI:
-			send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
-			break;
-		case DEL_MODE_INIT:
-			send_single_init(pcpu_id);
-			break;
-		default:
-			ASSERT(false, "Unknown delivery mode %u for pCPU%u", delmode, pcpu_id);
-			break;
-		}
+		kick_pcpu(pcpu_id);
 	}
 }
 
@@ -202,11 +192,7 @@ void sleep_thread(struct thread_object *obj)
 		scheduler->sleep(obj);
 	}
 	if (is_running(obj)) {
-		if (obj->notify_mode == SCHED_NOTIFY_INIT) {
-			make_reschedule_request(pcpu_id, DEL_MODE_INIT);
-		} else {
-			make_reschedule_request(pcpu_id, DEL_MODE_IPI);
-		}
+		make_reschedule_request(pcpu_id);
 		obj->be_blocking = true;
 	} else {
 		set_thread_status(obj, THREAD_STS_BLOCKED);
@@ -236,7 +222,7 @@ void wake_thread(struct thread_object *obj)
 		}
 		if (is_blocked(obj)) {
 			set_thread_status(obj, THREAD_STS_RUNNABLE);
-			make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+			make_reschedule_request(pcpu_id);
 		}
 		obj->be_blocking = false;
 	}
@@ -245,7 +231,7 @@ void wake_thread(struct thread_object *obj)
 
 void yield_current(void)
 {
-	make_reschedule_request(get_pcpu_id(), DEL_MODE_IPI);
+	make_reschedule_request(get_pcpu_id());
 }
 
 void run_thread(struct thread_object *obj)

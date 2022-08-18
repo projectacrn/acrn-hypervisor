@@ -12,6 +12,7 @@
 #include <asm/cpu_caps.h>
 #include <asm/lapic.h>
 #include <asm/apicreg.h>
+#include <asm/irq.h>
 #include <delay.h>
 
 /* intr_lapic_icr_delivery_mode */
@@ -293,4 +294,13 @@ void send_single_init(uint16_t pcpu_id)
 
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
 
+}
+
+void kick_pcpu(uint16_t pcpu_id)
+{
+	if (per_cpu(mode_to_kick_pcpu, pcpu_id) == DEL_MODE_INIT) {
+		send_single_init(pcpu_id);
+	} else {
+		send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
+	}
 }
