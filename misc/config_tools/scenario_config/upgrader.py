@@ -764,9 +764,6 @@ class ScenarioUpgrader(ScenarioTransformer):
         # Feature enabling or disabling
         "vuart0": partialmethod(move_enablement, ".//vuart0"),
         "vbootloader": partialmethod(move_enablement, ".//vbootloader", values_as_enabled = ["ovmf", "Enable"], values_as_disabled = ["no", "Disable"]),
-        "MCE_ON_PSC_ENABLED": partialmethod(move_enablement, ".//MCE_ON_PSC_DISABLED", values_as_enabled = ["n"], values_as_disabled = ["y"]),
-        "SPLIT_LOCK_DETECTION_ENABLED": partialmethod(move_enablement, ".//ENFORCE_TURNOFF_AC", values_as_enabled = ["n"], values_as_disabled = ["y"]),
-        "UC_LOCK_DETECTION_ENABLED": partialmethod(move_enablement, ".//ENFORCE_TURNOFF_GP", values_as_enabled = ["n"], values_as_disabled = ["y"]),
 
         # Intermediate nodes
         "pci_devs": partialmethod(create_node_if, ".//pci_devs", ".//passthrough_devices/*[text() != ''] | .//sriov/*[text() != '']"),
