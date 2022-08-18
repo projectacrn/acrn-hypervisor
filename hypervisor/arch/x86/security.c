@@ -221,7 +221,7 @@ void set_fs_base(void)
 }
 #endif
 
-#ifndef CONFIG_MCE_ON_PSC_WORKAROUND_ENABLED
+#ifdef CONFIG_MCE_ON_PSC_WORKAROUND_DISABLED
 bool is_ept_force_4k_ipage(void)
 {
 	return false;

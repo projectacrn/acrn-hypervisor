@@ -110,7 +110,7 @@ uint64_t get_active_pcpu_bitmap(void)
 
 static void enable_ac_for_splitlock(void)
 {
-#ifdef CONFIG_SPLIT_LOCK_DETECTION_ENABLED
+#ifndef CONFIG_ENFORCE_TURNOFF_AC
 	uint64_t test_ctl;
 
 	if (has_core_cap(CORE_CAP_SPLIT_LOCK)) {
@@ -118,12 +118,12 @@ static void enable_ac_for_splitlock(void)
 		test_ctl |= MSR_TEST_CTL_AC_SPLITLOCK;
 		msr_write(MSR_TEST_CTL, test_ctl);
 	}
-#endif /*CONFIG_SPLIT_LOCK_DETECTION_ENABLED*/
+#endif /*CONFIG_ENFORCE_TURNOFF_AC*/
 }
 
 static void enable_gp_for_uclock(void)
 {
-#ifdef CONFIG_UC_LOCK_DETECTION_ENABLED
+#ifndef CONFIG_ENFORCE_TURNOFF_GP
 	uint64_t test_ctl;
 
 	if (has_core_cap(CORE_CAP_UC_LOCK)) {
@@ -131,7 +131,7 @@ static void enable_gp_for_uclock(void)
 		test_ctl |= MSR_TEST_CTL_GP_UCLOCK;
 		msr_write(MSR_TEST_CTL, test_ctl);
 	}
-#endif /*CONFIG_UC_LOCK_DETECTION_ENABLED*/
+#endif /*CONFIG_ENFORCE_TURNOFF_GP*/
 }
 
 void init_pcpu_pre(bool is_bsp)
