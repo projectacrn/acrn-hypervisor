@@ -3,8 +3,3 @@ lxml
 elementpath==2.5.3
 xmlschema==1.9.2
 tqdm
-build
-requests
-xmltodict
-sphinx
-bs4
