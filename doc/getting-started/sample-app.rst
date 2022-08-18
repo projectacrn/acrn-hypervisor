@@ -427,14 +427,15 @@ Copy files from the development system to your target system
 
    Option 1: use ``scp`` to copy files over the local network
      Use scp from your development system to the ~/acrn-work directory on the
-     target (using the target system's IP address you found earlier)::
+     target (replace the IP address used in this example with the target
+     system's IP address you found earlier)::
 
        cd ~/acrn-work
 
        scp hmi_vm.img rt_vm.img acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
            *acrn-service-vm*.deb MyConfiguration/launch_user_vm_id*.sh \
            acpica-unix-20210105/generate/unix/bin/iasl \
-           acrn@10.0.0.15:~/acrn-work
+           acrn@10.0.0.200:~/acrn-work
 
    Option 2: use a USB stick to copy files
      Insert a USB stick into the development computer
@@ -453,7 +454,7 @@ Copy files from the development system to your target system
      Move the USB disk you just used to the target system and run
      these commands to copy the files locally::
 
-        disk="/media/$USER/"**$(**\ ls /media/$USER\ **)**
+        disk="/media/$USER/"$(ls /media/$USER)
 
         cp "$disk"/*vm.img ~/acrn-work
         cp "$disk"/acrn-my_board-MyConfiguration*.deb ~/acrn-work
@@ -501,7 +502,7 @@ Install and Run ACRN on the Target System
 
    .. code-block:: console
 
-      $ hostname -I \| cut -d ' ' -f 1
+      $ hostname -I | cut -d ' ' -f 1
       10.0.0.200
 
 #. From your development computer, ssh to your target board's Service VM
@@ -537,7 +538,7 @@ Install and Run ACRN on the Target System
 
    .. code-block:: console
 
-      (acrn-guest)root@ubuntu:~# hostname -I \| cut -d ' ' -f 1
+      (acrn-guest)root@ubuntu:~# hostname -I | cut -d ' ' -f 1
       10.0.0.100
 
 #. Run the HMI VM Sample Application userApp (in the background) and histapp.py::
@@ -578,13 +579,15 @@ Now the two parts of the sample application are running:
 
 We can view this data displayed as a histogram:
 
-- Option 1. Login to the HMI_VM on the target system's console. (If you want to
+Option 1: Use a browser on the HMI VM using the target system console
+  Login to the HMI_VM on the target system's console. (If you want to
   login as root, click on the "Not listed?" link under the username choices you
   do see and enter the root username and password. Open the web browser to
   http://localhost
 
-- Option 2. Open a web-browser on your development computer to the
-  HMI_VM IP address we found above (e.g., http://10.0.0.100).
+Option 2: Use a browser on your development system
+  Open a web-browser on your development computer to the
+  HMI_VM IP address we found in an earlier step (e.g., http://10.0.0.100).
 
 You'll see a histogram graph something like this showing the percentage
 of latency time intervals reported by cyclictest.
