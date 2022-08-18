@@ -503,7 +503,7 @@ how to build the Debian package from source code.
 
    .. code-block:: bash
 
-      cd ~/acrn-work/acrn-hypervisor/misc/config_tools
+      cd ~/acrn-work/acrn-hypervisor/misc/config_tools/configurator
       python3 -m pip install -r requirements.txt
       yarn
 
