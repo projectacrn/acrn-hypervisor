@@ -1,0 +1,5 @@
+build
+requests
+xmltodict
+sphinx
+bs4
