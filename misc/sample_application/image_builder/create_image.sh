@@ -156,19 +156,26 @@ function create_uio_config() {
     local temp_file=$(mktemp /tmp/rc.local.XXXX)
 
     cat << EOF > ${temp_file}
+#!/bin/bash
 dhclient -q
 modprobe uio
 modprobe uio_pci_generic
 
-for i in {0..3}
+for i in {0..2}
 do
 bash -c 'echo "1af4 1110" > /sys/bus/pci/drivers/uio_pci_generic/new_id'
+if [ $? -eq 0 ]; then
+    echo "uio setting result" $?
+    break
+fi
+echo "uio setting result" $? "try again"
 sleep 1
 done
 EOF
 
-    sudo mv ${temp_file} /etc/rc.local && \
-        sudo chown root:root /etc/rc.local
+    sudo mv ${temp_file} $mount_point/etc/rc.local && \
+        sudo chown root:root $mount_point/etc/rc.local && \
+	sudo chmod 755 $mount_point/etc/rc.local
 }
 
 function setup_hmi_vm_rootfs() {
