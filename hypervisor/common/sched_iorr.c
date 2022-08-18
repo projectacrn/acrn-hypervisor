@@ -94,7 +94,7 @@ static void sched_tick_handler(void *param)
 			}
 			/* make reschedule request if current ran out of its cycles */
 			if (is_idle_thread(current) || data->left_cycles <= 0) {
-				make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+				make_reschedule_request(pcpu_id);
 			}
 		}
 	}

@@ -23,11 +23,6 @@ enum thread_object_state {
 	THREAD_STS_BLOCKED
 };
 
-enum sched_notify_mode {
-	SCHED_NOTIFY_INIT,
-	SCHED_NOTIFY_IPI
-};
-
 /* Tools can configure a VM to use PRIO_LOW or PRIO_HIGH */
 enum thread_priority {
 	PRIO_IDLE = 0,
@@ -46,7 +41,6 @@ struct thread_object {
 	thread_entry_t thread_entry;
 	volatile enum thread_object_state status;
 	bool be_blocking;
-	enum sched_notify_mode notify_mode;
 
 	uint64_t host_sp;
 	switch_t switch_out;
@@ -126,7 +120,7 @@ void release_schedule_lock(uint16_t pcpu_id, uint64_t rflag);
 void init_thread_data(struct thread_object *obj);
 void deinit_thread_data(struct thread_object *obj);
 
-void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode);
+void make_reschedule_request(uint16_t pcpu_id);
 bool need_reschedule(uint16_t pcpu_id);
 
 void run_thread(struct thread_object *obj);
