@@ -84,6 +84,7 @@ class LaunchScript:
         self._vm_name = vm_name
         self._vm_descriptors = {}
         self._init_commands = []
+        self._cpu_dict = {}
         self._dm_parameters = []
         self._deinit_commands = []
 
@@ -92,6 +93,9 @@ class LaunchScript:
 
     def add_vm_descriptor(self, name, value):
         self._vm_descriptors[name] = value
+
+    def add_sos_cpu_dict(self, cpu_and_lapic_id_list):
+        self._cpu_dict = dict(cpu_and_lapic_id_list)
 
     def add_init_command(self, command):
         if command not in self._init_commands:
@@ -143,6 +147,36 @@ class LaunchScript:
             s += f"{command}\n"
         s += "\n"
 
+        s += """
+# Note for developers: The number of available logical CPUs depends on the
+# number of enabled cores and whether Hyperthreading is enabled in the BIOS
+# settings. CPU IDs are assigned to each logical CPU but are not the same ID
+# value throughout the system:
+#
+# Native CPU_ID:
+#       ID enumerated by the Linux Kernel and shown in the
+#       ACRN Configurator's CPU Affinity option (used in the scenario.xml)
+# Service VM CPU_ID:
+#       ID assigned by the Service VM at runtime
+# APIC_ID:
+#       Advanced Programmable Interrupt Controller's unique ID as
+#       enumerated by the board inspector (used in this launch script)
+#
+# This table shows equivalent CPU IDs for this scenario and board:
+#
+"""
+        s += "\n"
+
+        s += "#   Native CPU_ID    Service VM CPU_ID    APIC_ID\n"
+        s += "#   -------------    -----------------    -------\n"
+        vcpu_id = 0
+        for cpu_info in self._cpu_dict:
+            s += "#   "
+            s += f"{cpu_info:3d}{'':17s}"
+            s += f"{vcpu_id:3d}{'':17s}"
+            s += f"{self._cpu_dict[cpu_info]:3d}\n"
+            vcpu_id += 1
+        s += "\n"
         s += "# Invoking ACRN device model\n"
         s += "dm_params=(\n"
         for param in self._dm_parameters:
@@ -197,17 +231,14 @@ class LaunchScript:
             return False
 
 
-def cpu_id_to_lapic_id(board_etree, vm_name, cpus):
-    ret = []
+def cpu_id_to_lapic_id(board_etree, vm_name, cpu):
 
-    for cpu in cpus:
-        lapic_id = eval_xpath(board_etree, f"//processors//thread[cpu_id='{cpu}']/apic_id/text()", None)
-        if lapic_id is not None:
-            ret.append(int(lapic_id, 16))
-        else:
-            logging.warning(f"CPU {cpu} is not defined in the board XML, so it can't be available to VM {vm_name}")
-
-    return ret
+    lapic_id = eval_xpath(board_etree, f"//processors//thread[cpu_id='{cpu}']/apic_id/text()", None)
+    if lapic_id is not None:
+        return int(lapic_id, 16)
+    else:
+        logging.warning(f"CPU {cpu} is not defined in the board XML, so it can't be available to VM {vm_name}")
+        return None
 
 def get_slot_by_vbdf(vbdf):
     if vbdf is not None:
@@ -234,7 +265,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     # CPU and memory resources
     ###
     cpus = set(eval_xpath_all(vm_scenario_etree, ".//cpu_affinity//pcpu_id[text() != '']/text()"))
-    lapic_ids = cpu_id_to_lapic_id(board_etree, vm_name, cpus)
+    lapic_ids = [x for x in [cpu_id_to_lapic_id(board_etree, vm_name, cpu_id) for cpu_id in cpus] if x != None]
     if lapic_ids:
         script.add_dynamic_dm_parameter("add_cpus", f"{' '.join([str(x) for x in sorted(lapic_ids)])}")
 
@@ -382,12 +413,18 @@ def main(board_xml, scenario_xml, user_vm_id, out_dir):
     scenario_etree = etree.parse(scenario_xml)
 
     service_vm_id = eval_xpath(scenario_etree, "//vm[load_order = 'SERVICE_VM']/@id")
+    service_vm_name = eval_xpath(scenario_etree, "//vm[load_order = 'SERVICE_VM']/name/text()")
+
     hv_scenario_etree = eval_xpath(scenario_etree, "//hv")
     post_vms = eval_xpath_all(scenario_etree, "//vm[load_order = 'POST_LAUNCHED_VM']")
     if service_vm_id is None and len(post_vms) > 0:
         logging.error("The scenario does not define a service VM so no launch scripts will be generated for the post-launched VMs in the scenario.")
         return 1
     service_vm_id = int(service_vm_id)
+
+    # Service VM CPU list
+    pre_all_cpus = eval_xpath_all(scenario_etree, "//vm[load_order = 'PRE_LAUNCHED_VM']/cpu_affinity//pcpu_id/text()")
+    cpus_for_sos = sorted([int(x) for x in eval_xpath_all(board_etree, "//processors//thread//cpu_id/text()") if x not in pre_all_cpus])
 
     try:
         os.mkdir(out_dir)
@@ -410,6 +447,7 @@ def main(board_xml, scenario_xml, user_vm_id, out_dir):
             continue
 
         script = generate_for_one_vm(board_etree, hv_scenario_etree, post_vm, post_vm_id)
+        script.add_sos_cpu_dict([(x, cpu_id_to_lapic_id(board_etree, service_vm_name, x)) for x in cpus_for_sos])
         script.write_to_file(os.path.join(out_dir, f"launch_user_vm_id{post_vm_id - service_vm_id}.sh"))
 
     return 0
