@@ -140,7 +140,19 @@ Make the HMI_VM image
      ./create_image.sh hmi-vm
 
    After the script is finished the ``hmi_vm.img`` image file is created in the
-   ``build`` directory.  The HMI VM image is a configured Ubuntu desktop image
+   ``build`` directory. You should see a final message from the script that
+   looks like this:
+
+   .. code-block:: console
+
+      2022-08-18T09:53:06+08:00 [   Info   ] VM image created at /home/acrn/acrn-work/acrn-hypervisor/misc/sample_application/image_builder/build/hmi_vm.img.
+
+   If you don't see such a message, look back through the output to see what
+   errors are indicated.  For example, there could have been a network error
+   while retrieving packages from the internet. In such a case, simply trying
+   the ``create_image.sh`` command again might work.
+
+   The HMI VM image is a configured Ubuntu desktop image
    ready to launch as an ACRN user VM with the HMI parts of the sample app
    installed.
 
@@ -540,6 +552,10 @@ Install and Run ACRN on the Target System
 
       (acrn-guest)root@ubuntu:~# hostname -I | cut -d ' ' -f 1
       10.0.0.100
+
+   If no IP address is reported, run this command to request an IP address and check again::
+
+      dhclient
 
 #. Run the HMI VM Sample Application userApp (in the background) and histapp.py::
 
