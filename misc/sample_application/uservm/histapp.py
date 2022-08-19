@@ -40,17 +40,18 @@ def create_hist():
 	web_sem.release()
 
 	#Transform the data into an array that matplotlib can understand
-	dataset = transform_data(data)
+	count, dataset = transform_data(data)
 
 	#Clear the figure and recreate from the new data
 	plt.clf()
 
 	#Setup the figure and save it
-	figure = plt.hist(dataset)
+	bins=np.arange(min(dataset),max(dataset)+2)-0.5
+	figure = plt.hist(dataset,bins,rwidth=0.5)
 
-	plt.title("Latency percentages")
-	plt.xlabel("Latency Value (us)")
-	plt.ylabel("Frequency")
+	plt.title("ACRN Sample Application cyclictest display (unoptimized)")
+	plt.xlabel("Latency Value (microseconds)")
+	plt.ylabel("Count Percentage      " + f"{count:,}")
 	plt.savefig("hist.png")
 
 	return figure
@@ -77,7 +78,7 @@ def transform_data(data_string):
 	for i in range(0, int(len(data_percentages) / 2)):
 		transformed_data_values += ([int(data_percentages[i*2])] * int(data_percentages[i*2 + 1]))
 
-	return transformed_data_values
+	return int(total_count), transformed_data_values
 
 if __name__ == '__main__':
 
