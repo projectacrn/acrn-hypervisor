@@ -78,6 +78,10 @@ static int virtio_i2c_debug=0;
 #define VIRTIO_I2C_FLAGS_FAIL_NEXT	1 << 0
 #define VIRTIO_I2C_FLAGS_M_RD		1 << 1
 
+#define VIRTIO_I2C_F_ZERO_LENGTH_REQUEST 0
+#define VIRTIO_I2C_HOSTCAPS   (1UL << VIRTIO_F_VERSION_1) | \
+                              (1UL << VIRTIO_I2C_F_ZERO_LENGTH_REQUEST)
+
 static int acpi_i2c_adapter_num = 0;
 static void acpi_add_i2c_adapter(struct pci_vdev *dev, int i2c_bus);
 static void acpi_add_cam1(struct pci_vdev *dev, int i2c_bus);
@@ -821,6 +825,7 @@ virtio_i2c_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* init virtio struct and virtqueues */
 	virtio_linkup(&vi2c->base, &virtio_i2c_ops, vi2c, dev, &vi2c->vq, BACKEND_VBSU);
 	vi2c->base.mtx = &vi2c->mtx;
+	vi2c->base.device_caps = VIRTIO_I2C_HOSTCAPS;
 	vi2c->vq.qsize = 64;
 	vi2c->native_adapter_num = 0;
 
@@ -849,17 +854,17 @@ virtio_i2c_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	pci_set_cfgdata16(dev, PCIR_DEVICE, VIRTIO_DEV_I2C);
-	pci_set_cfgdata16(dev, PCIR_VENDOR, INTEL_VENDOR_ID);
-	pci_set_cfgdata8(dev, PCIR_CLASS, PCIC_SERIALBUS);
+	pci_set_cfgdata16(dev, PCIR_VENDOR, VIRTIO_VENDOR);
+	pci_set_cfgdata8(dev, PCIR_CLASS, PCIS_SERIALBUS_SMBUS);
 	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, VIRTIO_TYPE_I2C);
-	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, INTEL_VENDOR_ID);
+	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
 
 	if (virtio_interrupt_init(&vi2c->base, virtio_uses_msix())) {
 		WPRINTF("failed to init interrupt");
 		rc = -1;
 		goto fail;
 	}
-	virtio_set_io_bar(&vi2c->base, 0);
+	rc = virtio_set_modern_bar(&vi2c->base, false);
 	vi2c->in_process = 0;
 	vi2c->closing = 0;
 	pthread_mutex_init(&vi2c->req_mtx, NULL);

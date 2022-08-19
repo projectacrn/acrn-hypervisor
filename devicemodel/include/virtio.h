@@ -223,6 +223,7 @@ enum {
 #define	VIRTIO_DEV_RANDOM	0x1005
 #define	VIRTIO_DEV_GPU		0x1050
 #define	VIRTIO_DEV_VSOCK	0x1053
+#define VIRTIO_DEV_I2C		0x1062
 
 /*
  * ACRN virtio device IDs
@@ -236,7 +237,6 @@ enum {
 #define	VIRTIO_DEV_HDCP		0x8607
 #define	VIRTIO_DEV_COREU	0x8608
 #define	VIRTIO_DEV_GPIO		0x8609
-#define VIRTIO_DEV_I2C		0x860a
 
 /*
  * VIRTIO_CONFIG_S_NEEDS_RESET is not defined
