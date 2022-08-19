@@ -35,7 +35,7 @@ def alloc_clos_index(board_etree, scenario_etree, allocation_etree, mask_list):
         vm_name = common.get_node("./name/text()", vm_node)
         vcpu_list = scenario_etree.xpath(f"//POLICY[VM = '{vm_name}']/VCPU/text()")
         index_list = []
-        for vcpu in sorted(list(set(vcpu_list))):
+        for vcpu in sorted([int(x) for x in set(vcpu_list)]):
             if rdt.cdp_enable(scenario_etree):
                 index = get_clos_id(mask_list, rdt.policy_owner(vm_name, vcpu, "Data")) // 2
             else:

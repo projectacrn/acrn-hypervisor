@@ -32,5 +32,5 @@ def fn(board_etree, scenario_etree, allocation_etree):
                 allocation_sos_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
             if common.get_node("./load_order", allocation_sos_vm_node) is None:
                 common.append_node("./load_order", "SERVICE_VM", allocation_sos_vm_node)
-        for pcpu_id in cpus_for_sos:
+        for pcpu_id in sorted([int(x) for x in cpus_for_sos]):
             common.append_node("./cpu_affinity/pcpu_id", str(pcpu_id), allocation_sos_vm_node)
