@@ -14,7 +14,7 @@ that formats and presents the collected data as a histogram on a web
 page shown by a browser. This guide shows how to configure, create, and
 launch the two VM images that make up this application.
 
-.. figure:: images/image001.png
+.. figure:: images/samp-image001.png
    :class: drop-shadow
    :align: center
    :width: 900px
@@ -228,7 +228,7 @@ and generate new launch scripts for this Sample Application.
    prompted, confirm it's **OK** to overwrite an existing configuration.)
 
 
-   .. image:: images/image002.png
+   .. image:: images/samp-image002.png
       :class: drop-shadow
       :align: center
 
@@ -240,7 +240,7 @@ and generate new launch scripts for this Sample Application.
    #. Browse to ``/home/acrn/acrn-work/my_board.xml`` and click **Open**.
       Then click **Import Board File**.
 
-      .. image:: images/image003.png
+      .. image:: images/samp-image003.png
          :class: drop-shadow
          :align: center
 
@@ -248,7 +248,7 @@ and generate new launch scripts for this Sample Application.
 #. **Create a new scenario**: select a shared scenario type with a Service VM and
    two post-launched VMs. Click **OK**.
 
-   .. image:: images/image004.png
+   .. image:: images/samp-image004.png
       :class: drop-shadow
       :align: center
 
@@ -259,7 +259,7 @@ and generate new launch scripts for this Sample Application.
    scenario and when you click on the **Save Scenario And Launch Scripts**
    button.
 
-   .. image:: images/image004a.png
+   .. image:: images/samp-image004a.png
       :class: drop-shadow
       :align: center
 
@@ -268,7 +268,7 @@ and generate new launch scripts for this Sample Application.
    command-line parameters** by appending the existing parameters with ``i915.modeset=1 3``
    (to disable the GPU driver loading for Intel GPU device).
 
-   .. image:: images/image005.png
+   .. image:: images/samp-image005.png
       :class: drop-shadow
       :align: center
 
@@ -277,7 +277,7 @@ and generate new launch scripts for this Sample Application.
    and add the **physical CPU affinity** to pCPU ``0`` and ``1`` (click the
    **+** button to create the additional affinity setting), as shown below:
 
-   .. image:: images/image006.png
+   .. image:: images/samp-image006.png
       :class: drop-shadow
       :align: center
 
@@ -285,7 +285,7 @@ and generate new launch scripts for this Sample Application.
    setting** options and selecting the VGA compatible controller.  Click the
    **+** button again to add the USB controller to passthrough to the HMI_VM.
 
-   .. image:: images/image007.png
+   .. image:: images/samp-image007.png
       :class: drop-shadow
       :align: center
 
@@ -293,7 +293,7 @@ and generate new launch scripts for this Sample Application.
    devices** by clicking the **+** button in the section and setting the values
    as shown here (note the **Network interface name** must be ``tap0``):
 
-   .. image:: images/image008.png
+   .. image:: images/samp-image008.png
       :class: drop-shadow
       :align: center
 
@@ -301,7 +301,7 @@ and generate new launch scripts for this Sample Application.
    ``hmi_vim.img`` on the target system. (We'll copy the generated ``hmi_vm.img`` to
    this directory in a later step):
 
-   .. image:: images/image009.png
+   .. image:: images/samp-image009.png
       :class: drop-shadow
       :align: center
 
@@ -312,14 +312,14 @@ and generate new launch scripts for this Sample Application.
    set the **memory size** to ``1024``, set **pCPU affinity** to IDs ``2`` and ``3``, and
    check the **Real-time vCPU box** for pCPU ID 2, as shown below:
 
-   .. image:: images/image010.png
+   .. image:: images/samp-image010.png
       :class: drop-shadow
       :align: center
 
 #. Config the **virtio console device** for RT_VM (unlike the HMI_VM, we don't use a **virtio
    network device** for this RT_VM):
 
-   .. image:: images/image011.png
+   .. image:: images/samp-image011.png
       :align: center
       :class: drop-shadow
 
@@ -327,7 +327,7 @@ and generate new launch scripts for this Sample Application.
    the ``rt_vm.img`` file we generated earlier to this directory in a later
    step):
 
-   .. image:: images/image012.png
+   .. image:: images/samp-image012.png
       :class: drop-shadow
       :align: center
 
@@ -337,7 +337,7 @@ and generate new launch scripts for this Sample Application.
    missing **Virtual BDF** values will be supplied by the configurator when you
    save the configuration.)
 
-   .. image:: images/image013.png
+   .. image:: images/samp-image013.png
       :class: drop-shadow
       :align: center
 
@@ -345,7 +345,7 @@ and generate new launch scripts for this Sample Application.
    ``/dev/ttyS0``, as shown below (this will resolve the message about the
    missing serial port configuration):
 
-   .. image:: images/image014.png
+   .. image:: images/samp-image014.png
       :class: drop-shadow
       :align: center
 
@@ -354,7 +354,7 @@ and generate new launch scripts for this Sample Application.
    scenario is saved and validated, launch scripts are generated, and all files
    successfully saved.  Click **OK**.
 
-   .. image:: images/image015.png
+   .. image:: images/samp-image015.png
       :class: drop-shadow
       :align: center
       :width: 400px
@@ -438,13 +438,14 @@ Copy files from the development system to your target system
    or use a USB drive:
 
    Option 1: use ``scp`` to copy files over the local network
-     Use scp from your development system to the ~/acrn-work directory on the
-     target (replace the IP address used in this example with the target
-     system's IP address you found earlier)::
+     Use scp to copy files from your development system to the
+     ~/acrn-work directory on the target (replace the IP address used in
+     this example with the target system's IP address you found earlier)::
 
        cd ~/acrn-work
 
-       scp hmi_vm.img rt_vm.img acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
+       scp acrn-hypervisor/misc/sample_application/image_builder/build/*_vm.img \
+           acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
            *acrn-service-vm*.deb MyConfiguration/launch_user_vm_id*.sh \
            acpica-unix-20210105/generate/unix/bin/iasl \
            acrn@10.0.0.200:~/acrn-work
@@ -459,7 +460,7 @@ Copy files from the development system to your target system
         disk="/media/$USER/"$(ls /media/$USER)
 
         cd ~/acrn-work
-        cp hmi_vm.img rt_vm.img "$disk"
+        cp acrn-hypervisor/misc/sample_application/image_builder/*_vm.img rt_vm.img "$disk"
         cp acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb "$disk"
         cp *acrn-service-vm*.deb "$disk"
         cp MyConfiguration/launch_user_vm_id*.sh "$disk"
@@ -471,11 +472,12 @@ Copy files from the development system to your target system
 
         disk="/media/$USER/"$(ls /media/$USER)
 
-        cp "$disk"/*vm.img ~/acrn-work
+        cp "$disk"/*_vm.img ~/acrn-work
         cp "$disk"/acrn-my_board-MyConfiguration*.deb ~/acrn-work
         cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
         cp "$disk"/launch_user_vm_id*.sh ~/acrn-work
         sudo cp "$disk"/iasl /usr/sbin/
+        sudo ln -s /usr/sbin/iasl /usr/bin/iasl
         sync && sudo umount "$disk"
 
 .. rst-class:: numbered-step
@@ -504,7 +506,7 @@ Install and Run ACRN on the Target System
    auto-selected, in which case it will boot with this option automatically in 5
    seconds.)
 
-   .. image:: images/image016.png
+   .. image:: images/samp-image016.png
       :class: drop-shadow
       :align: center
 
@@ -590,7 +592,7 @@ Install and Run ACRN on the Target System
 
       ubuntu login: root
       Password:
-      Welcome to Ubuntu 20.04.04 LTS (GNU/Linux 5.15.0-46-generic x86_64)
+      Welcome to Ubuntu 20.04.04 LTS (GNU/Linux 5.10.120-rt70-acrn-kernel-rtvm X86_64)
 
       . . .
 
@@ -624,7 +626,7 @@ Option 2: Use a browser on your development system
 Refresh the browser. You'll see a histogram graph showing the
 percentage of latency time intervals reported by cyclictest.
 
-.. figure:: images/image018.png
+.. figure:: images/samp-image018.png
    :class: drop-shadow
    :align: center
 
