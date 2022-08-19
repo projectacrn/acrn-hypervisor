@@ -449,6 +449,9 @@ Copy files from the development system to your target system
            acpica-unix-20210105/generate/unix/bin/iasl \
            acrn@10.0.0.200:~/acrn-work
 
+       sudo mv ~/acrn-work/iasl /usr/sbin
+       sudo ln -s /usr/sbin/iasl /usr/bin/iasl
+
    Option 2: use a USB stick to copy files
      Insert a USB stick into the development computer
      and run these commands::
@@ -578,13 +581,26 @@ Install and Run ACRN on the Target System
      sudo ~/acrn-work/launch_user_vm_id2.sh
 
 #. The launch script will start up the RT_VM.  Lots of system messages will go
-   by and end with an Ubuntu login
-   prompt. Login to the RT_VM as **acrn** user.
+   by and end with an Ubuntu login prompt. 
+
+   Login to the RT_VM as **root** user (not **acrn**) in this ssh session:
+
+   .. code-block:: console
+      :emphasize-lines: 1
+
+      ubuntu login: root
+      Password:
+      Welcome to Ubuntu 20.04.04 LTS (GNU/Linux 5.15.0-46-generic x86_64)
+
+      . . .
+
+      (acrn-guest)root@ubuntu:~#
+
 
 #. Run the cyclictest (in the background) and the rtAPP in this RT_VM::
 
-     sudo cyclictest -p 80 --fifo="./data_pipe" -q &
-     sudo /root/rtApp
+     cyclictest -p 80 --fifo="./data_pipe" -q &
+     ./rtApp
 
 Now the two parts of the sample application are running:
 
@@ -605,8 +621,8 @@ Option 2: Use a browser on your development system
   Open a web-browser on your development computer to the
   HMI_VM IP address we found in an earlier step (e.g., http://10.0.0.100).
 
-You'll see a histogram graph something like this showing the percentage
-of latency time intervals reported by cyclictest.
+Refresh the browser. You'll see a histogram graph showing the
+percentage of latency time intervals reported by cyclictest.
 
 .. figure:: images/image018.png
    :class: drop-shadow
