@@ -140,7 +140,7 @@ def gen_policy_owner_list(scenario_etree):
         vm_name = common.get_node("./text()", vm)
         vcpu = common.get_node("../VCPU/text()", vm)
         cache_type = common.get_node("../TYPE/text()", vm)
-        policy_owner_list.append(policy_owner(vm_name, vcpu, cache_type))
+        policy_owner_list.append(policy_owner(vm_name, int(vcpu), cache_type))
     return policy_owner_list
 
 def vm_vcat_enable(scenario_etree, vm_name):
