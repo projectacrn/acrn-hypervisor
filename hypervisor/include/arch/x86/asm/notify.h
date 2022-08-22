@@ -17,6 +17,7 @@ struct acrn_vm;
 void smp_call_function(uint64_t mask, smp_call_func_t func, void *data);
 
 void setup_notification(void);
+void handle_smp_call(void);
 void setup_pi_notification(void);
 
 #endif

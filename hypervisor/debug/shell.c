@@ -993,12 +993,6 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 		goto out;
 	}
 
-	if (is_lapic_pt_enabled(vcpu)) {
-		shell_puts("Please switch to vlapic mode for vcpu register dump!\r\n");
-		status = 0;
-		goto out;
-	}
-
 	pcpu_id = pcpuid_from_vcpu(vcpu);
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
@@ -1568,9 +1562,13 @@ static int32_t shell_rdmsr(int32_t argc, char **argv)
 	}
 
 	if (ret == 0) {
-		val = msr_read_pcpu(msr_index, pcpu_id);
-		snprintf(str, MAX_STR_SIZE, "rdmsr(0x%x):0x%lx\n", msr_index, val);
-		shell_puts(str);
+		if (pcpu_id < get_pcpu_nums()) {
+			val = msr_read_pcpu(msr_index, pcpu_id);
+			snprintf(str, MAX_STR_SIZE, "rdmsr(0x%x):0x%lx\n", msr_index, val);
+			shell_puts(str);
+		} else {
+			shell_puts("pcpu id is out of range!\n");
+		}
 	}
 
 	return ret;
@@ -1606,7 +1604,11 @@ static int32_t shell_wrmsr(int32_t argc, char **argv)
 	}
 
 	if (ret == 0) {
-		msr_write_pcpu(msr_index, val, pcpu_id);
+		if (pcpu_id < get_pcpu_nums()) {
+			msr_write_pcpu(msr_index, val, pcpu_id);
+		} else {
+			shell_puts("pcpu id is out of range!\n");
+		}
 	}
 
 	return ret;

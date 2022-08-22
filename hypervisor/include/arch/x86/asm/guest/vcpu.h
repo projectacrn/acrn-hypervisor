@@ -105,6 +105,8 @@
  */
 #define ACRN_REQUEST_SPLIT_LOCK			10U
 
+#define ACRN_REQUEST_SMP_CALL			11U
+
 /**
  * @}
  */
