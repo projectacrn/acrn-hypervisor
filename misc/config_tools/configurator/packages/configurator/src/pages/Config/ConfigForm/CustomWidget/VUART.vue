@@ -9,14 +9,17 @@
             <label>
               <n-popover trigger="hover" placement="top-start">
                 <template #trigger>
-                    <IconInfo/>
+                  <IconInfo/>
                 </template>
                 <span v-html="this.VMConfigType.properties.name.description"></span>
-              </n-popover>{{vmNameTitle}}
+              </n-popover>
+              {{ vmNameTitle }}
             </label>
           </b-col>
           <b-col md="4">
-            <b-form-select :state="validation(VUARTConn.endpoint[0].vm_name)" v-model="VUARTConn.endpoint[0].vm_name" :options="vmNames"></b-form-select>
+            <b-form-select :state="validation(VUARTConn.endpoint[0].vm_name)" v-model="VUARTConn.endpoint[0].vm_name"
+                           :options="vmNames"
+                           @input="selectChange(VUARTConn.endpoint[0].vm_name,VUARTConn.endpoint[0],0)"></b-form-select>
             <b-form-invalid-feedback>
               must have value
             </b-form-invalid-feedback>
@@ -34,14 +37,17 @@
             <label>
               <n-popover trigger="hover" placement="top-start">
                 <template #trigger>
-                    <IconInfo/>
+                  <IconInfo/>
                 </template>
                 <span v-html="this.VMConfigType.properties.name.description"></span>
-              </n-popover>{{vmNameTitle}}:
+              </n-popover>
+              {{ vmNameTitle }}:
             </label>
           </b-col>
           <b-col md="4">
-            <b-form-select :state="validation(VUARTConn.endpoint[1].vm_name)" v-model="VUARTConn.endpoint[1].vm_name" :options="vmNames"></b-form-select>
+            <b-form-select :state="validation(VUARTConn.endpoint[1].vm_name)" v-model="VUARTConn.endpoint[1].vm_name"
+                           :options="vmNames"
+                           @input="selectChange(VUARTConn.endpoint[1].vm_name,VUARTConn.endpoint[1],1)"></b-form-select>
             <b-form-invalid-feedback>
               must have value
             </b-form-invalid-feedback>
@@ -53,14 +59,16 @@
             <label>
               <n-popover trigger="hover" placement="top-start">
                 <template #trigger>
-                    <IconInfo/>
+                  <IconInfo/>
                 </template>
                 <span v-html="this.VuartConnectionType.properties.type.description"></span>
-              </n-popover>{{vuartConnectionTypeTitle}}:
+              </n-popover>
+              {{ vuartConnectionTypeTitle }}:
             </label>
           </b-col>
           <b-col md="4">
-            <b-form-select :state="validation(VUARTConn.type)" v-model="VUARTConn.type" :options="VuartType"></b-form-select>
+            <b-form-select :state="validation(VUARTConn.type)" v-model="VUARTConn.type"
+                           :options="VuartType"></b-form-select>
             <b-form-invalid-feedback>
               must have value
             </b-form-invalid-feedback>
@@ -72,41 +80,46 @@
           <p></p>
           <b-row class="justify-content-sm-start">
             <b-col sm="4">
-              {{vuartEndpointTitle}}:
+              {{ vuartEndpointTitle }}:
             </b-col>
             <b-col sm="4" v-if="VUARTConn.type === 'legacy'">
               <n-popover trigger="hover" placement="top-start">
                 <template #trigger>
-                    <IconInfo/>
+                  <IconInfo/>
                 </template>
                 <span v-html="this.VuartEndpointType.io_port.description"></span>
               </n-popover>
-              {{vuartVIoPortTitle}}:
+              {{ vuartVIoPortTitle }}:
             </b-col>
             <b-col sm="4" v-else-if="VUARTConn.type === 'pci'">
               <n-popover trigger="hover" placement="top-start">
-                  <template #trigger>
-                      <IconInfo/>
-                  </template>
-                  <span v-html="this.VuartEndpointType.vbdf.description"></span>
-                </n-popover>{{vuartVBDFTitle}}
+                <template #trigger>
+                  <IconInfo/>
+                </template>
+                <span v-html="this.VuartEndpointType.vbdf.description"></span>
+              </n-popover>
+              {{ vuartVBDFTitle }}
             </b-col>
           </b-row>
           <b-row class="justify-content-sm-start align-items-center">
-            <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[0].vm_name }} </b-col>
+            <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[0].vm_name }}</b-col>
             <b-col sm="4">
-              <b-form-input v-model="VUARTConn.endpoint[0].io_port" v-if="VUARTConn.type === 'legacy'" :placeholder="vIoPortPlaceholder"/>
-              <b-form-input :state="validateVBDF(VUARTConn.endpoint[0].vbdf)" v-model="VUARTConn.endpoint[0].vbdf" v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
+              <b-form-input v-model="VUARTConn.endpoint[0].io_port" v-if="VUARTConn.type === 'legacy'"
+                            :placeholder="vIoPortPlaceholder"/>
+              <b-form-input :state="validateVBDF(VUARTConn.endpoint[0].vbdf)" v-model="VUARTConn.endpoint[0].vbdf"
+                            v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
               <b-form-invalid-feedback>
                 {{ this.VBDFType["err:pattern"] }}
               </b-form-invalid-feedback>
             </b-col>
           </b-row>
           <b-row class="justify-content-sm-start align-items-center">
-            <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[1].vm_name }} </b-col>
+            <b-col sm="4"> Connection_{{ index + 1 }}-{{ VUARTConn.endpoint[1].vm_name }}</b-col>
             <b-col sm="4">
-              <b-form-input v-model="VUARTConn.endpoint[1].io_port" v-if="VUARTConn.type === 'legacy'" :placeholder="vIoPortPlaceholder"/>
-              <b-form-input :state="validateVBDF(VUARTConn.endpoint[1].vbdf)" v-model="VUARTConn.endpoint[1].vbdf" v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
+              <b-form-input v-model="VUARTConn.endpoint[1].io_port" v-if="VUARTConn.type === 'legacy'"
+                            :placeholder="vIoPortPlaceholder"/>
+              <b-form-input :state="validateVBDF(VUARTConn.endpoint[1].vbdf)" v-model="VUARTConn.endpoint[1].vbdf"
+                            v-else-if="VUARTConn.type === 'pci'" :placeholder="vBDFPlaceholder"/>
               <b-form-invalid-feedback>
                 {{ this.VBDFType["err:pattern"] }}
               </b-form-invalid-feedback>
@@ -175,11 +188,12 @@ export default {
     let enumNames = this.rootSchema.definitions['VuartType']['enumNames']
     let VuartType = []
     enumValue.forEach((item, i) => {
-      VuartType.push({value:item, text:enumNames[i]})
+      VuartType.push({value: item, text: enumNames[i]})
     })
     let epTypeProp = this.rootSchema.definitions.VuartEndpointType.properties
     let conTypeProp = this.rootSchema.definitions.VuartConnectionType.properties
     return {
+      selected: {0: {oldValue: ""}, 1: {oldValue: ""}},
       VuartEndpointType: this.rootSchema.definitions['VuartEndpointType']['properties'],
       vmNameTitle: epTypeProp.vm_name.title,
       vuartConnectionTypeTitle: conTypeProp.type.title,
@@ -244,7 +258,14 @@ export default {
           }
         ]
       })
-    }
+    },
+    selectChange(value, obj, endpoint) {
+      if (this.selected[endpoint].oldValue != value) {
+        obj.vbdf = ""
+        obj.io_port = ""
+      }
+      this.selected[endpoint].oldValue = value
+    },
   }
 };
 </script>
