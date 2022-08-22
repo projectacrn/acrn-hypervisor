@@ -39,4 +39,11 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $vm in /acrn-config/vm[vm_type = 'RTVM'] satisfies
+                   count($vm//pcpu_id[./text() = '0']) = 0">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm//cpu_affinity">
+      <xs:documentation>The CPU 0 can't assign to RTVM {$vm/name/text()}.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
