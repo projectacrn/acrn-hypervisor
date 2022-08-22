@@ -173,7 +173,8 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_PCI_DEV_NUM" default="96">
-      <xs:annotation acrn:title="Max PCI devices" acrn:views="advanced">
+      <xs:annotation acrn:title="Max PCI devices" acrn:views="advanced"
+                     acrn:errormsg="'required': 'must config the max number of PCI devices'">
         <xs:documentation>Specify the maximum number of PCI devices. This impacts the amount of memory used to maintain information about these PCI devices. The default value is calculated from the board configuration file. If you have PCI devices that were not detected by the Board Inspector, you may need to change this maximum value.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
@@ -201,7 +202,8 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_PT_IRQ_ENTRIES" default="256">
-      <xs:annotation acrn:title="Max passthrough IRQ entries" acrn:views="advanced">
+      <xs:annotation acrn:title="Max passthrough IRQ entries" acrn:views="advanced"
+                     acrn:errormsg="'required': 'must config the max number of passthrough IRQ entries'">
         <xs:documentation>Specify the maximum number of interrupt request (IRQ) entries from all passthrough devices.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
@@ -215,7 +217,8 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_MSIX_TABLE_NUM" default="64">
-        <xs:annotation acrn:title="Max MSI-X tables" acrn:views="advanced">
+        <xs:annotation acrn:title="Max MSI-X tables" acrn:views="advanced"
+                       acrn:errormsg="'required': 'must config the max number of MSI-X tables'">
           <xs:documentation>Specify the maximum number of Message Signaled Interrupt MSI-X tables per device. The default value is calculated from the board configuration file.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
@@ -229,7 +232,8 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_EMULATED_MMIO" default="16">
-        <xs:annotation acrn:title="Max emulated MMIO regions" acrn:views="advanced">
+        <xs:annotation acrn:title="Max emulated MMIO regions" acrn:views="advanced"
+                       acrn:errormsg="'required': 'must config the max number of emulated MMIO regions'">
           <xs:documentation>Specify the maximum number of emulated MMIO regions for device virtualization. The default value is calculated from the board configuration file.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
