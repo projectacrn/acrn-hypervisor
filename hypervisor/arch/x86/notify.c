@@ -13,6 +13,7 @@
 #include <asm/per_cpu.h>
 #include <asm/lapic.h>
 #include <asm/guest/vm.h>
+#include <asm/guest/virq.h>
 
 static uint32_t notification_irq = IRQ_INVALID;
 
@@ -37,6 +38,11 @@ static void kick_notification(__unused uint32_t irq, __unused void *data)
 	}
 }
 
+void handle_smp_call(void)
+{
+	kick_notification(0, NULL);
+}
+
 void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 {
 	uint16_t pcpu_id;
@@ -47,10 +53,21 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 	pcpu_id = ffs64(mask);
 	while (pcpu_id < MAX_PCPU_NUM) {
 		bitmap_clear_nolock(pcpu_id, &mask);
-		if (is_pcpu_active(pcpu_id)) {
+		if (pcpu_id == get_pcpu_id()) {
+			func(data);
+			bitmap_clear_nolock(pcpu_id, &smp_call_mask);
+		} else if (is_pcpu_active(pcpu_id)) {
 			smp_call = &per_cpu(smp_call_info, pcpu_id);
 			smp_call->func = func;
 			smp_call->data = data;
+
+			struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
+
+			if ((vcpu != NULL) && (is_lapic_pt_enabled(vcpu))) {
+				vcpu_make_request(vcpu, ACRN_REQUEST_SMP_CALL);
+			} else {
+				send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
+			}
 		} else {
 			/* pcpu is not in active, print error */
 			pr_err("pcpu_id %d not in active!", pcpu_id);
@@ -58,7 +75,6 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 		}
 		pcpu_id = ffs64(mask);
 	}
-	send_dest_ipi_mask((uint32_t)smp_call_mask, NOTIFY_VCPU_VECTOR);
 	/* wait for current smp call complete */
 	wait_sync_change(&smp_call_mask, 0UL);
 }

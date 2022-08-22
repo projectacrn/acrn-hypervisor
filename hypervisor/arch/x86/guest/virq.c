@@ -388,6 +388,11 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			if (bitmap_test_and_clear_lock(ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE, pending_req_bits)) {
 				vcpu_set_vmcs_eoi_exit(vcpu);
 			}
+
+			if (bitmap_test_and_clear_lock(ACRN_REQUEST_SMP_CALL, pending_req_bits)) {
+				handle_smp_call();
+			}
+
 		}
 	}
 
