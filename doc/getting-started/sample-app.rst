@@ -360,8 +360,15 @@ and generate new launch scripts for this Sample Application.
       :width: 400px
 
 
-#. We're done configuring the sample application scenario. Exit the configurator
-   by clicking the **X** in the top right corner).
+#. We're done configuring the sample application scenario. When you saved the
+   scenario, the configurator did a re-verification of all the option settings
+   and found no issues, so all the error indicators are now cleared.
+
+   Exit the configurator by clicking the **X** in the top right corner).
+
+   .. image:: images/samp-image015a.png
+      :class: drop-shadow
+      :align: center
 
 You can see the saved scenario and launch scripts in the working
 directory:
@@ -534,11 +541,11 @@ Install and Run ACRN on the Target System
      sudo ~/acrn-work/launch_user_vm_id1.s
 
 #. The launch script will start up the HMI_VM and show an Ubuntu login
-   prompt in your ssh session and a graphical login on your target's HDMI
-   monitor.
+   prompt in your ssh session (and a graphical login on your target's HDMI
+   monitor).
 
    Login to the HMI_VM as **root** user (not acrn) using your development
-   systems ssh session:
+   system's ssh session:
 
    .. code-block:: console
       :emphasize-lines: 1
@@ -565,6 +572,7 @@ Install and Run ACRN on the Target System
 #. Run the HMI VM Sample Application userApp (in the background) and histapp.py::
 
      ./userApp &
+
      python3 histapp.py
 
    At this point, the HMI_VM is running and we've started the HMI parts of
@@ -599,9 +607,10 @@ Install and Run ACRN on the Target System
       (acrn-guest)root@ubuntu:~#
 
 
-#. Run the cyclictest (in the background) and the rtAPP in this RT_VM::
+#. Run the cyclictest (in the background) and then the rtApp in this RT_VM::
 
      cyclictest -p 80 --fifo="./data_pipe" -q &
+
      ./rtApp
 
 Now the two parts of the sample application are running:
@@ -613,18 +622,20 @@ Now the two parts of the sample application are running:
 
 We can view this data displayed as a histogram:
 
-Option 1: Use a browser on the HMI VM using the target system console
-  Login to the HMI_VM on the target system's console. (If you want to
-  login as root, click on the "Not listed?" link under the username choices you
-  do see and enter the root username and password. Open the web browser to
-  http://localhost
-
-Option 2: Use a browser on your development system
+Option 1: Use a browser on your development system
   Open a web-browser on your development computer to the
   HMI_VM IP address we found in an earlier step (e.g., http://10.0.0.100).
 
+Option 2: Use a browser on the HMI VM using the target system console
+  Login to the HMI_VM on the target system's console. (If you want to
+  login as root, click on the "Not listed?" link under the username choices you
+  do see and enter the root username and password.) Open the web browser to
+  http://localhost
+
 Refresh the browser. You'll see a histogram graph showing the
-percentage of latency time intervals reported by cyclictest.
+percentage of latency time intervals reported by cyclictest. The histogram will
+update every time you refresh the browser.  (Notice the count of samples
+increases as reported on the vertical axis label.)
 
 .. figure:: images/samp-image018.png
    :class: drop-shadow
@@ -634,6 +645,9 @@ percentage of latency time intervals reported by cyclictest.
 
 The horizontal axis represents the latency values in microseconds, and the
 vertical axis represents the percentage of occurrences of those values.
+
+Congratulations
+***************
 
 That completes the building and running of this sample application. You
 can view the application's code in the
