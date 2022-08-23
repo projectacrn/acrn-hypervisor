@@ -244,6 +244,22 @@ To install Ubuntu 20.04:
       sudo apt update
       sudo apt upgrade -y
 
+#. It's convenient to use the network to transfer files between the development
+   and target system, so we recommend installing the openssh-server package on
+   the target system::
+
+      sudo apt install -y openssh-server
+
+   This command will install and start the ssh-server service on the target
+   system.  We'll need to know the target system's IP address to make a
+   connection from the development system, so find it now with this command::
+
+      hostname -I | cut -d ' ' -f 1
+
+#. Make a working directory on the target system that we'll use later::
+
+      mkdir -p ~/acrn-work
+
 Configure Target BIOS Settings
 ===============================
 
@@ -262,8 +278,8 @@ Configure Target BIOS Settings
      provides additional support for managing I/O virtualization).
    * Disable **Secure Boot**. This setting simplifies the steps for this example.
 
-   The names and locations of the BIOS settings differ depending on the target
-   hardware and BIOS version.
+   The names and locations of the BIOS settings depend on the target
+   hardware and BIOS vendor and version.
 
 Generate a Board Configuration File
 =========================================
@@ -288,47 +304,55 @@ Generate a Board Configuration File
       directory.
 
 #. Copy the Board Inspector Debian package from the development computer to the
-   target system via USB disk as follows:
+   target system.
 
-   a. On the development computer, insert the USB disk that you intend to use to
-      copy files.
+   Option 1: Use ``scp``
+      Use the ``scp`` command to copy the Debian package from your development
+      computer to the ``~/acrn-work`` working directory we created on the target
+      system.  Replace ``10.0.0.200`` with the target system's IP address you found earlier::
 
-   #. Ensure that there is only one USB disk inserted by running the following
-      command:
+         scp ~/acrn-work/acrn-hypervisor/build/acrn-board-inspector*.deb acrn@10.0.0.200:~/acrn-work
 
-      .. code-block:: bash
+   Option 2: Use a USB disk
+       a. On the development computer, insert the USB disk that you intend to use to
+          copy files.
 
-         ls /media/$USER
+       #. Ensure that there is only one USB disk inserted by running the following
+          command:
 
-      Confirm that only one disk name appears. You'll use that disk name in the following steps.
+          .. code-block:: bash
 
-   #. Copy the Board Inspector Debian package to the USB disk:
+             ls /media/$USER
 
-      .. code-block:: bash
+          Confirm that only one disk name appears. You'll use that disk name in the following steps.
 
-         cd ~/acrn-work/
-         disk="/media/$USER/"$(ls /media/$USER)
-         cp -r acrn-hypervisor/build/acrn-board-inspector*.deb "$disk"/
-         sync && sudo umount "$disk"
+       #. Copy the Board Inspector Debian package to the USB disk:
 
-   #. Remove the USB stick from the development computer and insert it into the target system.
+          .. code-block:: bash
 
-   #. Copy the Board Inspector Debian package from the USB disk to the target:
+             cd ~/acrn-work/
+             disk="/media/$USER/"$(ls /media/$USER)
+             cp -r acrn-hypervisor/build/acrn-board-inspector*.deb "$disk"/
+             sync && sudo umount "$disk"
 
-      .. code-block:: bash
+       #. Remove the USB stick from the development computer and insert it into the target system.
 
-         mkdir -p ~/acrn-work
-         disk="/media/$USER/"$(ls /media/$USER)
-         cp -r "$disk"/acrn-board-inspector*.deb  ~/acrn-work
+       #. Copy the Board Inspector Debian package from the USB disk to the target:
 
-#. Install the Board Inspector Debian package on the target system:
+          .. code-block:: bash
+
+             mkdir -p ~/acrn-work
+             disk="/media/$USER/"$(ls /media/$USER)
+             cp -r "$disk"/acrn-board-inspector*.deb  ~/acrn-work
+
+#. Now that we've got the Board Inspector Debian package on the target system, install it there:
 
    .. code-block:: bash
 
       cd  ~/acrn-work
       sudo apt install -y ./acrn-board-inspector*.deb
 
-#. Reboot the system:
+#. Reboot the target system:
 
    .. code-block:: bash
 
@@ -356,28 +380,37 @@ Generate a Board Configuration File
 
       ls ./my_board.xml
 
-#. Copy ``my_board.xml`` from the target to the development computer via USB
-   disk as follows:
+#. Copy ``my_board.xml`` from the target to the development computer.  Again we
+   have two options:
 
-   a. Make sure the USB disk is connected to the target.
+   Option 1: Use ``scp``
+      From your development computer, use the ``scp`` command to copy the Debian
+      package from your target system back to the ``~/acrn-work`` directory on
+      your development computer.
+      Replace ``10.0.0.200`` with the target system's IP address you found earlier::
 
-   #. Copy ``my_board.xml`` to the USB disk:
+         scp acrn@10.0.0.200:~/acrn-work/my_board.xml ~/acrn-work/
 
-      .. code-block:: bash
+   Option 2: Use a USB disk
+       a. Make sure the USB disk is connected to the target.
 
-         disk="/media/$USER/"$(ls /media/$USER)
-         cp ~/acrn-work/my_board.xml "$disk"/
-         sync && sudo umount "$disk"
+       #. Copy ``my_board.xml`` to the USB disk:
 
-   #. Insert the USB disk into the development computer.
+          .. code-block:: bash
 
-   #. Copy ``my_board.xml`` from the USB disk to the development computer:
+             disk="/media/$USER/"$(ls /media/$USER)
+             cp ~/acrn-work/my_board.xml "$disk"/
+             sync && sudo umount "$disk"
 
-      .. code-block:: bash
+       #. Insert the USB disk into the development computer.
 
-         disk="/media/$USER/"$(ls /media/$USER)
-         cp "$disk"/my_board.xml ~/acrn-work
-         sync && sudo umount "$disk"
+       #. Copy ``my_board.xml`` from the USB disk to the development computer:
+
+          .. code-block:: bash
+
+             disk="/media/$USER/"$(ls /media/$USER)
+             cp "$disk"/my_board.xml ~/acrn-work
+             sync && sudo umount "$disk"
 
 .. _gsg-dev-setup:
 
@@ -615,31 +648,51 @@ Build ACRN
          linux-libc-dev_5.10.115-acrn-service-vm-1_amd64.deb
 
 #. Copy all the necessary files generated on the development computer to the
-   target system by USB disk as follows:
+   target system, using one of these two options:
 
-   a. Insert the USB disk into the development computer and run these commands:
+   Option 1: Use ``scp``
+      Use the ``scp`` command to copy files from your development system to 
+      to the target system.
+      Replace ``10.0.0.200`` with the target system's IP address you found earlier::
 
-      .. code-block:: bash
+         scp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
+             ~/acrn-work/*acrn-service-vm*.deb \
+             ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh \
+             ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl
+             acrn@10.0.0.200:~/acrn-work
 
-         disk="/media/$USER/"$(ls /media/$USER)
-         cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb "$disk"/
-         cp ~/acrn-work/*acrn-service-vm*.deb "$disk"/
-         cp ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh "$disk"/
-         cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
-         sync && sudo umount "$disk"
+      Then, go to the target system and put the ``iasl`` tool in its proper
+      place::
 
-   #. Insert the USB disk you just used into the target system and run these
-      commands to copy the files locally:
-
-      .. code-block:: bash
-
-         disk="/media/$USER/"$(ls /media/$USER)
-         cp "$disk"/acrn-my_board-MyConfiguration*.deb ~/acrn-work
-         cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
-         cp "$disk"/launch_user_vm_id1.sh ~/acrn-work
-         sudo cp "$disk"/iasl /usr/sbin/
+         cd ~/acrn-work
+         sudo cp iasl /usr/sbin/
          sudo chmod a+x /usr/sbin/iasl
-         sync && sudo umount "$disk"
+
+
+   Option 2: by USB disk
+       a. Insert the USB disk into the development computer and run these commands:
+
+          .. code-block:: bash
+
+             disk="/media/$USER/"$(ls /media/$USER)
+             cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb "$disk"/
+             cp ~/acrn-work/*acrn-service-vm*.deb "$disk"/
+             cp ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh "$disk"/
+             cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
+             sync && sudo umount "$disk"
+
+       #. Insert the USB disk you just used into the target system and run these
+          commands to copy the files locally:
+
+          .. code-block:: bash
+
+             disk="/media/$USER/"$(ls /media/$USER)
+             cp "$disk"/acrn-my_board-MyConfiguration*.deb ~/acrn-work
+             cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
+             cp "$disk"/launch_user_vm_id1.sh ~/acrn-work
+             sudo cp "$disk"/iasl /usr/sbin/
+             sudo chmod a+x /usr/sbin/iasl
+             sync && sudo umount "$disk"
 
 .. _gsg-install-acrn:
 
@@ -648,7 +701,7 @@ Build ACRN
 Install ACRN
 ************
 
-#. Install the ACRN Debian package and ACRN kernel Debian packages using these
+#. On the target system, install the ACRN Debian package and ACRN kernel Debian packages using these
    commands:
 
    .. code-block:: bash
@@ -664,7 +717,7 @@ Install ACRN
       reboot
 
 #. Confirm that you see the GRUB menu with the "ACRN multiboot2" entry. Select
-   it and proceed to booting ACRN. (It may be autoselected, in which case it
+   it and proceed to booting ACRN. (It may be auto-selected, in which case it
    will boot with this option automatically in 5 seconds.)
 
    .. code-block:: console
@@ -811,6 +864,9 @@ Launch the User VM
 Next Steps
 **************
 
-:ref:`overview_dev` describes the ACRN configuration process, with links to
-additional details.
+* :ref:`overview_dev` describes the ACRN configuration process, with links to
+  additional details.
 
+* A follow-on :ref:`GSG_sample_app` tutorial shows how to
+  configure, build, and run a more real-world sample application with a Real-time
+  VM communicating with an HMI VM via inter-VM shared memory (IVSHMEM).
