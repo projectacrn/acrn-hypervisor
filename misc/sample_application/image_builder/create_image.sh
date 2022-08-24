@@ -147,7 +147,8 @@ personality=linux
 preserve-environment=true
 EOF
 
-    sudo sed -i -e '3,9 s/^/#/' /etc/schroot/default/nssdatabases && \
+    sudo sed -ie "/passwd/d;/shadow/d;/group/d;/gshadow/d" \
+        /etc/schroot/desktop/nssdatabases && \
     sudo mv ${temp_file} /etc/schroot/chroot.d/acrn-guest && \
         sudo chown root:root /etc/schroot/chroot.d/acrn-guest
 }
