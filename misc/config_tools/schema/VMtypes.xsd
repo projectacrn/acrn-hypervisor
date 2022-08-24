@@ -46,7 +46,11 @@
   <xs:all>
     <xs:element name="pcpu_id" type="xs:integer">
       <xs:annotation acrn:title="pCPU ID"
-		     acrn:options="//processors//thread/cpu_id/text()" acrn:options-sorted-by="int">
+                     acrn:options="//processors//thread/cpu_id/text()"
+                     acrn:option-names="if (count(distinct-values(//processors//thread/core_type)) &gt; 1)
+                                        then (for $thread in //processors//thread return concat($thread/cpu_id, ' (', if ($thread/core_type = 'Core') then 'P-Core' else 'E-Core', ')'))
+                                        else //processors//thread/cpu_id/text()"
+                     acrn:options-sorted-by="int">
         <xs:documentation>ID of the pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
       </xs:annotation>
     </xs:element>
