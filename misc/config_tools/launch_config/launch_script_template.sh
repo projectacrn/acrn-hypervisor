@@ -87,8 +87,8 @@ function unmount_partition() {
 # Generators of device model parameters
 
 function add_cpus() {
-    # Each parameter of this function is considered the processor ID (as is reported in /proc/cpuinfo) of a CPU assigned
-    # to a post-launched RTVM.
+    # Each parameter of this function is considered the apicid of processor (as is reported in /proc/cpuinfo) of
+    # a CPU assigned to a post-launched RTVM.
 
     if [ "${vm_type}" = "RTVM" ] || [ "${scheduler}" = "SCHED_NOOP" ]; then
         offline_cpus $*
