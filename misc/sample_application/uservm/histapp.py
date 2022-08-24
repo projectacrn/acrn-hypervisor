@@ -26,7 +26,7 @@ def histapp():
 	create_hist()
 
 	#Send the histogram as a webpage to the user
-	return send_file("hist.png", mimetype='image/png')
+	return send_file("/root/hist.png", mimetype='image/png')
 
 #Creates the user histogram and saves to hist.png
 def create_hist():
@@ -52,7 +52,7 @@ def create_hist():
 	plt.title("ACRN Sample Application cyclictest display (unoptimized)")
 	plt.xlabel("Latency Value (microseconds)")
 	plt.ylabel("Count Percentage      " + f"{count:,}")
-	plt.savefig("hist.png")
+	plt.savefig("/root/hist.png")
 
 	return figure
 
