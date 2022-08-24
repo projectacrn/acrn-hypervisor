@@ -34,8 +34,11 @@
             </label>
           </b-col>
           <b-col>
-            <b-form-select :state="validateCPUAffinity(cpu.pcpu_id)" v-model="cpu.pcpu_id"
-                           :options="pcpuid_enum"></b-form-select>
+            <b-form-select :state="validateCPUAffinity(cpu.pcpu_id)" v-model="cpu.pcpu_id">
+              <option v-for="pcpu in pcpuid_enum.enum" :value="pcpu">
+                {{pcpuid_enum.enumNames[pcpuid_enum.enum.indexOf(pcpu)]}}
+              </option>
+            </b-form-select>
             <b-form-invalid-feedback>
               pCPU ID is required!
             </b-form-invalid-feedback>
@@ -117,7 +120,7 @@ export default {
       return vueUtils.getPathVal(this.rootFormData, 'vm_type') === 'RTVM'
     },
     pcpuid_enum() {
-      return window.getCurrentFormSchemaData().BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id.enum
+      return window.getCurrentFormSchemaData().BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id
     },
     uiOptions() {
       return formUtils.getUiOptions({
@@ -140,7 +143,7 @@ export default {
   },
   methods: {
     validateCPUAffinity(pcpu_id) {
-      return _.isNumber(pcpu_id) && this.pcpuid_enum.indexOf(pcpu_id) >= 0
+      return _.isNumber(pcpu_id) && this.pcpuid_enum.enum.indexOf(pcpu_id) >= 0
     },
     vCPUName(index) {
       return `${this.rootFormData.name} vCPU ${index}`
