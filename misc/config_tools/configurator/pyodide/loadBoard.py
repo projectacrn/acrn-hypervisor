@@ -22,15 +22,16 @@ def get_dynamic_scenario(board):
     """
     board_xml = etree.fromstring(board)
 
-    def get_enum(source, options, obj_type):
+    def get_enum(source, options, option_names, obj_type):
         elements = [str(x) for x in elementpath.select(source, options) if x]
-        elements = list(set(elements))
+        element_names = [str(x) for x in elementpath.select(source, option_names) if x]
+        elements = list(set(zip(elements, element_names)))
         if not elements:
-            elements = ['']
+            elements = [('', '')]
         # TODO: Add more converters if needed
         enum_type_convert = {'integer': lambda x: int(x) if x else 0}
         if obj_type in enum_type_convert.keys():
-            elements = [enum_type_convert[obj_type](x) for x in elements]
+            elements = [(enum_type_convert[obj_type](x[0]), x[1]) for x in elements]
         return elements
 
     def dynamic_enum(**enum_setting):
@@ -40,13 +41,14 @@ def get_dynamic_scenario(board):
             for key in ['function', 'source']
         ]
         # value from given
-        selector, sorted_func, obj_type = [enum_setting[key] for key in ['selector', 'sorted', 'type']]
+        selector, name_selector, sorted_func, obj_type = [enum_setting[key] for key in ['selector', 'name-selector', 'sorted', 'type']]
 
         # get enum data
-        enum = function(source, selector, obj_type)
+        enum = function(source, selector, name_selector, obj_type)
         if sorted_func:
-            enum = sorted(enum, key=eval(sorted_func))
-        return enum
+            fn = eval(sorted_func)
+            enum = sorted(enum, key=lambda x: fn(x[0]))
+        return zip(*enum)
 
     def dynamic_enum_apply(obj):
         # get json schema enum obj
@@ -56,7 +58,9 @@ def get_dynamic_scenario(board):
             if enum_setting['type'] == 'dynamicEnum':
                 enum_setting['type'] = obj.get('type', '')
                 # replace json schema obj enum field data
-                obj['enum'] = dynamic_enum(**enum_setting)
+                enum, enum_names = dynamic_enum(**enum_setting)
+                obj['enum'] = enum
+                obj['enumNames'] = enum_names
         return obj
 
     data = json.loads(scenario_json_schema, object_hook=dynamic_enum_apply)
