@@ -226,6 +226,7 @@ struct acrn_ioeventfd {
 #define ACRN_IOEVENTFD_FLAG_PIO		0x01
 #define ACRN_IOEVENTFD_FLAG_DATAMATCH	0x02
 #define ACRN_IOEVENTFD_FLAG_DEASSIGN	0x04
+#define ACRN_IOEVENTFD_FLAG_ASYNCIO	0x08
        /** file descriptor of the eventfd of this ioeventfd */
        int32_t fd;
        /** flag for ioeventfd ioctl */
