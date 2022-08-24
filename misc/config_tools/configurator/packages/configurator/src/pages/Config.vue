@@ -232,6 +232,12 @@ export default {
       let haveService = false;
       this.scenario.vm.map((vmConfig) => {
         let vmID = vmConfig['@id'];
+        if (vmConfig['name'] && (/^VM(\d+)$/).test(vmConfig['name'])) {
+          let temp = vmConfig['name'].replace(/\D/g, ' ')
+          if (maxVMID < parseInt(temp)) {
+            maxVMID = parseInt(temp)
+          }
+        }
         if (vmID > maxVMID) {
           maxVMID = vmID
         }
