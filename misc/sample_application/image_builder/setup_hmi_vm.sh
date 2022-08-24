@@ -41,12 +41,19 @@ function add_normal_user() {
 
 function enable_services() {
     services=(ssh.service isc-dhcp-server)
-    sudo ssh-keygen -A
     for service in ${services[*]}
     do
         systemctl enable ${service}
 	systemctl unmask ${service}
     done
+}
+
+function config_ssh() {
+
+    sudo sed -ie 's/PasswordAuthentication no/PasswordAuthentication yes/g' \
+	    /etc/ssh/sshd_config
+    sudo ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
+    sudo ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
 }
 
 # Change current working directory to the root to avoid "target is busy" errors
@@ -60,3 +67,4 @@ try_step "Installing GNOME desktop" install_desktop
 try_step "Changing the password of the root user" change_root_password
 try_step "Enable root user login" enable_root_login
 try_step "Adding the normal user acrn" add_normal_user
+try_step "Configure the ssh service" config_ssh
