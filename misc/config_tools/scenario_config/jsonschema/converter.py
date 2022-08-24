@@ -340,11 +340,13 @@ class XS2JS:
 
             # get description
             if 'xs:annotation' in element:
+                annotation = element['xs:annotation']
+
                 # title
-                js_ele['title'] = element['xs:annotation'].get('@acrn:title', name)
+                js_ele['title'] = annotation.get('@acrn:title', name)
 
                 # documentation
-                documentation: str = element['xs:annotation'].get('xs:documentation', None)
+                documentation: str = annotation.get('xs:documentation', None)
                 if documentation is None or documentation.strip() == '':
                     documentation = ''
                 if documentation:
@@ -352,13 +354,14 @@ class XS2JS:
                 js_ele['description'] = documentation
 
                 # dynamic enum
-                if '@acrn:options' in element['xs:annotation'] and 'dynamicEnum' in self.features:
+                if '@acrn:options' in annotation and 'dynamicEnum' in self.features:
                     dynamic_enum = {
                         'type': 'dynamicEnum',
                         'function': 'get_enum',
                         'source': 'board_xml',
-                        'selector': element['xs:annotation']['@acrn:options'],
-                        'sorted': element['xs:annotation'].get('@acrn:options-sorted-by', None)
+                        'selector': annotation['@acrn:options'],
+                        'name-selector': annotation['@acrn:option-names'] if '@acrn:option-names' in annotation else annotation['@acrn:options'],
+                        'sorted': annotation.get('@acrn:options-sorted-by', None)
                     }
                     # enum should be applied to array items instead of array itself
                     if 'items' in js_ele:
@@ -367,10 +370,10 @@ class XS2JS:
                         js_ele['enum'] = dynamic_enum
 
                 # widget and its options
-                self.convert_widget_config(element['xs:annotation'], js_ele)
+                self.convert_widget_config(annotation, js_ele)
 
                 # Error messages
-                self.convert_errormsg_config(element['xs:annotation'], js_ele)
+                self.convert_errormsg_config(annotation, js_ele)
 
             properties[name] = js_ele
 
