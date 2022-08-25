@@ -1570,6 +1570,10 @@ virtio_gpu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* VGA ioports regs [0x400~0x41f] */
 	gpu->vga.gc = gc_init(info.width, info.height, ctx->fb_base);
 	gpu->vga.dev = vga_init(gpu->vga.gc, 0);
+	if (gpu->vga.dev == NULL) {
+		pr_err("%s: fail to init vga.\n", __func__);
+		return -1;
+	}
 	/* Bochs Display regs [0x500~0x516]*/
 	gpu->vga.vberegs.xres = info.width;
 	gpu->vga.vberegs.yres = info.height;
