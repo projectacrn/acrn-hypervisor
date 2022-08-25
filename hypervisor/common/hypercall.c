@@ -545,6 +545,34 @@ int32_t hcall_setup_sbuf(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 	return ret;
 }
 
+int32_t hcall_asyncio_assign(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		 __unused uint64_t param1, uint64_t param2)
+{
+	struct acrn_asyncio_info asyncio_info;
+	struct acrn_vm *vm = vcpu->vm;
+	int ret = -1;
+
+	if (copy_from_gpa(vm, &asyncio_info, param2, sizeof(asyncio_info)) == 0) {
+		add_asyncio(target_vm, asyncio_info.type, asyncio_info.addr, asyncio_info.fd);
+		ret = 0;
+	}
+	return ret;
+}
+
+int32_t hcall_asyncio_deassign(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		 __unused uint64_t param1, uint64_t param2)
+{
+	struct acrn_asyncio_info asyncio_info;
+	struct acrn_vm *vm = vcpu->vm;
+	int ret = -1;
+
+	if (copy_from_gpa(vm, &asyncio_info, param2, sizeof(asyncio_info)) == 0) {
+		remove_asyncio(target_vm, asyncio_info.type, asyncio_info.addr, asyncio_info.fd);
+		ret = 0;
+	}
+	return ret;
+}
+
 /**
  * @brief notify request done
  *

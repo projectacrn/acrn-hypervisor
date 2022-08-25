@@ -525,6 +525,33 @@ int32_t hcall_set_callback_vector(struct acrn_vcpu *vcpu, struct acrn_vm *target
 int32_t hcall_setup_sbuf(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
 /**
+ * @brief Assign an asyncio to a VM.
+ *
+ * @param vcpu not used
+ * @param target_vm which VM the asyncio belongs.
+ * @param param1 guest physical address. This gpa points to
+ *              struct acrn_asyncio_info
+ * @param param2 not used
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_asyncio_assign(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		 __unused uint64_t param1, uint64_t param2);
+/**
+ * @brief Deassign an asyncio from a VM.
+ *
+ * @param vcpu not used
+ * @param target_vm which VM the asyncio belongs.
+ * @param param1 guest physical address. This gpa points to
+ *              struct acrn_asyncio_info
+ * @param param2 not used
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_asyncio_deassign(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		 __unused uint64_t param1, uint64_t param2);
+
+/**
  * @brief Setup the hypervisor NPK log.
  *
  * @param vcpu Pointer to vCPU that initiates the hypercall

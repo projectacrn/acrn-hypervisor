@@ -26,6 +26,7 @@
  */
 
 #define ACRN_IO_REQUEST_MAX		16U
+#define ACRN_ASYNCIO_MAX		64U
 
 #define ACRN_IOREQ_STATE_PENDING	0U
 #define ACRN_IOREQ_STATE_COMPLETE	1U
@@ -342,6 +343,12 @@ struct acrn_io_request_buffer {
 	};
 };
 
+struct acrn_asyncio_info {
+	uint32_t type;
+	uint64_t addr;
+	uint64_t fd;
+};
+
 /**
  * @brief Info to create a VM, the parameter for HC_CREATE_VM hypercall
  */
@@ -471,6 +478,7 @@ struct acrn_irqline_ops {
 	uint32_t gsi;
 	uint32_t op;
 };
+
 
 /**
  * @brief Info to inject a MSI interrupt to VM
