@@ -408,8 +408,14 @@ def gen_px_cx(config):
 
 def gen_pci_hide(config):
     """Generate hide pci information for this platform"""
+
+    scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
+    hidden_pdev_list = [x.replace('.', ':') for x in scenario_etree.xpath(f"//HIDDEN_PDEV/text()")]
+
     if board_cfg_lib.BOARD_NAME in list(board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB.keys()) and board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME] != 0:
-        hidden_pdev_list = board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME]
+        hidden_pdev_list += board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME] + scenario_pdev_list
+
+    if len(hidden_pdev_list) > 0:
         hidden_pdev_num = len(hidden_pdev_list)
         print("const union pci_bdf plat_hidden_pdevs[MAX_HIDDEN_PDEVS_NUM] = {", file=config)
         for hidden_pdev_i in range(hidden_pdev_num):
