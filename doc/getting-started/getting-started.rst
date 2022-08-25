@@ -53,10 +53,11 @@ Before you begin, make sure your machines have the following prerequisites:
   - USB keyboard and mouse
   - Monitor
   - Ethernet cable and Internet access
-  - A second USB disk with minimum 1GB capacity to copy files between the
-    development computer and target system (this guide offers steps for
-    copying via USB disk, but you can use another method, such as using ``scp``
-    to copy files over the local network, if you prefer)
+  - A second USB disk with minimum 16GB capacity. Format your USB disk with a
+    files system that supports files greater than 4GB: extFAT or NTFS, but not
+    FAT32. We'll use this USB disk to copy files between the development
+    computer and target system. Instead of a USB drive, you can copy files
+    between systems over the network using the ``scp`` command.)
   - Local storage device (NVMe or SATA drive, for example).  We recommend having
     40GB or more of free space.
 
@@ -110,7 +111,7 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      mkdir ~/acrn-work
+      mkdir -p ~/acrn-work
 
 #. Install the necessary ACRN build tools:
 
@@ -202,7 +203,7 @@ Install OS on the Target
 
 The target system needs Ubuntu Desktop 20.04 LTS to run the Board Inspector
 tool. You can read the full instructions to download, create a bootable USB
-stick, and `Install Ubuntu desktop
+drive, and `Install Ubuntu desktop
 <https://ubuntu.com/tutorials/install-ubuntu-desktop#1-overview>`_ on the Ubuntu
 site.  We'll provide a summary here:
 
@@ -335,7 +336,7 @@ Generate a Board Configuration File
              cp -r acrn-hypervisor/build/acrn-board-inspector*.deb "$disk"/
              sync && sudo umount "$disk"
 
-       #. Remove the USB stick from the development computer and insert it into the target system.
+       #. Remove the USB disk from the development computer and insert it into the target system.
 
        #. Copy the Board Inspector Debian package from the USB disk to the target:
 
