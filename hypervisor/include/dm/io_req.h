@@ -40,6 +40,13 @@ struct io_request {
 	} reqs;
 };
 
+struct asyncio_desc {
+	uint32_t type;
+	uint64_t addr;
+	uint64_t fd;
+	struct list_head list;
+};
+
 /**
  * @brief Definition of a IO port range
  */
@@ -293,6 +300,10 @@ void unregister_mmio_emulation_handler(struct acrn_vm *vm,
 void deinit_emul_io(struct acrn_vm *vm);
 
 int init_asyncio(struct acrn_vm *vm, uint64_t *hva);
+
+int add_asyncio(struct acrn_vm *vm, uint32_t type, uint64_t addr, uint64_t fd);
+
+int remove_asyncio(struct acrn_vm *vm, uint32_t type, uint64_t addr, uint64_t fd);
 /**
  * @}
  */

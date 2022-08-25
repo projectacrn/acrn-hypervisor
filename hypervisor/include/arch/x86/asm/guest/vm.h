@@ -28,6 +28,7 @@
 #include <asm/cpu_caps.h>
 #include <asm/e820.h>
 #include <asm/vm_config.h>
+#include <io_req.h>
 #ifdef CONFIG_HYPERV_ENABLED
 #include <asm/guest/hyperv.h>
 #endif
@@ -144,6 +145,10 @@ struct acrn_vm {
 	uint16_t vm_id;		    /* Virtual machine identifier */
 	enum vm_state state;	/* VM state */
 	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
+	struct asyncio_desc	aio_desc[ACRN_ASYNCIO_MAX];
+	struct list_head aiodesc_queue;
+	spinlock_t asyncio_lock; /* Spin-lock used to protect asyncio add/remove for a VM */
+
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	/* vm_state_lock used to protect vm/vcpu state transition,

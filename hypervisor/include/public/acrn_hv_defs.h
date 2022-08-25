@@ -50,6 +50,9 @@
 #define HC_ID_IOREQ_BASE            0x30UL
 #define HC_SET_IOREQ_BUFFER         BASE_HC_ID(HC_ID, HC_ID_IOREQ_BASE + 0x00UL)
 #define HC_NOTIFY_REQUEST_FINISH    BASE_HC_ID(HC_ID, HC_ID_IOREQ_BASE + 0x01UL)
+#define HC_ASYNCIO_ASSIGN           BASE_HC_ID(HC_ID, HC_ID_IOREQ_BASE + 0x02UL)
+#define HC_ASYNCIO_DEASSIGN         BASE_HC_ID(HC_ID, HC_ID_IOREQ_BASE + 0x03UL)
+
 
 /* Guest memory management */
 #define HC_ID_MEM_BASE              0x40UL
