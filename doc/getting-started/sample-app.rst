@@ -442,7 +442,7 @@ Copy files from the development system to your target system
    HMI_VM and RT_VM images, Debian packages for the Service VM and
    Hypervisor, launch scripts, and the iasl tool built following the
    Getting Started guide. You can use ``scp`` to copy across the local network,
-   or use a USB drive:
+   or use a USB stick:
 
    Option 1: use ``scp`` to copy files over the local network
      Use scp to copy files from your development system to the
@@ -461,20 +461,22 @@ Copy files from the development system to your target system
        sudo ln -s /usr/sbin/iasl /usr/bin/iasl
 
    Option 2: use a USB stick to copy files
-     Insert a USB stick into the development computer
-     and run these commands::
+     Because the VM image files are large, format your USB stick with a file
+     system that supports files greater than 4GB: extFAT or NTFS, but not FAT32.
+
+     Insert a USB stick into the development computer and run these commands::
 
         disk="/media/$USER/"$(ls /media/$USER)
 
         cd ~/acrn-work
-        cp acrn-hypervisor/misc/sample_application/image_builder/*_vm.img rt_vm.img "$disk"
+        cp acrn-hypervisor/misc/sample_application/image_builder/build/*_vm.img rt_vm.img "$disk"
         cp acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb "$disk"
         cp *acrn-service-vm*.deb "$disk"
         cp MyConfiguration/launch_user_vm_id*.sh "$disk"
         cp acpica-unix-20210105/generate/unix/bin/iasl "$disk"
         sync && sudo umount "$disk"
 
-     Move the USB disk you just used to the target system and run
+     Move the USB stick you just used to the target system and run
      these commands to copy the files locally::
 
         disk="/media/$USER/"$(ls /media/$USER)
