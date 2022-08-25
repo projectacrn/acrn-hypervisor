@@ -180,7 +180,7 @@ HANDLE initCom(const char *szStr)
 	return hCom;
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	DWORD recvsize = 0;
 	char recvbuf[BUFF_SIZE];
@@ -191,6 +191,9 @@ int main()
 	bool reboot = false;
 	unsigned int retry_times;
 
+	if (argc > 2)
+		return -1;
+
 	hCom2 = initCom("COM2");
 	if (hCom2 == INVALID_HANDLE_VALUE)
 		return -1;
@@ -200,7 +203,8 @@ int main()
 	if (ClearCommError(hCom2, &dwError, NULL)) {
 		PurgeComm(hCom2, PURGE_TXABORT | PURGE_TXCLEAR);
 	}
-	snprintf(buf, sizeof(buf), SYNC_FMT, WIN_VM_NAME);
+
+	snprintf(buf, sizeof(buf), SYNC_FMT, (argc == 1) ? WIN_VM_NAME : argv[1]);
 	start_uart_resend(buf, MIN_RESEND_TIME);
 	send_message_by_uart(hCom2, buf, strlen(buf));
 	/**
