@@ -660,6 +660,13 @@ class ScenarioUpgrader(ScenarioTransformer):
                 n.text = "n"
         return ret
 
+    def move_hierarchy(self, xsd_element_node, xml_parent_node, new_nodes):
+        element_tag = xsd_element_node.get("name")
+        for n in self.get_from_old_data(xml_parent_node, f"//{element_tag}"):
+            new_nodes.append(n)
+            for child in n.iter():
+                self.old_data_nodes.discard(child)
+
     def move_data_by_xpath(self, xpath, xsd_element_node, xml_parent_node, new_nodes, scenario_xml_only = False, launch_xml_only = False):
         element_tag = xsd_element_node.get("name")
 
@@ -781,6 +788,8 @@ class ScenarioUpgrader(ScenarioTransformer):
         "os_type": move_os_type,
         "virtio_devices": move_virtio_devices,
         "memory": move_memory,
+
+        "CACHE_REGION": move_hierarchy,
 
         "default": move_data_by_same_tag,
     }
