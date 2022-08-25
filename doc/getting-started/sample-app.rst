@@ -569,11 +569,13 @@ Install and Run ACRN on the Target System
 
       dhclient
 
-#. Run the HMI VM Sample Application userApp (in the background) and histapp.py::
+#. Run the HMI VM Sample Application userApp (in the background)::
 
-     ./userApp &
+     sudo /root/userApp &
 
-     python3 histapp.py
+   and then the histapp.py application::
+
+     sudo python3 /root/histapp.py
 
    At this point, the HMI_VM is running and we've started the HMI parts of
    the sample application. Next, we will launch the RT_VM and its parts of
@@ -607,11 +609,13 @@ Install and Run ACRN on the Target System
       (acrn-guest)root@ubuntu:~#
 
 
-#. Run the cyclictest (in the background) and then the rtApp in this RT_VM::
+#. Run the cyclictest in this RT_VM (in the background)::
 
      cyclictest -p 80 --fifo="./data_pipe" -q &
 
-     ./rtApp
+   and then the rtApp in this RT_VM::
+
+     sudo /root/rtApp
 
 Now the two parts of the sample application are running:
 
