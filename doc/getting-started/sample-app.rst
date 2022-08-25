@@ -538,7 +538,7 @@ Install and Run ACRN on the Target System
    script::
 
      sudo chmod +x ~/acrn-work/launch_user_vm_id1.sh
-     sudo ~/acrn-work/launch_user_vm_id1.s
+     sudo ~/acrn-work/launch_user_vm_id1.sh
 
 #. The launch script will start up the HMI_VM and show an Ubuntu login
    prompt in your ssh session (and a graphical login on your target's HDMI
