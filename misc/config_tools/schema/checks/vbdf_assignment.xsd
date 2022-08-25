@@ -24,4 +24,11 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $vm in /acrn-config//vm[./load_order/text() = 'PRE_LAUNCHED_VM' and ./mmio_resources/p2sb/text() = 'y'] satisfies
+                   count(/acrn-config//HIDDEN_PDEV[./text() = '00:1f.1']) = 0">
+    <xs:annotation acrn:severity="error" acrn:report-on="/acrn-config//p2sb[./text() = 'y']">
+      <xs:documentation>Can't passthrough P2SB to VM {/acrn-config//vm[./load_order/text() = 'PRE_LAUNCHED_VM' and .//p2sb/text() = 'y']/name/text()} because '00:1f.1' is set as a hidden device".</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
