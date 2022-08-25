@@ -27,7 +27,6 @@
 
 #define BUFF_SIZE	(32U)
 #define MSG_SIZE	(8U)
-#define VM_NAME_LEN	(sizeof(WIN_VM_NAME))
 #define UVM_SOCKET_PORT (0x2001U)
 #define READ_INTERVAL	(100U) /* The time unit is microsecond */
 #define MIN_RESEND_TIME (3U)
@@ -180,16 +179,24 @@ HANDLE initCom(const char *szStr)
 	return hCom;
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	DWORD recvsize = 0;
 	char recvbuf[BUFF_SIZE];
-	char buf[VM_NAME_LEN + 5];
+	char buf[BUFF_SIZE];
 	DWORD dwError;
 	DWORD threadId;
 	bool poweroff = false;
 	bool reboot = false;
 	unsigned int retry_times;
+
+	if (argc > 2)
+		return -1;
+
+	if ((argc == 2) && (sizeof(argv[1]) + 5 > BUFF_SIZE)) {
+		printf("VM name (%s) is too long\n", argv[1]);
+		return -1;
+	}
 
 	hCom2 = initCom("COM2");
 	if (hCom2 == INVALID_HANDLE_VALUE)
@@ -200,7 +207,8 @@ int main()
 	if (ClearCommError(hCom2, &dwError, NULL)) {
 		PurgeComm(hCom2, PURGE_TXABORT | PURGE_TXCLEAR);
 	}
-	snprintf(buf, sizeof(buf), SYNC_FMT, WIN_VM_NAME);
+
+	snprintf(buf, sizeof(buf), SYNC_FMT, (argc == 1) ? WIN_VM_NAME : argv[1]);
 	start_uart_resend(buf, MIN_RESEND_TIME);
 	send_message_by_uart(hCom2, buf, strlen(buf));
 	/**
