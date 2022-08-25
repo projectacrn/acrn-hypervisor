@@ -8,7 +8,6 @@
 #include <sys/param.h>
 
 #include <stdint.h>
-#include <assert.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -325,28 +324,50 @@ vga_mem_rd_handler(struct vmctx *ctx, uint64_t addr, void *arg1)
 		/*
 		 * extended mode: base 0xa0000 size 128k
 		 */
-		offset -=0xa0000;
-		offset &= (128 * KB - 1);
-		break;
+		if (offset >= 0xa0000) {
+			offset -=0xa0000;
+			offset &= (128 * KB - 1);
+			break;
+		} else {
+			pr_err("%s: invalid addr=0x%x.\n", __func__, addr);
+			return 0xFFFFFFFF;
+		}
 	case 0x1:
 		/*
 		 * EGA/VGA mode: base 0xa0000 size 64k
 		 */
-		offset -=0xa0000;
-		offset &= (64 * KB - 1);
-		break;
+		if (offset >= 0xa0000) {
+			offset -=0xa0000;
+			offset &= (64 * KB - 1);
+			break;
+		} else {
+			pr_err("%s: invalid addr=0x%x.\n", __func__, addr);
+			return 0xFFFFFFFF;
+		}
 	case 0x2:
 		/*
 		 * monochrome text mode: base 0xb0000 size 32kb
 		 */
-		assert(0);
+		if (offset >= 0xb0000) {
+			offset -=0xb0000;
+			offset &= (32 * KB - 1);
+			break;
+		} else {
+			pr_err("%s: invalid addr=0x%x.\n", __func__, addr);
+			return 0xFFFFFFFF;
+		}
 	case 0x3:
 		/*
 		 * color text mode and CGA: base 0xb8000 size 32kb
 		 */
-		offset -=0xb8000;
-		offset &= (32 * KB - 1);
-		break;
+		if (offset >= 0xb8000) {
+			offset -=0xb8000;
+			offset &= (32 * KB - 1);
+			break;
+		} else {
+			pr_err("%s: invalid addr=0x%x.\n", __func__, addr);
+			return 0xFFFFFFFF;
+		}
 	}
 
 	/* Fill latches. */
@@ -357,7 +378,8 @@ vga_mem_rd_handler(struct vmctx *ctx, uint64_t addr, void *arg1)
 
 	if (vd->vga_gc.gc_mode_rm) {
 		/* read mode 1 */
-		assert(0);
+		pr_err("VGA GC: doesn't support read mode 1.\n");
+		return 0xFFFFFFFF;
 	}
 
 	map_sel = vd->vga_gc.gc_read_map_sel;
@@ -389,28 +411,50 @@ vga_mem_wr_handler(struct vmctx *ctx, uint64_t addr, uint8_t val, void *arg1)
 		/*
 		 * extended mode: base 0xa0000 size 128kb
 		 */
-		offset -=0xa0000;
-		offset &= (128 * KB - 1);
-		break;
+		if (offset >= 0xa0000) {
+			offset -=0xa0000;
+			offset &= (128 * KB - 1);
+			break;
+		} else {
+			pr_err("%s: invalid addr 0x%x.\n, __func__, addr");
+			return;
+		}
 	case 0x1:
 		/*
 		 * EGA/VGA mode: base 0xa0000 size 64kb
 		 */
-		offset -=0xa0000;
-		offset &= (64 * KB - 1);
-		break;
+		if (offset >= 0xa0000) {
+			offset -=0xa0000;
+			offset &= (64 * KB - 1);
+			break;
+		} else {
+			pr_err("%s: invalid addr 0x%x.\n, __func__, addr");
+			return;
+		}
 	case 0x2:
 		/*
 		 * monochrome text mode: base 0xb0000 size 32kb
 		 */
-		assert(0);
+		if (offset >= 0xb0000) {
+			offset -=0xb0000;
+			offset &= (32 * KB - 1);
+			break;
+		} else {
+			pr_err("%s: invalid addr 0x%x.\n, __func__, addr");
+			return;
+		}
 	case 0x3:
 		/*
 		 * color text mode and CGA: base 0xb8000 size 32kb
 		 */
-		offset -=0xb8000;
-		offset &= (32 * KB - 1);
-		break;
+		if (offset >= 0xb8000) {
+			offset -=0xb8000;
+			offset &= (32 * KB - 1);
+			break;
+		} else {
+			pr_err("%s: invalid addr 0x%x.\n, __func__, addr");
+			return;
+		}
 	}
 
 	set_reset = vd->vga_gc.gc_set_reset;
@@ -777,8 +821,8 @@ vga_port_in_handler(struct vmctx *ctx, int in, int port, int bytes,
 			*val = vd->vga_crtc.crtc_line_compare;
 			break;
 		default:
+			*val = 0xFF;
 			pr_err("VGA CRTC: port 0x%04x at index %d\n", port, vd->vga_crtc.crtc_index);
-			assert(0);
 			break;
 		}
 		break;
@@ -806,8 +850,8 @@ vga_port_in_handler(struct vmctx *ctx, int in, int port, int bytes,
 			*val = vd->vga_atc.atc_color_select;
 			break;
 		default:
+			*val = 0xFF;
 			pr_err("VGA ATC inb 0x%04x at index %d\n", port , vd->vga_atc.atc_index);
-			assert(0);
 			break;
 		}
 		break;
@@ -832,8 +876,8 @@ vga_port_in_handler(struct vmctx *ctx, int in, int port, int bytes,
 			*val = vd->vga_seq.seq_mm;
 			break;
 		default:
+			*val = 0xFF;
 			pr_err("VGA SEQ: inb 0x%04x at index %d\n", port, vd->vga_seq.seq_index);
-			assert(0);
 			break;
 		}
 		break;
@@ -879,8 +923,8 @@ vga_port_in_handler(struct vmctx *ctx, int in, int port, int bytes,
 			*val = vd->vga_gc.gc_bit_mask;
 			break;
 		default:
+			*val = 0xFF;
 			pr_err("VGA GC: inb 0x%04x at index %d\n", port, vd->vga_crtc.crtc_index);
-			assert(0);
 			break;
 		}
 		break;
@@ -888,7 +932,7 @@ vga_port_in_handler(struct vmctx *ctx, int in, int port, int bytes,
 		*val = vd->vga_misc;
 		break;
 	case GEN_INPUT_STS0_PORT:
-		assert(0);
+		pr_err("VGA: doesn't support Status #0.\n");
 		break;
 	case GEN_INPUT_STS1_MONO_PORT:
 	case GEN_INPUT_STS1_COLOR_PORT:
@@ -899,16 +943,15 @@ vga_port_in_handler(struct vmctx *ctx, int in, int port, int bytes,
 		break;
 	case GEN_FEATURE_CTRL_PORT:
 		// OpenBvd calls this with bytes = 1
-		//assert(0);
 		*val = 0;
 		break;
 	case 0x3c3:
 		*val = 0;
 		break;
 	default:
-		printf("vga_port_in_handler() unhandled port 0x%x\n", port);
-		//assert(0);
-		return (-1);
+		*val = 0xFF;
+		pr_err("%s: unhandled port 0x%x\n", __func__, port);
+		break;
 	}
 
 	return (0);
@@ -1014,14 +1057,15 @@ vga_port_out_handler(struct vmctx *ctx, int in, int port, int bytes,
 			break;
 		default:
 			pr_err("VGA CRTC: outb 0x%04x, 0x%02x at index %d\n", port, val, vd->vga_crtc.crtc_index);
-			assert(0);
 			break;
 		}
 		break;
 	case ATC_IDX_PORT:
 		if (vd->vga_atc.atc_flipflop == 0) {
-			if (vd->vga_atc.atc_index & 0x20)
-				assert(0);
+			if (vd->vga_atc.atc_index & 0x20) {
+				pr_err("VGA ATC: invalid index.\n");
+				break;
+			}
 			vd->vga_atc.atc_index = val & ATC_IDX_MASK;
 		} else {
 			switch (vd->vga_atc.atc_index) {
@@ -1049,7 +1093,6 @@ vga_port_out_handler(struct vmctx *ctx, int in, int port, int bytes,
 				break;
 			default:
 				pr_err("VGA ATC: outb 0x%04x, 0x%02x at index %d\n", port, val, vd->vga_atc.atc_index);
-				assert(0);
 				break;
 			}
 		}
@@ -1081,11 +1124,12 @@ vga_port_out_handler(struct vmctx *ctx, int in, int port, int bytes,
 		case SEQ_MEMORY_MODE:
 			vd->vga_seq.seq_mm = val;
 			/* Windows queries Chain4 */
-			//assert((vd->vga_seq.seq_mm & SEQ_MM_C4) == 0);
+			if (vd->vga_seq.seq_mm & SEQ_MM_C4) {
+				pr_err("%s: invalid sequencer memory mode, need Chain-4 bit enabled.\n", __func__);
+			}
 			break;
 		default:
 			pr_err("VGA SEQ: outb 0x%04x, 0x%02x at index %d\n", port, val, vd->vga_seq.seq_index);
-			assert(0);
 			break;
 		}
 		break;
@@ -1143,7 +1187,10 @@ vga_port_out_handler(struct vmctx *ctx, int in, int port, int bytes,
 		case GC_MODE:
 			vd->vga_gc.gc_mode = val;
 			vd->vga_gc.gc_mode_c4 = (val & GC_MODE_C4) != 0;
-			assert(!vd->vga_gc.gc_mode_c4);
+			if (!vd->vga_gc.gc_mode_c4) {
+				pr_err("%s: invalid Chain 4 bit value %d.\n",
+						__func__, vd->vga_gc.gc_mode_c4);
+			}
 			vd->vga_gc.gc_mode_oe = (val & GC_MODE_OE) != 0;
 			vd->vga_gc.gc_mode_rm = (val >> 3) & 0x1;
 			vd->vga_gc.gc_mode_wm = val & 0x3;
@@ -1165,7 +1212,6 @@ vga_port_out_handler(struct vmctx *ctx, int in, int port, int bytes,
 			break;
 		default:
 			pr_err("VGA GC: outb 0x%04x, 0x%02x at index %d\n", port, val, vd->vga_gc.gc_index);
-			assert(0);
 			break;
 		}
 		break;
@@ -1181,7 +1227,6 @@ vga_port_out_handler(struct vmctx *ctx, int in, int port, int bytes,
 //		break;
 	default:
 		pr_dbg("vga_port_out_handler() unhandled port 0x%x, val 0x%x\n", port, val);
-		//assert(0);
 		return (-1);
 	}
 	return (0);
@@ -1232,7 +1277,6 @@ vga_port_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		}
 		break;
 	default:
-		assert(0);
 		return (-1);
 	}
 
@@ -1258,7 +1302,10 @@ vga_init(struct gfx_ctx *gc, int io_only)
 		iop.arg = vd;
 
 		error = register_inout(&iop);
-		assert(error == 0);
+		if (error == -1) {
+			pr_err("%s: failed to register inout port.\n", __func__);
+			return NULL;
+		}
 	}
 
 	vd->gc_image = gc->gc_image;
@@ -1274,7 +1321,10 @@ vga_init(struct gfx_ctx *gc, int io_only)
 	vd->mr.handler = vga_mem_handler;
 	vd->mr.arg1 = vd;
 	error = register_mem_fallback(&vd->mr);
-	assert(error == 0);
+	if (error == -1) {
+		pr_err("%s: failed to register mem fallback.\n", __func__);
+		return NULL;
+	}
 
 	vd->vga_ram = malloc(256 * KB);
 	memset(vd->vga_ram, 0, 256 * KB);
@@ -1367,7 +1417,7 @@ vga_vbe_write(struct vmctx *ctx, int vcpu, struct vga *vga,
 		break;
 	default:
 		pr_err("%s: write unknown size %d\n", __func__, size);
-		break;
+		return;
 	}
 
 	switch (offset) {
@@ -1431,7 +1481,7 @@ void vga_deinit(struct vga *vga)
 {
 	struct vga_vdev *vd;
 	struct inout_port iop;
-	int port;
+	int port, rc;
 
 	vd = (struct vga_vdev *)vga->dev;
 
@@ -1442,12 +1492,16 @@ void vga_deinit(struct vga *vga)
 		iop.handler = NULL;
 		iop.arg = NULL;
 
-		unregister_inout(&iop);
-		//error = unregister_inout(&iop);
-		//assert(error == 0);
+		rc = unregister_inout(&iop);
+		if (rc == -1) {
+			pr_err("%s: fail to unregister inout port.\n", __func__);
+		}
 	}
 
-	unregister_mem_fallback(&vd->mr);
+	rc = unregister_mem_fallback(&vd->mr);
+	if (rc == -1) {
+		pr_err("%s: fail to unregister mem fallback.\n", __func__);
+	}
 
 	free(vd->vga_ram);
 	vd->vga_ram = NULL;
