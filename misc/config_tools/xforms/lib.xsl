@@ -375,6 +375,9 @@
       <xsl:when test="//@board = 'apl-up2'">
         <func:result select="1" />
       </xsl:when>
+      <xsl:when test="count(//HIDDEN_PDEV/text()) > 0">
+        <func:result select="count(//HIDDEN_PDEV/text())" />
+      </xsl:when>
       <xsl:otherwise>
         <func:result select="0" />
       </xsl:otherwise>
