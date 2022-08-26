@@ -659,7 +659,7 @@ Build ACRN
          scp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
              ~/acrn-work/*acrn-service-vm*.deb \
              ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh \
-             ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl
+             ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl \
              acrn@10.0.0.200:~/acrn-work
 
       Then, go to the target system and put the ``iasl`` tool in its proper
