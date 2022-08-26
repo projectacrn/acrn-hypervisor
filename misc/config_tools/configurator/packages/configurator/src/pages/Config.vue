@@ -198,6 +198,7 @@ export default {
       this.updateCurrentFormSchema()
       this.updateCurrentFormData()
       configurator.cat.scenarioLoaded()
+      this.switchTab(-1)
     },
     getSchemaData() {
       return this.schemas
