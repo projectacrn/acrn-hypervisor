@@ -725,6 +725,9 @@ struct acrn_vdev {
 	uint8_t	args[128];
 };
 
+#define ACRN_ASYNCIO_PIO	(0x01U)
+#define ACRN_ASYNCIO_MMIO	(0x02U)
+
 #define SBUF_MAGIC	0x5aa57aa71aa13aa3UL
 #define SBUF_MAX_SIZE	(1UL << 22U)
 #define SBUF_HEAD_SIZE	64U
