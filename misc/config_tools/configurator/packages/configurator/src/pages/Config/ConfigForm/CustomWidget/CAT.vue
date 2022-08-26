@@ -2,24 +2,10 @@
   <div class="py-3">
     <b>Memory Isolation for Performance</b>
 
-    <div class="py-3">
-      <b-form-checkbox
-          v-model="SSRAM_ENABLED" :value="'y'" :uncheckedValue="'n'"
-          :disabled="RDT_ENABLED==='y'">
-        <n-popover trigger="hover" placement="top-start">
-          <template #trigger>
-            <IconInfo/>
-          </template>
-          <span v-html="this.SSRAMInfo.properties.SSRAM_ENABLED.description"></span>
-        </n-popover>
-        Software SRAM (for real-time apps)
-      </b-form-checkbox>
-    </div>
     <div class="d-flex gap-2 flex-column">
       <text>Intel Resource Director Technology</text>
       <b-form-checkbox
           v-model="RDT_ENABLED" :value="'y'" :uncheckedValue="'n'"
-          :disabled="SSRAM_ENABLED==='y'"
           @click="(event)=>checkboxController('RDT_ENABLED',event)">
         <n-popover trigger="hover" placement="top-start">
           <template #trigger>
@@ -32,7 +18,7 @@
       <div class="d-flex flex-column gap-2 ps-3 pb-3">
         <b-form-checkbox
             v-model="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'"
-            :disabled="SSRAM_ENABLED==='y'||VCAT_ENABLED==='y'"
+            :disabled="VCAT_ENABLED==='y'"
             @click="(event)=>checkboxController('CDP_ENABLED',event)">
           <n-popover trigger="hover" placement="top-start">
             <template #trigger>
@@ -44,7 +30,7 @@
         </b-form-checkbox>
         <b-form-checkbox
             v-model="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'"
-            :disabled="SSRAM_ENABLED==='y'||CDP_ENABLED==='y'"
+            :disabled="CDP_ENABLED==='y'"
             @click="(event)=>checkboxController('VCAT_ENABLED',event)">
           <n-popover trigger="hover" placement="top-start">
             <template #trigger>
@@ -181,14 +167,6 @@ export default {
     }
   },
   computed: {
-    SSRAM_ENABLED: {
-      get() {
-        return this.formDataProxy('SSRAM_ENABLED');
-      },
-      set(value) {
-        return this.formDataProxy('SSRAM_ENABLED', value, true);
-      }
-    },
     RDT_ENABLED: {
       get() {
         return this.formDataProxy('RDT_ENABLED');
@@ -217,7 +195,6 @@ export default {
   data() {
     return {
       CAT_INFO: {errorMsg: null, regions: [], summary: {}},
-      SSRAMInfo: this.rootSchema.definitions['SSRAMInfo'],
       RDTType: this.rootSchema.definitions['RDTType'],
       InstructionLocation: {},
     }
@@ -260,7 +237,6 @@ export default {
     },
     formDataProxy(name, data = null, update = false) {
       let path = {
-        'SSRAM_ENABLED': 'FEATURES.SSRAM.SSRAM_ENABLED',
         'RDT_ENABLED': 'FEATURES.RDT.RDT_ENABLED',
         'CDP_ENABLED': 'FEATURES.RDT.CDP_ENABLED',
         'VCAT_ENABLED': 'FEATURES.RDT.VCAT_ENABLED',
@@ -284,27 +260,19 @@ export default {
         // if data is not empty, set value as expected and update CAT_INFO
         if (update) {
           switch (name) {
-            case 'SSRAM_ENABLED':
-              this.formDataProxy('RDT_ENABLED', 'n');
-              this.formDataProxy('CDP_ENABLED', 'n');
-              this.formDataProxy('VCAT_ENABLED', 'n');
-              break;
             case 'RDT_ENABLED':
-              this.formDataProxy('SSRAM_ENABLED', 'n');
               if (data === 'n') {
                 this.formDataProxy('CDP_ENABLED', 'n');
                 this.formDataProxy('VCAT_ENABLED', 'n');
               }
               break;
             case 'CDP_ENABLED':
-              this.formDataProxy('SSRAM_ENABLED', 'n');
               if (data === 'y') {
                 this.formDataProxy('RDT_ENABLED', 'y');
                 this.formDataProxy('VCAT_ENABLED', 'n');
               }
               break;
             case 'VCAT_ENABLED':
-              this.formDataProxy('SSRAM_ENABLED', 'n');
               if (data === 'y') {
                 this.formDataProxy('RDT_ENABLED', 'y');
                 this.formDataProxy('CDP_ENABLED', 'n');

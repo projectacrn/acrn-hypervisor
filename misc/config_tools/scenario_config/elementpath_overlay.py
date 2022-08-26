@@ -25,6 +25,7 @@ class CustomParser(BaseParser):
         # Bit-wise operations
         'bitwise-and',
 
+        'bits-of',
         'has',
         'duplicate-values',
 
@@ -41,29 +42,44 @@ OPERATORS_MAP = {
     'bitwise-and': operator.and_
 }
 
+def hex_to_int(value):
+    if hasattr(value, 'text'):
+        value = value.text
+    if isinstance(value, int):
+        return value
+    elif isinstance(value, (float, Decimal)):
+        return int(value)
+    elif isinstance(value, str) and value.startswith("0x"):
+        return int(value, base=16)
+    else:
+        raise TypeError('invalid type {!r} for integer'.format(type(value)))
+
 @method(function('bitwise-and', nargs=2))
 def evaluate(self, context=None):
-    def to_int(value):
-        if isinstance(value, int):
-            return value
-        elif isinstance(value, (float, Decimal)):
-            return int(value)
-        elif isinstance(value, str) and value.startswith("0x"):
-            return int(value, base=16)
-        else:
-            raise TypeError('invalid type {!r} for xs:{}'.format(type(value), cls.name))
-
     def aux(op):
-        op1, op2 = self.get_operands(context)
-        if op1 is not None and op2 is not None:
-            try:
-                return op(to_int(op1), to_int(op2))
-            except ValueError as err:
-                raise self.error('FORG0001', err) from None
-            except TypeError as err:
-                raise self.error('XPTY0004', err)
+        op1 = self.get_argument(context, 0)
+        op2 = self.get_argument(context, 1)
+
+        try:
+            return op(hex_to_int(op1), hex_to_int(op2))
+        except ValueError as err:
+            raise self.error('FORG0001', err) from None
+        except TypeError as err:
+            raise self.error('XPTY0004', err)
 
     return aux(OPERATORS_MAP[self.symbol])
+
+@method(function('bits-of', nargs=1))
+def evaluate_bits_of(self, context=None):
+    op = self.get_argument(context)
+
+    try:
+        value = hex_to_int(op)
+        for idx, bit in enumerate(reversed(bin(value)[2:])):
+            if bit == '1':
+                yield idx
+    except TypeError as err:
+        raise self.error('XPTY0004', err)
 
 @method(function('has', nargs=2))
 def evaluate_has_function(self, context=None):

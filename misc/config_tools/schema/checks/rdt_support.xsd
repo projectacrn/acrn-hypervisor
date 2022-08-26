@@ -33,13 +33,7 @@
     </xs:annotation>
   </xs:assert>
 
-  <xs:assert test="not (//hv//RDT/RDT_ENABLED = 'y' and //hv//SSRAM/SSRAM_ENABLED = 'y')">
-    <xs:annotation acrn:severity="error" acrn:report-on="//hv//SSRAM/SSRAM_ENABLED">
-      <xs:documentation>The hypervisor Intel Resource Director Technology and Software SRAM settings may not be enabled at the same time.</xs:documentation>
-    </xs:annotation>
-  </xs:assert>
-
-  <xs:assert test="hv//SSRAM_ENABLED = 'n' or empty(vm[load_order ='PRE_LAUNCHED_VM' and vm_type='RTVM']) or
+  <xs:assert test="empty(vm[load_order ='PRE_LAUNCHED_VM' and vm_type='RTVM']) or
 		   every $cap in caches/cache[@level=3]/capability[@id='Software SRAM'] satisfies
 		   (compare($cap/end, '0x80000000') &lt; 0 or compare($cap/start, '0xf8000000') &gt;= 0)">
     <xs:annotation acrn:severity="warning" acrn:report-on="hv//SSRAM_ENABLED">
@@ -58,6 +52,15 @@ This error cannot be fixed by adjusting the configuration. Report a `GitHub issu
                    $needed &lt; $capacity">
     <xs:annotation acrn:severity="error" acrn:report-on="/acrn-config/hv/CACHE_REGION">
       <xs:documentation>The current CAT configuration requires {string($needed)} CLOS IDs, which exceeds the capacity of the platform which supports {string($capacity)} at most.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $cache in //CACHE_ALLOCATION satisfies
+                   every $ssram in //caches/cache[@level=$cache/CACHE_LEVEL and @id=$cache/CACHE_ID]/capability[@id='Software SRAM'] satisfies
+                   every $policy in $cache/POLICY satisfies
+                   bitwise-and($policy/CLOS_MASK, $ssram/waymask) = 0">
+    <xs:annotation acrn:severity="error" acrn:report-on="/acrn-config/hv/CACHE_REGION">
+      <xs:documentation>VM '{$policy/VM}' vCPU '{$policy/VCPU}' cannot use chunk(s) {bits-of($ssram/waymask)} of L{$cache/CACHE_LEVEL} cache (cache ID: {$cache/CACHE_ID}) as those chunks are consumed by software SRAM. </xs:documentation>
     </xs:annotation>
   </xs:assert>
 

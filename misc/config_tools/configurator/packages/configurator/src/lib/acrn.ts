@@ -92,7 +92,6 @@ class CAT {
     private CAT_REGION_INFO: any;
 
     private switches: {
-        SSRAM_ENABLED: boolean,
         RDT_ENABLED: boolean,
         CDP_ENABLED: boolean,
         VCAT_ENABLED: boolean
@@ -141,7 +140,6 @@ class CAT {
 
     formDataProxy(name, data = null, update = false) {
         let path = {
-            'SSRAM_ENABLED': 'FEATURES.SSRAM.SSRAM_ENABLED',
             'RDT_ENABLED': 'FEATURES.RDT.RDT_ENABLED',
             'CDP_ENABLED': 'FEATURES.RDT.CDP_ENABLED',
             'VCAT_ENABLED': 'FEATURES.RDT.VCAT_ENABLED',
@@ -165,27 +163,19 @@ class CAT {
             // if data is not empty, set value as expected and update CAT_INFO
             if (update) {
                 switch (name) {
-                    case 'SSRAM_ENABLED':
-                        this.formDataProxy('RDT_ENABLED', 'n');
-                        this.formDataProxy('CDP_ENABLED', 'n');
-                        this.formDataProxy('VCAT_ENABLED', 'n');
-                        break;
                     case 'RDT_ENABLED':
-                        this.formDataProxy('SSRAM_ENABLED', 'n');
                         if (data === 'n') {
                             this.formDataProxy('CDP_ENABLED', 'n');
                             this.formDataProxy('VCAT_ENABLED', 'n');
                         }
                         break;
                     case 'CDP_ENABLED':
-                        this.formDataProxy('SSRAM_ENABLED', 'n');
                         if (data === 'y') {
                             this.formDataProxy('RDT_ENABLED', 'y');
                             this.formDataProxy('VCAT_ENABLED', 'n');
                         }
                         break;
                     case 'VCAT_ENABLED':
-                        this.formDataProxy('SSRAM_ENABLED', 'n');
                         if (data === 'y') {
                             this.formDataProxy('RDT_ENABLED', 'y');
                             this.formDataProxy('CDP_ENABLED', 'n');
@@ -353,17 +343,7 @@ class CAT {
     }
 
     correctSwitches() {
-        if (this.switches.SSRAM_ENABLED) {
-            if (this.switches.RDT_ENABLED) {
-                this.switches.RDT_ENABLED = false
-            }
-            if (this.switches.CDP_ENABLED) {
-                this.switches.CDP_ENABLED = false
-            }
-            if (this.switches.VCAT_ENABLED) {
-                this.switches.VCAT_ENABLED = false
-            }
-        } else if (this.switches.RDT_ENABLED) {
+        if (this.switches.RDT_ENABLED) {
             if (this.switches.CDP_ENABLED) {
                 if (this.switches.VCAT_ENABLED) {
                     this.switches.VCAT_ENABLED = false
