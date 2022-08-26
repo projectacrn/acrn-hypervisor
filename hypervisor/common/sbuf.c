@@ -64,6 +64,8 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 		to = (void *)sbuf + SBUF_HEAD_SIZE + sbuf->tail;
 
 		(void)memcpy_s(to, sbuf->ele_size, data, sbuf->ele_size);
+		/* make sure write data before update head */
+		cpu_write_memory_barrier();
 
 		if (trigger_overwrite) {
 			sbuf->head = sbuf_next_ptr(sbuf->head,

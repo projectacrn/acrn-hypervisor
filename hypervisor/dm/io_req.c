@@ -7,6 +7,7 @@
 #include <asm/irq.h>
 #include <errno.h>
 #include <logmsg.h>
+#include <sbuf.h>
 
 #define DBG_LEVEL_IOREQ	6U
 
@@ -126,6 +127,73 @@ static inline bool has_complete_ioreq(const struct acrn_vcpu *vcpu)
 	return (get_io_req_state(vcpu->vm, vcpu->vcpu_id) == ACRN_IOREQ_STATE_COMPLETE);
 }
 
+static struct asyncio_desc *get_asyncio_desc(struct acrn_vcpu *vcpu, const struct io_request *io_req)
+{
+	uint64_t addr = 0UL;
+	uint32_t type;
+	struct list_head *pos;
+	struct asyncio_desc *iter_desc;
+	struct acrn_vm *vm = vcpu->vm;
+	struct asyncio_desc *ret = NULL;
+	struct shared_buf *sbuf =
+		(struct shared_buf *)vm->sw.asyncio_sbuf;
+
+	if (sbuf != NULL) {
+		switch (io_req->io_type) {
+		case ACRN_IOREQ_TYPE_PORTIO:
+			addr = io_req->reqs.pio_request.address;
+			type = ACRN_ASYNCIO_PIO;
+			break;
+
+		case ACRN_IOREQ_TYPE_MMIO:
+			addr = io_req->reqs.mmio_request.address;
+			type = ACRN_ASYNCIO_MMIO;
+			break;
+		default:
+			break;
+		}
+
+		if (addr != 0UL) {
+			spinlock_obtain(&vm->asyncio_lock);
+				list_for_each(pos, &vm->aiodesc_queue) {
+					iter_desc = container_of(pos, struct asyncio_desc, list);
+					if ((iter_desc->addr == addr) && (iter_desc->type == type)) {
+						ret = iter_desc;
+						break;
+					}
+				}
+			spinlock_release(&vm->asyncio_lock);
+		}
+	}
+
+	return ret;
+
+}
+static int acrn_insert_asyncio(struct acrn_vcpu *vcpu, const uint64_t asyncio_fd)
+{
+	struct acrn_vm *vm = vcpu->vm;
+	struct shared_buf *sbuf =
+		(struct shared_buf *)vm->sw.asyncio_sbuf;
+	int ret = -ENODEV;
+
+	if (sbuf != NULL) {
+		spinlock_obtain(&vm->asyncio_lock);
+		while (sbuf_put(sbuf, (uint8_t *)&asyncio_fd) == 0U) {
+			/* sbuf is full, try later.. */
+			spinlock_release(&vm->asyncio_lock);
+			asm_pause();
+			if (need_reschedule(pcpuid_from_vcpu(vcpu))) {
+				schedule();
+			}
+			spinlock_obtain(&vm->asyncio_lock);
+		}
+
+		spinlock_release(&vm->asyncio_lock);
+		arch_fire_hsm_interrupt();
+		ret = 0;
+	}
+	return ret;
+}
 /**
  * @brief Deliver \p io_req to Service VM and suspend \p vcpu till its completion
  *
@@ -615,6 +683,7 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status;
 	struct acrn_vm_config *vm_config;
+	struct asyncio_desc *aio_desc;
 
 	vm_config = get_vm_config(vcpu->vm->vm_id);
 
@@ -644,10 +713,16 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		 *
 		 * ACRN insert request to HSM and inject upcall.
 		 */
-		status = acrn_insert_request(vcpu, io_req);
-		if (status == 0) {
-			dm_emulate_io_complete(vcpu);
+		aio_desc = get_asyncio_desc(vcpu, io_req);
+		if (aio_desc) {
+			status = acrn_insert_asyncio(vcpu, aio_desc->fd);
 		} else {
+			status = acrn_insert_request(vcpu, io_req);
+			if (status == 0) {
+				dm_emulate_io_complete(vcpu);
+			}
+		}
+		if (status != 0) {
 			/* here for both IO & MMIO, the direction, address,
 			 * size definition is same
 			 */
