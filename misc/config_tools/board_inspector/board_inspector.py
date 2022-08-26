@@ -12,6 +12,7 @@ import tempfile
 import subprocess # nosec
 import lxml.etree
 import argparse
+from tqdm import tqdm
 from collections import namedtuple
 from importlib import import_module
 
@@ -68,7 +69,7 @@ def check_deps():
     try:
         logger.info("Updating pci.ids for latest PCI device descriptions.")
         res = subprocess.Popen(["update-pciids", "-q"], stderr=subprocess.DEVNULL)
-        if res.wait() != 0:
+        if res.wait(timeout=40) != 0:
             logger.warning(f"Failed to invoke update-pciids. No functional impact is foreseen, but descriptions of PCI devices may be inaccurate.")
     except Exception as e:
         logger.warning(f"Failed to invoke update-pciids: {e}. No functional impact is foreseen, but descriptions of PCI devices may be unavailable.")
@@ -146,64 +147,72 @@ def summary_loginfo(board_xml):
 def main(board_name, board_xml, args):
     print(f"Generating board XML {board_name}. This may take a few minutes...")
 
-    # Check that the dependencies are met
-    check_deps()
+    with tqdm(total=100) as pbar:
+        # Check that the dependencies are met
+        check_deps()
+        pbar.update(10)
 
-    # Check if this is native os
-    native_check()
+        # Check if this is native os
+        native_check()
 
-    # Check if there exists multiple PCI domains (which is not supported)
-    check_pci_domains()
+        # Check if there exists multiple PCI domains (which is not supported)
+        check_pci_domains()
 
-    # Bring up all cores
-    bring_up_cores()
+        # Bring up all cores
+        bring_up_cores()
 
-    try:
-        # First invoke the legacy board parser to create the board XML ...
-        legacy_parser = os.path.join(script_dir, "legacy", "board_parser.py")
-        env = { "PYTHONPATH": script_dir, "PATH": os.environ["PATH"] }
-        subprocess.run([sys.executable, legacy_parser, args.board_name, "--out", board_xml], check=True, env=env)
+        try:
+            # First invoke the legacy board parser to create the board XML ...
+            legacy_parser = os.path.join(script_dir, "legacy", "board_parser.py")
+            env = { "PYTHONPATH": script_dir, "PATH": os.environ["PATH"] }
+            subprocess.run([sys.executable, legacy_parser, args.board_name, "--out", board_xml], check=True, env=env)
+            # ... then load the created board XML and append it with additional data by invoking the extractors.
+            board_etree = lxml.etree.parse(board_xml)
+            root_node = board_etree.getroot()
 
-        # ... then load the created board XML and append it with additional data by invoking the extractors.
-        board_etree = lxml.etree.parse(board_xml)
-        root_node = board_etree.getroot()
+            # Clear the whitespaces between adjacent children under the root node
+            root_node.text = None
+            for elem in root_node:
+                elem.tail = None
 
-        # Clear the whitespaces between adjacent children under the root node
-        root_node.text = None
-        for elem in root_node:
-            elem.tail = None
 
-        # Create nodes for each kind of resource
-        root_node.append(lxml.etree.Element("processors"))
-        root_node.append(lxml.etree.Element("caches"))
-        root_node.append(lxml.etree.Element("memory"))
-        root_node.append(lxml.etree.Element("ioapics"))
-        root_node.append(lxml.etree.Element("devices"))
-        root_node.append(lxml.etree.Element("device-classes"))
+            # Create nodes for each kind of resource
+            root_node.append(lxml.etree.Element("processors"))
+            root_node.append(lxml.etree.Element("caches"))
+            root_node.append(lxml.etree.Element("memory"))
+            root_node.append(lxml.etree.Element("ioapics"))
+            root_node.append(lxml.etree.Element("devices"))
+            root_node.append(lxml.etree.Element("device-classes"))
+            pbar.update(10)
 
-        extractors_path = os.path.join(script_dir, "extractors")
-        extractors = [f for f in os.listdir(extractors_path) if f[:2].isdigit()]
-        for extractor in sorted(extractors):
-            module_name = os.path.splitext(extractor)[0]
-            module = import_module(f"extractors.{module_name}")
-            if args.basic and getattr(module, "advanced", False):
-                continue
-            module.extract(args, board_etree)
+            extractors_path = os.path.join(script_dir, "extractors")
+            extractors = [f for f in os.listdir(extractors_path) if f[:2].isdigit()]
+            for extractor in sorted(extractors):
+                module_name = os.path.splitext(extractor)[0]
+                module = import_module(f"extractors.{module_name}")
+                if args.basic and getattr(module, "advanced", False):
+                    continue
+                module.extract(args, board_etree)
+                if "50-acpi-namespace.py" in module_name:
+                    pbar.update(30)
+                else:
+                    pbar.update(10)
 
-        # Validate the XML against XSD assertions
-        count = validator.validate_board(os.path.join(script_dir, 'schema', 'boardchecks.xsd'), board_etree)
-        if count == 0:
-            logger.info("All board checks passed.")
+            # Validate the XML against XSD assertions
+            count = validator.validate_board(os.path.join(script_dir, 'schema', 'boardchecks.xsd'), board_etree)
+            if count == 0:
+                logger.info("All board checks passed.")
 
-        #Format and out put the log info
-        summary_loginfo(board_xml)
+            # Finally overwrite the output with the updated XML
+            board_etree.write(board_xml, pretty_print=True)
 
-        # Finally overwrite the output with the updated XML
-        board_etree.write(board_xml, pretty_print=True)
+            #Format and out put the log info
+            summary_loginfo(board_xml)
+            pbar.update(10)
 
-    except subprocess.CalledProcessError as e:
-        logger.critical(e)
-        sys.exit(1)
+        except subprocess.CalledProcessError as e:
+            logger.critical(e)
+            sys.exit(1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
