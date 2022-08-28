@@ -303,6 +303,7 @@ div.numbered-step h2::before {
   font-weight: bold;
   line-height: 1.6em;
   margin-right: 5px;
+  margin-left: -1.8em;
   text-align: center;
   width: 1.6em;}
 
