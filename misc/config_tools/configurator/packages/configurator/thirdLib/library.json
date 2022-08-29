@@ -78,16 +78,16 @@
       "name": "elementpath@2.5.0",
       "check": {
         "type": "file",
-        "path": "elementpath-2.4.0-py3-none-any.whl"
+        "path": "elementpath-2.5.0-py3-none-any.whl"
       },
       "clean": [
-        "elementpath-2.4.0-py3-none-any.whl"
+        "elementpath-2.5.0-py3-none-any.whl"
       ],
       "install": [
         {
           "type": "download",
-          "from": "https://files.pythonhosted.org/packages/7e/35/55a92f54f018c20e717223a0561bb60bf5053170c86b4b3624368f2da137/elementpath-2.4.0-py3-none-any.whl",
-          "to": "elementpath-2.4.0-py3-none-any.whl"
+          "from": "https://files.pythonhosted.org/packages/db/39/42134fabe580e6c7da7f65e94bd3a41aa6263d887e43214a0f8a5306e701/elementpath-2.5.0-py3-none-any.whl",
+          "to": "elementpath-2.5.0-py3-none-any.whl"
         }
       ]
     },
