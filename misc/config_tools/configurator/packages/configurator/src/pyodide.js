@@ -15,7 +15,7 @@ export default async function () {
         import micropip
         await micropip.install([
             './thirdLib/xmltodict-0.12.0-py2.py3-none-any.whl',
-            './thirdLib/elementpath-2.4.0-py3-none-any.whl',
+            './thirdLib/elementpath-2.5.0-py3-none-any.whl',
             './thirdLib/defusedxml-0.7.1-py2.py3-none-any.whl',
             './thirdLib/xmlschema-1.9.2-py3-none-any.whl',
             './thirdLib/acrn_config_tools-3.0-py3-none-any.whl'
