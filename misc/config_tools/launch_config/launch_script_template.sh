@@ -129,7 +129,7 @@ function add_virtual_device() {
         # Create the tap device
         if [[ ${options} =~ tap=([^,]+) ]]; then
             tap_conf="${BASH_REMATCH[1]}"
-            create_tap "${tap_conf}" >> /dev/stderr
+            create_tap "${tap_conf}" >&2
         fi
     fi
 
