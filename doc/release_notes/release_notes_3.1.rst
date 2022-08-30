@@ -62,15 +62,7 @@ Improved Board Inspector Collection and Reporting
   potential issues or limitations of your target system that could impact ACRN
   configuration options.  Read more in :ref:`board_inspector_tool`.
 
-.. _Vecow SPC-7100:
-   https://marketplace.intel.com/s/offering/a5b3b000000PReMAAW/vecow-spc7100-series-11th-gen-intel-core-i7i5i3-processor-ultracompact-f
-
-Commercial off-the-shelf Tiger Lake machine support
-  The `Vecow SPC-7100`_ system is validated and supported by ACRN. This is a
-  commercially available 11th Generation Intel |reg| Core |trade|  Processor (codenamed Tiger
-  Lake) from Vecow. Read more in the :ref:`hardware` documentation.
-
-Sample Application
+Sample Application with Two Post-Launched VMs
   With this v3.1 release, we provide a follow-on :ref_`GSG_sample_app` to the
   :ref:`gsg`.  This sample application shows how to create two VMs that are
   launched on your target system running ACRN.  One VM is a real-time VM running
@@ -84,6 +76,14 @@ Sample Application
   make up this application. Full code for the sample application is provided in
   the acrn-hypervisor GitHub repo :acrn_file:`misc/sample_application`.
 
+VM Support for Multiple Displays
+  The virtio-gpu mechanism is enhanced to support VMs with multiple displays.
+  TODO: add reference to tutorial
+
+Improved TSC frequency reporting
+  The hypervisor now reports TSC frequency in KHz so that VMs can get that number
+  without calibrating to a high precision timer.
+
 Upgrading to v3.1 from Previous Releases
 ****************************************
 
@@ -96,8 +96,8 @@ more information about the target system that is needed by the v3.1
 Configurator.
 
 We recommend you generate a new board XML for your target system with the v3.1
-Board Inspector.  You should also use the v3.1 Configurator to generate a new
-scenario XML file and launch scripts. Scenario XML files and launch scripts
+Board Inspector and use the v3.1 Configurator to generate a new
+scenario XML file and launch scripts. Board XML and Scenario XML files
 created by previous ACRN versions will not work with the v3.1 ACRN hypervisor
 build process and could produce unexpected errors during the build.
 
