@@ -27,6 +27,28 @@
   resolved "https://registry.yarnpkg.com/@juggle/resize-observer/-/resize-observer-3.3.1.tgz#b50a781709c81e10701004214340f25475a171a0"
   integrity sha512-zMM9Ds+SawiUkakS7y94Ymqx+S0ORzpG3frZirN3l+UlXUmSUR7hF4wxCVqW+ei94JzV5kt0uXBcoOEAuiydrw==
 
+"@lljj/vjsf-utils@1.14.0":
+  version "1.14.0"
+  resolved "https://registry.yarnpkg.com/@lljj/vjsf-utils/-/vjsf-utils-1.14.0.tgz#7261cf2df370c7f6b1c8d69d3173d2b26c32f8f4"
+  integrity sha512-dqRn6hSN5sYUvaPrCo6srzGy2Uj17hc95R1WHYhQtLNKVEXuoCrs65y/Ez4amT/sShvvWq6/z9klh1hugqlHSA==
+  dependencies:
+    ajv "^6.10.2"
+
+"@lljj/vue3-form-core@1.14.0":
+  version "1.14.0"
+  resolved "https://registry.yarnpkg.com/@lljj/vue3-form-core/-/vue3-form-core-1.14.0.tgz#9965000b6cfea36ddecaa44f5e670257c193951a"
+  integrity sha512-7ZSB66mbQc3iiHa0pRgSYEw+TiC2Et8Z8Zg7IRVjsc5jM/0eQl6Jj9+gecn8Qrb/WWgiQqEMo6ArpgXhdvXxDw==
+  dependencies:
+    "@lljj/vjsf-utils" "1.14.0"
+
+"@lljj/vue3-form-naive@^1.12.2":
+  version "1.14.0"
+  resolved "https://registry.yarnpkg.com/@lljj/vue3-form-naive/-/vue3-form-naive-1.14.0.tgz#5b1d288f311cf7504e32de9e408741e916599bd3"
+  integrity sha512-xN12Rw2z6s5JbhyKtwWa6FjTsge4S5pKsUENOStEhx35psrkhSHCtVEHd2RtrRsgV9neeI0ixGIsYG5i+39hTQ==
+  dependencies:
+    "@lljj/vjsf-utils" "1.14.0"
+    "@lljj/vue3-form-core" "1.14.0"
+
 "@popperjs/core@^2.11.5":
   version "2.11.5"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.5.tgz#db5a11bf66bdab39569719555b0f76e138d7bd64"
@@ -750,10 +772,10 @@ naive-ui@^2.28.1:
     vooks "^0.2.12"
     vueuc "^0.4.32"
 
-nanoid@^3.3.1:
-  version "3.3.3"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.3.tgz#fd8e8b7aa761fe807dba2d1b98fb7241bb724a25"
-  integrity sha512-p1sjXuopFs0xg+fPASzQ28agW1oHD7xDsd9Xkf3T15H3c/cifrFHVwrh74PdoklAPi+i7MdRsE47vm2r6JoB+w==
+nanoid@^3.3.4:
+  version "3.3.4"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.4.tgz#730b67e3cd09e2deacf03c027c81c9d9dbc5e8ab"
+  integrity sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==
 
 node-fetch@^2.6.7:
   version "2.6.7"
@@ -782,12 +804,12 @@ picomatch@^2.0.4, picomatch@^2.2.1, picomatch@^2.2.2:
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.1.tgz#3ba3833733646d9d3e4995946c1365a67fb07a42"
   integrity sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==
 
-postcss@^8.1.10, postcss@^8.4.12:
-  version "8.4.12"
-  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.12.tgz#1e7de78733b28970fa4743f7da6f3763648b1905"
-  integrity sha512-lg6eITwYe9v6Hr5CncVbK70SoioNQIq81nsaG86ev5hAidQvmOeETBqs7jm43K2F5/Ley3ytDtriImV6TpNiSg==
+postcss@^8.1.10, postcss@^8.4.13:
+  version "8.4.16"
+  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.16.tgz#33a1d675fac39941f5f445db0de4db2b6e01d43c"
+  integrity sha512-ipHE1XBvKzm5xI7hiHCZJCSugxvsdq2mPnsq5+UF+VHCjiBvtDrlxJfMBToWaP9D5XlgNmcFGqoHmUn0EYEaRQ==
   dependencies:
-    nanoid "^3.3.1"
+    nanoid "^3.3.4"
     picocolors "^1.0.0"
     source-map-js "^1.0.2"
 
@@ -922,13 +944,13 @@ vfonts@^0.0.3:
   resolved "https://registry.yarnpkg.com/vfonts/-/vfonts-0.0.3.tgz#999d66fecea18efee3f2b966c81101ae8ce01a29"
   integrity sha512-nguyw8L6Un8eelg1vQ31vIU2ESxqid7EYmy8V+MDeMaHBqaRSkg3dTBToC1PR00D89UzS/SLkfYPnx0Wf23IQQ==
 
-vite@^2.9.2:
-  version "2.9.6"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-2.9.6.tgz#29f1b33193b0de9e155d67ba0dd097501c3c3281"
-  integrity sha512-3IffdrByHW95Yjv0a13TQOQfJs7L5dVlSPuTt432XLbRMriWbThqJN2k/IS6kXn5WY4xBLhK9XoaWay1B8VzUw==
+vite@^2.9.13:
+  version "2.9.13"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-2.9.13.tgz#859cb5d4c316c0d8c6ec9866045c0f7858ca6abc"
+  integrity sha512-AsOBAaT0AD7Mhe8DuK+/kE4aWYFMx/i0ZNi98hJclxb4e0OhQcZYUrvLjIaQ8e59Ui7txcvKMiJC1yftqpQoDw==
   dependencies:
     esbuild "^0.14.27"
-    postcss "^8.4.12"
+    postcss "^8.4.13"
     resolve "^1.22.0"
     rollup "^2.59.0"
   optionalDependencies:
