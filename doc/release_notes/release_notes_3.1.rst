@@ -68,7 +68,7 @@ Improved Board Inspector Collection and Reporting
   :ref:`board_inspector_tool`.
 
 Sample Application with Two Post-Launched VMs
-  With this v3.1 release, we provide a follow-on :ref_`GSG_sample_app` to the
+  With this v3.1 release, we provide a follow-on :ref:`GSG_sample_app` to the
   :ref:`gsg`.  This sample application shows how to create two VMs that are
   launched on your target system running ACRN.  One VM is a real-time VM running
   `cyclictest
@@ -168,7 +168,8 @@ Sample Application User Guide
 We've also made edits throughout the documentation to improve clarity,
 formatting, and presentation.  We started updating feature enabling tutorials
 based on the new Configurator, and will continue updating them after the v3.1
-release (in the `latest documentation <https://docs.projectacrn.org>`_).
+release (in the `latest documentation <https://docs.projectacrn.org>`_). Here
+are some of the more significant updates:
 
 .. rst-class:: rst-columns2
 
