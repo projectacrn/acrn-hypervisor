@@ -457,7 +457,9 @@ Copy files from the development system to your target system
            acpica-unix-20210105/generate/unix/bin/iasl \
            acrn@10.0.0.200:~/acrn-work
 
-       sudo mv ~/acrn-work/iasl /usr/sbin
+     Then on the target system run these commands::
+
+       sudo cp ~/acrn-work/iasl /usr/sbin
        sudo ln -s /usr/sbin/iasl /usr/bin/iasl
 
    Option 2: use a USB stick to copy files
