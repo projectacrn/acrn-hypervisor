@@ -21,7 +21,7 @@
   <xs:assert test="every $pcpu in /acrn-config/vm[vm_type = 'RTVM']//cpu_affinity//pcpu_id satisfies
                    count(/acrn-config/vm[@id != $pcpu/ancestor::vm//companion_vmid ]//cpu_affinity[.//pcpu_id = $pcpu]) &lt;= 1">
     <xs:annotation acrn:severity="error" acrn:report-on="//vm//cpu_affinity[.//pcpu_id = $pcpu]">
-      <xs:documentation>Physical CPU {$pcpu} is assigned to RTVM "[{$pcpu/ancestor::vm/name}]" and thus may not be shared among multiple VMs. Look for, and probably remove, any affinity assignments to CPU {$pcpu} in this VM {//vm[cpu_affinity//pcpu_id = $pcpu]/name} settings.</xs:documentation>
+      <xs:documentation>Because physical CPU {$pcpu} is assigned to a Real-time VM "{$pcpu/ancestor::vm/name}", it may not be shared with any other VM. Look for, and probably remove, duplicate affinity assignments to CPU {$pcpu} in these VM {//vm[cpu_affinity//pcpu_id = $pcpu]/name} settings.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
@@ -35,14 +35,14 @@
   <xs:assert test="every $vm in /acrn-config/vm[load_order != 'SERVICE_VM'] satisfies
                    count(distinct-values(processors//thread[cpu_id = $vm//cpu_affinity//pcpu_id]/core_type)) &lt;= 1">
     <xs:annotation acrn:severity="error" acrn:report-on="$vm//cpu_affinity">
-      <xs:documentation>The physical CPUs allocated to the VM "{$vm/name}" have both performance cores {processors//thread[cpu_id = $vm//cpu_affinity//pcpu_id and core_type = 'Core']/cpu_id} and efficiency cores {processors//thread[cpu_id = $vm//cpu_affinity//pcpu_id and core_type = 'Atom']/cpu_id}, which is unsupported. Remove either all performance or all efficiency cores from the CPU affinity.</xs:documentation>
+      <xs:documentation>The physical CPUs allocated to VM "{$vm/name}" have both performance cores: {processors//thread[cpu_id = $vm//cpu_affinity//pcpu_id and core_type = 'Core']/cpu_id} and efficiency cores: {processors//thread[cpu_id = $vm//cpu_affinity//pcpu_id and core_type = 'Atom']/cpu_id}, which is unsupported. Choose either all performance or all efficiency cores for CPU affinity.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
   <xs:assert test="every $vm in /acrn-config/vm[vm_type = 'RTVM'] satisfies
                    count($vm//pcpu_id[./text() = '0']) = 0">
     <xs:annotation acrn:severity="error" acrn:report-on="$vm//cpu_affinity">
-      <xs:documentation>The CPU 0 can't assign to RTVM {$vm/name/text()}.</xs:documentation>
+      <xs:documentation>CPU 0 can not be assigned to Real-time VM "{$vm/name/text()}". Remove CPU 0 affinity setting for this VM.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
