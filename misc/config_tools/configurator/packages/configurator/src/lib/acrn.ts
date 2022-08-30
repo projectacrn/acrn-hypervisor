@@ -369,7 +369,7 @@ class CAT {
                     this.switches.VCAT_ENABLED = false
                 }
             }
-        } else if (this.switches.CDP_ENABLED || this.switches.VCAT_ENABLED) {
+        } else if (this.switches.VCAT_ENABLED) {
             if (!this.switches.RDT_ENABLED) {
                 this.switches.RDT_ENABLED = true
             }
