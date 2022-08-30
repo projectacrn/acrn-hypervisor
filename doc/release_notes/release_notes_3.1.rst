@@ -60,7 +60,12 @@ Improved Board Inspector Collection and Reporting
   are possible, as well as possible values for target system resources. The v3.1
   Board Inspector has improved scanning and provides more messages about
   potential issues or limitations of your target system that could impact ACRN
-  configuration options.  Read more in :ref:`board_inspector_tool`.
+  configuration options.
+
+  The Board Inspector is updated to probe beyond CPUID
+  information for Cache Allocation Technology (CAT) support and also detects
+  availability of L3 CAT by accessing the CAT MSRs directly. Read more in
+  :ref:`board_inspector_tool`.
 
 Sample Application with Two Post-Launched VMs
   With this v3.1 release, we provide a follow-on :ref_`GSG_sample_app` to the
@@ -76,7 +81,7 @@ Sample Application with Two Post-Launched VMs
   make up this application. Full code for the sample application is provided in
   the acrn-hypervisor GitHub repo :acrn_file:`misc/sample_application`.
 
-VM Support for Multiple Displays
+Multiple-Displays Support for VMs
   The virtio-gpu mechanism is enhanced to support VMs with multiple displays.
   TODO: add reference to tutorial
 
@@ -165,8 +170,13 @@ formatting, and presentation.  We started updating feature enabling tutorials
 based on the new Configurator, and will continue updating them after the v3.1
 release (in the `latest documentation <https://docs.projectacrn.org>`_).
 
-* <TO DO: doc list>
+.. rst-class:: rst-columns2
 
+* :ref:`gsg`
+* :ref:`GSG_sample_app`
+* :ref:`rdt_configuration`
+* :ref:`acrn-dm_parameters-and-launch-script`
+* :ref:`scenario-config-options`
 
 Fixed Issues Details
 ********************
