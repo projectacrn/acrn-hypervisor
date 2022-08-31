@@ -128,8 +128,8 @@ higher value (lower severity) are discarded.</xs:documentation>
   virtual time-based scheduling algorithm. It dispatches the runnable thread with the
   earliest effective virtual time.
 - ``Priority Based Scheduling``: The priority based scheduler supports vCPU scheduling based on pre-configured priorities.
-
-Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:documentation>
+    </xs:documentation>
+    <xs:documentation>Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="SCHED_NOOP">
