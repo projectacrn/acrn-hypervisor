@@ -25,6 +25,13 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $pcpu in /acrn-config/vm[own_pcpu = 'y']//cpu_affinity//pcpu_id satisfies
+                   count(/acrn-config/vm[@id != $pcpu/ancestor::vm//companion_vmid]//cpu_affinity[.//pcpu_id = $pcpu]) &lt;= 1">
+    <xs:annotation acrn:severity="error" acrn:report-on="//vm//cpu_affinity[.//pcpu_id = $pcpu]">
+      <xs:documentation>Physical CPU {$pcpu} is assigned to a VM "[{$pcpu/ancestor::vm/name}]" exclusively owns the physical CPUs assigned to it. Look for, and probably remove, any affinity assignments to CPU {$pcpu} in these VMs {//vm[cpu_affinity//pcpu_id = $pcpu and name != $pcpu/ancestor::vm/name]/name} settings.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
   <xs:assert test="every $vm in /acrn-config/vm[load_order != 'SERVICE_VM'] satisfies
                    count($vm/cpu_affinity/pcpu[pcpu_id != '']) > 0">
   <xs:annotation acrn:severity="error" acrn:report-on="$vm/cpu_affinity">

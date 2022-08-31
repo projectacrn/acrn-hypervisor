@@ -370,6 +370,11 @@ These settings can only be changed at build time.</xs:documentation>
       <xs:annotation acrn:title="" acrn:views="basic, advanced" acrn:applicable-vms="pre-launched, post-launched">
       </xs:annotation>
     </xs:element>
+    <xs:element name="own_pcpu" type="Boolean" default="n">
+      <xs:annotation acrn:title="Exclusively owns physical CPUs" acrn:views="">
+        <xs:documentation>Enable a VM exclusively owns the physical CPUs assigned to it.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="cpu_affinity" type="CPUAffinityConfigurations" minOccurs="0">
       <xs:annotation acrn:title="Physical CPU affinity" acrn:views="basic" acrn:applicable-vms="pre-launched, post-launched">
         <xs:documentation>Select a subset of physical CPUs that this VM can use. More than one can be selected.</xs:documentation>

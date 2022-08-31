@@ -3,6 +3,26 @@
     <b>{{ uiOptions.title }}</b>
     <div class="p-4">
       <div v-if="defaultVal.pcpu && defaultVal.pcpu.length>0">
+        <b-row v-if="is_std_vm">
+          <label>
+            <n-popover trigger="hover" placement="top-start" style="width: 500px">
+              <template #trigger>
+                <IconInfo/>
+              </template>
+              <span> Enable a VM exclusively owns the physical CPUs assigned to it. </span>
+            </n-popover>
+          Exclusively owns physical CPUs: </label>
+          <b-col>own_pcpu</b-col>
+          <b-col>
+            <b-form-checkbox v-model="pcpu_owned" :value="'y'" :uncheckedValue="'n'"
+              @click="click_own_pcpu"
+            >
+            </b-form-checkbox>
+          </b-col>
+          <b-col></b-col>
+          <b-col></b-col>
+          <b-col></b-col>
+        </b-row>
         <b-row>
           <b-col></b-col>
           <b-col></b-col>
@@ -119,8 +139,14 @@ export default {
     isRTVM() {
       return vueUtils.getPathVal(this.rootFormData, 'vm_type') === 'RTVM'
     },
+    is_std_vm() {
+      return vueUtils.getPathVal(this.rootFormData, 'vm_type') === 'STANDARD_VM'
+    },
     pcpuid_enum() {
       return window.getCurrentFormSchemaData().BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id
+    },
+    pcpu_owned() {
+      return vueUtils.getPathVal(this.rootFormData, 'own_pcpu')
     },
     uiOptions() {
       return formUtils.getUiOptions({
@@ -150,6 +176,10 @@ export default {
     },
     addPCPU(index) {
       this.defaultVal.pcpu.splice(index + 1, 0, {pcpu_id: null, real_time_vcpu: "n"})
+    },
+    click_own_pcpu() {
+      let newValue = this.pcpu_owned === 'y' ? 'n' : 'y';
+      vueUtils.setPathVal(this.rootFormData, 'own_pcpu', newValue)
     },
     removePCPU(index) {
       if (this.defaultVal.pcpu.length === 1) {
