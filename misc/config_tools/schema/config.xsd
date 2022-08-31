@@ -282,8 +282,8 @@ These settings can only be changed at build time.</xs:documentation>
     </xs:element>
     <xs:element name="vuart_connections" type="VuartConnectionsType">
       <xs:annotation acrn:title="Inter-VM virtual UART connection" acrn:views="basic">
-        <xs:documentation>Specify the vUART connection settings.
-Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
+          <xs:documentation>Specify the vUART connection settings.</xs:documentation>
+          <xs:documentation>Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="DEBUG_OPTIONS" type="DebugOptionsType">
@@ -304,13 +304,6 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
 	<xs:documentation>Miscellaneous options for workarounds.</xs:documentation>
       </xs:annotation>
     </xs:element>
-
-    <xs:element name="HIDDEN_PDEV_REGION" type="HiddenDevType" minOccurs="0">
-      <xs:annotation acrn:views="">
-        <xs:documentation>Specify the hidden devices.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-
     <xs:element name="CACHE_REGION" type="CacheRegionType" minOccurs="0">
       <xs:annotation acrn:views="advanced">
         <xs:documentation>Specify the cache setting.</xs:documentation>
@@ -344,7 +337,8 @@ Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
     </xs:element>
     <xs:element name="os_type" type="OSType" default="Non-Windows OS">
       <xs:annotation acrn:title="OS type" acrn:applicable-vms="post-launched" acrn:views="basic">
-	<xs:documentation>Select the OS type for this VM. This is required to run Windows in a User VM. See :ref:`acrn-dm_parameters` for how to include this in the Device Model arguments.</xs:documentation>
+          <xs:documentation>Select the OS type for this VM. This is required to run Windows in a User VM.</xs:documentation>
+          <xs:documentation>See :ref:`acrn-dm_parameters` for how to include this in the Device Model arguments.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="vuart0" type="Boolean" default="n">
@@ -475,8 +469,8 @@ This feature enables you to view the VM's GPU output in the Service VM.</xs:docu
             <xs:annotation acrn:title="Virtio console device" acrn:views="basic">
               <xs:documentation>Virtio console device for data input and output.
 The virtio console BE driver copies data from the frontend's transmitting virtqueue when it receives a kick on virtqueue (implemented as a vmexit).
-The BE driver then writes the data to backend, and can be implemented as a PTY, TTY, STDIO, or regular file.
-For details, see :ref:`virtio-console`.</xs:documentation>
+The BE driver then writes the data to backend, and can be implemented as a PTY, TTY, STDIO, or regular file.</xs:documentation>
+              <xs:documentation>For details, see :ref:`virtio-console`.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="network" type="VirtioNetworkConfiguration" minOccurs="0" maxOccurs="unbounded">

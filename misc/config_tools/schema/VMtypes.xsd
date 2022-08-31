@@ -56,7 +56,8 @@
     </xs:element>
     <xs:element name="real_time_vcpu" type="Boolean" default="n">
       <xs:annotation acrn:title="Real-time vCPU">
-          <xs:documentation>Check "Real-time vCPU" for each vCPU used for real-time workloads. Then configure cache usage in the Hypervisor/Advanced/Cache Allocation Technology (CAT) configuration option. There you'll see Real-time vCPUs separated from vCPUs you allocate to other tasks.  See :ref:`rdt_configuration` for more details.</xs:documentation>
+          <xs:documentation>Check "Real-time vCPU" for each vCPU used for real-time workloads. Then configure cache usage in the Hypervisor/Advanced/Cache Allocation Technology (CAT) configuration option. There you'll see Real-time vCPUs separated from vCPUs you allocate to other tasks.</xs:documentation>
+          <xs:documentation>See :ref:`rdt_configuration` for more details.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -267,16 +268,6 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
     <xs:element name="p2sb" type="Boolean" default="n" minOccurs="0">
       <xs:annotation acrn:title="P2SB bridge passthrough" acrn:applicable-vms="pre-launched">
         <xs:documentation>Enable passthrough of the Primary-to-Sideband (P2SB) bridge register access BAR to this VM.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-  </xs:all>
-</xs:complexType>
-
-<xs:complexType name="HiddenDevType">
-  <xs:all>
-    <xs:element name="HIDDEN_PDEV" type="VBDFType" minOccurs="0" maxOccurs="unbounded">
-      <xs:annotation acrn:views="">
-        <xs:documentation>Specify the hidden device vBDF</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
