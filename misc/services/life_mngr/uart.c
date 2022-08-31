@@ -22,31 +22,32 @@
 /* it read from uart, and if end is '\0' or '\n' or len = buff-len it will return */
 static ssize_t try_receive_message_by_uart(int fd, void *buffer, size_t buf_len)
 {
-	ssize_t rc = 0U, count = 0U;
-	char *tmp;
+	ssize_t rc = 0, count = 0;
+	char *p = (char *)buffer;
+	char ch;
 	unsigned int retry_times = RETRY_RECV_TIMES;
 
-	do {
-		/* NOTE: Now we can't handle multi command message at one time. */
-		rc = read(fd, buffer + count, buf_len - count);
-		if (rc > 0) {
-			count += rc;
-			tmp = (char *)buffer;
-			if ((tmp[count - 1] == '\0') || (tmp[count - 1] == '\n')
-						|| (count == buf_len)) {
-				if (tmp[count - 1] == '\n')
-					tmp[count - 1] = '\0';
+	while (count < buf_len) {
+		rc = read(fd, &ch, 1);
+		if (rc == 1) {
+			if (ch == (char)(-1)) /* ignore noise data */
+				continue;
+			if (ch == '\n') /* end of command */
+				ch = '\0';
+			p[count++] = ch;
+			if (ch == '\0')
 				break;
-			}
-		} else {
-			if (errno == EAGAIN) {
-				usleep(WAIT_RECV);
+		} else if ((rc == -1) && (errno == EAGAIN)) {
+			if (retry_times > 0) {
 				retry_times--;
+				usleep(WAIT_RECV);
 			} else {
 				break;
 			}
+		} else {
+			break;
 		}
-	} while (retry_times != 0U);
+	}
 
 	return count;
 }
