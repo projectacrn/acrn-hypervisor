@@ -137,7 +137,7 @@ def extract_topology(args, root_node, caches_node):
                 elif cache_level == 3:
                     if args.add_llc_cat:
                         # Inject L3 CAT capability specified by the user
-                        cap = add_child(llc_node, "capability", None, id="CAT")
+                        cap = add_child(n, "capability", None, id="CAT")
                         add_child(cap, "capacity_mask_length", str(args.add_llc_cat.capacity_mask_length))
                         add_child(cap, "clos_number", str(args.add_llc_cat.clos_number))
                         if args.add_llc_cat.has_CDP:
