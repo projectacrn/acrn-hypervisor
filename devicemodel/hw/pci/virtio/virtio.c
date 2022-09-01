@@ -104,6 +104,7 @@ virtio_set_iothread(struct virtio_base *base,
 			vq->viothrd.idx = idx;
 			vq->viothrd.iomvt.arg = &vq->viothrd;
 			vq->viothrd.iomvt.run = iothread_handler;
+			vq->viothrd.iomvt.fd = vq->viothrd.kick_fd;
 
 			if (!iothread_add(vq->viothrd.kick_fd, &vq->viothrd.iomvt))
 				if (!virtio_register_ioeventfd(base, idx, true))

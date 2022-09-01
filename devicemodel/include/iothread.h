@@ -10,6 +10,7 @@
 struct iothread_mevent {
 	void (*run)(void *);
 	void *arg;
+	int fd;
 };
 int iothread_add(int fd, struct iothread_mevent *aevt);
 int iothread_del(int fd);
