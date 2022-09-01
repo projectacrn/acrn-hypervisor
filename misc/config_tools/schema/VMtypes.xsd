@@ -273,6 +273,16 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
   </xs:all>
 </xs:complexType>
 
+<xs:complexType name="HiddenDevType">
+  <xs:all>
+    <xs:element name="HIDDEN_PDEV" type="VBDFType" minOccurs="0" maxOccurs="unbounded">
+      <xs:annotation acrn:views="">
+        <xs:documentation>Specify the hidden device vBDF</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+  </xs:all>
+</xs:complexType>
+
 <xs:complexType name="PCIDevsConfiguration">
   <xs:sequence>
     <xs:element name="pci_dev" type="xs:string" minOccurs="0" maxOccurs="unbounded">
