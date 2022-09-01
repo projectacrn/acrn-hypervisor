@@ -21,6 +21,7 @@
 
 
 #define MEVENT_MAX 64
+#define MAX_EVENT_NUM 64
 struct iothread_ctx {
 	pthread_t tid;
 	int epfd;
@@ -34,7 +35,8 @@ io_thread(void *arg)
 {
 	struct epoll_event eventlist[MEVENT_MAX];
 	struct iothread_mevent *aevp;
-	int i, n;
+	int i, n, status;
+	char buf[MAX_EVENT_NUM];
 
 	while(ioctx.started) {
 		n = epoll_wait(ioctx.epfd, eventlist, MEVENT_MAX, -1);
@@ -47,8 +49,13 @@ io_thread(void *arg)
 		}
 		for (i = 0; i < n; i++) {
 			aevp = eventlist[i].data.ptr;
-			if (aevp && aevp->run)
+			if (aevp && aevp->run) {
+				/* Mitigate the epoll_wait repeat cycles by reading out the events as more as possile.*/
+				do {
+					status = read(aevp->fd, buf, sizeof(buf));
+				} while (status == MAX_EVENT_NUM);
 				(*aevp->run)(aevp->arg);
+			}
 		}
 	}
 
