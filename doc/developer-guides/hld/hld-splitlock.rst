@@ -131,6 +131,6 @@ Disable Split-Locked Access Detection
 If the CPU supports Split-locked Access detection, the ACRN hypervisor
 uses it to prevent any VM running with potential system performance
 impacting split-locked instructions. This detection can be disabled
-(by changing the :option:`hv.FEATURES.ENFORCE_TURNOFF_AC` setting in
+(by deselecting the :term:`Enable split lock detection` option in
 the ACRN Configurator tool) for customers not
 caring about system performance.
