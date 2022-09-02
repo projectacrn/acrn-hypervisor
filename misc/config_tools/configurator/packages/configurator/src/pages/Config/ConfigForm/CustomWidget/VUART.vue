@@ -19,7 +19,7 @@
           <b-col md="4">
             <b-form-select :state="validation(VUARTConn.endpoint[0].vm_name)" v-model="VUARTConn.endpoint[0].vm_name"
                            :options="vmNames"
-                           @input="selectChange(VUARTConn.endpoint[0].vm_name,VUARTConn.endpoint[0],0)"></b-form-select>
+                           @input="selectChange(index,VUARTConn.endpoint[0].vm_name,VUARTConn.endpoint[0],0)"></b-form-select>
             <b-form-invalid-feedback>
               must have value
             </b-form-invalid-feedback>
@@ -47,7 +47,7 @@
           <b-col md="4">
             <b-form-select :state="validation(VUARTConn.endpoint[1].vm_name)" v-model="VUARTConn.endpoint[1].vm_name"
                            :options="vmNames"
-                           @input="selectChange(VUARTConn.endpoint[1].vm_name,VUARTConn.endpoint[1],1)"></b-form-select>
+                           @input="selectChange(index,VUARTConn.endpoint[1].vm_name,VUARTConn.endpoint[1],1)"></b-form-select>
             <b-form-invalid-feedback>
               must have value
             </b-form-invalid-feedback>
@@ -193,7 +193,7 @@ export default {
     let epTypeProp = this.rootSchema.definitions.VuartEndpointType.properties
     let conTypeProp = this.rootSchema.definitions.VuartConnectionType.properties
     return {
-      selected: {0: {oldValue: ""}, 1: {oldValue: ""}},
+      selected: {0: {0: {oldValue: ""}, 1: {oldValue: ""}}},
       VuartEndpointType: this.rootSchema.definitions['VuartEndpointType']['properties'],
       vmNameTitle: epTypeProp.vm_name.title,
       vuartConnectionTypeTitle: conTypeProp.type.title,
@@ -259,12 +259,18 @@ export default {
         ]
       })
     },
-    selectChange(value, obj, endpoint) {
-      if (this.selected[endpoint].oldValue != value) {
+    selectChange(index, value, obj, endpoint) {
+      if (this.selected[index]) {
+        if (this.selected[index][endpoint].oldValue != value) {
+          obj.vbdf = ""
+          obj.io_port = ""
+        }
+      } else {
+        this.selected[index] = {0: {oldValue: ""}, 1: {oldValue: ""}}
         obj.vbdf = ""
         obj.io_port = ""
       }
-      this.selected[endpoint].oldValue = value
+      this.selected[index][endpoint]["oldValue"] = value
     },
   }
 };
