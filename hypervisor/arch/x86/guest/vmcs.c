@@ -55,6 +55,8 @@ static void init_guest_vmx(struct acrn_vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 	/* init guest ia32_misc_enable value for guest read */
 	vcpu_set_guest_msr(vcpu, MSR_IA32_MISC_ENABLE, msr_read(MSR_IA32_MISC_ENABLE));
 
+	vcpu_set_guest_msr(vcpu, MSR_IA32_PERF_CTL, msr_read(MSR_IA32_PERF_CTL));
+
 	/* fixed values */
 	exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, 0U);
 	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, 0UL);

@@ -1027,6 +1027,12 @@ int32_t hcall_reset_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *targ
 	return ret;
 }
 
+static bool is_pt_pstate(__unused const struct acrn_vm *vm)
+{
+	/* Currently VM's CPU frequency is managed in hypervisor. So no pass through for all VMs. */
+	return false;
+}
+
 /**
  * @brief Get VCPU Power state.
  *
@@ -1047,12 +1053,20 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 	if (is_created_vm(target_vm)) {
 		switch (cmd & PMCMD_TYPE_MASK) {
 		case ACRN_PMCMD_GET_PX_CNT: {
+			if (!is_pt_pstate(target_vm)) {
+				break;
+			}
+
 			ret = copy_to_gpa(vm, &(target_vm->pm.px_cnt), param2, sizeof(target_vm->pm.px_cnt));
 			break;
 		}
 		case ACRN_PMCMD_GET_PX_DATA: {
 			uint8_t pn;
 			struct acrn_pstate_data *px_data;
+
+			if (!is_pt_pstate(target_vm)) {
+				break;
+			}
 
 			/* For now we put px data as per-vm,
 			 * If it is stored as per-cpu in the future,
