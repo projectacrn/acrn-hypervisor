@@ -270,3 +270,35 @@ def MSR_IA32_L3_MASK_n(n):
         bit_mask = msrfield(32, 0, doc="Capacity bit mask")
 
     return IA32_L3_MASK_n
+
+class MSR_IA32_PM_ENABLE(MSR):
+    addr = 0x00000770
+    hwp_enable = msrfield(0, 0, doc=None)
+
+class MSR_IA32_HWP_CAPABILITIES(MSR):
+    addr = 0x00000771
+    highest_performance_lvl = msrfield(7, 0, doc=None)
+    guaranteed_performance_lvl = msrfield(15, 8, doc=None)
+    lowest_performance_lvl = msrfield(31, 24, doc=None)
+
+    attribute_bits = [
+        "highest_performance_lvl",
+        "guaranteed_performance_lvl",
+        "lowest_performance_lvl",
+    ]
+
+class MSR_TURBO_RATIO_LIMIT(MSR):
+    addr = 0x000001ad
+    max_ratio_1core = msrfield(7, 0, doc=None)
+
+    attribute_bits = [
+        "max_ratio_1core",
+    ]
+
+class MSR_TURBO_ACTIVATION_RATIO(MSR):
+    addr = 0x0000064c
+    max_none_turbo_ratio = msrfield(7, 0, doc=None)
+
+    attribute_bits = [
+        "max_none_turbo_ratio",
+    ]
