@@ -11,6 +11,14 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="if (//RDT_ENABLED = 'y' and //CDP_ENABLED = 'y')
+                   then (count(//capability[./@id = 'CDP']) = count(//cache[./@level = '2' or ./@level = '3']))
+                   else true()">
+    <xs:annotation acrn:severity="error" acrn:report-on="//CDP_ENABLED">
+      <xs:documentation>Code and Data Prioritization can only be opened when all L2 and L3 cache region has 'CDP' capability.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
   <xs:assert test="if (count(//virtual_cat_support[text() = 'y']) > 0)
                    then (//RDT_ENABLED = 'y' and //VCAT_ENABLED = 'y')
                    else true()">
