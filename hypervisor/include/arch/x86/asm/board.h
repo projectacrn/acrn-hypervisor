@@ -34,6 +34,7 @@ extern struct rdt_type res_cap_info[RDT_NUM_RESOURCES];
 #endif
 
 extern const struct cpu_state_table board_cpu_state_tbl;
+extern struct acrn_cpufreq_limits cpufreq_limits[MAX_PCPU_NUM];
 extern const union pci_bdf plat_hidden_pdevs[MAX_HIDDEN_PDEVS_NUM];
 extern const struct vmsix_on_msi_info vmsix_on_msi_devs[MAX_VMSIX_ON_MSI_PDEVS_NUM];
 

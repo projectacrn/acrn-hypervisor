@@ -530,6 +530,21 @@ struct acrn_pstate_data {
 	uint64_t status;		/* success indicator */
 };
 
+enum acrn_cpufreq_policy_type {
+	CPUFREQ_POLICY_PERFORMANCE,
+	CPUFREQ_POLICY_NOMINAL,
+};
+
+struct acrn_cpufreq_limits {
+	/* Performance levels for HWP */
+	uint8_t guaranteed_hwp_lvl;
+	uint8_t highest_hwp_lvl;
+	uint8_t lowest_hwp_lvl;
+	/* Index for the p-state table _PSS */
+	uint8_t nominal_pstate;
+	uint8_t performance_pstate;
+};
+
 struct acpi_sx_pkg {
 	uint8_t		val_pm1a;
 	uint8_t		val_pm1b;

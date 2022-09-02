@@ -24,6 +24,7 @@
 #include <version.h>
 #include <asm/vmx.h>
 #include <asm/msr.h>
+#include <asm/host_pm.h>
 #include <ptdev.h>
 #include <logmsg.h>
 #include <asm/rdt.h>
@@ -155,6 +156,8 @@ void init_pcpu_pre(bool is_bsp)
 		init_pcpu_model_name();
 
 		load_pcpu_state_data();
+
+		init_frequency_policy();
 
 		init_e820();
 
@@ -314,6 +317,8 @@ void init_pcpu_post(uint16_t pcpu_id)
 	if (!init_software_sram(pcpu_id == BSP_CPU_ID)) {
 		panic("failed to initialize software SRAM!");
 	}
+
+	apply_frequency_policy();
 
 	init_sched(pcpu_id);
 
