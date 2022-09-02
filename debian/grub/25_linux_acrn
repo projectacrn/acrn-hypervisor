@@ -63,6 +63,8 @@ ACRN_BOOTARGS=$(for arg in ${ACRN_BOOTARGS}; do if [ "${arg##root=}" = "${arg}" 
 # special handling for memmap: make sure $ is escaped to \$. This is a GRUB requirement
 ACRN_BOOTARGS="$(echo "${ACRN_BOOTARGS}" | sed 's/\(.*memmap=[^\$]*\)\$\(.*\)/\1\\\$\2/')"
 
+GRUB_CMDLINE_ACRN="cpu_perf_policy=$(xmllint --xpath '//CPU_PERFORMANCE_POLICY/text()' ${ACRN_SCENARIO_FILE} 2>/dev/null || true) "$GRUB_CMDLINE_ACRN
+
 if [ "x${GRUB_DISTRIBUTOR}" = "x" ] ; then
   OS=GNU/Linux
 else

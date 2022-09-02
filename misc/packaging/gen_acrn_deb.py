@@ -13,6 +13,7 @@ import shlex
 import shutil
 import subprocess
 import argparse
+import re
 
 from pathlib import Path
 
@@ -81,6 +82,20 @@ def create_acrn_deb(board, scenario, version, build_dir):
     del lines[(start + 1):(end - 1)]
     lines.insert(start + 1, "\nSCENARIO=(%s)\n" % scenario)
     lines.insert(start + 2, "\nBOARD=(%s)\n" % board)
+
+    a_f = open(build_dir + "/hypervisor/.scenario.xml", 'r')
+    for a_line in a_f:
+        l = re.search("<CPU_PERFORMANCE_POLICY>(\w*)</CPU_PERFORMANCE_POLICY>", a_line)
+        if l != None:
+            break;
+    start = lines.index('#ACRN parameters Start\n')
+    end = lines.index('#ACRN parameters End\n')
+    del lines[(start + 1):(end - 1)]
+    if l == None:
+        lines.insert(start + 1, "\nGENERATED_PARAMS=(cpu_perf_policy=%s)\n" % "Performance")
+    else:
+        lines.insert(start + 1, "\nGENERATED_PARAMS=(cpu_perf_policy=%s)\n" % l.group(1))
+
     with open(cur_dir + "/misc/packaging/acrn-hypervisor.postinst", "w") as f:
         for line in lines:
             f.write(line)

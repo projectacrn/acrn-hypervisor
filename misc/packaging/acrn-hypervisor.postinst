@@ -13,6 +13,13 @@ BOARD=(nuc11tnbi5)
 
 #Build info End
 
+
+#ACRN parameters Start
+
+GENERATED_PARAMS=(cpu_perf_policy=Performance)
+
+#ACRN parameters End
+
 ACRNBIN="/boot/acrn.${SCENARIO}.${BOARD}.bin"
 type=$(lsblk -l |awk '$NF == "/" {print $1}')
 
@@ -45,7 +52,7 @@ menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
     insmod part_gpt
     insmod ext2
     search --no-floppy --fs-uuid  --set $uuid
-multiboot2 $ACRNBIN root=PARTUUID=$partuuid
+multiboot2 $ACRNBIN root=PARTUUID=$partuuid $GENERATED_PARAMS
 $kernelimg
 module2 /boot/zephyr64.elf Zephyr_ElfImage
 module2 /boot/ACPI_VM0.bin ACPI_VM0
@@ -64,7 +71,7 @@ menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
     insmod part_gpt
     insmod ext2
     search --no-floppy --fs-uuid  --set $uuid
-multiboot2 $ACRNBIN root=PARTUUID=$partuuid
+multiboot2 $ACRNBIN root=PARTUUID=$partuuid $GENERATED_PARAMS
 $kernelimg
 module2 /boot/bzImage_RT RT_bzImage
 module2 /boot/ACPI_VM0.bin ACPI_VM0
@@ -82,7 +89,7 @@ menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
     insmod ext2
     search --no-floppy --fs-uuid  --set $uuid
     echo 'loading ACRN...'
-multiboot2 $ACRNBIN root=PARTUUID=$partuuid
+multiboot2 $ACRNBIN root=PARTUUID=$partuuid $GENERATED_PARAMS
 $kernelimg
 module2 /boot/ACPI_VM0.bin ACPI_VM0
 module2 /boot/ACPI_VM1.bin ACPI_VM1
@@ -99,7 +106,7 @@ menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
     insmod part_gpt
     insmod ext2
     search --no-floppy --fs-uuid  --set $uuid
-multiboot2 $ACRNBIN root=PARTUUID=$partuuid
+multiboot2 $ACRNBIN root=PARTUUID=$partuuid $GENERATED_PARAMS
 $kernelimg
 
 }
