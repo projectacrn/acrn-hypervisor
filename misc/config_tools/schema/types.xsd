@@ -147,6 +147,24 @@ higher value (lower severity) are discarded.</xs:documentation>
   </xs:restriction>
 </xs:simpleType>
 
+<xs:simpleType name="policyType">
+  <xs:annotation>
+    <xs:documentation>A string specifying the CPU frequency policy type:
+
+- ``Performance``: CPU runs at its maximum frequency. Enable hardware autonomous frequency selection if the system supports Hardware-Controlled Performance States (HWP).
+- ``Nominal``: CPU runs at its guaranteed frequency.
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Performance">
+      <xs:annotation acrn:title="Performance" />
+    </xs:enumeration>
+    <xs:enumeration value="Nominal">
+      <xs:annotation acrn:title="Nominal" />
+    </xs:enumeration>
+  </xs:restriction>
+</xs:simpleType>
+
 <xs:simpleType name="PriorityType">
   <xs:annotation>
     <xs:documentation>Two priorities are supported for priority based scheduler:

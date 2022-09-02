@@ -129,6 +129,14 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
         <xs:documentation>Configure Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="CPU_PERFORMANCE_POLICY" type="policyType" default="Performance">
+      <xs:annotation acrn:title="CPU performance policy type" acrn:views="advanced">
+        <xs:documentation>Select the default performance policy type for all CPUs. The hypervisor will set up CPU frequency based on the policy type.
+
+- ``Performance``: CPU runs at its maximum frequency. Enable hardware autonomous frequency selection if the system supports Hardware-Controlled Performance States (HWP).
+- ``Nominal``: CPU runs at its guaranteed frequency.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
   </xs:all>
 </xs:complexType>
 
