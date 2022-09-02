@@ -72,6 +72,18 @@
 #define CPUID_EDX_TM1           (1U<<29U)
 #define CPUID_EDX_IA64          (1U<<30U)
 #define CPUID_EDX_PBE           (1U<<31U)
+/* CPUID.06H:EAX.HWP */
+#define CPUID_EAX_HWP           (1U<<7U)
+/* CPUID.06H:EAX.HWP_Notification */
+#define CPUID_EAX_HWP_N         (1U<<8U)
+/* CPUID.06H:EAX.HWP_Activity_Window */
+#define CPUID_EAX_HWP_AW        (1U<<9U)
+/* CPUID.06H:EAX.HWP_Energy_Performance_Preference */
+#define CPUID_EAX_HWP_EPP       (1U<<10U)
+/* CPUID.06H:EAX.HWP_Package_Level_Request */
+#define CPUID_EAX_HWP_PLR       (1U<<11U)
+/* CPUID.06H:ECX.Hardware_Coordination_Feedback_Capability */
+#define CPUID_ECX_HCFC          (1U<<0U)
 /* CPUID.07H:EBX.FSGSBASE*/
 #define CPUID_EBX_FSGSBASE      (1U<<0U)
 /* CPUID.07H:EBX.TSC_ADJUST*/
