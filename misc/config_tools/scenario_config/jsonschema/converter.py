@@ -346,7 +346,9 @@ class XS2JS:
                 js_ele['title'] = annotation.get('@acrn:title', name)
 
                 # documentation
-                documentation: str = annotation.get('xs:documentation', None)
+                documentation = annotation.get('xs:documentation', None)
+                if isinstance(documentation, list):
+                    documentation = documentation[0]
                 if documentation is None or documentation.strip() == '':
                     documentation = ''
                 if documentation:
