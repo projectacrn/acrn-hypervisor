@@ -286,11 +286,87 @@ class LEAF_6(CPUID):
     pln_supported = cpuidfield(EAX, 4, 4, doc = "Power limit notification controls are supported if set")
     ecmd_supported = cpuidfield(EAX, 5, 5, doc = "Clock modulation duty cycle extension is supported if set")
     package_thermal_management_supported = cpuidfield(EAX, 6, 6, doc = "Package thermal management is supported if set")
+    hwp_supported = cpuidfield(EAX, 7, 7, doc = "HWP base registers (IA32_PM_ENABLE[bit 0], IA32_HWP_CAPABILITIES, IA32_HWP_REQUEST, IA32_HWP_STATUS) are supported if set")
+    hwp_notification = cpuidfield(EAX, 8, 8, doc = "HWP_Notification. IA32_HWP_INTERRUPT MSR is supported if set.")
+    hwp_activity_window = cpuidfield(EAX, 9, 9, doc = "HWP_Activity_Window. IA32_HWP_REQUEST[bits 41:32] is supported if set.")
+    hwp_energy_performance_preference = cpuidfield(EAX, 10, 10, doc = "HWP_Energy_Performance_Preference. IA32_HWP_REQUEST[bits 31:24] is supported if set.")
+    hwp_package_level_request = cpuidfield(EAX, 11, 11, doc = "HWP_Package_Level_Request. IA32_HWP_REQUEST_PKG MSR is supported if set.")
+    hdc = cpuidfield(EAX, 13, 13, doc = "HDC. HDC base registers IA32_PKG_HDC_CTL, IA32_PM_CTL1, IA32_THREAD_STALL MSRs are supported if set.")
+    turbo_boost_30 = cpuidfield(EAX, 14, 14, doc = "Intel® Turbo Boost Max Technology 3.0 available.")
+    hwp_capabilities = cpuidfield(EAX, 15, 15, doc = "HWP Capabilities. Highest Performance change is supported if set.")
+    hwp_peci_override = cpuidfield(EAX, 16, 16, doc = "HWP PECI override is supported if set.")
+    flexible_hwp = cpuidfield(EAX, 17, 17, doc = "Flexible HWP is supported if set.")
+    fast_hwp_request = cpuidfield(EAX, 18, 18, doc = "Fast access mode for the IA32_HWP_REQUEST MSR is supported if set.")
+    hw_feedback = cpuidfield(EAX, 19, 19, doc = "HW_FEEDBACK. IA32_HW_FEEDBACK_PTR MSR, IA32_HW_FEEDBACK_CONFIG MSR, IA32_PACKAGE_THERM_STATUS MSR bit 26, and IA32_PACKAGE_THERM_INTERRUPT MSR bit 25 are supported if set.")
+    ignoring_idle_hwp = cpuidfield(EAX, 20, 20, doc = "Ignoring Idle Logical Processor HWP request is supported if set.")
+    thread_director = cpuidfield(EAX, 23, 23, doc = "Intel® Thread Director supported if set. IA32_HW_FEEDBACK_CHAR and IA32_HW_FEEDBACK_THREAD_CONFIG MSRs are supported if set.")
 
     num_interrupt_thresholds = cpuidfield(EBX, 3, 0, doc="Number of interrupt thresholds in digital thermal sensor")
 
     hardware_coordination_feedback_capability = cpuidfield(ECX, 0, 0, doc="Hardware coordination feedback capability")
     performance_energy_bias = cpuidfield(ECX, 3, 3, doc="Performance-energy bias preference support")
+    num_thread_director_classes = cpuidfield(ECX, 15, 8, "Number of Intel® Thread Director classes supported by the processor. Information for that many classes is written into the Intel Thread Director Table by the hardware.")
+
+    hardware_feedback_interface_bitmap = cpuidfield(EDX, 7, 0, doc = "Bitmap of supported hardware feedback interface capabilities.")
+    hardware_feedback_interface_structure_size = cpuidfield(EDX, 11, 8, doc = "Enumerates the size of the hardware feedback interface structure in number of 4 KB pages.")
+    hardware_feedback_index = cpuidfield(EDX, 31, 16, doc = "Index (starting at 0) of this logical processor's row in the hardware feedback interface structure.")
+
+    capability_bits = [
+        "digital_temperature_sensor_supported",
+        "turbo_boost_available",
+        "arat_supported",
+        "pln_supported",
+        "ecmd_supported",
+        "package_thermal_management_supported",
+        "hwp_supported",
+        "hwp_notification",
+        "hwp_activity_window",
+        "hwp_energy_performance_preference",
+        "hwp_package_level_request",
+        "hdc",
+        "turbo_boost_30",
+        "hwp_capabilities",
+        "hwp_peci_override",
+        "flexible_hwp",
+        "fast_hwp_request",
+        "hw_feedback",
+        "ignoring_idle_hwp",
+        "thread_director",
+        "num_interrupt_thresholds",
+        "hardware_coordination_feedback_capability",
+        "performance_energy_bias",
+        "num_thread_director_classes",
+        "hardware_feedback_interface_bitmap",
+        "hardware_feedback_interface_structure_size",
+        "hardware_feedback_index",
+        "digital_temperature_sensor_supported",
+        "turbo_boost_available",
+        "arat_supported",
+        "pln_supported",
+        "ecmd_supported",
+        "package_thermal_management_supported",
+        "hwp_supported",
+        "hwp_notification",
+        "hwp_activity_window",
+        "hwp_energy_performance_preference",
+        "hwp_package_level_request",
+        "hdc",
+        "turbo_boost_30",
+        "hwp_capabilities",
+        "hwp_peci_override",
+        "flexible_hwp",
+        "fast_hwp_request",
+        "hw_feedback",
+        "ignoring_idle_hwp",
+        "thread_director",
+        "num_interrupt_thresholds",
+        "hardware_coordination_feedback_capability",
+        "performance_energy_bias",
+        "num_thread_director_classes",
+        "hardware_feedback_interface_bitmap",
+        "hardware_feedback_interface_structure_size",
+        "hardware_feedback_index",
+    ]
 
 class LEAF_7(CPUID):
     """Structured Extended Feature Flags Enumeration Leaf
