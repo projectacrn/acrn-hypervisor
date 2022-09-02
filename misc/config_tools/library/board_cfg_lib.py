@@ -349,6 +349,44 @@ def get_pci_info(board_info):
 
     return (pci_desc, pci_bdf_vpid)
 
+def get_p_state_count():
+    """
+    Get cpu p-state count
+    :return: p-state count
+    """
+    px_info = get_info(common.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
+    if px_info != None:
+        for line in px_info:
+            if re.search("{.*}", line) == None:
+                px_info.remove(line)
+
+    return len(px_info)
+
+def get_p_state_index_from_ratio(ratio):
+    """
+    Get the closest p-state index that is lesser than or equel to given ratio
+    :return: p-state index; If no px_info found in board file, return 0;
+    """
+    closest_index = 0
+    px_info = get_info(common.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
+    if px_info != None:
+        for line in px_info:
+            if re.search("{.*}", line) == None:
+                px_info.remove(line)
+
+        i = 0
+        closest_index = 1
+        for line in px_info:
+            l = re.search("0x(\w*)UL}", line)
+            if l != None:
+                state_ratio = int(l.group(1), 16) >> 8
+                if state_ratio <= ratio:
+                    closest_index = i
+                    break
+            i += 1
+
+    return closest_index
+
 HI_MMIO_OFFSET = 0
 
 class Bar_Mem:

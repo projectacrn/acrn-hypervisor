@@ -455,6 +455,31 @@ def gen_known_caps_pci_devs(config):
                 if i == (bdf_list_len - 1):
                     print("};", file=config)
 
+def gen_cpufreq_limits(config):
+    allocation_dir = os.path.split(common.SCENARIO_INFO_FILE)[0] + "/configs/allocation.xml"
+    allocation_etree = lxml.etree.parse(allocation_dir)
+    cpu_list = board_cfg_lib.get_processor_info()
+    max_cpu_num = len(cpu_list)
+
+    print("\nstruct acrn_cpufreq_limits cpufreq_limits[MAX_PCPU_NUM] = {", file=config)
+    for cpu_id in range(max_cpu_num):
+        limit_node = common.get_node(f"//cpufreq/CPU[@id='{cpu_id}']/limits", allocation_etree)
+        if limit_node != None:
+            limit_guaranteed_lvl = common.get_node("./limit_guaranteed_lvl/text()", limit_node)
+            limit_highest_lvl = common.get_node("./limit_highest_lvl/text()", limit_node)
+            limit_lowest_lvl = common.get_node("./limit_lowest_lvl/text()", limit_node)
+            limit_nominal_pstate = common.get_node("./limit_nominal_pstate/text()", limit_node)
+            limit_highest_pstate = common.get_node("./limit_highest_pstate/text()", limit_node)
+            limit_lowest_pstate = common.get_node("./limit_lowest_pstate/text()", limit_node)
+
+            print("\t{", file=config)
+            print(f"\t\t.guaranteed_hwp_lvl = {limit_guaranteed_lvl},", file=config)
+            print(f"\t\t.highest_hwp_lvl = {limit_highest_lvl},", file=config)
+            print(f"\t\t.lowest_hwp_lvl = {limit_lowest_lvl},", file=config)
+            print(f"\t\t.nominal_pstate = {limit_nominal_pstate},", file=config)
+            print(f"\t\t.performance_pstate = {limit_highest_pstate},", file=config)
+            print("\t},", file=config)
+    print("};", file=config)
 
 def generate_file(config):
     """
@@ -484,5 +509,7 @@ def generate_file(config):
 
     # gen known caps of pci dev info for platform
     gen_known_caps_pci_devs(config)
+
+    gen_cpufreq_limits(config)
 
     return err_dic
