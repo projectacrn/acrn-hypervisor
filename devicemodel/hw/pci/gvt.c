@@ -256,7 +256,21 @@ gvt_init_config(struct pci_gvt *gvt)
 	/* capability */
 	pci_set_cfgdata8(gvt->gvt_pi, PCIR_CAP_PTR, gvt->host_config[0x34]);
 	cap_ptr = gvt->host_config[0x34];
-	while (cap_ptr != 0) {
+	/*
+hw/pci/gvt.c:263:41: error: array subscript 257 is above array bounds of ‘uint8_t[256]’ {aka ‘unsigned char[256]’} [-Werror=array-bounds]
+  263 |                         gvt->host_config[cap_ptr + 4]);
+      |                         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+hw/pci/gvt.c:48:17: note: while referencing ‘host_config’
+   48 |         uint8_t host_config[PCI_REGMAX+1];
+      |                 ^~~~~~~~~~~
+
+          With the additional condition cap_ptr < PCI_REGMAX - 16 it
+          is ensured that we never read config data from places we
+          shouln't read from.
+
+	  12 (offset) + 4 (pci_set_cfgdata32) = 16
+	 */
+	while (cap_ptr != 0 && cap_ptr < PCI_REGMAX - 16) {
 		pci_set_cfgdata32(gvt->gvt_pi, cap_ptr,
 			gvt->host_config[cap_ptr]);
 		pci_set_cfgdata32(gvt->gvt_pi, cap_ptr + 4,
