@@ -1942,7 +1942,7 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 		if (dev == xdev->devices[i])
 			break;
 
-	if (i <= XHCI_MAX_DEVS && XHCI_PORTREG_PTR(xdev, i)) {
+	if (XHCI_PORTREG_PTR(xdev, i)) {
 		XHCI_PORTREG_PTR(xdev, i)->portsc &= ~(XHCI_PS_CSC |
 				XHCI_PS_CCS | XHCI_PS_PED);
 
