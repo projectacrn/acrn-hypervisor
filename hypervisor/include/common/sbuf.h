@@ -21,5 +21,6 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data);
 int32_t sbuf_share_setup(uint16_t cpu_id, uint32_t sbuf_id, uint64_t *hva);
 void sbuf_reset(void);
 uint32_t sbuf_next_ptr(uint32_t pos, uint32_t span, uint32_t scope);
+int32_t sbuf_setup_common(__unused struct acrn_vm *vm, uint16_t cpu_id, uint32_t sbuf_id, uint64_t *hva);
 
 #endif /* SHARED_BUFFER_H */

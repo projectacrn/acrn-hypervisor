@@ -519,6 +519,33 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 }
 
 /**
+ * @brief Setup a share buffer for a VM.
+ *
+ * @param vcpu Pointer to vCPU that initiates the hypercall
+ * @param param1 guest physical address. This gpa points to
+ *              struct sbuf_setup_param
+ *
+ * @pre is_service_vm(vcpu->vm)
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_setup_sbuf(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
+{
+	struct acrn_vm *vm = vcpu->vm;
+	struct acrn_sbuf_param asp;
+	uint64_t *hva;
+	int ret = -1;
+
+	if (copy_from_gpa(vm, &asp, param2, sizeof(asp)) == 0) {
+		if (asp.gpa != 0U) {
+			hva = (uint64_t *)gpa2hva(vm, asp.gpa);
+			ret = sbuf_setup_common(target_vm, asp.cpu_id, asp.sbuf_id, hva);
+		}
+	}
+	return ret;
+}
+
+/**
  * @brief notify request done
  *
  * Notify the requestor VCPU for the completion of an ioreq.

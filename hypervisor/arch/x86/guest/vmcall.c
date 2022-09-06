@@ -181,7 +181,6 @@ struct acrn_vm *parse_target_vm(struct acrn_vm *service_vm, uint64_t hcall_id, u
 	case HC_GET_API_VERSION:
 	case HC_SERVICE_VM_OFFLINE_CPU:
 	case HC_SET_CALLBACK_VECTOR:
-	case HC_SETUP_SBUF:
 	case HC_SETUP_HV_NPK_LOG:
 	case HC_PROFILING_OPS:
 	case HC_GET_HW_INFO:
