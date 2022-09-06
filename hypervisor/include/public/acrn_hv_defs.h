@@ -56,6 +56,7 @@
 #define HC_VM_GPA2HPA               BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x01UL)
 #define HC_VM_SET_MEMORY_REGIONS    BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x02UL)
 #define HC_VM_WRITE_PROTECT_PAGE    BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x03UL)
+#define HC_SETUP_SBUF               BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x04UL)
 
 /* PCI assignment*/
 #define HC_ID_PCI_BASE              0x50UL
@@ -73,7 +74,6 @@
 
 /* DEBUG */
 #define HC_ID_DBG_BASE              0x60UL
-#define HC_SETUP_SBUF               BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x00UL)
 #define HC_SETUP_HV_NPK_LOG         BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x01UL)
 #define HC_PROFILING_OPS            BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x02UL)
 #define HC_GET_HW_INFO              BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x03UL)
@@ -186,9 +186,9 @@ struct wp_data {
 /**
  * Setup parameter for share buffer, used for HC_SETUP_SBUF hypercall
  */
-struct sbuf_setup_param {
-	/** sbuf physical cpu id */
-	uint16_t pcpu_id;
+struct acrn_sbuf_param {
+	/** sbuf cpu id */
+	uint16_t cpu_id;
 
 	/** Reserved */
 	uint16_t reserved;
