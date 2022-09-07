@@ -111,13 +111,13 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 	vbar = &vdev->vbars[idx];
 	offset = pci_bar_offset(idx);
 	lo = pci_vdev_read_vcfg(vdev, offset, 4U);
-	if ((!is_pci_reserved_bar(vbar)) && (lo != (vbar->mask | vbar->bar_type.bits))) {
+	if ((!is_pci_reserved_bar(vbar)) && !vbar->sizing) {
 		base = lo & vbar->mask;
 
 		if (is_pci_mem64lo_bar(vbar)) {
 			vbar = &vdev->vbars[idx + 1U];
-			hi = pci_vdev_read_vcfg(vdev, (offset + 4U), 4U);
-			if (hi != vbar->mask) {
+			if (!vbar->sizing) {
+				hi = pci_vdev_read_vcfg(vdev, (offset + 4U), 4U);
 				base |= ((uint64_t)hi << 32U);
 			} else {
 				base = 0UL;
@@ -199,6 +199,7 @@ void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 	uint32_t update_idx = idx;
 
 	vbar = &vdev->vbars[idx];
+	vbar->sizing = (val == ~0U);
 	bar = val & vbar->mask;
 	if (vbar->is_mem64hi) {
 		update_idx -= 1U;

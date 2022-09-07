@@ -38,6 +38,7 @@
 
 struct pci_vbar {
 	bool is_mem64hi;	/* this is to indicate the high part of 64 bits MMIO bar */
+	bool sizing;		/* this is to indicate the guest is sizing this BAR */
 	uint64_t size;		/* BAR size */
 	uint64_t base_gpa;	/* BAR guest physical address */
 	uint64_t base_hpa;	/* BAR host physical address */
