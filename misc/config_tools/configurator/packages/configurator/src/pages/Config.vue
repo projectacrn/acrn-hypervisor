@@ -415,6 +415,7 @@ export default {
           if (errorType === 'semantic') {
             formErrors[vmid].push(error)
           }
+          formErrors[vmid] = _.uniq(formErrors[vmid])
         })
       }
 
