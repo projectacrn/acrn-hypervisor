@@ -105,5 +105,5 @@ acrn-configurator
 #### Windows
 
 You can find installer under the
-`misc\config_tools\configurator\src-tauri\target\release\bundle\msi`
+`misc\config_tools\configurator\packages\configurator\src-tauri\target\release\bundle\msi`
 directory, the installer in the folder.
