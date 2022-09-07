@@ -316,14 +316,15 @@ class VirtioDevices(object):
                 interface_name = network.xpath("./interface_name")[0].text if network.xpath("./interface_name") else None
                 self.networks.append((virtio_framework, interface_name))
 
-        if virtio_device_node.xpath("./input")[0].text is not None:
-            for input in virtio_device_node.xpath("./input"):
-                self.inputs.append((None, input.text))
-        else:
-            for input in virtio_device_node.xpath("./input"):
-                backend_device_file = input.xpath("./backend_device_file")[0].text if input.xpath("./backend_device_file") else None
-                id = input.xpath("./id")[0].text if input.xpath("./id") else None
-                self.inputs.append((backend_device_file, id))
+        if len(virtio_device_node.xpath("./input")) > 0:
+            if virtio_device_node.xpath("./input")[0].text is not None:
+                for input in virtio_device_node.xpath("./input"):
+                    self.inputs.append((None, input.text))
+            else:
+                for input in virtio_device_node.xpath("./input"):
+                    backend_device_file = input.xpath("./backend_device_file")[0].text if input.xpath("./backend_device_file") else None
+                    id = input.xpath("./id")[0].text if input.xpath("./id") else None
+                    self.inputs.append((backend_device_file, id))
 
         for console in virtio_device_node.xpath("./console"):
             self.console_encoding(console)
