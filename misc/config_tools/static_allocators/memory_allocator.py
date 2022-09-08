@@ -7,7 +7,7 @@
 
 import os
 import sys
-import lib.error
+import logging
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 import common, math, logging
 
@@ -104,9 +104,9 @@ def alloc_hpa_region(ram_range_info, mem_info_list, vm_node_index_list):
                     elif mem_start == hpa_start and mem_end == hpa_end:
                         del ram_range_info[mem_start]
                     elif mem_start > hpa_start or mem_end < hpa_end:
-                        raise lib.error.ResourceError(f"Start address of HPA is out of available memory range: vm id: {vm_index}, hpa_start: {hpa_start}.")
+                        logging.warning(f"Start address of HPA is out of available memory range: vm id: {vm_index}, hpa_start: {hpa_start}.")
                     elif mem_size < hpa_size:
-                        raise lib.error.ResourceError(f"Size of HPA is out of available memory range: vm id: {vm_index}, hpa_size: {hpa_size}.")
+                        logging.warning(f"Size of HPA is out of available memory range: vm id: {vm_index}, hpa_size: {hpa_size}.")
 
     return ram_range_info
 
