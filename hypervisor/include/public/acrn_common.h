@@ -717,6 +717,52 @@ struct acrn_vdev {
 	uint8_t	args[128];
 };
 
+#define SBUF_MAGIC	0x5aa57aa71aa13aa3UL
+#define SBUF_MAX_SIZE	(1UL << 22U)
+#define SBUF_HEAD_SIZE	64U
+
+/* sbuf flags */
+#define OVERRUN_CNT_EN	(1U << 0U) /* whether overrun counting is enabled */
+#define OVERWRITE_EN	(1U << 1U) /* whether overwrite is enabled */
+
+/**
+ * (sbuf) head + buf (store (ele_num - 1) elements at most)
+ * buffer empty: tail == head
+ * buffer full:  (tail + ele_size) % size == head
+ *
+ *             Base of memory for elements
+ *                |
+ *                |
+ * ----------------------------------------------------------------------
+ * | struct shared_buf | raw data (ele_size)| ... | raw data (ele_size) |
+ * ----------------------------------------------------------------------
+ * |
+ * |
+ * struct shared_buf *buf
+ */
+
+enum {
+	ACRN_TRACE = 0U,
+	ACRN_HVLOG,
+	ACRN_SEP,
+	ACRN_SOCWATCH,
+	ACRN_SBUF_ID_MAX,
+};
+
+/* Make sure sizeof(struct shared_buf) == SBUF_HEAD_SIZE */
+struct shared_buf {
+	uint64_t magic;
+	uint32_t ele_num;	/* number of elements */
+	uint32_t ele_size;	/* sizeof of elements */
+	uint32_t head;		/* offset from base, to read */
+	uint32_t tail;		/* offset from base, to write */
+	uint32_t flags;
+	uint32_t reserved;
+	uint32_t overrun_cnt;	/* count of overrun */
+	uint32_t size;		/* ele_num * ele_size */
+	uint32_t padding[6];
+};
+
 /**
  * @}
  */

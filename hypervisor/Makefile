@@ -238,6 +238,7 @@ HW_C_SRCS += common/softirq.c
 HW_C_SRCS += common/schedule.c
 HW_C_SRCS += common/event.c
 HW_C_SRCS += common/efi_mmap.c
+HW_C_SRCS += common/sbuf.c
 ifeq ($(CONFIG_SCHED_NOOP),y)
 HW_C_SRCS += common/sched_noop.c
 endif
