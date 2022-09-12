@@ -1,0 +1,18 @@
+This file just holds my stupid ideas.
+
+Stupid ideas are stupid, non verified ideas, I just got while reading something here and there and getting some thoughts.
+Maybe this is helpful for me or others some point in time later.
+
+ACRN-Hypervisor:
+ACRN is booted using EFI and GRUB, this is complicated.
+So as ACRN wants to be embedded, so combine it with coreboot and boot into the hypervisor right away.
+Having a running ACRN hypervisor just after board bring up, booted from the flash of the x86_64 mainboard's 
+BIOS flash gives you a chain of trust while booting. 
+In the hypervisor ACRN you can try to boot something like linux, xBSD or commecrial operating systems.
+As ACRN claims to be a type 1 hypervisor this shoud work and one will get a secured embedded platform.
+This should be tested using a Lenovo X220 
+
+https://www.coreboot.org/Board:lenovo/x220
+https://github.com/michaelmob/x220-coreboot-guide
+
+So one can try to have a ACRN payload in coreboot.
