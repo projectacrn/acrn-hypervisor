@@ -72,12 +72,6 @@ For the shared memory region:
    blank. If the field is blank, the tool provides an address when the
    configuration is saved.
 
-   .. note::
-
-      The release v3.0 ACRN Configurator has an issue where you need to save the
-      configuration twice to see the generated BDF address in the shared memory
-      setting. (:acrn-issue:`7831`)
-
 #. Add more VMs to the shared memory region by clicking **+** on the right
    side of an existing VM. Or click **-** to delete a VM.
 
