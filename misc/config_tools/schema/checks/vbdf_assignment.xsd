@@ -31,4 +31,22 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $ivshmem in /acrn-config//IVSHMEM_VM satisfies
+                   if (/acrn-config//vm[./name/text() = $ivshmem/VM_NAME/text()]/load_order/text() = 'POST_LAUNCHED_VM')
+                   then (substring-before(substring-after($ivshmem/VBDF/text(), ':'), '.') &gt; '02') and (substring-before(substring-after($ivshmem/VBDF/text(), ':'), '.') &lt; '1f')
+	           else true()">
+    <xs:annotation acrn:severity="error" acrn:report-on="$ivshmem">
+      <xs:documentation>For post launched VM, the "device" value of a virtual BDF, which is used by {$ivshmem/VM_NAME/text()}, shall not be '00', '01', '02' or '1f', i.e., the allowed values are between 03 and 1e, inclusive.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $endpoint in /acrn-config//endpoint satisfies
+                   if (/acrn-config//vm[./name/text() = $endpoint/vm_name/text()]/load_order/text() = 'POST_LAUNCHED_VM')
+                   then (substring-before(substring-after($endpoint/vbdf/text(), ':'), '.') &gt; '02') and (substring-before(substring-after($endpoint/VBDF/text(), ':'), '.') &lt; '1f')
+	           else true()">
+    <xs:annotation acrn:severity="error" acrn:report-on="$endpoint">
+      <xs:documentation>For post launched VM, the "device" value of a virtual BDF, which is used by {$endpoint/vm_name/text()}, shall not be '00', '01', '02' or '1f', i.e., the allowed values are between 03 and 1e, inclusive.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
