@@ -164,12 +164,12 @@ The table title shows important information:
 The above example shows an L2 cache table. VMs assigned to any CPU cores 2-6 can
 have cache allocated to them.
 
-The table's columns show the names of all VMs that are assigned to the CPU cores
-noted in the table title, as well as their vCPU IDs. The table categorizes the
-vCPUs as either standard or real-time. The real-time vCPUs are those that are
-set as real-time in the VM's parameters. All other vCPUs are considered
-standard. The above example shows one real-time vCPU (VM1 vCPU 2) and two
-standard vCPUs (VM0 vCPU 2 and 6).
+The table's left-most column shows the names of all VMs that are assigned to the
+CPU cores noted in the table title, as well as their vCPU IDs. The table
+categorizes the vCPUs as either standard or real-time. The real-time vCPUs are
+those that are set as real-time in the VM's parameters. All other vCPUs are
+considered standard. The above example shows one real-time vCPU (VM1 vCPU 2) and
+two standard vCPUs (VM0 vCPU 2 and 6).
 
 .. note::
 
