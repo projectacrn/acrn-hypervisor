@@ -58,7 +58,7 @@
     </div>
     <!-- begin CAT Table -->
     <div class="py-3" v-if="CAT_INFO.errorMsg">
-      {{ CAT_INFO.errorMsg }}
+      <span v-html="CAT_INFO.errorMsg"></span>
     </div>
     <div class="py-4" v-for="(CACHE_ALLOCATION,index) in CAT_INFO.regions" v-if="RDT_ENABLED==='y'">
       <p v-if="showInstruction(CACHE_ALLOCATION.level,index) ">

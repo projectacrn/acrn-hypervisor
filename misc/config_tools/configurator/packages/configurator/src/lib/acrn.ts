@@ -266,7 +266,7 @@ class CAT {
         // if no CAT REGION INFO from board xml,
         // means this board(or CPU) not support CAT, or all support CAT region only have one CPU core
         if (this.CAT_REGION_INFO.length === 0) {
-            let errorMsg = 'This board(or CPU) not support CAT, or all support CAT region only have one CPU core';
+            let errorMsg = `This board(or CPU) doesn't support CAT which means there is no any CAT capability.</br>There is no Cache Region was shared which means \"all support CAT region only have one CPU core\".`;
             console.log(errorMsg);
             return {
                 errorMsg,
