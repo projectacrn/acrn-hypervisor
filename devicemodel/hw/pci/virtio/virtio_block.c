@@ -506,7 +506,11 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		if (strcmp("iothread", opt) == 0) {
 			use_iothread = true;
 		} else {
-			opts_tmp = opts_start;
+			/* The string pointed by opts_start is truncated by strsep,
+			* so use opts instead of opts_start which point to the original
+			* parameter string.
+			* */
+			opts_tmp = opts;
 		}
 		bctxt = blockif_open(opts_tmp, bident);
 		if (bctxt == NULL) {
