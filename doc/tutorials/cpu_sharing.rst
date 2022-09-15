@@ -135,10 +135,11 @@ VMs. The example extends the information provided in the :ref:`gsg`.
    you assigned pCPUs 1 and 2 to VMs 1 and 2 (via the ACRN Configurator). vCPU 1
    of VM 0 and vCPU 0 of VM 1 and VM 2 are running on the same physical CPU;
    they are sharing the physical CPU execution time. The thread state column
-   shows the current states of the vCPUs. BLOCKED state means the vCPU is
-   waiting for an I/O operation to be completed. Once it is done, the state will
-   change to RUNNABLE. When this vCPU gets its pCPU execution time, its state
-   will change to RUNNING, then the vCPU is actually running on the pCPU.
+   shows the current states of the vCPUs. The BLOCKED state can occur for
+   different reasons, most likely the vCPU is waiting for an I/O operation to be
+   completed. Once it is done, the state will change to RUNNABLE. When this vCPU
+   gets its pCPU execution time, its state will change to RUNNING, then the vCPU
+   is actually running on the pCPU.
 
 Learn More
 **********
