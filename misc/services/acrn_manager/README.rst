@@ -87,7 +87,7 @@ Use the ``list`` command to display VMs and their state:
 Start VM
 ========
 
-If a VM is in a ``stopped`` state, you can start it with the ``start``
+If a VM is in a ``stopped`` state, you can start it with the ``start``, acrnd automatically loads launch scripts under /usr/share/acrn/conf/add/ to boot VMs.
 command:
 
 .. code-block:: none
