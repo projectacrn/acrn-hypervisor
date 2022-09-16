@@ -54,21 +54,21 @@ Before you begin, make sure your machines have the following prerequisites:
   - Monitor
   - Ethernet cable and Internet access
   - A second USB disk with minimum 16GB capacity. Format your USB disk with a
-    files system that supports files greater than 4GB: extFAT or NTFS, but not
+    file system that supports files greater than 4GB: extFAT or NTFS, but not
     FAT32. We'll use this USB disk to copy files between the development
     computer and target system. Instead of a USB drive, you can copy files
-    between systems over the network using the ``scp`` command.)
+    between systems over the network using the ``scp`` command.
   - Local storage device (NVMe or SATA drive, for example).  We recommend having
     40GB or more of free space.
 
 .. note::
    If you're working behind a corporate firewall, you'll likely need to
-   configure a proxy for accessing the internet, if you haven't done so already.
+   configure a proxy for accessing the Internet, if you haven't done so already.
    While some tools use the environment variables ``http_proxy`` and ``https_proxy`` to
    get their proxy settings, some use their own configuration files, most
    notably ``apt`` and ``git``.  If a proxy is needed and it's not configured,
-   commands that access the internet may time out and you may see errors such
-   as, "unable to access ..." or "couldn't resolve host ...".
+   commands that access the Internet may time out and you may see errors such
+   as "unable to access ..." or "couldn't resolve host ...".
 
 .. _gsg-dev-computer:
 
@@ -246,14 +246,14 @@ To install Ubuntu 20.04:
       sudo apt upgrade -y
 
 #. It's convenient to use the network to transfer files between the development
-   and target system, so we recommend installing the openssh-server package on
-   the target system::
+   computer and target system, so we recommend installing the openssh-server
+   package on the target system::
 
       sudo apt install -y openssh-server
 
    This command will install and start the ssh-server service on the target
    system.  We'll need to know the target system's IP address to make a
-   connection from the development system, so find it now with this command::
+   connection from the development computer, so find it now with this command::
 
       hostname -I | cut -d ' ' -f 1
 
@@ -385,10 +385,10 @@ Generate a Board Configuration File
    have two options:
 
    Option 1: Use ``scp``
-      From your development computer, use the ``scp`` command to copy the Debian
-      package from your target system back to the ``~/acrn-work`` directory on
-      your development computer.
-      Replace ``10.0.0.200`` with the target system's IP address you found earlier::
+      From your development computer, use the ``scp`` command to copy the board
+      configuration file from your target system back to the
+      ``~/acrn-work`` directory on your development computer. Replace
+      ``10.0.0.200`` with the target system's IP address you found earlier::
 
          scp acrn@10.0.0.200:~/acrn-work/my_board.xml ~/acrn-work/
 
@@ -508,13 +508,13 @@ post-launched User VM. Each User VM has its own launch script.
    settings to meet your application's particular needs. But for now, you
    will update only a few settings for functional and educational purposes.
 
-   You may see some error messages from the configurator, such as shown here:
+   You may see some error messages from the Configurator, such as shown here:
 
    .. image:: images/gsg-config-errors.png
       :align: center
       :class: drop-shadow
 
-   The configurator does consistency and validation checks when you load or save
+   The Configurator does consistency and validation checks when you load or save
    a scenario.  Notice the Hypervisor and VM1 tabs both have an error icon,
    meaning there are issues with configuration options in two areas.  Since the
    Hypervisor tab is currently highlighted, we're seeing an issue we can resolve
@@ -567,7 +567,7 @@ post-launched User VM. Each User VM has its own launch script.
       a different username when installing Ubuntu on the target system, here's
       where you'll need to change the ``acrn`` username to the username you used.)
 
-   .. image:: images/configurator-postvm1.png
+   .. image:: images/configurator-postvm.png
       :align: center
       :class: drop-shadow
 
@@ -652,8 +652,8 @@ Build ACRN
    target system, using one of these two options:
 
    Option 1: Use ``scp``
-      Use the ``scp`` command to copy files from your development system to 
-      to the target system.
+      Use the ``scp`` command to copy files from your development computer to 
+      the target system.
       Replace ``10.0.0.200`` with the target system's IP address you found earlier::
 
          scp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
@@ -775,9 +775,9 @@ Launch the User VM
 #. On the target system, use the web browser to go to the `official Ubuntu website <https://releases.ubuntu.com/focal/>`__ to
    get the Ubuntu Desktop 20.04 LTS ISO image
    ``ubuntu-20.04.5-desktop-amd64.iso`` for the User VM. (The same image you
-   specified earlier in the ACRN Configurator UI.  (Alternatively, instead of
+   specified earlier in the ACRN Configurator UI.) Alternatively, instead of
    downloading it again, you can use a USB drive or ``scp`` to copy the ISO
-   image file to the ``~/acrn-work`` directory on the target system.)
+   image file to the ``~/acrn-work`` directory on the target system.
 
 #. If you downloaded the ISO file on the target system, copy it from the
    Downloads directory to the ``~/acrn-work/`` directory (the location we said
