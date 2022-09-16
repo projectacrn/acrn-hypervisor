@@ -561,13 +561,13 @@ post-launched User VM. Each User VM has its own launch script.
       log in to the User VM later in this guide.
 
    #. For **Virtio block device**, click **+** and enter
-      ``/home/acrn/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
+      ``/home/acrn/acrn-work/ubuntu-20.04.5-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
       in this guide, you will save the ISO file to that directory. (If you used
       a different username when installing Ubuntu on the target system, here's
       where you'll need to change the ``acrn`` username to the username you used.)
 
-   .. image:: images/configurator-postvm.png
+   .. image:: images/configurator-postvm1.png
       :align: center
       :class: drop-shadow
 
@@ -643,10 +643,10 @@ Build ACRN
 
       cd ..
       ls *.deb
-         linux-headers-5.10.115-acrn-service-vm_5.10.115-acrn-service-vm-1_amd64.deb
-         linux-image-5.10.115-acrn-service-vm_5.10.115-acrn-service-vm-1_amd64.deb
-         linux-image-5.10.115-acrn-service-vm-dbg_5.10.115-acrn-service-vm-1_amd64.deb
-         linux-libc-dev_5.10.115-acrn-service-vm-1_amd64.deb
+         linux-headers-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
+         linux-image-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
+         linux-image-5.15.44-acrn-service-vm-dbg_5.15.44-acrn-service-vm-1_amd64.deb
+         linux-libc-dev_5.15.44-acrn-service-vm-1_amd64.deb
 
 #. Copy all the necessary files generated on the development computer to the
    target system, using one of these two options:
@@ -774,7 +774,7 @@ Launch the User VM
 
 #. On the target system, use the web browser to go to the `official Ubuntu website <https://releases.ubuntu.com/focal/>`__ to
    get the Ubuntu Desktop 20.04 LTS ISO image
-   ``ubuntu-20.04.4-desktop-amd64.iso`` for the User VM. (The same image you
+   ``ubuntu-20.04.5-desktop-amd64.iso`` for the User VM. (The same image you
    specified earlier in the ACRN Configurator UI.  (Alternatively, instead of
    downloading it again, you can use a USB drive or ``scp`` to copy the ISO
    image file to the ``~/acrn-work`` directory on the target system.)
@@ -786,7 +786,7 @@ Launch the User VM
 
    .. code-block:: bash
 
-      cp ~/Downloads/ubuntu-20.04.4-desktop-amd64.iso ~/acrn-work
+      cp ~/Downloads/ubuntu-20.04.5-desktop-amd64.iso ~/acrn-work
 
 #. Launch the User VM:
 
@@ -801,7 +801,7 @@ Launch the User VM
 
    .. code-block:: console
 
-      Ubuntu 20.04.4 LTS ubuntu hvc0
+      Ubuntu 20.04.5 LTS ubuntu hvc0
 
       ubuntu login:
 
@@ -812,7 +812,7 @@ Launch the User VM
 
    .. code-block:: console
 
-      Welcome to Ubuntu 20.04.4 LTS (GNU/Linux 5.13.0-30-generic x86_64)
+      Welcome to Ubuntu 20.04.5 LTS (GNU/Linux 5.13.0-30-generic x86_64)
 
       * Documentation:  https://help.ubuntu.com
       * Management:     https://landscape.canonical.com
@@ -849,7 +849,7 @@ Launch the User VM
    .. code-block:: console
 
       acrn@vecow:~$ uname -r
-      5.10.115-acrn-service-vm
+      5.15.44-acrn-service-vm
 
    The User VM has launched successfully. You have completed this ACRN setup.
 
