@@ -11,8 +11,6 @@ The ``acrnctl`` tool helps users create, delete, launch, and stop a User
 VM (aka UOS).  The tool runs under the Service VM, and User VMs should be based
 on ``acrn-dm``. The daemon for acrn-manager is `acrnd`_.
 
-
-
 Usage
 =====
 
@@ -32,7 +30,7 @@ You can see the available ``acrnctl`` commands by running:
    Use acrnctl [cmd] help for details
 
 .. note::
-   You must run ``acrnctl`` with root privileges, and make sure ``acrnd``
+   You must run ``acrnctl`` with root privileges, and make sure the ``acrnd``
    service has been started before running ``acrnctl``.
 
 Here are some usage examples:
@@ -54,7 +52,7 @@ container::
    # acrnctl add launch_uos.sh -C
 
 .. note:: You can download an :acrn_raw:`example launch_uos.sh script
-   <devicemodel/samples/nuc/launch_uos.sh>`
+   <misc/config_tools/data/sample_launch_scripts/nuc/launch_uos.sh>`
    that supports the ``-C``  (``run_container`` function) option.
 
 Note that the launch script must only launch one User VM instance.
@@ -87,8 +85,9 @@ Use the ``list`` command to display VMs and their state:
 Start VM
 ========
 
-If a VM is in a stopped state, you can start it with the start command. The acrnd service automatically loads launch scripts under /usr/share/acrn/conf/add/ to boot the VMs.
-command:
+If a VM is in a stopped state, you can start it with the ``start`` command. The
+``acrnd`` service automatically loads the launch script under
+``/usr/share/acrn/conf/add/`` to boot the VM.
 
 .. code-block:: none
 
@@ -97,7 +96,7 @@ command:
 Stop VM
 =======
 
-Use the ``stop`` command to stop one or more running VM:
+Use the ``stop`` command to stop one or more running VMs:
 
 .. code-block:: none
 
