@@ -132,12 +132,12 @@ To set up the ACRN build environment on the development computer:
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout v3.0
+      git checkout v3.1
 
       cd ..
       git clone https://github.com/projectacrn/acrn-kernel.git
       cd acrn-kernel
-      git checkout acrn-v3.0
+      git checkout acrn-v3.1
 
 #. Install Python package dependencies:
 
@@ -351,6 +351,7 @@ Generate a Board Configuration File
    .. code-block:: bash
 
       cd  ~/acrn-work
+      sudo pip3 install tqdm
       sudo apt install -y ./acrn-board-inspector*.deb
 
 #. Reboot the target system:
@@ -421,7 +422,7 @@ Generate a Scenario Configuration File and Launch Script
 ********************************************************
 
 In this step, you will download, install, and use the `ACRN Configurator
-<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb>`__
+<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.1.deb>`__
 to generate a scenario configuration file and launch script.
 
 A **scenario configuration file** is an XML file that holds the parameters of
@@ -437,7 +438,7 @@ post-launched User VM. Each User VM has its own launch script.
    .. code-block:: bash
 
       cd ~/acrn-work
-      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb
+      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.1.deb
 
    If you already have a previous version of the acrn-configurator installed,
    you should first remove it:
@@ -450,7 +451,7 @@ post-launched User VM. Each User VM has its own launch script.
 
    .. code-block:: bash
 
-      sudo apt install -y ./acrn-configurator-3.0.deb
+      sudo apt install -y ./acrn-configurator-3.1.deb
 
 #. Launch the ACRN Configurator:
 
@@ -608,7 +609,7 @@ Build ACRN
 
       cd ./build
       ls *.deb
-         acrn-my_board-MyConfiguration-3.0.deb
+         acrn-my_board-MyConfiguration-3.1.deb
 
    The Debian package contains the ACRN hypervisor and tools to ease installing
    ACRN on the target. The Debian file name contains the board name (``my_board``)
