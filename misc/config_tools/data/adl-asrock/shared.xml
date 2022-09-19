@@ -1,0 +1,194 @@
+<acrn-config>
+  <hv>
+    <BUILD_TYPE>debug</BUILD_TYPE>
+    <FEATURES>
+      <RELOC_ENABLED>y</RELOC_ENABLED>
+      <SCHEDULER>SCHED_BVT</SCHEDULER>
+      <MULTIBOOT2_ENABLED>y</MULTIBOOT2_ENABLED>
+      <SPLIT_LOCK_DETECTION_ENABLED>n</SPLIT_LOCK_DETECTION_ENABLED>
+      <UC_LOCK_DETECTION_ENABLED>n</UC_LOCK_DETECTION_ENABLED>
+      <SECURITY_VM_FIXUP>n</SECURITY_VM_FIXUP>
+      <KEEP_IRQ_DISABLED>n</KEEP_IRQ_DISABLED>
+      <HYPERV_ENABLED>y</HYPERV_ENABLED>
+      <IOMMU_ENFORCE_SNP>n</IOMMU_ENFORCE_SNP>
+      <ACPI_PARSE_ENABLED>y</ACPI_PARSE_ENABLED>
+      <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
+      <MCE_ON_PSC_ENABLED>y</MCE_ON_PSC_ENABLED>
+      <RDT>
+        <RDT_ENABLED>n</RDT_ENABLED>
+        <CDP_ENABLED>n</CDP_ENABLED>
+        <VCAT_ENABLED>n</VCAT_ENABLED>
+      </RDT>
+      <IVSHMEM/>
+      <SSRAM>
+        <SSRAM_ENABLED>n</SSRAM_ENABLED>
+      </SSRAM>
+    </FEATURES>
+    <vuart_connections>
+      <vuart_connection>
+        <name>vUART connection 1</name>
+        <type>pci</type>
+        <endpoint>
+          <vm_name>ACRN_Service_VM</vm_name>
+          <io_port>0x2F8</io_port>
+          <vbdf>00:10.0</vbdf>
+        </endpoint>
+        <endpoint>
+          <vm_name>POST_STD_VM1</vm_name>
+          <io_port>0x2F8</io_port>
+          <vbdf>00:10.0</vbdf>
+        </endpoint>
+      </vuart_connection>
+    </vuart_connections>
+    <DEBUG_OPTIONS>
+      <SERIAL_CONSOLE>/dev/ttyS1</SERIAL_CONSOLE>
+      <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
+      <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
+      <CONSOLE_LOGLEVEL>3</CONSOLE_LOGLEVEL>
+    </DEBUG_OPTIONS>
+    <MEMORY>
+      <STACK_SIZE>0x2000</STACK_SIZE>
+    </MEMORY>
+    <CAPACITIES>
+      <MAX_VM_NUM>16</MAX_VM_NUM>
+      <MAX_IOAPIC_NUM>1</MAX_IOAPIC_NUM>
+      <MAX_PCI_DEV_NUM>96</MAX_PCI_DEV_NUM>
+      <MAX_IOAPIC_LINES>120</MAX_IOAPIC_LINES>
+      <MAX_PT_IRQ_ENTRIES>64</MAX_PT_IRQ_ENTRIES>
+      <MAX_MSIX_TABLE_NUM>64</MAX_MSIX_TABLE_NUM>
+      <MAX_EMULATED_MMIO>16</MAX_EMULATED_MMIO>
+    </CAPACITIES>
+    <MISC_CFG>
+      <GPU_SBDF>0x00000010</GPU_SBDF>
+    </MISC_CFG>
+  </hv>
+  <vm id="0">
+    <load_order>SERVICE_VM</load_order>
+    <name>ACRN_Service_VM</name>
+    <vm_type>STANDARD_VM</vm_type>
+    <console_vuart>COM Port 1</console_vuart>
+    <lapic_passthrough>n</lapic_passthrough>
+    <nested_virtualization_support>n</nested_virtualization_support>
+    <priority>PRIO_LOW</priority>
+    <companion_vmid>65535</companion_vmid>
+    <os_config>
+      <kern_type>KERNEL_BZIMAGE</kern_type>
+      <kern_mod>Linux_bzImage</kern_mod>
+      <bootargs>root=/dev/nvme0n1p2 rw rootwait console=tty0 console=ttyS0 consoleblank=0 no_timer_check quiet loglevel=3        i915.nuclear_pageflip=1 i915.modeset=0</bootargs>
+    </os_config>
+  </vm>
+  <vm id="1">
+    <load_order>POST_LAUNCHED_VM</load_order>
+    <name>POST_STD_VM1</name>
+    <vm_type>STANDARD_VM</vm_type>
+    <console_vuart>COM Port 1</console_vuart>
+    <os_type>Windows OS</os_type>
+    <vuart0>n</vuart0>
+    <vbootloader>y</vbootloader>
+    <memory>
+      <size>4096</size>
+    </memory>
+    <cpu_affinity>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+        <real_time_vcpu>n</real_time_vcpu>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+        <real_time_vcpu>n</real_time_vcpu>
+      </pcpu>
+    </cpu_affinity>
+    <priority>PRIO_LOW</priority>
+    <companion_vmid>65535</companion_vmid>
+    <pci_devs>
+      <pci_dev>00:02.0 VGA compatible controller: Intel Corporation WhiskeyLake-U GT2 [UHD Graphics 620]</pci_dev>
+    </pci_devs>
+    <PTM>n</PTM>
+    <virtio_devices>
+      <network>
+        <virtio_framework>User space based (VBSU)</virtio_framework>
+        <interface_name>WaaG</interface_name>
+      </network>
+      <input>
+        <backend_device_file>Device name: Raritan D2CIM-DVUSB, Device physical path: usb-0000:00:14.0-4/input0</backend_device_file>
+      </input>
+      <block>./win10-ltsc.img</block>
+    </virtio_devices>
+  </vm>
+  <vm id="2">
+    <load_order>POST_LAUNCHED_VM</load_order>
+    <name>POST_RT_VM1</name>
+    <vm_type>RTVM</vm_type>
+    <console_vuart>COM Port 1</console_vuart>
+    <os_type>Non-Windows OS</os_type>
+    <vuart0>n</vuart0>
+    <vbootloader>y</vbootloader>
+    <memory>
+      <size>1024</size>
+    </memory>
+    <cpu_affinity>
+      <pcpu>
+        <pcpu_id>10</pcpu_id>
+        <real_time_vcpu>y</real_time_vcpu>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>11</pcpu_id>
+        <real_time_vcpu>y</real_time_vcpu>
+      </pcpu>
+    </cpu_affinity>
+    <lapic_passthrough>y</lapic_passthrough>
+    <io_completion_polling>y</io_completion_polling>
+    <virtual_cat_support>n</virtual_cat_support>
+    <virtual_cat_number>0</virtual_cat_number>
+    <priority>PRIO_LOW</priority>
+    <companion_vmid>65535</companion_vmid>
+    <PTM>n</PTM>
+    <virtio_devices>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <virtio_framework>User space based (VBSU)</virtio_framework>
+        <interface_name>RT</interface_name>
+      </network>
+      <block>./core-image-weston-intel-corei7-64.wic</block>
+    </virtio_devices>
+  </vm>
+  <vm id="3">
+    <load_order>POST_LAUNCHED_VM</load_order>
+    <name>POST_STD_VM2</name>
+    <vm_type>STANDARD_VM</vm_type>
+    <console_vuart>COM Port 1</console_vuart>
+    <os_type>Non-Windows OS</os_type>
+    <vuart0>n</vuart0>
+    <vbootloader>y</vbootloader>
+    <memory>
+      <size>2048</size>
+    </memory>
+    <cpu_affinity>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+        <real_time_vcpu>n</real_time_vcpu>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>1</pcpu_id>
+        <real_time_vcpu>n</real_time_vcpu>
+      </pcpu>
+    </cpu_affinity>
+    <priority>PRIO_LOW</priority>
+    <companion_vmid>65535</companion_vmid>
+    <PTM>n</PTM>
+    <virtio_devices>
+      <console>
+        <use_type>Virtio console</use_type>
+        <backend_type>stdio</backend_type>
+      </console>
+      <network>
+        <virtio_framework>User space based (VBSU)</virtio_framework>
+        <interface_name>YaaG3</interface_name>
+      </network>
+      <block>./YaaG.img</block>
+    </virtio_devices>
+  </vm>
+</acrn-config>
