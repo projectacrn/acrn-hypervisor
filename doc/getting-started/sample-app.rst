@@ -117,7 +117,7 @@ As a normal (e.g., **acrn**) user follow these steps:
 
      cd ~/acrn-work/acrn-hypervisor
      git fetch --all
-     git checkout -b sample acrn-tag-sample-application
+     git checkout v3.1 
 
 #. Build the ACRN sample application source code::
 
@@ -411,7 +411,7 @@ Build the ACRN Hypervisor and Service VM images
      cd ~/acrn-work/acrn-kernel
      git fetch --all
 
-     git checkout -b sample_service acrn-tag-sample-application
+     git checkout acrn-v3.1
 
      make distclean
      cp kernel_config_service_vm .config
