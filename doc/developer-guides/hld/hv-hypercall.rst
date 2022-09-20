@@ -9,6 +9,29 @@ is from the hypervisor to the guest VM. The hypervisor supports
 hypercall APIs for VM management, I/O request distribution, interrupt injection,
 PCI assignment, guest memory mapping, power management, and secure world switch.
 
+The application binary interface (ABI) of ACRN hypercalls is defined as follows.
+
+- A guest VM executes the ``vmcall`` instruction to trigger a hypercall.
+
+- Input parameters of a hypercall includes:
+
+  - An hypercall ID in register ``R8``, which specifies the kind of service
+    requested by the guest VM.
+
+  - The first parameter in register ``RDI`` and the second in register
+    ``RSI``. The semantics of those two parameters vary among different kinds of
+    hypercalls and are defined in the hypercall APIs reference. For hypercalls
+    requesting operations on a specific VM, the first parameter is typically the
+    ID of that VM.
+
+- The register ``RAX`` contains the return value of the hypercall after a guest
+  VM executes the ``vmcall`` instruction, unless the ``vmcall`` instruction
+  triggers an exception. Other general purpose registers are not modified by a
+  hypercall.
+
+- In case a hypercall parameter is defined as a pointer to a data structure,
+  fields in that structure can be either input, output or inout.
+
 There are some restrictions for hypercall and upcall:
 
 #. Only specific VMs (the Service VM and the VM with Trusty enabled)
