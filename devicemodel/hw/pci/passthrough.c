@@ -708,6 +708,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	uint16_t vendor = 0, device = 0;
 	uint8_t class = 0;
 	char rom_file[256];
+	bool need_rombar = false;
 
 	ptdev = NULL;
 	error = -EINVAL;
@@ -740,6 +741,10 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		} else if (!strncmp(opt, "enable_ptm", 10)) {
 			pr_notice("<PTM>: opt=enable_ptm.\n");
 			enable_ptm = true;
+		} else if (!strncmp(opt, "romfile=", 8)) {
+			need_rombar = true;
+			opt += 8;
+			strcpy(rom_file, opt);
 		} else
 			pr_warn("Invalid passthru options:%s", opt);
 	}
@@ -820,6 +825,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		error = ACRN_PTDEV_IRQ_MSI;
 	}
 
+	ptdev->need_rombar = need_rombar;
 	if (class != 3) {
 		if (ptdev->need_rombar) {
 			pr_warn("Virtual PCI rom is only supported for GPU device\n");
