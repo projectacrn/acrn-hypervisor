@@ -92,6 +92,7 @@
 #define PCIM_BAR_MEM_BASE     0xFFFFFFF0U
 #define PCIV_SUB_VENDOR_ID    0x2CU
 #define PCIV_SUB_SYSTEM_ID    0x2EU
+#define PCIR_BIOS	      0x30U
 #define PCIR_CAP_PTR          0x34U
 #define PCIR_CAP_PTR_CARDBUS  0x14U
 #define PCI_BASE_ADDRESS_MEM_MASK (~0x0fUL)
