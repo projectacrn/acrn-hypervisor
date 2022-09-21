@@ -29,5 +29,7 @@ void resume_console(void) {}
 bool handle_dbg_cmd(__unused const char *cmd, __unused int32_t len) { return false; }
 void console_vmexit_callback(__unused struct acrn_vcpu *vcpu) {}
 
+bool is_using_init_ipi(void) { return false; }
+
 void shell_init(void) {}
 void shell_kick(void) {}

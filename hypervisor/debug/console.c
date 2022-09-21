@@ -25,6 +25,14 @@ struct hv_timer console_timer;
 #define GUEST_CONSOLE_TO_HV_SWITCH_KEY      0       /* CTRL + SPACE */
 uint16_t console_vmid = ACRN_INVALID_VMID;
 
+/* if use INIT to kick pcpu only, if not notification IPI still is used for sharing CPU */
+static bool use_init_ipi = false;
+
+bool is_using_init_ipi(void)
+{
+	return use_init_ipi;
+}
+
 static void parse_hvdbg_cmdline(void)
 {
 	const char *start = NULL;
@@ -43,6 +51,9 @@ static void parse_hvdbg_cmdline(void)
 
 			if (!handle_dbg_cmd(start, (int32_t)(end - start))) {
 				/* if not handled by handle_dbg_cmd, it can be handled further */
+				if (strncmp(start, "USE_INIT_IPI", (size_t)(end - start)) == 0) {
+					use_init_ipi = true;
+				}
 			}
 			start = end;
 		}
