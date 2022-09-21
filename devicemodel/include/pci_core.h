@@ -103,7 +103,9 @@ enum pcibar_type {
 	PCIBAR_IO,
 	PCIBAR_MEM32,
 	PCIBAR_MEM64,
-	PCIBAR_MEMHI64
+	PCIBAR_MEMHI64,
+	/* the type for ROM bar. It will be allocated from PCI_EMUL_MEM32 region */
+	PCIBAR_ROM
 };
 
 struct pcibar {
@@ -135,6 +137,7 @@ enum lintr_stat {
 	PENDING
 };
 
+#define PCI_ROMBAR	(PCIR_MAX_BAR_0 + 1) /* ROM BAR index in Type 0 Header */
 struct pci_vdev {
 	struct pci_vdev_ops *dev_ops;
 	struct vmctx *vmctx;
@@ -176,7 +179,8 @@ struct pci_vdev {
 	void	*arg;		/* devemu-private data */
 
 	uint8_t	cfgdata[PCI_REGMAX + 1];
-	struct pcibar bar[PCI_BARMAX + 1];
+	/* 0..5 is used for PCI MMIO/IO bar. 6 is used for PCI ROMbar */
+	struct pcibar bar[PCI_BARMAX + 2];
 };
 
 struct gsi_dev {
@@ -311,6 +315,22 @@ void	msicap_cfgwrite(struct pci_vdev *pi, int capoff, int offset,
 void	msixcap_cfgwrite(struct pci_vdev *pi, int capoff, int offset,
 			 int bytes, uint32_t val);
 void	pci_callback(void);
+
+/*
+ * @brief allocate bar region for virtual PCI device
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param idx the bar_idx for the request bar region
+ * @param type the region type for the request bar region
+ * @param size the region size for the request bar region
+ *        It can support the allocation of bar_region for bar_idx 0..5 and
+ *           the bar type can be PCIBAR_IO/PCIBAR_MEM32/PCIBAR_MEM64.
+ *        It can support the allocation of ROM bar for PCI_ROMBAR and only allow
+ *           that the bar type is PCIBAR_ROM.
+ *
+ * @Return 0 indicates that the allocation is successful.
+ *         error indicates that it fails in the allocation of bar region.
+ */
 int	pci_emul_alloc_bar(struct pci_vdev *pdi, int idx,
 			   enum pcibar_type type, uint64_t size);
 int	pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx,
