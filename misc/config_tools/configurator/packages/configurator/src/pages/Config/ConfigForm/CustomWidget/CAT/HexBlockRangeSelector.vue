@@ -23,9 +23,9 @@ export default {
   computed: {
     sliderOptions() {
       let options = {}
-      if (this.isVcat) {
-        options['behaviour'] = 'drag-fixed'
-      }
+      // if (this.isVcat) {
+      //   options['behaviour'] = 'drag-fixed'
+      // }
       return options
     },
     hexField: {
