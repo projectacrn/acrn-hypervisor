@@ -41,5 +41,6 @@ void console_vmexit_callback(struct acrn_vcpu *vcpu);
 void suspend_console(void);
 void resume_console(void);
 struct acrn_vuart *vm_console_vuart(struct acrn_vm *vm);
+bool is_using_init_ipi(void);
 
 #endif /* CONSOLE_H */

@@ -21,6 +21,7 @@
 #include <lib/sprintf.h>
 #include <asm/lapic.h>
 #include <asm/irq.h>
+#include <console.h>
 
 /* stack_frame is linked with the sequence of stack operation in arch_switch_to() */
 struct stack_frame {
@@ -526,11 +527,13 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		vcpu->vcpu_id = vcpu_id;
 		per_cpu(ever_run_vcpu, pcpu_id) = vcpu;
 
-		if (is_lapic_pt_configured(vm)) {
+		if (is_lapic_pt_configured(vm) || is_using_init_ipi()) {
 			per_cpu(mode_to_kick_pcpu, pcpu_id) = DEL_MODE_INIT;
 		} else {
 			per_cpu(mode_to_kick_pcpu, pcpu_id) = DEL_MODE_IPI;
 		}
+		pr_info("pcpu=%d, kick-mode=%d, use_init_flag=%d", pcpu_id,
+			per_cpu(mode_to_kick_pcpu, pcpu_id), is_using_init_ipi());
 
 		/* Initialize the parent VM reference */
 		vcpu->vm = vm;
