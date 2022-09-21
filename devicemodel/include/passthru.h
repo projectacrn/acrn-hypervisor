@@ -16,7 +16,7 @@
 
 struct passthru_dev {
 	struct pci_vdev *dev;
-	struct pcibar bar[PCI_BARMAX + 1];
+	struct pcibar bar[PCI_BARMAX + 2];
 	struct {
 		int		capoff;
 	} msi;
@@ -36,6 +36,8 @@ struct passthru_dev {
 	 */
 	bool need_reset;
 	bool d3hot_reset;
+	bool need_rombar;
+	char *rom_buffer;
 	bool (*has_virt_pcicfg_regs)(int offset);
 };
 
