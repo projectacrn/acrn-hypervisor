@@ -18,8 +18,8 @@ The ACRN hypervisor can boot from the `multiboot protocol
 with the multiboot protocol, the multiboot2 protocol adds UEFI support.
 
 The multiboot protocol is supported by the ACRN hypervisor natively. The
-multiboot2 protocol is supported when :option:`hv.FEATURES.MULTIBOOT2` is
-enabled in the scenario configuration. The :option:`hv.FEATURES.MULTIBOOT2` is
+multiboot2 protocol is supported when the :term:`Multiboot2` option is
+enabled in the scenario configuration. The :term:`Multiboot2` option is
 enabled by default. To load the hypervisor with the multiboot protocol, run the
 GRUB ``multiboot`` command. To load the hypervisor with the multiboot2 protocol,
 run the ``multiboot2`` command. To load a VM kernel or ramdisk, run the
@@ -29,13 +29,14 @@ for the multiboot2 protocol.
 The ACRN hypervisor binary is built with two formats: ``acrn.32.out`` in
 ELF format and ``acrn.bin`` in RAW format. The GRUB ``multiboot``
 command supports ELF format only and does not support binary relocation,
-even if :option:`hv.FEATURES.RELOC` is set. The GRUB ``multiboot2``
-command supports
-ELF format when :option:`hv.FEATURES.RELOC` is not set, or RAW format when
-:option:`hv.FEATURES.RELOC` is set.
+even if the :term:`Hypervisor relocation` option is set in the scenario
+configuration. The GRUB ``multiboot2`` command supports
+ELF format when the :term:`Hypervisor relocation` option is not set, or RAW
+format when the :term:`Hypervisor relocation` option is set.
 
 .. note::
-   * :option:`hv.FEATURES.RELOC` is set by default, so use ``acrn.32.out`` in
+   * The :term:`Hypervisor relocation` option is set by default, so use
+     ``acrn.32.out`` in
      the multiboot protocol and ``acrn.bin`` in the multiboot2 protocol.
 
    * Per ACPI specification, the RSDP pointer is described in the EFI System
