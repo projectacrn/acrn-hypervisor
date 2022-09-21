@@ -109,6 +109,13 @@ class AddrWindow(namedtuple(
             return False
         return True
 
+    def contains(self, other):
+        if not isinstance(other, AddrWindow):
+            raise TypeError('contains() other must be an AddrWindow: {}'.format(type(other)))
+        if other.start >= self.start and other.end <= self.end:
+            return True
+        return False
+
 def insert_vuart_to_dev_dict(scenario_etree, vm_id, devdict_32bits):
 
     console_vuart =  scenario_etree.xpath(f"./console_vuart[base != 'INVALID_PCI_BASE']/@id")
@@ -223,18 +230,27 @@ def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
             devdict[(f"{dev_name}", f"bar{next_bar_region}")] = VMSIX_VBAR_SIZE
 
 def get_devs_mem_native(board_etree, mems):
-    nodes = board_etree.xpath(f"//resource[@type = 'memory' and @len != '0x0' and @id and @width]")
+    nodes = board_etree.xpath(f"//resource[@type = 'memory' and @len != '0x0' and @id and @width and @min and @max]")
+    secondary_pci_nodes = board_etree.xpath(f"//resource[../bus[@type = 'pci'] and @type = 'memory' and @len != '0x0' and @min and @max]")
+    secondary_pci_windows = [AddrWindow(int(node.get('min'), 16), int(node.get('max'), 16)) for node in secondary_pci_nodes]
     dev_list = []
+
     for node in nodes:
         start = node.get('min')
         end = node.get('max')
-        if start is not None and end is not None:
-            window = AddrWindow(int(start, 16), int(end, 16))
-            for mem in mems:
-                if window.start >= mem.start and window.end <= mem.end:
-                    dev_list.append(window)
-                    break
-    return sorted(dev_list)
+        node_window = AddrWindow(int(start, 16), int(end, 16))
+        if all(not(w.contains(node_window)) for w in secondary_pci_windows):
+            dev_list.append(node_window)
+
+    # check if there is any nested window
+    for i in range(len(secondary_pci_windows)):
+        secondary_pci_window = secondary_pci_windows[i]
+        if all(not(w.contains(secondary_pci_window)) for w in (secondary_pci_windows[:i] + secondary_pci_windows[i + 1:])):
+            dev_list.append(secondary_pci_window)
+
+    # check if all the mmio window of dev_list fall into pci hole
+    return_dev_list = [d for d in dev_list if any(mem.contains(d) for mem in mems)]
+    return sorted(return_dev_list)
 
 def get_devs_io_port_native(board_etree, io_port_range):
     nodes = board_etree.xpath(f"//device/resource[@type = 'io_port' and @len != '0x0' and @id]")
