@@ -784,6 +784,23 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 			size = 16;
 	}
 
+	if (idx > PCI_ROMBAR) {
+		pr_err("%s: invalid bar number %d for PCI bar type\n", __func__, idx);
+		return -1;
+	}
+	if (idx == PCI_ROMBAR) {
+		/*
+		 * It needs to pass the PCIBAR_ROM for PCI_ROMBAR idx. But as it
+		 * is allocated from PCI_EMUL_MEM32 type, the internal type is
+		 * changed to PCIBAR_MEM32
+		 */
+		if (type != PCIBAR_ROM) {
+			pr_err("%s: invalid bar type %d for PCI ROM\n",
+				__func__, type);
+			return -1;
+		}
+		type = PCIBAR_MEM32;
+	}
 	switch (type) {
 	case PCIBAR_NONE:
 		baseptr = NULL;
@@ -853,13 +870,20 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 	pdi->bar[idx].addr = addr;
 	pdi->bar[idx].size = size;
 
-	/* Initialize the BAR register in config space */
-	bar = (addr & mask) | lobits;
-	pci_set_cfgdata32(pdi, PCIR_BAR(idx), bar);
+	if (idx == PCI_ROMBAR) {
+		mask = PCIM_BIOS_ADDR_MASK;
+		bar = addr & mask;
+		/* enable flag will be configured later */
+		pci_set_cfgdata32(pdi, PCIR_BIOS, bar);
+	} else {
+		/* Initialize the BAR register in config space */
+		bar = (addr & mask) | lobits;
+		pci_set_cfgdata32(pdi, PCIR_BAR(idx), bar);
 
-	if (type == PCIBAR_MEM64) {
-		pdi->bar[idx + 1].type = PCIBAR_MEMHI64;
-		pci_set_cfgdata32(pdi, PCIR_BAR(idx + 1), bar >> 32);
+		if (type == PCIBAR_MEM64) {
+			pdi->bar[idx + 1].type = PCIBAR_MEMHI64;
+			pci_set_cfgdata32(pdi, PCIR_BAR(idx + 1), bar >> 32);
+		}
 	}
 
 	error = register_bar(pdi, idx);
