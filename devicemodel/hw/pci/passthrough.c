@@ -841,6 +841,13 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		passthru_gpu_dsm_opregion(ctx, ptdev, &pcidev, device);
 	}
 
+	if (ptdev->need_rombar) {
+		/* When the rombar is enabled, the access to
+		 * pci 0x30 reg will be emulated in DM.
+		 * So this will provide one hint for hypervisor.
+		 */
+		pcidev.type = ACRN_PTDEV_QUIRK_ASSIGN;
+	}
 	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	pcidev.phys_bdf = ptdev->phys_bdf;
 	for (idx = 0; idx <= PCI_BARMAX; idx++) {
@@ -995,7 +1002,9 @@ passthru_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 {
 	struct passthru_dev *ptdev = dev->arg;
 
-	if (ptdev->has_virt_pcicfg_regs && ptdev->has_virt_pcicfg_regs(coff))
+	if (coff == PCIR_BIOS) {
+		*rv = pci_get_cfgdata32(dev, coff);
+	} else if (ptdev->has_virt_pcicfg_regs && ptdev->has_virt_pcicfg_regs(coff))
 		*rv = pci_get_cfgdata32(dev, coff);
 	else
 		*rv = read_config(ptdev->phys_dev, coff, bytes);
@@ -1008,9 +1017,33 @@ passthru_cfgwrite(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		  int coff, int bytes, uint32_t val)
 {
 	struct passthru_dev *ptdev = dev->arg;
+	uint32_t bios_rom;
 
-	if (!(ptdev->has_virt_pcicfg_regs && ptdev->has_virt_pcicfg_regs(coff)))
-		write_config(ptdev->phys_dev, coff, bytes, val);
+	if (coff == PCIR_BIOS) {
+
+		if ((val & PCIM_BIOS_ADDR_MASK) == PCIM_BIOS_ADDR_MASK) {
+			/* size is returned by read after writing 0xFFFFF800.
+			 * And format is ~(size - 1).
+			 */
+			bios_rom = (uint32_t) dev->bar[PCI_ROMBAR].size;
+			bios_rom = ~(bios_rom - 1);
+			pci_set_cfgdata32(dev, PCIR_BIOS, bios_rom);
+		} else if (val == 0) {
+			/* restore the zero if ROM_Bar is not supported */
+			pci_set_cfgdata32(dev, PCIR_BIOS, val);
+		} else {
+			/* restore the original addr into PCI_ROM bar.
+			 * force to update the original addr as remapping is not supported.
+			 */
+			bios_rom = (uint32_t) dev->bar[PCI_ROMBAR].addr;
+			pci_set_cfgdata32(dev, PCIR_BIOS, (bios_rom | PCIR_BIOS));
+			pr_dbg("Restore %x into ROM of %d:%d.%d\n",
+				val, dev->bus, dev->slot, dev->func);
+		}
+	} else {
+		if (!(ptdev->has_virt_pcicfg_regs && ptdev->has_virt_pcicfg_regs(coff)))
+			write_config(ptdev->phys_dev, coff, bytes, val);
+	}
 
 	return 0;
 }
