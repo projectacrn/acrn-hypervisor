@@ -75,20 +75,14 @@ For the connection:
    leave it blank. If the field is blank, the tool provides an address when the
    configuration is saved.
 
-   .. note::
-
-      The release v3.0 ACRN Configurator has an issue where you need to save the
-      configuration twice to see the generated I/O or BDF address in the vUART
-      setting. (:acrn-issue:`7831`)
-
 To add another connection, click **+** on the right side of an existing
 connection. Or click **-** to delete a connection.
 
    .. note::
 
-      The release v3.0 ACRN Configurator assigns COM2 (I/O address ``0x2F8``) to
+      The release v3.0+ ACRN Configurator assigns COM2 (I/O address ``0x2F8``) to
       the S5 feature. A conflict will occur if you assign ``0x2F8`` to another
-      connection. In our example, we'll use COM3 (I/O address ``0x3F8``).
+      connection. In our example, we'll use COM3 (I/O address ``0x3E8``).
 
 .. image:: images/configurator-vuartconn01.png
    :align: center
