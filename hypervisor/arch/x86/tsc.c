@@ -17,7 +17,10 @@
 #define CAL_MS	10U
 
 #define HPET_PERIOD	0x004U
+#define HPET_CFG	0x010U
 #define HPET_COUNTER	0x0F0U
+
+#define HPET_CFG_ENABLE	0x001UL
 
 static uint32_t tsc_khz;
 static void *hpet_hva;
@@ -74,10 +77,19 @@ static uint64_t pit_calibrate_tsc(uint32_t cal_ms_arg)
 
 void hpet_init(void)
 {
+	uint64_t cfg;
+
 	hpet_hva = parse_hpet();
+	if (hpet_hva != NULL) {
+		cfg = mmio_read64(hpet_hva + HPET_CFG);
+		if ((cfg & HPET_CFG_ENABLE) == 0UL) {
+			cfg |= HPET_CFG_ENABLE;
+			mmio_write64(cfg, hpet_hva + HPET_CFG);
+		}
+	}
 }
 
-static inline bool is_hpet_enabled(void)
+static inline bool is_hpet_capable(void)
 {
 	return (hpet_hva != NULL);
 }
@@ -131,7 +143,7 @@ static uint64_t pit_hpet_calibrate_tsc(uint32_t cal_ms_arg, uint64_t tsc_ref_hz)
 {
 	uint64_t tsc_hz, delta;
 
-	if (is_hpet_enabled()) {
+	if (is_hpet_capable()) {
 		tsc_hz = hpet_calibrate_tsc(cal_ms_arg);
 	} else {
 		tsc_hz = pit_calibrate_tsc(cal_ms_arg);

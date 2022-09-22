@@ -60,7 +60,7 @@ i18n.useLocal(localizeEn);
 export default {
   name: "ConfigForm",
   components: {Icon, Minus, VueForm, CAT, VUART, cpu_affinity, IVSHMEM_REGION},
-  emits: ['scenarioConfigFormDataUpdate', 'deleteVM', 'vmNameChange'],
+  emits: ['scenarioConfigFormDataUpdate', 'deleteVM', 'vmNameChange', 'updateCpuAffinity'],
   props: {
     currentActiveVMID: {type: Number},
     currentFormSchema: {type: Object},
@@ -125,6 +125,7 @@ export default {
     dataChange({newValue, oldValue}) {
       let newID = newValue.hasOwnProperty('@id') ? newValue['@id'] : -1;
       let oldID = oldValue.hasOwnProperty('@id') ? oldValue['@id'] : -1;
+      let vmType = newValue.hasOwnProperty('vm_type') ? newValue['vm_type'] : "";
 
       if (newID === oldID) {
         // skip hv settings
@@ -132,6 +133,9 @@ export default {
           if (this.vmNameCache !== newValue.name) {
             this.$emit('vmNameChange', newValue.name, this.vmNameCache)
             this.vmNameCache = newValue.name;
+          }
+          if (vmType != 'RTVM') {
+            this.$emit('updateCpuAffinity', newID)
           }
         }
         this.$emit('scenarioConfigFormDataUpdate', newID, newValue)

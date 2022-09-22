@@ -500,13 +500,16 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		WPRINTF(("%s: strdup failed\n", __func__));
 		return -1;
 	}
-	if (strstr(opts, "nodisk") != NULL) {
-		dummy_bctxt = true;
-	} else if ((opt = strsep(&opts_tmp, ",")) != NULL) {
+	if (strstr(opts, "nodisk") == NULL) {
+		opt = strsep(&opts_tmp, ",");
 		if (strcmp("iothread", opt) == 0) {
 			use_iothread = true;
 		} else {
-			opts_tmp = opts_start;
+			/* The opts_start is truncated by strsep, opts_tmp is also
+			 * changed by strsetp, so use opts which points to the
+			 * original parameter string
+			 */
+			opts_tmp = opts;
 		}
 		bctxt = blockif_open(opts_tmp, bident);
 		if (bctxt == NULL) {
@@ -514,7 +517,10 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			free(opts_start);
 			return -1;
 		}
+	} else {
+		dummy_bctxt = true;
 	}
+
 	free(opts_start);
 
 

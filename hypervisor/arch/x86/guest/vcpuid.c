@@ -115,6 +115,13 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	entry->flags = flags;
 
 	switch (leaf) {
+
+	case 0x06U:
+		cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
+		entry->eax &= ~(CPUID_EAX_HWP | CPUID_EAX_HWP_N | CPUID_EAX_HWP_AW | CPUID_EAX_HWP_EPP | CPUID_EAX_HWP_PLR);
+		entry->ecx &= ~CPUID_ECX_HCFC;
+		break;
+
 	case 0x07U:
 		if (subleaf == 0U) {
 			uint64_t cr4_reserved_mask = get_cr4_reserved_bits();
@@ -626,6 +633,8 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 
 	/* mask Safer Mode Extension */
 	*ecx &= ~CPUID_ECX_SMX;
+
+	*ecx &= ~CPUID_ECX_EST;
 
 	/* mask SDBG for silicon debug */
 	*ecx &= ~CPUID_ECX_SDBG;

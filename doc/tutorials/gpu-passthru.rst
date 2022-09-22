@@ -26,6 +26,9 @@ Consider the following dependencies and constraints:
 
 * When a device is assigned to a VM via GVT-d, no other VMs can use it.
 
+* For ASRock systems, disable the BIOS setting "Above 4G Decoding" (under
+  Advanced Menu > SA Configuration) to enable the GVT-d feature.
+
 .. note:: After GVT-d is enabled, have either a serial port
    or SSH session open in the Service VM to interact with it.
 

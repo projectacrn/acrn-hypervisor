@@ -1,196 +1,148 @@
 .. _cpu_sharing:
 
-Enable CPU Sharing in ACRN
-##########################
+Enable CPU Sharing
+##################
 
-Introduction
-************
+About CPU Sharing
+*****************
 
-The goal of CPU Sharing is to fully utilize the physical CPU resource to
-support more virtual machines. ACRN only supports 1 to 1
-mapping mode between virtual CPUs (vCPUs) and physical CPUs (pCPUs).
-Because of the lack of CPU sharing ability, the number of VMs is
-limited. To support CPU Sharing, we have introduced a scheduling
-framework and implemented two simple small scheduling algorithms to
-satisfy embedded device requirements. Note that, CPU Sharing is not
-available for VMs with local APIC passthrough (``--lapic_pt`` option).
+CPU sharing allows the virtual CPUs (vCPUs) of different VMs to run on the same
+physical CPU, just like how multiple processes run concurrently on a single CPU.
+Internally the hypervisor adopts time slicing scheduling and periodically
+switches among those vCPUs.
 
-Scheduling Framework
-********************
+This feature can help improve overall CPU utilization when the VMs are not fully
+loaded. However, sharing a physical CPU among multiple vCPUs increases the
+worst-case response latency of them, and thus is not suitable for vCPUs running
+latency-sensitive workloads.
 
-To satisfy the modularization design concept, the scheduling framework
-layer isolates the vCPU layer and scheduler algorithm. It does not have
-a vCPU concept so it is only aware of the thread object instance. The
-thread object state machine is maintained in the framework. The
-framework abstracts the scheduler algorithm object, so this architecture
-can easily extend to new scheduler algorithms.
+Dependencies and Constraints
+****************************
 
-.. figure:: images/cpu_sharing_framework.png
+Consider the following dependencies and constraints:
+
+* CPU sharing is a hypervisor feature that is hardware and OS neutral.
+
+* CPU sharing is not available for real-time VMs or for VMs with local APIC
+  passthrough (via the LAPIC passthrough option in the ACRN Configurator or via
+  the Device Model ``--lapic_pt`` option).
+
+* You can choose the scheduler the hypervisor uses. A scheduler is an algorithm
+  for determining the priority of VMs running on a shared virtual CPU. ACRN
+  supports the following schedulers:
+
+  - Borrowed Virtual Time (BVT), which fairly allocates time slices to multiple
+    vCPUs pinned to the same physical CPU. The BVT scheduler is the default and
+    is sufficient for most use cases.
+
+  - No-Operation (NOOP), which runs at most one vCPU on each physical CPU.
+
+  - Priority based, which supports vCPU scheduling based on their static
+    priorities defined in the scenario configuration. A vCPU can be running only
+    if there is no higher-priority vCPU running on the same physical CPU.
+
+Configuration Overview
+**********************
+
+You use the :ref:`acrn_configurator_tool` to enable CPU sharing by assigning the
+same set of physical CPUs to multiple VMs and selecting a scheduler. The
+following documentation is a general overview of the configuration process.
+
+To assign the same set of physical CPUs to multiple VMs, set the following
+parameters in each VM's **Basic Parameters**:
+
+* VM type: Standard (Real-time VMs don't support CPU sharing)
+* Physical CPU affinity > pCPU ID: Select a physical CPU by its core ID.
+* To add another physical CPU, click **+** on the right side of an existing CPU.
+  Or click **-** to delete a CPU.
+* Repeat the process to assign the same physical CPUs to another VM.
+
+.. image:: images/configurator-cpusharing-affinity.png
    :align: center
+   :class: drop-shadow
 
-The below diagram shows that the vCPU layer invokes APIs provided by
-scheduling framework for vCPU scheduling. The scheduling framework also
-provides some APIs for schedulers. The scheduler mainly implements some
-callbacks in an ``acrn_scheduler`` instance for scheduling framework.
-Scheduling initialization is invoked in the hardware management layer.
+To select a scheduler, go to **Hypervisor Global Settings > Advanced Parameters
+> Virtual CPU scheduler** and select a scheduler from the list.
 
-.. figure:: images/cpu_sharing_api.png
+.. image:: images/configurator-cpusharing-scheduler.png
    :align: center
+   :class: drop-shadow
 
-CPU Affinity
-*************
+Example Configuration
+*********************
 
-We do not support vCPU migration; the assignment of vCPU mapping to
-pCPU is fixed at the time the VM is launched. The statically configured
-cpu_affinity in the VM configuration defines a superset of pCPUs that
-the VM is allowed to run on. One bit in this bitmap indicates that one pCPU
-could be assigned to this VM, and the bit number is the pCPU ID. A pre-launched
-VM is launched on exactly the number of pCPUs assigned in
-this bitmap. The vCPU to pCPU mapping is implicitly indicated: vCPU0 maps
-to the pCPU with lowest pCPU ID, vCPU1 maps to the second lowest pCPU ID, and
-so on.
+The following steps show how to enable and verify CPU sharing between two User
+VMs. The example extends the information provided in the :ref:`gsg`.
 
-For post-launched VMs, acrn-dm could choose to launch a subset of pCPUs that
-are defined in cpu_affinity by specifying the assigned Service VM vCPU's lapic_id
-(``--cpu_affinity`` option). But it can't assign any pCPUs that are not
-included in the VM's cpu_affinity.
+#. In the ACRN Configurator, create a shared scenario with a Service VM and two
+   post-launched User VMs.
 
-Here is an example for affinity:
+#. For the first User VM, set the following parameters in the VM's **Basic
+   Parameters**:
 
-- VM0: 2 vCPUs, pinned to pCPU0 and pCPU1
-- VM1: 2 vCPUs, pinned to pCPU0 and pCPU1
-- VM2: 2 vCPUs, pinned to pCPU2 and pCPU3
+   * VM name: This example uses ``POST_STD_VM1``.
+   * VM type: ``Standard``
+   * Physical CPU affinity: Select pCPU ID ``1``, then click **+** and select
+     pCPU ID ``2`` to assign the VM to CPU cores 1 and 2.
 
-.. figure:: images/cpu_sharing_affinity.png
-   :align: center
+   .. image:: images/configurator-cpusharing-vm1.png
+      :align: center
+      :class: drop-shadow
 
-Thread Object State
-*******************
+   .. image:: images/configurator-cpusharing-affinity.png
+      :align: center
+      :class: drop-shadow
 
-The thread object contains three states: RUNNING, RUNNABLE, and BLOCKED.
+#. For the second User VM, set the following parameters in the VM's **Basic
+   Parameters**:
 
-.. figure:: images/cpu_sharing_state.png
-   :align: center
+   * VM name: This example uses ``POST_STD_VM2``.
+   * VM type: ``Standard``
+   * Physical CPU affinity: Select pCPU ID ``1`` and ``2``. The pCPU IDs must be
+     the same as those of ``POST_STD_VM1`` to use the CPU sharing function.
 
-After a new vCPU is created, the corresponding thread object is
-initiated. The vCPU layer invokes a wakeup operation. After wakeup, the
-state for the new thread object is set to RUNNABLE, and then follows its
-algorithm to determine whether or not to preempt the current running
-thread object. If yes, it turns to the RUNNING state. In RUNNING state,
-the thread object may turn back to the RUNNABLE state when it runs out
-of its timeslice, or it might yield the pCPU by itself, or be preempted.
-The thread object under RUNNING state may trigger sleep to transfer to
-BLOCKED state.
+#. In **Hypervisor Global Settings > Advanced Parameters > Virtual CPU
+   scheduler**, confirm that the default scheduler, Borrowed Virtual Time, is
+   selected.
 
-Scheduler
-*********
+#. Save the scenario and launch script.
 
-The below block diagram shows the basic concept for the scheduler. There
-are four kinds of schedulers in the diagram: NOOP (No-Operation) scheduler,
-the IO sensitive Round Robin scheduler, the priority based scheduler and
-the BVT (Borrowed Virtual Time) scheduler. By default, BVT is used.
+#. Build ACRN, copy all the necessary files from the development computer to
+   the target system, and launch the Service VM and post-launched User VMs.
 
+#. In the :ref:`ACRN hypervisor shell<acrnshell>`, check the CPU sharing via
+   the ``vcpu_list`` command. For example:
 
-- **No-Operation scheduler**:
+   .. code-block:: none
 
-  The NOOP (No-operation) scheduler has the same policy as the original
-  1-1 mapping previously used; every pCPU can run only two thread objects:
-  one is the idle thread, and another is the thread of the assigned vCPU.
-  With this scheduler, vCPU works in Work-Conserving mode, which always
-  tries to keep resources busy, and will run once it is ready. The idle thread
-  can run when the vCPU thread is blocked.
+      ACRN:\>vcpu_list
 
-- **Priority based scheduler**:
+      VM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE    THREAD STATE
+      =====    =======    =======    =========    ==========    ==========
+        0         0          0        PRIMARY      Running       RUNNABLE
+        0         1          1        SECONDARY    Running       BLOCKED
+        0         2          2        SECONDARY    Running       BLOCKED
+        0         3          3        SECONDARY    Running       BLOCKED
+        1         1          0        PRIMARY      Running       RUNNING
+        1         2          1        SECONDARY    Running       BLOCKED
+        2         1          0        PRIMARY      Running       BLOCKED
+        2         2          1        SECONDARY    Running       RUNNING
 
-  The priority based scheduler can support vCPU scheduling based on their
-  pre-configured priorities. A vCPU can be running only if there is no
-  higher priority vCPU running on the same pCPU. For example, in some cases,
-  we have two VMs, one VM can be configured to use **PRIO_LOW** and the
-  other one to use **PRIO_HIGH**. The vCPU of the **PRIO_LOW** VM can
-  only be running when the vCPU of the **PRIO_HIGH** VM voluntarily relinquishes
-  usage of the pCPU.
+   The VM ID, PCPU ID, VCPU ID, and THREAD STATE columns provide information to
+   help you check CPU sharing. In the VM ID column, VM 0 is the Service VM, VM 1
+   is POST_STD_VM1, and VM 2 is POST_STD_VM2. The output shows that ACRN
+   assigned all physical CPUs (pCPUs) to VM 0 as expected. It also confirms that
+   you assigned pCPUs 1 and 2 to VMs 1 and 2 (via the ACRN Configurator). vCPU 1
+   of VM 0 and vCPU 0 of VM 1 and VM 2 are running on the same physical CPU;
+   they are sharing the physical CPU execution time. The thread state column
+   shows the current states of the vCPUs. The BLOCKED state can occur for
+   different reasons, most likely the vCPU is waiting for an I/O operation to be
+   completed. Once it is done, the state will change to RUNNABLE. When this vCPU
+   gets its pCPU execution time, its state will change to RUNNING, then the vCPU
+   is actually running on the pCPU.
 
-- **Borrowed Virtual Time scheduler**:
+Learn More
+**********
 
-  BVT (Borrowed Virtual time) is a virtual time based scheduling
-  algorithm, it dispatches the runnable thread with the earliest
-  effective virtual time.
-
-  - **Virtual time**: The thread with the earliest effective virtual
-    time (EVT) is dispatched first.
-  - **Warp**: a latency-sensitive thread is allowed to warp back in
-    virtual time to make it appear earlier. It borrows virtual time from
-    its future CPU allocation and thus does not disrupt long-term CPU
-    sharing
-  - **MCU**: minimum charging unit, the scheduler account for running time
-    in units of MCU.
-  - **Weighted fair sharing**: each runnable thread receives a share of
-    the processor in proportion to its weight over a scheduling
-    window of some number of MCU.
-  - **C**: context switch allowance.  Real time by which the current
-    thread is allowed to advance beyond another runnable thread with
-    equal claim on the CPU. C is similar to the quantum in conventional
-    timesharing.
-
-
-Scheduler configuration
-
-* The scheduler used at runtime is defined in the scenario XML file
-  via the :option:`hv.FEATURES.SCHEDULER` option. The default scheduler
-  is **SCHED_BVT**. Use the :ref:`ACRN Configurator tool <acrn_configurator_tool>`
-  if you want to change this scenario option value.
-
-
-The default scheduler is **SCHED_BVT**.
-
-* The cpu_affinity could be configured by one of these approaches:
-
-  - Without ``cpu_affinity`` option in acrn-dm. This launches the user VM
-    on all the pCPUs that are included in the statically configured cpu_affinity.
-
-  - With ``cpu_affinity`` option in acrn-dm. This launches the user VM on
-    a subset of the configured cpu_affinity pCPUs.
-
-  For example, assign physical CPUs 0 and 1 to this VM::
-
-	--cpu_affinity 0,1
-
-
-Example
-*******
-
-Use the following settings to support this configuration in the shared scenario:
-
-+---------+--------+-------+-------+
-|pCPU0    |pCPU1   |pCPU2  |pCPU3  |
-+=========+========+=======+=======+
-|Service VM + WaaG |RT Linux       |
-+------------------+---------------+
-
-- offline pcpu2-3 in Service VM.
-
-
-- launch guests.
-
-  - launch WaaG with "--cpu_affinity 0,1"
-  - launch RT with "--cpu_affinity 2,3"
-
-
-After you start all VMs, check the CPU affinities from the Hypervisor
-console with the ``vcpu_list`` command:
-
-.. code-block:: none
-
-	ACRN:\>vcpu_list
-
-	VM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE    THREAD STATE
-	=====    =======    =======    =========    ==========    ==========
-	  0         0          0       PRIMARY      Running          RUNNING
-	  0         1          1       SECONDARY    Running          RUNNING
-	  1         0          0       PRIMARY      Running          RUNNABLE
-	  1         1          1       SECONDARY    Running          BLOCKED
-	  2         2          0       PRIMARY      Running          RUNNING
-	  2         3          1       SECONDARY    Running          RUNNING
-
-Note: the THREAD STATE are instant states, they will change at any time.
-
+For details on the ACRN CPU virtualization high-level design, For the
+:ref:`hv-cpu-virt`.

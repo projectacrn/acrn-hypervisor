@@ -39,9 +39,9 @@ optimization in this sample to get the best RT performance.
 Prerequisites Environment and Images
 ************************************
 
-Before beginning, use the ``df`` command on your development system and
+Before beginning, use the ``df`` command on your development computer and
 verify there's at least 30GB free disk space for building the ACRN
-Sample application. You may see a different Filesystem name and sizes:
+sample application. You may see a different Filesystem name and sizes:
 
 .. code-block:: console
 
@@ -53,7 +53,7 @@ Sample application. You may see a different Filesystem name and sizes:
 
 .. rst-class:: numbered-step
 
-Prepare the ACRN Development and Target environment
+Prepare the ACRN Development and Target Environment
 ***************************************************
 
 .. important::
@@ -66,9 +66,9 @@ development and target systems that we'll also use to build and run this sample
 application.
 
 After following the Getting Started Guide, you'll have a directory
-``~/acrn-work`` on your development system containing directories with the
+``~/acrn-work`` on your development computer containing directories with the
 ``acrn-hypervisor`` and ``acrn-kernel`` source code and build output. You'll
-also have the board XML file that's needed by the ACRN configurator to
+also have the board XML file that's needed by the ACRN Configurator to
 configure the ACRN hypervisor and set up the VM launch scripts for this sample
 application.
 
@@ -78,7 +78,7 @@ Preparing the Target System
 On the target system, reboot and choose the regular Ubuntu image (not the
 Multiboot2 choice created when following the Getting Started Guide).
 
-1. Login as the **acrn** user. We'll be making ssh connections to the target system
+1. Log in as the **acrn** user. We'll be making ssh connections to the target system
    later in these steps, so install the ssh server on the target system using::
 
       sudo apt install -y openssh-server
@@ -97,27 +97,27 @@ Multiboot2 choice created when following the Getting Started Guide).
 Make the Sample Application
 ***************************
 
-On your development system, build the applications used by the sample. The
+On your development computer, build the applications used by the sample. The
 ``rtApp`` app in the RT VM reads the output from the cyclictest program and
 sends it via inter-VM shared memory (IVSHMEM) to another regular HMI VM where
 the ``userApp`` app receives the data and formats it for presentation using the
 ``histapp.py`` Python app.
 
-As a normal (e.g., **acrn**) user follow these steps:
+As a normal (e.g., **acrn**) user, follow these steps:
 
-1. Install some additional packages in your development system used for
+1. Install some additional packages in your development computer used for
    building the sample application::
 
      sudo apt install -y cloud-guest-utils schroot kpartx qemu-kvm
 
-#. Checkout the acrn-hypervisor source code branch (already cloned from the
-   acrn-hypervisor repo when you followed the :ref:`gsg`). We've tagged a
+#. Check out the ``acrn-hypervisor`` source code branch (already cloned from the
+   ``acrn-hypervisor`` repo when you followed the :ref:`gsg`). We've tagged a
    specific version of the hypervisor you should use for the sample app's HMI
    VM::
 
      cd ~/acrn-work/acrn-hypervisor
      git fetch --all
-     git checkout -b sample acrn-tag-sample-application
+     git checkout v3.1 
 
 #. Build the ACRN sample application source code::
 
@@ -129,7 +129,7 @@ As a normal (e.g., **acrn**) user follow these steps:
 
 .. rst-class:: numbered-step
 
-Make the HMI_VM image
+Make the HMI_VM Image
 *********************
 
 1. Make the HMI VM image. This script runs for about 10 minutes total and will
@@ -139,7 +139,7 @@ Make the HMI_VM image
      cd ~/acrn-work/acrn-hypervisor/misc/sample_application/image_builder
      ./create_image.sh hmi-vm
 
-   After the script is finished the ``hmi_vm.img`` image file is created in the
+   After the script is finished, the ``hmi_vm.img`` image file is created in the
    ``build`` directory. You should see a final message from the script that
    looks like this:
 
@@ -149,7 +149,7 @@ Make the HMI_VM image
 
    If you don't see such a message, look back through the output to see what
    errors are indicated.  For example, there could have been a network error
-   while retrieving packages from the internet. In such a case, simply trying
+   while retrieving packages from the Internet. In such a case, simply trying
    the ``create_image.sh`` command again might work.
 
    The HMI VM image is a configured Ubuntu desktop image
@@ -161,10 +161,10 @@ Make the HMI_VM image
 Make the RT_VM image
 *********************
 
-1. Checkout the acrn-kernel source code branch (already cloned from the
-   acrn-kernel repo when you followed the :ref:`gsg`). We've tagged a
-   specific version of the acrn-kernel you should use for the sample app's RT
-   VM::
+1. Check out the ``acrn-kernel`` source code branch (already cloned from the
+   ``acrn-kernel`` repo when you followed the :ref:`gsg`). We've tagged a
+   specific version of the ``acrn-kernel`` you should use for the sample app's
+   RT VM::
 
      cd ~/acrn-work/acrn-kernel
      git fetch --all
@@ -200,7 +200,7 @@ Make the RT_VM image
      cd ~/acrn-work/acrn-hypervisor/misc/sample_application/image_builder
      ./create_image.sh rt-vm
 
-   After the script is finished the ``rt_vm.img`` image file is created in the ``build``
+   After the script is finished, the ``rt_vm.img`` image file is created in the ``build``
    directory. The RT VM image is a configured Ubuntu image with a
    preempt-rt patched kernel used for real-time VMs.
 
@@ -212,18 +212,18 @@ Create and Configure the ACRN Scenario
 
 Now we turn to building the hypervisor based on the board and scenario
 configuration for our sample application. We'll use the board XML file
-and ACRN configurator already on your development system when you followed
-:ref:`gsg`.
+and ACRN Configurator already on your development computer when you followed
+the :ref:`gsg`.
 
-Use the ACRN configurator to define a new scenario for our two VMs
-and generate new launch scripts for this Sample Application.
+Use the ACRN Configurator to define a new scenario for our two VMs
+and generate new launch scripts for this sample application.
 
-1. On your development computer, Launch the ACRN Configurator::
+1. On your development computer, launch the ACRN Configurator::
 
      cd ~/acrn-work
      acrn-configurator
 
-#. Under Start a new configuration, confirm that the working folder is
+#. Under **Start a new configuration**, confirm that the working folder is
    ``/home/acrn/acrn-work/MyConfiguration``. Click **Use This Folder**. (If
    prompted, confirm it's **OK** to overwrite an existing configuration.)
 
@@ -234,7 +234,7 @@ and generate new launch scripts for this Sample Application.
 
 #. Import your board configuration file as follows:
 
-   a. In the **1. Import a board configuration file** panel and click **Browse
+   a. In the **1. Import a board configuration file** panel, click **Browse
       for file**.
 
    #. Browse to ``/home/acrn/acrn-work/my_board.xml`` and click **Open**.
@@ -252,10 +252,10 @@ and generate new launch scripts for this Sample Application.
       :class: drop-shadow
       :align: center
 
-   The configurator will report some problems with the initial scenario
+   The ACRN Configurator will report some problems with the initial scenario
    configuration that we'll resolve as we make updates. (Notice the error
    indicators on the settings tabs and above the parameters tabs.) The
-   configurator does a verification of the scenario when you open a saved
+   ACRN Configurator does a verification of the scenario when you open a saved
    scenario and when you click on the **Save Scenario And Launch Scripts**
    button.
 
@@ -273,7 +273,7 @@ and generate new launch scripts for this Sample Application.
       :align: center
 
 #. Select the VM1 tab and change the VM name to HMI_VM. Configure the **Console
-   virtual UART type** to ``COM Port1``, set the **Memory size** to ``2048``,
+   virtual UART type** to ``COM Port 1``, set the **Memory size** to ``2048``,
    and add the **physical CPU affinity** to pCPU ``0`` and ``1`` (click the
    **+** button to create the additional affinity setting), as shown below:
 
@@ -298,8 +298,8 @@ and generate new launch scripts for this Sample Application.
       :align: center
 
 #. Configure the HMI_VM **virtio block device**. Add the absolute path of your
-   ``hmi_vim.img`` on the target system. (We'll copy the generated ``hmi_vm.img`` to
-   this directory in a later step):
+   ``hmi_vm.img`` on the target system (we'll copy the generated ``hmi_vm.img``
+   to this directory in a later step):
 
    .. image:: images/samp-image009.png
       :class: drop-shadow
@@ -307,7 +307,7 @@ and generate new launch scripts for this Sample Application.
 
    That completes the HMI_VM settings.
 
-#. Next, Select the VM2 tab and change the **VM name** to RT_VM, change the
+#. Next, select the VM2 tab and change the **VM name** to RT_VM, change the
    **VM type** to ``Real-time``, set the **Console virtual UART type** to ``COM port 1``,
    set the **memory size** to ``1024``, set **pCPU affinity** to IDs ``2`` and ``3``, and
    check the **Real-time vCPU box** for pCPU ID 2, as shown below:
@@ -316,14 +316,14 @@ and generate new launch scripts for this Sample Application.
       :class: drop-shadow
       :align: center
 
-#. Config the **virtio console device** for RT_VM (unlike the HMI_VM, we don't use a **virtio
-   network device** for this RT_VM):
+#. Configure the **virtio console device** for the RT_VM (unlike the HMI_VM, we
+   don't use a **virtio network device** for this RT_VM):
 
    .. image:: images/samp-image011.png
       :align: center
       :class: drop-shadow
 
-#. Add the absolute path of your ``rt_vm.img`` on the target board (we'll copy
+#. Add the absolute path of your ``rt_vm.img`` on the target system (we'll copy
    the ``rt_vm.img`` file we generated earlier to this directory in a later
    step):
 
@@ -332,10 +332,10 @@ and generate new launch scripts for this Sample Application.
       :align: center
 
 #. Select the Hypervisor tab: Verify the **build type** is ``Debug``, define the
-   **InterVM Shared Memory region** settings as shown below, adding the
+   **InterVM shared memory region** settings as shown below, adding the
    HMI_VM and RT_VM as the VMs doing the sharing of this region. (The
-   missing **Virtual BDF** values will be supplied by the configurator when you
-   save the configuration.)
+   missing **Virtual BDF** values will be supplied by the ACRN Configurator
+   when you save the configuration.)
 
    .. image:: images/samp-image013.png
       :class: drop-shadow
@@ -361,10 +361,10 @@ and generate new launch scripts for this Sample Application.
 
 
 #. We're done configuring the sample application scenario. When you saved the
-   scenario, the configurator did a re-verification of all the option settings
-   and found no issues, so all the error indicators are now cleared.
+   scenario, the ACRN Configurator did a re-verification of all the option
+   settings and found no issues, so all the error indicators are now cleared.
 
-   Exit the configurator by clicking the **X** in the top right corner).
+   Exit the ACRN Configurator by clicking the **X** in the top right corner.
 
    .. image:: images/samp-image015a.png
       :class: drop-shadow
@@ -380,12 +380,12 @@ directory:
    launch_user_vm_id1.sh launch_user_vm_id2.sh scenario.xml myboard.board.xml
 
 You'll see the two VM launch scripts (id1 for the HMI_VM, and id2 for
-the RT_VM) and the scenario XML file for you Sample Application (as
+the RT_VM) and the scenario XML file for your sample application (as
 well as your board XML file).
 
 .. rst-class:: numbered-step
 
-Build the ACRN Hypervisor and Service VM images
+Build the ACRN Hypervisor and Service VM Images
 ***********************************************
 
 1. On the development computer, build the ACRN hypervisor using the
@@ -406,12 +406,12 @@ Build the ACRN Hypervisor and Service VM images
 #. Build the ACRN kernel for the Service VM (the sample application
    requires a newer version of the Service VM than generated in the
    Getting Started Guide, so we'll need to generate it again) using a tagged
-   version of the acrn-kernel::
+   version of the ``acrn-kernel``::
 
      cd ~/acrn-work/acrn-kernel
      git fetch --all
 
-     git checkout -b sample_service acrn-tag-sample-application
+     git checkout acrn-v3.1
 
      make distclean
      cp kernel_config_service_vm .config
@@ -434,19 +434,19 @@ Build the ACRN Hypervisor and Service VM images
 
 .. rst-class:: numbered-step
 
-Copy files from the development system to your target system
-************************************************************
+Copy Files from the Development Computer to Your Target System
+**************************************************************
 
 1. Copy all the files generated on the development computer to the
    target system. This includes the sample application executable files,
    HMI_VM and RT_VM images, Debian packages for the Service VM and
    Hypervisor, launch scripts, and the iasl tool built following the
-   Getting Started guide. You can use ``scp`` to copy across the local network,
+   Getting Started Guide. You can use ``scp`` to copy across the local network,
    or use a USB stick:
 
    Option 1: use ``scp`` to copy files over the local network
-     Use scp to copy files from your development system to the
-     ~/acrn-work directory on the target (replace the IP address used in
+     Use ``scp`` to copy files from your development computer to the
+     ``~/acrn-work`` directory on the target (replace the IP address used in
      this example with the target system's IP address you found earlier)::
 
        cd ~/acrn-work
@@ -523,7 +523,7 @@ Install and Run ACRN on the Target System
 
    This will boot the ACRN hypervisor and launch the Service VM.
 
-#. Login to the service VM (using the target's keyboard and HDMI monitor) using
+#. Log in to the Service VM (using the target's keyboard and HDMI monitor) using
    the ``acrn`` username.
 
 #. Find the Service VM's IP address (the first IP address shown by this command):
@@ -533,7 +533,7 @@ Install and Run ACRN on the Target System
       $ hostname -I | cut -d ' ' -f 1
       10.0.0.200
 
-#. From your development computer, ssh to your target board's Service VM
+#. From your development computer, ssh to your target system's Service VM
    using that IP address::
 
      ssh acrn@10.0.0.200
@@ -548,8 +548,8 @@ Install and Run ACRN on the Target System
    prompt in your ssh session (and a graphical login on your target's HDMI
    monitor).
 
-   Login to the HMI_VM as **root** user (not acrn) using your development
-   system's ssh session:
+   Log in to the HMI_VM as **root** user (not **acrn**) using your development
+   computer's ssh session:
 
    .. code-block:: console
       :emphasize-lines: 1
@@ -573,20 +573,20 @@ Install and Run ACRN on the Target System
 
       dhclient
 
-#. Run the HMI VM Sample Application userApp (in the background)::
+#. Run the HMI VM sample application ``userApp`` (in the background)::
 
      sudo /root/userApp &
 
-   and then the histapp.py application::
+   and then the ``histapp.py`` application::
 
      sudo python3 /root/histapp.py
 
    At this point, the HMI_VM is running and we've started the HMI parts of
    the sample application. Next, we will launch the RT_VM and its parts of
-   sample application.
+   the sample application.
 
-#. On your development system, open a new terminal window and start a
-   new ssh connection to your target board's service VM::
+#. On your development computer, open a new terminal window and start a
+   new ssh connection to your target system's Service VM::
 
      ssh acrn@10.0.0.200
 
@@ -599,7 +599,7 @@ Install and Run ACRN on the Target System
 #. The launch script will start up the RT_VM.  Lots of system messages will go
    by and end with an Ubuntu login prompt. 
 
-   Login to the RT_VM as **root** user (not **acrn**) in this ssh session:
+   Log in to the RT_VM as **root** user (not **acrn**) in this ssh session:
 
    .. code-block:: console
       :emphasize-lines: 1
@@ -624,21 +624,21 @@ Install and Run ACRN on the Target System
 Now the two parts of the sample application are running:
 
 * The RT_VM is running cyclictest, which generates latency data, and the rtApp
-  send this data via IVSHMEM to the HMI_VM.
+  sends this data via IVSHMEM to the HMI_VM.
 * In the HMI_VM, the userApp receives the cyclictest data and provides it to the
   histapp.py Python application that is running a web server.
 
 We can view this data displayed as a histogram:
 
-Option 1: Use a browser on your development system
-  Open a web-browser on your development computer to the
+Option 1: Use a browser on your development computer
+  Open a web browser on your development computer to the
   HMI_VM IP address we found in an earlier step (e.g., http://10.0.0.100).
 
 Option 2: Use a browser on the HMI VM using the target system console
-  Login to the HMI_VM on the target system's console. (If you want to
-  login as root, click on the "Not listed?" link under the username choices you
+  Log in to the HMI_VM on the target system's console. (If you want to
+  log in as root, click on the "Not listed?" link under the username choices you
   do see and enter the root username and password.) Open the web browser to
-  http://localhost
+  http://localhost.
 
 Refresh the browser. You'll see a histogram graph showing the
 percentage of latency time intervals reported by cyclictest. The histogram will
@@ -649,7 +649,7 @@ increases as reported on the vertical axis label.)
    :class: drop-shadow
    :align: center
 
-   Example histogram output from cyclictest as reported by the sample app
+   Example Histogram Output from Cyclictest as Reported by the Sample App
 
 The horizontal axis represents the latency values in microseconds, and the
 vertical axis represents the percentage of occurrences of those values.
@@ -660,7 +660,7 @@ Congratulations
 That completes the building and running of this sample application. You
 can view the application's code in the
 ``~/acrn-work/acrn-hypervisor/misc/sample_application`` directory on your
-development system (cloned from the acrn-hypervisor repo).
+development computer (cloned from the ``acrn-hypervisor`` repo).
 
 .. note:: As mentioned at the beginning, while this sample application uses the
    cyclictest to generate data about performance latency in the RT_VM, we

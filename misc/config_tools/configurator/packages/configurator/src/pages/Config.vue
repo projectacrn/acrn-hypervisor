@@ -86,6 +86,7 @@
               @deleteVM="deleteVM"
               @scenarioConfigFormDataUpdate="scenarioConfigFormDataUpdate"
               @vmNameChange="vmNameChange"
+              @updateCpuAffinity="updateCpuAffinity"
           />
         </div>
       </div>
@@ -343,6 +344,15 @@ export default {
           }
         }
       }
+    },
+    updateCpuAffinity(vmid) {
+      this.scenario.vm.map((vmConfig, vmIndex) => {
+          if (vmConfig['@id'] === vmid) {
+            for (let i = 0; i < vmConfig['cpu_affinity']['pcpu'].length; i++) {
+              this.scenario.vm[vmIndex]['cpu_affinity']['pcpu'][i]['real_time_vcpu'] = 'n'
+            }
+          }
+        })
     },
     assignVMID() {
       let vm_priority = {

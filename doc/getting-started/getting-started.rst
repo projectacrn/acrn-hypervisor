@@ -54,21 +54,21 @@ Before you begin, make sure your machines have the following prerequisites:
   - Monitor
   - Ethernet cable and Internet access
   - A second USB disk with minimum 16GB capacity. Format your USB disk with a
-    files system that supports files greater than 4GB: extFAT or NTFS, but not
+    file system that supports files greater than 4GB: extFAT or NTFS, but not
     FAT32. We'll use this USB disk to copy files between the development
     computer and target system. Instead of a USB drive, you can copy files
-    between systems over the network using the ``scp`` command.)
+    between systems over the network using the ``scp`` command.
   - Local storage device (NVMe or SATA drive, for example).  We recommend having
     40GB or more of free space.
 
 .. note::
    If you're working behind a corporate firewall, you'll likely need to
-   configure a proxy for accessing the internet, if you haven't done so already.
+   configure a proxy for accessing the Internet, if you haven't done so already.
    While some tools use the environment variables ``http_proxy`` and ``https_proxy`` to
    get their proxy settings, some use their own configuration files, most
    notably ``apt`` and ``git``.  If a proxy is needed and it's not configured,
-   commands that access the internet may time out and you may see errors such
-   as, "unable to access ..." or "couldn't resolve host ...".
+   commands that access the Internet may time out and you may see errors such
+   as "unable to access ..." or "couldn't resolve host ...".
 
 .. _gsg-dev-computer:
 
@@ -132,12 +132,12 @@ To set up the ACRN build environment on the development computer:
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout v3.0
+      git checkout v3.1
 
       cd ..
       git clone https://github.com/projectacrn/acrn-kernel.git
       cd acrn-kernel
-      git checkout acrn-v3.0
+      git checkout acrn-v3.1
 
 #. Install Python package dependencies:
 
@@ -246,14 +246,14 @@ To install Ubuntu 20.04:
       sudo apt upgrade -y
 
 #. It's convenient to use the network to transfer files between the development
-   and target system, so we recommend installing the openssh-server package on
-   the target system::
+   computer and target system, so we recommend installing the openssh-server
+   package on the target system::
 
       sudo apt install -y openssh-server
 
    This command will install and start the ssh-server service on the target
    system.  We'll need to know the target system's IP address to make a
-   connection from the development system, so find it now with this command::
+   connection from the development computer, so find it now with this command::
 
       hostname -I | cut -d ' ' -f 1
 
@@ -351,6 +351,7 @@ Generate a Board Configuration File
    .. code-block:: bash
 
       cd  ~/acrn-work
+      sudo pip3 install tqdm
       sudo apt install -y ./acrn-board-inspector*.deb
 
 #. Reboot the target system:
@@ -385,10 +386,10 @@ Generate a Board Configuration File
    have two options:
 
    Option 1: Use ``scp``
-      From your development computer, use the ``scp`` command to copy the Debian
-      package from your target system back to the ``~/acrn-work`` directory on
-      your development computer.
-      Replace ``10.0.0.200`` with the target system's IP address you found earlier::
+      From your development computer, use the ``scp`` command to copy the board
+      configuration file from your target system back to the
+      ``~/acrn-work`` directory on your development computer. Replace
+      ``10.0.0.200`` with the target system's IP address you found earlier::
 
          scp acrn@10.0.0.200:~/acrn-work/my_board.xml ~/acrn-work/
 
@@ -421,7 +422,7 @@ Generate a Scenario Configuration File and Launch Script
 ********************************************************
 
 In this step, you will download, install, and use the `ACRN Configurator
-<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb>`__
+<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.1.deb>`__
 to generate a scenario configuration file and launch script.
 
 A **scenario configuration file** is an XML file that holds the parameters of
@@ -437,7 +438,7 @@ post-launched User VM. Each User VM has its own launch script.
    .. code-block:: bash
 
       cd ~/acrn-work
-      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.0/acrn-configurator-3.0.deb
+      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.1.deb
 
    If you already have a previous version of the acrn-configurator installed,
    you should first remove it:
@@ -450,7 +451,7 @@ post-launched User VM. Each User VM has its own launch script.
 
    .. code-block:: bash
 
-      sudo apt install -y ./acrn-configurator-3.0.deb
+      sudo apt install -y ./acrn-configurator-3.1.deb
 
 #. Launch the ACRN Configurator:
 
@@ -508,13 +509,13 @@ post-launched User VM. Each User VM has its own launch script.
    settings to meet your application's particular needs. But for now, you
    will update only a few settings for functional and educational purposes.
 
-   You may see some error messages from the configurator, such as shown here:
+   You may see some error messages from the Configurator, such as shown here:
 
    .. image:: images/gsg-config-errors.png
       :align: center
       :class: drop-shadow
 
-   The configurator does consistency and validation checks when you load or save
+   The Configurator does consistency and validation checks when you load or save
    a scenario.  Notice the Hypervisor and VM1 tabs both have an error icon,
    meaning there are issues with configuration options in two areas.  Since the
    Hypervisor tab is currently highlighted, we're seeing an issue we can resolve
@@ -561,7 +562,7 @@ post-launched User VM. Each User VM has its own launch script.
       log in to the User VM later in this guide.
 
    #. For **Virtio block device**, click **+** and enter
-      ``/home/acrn/acrn-work/ubuntu-20.04.4-desktop-amd64.iso``. This parameter
+      ``/home/acrn/acrn-work/ubuntu-20.04.5-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
       in this guide, you will save the ISO file to that directory. (If you used
       a different username when installing Ubuntu on the target system, here's
@@ -608,7 +609,7 @@ Build ACRN
 
       cd ./build
       ls *.deb
-         acrn-my_board-MyConfiguration-3.0.deb
+         acrn-my_board-MyConfiguration-3.1.deb
 
    The Debian package contains the ACRN hypervisor and tools to ease installing
    ACRN on the target. The Debian file name contains the board name (``my_board``)
@@ -643,17 +644,17 @@ Build ACRN
 
       cd ..
       ls *.deb
-         linux-headers-5.10.115-acrn-service-vm_5.10.115-acrn-service-vm-1_amd64.deb
-         linux-image-5.10.115-acrn-service-vm_5.10.115-acrn-service-vm-1_amd64.deb
-         linux-image-5.10.115-acrn-service-vm-dbg_5.10.115-acrn-service-vm-1_amd64.deb
-         linux-libc-dev_5.10.115-acrn-service-vm-1_amd64.deb
+         linux-headers-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
+         linux-image-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
+         linux-image-5.15.44-acrn-service-vm-dbg_5.15.44-acrn-service-vm-1_amd64.deb
+         linux-libc-dev_5.15.44-acrn-service-vm-1_amd64.deb
 
 #. Copy all the necessary files generated on the development computer to the
    target system, using one of these two options:
 
    Option 1: Use ``scp``
-      Use the ``scp`` command to copy files from your development system to 
-      to the target system.
+      Use the ``scp`` command to copy files from your development computer to 
+      the target system.
       Replace ``10.0.0.200`` with the target system's IP address you found earlier::
 
          scp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
@@ -774,10 +775,10 @@ Launch the User VM
 
 #. On the target system, use the web browser to go to the `official Ubuntu website <https://releases.ubuntu.com/focal/>`__ to
    get the Ubuntu Desktop 20.04 LTS ISO image
-   ``ubuntu-20.04.4-desktop-amd64.iso`` for the User VM. (The same image you
-   specified earlier in the ACRN Configurator UI.  (Alternatively, instead of
+   ``ubuntu-20.04.5-desktop-amd64.iso`` for the User VM. (The same image you
+   specified earlier in the ACRN Configurator UI.) Alternatively, instead of
    downloading it again, you can use a USB drive or ``scp`` to copy the ISO
-   image file to the ``~/acrn-work`` directory on the target system.)
+   image file to the ``~/acrn-work`` directory on the target system.
 
 #. If you downloaded the ISO file on the target system, copy it from the
    Downloads directory to the ``~/acrn-work/`` directory (the location we said
@@ -786,7 +787,7 @@ Launch the User VM
 
    .. code-block:: bash
 
-      cp ~/Downloads/ubuntu-20.04.4-desktop-amd64.iso ~/acrn-work
+      cp ~/Downloads/ubuntu-20.04.5-desktop-amd64.iso ~/acrn-work
 
 #. Launch the User VM:
 
@@ -801,7 +802,7 @@ Launch the User VM
 
    .. code-block:: console
 
-      Ubuntu 20.04.4 LTS ubuntu hvc0
+      Ubuntu 20.04.5 LTS ubuntu hvc0
 
       ubuntu login:
 
@@ -812,7 +813,7 @@ Launch the User VM
 
    .. code-block:: console
 
-      Welcome to Ubuntu 20.04.4 LTS (GNU/Linux 5.13.0-30-generic x86_64)
+      Welcome to Ubuntu 20.04.5 LTS (GNU/Linux 5.13.0-30-generic x86_64)
 
       * Documentation:  https://help.ubuntu.com
       * Management:     https://landscape.canonical.com
@@ -849,7 +850,7 @@ Launch the User VM
    .. code-block:: console
 
       acrn@vecow:~$ uname -r
-      5.10.115-acrn-service-vm
+      5.15.44-acrn-service-vm
 
    The User VM has launched successfully. You have completed this ACRN setup.
 
