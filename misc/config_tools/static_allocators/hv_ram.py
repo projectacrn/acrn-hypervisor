@@ -17,11 +17,9 @@ def fn(board_etree, scenario_etree, allocation_etree):
     # this dictonary mapped with 'address start':'mem range'
     ram_range = {}
 
-    vm_num = 0
-    vm_list = scenario_etree.xpath("//vm")
-    if vm_list is not None:
-        vm_num = len(vm_list)
-    hv_ram_size = common.HV_BASE_RAM_SIZE + common.VM_RAM_SIZE * vm_num
+    max_vm_num = int(common.get_node(f"//hv/CAPACITIES/MAX_VM_NUM/text()", scenario_etree))
+    max_trusty_vm = len(scenario_etree.xpath(f"//vm[./secure_world_support/text() = 'y']"))
+    hv_ram_size = common.HV_BASE_RAM_SIZE + common.VM_RAM_SIZE * max_vm_num + max_trusty_vm * common.TRUSTY_RAM_SIZE
     ivshmem_list = scenario_etree.xpath("//IVSHMEM_SIZE/text()")
     total_shm_size = 0
     for ram_size in ivshmem_list:

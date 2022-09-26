@@ -404,9 +404,9 @@ These settings can only be changed at build time.</xs:documentation>
         </xs:restriction>
       </xs:simpleType>
     </xs:element>
-    <xs:element name="secure_world_support" type="Boolean" default="n" minOccurs="0">
-      <xs:annotation acrn:views="">
-        <xs:documentation>Specify secure world support for trusty OS.</xs:documentation>
+    <xs:element name="secure_world_support" type="Boolean" default="n">
+      <xs:annotation acrn:title="Enable secure world for running Trusty" acrn:views="advanced" acrn:applicable-vms="post-launched">
+        <xs:documentation>Enable secure world for this VM to provide an isolated execution environment which is suitable for running Trusted Execution Environment (TEE) such as Trusty. This is typically enabled when the VM is designed to run Android OS, and disabled otherwise.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="hide_mtrr_support" type="Boolean" default="n" minOccurs="0">

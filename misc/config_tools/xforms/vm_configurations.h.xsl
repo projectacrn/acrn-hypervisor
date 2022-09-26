@@ -57,6 +57,7 @@
     <xsl:value-of select="acrn:define('PRE_VM_NUM', count(vm[acrn:is-pre-launched-vm(load_order)]), 'U')" />
     <xsl:value-of select="acrn:define('SERVICE_VM_NUM', count(vm[acrn:is-service-vm(load_order)]), 'U')" />
     <xsl:value-of select="acrn:define('MAX_POST_VM_NUM', hv/CAPACITIES/MAX_VM_NUM - count(vm[acrn:is-pre-launched-vm(load_order)]) - count(vm[acrn:is-service-vm(load_order)]) , 'U')" />
+    <xsl:value-of select="acrn:define('MAX_TRUSTY_VM_NUM', count(vm[./secure_world_support/text() = 'y']) , 'U')" />
     <xsl:value-of select="acrn:define('CONFIG_MAX_VM_NUM', hv/CAPACITIES/MAX_VM_NUM , 'U')" />
   </xsl:template>
 
