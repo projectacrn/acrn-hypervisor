@@ -316,9 +316,9 @@ void init_paging(void)
 	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, round_pde_down(hv_hva),
 			round_pde_up((uint64_t)&ld_text_end) - round_pde_down(hv_hva), 0UL,
 			PAGE_NX, &ppt_pgtable, MR_MODIFY);
-#if (SERVICE_VM_NUM == 1)
+#if ((SERVICE_VM_NUM == 1) && (MAX_TRUSTY_VM_NUM > 0))
 	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_sworld_memory_base(),
-			TRUSTY_RAM_SIZE * MAX_POST_VM_NUM, PAGE_USER, 0UL, &ppt_pgtable, MR_MODIFY);
+			TRUSTY_RAM_SIZE * MAX_TRUSTY_VM_NUM, PAGE_USER, 0UL, &ppt_pgtable, MR_MODIFY);
 #endif
 
 	/* Enable paging */
