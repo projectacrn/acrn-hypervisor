@@ -122,15 +122,15 @@ that is essential for building the ACRN hypervisor and setting up User VMs.
 Compared to previous versions, ACRN v3.1 adds the following information to the board
 XML file for supporting new features and fixes:
 
-* Add a progress bar and timeout mechanism to the Board Inspector
-* Guess L3 CAT parameters if not reported via CPUID
+* Probe and detect availability of L3 CAT by accessing the CAT MSRs directly
 * Refactor MSR utilities
-* Record all details from RTCT in the board XML and generate vRTCT instead of
-  copying a physical one
-* Hide unnecessary logs and fix typos in error messages
+* Record all details from the real-time configuration table (RTCT) in the board
+  XML and generate vRTCT instead of copying a physical one
 
-See the :ref:`board_inspector_tool` documentation for a complete list of steps
-to install and run the tool.
+The v3.1 Board Inspector includes a progress bar and timeout mechanism, as well
+as more developer-friendly logs and error messages. See the
+:ref:`board_inspector_tool` documentation for a complete list of steps to
+install and run the tool.
 
 Update Configuration Options
 ============================
