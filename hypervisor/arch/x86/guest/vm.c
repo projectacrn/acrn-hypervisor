@@ -48,7 +48,7 @@
 /* Local variables */
 
 /* pre-assumption: TRUSTY_RAM_SIZE is 2M aligned */
-static struct page post_user_vm_sworld_memory[MAX_POST_VM_NUM][TRUSTY_RAM_SIZE >> PAGE_SHIFT] __aligned(MEM_2M);
+static struct page post_user_vm_sworld_memory[MAX_TRUSTY_VM_NUM][TRUSTY_RAM_SIZE >> PAGE_SHIFT] __aligned(MEM_2M);
 
 static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
@@ -636,6 +636,34 @@ void prepare_vm_identical_memmap(struct acrn_vm *vm, uint16_t e820_entry_type, u
 }
 
 /**
+ * @pre vm_id < CONFIG_MAX_VM_NUM and should be trusty post-launched VM
+ */
+int32_t get_sworld_vm_index(uint16_t vm_id)
+{
+	int16_t i;
+	int32_t vm_idx = MAX_TRUSTY_VM_NUM;
+	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
+
+	if ((vm_config->guest_flags & GUEST_FLAG_SECURE_WORLD_ENABLED) != 0U) {
+		vm_idx = 0;
+
+		for (i = 0; i < vm_id; i++) {
+			vm_config = get_vm_config(i);
+			if ((vm_config->guest_flags & GUEST_FLAG_SECURE_WORLD_ENABLED) != 0U) {
+				vm_idx += 1;
+			}
+		}
+	}
+
+	if (vm_idx >= (int32_t)MAX_TRUSTY_VM_NUM) {
+		pr_err("Can't find sworld memory for vm id: %d", vm_id);
+		vm_idx = -EINVAL;
+	}
+
+	return vm_idx;
+}
+
+/**
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL
  * @pre vm->state == VM_POWERED_OFF
  */
@@ -667,32 +695,38 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 			vm->sworld_control.flag.supported = 1U;
 		}
 		if (vm->sworld_control.flag.supported != 0UL) {
-			uint16_t service_vm_id = (get_service_vm())->vm_id;
-			uint16_t page_idx = vmid_2_rel_vmid(service_vm_id, vm_id) - 1U;
+			int32_t vm_idx = get_sworld_vm_index(vm_id);
 
-			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				hva2hpa(post_user_vm_sworld_memory[page_idx]),
-				TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
-		}
-		if (vm_config->name[0] == '\0') {
-			/* if VM name is not configured, specify with VM ID */
-			snprintf(vm_config->name, 16, "ACRN VM_%d", vm_id);
-		}
-
-		if (vm_config->load_order == PRE_LAUNCHED_VM) {
-			/*
-			 * If a prelaunched VM has the flag GUEST_FLAG_TEE set then it
-			 * is a special prelaunched VM called TEE VM which need special
-			 * memmap, e.g. mapping the REE VM into its space. Otherwise,
-			 * just use the standard preplaunched VM memmap.
-			 */
-			if ((vm_config->guest_flags & GUEST_FLAG_TEE) != 0U) {
-				prepare_tee_vm_memmap(vm, vm_config);
+			if (vm_idx >= 0)
+			{
+				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+					hva2hpa(post_user_vm_sworld_memory[vm_idx]),
+					TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
 			} else {
-				create_prelaunched_vm_e820(vm);
-				prepare_prelaunched_vm_memmap(vm, vm_config);
+				status = -EINVAL;
 			}
-			status = init_vm_boot_info(vm);
+		}
+		if (status == 0) {
+			if (vm_config->name[0] == '\0') {
+				/* if VM name is not configured, specify with VM ID */
+				snprintf(vm_config->name, 16, "ACRN VM_%d", vm_id);
+			}
+
+			if (vm_config->load_order == PRE_LAUNCHED_VM) {
+				/*
+				 * If a prelaunched VM has the flag GUEST_FLAG_TEE set then it
+				 * is a special prelaunched VM called TEE VM which need special
+				 * memmap, e.g. mapping the REE VM into its space. Otherwise,
+				 * just use the standard preplaunched VM memmap.
+				 */
+				if ((vm_config->guest_flags & GUEST_FLAG_TEE) != 0U) {
+					prepare_tee_vm_memmap(vm, vm_config);
+				} else {
+					create_prelaunched_vm_e820(vm);
+					prepare_prelaunched_vm_memmap(vm, vm_config);
+				}
+				status = init_vm_boot_info(vm);
+			}
 		}
 	}
 
