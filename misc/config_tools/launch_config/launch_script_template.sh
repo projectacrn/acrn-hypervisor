@@ -19,11 +19,15 @@ function offline_cpus() {
         if [ -z ${processor_id} ]; then
             continue
         fi
+        if [ "${processor_id}" = "0" ]; then
+            echo "Warning: processor 0 can't be offline, there may be unexpect error!" >> /dev/stderr
+            continue
+        fi
         cpu_path="/sys/devices/system/cpu/cpu${processor_id}"
         if [ -f ${cpu_path}/online ]; then
             online=`cat ${cpu_path}/online`
             echo cpu${processor_id} online=${online} >> /dev/stderr
-            if [ "${online}" = "1" ] && [ "${processor_id}" != "0" ]; then
+            if [ "${online}" = "1" ]; then
                 echo 0 > ${cpu_path}/online
                 online=`cat ${cpu_path}/online`
                 # during boot time, cpu hotplug may be disabled by pci_device_probe during a pci module insmod
@@ -90,7 +94,7 @@ function add_cpus() {
     # Each parameter of this function is considered the apicid of processor (as is reported in /proc/cpuinfo) of
     # a CPU assigned to a post-launched RTVM.
 
-    if [ "${vm_type}" = "RTVM" ] || [ "${scheduler}" = "SCHED_NOOP" ]; then
+    if [ "${vm_type}" = "RTVM" ] || [ "${scheduler}" = "SCHED_NOOP" ] || [ "${own_pcpu}" = "y" ]; then
         offline_cpus $*
     fi
 

@@ -260,6 +260,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
         script.add_plain_dm_parameter("--windows")
     script.add_vm_descriptor("vm_type", f"'{eval_xpath(vm_scenario_etree, './/vm_type/text()', 'STANDARD_VM')}'")
     script.add_vm_descriptor("scheduler", f"'{eval_xpath(hv_scenario_etree, './/SCHEDULER/text()')}'")
+    script.add_vm_descriptor("own_pcpu", f"'{eval_xpath(vm_scenario_etree, './/own_pcpu/text()')}'")
 
     ###
     # CPU and memory resources
