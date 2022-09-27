@@ -191,7 +191,7 @@ The interrupt vectors are assigned as shown here:
      - Usage
 
    * - 0x0-0x14
-     - Exceptions: NMI, INT3, page dault, GP, debug.
+     - Exceptions: NMI, INT3, page fault, GP, debug.
 
    * - 0x15-0x1F
      - Reserved
@@ -218,7 +218,7 @@ The interrupt vectors are assigned as shown here:
      - Hypervisor Callback HSM
 
    * - 0xF4
-     - Performance Monitering Interrupt
+     - Performance Monitoring Interrupt
 
    * - 0xFF
      - SPURIOUS_APIC_VECTOR
