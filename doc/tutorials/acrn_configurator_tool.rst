@@ -39,8 +39,9 @@ build the Debian package.
 Scenario Error Checking
 ***********************
 
-The configurator includes many validation checks that verify input values, ensure the consistency of
-configuration options, and interactions between options.
+The Configurator includes many validation checks that verify input values,
+ensure the consistency of configuration options, and interactions between
+options.
 
 Simple data validation checks on values are detected immediately with red
 text indicating the problem, or with an indicator within a data entry field. For
@@ -70,7 +71,7 @@ VM1 tabs indicate an option setting problem:
    :class: drop-shadow
 
 Since we're on the Hypervisor (Basic Parameters) options, we see the Hypervisor
-configuration error message.  If we click on the VM1 tab, we'll see what the
+configuration error message.  If we click the VM1 tab, we'll see what the
 issues are with that VM's configuration options:
 
 .. image:: images/config-tab-errors2.png
@@ -78,11 +79,11 @@ issues are with that VM's configuration options:
    :class: drop-shadow
 
 In both cases, you can scroll down to see the specific problem (on either the
-basic or advanced parameters tab), fix the issues,
-and then when all issues are resolved, click on the "Save Scenario" button to
+basic or advanced parameters tab) and fix the issues.
+When all issues are resolved, click the "Save Scenario" button to
 validate the changes and save the settings.  If all issues were resolved, the
-save scenario response window will indicate no issues were found and all the
-error indicators will be cleared.
+save scenario response window will indicate that no issues were found, and all
+the error indicators will be cleared.
 
 Start with a New or Existing Configuration
 ******************************************
@@ -208,7 +209,7 @@ that no board information has been imported yet.
 To import a board configuration file for the first time:
 
 1. Under **Import a board configuration file**, select a
-   file from the dropdown menu or click **Browse for file** to select a
+   file from the drop-down menu or click **Browse for file** to select a
    different file.
 
    .. image:: images/configurator-board01.png
@@ -258,7 +259,7 @@ Create New or Import an Existing Scenario
 *******************************************
 
 After importing the board configuration file, the next step is to specify an
-initial scenario. You can create a new scenario, or import an existing scenario
+initial scenario. You can create a scenario, or import an existing scenario
 configuration file. In both cases, this step is a starting point for configuring
 your hypervisor and VMs. Later, you can choose to change the configuration, such
 as adding or deleting VMs.
@@ -304,8 +305,8 @@ the configuration where you left off.
    the next step.
 
 #. Under **Create new or import an existing scenario**, go to the right side of
-   the screen and select a scenario configuration file from the dropdown menu or
-   click **Browse for scenario file** to select a different file.
+   the screen and select a scenario configuration file from the drop-down menu
+   or click **Browse for scenario file** to select a different file.
 
    .. image:: images/configurator-exscenario.png
       :align: center
@@ -430,7 +431,7 @@ After generating a valid scenario configuration file, you can build ACRN. See
 
 .. _acrn_configurator_tool_source:
 
-Build ACRN Configurator From Source Code
+Build ACRN Configurator from Source Code
 *****************************************
 
 The :ref:`prerequisites<acrn_configurator_tool_prerequisites>` use a prebuilt
