@@ -27,7 +27,6 @@
 
 #define BUFF_SIZE	(32U)
 #define MSG_SIZE	(8U)
-#define VM_NAME_LEN	(sizeof(WIN_VM_NAME))
 #define UVM_SOCKET_PORT (0x2001U)
 #define READ_INTERVAL	(100U) /* The time unit is microsecond */
 #define MIN_RESEND_TIME (3U)
@@ -184,7 +183,7 @@ int main(int argc, char **argv)
 {
 	DWORD recvsize = 0;
 	char recvbuf[BUFF_SIZE];
-	char buf[VM_NAME_LEN + 5];
+	char buf[BUFF_SIZE];
 	DWORD dwError;
 	DWORD threadId;
 	bool poweroff = false;
@@ -193,6 +192,11 @@ int main(int argc, char **argv)
 
 	if (argc > 2)
 		return -1;
+
+	if ((argc == 2) && (sizeof(argv[1]) + 5 > BUFF_SIZE)) {
+		printf("VM name (%s) is too long\n", argv[1]);
+		return -1;
+	}
 
 	hCom2 = initCom("COM2");
 	if (hCom2 == INVALID_HANDLE_VALUE)
