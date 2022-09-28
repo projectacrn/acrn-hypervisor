@@ -9,8 +9,8 @@ via inter-VM shared memory (IVSHMEM). One VM is a real-time VM running
 `cyclictest <https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/cyclictest/start>`__,
 an open source application commonly used to measure latencies in
 real-time systems. This real-time VM (RT_VM) uses inter-VM shared memory
-(IVSHMEM) to send data to a second Human-Machine Interface VM (HMI_VM)
-that formats and presents the collected data as a histogram on a web
+(IVSHMEM) to send data to a second Human-Machine Interface VM (HMI_VM).
+The HMI_VM formats and presents the collected data as a histogram on a web
 page shown by a browser. This guide shows how to configure, create, and
 launch the two VM images that make up this application.
 
@@ -112,8 +112,8 @@ As a normal (e.g., **acrn**) user, follow these steps:
 
 #. Check out the ``acrn-hypervisor`` source code branch (already cloned from the
    ``acrn-hypervisor`` repo when you followed the :ref:`gsg`). We've tagged a
-   specific version of the hypervisor you should use for the sample app's HMI
-   VM::
+   specific version of the hypervisor that you should use for the sample app's
+   HMI VM::
 
      cd ~/acrn-work/acrn-hypervisor
      git fetch --all
@@ -158,7 +158,7 @@ Make the HMI_VM Image
 
 .. rst-class:: numbered-step
 
-Make the RT_VM image
+Make the RT_VM Image
 *********************
 
 1. Check out the ``acrn-kernel`` source code branch (already cloned from the
@@ -178,14 +178,14 @@ Make the RT_VM image
      make -j $(nproc) deb-pkg
 
    The kernel build can take 15 minutes on a fast computer but could
-   take 2-3 hours depending on the performance of your development
+   take two to three hours depending on the performance of your development
    computer. When done, the build generates four Debian packages in the
    directory above the build root directory, as shown by this command::
 
      ls ../*rtvm*.deb
 
    You will see rtvm Debian packages for linux-headers, linux-image
-   (normal and debug), and linux-libc-dev (your filenames might look a
+   (normal and debug), and linux-libc-dev (your file names might look a
    bit different):
 
    .. code-block:: console
@@ -255,8 +255,8 @@ and generate new launch scripts for this sample application.
    The ACRN Configurator will report some problems with the initial scenario
    configuration that we'll resolve as we make updates. (Notice the error
    indicators on the settings tabs and above the parameters tabs.) The
-   ACRN Configurator does a verification of the scenario when you open a saved
-   scenario and when you click on the **Save Scenario And Launch Scripts**
+   ACRN Configurator verifies the scenario when you open a saved
+   scenario and when you click the **Save Scenario And Launch Scripts**
    button.
 
    .. image:: images/samp-image004a.png
@@ -331,7 +331,8 @@ and generate new launch scripts for this sample application.
       :class: drop-shadow
       :align: center
 
-#. Select the Hypervisor tab: Verify the **build type** is ``Debug``, define the
+#. Select the Hypervisor tab: Verify that the **build type** is ``Debug``,
+   define the
    **InterVM shared memory region** settings as shown below, adding the
    HMI_VM and RT_VM as the VMs doing the sharing of this region. (The
    missing **Virtual BDF** values will be supplied by the ACRN Configurator
@@ -419,7 +420,7 @@ Build the ACRN Hypervisor and Service VM Images
      make -j $(nproc) deb-pkg
 
    The kernel build can take 15 minutes or less on a fast computer, but
-   could take 1-2 hours depending on the performance of your development
+   could take one to two hours depending on the performance of your development
    computer. When done, the build generates four Debian packages in the
    directory above the build root directory:
 
@@ -457,7 +458,7 @@ Copy Files from the Development Computer to Your Target System
            acpica-unix-20210105/generate/unix/bin/iasl \
            acrn@10.0.0.200:~/acrn-work
 
-     Then on the target system run these commands::
+     Then on the target system, run these commands::
 
        sudo cp ~/acrn-work/iasl /usr/sbin
        sudo ln -s /usr/sbin/iasl /usr/bin/iasl
@@ -632,11 +633,11 @@ We can view this data displayed as a histogram:
 
 Option 1: Use a browser on your development computer
   Open a web browser on your development computer to the
-  HMI_VM IP address we found in an earlier step (e.g., http://10.0.0.100).
+  HMI_VM IP address that we found in an earlier step (e.g., http://10.0.0.100).
 
 Option 2: Use a browser on the HMI VM using the target system console
   Log in to the HMI_VM on the target system's console. (If you want to
-  log in as root, click on the "Not listed?" link under the username choices you
+  log in as root, click the "Not listed?" link under the username choices you
   do see and enter the root username and password.) Open the web browser to
   http://localhost.
 
