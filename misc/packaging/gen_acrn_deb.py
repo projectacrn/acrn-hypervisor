@@ -162,7 +162,7 @@ def create_acrn_board_inspector_deb(version, build_dir):
         'Architecture: amd64 \n',
         'Maintainer: acrn-dev@lists.projectacrn.org \n',
         'Description: ACRN board inspector tools \n',
-        'Depends: cpuid, msr-tools, pciutils, dmidecode, python3, python3-pip, python3-lxml \n',
+        'Depends: cpuid, msr-tools, pciutils, dmidecode, python3, python3-pip, python3-lxml, python3-tqdm \n',
         '\n'
     ]
     with open(deb_dir + '/DEBIAN/control', 'w', encoding='utf-8') as fr:
