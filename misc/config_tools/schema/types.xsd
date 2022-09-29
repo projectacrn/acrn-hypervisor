@@ -330,17 +330,41 @@ the board hardware does not support RDT, enabling this option is ignored.</xs:do
 
 <xs:complexType name="CachePolicyType">
   <xs:sequence>
-    <xs:element name="VM" type="xs:string" />
-    <xs:element name="VCPU" type="xs:integer" />
-    <xs:element name="TYPE" type="CacheType" minOccurs="1"/>
-    <xs:element name="CLOS_MASK" type="HexFormat" />
+    <xs:element name="VM" type="xs:string">
+      <xs:annotation acrn:title="VM Name">
+        <xs:documentation>The Name of VM</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="VCPU" type="xs:integer">
+      <xs:annotation acrn:title="Virtual CPU ID">
+        <xs:documentation>The Virtual CPU index of VM</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="TYPE" type="CacheType" minOccurs="1">
+      <xs:annotation acrn:title="Cache Type">
+        <xs:documentation>The Type of Cache Region</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="CLOS_MASK" type="HexFormat">
+      <xs:annotation acrn:title="Cache CLOS Mask">
+        <xs:documentation>The Cache Region Mask</xs:documentation>
+      </xs:annotation>
+    </xs:element>
   </xs:sequence>
 </xs:complexType>
 
 <xs:complexType name="CacheAllocationType">
   <xs:sequence>
-    <xs:element name="CACHE_ID" type="HexFormat"/>
-    <xs:element name="CACHE_LEVEL" type="xs:integer"/>
+    <xs:element name="CACHE_ID" type="HexFormat">
+      <xs:annotation acrn:title="Cache ID">
+        <xs:documentation>The Cache Region index</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="CACHE_LEVEL" type="xs:integer">
+      <xs:annotation acrn:title="Cache Level">
+        <xs:documentation>The Cache Region Level</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="POLICY" type="CachePolicyType"  minOccurs="1" maxOccurs="unbounded"/>
   </xs:sequence>
 </xs:complexType>
