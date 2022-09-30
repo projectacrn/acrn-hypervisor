@@ -544,6 +544,29 @@
     <func:result select="$unique_mapping" />
   </func:function>
 
+  <func:function name="acrn:binary-bdf">
+      <xsl:param name="bdf" />
+      <xsl:variable name="bus" select="substring-before($bdf, ':')" />
+      <xsl:variable name="device" select="substring-before(substring-after($bdf, ':'), '.')" />
+      <xsl:variable name="function" select="substring-after($bdf, '.')" />
+      <xsl:variable name="serial_bdf">
+        <xsl:text>0b</xsl:text>
+        <xsl:call-template name="hex-to-bin">
+          <xsl:with-param name="s" select="$bus" />
+          <xsl:with-param name="width" select="4" />
+        </xsl:call-template>
+        <xsl:call-template name="hex-to-bin">
+          <xsl:with-param name="s" select="$device" />
+          <xsl:with-param name="width" select="1" />
+        </xsl:call-template>
+        <xsl:call-template name="hex-to-bin">
+          <xsl:with-param name="s" select="$function" />
+          <xsl:with-param name="width" select="3" />
+        </xsl:call-template>
+      </xsl:variable>
+      <func:result select="$serial_bdf" />
+  </func:function>
+
   <func:function name="acrn:get-vbdf">
     <xsl:param name="vmid" />
     <xsl:param name="name" />

@@ -205,32 +205,24 @@
 	  <xsl:with-param name="key" select="'SERIAL_PIO_BASE'" />
 	  <xsl:with-param name="value" select="$base" />
 	</xsl:call-template>
+        <xsl:if test="$bdf != ''">
+          <xsl:call-template name="boolean-by-key-value">
+	          <xsl:with-param name="key" select="'SERIAL_PCI'" />
+	          <xsl:with-param name="value" select="'y'" />
+	        </xsl:call-template>
+          <xsl:variable name="serial_bdf" select="acrn:binary-bdf($bdf)" />
+	        <xsl:call-template name="integer-by-key-value">
+	          <xsl:with-param name="key" select="'SERIAL_PCI_BDF'" />
+	          <xsl:with-param name="value" select="$serial_bdf" />
+	        </xsl:call-template>
+        </xsl:if>
       </xsl:when>
       <xsl:when test="($type = 'mmio') and ($bdf != '')">
 	<xsl:call-template name="boolean-by-key-value">
 	  <xsl:with-param name="key" select="'SERIAL_PCI'" />
 	  <xsl:with-param name="value" select="'y'" />
 	</xsl:call-template>
-
-	<xsl:variable name="bus" select="substring-before($bdf, ':')" />
-	<xsl:variable name="device" select="substring-before(substring-after($bdf, ':'), '.')" />
-	<xsl:variable name="function" select="substring-after($bdf, '.')" />
-	<xsl:variable name="serial_bdf">
-	  <xsl:text>0b</xsl:text>
-	  <xsl:call-template name="hex-to-bin">
-	    <xsl:with-param name="s" select="$bus" />
-	    <xsl:with-param name="width" select="4" />
-	  </xsl:call-template>
-	  <xsl:call-template name="hex-to-bin">
-	    <xsl:with-param name="s" select="$device" />
-	    <xsl:with-param name="width" select="1" />
-	  </xsl:call-template>
-	  <xsl:call-template name="hex-to-bin">
-	    <xsl:with-param name="s" select="$function" />
-	    <xsl:with-param name="width" select="3" />
-	  </xsl:call-template>
-	</xsl:variable>
-
+       <xsl:variable name="serial_bdf" select="acrn:binary-bdf($bdf)" />
 	<xsl:call-template name="integer-by-key-value">
 	  <xsl:with-param name="key" select="'SERIAL_PCI_BDF'" />
 	  <xsl:with-param name="value" select="$serial_bdf" />
