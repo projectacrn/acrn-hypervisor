@@ -5,10 +5,14 @@
 
 import re, os
 import logging
-from extractors.helpers import add_child, get_node
+
+from extractors.helpers import add_child, get_node, get_bdf_from_realpath
+from collections import defaultdict
+from pathlib import Path
 
 SYS_INPUT_DEVICES_CLASS_PATH = "/sys/class/input/"
 SYS_TTY_DEVICES_CLASS_PATH = "/sys/class/tty/"
+SYS_DISPLAYS_INFO_PATH = "/sys/class/drm/"
 
 def add_child_with_file_contents(parent_node, tag, filepath, translations = {}):
     try:
@@ -48,10 +52,51 @@ def extract_ttys(device_classes_node):
         add_child(serial_node, "dev_path", f"/dev/{serial_dev}")
         add_child_with_file_contents(serial_node, "type", f"{SYS_TTY_DEVICES_CLASS_PATH}{serial_dev}/type")
 
-def extract_topology(device_classes_node):
+def extract_display(board_etree):
+    display_regex = re.compile("(card[0-9])-(DP|HDMI|VGA)-.*")
+    display_types = {
+        "DP": "DisplayPort (DP)",
+        "HDMI": "High Definition Multimedia Interface (HDMI)",
+        "VGA": "Video Graphics Array (VGA)",
+    }
+    display_ids = defaultdict(lambda: 0)
+    for root in filter(lambda x: x.startswith("card"), os.listdir(SYS_DISPLAYS_INFO_PATH)):
+        displays_path = SYS_DISPLAYS_INFO_PATH + root
+        status_path = f"{displays_path}/status"
+        device_path = f"{displays_path}/device/device"
+        m = display_regex.match(root)
+        if m:
+            try:
+                assert Path(status_path).exists(), \
+                    f"{status_path} does not exist and connection status of {root} cannot be detected. Failed to add " \
+                    f"{root} to board XML."
+                assert Path(device_path).exists(), \
+                    f"{device_path} does not exist and the graphics card which {root} is connected to cannot be detected. " \
+                    f"Failed to add {root} to board XML"
+                with open(f"{status_path}", "r") as f:
+                    if f.read().strip() == "connected":
+                        bus, device, function = \
+                            get_bdf_from_realpath(f"{device_path}")
+                        adr = hex((device << 16) + function)
+                        bus_node = get_node(board_etree, f"//bus[@type='pci' and @address='{hex(bus)}']")
+                        if bus_node is None:
+                            devices_node = get_node(board_etree, "//devices")
+                            bus_node = add_child(devices_node, "bus", type="pci", address=hex(bus))
+                        device_node = get_node(bus_node, f"./device[@address='{adr}']")
+                        if device_node is None:
+                            device_node = add_child(bus_node, "device", None, address=adr)
+                        bdf = (bus, device, function)
+                        display_id = display_ids[bdf]
+                        add_child(device_node, "display", f"{display_id}", type=display_types[m.group(2)])
+                        display_ids[bdf] += 1
+            except Exception as e:
+                logging.warning(f"{e}")
+
+def extract_topology(device_classes_node, board_etree):
     extract_inputs(device_classes_node)
     extract_ttys(device_classes_node)
+    extract_display(board_etree)
 
 def extract(args, board_etree):
     device_classes_node = get_node(board_etree, "//device-classes")
-    extract_topology(device_classes_node)
+    extract_topology(device_classes_node, board_etree)
