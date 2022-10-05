@@ -347,7 +347,7 @@ export default {
     },
     updateCpuAffinity(vmid) {
       this.scenario.vm.map((vmConfig, vmIndex) => {
-          if (vmConfig['@id'] === vmid) {
+          if (vmConfig['@id'] === vmid && vmConfig['cpu_affinity'] != null) {
             for (let i = 0; i < vmConfig['cpu_affinity']['pcpu'].length; i++) {
               this.scenario.vm[vmIndex]['cpu_affinity']['pcpu'][i]['real_time_vcpu'] = 'n'
             }
