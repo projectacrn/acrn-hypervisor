@@ -413,7 +413,7 @@ def gen_pci_hide(config):
     hidden_pdev_list = [x.replace('.', ':') for x in scenario_etree.xpath(f"//HIDDEN_PDEV/text()")]
 
     if board_cfg_lib.BOARD_NAME in list(board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB.keys()) and board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME] != 0:
-        hidden_pdev_list += board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME] + scenario_pdev_list
+        hidden_pdev_list += board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME]
 
     if len(hidden_pdev_list) > 0:
         hidden_pdev_num = len(hidden_pdev_list)
