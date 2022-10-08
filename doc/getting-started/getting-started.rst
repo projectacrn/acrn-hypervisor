@@ -351,7 +351,6 @@ Generate a Board Configuration File
    .. code-block:: bash
 
       cd  ~/acrn-work
-      sudo pip3 install tqdm
       sudo apt install -y ./acrn-board-inspector*.deb
 
 #. Reboot the target system:
