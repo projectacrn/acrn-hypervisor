@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import parser_lib
+import parser_lib, os
+from extractors.helpers import get_bdf_from_realpath
 
 MEM_PATH = ['/proc/iomem', '/proc/meminfo']
 TTY_PATH = '/sys/class/tty/'
@@ -91,7 +92,15 @@ def dump_ttys_info(ttys_list, config):
         if ttys_type[serial_type] == 'PORT':
             base_path = '{}{}/port'.format(TTY_PATH, ttys_n)
             base = read_ttys_node(base_path)
-            print("\tseri:{} type:portio base:{} irq:{}".format(ttys, base, irq), file=config)
+            try:
+                b = get_bdf_from_realpath(os.path.join(TTY_PATH, ttys_n, 'device'))
+                bdf = f'{b[0]}:{b[1]}.{b[2]}
+            except AssertionError:
+                bdf = ''
+            if bdf:
+                print("\tseri:{} type:portio base:{} irq:{} bdf:{}".format(ttys, base, irq, bdf), file=config)
+            else:
+                print("\tseri:{} type:portio base:{} irq:{}".format(ttys, base, irq), file=config)
         elif ttys_type[serial_type] == 'MMIO':
             base_path = '{}{}/iomem_base'.format(TTY_PATH, ttys_n)
             base = read_ttys_node(base_path)
