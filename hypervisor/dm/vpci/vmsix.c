@@ -27,6 +27,7 @@
  */
 
 #include <asm/guest/vm.h>
+#include <asm/io.h>
 #include <errno.h>
 #include <vpci.h>
 #include <asm/guest/ept.h>
@@ -98,32 +99,46 @@ uint32_t rw_vmsix_table(struct pci_vdev *vdev, struct io_request *io_req)
 	struct msix_table_entry *entry;
 	uint32_t entry_offset, table_offset, index = CONFIG_MAX_MSIX_TABLE_NUM;
 	uint64_t offset;
+	void *hva;
 
-	/* Must be full DWORD or full QWORD aligned. */
-	if ((mmio->size == 4U) || (mmio->size == 8U)) {
+	if ((mmio->size <= 8U) && mem_aligned_check(mmio->address, mmio->size)) {
 		offset = mmio->address - vdev->msix.mmio_gpa;
 		if (msixtable_access(vdev, (uint32_t)offset)) {
+			/* Must be full DWORD or full QWORD aligned. */
+			if ((mmio->size == 4U) || (mmio->size == 8U)) {
 
-			table_offset = (uint32_t)(offset - vdev->msix.table_offset);
-			index = table_offset / MSIX_TABLE_ENTRY_SIZE;
+				table_offset = (uint32_t)(offset - vdev->msix.table_offset);
+				index = table_offset / MSIX_TABLE_ENTRY_SIZE;
 
-			entry = &vdev->msix.table_entries[index];
-			entry_offset = table_offset % MSIX_TABLE_ENTRY_SIZE;
+				entry = &vdev->msix.table_entries[index];
+				entry_offset = table_offset % MSIX_TABLE_ENTRY_SIZE;
 
-			if (mmio->direction == ACRN_IOREQ_DIR_READ) {
-				(void)memcpy_s(&mmio->value, (size_t)mmio->size,
-					(void *)entry + entry_offset, (size_t)mmio->size);
+				if (mmio->direction == ACRN_IOREQ_DIR_READ) {
+					(void)memcpy_s(&mmio->value, (size_t)mmio->size,
+						(void *)entry + entry_offset, (size_t)mmio->size);
+				} else {
+					(void)memcpy_s((void *)entry + entry_offset, (size_t)mmio->size,
+						&mmio->value, (size_t)mmio->size);
+				}
 			} else {
-				(void)memcpy_s((void *)entry + entry_offset, (size_t)mmio->size,
-					&mmio->value, (size_t)mmio->size);
+				pr_err("%s, Only DWORD and QWORD are permitted", __func__);
 			}
 		} else {
-			if (mmio->direction == ACRN_IOREQ_DIR_READ) {
-				mmio->value = 0UL;
+			if (vdev->pdev != NULL) {
+				hva = hpa2hva(vdev->msix.mmio_hpa + (mmio->address - vdev->msix.mmio_gpa));
+				stac();
+				if (mmio->direction == ACRN_IOREQ_DIR_READ) {
+					mmio->value = mmio_read(hva, mmio->size);
+				} else {
+					mmio_write(hva, mmio->size, mmio->value);
+				}
+				clac();
+			} else {
+				if (mmio->direction == ACRN_IOREQ_DIR_READ) {
+					mmio->value = 0UL;
+				}
 			}
 		}
-	} else {
-		pr_err("%s, Only DWORD and QWORD are permitted", __func__);
 	}
 
 	return index;
