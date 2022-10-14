@@ -113,7 +113,7 @@ configurator:
 	  echo -e "'yarn' or 'cargo' utility is not available. Unable to create Debian package for configurator."; \
 	fi
 
-hypervisor: hvdefconfig
+hypervisor:
 	$(MAKE) $(HV_MAKEOPTS)
 	@echo -e "ACRN Configuration Summary:" > $(HV_CFG_LOG)
 	@$(MAKE) showconfig $(HV_MAKEOPTS) -s >> $(HV_CFG_LOG)
