@@ -138,7 +138,7 @@ def extract_topology(processors_node):
             subleaf += 1
 
 def extract_hwp_info(processors_node):
-    if processors_node.xpath("//capability[@id = 'hwp_supported']") is None:
+    if not processors_node.xpath("//capability[@id = 'hwp_supported']"):
         return
 
     # SDM Vol3 14.4.2: Additional MSRs associated with HWP may only be accessed after HWP is enabled
