@@ -40,9 +40,6 @@ ARCH_ASFLAGS :=
 ARCH_ARFLAGS :=
 ARCH_LDFLAGS :=
 
-.PHONY: default
-default: all
-
 include scripts/makefile/config.mk
 
 BOARD_INFO_DIR := $(HV_CONFIG_DIR)/boards
@@ -566,3 +563,5 @@ $(VM_CFG_C_OBJS): %.o: %.c header
 $(HV_OBJDIR)/%.o: %.S header
 	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. $(ASFLAGS) $(ARCH_ASFLAGS) -c $< -o $@ -MMD -MT $@
+
+.DEFAULT_GOAL := all
