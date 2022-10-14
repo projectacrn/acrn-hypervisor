@@ -14,8 +14,8 @@ ifeq ($(SCENARIO),)
     $(error please specify SCENARIO for the build!)
 endif
 
-ifeq ($(TARGET_DIR),)
-    $(error please specify VM configs directory! )
+ifeq ($(CHECKER_OUT),)
+    $(error please specify the path to the generated checker! )
 endif
 
 BOARD_INFO_DIR := $(HV_OBJDIR)/configs/boards
@@ -52,4 +52,4 @@ default: $(PRE_BUILD_SRCS)
 	else \
 		echo "Found $(BOARD) configuration for SCENARIO $(SCENARIO) under $(BOARD_CFG_DIR)"; \
 	fi;
-	$(CC) $(PRE_BUILD_SRCS) $(PRE_BUILD_INCLUDE) $(PRE_BUILD_CFLAGS) -o $(HV_OBJDIR)/hv_prebuild_check.out
+	$(CC) $(PRE_BUILD_SRCS) $(PRE_BUILD_INCLUDE) $(PRE_BUILD_CFLAGS) -o $(CHECKER_OUT)
