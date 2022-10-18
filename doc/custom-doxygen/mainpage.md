@@ -1,4 +1,4 @@
-# API Documentation   {#index}
+# API Documentation   {#mainpage}
 
 Project ACRN is a flexible and lighweight hypervisor, built with
 real-time and safety-criticality in mind. It streamlines
