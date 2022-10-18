@@ -13,7 +13,7 @@ SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = "Project ACRN"
 BUILDDIR      ?= _build
 SOURCEDIR     = $(BUILDDIR)/rst
-LATEXMKOPTS   = -silent
+LATEXMKOPTS   = "-silent -f"
 
 # should the config option doc show hidden config options?
 XSLTPARAM     ?= --stringparam showHidden 'n'
