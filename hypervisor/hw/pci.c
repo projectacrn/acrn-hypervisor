@@ -179,24 +179,10 @@ static uint32_t pci_mmcfg_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t 
 {
 	uint32_t addr = mmcfg_off_to_address(bdf, offset);
 	void *hva = hpa2hva(addr);
-	uint32_t val;
-
 
 	ASSERT(pci_is_valid_access(offset, bytes), "the offset should be aligned with 2/4 byte\n");
 
-	switch (bytes) {
-	case 1U:
-		val = (uint32_t)mmio_read8(hva);
-		break;
-	case 2U:
-		val = (uint32_t)mmio_read16(hva);
-		break;
-	default:
-		val = mmio_read32(hva);
-		break;
-	}
-
-	return val;
+	return (uint32_t)mmio_read(hva, bytes);
 }
 
 /*
@@ -211,17 +197,8 @@ static void pci_mmcfg_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t byt
 	void *hva = hpa2hva(addr);
 
 	ASSERT(pci_is_valid_access(offset, bytes), "the offset should be aligned with 2/4 byte\n");
-	switch (bytes) {
-	case 1U:
-		mmio_write8((uint8_t)val, hva);
-		break;
-	case 2U:
-		mmio_write16((uint16_t)val, hva);
-		break;
-	default:
-		mmio_write32(val, hva);
-		break;
-	}
+
+	mmio_write(hva, bytes, val);
 }
 
 static const struct pci_cfg_ops pci_mmcfg_cfg_ops = {
