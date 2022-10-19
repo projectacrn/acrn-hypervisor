@@ -28,7 +28,8 @@ their respective websites.
 The project's documentation contains the following items:
 
 * ReStructuredText source files used to generate documentation found at the
-  http://projectacrn.github.io website. All of the reStructuredText sources
+  https://projectacrn.github.io website or via the redirect at
+  https://docs.projectacrn.org.  All of the reStructuredText sources
   are found in the ``acrn-hypervisor/doc`` folder, or pulled in from sibling
   folders (such as ``misc/``) by the build scripts.
 
@@ -64,6 +65,7 @@ recommended folder setup for documentation contributions and generation:
 
    projectacrn/
       acrn-hypervisor/
+         debian/
          devicemodel/
          doc/
          hypervisor/
@@ -112,18 +114,19 @@ development computer, and then link that to the upstream repo as well:
 Install the Documentation Tools
 *******************************
 
-Our documentation processing has been tested to run with Python 3.8.10
-and these other tools:
+Our documentation processing has been tested to run with Python 3.8.10 and
+later, and these other tools:
 
-* breathe                   version: 4.31.0
-* sphinx                    version: 3.5.4
-* docutils                  version: 0.16
+* breathe                   version: 4.34.0 (>=4.2.3)
+* sphinx                    version: 5.3.0  (>=3.2.1, <6.0)
+* docutils                  version: 0.16.1 (>=0.16, <=0.17.1)
 * sphinx-rtd-theme          version: 1.0.0
-* sphinx-tabs               version: 1.3.0
-* doxygen                   version: 1.8.17
+* sphinx-tabs               version: 3.4.0 (>=1.3.0, <=3.4.0)
+* doxygen                   version: 1.8.17 (Ubuntu 20.04) and 1.9.1 (Ubuntu 22.04)
 
 Depending on your Linux version, install the needed tools. You may get a
-different (newer) version of doxygen noted above that may also work.
+different (newer) version of doxygen (installed using `apt`) than shown here,
+that may also work.
 
 For Ubuntu use:
 
@@ -133,7 +136,7 @@ For Ubuntu use:
      python3-wheel make graphviz xsltproc
 
 Then use ``pip3`` to install the remaining Python-based tools specified in the
-``requirements.txt`` file:
+:acrn_file:`doc/scripts/requirements.txt` file:
 
 .. code-block:: bash
 
@@ -142,7 +145,7 @@ Then use ``pip3`` to install the remaining Python-based tools specified in the
 
 Use this command to add ``$HOME/.local/bin`` to the front of your ``PATH`` so the system will
 find expected versions of these Python utilities such as ``sphinx-build`` and
-``breathe``:
+``breathe`` (you should first check whether this directory is already on your path):
 
 .. code-block:: bash
 
@@ -164,6 +167,20 @@ And with that you're ready to generate the documentation.
 
       doc/scripts/show-versions.py
 
+   for example:
+
+   .. code-block:: console
+
+      ~/projectacrn/acrn-hypervisor/doc$ scripts/show-versions.py
+
+      doc build tool versions found on your system...
+
+       breathe                   version: 4.34.0
+       sphinx                    version: 5.3.0
+       docutils                  version: 0.17.1
+       sphinx-rtd-theme          version: 1.0.0
+       sphinx-tabs               version: 3.4.0
+       doxygen                   version: 1.9.1
 
 Extra Tools for Generating PDF
 ==============================
@@ -238,7 +255,7 @@ with the ``-silent`` options, like this (after you've run ``make html``:
 
 .. code-block:: bash
 
-   make latexpdf LATEXMKOPTS="-silent"
+   make latexpdf LATEXMKOPTS="-silent -f"
 
 For convenience, we've also created a make target called ``pdf`` that will
 generate the HTML content and then make the PDF file in one step:
@@ -257,7 +274,8 @@ Publish Content
 
 If you have merge rights to the projectacrn repo called
 ``projectacrn.github.io``, you can update the public project documentation
-found at https://projectacrn.github.io.
+found at https://projectacrn.github.io and redirected from
+https://docs.projectacrn.org.
 
 You'll need to do a one-time clone of the upstream repo (we publish
 directly to the upstream repo rather than to a personal forked copy):
