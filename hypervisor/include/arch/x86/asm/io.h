@@ -166,4 +166,42 @@ static inline uint8_t mmio_read8(const void *addr)
 	return *((volatile const uint8_t *)addr);
 }
 
+static inline uint64_t mmio_read(const void *addr, uint64_t sz)
+{
+	uint64_t val;
+	switch (sz) {
+	case 1U:
+		val = (uint64_t)mmio_read8(addr);
+		break;
+	case 2U:
+		val = (uint64_t)mmio_read16(addr);
+		break;
+	case 4U:
+		val = (uint64_t)mmio_read32(addr);
+		break;
+	default:
+		val = mmio_read64(addr);
+		break;
+	}
+	return val;
+}
+
+static inline void mmio_write(void *addr, uint64_t sz, uint64_t val)
+{
+	switch (sz) {
+	case 1U:
+		mmio_write8((uint8_t)val, addr);
+		break;
+	case 2U:
+		mmio_write16((uint16_t)val, addr);
+		break;
+	case 4U:
+		mmio_write32((uint32_t)val, addr);
+		break;
+	default:
+		mmio_write64(val, addr);
+		break;
+	}
+}
+
 #endif /* _IO_H defined */
