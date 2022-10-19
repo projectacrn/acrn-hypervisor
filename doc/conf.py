@@ -45,8 +45,8 @@ extensions = [
 
 # extlinks provides a macro template
 
-extlinks = {'acrn-commit': ('https://github.com/projectacrn/acrn-hypervisor/commit/%s', ''),
-            'acrn-issue': ('https://github.com/projectacrn/acrn-hypervisor/issues/%s', '')
+extlinks = {
+            'acrn-issue': ('https://github.com/projectacrn/acrn-hypervisor/issues/%s', '#')
            }
 
 # use intersphinx linking to link to previous version release notes
@@ -128,7 +128,7 @@ finally:
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
