@@ -234,24 +234,24 @@ UEFI Secure Boot implementations use these keys:
 
 And keys and certificates are in multiple formats:
 
-#. `.key`  PEM format private keys for EFI binary and EFI signature list signing.
-#. `.crt`  PEM format certificates for sbsign.
-#. `.cer`  DER format certificates for firmware.
+#. ``.key``  PEM format private keys for EFI binary and EFI signature list signing.
+#. ``.crt``  PEM format certificates for sbsign.
+#. ``.cer``  DER format certificates for firmware.
 
 In ACRN, User VM Secure Boot can be enabled as follows:
 
 #. Generate keys (PK/KEK/DB) with a key generation tool such as Ubuntu
-   KeyGeneration. `PK.der`, `KEK.der`, and `db.der` will be enrolled in UEFI
-   BIOS. `db.key` and `db.crt` will be used to sign the User VM
+   KeyGeneration. ``PK.der``, ``KEK.der``, and ``db.der`` will be enrolled in UEFI
+   BIOS. ``db.key`` and ``db.crt`` will be used to sign the User VM
    bootloader/kernel.
-#. Create a virtual disk to hold `PK.der`, `KEK.der`, and `db.der`, then launch
+#. Create a virtual disk to hold ``PK.der``, ``KEK.der``, and ``db.der``, then launch
    the User VM with this virtual disk.
 #. Start the OVMF in writeback mode to ensure the keys are persistently stored
    in the OVMF image.
 #. Enroll the keys in the OVMF GUI by following the Secure Boot configuration
    flow and enable Secure Boot mode.
 #. Perform writeback via reset in OVMF.
-#. Sign the User VM images with `db.key` and `db.crt`.
+#. Sign the User VM images with ``db.key`` and ``db.crt``.
 #. Boot the User VM with Secure Boot enabled.
 
 .. _service_vm_hardening:
