@@ -46,9 +46,10 @@ endef
 #
 #   * The <symbol> (i.e. either BOARD or SCENARIO) will always hold the name of the effective board/scenario.
 #
-#   * The <symbol>_FILE (i.e. either BOARD_FILE or SCENARIO_FILE) will always hold the path to an existing XML file that
-#     defines the effective board/scenario. If only a BOARD/SCENARIO name is given, a predefined configuration under
-#     misc/config_tools/data/$BOARD will be used.
+#   * The <symbol>_FILE (i.e. either BOARD_FILE or SCENARIO_FILE) will hold the path to an existing XML file that
+#     defines the effective board/scenario. If only a BOARD/SCENARIO name is given from the command line, a predefined
+#     configuration under misc/config_tools/data/$BOARD will be used. If neither <symbol>_FILE nor <symbol> is given,
+#     this variable has an empty string as its value.
 #
 define determine_config =
 ifneq ($($(1)),)
@@ -76,7 +77,7 @@ ifneq ($($(1)),)
 else
   ifdef CONFIG_$(1)
     override $(1) := $(CONFIG_$(1))
-    override $(1)_FILE := $(HV_PREDEFINED_DATA_DIR)/$$(BOARD)/$$($(1)).xml
+    override $(1)_FILE :=
   else
     $$(error There is no $(1) parameter specified on the command-line and none from a previous build. Please provide a valid $(1) parameter)
   endif
@@ -191,32 +192,16 @@ $(eval $(call determine_config,BOARD))
 $(eval $(call determine_config,SCENARIO))
 $(eval $(call determine_build_type,n))
 
-$(HV_BOARD_XML):
-	@if [ ! -f $(HV_BOARD_XML) ]; then \
-	  if [ -f $(BOARD_FILE) ]; then \
-	    echo "Board XML is fetched from $(realpath $(BOARD_FILE))"; \
-	    mkdir -p $(dir $(HV_BOARD_XML)); \
-	    cp $(BOARD_FILE) $(HV_BOARD_XML); \
-	  else \
-	    echo "No pre-defined board info available at $(BOARD_FILE)"; \
-	    echo "Try setting another predefined BOARD or SCENARIO or specifying a board XML file"; \
-	    exit 1; \
-	  fi; \
-	fi
+$(HV_BOARD_XML): $(BOARD_FILE)
+	@echo "Board XML is fetched from $(realpath $(BOARD_FILE))"
+	@mkdir -p $(dir $(HV_BOARD_XML))
+	@cp $(BOARD_FILE) $(HV_BOARD_XML)
 
-$(HV_SCENARIO_XML):
-	@if [ ! -f $(HV_SCENARIO_XML) ]; then \
-	  if [ -f $(SCENARIO_FILE) ]; then \
-	    echo "Scenario XML is being fetched from $(abspath $(SCENARIO_FILE))"; \
-	    mkdir -p $(dir $(HV_SCENARIO_XML)); \
-	    python3 $(HV_CONFIG_TOOL_DIR)/scenario_config/default_populator.py $(SCENARIO_FILE) $(HV_SCENARIO_XML); \
-	    sed "s#<acrn-config.*#<acrn-config scenario=\"$(SCENARIO)\" >#g" -i $(HV_SCENARIO_XML); \
-	  else \
-	    echo "No pre-defined scenario available at $(SCENARIO_FILE)"; \
-	    echo "Try setting another predefined BOARD or SCENARIO or specifying a scenario XML file"; \
-	    exit 1; \
-	  fi; \
-	fi
+$(HV_SCENARIO_XML): $(SCENARIO_FILE)
+	@echo "Scenario XML is fetched from $(abspath $(SCENARIO_FILE))"
+	@mkdir -p $(dir $(HV_SCENARIO_XML))
+	@python3 $(HV_CONFIG_TOOL_DIR)/scenario_config/default_populator.py $(SCENARIO_FILE) $(HV_SCENARIO_XML)
+	@sed "s#<acrn-config.*#<acrn-config scenario=\"$(SCENARIO)\" >#g" -i $(HV_SCENARIO_XML)
 
 # A unified XML is generated to include board and scenario XML files so that XSLT scripts have access to both for
 # generating source files.
