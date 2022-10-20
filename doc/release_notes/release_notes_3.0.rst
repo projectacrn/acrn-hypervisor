@@ -145,7 +145,7 @@ XML file for supporting new features and fixes:
   - Extract all serial TTYs and virtio input devices: see PR `#7219 <https://github.com/projectacrn/acrn-hypervisor/pull/7219>`_.
   - Extract common ioapic information such as ioapic id, address, gsi base, and gsi num:
     see PR `#6987 <https://github.com/projectacrn/acrn-hypervisor/pull/6987>`_.
-  - Add another level of `die` node even though the hardware reports die topology in CPUID:
+  - Add another level of ``die`` node even though the hardware reports die topology in CPUID:
     see PR `#7080 <https://github.com/projectacrn/acrn-hypervisor/pull/7080>`_.
   - Bring up all cores online so Board Inspector can run cpuid to extract all available cores'
     information: see PR `#7120 <https://github.com/projectacrn/acrn-hypervisor/pull/7120>`_.

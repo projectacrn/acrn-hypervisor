@@ -181,7 +181,7 @@ the hypervisor.
 Service VM ACRN Log Module
 ==========================
 
-ACRNLog module provides one kernel option `hvlog=$size@$pbase` to configure
+ACRNLog module provides one kernel option ``hvlog=$size@$pbase`` to configure
 the size and base address of hypervisor log buffer. This space will be further divided
 into two buffers with equal size: last log buffer and current log buffer.
 

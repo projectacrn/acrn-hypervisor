@@ -1205,20 +1205,20 @@ following linearity relationship holds between the TSC and the ART hardware:
 
    ``TSC_Value = (ART_Value * CPUID.15H:EBX[31:0]) / CPUID.15H:EAX[31:0] + K``
 
-Where `K` is an offset that can be adjusted by a privileged agent.
+Where ``K`` is an offset that can be adjusted by a privileged agent.
 When ART hardware is reset, both invariant TSC and K are also reset.
 
 The guideline of ART virtualization (vART) is that software in native can run in
 the VM too. The vART solution is:
 
--  Present the ART capability to the guest through CPUID leaf 15H for `CPUID.15H:EBX[31:0]`
-   and `CPUID.15H:EAX[31:0]`.
+-  Present the ART capability to the guest through CPUID leaf 15H for ``CPUID.15H:EBX[31:0]``
+   and ``CPUID.15H:EAX[31:0]``.
 -  Passthrough devices see the physical ART_Value (vART_Value = pART_Value).
 -  Relationship between the ART and TSC in the guest is:
    ``vTSC_Value = (vART_Value * CPUID.15H:EBX[31:0]) / CPUID.15H:EAX[31:0] + vK``
-   where `vK = K + VMCS.TSC_OFFSET`.
--  If the guest changes `vK` or `vTSC_Value`, we change the `VMCS.TSC_OFFSET` accordingly.
--  `K` should never be changed by the hypervisor.
+   where ``vK = K + VMCS.TSC_OFFSET``.
+-  If the guest changes ``vK`` or ``vTSC_Value``, we change the ``VMCS.TSC_OFFSET`` accordingly.
+-  ``K`` should never be changed by the hypervisor.
 
 XSAVE Emulation
 ***************

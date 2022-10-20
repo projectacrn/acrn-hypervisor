@@ -125,7 +125,7 @@ later, and these other tools:
 * doxygen                   version: 1.8.17 (Ubuntu 20.04) and 1.9.1 (Ubuntu 22.04)
 
 Depending on your Linux version, install the needed tools. You may get a
-different (newer) version of doxygen (installed using `apt`) than shown here,
+different (newer) version of doxygen (installed using ``apt``) than shown here,
 that may also work.
 
 For Ubuntu use:
