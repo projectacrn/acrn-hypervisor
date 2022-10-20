@@ -246,16 +246,15 @@ override_dh_auto_install-arch:
 		fi;                                                                 \
 		cp $(call sfile,$b,$s) $(DESTDIR)$(libdir)/acrn/$b/$s/scenario.xml; \
 		vmids=$$(xmllint --xpath '//vm[load_order="POST_LAUNCHED_VM"]/@id' $(call sfile,$b,$s) 2>/dev/null || true); \
-		for vmid in $${vmids}; do                                           \
-		    mkdir -p $(DESTDIR)$(datadir)/acrn/launch-scripts/$b/$s/;       \
-		    id=$$(echo "$${vmid}" | sed -e 's/[[:space:]]*id="\(.*\)"/\1/g'); \
-		    $(call echo-silent,CREATE $(datadir)/acrn/launch-scripts/$b/$s/launch_user_vm_id$${id}.sh); \
-		    misc/config_tools/launch_config/launch_cfg_gen.py               \
-		        --board $(call bfile,$b) --scenario $(call sfile,$b,$s)     \
-		        --out $(DESTDIR)$(datadir)/acrn/launch-scripts/$b/$s        \
-			--user_vmid $${id} $(devnull) 2>&1;                         \
-		    chmod a+x $(DESTDIR)$(datadir)/acrn/launch-scripts/$b/$s/*;     \
-		done;                                                               \
+		if [ -n "$${vmids}" ]; then                                         \
+			$(call echo-silent,CREATE launch scripts in $(datadir)/acrn/launch-scripts/$b/$s/); \
+			mkdir -p $(DESTDIR)$(datadir)/acrn/launch-scripts/$b/$s/;   \
+			misc/config_tools/launch_config/launch_cfg_gen.py           \
+			    --board $(call bfile,$b) --scenario $(call sfile,$b,$s) \
+			    --out $(DESTDIR)$(datadir)/acrn/launch-scripts/$b/$s    \
+			    $(devnull) 2>&1;                          \
+			chmod a+x $(DESTDIR)$(datadir)/acrn/launch-scripts/$b/$s/*; \
+		fi;                                                                 \
 	) cp $(call bfile,$b) $(DESTDIR)$(libdir)/acrn/$b/board.xml;)
 	@:
 	@# install devicemodel & tools
