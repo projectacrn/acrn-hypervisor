@@ -127,7 +127,8 @@ HV_ALLOCATION_XML := $(HV_CONFIG_DIR)/allocation.xml
 HV_UNIFIED_XML := $(HV_CONFIG_DIR)/unified.xml
 HV_CONFIG_H := $(HV_OBJDIR)/include/config.h
 HV_CONFIG_MK := $(HV_CONFIG_DIR)/config.mk
-HV_CONFIG_TIMESTAMP := $(HV_CONFIG_DIR)/.timestamp
+HV_VALIDATION_TIMESTAMP := $(HV_CONFIG_DIR)/.validation.timestamp
+HV_CONFIG_TIMESTAMP := $(HV_CONFIG_DIR)/.configfiles.timestamp
 HV_DIFFCONFIG_LIST := $(HV_CONFIG_DIR)/.diffconfig
 
 # Directory containing generated configuration sources for diffconfig
@@ -219,7 +220,7 @@ $(HV_SCENARIO_XML):
 
 # A unified XML is generated to include board and scenario XML files so that XSLT scripts have access to both for
 # generating source files.
-$(HV_ALLOCATION_XML): $(HV_BOARD_XML) $(HV_SCENARIO_XML) | $(HV_CONFIG_DIR)
+$(HV_ALLOCATION_XML): $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_VALIDATION_TIMESTAMP) | $(HV_CONFIG_DIR)
 	@python3 $(HV_CONFIG_TOOL_DIR)/static_allocators/main.py --board $(HV_BOARD_XML) --scenario $(HV_SCENARIO_XML) --output $(HV_ALLOCATION_XML)
 	@echo "$@ generated"
 
@@ -238,7 +239,12 @@ $(HV_CONFIG_H): $(HV_UNIFIED_XML)
 	@xsltproc -o $@ --xinclude --xincludestyle $(HV_CONFIG_XFORM_DIR)/config.h.xsl $<
 	@echo "$@ generated"
 
-$(HV_CONFIG_TIMESTAMP): $(HV_UNIFIED_XML) ${HV_DIFFCONFIG_LIST} | $(HV_CONFIG_DIR)
+$(HV_VALIDATION_TIMESTAMP): $(HV_BOARD_XML) $(HV_SCENARIO_XML) | $(HV_CONFIG_DIR)
+	@echo "Validating scenario configurations..."
+	@python3 $(HV_CONFIG_TOOL_DIR)/scenario_config/validator.py $(HV_BOARD_XML) $(HV_SCENARIO_XML)
+	@touch $@
+
+$(HV_CONFIG_TIMESTAMP): $(HV_VALIDATION_TIMESTAMP) $(HV_UNIFIED_XML) ${HV_DIFFCONFIG_LIST} | $(HV_CONFIG_DIR)
 	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_CONFIG_DIR) $(HV_UNIFIED_XML)
 	@touch $@
 
@@ -287,7 +293,7 @@ else
   endif
 endif
 
-$(HV_DIFFCONFIG_LIST):
+$(HV_DIFFCONFIG_LIST): | $(HV_CONFIG_DIR)
 	@touch $@
 
 menuconfig:

@@ -433,7 +433,7 @@ $(HV_ACPI_TABLE_TIMESTAMP): $(HV_CONFIG_TIMESTAMP)
 	python3 ../misc/config_tools/acpi_gen/bin_gen.py --board $(HV_BOARD_XML) --scenario $(HV_SCENARIO_XML) --asl $(HV_CONFIG_DIR) --out $(HV_OBJDIR) --iasl_path $(ASL_COMPILER) --iasl_min_ver $(IASL_MIN_VER)
 	@touch $(HV_ACPI_TABLE_TIMESTAMP)
 
-$(SERIAL_CONF): $(HV_CONFIG_TIMESTAMP)
+$(SERIAL_CONF): $(HV_CONFIG_TIMESTAMP) $(HV_ALLOCATION_XML)
 	@echo "generate the serial configuration file for service VM ..."
 	python3 ../misc/config_tools/service_vm_config/serial_config.py --allocation $(HV_ALLOCATION_XML) --scenario $(HV_SCENARIO_XML) --out $(SERIAL_CONF)
 
