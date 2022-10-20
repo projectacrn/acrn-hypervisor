@@ -150,10 +150,6 @@ ifdef RELEASE
   endif
 endif
 
-ifeq ($(findstring $(MAKECMDGOALS),distclean),)
--include $(HV_CONFIG_MK)
-endif
-
 # BOARD/SCENARIO/BOARD_FILE/SCENARIO_FILE parameters sanity check.
 #
 # 1. Raise an error if BOARD/SCENARIO (or BOARD_FILE/SCENARIO_FILE) are partially given.
@@ -188,9 +184,12 @@ endif
 # file. SCENARIO/SCENARIO_FILE are used in the same way. The following block translates the user-visible BOARD/SCENARIO
 # (which is multiplexed) to the internal representation.
 
+ifeq ($(findstring $(MAKECMDGOALS),distclean),)
+-include $(HV_CONFIG_MK)
 $(eval $(call determine_config,BOARD))
 $(eval $(call determine_config,SCENARIO))
 $(eval $(call determine_build_type,n))
+endif
 
 $(HV_BOARD_XML): $(BOARD_FILE)
 	@echo "Board XML is fetched from $(realpath $(BOARD_FILE))"
