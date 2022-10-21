@@ -94,7 +94,7 @@ def dump_ttys_info(ttys_list, config):
             base = read_ttys_node(base_path)
             try:
                 b = get_bdf_from_realpath(os.path.join(TTY_PATH, ttys_n, 'device'))
-                bdf = f'{b[0]}:{b[1]}.{b[2]}
+                bdf = f'{b[0]}:{b[1]}.{b[2]}'
             except AssertionError:
                 bdf = ''
             if bdf:
