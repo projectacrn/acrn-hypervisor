@@ -44,10 +44,6 @@ export RELEASE ?= 0
 debian/configs/configurations.mk:
 	@:
 
-ifeq ($(ACRN_SCENARIOLIST),)
-$(error No scenarios defined. Please set ACRN_SCENARIOLIST)
-endif
-
 # misc/config_tools/data: contains ACRN supported configuration
 # debian/configs: add additional, unsupported configurations here!
 CONFIGDIRS ?= misc/config_tools/data debian/configs
@@ -81,13 +77,22 @@ endef
 # get all XML data
 $(foreach xml,$(CONFIGXMLS),$(call get-xml-data,$(xml)))
 
-# honor variable ACRN_BOARDLIST
+# honor variable ACRN_BOARDLIST by filtering the discovered board configurations accordingly
 ifneq ($(ACRN_BOARDLIST),)
-boardlist := $(sort $(ACRN_BOARDLIST))
+boardlist := $(sort $(filter $(boardlist),$(ACRN_BOARDLIST)))
 endif
 
-# honor variable ACRN_SCENARIOLIST
+# honor variable ACRN_SCENARIOLIST by filtering the discovered scenario configurations
+ifneq ($(ACRN_SCENARIOLIST),)
 $(foreach b,$(boardlist),$(eval scenariolist_$(b) := $(filter $(scenariolist_$(b)),$(ACRN_SCENARIOLIST))))
+endif
+
+# only keep boards with at least one valid scenario configuration
+boardlist := $(foreach b,$(boardlist),$(if $(scenariolist_$(b)),$b))
+# assert nonempty boardlist
+ifeq ($(boardlist),)
+$(error No valid board/scenario configurations specified/found)
+endif
 
 # board config name -> board config file
 bfile = $(abspath $(config_$1))
