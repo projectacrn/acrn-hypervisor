@@ -364,6 +364,14 @@ override_dh_auto_clean:
 	@$(foreach b,$(boardlist),echo "  $b: $(bold)$(call commasep,$(scenariolist_$b))$(sgr0)";)
 	@$(call echo-verbose)
 	@$(call echo-silent,CLEAN)
+	$(Q)rm -rf .pybuild/
+	$(Q)find . -type d -name __pycache__ | xargs rm -rf
+	$(Q)rm -f debian/acrn-hypervisor.config
+	$(Q)rm -f debian/acrn-hypervisor.postinst
+	$(Q)rm -f debian/acrn-hypervisor.postrm
+	$(Q)rm -f debian/acrn-hypervisor.prerm
+	$(Q)rm -f debian/acrn-hypervisor.templates
+	$(Q)rm -rf debian/acrn-board-inspector/build
 	$(Q)dh_auto_clean $(devnull)
 
 ### others ###################################################################
