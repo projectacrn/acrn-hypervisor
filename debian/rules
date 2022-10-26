@@ -36,8 +36,8 @@ ACRN_BOARDLIST ?= whl-ipc-i5 nuc11tnbi5 cfl-k700-i7 tgl-vecow-spc-7100-Corei7
 ACRN_SCENARIOLIST ?= partitioned shared hybrid hybrid_rt
 
 # for now build the debug versions
-# set to 1 for RELEASE build
-export RELEASE ?= 0
+# set to y for RELEASE build
+export RELEASE ?= n
 
 # eventually add-in locally contributed configurations
 -include debian/configs/configurations.mk
@@ -302,7 +302,7 @@ override_dh_auto_install-arch:
 		$(DESTDIR)$(docdir)/acrn-devicemodel
 	@:
 	@# adapt systemd services for tools (available in DEBUG build only)
-	$(if $(call strequ,${RELEASE},0),					\
+	$(if $(call strequ,${RELEASE},n),					\
 		$(Q)sed -i -e '/telemd.socket/d' -e '/prepare.service/d'	\
 			$(DESTDIR)$(systemd_unitdir)/system/acrnprobe.service;	\
 		sed -i '/telemd/d'						\
