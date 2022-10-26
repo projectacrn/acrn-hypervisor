@@ -173,6 +173,7 @@ export default {
       this.schemas = scenarioJSONSchema
       this.updateCurrentFormSchema()
       this.updateCurrentBoardInfo()
+      this.switchTab(-1)
     },
     updateCurrentFormSchema() {
       if (this.activeVMID === -1) {
