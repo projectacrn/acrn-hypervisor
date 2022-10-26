@@ -135,13 +135,13 @@ There are four types of I/O requests:
      - A port I/O access.
 
    * - MMIO
-     - A MMIO access to a GPA with no mapping in EPT.
+     - An MMIO access to a GPA with no mapping in EPT.
 
    * - PCI
      - A PCI configuration space access.
 
    * - WP
-     - A MMIO access to a GPA with a read-only mapping in EPT.
+     - An MMIO access to a GPA with a read-only mapping in EPT.
 
 
 For port I/O accesses, the hypervisor will always deliver an I/O request
@@ -293,7 +293,7 @@ The following structure represents a port I/O handler:
 .. doxygenstruct:: vm_io_handler_desc
    :project: Project ACRN
 
-The following structure represents a MMIO handler.
+The following structure represents an MMIO handler.
 
 .. doxygenstruct:: mem_io_node
    :project: Project ACRN
