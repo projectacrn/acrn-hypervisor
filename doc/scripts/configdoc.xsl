@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:acrn="https://projectacrn.org" version="1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                xmlns:acrn="https://projectacrn.org"
+                xmlns:func="http://exslt.org/functions"
+                extension-element-prefixes="func"
+                version="1.0">
   <xsl:output method="text"/>
   <xsl:variable name="newline" select="'&#10;'"/>
   <xsl:variable name="section_adornment" select="'#*=-%+@`'"/>
@@ -13,7 +18,6 @@
     <xsl:apply-templates select="xs:complexType[@name='ACRNConfigType']">
       <xsl:with-param name="level" select="2"/>
       <xsl:with-param name="prefix" select="''"/>
-      <xsl:with-param name="parent" select="."/>
     </xsl:apply-templates>
   </xsl:template>
   <!-- Walk through all the ACRNConfigType element's children -->
@@ -23,24 +27,21 @@
     <xsl:apply-templates select="descendant::xs:element">
       <xsl:with-param name="level" select="$level"/>
       <xsl:with-param name="prefix" select="$prefix"/>
-      <xsl:with-param name="parent" select="."/>
+      <xsl:with-param name="views-of-parent" select="'basic, advanced'"/>
+      <xsl:with-param name="applicable-vms-of-parent" select="''"/>
     </xsl:apply-templates>
   </xsl:template>
   <!-- ... and process all the child elements -->
   <xsl:template match="xs:element">
     <xsl:param name="level"/>
     <xsl:param name="prefix"/>
-    <xsl:param name="parent"/>
-    <xsl:variable name="ty">
-      <xsl:choose>
-        <xsl:when test="@type">
-          <xsl:value-of select="@type"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select=".//xs:alternative[1]/@type"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:param name="views-of-parent"/>
+    <xsl:param name="applicable-vms-of-parent"/>
+
+    <xsl:variable name="views" select="acrn:conditional(count(xs:annotation/@acrn:views) = 1, xs:annotation/@acrn:views, $views-of-parent)"/>
+    <xsl:variable name="applicable-vms" select="acrn:conditional(count(xs:annotation/@acrn:applicable-vms) = 1, xs:annotation/@acrn:applicable-vms, $applicable-vms-of-parent)"/>
+    <xsl:variable name="ty" select="acrn:conditional(count(@type) = 1, @type, .//xs:alternative[1]/@type)"/>
+
     <!-- dxnamePure and dxname hold the element name with and without spaces converted to underscores -->
     <xsl:variable name="dxnamePure">
       <xsl:choose>
@@ -58,9 +59,8 @@
     <!-- Only visit elements having complex types. Those having simple types are
          described as an option -->
     <xsl:choose>
-        <!-- don't document elements if not viewable -->
-        <xsl:when test="xs:annotation/@acrn:views='' and $showHidden='n'">
-        </xsl:when>
+      <!-- don't document elements if not viewable -->
+      <xsl:when test="$views='' and $showHidden='n'"/>
       <xsl:when test="//xs:complexType[@name=$ty]">
         <!-- The section header -->
           <xsl:if test="$level &lt;= 4">
@@ -84,8 +84,9 @@
         <xsl:apply-templates select="//xs:complexType[@name=$ty]">
           <xsl:with-param name="level" select="$level"/>
           <xsl:with-param name="name" select="concat($prefix, $dxname)"/>
-          <xsl:with-param name="parent" select="."/>
-      </xsl:apply-templates>
+          <xsl:with-param name="views-of-parent" select="$views"/>
+          <xsl:with-param name="applicable-vms-of-parent" select="$applicable-vms"/>
+        </xsl:apply-templates>
       </xsl:when>
       <xsl:otherwise>
         <xsl:if test="$level = 3">
@@ -112,56 +113,27 @@
               <xsl:text>|icon-hypervisor| </xsl:text>
             </xsl:when>
             <xsl:otherwise>
-              <xsl:choose>
-                <xsl:when test="count((ancestor-or-self::node()|$parent)[xs:annotation[@acrn:applicable-vms]])=0">
-                  <xsl:text>|icon-pre-launched-vm| |icon-post-launched-vm| |icon-service-vm| </xsl:text>
-                </xsl:when>
-                <xsl:otherwise>
-                   <xsl:if test="count((ancestor-or-self::node()|$parent)[xs:annotation[contains(@acrn:applicable-vms,'pre-launched')]][1])!=0">
-                    <xsl:text>|icon-pre-launched-vm| </xsl:text>
-                  </xsl:if>
-                  <xsl:if test="count((ancestor-or-self::node()|$parent)[xs:annotation[contains(@acrn:applicable-vms,'post-launched')]][1])!=0">
-                    <xsl:text>|icon-post-launched-vm| </xsl:text>
-                  </xsl:if>
-                  <xsl:if test="count((ancestor-or-self::node()|$parent)[xs:annotation[contains(@acrn:applicable-vms,'service-vm')]][1])!=0">
-                    <xsl:text>|icon-service-vm| </xsl:text>
-                  </xsl:if>
-                </xsl:otherwise>
-              </xsl:choose>
+              <xsl:if test="$applicable-vms = '' or contains($applicable-vms, 'pre-launched')">
+                <xsl:text>|icon-pre-launched-vm| </xsl:text>
+              </xsl:if>
+              <xsl:if test="$applicable-vms = '' or contains($applicable-vms, 'post-launched')">
+                <xsl:text>|icon-post-launched-vm| </xsl:text>
+              </xsl:if>
+              <xsl:if test="$applicable-vms = '' or contains($applicable-vms, 'service-vm')">
+                <xsl:text>|icon-service-vm| </xsl:text>
+              </xsl:if>
             </xsl:otherwise>
           </xsl:choose>
           <xsl:text>/ </xsl:text>
-          <xsl:choose>
-            <xsl:when test="count((ancestor-or-self::node()|$parent)[xs:annotation[@acrn:views]])=0">
-              <xsl:text>|icon-basic| |icon-advanced|</xsl:text>
-            </xsl:when>
-            <xsl:when test="xs:annotation/@acrn:views=''">
-              <xsl:text>|icon-not-available| </xsl:text>
-            </xsl:when>
-            <xsl:when test="$parent/xs:annotation/@acrn:views=''">
-              <xsl:text>|icon-not-available| </xsl:text>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:choose>
-                    <xsl:when test="count(ancestor-or-self::node()[xs:annotation[@acrn:views]])!=0">
-                      <xsl:if test="count((ancestor-or-self::node())[xs:annotation[contains(@acrn:views,'basic')]][1])!=0">
-                        <xsl:text>|icon-basic| </xsl:text>
-                      </xsl:if>
-                      <xsl:if test="count((ancestor-or-self::node())[xs:annotation[contains(@acrn:views,'advanced')]][1])!=0">
-                        <xsl:text>|icon-advanced| </xsl:text>
-                      </xsl:if>
-                    </xsl:when>
-                  <xsl:otherwise>
-                      <xsl:if test="count(($parent)[xs:annotation[contains(@acrn:views,'basic')]][1])!=0">
-                        <xsl:text>|icon-basic| </xsl:text>
-                      </xsl:if>
-                      <xsl:if test="count(($parent)[xs:annotation[contains(@acrn:views,'advanced')]][1])!=0">
-                        <xsl:text>|icon-advanced| </xsl:text>
-                      </xsl:if>
-                  </xsl:otherwise>
-              </xsl:choose>
-            </xsl:otherwise>
-          </xsl:choose>
+          <xsl:if test="contains($views, 'basic')">
+            <xsl:text>|icon-basic| </xsl:text>
+          </xsl:if>
+          <xsl:if test="contains($views, 'advanced')">
+            <xsl:text>|icon-advanced| </xsl:text>
+          </xsl:if>
+          <xsl:if test="$views = ''">
+            <xsl:text>|icon-not-availble| </xsl:text>
+          </xsl:if>
         </xsl:variable>
         <xsl:if test="$option-icons!=''">
           <xsl:value-of select="concat('   ',$option-icons,$newline)"/>
@@ -177,7 +149,6 @@
             <xsl:apply-templates select="//xs:simpleType[@name=$ty]">
               <xsl:with-param name="level" select="$level"/>
               <xsl:with-param name="prefix" select="''"/>
-              <xsl:with-param name="parent" select="$parent"/>
             </xsl:apply-templates>
           </xsl:when>
           <xsl:when test="starts-with($ty, 'xs:')">
@@ -191,7 +162,6 @@
             <xsl:apply-templates select="descendant::xs:simpleType">
               <xsl:with-param name="level" select="$level"/>
               <xsl:with-param name="prefix" select="''"/>
-              <xsl:with-param name="parent" select="$parent"/>
             </xsl:apply-templates>
           </xsl:otherwise>
         </xsl:choose>
@@ -207,7 +177,9 @@
   <xsl:template match="xs:complexType">
     <xsl:param name="level"/>
     <xsl:param name="name"/>
-    <xsl:param name="parent"/>
+    <xsl:param name="views-of-parent"/>
+    <xsl:param name="applicable-vms-of-parent"/>
+
         <!-- Visit the sub-menus -->
     <xsl:variable name="newLevel">
       <xsl:choose>
@@ -220,7 +192,8 @@
     <xsl:apply-templates select="descendant::xs:element">
       <xsl:with-param name="level" select="$newLevel"/>
       <xsl:with-param name="prefix" select="concat($name, '.')"/>
-      <xsl:with-param name="parent" select="$parent"/>
+      <xsl:with-param name="views-of-parent" select="$views-of-parent"/>
+      <xsl:with-param name="applicable-vms-of-parent" select="$applicable-vms-of-parent"/>
     </xsl:apply-templates>
   </xsl:template>
   <xsl:template match="xs:simpleType">
@@ -400,4 +373,17 @@
       </xsl:choose>
     </xsl:if>
   </xsl:template>
+  <func:function name="acrn:conditional">
+    <xsl:param name="cond"/>
+    <xsl:param name="a"/>
+    <xsl:param name="b"/>
+    <xsl:choose>
+      <xsl:when test="$cond">
+        <func:result select="$a"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <func:result select="$b"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </func:function>
 </xsl:stylesheet>
