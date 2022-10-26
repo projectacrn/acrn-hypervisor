@@ -254,7 +254,7 @@ Here are descriptions for each of these ``acrn-dm`` command-line parameters:
 
       --mmiodev_pt 0xFED40000,0x00005000
 
-   to pass through a MMIO device to a User VM.  The MMIO device has a MMIO
+   to pass through an MMIO device to a User VM.  The MMIO device has an MMIO
    region.  The base address of this region is 0xFED40000 and the size of the
    region is 0x00005000.
 

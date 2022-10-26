@@ -567,7 +567,7 @@ MMIO Handler Register
 ---------------------
 
 An MMIO range structure is defined below. As with PIO, it's the
-parameter needed to register a MMIO handler for a special MMIO range:
+parameter needed to register an MMIO handler for a special MMIO range:
 
 .. code-block:: c
 

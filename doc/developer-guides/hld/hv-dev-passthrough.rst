@@ -255,7 +255,7 @@ MMIO Remapping
 
 For PCI MMIO BAR, the hypervisor builds EPT mapping between the virtual BAR and
 physical BAR, then the VM can access MMIO directly. There is one exception: an
-MSI-X table is also in a MMIO BAR. The hypervisor needs to trap the accesses to
+MSI-X table is also in an MMIO BAR. The hypervisor needs to trap the accesses to
 the MSI-X table. So the pages that have an MSI-X table should not be accessed by
 the VM directly. EPT mapping is not built for pages that have an MSI-X table.
 
