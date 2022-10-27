@@ -143,7 +143,8 @@ To set up the ACRN build environment on the development computer:
 
    .. code-block:: bash
 
-      sudo pip3 install "elementpath==2.5.0" lxml "xmlschema==1.9.2" defusedxml tqdm requests
+      cd ~/acrn-work/acrn-hypervisor
+      sudo python3 -m pip install -r misc/config_tools/requirements.txt
 
 #. Build and install the iASL compiler/disassembler used for advanced power management,
    device discovery, and configuration (ACPI) within the host OS:
