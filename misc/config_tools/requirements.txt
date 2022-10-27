@@ -1,5 +1,5 @@
 defusedxml
 lxml
-elementpath==2.5.3
-xmlschema==1.9.2
+elementpath>=2.5.0
+xmlschema
 tqdm
