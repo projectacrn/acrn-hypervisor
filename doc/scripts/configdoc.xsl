@@ -61,7 +61,7 @@
     <xsl:choose>
       <!-- don't document elements if not viewable -->
       <xsl:when test="$views='' and $showHidden='n'"/>
-      <xsl:when test="//xs:complexType[@name=$ty]">
+      <xsl:when test="//xs:complexType[@name=$ty] or ./xs:complexType">
         <!-- The section header -->
           <xsl:if test="$level &lt;= 4">
               <xsl:if test="$dxnamePure!=''">
@@ -81,7 +81,7 @@
                   </xsl:if>
         </xsl:if>
         <!-- Visit the complex type to generate menus and/or entries -->
-        <xsl:apply-templates select="//xs:complexType[@name=$ty]">
+        <xsl:apply-templates select="//xs:complexType[@name=$ty] | ./xs:complexType">
           <xsl:with-param name="level" select="$level"/>
           <xsl:with-param name="name" select="concat($prefix, $dxname)"/>
           <xsl:with-param name="views-of-parent" select="$views"/>
@@ -189,7 +189,7 @@
         <xsl:otherwise><xsl:value-of select="$level + 1"/></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
-    <xsl:apply-templates select="descendant::xs:element">
+    <xsl:apply-templates select="./*/xs:element">
       <xsl:with-param name="level" select="$newLevel"/>
       <xsl:with-param name="prefix" select="concat($name, '.')"/>
       <xsl:with-param name="views-of-parent" select="$views-of-parent"/>
