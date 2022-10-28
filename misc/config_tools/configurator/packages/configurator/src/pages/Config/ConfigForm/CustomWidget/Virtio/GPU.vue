@@ -1,8 +1,8 @@
 <template>
   <div><br><b>Virtio GPU device</b></div>
   <div><br><span v-html="this.GPUDescription" style="color: rgb(153, 153, 153)"></span></div>
-  <div class="virtio_gpu" v-if="defaultVal && defaultVal.displays.display.length !== 0">
-    <div class="virtio_gpu_demo">
+  <div class="virtio_gpu" v-if="defaultVal && defaultVal.length>0">
+    <div class="virtio_gpu_demo" v-for="(virtio_gpu, index) in defaultVal">
       <b style="margin-bottom: 2rem">Virtual displays</b>
       <b-row class="align-items-center my-2 mt-4">
         <b-col md="2">
@@ -17,21 +17,21 @@
           </label>
         </b-col>
         <b-col md="4">
-          <b-form-select v-model="defaultVal.display_type" :options="GPUDisplayType"/>
+          <b-form-select v-model="virtio_gpu.display_type" :options="GPUDisplayType"/>
         </b-col>
       </b-row>
-      <div class="align-items-center my-2 mt-4" v-if="defaultVal.display_type === 'Window'"
-           v-for="(window_display, index) in defaultVal.displays.display">
+      <div class="align-items-center my-2 mt-4" v-if="virtio_gpu.display_type === 'Window'"
+           v-for="(window_display, window_index) in virtio_gpu.displays.display">
         <div style="float: left; text-indent: 2em;">
-          <b>Display {{ index + 1 }}</b>
+          <b>Display {{ window_index + 1 }}</b>
         </div>
         <div class="ToolSet" style="float: right;">
-          <div @click="removeDisplay(defaultVal.displays.display, index)">
+          <div @click="removeDisplay(virtio_gpu.displays.display, window_index)">
             <Icon size="18px">
               <Minus/>
             </Icon>
           </div>
-          <div @click="addWindowDisplay(defaultVal.displays.display, index)">
+          <div @click="addWindowDisplay(virtio_gpu.displays.display, window_index)">
             <Icon size="18px">
               <Plus/>
             </Icon>
@@ -90,18 +90,18 @@
         </div>
       </div>
 
-      <div class="align-items-center my-2 mt-4" v-else-if="defaultVal.display_type === 'Full screen'"
-           v-for="(fullScreen_display, index) in defaultVal.displays.display">
+      <div class="align-items-center my-2 mt-4" v-else-if="virtio_gpu.display_type === 'Full screen'"
+           v-for="(fullScreen_display, fullScreen_display_index) in virtio_gpu.displays.display">
         <div style="float: left; text-indent: 2em;">
           <b>Display {{ index + 1 }}</b>
         </div>
         <div class="ToolSet" style="float: right;">
-          <div @click="removeDisplay(defaultVal.displays.display, index)">
+          <div @click="removeDisplay(virtio_gpu.displays.display, fullScreen_display_index)">
             <Icon size="18px">
               <Minus/>
             </Icon>
           </div>
-          <div @click="addFullScreenDisplay(defaultVal.displays.display, index)">
+          <div @click="addFullScreenDisplay(virtio_gpu.displays.display, fullScreen_display_index)">
             <Icon size="18px">
               <Plus/>
             </Icon>
@@ -213,10 +213,13 @@ export default {
       display.splice(index, 1)
     },
     removeVirtioGPU() {
-      this.defaultVal = null
+      this.defaultVal = []
     },
     addVirtioGPU() {
-      this.defaultVal = {
+      if (!_.isArray(this.defaultVal)) {
+        this.defaultVal = []
+      }
+      this.defaultVal.splice(1, 0, {
         "display_type": "",
         "displays": {
           "display": [
@@ -228,7 +231,7 @@ export default {
             }
           ]
         }
-      }
+      })
     }
   }
 }

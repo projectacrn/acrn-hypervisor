@@ -478,7 +478,7 @@ argument and memory.</xs:documentation>
       </xs:annotation>
       <xs:complexType>
         <xs:all>
-          <xs:element name="gpu" type="VirtioGPUConfiguration" minOccurs="0">
+          <xs:element name="gpu" type="VirtioGPUConfiguration" minOccurs="0" maxOccurs="1">
             <xs:annotation acrn:title="Virtio GPU device" acrn:views="basic">
               <xs:documentation>The virtio GPU device presents a GPU device to the VM.
 This feature enables you to view the VM's GPU output in the Service VM.</xs:documentation>

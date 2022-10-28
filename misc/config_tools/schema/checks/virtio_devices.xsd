@@ -23,7 +23,17 @@
   </xs:assert>
 
   <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Window']] satisfies
-                   $vm/virtio_devices/gpu/displays/display/window_resolutions/text() != ''
+                   (count($vm//window_resolutions) = count($vm//horizontal_offset)
+                   and count($vm//window_resolutions) = count($vm//vertical_offset)
+                   and count($vm//horizontal_offset) = count($vm//vertical_offset))
+                   ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>VM "{$vm/name}": every display's window resolution, horizontal offset and vertical offset are required.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
+  <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Window']] satisfies
+                   $vm/virtio_devices/gpu/displays/display//window_resolutions/text() != ''
                    ">
     <xs:annotation acrn:severity="error" acrn:report-on="$vm">
       <xs:documentation>VM "{$vm/name}": window resolution is required for "window" virtual display.</xs:documentation>
@@ -31,7 +41,7 @@
   </xs:assert>
 
   <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Window']] satisfies
-                   $vm/virtio_devices/gpu/displays/display/horizontal_offset/text() != ''
+                   $vm/virtio_devices/gpu/displays/display//horizontal_offset/text() != ''
                    ">
     <xs:annotation acrn:severity="error" acrn:report-on="$vm">
       <xs:documentation>VM "{$vm/name}": horizontal offset (pixels) is required for "window" virtual displays.</xs:documentation>
@@ -39,11 +49,10 @@
   </xs:assert>
 
     <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Window']] satisfies
-                     $vm/virtio_devices/gpu/displays/display/vertical_offset/text() != ''
+                     $vm/virtio_devices/gpu/displays/display//vertical_offset/text() != ''
                      ">
     <xs:annotation acrn:severity="error" acrn:report-on="$vm">
-      <xs:documentation>VM "{$vm/name}" support 2 virtual windows at most. 
-Remove some of the virtual displays so that the total number does not exceed that limit.</xs:documentation>
+      <xs:documentation>VM "{$vm/name}": vertical offset (pixels) is required for "window" virtual displays.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 

@@ -374,7 +374,7 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
             script.add_virtual_device("virtio-blk", options=os.path.join(f"${{{var}}}", rootfs_img))
             script.add_deinit_command(f"unmount_partition ${{{var}}}")
 
-    for gpu_etree in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/gpu"):
+    for gpu_etree in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/gpu[./display_type]"):
         display_type = eval_xpath(gpu_etree, "./display_type[text() != '']/text()")
         params = list()
         for display_etree in eval_xpath_all(gpu_etree, "./displays/display"):
