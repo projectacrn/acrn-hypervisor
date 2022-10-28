@@ -550,8 +550,8 @@ post-launched User VM. Each User VM has its own launch script.
       ``STD`` in the VM name is short for Standard.
 
    #. Scroll down to **Memory size (MB)** and change the value to ``1024``. For
-      this example, we will use Ubuntu 20.04 to boot the post-launched VM.
-      Ubuntu 20.04 needs at least 1024 MB to boot.
+      this example, we will use Ubuntu 22.04 to boot the post-launched VM.
+      Ubuntu 22.04 needs at least 1024 MB to boot.
 
    #. For **Physical CPU affinity**, select pCPU ID ``0``, then click **+** and
       select pCPU ID ``1`` to affine (or pin) the VM to CPU cores 0 and 1. (That will
