@@ -440,12 +440,12 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
 
 <xs:complexType name="VirtioGPUConfiguration">
   <xs:all>
-    <xs:element name="display_type" type="VirtioGPUDisplayType">
+    <xs:element name="display_type" type="VirtioGPUDisplayType" minOccurs="0">
       <xs:annotation acrn:title="Display type">
         <xs:documentation>Display type provide virtual display for user vm with either full screen mode or virtual window mode.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="displays" type="DisplaysConfiguration"/>
+    <xs:element name="displays" type="DisplaysConfiguration" minOccurs="0"/>
   </xs:all>
 </xs:complexType>
 

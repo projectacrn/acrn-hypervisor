@@ -14,6 +14,14 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu/display_type] satisfies
+                   $vm/virtio_devices/gpu/display_type/text() != ''
+                   ">
+    <xs:annotation acrn:severity="error" acrn:report-on="$vm">
+      <xs:documentation>Select a display type of VM "{$vm/name}".</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
   <xs:assert test="every $vm in /acrn-config/vm[./virtio_devices/gpu[display_type = 'Full screen']] satisfies
                    $vm/virtio_devices/gpu/displays/display/monitor_id/text() != ''
                    ">
