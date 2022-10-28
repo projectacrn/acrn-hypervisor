@@ -38,15 +38,15 @@ Before you begin, make sure your machines have the following prerequisites:
 
 * Software specifications
 
-  - Ubuntu Desktop 20.04 LTS (ACRN development is not supported on Windows.)
+  - Ubuntu Desktop 22.04 LTS (ACRN development is not supported on Windows.)
 
 **Target system**:
 
 * Hardware specifications
 
   - Target board (see :ref:`hardware_tested`)
-  - Ubuntu Desktop 20.04 LTS bootable USB disk: download the latest `Ubuntu
-    Desktop 20.04 LTS ISO image <https://releases.ubuntu.com/focal/>`__ and
+  - Ubuntu Desktop 22.04 LTS bootable USB disk: download the latest `Ubuntu
+    Desktop 22.04 LTS ISO image <https://releases.ubuntu.com/jammy/>`__ and
     follow the `Ubuntu documentation
     <https://ubuntu.com/tutorials/create-a-usb-stick-on-ubuntu#1-overview>`__
     for creating the USB disk.
@@ -80,7 +80,7 @@ Prepare the Development Computer
 To set up the ACRN build environment on the development computer:
 
 #. On the development computer, run the following command to confirm that Ubuntu
-   Desktop 20.04 is running:
+   Desktop 22.04 is running:
 
    .. code-block:: bash
 
@@ -119,7 +119,7 @@ To set up the ACRN build environment on the development computer:
 
       sudo apt install -y gcc git make vim libssl-dev libpciaccess-dev uuid-dev \
            libsystemd-dev libevent-dev libxml2-dev libxml2-utils libusb-1.0-0-dev \
-           python3 python3-pip python3.8-venv libblkid-dev e2fslibs-dev \
+           python3 python3-pip libblkid-dev e2fslibs-dev \
            pkg-config libnuma-dev libcjson-dev liblz4-tool flex bison \
            xsltproc clang-format bc libpixman-1-dev libsdl2-dev libegl-dev \
            libgles-dev libdrm-dev gnu-efi libelf-dev
@@ -202,13 +202,13 @@ Example of a target system with cables connected:
 Install OS on the Target
 ============================
 
-The target system needs Ubuntu Desktop 20.04 LTS to run the Board Inspector
+The target system needs Ubuntu Desktop 22.04 LTS to run the Board Inspector
 tool. You can read the full instructions to download, create a bootable USB
 drive, and `Install Ubuntu desktop
 <https://ubuntu.com/tutorials/install-ubuntu-desktop#1-overview>`_ on the Ubuntu
 site.  We'll provide a summary here:
 
-To install Ubuntu 20.04:
+To install Ubuntu 22.04:
 
 #. Insert the Ubuntu bootable USB disk into the target system.
 
@@ -562,7 +562,7 @@ post-launched User VM. Each User VM has its own launch script.
       log in to the User VM later in this guide.
 
    #. For **Virtio block device**, click **+** and enter
-      ``/home/acrn/acrn-work/ubuntu-20.04.5-desktop-amd64.iso``. This parameter
+      ``/home/acrn/acrn-work/ubuntu-22.04.1-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
       in this guide, you will save the ISO file to that directory. (If you used
       a different username when installing Ubuntu on the target system, here's
@@ -773,9 +773,9 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
 Launch the User VM
 *******************
 
-#. On the target system, use the web browser to go to the `official Ubuntu website <https://releases.ubuntu.com/focal/>`__ to
-   get the Ubuntu Desktop 20.04 LTS ISO image
-   ``ubuntu-20.04.5-desktop-amd64.iso`` for the User VM. (The same image you
+#. On the target system, use the web browser to go to the `official Ubuntu website <https://releases.ubuntu.com/jammy/>`__ to
+   get the Ubuntu Desktop 22.04 LTS ISO image
+   ``ubuntu-22.04.1-desktop-amd64.iso`` for the User VM. (The same image you
    specified earlier in the ACRN Configurator UI.) Alternatively, instead of
    downloading it again, you can use a USB drive or ``scp`` to copy the ISO
    image file to the ``~/acrn-work`` directory on the target system.
@@ -787,7 +787,7 @@ Launch the User VM
 
    .. code-block:: bash
 
-      cp ~/Downloads/ubuntu-20.04.5-desktop-amd64.iso ~/acrn-work
+      cp ~/Downloads/ubuntu-22.04.1-desktop-amd64.iso ~/acrn-work
 
 #. Launch the User VM:
 
@@ -802,18 +802,18 @@ Launch the User VM
 
    .. code-block:: console
 
-      Ubuntu 20.04.5 LTS ubuntu hvc0
+      Ubuntu 22.04.1 LTS ubuntu hvc0
 
       ubuntu login:
 
-#. Log in to the User VM. For the Ubuntu 20.04 ISO, the user is ``ubuntu``, and
+#. Log in to the User VM. For the Ubuntu 22.04 ISO, the user is ``ubuntu``, and
    there's no password.
 
 #. Confirm that you see output similar to this example:
 
    .. code-block:: console
 
-      Welcome to Ubuntu 20.04.5 LTS (GNU/Linux 5.13.0-30-generic x86_64)
+      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.0-43-generic x86_64)
 
       * Documentation:  https://help.ubuntu.com
       * Management:     https://landscape.canonical.com
@@ -842,7 +842,7 @@ Launch the User VM
    .. code-block:: console
 
       ubuntu@ubuntu:~$ uname -r
-      5.15.0-46-generic
+      5.15.0-43-generic
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
