@@ -93,7 +93,7 @@ export default {
             'ui:field': Input,
           },
           "gpu": {
-            "ui:title": "Virtio GPU device",
+            "ui:title": "",
             "ui:field": GPU,
           },
         },
