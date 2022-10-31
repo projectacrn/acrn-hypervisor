@@ -147,6 +147,21 @@ else
 endif
 
 ### dh_installdeb ############################################################
+
+# create acrntools.install for debug build
+ifeq ($(RELEASE),n)
+
+debian/acrn-tools.install: debian/acrn-tools.install.debug
+	@$(call echo-verbose)
+	@$(call echo-silent,CREATE $@)
+	$(Q)cp $< $@
+
+override_dh_install: debian/acrn-tools.install
+	$(Q)dh_install
+
+endif
+
+### dh_installdeb ############################################################
 debian/acrn-hypervisor.postinst: debian/acrn-hypervisor.postinst.in
 	@$(call echo-verbose)
 	@$(call echo-silent,CREATE $@)
@@ -390,6 +405,7 @@ override_dh_auto_clean:
 	$(Q)rm -f debian/acrn-hypervisor.postinst
 	$(Q)rm -f debian/acrn-hypervisor.postrm
 	$(Q)rm -f debian/acrn-hypervisor.prerm
+	$(Q)rm -f debian/acrn-tools.install
 	$(Q)rm -f debian/acrn-hypervisor.templates
 	$(Q)rm -rf debian/acrn-board-inspector/build
 	$(Q)dh_auto_clean $(devnull)
