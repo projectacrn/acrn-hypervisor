@@ -17,7 +17,7 @@ function update_package_info() {
 	linux-modules-extra-$(uname -r) \
 	openssh-server \
 	isc-dhcp-server -y
-    pip3 install flask 'numpy==1.18.5' pandas posix_ipc
+    pip3 install flask 'numpy>=1.18.5' pandas posix_ipc
 
 }
 

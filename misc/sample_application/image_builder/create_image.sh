@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 build_dir="$PWD/build"
-cloud_image="${build_dir}/focal-server-cloudimg-amd64.img"
-cloud_image_url=https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
+cloud_image="${build_dir}/jammy-server-cloudimg-amd64.img"
+cloud_image_url=https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
 hmi_vm_image="${build_dir}/hmi_vm.img"
 rt_vm_image="${build_dir}/rt_vm.img"
 rt_kernel=(linux-libc linux-headers linux-image)
