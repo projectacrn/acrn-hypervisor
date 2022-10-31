@@ -557,7 +557,7 @@ Install and Run ACRN on the Target System
 
       ubuntu login: root
       Password:
-      Welcome to Ubuntu 20.04.5 LTS (GNU/Linux 5.15.0-46-generic x86_64)
+      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.0-52-generic x86_64)
 
       . . .
 
@@ -607,7 +607,7 @@ Install and Run ACRN on the Target System
 
       ubuntu login: root
       Password:
-      Welcome to Ubuntu 20.04.5 LTS (GNU/Linux 5.10.120-rt70-acrn-kernel-rtvm X86_64)
+      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.10.120-rt70-acrn-kernel-rtvm X86_64)
 
       . . .
 
