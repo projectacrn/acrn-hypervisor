@@ -408,6 +408,7 @@ override_dh_auto_clean:
 	$(Q)rm -f debian/acrn-tools.install
 	$(Q)rm -f debian/acrn-hypervisor.templates
 	$(Q)rm -rf debian/acrn-board-inspector/build
+	$(Q)rm -rf debian/acrn-board-inspector/acrn_board_inspector.egg-info
 	$(Q)dh_auto_clean $(devnull)
 
 ### others ###################################################################
