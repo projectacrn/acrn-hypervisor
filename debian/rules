@@ -218,9 +218,27 @@ override_dh_auto_build-indep: build/documentation/html/index.html
 	    --sourcedirectory=debian/acrn-board-inspector $(devnull)
 
 ### binary-arch ##############################################################
+
+# check_post_launched <configfile>
+# Checks if there is a POST_LAUNCHED_VM configured in the given config file
+# returns empty string (i.e. false) if there is no POST_LAUNCHED_VM detected
+check_post_launched=$(strip $(shell xmllint --xpath '//vm[load_order="POST_LAUNCHED_VM"]/@id' $1 2>/dev/null || true))
+
+# helper to determine if there are any POST_LAUNCHED VMs in any configuration
+check_any_post_launched=$(strip $(foreach b,$(boardlist),$(foreach s,$(scenariolist_$b),$(call check_post_launched,$(call sfile,$b,$s)))))
+
+# dynamically generate acrn-hypervisor.install to conditionally add launch script directory
+debian/acrn-hypervisor.install:
+	@$(call echo-verbose)
+	@$(call echo-silent,CREATE $@)
+	$(Q)echo "usr/lib/x86_64-linux-gnu/acrn/*" >$@
+	$(Q)if [ -n "$(call check_any_post_launched)" ]; then echo "usr/share/acrn/launch-scripts/" >>$@; fi
+
+.PHONY: debian/acrn-hypervisor.install
+
 override_dh_auto_install-arch: O=build
 override_dh_auto_install-arch: DESTDIR=$(abspath debian/tmp)
-override_dh_auto_install-arch:
+override_dh_auto_install-arch: debian/acrn-hypervisor.install
 	@$(call echo-verbose)
 	$(Q)set -e;$(foreach b,$(boardlist),$(foreach s,$(scenariolist_$b),         \
 		$(call echo-silent,BUILD & INSTALL hypervisor for $b:$s);           \
@@ -250,8 +268,7 @@ override_dh_auto_install-arch:
 			chmod 644 $(DESTDIR)$(libdir)/acrn/$b/$s/acpi/*;            \
 		fi;                                                                 \
 		cp $(call sfile,$b,$s) $(DESTDIR)$(libdir)/acrn/$b/$s/scenario.xml; \
-		vmids=$$(xmllint --xpath '//vm[load_order="POST_LAUNCHED_VM"]/@id' $(call sfile,$b,$s) 2>/dev/null || true); \
-		if [ -n "$${vmids}" ]; then                                         \
+		if [ -n "$(call check_post_launched,$(call sfile,$b,$s))" ]; then   \
 			$(call echo-silent,CREATE launch scripts in $(datadir)/acrn/launch-scripts/$b/$s/); \
 			mkdir -p $(DESTDIR)$(datadir)/acrn/launch-scripts/$b/$s/;   \
 			misc/config_tools/launch_config/launch_cfg_gen.py           \
@@ -366,6 +383,7 @@ override_dh_auto_clean:
 	@$(call echo-silent,CLEAN)
 	$(Q)rm -rf .pybuild/
 	$(Q)find . -type d -name __pycache__ | xargs rm -rf
+	$(Q)rm -f debian/acrn-hypervisor.install
 	$(Q)rm -f debian/acrn-hypervisor.config
 	$(Q)rm -f debian/acrn-hypervisor.postinst
 	$(Q)rm -f debian/acrn-hypervisor.postrm
