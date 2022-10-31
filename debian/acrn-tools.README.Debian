@@ -1,0 +1,7 @@
+acrn-tools for Debian
+---------------------
+
+Since acrn-tools cannot be provided for release builds, a virtually empty
+acrn-tools package indicates a release build package. As a consequence,
+the tools belonging to this package are only populated for debug builds.
+
