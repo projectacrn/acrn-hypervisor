@@ -58,7 +58,7 @@
         <xs:documentation>Enable multiboot2 protocol support (with multiboot1 downward compatibility). If multiboot1 meets your requirements, disable this feature to reduce hypervisor code size.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="ENFORCE_TURNOFF_AC" type="Boolean" default="y">
+    <xs:element name="ENFORCE_TURNOFF_AC" type="Boolean" default="n">
       <xs:annotation acrn:title="Disable Split lock detection" acrn:views="advanced">
         <xs:documentation>Disable detection of split locks. A split lock can negatively affect an application's real-time performance. If a lock is detected, an alignment check exception #AC occurs.</xs:documentation>
       </xs:annotation>
