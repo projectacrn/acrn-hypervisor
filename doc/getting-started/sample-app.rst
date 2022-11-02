@@ -117,7 +117,7 @@ As a normal (e.g., **acrn**) user, follow these steps:
 
      cd ~/acrn-work/acrn-hypervisor
      git fetch --all
-     git checkout v3.1 
+     git checkout master 
 
 #. Build the ACRN sample application source code::
 
@@ -162,13 +162,12 @@ Make the RT_VM Image
 *********************
 
 1. Check out the ``acrn-kernel`` source code branch (already cloned from the
-   ``acrn-kernel`` repo when you followed the :ref:`gsg`). We've tagged a
-   specific version of the ``acrn-kernel`` you should use for the sample app's
-   RT VM::
+   ``acrn-kernel`` repo when you followed the :ref:`gsg`). We use preempt-rt 
+   branch of ``acrn-kernel`` for the sample app's RT VM::
 
      cd ~/acrn-work/acrn-kernel
      git fetch --all
-     git checkout -b sample_rt acrn-tag-sample-application-rt
+     git checkout -b sample_rt origin/5.15/preempt-rt
 
 #. Build the preempt-rt patched kernel used by the RT VM::
 
@@ -190,10 +189,10 @@ Make the RT_VM Image
 
    .. code-block:: console
 
-     linux-headers-5.10.120-rt70-acrn-kernel-rtvm+_5.10.120-rt70-acrn-kernel-rtvm+-1_amd64.deb
-     linux-image-5.10.120-rt70-acrn-kernel-rtvm+_5.10.120-rt70-acrn-kernel-rtvm+-1_amd64.deb
-     linux-image-5.10.120-rt70-acrn-kernel-rtvm+-dbg_5.10.120-rt70-acrn-kernel-rtvm+-1_amd64.deb
-     linux-libc-dev_5.10.120-rt70-acrn-kernel-rtvm+-1_amd64.deb
+     linux-headers-5.15.44-rt46-acrn-kernel-rtvm+_5.15.44-rt46-acrn-kernel-rtvm+-1_amd64.deb
+     linux-image-5.15.44-rt46-acrn-kernel-rtvm+-dbg_5.15.44-rt46-acrn-kernel-rtvm+-1_amd64.deb
+     linux-image-5.15.44-rt46-acrn-kernel-rtvm+_5.15.44-rt46-acrn-kernel-rtvm+-1_amd64.deb
+     linux-libc-dev_5.15.44-rt46-acrn-kernel-rtvm+-1_amd64.deb
 
 #. Make the RT VM image::
 
@@ -607,7 +606,7 @@ Install and Run ACRN on the Target System
 
       ubuntu login: root
       Password:
-      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.10.120-rt70-acrn-kernel-rtvm X86_64)
+      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.44-rt46-acrn-kernel-rtvm+ x86_64)
 
       . . .
 
