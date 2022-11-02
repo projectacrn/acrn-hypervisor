@@ -7,10 +7,11 @@
 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common
+import acrn_config_utilities
 import re
 from collections import defaultdict
 from collections import namedtuple
+from acrn_config_utilities import get_node
 
 policy_owner = namedtuple("policy_owner", ["vm_name", "vcpu", "cache_type"])
 
@@ -74,9 +75,9 @@ class RdtPolicy:
         l2_mask = None
         l3_mask = None
         for policy in policy_list:
-            cache_level = common.get_node("../CACHE_LEVEL/text()", policy)
-            cache_id = common.get_node("../CACHE_ID/text()", policy)
-            clos_mask = common.get_node("./CLOS_MASK/text()", policy)
+            cache_level = get_node("../CACHE_LEVEL/text()", policy)
+            cache_id = get_node("../CACHE_ID/text()", policy)
+            clos_mask = get_node("./CLOS_MASK/text()", policy)
             if cache_level == "2":
                 l2_mask = clos_mask
                 cache2_id = cache_id
@@ -137,19 +138,19 @@ def gen_policy_owner_list(scenario_etree):
     policy_owner_list = []
     vm_list = scenario_etree.xpath("//POLICY/VM")
     for vm in vm_list:
-        vm_name = common.get_node("./text()", vm)
-        vcpu = common.get_node("../VCPU/text()", vm)
-        cache_type = common.get_node("../TYPE/text()", vm)
+        vm_name = get_node("./text()", vm)
+        vcpu = get_node("../VCPU/text()", vm)
+        cache_type = get_node("../TYPE/text()", vm)
         policy_owner_list.append(policy_owner(vm_name, int(vcpu), cache_type))
     return policy_owner_list
 
 def vm_vcat_enable(scenario_etree, vm_name):
-    vcat_enable = common.get_node(f"//VCAT_ENABLED/text()", scenario_etree)
-    virtual_cat_support = common.get_node(f"//vm[name = '{vm_name}']/virtual_cat_support/text()", scenario_etree)
+    vcat_enable = get_node(f"//VCAT_ENABLED/text()", scenario_etree)
+    virtual_cat_support = get_node(f"//vm[name = '{vm_name}']/virtual_cat_support/text()", scenario_etree)
     return (vcat_enable == "y") and (virtual_cat_support == "y")
 
 def cdp_enable(scenario_etree):
-    cdp_enable = common.get_node(f"//CDP_ENABLED/text()", scenario_etree)
+    cdp_enable = get_node(f"//CDP_ENABLED/text()", scenario_etree)
     return cdp_enable == "y"
 
 def convert_cdp_to_normal(cdp_policy_list):

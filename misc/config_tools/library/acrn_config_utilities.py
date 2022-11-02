@@ -183,7 +183,7 @@ def get_xml_attrib(config_file, attrib):
             if 'board=' in line or 'scenario=' in line:
 
                 if attrib not in line:
-                    err_dic['common error'] = "The {} attribute is not in xml file".format(attrib)
+                    err_dic['acrn_config_utilities error'] = "The {} attribute is not in xml file".format(attrib)
                     return (err_dic, value)
 
                 attrib_list = line.split()

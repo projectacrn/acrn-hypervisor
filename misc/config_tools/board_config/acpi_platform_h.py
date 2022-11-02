@@ -4,7 +4,7 @@
 #
 
 import board_cfg_lib
-import common
+import acrn_config_utilities
 
 PLATFORM_HEADER = r"""/* DO NOT MODIFY THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
  */
@@ -89,7 +89,7 @@ def multi_info_parser(config, default_platform, msg_s, msg_e):
     write_direct = ['PM1A_EVT_ACCESS_SIZE', 'PM1A_EVT_ADDRESS', 'PM1A_CNT_ADDRESS']
 
     pm_ac_sz = OverridAccessSize()
-    multi_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, msg_s, msg_e)
+    multi_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, msg_s, msg_e)
 
     msg_name = msg_s.split('_')[0].strip('<')
 
@@ -138,7 +138,7 @@ def write_direct_info_parser(config, msg_s, msg_e):
     :param msg_s: it is a pattern of key stings what start to match from board information
     :param msg_e: it is a pattern of key stings what end to match from board information
     """
-    vector_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, msg_s, msg_e)
+    vector_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, msg_s, msg_e)
     msg_name = msg_s.split('_')[0].strip('<')
 
     # Set defaults if not present in target xml file
@@ -193,7 +193,7 @@ def drhd_info_parser(config):
     prev_num = 0
 
     drhd_lines = board_cfg_lib.get_info(
-        common.BOARD_INFO_FILE, "<DRHD_INFO>", "</DRHD_INFO>")
+        acrn_config_utilities.BOARD_INFO_FILE, "<DRHD_INFO>", "</DRHD_INFO>")
 
     # write DRHD
     print("/* DRHD of DMAR */", file=config)

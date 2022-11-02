@@ -8,9 +8,9 @@
 import os, sys
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common
+import acrn_config_utilities
 
-VM_CONFIGS_PATH = os.path.join(common.SOURCE_ROOT_DIR, 'misc', 'config_tools')
+VM_CONFIGS_PATH = os.path.join(acrn_config_utilities.SOURCE_ROOT_DIR, 'misc', 'config_tools')
 TEMPLATE_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'acpi_template', 'template')
 
 ACPI_TABLE_LIST = [('rsdp.asl', 'rsdp.aml'), ('xsdt.asl', 'xsdt.aml'), ('facp.asl', 'facp.aml'),

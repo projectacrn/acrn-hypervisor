@@ -7,10 +7,11 @@
 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common, board_cfg_lib, lib.error, lib.lib
+import acrn_config_utilities, board_cfg_lib, lib.error, lib.lib
 import re
 from collections import defaultdict
 from itertools import combinations
+from acrn_config_utilities import get_node
 
 LEGACY_IRQ_MAX = 16
 
@@ -20,7 +21,7 @@ def get_native_valid_irq():
     :return: native available irq list
     """
     val_irq = []
-    irq_info_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<AVAILABLE_IRQ_INFO>", "</AVAILABLE_IRQ_INFO>")
+    irq_info_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<AVAILABLE_IRQ_INFO>", "</AVAILABLE_IRQ_INFO>")
     for irq_string in irq_info_lines:
         val_irq = [int(x.strip()) for x in irq_string.split(',')]
     return val_irq
@@ -48,15 +49,15 @@ def remove_irq(irq_list, irq):
         raise ValueError("Cannot remove irq:{} from available irq list:{}, {}". format(irq, e, irq_list)) from e
 
 def create_vuart_irq_node(etree, vm_id, load_order, vuart_id, irq):
-    allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", etree)
+    allocation_vm_node = get_node(f"/acrn-config/vm[@id = '{vm_id}']", etree)
     if allocation_vm_node is None:
-        allocation_vm_node = common.append_node("/acrn-config/vm", None, etree, id = vm_id)
-    if common.get_node("./load_order", allocation_vm_node) is None:
-        common.append_node("./load_order", load_order, allocation_vm_node)
-    if common.get_node(f"./legacy_vuart[@id = '{vuart_id}']", allocation_vm_node) is None:
-        common.append_node("./legacy_vuart", None, allocation_vm_node, id = vuart_id)
+        allocation_vm_node = acrn_config_utilities.append_node("/acrn-config/vm", None, etree, id = vm_id)
+    if get_node("./load_order", allocation_vm_node) is None:
+        acrn_config_utilities.append_node("./load_order", load_order, allocation_vm_node)
+    if get_node(f"./legacy_vuart[@id = '{vuart_id}']", allocation_vm_node) is None:
+        acrn_config_utilities.append_node("./legacy_vuart", None, allocation_vm_node, id = vuart_id)
 
-    common.append_node(f"./legacy_vuart[@id = '{vuart_id}']/irq", irq, allocation_vm_node)
+    acrn_config_utilities.append_node(f"./legacy_vuart[@id = '{vuart_id}']/irq", irq, allocation_vm_node)
 
 def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
     native_ttys = lib.lib.get_native_ttys()
@@ -65,7 +66,7 @@ def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
     vm_node_list = scenario_etree.xpath("//vm")
 
     for vm_node in vm_node_list:
-        load_order = common.get_node("./load_order/text()", vm_node)
+        load_order = get_node("./load_order/text()", vm_node)
         irq_list = get_native_valid_irq() if load_order == "SERVICE_VM" else [f"{d}" for d in list(range(5,15))]
 
         if load_order == "SERVICE_VM":
@@ -75,34 +76,34 @@ def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
                 remove_irq(irq_list, 4)
         vuart_id = 1
         legacy_vuart_irq = "0"
-        vmname = common.get_node("./name/text()", vm_node)
+        vmname = get_node("./name/text()", vm_node)
 
         vuart_connections = scenario_etree.xpath("//vuart_connection")
         for connection in vuart_connections:
             endpoint_list = connection.xpath(".//endpoint")
             for endpoint in endpoint_list:
-                vm_name = common.get_node("./vm_name/text()", endpoint)
+                vm_name = get_node("./vm_name/text()", endpoint)
                 if vm_name == vmname:
-                    vuart_type = common.get_node("./type/text()", connection)
+                    vuart_type = get_node("./type/text()", connection)
                     if vuart_type == "legacy":
-                        io_port = common.get_node("./io_port/text()", endpoint)
+                        io_port = get_node("./io_port/text()", endpoint)
                         legacy_vuart_irq = alloc_standard_irq(io_port)
                         if legacy_vuart_irq == "0" and load_order != "SERVICE_VM":
                             legacy_vuart_irq = alloc_irq(irq_list)
                     else:
                         legacy_vuart_irq = alloc_irq(irq_list)
 
-                    create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
+                    create_vuart_irq_node(allocation_etree, get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
                     vuart_id = vuart_id + 1
         # Allocate irq for S5 vuart, we have to use the irq of COM2
         if load_order != "SERVICE_VM":
             legacy_vuart_irq = alloc_standard_irq("0x2F8")
-            create_vuart_irq_node(allocation_etree, common.get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
+            create_vuart_irq_node(allocation_etree, get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
             vuart_id = vuart_id + 1
 
     user_vm_list = scenario_etree.xpath(f"//vm[load_order != 'SERVICE_VM']/name/text()")
-    service_vm_id = common.get_node(f"//vm[load_order = 'SERVICE_VM']/@id", scenario_etree)
-    service_vm_name = common.get_node(f"//vm[load_order = 'SERVICE_VM']/name/text()", scenario_etree)
+    service_vm_id = get_node(f"//vm[load_order = 'SERVICE_VM']/@id", scenario_etree)
+    service_vm_name = get_node(f"//vm[load_order = 'SERVICE_VM']/name/text()", scenario_etree)
     service_vuart_list = scenario_etree.xpath(f"//endpoint[vm_name = '{service_vm_name}']")
     if service_vm_id is not None:
         for index in range(0, len(user_vm_list)):
@@ -130,7 +131,7 @@ def get_irqs_of_device(device_node):
             else:
                 # Interrupts from another device
                 index = res.get("index", "0")
-                irq = common.get_node(f"//device[acpi_object='{source}']/resource[@id='res{index}' and @type='irq']/@int", device_node.getroottree())
+                irq = get_node(f"//device[acpi_object='{source}']/resource[@id='res{index}' and @type='irq']/@int", device_node.getroottree())
                 if irq is not None:
                     irqs.add(int(irq))
 
@@ -152,7 +153,7 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
         load_order = vm.find("load_order").text
         vm_id = int(vm.get("id"))
         if lib.lib.is_pre_launched_vm(load_order):
-            pt_intx_text = common.get_node("pt_intx/text()", vm)
+            pt_intx_text = get_node("pt_intx/text()", vm)
             if pt_intx_text is not None:
                 pt_intx_mapping = dict(eval(f"[{pt_intx_text.replace(')(', '), (')}]"))
                 for irq in pt_intx_mapping.keys():
@@ -160,7 +161,7 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
             for pci_dev in vm.xpath("pci_devs/pci_dev/text()"):
                 bdf = lib.lib.BusDevFunc.from_str(pci_dev.split(" ")[0])
                 address = hex((bdf.dev << 16) | (bdf.func))
-                device_node = common.get_node(f"//bus[@address='{hex(bdf.bus)}']/device[@address='{address}']", board_etree)
+                device_node = get_node(f"//bus[@address='{hex(bdf.bus)}']/device[@address='{address}']", board_etree)
                 if device_node in device_nodes:
                     irqs = get_irqs_of_device(device_node)
                     for irq in irqs:
@@ -168,7 +169,7 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
                     device_nodes.discard(device_node)
 
             # Raise error when any pre-launched VM with LAPIC passthrough requires any interrupt line.
-            lapic_passthru_flag = common.get_node("lapic_passthrough[text() = 'y']", vm)
+            lapic_passthru_flag = get_node("lapic_passthrough[text() = 'y']", vm)
             if lapic_passthru_flag is not None and irq_allocation[vm_id]:
                 for irq, devices in irq_allocation[vm_id].items():
                     print(f"Interrupt line {irq} is used by the following device(s).")
@@ -226,10 +227,10 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
     # stated in the scenario configuration.
     #
     for vm_id, alloc in irq_allocation.items():
-        vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+        vm_node = get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
         if vm_node is None:
-            vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = str(vm_id))
-        pt_intx_text = common.get_node(f"//vm[@id='{vm_id}']/pt_intx/text()", scenario_etree)
+            vm_node = acrn_config_utilities.append_node("/acrn-config/vm", None, allocation_etree, id = str(vm_id))
+        pt_intx_text = get_node(f"//vm[@id='{vm_id}']/pt_intx/text()", scenario_etree)
         pt_intx_mapping = dict(eval(f"[{pt_intx_text.replace(')(', '), (')}]")) if pt_intx_text is not None else {}
         for irq, devs in alloc.items():
             for dev in devs:
@@ -237,13 +238,13 @@ def alloc_device_irqs(board_etree, scenario_etree, allocation_etree):
                     continue
                 bdf = dev.split(" ")[0]
                 dev_name = f"PTDEV_{bdf}"
-                dev_node = common.get_node(f"device[@name = '{dev_name}']", vm_node)
+                dev_node = get_node(f"device[@name = '{dev_name}']", vm_node)
                 if dev_node is None:
-                    dev_node = common.append_node("./device", None, vm_node, name = dev_name)
-                pt_intx_node = common.get_node(f"pt_intx", dev_node)
+                    dev_node = acrn_config_utilities.append_node("./device", None, vm_node, name = dev_name)
+                pt_intx_node = get_node(f"pt_intx", dev_node)
                 virq = pt_intx_mapping.get(irq, irq)
                 if pt_intx_node is None:
-                    common.append_node(f"./pt_intx", f"({irq}, {virq})", dev_node)
+                    acrn_config_utilities.append_node(f"./pt_intx", f"({irq}, {virq})", dev_node)
                 else:
                     pt_intx_node.text += f" ({irq}, {virq})"
 

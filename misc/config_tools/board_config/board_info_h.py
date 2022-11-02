@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import common
+import acrn_config_utilities
 import board_cfg_lib
 import scenario_cfg_lib
 
@@ -31,7 +31,7 @@ def find_hi_mmio_window(config):
     mmio_max = 0
     is_hi_mmio = False
 
-    iomem_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+    iomem_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
 
     for line in iomem_lines:
         if "PCI Bus" not in line:
@@ -39,12 +39,12 @@ def find_hi_mmio_window(config):
 
         line_start_addr = int(line.split('-')[0], 16)
         line_end_addr = int(line.split('-')[1].split()[0], 16)
-        if line_start_addr < common.SIZE_4G and line_end_addr < common.SIZE_4G:
+        if line_start_addr < acrn_config_utilities.SIZE_4G and line_end_addr < acrn_config_utilities.SIZE_4G:
             continue
-        elif line_start_addr < common.SIZE_4G and line_end_addr >= common.SIZE_4G:
+        elif line_start_addr < acrn_config_utilities.SIZE_4G and line_end_addr >= acrn_config_utilities.SIZE_4G:
             i_cnt += 1
             is_hi_mmio = True
-            mmio_min = common.SIZE_4G
+            mmio_min = acrn_config_utilities.SIZE_4G
             mmio_max = line_end_addr
             continue
 
@@ -59,8 +59,8 @@ def find_hi_mmio_window(config):
 
     print("", file=config)
     if is_hi_mmio:
-        print("#define HI_MMIO_START\t\t\t0x%xUL" % common.round_down(mmio_min, common.SIZE_G), file=config)
-        print("#define HI_MMIO_END\t\t\t0x%xUL" % common.round_up(mmio_max, common.SIZE_G), file=config)
+        print("#define HI_MMIO_START\t\t\t0x%xUL" % acrn_config_utilities.round_down(mmio_min, acrn_config_utilities.SIZE_G), file=config)
+        print("#define HI_MMIO_END\t\t\t0x%xUL" % acrn_config_utilities.round_up(mmio_max, acrn_config_utilities.SIZE_G), file=config)
     else:
         print("#define HI_MMIO_START\t\t\t~0UL", file=config)
         print("#define HI_MMIO_END\t\t\t0UL", file=config)
@@ -91,8 +91,8 @@ def generate_file(config):
     # generate HI_MMIO_START/HI_MMIO_END
     find_hi_mmio_window(config)
 
-    p2sb = common.get_leaf_tag_map_bool(common.SCENARIO_INFO_FILE, "mmio_resources", "p2sb")
-    if (common.LOAD_ORDER.get(0) == "PRE_LAUNCHED_VM"
+    p2sb = acrn_config_utilities.get_leaf_tag_map_bool(acrn_config_utilities.SCENARIO_INFO_FILE, "mmio_resources", "p2sb")
+    if (acrn_config_utilities.LOAD_ORDER.get(0) == "PRE_LAUNCHED_VM"
         and board_cfg_lib.is_p2sb_passthru_possible()
         and p2sb.get(0, False)):
         print("", file=config)
@@ -100,7 +100,7 @@ def generate_file(config):
 
         hpa = board_cfg_lib.find_p2sb_bar_addr()
         print("#define P2SB_BAR_ADDR\t\t\t0x{:X}UL".format(hpa), file=config)
-        gpa = common.hpa2gpa(0, hpa, 0x1000000)
+        gpa = acrn_config_utilities.hpa2gpa(0, hpa, 0x1000000)
         print("#define P2SB_BAR_ADDR_GPA\t\t0x{:X}UL".format(gpa), file=config)
         print("#define P2SB_BAR_SIZE\t\t\t0x1000000UL", file=config)
 

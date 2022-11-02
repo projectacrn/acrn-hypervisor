@@ -6,9 +6,10 @@
 import sys
 import enum
 import board_cfg_lib
-import common
+import acrn_config_utilities
 import lxml.etree
 import os
+from acrn_config_utilities import get_node
 
 class RDT(enum.Enum):
     L2 = 0
@@ -33,7 +34,7 @@ MSR_IA32_L3_MASK_END = 0x00000D0F
 def gen_dmar_structure(config):
     """Generate dmar structure information"""
 
-    dmar_info_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<DRHD_INFO>", "</DRHD_INFO>")
+    dmar_info_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<DRHD_INFO>", "</DRHD_INFO>")
     drhd_cnt = 0
     drhd_dev_scope_cnt = []
     dev_scope_type = []
@@ -124,7 +125,7 @@ def populate_mba_delay_mask(rdt_res, mba_delay_list, config):
         idx += 1
 
 def get_rdt_enabled():
-    scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
+    scenario_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
     enable = scenario_etree.xpath(f"//RDT_ENABLED/text()")
     if enable[0] == "y":
         return "true"
@@ -132,7 +133,7 @@ def get_rdt_enabled():
         return "false"
 
 def get_cdp_enabled():
-    scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
+    scenario_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
     enable = scenario_etree.xpath(f"//CDP_ENABLED/text()")
     if enable[0] == "y":
         return "true"
@@ -153,13 +154,13 @@ def gen_rdt_str(cache, config):
     err_dic = {}
     cat_mask_list = {}
 
-    board_etree = lxml.etree.parse(common.BOARD_INFO_FILE)
-    mask_length = common.get_node(f"./capability[@id='CAT']/capacity_mask_length/text()", cache)
-    clos_number = common.get_node(f"./capability[@id='CAT']/clos_number/text()", cache)
+    board_etree = lxml.etree.parse(acrn_config_utilities.BOARD_INFO_FILE)
+    mask_length = get_node(f"./capability[@id='CAT']/capacity_mask_length/text()", cache)
+    clos_number = get_node(f"./capability[@id='CAT']/clos_number/text()", cache)
 
     bitmask = (1 << int(mask_length)) - 1
-    cache_level = common.get_node(f"./@level", cache)
-    cache_id = common.get_node(f"./@id", cache)
+    cache_level = get_node(f"./@level", cache)
+    cache_id = get_node(f"./@id", cache)
     processor_list = board_etree.xpath(f"//cache[@level = '{cache_level}' and @id = '{cache_id}']/processors/processor/text()")
     capability_list = board_etree.xpath(f"//cache[@level = '{cache_level}' and @id = '{cache_id}']/capability/@id")
 
@@ -192,7 +193,7 @@ def gen_rdt_str(cache, config):
             print("\t\t\t.is_cdp_enabled = {0},".format(cdp_enable), file=config)
             print("\t\t},", file=config)
         elif capability_id == "MBA":
-            max_throttling_value = common.get_node(f"./capability/max_throttling_value/text()", cache)
+            max_throttling_value = get_node(f"./capability/max_throttling_value/text()", cache)
             rdt_res = "mba"
             clos_config_array = "platform_mba_clos_array"
             print("\t{", file=config)
@@ -207,7 +208,7 @@ def gen_rdt_str(cache, config):
 
     cpu_mask = 0
     for processor in processor_list:
-        core_id = common.get_node(f"//thread[apic_id = '{processor}']/cpu_id/text()", board_etree)
+        core_id = get_node(f"//thread[apic_id = '{processor}']/cpu_id/text()", board_etree)
         if core_id is None:
             continue
         else:
@@ -218,7 +219,7 @@ def gen_rdt_str(cache, config):
     return err_dic;
 
 def get_mask_list(cache_level, cache_id):
-    allocation_dir = os.path.split(common.SCENARIO_INFO_FILE)[0] + "/configs/allocation.xml"
+    allocation_dir = os.path.split(acrn_config_utilities.SCENARIO_INFO_FILE)[0] + "/configs/allocation.xml"
     allocation_etree = lxml.etree.parse(allocation_dir)
     if cache_level == "3":
         clos_list = allocation_etree.xpath(f"//clos_mask[@id = 'l3']/clos/text()")
@@ -235,9 +236,9 @@ def gen_clos_array(cache_list, config):
         print("struct rdt_info res_infos[RDT_INFO_NUMBER];", file=config)
     else:
         for idx, cache in enumerate(cache_list):
-            cache_level = common.get_node(f"./@level", cache)
-            cache_id = common.get_node(f"./@id", cache)
-            clos_number = common.get_node(f"./capability/clos_number/text()", cache)
+            cache_level = get_node(f"./@level", cache)
+            cache_id = get_node(f"./@id", cache)
+            clos_number = get_node(f"./capability/clos_number/text()", cache)
             if cache_level == "2":
 
                 cat_mask_list = get_mask_list(cache_level, cache_id)
@@ -264,7 +265,7 @@ def gen_clos_array(cache_list, config):
                 print("};\n", file=config)
                 res_present[RDT.MBA.value] = 1
             else:
-                err_dic['board config: generate board.c failed'] = "The input of {} was corrupted!".format(common.BOARD_INFO_FILE)
+                err_dic['board config: generate board.c failed'] = "The input of {} was corrupted!".format(acrn_config_utilities.BOARD_INFO_FILE)
                 return err_dic
 
         if res_present[RDT.L2.value] == 0:
@@ -284,9 +285,9 @@ def gen_rdt_res(config):
     err_dic = {}
     res_present = [0, 0, 0]
 
-    scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
-    allocation_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
-    board_etree = lxml.etree.parse(common.BOARD_INFO_FILE)
+    scenario_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
+    allocation_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
+    board_etree = lxml.etree.parse(acrn_config_utilities.BOARD_INFO_FILE)
 
     cache_list = board_etree.xpath(f"//cache[capability/@id = 'CAT' or capability/@id = 'MBA']")
     gen_clos_array(cache_list, config)
@@ -385,9 +386,9 @@ def gen_px_cx(config):
     :param config: it is a file pointer of board information for writing to
     """
     cpu_brand_lines = board_cfg_lib.get_info(
-        common.BOARD_INFO_FILE, "<CPU_BRAND>", "</CPU_BRAND>")
-    cx_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<CX_INFO>", "</CX_INFO>")
-    px_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
+        acrn_config_utilities.BOARD_INFO_FILE, "<CPU_BRAND>", "</CPU_BRAND>")
+    cx_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<CX_INFO>", "</CX_INFO>")
+    px_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
 
     gen_single_data(cx_lines, 'c', config)
     gen_single_data(px_lines, 'p', config)
@@ -409,7 +410,7 @@ def gen_px_cx(config):
 def gen_pci_hide(config):
     """Generate hide pci information for this platform"""
 
-    scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
+    scenario_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
     hidden_pdev_list = [x.replace('.', ':') for x in scenario_etree.xpath(f"//HIDDEN_PDEV/text()")]
 
     if board_cfg_lib.BOARD_NAME in list(board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB.keys()) and board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME] != 0:
@@ -456,21 +457,21 @@ def gen_known_caps_pci_devs(config):
                     print("};", file=config)
 
 def gen_cpufreq_limits(config):
-    allocation_dir = os.path.split(common.SCENARIO_INFO_FILE)[0] + "/configs/allocation.xml"
+    allocation_dir = os.path.split(acrn_config_utilities.SCENARIO_INFO_FILE)[0] + "/configs/allocation.xml"
     allocation_etree = lxml.etree.parse(allocation_dir)
     cpu_list = board_cfg_lib.get_processor_info()
     max_cpu_num = len(cpu_list)
 
     print("\nstruct acrn_cpufreq_limits cpufreq_limits[MAX_PCPU_NUM] = {", file=config)
     for cpu_id in range(max_cpu_num):
-        limit_node = common.get_node(f"//cpufreq/CPU[@id='{cpu_id}']/limits", allocation_etree)
+        limit_node = get_node(f"//cpufreq/CPU[@id='{cpu_id}']/limits", allocation_etree)
         if limit_node != None:
-            limit_guaranteed_lvl = common.get_node("./limit_guaranteed_lvl/text()", limit_node)
-            limit_highest_lvl = common.get_node("./limit_highest_lvl/text()", limit_node)
-            limit_lowest_lvl = common.get_node("./limit_lowest_lvl/text()", limit_node)
-            limit_nominal_pstate = common.get_node("./limit_nominal_pstate/text()", limit_node)
-            limit_highest_pstate = common.get_node("./limit_highest_pstate/text()", limit_node)
-            limit_lowest_pstate = common.get_node("./limit_lowest_pstate/text()", limit_node)
+            limit_guaranteed_lvl = get_node("./limit_guaranteed_lvl/text()", limit_node)
+            limit_highest_lvl = get_node("./limit_highest_lvl/text()", limit_node)
+            limit_lowest_lvl = get_node("./limit_lowest_lvl/text()", limit_node)
+            limit_nominal_pstate = get_node("./limit_nominal_pstate/text()", limit_node)
+            limit_highest_pstate = get_node("./limit_highest_pstate/text()", limit_node)
+            limit_lowest_pstate = get_node("./limit_lowest_pstate/text()", limit_node)
 
             print("\t{", file=config)
             print(f"\t\t.guaranteed_hwp_lvl = {limit_guaranteed_lvl},", file=config)

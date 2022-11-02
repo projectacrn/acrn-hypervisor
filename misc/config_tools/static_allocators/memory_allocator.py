@@ -9,15 +9,16 @@ import os
 import sys
 import logging
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common, math, logging
+import acrn_config_utilities, math, logging
+from acrn_config_utilities import get_node
 
 class RamRange():
     ram_range = {}
 
     @classmethod
     def import_memory_info(cls, board_etree, allocation_etree):
-        hv_start = int(common.get_node("/acrn-config/hv/MEMORY/HV_RAM_START/text()", allocation_etree), 16)
-        hv_size = int(common.get_node("/acrn-config/hv/MEMORY/HV_RAM_SIZE/text()", allocation_etree), 16)
+        hv_start = int(get_node("/acrn-config/hv/MEMORY/HV_RAM_START/text()", allocation_etree), 16)
+        hv_size = int(get_node("/acrn-config/hv/MEMORY/HV_RAM_SIZE/text()", allocation_etree), 16)
         for memory_range in board_etree.xpath("/acrn-config/memory/range[not(@id) or @id = 'RAM']"):
             start = int(memory_range.get("start"), base=16)
             size = int(memory_range.get("size"), base=10)
@@ -45,7 +46,7 @@ class RamRange():
         size_hpa = []
         hpa_info = {}
 
-        size_node = common.get_node("./memory/size", vm_node_info)
+        size_node = get_node("./memory/size", vm_node_info)
         if size_node is not None:
             size_byte = int(size_node.text) * 0x100000
             hpa_info[0] = size_byte
@@ -137,26 +138,26 @@ def write_hpa_info(allocation_etree, mem_info_list, vm_node_index_list):
     for i in range(len(vm_node_index_list)):
         vm_id = vm_node_index_list[i]
         hpa_info = mem_info_list[i]
-        vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+        vm_node = get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
         if vm_node is None:
-            vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id=vm_id)
-        memory_node = common.get_node("./memory", vm_node)
+            vm_node = acrn_config_utilities.append_node("/acrn-config/vm", None, allocation_etree, id=vm_id)
+        memory_node = get_node("./memory", vm_node)
         if memory_node is None:
-            memory_node = common.append_node(f"./memory", None, vm_node)
+            memory_node = acrn_config_utilities.append_node(f"./memory", None, vm_node)
         region_index = 1
         start_key = sorted(hpa_info)
         for start_hpa in start_key:
-            hpa_region_node = common.get_node(f"./hpa_region[@id='{region_index}']", memory_node)
+            hpa_region_node = get_node(f"./hpa_region[@id='{region_index}']", memory_node)
             if hpa_region_node is None:
-                hpa_region_node = common.append_node("./hpa_region", None, memory_node, id=str(region_index).encode('UTF-8'))
+                hpa_region_node = acrn_config_utilities.append_node("./hpa_region", None, memory_node, id=str(region_index).encode('UTF-8'))
 
-                start_hpa_node = common.get_node("./start_hpa", hpa_region_node)
+                start_hpa_node = get_node("./start_hpa", hpa_region_node)
                 if start_hpa_node is None:
-                    common.append_node("./start_hpa", hex(start_hpa), hpa_region_node)
+                    acrn_config_utilities.append_node("./start_hpa", hex(start_hpa), hpa_region_node)
 
-                size_hpa_node = common.get_node("./size_hpa", hpa_region_node)
+                size_hpa_node = get_node("./size_hpa", hpa_region_node)
                 if size_hpa_node is None:
-                    common.append_node("./size_hpa", hex(hpa_info[start_hpa]), hpa_region_node)
+                    acrn_config_utilities.append_node("./size_hpa", hex(hpa_info[start_hpa]), hpa_region_node)
             region_index = region_index + 1
 
 def alloc_vm_memory(board_etree, scenario_etree, allocation_etree):
@@ -175,7 +176,7 @@ def allocate_hugepages(board_etree, scenario_etree, allocation_etree):
     post_launch_vms = scenario_etree.xpath("//vm[load_order = 'POST_LAUNCHED_VM']")
     if len(post_launch_vms) > 0:
         for post_launch_vm in post_launch_vms:
-            size = common.get_node("./memory/size/text()", post_launch_vm)
+            size = get_node("./memory/size/text()", post_launch_vm)
             if size is not None:
                 mb, gb = math.modf(int(size)/1024)
                 hugepages_1gb = int(hugepages_1gb + gb)
@@ -186,10 +187,10 @@ def allocate_hugepages(board_etree, scenario_etree, allocation_etree):
         logging.debug(f"The sum {post_vms_memory} of memory configured in post launch VMs should not be larger than " \
         f"the calculated total hugepages {total_hugepages} of service VMs. Please update the configuration in post launch VMs")
 
-    allocation_service_vm_node = common.get_node("/acrn-config/vm[load_order = 'SERVICE_VM']", allocation_etree)
+    allocation_service_vm_node = get_node("/acrn-config/vm[load_order = 'SERVICE_VM']", allocation_etree)
     if allocation_service_vm_node is not None:
-        common.append_node("./hugepages/gb", int(hugepages_1gb), allocation_service_vm_node)
-        common.append_node("./hugepages/mb", int(hugepages_2mb), allocation_service_vm_node)
+        acrn_config_utilities.append_node("./hugepages/gb", int(hugepages_1gb), allocation_service_vm_node)
+        acrn_config_utilities.append_node("./hugepages/mb", int(hugepages_2mb), allocation_service_vm_node)
 
 def fn(board_etree, scenario_etree, allocation_etree):
     alloc_vm_memory(board_etree, scenario_etree, allocation_etree)

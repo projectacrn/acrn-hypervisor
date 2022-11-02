@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import common
+import acrn_config_utilities
 import hv_cfg_lib
 
 class LogLevel:
@@ -15,9 +15,9 @@ class LogLevel:
         self.console = 0
 
     def get_info(self):
-        self.npk = common.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "NPK_LOGLEVEL")
-        self.mem = common.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "MEM_LOGLEVEL")
-        self.console = common.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "CONSOLE_LOGLEVEL")
+        self.npk = acrn_config_utilities.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "NPK_LOGLEVEL")
+        self.mem = acrn_config_utilities.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "MEM_LOGLEVEL")
+        self.console = acrn_config_utilities.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "CONSOLE_LOGLEVEL")
 
     def check_item(self):
         hv_cfg_lib.hv_range_check(self.npk, "DEBUG_OPTIONS", "NPK_LOGLEVEL", hv_cfg_lib.RANGE_DB['LOG_LEVEL'])
@@ -33,7 +33,7 @@ class LogOpt:
         self.level = LogLevel(self.hv_file)
 
     def get_info(self):
-        self.release = common.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "RELEASE")
+        self.release = acrn_config_utilities.get_hv_item_tag(self.hv_file, "DEBUG_OPTIONS", "RELEASE")
         self.level.get_info()
 
     def check_item(self):
@@ -53,12 +53,12 @@ class CapHv:
         self.max_msix_table_num = 0
 
     def get_info(self):
-        self.max_emu_mmio_regions = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_EMULATED_MMIO")
-        self.max_pt_irq_entries = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_PT_IRQ_ENTRIES")
-        self.max_ioapic_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IOAPIC_NUM")
-        self.max_ioapic_lines = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IOAPIC_LINES")
-        self.max_pci_dev_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_PCI_DEV_NUM")
-        self.max_msix_table_num = common.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_MSIX_TABLE_NUM")
+        self.max_emu_mmio_regions = acrn_config_utilities.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_EMULATED_MMIO")
+        self.max_pt_irq_entries = acrn_config_utilities.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_PT_IRQ_ENTRIES")
+        self.max_ioapic_num = acrn_config_utilities.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IOAPIC_NUM")
+        self.max_ioapic_lines = acrn_config_utilities.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_IOAPIC_LINES")
+        self.max_pci_dev_num = acrn_config_utilities.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_PCI_DEV_NUM")
+        self.max_msix_table_num = acrn_config_utilities.get_hv_item_tag(self.hv_file, "CAPACITIES", "MAX_MSIX_TABLE_NUM")
 
     def check_item(self):
         hv_cfg_lib.hv_range_check(self.max_emu_mmio_regions, "CAPACITIES", "MAX_EMULATED_MMIO", hv_cfg_lib.RANGE_DB['EMULATED_MMIO_REGIONS'])
@@ -86,19 +86,19 @@ class Features:
         self.ssram_enabled = ''
 
     def get_info(self):
-        self.multiboot2 = common.get_hv_item_tag(self.hv_file, "FEATURES", "MULTIBOOT2_ENABLED")
-        self.rdt_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "RDT_ENABLED")
-        self.cdp_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "CDP_ENABLED")
-        self.cat_max_mask = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "CLOS_MASK")
-        self.mba_delay = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "MBA_DELAY")
-        self.scheduler = common.get_hv_item_tag(self.hv_file, "FEATURES", "SCHEDULER")
-        self.reloc = common.get_hv_item_tag(self.hv_file, "FEATURES", "RELOC_ENABLED")
-        self.hyperv_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "HYPERV_ENABLED")
-        self.acpi_parse_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "ACPI_PARSE_ENABLED")
-        self.l1d_flush_vmentry_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "L1D_VMENTRY_ENABLED")
-        self.mce_on_psc_workaround_disabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "MCE_ON_PSC_DISABLED")
-        self.iommu_enforce_snp = common.get_hv_item_tag(self.hv_file, "FEATURES", "IOMMU_ENFORCE_SNP")
-        self.ssram_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "SSRAM", "SSRAM_ENABLED")
+        self.multiboot2 = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "MULTIBOOT2_ENABLED")
+        self.rdt_enabled = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "RDT_ENABLED")
+        self.cdp_enabled = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "CDP_ENABLED")
+        self.cat_max_mask = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "CLOS_MASK")
+        self.mba_delay = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "MBA_DELAY")
+        self.scheduler = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "SCHEDULER")
+        self.reloc = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "RELOC_ENABLED")
+        self.hyperv_enabled = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "HYPERV_ENABLED")
+        self.acpi_parse_enabled = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "ACPI_PARSE_ENABLED")
+        self.l1d_flush_vmentry_enabled = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "L1D_VMENTRY_ENABLED")
+        self.mce_on_psc_workaround_disabled = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "MCE_ON_PSC_DISABLED")
+        self.iommu_enforce_snp = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "IOMMU_ENFORCE_SNP")
+        self.ssram_enabled = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "SSRAM", "SSRAM_ENABLED")
 
     def check_item(self):
         hv_cfg_lib.ny_support_check(self.multiboot2, "FEATURES", "MULTIBOOT2_ENABLED")
@@ -129,10 +129,10 @@ class Memory:
         self.ivshmem_region = []
 
     def get_info(self):
-        self.stack_size = common.get_hv_item_tag(self.hv_file, "MEMORY", "STACK_SIZE")
-        self.hv_ram_start = common.get_hv_item_tag(self.hv_file, "MEMORY", "HV_RAM_START")
-        self.ivshmem_enable = common.get_hv_item_tag(self.hv_file, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
-        self.ivshmem_region = common.get_hv_item_tag(self.hv_file, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+        self.stack_size = acrn_config_utilities.get_hv_item_tag(self.hv_file, "MEMORY", "STACK_SIZE")
+        self.hv_ram_start = acrn_config_utilities.get_hv_item_tag(self.hv_file, "MEMORY", "HV_RAM_START")
+        self.ivshmem_enable = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+        self.ivshmem_region = acrn_config_utilities.get_hv_item_tag(self.hv_file, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
 
     def check_item(self):
         hv_cfg_lib.hv_size_check(self.stack_size, "MEMORY", "STACK_SIZE")

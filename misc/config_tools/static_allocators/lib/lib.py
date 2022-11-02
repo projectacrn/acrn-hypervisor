@@ -8,8 +8,9 @@
 
 import sys, os, re
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common, board_cfg_lib
+import acrn_config_utilities, board_cfg_lib
 from collections import namedtuple
+from acrn_config_utilities import get_node
 
 PRE_LAUNCHED_VMS_TYPE = ["SAFETY_VM", "PRE_RT_VM", "PRE_STD_VM"]
 POST_LAUNCHED_VMS_TYPE = ["POST_STD_VM", "POST_RT_VM"]
@@ -60,7 +61,7 @@ def parse_hv_console(scenario_etree):
     4. "None"
     """
     ttys_n = ''
-    ttys = common.get_node("//SERIAL_CONSOLE/text()", scenario_etree)
+    ttys = get_node("//SERIAL_CONSOLE/text()", scenario_etree)
 
     if not ttys or ttys == None or ttys == 'None':
         return ttys_n
@@ -74,7 +75,7 @@ def parse_hv_console(scenario_etree):
 
 def get_native_ttys():
     native_ttys = {}
-    ttys_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
+    ttys_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
     if ttys_lines:
         for tty_line in ttys_lines:
             tmp_dic = {}
@@ -98,18 +99,18 @@ def get_ivshmem_regions_by_tree(etree):
     ivshmem_regions = etree.xpath("//IVSHMEM_REGION")
     shmem_regions = {}
     for idx in range(len(ivshmem_regions)):
-        provided_by = common.get_node("./PROVIDED_BY/text()", ivshmem_regions[idx])
+        provided_by = get_node("./PROVIDED_BY/text()", ivshmem_regions[idx])
         if provided_by != "Hypervisor":
             continue
-        shm_name = common.get_node("./NAME/text()", ivshmem_regions[idx])
+        shm_name = get_node("./NAME/text()", ivshmem_regions[idx])
         if shm_name is None:
             continue
-        shm_size = common.get_node("./IVSHMEM_SIZE/text()", ivshmem_regions[idx])
+        shm_size = get_node("./IVSHMEM_SIZE/text()", ivshmem_regions[idx])
         shm_vm_list = ivshmem_regions[idx].xpath(".//IVSHMEM_VM")
         for shm_vm in shm_vm_list:
-            vm_name = common.get_node("./VM_NAME/text()", shm_vm)
-            vm_id = common.get_node(f"//vm[name = '{vm_name}']/@id", etree)
-            vbdf =  common.get_node("./VBDF/text()", shm_vm)
+            vm_name = get_node("./VM_NAME/text()", shm_vm)
+            vm_id = get_node(f"//vm[name = '{vm_name}']/@id", etree)
+            vbdf =  get_node("./VBDF/text()", shm_vm)
             if vm_id not in shmem_regions:
                 shmem_regions[vm_id] = {}
             shmem_regions[vm_id][shm_name] = {'id' : str(idx), 'size' : shm_size, 'vbdf' : vbdf}

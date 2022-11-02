@@ -7,7 +7,8 @@
 
 import sys, os, re
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common, lib.error, lib.lib
+import acrn_config_utilities, lib.error, lib.lib
+from acrn_config_utilities import get_node
 
 # Constants for device name prefix
 IVSHMEM = "IVSHMEM"
@@ -78,7 +79,7 @@ def get_devs_bdf_native(board_etree):
     dev_list = []
     for node in nodes:
         address = node.get('address')
-        bus = int(common.get_node("../@address", node), 16)
+        bus = int(get_node("../@address", node), 16)
         dev = int(address, 16) >> 16
         func = int(address, 16) & 0xffff
 
@@ -108,18 +109,18 @@ def create_device_node(allocation_etree, vm_id, devdict):
     for dev in devdict:
         dev_name = dev
         bdf = devdict.get(dev)
-        vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+        vm_node = get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
         if vm_node is None:
-            vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
-        dev_node = common.get_node(f"./device[@name = '{dev_name}']", vm_node)
+            vm_node = acrn_config_utilities.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
+        dev_node = get_node(f"./device[@name = '{dev_name}']", vm_node)
         if dev_node is None:
-            dev_node = common.append_node("./device", None, vm_node, name = dev_name)
-        if common.get_node(f"./bus", dev_node) is None:
-            common.append_node(f"./bus",  f"{bdf.bus:#04x}", dev_node)
-        if common.get_node(f"./dev", dev_node) is None:
-            common.append_node(f"./dev", f"{bdf.dev:#04x}", dev_node)
-        if common.get_node(f"./func", dev_node) is None:
-            common.append_node(f"./func", f"{bdf.func:#04x}", dev_node)
+            dev_node = acrn_config_utilities.append_node("./device", None, vm_node, name = dev_name)
+        if get_node(f"./bus", dev_node) is None:
+            acrn_config_utilities.append_node(f"./bus",  f"{bdf.bus:#04x}", dev_node)
+        if get_node(f"./dev", dev_node) is None:
+            acrn_config_utilities.append_node(f"./dev", f"{bdf.dev:#04x}", dev_node)
+        if get_node(f"./func", dev_node) is None:
+            acrn_config_utilities.append_node(f"./func", f"{bdf.func:#04x}", dev_node)
 
 def create_igd_sbdf(board_etree, allocation_etree):
     """
@@ -127,14 +128,14 @@ def create_igd_sbdf(board_etree, allocation_etree):
     doesn't exist.
     """
     bus = "0x0"
-    device_node = common.get_node(f"//bus[@type='pci' and @address='{bus}']/device[@address='0x20000' and vendor='0x8086' and class='0x030000']", board_etree)
+    device_node = get_node(f"//bus[@type='pci' and @address='{bus}']/device[@address='0x20000' and vendor='0x8086' and class='0x030000']", board_etree)
     if device_node is None:
-        common.append_node("/acrn-config/hv/MISC_CFG/IGD_SBDF", '0xFFFF', allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MISC_CFG/IGD_SBDF", '0xFFFF', allocation_etree)
     else:
         address = device_node.get('address')
         dev = int(address, 16) >> 16
         func = int(address, 16) & 0xffff
-        common.append_node("/acrn-config/hv/MISC_CFG/IGD_SBDF", f"{(int(bus, 16) << 8) | (dev << 3) | func:#06x}", allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MISC_CFG/IGD_SBDF", f"{(int(bus, 16) << 8) | (dev << 3) | func:#06x}", allocation_etree)
 
 def fn(board_etree, scenario_etree, allocation_etree):
     create_igd_sbdf(board_etree, allocation_etree)
@@ -143,7 +144,7 @@ def fn(board_etree, scenario_etree, allocation_etree):
         vm_id = vm_node.get('id')
         devdict = {}
         used = []
-        load_order = common.get_node("./load_order/text()", vm_node)
+        load_order = get_node("./load_order/text()", vm_node)
         if load_order is not None and lib.lib.is_post_launched_vm(load_order):
             continue
 
@@ -151,7 +152,7 @@ def fn(board_etree, scenario_etree, allocation_etree):
             native_used = get_devs_bdf_native(board_etree)
             passthrough_used = get_devs_bdf_passthrough(scenario_etree)
             used = [bdf for bdf in native_used if bdf not in passthrough_used]
-            if common.get_node("//@board", scenario_etree) == "tgl-rvp":
+            if get_node("//@board", scenario_etree) == "tgl-rvp":
                 used.append(lib.lib.BusDevFunc(bus = 0, dev = 1, func = 0))
 
         insert_vuart_to_dev_dict(vm_node, devdict, used)

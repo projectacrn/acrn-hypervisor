@@ -9,7 +9,8 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 
 import argparse
 import lxml.etree
-import common
+import acrn_config_utilities
+from acrn_config_utilities import get_node
 
 #vuart devices name is configured to start from /dev/ttyS8
 START_VUART_DEV_NAME_NO = 8
@@ -19,19 +20,19 @@ UART_IRQ_BAUD = " irq 0 uart 16550A baud_base 115200"
 
 def find_non_standard_uart(vm, scenario_etree, allocation_etree):
     uart_list = []
-    vmname = common.get_node("./name/text()", vm)
+    vmname = get_node("./name/text()", vm)
 
     connection_list0 = scenario_etree.xpath(f"//vuart_connection[endpoint/vm_name = '{vmname}']")
     connection_list1 = allocation_etree.xpath(f"//vuart_connection[endpoint/vm_name = '{vmname}']")
     for connection in (connection_list0 + connection_list1):
-        type = common.get_node(f"./type/text()", connection)
+        type = get_node(f"./type/text()", connection)
 
         if (type != "legacy") :
             continue
-        port = common.get_node(f".//endpoint[vm_name = '{vmname}']/io_port/text()", connection)
+        port = get_node(f".//endpoint[vm_name = '{vmname}']/io_port/text()", connection)
         if port not in stadard_uart_port:
-            target_vm_name = common.get_node(f".//endpoint[vm_name != '{vmname}']/vm_name/text()", connection)
-            target_vm_id = common.get_node(f"//vm[name = '{target_vm_name}']/@id", scenario_etree)
+            target_vm_name = get_node(f".//endpoint[vm_name != '{vmname}']/vm_name/text()", connection)
+            target_vm_id = get_node(f"//vm[name = '{target_vm_name}']/@id", scenario_etree)
             uart_list.append({"io_port" : port, "target_vm_id" : target_vm_id})
     return uart_list
 
@@ -47,7 +48,7 @@ def main(args):
     vm_list = scenario_etree.xpath("//vm[load_order = 'SERVICE_VM']")
     for vm in vm_list:
         vuart_list = find_non_standard_uart(vm, scenario_etree, allocation_etree)
-        vmname = common.get_node("./name/text()", vm)
+        vmname = get_node("./name/text()", vm)
         if len(vuart_list) != 0:
             with open(args.out, "w+") as config_f:
                 for uart_start_num, vuart in enumerate(vuart_list, start=START_VUART_DEV_NAME_NO):

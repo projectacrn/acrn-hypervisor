@@ -7,7 +7,7 @@ import os
 import getopt
 import re
 
-import common
+import acrn_config_utilities
 import board_cfg_lib
 import scenario_cfg_lib
 import lxml
@@ -81,7 +81,7 @@ def get_param(args):
 
         if arg_str not in args:
             usage(args[0])
-            err_dic['common error: wrong parameter'] = "wrong usage"
+            err_dic['acrn_config_utilities error: wrong parameter'] = "wrong usage"
             return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     args_list = args[1:]
@@ -131,7 +131,7 @@ def launch_vm_cnt(config_file):
     post_vm_count = 0
 
     # get post vm number
-    root = common.get_config_root(config_file)
+    root = acrn_config_utilities.get_config_root(config_file)
     for item in root:
         if item.tag == "user_vm":
             post_vm_count += 1
@@ -147,7 +147,7 @@ def get_post_num_list():
     post_vm_list = []
 
     # get post vm number
-    root = common.get_config_root(common.LAUNCH_INFO_FILE)
+    root = acrn_config_utilities.get_config_root(acrn_config_utilities.LAUNCH_INFO_FILE)
     for item in root:
         if item.tag == "user_vm":
             post_vm_list.append(int(item.attrib['id']))
@@ -163,7 +163,7 @@ def post_vm_cnt(config_file):
     """
     post_launch_cnt = 0
 
-    for load_order in common.LOAD_ORDER.values():
+    for load_order in acrn_config_utilities.LOAD_ORDER.values():
         if load_order == "POST_LAUNCHED_VM":
             post_launch_cnt += 1
 
@@ -175,15 +175,15 @@ def get_post_vm_cnt():
     Get board name from launch.xml at fist line
     :param scenario_file: it is a file what contains scenario information for script to read from
     """
-    launch_vm_count = launch_vm_cnt(common.LAUNCH_INFO_FILE)
-    post_vm_count = post_vm_cnt(common.SCENARIO_INFO_FILE)
+    launch_vm_count = launch_vm_cnt(acrn_config_utilities.LAUNCH_INFO_FILE)
+    post_vm_count = post_vm_cnt(acrn_config_utilities.SCENARIO_INFO_FILE)
     return (launch_vm_count, post_vm_count)
 
 
 def get_sos_vmid():
 
     sos_id = ''
-    for vm_i,load_order in common.LOAD_ORDER.items():
+    for vm_i,load_order in acrn_config_utilities.LOAD_ORDER.items():
         if load_order == "SERVICE_VM":
             sos_id = vm_i
             break
@@ -193,7 +193,7 @@ def get_sos_vmid():
 
 def get_bdf_from_tag(config_file, branch_tag, tag_str):
     bdf_list = {}
-    bdf_list = common.get_leaf_tag_map(config_file, branch_tag, tag_str)
+    bdf_list = acrn_config_utilities.get_leaf_tag_map(config_file, branch_tag, tag_str)
 
     # split b:d:f from pci description
     for idx, bdf_v in bdf_list.items():
@@ -223,13 +223,13 @@ def get_user_vm_type():
     """
     Get User VM name from launch.xml at fist line
     """
-    user_vm_types = common.get_leaf_tag_map(common.LAUNCH_INFO_FILE, "user_vm_type")
+    user_vm_types = acrn_config_utilities.get_leaf_tag_map(acrn_config_utilities.LAUNCH_INFO_FILE, "user_vm_type")
 
     return user_vm_types
 
 
 def get_user_vm_names():
-    user_vm_names = common.get_leaf_tag_map(common.LAUNCH_INFO_FILE, "vm_name")
+    user_vm_names = acrn_config_utilities.get_leaf_tag_map(acrn_config_utilities.LAUNCH_INFO_FILE, "vm_name")
     return user_vm_names
 
 
@@ -410,7 +410,7 @@ def get_pt_dev():
 
 def get_vuart1_from_scenario(vmid):
     """Get the vmid's  vuart1 base"""
-    vuart1 = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
+    vuart1 = acrn_config_utilities.get_vuart_info_id(acrn_config_utilities.SCENARIO_INFO_FILE, 1)
     return vuart1[vmid]['base']
 
 
@@ -431,7 +431,7 @@ def pt_devs_check_audio(audio_map, audio_codec_map):
 
 
 def check_block_mount(virtio_blk_dic):
-    (blk_dev_list, num) = board_cfg_lib.get_rootfs(common.BOARD_INFO_FILE)
+    (blk_dev_list, num) = board_cfg_lib.get_rootfs(acrn_config_utilities.BOARD_INFO_FILE)
     for vmid in list(virtio_blk_dic.keys()):
         mount_flags = []
         for blk in virtio_blk_dic[vmid]:
@@ -494,7 +494,7 @@ def bdf_duplicate_check(bdf_dic):
 
 def get_gpu_bdf():
 
-    pci_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<PCI_DEVICE>", "</PCI_DEVICE>")
+    pci_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<PCI_DEVICE>", "</PCI_DEVICE>")
 
     for line in pci_lines:
         if "VGA compatible controller" in line:
@@ -506,7 +506,7 @@ def get_gpu_bdf():
 
 def get_vpid_by_bdf(bdf):
     vpid = ''
-    vpid_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
+    vpid_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
 
     for vpid_line in vpid_lines:
         if bdf in vpid_line:
@@ -572,9 +572,9 @@ def is_linux_like(user_vm_type):
 def set_shm_regions(launch_item_values, scenario_info):
 
     try:
-        raw_shmem_regions = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
-        load_orders = common.get_leaf_tag_map(scenario_info, "load_order")
-        shm_enabled = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+        raw_shmem_regions = acrn_config_utilities.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+        load_orders = acrn_config_utilities.get_leaf_tag_map(scenario_info, "load_order")
+        shm_enabled = acrn_config_utilities.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
     except:
         return
 
@@ -604,12 +604,12 @@ def set_shm_regions(launch_item_values, scenario_info):
 def set_pci_vuarts(launch_item_values, scenario_info):
     try:
         launch_item_values['user_vm,console_vuart'] = DM_VUART0
-        load_orders = common.get_leaf_tag_map(scenario_info, 'load_order')
+        load_orders = acrn_config_utilities.get_leaf_tag_map(scenario_info, 'load_order')
         sos_vm_id = 0
         for vm_id,load_order in load_orders.items():
             if load_order in ['SERVICE_VM']:
                 sos_vm_id = vm_id
-        for vm in list(common.get_config_root(scenario_info)):
+        for vm in list(acrn_config_utilities.get_config_root(scenario_info)):
             if vm.tag == 'vm' and load_orders[int(vm.attrib['id'])] == 'POST_LAUNCHED_VM':
                 user_vmid = int(vm.attrib['id']) - sos_vm_id
                 pci_vuart_key = 'user_vm:id={},communication_vuarts,communication_vuart'.format(user_vmid)
@@ -639,7 +639,7 @@ def check_shm_regions(launch_shm_regions, scenario_info):
 
 
 def check_console_vuart(launch_console_vuart, vuart0, scenario_info):
-    vuarts = common.get_vuart_info(scenario_info)
+    vuarts = acrn_config_utilities.get_vuart_info(scenario_info)
 
     for user_vmid, console_vuart_enable in launch_console_vuart.items():
         key = 'user_vm:id={},console_vuart'.format(user_vmid)
@@ -654,8 +654,8 @@ def check_console_vuart(launch_console_vuart, vuart0, scenario_info):
 
 
 def check_communication_vuart(launch_communication_vuarts, scenario_info):
-    vuarts = common.get_vuart_info(scenario_info)
-    vuart1_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
+    vuarts = acrn_config_utilities.get_vuart_info(scenario_info)
+    vuart1_setting = acrn_config_utilities.get_vuart_info_id(acrn_config_utilities.SCENARIO_INFO_FILE, 1)
 
     for user_vmid, vuart_list in launch_communication_vuarts.items():
         vuart_key = 'user_vm:id={},communication_vuarts,communication_vuart'.format(user_vmid)

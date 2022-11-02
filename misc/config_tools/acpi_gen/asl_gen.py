@@ -7,9 +7,10 @@
 
 import sys, os, re, argparse, shutil, ctypes
 from acpi_const import *
-import board_cfg_lib, common
+import board_cfg_lib, acrn_config_utilities
 import collections
 import lxml.etree
+from acrn_config_utilities import get_node
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'board_inspector'))
 from acpiparser._utils import TableHeader
@@ -575,7 +576,7 @@ def collect_dependent_devices(board_etree, device_node):
             result.add(device)
             for node in device.findall("dependency"):
                 if node.get("type") in types_in_scope:
-                    peer_device = common.get_node(f"//device[acpi_object='{node.text}']", board_etree)
+                    peer_device = get_node(f"//device[acpi_object='{node.text}']", board_etree)
                     if peer_device is not None:
                         queue.append(peer_device)
 
@@ -669,8 +670,8 @@ def gen_dsdt(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
             bus_number = int(m.group(1), 16)
             bdf = f"{bus_number:02x}:{device_number:02x}.{function_number}"
             address = hex((device_number << 16) | (function_number))
-            device_node = common.get_node(f"//bus[@address='{hex(bus_number)}']/device[@address='{address}']", board_etree)
-            alloc_node = common.get_node(f"/acrn-config/vm[@id='{vm_id}']/device[@name='PTDEV_{bdf}']", allocation_etree)
+            device_node = get_node(f"//bus[@address='{hex(bus_number)}']/device[@address='{address}']", board_etree)
+            alloc_node = get_node(f"/acrn-config/vm[@id='{vm_id}']/device[@name='PTDEV_{bdf}']", allocation_etree)
             if device_node is not None and alloc_node is not None:
                 assert int(alloc_node.find("bus").text, 16) == 0, "Virtual PCI devices must be on bus 0."
                 vdev = int(alloc_node.find("dev").text, 16)
@@ -686,8 +687,8 @@ def gen_dsdt(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
                     objects.add_device_object(tree)
 
                 # The _PRT remapping package, if necessary
-                intr_pin_node = common.get_node("resource[@type='interrupt_pin']", device_node)
-                virq_node = common.get_node("pt_intx", alloc_node)
+                intr_pin_node = get_node("resource[@type='interrupt_pin']", device_node)
+                virq_node = get_node("pt_intx", alloc_node)
                 if intr_pin_node is not None and virq_node is not None:
                     pin_id = interrupt_pin_ids[intr_pin_node.get("pin")]
                     vaddr = (vdev << 16) | 0xffff
@@ -724,12 +725,12 @@ def gen_dsdt(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
     # as the guest physical address of the passed through TPM2. Thus, it works for now to reuse the host TPM2 device
     # object without updating the addresses of operation regions or resource descriptors. It is, however, necessary to
     # introduce a pass to translate such address to arbitrary guest physical ones in the future.
-    has_tpm2 = common.get_node(f"//vm[@id='{vm_id}']//TPM2/text()", scenario_etree)
+    has_tpm2 = get_node(f"//vm[@id='{vm_id}']//TPM2/text()", scenario_etree)
     if has_tpm2 == "y":
         # TPM2 devices should have "MSFT0101" as hardware id or compatible ID
-        template = common.get_node("//device[@id='MSFT0101']/aml_template", board_etree)
+        template = get_node("//device[@id='MSFT0101']/aml_template", board_etree)
         if template is None:
-            template = common.get_node("//device[compatible_id='MSFT0101']/aml_template", board_etree)
+            template = get_node("//device[compatible_id='MSFT0101']/aml_template", board_etree)
         if template is not None:
             tree = parse_tree("DefDevice", bytes.fromhex(template.text))
             objects.add_device_object(tree)
@@ -768,9 +769,9 @@ def gen_dsdt(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
 
 def gen_rtct(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
     def cpu_id_to_lapic_id(cpu_id):
-        return common.get_node(f"//thread[cpu_id = '{cpu_id}']/apic_id/text()", board_etree)
+        return get_node(f"//thread[cpu_id = '{cpu_id}']/apic_id/text()", board_etree)
 
-    vm_node = common.get_node(f"//vm[@id='{vm_id}']", scenario_etree)
+    vm_node = get_node(f"//vm[@id='{vm_id}']", scenario_etree)
     if vm_node is None:
         return False
 
@@ -810,7 +811,7 @@ def gen_rtct(board_etree, scenario_etree, allocation_etree, vm_id, dest_path):
     # Look for the cache blocks that are visible to this VM and have software SRAM in it. Those software SRAM will be
     # exposed to the VM in RTCT.
     for cache in board_etree.xpath(f"//caches/cache[count(processors/processor[contains('{vcpus}', .)]) and capability[@id = 'Software SRAM']]"):
-        ssram_cap = common.get_node("capability[@id = 'Software SRAM']", cache)
+        ssram_cap = get_node("capability[@id = 'Software SRAM']", cache)
 
         ssram_entry = create_object(
             rtct.RTCTSubtableSoftwareSRAM_v2,
@@ -851,7 +852,7 @@ def main(args):
 
     err_dic = {}
 
-    (err_dic, params) = common.get_param(args)
+    (err_dic, params) = acrn_config_utilities.get_param(args)
     if err_dic:
         return err_dic
 
@@ -872,7 +873,7 @@ def main(args):
     if out is None or out == '':
         DEST_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'scenarios', scenario_name)
     else:
-        DEST_ACPI_PATH = os.path.join(common.SOURCE_ROOT_DIR, out, 'scenarios', scenario_name)
+        DEST_ACPI_PATH = os.path.join(acrn_config_utilities.SOURCE_ROOT_DIR, out, 'scenarios', scenario_name)
 
     if os.path.isdir(DEST_ACPI_PATH):
         for config in os.listdir(DEST_ACPI_PATH):
@@ -914,10 +915,10 @@ def main(args):
     except:
         PASSTHROUGH_RTCT = False
 
-    kern_args = common.get_leaf_tag_map(scenario, "os_config", "bootargs")
-    kern_type = common.get_leaf_tag_map(scenario, "os_config", "kern_type")
+    kern_args = acrn_config_utilities.get_leaf_tag_map(scenario, "os_config", "bootargs")
+    kern_type = acrn_config_utilities.get_leaf_tag_map(scenario, "os_config", "kern_type")
     for vm_id, passthru_devices in dict_passthru_devices.items():
-        bootargs_node= common.get_node(f"//vm[@id='{vm_id}']/os_config/bootargs", scenario_etree)
+        bootargs_node= get_node(f"//vm[@id='{vm_id}']/os_config/bootargs", scenario_etree)
         if bootargs_node is not None and kern_args[int(vm_id)].find('reboot=acpi') == -1 and kern_type[int(vm_id)] in ['KERNEL_BZIMAGE']:
             emsg = "you need to specify 'reboot=acpi' in scenario file's bootargs for VM{}".format(vm_id)
             print(emsg)
@@ -940,7 +941,7 @@ def main(args):
 
             apic_ids = []
             for id in dict_pcpu_list[vm_id]:
-                apic_id = common.get_node(f"//processors//thread[cpu_id='{id}']/apic_id/text()", board_etree)
+                apic_id = get_node(f"//processors//thread[cpu_id='{id}']/apic_id/text()", board_etree)
                 if apic_id is None:
                     emsg = 'some or all of the processors//thread/cpu_id tags are missing in board xml file for cpu {}, please run board_inspector.py to regenerate the board xml file!'.format(id)
                     print(emsg)
