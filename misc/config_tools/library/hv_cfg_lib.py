@@ -5,7 +5,7 @@
 
 import os
 import sys
-import common
+import acrn_config_utilities
 import getopt
 import board_cfg_lib
 
@@ -56,7 +56,7 @@ def is_numeric_check(str_value, prime_item, item):
 
 def range_check(str_value, prime_item, item, range_val):
 
-    value = common.num2int(str_value)
+    value = acrn_config_utilities.num2int(str_value)
     if value < range_val['min'] or value > range_val['max']:
         key = 'hv,{},{}'.format(prime_item, item)
         ERR_LIST[key] = "{} should be in range[{},{}]".format(item, range_val['min'], range_val['max'])
@@ -102,7 +102,7 @@ def hv_ram_start_check(hv_ram_start, prime_item, item):
 
 def ir_entries_check(str_num, cap, cap_ir_entries):
     hv_size_check(str_num, cap, cap_ir_entries)
-    val = common.num2int(str_num)
+    val = acrn_config_utilities.num2int(str_num)
     if val % 2 != 0:
         key = 'hv,{},{}'.format(cap, cap_ir_entries)
         ERR_LIST[key] = "{} should be a value of 2^n".format(cap_ir_entries)
@@ -173,7 +173,7 @@ def is_contiguous_bit_set(value):
 
 def cat_max_mask_check(cat_mask_list, feature, cat_str, max_mask_str):
 
-    (res_info, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+    (res_info, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(acrn_config_utilities.BOARD_INFO_FILE)
     if not board_cfg_lib.is_rdt_enabled() or ("L2" not in res_info and "L3" not in res_info):
         return
 
@@ -189,11 +189,11 @@ def cat_max_mask_check(cat_mask_list, feature, cat_str, max_mask_str):
         return
 
     clos_max_mask_str = clos_max_mask_list[0].strip('"').strip("'")
-    clos_max_mask = common.num2int(clos_max_mask_str)
+    clos_max_mask = acrn_config_utilities.num2int(clos_max_mask_str)
     for val_str in cat_mask_list:
         if empty_check(val_str, feature, cat_str, max_mask_str):
             return
-        value = common.num2int(val_str)
+        value = acrn_config_utilities.num2int(val_str)
         if value < 0 or value > clos_max_mask:
             key = 'hv,{},{},{}'.format(feature, cat_str, max_mask_str)
             ERR_LIST[key] = "{} should be in range[0,{}]".format(max_mask_str, clos_max_mask_str)
@@ -207,7 +207,7 @@ def cat_max_mask_check(cat_mask_list, feature, cat_str, max_mask_str):
 
 def mba_delay_check(mba_delay_list, feature, mba_str, max_mask_str):
 
-    (res_info, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+    (res_info, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(acrn_config_utilities.BOARD_INFO_FILE)
     if not board_cfg_lib.is_rdt_enabled() or "MBA" not in res_info:
         return
 
@@ -220,11 +220,11 @@ def mba_delay_check(mba_delay_list, feature, mba_str, max_mask_str):
 
     mba_idx = res_info.index("MBA")
     mba_delay_str = clos_max_mask_list[mba_idx].strip('"').strip("'")
-    mba_delay = common.num2int(mba_delay_str)
+    mba_delay = acrn_config_utilities.num2int(mba_delay_str)
     for val_str in mba_delay_list:
         if empty_check(val_str, feature, mba_str, max_mask_str):
             return
-        value = common.num2int(val_str)
+        value = acrn_config_utilities.num2int(val_str)
         if value > mba_delay:
             key = 'hv,{},{},{}'.format(feature, mba_str, max_mask_str)
             ERR_LIST[key] = "{} should be in range[0,{}]".format(max_mask_str, mba_delay_str)
@@ -232,7 +232,7 @@ def mba_delay_check(mba_delay_list, feature, mba_str, max_mask_str):
 
 
 def max_msix_table_num_check(max_msix_table_num, cap_str, max_msi_num_str):
-    native_max_msix_line = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<MAX_MSIX_TABLE_NUM>", "</MAX_MSIX_TABLE_NUM>")
+    native_max_msix_line = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<MAX_MSIX_TABLE_NUM>", "</MAX_MSIX_TABLE_NUM>")
     if not native_max_msix_line and not max_msix_table_num:
         empty_check(max_msix_table_num, cap_str, max_msi_num_str)
         return

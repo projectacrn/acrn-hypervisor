@@ -9,15 +9,15 @@ import sys, os
 import lxml.etree
 import argparse
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common
+import acrn_config_utilities
 from importlib import import_module
 
 def main(args):
     # Initialize configuration libraries for backward compatibility
-    common.BOARD_INFO_FILE = args.board
-    common.SCENARIO_INFO_FILE = args.scenario
-    common.get_vm_num(args.scenario)
-    common.get_load_order()
+    acrn_config_utilities.BOARD_INFO_FILE = args.board
+    acrn_config_utilities.SCENARIO_INFO_FILE = args.scenario
+    acrn_config_utilities.get_vm_num(args.scenario)
+    acrn_config_utilities.get_load_order()
 
     scripts_path = os.path.dirname(os.path.realpath(__file__))
     current = os.path.basename(__file__)

@@ -5,7 +5,6 @@
 
 import collections
 import board_cfg_lib
-import common
 
 PCI_HEADER = r"""
 #ifndef PCI_DEVICES_H_

@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 from scenario_item import HwInfo, VmInfo
 import board_cfg_lib
 import scenario_cfg_lib
-import common
+import acrn_config_utilities
 import hv_cfg_lib
 import board_defconfig
 from hv_item import HvInfo
@@ -24,7 +24,7 @@ try:
 except ImportError:
     pass
 
-ACRN_PATH = common.SOURCE_ROOT_DIR
+ACRN_PATH = acrn_config_utilities.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + 'misc/config_tools/data/'
 GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c", ".config", "ivshmem_cfg.h", "pt_intx.c"]
 
@@ -42,13 +42,13 @@ def get_scenario_item_values(board_info, scenario_info):
     hv_info = HvInfo(scenario_info)
 
     # get vm count
-    common.BOARD_INFO_FILE = board_info
-    common.SCENARIO_INFO_FILE = scenario_info
-    common.get_vm_num(scenario_info)
-    common.get_load_order()
+    acrn_config_utilities.BOARD_INFO_FILE = board_info
+    acrn_config_utilities.SCENARIO_INFO_FILE = scenario_info
+    acrn_config_utilities.get_vm_num(scenario_info)
+    acrn_config_utilities.get_load_order()
 
     # per scenario
-    guest_flags = copy.deepcopy(common.GUEST_FLAG)
+    guest_flags = copy.deepcopy(acrn_config_utilities.GUEST_FLAG)
     guest_flags.remove('0UL')
     scenario_item_values['vm,vm_type'] = scenario_cfg_lib.LOAD_VM_TYPE
     scenario_item_values["vm,cpu_affinity"] = hw_info.get_processor_val()
@@ -100,7 +100,7 @@ def validate_scenario_schema(scenario_info):
     XMLSchema does not process XInclude.
     Use lxml to expand the schema which is feed to XMLSchema as a string.
     """
-    xsd_doc = etree.parse(common.SCENARIO_SCHEMA_FILE)
+    xsd_doc = etree.parse(acrn_config_utilities.SCENARIO_SCHEMA_FILE)
     xsd_doc.xinclude()
     my_schema = xmlschema.XMLSchema11(etree.tostring(xsd_doc, encoding="unicode"))
 
@@ -124,7 +124,7 @@ def validate_scenario_schema(scenario_info):
             scenario_cfg_lib.ERR_LIST[key] = element + reason
 
 def apply_data_checks(board_info, scenario_info):
-    xsd_doc = etree.parse(common.DATACHECK_SCHEMA_FILE)
+    xsd_doc = etree.parse(acrn_config_utilities.DATACHECK_SCHEMA_FILE)
     xsd_doc.xinclude()
     datachecks_schema = xmlschema.XMLSchema11(etree.tostring(xsd_doc, encoding="unicode"))
 
@@ -160,8 +160,8 @@ def validate_scenario_setting(board_info, scenario_info):
     :param scenario_info: scenario file
     :return: return a dictionary that contains errors
     """
-    common.BOARD_INFO_FILE = board_info
-    common.SCENARIO_INFO_FILE = scenario_info
+    acrn_config_utilities.BOARD_INFO_FILE = board_info
+    acrn_config_utilities.SCENARIO_INFO_FILE = scenario_info
 
     hv_info = HvInfo(scenario_info)
     hv_info.get_info()
@@ -187,31 +187,31 @@ def main(args):
     """
     err_dic = {}
 
-    (err_dic, params) = common.get_param(args)
+    (err_dic, params) = acrn_config_utilities.get_param(args)
     if err_dic:
         return err_dic
 
     # check env
-    err_dic = common.prepare()
+    err_dic = acrn_config_utilities.prepare()
     if err_dic:
         return err_dic
 
-    common.BOARD_INFO_FILE = params['--board']
-    common.SCENARIO_INFO_FILE = params['--scenario']
-    common.get_vm_num(params['--scenario'])
-    common.get_load_order()
+    acrn_config_utilities.BOARD_INFO_FILE = params['--board']
+    acrn_config_utilities.SCENARIO_INFO_FILE = params['--scenario']
+    acrn_config_utilities.get_vm_num(params['--scenario'])
+    acrn_config_utilities.get_load_order()
 
     # get board name
-    (err_dic, board_name) = common.get_board_name()
+    (err_dic, board_name) = acrn_config_utilities.get_board_name()
 
     # get scenario name
-    (err_dic, scenario) = common.get_scenario_name()
+    (err_dic, scenario) = acrn_config_utilities.get_scenario_name()
     if err_dic:
         return err_dic
 
-    if common.VM_COUNT > common.MAX_VM_NUM:
+    if acrn_config_utilities.VM_COUNT > acrn_config_utilities.MAX_VM_NUM:
         err_dic['vm count'] = "Number of VMs in scenario xml file should be no greater than hv/CAPACITIES/MAX_VM_NUM ! " \
-                              "Now this value is {}.".format(common.MAX_VM_NUM)
+                              "Now this value is {}.".format(acrn_config_utilities.MAX_VM_NUM)
         return err_dic
 
     if params['--out']:
@@ -223,8 +223,8 @@ def main(args):
         scen_output = ACRN_CONFIG_DEF + "/" + scenario + "/"
 
     scen_board = scen_output + "/"
-    common.mkdir(scen_board)
-    common.mkdir(scen_output)
+    acrn_config_utilities.mkdir(scen_board)
+    acrn_config_utilities.mkdir(scen_output)
 
     vm_config_h  = scen_output + GEN_FILE[0]
     vm_config_c  = scen_output + GEN_FILE[1]
@@ -237,7 +237,7 @@ def main(args):
     get_scenario_item_values(params['--board'], params['--scenario'])
     (err_dic, scenario_items) = validate_scenario_setting(params['--board'], params['--scenario'])
     if err_dic:
-        common.print_red("Scenario xml file validation failed:", err=True)
+        acrn_config_utilities.print_red("Scenario xml file validation failed:", err=True)
         return err_dic
 
     # generate board defconfig
@@ -262,7 +262,7 @@ def ui_entry_api(board_info, scenario_info, out=''):
 
     arg_list = ['scenario_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--out', out]
 
-    err_dic = common.prepare()
+    err_dic = acrn_config_utilities.prepare()
     if err_dic:
         return err_dic
 
@@ -277,5 +277,5 @@ if __name__ == '__main__':
     err_dic = main(ARGS)
     if err_dic:
         for err_k, err_v in err_dic.items():
-            common.print_red("{}: {}".format(err_k, err_v), err=True)
+            acrn_config_utilities.print_red("{}: {}".format(err_k, err_v), err=True)
     sys.exit(1 if err_dic else 0)

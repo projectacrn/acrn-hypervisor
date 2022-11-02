@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import common
+import acrn_config_utilities
 import board_cfg_lib
 import scenario_cfg_lib
 
@@ -30,7 +30,7 @@ class HwInfo:
         Get root devices from board info
         :return: root devices list
         """
-        (self.root_dev_val, num) = common.get_rootfs(self.board_info)
+        (self.root_dev_val, num) = acrn_config_utilities.get_rootfs(self.board_info)
         return self.root_dev_val
 
     def get_ttys_val(self):
@@ -86,18 +86,18 @@ class CfgOsKern:
         Get all items which belong to this class
         :return: None
         """
-        self.kern_name = common.get_leaf_tag_map(self.scenario_info, "os_config", "name")
-        self.kern_type = common.get_leaf_tag_map(
+        self.kern_name = acrn_config_utilities.get_leaf_tag_map(self.scenario_info, "os_config", "name")
+        self.kern_type = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_type")
-        self.kern_mod = common.get_leaf_tag_map(
+        self.kern_mod = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_mod")
-        self.kern_args = common.get_leaf_tag_map(
+        self.kern_args = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "os_config", "bootargs")
-        self.kern_load_addr = common.get_leaf_tag_map(
+        self.kern_load_addr = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_load_addr")
-        self.kern_entry_addr = common.get_leaf_tag_map(
+        self.kern_entry_addr = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_entry_addr")
-        self.ramdisk_mod = common.get_leaf_tag_map(
+        self.ramdisk_mod = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "os_config", "ramdisk_mod")
 
     def check_item(self):
@@ -130,9 +130,9 @@ class VuartInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.v0_vuart = common.get_vuart_info_id(self.scenario_info, 0)
-        self.v1_vuart = common.get_vuart_info_id(self.scenario_info, 1)
-        self.pci_vuarts = common.get_vuart_info(self.scenario_info)
+        self.v0_vuart = acrn_config_utilities.get_vuart_info_id(self.scenario_info, 0)
+        self.v1_vuart = acrn_config_utilities.get_vuart_info_id(self.scenario_info, 1)
+        self.pci_vuarts = acrn_config_utilities.get_vuart_info(self.scenario_info)
 
     def check_item(self):
         """
@@ -157,13 +157,13 @@ class MemInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.mem_start_hpa = common.get_leaf_tag_map(
+        self.mem_start_hpa = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "memory", "start_hpa")
-        self.mem_size = common.get_leaf_tag_map(
+        self.mem_size = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "memory", "size")
-        self.mem_start_hpa2 = common.get_leaf_tag_map(
+        self.mem_start_hpa2 = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "memory", "start_hpa2")
-        self.mem_size_hpa2 = common.get_leaf_tag_map(
+        self.mem_size_hpa2 = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "memory", "size_hpa2")
 
     def check_item(self):
@@ -197,7 +197,7 @@ class CfgPci:
         Get pci devices items
         :return: None
         """
-        pci_items = common.get_leaf_tag_map(self.scenario_info, "pci_devs", "pci_dev")
+        pci_items = acrn_config_utilities.get_leaf_tag_map(self.scenario_info, "pci_devs", "pci_dev")
         self.pci_devs = scenario_cfg_lib.get_pt_pci_devs(pci_items)
 
 
@@ -224,8 +224,8 @@ class EpcSection:
         self.scenario_info = scenario_info
 
     def get_info(self):
-        self.base = common.get_leaf_tag_map(self.scenario_info, "epc_section", "base")
-        self.size = common.get_leaf_tag_map(self.scenario_info, "epc_section", "size")
+        self.base = acrn_config_utilities.get_leaf_tag_map(self.scenario_info, "epc_section", "base")
+        self.size = acrn_config_utilities.get_leaf_tag_map(self.scenario_info, "epc_section", "size")
 
 
 class ShareMem:
@@ -245,7 +245,7 @@ class ShareMem:
         :return:
         """
         self.raw_shmem_regions = ivshmem_regions
-        self.shmem_enabled = common.get_hv_item_tag(self.scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+        self.shmem_enabled = acrn_config_utilities.get_hv_item_tag(self.scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
         self.shmem_regions = scenario_cfg_lib.get_shmem_regions(ivshmem_regions)
         self.shmem_num = scenario_cfg_lib.get_shmem_num(self.shmem_regions)
 
@@ -255,7 +255,7 @@ class ShareMem:
         :return:
         '''
         if self.shmem_enabled == 'y':
-            vm_type_info = common.get_leaf_tag_map(self.scenario_info, "vm_type")
+            vm_type_info = acrn_config_utilities.get_leaf_tag_map(self.scenario_info, "vm_type")
             scenario_cfg_lib.share_mem_check(self.shmem_regions, self.raw_shmem_regions, vm_type_info,
                                          "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
 
@@ -285,8 +285,8 @@ class MmioResourcesInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.p2sb = common.get_leaf_tag_map_bool(self.scenario_info, "mmio_resources", "p2sb")
-        self.tpm2 = common.get_leaf_tag_map_bool(self.scenario_info, "mmio_resources", "TPM2")
+        self.p2sb = acrn_config_utilities.get_leaf_tag_map_bool(self.scenario_info, "mmio_resources", "p2sb")
+        self.tpm2 = acrn_config_utilities.get_leaf_tag_map_bool(self.scenario_info, "mmio_resources", "TPM2")
 
     def check_item(self):
         """
@@ -309,7 +309,7 @@ class PtIntxInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.phys_gsi, self.virt_gsi = common.get_pt_intx_table(self.scenario_info)
+        self.phys_gsi, self.virt_gsi = acrn_config_utilities.get_pt_intx_table(self.scenario_info)
 
     def check_item(self):
         """
@@ -331,7 +331,7 @@ class VmInfo:
     def __init__(self, board_file, scenario_file):
         self.board_info = board_file
         self.scenario_info = scenario_file
-        common.get_vm_num(self.scenario_info)
+        acrn_config_utilities.get_vm_num(self.scenario_info)
 
         self.epc_section = EpcSection(self.scenario_info)
         self.mem_info = MemInfo(self.scenario_info)
@@ -349,13 +349,13 @@ class VmInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.name = common.get_leaf_tag_map(self.scenario_info, "name")
-        self.load_vm= common.get_leaf_tag_map(self.scenario_info, "vm_type")
-        self.guest_flags = common.get_leaf_tag_map(
+        self.name = acrn_config_utilities.get_leaf_tag_map(self.scenario_info, "name")
+        self.load_vm= acrn_config_utilities.get_leaf_tag_map(self.scenario_info, "vm_type")
+        self.guest_flags = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "guest_flags", "guest_flag")
-        self.cpus_per_vm = common.get_leaf_tag_map(
+        self.cpus_per_vm = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "cpu_affinity", "pcpu_id")
-        self.clos_per_vm = common.get_leaf_tag_map(
+        self.clos_per_vm = acrn_config_utilities.get_leaf_tag_map(
             self.scenario_info, "clos", "vcpu_clos")
 
         self.epc_section.get_info()

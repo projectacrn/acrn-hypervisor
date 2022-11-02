@@ -7,7 +7,7 @@
 
 import sys, os, logging
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common, lib.lib, lib.error
+import lib.lib, lib.error
 
 def fn(board_etree, scenario_etree, allocation_etree):
     # With the console vUART explicitly specified as COM port and communication vUART with explicit I/O port base

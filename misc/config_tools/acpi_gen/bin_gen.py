@@ -14,7 +14,8 @@ from acpi_const import *
 import acpiparser.tpm2
 import inspectorlib.cdata
 import acpiparser.rtct
-import common
+import acrn_config_utilities
+from acrn_config_utilities import get_node
 
 def move_rtct_ssram_and_bin_entries(rtct, new_base_addr, new_area_max_size):
     '''
@@ -75,11 +76,11 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path, scenario_etree, allocat
                 rtct = acpiparser.rtct.RTCT(os.path.join(dest_vm_acpi_path, acpi_table[0]))
                 outfile = os.path.join(dest_vm_acpi_bin_path, acpi_table[1])
                 # move the guest ssram area to the area next to ACPI region
-                pre_rt_vms = common.get_node("//vm[load_order ='PRE_LAUNCHED_VM' and vm_type ='RTVM']", scenario_etree)
+                pre_rt_vms = get_node("//vm[load_order ='PRE_LAUNCHED_VM' and vm_type ='RTVM']", scenario_etree)
                 vm_id = pre_rt_vms.get("id")
-                allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
-                ssram_start_gpa = common.get_node("./ssram/start_gpa/text()", allocation_vm_node)
-                ssram_max_size = common.get_node("./ssram/max_size/text()", allocation_vm_node)
+                allocation_vm_node = get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+                ssram_start_gpa = get_node("./ssram/start_gpa/text()", allocation_vm_node)
+                ssram_max_size = get_node("./ssram/max_size/text()", allocation_vm_node)
                 move_rtct_ssram_and_bin_entries(rtct, int(ssram_start_gpa, 16), int(ssram_max_size, 16))
                 fp = open(outfile, mode='wb')
                 fp.write(rtct)
@@ -105,11 +106,11 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path, scenario_etree, allocat
     return rmsg
 
 def tpm2_acpi_gen(acpi_bin, board_etree, scenario_etree, allocation_etree):
-    tpm2_enabled = common.get_node("//vm[@id = '0']/mmio_resources/TPM2/text()", scenario_etree)
+    tpm2_enabled = get_node("//vm[@id = '0']/mmio_resources/TPM2/text()", scenario_etree)
     if tpm2_enabled is not None and tpm2_enabled == 'y':
-        tpm2_node = common.get_node("//device[@id = 'MSFT0101' or compatible_id = 'MSFT0101']", board_etree)
+        tpm2_node = get_node("//device[@id = 'MSFT0101' or compatible_id = 'MSFT0101']", board_etree)
         if tpm2_node is not None:
-            _data_len = 0x4c if common.get_node("//capability[@id = 'log_area']", board_etree) is not None else 0x40
+            _data_len = 0x4c if get_node("//capability[@id = 'log_area']", board_etree) is not None else 0x40
             _data = bytearray(_data_len)
             ctype_data = acpiparser.tpm2.TPM2(_data)
             ctype_data.header.signature = "TPM2".encode()
@@ -121,13 +122,13 @@ def tpm2_acpi_gen(acpi_bin, board_etree, scenario_etree, allocation_etree):
             ctype_data.header.creatorid = "INTL".encode()
             ctype_data.header.creatorrevision = 0x20190703
             ctype_data.address_of_control_area = 0xFED40040
-            ctype_data.start_method = int(common.get_node("//capability[@id = 'start_method']/value/text()", tpm2_node), 16)
+            ctype_data.start_method = int(get_node("//capability[@id = 'start_method']/value/text()", tpm2_node), 16)
             start_method_parameters = tpm2_node.xpath("//parameter/text()")
             for i in range(len(start_method_parameters)):
                 ctype_data.start_method_specific_parameters[i] = int(start_method_parameters[i], 16)
-            if common.get_node("//capability[@id = 'log_area']", board_etree) is not None:
-                ctype_data.log_area_minimum_length = int(common.get_node("//log_area_minimum_length/text()", allocation_etree), 16)
-                ctype_data.log_area_start_address = int(common.get_node("//log_area_start_address/text()", allocation_etree), 16)
+            if get_node("//capability[@id = 'log_area']", board_etree) is not None:
+                ctype_data.log_area_minimum_length = int(get_node("//log_area_minimum_length/text()", allocation_etree), 16)
+                ctype_data.log_area_start_address = int(get_node("//log_area_start_address/text()", allocation_etree), 16)
             ctype_data.header.checksum = (~(sum(inspectorlib.cdata.to_bytes(ctype_data))) + 1) & 0xFF
             acpi_bin.seek(ACPI_TPM2_ADDR_OFFSET)
             acpi_bin.write(inspectorlib.cdata.to_bytes(ctype_data))
@@ -253,14 +254,14 @@ def main(args):
     board_etree = lxml.etree.parse(args.board)
     scenario_etree = lxml.etree.parse(args.scenario)
 
-    scenario_name = common.get_node("//@scenario", scenario_etree)
+    scenario_name = get_node("//@scenario", scenario_etree)
 
     if args.asl is None:
         DEST_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'scenarios', scenario_name)
     else:
-        DEST_ACPI_PATH = os.path.join(common.SOURCE_ROOT_DIR, args.asl, 'scenarios', scenario_name)
+        DEST_ACPI_PATH = os.path.join(acrn_config_utilities.SOURCE_ROOT_DIR, args.asl, 'scenarios', scenario_name)
     if args.out is None:
-        hypervisor_out = os.path.join(common.SOURCE_ROOT_DIR, 'build', 'hypervisor')
+        hypervisor_out = os.path.join(acrn_config_utilities.SOURCE_ROOT_DIR, 'build', 'hypervisor')
     else:
         hypervisor_out = args.out
     DEST_ACPI_BIN_PATH = os.path.join(hypervisor_out, 'acpi')

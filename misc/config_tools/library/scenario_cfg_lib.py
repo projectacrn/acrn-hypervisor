@@ -4,11 +4,11 @@
 #
 
 import math
-import common
+import acrn_config_utilities
 import board_cfg_lib
 import launch_cfg_lib
 
-HEADER_LICENSE = common.open_license()
+HEADER_LICENSE = acrn_config_utilities.open_license()
 SERVICE_VM_UART1_VALID_NUM = ""
 NATIVE_TTYS_DIC = {}
 
@@ -130,8 +130,8 @@ def get_pci_vuart_num(vuarts):
 
     vuarts_num = {}
     # get legacy vuart information
-    vuart0_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 0)
-    vuart1_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
+    vuart0_setting = acrn_config_utilities.get_vuart_info_id(acrn_config_utilities.SCENARIO_INFO_FILE, 0)
+    vuart1_setting = acrn_config_utilities.get_vuart_info_id(acrn_config_utilities.SCENARIO_INFO_FILE, 1)
     for vm_i,vuart_list in vuarts.items():
         vuarts_num[vm_i] = 0
         for vuart_id in vuart_list:
@@ -139,7 +139,7 @@ def get_pci_vuart_num(vuarts):
                 vuarts_num[vm_i] += 1
 
     for vm_i in vuart0_setting:
-        load_order = common.LOAD_ORDER[vm_i]
+        load_order = acrn_config_utilities.LOAD_ORDER[vm_i]
         # Skip post-launched vm's pci base vuart0
         if "POST_LAUNCHED_VM" == load_order and 0 in vuarts[vm_i].keys() \
              and vuarts[vm_i][0]['base'] != "INVALID_PCI_BASE":
@@ -160,23 +160,23 @@ def get_pci_vuart_num(vuarts):
 def get_pci_dev_num_per_vm():
     pci_dev_num_per_vm = {}
 
-    pci_items = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "pci_devs", "pci_dev")
+    pci_items = acrn_config_utilities.get_leaf_tag_map(acrn_config_utilities.SCENARIO_INFO_FILE, "pci_devs", "pci_dev")
     pci_devs = get_pt_pci_devs(pci_items)
     pt_pci_num = get_pt_pci_num(pci_devs)
 
-    ivshmem_region = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
+    ivshmem_region = acrn_config_utilities.get_hv_item_tag(acrn_config_utilities.SCENARIO_INFO_FILE,
         "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
 
-    shmem_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
+    shmem_enabled = acrn_config_utilities.get_hv_item_tag(acrn_config_utilities.SCENARIO_INFO_FILE,
         "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
 
     shmem_regions = get_shmem_regions(ivshmem_region)
     shmem_num = get_shmem_num(shmem_regions)
 
-    vuarts = common.get_vuart_info(common.SCENARIO_INFO_FILE)
+    vuarts = acrn_config_utilities.get_vuart_info(acrn_config_utilities.SCENARIO_INFO_FILE)
     vuarts_num = get_pci_vuart_num(vuarts)
 
-    for vm_i,load_order in common.LOAD_ORDER.items():
+    for vm_i,load_order in acrn_config_utilities.LOAD_ORDER.items():
         if "POST_LAUNCHED_VM" == load_order:
             shmem_num_i = 0
             vuart_num = vuarts_num[vm_i]
@@ -273,7 +273,7 @@ def guest_flag_check(guest_flags, branch_tag, leaf_tag):
 
     for vm_i, flags in guest_flags.items():
         for guest_flag in flags:
-            if guest_flag and guest_flag not in common.GUEST_FLAG:
+            if guest_flag and guest_flag not in acrn_config_utilities.GUEST_FLAG:
                 key = "vm:id={},{},{}".format(vm_i, branch_tag, leaf_tag)
                 ERR_LIST[key] = "Unknow guest flag"
 
@@ -288,16 +288,16 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
     use_cpus = []
     cpu_sharing_enabled = True
 
-    cpu_sharing = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "SCHEDULER")
+    cpu_sharing = acrn_config_utilities.get_hv_item_tag(acrn_config_utilities.SCENARIO_INFO_FILE, "FEATURES", "SCHEDULER")
     if cpu_sharing == "SCHED_NOOP":
         cpu_sharing_enabled = False
 
     # validate cpu_affinity config with scenario file
     sos_vmid = launch_cfg_lib.get_sos_vmid()
-    scenario_cpu_aff = common.get_leaf_tag_map(scenario_file, "cpu_affinity", "pcpu_id")
-    scenario_vm_names = {v: k for k, v in common.get_leaf_tag_map(scenario_file, 'name').items()}
+    scenario_cpu_aff = acrn_config_utilities.get_leaf_tag_map(scenario_file, "cpu_affinity", "pcpu_id")
+    scenario_vm_names = {v: k for k, v in acrn_config_utilities.get_leaf_tag_map(scenario_file, 'name').items()}
     if launch_file:
-        launch_vm_names = common.get_leaf_tag_map(launch_file, 'vm_name')
+        launch_vm_names = acrn_config_utilities.get_leaf_tag_map(launch_file, 'vm_name')
         for vm_id, cpu_ids in cpu_affinity.items():
             launch_vm_name = launch_vm_names[vm_id - sos_vmid]
             if launch_vm_name not in scenario_vm_names:
@@ -325,10 +325,10 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
         else:
             use_cpus.append(cpu)
 
-    sos_vm_cpus = []
+    service_vm_cpus = []
     pre_launch_cpus = []
     post_launch_cpus = []
-    for vm_i, load_order in common.LOAD_ORDER.items():
+    for vm_i, load_order in acrn_config_utilities.LOAD_ORDER.items():
         if vm_i not in cpu_affinity.keys():
             continue
         elif VM_DB[load_order]['load_type'] == "PRE_LAUNCHED_VM":
@@ -339,7 +339,7 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
             post_launch_cpus.extend(cpus)
         elif VM_DB[load_order]['load_type'] == "SERVICE_VM":
             cpus = [x for x in cpu_affinity[vm_i] if not None]
-            sos_vm_cpus.extend(cpus)
+            service_vm_cpus.extend(cpus)
 
         # duplicate cpus assign the same VM check
         cpus_vm_i = cpu_affinity[vm_i]
@@ -350,7 +350,7 @@ def vm_cpu_affinity_check(scenario_file, launch_file, cpu_affinity):
                 return err_dic
 
     if pre_launch_cpus:
-        if "SERVICE_VM" in common.LOAD_ORDER and not sos_vm_cpus:
+        if "SERVICE_VM" in acrn_config_utilities.LOAD_ORDER and not service_vm_cpus:
             key = "Service VM cpu_affinity"
             err_dic[key] = "Should assign CPU id for Service VM"
 
@@ -507,7 +507,7 @@ def pci_devs_check(pci_bdf_devs, branch_tag, tag_str):
     :param item: vm pci_devs item in xml
     :return: None
     """
-    (bdf_desc_map, bdf_vpid_map) = board_cfg_lib.get_pci_info(common.BOARD_INFO_FILE)
+    (bdf_desc_map, bdf_vpid_map) = board_cfg_lib.get_pci_info(acrn_config_utilities.BOARD_INFO_FILE)
     for id_key, pci_bdf_devs_list in pci_bdf_devs.items():
         for pci_bdf_dev in pci_bdf_devs_list:
             if pci_bdf_dev and pci_bdf_dev not in bdf_desc_map.keys():
@@ -523,7 +523,7 @@ def get_vuart1_vmid(vm_vuart1):
     """
     vm_id_dic = {}
     new_vm_id_dic = {}
-    for i in list(common.LOAD_ORDER.keys()):
+    for i in list(acrn_config_utilities.LOAD_ORDER.keys()):
         for key in vm_vuart1[i].keys():
             if key == "target_vm_id":
                 vm_id_dic[i] = vm_vuart1[i][key]
@@ -547,13 +547,13 @@ def cpus_assignment(cpus_per_vm, index):
     :return: cpu assignment string
     """
     vm_cpu_bmp = {}
-    if "SERVICE_VM" == common.LOAD_ORDER[index]:
+    if "SERVICE_VM" == acrn_config_utilities.LOAD_ORDER[index]:
         if index not in cpus_per_vm or cpus_per_vm[index] == [None]:
             sos_extend_all_cpus = board_cfg_lib.get_processor_info()
             pre_all_cpus = []
             for vmid, cpu_list in cpus_per_vm.items():
-                if vmid in common.LOAD_ORDER:
-                    load_order = common.LOAD_ORDER[vmid]
+                if vmid in acrn_config_utilities.LOAD_ORDER:
+                    load_order = acrn_config_utilities.LOAD_ORDER[vmid]
                     load_type = ''
                     if load_order in VM_DB:
                         load_type = VM_DB[load_order]['load_type']
@@ -605,7 +605,7 @@ def clos_assignment(clos_per_vm, index):
 
 def avl_vuart_ui_select(scenario_info):
     tmp_vuart = {}
-    for vm_i,load_order in common.LOAD_ORDER.items():
+    for vm_i,load_order in acrn_config_utilities.LOAD_ORDER.items():
 
         if "SERVICE_VM" == VM_DB[load_order]['load_type']:
             key = "vm={},legacy_vuart=0,base".format(vm_i)
@@ -624,7 +624,7 @@ def avl_vuart_ui_select(scenario_info):
 def get_first_post_vm():
 
     i = 0
-    for vm_i,load_order in common.LOAD_ORDER.items():
+    for vm_i,load_order in acrn_config_utilities.LOAD_ORDER.items():
         if "POST_LAUNCHED_VM" == VM_DB[load_order]['load_type']:
             i = vm_i
             break
@@ -635,13 +635,13 @@ def get_first_post_vm():
 def avl_pci_devs():
 
     pci_dev_list = []
-    (bdf_desc_map, bdf_vpid_map) = board_cfg_lib.get_pci_info(common.BOARD_INFO_FILE)
-    pci_dev_list = common.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['ethernet'])
-    tmp_pci_list = common.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['sata'])
+    (bdf_desc_map, bdf_vpid_map) = board_cfg_lib.get_pci_info(acrn_config_utilities.BOARD_INFO_FILE)
+    pci_dev_list = acrn_config_utilities.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['ethernet'])
+    tmp_pci_list = acrn_config_utilities.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['sata'])
     pci_dev_list.extend(tmp_pci_list)
-    tmp_pci_list = common.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['nvme'])
+    tmp_pci_list = acrn_config_utilities.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['nvme'])
     pci_dev_list.extend(tmp_pci_list)
-    tmp_pci_list = common.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['usb'])
+    tmp_pci_list = acrn_config_utilities.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['usb'])
     pci_dev_list.extend(tmp_pci_list)
     pci_dev_list.insert(0, '')
 
@@ -678,7 +678,7 @@ def check_vuart(v0_vuart, v1_vuart):
     target_id_keys = list(vm_target_id_dic.keys())
     i = 0
     for vm_i,t_vm_id in vm_target_id_dic.items():
-        if t_vm_id.isnumeric() and int(t_vm_id) not in common.LOAD_ORDER.keys():
+        if t_vm_id.isnumeric() and int(t_vm_id) not in acrn_config_utilities.LOAD_ORDER.keys():
             key = "vm:id={},legacy_vuart:id=1,target_vm_id".format(vm_i)
             ERR_LIST[key] = "target_vm_id which specified does not exist"
 
@@ -760,8 +760,8 @@ def check_vuart_id_count(vm_pci_vuarts, legacy_vuart0, legacy_vuart1):
     if legacy_vuart_base1 != INVALID_COM_BASE:
         vuart_cnt += 1
 
-    if vuart_cnt > common.MAX_VUART_NUM:
-        raise XmlError("enables more than {} vuarts, total number: {}".format(common.MAX_VUART_NUM, vuart_cnt))
+    if vuart_cnt > acrn_config_utilities.MAX_VUART_NUM:
+        raise XmlError("enables more than {} vuarts, total number: {}".format(acrn_config_utilities.MAX_VUART_NUM, vuart_cnt))
 
 
 def check_against_coexistence(vm_pci_vuarts, vm_legacy_vuart, legacy_vuart_idx):
@@ -808,10 +808,10 @@ def get_target_vm_id(vuart, vm_id):
             "target_vm_id should be present and numeric: {!r}".format(
                 target_vm_id_str))
 
-    if target_vm_id not in common.LOAD_ORDER:
+    if target_vm_id not in acrn_config_utilities.LOAD_ORDER:
         raise XmlError(
             'invalid target_vm_id: target_vm_id={!r}, vm_ids={}'.format(
-                target_vm_id, common.LOAD_ORDER.keys()))
+                target_vm_id, acrn_config_utilities.LOAD_ORDER.keys()))
 
     if target_vm_id == vm_id:
         raise XmlError(
@@ -950,7 +950,7 @@ def is_target_vm_available(target_vm_id, vm_visited, legacy_vuart1_visited):
         raise TypeError('legacy_vuart1_visited should be a dict: {}, {!r}' \
                  .format(type(legacy_vuart1_visited), legacy_vuart1_visited))
 
-    if target_vm_id not in common.LOAD_ORDER:
+    if target_vm_id not in acrn_config_utilities.LOAD_ORDER:
         raise TargetError("target vm {} is not present".format(target_vm_id))
     if target_vm_id in vm_visited:
         pass
@@ -1151,7 +1151,7 @@ def check_p2sb(enable_p2sb):
             ERR_LIST[key] = "Can only specify p2sb passthru for VM0"
             return
 
-        if p2sb and not VM_DB[common.LOAD_ORDER[0]]['load_type'] == "PRE_LAUNCHED_VM":
+        if p2sb and not VM_DB[acrn_config_utilities.LOAD_ORDER[0]]['load_type'] == "PRE_LAUNCHED_VM":
             ERR_LIST["vm:id=0,p2sb"] = "p2sb passthru can only be enabled for Pre-launched VM"
             return
 
@@ -1176,7 +1176,7 @@ def check_pt_intx(phys_gsi, virt_gsi):
         ERR_LIST["pt_intx"] = "only board ehl-crb-b/generic_board is supported"
         return
 
-    if not VM_DB[common.LOAD_ORDER[0]]['load_type'] == "PRE_LAUNCHED_VM":
+    if not VM_DB[acrn_config_utilities.LOAD_ORDER[0]]['load_type'] == "PRE_LAUNCHED_VM":
        ERR_LIST["pt_intx"] = "pt_intx can only be specified for pre-launched VM"
        return
 
@@ -1213,7 +1213,7 @@ def get_valid_ttys_for_sos_vuart(ttys_n):
      """
     vuart0_valid = []
     vuart1_valid = ['ttyS0', 'ttyS1', 'ttyS2', 'ttyS3']
-    ttys_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
+    ttys_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
     if ttys_lines:
         vuart0_valid.clear()
         for tty_line in ttys_lines:
@@ -1231,7 +1231,7 @@ def get_valid_ttys_for_sos_vuart(ttys_n):
                 vuart1_valid.remove(tty)
 
     if not vuart1_valid:
-        common.print_yel("ttyS are fully used. ttyS0 is used for hv_console, ttyS1 is used for vuart1!", warn=True)
+        acrn_config_utilities.print_yel("ttyS are fully used. ttyS0 is used for hv_console, ttyS1 is used for vuart1!", warn=True)
         vuart1_valid = ['ttyS0', 'ttyS1', 'ttyS2', 'ttyS3']
         if ttys_n in vuart1_valid:
             vuart1_valid.remove(ttys_n)

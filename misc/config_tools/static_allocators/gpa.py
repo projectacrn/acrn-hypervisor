@@ -7,8 +7,9 @@
 
 import sys, os, re
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common, lib.error, lib.lib, math
+import acrn_config_utilities, lib.error, lib.lib, math
 from collections import namedtuple
+from acrn_config_utilities import get_node
 
 # VMSIX devices list
 TSN_DEVS = [("0x8086", "0x4b30"), ("0x8086", "0x4b31"), ("0x8086", "0x4b32"), ("0x8086", "0x4ba0"),
@@ -58,7 +59,7 @@ PRE_LAUNCHED_VM_HIGH_MEM_END = 512 * SIZE_G
 # Constants for ivshmem
 BAR0_SHEMEM_SIZE = 4 * SIZE_K
 BAR1_SHEMEM_SIZE = 4 * SIZE_K
-BAR2_SHEMEM_ALIGNMENT = 2 * common.SIZE_M
+BAR2_SHEMEM_ALIGNMENT = 2 * acrn_config_utilities.SIZE_M
 
 # Constants for pci vuart
 PCI_VUART_VBAR0_SIZE = 4 * SIZE_K
@@ -123,10 +124,10 @@ def insert_vuart_to_dev_dict(scenario_etree, vm_id, devdict_32bits):
         devdict_32bits[(f"{VUART}_{vuart_id}", "bar0")] = PCI_VUART_VBAR0_SIZE
         devdict_32bits[(f"{VUART}_{vuart_id}", "bar1")] = PCI_VUART_VBAR1_SIZE
 
-    vm_name = common.get_node(f"//vm[@id = '{vm_id}']/name/text()", scenario_etree)
+    vm_name = get_node(f"//vm[@id = '{vm_id}']/name/text()", scenario_etree)
     communication_vuarts = scenario_etree.xpath(f"//vuart_connection[endpoint/vm_name/text() = '{vm_name}']")
     for vuart_id, vuart in enumerate(communication_vuarts, start=1):
-        connection_type = common.get_node(f"./type/text()", vuart)
+        connection_type = get_node(f"./type/text()", vuart)
         if connection_type == "pci":
             devdict_32bits[(f"{VUART}_{vuart_id}", "bar0")] = PCI_VUART_VBAR0_SIZE
             devdict_32bits[(f"{VUART}_{vuart_id}", "bar1")] = PCI_VUART_VBAR1_SIZE
@@ -159,7 +160,7 @@ def insert_pt_devs_to_dev_dict(board_etree, vm_node_etree, devdict_32bits, devdi
         dev = int(bdf.split(":")[1].split('.')[0], 16)
         func = int(bdf.split(":")[1].split('.')[1], 16)
         bdf = lib.lib.BusDevFunc(bus=bus, dev=dev, func=func)
-        pt_dev_node = common.get_node(f"//bus[@type = 'pci' and @address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}']", board_etree)
+        pt_dev_node = get_node(f"//bus[@type = 'pci' and @address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}']", board_etree)
         if pt_dev_node is not None:
             insert_vmsix_to_dev_dict(pt_dev_node, devdict_32bits)
             pt_dev_resources = pt_dev_node.xpath(".//resource[@type = 'memory' and @len != '0x0' and @id and @width]")
@@ -184,7 +185,7 @@ def get_pt_devs_io_port(board_etree, vm_node_etree):
         dev = int(bdf.split(":")[1].split('.')[0], 16)
         func = int(bdf.split(":")[1].split('.')[1], 16)
         bdf = lib.lib.BusDevFunc(bus=bus, dev=dev, func=func)
-        pt_dev_node = common.get_node(f"//bus[@type = 'pci' and @address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}']", board_etree)
+        pt_dev_node = get_node(f"//bus[@type = 'pci' and @address = '{hex(bus)}']/device[@address = '{hex((dev << 16) | func)}']", board_etree)
         if pt_dev_node is not None:
             pt_dev_resources = pt_dev_node.xpath(".//resource[@type = 'io_port' and @id[starts-with(., 'bar')]]")
             for pt_dev_resource in pt_dev_resources:
@@ -200,8 +201,8 @@ def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
     2. Find the first unused region index for the vmsix bar.
     3. Allocate an unused mmio window for this bar.
     """
-    vendor = common.get_node("./vendor/text()", pt_dev_node)
-    identifier = common.get_node("./identifier/text()", pt_dev_node)
+    vendor = get_node("./vendor/text()", pt_dev_node)
+    identifier = get_node("./identifier/text()", pt_dev_node)
     if vendor is None or identifier is None:
         return
 
@@ -222,8 +223,8 @@ def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
             next_bar_region = unused_bar_index.pop(0)
         except IndexError:
             raise lib.error.ResourceError(f"Cannot allocate a bar index for vmsix supported device: {vendor}:{identifier}, used bar idx list: {used_bar_index}")
-        address = common.get_node("./@address", pt_dev_node)
-        bus = common.get_node(f"../@address", pt_dev_node)
+        address = get_node("./@address", pt_dev_node)
+        bus = get_node(f"../@address", pt_dev_node)
         if bus is not None and address is not None:
             bdf = lib.lib.BusDevFunc(bus=int(bus, 16), dev=int(address, 16) >> 16, func=int(address, 16) & 0xffff)
             dev_name = str(bdf)
@@ -349,44 +350,44 @@ def create_device_node(allocation_etree, vm_id, devdict):
         bar_region = dev[1].split('bar')[-1]
         bar_base = devdict.get(dev)
 
-        vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+        vm_node = get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
         if vm_node is None:
-            vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
-        dev_node = common.get_node(f"./device[@name = '{dev_name}']", vm_node)
+            vm_node = acrn_config_utilities.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
+        dev_node = get_node(f"./device[@name = '{dev_name}']", vm_node)
         if dev_node is None:
-            dev_node = common.append_node("./device", None, vm_node, name = dev_name)
-        if common.get_node(f"./bar[@id='{bar_region}']", dev_node) is None:
-            common.append_node(f"./bar", hex(bar_base), dev_node, id = bar_region)
+            dev_node = acrn_config_utilities.append_node("./device", None, vm_node, name = dev_name)
+        if get_node(f"./bar[@id='{bar_region}']", dev_node) is None:
+            acrn_config_utilities.append_node(f"./bar", hex(bar_base), dev_node, id = bar_region)
         if IVSHMEM in dev_name and bar_region == '2':
-            common.update_text(f"./bar[@id = '2']", hex(bar_base | PREFETCHABLE_BIT | MEMORY_BAR_LOCATABLE_64BITS), dev_node, True)
+            acrn_config_utilities.update_text(f"./bar[@id = '2']", hex(bar_base | PREFETCHABLE_BIT | MEMORY_BAR_LOCATABLE_64BITS), dev_node, True)
 
 def create_vuart_node(allocation_etree, vm_id, devdict):
     for dev in devdict:
         vuart_id = dev[0][-1]
         bar_base = devdict.get(dev)
 
-        vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+        vm_node = get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
         if vm_node is None:
-            vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
-        vuart_node = common.get_node(f"./legacy_vuart[@id = '{vuart_id}']", vm_node)
+            vm_node = acrn_config_utilities.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
+        vuart_node = get_node(f"./legacy_vuart[@id = '{vuart_id}']", vm_node)
         if vuart_node is None:
-            vuart_node = common.append_node("./legacy_vuart", None, vm_node, id = vuart_id)
-        if common.get_node(f"./base", vuart_node) is None:
-            common.append_node(f"./base", hex(bar_base), vuart_node)
+            vuart_node = acrn_config_utilities.append_node("./legacy_vuart", None, vm_node, id = vuart_id)
+        if get_node(f"./base", vuart_node) is None:
+            acrn_config_utilities.append_node(f"./base", hex(bar_base), vuart_node)
 
 def create_native_pci_hole_node(allocation_etree, low_mem, high_mem):
-    common.append_node("/acrn-config/hv/MMIO/MMIO32_START", hex(low_mem[0].start).upper(), allocation_etree)
-    common.append_node("/acrn-config/hv/MMIO/MMIO32_END", hex(low_mem[-1].end + 1).upper(), allocation_etree)
+    acrn_config_utilities.append_node("/acrn-config/hv/MMIO/MMIO32_START", hex(low_mem[0].start).upper(), allocation_etree)
+    acrn_config_utilities.append_node("/acrn-config/hv/MMIO/MMIO32_END", hex(low_mem[-1].end + 1).upper(), allocation_etree)
     if len(high_mem):
-        common.append_node("/acrn-config/hv/MMIO/MMIO64_START", hex(high_mem[0].start).upper(), allocation_etree)
-        common.append_node("/acrn-config/hv/MMIO/MMIO64_END", hex(high_mem[-1].end + 1).upper(), allocation_etree)
-        common.append_node("/acrn-config/hv/MMIO/HI_MMIO_START", hex(high_mem[0].start).upper(), allocation_etree)
-        common.append_node("/acrn-config/hv/MMIO/HI_MMIO_END", hex(high_mem[0].end + 1).upper(), allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MMIO/MMIO64_START", hex(high_mem[0].start).upper(), allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MMIO/MMIO64_END", hex(high_mem[-1].end + 1).upper(), allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MMIO/HI_MMIO_START", hex(high_mem[0].start).upper(), allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MMIO/HI_MMIO_END", hex(high_mem[0].end + 1).upper(), allocation_etree)
     else:
-        common.append_node("/acrn-config/hv/MMIO/MMIO64_START", "~0".upper(), allocation_etree)
-        common.append_node("/acrn-config/hv/MMIO/MMIO64_END", "~0", allocation_etree)
-        common.append_node("/acrn-config/hv/MMIO/HI_MMIO_START", "~0".upper(), allocation_etree)
-        common.append_node("/acrn-config/hv/MMIO/HI_MMIO_END", "0", allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MMIO/MMIO64_START", "~0".upper(), allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MMIO/MMIO64_END", "~0", allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MMIO/HI_MMIO_START", "~0".upper(), allocation_etree)
+        acrn_config_utilities.append_node("/acrn-config/hv/MMIO/HI_MMIO_END", "0", allocation_etree)
 
 def get_free_addr(windowslist, used, size, alignment):
     if not size:
@@ -396,11 +397,11 @@ def get_free_addr(windowslist, used, size, alignment):
 
     alignment = max(alignment, size)
     for w in windowslist:
-        new_w_start = common.round_up(w.start, alignment)
+        new_w_start = acrn_config_utilities.round_up(w.start, alignment)
         window = AddrWindow(start = new_w_start, end = new_w_start + size - 1)
         for u in used:
             if window.overlaps(u):
-                new_u_end = common.round_up(u.end + 1, alignment)
+                new_u_end = acrn_config_utilities.round_up(u.end + 1, alignment)
                 window = AddrWindow(start = new_u_end, end = new_u_end + size - 1)
                 continue
         if window.overlaps(w):
@@ -439,7 +440,7 @@ def allocate_pci_bar(board_etree, scenario_etree, allocation_etree):
         used_low_mem = []
         used_high_mem = []
 
-        load_order = common.get_node("./load_order/text()", vm_node)
+        load_order = get_node("./load_order/text()", vm_node)
         if load_order is not None and lib.lib.is_pre_launched_vm(load_order):
             low_mem = [AddrWindow(start = PRE_LAUNCHED_VM_LOW_MEM_START, end = PRE_LAUNCHED_VM_LOW_MEM_END - 1)]
             high_mem = [AddrWindow(start = PRE_LAUNCHED_VM_HIGH_MEM_START, end = PRE_LAUNCHED_VM_HIGH_MEM_END - 1)]
@@ -474,7 +475,7 @@ def allocate_io_port(board_etree, scenario_etree, allocation_etree):
         io_port_range_list = []
         used_io_port_list = []
 
-        load_order = common.get_node("./load_order/text()", vm_node)
+        load_order = get_node("./load_order/text()", vm_node)
         if load_order is not None and lib.lib.is_service_vm(load_order):
             io_port_range_list = io_port_range_list_native
             io_port_passthrough = get_pt_devs_io_port_passthrough(board_etree, scenario_etree)
@@ -491,9 +492,9 @@ def allocate_io_port(board_etree, scenario_etree, allocation_etree):
 def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
     # Guest physical address of the SW SRAM allocated to a pre-launched VM
     ssram_area_max_size = 0
-    enabled = common.get_node("//SSRAM_ENABLED/text()", scenario_etree)
+    enabled = get_node("//SSRAM_ENABLED/text()", scenario_etree)
     if enabled == "y":
-        pre_rt_vms = common.get_node("//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']", scenario_etree)
+        pre_rt_vms = get_node("//vm[load_order = 'PRE_LAUNCHED_VM' and vm_type = 'RTVM']", scenario_etree)
         if pre_rt_vms is not None:
             vm_id = pre_rt_vms.get("id")
             l3_sw_sram = board_etree.xpath("//cache[@level='3']/capability[@id='Software SRAM']")
@@ -502,32 +503,32 @@ def allocate_ssram_region(board_etree, scenario_etree, allocation_etree):
                 top = 0
                 base = 0
                 for ssram in board_etree.xpath("//cache/capability[@id='Software SRAM']"):
-                    entry_base = int(common.get_node("./start/text()", ssram), 16)
-                    entry_size = int(common.get_node("./size/text()", ssram))
+                    entry_base = int(get_node("./start/text()", ssram), 16)
+                    entry_size = int(get_node("./size/text()", ssram))
                     top = (entry_base + entry_size) if top < (entry_base + entry_size) else top
                     base = entry_base if base == 0 or entry_base < base else base
                 ssram_area_max_size = math.ceil((top - base)/0x1000) * 0x1000
 
-            allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
+            allocation_vm_node = get_node(f"/acrn-config/vm[@id = '{vm_id}']", allocation_etree)
             if allocation_vm_node is None:
-                allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
-            common.append_node("./ssram/start_gpa", hex(PRE_RTVM_SW_SRAM_END_GPA - ssram_area_max_size + 1), allocation_vm_node)
-            common.append_node("./ssram/end_gpa", hex(PRE_RTVM_SW_SRAM_END_GPA), allocation_vm_node)
-            common.append_node("./ssram/max_size", str(ssram_area_max_size), allocation_vm_node)
+                allocation_vm_node = acrn_config_utilities.append_node("/acrn-config/vm", None, allocation_etree, id = vm_id)
+            acrn_config_utilities.append_node("./ssram/start_gpa", hex(PRE_RTVM_SW_SRAM_END_GPA - ssram_area_max_size + 1), allocation_vm_node)
+            acrn_config_utilities.append_node("./ssram/end_gpa", hex(PRE_RTVM_SW_SRAM_END_GPA), allocation_vm_node)
+            acrn_config_utilities.append_node("./ssram/max_size", str(ssram_area_max_size), allocation_vm_node)
 
 def allocate_log_area(board_etree, scenario_etree, allocation_etree):
-    tpm2_enabled = common.get_node(f"//vm[@id = '0']/mmio_resources/TPM2/text()", scenario_etree)
+    tpm2_enabled = get_node(f"//vm[@id = '0']/mmio_resources/TPM2/text()", scenario_etree)
     if tpm2_enabled is None or tpm2_enabled == 'n':
         return
 
-    if common.get_node("//capability[@id='log_area']", board_etree) is not None:
-        log_area_min_len_native = int(common.get_node(f"//log_area_minimum_length/text()", board_etree), 16)
-        log_area_start_address = common.round_up(VIRT_ACPI_NVS_ADDR, 0x10000) + RESERVED_NVS_AREA
-        allocation_vm_node = common.get_node(f"/acrn-config/vm[@id = '0']", allocation_etree)
+    if get_node("//capability[@id='log_area']", board_etree) is not None:
+        log_area_min_len_native = int(get_node(f"//log_area_minimum_length/text()", board_etree), 16)
+        log_area_start_address = acrn_config_utilities.round_up(VIRT_ACPI_NVS_ADDR, 0x10000) + RESERVED_NVS_AREA
+        allocation_vm_node = get_node(f"/acrn-config/vm[@id = '0']", allocation_etree)
         if allocation_vm_node is None:
-            allocation_vm_node = common.append_node("/acrn-config/vm", None, allocation_etree, id = '0')
-        common.append_node("./log_area_start_address", hex(log_area_start_address).upper(), allocation_vm_node)
-        common.append_node("./log_area_minimum_length", hex(log_area_min_len_native).upper(), allocation_vm_node)
+            allocation_vm_node = acrn_config_utilities.append_node("/acrn-config/vm", None, allocation_etree, id = '0')
+        acrn_config_utilities.append_node("./log_area_start_address", hex(log_area_start_address).upper(), allocation_vm_node)
+        acrn_config_utilities.append_node("./log_area_minimum_length", hex(log_area_min_len_native).upper(), allocation_vm_node)
 
 def pt_dev_io_port_passthrough(board_etree, scenario_etree, allocation_etree):
     vm_nodes = scenario_etree.xpath("//vm")

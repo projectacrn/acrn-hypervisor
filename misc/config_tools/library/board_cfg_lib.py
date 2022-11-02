@@ -5,7 +5,7 @@
 
 import re
 import sys
-import common
+import acrn_config_utilities
 import collections
 
 BOARD_NAME = ''
@@ -23,7 +23,7 @@ VALID_LEGACY_IRQ = []
 ERR_LIST = {}
 USED_RAM_RANGE = {}
 
-HEADER_LICENSE = common.open_license() + "\n"
+HEADER_LICENSE = acrn_config_utilities.open_license() + "\n"
 
 # The data base contains hide pci device
 KNOWN_HIDDEN_PDEVS_BOARD_DB = {
@@ -84,8 +84,8 @@ def handle_bios_info(config):
     Handle bios information
     :param config: it is a file pointer of bios information for writing to
     """
-    bios_lines = get_info(common.BOARD_INFO_FILE, "<BIOS_INFO>", "</BIOS_INFO>")
-    board_lines = get_info(common.BOARD_INFO_FILE, "<BASE_BOARD_INFO>", "</BASE_BOARD_INFO>")
+    bios_lines = get_info(acrn_config_utilities.BOARD_INFO_FILE, "<BIOS_INFO>", "</BIOS_INFO>")
+    board_lines = get_info(acrn_config_utilities.BOARD_INFO_FILE, "<BASE_BOARD_INFO>", "</BASE_BOARD_INFO>")
     print("/*", file=config)
 
     if not bios_lines or not board_lines:
@@ -216,7 +216,7 @@ def parser_hv_console():
     """
     ttys_n = ''
     err_dic = {}
-    ttys = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "DEBUG_OPTIONS", "SERIAL_CONSOLE")
+    ttys = acrn_config_utilities.get_hv_item_tag(acrn_config_utilities.SCENARIO_INFO_FILE, "DEBUG_OPTIONS", "SERIAL_CONSOLE")
 
     if not ttys or ttys == None:
         return (err_dic, ttys_n)
@@ -237,7 +237,7 @@ def get_processor_info():
     """
     processor_list = []
     tmp_list = []
-    processor_info = get_info(common.BOARD_INFO_FILE, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
+    processor_info = get_info(acrn_config_utilities.BOARD_INFO_FILE, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
 
     if not processor_info:
         key = "CPU PROCESSOR_INFO error:"
@@ -285,7 +285,7 @@ def get_total_mem():
     """
     scale_to_mb = 1
     total_mem_mb = scale_to_mb
-    mem_lines = get_info(common.BOARD_INFO_FILE, "<TOTAL_MEM_INFO>", "</TOTAL_MEM_INFO>")
+    mem_lines = get_info(acrn_config_utilities.BOARD_INFO_FILE, "<TOTAL_MEM_INFO>", "</TOTAL_MEM_INFO>")
     for mem_line in mem_lines:
         mem_info_list = mem_line.split()
 
@@ -354,7 +354,7 @@ def get_p_state_count():
     Get cpu p-state count
     :return: p-state count
     """
-    px_info = get_info(common.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
+    px_info = get_info(acrn_config_utilities.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
     if px_info != None:
         for line in px_info:
             if re.search("{.*}", line) == None:
@@ -368,7 +368,7 @@ def get_p_state_index_from_ratio(ratio):
     :return: p-state index; If no px_info found in board file, return 0;
     """
     closest_index = 0
-    px_info = get_info(common.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
+    px_info = get_info(acrn_config_utilities.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
     if px_info != None:
         for line in px_info:
             if re.search("{.*}", line) == None:
@@ -434,11 +434,11 @@ def get_size(line):
     # get size string from format, Region n: Memory at x ... [size=NK]
     size_str = line.split()[-1].strip(']').split('=')[1]
     if 'G' in size_str:
-        size = int(size_str.strip('G')) * common.SIZE_G
+        size = int(size_str.strip('G')) * acrn_config_utilities.SIZE_G
     elif 'M' in size_str:
-        size = int(size_str.strip('M')) * common.SIZE_M
+        size = int(size_str.strip('M')) * acrn_config_utilities.SIZE_M
     elif 'K' in size_str:
-        size = int(size_str.strip('K')) * common.SIZE_K
+        size = int(size_str.strip('K')) * acrn_config_utilities.SIZE_K
     else:
         size = int(size_str)
 
@@ -449,7 +449,7 @@ def remap_bar_addr_to_high(bar_addr, line):
     """Generate vbar address"""
     global HI_MMIO_OFFSET
     size = get_size(line)
-    cur_addr = common.round_up(bar_addr, size)
+    cur_addr = acrn_config_utilities.round_up(bar_addr, size)
     HI_MMIO_OFFSET = cur_addr + size
     return cur_addr
 
@@ -463,7 +463,7 @@ def parser_pci():
     bar_addr = bar_num = '0'
     cal_sub_pci_name = []
 
-    pci_lines = get_info(common.BOARD_INFO_FILE, "<PCI_DEVICE>", "</PCI_DEVICE>")
+    pci_lines = get_info(acrn_config_utilities.BOARD_INFO_FILE, "<PCI_DEVICE>", "</PCI_DEVICE>")
 
     for line in pci_lines:
         tmp_bar_mem = Bar_Mem()
@@ -479,7 +479,7 @@ def parser_pci():
                 continue
 
             bar_num = line.split()[1].strip(':')
-            if bar_addr >= common.SIZE_4G or bar_addr < common.SIZE_2G:
+            if bar_addr >= acrn_config_utilities.SIZE_4G or bar_addr < acrn_config_utilities.SIZE_2G:
                 if not tmp_bar_attr.remappable:
                     continue
 
@@ -521,7 +521,7 @@ def parser_pci():
 
 
 def parse_mem():
-    raw_shmem_regions = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+    raw_shmem_regions = acrn_config_utilities.get_hv_item_tag(acrn_config_utilities.SCENARIO_INFO_FILE, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
 
     global USED_RAM_RANGE
     for shm_name, shm_bar_dic in PCI_DEV_BAR_DESC.shm_bar_dic.items():
@@ -547,15 +547,15 @@ def parse_mem():
         hv_start_offset = 0x80000000
         ret_start_addr = find_avl_memory(ram_range, str(0x200100), hv_start_offset)
         bar_mem_0 = Bar_Mem()
-        bar_mem_0.addr = hex(common.round_up(int(ret_start_addr, 16), 0x200000))
+        bar_mem_0.addr = hex(acrn_config_utilities.round_up(int(ret_start_addr, 16), 0x200000))
         USED_RAM_RANGE[int(bar_mem_0.addr, 16)] = 0x100
         tmp_bar_dict[0] = bar_mem_0
         ram_range = get_ram_range()
         hv_start_offset2 = 0x100000000
         ret_start_addr2 = find_avl_memory(ram_range, str(int_size + 0x200000), hv_start_offset2)
         bar_mem_2 = Bar_Mem()
-        bar_mem_2.addr = hex(common.round_up(int(ret_start_addr2, 16), 0x200000) + 0xC)
-        USED_RAM_RANGE[common.round_up(int(ret_start_addr2, 16), 0x20000)] = int_size
+        bar_mem_2.addr = hex(acrn_config_utilities.round_up(int(ret_start_addr2, 16), 0x200000) + 0xC)
+        USED_RAM_RANGE[acrn_config_utilities.round_up(int(ret_start_addr2, 16), 0x20000)] = int_size
         tmp_bar_dict[2] = bar_mem_2
         PCI_DEV_BAR_DESC.shm_bar_dic[str(idx)+'_'+name] = tmp_bar_dict
         idx += 1
@@ -565,7 +565,7 @@ def is_rdt_supported():
     """
     Returns True if platform supports RDT else False
     """
-    (rdt_resources, rdt_res_clos_max, _) = clos_info_parser(common.BOARD_INFO_FILE)
+    (rdt_resources, rdt_res_clos_max, _) = clos_info_parser(acrn_config_utilities.BOARD_INFO_FILE)
     if len(rdt_resources) == 0 or len(rdt_res_clos_max) == 0:
         return False
     else:
@@ -576,7 +576,7 @@ def is_rdt_enabled():
     """
     Returns True if RDT enabled else False
     """
-    rdt_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "RDT_ENABLED")
+    rdt_enabled = acrn_config_utilities.get_hv_item_tag(acrn_config_utilities.SCENARIO_INFO_FILE, "FEATURES", "RDT", "RDT_ENABLED")
     if is_rdt_supported() and rdt_enabled == 'y':
         return True
     return False
@@ -587,7 +587,7 @@ def is_cdp_enabled():
     Returns True if platform supports RDT/CDP else False
     """
     rdt_enabled = is_rdt_enabled()
-    cdp_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CDP_ENABLED")
+    cdp_enabled = acrn_config_utilities.get_hv_item_tag(acrn_config_utilities.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CDP_ENABLED")
     if rdt_enabled and cdp_enabled == 'y':
         return True
 
@@ -605,7 +605,7 @@ def get_rdt_select_opt():
 def get_common_clos_max():
 
     common_clos_max = 0
-    (res_info, rdt_res_clos_max, clos_max_mask_list) = clos_info_parser(common.BOARD_INFO_FILE)
+    (res_info, rdt_res_clos_max, clos_max_mask_list) = clos_info_parser(acrn_config_utilities.BOARD_INFO_FILE)
     if is_rdt_enabled() and not is_cdp_enabled():
         common_clos_max = min(rdt_res_clos_max)
 
@@ -628,7 +628,7 @@ def get_sub_pci_name(i_cnt, bar_attr):
         tmp_sub_name = "_".join(bar_attr.name.split()).upper()
     else:
         if '-' in bar_attr.name:
-            tmp_sub_name = common.undline_name(bar_attr.name) + "_" + str(i_cnt)
+            tmp_sub_name = acrn_config_utilities.undline_name(bar_attr.name) + "_" + str(i_cnt)
         else:
             tmp_sub_name = "_".join(bar_attr.name.split()).upper() + "_" + str(i_cnt)
 
@@ -636,7 +636,7 @@ def get_sub_pci_name(i_cnt, bar_attr):
 
 def get_known_caps_pci_devs():
     known_caps_pci_devs = {}
-    vpid_lines = get_info(common.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
+    vpid_lines = get_info(acrn_config_utilities.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
     for dev,known_dev in KNOWN_CAPS_PCI_DEVS_DB.items():
         if dev not in known_caps_pci_devs:
             known_caps_pci_devs[dev] = []
@@ -653,8 +653,8 @@ def get_known_caps_pci_devs():
 def is_tpm_passthru():
 
     tpm_passthru = False
-    (_, board) = common.get_board_name()
-    tpm2_passthru_enabled = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "mmio_resources", "TPM2")
+    (_, board) = acrn_config_utilities.get_board_name()
+    tpm2_passthru_enabled = acrn_config_utilities.get_leaf_tag_map(acrn_config_utilities.SCENARIO_INFO_FILE, "mmio_resources", "TPM2")
     if board in TPM_PASSTHRU_BOARD and tpm2_passthru_enabled and 'y' in tpm2_passthru_enabled.values():
         tpm_passthru = True
 
@@ -692,7 +692,7 @@ def get_ram_range():
     ram_range = {}
 
     io_mem_lines = get_info(
-        common.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+        acrn_config_utilities.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
 
     for line in io_mem_lines:
         if 'System RAM' not in line:
@@ -732,7 +732,7 @@ def get_ram_range():
 def is_p2sb_passthru_possible():
 
     p2sb_passthru = False
-    (_, board) = common.get_board_name()
+    (_, board) = acrn_config_utilities.get_board_name()
     if board in P2SB_PASSTHRU_BOARD:
         p2sb_passthru = True
 
@@ -741,22 +741,22 @@ def is_p2sb_passthru_possible():
 
 def is_matched_board(boardlist):
 
-    (_, board) = common.get_board_name()
+    (_, board) = acrn_config_utilities.get_board_name()
 
     return board in boardlist
 
 
 def find_p2sb_bar_addr():
     if not is_matched_board(('ehl-crb-b')):
-        common.print_red('find_p2sb_bar_addr() can only be called for board ehl-crb-b', err=True)
+        acrn_config_utilities.print_red('find_p2sb_bar_addr() can only be called for board ehl-crb-b', err=True)
         sys.exit(1)
 
-    iomem_lines = get_info(common.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+    iomem_lines = get_info(acrn_config_utilities.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
 
     for line in iomem_lines:
         if 'INTC1020:' in line:
             start_addr = int(line.split('-')[0], 16) & 0xFF000000
             return start_addr
 
-    common.print_red('p2sb device is not found in board file %s!\n' % common.BOARD_INFO_FILE, err=True)
+    acrn_config_utilities.print_red('p2sb device is not found in board file %s!\n' % acrn_config_utilities.BOARD_INFO_FILE, err=True)
     sys.exit(1)

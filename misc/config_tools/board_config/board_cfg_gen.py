@@ -12,9 +12,9 @@ import board_c
 import board_info_h
 import pci_devices_h
 import acpi_platform_h
-import common
+import acrn_config_utilities
 
-ACRN_PATH = common.SOURCE_ROOT_DIR
+ACRN_PATH = acrn_config_utilities.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + "misc/config_tools/data/"
 
 ACRN_DEFAULT_ACPI = ACRN_PATH + "hypervisor/include/arch/x86/asm/default_acpi_info.h"
@@ -29,32 +29,32 @@ def main(args):
     """
     err_dic = {}
 
-    (err_dic, params) = common.get_param(args)
+    (err_dic, params) = acrn_config_utilities.get_param(args)
     if err_dic:
         return err_dic
 
     # check env
-    err_dic = common.prepare()
+    err_dic = acrn_config_utilities.prepare()
     if err_dic:
         return err_dic
 
-    common.BOARD_INFO_FILE = params['--board']
-    common.SCENARIO_INFO_FILE = params['--scenario']
-    common.get_vm_num(params['--scenario'])
-    common.get_load_order()
+    acrn_config_utilities.BOARD_INFO_FILE = params['--board']
+    acrn_config_utilities.SCENARIO_INFO_FILE = params['--scenario']
+    acrn_config_utilities.get_vm_num(params['--scenario'])
+    acrn_config_utilities.get_load_order()
 
-    if common.VM_COUNT > common.MAX_VM_NUM:
+    if acrn_config_utilities.VM_COUNT > acrn_config_utilities.MAX_VM_NUM:
         err_dic['vm count'] = "The number of VMs in the scenario XML file should be no greater than " \
-                              "hv.CAPACITIES.MAX_VM_NUM. Its current value is {}.".format(common.MAX_VM_NUM)
+                              "hv.CAPACITIES.MAX_VM_NUM. Its current value is {}.".format(acrn_config_utilities.MAX_VM_NUM)
         return err_dic
 
     # check if this is the scenario config which matched board info
     # get board name
-    (err_dic, board) = common.get_board_name()
+    (err_dic, board) = acrn_config_utilities.get_board_name()
     if err_dic:
         return err_dic
 
-    (err_dic, scenario) = common.get_scenario_name()
+    (err_dic, scenario) = acrn_config_utilities.get_scenario_name()
     if err_dic:
         return err_dic
     board_cfg_lib.BOARD_NAME = board
@@ -70,8 +70,8 @@ def main(args):
 
     board_fix_dir = os.path.join(output, "boards/")
     scen_board_dir = os.path.join(output, "scenarios/" + scenario + "/")
-    common.mkdir(board_fix_dir)
-    common.mkdir(scen_board_dir)
+    acrn_config_utilities.mkdir(board_fix_dir)
+    acrn_config_utilities.mkdir(scen_board_dir)
 
     config_pci = board_fix_dir + GEN_FILE[0]
     config_board = board_fix_dir + GEN_FILE[1]
@@ -110,7 +110,7 @@ def ui_entry_api(board_info, scenario_info, out=''):
 
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--out', out]
 
-    err_dic = common.prepare()
+    err_dic = acrn_config_utilities.prepare()
     if err_dic:
         return err_dic
 
@@ -125,5 +125,5 @@ if __name__ == '__main__':
     err_dic = main(ARGS)
     if err_dic:
         for err_k, err_v in err_dic.items():
-            common.print_red("{}: {}".format(err_k, err_v), err=True)
+            acrn_config_utilities.print_red("{}: {}".format(err_k, err_v), err=True)
     sys.exit(1 if err_dic else 0)

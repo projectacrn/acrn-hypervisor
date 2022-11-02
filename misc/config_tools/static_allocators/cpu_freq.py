@@ -5,7 +5,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import common, board_cfg_lib
+import acrn_config_utilities, board_cfg_lib
+from acrn_config_utilities import get_node
 
 # CPU frequency dependency
 # Some CPU cores may share the same clock domain/group with others, which makes them always run at
@@ -26,19 +27,19 @@ def get_dependency(board_etree):
     cpus = board_etree.xpath("//processors//thread")
     dep_ret = []
     for cpu in cpus:
-        cpu_id = common.get_node("./cpu_id/text()", cpu)
+        cpu_id = get_node("./cpu_id/text()", cpu)
         psd_cpus = [cpu_id]
-        psd_cpus_list = common.get_node("./freqdomain_cpus/text()", cpu)
+        psd_cpus_list = get_node("./freqdomain_cpus/text()", cpu)
         if psd_cpus_list != None:
             psd_cpus = psd_cpus_list.split(' ')
-        apic_id = int(common.get_node("./apic_id/text()", cpu)[2:], base=16)
+        apic_id = int(get_node("./apic_id/text()", cpu)[2:], base=16)
         is_hybrid = (len(board_etree.xpath("//processors//capability[@id='hybrid']")) != 0)
-        core_type = common.get_node("./core_type/text()", cpu)
+        core_type = get_node("./core_type/text()", cpu)
         for other_cpu in cpus:
-            other_cpu_id = common.get_node("./cpu_id/text()", other_cpu)
+            other_cpu_id = get_node("./cpu_id/text()", other_cpu)
             if cpu_id != other_cpu_id:
-                other_apic_id = int(common.get_node("./apic_id/text()", other_cpu)[2:], base=16)
-                other_core_type = common.get_node("./core_type/text()", other_cpu)
+                other_apic_id = int(get_node("./apic_id/text()", other_cpu)[2:], base=16)
+                other_core_type = get_node("./core_type/text()", other_cpu)
                 # threads at same core
                 if (apic_id & ~1) == (other_apic_id & ~1):
                     psd_cpus.append(other_cpu_id)
@@ -92,11 +93,11 @@ def alloc_limits(board_etree, scenario_etree, allocation_etree):
     cpus = board_etree.xpath("//processors//thread")
 
     for cpu in cpus:
-        cpu_id = common.get_node("./cpu_id/text()", cpu)
+        cpu_id = get_node("./cpu_id/text()", cpu)
         if cpu_has_hwp:
-            guaranteed_performance_lvl = common.get_node("./guaranteed_performance_lvl/text()", cpu)
-            highest_performance_lvl = common.get_node("./highest_performance_lvl/text()", cpu)
-            lowest_performance_lvl = common.get_node("./lowest_performance_lvl/text()", cpu)
+            guaranteed_performance_lvl = get_node("./guaranteed_performance_lvl/text()", cpu)
+            highest_performance_lvl = get_node("./highest_performance_lvl/text()", cpu)
+            lowest_performance_lvl = get_node("./lowest_performance_lvl/text()", cpu)
             if cpu_id in rtvm_cpus:
                 # for CPUs in RTVM, fix to base performance
                 limit_lowest_lvl = guaranteed_performance_lvl
@@ -115,11 +116,11 @@ def alloc_limits(board_etree, scenario_etree, allocation_etree):
                 limit_highest_lvl = 0xff
                 limit_guaranteed_lvl = 0xff
 
-        cpu_node = common.append_node(f"//hv/cpufreq/CPU", None, allocation_etree, id = cpu_id)
-        limit_node = common.append_node("./limits", None, cpu_node)
-        common.append_node("./limit_guaranteed_lvl", limit_guaranteed_lvl, limit_node)
-        common.append_node("./limit_highest_lvl", limit_highest_lvl, limit_node)
-        common.append_node("./limit_lowest_lvl", limit_lowest_lvl, limit_node)
+        cpu_node = acrn_config_utilities.append_node(f"//hv/cpufreq/CPU", None, allocation_etree, id = cpu_id)
+        limit_node = acrn_config_utilities.append_node("./limits", None, cpu_node)
+        acrn_config_utilities.append_node("./limit_guaranteed_lvl", limit_guaranteed_lvl, limit_node)
+        acrn_config_utilities.append_node("./limit_highest_lvl", limit_highest_lvl, limit_node)
+        acrn_config_utilities.append_node("./limit_lowest_lvl", limit_lowest_lvl, limit_node)
 
         limit_highest_pstate = 0
         limit_nominal_pstate = 0
@@ -152,39 +153,39 @@ def alloc_limits(board_etree, scenario_etree, allocation_etree):
                         limit_nominal_pstate = 0
                         limit_lowest_pstate = p_count -1
 
-        common.append_node("./limit_nominal_pstate", str(limit_nominal_pstate), limit_node)
-        common.append_node("./limit_highest_pstate", str(limit_highest_pstate), limit_node)
-        common.append_node("./limit_lowest_pstate", str(limit_lowest_pstate), limit_node)
+        acrn_config_utilities.append_node("./limit_nominal_pstate", str(limit_nominal_pstate), limit_node)
+        acrn_config_utilities.append_node("./limit_highest_pstate", str(limit_highest_pstate), limit_node)
+        acrn_config_utilities.append_node("./limit_lowest_pstate", str(limit_lowest_pstate), limit_node)
 
     # Let CPUs in the same frequency dependency group have the same limits. So that RTVM's frequency can be fixed
     dep_info = get_dependency(board_etree)
     for alloc_cpu in allocation_etree.xpath("//cpufreq/CPU"):
         dependency_cpus = dep_info[int(alloc_cpu.attrib['id'])]
-        if common.get_node("./limits", alloc_cpu) != None:
-            highest_lvl = int(common.get_node(".//limit_highest_lvl/text()", alloc_cpu))
-            lowest_lvl = int(common.get_node(".//limit_lowest_lvl/text()", alloc_cpu))
-            highest_pstate = int(common.get_node(".//limit_highest_pstate/text()", alloc_cpu))
-            lowest_pstate = int(common.get_node(".//limit_lowest_pstate/text()", alloc_cpu))
+        if get_node("./limits", alloc_cpu) != None:
+            highest_lvl = int(get_node(".//limit_highest_lvl/text()", alloc_cpu))
+            lowest_lvl = int(get_node(".//limit_lowest_lvl/text()", alloc_cpu))
+            highest_pstate = int(get_node(".//limit_highest_pstate/text()", alloc_cpu))
+            lowest_pstate = int(get_node(".//limit_lowest_pstate/text()", alloc_cpu))
 
             for dep_cpu_id in dependency_cpus:
-                dep_highest_lvl = int(common.get_node(f"//cpufreq/CPU[@id={dep_cpu_id}]//limit_highest_lvl/text()", allocation_etree))
-                dep_lowest_lvl = int(common.get_node(f"//cpufreq/CPU[@id={dep_cpu_id}]//limit_lowest_lvl/text()", allocation_etree))
+                dep_highest_lvl = int(get_node(f"//cpufreq/CPU[@id={dep_cpu_id}]//limit_highest_lvl/text()", allocation_etree))
+                dep_lowest_lvl = int(get_node(f"//cpufreq/CPU[@id={dep_cpu_id}]//limit_lowest_lvl/text()", allocation_etree))
                 if highest_lvl > dep_highest_lvl:
                     highest_lvl = dep_highest_lvl
                 if lowest_lvl < dep_lowest_lvl:
                     lowest_lvl = dep_lowest_lvl
-                dep_highest_pstate = int(common.get_node(f"//cpufreq/CPU[@id={dep_cpu_id}]//limit_highest_pstate/text()", allocation_etree))
-                dep_lowest_pstate = int(common.get_node(f"//cpufreq/CPU[@id={dep_cpu_id}]//limit_lowest_pstate/text()", allocation_etree))
+                dep_highest_pstate = int(get_node(f"//cpufreq/CPU[@id={dep_cpu_id}]//limit_highest_pstate/text()", allocation_etree))
+                dep_lowest_pstate = int(get_node(f"//cpufreq/CPU[@id={dep_cpu_id}]//limit_lowest_pstate/text()", allocation_etree))
                 if highest_pstate < dep_highest_pstate:
                     highest_pstate = dep_highest_pstate
                 if lowest_pstate > dep_lowest_pstate:
                     lowest_pstate = dep_lowest_pstate
 
-            common.update_text("./limits/limit_highest_lvl", str(highest_lvl), alloc_cpu, True)
-            common.update_text("./limits/limit_lowest_lvl", str(lowest_lvl), alloc_cpu, True)
-            common.update_text("./limits/limit_highest_pstate", str(highest_pstate), alloc_cpu, True)
-            common.update_text("./limits/limit_lowest_pstate", str(lowest_pstate), alloc_cpu, True)
+            acrn_config_utilities.update_text("./limits/limit_highest_lvl", str(highest_lvl), alloc_cpu, True)
+            acrn_config_utilities.update_text("./limits/limit_lowest_lvl", str(lowest_lvl), alloc_cpu, True)
+            acrn_config_utilities.update_text("./limits/limit_highest_pstate", str(highest_pstate), alloc_cpu, True)
+            acrn_config_utilities.update_text("./limits/limit_lowest_pstate", str(lowest_pstate), alloc_cpu, True)
 
 def fn(board_etree, scenario_etree, allocation_etree):
-    common.append_node("/acrn-config/hv/cpufreq", None, allocation_etree)
+    acrn_config_utilities.append_node("/acrn-config/hv/cpufreq", None, allocation_etree)
     alloc_limits(board_etree, scenario_etree, allocation_etree)
