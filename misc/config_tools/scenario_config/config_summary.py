@@ -5,7 +5,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import sys
 import argparse
+import logging
+
 from rstcloth import RstCloth
 from lxml import etree
 
@@ -20,7 +23,6 @@ class GenerateRst:
     # Class initialization
     def __init__(self, board_file_name, scenario_file_name, rst_file_name) -> None:
         self.board_etree = etree.parse(board_file_name)
-        self.scenario_file_name = scenario_file_name
         self.scenario_etree = etree.parse(scenario_file_name)
         self.file = open(rst_file_name, 'w')
         self.doc = RstCloth(self.file)
@@ -28,7 +30,7 @@ class GenerateRst:
     # The rst content is written in three parts according to the first level title
     # 1. Hardware Resource Allocation 2. Inter-VM Connections 3. VM info
     def write_configuration_rst(self):
-        self.doc.title(f"ACRN Scenario <{self.scenario_file_name}> - Datasheet")
+        self.doc.title(f"ACRN Scenario Datasheet")
         self.doc.newline()
         self.write_hardware_resource_allocation()
         self.write_inter_vm_connections()
@@ -374,9 +376,9 @@ class GenerateRst:
         self.file.close()
 
 
-def main(args):
-    GenerateRst(board_file_name=args.board_file_name, scenario_file_name=args.scenario_file_name,
-                rst_file_name=args.rst_file_name).write_configuration_rst()
+def main(board_xml, scenario_xml, config_summary):
+    GenerateRst(board_file_name=board_xml, scenario_file_name=scenario_xml,
+                rst_file_name=config_summary).write_configuration_rst()
 
 
 if __name__ == "__main__":
@@ -388,6 +390,8 @@ if __name__ == "__main__":
     parser.add_argument("rst_file_name", default="config_summary.rst",
                         help="the path and name of the output rst file that "
                              "summaries the config from scenario.xml and board.xml")
-
     args = parser.parse_args()
-    main(args)
+
+    logging.basicConfig(level="INFO")
+
+    sys.exit(main(args.board_file_name, args.scenario_file_name, args.rst_file_name))

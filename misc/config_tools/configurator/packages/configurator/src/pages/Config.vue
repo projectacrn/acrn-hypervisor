@@ -452,12 +452,14 @@ export default {
       let msg = [
         "Scenario xml saved\n",
         "Settings validated\n",
+        "Document config_summary.rst generated\n",
         "Launch scripts generated\n"
       ];
       let errmsg = [
         "Scenario xml save failed\n",
         "Settings validate failed\n",
-        "Launch scripts generate failed\n"
+        "Document config_summary.rst generation failed\n",
+        "Launch scripts generation failed\n"
       ];
       let stepDone = 0
       let totalMsgLength = msg.length // msg and errMsg must be same length.
@@ -475,7 +477,7 @@ export default {
         }
       })
       if (!needSaveLaunchScript) {
-        totalMsgLength = totalMsgLength - 1 // remove the 'launch script' related mssage.
+        totalMsgLength = totalMsgLength - 1 // remove the 'launch script' related message.
       }
       // begin write down and verify
 
@@ -499,6 +501,11 @@ export default {
             return this.cleanLaunchScript()
           })
           .then(() => {
+            // generate config_summary
+            let configSummary = configurator.pythonObject.generateConfigSummary(this.board.content, scenarioXMLData)
+            return configurator.writeFile(this.WorkingFolder + 'config_summary.rst', configSummary)
+          })
+          .then(() => {
             // generate launch script
             if (needSaveLaunchScript) {
               let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
@@ -512,7 +519,7 @@ export default {
           .then((result) => {
             // show success message
             if (!_.isEmpty(result)) {
-              stepDone = 3
+              stepDone = 4
             }
             this.totalMsg = `${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`
           })
