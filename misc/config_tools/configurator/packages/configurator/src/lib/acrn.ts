@@ -647,6 +647,10 @@ class PythonObject {
     populateDefaultValues(scenarioXMLText) {
         return this.api('populateDefaultValues', 'json', scenarioXMLText)
     }
+
+    generateConfigSummary(boardXMLText, scenarioXMLText) {
+        return this.api('generateConfigSummary', 'plaintext', boardXMLText, scenarioXMLText)
+    }
 }
 
 class Configurator {
