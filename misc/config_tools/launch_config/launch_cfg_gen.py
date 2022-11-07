@@ -317,10 +317,13 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
             slot = get_slot_by_vbdf(vbdf)
             script.add_virtual_device("uart", slot, options=f"vuart_idx:{idx}")
 
+    xhci_params = []
     # Mediated PCI devices, including virtio
     for usb_xhci in eval_xpath_all(vm_scenario_etree, ".//usb_xhci/usb_dev[text() != '']/text()"):
         bus_port = usb_xhci.split(' ')[0]
-        script.add_virtual_device("xhci", options=bus_port)
+        xhci_params.append(bus_port)
+    if xhci_params: 
+        script.add_virtual_device("xhci", options=",".join(xhci_params))
 
     for virtio_input_etree in eval_xpath_all(vm_scenario_etree, ".//virtio_devices/input"):
         backend_device_file = eval_xpath(virtio_input_etree, "./backend_device_file[text() != '']/text()")
