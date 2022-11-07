@@ -64,7 +64,9 @@ $(eval $(if $(board),                                                           
     $(eval boardlist := $(sort $(boardlist) $(board)))                                    \
     $(foreach f,$(wildcard $(addprefix $(dir $1),*)),                                     \
         $(if $(strip $(shell xmllint --xpath '/acrn-config/@board' $f 2>/dev/null)),,     \
-            $(eval scenario = $(basename $(notdir $f)))                                   \
+            $(if $(subst scenario.xml,,$(notdir $f)),                                     \
+                $(eval scenario = $(basename $(notdir $f))),                              \
+                $(eval scenario = $(notdir $(abspath $(dir $f)))))                        \
             $(eval config_$(board)_$(scenario) := $f)                                     \
             $(eval scenariolist_$(board) := $(sort $(scenariolist_$(board)) $(scenario))) \
         )                                                                                 \
