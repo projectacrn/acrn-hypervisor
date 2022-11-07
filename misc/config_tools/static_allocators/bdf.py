@@ -81,7 +81,15 @@ def get_devs_bdf_native(board_etree):
         bus = int(common.get_node("../@address", node), 16)
         dev = int(address, 16) >> 16
         func = int(address, 16) & 0xffff
-        dev_list.append(lib.lib.BusDevFunc(bus = bus, dev = dev, func = func))
+
+        # According to section 6.1.1, ACPI Spec 6.4, _ADR of a device object under PCI/PCIe bus can use a special
+        # function number 0xFFFF to refer to all functions of a certain device. Such objects will have their own nodes
+        # in the board XML, but are out of the scope here as we are only interested in concrete BDFs that are already
+        # occupied.
+        #
+        # Thus, if the function number is 0xffff, we simply skip it.
+        if func != 0xffff:
+            dev_list.append(lib.lib.BusDevFunc(bus = bus, dev = dev, func = func))
     return dev_list
 
 def get_devs_bdf_passthrough(scenario_etree):
