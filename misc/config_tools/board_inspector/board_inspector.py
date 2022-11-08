@@ -75,10 +75,12 @@ def native_check():
         "Only KVM or QEMU is supported. Unexpected results may occur.")
 
 def check_pci_domains():
-    root_buses = filter(lambda x: x.startswith("pci"), os.listdir("/sys/devices"))
-    domain_ids = set(map(lambda x: x.split(":")[0].replace("pci", ""), root_buses))
+    root_buses = os.listdir("/sys/bus/pci/devices/")
+    domain_ids = set(map(lambda x: x.split(":")[0], root_buses))
     if len(domain_ids) > 1:
-        logger.fatal(f"ACRN does not support platforms with multiple PCI domains {domain_ids}. Check if the BIOS has any configuration that consolidates those domains into one.")
+        logger.fatal(f"ACRN does not support platforms with multiple PCI domains {domain_ids}. " \
+        "Check if the BIOS has any configuration that consolidates those domains into one. " \
+        "Known causes of multiple PCI domains include: VMD (Volume Management Device) being enabled.")
         sys.exit(1)
 
 def bring_up_cores():
