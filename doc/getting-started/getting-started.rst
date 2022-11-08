@@ -122,7 +122,10 @@ To set up the ACRN build environment on the development computer:
            python3 python3-pip libblkid-dev e2fslibs-dev \
            pkg-config libnuma-dev libcjson-dev liblz4-tool flex bison \
            xsltproc clang-format bc libpixman-1-dev libsdl2-dev libegl-dev \
-           libgles-dev libdrm-dev gnu-efi libelf-dev
+           libgles-dev libdrm-dev gnu-efi libelf-dev \
+           build-essential git-buildpackage devscripts dpkg-dev equivs lintian \
+           apt-utils pristine-tar dh-python python3-lxml python3-defusedxml \
+           python3-tqdm python3-xmlschema python3-elementpath acpica-tools
 
 #. Get the ACRN hypervisor and ACRN kernel source code, and check out the
    current release branch.
@@ -132,31 +135,20 @@ To set up the ACRN build environment on the development computer:
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout v3.1
+      git checkout master
 
       cd ..
       git clone https://github.com/projectacrn/acrn-kernel.git
       cd acrn-kernel
-      git checkout acrn-v3.1
+      git checkout master
 
-#. Install Python package dependencies:
 
-   .. code-block:: bash
+#. Configure git with your name and email address:
 
-      cd ~/acrn-work/acrn-hypervisor
-      sudo python3 -m pip install -r misc/config_tools/requirements.txt
+   .. code-block:: none
 
-#. Build and install the iASL compiler/disassembler used for advanced power management,
-   device discovery, and configuration (ACPI) within the host OS:
-
-   .. code-block:: bash
-
-      cd ~/acrn-work
-      wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
-      tar zxvf acpica-unix-20210105.tar.gz
-      cd acpica-unix-20210105
-      make clean && make iasl
-      sudo cp ./generate/unix/bin/iasl /usr/sbin
+      git config --global user.name "David Developer"
+      git config --global user.email "david.developer@company.com"
 
 .. _gsg-board-setup:
 
@@ -300,10 +292,10 @@ Generate a Board Configuration File
 
       .. code-block:: bash
 
-         make clean && make board_inspector
+         debian/debian_build.sh clean && debian/debian_build.sh board_inspector
 
-      In a few seconds, the build generates a board_inspector Debian package in the ``./build``
-      directory.
+      In a few seconds, the build generates a board_inspector Debian package in the
+      parent (``~/acrn-work``) directory.
 
 #. Copy the Board Inspector Debian package from the development computer to the
    target system.
@@ -313,7 +305,7 @@ Generate a Board Configuration File
       computer to the ``~/acrn-work`` working directory we created on the target
       system.  Replace ``10.0.0.200`` with the target system's IP address you found earlier::
 
-         scp ~/acrn-work/acrn-hypervisor/build/acrn-board-inspector*.deb acrn@10.0.0.200:~/acrn-work
+         scp ~/acrn-work/python3-acrn-board-inspector*.deb acrn@10.0.0.200:~/acrn-work
 
    Option 2: Use a USB disk
        a. On the development computer, insert the USB disk that you intend to use to
@@ -334,7 +326,7 @@ Generate a Board Configuration File
 
              cd ~/acrn-work/
              disk="/media/$USER/"$(ls /media/$USER)
-             cp -r acrn-hypervisor/build/acrn-board-inspector*.deb "$disk"/
+             cp -r python3-acrn-board-inspector*.deb "$disk"/
              sync && sudo umount "$disk"
 
        #. Remove the USB disk from the development computer and insert it into the target system.
@@ -345,14 +337,14 @@ Generate a Board Configuration File
 
              mkdir -p ~/acrn-work
              disk="/media/$USER/"$(ls /media/$USER)
-             cp -r "$disk"/acrn-board-inspector*.deb  ~/acrn-work
+             cp -r "$disk"/python3-acrn-board-inspector*.deb  ~/acrn-work
 
 #. Now that we've got the Board Inspector Debian package on the target system, install it there:
 
    .. code-block:: bash
 
       cd  ~/acrn-work
-      sudo apt install -y ./acrn-board-inspector*.deb
+      sudo apt install -y ./python3-acrn-board-inspector*.deb
 
 #. Reboot the target system:
 
@@ -368,7 +360,7 @@ Generate a Board Configuration File
    .. code-block:: bash
 
       cd ~/acrn-work
-      sudo board_inspector.py my_board
+      sudo board_inspector my_board
 
    .. note::
 
@@ -600,20 +592,27 @@ Build ACRN
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-hypervisor
-      make clean && make BOARD=~/acrn-work/MyConfiguration/my_board.board.xml SCENARIO=~/acrn-work/MyConfiguration/scenario.xml
+      debian/debian_build.sh clean && debian/debian_build.sh -c ~/acrn-work/MyConfiguration -b my_board.board -s scenario
 
-   The build typically takes a few minutes. When done, the build generates a
-   Debian package in the ``./build`` directory:
+   The build typically takes a few minutes. When done, the build generates several
+   Debian packages in the parent (``~/acrn-work``) directory:
 
    .. code-block:: bash
 
-      cd ./build
+      cd ../
       ls *.deb
-         acrn-my_board-MyConfiguration-3.1.deb
+         acrnd_*.deb
+         acrn-dev_*.deb
+         acrn-devicemodel_*.deb
+         acrn-doc_*.deb
+         acrn-hypervisor_*.deb
+         acrn-lifemngr_*.deb
+         acrn-system_*.deb
+         acrn-tools_*.deb
+         grub-acrn_*.deb
 
-   The Debian package contains the ACRN hypervisor and tools to ease installing
-   ACRN on the target. The Debian file name contains the board name (``my_board``)
-   and the working folder name (``MyConfiguration``).
+   The Debian packages contain the ACRN hypervisor and tools to ease installing
+   ACRN on the target.
 
 #. Build the ACRN kernel for the Service VM:
 
@@ -657,10 +656,11 @@ Build ACRN
       the target system.
       Replace ``10.0.0.200`` with the target system's IP address you found earlier::
 
-         scp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
+         sudo scp ~/acrn-work/acrn*.deb \
+             ~/acrn-work/grub*.deb \
              ~/acrn-work/*acrn-service-vm*.deb \
              ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh \
-             ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl \
+             /usr/bin/iasl \
              acrn@10.0.0.200:~/acrn-work
 
       Then, go to the target system and put the ``iasl`` tool in its proper
@@ -677,10 +677,11 @@ Build ACRN
           .. code-block:: bash
 
              disk="/media/$USER/"$(ls /media/$USER)
-             cp ~/acrn-work/acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb "$disk"/
+             cp ~/acrn-work/acrn*.deb "$disk"/
+             cp ~/acrn-work/grub*.deb "$disk"/
              cp ~/acrn-work/*acrn-service-vm*.deb "$disk"/
              cp ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh "$disk"/
-             cp ~/acrn-work/acpica-unix-20210105/generate/unix/bin/iasl "$disk"/
+             sudo cp /usr/bin/iasl "$disk"/
              sync && sudo umount "$disk"
 
        #. Insert the USB disk you just used into the target system and run these
@@ -689,7 +690,8 @@ Build ACRN
           .. code-block:: bash
 
              disk="/media/$USER/"$(ls /media/$USER)
-             cp "$disk"/acrn-my_board-MyConfiguration*.deb ~/acrn-work
+             cp "$disk"/acrn*.deb ~/acrn-work
+             cp "$disk"/grub*.deb ~/acrn-work
              cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
              cp "$disk"/launch_user_vm_id1.sh ~/acrn-work
              sudo cp "$disk"/iasl /usr/sbin/
@@ -709,7 +711,7 @@ Install ACRN
    .. code-block:: bash
 
       cd ~/acrn-work
-      sudo apt install ./acrn-my_board-MyConfiguration*.deb
+      sudo apt install ./acrn*.deb ./grub*.deb
       sudo apt install ./*acrn-service-vm*.deb
 
 #. Reboot the system:
@@ -723,14 +725,15 @@ Install ACRN
    will boot with this option automatically in 5 seconds.)
 
    .. code-block:: console
-      :emphasize-lines: 6
+      :emphasize-lines: 5
 
                               GNU GRUB version 2.04
       ────────────────────────────────────────────────────────────────────────────────
       Ubuntu
       Advanced options for Ubuntu
+      *Ubuntu GNU/Linux, with ACRN hypervisor
+      Advanced options for Ubuntu GNU/Linux (with ACRN hypervisor)
       UEFI Firmware Settings
-      *ACRN multiboot2
 
 .. _gsg-run-acrn:
 
