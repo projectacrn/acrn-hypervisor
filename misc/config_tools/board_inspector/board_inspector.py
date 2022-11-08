@@ -134,14 +134,11 @@ def summary_loginfo(board_xml):
             print("\033[1;31m{0}\033[0m".format(critical.strip('\n')))
 
     print("="*length)
-    if len(error_list) != 0 and len(critical_list) == 0:
+    if len(critical_list) == 0:
         print(
             f"\033[1;32mSUCCESS: Board configuration file {board_xml} generated successfully and saved to {os.path.dirname(os.path.abspath(board_xml))}\033[0m\n")
+    if len(error_list) != 0:
         print("\033[1;36mNOTE: Board configuration file lacks important features, which will cause ACRN to fail build or boot. Resolve ERROR messages then run the tool again.\033[0m")
-
-    elif len(warning_list) != 0 and len(error_list) == 0 and len(critical_list) == 0:
-        print(
-            f"\033[1;32mSUCCESS: Board configuration file {board_xml} generated successfully and saved to {os.path.dirname(os.path.abspath(board_xml))}\033[0m\n")
     tmpfile.close()
 
 def main(board_name, board_xml, args):
