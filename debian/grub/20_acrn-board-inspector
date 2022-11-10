@@ -1,0 +1,269 @@
+#! /bin/sh
+set -e
+
+# grub-mkconfig helper script.
+# Copyright (C) 2022 TTTech Industrial Automation AG
+#
+# Create boot menu entry to boot default entry with kernel parameters
+# add required by acrn-board-inspector
+#
+# GRUB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GRUB is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
+
+. "$pkgdatadir/grub-mkconfig_lib"
+
+CLASS="--class gnu-linux --class gnu --class os"
+
+# to be appended for acrn-board-inspector
+GRUB_CMDLINE_ACRN_BOARD_INSPECTOR="iomem=relaxed intel_idle.max_cstate=0 intel_pstate=disable"
+
+if [ "x${GRUB_DISTRIBUTOR}" = "x" ] ; then
+  OS=GNU/Linux
+else
+  case ${GRUB_DISTRIBUTOR} in
+    Ubuntu|Kubuntu)
+      OS="${GRUB_DISTRIBUTOR}"
+      ;;
+    *)
+      OS="${GRUB_DISTRIBUTOR} GNU/Linux"
+      ;;
+  esac
+  CLASS="--class $(echo ${GRUB_DISTRIBUTOR} | tr 'A-Z' 'a-z' | cut -d' ' -f1|LC_ALL=C sed 's,[^[:alnum:]_],_,g') ${CLASS}"
+fi
+
+# loop-AES arranges things so that /dev/loop/X can be our root device, but
+# the initrds that Linux uses don't like that.
+case ${GRUB_DEVICE} in
+  /dev/loop/*|/dev/loop[0-9])
+    GRUB_DEVICE=`losetup ${GRUB_DEVICE} | sed -e "s/^[^(]*(\([^)]\+\)).*/\1/"`
+    # We can't cope with devices loop-mounted from files here.
+    case ${GRUB_DEVICE} in
+      /dev/*) ;;
+      *) exit 0 ;;
+    esac
+  ;;
+esac
+
+# Default to disabling partition uuid support to maintian compatibility with
+# older kernels.
+GRUB_DISABLE_LINUX_PARTUUID=${GRUB_DISABLE_LINUX_PARTUUID-true}
+
+# btrfs may reside on multiple devices. We cannot pass them as value of root= parameter
+# and mounting btrfs requires user space scanning, so force UUID in this case.
+if ( [ "x${GRUB_DEVICE_UUID}" = "x" ] && [ "x${GRUB_DEVICE_PARTUUID}" = "x" ] ) \
+    || ( [ "x${GRUB_DISABLE_LINUX_UUID}" = "xtrue" ] \
+	&& [ "x${GRUB_DISABLE_LINUX_PARTUUID}" = "xtrue" ] ) \
+    || ( ! test -e "/dev/disk/by-uuid/${GRUB_DEVICE_UUID}" \
+	&& ! test -e "/dev/disk/by-partuuid/${GRUB_DEVICE_PARTUUID}" ) \
+    || ( test -e "${GRUB_DEVICE}" && uses_abstraction "${GRUB_DEVICE}" lvm ); then
+  LINUX_ROOT_DEVICE=${GRUB_DEVICE}
+elif [ "x${GRUB_DEVICE_UUID}" = "x" ] \
+    || [ "x${GRUB_DISABLE_LINUX_UUID}" = "xtrue" ]; then
+  LINUX_ROOT_DEVICE=PARTUUID=${GRUB_DEVICE_PARTUUID}
+else
+  LINUX_ROOT_DEVICE=UUID=${GRUB_DEVICE_UUID}
+fi
+
+case x"$GRUB_FS" in
+    xbtrfs)
+	rootsubvol="`make_system_path_relative_to_its_root /`"
+	rootsubvol="${rootsubvol#/}"
+	if [ "x${rootsubvol}" != x ]; then
+	    GRUB_CMDLINE_LINUX="rootflags=subvol=${rootsubvol} ${GRUB_CMDLINE_LINUX}"
+	fi;;
+    xzfs)
+	rpool=`${grub_probe} --device ${GRUB_DEVICE} --target=fs_label 2>/dev/null || true`
+	bootfs="`make_system_path_relative_to_its_root / | sed -e "s,@$,,"`"
+	LINUX_ROOT_DEVICE="ZFS=${rpool}${bootfs%/}"
+	;;
+esac
+
+if [ -x /lib/recovery-mode/recovery-menu ]; then
+    GRUB_CMDLINE_LINUX_RECOVERY=recovery
+else
+    GRUB_CMDLINE_LINUX_RECOVERY=single
+fi
+
+linux_entry ()
+{
+  os="$1"
+  version="$2"
+  args="$3"
+
+  if [ -z "$boot_device_id" ]; then
+      boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
+  fi
+  echo "menuentry '$(echo "$os" | grub_quote)' ${CLASS} \$menuentry_id_option 'gnulinux-acrn-board-inspector-$boot_device_id' {"
+
+  # Use ELILO's generic "efifb" when it's known to be available.
+  # FIXME: We need an interface to select vesafb in case efifb can't be used.
+  if [ "x$GRUB_GFXPAYLOAD_LINUX" = x ]; then
+      echo "	load_video"
+  else
+      if [ "x$GRUB_GFXPAYLOAD_LINUX" != xtext ]; then
+	  echo "	load_video"
+      fi
+  fi
+  if [ "x$GRUB_GFXPAYLOAD_LINUX" != x ]; then
+      echo "	gfxmode \$linux_gfx_mode"
+  fi
+
+  echo "	insmod gzio"
+
+  if [ x$dirname = x/ ]; then
+    if [ -z "${prepare_root_cache}" ]; then
+      prepare_root_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE} | grub_add_tab)"
+    fi
+    printf '%s\n' "${prepare_root_cache}"
+  else
+    if [ -z "${prepare_boot_cache}" ]; then
+      prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | grub_add_tab)"
+    fi
+    printf '%s\n' "${prepare_boot_cache}"
+  fi
+  message="$(gettext_printf "Loading Linux %s ..." ${version})"
+  cat << EOF
+	echo	'$(echo "$message" | grub_quote)'
+EOF
+  if test -d /sys/firmware/efi && test -e "${linux}.efi.signed"; then
+    cat << EOF
+	linux	${rel_dirname}/${basename}.efi.signed root=${linux_root_device_thisversion} ro ${args}
+EOF
+  else
+    cat << EOF
+	linux	${rel_dirname}/${basename} root=${linux_root_device_thisversion} ro ${args}
+EOF
+  fi
+  if test -n "${initrd}" ; then
+    # TRANSLATORS: ramdisk isn't identifier. Should be translated.
+    message="$(gettext_printf "Loading initial ramdisk ...")"
+    cat << EOF
+	echo	'$(echo "$message" | grub_quote)'
+EOF
+    initrd_path=
+    for i in ${initrd}; do
+      initrd_path="${initrd_path} ${rel_dirname}/${i}"
+    done
+    cat << EOF
+	initrd	$(echo $initrd_path)
+EOF
+  fi
+  cat << EOF
+}
+EOF
+}
+
+machine=`uname -m`
+case "x$machine" in
+    xx86_64)
+	GENKERNEL_ARCH="x86"
+	list=
+	for i in /boot/vmlinuz-* /vmlinuz-* /boot/kernel-* ; do
+	    if grub_file_is_not_garbage "$i" ; then list="$list $i" ; fi
+	done ;;
+    *)
+	list=
+	;;
+esac
+
+prepare_boot_cache=
+prepare_root_cache=
+boot_device_id=
+
+while [ "x$list" != "x" ] ; do
+  linux=`version_find_latest $list`
+  case $linux in
+    *.efi.signed)
+      # We handle these in linux_entry.
+      list=`echo $list | tr ' ' '\n' | grep -vx $linux | tr '\n' ' '`
+      continue
+      ;;
+  esac
+  gettext_printf "Found linux image: %s\n" "$linux" >&2
+  basename=`basename $linux`
+  dirname=`dirname $linux`
+  rel_dirname=`make_system_path_relative_to_its_root $dirname`
+  version=`echo $basename | sed -e "s,^[^0-9]*-,,g"`
+  alt_version=`echo $version | sed -e "s,\.old$,,g"`
+  linux_root_device_thisversion="${LINUX_ROOT_DEVICE}"
+
+  initrd_early=
+  for i in ${GRUB_EARLY_INITRD_LINUX_STOCK} \
+	   ${GRUB_EARLY_INITRD_LINUX_CUSTOM}; do
+    if test -e "${dirname}/${i}" ; then
+      initrd_early="${initrd_early} ${i}"
+    fi
+  done
+
+  initrd_real=
+  for i in "initrd.img-${version}" "initrd-${version}.img" "initrd-${version}.gz" \
+	   "initrd-${version}" "initramfs-${version}.img" \
+	   "initrd.img-${alt_version}" "initrd-${alt_version}.img" \
+	   "initrd-${alt_version}" "initramfs-${alt_version}.img" \
+	   "initramfs-genkernel-${version}" \
+	   "initramfs-genkernel-${alt_version}" \
+	   "initramfs-genkernel-${GENKERNEL_ARCH}-${version}" \
+	   "initramfs-genkernel-${GENKERNEL_ARCH}-${alt_version}"; do
+    if test -e "${dirname}/${i}" ; then
+      initrd_real="${i}"
+      break
+    fi
+  done
+
+  initrd=
+  if test -n "${initrd_early}" || test -n "${initrd_real}"; then
+    initrd="${initrd_early} ${initrd_real}"
+
+    initrd_display=
+    for i in ${initrd}; do
+      initrd_display="${initrd_display} ${dirname}/${i}"
+    done
+    gettext_printf "Found initrd image: %s\n" "$(echo $initrd_display)" >&2
+  fi
+
+  config=
+  for i in "${dirname}/config-${version}" "${dirname}/config-${alt_version}" "/etc/kernels/kernel-config-${version}" ; do
+    if test -e "${i}" ; then
+      config="${i}"
+      break
+    fi
+  done
+
+  initramfs=
+  if test -n "${config}" ; then
+      initramfs=`grep CONFIG_INITRAMFS_SOURCE= "${config}" | cut -f2 -d= | tr -d \"`
+  fi
+
+  if test -z "${initramfs}" && test -z "${initrd_real}" ; then
+    # "UUID=" and "ZFS=" magic is parsed by initrd or initramfs.  Since there's
+    # no initrd or builtin initramfs, it can't work here.
+    if [ "x${GRUB_DEVICE_PARTUUID}" = "x" ] \
+	|| [ "x${GRUB_DISABLE_LINUX_PARTUUID}" = "xtrue" ]; then
+
+	linux_root_device_thisversion=${GRUB_DEVICE}
+    else
+	linux_root_device_thisversion=PARTUUID=${GRUB_DEVICE_PARTUUID}
+    fi
+  fi
+
+  linux_entry "${OS} - ACRN Board Inspector" "${version}" \
+    "${GRUB_CMDLINE_LINUX} ${GRUB_CMDLINE_LINUX_DEFAULT} ${GRUB_CMDLINE_ACRN_BOARD_INSPECTOR}"
+
+  if [ -z "$boot_device_id" ]; then
+    boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
+  fi
+
+  list=`echo $list | tr ' ' '\n' | fgrep -vx "$linux" | tr '\n' ' '`
+done
+
+echo ""

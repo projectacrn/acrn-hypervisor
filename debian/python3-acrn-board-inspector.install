@@ -1,0 +1,6 @@
+# keep these files from being treated as standard conffiles
+# (won't get removed by apt remove), link them in maintainer
+# scripts instead, see
+# https://www.debian.org/doc/manuals/maint-guide/dother.en.html#conffiles
+
+debian/grub/20_acrn-board-inspector var/lib/acrn-board-inspector
