@@ -27,7 +27,7 @@ def fn(board_etree, scenario_etree, allocation_etree):
             total_shm_size += int(ram_size) * 0x100000
         except Exception as e:
             print(e)
-    hv_ram_size += 2 * max(total_shm_size, 0x200000)
+    hv_ram_size += max(total_shm_size, 0x200000)
     assert(hv_ram_size <= HV_RAM_SIZE_MAX)
 
     # We recommend to put hv ram start address high than 0x400000 to
