@@ -232,7 +232,7 @@ def insert_vmsix_to_dev_dict(pt_dev_node, devdict):
 def get_devs_mem_native(board_etree, mems):
     nodes = board_etree.xpath(f"//resource[@type = 'memory' and @len != '0x0' and @id and @width and @min and @max]")
     secondary_pci_nodes = board_etree.xpath(f"//resource[../bus[@type = 'pci'] and @type = 'memory' and @len != '0x0' and @min and @max]")
-    secondary_pci_windows = [AddrWindow(int(node.get('min'), 16), int(node.get('max'), 16)) for node in secondary_pci_nodes]
+    secondary_pci_windows = list(set(AddrWindow(int(node.get('min'), 16), int(node.get('max'), 16)) for node in secondary_pci_nodes))
     dev_list = []
 
     for node in nodes:
