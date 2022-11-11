@@ -19,6 +19,7 @@ class GenerateRst:
     pci_vuart = {}
     pci_ivshmem = {}
     amount_l3_cache = {}
+    service_vm_used_pcpu_list = []
 
     # Class initialization
     def __init__(self, board_file_name, scenario_file_name, rst_file_name) -> None:
@@ -67,7 +68,6 @@ class GenerateRst:
     def get_pcpu_table(self):
         data_table = []
         column_title = [" "]
-        service_vm_used_pcpu_list = []
         total_pcpu_list = self.get_pcpu()
         vm_node_list = self.get_vm_node_list()
         pre_launch_vm_node_list = self.scenario_etree.xpath("vm[load_order = 'PRE_LAUNCHED_VM']")
@@ -76,9 +76,9 @@ class GenerateRst:
         if pre_launch_vm_node_list is not None and len(pre_launch_vm_node_list) != 0:
             for pre_launch_vm_node in pre_launch_vm_node_list:
                 pre_launch_vm_pcpu_list = list(map(int, (pre_launch_vm_node.xpath("cpu_affinity/pcpu/pcpu_id/text()"))))
-                service_vm_used_pcpu_list.extend(set(total_pcpu_list).difference(set(pre_launch_vm_pcpu_list)))
+                self.service_vm_used_pcpu_list.extend(set(total_pcpu_list).difference(set(pre_launch_vm_pcpu_list)))
         else:
-            service_vm_used_pcpu_list.extend(total_pcpu_list)
+            self.service_vm_used_pcpu_list.extend(total_pcpu_list)
 
         for vm_node in vm_node_list:
             vm_pcpu_id_list = []
@@ -89,7 +89,7 @@ class GenerateRst:
             vm_pcpu_id_list.extend(map(lambda x: int(x.text), vm_pcpu_id_node))
 
             if len(vm_pcpu_id_node) == 0 and vm_load_order == "SERVICE_VM":
-                for pcpu in service_vm_used_pcpu_list:
+                for pcpu in self.service_vm_used_pcpu_list:
                     data_row[pcpu + 1] = "*"
             else:
                 for pcpu in vm_pcpu_id_list:
@@ -280,7 +280,6 @@ class GenerateRst:
     def get_basic_information_table(self, vm_node):
         parameter_dict = {}
         memory_size = 0
-        vcpu_num = set()
         data_table = []
         column_title = ["Parameter", "Configuration"]
         load_order = vm_node.find("load_order").text
@@ -296,15 +295,12 @@ class GenerateRst:
                     memory_size = memory_size + int(hpa_region.find("size_hpa").text)
         vm_vcpu_info_l2 = self.get_vm_used_vcpu("2")
         vm_vcpu_info_l3 = self.get_vm_used_vcpu("3")
-        if vm_name in vm_vcpu_info_l2.keys():
-            for item in vm_vcpu_info_l2[vm_name]:
-                vcpu_num.add(item)
-        if vm_name in vm_vcpu_info_l3.keys():
-            for item in vm_vcpu_info_l3[vm_name]:
-                vcpu_num.add(item)
         amount_vm_l3_cache = self.get_amount_l3_cache(vm_node)
         parameter_dict["Load Order"] = load_order
-        parameter_dict["Number of vCPUs"] = len(vcpu_num)
+        if load_order == "SERVICE_VM":
+           parameter_dict["Number of vCPUs"] = len(self.service_vm_used_pcpu_list)
+        else:
+           parameter_dict["Number of vCPUs"] = len(vm_node.xpath(f"cpu_affinity/pcpu/pcpu_id"))
         parameter_dict["Ammount of RAM"] = str(memory_size) + "MB"
         parameter_dict["Amount of L3 Cache"] = amount_vm_l3_cache
         data_table.extend(map(list, parameter_dict.items()))
