@@ -108,10 +108,11 @@ cd $SCRIPT_PATH/../
 source VERSION
 
 rm -rf debian/changelog
-export EMAIL=`git config --get user.email`
-if [ -z $EMAIL ]; then
-    echo "ERROR: please configure git with email address before running the build script: \"git config --global user.email email@address.com\""
-    exit 1
+if [ -z $EMAIL ] && [ -z $DEBEMAIL]; then
+  export DEBEMAIL=$(git config --get user.email)
+  if [ -z $DEBEMAIL ]; then
+    export DEBEMAIL="projectacrn@gmail.com"
+  fi
 fi
 gbp dch -S --git-log="-n 10" --id-length=10 --ignore-branch
 sed -i "s/unknown/$MAJOR_VERSION.$MINOR_VERSION$EXTRA_VERSION/g" debian/changelog
