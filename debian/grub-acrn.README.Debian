@@ -1,0 +1,31 @@
+
+ACRN specific GRUB configuration items
+--------------------------------------
+
+The following variables can be set and exported in /etc/default/grub.d/acrn.cfg
+to control GRUB boot menu generation for ACRN:
+
+GRUB_CMDLINE_ACRN: command line parameter for the ACRN hypervisor. This will
+                   be merged with parameters from ACRN configuration. E.g.
+                   add a required uart parameter, see
+                   https://projectacrn.github.io/latest/user-guides/hv-parameters.html
+
+GRUB_CMDLINE_LINUX and GRUB_CMDLINE_LINUX_DEFAULT (in /etc/default/grub) can be
+used as usual and apply to the ACRN Service VM only. They are appended to the
+settings provided by ACRN configuration.
+
+ACRN VM specific variables:
+
+GRUB_ACRN_MOD_CMDLINE_<tagname>: kernel command line parameter for VM using the
+                                 kernel module tag <tagname> in its configuration.
+
+Attention: Using GRUB_ACRN_MOD_CMDLINE_<tagname> for Service VM associated kernel
+           module tag will *OVERRIDE* the settings provided by ACRN configuration
+           and is *NOT* recommended! So, be careful!
+
+GRUB_ACRN_MOD_<tagname>: path of the module tagged with <tagname>. This is valid
+                         for kernel module tags, ramdisk module tags and acpi
+                         module tags.
+
+Remember: There is no need to set the acpi module tag, since it defaults to
+          generated /boot/ACPI_VMx.bin anyway!

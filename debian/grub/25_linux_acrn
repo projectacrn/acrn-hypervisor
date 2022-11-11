@@ -23,13 +23,9 @@ datarootdir="/usr/share"
 
 . "$pkgdatadir/grub-mkconfig_lib"
 
-export TEXTDOMAIN=grub
-export TEXTDOMAINDIR="${datarootdir}/locale"
-
 CLASS="--class gnu-linux --class gnu --class os --class acrn"
-SUPPORTED_INITS="systemd:/lib/systemd/systemd"
 
-# read ACRN config (board/scenario)
+# read ACRN config (board/scenario) from debconf
 ACRN_BOARD=$(echo "get acrn-hypervisor/board" | debconf-communicate || true)
 if [ "$(echo "${ACRN_BOARD}" | awk '{print $1}')" != "0" ]; then
     gettext_printf "ACRN: Cannot access debconf acrn-hypervisor/board: %s" "${ACRN_BOARD}\n" >&2
@@ -47,28 +43,58 @@ ACRN_SCENARIO="$(echo "${ACRN_SCENARIO}" | awk '{print $2}')"
 # we obtain any data from scenario config
 ACRN_SCENARIO_FILE=/usr/lib/x86_64-linux-gnu/acrn/${ACRN_BOARD}/${ACRN_SCENARIO}/scenario.xml
 if [ ! -f ${ACRN_SCENARIO_FILE} ]; then
-    gettext_printf "ACRN: Missing scenario config %s" "${ACRN_SCENARIO_FILE}\n" >&2
+    gettext_printf "ACRN: Missing scenario config %s\n" "${ACRN_SCENARIO_FILE}" >&2
     exit 0
 fi
 
-ACRN_KERN_MOD=$(xmllint --xpath '//vm[load_order="SERVICE_VM"]/os_config/kern_mod/text()' ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
-# skip if no kern_mod tag given
-[ -z "${ACRN_KERN_MOD}" ] && exit 0
-ACRN_RAMDISK_MOD=$(xmllint --xpath '//vm[load_order="SERVICE_VM"]/os_config/ramdisk_mod/text()' ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
-ACRN_BOOTARGS=$(xmllint --xpath '//vm[load_order="SERVICE_VM"]/os_config/bootargs/text()' ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
-# normalize
-ACRN_BOOTARGS=$(echo "${ACRN_BOOTARGS}" | tr -d '\n' | tr -s ' ')
-# eventually remove root=XXX parameter, since this is automatically detected below
-ACRN_BOOTARGS=$(for arg in ${ACRN_BOOTARGS}; do if [ "${arg##root=}" = "${arg}" ]; then echo -n "${arg} "; fi; done)
-# special handling for memmap: make sure $ is escaped to \$. This is a GRUB requirement
-ACRN_BOOTARGS="$(echo "${ACRN_BOOTARGS}" | sed 's/\(.*memmap=[^\$]*\)\$\(.*\)/\1\\\$\2/')"
+# get list of vm ids from scenario config
+ACRN_VM_IDS=$(xmllint --xpath '//vm/@id' ${ACRN_SCENARIO_FILE} 2>/dev/null | sed 's/\s*id="\([^"]*\)"/\1/g')
+if [ -z "${ACRN_VM_IDS}" ]; then
+    gettext_printf "ACRN: No VMs defined in scenario config %s" "${ACRN_SCENARIO_FILE}\n" >&2
+    exit 0
+fi
 
-GRUB_CMDLINE_ACRN="cpu_perf_policy=$(xmllint --xpath '//CPU_PERFORMANCE_POLICY/text()' ${ACRN_SCENARIO_FILE} 2>/dev/null || true) "$GRUB_CMDLINE_ACRN
+# get number of configured pre-launched VMs
+ACRN_PRE_LAUNCHED_VM_COUNT=$(xmllint --xpath "count(//vm[load_order=\"PRE_LAUNCHED_VM\"])" ${ACRN_SCENARIO_FILE})
+
+for id in ${ACRN_VM_IDS}; do
+  # get grub relevant data from scenario configuration (ugly handling of pseudo array in conventional shell, sigh!)
+  eval ACRN_LOAD_ORDER_VM${id}=$(xmllint --xpath "//vm[@id=\"${id}\"]/load_order/text()" ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
+  eval ACRN_NAME_VM${id}=$(xmllint --xpath "//vm[@id=\"${id}\"]/name/text()" ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
+  eval ACRN_KERN_MOD_VM${id}=$(xmllint --xpath "//vm[@id=\"${id}\"]/os_config/kern_mod/text()" ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
+  eval ACRN_RAMDISK_MOD_VM${id}=$(xmllint --xpath "//vm[@id=\"${id}\"]/os_config/ramdisk_mod/text()" ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
+  eval ACRN_ACPI_MOD_VM${id}=$(xmllint --xpath "//vm[@id=\"${id}\"]/os_config/acpi_mod_tag/text()" ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
+
+  # eventually store Service VM id
+  [ "$(eval echo \${ACRN_LOAD_ORDER_VM${id}})" = "SERVICE_VM" ] && ACRN_SERVICE_VM_ID=${id}
+
+  if [ "$(eval echo \${ACRN_LOAD_ORDER_VM${id}})" = "PRE_LAUNCHED_VM" ]; then
+    # pre-launched VMs always need ACPI data, eventually set acpi_mod_tag to default
+    if [ -z "$(eval echo \${ACRN_ACPI_MOD_VM${id}})" ]; then
+        eval ACRN_ACPI_MOD_VM${id}="ACPI_VM${id}"
+        eval GRUB_ACRN_MOD_ACPI_VM${id}="/boot/ACPI_VM${id}.bin"
+    fi
+  fi
+done
+
+# get performance policy parameter from scenario configuration
+ACRN_CPU_PERF_POLICY=$(xmllint --xpath '//CPU_PERFORMANCE_POLICY/text()' ${ACRN_SCENARIO_FILE} 2>/dev/null || true)
+if [ -z "${ACRN_CPU_PERF_POLICY}" ]; then
+  ACRN_CPU_PERF_POLICY=Performance
+fi
+GRUB_CMDLINE_ACRN="cpu_perf_policy=${ACRN_CPU_PERF_POLICY} ${GRUB_CMDLINE_ACRN}"
 
 if [ "x${GRUB_DISTRIBUTOR}" = "x" ] ; then
   OS=GNU/Linux
 else
-  OS="${GRUB_DISTRIBUTOR} GNU/Linux"
+  case ${GRUB_DISTRIBUTOR} in
+    Ubuntu|Kubuntu)
+      OS="${GRUB_DISTRIBUTOR}"
+      ;;
+    *)
+      OS="${GRUB_DISTRIBUTOR} GNU/Linux"
+      ;;
+  esac
   CLASS="--class $(echo ${GRUB_DISTRIBUTOR} | tr 'A-Z' 'a-z' | cut -d' ' -f1|LC_ALL=C sed 's,[^[:alnum:]_],_,g') ${CLASS}"
 fi
 
@@ -76,7 +102,7 @@ fi
 # the initrds that Linux uses don't like that.
 case ${GRUB_DEVICE} in
   /dev/loop/*|/dev/loop[0-9])
-    GRUB_DEVICE=`losetup ${GRUB_DEVICE} | sed -e "s/^[^(]*(\([^)]\+\)).*/\1/"`
+    GRUB_DEVICE=$(losetup ${GRUB_DEVICE} | sed -e "s/^[^(]*(\([^)]\+\)).*/\1/")
     # We can't cope with devices loop-mounted from files here.
     case ${GRUB_DEVICE} in
       /dev/*) ;;
@@ -97,117 +123,173 @@ fi
 
 case x"$GRUB_FS" in
     xbtrfs)
-	rootsubvol="`make_system_path_relative_to_its_root /`"
-	rootsubvol="${rootsubvol#/}"
-	if [ "x${rootsubvol}" != x ]; then
-	    GRUB_CMDLINE_LINUX="rootflags=subvol=${rootsubvol} ${GRUB_CMDLINE_LINUX}"
-	fi;;
+        rootsubvol="$(make_system_path_relative_to_its_root /)"
+        rootsubvol="${rootsubvol#/}"
+        if [ "x${rootsubvol}" != x ]; then
+            GRUB_CMDLINE_LINUX="rootflags=subvol=${rootsubvol} ${GRUB_CMDLINE_LINUX}"
+        fi;;
     xzfs)
-	rpool=`${grub_probe} --device ${GRUB_DEVICE} --target=fs_label 2>/dev/null || true`
-	bootfs="`make_system_path_relative_to_its_root / | sed -e "s,@$,,"`"
-	LINUX_ROOT_DEVICE="ZFS=${rpool}${bootfs%/}"
-	;;
+        rpool=$(${grub_probe} --device ${GRUB_DEVICE} --target=fs_label 2>/dev/null || true)
+        bootfs="$(make_system_path_relative_to_its_root / | sed -e "s,@$,,")"
+        LINUX_ROOT_DEVICE="ZFS=${rpool}${bootfs%/}"
+        ;;
 esac
 
-title_correction_code=
+# add_mod_tag: Add entry for a module tag
+# add_mod_tag <tagtype> <tagname> <vmid>
+# tagtype: Type of tag: kernel, ramdisk, acpi
+# tagname: Name of the tag (from config)
+# vmid: ID of the repsective VM
+add_mod_tag()
+{
+    local tagtype=$1
+    local tagname=$2
+    local vmid=$3
+
+    # silently skip empty tagnames
+    if [ -z "${tagname}" ]; then
+        return
+    fi
+
+    local tagvalue="$(eval echo \${GRUB_ACRN_MOD_${tagname}})"
+    if [ -n "${tagvalue}" ]; then
+        local message="$(gettext_printf "Loading ACRN %s %s for %s" "VM${vmid}" "${tagtype}" "$(eval echo \${ACRN_NAME_VM${vmid}})")"
+        local basename=$(basename ${tagvalue})
+        local dirname=$(dirname ${tagvalue})
+        local rel_dirname=$(make_system_path_relative_to_its_root $dirname)
+        local modparams
+        local loaderparams
+
+        # kernel might add a command line
+        [ "${tagtype}" = "kernel" ] && modparams="$(eval echo \${GRUB_ACRN_MOD_CMDLINE_${tagname}})"
+        # ramdisk will not be unzipped
+        [ "${tagtype}" = "ramdisk" ] && loaderparams="--nounzip"
+        cat << EOF
+	echo	'$(echo "$message" | grub_quote)'
+	${module_loader} ${loaderparams}	${rel_dirname}/${basename} ${tagname} ${modparams}
+EOF
+    else
+        gettext_printf "ACRN: GRUB_ACRN_MOD_${tagname} not set, skipping\n" >&2
+    fi
+}
+
+
+add_prelaunched_vms()
+{
+    # eventually also load data for pre-launched VMs
+    for id in ${ACRN_VM_IDS}; do
+        # we just care for pre-launched VMs
+        [ "$(eval echo \${ACRN_LOAD_ORDER_VM${id}})" != "PRE_LAUNCHED_VM" ] && continue
+        # start with kernel mod tag
+        tagname="$(eval echo \${ACRN_KERN_MOD_VM${id}})"
+        if [ -z "${tagname}" ]; then
+           gettext_printf "ACRN: No kernel module tag set for %s(%s), skipping\n" "$(eval echo \${ACRN_NAME_VM${id}})" "VM${id}" >&2
+           continue
+        fi
+        if [ -z "$(eval echo \${GRUB_ACRN_MOD_${tagname}})" ]; then
+           gettext_printf "ACRN: GRUB_ACRN_MOD_${tagname} not set, skipping %s(%s)\n" "$(eval echo \${ACRN_NAME_VM${id}})" "VM${id}" >&2
+           continue
+        fi
+        gettext_printf "Found ACRN pre-launched %s %s: %s\n" "VM${id}" "$(eval echo \${ACRN_NAME_VM${id}})" "$(eval echo \${GRUB_ACRN_MOD_${tagname}})">&2
+        add_mod_tag kernel ${tagname} ${id}
+        add_mod_tag acpi "$(eval echo \${ACRN_ACPI_MOD_VM${id}})" ${id}
+        add_mod_tag ramdisk "$(eval echo \${ACRN_RAMDISK_MOD_VM${id}})" ${id}
+    done
+}
 
 linux_entry ()
 {
   os="$1"
   version="$2"
   acrn_version="$3"
-  type="$4"
-  args="$5"
-  acrn_args="$6"
+  args="$4"
+  acrn_args="$5"
   if [ -z "$boot_device_id" ]; then
       boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
   fi
-  if [ x$type != xsimple ] ; then
-      if [ x$type = xrecovery ] ; then
-	  title="$(gettext_printf "%s, with Acrn %s and Linux %s (%s)" "${os}" "${acrn_version}" "${version}" "$(gettext "${GRUB_RECOVERY_TITLE}")")"
-      elif [ "${type#init-}" != "$type" ] ; then
-	  title="$(gettext_printf "%s, with Acrn %s and Linux %s (%s)" "${os}" "${acrn_version}" "${version}" "${type#init-}")"
-      else
-	  title="$(gettext_printf "%s, with Acrn %s and Linux %s" "${os}" "${acrn_version}" "${version}")"
-      fi
-      replacement_title="$(echo "Advanced options for ${OS}" | sed 's,>,>>,g')>$(echo "$title" | sed 's,>,>>,g')"
-      if [ x"Acrn ${acrn_version}>$title" = x"$GRUB_ACTUAL_DEFAULT" ]; then
-         quoted="$(echo "$GRUB_ACTUAL_DEFAULT" | grub_quote)"
-         title_correction_code="${title_correction_code}if [ \"x\$default\" = '$quoted' ]; then default='$(echo "$replacement_title" | grub_quote)'; fi;"
-         grub_warn "$(gettext_printf "Please don't use old title \`%s' for GRUB_DEFAULT, use \`%s' (for versions before 2.00) or \`%s' (for 2.00 or later)" "$GRUB_ACTUAL_DEFAULT" "$replacement_title" "gnulinux-advanced-$boot_device_id>gnulinux-$version-$type-$boot_device_id")"
-      fi
-      echo "menuentry '$(echo "$title" | grub_quote)' ${CLASS} \$menuentry_id_option 'acrn-gnulinux-$version-$type-$boot_device_id' {" | sed "s/^/$submenu_indentation/"
-  else
-      title="$(gettext_printf "%s, with ACRN hypervisor" "${os}")"
-      echo "menuentry '$(echo "$title" | grub_quote)' ${CLASS} \$menuentry_id_option 'acrn-gnulinux-simple-$boot_device_id' {" | sed "s/^/$submenu_indentation/"
-  fi
-  if [ x$type != xrecovery ] ; then
-      save_default_entry | grub_add_tab | sed "s/^/$submenu_indentation/"
-  fi
+  title="$(gettext_printf "%s with ACRN hypervisor" "${os}")"
+  echo "menuentry '$(echo "$title" | grub_quote)' ${CLASS} \$menuentry_id_option 'acrn-gnulinux-$boot_device_id' {"
 
   if [ -z "${prepare_boot_cache}" ]; then
     prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | grub_add_tab)"
   fi
-  printf '%s\n' "${prepare_boot_cache}" | sed "s/^/$submenu_indentation/"
-  xmessage="$(gettext_printf "Loading Acrn %s ..." ${acrn_version})"
-  lmessage="$(gettext_printf "Loading Linux %s ..." ${version})"
-  sed "s/^/$submenu_indentation/" << EOF
-	echo	'$(echo "$xmessage" | grub_quote)'
-	${acrn_loader}	${rel_acrn_dirname}/${acrn_basename} ${acrn_args}
-	echo	'$(echo "$lmessage" | grub_quote)'
-	${module_loader}	${rel_dirname}/${basename} ${ACRN_KERN_MOD} root=${linux_root_device_thisversion} ro ${ACRN_BOOTARGS} ${args}
-EOF
-  if test -n "${initrd}" && test -n "${ACRN_RAMDISK_MOD}"; then
-    # TRANSLATORS: ramdisk isn't identifier. Should be translated.
-    message="$(gettext_printf "Loading initial ramdisk ...")"
-    sed "s/^/$submenu_indentation/" << EOF
+  printf '%s\n' "${prepare_boot_cache}"
+  message="$(gettext_printf "Loading ACRN hypervisor %s ..." ${acrn_version})"
+  cat << EOF
 	echo	'$(echo "$message" | grub_quote)'
-	${module_loader} --nounzip	${rel_dirname}/${initrd} ${ACRN_RAMDISK_MOD}
+	${acrn_loader}	${rel_acrn_dirname}/${acrn_basename} ${acrn_args} root=${linux_root_device_thisversion} ro ${args}
+EOF
+  message="$(gettext_printf "Loading ACRN Service VM Linux kernel %s ..." ${version})"
+  ktagname="$(eval echo \${ACRN_KERN_MOD_VM${ACRN_SERVICE_VM_ID}})"
+  cat << EOF
+	echo	'$(echo "$message" | grub_quote)'
+	${module_loader}	${rel_dirname}/${basename} ${ktagname} $(eval echo \${GRUB_ACRN_MOD_CMDLINE_${ktagname}})
+EOF
+  if test -n "${initrd}"; then
+    # TRANSLATORS: ramdisk isn't identifier. Should be translated.
+    message="$(gettext_printf "Loading ACRN Service VM initial ramdisk ...")"
+    rtagname="$(eval echo \${ACRN_RAMDISK_MOD_VM${ACRN_SERVICE_VM_ID}})"
+    cat << EOF
+	echo	'$(echo "$message" | grub_quote)'
+	${module_loader} --nounzip	${rel_dirname}/${initrd} ${rtagname}
 EOF
   fi
-  sed "s/^/$submenu_indentation/" << EOF
+  add_prelaunched_vms
+  cat << EOF
 }
 EOF
 }
 
+machine=$(uname -m)
+# ACRN only on x86_64 machines
+if [ "x${machine}" != "xx86_64" ]; then
+    exit 0
+fi
+GENKERNEL_ARCH="x86"
+
+# ServiceVM: Gather all Linux images with ACRN support, i.e. CONFIG_ACRN_HSM is set
 linux_list=
 for i in /boot/vmlinu[xz]-* /vmlinu[xz]-* /boot/kernel-*; do
     if grub_file_is_not_garbage "$i"; then
-    	basename=$(basename $i)
-	version=$(echo $basename | sed -e "s,^[^0-9]*-,,g")
-	dirname=$(dirname $i)
-	config=
-	for j in "${dirname}/config-${version}" "${dirname}/config-${alt_version}" "/etc/kernels/kernel-config-${version}" ; do
-	    if test -e "${j}" ; then
-		config="${j}"
-		break
-	    fi
-	done
-        if grep -Eqx "^CONFIG_ACRN_HSM=(y|m)" "${config}" 2> /dev/null; then linux_list="$linux_list $i" ; fi
+        basename=$(basename $i)
+        version=$(echo $basename | sed -e "s,^[^0-9]*-,,g")
+        alt_version=$(echo $version | sed -e "s,\.old$,,g")
+        dirname=$(dirname $i)
+        config=
+        for j in "${dirname}/config-${version}" "${dirname}/config-${alt_version}" "/etc/kernels/kernel-config-${version}" ; do
+            if test -e "${j}" ; then
+                config="${j}"
+                break
+            fi
+        done
+        if grep -Eqx "^CONFIG_ACRN_HSM=(y|m)" "${config}" 2> /dev/null; then
+            linux_list="$linux_list $i"
+        fi
     fi
 done
-if [ "x${linux_list}" = "x" ] ; then
-    exit 0
-fi
 
 file_is_not_sym () {
     case "$1" in
-	*/acrn-syms-*)
-	    return 1;;
-	*)
-	    return 0;;
+        */acrn-syms-*)
+        return 1;;
+    *)
+        return 0;;
     esac
 }
 
 # use ELF *.out files for multiboot
 acrn_out_list=
 for i in /boot/acrn*.out; do
-    if grub_file_is_not_garbage "$i" && file_is_not_sym "$i" && grub-file --is-x86-multiboot "$i"; then acrn_out_list="$acrn_out_list $i" ; fi
+    if grub_file_is_not_garbage "$i" && file_is_not_sym "$i" && grub-file --is-x86-multiboot "$i"; then
+        acrn_out_list="$acrn_out_list $i"
+    fi
 done
 # use raw binary *.bin files for multiboot2
 acrn_bin_list=
 for i in /boot/acrn*.bin; do
-    if grub_file_is_not_garbage "$i" && file_is_not_sym "$i" && grub-file --is-x86-multiboot2 "$i"; then acrn_bin_list="$acrn_bin_list $i" ; fi
+    if grub_file_is_not_garbage "$i" && file_is_not_sym "$i" && grub-file --is-x86-multiboot2 "$i"; then
+        acrn_bin_list="$acrn_bin_list $i"
+    fi
 done
 # we prefer multiboot2
 if [ "x${acrn_bin_list}" != "x" ]; then
@@ -219,115 +301,96 @@ else
     acrn_loader="multiboot --quirk-modules-after-kernel"
     module_loader="module"
 fi
+# no ACRN binary found
+if [ "x${acrn_list}" = "x" ] ; then
+    exit 0
+fi
 
 prepare_boot_cache=
 boot_device_id=
-
-title_correction_code=
-
-machine=`uname -m`
-
-case "$machine" in
-    i?86) GENKERNEL_ARCH="x86" ;;
-    mips|mips64) GENKERNEL_ARCH="mips" ;;
-    mipsel|mips64el) GENKERNEL_ARCH="mipsel" ;;
-    arm*) GENKERNEL_ARCH="arm" ;;
-    *) GENKERNEL_ARCH="$machine" ;;
-esac
-
-# Extra indentation to add to menu entries in a submenu. We're not in a submenu
-# yet, so it's empty. In a submenu it will be equal to '\t' (one tab).
-submenu_indentation=""
-
-is_top_level=true
+acrn_first_entry=
 
 while [ "x${acrn_list}" != "x" ] ; do
-    list="${linux_list}"
-    current_acrn=`version_find_latest $acrn_list`
-    acrn_basename=`basename ${current_acrn}`
-    acrn_dirname=`dirname ${current_acrn}`
-    rel_acrn_dirname=`make_system_path_relative_to_its_root $acrn_dirname`
-    acrn_version=`echo $acrn_basename | sed -e "s,.out$,,g;s,.bin$,,g;s,^acrn-,,g"`
-    if [ -z "$boot_device_id" ]; then
-	boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
-    fi
-    if [ "x$is_top_level" != xtrue ]; then
-	echo "	submenu '$(gettext_printf "ACRN hypervisor, version %s" "${acrn_version}" | grub_quote)' \$menuentry_id_option 'acrn-hypervisor-$acrn_version-$boot_device_id' {"
-    fi
-    while [ "x$list" != "x" ] ; do
-	linux=`version_find_latest $list`
-	gettext_printf "Found linux image: %s\n" "$linux" >&2
-	basename=`basename $linux`
-	dirname=`dirname $linux`
-	rel_dirname=`make_system_path_relative_to_its_root $dirname`
-	version=`echo $basename | sed -e "s,^[^0-9]*-,,g"`
-	alt_version=`echo $version | sed -e "s,\.old$,,g"`
-	linux_root_device_thisversion="${LINUX_ROOT_DEVICE}"
+    current_acrn=$(version_find_latest $acrn_list)
+    acrn_basename=$(basename ${current_acrn})
+    acrn_dirname=$(dirname ${current_acrn})
+    rel_acrn_dirname=$(make_system_path_relative_to_its_root $acrn_dirname)
+    acrn_version=$(echo $acrn_basename | sed -e "s,.out$,,g;s,.bin$,,g;s,^acrn-,,g")
 
-	initrd=
-	# only use initrd when needed by  scenarioconfig (even when generated at image install)
-	if test -n "${ACRN_RAMDISK_MOD}"; then
-	    for i in "initrd.img-${version}" "initrd-${version}.img" "initrd-${version}.gz" \
-	       "initrd-${version}" "initramfs-${version}.img" \
-	       "initrd.img-${alt_version}" "initrd-${alt_version}.img" \
-	       "initrd-${alt_version}" "initramfs-${alt_version}.img" \
-	       "initramfs-genkernel-${version}" \
-	       "initramfs-genkernel-${alt_version}" \
-	       "initramfs-genkernel-${GENKERNEL_ARCH}-${version}" \
-	       "initramfs-genkernel-${GENKERNEL_ARCH}-${alt_version}" ; do
-	        if test -e "${dirname}/${i}" ; then
-		    initrd="$i"
-		    break
-	        fi
-	    done
+    list="${linux_list}" # this is the list of possible ServiceVM kernels
+
+    # no ACRN capable linux kernel, eventually add ACRN entry for partitioned system
+    if ([ "x$list" = "x" ] || [ "x${ACRN_SERVICE_VM_ID}" = "x" ]) && [ "${ACRN_PRE_LAUNCHED_VM_COUNT}" != "0" ]; then
+        if [ -z "${acrn_first_entry}" ]; then
+            title="$(gettext_printf "%s with ACRN hypervisor" "${OS}")"
+            acrn_first_entry="false"
         else
-            gettext_printf "Skipped initrd image for ${ACRN_BOARD}:${ACRN_SCENARIO}\n" >&2
+            title="$(gettext_printf "%s with ACRN hypervisor %s" "${OS}" "${acrn_version}")"
         fi
-	if test -n "${initrd}" ; then
-	    gettext_printf "Found initrd image: %s\n" "${dirname}/${initrd}" >&2
-	else
-    # "UUID=" magic is parsed by initrds.  Since there's no initrd, it can't work here.
-	    linux_root_device_thisversion=${GRUB_DEVICE}
-	fi
+        echo "menuentry '$(echo "$title" | grub_quote)' ${CLASS} \$menuentry_id_option 'acrn-gnulinux-partitioned-${acrn_version}' {"
+        message="$(gettext_printf "Loading ACRN hypervisor %s ..." ${acrn_version})"
+        cat << EOF
+	echo	'$(echo "$message" | grub_quote)'
+	${acrn_loader}	${rel_acrn_dirname}/${acrn_basename} ${GRUB_CMDLINE_ACRN}
+EOF
+        add_prelaunched_vms
+        echo "}"
+    fi
+    if [ -z "$boot_device_id" ]; then
+        boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
+    fi
 
-	if [ "x$is_top_level" = xtrue ] && [ "x${GRUB_DISABLE_SUBMENU}" != xy ]; then
-	    linux_entry "${OS}" "${version}" "${acrn_version}" simple \
-		"${GRUB_CMDLINE_LINUX} ${GRUB_CMDLINE_LINUX_DEFAULT}" "${GRUB_CMDLINE_ACRN} ${GRUB_CMDLINE_ACRN_DEFAULT}"
+    # only if we have at least one ACRN capable kernel and a Service VM entry defined
+    while [ "x$list" != "x" ] && [ "x${ACRN_SERVICE_VM_ID}" != "x" ] ; do
+        linux=$(version_find_latest $list)
+        gettext_printf "Found ACRN linux image: %s\n" "$linux" >&2
+        basename=$(basename $linux)
+        dirname=$(dirname $linux)
+        rel_dirname=$(make_system_path_relative_to_its_root $dirname)
+        version=$(echo $basename | sed -e "s,^[^0-9]*-,,g")
+        alt_version=$(echo $version | sed -e "s,\.old$,,g")
+        linux_root_device_thisversion="${LINUX_ROOT_DEVICE}"
 
-	    submenu_indentation="$grub_tab$grub_tab"
+        initrd=
+        for i in "initrd.img-${version}" "initrd-${version}.img" "initrd-${version}.gz" \
+           "initrd-${version}" "initramfs-${version}.img" \
+           "initrd.img-${alt_version}" "initrd-${alt_version}.img" \
+           "initrd-${alt_version}" "initramfs-${alt_version}.img" \
+           "initramfs-genkernel-${version}" \
+           "initramfs-genkernel-${alt_version}" \
+           "initramfs-genkernel-${GENKERNEL_ARCH}-${version}" \
+           "initramfs-genkernel-${GENKERNEL_ARCH}-${alt_version}" ; do
+            if test -e "${dirname}/${i}" ; then
+                initrd="$i"
+                break
+            fi
+        done
+        if [ -n "${initrd}" ]; then
+            if [ -z "$(eval echo \${ACRN_RAMDISK_MOD_VM${ACRN_SERVICE_VM_ID}})" ]; then
+                # Use the found ramdisk despite we don't have a respective module tag
+                # in ACRN configuration. This makes the UUID magic work and avoid the
+                # problem of duplicated boot menu entries detected by os-prober when
+                # using GRUB_DEVICE directly and running grub-mkconfig on such a system.
+                gettext_printf "WARNING: Using ${initrd} despite ramdisk module tag of ACRN Service VM is not set.\n" >&2
+            else
+                gettext_printf "Found ACRN initrd image: %s\n" "${dirname}/${initrd}" >&2
+            fi
+        else
+            gettext_printf "ACRN: No initrd image for ${ACRN_BOARD}:${ACRN_SCENARIO}\n" >&2
+            # "UUID=" magic is parsed by initrds.  Since there's no initrd, it can't work here.
+            linux_root_device_thisversion=${GRUB_DEVICE}
+        fi
 
-	    if [ -z "$boot_device_id" ]; then
-		boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
-	    fi
-            # TRANSLATORS: %s is replaced with an OS name
-	    echo "submenu '$(gettext_printf "Advanced options for %s (with ACRN hypervisor)" "${OS}" | grub_quote)' \$menuentry_id_option 'gnulinux-advanced-$boot_device_id' {"
-	    is_top_level=false
-	fi
+        linux_entry "${OS}" "${version}" "${acrn_version}" \
+            "${GRUB_CMDLINE_LINUX} ${GRUB_CMDLINE_LINUX_DEFAULT}" "${GRUB_CMDLINE_ACRN}"
 
-	linux_entry "${OS}" "${version}" "${acrn_version}" advanced \
-	    "${GRUB_CMDLINE_LINUX} ${GRUB_CMDLINE_LINUX_DEFAULT}" "${GRUB_CMDLINE_ACRN} ${GRUB_CMDLINE_ACRN_DEFAULT}"
-	for supported_init in ${SUPPORTED_INITS}; do
-	    init_path="${supported_init#*:}"
-	    if [ -x "${init_path}" ] && [ "$(readlink -f /sbin/init)" != "$(readlink -f "${init_path}")" ]; then
-		linux_entry "${OS}" "${version}" "${acrn_version}" "init-${supported_init%%:*}" \
-		    "${GRUB_CMDLINE_LINUX} ${GRUB_CMDLINE_LINUX_DEFAULT}" "init=${init_path} ${GRUB_CMDLINE_ACRN} ${GRUB_CMDLINE_ACRN_DEFAULT}"
+        if [ -z "$boot_device_id" ]; then
+            boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
+        fi
 
-	    fi
-	done
-	if [ "x${GRUB_DISABLE_RECOVERY}" != "xtrue" ]; then
-	    linux_entry "${OS}" "${version}" "${acrn_version}" recovery \
-		"single ${GRUB_CMDLINE_LINUX}" "${GRUB_CMDLINE_ACRN}"
-	fi
-
-	list=`echo $list | tr ' ' '\n' | fgrep -vx "$linux" | tr '\n' ' '`
+        list=$(echo $list | tr ' ' '\n' | fgrep -vx "$linux" | tr '\n' ' ')
     done
-    acrn_list=`echo $acrn_list | tr ' ' '\n' | fgrep -vx "$current_acrn" | tr '\n' ' '`
+    acrn_list=$(echo $acrn_list | tr ' ' '\n' | fgrep -vx "$current_acrn" | tr '\n' ' ')
 done
 
-# If at least one kernel was found, then we need to
-# add a closing '}' for the submenu command.
-if [ x"$is_top_level" != xtrue ]; then
-  echo '}'
-fi
-
-echo "$title_correction_code"
+echo ""
