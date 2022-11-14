@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import os, re
+import os, re, logging
 
 from extractors.helpers import add_child, get_node
 
@@ -17,17 +17,20 @@ def extract(args, board_etree):
         if m:
             d = m.group(0)
             devpath = os.path.join(USB_DEVICES_PATH, d)
-            with open(os.path.join(devpath, 'devnum'), 'r') as f:
-                devnum = f.read().strip()
-            with open(os.path.join(devpath, 'busnum'), 'r') as f:
-                busnum = f.read().strip()
-            cmd_out = os.popen('lsusb -s {b}:{d}'.format(b=busnum, d=devnum)).read()
-            desc = cmd_out.split(':', maxsplit=1)[1].strip('\n')
+            try:
+                with open(os.path.join(devpath, 'devnum'), 'r') as f:
+                    devnum = f.read().strip()
+                with open(os.path.join(devpath, 'busnum'), 'r') as f:
+                    busnum = f.read().strip()
+                cmd_out = os.popen('lsusb -s {b}:{d}'.format(b=busnum, d=devnum)).read()
+                desc = cmd_out.split(':', maxsplit=1)[1].strip('\n')
 
-            with open(devpath + '/port/firmware_node/path') as f:
-                acpi_path = f.read().strip()
-            usb_port_node = get_node(board_etree, f"//device[acpi_object='{acpi_path}']")
-            if usb_port_node is not None:
-                add_child(usb_port_node, "usb_device", location=d,
-                        description=d + desc)
-
+                with open(devpath + '/port/firmware_node/path') as f:
+                    acpi_path = f.read().strip()
+                usb_port_node = get_node(board_etree, f"//device[acpi_object='{acpi_path}']")
+                if usb_port_node is not None:
+                    add_child(usb_port_node, "usb_device", location=d,
+                            description=d + desc)
+            except Exception as e:
+                logging.debug(f"{e}: please check if a USB device has been removed form usb port {d}.")
+                pass
