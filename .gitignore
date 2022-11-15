@@ -13,6 +13,30 @@ venv
 /misc/config_tools/schema/sliced.xsd
 /misc/config_tools/schema/allchecks.xsd
 
+# ignore debuild intermediate files
+.pybuild
+debian/*.debhelper
+debian/*.substvars
+debian/acrn-dev
+debian/acrn-devicemodel
+debian/acrn-doc
+debian/acrn-hypervisor.config
+debian/acrn-hypervisor.install
+debian/acrn-hypervisor.postinst
+debian/acrn-hypervisor.postrm
+debian/acrn-hypervisor.prerm
+debian/acrn-hypervisor.templates
+debian/acrn-hypervisor
+debian/acrn-lifemngr
+debian/acrn-system
+debian/acrn-tools
+debian/acrnd
+debian/debhelper-build-stamp
+debian/files
+debian/grub-acrn
+debian/python3-acrn-board-inspector
+debian/tmp
+
 # ignore Eclipse project config
 .cproject
 .project
