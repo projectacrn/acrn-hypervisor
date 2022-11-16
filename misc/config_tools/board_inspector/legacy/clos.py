@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import parser_lib
 import logging
+from inspectorlib import external_tools
 
 RDT_TYPE = {
         "L2":4,
@@ -18,7 +18,7 @@ def dump_cpuid_reg(cmd, reg):
     :param cmd: command what can be executed in shell
     :param reg: register name
     """
-    res = parser_lib.cmd_execute(cmd)
+    res = external_tools.run(cmd)
     if reg == "eax":
         idx = 2
     if reg == "ebx":
@@ -27,7 +27,7 @@ def dump_cpuid_reg(cmd, reg):
         idx = 5
 
     while True:
-        line = parser_lib.decode_stdout(res)
+        line = res.stdout.readline().decode('ascii')
 
         if not line:
             break

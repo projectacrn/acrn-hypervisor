@@ -4,6 +4,7 @@
 #
 
 import parser_lib
+from inspectorlib import external_tools
 
 MEM_PATH = ['/proc/iomem', '/proc/meminfo']
 TTY_PATH = '/sys/class/tty/'
@@ -34,7 +35,7 @@ def detected_ttys():
     tty_used_list = []
     for s_inc in range(ttys_cnt):
         cmd = 'stty -F /dev/ttyS{}'.format(s_inc)
-        res = parser_lib.cmd_execute('{}'.format(cmd))
+        res = external_tools.run('{}'.format(cmd))
 
         while True:
             line = res.stdout.readline().decode('ascii')

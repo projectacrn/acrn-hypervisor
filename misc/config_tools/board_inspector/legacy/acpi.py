@@ -5,12 +5,12 @@
 
 import os
 import sys
-import subprocess # nosec
 import shutil
 from collections import defaultdict
 import dmar
 import parser_lib
 import logging
+from inspectorlib import external_tools
 
 SYS_PATH = ['/proc/cpuinfo', '/sys/firmware/acpi/tables/', '/sys/devices/system/cpu/']
 
@@ -546,14 +546,11 @@ def store_px_data(sysnode, config):
     p_cnt = 0
     for freq in freqs.split():
         if boost != 0 and i == 0:
-            try:
-                subprocess.check_call('/usr/sbin/rdmsr 0x1ad', shell=True, stdout=subprocess.PIPE)
-            except subprocess.CalledProcessError:
+            res = external_tools.run(['rdmsr', '0x1ad'])
+            if res.returncode != 0:
                 logging.debug("MSR 0x1ad not support in this platform!")
                 return
 
-            res = subprocess.Popen('/usr/sbin/rdmsr 0x1ad', shell=True,
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
             result = res.stdout.readline().strip()
             #max_ratio_cpu = result[-2:]
             ctl_state = int(result[-2:], 16) << 8
@@ -600,11 +597,7 @@ def read_tpm_data(config):
     :param config: file pointer that opened for writing board config information
     :return:
     '''
-    try:
-        acpi_table_output = subprocess.check_output('ls -l /sys/firmware/acpi/tables/'.split()).decode('utf8')
-    except:
-        acpi_table_output = ''
-    if 'TPM2' in acpi_table_output:
+    if os.path.exists('/sys/firmware/acpi/tables/TPM2'):
         print("\tTPM2", file=config)
     else:
         print("\t/* no TPM device */", file=config)
