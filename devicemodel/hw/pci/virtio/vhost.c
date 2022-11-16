@@ -196,7 +196,7 @@ vhost_vq_register_eventfd(struct vhost_dev *vdev,
 		irqfd.flags = ACRN_IRQFD_FLAG_DEASSIGN;
 	}
 
-	virtio_register_ioeventfd(base, idx, is_register);
+	virtio_register_ioeventfd(base, idx, is_register, vq->kick_fd);
 	/* register irqfd for notify */
 	mte = &vdev->base->dev->msix.table[vqi->msix_idx];
 	msi.msi_addr = mte->addr;

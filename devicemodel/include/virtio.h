@@ -776,5 +776,5 @@ uint32_t virtio_device_cfg_read(
 int virtio_set_modern_pio_bar(
 		struct virtio_base *base, int barnum);
 
-int virtio_register_ioeventfd(struct virtio_base *base, int idx, bool is_register);
+int virtio_register_ioeventfd(struct virtio_base *base, int idx, bool is_register, int fd);
 #endif	/* _VIRTIO_H_ */

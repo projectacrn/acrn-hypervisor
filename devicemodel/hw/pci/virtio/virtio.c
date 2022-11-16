@@ -107,10 +107,10 @@ virtio_set_iothread(struct virtio_base *base,
 			vq->viothrd.iomvt.fd = vq->viothrd.kick_fd;
 
 			if (!iothread_add(vq->viothrd.kick_fd, &vq->viothrd.iomvt))
-				if (!virtio_register_ioeventfd(base, idx, true))
+				if (!virtio_register_ioeventfd(base, idx, true, vq->viothrd.kick_fd))
 					vq->viothrd.ioevent_started = true;
 		} else {
-			if (!virtio_register_ioeventfd(base, idx, false))
+			if (!virtio_register_ioeventfd(base, idx, false, vq->viothrd.kick_fd))
 				if (!iothread_del(vq->viothrd.kick_fd)) {
 					vq->viothrd.ioevent_started = false;
 					if (vq->viothrd.kick_fd) {
@@ -1991,16 +1991,15 @@ acrn_parse_virtio_poll_interval(const char *optarg)
 	return 0;
 }
 
-int virtio_register_ioeventfd(struct virtio_base *base, int idx, bool is_register)
+int virtio_register_ioeventfd(struct virtio_base *base, int idx, bool is_register, int fd)
 {
 	struct acrn_ioeventfd ioeventfd = {0};
-	struct virtio_vq_info *vq;
 	struct pcibar *bar;
 	int rc = 0;
 
 	if (!is_register)
 		ioeventfd.flags = ACRN_IOEVENTFD_FLAG_DEASSIGN;
-	else
+	else if (base->iothread)
 		/* Enable ASYNCIO by default. If ASYNCIO is not supported by kernel
 		 * or hyperviosr, this flag will be ignored.
 		 */
@@ -2040,8 +2039,7 @@ int virtio_register_ioeventfd(struct virtio_base *base, int idx, bool is_registe
 			ACRN_IOEVENTFD_FLAG_PIO);
 	}
 
-	vq = &base->queues[idx];
-	ioeventfd.fd = vq->viothrd.kick_fd;
+	ioeventfd.fd = fd;
 	if (is_register)
 		pr_info("[ioeventfd: %d][0x%lx@%d][flags: 0x%x][data: 0x%lx]\r\n",
 			ioeventfd.fd, ioeventfd.addr, ioeventfd.len,
