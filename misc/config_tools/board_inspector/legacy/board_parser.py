@@ -7,7 +7,6 @@ import os
 import sys
 import shutil
 import argparse
-import subprocess # nosec
 import pci_dev
 import dmi
 import acpi
@@ -15,6 +14,7 @@ import clos
 import misc
 import parser_lib
 import logging
+from inspectorlib import external_tools
 
 OUTPUT = "./out/"
 PY_CACHE = "__pycache__"
@@ -52,12 +52,13 @@ def check_env():
     if os.path.exists(PY_CACHE):
         shutil.rmtree(PY_CACHE)
 
+    if not external_tools.locate_tools(['cpuid', 'rdmsr', 'lspci', 'dmidecode', 'blkid', 'stty', 'modprobe']):
+        sys.exit(1)
+
     # check cpu msr file
     cpu_dirs = "/dev/cpu"
-    if check_msr_files(cpu_dirs):
-        res = subprocess.Popen("modprobe msr",
-                            shell=True, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, close_fds=True)
+    if not check_msr_files(cpu_dirs):
+        res = external_tools.run("modprobe msr")
         err_msg = res.stderr.readline().decode('ascii')
         if err_msg:
             logging.critical("{}".format(err_msg))
