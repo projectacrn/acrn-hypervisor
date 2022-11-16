@@ -330,11 +330,6 @@ override_dh_auto_install-arch: debian/acrn-hypervisor.install
 	$(Q)sed -i 's/acrn_tap\* //g'						\
 		$(DESTDIR)$(docdir)/acrnd/examples/50-acrn.network
 	@:
-	@# move devicemodel samples
-	$(Q)mkdir -p $(DESTDIR)$(docdir)/acrn-devicemodel
-	$(Q)mv $(DESTDIR)$(datadir)/acrn/samples				\
-		$(DESTDIR)$(docdir)/acrn-devicemodel
-	@:
 	@# adapt systemd services for tools (available in DEBUG build only)
 	$(if $(call strequ,${RELEASE},n),					\
 		$(Q)sed -i -e '/telemd.socket/d' -e '/prepare.service/d'	\
