@@ -13,6 +13,12 @@ ifneq ($(SCM_VERSION),)
 	SCM_VERSION := "-"$(SCM_VERSION)
 endif
 export FULL_VERSION=$(MAJOR_VERSION).$(MINOR_VERSION)$(EXTRA_VERSION)$(SCM_VERSION)
+ROMOTE_BRANCH := $(shell [ -d .git ] && git rev-parse --abbrev-ref HEAD)
+STABLE_STR := -stable
+ifeq ($(EXTRA_VERSION), -unstable)
+	STABLE_STR := -unstable
+endif
+export BRANCH_VERSION=$(ROMOTE_BRANCH)$(STABLE_STR)
 
 ifdef TARGET_DIR
   $(warning TARGET_DIR is obsoleted because generated configuration files are now stored in the build directory)

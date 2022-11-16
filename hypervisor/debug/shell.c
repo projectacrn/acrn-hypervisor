@@ -737,10 +737,15 @@ static int32_t shell_cmd_help(__unused int32_t argc, __unused char **argv)
 static int32_t shell_version(__unused int32_t argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
+	char tag_str[TEMP_STR_SIZE] = HV_COMMIT_TAGS;
 
-	snprintf(temp_str, MAX_STR_SIZE, "HV %s-%s-%s %s (daily tag: %s) %s@%s build by %s%s\nAPI %u.%u\r\n",
-		HV_FULL_VERSION, HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE, HV_DAILY_TAG, HV_BUILD_SCENARIO,
-		HV_BUILD_BOARD, HV_BUILD_USER, HV_CONFIG_TOOL, HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
+	if(tag_str[0] != '\0'){
+		snprintf(tag_str, TEMP_STR_SIZE, "(tag: %s)", HV_COMMIT_TAGS);
+		tag_str[TEMP_STR_SIZE-1] = '\0';
+	}
+	snprintf(temp_str, MAX_STR_SIZE, "%s-%s-%s %s%s %s@%s build by %s %s\r\n",
+		HV_BRANCH_VERSION, HV_COMMIT_TIME, HV_COMMIT_DIRTY, HV_BUILD_TYPE, tag_str,
+		HV_BUILD_SCENARIO, HV_BUILD_BOARD, HV_BUILD_USER, HV_BUILD_TIME);
 	shell_puts(temp_str);
 
 	return 0;

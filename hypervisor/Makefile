@@ -526,6 +526,12 @@ $(VERSION): $(HV_CONFIG_H)
 		PATCH="$(BUILD_VERSION)"; \
 		DAILY_TAG="$(BUILD_TAG)"; \
 	fi; \
+	COMMIT_ID=`git rev-parse --verify --short HEAD 2>/dev/null`;\
+	DIRTY= `git diff-index --name-only HEAD`;\
+	if [ -n "$$DIRTY" ];then COMMIT_DIRTY="$$COMMIT_ID-dirty";else COMMIT_DIRTY="$$COMMIT_ID";fi;\
+	COMMIT_TAGS=$$(git tag --points-at HEAD|tr -s "\n" " "); \
+	COMMIT_TAGS=$$(eval echo $$COMMIT_TAGS);\
+	COMMIT_TIME=$$(git log -1 --date=format:"%Y-%m-%d %T" --format=%cd); \
 	TIME=$$(date -u -d "@$${SOURCE_DATE_EPOCH:-$$(date +%s)}" "+%F %T"); \
 	USER="$${USER:-$$(id -u -n)}"; \
 	if [ x$(CONFIG_RELEASE) = "xy" ];then BUILD_TYPE="REL";else BUILD_TYPE="DBG";fi;\
@@ -545,6 +551,10 @@ $(VERSION): $(HV_CONFIG_H)
 	echo "#define HV_BUILD_USER "\""$$USER"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_SCENARIO "\"$(SCENARIO)\""" >> $(VERSION);\
 	echo "#define HV_BUILD_BOARD "\"$(BOARD)\""" >> $(VERSION);\
+	echo "#define HV_BRANCH_VERSION "\"$(BRANCH_VERSION)\""" >> $(VERSION);\
+	echo "#define HV_COMMIT_TAGS "\"$$COMMIT_TAGS\""" >> $(VERSION);\
+	echo "#define HV_COMMIT_TIME "\"$$COMMIT_TIME\""" >> $(VERSION);\
+	echo "#define HV_COMMIT_DIRTY "\""$$COMMIT_DIRTY"\""" >> $(VERSION);\
 	if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
 		echo "#define HV_CONFIG_TOOL \" with acrn-config\"" >> $(VERSION);\
 	else	\
