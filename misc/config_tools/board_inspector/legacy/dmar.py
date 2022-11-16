@@ -5,7 +5,7 @@
 
 import sys
 import ctypes
-import parser_lib
+from inspectorlib import external_tools
 
 ACPI_DMAR_TYPE = {
     'ACPI_DMAR_TYPE_HARDWARE_UNIT':0,
@@ -193,7 +193,7 @@ def get_secondary_bus(dmar_tbl, tmp_dev, tmp_fun):
     secondary_bus_str = ''
     found_pci_bdf = False
     pci_bridge_header_type = False
-    res = parser_lib.cmd_execute(cmd)
+    res = external_tools.run(cmd)
 
     while True:
         line = res.stdout.readline().decode("ascii")

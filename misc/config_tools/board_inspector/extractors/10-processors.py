@@ -4,7 +4,6 @@
 #
 
 import logging
-import subprocess
 import lxml.etree
 import re
 

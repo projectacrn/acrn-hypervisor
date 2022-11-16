@@ -7,7 +7,6 @@
 
 from __future__ import print_function
 import sys
-import subprocess # nosec
 import re
 import functools
 import inspect
@@ -15,6 +14,7 @@ import operator
 import textwrap
 import logging
 from collections import namedtuple
+from inspectorlib import external_tools
 
 _wrapper = textwrap.TextWrapper(width=78, initial_indent='  ', subsequent_indent='    ')
 regex_hex = "0x[0-9a-f]+"
@@ -26,7 +26,7 @@ class cpuid_result(namedtuple('cpuid_result', ['eax', 'ebx', 'ecx', 'edx'])):
         return "cpuid_result(eax={eax:#010x}, ebx={ebx:#010x}, ecx={ecx:#010x}, edx={edx:#010x})".format(**self._asdict())
 
 def cpuid(cpu_id, leaf, subleaf):
-    result = subprocess.run(["cpuid", "-l", str(leaf), "-s", str(subleaf), "-r"], stdout=subprocess.PIPE, check=True)
+    result = external_tools.run(["cpuid", "-l", str(leaf), "-s", str(subleaf), "-r"], check=True)
     stdout = result.stdout.decode("ascii").replace("\n", "")
     regex = re.compile(f"CPU {cpu_id}:[^:]*: eax=({regex_hex}) ebx=({regex_hex}) ecx=({regex_hex}) edx=({regex_hex})")
     m = regex.search(stdout)

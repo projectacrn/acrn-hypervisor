@@ -4,7 +4,7 @@
 #
 
 import os
-import subprocess # nosec
+from inspectorlib import external_tools
 
 BIOS_INFO_KEY = ['BIOS Information', 'Vendor:', 'Version:', 'Release Date:', 'BIOS Revision:']
 
@@ -45,14 +45,6 @@ def print_red(msg, err=False):
         print("\033[1;31m{0}\033[0m".format(msg))
 
 
-def decode_stdout(resource):
-    """Decode the information and return one line of the decoded information
-    :param resource: it contains information produced by subprocess.Popen method
-    """
-    line = resource.stdout.readline().decode('ascii')
-    return line
-
-
 def handle_hw_info(line, hw_info):
     """Handle the hardware information
     :param line: one line of information which had decoded to 'ASCII'
@@ -78,16 +70,6 @@ def handle_pci_dev(line):
             return True
 
     return False
-
-
-def cmd_execute(cmd):
-    """Excute cmd and retrun raw information
-    :param cmd: command what can be executed in shell
-    """
-    res = subprocess.Popen(cmd, shell=True,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-
-    return res
 
 
 def handle_block_dev(line):
@@ -122,7 +104,7 @@ def dump_execute(cmd, desc, config):
         print("\t\t</{0}>".format(desc), file=config)
         return
 
-    res = cmd_execute(cmd)
+    res = external_tools.run(cmd)
     while True:
         line = res.stdout.readline().decode('ascii')
         line = line.replace("&", "&amp;").replace('"', "&quot;") \
@@ -160,7 +142,7 @@ def dump_execute(cmd, desc, config):
 
 def get_output_lines(cmd):
     res_lines = []
-    res = cmd_execute(cmd)
+    res = external_tools.run(cmd)
     while True:
         line = res.stdout.readline().decode('ascii')
         if not line:
