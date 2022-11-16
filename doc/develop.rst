@@ -66,6 +66,7 @@ Advanced Features
    tutorials/cpu_sharing
    tutorials/sriov_virtualization
    tutorials/gpu-passthru
+   tutorials/enable_multiple_displays
    tutorials/run_kata_containers
    tutorials/rtvm_workload_design_guideline
    tutorials/acrn_on_qemu
