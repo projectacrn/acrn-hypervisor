@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Intel Corporation.
+ * Copyright (C) 2022 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -13,14 +13,9 @@
 #define PRE_VM_NUM 2U
 #define SERVICE_VM_NUM 0U
 #define MAX_POST_VM_NUM 14U
+#define MAX_TRUSTY_VM_NUM 0U
 #define CONFIG_MAX_VM_NUM 16U
-#define VM0_CONFIG_MEM_START_HPA 0x100000000UL
-#define VM0_CONFIG_MEM_SIZE 0x20000000UL
-#define VM0_CONFIG_MEM_START_HPA2 0x0UL
-#define VM0_CONFIG_MEM_SIZE_HPA2 0x0UL
-#define VM1_CONFIG_MEM_START_HPA 0x120000000UL
-#define VM1_CONFIG_MEM_SIZE 0x20000000UL
-#define VM1_CONFIG_MEM_START_HPA2 0x0UL
-#define VM1_CONFIG_MEM_SIZE_HPA2 0x0UL
+#define MAX_VUART_NUM_PER_VM 2U
+#define MAX_IR_ENTRIES 256U
 
 #endif /* VM_CONFIGURATIONS_H */

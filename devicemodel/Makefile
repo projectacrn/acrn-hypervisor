@@ -208,8 +208,6 @@ DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 
 PROGRAM := acrn-dm
 
-SAMPLES_NUC := $(wildcard samples/nuc/*)
-
 BIOS_BIN := $(wildcard bios/*)
 
 all: $(DM_OBJDIR)/$(PROGRAM)
@@ -259,11 +257,9 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MT $@
 
-install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-bios
+install: $(DM_OBJDIR)/$(PROGRAM) install-bios
 	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)$(bindir)/$(PROGRAM)
 
-install-samples-nuc: $(SAMPLES_NUC)
-	install -D -t $(DESTDIR)$(datadir)/acrn/samples/nuc $^
 
 install-bios: $(BIOS_BIN)
 	install -d $(DESTDIR)$(datadir)/acrn/bios

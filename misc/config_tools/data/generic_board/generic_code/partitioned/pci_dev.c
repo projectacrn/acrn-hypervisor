@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Intel Corporation.
+ * Copyright (C) 2022 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -31,9 +31,9 @@ struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
 				.d = 0x17U,
 				.f = 0x00U,
 			},
-		.vbar_base[0] = 0x80104000UL,
-		.vbar_base[5] = 0x80106000UL,
-		.vbar_base[1] = 0x80107000UL,
+		.vbar_base[0] = 0x80020000UL,
+		.vbar_base[5] = 0x80022000UL,
+		.vbar_base[1] = 0x80023000UL,
 		.vbar_base[4] = 0x3060UL,
 		.vbar_base[3] = 0x3080UL,
 		.vbar_base[2] = 0x3090UL,
@@ -48,12 +48,11 @@ struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
 			},
 		.pbdf.bits =
 			{
-				.b = 0x58U,
-				.d = 0x00U,
-				.f = 0x00U,
+				.b = 0x00U,
+				.d = 0x1FU,
+				.f = 0x06U,
 			},
 		.vbar_base[0] = 0x80000000UL,
-		.vbar_base[3] = 0x80100000UL,
 	},
 };
 struct acrn_vm_pci_dev_config vm1_pci_devs[VM1_CONFIG_PCI_DEV_NUM] = {

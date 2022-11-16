@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Intel Corporation.
+ * Copyright (C) 2022 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -12,29 +12,34 @@
 
 extern struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM];
 extern struct pt_intx_config vm0_pt_intx[1U];
+static struct vm_hpa_regions vm0_hpa[] = {
+	{.start_hpa = 0x100000000, .size_hpa = 0x20000000},
+};
 extern struct acrn_vm_pci_dev_config vm1_pci_devs[VM1_CONFIG_PCI_DEV_NUM];
 extern struct pt_intx_config vm1_pt_intx[1U];
+static struct vm_hpa_regions vm1_hpa[] = {
+	{.start_hpa = 0x120000000, .size_hpa = 0x20000000},
+};
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{
 		/* Static configured VM0 */
 		CONFIG_PRE_STD_VM,
 		.name = "PRE_STD_VM0",
 		.vm_prio = PRIO_LOW,
-		.guest_flags = GUEST_FLAG_STATIC_VM,
+		.companion_vm_id = 65535U,
+		.guest_flags = (GUEST_FLAG_STATIC_VM),
 		.cpu_affinity = VM0_CONFIG_CPU_AFFINITY,
 		.memory =
 			{
-				.start_hpa = VM0_CONFIG_MEM_START_HPA,
-				.size = VM0_CONFIG_MEM_SIZE,
-				.start_hpa2 = VM0_CONFIG_MEM_START_HPA2,
-				.size_hpa2 = VM0_CONFIG_MEM_SIZE_HPA2,
+				.region_num = 1,
+				.host_regions = vm0_hpa,
 			},
 		.os_config =
 			{
-				.name = "YOCTO",
+				.name = "",
 				.kernel_type = KERNEL_BZIMAGE,
 				.kernel_mod_tag = "Linux_bzImage",
-				.ramdisk_mod_tag = "",
+				.ramdisk_mod_tag = "Ubuntu",
 				.bootargs = VM0_BOOT_ARGS,
 			},
 		.acpi_config =
@@ -49,9 +54,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			},
 		.vuart[1] =
 			{
+				.irq = 3U,
 				.type = VUART_LEGACY_PIO,
 				.addr.port_base = 0x2F8U,
-				.irq = 3U,
 				.t_vuart.vm_id = 1U,
 				.t_vuart.vuart_id = 1U,
 			},
@@ -98,18 +103,17 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		CONFIG_PRE_STD_VM,
 		.name = "PRE_STD_VM1",
 		.vm_prio = PRIO_LOW,
-		.guest_flags = GUEST_FLAG_STATIC_VM,
+		.companion_vm_id = 65535U,
+		.guest_flags = (GUEST_FLAG_STATIC_VM),
 		.cpu_affinity = VM1_CONFIG_CPU_AFFINITY,
 		.memory =
 			{
-				.start_hpa = VM1_CONFIG_MEM_START_HPA,
-				.size = VM1_CONFIG_MEM_SIZE,
-				.start_hpa2 = VM1_CONFIG_MEM_START_HPA2,
-				.size_hpa2 = VM1_CONFIG_MEM_SIZE_HPA2,
+				.region_num = 1,
+				.host_regions = vm1_hpa,
 			},
 		.os_config =
 			{
-				.name = "YOCTO",
+				.name = "",
 				.kernel_type = KERNEL_BZIMAGE,
 				.kernel_mod_tag = "Linux_bzImage",
 				.ramdisk_mod_tag = "",
@@ -127,11 +131,11 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			},
 		.vuart[1] =
 			{
-				.type = VUART_LEGACY_PIO,
-				.addr.port_base = 0x2F8U,
 				.irq = 3U,
+				.type = VUART_LEGACY_PIO,
 				.t_vuart.vm_id = 0U,
 				.t_vuart.vuart_id = 1U,
+				.addr.port_base = 0x2F8U,
 			},
 		.pci_dev_num = VM1_CONFIG_PCI_DEV_NUM,
 		.pci_devs = vm1_pci_devs,
