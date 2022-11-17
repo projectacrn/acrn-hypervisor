@@ -517,15 +517,16 @@ distclean:
 PHONY: (VERSION)
 $(VERSION): $(HV_CONFIG_H)
 	touch $(VERSION)
-	@if [ "$(BUILD_VERSION)"x = x -o "$(BUILD_TAG)"x = x ];then \
+	@if [ "$(BUILD_VERSION)"x = x ];then \
 		COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 		DIRTY=`git diff-index --name-only HEAD`;\
 		if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
-		DAILY_TAG=`git tag --merged HEAD|grep "acrn"|tail -n 1`;\
 	else \
 		PATCH="$(BUILD_VERSION)"; \
-		DAILY_TAG="$(BUILD_TAG)"; \
 	fi; \
+	COMMIT_TAGS=$$(git tag --points-at HEAD|tr -s "\n" " "); \
+	COMMIT_TAGS=$$(eval echo $$COMMIT_TAGS);\
+	COMMIT_TIME=$$(git log -1 --date=format:"%Y-%m-%d-%T" --format=%cd); \
 	TIME=$$(date -u -d "@$${SOURCE_DATE_EPOCH:-$$(date +%s)}" "+%F %T"); \
 	USER="$${USER:-$$(id -u -n)}"; \
 	if [ x$(CONFIG_RELEASE) = "xy" ];then BUILD_TYPE="REL";else BUILD_TYPE="DBG";fi;\
@@ -535,21 +536,17 @@ $(VERSION): $(HV_CONFIG_H)
 	echo "" >> $(VERSION); \
 	echo "#ifndef VERSION_H" >> $(VERSION); \
 	echo "#define VERSION_H" >> $(VERSION); \
-	echo "#define HV_FULL_VERSION "\"$(FULL_VERSION)\""" >> $(VERSION);\
 	echo "#define HV_API_MAJOR_VERSION $(API_MAJOR_VERSION)U" >> $(VERSION);\
 	echo "#define HV_API_MINOR_VERSION $(API_MINOR_VERSION)U" >> $(VERSION);\
-	echo "#define HV_DAILY_TAG "\""$$DAILY_TAG"\""" >> $(VERSION);\
-	echo "#define HV_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION);\
+	echo "#define HV_BRANCH_VERSION "\"$(BRANCH_VERSION)\""" >> $(VERSION);\
+	echo "#define HV_COMMIT_DIRTY "\""$$PATCH"\""" >> $(VERSION);\
+	echo "#define HV_COMMIT_TAGS "\"$$COMMIT_TAGS\""" >> $(VERSION);\
+	echo "#define HV_COMMIT_TIME "\"$$COMMIT_TIME\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TYPE "\""$$BUILD_TYPE"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_USER "\""$$USER"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_SCENARIO "\"$(SCENARIO)\""" >> $(VERSION);\
 	echo "#define HV_BUILD_BOARD "\"$(BOARD)\""" >> $(VERSION);\
-	if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
-		echo "#define HV_CONFIG_TOOL \" with acrn-config\"" >> $(VERSION);\
-	else	\
-		echo "#define HV_CONFIG_TOOL \"\"" >> $(VERSION);\
-	fi;\
 	echo "#endif" >> $(VERSION)
 
 -include $(C_OBJS:.o=.d)
