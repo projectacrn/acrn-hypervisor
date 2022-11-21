@@ -227,27 +227,26 @@ distclean:
 $(VERSION_H):
 	mkdir -p $(DM_OBJDIR)/include
 	touch $(VERSION_H)
-	if [ "$(DM_BUILD_VERSION)"x = x -o "$(DM_BUILD_TAG)"x = x ];then\
+	if [ "$(DM_BUILD_VERSION)"x = x ];then\
 		COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 		DIRTY=`git diff-index --name-only HEAD`;\
 		if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
-		DAILY_TAG=`git tag --merged HEAD|grep "acrn"|tail -n 1`;\
 	else\
-		PATCH=$(DM_BUILD_VERSION);\
-		DAILY_TAG=$(DM_BUILD_TAG);\
+		PATCH="$(DM_BUILD_VERSION)";\
 	fi;\
+	COMMIT_TAGS=$$(git tag --points-at HEAD|tr -s "\n" " "); \
+	COMMIT_TAGS=$$(eval echo $$COMMIT_TAGS);\
+	COMMIT_TIME=$$(git log -1 --date=format:"%Y-%m-%d-%T" --format=%cd); \
 	TIME=$$(date -u -d "@$${SOURCE_DATE_EPOCH:-$$(date +%s)}" "+%Y-%m-%d %H:%M:%S"); \
 	USER="$${USER:-$$(id -u -n)}"; \
 	echo "/*" > $(VERSION_H); \
 	sed 's/^/ * /' ../LICENSE >> $(VERSION_H);\
 	echo " */" >> $(VERSION_H);\
 	echo "" >> $(VERSION_H);\
-	echo "#define DM_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION_H);\
-	echo "#define DM_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION_H);\
-	echo "#define DM_EXTRA_VERSION "\"$(EXTRA_VERSION)\""" >> $(VERSION_H);\
-	echo "#define DM_FULL_VERSION "\"$(FULL_VERSION)\""" >> $(VERSION_H);\
-	echo "#define DM_DAILY_TAG "\""$$DAILY_TAG"\""" >> $(VERSION_H);\
-	echo "#define DM_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION_H);\
+	echo "#define DM_BRANCH_VERSION "\"$(BRANCH_VERSION)\""" >> $(VERSION_H);\
+	echo "#define DM_COMMIT_DIRTY "\""$$PATCH"\""" >> $(VERSION_H);\
+	echo "#define DM_COMMIT_TAGS "\"$$COMMIT_TAGS\""" >> $(VERSION_H);\
+	echo "#define DM_COMMIT_TIME "\"$$COMMIT_TIME\""" >> $(VERSION_H);\
 	echo "#define DM_BUILD_TIME "\""$$TIME"\""" >> $(VERSION_H);\
 	echo "#define DM_BUILD_USER "\""$$USER"\""" >> $(VERSION_H)
 
