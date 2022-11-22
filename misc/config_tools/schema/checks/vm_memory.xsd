@@ -7,7 +7,7 @@
 
   <xs:assert test="sum(//memory/range[not(@id)]/@size) &gt; (sum(/acrn-config//vm[load_order != 'SERVICE_VM']//memory/size) + sum(/acrn-config//vm[load_order != 'SERVICE_VM']//size_hpa)) * 1024 * 1024">
     <xs:annotation acrn:severity="warning" acrn:report-on="/acrn-config//vm[load_order != 'SERVICE_VM']//memory">
-        <xs:documentation>The total memory size allocated to all VMs is larger then available host memory ({(sum(/acrn-config//vm[load_order != 'SERVICE_VM']//memory/size) + sum(/acrn-config//vm[load_order != 'SERVICE_VM']//size_hpa))} MB > {sum(//memory/range[not(@id)]/@size) / 1048576} MB). Reduce total allocated User VM memory size.</xs:documentation>
+        <xs:documentation>The total memory size allocated to all VMs is larger then available host memory ({(sum(/acrn-config//vm[load_order != 'SERVICE_VM']//memory/size) + sum(/acrn-config//vm[load_order != 'SERVICE_VM']//size_hpa))} MB > {sum(//memory/range[not(@id)]/@size) div 1048576} MB). Reduce total allocated User VM memory size.</xs:documentation>
     </xs:annotation>
   </xs:assert>
 
