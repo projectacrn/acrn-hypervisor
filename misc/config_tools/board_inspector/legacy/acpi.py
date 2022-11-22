@@ -546,8 +546,8 @@ def store_px_data(sysnode, config):
     p_cnt = 0
     for freq in freqs.split():
         if boost != 0 and i == 0:
-            res = external_tools.run(['rdmsr', '0x1ad'])
-            if res.returncode != 0:
+            res = external_tools.run('rdmsr 0x1ad')
+            if res.wait() != 0:
                 logging.debug("MSR 0x1ad not support in this platform!")
                 return
 
