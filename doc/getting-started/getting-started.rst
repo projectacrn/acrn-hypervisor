@@ -302,10 +302,10 @@ Generate a Board Configuration File
 
    Option 1: Use ``scp``
       Use the ``scp`` command to copy the Debian package from your development
-      computer to the ``~/acrn-work`` working directory we created on the target
+      computer to the ``/tmp`` directory on the target
       system.  Replace ``10.0.0.200`` with the target system's IP address you found earlier::
 
-         scp ~/acrn-work/python3-acrn-board-inspector*.deb acrn@10.0.0.200:~/acrn-work
+         scp ~/acrn-work/python3-acrn-board-inspector*.deb acrn@10.0.0.200:/tmp
 
    Option 2: Use a USB disk
        a. On the development computer, insert the USB disk that you intend to use to
@@ -337,14 +337,13 @@ Generate a Board Configuration File
 
              mkdir -p ~/acrn-work
              disk="/media/$USER/"$(ls /media/$USER)
-             cp -r "$disk"/python3-acrn-board-inspector*.deb  ~/acrn-work
+             cp -r "$disk"/python3-acrn-board-inspector*.deb  /tmp
 
 #. Now that we've got the Board Inspector Debian package on the target system, install it there:
 
    .. code-block:: bash
 
-      cd  ~/acrn-work
-      sudo apt install -y ./python3-acrn-board-inspector*.deb
+      sudo apt install -y /tmp/python3-acrn-board-inspector*.deb
 
 #. Reboot the target system:
 
@@ -414,7 +413,7 @@ Generate a Scenario Configuration File and Launch Script
 ********************************************************
 
 In this step, you will download, install, and use the `ACRN Configurator
-<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.1.deb>`__
+<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.2-unstable.deb>`__
 to generate a scenario configuration file and launch script.
 
 A **scenario configuration file** is an XML file that holds the parameters of
@@ -430,7 +429,8 @@ post-launched User VM. Each User VM has its own launch script.
    .. code-block:: bash
 
       cd ~/acrn-work
-      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.1.deb
+      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.2-unstable.deb
+      cp acrn-configurator-3.2-unstable.deb /tmp
 
    If you already have a previous version of the acrn-configurator installed,
    you should first remove it:
@@ -443,7 +443,7 @@ post-launched User VM. Each User VM has its own launch script.
 
    .. code-block:: bash
 
-      sudo apt install -y ./acrn-configurator-3.1.deb
+      sudo apt install -y /tmp/acrn-configurator-3.2-unstable.deb
 
 #. Launch the ACRN Configurator:
 
@@ -660,16 +660,7 @@ Build ACRN
              ~/acrn-work/grub*.deb \
              ~/acrn-work/*acrn-service-vm*.deb \
              ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh \
-             /usr/bin/iasl \
              acrn@10.0.0.200:~/acrn-work
-
-      Then, go to the target system and put the ``iasl`` tool in its proper
-      place::
-
-         cd ~/acrn-work
-         sudo cp iasl /usr/sbin/
-         sudo chmod a+x /usr/sbin/iasl
-
 
    Option 2: by USB disk
        a. Insert the USB disk into the development computer and run these commands:
@@ -681,7 +672,6 @@ Build ACRN
              cp ~/acrn-work/grub*.deb "$disk"/
              cp ~/acrn-work/*acrn-service-vm*.deb "$disk"/
              cp ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh "$disk"/
-             sudo cp /usr/bin/iasl "$disk"/
              sync && sudo umount "$disk"
 
        #. Insert the USB disk you just used into the target system and run these
@@ -694,8 +684,6 @@ Build ACRN
              cp "$disk"/grub*.deb ~/acrn-work
              cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
              cp "$disk"/launch_user_vm_id1.sh ~/acrn-work
-             sudo cp "$disk"/iasl /usr/sbin/
-             sudo chmod a+x /usr/sbin/iasl
              sync && sudo umount "$disk"
 
 .. _gsg-install-acrn:
