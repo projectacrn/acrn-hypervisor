@@ -3,6 +3,45 @@
 Security Advisory
 #################
 
+Addressed in ACRN v3.0.2
+************************
+We recommend that all developers using v3.0.1 or earlier upgrade to this v3.0.2
+release (or later), which addresses the following security issue discovered in
+previous releases. For v3.1 users, these issues are addressed in the v3.2
+release:
+
+-----
+
+- Board_inspector: use executables found under system paths
+    Using partial executable paths in the board inspector may cause unintended
+    results when another executable has the same name and is also detectable in
+    the search paths.
+
+    Introduce a wrapper module (`external_tools`) which locates executables
+    only under system paths such as /usr/bin and /usr/sbin and converts partial
+    executable paths to absolute ones before executing them via the subprocess
+    module. All invocations to `subprocess.run` or `subprocess.Popen`
+    throughout the board inspector are replaced with `external_tools.run`, with
+    the only exception being the invocation to the legacy board parser which
+    already uses an absolute path to the current Python interpreter.
+
+    **Affected Release:** v3.1, v3.0.1 and earlier
+
+- Add tarfile member sanitization to extractall()
+    A directory traversal vulnerability in the Python tarfile module extractall() functions
+    could allow user-assisted remote attackers to overwrite arbitrary files via
+    a ``..`` (dot dot) sequence in filenames in a tar archive, related to CVE-2001-1267.
+    (Addresses security issue tracked by CVE-2007-4559)
+
+    **Affected Release:** v3.1, v3.0.1 and earlier
+
+- PMU (Performance Monitoring Unit) is passed through to an RTVM only for debug mode
+    Enabling Pass-through PMU counters to RTVM can cause workload interference
+    in a release build, so enable PMU passthrough only when building ACRN in
+    debug mode.
+
+    **Affected Release:** v3.1, v3.0.1 and earlier
+
 Addressed in ACRN v3.0.1
 ************************
 We recommend that all developers upgrade to this v3.0.1 release (or later), which
