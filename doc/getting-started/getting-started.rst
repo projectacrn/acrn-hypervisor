@@ -349,7 +349,7 @@ Generate a Board Configuration File
 
    .. code-block:: bash
 
-      reboot
+      sudo reboot
 
 #. Run the Board Inspector to generate the board configuration file. This
    example uses the parameter ``my_board`` as the file name. The Board Inspector
@@ -359,7 +359,7 @@ Generate a Board Configuration File
    .. code-block:: bash
 
       cd ~/acrn-work
-      sudo board_inspector my_board
+      sudo acrn-board-inspector my_board
 
    .. note::
 
