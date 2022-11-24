@@ -135,20 +135,12 @@ To set up the ACRN build environment on the development computer:
       cd ~/acrn-work
       git clone https://github.com/projectacrn/acrn-hypervisor.git
       cd acrn-hypervisor
-      git checkout master
+      git checkout release_3.2
 
       cd ..
       git clone https://github.com/projectacrn/acrn-kernel.git
       cd acrn-kernel
-      git checkout master
-
-
-#. Configure git with your name and email address:
-
-   .. code-block:: none
-
-      git config --global user.name "David Developer"
-      git config --global user.email "david.developer@company.com"
+      git checkout release_3.2
 
 .. _gsg-board-setup:
 
@@ -351,7 +343,7 @@ Generate a Board Configuration File
 
       sudo reboot
 
-#. Run the Board Inspector to generate the board configuration file. This
+#. Run the Board Inspector on the target system to generate the board configuration file. This
    example uses the parameter ``my_board`` as the file name. The Board Inspector
    can take a few minutes to scan your target system and create the board XML
    file with your target system's information.
@@ -592,7 +584,7 @@ Build ACRN
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-hypervisor
-      debian/debian_build.sh clean && debian/debian_build.sh -c ~/acrn-work/MyConfiguration -b my_board.board -s scenario
+      debian/debian_build.sh clean && debian/debian_build.sh -c ~/acrn-work/MyConfiguration -b "" -s ""
 
    The build typically takes a few minutes. When done, the build generates several
    Debian packages in the parent (``~/acrn-work``) directory:
