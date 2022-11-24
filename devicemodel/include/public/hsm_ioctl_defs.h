@@ -107,8 +107,6 @@
 	_IOW(ACRN_IOCTL_TYPE, 0x41, struct acrn_vm_memmap)
 #define ACRN_IOCTL_UNSET_MEMSEG		\
 	_IOW(ACRN_IOCTL_TYPE, 0x42, struct acrn_vm_memmap)
-#define ACRN_IOCTL_SETUP_SBUF	\
-	_IOW(ACRN_IOCTL_TYPE, 0x43, struct acrn_sbuf)
 
 /* PCI assignment*/
 #define ACRN_IOCTL_SET_PTDEV_INTR	\
@@ -138,6 +136,9 @@
 #define ACRN_IOCTL_IRQFD		\
 	_IOW(ACRN_IOCTL_TYPE, 0x71, struct acrn_irqfd)
 
+/* Asynchronous IO */
+#define ACRN_IOCTL_SETUP_ASYNCIO	\
+	_IOW(ACRN_IOCTL_TYPE, 0x90, __u64)
 
 #define	ACRN_MEM_ACCESS_RIGHT_MASK	0x00000007U
 #define	ACRN_MEM_ACCESS_READ		0x00000001U
@@ -250,13 +251,4 @@ struct acrn_irqfd {
        struct acrn_msi_entry msi;
 };
 
-/**
- * @brief data structure to register a share buffer by ioctl
- */
-struct acrn_sbuf {
-	/** Type of the sbuf. */
-	uint32_t sbuf_id;
-	/** Base address of the sbuf. */
-	uint64_t base;
-};
 #endif /* VHM_IOCTL_DEFS_H */

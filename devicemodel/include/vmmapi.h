@@ -107,7 +107,7 @@ int	vm_create_ioreq_client(struct vmctx *ctx);
 int	vm_destroy_ioreq_client(struct vmctx *ctx);
 int	vm_attach_ioreq_client(struct vmctx *ctx);
 int	vm_notify_request_done(struct vmctx *ctx, int vcpu);
-int	vm_setup_sbuf(struct vmctx *ctx, uint32_t sbuf_type, uint64_t base);
+int	vm_setup_asyncio(struct vmctx *ctx, uint64_t base);
 void	vm_clear_ioreq(struct vmctx *ctx);
 const char *vm_state_to_str(enum vm_suspend_how idx);
 void	vm_set_suspend_mode(enum vm_suspend_how how);

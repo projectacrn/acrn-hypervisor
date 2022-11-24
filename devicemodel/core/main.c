@@ -852,7 +852,7 @@ vm_init_asyncio(struct vmctx *ctx, uint64_t base)
 	sbuf->overrun_cnt = 0;
 	sbuf->head = 0;
 	sbuf->tail = 0;
-	return vm_setup_sbuf(ctx, ACRN_ASYNCIO, base);
+	return vm_setup_asyncio(ctx, base);
 }
 
 int
