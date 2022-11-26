@@ -46,6 +46,10 @@ def main(scenario):
             if name.text not in vmNames:
                 name.text = ""
 
+        own_pcpus = etree.findall(".//vm[vm_type = 'RTVM']/own_pcpu")
+        for o in own_pcpus:
+            o.text = 'y'
+
         result = tostring(obj.get("scenario_etree").getroot())
         result = result.decode()
     result = convert_result({
