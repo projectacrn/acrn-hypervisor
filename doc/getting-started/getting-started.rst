@@ -698,7 +698,7 @@ Install ACRN
 
    .. code-block:: bash
 
-      reboot
+      sudo reboot
 
 #. Confirm that you see the GRUB menu with the "ACRN multiboot2" entry. Select
    it and proceed to booting ACRN. (It may be auto-selected, in which case it
@@ -825,7 +825,7 @@ Launch the User VM
    .. code-block:: console
 
       ubuntu@ubuntu:~$ uname -r
-      5.15.0-43-generic
+      5.15.71-acrn-service-vm-00001-g7df95512ae9e
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
