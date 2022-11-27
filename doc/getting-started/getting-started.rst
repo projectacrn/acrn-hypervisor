@@ -635,10 +635,10 @@ Build ACRN
 
       cd ..
       ls *.deb
-         linux-headers-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
-         linux-image-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
-         linux-image-5.15.44-acrn-service-vm-dbg_5.15.44-acrn-service-vm-1_amd64.deb
-         linux-libc-dev_5.15.44-acrn-service-vm-1_amd64.deb
+         linux-headers-5.15.71-acrn-service-vm_5.15.71-acrn-service-vm-1_amd64.deb
+         linux-image-5.15.71-acrn-service-vm_5.15.71-acrn-service-vm-1_amd64.deb
+         linux-image-5.15.71-acrn-service-vm-dbg_5.15.71-acrn-service-vm-1_amd64.deb
+         linux-libc-dev_5.15.71-acrn-service-vm-1_amd64.deb
 
 #. Copy all the necessary files generated on the development computer to the
    target system, using one of these two options:
@@ -694,25 +694,41 @@ Install ACRN
       sudo apt install ./acrn*.deb ./grub*.deb
       sudo apt install ./*acrn-service-vm*.deb
 
+#. Enter /etc/default/grub and edit to show grub menu:
+   
+   .. code-block:: bash
+     
+      #GRUB_TIMEOUT_STYLE=hidden
+      GRUB_TIMEOUT=5
+      
 #. Reboot the system:
 
    .. code-block:: bash
 
       reboot
 
-#. Confirm that you see the GRUB menu with the "ACRN multiboot2" entry. Select
+#. Confirm that you see the GRUB menu with the "Ubuntu-ACRN Board Inspector" entry. Select
    it and proceed to booting ACRN. (It may be auto-selected, in which case it
    will boot with this option automatically in 5 seconds.)
 
+   Note: Maybe there are several same items display, you can check them via pressng `e` to
+       select the item with kernel "5.15.0-53-generic".
+
+   Example grub menu shown as below:
+
    .. code-block:: console
-      :emphasize-lines: 5
+      :emphasize-lines: 9
 
                               GNU GRUB version 2.04
       ────────────────────────────────────────────────────────────────────────────────
       Ubuntu
       Advanced options for Ubuntu
-      *Ubuntu GNU/Linux, with ACRN hypervisor
-      Advanced options for Ubuntu GNU/Linux (with ACRN hypervisor)
+      Ubuntu-ACRN Board Inspector
+      Ubuntu-ACRN Board Inspector
+      *Ubuntu-ACRN Board Inspector
+      Ubuntu with ACRN hypervisor
+      Ubuntu with ACRN hypervisor
+      Ubuntu with ACRN hypervisor
       UEFI Firmware Settings
 
 .. _gsg-run-acrn:
@@ -833,7 +849,7 @@ Launch the User VM
    .. code-block:: console
 
       acrn@vecow:~$ uname -r
-      5.15.44-acrn-service-vm
+      5.15.71-acrn-service-vm
 
    The User VM has launched successfully. You have completed this ACRN setup.
 

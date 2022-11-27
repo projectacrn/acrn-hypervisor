@@ -117,7 +117,7 @@ As a normal (e.g., **acrn**) user, follow these steps:
 
      cd ~/acrn-work/acrn-hypervisor
      git fetch --all
-     git checkout master 
+     git checkout release_3.2
 
 #. Build the ACRN sample application source code::
 
@@ -394,7 +394,7 @@ Build the ACRN Hypervisor and Service VM Images
      cd ~/acrn-work/acrn-hypervisor
 
      make clean
-     make BOARD=~/acrn-work/MyConfiguration/my_board.board.xml SCENARIO=~/acrn-work/MyConfiguration/scenario.xml
+     debian/debian_build.sh clean && debian/debian_build.sh -c ~/acrn-work/MyConfiguration -b "my_board" -s "MyConfiguration"
 
    The build typically takes about a minute. When done, the build
    generates a Debian package in the build directory with your board and
@@ -411,7 +411,7 @@ Build the ACRN Hypervisor and Service VM Images
      cd ~/acrn-work/acrn-kernel
      git fetch --all
 
-     git checkout acrn-v3.1
+     git checkout release_3.2
 
      make distclean
      cp kernel_config_service_vm .config
@@ -440,8 +440,7 @@ Copy Files from the Development Computer to Your Target System
 1. Copy all the files generated on the development computer to the
    target system. This includes the sample application executable files,
    HMI_VM and RT_VM images, Debian packages for the Service VM and
-   Hypervisor, launch scripts, and the iasl tool built following the
-   Getting Started Guide. You can use ``scp`` to copy across the local network,
+   Hypervisor, launch scripts. You can use ``scp`` to copy across the local network,
    or use a USB stick:
 
    Option 1: use ``scp`` to copy files over the local network
@@ -452,15 +451,10 @@ Copy Files from the Development Computer to Your Target System
        cd ~/acrn-work
 
        scp acrn-hypervisor/misc/sample_application/image_builder/build/*_vm.img \
-           acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
+           acrn-hypervisor_3.2-unstable~1.gbp<commit ID>_amd64.deb \    
            *acrn-service-vm*.deb MyConfiguration/launch_user_vm_id*.sh \
-           acpica-unix-20210105/generate/unix/bin/iasl \
            acrn@10.0.0.200:~/acrn-work
 
-     Then on the target system, run these commands::
-
-       sudo cp ~/acrn-work/iasl /usr/sbin
-       sudo ln -s /usr/sbin/iasl /usr/bin/iasl
 
    Option 2: use a USB stick to copy files
      Because the VM image files are large, format your USB stick with a file
@@ -501,7 +495,7 @@ Install and Run ACRN on the Target System
 
      cd ~/acrn-work
      sudo apt purge acrn-hypervisor
-     sudo apt install ./acrn-my_board-MyConfiguration*.deb
+     sudo apt install ./acrn-hypervisor_3.2-unstable~1.gbp<commit ID>_amd64.deb
      sudo apt install ./*acrn-service-vm*.deb
 
 #. Enable networking services for sharing with the HMI User VM::
