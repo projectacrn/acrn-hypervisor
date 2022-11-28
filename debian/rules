@@ -62,7 +62,7 @@ $(eval $(call unquote,$(shell xmllint --xpath '/acrn-config/@board' $1 2>/dev/nu
 $(eval $(if $(board),                                                                     \
     $(eval config_$(board) := $1)                                                         \
     $(eval boardlist := $(sort $(boardlist) $(board)))                                    \
-    $(foreach f,$(wildcard $(addprefix $(dir $1),*)),                                     \
+    $(foreach f,$(wildcard $(addprefix $(dir $1),*.xml)),                                 \
         $(if $(strip $(shell xmllint --xpath '/acrn-config/@board' $f 2>/dev/null)),,     \
             $(if $(subst scenario.xml,,$(notdir $f)),                                     \
                 $(eval scenario = $(basename $(notdir $f))),                              \
