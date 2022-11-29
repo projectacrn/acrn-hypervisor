@@ -53,11 +53,6 @@ Before you begin, make sure your machines have the following prerequisites:
   - USB keyboard and mouse
   - Monitor
   - Ethernet cable and Internet access
-  - A second USB disk with minimum 16GB capacity. Format your USB disk with a
-    file system that supports files greater than 4GB: extFAT or NTFS, but not
-    FAT32. We'll use this USB disk to copy files between the development
-    computer and target system. Instead of a USB drive, you can copy files
-    between systems over the network using the ``scp`` command.
   - Local storage device (NVMe or SATA drive, for example).  We recommend having
     40GB or more of free space.
 
@@ -289,47 +284,11 @@ Generate a Board Configuration File
       In a few seconds, the build generates a board_inspector Debian package in the
       parent (``~/acrn-work``) directory.
 
-#. Copy the Board Inspector Debian package from the development computer to the
-   target system.
+#. Use the ``scp`` command to copy the board inspector Debian package from your
+   development computer to the ``/tmp`` directory on the target system.  Replace
+   ``10.0.0.200`` with the target system's IP address you found earlier::
 
-   Option 1: Use ``scp``
-      Use the ``scp`` command to copy the Debian package from your development
-      computer to the ``/tmp`` directory on the target
-      system.  Replace ``10.0.0.200`` with the target system's IP address you found earlier::
-
-         scp ~/acrn-work/python3-acrn-board-inspector*.deb acrn@10.0.0.200:/tmp
-
-   Option 2: Use a USB disk
-       a. On the development computer, insert the USB disk that you intend to use to
-          copy files.
-
-       #. Ensure that there is only one USB disk inserted by running the following
-          command:
-
-          .. code-block:: bash
-
-             ls /media/$USER
-
-          Confirm that only one disk name appears. You'll use that disk name in the following steps.
-
-       #. Copy the Board Inspector Debian package to the USB disk:
-
-          .. code-block:: bash
-
-             cd ~/acrn-work/
-             disk="/media/$USER/"$(ls /media/$USER)
-             cp -r python3-acrn-board-inspector*.deb "$disk"/
-             sync && sudo umount "$disk"
-
-       #. Remove the USB disk from the development computer and insert it into the target system.
-
-       #. Copy the Board Inspector Debian package from the USB disk to the target:
-
-          .. code-block:: bash
-
-             mkdir -p ~/acrn-work
-             disk="/media/$USER/"$(ls /media/$USER)
-             cp -r "$disk"/python3-acrn-board-inspector*.deb  /tmp
+     scp ~/acrn-work/python3-acrn-board-inspector*.deb acrn@10.0.0.200:/tmp
 
 #. Now that we've got the Board Inspector Debian package on the target system, install it there:
 
@@ -365,37 +324,12 @@ Generate a Board Configuration File
 
       ls ./my_board.xml
 
-#. Copy ``my_board.xml`` from the target to the development computer.  Again we
-   have two options:
+#. From your development computer, use the ``scp`` command to copy the board
+   configuration file on your target system back to the ``~/acrn-work``
+   directory on your development computer. Replace ``10.0.0.200`` with the
+   target system's IP address you found earlier::
 
-   Option 1: Use ``scp``
-      From your development computer, use the ``scp`` command to copy the board
-      configuration file from your target system back to the
-      ``~/acrn-work`` directory on your development computer. Replace
-      ``10.0.0.200`` with the target system's IP address you found earlier::
-
-         scp acrn@10.0.0.200:~/acrn-work/my_board.xml ~/acrn-work/
-
-   Option 2: Use a USB disk
-       a. Make sure the USB disk is connected to the target.
-
-       #. Copy ``my_board.xml`` to the USB disk:
-
-          .. code-block:: bash
-
-             disk="/media/$USER/"$(ls /media/$USER)
-             cp ~/acrn-work/my_board.xml "$disk"/
-             sync && sudo umount "$disk"
-
-       #. Insert the USB disk into the development computer.
-
-       #. Copy ``my_board.xml`` from the USB disk to the development computer:
-
-          .. code-block:: bash
-
-             disk="/media/$USER/"$(ls /media/$USER)
-             cp "$disk"/my_board.xml ~/acrn-work
-             sync && sudo umount "$disk"
+     scp acrn@10.0.0.200:~/acrn-work/my_board.xml ~/acrn-work/
 
 .. _gsg-dev-setup:
 
@@ -421,8 +355,7 @@ post-launched User VM. Each User VM has its own launch script.
    .. code-block:: bash
 
       cd ~/acrn-work
-      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.2-unstable.deb
-      cp acrn-configurator-3.2-unstable.deb /tmp
+      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.2-unstable.deb -P /tmp
 
    If you already have a previous version of the acrn-configurator installed,
    you should first remove it:
@@ -577,14 +510,14 @@ post-launched User VM. Each User VM has its own launch script.
 .. rst-class:: numbered-step
 
 Build ACRN
-***************
+**********
 
 #. On the development computer, build the ACRN hypervisor:
 
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-hypervisor
-      debian/debian_build.sh clean && debian/debian_build.sh -c ~/acrn-work/MyConfiguration -b "" -s ""
+      debian/debian_build.sh clean && debian/debian_build.sh -c ~/acrn-work/MyConfiguration
 
    The build typically takes a few minutes. When done, the build generates several
    Debian packages in the parent (``~/acrn-work``) directory:
@@ -603,7 +536,7 @@ Build ACRN
          acrn-tools_*.deb
          grub-acrn_*.deb
 
-   The Debian packages contain the ACRN hypervisor and tools to ease installing
+   These Debian packages contain the ACRN hypervisor and tools to ease installing
    ACRN on the target.
 
 #. Build the ACRN kernel for the Service VM:
@@ -635,48 +568,20 @@ Build ACRN
 
       cd ..
       ls *.deb
-         linux-headers-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
-         linux-image-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
-         linux-image-5.15.44-acrn-service-vm-dbg_5.15.44-acrn-service-vm-1_amd64.deb
-         linux-libc-dev_5.15.44-acrn-service-vm-1_amd64.deb
+         linux-headers-5.15.71-acrn-service-vm_5.15.71-acrn-service-vm-1_amd64.deb
+         linux-image-5.15.71-acrn-service-vm_5.15.71-acrn-service-vm-1_amd64.deb
+         linux-image-5.15.71-acrn-service-vm-dbg_5.15.71-acrn-service-vm-1_amd64.deb
+         linux-libc-dev_5.15.71-acrn-service-vm-1_amd64.deb
 
-#. Copy all the necessary files generated on the development computer to the
-   target system, using one of these two options:
+#. Use the ``scp`` command to copy files from your development computer to the
+   target system.  Replace ``10.0.0.200`` with the target system's IP address
+   you found earlier::
 
-   Option 1: Use ``scp``
-      Use the ``scp`` command to copy files from your development computer to 
-      the target system.
-      Replace ``10.0.0.200`` with the target system's IP address you found earlier::
-
-         sudo scp ~/acrn-work/acrn*.deb \
-             ~/acrn-work/grub*.deb \
-             ~/acrn-work/*acrn-service-vm*.deb \
-             ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh \
-             acrn@10.0.0.200:~/acrn-work
-
-   Option 2: by USB disk
-       a. Insert the USB disk into the development computer and run these commands:
-
-          .. code-block:: bash
-
-             disk="/media/$USER/"$(ls /media/$USER)
-             cp ~/acrn-work/acrn*.deb "$disk"/
-             cp ~/acrn-work/grub*.deb "$disk"/
-             cp ~/acrn-work/*acrn-service-vm*.deb "$disk"/
-             cp ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh "$disk"/
-             sync && sudo umount "$disk"
-
-       #. Insert the USB disk you just used into the target system and run these
-          commands to copy the files locally:
-
-          .. code-block:: bash
-
-             disk="/media/$USER/"$(ls /media/$USER)
-             cp "$disk"/acrn*.deb ~/acrn-work
-             cp "$disk"/grub*.deb ~/acrn-work
-             cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
-             cp "$disk"/launch_user_vm_id1.sh ~/acrn-work
-             sync && sudo umount "$disk"
+     sudo scp ~/acrn-work/acrn*.deb \
+         ~/acrn-work/grub*.deb \
+         ~/acrn-work/*acrn-service-vm*.deb \
+         ~/acrn-work/MyConfiguration/launch_user_vm_id1.sh \
+         acrn@10.0.0.200:~/acrn-work
 
 .. _gsg-install-acrn:
 
@@ -691,29 +596,17 @@ Install ACRN
    .. code-block:: bash
 
       cd ~/acrn-work
-      sudo apt install ./acrn*.deb ./grub*.deb
-      sudo apt install ./*acrn-service-vm*.deb
+      cp ./acrn*.deb ./grub*.deb ./*acrn-service-vm*.deb /tmp
+      sudo apt install /tmp/acrn*.deb /tmp/grub*.deb /tmp/*acrn-service-vm*.deb
 
 #. Reboot the system:
 
    .. code-block:: bash
 
-      sudo reboot
+      reboot
 
-#. Confirm that you see the GRUB menu with the "ACRN multiboot2" entry. Select
-   it and proceed to booting ACRN. (It may be auto-selected, in which case it
-   will boot with this option automatically in 5 seconds.)
-
-   .. code-block:: console
-      :emphasize-lines: 5
-
-                              GNU GRUB version 2.04
-      ────────────────────────────────────────────────────────────────────────────────
-      Ubuntu
-      Advanced options for Ubuntu
-      *Ubuntu GNU/Linux, with ACRN hypervisor
-      Advanced options for Ubuntu GNU/Linux (with ACRN hypervisor)
-      UEFI Firmware Settings
+   The target system will reboot into the ACRN hypervisor and
+   start the Ubuntu Service VM.
 
 .. _gsg-run-acrn:
 
@@ -724,7 +617,8 @@ Run ACRN and the Service VM
 
 The ACRN hypervisor boots the Ubuntu Service VM automatically.
 
-#. On the target, log in to the Service VM. (It will look like a normal
+#. On the target, log in to the Service VM using the ``acrn`` username and
+   password you set up previously. (It will look like a normal
    graphical Ubuntu session.)
 
 #. Verify that the hypervisor is running by checking ``dmesg`` in the Service
@@ -756,12 +650,12 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
 Launch the User VM
 *******************
 
-#. On the target system, use the web browser to go to the `official Ubuntu website <https://releases.ubuntu.com/jammy/>`__ to
+#. On the target system, use the web browser to visit the `official Ubuntu website <https://releases.ubuntu.com/jammy/>`__ and
    get the Ubuntu Desktop 22.04 LTS ISO image
    ``ubuntu-22.04.1-desktop-amd64.iso`` for the User VM. (The same image you
    specified earlier in the ACRN Configurator UI.) Alternatively, instead of
-   downloading it again, you can use a USB drive or ``scp`` to copy the ISO
-   image file to the ``~/acrn-work`` directory on the target system.
+   downloading it again, you could use ``scp`` to copy the ISO
+   image file from the development system to the ``~/acrn-work`` directory on the target system.
 
 #. If you downloaded the ISO file on the target system, copy it from the
    Downloads directory to the ``~/acrn-work/`` directory (the location we said
@@ -825,7 +719,7 @@ Launch the User VM
    .. code-block:: console
 
       ubuntu@ubuntu:~$ uname -r
-      5.15.71-acrn-service-vm-00001-g7df95512ae9e
+      5.15.0-43-generic
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
@@ -833,7 +727,7 @@ Launch the User VM
    .. code-block:: console
 
       acrn@vecow:~$ uname -r
-      5.15.44-acrn-service-vm
+      5.15.71-acrn-service-vm
 
    The User VM has launched successfully. You have completed this ACRN setup.
 
