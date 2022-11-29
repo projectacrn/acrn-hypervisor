@@ -32,8 +32,8 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 unquote = $(subst $\",,$1)
 
 # set these variables to define build of certain boards/scenarios, e.g.
-ACRN_BOARDLIST ?= whl-ipc-i5 nuc11tnbi5 cfl-k700-i7 tgl-vecow-spc-7100-Corei7
-ACRN_SCENARIOLIST ?= partitioned shared hybrid hybrid_rt
+ACRN_BOARDLIST ?=
+ACRN_SCENARIOLIST ?=
 
 # for now build the debug versions
 # set to y for RELEASE build
