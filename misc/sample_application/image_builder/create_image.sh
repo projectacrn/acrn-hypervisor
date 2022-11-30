@@ -227,7 +227,7 @@ function cleanup() {
 mount_point=$(pwd)/mnt
 if [[ ${vm_type} == "hmi-vm" ]]; then
     target_image=${hmi_vm_image}
-    size_modifier="+4G"
+    size_modifier="+5G"
 elif [[ ${vm_type} == "rt-vm" ]]; then
     target_image=${rt_vm_image}
     size_modifier="+1G"
@@ -236,7 +236,7 @@ else
     exit 1
 fi
 
-try_step "Download Ubuntu Focal cloud image" download_image ${cloud_image} ${cloud_image_url}
+try_step "Download Ubuntu cloud image" download_image ${cloud_image} ${cloud_image_url}
 if [[ ${vm_type} == "rt-vm" ]]; then
     try_step "Copy the RT kernel to build directory" copy_rt_kernel
     try_step "Check availability of RT kernel image" check_rt_kernel
