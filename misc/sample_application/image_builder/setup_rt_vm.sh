@@ -35,7 +35,8 @@ function install_rt_kernel() {
     search_dir=$1
     for file in $(ls -r ${search_dir}/*acrn-kernel-*.deb)
     do
-        sudo apt install ${file} -y
+        cp ${file} /tmp
+        sudo apt install /tmp/${file##*/} -y
     done
 }
 
