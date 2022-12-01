@@ -567,7 +567,7 @@ Build ACRN
    .. code-block:: bash
 
       cd ..
-      ls *.deb
+      ls *acrn-service-vm*.deb  
          linux-headers-5.15.71-acrn-service-vm_5.15.71-acrn-service-vm-1_amd64.deb
          linux-image-5.15.71-acrn-service-vm_5.15.71-acrn-service-vm-1_amd64.deb
          linux-image-5.15.71-acrn-service-vm-dbg_5.15.71-acrn-service-vm-1_amd64.deb
@@ -599,6 +599,16 @@ Install ACRN
       cp ./acrn*.deb ./grub*.deb ./*acrn-service-vm*.deb /tmp
       sudo apt install /tmp/acrn*.deb /tmp/grub*.deb /tmp/*acrn-service-vm*.deb
 
+#. Modify the GRUB menu display using ``sudo vi /etc/default/grub``, comment out the hidden style  
+   and changing the timeout to 5 seconds (leave other lines as they are), as shown:: 
+
+      #GRUB_TIMEOUT_STYLE=hidden
+      GRUB_TIMEOUT=5
+
+   and install the new GRUB menu using::
+   
+      sudo update-grub
+
 #. Reboot the system:
 
    .. code-block:: bash
@@ -607,6 +617,29 @@ Install ACRN
 
    The target system will reboot into the ACRN hypervisor and
    start the Ubuntu Service VM.
+
+#. Confirm that you see the GRUB menu with the "Ubuntu-ACRN Board Inspector" entry. Select
+   it and proceed to booting ACRN. (It may be auto-selected, in which case it
+   will boot with this option automatically in 5 seconds.)
+
+   Note: Maybe there are several same items display, you can check them via pressing the key ``e`` to
+       select the item with kernel "5.15.0-53-generic".
+
+   Example grub menu shown as below:
+
+   .. code-block:: console
+
+                              GNU GRUB version 2.04
+      ────────────────────────────────────────────────────────────────────────────────
+      Ubuntu
+      Advanced options for Ubuntu
+      Ubuntu-ACRN Board Inspector
+      Ubuntu-ACRN Board Inspector
+      *Ubuntu-ACRN Board Inspector
+      Ubuntu with ACRN hypervisor
+      Ubuntu with ACRN hypervisor
+      Ubuntu with ACRN hypervisor
+      UEFI Firmware Settings
 
 .. _gsg-run-acrn:
 
@@ -690,7 +723,7 @@ Launch the User VM
 
    .. code-block:: console
 
-      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.0-43-generic x86_64)
+      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.0-53-generic x86_64)
 
       * Documentation:  https://help.ubuntu.com
       * Management:     https://landscape.canonical.com
@@ -719,7 +752,7 @@ Launch the User VM
    .. code-block:: console
 
       ubuntu@ubuntu:~$ uname -r
-      5.15.0-43-generic
+      5.15.0-53-generic
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
