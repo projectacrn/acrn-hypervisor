@@ -103,7 +103,7 @@ linux_entry ()
   if [ -z "$boot_device_id" ]; then
       boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
   fi
-  echo "menuentry '$(echo "$os" | grub_quote)' ${CLASS} \$menuentry_id_option 'gnulinux-acrn-board-inspector-$boot_device_id' {"
+  echo "menuentry '$(echo "$os, with ${version}" | grub_quote)' ${CLASS} \$menuentry_id_option 'gnulinux-acrn-board-inspector-$boot_device_id' {"
 
   # Use ELILO's generic "efifb" when it's known to be available.
   # FIXME: We need an interface to select vesafb in case efifb can't be used.
