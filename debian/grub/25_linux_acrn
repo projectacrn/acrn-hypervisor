@@ -208,7 +208,7 @@ linux_entry ()
       boot_device_id="$(grub_get_device_id "${GRUB_DEVICE}")"
   fi
   title="$(gettext_printf "%s with ACRN hypervisor" "${os}")"
-  echo "menuentry '$(echo "$title" | grub_quote)' ${CLASS} \$menuentry_id_option 'acrn-gnulinux-$boot_device_id' {"
+  echo "menuentry '$(echo "$title, with ${version}(${acrn_version})" | grub_quote)' ${CLASS} \$menuentry_id_option 'acrn-gnulinux-$boot_device_id' {"
 
   if [ -z "${prepare_boot_cache}" ]; then
     prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | grub_add_tab)"
@@ -327,7 +327,7 @@ while [ "x${acrn_list}" != "x" ] ; do
         else
             title="$(gettext_printf "%s with ACRN hypervisor %s" "${OS}" "${acrn_version}")"
         fi
-        echo "menuentry '$(echo "$title" | grub_quote)' ${CLASS} \$menuentry_id_option 'acrn-gnulinux-partitioned-${acrn_version}' {"
+	echo "menuentry '$(echo "$title, with ${version}(${acrn_version})" | grub_quote)' ${CLASS} \$menuentry_id_option 'acrn-gnulinux-partitioned-${acrn_version}' {"
         message="$(gettext_printf "Loading ACRN hypervisor %s ..." ${acrn_version})"
         cat << EOF
 	echo	'$(echo "$message" | grub_quote)'
