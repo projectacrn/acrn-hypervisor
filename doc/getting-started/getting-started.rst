@@ -618,12 +618,9 @@ Install ACRN
    The target system will reboot into the ACRN hypervisor and
    start the Ubuntu Service VM.
 
-#. Confirm that you see the GRUB menu with the "Ubuntu-ACRN Board Inspector" entry. Select
-   it and proceed to booting ACRN. (It may be auto-selected, in which case it
+#. Confirm that you see the GRUB menu with "Ubuntu-ACRN Board Inspector, with 5.15.0-56-generic" entry. 
+   Select it and proceed to booting ACRN. (It may be auto-selected, in which case it
    will boot with this option automatically in 5 seconds.)
-
-   Note: Maybe there are several same items display, you can check them via pressing the key ``e`` to
-       select the item with kernel "5.15.0-53-generic".
 
    Example grub menu shown as below:
 
@@ -633,12 +630,10 @@ Install ACRN
       ────────────────────────────────────────────────────────────────────────────────
       Ubuntu
       Advanced options for Ubuntu
-      Ubuntu-ACRN Board Inspector
-      Ubuntu-ACRN Board Inspector
-      *Ubuntu-ACRN Board Inspector
-      Ubuntu with ACRN hypervisor
-      Ubuntu with ACRN hypervisor
-      Ubuntu with ACRN hypervisor
+      Ubuntu-ACRN Board Inspector, with 5.15.71-acrn-service-vm
+      *Ubuntu-ACRN Board Inspector, with 5.15.0-56-generic
+      Ubuntu with ACRN hypervisor, with 5.15.71-acrn-service-vm(3.2)
+      Ubuntu with ACRN hypervisor, with 5.15.0-56-generic(3.2)
       UEFI Firmware Settings
 
 .. _gsg-run-acrn:
@@ -723,7 +718,7 @@ Launch the User VM
 
    .. code-block:: console
 
-      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.0-53-generic x86_64)
+      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.0-56-generic x86_64)
 
       * Documentation:  https://help.ubuntu.com
       * Management:     https://landscape.canonical.com
@@ -752,7 +747,7 @@ Launch the User VM
    .. code-block:: console
 
       ubuntu@ubuntu:~$ uname -r
-      5.15.0-53-generic
+      5.15.0-56-generic
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
