@@ -76,7 +76,7 @@ Preparing the Target System
 ===========================
 
 On the target system, reboot and choose the regular Ubuntu image (not the
-Multiboot2 choice created when following the Getting Started Guide).
+Ubuntu-ACRN Board Inspector choice created when following the Getting Started Guide).
 
 1. Log in as the **acrn** user. We'll be making ssh connections to the target system
    later in these steps, so install the ssh server on the target system using::
@@ -397,40 +397,18 @@ Build the ACRN Hypervisor and Service VM Images
      debian/debian_build.sh clean && debian/debian_build.sh -c ~/acrn-work/MyConfiguration 
 
    The build typically takes about a minute. When done, the build
-   generates a Debian package in the build directory with your board and
-   working folder name.
+   generates several Debian packages in the build directory. Only one 
+   with your board and working folder name among these Debian packages 
+   is different from genetated in the Getting Started Guide. So we only 
+   need to copy and reinstall one Debian package to the target system. 
 
    This Debian package contains the ACRN hypervisor and tools for
    installing ACRN on the target.
 
-#. Build the ACRN kernel for the Service VM (the sample application
-   requires a newer version of the Service VM than generated in the
-   Getting Started Guide, so we'll need to generate it again) using a tagged
-   version of the ``acrn-kernel``::
-
-     cd ~/acrn-work/acrn-kernel
-     git fetch --all
-
-     git checkout release_3.2
-
-     make distclean
-     cp kernel_config_service_vm .config
-     make olddefconfig
-     make -j $(nproc) deb-pkg
-
-   The kernel build can take 15 minutes or less on a fast computer, but
-   could take one to two hours depending on the performance of your development
-   computer. When done, the build generates four Debian packages in the
-   directory above the build root directory:
-
-   .. code-block:: console
-
-      $ ls ../*acrn-service*.deb
-
-      linux-headers-5.15.71-acrn-service-vm_5.15.71-acrn-service-vm-1_amd64.deb
-      linux-image-5.15.71-acrn-service-vm_5.15.71-acrn-service-vm-1_amd64.deb
-      linux-image-5.15.71-acrn-service-vm-dbg_5.15.71-acrn-service-vm-1_amd64.deb
-      linux-libc-dev_5.15.71-acrn-service-vm-1_amd64.deb
+#. Use the ACRN kernel for the Service VM already on your development computer 
+   when you followed the Getting Started Guide (the sample application
+   requires the same version of the Service VM as generated in the
+   Getting Started Guide, so no need to generate it again).
 
 .. rst-class:: numbered-step
 
@@ -439,8 +417,8 @@ Copy Files from the Development Computer to Your Target System
 
 1. Copy all the files generated on the development computer to the
    target system. This includes the sample application executable files,
-   HMI_VM and RT_VM images, Debian packages for the Service VM and
-   Hypervisor, and the launch scripts. 
+   HMI_VM and RT_VM images, Debian packages for ACRN Hypervisor,
+   and the launch scripts. 
 
    Use ``scp`` to copy files from your development computer to the
    ``~/acrn-work`` directory on the target (replace the IP address used in
@@ -449,7 +427,7 @@ Copy Files from the Development Computer to Your Target System
      cd ~/acrn-work
 
      scp acrn-hypervisor/misc/sample_application/image_builder/build/*_vm.img \
-         acrn-hypervisor*.deb *acrn-service-vm*.deb \
+         acrn-hypervisor*.deb \
          MyConfiguration/launch_user_vm_id*.sh \
          acrn@10.0.0.200:~/acrn-work
 
