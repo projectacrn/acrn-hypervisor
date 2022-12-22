@@ -630,10 +630,10 @@ Install ACRN
       ────────────────────────────────────────────────────────────────────────────────
       Ubuntu
       Advanced options for Ubuntu
-      Ubuntu-ACRN Board Inspector, with 5.15.71-acrn-service-vm
-      *Ubuntu-ACRN Board Inspector, with 5.15.0-56-generic
-      Ubuntu with ACRN hypervisor, with 5.15.71-acrn-service-vm(3.2)
-      Ubuntu with ACRN hypervisor, with 5.15.0-56-generic(3.2)
+      Ubuntu-ACRN Board Inspector, with Linux 5.15.71-acrn-service-vm
+      *Ubuntu-ACRN Board Inspector, with Linux 5.15.0-56-generic
+      Ubuntu with ACRN hypervisor, with Linux 5.15.71-acrn-service-vm (ACRN 3.2)
+      Ubuntu with ACRN hypervisor, with Linux 5.15.0-56-generic (ACRN 3.2)
       UEFI Firmware Settings
 
 .. _gsg-run-acrn:
