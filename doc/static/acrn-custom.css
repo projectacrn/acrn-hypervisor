@@ -291,7 +291,8 @@ body {
    counter-reset: step-count;
 }
 
-div.numbered-step h2::before {
+div.numbered-step h2::before,
+section.numbered-step h2::before {
   counter-increment: step-count;
   content: counter(step-count);
   background: #cccccc;
