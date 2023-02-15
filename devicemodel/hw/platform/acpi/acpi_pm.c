@@ -22,15 +22,15 @@ static inline int get_vcpu_pm_info(struct vmctx *ctx, int vcpu_id,
 	return vm_get_cpu_state(ctx, pm_info);
 }
 
-static inline uint8_t get_vcpu_px_cnt(struct vmctx *ctx, int vcpu_id)
+static inline int get_vcpu_px_cnt(struct vmctx *ctx, int vcpu_id, uint8_t *px_cnt)
 {
-	uint64_t px_cnt;
+	uint64_t px_cnt_u64;
+	int ret;
 
-	if (get_vcpu_pm_info(ctx, vcpu_id, ACRN_PMCMD_GET_PX_CNT, &px_cnt)) {
-		return 0;
-	}
+	ret = get_vcpu_pm_info(ctx, vcpu_id, ACRN_PMCMD_GET_PX_CNT, &px_cnt_u64);
+	*px_cnt = (uint8_t)px_cnt_u64;
 
-	return (uint8_t)px_cnt;
+	return ret;
 }
 
 uint8_t get_vcpu_cx_cnt(struct vmctx *ctx, int vcpu_id)
@@ -259,9 +259,13 @@ static int dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 	uint8_t vcpu_px_cnt;
 	int i;
 	struct acrn_pstate_data *vcpu_px_data;
+	int ret;
 
-	vcpu_px_cnt = get_vcpu_px_cnt(ctx, vcpu_id);
-	if (!vcpu_px_cnt) {
+	ret = get_vcpu_px_cnt(ctx, vcpu_id, &vcpu_px_cnt);
+	/* vcpu_px_cnt = 0 Indicates vcpu supports continuous pstate.
+	 * Then we should write _CPC instate of _PSS
+	 */
+	if (ret || !vcpu_px_cnt) {
 		return -1;
 	}
 
@@ -316,10 +320,49 @@ static int dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 	return 0;
 }
 
+/* _CPC: Continuous Performance Control
+ * Hard code a V3 CPC table, describing HWP register interface.
+ */
+static void dsdt_write_cpc(void)
+{
+	dsdt_line("");
+	dsdt_line("    Method (_CPC, 0, NotSerialized)");
+	dsdt_line("    {");
+	dsdt_line("        Return (Package (0x17)");
+	dsdt_line("        {");
+	dsdt_line("            0x17,");
+	dsdt_line("            0x03,");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x08, 0x00, 0x0000000000000771, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x08, 0x08, 0x00000000000000CE, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x08, 0x10, 0x0000000000000771, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x08, 0x18, 0x0000000000000771, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x08, 0x08, 0x0000000000000771, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x08, 0x10, 0x0000000000000774, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x08, 0x00, 0x0000000000000774, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x08, 0x08, 0x0000000000000774, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(SystemMemory, 0x00, 0x00, 0x0000000000000000, , )},");
+	dsdt_line("            ResourceTemplate() {Register(SystemMemory, 0x00, 0x00, 0x0000000000000000, , )},");
+	dsdt_line("            ResourceTemplate() {Register(SystemMemory, 0x00, 0x00, 0x0000000000000000, , )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x40, 0x00, 0x00000000000000E7, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x40, 0x00, 0x00000000000000E8, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x02, 0x01, 0x0000000000000777, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x01, 0x00, 0x0000000000000770, 0x04, )},");
+	dsdt_line("            One,");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x0A, 0x20, 0x0000000000000774, 0x04, )},");
+	dsdt_line("            ResourceTemplate() {Register(FFixedHW, 0x08, 0x18, 0x0000000000000774, 0x04, )},");
+	dsdt_line("            Zero,");
+	dsdt_line("            Zero,");
+	dsdt_line("            Zero");
+	dsdt_line("        })");
+	dsdt_line("    }");
+}
+
 void pm_write_dsdt(struct vmctx *ctx, int ncpu)
 {
 	int i;
 	int ret;
+	bool is_cpc = false;
+	uint8_t px_cnt;
 
 	/* Scope (_PR) */
 	dsdt_line("");
@@ -359,6 +402,26 @@ void pm_write_dsdt(struct vmctx *ctx, int ncpu)
 				dsdt_line("    Method (_PCT, 0, NotSerialized)");
 				dsdt_line("    {");
 				dsdt_line("      Return (^^PR00._PCT)");
+				dsdt_line("    }");
+				dsdt_line("");
+			}
+		}
+
+		ret = get_vcpu_px_cnt(ctx, i, &px_cnt);
+		if (ret == 0 && px_cnt == 0) {
+			/* px_cnt = 0 Indicates vcpu supports continuous pstate.
+			 * Then we can write _CPC
+			 */
+			is_cpc = true;
+		}
+
+		if (is_cpc) {
+			if (i == 0) {
+				dsdt_write_cpc();
+			} else {
+				dsdt_line("    Method (_CPC, 0, NotSerialized)");
+				dsdt_line("    {");
+				dsdt_line("      Return (^^PR00._CPC)");
 				dsdt_line("    }");
 				dsdt_line("");
 			}
