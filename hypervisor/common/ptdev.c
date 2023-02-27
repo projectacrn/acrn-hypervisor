@@ -22,9 +22,10 @@ struct ptirq_remapping_info ptirq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
 static uint64_t ptirq_entry_bitmaps[PTIRQ_BITMAP_ARRAY_SIZE];
 spinlock_t ptdev_lock = { .head = 0U, .tail = 0U, };
 
-static struct ptirq_entry_head {
-	struct hlist_head list;
-} ptirq_entry_heads[PTIRQ_ENTRY_HASHSIZE];
+/* lookup mapping info from phyical sid, hashing from sid + vm address(0) */
+static struct hlist_head phys_sid_htable[PTIRQ_ENTRY_HASHSIZE];
+/* lookup mapping info from virtual sid within a vm, hashing from sid + vm address */
+static struct hlist_head virt_sid_htable[PTIRQ_ENTRY_HASHSIZE];
 
 static inline uint16_t ptirq_alloc_entry_id(void)
 {
@@ -40,28 +41,36 @@ static inline uint16_t ptirq_alloc_entry_id(void)
 	return (id < CONFIG_MAX_PT_IRQ_ENTRIES) ? id: INVALID_PTDEV_ENTRY_ID;
 }
 
+/* to find ptirq_remapping_info from phy sid or virtual sid in a vm */
 struct ptirq_remapping_info *find_ptirq_entry(uint32_t intr_type,
 		const union source_id *sid, const struct acrn_vm *vm)
 {
 	struct hlist_node *p;
+	struct hlist_head *b;
 	struct ptirq_remapping_info *n, *entry = NULL;
-	uint64_t key = hash64(sid->value, PTIRQ_ENTRY_HASHBITS);
-	struct ptirq_entry_head *b = &ptirq_entry_heads[key];
+	uint64_t key = hash64(sid->value + (uint64_t)vm, PTIRQ_ENTRY_HASHBITS);
 
-	hlist_for_each(p, &b->list) {
-		if (vm == NULL) {
+	if (vm == NULL) {
+		b = &(phys_sid_htable[key]);
+
+		hlist_for_each(p, b) {
 			n = hlist_entry(p, struct ptirq_remapping_info, phys_link);
-		} else {
-			n = hlist_entry(p, struct ptirq_remapping_info, virt_link);
+			if (is_entry_active(n)) {
+				if ((intr_type == n->intr_type) && (sid->value == n->phys_sid.value)) {
+					entry = n;
+					break;
+				}
+			}
 		}
-
-		if (is_entry_active(n)) {
-			if ((intr_type == n->intr_type) &&
-				((vm == NULL) ?
-				(sid->value == n->phys_sid.value) :
-				((vm == n->vm) && (sid->value == n->virt_sid.value)))) {
-				entry = n;
-				break;
+	} else {
+		b = &(virt_sid_htable[key]);
+		hlist_for_each(p, b) {
+			n = hlist_entry(p, struct ptirq_remapping_info, virt_link);
+			if (is_entry_active(n)) {
+				if ((intr_type == n->intr_type) && (sid->value == n->virt_sid.value) && (vm == n->vm)) {
+					entry = n;
+					break;
+				}
 			}
 		}
 	}
@@ -212,9 +221,9 @@ int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_i
 		entry->active = true;
 
 		key = hash64(entry->phys_sid.value, PTIRQ_ENTRY_HASHBITS);
-		hlist_add_head(&entry->phys_link, &(ptirq_entry_heads[key].list));
-		key = hash64(entry->virt_sid.value, PTIRQ_ENTRY_HASHBITS);
-		hlist_add_head(&entry->virt_link, &(ptirq_entry_heads[key].list));
+		hlist_add_head(&entry->phys_link, &(phys_sid_htable[key]));
+		key = hash64(entry->virt_sid.value + (uint64_t)entry->vm, PTIRQ_ENTRY_HASHBITS);
+		hlist_add_head(&entry->virt_link, &(virt_sid_htable[key]));
 	}
 
 	return ret;
