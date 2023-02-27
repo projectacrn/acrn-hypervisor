@@ -1016,6 +1016,7 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target
 					if ((((!irq.intx.pic_pin) && (irq.intx.virt_pin < get_vm_gsicount(target_vm)))
 						|| ((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount())))
 							&& is_gsi_valid(irq.intx.phys_pin)) {
+						ptirq_remove_intx_remapping(get_service_vm(), irq.intx.phys_pin, false, true);
 						ret = ptirq_add_intx_remapping(target_vm, irq.intx.virt_pin,
 								irq.intx.phys_pin, irq.intx.pic_pin);
 					} else {
@@ -1067,7 +1068,7 @@ int32_t hcall_reset_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *targ
 				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
 					if (((!irq.intx.pic_pin) && (irq.intx.virt_pin < get_vm_gsicount(target_vm))) ||
 						((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount()))) {
-						ptirq_remove_intx_remapping(target_vm, irq.intx.virt_pin, irq.intx.pic_pin);
+						ptirq_remove_intx_remapping(target_vm, irq.intx.virt_pin, irq.intx.pic_pin, false);
 						ret = 0;
 					} else {
 						pr_err("%s: Invalid virt pin\n", __func__);
