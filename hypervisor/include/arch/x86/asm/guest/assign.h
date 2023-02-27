@@ -112,18 +112,20 @@ int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_gsi, uint32_t
 /**
  * @brief Remove an interrupt remapping entry for INTx.
  *
- * Deactivate & remove mapping entry of the given virt_pin for given vm.
+ * Deactivate & remove mapping entry of the given virt gsi for given vm or
+ * phys gsi assigned to this vm.
  *
  * @param[in] vm pointer to acrn_vm
- * @param[in] virt_gsi virtual pin number associated with the passthrough device
+ * @param[in] gsi virtual gsi number or physical gsi number associated with the passthrough device
  * @param[in] pic_pin true for pic, false for ioapic
+ * @param[in] is_phy_gsi true if gsi is physical, false if gsi is virtual
  *
  * @return None
  *
  * @pre vm != NULL
  *
  */
-void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, bool pic_pin);
+void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t gsi, bool pic_pin, bool is_phy_gsi);
 
 /**
  * @brief Remove interrupt remapping entry/entries for MSI/MSI-x.

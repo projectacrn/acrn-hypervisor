@@ -382,15 +382,9 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 			pr_err("INTX re-add vpin %d", virt_gsi);
 		}
 	} else if (entry->vm != vm) {
-		if (is_service_vm(entry->vm)) {
-			entry->vm = vm;
-			entry->virt_sid.value = virt_sid.value;
-			entry->polarity = 0U;
-		} else {
-			pr_err("INTX gsi%d already in vm%d with vgsi%d, not able to add into vm%d with vgsi%d",
-					phys_gsi, entry->vm->vm_id, entry->virt_sid.intx_id.gsi, vm->vm_id, virt_gsi);
-			entry = NULL;
-		}
+		pr_err("INTX gsi%d already in vm%d with vgsi%d, not able to add into vm%d with vgsi%d",
+				phys_gsi, entry->vm->vm_id, entry->virt_sid.intx_id.gsi, vm->vm_id, virt_gsi);
+		entry = NULL;
 	} else {
 		/* The mapping has already been added to the VM. No action
 		 * required.
@@ -410,15 +404,24 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 	return entry;
 }
 
-/* deactive & remove mapping entry of vpin for vm */
-static void remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ctlr vgsi_ctlr)
+/* deactivate & remove mapping entry of vpin for vm */
+static void remove_intx_remapping(const struct acrn_vm *vm, uint32_t gsi, enum intx_ctlr gsi_ctlr, bool is_phy_gsi)
 {
 	uint32_t phys_irq;
 	struct ptirq_remapping_info *entry;
 	struct intr_source intr_src;
-	DEFINE_INTX_SID(virt_sid, virt_gsi, vgsi_ctlr);
 
-	entry = find_ptirq_entry(PTDEV_INTR_INTX, &virt_sid, vm);
+	if (is_phy_gsi) {
+		DEFINE_INTX_SID(sid, gsi, INTX_CTLR_IOAPIC);
+		entry = find_ptirq_entry(PTDEV_INTR_INTX, &sid, 0);
+		if (entry->vm != vm) {
+			entry = NULL;
+		}
+	} else {
+		DEFINE_INTX_SID(sid, gsi, gsi_ctlr);
+		entry = find_ptirq_entry(PTDEV_INTR_INTX, &sid, vm);
+	}
+
 	if (entry != NULL) {
 		if (is_entry_active(entry)) {
 			phys_irq = entry->allocated_pirq;
@@ -431,11 +434,11 @@ static void remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, e
 
 			dmar_free_irte(&intr_src, entry->irte_idx);
 			dev_dbg(DBG_LEVEL_IRQ,
-				"deactive %s intx entry:pgsi=%d, pirq=%d ",
-				(vgsi_ctlr == INTX_CTLR_PIC) ? "vPIC" : "vIOAPIC",
+				"deactivate %s intx entry:pgsi=%d, pirq=%d ",
+				(entry->virt_sid.intx_id.ctlr == INTX_CTLR_PIC) ? "vPIC" : "vIOAPIC",
 				entry->phys_sid.intx_id.gsi, phys_irq);
 			dev_dbg(DBG_LEVEL_IRQ, "from vm%d vgsi=%d\n",
-				entry->vm->vm_id, virt_gsi);
+				entry->vm->vm_id, entry->virt_sid.intx_id.gsi);
 		}
 
 		ptirq_release_entry(entry);
@@ -735,7 +738,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 						uint32_t phys_gsi = virt_gsi;
 
 						remove_intx_remapping(vm, alt_virt_sid.intx_id.gsi,
-							alt_virt_sid.intx_id.ctlr);
+							alt_virt_sid.intx_id.ctlr, false);
 						entry = add_intx_remapping(vm, virt_gsi, phys_gsi, vgsi_ctlr);
 						if (entry == NULL) {
 							pr_err("%s, add intx remapping failed", __func__);
@@ -806,12 +809,12 @@ int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_gsi, uint32_t
 /*
  * @pre vm != NULL
  */
-void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, bool pic_pin)
+void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t gsi, bool pic_pin, bool is_phy_gsi)
 {
 	enum intx_ctlr vgsi_ctlr = pic_pin ? INTX_CTLR_PIC : INTX_CTLR_IOAPIC;
 
 	spinlock_obtain(&ptdev_lock);
-	remove_intx_remapping(vm, virt_gsi, vgsi_ctlr);
+	remove_intx_remapping(vm, gsi, vgsi_ctlr, is_phy_gsi);
 	spinlock_release(&ptdev_lock);
 }
 
@@ -839,6 +842,6 @@ void ptirq_remove_configured_intx_remappings(const struct acrn_vm *vm)
 	uint16_t i;
 
 	for (i = 0; i < vm_config->pt_intx_num; i++) {
-		ptirq_remove_intx_remapping(vm, vm_config->pt_intx[i].virt_gsi, false);
+		ptirq_remove_intx_remapping(vm, vm_config->pt_intx[i].virt_gsi, false, false);
 	}
 }
