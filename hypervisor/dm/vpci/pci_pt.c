@@ -375,6 +375,10 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 		}
 		lo = pci_pdev_read_cfg(pbdf, offset, 4U);
 		vbar->bar_type.bits = lo;
+		if (is_pci_io_bar(vbar)) {
+			//For some device, PIO BAR base may bigger than 0xffff
+			lo &= 0xffffUL;
+		}
 
 		if (is_pci_reserved_bar(vbar)) {
 			continue;
