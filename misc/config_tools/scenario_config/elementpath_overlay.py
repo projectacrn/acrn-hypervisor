@@ -21,16 +21,17 @@ import library.rdt as rdt
 BaseParser = elementpath.XPath2Parser
 
 class CustomParser(BaseParser):
-    SYMBOLS = BaseParser.SYMBOLS | {
-        # Bit-wise operations
-        'bitwise-and',
+    if hasattr(BaseParser, "SYMBOLS"):
+        SYMBOLS = BaseParser.SYMBOLS | {
+            # Bit-wise operations
+            'bitwise-and',
 
-        'bits-of',
-        'has',
-        'duplicate-values',
+            'bits-of',
+            'has',
+            'duplicate-values',
 
-        'number-of-clos-id-needed',
-        }
+            'number-of-clos-id-needed',
+            }
 
 method = CustomParser.method
 function = CustomParser.function
