@@ -554,6 +554,11 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 					entry.eax &= ~(CPUID_EAX_HWP | CPUID_EAX_HWP_AW | CPUID_EAX_HWP_EPP);
 					entry.ecx &= ~CPUID_ECX_HCFC;
 				}
+				/* Hide thermal bits for VMs without vtm */
+				if (!is_vtm_configured(vm)) {
+					entry.eax &= ~(CPUID_EAX_DTS | CPUID_EAX_PLN | CPUID_EAX_PTM);
+				}
+
 				result = set_vcpuid_entry(vm, &entry);
 				break;
 			case 0x07U:
@@ -646,6 +651,11 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 	*ecx &= ~CPUID_ECX_SMX;
 
 	*ecx &= ~CPUID_ECX_EST;
+
+	if (!is_vtm_configured(vcpu->vm)) {
+		*edx &= ~(CPUID_EDX_ACPI | CPUID_EDX_TM1);
+		*ecx &= ~CPUID_ECX_TM2;
+	}
 
 	/* mask SDBG for silicon debug */
 	*ecx &= ~CPUID_ECX_SDBG;

@@ -224,6 +224,16 @@ bool is_vhwp_configured(const struct acrn_vm *vm)
 }
 
 /**
+ * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
+ */
+bool is_vtm_configured(const struct acrn_vm *vm)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	return ((vm_config->guest_flags & GUEST_FLAG_VTM) != 0U);
+}
+
+/**
  * @brief VT-d PI posted mode can possibly be used for PTDEVs assigned
  * to this VM if platform supports VT-d PI AND lapic passthru is not configured
  * for this VM.

@@ -278,6 +278,17 @@ static const uint32_t unsupported_msrs[] = {
 	 * CPUID.06H.EAX[8]
 	 */
 	MSR_IA32_HWP_INTERRUPT,
+
+	/*
+	 * Thermal MSRs disabled:
+	 * CPUID.01H.EDX[22] IA32_THERM_INTERRUPT, IA32_THERM_STATUS, MSR_IA32_CLOCK_MODULATION
+	 * CPUID.06H:EAX[6] IA32_PACKAGE_THERM_INTERRUPT, IA32_PACKAGE_THERM_STATUS
+	 */
+	MSR_IA32_CLOCK_MODULATION,
+	MSR_IA32_THERM_INTERRUPT,
+	MSR_IA32_THERM_STATUS,
+	MSR_IA32_PACKAGE_THERM_INTERRUPT,
+	MSR_IA32_PACKAGE_THERM_STATUS,
 };
 
 /* emulated_guest_msrs[] shares same indexes with array vcpu->arch->guest_msrs[] */
@@ -1299,5 +1310,8 @@ void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu)
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_XAPICID, INTERCEPT_READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_LDR, INTERCEPT_READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_ICR, INTERCEPT_WRITE);
+	if (!is_vtm_configured(vcpu->vm)) {
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_LVT_THERMAL, INTERCEPT_READ_WRITE);
+	}
 	set_tsc_msr_interception(vcpu, exec_vmread64(VMX_TSC_OFFSET_FULL) != 0UL);
 }
