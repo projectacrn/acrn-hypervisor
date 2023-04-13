@@ -115,11 +115,10 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	entry->flags = flags;
 
 	switch (leaf) {
-
 	case 0x06U:
 		cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
-		entry->eax &= ~(CPUID_EAX_HWP | CPUID_EAX_HWP_N | CPUID_EAX_HWP_AW | CPUID_EAX_HWP_EPP | CPUID_EAX_HWP_PLR);
-		entry->ecx &= ~CPUID_ECX_HCFC;
+		/* Always hide package level HWP controls and HWP interrupt*/
+		entry->eax &= ~(CPUID_EAX_HWP_CTL | CPUID_EAX_HWP_PLR | CPUID_EAX_HWP_N);
 		break;
 
 	case 0x07U:
@@ -547,6 +546,15 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 				break;
 			/* MONITOR/MWAIT */
 			case 0x05U:
+				break;
+			case 0x06U:
+				init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
+				/* For VMs without vhwp, HWP and HCFC are always hidden. */
+				if (!is_vhwp_configured(vm)) {
+					entry.eax &= ~(CPUID_EAX_HWP | CPUID_EAX_HWP_AW | CPUID_EAX_HWP_EPP);
+					entry.ecx &= ~CPUID_ECX_HCFC;
+				}
+				result = set_vcpuid_entry(vm, &entry);
 				break;
 			case 0x07U:
 				init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
