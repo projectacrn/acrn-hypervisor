@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import parser_lib, os
+import parser_lib, os, re
 from inspectorlib import external_tools
 from extractors.helpers import get_bdf_from_realpath
 
@@ -165,10 +165,12 @@ def dump_system_ram(config):
     :param config: file pointer that opened for writing board config information
     """
     print("\t<IOMEM_INFO>", file=config)
-    with open(MEM_PATH[0], 'rt') as mem_info:
+    with open(MEM_PATH[0], 'rt', errors='ignore') as mem_info:
 
         while True:
             line = mem_info.readline().strip('\n')
+            line = re.sub('[^!-~]+', ' ', line)
+
             if not line:
                 break
 
