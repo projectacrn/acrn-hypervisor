@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include "uart_channel.h"
 #include "log.h"
+#include "list.h"
 #include "config.h"
 #include "command.h"
 
@@ -308,9 +309,9 @@ struct channel_dev *create_uart_channel_dev(struct uart_channel *c, char *path, 
 }
 static void destroy_uart_channel_devs(struct uart_channel *c)
 {
-	struct channel_dev *c_dev;
+	struct channel_dev *c_dev, *tc_dev;
 
-	LIST_FOREACH(c_dev, &c->tty_open_head, open_list) {
+	list_foreach_safe(c_dev, &c->tty_open_head, open_list, tc_dev) {
 		pthread_mutex_lock(&c->tty_conn_list_lock);
 		LIST_REMOVE(c_dev, open_list);
 		pthread_mutex_unlock(&c->tty_conn_list_lock);

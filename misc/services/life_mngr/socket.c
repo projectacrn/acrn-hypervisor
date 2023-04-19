@@ -18,12 +18,7 @@
 #include <arpa/inet.h>
 #include "socket.h"
 #include "log.h"
-
-
-#define list_foreach_safe(var, head, field, tvar)	\
-for ((var) = LIST_FIRST((head));			\
-	(var) && ((tvar) = LIST_NEXT((var), field), 1);\
-	(var) = (tvar))
+#include "list.h"
 
 
 static int setup_and_listen_unix_socket(const char *sock_path, int num)
