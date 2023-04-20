@@ -100,7 +100,7 @@ class GenerateRst:
 
     # Get all physical CPU information from board.xml
     def get_pcpu(self):
-        pcpu_list = list(map(int, self.board_etree.xpath("processors/die/core/thread/cpu_id/text()")))
+        pcpu_list = list(map(int, self.board_etree.xpath("processors//cpu_id/text()")))
         return pcpu_list
 
     def write_shared_cache(self):
