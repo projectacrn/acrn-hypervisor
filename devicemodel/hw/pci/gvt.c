@@ -256,7 +256,7 @@ gvt_init_config(struct pci_gvt *gvt)
 	/* capability */
 	pci_set_cfgdata8(gvt->gvt_pi, PCIR_CAP_PTR, gvt->host_config[0x34]);
 	cap_ptr = gvt->host_config[0x34];
-	while (cap_ptr != 0) {
+	while (cap_ptr != 0 && cap_ptr <= PCI_REGMAX - 15) {
 		pci_set_cfgdata32(gvt->gvt_pi, cap_ptr,
 			gvt->host_config[cap_ptr]);
 		pci_set_cfgdata32(gvt->gvt_pi, cap_ptr + 4,
