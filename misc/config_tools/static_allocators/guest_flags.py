@@ -38,3 +38,5 @@ def fn(board_etree, scenario_etree, allocation_etree):
             if vm_node.xpath(policy.condition):
                 acrn_config_utilities.append_node("./guest_flags/guest_flag", str(policy.guest_flag), allocation_vm_node)
         acrn_config_utilities.append_node("./guest_flags/guest_flag",'GUEST_FLAG_STATIC_VM', allocation_vm_node)
+        if board_etree.xpath("//capability[@id = 'hwp_supported']") and get_node(".//own_pcpu/text()", vm_node) == "y" and get_node(".//os_type/text()", vm_node) != "Windows OS":
+            acrn_config_utilities.append_node("./guest_flags/guest_flag", 'GUEST_FLAG_VHWP', allocation_vm_node)
