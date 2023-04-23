@@ -1109,11 +1109,21 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 	if (is_created_vm(target_vm)) {
 		switch (cmd & PMCMD_TYPE_MASK) {
 		case ACRN_PMCMD_GET_PX_CNT: {
-			if (!is_pt_pstate(target_vm)) {
+			uint8_t px_cnt;
+			/* If the VM supports vHWP, then the guest is having continuous p-state. Thus it doesn't have a specific
+			 * px_cnt. The hypercall returns success and px_cnt = 0.
+			 * If the VM's p-state is hidden or hv doesn't have its p-state info, the hypercall returns -1.
+			 */
+			if (is_vhwp_configured(target_vm)) {
+				px_cnt = 0U;
+			} else if (!is_pt_pstate(target_vm)) {
 				break;
+			} else if (target_vm->pm.px_cnt == 0U) {
+				break;
+			} else {
+				px_cnt = target_vm->pm.px_cnt;
 			}
-
-			ret = copy_to_gpa(vm, &(target_vm->pm.px_cnt), param2, sizeof(target_vm->pm.px_cnt));
+			ret = copy_to_gpa(vm, &px_cnt, param2, sizeof(px_cnt));
 			break;
 		}
 		case ACRN_PMCMD_GET_PX_DATA: {
