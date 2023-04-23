@@ -274,6 +274,7 @@ struct acrn_vm *get_highest_severity_vm(bool runtime);
 bool vm_hide_mtrr(const struct acrn_vm *vm);
 void update_vm_vlapic_state(struct acrn_vm *vm);
 enum vm_vlapic_mode check_vm_vlapic_mode(const struct acrn_vm *vm);
+bool is_vhwp_configured(const struct acrn_vm *vm);
 /*
  * @pre vm != NULL
  */
