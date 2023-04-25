@@ -4,13 +4,89 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
-
 import sys
 import argparse
 import logging
-
-from rstcloth import RstCloth
+import typing
+import functools
+import textwrap
 from lxml import etree
+
+t_content = typing.Union[str, typing.List[str]]
+
+
+class Doc:
+    def __init__(self, stream: typing.TextIO = sys.stdout, line_width: int = 72) -> None:
+        self._stream = stream
+        self._line_width = line_width
+
+    def fill(self, text: str, initial_indent: int = 0, subsequent_indent: int = 0) -> str:
+        return textwrap.fill(
+            text=text,
+            width=self._line_width,
+            initial_indent=" " * initial_indent,
+            subsequent_indent=" " * subsequent_indent,
+            expand_tabs=False,
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+
+    def _add(self, content: t_content) -> None:
+        if isinstance(content, list):
+            self._stream.write("\n".join(content) + "\n")
+        else:
+            self._stream.write(content + "\n")
+
+    def content(self, content: t_content, indent: int = 0) -> None:
+        if isinstance(content, list):
+            content = " ".join(content)
+        self._add(self.fill(content, indent, indent))
+
+    def note(self):
+        marker = ".. {type}::".format(type='note')
+        self._add(marker)
+
+    def newline(self, count: int = 1) -> None:
+        if count == 1:
+            self._add("")
+        else:
+            self._add("\n" * (count - 1))
+
+    def table(self, header: typing.List, data) -> None:
+        column_widths = list()
+        content = list()
+        data = [header] + data
+
+        for i in range(len(header)):
+            column_widths.append(max(list(map(lambda x: len(str(x[i])), data))))
+
+        for j in range(len(data)):
+            overline = "+" + "+".join(["-" * column_widths[i] for i in range(len(header))]) + "+"
+            underline = "+" + "+".join(["=" * column_widths[i] for i in range(len(header))]) + "+"
+            format_raw = "|" + "|".join([str(data[j][i]).ljust(column_widths[i]) for i in range(len(header))]) + "|"
+            if j == 0:
+                content.extend([overline, format_raw, underline])
+            else:
+                content.extend([format_raw, overline])
+
+        if len(data) == 1:
+            content.append(overline)
+
+        self.newline()
+        self._add(content)
+        self.newline()
+
+    def heading(self, text: str, char: str, overline: bool = False) -> None:
+        underline = char * len(text)
+        content = [text, underline]
+        if overline:
+            content.insert(0, underline)
+        self._add(content)
+
+    h1 = functools.partialmethod(heading, char="#")
+    h2 = functools.partialmethod(heading, char="*")
+    h3 = functools.partialmethod(heading, char="=")
+    title = functools.partialmethod(heading, char="=", overline=True)
 
 
 class GenerateRst:
@@ -26,7 +102,7 @@ class GenerateRst:
         self.board_etree = etree.parse(board_file_name)
         self.scenario_etree = etree.parse(scenario_file_name)
         self.file = open(rst_file_name, 'w')
-        self.doc = RstCloth(self.file)
+        self.doc = Doc(self.file)
 
     # The rst content is written in three parts according to the first level title
     # 1. Hardware Resource Allocation 2. Inter-VM Connections 3. VM info
@@ -298,9 +374,9 @@ class GenerateRst:
         amount_vm_l3_cache = self.get_amount_l3_cache(vm_node)
         parameter_dict["Load Order"] = load_order
         if load_order == "SERVICE_VM":
-           parameter_dict["Number of vCPUs"] = len(self.service_vm_used_pcpu_list)
+            parameter_dict["Number of vCPUs"] = len(self.service_vm_used_pcpu_list)
         else:
-           parameter_dict["Number of vCPUs"] = len(vm_node.xpath(f"cpu_affinity/pcpu/pcpu_id"))
+            parameter_dict["Number of vCPUs"] = len(vm_node.xpath(f"cpu_affinity/pcpu/pcpu_id"))
         parameter_dict["Ammount of RAM"] = str(memory_size) + "MB"
         parameter_dict["Amount of L3 Cache"] = amount_vm_l3_cache
         data_table.extend(map(list, parameter_dict.items()))
