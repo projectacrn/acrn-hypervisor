@@ -72,9 +72,12 @@ def extract_model(processors_node, cpu_id, family_id, model_id, core_type, nativ
 
         msr_regs = [MSR_TURBO_RATIO_LIMIT, MSR_TURBO_ACTIVATION_RATIO]
         for msr_reg in msr_regs:
-            msr_data = msr_reg.rdmsr(cpu_id)
-            for attr in msr_data.attribute_bits:
-                add_child(n, "attribute", str(getattr(msr_data, attr)), id=attr)
+            try:
+                msr_data = msr_reg.rdmsr(cpu_id)
+                for attr in msr_data.attribute_bits:
+                    add_child(n, "attribute", str(getattr(msr_data, attr)), id=attr)
+            except IOError:
+                logging.debug(f"No {msr_reg} MSR info for CPU {cpu_id}.")
 
 def extract_topology(processors_node):
     cpu_ids = get_online_cpu_ids()
