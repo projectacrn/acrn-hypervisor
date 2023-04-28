@@ -14,7 +14,7 @@
 
 Makefile                                 @terryzouhao @NanlinXie
 /hypervisor/                             @dongyaozu @lifeix
-/devicemodel/                            @ywan170
+/devicemodel/                            @ywan170 @chejianj
 /doc/                                    @dbkinder @NanlinXie
 /misc/debug_tools/acrn_crashlog/         @ywan170 @lifeix
 /misc/debug_tools/acrn_log/              @ywan170 @lifeix
