@@ -40,6 +40,7 @@ LIFEMNGR_LDFLAGS += $(LDFLAGS)
 
 # set cross compiler for Windows
 MINGWIN_CC := x86_64-w64-mingw32-gcc
+MINGWIN_LD := x86_64-w64-mingw32-ld
 
 CONF_DIR = $(sysconfdir)/life_mngr
 LM_C_SRCS += monitor.c
@@ -63,13 +64,15 @@ all-linux: life_mngr.service
 
 # only build for Windows if cross compiler is installed
 all-win:
-ifneq ($(shell which $(MINGWIN_CC)),)
+ifeq ($(shell which $(MINGWIN_CC)),)
+	@echo "WARN: $(MINGWIN_CC) not installed, skipping life_mngr_win.exe" >&2
+else ifneq ($(findstring -z,$(LDFLAGS)),)
+	@echo "WARN: $(MINGWIN_LD) does not support -z option, skipping life_mngr_win.exe" >&2
+else
 	$(MINGWIN_CC) -g life_mngr_win.c -o $(OUT_DIR)/life_mngr_win.exe -Wall -O2 $(LDFLAGS) -lwsock32
 	cp COPYING.MinGW-w64-runtime.txt $(OUT_DIR)/COPYING.MinGW-w64-runtime.txt
 	cp s5_trigger_win.py $(OUT_DIR)/s5_trigger_win.py
 	cp system_reboot_trigger_win.py $(OUT_DIR)/system_reboot_trigger_win.py
-else
-	@echo "WARN: $(MINGWIN_CC) not installed, skipping life_mngr_win.exe" >&2
 endif
 
 clean:
