@@ -8,6 +8,7 @@ usage() {
   echo "Usage: $0 [--board_list ACRN_BOARDLIST] [--scenario_list ACRN_SCENARIOLIST] [--config_path CONFIGDIRS] [--release n|y] [acrn | board_inspector | clean]"
   echo "Optional arguments:"
   echo "  -h, --help           show this help message and exit"
+  echo "  -v, --verbose        show verbose output"
   echo "  -b, --board_list     list the boards to build, seperated by blank; build all scanned boards in the config path if specified as \"\"; build the default boards in debian rules if not specified"
   echo "  -s, --scenario_list  list the scenarios to build, seperated by blank; build all scanned scenarios in the config path if specified as \"\"; build the default scenarios in debian rules if not specified"
   echo "  -c, --config_path    specify the config path for the board and scenario configuration files, default use misc/config_tools/data if not specified"
@@ -59,6 +60,10 @@ while [[ $# -gt 0 ]]; do
       release="$2"
       shift 2
       ;;
+    -v|--verbose)
+      verbose=1
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -76,6 +81,9 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 cmd="debuild"
+if [ -n "$verbose" ]; then
+  cmd="$cmd -eDH_VERBOSE=1"
+fi
 if [ "$board_list" != "default" ]; then
   echo "ACRN_BOARDLIST    = ${board_list@Q}"
   cmd="$cmd -eACRN_BOARDLIST=${board_list@Q}"
