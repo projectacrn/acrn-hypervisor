@@ -124,23 +124,6 @@
           "to": "defusedxml-0.7.1-py2.py3-none-any.whl"
         }
       ]
-    },
-    {
-      "name": "rstcloth-0.5.2-py3-none-any.whl",
-      "check": {
-        "type": "file",
-        "path": "rstcloth-0.5.2-py3-none-any.whl"
-      },
-      "clean": [
-        "rstcloth-0.5.2-py3-none-any.whl"
-      ],
-      "install": [
-        {
-          "type": "download",
-          "from": "https://files.pythonhosted.org/packages/f1/fa/e653417b4eb6319e9b120f8d9bb16f7c5a4bcc5d1f8a2039d3106f7504e6/rstcloth-0.5.2-py3-none-any.whl",
-          "to": "rstcloth-0.5.2-py3-none-any.whl"
-        }
-      ]
     }
   ]
 }

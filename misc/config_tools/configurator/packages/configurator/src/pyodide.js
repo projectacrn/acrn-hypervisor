@@ -18,8 +18,7 @@ export default async function () {
             './thirdLib/elementpath-2.5.0-py3-none-any.whl',
             './thirdLib/defusedxml-0.7.1-py2.py3-none-any.whl',
             './thirdLib/xmlschema-1.9.2-py3-none-any.whl',
-            './thirdLib/acrn_config_tools-3.0-py3-none-any.whl',
-            './thirdLib/rstcloth-0.5.2-py3-none-any.whl'
+            './thirdLib/acrn_config_tools-3.0-py3-none-any.whl'
         ])
     `)
 
