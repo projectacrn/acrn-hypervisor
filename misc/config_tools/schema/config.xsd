@@ -472,6 +472,11 @@ argument and memory.</xs:documentation>
         <xs:documentation>Enable virtualization of PCIe Precision Time Measurement (PTM) mechanism for devices with PTM capability and for real-time application. The hypervisor provides PCIe root port emulation instead of host bridge emulation for the VM. PTM coordinates timing between the device and root port with the device's local timebases without relying on software.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="customized_parameters" type="xs:string" minOccurs="0">
+      <xs:annotation acrn:title="Customized Parameters" acrn:views="advanced">
+        <xs:documentation>Specify the customized parameters that are appened to the device model when launching this VM.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="virtio_devices">
       <xs:annotation acrn:title="Virt-IO devices" acrn:views="basic" acrn:applicable-vms="post-launched">
         <xs:documentation>Enable virt-IO devices in post-launched VMs.</xs:documentation>
