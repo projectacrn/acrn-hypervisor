@@ -11,6 +11,7 @@ import os
 import sys
 
 import copy
+import shlex
 import argparse
 
 import logging
@@ -417,6 +418,10 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     ###
     # Lastly, conclude the device model parameters with the VM name
     ###
+    customized_parameters = eval_xpath(vm_scenario_etree, ".//customized_parameters/text()")
+    if customized_parameters is not None:
+        customized_parameters = shlex.quote(customized_parameters)
+        script.add_plain_dm_parameter(f"{customized_parameters}")
     script.add_plain_dm_parameter(f"{vm_name}")
 
     return script
