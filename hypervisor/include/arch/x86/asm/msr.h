@@ -673,4 +673,10 @@ void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu);
 /* Flush L1 D-cache */
 #define IA32_L1D_FLUSH				(1UL << 0U)
 
+/* PLATFORM INFO bits */
+#define MSR_PLATFORM_INFO_MAX_NON_TURBO_LIM_RATIO_MASK	(0x000000000000ff00UL)	/* 15:8 */
+#define MSR_PLATFORM_INFO_MAX_EFFICIENCY_RATIO_MASK	(0x0000ff0000000000UL)	/* 47:40 */
+#define MSR_PLATFORM_INFO_MIN_OPERATING_RATIO_MASK	(0x00ff000000000000UL)	/* 55:48 */
+#define MSR_PLATFORM_INFO_SAMPLE_PART			(1UL << 27U)
+
 #endif /* MSR_H */
