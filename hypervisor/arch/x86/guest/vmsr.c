@@ -77,6 +77,8 @@ static uint32_t emulated_guest_msrs[NUM_EMULATED_MSRS] = {
 
 	MSR_TEST_CTL,
 
+	MSR_PLATFORM_INFO,
+
 	/* VMX: CPUID.01H.ECX[5] */
 #ifdef CONFIG_NVMX_ENABLED
 	LIST_OF_VMX_MSRS,
@@ -768,6 +770,20 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		} else {
 			vcpu_inject_gp(vcpu, 0U);
 		}
+		break;
+	}
+	case MSR_PLATFORM_INFO:
+	{
+		v = msr_read(msr);
+		// if (is_service_vm(vcpu->vm)) {
+		// 	v = msr_read(msr);
+		// 	v &= MSR_PLATFORM_INFO_MAX_NON_TURBO_LIM_RATIO_MASK |
+		// 	     MSR_PLATFORM_INFO_MAX_EFFICIENCY_RATIO_MASK |
+		// 	     MSR_PLATFORM_INFO_MIN_OPERATING_RATIO_MASK |
+		// 	     MSR_PLATFORM_INFO_SAMPLE_PART;
+		// } else {
+		// 	err = -EACCES;
+		// }
 		break;
 	}
 #ifdef CONFIG_VCAT_ENABLED
