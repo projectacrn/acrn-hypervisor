@@ -37,15 +37,15 @@ def vendor_check():
                     vendor_name = line.split(':')[1].strip()
                     return vendor_name == CPU_VENDOR
 
-def check_msr_files(cpu_dirs):
-    cpu_list = []
+def check_msr_nodes(cpu_dirs):
+    cpu_list_of_no_msr_node = []
     for cpu_num in os.listdir(cpu_dirs):
         if cpu_num.isdigit():
             if os.path.exists(os.path.join(cpu_dirs, "{}/msr".format(cpu_num))):
                 continue
             else:
-                cpu_list.append(cpu_num)
-    return cpu_list
+                cpu_list_of_no_msr_node.append(cpu_num)
+    return cpu_list_of_no_msr_node
 
 def check_env():
     """Check if there is appropriate environment on this system"""
@@ -57,15 +57,15 @@ def check_env():
 
     # check cpu msr file
     cpu_dirs = "/dev/cpu"
-    if not check_msr_files(cpu_dirs):
+    if check_msr_nodes(cpu_dirs):
         res = external_tools.run("modprobe msr")
         err_msg = res.stderr.readline().decode('ascii')
         if err_msg:
             logging.critical("{}".format(err_msg))
             exit(-1)
-    msr_info = check_msr_files(cpu_dirs)
-    if msr_info:
-        for cpu_num in msr_info:
+    msr_node_unavailable_cpus = check_msr_nodes(cpu_dirs)
+    if msr_node_unavailable_cpus:
+        for cpu_num in msr_node_unavailable_cpus:
             logging.critical("Missing CPU MSR file at {}/{}/msr".format(cpu_dirs, cpu_num))
         logging.critical("Missing CPU MSR file /dev/cpu/#/msr. Check the value of CONFIG_X86_MSR in the kernel config." \
         "  Set it to 'Y' and rebuild the OS. Then rerun the Board Inspector.")
