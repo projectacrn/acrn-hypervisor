@@ -31,6 +31,7 @@ debian/acrn-lifemngr
 debian/acrn-system
 debian/acrn-tools
 debian/acrnd
+debian/changelog
 debian/debhelper-build-stamp
 debian/files
 debian/grub-acrn
