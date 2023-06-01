@@ -57,39 +57,36 @@ static int32_t partition_epc(void)
 	uint16_t vm_id = 0U;
 	uint32_t psec_id = 0U, mid = 0U;
 	uint64_t psec_addr = 0UL, psec_size = 0UL;
-	uint64_t vm_request_size = 0UL, free_size = 0UL, alloc_size;
-	struct acrn_vm_config *vm_config;
+	uint64_t free_size = 0UL, alloc_size;
+	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
+	uint64_t vm_request_size = vm_config->epc.size;
 	int32_t ret = 0;
 
-	while ((psec_id < MAX_EPC_SECTIONS) && (vm_id < CONFIG_MAX_VM_NUM)) {
-		if (vm_request_size == 0U) {
+	while (psec_id < MAX_EPC_SECTIONS) {
+		if (vm_request_size == 0UL) {
+			vm_id++;
+			if (vm_id == CONFIG_MAX_VM_NUM) {
+				break;
+			}
 			mid = 0U;
 			vm_config = get_vm_config(vm_id);
 			vm_request_size = vm_config->epc.size;
-		}
-		if ((free_size == 0UL) && (vm_request_size != 0UL)) {
-			ret = get_epc_section(psec_id, &psec_addr, &psec_size);
-			free_size = psec_size;
-			if ((ret != 0) || (free_size == 0UL)) {
-				break;
+		} else {
+			if (free_size == 0UL) {
+				ret = get_epc_section(psec_id, &psec_addr, &psec_size);
+				free_size = psec_size;
+				if ((ret != 0) || (free_size == 0UL)) {
+					break;
+				}
+				psec_id++;
 			}
-			psec_id++;
-		}
-		if (vm_request_size != 0UL) {
-			if (vm_request_size <= free_size) {
-				alloc_size = vm_request_size;
-			} else {
-				alloc_size = free_size;
-			}
+			alloc_size = min(vm_request_size, free_size);
 			vm_epc_maps[mid][vm_id].size = alloc_size;
 			vm_epc_maps[mid][vm_id].hpa = psec_addr + psec_size - free_size;
 			vm_epc_maps[mid][vm_id].gpa = vm_config->epc.base + vm_config->epc.size - vm_request_size;
 			vm_request_size -= alloc_size;
 			free_size -= alloc_size;
 			mid++;
-		}
-		if (vm_request_size == 0UL) {
-			vm_id++;
 		}
 	}
 	if (vm_request_size != 0UL) {
