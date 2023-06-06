@@ -27,28 +27,6 @@
   resolved "https://registry.yarnpkg.com/@juggle/resize-observer/-/resize-observer-3.3.1.tgz#b50a781709c81e10701004214340f25475a171a0"
   integrity sha512-zMM9Ds+SawiUkakS7y94Ymqx+S0ORzpG3frZirN3l+UlXUmSUR7hF4wxCVqW+ei94JzV5kt0uXBcoOEAuiydrw==
 
-"@lljj/vjsf-utils@1.14.0":
-  version "1.14.0"
-  resolved "https://registry.yarnpkg.com/@lljj/vjsf-utils/-/vjsf-utils-1.14.0.tgz#7261cf2df370c7f6b1c8d69d3173d2b26c32f8f4"
-  integrity sha512-dqRn6hSN5sYUvaPrCo6srzGy2Uj17hc95R1WHYhQtLNKVEXuoCrs65y/Ez4amT/sShvvWq6/z9klh1hugqlHSA==
-  dependencies:
-    ajv "^6.10.2"
-
-"@lljj/vue3-form-core@1.14.0":
-  version "1.14.0"
-  resolved "https://registry.yarnpkg.com/@lljj/vue3-form-core/-/vue3-form-core-1.14.0.tgz#9965000b6cfea36ddecaa44f5e670257c193951a"
-  integrity sha512-7ZSB66mbQc3iiHa0pRgSYEw+TiC2Et8Z8Zg7IRVjsc5jM/0eQl6Jj9+gecn8Qrb/WWgiQqEMo6ArpgXhdvXxDw==
-  dependencies:
-    "@lljj/vjsf-utils" "1.14.0"
-
-"@lljj/vue3-form-naive@^1.12.2":
-  version "1.14.0"
-  resolved "https://registry.yarnpkg.com/@lljj/vue3-form-naive/-/vue3-form-naive-1.14.0.tgz#5b1d288f311cf7504e32de9e408741e916599bd3"
-  integrity sha512-xN12Rw2z6s5JbhyKtwWa6FjTsge4S5pKsUENOStEhx35psrkhSHCtVEHd2RtrRsgV9neeI0ixGIsYG5i+39hTQ==
-  dependencies:
-    "@lljj/vjsf-utils" "1.14.0"
-    "@lljj/vue3-form-core" "1.14.0"
-
 "@popperjs/core@^2.11.5":
   version "2.11.5"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.5.tgz#db5a11bf66bdab39569719555b0f76e138d7bd64"
@@ -848,10 +826,10 @@ resolve@^1.22.0:
     path-parse "^1.0.7"
     supports-preserve-symlinks-flag "^1.0.0"
 
-rollup@^2.59.0:
-  version "2.70.2"
-  resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.70.2.tgz#808d206a8851628a065097b7ba2053bd83ba0c0d"
-  integrity sha512-EitogNZnfku65I1DD5Mxe8JYRUCy0hkK5X84IlDtUs+O6JRMpRciXTzyCUuX11b5L5pvjH+OmFXiQ3XjabcXgg==
+"rollup@>=2.59.0 <2.78.0":
+  version "2.77.3"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.77.3.tgz#8f00418d3a2740036e15deb653bed1a90ee0cc12"
+  integrity sha512-/qxNTG7FbmefJWoeeYJFbHehJ2HNWnjkAFRKzWN/45eNBBF/r8lo992CwcJXEzyVxs5FmfId+vTSTQDb+bxA+g==
   optionalDependencies:
     fsevents "~2.3.2"
 
@@ -944,15 +922,15 @@ vfonts@^0.0.3:
   resolved "https://registry.yarnpkg.com/vfonts/-/vfonts-0.0.3.tgz#999d66fecea18efee3f2b966c81101ae8ce01a29"
   integrity sha512-nguyw8L6Un8eelg1vQ31vIU2ESxqid7EYmy8V+MDeMaHBqaRSkg3dTBToC1PR00D89UzS/SLkfYPnx0Wf23IQQ==
 
-vite@^2.9.13:
-  version "2.9.13"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-2.9.13.tgz#859cb5d4c316c0d8c6ec9866045c0f7858ca6abc"
-  integrity sha512-AsOBAaT0AD7Mhe8DuK+/kE4aWYFMx/i0ZNi98hJclxb4e0OhQcZYUrvLjIaQ8e59Ui7txcvKMiJC1yftqpQoDw==
+vite@^2.9.16:
+  version "2.9.16"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-2.9.16.tgz#daf7ba50f5cc37a7bf51b118ba06bc36e97898e9"
+  integrity sha512-X+6q8KPyeuBvTQV8AVSnKDvXoBMnTx8zxh54sOwmmuOdxkjMmEJXH2UEchA+vTMps1xw9vL64uwJOWryULg7nA==
   dependencies:
     esbuild "^0.14.27"
     postcss "^8.4.13"
     resolve "^1.22.0"
-    rollup "^2.59.0"
+    rollup ">=2.59.0 <2.78.0"
   optionalDependencies:
     fsevents "~2.3.2"
 
