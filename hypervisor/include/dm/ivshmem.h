@@ -32,8 +32,6 @@ extern const struct pci_vdev_ops vpci_ivshmem_ops;
  * @brief Initialize ivshmem shared memory regions
  *
  * Initialize ivshmem shared memory regions based on user configuration.
- *
- * @return None
  */
 void init_ivshmem_shared_memory(void);
 

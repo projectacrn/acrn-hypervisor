@@ -346,8 +346,6 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->pdev != NULL
- *
- * @return None
  */
 static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 {
@@ -542,7 +540,7 @@ void passthru_gpu_opregion(struct pci_vdev *vdev)
 	pci_vdev_write_vcfg(vdev, PCIR_ASLS_CTL, 4U, gpu_opregion_gpa | (gpu_asls_phys & ~PCIM_ASLS_OPREGION_MASK));
 }
 
-/*
+/**
  * @brief Initialize a specified passthrough vdev structure.
  *
  * The function init_vdev_pt is used to initialize a vdev structure. If a vdev structure supports
@@ -556,8 +554,6 @@ void passthru_gpu_opregion(struct pci_vdev *vdev)
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->pdev != NULL
- *
- * @return None
  */
 void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 {
@@ -614,7 +610,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 
 }
 
-/*
+/**
  * @brief Destruct a specified passthrough vdev structure.
  *
  * The function deinit_vdev_pt is the destructor corresponding to the function init_vdev_pt.
@@ -622,8 +618,6 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
  * @param vdev  pointer to vdev data structure
  *
  * @pre vdev != NULL
- *
- * @return None
  */
 void deinit_vdev_pt(struct pci_vdev *vdev) {
 

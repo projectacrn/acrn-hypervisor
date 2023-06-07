@@ -13,8 +13,6 @@
  * @brief Busy wait a few micro seconds.
  *
  * @param[in] us micro seconds to delay.
- *
- * @retval None
  */
 void udelay(uint32_t us);
 

@@ -510,8 +510,6 @@ vq_has_descs(struct virtio_vq_info *vq)
  *
  * @param vb Pointer to struct virtio_base.
  * @param vq Pointer to struct virtio_vq_info.
- *
- * @return None
  */
 static inline void
 vq_interrupt(struct virtio_base *vb, struct virtio_vq_info *vq)
@@ -533,8 +531,6 @@ vq_interrupt(struct virtio_base *vb, struct virtio_vq_info *vq)
  * MSI-X or a generic MSI interrupt with config changed event.
  *
  * @param vb Pointer to struct virtio_base.
- *
- * @return None
  */
 static inline void
 virtio_config_changed(struct virtio_base *vb)
@@ -567,8 +563,6 @@ struct iovec;
  * @param dev Pointer to struct pci_vdev which emulates a PCI device.
  * @param queues Pointer to struct virtio_vq_info, normally an array.
  * @param backend_type can be VBSU, VBSK or VHOST
- *
- * @return None
  */
 void virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
 		   void *pci_virtio_dev, struct pci_vdev *dev,
@@ -624,8 +618,6 @@ int virtio_intr_init(struct virtio_base *base, int barnum, int use_msix);
  * If MSI-X is enabled, this also resets all the vectors to NO_VECTOR.
  *
  * @param base Pointer to struct virtio_base.
- *
- * @return None
  */
 void virtio_reset_dev(struct virtio_base *base);
 
@@ -634,8 +626,6 @@ void virtio_reset_dev(struct virtio_base *base);
  *
  * @param base Pointer to struct virtio_base.
  * @param barnum Which BAR[0..5] to use.
- *
- * @return None
  */
 void virtio_set_io_bar(struct virtio_base *base, int barnum);
 
@@ -660,8 +650,6 @@ int vq_getchain(struct virtio_vq_info *vq, uint16_t *pidx,
  * available ring.
  *
  * @param vq Pointer to struct virtio_vq_info.
- *
- * @return None
  */
 void vq_retchain(struct virtio_vq_info *vq);
 
@@ -672,8 +660,6 @@ void vq_retchain(struct virtio_vq_info *vq);
  * @param vq Pointer to struct virtio_vq_info.
  * @param idx Pointer to available ring position, returned by vq_getchain().
  * @param iolen Number of data bytes to be returned to frontend.
- *
- * @return None
  */
 void vq_relchain(struct virtio_vq_info *vq, uint16_t idx, uint32_t iolen);
 
@@ -685,8 +671,6 @@ void vq_relchain(struct virtio_vq_info *vq, uint16_t idx, uint32_t iolen);
  *
  * @param vq Pointer to struct virtio_vq_info.
  * @param used_all_avail Flag indicating if driver used all available chains.
- *
- * @return None
  */
 void vq_endchains(struct virtio_vq_info *vq, int used_all_avail);
 
@@ -699,8 +683,6 @@ void vq_endchains(struct virtio_vq_info *vq, int used_all_avail);
  *
  * @param base Pointer to struct virtio_base.
  * @param vq Pointer to struct virtio_vq_info.
- *
- * @return None
  */
 void vq_clear_used_ring_flags(struct virtio_base *base, struct virtio_vq_info *vq);
 
@@ -735,8 +717,6 @@ uint64_t virtio_pci_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
  * @param offset Register offset in bytes within a BAR region.
  * @param size Access range in bytes.
  * @param value Data value to be written into register.
- *
- * @return None
  */
 void virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		      int baridx, uint64_t offset, int size, uint64_t value);

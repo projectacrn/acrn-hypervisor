@@ -192,8 +192,6 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
  * @brief Reset all IO requests status of the VM
  *
  * @param vm The VM whose IO requests to be reset
- *
- * @return None
  */
 void reset_vm_ioreqs(struct acrn_vm *vm);
 
@@ -213,7 +211,6 @@ uint32_t get_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id);
  * @param vm Target VM context
  * @param vcpu_id VCPU ID of the IO request
  * @param state State to be set
- * @return None
  */
 void set_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id, uint32_t state);
 
@@ -221,7 +218,6 @@ void set_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id, uint32_t state);
  * @brief Set the vector for HV callback HSM
  *
  * @param vector vector for HV callback HSM
- * @return None
  */
 void set_hsm_notification_vector(uint32_t vector);
 
@@ -277,8 +273,6 @@ void   register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
  * @param end The end of the range (exclusive) \p read_write can emulate
  * @param handler_private_data Handler-specific data which will be passed to \p read_write when called
  * @param hold_lock Whether hold the lock to handle the MMIO access
- *
- * @return None
  */
 void register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
@@ -292,8 +286,6 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
  * @param vm The VM to which the MMIO handler is unregistered
  * @param start The base address of the range which wants to unregister
  * @param end The end of the range (exclusive) which wants to unregister
- *
- * @return None
  */
 void unregister_mmio_emulation_handler(struct acrn_vm *vm,
 					uint64_t start, uint64_t end);
