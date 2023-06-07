@@ -59,8 +59,6 @@ struct hv_timer {
  *
  * @remark Don't initialize a timer twice if it has been added to the timer list
  *         after calling add_timer. If you want to, delete the timer from the list first.
- *
- * @return None
  */
 void initialize_timer(struct hv_timer *timer,
 		      timer_handle_t func, void *priv_data,
@@ -92,8 +90,6 @@ bool timer_is_started(const struct hv_timer *timer);
  * @param[in] timer Pointer to timer.
  * @param[in] timeout deadline to interrupt.
  * @param[in] period period of the periodic timer in unit of CPU ticks.
- *
- * @return None
  */
 void update_timer(struct hv_timer *timer, uint64_t timeout, uint64_t period);
 
@@ -114,16 +110,12 @@ int32_t add_timer(struct hv_timer *timer);
  *
  * @param[in] timer Pointer to timer.
  *
- * @return None
- *
  * @remark Don't call it in the timer callback function or interrupt content.
  */
 void del_timer(struct hv_timer *timer);
 
 /**
  * @brief Initialize timer.
- *
- * @return None
  */
 void timer_init(void);
 

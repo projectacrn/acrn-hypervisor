@@ -192,8 +192,6 @@ vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t ope
  *
  * @pre vgsi < get_vm_gsicount(vm)
  * @pre vm != NULL
- *
- * @return None
  */
 void
 vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t operation)

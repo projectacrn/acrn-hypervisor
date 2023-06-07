@@ -37,8 +37,6 @@ bool ept_is_valid_mr(struct acrn_vm *vm, uint64_t mr_base_gpa, uint64_t size);
  * @brief EPT page tables destroy
  *
  * @param[inout] vm the pointer that points to VM data structure
- *
- * @return None
  */
 void destroy_ept(struct acrn_vm *vm);
 /**
@@ -83,8 +81,6 @@ uint64_t service_vm_hpa2gpa(uint64_t hpa);
  * @param[in] size The size of guest physical memory region that needs
  *                 to be mapped
  * @param[in] prot_orig The specified memory access right and memory type
- *
- * @return None
  */
 void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t hpa,
 		uint64_t gpa, uint64_t size, uint64_t prot_orig);
@@ -100,8 +96,6 @@ void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t hpa,
  *                     that will be set
  * @param[in] prot_clr The specified memory access right and memory type
  *                     that will be cleared
- *
- * @return None
  */
 void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size, uint64_t prot_set, uint64_t prot_clr);
@@ -114,8 +108,6 @@ void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
  *                physical memory region whoes mapping needs to be deleted
  * @param[in] size The size of guest physical memory region
  *
- * @return None
- *
  * @pre [gpa,gpa+size) has been mapped into host physical memory region
  */
 void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
@@ -127,8 +119,6 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
  * @param[in] pge the pointer that points to the page entry
  *
  * @param[in] size the size of the page
- *
- * @return None
  */
 void ept_flush_leaf_page(uint64_t *pge, uint64_t size);
 
@@ -149,8 +139,6 @@ void *get_eptp(struct acrn_vm *vm);
  * @param[in] cb the pointer that points to walk_ept_table callback, the callback
  * 		will be invoked when getting a present page entry from EPT, and
  *		the callback could get the page entry and page size parameters.
- *
- * @return None
  */
 void walk_ept_table(struct acrn_vm *vm, pge_handler cb);
 

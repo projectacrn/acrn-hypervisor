@@ -93,8 +93,6 @@ void reset_vioapics(const struct acrn_vm *vm);
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @pre irqline < vioapic_pincount(vm)
- *
- * @return None
  */
 void	vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t operation);
 
@@ -110,7 +108,6 @@ void	vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t 
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @pre irqline < vioapic_pincount(vm)
- * @return None
  */
 void	vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t operation);
 

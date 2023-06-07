@@ -350,8 +350,6 @@ int	pci_emul_add_pciecap(struct pci_vdev *pi, int pcie_device_type);
  *
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
  * @param index Message data index.
- *
- * @return None
  */
 void	pci_generate_msi(struct pci_vdev *dev, int index);
 
@@ -360,8 +358,6 @@ void	pci_generate_msi(struct pci_vdev *dev, int index);
  *
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
  * @param index MSIs table entry index.
- *
- * @return None
  */
 void	pci_generate_msix(struct pci_vdev *dev, int index);
 
@@ -369,8 +365,6 @@ void	pci_generate_msix(struct pci_vdev *dev, int index);
  * @brief Assert INTx pin of virtual PCI device
  *
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
- *
- * @return None
  */
 void	pci_lintr_assert(struct pci_vdev *dev);
 
@@ -378,8 +372,6 @@ void	pci_lintr_assert(struct pci_vdev *dev);
  * @brief Deassert INTx pin of virtual PCI device
  *
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
- *
- * @return None
  */
 void	pci_lintr_deassert(struct pci_vdev *dev);
 
@@ -417,8 +409,6 @@ struct pci_vdev *pci_get_vdev_info(int slot);
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
  * @param offset Offset in configuration space.
  * @param val Value in 1 byte.
- *
- * @return None
  */
 static inline void
 pci_set_cfgdata8(struct pci_vdev *dev, int offset, uint8_t val)
@@ -436,8 +426,6 @@ pci_set_cfgdata8(struct pci_vdev *dev, int offset, uint8_t val)
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
  * @param offset Offset in configuration space.
  * @param val Value in 2 bytes.
- *
- * @return None
  */
 static inline void
 pci_set_cfgdata16(struct pci_vdev *dev, int offset, uint16_t val)
@@ -455,8 +443,6 @@ pci_set_cfgdata16(struct pci_vdev *dev, int offset, uint16_t val)
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
  * @param offset Offset in configuration space.
  * @param val Value in 4 bytes.
- *
- * @return None
  */
 static inline void
 pci_set_cfgdata32(struct pci_vdev *dev, int offset, uint32_t val)
