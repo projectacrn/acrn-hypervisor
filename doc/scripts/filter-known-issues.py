@@ -36,7 +36,6 @@ import logging
 import mmap
 import os
 import re
-import sre_constants
 import sys
 import traceback
 
@@ -69,7 +68,7 @@ def config_import_file(filename):
                 regex = gd['regex']
                 try:
                     r = re.compile(regex, re.MULTILINE)
-                except sre_constants.error as e:
+                except re.error as e:
                     logging.error("%s: bytes %d-%d: bad regex: %s",
                                   filename, m.start(), m.end(), e)
                     raise
