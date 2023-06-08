@@ -42,9 +42,10 @@ class Doc:
             content = " ".join(content)
         self._add(self.fill(content, indent, indent))
 
-    def note(self):
+    def note(self, content: t_content, indent: int = 0):
         marker = ".. {type}::".format(type='note')
         self._add(marker)
+        self.content(content, indent=indent + 3)
 
     def newline(self, count: int = 1) -> None:
         if count == 1:
@@ -200,7 +201,7 @@ class GenerateRst:
                 each_cache_way_size = self.get_each_cache_way_info(cache_level, cache_info[1])[0]
                 column_title, data_table = self.get_vcpu_table({cache_info: vm_info}, cache_level)
                 self.doc.table(column_title, data_table)
-                self.doc.note(name="note", content=f"Each cache chunk is {each_cache_way_size}KB.")
+                self.doc.note(content=f"Each cache chunk is {each_cache_way_size}KB.")
         self.doc.newline()
 
     # Get used vcpu table
