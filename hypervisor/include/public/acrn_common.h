@@ -64,6 +64,7 @@
 #define GUEST_FLAG_REE				(1UL << 10U)	/* Whether the VM is REE VM */
 #define GUEST_FLAG_PMU_PASSTHROUGH	(1UL << 11U)    /* Whether PMU is passed through */
 #define GUEST_FLAG_VHWP				(1UL << 12U)    /* Whether the VM supports vHWP */
+#define GUEST_FLAG_VTM				(1UL << 13U)    /* Whether the VM supports virtual thermal monitor */
 
 /* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
 #define VIRTUAL_SLEEP_CTL_ADDR		0x400U /* Pre-launched VM uses ACPI reduced HW mode and sleep control register */
