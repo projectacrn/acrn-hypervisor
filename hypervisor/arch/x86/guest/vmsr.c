@@ -797,7 +797,9 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 			     MSR_PLATFORM_INFO_MIN_OPERATING_RATIO_MASK |
 			     MSR_PLATFORM_INFO_SAMPLE_PART;
 		} else {
-			err = -EACCES;
+			/* Allow read by non-service vm for compatibility */
+			v = 0UL;
+			pr_warn("%s(): vm%d read MSR_PLATFORM_INFO", __func__, vcpu->vm->vm_id);
 		}
 		break;
 	}
