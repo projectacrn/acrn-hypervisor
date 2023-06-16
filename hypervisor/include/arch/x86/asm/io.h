@@ -9,6 +9,9 @@
 
 #include <types.h>
 
+/* X86 architecture only supports 16 bits IO space */
+#define IO_SPACE_BITMASK 0xffffU
+
 /* Write 1 byte to specified I/O port */
 static inline void pio_write8(uint8_t value, uint16_t port)
 {

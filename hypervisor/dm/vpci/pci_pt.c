@@ -379,7 +379,24 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 		if (is_pci_reserved_bar(vbar)) {
 			continue;
 		}
-		mask = (is_pci_io_bar(vbar)) ? PCI_BASE_ADDRESS_IO_MASK : PCI_BASE_ADDRESS_MEM_MASK;
+
+		if (is_pci_io_bar(vbar)) {
+			if (lo & ~IO_SPACE_BITMASK) {
+				/* 
+				 * Some buggy x86 BIOS may program an invalid I/O BAR whose upper 16 bits are not zero.
+				 * Such I/O BAR is not addressable on x86 platforms. Skip it when initializing the
+				 * virtual PCI function as I/O BAR reprogramming in VM is currently unsupported.
+				 */
+				pr_warn("%s: %02x:%02x.%x: IO BAR%d value 0x%08x has invalid bits, IO_SPACE_BITMASK "
+				        "is 0x%08x, Ignore this BAR in vdev",
+					__func__, vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, lo,
+					IO_SPACE_BITMASK);
+				continue;
+			}
+			mask = PCI_BASE_ADDRESS_IO_MASK;
+		} else {
+			mask = PCI_BASE_ADDRESS_MEM_MASK;
+		}
 		vbar->base_hpa = (uint64_t)lo & mask;
 
 		if (is_pci_mem64lo_bar(vbar)) {
