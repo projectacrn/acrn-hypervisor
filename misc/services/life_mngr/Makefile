@@ -60,6 +60,7 @@ all-linux: life_mngr.service
 	$(CC) -g $(LM_C_SRCS) -o $(OUT_DIR)/life_mngr -lpthread $(LIFEMNGR_CFLAGS) $(LIFEMNGR_LDFLAGS)
 	cp life_mngr.conf $(OUT_DIR)/life_mngr.conf
 	cp s5_trigger_linux.py $(OUT_DIR)/s5_trigger_linux.py
+	cp system_reboot_trigger_linux_rtvm.py $(OUT_DIR)/system_reboot_trigger_linux_rtvm.py
 
 # only build for Windows if cross compiler is installed
 all-win:
@@ -78,6 +79,7 @@ ifneq ($(OUT_DIR),.)
 	rm -f $(OUT_DIR)/life_mngr.service
 	rm -f $(OUT_DIR)/life_mngr.conf
 	rm -f $(OUT_DIR)/s5_trigger_linux.py
+	rm -f $(OUT_DIR)/system_reboot_trigger_linux_rtvm.py
 	rm -rf $(OUT_DIR)
 endif
 

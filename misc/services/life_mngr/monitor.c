@@ -98,6 +98,8 @@ int init_socket_server_and_shutdown_commands(bool service_vm)
 	} else {
 		register_command_handler(socket_req_system_shutdown_user_vm_handler,
 						sock_server, REQ_SYS_SHUTDOWN);
+		register_command_handler(socket_req_system_reboot_handler,
+						sock_server, REQ_SYS_REBOOT);
 	}
 	return ret;
 }

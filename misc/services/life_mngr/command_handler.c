@@ -173,6 +173,33 @@ int socket_req_user_vm_reboot_handler(void *arg, int fd)
 {
 	return req_user_vm_shutdown_reboot(arg, fd, USER_VM_REBOOT, ACK_REQ_USER_VM_REBOOT);
 }
+
+int socket_req_system_reboot_handler(void *arg, int fd)
+{
+	int ret;
+	struct channel_dev *c_dev = NULL;
+
+	usleep(LISTEN_INTERVAL + SECOND_TO_US);
+	c_dev = (struct channel_dev *)LIST_FIRST(&channel->tty_conn_head);
+	if (c_dev == NULL) {
+		(void) send_socket_ack(arg, fd, USER_VM_DISCONNECT);
+		LOG_WRITE("User VM is disconnect\n");
+		return 0;
+	}
+
+	ret = send_socket_ack(arg, fd, ACK_REQ_SYS_REBOOT);
+	if (ret < 0) {
+		LOG_WRITE("Failed to send ACK by socket\n");
+		return 0;
+	}
+	LOG_WRITE("Foward reboot req to service VM by UART\n");
+	start_uart_channel_dev_resend(c_dev, REQ_SYS_REBOOT, MIN_RESEND_TIME);
+	ret = send_message_by_uart(c_dev->uart_device, REQ_SYS_REBOOT, strlen(REQ_SYS_REBOOT));
+	if (ret < 0)
+		LOG_WRITE("Failed to foward system reboot request to service VM by UART\n");
+	return ret;
+}
+
 int socket_req_system_shutdown_user_vm_handler(void *arg, int fd)
 {
 	int ret;

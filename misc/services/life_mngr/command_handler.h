@@ -29,6 +29,8 @@ int socket_req_user_vm_shutdown_handler(void *arg, int fd);
  * @brief The handler of request user reboot command on socket in service VM
  */
 int socket_req_user_vm_reboot_handler(void *arg, int fd);
+
+int socket_req_system_reboot_handler(void *arg, int fd);
 /**
  * @brief The handler of request system shutdown command on socket in user VM
  */
