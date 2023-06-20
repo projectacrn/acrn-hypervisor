@@ -616,6 +616,27 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 	case 0x46c1:
 	case 0x46c2:
 	case 0x46c3:
+	/* Alder Lake-N */
+	case 0x46d0:
+	case 0x46d1:
+	case 0x46d2:
+	/* Raptor Lake-S */
+	case 0xa780:
+	case 0xa781:
+	case 0xa782:
+	case 0xa783:
+	case 0xa788:
+	case 0xa789:
+	case 0xa78a:
+	case 0xa78b:
+	/* Raptor Lake-U */
+	case 0xa721:
+	case 0xa7a1:
+	case 0xa7a9:
+	/* Raptor Lake-P */
+	case 0xa720:
+	case 0xa7a0:
+	case 0xa7a8:
 		/* BDSM register has 64 bits.
 		 * bits 63:20 contains the base address of stolen memory
 		 */
