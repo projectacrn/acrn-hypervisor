@@ -372,14 +372,16 @@ class GenerateRst:
                     memory_size = memory_size + int(hpa_region.find("size_hpa").text)
         vm_vcpu_info_l2 = self.get_vm_used_vcpu("2")
         vm_vcpu_info_l3 = self.get_vm_used_vcpu("3")
-        amount_vm_l3_cache = self.get_amount_l3_cache(vm_node)
+        l3_cache = self.board_etree.xpath(f"caches/cache [@level = '3']")
+        if len(l3_cache) > 0:
+            amount_vm_l3_cache = self.get_amount_l3_cache(vm_node)
+            parameter_dict["Amount of L3 Cache"] = amount_vm_l3_cache
         parameter_dict["Load Order"] = load_order
         if load_order == "SERVICE_VM":
             parameter_dict["Number of vCPUs"] = len(self.service_vm_used_pcpu_list)
         else:
             parameter_dict["Number of vCPUs"] = len(vm_node.xpath(f"cpu_affinity/pcpu/pcpu_id"))
         parameter_dict["Ammount of RAM"] = str(memory_size) + "MB"
-        parameter_dict["Amount of L3 Cache"] = amount_vm_l3_cache
         data_table.extend(map(list, parameter_dict.items()))
         return column_title, data_table
 
