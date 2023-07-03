@@ -253,6 +253,8 @@ union ioapic_rte {
 
 /* fields in LDR */
 #define	APIC_LDR_RESERVED	0x00ffffffU
+#define X2APIC_LDR_LOGICAL_ID_MASK	0x0000ffffU
+#define X2APIC_LDR_CLUSTER_ID_MASK	0xffff0000U
 
 /* fields in DFR */
 #define	APIC_DFR_RESERVED	0x0fffffffU
