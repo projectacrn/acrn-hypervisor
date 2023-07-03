@@ -744,7 +744,11 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		} else if (!strncmp(opt, "romfile=", 8)) {
 			need_rombar = true;
 			opt += 8;
-			strcpy(rom_file, opt);
+			if (strnlen(opt, PATH_MAX) >= sizeof(rom_file)) {
+				pr_err("romfile path too long, max supported path length is 255");
+				return -EINVAL;
+			}
+			strncpy(rom_file, opt, sizeof(rom_file));
 		} else
 			pr_warn("Invalid passthru options:%s", opt);
 	}
