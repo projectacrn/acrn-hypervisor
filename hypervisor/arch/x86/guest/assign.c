@@ -53,17 +53,33 @@ static struct acrn_vcpu *is_single_destination(struct acrn_vm *vm, const struct 
 
 static uint32_t calculate_logical_dest_mask(uint64_t pdmask)
 {
-	uint32_t dest_mask = 0UL;
+	uint32_t dest_cluster_id, cluster_id, logical_id_mask = 0U;
 	uint64_t pcpu_mask = pdmask;
 	uint16_t pcpu_id;
 
+	/* Guest using Guests working in xAPIC mode may use 'Flat Model' to select an
+	 * arbitrary list of CPUs. But as the HW is woring in x2APIC mode and can only
+	 * use 'Cluster Model', destination mask can only be assigned to pCPUs within
+	 * one Cluster. So some pCPUs may not be included.
+	 * Here we use the first Cluster of all the requested pCPUs.
+	 */
 	pcpu_id = ffs64(pcpu_mask);
+	dest_cluster_id = per_cpu(lapic_ldr, pcpu_id) & X2APIC_LDR_CLUSTER_ID_MASK;
 	while (pcpu_id < MAX_PCPU_NUM) {
 		bitmap_clear_nolock(pcpu_id, &pcpu_mask);
-		dest_mask |= per_cpu(lapic_ldr, pcpu_id);
+		cluster_id = per_cpu(lapic_ldr, pcpu_id) & X2APIC_LDR_CLUSTER_ID_MASK;
+		if (cluster_id == dest_cluster_id) {
+			logical_id_mask |= (per_cpu(lapic_ldr, pcpu_id) & X2APIC_LDR_LOGICAL_ID_MASK);
+		} else {
+			pr_warn("The cluster ID of pCPU %d is %d which differs from that (%d) of "
+				"the previous cores in the guest logical destination.\n"
+				"Ignore that pCPU in the logical destination for physical interrupts.",
+				pcpu_id, cluster_id >> 16U, dest_cluster_id >> 16U);
+		}
 		pcpu_id = ffs64(pcpu_mask);
 	}
-	return dest_mask;
+
+	return (dest_cluster_id | logical_id_mask);
 }
 
 /**
