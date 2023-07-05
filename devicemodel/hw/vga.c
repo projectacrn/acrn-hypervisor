@@ -1291,6 +1291,10 @@ vga_init(struct gfx_ctx *gc, int io_only)
 	int port, error;
 
 	vd = calloc(1, sizeof(struct vga_vdev));
+	if (!vd) {
+		pr_err("%s: out of memory.\n", __func__);
+		return NULL;
+	}
 
 	bzero(&iop, sizeof(struct inout_port));
 	iop.name = "VGA";
@@ -1326,8 +1330,12 @@ vga_init(struct gfx_ctx *gc, int io_only)
 		return NULL;
 	}
 
-	vd->vga_ram = malloc(256 * KB);
-	memset(vd->vga_ram, 0, 256 * KB);
+	vd->vga_ram = calloc(256, KB);
+	if (!vd->vga_ram) {
+		pr_err("%s: failed to allocate vga_ram.\n", __func__);
+		free(vd);
+		return NULL;
+	}
 
 	{
 		static uint8_t palette[] = {
