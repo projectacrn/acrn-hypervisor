@@ -785,8 +785,23 @@ virtio_gpu_cmd_resource_attach_backing(struct virtio_gpu_command *cmd)
 	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
 	memset(&resp, 0, sizeof(resp));
 
+	/*
+	 * 1. Per VIRTIO GPU specification,
+	 *    'cmd->iovcnt' = 'nr_entries' of 'struct virtio_gpu_resource_attach_backing' + 2,
+	 *    where 'nr_entries' is number of instance of 'struct virtio_gpu_mem_entry'.
+	 *    case 'cmd->iovcnt < 3' means above 'nr_entries' is zero, which is invalid
+	 *    and ignored.
+	 *    2. Function 'virtio_gpu_ctrl_bh(void *data)' guarantees cmd->iovcnt >=1.
+	 */
+	if (cmd->iovcnt < 2) {
+		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_PARAMETER;
+		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+		pr_err("%s : invalid memory entry.\n", __func__);
+		return;
+	}
+
 	r2d = virtio_gpu_find_resource_2d(cmd->gpu, req.resource_id);
-	if (r2d) {
+	if (r2d && req.nr_entries > 0) {
 		iov = malloc(req.nr_entries * sizeof(struct iovec));
 		if (!iov) {
 			resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
@@ -1198,6 +1213,19 @@ virtio_gpu_cmd_create_blob(struct virtio_gpu_command *cmd)
 		return;
 	}
 
+	/*
+	 * 1. Per VIRTIO GPU specification,
+	 *    'cmd->iovcnt' = 'nr_entries' of 'struct virtio_gpu_resource_create_blob' + 2,
+	 *    where 'nr_entries' is number of instance of 'struct virtio_gpu_mem_entry'.
+	 *    2. Function 'virtio_gpu_ctrl_bh(void *data)' guarantees cmd->iovcnt >=1.
+	 */
+	if (cmd->iovcnt < 2) {
+		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_PARAMETER;
+		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+		pr_err("%s : invalid memory entry.\n", __func__);
+		return;
+	}
+
 	if ((req.blob_mem != VIRTIO_GPU_BLOB_MEM_GUEST) ||
 		(req.blob_flags != VIRTIO_GPU_BLOB_FLAG_USE_SHAREABLE)) {
 		pr_dbg("%s : invalid create_blob parameter for %d.\n",
@@ -1227,62 +1255,64 @@ virtio_gpu_cmd_create_blob(struct virtio_gpu_command *cmd)
 
 	r2d->resource_id = req.resource_id;
 
-	entries = malloc(req.nr_entries * sizeof(struct virtio_gpu_mem_entry));
-	if (!entries) {
-		pr_err("%s : memory allocation for entries failed.\n", __func__);
-		free(r2d);
-		resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
-		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
-		return;
-	}
-	pbuf = (uint8_t *)entries;
-	for (i = 1; i < (cmd->iovcnt - 1); i++) {
-		memcpy(pbuf, cmd->iov[i].iov_base, cmd->iov[i].iov_len);
-		pbuf += cmd->iov[i].iov_len;
-	}
-	if (req.size > CURSOR_BLOB_SIZE) {
-		/* Try to create the dma buf */
-		r2d->dma_info = virtio_gpu_create_udmabuf(cmd->gpu,
-							  entries,
-							  req.nr_entries);
-		if (r2d->dma_info == NULL) {
-			free(entries);
-			resp.type = VIRTIO_GPU_RESP_ERR_UNSPEC;
-			memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
-			return;
-		}
-		r2d->blob = true;
-	} else {
-		/* Cursor resource with 64x64 and PIXMAN_a8r8g8b8 format.
-		 * Or when it fails to create dmabuf
-		 */
-		r2d->width = 64;
-		r2d->height = 64;
-		r2d->format = PIXMAN_a8r8g8b8;
-		r2d->image = pixman_image_create_bits(
-				r2d->format, r2d->width, r2d->height, NULL, 0);
-
-		iov = malloc(req.nr_entries * sizeof(struct iovec));
-		if (!iov) {
-			free(entries);
+	if (req.nr_entries > 0) {
+		entries = malloc(req.nr_entries * sizeof(struct virtio_gpu_mem_entry));
+		if (!entries) {
+			pr_err("%s : memory allocation for entries failed.\n", __func__);
 			free(r2d);
 			resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
 			memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
 			return;
 		}
-		r2d->iov = iov;
-
-		r2d->iovcnt = req.nr_entries;
-		for (i = 0; i < req.nr_entries; i++) {
-			r2d->iov[i].iov_base = paddr_guest2host(
-					cmd->gpu->base.dev->vmctx,
-					entries[i].addr,
-					entries[i].length);
-			r2d->iov[i].iov_len = entries[i].length;
+		pbuf = (uint8_t *)entries;
+		for (i = 1; i < (cmd->iovcnt - 1); i++) {
+			memcpy(pbuf, cmd->iov[i].iov_base, cmd->iov[i].iov_len);
+			pbuf += cmd->iov[i].iov_len;
 		}
-	}
+		if (req.size > CURSOR_BLOB_SIZE) {
+			/* Try to create the dma buf */
+			r2d->dma_info = virtio_gpu_create_udmabuf(cmd->gpu,
+					entries,
+					req.nr_entries);
+			if (r2d->dma_info == NULL) {
+				free(entries);
+				resp.type = VIRTIO_GPU_RESP_ERR_UNSPEC;
+				memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+				return;
+			}
+			r2d->blob = true;
+		} else {
+			/* Cursor resource with 64x64 and PIXMAN_a8r8g8b8 format.
+			 * Or when it fails to create dmabuf
+			 */
+			r2d->width = 64;
+			r2d->height = 64;
+			r2d->format = PIXMAN_a8r8g8b8;
+			r2d->image = pixman_image_create_bits(
+					r2d->format, r2d->width, r2d->height, NULL, 0);
 
-	free(entries);
+			iov = malloc(req.nr_entries * sizeof(struct iovec));
+			if (!iov) {
+				free(entries);
+				free(r2d);
+				resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
+				memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+				return;
+			}
+			r2d->iov = iov;
+
+			r2d->iovcnt = req.nr_entries;
+			for (i = 0; i < req.nr_entries; i++) {
+				r2d->iov[i].iov_base = paddr_guest2host(
+						cmd->gpu->base.dev->vmctx,
+						entries[i].addr,
+						entries[i].length);
+				r2d->iov[i].iov_len = entries[i].length;
+			}
+		}
+
+		free(entries);
+	}
 	resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 	LIST_INSERT_HEAD(&cmd->gpu->r2d_list, r2d, link);
 	memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
