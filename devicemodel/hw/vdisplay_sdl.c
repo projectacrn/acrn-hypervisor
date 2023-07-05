@@ -1369,6 +1369,10 @@ int vdpy_parse_cmd_option(const char *opts)
 
 	error = 0;
 	vdpy.vscrs = calloc(VSCREEN_MAX_NUM, sizeof(struct vscreen));
+	if (!vdpy.vscrs) {
+		pr_err("%s, memory allocation for vscrs failed.", __func__);
+		return -1;
+	}
 	vdpy.vscrs_num = 0;
 
 	stropts = strdup(opts);
