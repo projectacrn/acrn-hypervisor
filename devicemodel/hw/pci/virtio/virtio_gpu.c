@@ -702,6 +702,12 @@ virtio_gpu_cmd_resource_create_2d(struct virtio_gpu_command *cmd)
 	}
 	r2d = (struct virtio_gpu_resource_2d*)calloc(1, \
 			sizeof(struct virtio_gpu_resource_2d));
+	if (!r2d) {
+		pr_err("%s: memory allocation for r2d failed.\n", __func__);
+		resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
+		goto response;
+	}
+
 	r2d->resource_id = req.resource_id;
 	r2d->width = req.width;
 	r2d->height = req.height;
@@ -774,15 +780,27 @@ virtio_gpu_cmd_resource_attach_backing(struct virtio_gpu_command *cmd)
 	struct virtio_gpu_ctrl_hdr resp;
 	int i;
 	uint8_t *pbuf;
+	struct iovec *iov;
 
 	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
 	memset(&resp, 0, sizeof(resp));
 
 	r2d = virtio_gpu_find_resource_2d(cmd->gpu, req.resource_id);
 	if (r2d) {
-		r2d->iov = malloc(req.nr_entries * sizeof(struct iovec));
+		iov = malloc(req.nr_entries * sizeof(struct iovec));
+		if (!iov) {
+			resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
+			goto exit;
+		}
+
+		r2d->iov = iov;
 		r2d->iovcnt = req.nr_entries;
 		entries = malloc(req.nr_entries * sizeof(struct virtio_gpu_mem_entry));
+		if (!entries) {
+			free(iov);
+			resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
+			goto exit;
+		}
 		pbuf = (uint8_t*)entries;
 		for (i = 1; i < (cmd->iovcnt - 1); i++) {
 			memcpy(pbuf, cmd->iov[i].iov_base, cmd->iov[i].iov_len);
@@ -796,13 +814,13 @@ virtio_gpu_cmd_resource_attach_backing(struct virtio_gpu_command *cmd)
 			r2d->iov[i].iov_len = entries[i].length;
 		}
 		free(entries);
+		resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 	} else {
 		pr_err("%s: Illegal resource id %d\n", __func__, req.resource_id);
 		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_RESOURCE_ID;
 	}
-
+exit:
 	cmd->iolen = sizeof(resp);
-	resp.type = VIRTIO_GPU_RESP_OK_NODATA;
 	virtio_gpu_update_resp_fence(&cmd->hdr, &resp);
 	memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
 }
@@ -1166,6 +1184,7 @@ virtio_gpu_cmd_create_blob(struct virtio_gpu_command *cmd)
 	struct virtio_gpu_ctrl_hdr resp;
 	int i;
 	uint8_t *pbuf;
+	struct iovec *iov;
 
 	memcpy(&req, cmd->iov[0].iov_base, sizeof(req));
 	cmd->iolen = sizeof(resp);
@@ -1177,7 +1196,6 @@ virtio_gpu_cmd_create_blob(struct virtio_gpu_command *cmd)
 		resp.type = VIRTIO_GPU_RESP_ERR_INVALID_RESOURCE_ID;
 		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
 		return;
-
 	}
 
 	if ((req.blob_mem != VIRTIO_GPU_BLOB_MEM_GUEST) ||
@@ -1200,9 +1218,23 @@ virtio_gpu_cmd_create_blob(struct virtio_gpu_command *cmd)
 
 	r2d = (struct virtio_gpu_resource_2d *)calloc(1,
 			sizeof(struct virtio_gpu_resource_2d));
+	if (!r2d) {
+		pr_err("%s : memory allocation for r2d failed.\n", __func__);
+		resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
+		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+		return;
+	}
+
 	r2d->resource_id = req.resource_id;
 
 	entries = malloc(req.nr_entries * sizeof(struct virtio_gpu_mem_entry));
+	if (!entries) {
+		pr_err("%s : memory allocation for entries failed.\n", __func__);
+		free(r2d);
+		resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
+		memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+		return;
+	}
 	pbuf = (uint8_t *)entries;
 	for (i = 1; i < (cmd->iovcnt - 1); i++) {
 		memcpy(pbuf, cmd->iov[i].iov_base, cmd->iov[i].iov_len);
@@ -1230,7 +1262,16 @@ virtio_gpu_cmd_create_blob(struct virtio_gpu_command *cmd)
 		r2d->image = pixman_image_create_bits(
 				r2d->format, r2d->width, r2d->height, NULL, 0);
 
-		r2d->iov = malloc(req.nr_entries * sizeof(struct iovec));
+		iov = malloc(req.nr_entries * sizeof(struct iovec));
+		if (!iov) {
+			free(entries);
+			free(r2d);
+			resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
+			memcpy(cmd->iov[cmd->iovcnt - 1].iov_base, &resp, sizeof(resp));
+			return;
+		}
+		r2d->iov = iov;
+
 		r2d->iovcnt = req.nr_entries;
 		for (i = 0; i < req.nr_entries; i++) {
 			r2d->iov[i].iov_base = paddr_guest2host(
@@ -1552,7 +1593,7 @@ virtio_gpu_vga_render(void *param)
 	gpu->vga.surf.stride = 0;
 	/* The below logic needs to be refined */
 	while(gpu->vga.enable) {
-		if(gpu->vga.gc->gc_image->vgamode) {
+		if ((gpu->vga.gc->gc_image->vgamode) && (gpu->vga.dev != NULL)) {
 			vga_render(gpu->vga.gc, gpu->vga.dev);
 			break;
 		}
@@ -1801,6 +1842,9 @@ virtio_gpu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	int i;
 
 	gpu = (struct virtio_gpu *)dev->arg;
+	if (!gpu)
+		return;
+
 	gpu->vga.enable = false;
 
 	pthread_mutex_lock(&gpu->vga_thread_mtx);
@@ -1860,10 +1904,8 @@ virtio_gpu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	vdpy_deinit(gpu->vdpy_handle);
 
-	if (gpu) {
-		pthread_mutex_destroy(&gpu->mtx);
-		free(gpu);
-	}
+	pthread_mutex_destroy(&gpu->mtx);
+	free(gpu);
 	virtio_gpu_device_cnt--;
 }
 
