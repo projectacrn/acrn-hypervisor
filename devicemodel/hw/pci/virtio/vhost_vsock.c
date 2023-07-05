@@ -298,14 +298,16 @@ virtio_vhost_vsock_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	virtio_set_modern_bar(&vsock->base, false);
 
 	vsock->vhost_vsock = vhost_vsock_init(&vsock->base, 0);
+	if (!vsock->vhost_vsock) {
+		pr_err("vhost vosck init failed.");
+		free(vsock);
+		return -1;
+	}
 	vhost_vsock_set_guest_cid(&vsock->vhost_vsock->vdev, vsock->config.guest_cid);
 
 	if (virtio_interrupt_init(&vsock->base, virtio_uses_msix())) {
-		if (vsock) {
-			if (vsock->vhost_vsock)
-				vhost_vsock_deinit(vsock->vhost_vsock);
-			free(vsock);
-		}
+		vhost_vsock_deinit(vsock->vhost_vsock);
+		free(vsock);
 		return -1;
 	}
 	return 0;
