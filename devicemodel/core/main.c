@@ -247,6 +247,64 @@ high_bios_size(void)
 	return roundup2(size, 2 * MB);
 }
 
+/*
+ * set nice value of current pthread
+ * input range: [-20, 19]
+ * Lower priorities cause more favorable scheduling.
+ */
+void
+set_thread_priority(int priority, bool reset_on_fork)
+{
+	int ret, policy;
+	char tname[MAXCOMLEN + 1];
+	struct sched_param sp = { .sched_priority = 0 };
+
+	memset(tname, 0, sizeof(tname));
+	pthread_getname_np(pthread_self(), tname, sizeof(tname));
+
+	policy = sched_getscheduler(0);
+	if (policy == -1) {
+		pr_err("%s(%s), sched_getscheduler failed, errno = %d\n",
+			__func__, tname, errno);
+	}
+
+	if ((policy & SCHED_RESET_ON_FORK) && !reset_on_fork)
+		policy &= ~SCHED_RESET_ON_FORK;
+	else if (((policy & SCHED_RESET_ON_FORK) == 0) && reset_on_fork)
+		policy |= SCHED_RESET_ON_FORK;
+
+	ret = sched_setscheduler(0, policy, &sp);
+	if (ret == -1) {
+		pr_err("%s(%s), sched_setscheduler failed, errno = %d\n",
+			__func__, tname, errno);
+	}
+
+	errno = 0;
+	ret = getpriority(PRIO_PROCESS, 0);
+	if (errno && (ret == -1)) {
+		pr_err("%s(%s), getpriority failed, errno = %d\n",
+			__func__, tname, errno);
+	} else {
+		pr_info("%s(%s), orig prio = %d\n",
+			__func__, tname, ret);
+	}
+
+	ret = setpriority(PRIO_PROCESS, 0, priority);
+	if (ret) {
+		pr_err("%s(%s), setpriority failed, errno = %d\n",
+			__func__, tname, errno);
+	}
+
+	ret = getpriority(PRIO_PROCESS, 0);
+	if (ret != priority) {
+		pr_err("%s(%s), getpriority(%d) != setpriority(%d)\n",
+			__func__, tname, ret, priority);
+	} else {
+		pr_info("%s(%s), new priority = %d\n",
+			__func__, tname, ret);
+	}
+}
+
 static void *
 start_thread(void *param)
 {

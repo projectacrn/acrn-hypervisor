@@ -30,6 +30,8 @@
 #define	_DM_H_
 
 #include <stdbool.h>
+#include <sys/resource.h>
+
 #include "types.h"
 #include "dm_string.h"
 #include "acrn_common.h"
@@ -52,6 +54,14 @@ extern bool ssram;
 extern bool vtpm2;
 extern bool is_winvm;
 
+enum acrn_thread_prio {
+	PRIO_VCPU = PRIO_MIN,
+	PRIO_IOTHREAD = PRIO_MIN,
+	PRIO_VIRTIO_SND,
+	PRIO_VIRTIO_IPU,
+	PRIO_VIRTIO_GPU
+};
+
 /**
  * @brief Convert guest physical address to host virtual address
  *
@@ -67,4 +77,5 @@ int  guest_cpu_num(void);
 size_t high_bios_size(void);
 void init_debugexit(void);
 void deinit_debugexit(void);
+void set_thread_priority(int priority, bool reset_on_fork);
 #endif

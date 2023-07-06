@@ -18,6 +18,7 @@
 #include "iothread.h"
 #include "log.h"
 #include "mevent.h"
+#include "dm.h"
 
 
 #define MEVENT_MAX 64
@@ -34,6 +35,8 @@ io_thread(void *arg)
 	struct iothread_mevent *aevp;
 	int i, n;
 	struct iothread_ctx *ioctx_x = (struct iothread_ctx *)arg;
+
+	set_thread_priority(PRIO_IOTHREAD, true);
 
 	while(ioctx_x->started) {
 		n = epoll_wait(ioctx_x->epfd, eventlist, MEVENT_MAX, -1);
