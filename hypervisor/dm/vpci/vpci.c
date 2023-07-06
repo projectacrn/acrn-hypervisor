@@ -846,7 +846,7 @@ void vpci_update_one_vbar(struct pci_vdev *vdev, uint32_t bar_idx, uint32_t val,
 	}
 }
 
-/*
+/**
  * @brief Add emulated legacy PCI capability support for virtual PCI device
  *
  * @param vdev     Pointer to vdev data structure
@@ -855,8 +855,6 @@ void vpci_update_one_vbar(struct pci_vdev *vdev, uint32_t bar_idx, uint32_t val,
  *
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- *
- * @return None
  */
 uint32_t vpci_add_capability(struct pci_vdev *vdev, uint8_t *capdata, uint8_t caplen)
 {

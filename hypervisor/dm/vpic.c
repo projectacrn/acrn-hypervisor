@@ -540,8 +540,6 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t leve
  * @param[in] irqline   Target IRQ number
  * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
- *
- * @return None
  */
 void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t vgsi, uint32_t operation)
 {
@@ -613,7 +611,6 @@ void vpic_get_irqline_trigger_mode(const struct acrn_vpic *vpic, uint32_t vgsi,
  *			with eligible vector if any.
  *
  * @pre this function should be called after vpic_init()
- * @return None
  */
 void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr)
 {
@@ -669,8 +666,6 @@ static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint32_t pin)
  *
  * @param[in] vm     Pointer to target VM
  * @param[in] vector Target virtual interrupt vector
- *
- * @return None
  *
  * @pre vm != NULL
  * @pre this function should be called after vpic_init()

@@ -36,15 +36,11 @@ uint32_t get_tsc_khz(void);
  *
  * @remark Generic time related routines, e.g., cpu_tickrate(), us_to_ticks(),
  * udelay(), etc., relies on this function being called earlier during system initialization.
- *
- * @return None
  */
 void calibrate_tsc(void);
 
 /**
  * @brief Initialize HPET.
- *
- * @return None
  */
 void hpet_init(void);
 

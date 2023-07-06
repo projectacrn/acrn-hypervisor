@@ -127,28 +127,20 @@ static inline uint64_t round_pde_down(uint64_t val)
 
 /**
  * @brief MMU paging enable
- *
- * @return None
  */
 void enable_paging(void);
 /**
  * @brief Supervisor-mode execution prevention (SMEP) enable
- *
- * @return None
  */
 void enable_smep(void);
 
 /**
  * @brief Supervisor-mode Access Prevention (SMAP) enable
- *
- * @return None
  */
 void enable_smap(void);
 
 /**
  * @brief MMU page tables initialization
- *
- * @return None
  */
 void init_paging(void);
 
@@ -163,14 +155,10 @@ void set_paging_nx(uint64_t base, uint64_t size);
  * @brief Specified signle VPID flush
  *
  * @param[in] vpid the specified VPID
- *
- * @return None
  */
 void flush_vpid_single(uint16_t vpid);
 /**
  * @brief All VPID flush
- *
- * @return None
  */
 void flush_vpid_global(void);
 
@@ -178,8 +166,6 @@ void flush_vpid_global(void);
  * @brief Guest-physical mappings and combined mappings invalidation
  *
  * @param[in] eptp the pointer that points the eptp
- *
- * @return None
  */
 void invept(const void *eptp);
 

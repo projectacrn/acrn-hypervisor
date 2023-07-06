@@ -547,8 +547,6 @@ static void vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool
  *
  * @param[in] dest_pcpu_id Target CPU ID.
  * @param[in] anv Activation Notification Vectors (ANV)
- *
- * @return None
  */
 static void apicv_trigger_pi_anv(uint16_t dest_pcpu_id, uint32_t anv)
 {
@@ -1261,8 +1259,6 @@ static bool vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint3
  *
  * @param[in] vlapic Pointer to target vLAPIC data structure
  * @param[in] vector Target virtual interrupt vector
- *
- * @return None
  *
  * @pre vlapic != NULL
  */

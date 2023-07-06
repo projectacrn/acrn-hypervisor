@@ -32,8 +32,6 @@
  * @param[in] virt_gsi virtual GSI number associated with the passthrough device
  * @param[in] vgsi_ctlr INTX_CTLR_IOAPIC or INTX_CTLR_PIC
  *
- * @return None
- *
  * @pre vm != NULL
  *
  */
@@ -120,8 +118,6 @@ int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_gsi, uint32_t
  * @param[in] pic_pin true for pic, false for ioapic
  * @param[in] is_phy_gsi true if gsi is physical, false if gsi is virtual
  *
- * @return None
- *
  * @pre vm != NULL
  *
  */
@@ -136,8 +132,6 @@ void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t gsi, bool pi
  * @param[in] phys_bdf physical bdf associated with the passthrough device
  * @param[in] vector_count number of vectors
  *
- * @return None
- *
  * @pre vm != NULL
  *
  */
@@ -149,8 +143,6 @@ void ptirq_remove_msix_remapping(const struct acrn_vm *vm, uint16_t phys_bdf, ui
  * Deactivate & remove all mapping entries of the virt_gsis defined in VM config for given vm.
  *
  * @param[in] vm pointer to acrn_vm
- *
- * @return None
  *
  * @pre vm != NULL
  *

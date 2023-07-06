@@ -528,8 +528,6 @@ static UINTN container_get_hv_ram_size(HV_LOADER hvld)
  * @brief Free up memory allocated by the container loader
  *
  * @param[in]  hvld Loader handle
- *
- * @return None
  */
 static void container_deinit(HV_LOADER hvld)
 {

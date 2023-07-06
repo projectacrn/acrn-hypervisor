@@ -151,8 +151,6 @@ void vpic_init(struct acrn_vm *vm);
  * @param[in] vgsi      GSI for the virtual interrupt
  * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
- *
- * @return None
  */
 void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t vgsi, uint32_t operation);
 
@@ -162,8 +160,6 @@ void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t vgsi, uint32_t operation)
  * @param[in]    vpic   Pointer to target VM's vpic table
  * @param[inout] vecptr Pointer to vector buffer and will be filled
  *			with eligible vector if any.
- *
- * @return None
  */
 void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr);
 
@@ -172,8 +168,6 @@ void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr);
  *
  * @param[in] vpic     Pointer to target VM's vpic table
  * @param[in] vector Target virtual interrupt vector
- *
- * @return None
  *
  * @pre vm != NULL
  */

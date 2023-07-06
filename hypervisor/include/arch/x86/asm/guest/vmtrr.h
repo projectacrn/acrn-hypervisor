@@ -60,8 +60,6 @@ struct acrn_vcpu;
  * @param[inout] vcpu The pointer that points VCPU data structure
  * @param[in] msr Virtual MTRR MSR Address
  * @param[in] value The value that will be writen into virtual MTRR MSR
- *
- * @return None
  */
 void write_vmtrr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t value);
 /**
@@ -77,8 +75,6 @@ uint64_t read_vmtrr(const struct acrn_vcpu *vcpu, uint32_t msr);
  * @brief Virtual MTRR initialization
  *
  * @param[inout] vcpu The pointer that points VCPU data structure
- *
- * @return None
  */
 void init_vmtrr(struct acrn_vcpu *vcpu);
 /**
