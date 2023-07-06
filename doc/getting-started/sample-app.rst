@@ -108,7 +108,7 @@ As a normal (e.g., **acrn**) user, follow these steps:
 1. Install some additional packages in your development computer used for
    building the sample application::
 
-     sudo apt install -y cloud-guest-utils schroot kpartx qemu-kvm
+     sudo apt install -y cloud-guest-utils schroot kpartx qemu-utils
 
 #. Check out the ``acrn-hypervisor`` source code branch (already cloned from the
    ``acrn-hypervisor`` repo when you followed the :ref:`gsg`). We've tagged a
