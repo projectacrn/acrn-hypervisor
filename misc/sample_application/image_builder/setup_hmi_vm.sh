@@ -12,17 +12,20 @@ function umount_directory() {
 }
 
 function update_package_info() {
-    apt update -y && apt install python3 python3-pip \
-        net-tools python3-matplotlib \
-	linux-modules-extra-$(uname -r) \
-	openssh-server \
-	isc-dhcp-server -y
+    apt update -y
+    # Remove needrestart to disable interactive prompts in apt install
+    apt remove -y needrestart
+    apt install -y python3 python3-pip net-tools python3-matplotlib openssh-server \
+        isc-dhcp-server linux-generic-hwe-$(lsb_release -sr)
     pip3 install flask 'numpy>=1.18.5' pandas posix_ipc
-
 }
 
 function install_desktop() {
     apt install ubuntu-gnome-desktop -y
+}
+
+function cleanup_packages() {
+    apt autoremove -y
 }
 
 function change_root_password() {
@@ -64,6 +67,7 @@ try_step "Unmounting /root" umount_directory /root
 try_step "Unmounting /home" umount_directory /home
 try_step "Updating package information" update_package_info
 try_step "Installing GNOME desktop" install_desktop
+try_step "Cleaning up packages" cleanup_packages
 try_step "Changing the password of the root user" change_root_password
 try_step "Enable root user login" enable_root_login
 try_step "Adding the normal user acrn" add_normal_user
