@@ -227,7 +227,7 @@ function cleanup() {
 mount_point=$(pwd)/mnt
 if [[ ${vm_type} == "hmi-vm" ]]; then
     target_image=${hmi_vm_image}
-    size_modifier="+5G"
+    size_modifier="+7G"
 elif [[ ${vm_type} == "rt-vm" ]]; then
     target_image=${rt_vm_image}
     size_modifier="+1G"
