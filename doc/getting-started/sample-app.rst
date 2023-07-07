@@ -449,8 +449,14 @@ Install and Run ACRN on the Target System
      sudo apt purge acrn-hypervisor
      sudo apt install /tmp/acrn-hypervisor*.deb  /tmp/*acrn-service-vm*.deb
 
-#. Enable networking services for sharing with the HMI User VM::
+#. Enable networking services for sharing with the HMI User VM:
 
+   .. warning::
+      The IP address of Service VM may change after executing the following command.
+
+   .. code-block:: bash
+
+     cp /usr/share/doc/acrnd/examples/* /etc/systemd/network
      sudo systemctl enable --now systemd-networkd
 
 #. Reboot the system::

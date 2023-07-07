@@ -667,8 +667,12 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
    so the Device Model can create a bridge device (acrn-br0) that provides User VMs with
    wired network access:
 
+   .. warning::
+      The IP address of Service VM may change after executing the following command.
+
    .. code-block:: bash
 
+      cp /usr/share/doc/acrnd/examples/* /etc/systemd/network
       sudo systemctl enable --now systemd-networkd
 
 .. _gsg-user-vm:
