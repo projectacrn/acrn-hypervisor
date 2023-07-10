@@ -61,7 +61,7 @@
 
 /* Device can toggle its cache between writeback and writethrough modes */
 #define	VIRTIO_BLK_F_CONFIG_WCE	(1 << 11)
-
+#define	VIRTIO_BLK_F_MQ		(1 << 12)	/* support more than one vq */
 #define	VIRTIO_BLK_F_DISCARD	(1 << 13)
 
 /*
@@ -101,8 +101,8 @@ struct virtio_blk_config {
 	} topology;
 	uint8_t	writeback;
 	uint8_t unused;
-	/* Reserve for num_queues when VIRTIO_BLK_F_MQ is support*/
-	uint16_t reserve;
+	/* num_queues when VIRTIO_BLK_F_MQ is support*/
+	uint16_t num_queues;
 	/* The maximum discard sectors (in 512-byte sectors) for one segment */
 	uint32_t max_discard_sectors;
 	/* The maximum number of discard segments */
@@ -156,13 +156,14 @@ struct virtio_blk_ioreq {
 struct virtio_blk {
 	struct virtio_base base;
 	pthread_mutex_t mtx;
-	struct virtio_vq_info vq;
+	struct virtio_vq_info *vqs;
 	struct virtio_blk_config cfg;
 	bool dummy_bctxt; /* Used in blockrescan. Indicate if the bctxt can be used */
 	struct blockif_ctxt *bc;
 	char ident[VIRTIO_BLK_BLK_ID_BYTES + 1];
-	struct virtio_blk_ioreq ios[VIRTIO_BLK_RINGSZ];
+	struct virtio_blk_ioreq *ios;
 	uint8_t original_wce;
+	int num_vqs;
 };
 
 static void virtio_blk_reset(void *);
@@ -175,7 +176,7 @@ static struct virtio_ops virtio_blk_ops = {
 	1,			/* we support 1 virtqueue */
 	sizeof(struct virtio_blk_config), /* config reg size */
 	virtio_blk_reset,	/* reset */
-	virtio_blk_notify,	/* device-wide qnotify */
+	NULL,			/* device-wide qnotify */
 	virtio_blk_cfgread,	/* read PCI config */
 	virtio_blk_cfgwrite,	/* write PCI config */
 	NULL,			/* apply negotiated features */
@@ -199,6 +200,7 @@ virtio_blk_done(struct blockif_req *br, int err)
 {
 	struct virtio_blk_ioreq *io = br->param;
 	struct virtio_blk *blk = io->blk;
+	struct virtio_vq_info *vq = blk->vqs + br->qidx;
 
 	if (err)
 		DPRINTF(("virtio_blk: done with error = %d\n\r", err));
@@ -215,10 +217,10 @@ virtio_blk_done(struct blockif_req *br, int err)
 	 * Return the descriptor back to the host.
 	 * We wrote 1 byte (our status) to host.
 	 */
-	pthread_mutex_lock(&blk->mtx);
-	vq_relchain(&blk->vq, io->idx, 1);
-	vq_endchains(&blk->vq, !vq_has_descs(&blk->vq));
-	pthread_mutex_unlock(&blk->mtx);
+	pthread_mutex_lock(&vq->mtx);
+	vq_relchain(vq, io->idx, 1);
+	vq_endchains(vq, !vq_has_descs(vq));
+	pthread_mutex_unlock(&vq->mtx);
 }
 
 static void
@@ -235,13 +237,14 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 {
 	struct virtio_blk_hdr *vbh;
 	struct virtio_blk_ioreq *io;
-	int i, n;
+	int i, n, qidx;
 	int err;
 	ssize_t iolen;
 	int writeop, type;
 	struct iovec iov[BLOCKIF_IOV_MAX + 2];
 	uint16_t idx, flags[BLOCKIF_IOV_MAX + 2];
 
+	qidx = vq - blk->vqs;
 	idx = vq->qsize;
 	n = vq_getchain(vq, &idx, iov, BLOCKIF_IOV_MAX + 2, flags);
 
@@ -259,7 +262,7 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 		return;
 	}
 
-	io = &blk->ios[idx];
+	io = &blk->ios[qidx * VIRTIO_BLK_RINGSZ + idx];
 	if ((flags[0] & VRING_DESC_F_WRITE) != 0) {
 		WPRINTF(("%s: the type for hdr should not be VRING_DESC_F_WRITE\n", __func__));
 		virtio_blk_abort(vq, idx);
@@ -420,6 +423,9 @@ virtio_blk_get_caps(struct virtio_blk *blk, bool wb)
 	if (blockif_is_ro(blk->bc))
 		caps |= VIRTIO_BLK_F_RO;
 
+	if (blk->num_vqs > 1)
+		caps |= VIRTIO_BLK_F_MQ;
+
 	return caps;
 }
 
@@ -447,6 +453,7 @@ virtio_blk_update_config_space(struct virtio_blk *blk)
 	    (sto != 0) ? ((sts - sto) / sectsz) : 0;
 	blk->cfg.topology.min_io_size = 0;
 	blk->cfg.writeback = blockif_get_wce(blk->bc);
+	blk->cfg.num_queues = (uint16_t)blk->num_vqs;
 	blk->original_wce = blk->cfg.writeback; /* save for reset */
 	if (blockif_candiscard(blk->bc)) {
 		blk->cfg.max_discard_sectors = blockif_max_discard_sectors(blk->bc);
@@ -468,7 +475,8 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	u_char digest[16];
 	struct virtio_blk *blk;
 	bool use_iothread;
-	int i;
+	int num_vqs;
+	int i, j;
 	pthread_mutexattr_t attr;
 	int rc;
 
@@ -476,6 +484,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* Assume the bctxt is valid, until identified otherwise */
 	dummy_bctxt = false;
 	use_iothread = false;
+	num_vqs = 1;
 
 	if (opts == NULL) {
 		pr_err("virtio_blk: backing device required\n");
@@ -501,17 +510,42 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		return -1;
 	}
 	if (strstr(opts, "nodisk") == NULL) {
-		opt = strsep(&opts_tmp, ",");
-		if (strcmp("iothread", opt) == 0) {
-			use_iothread = true;
-		} else {
-			/* The opts_start is truncated by strsep, opts_tmp is also
-			 * changed by strsetp, so use opts which points to the
-			 * original parameter string
-			 */
-			opts_tmp = opts;
+		/*
+		 * both ",iothread" and ",mq=int" are consumed by virtio-blk
+		 * and must be specified before any other opts which will
+		 * be used by blockif_open.
+		 */
+		char *p = opts_start;
+		while (opts_tmp != NULL) {
+			opt = strsep(&opts_tmp, ",");
+			if (strcmp("iothread", opt) == 0) {
+				use_iothread = true;
+				p = opts_tmp;
+			} else if (!strncmp(opt, "mq", strlen("mq"))) {
+				strsep(&opt, "=");
+				if (opt != NULL) {
+					if (dm_strtoi(opt, &opt, 10, &num_vqs) ||
+						(num_vqs <= 0)) {
+						WPRINTF(("%s: incorrect num queues %s\n",
+							__func__, opt));
+						free(opts_start);
+						return -1;
+					}
+					/* the max vq number allowed by FE is guest cpu num */
+					if (num_vqs > guest_cpu_num())
+						num_vqs = guest_cpu_num();
+				}
+				p = opts_tmp;
+			} else {
+				/* The opts_start is truncated by strsep, opts_tmp is also
+				 * changed by strsetp, so use opts which points to the
+				 * original parameter string
+				 */
+				p = opts + (p - opts_start);
+				break;
+			}
 		}
-		bctxt = blockif_open(opts_tmp, bident);
+		bctxt = blockif_open(p, bident);
 		if (bctxt == NULL) {
 			pr_err("Could not open backing file");
 			free(opts_start);
@@ -534,13 +568,33 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* Update virtio-blk device struct of dummy ctxt*/
 	blk->dummy_bctxt = dummy_bctxt;
 
-	for (i = 0; i < VIRTIO_BLK_RINGSZ; i++) {
-		struct virtio_blk_ioreq *io = &blk->ios[i];
+	blk->num_vqs = num_vqs;
+	virtio_blk_ops.nvq = num_vqs;
+	blk->vqs = calloc(blk->num_vqs, sizeof(struct virtio_vq_info));
+	if (!blk->vqs) {
+		WPRINTF(("virtio_blk: calloc vqs returns NULL\n"));
+		free(blk);
+		return -1;
+	}
+	blk->ios = calloc(blk->num_vqs * VIRTIO_BLK_RINGSZ,
+		sizeof(struct virtio_blk_ioreq));
+	if (!blk->ios) {
+		WPRINTF(("virtio_blk: calloc ios returns NULL\n"));
+		free(blk->vqs);
+		free(blk);
+		return -1;
+	}
 
-		io->req.callback = virtio_blk_done;
-		io->req.param = io;
-		io->blk = blk;
-		io->idx = i;
+	for (j = 0; j < num_vqs; j++) {
+		for (i = 0; i < VIRTIO_BLK_RINGSZ; i++) {
+			struct virtio_blk_ioreq *io = &blk->ios[j * VIRTIO_BLK_RINGSZ + i];
+
+			io->req.callback = virtio_blk_done;
+			io->req.param = io;
+			io->req.qidx = j;
+			io->blk = blk;
+			io->idx = i;
+		}
 	}
 
 	/* init mutex attribute properly to avoid deadlock */
@@ -558,12 +612,14 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 					"error %d!\n", rc));
 
 	/* init virtio struct and virtqueues */
-	virtio_linkup(&blk->base, &virtio_blk_ops, blk, dev, &blk->vq, BACKEND_VBSU);
+	virtio_linkup(&blk->base, &virtio_blk_ops, blk, dev, blk->vqs, BACKEND_VBSU);
 	blk->base.iothread = use_iothread;
 	blk->base.mtx = &blk->mtx;
 
-	blk->vq.qsize = VIRTIO_BLK_RINGSZ;
-	/* blk->vq.vq_notify = we have no per-queue notify */
+	for (j = 0; j < num_vqs; j++) {
+		blk->vqs[j].qsize = VIRTIO_BLK_RINGSZ;
+		blk->vqs[j].notify = virtio_blk_notify;
+	}
 
 	/*
 	 * Create an identifier for the backing file. Use parts of the
@@ -645,6 +701,10 @@ virtio_blk_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			blockif_close(bctxt);
 		}
 		virtio_reset_dev(&blk->base);
+		if (blk->ios)
+			free(blk->ios);
+		if (blk->vqs)
+			free(blk->vqs);
 		free(blk);
 	}
 }
