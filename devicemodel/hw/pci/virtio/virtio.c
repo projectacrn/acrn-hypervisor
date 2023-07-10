@@ -68,11 +68,10 @@ void iothread_handler(void *arg)
 	struct virtio_vq_info *vq = &base->queues[idx];
 
 	if (viothrd->iothread_run) {
-		if (base->mtx)
-			pthread_mutex_lock(base->mtx);
+		pthread_mutex_lock(&vq->mtx);
+		/* only vq specific data can be accessed in qnotify callback */
 		(*viothrd->iothread_run)(base, vq);
-		if (base->mtx)
-			pthread_mutex_unlock(base->mtx);
+		pthread_mutex_unlock(&vq->mtx);
 	}
 }
 
@@ -194,13 +193,27 @@ virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
 	      struct virtio_vq_info *queues,
 	      int backend_type)
 {
-	int i;
+	int i, rc;
+	pthread_mutexattr_t attr;
 
 	/* base and pci_virtio_dev addresses must match */
 	if ((void *)base != pci_virtio_dev) {
 		pr_err("virtio_base and pci_virtio_dev addresses don't match!\n");
 		return;
 	}
+
+	rc = pthread_mutexattr_init(&attr);
+	if (rc) {
+		pr_err("%s, pthread_mutexattr_init failed\n", __func__);
+		return;
+	}
+
+	rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	if (rc) {
+		pr_err("%s, pthread_mutexattr_settype failed\n", __func__);
+		return;
+	}
+
 	base->vops = vops;
 	base->dev = dev;
 	dev->arg = base;
@@ -210,6 +223,11 @@ virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
 	for (i = 0; i < vops->nvq; i++) {
 		queues[i].base = base;
 		queues[i].num = i;
+		rc = pthread_mutex_init(&queues[i].mtx, &attr);
+		if (rc) {
+			pr_err("%s, pthread_mutex_init failed\n", __func__);
+			return;
+		}
 	}
 }
 
