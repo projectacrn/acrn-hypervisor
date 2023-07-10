@@ -63,6 +63,7 @@ extern bool is_winvm;
  */
 void *paddr_guest2host(struct vmctx *ctx, uintptr_t gaddr, size_t len);
 int  virtio_uses_msix(void);
+int  guest_cpu_num(void);
 size_t high_bios_size(void);
 void init_debugexit(void);
 void deinit_debugexit(void);

@@ -233,6 +233,12 @@ virtio_uses_msix(void)
 	return virtio_msix;
 }
 
+int
+guest_cpu_num(void)
+{
+	return guest_ncpus;
+}
+
 size_t
 high_bios_size(void)
 {

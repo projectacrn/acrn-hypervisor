@@ -48,6 +48,7 @@ struct blockif_req {
 	ssize_t		resid;
 	void		(*callback)(struct blockif_req *req, int err);
 	void		*param;
+	int		qidx;
 };
 
 struct blockif_ctxt;
