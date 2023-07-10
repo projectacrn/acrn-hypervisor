@@ -133,7 +133,7 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'misc/README.rst' ]
+exclude_patterns = ['_build', 'misc/README.rst', 'venv' ]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
