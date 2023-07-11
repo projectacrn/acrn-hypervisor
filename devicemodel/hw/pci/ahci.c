@@ -2405,7 +2405,7 @@ pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 		 */
 		snprintf(bident, sizeof(bident), "%02x:%02x:%02x", dev->slot,
 		    dev->func, p);
-		bctxt = blockif_open(opts, bident);
+		bctxt = blockif_open(opts, bident, 1);
 		if (bctxt == NULL) {
 			ahci_dev->ports = p;
 			ret = 1;
