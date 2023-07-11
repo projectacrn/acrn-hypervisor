@@ -545,7 +545,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				break;
 			}
 		}
-		bctxt = blockif_open(p, bident);
+		bctxt = blockif_open(p, bident, num_vqs);
 		if (bctxt == NULL) {
 			pr_err("Could not open backing file");
 			free(opts_start);
@@ -804,7 +804,7 @@ virtio_blk_rescan(struct vmctx *ctx, struct pci_vdev *dev, char *newpath)
 
 	pr_err("name=%s, Path=%s, ident=%s\n", dev->name, newpath, bident);
 	/* update the bctxt for the virtio-blk device */
-	bctxt = blockif_open(newpath, bident);
+	bctxt = blockif_open(newpath, bident, blk->num_vqs);
 	if (bctxt == NULL) {
 		pr_err("Error opening backing file\n");
 		goto end;
