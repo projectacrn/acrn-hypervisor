@@ -553,7 +553,7 @@ int32_t hcall_asyncio_assign(__unused struct acrn_vcpu *vcpu, struct acrn_vm *ta
 	int ret = -1;
 
 	if (copy_from_gpa(vm, &asyncio_info, param2, sizeof(asyncio_info)) == 0) {
-		add_asyncio(target_vm, asyncio_info.type, asyncio_info.addr, asyncio_info.fd);
+		add_asyncio(target_vm, &asyncio_info);
 		ret = 0;
 	}
 	return ret;
@@ -567,7 +567,7 @@ int32_t hcall_asyncio_deassign(__unused struct acrn_vcpu *vcpu, struct acrn_vm *
 	int ret = -1;
 
 	if (copy_from_gpa(vm, &asyncio_info, param2, sizeof(asyncio_info)) == 0) {
-		remove_asyncio(target_vm, asyncio_info.type, asyncio_info.addr, asyncio_info.fd);
+		remove_asyncio(target_vm, &asyncio_info);
 		ret = 0;
 	}
 	return ret;

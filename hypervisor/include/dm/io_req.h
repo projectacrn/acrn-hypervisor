@@ -41,9 +41,7 @@ struct io_request {
 };
 
 struct asyncio_desc {
-	uint32_t type;
-	uint64_t addr;
-	uint64_t fd;
+	struct acrn_asyncio_info asyncio_info;
 	struct list_head list;
 };
 
@@ -293,9 +291,9 @@ void deinit_emul_io(struct acrn_vm *vm);
 
 int init_asyncio(struct acrn_vm *vm, uint64_t *hva);
 
-int add_asyncio(struct acrn_vm *vm, uint32_t type, uint64_t addr, uint64_t fd);
+int add_asyncio(struct acrn_vm *vm, const struct acrn_asyncio_info *async_info);
 
-int remove_asyncio(struct acrn_vm *vm, uint32_t type, uint64_t addr, uint64_t fd);
+int remove_asyncio(struct acrn_vm *vm, const struct acrn_asyncio_info *async_info);
 /**
  * @}
  */
