@@ -466,9 +466,9 @@ post-launched User VM. Each User VM has its own launch script.
    #. Confirm that the **VM type** is ``Standard``. In the previous step,
       ``STD`` in the VM name is short for Standard.
 
-   #. Scroll down to **Memory size (MB)** and change the value to ``1024``. For
+   #. Scroll down to **Memory size (MB)** and change the value to ``2048``. For
       this example, we will use Ubuntu 22.04 to boot the post-launched VM.
-      Ubuntu 22.04 needs at least 1024 MB to boot.
+      Ubuntu 22.04 needs at least 2048 MB to boot.
 
    #. For **Physical CPU affinity**, select pCPU ID ``0``, then click **+** and
       select pCPU ID ``1`` to affine (or pin) the VM to CPU cores 0 and 1. (That will
@@ -479,13 +479,17 @@ post-launched User VM. Each User VM has its own launch script.
       log in to the User VM later in this guide.
 
    #. For **Virtio block device**, click **+** and enter
-      ``/home/acrn/acrn-work/ubuntu-22.04.1-desktop-amd64.iso``. This parameter
+      ``/home/acrn/acrn-work/ubuntu-22.04.2-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
       in this guide, you will save the ISO file to that directory. (If you used
       a different username when installing Ubuntu on the target system, here's
       where you'll need to change the ``acrn`` username to the username you used.)
 
-   .. image:: images/configurator-postvm.png
+   .. image:: images/configurator_postvm01.png
+      :align: center
+      :class: drop-shadow
+
+   .. image:: images/configurator-postvm02.png
       :align: center
       :class: drop-shadow
 
@@ -680,7 +684,7 @@ Launch the User VM
 
 #. On the target system, use the web browser to visit the `official Ubuntu website <https://releases.ubuntu.com/jammy/>`__ and
    get the Ubuntu Desktop 22.04 LTS ISO image
-   ``ubuntu-22.04.1-desktop-amd64.iso`` for the User VM. (The same image you
+   ``ubuntu-22.04.2-desktop-amd64.iso`` for the User VM. (The same image you
    specified earlier in the ACRN Configurator UI.) Alternatively, instead of
    downloading it again, you could use ``scp`` to copy the ISO
    image file from the development system to the ``~/acrn-work`` directory on the target system.
@@ -692,7 +696,7 @@ Launch the User VM
 
    .. code-block:: bash
 
-      cp ~/Downloads/ubuntu-22.04.1-desktop-amd64.iso ~/acrn-work
+      cp ~/Downloads/ubuntu-22.04.2-desktop-amd64.iso ~/acrn-work
 
 #. Launch the User VM:
 
@@ -707,7 +711,7 @@ Launch the User VM
 
    .. code-block:: console
 
-      Ubuntu 22.04.1 LTS ubuntu hvc0
+      Ubuntu 22.04.2 LTS ubuntu hvc0
 
       ubuntu login:
 
@@ -718,16 +722,22 @@ Launch the User VM
 
    .. code-block:: console
 
-      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.0-56-generic x86_64)
+      Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.19.0-32-generic x86_64)
 
       * Documentation:  https://help.ubuntu.com
       * Management:     https://landscape.canonical.com
       * Support:        https://ubuntu.com/advantage
 
-      0 packages can be updated.
-      0 updates are security updates.
+      Expanded Security Maintenance for Applications is not enabled.
 
-      Your Hardware Enablement Stack (HWE) is supported until April 2025.
+      0 updates can be applied immediately.
+
+      Enable ESM Apps to receive additional future security updates.
+      See https://ubuntu.com/esm or run: sudo pro status
+
+
+      The list of available updates is more than a week old.
+      To check for new updates run: sudo apt update
 
       The programs included with the Ubuntu system are free software;
       the exact distribution terms for each program are described in the
@@ -747,7 +757,7 @@ Launch the User VM
    .. code-block:: console
 
       ubuntu@ubuntu:~$ uname -r
-      5.15.0-56-generic
+      5.19.0-32-generic
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
