@@ -63,27 +63,62 @@ void reset_vm_ioreqs(struct acrn_vm *vm)
 	}
 }
 
-int add_asyncio(struct acrn_vm *vm, uint32_t type, uint64_t addr, uint64_t fd)
+/**
+ * @pre vm->asyncio_lock is held
+ */
+static bool asyncio_is_conflict(struct acrn_vm *vm,
+	const struct acrn_asyncio_info *async_info)
+{
+	struct list_head *pos;
+	struct asyncio_desc *p;
+	struct acrn_asyncio_info *info;
+	bool ret = false;
+
+	/* When either one's match_data is 0, the data matching will be skipped. */
+	list_for_each(pos, &vm->aiodesc_queue) {
+		p = container_of(pos, struct asyncio_desc, list);
+		info = &(p->asyncio_info);
+		if ((info->addr == async_info->addr) &&
+			(info->type == async_info->type) &&
+			((info->match_data == 0U) || (async_info->match_data == 0U) ||
+				(info->data == async_info->data))) {
+			ret = true;
+			break;
+		}
+	}
+
+	return ret;
+}
+
+int add_asyncio(struct acrn_vm *vm, const struct acrn_asyncio_info *async_info)
 {
 	uint32_t i;
 	int ret = -1;
+	bool b_conflict;
+	struct asyncio_desc *desc;
 
-	if (addr != 0UL) {
+	if (async_info->addr != 0UL) {
 		spinlock_obtain(&vm->asyncio_lock);
-		for (i = 0U; i < ACRN_ASYNCIO_MAX; i++) {
-			if ((vm->aio_desc[i].addr == 0UL) && (vm->aio_desc[i].fd == 0UL)) {
-				vm->aio_desc[i].type = type;
-				vm->aio_desc[i].addr = addr;
-				vm->aio_desc[i].fd = fd;
-				INIT_LIST_HEAD(&vm->aio_desc[i].list);
-				list_add(&vm->aio_desc[i].list, &vm->aiodesc_queue);
-				ret = 0;
-				break;
+		b_conflict = asyncio_is_conflict(vm, async_info);
+		if (!b_conflict) {
+			for (i = 0U; i < ACRN_ASYNCIO_MAX; i++) {
+				desc = &(vm->aio_desc[i]);
+				if ((desc->asyncio_info.addr == 0UL) && (desc->asyncio_info.fd == 0UL)) {
+					(void)memcpy_s(&(desc->asyncio_info), sizeof(struct acrn_asyncio_info),
+						async_info, sizeof(struct acrn_asyncio_info));
+					INIT_LIST_HEAD(&(desc->list));
+					list_add(&(desc->list), &vm->aiodesc_queue);
+					ret = 0;
+					break;
+				}
 			}
-		}
-		spinlock_release(&vm->asyncio_lock);
-		if (i == ACRN_ASYNCIO_MAX) {
-			pr_fatal("too much fastio, would not support!");
+			spinlock_release(&vm->asyncio_lock);
+			if (i == ACRN_ASYNCIO_MAX) {
+				pr_fatal("too much fastio, would not support!");
+			}
+		} else {
+			spinlock_release(&vm->asyncio_lock);
+			pr_err("%s, already registered!", __func__);
 		}
 	} else {
 		pr_err("%s: base = 0 is not supported!", __func__);
@@ -91,28 +126,32 @@ int add_asyncio(struct acrn_vm *vm, uint32_t type, uint64_t addr, uint64_t fd)
 	return ret;
 }
 
-int remove_asyncio(struct acrn_vm *vm, uint32_t type, uint64_t addr, uint64_t fd)
+int remove_asyncio(struct acrn_vm *vm, const struct acrn_asyncio_info *async_info)
 {
 	uint32_t i;
 	int ret = -1;
+	struct asyncio_desc *desc;
+	struct acrn_asyncio_info *info;
 
-	if (addr != 0UL) {
+	if (async_info->addr != 0UL) {
 		spinlock_obtain(&vm->asyncio_lock);
 		for (i = 0U; i < ACRN_ASYNCIO_MAX; i++) {
-			if ((vm->aio_desc[i].type == type)
-					&& (vm->aio_desc[i].addr == addr)
-					&& (vm->aio_desc[i].fd == fd)) {
-				vm->aio_desc[i].type = 0U;
-				vm->aio_desc[i].addr = 0UL;
-				vm->aio_desc[i].fd = 0UL;
-				list_del_init(&vm->aio_desc[i].list);
+			desc = &(vm->aio_desc[i]);
+			info = &(desc->asyncio_info);
+			if ((info->type == async_info->type)
+					&& (info->addr == async_info->addr)
+					&& (info->fd == async_info->fd)
+					&& ((info->match_data == 0U) == (async_info->match_data == 0U))
+					&& (info->data == async_info->data)) {
+				list_del_init(&(desc->list));
+				memset(desc, 0, sizeof(vm->aio_desc[0]));
 				ret = 0;
 				break;
 			}
 		}
 		spinlock_release(&vm->asyncio_lock);
 		if (i == ACRN_ASYNCIO_MAX) {
-			pr_fatal("Failed to find asyncio req on addr: %lx!", addr);
+			pr_fatal("Failed to find asyncio req on addr: %lx!", async_info->addr);
 		}
 	} else {
 		pr_err("%s: base = 0 is not supported!", __func__);
@@ -129,8 +168,10 @@ static struct asyncio_desc *get_asyncio_desc(struct acrn_vcpu *vcpu, const struc
 {
 	uint64_t addr = 0UL;
 	uint32_t type;
+	uint64_t value;
 	struct list_head *pos;
 	struct asyncio_desc *iter_desc;
+	struct acrn_asyncio_info *iter_info;
 	struct acrn_vm *vm = vcpu->vm;
 	struct asyncio_desc *ret = NULL;
 	struct shared_buf *sbuf =
@@ -140,11 +181,13 @@ static struct asyncio_desc *get_asyncio_desc(struct acrn_vcpu *vcpu, const struc
 		switch (io_req->io_type) {
 		case ACRN_IOREQ_TYPE_PORTIO:
 			addr = io_req->reqs.pio_request.address;
+			value = io_req->reqs.pio_request.value;
 			type = ACRN_ASYNCIO_PIO;
 			break;
 
 		case ACRN_IOREQ_TYPE_MMIO:
 			addr = io_req->reqs.mmio_request.address;
+			value = io_req->reqs.mmio_request.value;
 			type = ACRN_ASYNCIO_MMIO;
 			break;
 		default:
@@ -155,7 +198,9 @@ static struct asyncio_desc *get_asyncio_desc(struct acrn_vcpu *vcpu, const struc
 			spinlock_obtain(&vm->asyncio_lock);
 				list_for_each(pos, &vm->aiodesc_queue) {
 					iter_desc = container_of(pos, struct asyncio_desc, list);
-					if ((iter_desc->addr == addr) && (iter_desc->type == type)) {
+					iter_info = &(iter_desc->asyncio_info);
+					if ((iter_info->addr == addr) && (iter_info->type == type) &&
+						((iter_info->match_data == 0U) || (iter_info->data == value))) {
 						ret = iter_desc;
 						break;
 					}
@@ -713,7 +758,7 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		 */
 		aio_desc = get_asyncio_desc(vcpu, io_req);
 		if (aio_desc) {
-			status = acrn_insert_asyncio(vcpu, aio_desc->fd);
+			status = acrn_insert_asyncio(vcpu, aio_desc->asyncio_info.fd);
 		} else {
 			status = acrn_insert_request(vcpu, io_req);
 			if (status == 0) {

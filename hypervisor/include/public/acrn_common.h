@@ -346,8 +346,10 @@ struct acrn_io_request_buffer {
 
 struct acrn_asyncio_info {
 	uint32_t type;
+	uint32_t match_data;
 	uint64_t addr;
 	uint64_t fd;
+	uint64_t data;
 };
 
 /**
