@@ -1988,12 +1988,12 @@ int virtio_register_ioeventfd(struct virtio_base *base, int idx, bool is_registe
 	int rc = 0;
 
 	if (!is_register)
-		ioeventfd.flags = ACRN_IOEVENTFD_FLAG_DEASSIGN;
-	else if (base->iothread)
+		ioeventfd.flags |= ACRN_IOEVENTFD_FLAG_DEASSIGN;
+	if (base->iothread)
 		/* Enable ASYNCIO by default. If ASYNCIO is not supported by kernel
 		 * or hyperviosr, this flag will be ignored.
 		 */
-		ioeventfd.flags = ACRN_IOEVENTFD_FLAG_ASYNCIO;
+		ioeventfd.flags |= ACRN_IOEVENTFD_FLAG_ASYNCIO;
 	/* register ioeventfd for kick */
 	if (base->device_caps & (1UL << VIRTIO_F_VERSION_1)) {
 		/*
