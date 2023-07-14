@@ -60,8 +60,8 @@
 
 extern uint64_t audio_nhlt_len;
 
-uint32_t gpu_dsm_hpa = 0;
-uint32_t gpu_dsm_gpa = 0;
+uint64_t gpu_dsm_hpa = 0;
+uint64_t gpu_dsm_gpa = 0;
 uint32_t gpu_opregion_hpa = 0;
 uint32_t gpu_opregion_gpa = 0;
 
