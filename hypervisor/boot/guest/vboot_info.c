@@ -184,10 +184,8 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_boot_info *
 	}
 
 	if (ret == 0) {
-		/* Currently VM bootargs only support Linux guest */
-		if (vm->sw.kernel_type == KERNEL_BZIMAGE) {
-			init_vm_bootargs_info(vm, abi);
-		}
+		init_vm_bootargs_info(vm, abi);
+
 		/* check whether there is a ramdisk module */
 		mod = get_mod_by_tag(abi, vm_config->os_config.ramdisk_mod_tag);
 		if (mod != NULL) {
