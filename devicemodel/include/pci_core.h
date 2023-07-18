@@ -296,7 +296,6 @@ void destory_io_rsvd_rgns(struct pci_vdev *vdev);
  * For OpRegion 2.0:  ASLE.rvda = physical address, not support currently
  */
 #define GPU_DSM_GPA			0x7C000000
-#define GPU_DSM_SIZE			0x4000000
 #define GPU_OPREGION_SIZE		0x5000
 /*
  * TODO: Forced DSM/OPREGION size requires native BIOS configuration.

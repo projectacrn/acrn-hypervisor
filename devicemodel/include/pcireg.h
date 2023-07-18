@@ -1066,6 +1066,8 @@
 #define	PCIM_OSC_CTL_PCIE_CAP_STRUCT	0x10 /* Various Capability Structures */
 
 /* Graphics definitions */
+#define PCIR_GGC			0x50 /* GMCH Graphics Control */
+#define PCIR_GGC_GMS_SHIFT		8    /*   Bit 15:8  Graphics Memory Size (GMS) */
 #define PCIR_BDSM			0x5C /* BDSM graphics base data of stolen memory register */
 #define PCIR_GEN11_BDSM_DW0		0xC0
 #define PCIR_GEN11_BDSM_DW1		0xC4
