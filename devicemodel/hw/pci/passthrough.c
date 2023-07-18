@@ -63,6 +63,7 @@ extern uint64_t audio_nhlt_len;
 
 uint64_t gpu_dsm_hpa = 0;
 uint64_t gpu_dsm_gpa = 0;
+uint32_t gpu_dsm_size = 0;
 uint32_t gpu_opregion_hpa = 0;
 uint32_t gpu_opregion_gpa = 0;
 
@@ -553,7 +554,7 @@ get_gpu_rsvmem_base_gpa()
 uint32_t
 get_gpu_rsvmem_size()
 {
-	return GPU_OPREGION_SIZE + GPU_DSM_SIZE;
+	return GPU_OPREGION_SIZE + gpu_dsm_size;
 }
 
 static const struct igd_device igd_device_tbl[] = {
@@ -586,6 +587,31 @@ int igd_gen(uint16_t device) {
 	return 0;
 }
 
+uint32_t igd_dsm_region_size(struct pci_device *igddev)
+{
+	uint16_t ggc;
+	uint8_t gms;
+
+	ggc = read_config(igddev, PCIR_GGC, 2);
+	gms = ggc >> PCIR_GGC_GMS_SHIFT;
+
+	switch (gms) {
+		case 0x00 ... 0x10:
+			return gms * 32 * MB;
+		case 0x20:
+			return 1024 * MB;
+		case 0x30:
+			return 1536 * MB;
+		case 0x40:
+			return 2048 * MB;
+		case 0xf0 ... 0xfe:
+			return (gms - 0xf0 + 1) * 4 * MB;
+	}
+
+	pr_err("%s: Invalid GMS value in GGC register. GGC = %04x\n", __func__, ggc);
+	return 0;	/* Should never reach here */
+}
+
 /*
  * passthrough GPU DSM(Data Stolen Memory) and Opregion to guest
  */
@@ -605,6 +631,12 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 		pr_warn("Device 8086:%04x is not an igd device in allowlist, assuming it is gen 11+. " \
 			"GVT-d may not working properly\n", device);
 		gen = 11;
+	}
+
+	gpu_dsm_size = igd_dsm_region_size(ptdev->phys_dev);
+	if (!gpu_dsm_size) {
+		pr_err("Invalid igd dsm region size, check DVMT Pre-Allocated option in BIOS\n");
+		return;
 	}
 
 	if (gen >= 11) {
@@ -642,8 +674,8 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 	pci_set_cfgdata32(ptdev->dev, PCIR_ASLS_CTL, gpu_opregion_gpa | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK));
 
 	/* initialize the EPT mapping for passthrough GPU dsm region */
-	vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, GPU_DSM_SIZE, gpu_dsm_hpa);
-	vm_map_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, GPU_DSM_SIZE, gpu_dsm_hpa);
+	vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, gpu_dsm_size, gpu_dsm_hpa);
+	vm_map_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, gpu_dsm_size, gpu_dsm_hpa);
 
 	/* initialize the EPT mapping for passthrough GPU opregion */
 	vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_opregion_gpa, GPU_OPREGION_SIZE, gpu_opregion_hpa);
@@ -939,7 +971,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		phys_bdf = ptdev->phys_bdf;
 
 	if (is_intel_graphics_dev(dev)) {
-		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, GPU_DSM_SIZE, gpu_dsm_hpa);
+		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, gpu_dsm_size, gpu_dsm_hpa);
 		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_opregion_gpa, GPU_OPREGION_SIZE, gpu_opregion_hpa);
 	}
 
