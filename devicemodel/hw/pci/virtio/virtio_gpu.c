@@ -810,7 +810,7 @@ virtio_gpu_cmd_resource_attach_backing(struct virtio_gpu_command *cmd)
 
 		r2d->iov = iov;
 		r2d->iovcnt = req.nr_entries;
-		entries = malloc(req.nr_entries * sizeof(struct virtio_gpu_mem_entry));
+		entries = calloc(req.nr_entries, sizeof(struct virtio_gpu_mem_entry));
 		if (!entries) {
 			free(iov);
 			resp.type = VIRTIO_GPU_RESP_ERR_OUT_OF_MEMORY;
@@ -1256,7 +1256,7 @@ virtio_gpu_cmd_create_blob(struct virtio_gpu_command *cmd)
 	r2d->resource_id = req.resource_id;
 
 	if (req.nr_entries > 0) {
-		entries = malloc(req.nr_entries * sizeof(struct virtio_gpu_mem_entry));
+		entries = calloc(req.nr_entries, sizeof(struct virtio_gpu_mem_entry));
 		if (!entries) {
 			pr_err("%s : memory allocation for entries failed.\n", __func__);
 			free(r2d);
