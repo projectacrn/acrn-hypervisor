@@ -119,6 +119,7 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 		cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
 		/* Always hide package level HWP controls and HWP interrupt*/
 		entry->eax &= ~(CPUID_EAX_HWP_CTL | CPUID_EAX_HWP_PLR | CPUID_EAX_HWP_N);
+		entry->eax &= ~(CPUID_EAX_HFI | CPUID_EAX_ITD);
 		break;
 
 	case 0x07U:

@@ -84,8 +84,12 @@
 #define CPUID_EAX_HWP_EPP       (1U<<10U)
 /* CPUID.06H:EAX.HWP_Package_Level_Request */
 #define CPUID_EAX_HWP_PLR       (1U<<11U)
+/* CPUID.06H:EAX.Hardware_Feedback_Interface */
+#define CPUID_EAX_HFI           (1U<<19U)
 /* CPUID.06H:EAX.HWP_control */
 #define CPUID_EAX_HWP_CTL       (1U<<22U)
+/* CPUID.06H:EAX.Intel_Thread_Director */
+#define CPUID_EAX_ITD           (1U<<23U)
 /* CPUID.06H:ECX.Hardware_Coordination_Feedback_Capability */
 #define CPUID_ECX_HCFC          (1U<<0U)
 /* CPUID.07H:EBX.FSGSBASE*/
