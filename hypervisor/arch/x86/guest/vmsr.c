@@ -280,6 +280,16 @@ static const uint32_t unsupported_msrs[] = {
 	 * CPUID.06H.EAX[8]
 	 */
 	MSR_IA32_HWP_INTERRUPT,
+
+	/*
+	 * HFI and IDT registers disabled:
+	 * CPUID.06H.EAX[19]
+	 * CPUID.06H.EAX[23]
+	 */
+	IA32_HW_FEEDBACK_PTR,
+	IA32_HW_FEEDBACK_CONFIG,
+	IA32_THREAD_FEEDBACK_CHAR,
+	IA32_HW_FEEDBACK_THREAD_CONFIG,
 };
 
 /* emulated_guest_msrs[] shares same indexes with array vcpu->arch->guest_msrs[] */
