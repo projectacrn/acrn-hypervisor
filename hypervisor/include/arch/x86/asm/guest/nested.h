@@ -318,7 +318,6 @@ enum VMXResult {
 void nested_vmx_result(enum VMXResult, int error_number);
 int64_t get_invvpid_ept_operands(struct acrn_vcpu *vcpu, void *desc, size_t size);
 bool check_vmx_permission(struct acrn_vcpu *vcpu);
-int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmxon_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmxoff_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmptrld_vmexit_handler(struct acrn_vcpu *vcpu);
@@ -354,6 +353,7 @@ bool is_vcpu_in_l2_guest(struct acrn_vcpu *vcpu);
 bool is_vmx_msr(uint32_t msr);
 void init_vmx_msrs(struct acrn_vcpu *vcpu);
 int32_t read_vmx_msr(__unused struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val);
+int32_t nested_vmexit_handler(struct acrn_vcpu *vcpu);
 #else
 struct acrn_nested {};
 
@@ -377,6 +377,11 @@ static inline int32_t read_vmx_msr(__unused struct acrn_vcpu *vcpu,
 	__unused uint32_t msr, __unused uint64_t *val)
 {
 	return -EACCES;
+}
+
+static inline int32_t nested_vmexit_handler(__unused struct acrn_vcpu *vcpu)
+{
+	return -EINVAL;
 }
 #endif /* CONFIG_NVMX_ENABLED */
 #endif /* NESTED_H */
