@@ -787,6 +787,8 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		passthrough_smbios(vm, get_acrn_boot_info());
 #endif
 
+		vm->sw.vm_event_sbuf = NULL;
+
 		status = init_vpci(vm);
 		if (status == 0) {
 			enable_iommu();
