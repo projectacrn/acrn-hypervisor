@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <asm/cpu.h>
 #include <asm/per_cpu.h>
+#include <vm_event.h>
 
 uint32_t sbuf_next_ptr(uint32_t pos_arg,
 		uint32_t span, uint32_t scope)
@@ -92,6 +93,9 @@ int32_t sbuf_setup_common(struct acrn_vm *vm, uint16_t cpu_id, uint32_t sbuf_id,
 			break;
 		case ACRN_ASYNCIO:
 			ret = init_asyncio(vm, hva);
+			break;
+		case ACRN_VM_EVENT:
+			ret = init_vm_event(vm, hva);
 			break;
 		default:
 			pr_err("%s not support sbuf_id %d", __func__, sbuf_id);

@@ -71,6 +71,7 @@ struct vm_sw_info {
 	/* HVA to IO shared page */
 	void *io_shared_page;
 	void *asyncio_sbuf;
+	void *vm_event_sbuf;
 	/* If enable IO completion polling mode */
 	bool is_polling_ioreq;
 };
@@ -146,6 +147,7 @@ struct acrn_vm {
 	struct asyncio_desc	aio_desc[ACRN_ASYNCIO_MAX];
 	struct list_head aiodesc_queue;
 	spinlock_t asyncio_lock; /* Spin-lock used to protect asyncio add/remove for a VM */
+	spinlock_t vm_event_lock;
 
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */

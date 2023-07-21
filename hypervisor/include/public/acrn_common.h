@@ -776,6 +776,7 @@ enum {
 	/* The sbuf with above ids are created each pcpu */
 	ACRN_SBUF_PER_PCPU_ID_MAX,
 	ACRN_ASYNCIO = 64,
+	ACRN_VM_EVENT,
 };
 
 /* Make sure sizeof(struct shared_buf) == SBUF_HEAD_SIZE */
@@ -790,6 +791,53 @@ struct shared_buf {
 	uint32_t overrun_cnt;	/* count of overrun */
 	uint32_t size;		/* ele_num * ele_size */
 	uint32_t padding[6];
+};
+
+/**
+ * VM event architecture:
+ * +------------------------------------------------------+
+ * |    Service VM                                        |
+ * | +----------------------------+                       |
+ * | | DM  +--------------------+ |                       |
+ * | |     | [ event source ]   | |                       |
+ * | |     +-+------------+-----+ |                       |
+ * | |       | (eventfd)  |(sbuf) |                       |
+ * | |       v            v       |                       |
+ * | | +------------------------+ | (socket)  +---------+ |
+ * | | |  [event deliver logic] |-+---------->| Libvirt | |
+ * | | +------------------------+ |           +---------+ |
+ * | |       ^            ^       |                       |
+ * | +-------|------------|-------+                       |
+ * |         | (eventfd)  | (sbuf)                        |
+ * +---------|------------|-------------------------------+
+ * +---------|------------|-------------------------------+
+ * | kernel [HSM]         |                               |
+ * |         ^            |                               |
+ * +---------|------------|-------------------------------+
+ *           |upcall      |
+ * +---------+------------+-------------------------------+
+ * | HV     [ event source ]                              |
+ * +------------------------------------------------------+
+ *
+ * For event sources in HV
+ *  - HV puts the event in the shared ring sbuf.
+ *  - The hypervisor notifies the service VM via upcall.
+ *  - HSM in the service VM notifies device model via eventfd.
+ *  - The device model fetches and handles events from the shared ring sbuf.
+ * For event sources in DM
+ *  - DM puts the event in the DM event ring sbuf.
+ *  - DM notifies event delivery logic via eventfd.
+ *  - The event delivery logic fetches and handles events from the DM event ring sbuf.
+ */
+#define VM_EVENT_RTC_CHG	0U
+#define VM_EVENT_POWEROFF	1U
+#define VM_EVENT_TRIPLE_FAULT	2U
+
+#define VM_EVENT_DATA_LEN	28U
+
+struct vm_event {
+    uint32_t type;
+    uint8_t event_data[VM_EVENT_DATA_LEN];
 };
 
 /**
