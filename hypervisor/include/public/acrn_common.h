@@ -833,6 +833,8 @@ struct shared_buf {
 #define VM_EVENT_POWEROFF	1U
 #define VM_EVENT_TRIPLE_FAULT	2U
 
+#define VM_EVENT_COUNT		3U
+
 #define VM_EVENT_DATA_LEN	28U
 
 struct vm_event {
