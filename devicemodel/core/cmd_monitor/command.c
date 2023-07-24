@@ -26,6 +26,7 @@
 #define CMD_OBJS \
 	GEN_CMD_OBJ(DESTROY), \
 	GEN_CMD_OBJ(BLKRESCAN), \
+	GEN_CMD_OBJ(REGISTER_VM_EVENT_CLIENT), \
 
 struct command dm_command_list[CMDS_NUM] = {CMD_OBJS};
 

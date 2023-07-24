@@ -47,13 +47,23 @@ err:
 }
 static void free_socket_client(struct socket_dev *sock, struct socket_client *client)
 {
+	pthread_mutex_t *per_client_mutex = client->per_client_mutex;
 	pthread_mutex_lock(&sock->client_mtx);
 	LIST_REMOVE(client, list);
 	pthread_mutex_unlock(&sock->client_mtx);
 
+	if (per_client_mutex) {
+		pthread_mutex_lock(per_client_mutex);
+	}
+	if (client->free_client_cb) {
+		client->free_client_cb(client);
+	}
 	close(client->fd);
 	client->fd = -1;
 	free(client);
+	if (per_client_mutex) {
+		pthread_mutex_unlock(per_client_mutex);
+	}
 }
 
 int write_socket_char(struct socket_client *client)
@@ -142,7 +152,8 @@ static struct socket_client *new_socket_client(struct socket_dev *sock)
 					__func__);
 		goto alloc_client;
 	}
-
+	/* If per client mutex is needed, init in callback */
+	client->per_client_mutex = NULL;
 	client->addr_len = sizeof(client->addr);
 	client->fd =
 	    accept(sock->sock_fd, (struct sockaddr *)&client->addr,
@@ -153,7 +164,6 @@ static struct socket_client *new_socket_client(struct socket_dev *sock)
 					__func__, sock->sock_fd, strerror(errno));
 		goto accept_con;
 	}
-
 	pthread_mutex_lock(&sock->client_mtx);
 	LIST_INSERT_HEAD(&sock->client_head, client, list);
 	pthread_mutex_unlock(&sock->client_mtx);

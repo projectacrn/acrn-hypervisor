@@ -67,6 +67,78 @@ static int send_socket_ack(struct socket_dev *sock, int fd, bool normal)
 	return ret;
 }
 
+static struct socket_client *vm_event_client = NULL;
+static pthread_mutex_t vm_event_client_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void vm_event_free_cb(struct socket_client *self)
+{
+	vm_event_client = NULL;
+}
+
+static int set_vm_event_client(struct socket_client *client)
+{
+	if (vm_event_client != NULL) {
+		pr_err("vm event client already registerred.\n");
+		return -1;
+	} else {
+		vm_event_client = client;
+		client->per_client_mutex = &vm_event_client_mutex;
+		client->free_client_cb = vm_event_free_cb;
+		return 0;
+	}
+}
+
+int vm_monitor_send_vm_event(const char *msg)
+{
+	int ret = -1;
+	struct socket_client *client;
+	pthread_mutex_t *per_client_mutex = &vm_event_client_mutex;
+
+	pthread_mutex_lock(per_client_mutex);
+	client = vm_event_client;
+	if (msg == NULL || client == NULL) {
+		pthread_mutex_unlock(per_client_mutex);
+		return -1;
+	}
+	memset(client->buf, 0, CLIENT_BUF_LEN);
+	memcpy(client->buf, msg, strlen(msg));
+	client->len = strlen(msg);
+	ret = write_socket_char(client);
+	pthread_mutex_unlock(per_client_mutex);
+	return ret;
+}
+
+/* When a client issues the REGISTER_VM_EVENT_CLIENT command,
+ * this handler will register that client as this VM's only vm_event receiver,
+ * and keeps the socket connection. Then vm events will be sent to
+ * the client through this connection.
+ */
+int user_vm_register_vm_event_client_handler(void *arg, void *command_para)
+{
+	int ret;
+	struct command_parameters *cmd_para = (struct command_parameters *)command_para;
+	struct handler_args *hdl_arg = (struct handler_args *)arg;
+	struct socket_dev *sock = (struct socket_dev *)hdl_arg->channel_arg;
+	struct socket_client *client = NULL;
+	bool cmd_completed = false;
+
+	client = find_socket_client(sock, cmd_para->fd);
+	if (client == NULL)
+		return -1;
+
+	if (set_vm_event_client(client) == 0) {
+		cmd_completed = true;
+	}
+
+	pr_dbg("%s: client with fd %d registerred\n", __func__, client->fd);
+
+	ret = send_socket_ack(sock, cmd_para->fd, cmd_completed);
+	if (ret < 0) {
+		pr_err("%s: Failed to send ACK message by socket.\n", __func__);
+	}
+	return ret;
+}
+
 int user_vm_destroy_handler(void *arg, void *command_para)
 {
 	int ret;

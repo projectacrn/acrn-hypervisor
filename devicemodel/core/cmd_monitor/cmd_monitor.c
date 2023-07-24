@@ -99,6 +99,7 @@ static void register_socket_message_handlers(struct vmctx *ctx)
 	arg.ctx_arg = ctx;
 	register_command_handler(user_vm_destroy_handler, &arg, DESTROY);
 	register_command_handler(user_vm_blkrescan_handler, &arg, BLKRESCAN);
+	register_command_handler(user_vm_register_vm_event_client_handler, &arg, REGISTER_VM_EVENT_CLIENT);
 }
 
 int init_cmd_monitor(struct vmctx *ctx)
