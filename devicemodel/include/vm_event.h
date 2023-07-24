@@ -12,5 +12,6 @@
 
 int vm_event_init(struct vmctx *ctx);
 int vm_event_deinit(void);
+int dm_send_vm_event(struct vm_event *event);
 
 #endif /* VM_EVENT_H */

@@ -34,6 +34,9 @@ static int epoll_fd;
 static bool started = false;
 static char hv_vm_event_page[4096] __aligned(4096);
 static char dm_vm_event_page[4096] __aligned(4096);
+static pthread_t vm_event_tid;
+
+static void general_event_handler(struct vmctx *ctx, struct vm_event *event);
 
 enum event_source_type {
 	EVENT_SOURCE_TYPE_HV,
@@ -48,6 +51,78 @@ struct vm_event_tunnel {
 	pthread_mutex_t mtx;
 	bool enabled;
 };
+
+struct vm_event_proc {
+	vm_event_handler ve_handler;
+};
+
+static struct vm_event_proc ve_proc[VM_EVENT_COUNT] = {
+	[VM_EVENT_RTC_CHG] = {
+		.ve_handler = general_event_handler,
+	},
+	[VM_EVENT_POWEROFF] = {
+		.ve_handler = general_event_handler,
+	},
+	[VM_EVENT_TRIPLE_FAULT] = {
+		.ve_handler = general_event_handler,
+	},
+};
+
+static inline struct vm_event_proc *get_vm_event_proc(struct vm_event *event)
+{
+	struct vm_event_proc *proc = NULL;
+	if (event->type < VM_EVENT_COUNT) {
+		proc = &ve_proc[event->type];
+	}
+	return proc;
+}
+
+static void general_event_handler(struct vmctx *ctx, struct vm_event *event)
+{
+	return;
+}
+
+static void *vm_event_thread(void *param)
+{
+	int n, i;
+	struct vm_event ve;
+	eventfd_t val;
+	struct vm_event_tunnel *tunnel;
+	struct vmctx *ctx = param;
+
+	struct epoll_event eventlist[MAX_EPOLL_EVENTS];
+
+	while (started) {
+		n = epoll_wait(epoll_fd, eventlist, MAX_EPOLL_EVENTS, -1);
+		if (n < 0) {
+			if (errno != EINTR) {
+				pr_err("%s: epoll failed %d\n", __func__, errno);
+			}
+			continue;
+		}
+		for (i = 0; i < n; i++) {
+			if (i < MAX_EPOLL_EVENTS) {
+				tunnel = eventlist[i].data.ptr;
+				eventfd_read(tunnel->kick_fd, &val);
+				if (tunnel && tunnel->enabled) {
+					while (!sbuf_is_empty(tunnel->sbuf)) {
+						struct vm_event_proc *proc;
+						sbuf_get(tunnel->sbuf, (uint8_t*)&ve);
+						pr_dbg("%ld vm event from%d %d\n", val, tunnel->type, ve.type);
+						proc = get_vm_event_proc(&ve);
+						if (proc && proc->ve_handler) {
+							(proc->ve_handler)(ctx, &ve);
+						} else {
+							pr_warn("%s: unhandled vm event type %d\n", __func__, ve.type);
+						}
+
+					}
+				}
+			}
+		}
+	}
+	return NULL;
+}
 
 static struct vm_event_tunnel ve_tunnel[MAX_VM_EVENT_TUNNELS] = {
 	{
@@ -146,6 +221,12 @@ int vm_event_init(struct vmctx *ctx)
 		goto out;
 	}
 
+	error = pthread_create(&vm_event_tid, NULL, vm_event_thread, ctx);
+	if (error) {
+		pr_err("%s: vm_event create failed %d\n", __func__, errno);
+		goto out;
+	}
+
 	started = true;
 	return 0;
 
@@ -160,11 +241,44 @@ out:
 
 int vm_event_deinit(void)
 {
+	void *jval;
+
 	if (started) {
+		started = false;
+		pthread_kill(vm_event_tid, SIGCONT);
+		pthread_join(vm_event_tid, &jval);
 		close(epoll_fd);
 		destory_event_tunnel(&ve_tunnel[HV_VM_EVENT_TUNNEL]);
 		destory_event_tunnel(&ve_tunnel[DM_VM_EVENT_TUNNEL]);
-		started = false;
 	}
 	return 0;
+}
+
+/* Send a dm generated vm_event by putting it to sbuf.
+ * A thread will receive and process those events.
+ * Events will be dropped if sbuf is full.
+ * They also maight be dropped due to event throttle control in receive thread.
+ */
+int dm_send_vm_event(struct vm_event *event)
+{
+	struct vm_event_tunnel *tunnel = &ve_tunnel[DM_VM_EVENT_TUNNEL];
+	struct shared_buf *sbuf;
+	int32_t ret = -1;
+	uint32_t size_sent;
+
+	if (!tunnel->enabled) {
+		return -1;
+	}
+	sbuf = tunnel->sbuf;
+
+	if (sbuf != NULL) {
+		pthread_mutex_lock(&tunnel->mtx);
+		size_sent = sbuf_put(sbuf, (uint8_t *)event, sizeof(*event));
+		pthread_mutex_unlock(&tunnel->mtx);
+		if (size_sent == VM_EVENT_ELE_SIZE) {
+			eventfd_write(tunnel->kick_fd, 1UL);
+			ret = 0;
+		}
+	}
+	return ret;
 }
