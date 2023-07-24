@@ -10,8 +10,9 @@
 
 #define DESTROY "destroy"
 #define BLKRESCAN "blkrescan"
+#define REGISTER_VM_EVENT_CLIENT "register_vm_event_client"
 
-#define CMDS_NUM 2U
+#define CMDS_NUM 3U
 #define CMD_NAME_MAX 32U
 #define CMD_ARG_MAX 320U
 

@@ -36,4 +36,7 @@ unsigned get_wakeup_reason(void);
 int set_wakeup_timer(time_t t);
 int acrn_parse_intr_monitor(const char *opt);
 int vm_monitor_blkrescan(void *arg, char *devargs);
+
+int vm_monitor_send_vm_event(const char *msg);
+
 #endif
