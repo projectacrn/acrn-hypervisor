@@ -46,7 +46,8 @@ extensions = [
 # extlinks provides a macro template
 
 extlinks = {
-            'acrn-issue': ('https://github.com/projectacrn/acrn-hypervisor/issues/%s', '#')
+            'acrn-issue': ('https://github.com/projectacrn/acrn-hypervisor/issues/%s', '#'),
+            'acrn-pr': ('https://github.com/projectacrn/acrn-hypervisor/pull/%s', '#')
            }
 
 # use intersphinx linking to link to previous version release notes
