@@ -173,7 +173,7 @@ static void *do_load_elf32(struct acrn_vm *vm)
 				 * We assume that the guest elf can put segments to valid gpa.
 				 */
 				(void)copy_to_gpa(vm, p_elf_img + p_prg_tbl_head32->p_offset,
-					p_prg_tbl_head32->p_paddr, p_prg_tbl_head32->p_memsz);
+					p_prg_tbl_head32->p_paddr, p_prg_tbl_head32->p_filesz);
 				/* copy_to_gpa has it's stac/clac inside. So call stac again here. */
 				stac();
 			}
