@@ -1148,11 +1148,11 @@ vrtc_init(struct vmctx *ctx)
 	pthread_mutex_unlock(&vrtc->mtx);
 
 	/* init periodic interrupt timer */
-	vrtc->periodic_timer.clockid = CLOCK_REALTIME;
+	vrtc->periodic_timer.clockid = CLOCK_MONOTONIC;
 	acrn_timer_init(&vrtc->periodic_timer, vrtc_periodic_timer, vrtc);
 
 	/* init update interrupt timer(1s)*/
-	vrtc->update_timer.clockid = CLOCK_REALTIME;
+	vrtc->update_timer.clockid = CLOCK_MONOTONIC;
 	acrn_timer_init(&vrtc->update_timer, vrtc_update_timer, vrtc);
 	vrtc_start_timer(&vrtc->update_timer, 1, 0);
 
