@@ -5,9 +5,39 @@
  */
 
 #include <asm/guest/vm.h>
+#include <asm/guest/ept.h>
+#include <asm/mmu.h>
 #include <vboot.h>
 #include <elf.h>
 #include <logmsg.h>
+#include <vacpi.h>
+
+/* Define a memory block to store ELF format VM load params in guest address space
+ * The params including:
+ *	MISC info: 1KB
+ *		including: Init GDT(40 bytes),ACRN ELF loader name(20 bytes), ACPI RSDP table(36 bytes).
+ *	Multiboot info : 4KB
+ *	Boot cmdline : 2KB
+ *	memory map : 20KB (enough to put memory entries for multiboot 0.6.96 or multiboot 2.0)
+ * Each param should keep 8byte aligned and the total region should be able to put below MEM_1M.
+ * The total params size is:
+ * (MEM_1K + MEM_4K + MEM_2K + 20K) = 27KB
+ */
+
+struct elf_boot_para {
+	char init_gdt[40];
+	char loader_name[20];
+	struct acpi_table_rsdp rsdp;
+	struct multiboot_info mb_info;
+	char cmdline[MEM_2K];
+	char mmap[MEM_4K * 5U];
+} __aligned(8);
+
+int32_t prepare_elf_cmdline(struct acrn_vm *vm, uint64_t param_cmd_gpa)
+{
+	return copy_to_gpa(vm, vm->sw.bootargs_info.src_addr, param_cmd_gpa,
+		           vm->sw.bootargs_info.size);
+}
 
 /**
  * @pre vm != NULL
@@ -176,17 +206,25 @@ static int32_t load_elf(struct acrn_vm *vm)
 
 int32_t elf_loader(struct acrn_vm *vm)
 {
-	uint64_t vgdt_gpa = 0x800;
-
+	int32_t ret = -ENOMEM;
+	/* Get primary vcpu */
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 	/*
-	 * TODO:
-	 *    - We need to initialize the guest BSP(boot strap processor) registers according to
-	 *	guest boot mode (real mode vs protect mode)
-	 *    - The memory layout usage is unclear, only GDT might be needed as its boot param.
-	 *	currently we only support Zephyr which has no needs on cmdline/e820/efimmap/etc.
-	 *	hardcode the vGDT GPA to 0x800 where is not used by Zephyr so far;
+	 * Assuming the guest elf would not load content to GPA space under
+	 * VIRT_RSDP_ADDR, and guest gpa load space is sure under address
+	 * we prepared in ve820.c. In the future, need to check each
+	 * ELF load entry according to ve820 if relocation is not supported.
 	 */
-	init_vcpu_protect_mode_regs(vcpu_from_vid(vm, BSP_CPU_ID), vgdt_gpa);
+	uint64_t load_params_gpa = find_space_from_ve820(vm, sizeof(struct elf_boot_para),
+				   MEM_4K, VIRT_RSDP_ADDR);
 
-	return load_elf(vm);
+	if (load_params_gpa != INVALID_GPA) {
+		/* We boot ELF Image from protected mode directly */
+		init_vcpu_protect_mode_regs(vcpu, load_params_gpa +
+					    offsetof(struct elf_boot_para, init_gdt));
+
+		ret = load_elf(vm);
+	}
+
+	return ret;
 }
