@@ -202,7 +202,7 @@ vhpet_counter(struct vhpet *vhpet, struct timespec *nowptr)
 	val = vhpet->countbase;
 
 	if (vhpet_counter_enabled(vhpet)) {
-		if (clock_gettime(CLOCK_REALTIME, &now))
+		if (clock_gettime(CLOCK_MONOTONIC, &now))
 			pr_dbg("clock_gettime returned: %s", strerror(errno));
 
 		/* delta = now - countbase_ts */
@@ -225,7 +225,7 @@ vhpet_counter(struct vhpet *vhpet, struct timespec *nowptr)
 		 */
 		if (nowptr) {
 			pr_warn("vhpet unexpected nowptr");
-			if (clock_gettime(CLOCK_REALTIME, nowptr))
+			if (clock_gettime(CLOCK_MONOTONIC, nowptr))
 				pr_dbg("clock_gettime returned: %s", strerror(errno));
 		}
 	}
@@ -366,7 +366,7 @@ vhpet_timer_handler(void *a, uint64_t nexp)
 
 	vhpet_timer_interrupt(vhpet, n);
 
-	if (clock_gettime(CLOCK_REALTIME, &now))
+	if (clock_gettime(CLOCK_MONOTONIC, &now))
 		pr_dbg("clock_gettime returned: %s", strerror(errno));
 
 	if (acrn_timer_gettime(vhpet_tmr(vhpet, n), &tmrts))
@@ -548,7 +548,7 @@ vhpet_start_counting(struct vhpet *vhpet)
 {
 	int i;
 
-	if (clock_gettime(CLOCK_REALTIME, &vhpet->countbase_ts))
+	if (clock_gettime(CLOCK_MONOTONIC, &vhpet->countbase_ts))
 		pr_dbg("clock_gettime returned: %s", strerror(errno));
 
 	/* Restart the timers based on the main counter base value */
@@ -639,7 +639,7 @@ vhpet_timer_update_config(struct vhpet *vhpet, int n, uint64_t data,
 			 *   - Timer remains in periodic mode
 			 */
 			if (!vhpet_timer_enabled(vhpet, n)) {
-				if (clock_gettime(CLOCK_REALTIME, &now))
+				if (clock_gettime(CLOCK_MONOTONIC, &now))
 					pr_dbg("clock_gettime returned: %s", strerror(errno));
 				vhpet_stop_timer(vhpet, n, &now, true);
 			} else if (!(oldval & (HPET_TCNF_TYPE | HPET_TCNF_INT_ENB)) ||
@@ -998,7 +998,7 @@ vhpet_init(struct vmctx *ctx)
 			arg->timer_num = i;
 
 			tmr = &vhpet->timer[i].tmrlst[j].t;
-			tmr->clockid = CLOCK_REALTIME;
+			tmr->clockid = CLOCK_MONOTONIC;
 			error = acrn_timer_init(tmr, vhpet_timer_handler, arg);
 
 			if (error) {

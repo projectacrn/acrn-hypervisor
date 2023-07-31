@@ -107,7 +107,7 @@ ticks_elapsed_since(const struct timespec *since)
 {
 	struct timespec ts;
 
-	if (clock_gettime(CLOCK_REALTIME, &ts))
+	if (clock_gettime(CLOCK_MONOTONIC, &ts))
 		pr_dbg("clock_gettime returned: %s", strerror(errno));
 
 	if (timespeccmp(&ts, since, <=))
@@ -192,7 +192,7 @@ pit_load_ce(struct channel *c)
 		c->nullcnt = false;
 		c->crbyte = 0;
 
-		if (clock_gettime(CLOCK_REALTIME, &c->start_ts))
+		if (clock_gettime(CLOCK_MONOTONIC, &c->start_ts))
 			pr_dbg("clock_gettime returned: %s", strerror(errno));
 
 		if (c->initial == 0 || c->initial > 0x10000) {
@@ -330,7 +330,7 @@ pit_timer_start_cntr0(struct vpit *vpit)
 	sigevt.sigev_notify = SIGEV_THREAD;
 	sigevt.sigev_notify_function = vpit_timer_handler;
 
-	if (timer_create(CLOCK_REALTIME, &sigevt, &c->timer_id))
+	if (timer_create(CLOCK_MONOTONIC, &sigevt, &c->timer_id))
 		pr_dbg("timer_create returned: %s", strerror(errno));
 
 	vpit_timer_arg[c->timer_idx].active = true;
@@ -360,7 +360,7 @@ pit_update_counter(struct vpit *vpit, struct channel *c, bool latch,
 
 		c->initial = PIT_HZ_TO_TICKS(100);
 		delta_ticks = 0;
-		if (clock_gettime(CLOCK_REALTIME, &c->start_ts))
+		if (clock_gettime(CLOCK_MONOTONIC, &c->start_ts))
 			pr_dbg("clock_gettime returned: %s", strerror(errno));
 	} else
 		delta_ticks = ticks_elapsed_since(&c->start_ts);
