@@ -30,6 +30,7 @@
 #include <asm/tsc.h>
 #include <vrtc.h>
 #include <logmsg.h>
+#include <vm_event.h>
 
 #include "mc146818rtc.h"
 
@@ -549,6 +550,8 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 	struct acrn_vrtc *vrtc = &vcpu->vm->vrtc;
 	struct acrn_vrtc temp_vrtc;
 	uint8_t mask = 0xFFU;
+	struct vm_event rtc_chg_event;
+	struct rtc_change_event_data *edata = (struct rtc_change_event_data *)rtc_chg_event.event_data;
 
 	if ((width == 1U) && (addr == CMOS_ADDR_PORT)) {
 		vrtc->addr = (uint8_t)(value & 0x7FU);
@@ -595,6 +598,12 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 				vrtc->offset_rtctime += after - current;
 				vrtc->last_rtctime = VRTC_BROKEN_TIME;
 				spinlock_release(&vrtc_rebase_lock);
+				if (is_postlaunched_vm(vcpu->vm) && vrtc_is_time_register(vrtc->addr)) {
+					rtc_chg_event.type = VM_EVENT_RTC_CHG;
+					edata->delta_time = after - current;
+					edata->last_time = current;
+					send_vm_event(vcpu->vm, &rtc_chg_event);
+				}
 				break;
 			}
 		}
