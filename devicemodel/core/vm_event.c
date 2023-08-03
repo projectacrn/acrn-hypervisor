@@ -22,6 +22,7 @@
 #include "log.h"
 #include <cjson/cJSON.h>
 #include "monitor.h"
+#include "timer.h"
 
 #define VM_EVENT_ELE_SIZE (sizeof(struct vm_event))
 
@@ -29,6 +30,8 @@
 #define DM_VM_EVENT_TUNNEL 1
 #define MAX_VM_EVENT_TUNNELS 2
 #define MAX_EPOLL_EVENTS MAX_VM_EVENT_TUNNELS
+
+#define THROTTLE_WINDOW	1U /* time window for throttle counter, in secs*/
 
 typedef void (*vm_event_handler)(struct vmctx *ctx, struct vm_event *event);
 typedef void (*vm_event_generate_jdata)(cJSON *event_obj, struct vm_event *event);
@@ -55,23 +58,37 @@ struct vm_event_tunnel {
 	bool enabled;
 };
 
+struct event_throttle_ctl {
+	struct acrn_timer timer;
+	pthread_mutex_t mtx;
+	uint32_t event_counter;
+	uint32_t throttle_count;	/* how many events has been throttled(dropped) */
+	bool	is_up;
+};
+
 struct vm_event_proc {
 	vm_event_handler ve_handler;
+	uint32_t	throttle_rate; /* how many events allowed per sec */
+	struct event_throttle_ctl throttle_ctl;
 	vm_event_generate_jdata gen_jdata_handler;
 };
+
 
 static struct vm_event_proc ve_proc[VM_EVENT_COUNT] = {
 	[VM_EVENT_RTC_CHG] = {
 		.ve_handler = general_event_handler,
 		.gen_jdata_handler = NULL,
+		.throttle_rate = 1,
 	},
 	[VM_EVENT_POWEROFF] = {
 		.ve_handler = general_event_handler,
 		.gen_jdata_handler = NULL,
+		.throttle_rate = 1,
 	},
 	[VM_EVENT_TRIPLE_FAULT] = {
 		.ve_handler = general_event_handler,
 		.gen_jdata_handler = NULL,
+		.throttle_rate = 1,
 	},
 };
 
@@ -82,6 +99,87 @@ static inline struct vm_event_proc *get_vm_event_proc(struct vm_event *event)
 		proc = &ve_proc[event->type];
 	}
 	return proc;
+}
+
+static bool event_throttle(struct vm_event *event)
+{
+	struct vm_event_proc *proc;
+	struct event_throttle_ctl *ctl;
+	uint32_t current_rate;
+	bool ret = false;
+
+	proc = get_vm_event_proc(event);
+	if (proc) {
+		ctl = &proc->throttle_ctl;
+		if (ctl->is_up) {
+			pthread_mutex_lock(&ctl->mtx);
+			current_rate = ctl->event_counter / THROTTLE_WINDOW;
+			if (current_rate < proc->throttle_rate) {
+				ctl->event_counter++;
+				ret = false;
+			} else {
+				ret = true;
+				ctl->throttle_count++;
+				pr_notice("event %d throttle: %d dropped\n",
+					event->type, ctl->throttle_count);
+			}
+			pthread_mutex_unlock(&ctl->mtx);
+		}
+	}
+	return ret;
+}
+
+void throttle_timer_cb(void *arg, uint64_t nexp)
+{
+	struct event_throttle_ctl *ctl = (struct event_throttle_ctl *)arg;
+	pthread_mutex_lock(&ctl->mtx);
+	ctl->event_counter = 0;
+	pthread_mutex_unlock(&ctl->mtx);
+}
+
+static void vm_event_throttle_init(struct vmctx *ctx)
+{
+	int i;
+	struct event_throttle_ctl *ctl;
+	int ret = 0;
+	struct itimerspec timer_spec;
+
+	for (i = 0; i < ARRAY_SIZE(ve_proc); i++) {
+		ctl = &ve_proc[i].throttle_ctl;
+		ctl->event_counter = 0U;
+		ctl->throttle_count = 0U;
+		ctl->is_up = false;
+		pthread_mutex_init(&ctl->mtx, NULL);
+		ctl->timer.clockid = CLOCK_MONOTONIC;
+		ret = acrn_timer_init(&ctl->timer, throttle_timer_cb, ctl);
+		if (ret < 0) {
+			pr_warn("failed to create timer for vm_event %d, throttle disabled\n", i);
+			continue;
+		}
+		timer_spec.it_value.tv_sec = THROTTLE_WINDOW;
+		timer_spec.it_value.tv_nsec = 0;
+		timer_spec.it_interval.tv_sec = THROTTLE_WINDOW;
+		timer_spec.it_interval.tv_nsec = 0;
+		ret = acrn_timer_settime(&ctl->timer, &timer_spec);
+		if (ret < 0) {
+			pr_warn("failed to set timer for vm_event %d, throttle disabled\n", i);
+			continue;
+		}
+		ctl->is_up = true;
+	}
+}
+
+static void vm_event_throttle_deinit(void)
+{
+	int i;
+	struct event_throttle_ctl *ctl;
+
+	for (i = 0; i < ARRAY_SIZE(ve_proc); i++) {
+		ctl = &ve_proc[i].throttle_ctl;
+		if (ctl->timer.fd != -1) {
+			acrn_timer_deinit(&ctl->timer);
+		}
+	}
 }
 
 static char *generate_vm_event_message(struct vm_event *event)
@@ -111,13 +209,20 @@ static char *generate_vm_event_message(struct vm_event *event)
 	return event_msg;
 }
 
+static void emit_vm_event(struct vmctx *ctx, struct vm_event *event)
+{
+	if (!event_throttle(event)) {
+		char *msg = generate_vm_event_message(event);
+		if (msg != NULL) {
+			vm_monitor_send_vm_event(msg);
+			free(msg);
+		}
+	}
+}
+
 static void general_event_handler(struct vmctx *ctx, struct vm_event *event)
 {
-	char *msg = generate_vm_event_message(event);
-	if (msg != NULL) {
-		vm_monitor_send_vm_event(msg);
-		free(msg);
-	}
+	emit_vm_event(ctx, event);
 }
 
 static void *vm_event_thread(void *param)
@@ -259,6 +364,8 @@ int vm_event_init(struct vmctx *ctx)
 		goto out;
 	}
 
+	vm_event_throttle_init(ctx);
+
 	error = pthread_create(&vm_event_tid, NULL, vm_event_thread, ctx);
 	if (error) {
 		pr_err("%s: vm_event create failed %d\n", __func__, errno);
@@ -283,6 +390,7 @@ int vm_event_deinit(void)
 
 	if (started) {
 		started = false;
+		vm_event_throttle_deinit();
 		pthread_kill(vm_event_tid, SIGCONT);
 		pthread_join(vm_event_tid, &jval);
 		close(epoll_fd);
