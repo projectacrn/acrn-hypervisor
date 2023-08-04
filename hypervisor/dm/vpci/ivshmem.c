@@ -198,7 +198,9 @@ static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
 	struct ivshmem_device *ivs_dev = (struct ivshmem_device *) vdev->priv_data;
 	uint64_t offset = mmio->address - vdev->vbars[IVSHMEM_MMIO_BAR].base_gpa;
 
-	if ((mmio->size == 4U) && ((offset & 0x3U) == 0U)) {
+	/* ivshmem spec define the BAR0 offset > 16 are reserved */
+	if ((mmio->size == 4U) && ((offset & 0x3U) == 0U) &&
+		(offset < sizeof(ivs_dev->mmio))) {
 		/*
 		 * IVSHMEM_IRQ_MASK_REG and IVSHMEM_IRQ_STA_REG are R/W registers
 		 * they are useless for ivshmem Rev.1.
