@@ -42,6 +42,7 @@
 #include "lpc.h"
 #include "monitor.h"
 #include "log.h"
+#include "vm_event.h"
 
 static pthread_mutex_t pm_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct mevent *power_button;
@@ -242,6 +243,14 @@ power_button_handler(int signal, enum ev_type type, void *arg)
 		inject_power_button_event(arg);
 }
 
+static void
+send_poweroff_event(void)
+{
+	struct vm_event event;
+	event.type = VM_EVENT_POWEROFF;
+	dm_send_vm_event(&event);
+}
+
 static int
 pm1_control_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		    uint32_t *eax, void *arg)
@@ -265,6 +274,7 @@ pm1_control_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		 */
 		if (*eax & VIRTUAL_PM1A_SLP_EN) {
 			if ((pm1_control & VIRTUAL_PM1A_SLP_TYP) >> 10 == 5) {
+				send_poweroff_event();
 				vm_suspend(ctx, VM_SUSPEND_POWEROFF);
 			}
 
