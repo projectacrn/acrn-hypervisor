@@ -339,7 +339,7 @@ Generate a Scenario Configuration File and Launch Script
 ********************************************************
 
 In this step, you will download, install, and use the `ACRN Configurator
-<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.2-unstable.deb>`__
+<https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.2/acrn-configurator-3.2.deb>`__
 to generate a scenario configuration file and launch script.
 
 A **scenario configuration file** is an XML file that holds the parameters of
@@ -355,7 +355,7 @@ post-launched User VM. Each User VM has its own launch script.
    .. code-block:: bash
 
       cd ~/acrn-work
-      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.1/acrn-configurator-3.2-unstable.deb -P /tmp
+      wget https://github.com/projectacrn/acrn-hypervisor/releases/download/v3.2/acrn-configurator-3.2.deb -P /tmp
 
    If you already have a previous version of the acrn-configurator installed,
    you should first remove it:
@@ -368,7 +368,7 @@ post-launched User VM. Each User VM has its own launch script.
 
    .. code-block:: bash
 
-      sudo apt install -y /tmp/acrn-configurator-3.2-unstable.deb
+      sudo apt install -y /tmp/acrn-configurator-3.2.deb
 
 #. Launch the ACRN Configurator:
 
