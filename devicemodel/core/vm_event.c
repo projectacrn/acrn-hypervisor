@@ -20,6 +20,8 @@
 #include "hsm_ioctl_defs.h"
 #include "sbuf.h"
 #include "log.h"
+#include <cjson/cJSON.h>
+#include "monitor.h"
 
 #define VM_EVENT_ELE_SIZE (sizeof(struct vm_event))
 
@@ -29,6 +31,7 @@
 #define MAX_EPOLL_EVENTS MAX_VM_EVENT_TUNNELS
 
 typedef void (*vm_event_handler)(struct vmctx *ctx, struct vm_event *event);
+typedef void (*vm_event_generate_jdata)(cJSON *event_obj, struct vm_event *event);
 
 static int epoll_fd;
 static bool started = false;
@@ -54,17 +57,21 @@ struct vm_event_tunnel {
 
 struct vm_event_proc {
 	vm_event_handler ve_handler;
+	vm_event_generate_jdata gen_jdata_handler;
 };
 
 static struct vm_event_proc ve_proc[VM_EVENT_COUNT] = {
 	[VM_EVENT_RTC_CHG] = {
 		.ve_handler = general_event_handler,
+		.gen_jdata_handler = NULL,
 	},
 	[VM_EVENT_POWEROFF] = {
 		.ve_handler = general_event_handler,
+		.gen_jdata_handler = NULL,
 	},
 	[VM_EVENT_TRIPLE_FAULT] = {
 		.ve_handler = general_event_handler,
+		.gen_jdata_handler = NULL,
 	},
 };
 
@@ -77,9 +84,40 @@ static inline struct vm_event_proc *get_vm_event_proc(struct vm_event *event)
 	return proc;
 }
 
+static char *generate_vm_event_message(struct vm_event *event)
+{
+	char *event_msg = NULL;
+	cJSON *val;
+	cJSON *event_obj = cJSON_CreateObject();
+	struct vm_event_proc *proc;
+
+	if (event_obj == NULL)
+		return NULL;
+	val = cJSON_CreateNumber(event->type);
+	if (val == NULL)
+		return NULL;
+	cJSON_AddItemToObject(event_obj, "vm_event", val);
+
+	proc = get_vm_event_proc(event);
+	if (proc && proc->gen_jdata_handler) {
+		(proc->gen_jdata_handler)(event_obj, event);
+	}
+
+	event_msg = cJSON_Print(event_obj);
+	if (event_msg == NULL)
+		fprintf(stderr, "Failed to generate vm_event message.\n");
+
+	cJSON_Delete(event_obj);
+	return event_msg;
+}
+
 static void general_event_handler(struct vmctx *ctx, struct vm_event *event)
 {
-	return;
+	char *msg = generate_vm_event_message(event);
+	if (msg != NULL) {
+		vm_monitor_send_vm_event(msg);
+		free(msg);
+	}
 }
 
 static void *vm_event_thread(void *param)
