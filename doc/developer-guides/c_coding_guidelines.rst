@@ -3312,8 +3312,7 @@ each function:
     ``@post <post-condition description>``.
 12) The brief description of the function return value shall be documented
     with the format ``@return <brief description of return value>``.
-13) A void-returning function shall be documented with the format
-    ``@return None``.
+13) A void-returning function shall not be documented with ``@return``.
 14) The comments explaining the actual return values shall be documented with
     the format ``@retval <return value> <return value explanation>``.
 15) If the description of one element needs to span multiple lines, each line

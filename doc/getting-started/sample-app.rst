@@ -76,7 +76,7 @@ Preparing the Target System
 ===========================
 
 On the target system, reboot and choose the regular Ubuntu image (not the
-Multiboot2 choice created when following the Getting Started Guide).
+Ubuntu-ACRN Board Inspector choice created when following the Getting Started Guide).
 
 1. Log in as the **acrn** user. We'll be making ssh connections to the target system
    later in these steps, so install the ssh server on the target system using::
@@ -108,7 +108,7 @@ As a normal (e.g., **acrn**) user, follow these steps:
 1. Install some additional packages in your development computer used for
    building the sample application::
 
-     sudo apt install -y cloud-guest-utils schroot kpartx qemu-kvm
+     sudo apt install -y cloud-guest-utils schroot kpartx qemu-utils
 
 #. Check out the ``acrn-hypervisor`` source code branch (already cloned from the
    ``acrn-hypervisor`` repo when you followed the :ref:`gsg`). We've tagged a
@@ -117,7 +117,7 @@ As a normal (e.g., **acrn**) user, follow these steps:
 
      cd ~/acrn-work/acrn-hypervisor
      git fetch --all
-     git checkout master 
+     git checkout release_3.2
 
 #. Build the ACRN sample application source code::
 
@@ -189,10 +189,10 @@ Make the RT_VM Image
 
    .. code-block:: console
 
-     linux-headers-5.15.44-rt46-acrn-kernel-rtvm+_5.15.44-rt46-acrn-kernel-rtvm+-1_amd64.deb
-     linux-image-5.15.44-rt46-acrn-kernel-rtvm+-dbg_5.15.44-rt46-acrn-kernel-rtvm+-1_amd64.deb
-     linux-image-5.15.44-rt46-acrn-kernel-rtvm+_5.15.44-rt46-acrn-kernel-rtvm+-1_amd64.deb
-     linux-libc-dev_5.15.44-rt46-acrn-kernel-rtvm+-1_amd64.deb
+     linux-headers-5.15.71-rt46-acrn-kernel-rtvm+_5.15.71-rt46-acrn-kernel-rtvm+-1_amd64.deb
+     linux-image-5.15.71-rt46-acrn-kernel-rtvm+-dbg_5.15.71-rt46-acrn-kernel-rtvm+-1_amd64.deb
+     linux-image-5.15.71-rt46-acrn-kernel-rtvm+_5.15.71-rt46-acrn-kernel-rtvm+-1_amd64.deb
+     linux-libc-dev_5.15.71-rt46-acrn-kernel-rtvm+-1_amd64.deb
 
 #. Make the RT VM image::
 
@@ -394,43 +394,21 @@ Build the ACRN Hypervisor and Service VM Images
      cd ~/acrn-work/acrn-hypervisor
 
      make clean
-     make BOARD=~/acrn-work/MyConfiguration/my_board.board.xml SCENARIO=~/acrn-work/MyConfiguration/scenario.xml
+     debian/debian_build.sh clean && debian/debian_build.sh -c ~/acrn-work/MyConfiguration 
 
    The build typically takes about a minute. When done, the build
-   generates a Debian package in the build directory with your board and
-   working folder name.
+   generates several Debian packages in the build directory. Only one 
+   with your board and working folder name among these Debian packages 
+   is different from genetated in the Getting Started Guide. So we only 
+   need to copy and reinstall one Debian package to the target system. 
 
    This Debian package contains the ACRN hypervisor and tools for
    installing ACRN on the target.
 
-#. Build the ACRN kernel for the Service VM (the sample application
-   requires a newer version of the Service VM than generated in the
-   Getting Started Guide, so we'll need to generate it again) using a tagged
-   version of the ``acrn-kernel``::
-
-     cd ~/acrn-work/acrn-kernel
-     git fetch --all
-
-     git checkout acrn-v3.1
-
-     make distclean
-     cp kernel_config_service_vm .config
-     make olddefconfig
-     make -j $(nproc) deb-pkg
-
-   The kernel build can take 15 minutes or less on a fast computer, but
-   could take one to two hours depending on the performance of your development
-   computer. When done, the build generates four Debian packages in the
-   directory above the build root directory:
-
-   .. code-block:: console
-
-      $ ls ../*acrn-service*.deb
-
-      linux-headers-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
-      linux-image-5.15.44-acrn-service-vm_5.15.44-acrn-service-vm-1_amd64.deb
-      linux-image-5.15.44-acrn-service-vm-dbg_5.15.44-acrn-service-vm-1_amd64.deb
-      linux-libc-dev_5.15.44-acrn-service-vm-1_amd64.deb
+#. Use the ACRN kernel for the Service VM already on your development computer 
+   when you followed the Getting Started Guide (the sample application
+   requires the same version of the Service VM as generated in the
+   Getting Started Guide, so no need to generate it again).
 
 .. rst-class:: numbered-step
 
@@ -439,91 +417,56 @@ Copy Files from the Development Computer to Your Target System
 
 1. Copy all the files generated on the development computer to the
    target system. This includes the sample application executable files,
-   HMI_VM and RT_VM images, Debian packages for the Service VM and
-   Hypervisor, launch scripts, and the iasl tool built following the
-   Getting Started Guide. You can use ``scp`` to copy across the local network,
-   or use a USB stick:
+   HMI_VM and RT_VM images, Debian packages for ACRN Hypervisor,
+   and the launch scripts. 
 
-   Option 1: use ``scp`` to copy files over the local network
-     Use ``scp`` to copy files from your development computer to the
-     ``~/acrn-work`` directory on the target (replace the IP address used in
-     this example with the target system's IP address you found earlier)::
+   Use ``scp`` to copy files from your development computer to the
+   ``~/acrn-work`` directory on the target (replace the IP address used in
+   this example with the target system's IP address you found earlier)::
 
-       cd ~/acrn-work
+     cd ~/acrn-work
 
-       scp acrn-hypervisor/misc/sample_application/image_builder/build/*_vm.img \
-           acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb \
-           *acrn-service-vm*.deb MyConfiguration/launch_user_vm_id*.sh \
-           acpica-unix-20210105/generate/unix/bin/iasl \
-           acrn@10.0.0.200:~/acrn-work
+     scp acrn-hypervisor/misc/sample_application/image_builder/build/*_vm.img \
+         acrn-hypervisor*.deb \
+         MyConfiguration/launch_user_vm_id*.sh \
+         acrn@10.0.0.200:~/acrn-work
 
-     Then on the target system, run these commands::
-
-       sudo cp ~/acrn-work/iasl /usr/sbin
-       sudo ln -s /usr/sbin/iasl /usr/bin/iasl
-
-   Option 2: use a USB stick to copy files
-     Because the VM image files are large, format your USB stick with a file
-     system that supports files greater than 4GB: extFAT or NTFS, but not FAT32.
-
-     Insert a USB stick into the development computer and run these commands::
-
-        disk="/media/$USER/"$(ls /media/$USER)
-
-        cd ~/acrn-work
-        cp acrn-hypervisor/misc/sample_application/image_builder/build/*_vm.img rt_vm.img "$disk"
-        cp acrn-hypervisor/build/acrn-my_board-MyConfiguration*.deb "$disk"
-        cp *acrn-service-vm*.deb "$disk"
-        cp MyConfiguration/launch_user_vm_id*.sh "$disk"
-        cp acpica-unix-20210105/generate/unix/bin/iasl "$disk"
-        sync && sudo umount "$disk"
-
-     Move the USB stick you just used to the target system and run
-     these commands to copy the files locally::
-
-        disk="/media/$USER/"$(ls /media/$USER)
-
-        cp "$disk"/*_vm.img ~/acrn-work
-        cp "$disk"/acrn-my_board-MyConfiguration*.deb ~/acrn-work
-        cp "$disk"/*acrn-service-vm*.deb ~/acrn-work
-        cp "$disk"/launch_user_vm_id*.sh ~/acrn-work
-        sudo cp "$disk"/iasl /usr/sbin/
-        sudo ln -s /usr/sbin/iasl /usr/bin/iasl
-        sync && sudo umount "$disk"
 
 .. rst-class:: numbered-step
 
 Install and Run ACRN on the Target System
 *****************************************
 
-1. On your target system, install the ACRN Debian package and ACRN
+1. On the target system, configure your network according to instruction of below link:
+
+   https://www.ubuntupit.com/how-to-configure-and-use-network-bridge-in-ubuntu-linux/
+
+#. On your target system, install the ACRN Debian package and ACRN
    kernel Debian packages using these commands::
 
      cd ~/acrn-work
+     cp ./acrn-hypervisor*.deb ./*acrn-service-vm*.deb /tmp
      sudo apt purge acrn-hypervisor
-     sudo apt install ./acrn-my_board-MyConfiguration*.deb
-     sudo apt install ./*acrn-service-vm*.deb
+     sudo apt install /tmp/acrn-hypervisor*.deb  /tmp/*acrn-service-vm*.deb
 
-#. Enable networking services for sharing with the HMI User VM::
+#. Enable networking services for sharing with the HMI User VM:
 
+   .. warning::
+      The IP address of Service VM may change after executing the following command.
+
+   .. code-block:: bash
+
+     cp /usr/share/doc/acrnd/examples/* /etc/systemd/network
      sudo systemctl enable --now systemd-networkd
 
 #. Reboot the system::
 
      reboot
 
-#. Confirm that you see the GRUB menu with the "ACRN multiboot2" entry.  Select
-   it and press :kbd:`Enter` to proceed to booting ACRN. (It may be
-   auto-selected, in which case it will boot with this option automatically in 5
-   seconds.)
-
-   .. image:: images/samp-image016.png
-      :class: drop-shadow
-      :align: center
-
-   This will boot the ACRN hypervisor and launch the Service VM.
-
-#. Log in to the Service VM (using the target's keyboard and HDMI monitor) using
+#. The target system will boot automatically into the ACRN hypervisor and 
+   launch the Service VM. 
+   
+   Log in to the Service VM (using the target's keyboard and HDMI monitor) using
    the ``acrn`` username.
 
 #. Find the Service VM's IP address (the first IP address shown by this command):
@@ -606,7 +549,7 @@ Install and Run ACRN on the Target System
 
       ubuntu login: root
       Password:
-      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.44-rt46-acrn-kernel-rtvm+ x86_64)
+      Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.71-rt46-acrn-kernel-rtvm+ x86_64)
 
       . . .
 
