@@ -617,13 +617,13 @@ Install ACRN
 
    .. code-block:: bash
 
-      reboot
+      sudo reboot
 
    The target system will reboot into the ACRN hypervisor and
    start the Ubuntu Service VM.
 
-#. Confirm that you see the GRUB menu with "Ubuntu-ACRN Board Inspector, with 5.15.0-56-generic" entry. 
-   Select it and proceed to booting ACRN. (It may be auto-selected, in which case it
+#. Confirm that you see the GRUB menu with "Ubuntu with ACRN hypervisor, with Linux 5.15.71-acrn-service-vm (ACRN 3.2)"
+   entry. Select it and proceed to booting ACRN. (It may be auto-selected, in which case it
    will boot with this option automatically in 5 seconds.)
 
    Example grub menu shown as below:
@@ -635,8 +635,8 @@ Install ACRN
       Ubuntu
       Advanced options for Ubuntu
       Ubuntu-ACRN Board Inspector, with Linux 5.15.71-acrn-service-vm
-      *Ubuntu-ACRN Board Inspector, with Linux 5.15.0-56-generic
-      Ubuntu with ACRN hypervisor, with Linux 5.15.71-acrn-service-vm (ACRN 3.2)
+      Ubuntu-ACRN Board Inspector, with Linux 5.15.0-56-generic
+      *Ubuntu with ACRN hypervisor, with Linux 5.15.71-acrn-service-vm (ACRN 3.2)
       Ubuntu with ACRN hypervisor, with Linux 5.15.0-56-generic (ACRN 3.2)
       UEFI Firmware Settings
 
@@ -676,7 +676,7 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
 
    .. code-block:: bash
 
-      cp /usr/share/doc/acrnd/examples/* /etc/systemd/network
+      sudo cp /usr/share/doc/acrnd/examples/* /etc/systemd/network
       sudo systemctl enable --now systemd-networkd
 
 .. _gsg-user-vm:
