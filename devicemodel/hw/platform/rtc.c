@@ -882,6 +882,12 @@ vrtc_addr_handler(struct vmctx *ctx, int vcpu, int in, int port,
 	return 0;
 }
 
+static inline bool vrtc_is_time_register(uint32_t offset)
+{
+	return ((offset == RTC_SEC) || (offset == RTC_MIN) || (offset == RTC_HRS) || (offset == RTC_DAY)
+			|| (offset == RTC_MONTH) || (offset == RTC_YEAR) || (offset == RTC_CENTURY));
+}
+
 int
 vrtc_data_handler(struct vmctx *ctx, int vcpu, int in, int port,
 		  int bytes, uint32_t *eax, void *arg)
@@ -960,10 +966,11 @@ vrtc_data_handler(struct vmctx *ctx, int vcpu, int in, int port,
 		}
 
 		/*
-		 * XXX some guests (e.g. OpenBSD) write the century byte
-		 * outside of RTCSB_HALT so re-calculate the RTC date/time.
+		 * Some guests (e.g. OpenBSD) write the century byte outside of RTCSB_HALT,
+		 * and some guests (e.g. WaaG) write all date/time outside of RTCSB_HALT,
+		 * so re-calculate the RTC date/time.
 		 */
-		if (offset == RTC_CENTURY && !rtc_halted(vrtc)) {
+		if (vrtc_is_time_register(offset) && !rtc_halted(vrtc)) {
 			curtime = rtc_to_secs(vrtc);
 			error = vrtc_time_update(vrtc, curtime, time(NULL));
 			if ((error != 0) || (curtime == VRTC_BROKEN_TIME && rtc_flag_broken_time))
