@@ -41,6 +41,7 @@
 #include "timer.h"
 #include "acpi.h"
 #include "lpc.h"
+#include "vm_event.h"
 
 #include "log.h"
 
@@ -80,6 +81,7 @@ struct vrtc {
 	u_int		addr;               /* RTC register to read or write */
 	time_t		base_uptime;
 	time_t		base_rtctime;
+	time_t		halted_rtctime;
 	struct rtcdev	rtcdev;
 };
 
@@ -725,6 +727,18 @@ vrtc_set_reg_c(struct vrtc *vrtc, uint8_t newval)
 	}
 }
 
+static void
+send_rtc_chg_event(time_t newtime, time_t lasttime)
+{
+	struct vm_event event;
+	struct rtc_change_event_data *data = (struct rtc_change_event_data *)event.event_data;
+
+	event.type = VM_EVENT_RTC_CHG;
+	data->delta_time = newtime - lasttime;
+	data->last_time = lasttime;
+	dm_send_vm_event(&event);
+}
+
 static int
 vrtc_set_reg_b(struct vrtc *vrtc, uint8_t newval)
 {
@@ -751,12 +765,19 @@ vrtc_set_reg_b(struct vrtc *vrtc, uint8_t newval)
 			if (rtctime == VRTC_BROKEN_TIME) {
 				if (rtc_flag_broken_time)
 					return -1;
+			} else {
+				/* send rtc change event if rtc time changed during halt */
+				if (vrtc->halted_rtctime != VRTC_BROKEN_TIME &&
+					rtctime != vrtc->halted_rtctime) {
+					send_rtc_chg_event(rtctime, vrtc->halted_rtctime);
+					vrtc->halted_rtctime = VRTC_BROKEN_TIME;
+				}
 			}
 		} else {
 			curtime = vrtc_curtime(vrtc, &basetime);
 			if (curtime != vrtc->base_rtctime)
 				return -1;
-
+			vrtc->halted_rtctime = curtime;
 			/*
 			 * Force a refresh of the RTC date/time fields so
 			 * they reflect the time right before the guest set
@@ -982,10 +1003,18 @@ vrtc_data_handler(struct vmctx *ctx, int vcpu, int in, int port,
 		 * so re-calculate the RTC date/time.
 		 */
 		if (vrtc_is_time_register(offset) && !rtc_halted(vrtc)) {
+			time_t last_time = curtime;
 			curtime = rtc_to_secs(vrtc);
 			error = vrtc_time_update(vrtc, curtime, monotonic_time());
-			if ((error != 0) || (curtime == VRTC_BROKEN_TIME && rtc_flag_broken_time))
+			if ((error != 0) || (curtime == VRTC_BROKEN_TIME && rtc_flag_broken_time)) {
 				error = -1;
+			} else {
+				/* We don't know when the Guest has finished the RTC change action.
+				 * So send an event each time the date/time regs has been updated.
+				 * The event handler will process those events.
+				 */
+				send_rtc_chg_event(rtc_to_secs(vrtc), last_time);
+			}
 		}
 	}
 
@@ -1105,6 +1134,7 @@ vrtc_init(struct vmctx *ctx)
 	/* Reset the index register to a safe value. */
 	vrtc->addr = RTC_STATUSD;
 
+	vrtc->halted_rtctime = VRTC_BROKEN_TIME;
 	/*
 	 * Initialize RTC time to 00:00:00 Jan 1, 1970 if curtime = 0
 	 */

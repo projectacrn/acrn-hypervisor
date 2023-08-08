@@ -33,6 +33,8 @@
 
 #define THROTTLE_WINDOW	1U /* time window for throttle counter, in secs*/
 
+#define BROKEN_TIME ((time_t)-1)
+
 typedef void (*vm_event_handler)(struct vmctx *ctx, struct vm_event *event);
 typedef void (*vm_event_generate_jdata)(cJSON *event_obj, struct vm_event *event);
 
@@ -43,6 +45,9 @@ static char dm_vm_event_page[4096] __aligned(4096);
 static pthread_t vm_event_tid;
 
 static void general_event_handler(struct vmctx *ctx, struct vm_event *event);
+static void rtc_chg_event_handler(struct vmctx *ctx, struct vm_event *event);
+
+static void gen_rtc_chg_jdata(cJSON *event_obj, struct vm_event *event);
 
 enum event_source_type {
 	EVENT_SOURCE_TYPE_HV,
@@ -70,14 +75,13 @@ struct vm_event_proc {
 	vm_event_handler ve_handler;
 	uint32_t	throttle_rate; /* how many events allowed per sec */
 	struct event_throttle_ctl throttle_ctl;
-	vm_event_generate_jdata gen_jdata_handler;
+	vm_event_generate_jdata gen_jdata_handler; /* how to transtfer vm_event data to json txt */
 };
-
 
 static struct vm_event_proc ve_proc[VM_EVENT_COUNT] = {
 	[VM_EVENT_RTC_CHG] = {
-		.ve_handler = general_event_handler,
-		.gen_jdata_handler = NULL,
+		.ve_handler = rtc_chg_event_handler,
+		.gen_jdata_handler = gen_rtc_chg_jdata,
 		.throttle_rate = 1,
 	},
 	[VM_EVENT_POWEROFF] = {
@@ -206,6 +210,7 @@ static char *generate_vm_event_message(struct vm_event *event)
 		fprintf(stderr, "Failed to generate vm_event message.\n");
 
 	cJSON_Delete(event_obj);
+
 	return event_msg;
 }
 
@@ -223,6 +228,79 @@ static void emit_vm_event(struct vmctx *ctx, struct vm_event *event)
 static void general_event_handler(struct vmctx *ctx, struct vm_event *event)
 {
 	emit_vm_event(ctx, event);
+}
+
+static void gen_rtc_chg_jdata(cJSON *event_obj, struct vm_event *event)
+{
+	struct rtc_change_event_data *data = (struct rtc_change_event_data *)event->event_data;
+	cJSON *val;
+
+	val = cJSON_CreateNumber(data->delta_time);
+	if (val != NULL) {
+		cJSON_AddItemToObject(event_obj, "delta_time", val);
+	}
+	val = cJSON_CreateNumber(data->last_time);
+	if (val != NULL) {
+		cJSON_AddItemToObject(event_obj, "last_time", val);
+	}
+}
+
+/* assume we only have one unique rtc source */
+
+static struct acrn_timer rtc_chg_event_timer = {
+	.clockid = CLOCK_MONOTONIC,
+};
+static pthread_mutex_t rtc_chg_mutex = PTHREAD_MUTEX_INITIALIZER;
+static struct timespec time_window_start;
+static time_t last_time_cached = BROKEN_TIME;
+static time_t delta_time_sum = 0;
+#define RTC_CHG_WAIT_TIME 1 /* 1 second */
+static void rtc_chg_event_handler(struct vmctx *ctx, struct vm_event *event)
+{
+	struct itimerspec timer_spec;
+	struct rtc_change_event_data *data = (struct rtc_change_event_data *)event->event_data;
+
+	/*
+	 * RTC time is not reliable until guest finishes updating all RTC date/time regs.
+	 * So wait for some time, if no more change happens, we can conclude that the RTC
+	 * change has been done.
+	 */
+	timer_spec.it_value.tv_sec = RTC_CHG_WAIT_TIME;
+	timer_spec.it_value.tv_nsec = 0;
+	timer_spec.it_interval.tv_sec = 0;
+	timer_spec.it_interval.tv_nsec = 0;
+	pthread_mutex_lock(&rtc_chg_mutex);
+	if (last_time_cached == BROKEN_TIME) {
+		last_time_cached = data->last_time;
+	}
+	delta_time_sum += data->delta_time;
+	/* The last timer will be overwriten if it is not triggered yet. */
+	acrn_timer_settime(&rtc_chg_event_timer, &timer_spec);
+	clock_gettime(CLOCK_MONOTONIC, &time_window_start);
+	pthread_mutex_unlock(&rtc_chg_mutex);
+}
+
+static void rtc_chg_timer_cb(void *arg, uint64_t nexp)
+{
+	struct timespec now, delta;
+	struct timespec time_window_size = {RTC_CHG_WAIT_TIME, 0};
+	struct vmctx *ctx = arg;
+	struct vm_event send_event;
+	struct rtc_change_event_data *data = (struct rtc_change_event_data *)send_event.event_data;
+
+	pthread_mutex_lock(&rtc_chg_mutex);
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	delta = now;
+	timespecsub(&delta, &time_window_start);
+	/* possible racing problem here. make sure this is the right timer cb for the vm_event */
+	if (timespeccmp(&delta, &time_window_size, >=)) {
+		data->delta_time = delta_time_sum;
+		data->last_time = last_time_cached;
+		emit_vm_event(ctx, &send_event);
+		last_time_cached = BROKEN_TIME;
+		delta_time_sum = 0;
+	}
+	pthread_mutex_unlock(&rtc_chg_mutex);
 }
 
 static void *vm_event_thread(void *param)
@@ -371,6 +449,8 @@ int vm_event_init(struct vmctx *ctx)
 		pr_err("%s: vm_event create failed %d\n", __func__, errno);
 		goto out;
 	}
+
+	acrn_timer_init(&rtc_chg_event_timer, rtc_chg_timer_cb, ctx);
 
 	started = true;
 	return 0;
