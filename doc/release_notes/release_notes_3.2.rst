@@ -79,7 +79,7 @@ to upgrade from prior ACRN versions:
 #. Manually edit your previous older scenario XML and launch XML files to make them
    compatible with v3.2.  This is not our recommended approach.
 
-Here are some additional details about upgrading to the v3.22 release.
+Here are some additional details about upgrading to the v3.2 release.
 
 Generate New Board XML
 ======================
