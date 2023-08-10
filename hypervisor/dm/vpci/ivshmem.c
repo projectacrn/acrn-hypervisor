@@ -66,16 +66,15 @@ struct ivshmem_device {
 	struct ivshmem_shm_region *region;
 };
 
-/* IVSHMEM_SHM_SIZE is provided by offline tool */
-static uint8_t ivshmem_base[IVSHMEM_SHM_SIZE] __aligned(PDE_SIZE);
 static struct ivshmem_device ivshmem_dev[IVSHMEM_DEV_NUM];
 static spinlock_t ivshmem_dev_lock = { .head = 0U, .tail = 0U, };
 
 void init_ivshmem_shared_memory()
 {
 	uint32_t i;
-	uint64_t addr = hva2hpa(&ivshmem_base);
+	uint64_t addr;
 
+	addr = e820_alloc_memory(roundup(IVSHMEM_SHM_SIZE, PDE_SIZE), MEM_SIZE_MAX);
 	for (i = 0U; i < ARRAY_SIZE(mem_regions); i++) {
 		mem_regions[i].hpa = addr;
 		addr += mem_regions[i].size;
