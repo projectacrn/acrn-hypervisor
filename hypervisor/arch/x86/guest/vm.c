@@ -503,9 +503,7 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 		entry = p_e820 + i;
 		pr_dbg("e820 table: %d type: 0x%x", i, entry->type);
 		pr_dbg("BaseAddress: 0x%016lx length: 0x%016lx\n", entry->baseaddr, entry->length);
-		if (entry->type == E820_TYPE_RAM) {
-			service_vm_high64_max_ram = max((entry->baseaddr + entry->length), service_vm_high64_max_ram);
-		}
+		service_vm_high64_max_ram = max((entry->baseaddr + entry->length), service_vm_high64_max_ram);
 	}
 
 	/* create real ept map for [0, service_vm_high64_max_ram) with UC */
