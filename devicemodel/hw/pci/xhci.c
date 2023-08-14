@@ -384,6 +384,12 @@ struct pci_xhci_vbdp_dev_state {
 	uint8_t	state;
 };
 
+struct pci_xhci_async_request_node {
+	STAILQ_ENTRY(pci_xhci_async_request_node) link;
+	uint64_t offset;
+	uint64_t value;
+};
+
 struct pci_xhci_vdev {
 	struct pci_vdev *dev;
 	pthread_mutex_t mtx;
@@ -423,6 +429,12 @@ struct pci_xhci_vdev {
 	bool		vbdp_polling;
 	int		vbdp_dev_num;
 	struct pci_xhci_vbdp_dev_state vbdp_devs[XHCI_MAX_VIRT_PORTS];
+
+	pthread_t	async_thread;
+	bool	async_transfer;
+	pthread_cond_t	async_cond;
+	pthread_mutex_t	async_tmx;
+	STAILQ_HEAD(, pci_xhci_async_request_node) async_head;
 
 	/*
 	 * native_ports uses for record the command line assigned native root
@@ -485,6 +497,7 @@ static int pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_convert_speed(int lspeed);
 static void pci_xhci_free_usb_xfer(struct pci_xhci_dev_emu *dev, struct usb_xfer *xfer);
 static void pci_xhci_isoc_handler(void *arg, uint64_t param);
+static void pci_xhci_async_enqueue(struct pci_xhci_vdev *xdev, uint64_t offset, uint64_t value);
 
 #define XHCI_OPT_MAX_LEN 32
 static struct pci_xhci_option_elem xhci_option_table[] = {
@@ -1982,7 +1995,9 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 				slot, di->path.bus, usb_dev_path(&di->path));
 
 		/* release all the resource allocated for virtual device */
+		pthread_mutex_unlock(&xdev->mtx);
 		pci_xhci_dev_destroy(dev);
+		pthread_mutex_lock(&xdev->mtx);
 	} else
 		UPRINTF(LWRN, "invalid slot %d\r\n", slot);
 
@@ -2056,6 +2071,7 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 	struct usb_native_devinfo *di;
 	uint32_t cmderr;
 	uint8_t rh_port;
+	int ret;
 
 	input_ctx = XHCI_GADDR(xdev, trb->qwTrb0 & ~0xFUL);
 	if (!input_ctx) {
@@ -2110,7 +2126,10 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 				"port %d\r\n", di->path.bus,
 				usb_dev_path(&di->path), rh_port);
 
+		pthread_mutex_unlock(&xdev->mtx);
 		dev = pci_xhci_dev_create(xdev, di);
+		pthread_mutex_lock(&xdev->mtx);
+
 		if (!dev) {
 			UPRINTF(LFTL, "fail to create device for %d-%s\r\n",
 					di->path.bus,
@@ -2142,8 +2161,15 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 	dev->hci.hci_address = slot;
 	dev->dev_ctx = dev_ctx;
 
-	if (dev->dev_ue->ue_reset == NULL ||
-	    dev->dev_ue->ue_reset(dev->dev_instance) < 0) {
+	if (dev->dev_ue->ue_reset == NULL) {
+		cmderr = XHCI_TRB_ERROR_ENDP_NOT_ON;
+		goto done;
+	}
+
+	pthread_mutex_unlock(&xdev->mtx);
+	ret = dev->dev_ue->ue_reset(dev->dev_instance);
+	pthread_mutex_lock(&xdev->mtx);
+	if (ret < 0) {
 		cmderr = XHCI_TRB_ERROR_ENDP_NOT_ON;
 		goto done;
 	}
@@ -2391,6 +2417,7 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 
 	devep = &dev->eps[epid];
 	pthread_mutex_lock(&devep->mtx);
+	pthread_mutex_unlock(&xdev->mtx);
 
 	xfer = devep->ep_xfer;
 	for (i = 0; i < xfer->max_blk_cnt; ++i) {
@@ -2413,6 +2440,7 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	UPRINTF(LDBG, "reset ep[%u] %08x %08x %016lx %08x\r\n",
 		epid, ep_ctx->dwEpCtx0, ep_ctx->dwEpCtx1, ep_ctx->qwEpCtx2,
 		ep_ctx->dwEpCtx4);
+	pthread_mutex_lock(&xdev->mtx);
 	pthread_mutex_unlock(&devep->mtx);
 
 done:
@@ -3022,8 +3050,10 @@ pci_xhci_try_usb_xfer(struct pci_xhci_vdev *xdev,
 
 	/* outstanding requests queued up */
 	if (dev->dev_ue->ue_data != NULL) {
+		pthread_mutex_unlock(&xdev->mtx);
 		err = dev->dev_ue->ue_data(dev->dev_instance, xfer, epid & 0x1 ?
 					   USB_XFER_IN : USB_XFER_OUT, epid/2);
+		pthread_mutex_lock(&xdev->mtx);
 		if (err == USB_ERR_CANCELLED) {
 			if (USB_DATA_GET_ERRCODE(&xfer->data[xfer->head]) ==
 			    USB_NAK)
@@ -3286,8 +3316,11 @@ retry:
 
 	if (epid == 1) {
 		err = USB_ERR_NOT_STARTED;
-		if (dev->dev_ue->ue_request != NULL)
+		if (dev->dev_ue->ue_request != NULL) {
+			pthread_mutex_unlock(&xdev->mtx);
 			err = dev->dev_ue->ue_request(dev->dev_instance, xfer);
+			pthread_mutex_lock(&xdev->mtx);
+		}
 		setup_trb = NULL;
 	} else {
 		/* handle data transfer */
@@ -3658,21 +3691,24 @@ pci_xhci_write(struct vmctx *ctx,
 
 	xdev = dev->arg;
 
-	pthread_mutex_lock(&xdev->mtx);
 	if (offset < XHCI_CAPLEN)	/* read only registers */
 		UPRINTF(LWRN, "write RO-CAPs offset %ld\r\n", offset);
-	else if (offset < xdev->dboff)
+	else if (offset < xdev->dboff) {
+		pthread_mutex_lock(&xdev->mtx);
 		pci_xhci_hostop_write(xdev, offset, value);
-	else if (offset < xdev->rtsoff)
-		pci_xhci_dbregs_write(xdev, offset, value);
-	else if (offset < xdev->rtsend)
+		pthread_mutex_unlock(&xdev->mtx);
+	} else if (offset < xdev->rtsoff) {
+		pci_xhci_async_enqueue(xdev, offset, value);
+	} else if (offset < xdev->rtsend) {
+		pthread_mutex_lock(&xdev->mtx);
 		pci_xhci_rtsregs_write(xdev, offset, value);
-	else if (offset < xdev->regsend)
+		pthread_mutex_unlock(&xdev->mtx);
+	} else if (offset < xdev->regsend) {
+		pthread_mutex_lock(&xdev->mtx);
 		pci_xhci_excap_write(xdev, offset, value);
-	else
+		pthread_mutex_unlock(&xdev->mtx);
+	} else
 		UPRINTF(LWRN, "write invalid offset %ld\r\n", offset);
-
-	pthread_mutex_unlock(&xdev->mtx);
 }
 
 static uint64_t
@@ -3901,24 +3937,28 @@ pci_xhci_read(struct vmctx *ctx,
 	uint32_t	value;
 
 	xdev = dev->arg;
-
-	pthread_mutex_lock(&xdev->mtx);
-	if (offset < XHCI_CAPLEN)
+	if (offset < XHCI_CAPLEN) {
+		pthread_mutex_lock(&xdev->mtx);
 		value = pci_xhci_hostcap_read(xdev, offset);
-	else if (offset < xdev->dboff)
+		pthread_mutex_unlock(&xdev->mtx);
+	} else if (offset < xdev->dboff) {
+		pthread_mutex_lock(&xdev->mtx);
 		value = pci_xhci_hostop_read(xdev, offset);
-	else if (offset < xdev->rtsoff)
+		pthread_mutex_unlock(&xdev->mtx);
+	} else if (offset < xdev->rtsoff) {
 		value = pci_xhci_dbregs_read(xdev, offset);
-	else if (offset < xdev->rtsend)
+	} else if (offset < xdev->rtsend) {
+		pthread_mutex_lock(&xdev->mtx);
 		value = pci_xhci_rtsregs_read(xdev, offset);
-	else if (offset < xdev->regsend)
+		pthread_mutex_unlock(&xdev->mtx);
+	} else if (offset < xdev->regsend) {
+		pthread_mutex_lock(&xdev->mtx);
 		value = pci_xhci_excap_read(xdev, offset);
-	else {
+		pthread_mutex_unlock(&xdev->mtx);
+	} else {
 		value = 0;
 		UPRINTF(LDBG, "read invalid offset %ld\r\n", offset);
 	}
-
-	pthread_mutex_unlock(&xdev->mtx);
 
 	switch (size) {
 	case 1:
@@ -4005,6 +4045,7 @@ pci_xhci_dev_intr(struct usb_hci *hci, int epctx)
 	struct xhci_endp_ctx	*ep_ctx;
 	int	dir_in;
 	int	epid;
+	int ret = 0;
 
 	dir_in = epctx & 0x80;
 	epid = epctx & ~0x80;
@@ -4018,10 +4059,11 @@ pci_xhci_dev_intr(struct usb_hci *hci, int epctx)
 	xdev = dev->xdev;
 
 	/* check if device is ready; OS has to initialise it */
+	pthread_mutex_lock(&xdev->mtx);
 	if (xdev->rtsregs.erstba_p == NULL ||
 	    (xdev->opregs.usbcmd & XHCI_CMD_RS) == 0 ||
 	    dev->dev_ctx == NULL)
-		return 0;
+		goto out;
 
 	p = XHCI_PORTREG_PTR(xdev, hci->hci_port);
 
@@ -4030,16 +4072,18 @@ pci_xhci_dev_intr(struct usb_hci *hci, int epctx)
 		p->portsc &= ~XHCI_PS_PLS_MASK;
 		p->portsc |= XHCI_PS_PLS_SET(UPS_PORT_LS_RESUME);
 		if ((p->portsc & XHCI_PS_PLC) != 0)
-			return 0;
+			goto out;
 
 		p->portsc |= XHCI_PS_PLC;
 
 		pci_xhci_set_evtrb(&evtrb, hci->hci_port,
 				   XHCI_TRB_ERROR_SUCCESS,
 				   XHCI_TRB_EVENT_PORT_STS_CHANGE);
+
 		if (pci_xhci_insert_event(xdev, &evtrb, 0) != 0) {
 			UPRINTF(LFTL, "Failed to inject port status change event!\r\n");
-			return -ENAVAIL;
+			ret = -ENAVAIL;
+			goto out;
 		}
 	}
 
@@ -4048,14 +4092,15 @@ pci_xhci_dev_intr(struct usb_hci *hci, int epctx)
 	if ((ep_ctx->dwEpCtx0 & 0x7) == XHCI_ST_EPCTX_DISABLED) {
 		UPRINTF(LWRN, "device interrupt on disabled endpoint %d\r\n",
 			 epid);
-		return 0;
+		goto out;
 	}
 
 	UPRINTF(LDBG, "device interrupt on endpoint %d\r\n", epid);
-
 	pci_xhci_device_doorbell(xdev, hci->hci_port, epid, 0);
 
-	return 0;
+out:
+	pthread_mutex_unlock(&xdev->mtx);
+	return ret;
 }
 
 static int
@@ -4418,6 +4463,55 @@ pci_xhci_isoc_handler(void *arg, uint64_t param)
 				? "under" : "over", pdata->slot, pdata->epnum);
 }
 
+static void
+pci_xhci_async_enqueue(struct pci_xhci_vdev *xdev, uint64_t offset, uint64_t value)
+{
+	struct pci_xhci_async_request_node *request;
+
+	request = malloc(sizeof(struct pci_xhci_async_request_node));
+	if (request == NULL) {
+		UPRINTF(LFTL, "%s: malloc memory fail\r\n", __func__);
+		return;
+	}
+	request->offset = offset;
+	request->value = value;
+
+	pthread_mutex_lock(&xdev->async_tmx);
+	if (STAILQ_EMPTY(&xdev->async_head)) {
+		STAILQ_INSERT_HEAD(&xdev->async_head, request, link);
+	} else {
+		STAILQ_INSERT_TAIL(&xdev->async_head, request, link);
+	}
+	pthread_cond_signal(&xdev->async_cond);
+	pthread_mutex_unlock(&xdev->async_tmx);
+}
+
+static void *
+pci_xhci_ansyc_thread(void *data)
+{
+	struct pci_xhci_vdev *xdev;
+	struct pci_xhci_async_request_node *request;
+
+	xdev = data;
+	pthread_mutex_lock(&xdev->async_tmx);
+	while (xdev->async_transfer || !STAILQ_EMPTY(&xdev->async_head)) {
+		if(STAILQ_EMPTY(&xdev->async_head))
+			pthread_cond_wait(&xdev->async_cond, &xdev->async_tmx);
+		if ((request = STAILQ_FIRST(&xdev->async_head)) == NULL) {
+			continue;
+		}
+		pthread_mutex_unlock(&xdev->async_tmx);
+		pthread_mutex_lock(&xdev->mtx);
+		pci_xhci_dbregs_write(xdev, request->offset, request->value);
+		pthread_mutex_unlock(&xdev->mtx);
+		pthread_mutex_lock(&xdev->async_tmx);
+		STAILQ_REMOVE_HEAD(&xdev->async_head, link);
+		free(request);
+	}
+	pthread_mutex_unlock(&xdev->async_tmx);
+	return NULL;
+}
+
 static int
 pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
@@ -4548,6 +4642,15 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (error)
 		goto done;
 
+	xdev->async_transfer = true;
+	pthread_cond_init(&xdev->async_cond, NULL);
+	pthread_mutex_init(&xdev->async_tmx, NULL);
+	STAILQ_INIT(&xdev->async_head);
+	error = pthread_create(&xdev->async_thread, NULL, pci_xhci_ansyc_thread,
+			(void *)xdev);
+	if (error)
+		goto done;
+
 	xhci_in_use = 1;
 done:
 	if (error) {
@@ -4602,6 +4705,14 @@ pci_xhci_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	sem_post(&xdev->vbdp_sem);
 	pthread_join(xdev->vbdp_thread, NULL);
 	sem_close(&xdev->vbdp_sem);
+
+	pthread_mutex_lock(&xdev->async_tmx);
+	xdev->async_transfer = false;
+	pthread_cond_signal(&xdev->async_cond);
+	pthread_mutex_unlock(&xdev->async_tmx);
+	pthread_join(xdev->async_thread, NULL);
+	pthread_cond_destroy(&xdev->async_cond);
+	pthread_mutex_destroy(&xdev->async_tmx);
 
 	pthread_mutex_destroy(&xdev->mtx);
 	free(xdev);
