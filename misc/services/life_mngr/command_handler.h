@@ -30,7 +30,10 @@ int socket_req_user_vm_shutdown_handler(void *arg, int fd);
  */
 int socket_req_user_vm_reboot_handler(void *arg, int fd);
 
-int socket_req_system_reboot_handler(void *arg, int fd);
+/**
+ * @brief The handler of request system reboot command on socket in user VM
+ */
+int socket_req_system_reboot_user_vm_handler(void *arg, int fd);
 /**
  * @brief The handler of request system shutdown command on socket in user VM
  */
@@ -109,7 +112,7 @@ int acked_sync_handler(void *arg, int fd);
  * @param fd the file directory of the uart which receives message
  * @return indicate this command is handled successful or not
  */
-int acked_req_shutdown_handler(void *arg, int fd);
+int acked_req_shutdown_reboot_handler(void *arg, int fd);
 /**
  * @brief The handler of poweroff command of lifecycle manager in user VM
  *
