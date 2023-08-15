@@ -98,7 +98,7 @@ int init_socket_server_and_shutdown_commands(bool service_vm)
 	} else {
 		register_command_handler(socket_req_system_shutdown_user_vm_handler,
 						sock_server, REQ_SYS_SHUTDOWN);
-		register_command_handler(socket_req_system_reboot_handler,
+		register_command_handler(socket_req_system_reboot_user_vm_handler,
 						sock_server, REQ_SYS_REBOOT);
 	}
 	return ret;
@@ -133,7 +133,8 @@ int init_uart_channel_devs_and_shutdown_commands(bool service_vm, char *uart_dev
 		register_command_handler(poweroff_cmd_handler, channel, POWEROFF_CMD);
 		register_command_handler(user_vm_shutdown_cmd_handler, channel, USER_VM_SHUTDOWN);
 		register_command_handler(user_vm_reboot_cmd_handler, channel, USER_VM_REBOOT);
-		register_command_handler(acked_req_shutdown_handler, channel, ACK_REQ_SYS_SHUTDOWN);
+		register_command_handler(acked_req_shutdown_reboot_handler, channel, ACK_REQ_SYS_SHUTDOWN);
+		register_command_handler(acked_req_shutdown_reboot_handler, channel, ACK_REQ_SYS_REBOOT);
 		register_command_handler(ack_timeout_default_handler, channel, ACK_TIMEOUT);
 
 		c_dev = create_uart_channel_dev(channel, uart_dev_name, monitor_cmd_dispatch);

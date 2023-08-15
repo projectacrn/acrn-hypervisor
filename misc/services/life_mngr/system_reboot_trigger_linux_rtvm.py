@@ -11,7 +11,7 @@ class SocketClient:
         pass
     def connect_to_server(self):
         SOKET_ADDR = '/var/lib/life_mngr/monitor.sock'
-        SHUTDOWN_REQ = 'req_sys_reboot'
+        SYS_REBOOT_REQ = 'req_sys_reboot'
         BUF_LEN = 1024
 
         # unix domain sockets
@@ -21,7 +21,7 @@ class SocketClient:
 
         sock = socket.socket(socket_family, socket_type)
         sock.connect(server_address)
-        sock.sendall(SHUTDOWN_REQ.encode())
+        sock.sendall(SYS_REBOOT_REQ.encode())
         data = sock.recv(BUF_LEN)
         print(f"Waiting for ACK message...: {data.decode()}")
         sock.close()
