@@ -86,7 +86,7 @@ static void reserve_ept_bitmap(void)
 	bitmap_size = (get_ept_page_num() * CONFIG_MAX_VM_NUM) / 8;
 	bitmap_offset = get_ept_page_num() / 8;
 
-	bitmap_base = e820_alloc_memory(bitmap_size, ~0UL);
+	bitmap_base = e820_alloc_memory(bitmap_size, MEM_SIZE_MAX);
 	set_paging_supervisor(bitmap_base, bitmap_size);
 
 	for(i = 0; i < CONFIG_MAX_VM_NUM; i++){
@@ -103,7 +103,7 @@ void reserve_buffer_for_ept_pages(void)
 	uint16_t vm_id;
 	uint32_t offset = 0U;
 
-	page_base = e820_alloc_memory(get_total_ept_4k_pages_size(), ~0UL);
+	page_base = e820_alloc_memory(get_total_ept_4k_pages_size(), MEM_SIZE_MAX);
 	set_paging_supervisor(page_base, get_total_ept_4k_pages_size());
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		ept_pages[vm_id] = (struct page *)(void *)(page_base + offset);

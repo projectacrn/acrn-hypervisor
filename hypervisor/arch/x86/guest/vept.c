@@ -51,12 +51,12 @@ static void init_vept_pool(void)
 {
 	uint64_t page_base;
 
-	page_base = e820_alloc_memory(calc_sept_size(), ~0UL);
+	page_base = e820_alloc_memory(calc_sept_size(), MEM_SIZE_MAX);
 
 	set_paging_supervisor(page_base, calc_sept_size());
 
 	sept_pages = (struct page *)page_base;
-	sept_page_bitmap = (uint64_t*)e820_alloc_memory((calc_sept_page_num() / 64U), ~0UL);
+	sept_page_bitmap = (uint64_t *)e820_alloc_memory((calc_sept_page_num() / 64U), MEM_SIZE_MAX);
 }
 
 static bool is_present_ept_entry(uint64_t ept_entry)

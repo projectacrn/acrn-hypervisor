@@ -18,6 +18,8 @@
 
 #define E820_MAX_ENTRIES	64U
 
+#define MEM_SIZE_MAX (~0UL)
+
 /** Defines a single entry in an E820 memory map. */
 struct e820_entry {
    /** The base address of the memory range. */
