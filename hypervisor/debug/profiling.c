@@ -303,7 +303,6 @@ static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
  */
 static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 {
-	uint64_t i;
 	uint32_t remaining_space = 0U;
 	int32_t 	ret = 0;
 	struct data_header pkt_header;
@@ -380,13 +379,8 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 				return 0;
 			}
 
-			for (i = 0U; i < (((DATA_HEADER_SIZE - 1U) / SEP_BUF_ENTRY_SIZE) + 1U); i++) {
-				(void)sbuf_put(sbuf, (uint8_t *)&pkt_header + i * SEP_BUF_ENTRY_SIZE);
-			}
-
-			for (i = 0U; i < (((payload_size - 1U) / SEP_BUF_ENTRY_SIZE) + 1U); i++) {
-				(void)sbuf_put(sbuf, (uint8_t *)payload + i * SEP_BUF_ENTRY_SIZE);
-			}
+			(void)sbuf_put_many(sbuf, SEP_BUF_ENTRY_SIZE, (uint8_t *)&pkt_header, sizeof(pkt_header));
+			(void)sbuf_put_many(sbuf, SEP_BUF_ENTRY_SIZE, (uint8_t *)payload, payload_size);
 
 			ss->samples_logged++;
 		}

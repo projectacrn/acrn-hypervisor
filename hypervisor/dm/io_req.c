@@ -176,7 +176,7 @@ static int acrn_insert_asyncio(struct acrn_vcpu *vcpu, const uint64_t asyncio_fd
 
 	if (sbuf != NULL) {
 		spinlock_obtain(&vm->asyncio_lock);
-		while (sbuf_put(sbuf, (uint8_t *)&asyncio_fd) == 0U) {
+		while (sbuf_put(sbuf, (uint8_t *)&asyncio_fd, sizeof(asyncio_fd)) == 0U) {
 			/* sbuf is full, try later.. */
 			spinlock_release(&vm->asyncio_lock);
 			asm_pause();

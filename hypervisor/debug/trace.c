@@ -56,7 +56,7 @@ static inline void trace_put(uint16_t cpu_id, uint32_t evid, uint32_t n_data, st
 	entry->id = evid;
 	entry->n_data = (uint8_t)n_data;
 	entry->cpu = (uint8_t)cpu_id;
-	(void)sbuf_put(sbuf, (uint8_t *)entry);
+	(void)sbuf_put(sbuf, (uint8_t *)entry, sizeof(*entry));
 }
 
 void TRACE_2L(uint32_t evid, uint64_t e, uint64_t f)
