@@ -91,18 +91,14 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 
 	/* Check whether output to memory */
 	if (do_mem_log) {
-		uint32_t i, msg_len;
+		uint32_t msg_len;
 		struct shared_buf *sbuf = per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
 
 		/* If sbuf is not ready, we just drop the massage */
 		if (sbuf != NULL) {
 			msg_len = strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE);
-
-			for (i = 0U; i < (((msg_len - 1U) / LOG_ENTRY_SIZE) + 1U);
-					i++) {
-				(void)sbuf_put(sbuf, (uint8_t *)buffer +
-							(i * LOG_ENTRY_SIZE));
-			}
+			(void)sbuf_put_many(sbuf, LOG_ENTRY_SIZE, (uint8_t *)buffer,
+				LOG_ENTRY_SIZE * (((msg_len - 1U) / LOG_ENTRY_SIZE) + 1));
 		}
 	}
 }

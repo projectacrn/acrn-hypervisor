@@ -37,7 +37,7 @@ int32_t send_vm_event(struct acrn_vm *vm, struct vm_event *event)
 
 	if (sbuf != NULL) {
 		spinlock_obtain(&vm->vm_event_lock);
-		size_sent = sbuf_put(sbuf, (uint8_t *)event);
+		size_sent = sbuf_put(sbuf, (uint8_t *)event, sizeof(*event));
 		spinlock_release(&vm->vm_event_lock);
 		if (size_sent == sizeof(struct vm_event)) {
 			arch_fire_hsm_interrupt();

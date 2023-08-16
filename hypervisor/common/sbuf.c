@@ -27,8 +27,13 @@ uint32_t sbuf_next_ptr(uint32_t pos_arg,
 
 /**
  * The high caller should guarantee each time there must have
- * sbuf->ele_size data can be write form data and this function
- * should guarantee execution atomically.
+ * sbuf->ele_size data can be write form data.
+ *
+ * As sbuf->ele_size is possibly setup by some sources outside of the
+ * HV (e.g. the service VM), it is not meant to be trusted. So caller
+ * should provide the max length of the data for safety reason.
+ *
+ * And this function should guarantee execution atomically.
  *
  * flag:
  * If OVERWRITE_EN set, buf can store (ele_num - 1) elements at most.
@@ -40,23 +45,24 @@ uint32_t sbuf_next_ptr(uint32_t pos_arg,
  * return:
  * ele_size:	write succeeded.
  * 0:		no write, buf is full
- * negative:	failed.
+ * UINT32_MAX:	failed, sbuf corrupted.
  */
 
-uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
+uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data, uint32_t max_len)
 {
 	void *to;
 	uint32_t next_tail;
-	uint32_t ele_size;
+	uint32_t ele_size, ret;
 	bool trigger_overwrite = false;
 
 	stac();
-	next_tail = sbuf_next_ptr(sbuf->tail, sbuf->ele_size, sbuf->size);
+	ele_size = sbuf->ele_size;
+	next_tail = sbuf_next_ptr(sbuf->tail, ele_size, sbuf->size);
 
 	if ((next_tail == sbuf->head) && ((sbuf->flags & OVERWRITE_EN) == 0U)) {
 		/* if overrun is not enabled, return 0 directly */
-		ele_size = 0U;
-	} else {
+		ret = 0U;
+	} else if (ele_size <= max_len) {
 		if (next_tail == sbuf->head) {
 			/* accumulate overrun count if necessary */
 			sbuf->overrun_cnt += sbuf->flags & OVERRUN_CNT_EN;
@@ -64,20 +70,23 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 		}
 		to = (void *)sbuf + SBUF_HEAD_SIZE + sbuf->tail;
 
-		(void)memcpy_s(to, sbuf->ele_size, data, sbuf->ele_size);
+		(void)memcpy_s(to, ele_size, data, max_len);
 		/* make sure write data before update head */
 		cpu_write_memory_barrier();
 
 		if (trigger_overwrite) {
 			sbuf->head = sbuf_next_ptr(sbuf->head,
-					sbuf->ele_size, sbuf->size);
+					ele_size, sbuf->size);
 		}
 		sbuf->tail = next_tail;
-		ele_size = sbuf->ele_size;
+		ret = ele_size;
+	} else {
+		/* there must be something wrong */
+		ret = UINT32_MAX;
 	}
 	clac();
 
-	return ele_size;
+	return ret;
 }
 
 int32_t sbuf_setup_common(struct acrn_vm *vm, uint16_t cpu_id, uint32_t sbuf_id, uint64_t *hva)
@@ -103,4 +112,30 @@ int32_t sbuf_setup_common(struct acrn_vm *vm, uint16_t cpu_id, uint32_t sbuf_id,
 	}
 
 	return ret;
+}
+
+/* try put a batch of elememts from data to sbuf
+ * data_size should be equel to n*elem_size, data not enough to fill the elem_size will be ignored.
+ *
+ * return:
+ * elem_size * n:   bytes put in sbuf
+ * UINT32_MAX:	failed, sbuf corrupted.
+ */
+uint32_t sbuf_put_many(struct shared_buf *sbuf, uint32_t elem_size, uint8_t *data, uint32_t data_size)
+{
+	uint32_t ret, sent = 0U;
+	uint32_t i;
+
+	for (i = 0U; i < (data_size / elem_size); i++) {
+		ret = sbuf_put(sbuf, data + i * elem_size, elem_size);
+		if (ret == elem_size) {
+			sent += ret;
+		} else {
+			if (ret == UINT32_MAX) {
+				sent = UINT32_MAX;
+			}
+			break;
+		}
+	}
+	return sent;
 }
