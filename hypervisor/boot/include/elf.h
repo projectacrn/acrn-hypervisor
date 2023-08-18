@@ -137,8 +137,8 @@ struct elf32_prog_entry
 	uint32_t p_offset;	/* Offset in file */
 	uint32_t p_vaddr;	/* Virtual address in memory */
 	uint32_t p_paddr;	/* Physical address in memory */
-	uint32_t p_filesz;	/* Size of segment in memory */
-	uint32_t p_memsz;	/* Size of segment in file */
+	uint32_t p_filesz;	/* Size of segment in file */
+	uint32_t p_memsz;	/* Size of segment in memory */
 	uint32_t p_flags;	/* Segment attributes */
 	uint32_t p_align;	/* Alignment of segment */
 };
