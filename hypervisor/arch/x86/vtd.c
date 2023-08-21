@@ -119,7 +119,7 @@ enum dmar_iirg_type {
 	DMAR_IIRG_PAGE
 };
 
-/* dmar unit runtime data */
+/* DMAR unit runtime data */
 struct dmar_drhd_rt {
 	uint32_t index;
 	spinlock_t lock;
@@ -258,9 +258,9 @@ static inline void dmar_wait_completion(const struct dmar_drhd_rt *dmar_unit, ui
 	} while( (*status & mask) == pre_condition);
 }
 
-/* Flush CPU cache when root table, context table or second-level translation teable updated
+/* Flush CPU cache when root table, context table or second-level translation table updated
  * In the context of ACRN, GPA to HPA mapping relationship is not changed after VM created,
- * skip flushing iotlb to avoid performance penalty.
+ * skip flushing IOTLB to avoid performance penalty.
  */
 void iommu_flush_cache(const void *p, uint32_t size)
 {
