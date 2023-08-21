@@ -33,8 +33,8 @@
 #define DMAR_PMEN_REG   0x64U    /* Enable Protected Memory Region */
 #define DMAR_PLMBASE_REG 0x68U   /* PMRR Low addr */
 #define DMAR_PLMLIMIT_REG 0x6cU  /* PMRR low limit */
-#define DMAR_PHMBASE_REG 0x70U   /* pmrr high base addr */
-#define DMAR_PHMLIMIT_REG 0x78U  /* pmrr high limit */
+#define DMAR_PHMBASE_REG 0x70U   /* PMRR high base addr */
+#define DMAR_PHMLIMIT_REG 0x78U  /* PMRR high limit */
 #define DMAR_IQH_REG    0x80U    /* Invalidation queue head register */
 #define DMAR_IQT_REG    0x88U    /* Invalidation queue tail register */
 #define DMAR_IQ_SHIFT   4   /* Invalidation queue head/tail shift */
@@ -676,7 +676,7 @@ int32_t init_iommu(void);
  *
  * @param[in] intr_src filled with type of interrupt source and the source
  * @param[in] num number of IRTEs to reserve
- * @param[out] start_id stard index of reserved IRTEs, caller should check the value is INVALID_IRTE_ID or not.
+ * @param[out] start_id start index of reserved IRTEs, caller should check the value is INVALID_IRTE_ID or not.
  *
  * @retval 0 on success, caller should check whether the returned start index is valid or not.
  * @retval -EINVAL if corresponding DMAR is not preset.
@@ -690,11 +690,11 @@ int32_t dmar_reserve_irte(const struct intr_source *intr_src, uint16_t num, uint
  * @brief Assign RTE for Interrupt Remapping Table.
  *
  * @param[in] intr_src filled with type of interrupt source and the source
- * @param[in] irte filled with info about interrupt deliverymode, destination and destination mode
+ * @param[in] irte filled with information about interrupt delivery mode, destination core(s) and destination mode
  * @param[in] idx_in if this value is INVALID_IRTE_ID, a new IRTE will be allocated, otherwise, use the IRTE directly.
  * @param[out] idx_out return the actual IRTE index used, need to check whether the returned value is valid or not.
  *
- * @retval -EINVAL if corresponding DMAR is not preset
+ * @retval -EINVAL if corresponding DMAR is not present
  * @retval 0 on success, caller should check whether the returned start index is valid or not.
  *
  */
@@ -702,7 +702,7 @@ int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry
 	uint16_t idx_in, uint16_t *idx_out);
 
 /**
- * @brief Free RTE for Interrupt Remapping Table.
+ * @brief Free IRTE for Interrupt Remapping Table.
  *
  * @param[in] intr_src filled with type of interrupt source and the source
  * @param[in] index into Interrupt Remapping Table
