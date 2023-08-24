@@ -75,6 +75,16 @@ struct acrn_vm_pci_dev_config *init_one_dev_config(struct pci_pdev *pdev)
 		} else {
 			dev_config->emu_type = PCI_DEV_TYPE_PTDEV;
 		}
+
+		if ((is_allocated_to_hv || is_allocated_to_prelaunched_vm)
+				&& (dev_config == NULL)
+				&& is_pci_cfg_multifunction(pdev->hdr_type)
+				&& (pdev->bdf.bits.f == 0U))
+		{
+			dev_config = &service_vm_config->pci_devs[service_vm_config->pci_dev_num];
+			dev_config->emu_type = PCI_DEV_TYPE_DUMMY_MF_EMUL;
+			dev_config->vdev_ops = &vpci_mf_dev_ops;
+		}
 	}
 
 	if (dev_config != NULL) {
