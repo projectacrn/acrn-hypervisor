@@ -87,6 +87,15 @@
     </xsl:if>
     <xsl:value-of select="$newline"/>
     <xsl:value-of select="$end_of_array_initializer" />
+    <xsl:value-of select="$newline"/>
+    <xsl:choose>
+      <xsl:when test="count(vm[load_order='SERVICE_VM'])">
+        <xsl:value-of select="concat('struct acrn_vm_config *const service_vm_config = &amp;vm_configs[', vm[load_order='SERVICE_VM']/@id, '];')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat('struct acrn_vm_config *const service_vm_config =', ' NULL;')" />
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="vm">
