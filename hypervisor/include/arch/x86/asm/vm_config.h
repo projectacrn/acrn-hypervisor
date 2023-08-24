@@ -29,9 +29,11 @@
 #define SERVICE_VM_IDLE		"idle=halt "
 #endif
 
+#define PCI_DEV_TYPE_NONE		0U
 #define PCI_DEV_TYPE_PTDEV		(1U << 0U)
 #define PCI_DEV_TYPE_HVEMUL		(1U << 1U)
 #define PCI_DEV_TYPE_SERVICE_VM_EMUL	(1U << 2U)
+#define PCI_DEV_TYPE_DUMMY_MF_EMUL	(1U << 3U)
 
 #define MAX_MMIO_DEV_NUM	2U
 

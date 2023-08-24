@@ -315,6 +315,7 @@ VP_DM_C_SRCS += dm/vpci/vpci.c
 VP_DM_C_SRCS += dm/vpci/vhostbridge.c
 VP_DM_C_SRCS += dm/vpci/vroot_port.c
 VP_DM_C_SRCS += dm/vpci/vpci_bridge.c
+VP_DM_C_SRCS += dm/vpci/vpci_mf_dev.c
 VP_DM_C_SRCS += dm/vpci/ivshmem.c
 VP_DM_C_SRCS += dm/vpci/pci_pt.c
 VP_DM_C_SRCS += dm/vpci/vmsi.c
