@@ -217,5 +217,6 @@ uint8_t get_vm_severity(uint16_t vm_id);
 bool vm_has_matched_name(uint16_t vmid, const char *name);
 
 extern struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM];
+extern struct acrn_vm_config *const service_vm_config;
 
 #endif /* VM_CONFIG_H_ */
