@@ -261,6 +261,8 @@ uint64_t find_space_from_ve820(struct acrn_vm *vm, uint32_t size, uint64_t min_a
 
 int32_t prepare_os_image(struct acrn_vm *vm);
 
+void suspend_vrtc(void);
+void resume_vrtc(void);
 void vrtc_init(struct acrn_vm *vm);
 
 bool is_lapic_pt_configured(const struct acrn_vm *vm);

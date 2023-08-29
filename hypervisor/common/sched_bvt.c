@@ -215,6 +215,11 @@ static void sched_bvt_init_data(struct thread_object *obj, struct sched_params *
 	data->residual = 0U;
 }
 
+static void sched_bvt_suspend(struct sched_control *ctl)
+{
+	sched_bvt_deinit(ctl);
+}
+
 static uint64_t v2p(uint64_t virt_time, uint64_t ratio)
 {
 	return (uint64_t)(virt_time / ratio);
@@ -334,4 +339,9 @@ struct acrn_scheduler sched_bvt = {
 	.sleep		= sched_bvt_sleep,
 	.wake		= sched_bvt_wake,
 	.deinit		= sched_bvt_deinit,
+	/* Now suspend is just to do del_timer and add_timer will be delayed to
+	 * shedule after resume.
+	 * So no need to add .resume now.
+	 */
+	.suspend	= sched_bvt_suspend,
 };

@@ -699,6 +699,18 @@ static void vrtc_set_basetime(struct acrn_vrtc *vrtc)
 	spinlock_release(&vrtc_rebase_lock);
 }
 
+void suspend_vrtc(void)
+{
+	/* For service vm */
+	del_timer(&calibrate_timer);
+}
+
+void resume_vrtc(void)
+{
+	/* For service vm */
+	calibrate_setup_timer();
+}
+
 void vrtc_init(struct acrn_vm *vm)
 {
 	struct vm_io_range range = {

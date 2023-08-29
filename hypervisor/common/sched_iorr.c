@@ -101,19 +101,11 @@ static void sched_tick_handler(void *param)
 	release_schedule_lock(pcpu_id, rflags);
 }
 
-/*
- * @pre ctl->pcpu_id == get_pcpu_id()
- */
-int sched_iorr_init(struct sched_control *ctl)
+int sched_iorr_add_timer(struct sched_control *ctl)
 {
 	struct sched_iorr_control *iorr_ctl = &per_cpu(sched_iorr_ctl, ctl->pcpu_id);
 	uint64_t tick_period = TICKS_PER_MS;
 	int ret = 0;
-
-	ASSERT(get_pcpu_id() == ctl->pcpu_id, "Init scheduler on wrong CPU!");
-
-	ctl->priv = iorr_ctl;
-	INIT_LIST_HEAD(&iorr_ctl->runqueue);
 
 	/* The tick_timer is periodically */
 	initialize_timer(&iorr_ctl->tick_timer, sched_tick_handler, ctl,
@@ -126,10 +118,39 @@ int sched_iorr_init(struct sched_control *ctl)
 	return ret;
 }
 
-void sched_iorr_deinit(struct sched_control *ctl)
+static int sched_iorr_del_timer(struct sched_control *ctl)
 {
 	struct sched_iorr_control *iorr_ctl = (struct sched_iorr_control *)ctl->priv;
 	del_timer(&iorr_ctl->tick_timer);
+}
+
+/*
+ * @pre ctl->pcpu_id == get_pcpu_id()
+ */
+int sched_iorr_init(struct sched_control *ctl)
+{
+	struct sched_iorr_control *iorr_ctl = &per_cpu(sched_iorr_ctl, ctl->pcpu_id);
+
+	ASSERT(get_pcpu_id() == ctl->pcpu_id, "Init scheduler on wrong CPU!");
+
+	ctl->priv = iorr_ctl;
+	INIT_LIST_HEAD(&iorr_ctl->runqueue);
+	return sched_iorr_add_timer(ctl);
+}
+
+void sched_iorr_deinit(struct sched_control *ctl)
+{
+	sched_iorr_del_timer(ctl);
+}
+
+static void sched_iorr_suspend(struct sched_control *ctl)
+{
+	sched_iorr_del_timer(ctl);
+}
+
+static void sched_iorr_resume(struct sched_control *ctl)
+{
+	sched_iorr_add_timer(ctl);
 }
 
 void sched_iorr_init_data(struct thread_object *obj, __unused struct sched_params * params)
@@ -201,4 +222,6 @@ struct acrn_scheduler sched_iorr = {
 	.sleep		= sched_iorr_sleep,
 	.wake		= sched_iorr_wake,
 	.deinit		= sched_iorr_deinit,
+	.suspend	= sched_iorr_suspend,
+	.resume		= sched_iorr_resume,
 };
