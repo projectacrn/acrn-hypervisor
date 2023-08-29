@@ -98,6 +98,24 @@ void deinit_sched(uint16_t pcpu_id)
 	}
 }
 
+void suspend_sched(void)
+{
+	struct sched_control *ctl = &per_cpu(sched_ctl, BSP_CPU_ID);
+
+	if (ctl->scheduler->suspend != NULL) {
+		ctl->scheduler->suspend(ctl);
+	}
+}
+
+void resume_sched(void)
+{
+	struct sched_control *ctl = &per_cpu(sched_ctl, BSP_CPU_ID);
+
+	if (ctl->scheduler->resume != NULL) {
+		ctl->scheduler->resume(ctl);
+	}
+}
+
 void init_thread_data(struct thread_object *obj, struct sched_params *params)
 {
 	struct acrn_scheduler *scheduler = get_scheduler(obj->pcpu_id);

@@ -99,6 +99,10 @@ struct acrn_scheduler {
 	void	(*deinit_data)(struct thread_object *obj);
 	/* deinit scheduler */
 	void	(*deinit)(struct sched_control *ctl);
+	/* suspend scheduler */
+	void	(*suspend)(struct sched_control *ctl);
+	/* resume scheduler */
+	void	(*resume)(struct sched_control *ctl);
 };
 extern struct acrn_scheduler sched_noop;
 extern struct acrn_scheduler sched_iorr;
@@ -131,6 +135,8 @@ struct thread_object *sched_get_current(uint16_t pcpu_id);
 
 void init_sched(uint16_t pcpu_id);
 void deinit_sched(uint16_t pcpu_id);
+void suspend_sched(void);
+void resume_sched(void);
 void obtain_schedule_lock(uint16_t pcpu_id, uint64_t *rflag);
 void release_schedule_lock(uint16_t pcpu_id, uint64_t rflag);
 

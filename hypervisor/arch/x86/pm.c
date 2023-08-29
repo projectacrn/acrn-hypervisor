@@ -207,6 +207,8 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	vmx_off();
 
 	suspend_console();
+	suspend_vrtc();
+	suspend_sched();
 	suspend_ioapic();
 	suspend_iommu();
 	suspend_lapic();
@@ -237,6 +239,8 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	smp_call_function(get_active_pcpu_bitmap(), resume_tsc, NULL);
 
 	/* console must be resumed after TSC restored since it will setup timer base on TSC */
+	resume_sched();
+	resume_vrtc();
 	resume_console();
 }
 
