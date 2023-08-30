@@ -90,6 +90,17 @@ void vcpu_inject_ud(struct acrn_vcpu *vcpu);
  * @pre vcpu != NULL
  */
 void vcpu_inject_ss(struct acrn_vcpu *vcpu);
+
+/**
+ * @brief Inject thermal sensor interrupt to guest.
+ *
+ * @param[in] vcpu Pointer to vCPU.
+ *
+ * @return None
+ *
+ * @pre vcpu != NULL
+ */
+void vcpu_inject_thermal_interrupt(struct acrn_vcpu *vcpu);
 void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid);
 
 /*

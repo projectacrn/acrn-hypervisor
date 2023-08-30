@@ -37,6 +37,7 @@
 #include <asm/tsc.h>
 #include <ticks.h>
 #include <delay.h>
+#include <thermal.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
@@ -268,6 +269,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 		init_interrupt(BSP_CPU_ID);
 
 		timer_init();
+		thermal_init();
 		setup_notification();
 		setup_pi_notification();
 
@@ -309,6 +311,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 		init_interrupt(pcpu_id);
 
 		timer_init();
+		thermal_init();
 		ptdev_init();
 	}
 

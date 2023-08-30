@@ -589,6 +589,12 @@ static inline void cpu_memory_barrier(void)
 	asm volatile ("mfence\n" : : : "memory");
 }
 
+/* Prevents compilers from reordering read/write access across this barrier */
+static inline void cpu_compiler_barrier(void)
+{
+	asm volatile ("" : : : "memory");
+}
+
 static inline void invlpg(unsigned long addr)
 {
 	asm volatile("invlpg (%0)" ::"r" (addr) : "memory");

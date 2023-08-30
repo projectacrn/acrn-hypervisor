@@ -302,6 +302,14 @@ void vcpu_inject_ss(struct acrn_vcpu *vcpu)
 	(void)vcpu_queue_exception(vcpu, IDT_SS, 0);
 }
 
+/* Inject thermal sensor interrupt to guest */
+void vcpu_inject_thermal_interrupt(struct acrn_vcpu *vcpu)
+{
+	if (is_vtm_configured(vcpu->vm)) {
+		(void)vlapic_set_local_intr(vcpu->vm, vcpu->vcpu_id, APIC_LVT_THERMAL);
+	};
+}
+
 int32_t interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	TRACE_2L(TRACE_VMEXIT_INTERRUPT_WINDOW, 0UL, 0UL);
