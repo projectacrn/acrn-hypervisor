@@ -32,6 +32,7 @@ static struct {
 	uint32_t vector;
 } irq_static_mappings[NR_STATIC_MAPPINGS] = {
 	{TIMER_IRQ, TIMER_VECTOR},
+	{THERMAL_IRQ, THERMAL_VECTOR},
 	{NOTIFY_VCPU_IRQ, NOTIFY_VCPU_VECTOR},
 	{PMI_IRQ, PMI_VECTOR},
 

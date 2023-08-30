@@ -573,6 +573,16 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		vcpu->arch.vpid = ALLOCATED_MIN_L1_VPID + (vm->vm_id * MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
 
 		/*
+		 * There are two locally independent writing operations, namely the
+		 * assignment of vcpu->vm and vcpu_array[]. Compilers may optimize
+		 * and reorder writing operations while users of vcpu_array[] may
+		 * assume the presence of vcpu->vm. A compiler barrier is added here
+		 * to prevent compiler reordering, ensuring that assignments to
+		 * vcpu->vm precede vcpu_array[].
+		 */
+		cpu_compiler_barrier();
+
+		/*
 		 * ACRN uses the following approach to manage VT-d PI notification vectors:
 		 * Allocate unique Activation Notification Vectors (ANV) for each vCPU that
 		 * belongs to the same pCPU, the ANVs need only be unique within each pCPU,

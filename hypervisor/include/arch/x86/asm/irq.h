@@ -22,7 +22,7 @@
 #define VECTOR_INVALID		(NR_MAX_VECTOR + 1U)
 
 /* # of NR_STATIC_MAPPINGS_1 entries for timer, vcpu notify, and PMI */
-#define NR_STATIC_MAPPINGS_1	3U
+#define NR_STATIC_MAPPINGS_1	4U
 
 /*
  * The static IRQ/Vector mapping table in irq.c consists of the following entries:
@@ -53,6 +53,7 @@
 #define TIMER_VECTOR		(VECTOR_FIXED_START)
 #define NOTIFY_VCPU_VECTOR	(VECTOR_FIXED_START + 1U)
 #define PMI_VECTOR		(VECTOR_FIXED_START + 2U)
+#define THERMAL_VECTOR		(VECTOR_FIXED_START + 3U)
 /*
  * Starting vector for posted interrupts
  * # of CONFIG_MAX_VM_NUM (POSTED_INTR_VECTOR ~ (POSTED_INTR_VECTOR + CONFIG_MAX_VM_NUM - 1U))
@@ -63,6 +64,7 @@
 #define TIMER_IRQ		(NR_IRQS - 1U)
 #define NOTIFY_VCPU_IRQ		(NR_IRQS - 2U)
 #define PMI_IRQ			(NR_IRQS - 3U)
+#define THERMAL_IRQ		(NR_IRQS - 4U)
 /*
  * Starting IRQ for posted interrupts
  * # of CONFIG_MAX_VM_NUM (POSTED_INTR_IRQ ~ (POSTED_INTR_IRQ + CONFIG_MAX_VM_NUM - 1U))
