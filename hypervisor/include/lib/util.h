@@ -22,6 +22,9 @@
 
 #define max(x, y)	(((x) < (y)) ? (y) : (x))
 
+/** return a value of v clamped to the range [l, h] */
+#define clamp(v, l, h)	(max(min((v), (h)), (l)))
+
 /** Replaces 'x' by the string "x". */
 #define STRINGIFY(x) #x
 
