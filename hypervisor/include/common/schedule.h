@@ -42,6 +42,12 @@ enum thread_priority {
  */
 struct sched_params {
 	uint32_t prio;		/* The priority of a thread */
+
+	/* per thread parameters for bvt scheduler */
+	uint8_t bvt_weight;	/* the weight of a thread */
+	int32_t bvt_warp_value; /* the warp reduce effective VT to boost priority */
+	uint32_t bvt_warp_limit;	/* max time in one warp */
+	uint32_t bvt_unwarp_period;	/* min unwarp time after a warp */
 };
 
 struct thread_object;

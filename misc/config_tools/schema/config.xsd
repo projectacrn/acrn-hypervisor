@@ -442,6 +442,62 @@ These settings can only be changed at build time.</xs:documentation>
         <xs:documentation>Specify the VM vCPU priority for scheduling.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="bvt_weight" default="1">
+      <xs:annotation acrn:views="advanced">
+        <xs:documentation>Specify the VM vCPU weight for scheduling.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+         <xs:annotation>
+           <xs:documentation>Integer from 1 to 128.</xs:documentation>
+         </xs:annotation>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="1" />
+          <xs:maxInclusive value="128" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
+    <xs:element name="bvt_warp_value" default="0">
+      <xs:annotation acrn:views="">
+        <xs:documentation>Specify the VM vCPU warp in MCU (minimum charging unit, i.e. tick period) to prioritize them.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+         <xs:annotation>
+           <xs:documentation>Integer from -8192 to 8192.</xs:documentation>
+         </xs:annotation>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="-8192" />
+          <xs:maxInclusive value="8192" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
+    <xs:element name="bvt_warp_limit" default="0">
+      <xs:annotation acrn:views="">
+        <xs:documentation>Specify the VM vCPU warp limit time in MCU (minimum charging unit, i.e. tick period) to prevent starving non-warpped threads.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+         <xs:annotation>
+           <xs:documentation>Integer from 0 to 10.</xs:documentation>
+         </xs:annotation>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="0" />
+          <xs:maxInclusive value="10" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
+    <xs:element name="bvt_unwarp_period" default="0">
+      <xs:annotation acrn:views="">
+        <xs:documentation>Specify the VM vCPU unwarp period in MCU (minimum charging unit, i.e. tick period) after a warp.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+         <xs:annotation>
+           <xs:documentation>Integer from 0 to 10.</xs:documentation>
+         </xs:annotation>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="0" />
+          <xs:maxInclusive value="10" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
     <xs:element name="companion_vmid" type="xs:integer" default="65535">
       <xs:annotation acrn:views="">
         <xs:documentation>Specify the companion VM id of this VM.</xs:documentation>
