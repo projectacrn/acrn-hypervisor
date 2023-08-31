@@ -9,18 +9,49 @@
 #include <schedule.h>
 #include <ticks.h>
 
-#define BVT_MCU_MS	1U
+#define BVT_MCU_MS		1U
 /* context switch allowance */
-#define BVT_CSA_MCU 5U
+#define BVT_CSA_MCU		5U
+
+/*
+ * limit the weight range to [1, 128]. It's enough to allocate CPU resources
+ * for different types of vCPUs
+ */
+#define BVT_WEIGHT_MIN		1U
+#define BVT_WEIGHT_MAX		128U
+
+/*
+ * the VT (Virtual Time) ratio is proportional to 1 / weight and making the VT
+ * ratio an integer will ease translation between virtual time and physical
+ * time.
+ * Max (theoretical VT ratio - actual VT ratio) is
+ *   1 (< 1 because of integer round down).
+ * The minimum total VT ratios of VCPUs (at least two) is
+ *   2 * 8 (Min per-vcpu VT ratio)
+ * So the max VT ratio share error is about 1/16.
+ * To reduce it, we can enlarge the BVT_VT_RATIO_MIN.
+ * However increasing VT ratio will reduce the total time needed to overflow
+ * AVT. AVT is of type int64_t. The max VT ratio is 1024. MCU is 1 ms.
+ * So the time to overflow AVT is about:
+ *   2^63  / (1024 * 1000) s, i.e. ~= 9 * 10^12(s) ~= 10^8 day
+ * It's so large that we can ignore the AVT overflow case.
+ */
+#define BVT_VT_RATIO_MIN	8U
+#define BVT_VT_RATIO_MAX	(BVT_WEIGHT_MAX * BVT_VT_RATIO_MIN / BVT_WEIGHT_MIN)
+
 struct sched_bvt_data {
 	/* keep list as the first item */
 	struct list_head list;
 	/* minimum charging unit in cycles */
 	uint64_t mcu;
 	/* a thread receives a share of cpu in proportion to its weight */
-	uint16_t weight;
+	uint8_t weight;
 	/* virtual time advance variable, proportional to 1 / weight */
 	uint64_t vt_ratio;
+	bool warp_on;
+	int32_t warp_value;
+	uint32_t warp_limit;
+	uint32_t unwarp_period;
 	/* actual virtual time in units of mcu */
 	int64_t avt;
 	/* effective virtual time in units of mcu */
@@ -168,15 +199,19 @@ static void sched_bvt_deinit(struct sched_control *ctl)
 	del_timer(&bvt_ctl->tick_timer);
 }
 
-static void sched_bvt_init_data(struct thread_object *obj, __unused struct sched_params * params)
+static void sched_bvt_init_data(struct thread_object *obj, struct sched_params * params)
 {
 	struct sched_bvt_data *data;
 
 	data = (struct sched_bvt_data *)obj->data;
 	INIT_LIST_HEAD(&data->list);
 	data->mcu = BVT_MCU_MS * TICKS_PER_MS;
-	/* TODO: virtual time advance ratio should be proportional to weight. */
-	data->vt_ratio = 1U;
+	data->weight = clamp(params->bvt_weight, BVT_WEIGHT_MIN, BVT_WEIGHT_MAX);
+	data->warp_value = params->bvt_warp_value;
+	data->warp_limit = params->bvt_warp_limit;
+	data->unwarp_period = params->bvt_unwarp_period;
+	data->warp_on = false;	/* warp disabled by default */
+	data->vt_ratio = BVT_VT_RATIO_MAX / data->weight;
 	data->residual = 0U;
 }
 
