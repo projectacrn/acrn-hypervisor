@@ -121,6 +121,7 @@ struct blockif_queue {
 	int			in_flight;
 	struct io_uring		ring;
 	struct iothread_mevent	iomvt;
+	struct iothread_ctx	*ioctx;
 
 	struct blockif_ctxt	*bc;
 };
@@ -739,7 +740,7 @@ iou_set_iothread(struct blockif_queue *bq)
 	bq->iomvt.run = iou_completion_cb;
 	bq->iomvt.fd = fd;
 
-	ret = iothread_add(fd, &bq->iomvt);
+	ret = iothread_add(bq->ioctx, fd, &bq->iomvt);
 	if (ret < 0) {
 		pr_err("%s: iothread_add fails, error %d \n", __func__, ret);
 	}
@@ -752,7 +753,7 @@ iou_del_iothread(struct blockif_queue *bq)
 	int fd = bq->ring.ring_fd;
 	int ret = 0;
 
-	ret = iothread_del(fd);
+	ret = iothread_del(bq->ioctx, fd);
 	if (ret < 0) {
 		pr_err("%s: iothread_del fails, error %d \n", __func__, ret);
 	}
@@ -810,7 +811,7 @@ static struct blockif_ops blockif_ops_iou = {
 };
 
 struct blockif_ctxt *
-blockif_open(const char *optstr, const char *ident, int queue_num)
+blockif_open(const char *optstr, const char *ident, int queue_num, struct iothreads_info *iothrds_info)
 {
 	char tag[MAXCOMLEN + 1];
 	char *nopt, *xopts, *cp;
@@ -1097,6 +1098,13 @@ blockif_open(const char *optstr, const char *ident, int queue_num)
 		struct blockif_queue *bq = bc->bqs + j;
 
 		bq->bc = bc;
+
+		if ((iothrds_info != NULL) && (iothrds_info->ioctx_base != NULL) && (iothrds_info->num != 0)) {
+			bq->ioctx = iothrds_info->ioctx_base + j % iothrds_info->num;
+		} else {
+			bq->ioctx = NULL;
+		}
+
 		pthread_mutex_init(&bq->mtx, NULL);
 		pthread_cond_init(&bq->cond, NULL);
 		TAILQ_INIT(&bq->freeq);

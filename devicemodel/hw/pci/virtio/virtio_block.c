@@ -164,6 +164,7 @@ struct virtio_blk {
 	struct virtio_blk_ioreq *ios;
 	uint8_t original_wce;
 	int num_vqs;
+	struct iothreads_info iothrds_info;
 };
 
 static void virtio_blk_reset(void *);
@@ -475,7 +476,9 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	u_char digest[16];
 	struct virtio_blk *blk;
 	bool use_iothread;
-	int num_vqs;
+	struct iothread_ctx *ioctx_base = NULL;
+	struct iothreads_info iothrds_info;
+	int num_vqs, num_iothread;
 	int i, j;
 	pthread_mutexattr_t attr;
 	int rc;
@@ -485,6 +488,11 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	dummy_bctxt = false;
 	use_iothread = false;
 	num_vqs = 1;
+
+	/*
+	 * Create one iothread instance if DM parameters contain 'iothread', but the number is not specified.
+	 */
+	num_iothread = 1;
 
 	if (opts == NULL) {
 		pr_err("virtio_blk: backing device required\n");
@@ -518,8 +526,29 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		char *p = opts_start;
 		while (opts_tmp != NULL) {
 			opt = strsep(&opts_tmp, ",");
-			if (strcmp("iothread", opt) == 0) {
+			/*
+			 * Valid 'iothread' setting examples:
+			 * - create 1 iothread instance for virtio-blk
+			 *   ... virtio-blk iothread,...
+			 *
+			 * - create 1 iothread instance for virtio-blk
+			 *   ... virtio-blk iothread=1,...
+			 *
+			 * - create 3 iothread instances for virtio-blk
+			 *   ... virtio-blk iothread=3,...
+			 */
+			if (!strncmp(opt, "iothread", strlen("iothread"))) {
 				use_iothread = true;
+				strsep(&opt, "=");
+				if (opt != NULL) {
+					if (dm_strtoi(opt, &opt, 10, &num_iothread) ||
+						(num_iothread <= 0)) {
+						WPRINTF(("%s: incorrect iothread number %s\n",
+							__func__, opt));
+						free(opts_start);
+						return -1;
+					}
+				}
 				p = opts_tmp;
 			} else if (!strncmp(opt, "mq", strlen("mq"))) {
 				strsep(&opt, "=");
@@ -545,7 +574,27 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				break;
 			}
 		}
-		bctxt = blockif_open(p, bident, num_vqs);
+
+		if (use_iothread) {
+			/*
+			 * Creating more iothread instances than the number of virtqueues is not necessary.
+			 * - One or more vqs can be handled in one iothread.
+			 * - The mapping between virtqueues and iothreads is based on round robin.
+			 */
+			if (num_iothread > num_vqs) {
+				num_iothread = num_vqs;
+			}
+
+			ioctx_base = iothread_create(num_iothread);
+			if (ioctx_base == NULL) {
+				pr_err("%s: Fails to create iothread context instance \n", __func__);
+				return -1;
+			}
+		}
+		iothrds_info.ioctx_base = ioctx_base;
+		iothrds_info.num = num_iothread;
+
+		bctxt = blockif_open(p, bident, num_vqs, &iothrds_info);
 		if (bctxt == NULL) {
 			pr_err("Could not open backing file");
 			free(opts_start);
@@ -563,6 +612,9 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		WPRINTF(("virtio_blk: calloc returns NULL\n"));
 		return -1;
 	}
+
+	blk->iothrds_info.ioctx_base = ioctx_base;
+	blk->iothrds_info.num = num_iothread;
 
 	blk->bc = bctxt;
 	/* Update virtio-blk device struct of dummy ctxt*/
@@ -619,6 +671,9 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	for (j = 0; j < num_vqs; j++) {
 		blk->vqs[j].qsize = VIRTIO_BLK_RINGSZ;
 		blk->vqs[j].notify = virtio_blk_notify;
+		if (use_iothread) {
+			blk->vqs[j].viothrd.ioctx = ioctx_base + j % num_iothread;
+		}
 	}
 
 	/*
@@ -804,7 +859,7 @@ virtio_blk_rescan(struct vmctx *ctx, struct pci_vdev *dev, char *newpath)
 
 	pr_err("name=%s, Path=%s, ident=%s\n", dev->name, newpath, bident);
 	/* update the bctxt for the virtio-blk device */
-	bctxt = blockif_open(newpath, bident, blk->num_vqs);
+	bctxt = blockif_open(newpath, bident, blk->num_vqs, &blk->iothrds_info);
 	if (bctxt == NULL) {
 		pr_err("Error opening backing file\n");
 		goto end;
