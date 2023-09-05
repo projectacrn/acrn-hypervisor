@@ -528,9 +528,22 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		per_cpu(ever_run_vcpu, pcpu_id) = vcpu;
 
 		if (is_lapic_pt_configured(vm) || is_using_init_ipi()) {
+			/* Lapic_pt pCPU does not enable irq in root mode. So it
+			 * should be set to PAUSE idle mode.
+			 * At this point the pCPU is possibly in HLT idle. And the
+			 * kick mode is to be set to INIT kick, which will not be
+			 * able to wake root mode HLT. So a kick(if pCPU is in HLT
+			 * idle, the kick mode is certainly ipi kick) will change
+			 * it to PAUSE idle right away.
+			 */
+			if (per_cpu(mode_to_idle, pcpu_id) == IDLE_MODE_HLT) {
+				per_cpu(mode_to_idle, pcpu_id) = IDLE_MODE_PAUSE;
+				kick_pcpu(pcpu_id);
+			}
 			per_cpu(mode_to_kick_pcpu, pcpu_id) = DEL_MODE_INIT;
 		} else {
 			per_cpu(mode_to_kick_pcpu, pcpu_id) = DEL_MODE_IPI;
+			per_cpu(mode_to_idle, pcpu_id) = IDLE_MODE_HLT;
 		}
 		pr_info("pcpu=%d, kick-mode=%d, use_init_flag=%d", pcpu_id,
 			per_cpu(mode_to_kick_pcpu, pcpu_id), is_using_init_ipi());

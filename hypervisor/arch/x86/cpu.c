@@ -462,7 +462,25 @@ void stop_pcpus(void)
 
 void cpu_do_idle(void)
 {
+#ifdef CONFIG_KEEP_IRQ_DISABLED
 	asm_pause();
+#else
+	uint16_t pcpu_id = get_pcpu_id();
+
+	if (per_cpu(mode_to_idle, pcpu_id) == IDLE_MODE_HLT) {
+		asm_safe_hlt();
+	} else {
+		struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
+
+		if ((vcpu != NULL) && !is_lapic_pt_enabled(vcpu)) {
+			CPU_IRQ_ENABLE_ON_CONFIG();
+		}
+		asm_pause();
+		if ((vcpu != NULL) && !is_lapic_pt_enabled(vcpu)) {
+			CPU_IRQ_DISABLE_ON_CONFIG();
+		}
+	}
+#endif
 }
 
 /**
