@@ -1049,8 +1049,8 @@ void vcpu_handle_pi_notification(uint32_t vcpu_index)
 			 * Record this request as ACRN_REQUEST_EVENT,
 			 * so that vlapic_inject_intr() will sync PIR to vIRR
 			 */
-			signal_event(&vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
 			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+			signal_event(&vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
 		}
 	}
 }
