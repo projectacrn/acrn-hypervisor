@@ -21,8 +21,6 @@ struct sched_bvt_data {
 	uint16_t weight;
 	/* virtual time advance variable, proportional to 1 / weight */
 	uint64_t vt_ratio;
-	/* the count down number of mcu until reschedule should take place */
-	uint64_t run_countdown;
 	/* actual virtual time in units of mcu */
 	int64_t avt;
 	/* effective virtual time in units of mcu */
@@ -125,7 +123,6 @@ static void sched_tick_handler(void *param)
 {
 	struct sched_control  *ctl = (struct sched_control *)param;
 	struct sched_bvt_control *bvt_ctl = (struct sched_bvt_control *)ctl->priv;
-	struct sched_bvt_data *data;
 	struct thread_object *current;
 	uint16_t pcpu_id = get_pcpu_id();
 	uint64_t rflags;
@@ -134,13 +131,9 @@ static void sched_tick_handler(void *param)
 	current = ctl->curr_obj;
 
 	if (current != NULL ) {
-		data = (struct sched_bvt_data *)current->data;
 		/* only non-idle thread need to consume run_countdown */
 		if (!is_idle_thread(current)) {
-			data->run_countdown -= 1U;
-			if (data->run_countdown == 0U) {
-				make_reschedule_request(pcpu_id);
-			}
+			make_reschedule_request(pcpu_id);
 		} else {
 			if (!list_empty(&bvt_ctl->runqueue)) {
 				make_reschedule_request(pcpu_id);
@@ -156,7 +149,6 @@ static void sched_tick_handler(void *param)
 static int sched_bvt_init(struct sched_control *ctl)
 {
 	struct sched_bvt_control *bvt_ctl = &per_cpu(sched_bvt_ctl, ctl->pcpu_id);
-	uint64_t tick_period = BVT_MCU_MS * TICKS_PER_MS;
 	int ret = 0;
 
 	ASSERT(ctl->pcpu_id == get_pcpu_id(), "Init scheduler on wrong CPU!");
@@ -165,13 +157,7 @@ static int sched_bvt_init(struct sched_control *ctl)
 	INIT_LIST_HEAD(&bvt_ctl->runqueue);
 
 	/* The tick_timer is periodically */
-	initialize_timer(&bvt_ctl->tick_timer, sched_tick_handler, ctl,
-			cpu_ticks() + tick_period, tick_period);
-
-	if (add_timer(&bvt_ctl->tick_timer) < 0) {
-		pr_err("Failed to add schedule tick timer!");
-		ret = -1;
-	}
+	initialize_timer(&bvt_ctl->tick_timer, sched_tick_handler, ctl, 0, 0);
 
 	return ret;
 }
@@ -192,7 +178,6 @@ static void sched_bvt_init_data(struct thread_object *obj)
 	/* TODO: virtual time advance ratio should be proportional to weight. */
 	data->vt_ratio = 1U;
 	data->residual = 0U;
-	data->run_countdown = BVT_CSA_MCU;
 }
 
 static uint64_t v2p(uint64_t virt_time, uint64_t ratio)
@@ -239,12 +224,16 @@ static struct thread_object *sched_bvt_pick_next(struct sched_control *ctl)
 	struct thread_object *current = ctl->curr_obj;
 	uint64_t now_tsc = cpu_ticks();
 	uint64_t delta_mcu = 0U;
+	uint64_t tick_period = BVT_MCU_MS * TICKS_PER_MS;
+	uint64_t run_countdown;
 
 	if (!is_idle_thread(current)) {
 		update_vt(current);
 	}
 	/* always align the svt with the avt of the first thread object in runqueue.*/
 	update_svt(bvt_ctl);
+
+	del_timer(&bvt_ctl->tick_timer);
 
 	if (!list_empty(&bvt_ctl->runqueue)) {
 		first = bvt_ctl->runqueue.next;
@@ -253,25 +242,26 @@ static struct thread_object *sched_bvt_pick_next(struct sched_control *ctl)
 		first_obj = container_of(first, struct thread_object, data);
 		first_data = (struct sched_bvt_data *)first_obj->data;
 
-		/* The run_countdown is used to store how may mcu the next thread
-		 * can run for. It is set in pick_next handler, and decreases in
-		 * tick handler. Normally, the next thread can run until its AVT
-		 * is ahead of the next runnable thread for one CSA
-		 * (context switch allowance). But when there is only one object
-		 * in runqueue, it can run forever. so, set a very very large
-		 * number to it so that it can run for a long time. Here,
-		 * UINT64_MAX can make it run for >100 years before rescheduled.
+		/* The run_countdown is used to describe how may mcu the next thread
+		 * can run for. A one-shot timer is set to expire at
+		 * current time + run_countdown. The next thread can run until the
+		 * timer interrupts. But when there is only one object
+		 * in runqueue, it can run forever. so, no timer is set.
 		 */
 		if (sec != NULL) {
 			second_obj = container_of(sec, struct thread_object, data);
 			second_data = (struct sched_bvt_data *)second_obj->data;
 			delta_mcu = second_data->evt - first_data->evt;
-			first_data->run_countdown = v2p(delta_mcu, first_data->vt_ratio) + BVT_CSA_MCU;
+			run_countdown = v2p(delta_mcu, first_data->vt_ratio) + BVT_CSA_MCU;
 		} else {
-			first_data->run_countdown = UINT64_MAX;
+			run_countdown = UINT64_MAX;
 		}
 		first_data->start_tsc = now_tsc;
 		next = first_obj;
+		if (run_countdown != UINT64_MAX) {
+			update_timer(&bvt_ctl->tick_timer, cpu_ticks() + run_countdown * tick_period, 0);
+			(void)add_timer(&bvt_ctl->tick_timer);
+		}
 	} else {
 		next = &get_cpu_var(idle);
 	}
