@@ -1139,12 +1139,6 @@ main(int argc, char *argv[])
 			goto mevent_fail;
 		}
 
-		error = iothread_init();
-		if (error) {
-			pr_err("Unable to initialize iothread (%d)\n", errno);
-			goto iothread_fail;
-		}
-
 		pr_notice("vm_init_vdevs\n");
 		if (vm_init_vdevs(ctx) < 0) {
 			pr_err("Unable to init vdev (%d)\n", errno);
@@ -1232,7 +1226,6 @@ vm_fail:
 
 dev_fail:
 	iothread_deinit();
-iothread_fail:
 	mevent_deinit();
 mevent_fail:
 	vm_unsetup_memory(ctx);

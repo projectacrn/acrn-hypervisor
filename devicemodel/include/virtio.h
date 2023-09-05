@@ -427,6 +427,7 @@ struct virtio_iothread {
 	int idx;
 	int kick_fd;
 	bool	ioevent_started;
+	struct iothread_ctx *ioctx;
 	struct iothread_mevent iomvt;
 	void (*iothread_run)(void *, struct virtio_vq_info *);
 };

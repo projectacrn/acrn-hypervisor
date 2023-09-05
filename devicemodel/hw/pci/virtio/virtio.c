@@ -112,12 +112,12 @@ virtio_set_iothread(struct virtio_base *base,
 			vq->viothrd.iomvt.run = iothread_handler;
 			vq->viothrd.iomvt.fd = vq->viothrd.kick_fd;
 
-			if (!iothread_add(vq->viothrd.kick_fd, &vq->viothrd.iomvt))
+			if (!iothread_add(vq->viothrd.ioctx, vq->viothrd.kick_fd, &vq->viothrd.iomvt))
 				if (!virtio_register_ioeventfd(base, idx, true, vq->viothrd.kick_fd))
 					vq->viothrd.ioevent_started = true;
 		} else {
 			if (!virtio_register_ioeventfd(base, idx, false, vq->viothrd.kick_fd))
-				if (!iothread_del(vq->viothrd.kick_fd)) {
+				if (!iothread_del(vq->viothrd.ioctx, vq->viothrd.kick_fd)) {
 					vq->viothrd.ioevent_started = false;
 					if (vq->viothrd.kick_fd) {
 						close(vq->viothrd.kick_fd);
