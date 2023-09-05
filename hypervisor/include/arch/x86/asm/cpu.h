@@ -533,6 +533,15 @@ static inline void asm_hlt(void)
 	asm volatile ("hlt");
 }
 
+/* interrupts remain inhibited on the instruction boundary following
+ * an execution of STI. This will make sure pending interrupts will
+ * wake hlt.
+ */
+static inline void asm_safe_hlt(void)
+{
+	asm volatile ("sti; hlt; cli" : : : "cc");
+}
+
 /* Disables interrupts on the current CPU */
 #ifdef CONFIG_KEEP_IRQ_DISABLED
 #define CPU_IRQ_DISABLE_ON_CONFIG()		do { } while (0)

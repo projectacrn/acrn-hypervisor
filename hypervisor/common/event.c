@@ -25,7 +25,13 @@ void reset_event(struct sched_event *event)
 	spinlock_irqrestore_release(&event->lock, rflag);
 }
 
-/* support exclusive waiting only */
+/* support exclusive waiting only
+ *
+ * During wait, the pCPU could be scheduled to run the idle thread when run queue
+ * is empty. Signal_event() can happen when schedule() is in process.
+ * This signal_event is not going to be lost, for the idle thread will always
+ * check need_reschedule() after it is switched to at schedule().
+ */
 void wait_event(struct sched_event *event)
 {
 	uint64_t rflag;
