@@ -25,7 +25,10 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		/* Static configured VM0 */
 		CONFIG_PRE_STD_VM,
 		.name = "PRE_STD_VM0",
-		.vm_prio = PRIO_LOW,
+		.sched_params =
+			{
+				.prio = PRIO_LOW,
+			},
 		.companion_vm_id = 65535U,
 		.guest_flags = (GUEST_FLAG_STATIC_VM),
 		.cpu_affinity = VM0_CONFIG_CPU_AFFINITY,
@@ -102,7 +105,10 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		/* Static configured VM1 */
 		CONFIG_PRE_STD_VM,
 		.name = "PRE_STD_VM1",
-		.vm_prio = PRIO_LOW,
+		.sched_params =
+			{
+				.prio = PRIO_LOW,
+			},
 		.companion_vm_id = 65535U,
 		.guest_flags = (GUEST_FLAG_STATIC_VM),
 		.cpu_affinity = VM1_CONFIG_CPU_AFFINITY,

@@ -22,7 +22,10 @@ struct acrn_vm_config
 			 /* Static configured VM0 */
 			 CONFIG_PRE_STD_VM,
 			 .name = "SAFETY_VM0",
-			 .vm_prio = PRIO_LOW,
+			 .sched_params =
+			 	 {
+					 .prio = PRIO_LOW,
+				 },
 			 .companion_vm_id = 65535U,
 			 .guest_flags = (GUEST_FLAG_STATIC_VM),
 			 .cpu_affinity = VM0_CONFIG_CPU_AFFINITY,
@@ -106,7 +109,10 @@ struct acrn_vm_config
 				CONFIG_SERVICE_VM,
 				.name = "ACRN_Service_VM",
 				/* Allow Service VM to reboot the system since it is the highest priority VM. */
-				.vm_prio = PRIO_LOW,
+				.sched_params =
+					{
+						.prio = PRIO_LOW,
+					},
 				.companion_vm_id = 65535U,
 				.guest_flags = (GUEST_FLAG_STATIC_VM),
 				.cpu_affinity = SERVICE_VM_CONFIG_CPU_AFFINITY,
@@ -163,7 +169,10 @@ struct acrn_vm_config
 				/* Static configured VM2 */
 				CONFIG_POST_STD_VM,
 				.name = "POST_STD_VM1",
-				.vm_prio = PRIO_LOW,
+				.sched_params =
+					{
+						.prio = PRIO_LOW,
+					},
 				.companion_vm_id = 65535U,
 				.guest_flags = (GUEST_FLAG_STATIC_VM),
 				.cpu_affinity = VM2_CONFIG_CPU_AFFINITY,
@@ -186,7 +195,10 @@ struct acrn_vm_config
 				/* Static configured VM3 */
 				CONFIG_POST_STD_VM,
 				.name = "POST_STD_VM2",
-				.vm_prio = PRIO_LOW,
+				.sched_params =
+					{
+						.prio = PRIO_LOW,
+					},
 				.companion_vm_id = 65535U,
 				.guest_flags = (GUEST_FLAG_STATIC_VM),
 				.cpu_affinity = VM3_CONFIG_CPU_AFFINITY,

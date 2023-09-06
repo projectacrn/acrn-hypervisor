@@ -95,6 +95,7 @@ void run_idle_thread(void)
 {
 	uint16_t pcpu_id = get_pcpu_id();
 	struct thread_object *idle = &per_cpu(idle, pcpu_id);
+	struct sched_params idle_params = {0};
 	char idle_name[16];
 
 	snprintf(idle_name, 16U, "idle%hu", pcpu_id);
@@ -103,7 +104,8 @@ void run_idle_thread(void)
 	idle->thread_entry = default_idle;
 	idle->switch_out = NULL;
 	idle->switch_in = NULL;
-	idle->priority = PRIO_IDLE;
+	idle_params.prio = PRIO_IDLE;
+	init_thread_data(idle, &idle_params);
 
 	run_thread(idle);
 

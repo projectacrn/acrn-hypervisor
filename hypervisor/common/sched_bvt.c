@@ -168,7 +168,7 @@ static void sched_bvt_deinit(struct sched_control *ctl)
 	del_timer(&bvt_ctl->tick_timer);
 }
 
-static void sched_bvt_init_data(struct thread_object *obj)
+static void sched_bvt_init_data(struct thread_object *obj, __unused struct sched_params * params)
 {
 	struct sched_bvt_data *data;
 

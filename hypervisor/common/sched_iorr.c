@@ -132,7 +132,7 @@ void sched_iorr_deinit(struct sched_control *ctl)
 	del_timer(&iorr_ctl->tick_timer);
 }
 
-void sched_iorr_init_data(struct thread_object *obj)
+void sched_iorr_init_data(struct thread_object *obj, __unused struct sched_params * params)
 {
 	struct sched_iorr_data *data;
 

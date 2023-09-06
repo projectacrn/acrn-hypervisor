@@ -11,6 +11,7 @@
 struct sched_prio_data {
 	/* keep list as the first item */
 	struct list_head list;
+	int priority;
 };
 
 static int sched_prio_init(struct sched_control *ctl)
@@ -25,12 +26,13 @@ static int sched_prio_init(struct sched_control *ctl)
 	return 0;
 }
 
-static void sched_prio_init_data(struct thread_object *obj)
+static void sched_prio_init_data(struct thread_object *obj, struct sched_params *params)
 {
 	struct sched_prio_data *data;
 
 	data = (struct sched_prio_data *)obj->data;
 	INIT_LIST_HEAD(&data->list);
+	data->priority = params->priority;
 }
 
 static struct thread_object *sched_prio_pick_next(struct sched_control *ctl)
@@ -52,15 +54,15 @@ static void prio_queue_add(struct thread_object *obj)
 	struct sched_prio_control *prio_ctl =
 		(struct sched_prio_control *)obj->sched_ctl->priv;
 	struct sched_prio_data *data = (struct sched_prio_data *)obj->data;
-	struct thread_object *iter_obj;
+	struct sched_prio_data *iter_data;
 	struct list_head *pos;
 
 	if (list_empty(&prio_ctl->prio_queue)) {
 		list_add(&data->list, &prio_ctl->prio_queue);
 	} else {
 		list_for_each(pos, &prio_ctl->prio_queue) {
-			iter_obj = container_of(pos, struct thread_object, data);
-			if (iter_obj->priority < obj->priority) {
+			iter_data = container_of(pos, struct sched_prio_data, list);
+			if (iter_data->priority < data->priority) {
 				list_add_node(&data->list, pos->prev, pos);
 				break;
 			}

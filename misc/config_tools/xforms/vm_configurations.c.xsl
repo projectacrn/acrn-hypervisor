@@ -110,7 +110,10 @@
       <xsl:value-of select="acrn:comment('Allow Service VM to reboot the system since it is the highest priority VM.')" />
       <xsl:value-of select="$newline" />
     </xsl:if>
-    <xsl:value-of select="acrn:initializer('vm_prio', priority)" />
+    <xsl:value-of select="acrn:initializer('sched_params', '{', true())" />
+    <xsl:value-of select="acrn:initializer('prio', priority)" />
+    <xsl:text>},</xsl:text>
+    <xsl:value-of select="$newline" />
     <xsl:value-of select="acrn:initializer('companion_vm_id', concat(companion_vmid, 'U'))" />
     <xsl:call-template name="guest_flags" />
 

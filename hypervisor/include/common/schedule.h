@@ -34,6 +34,16 @@ enum thread_priority {
 	PRIO_MAX
 };
 
+/* 
+ * For now, we just have several parameters for all the schedulers. So we
+ * put them together here for simplicity. TODO When this structure grows big
+ * enough, we need to replace it with a union of parameters of different
+ * schedulers.
+ */
+struct sched_params {
+	uint32_t prio;		/* The priority of a thread */
+};
+
 struct thread_object;
 typedef void (*thread_entry_t)(struct thread_object *obj);
 typedef void (*switch_t)(struct thread_object *obj);
@@ -48,8 +58,6 @@ struct thread_object {
 	uint64_t host_sp;
 	switch_t switch_out;
 	switch_t switch_in;
-
-	int priority;
 
 	uint8_t data[THREAD_DATA_SIZE];
 };
@@ -70,7 +78,7 @@ struct acrn_scheduler {
 	/* init scheduler */
 	int32_t	(*init)(struct sched_control *ctl);
 	/* init private data of scheduler */
-	void	(*init_data)(struct thread_object *obj);
+	void	(*init_data)(struct thread_object *obj, struct sched_params *params);
 	/* pick the next thread object */
 	struct thread_object* (*pick_next)(struct sched_control *ctl);
 	/* put thread object into sleep */
@@ -120,7 +128,7 @@ void deinit_sched(uint16_t pcpu_id);
 void obtain_schedule_lock(uint16_t pcpu_id, uint64_t *rflag);
 void release_schedule_lock(uint16_t pcpu_id, uint64_t rflag);
 
-void init_thread_data(struct thread_object *obj);
+void init_thread_data(struct thread_object *obj, struct sched_params *params);
 void deinit_thread_data(struct thread_object *obj);
 
 void make_reschedule_request(uint16_t pcpu_id);

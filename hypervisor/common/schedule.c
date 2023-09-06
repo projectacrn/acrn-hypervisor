@@ -98,14 +98,14 @@ void deinit_sched(uint16_t pcpu_id)
 	}
 }
 
-void init_thread_data(struct thread_object *obj)
+void init_thread_data(struct thread_object *obj, struct sched_params *params)
 {
 	struct acrn_scheduler *scheduler = get_scheduler(obj->pcpu_id);
 	uint64_t rflag;
 
 	obtain_schedule_lock(obj->pcpu_id, &rflag);
 	if (scheduler->init_data != NULL) {
-		scheduler->init_data(obj);
+		scheduler->init_data(obj, params);
 	}
 	/* initial as BLOCKED status, so we can wake it up to run */
 	set_thread_status(obj, THREAD_STS_BLOCKED);
@@ -241,7 +241,6 @@ void run_thread(struct thread_object *obj)
 {
 	uint64_t rflag;
 
-	init_thread_data(obj);
 	obtain_schedule_lock(obj->pcpu_id, &rflag);
 	get_cpu_var(sched_ctl).curr_obj = obj;
 	set_thread_status(obj, THREAD_STS_RUNNING);
