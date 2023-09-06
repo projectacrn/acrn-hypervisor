@@ -96,14 +96,6 @@ void early_init_lapic(void)
 	/* Step2: Enable LAPIC in x2APIC mode */
 	base.fields.x2APIC_enable = 1U;
 	msr_write(MSR_IA32_APIC_BASE, base.value);
-}
-
-/**
- * @pre pcpu_id < 8U
- */
-void init_lapic(uint16_t pcpu_id)
-{
-	per_cpu(lapic_ldr, pcpu_id) = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LDR);
 
 	/* Set the mask bits for all the LVT entries by disabling a local APIC software. */
 	msr_write(MSR_IA32_EXT_APIC_SIVR, 0UL);
@@ -114,6 +106,14 @@ void init_lapic(uint16_t pcpu_id)
 
 	/* Ensure there are no ISR bits set. */
 	clear_lapic_isr();
+}
+
+void init_lapic(uint16_t pcpu_id)
+{
+	/* Can not put this to early_init_lapic because logical ID is not
+	 * updated yet.
+	 */
+	per_cpu(lapic_ldr, pcpu_id) = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LDR);
 }
 
 static void save_lapic(struct lapic_regs *regs)
