@@ -15,6 +15,7 @@
 #include <vm_configurations.h>
 #include <asm/sgx.h>
 #include <acrn_hv_defs.h>
+#include <schedule.h>
 
 #define AFFINITY_CPU(n)		(1UL << (n))
 #define MAX_VCPUS_PER_VM	MAX_PCPU_NUM
@@ -170,7 +171,7 @@ struct acrn_vm_config {
 							 *	GUEST_FLAG_LAPIC_PASSTHROUGH
 							 * We could add more guest flags in future;
 							 */
-	uint32_t vm_prio;				/* The priority for VM vCPU scheduling */
+	struct sched_params sched_params;		/* Scheduler params for vCPUs of this VM */
 	uint16_t companion_vm_id;			/* The companion VM id for this VM */
 	struct acrn_vm_mem_config memory;		/* memory configuration of VM */
 	struct epc_section epc;				/* EPC memory configuration of VM */
