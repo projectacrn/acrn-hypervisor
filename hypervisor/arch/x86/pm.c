@@ -216,6 +216,7 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	resume_lapic();
 	resume_iommu();
 	resume_ioapic();
+	init_frequency_policy();
 
 	vmx_on();
 	CPU_IRQ_ENABLE_ON_CONFIG();
