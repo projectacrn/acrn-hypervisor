@@ -72,7 +72,7 @@ struct mevent {
 };
 
 static LIST_HEAD(listhead, mevent) global_head;
-/* List holds the mevent node which is requested to deleted */
+/* List holds the mevent node which is requested to be deleted */
 static LIST_HEAD(del_listhead, mevent) del_head;
 
 static void

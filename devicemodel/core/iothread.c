@@ -50,7 +50,7 @@ io_thread(void *arg)
 		for (i = 0; i < n; i++) {
 			aevp = eventlist[i].data.ptr;
 			if (aevp && aevp->run) {
-				/* Mitigate the epoll_wait repeat cycles by reading out the events as more as possile.*/
+				/* Mitigate the epoll_wait repeat cycles by reading out the events as more as possible.*/
 				do {
 					status = read(aevp->fd, buf, sizeof(buf));
 				} while (status == MAX_EVENT_NUM);

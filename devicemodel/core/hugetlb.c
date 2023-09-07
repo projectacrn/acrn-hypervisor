@@ -446,7 +446,7 @@ static bool release_larger_freepage(int level_limit)
 		if (hugetlb_priv[level].pages_delta >= 0)
 			continue;
 
-		/* free one unsed larger page */
+		/* free one un-used larger page */
 		orig_pages = read_sys_info(hugetlb_priv[level].nr_pages_path);
 		total_pages = orig_pages - 1;
 		snprintf(cmd_buf, MAX_PATH_LEN, "echo %d > %s",
@@ -483,7 +483,7 @@ static bool release_larger_freepage(int level_limit)
  *.D.enough higher level free pages, but not enough free memory for
  *    lower level gap pages, so release some higher level free pages for that.
  * other info:
- *.   even enough free memory, it is eaiser to reserve smaller pages than
+ *.   even enough free memory, it is easier to reserve smaller pages than
  * lager ones, for example:2MB easier than 1GB. One flow of current solution:
  *.it could leave Service VM very small free memory.
  *.return value: true: success; false: failure
@@ -507,8 +507,8 @@ static bool hugetlb_reserve_pages(void)
 
 		/* probably system allocates fewer pages than needed
 		 * especially for larger page like 1GB, even there is enough
-		 * free memory, it stil can fail to allocate 1GB huge page.
-		 * so if that,it needs the next level to handle it.
+		 * free memory, it still can fail to allocate 1GB huge page.
+		 * so if that, it needs the next level to handle it.
 		 */
 		if (level > HUGETLB_LV1) {
 			left_gap = hugetlb_priv[level].pages_delta;
@@ -901,7 +901,7 @@ bool vm_allow_dmabuf(struct vmctx *ctx)
 	}
 
 	if (ctx->lowmem) {
-		/* Check the lowhmem is used by HUGETLB_LV1/HUGETLB_LV2 */
+		/* Check the lowmem is used by HUGETLB_LV1/HUGETLB_LV2 */
 		mem_flags = 0;
 		if ((hugetlb_priv[HUGETLB_LV1].fd > 0) &&
 			(hugetlb_priv[HUGETLB_LV1].lowmem))
