@@ -192,7 +192,7 @@ void
 pm_backto_wakeup(struct vmctx *ctx)
 {
 	/* According to ACPI 5.0 Table 4-16: bit 15, WAK_STS should be
-	 * set when system trasition to the working state
+	 * set when system transition to the working state
 	 */
 	pm1_status |= PM1_WAK_STS;
 }
