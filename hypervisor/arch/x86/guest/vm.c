@@ -995,7 +995,7 @@ void start_vm(struct acrn_vm *vm)
  * @pre vm != NULL
  * @pre vm->state == VM_PAUSED
  */
-int32_t reset_vm(struct acrn_vm *vm)
+int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode)
 {
 	uint16_t i;
 	uint64_t mask;
@@ -1016,7 +1016,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 	 */
 	vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
 
-	if (is_service_vm(vm)) {
+	if ((mode == POWER_ON_RESET) && is_service_vm(vm)) {
 		(void)prepare_os_image(vm);
 	}
 
@@ -1078,17 +1078,14 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 {
 	struct acrn_vcpu *bsp = vcpu_from_vid(vm, BSP_CPU_ID);
 
-	vm->state = VM_RUNNING;
-
-	reset_vcpu(bsp, POWER_ON_RESET);
+	reset_vm(vm, RESUME_FROM_S3);
 
 	/* When Service VM resume from S3, it will return to real mode
 	 * with entry set to wakeup_vec.
 	 */
 	set_vcpu_startup_entry(bsp, wakeup_vec);
 
-	init_vmcs(bsp);
-	launch_vcpu(bsp);
+	start_vm(vm);
 }
 
 static uint8_t loaded_pre_vm_nr = 0U;
