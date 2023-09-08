@@ -21,14 +21,6 @@ def fn(board_etree, scenario_etree, allocation_etree):
     max_vm_num = int(get_node(f"//hv/CAPACITIES/MAX_VM_NUM/text()", scenario_etree))
     max_trusty_vm = len(scenario_etree.xpath(f"//vm[./secure_world_support/text() = 'y']"))
     hv_ram_size = acrn_config_utilities.HV_BASE_RAM_SIZE + acrn_config_utilities.VM_RAM_SIZE * max_vm_num + max_trusty_vm * acrn_config_utilities.TRUSTY_RAM_SIZE
-    ivshmem_list = scenario_etree.xpath("//IVSHMEM_SIZE/text()")
-    total_shm_size = 0
-    for ram_size in ivshmem_list:
-        try:
-            total_shm_size += int(ram_size) * 0x100000
-        except Exception as e:
-            print(e)
-    hv_ram_size += max(total_shm_size, 0x200000)
     assert(hv_ram_size <= HV_RAM_SIZE_MAX)
 
     # We recommend to put hv ram start address high than 0x400000 to
