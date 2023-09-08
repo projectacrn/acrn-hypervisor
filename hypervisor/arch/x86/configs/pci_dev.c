@@ -12,7 +12,7 @@
 /*
  * @pre pdev != NULL;
  */
-static bool is_allocated_to_prelaunched_vm(struct pci_pdev *pdev)
+static bool allocate_to_prelaunched_vm(struct pci_pdev *pdev)
 {
 	bool found = false;
 	uint16_t vmid;
@@ -56,7 +56,7 @@ struct acrn_vm_pci_dev_config *init_one_dev_config(struct pci_pdev *pdev)
 	struct acrn_vm_config *vm_config;
 	struct acrn_vm_pci_dev_config *dev_config = NULL;
 
-	if (!is_allocated_to_prelaunched_vm(pdev)) {
+	if (!allocate_to_prelaunched_vm(pdev)) {
 		for (vmid = 0U; vmid < CONFIG_MAX_VM_NUM; vmid++) {
 			vm_config = get_vm_config(vmid);
 			if (vm_config->load_order != SERVICE_VM) {
