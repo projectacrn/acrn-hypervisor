@@ -69,6 +69,7 @@
 #define PCIR_COMMAND          0x04U
 #define	PCIM_CMD_PORTEN       0x01U
 #define	PCIM_CMD_MEMEN        0x02U
+#define	PCIM_CMD_BUSEN        0x04U
 #define PCIM_CMD_INTxDIS      0x400U
 #define PCIR_STATUS           0x06U
 #define PCIM_STATUS_CAPPRESENT    0x0010U
@@ -105,6 +106,9 @@
 #define PCIR_PRIBUS_1         0x18U
 #define PCIR_SECBUS_1         0x19U
 #define PCIR_SUBBUS_1         0x1AU
+#define PCIR_IO_BASE          0x1CU
+#define PCIR_MEM_BASE         0x20U
+#define PCIR_IO_BASE_UPPER_16 0x30U
 
 /* Capability Register Offsets */
 #define PCICAP_ID             0x0U

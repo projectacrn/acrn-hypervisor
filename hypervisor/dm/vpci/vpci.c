@@ -474,6 +474,7 @@ static int32_t read_cfg_header(const struct pci_vdev *vdev,
 static int32_t write_cfg_header(struct pci_vdev *vdev,
 		uint32_t offset, uint32_t bytes, uint32_t val)
 {
+	bool dev_is_bridge = is_bridge(vdev->pdev);
 	int32_t ret = 0;
 
 	if ((offset == PCIR_BIOS) && is_quirk_ptdev(vdev)) {
@@ -489,10 +490,20 @@ static int32_t write_cfg_header(struct pci_vdev *vdev,
 #define PCIM_SPACE_EN (PCIM_CMD_PORTEN | PCIM_CMD_MEMEN)
 			uint16_t phys_cmd = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 
-			/* check whether need to restore BAR because some kind of reset */
-			if (((phys_cmd & PCIM_SPACE_EN) == 0U) && ((val & PCIM_SPACE_EN) != 0U) &&
-					pdev_need_bar_restore(vdev->pdev)) {
-				pdev_restore_bar(vdev->pdev);
+			if (((phys_cmd & PCIM_SPACE_EN) == 0U) && ((val & PCIM_SPACE_EN) != 0U)) {
+				/* check whether need to restore BAR because some kind of reset */
+				if (pdev_need_bar_restore(vdev->pdev)) {
+					pdev_restore_bar(vdev->pdev);
+				}
+
+				/* check whether need to restore bridge mem/IO related registers because some kind of reset */
+				if (dev_is_bridge) {
+					vdev_bridge_pt_restore_space(vdev);
+				}
+			}
+			/* check whether need to restore Primary/Secondary/Subordinate Bus Number registers because some kind of reset */
+			if (dev_is_bridge && ((phys_cmd & PCIM_CMD_BUSEN) == 0U) && ((val & PCIM_CMD_BUSEN) != 0U)) {
+				vdev_bridge_pt_restore_bus(vdev);
 			}
 		}
 
