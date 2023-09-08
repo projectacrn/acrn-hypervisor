@@ -315,6 +315,53 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 	}
 }
 
+/*
+ * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
+ */
+void vdev_bridge_pt_restore_space(struct pci_vdev *vdev)
+{
+	struct pci_pdev *pdev = vdev->pdev;
+	uint32_t pre_val;
+	uint32_t offset;
+
+	/* I/O Base (0x1c) and I/O Limit (0x1d) */
+	pre_val = pci_vdev_read_vcfg(vdev, PCIR_IO_BASE, 2U);
+	if (pre_val != pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_IO_BASE, 2U)) {
+		pci_pdev_write_cfg(pdev->bdf, PCIR_IO_BASE, 2U, pre_val);
+	}
+
+	/* From Memory Base (0x20) to I/O Base Limit 16 Bits (0x32) */
+	for (offset = PCIR_MEM_BASE; offset < PCIR_IO_BASE_UPPER_16; offset += 4) {
+		pre_val = pci_vdev_read_vcfg(vdev, offset, 4U);
+		if (pre_val != pci_pdev_read_cfg(vdev->pdev->bdf, offset, 4U)) {
+			pci_pdev_write_cfg(pdev->bdf, offset, 4U, pre_val);
+		}
+	}
+}
+
+/*
+ * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
+ */
+void vdev_bridge_pt_restore_bus(struct pci_vdev *vdev)
+{
+	struct pci_pdev *pdev = vdev->pdev;
+	uint32_t pre_val;
+
+	/* Primary Bus Number (0x18) and Secondary Bus Number (0x19) */
+	pre_val = pci_vdev_read_vcfg(vdev, PCIR_PRIBUS_1, 2U);
+	if (pre_val != pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_PRIBUS_1, 2U)) {
+		pci_pdev_write_cfg(pdev->bdf, PCIR_PRIBUS_1, 2U, pre_val);
+	}
+
+	/* Subordinate Bus Number (0x1a) */
+	pre_val = pci_vdev_read_vcfg(vdev, PCIR_SUBBUS_1, 1U);
+	if (pre_val != pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_SUBBUS_1, 1U)) {
+		pci_pdev_write_cfg(pdev->bdf, PCIR_SUBBUS_1, 1U, pre_val);
+	}
+}
+
 /**
  * PCI base address register (bar) virtualization:
  *

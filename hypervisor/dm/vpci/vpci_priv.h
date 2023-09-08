@@ -177,6 +177,9 @@ uint32_t vpci_add_capability(struct pci_vdev *vdev, uint8_t *capdata, uint8_t ca
 
 void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
 
+void vdev_bridge_pt_restore_space(struct pci_vdev *vdev);
+void vdev_bridge_pt_restore_bus(struct pci_vdev *vdev);
+
 void vdev_pt_hide_sriov_cap(struct pci_vdev *vdev);
 
 int32_t check_pt_dev_pio_bars(struct pci_vdev *vdev);
