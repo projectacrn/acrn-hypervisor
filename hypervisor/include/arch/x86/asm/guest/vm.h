@@ -39,6 +39,7 @@ enum reset_mode {
 	WARM_RESET,		/* behavior slightly differ from cold reset, that some MSRs might be retained. */
 	INIT_RESET,		/* reset by INIT */
 	SOFTWARE_RESET,		/* reset by software disable<->enable */
+	RESUME_FROM_S3,		/* reset core states after resuming from S3 */
 };
 
 struct vm_hw_info {
@@ -239,7 +240,7 @@ void poweroff_if_rt_vm(struct acrn_vm *vm);
 void pause_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
 void start_vm(struct acrn_vm *vm);
-int32_t reset_vm(struct acrn_vm *vm);
+int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode);
 int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 int32_t prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);

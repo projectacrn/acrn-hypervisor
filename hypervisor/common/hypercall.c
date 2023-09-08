@@ -348,7 +348,7 @@ int32_t hcall_reset_vm(__unused struct acrn_vcpu *vcpu, struct acrn_vm *target_v
 
 	if (is_paused_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
-		ret = reset_vm(target_vm);
+		ret = reset_vm(target_vm, COLD_RESET);
 	}
 	return ret;
 }
