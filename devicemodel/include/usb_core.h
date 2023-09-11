@@ -221,12 +221,6 @@ enum USB_ERRCODE {
 	do { if (lvl <= usb_log_level) pr_dbg(LOG_TAG fmt, ##args); } while (0)
 
 #define NATIVE_USBSYS_DEVDIR "/sys/bus/usb/devices"
-#define NATIVE_USB2_SPEED "480"
-#define NATIVE_USB3_SPEED "5000"
-#define USB_NATIVE_NUM_PORT 20
-#define USB_NATIVE_NUM_BUS 5
-
-#define USB_DROPPED_XFER_MAGIC	0xaaaaaaaa55555555
 
 inline bool
 index_valid(int head, int tail, int maxcnt, int idx) {

@@ -4172,11 +4172,6 @@ pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
 		goto errout;
 	}
 
-	if (bus >= USB_NATIVE_NUM_BUS || port >= USB_NATIVE_NUM_PORT) {
-		rc = -1;
-		goto errout;
-	}
-
 	if (!usb_native_is_bus_existed(bus) ||
 			!usb_native_is_port_existed(bus, port)) {
 		rc = -2;
