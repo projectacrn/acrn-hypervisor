@@ -21,6 +21,7 @@ policies = [
     GuestFlagPolicy(".//secure_world_support = 'y'", "GUEST_FLAG_SECURE_WORLD_ENABLED"),
     GuestFlagPolicy(".//hide_mtrr_support = 'y'", "GUEST_FLAG_HIDE_MTRR"),
     GuestFlagPolicy(".//nested_virtualization_support = 'y'", "GUEST_FLAG_NVMX_ENABLED"),
+    GuestFlagPolicy(".//virtual_thermal_monitor = 'y'", "GUEST_FLAG_VTM"),
     GuestFlagPolicy(".//security_vm = 'y'", "GUEST_FLAG_SECURITY_VM"),
     GuestFlagPolicy(".//vm_type = 'RTVM'", "GUEST_FLAG_RT"),
     GuestFlagPolicy(".//vm_type = 'RTVM' and .//load_order = 'PRE_LAUNCHED_VM' and //hv/BUILD_TYPE= 'debug'", "GUEST_FLAG_PMU_PASSTHROUGH"),
