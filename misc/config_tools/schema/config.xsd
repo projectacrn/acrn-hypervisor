@@ -409,6 +409,11 @@ These settings can only be changed at build time.</xs:documentation>
         <xs:documentation>Enable virtualization of the Cache Allocation Technology (CAT) feature in RDT. CAT enables you to allocate cache to VMs, providing isolation to avoid performance interference from other VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="virtual_thermal_monitor" type="Boolean" default="n" minOccurs="0">
+      <xs:annotation acrn:title="Virtual Thermal Monitor" acrn:applicable-vms="pre-launched, post-launched, service-vm" acrn:views="advanced">
+        <xs:documentation>Enable virtualization of the Thermal Monitor feature for this VM. This feature enables VM to retrieve SOC temperature and thermal irq. And this VM can implement cooling stategies based on these information.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="virtual_cat_number" default="0" minOccurs="0">
       <xs:annotation acrn:title="Maximum virtual CLOS" acrn:applicable-vms="pre-launched, post-launched" acrn:views="advanced">
         <xs:documentation>Max number of virtual CLOS MASK</xs:documentation>
