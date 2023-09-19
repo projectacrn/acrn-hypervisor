@@ -123,7 +123,7 @@ def tpm2_acpi_gen(acpi_bin, board_etree, scenario_etree, allocation_etree):
             ctype_data.header.creatorrevision = 0x20190703
             ctype_data.address_of_control_area = 0xFED40040
             ctype_data.start_method = int(get_node("//capability[@id = 'start_method']/value/text()", tpm2_node), 16)
-            start_method_parameters = tpm2_node.xpath("//parameter/text()")
+            start_method_parameters = tpm2_node.xpath("//capability[@id = 'start_method']/parameter/text()")
             for i in range(len(start_method_parameters)):
                 ctype_data.start_method_specific_parameters[i] = int(start_method_parameters[i], 16)
             if get_node("//capability[@id = 'log_area']", board_etree) is not None:
