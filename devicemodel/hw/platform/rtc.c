@@ -220,6 +220,17 @@ update_enabled(struct vrtc *vrtc)
 	return true;
 }
 
+/* monotonic time is number of seconds that the system has been running
+ * since it was booted. It is none setable. It is more suitable to be used
+ * as base time.
+ */
+static time_t monotonic_time(void)
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return ts.tv_sec;
+}
+
 static time_t
 vrtc_curtime(struct vrtc *vrtc, time_t *basetime)
 {
@@ -229,7 +240,7 @@ vrtc_curtime(struct vrtc *vrtc, time_t *basetime)
 	t = vrtc->base_rtctime;
 	*basetime = vrtc->base_uptime;
 	if (update_enabled(vrtc)) {
-		now = time(NULL);
+		now = monotonic_time();
 		delta = now - vrtc->base_uptime;
 		secs = delta;
 		t += secs;
@@ -736,7 +747,7 @@ vrtc_set_reg_b(struct vrtc *vrtc, uint8_t newval)
 	if (changed & RTCSB_HALT) {
 		if ((newval & RTCSB_HALT) == 0) {
 			rtctime = rtc_to_secs(vrtc);
-			basetime = time(NULL);
+			basetime = monotonic_time();
 			if (rtctime == VRTC_BROKEN_TIME) {
 				if (rtc_flag_broken_time)
 					return -1;
@@ -810,7 +821,7 @@ vrtc_set_reg_a(struct vrtc *vrtc, uint8_t newval)
 		 * maintain the illusion that the RTC date/time was frozen
 		 * while the dividers were disabled.
 		 */
-		vrtc->base_uptime = time(NULL);
+		vrtc->base_uptime = monotonic_time();
 		RTC_DEBUG("RTC divider out of reset at %#lx/%#lx\n",
 				vrtc->base_rtctime, vrtc->base_uptime);
 	} else {
@@ -972,7 +983,7 @@ vrtc_data_handler(struct vmctx *ctx, int vcpu, int in, int port,
 		 */
 		if (vrtc_is_time_register(offset) && !rtc_halted(vrtc)) {
 			curtime = rtc_to_secs(vrtc);
-			error = vrtc_time_update(vrtc, curtime, time(NULL));
+			error = vrtc_time_update(vrtc, curtime, monotonic_time());
 			if ((error != 0) || (curtime == VRTC_BROKEN_TIME && rtc_flag_broken_time))
 				error = -1;
 		}
@@ -989,7 +1000,7 @@ vrtc_set_time(struct vrtc *vrtc, time_t secs)
 	int error;
 
 	pthread_mutex_lock(&vrtc->mtx);
-	error = vrtc_time_update(vrtc, secs, time(NULL));
+	error = vrtc_time_update(vrtc, secs, monotonic_time());
 	pthread_mutex_unlock(&vrtc->mtx);
 
 	if (error)
@@ -1102,7 +1113,7 @@ vrtc_init(struct vmctx *ctx)
 
 	pthread_mutex_lock(&vrtc->mtx);
 	vrtc->base_rtctime = VRTC_BROKEN_TIME;
-	vrtc_time_update(vrtc, curtime, time(NULL));
+	vrtc_time_update(vrtc, curtime, monotonic_time());
 	secs_to_rtc(curtime, vrtc, 0);
 	pthread_mutex_unlock(&vrtc->mtx);
 
