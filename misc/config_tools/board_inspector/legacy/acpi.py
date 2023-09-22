@@ -576,6 +576,10 @@ def store_px_data(sysnode, config):
 
 def store_mmcfg_base_data(mmcfg_node, config):
 
+    # in case there're MCFG1/MCFG2 instead of MCFG
+    if not os.path.exists(mmcfg_node):
+        mmcfg_node += "1"
+
     print("\t/* PCI mmcfg base of MCFG */", file=config)
     with open(mmcfg_node, 'rb') as mmcfg:
         mmcfg.read(MCFG_OFFSET)
