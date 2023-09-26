@@ -336,6 +336,8 @@ static void init_ivshmem_vdev(struct pci_vdev *vdev)
 	pci_vdev_write_vcfg(vdev, PCIR_DEVICE, 2U, IVSHMEM_DEVICE_ID);
 	pci_vdev_write_vcfg(vdev, PCIR_REVID, 1U, IVSHMEM_REV);
 	pci_vdev_write_vcfg(vdev, PCIR_CLASS, 1U, IVSHMEM_CLASS);
+	pci_vdev_write_vcfg(vdev, PCIR_HDRTYPE, 1U,
+		PCIM_HDRTYPE_NORMAL | ((vdev->bdf.bits.f == 0U) ? PCIM_MFDEV : 0U));
 	add_vmsix_capability(vdev, MAX_IVSHMEM_MSIX_TBL_ENTRY_NUM, IVSHMEM_MSIX_BAR);
 
 	/* initialize ivshmem bars */
