@@ -34,6 +34,11 @@
         <xs:documentation>Select the default log level for log messages written to the serial console. Log messages with the selected value or lower are displayed.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="CONSOLE_VM" type="xs:integer" default="65535">
+      <xs:annotation acrn:title="Default VM in hypervisor console output" acrn:views="basic">
+        <xs:documentation>Select the default VM in hypervisor console output. Default is hypervisor console.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
   </xs:all>
 </xs:complexType>
 
