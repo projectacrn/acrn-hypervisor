@@ -63,6 +63,13 @@
       <xsl:with-param name="value" select="CONSOLE_LOGLEVEL" />
     </xsl:call-template>
 
+    <xsl:call-template name="integer-by-key-value">
+      <xsl:with-param name="key" select="'CONSOLE_DEFAULT_VM'" />
+      <xsl:with-param name="value" select="CONSOLE_VM" />
+      <!-- Default is HV console, ACRN_INVALID_VMID -->
+      <xsl:with-param name="default" select="'0xffff'" />
+    </xsl:call-template>
+
     <xsl:apply-templates select="SERIAL_CONSOLE" />
   </xsl:template>
 

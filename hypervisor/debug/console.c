@@ -23,7 +23,7 @@ struct hv_timer console_timer;
 #define CONSOLE_KICK_TIMER_TIMEOUT  40UL /* timeout is 40ms*/
 /* Switching key combinations for shell and uart console */
 #define GUEST_CONSOLE_TO_HV_SWITCH_KEY      0       /* CTRL + SPACE */
-uint16_t console_vmid = ACRN_INVALID_VMID;
+uint16_t console_vmid = CONFIG_CONSOLE_DEFAULT_VM;
 
 /* if use INIT to kick pcpu only, if not notification IPI still is used for sharing CPU */
 static bool use_init_ipi = false;
