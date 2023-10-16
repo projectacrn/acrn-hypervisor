@@ -43,14 +43,59 @@
 
 #define BLOCKIF_IOV_MAX		256	/* not practical to be IOV_MAX */
 
+/*
+ *  |<------------------------------------- bounced_size --------------------------------->|
+ *  |<-------- alignment ------->|                            |<-------- alignment ------->|
+ *  |<--- head --->|<------------------------ org_size ---------------------->|<-- tail -->|
+ *  |              |             |                            |               |            |
+ *  *--------------$-------------*----------- ... ------------*---------------$------------*
+ *  |              |             |                            |               |            |
+ *  |              start                                                      end          |
+ *  aligned_dn_start                                          aligned_dn_end
+ *  |__________head_area_________|                            |__________tail_area_________|
+ *  |<--- head --->|             |                            |<-- end_rmd -->|<-- tail -->|
+ *  |<-------- alignment ------->|                            |<-------- alignment ------->|
+ *
+ */
+struct br_align_info {
+	uint32_t	alignment;
+
+	bool		is_iov_base_aligned;
+	bool		is_iov_len_aligned;
+	bool		is_offset_aligned;
+
+	/*
+	 * Needs to convert the misaligned request to an aligned one when
+	 * O_DIRECT is used, but the request (either buffer address/length, or offset) is not aligned.
+	 */
+	bool		need_conversion;
+
+	uint32_t	head;
+	uint32_t	tail;
+	uint32_t	org_size;
+	uint32_t	bounced_size;
+
+	off_t		aligned_dn_start;
+	off_t		aligned_dn_end;
+
+	/*
+	 * A bounce_iov for aligned read/write access.
+	 * bounce_iov.iov_base is aligned to @alignment
+	 * bounce_iov.iov_len is @bounced_size (@head + @org_size + @tail)
+	 */
+	struct iovec	bounce_iov;
+};
+
 struct blockif_req {
-	struct iovec	iov[BLOCKIF_IOV_MAX];
-	int		iovcnt;
-	off_t		offset;
-	ssize_t		resid;
-	void		(*callback)(struct blockif_req *req, int err);
-	void		*param;
-	int		qidx;
+	struct iovec		iov[BLOCKIF_IOV_MAX];
+	int			iovcnt;
+	off_t			offset;
+	ssize_t			resid;
+	void			(*callback)(struct blockif_req *req, int err);
+	void			*param;
+	int			qidx;
+
+	struct br_align_info	align_info;
 };
 
 struct blockif_ctxt;
