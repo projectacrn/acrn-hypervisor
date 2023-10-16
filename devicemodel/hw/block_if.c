@@ -161,6 +161,9 @@ struct blockif_ctxt {
 
 	/* write cache enable */
 	uint8_t			wce;
+
+	/* whether bypass the Service VM's page cache or not */
+	uint8_t			bypass_host_cache;
 };
 
 static pthread_once_t blockif_once = PTHREAD_ONCE_INIT;
@@ -363,20 +366,447 @@ blockif_process_discard(struct blockif_ctxt *bc, struct blockif_req *br)
 }
 
 static void
+blockif_init_iov_align_info(struct blockif_req *br)
+{
+	int i, size;
+	struct br_align_info *info = &br->align_info;
+
+	size = 0;
+	info->is_iov_base_aligned = true;
+	info->is_iov_len_aligned = true;
+
+	for (i = 0; i < br->iovcnt; i++) {
+		size += br->iov[i].iov_len;
+
+		if ((uint64_t)(br->iov[i].iov_base) % info->alignment) {
+			info->is_iov_base_aligned = false;
+		}
+
+		if (br->iov[i].iov_len % info->alignment) {
+			info->is_iov_len_aligned = false;
+		}
+	}
+
+	info->org_size = size;
+
+	return;
+}
+
+/* only for debug purpose */
+static void
+blockif_dump_align_info(struct blockif_req *br)
+{
+	struct br_align_info *info = &br->align_info;
+	int i;
+
+	if (!info->is_offset_aligned) {
+		DPRINTF(("%s: Misaligned offset 0x%llx \n\r", __func__, (info->aligned_dn_start + info->head)));
+	}
+
+	/* iov info */
+	if (!info->is_iov_base_aligned) {
+		DPRINTF(("%s: Misaligned iov_base \n\r", __func__));
+	}
+	if (!info->is_iov_len_aligned) {
+		DPRINTF(("%s: Misaligned iov_len \n\r", __func__));
+	}
+
+	DPRINTF(("%s: alignment %d, br->iovcnt %d \n\r", __func__, info->alignment, br->iovcnt));
+	for (i = 0; i < br->iovcnt; i++) {
+		DPRINTF(("%s: iov[%d].iov_base 0x%llx (remainder %d), iov[%d].iov_len %d (remainder %d) \n\r",
+			__func__,
+			i, (uint64_t)(br->iov[i].iov_base), (uint64_t)(br->iov[i].iov_base) % info->alignment,
+			i, br->iov[i].iov_len, (br->iov[i].iov_len) % info->alignment));
+	}
+
+	/* overall info */
+	DPRINTF(("%s: head %d, tail %d, org_size %d, bounced_size %d, aligned_dn_start 0x%lx aligned_dn_end 0x%lx \n\r",
+		__func__, info->head, info->tail, info->org_size, info->bounced_size,
+		info->aligned_dn_start, info->aligned_dn_end));
+}
+
+/*
+ *  |<------------------------------------- bounced_size --------------------------------->|
+ *  |<-------- alignment ------->|                            |<-------- alignment ------->|
+ *  |<--- head --->|<------------------------ org_size ---------------------->|<-- tail -->|
+ *  |              |             |                            |               |            |
+ *  *--------------$-------------*----------- ... ------------*---------------$------------*
+ *  |              |             |                            |               |            |
+ *  |              start                                                      end          |
+ *  aligned_dn_start                                          aligned_dn_end
+ *  |__________head_area_________|                            |__________tail_area_________|
+ *  |<--- head --->|             |                            |<-- end_rmd -->|<-- tail -->|
+ *  |<-------- alignment ------->|                            |<-------- alignment ------->|
+ *
+ *
+ * Original access area:
+ *  - start = br->offset + bc->sub_file_start_lba
+ *  - org_size = SUM of org_iov[i].iov_len
+ *  - end = start + org_size
+ *
+ *
+ * Head area to be bounced:
+ *  - head = start % alignment
+ *  - aligned_dn_start = start - head
+ *     head        | head_area
+ *    -------------|-------------
+ *     0           | not exist
+ *     non-zero    | exist
+ *
+ *
+ * Tail area to be bounced:
+ *  - end_rmd = end % alignment
+ *  - aligned_dn_end = end - end_rmd
+ *     end_rmd     | tail                  | tail_area
+ *    -------------|-----------------------|------------------
+ *     0           | 0                     | not exist
+ *     non-zero    | alignment - end_rmd   | exist
+ *
+ *
+ * Overall bounced area:
+ *  - bounced_size = head + org_size + tail
+ *
+ *
+ * Use a single bounce_iov to do the aligned READ/WRITE.
+ *  - bounce_iov cnt = 1
+ *  - bounce_iov.iov_base = return of posix_memalign (aligned to @alignment)
+ *  - bounce_iov.len = bounced_size
+ *  - Accessing from the offset `aligned_dn_start`
+ *
+ *
+ * For READ access:
+ *    1. Do the aligned READ (using `bounce_iov`) from the offset `aligned_dn_start`, with the length `bounced_size`.
+ *    2. AFTER the aligned READ is completed, copy the data from the bounce_iov to the org_iov.
+ *       from                          | length
+ *       ------------------------------|---------------
+ *       bounce_iov.iov_base + head    | org_size
+ *
+ *
+ * For WRITE access:
+ *    1. BEFORE the aligned WRITE is conducted, construct the bounced data with three parts in bounce_iov.
+ *        (a). If head is not 0, get data of first alignment area -> head_area data (by doing aligned read)
+ *             from                | length
+ *             --------------------|---------------
+ *             aligned_dn_start    | alignment
+ *
+ *        (b). If tail is not 0, get data of last alignment area -> tail_area data (by doing aligned read)
+ *             from                | length
+ *             --------------------|---------------
+ *             aligned_dn_end      | alignment
+ *
+ *        (c). Construct the bounced data in bounce_iov
+ *             from                | to               | length        | source
+ *             --------------------|------------------|---------------|---------------------------------
+ *             aligned_dn_start    | start            | head          | head_area data from block device
+ *             start               | end              | org_size      | data specified in org_iov[]
+ *             end                 | end + tail       | tail          | tail_area data from block device
+ *    2. Do the aligned WRITE (using `bounce_iov`) from the offset `aligned_dn_start`, with the length `bounced_size`.
+ *
+ *
+ */
+static void
+blockif_init_alignment_info(struct blockif_ctxt *bc, struct blockif_req *br)
+{
+	struct br_align_info *info = &br->align_info;
+	uint32_t alignment = bc->sectsz;
+	uint32_t end_rmd;
+	off_t start, end;
+	bool all_aligned;
+
+	/* If O_DIRECT flag is not used, does NOT need to initialize the alignment info. */
+	if (!bc->bypass_host_cache) {
+		info->need_conversion = false;
+		return;
+	}
+
+	start = br->offset + bc->sub_file_start_lba;
+	info->is_offset_aligned = (!(start % alignment));
+
+	info->alignment = alignment;
+	blockif_init_iov_align_info(br);
+
+	all_aligned = (info->is_offset_aligned && info->is_iov_base_aligned && info->is_iov_len_aligned);
+	/*
+	 * If O_DIRECT flag is used and the request is aligned,
+	 * does NOT need to initialize the alignment info further.
+	 */
+	if (all_aligned) {
+		info->need_conversion = false;
+		return;
+	}
+	info->need_conversion = true;
+
+	/* head area */
+	info->head = start % alignment;
+	info->aligned_dn_start = start - info->head;
+
+	/* tail area */
+	end = start + info->org_size;
+	end_rmd = (end % alignment);
+	info->tail = (end_rmd == 0) ? (0) : (alignment - end_rmd);
+	info->aligned_dn_end = end - end_rmd;
+
+	/* overall bounced area */
+	info->bounced_size = info->head + info->org_size + info->tail;
+
+	/* only for debug purpose */
+	blockif_dump_align_info(br);
+
+	return;
+}
+
+/*
+ * Use a single bounce_iov to do the aligned READ/WRITE.
+ *  - bounce_iov cnt = 1
+ *  - bounce_iov.iov_base = return of posix_memalign (aligned to @alignment)
+ *  - bounce_iov.len = bounced_size
+ *  - Accessing from the offset `aligned_dn_start`
+ */
+static int
+blockif_init_bounce_iov(struct blockif_req *br)
+{
+	int ret = 0;
+	void *bounce_buf = NULL;
+	struct br_align_info *info = &br->align_info;
+
+	ret = posix_memalign(&bounce_buf, info->alignment, info->bounced_size);
+	if (ret != 0) {
+		bounce_buf = NULL;
+		pr_err("%s: posix_memalign fails, error %s \n", __func__, strerror(-ret));
+	} else {
+		info->bounce_iov.iov_base = bounce_buf;
+		info->bounce_iov.iov_len = info->bounced_size;
+	}
+
+	return ret;
+}
+
+static void
+blockif_deinit_bounce_iov(struct blockif_req *br)
+{
+	struct br_align_info *info = &br->align_info;
+
+	if (info->bounce_iov.iov_base == NULL) {
+		pr_err("%s: info->bounce_iov.iov_base is NULL %s \n", __func__);
+		return;
+	}
+
+	free(info->bounce_iov.iov_base);
+	info->bounce_iov.iov_base = NULL;
+}
+
+/*
+ * For READ access:
+ *    1. Do the aligned READ (using `bounce_iov`) from the offset `aligned_dn_start`, with the length `bounced_size`.
+ *    2. AFTER the aligned READ is completed, copy the data from the bounce_iov to the org_iov.
+ *       from                          | length
+ *       ------------------------------|---------------
+ *       bounce_iov.iov_base + head    | org_size
+ */
+static void
+blockif_complete_bounced_read(struct blockif_req *br)
+{
+	struct iovec *iov = br->iov;
+	struct br_align_info *info = &br->align_info;
+	int length = info->org_size;
+	int i, len, done;
+
+	if (info->bounce_iov.iov_base == NULL) {
+		pr_err("%s: info->bounce_iov.iov_base is NULL %s \n", __func__);
+		return;
+	}
+
+	done = info->head;
+	for (i = 0; i < br->iovcnt; i++) {
+		len = (iov[i].iov_len < length) ? iov[i].iov_len : length;
+		memcpy(iov[i].iov_base, info->bounce_iov.iov_base + done, len);
+
+		done += len;
+		length -= len;
+		if (length <= 0)
+			break;
+	}
+
+	return;
+};
+
+/*
+ * It is used to read out the head/tail area to construct the bounced data.
+ *
+ * Allocate an aligned buffer for @b_iov and do an aligned read from @offset (with length @alignment).
+ * @offset shall be guaranteed to be aligned by caller (either aligned_dn_start or aligned_dn_end).
+ */
+static int
+blockif_read_head_or_tail_area(int fd, struct iovec *b_iov, off_t offset, uint32_t alignment)
+{
+	int ret = 0;
+	int bytes_read;
+	void *area = NULL;
+
+	ret = posix_memalign(&area, alignment, alignment);
+	if (ret != 0) {
+		area = NULL;
+		pr_err("%s: posix_memalign fails, error %s \n", __func__, strerror(-ret));
+		return ret;
+	}
+
+	b_iov->iov_base = area;
+	b_iov->iov_len = alignment;
+	bytes_read = preadv(fd, b_iov, 1, offset);
+
+	if (bytes_read < 0) {
+		pr_err("%s: read fails \n", __func__);
+		ret = errno;
+	}
+
+	return ret;
+}
+
+/*
+ * For WRITE access:
+ *    1. BEFORE the aligned WRITE is conducted, construct the bounced data with three parts in bounce_iov.
+ *        (a). If head is not 0, get data of first alignment area -> head_area data (by doing aligned read)
+ *             from                | length
+ *             --------------------|---------------
+ *             aligned_dn_start    | alignment
+ *
+ *        (b). If tail is not 0, get data of last alignment area -> tail_area data (by doing aligned read)
+ *             from                | length
+ *             --------------------|---------------
+ *             aligned_dn_end      | alignment
+ *
+ *        (c). Construct the bounced data in bounce_iov
+ *             from                | to               | length        | source
+ *             --------------------|------------------|---------------|---------------------------------
+ *             aligned_dn_start    | start            | head          | head_area data from block device
+ *             start               | end              | org_size      | data specified in org_iov[]
+ *             end                 | end + tail       | tail          | tail_area data from block device
+ *    2. Do the aligned WRITE (using `bounce_iov`) from the offset `aligned_dn_start`, with the length `bounced_size`.
+ */
+static int
+blockif_init_bounced_write(struct blockif_ctxt *bc, struct blockif_req *br)
+{
+	struct iovec *iov = br->iov;
+	struct br_align_info *info = &br->align_info;
+	uint32_t alignment = info->alignment;
+	struct iovec head_iov, tail_iov;
+	uint32_t head = info->head;
+	uint32_t tail = info->tail;
+	int i, done, ret;
+
+	ret = 0;
+
+	if (info->bounce_iov.iov_base == NULL) {
+		pr_err("%s: info->bounce_iov.iov_base is NULL \n", __func__);
+		return -1;
+	}
+
+	memset(&head_iov, 0, sizeof(head_iov));
+	memset(&tail_iov, 0, sizeof(tail_iov));
+
+	/*
+	 * If head is not 0, get data of first alignment area, head_area data (by doing aligned read)
+	 *  from                | length
+	 *  --------------------|---------------
+	 *  aligned_dn_start    | alignment
+	 */
+	if (head != 0) {
+		ret = blockif_read_head_or_tail_area(bc->fd, &head_iov, info->aligned_dn_start, alignment);
+		if (ret < 0) {
+			pr_err("%s: fails to read out the head area \n", __func__);
+			goto end;
+		}
+	}
+
+	/*
+	 * If tail is not 0, get data of last alignment area, tail_area data (by doing aligned read)
+	 *  from                | length
+	 *  --------------------|---------------
+	 *  aligned_dn_end      | alignment
+	 */
+	if (tail != 0) {
+		ret = blockif_read_head_or_tail_area(bc->fd, &tail_iov, info->aligned_dn_end, alignment);
+		if (ret < 0) {
+			pr_err("%s: fails to read out the tail area \n", __func__);
+			goto end;
+		}
+	}
+
+	done = 0;
+	/*
+	 * Construct the bounced data in bounce_iov
+	 *  from                | to               | length        | source
+	 *  --------------------|------------------|---------------|---------------------------------
+	 *  aligned_dn_start    | start            | head          | head_area data from block device
+	 *  start               | end              | org_size      | data specified in org_iov[]
+	 *  end                 | end + tail       | tail          | tail_area data from block device
+	 */
+	if (head_iov.iov_base != NULL) {
+		memcpy(info->bounce_iov.iov_base, head_iov.iov_base, head);
+		done += head;
+	}
+
+	/* data specified in org_iov[] */
+	for (i = 0; i < br->iovcnt; i++) {
+		memcpy(info->bounce_iov.iov_base + done, iov[i].iov_base, iov[i].iov_len);
+		done += iov[i].iov_len;
+	}
+
+	if (tail_iov.iov_base != NULL) {
+		memcpy(info->bounce_iov.iov_base + done, tail_iov.iov_base + alignment - tail, tail);
+		done += tail;
+	}
+
+end:
+	if (head_iov.iov_base != NULL) {
+		free(head_iov.iov_base);
+	}
+
+	if (tail_iov.iov_base != NULL) {
+		free(tail_iov.iov_base);
+	}
+
+	return ret;
+};
+
+static void
 blockif_proc(struct blockif_queue *bq, struct blockif_elem *be)
 {
 	struct blockif_req *br;
 	struct blockif_ctxt *bc;
-	ssize_t len;
+	struct br_align_info *info;
+	ssize_t len, iovcnt;
+	struct iovec *iovecs;
+	off_t offset;
 	int err;
 
 	br = be->req;
 	bc = bq->bc;
+	info = &br->align_info;
 	err = 0;
+
+	if ((be->op == BOP_READ) || (be->op == BOP_WRITE)) {
+		if (info->need_conversion) {
+			/* bounce_iov has been initialized in blockif_request */
+			iovecs = &(info->bounce_iov);
+			iovcnt = 1;
+			offset = info->aligned_dn_start;
+		} else {
+			/* use the original iov if no conversion is required */
+			iovecs = br->iov;
+			iovcnt = br->iovcnt;
+			offset = br->offset + bc->sub_file_start_lba;
+		}
+	}
+
 	switch (be->op) {
 	case BOP_READ:
-		len = preadv(bc->fd, br->iov, br->iovcnt,
-				 br->offset + bc->sub_file_start_lba);
+		len = preadv(bc->fd, iovecs, iovcnt, offset);
+		if (info->need_conversion) {
+			blockif_complete_bounced_read(br);
+			blockif_deinit_bounce_iov(br);
+		}
+
 		if (len < 0)
 			err = errno;
 		else
@@ -388,8 +818,11 @@ blockif_proc(struct blockif_queue *bq, struct blockif_elem *be)
 			break;
 		}
 
-		len = pwritev(bc->fd, br->iov, br->iovcnt,
-				  br->offset + bc->sub_file_start_lba);
+		len = pwritev(bc->fd, iovecs, iovcnt, offset);
+		if (info->need_conversion) {
+			blockif_deinit_bounce_iov(br);
+		}
+
 		if (len < 0)
 			err = errno;
 		else {
@@ -596,18 +1029,36 @@ iou_submit_sqe(struct blockif_queue *bq, struct blockif_elem *be)
 	struct io_uring_sqe *sqes = io_uring_get_sqe(ring);
 	struct blockif_req *br = be->req;
 	struct blockif_ctxt *bc = bq->bc;
+	struct br_align_info *info = &br->align_info;
+	struct iovec *iovecs;
+	size_t iovcnt;
+	off_t offset;
 
 	if (!sqes) {
 		pr_err("%s: io_uring_get_sqe fails. NO available submission queue entry. \n", __func__);
 		return -1;
 	}
 
+	if ((be->op == BOP_READ) || (be->op == BOP_WRITE)) {
+		if (info->need_conversion) {
+			/* bounce_iov has been initialized in blockif_request */
+			iovecs = &(info->bounce_iov);
+			iovcnt = 1;
+			offset = info->aligned_dn_start;
+		} else {
+			/* use the original iov if no conversion is required */
+			iovecs = br->iov;
+			iovcnt = br->iovcnt;
+			offset = br->offset + bc->sub_file_start_lba;
+		}
+	}
+
 	switch (be->op) {
 	case BOP_READ:
-		io_uring_prep_readv(sqes, bc->fd, br->iov, br->iovcnt, br->offset + bc->sub_file_start_lba);
+		io_uring_prep_readv(sqes, bc->fd, iovecs, iovcnt, offset);
 		break;
 	case BOP_WRITE:
-		io_uring_prep_writev(sqes, bc->fd, br->iov, br->iovcnt, br->offset + bc->sub_file_start_lba);
+		io_uring_prep_writev(sqes, bc->fd, iovecs, iovcnt, offset);
 		break;
 	case BOP_FLUSH:
 		io_uring_prep_fsync(sqes, bc->fd, IORING_FSYNC_DATASYNC);
@@ -689,6 +1140,14 @@ iou_process_completions(struct blockif_queue *bq)
 		if (!br) {
 			pr_err("%s: br is NULL \n", __func__);
 			break;
+		}
+
+		/* when a misaligned request is converted to an aligned one, need to do some post-work */
+		if (br->align_info.need_conversion) {
+			if (be->op == BOP_READ) {
+				blockif_complete_bounced_read(br);
+			}
+			blockif_deinit_bounce_iov(br);
 		}
 
 		be->status = BST_DONE;
@@ -1089,6 +1548,7 @@ blockif_open(const char *optstr, const char *ident, int queue_num, struct iothre
 	bc->psectsz = psectsz;
 	bc->psectoff = psectoff;
 	bc->wce = writeback;
+	bc->bypass_host_cache = bypass_host_cache;
 	bc->aio_mode = aio_mode;
 
 	if (bc->aio_mode == AIO_MODE_IO_URING) {
@@ -1172,6 +1632,22 @@ blockif_request(struct blockif_ctxt *bc, struct blockif_req *breq,
 		return ENOENT;
 	}
 	bq = bc->bqs + breq->qidx;
+
+	blockif_init_alignment_info(bc, breq);
+	/* For misaligned READ/WRITE, need a bounce_iov to convert the misaligned request to an aligned one. */
+	if (((op == BOP_READ) || (op == BOP_WRITE)) && (breq->align_info.need_conversion)) {
+		err = blockif_init_bounce_iov(breq);
+		if (err < 0) {
+			return err;
+		}
+
+		if (op == BOP_WRITE) {
+			err = blockif_init_bounced_write(bc, breq);
+			if (err < 0) {
+				return err;
+			}
+		}
+	}
 
 	if (bc->ops->mutex_lock) {
 		bc->ops->mutex_lock(&bq->mtx);
