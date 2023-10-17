@@ -829,6 +829,7 @@ blockif_open(const char *optstr, const char *ident, int queue_num, struct iothre
 	int max_discard_sectors, max_discard_seg, discard_sector_alignment;
 	off_t probe_arg[] = {0, 0};
 	int aio_mode;
+	int bypass_host_cache, open_flag;
 
 	pthread_once(&blockif_once, blockif_init);
 
@@ -849,6 +850,9 @@ blockif_open(const char *optstr, const char *ident, int queue_num, struct iothre
 
 	/* writethru is on by default */
 	writeback = 0;
+
+	/* By default, do NOT bypass Service VM's page cache. */
+	bypass_host_cache = 0;
 
 	candiscard = 0;
 
@@ -874,6 +878,8 @@ blockif_open(const char *optstr, const char *ident, int queue_num, struct iothre
 			writeback = 0;
 		else if (!strcmp(cp, "ro"))
 			ro = 1;
+		else if (!strcmp(cp, "nocache"))
+			bypass_host_cache = 1;
 		else if (!strncmp(cp, "discard", strlen("discard"))) {
 			strsep(&cp, "=");
 			if (cp != NULL) {
@@ -933,8 +939,12 @@ blockif_open(const char *optstr, const char *ident, int queue_num, struct iothre
 	 * after file is opened. Instead, we call fsync() after each write
 	 * operation to emulate it.
 	 */
+	open_flag = (ro ? O_RDONLY : O_RDWR);
+	if (bypass_host_cache == 1) {
+		open_flag |= O_DIRECT;
+	}
+	fd = open(nopt, open_flag);
 
-	fd = open(nopt, ro ? O_RDONLY : O_RDWR);
 	if (fd < 0 && !ro) {
 		/* Attempt a r/w fail with a r/o open */
 		fd = open(nopt, O_RDONLY);
