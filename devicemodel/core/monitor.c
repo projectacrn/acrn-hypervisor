@@ -124,10 +124,10 @@ static void *intr_storm_monitor_thread(void *arg)
 		}
 
 		/*
-		 * calc the delta of the two times count of interrupt;
-		 * compare the IRQ num first, if not same just drop it,
-		 * for it just happens rarelly when devices dynamically
-		 * allocation in Service VM or User VM, it can be calc next time
+		 * calculate the delta of the two times count of interrupt;
+		 * compare the IRQ number first, if not same just drop it,
+		 * for it just happens rarely when devices dynamically
+		 * allocation in Service VM or User VM, it can be calculated next time
 		 */
 		for (i = 0; i < hdr->buf_cnt; i += 2) {
 			if (hdr->buffer[i] != intr_cnt_buf[i])
