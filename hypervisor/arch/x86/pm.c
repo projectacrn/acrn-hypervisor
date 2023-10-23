@@ -302,7 +302,7 @@ void init_frequency_policy(void)
  * This Function is to be called by each pcpu after init_cpufreq().
  * It applies the frequency policy, which can be specified from boot parameters.
  *   - cpu_perf_policy=Performance: HWP autonomous selection, between highest HWP level and
- *     lowest HWP level. If HWP is not avaliable, the frequency is fixed to highest p-state.
+ *     lowest HWP level. If HWP is not available, the frequency is fixed to highest p-state.
  *   - cpu_perf_policy=Nominal: frequency is fixed to guaranteed HWP level or nominal p-state.
  * The default policy is 'Performance'.
  *
@@ -317,7 +317,7 @@ void apply_frequency_policy(void)
 
 	cpuid_subleaf(0x6U, 0U, &cpuid_06_eax, &unused, &unused, &unused);
 	cpuid_subleaf(0x1U, 0U, &unused, &unused, &cpuid_01_ecx, &unused);
-	/* Both HWP and ACPI p-state are supported. HWP is the first choise. */
+	/* Both HWP and ACPI p-state are supported. HWP is the first choice. */
 	if ((cpuid_06_eax & CPUID_EAX_HWP) != 0U) {
 		/*
 		 * For Performance policy(default): CPU frequency will be autonomously selected between highest and lowest
@@ -342,7 +342,7 @@ void apply_frequency_policy(void)
 			pstate_req = limits->nominal_pstate;
 		}
 
-		/* PX info might be missing on some platforms (px_cnt equels 0). Do nothing if so. */
+		/* PX info might be missing on some platforms (px_cnt equals 0). Do nothing if so. */
 		if (pm_s_state_data->px_cnt != 0) {
 			if (pstate_req < pm_s_state_data->px_cnt) {
 				msr_write(MSR_IA32_PERF_CTL, pm_s_state_data->px_data[pstate_req].control);

@@ -22,7 +22,7 @@ static uint64_t smp_call_mask = 0UL;
 /* run in interrupt context */
 static void kick_notification(__unused uint32_t irq, __unused void *data)
 {
-	/* Notification vector is used to kick taget cpu out of non-root mode.
+	/* Notification vector is used to kick target cpu out of non-root mode.
 	 * And it also serves for smp call.
 	 */
 	uint16_t pcpu_id = get_pcpu_id();
