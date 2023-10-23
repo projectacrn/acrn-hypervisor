@@ -32,10 +32,10 @@ struct page *alloc_page(struct page_pool *pool)
 	ASSERT(page != NULL, "no page aviable!");
 	page = (page != NULL) ? page : pool->dummy_page;
 	if (page == NULL) {
-		/* For HV MMU pagetable mapping, we didn't use dummy page when there's no page
-		 * aviable in the page pool. This because we only do MMU pagetable mapping on
+		/* For HV MMU page-table mapping, we didn't use dummy page when there's no page
+		 * available in the page pool. This because we only do MMU page-table mapping on
 		 * the early boot time and we reserve enough pages for it. After that, we would
-		 * not do any MMU pagetable mapping. We would let the system boot fail when page
+		 * not do any MMU page-table mapping. We would let the system boot fail when page
 		 * allocation failed.
 		 */
 		panic("no dummy aviable!");
