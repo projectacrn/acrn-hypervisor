@@ -40,10 +40,10 @@ static struct {
 };
 
 /*
- * alloc an vectror and bind it to irq
+ * allocate a vector and bind it to irq
  * for legacy_irq (irq num < 16) and static mapped ones, do nothing
  * if mapping is correct.
- * retval: valid vector num on susccess, VECTOR_INVALID on failure.
+ * retval: valid vector number on success, VECTOR_INVALID on failure.
  */
 uint32_t alloc_irq_vector(uint32_t irq)
 {
@@ -66,7 +66,7 @@ uint32_t alloc_irq_vector(uint32_t irq)
 			}
 		} else {
 			/* alloc a vector between:
-			 *   VECTOR_DYNAMIC_START ~ VECTOR_DYNAMC_END
+			 *   VECTOR_DYNAMIC_START ~ VECTOR_DYNAMIC_END
 			 */
 			for (vr = VECTOR_DYNAMIC_START;
 				vr <= VECTOR_DYNAMIC_END; vr++) {

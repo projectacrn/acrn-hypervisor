@@ -298,7 +298,7 @@ void init_paging(void)
 	}
 
 	/*
-	 * set the paging-structure entries' U/S flag to supervisor-mode for hypervisor owned memroy.
+	 * set the paging-structure entries' U/S flag to supervisor-mode for hypervisor owned memory.
 	 * (exclude the memory reserve for trusty)
 	 *
 	 * Before the new PML4 take effect in enable_paging(), HPA->HVA is always 1:1 mapping,

@@ -284,7 +284,7 @@ void send_single_init(uint16_t pcpu_id)
 	/*
 	 * Intel SDM Vol3 23.8:
 	 *   The INIT signal is blocked whenever a logical processor is in VMX root operation.
-	 *   It is not blocked in VMX nonroot operation. Instead, INITs cause VM exits
+	 *   It is not blocked in VMX non-root operation. Instead, INITs cause VM exits
 	 */
 
 	icr.value_32.hi_32 = per_cpu(lapic_id, pcpu_id);
