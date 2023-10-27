@@ -469,6 +469,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	bool dummy_bctxt;
 	char bident[16];
+	char ioctx_tag[16];
 	struct blockif_ctxt *bctxt;
 	char *opts_tmp = NULL;
 	char *opts_start = NULL;
@@ -585,7 +586,11 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				num_iothread = num_vqs;
 			}
 
-			ioctx_base = iothread_create(num_iothread);
+			if (snprintf(ioctx_tag, sizeof(ioctx_tag), "blk%s", bident) >= sizeof(ioctx_tag)) {
+				pr_err("%s: virtio-blk ioctx_tag too long \n", __func__);
+			}
+
+			ioctx_base = iothread_create(num_iothread, ioctx_tag);
 			if (ioctx_base == NULL) {
 				pr_err("%s: Fails to create iothread context instance \n", __func__);
 				return -1;

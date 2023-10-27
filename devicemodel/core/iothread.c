@@ -63,7 +63,6 @@ io_thread(void *arg)
 static int
 iothread_start(struct iothread_ctx *ioctx_x)
 {
-	char tname[MAXCOMLEN + 1];
 	pthread_mutex_lock(&ioctx_x->mtx);
 
 	if (ioctx_x->started) {
@@ -78,10 +77,9 @@ iothread_start(struct iothread_ctx *ioctx_x)
 	}
 
 	ioctx_x->started = true;
-	snprintf(tname, sizeof(tname), "iothread_%d", ioctx_x->idx);
-	pthread_setname_np(ioctx_x->tid, tname);
+	pthread_setname_np(ioctx_x->tid, ioctx_x->name);
 	pthread_mutex_unlock(&ioctx_x->mtx);
-	pr_info("iothread_%d started\n", ioctx_x->idx);
+	pr_info("%s started\n", ioctx_x->name);
 
 	return 0;
 }
@@ -158,7 +156,7 @@ iothread_deinit(void)
 			ioctx_x->epfd = -1;
 		}
 		pthread_mutex_destroy(&ioctx_x->mtx);
-		pr_info("iothread_%d stop \n", i);
+		pr_info("%s stop \n", ioctx_x->name);
 	}
 	ioctx_active_cnt = 0;
 	pthread_mutex_unlock(&ioctxes_mutex);
@@ -169,7 +167,7 @@ iothread_deinit(void)
  * Return NULL if fails. Otherwise, return the base of those iothread context instances.
  */
 struct iothread_ctx *
-iothread_create(int ioctx_num)
+iothread_create(int ioctx_num, const char *ioctx_tag)
 {
 	pthread_mutexattr_t attr;
 	int i, ret, base, end;
@@ -198,6 +196,11 @@ iothread_create(int ioctx_num)
 			ioctx_x->tid = 0;
 			ioctx_x->started = false;
 			ioctx_x->epfd = epoll_create1(0);
+
+			if (snprintf(ioctx_x->name, PTHREAD_NAME_MAX_LEN,
+				"iothr-%d-%s", ioctx_x->idx, ioctx_tag) >= PTHREAD_NAME_MAX_LEN) {
+				pr_err("%s: iothread name too long \n", __func__);
+			}
 
 			if (ioctx_x->epfd < 0) {
 				ret = -1;
