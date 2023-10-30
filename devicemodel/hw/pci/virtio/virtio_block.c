@@ -469,7 +469,6 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	bool dummy_bctxt;
 	char bident[16];
-	char ioctx_tag[16];
 	struct blockif_ctxt *bctxt;
 	char *opts_tmp = NULL;
 	char *opts_start = NULL;
@@ -479,21 +478,19 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	bool use_iothread;
 	struct iothread_ctx *ioctx_base = NULL;
 	struct iothreads_info iothrds_info;
-	int num_vqs, num_iothread;
+	int num_vqs;
 	int i, j;
 	pthread_mutexattr_t attr;
 	int rc;
+	struct iothreads_option iot_opt;
+
+	memset(&iot_opt, 0, sizeof(iot_opt));
 
 	bctxt = NULL;
 	/* Assume the bctxt is valid, until identified otherwise */
 	dummy_bctxt = false;
 	use_iothread = false;
 	num_vqs = 1;
-
-	/*
-	 * Create one iothread instance if DM parameters contain 'iothread', but the number is not specified.
-	 */
-	num_iothread = 1;
 
 	if (opts == NULL) {
 		pr_err("virtio_blk: backing device required\n");
@@ -527,29 +524,16 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		char *p = opts_start;
 		while (opts_tmp != NULL) {
 			opt = strsep(&opts_tmp, ",");
-			/*
-			 * Valid 'iothread' setting examples:
-			 * - create 1 iothread instance for virtio-blk
-			 *   ... virtio-blk iothread,...
-			 *
-			 * - create 1 iothread instance for virtio-blk
-			 *   ... virtio-blk iothread=1,...
-			 *
-			 * - create 3 iothread instances for virtio-blk
-			 *   ... virtio-blk iothread=3,...
-			 */
+
 			if (!strncmp(opt, "iothread", strlen("iothread"))) {
 				use_iothread = true;
 				strsep(&opt, "=");
-				if (opt != NULL) {
-					if (dm_strtoi(opt, &opt, 10, &num_iothread) ||
-						(num_iothread <= 0)) {
-						WPRINTF(("%s: incorrect iothread number %s\n",
-							__func__, opt));
-						free(opts_start);
-						return -1;
-					}
+
+				if (iothread_parse_options(opt, &iot_opt) < 0) {
+					free(opts_start);
+					return -1;
 				}
+
 				p = opts_tmp;
 			} else if (!strncmp(opt, "mq", strlen("mq"))) {
 				strsep(&opt, "=");
@@ -582,22 +566,23 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			 * - One or more vqs can be handled in one iothread.
 			 * - The mapping between virtqueues and iothreads is based on round robin.
 			 */
-			if (num_iothread > num_vqs) {
-				num_iothread = num_vqs;
+			if (iot_opt.num > num_vqs) {
+				iot_opt.num = num_vqs;
 			}
 
-			if (snprintf(ioctx_tag, sizeof(ioctx_tag), "blk%s", bident) >= sizeof(ioctx_tag)) {
+			if (snprintf(iot_opt.tag, sizeof(iot_opt.tag), "blk%s", bident) >= sizeof(iot_opt.tag)) {
 				pr_err("%s: virtio-blk ioctx_tag too long \n", __func__);
 			}
 
-			ioctx_base = iothread_create(num_iothread, ioctx_tag);
+			ioctx_base = iothread_create(&iot_opt);
+			iothread_free_options(&iot_opt);
 			if (ioctx_base == NULL) {
 				pr_err("%s: Fails to create iothread context instance \n", __func__);
 				return -1;
 			}
 		}
 		iothrds_info.ioctx_base = ioctx_base;
-		iothrds_info.num = num_iothread;
+		iothrds_info.num = iot_opt.num;
 
 		bctxt = blockif_open(p, bident, num_vqs, &iothrds_info);
 		if (bctxt == NULL) {
@@ -619,7 +604,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	blk->iothrds_info.ioctx_base = ioctx_base;
-	blk->iothrds_info.num = num_iothread;
+	blk->iothrds_info.num = iot_opt.num;
 
 	blk->bc = bctxt;
 	/* Update virtio-blk device struct of dummy ctxt*/
@@ -677,7 +662,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		blk->vqs[j].qsize = VIRTIO_BLK_RINGSZ;
 		blk->vqs[j].notify = virtio_blk_notify;
 		if (use_iothread) {
-			blk->vqs[j].viothrd.ioctx = ioctx_base + j % num_iothread;
+			blk->vqs[j].viothrd.ioctx = ioctx_base + j % (iot_opt.num);
 		}
 	}
 

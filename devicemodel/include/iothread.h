@@ -29,7 +29,14 @@ struct iothread_ctx {
 	bool started;
 	pthread_mutex_t mtx;
 	int idx;
+	cpu_set_t cpuset;
 	char name[PTHREAD_NAME_MAX_LEN];
+};
+
+struct iothreads_option {
+	char tag[PTHREAD_NAME_MAX_LEN];
+	int num;
+	cpu_set_t *cpusets;
 };
 
 struct iothreads_info {
@@ -40,6 +47,8 @@ struct iothreads_info {
 int iothread_add(struct iothread_ctx *ioctx_x, int fd, struct iothread_mevent *aevt);
 int iothread_del(struct iothread_ctx *ioctx_x, int fd);
 void iothread_deinit(void);
-struct iothread_ctx *iothread_create(int ioctx_num, const char *ioctx_tag);
+struct iothread_ctx *iothread_create(struct iothreads_option *iothr_opt);
+int iothread_parse_options(char *str, struct iothreads_option *iothr_opt);
+void iothread_free_options(struct iothreads_option *iothr_opt);
 
 #endif
