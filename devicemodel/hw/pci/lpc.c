@@ -87,6 +87,7 @@ lpc_device_parse(const char *opts)
 	if (lpcdev != NULL) {
 		for (unit = 0; unit < LPC_UART_NUM; unit++) {
 			if (strcasecmp(lpcdev, lpc_uart_names[unit]) == 0) {
+				lpc_uart_vdev[unit].enabled = 1;
 				lpc_uart_vdev[unit].opts = str;
 				error = 0;
 				goto done;
@@ -201,6 +202,9 @@ lpc_init(struct vmctx *ctx)
 	for (unit = 0; unit < LPC_UART_NUM; unit++) {
 		lpc_uart = &lpc_uart_vdev[unit];
 		name = lpc_uart_names[unit];
+
+		if (lpc_uart->enabled == 0)
+			continue;
 
 		if (uart_legacy_alloc(unit,
 				      &lpc_uart->iobase,
