@@ -499,7 +499,8 @@ static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 
 static inline bool is_percpu_related(uint32_t leaf)
 {
-	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) || (leaf == 0x80000001U) || (leaf == 0x2U) || (leaf == 0x1aU));
+	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) ||
+		(leaf == 0x1fU) || (leaf == 0x80000001U) || (leaf == 0x2U) || (leaf == 0x1aU));
 }
 
 int32_t set_vcpuid_entries(struct acrn_vm *vm)
@@ -776,6 +777,14 @@ static void guest_cpuid_19h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 	}
 }
 
+static void guest_cpuid_1fh(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	cpuid_subleaf(0x1fU, *ecx, eax, ebx, ecx, edx);
+
+	/* Patching X2APIC */
+	*edx = vlapic_get_apicid(vcpu_vlapic(vcpu));
+}
+
 static void guest_cpuid_80000001h(const struct acrn_vcpu *vcpu,
 	uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
@@ -859,13 +868,17 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			guest_cpuid_19h(vcpu, eax, ebx, ecx, edx);
 			break;
 
+		case 0x1fU:
+			guest_cpuid_1fh(vcpu, eax, ebx, ecx, edx);
+			break;
+
 		case 0x80000001U:
 			guest_cpuid_80000001h(vcpu, eax, ebx, ecx, edx);
 			break;
 
 		default:
 			/*
-			 * In this switch statement, leaf 0x01/0x0b/0x0d/0x19/0x80000001
+			 * In this switch statement, leaf 0x01/0x0b/0x0d/0x19/0x1f/0x80000001
 			 * shall be handled specifically. All the other cases
 			 * just return physical value.
 			 */
