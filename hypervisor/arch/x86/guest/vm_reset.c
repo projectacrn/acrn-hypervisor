@@ -95,7 +95,7 @@ static bool handle_reset_reg_read(struct acrn_vcpu *vcpu, __unused uint16_t addr
 /**
  * @pre vm != NULL
  */
-static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset)
+static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset, bool warm)
 {
 	struct acrn_vm *vm = vcpu->vm;
 	bool ret = true;
@@ -105,7 +105,7 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset)
 		poweroff_if_rt_vm(vm);
 
 		if (get_highest_severity_vm(true) == vm) {
-			reset_host();
+			reset_host(warm);
 		} else if (is_postlaunched_vm(vm)) {
 			/* re-inject to DM */
 			ret = false;
@@ -142,7 +142,7 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset)
 static bool handle_kb_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size_t bytes, uint32_t val)
 {
 	/* ignore commands other than system reset */
-	return handle_common_reset_reg_write(vcpu, ((bytes == 1U) && (val == 0xfeU)));
+	return handle_common_reset_reg_write(vcpu, ((bytes == 1U) && (val == 0xfeU)), false);
 }
 
 static bool handle_kb_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
@@ -172,9 +172,9 @@ static bool handle_kb_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
  */
 static bool handle_cf9_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size_t bytes, uint32_t val)
 {
-	/* We don't differentiate among hard/soft/warm/cold reset */
 	return handle_common_reset_reg_write(vcpu,
-			((bytes == 1U) && ((val & 0x4U) == 0x4U) && ((val & 0xaU) != 0U)));
+			((bytes == 1U) && ((val & 0x4U) == 0x4U) && ((val & 0xaU) != 0U)),
+			((val & 0x8U) == 0U));
 }
 
 /**
@@ -189,7 +189,7 @@ static bool handle_reset_reg_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 		struct acpi_reset_reg *reset_reg = get_host_reset_reg_data();
 
 		if (val == reset_reg->val) {
-			ret = handle_common_reset_reg_write(vcpu, true);
+			ret = handle_common_reset_reg_write(vcpu, true, false);
 		} else {
 			/*
 			 * ACPI defines the reset value but doesn't specify the meaning of other values.

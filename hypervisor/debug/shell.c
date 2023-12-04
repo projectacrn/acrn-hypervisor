@@ -1531,7 +1531,7 @@ static int32_t shell_cpuid(int32_t argc, char **argv)
 
 static int32_t shell_reboot(__unused int32_t argc, __unused char **argv)
 {
-	reset_host();
+	reset_host(false);
 	return 0;
 }
 
