@@ -12,6 +12,9 @@
 #define	BIT_SLP_EN	13U
 #define	BIT_WAK_STS	15U
 
+#define CF9_RESET_WARM	0x6
+#define CF9_RESET_COLD	0xE
+
 struct cpu_state_info {
 	uint8_t			 	px_cnt;	/* count of all Px states */
 	const struct acrn_pstate_data	*px_data;
@@ -38,7 +41,7 @@ extern void asm_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1
 extern void restore_s3_context(void);
 struct cpu_state_info *get_cpu_pm_state_info(void);
 struct acpi_reset_reg *get_host_reset_reg_data(void);
-void reset_host(void);
+void reset_host(bool warm);
 void init_frequency_policy(void);
 void apply_frequency_policy(void);
 
