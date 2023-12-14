@@ -375,7 +375,7 @@
       <xsl:value-of select="acrn:initializer('mem_type', 'EPT_UNCACHED')" />
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
-      <xsl:if test="//capability[@id='log_area']">
+      <xsl:if test="//capability[@id='log_area'] and //capability[@id='log_area']/log_area_minimum_length != '0x0' and //capability[@id='log_area']/log_area_start_address != '0x0'">
         <xsl:value-of select="acrn:initializer('res[1]', '{', true())" />
         <xsl:value-of select="acrn:initializer('user_vm_pa', 'VM0_TPM_EVENTLOG_BASE_ADDR')" />
         <xsl:value-of select="acrn:initializer('host_pa', 'VM0_TPM_EVENTLOG_BASE_ADDR_HPA')" />
