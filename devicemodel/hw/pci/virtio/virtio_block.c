@@ -165,24 +165,13 @@ struct virtio_blk {
 	uint8_t original_wce;
 	int num_vqs;
 	struct iothreads_info iothrds_info;
+	struct virtio_ops ops;
 };
 
 static void virtio_blk_reset(void *);
 static void virtio_blk_notify(void *, struct virtio_vq_info *);
 static int virtio_blk_cfgread(void *, int, int, uint32_t *);
 static int virtio_blk_cfgwrite(void *, int, int, uint32_t);
-
-static struct virtio_ops virtio_blk_ops = {
-	"virtio_blk",		/* our name */
-	1,			/* we support 1 virtqueue */
-	sizeof(struct virtio_blk_config), /* config reg size */
-	virtio_blk_reset,	/* reset */
-	NULL,			/* device-wide qnotify */
-	virtio_blk_cfgread,	/* read PCI config */
-	virtio_blk_cfgwrite,	/* write PCI config */
-	NULL,			/* apply negotiated features */
-	NULL,			/* called on guest set status */
-};
 
 static void
 virtio_blk_reset(void *vdev)
@@ -464,6 +453,18 @@ virtio_blk_update_config_space(struct virtio_blk *blk)
 	blk->base.device_caps =
 		virtio_blk_get_caps(blk, !!blk->cfg.writeback);
 }
+
+static void
+virtio_blk_init_ops(struct virtio_blk *blk, int num_vqs)
+{
+	blk->ops.name = "virtio_blk";
+	blk->ops.nvq = num_vqs;
+	blk->ops.cfgsize = sizeof(struct virtio_blk_config);
+	blk->ops.reset = virtio_blk_reset;
+	blk->ops.cfgread = virtio_blk_cfgread;
+	blk->ops.cfgwrite = virtio_blk_cfgwrite;
+}
+
 static int
 virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
@@ -611,7 +612,6 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	blk->dummy_bctxt = dummy_bctxt;
 
 	blk->num_vqs = num_vqs;
-	virtio_blk_ops.nvq = num_vqs;
 	blk->vqs = calloc(blk->num_vqs, sizeof(struct virtio_vq_info));
 	if (!blk->vqs) {
 		WPRINTF(("virtio_blk: calloc vqs returns NULL\n"));
@@ -653,8 +653,10 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		DPRINTF(("virtio_blk: pthread_mutex_init failed with "
 					"error %d!\n", rc));
 
+	virtio_blk_init_ops(blk, num_vqs);
+
 	/* init virtio struct and virtqueues */
-	virtio_linkup(&blk->base, &virtio_blk_ops, blk, dev, blk->vqs, BACKEND_VBSU);
+	virtio_linkup(&blk->base, &(blk->ops), blk, dev, blk->vqs, BACKEND_VBSU);
 	blk->base.iothread = use_iothread;
 	blk->base.mtx = &blk->mtx;
 
