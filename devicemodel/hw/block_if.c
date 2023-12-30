@@ -1120,6 +1120,7 @@ iou_process_completions(struct blockif_queue *bq)
 	struct blockif_elem *be;
 	struct blockif_req *br;
 	struct io_uring *ring = &bq->ring;
+	int err = 0;
 
 	while (io_uring_peek_cqe(ring, &cqes) == 0) {
 		if (!cqes) {
@@ -1150,8 +1151,12 @@ iou_process_completions(struct blockif_queue *bq)
 			blockif_deinit_bounce_iov(br);
 		}
 
+		if (be->op == BOP_WRITE) {
+			err = blockif_flush_cache(bq->bc);
+		}
+
 		be->status = BST_DONE;
-		(*br->callback)(br, 0);
+		(*br->callback)(br, err);
 		blockif_complete(bq, be);
 	}
 
