@@ -918,13 +918,6 @@ def main(args):
     kern_args = acrn_config_utilities.get_leaf_tag_map(scenario, "os_config", "bootargs")
     kern_type = acrn_config_utilities.get_leaf_tag_map(scenario, "os_config", "kern_type")
     for vm_id, passthru_devices in dict_passthru_devices.items():
-        bootargs_node= get_node(f"//vm[@id='{vm_id}']/os_config/bootargs", scenario_etree)
-        if bootargs_node is not None and kern_args[int(vm_id)].find('reboot=acpi') == -1 and kern_type[int(vm_id)] in ['KERNEL_BZIMAGE']:
-            emsg = "you need to specify 'reboot=acpi' in scenario file's bootargs for VM{}".format(vm_id)
-            print(emsg)
-            err_dic['vm,bootargs'] = emsg
-            break
-
         print('start to generate ACPI ASL code for VM{}'.format(vm_id))
         dest_vm_acpi_path = os.path.join(DEST_ACPI_PATH, 'ACPI_VM'+vm_id)
         if not os.path.isdir(dest_vm_acpi_path):
