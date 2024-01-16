@@ -164,6 +164,17 @@ struct blockif_ctxt {
 
 	/* whether bypass the Service VM's page cache or not */
 	uint8_t			bypass_host_cache;
+
+	/*
+	 * whether enable BST_BLOCK logic in blockif_dequeue/blockif_complete or not.
+	 *
+	 * If the BST_BLOCK logic is enabled, following check would be done:
+	 *     if the current request is consecutive to any request in penq or busyq,
+	 *     current request's status is set to BST_BLOCK. Then, this request is blocked until the prior request,
+	 *     which blocks it, is completed.
+	 * It indicates that consecutive requests are executed sequentially.
+	 */
+	uint8_t			bst_block;
 };
 
 static pthread_once_t blockif_once = PTHREAD_ONCE_INIT;
@@ -212,33 +223,36 @@ blockif_enqueue(struct blockif_queue *bq, struct blockif_req *breq,
 	TAILQ_REMOVE(&bq->freeq, be, link);
 	be->req = breq;
 	be->op = op;
-	switch (op) {
-	case BOP_READ:
-	case BOP_WRITE:
-	case BOP_DISCARD:
-		off = breq->offset;
-		for (i = 0; i < breq->iovcnt; i++)
-			off += breq->iov[i].iov_len;
-		break;
-	default:
-		/* off = OFF_MAX; */
-		off = 1 << (sizeof(off_t) - 1);
-	}
-	be->block = off;
-	TAILQ_FOREACH(tbe, &bq->pendq, link) {
-		if (tbe->block == breq->offset)
+
+	be->status = BST_PEND;
+	if (bq->bc->bst_block == 1) {
+		switch (op) {
+		case BOP_READ:
+		case BOP_WRITE:
+		case BOP_DISCARD:
+			off = breq->offset;
+			for (i = 0; i < breq->iovcnt; i++)
+				off += breq->iov[i].iov_len;
 			break;
-	}
-	if (tbe == NULL) {
-		TAILQ_FOREACH(tbe, &bq->busyq, link) {
+		default:
+			/* off = OFF_MAX; */
+			off = 1 << (sizeof(off_t) - 1);
+		}
+		be->block = off;
+		TAILQ_FOREACH(tbe, &bq->pendq, link) {
 			if (tbe->block == breq->offset)
 				break;
 		}
+		if (tbe == NULL) {
+			TAILQ_FOREACH(tbe, &bq->busyq, link) {
+				if (tbe->block == breq->offset)
+					break;
+			}
+		}
+		if (tbe != NULL)
+			be->status = BST_BLOCK;
 	}
-	if (tbe == NULL)
-		be->status = BST_PEND;
-	else
-		be->status = BST_BLOCK;
+
 	TAILQ_INSERT_TAIL(&bq->pendq, be, link);
 	return (be->status == BST_PEND);
 }
@@ -271,9 +285,12 @@ blockif_complete(struct blockif_queue *bq, struct blockif_elem *be)
 		TAILQ_REMOVE(&bq->busyq, be, link);
 	else
 		TAILQ_REMOVE(&bq->pendq, be, link);
-	TAILQ_FOREACH(tbe, &bq->pendq, link) {
-		if (tbe->req->offset == be->block)
-			tbe->status = BST_PEND;
+
+	if (bq->bc->bst_block == 1) {
+		TAILQ_FOREACH(tbe, &bq->pendq, link) {
+			if (tbe->req->offset == be->block)
+				tbe->status = BST_PEND;
+		}
 	}
 	be->tid = 0;
 	be->status = BST_FREE;
@@ -1293,7 +1310,7 @@ blockif_open(const char *optstr, const char *ident, int queue_num, struct iothre
 	int max_discard_sectors, max_discard_seg, discard_sector_alignment;
 	off_t probe_arg[] = {0, 0};
 	int aio_mode;
-	int bypass_host_cache, open_flag;
+	int bypass_host_cache, open_flag, bst_block;
 
 	pthread_once(&blockif_once, blockif_init);
 
@@ -1317,6 +1334,9 @@ blockif_open(const char *optstr, const char *ident, int queue_num, struct iothre
 
 	/* By default, do NOT bypass Service VM's page cache. */
 	bypass_host_cache = 0;
+
+	/* By default, bst_block is 1, meaning that the BST_BLOCK logic in blockif_dequeue is enabled. */
+	bst_block = 1;
 
 	candiscard = 0;
 
@@ -1344,6 +1364,8 @@ blockif_open(const char *optstr, const char *ident, int queue_num, struct iothre
 			ro = 1;
 		else if (!strcmp(cp, "nocache"))
 			bypass_host_cache = 1;
+		else if (!strcmp(cp, "no_bst_block"))
+			bst_block = 0;
 		else if (!strncmp(cp, "discard", strlen("discard"))) {
 			strsep(&cp, "=");
 			if (cp != NULL) {
@@ -1558,8 +1580,10 @@ blockif_open(const char *optstr, const char *ident, int queue_num, struct iothre
 
 	if (bc->aio_mode == AIO_MODE_IO_URING) {
 		bc->ops = &blockif_ops_iou;
+		bc->bst_block = 0;
 	} else {
 		bc->ops = &blockif_ops_thread_pool;
+		bc->bst_block = bst_block;
 	}
 
 	bc->bq_num = queue_num;
