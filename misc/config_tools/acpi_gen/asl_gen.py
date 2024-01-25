@@ -394,11 +394,12 @@ def gen_root_pci_bus(path, prt_packages):
     resources.append(res)
 
     # The PCI hole above 4G
+    qword_address_space_cls = rdt.LargeResourceItemQWordAddressSpace_factory()
     res = create_object(
-        dword_address_space_cls,
+        qword_address_space_cls,
         type   = 1,    # Large type
-        name   = rdt.LARGE_RESOURCE_ITEM_ADDRESS_SPACE_RESOURCE,
-        length = ctypes.sizeof(dword_address_space_cls) - 3,
+        name   = rdt.LARGE_RESOURCE_ITEM_QWORD_ADDRESS_SPACE,
+        length = ctypes.sizeof(qword_address_space_cls) - 3,
         _TYP   = 0,    # Memory range
         _DEC   = 0,    # Positive decoding
         _MIF   = 1,    # Minimum address fixed
