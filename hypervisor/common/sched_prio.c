@@ -32,7 +32,7 @@ static void sched_prio_init_data(struct thread_object *obj, struct sched_params 
 
 	data = (struct sched_prio_data *)obj->data;
 	INIT_LIST_HEAD(&data->list);
-	data->priority = params->priority;
+	data->priority = params->prio;
 }
 
 static struct thread_object *sched_prio_pick_next(struct sched_control *ctl)
