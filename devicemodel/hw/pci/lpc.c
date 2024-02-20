@@ -65,7 +65,7 @@ static struct lpc_uart_vdev {
 	const char *opts;
 	int	iobase;
 	int	irq;
-	int	enabled;
+	int	enabled;	/* enabled/configured by user */
 } lpc_uart_vdev[LPC_UART_NUM];
 
 static const char *lpc_uart_names[LPC_UART_NUM] = { "COM1", "COM2", "COM3", "COM4" };
@@ -185,7 +185,6 @@ lpc_deinit(struct vmctx *ctx)
 		uart_release_backend(lpc_uart->uart, lpc_uart->opts);
 		uart_legacy_dealloc(unit);
 		lpc_uart->uart = NULL;
-		lpc_uart->enabled = 0;
 	}
 }
 
@@ -233,7 +232,6 @@ lpc_init(struct vmctx *ctx)
 		error = register_inout(&iop);
 		if (error)
 			goto init_failed;
-		lpc_uart->enabled = 1;
 	}
 
 	return 0;
