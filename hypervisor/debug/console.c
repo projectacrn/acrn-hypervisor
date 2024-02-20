@@ -104,20 +104,27 @@ struct acrn_vuart *vm_console_vuart(struct acrn_vm *vm)
 static void vuart_console_rx_chars(struct acrn_vuart *vu)
 {
 	char ch = -1;
+	bool recv = false;
 
-	/* Get data from physical uart */
-	ch = uart16550_getc();
+	while (1) {
+		/* Get data from physical uart */
+		ch = uart16550_getc();
+		if (ch == -1)
+			break;
 
-	if (ch == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
-		/* Switch the console */
-		console_vmid = ACRN_INVALID_VMID;
-		printf("\r\n\r\n ---Entering ACRN SHELL---\r\n");
-	}
-	if (ch != -1) {
+		if (ch == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
+			/* Switch the console */
+			console_vmid = ACRN_INVALID_VMID;
+			printf("\r\n\r\n ---Entering ACRN SHELL---\r\n");
+			break;
+		}
+
 		vuart_putchar(vu, ch);
+		recv = true;
+	}
+	if (recv) {
 		vuart_toggle_intr(vu);
 	}
-
 }
 
 /**
