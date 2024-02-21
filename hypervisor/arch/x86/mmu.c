@@ -233,14 +233,17 @@ void set_paging_x(uint64_t base, uint64_t size)
 
 void allocate_ppt_pages(void)
 {
-       uint64_t page_base;
+	uint64_t page_base;
+	uint64_t bitmap_size = get_ppt_page_num() / 8;
 
-       page_base = e820_alloc_memory(sizeof(struct page) * get_ppt_page_num(), MEM_4G);
-       ppt_page_pool.bitmap = (uint64_t *)e820_alloc_memory(get_ppt_page_num()/8, MEM_4G);
+	page_base = e820_alloc_memory(sizeof(struct page) * get_ppt_page_num(), MEM_4G);
+	ppt_page_pool.bitmap = (uint64_t *)e820_alloc_memory(bitmap_size, MEM_4G);
 
-       ppt_page_pool.start_page = (struct page *)(void *)page_base;
-       ppt_page_pool.bitmap_size = get_ppt_page_num() / 64;
-       ppt_page_pool.dummy_page = NULL;
+	ppt_page_pool.start_page = (struct page *)(void *)page_base;
+	ppt_page_pool.bitmap_size = bitmap_size / sizeof(uint64_t);
+	ppt_page_pool.dummy_page = NULL;
+
+	memset(ppt_page_pool.bitmap, 0, bitmap_size);
 }
 
 void init_paging(void)
