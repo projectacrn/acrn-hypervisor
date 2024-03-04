@@ -53,6 +53,7 @@
 #define	IVSHMEM_DEVICE_ID	0x1110
 #define	IVSHMEM_CLASS		0x05
 #define	IVSHMEM_REV		0x01
+#define IVSHMEM_INTEL_SUBVENDOR_ID      0x8086U
 
 
 /* IVSHMEM MMIO Registers */
@@ -249,13 +250,13 @@ pci_ivshmem_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 static int
 pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	uint32_t size;
-	char *tmp, *name, *orig;
+	uint32_t size, region_id = 0;
+	char *tmp, *name, *size_str, *orig;
 	struct pci_ivshmem_vdev *ivshmem_vdev = NULL;
 	bool is_hv_land;
 	int rc;
 
-	/* ivshmem device usage: "-s N,ivshmem,shm_name,shm_size" */
+	/* ivshmem device usage: "-s N,ivshmem,shm_name,shm_size,region_id" */
 	tmp = orig = strdup(opts);
 	if (!orig) {
 		pr_warn("No memory for strdup\n");
@@ -277,8 +278,9 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto err;
 	}
 
-	if (dm_strtoui(tmp, &tmp, 10, &size) != 0) {
-		pr_warn("the shared memory size is incorrect, %s\n", tmp);
+	size_str = strsep(&tmp, ",");
+	if (dm_strtoui(size_str, &size_str, 10, &size) != 0) {
+		pr_warn("the shared memory size is incorrect, %s\n", size_str);
 		goto err;
 	}
 	size *= 0x100000; /* convert to megabytes */
@@ -287,6 +289,13 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pr_warn("Invalid shared memory size %u, the size range is [2MB,512MB], the unit is megabyte and the value must be a power of 2\n",
 			size/0x100000);
 		goto err;
+	}
+
+	if (tmp) {
+		if (dm_strtoui(tmp, &tmp, 10, &region_id) != 0) {
+			pr_warn("shared memory region ID is incorrect, %s, 0 will used.\n", tmp);
+			region_id = 0;
+		}
 	}
 
 	ivshmem_vdev = calloc(1, sizeof(struct pci_ivshmem_vdev));
@@ -304,6 +313,8 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_DEVICE, IVSHMEM_DEVICE_ID);
 	pci_set_cfgdata16(dev, PCIR_REVID, IVSHMEM_REV);
 	pci_set_cfgdata8(dev, PCIR_CLASS, IVSHMEM_CLASS);
+	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, (uint16_t)region_id);
+	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, IVSHMEM_INTEL_SUBVENDOR_ID);
 
 	pci_emul_alloc_bar(dev, IVSHMEM_MMIO_BAR, PCIBAR_MEM32, IVSHMEM_REG_SIZE);
 	pci_emul_alloc_bar(dev, IVSHMEM_MSIX_BAR, PCIBAR_MEM32, IVSHMEM_MSIX_PBA_SIZE);
