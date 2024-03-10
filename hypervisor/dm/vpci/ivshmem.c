@@ -329,6 +329,9 @@ static void init_ivshmem_bar(struct pci_vdev *vdev, uint32_t bar_idx)
 
 static void init_ivshmem_vdev(struct pci_vdev *vdev)
 {
+	struct acrn_vm_pci_dev_config *dev_config = vdev->pci_dev_config;
+	struct ivshmem_shm_region *region = find_shm_region(dev_config->shm_region_name);
+
 	create_ivshmem_device(vdev);
 
 	/* initialize ivshmem config */
@@ -338,6 +341,9 @@ static void init_ivshmem_vdev(struct pci_vdev *vdev)
 	pci_vdev_write_vcfg(vdev, PCIR_CLASS, 1U, IVSHMEM_CLASS);
 	pci_vdev_write_vcfg(vdev, PCIR_HDRTYPE, 1U,
 		PCIM_HDRTYPE_NORMAL | ((vdev->bdf.bits.f == 0U) ? PCIM_MFDEV : 0U));
+
+	pci_vdev_write_vcfg(vdev, PCIV_SUB_VENDOR_ID, 2U, IVSHMEM_INTEL_SUBVENDOR_ID);
+	pci_vdev_write_vcfg(vdev, PCIV_SUB_SYSTEM_ID, 2U, region->region_id);
 	add_vmsix_capability(vdev, MAX_IVSHMEM_MSIX_TBL_ENTRY_NUM, IVSHMEM_MSIX_BAR);
 
 	/* initialize ivshmem bars */
