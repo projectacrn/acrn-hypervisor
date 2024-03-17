@@ -286,6 +286,11 @@ in megabytes. The value should be a power of 2
 and no more than 512.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="IVSHMEM_REGION_ID" type="xs:integer" default="0">
+      <xs:annotation acrn:title="IVSHMEM Region ID">
+        <xs:documentation>A stable identification when multiple shared memory regions are provided.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="IVSHMEM_VMS" type="IVSHMEMVMS">
       <xs:annotation acrn:title="Shared VMs">
         <xs:documentation>Select all VMs that use the shared memory region.</xs:documentation>

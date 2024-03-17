@@ -55,6 +55,22 @@
           </b-col>
         </b-row>
 
+        <b-row class="align-items-center my-2">
+          <b-col md="2">
+            <label>
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                    <IconInfo/>
+                </template>
+                <span v-html="this.IVSHMEMRegionType.properties.IVSHMEM_REGION_ID.description"></span>
+              </n-popover>IVSHMEM Region ID:
+            </label>
+          </b-col>
+          <b-col md="4">
+            <b-form-input v-model="IVSHMEM_VMO.IVSHMEM_REGION_ID"/>
+          </b-col>
+        </b-row>
+
         <div class="m-3 mt-4 d-flex flex-column gap-2">
           <b>Shared VMs</b>
           <p>Select all VMs that will use this shared memory region</p>

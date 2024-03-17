@@ -64,9 +64,11 @@
     <xsl:for-each select="hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']">
       <xsl:if test="text()">
         <xsl:variable name="memsize" select="IVSHMEM_SIZE" />
+        <xsl:variable name="regionid" select="IVSHMEM_REGION_ID" />
         <xsl:text>{ \</xsl:text>
         <xsl:value-of select="$newline" />
         <xsl:value-of select="acrn:initializer('name', concat('IVSHMEM_SHM_REGION_', position() - 1, ', \'), true())" />
+        <xsl:value-of select="acrn:initializer('region_id', concat(string($regionid), ', \'), true())" />
         <xsl:value-of select="acrn:initializer('size', concat('0x', acrn:convert-num-base(string($memsize), 10, 16), '00000UL', ', \'), true())" />
         <xsl:choose>
           <xsl:when test="last() = position()">
