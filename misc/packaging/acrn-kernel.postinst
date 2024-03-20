@@ -3,7 +3,7 @@
 # postinst script for acrn kernel
 filename="/etc/grub.d/40_custom"
 menu=$(grep ACRN_deb_multiboot2 ${filename}) || true
-type=$(lsblk -l |awk '$NF == "/" {print $1}')
+type=$(findmnt / |awk '$1 == "/" {print $2}')
 str=$(blkid |grep ${type})
 uuid=$(echo $str |cut -d " " -f 2|cut -d "=" -f 2)
 str=$(blkid |grep ${type})
