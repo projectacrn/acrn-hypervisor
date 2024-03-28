@@ -39,6 +39,6 @@
     "@tauri-apps/cli": "^1.0.0-rc.10",
     "@types/node": "^16.11.33",
     "@vitejs/plugin-vue": "^2.3.1",
-    "vite": "^2.9.16"
+    "vite": "^2.9.17"
   }
 }
