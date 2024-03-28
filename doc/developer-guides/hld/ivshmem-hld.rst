@@ -106,12 +106,12 @@ MMIO Registers Definition
    * - IVSHMEM\_IRQ\_MASK\_REG
      - 0x0
      - R/W
-     - Interrupt Status register is used for legacy interrupt.
+     - Interrupt Mask register is used for legacy interrupt.
        ivshmem doesn't support interrupts, so this register is reserved.
    * - IVSHMEM\_IRQ\_STA\_REG
      - 0x4
      - R/W
-     - Interrupt Mask register is used for legacy interrupt.
+     - Interrupt Status register is used for legacy interrupt.
        ivshmem doesn't support interrupts, so this register is reserved.
    * - IVSHMEM\_IV\_POS\_REG
      - 0x8
