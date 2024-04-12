@@ -181,7 +181,7 @@ prepare_root_cache=
 boot_device_id=
 
 while [ "x$list" != "x" ] ; do
-  linux=`version_find_latest $list`
+  linux=$(echo ${list} | tr ' ' '\n' | sed -e 's/\.old$/ 1/; / 1$/! s/$/ 2/' | LC_ALL=C sort -V -r | sed -e 's/ 1$/.old/; s/ 2$//' | head -n 1)
   case $linux in
     *.efi.signed)
       # We handle these in linux_entry.

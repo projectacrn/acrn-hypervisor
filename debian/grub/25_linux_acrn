@@ -311,7 +311,7 @@ boot_device_id=
 acrn_first_entry=
 
 while [ "x${acrn_list}" != "x" ] ; do
-    current_acrn=$(version_find_latest $acrn_list)
+    current_acrn=$(echo ${acrn_list} | tr ' ' '\n' | sed -e 's/\.old$/ 1/; / 1$/! s/$/ 2/' | LC_ALL=C sort -V -r | sed -e 's/ 1$/.old/; s/ 2$//' | head -n 1)
     acrn_basename=$(basename ${current_acrn})
     acrn_dirname=$(dirname ${current_acrn})
     rel_acrn_dirname=$(make_system_path_relative_to_its_root $acrn_dirname)
@@ -342,7 +342,7 @@ EOF
 
     # only if we have at least one ACRN capable kernel and a Service VM entry defined
     while [ "x$list" != "x" ] && [ "x${ACRN_SERVICE_VM_ID}" != "x" ] ; do
-        linux=$(version_find_latest $list)
+        linux=$(echo ${list} | tr ' ' '\n' | sed -e 's/\.old$/ 1/; / 1$/! s/$/ 2/' | LC_ALL=C sort -V -r | sed -e 's/ 1$/.old/; s/ 2$//' | head -n 1)
         gettext_printf "Found ACRN linux image: %s\n" "$linux" >&2
         basename=$(basename $linux)
         dirname=$(dirname $linux)
