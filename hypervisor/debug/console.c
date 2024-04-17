@@ -22,7 +22,8 @@ struct hv_timer console_timer;
 
 #define CONSOLE_KICK_TIMER_TIMEOUT  40UL /* timeout is 40ms*/
 /* Switching key combinations for shell and uart console */
-#define GUEST_CONSOLE_TO_HV_SWITCH_KEY      0       /* CTRL + SPACE */
+#define GUEST_CONSOLE_ESCAPE_KEY	0x0 /* the "break", put twice to send "break" to guest */
+#define GUEST_CONSOLE_TO_HV_SWITCH_KEY  'e' /* escape + e to switch back to hv console */
 uint16_t console_vmid = CONFIG_CONSOLE_DEFAULT_VM;
 
 /* if use INIT to kick pcpu only, if not notification IPI still is used for sharing CPU */
@@ -112,16 +113,35 @@ static void vuart_console_rx_chars(struct acrn_vuart *vu)
 		if (ch == -1)
 			break;
 
-		if (ch == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
-			/* Switch the console */
-			console_vmid = ACRN_INVALID_VMID;
-			printf("\r\n\r\n ---Entering ACRN SHELL---\r\n");
-			break;
+		if (vu->escaping) {
+			vu->escaping = false;
+			switch (ch) {
+				case GUEST_CONSOLE_ESCAPE_KEY:
+					vuart_putchar(vu, ch);
+					vu->lsr |= LSR_BI;
+					recv = true;
+					break;
+				case GUEST_CONSOLE_TO_HV_SWITCH_KEY:
+					/* Switch the console */
+					console_vmid = ACRN_INVALID_VMID;
+					printf("\r\n\r\n ---Entering ACRN SHELL---\r\n");
+					/* following inputs are for hv, don't handle in this loop */
+					goto exit;
+				default:
+					printf("Unknown escaping key: '%c'\r\n", ch);
+					break;
+			}
+		} else {
+			if (ch == GUEST_CONSOLE_ESCAPE_KEY) {
+				vu->escaping = true;
+			} else {
+				vuart_putchar(vu, ch);
+				recv = true;
+			}
 		}
-
-		vuart_putchar(vu, ch);
-		recv = true;
 	}
+
+exit:
 	if (recv) {
 		vuart_toggle_intr(vu);
 	}

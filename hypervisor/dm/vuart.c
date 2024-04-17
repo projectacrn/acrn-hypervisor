@@ -135,7 +135,7 @@ static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 {
 	uint8_t ret;
 
-	if (((vu->lsr & LSR_OE) != 0U) && ((vu->ier & IER_ELSI) != 0U)) {
+	if (((vu->lsr & (LSR_OE | LSR_BI)) != 0U) && ((vu->ier & IER_ELSI) != 0U)) {
 		ret = IIR_RLS;
 	} else if ((fifo_numchars(&vu->rxfifo) > 0U) && ((vu->ier & IER_ERBFI) != 0U)) {
 		ret = IIR_RXTOUT;
@@ -499,7 +499,7 @@ uint8_t vuart_read_reg(struct acrn_vuart *vu, uint16_t offset)
 			}
 			reg = vu->lsr;
 			/* The LSR_OE bit is cleared on LSR read */
-			vu->lsr &= ~LSR_OE;
+			vu->lsr &= ~(LSR_OE | LSR_BI);
 			break;
 		case UART16550_MSR:
 			/*
@@ -655,6 +655,7 @@ void init_legacy_vuarts(struct acrn_vm *vm, const struct vuart_config *vu_config
 			vu->irq = vu_config[i].irq;
 			if (vuart_register_io_handler(vm, vu->port_base, i) != 0U) {
 				vu->active = true;
+				vu->escaping = false;
 			}
 			/*
 			 * The first vuart is used for VM console.
@@ -674,6 +675,7 @@ void deinit_legacy_vuarts(struct acrn_vm *vm)
 	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
 		if (vm->vuart[i].port_base != INVALID_COM_BASE) {
 			vm->vuart[i].active = false;
+			vm->vuart[i].escaping = false;
 			if (vm->vuart[i].target_vu != NULL) {
 				vuart_deinit_connection(&vm->vuart[i]);
 			}
@@ -696,6 +698,7 @@ void init_pci_vuart(struct pci_vdev *vdev)
 	vm_cfg->vuart[idx].t_vuart.vuart_id = pci_cfg->t_vuart.vuart_id;
 
 	vu->active = true;
+	vu->escaping = false;
 	if (pci_cfg->vuart_idx != 0U) {
 		vuart_setup_connection(vm, &vm_cfg->vuart[idx], idx);
 	}
@@ -707,6 +710,7 @@ void deinit_pci_vuart(struct pci_vdev *vdev)
 	struct acrn_vuart *vu = vdev->priv_data;
 
 	vu->active = false;
+	vu->escaping = false;
 	if (vu->target_vu != NULL) {
 		vuart_deinit_connection(vu);
 	}
