@@ -138,7 +138,7 @@ static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 	if (((vu->lsr & (LSR_OE | LSR_BI)) != 0U) && ((vu->ier & IER_ELSI) != 0U)) {
 		ret = IIR_RLS;
 	} else if ((fifo_numchars(&vu->rxfifo) > 0U) && ((vu->ier & IER_ERBFI) != 0U)) {
-		ret = IIR_RXTOUT;
+		ret = IIR_RXRDY;
 	} else if (vu->thre_int_pending && ((vu->ier & IER_ETBEI) != 0U)) {
 		ret = IIR_TXRDY;
 	} else if(((vu->msr & MSR_DELTA_MASK) != 0U) && ((vu->ier & IER_EMSC) != 0U)) {
