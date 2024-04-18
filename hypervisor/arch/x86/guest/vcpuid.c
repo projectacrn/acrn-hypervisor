@@ -18,6 +18,11 @@
 #include <asm/rdt.h>
 #include <asm/guest/vcat.h>
 
+static struct percpu_cpuids {
+	uint32_t leaf_nr;
+	uint32_t leaves[MAX_VM_VCPUID_ENTRIES];
+} pcpu_cpuids;
+
 static inline const struct vcpuid_entry *local_find_vcpuid_entry(const struct acrn_vcpu *vcpu,
 					uint32_t leaf, uint32_t subleaf)
 {
@@ -499,8 +504,28 @@ static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 
 static inline bool is_percpu_related(uint32_t leaf)
 {
-	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) ||
-		(leaf == 0x1fU) || (leaf == 0x80000001U) || (leaf == 0x2U) || (leaf == 0x1aU));
+	uint32_t i;
+	bool ret = false;
+
+	for (i = 0; i < pcpu_cpuids.leaf_nr; i++) {
+		if (leaf == pcpu_cpuids.leaves[i]) {
+			ret = true;
+			break;
+		}
+	}
+	return ret;
+}
+
+static inline void percpu_cpuid_init(void)
+{
+	/* 0x1U, 0xBU, 0xDU, 0x19U, 0x1FU, 0x80000001U */
+	uint32_t percpu_leaves[] = {CPUID_FEATURES, CPUID_EXTEND_TOPOLOGY,
+		CPUID_XSAVE_FEATURES, CPUID_KEY_LOCKER,
+		CPUID_V2_EXTEND_TOPOLOGY, CPUID_EXTEND_FUNCTION_1};
+
+	pcpu_cpuids.leaf_nr = sizeof(percpu_leaves)/sizeof(uint32_t);
+	memcpy_s(pcpu_cpuids.leaves, sizeof(percpu_leaves),
+		 percpu_leaves, sizeof(percpu_leaves));
 }
 
 int32_t set_vcpuid_entries(struct acrn_vm *vm)
@@ -518,6 +543,8 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 	}
 	result = set_vcpuid_entry(vm, &entry);
 	if (result == 0) {
+		percpu_cpuid_init();
+
 		limit = entry.eax;
 		vm->vcpuid_level = limit;
 
