@@ -120,13 +120,6 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	entry->flags = flags;
 
 	switch (leaf) {
-	case 0x06U:
-		cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
-		/* Always hide package level HWP controls and HWP interrupt*/
-		entry->eax &= ~(CPUID_EAX_HWP_CTL | CPUID_EAX_HWP_PLR | CPUID_EAX_HWP_N);
-		entry->eax &= ~(CPUID_EAX_HFI | CPUID_EAX_ITD);
-		break;
-
 	case 0x07U:
 		if (subleaf == 0U) {
 			uint64_t cr4_reserved_mask = get_cr4_reserved_bits();
@@ -487,6 +480,34 @@ static int32_t set_vcpuid_cache(struct acrn_vm *vm)
 	return result;
 }
 
+static void guest_cpuid_06h(struct acrn_vm *vm, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	cpuid_subleaf(CPUID_THERMAL_POWER, *ecx, eax, ebx, ecx, edx);
+
+	/* Always hide package level HWP controls and HWP interrupt*/
+	*eax &= ~(CPUID_EAX_HWP_CTL | CPUID_EAX_HWP_PLR | CPUID_EAX_HWP_N);
+	*eax &= ~(CPUID_EAX_HFI | CPUID_EAX_ITD);
+	/* Since HFI is hidden, hide the edx too */
+	*edx = 0U;
+	if (!is_vhwp_configured(vm)) {
+		*eax &= ~(CPUID_EAX_HWP | CPUID_EAX_HWP_AW | CPUID_EAX_HWP_EPP);
+		*ecx &= ~CPUID_ECX_HCFC;
+	}
+}
+
+static int32_t set_vcpuid_thermal_power(struct acrn_vm *vm)
+{
+	struct vcpuid_entry entry;
+
+	entry.leaf = CPUID_THERMAL_POWER;
+	entry.subleaf = 0;
+	entry.ecx = 0;
+	entry.flags = CPUID_CHECK_SUBLEAF;
+	guest_cpuid_06h(vm, &entry.eax, &entry.ebx, &entry.ecx, &entry.edx);
+
+	return set_vcpuid_entry(vm, &entry);
+}
+
 static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 {
 	uint32_t i, limit;
@@ -573,8 +594,8 @@ static inline void percpu_cpuid_init(void)
 
 	/* hybrid related percpu leaves*/
 	if (pcpu_has_cap(X86_FEATURE_HYBRID)) {
-		/* 0x4U */
-		uint32_t hybrid_leaves[] = {CPUID_CACHE};
+		/* 0x4U, 0x6U */
+		uint32_t hybrid_leaves[] = {CPUID_CACHE, CPUID_THERMAL_POWER};
 		memcpy_s((pcpu_cpuids.leaves + pcpu_cpuids.leaf_nr * sizeof(uint32_t)),
 			 sizeof(hybrid_leaves), hybrid_leaves, sizeof(hybrid_leaves));
 		pcpu_cpuids.leaf_nr += sizeof(hybrid_leaves)/sizeof(uint32_t);
@@ -614,14 +635,9 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 			/* MONITOR/MWAIT */
 			case 0x05U:
 				break;
-			case 0x06U:
-				init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
-				/* For VMs without vhwp, HWP and HCFC are always hidden. */
-				if (!is_vhwp_configured(vm)) {
-					entry.eax &= ~(CPUID_EAX_HWP | CPUID_EAX_HWP_AW | CPUID_EAX_HWP_EPP);
-					entry.ecx &= ~CPUID_ECX_HCFC;
-				}
-				result = set_vcpuid_entry(vm, &entry);
+			/* 0x06U */
+			case CPUID_THERMAL_POWER:
+				result = set_vcpuid_thermal_power(vm);
 				break;
 			case 0x07U:
 				init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
@@ -926,6 +942,11 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			guest_cpuid_04h(vcpu->vm, eax, ebx, ecx, edx);
 			break;
 
+		/* 0x06U for hybrid arch */
+		case CPUID_THERMAL_POWER:
+			guest_cpuid_06h(vcpu->vm, eax, ebx, ecx, edx);
+			break;
+
 		case 0x0bU:
 			guest_cpuid_0bh(vcpu, eax, ebx, ecx, edx);
 			break;
@@ -948,7 +969,7 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 
 		default:
 			/*
-			 * In this switch statement, leaf 0x01/0x04/0x0b/0x0d/0x19/0x1f/0x80000001
+			 * In this switch statement, leaf 0x01/0x04/0x06/0x0b/0x0d/0x19/0x1f/0x80000001
 			 * shall be handled specifically. All the other cases
 			 * just return physical value.
 			 */

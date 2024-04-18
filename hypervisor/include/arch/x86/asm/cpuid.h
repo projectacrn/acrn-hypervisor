@@ -169,6 +169,7 @@
 #define CPUID_TLB               2U
 #define CPUID_SERIALNUM         3U
 #define CPUID_CACHE             4U
+#define CPUID_THERMAL_POWER     6U
 #define CPUID_EXTEND_FEATURE    7U
 #define CPUID_EXTEND_TOPOLOGY  0xBU
 #define CPUID_XSAVE_FEATURES   0xDU
