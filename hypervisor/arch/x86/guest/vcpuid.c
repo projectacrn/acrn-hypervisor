@@ -594,8 +594,11 @@ static inline void percpu_cpuid_init(void)
 
 	/* hybrid related percpu leaves*/
 	if (pcpu_has_cap(X86_FEATURE_HYBRID)) {
-		/* 0x4U, 0x6U */
-		uint32_t hybrid_leaves[] = {CPUID_CACHE, CPUID_THERMAL_POWER};
+		/* 0x2U, 0x4U, 0x6U, 0x14U, 0x16U, 0x18U, 0x1A, 0x1C, 0x80000006U */
+		uint32_t hybrid_leaves[] = {CPUID_TLB, CPUID_CACHE,
+			CPUID_THERMAL_POWER, CPUID_FREQ, CPUID_ADDR_TRANS,
+			CPUID_MODEL_ID, CPUID_LAST_BRANCH_RECORD,
+			CPUID_EXTEND_CACHE};
 		memcpy_s((pcpu_cpuids.leaves + pcpu_cpuids.leaf_nr * sizeof(uint32_t)),
 			 sizeof(hybrid_leaves), hybrid_leaves, sizeof(hybrid_leaves));
 		pcpu_cpuids.leaf_nr += sizeof(hybrid_leaves)/sizeof(uint32_t);
@@ -639,7 +642,8 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 			case CPUID_THERMAL_POWER:
 				result = set_vcpuid_thermal_power(vm);
 				break;
-			case 0x07U:
+			 /* 0x07U */
+			case CPUID_EXTEND_FEATURE:
 				init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
 				if (entry.eax != 0U) {
 					pr_warn("vcpuid: only support subleaf 0 for cpu leaf 07h");
@@ -658,23 +662,25 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 #endif
 				result = set_vcpuid_entry(vm, &entry);
 				break;
-			case 0x12U:
+			/* 0x12U */
+			case CPUID_SGX_CAP:
 				result = set_vcpuid_sgx(vm);
 				break;
 			/* These features are disabled */
 			/* PMU is not supported except for core partition VM, like RTVM */
-			case 0x0aU:
+			/* 0x0aU */
+			case CPUID_ARCH_PERF_MON:
 				if (is_pmu_pt_configured(vm)) {
 					init_vcpuid_entry(i, 0U, 0U, &entry);
 					result = set_vcpuid_entry(vm, &entry);
 				}
 				break;
 
-			/* Intel RDT */
-			case 0x0fU:
+			/* 0xFU, Intel RDT */
+			case CPUID_RDT_MONITOR:
 				break;
-			/* Intel RDT */
-			case 0x10U:
+			/* 0x10U, Intel RDT */
+			case CPUID_RDT_ALLOCATION:
 #ifdef CONFIG_VCAT_ENABLED
 				if (is_vcat_configured(vm)) {
 					result = set_vcpuid_vcat_10h(vm);
@@ -682,12 +688,10 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 #endif
 				break;
 
-			/* Intel Processor Trace */
-			case 0x14U:
-			/* PCONFIG */
-			case 0x1bU:
-			/* V2 Extended Topology Enumeration Leaf */
-			case 0x1fU:
+			/* 0x14U, Intel Processor Trace */
+			case CPUID_TRACE:
+			/* 0x1BU, PCONFIG */
+			case CPUID_PCONFIG:
 				break;
 			default:
 				init_vcpuid_entry(i, 0U, 0U, &entry);
@@ -933,7 +937,8 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 	} else {
 		/* percpu related */
 		switch (leaf) {
-		case 0x01U:
+		/* 0x01U */
+		case CPUID_FEATURES:
 			guest_cpuid_01h(vcpu, eax, ebx, ecx, edx);
 			break;
 
@@ -947,23 +952,35 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			guest_cpuid_06h(vcpu->vm, eax, ebx, ecx, edx);
 			break;
 
-		case 0x0bU:
+		/* 0x0BU */
+		case CPUID_EXTEND_TOPOLOGY:
 			guest_cpuid_0bh(vcpu, eax, ebx, ecx, edx);
 			break;
 
-		case 0x0dU:
+		/* 0x0dU */
+		case CPUID_XSAVE_FEATURES:
 			guest_cpuid_0dh(vcpu, eax, ebx, ecx, edx);
 			break;
 
-		case 0x19U:
+		/* 0x14U for hybrid arch */
+		case CPUID_TRACE:
+			*eax = 0U;
+			*ebx = 0U;
+			*ecx = 0U;
+			*edx = 0U;
+			break;
+		/* 0x19U */
+		case CPUID_KEY_LOCKER:
 			guest_cpuid_19h(vcpu, eax, ebx, ecx, edx);
 			break;
 
-		case 0x1fU:
+		/* 0x1fU */
+		case CPUID_V2_EXTEND_TOPOLOGY:
 			guest_cpuid_1fh(vcpu, eax, ebx, ecx, edx);
 			break;
 
-		case 0x80000001U:
+		/* 0x80000001U */
+		case CPUID_EXTEND_FUNCTION_1:
 			guest_cpuid_80000001h(vcpu, eax, ebx, ecx, edx);
 			break;
 
