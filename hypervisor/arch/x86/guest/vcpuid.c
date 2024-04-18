@@ -443,6 +443,50 @@ static int32_t set_vcpuid_vcat_10h(struct acrn_vm *vm)
 }
 #endif
 
+static void guest_cpuid_04h(__unused struct acrn_vm *vm, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	struct vcpuid_entry entry;
+
+	cpuid_subleaf(CPUID_CACHE, *ecx, &entry.eax, &entry.ebx, &entry.ecx, &entry.edx);
+	if (entry.eax != 0U) {
+#ifdef CONFIG_VCAT_ENABLED
+		if (is_vcat_configured(vm)) {
+			/* set_vcpuid_vcat_04h will not change entry.eax */
+			result = set_vcpuid_vcat_04h(vm, &entry);
+		}
+#endif
+	}
+	*eax = entry.eax;
+	*ebx = entry.ebx;
+	*ecx = entry.ecx;
+	*edx = entry.edx;
+}
+
+static int32_t set_vcpuid_cache(struct acrn_vm *vm)
+{
+	int32_t result = 0;
+	struct vcpuid_entry entry;
+	uint32_t i;
+
+	entry.leaf = CPUID_CACHE;
+	entry.flags = CPUID_CHECK_SUBLEAF;
+	for (i = 0U; ; i++) {
+		entry.subleaf = i;
+		entry.ecx = i;
+		guest_cpuid_04h(vm, &entry.eax, &entry.ebx, &entry.ecx, &entry.edx);
+		if (entry.eax == 0U) {
+			break;
+		}
+
+		result = set_vcpuid_entry(vm, &entry);
+		if (result != 0) {
+			/* wants to break out of switch */
+			break;
+		}
+	}
+	return result;
+}
+
 static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 {
 	uint32_t i, limit;
@@ -526,6 +570,15 @@ static inline void percpu_cpuid_init(void)
 	pcpu_cpuids.leaf_nr = sizeof(percpu_leaves)/sizeof(uint32_t);
 	memcpy_s(pcpu_cpuids.leaves, sizeof(percpu_leaves),
 		 percpu_leaves, sizeof(percpu_leaves));
+
+	/* hybrid related percpu leaves*/
+	if (pcpu_has_cap(X86_FEATURE_HYBRID)) {
+		/* 0x4U */
+		uint32_t hybrid_leaves[] = {CPUID_CACHE};
+		memcpy_s((pcpu_cpuids.leaves + pcpu_cpuids.leaf_nr * sizeof(uint32_t)),
+			 sizeof(hybrid_leaves), hybrid_leaves, sizeof(hybrid_leaves));
+		pcpu_cpuids.leaf_nr += sizeof(hybrid_leaves)/sizeof(uint32_t);
+	}
 }
 
 int32_t set_vcpuid_entries(struct acrn_vm *vm)
@@ -533,7 +586,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 	int32_t result;
 	struct vcpuid_entry entry;
 	uint32_t limit;
-	uint32_t i, j;
+	uint32_t i;
 	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 
 	init_vcpuid_entry(0U, 0U, 0U, &entry);
@@ -554,24 +607,9 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 			}
 
 			switch (i) {
-			case 0x04U:
-				for (j = 0U; ; j++) {
-					init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF, &entry);
-					if (entry.eax == 0U) {
-						break;
-					}
-
-#ifdef CONFIG_VCAT_ENABLED
-					if (is_vcat_configured(vm)) {
-						result = set_vcpuid_vcat_04h(vm, &entry);
-					}
-#endif
-					result = set_vcpuid_entry(vm, &entry);
-					if (result != 0) {
-						/* wants to break out of switch */
-						break;
-					}
-				}
+			/* 0x4U */
+			case CPUID_CACHE:
+				result = set_vcpuid_cache(vm);
 				break;
 			/* MONITOR/MWAIT */
 			case 0x05U:
@@ -883,6 +921,11 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			guest_cpuid_01h(vcpu, eax, ebx, ecx, edx);
 			break;
 
+		/* 0x04U for hybrid arch */
+		case CPUID_CACHE:
+			guest_cpuid_04h(vcpu->vm, eax, ebx, ecx, edx);
+			break;
+
 		case 0x0bU:
 			guest_cpuid_0bh(vcpu, eax, ebx, ecx, edx);
 			break;
@@ -905,7 +948,7 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 
 		default:
 			/*
-			 * In this switch statement, leaf 0x01/0x0b/0x0d/0x19/0x1f/0x80000001
+			 * In this switch statement, leaf 0x01/0x04/0x0b/0x0d/0x19/0x1f/0x80000001
 			 * shall be handled specifically. All the other cases
 			 * just return physical value.
 			 */
