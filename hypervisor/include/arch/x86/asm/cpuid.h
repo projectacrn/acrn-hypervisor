@@ -120,6 +120,8 @@
 #define CPUID_ECX_SGX_LC        (1U<<30U)
 /* CPUID.07H:ECX.PKS*/
 #define CPUID_ECX_PKS           (1U<<31U)
+/* CPUID.07H:EDX.Hybrid */
+#define CPUID_EDX_HYBRID        (1U<<15U)
 /* CPUID.07H:EDX.CET_IBT */
 #define CPUID_EDX_CET_IBT       (1U<<20U)
 /* CPUID.07H:EDX.IBRS_IBPB*/
@@ -166,6 +168,7 @@
 #define CPUID_FEATURES          1U
 #define CPUID_TLB               2U
 #define CPUID_SERIALNUM         3U
+#define CPUID_CACHE             4U
 #define CPUID_EXTEND_FEATURE    7U
 #define CPUID_EXTEND_TOPOLOGY  0xBU
 #define CPUID_XSAVE_FEATURES   0xDU
