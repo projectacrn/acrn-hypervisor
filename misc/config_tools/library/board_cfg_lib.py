@@ -148,7 +148,7 @@ def get_max_clos_mask(board_file):
     if (len(rdt_res) == 0) or (len(rdt_res_clos_max) == 0):
         return rdt_res, rdt_res_clos_max, rdt_res_mask_max
     else:
-        return list(re.split(', |\s |,', rdt_res)), list(map(int, rdt_res_clos_max.split(','))), list(re.split(', |\s |,', rdt_res_mask_max))
+        return list(re.split(r', |\s |,', rdt_res)), list(map(int, rdt_res_clos_max.split(','))), list(re.split(r', |\s |,', rdt_res_mask_max))
 
 
 def get_rootfs(config_file):
@@ -377,7 +377,7 @@ def get_p_state_index_from_ratio(ratio):
         i = 0
         closest_index = 1
         for line in px_info:
-            l = re.search("0x(\w*)UL}", line)
+            l = re.search(r"0x(\w*)UL}", line)
             if l != None:
                 state_ratio = int(l.group(1), 16) >> 8
                 if state_ratio <= ratio:

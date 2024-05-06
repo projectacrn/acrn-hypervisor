@@ -85,7 +85,7 @@ def create_acrn_deb(board, scenario, version, build_dir):
 
     a_f = open(build_dir + "/hypervisor/.scenario.xml", 'r')
     for a_line in a_f:
-        l = re.search("<CPU_PERFORMANCE_POLICY>(\w*)</CPU_PERFORMANCE_POLICY>", a_line)
+        l = re.search(r"<CPU_PERFORMANCE_POLICY>(\w*)</CPU_PERFORMANCE_POLICY>", a_line)
         if l != None:
             break;
     start = lines.index('#ACRN parameters Start\n')
@@ -250,10 +250,10 @@ def clean_configurator_deb(version, build_dir):
 
     add_cmd_list(cmd_list, 'bash -c "find -name "*.log" -delete"', config_tools_path)
     add_cmd_list(cmd_list, 'bash -c "find -name "*.whl" -delete"', config_tools_path)
-    add_cmd_list(cmd_list, 'bash -c "find -name "*.egg-info" -prune -exec rm -rf {} \;"', config_tools_path)
-    add_cmd_list(cmd_list, 'bash -c "find -name "node_modules" -prune -exec rm -rf {} \;"', config_tools_path)
-    add_cmd_list(cmd_list, 'bash -c "find -name "build" -prune -exec rm -rf {} \;"', config_tools_path)
-    add_cmd_list(cmd_list, 'bash -c "find -name "target" -prune -exec rm -rf {} \;"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "find -name "*.egg-info" -prune -exec rm -rf {} \\;"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "find -name "node_modules" -prune -exec rm -rf {} \\;"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "find -name "build" -prune -exec rm -rf {} \\;"', config_tools_path)
+    add_cmd_list(cmd_list, 'bash -c "find -name "target" -prune -exec rm -rf {} \\;"', config_tools_path)
     add_cmd_list(cmd_list, 'bash -c "rm -rf dist"', config_tools_path)
     add_cmd_list(cmd_list, 'bash -c "rm -rf schema/sliced.xsd"', config_tools_path)
     add_cmd_list(cmd_list, 'bash -c "rm -rf schema/allchecks.xsd"', config_tools_path)

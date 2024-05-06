@@ -72,10 +72,8 @@ LEGACY_VUART_IO_PORT_SIZE = 0x10
 VMSIX_VBAR_SIZE = 4 * SIZE_K
 
 # Constant for VIRT_ACPI_NVS_ADDR
-"""
-VIRT_ACPI_NVS_ADDR and PRE_RTVM_SW_SRAM_END_GPA
-need to be consistant with the layout of hypervisor\arch\x86\guest\ve820.c
-"""
+# VIRT_ACPI_NVS_ADDR and PRE_RTVM_SW_SRAM_END_GPA
+# need to be consistant with the layout of hypervisor\arch\x86\guest\ve820.c
 VIRT_ACPI_NVS_ADDR = 0x7FF00000
 RESERVED_NVS_AREA = 0xB0000
 
