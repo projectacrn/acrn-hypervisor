@@ -30,6 +30,7 @@
 #define VPCI_H_
 
 #include <asm/lib/spinlock.h>
+#include <lib/util.h>
 #include <pci.h>
 #include <list.h>
 
@@ -109,6 +110,7 @@ struct pci_vdev_ops {
 };
 
 struct pci_vdev {
+	uint32_t id;
 	struct acrn_vpci *vpci;
 	/* The bus/device/function triple of the virtual PCI device. */
 	union pci_bdf bdf;
@@ -173,10 +175,10 @@ struct acrn_vpci {
 	spinlock_t lock;
 	union pci_cfg_addr_reg addr;
 	struct pci_mmcfg_region pci_mmcfg;
-	uint32_t pci_vdev_cnt;
 	struct pci_mmio_res res32; 	/* 32-bit mmio start/end address */
 	struct pci_mmio_res res64; 	/* 64-bit mmio start/end address */
 	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
+	uint64_t vdev_bitmaps[INT_DIV_ROUNDUP(CONFIG_MAX_PCI_DEV_NUM, 64U)];
 	struct hlist_head vdevs_hlist_heads [VDEV_LIST_HASHSIZE];
 };
 

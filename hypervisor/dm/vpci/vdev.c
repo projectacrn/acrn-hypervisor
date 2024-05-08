@@ -75,7 +75,6 @@ void pci_vdev_write_vcfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 
 /**
  * @pre vpci != NULL
- * @pre vpci->pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
 struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)
 {
