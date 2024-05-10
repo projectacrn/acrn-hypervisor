@@ -86,6 +86,17 @@ static uint32_t emulated_guest_msrs[NUM_EMULATED_MSRS] = {
 	MSR_IA32_MPERF,
 	MSR_IA32_APERF,
 
+	/*
+	 * Thermal MSRs:
+	 * CPUID.01H.EDX[22] IA32_THERM_INTERRUPT, IA32_THERM_STATUS, MSR_IA32_CLOCK_MODULATION
+	 * CPUID.06H:EAX[6] IA32_PACKAGE_THERM_INTERRUPT, IA32_PACKAGE_THERM_STATUS
+	 */
+	MSR_IA32_CLOCK_MODULATION,
+	MSR_IA32_THERM_INTERRUPT,
+	MSR_IA32_THERM_STATUS,
+	MSR_IA32_PACKAGE_THERM_INTERRUPT,
+	MSR_IA32_PACKAGE_THERM_STATUS,
+
 	/* VMX: CPUID.01H.ECX[5] */
 #ifdef CONFIG_NVMX_ENABLED
 	LIST_OF_VMX_MSRS,
@@ -618,6 +629,17 @@ bool is_iwkey_backup_support(struct acrn_vcpu *vcpu)
 /**
  * @pre vcpu != NULL
  */
+bool is_ecmd_supported(struct acrn_vcpu *vcpu)
+{
+	uint32_t eax = 0x6U, ebx = 0U, ecx = 0U, edx = 0U;
+	/* ECMD. Check clock modulation duty cycle extension is supported */
+	guest_cpuid(vcpu, &eax, &ebx, &ecx, &edx);
+	return (eax & CPUID_EAX_ECMD) == CPUID_EAX_ECMD;
+}
+
+/**
+ * @pre vcpu != NULL
+ */
 int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t err = 0;
@@ -650,6 +672,15 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_TSC_ADJUST:
 	{
 		v = vcpu_get_guest_msr(vcpu, MSR_IA32_TSC_ADJUST);
+		break;
+	}
+	case MSR_IA32_CLOCK_MODULATION:
+	case MSR_IA32_THERM_STATUS:
+	case MSR_IA32_THERM_INTERRUPT:
+	case MSR_IA32_PACKAGE_THERM_INTERRUPT:
+	case MSR_IA32_PACKAGE_THERM_STATUS:
+	{
+		v = msr_read(msr);
 		break;
 	}
 	case MSR_IA32_MTRR_CAP:
@@ -1044,6 +1075,59 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_TIME_STAMP_COUNTER:
 	{
 		set_guest_tsc(vcpu, v);
+		break;
+	}
+	case MSR_IA32_CLOCK_MODULATION:
+	{
+		if (is_vtm_configured(vcpu->vm)) {
+			/*if extended clock modulation duty(ECMD) is not supported,
+			 *bit 0 is reserved.
+			 */
+			if (is_ecmd_supported(vcpu)) {
+				err = msr_write_safe(msr, v, MSR_IA32_CLOCK_MODULATION_RSV_BITS);
+			} else {
+				err = msr_write_safe(msr, v, MSR_IA32_CLOCK_MODULATION_RSV_BITS |
+					0x1UL);
+			}
+		} else {
+			err = -EACCES;
+		}
+		break;
+	}
+	case MSR_IA32_THERM_STATUS:
+	{
+		if (is_vtm_configured(vcpu->vm)) {
+			err = msr_write_safe(msr, v, MSR_IA32_THERM_STATUS_RSV_BITS);
+		} else {
+			err = -EACCES;
+		}
+		break;
+	}
+	case MSR_IA32_THERM_INTERRUPT:
+	{
+		if (is_vtm_configured(vcpu->vm)) {
+			err = msr_write_safe(msr, v, MSR_IA32_THERM_INTERRUPT_RSV_BITS);
+		} else {
+			err = -EACCES;
+		}
+		break;
+	}
+	case MSR_IA32_PACKAGE_THERM_INTERRUPT:
+	{
+		if (is_vtm_configured(vcpu->vm)) {
+			err = msr_write_safe(msr, v, MSR_IA32_PACKAGE_THERM_INTERRUPT_RSV_BITS);
+		} else {
+			err = -EACCES;
+		}
+		break;
+	}
+	case MSR_IA32_PACKAGE_THERM_STATUS:
+	{
+		if (is_vtm_configured(vcpu->vm)) {
+			err = msr_write_safe(msr, v, MSR_IA32_PACKAGE_THERM_STATUS_RSV_BITS);
+		} else {
+			err = -EACCES;
+		}
 		break;
 	}
 	case MSR_IA32_MTRR_DEF_TYPE:
