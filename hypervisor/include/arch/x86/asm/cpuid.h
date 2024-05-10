@@ -74,6 +74,8 @@
 #define CPUID_EDX_TM1           (1U<<29U)
 #define CPUID_EDX_IA64          (1U<<30U)
 #define CPUID_EDX_PBE           (1U<<31U)
+/* CPUID.06H:EAX.ECMD */
+#define CPUID_EAX_ECMD          (1U<<5U)
 /* CPUID.06H:EAX.HWP */
 #define CPUID_EAX_HWP           (1U<<7U)
 /* CPUID.06H:EAX.HWP_Notification */
