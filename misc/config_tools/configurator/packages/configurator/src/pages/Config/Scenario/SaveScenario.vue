@@ -1,6 +1,6 @@
 <template>
   <b-modal title="ACRN Configurator" ok-only fade
-           v-model="showModal"
+           :showModal="showModal"
            @ok="overWrite"
   >
     <div class="picture">

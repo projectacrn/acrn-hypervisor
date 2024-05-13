@@ -1362,7 +1362,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http",
- "indexmap 2.0.0"
+ "indexmap 2.0.0",
  "slab",
  "tokio",
  "tokio-util",
