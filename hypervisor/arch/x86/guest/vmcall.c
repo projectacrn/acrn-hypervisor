@@ -257,7 +257,7 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
  */
 int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	int32_t ret;
+	int32_t ret = -EACCES;
 	struct acrn_vm *vm = vcpu->vm;
 	/* hypercall ID from guest*/
 	uint64_t hypcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
@@ -275,17 +275,13 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	 */
 	if (!is_service_vm(vm) && !is_guest_hypercall(vm)) {
 		vcpu_inject_ud(vcpu);
-		ret = -ENODEV;
 	} else if (!is_hypercall_from_ring0()) {
 		vcpu_inject_gp(vcpu, 0U);
-		ret = -EACCES;
 	} else {
 		ret = dispatch_hypercall(vcpu);
-	}
-
-	if ((ret != -EACCES) && (ret != -ENODEV)) {
 		vcpu_set_gpreg(vcpu, CPU_REG_RAX, (uint64_t)ret);
 	}
+
 	if (ret < 0) {
 		pr_err("ret=%d hypercall=0x%lx failed in %s\n", ret, hypcall_id, __func__);
 	}
