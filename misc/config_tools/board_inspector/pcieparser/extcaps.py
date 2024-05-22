@@ -42,7 +42,7 @@ class ExtendedCapability:
         0x1c: "LNR",
         0x1d: "DPC",
         0x1e: "L1 PM Substates",
-        0x1f: "TPM",
+        0x1f: "PTM",
         0x20: "M-PCIe",
         0x21: "FRS Queueing",
         0x22: "Readiness Time Reporting",
