@@ -254,6 +254,12 @@ export default {
       }
       maxVMID++;
       this.scenario.vm.push(configurator.newVM(maxVMID, load_order))
+
+      //checking while adding new vm
+      let scenarioXMLData = this.scenarioToXML(this.scenario)
+      let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+      this.errors = this.translateErrors(all_errors, this.scenario)
+
       this.switchTab(maxVMID)
     },
     deleteVM() {
