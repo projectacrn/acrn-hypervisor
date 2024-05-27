@@ -354,19 +354,18 @@ static int32_t hlt_vmexit_handler(struct acrn_vcpu *vcpu)
 
 int32_t cpuid_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	uint64_t rax, rbx, rcx, rdx;
+	uint32_t eax, ebx, ecx, edx;
 
-	rax = vcpu_get_gpreg(vcpu, CPU_REG_RAX);
-	rbx = vcpu_get_gpreg(vcpu, CPU_REG_RBX);
-	rcx = vcpu_get_gpreg(vcpu, CPU_REG_RCX);
-	rdx = vcpu_get_gpreg(vcpu, CPU_REG_RDX);
-	TRACE_2L(TRACE_VMEXIT_CPUID, rax, rcx);
-	guest_cpuid(vcpu, (uint32_t *)&rax, (uint32_t *)&rbx,
-		(uint32_t *)&rcx, (uint32_t *)&rdx);
-	vcpu_set_gpreg(vcpu, CPU_REG_RAX, rax);
-	vcpu_set_gpreg(vcpu, CPU_REG_RBX, rbx);
-	vcpu_set_gpreg(vcpu, CPU_REG_RCX, rcx);
-	vcpu_set_gpreg(vcpu, CPU_REG_RDX, rdx);
+	eax = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RAX);
+	ebx = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RBX);
+	ecx = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RCX);
+	edx = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RDX);
+	TRACE_2L(TRACE_VMEXIT_CPUID, (uint64_t)eax, (uint64_t)ecx);
+	guest_cpuid(vcpu, &eax, &ebx, &ecx, &edx);
+	vcpu_set_gpreg(vcpu, CPU_REG_RAX, (uint64_t)eax);
+	vcpu_set_gpreg(vcpu, CPU_REG_RBX, (uint64_t)ebx);
+	vcpu_set_gpreg(vcpu, CPU_REG_RCX, (uint64_t)ecx);
+	vcpu_set_gpreg(vcpu, CPU_REG_RDX, (uint64_t)edx);
 
 	return 0;
 }
