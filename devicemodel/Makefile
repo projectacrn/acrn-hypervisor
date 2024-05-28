@@ -80,6 +80,7 @@ LDFLAGS += -L$(TOOLS_OUT)/services
 LIBS = -lrt
 LIBS += -lpthread
 LIBS += -lcrypto
+LIBS += -luring
 LIBS += -lpciaccess
 LIBS += -lusb-1.0
 LIBS += -lacrn-mngr

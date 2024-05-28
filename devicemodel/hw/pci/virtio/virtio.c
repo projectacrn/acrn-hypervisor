@@ -66,6 +66,13 @@ void iothread_handler(void *arg)
 	struct virtio_base *base = viothrd->base;
 	int idx = viothrd->idx;
 	struct virtio_vq_info *vq = &base->queues[idx];
+	eventfd_t val;
+
+	/* Mitigate the epoll_wait repeat cycles by reading out the event */
+	if (eventfd_read(vq->viothrd.iomvt.fd, &val) == -1) {
+		pr_err("%s: eventfd_read fails \r\n", __func__);
+		return;
+	}
 
 	if (viothrd->iothread_run) {
 		pthread_mutex_lock(&vq->mtx);
