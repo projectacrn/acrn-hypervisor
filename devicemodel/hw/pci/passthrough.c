@@ -714,22 +714,25 @@ parse_vmsix_on_msi_bar_id(char *s, int *id, int base)
 static int
 passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	int bus, slot, func, idx, error;
+	int bus, slot, func, idx, irq, error;
 	struct passthru_dev *ptdev;
 	struct pci_device_iterator *iter;
 	struct pci_device *phys_dev;
-	char *opt;
+	char *opt, *s_irq;
 	bool keep_gsi = false;
 	bool need_reset = true;
 	bool d3hot_reset = false;
 	bool enable_ptm = false;
+	bool enable_irq = false;
 	int vrp_sec_bus = 0;
 	int vmsix_on_msi_bar_id = -1;
 	struct acrn_pcidev pcidev = {};
 	uint16_t vendor = 0, device = 0;
 	uint8_t class = 0;
 	char rom_file[256];
+	char dsdt_path[256];
 	bool need_rombar = false;
+	bool need_dsdt = false;
 
 	ptdev = NULL;
 	error = -EINVAL;
@@ -746,6 +749,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	memset(rom_file, 0, sizeof(rom_file));
+	memset(dsdt_path, 0, sizeof(dsdt_path));
 	while ((opt = strsep(&opts, ",")) != NULL) {
 		if (!strncmp(opt, "keep_gsi", 8))
 			keep_gsi = true;
@@ -770,6 +774,25 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				return -EINVAL;
 			}
 			strncpy(rom_file, opt, sizeof(rom_file));
+		} else if (!strncmp(opt, "irq=", 4)) {
+			if(dm_strtoi(opt + 4, &s_irq, 10, &irq) == 0) {
+				enable_irq = true;
+				pr_warn("IRQ %d might be shared by multiple devices!\n", irq);
+			}
+			else {
+				pr_err("Input IRQ number cannnot be recognized.\n");
+				return -EINVAL;
+			}
+		} else if (!strncmp(opt, "dsdt=", 5)) {
+			need_dsdt = true;
+			opt += 5;
+			if (strlen(opt) >= sizeof(dsdt_path)) {
+				pr_err("dsdt file path too long, max supported path length is %d\n",
+					sizeof(dsdt_path)-1);
+				return -EINVAL;
+			}
+			strncpy(dsdt_path, opt, sizeof(dsdt_path) - 1);
+			pr_info("dsdt file path is %s\n", dsdt_path);
 		} else
 			pr_warn("Invalid passthru options:%s", opt);
 	}
@@ -893,7 +916,12 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		/* Allocates the virq if ptdev only support INTx */
 		pci_lintr_request(dev);
 
-		ptdev->phys_pin = read_config(ptdev->phys_dev, PCIR_INTLINE, 1);
+		if(enable_irq) {
+			ptdev->phys_pin = irq;
+		}
+		else {
+			ptdev->phys_pin = read_config(ptdev->phys_dev, PCIR_INTLINE, 1);
+		}
 
 		if (ptdev->phys_pin == -1 || ptdev->phys_pin > 256) {
 			pr_err("ptdev %x/%x/%x has wrong phys_pin %d, likely fail!",
@@ -902,6 +930,10 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			goto done;
 		}
 	}
+
+	ptdev->need_dsdt = need_dsdt;
+	memset(ptdev->dsdt_path, 0, sizeof(ptdev->dsdt_path));
+	strncpy(ptdev->dsdt_path, dsdt_path, sizeof(ptdev->dsdt_path) - 1);
 
 	if (enable_ptm) {
 		error = ptm_probe(ctx, ptdev, &vrp_sec_bus);
@@ -1810,8 +1842,37 @@ write_dsdt_tsn(struct pci_vdev *dev, uint16_t device)
 }
 
 static void
+write_dsdt_file(struct pci_vdev *dev)
+{
+	struct passthru_dev *ptdev = NULL;
+	FILE *fp;
+	char *line = NULL;
+	char *dsdt_path = NULL;
+	size_t len = 0;
+	ssize_t read;
+
+	ptdev = (struct passthru_dev *) dev->arg;
+	dsdt_path = ptdev->dsdt_path;
+	fp = fopen(dsdt_path, "r");
+	if (fp == NULL) {
+		pr_err("Cannot open dsdt file %s", dsdt_path);
+		return;
+	}
+
+	dsdt_line("");
+	/* Read each line of dsdt file */
+	while ((read = getline(&line, &len, fp)) != -1) {
+		dsdt_line(line);
+	}
+	if (line)
+		free(line);
+	fclose(fp);
+}
+
+static void
 passthru_write_dsdt(struct pci_vdev *dev)
 {
+	struct passthru_dev *ptdev = NULL;
 	uint16_t vendor = 0, device = 0;
 
 	vendor = pci_get_cfgdata16(dev, PCIR_VENDOR);
@@ -1820,6 +1881,7 @@ passthru_write_dsdt(struct pci_vdev *dev)
 		return;
 
 	device = pci_get_cfgdata16(dev, PCIR_DEVICE);
+	ptdev = (struct passthru_dev *) dev->arg;
 
 	/* Provides ACPI extra info */
 	if (device == 0x5aaa)
@@ -1842,6 +1904,9 @@ passthru_write_dsdt(struct pci_vdev *dev)
 		write_dsdt_sdc(dev);
 	else if ((device == 0x4b32) || (device == 0x4ba0) || (device == 0x4bb0))
 		write_dsdt_tsn(dev, device);
+	else if (ptdev->need_dsdt)
+		/* load DSDT by input file */
+                write_dsdt_file(dev);
 }
 
 struct pci_vdev_ops passthru = {

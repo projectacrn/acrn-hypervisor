@@ -9,6 +9,7 @@
 #define __PASSTHRU_H__
 
 #include <types.h>
+#include <limits.h>
 
 #include "pciaccess.h"
 #include "pci_core.h"
@@ -37,7 +38,9 @@ struct passthru_dev {
 	bool need_reset;
 	bool d3hot_reset;
 	bool need_rombar;
+	bool need_dsdt;
 	char *rom_buffer;
+	char dsdt_path[256];
 	bool (*has_virt_pcicfg_regs)(int offset);
 };
 
