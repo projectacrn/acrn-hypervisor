@@ -119,43 +119,6 @@ static void insert_e820_entry(uint32_t index, uint64_t addr, uint64_t length, ui
 	hv_e820[index].type = type;
 }
 
-static uint64_t e820_alloc_region(uint64_t addr, uint64_t size)
-{
-	uint32_t i;
-	uint64_t entry_start;
-	uint64_t entry_end;
-	uint64_t start_pa = round_page_down(addr);
-	uint64_t end_pa = round_page_up(addr + size);
-	struct e820_entry *entry;
-
-	for (i = 0U; i < hv_e820_entries_nr; i++) {
-		entry = &hv_e820[i];
-		entry_start = entry->baseaddr;
-		entry_end = entry->baseaddr + entry->length;
-
-		/* No need handle in these cases*/
-		if ((entry->type != E820_TYPE_RAM) || (entry_end <= start_pa) || (entry_start >= end_pa)) {
-			continue;
-		}
-
-		if ((entry_start <= start_pa) && (entry_end >= end_pa)) {
-			entry->length = start_pa - entry_start;
-			/*
-			 * .......|start_pa... ....................End_pa|.....
-			 * |entry_start..............................entry_end|
-			 */
-			if (end_pa < entry_end) {
-				insert_e820_entry(i + 1, end_pa, entry_end - end_pa, E820_TYPE_RAM);
-				break;
-			}
-		} else {
-			pr_err("This region not in one entry!");
-		}
-	}
-
-	return addr;
-}
-
 static void init_e820_from_efi_mmap(void)
 {
 	uint32_t i, e820_idx = 0U;
@@ -271,14 +234,57 @@ static void calculate_e820_ram_size(void)
 
 static void alloc_mods_memory(void)
 {
-	uint32_t i;
-	int64_t mod_start = 0UL;
+	uint32_t mod_index, e820_index, target_index;
+	uint64_t mod_start, mod_end;
+	uint64_t entry_start, entry_end;
 	struct acrn_boot_info *abi = get_acrn_boot_info();
 
-	for (i = 0; i < abi->mods_count; i++) {
-		mod_start = hva2hpa(abi->mods[i].start);
-		e820_alloc_region(mod_start, abi->mods[i].size);
+	/* 1st pass: remove the exact region */
+	for (mod_index = 0; mod_index < abi->mods_count; mod_index++) {
+		mod_start = hva2hpa(abi->mods[mod_index].start);
+		mod_end = hva2hpa(abi->mods[mod_index].start) + abi->mods[mod_index].size;
+
+		for (e820_index = 0; e820_index < hv_e820_entries_nr; e820_index++) {
+			entry_start = hv_e820[e820_index].baseaddr;
+			entry_end = hv_e820[e820_index].baseaddr + hv_e820[e820_index].length;
+
+			/* No need handle in these cases*/
+			if ((hv_e820[e820_index].type != E820_TYPE_RAM) || (entry_end <= mod_start) || (entry_start >= mod_end)) {
+				continue;
+			}
+
+			if ((entry_start <= mod_start) && (entry_end >= mod_end)) {
+				hv_e820[e820_index].length = mod_start - entry_start;
+
+				if (mod_end < entry_end) {
+					/*
+					* .......|start_pa... ....................end_pa|.....
+					* |entry_start..............................entry_end|
+					*/
+					insert_e820_entry(e820_index + 1, mod_end, entry_end - mod_end, E820_TYPE_RAM);
+				}
+			} else {
+				panic("%s: region 0x%016x-0x%016x crosses multiple e820 entries, check your bootloader!",
+					   __func__, entry_start, entry_end);
+			}
+		}
 	}
+
+	/* 2nd pass: shrink the entries to page boundary */
+	target_index = 0;
+	for (e820_index = 0; e820_index < hv_e820_entries_nr; e820_index++) {
+		entry_start = round_page_up(hv_e820[e820_index].baseaddr);
+		entry_end = round_page_down(hv_e820[e820_index].baseaddr + hv_e820[e820_index].length);
+
+		if (entry_start < entry_end) {
+			hv_e820[target_index].baseaddr = entry_start;
+			hv_e820[target_index].length = entry_end - entry_start;
+			hv_e820[target_index].type = hv_e820[e820_index].type;
+			target_index++;
+		}
+	}
+	memset(&hv_e820[target_index], 0, (hv_e820_entries_nr - target_index) * sizeof(struct e820_entry));
+	hv_e820_entries_nr = target_index;
 }
 
 
