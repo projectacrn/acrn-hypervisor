@@ -166,6 +166,7 @@ const struct pci_vdev_ops vmcs9900_ops = {
 int32_t create_vmcs9900_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 {
 	uint16_t i;
+	struct pci_vdev *vdev;
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	struct acrn_vm_pci_dev_config *dev_config = NULL;
 	int32_t ret = -EINVAL;
@@ -177,14 +178,18 @@ int32_t create_vmcs9900_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 			dev_config->vbdf.value = (uint16_t) dev->slot;
 			dev_config->vbar_base[0] = (uint64_t) dev->io_addr[0];
 			dev_config->vbar_base[1] = (uint64_t) dev->io_addr[1];
-			(void) vpci_init_vdev(&vm->vpci, dev_config, NULL);
-			ret = 0;
+			spinlock_obtain(&vm->vpci.lock);
+			vdev = vpci_init_vdev(&vm->vpci, dev_config, NULL);
+			spinlock_release(&vm->vpci.lock);
+			if (vdev != NULL) {
+				ret = 0;
+			}
 			break;
 		}
 	}
 
 	if (ret != 0) {
-		pr_err("Unsupport: create VM%d vuart_idx=%d", vm->vm_id, vuart_idx);
+		pr_err("Failed: create VM%d vuart_idx=%d", vm->vm_id, vuart_idx);
 	}
 
 	return ret;
@@ -193,12 +198,17 @@ int32_t create_vmcs9900_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 int32_t destroy_vmcs9900_vdev(struct pci_vdev *vdev)
 {
 	uint32_t i;
+	struct acrn_vpci *vpci = vdev->vpci;
 
 	for (i = 0U; i < vdev->nr_bars; i++) {
 		vpci_update_one_vbar(vdev, i, 0U, NULL, unmap_vmcs9900_vbar);
 	}
 
 	deinit_pci_vuart(vdev);
+
+	spinlock_obtain(&vpci->lock);
+	vpci_deinit_vdev(vdev);
+	spinlock_release(&vpci->lock);
 
 	return 0;
 }
