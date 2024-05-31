@@ -384,6 +384,7 @@ int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 	uint32_t i;
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	struct acrn_vm_pci_dev_config *dev_config = NULL;
+	struct pci_vdev *vdev = NULL;
 	int32_t ret = -EINVAL;
 
 	for (i = 0U; i < vm_config->pci_dev_num; i++) {
@@ -397,15 +398,19 @@ int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 				dev_config->vbar_base[IVSHMEM_MSIX_BAR] = (uint64_t) dev->io_addr[IVSHMEM_MSIX_BAR];
 				dev_config->vbar_base[IVSHMEM_SHM_BAR] = (uint64_t) dev->io_addr[IVSHMEM_SHM_BAR];
 				dev_config->vbar_base[IVSHMEM_SHM_BAR] |= ((uint64_t) dev->io_addr[IVSHMEM_SHM_BAR + 1U]) << 32U;
-				(void) vpci_init_vdev(&vm->vpci, dev_config, NULL);
+				vdev = vpci_init_vdev(&vm->vpci, dev_config, NULL);
 				spinlock_release(&vm->vpci.lock);
-				ret = 0;
-			} else {
-				pr_warn("%s, failed to create ivshmem device %x:%x.%x\n", __func__,
-				dev->slot >> 8U, (dev->slot >> 3U) & 0x1fU, dev->slot & 0x7U);
-			}
+				if (vdev != NULL) {
+					ret = 0;
+				}
+			} 
 			break;
 		}
+	}
+
+	if (ret != 0) {
+		pr_warn("%s, failed to create ivshmem device %x:%x.%x\n", __func__,
+			dev->slot >> 8U, (dev->slot >> 3U) & 0x1fU, dev->slot & 0x7U);
 	}
 	return ret;
 }
@@ -413,10 +418,15 @@ int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 int32_t destroy_ivshmem_vdev(struct pci_vdev *vdev)
 {
 	uint32_t i;
+	struct acrn_vpci *vpci = vdev->vpci;
 
 	for (i = 0U; i < vdev->nr_bars; i++) {
 		vpci_update_one_vbar(vdev, i, 0U, NULL, ivshmem_vbar_unmap);
 	}
+
+	spinlock_obtain(&vpci->lock);
+	vpci_deinit_vdev(vdev);
+	spinlock_release(&vpci->lock);
 
 	return 0;
 }
