@@ -167,7 +167,9 @@ vm_console
 
 The ``vm_console <vm_id>`` command switches the ACRN's console to become the
 VM's console.
-Press :kbd:`Ctrl` + :kbd:`Alt` + :kbd:`Space` to return to the ACRN shell console.
+Send a BREAK character to enter escaping mode and a character e to return to
+the ACRN shell console. For details on how the hypervisor console works,
+refer to :ref:`hv-console`.
 
 vioapic
 =======
