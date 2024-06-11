@@ -70,10 +70,24 @@ Specifically:
    the hypervisor shell. Inputs to the physical UART will be
    redirected to the vUART starting from the next timer event.
 
--  The vUART is deactivated after a :kbd:`Ctrl` + :kbd:`Space` hotkey is received
-   from the physical UART. Inputs to the physical UART will be
-   handled by the hypervisor shell starting from the next timer
-   event.
+-  The vUART enters escaping mode after a BREAK character is received from
+   the physical UART. When in escaping mode, next received character will
+   be a command. After processing this command, the vUART exits the escaping
+   mode. So far, following escaping commands are supported:
+
+   - BREAK charater. If user sends break charater again in escaping mode,
+     one break charater will be sent to vUART.
+
+   - Character "e". This will deactive vUART. Inputs to the physical UART will
+     be handled by the hypervisor shell starting from the next timer event.
+
+   Other characters are not supported. The physical UART will prompt out an
+   "Unknown escaping key" message and the active vUART exits escaping mode.
+
+   Note that the BREAK character is a control character and different serial
+   terminals have different ways to send it, for example, `<Ctrl-A> + F`
+   in minicom, `<Ctrl-a> + <Ctrl-\>` in picocom, right click -> special
+   command -> break in putty serial terminal.
 
 The workflows are described as follows:
 

@@ -73,7 +73,7 @@ struct shell {
 
 #define SHELL_CMD_VM_CONSOLE		"vm_console"
 #define SHELL_CMD_VM_CONSOLE_PARAM	"<vm id>"
-#define SHELL_CMD_VM_CONSOLE_HELP	"Switch to the VM's console. Use [Ctrl+Spacebar] to return to the ACRN shell "\
+#define SHELL_CMD_VM_CONSOLE_HELP	"Switch to the VM's console. Use 'BREAK + e' to return to the ACRN shell "\
 					"console"
 
 #define SHELL_CMD_INTERRUPT		"int"
