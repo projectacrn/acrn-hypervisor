@@ -80,6 +80,10 @@
     </xsl:call-template>
 
     <xsl:call-template name="boolean-by-key">
+      <xsl:with-param name="key" select="'SERVICE_VM_SUPERVISOR_ENABLED'" />
+    </xsl:call-template>
+
+    <xsl:call-template name="boolean-by-key">
       <xsl:with-param name="key" select="'SPLIT_LOCK_DETECTION_ENABLED'" />
     </xsl:call-template>
 

@@ -233,6 +233,11 @@ static inline uint16_t vmid_2_rel_vmid(uint16_t service_vmid, uint16_t vmid) {
 	return (vmid - service_vmid);
 }
 
+static inline bool is_severity_pass(uint16_t target_vmid)
+{
+	return SEVERITY_SERVICE_VM >= get_vm_severity(target_vmid);
+}
+
 void make_shutdown_vm_request(uint16_t pcpu_id);
 bool need_shutdown_vm(uint16_t pcpu_id);
 int32_t shutdown_vm(struct acrn_vm *vm);

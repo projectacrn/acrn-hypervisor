@@ -1012,13 +1012,10 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pciaccess_cleanup();
 	free(ptdev);
 
-	if (!is_rtvm) {
-		/* Let the HV to deassign the pt device for RTVM, In this case, the RTVM
-		 * could still be alive if DM died.
-		 */
-		vm_deassign_pcidev(ctx, &pcidev);
-	}
-	if (!is_rtvm && phys_bdf) {
+	/*Let device model to deassign pt device for all VMs, including RTVM if the Service VM plays 
+         *supervisor role.*/
+	vm_deassign_pcidev(ctx, &pcidev);
+	if (phys_bdf) {
 		memset(reset_path, 0, sizeof(reset_path));
 		snprintf(reset_path, 40,
 			"/sys/bus/pci/devices/0000:%02x:%02x.%x/reset",
