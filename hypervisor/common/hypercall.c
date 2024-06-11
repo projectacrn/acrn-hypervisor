@@ -14,6 +14,7 @@
 #include <asm/lapic.h>
 #include <asm/guest/assign.h>
 #include <asm/guest/ept.h>
+#include <asm/guest/vm.h>
 #include <asm/mmu.h>
 #include <hypercall.h>
 #include <errno.h>
@@ -67,11 +68,6 @@ bool is_hypercall_from_ring0(void)
 	}
 
 	return ret;
-}
-
-inline static bool is_severity_pass(uint16_t target_vmid)
-{
-	return SEVERITY_SERVICE_VM >= get_vm_severity(target_vmid);
 }
 
 /**

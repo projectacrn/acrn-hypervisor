@@ -736,8 +736,7 @@ vm_loop(struct vmctx *ctx)
 			break;
 		}
 
-		/* RTVM can't be reset */
-		if ((VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) && (!is_rtvm)) {
+		if (VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) {
 			vm_system_reset(ctx);
 		}
 

@@ -40,6 +40,7 @@
     <xsl:call-template name="cpu_affinity" />
     <xsl:call-template name="rdt" />
     <xsl:call-template name="vm0_passthrough_tpm" />
+    <xsl:call-template name="service_vm_super_role" />
     <xsl:call-template name="vm_config_pci_dev_num" />
     <xsl:call-template name="vm_boot_args" />
   </xsl:template>
@@ -170,6 +171,17 @@
       </xsl:if>
     </xsl:if>
   </xsl:if>
+</xsl:template>
+
+<xsl:template name="service_vm_super_role">
+  <xsl:choose>	
+    <xsl:when test="//SERVICE_VM_SUPERVISOR_ENABLED = 'y'">
+      <xsl:value-of select="acrn:define('RTVM_SEVERITY_LEVEL', '0x10', 'U')" />
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="acrn:define('RTVM_SEVERITY_LEVEL', '0x30', 'U')" />
+    </xsl:otherwise>
+  </xsl:choose>	
 </xsl:template>
 
 <xsl:template name="vm_config_pci_dev_num">

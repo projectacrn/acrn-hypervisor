@@ -63,6 +63,11 @@
         <xs:documentation>Enable multiboot2 protocol support (with multiboot1 downward compatibility). If multiboot1 meets your requirements, disable this feature to reduce hypervisor code size.</xs:documentation>
       </xs:annotation>
     </xs:element>
+   <xs:element name="SERVICE_VM_SUPERVISOR_ENABLED" type="Boolean" default="n">
+      <xs:annotation acrn:title="Enable Service VM supervisor role" acrn:views="advanced">
+        <xs:documentation>Enable Service VM to play the supervisor role. If Enabled, the severity level of Service VM is higher than RTVM.</xs:documentation>
+      </xs:annotation>
+    </xs:element> 
     <xs:element name="SPLIT_LOCK_DETECTION_ENABLED" type="Boolean" default="n">
       <xs:annotation acrn:title="Enable split lock detection" acrn:views="advanced">
         <xs:documentation>Enable detection of split locks. A split lock can negatively affect an application's real-time performance. If a lock is detected, an alignment check exception #AC occurs.</xs:documentation>
