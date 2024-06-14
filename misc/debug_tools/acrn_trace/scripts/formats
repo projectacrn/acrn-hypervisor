@@ -20,3 +20,6 @@
 # For TRACE_4I
 0x0001001E CPU%(cpu)d 0x%(event)016x %(tsc)d IO instruction [port = %(1)d, direction = %(2)d, sz = %(3)d, cur_context_idx = %(4)d]
 0x00010000 CPU%(cpu)d 0x%(event)016x %(tsc)d exception or nmi [vector = 0x%(1)08x, err = %(2)d, d3 = %(1)d, d4 = %(2)d]
+
+# For TRACE_16STR
+0x00000005 CPU%(cpu)d 0x%(event)016x %(tsc)d sched next [data = %(1)c%(2)c%(3)c%(4)c%(5)c%(6)c%(7)c%(8)c%(9)c%(10)c%(11)c%(12)c%(13)c%(14)c%(15)c]

@@ -111,7 +111,7 @@ void TRACE_6C(uint32_t evid, uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uin
 #define TRACE_ENTER TRACE_16STR(TRACE_FUNC_ENTER, __func__)
 #define TRACE_EXIT TRACE_16STR(TRACE_FUNC_EXIT, __func__)
 
-static inline void TRACE_16STR(uint32_t evid, const char name[])
+void TRACE_16STR(uint32_t evid, const char name[])
 {
 	struct trace_entry entry;
 	uint16_t cpu_id = get_pcpu_id();

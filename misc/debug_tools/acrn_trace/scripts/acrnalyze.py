@@ -12,6 +12,7 @@ import getopt
 import os
 from vmexit_analyze import analyze_vm_exit
 from irq_analyze import analyze_irq
+from cpuusage_analyze import analyze_cpu_usage
 
 def usage():
     """print the usage of the script
@@ -29,6 +30,7 @@ def usage():
     -f, --frequency=[unsigned int]: TSC frequency in MHz
     --vm_exit: to generate vm_exit report
     --irq: to generate irq related report
+    --cpu_usage: to generate cpu_usage report
     ''')
 
 def do_analysis(ifile, ofile, analyzer, freq):
@@ -62,7 +64,7 @@ def main(argv):
     # Default TSC frequency of MRB in MHz
     freq = 1881.6
     opts_short = "hi:o:f:"
-    opts_long = ["ifile=", "ofile=", "frequency=", "vm_exit", "irq"]
+    opts_long = ["ifile=", "ofile=", "frequency=", "vm_exit", "irq", "cpu_usage"]
     analyzer = []
 
     try:
@@ -85,6 +87,8 @@ def main(argv):
             analyzer.append(analyze_vm_exit)
         elif opt == "--irq":
             analyzer.append(analyze_irq)
+        elif opt == "--cpu_usage":
+            analyzer.append(analyze_cpu_usage)
         else:
             assert False, "unhandled option"
 
