@@ -20,6 +20,10 @@
 
 #define TRACE_VM_EXIT			0x10U
 #define TRACE_VM_ENTER			0X11U
+
+/* event to calculate cpu usage with shared pcpu */
+#define TRACE_SCHED_NEXT		0x20U
+
 #define TRACE_VMEXIT_ENTRY		0x10000U
 
 #define TRACE_VMEXIT_EXCEPTION_OR_NMI	    (TRACE_VMEXIT_ENTRY + 0x00000000U)
@@ -44,5 +48,6 @@
 void TRACE_2L(uint32_t evid, uint64_t e, uint64_t f);
 void TRACE_4I(uint32_t evid, uint32_t a, uint32_t b, uint32_t c, uint32_t d);
 void TRACE_6C(uint32_t evid, uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uint8_t b1, uint8_t b2);
+void TRACE_16STR(uint32_t evid, const char name[]);
 
 #endif /* TRACE_H */
