@@ -596,10 +596,10 @@ static inline void percpu_cpuid_init(void)
 	if (pcpu_has_cap(X86_FEATURE_HYBRID)) {
 		/* 0x2U, 0x4U, 0x6U, 0x14U, 0x16U, 0x18U, 0x1A, 0x1C, 0x80000006U */
 		uint32_t hybrid_leaves[] = {CPUID_TLB, CPUID_CACHE,
-			CPUID_THERMAL_POWER, CPUID_FREQ, CPUID_ADDR_TRANS,
-			CPUID_MODEL_ID, CPUID_LAST_BRANCH_RECORD,
+			CPUID_THERMAL_POWER, CPUID_TRACE, CPUID_FREQ,
+			CPUID_ADDR_TRANS, CPUID_MODEL_ID, CPUID_LAST_BRANCH_RECORD,
 			CPUID_EXTEND_CACHE};
-		memcpy_s((pcpu_cpuids.leaves + pcpu_cpuids.leaf_nr * sizeof(uint32_t)),
+		memcpy_s(pcpu_cpuids.leaves + pcpu_cpuids.leaf_nr,
 			 sizeof(hybrid_leaves), hybrid_leaves, sizeof(hybrid_leaves));
 		pcpu_cpuids.leaf_nr += sizeof(hybrid_leaves)/sizeof(uint32_t);
 	}
