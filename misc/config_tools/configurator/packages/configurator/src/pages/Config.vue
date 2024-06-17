@@ -25,7 +25,7 @@
           </div>
         </div>
       </template>
-      <Board :WorkingFolder="WorkingFolder" v-model:board="board" v-model:schemas="schemas"
+      <Board v-model:WorkingFolder="WorkingFolder" v-model:board="board" v-model:schemas="schemas"
              @boardUpdate="boardUpdate"/>
     </b-accordion-item>
 

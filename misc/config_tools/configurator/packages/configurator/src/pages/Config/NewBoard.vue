@@ -1,6 +1,6 @@
 <template>
   <b-modal title="Board XML overwrite" fade no-close-on-backdrop
-           :showModal="showModal"
+           v-model="showModal"
            @cancel="cancel"
            @abort="cancel"
            @close="cancel"

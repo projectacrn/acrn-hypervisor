@@ -1,6 +1,6 @@
 <template>
   <b-modal id="newScenarioModal" size="xl" title="Create a New Scenario" fade no-close-on-backdrop
-           :showModal="showModal"
+           v-model="showModal"
            @cancel="cancel"
            @abort="cancel"
            @close="cancel"
