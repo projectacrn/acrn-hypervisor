@@ -31,7 +31,7 @@
     </div>
     <VueForm
         :key="(currentActiveVMID===-1?'HV':`VM${currentActiveVMID}`)+currentFormMode+'ConfigForm'"
-        :currentFormData="currentFormData"
+        v-model="currentFormData"
         :form-props="formProps"
         :ui-schema="uiSchema"
         :schema="currentFormSchema[currentFormMode]"

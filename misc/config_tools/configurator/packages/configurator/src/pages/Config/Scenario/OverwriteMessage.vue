@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-modal id="my-modal" no-close-on-backdrop
-             title="Scenario XML Overwrite" :showModal="showModal"
+             title="Scenario XML Overwrite" v-model="showModal"
              @cancel="cancel"
              @hidden="cancel"
              @abort="cancel"

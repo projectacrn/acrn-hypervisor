@@ -24,7 +24,7 @@
     "@vueform/slider": "^2.0.10",
     "ajv-i18n": "^4.2.0",
     "bootstrap": "^5.1.3",
-    "bootstrap-vue-3": "^0.1.10",
+    "bootstrap-vue-3": "0.1.11",
     "encoding": "^0.1.13",
     "js-base64": "^3.7.2",
     "lodash": "^4.17.21",
@@ -32,8 +32,15 @@
     "node-fetch": "^2.6.7",
     "sass": "^1.50.0",
     "vfonts": "^0.0.3",
-    "vue": "^3.2.25",
+    "vue": "3.2.33",
     "vue-router": "4"
+  },
+  "overrides": {
+    "sass": {
+      "chokidar": {
+        "braces": "3.0.3"
+      }
+    }
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.0.0-rc.10",
