@@ -107,8 +107,10 @@
 #define PCIR_SECBUS_1         0x19U
 #define PCIR_SUBBUS_1         0x1AU
 #define PCIR_IO_BASE          0x1CU
+#define PCIR_IO_LIMIT         0x1DU
 #define PCIR_MEM_BASE         0x20U
 #define PCIR_IO_BASE_UPPER_16 0x30U
+#define PCIR_SECSTATUS_LINE_MASK   0xFFFF0000U
 
 /* Capability Register Offsets */
 #define PCICAP_ID             0x0U
