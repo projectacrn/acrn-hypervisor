@@ -1040,6 +1040,17 @@ vrtc_set_time(struct vrtc *vrtc, time_t secs)
 	return error;
 }
 
+/* set CMOS shutdown status register (index 0xF) as S3_resume(0xFE)
+ * BIOS will read it and start S3 resume at POST Entry
+ */
+void vrtc_suspend(struct vmctx *ctx)
+{
+	struct vrtc *vrtc = ctx->vrtc;
+	struct rtcdev *rtc = &vrtc->rtcdev;
+
+	*((uint8_t *)rtc + 0xF) = 0xFE;
+}
+
 int
 vrtc_init(struct vmctx *ctx)
 {

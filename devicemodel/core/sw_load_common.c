@@ -297,7 +297,7 @@ acrn_sw_load(struct vmctx *ctx)
 {
 	if (vsbl_file_name)
 		return acrn_sw_load_vsbl(ctx);
-	else if ((ovmf_file_name != NULL) ^ (ovmf_code_file_name && ovmf_vars_file_name))
+	else if (ovmf_loaded)
 		return acrn_sw_load_ovmf(ctx);
 	else if (kernel_file_name)
 		return acrn_sw_load_bzimage(ctx);

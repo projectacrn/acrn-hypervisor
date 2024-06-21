@@ -102,6 +102,7 @@ bool vtpm2;
 bool is_winvm;
 bool skip_pci_mem64bar_workaround = false;
 bool gfx_ui = false;
+bool ovmf_loaded = false;
 
 static int guest_ncpus;
 static int virtio_msix = 1;
@@ -752,6 +753,8 @@ vm_suspend_resume(struct vmctx *ctx)
 	 *   6. hypercall restart vm
 	 */
 	vm_pause(ctx);
+	if (ovmf_loaded)
+		vrtc_suspend(ctx);
 
 	vm_clear_ioreq(ctx);
 	vm_stop_watchdog(ctx);
@@ -1016,6 +1019,7 @@ main(int argc, char *argv[])
 		case CMD_OPT_OVMF:
 			if (!vsbl_file_name && acrn_parse_ovmf(optarg) != 0)
 				errx(EX_USAGE, "invalid ovmf param %s", optarg);
+			ovmf_loaded = true;
 			skip_pci_mem64bar_workaround = true;
 			break;
 		case CMD_OPT_IASL:
