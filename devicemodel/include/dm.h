@@ -53,6 +53,7 @@ extern bool pt_tpm2;
 extern bool ssram;
 extern bool vtpm2;
 extern bool is_winvm;
+extern bool ovmf_loaded;
 
 enum acrn_thread_prio {
 	PRIO_VCPU = PRIO_MIN,
