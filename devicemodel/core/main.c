@@ -742,6 +742,7 @@ vm_system_reset(struct vmctx *ctx)
 static void
 vm_suspend_resume(struct vmctx *ctx)
 {
+	struct acrn_vcpu_regs bsp_regs;
 	/*
 	 * If we get warm reboot request, we don't want to exit the
 	 * vcpu_loop/vm_loop/mevent_loop. So we do:
@@ -764,8 +765,32 @@ vm_suspend_resume(struct vmctx *ctx)
 	vm_reset_watchdog(ctx);
 	vm_reset(ctx);
 
+	bsp_regs = ctx->bsp_regs;
+	/* for bzImage or elf */
+	if (!ovmf_loaded) {
+		uint32_t *guest_wakeup_vec32;
+		/* 64BIT_WAKE_SUPPORTED_F is not set */
+		guest_wakeup_vec32 = paddr_guest2host(ctx,
+						      get_acpi_wakingvector_offset(),
+						      get_acpi_wakingvector_length());
+		/* set the BSP waking vector */
+		bsp_regs.vcpu_regs.cs_sel = (uint16_t)((*guest_wakeup_vec32 >> 4U) & 0xFFFFU);
+		bsp_regs.vcpu_regs.cs_base = bsp_regs.vcpu_regs.cs_sel << 4U;
+		/* real mode code segment */
+		bsp_regs.vcpu_regs.cs_ar = 0x009FU;
+		bsp_regs.vcpu_regs.cs_limit = 0xFFFFU;
+		bsp_regs.vcpu_regs.rip = 0x0U;
+		/* CR0_ET | CR0_NE */
+		bsp_regs.vcpu_regs.cr0 = 0x30;
+		/* real mode gdt */
+		bsp_regs.vcpu_regs.gdt.limit = 0xFFFFU;
+		bsp_regs.vcpu_regs.gdt.base = 0UL;
+		/* real mode idt */
+		bsp_regs.vcpu_regs.idt.limit = 0xFFFFU;
+		bsp_regs.vcpu_regs.idt.base = 0UL;
+	}
 	/* set the BSP init state */
-	vm_set_vcpu_regs(ctx, &ctx->bsp_regs);
+	vm_set_vcpu_regs(ctx, &bsp_regs);
 	vm_run(ctx);
 }
 
