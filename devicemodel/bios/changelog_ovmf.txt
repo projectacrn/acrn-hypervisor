@@ -1,3 +1,12 @@
+OVMF release v3.3
+
+- OvmfPkg: resolve AcrnS3Lib
+- OvmfPkg: add AcrnS3Lib to support S3
+- OvmfPkg: introduce AcrnS3Lib class
+- OVMF:ACRN:PCI: Try to load ROM image for the PCI device with PCI_ROM
+- OVMF:ACRN:PCI: Add LoadOpRomImageLight to Load the PCI Rom
+- OVMF:ACRN:PCI: Write back the original value of PCI ROM
+
 OVMF release v3.0
 
 - VGA interface of virtio-gpu adapter support
