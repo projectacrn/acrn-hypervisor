@@ -615,6 +615,92 @@ vm_deassign_pio_region(struct vmctx *ctx, struct acrn_pio_region *pio_region)
 }
 
 int
+vm_assign_acpidev(struct vmctx *ctx, struct acrn_acpidev *acpidev)
+{
+	int i, error = -EINVAL;
+	struct acrn_acpires *res;
+	struct acrn_mmiodev mmiodev;
+	struct acrn_pio_region pio_region;
+	struct acrn_ptdev_irq ptirq;
+
+	for (i = 0; i < ACPIDEV_RES_NUM; i++) {
+		res = &acpidev->res[i];
+		if (res->type == MEMORY_RES) {
+			memset(&mmiodev, 0, sizeof(struct acrn_mmiodev));
+			strncpy(mmiodev.name, acpidev->name, 8);
+			mmiodev.res[0] = res->mmio_res;
+			error = ioctl(ctx->fd, ACRN_IOCTL_ASSIGN_MMIODEV, &mmiodev);
+			if (error) {
+				pr_err("ACRN_IOCTL_ASSIGN_MMIODEV ioctl() returned an error: %s\n", errormsg(errno));
+			}
+		} else if (res->type == IO_PORT_RES) {
+			memset(&pio_region, 0, sizeof(struct acrn_pio_region));
+			strncpy(pio_region.name, acpidev->name, 8);
+			pio_region.res = res->pio_res;
+			error = ioctl(ctx->fd, ACRN_IOCTL_ASSIGN_PIO_REGION, &pio_region);
+			if (error) {
+				pr_err("ACRN_IOCTL_ASSIGN_PIO_REGION ioctl() returned an error: %s\n", errormsg(errno));
+			}
+		} else if (res->type == IRQ_RES) {
+			memset(&ptirq, 0, sizeof(struct acrn_ptdev_irq));
+			ptirq.type = ACRN_PTDEV_IRQ_INTX;
+			ptirq.virt_bdf = ACRN_PTDEV_NON_PCI_BDF;
+			ptirq.phys_bdf = ACRN_PTDEV_NON_PCI_BDF;
+			ptirq.intx.virt_pin = res->irq_res.irq;
+			ptirq.intx.phys_pin = res->irq_res.irq;
+			ptirq.intx.is_pic_pin = false;
+			error = ioctl(ctx->fd, ACRN_IOCTL_SET_PTDEV_INTR, &ptirq);
+			if (error) {
+				pr_err("ACRN_IOCTL_SET_PTDEV_INTR ioctl() returned an error: %s\n", errormsg(errno));
+			}
+		}
+	}
+	return error;
+}
+
+int
+vm_deassign_acpidev(struct vmctx *ctx, struct acrn_acpidev *acpidev)
+{
+	int i, error = 0;
+	struct acrn_acpires *res;
+	struct acrn_mmiodev mmiodev;
+	struct acrn_pio_region pio_region;
+	struct acrn_ptdev_irq ptirq;
+
+	for (i = 0; i < ACPIDEV_RES_NUM; i++) {
+		res = &acpidev->res[i];
+		if (res->type == MEMORY_RES) {
+			memset(&mmiodev, 0, sizeof(struct acrn_mmiodev));
+			mmiodev.res[0] = res->mmio_res;
+			error = ioctl(ctx->fd, ACRN_IOCTL_DEASSIGN_MMIODEV, &mmiodev);
+			if (error) {
+				pr_err("ACRN_IOCTL_DEASSIGN_MMIODEV ioctl() returned an error: %s\n", errormsg(errno));
+			}
+		} else if (res->type == IO_PORT_RES) {
+			memset(&pio_region, 0, sizeof(struct acrn_pio_region));
+			pio_region.res = res->pio_res;
+			error = ioctl(ctx->fd, ACRN_IOCTL_DEASSIGN_PIO_REGION, &pio_region);
+			if (error) {
+				pr_err("ACRN_IOCTL_DEASSIGN_PIO_REGION ioctl() returned an error: %s\n", errormsg(errno));
+			}
+		} else if (res->type == IRQ_RES) {
+			memset(&ptirq, 0, sizeof(struct acrn_ptdev_irq));
+			ptirq.type = ACRN_PTDEV_IRQ_INTX;
+			ptirq.virt_bdf = ACRN_PTDEV_NON_PCI_BDF;
+			ptirq.phys_bdf = ACRN_PTDEV_NON_PCI_BDF;
+			ptirq.intx.virt_pin = res->irq_res.irq;
+			ptirq.intx.phys_pin = res->irq_res.irq;
+			ptirq.intx.is_pic_pin = false;
+			error = ioctl(ctx->fd, ACRN_IOCTL_RESET_PTDEV_INTR, &ptirq);
+			if (error) {
+				pr_err("ACRN_IOCTL_RESET_PTDEV_INTR ioctl() returned an error: %s\n", errormsg(errno));
+			}
+		}
+	}
+	return error;
+}
+
+int
 vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 		   vm_paddr_t gpa, size_t len, vm_paddr_t hpa)
 {

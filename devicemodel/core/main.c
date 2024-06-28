@@ -63,6 +63,7 @@
 #include "atomic.h"
 #include "tpm.h"
 #include "mmio_dev.h"
+#include "acpi_dev.h"
 #include "virtio.h"
 #include "pm_vuart.h"
 #include "log.h"
@@ -178,7 +179,11 @@ usage(int code)
 		"       --cmd_monitor: enable command monitor\n"
 		"            its params: unix domain socket path\n"
 		"       --virtio_poll: enable virtio poll mode with poll interval with ns\n"
-		"       --acpidev_pt: ACPI device ID args: HID in ACPI Table\n"
+		"       --acpidev_pt: ACPI device pass through\n"
+		"            its params: HID[,uid=UID,type=Resource Type,Resouece config,...]\n"
+		"			 e.g. --acpidev_pt INTC1055,uid=0,type=memory,min=0xfd6e0000,len=0x10000\n"
+		"			 e.g. --acpidev_pt PNP0501,uid=19,type=io_port,min=0x2f8,len=8\n"
+		"			 e.g. --acpidev_pt PNP0501,uid=19,type=irq,irq=5\n"
 		"       --mmiodev_pt: MMIO resources args: physical MMIO regions\n"
 		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
 		"       --lapic_pt: enable local apic passthrough\n"
@@ -576,6 +581,10 @@ vm_init_vdevs(struct vmctx *ctx)
 	if (ret < 0)
 		goto mmio_dev_fail;
 
+	ret = init_acpi_devs(ctx);
+	if (ret < 0)
+		goto acpi_dev_fail;
+
 	ret = init_pci(ctx);
 	if (ret < 0)
 		goto pci_fail;
@@ -586,6 +595,8 @@ vm_init_vdevs(struct vmctx *ctx)
 	return 0;
 
 pci_fail:
+	deinit_acpi_devs(ctx);
+acpi_dev_fail:
 	deinit_mmio_devs(ctx);
 mmio_dev_fail:
 	monitor_close();
@@ -620,6 +631,7 @@ vm_deinit_vdevs(struct vmctx *ctx)
 	acrn_writeback_ovmf_nvstorage(ctx);
 
 	deinit_pci(ctx);
+	deinit_acpi_devs(ctx);
 	deinit_mmio_devs(ctx);
 	monitor_close();
 

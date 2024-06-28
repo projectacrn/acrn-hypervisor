@@ -69,6 +69,8 @@ struct inout_port {
 	};								\
 	DATA_SET(inout_port_set, __CONCAT(__inout_port, __LINE__))
 
+int	default_inout(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
+	      uint32_t *eax, void *arg);
 void	init_inout(void);
 int	emulate_inout(struct vmctx *ctx, int *pvcpu, struct acrn_pio_request *req);
 int	register_inout(struct inout_port *iop);

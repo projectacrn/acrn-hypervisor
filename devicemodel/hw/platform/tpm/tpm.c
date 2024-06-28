@@ -15,7 +15,6 @@
 #include "tpm.h"
 #include "tpm_internal.h"
 #include "log.h"
-#include "mmio_dev.h"
 #include "dm.h"
 
 static int tpm_debug;
@@ -28,7 +27,7 @@ static int tpm_debug;
 #define STR_MAX_LEN 1024U
 static char *sock_path = NULL;
 static uint32_t vtpm_crb_mmio_addr = 0U;
-struct acpi_dev_pt_ops pt_acpi_dev;
+struct acpi_dev_ops pt_acpi_dev;
 
 #define TPM2_TABLE_SYSFS_PATH	"/sys/firmware/acpi/tables/TPM2"
 
@@ -76,7 +75,7 @@ static int is_tpm2_eventlog_supported(struct acpi_table_tpm2 *tpm2)
 static int is_hid_tpm2_device(char *opts)
 {
 	int ret;
-	struct acpi_dev_pt_ops *ops = &pt_acpi_dev;
+	struct acpi_dev_ops *ops = &pt_acpi_dev;
 	uint32_t uid = 0;
 	char *devopts, *hid, *vtopts;
 
@@ -102,7 +101,7 @@ static int is_hid_tpm2_device(char *opts)
  * @pre: hid should be a valid HID of the TPM2 device being passed-through.
  * @pre: tpm2dev != NULL
  */
-static int init_tpm2_pt(char *opts, struct mmio_dev *tpm2dev)
+static int create_tpm2_pt(char *opts, struct acpi_dev *tpm2dev)
 {
 	int err = 0;
 	uint64_t tpm2_buffer_hpa, tpm2_buffer_size;
@@ -129,10 +128,13 @@ static int init_tpm2_pt(char *opts, struct mmio_dev *tpm2dev)
 	 */
 	if (vtopts != NULL ){
 		vtopts[0] = ':';
+		if(!strncmp(vtopts + 1, "uid=", 4)) {
+			strcpy(vtopts + 1, vtopts + 5);
+		}
 	}
 
 	/* parse /proc/iomem to find the address and size of tpm buffer */
-	if (!get_mmio_hpa_resource(devopts, &tpm2_buffer_hpa, &tpm2_buffer_size)) {
+	if (!get_mmio_hpa_resource(devopts, &tpm2_buffer_hpa, &tpm2_buffer_size, 0)) {
 		free(devopts);
 		return -ENODEV;
 	}
@@ -163,16 +165,18 @@ static int init_tpm2_pt(char *opts, struct mmio_dev *tpm2dev)
 
 	strncpy(tpm2dev->name, "MSFT0101", 8);
 	strncpy(tpm2dev->dev.name, "tpm2", 4);
-	tpm2dev->dev.res[0].host_pa = tpm2_buffer_hpa;
-	tpm2dev->dev.res[0].user_vm_pa = tpm2_buffer_hpa;
-	tpm2dev->dev.res[0].size = tpm2_buffer_size;
+	tpm2dev->dev.res[0].type = MEMORY_RES;
+	tpm2dev->dev.res[0].mmio_res.host_pa = tpm2_buffer_hpa;
+	tpm2dev->dev.res[0].mmio_res.user_vm_pa = tpm2_buffer_hpa;
+	tpm2dev->dev.res[0].mmio_res.size = tpm2_buffer_size;
 
 	/* Search for eventlog */
 	if (is_tpm2_eventlog_supported(&tpm2) &&
 		!mmio_dev_alloc_gpa_resource32(&base, tpm2.laml)) {
-		tpm2dev->dev.res[1].host_pa = tpm2.lasa;
-		tpm2dev->dev.res[1].user_vm_pa = base;
-		tpm2dev->dev.res[1].size = tpm2.laml;
+		tpm2dev->dev.res[1].type = MEMORY_RES;
+		tpm2dev->dev.res[1].mmio_res.host_pa = tpm2.lasa;
+		tpm2dev->dev.res[1].mmio_res.user_vm_pa = base;
+		tpm2dev->dev.res[1].mmio_res.size = tpm2.laml;
 	}
 
 	pt_tpm2 = true;
@@ -180,13 +184,21 @@ static int init_tpm2_pt(char *opts, struct mmio_dev *tpm2dev)
 	return 0;
 }
 
+static int init_tpm2_pt(struct vmctx *ctx, struct acrn_acpidev *tmp2_dev)
+{
+	if(!ctx || !tmp2_dev)
+		return -EINVAL;
+
+	return init_pt_acpidev(ctx, tmp2_dev);
+}
+
 uint32_t get_vtpm_crb_mmio_addr(void) {
 	return vtpm_crb_mmio_addr;
 }
 
-static struct acrn_mmiodev *get_tpm2_mmio_dev()
+static struct acrn_acpidev *get_tpm2_acpi_dev()
 {
-	struct mmio_dev *dev = get_mmiodev("MSFT0101");
+	struct acpi_dev *dev = get_acpidev("MSFT0101", "0");
 	return dev ? &dev->dev : NULL;
 }
 
@@ -195,8 +207,8 @@ uint32_t get_tpm_crb_mmio_addr(void)
 	uint32_t base;
 
 	if (pt_tpm2) {
-		struct acrn_mmiodev *d = get_tpm2_mmio_dev();
-		base = d ? (uint32_t)d->res[0].host_pa : 0U;
+		struct acrn_acpidev *d = get_tpm2_acpi_dev();
+		base = d ? (uint32_t)d->res[0].mmio_res.host_pa : 0U;
 	} else {
 		base = get_vtpm_crb_mmio_addr();
 	}
@@ -206,20 +218,20 @@ uint32_t get_tpm_crb_mmio_addr(void)
 
 static uint32_t get_tpm_crb_mmio_size(void)
 {
-	struct acrn_mmiodev *d = get_tpm2_mmio_dev();
-	return (pt_tpm2 && d) ? d->res[0].size : TPM_CRB_MMIO_SIZE;
+	struct acrn_acpidev *d = get_tpm2_acpi_dev();
+	return (pt_tpm2 && d) ? d->res[0].mmio_res.size : TPM_CRB_MMIO_SIZE;
 }
 
 static uint32_t get_tpm2_table_minimal_log_length(void)
 {
-	struct acrn_mmiodev *d = get_tpm2_mmio_dev();
-	return (pt_tpm2 && d && d->res[1].host_pa) ? d->res[1].size : 0U;
+	struct acrn_acpidev *d = get_tpm2_acpi_dev();
+	return (pt_tpm2 && d && d->res[1].mmio_res.host_pa) ? d->res[1].mmio_res.size : 0U;
 }
 
 static uint64_t get_tpm2_table_log_address(void)
 {
-	struct acrn_mmiodev *d = get_tpm2_mmio_dev();
-	return (pt_tpm2 && d && d->res[1].host_pa) ? d->res[1].user_vm_pa : 0UL;
+	struct acrn_acpidev *d = get_tpm2_acpi_dev();
+	return (pt_tpm2 && d && d->res[1].mmio_res.host_pa) ? d->res[1].mmio_res.user_vm_pa : 0UL;
 }
 
 enum {
@@ -285,7 +297,7 @@ void deinit_vtpm2(struct vmctx *ctx)
 	}
 }
 
-static void tpm_write_dsdt(struct vmctx *ctx)
+static void tpm_write_dsdt(struct vmctx *ctx, struct acpi_dev *tpm_dev)
 {
 	if (ctx->tpm_dev || pt_tpm2) {
 		dsdt_line("  Scope (\\_SB)");
@@ -340,9 +352,10 @@ int basl_fwrite_tpm2(FILE *fp, struct vmctx *ctx)
 	return 0;
 }
 
-struct acpi_dev_pt_ops pt_tpm2_dev_ops = {
+struct acpi_dev_ops pt_tpm2_dev_ops = {
 	.match = is_hid_tpm2_device,
+	.create = create_tpm2_pt,
 	.init = init_tpm2_pt,
 	.write_dsdt = tpm_write_dsdt,
 };
-DEFINE_ACPI_PT_DEV(pt_tpm2_dev_ops);
+DEFINE_ACPI_DEV(pt_tpm2_dev_ops);

@@ -45,7 +45,7 @@ static struct {
 	void		*arg;
 } inout_handlers[MAX_IOPORTS];
 
-static int
+int
 default_inout(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	      uint32_t *eax, void *arg)
 {

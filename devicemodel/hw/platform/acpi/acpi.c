@@ -73,7 +73,7 @@
 #include "log.h"
 #include "vssram.h"
 #include "vmmapi.h"
-#include "mmio_dev.h"
+#include "acpi_dev.h"
 
 /*
  * Define the base address of the ACPI tables, and the offsets to
@@ -382,6 +382,8 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "\t\t\tTrigger Mode : 3\n");
 		EFPRINTF(fp, "\n");
 	}
+
+	acpi_dev_write_madt(fp, ctx);
 
 	/* Local APIC NMI is connected to LINT 1 on all CPUs */
 	EFPRINTF(fp, "[0001]\t\tSubtable Type : 04\n");
