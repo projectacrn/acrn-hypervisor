@@ -125,6 +125,10 @@
 	_IOW(ACRN_IOCTL_TYPE, 0x59, struct acrn_vdev)
 #define ACRN_IOCTL_DESTROY_VDEV	\
 	_IOW(ACRN_IOCTL_TYPE, 0x5A, struct acrn_vdev)
+#define ACRN_IOCTL_ASSIGN_PIO_REGION	\
+	_IOW(ACRN_IOCTL_TYPE, 0x5B, struct acrn_pio_region)
+#define ACRN_IOCTL_DEASSIGN_PIO_REGION	\
+	_IOW(ACRN_IOCTL_TYPE, 0x5C, struct acrn_pio_region)
 
 /* Power management */
 #define ACRN_IOCTL_PM_GET_CPU_STATE	\

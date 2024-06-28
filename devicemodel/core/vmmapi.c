@@ -593,6 +593,28 @@ vm_deassign_mmiodev(struct vmctx *ctx, struct acrn_mmiodev *mmiodev)
 }
 
 int
+vm_assign_pio_region(struct vmctx *ctx, struct acrn_pio_region *pio_region)
+{
+	int error;
+	error = ioctl(ctx->fd, ACRN_IOCTL_ASSIGN_PIO_REGION, pio_region);
+	if (error) {
+		pr_err("ACRN_IOCTL_ASSIGN_PIO_REGION ioctl() returned an error: %s\n", errormsg(errno));
+	}
+	return error;
+}
+
+int
+vm_deassign_pio_region(struct vmctx *ctx, struct acrn_pio_region *pio_region)
+{
+	int error;
+	error = ioctl(ctx->fd, ACRN_IOCTL_DEASSIGN_PIO_REGION, pio_region);
+	if (error) {
+		pr_err("ACRN_IOCTL_DEASSIGN_PIO_REGION ioctl() returned an error: %s\n", errormsg(errno));
+	}
+	return error;
+}
+
+int
 vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 		   vm_paddr_t gpa, size_t len, vm_paddr_t hpa)
 {
