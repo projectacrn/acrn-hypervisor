@@ -996,19 +996,28 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *target
 
 		if (copy_from_gpa(vm, &irq, param2, sizeof(irq)) == 0) {
 			if (irq.type == IRQ_INTX) {
-				struct pci_vdev *vdev;
+				struct pci_vdev *vdev = NULL;
 				union pci_bdf bdf = {.value = irq.virt_bdf};
 				struct acrn_vpci *vpci = &target_vm->vpci;
 
-				spinlock_obtain(&vpci->lock);
-				vdev = pci_find_vdev(vpci, bdf);
-				spinlock_release(&vpci->lock);
+				/*
+				 * Consider ptdev as non PCI device if hc_ptdev_irq.virt_bdf is 0xFFFF
+				 * No need to find vdev for non PCI device
+				 */
+				if (bdf.value != NON_PCI_DEVICE_BDF) {
+					spinlock_obtain(&vpci->lock);
+					vdev = pci_find_vdev(vpci, bdf);
+					spinlock_release(&vpci->lock);
+				}
 				/*
 				 * TODO: Change the hc_ptdev_irq structure member names
 				 * virt_pin to virt_gsi
 				 * phys_pin to phys_gsi
+				 * 
+				 * Consider ptdev as non PCI device if hc_ptdev_irq.phys_bdf is 0xFFFF
 				 */
-				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
+				if (((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf))
+					|| ((vdev == NULL) && (irq.phys_bdf == NON_PCI_DEVICE_BDF))) {
 					if ((((!irq.intx.pic_pin) && (irq.intx.virt_pin < get_vm_gsicount(target_vm)))
 						|| ((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount())))
 							&& is_gsi_valid(irq.intx.phys_pin)) {
@@ -1049,19 +1058,28 @@ int32_t hcall_reset_ptdev_intr_info(struct acrn_vcpu *vcpu, struct acrn_vm *targ
 
 		if (copy_from_gpa(vm, &irq, param2, sizeof(irq)) == 0) {
 			if (irq.type == IRQ_INTX) {
-				struct pci_vdev *vdev;
+				struct pci_vdev *vdev = NULL;
 				union pci_bdf bdf = {.value = irq.virt_bdf};
 				struct acrn_vpci *vpci = &target_vm->vpci;
 
-				spinlock_obtain(&vpci->lock);
-				vdev = pci_find_vdev(vpci, bdf);
-				spinlock_release(&vpci->lock);
+				/*
+				 * Consider ptdev as non PCI device if hc_ptdev_irq.virt_bdf is 0xFFFF
+				 * No need to find vdev for non PCI device
+				 */
+				if (bdf.value != NON_PCI_DEVICE_BDF) {
+					spinlock_obtain(&vpci->lock);
+					vdev = pci_find_vdev(vpci, bdf);
+					spinlock_release(&vpci->lock);
+				}
 				/*
 				 * TODO: Change the hc_ptdev_irq structure member names
 				 * virt_pin to virt_gsi
 				 * phys_pin to phys_gsi
+				 * 
+				 * Consider ptdev as non PCI device if hc_ptdev_irq.phys_bdf is 0xFFFF
 				 */
-				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
+				if (((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf))
+					|| ((vdev == NULL) && (irq.phys_bdf == NON_PCI_DEVICE_BDF))) {
 					if (((!irq.intx.pic_pin) && (irq.intx.virt_pin < get_vm_gsicount(target_vm))) ||
 						((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount()))) {
 						ptirq_remove_intx_remapping(target_vm, irq.intx.virt_pin, irq.intx.pic_pin, false);
