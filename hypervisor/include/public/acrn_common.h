@@ -708,6 +708,19 @@ struct acrn_mmiodev {
 };
 
 /**
+ * @brief Info to assign or deassign a PIO device for a VM
+ */
+struct acrn_pio_region {
+	char name[8];
+	struct acrn_piores {
+		/** the io port address for PIO device */
+		uint16_t port_address;
+		/** the size of the io port for the PIO resource */
+		uint16_t size;
+	} res;
+};
+
+/**
  * @brief Info to create or destroy a virtual PCI or legacy device for a VM
  *
  * the parameter for HC_CREATE_VDEV or HC_DESTROY_VDEV hypercall

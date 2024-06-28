@@ -81,6 +81,18 @@ void   allow_guest_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_
 void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_t nbytes);
 
 /**
+ * @brief Check if a VM has full access to a port I/O range
+ *
+ * This API check if given \p vm has direct access to the port I/O space
+ * starting from \p port_address to \p port_address + \p nbytes - 1.
+ *
+ * @param vm The VM whose port I/O access permissions is to be checked
+ * @param port_address The start address of the port I/O range
+ * @param nbytes The size of the range, in bytes
+ */
+bool has_direct_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_t nbytes);
+
+/**
  * @brief Fire HSM interrupt to Service VM
  */
 void arch_fire_hsm_interrupt(void);
