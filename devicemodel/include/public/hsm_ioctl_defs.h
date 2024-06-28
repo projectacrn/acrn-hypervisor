@@ -199,6 +199,8 @@ struct acrn_vm_memmap {
 #define ACRN_PTDEV_IRQ_MSI	1
 #define ACRN_PTDEV_IRQ_MSIX	2
 
+#define ACRN_PTDEV_NON_PCI_BDF 0xFFFF
+
 /**
  * @brief pass thru device irq data structure
  */
@@ -259,6 +261,55 @@ struct acrn_irqfd {
        uint32_t flags;
        /** MSI interrupt to be injected */
        struct acrn_msi_entry msi;
+};
+
+/**
+ * @brief Info to assign or deassign IRQ resource of ACPI device for a VM
+*/
+struct acrn_irqres {
+	/** The irq number */
+	uint8_t irq;
+	/**
+	 * Polarity of the APIC I/O input signals written to MADT
+	 * 
+	 *   00 Conforms to the specifications of the bus (for example, EISA is active-low for level-triggered interrupts)
+	 *   01 Active high
+	 *   10 Reserved
+	 *   11 Active low
+	*/
+	uint8_t polarity;
+	/**
+	 * Trigger mode of the APIC I/O Input signals written to MADT
+	 * 
+	 *   00 Conforms to specifications of the bus (For example, ISA is edge-triggered)
+	 *   01 Edge-triggered
+	 *   10 Reserved
+	 *   11 Level-triggered
+	*/
+	uint8_t trigger_mode;
+};
+
+#define ACPIDEV_RES_NUM		8
+
+/**
+ * @brief Info to assign or deassign ACPI device resource for a VM
+ */
+struct acrn_acpidev {
+	char name[8];
+	struct acrn_acpires {
+		/** acpi resource type */
+		enum acpires_type {
+			INVALID_RES = 0,
+			MEMORY_RES,
+			IO_PORT_RES,
+			IRQ_RES
+		} type;
+		union {
+			struct acrn_mmiores mmio_res;
+			struct acrn_piores pio_res;
+			struct acrn_irqres irq_res;
+		};
+	} res[ACPIDEV_RES_NUM];
 };
 
 #endif /* VHM_IOCTL_DEFS_H */

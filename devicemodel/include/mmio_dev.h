@@ -15,23 +15,10 @@ struct mmio_dev {
 	struct acrn_mmiodev dev;
 };
 
-struct acpi_dev_pt_ops {
-	char hid[8];
-	char modalias[32];
-	int (*match)(char *);
-	int (*init)(char *, struct mmio_dev *);
-	void (*write_dsdt)(struct vmctx *);
-	/* TODO: We may add more fields when we support other ACPI dev pt */
-};
-
-#define DEFINE_ACPI_PT_DEV(x) DATA_SET(acpi_dev_pt_ops_set, x);
-
 struct mmio_dev *get_mmiodev(char *name);
-bool get_mmio_hpa_resource(char *name, uint64_t *res_start, uint64_t *res_size);
-int get_more_acpi_dev_info(char *hid, uint32_t instance, struct acpi_dev_pt_ops *ops);
-void acpi_dev_write_dsdt(struct vmctx *ctx);
+struct mmio_dev *alloc_mmiodev(void);
+bool get_mmio_hpa_resource(char *name, uint64_t *res_start, uint64_t *res_size, uint8_t region_index);
 
-int create_pt_acpidev(char *arg);
 int create_pt_mmiodev(char *arg);
 
 int init_mmio_devs(struct vmctx *ctx);

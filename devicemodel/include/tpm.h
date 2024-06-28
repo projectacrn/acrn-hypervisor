@@ -7,7 +7,7 @@
 #ifndef _TPM_H_
 #define _TPM_H_
 
-#include "mmio_dev.h"
+#include "acpi_dev.h"
 #include "acpi.h"
 
 #define TPM_CRB_MMIO_ADDR 0xFED40000UL

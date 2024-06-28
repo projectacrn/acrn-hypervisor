@@ -139,6 +139,8 @@ int	vm_assign_mmiodev(struct vmctx *ctx, struct acrn_mmiodev *mmiodev);
 int	vm_deassign_mmiodev(struct vmctx *ctx, struct acrn_mmiodev *mmiodev);
 int	vm_assign_pio_region(struct vmctx *ctx, struct acrn_pio_region *pio_region);
 int	vm_deassign_pio_region(struct vmctx *ctx, struct acrn_pio_region *pio_region);
+int	vm_assign_acpidev(struct vmctx *ctx, struct acrn_acpidev *acpidev);
+int	vm_deassign_acpidev(struct vmctx *ctx, struct acrn_acpidev *acpidev);
 int	vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 			  vm_paddr_t gpa, size_t len, vm_paddr_t hpa);
 int	vm_unmap_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
