@@ -260,6 +260,7 @@ struct hc_ptdev_irq {
 	/** virtual BDF of the ptdev */
 	uint16_t virt_bdf;
 
+#define NON_PCI_DEVICE_BDF 0xFFFF
 	/** physical BDF of the ptdev */
 	uint16_t phys_bdf;
 
