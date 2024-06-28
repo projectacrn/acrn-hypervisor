@@ -204,7 +204,7 @@ void allow_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 
 	b = (uint32_t *)vm->arch_vm.io_bitmap;
 	for (i = 0U; i < nbytes; i++) {
-		b[address >> 5U] &= ~(1U << (address & 0x1fU));
+		bitmap32_clear_nolock(address & 0x1fU, &b[address >> 5U]);
 		address++;
 	}
 }
@@ -218,7 +218,35 @@ void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 
 	b = (uint32_t *)vm->arch_vm.io_bitmap;
 	for (i = 0U; i < nbytes; i++) {
-		b[address >> 5U] |= (1U << (address & 0x1fU));
+		bitmap32_set_nolock(address & 0x1fU, &b[address >> 5U]);
 		address++;
 	}
+}
+
+/**
+ * @brief Check if a VM has full access to a port I/O range
+ *
+ * This API check if given \p vm has direct access to the port I/O space
+ * starting from \p port_address to \p port_address + \p nbytes - 1.
+ *
+ * @param vm The VM whose port I/O access permissions is to be checked
+ * @param port_address The start address of the port I/O range
+ * @param nbytes The size of the range, in bytes
+ */
+bool has_direct_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_t nbytes)
+{
+	uint16_t address = port_address;
+	uint32_t *b;
+	uint32_t i;
+	bool ret = true;
+
+	b = (uint32_t *)vm->arch_vm.io_bitmap;
+	for (i = 0U; i < nbytes; i++) {
+		if (bitmap32_test(address & 0x1fU, &b[address >> 5U])) {
+			ret = false;
+			break;
+		}
+		address++;
+	}
+	return ret;
 }

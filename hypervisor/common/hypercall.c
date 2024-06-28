@@ -1354,3 +1354,75 @@ int32_t hcall_remove_vdev(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm, __u
 	}
 	return ret;
 }
+
+/**
+ * @brief Assign PIO device resource to a VM.
+ *
+ * @param vcpu Pointer to vCPU that initiates the hypercall
+ * @param target_vm Pointer to target VM data structure
+ * @param param2 guest physical address. This gpa points to data structure of
+ *              acrn_pio_region including assign PIO resource info
+ *
+ * @pre is_service_vm(vcpu->vm)
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_assign_pio_region(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
+{
+	struct acrn_vm *vm = vcpu->vm;
+	int32_t ret = -EINVAL;
+	struct acrn_pio_region pio_region;
+
+	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
+	if (is_created_vm(target_vm)) {
+		if (copy_from_gpa(vm, &pio_region, param2, sizeof(pio_region)) == 0) {
+			if (has_direct_pio_access(vm, pio_region.res.port_address, pio_region.res.size)) {
+				deny_guest_pio_access(vm, pio_region.res.port_address, pio_region.res.size);
+				allow_guest_pio_access(target_vm, pio_region.res.port_address, pio_region.res.size);
+				ret = 0;
+			} else {
+				pr_err("vm[%d] %s failed: pio region not fully accessible for vm[%d].\n",target_vm->vm_id, __func__, vm->vm_id);
+			}
+		}
+	} else {
+		pr_err("vm[%d] %s failed: target vm not created.\n",target_vm->vm_id, __func__);
+	}
+
+	return ret;
+}
+
+/**
+ * @brief Deassign PIO device resource from a VM.
+ *
+ * @param vcpu Pointer to vCPU that initiates the hypercall
+ * @param target_vm Pointer to target VM data structure
+ * @param param2 guest physical address. This gpa points to data structure of
+ *              acrn_pio_region including deassign PIO device info
+ *
+ * @pre is_service_vm(vcpu->vm)
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_deassign_pio_region(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
+		__unused uint64_t param1, uint64_t param2)
+{
+	struct acrn_vm *vm = vcpu->vm;
+	int32_t ret = -EINVAL;
+	struct acrn_pio_region pio_region;
+
+	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
+	if ((is_paused_vm(target_vm) || is_created_vm(target_vm))) {
+		if (copy_from_gpa(vm, &pio_region, param2, sizeof(pio_region)) == 0) {
+			if (has_direct_pio_access(target_vm, pio_region.res.port_address, pio_region.res.size)) {
+				deny_guest_pio_access(target_vm, pio_region.res.port_address, pio_region.res.size);
+				allow_guest_pio_access(vm, pio_region.res.port_address, pio_region.res.size);
+				ret = 0;
+			} else {
+				pr_err("vm[%d] %s failed: pio region not fully accessible for vm[%d].\n",vm->vm_id, __func__, target_vm->vm_id);
+			}
+		}
+	} else {
+		pr_err("vm[%d] %s failed: target vm not created or not paused.\n",target_vm->vm_id, __func__);
+	}
+
+	return ret;
+}
