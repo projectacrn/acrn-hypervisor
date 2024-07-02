@@ -119,6 +119,36 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
         <xs:documentation>Enable the software workaround for Machine Check Error on Page Size Change (erratum in some processor families).  For more information about this workaround and affected processors, see this `MCE Avoidance on Page Size Change White Paper &lt;https://www.intel.com/content/www/us/en/developer/articles/troubleshooting/software-security-guidance/technical-documentation/machine-check-error-avoidance-page-size-change.html&gt;`_.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="VUART_RX_BUF_SIZE" default="256">
+      <xs:annotation acrn:title="vuart rx buffer size (bytes)" acrn:views="advanced"
+                     acrn:errormsg="'required': 'must config the max rx buffer size of vuart in byte'">
+        <xs:documentation>Specify the maximum rx buffer size of vuart.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+         <xs:annotation>
+           <xs:documentation>Integer from 256 to 2560.</xs:documentation>
+         </xs:annotation>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="256" />
+          <xs:maxInclusive value="2560" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
+    <xs:element name="VUART_TX_BUF_SIZE" default="8192">
+      <xs:annotation acrn:title="vuart tx buffer size" acrn:views="advanced"
+                     acrn:errormsg="'required': 'must config the max tx buffer size of vuart in byte'">
+        <xs:documentation>Specify the maximum tx buffer size of vuart.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+         <xs:annotation>
+           <xs:documentation>Integer from 8192 to 81920.</xs:documentation>
+         </xs:annotation>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="8192" />
+          <xs:maxInclusive value="81920" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
     <xs:element name="RDT" type="RDTType">
       <xs:annotation acrn:title="Intel Resource Director Tech" acrn:views="">
         <xs:documentation>Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.</xs:documentation>

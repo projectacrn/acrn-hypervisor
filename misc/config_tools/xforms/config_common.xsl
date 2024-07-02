@@ -154,6 +154,14 @@
       <xsl:with-param name="key" select="'IVSHMEM_ENABLED'" />
       <xsl:with-param name="value" select="count(//hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']) > 0" />
     </xsl:call-template>
+
+    <xsl:call-template name="integer-by-key">
+      <xsl:with-param name="key" select="'VUART_RX_BUF_SIZE'" />
+    </xsl:call-template>
+
+    <xsl:call-template name="integer-by-key">
+      <xsl:with-param name="key" select="'VUART_TX_BUF_SIZE'" />
+    </xsl:call-template>
   </xsl:template>
 
   <xsl:template match="MEMORY">
