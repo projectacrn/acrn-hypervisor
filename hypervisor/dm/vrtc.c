@@ -455,10 +455,6 @@ static void cmos_set_reg_val(uint8_t addr, uint8_t value)
 
 #define TRIGGER_ALARM	(RTCIR_ALARM | RTCIR_INT)
 #define RTC_DELTA	1	/* For RTC and system time may out of sync for no more than 1s */
-static inline bool rtc_halted(struct acrn_vrtc *rtc)
-{
-        return ((rtc->rtcdev.reg_b & RTCSB_HALT) != 0U);
-}
 
 static uint8_t vrtc_get_reg_c(struct acrn_vrtc *vrtc)
 {
