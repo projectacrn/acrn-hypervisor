@@ -1398,6 +1398,7 @@ void dmar_free_irte(const struct intr_source *intr_src, uint16_t index)
 
 	if (intr_src->is_msi) {
 		dmar_unit = device_to_dmaru((uint8_t)intr_src->src.msi.bits.b, intr_src->src.msi.fields.devfun);
+		sid.value = (uint16_t)(intr_src->src.msi.value);
 	} else {
 		dmar_unit = ioapic_to_dmaru(intr_src->src.ioapic_id, &sid);
 	}
