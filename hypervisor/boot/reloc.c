@@ -26,12 +26,12 @@ struct Elf64_Rel {
 	uint64_t r_info;
 	uint64_t reserved;
 };
-#endif
 
 static inline uint64_t elf64_r_type(uint64_t i)
 {
 	return (i & 0xffffffffUL);
 }
+#endif
 
 /* get the delta between CONFIG_HV_RAM_START and the actual load address */
 uint64_t get_hv_image_delta(void)
