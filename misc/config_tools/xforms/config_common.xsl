@@ -166,6 +166,10 @@
     <xsl:call-template name="integer-by-key">
       <xsl:with-param name="key" select="'VUART_TX_BUF_SIZE'" />
     </xsl:call-template>
+
+    <xsl:call-template name="integer-by-key">
+        <xsl:with-param name="key" select="'VUART_TIMER_PCPU'" />
+    </xsl:call-template>
   </xsl:template>
 
   <xsl:template match="MEMORY">

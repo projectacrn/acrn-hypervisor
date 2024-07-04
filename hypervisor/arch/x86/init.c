@@ -47,6 +47,9 @@ static void init_debug_post(uint16_t pcpu_id)
 	if (pcpu_id == BSP_CPU_ID) {
 		/* Initialize the shell */
 		shell_init();
+	}
+
+	if (pcpu_id == VUART_TIMER_CPU) {
 		console_setup_timer();
 	}
 

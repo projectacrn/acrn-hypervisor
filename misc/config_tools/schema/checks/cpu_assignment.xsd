@@ -53,4 +53,11 @@
     </xs:annotation>
   </xs:assert>
 
+  <xs:assert test="every $pcpu in /acrn-config/vm[lapic_passthrough = 'y']//cpu_affinity//pcpu_id satisfies
+                   count(/acrn-config[.//VUART_TIMER_PCPU=$pcpu]) = 0">
+    <xs:annotation acrn:severity="warning" acrn:report-on="//VUART_TIMER_PCPU">
+      <xs:documentation>Physical CPU "{//VUART_TIMER_PCPU}" hosting vUART timer is assigned to a lapic passthrough VM. The console may be laggy.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
+
 </xs:schema>
