@@ -211,7 +211,7 @@ void console_setup_timer(void)
 }
 
 /* When lapic-pt is enabled for a vcpu working on the pcpu hosting
- * console timer (currently BSP), we utilize vm-exits to drive the console.
+ * console timer, we utilize vm-exits to drive the console.
  *
  * Note that currently this approach will result in a laggy shell when
  * the number of VM-exits/second is low (which is mostly true when lapic-pt is
@@ -222,8 +222,7 @@ void console_vmexit_callback(struct acrn_vcpu *vcpu)
 	static uint64_t prev_tsc = 0;
 	uint64_t tsc;
 
-	/* console_setup_timer is called on BSP only. */
-	if ((pcpuid_from_vcpu(vcpu) == BSP_CPU_ID) && (is_lapic_pt_enabled(vcpu))) {
+	if ((pcpuid_from_vcpu(vcpu) == VUART_TIMER_CPU) && (is_lapic_pt_enabled(vcpu))) {
 		tsc = cpu_ticks();
 		if (tsc - prev_tsc > (TICKS_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT)) {
 			console_timer_callback(NULL);
@@ -234,10 +233,14 @@ void console_vmexit_callback(struct acrn_vcpu *vcpu)
 
 void suspend_console(void)
 {
-	del_timer(&console_timer);
+	if (VUART_TIMER_CPU == BSP_CPU_ID) {
+		del_timer(&console_timer);
+	}
 }
 
 void resume_console(void)
 {
-	console_setup_timer();
+	if (VUART_TIMER_CPU == BSP_CPU_ID) {
+		console_setup_timer();
+	}
 }

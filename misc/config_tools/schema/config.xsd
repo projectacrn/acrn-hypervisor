@@ -149,6 +149,16 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
         </xs:restriction>
       </xs:simpleType>
     </xs:element>
+    <xs:element name="VUART_TIMER_PCPU" type="xs:integer" default="0">
+      <xs:annotation acrn:title="vUART timer pCPU ID" acrn:views="advanced"
+                     acrn:options="//processors//thread/cpu_id/text()"
+                     acrn:option-names="if (count(distinct-values(//processors//thread/core_type)) &gt; 1)
+                                        then (for $thread in //processors//thread return concat($thread/cpu_id, ' (', if ($thread/core_type = 'Core') then 'P-Core' else 'E-Core', ')'))
+                                        else //processors//thread/cpu_id/text()"
+                     acrn:options-sorted-by="int">
+        <xs:documentation>pCPU ID of the vUART timer is allowed to pin to.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="RDT" type="RDTType">
       <xs:annotation acrn:title="Intel Resource Director Tech" acrn:views="">
         <xs:documentation>Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.</xs:documentation>
