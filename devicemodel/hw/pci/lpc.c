@@ -59,7 +59,7 @@ SYSRES_IO(NMISC_PORT, 1);
 
 static struct pci_vdev *lpc_bridge;
 
-#define	LPC_UART_NUM	4
+#define	LPC_UART_NUM	5
 static struct lpc_uart_vdev {
 	struct uart_vdev *uart;
 	const char *opts;
@@ -67,19 +67,23 @@ static struct lpc_uart_vdev {
 	int	irq;
 	int	enabled;	/* enabled/configured by user */
 } lpc_uart_vdev[LPC_UART_NUM];
+#define LPC_S5_UART_NAME "COM5"
 
-static const char *lpc_uart_names[LPC_UART_NUM] = { "COM1", "COM2", "COM3", "COM4" };
+static const char *lpc_uart_names[LPC_UART_NUM] = { "COM1", "COM2", "COM3", "COM4", LPC_S5_UART_NAME};
 
 /*
  * LPC device configuration is in the following form:
  * <lpc_device_name>[,<options>]
  * For e.g. "com1,stdio"
+ * For S5 e.g. "com5,/dev/pts/0,0x9000,5"
  */
 int
 lpc_device_parse(const char *opts)
 {
 	int unit, error;
 	char *str, *cpy, *lpcdev;
+        char *lpcopt, *lpcport, *endptr;
+	int s5_port = 0, s5_irq = 0;
 
 	error = -1;
 	str = cpy = strdup(opts);
@@ -88,7 +92,25 @@ lpc_device_parse(const char *opts)
 		for (unit = 0; unit < LPC_UART_NUM; unit++) {
 			if (strcasecmp(lpcdev, lpc_uart_names[unit]) == 0) {
 				lpc_uart_vdev[unit].enabled = 1;
-				lpc_uart_vdev[unit].opts = str;
+				if(strcasecmp(lpcdev,LPC_S5_UART_NAME) == 0){
+					lpcopt = strsep(&str,",");
+					if(lpcopt != NULL){
+						lpc_uart_vdev[unit].opts = lpcopt;
+					}
+					lpcport = strsep(&str, ",");
+					if(lpcport != NULL){
+						if(dm_strtoul(lpcport, &endptr, 0, (long unsigned int*)&s5_port))
+							goto done;
+						if(dm_strtoul(str, &endptr, 0, (long unsigned int*)&s5_irq))
+							goto done;
+					}
+					if((s5_port != 0) && (s5_irq != 0)){
+						uart_legacy_reinit_res(unit, s5_port, s5_irq);
+					}
+				}
+				else{
+					lpc_uart_vdev[unit].opts = str;
+				}
 				error = 0;
 				goto done;
 			}
