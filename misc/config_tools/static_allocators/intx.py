@@ -74,6 +74,9 @@ def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
                 remove_irq(irq_list, 3)
             if 4 in irq_list:
                 remove_irq(irq_list, 4)
+        else:
+            if 14 in irq_list:
+                remove_irq(irq_list, 14)
         vuart_id = 1
         legacy_vuart_irq = "0"
         vmname = get_node("./name/text()", vm_node)
@@ -97,7 +100,7 @@ def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
                     vuart_id = vuart_id + 1
         # Allocate irq for S5 vuart, we have to use the irq of COM2
         if load_order != "SERVICE_VM":
-            legacy_vuart_irq = alloc_standard_irq("0x2F8")
+            legacy_vuart_irq = alloc_irq(irq_list)
             create_vuart_irq_node(allocation_etree, get_node("./@id", vm_node), load_order, str(vuart_id), legacy_vuart_irq)
             vuart_id = vuart_id + 1
 

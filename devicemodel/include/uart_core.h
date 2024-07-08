@@ -36,6 +36,7 @@ struct uart_vdev;
 
 typedef void (*uart_intr_func_t)(void *arg);
 int	uart_legacy_alloc(int unit, int *ioaddr, int *irq);
+int     uart_legacy_reinit_res(int which, int baseaddr, int irq);
 void	uart_legacy_dealloc(int which);
 uint8_t	uart_read(struct uart_vdev *uart, int offset);
 void	uart_write(struct uart_vdev *uart, int offset, uint8_t value);

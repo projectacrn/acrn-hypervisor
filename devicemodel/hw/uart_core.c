@@ -56,6 +56,8 @@
 #define COM3_IRQ	6
 #define COM4_BASE	0x2E8
 #define COM4_IRQ	7
+#define COM5_BASE       0x9000   /*for S5 connection*/
+#define COM5_IRQ        10
 
 #define	DEFAULT_RCLK	1843200
 #define	DEFAULT_BAUD	9600
@@ -89,6 +91,7 @@ static struct {
 	{ COM2_BASE, COM2_IRQ, false},
 	{ COM3_BASE, COM3_IRQ, false},
 	{ COM4_BASE, COM4_IRQ, false},
+	{ COM5_BASE, COM5_IRQ, false},
 };
 
 #define	UART_NLDEVS	(ARRAY_SIZE(uart_lres))
@@ -620,6 +623,18 @@ uart_legacy_alloc(int which, int *baseaddr, int *irq)
 	uart_lres[which].inuse = true;
 	*baseaddr = uart_lres[which].baseaddr;
 	*irq = uart_lres[which].irq;
+
+	return 0;
+}
+
+int 
+uart_legacy_reinit_res(int which, int baseaddr, int irq)
+{
+	if (which < 0 || which >= UART_NLDEVS || uart_lres[which].inuse)
+		return -1;
+
+	uart_lres[which].baseaddr = baseaddr;
+	uart_lres[which].irq = irq;
 
 	return 0;
 }

@@ -8,9 +8,11 @@
 import sys
 import acrn_config_utilities, lib.error
 from acrn_config_utilities import get_node
+from collections import defaultdict
 
 # The COM1 was used for console vUART, so we alloc io_port frome COM2~COM4
-service_port_list = list(range(0x9000, 0x9100, 8))
+val = lambda:list(range(0x9000, 0x9100, 8))
+vm_port_list = defaultdict(val)
 
 def create_s5_vuart_connection(allocation_etree, service_vm_name, service_vm_port, user_vm_name, user_vm_port):
     vuart_connections_node = get_node(f"/acrn-config/hv/vuart_connections", allocation_etree)
@@ -49,23 +51,25 @@ def get_console_vuart_port(scenario_etree, vm_name):
 
 def alloc_free_port(scenario_etree, load_order, vm_name):
     port_list = scenario_etree.xpath(f"//endpoint[vm_name = '{vm_name}']/io_port/text()")
+    if load_order == "SERVICE_VM":
+        vm_id = int(get_node(f"//vm[load_order = 'SERVICE_VM']/@id", scenario_etree))
+    else:
+        vm_id = int(get_node(f"//vm[name = '{vm_name}']/@id", scenario_etree))
     console_port = get_console_vuart_port(scenario_etree, vm_name)
     if console_port is not None:
         port_list.append(console_port.replace("U", ""))
+    
+    tmp_list = []
+    for port in port_list:
+        tmp_list.append(int(port, 16))
 
-    if load_order == "SERVICE_VM":
-        tmp_list = []
-        for port in port_list:
-            tmp_list.append(int(port, 16))
 
-        global service_port_list
-        service_port_list = list(set(service_port_list) - set(tmp_list))
-        service_port_list.sort()
-        port = hex(service_port_list[0])
-        service_port_list.remove(service_port_list[0])
-        return str(port).upper()
-    else:
-        return "0x2F8"
+    global vm_port_list
+    vm_port_list[vm_id] = list(set(vm_port_list[vm_id]) - set(tmp_list))
+    vm_port_list[vm_id].sort()
+    port = hex(vm_port_list[vm_id][0])
+    vm_port_list[vm_id].remove(vm_port_list[vm_id][0])
+    return str(port).upper()
 
 def alloc_vuart_connection_info(board_etree, scenario_etree, allocation_etree):
     user_vm_list = scenario_etree.xpath(f"//vm[load_order != 'SERVICE_VM']")
