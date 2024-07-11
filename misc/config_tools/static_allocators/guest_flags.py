@@ -27,6 +27,7 @@ policies = [
     GuestFlagPolicy(".//vm_type = 'RTVM' and .//load_order = 'PRE_LAUNCHED_VM' and //hv/BUILD_TYPE= 'debug'", "GUEST_FLAG_PMU_PASSTHROUGH"),
     GuestFlagPolicy(".//vm_type = 'TEE_VM'", "GUEST_FLAG_TEE"),
     GuestFlagPolicy(".//vm_type = 'REE_VM'", "GUEST_FLAG_REE"),
+    GuestFlagPolicy("(.//load_order = 'PRE_LAUNCHED_VM' and .//stateless = 'y') or (.//vm_type = 'TEE_VM')", "GUEST_FLAG_STATELESS"),
 ]
 
 def fn(board_etree, scenario_etree, allocation_etree):

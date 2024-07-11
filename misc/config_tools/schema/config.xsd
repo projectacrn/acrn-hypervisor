@@ -487,6 +487,11 @@ These settings can only be changed at build time.</xs:documentation>
         <xs:documentation>Specify TPM2 FIXUP for VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="stateless" type="Boolean" default="n" minOccurs="0">
+      <xs:annotation acrn:title="Stateless VM" acrn:applicable-vms="pre-launched" acrn:views="advanced">
+        <xs:documentation>Indicate the VM is running a stateless operating system and it can be shutdown forcefully with no data loss.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="epc_section" type="EPCSection" minOccurs="0">
       <xs:annotation acrn:title="SGX Enclave Page Cache" acrn:views="advanced" acrn:applicable-vms="pre-launched">
         <xs:documentation>Specify the Intel Software Guard Extensions (SGX) enclave page cache (EPC) section settings.</xs:documentation>

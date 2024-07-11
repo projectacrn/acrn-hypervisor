@@ -177,10 +177,8 @@ bool is_stateful_vm(const struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
-	/* TEE VM doesn't has its own state. The TAs will do the content
-	 * flush by themselves, HV and OS doesn't need to care about the state.
-	 */
-	return ((vm_config->guest_flags & GUEST_FLAG_TEE) == 0U);
+	/* TEE VM has GUEST_FLAG_STATELESS set implicitly */
+	return ((vm_config->guest_flags & GUEST_FLAG_STATELESS) == 0U);
 }
 
 /**
