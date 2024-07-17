@@ -444,15 +444,17 @@ how to build the Debian package from source code.
 
    .. code-block:: bash
 
-      sudo apt install -y libwebkit2gtk-4.0-dev \
-         build-essential \
+      sudo apt install -y build-essential \
          curl \
          wget \
          libssl-dev \
          libgtk-3-dev \
-         libappindicator3-dev \
          librsvg2-dev \
          python3-venv
+
+      cd /tmp/
+      wget http://security.ubuntu.com/ubuntu/pool/main/w/webkit2gtk/libwebkit2gtk-4.0-37_2.44.2-0ubuntu0.22.04.1_amd64.deb http://mirrors.kernel.org/ubuntu/pool/main/i/icu/libicu70_70.1-2_amd64.deb http://security.ubuntu.com/ubuntu/pool/main/w/webkit2gtk/libjavascriptcoregtk-4.0-18_2.44.2-0ubuntu0.22.04.1_amd64.deb
+      sudo apt install ./libwebkit2gtk-4.0-37_2.44.2-0ubuntu0.22.04.1_amd64.deb ./libicu70_70.1-2_amd64.deb ./libjavascriptcoregtk-4.0-18_2.44.2-0ubuntu0.22.04.1_amd64.deb
 
 #. Install Node.js (npm included) as follows:
 
