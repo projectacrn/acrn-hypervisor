@@ -67,16 +67,21 @@ def alloc_vuart_connection_irqs(board_etree, scenario_etree, allocation_etree):
 
     for vm_node in vm_node_list:
         load_order = get_node("./load_order/text()", vm_node)
-        irq_list = get_native_valid_irq() if load_order == "SERVICE_VM" else [f"{d}" for d in list(range(5,15))]
+        """
+        For both Service VM and post-launched VM, IRQs allocated to vuart connection
+        should avoid IRQ of existing physical device as it may conflict with legacy
+        INTX of ptdev. 
+        """
+        irq_list = get_native_valid_irq()
 
-        if load_order == "SERVICE_VM":
-            if 3 in irq_list:
-                remove_irq(irq_list, 3)
-            if 4 in irq_list:
-                remove_irq(irq_list, 4)
-        else:
-            if 14 in irq_list:
-                remove_irq(irq_list, 14)
+        """
+        Remove IRQ 3 and 4 from valid irq list as it is allocated to vuart with
+        standard COM port.
+        """
+        if 3 in irq_list:
+            remove_irq(irq_list, 3)
+        if 4 in irq_list:
+            remove_irq(irq_list, 4)
         vuart_id = 1
         legacy_vuart_irq = "0"
         vmname = get_node("./name/text()", vm_node)
