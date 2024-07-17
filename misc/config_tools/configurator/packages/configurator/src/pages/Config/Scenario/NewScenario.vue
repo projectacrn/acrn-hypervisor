@@ -32,7 +32,7 @@
           </b-form-radio>
 
           <b-form-radio class="mb-3" v-model="scenarioTemplate" value="partitioned">
-            Partitioned <i>(Pre-launched VMs only)</i>
+            Partitioned <i>(Pre-launched VMs or with Main VM)</i>
           </b-form-radio>
 
           <b-form-radio class="mb-3" v-model="scenarioTemplate" value="hybrid">
@@ -53,6 +53,10 @@
           <b-form-input v-if="scenarioTemplate!=='shared'" type="number" min="0" max="8" v-model="preLaunch"/>
           <b v-if="scenarioTemplate!=='partitioned'">Service VM:</b>
           <b-form-input v-if="scenarioTemplate!=='partitioned'" disabled type="number" model-value="1"/>
+
+          <b v-if="scenarioTemplate=='partitioned'">Main VM:</b>
+          <b-form-input v-if="scenarioTemplate=='partitioned'" min="0" max="1" type="number" v-model="mainVM"/>
+
           <b v-if="scenarioTemplate!=='partitioned'">Post-launch VMs:</b>
           <b-form-input v-if="scenarioTemplate!=='partitioned'" type="number" min="0" max="8" v-model="postLaunch"/>
         </div>
@@ -83,7 +87,8 @@ export default {
       version: branchVersion,
       scenarioTemplate: "shared",
       preLaunch: 1,
-      postLaunch: 1
+      postLaunch: 1,
+      mainVM: 1
     }
   },
   methods: {
@@ -102,6 +107,7 @@ export default {
         post = this.postLaunch
       } else if (this.scenarioTemplate === 'partitioned') {
         pre = this.preLaunch
+        service = this.mainVM;
       } else if (this.scenarioTemplate === 'hybrid') {
         pre = this.preLaunch;
         service = 1;
