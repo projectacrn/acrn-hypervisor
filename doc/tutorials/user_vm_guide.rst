@@ -168,6 +168,7 @@ when using one of these OSs:
 
 * :ref:`using_ubuntu_as_user_vm`
 * :ref:`using_windows_as_user_vm`
+* :ref:`using_celadon_as_user_vm`
 
 Real-time VM OS Considerations
 ******************************
