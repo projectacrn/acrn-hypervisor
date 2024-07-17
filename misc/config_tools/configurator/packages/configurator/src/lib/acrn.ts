@@ -651,6 +651,10 @@ class PythonObject {
     generateConfigSummary(boardXMLText, scenarioXMLText) {
         return this.api('generateConfigSummary', 'plaintext', boardXMLText, scenarioXMLText)
     }
+
+    updateSchema(boardXMLText, scenarioXMLText) {
+        return this.api('updateSchema', 'plaintext', boardXMLText, scenarioXMLText)
+    }
 }
 
 class Configurator {

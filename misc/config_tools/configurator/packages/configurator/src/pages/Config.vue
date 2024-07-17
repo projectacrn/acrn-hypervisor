@@ -140,6 +140,8 @@ export default {
       errors: [],
       totalMsg: "",
       showTotalMessageFlag: false,
+      isSaved:false,
+      isLoaded:false
     }
   },
   computed: {
@@ -151,6 +153,18 @@ export default {
     }
   },
   methods: {
+    updateSchema(i){
+      let current_selected_pcis=this.scenario.vm[i]['pci_devs']['pci_dev']
+      let total_pcis=this.schemas.PreLaunchedVM.BasicConfigType.definitions.PCIDevsConfiguration.properties.pci_dev.items
+      console.log('before:',total_pcis.enum.length)
+      let s=new Set(total_pcis.enum)
+      current_selected_pcis.map(e=>{
+        s.delete(e)
+      })
+      let to_updated=Array.from(s).sort()
+      total_pcis.enum=total_pcis.enumNames=to_updated
+      console.log('after:',total_pcis.enum.length)
+    },
     back() {
       this.$router.back()
     },
@@ -175,10 +189,28 @@ export default {
       this.updateCurrentBoardInfo()
       this.switchTab(-1)
     },
+    updateLoadSchema(){
+        let total=[]
+        this.scenario.vm.map((vmConfig)=>{
+            if(vmConfig.pci_devs!==undefined){//at least typeof pci_devs=='object', i.e.,{}
+                total.push(...vmConfig.pci_devs.pci_dev)
+            }
+        })
+        let current=configurator.pythonObject.updateSchema(this.board.content,total)
+        let retSch=JSON.parse(current)
+        this.schemas.PreLaunchedVM.BasicConfigType.definitions.PCIDevsConfiguration.properties.pci_dev.items.enum=this.schemas.PreLaunchedVM.BasicConfigType.definitions.PCIDevsConfiguration.properties.pci_dev.items.enumNames=retSch
+    },
     updateCurrentFormSchema() {
       if (this.activeVMID === -1) {
         this.currentFormSchema = this.schemas.HV
       } else {
+        if(!this.isLoaded){
+            this.updateLoadSchema()
+            this.isLoaded=true
+        }
+        if(this.isSaved){
+            this.updateLoadSchema()
+        }
         this.scenario.vm.map((vmConfig) => {
           if (vmConfig['@id'] === this.activeVMID) {
             let vm_schema = {
@@ -221,6 +253,9 @@ export default {
       for (let i = 0; i < this.scenario.vm.length; i++) {
         if (this.scenario.vm[i]['@id'] === this.activeVMID) {
           this.currentFormData = this.scenario.vm[i]
+          if(this.scenario.vm[i]['load_order']=='PRE_LAUNCHED_VM'&&this.isSaved){
+            this.updateSchema(i)
+          }
         }
       }
     },
@@ -490,7 +525,10 @@ export default {
 
       configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
           .then(() => {
+            this.isSaved=true
             this.updateCurrentFormData()
+            this.isSaved=false
+            this.isLoaded=false
           })
           .then(() => {
             // validate scenario and clean up the launch script
