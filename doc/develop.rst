@@ -29,6 +29,7 @@ User VM Tutorials
    tutorials/using_xenomai_as_user_vm
    tutorials/using_vxworks_as_user_vm
    tutorials/using_zephyr_as_user_vm
+   tutorials/using_celadon_as_user_vm
 
 Configuration Tutorials
 ***********************
