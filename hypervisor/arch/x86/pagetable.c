@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2024 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -11,8 +11,29 @@
 #include <asm/mmu.h>
 #include <logmsg.h>
 
+/**
+ * @addtogroup hwmgmt_page
+ *
+ * @{
+ */
+
+/**
+ * @file
+ * @brief Implementation page table management.
+ *
+ * This file implements the external APIs to establish, modify, delete, or look for the mapping information. It also
+ * defines some helper functions to implement the features that are commonly used in this file.
+ *
+ */
+
 #define DBG_LEVEL_MMU	6U
 
+/**
+ * @brief Host physical address of the sanitized page.
+ *
+ * The sanitized page is used to mitigate l1tf. This variable is used to store the host physical address of the
+ * sanitized page.
+ */
 static uint64_t sanitized_page_hpa;
 
 static void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table)
@@ -28,6 +49,26 @@ static void sanitize_pte(uint64_t *pt_page, const struct pgtable *table)
 	}
 }
 
+/**
+ * @brief Initializes a sanitized page.
+ *
+ * This function is responsible for initializing a sanitized page. It sets the page table entries in this sanitized page
+ * to point to the host physical address of the sanitized page itself.
+ *
+ * The static variable 'sanitized_page_hpa' will be set and the `sanitized_page` will be initialized.
+ *
+ * @param[out] sanitized_page The page to be sanitized.
+ * @param[in] hpa The host physical address that the page table entries in the sanitized page will point to.
+ *
+ * @return None
+ *
+ * @pre sanitized_page != NULL
+ * @pre ((uint64_t)sanitized_page & (PAGE_SIZE - 1)) == 0x0U
+ * @pre hpa != 0U
+ * @pre (hpa & (PAGE_SIZE - 1)) == 0x0U
+ *
+ * @post N/A
+ */
 void init_sanitized_page(uint64_t *sanitized_page, uint64_t hpa)
 {
 	uint64_t i;
@@ -256,18 +297,62 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 	}
 }
 
-/*
- * type: MR_MODIFY
- * modify [vaddr, vaddr + size ) memory type or page access right.
- * prot_clr - memory type or page access right want to be clear
- * prot_set - memory type or page access right want to be set
- * @pre: the prot_set and prot_clr should set before call this function.
- * If you just want to modify access rights, you can just set the prot_clr
- * to what you want to set, prot_clr to what you want to clear. But if you
- * want to modify the MT, you should set the prot_set to what MT you want
- * to set, prot_clr to the MT mask.
- * type: MR_DEL
- * delete [vaddr_base, vaddr_base + size ) memory region page table mapping.
+/**
+ * @brief Modify or delete the mappings associated with the specified address range.
+ *
+ * This function modifies the properties of an existing mapping or deletes it entirely from the page table. The input
+ * address range is specified by [vaddr_base, vaddr_base + size). It is used when changing the access permissions of a
+ * memory region or when freeing a previously mapped region. This operation is critical for dynamic memory management,
+ * allowing the system to adapt to changes in memory usage patterns or to reclaim resources.
+ *
+ * For error case behaviors:
+ * - If the 'type' is MR_MODIFY and any page referenced by the PML4E in the specified address range is not present, the
+ * function asserts that the operation is invalid.
+ * For normal case behaviors(when the error case conditions are not satisfied):
+ * - If any page referenced by the PDPTE/PDE/PTE in the specified address range is not present, there is no change to
+ * the corresponding mapping and it continues the operation.
+ * - If any PDPTE/PDE in the specified address range maps a large page and the large page address exceeds the specified
+ * address range, the function splits the large page into next level page to allow for the modification or deletion of
+ * the mappings and the execute right will be recovered by the callback function table->recover_exe_right() when a 2MB
+ * page is split to 4KB pages.
+ * - If the 'type' is MR_MODIFY, the function modifies the properties of the existing mapping to match the specified
+ * properties.
+ * - If the 'type' is MR_DEL, the function will set corresponding page table entries to point to the sanitized page.
+ *
+ * @param[inout] pml4_page A pointer to the specified PML4 table.
+ * @param[in] vaddr_base The specified input address determining the start of the input address range whose mapping
+ *                       information is to be updated.
+ *                       For hypervisor's MMU, it is the host virtual address.
+ *                       For each VM's EPT, it is the guest physical address.
+ * @param[in] size The size of the specified input address range whose mapping information is to be updated.
+ * @param[in] prot_set Bit positions representing the specified properties which need to be set.
+ *                     Bits specified by prot_clr are cleared before each bit specified by prot_set is set to 1.
+ * @param[in] prot_clr Bit positions representing the specified properties which need to be cleared.
+ *                     Bits specified by prot_clr are cleared before each bit specified by prot_set is set to 1.
+ * @param[in] table A pointer to the struct pgtable containing the information of the specified memory operations.
+ * @param[in] type The type of operation to perform (MR_MODIFY or MR_DEL).
+ *
+ * @return None
+ *
+ * @pre pml4_page != NULL
+ * @pre table != NULL
+ * @pre (type == MR_MODIFY) || (type == MR_DEL)
+ * @pre For x86 hypervisor, the following conditions shall be met if "type == MR_MODIFY".
+ *      - (prot_set & ~(PAGE_RW | PAGE_USER | PAGE_PWT | PAGE_PCD | PAGE_ACCESSED | PAGE_DIRTY | PAGE_PSE | PAGE_GLOBAL
+ *      | PAGE_PAT_LARGE | PAGE_NX) == 0)
+ *      - (prot_clr & ~(PAGE_RW | PAGE_USER | PAGE_PWT | PAGE_PCD | PAGE_ACCESSED | PAGE_DIRTY | PAGE_PSE | PAGE_GLOBAL
+ *      | PAGE_PAT_LARGE | PAGE_NX) == 0)
+ * @pre For the VM EPT mappings, the following conditions shall be met if "type == MR_MODIFY".
+ *      - (prot_set & ~(EPT_RD | EPT_WR | EPT_EXE | EPT_MT_MASK) == 0)
+ *      - (prot_set & EPT_MT_MASK) == EPT_UNCACHED || (prot_set & EPT_MT_MASK) == EPT_WC ||
+ *        (prot_set & EPT_MT_MASK) == EPT_WT || (prot_set & EPT_MT_MASK) == EPT_WP || (prot_set & EPT_MT_MASK) == EPT_WB
+ *      - (prot_clr & ~(EPT_RD | EPT_WR | EPT_EXE | EPT_MT_MASK) == 0)
+ *      - (prot_clr & EPT_MT_MASK) == EPT_UNCACHED || (prot_clr & EPT_MT_MASK) == EPT_WC ||
+ *        (prot_clr & EPT_MT_MASK) == EPT_WT || (prot_clr & EPT_MT_MASK) == EPT_WP || (prot_clr & EPT_MT_MASK) == EPT_WB
+ *
+ * @post N/A
+ *
+ * @remark N/A
  */
 void pgtable_modify_or_del_map(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr, const struct pgtable *table, uint32_t type)
@@ -422,10 +507,46 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 	}
 }
 
-/*
- * action: MR_ADD
- * add [vaddr_base, vaddr_base + size ) memory region page table mapping.
- * @pre: the prot should set before call this function.
+/**
+ * @brief Add new page table mappings.
+ *
+ * This function maps a virtual address range specified by [vaddr_base, vaddr_base + size) to a physical address range
+ * starting from 'paddr_base'.
+ *
+ * - If any subrange within [vaddr_base, vaddr_base + size) is already mapped, there is no change to the corresponding
+ * mapping and it continues the operation.
+ * - When a new 1GB or 2MB mapping is established, the callback function table->tweak_exe_right() is invoked to tweak
+ * the execution bit.
+ * - When a new page table referenced by a new PDPTE/PDE is created, all entries in the page table are initialized to
+ * point to the sanitized page by default.
+ * - Finally, the new mappings are established and initialized according to the specified address range and properties.
+ *
+ * @param[inout] pml4_page A pointer to the specified PML4 table hierarchy.
+ * @param[in] paddr_base The specified physical address determining the start of the physical memory region.
+ *                       It is the host physical address.
+ * @param[in] vaddr_base The specified input address determining the start of the input address space.
+ *                       For hypervisor's MMU, it is the host virtual address.
+ *                       For each VM's EPT, it is the guest physical address.
+ * @param[in] size The size of the specified input address space.
+ * @param[in] prot Bit positions representing the specified properties which need to be set.
+ * @param[in] table A pointer to the struct pgtable containing the information of the specified memory operations.
+ *
+ * @return None
+ *
+ * @pre pml4_page != NULL
+ * @pre Any subrange within [vaddr_base, vaddr_base + size) shall already be unmapped.
+ * @pre For x86 hypervisor mapping, the following condition shall be met.
+ *      - prot & ~(PAGE_PRESENT| PAGE_RW | PAGE_USER | PAGE_PWT | PAGE_PCD | PAGE_ACCESSED | PAGE_DIRTY | PAGE_PSE |
+ *      PAGE_GLOBAL | PAGE_PAT_LARGE | PAGE_NX) == 0
+ * @pre For VM EPT mapping, the following conditions shall be met.
+ *      - prot & ~(EPT_RD | EPT_WR | EPT_EXE | EPT_MT_MASK | EPT_IGNORE_PAT) == 0
+ *      - (prot & EPT_MT_MASK) == EPT_UNCACHED || (prot & EPT_MT_MASK) == EPT_WC || (prot & EPT_MT_MASK) == EPT_WT ||
+ *        (prot & EPT_MT_MASK) == EPT_WP || (prot & EPT_MT_MASK) == EPT_WB
+ * @pre table != NULL
+ *
+ * @post N/A
+ *
+ * @remark N/A
  */
 void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,
 		uint64_t size, uint64_t prot, const struct pgtable *table)
@@ -455,6 +576,24 @@ void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_ba
 	}
 }
 
+/**
+ * @brief Create a new root page table.
+ *
+ * This function initializes and returns a new root page table. It is typically used during the setup of a new execution
+ * context, such as initializing a hypervisor PML4 table or creating a virtual machine. The root page table is essential
+ * for defining the virtual memory layout for the context.
+ *
+ * It creates a new root page table and every entries in the page table are initialized to point to the sanitized page.
+ * Finally, the function returns the root page table pointer.
+ *
+ * @param[in] table A pointer to the struct pgtable containing the information of the specified memory operations.
+ *
+ * @return A pointer to the newly created root page table.
+ *
+ * @pre table != NULL
+ *
+ * @post N/A
+ */
 void *pgtable_create_root(const struct pgtable *table)
 {
 	uint64_t *page = (uint64_t *)alloc_page(table->pool);
@@ -462,6 +601,31 @@ void *pgtable_create_root(const struct pgtable *table)
 	return page;
 }
 
+/**
+ * @brief Create a root page table for Secure World.
+ *
+ * This function initializes a new root page table for Secure World. It is intended to be used during the initialization
+ * phase of Trusty, setting up isolated memory regions for secure execution. Secure world can access Normal World's
+ * memory, but Normal World cannot access Secure World's memory. The PML4T/PDPT for Secure World are separated from
+ * Normal World. PDT/PT are shared in both Secure World's EPT and Normal World's EPT. So this function copies the PDPTEs
+ * from the Normal World to the Secure World.
+ *
+ * - It creates a new root page table and every entries are initialized to point to the sanitized page by default.
+ * - The access right specified by prot_clr is cleared for Secure World PDPTEs.
+ * - Finally, the function returns the new root page table pointer.
+ *
+ * @param[in] table A pointer to the struct pgtable containing the information of the specified memory operations.
+ * @param[in] nworld_pml4_page A pointer to pml4 table hierarchy in Normal World.
+ * @param[in] prot_table_present Mask indicating the page referenced is present.
+ * @param[in] prot_clr Bit positions representing the specified properties which need to be cleared.
+ *
+ * @return A pointer to the newly created root page table for Secure World.
+ *
+ * @pre table != NULL
+ * @pre nworld_pml4_page != NULL
+ *
+ * @post N/A
+ */
 void *pgtable_create_trusty_root(const struct pgtable *table,
 	void *nworld_pml4_page, uint64_t prot_table_present, uint64_t prot_clr)
 {
@@ -474,7 +638,7 @@ void *pgtable_create_trusty_root(const struct pgtable *table,
 	 * Secure world can access Normal World's memory,
 	 * but Normal World can not access Secure World's memory.
 	 * The PML4/PDPT for Secure world are separated from
-	 * Normal World.PD/PT are shared in both Secure world's EPT
+	 * Normal World. PD/PT are shared in both Secure world's EPT
 	 * and Normal World's EPT
 	 */
 	pml4_base = pgtable_create_root(table);
@@ -508,7 +672,39 @@ void *pgtable_create_trusty_root(const struct pgtable *table,
 }
 
 /**
- * @pre (pml4_page != NULL) && (pg_size != NULL)
+ * @brief Look for the paging-structure entry that contains the mapping information for the specified input address.
+ *
+ * This function looks for the paging-structure entry that contains the mapping information for the specified input
+ * address of the translation process. It is used to search the page table hierarchy for the entry corresponding to the
+ * given virtual address. The function traverses the page table hierarchy from the PML4 down to the appropriate page
+ * table level, returning the entry if found.
+ *
+ * - If specified address is mapped in the page table hierarchy, it will return a pointer to the page table entry that
+ * maps the specified address.
+ * - If the specified address is not mapped in the page table hierarchy, it will return NULL.
+ *
+ * @param[in] pml4_page A pointer to the specified PML4 table hierarchy.
+ * @param[in] addr The specified input address whose mapping information is to be searched.
+ *                 For hypervisor's MMU, it is the host virtual address.
+ *                 For each VM's EPT, it is the guest physical address.
+ * @param[out] pg_size A pointer to the size of the page controlled by the returned paging-structure entry.
+ * @param[in] table A pointer to the struct pgtable which provides the page pool and callback functions to be used when
+ *                  creating the new page.
+ *
+ * @return A pointer to the paging-structure entry that maps the specified input address.
+ *
+ * @retval non-NULL There is a paging-structure entry that contains the mapping information for the specified input
+ *                  address.
+ * @retval NULL There is no paging-structure entry that contains the mapping information for the specified input
+ *              address.
+ *
+ * @pre pml4_page != NULL
+ * @pre pg_size != NULL
+ * @pre table != NULL
+ *
+ * @post N/A
+ *
+ * @remark N/A
  */
 const uint64_t *pgtable_lookup_entry(uint64_t *pml4_page, uint64_t addr, uint64_t *pg_size, const struct pgtable *table)
 {
@@ -548,3 +744,7 @@ const uint64_t *pgtable_lookup_entry(uint64_t *pml4_page, uint64_t addr, uint64_
 
 	return pret;
 }
+
+/**
+ * @}
+ */

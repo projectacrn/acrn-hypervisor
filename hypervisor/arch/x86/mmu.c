@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 2011 NetApp, Inc.
- * Copyright (c) 2017-2022 Intel Corporation.
+ * Copyright (c) 2017-2024 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,6 +41,11 @@
 
 static uint64_t hv_ram_size;
 static void *ppt_mmu_pml4_addr;
+/**
+ * @brief The sanitized page
+ *
+ * The sanitized page is used to mitigate l1tf.
+ */
 static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
 
 /* PPT VA and PA are identical mapping */
