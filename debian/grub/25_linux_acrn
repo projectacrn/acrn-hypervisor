@@ -25,6 +25,44 @@ datarootdir="/usr/share"
 
 CLASS="--class gnu-linux --class gnu --class os --class acrn"
 
+file_is_not_sym () {
+    case "$1" in
+        */acrn-syms-*)
+        return 1;;
+    *)
+        return 0;;
+    esac
+}
+
+# use ELF *.out files for multiboot
+acrn_out_list=
+for i in /boot/acrn*.out; do
+    if grub_file_is_not_garbage "$i" && file_is_not_sym "$i" && grub-file --is-x86-multiboot "$i"; then
+        acrn_out_list="$acrn_out_list $i"
+    fi
+done
+# use raw binary *.bin files for multiboot2
+acrn_bin_list=
+for i in /boot/acrn*.bin; do
+    if grub_file_is_not_garbage "$i" && file_is_not_sym "$i" && grub-file --is-x86-multiboot2 "$i"; then
+        acrn_bin_list="$acrn_bin_list $i"
+    fi
+done
+# we prefer multiboot2
+if [ "x${acrn_bin_list}" != "x" ]; then
+    acrn_list="${acrn_bin_list}"
+    acrn_loader="multiboot2"
+    module_loader="module2"
+else
+    acrn_list="${acrn_out_list}"
+    acrn_loader="multiboot --quirk-modules-after-kernel"
+    module_loader="module"
+fi
+# no ACRN binary found
+if [ "x${acrn_list}" = "x" ] ; then
+    exit 0
+fi
+
 # we obtain any data from scenario config
 ACRN_SCENARIO_FILE=/usr/share/acrn/scenario.xml
 if [ ! -f ${ACRN_SCENARIO_FILE} ]; then
@@ -252,44 +290,6 @@ for i in /boot/vmlinu[xz]-* /vmlinu[xz]-* /boot/kernel-*; do
         fi
     fi
 done
-
-file_is_not_sym () {
-    case "$1" in
-        */acrn-syms-*)
-        return 1;;
-    *)
-        return 0;;
-    esac
-}
-
-# use ELF *.out files for multiboot
-acrn_out_list=
-for i in /boot/acrn*.out; do
-    if grub_file_is_not_garbage "$i" && file_is_not_sym "$i" && grub-file --is-x86-multiboot "$i"; then
-        acrn_out_list="$acrn_out_list $i"
-    fi
-done
-# use raw binary *.bin files for multiboot2
-acrn_bin_list=
-for i in /boot/acrn*.bin; do
-    if grub_file_is_not_garbage "$i" && file_is_not_sym "$i" && grub-file --is-x86-multiboot2 "$i"; then
-        acrn_bin_list="$acrn_bin_list $i"
-    fi
-done
-# we prefer multiboot2
-if [ "x${acrn_bin_list}" != "x" ]; then
-    acrn_list="${acrn_bin_list}"
-    acrn_loader="multiboot2"
-    module_loader="module2"
-else
-    acrn_list="${acrn_out_list}"
-    acrn_loader="multiboot --quirk-modules-after-kernel"
-    module_loader="module"
-fi
-# no ACRN binary found
-if [ "x${acrn_list}" = "x" ] ; then
-    exit 0
-fi
 
 prepare_boot_cache=
 boot_device_id=
