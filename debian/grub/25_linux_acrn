@@ -25,23 +25,8 @@ datarootdir="/usr/share"
 
 CLASS="--class gnu-linux --class gnu --class os --class acrn"
 
-# read ACRN config (board/scenario) from debconf
-ACRN_BOARD=$(echo "get acrn-hypervisor/board" | debconf-communicate || true)
-if [ "$(echo "${ACRN_BOARD}" | awk '{print $1}')" != "0" ]; then
-    gettext_printf "ACRN: Cannot access debconf acrn-hypervisor/board: %s" "${ACRN_BOARD}\n" >&2
-    exit 0
-fi
-ACRN_BOARD="$(echo "${ACRN_BOARD}" | awk '{print $2}')"
-
-ACRN_SCENARIO=$(echo "get acrn-hypervisor/scenario" | debconf-communicate || true)
-if [ "$(echo "${ACRN_SCENARIO}" | awk '{print $1}')" != "0" ]; then
-    gettext_printf "ACRN: Cannot access debconf acrn-hypervisor/:scenario %s" "${ACRN_SCENARIO}\n" >&2
-    exit 0
-fi
-ACRN_SCENARIO="$(echo "${ACRN_SCENARIO}" | awk '{print $2}')"
-
 # we obtain any data from scenario config
-ACRN_SCENARIO_FILE=/usr/lib/x86_64-linux-gnu/acrn/${ACRN_BOARD}/${ACRN_SCENARIO}/scenario.xml
+ACRN_SCENARIO_FILE=/usr/share/acrn/scenario.xml
 if [ ! -f ${ACRN_SCENARIO_FILE} ]; then
     gettext_printf "ACRN: Missing scenario config %s\n" "${ACRN_SCENARIO_FILE}" >&2
     exit 0
@@ -376,7 +361,7 @@ EOF
                 gettext_printf "Found ACRN initrd image: %s\n" "${dirname}/${initrd}" >&2
             fi
         else
-            gettext_printf "ACRN: No initrd image for ${ACRN_BOARD}:${ACRN_SCENARIO}\n" >&2
+            gettext_printf "ACRN: No initrd image found for %s\n" "${linux}" >&2
             # "UUID=" magic is parsed by initrds.  Since there's no initrd, it can't work here.
             linux_root_device_thisversion=${GRUB_DEVICE}
         fi
