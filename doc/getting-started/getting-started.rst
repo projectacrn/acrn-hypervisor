@@ -480,7 +480,7 @@ post-launched User VM. Each User VM has its own launch script.
       default options. 
 
    #. For **Virtio block device**, click **+** and enter
-      ``/home/acrn/acrn-work/ubuntu-22.04.2-desktop-amd64.iso``. This parameter
+      ``/home/acrn/acrn-work/ubuntu-22.04.4-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
       in this guide, you will save the ISO file to that directory. (If you used
       a different username when installing Ubuntu on the target system, here's
@@ -634,11 +634,11 @@ Install ACRN
       ────────────────────────────────────────────────────────────────────────────────
       Ubuntu
       Advanced options for Ubuntu
-      Ubuntu-ACRN Board Inspector, with Linux 6.8.0-35-generic
+      Ubuntu-ACRN Board Inspector, with Linux 6.5.0-18-generic
       Ubuntu-ACRN Board Inspector, with Linux 6.1.80-acrn-service-vm
       Memory test (memtest86+x64.efi)
       Memory test (memtest86+x64.efi, serial console)
-      Ubuntu with ACRN hypervisor, with Linux 6.8.0-35-generic (ACRN 3.3)
+      Ubuntu with ACRN hypervisor, with Linux 6.5.0-18-generic (ACRN 3.3)
       *Ubuntu with ACRN hypervisor, with Linux 6.1.80-acrn-service-vm (ACRN 3.3)
       UEFI Firmware Settings
 
@@ -690,7 +690,7 @@ Launch the User VM
 
 #. On the target system, use the web browser to visit the `official Ubuntu website <https://releases.ubuntu.com/jammy/>`__ and
    get the Ubuntu Desktop 22.04 LTS ISO image
-   ``ubuntu-22.04.2-desktop-amd64.iso`` for the User VM. (The same image you
+   ``ubuntu-22.04.4-desktop-amd64.iso`` for the User VM. (The same image you
    specified earlier in the ACRN Configurator UI.) Alternatively, instead of
    downloading it again, you could use ``scp`` to copy the ISO
    image file from the development system to the ``~/acrn-work`` directory on the target system.
@@ -702,7 +702,7 @@ Launch the User VM
 
    .. code-block:: bash
 
-      cp ~/Downloads/ubuntu-22.04.2-desktop-amd64.iso ~/acrn-work
+      cp ~/Downloads/ubuntu-22.04.4-desktop-amd64.iso ~/acrn-work
 
 #. Launch the User VM:
 
@@ -717,7 +717,7 @@ Launch the User VM
    
    .. code-block:: console
 
-      Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.19.0-32-generic x86_64)
+      Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 6.5.0-18-generic x86_64)
 
       * Documentation:  https://help.ubuntu.com
       * Management:     https://landscape.canonical.com
@@ -752,7 +752,7 @@ Launch the User VM
    .. code-block:: console
 
       acrn@ubuntu:~$ uname -r
-      5.19.0-32-generic
+      6.5.0-18-generic
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
