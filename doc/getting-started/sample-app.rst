@@ -117,7 +117,7 @@ As a normal (e.g., **acrn**) user, follow these steps:
 
      cd ~/acrn-work/acrn-hypervisor
      git fetch --all
-     git checkout release_3.2
+     git checkout release_3.3
 
 #. Build the ACRN sample application source code::
 
