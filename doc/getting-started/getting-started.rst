@@ -38,15 +38,15 @@ Before you begin, make sure your machines have the following prerequisites:
 
 * Software specifications
 
-  - Ubuntu Desktop 24.04 LTS (ACRN development is not supported on Windows.)
+  - Ubuntu Desktop 22.04 LTS (ACRN development is not supported on Windows.)
 
 **Target system**:
 
 * Hardware specifications
 
   - Target board (see :ref:`hardware_tested`)
-  - Ubuntu Desktop 24.04 LTS bootable USB disk: download the latest `Ubuntu
-    Desktop 24.04 LTS ISO image <https://releases.ubuntu.com/noble/>`__ and
+  - Ubuntu Desktop 22.04 LTS bootable USB disk: download the latest `Ubuntu
+    Desktop 22.04 LTS ISO image <https://releases.ubuntu.com/jammy/>`__ and
     follow the `Ubuntu documentation
     <https://ubuntu.com/tutorials/create-a-usb-stick-on-ubuntu#1-overview>`__
     for creating the USB disk.
@@ -75,7 +75,7 @@ Prepare the Development Computer
 To set up the ACRN build environment on the development computer:
 
 #. On the development computer, run the following command to confirm that Ubuntu
-   Desktop 24.04 is running:
+   Desktop 22.04 is running:
 
    .. code-block:: bash
 
@@ -119,8 +119,8 @@ To set up the ACRN build environment on the development computer:
            xsltproc clang-format bc libpixman-1-dev libsdl2-dev libegl-dev \
            libgles-dev libdrm-dev gnu-efi libelf-dev liburing-dev \
            build-essential git-buildpackage devscripts dpkg-dev equivs lintian \
-           apt-utils pristine-tar dh-python acpica-tools
-      sudo pip3 install "elementpath==2.5.0" lxml "xmlschema==1.9.2" defusedxml tqdm  
+           apt-utils pristine-tar dh-python acpica-tools python3-tqdm \
+           python3-elementpath python3-lxml python3-xmlschema python3-defusedxml
       
 
 #. Get the ACRN hypervisor and ACRN kernel source code, and check out the
@@ -172,7 +172,7 @@ To set up the target hardware environment:
 
 #. Connect the monitor and power supply cable.
 
-#. Connect the target system to the LAN with the Ethernet cable.
+#. Connect the target system to the LAN with the Ethernet cable or wifi.
 
 Example of a target system with cables connected:
 
@@ -182,13 +182,13 @@ Example of a target system with cables connected:
 Install OS on the Target
 ============================
 
-The target system needs Ubuntu Desktop 24.04 LTS to run the Board Inspector
+The target system needs Ubuntu Desktop 22.04 LTS to run the Board Inspector
 tool. You can read the full instructions to download, create a bootable USB
 drive, and `Install Ubuntu desktop
 <https://ubuntu.com/tutorials/install-ubuntu-desktop#1-overview>`_ on the Ubuntu
 site.  We'll provide a summary here:
 
-To install Ubuntu 24.04:
+To install Ubuntu 22.04:
 
 #. Insert the Ubuntu bootable USB disk into the target system.
 
@@ -248,9 +248,10 @@ Configure Target BIOS Settings
 #. Boot your target and enter the BIOS configuration editor.
 
    Tip: When you are booting your target, you'll see an option (quickly) to
-   enter the BIOS configuration editor, typically by pressing :kbd:`F2` or :kbd:`DEL` during
-   the boot and before the GRUB menu (or Ubuntu login screen) appears. If you
-   are not quick enough, you can still choose ``UEFI settings`` in the GRUB menu.
+   enter the BIOS configuration editor, typically by pressing :kbd:`F2` 
+   or :kbd:`DEL` during the boot and before the GRUB menu (or Ubuntu login
+   screen) appears. If you are not quick enough, you can still choose
+   ``UEFI settings`` in the GRUB menu or just reboot the system to try again.
 
 #. Configure these BIOS settings:
 
@@ -467,9 +468,9 @@ post-launched User VM. Each User VM has its own launch script.
    #. Confirm that the **VM type** is ``Standard``. In the previous step,
       ``STD`` in the VM name is short for Standard.
 
-   #. Scroll down to **Memory size (MB)** and change the value to ``4096``. For
-      this example, we will use Ubuntu 24.04 to boot the post-launched VM.
-      Ubuntu 24.04 needs at least 4096 MB to boot.
+   #. Scroll down to **Memory size (MB)** and change the value to ``2048``. For
+      this example, we will use Ubuntu 22.04 to boot the post-launched VM.
+      Ubuntu 22.04 needs at least 2048 MB to boot.
 
    #. For **Physical CPU affinity**, select pCPU ID ``0``, then click **+** and
       select pCPU ID ``1`` to affine (or pin) the VM to CPU cores 0 and 1. (That will
@@ -479,17 +480,17 @@ post-launched User VM. Each User VM has its own launch script.
       default options. 
 
    #. For **Virtio block device**, click **+** and enter
-      ``/home/acrn/acrn-work/user-vm1.img``. This parameter
+      ``/home/acrn/acrn-work/ubuntu-22.04.2-desktop-amd64.iso``. This parameter
       specifies the VM's OS image and its location on the target system. Later
-      in this guide, you will create the image file to that directory. (If you used
+      in this guide, you will save the ISO file to that directory. (If you used
       a different username when installing Ubuntu on the target system, here's
       where you'll need to change the ``acrn`` username to the username you used.)
 
-   .. image:: images/configurator-postvm01.png
+   .. image:: images/configurator_postvm01.png
       :align: center
       :class: drop-shadow
 
-   .. image:: images/configurator-postvm02.png
+   .. image:: images/configurator_postvm02.png
       :align: center
       :class: drop-shadow
 
@@ -574,7 +575,6 @@ Build ACRN
       ls *acrn-service-vm*.deb  
          linux-headers-6.1.80-acrn-service-vm_6.1.80-acrn-service-vm-1_amd64.deb
          linux-image-6.1.80-acrn-service-vm_6.1.80-acrn-service-vm-1_amd64.deb
-         linux-image-6.1.80-acrn-service-vm-dbg_6.1.80-acrn-service-vm-1_amd64.deb
          linux-libc-dev_6.1.80-acrn-service-vm-1_amd64.deb
 
 #. Use the ``scp`` command to copy files from your development computer to the
@@ -688,24 +688,21 @@ The ACRN hypervisor boots the Ubuntu Service VM automatically.
 Launch the User VM
 *******************
 
-#. On the target system, download the Ubuntu cloud images ``noble-server-cloudimg-amd64.img`` 
-   for the User VM into the ``~/acrn-work/`` directory (the location we said
-   in the ACRN Configurator for the scenario configuration for the VM): 
+#. On the target system, use the web browser to visit the `official Ubuntu website <https://releases.ubuntu.com/jammy/>`__ and
+   get the Ubuntu Desktop 22.04 LTS ISO image
+   ``ubuntu-22.04.2-desktop-amd64.iso`` for the User VM. (The same image you
+   specified earlier in the ACRN Configurator UI.) Alternatively, instead of
+   downloading it again, you could use ``scp`` to copy the ISO
+   image file from the development system to the ``~/acrn-work`` directory on the target system.
+
+#. If you downloaded the ISO file on the target system, copy it from the
+   Downloads directory to the ``~/acrn-work/`` directory (the location we said
+   in the ACRN Configurator for the scenario configuration for the VM), for
+   example:
 
    .. code-block:: bash
-      
-      cd ~/acrn-work/
-      wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img ./
 
-#. We need to do some steps before booting into cloud image User VM: Set up username and password both to ``acrn``; 
-   Change the image format to ``raw`` and change the image size:  
-
-   .. code-block:: bash
-
-      sudo apt install qemu-utils guestfs-tools
-      sudo virt-customize -a ./noble-server-cloudimg-amd64.img --run-command 'useradd -m -s /bin/bash acrn' --run-command 'echo "acrn:acrn" | chpasswd' --run-command 'systemctl disable systemd-networkd-wait-online.service'
-      qemu-img convert -f qcow2 -O raw ./noble-server-cloudimg-amd64.img ./user-vm1.img
-      qemu-img -f raw ./user-vm1.img 16G
+      cp ~/Downloads/ubuntu-22.04.2-desktop-amd64.iso ~/acrn-work
 
 #. Launch the User VM:
 
@@ -720,9 +717,34 @@ Launch the User VM
    
    .. code-block:: console
 
-      Ubuntu 24.04 LTS ubuntu hvc0
+      Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.19.0-32-generic x86_64)
 
-      ubuntu login:
+      * Documentation:  https://help.ubuntu.com
+      * Management:     https://landscape.canonical.com
+      * Support:        https://ubuntu.com/advantage
+
+      Expanded Security Maintenance for Applications is not enabled.
+
+      0 updates can be applied immediately.
+
+      Enable ESM Apps to receive additional future security updates.
+      See https://ubuntu.com/esm or run: sudo pro status
+
+
+      The list of available updates is more than a week old.
+      To check for new updates run: sudo apt update
+
+      The programs included with the Ubuntu system are free software;
+      the exact distribution terms for each program are described in the
+      individual files in /usr/share/doc/*/copyright.
+
+      Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+      applicable law.
+
+      To run a command as administrator (user "root"), use "sudo <command>".
+      See "man sudo_root" for details.
+
+      ubuntu@ubuntu:~$
 
 #. This User VM and the Service VM are running different Ubuntu images. Use this
    command to see that the User VM is running the downloaded Ubuntu image:
@@ -730,7 +752,7 @@ Launch the User VM
    .. code-block:: console
 
       acrn@ubuntu:~$ uname -r
-      6.8.0-36-generic
+      5.19.0-32-generic
 
    Then open a new terminal window and use the command to see that the Service
    VM is running the ``acrn-kernel`` Service VM image:
