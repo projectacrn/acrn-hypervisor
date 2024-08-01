@@ -360,6 +360,7 @@ def write_dmar_data(sysnode, config):
         dmar_tbl, dmar_hw_list, dmar_dev_list, sysnode)
 
     print("\t#define DRHD_COUNT              {0}U".format(drhd_cnt), file=config)
+    print("\t#define DRHD_MAX_DEVSCOPE_COUNT {0}U".format(max(dmar_dev_list.dev_scope_cnt_list)), file=config)
     print("", file=config)
     prev_dev_scope_num = 0
     for drhd_hw_i in range(drhd_cnt):
