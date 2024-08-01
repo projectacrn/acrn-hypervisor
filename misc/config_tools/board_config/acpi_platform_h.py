@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import logging
+
 import board_cfg_lib
 import acrn_config_utilities
 
@@ -190,7 +192,7 @@ def drhd_info_parser(config):
     Parse DRHD information
     :param config: it is a file pointer to write acpi information
     """
-    prev_num = 0
+    has_drhd_max_devscope_count = False
 
     drhd_lines = board_cfg_lib.get_info(
         acrn_config_utilities.BOARD_INFO_FILE, "<DRHD_INFO>", "</DRHD_INFO>")
@@ -200,7 +202,18 @@ def drhd_info_parser(config):
 
     if not drhd_lines:
         print("\n#define DRHD_COUNT\t\t8U", file=config)
+        print("\n#define DRHD_MAX_DEVSCOPE_COUNT\t16U", file=config)
         return
+    
+    for drhd in drhd_lines:
+        if "DRHD_MAX_DEVSCOPE_COUNT" in drhd:
+            has_drhd_max_devscope_count = True
+            break
+
+    if not has_drhd_max_devscope_count:
+        logging.warning("DRHD_MAX_DEVSCOPE_COUNT is not defined in board.xml, using default 16U. "
+                        "Generate board.xml with latest board inspector to remove this warning.")
+        print("\n#define DRHD_MAX_DEVSCOPE_COUNT\t16U", file=config)
 
     for drhd in drhd_lines:
         print(drhd.strip(), file=config)
