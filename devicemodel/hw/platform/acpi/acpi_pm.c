@@ -430,3 +430,62 @@ void pm_write_dsdt(struct vmctx *ctx, int ncpu)
 		dsdt_line("  }");
 	}
 }
+
+/* _OSC: Operating System Capabilities
+ * Currently only support CPPC v2 capability.
+ * CPPC v2 capability: revision 2 of the _CPC object.
+ * If all vcpus don't support _CPC object, no need to add _OSC in DSDT.
+ */
+void osc_write_ospm_dsdt(struct vmctx *ctx, int ncpu)
+{
+	int ret;
+	bool support_cpc = false;
+	uint8_t px_cnt;
+
+	/* check px_cnt on vBSP */
+	ret = get_vcpu_px_cnt(ctx, 0, &px_cnt);
+	if (ret == 0 && px_cnt == 0) {
+		/* px_cnt = 0 Indicates vcpu supports continuous pstate.
+		 */
+		support_cpc = true;
+	}
+	if (support_cpc) {
+		/* Scope (_SB._OSC) */
+		dsdt_line("");
+		dsdt_line("  Scope (_SB)");
+		dsdt_line("  {");
+		dsdt_line("    Method (_OSC, 4, NotSerialized) // _OSC: Operating System Capabilities");
+		dsdt_line("    {");
+		dsdt_line("      CreateDWordField (Arg3, 0x00, STS0)");
+		dsdt_line("      CreateDWordField (Arg3, 0x04, CAP0)");
+		dsdt_line("      If ((Arg0 == ToUUID (\"0811b06e-4a27-44f9-8d60-3cbbc22e7b48\") /* Platform-wide OSPM Capabilities */))");
+		dsdt_line("      {");
+		dsdt_line("        If ((Arg1 == One))");
+		dsdt_line("        {");
+		dsdt_line("          If ((CAP0 & 0x40))");
+		dsdt_line("          {");
+		dsdt_line("            CAP0 &= 0x00000040");
+		dsdt_line("          }");
+		dsdt_line("          Else");
+		dsdt_line("          {");
+		dsdt_line("            STS0 &= 0xFFFFFF00");
+		dsdt_line("            STS0 |= 0x02");
+		dsdt_line("          }");
+		dsdt_line("        }");
+		dsdt_line("        Else");
+		dsdt_line("        {");
+		dsdt_line("          STS0 &= 0xFFFFFF00");
+		dsdt_line("          STS0 |= 0x0A");
+		dsdt_line("        }");
+		dsdt_line("      }");
+		dsdt_line("      Else");
+		dsdt_line("      {");
+		dsdt_line("        STS0 &= 0xFFFFFF00");
+		dsdt_line("        STS0 |= 0x06");
+		dsdt_line("      }");
+		dsdt_line("      Return (Arg3)");
+		dsdt_line("    }");
+		dsdt_line("  }");
+		dsdt_line("");
+	}
+}

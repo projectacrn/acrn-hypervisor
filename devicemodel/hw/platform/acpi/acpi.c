@@ -883,6 +883,7 @@ basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 
 	acpi_dev_write_dsdt(ctx);
 
+	osc_write_ospm_dsdt(ctx, basl_ncpu);
 	pm_write_dsdt(ctx, basl_ncpu);
 
 	dsdt_line("}");
