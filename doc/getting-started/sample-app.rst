@@ -522,6 +522,7 @@ Install and Run ACRN on the Target System
 
    and then the ``histapp.py`` application::
 
+     pip install "numpy<2"
      sudo python3 /root/histapp.py
 
    At this point, the HMI_VM is running and we've started the HMI parts of
