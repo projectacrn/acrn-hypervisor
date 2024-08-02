@@ -1,0 +1,199 @@
+.. _release_notes_3.3:
+
+ACRN v3.3 (Aug 2024)
+####################
+
+We are pleased to announce the release of the Project ACRN hypervisor
+version 3.3.
+
+ACRN is a flexible, lightweight reference hypervisor that is built with
+real-time and safety-criticality in mind. It is optimized to streamline
+embedded development through an open-source platform. See the
+:ref:`introduction` introduction for more information.
+
+All project ACRN source code is maintained in the
+https://github.com/projectacrn/acrn-hypervisor repository and includes
+folders for the ACRN hypervisor, the ACRN device model, tools, and
+documentation. You can download this source code either as a zip or
+tar.gz file (see the `ACRN v3.3 GitHub release page
+<https://github.com/projectacrn/acrn-hypervisor/releases/tag/v3.3>`_) or
+use Git ``clone`` and ``checkout`` commands::
+
+   git clone https://github.com/projectacrn/acrn-hypervisor
+   cd acrn-hypervisor
+   git checkout v3.3
+
+The project's online technical documentation is also tagged to
+correspond with a specific release: generated v3.3 documents can be
+found at https://projectacrn.github.io/3.3/. Documentation for the
+latest development branch is found at https://projectacrn.github.io/latest/.
+
+ACRN v3.3 requires Ubuntu 22.04. Follow the instructions in the
+:ref:`gsg` to get started with ACRN.
+
+
+What's New in v3.3
+******************
+
+Generic Main VM Support
+  The v3.3 release now supports a new scenario called "Main VM". A "Service VM"
+  has two characteristics: (1) it is the default owner of physical resources 
+  and (2) it can invoke VM management hypercalls. This release adds support 
+  to configure a VM with only the physical resource ownership characteristic 
+  and calling this a "Main VM". An example scenario is a pre-launched TEE
+  (Trusted Execution Environment) VM and a main REE (Rich Execution Environment)
+  VM.
+
+Enabling Celadon as User VM
+  The acrn hypervisor now supports Celadon as User VM OS. Celadon Celadon is an 
+  open-source project by Intel that provides a reference software stack for Android
+  on Intel architecture platforms, aiming to enable developers to optimize and test
+  Android on Intel-based devices.
+
+Virtual Processor Performance Controls (vHWP)
+  The v3.3 release provides virtual HWP feature to a VM so that the VM can check
+  hardware performance ranges and adjust performance levels for performance or 
+  power consumption.
+
+Virtual Thermal Monitor and Software Controlled Clock Facilities
+  This release is able to virtualize processor thermal sensors and
+  controls for thermal management in VMs.
+
+Hypervisor Runtime Core PM 
+  The v3.3 release enhances processor power management in the hypervisor
+  at runtime to reduce power consumption when a core is idle.
+
+Guest S3 Support
+  The v3.3 release supports suspend-to-RAM of post-launched VMs running
+  with OVMF.
+
+System Performance Optimization - Virtio-blk Multi-Virtqueue Support
+  This release optimizes the virtio-block backend performance by allowing
+  multiple virtqueues between a frontend driver and the backend.
+
+Notification of VM Events 
+  Emit events (such as RTC changes and power cycles) to the monitor socket for 
+  customizing further actions upon such events.
+
+Enhance device model passthrough
+  This release support passthrough PCI device with legacy interrupt, some ACPI device like
+  GPIO controller, legacy UART.
+
+ServiceVM supervisor role
+  User can config ServicVM as supervisor role in result it can manage the power status of 
+  any guest VM.
+
+
+Upgrading to v3.3 from Previous Releases
+****************************************
+
+We recommend you generate a new board XML for your target system with the v3.3
+Board Inspector. You should also use the v3.3 Configurator to generate a new
+scenario XML file and launch scripts. Scenario XML files and launch scripts
+created by previous ACRN versions will not work with the v3.3 ACRN hypervisor
+build process and could produce unexpected errors during the build.
+
+Given the scope of changes for the v3.3 release, we have recommendations for how
+to upgrade from prior ACRN versions:
+
+1. Start fresh from our :ref:`gsg`. This is the best way to ensure you have a
+   v3.3-ready board XML file from your target system and generate a new scenario
+   XML and launch scripts from the new ACRN Configurator that are consistent and
+   will work for the v3.3 build system.
+#. Use the :ref:`upgrader tool <upgrading_configuration>` to attempt upgrading
+   your configuration files that worked with prior releases. You'll need the
+   matched pair of scenario XML and launch XML files from a prior configuration,
+   and use them to create a new merged scenario XML file. See
+   :ref:`upgrading_configuration` for details.
+#. Manually edit your previous older scenario XML and launch XML files to make them
+   compatible with v3.3.  This is not our recommended approach.
+
+Here are some additional details about upgrading to the v3.3 release.
+
+Generate New Board XML
+======================
+
+Board XML files, generated by ACRN Board Inspector, contain board information
+that is essential for building the ACRN hypervisor and setting up User VMs.
+Compared to previous versions, ACRN v3.3 adds the following information to the
+board XML file for supporting new features and fixes:
+
+* Fix typo in PCIe PTM Capability name (See :acrn-pr:`8607`)
+* Support motherboard which exposes MCFG1/MCFG2 instad of one ACPI MCFG 
+  table. (See :acrn-pr:`8513`)
+
+See the :ref:`board_inspector_tool` documentation for a complete list of steps
+to install and run the tool.
+
+Update Configuration Options
+============================
+
+As explained in this :ref:`upgrading_configuration` document, we do provide a
+tool that can assist upgrading your existing pre-v3.3 scenario XML files in the
+new merged v3.3 format. From there, you can use the v3.3 ACRN Configurator UI to
+open the upgraded scenario file for viewing and further editing if the upgrader
+tool lost meaningful data during the conversion.
+
+The ACRN Configurator adds the following features and fixes to improve the user
+experience:
+
+* Support Main VM configuration. (See :acrn-pr:`8658`)
+* Change Service VM to supervisor role. (See :acrn-pr:`8630`)
+* Fix Vue3 version and update braces version (See :acrn-pr:`8627`)
+* Fix openssl's vulnerability for tauri (See :acrn-pr:`8670`)
+* Fix v-model used on props for Vue3 making strictly checking (See :acrn-pr:`8597`)
+* Support vUART two options in configurator (See :acrn-pr:`8649`)
+* Add checking cpu affinity and serial port for post-launch VM and hypervisor
+  while the user click to append a new VM. (See :acrn-pr:`8602`)
+
+See the :ref:`scenario-config-options` documentation for details about all the
+available configuration options in the new Configurator.
+
+
+Document Updates
+****************
+
+Here are some of the more significant documentation updates from the v3.2 release:
+
+.. rst-class:: rst-columns2
+
+* :ref:`gsg`
+* :ref:`using_celadon_as_user_vm`
+* :ref:`release_notes_3.3`
+* :ref:`hv-config`
+* :ref:`acrn_configurator_tool`
+* :ref:`GSG_sample_app`
+* :ref:`acrnshell`
+
+
+Fixed Issues Details
+********************
+
+.. comment example item
+   - :acrn-issue:`5626` - Host Call Trace once detected
+
+- :acrn-issue:`8608` - hybrid vcpuid support 
+- :acrn-issue:`8590` - Hypervisor crashes after rebooting post-launched vm with passthrogh device for lots of times 
+- :acrn-issue:`8599` - Should clear pcpu_active_bitmap in start_pcpu 
+- :acrn-issue:`8590` - Hypervisor crashes after rebooting post-launched vm with passthrogh device for lots of times 
+- :acrn-issue:`8576` - Update-grub failed with GRUB 2.12 
+- :acrn-issue:`8518` - Initial boot log is lost in vm_console 
+- :acrn-issue:`8509` - S3 feature of Service VM OS is not available 
+- :acrn-issue:`8506` - Unable to passthrough USB device on bus 5 to guest 
+- :acrn-issue:`8500` - Add weight support for BVT scheduler 
+- :acrn-issue:`8495` - Service VM dead loops when booting up on platform with reserved memory as the last e820 entry 
+- :acrn-issue:`8492` - passthru multifunction device at function 0 will cause sub-function devices lost 
+- :acrn-issue:`8537` - Emulate COM3/4 in devicemodel 
+- :acrn-issue:`8491` - need to expose service vm config pointer 
+- :acrn-issue:`8579` - debian: fix broken grub config with grub 2.12 
+- :acrn-issue:`6631` - Fix Kata support with modify network configuration
+
+Known Issues
+************
+
+- :acrn-issue:`6978` - openstack failed since ACRN v2.7
+- :acrn-issue:`7827` - Pre_launched standard VMs cannot share CPU with Service VM in configurator
+- :acrn-issue:`8471` - PTM enabling failure on i225 NIC
+- :acrn-issue:`8472` - Failed to clear memory for post-launched standard VM
+
+ 
