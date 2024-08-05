@@ -542,6 +542,10 @@ arguments:
          capability.  The specific virtual bar will be allocated.
        * ``enable_ptm``: enable PCIe precise time measurement mechanism for the
          passthrough device.
+       * ``irq=<irq_number>``: when the passthrough PCI devices support legacy interrupt,
+         e.g. UART, SDIO controller, ``irq_number`` shall be specified.
+       * ``dsdt=<dsdt_file_dir>``: when the passthrough PCI devices support legacy interrupt
+         and customized ``dsdt_file`` are needed , e.g. SPI, ``dsdt_file_dir`` shall be specified.
 
    * - ``uart``
      - Emulated PCI UART. Use the parameter with the format
