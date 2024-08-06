@@ -42,6 +42,7 @@ the project.
 
    developer-guides/contribute_guidelines
    developer-guides/coding_guidelines
+   developer-guides/module_design_guidelines
    developer-guides/doc_guidelines
    developer-guides/graphviz
    tutorials/docbuild
