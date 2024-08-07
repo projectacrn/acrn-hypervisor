@@ -75,6 +75,7 @@ Options:
 -f, --frequency=unsigned_int      TSC frequency in MHz
 --vm_exit                         generate a vm_exit report
 --irq                             generate an IRQ-related report
+--cpu_usage                       generate a cpu_usage report
 
 .. note:: The tool depends on TSC frequency to do time-based analysis. Be sure
    to configure the right TSC frequency that ACRN runs on. TSC frequency can be
@@ -140,6 +141,8 @@ data to your development computer (Linux system), and run the analysis tool.
    - The analysis report is written to stdout, or to a CSV file if
      a file name is specified using ``-o filename``.
    - The scripts require Python3.
+   - If want to analyze cpu usage of each VM in cpu-sharing case, use ``--cpu_usage``
+     to replace.
 
 Build and Install
 *****************
