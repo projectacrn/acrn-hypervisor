@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 2013 Neel Natu <neel@freebsd.org>
- * Copyright (c) 2018-2022 Intel Corporation.
+ * Copyright (c) 2018-2024 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,6 +32,19 @@
 #include <asm/lib/spinlock.h>
 #include <asm/vm_config.h>
 
+/**
+ * @addtogroup vp-dm_vperipheral
+ *
+ * @{
+ */
+
+/**
+ * @file
+ * @brief All APIs to support virtual UART device.
+ *
+ * This file defines macros, structures and function declarations for emulating virtual UART device.
+ */
+
 #define RX_BUF_SIZE		CONFIG_VUART_RX_BUF_SIZE
 #define TX_BUF_SIZE		CONFIG_VUART_TX_BUF_SIZE
 #define VUART_TIMER_CPU		CONFIG_VUART_TIMER_PCPU
@@ -56,31 +69,41 @@ struct vuart_fifo {
 	uint32_t size;		/* size of the fifo */
 };
 
+/**
+ * @brief Data structure to illustrate a virtual UART device.
+ *
+ * This structure contains the information of a virtual UART device.
+ *
+ * @consistency self.vm->vuart[X] == self
+ * @alignment N/A
+ *
+ * @remark N/A
+ */
 struct acrn_vuart {
-	uint8_t data;		/* Data register (R/W) */
-	uint8_t ier;		/* Interrupt enable register (R/W) */
-	uint8_t lcr;		/* Line control register (R/W) */
-	uint8_t mcr;		/* Modem control register (R/W) */
-	uint8_t lsr;		/* Line status register (R/W) */
-	uint8_t msr;		/* Modem status register (R/W) */
-	uint8_t fcr;		/* FIFO control register (W) */
-	uint8_t scr;		/* Scratch register (R/W) */
-	uint8_t dll;		/* Baudrate divisor latch LSB */
-	uint8_t dlh;		/* Baudrate divisor latch MSB */
+	uint8_t data; /**< Data register (R/W). */
+	uint8_t ier; /**< Interrupt enable register (R/W). */
+	uint8_t lcr; /**< Line control register (R/W). */
+	uint8_t mcr; /**< Modem control register (R/W). */
+	uint8_t lsr; /**< Line status register (R/W). */
+	uint8_t msr; /**< Modem status register (R/W). */
+	uint8_t fcr; /**< FIFO control register (W). */
+	uint8_t scr; /**< Scratch register (R/W). */
+	uint8_t dll; /**< Baudrate divisor latch LSB. */
+	uint8_t dlh; /**< Baudrate divisor latch MSB. */
 
-	struct vuart_fifo rxfifo;
-	struct vuart_fifo txfifo;
-	uint16_t port_base;
-	uint32_t irq;
-	char vuart_rx_buf[RX_BUF_SIZE];
-	char vuart_tx_buf[TX_BUF_SIZE];
-	bool thre_int_pending;	/* THRE interrupt pending */
-	bool active;
-	bool escaping;		/* in escaping sequence, for console vuarts */
-	struct acrn_vuart *target_vu; /* Pointer to target vuart */
-	struct acrn_vm *vm;
-	struct pci_vdev *vdev;	/* pci vuart */
-	spinlock_t lock;	/* protects all softc elements */
+	struct vuart_fifo rxfifo; /**< FIFO queue for received data. */
+	struct vuart_fifo txfifo; /**< FIFO queue for transmitted data. */
+	uint16_t port_base; /**< Base port address of the virtual UART device. */
+	uint32_t irq; /**< IRQ number of the virtual UART device. */
+	char vuart_rx_buf[RX_BUF_SIZE]; /**< Buffer for received data. */
+	char vuart_tx_buf[TX_BUF_SIZE]; /**< Buffer for transmitted data. */
+	bool thre_int_pending; /**< Whether Transmitter Holding Register Empty(THRE) interrupt is pending. */
+	bool active; /**< Whether the vuart is active. */
+	bool escaping; /**< Whether in escaping sequence, only for console vuarts. */
+	struct acrn_vuart *target_vu; /**< Pointer to target vuart */
+	struct acrn_vm *vm; /**< Pointer to the VM that owns the virtual UART device. */
+	struct pci_vdev *vdev; /**< Pointer to the PCI device, only for a PCI vuart. */
+	spinlock_t lock; /**< The spinlock to protect simultaneous access of all elements. */
 };
 
 void init_legacy_vuarts(struct acrn_vm *vm, const struct vuart_config *vu_config);
@@ -97,3 +120,7 @@ bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_gsi);
 uint8_t vuart_read_reg(struct acrn_vuart *vu, uint16_t offset);
 void vuart_write_reg(struct acrn_vuart *vu, uint16_t offset, uint8_t value);
 #endif /* VUART_H */
+
+/**
+ * @}
+ */
