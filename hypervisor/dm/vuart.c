@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2012 NetApp, Inc.
  * Copyright (c) 2013 Neel Natu <neel@freebsd.org>
- * Copyright (c) 2018-2022 Intel Corporation.
+ * Copyright (c) 2018-2024 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,6 +35,20 @@
 #include <vmcs9900.h>
 #include <asm/guest/vm.h>
 #include <logmsg.h>
+
+/**
+ * @addtogroup vp-dm_vperipheral
+ *
+ * @{
+ */
+
+/**
+ * @file
+ * @brief Implementation of virtual UART device.
+ *
+ * This file implements all the APIs to support virtual UART device. It also defines some helper functions to simulate
+ * the device that are commonly used in this file.
+ */
 
 #define init_vuart_lock(vu)	spinlock_init(&((vu)->lock))
 #define obtain_vuart_lock(vu, flags)	spinlock_irqsave_obtain(&((vu)->lock), &(flags))
@@ -376,8 +390,31 @@ static void write_reg(struct acrn_vuart *vu, uint16_t reg, uint8_t value_u8)
 	release_vuart_lock(vu, rflags);
 }
 
-/*
- * @pre: vu != NULL
+/**
+ * @brief Write a value to a register in the virtual UART.
+ *
+ * This function writes a 8-bit value to a specified register in the virtual UART (vUART). It is a basic function used
+ * for port I/O write or MMIO write.
+ *
+ * - When the following conditions are met, data is sent to the target vUART's RXFIFO:
+ *   1) The target vUART exists for the specified vUART, which is used for communication.
+ *   2) The accessed register is the THR (Transmitter Holding Register).
+ *   3) Loopback mode is not enabled.
+ *   4) DLAB (Divisor Latch Access Bit) is not set.
+ *   - Additionally, to ensure reliable communication, it raises the THRE interrupt (indicating that more data can be
+ *     processed) only if the target vUART's RXFIFO is not full.
+ * - If these conditions are not met, the virtual registers specified by the offset are updated according to the 16550
+ *   UART specification.
+ *
+ * @param[inout] vu The virtual UART structure to which the register value is to be written.
+ * @param[in] offset The offset of the register within the vUART.
+ * @param[in] value_u8 The 8-bit value to be written to the register.
+ *
+ * @return None
+ *
+ * @pre vu != NULL
+ *
+ * @post N/A
  */
 void vuart_write_reg(struct acrn_vuart *vu, uint16_t offset, uint8_t value_u8)
 {
@@ -401,8 +438,28 @@ void vuart_write_reg(struct acrn_vuart *vu, uint16_t offset, uint8_t value_u8)
 }
 
 /**
+ * @brief Write a value to a port in the legacy virtual UART.
+ *
+ * This function writes a value to the legacy virtual UART (vUART) based on the specified port address. It is used to
+ * handle I/O port write operations in the VM by updating the vUART's register. This function is typically called when
+ * the vCPU needs to write data to the vUART during emulation of I/O port operations.
+ *
+ * - Based on the specified port address, it first finds the vUART device within the VM corresponding to the given vCPU.
+ * - If the vUART is found, the value is written to the corresponding register. For detailed write operations, refer to
+ *   vuart_write_reg().
+ * - If the vUART is not found, the write operation is ignored.
+ *
+ * @param[inout] vcpu A pointer to the vCPU that initiates the write operation.
+ * @param[in] offset_arg The port address to write to.
+ * @param[in] width The width of the write operation (unused in this function).
+ * @param[in] value The value to be written to the register.
+ *
+ * @return Always returns true.
+ *
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
+ *
+ * @post N/A
  */
 static bool vuart_write(struct acrn_vcpu *vcpu, uint16_t offset_arg,
 			__unused size_t width, uint32_t value)
@@ -435,7 +492,28 @@ static void notify_target(const struct acrn_vuart *vu)
 }
 
 /**
+ * @brief Read a register from the virtual UART.
+ *
+ * This function returns the 8-bit value of a specified register. It is a basic function used for port I/O read or MMIO
+ * read. The registers in the UART will affect each other, such as reading the LSR register will clear some bits in it.
+ * This function carefully simulates this behavior.
+ *
+ * - If the DLAB bit in LCR is set, only the DLL and DLH registers are accessed. Other registers are considered as 0.
+ * - Otherwise, according to the UART16550 specification, set and read the corresponding register. For registers greater
+ *   than 0x07 (SCR), the value will be 0xFF.
+ * - It will toggle the interrupt.
+ * - For communication vUART, when the data in FIFO is read out (read from RBR), it will notify the target vUART to send
+ *   more data.
+ * - Finally, it will return the value of the specified register.
+ *
+ * @param[inout] vu Pointer to the virtual UART device.
+ * @param[in] offset The specified offset of the register to read.
+ *
+ * @return The value of the specified register.
+ *
  * @pre vu != NULL
+ *
+ * @post N/A
  */
 uint8_t vuart_read_reg(struct acrn_vuart *vu, uint16_t offset)
 {
@@ -529,8 +607,27 @@ uint8_t vuart_read_reg(struct acrn_vuart *vu, uint16_t offset)
 }
 
 /**
+ * @brief Read a value from a port in the legacy virtual UART.
+ *
+ * This function reads a value from the legacy virtual UART (vUART) based on the specified port address. It is used to
+ * handle I/O port read operations in the VM by retrieving the value from the vUART's registers. This function is
+ * typically called when the vCPU needs to read data from the vUART during emulation of I/O port operations.
+ *
+ * - Based on the specified port address, it first finds the vUART device within the VM corresponding to the given vCPU.
+ * - If the vUART is found, the value is read from the corresponding virtual register and stored in the vCPU's PIO
+ *   request. For detailed read operations, refer to vuart_read_reg().
+ * - If the vUART is not found, the vCPU's PIO request remains unchanged.
+ *
+ * @param[inout] vcpu A pointer to the vCPU that initiates the read operation.
+ * @param[in] offset_arg The port address to read from.
+ * @param[in] width The width of the read operation (unused in this function).
+ *
+ * @return Always returns true.
+ *
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
+ *
+ * @post N/A
  */
 static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused size_t width)
 {
@@ -628,6 +725,27 @@ static void vuart_deinit_connection(struct acrn_vuart *vu)
 	vu->target_vu = NULL;
 }
 
+/**
+ * @brief Check if any of the vUARTs in the given VM uses the specified INTx interrupt.
+ *
+ * This function checks whether the INTx interrupt is already used by vUART. It's usually used when the hypervisor
+ * tries to add a new INTx remapping.
+ *
+ * It will check all the vUARTs in the VM to see if any of them uses the specified INTx interrupt. If any of the vUARTs
+ * is active and using the specified INTx interrupt, the function will return true. Otherwise, it will return false.
+ *
+ * @param[in] vm Pointer to the VM.
+ * @param[in] intx_gsi The INTx interrupt number to check against the vUART configurations.
+ *
+ * @return A boolean value indicating if any of the vUARTs in the VM uses the specified INTx interrupt.
+ *
+ * @retval true If any of the vUARTs in the VM uses the specified INTx interrupt.
+ * @retval false If none of the vUARTs in the VM uses the specified INTx interrupt.
+ *
+ * @pre vm != NULL
+ *
+ * @post N/A
+ */
 bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_gsi)
 {
 	uint8_t i;
@@ -641,6 +759,28 @@ bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_gsi)
 	return ret;
 }
 
+/**
+ * @brief Initialize legacy virtual UART devices.
+ *
+ * This function initializes the legacy virtual UARTs (vUARTs) in hypervisor. A vUART is emulated as a 16550 UART device
+ * and can exchange data between the hypervisor and a VM or between two VMs. It sets up the necessary configurations and
+ * resources required for the vUARTs to function correctly. This function is usually called during VM creation.
+ *
+ * A VM can have several vUARTs (including legacy and PCI vUARTs). The first vUART is used for the VM console, and the
+ * rest are used for communication between VMs. Every legacy vUART device defined in the vUART configuration list is
+ * initialized and configured. It will also register port I/O handlers for every vUART device and set up the connection
+ * between vUARTs for communication.
+ *
+ * @param[inout] vm Pointer to the VM that owns the vUART devices.
+ * @param[in] vu_config Pointer to the vUART configuration structure list that contains the configuration information.
+ *
+ * @return None
+ *
+ * @pre vm != NULL
+ * @pre vu_config != NULL
+ *
+ * @post N/A
+ */
 void init_legacy_vuarts(struct acrn_vm *vm, const struct vuart_config *vu_config)
 {
 	uint8_t i;
@@ -668,6 +808,24 @@ void init_legacy_vuarts(struct acrn_vm *vm, const struct vuart_config *vu_config
 	}
 }
 
+/**
+ * @brief Deinitialize legacy virtual UART devices.
+ *
+ * This function deinitializes the legacy virtual UARTs (vUARTs) in hypervisor. It cleans up the resources and
+ * configurations that were set up for the vUARTs during initialization. This function should be called when the vUARTs
+ * are no longer needed, such as when a VM is being destroyed.
+ *
+ * The function will deinitialize all vUARTs associated with the given VM. It will set the active flag to false and
+ * remove the connection between vUARTs for communication.
+ *
+ * @param[inout] vm Pointer to the VM that owns the vUART devices.
+ *
+ * @return None
+ *
+ * @pre vm != NULL
+ *
+ * @post N/A
+ */
 void deinit_legacy_vuarts(struct acrn_vm *vm)
 {
 	uint8_t i;
@@ -683,6 +841,26 @@ void deinit_legacy_vuarts(struct acrn_vm *vm)
 	}
 }
 
+/**
+ * @brief Initialize a PCI virtual UART device.
+ *
+ * This function initializes a PCI-based virtual UART (vUART) in hypervisor. A MCS9900 controller is emulated as a PCI
+ * device, and the vUART device is a part of the MCS9900 controller. This function is usually called during the VM
+ * creation and after the MCS9900 controller device is initialized.
+ *
+ * A VM can have several vUARTs (including legacy and PCI vUARTs). The first vUART is used for the VM console, and the
+ * rest are used for communication between VMs. The PCI vUARTs are only used for communication between VMs for now. It
+ * will initialize the vUART associated with the given PCI device and set up the connection between vUARTs for
+ * communication.
+ *
+ * @param[inout] vdev Pointer to the PCI device that owns the vUART.
+ *
+ * @return None
+ *
+ * @pre vdev != NULL
+ *
+ * @post N/A
+ */
 void init_pci_vuart(struct pci_vdev *vdev)
 {
 	struct acrn_vuart *vu = vdev->priv_data;
@@ -705,6 +883,24 @@ void init_pci_vuart(struct pci_vdev *vdev)
 
 }
 
+/**
+ * @brief Deinitialize a PCI virtual UART device.
+ *
+ * This function deinitializes a PCI virtual UART (vUART) in hypervisor. It cleans up the resources and configurations
+ * that were set up for the vUART during initialization. This function should be called when the vUART is no longer
+ * needed, such as when a VM is being destroyed.
+ *
+ * The function will deinitialize the vUART associated with the given PCI device. It will set the active flag to false
+ * and remove the connection between vUARTs for communication.
+ *
+ * @param[inout] vdev Pointer to the PCI device that owns the vUART.
+ *
+ * @return None
+ *
+ * @pre vdev != NULL
+ *
+ * @post N/A
+ */
 void deinit_pci_vuart(struct pci_vdev *vdev)
 {
 	struct acrn_vuart *vu = vdev->priv_data;
@@ -715,3 +911,7 @@ void deinit_pci_vuart(struct pci_vdev *vdev)
 		vuart_deinit_connection(vu);
 	}
 }
+
+/**
+ * @}
+ */
