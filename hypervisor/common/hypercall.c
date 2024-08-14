@@ -1102,7 +1102,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 	int32_t ret = -1;
 	uint64_t cmd = param1;
 
-	if (is_created_vm(target_vm)) {
+	if (is_created_vm(target_vm) || is_paused_vm(target_vm)) {
 		switch (cmd & PMCMD_TYPE_MASK) {
 		case ACRN_PMCMD_GET_PX_CNT: {
 			uint8_t px_cnt;
