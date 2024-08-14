@@ -64,8 +64,6 @@ struct acrn_vm_pci_dev_config *init_one_dev_config(struct pci_pdev *pdev)
 			dev_config->emu_type = PCI_DEV_TYPE_SERVICE_VM_EMUL;
 			if (is_bridge(pdev)) {
 				dev_config->vdev_ops = &vpci_bridge_ops;
-			} else if (is_host_bridge(pdev)) {
-				dev_config->vdev_ops = &vhostbridge_ops;
 			} else {
 				/* May have type0 device, E.g. debug pci uart */
 				dev_config = NULL;
