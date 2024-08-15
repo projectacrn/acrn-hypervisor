@@ -156,30 +156,30 @@ struct intr_remap_table {
 	struct page tables[MAX_IR_ENTRIES/DMAR_NUM_IR_ENTRIES_PER_PAGE];
 };
 
+static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 static inline uint8_t *get_root_table(uint32_t dmar_index)
 {
-	static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 	return root_tables[dmar_index].contents;
 }
 
+static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 static inline uint8_t *get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 {
-	static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 	return ctx_tables[dmar_index].buses[bus_no].contents;
 }
 
 /*
  * @pre dmar_index < CONFIG_MAX_IOMMU_NUM
  */
+static struct page qi_queues[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 static inline void *get_qi_queue(uint32_t dmar_index)
 {
-	static struct page qi_queues[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 	return (void *)qi_queues[dmar_index].contents;
 }
 
+static struct intr_remap_table ir_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 static inline void *get_ir_table(uint32_t dmar_index)
 {
-	static struct intr_remap_table ir_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 	return (void *)ir_tables[dmar_index].tables[0].contents;
 }
 
@@ -1158,9 +1158,9 @@ static void do_action_for_iommus(void (*action)(struct dmar_drhd_rt *))
 	}
 }
 
+static struct iommu_domain iommu_domains[MAX_DOMAIN_NUM];
 struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table, uint32_t addr_width)
 {
-	static struct iommu_domain iommu_domains[MAX_DOMAIN_NUM];
 	struct iommu_domain *domain;
 
 	/* TODO: check if a domain with the vm_id exists */
