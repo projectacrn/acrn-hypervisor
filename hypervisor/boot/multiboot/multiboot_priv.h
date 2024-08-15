@@ -7,6 +7,8 @@
 #ifndef MULTIBOOT_PRIV_H
 #define MULTIBOOT_PRIV_H
 
+#include <multiboot_std.h>
+
 #ifdef CONFIG_MULTIBOOT2
 /*
  * @post boot_regs[1] stores the address pointer that point to a valid multiboot2 info
