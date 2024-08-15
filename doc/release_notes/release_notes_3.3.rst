@@ -45,7 +45,7 @@ Generic Main VM Support
   VM.
 
 Enabling Celadon as User VM
-  The acrn hypervisor now supports Celadon as User VM OS. Celadon Celadon is an 
+  The acrn hypervisor now supports Celadon as User VM OS. Celadon is an 
   open-source project by Intel that provides a reference software stack for Android
   on Intel architecture platforms, aiming to enable developers to optimize and test
   Android on Intel-based devices.
