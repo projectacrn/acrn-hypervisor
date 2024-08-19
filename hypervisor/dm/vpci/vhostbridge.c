@@ -1,6 +1,6 @@
 /*-
 * Copyright (c) 2011 NetApp, Inc.
-* Copyright (c) 2018-2022 Intel Corporation.
+* Copyright (c) 2018-2024 Intel Corporation.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions
@@ -39,51 +39,91 @@
 #include <vacpi.h>
 
 /**
- * @pre vdev != NULL
- * @pre vdev->vpci != NULL
+ * @addtogroup vp-dm_vperipheral
+ *
+ * @{
  */
-/* The chart below shows the hostbridge DID high-byte of the platform later than broadwell, whose PCIEXBAR are always
-	located in the PCI hostbridge config space at the offset 0x60. This chart may need further extension in the future
-	--------------------------------------------------------------------------------------
-		platform			|	hostbridge DID high-byte
-	--------------------------------------------------------------------------------------
-		SKL(6-gen)			|	0x19
-		APL(6-gen Atom)			|	0x5a
-		KBL(7/8-gen)			|	0x59
-		CFL/CFL-R(8/9-gen)		|	0x3e
-		ICL(10-gen)			|	0x9b
-		EHL(11-gen)			|	0x45
-		TGL(11-gen)			|	0x9a
-	--------------------------------------------------------------------------------------
+
+/**
+ * @file
+ * @brief Implementation of virtual PCI host bridge.
+ *
+ * This file defines operations to support virtual PCI host bridge. All the operation related APIs are registered as the
+ * callbacks in the global variable "struct pci_vdev_ops vhostbridge_ops".
+ */
+
+/*
+The chart below shows the hostbridge DID high-byte of the platform later than broadwell, whose PCIEXBAR are always
+located in the PCI hostbridge config space at the offset 0x60. This chart may need further extension in the future
+--------------------------------------------------------------------------------------
+	platform			|	hostbridge DID high-byte
+--------------------------------------------------------------------------------------
+	SKL(6-gen)			|	0x19
+	APL(6-gen Atom)			|	0x5a
+	KBL(7/8-gen)			|	0x59
+	CFL/CFL-R(8/9-gen)		|	0x3e
+	ICL(10-gen)			|	0x9b
+	EHL(11-gen)			|	0x45
+	TGL(11-gen)			|	0x9a
+--------------------------------------------------------------------------------------
 */
 static const uint32_t hostbridge_did_highbytes[] = {0x19U, 0x5aU, 0x59U, 0x3eU, 0x9aU, 0x45U, 0x9bU};
 
 /*
-	The vhostbridge we currently emulated is "Celeron N3350/Pentium N4200/Atom E3900 Series Host Bridge",
-	which belongs to Intel Appollo Lake processors family, and the device id is 5af0
+TODO:
+1. In the future, we may add one or more virtual hostbridges for CPUs that are incompatible in layout with the current
+one
+2. Besides PCIEXBAR(0x60), there are also some registers needs to be emulated more precisely rather than be treated as
+read-only and hard-coded, listed below:
 
-	TODO:
-		1. In the future, we may add one or more virtual hostbridges for CPUs that are incompatible in layout with the current one
-		2. Besides PCIEXBAR(0x60), there are also some registers needs to be emulated more precisely rather than be treated as read-only and hard-coded, listed below:
-
-	----------------------------------------------------------------------------------------------------------------
-	reg	|	offset	|	length	|	current status	|	remark
-	----------------------------------------------------------------------------------------------------------------
-	STATUS_COMMAND	|	0x8	|	dword	|	unemulated	|	pci status and command
-	SVID_SID	|	0x2C	|	dword	|	unemulated	|	subsys id and subsys vendor id
-	MCHBAR		|	0x48	|	qword	|	hard-coded	|	BAR of memory controller hub
-	GGC		|	0x50	|	dword	|	hard-coded	|	graphics & mem controller hub graphics CR
-	DEVEN		|	0x54	|	dword	|	hard-coded	|	device enable register
-	PAVPC		|	0x58	|	dword	|	hard-coded	|	protected audio video path control
-	TOUUD		|	0xA8	|	qword	|	hard-coded	|	top of upper usable DRAM
-	BDSM		|	0xB0	|	dword	|	hard-coded	|	base of data stolen memory
-	BGSM		|	0xB4	|	dword	|	hard-coded	|	base of graphics stolen memory
-	TSEGMB		|	0xB8	|	dword	|	hard-coded	|	top segmentmemory base
-	TOLUD		|	0xBC	|	dword	|	hard-coded	|	top of lower usable dram
-	SKPD		|	0xDC	|	dword	|	unemulated	|	scratchpad
-	CAPID0_CAPCTRL0	|	0xe0	|	dword	|	hard-coded	|	capability 0 control
-	----------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+reg		|offset	|length	|current status	|remark
+-----------------------------------------------------------------------------------------------
+STATUS_COMMAND	|0x8	|dword	|unemulated	|pci status and command
+SVID_SID	|0x2C	|dword	|unemulated	|subsys id and subsys vendor id
+MCHBAR		|0x48	|qword	|hard-coded	|BAR of memory controller hub
+GGC		|0x50	|dword	|hard-coded	|graphics & mem controller hub graphics CR
+DEVEN		|0x54	|dword	|hard-coded	|device enable register
+PAVPC		|0x58	|dword	|hard-coded	|protected audio video path control
+TOUUD		|0xA8	|qword	|hard-coded	|top of upper usable DRAM
+BDSM		|0xB0	|dword	|hard-coded	|base of data stolen memory
+BGSM		|0xB4	|dword	|hard-coded	|base of graphics stolen memory
+TSEGMB		|0xB8	|dword	|hard-coded	|top segmentmemory base
+TOLUD		|0xBC	|dword	|hard-coded	|top of lower usable dram
+SKPD		|0xDC	|dword	|unemulated	|scratchpad
+CAPID0_CAPCTRL0	|0xe0	|dword	|hard-coded	|capability 0 control
+-----------------------------------------------------------------------------------------------
 */
+
+/**
+ * @brief Initialize the virtual host bridge.
+ *
+ * A host bridge is a PCI device that is used to support the pci devices under it. This function initializes the
+ * specified virtual PCI device as a host bridge. It's usually called during the initialization of a VM.
+ *
+ * This function emulates the virtual host bridge as a "Celeron N3350/Pentium N4200/Atom E3900 Series Host Bridge",
+ * which belongs to Intel Apollo Lake processors family, and the device id is 0x5af0. Per "Section 9 C-Unit in Intel®
+ * Pentium® and Celeron® Processor N- and J- Series, Datasheet Volume 2", it initializes related type info registers in
+ * configuration space.
+ * PCI Express Enhanced Configuration Range Base Address Register (PCIEXBAR) is emulated differently for pre-launched
+ * VMs and Service VM, to support PCI Express Enhanced Configuration Access Mechanism (ECAM).
+ * - For a pre-launched VM, it is emulated as 'USER_VM_VIRT_PCI_MMCFG_BASE | 0x1'. USER_VM_VIRT_PCI_MMCFG_BASE
+ *   (0xE0000000) is the hard-coded virtual PCI MMCFG address base for pre/post-launched VMs. Bit 0 is set to 1 to
+ *   indicate that the base address defined in the PCIEXBAR register is active.
+ * - For a Service VM, it is emulated to be the same value as the physical PCIEXBAR. It is not used for now, mainly for
+ *   feature extension in the future.
+ * Finally, it sets the field parent_user to NULL and the field user to vdev, indicating that this vPCI bridge is used
+ * by a VM.
+ *
+ * @param[inout] vdev Pointer to the virtual PCI device to be initialized.
+ *
+ * @return None
+ *
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ *
+ * @post N/A
+ */
 static void init_vhostbridge(struct pci_vdev *vdev)
 {
 	union pci_bdf hostbridge_bdf = {.value = 0x0U};
@@ -133,11 +173,13 @@ static void init_vhostbridge(struct pci_vdev *vdev)
 		 */
 		pciexbar_low = USER_VM_VIRT_PCI_MMCFG_BASE | 0x1U;
 	} else {
-		/* Inject physical ECAM value to Service VM vhostbridge since Service VM may check PCIe-MMIO Base Address with it */
+		/* Inject physical ECAM value to Service VM vhostbridge since Service VM may check PCIe-MMIO Base
+		Address with it */
 		phys_did = pci_pdev_read_cfg(hostbridge_bdf, PCIR_DEVICE, 2);
 		for (i = 0U; i < (sizeof(hostbridge_did_highbytes) / sizeof(uint32_t)); i++) {
 			if (((phys_did & 0xff00U) >> 8) == hostbridge_did_highbytes[i]) {
-				/* The offset of PCIEXBAR register is 0x60 on Intel platforms, and no counter-case is encountered yet */
+				/* The offset of PCIEXBAR register is 0x60 on Intel platforms, and no counter-case is
+				encountered yet */
 				pciexbar_low = pci_pdev_read_cfg(hostbridge_bdf, 0x60U, 4);
 				pciexbar_high = pci_pdev_read_cfg(hostbridge_bdf, 0x64U, 4);
 				break;
@@ -152,16 +194,48 @@ static void init_vhostbridge(struct pci_vdev *vdev)
 	vdev->user = vdev;
 }
 
-static void deinit_vhostbridge(__unused struct pci_vdev *vdev)
+/**
+ * @brief Deinitialize the virtual host bridge.
+ *
+ * This function deinitializes the specified virtual PCI device that was previously initialized as a host bridge.
+ *
+ * For the specified vdev, it sets the fields parent_user and user to NULL, indicating that this virtual device is not
+ * owned by any VM.
+ *
+ * @param[inout] vdev Pointer to the virtual PCI device.
+ *
+ * @return None
+ *
+ * @pre vdev != NULL
+ *
+ * @post N/A
+ */
+static void deinit_vhostbridge(struct pci_vdev *vdev)
 {
 	vdev->parent_user = NULL;
 	vdev->user = NULL;
 }
 
-
 /**
+ * @brief Read the configuration space of the virtual host bridge.
+ *
+ * This function reads the configuration space of the specified virtual PCI device that is configured as a host bridge.
+ * It is used to retrieve specific configuration data of the virtual host bridge for further processing or validation.
+ *
+ * It reads the configuration space of the virtual host bridge and stores the read configuration data in the provided
+ * buffer.
+ *
+ * @param[in] vdev Pointer to the virtual PCI device whose configuration space is to be read.
+ * @param[in] offset Offset within the configuration space to read from.
+ * @param[in] bytes Number of bytes to read from the configuration space.
+ * @param[inout] val Pointer to the buffer where the read configuration data will be stored.
+ *
+ * @return Always return 0.
+ *
  * @pre vdev != NULL
- * @pre vdev->vpci != NULL
+ * @pre val != NULL
+ *
+ * @post retval == 0
  */
 static int32_t read_vhostbridge_cfg(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
@@ -170,10 +244,25 @@ static int32_t read_vhostbridge_cfg(struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
-
 /**
+ * @brief Write to the virtual host bridge configuration space.
+ *
+ * This function writes to the configuration space of the specified virtual PCI device that is configured as a host
+ * bridge. It is used to update specific configuration settings based on the provided parameters.
+ *
+ * For the non-BAR configuration space, it writes the provided value to the configuration space of the virtual host
+ * bridge. For the BAR configuration space, it is read-only and the write operation is ignored.
+ *
+ * @param[inout] vdev Pointer to the virtual PCI device whose configuration space is to be written.
+ * @param[in] offset Offset within the configuration space to start writing to.
+ * @param[in] bytes Number of bytes to write to the configuration space.
+ * @param[in] val Value to be written to the configuration space.
+ *
+ * @return Always return 0.
+ *
  * @pre vdev != NULL
- * @pre vdev->vpci != NULL
+ *
+ * @post retval == 0
  */
 static int32_t write_vhostbridge_cfg(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
@@ -184,9 +273,27 @@ static int32_t write_vhostbridge_cfg(struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
+/**
+ * @brief Data structure implementation for virtual host bridge operations.
+ *
+ * Struct pci_vdev_ops is used to define the operations of virtual PCI device and definition here is used to support
+ * virtual host bridge.
+ *
+ * A pre-launched VM may have some pci devices and a host bridge is needed to support these devices. This struct is used
+ * to define the operations of virtual host bridge in this case for now.
+ *
+ * @consistency N/A
+ * @alignment N/A
+ *
+ * @remark N/A
+ */
 const struct pci_vdev_ops vhostbridge_ops = {
 	.init_vdev	= init_vhostbridge,
 	.deinit_vdev	= deinit_vhostbridge,
 	.write_vdev_cfg	= write_vhostbridge_cfg,
 	.read_vdev_cfg	= read_vhostbridge_cfg,
 };
+
+/**
+ * @}
+ */
