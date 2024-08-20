@@ -88,26 +88,42 @@ static void init_vhostbridge(struct pci_vdev *vdev)
 {
 	union pci_bdf hostbridge_bdf = {.value = 0x0U};
 	uint32_t pciexbar_low = 0x0U, pciexbar_high = 0x0U, phys_did, i;
+	/* Refer to Section 9 C-Unit in Intel® Pentium® and Celeron® Processor N- and J- Series, Datasheet Volume 2 */
 	/* PCI config space */
 	pci_vdev_write_vcfg(vdev, PCIR_VENDOR, 2U, 0x8086U);
 	pci_vdev_write_vcfg(vdev, PCIR_DEVICE, 2U, 0x5af0U);
 	pci_vdev_write_vcfg(vdev, PCIR_REVID, 1U, 0xbU);
-	pci_vdev_write_vcfg(vdev, PCIR_HDRTYPE, 1U, (PCIM_HDRTYPE_NORMAL | PCIM_MFDEV));
-	pci_vdev_write_vcfg(vdev, PCIR_CLASS, 1U, PCIC_BRIDGE);
 	pci_vdev_write_vcfg(vdev, PCIR_SUBCLASS, 1U, PCIS_BRIDGE_HOST);
-	pci_vdev_write_vcfg(vdev, 0x34U, 1U, 0xe0U);
-	pci_vdev_write_vcfg(vdev, 0x3cU, 1U, 0xe0U);
+	pci_vdev_write_vcfg(vdev, PCIR_CLASS, 1U, PCIC_BRIDGE);
+	pci_vdev_write_vcfg(vdev, PCIR_HDRTYPE, 1U, (PCIM_HDRTYPE_NORMAL | PCIM_MFDEV));
+	/* First Capability Register is CAPID0_CAPCTRL0 */
+	pci_vdev_write_vcfg(vdev, PCIR_CAP_PTR, 1U, 0xe0U);
+	pci_vdev_write_vcfg(vdev, PCIR_INTERRUPT_LINE, 1U, 0xe0U);
 
+	/* Memory Controller Hub Base Address Register, MCHBAR_LO */
+	/* MCHBAR[38:15] is {MCHBAR_HI[6:0],MCHBAR_LO[31:15]} */
 	pci_vdev_write_vcfg(vdev, 0x48U, 4U, 0xfed10001U);
+	/* Graphics and Memory Controller Hub Graphics Control Register, GGC */
+	/* [15:8] is Graphics Memory Select (GMS), 512MB */
 	pci_vdev_write_vcfg(vdev, 0x50U, 4U, 0x000002c1U);
+	/* Device Enable Register, DEVEN */
 	pci_vdev_write_vcfg(vdev, 0x54U, 4U, 0x00000033U);
+	/* Protected Audio Video Path Control, PAVPC */
 	pci_vdev_write_vcfg(vdev, 0x58U, 4U, 0x7ff00007U);
+	/* Top of Upper Usable DRAM Low, TOUUD_LO */
 	pci_vdev_write_vcfg(vdev, 0xa8U, 4U, 0x80000000U);
+	/* Top of Upper Usable DRAM High, TOUUD_HI */
 	pci_vdev_write_vcfg(vdev, 0xacU, 4U, 0x00000002U);
+	/* Base of Data Stolen Memory, BDSM */
 	pci_vdev_write_vcfg(vdev, 0xb0U, 4U, 0x7c000001U);
+	/* Base of Graphics Stolen Memory, BGSM */
 	pci_vdev_write_vcfg(vdev, 0xb4U, 4U, 0x7b800001U);
+	/* Top Segment Memory Base, TSEGMB */
 	pci_vdev_write_vcfg(vdev, 0xb8U, 4U, 0x7b000001U);
+	/* Top of Lower Usable DRAM, TOLUD */
 	pci_vdev_write_vcfg(vdev, 0xbcU, 4U, 0x80000001U);
+	/* Capability ID0 Capability Control, CAPID0_CAPCTRL0 */
+	/* CAP_ID: 9h, NEXT_CAP: 0h, CAPIDLEN: Ch, CAPID_VER: 1h */
 	pci_vdev_write_vcfg(vdev, 0xe0U, 4U, 0x010c0009U);
 	pci_vdev_write_vcfg(vdev, 0xf4U, 4U, 0x011c0f00U);
 
@@ -117,7 +133,7 @@ static void init_vhostbridge(struct pci_vdev *vdev)
 		 */
 		pciexbar_low = USER_VM_VIRT_PCI_MMCFG_BASE | 0x1U;
 	} else {
-		/*Inject physical ECAM value to Service VM vhostbridge since Service VM may check PCIe-MMIO Base Address with it */
+		/* Inject physical ECAM value to Service VM vhostbridge since Service VM may check PCIe-MMIO Base Address with it */
 		phys_did = pci_pdev_read_cfg(hostbridge_bdf, PCIR_DEVICE, 2);
 		for (i = 0U; i < (sizeof(hostbridge_did_highbytes) / sizeof(uint32_t)); i++) {
 			if (((phys_did & 0xff00U) >> 8) == hostbridge_did_highbytes[i]) {
@@ -128,8 +144,9 @@ static void init_vhostbridge(struct pci_vdev *vdev)
 			}
 		}
 	}
-
+	/* PCI Express Enhanced Configuration Range Base Address Low, PCIEXBAR_LO */
 	pci_vdev_write_vcfg(vdev, 0x60U, 4, pciexbar_low);
+	/* PCI Express Enhanced Configuration Range Base Address High, PCIEXBAR_HI */
 	pci_vdev_write_vcfg(vdev, 0x64U, 4, pciexbar_high);
 	vdev->parent_user = NULL;
 	vdev->user = vdev;
