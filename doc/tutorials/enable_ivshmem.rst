@@ -67,6 +67,9 @@ For the shared memory region:
 #. Enter a name for the shared memory region.
 #. Select the source of the emulation, either Hypervisor or Device Model.
 #. Select the size of the shared memory region.
+#. **Enter shared memory region ID, which can be in hexadecimal or decimal format**.
+    .. note::
+       Default value is 0 and IDs in 0x001 ~ 0xFFF  are reserved, 0x1000 ~ 0xFFFF are available.
 #. Select at least two VMs that can use the shared memory region.
 #. Enter a virtual Board:Device.Function (BDF) address for each VM or leave it
    blank. If the field is blank, the tool provides an address when the
