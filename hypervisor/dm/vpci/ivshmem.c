@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Intel Corporation.
+ * Copyright (C) 2020-2024 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -13,6 +13,20 @@
 #include <ivshmem.h>
 #include <ivshmem_cfg.h>
 #include "vpci_priv.h"
+
+/**
+ * @addtogroup vp-dm_vperipheral
+ *
+ * @{
+ */
+
+/**
+ * @file
+ * @brief Implementation of Inter-VM shared memory device (ivshmem).
+ *
+ * This file defines marcos, data structure and functions to support ivshmem devices. It also implements necessary
+ * functions to model a ivshmem device as a PCI device.
+ */
 
 /* config space of ivshmem device */
 #define	IVSHMEM_CLASS		0x05U
@@ -69,6 +83,25 @@ struct ivshmem_device {
 static struct ivshmem_device ivshmem_dev[IVSHMEM_DEV_NUM];
 static spinlock_t ivshmem_dev_lock = { .head = 0U, .tail = 0U, };
 
+/**
+ * @brief Initialize the shared memory regions for all ivshmem devices.
+ *
+ * An ivshmem device is used to transfer data between VMs based on shared memory region. Basic ivshmem information is
+ * configured in scenario file. After compilation, every shared memory region is stored in struct ivshmem_shm_region.
+ * This function initializes all shared memory regions for ivshmem devices and it is usually called before all VMs are
+ * created.
+ *
+ * IVSHMEM_SHM_SIZE is the sum of all ivshmem shared memory regions in bytes. It rounds IVSHMEM_SHM_SIZE up to PDE_SIZE
+ * (1 GiB) and allocates a contiguous block of memory for these memory regions from host e820. For detailed allocation
+ * operations, refer to e820_alloc_memory(). The function then iterates over the memory regions and assigns the
+ * allocated physical addresses to each region.
+ *
+ * @return None
+ *
+ * @pre N/A
+ *
+ * @post N/A
+ */
 void init_ivshmem_shared_memory()
 {
 	uint32_t i;
@@ -186,8 +219,36 @@ static void create_ivshmem_device(struct pci_vdev *vdev)
 	memset(&ivshmem_dev[i].mmio, 0U, sizeof(uint32_t) * 4);
 }
 
-/*
- * @pre vdev->priv_data != NULL
+/**
+ * @brief Handle MMIO (Memory-Mapped I/O) operations for the ivshmem device.
+ *
+ * BAR0 is used for device registers. This function handles MMIO read and write operations to the ivshmem device BAR0.
+ *
+ * Per the specification, the access offset within should be 4-byte aligned, the access size should be 4 bytes, and the
+ * access offset exceeds 16 bytes are reserved. So the request needs to meet these conditions, otherwise, it does
+ * nothing and directly returns 0.
+ * - For a read operation, the read value is stored in the input mmio request structure:
+ *   - Doorbell register is a write-only register, so it sets the read value to 0.
+ *   - Otherwise, it reads specified register value of the ivshmem device.
+ * - For a write operation:
+ *   - IVPosition register is a read-only register, so it does nothing if writing to IVPosition.
+ *   - Writing to the Doorbell register requests to interrupt a peer. It extracts the peer ID and vector index from the
+ *     input mmio value. If the peer is valid (peer ivshmem device exists, MSI-X is enabled, the MSI-X table entry
+ *     corresponding to the vector index exists and is not masked), it injects an MSI to the peer VM. For more details
+ *     about the MSI injection, refer to vlapic_inject_msi().
+ *   - Otherwise, it writes the value to the specified register of the ivshmem device.
+ * - Finally, it returns 0.
+ *
+ * @param[inout] io_req Pointer to the I/O request structure that contains the MMIO request information.
+ * @param[inout] data Pointer to the pci_vdev structure that is treated as an ivshmem device.
+ *
+ * @return Always return 0.
+ *
+ * @pre io_req != NULL
+ * @pre data != NULL
+ * @pre data->priv_data != NULL
+ *
+ * @post retval == 0
  */
 static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
 {
@@ -227,6 +288,27 @@ static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
 	return 0;
 }
 
+/**
+ * @brief Read the PCI configuration space of the ivshmem device.
+ *
+ * This function reads the configuration space of the specified virtual PCI device that is configured as a ivshmem
+ * device. It is used to retrieve the configuration data of the ivshmem device for further processing or validation.
+ *
+ * It directly reads the configuration space of the ivshmem device by calling pci_vdev_read_vcfg().
+ *
+ * @param[in] vdev Pointer to the virtual PCI device whose configuration is to be read.
+ * @param[in] offset Offset within the configuration space to start reading from.
+ * @param[in] bytes Number of bytes to read from the configuration space.
+ * @param[inout] val Pointer to the buffer where the read configuration data will be stored.
+ *
+ * @return Always return 0.
+ *
+ * @pre vdev != NULL
+ * @pre val != NULL
+ * @pre offset + bytes <= 0x1000
+ *
+ * @post retval == 0
+ */
 static int32_t read_ivshmem_vdev_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	*val = pci_vdev_read_vcfg(vdev, offset, bytes);
@@ -234,6 +316,30 @@ static int32_t read_ivshmem_vdev_cfg(struct pci_vdev *vdev, uint32_t offset, uin
 	return 0;
 }
 
+/**
+ * @brief Unmap the specified BAR for the ivshmem device.
+ *
+ * This function unmaps the specified BAR for the ivshmem device. It is typically called during the destroy phase of the
+ * ivshmem device or when guest updates the BAR register.
+ *
+ * - BAR0 and BAR1 are used for device registers and MSI-X table and PBA, respectively. If the specified idx is 0 or 1
+ *   and the field base_gpa in the specified vBAR is not 0, it unregisters the mmio range handler for the BAR by calling
+ *   unregister_mmio_emulation_handler().
+ * - BAR2 maps the shared memory object. If the specified idx is 2 and the field base_gpa in vBAR2 is not 0, it releases
+ *   the ept memory mapping for the shared memory region by calling ept_del_mr().
+ * - Otherwise, it does nothing.
+ *
+ * @param[inout] vdev Pointer to the PCI device that is treated as an ivshmem device.
+ * @param[in] idx Index of the BAR to be unmapped.
+ *
+ * @return None
+ *
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre idx < PCI_BAR_COUNT
+ *
+ * @post N/A
+ */
 static void ivshmem_vbar_unmap(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct acrn_vm *vm = vpci2vm(vdev->vpci);
@@ -246,9 +352,35 @@ static void ivshmem_vbar_unmap(struct pci_vdev *vdev, uint32_t idx)
 	}
 }
 
-/*
+/**
+ * @brief Map the virtual BAR for the ivshmem device.
+ *
+ * This function maps the specified virtual BAR for the ivshmem device. It is typically called when guest updates the
+ * BAR register.
+ *
+ * - BAR0 is used for device registers. If the specified idx is 0 and the field base_gpa in the specified vBAR is not 0,
+ *   it registers the mmio range handler (via the callback ivshmem_mmio_handler) for the BAR and deletes the 4KB ept
+ *   memory mapping for the BAR by calling ept_del_mr().
+ * - BAR1 is used for MSI-X table and PBA. If the specified idx is 1 and the field base_gpa in the specified vBAR is not
+ *   0, it registers the mmio range handler (via the callback vmsix_handle_table_mmio_access) for the BAR and deletes
+ *   the ept memory mapping for the BAR by calling ept_del_mr(). It also sets the mmio_gpa field in the vdev->msix to
+ *   the GPA of the BAR for MSI-X table access.
+ * - BAR2 maps the shared memory object. If the specified idx is 2, the field base_gpa in vBAR2 is not 0 and the field
+ *   base_hpa in vBAR2 is not INVALID_HPA, it adds the ept memory mapping as (EPT_RD|EPT_WR|EPT_WB|EPT_IGNORE_PAT) for
+ *   the BAR by calling ept_add_mr().
+ * - Otherwise, it does nothing.
+ *
+ * @param[inout] vdev Pointer to the PCI device that is treated as an ivshmem device.
+ * @param[in] idx Index of the BAR to be mapped.
+ *
+ * @return None
+ *
+ * @pre vdev != NULL
  * @pre vdev->priv_data != NULL
  * @pre msix->table_offset == 0U
+ * @pre bar_idx < PCI_BAR_COUNT
+ *
+ * @post N/A
  */
 static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
 {
@@ -270,6 +402,32 @@ static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
 	}
 }
 
+/**
+ * @brief Write to the virtual ivshmem device configuration space.
+ *
+ * This function handles writes to the configuration space of the specified virtual PCI device that is configured as an
+ * ivshmem device. It is typically called when the guest writes to the ivshmem device's configuration space.
+ *
+ * - If the write request is for a BAR register, it updates the BAR with the provided value. It also needs to update the
+ *   ept mapping and mmio emulation handler based on the bar information. For detailed operations, refer to
+ *   vpci_update_one_vbar(), ivshmem_vbar_map() and ivshmem_vbar_unmap().
+ * - If the write request is for the MSI-X capability register, it specially handles the write request. For detailed
+ *   operations, refer to write_vmsix_cap_reg().
+ * - Otherwise, the function writes the provided value to the specified configuration space register.
+ * - Finally, the function returns 0.
+ *
+ * @param[inout] vdev Pointer to the virtual PCI device whose configuration is to be written.
+ * @param[in] offset Offset within the configuration space to start writing to.
+ * @param[in] bytes Number of bytes to write.
+ * @param[in] val The value to be written to the register.
+ *
+ * @return Always return 0.
+ *
+ * @pre vdev != NULL
+ * @pre offset + bytes <= 0x1000
+ *
+ * @post retval == 0
+ */
 static int32_t write_ivshmem_vdev_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	if (vbar_access(vdev, offset)) {
@@ -284,9 +442,30 @@ static int32_t write_ivshmem_vdev_cfg(struct pci_vdev *vdev, uint32_t offset, ui
 	return 0;
 }
 
-/*
+/**
+ * @brief Initialize the specified BAR for the ivshmem device.
+ *
+ * The ivshmem PCI device has three BARs: BAR0, BAR1, and BAR2. BAR0/BAR1 is a 32-bit memory BAR and BAR2 is a 64-bit
+ * memory BAR. This function initializes a specified BAR for the ivshmem device. It is typically called during the
+ * initialization phase of the ivshmem device.
+ *
+ * - If bar_idx exceeds 2, the function does nothing.
+ * - For BAR2, it finds the shared memory region based on the shared memory region name. If the shared memory region is
+ *   not found, the function does nothing.
+ * - It updates corresponding fields in the pci_vbar structure of specified bar_idx.
+ * - It configures the Base Address Register in the device's configuration space.
+ * - For a 64-bit memory BAR (BAR2 for now), it also sets up the next Base Address Register as the high 32 bits.
+ *
+ * @param[inout] vdev Pointer to the PCI device that is treated as an ivshmem device.
+ * @param[in] bar_idx Index of the BAR to be initialized.
+ *
+ * @return None
+ *
  * @pre vdev != NULL
+ * @pre vdev->pci_dev_config != NULL
  * @pre bar_idx < PCI_BAR_COUNT
+ *
+ * @post N/A
  */
 static void init_ivshmem_bar(struct pci_vdev *vdev, uint32_t bar_idx)
 {
@@ -327,6 +506,40 @@ static void init_ivshmem_bar(struct pci_vdev *vdev, uint32_t bar_idx)
 	}
 }
 
+/**
+ * @brief Initialize a virtual ivshmem device.
+ *
+ * This function initializes the specified virtual PCI device as an ivshmem device. It sets up the device to follow the
+ * specifications. Because the ivshmem is introduced by QEMU, the spec link is
+ * https://www.qemu.org/docs/master/specs/ivshmem-spec.html. This function is usually used in the initialization phase
+ * of VM.
+ *
+ * - It sets the pcidev field in ivshmem_device (all ivshmem devices emulated by hypervisor are static stored based on
+ *   the configuration) to the vdev and sets the priv_data field in the specified vdev to new ivshmem_device structure
+ *   data, indicating the association between the virtual PCI device and the ivshmem device.
+ * - Per the ivshmem specification and PCI Express Base Specification, it initializes the ivshmem device configuration
+ *   space with appropriate values:
+ *   - The device ID and Vendor ID is 0x11101af4.
+ *   - It sets subsystem vendor ID to 0x8086 (Intel) and subsystem ID to the region ID of the shared memory region.
+ *   - It sets up the MSI-X capability with 8 MSI-X table entries and maps the table and PBA into BAR1. For detailed
+ *     operations, refer to add_vmsix_capability().
+ *   - It initializes BAR0 for the device to hold device registers (256 Byte MMIO).
+ *   - It initializes BAR1 for the device to hold MSI-X table and PBA.
+ *   - It initializes BAR2 for the device to map the shared memory object. Because BAR2 is a 64-bit memory BAR, it also
+ *     sets up the next Base Address Register as the high 32 bits and the total number of bars is set to 4.
+ *   - It binds the device to the ivshmem server (hosts in hypervisor) for inter-VM communication.
+ * - Finally, it sets the user field to vdev, indicating that this ivshmem is used by a VM.
+ *
+ * @param[inout] vdev Pointer to the virtual PCI device to be initialized.
+ *
+ * @return None
+ *
+ * @pre vdev != NULL
+ * @pre vdev->pci_dev_config != NULL
+ * @pre vdev->pci != NULL
+ *
+ * @post N/A
+ */
 static void init_ivshmem_vdev(struct pci_vdev *vdev)
 {
 	struct acrn_vm_pci_dev_config *dev_config = vdev->pci_dev_config;
@@ -359,8 +572,25 @@ static void init_ivshmem_vdev(struct pci_vdev *vdev)
 	vdev->user = vdev;
 }
 
-/*
+/**
+ * @brief Deinitialize a virtual ivshmem device.
+ *
+ * This function deinitializes the specified virtual PCI device that was previously initialized as an ivshmem device.
+ *
+ * - It unbinds the device from the ivshmem server (hosts in hypervisor).
+ * - It sets the priv_data field in the specified vdev to NULL and sets the pcidev field in ivshmem_device to NULL,
+ *   indicating the disassociation between the virtual PCI device and the ivshmem device.
+ * - It sets the user field to NULL, indicating that this virtual device is not owned by any VM.
+ *
+ * @param[inout] vdev Pointer to the virtual PCI device to be deinitialized.
+ *
+ * @return None
+ *
+ * @pre vdev != NULL
  * @pre vdev->priv_data != NULL
+ * @pre vdev->pci != NULL
+ *
+ * @post N/A
  */
 static void deinit_ivshmem_vdev(struct pci_vdev *vdev)
 {
@@ -376,8 +606,39 @@ static void deinit_ivshmem_vdev(struct pci_vdev *vdev)
 }
 
 /**
+ * @brief Create a virtual ivshmem device based on the specified device information.
+ *
+ * Basic ivshmem information is configured in the scenario file. After compilation, some device configurations of every
+ * ivshmem PCI device are stored in struct acrn_vm_pci_dev_config and every shared memory region is stored in struct
+ * ivshmem_shm_region. This function creates one virtual ivshmem device based on the input device information. The
+ * user-space tool(such as acrn-dm) may add an ivshmem device for a post-launch VM and this device is emulated in
+ * hypervisor. This function is used for the case for now and it is usually used in the initialization phase of a
+ * post-launch VM.
+ *
+ * - Per the ivshmem specification, BAR2 maps the shared memory object. For the ivshmem device to be created, the shared
+ *   memory region name is stored in dev->args and the size of the shared memory region is stored in
+ *   dev->io_size[IVSHMEM_SHM_BAR].
+ * - It traverses all configured PCI devices of the specified VM. Based on the input shared memory region name, it finds
+ *   corresponding acrn_vm_pci_dev_config and ivshmem_shm_region.
+ * - If the acrn_vm_pci_dev_config is not found or the ivshmem_shm_region is not found or the size of ivshmem_shm_region
+ *   is not equal to the size specified in dev->io_size[IVSHMEM_SHM_BAR], the function returns -EINVAL.
+ * - Otherwise, update the acrn_vm_pci_dev_config with input device information specified in dev and initializes a new
+ *   virtual PCI device as an ivshmem device. For detailed operations, refer to vpci_init_vdev(). The function returns
+ *   -EINVAL if the vpci_init_vdev() fails.
+ * - Finally, it returns 0 on success.
+ *
+ * @param[inout] vm Pointer to the VM that owns the ivshmem device.
+ * @param[in] dev Pointer to the device information to create an ivshmem device.
+ *
+ * @return A int32_t value to indicate the status of the ivshmem device creation.
+ *
+ * @retval 0 On success.
+ * @retval -EINVAL If the ivshmem device creation fails.
+ *
  * @pre vm != NULL
  * @pre dev != NULL
+ *
+ * @post retval <= 0
  */
 int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 {
@@ -403,7 +664,7 @@ int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 				if (vdev != NULL) {
 					ret = 0;
 				}
-			} 
+			}
 			break;
 		}
 	}
@@ -415,6 +676,27 @@ int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_vdev *dev)
 	return ret;
 }
 
+/**
+ * @brief Destroy the virtual ivshmem device.
+ *
+ * This function is the counterpart of create_ivshmem_vdev(). This function destroys the specified virtual PCI device
+ * that was previously initialized as an ivshmem device. It is usually used for a post-launch VM to destroy the ivshmem
+ * device.
+ *
+ * - It updates all BARs of the specified vdev. For detailed operations, refer to vpci_update_one_vbar() and the
+ *   function ivshmem_vbar_unmap().
+ * - It deinitializes the specified virtual PCI device. For detailed operations, refer to vpci_deinit_vdev().
+ * - Finally, it returns 0.
+ *
+ * @param[inout] vdev Pointer to the virtual PCI device to be destroyed.
+ *
+ * @return Always return 0.
+ *
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ *
+ * @post retval == 0
+ */
 int32_t destroy_ivshmem_vdev(struct pci_vdev *vdev)
 {
 	uint32_t i;
@@ -431,10 +713,26 @@ int32_t destroy_ivshmem_vdev(struct pci_vdev *vdev)
 	return 0;
 }
 
+/**
+ * @brief Data structure implementation for virtual Inter-VM shared memory device (ivshmem) operations.
+ *
+ * The ivshmem is actually first introduced by QEMU to share a memory region between multiple VMs and host. It is
+ * modeled as a PCI device exposing said memory to the VM as a PCI BAR. ACRN also introduces it to transfer data between
+ * VMs based on the shared memory region. Struct pci_vdev_ops is used to define the operations of virtual PCI device and
+ * definition here is used to support ivshmem device.
+ *
+ * @consistency N/A
+ * @alignment N/A
+ *
+ * @remark N/A
+ */
 const struct pci_vdev_ops vpci_ivshmem_ops = {
 	.init_vdev	= init_ivshmem_vdev,
 	.deinit_vdev	= deinit_ivshmem_vdev,
 	.write_vdev_cfg	= write_ivshmem_vdev_cfg,
 	.read_vdev_cfg	= read_ivshmem_vdev_cfg,
 };
+/**
+ * @}
+ */
 #endif
