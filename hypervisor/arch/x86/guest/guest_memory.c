@@ -65,7 +65,6 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 	int32_t ret = 0;
 	int32_t fault = 0;
 	bool is_user_mode_addr = true;
-	bool is_page_rw_flags_on = true;
 
 	if (pw_info->level < 1U) {
 		ret = -EINVAL;
@@ -108,7 +107,6 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 						 * Case2: Usermode */
 						fault = 1;
 					}
-					is_page_rw_flags_on = false;
 				}
 			}
 
@@ -142,34 +140,8 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 		 */
 		/* if smap is enabled and supervisor-mode access */
 		if ((fault == 0) && pw_info->is_smap_on && (!pw_info->is_user_mode_access) &&
-			is_user_mode_addr) {
-			bool acflag = ((vcpu_get_rflags(vcpu) & RFLAGS_AC) != 0UL);
-
-			/* read from user mode address, eflags.ac = 0 */
-			if ((!pw_info->is_write_access) && (!acflag)) {
-				fault = 1;
-			} else if (pw_info->is_write_access) {
-				/* write to user mode address */
-
-				/* cr0.wp = 0, eflags.ac = 0 */
-				if ((!pw_info->wp) && (!acflag)) {
-					fault = 1;
-				}
-
-				/* cr0.wp = 1, eflags.ac = 1, r/w flag is 0
-				 * on any paging structure entry
-				 */
-				if (pw_info->wp && acflag && (!is_page_rw_flags_on)) {
-					fault = 1;
-				}
-
-				/* cr0.wp = 1, eflags.ac = 0 */
-				if (pw_info->wp && (!acflag)) {
-					fault = 1;
-				}
-			} else {
-				/* do nothing */
-			}
+			is_user_mode_addr && ((vcpu_get_rflags(vcpu) & RFLAGS_AC) == 0UL)) {
+			fault = 1;
 		}
 
 		/* instruction fetch from user-mode address, smep on */
