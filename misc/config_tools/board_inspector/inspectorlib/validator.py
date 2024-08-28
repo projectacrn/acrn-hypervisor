@@ -7,7 +7,7 @@
 
 import sys, os
 import argparse
-import lxml.etree as etree
+from defusedxml.lxml import parse
 import logging
 import xmlschema
 
@@ -18,7 +18,7 @@ logging_fn = {
 }
 
 def validate_board(xsd_path, board_etree):
-    schema_etree = etree.parse(xsd_path)
+    schema_etree = parse(xsd_path)
     schema_etree.xinclude()
     schema = xmlschema.XMLSchema11(schema_etree)
 

@@ -6,7 +6,7 @@
 import os
 import sys
 import copy
-import lxml.etree as etree
+from defusedxml.lxml import parse, tostring
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'hv_config'))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'acpi_gen'))
@@ -100,9 +100,9 @@ def validate_scenario_schema(scenario_info):
     XMLSchema does not process XInclude.
     Use lxml to expand the schema which is feed to XMLSchema as a string.
     """
-    xsd_doc = etree.parse(acrn_config_utilities.SCENARIO_SCHEMA_FILE)
+    xsd_doc = parse(acrn_config_utilities.SCENARIO_SCHEMA_FILE)
     xsd_doc.xinclude()
-    my_schema = xmlschema.XMLSchema11(etree.tostring(xsd_doc, encoding="unicode"))
+    my_schema = xmlschema.XMLSchema11(tostring(xsd_doc, encoding="unicode"))
 
     it = my_schema.iter_errors(scenario_info)
     for idx, validation_error in enumerate(it, start=1):
@@ -124,12 +124,12 @@ def validate_scenario_schema(scenario_info):
             scenario_cfg_lib.ERR_LIST[key] = element + reason
 
 def apply_data_checks(board_info, scenario_info):
-    xsd_doc = etree.parse(acrn_config_utilities.DATACHECK_SCHEMA_FILE)
+    xsd_doc = parse(acrn_config_utilities.DATACHECK_SCHEMA_FILE)
     xsd_doc.xinclude()
-    datachecks_schema = xmlschema.XMLSchema11(etree.tostring(xsd_doc, encoding="unicode"))
+    datachecks_schema = xmlschema.XMLSchema11(tostring(xsd_doc, encoding="unicode"))
 
-    main_etree = etree.parse(board_info)
-    scenario_etree = etree.parse(scenario_info)
+    main_etree = parse(board_info)
+    scenario_etree = parse(scenario_info)
     main_etree.getroot().extend(scenario_etree.getroot()[:])
     # FIXME: Figure out proper error keys for data check failures
     error_key = ""

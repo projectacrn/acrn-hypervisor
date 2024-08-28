@@ -9,7 +9,7 @@ import sys, os, re, argparse, shutil, ctypes
 from acpi_const import *
 import board_cfg_lib, acrn_config_utilities
 import collections
-import lxml.etree
+from defusedxml.lxml import parse
 from acrn_config_utilities import get_node
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'board_inspector'))
@@ -861,11 +861,11 @@ def main(args):
     scenario= params['--scenario']
     out = params['--out']
 
-    board_etree = lxml.etree.parse(board)
+    board_etree = parse(board)
     board_root = board_etree.getroot()
-    scenario_etree = lxml.etree.parse(scenario)
+    scenario_etree = parse(scenario)
     scenario_root = scenario_etree.getroot()
-    allocation_etree = lxml.etree.parse(os.path.join(os.path.dirname(board), "configs", "allocation.xml"))
+    allocation_etree = parse(os.path.join(os.path.dirname(board), "configs", "allocation.xml"))
     board_type = board_root.attrib['board']
     scenario_name = scenario_root.attrib['scenario']
     pcpu_list = board_root.find('CPU_PROCESSOR_INFO').text.strip().split(',')

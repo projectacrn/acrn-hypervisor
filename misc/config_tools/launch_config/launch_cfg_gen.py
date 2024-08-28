@@ -16,7 +16,7 @@ import argparse
 
 import logging
 
-import lxml.etree as etree
+from defusedxml.lxml import parse
 
 
 def eval_xpath(element, xpath, default_value=None):
@@ -434,8 +434,8 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
 
 
 def main(board_xml, scenario_xml, user_vm_id, out_dir):
-    board_etree = etree.parse(board_xml)
-    scenario_etree = etree.parse(scenario_xml)
+    board_etree = parse(board_xml)
+    scenario_etree = parse(scenario_xml)
 
     service_vm_id = eval_xpath(scenario_etree, "//vm[load_order = 'SERVICE_VM']/@id")
     service_vm_name = eval_xpath(scenario_etree, "//vm[load_order = 'SERVICE_VM']/name/text()")

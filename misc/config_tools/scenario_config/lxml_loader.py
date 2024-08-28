@@ -5,7 +5,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-from lxml.etree import parse, XMLParser
+from lxml.etree import XMLParser
+from defusedxml.lxml import parse
 from pipeline import PipelineStage
 
 class LXMLLoadStage(PipelineStage):
