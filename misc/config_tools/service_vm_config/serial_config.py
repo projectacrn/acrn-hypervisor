@@ -8,7 +8,7 @@ import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 
 import argparse
-import lxml.etree
+from defusedxml.lxml import parse
 import acrn_config_utilities
 from acrn_config_utilities import get_node
 
@@ -41,8 +41,8 @@ def main(args):
     Generate serial configuration file for service VM
     :param args: command line args
     """
-    scenario_etree = lxml.etree.parse(args.scenario)
-    allocation_etree = lxml.etree.parse(args.allocation)
+    scenario_etree = parse(args.scenario)
+    allocation_etree = parse(args.allocation)
     vuart_target_vmid = {}
 
     vm_list = scenario_etree.xpath("//vm[load_order = 'SERVICE_VM']")
