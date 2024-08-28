@@ -227,7 +227,7 @@ Here are descriptions for each of these ``acrn-dm`` command-line parameters:
 
 ----
 
-``--acpidev_pt <HID>[,<UID>]``
+``--acpidev_pt <HID>[,uid=<UID>,type=<Resource Type>,<Resouece config>,...]``
    Enable ACPI device passthrough support. The ``HID`` is a
    mandatory parameter and is the Hardware ID of the ACPI
    device.
@@ -235,12 +235,52 @@ Here are descriptions for each of these ``acrn-dm`` command-line parameters:
    The ``UID`` is an option and used to specify an instance of the
    HID device, the default is 00.
 
+   The  ``type`` is the type of the ACPI device owned resource.
+   The available options for this parameter are ``irq``, ``memory`` and
+   ``io_port``.
+
+   For different types:
+
+   - ``irq`` require ``irq=<IRQ>`` as mandatory parameter which is the
+     IRQ used by ACPI device. ``polarity=<POLARITY>`` and
+     ``trigger_mode=<TRIGGER_MODE>`` are options to specify interrupt
+     attributes.
+   
+   - ``memory`` require ``min=<MIN>`` and ``len=<LENGTH>`` as mandatory
+     parameter which is the base address and the length of MMIO region of
+     ACPI device.
+   
+   - ``io_port`` require ``min=<MIN>`` and ``len=<LENGTH>`` as mandatory
+     parameter which is the base address and the length of PIO region of
+     ACPI device.
+
    Example::
 
       --acpidev_pt MSFT0101,00
 
    to pass through a TPM (HID is MSFT0101 and UID is 00) ACPI device to
    a User VM.
+
+   ::
+
+      --acpidev_pt PNP0501,uid=19,type=io_port,min=0x2f8,len=8
+      --acpidev_pt PNP0501,uid=19,type=irq,irq=3
+   
+   to pass through a UART (HID is PNP0501 and UID is 19) ACPI device to
+   a User VM, with PIO region of base address 0x2F8 and length 8, and IRQ
+   of number 3.
+
+   ::
+
+      --acpidev_pt INTC1055,type=irq,irq=14,polarity=3,trigger_mode=3
+      --acpidev_pt INTC1055,type=memory,min=0xfd6e0000,len=0x10000
+      --acpidev_pt INTC1055,type=memory,min=0xfd6d0000,len=0x10000
+      --acpidev_pt INTC1055,type=memory,min=0xfd6a0000,len=0x10000
+      --acpidev_pt INTC1055,type=memory,min=0xfd690000,len=0x10000
+   
+   to pass through a GPIO controller (HID is INTC1055 and UID is 00) ACPI
+   device to a User VM, with its four MMIO regions and IRQ which specifes
+   polarity and trigger mode.
 
 ----
 
