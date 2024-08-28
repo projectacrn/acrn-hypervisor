@@ -56,7 +56,7 @@ options:
                [-l lpc] [-m mem] [-r ramdisk_image_path]
                [-s pci] [--ovmf ovmf_file_path]
                [--enable_trusty] [--intr_monitor param_setting]
-               [--acpidev_pt HID[,UID]] [--mmiodev_pt MMIO_regions]
+               [--acpidev_pt HID] [--mmiodev_pt MMIO_regions]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
                [--cpu_affinity lapic_ids] [--lapic_pt] [--rtvm] [--windows]
                [--debugexit] [--logger-setting param_setting]
@@ -75,13 +75,14 @@ options:
        --ovmf: ovmf file path
        --ssram: Enable Software SRAM
        --cpu_affinity: comma-separated of Service VM vCPUs assigned to this VM. A Service VM vCPU is
-            identified by its lapic ID.\n"
+            identified by its lapic ID.
        --enable_trusty: enable trusty for guest
        --debugexit: enable debug exit function
        --intr_monitor: enable interrupt storm monitor
             its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms),
        --virtio_poll: enable virtio poll mode with poll interval with ns
-       --acpidev_pt: ACPI device ID args: HID,UID from the ACPI tables
+       --acpidev_pt: ACPI device pass through
+            its params: HID[,uid=UID,type=Resource Type,Resouece config,...]
        --mmiodev_pt: MMIO resources args: physical MMIO regions
        --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET
        --lapic_pt: enable local apic passthrough
@@ -1202,4 +1203,5 @@ Passthrough in Device Model
 
 Refer to :ref:`hv-device-passthrough` for passthrough realization
 in the Device Model and :ref:`mmio-device-passthrough` for MMIO passthrough
+realization and :ref:`acpi-device-passthrough` for ACPI device passthrough
 realization in the Device Model and ACRN hypervisor.
