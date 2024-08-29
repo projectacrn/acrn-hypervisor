@@ -29,6 +29,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -93,6 +94,8 @@ static struct {
 	{ COM4_BASE, COM4_IRQ, false},
 	{ COM5_BASE, COM5_IRQ, false},
 };
+
+static bool stdio_ctrl_a_pressed = false;
 
 #define	UART_NLDEVS	(ARRAY_SIZE(uart_lres))
 
@@ -717,6 +720,18 @@ uart_backend_read(struct uart_backend *be)
 
 	switch (be->be_type) {
 	case UART_BE_STDIO:
+		rc = read(be->fd, &rb, 1);
+		if (rb == 0x01) {  // Ctrl-a
+			DPRINTF(("%s: Got Ctrl-a\n", __func__));
+			stdio_ctrl_a_pressed = true;
+		} else if (stdio_ctrl_a_pressed) {
+			if (rb == 'x') {
+				DPRINTF(("%s: Got Ctrl-a x\n", __func__));
+				kill(getpid(), SIGINT);
+			}
+			stdio_ctrl_a_pressed = false;
+		}
+		break;
 	case UART_BE_TTY:
 		/* fd is used to read */
 		rc = read(be->fd, &rb, 1);
