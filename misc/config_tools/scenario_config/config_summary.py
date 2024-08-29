@@ -448,7 +448,9 @@ class GenerateRst:
 
     # Close the Rst file after all information is written.
     def close_file(self):
-        self.file.close()
+        if self.file:
+            self.service_vm_used_pcpu_list.clear()
+            self.file.close()
 
 
 def main(board_xml, scenario_xml, config_summary):
