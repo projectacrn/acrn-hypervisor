@@ -118,6 +118,20 @@ higher value (lower severity) are discarded.</xs:documentation>
   </xs:restriction>
 </xs:simpleType>
 
+<xs:simpleType name="RegWidthType">
+  <xs:annotation>
+    <xs:documentation>Register width should be 1 or 4.</xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="1">
+      <xs:annotation acrn:title="1" />
+    </xs:enumeration>
+    <xs:enumeration value="4">
+      <xs:annotation acrn:title="4" />
+    </xs:enumeration>
+  </xs:restriction>
+</xs:simpleType>
+
 <xs:simpleType name="SchedulerType">
   <xs:annotation>
     <xs:documentation>A string specifying the scheduling option:

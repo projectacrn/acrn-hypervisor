@@ -47,7 +47,7 @@ static struct console_uart uart = {
 	.enabled = true,
 	.type = MMIO,
 	.mmio_base_vaddr = (void *)CONFIG_SERIAL_MMIO_BASE,
-	.reg_width = 1,
+	.reg_width = CONFIG_SERIAL_MMIO_REG_WIDTH,
 };
 #endif
 
@@ -292,7 +292,11 @@ void uart16550_set_property(bool enabled, enum serial_dev_type uart_type, uint64
 		uart.reg_width = 4;
 	} else if (uart_type == MMIO) {
 		uart.mmio_base_vaddr = (void *)data;
-		uart.reg_width = 1;
+		#if defined(CONFIG_SERIAL_MMIO_BASE)
+		    uart.reg_width = CONFIG_SERIAL_MMIO_REG_WIDTH;
+		#else
+		    uart.reg_width = 1;
+		#endif
 	}
 }
 

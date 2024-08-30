@@ -19,6 +19,13 @@
         <xs:documentation>Select the host serial device used for hypervisor debugging.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="SERIAL_MMIO_REG_WIDTH" type="RegWidthType" default="1" minOccurs="0">
+      <xs:annotation acrn:title="Default register width for serial MMIO"
+                     acrn:views="basic"
+                     acrn:hidden="//TTYS_INFO/text(),mmio">
+        <xs:documentation>Select the default register width for serial MMIO. Value can be changed at runtime.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="MEM_LOGLEVEL" type="LogLevelType" default="5">
       <xs:annotation acrn:title="ACRN log level" acrn:views="basic">
         <xs:documentation>Select the default log level for log messages stored in memory. Value can be changed at runtime. Log messages with the selected value or lower are displayed.</xs:documentation>

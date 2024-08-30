@@ -371,6 +371,22 @@ class XS2JS:
                     else:
                         js_ele['enum'] = dynamic_enum
 
+                # dynamic serial
+                if '@acrn:hidden' in annotation:
+                    xpath, serial_cat = annotation['@acrn:hidden'].split(',')
+                    if 'dynamicSerial' in self.features:
+                        dynamic_serial = {
+                            'type': 'dynamicSerial',
+                            'function': 'get_serial',
+                            'source': 'board_xml',
+                            'selector': xpath.strip(),
+                            'serial_cat': serial_cat.strip(),
+                        }
+                        if 'items' in js_ele:
+                            js_ele['items']['hidden'] = dynamic_serial
+                        else:
+                            js_ele['hidden'] = dynamic_serial
+
                 # widget and its options
                 self.convert_widget_config(annotation, js_ele)
 
@@ -424,6 +440,7 @@ def main():
     features = []
     if not stand_json_schema:
         features.append('dynamicEnum')
+        features.append('dynamicSerial')
     json_schema = XS2JS(schema_file, features).get_json_schema()
     json_schema = json.dumps(json_schema, indent='\t')
 

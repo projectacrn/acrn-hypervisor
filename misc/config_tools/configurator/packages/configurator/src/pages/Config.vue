@@ -141,7 +141,8 @@ export default {
       totalMsg: "",
       showTotalMessageFlag: false,
       isSaved:false,
-      isLoaded:false
+      isLoaded:false,
+      serial_console: '',
     }
   },
   computed: {
@@ -350,9 +351,28 @@ export default {
             }
           })
     },
+    getOption(serial_cat){
+        return this.schemas.HV.BasicConfigType.definitions.DebugOptionsType.properties[serial_cat]['hidden']
+    },
+    showOption(serial_cat, show){
+        this.schemas.HV.BasicConfigType.definitions.DebugOptionsType.properties[serial_cat]["ui:hidden"]=!show
+    },
     scenarioConfigFormDataUpdate(vmid, data) {
       if (vmid === -1) {
         this.scenario.hv = data
+        this.serial_console = this.scenario.hv.DEBUG_OPTIONS.SERIAL_CONSOLE
+        let cats = this.getOption('SERIAL_MMIO_REG_WIDTH')
+        if(cats.length==0){
+            this.showOption('SERIAL_MMIO_REG_WIDTH',false)
+        }
+        for(let c of cats){
+            if(this.serial_console===c){
+                this.showOption('SERIAL_MMIO_REG_WIDTH',true)
+                break
+            }else{
+                this.showOption('SERIAL_MMIO_REG_WIDTH',false)
+            }
+        }
       } else {
         this.scenario.vm.map((vmConfig, vmIndex) => {
           if (vmConfig['@id'] === vmid) {
