@@ -74,8 +74,7 @@ struct acrn_vrtc {
 	struct rtcdev	rtcdev; /**< Register layout of RTC. */
 };
 
-#endif /* VRTC_H */
-
 /**
  * @}
  */
+#endif /* VRTC_H */
