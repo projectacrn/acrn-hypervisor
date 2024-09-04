@@ -181,6 +181,7 @@ struct acrn_vm {
 	struct acrn_vrtc vrtc;
 
 	uint64_t intr_inject_delay_delta; /* delay of intr injection */
+	uint32_t reset_control;
 } __aligned(PAGE_SIZE);
 
 /*
