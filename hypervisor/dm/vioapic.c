@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2013 Tycho Nightingale <tycho.nightingale@pluribusnetworks.com>
  * Copyright (c) 2013 Neel Natu <neel@freebsd.org>
- * Copyright (c) 2017-2022 Intel Corporation.
+ * Copyright (c) 2017-2024 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,11 +37,32 @@
 #include <logmsg.h>
 #include <asm/ioapic.h>
 
+/**
+ * @addtogroup vp-dm_vioapic
+ *
+ * @{
+ */
+
+/**
+ * @file
+ * @brief Implementation of the virtual I/O APIC.
+ *
+ * This file contains the implementation of the virtual I/O APIC. It also defines some helper functions to simulate
+ * the virtual I/O APIC that are commonly used in this file.
+ */
+
 #define	RTBL_RO_BITS	((uint32_t)0x00004000U | (uint32_t)0x00001000U) /*Remote IRR and Delivery Status bits*/
 
 #define DBG_LEVEL_VIOAPIC	6U
 #define ACRN_IOAPIC_VERSION	0x11U
 
+/**
+ * @brief The default definition of a RTE.
+ *
+ * It emulates the virtual I/O APIC as a "82093AA I/O Advanced Programmable Interrupt Controller". Per spec, the default
+ * value of the redirection table entry (RTE) is xxx1xxxxxxxxxxxxh. The 'mask' (bit 16) is also set to mask the
+ * interrupt.
+ */
 #define MASK_ALL_INTERRUPTS   0x0001000000010000UL
 
 static inline struct acrn_vioapics *vm_ioapics(const struct acrn_vm *vm)
@@ -137,19 +158,37 @@ vgsi_to_vioapic_and_vpin(const struct acrn_vm *vm, uint32_t vgsi, uint32_t *vpin
 }
 
 /**
- * @brief Set vIOAPIC IRQ line status.
+ * @brief Set virtual I/O APIC IRQ line status for the specified GSI.
  *
- * Similar with vioapic_set_irqline_lock(),but would not make sure
- * operation be done with ioapic lock.
+ * This function sets the corresponding IRQ line status but would not make sure the set be done with I/O APIC lock. It
+ * will assert or deassert the IRQ.
  *
- * @param[in] vm        Pointer to target VM
- * @param[in] vgsi   	Target GSI number
- * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
- *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
+ * The operation option is limited to one of GSI_SET_HIGH/GSI_SET_LOW/GSI_RAISING_PULSE/GSI_FALLING_PULSE. Otherwise,
+ * it does nothing.
+ * It first gets the corresponding virtual I/O APIC and pin number (index in the Redirection Table) based on the input
+ * GSI number.
+ * - For the Service VM, it utilizes the platform I/O APIC information to get the virtual I/O APIC and the pin number.
+ * - For other VMs, it directly uses virtual I/O APIC 0 and the GSI number as the pin number.
+ * It sets the corresponding pin state based on the input operation option.
+ * - GSI_SET_HIGH: Set corresponding pin state to high.
+ * - GSI_SET_LOW: Set corresponding pin state to low.
+ * - GSI_RAISING_PULSE: Set corresponding pin state to high and then to low.
+ * - GSI_FALLING_PULSE: Set corresponding pin state to low and then to high.
+ * After every set operation, it checks the polarity of the corresponding RTE and the other conditions to determine
+ * whether to generate an interrupt. If the polarity is active, the RTE is not masked, and the remote irr bit is
+ * cleared, it generates an interrupt and deliver the interrupt to the local APIC. For detailed local APIC operation,
+ * see vlapic_receive_intr().
  *
- * @pre vgsi < get_vm_gsicount(vm)
- * @pre vm != NULL
+ * @param[inout] vm Pointer to the VM for which the virtual I/O APIC IRQ line status is set.
+ * @param[in] vgsi The GSI number to locate the virtual I/O APIC and the offset in the Redirection Table (RT).
+ * @param[in] operation The action option to set the virtual I/O APIC IRQ line status.
+ *
  * @return None
+ *
+ * @pre vm != NULL
+ * @pre vgsi < get_vm_gsicount(vm)
+ *
+ * @post N/A
  */
 void
 vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t operation)
@@ -183,15 +222,27 @@ vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t ope
 }
 
 /**
- * @brief Set vIOAPIC IRQ line status.
+ * @brief Set IRQ line status with I/O APIC lock for the specified GSI.
  *
- * @param[in] vm        Pointer to target VM
- * @param[in] vgsi  	Target GSI number
- * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
- *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
+ * This function sets the corresponding IRQ line status with the I/O APIC lock. It will assert or deassert the IRQ.
  *
- * @pre vgsi < get_vm_gsicount(vm)
+ * It first gets the corresponding virtual I/O APIC and pin number (index in the Redirection Table) based on the input
+ * GSI number.
+ * - For the Service VM, it utilizes the platform I/O APIC information to get the virtual I/O APIC and the pin number.
+ * - For other VMs, it directly uses virtual I/O APIC 0 and the GSI number as the pin number.
+ * It sets the IRQ line status witch the virtual I/O APIC lock. For detailed set operation, see
+ * vioapic_set_irqline_nolock().
+ *
+ * @param[inout] vm Pointer to the VM for which the virtual I/O APIC IRQ line status is set.
+ * @param[in] vgsi The GSI number to locate the virtual I/O APIC and the offset in the Redirection Table (RT).
+ * @param[in] operation The action option to set the virtual I/O APIC IRQ line status.
+ *
+ * @return None
+ *
  * @pre vm != NULL
+ * @pre vgsi < get_vm_gsicount(vm)
+ *
+ * @post N/A
  */
 void
 vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t operation)
@@ -370,7 +421,6 @@ static void vioapic_indirect_write(struct acrn_single_vioapic *vioapic, uint32_t
 			if ((new.bits.intr_mask == IOAPIC_RTE_MASK_CLR) || (last.bits.intr_mask  == IOAPIC_RTE_MASK_CLR)) {
 				/* VM enable intr */
 				/* NOTE: only support max 256 pin */
-				
 				(void)ptirq_intx_pin_remap(vioapic->vm, vioapic->chipinfo.gsi_base + pin, INTX_CTLR_IOAPIC);
 			}
 
@@ -480,6 +530,28 @@ vioapic_process_eoi(struct acrn_single_vioapic *vioapic, uint32_t vector)
 	spinlock_irqrestore_release(&(vioapic->lock), rflags);
 }
 
+/**
+ * @brief Broadcasts End of Interrupt (EOI) message to all virtual I/O APICs in the VM.
+ *
+ * This function is used to emulate the behavior of broadcasting an EOI message from the Local APIC (LAPIC) to all I/O
+ * APICs in the specified VM. It is typically called when the LAPIC receives an EOI command and broadcasts the EOI
+ * message to all virtual I/O APICs for a level triggered interrupt.
+ *
+ * It iterates through all virtual I/O APICs in the specified VM, and EOI message is valid only for the RTEs with the
+ * same vector as the specified vector and the remote IRR bit is set.
+ * For a pass-through device, it deasserts the pin level to make the interrupt inactive and unmask the corresponding
+ * RTE. For detailed operations, see ptirq_intx_ack().
+ * It clears the remote IRR bit of the corresponding RTE and generates an interrupt if the pin level is asserted.
+ *
+ * @param[inout] vm Pointer to the VM for which the EOI message is broadcast to.
+ * @param[in] vector The vector within the EOI message to be broadcast.
+ *
+ * @return None
+ *
+ * @pre vm != NULL
+ *
+ * @post N/A
+ */
 void vioapic_broadcast_eoi(const struct acrn_vm *vm, uint32_t vector)
 {
 	struct acrn_single_vioapic *vioapic;
@@ -509,6 +581,24 @@ static void reset_one_vioapic(struct acrn_single_vioapic *vioapic)
 	vioapic->ioregsel = 0U;
 }
 
+/**
+ * @brief Reset all virtual I/O APICs for a given VM.
+ *
+ * This function resets all virtual I/O APICs for a given VM. It reinitializes the state of each virtual IOAPIC to its
+ * default state. This function is typically called during VM reset.
+ *
+ * It iterates over all virtual I/O APICs of the specified VM and resets each virtual I/O APIC to its default state.
+ * Per spec, it initializes every redirection table entry (RTE) to the default value which is 0x0001000000000000. And
+ * it masks the interrupt by setting the 'mask' (bit 16).
+ *
+ * @param[inout] vm Pointer to the VM for which the virtual IOAPICs are to be reset.
+ *
+ * @return None
+ *
+ * @pre vm != NULL
+ *
+ * @post N/A
+ */
 void reset_vioapics(const struct acrn_vm *vm)
 {
 	struct acrn_vioapics *vioapics = vm_ioapics(vm);
@@ -522,6 +612,36 @@ void reset_vioapics(const struct acrn_vm *vm)
 	}
 }
 
+/**
+ * @brief Initialize all virtual I/O APICs for a given VM.
+ *
+ * This function initializes all virtual I/O APICs for a given VM. It sets up the necessary data structures and
+ * resources for the virtual I/O APICs to function properly within the VM. This function is usually called during the
+ * initialization of the VM.
+ *
+ * This function emulates every virtual I/O APIC as a "82093AA I/O Advanced Programmable Interrupt Controller" and all
+ * virtual I/O APICs are stored in the VM data structure (vm->arch_vm.vioapics).
+ * Different VMs, different emulated I/O APIC information:
+ * - For the Service VM, the number of virtual I/O APICs is determined by the platform and the I/O APIC information is
+ *   retrieved from the platform.
+ * - Otherwise, only one virtual I/O APIC is emulated for the VM. The number of redirection table entries (RTEs) is set
+ *   to 48 and the default base address of the virtual I/O APIC is set to 0xFEC00000.
+ * And for every virtual I/O APIC:
+ * - Per spec, it initializes every redirection table entry (RTE) to the default value which is 0x0001000000000000. And
+ *   it masks the interrupt by setting the 'mask' (bit 16).
+ * - It registers the MMIO emulation handler for all the registers and remove the EPT mapping for the registers address
+ *   range.
+ * The GSI of a RTE is computed as the GSI base of the I/O APIC plus the RTE index (IRQ number). It sets the maximum
+ * number of GSI as the GSI base of the last I/O APIC plus the number of interrupt pins of that I/O APIC.
+ *
+ * @param[inout] vm Pointer to the VM for which the virtual I/O APICs are to be initialized.
+ *
+ * @return None
+ *
+ * @pre vm != NULL
+ *
+ * @post N/A
+ */
 void
 vioapic_init(struct acrn_vm *vm)
 {
@@ -563,14 +683,76 @@ vioapic_init(struct acrn_vm *vm)
 	}
 }
 
+/**
+ * @brief Get the maximum number of GSI for a given VM.
+ *
+ * This function returns the maximum number of GSI that the VM can support.
+ *
+ * It returns the maximum number of GSI of the given VM. The value is computed during the initialization of all the
+ * virtual I/O APICs for the VM. For details, see vioapic_init().
+ *
+ * @param[in] vm Pointer to the VM for which the GSI count is to be retrieved.
+ *
+ * @return An unsigned integer value that indicates the GSI count of the given VM.
+ *
+ * @pre vm != NULL
+ *
+ * @post retval >= 0
+ */
 uint32_t
 get_vm_gsicount(const struct acrn_vm *vm)
 {
 	return vm->arch_vm.vioapics.nr_gsi;
 }
 
-/*
+/**
+ * @brief Handle MMIO (Memory-Mapped I/O) access for the virtual I/O APIC.
+ *
+ * This function handles MMIO (Memory-Mapped I/O) read and write operations for the virtual I/O APIC registers. The I/O
+ * APIC is accessed using an indirect addressing scheme. This function is typically called when the guest performs MMIO
+ * operations on the virtual I/O APIC.
+ *
+ * All operations must follow the operation rules of the 82093AA I/O APIC spec.
+ * It will do nothing and return -EINVAL if the access size is not 32 bits or the operation is not read or write.
+ * - For a read operation:
+ *   - If the offset is IOAPIC_REGSEL (Index Register), it will return the value of the index register.
+ *   - If the offset is IOAPIC_WINDOW (Data Register), and according to the index register cached in the last write, the
+ *     operation will have different behaviors:
+ *     - If the index is in the range of ACPI Indriect Registers (including ID Register, Version Register, Arbitration
+ *       ID Register, Redirection Table Register, and Redirection Table), the read operation is emulated and the return
+ *       value is set to corresponding value. And if the trigger mode is level sensitive and LAPIC passthrough is
+ *       configured, the remote irr bit is updated from physical IOAPIC RTE for a pass-through device.
+ *     - Otherwise, the return value is set to 0.
+ *   - For other offsets, the read operation is invalid and the return value is set to 0xFFFFFFFF.
+ *   - It stores the return value of the read in input MMIO request structure.
+ * - For a write operation:
+ *   - If the offset is IOAPIC_REGSEL (Index Register), it will store the value as the register index to be accessed.
+ *   - If the offset is IOAPIC_WINDOW (Data Register), and according to the index register cached in the last write,
+ *     - it updates the virtual ID register if the index is IOAPIC_ID (ID Register);
+ *     - it updates the redirection table entry if the index is in the range of IOAPIC_REDTBL (Redirection Table
+ *       Register).
+ *       - Some OSes simulate EOI message manually using mask+edge followed by unmask+level, so it clears the remote irr
+ *         bit if the trigger mode is edge sensitive.
+ *       - It adds the virtual GSI to physical GSI mapping for the Service VM if the write RTE is unmasked or the
+ *         previous RTE is unmasked. For detailed operation, see ptirq_intx_pin_remap().
+ *       - If the RTE is not masked, the remote irr bit is cleared and the pin level is asserted, it generates an
+ *         interrupt and delivers it to the local APIC. For detailed local APIC operation, see vlapic_receive_intr().
+ *   - For other offsets, it ignores the write operation to indicate that the offset is read-only or reserved.
+ * Finally, the function returns 0 to indicate that the MMIO operation is successful.
+ *
+ * @param[inout] io_req Pointer to the I/O request structure that contains the MMIO request information. For a read
+ * 			operation, the read value is stored in this structure.
+ * @param[inout] handler_private_data Pointer to the acrn_single_vioapic structure that is treated as an I/O APIC.
+ *
+ * @return An integer value that indicates the status of the MMIO operation.
+ *
+ * @retval -EINVAL If the access size is not 32 bits or the operation is not read or write.
+ * @retval 0 The MMIO operation is successful.
+ *
+ * @pre io_req != NULL
  * @pre handler_private_data != NULL
+ *
+ * @post retval <= 0
  */
 int32_t vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
@@ -600,9 +782,29 @@ int32_t vioapic_mmio_access_handler(struct io_request *io_req, void *handler_pri
 }
 
 /**
+ * @brief Retrieves the Redirection Table Entry (RTE) for a specified GSI.
+ *
+ * This function is used to get the RTE for a specific GSI in the virtual I/O APIC. The RTE information is used to
+ * translate the interrupt manifestation on the corresponding interrupt pin into an APIC message.
+ *
+ * It first gets the corresponding virtual I/O APIC and pin number (index in the Redirection Table) based on the input
+ * GSI number.
+ * - For the Service VM, it utilizes the platform I/O APIC information to get the virtual I/O APIC and the pin number.
+ * - For other VMs, it directly uses virtual I/O APIC 0 and the GSI number as the pin number.
+ * Finally it retrieves the RTE for the pin and stores it in the provided rte parameter.
+ *
+ * @param[inout] vm Pointer to the VM for which the RTE is to be retrieved.
+ * @param[in] vgsi The GSI number to locate the virtual I/O APIC and the offset in the Redirection Table (RT).
+ * @param[out] rte Pointer to the variable where the RTE will be stored.
+ *
+ * @return None
+ *
+ * @pre vm != NULL
  * @pre vm->arch_vm.vioapics != NULL
  * @pre vgsi < get_vm_gsicount(vm)
  * @pre rte != NULL
+ *
+ * @post N/A
  */
 void vioapic_get_rte(const struct acrn_vm *vm, uint32_t vgsi, union ioapic_rte *rte)
 {
@@ -612,3 +814,7 @@ void vioapic_get_rte(const struct acrn_vm *vm, uint32_t vgsi, union ioapic_rte *
 
 	*rte = vioapic->rtbl[pin];
 }
+
+/**
+ * @}
+ */
