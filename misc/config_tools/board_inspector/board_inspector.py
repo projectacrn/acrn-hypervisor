@@ -11,6 +11,7 @@ import logging
 import tempfile
 import subprocess # nosec
 import lxml.etree
+from defusedxml.lxml import parse
 import argparse
 from tqdm import tqdm
 from collections import namedtuple
@@ -158,7 +159,7 @@ def main(board_name, board_xml, args):
             env = { "PYTHONPATH": script_dir, "PATH": os.environ["PATH"] }
             subprocess.run([sys.executable, legacy_parser, args.board_name, "--out", board_xml], check=True, env=env)
             # ... then load the created board XML and append it with additional data by invoking the extractors.
-            board_etree = lxml.etree.parse(board_xml)
+            board_etree = parse(board_xml)
             root_node = board_etree.getroot()
 
             # Clear the whitespaces between adjacent children under the root node
