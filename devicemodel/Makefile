@@ -129,6 +129,7 @@ SRCS += hw/platform/tpm/tpm_emulator.c
 SRCS += hw/platform/tpm/tpm_crb.c
 SRCS += hw/platform/tpm/tpm.c
 SRCS += hw/platform/uart.c
+SRCS += hw/platform/ith.c
 SRCS += hw/platform/debugexit.c
 SRCS += hw/pci/wdt_i6300esb.c
 SRCS += hw/pci/lpc.c
