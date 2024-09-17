@@ -15,7 +15,7 @@
 Makefile                                 @terryzouhao @NanlinXie
 /hypervisor/                             @dongyaozu @lifeix @junjiemao1
 /devicemodel/                            @ywan170 @chejianj
-/doc/                                    @dbkinder @NanlinXie
+/doc/                                    @NanlinXie
 /misc/debug_tools/acrn_crashlog/         @ywan170 @lifeix
 /misc/debug_tools/acrn_log/              @ywan170 @lifeix
 /misc/debug_tools/acrn_trace/            @ywan170 @lifeix
@@ -27,4 +27,4 @@ Makefile                                 @terryzouhao @NanlinXie
 /misc/packaging/                         @terryzouhao @NanlinXie
 /misc/hv_prebuild/                       @terryzouhao @NanlinXie
 
-*.rst                                    @dbkinder @NanlinXie
+*.rst                                    @NanlinXie
