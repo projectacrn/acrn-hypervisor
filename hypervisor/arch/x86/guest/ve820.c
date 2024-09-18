@@ -138,8 +138,6 @@ void create_service_vm_e820(struct acrn_vm *vm)
 {
 	uint16_t vm_id;
 	uint32_t i;
-	uint64_t hv_start_pa = hva2hpa((void *)(get_hv_image_base()));
-	uint64_t hv_end_pa  = hv_start_pa + get_hv_image_size();
 	uint32_t entries_count = get_e820_entries_count();
 	struct acrn_vm_config *service_vm_config = get_vm_config(vm->vm_id);
 
@@ -148,8 +146,6 @@ void create_service_vm_e820(struct acrn_vm *vm)
 
 	vm->e820_entry_num = entries_count;
 	vm->e820_entries = service_vm_e820;
-	/* filter out hv memory from e820 table */
-	filter_mem_from_service_vm_e820(vm, hv_start_pa, hv_end_pa);
 
 	/* filter out prelaunched vm memory from e820 table */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
