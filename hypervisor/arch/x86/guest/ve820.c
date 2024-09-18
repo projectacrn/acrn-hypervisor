@@ -139,7 +139,7 @@ void create_service_vm_e820(struct acrn_vm *vm)
 	uint16_t vm_id;
 	uint32_t i;
 	uint64_t hv_start_pa = hva2hpa((void *)(get_hv_image_base()));
-	uint64_t hv_end_pa  = hv_start_pa + get_hv_ram_size();
+	uint64_t hv_end_pa  = hv_start_pa + get_hv_image_size();
 	uint32_t entries_count = get_e820_entries_count();
 	struct acrn_vm_config *service_vm_config = get_vm_config(vm->vm_id);
 
