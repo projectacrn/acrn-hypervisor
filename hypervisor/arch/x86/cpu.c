@@ -503,7 +503,7 @@ void cpu_dead(void)
 		vmx_off();
 
 		stac();
-		flush_cache_range((void *)get_hv_image_base(), get_hv_ram_size());
+		flush_cache_range((void *)get_hv_image_base(), get_hv_image_size());
 		clac();
 
 		/* Set state to show CPU is dead */
