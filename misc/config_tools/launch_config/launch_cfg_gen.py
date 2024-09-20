@@ -303,12 +303,18 @@ def generate_for_one_vm(board_etree, hv_scenario_etree, vm_scenario_etree, vm_id
     for ivshmem in eval_xpath_all(vm_scenario_etree, f"//IVSHMEM_REGION[PROVIDED_BY = 'Device Model' and .//VM_NAME = '{vm_name}']"):
         vbdf = eval_xpath(ivshmem, f".//VBDF/text()")
         slot = get_slot_by_vbdf(vbdf)
-        script.add_virtual_device("ivshmem", slot, options=f"dm:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text}")
+        if ivshmem.find('IVSHMEM_REGION_ID') is not None:
+            script.add_virtual_device("ivshmem", slot, options=f"dm:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text},{ivshmem.find('IVSHMEM_REGION_ID').text}")
+        else:
+            script.add_virtual_device("ivshmem", slot, options=f"dm:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text},{0}")
 
     for ivshmem in eval_xpath_all(vm_scenario_etree, f"//IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor' and .//VM_NAME = '{vm_name}']"):
         vbdf = eval_xpath(ivshmem, f".//VBDF/text()")
         slot = get_slot_by_vbdf(vbdf)
-        script.add_virtual_device("ivshmem", slot, options=f"hv:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text}")
+        if ivshmem.find('IVSHMEM_REGION_ID') is not None:
+            script.add_virtual_device("ivshmem", slot, options=f"hv:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text},{ivshmem.find('IVSHMEM_REGION_ID').text}")
+        else:
+            script.add_virtual_device("ivshmem", slot,options=f"hv:/{ivshmem.find('NAME').text},{ivshmem.find('IVSHMEM_SIZE').text},{0}")
 
     if eval_xpath(vm_scenario_etree, ".//console_vuart/text()") == "PCI":
         script.add_virtual_device("uart", options="vuart_idx:0")
