@@ -122,7 +122,7 @@ vgsi_to_vioapic_and_vpin(const struct acrn_vm *vm, uint32_t vgsi, uint32_t *vpin
 	if (is_service_vm(vm)) {
 		/*
 		 * Utilize platform ioapic_info for Service VM
-		 */	
+		 */
 		vioapic_index = get_gsi_to_ioapic_index(vgsi);
 		if (vpin != NULL) {
 			*vpin = gsi_to_ioapic_pin(vgsi);
@@ -241,7 +241,9 @@ vioapic_indirect_read(struct acrn_single_vioapic *vioapic, uint32_t addr)
 		if ((addr_offset & 0x1U) != 0U) {
 			ret = vioapic->rtbl[pin].u.hi_32;
 		} else {
-			if (is_lapic_pt_configured(vioapic->vm) && (vioapic->rtbl[pin].bits.trigger_mode != 0UL)) {
+			/* RIRR is only used for level triggered interrupts and it's undefined for edge triggered. */
+			if (is_lapic_pt_configured(vioapic->vm) &&
+				(vioapic->rtbl[pin].bits.trigger_mode == IOAPIC_RTE_TRGRMODE_LEVEL)) {
 				/*
 				 * For local APIC passthrough case, EOI would not trigger VM-exit. So virtual
 				 * 'Remote IRR' would not be updated. Needs to read physical IOxAPIC RTE to
@@ -510,10 +512,13 @@ static void reset_one_vioapic(struct acrn_single_vioapic *vioapic)
 void reset_vioapics(const struct acrn_vm *vm)
 {
 	struct acrn_vioapics *vioapics = vm_ioapics(vm);
+	uint64_t rflags;
 	uint8_t vioapic_index;
 
 	for (vioapic_index = 0U; vioapic_index < vioapics->ioapic_num; vioapic_index++) {
+		spinlock_irqsave_obtain(&(vioapics->vioapic_array[vioapic_index].lock), &rflags);
 		reset_one_vioapic(&vioapics->vioapic_array[vioapic_index]);
+		spinlock_irqrestore_release(&(vioapics->vioapic_array[vioapic_index].lock), rflags);
 	}
 }
 
