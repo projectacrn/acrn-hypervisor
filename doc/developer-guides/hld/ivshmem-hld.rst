@@ -107,22 +107,23 @@ MMIO Registers Definition
      - 0x0
      - R/W
      - Interrupt Mask register is used for legacy interrupt.
-       ivshmem doesn't support interrupts, so this register is reserved.
+       IVSHMEM doesn't support legacy INTx interrupts, so this register
+       is reserved.
    * - IVSHMEM\_IRQ\_STA\_REG
      - 0x4
      - R/W
      - Interrupt Status register is used for legacy interrupt.
-       ivshmem doesn't support interrupts, so this register is reserved.
+       IVSHMEM doesn't support legacy INTx interrupts, so this register
+       is reserved.
    * - IVSHMEM\_IV\_POS\_REG
      - 0x8
      - RO
      - Inter-VM Position register is used to identify the VM ID.
-       Its value is zero.
+       Its value is equal to device ID.
    * - IVSHMEM\_DOORBELL\_REG
      - 0xC
      - WO
      - Doorbell register is used to trigger an interrupt to the peer VM.
-       ivshmem doesn't support interrupts.
 
 Usage
 *****
