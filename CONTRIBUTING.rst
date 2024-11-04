@@ -48,7 +48,7 @@ the TSC and its membership, are described in the project's `technical-charter`_.
 
 These are the current TSC voting members and chair person:
 
-- Junjie Mao (chair): junjie.mao@intel.com
+- Yu Wang (chair): yu1.wang@intel.com
 - Helmut Buchsbaum: helmut.buchsbaum@tttech-industrial.com
 - Thomas Gleixner: thomas.gleixner@intel.com
 
