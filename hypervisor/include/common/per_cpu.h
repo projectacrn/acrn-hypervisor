@@ -62,8 +62,8 @@ struct per_cpu_region {
 	 * to avoid contention between offline_vcpu and posted interrupt handler
 	 */
 	struct acrn_vcpu *vcpu_array[CONFIG_MAX_VM_NUM] __aligned(8);
-#ifdef HV_DEBUG
 	struct shared_buf *sbuf[ACRN_SBUF_PER_PCPU_ID_MAX];
+#ifdef HV_DEBUG
 	char logbuf[LOG_MESSAGE_MAX_SIZE];
 	uint32_t npk_log_ref;
 #endif

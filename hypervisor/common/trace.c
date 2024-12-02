@@ -9,10 +9,7 @@
 #include <ticks.h>
 #include <trace.h>
 
-#define TRACE_CUSTOM			0xFCU
-#define TRACE_FUNC_ENTER		0xFDU
-#define TRACE_FUNC_EXIT			0xFEU
-#define TRACE_STR			0xFFU
+#ifdef CONFIG_ACRNTRACE_ENABLED
 
 /* sizeof(trace_entry) == 4 x 64bit */
 struct trace_entry {
@@ -41,11 +38,7 @@ struct trace_entry {
 
 static inline bool trace_check(uint16_t cpu_id)
 {
-	if (per_cpu(sbuf, cpu_id)[ACRN_TRACE] == NULL) {
-		return false;
-	}
-
-	return true;
+	return (per_cpu(sbuf, cpu_id)[ACRN_TRACE] != NULL);
 }
 
 static inline void trace_put(uint16_t cpu_id, uint32_t evid, uint32_t n_data, struct trace_entry *entry)
@@ -89,28 +82,6 @@ void TRACE_4I(uint32_t evid, uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 	trace_put(cpu_id, evid, 4U, &entry);
 }
 
-void TRACE_6C(uint32_t evid, uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uint8_t b1, uint8_t b2)
-{
-	struct trace_entry entry;
-	uint16_t cpu_id = get_pcpu_id();
-
-	if (!trace_check(cpu_id)) {
-		return;
-	}
-
-	entry.payload.fields_8.a1 = a1;
-	entry.payload.fields_8.a2 = a2;
-	entry.payload.fields_8.a3 = a3;
-	entry.payload.fields_8.a4 = a4;
-	entry.payload.fields_8.b1 = b1;
-	entry.payload.fields_8.b2 = b2;
-	/* payload.fields_8.b3/b4 not used, but is put in trace buf */
-	trace_put(cpu_id, evid, 8U, &entry);
-}
-
-#define TRACE_ENTER TRACE_16STR(TRACE_FUNC_ENTER, __func__)
-#define TRACE_EXIT TRACE_16STR(TRACE_FUNC_EXIT, __func__)
-
 void TRACE_16STR(uint32_t evid, const char name[])
 {
 	struct trace_entry entry;
@@ -133,3 +104,16 @@ void TRACE_16STR(uint32_t evid, const char name[])
 	entry.payload.str[15] = 0;
 	trace_put(cpu_id, evid, 16U, &entry);
 }
+
+#else
+
+void TRACE_2L(__unused uint32_t evid, __unused uint64_t e, __unused uint64_t f) {}
+
+void TRACE_4I(__unused uint32_t evid, __unused uint32_t a, __unused uint32_t b,
+		__unused uint32_t c, __unused uint32_t d)
+{
+}
+
+void TRACE_16STR(__unused uint32_t evid, __unused const char name[]) {}
+
+#endif

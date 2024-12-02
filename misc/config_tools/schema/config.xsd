@@ -124,6 +124,11 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
         <xs:documentation>Enable the software workaround for Machine Check Error on Page Size Change (erratum in some processor families).  For more information about this workaround and affected processors, see this `MCE Avoidance on Page Size Change White Paper &lt;https://www.intel.com/content/www/us/en/developer/articles/troubleshooting/software-security-guidance/technical-documentation/machine-check-error-avoidance-page-size-change.html&gt;`_.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="ACRNTRACE_ENABLED" type="Boolean" default="y">
+      <xs:annotation acrn:title="Enable acrntrace" acrn:views="advanced">
+        <xs:documentation>acrntrace is a tool running on the Service VM to capture trace data. Enable acrntrace support in hypervisor</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="VUART_RX_BUF_SIZE" default="256">
       <xs:annotation acrn:title="vuart rx buffer size (bytes)" acrn:views="advanced"
                      acrn:errormsg="'required': 'must config the max rx buffer size of vuart in byte'">
