@@ -10,7 +10,7 @@
 #include <per_cpu.h>
 #include <asm/notify.h>
 #include <common/notify.h>
-#include <debug/logmsg.h>
+#include <logmsg.h>
 #include <asm/cpu.h>
 #include <cpu.h>
 

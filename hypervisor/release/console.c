@@ -33,3 +33,6 @@ bool is_using_init_ipi(void) { return false; }
 
 void shell_init(void) {}
 void shell_kick(void) {}
+
+bool console_need_log(__unused uint32_t severity) { return false; }
+void console_log(__unused char *buffer) {}

@@ -13,6 +13,8 @@
 #include <npk_log.h>
 #include <cpu.h>
 
+uint16_t npk_loglevel = CONFIG_NPK_LOGLEVEL_DEFAULT;
+
 static int32_t npk_log_setup_ref;
 static bool npk_log_enabled;
 static uint64_t base;
@@ -160,4 +162,14 @@ void npk_log_write(const char *buf, size_t buf_len)
 	mmio_write8(0U, &(channel->FLAG));
 
 	atomic_dec32(&per_cpu(npk_log_ref, cpu_id));
+}
+
+bool npk_need_log(uint32_t severity)
+{
+	return (severity <= npk_loglevel);
+}
+
+void npk_log(char *buffer)
+{
+	npk_log_write(buffer, strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE));
 }

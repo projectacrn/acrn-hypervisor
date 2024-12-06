@@ -24,11 +24,8 @@
 #define LOG_MESSAGE_MAX_SIZE	(4U * LOG_ENTRY_SIZE)
 
 #define DBG_LEVEL_LAPICPT	5U
-#if defined(HV_DEBUG)
 
-extern uint16_t console_loglevel;
-extern uint16_t mem_loglevel;
-extern uint16_t npk_loglevel;
+#if defined(HV_DEBUG)
 
 void asm_assert(int32_t line, const char *file, const char *txt);
 
@@ -44,8 +41,6 @@ void asm_assert(int32_t line, const char *file, const char *txt);
 #define ASSERT(x, ...)	do { } while (0)
 
 #endif /* HV_DEBUG */
-
-void init_logmsg();
 
 /*
  * @pre the severity > 0

@@ -10,7 +10,7 @@
 #include <types.h>
 #include <cpu.h>
 #include <per_cpu.h>
-#include <debug/logmsg.h>
+#include <logmsg.h>
 
 static void init_pcpu_comm_post(void);
 

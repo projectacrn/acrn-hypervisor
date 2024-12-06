@@ -36,9 +36,6 @@ static void init_debug_pre(void)
 {
 	/* Initialize console */
 	console_init();
-
-	/* Enable logging */
-	init_logmsg();
 }
 
 /*TODO: move into debug module */

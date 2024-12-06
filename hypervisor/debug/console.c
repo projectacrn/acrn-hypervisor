@@ -17,6 +17,7 @@
 #include <console.h>
 #include <boot.h>
 #include <dbg_cmd.h>
+#include <spinlock.h>
 
 struct hv_timer console_timer;
 
@@ -28,6 +29,9 @@ uint16_t console_vmid = CONFIG_CONSOLE_DEFAULT_VM;
 
 /* if use INIT to kick pcpu only, if not notification IPI still is used for sharing CPU */
 static bool use_init_ipi = false;
+
+uint16_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
+static spinlock_t console_log_lock;
 
 bool is_using_init_ipi(void)
 {
@@ -72,6 +76,8 @@ void console_init(void)
 	 * Then we could use printf for debugging on early boot stage.
 	 */
 	uart16550_init(true);
+
+	spinlock_init(&console_log_lock);
 }
 
 void console_putc(const char *ch)
@@ -243,4 +249,21 @@ void resume_console(void)
 	if (VUART_TIMER_CPU == BSP_CPU_ID) {
 		console_setup_timer();
 	}
+}
+
+bool console_need_log(uint32_t severity)
+{
+	return (severity <= console_loglevel);
+}
+
+void console_log(char *buffer)
+{
+	uint64_t rflags;
+
+	spinlock_irqsave_obtain(&console_log_lock ,&rflags);
+
+	/* Send buffer to stdout */
+	printf("%s\n\r", buffer);
+
+	spinlock_irqrestore_release(&console_log_lock, rflags);
 }

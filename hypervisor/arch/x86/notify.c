@@ -16,7 +16,7 @@
 #include <asm/guest/virq.h>
 #include <common/notify.h>
 #include <irq.h>
-#include <debug/logmsg.h>
+#include <logmsg.h>
 
 static uint32_t notification_irq = IRQ_INVALID;
 

@@ -63,8 +63,8 @@ struct per_cpu_region {
 	 */
 	struct acrn_vcpu *vcpu_array[CONFIG_MAX_VM_NUM] __aligned(8);
 	struct shared_buf *sbuf[ACRN_SBUF_PER_PCPU_ID_MAX];
-#ifdef HV_DEBUG
 	char logbuf[LOG_MESSAGE_MAX_SIZE];
+#ifdef HV_DEBUG
 	uint32_t npk_log_ref;
 #endif
 

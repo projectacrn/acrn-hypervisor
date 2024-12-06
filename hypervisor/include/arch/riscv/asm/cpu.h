@@ -10,7 +10,7 @@
 
 #include <types.h>
 #include <lib/util.h>
-#include <debug/logmsg.h>
+#include <logmsg.h>
 #include <board_info.h>
 #include <barrier.h>
 

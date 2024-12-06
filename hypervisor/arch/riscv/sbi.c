@@ -9,7 +9,7 @@
 
 #include <types.h>
 #include <asm/sbi.h>
-#include <debug/logmsg.h>
+#include <logmsg.h>
 
 /**
  * An ECALL is used as the control transfer instruction between the

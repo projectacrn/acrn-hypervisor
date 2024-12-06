@@ -11,4 +11,7 @@ struct hv_npk_log_param;
 void npk_log_setup(struct hv_npk_log_param *param);
 void npk_log_write(const char *buf, size_t len);
 
+bool npk_need_log(uint32_t severity);
+void npk_log(char *buffer);
+
 #endif /* NPK_LOG_H */

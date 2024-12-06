@@ -10,7 +10,7 @@
 #include <asm/pgtable.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/ept.h>
-#include <debug/logmsg.h>
+#include <logmsg.h>
 
 
 int32_t assign_mmio_dev(struct acrn_vm *vm, const struct acrn_mmiodev *mmiodev)
