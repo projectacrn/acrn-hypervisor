@@ -89,6 +89,31 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data, uint32_t max_len)
 	return ret;
 }
 
+int32_t sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
+{
+	int ret = -EINVAL;
+
+	if ((pcpu_id < get_pcpu_nums()) && (sbuf_id < ACRN_SBUF_PER_PCPU_ID_MAX)) {
+		per_cpu(sbuf, pcpu_id)[sbuf_id] = (struct shared_buf *) hva;
+		pr_info("%s share sbuf for pCPU[%u] with sbuf_id[%u] setup successfully",
+				__func__, pcpu_id, sbuf_id);
+		ret = 0;
+	}
+
+	return ret;
+}
+
+void sbuf_reset(void)
+{
+	uint16_t pcpu_id, sbuf_id;
+
+	for (pcpu_id = 0U; pcpu_id < get_pcpu_nums(); pcpu_id++) {
+		for (sbuf_id = 0U; sbuf_id < ACRN_SBUF_PER_PCPU_ID_MAX; sbuf_id++) {
+			per_cpu(sbuf, pcpu_id)[sbuf_id] = 0U;
+		}
+	}
+}
+
 int32_t sbuf_setup_common(struct acrn_vm *vm, uint16_t cpu_id, uint32_t sbuf_id, uint64_t *hva)
 {
 	int32_t ret = 0;
