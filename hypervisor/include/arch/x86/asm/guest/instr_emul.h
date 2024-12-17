@@ -46,6 +46,9 @@ struct instr_emul_vie {
 	uint8_t		num_valid;		/* size of the instruction */
 	uint8_t		num_processed;
 
+	struct acrn_vcpu 	*vcpu;
+	uint64_t		rip;
+
 	uint8_t		addrsize:4, opsize:4;	/* address and operand sizes */
 	uint8_t		rex_w:1,		/* REX prefix */
 			rex_r:1,
