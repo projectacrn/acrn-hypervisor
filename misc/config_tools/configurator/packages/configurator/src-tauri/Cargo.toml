@@ -16,6 +16,8 @@ tauri-build = { version = "1.5.2", features = [] }
 
 [dependencies]
 openssl = "0.10.66" # fix vulnerability only
+idna = "=1.0.0"     # fix vulnerability only
+url = "=2.5.1"      # fix vulnerability only
 serde_json = "1.0.81"
 serde = { version = "1.0.137", features = ["derive"] }
 tauri = { version = "1.6.7", features = ["api-all", "devtools"] }
