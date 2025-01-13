@@ -309,3 +309,14 @@ hyperv_init_vcpuid_entry(uint32_t leaf, uint32_t subleaf, uint32_t flags,
 	dev_dbg(DBG_LEVEL_HYPERV, "hv: %s: leaf=%x subleaf=%x flags=%x eax=%x ebx=%x ecx=%x edx=%x",
 		__func__, leaf, subleaf, flags, entry->eax, entry->ebx, entry->ecx, entry->edx);
 }
+
+void
+hyperv_page_destory(struct acrn_vm *vm)
+{
+	/* Reset the hypercall page */
+	vm->arch_vm.hyperv.hypercall_page.enabled = 0U;
+	/* Reset OS id */
+	vm->arch_vm.hyperv.guest_os_id.val64 = 0UL;
+	/* Reset the TSC page */
+	vm->arch_vm.hyperv.ref_tsc_page.enabled = 0UL;
+}
