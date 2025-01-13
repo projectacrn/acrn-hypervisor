@@ -957,6 +957,10 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		offline_vcpu(vcpu);
 	}
 
+#ifdef CONFIG_HYPERV_ENABLED
+	hyperv_page_destory(vm);
+#endif
+
 	/* after guest_flags not used, then clear it */
 	vm_config = get_vm_config(vm->vm_id);
 	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
