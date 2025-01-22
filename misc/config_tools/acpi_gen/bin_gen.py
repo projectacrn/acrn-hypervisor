@@ -9,7 +9,7 @@ import logging
 import subprocess # nosec
 import os, sys, argparse, re, shutil
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'board_inspector'))
-import lxml.etree
+from defusedxml.lxml import parse
 from acpi_const import *
 import acpiparser.tpm2
 import inspectorlib.cdata
@@ -251,8 +251,8 @@ def check_iasl(iasl_path, iasl_min_ver):
 
 def main(args):
 
-    board_etree = lxml.etree.parse(args.board)
-    scenario_etree = lxml.etree.parse(args.scenario)
+    board_etree = parse(args.board)
+    scenario_etree = parse(args.scenario)
 
     scenario_name = get_node("//@scenario", scenario_etree)
 
@@ -266,7 +266,7 @@ def main(args):
         hypervisor_out = args.out
     DEST_ACPI_BIN_PATH = os.path.join(hypervisor_out, 'acpi')
 
-    allocation_etree = lxml.etree.parse(os.path.join(hypervisor_out, 'configs', 'allocation.xml'))
+    allocation_etree = parse(os.path.join(hypervisor_out, 'configs', 'allocation.xml'))
 
     if os.path.isdir(DEST_ACPI_BIN_PATH):
         shutil.rmtree(DEST_ACPI_BIN_PATH)

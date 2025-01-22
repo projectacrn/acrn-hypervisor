@@ -11,7 +11,7 @@ import acrn_config_utilities
 import board_cfg_lib
 import scenario_cfg_lib
 import lxml
-import lxml.etree
+from defusedxml.lxml import parse
 
 ERR_LIST = {}
 BOOT_TYPE = ['no', 'ovmf']
@@ -673,7 +673,7 @@ def check_communication_vuart(launch_communication_vuarts, scenario_info):
                 return
 
 def check_enable_ptm(launch_enable_ptm, scenario_info):
-    scenario_etree = lxml.etree.parse(scenario_info)
+    scenario_etree = parse(scenario_info)
     enable_ptm_vm_list = scenario_etree.xpath("//vm[PTM = 'y']/@id")
     for user_vmid, enable_ptm in launch_enable_ptm.items():
         key = 'user_vm:id={},enable_ptm'.format(user_vmid)

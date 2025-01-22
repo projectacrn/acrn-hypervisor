@@ -8,7 +8,7 @@ import os
 from copy import deepcopy
 
 import elementpath
-import lxml.etree as etree
+from defusedxml.lxml import fromstring
 from bs4 import BeautifulSoup
 
 from . import convert_result, nuc11_board, scenario_json_schema, nuc11_board_path
@@ -20,7 +20,7 @@ def get_dynamic_scenario(board):
     :type board: str
     :param board: board xml text
     """
-    board_xml = etree.fromstring(board)
+    board_xml = fromstring(board)
 
     def get_enum(source, options, option_names, obj_type):
         elements = [str(x) for x in elementpath.select(source, options) if x]
