@@ -251,13 +251,11 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 
 static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const struct acrn_acpi_generic_address *gas)
 {
-	uint8_t io_len[5] = {0U, 1U, 2U, 4U, 8U};
 	struct vm_io_range gas_io;
 
-	if ((gas->address != 0UL) && (gas->space_id == SPACE_SYSTEM_IO)
-			&& (gas->access_size != 0U) && (gas->access_size <= 4U)) {
+	if ((gas->address != 0UL) && (gas->space_id == SPACE_SYSTEM_IO) && (gas->bit_width != 0U)) {
 		gas_io.base = (uint16_t)gas->address;
-		gas_io.len = io_len[gas->access_size];
+		gas_io.len = gas->bit_width / 8;
 
 		register_pio_emulation_handler(vm, pio_idx, &gas_io, &pm1ab_io_read, &pm1ab_io_write);
 
