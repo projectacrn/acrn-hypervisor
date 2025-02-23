@@ -61,7 +61,7 @@ static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 	kernel_init_size = zeropage->hdr.init_size;
 	kernel_align = zeropage->hdr.kernel_alignment;
 	initrd_addr_max = zeropage->hdr.initrd_addr_max;
-	stac();
+	clac();
 	kernel_end = roundup(kernel_start, kernel_align) + kernel_init_size;
 
 	if (initrd_addr_max != 0U) {
