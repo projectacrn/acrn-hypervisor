@@ -109,7 +109,8 @@ static void *do_load_elf64(struct acrn_vm *vm)
 				 */
 				(void)copy_to_gpa(vm, p_elf_img + p_prg_tbl_head64->p_offset,
 					p_prg_tbl_head64->p_paddr, (uint32_t)p_prg_tbl_head64->p_filesz);
-				/* copy_to_gpa has it's stac/clac inside. So call stac again here. */
+				/* copy_to_gpa has its own stac/clac inside. Call stac again here to keep
+				 * the context. */
 				stac();
 			}
 			p_prg_tbl_head64++;
@@ -174,7 +175,8 @@ static void *do_load_elf32(struct acrn_vm *vm)
 				 */
 				(void)copy_to_gpa(vm, p_elf_img + p_prg_tbl_head32->p_offset,
 					p_prg_tbl_head32->p_paddr, p_prg_tbl_head32->p_filesz);
-				/* copy_to_gpa has it's stac/clac inside. So call stac again here. */
+				/* copy_to_gpa has its own stac/clac inside. Call stac again here to keep
+				 * the context. */
 				stac();
 			}
 			p_prg_tbl_head32++;
