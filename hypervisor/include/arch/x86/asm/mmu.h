@@ -169,8 +169,6 @@ void flush_vpid_global(void);
  */
 void invept(const void *eptp);
 
-uint64_t get_hv_ram_size(void);
-
 /* get PDPT address from CR3 vaule in PAE mode */
 static inline uint64_t get_pae_pdpt_addr(uint64_t cr3)
 {
