@@ -555,8 +555,13 @@ bool init_hugetlb(void)
 			path[i] = 0;
 			if (access(path, F_OK) != 0) {
 				if (mkdir(path, 0755) < 0) {
-					pr_err("mkdir %s failed.\n", path);
-					return -1;
+					/* We might have multiple acrn-dm instances booting VMs at
+					 * the same time
+					 */
+					if (errno != EEXIST) {
+						pr_err("mkdir %s failed: %s\n", path, errormsg(errno));
+						return false;
+					}
 				}
 			}
 			path[i] = '/';
