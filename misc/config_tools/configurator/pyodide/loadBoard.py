@@ -14,6 +14,9 @@ from bs4 import BeautifulSoup
 from . import convert_result, nuc11_board, scenario_json_schema, nuc11_board_path
 
 
+SERIAL_CATEGORIES = ('portio', 'mmio', 'pci')
+
+
 def get_dynamic_scenario(board):
     """
 
@@ -34,6 +37,25 @@ def get_dynamic_scenario(board):
             elements = [(enum_type_convert[obj_type](x[0]), x[1]) for x in elements]
         return elements
 
+    def get_serial(source, options, serial_cat):
+        elements = [str(e) for e in elementpath.select(source, options) if e][0].strip().split('\n\t')
+        # seri:/dev/ttyS7 type:mmio base:0x4017000000 irq:16 bdf:"00:1e.0"
+        serials = {c:[] for c in SERIAL_CATEGORIES}
+        for el in elements:
+            t = {}
+            for e in el.split(' '):
+                e_ = e.split(':')
+                k, v = e_[0], e_[1]
+                t[k] = v
+            if t['type'] == SERIAL_CATEGORIES[0]:
+                serials[SERIAL_CATEGORIES[0]].append(t['seri'])
+            elif t['type'] == SERIAL_CATEGORIES[1] and 'bdf' in t:
+                serials[SERIAL_CATEGORIES[2]].append(t['seri'])
+            else:
+                serials[SERIAL_CATEGORIES[1]].append(t['seri'])
+        print(serials)
+        return serials[serial_cat]
+
     def dynamic_enum(**enum_setting):
         # value from env
         function, source = [
@@ -50,6 +72,14 @@ def get_dynamic_scenario(board):
             enum = sorted(enum, key=lambda x: fn(x[0]))
         return zip(*enum)
 
+    def dynamic_serial(**hidden_setting):
+        function, source = [
+            {"get_serial": get_serial, "board_xml": board_xml}[hidden_setting[key]]
+            for key in ['function', 'source']
+        ]
+        selector, serial_cat = [hidden_setting[key] for key in ['selector', 'serial_cat']]
+        return function(source, selector, serial_cat)
+
     def dynamic_enum_apply(obj):
         # get json schema enum obj
         if 'enum' in obj and isinstance(obj['enum'], dict):
@@ -61,6 +91,14 @@ def get_dynamic_scenario(board):
                 enum, enum_names = dynamic_enum(**enum_setting)
                 obj['enum'] = enum
                 obj['enumNames'] = enum_names
+
+        # get json schema hidden
+        if 'hidden' in obj and isinstance(obj['hidden'], dict):
+            hidden_setting = obj['hidden']
+            if hidden_setting['type'] == 'dynamicSerial':
+                hidden_setting['type'] = obj.get('type', '')
+                obj['hidden'] = dynamic_serial(**hidden_setting)
+
         return obj
 
     data = json.loads(scenario_json_schema, object_hook=dynamic_enum_apply)
