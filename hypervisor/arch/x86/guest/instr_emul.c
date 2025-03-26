@@ -1675,58 +1675,79 @@ static __attribute__((noinline)) int32_t emulate_xchg_for_splitlock(struct acrn_
 	return ret;
 }
 
-static int32_t vie_init(struct instr_emul_vie *vie, struct acrn_vcpu *vcpu)
+static int32_t vie_fetch_instruction(struct instr_emul_vie *vie)
 {
-	uint32_t inst_len = vcpu->arch.inst_len;
-	enum vm_cpu_mode cpu_mode;
-	struct seg_desc desc;
-	uint64_t guest_rip_gva;
+	uint32_t fetch_len;
+	uint64_t fetch_gva;
 	uint32_t err_code;
 	uint64_t fault_addr;
 	int32_t ret;
 
-	if ((inst_len > VIE_INST_SIZE) || (inst_len == 0U)) {
-		pr_err("%s: invalid instruction length (%d)", __func__, inst_len);
-		ret = -EINVAL;
+	if (vie->num_valid == 0) {
+		fetch_len = min(VIE_INST_SIZE, (uint32_t)(PAGE_SIZE - (vie->rip & ~PAGE_MASK)));
+		fetch_gva = vie->rip;
 	} else {
-		(void)memset(vie, 0U, sizeof(struct instr_emul_vie));
+		fetch_len = VIE_INST_SIZE - vie->num_valid;
+		fetch_gva = vie->rip + vie->num_valid;
+	}
 
-		/* init register fields in vie. */
-		vie->base_register = CPU_REG_LAST;
-		vie->index_register = CPU_REG_LAST;
-		vie->segment_register = CPU_REG_LAST;
-
-		cpu_mode = get_vcpu_mode(vcpu);
-		vm_get_seg_desc(CPU_REG_CS, &desc);
-
-		/* VMX_GUEST_RIP is a natural-width field */
-		vie_calculate_gla(cpu_mode, CPU_REG_CS, &desc, vcpu_get_rip(vcpu),
-				8U, &guest_rip_gva);
-
-		err_code = PAGE_FAULT_ID_FLAG;
-		ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva, inst_len, &err_code, &fault_addr);
-		if (ret < 0) {
-			if (ret == -EFAULT) {
-				vcpu_inject_pf(vcpu, fault_addr, err_code);
-			}
-		} else {
-			vie->num_valid = (uint8_t)inst_len;
-			ret = 0;
+	err_code = PAGE_FAULT_ID_FLAG;
+	ret = copy_from_gva(vie->vcpu, vie->inst + vie->num_valid, fetch_gva, fetch_len,
+			    &err_code, &fault_addr);
+	if (ret < 0) {
+		if (ret == -EFAULT) {
+			vcpu_inject_pf(vie->vcpu, fault_addr, err_code);
 		}
+	} else {
+		vie->num_valid += (uint8_t)fetch_len;
+		ret = 0;
 	}
 
 	return ret;
 }
 
-static int32_t vie_peek(const struct instr_emul_vie *vie, uint8_t *x)
+static int32_t vie_init(struct instr_emul_vie *vie, struct acrn_vcpu *vcpu)
+{
+	enum vm_cpu_mode cpu_mode;
+	struct seg_desc desc;
+
+	(void)memset(vie, 0U, sizeof(struct instr_emul_vie));
+
+	vie->vcpu = vcpu;
+
+	/* init register fields in vie. */
+	vie->base_register = CPU_REG_LAST;
+	vie->index_register = CPU_REG_LAST;
+	vie->segment_register = CPU_REG_LAST;
+
+	cpu_mode = get_vcpu_mode(vcpu);
+	vm_get_seg_desc(CPU_REG_CS, &desc);
+
+	/* VMX_GUEST_RIP is a natural-width field */
+	vie_calculate_gla(cpu_mode, CPU_REG_CS, &desc, vcpu_get_rip(vcpu),
+			  8U, &(vie->rip));
+
+	return vie_fetch_instruction(vie);
+}
+
+static int32_t vie_peek(struct instr_emul_vie *vie, uint8_t *x)
 {
 	int32_t ret;
+
 	if (vie->num_processed < vie->num_valid) {
-		*x = vie->inst[vie->num_processed];
 		ret = 0;
-	} else {
-		ret = -1;
+	} else { /* vie->num_processed == vie->num_valid */
+		if (vie->num_valid < VIE_INST_SIZE) {
+			ret = vie_fetch_instruction(vie);
+		} else {
+			ret = -1;
+		}
 	}
+
+	if (ret == 0) {
+		*x = vie->inst[vie->num_processed];
+	}
+
 	return ret;
 }
 
@@ -2370,6 +2391,8 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu, bool full_decode)
 				retval = -EFAULT;
 			}
 		} else {
+			vcpu->arch.inst_len = emul_ctxt->vie.num_processed;
+
 			/*
 			 * We do operand check in instruction decode phase and
 			 * inject exception accordingly. In late instruction
