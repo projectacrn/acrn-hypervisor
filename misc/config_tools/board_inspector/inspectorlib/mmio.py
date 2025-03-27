@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-import lxml.etree
+from defusedxml.lxml import parse
 
 def mmio_regions(etree):
     ret = []
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument("file", help="board XML file")
     args = parser.parse_args()
 
-    etree = lxml.etree.parse(args.file)
+    etree = parse(args.file)
     regions = mmio_regions(etree)
     for region in regions:
         print("%-4s 0x%08x 0x%08x" % (region[0], region[1], region[2]))

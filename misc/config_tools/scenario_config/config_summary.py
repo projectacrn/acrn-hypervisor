@@ -10,7 +10,7 @@ import logging
 import typing
 import functools
 import textwrap
-from lxml import etree
+from defusedxml.lxml import parse
 
 t_content = typing.Union[str, typing.List[str]]
 
@@ -100,8 +100,8 @@ class GenerateRst:
 
     # Class initialization
     def __init__(self, board_file_name, scenario_file_name, rst_file_name) -> None:
-        self.board_etree = etree.parse(board_file_name)
-        self.scenario_etree = etree.parse(scenario_file_name)
+        self.board_etree = parse(board_file_name)
+        self.scenario_etree = parse(scenario_file_name)
         self.file = open(rst_file_name, 'w')
         self.doc = Doc(self.file)
 

@@ -7,6 +7,7 @@
 
 import sys, os
 import lxml.etree
+from defusedxml.lxml import parse, fromstring
 import argparse
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 import acrn_config_utilities
@@ -22,9 +23,9 @@ def main(args):
     scripts_path = os.path.dirname(os.path.realpath(__file__))
     current = os.path.basename(__file__)
 
-    board_etree = lxml.etree.parse(args.board)
-    scenario_etree = lxml.etree.parse(args.scenario)
-    allocation_etree = lxml.etree.ElementTree(element=lxml.etree.fromstring("<acrn-config></acrn-config>"))
+    board_etree = parse(args.board)
+    scenario_etree = parse(args.scenario)
+    allocation_etree = lxml.etree.ElementTree(element=fromstring("<acrn-config></acrn-config>"))
     for script in sorted([f for f in os.listdir(scripts_path) if f.endswith(".py") and f != current]):
         module_name = os.path.splitext(script)[0]
         module = import_module(f"{module_name}")
