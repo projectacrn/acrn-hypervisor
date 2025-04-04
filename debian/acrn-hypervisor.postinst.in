@@ -19,6 +19,8 @@ ACRNMAP="${ACRNDIR}/${BOARD}/${SCENARIO}/acrn.${BOARD}.${SCENARIO}.map"
 ACRNBIN="${ACRNDIR}/${BOARD}/${SCENARIO}/acrn.${BOARD}.${SCENARIO}.bin"
 ACRNACPI="${ACRNDIR}/${BOARD}/${SCENARIO}/acpi"
 ACRNETC="${ACRNDIR}/${BOARD}/${SCENARIO}/etc"
+ACRNBOARD="${ACRNDIR}/${BOARD}/board.xml"
+ACRNSCENARIO="${ACRNDIR}/${BOARD}/${SCENARIO}/scenario.xml"
 
 case "$1" in
     configure)
@@ -26,6 +28,10 @@ case "$1" in
             cp ${ACRNCFG} /boot/acrn-@acrnversion@.config
             cp ${ACRNMAP} /boot/acrn-@acrnversion@.map
             cp ${ACRNBIN} /boot/acrn-@acrnversion@.bin
+            if [ -f ${ACRNBOARD} ] && [ -f ${ACRNSCENARIO} ]; then
+                ln -sf ${ACRNBOARD} /usr/share/acrn/board.xml
+                ln -sf ${ACRNSCENARIO} /usr/share/acrn/scenario.xml
+            fi
             if [ -d ${ACRNACPI} ]; then
                 cp ${ACRNACPI}/ACPI_VM* /boot
             fi
