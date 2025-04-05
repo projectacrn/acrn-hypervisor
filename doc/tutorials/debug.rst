@@ -159,6 +159,16 @@ reason and times of each vm_exit after we have done some operations.
 
       vmexit summary information
 
+4. Use the command to get a summary of cpu usage in cpu-sharing case::
+
+      # acrnalyze.py -i /home/trace/acrntrace/20231122-054116/0 -o cpu_usage --cpu_usage
+
+   .. figure:: images/debug_image29.png
+      :align: center
+
+      cpu usage summary information
+
+
 Using Self-Defined Trace Event ID to Analyze Trace
 ==================================================
 
