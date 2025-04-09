@@ -553,8 +553,8 @@ void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base,
 void pgtable_modify_or_del_map(uint64_t *pml4_page, uint64_t vaddr_base,
 		uint64_t size, uint64_t prot_set, uint64_t prot_clr,
 		const struct pgtable *table, uint32_t type);
-#endif /* PGTABLE_H */
 
 /**
  * @}
  */
+#endif /* PGTABLE_H */

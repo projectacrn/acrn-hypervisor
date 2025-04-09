@@ -132,8 +132,9 @@ struct page_pool {
 
 struct page *alloc_page(struct page_pool *pool);
 void free_page(struct page_pool *pool, struct page *page);
-#endif /* PAGE_H */
 
 /**
  * @}
  */
+
+#endif /* PAGE_H */
