@@ -10,6 +10,7 @@
 #include <asm/e820.h>
 #include <asm/mmu.h>
 #include <boot.h>
+#include <reloc.h>
 #include <efi_mmap.h>
 #include <logmsg.h>
 #include <asm/guest/ept.h>
@@ -232,6 +233,47 @@ static void calculate_e820_ram_size(void)
         dev_dbg(DBG_LEVEL_E820, "ram size: 0x%016lx ",hv_e820_ram_size);
 }
 
+static void reserve_e820_region(uint64_t start_hpa, uint64_t end_hpa)
+{
+	uint32_t e820_index;
+	uint64_t entry_start, entry_end;
+
+	for (e820_index = 0; e820_index < hv_e820_entries_nr; e820_index++) {
+		entry_start = hv_e820[e820_index].baseaddr;
+		entry_end = hv_e820[e820_index].baseaddr + hv_e820[e820_index].length;
+
+		/* No need handle in these cases*/
+		if ((hv_e820[e820_index].type != E820_TYPE_RAM) || (entry_end <= start_hpa) || (entry_start >= end_hpa)) {
+			continue;
+		}
+
+		if ((entry_start <= start_hpa) && (entry_end >= end_hpa)) {
+			hv_e820[e820_index].length = start_hpa - entry_start;
+
+			if (end_hpa < entry_end) {
+				/*
+				* .......|start_hpa......................end_hpa|.....
+				* |entry_start..............................entry_end|
+				*/
+				insert_e820_entry(e820_index + 1, end_hpa, entry_end - end_hpa, E820_TYPE_RAM);
+			}
+		} else {
+			panic("%s: region 0x%016x-0x%016x crosses multiple e820 entries, check your bootloader!",
+					   __func__, entry_start, entry_end);
+		}
+	}
+}
+
+static void alloc_hv_memory(void)
+{
+	uint64_t hv_start = hva2hpa((void *)(get_hv_image_base()));
+	uint64_t hv_end  = hv_start + get_hv_image_size();
+
+	pr_err("%s: hv start: 0x%016x, end: 0x%016x", __func__, hv_start, hv_end);
+
+	reserve_e820_region(hv_start, hv_end);
+}
+
 static void alloc_mods_memory(void)
 {
 	uint32_t mod_index, e820_index, target_index;
@@ -242,32 +284,11 @@ static void alloc_mods_memory(void)
 	/* 1st pass: remove the exact region */
 	for (mod_index = 0; mod_index < abi->mods_count; mod_index++) {
 		mod_start = hva2hpa(abi->mods[mod_index].start);
-		mod_end = hva2hpa(abi->mods[mod_index].start) + abi->mods[mod_index].size;
+		mod_end = mod_start + abi->mods[mod_index].size;
 
-		for (e820_index = 0; e820_index < hv_e820_entries_nr; e820_index++) {
-			entry_start = hv_e820[e820_index].baseaddr;
-			entry_end = hv_e820[e820_index].baseaddr + hv_e820[e820_index].length;
+		pr_err("%s: mod %d, start: 0x%016x, end: 0x%016x", __func__, mod_index, mod_start, mod_end);
 
-			/* No need handle in these cases*/
-			if ((hv_e820[e820_index].type != E820_TYPE_RAM) || (entry_end <= mod_start) || (entry_start >= mod_end)) {
-				continue;
-			}
-
-			if ((entry_start <= mod_start) && (entry_end >= mod_end)) {
-				hv_e820[e820_index].length = mod_start - entry_start;
-
-				if (mod_end < entry_end) {
-					/*
-					* .......|start_pa... ....................end_pa|.....
-					* |entry_start..............................entry_end|
-					*/
-					insert_e820_entry(e820_index + 1, mod_end, entry_end - mod_end, E820_TYPE_RAM);
-				}
-			} else {
-				panic("%s: region 0x%016x-0x%016x crosses multiple e820 entries, check your bootloader!",
-					   __func__, entry_start, entry_end);
-			}
-		}
+		reserve_e820_region(mod_start, mod_end);
 	}
 
 	/* 2nd pass: shrink the entries to page boundary */
@@ -300,6 +321,7 @@ void init_e820(void)
 	}
 
 	calculate_e820_ram_size();
+	alloc_hv_memory();
 	/* reserve multiboot modules memory */
 	alloc_mods_memory();
 }

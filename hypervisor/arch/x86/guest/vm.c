@@ -528,7 +528,7 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 	 * will cause EPT violation if Service VM accesses hv memory
 	 */
 	hv_hpa = hva2hpa((void *)(get_hv_image_base()));
-	ept_del_mr(vm, pml4_page, hv_hpa, get_hv_ram_size());
+	ept_del_mr(vm, pml4_page, hv_hpa, get_hv_image_size());
 	/* unmap prelaunch VM memory */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);

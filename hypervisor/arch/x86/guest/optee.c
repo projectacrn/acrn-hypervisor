@@ -45,7 +45,7 @@ void prepare_tee_vm_memmap(struct acrn_vm *vm, const struct acrn_vm_config *vm_c
 		prepare_vm_identical_memmap(vm, E820_TYPE_RAM, EPT_WB | EPT_RWX);
 
 		hv_hpa = hva2hpa((void *)(get_hv_image_base()));
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, hv_hpa, get_hv_ram_size());
+		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, hv_hpa, get_hv_image_size());
 	}
 }
 

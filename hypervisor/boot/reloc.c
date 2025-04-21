@@ -55,6 +55,11 @@ uint64_t get_hv_image_base(void)
 	return (get_hv_image_delta() + CONFIG_HV_RAM_START);
 }
 
+inline uint64_t get_hv_image_size(void)
+{
+	return (uint64_t)(&ld_ram_end - &ld_ram_start);
+}
+
 void relocate(void)
 {
 #ifdef CONFIG_RELOC
