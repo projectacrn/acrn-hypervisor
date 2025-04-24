@@ -7,7 +7,7 @@ import sys
 import enum
 import board_cfg_lib
 import acrn_config_utilities
-import lxml.etree
+from defusedxml.lxml import parse
 import os
 from acrn_config_utilities import get_node
 
@@ -125,7 +125,7 @@ def populate_mba_delay_mask(rdt_res, mba_delay_list, config):
         idx += 1
 
 def get_rdt_enabled():
-    scenario_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
+    scenario_etree = parse(acrn_config_utilities.SCENARIO_INFO_FILE)
     enable = scenario_etree.xpath(f"//RDT_ENABLED/text()")
     if enable[0] == "y":
         return "true"
@@ -133,7 +133,7 @@ def get_rdt_enabled():
         return "false"
 
 def get_cdp_enabled():
-    scenario_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
+    scenario_etree = parse(acrn_config_utilities.SCENARIO_INFO_FILE)
     enable = scenario_etree.xpath(f"//CDP_ENABLED/text()")
     if enable[0] == "y":
         return "true"
@@ -154,7 +154,7 @@ def gen_rdt_str(cache, config):
     err_dic = {}
     cat_mask_list = {}
 
-    board_etree = lxml.etree.parse(acrn_config_utilities.BOARD_INFO_FILE)
+    board_etree = parse(acrn_config_utilities.BOARD_INFO_FILE)
     mask_length = get_node(f"./capability[@id='CAT']/capacity_mask_length/text()", cache)
     clos_number = get_node(f"./capability[@id='CAT']/clos_number/text()", cache)
 
@@ -220,7 +220,7 @@ def gen_rdt_str(cache, config):
 
 def get_mask_list(cache_level, cache_id):
     allocation_dir = os.path.split(acrn_config_utilities.SCENARIO_INFO_FILE)[0] + "/configs/allocation.xml"
-    allocation_etree = lxml.etree.parse(allocation_dir)
+    allocation_etree = parse(allocation_dir)
     if cache_level == "3":
         clos_list = allocation_etree.xpath(f"//clos_mask[@id = 'l3']/clos/text()")
     else:
@@ -285,9 +285,9 @@ def gen_rdt_res(config):
     err_dic = {}
     res_present = [0, 0, 0]
 
-    scenario_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
-    allocation_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
-    board_etree = lxml.etree.parse(acrn_config_utilities.BOARD_INFO_FILE)
+    scenario_etree = parse(acrn_config_utilities.SCENARIO_INFO_FILE)
+    allocation_etree = parse(acrn_config_utilities.SCENARIO_INFO_FILE)
+    board_etree = parse(acrn_config_utilities.BOARD_INFO_FILE)
 
     cache_list = board_etree.xpath(f"//cache[capability/@id = 'CAT' or capability/@id = 'MBA']")
     gen_clos_array(cache_list, config)
@@ -410,7 +410,7 @@ def gen_px_cx(config):
 def gen_pci_hide(config):
     """Generate hide pci information for this platform"""
 
-    scenario_etree = lxml.etree.parse(acrn_config_utilities.SCENARIO_INFO_FILE)
+    scenario_etree = parse(acrn_config_utilities.SCENARIO_INFO_FILE)
     hidden_pdev_list = [x.replace('.', ':') for x in scenario_etree.xpath(f"//HIDDEN_PDEV/text()")]
 
     if board_cfg_lib.BOARD_NAME in list(board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB.keys()) and board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME] != 0:
@@ -458,7 +458,7 @@ def gen_known_caps_pci_devs(config):
 
 def gen_cpufreq_limits(config):
     allocation_dir = os.path.split(acrn_config_utilities.SCENARIO_INFO_FILE)[0] + "/configs/allocation.xml"
-    allocation_etree = lxml.etree.parse(allocation_dir)
+    allocation_etree = parse(allocation_dir)
     cpu_list = board_cfg_lib.get_processor_info()
     max_cpu_num = len(cpu_list)
 
