@@ -274,7 +274,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 
 	stac();
 	/* clear the zeropage */
-	(void)memset(zeropage, 0U, MEM_2K);
+	(void)memset(zeropage, 0U, MEM_4K);
 
 #ifdef CONFIG_MULTIBOOT2
 	if (is_service_vm(vm)) {
