@@ -84,7 +84,7 @@ void iothread_handler(void *arg)
 
 void
 virtio_set_iothread(struct virtio_base *base,
-			  bool is_register)
+			  bool is_register, bool ioevent_poll)
 {
 	struct virtio_vq_info *vq;
 	struct virtio_ops *vops;
@@ -113,10 +113,12 @@ virtio_set_iothread(struct virtio_base *base,
 			vq->viothrd.iomvt.fd = vq->viothrd.kick_fd;
 
 			if (!iothread_add(vq->viothrd.ioctx, vq->viothrd.kick_fd, &vq->viothrd.iomvt))
-				if (!virtio_register_ioeventfd(base, idx, true, vq->viothrd.kick_fd))
+			{
+				if (ioevent_poll || !virtio_register_ioeventfd(base, idx, true, vq->viothrd.kick_fd))
 					vq->viothrd.ioevent_started = true;
+			}
 		} else {
-			if (!virtio_register_ioeventfd(base, idx, false, vq->viothrd.kick_fd))
+			if (ioevent_poll || !virtio_register_ioeventfd(base, idx, false, vq->viothrd.kick_fd))
 				if (!iothread_del(vq->viothrd.ioctx, vq->viothrd.kick_fd)) {
 					vq->viothrd.ioevent_started = false;
 					if (vq->viothrd.kick_fd) {
@@ -153,6 +155,7 @@ virtio_poll_timer(void *arg, uint64_t nexp)
 	struct virtio_vq_info *vq;
 	const char *name;
 	int i;
+	eventfd_t val = 1;
 
 	base = arg;
 	vops = base->vops;
@@ -169,13 +172,17 @@ virtio_poll_timer(void *arg, uint64_t nexp)
 			continue;
 		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 		/* TODO: call notify when necessary */
-		if (vq->notify)
+		if (vq->viothrd.ioevent_started){
+			if (eventfd_write(vq->viothrd.iomvt.fd, val) == -1){
+				pr_err("%s: qnotify queue %d: eventfd_write failed\r\n", name, i);
+			}
+		}
+		else if (vq->notify)
 			(*vq->notify)(DEV_STRUCT(base), vq);
 		else if (vops->qnotify)
 			(*vops->qnotify)(DEV_STRUCT(base), vq);
 		else
-			pr_err("%s: qnotify queue %d: missing vq/vops notify\r\n",
-				name, i);
+			pr_err("%s: qnotify queue %d: missing vq/vops notify\r\n", name, i);			
 	}
 
 	if (base->mtx)
@@ -262,7 +269,9 @@ virtio_reset_dev(struct virtio_base *base)
 	acrn_timer_deinit(&base->polling_timer);
 	base->polling_in_progress = 0;
 	if (base->iothread)
-		virtio_set_iothread(base, false);
+	{
+		virtio_set_iothread(base, false, virtio_poll_enabled ? true : false);
+	}
 
 	nvq = base->vops->nvq;
 	for (vq = base->queues, i = 0; i < nvq; vq++, i++) {
@@ -989,6 +998,33 @@ done:
 	return value;
 }
 
+static void
+virtio_pci_status_handler(struct virtio_base *base, struct virtio_ops *vops, uint64_t value)
+{
+	if (vops->set_status)
+		(*vops->set_status)(DEV_STRUCT(base), value);
+	if ((value == 0) && (vops->reset))
+		(*vops->reset)(DEV_STRUCT(base));
+
+	if (base->backend_type == BACKEND_VBSU){
+		if (value & VIRTIO_CONFIG_S_DRIVER_OK){
+			if (virtio_poll_enabled){
+				base->polling_timer.clockid = CLOCK_MONOTONIC;
+				acrn_timer_init(&base->polling_timer, virtio_poll_timer, base);
+				/* wait 5s to start virtio poll mode
+		 		* skip vsbl and make sure device initialization completed
+			 	* FIXME: Need optimization in the future
+			 	*/
+				virtio_start_timer(&base->polling_timer, 5, 0);
+			}
+			if (base->iothread)
+				virtio_set_iothread(base, true, virtio_poll_enabled ? true : false);
+		}
+		else if (base->iothread)
+			virtio_set_iothread(base, false, virtio_poll_enabled ? true : false);
+	}
+}
+
 /*
  * Handle pci config space writes.
  * If it's to the MSI-X info, do that.
@@ -1007,7 +1043,7 @@ virtio_pci_legacy_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	const char *name;
 	uint32_t newoff;
 	int error = -1;
-
+	eventfd_t val = 1;
 
 	if (base->mtx)
 		pthread_mutex_lock(base->mtx);
@@ -1085,7 +1121,11 @@ bad:
 			goto done;
 		}
 		vq = &base->queues[value];
-		if (vq->notify)
+		if (virtio_poll_enabled && vq->viothrd.ioevent_started){
+			if (eventfd_write(vq->viothrd.iomvt.fd, val) == -1)
+				pr_err("%s: qnotify queue %llu: eventfd_write failed\r\n", name, value);
+		}
+		else if (vq->notify)
 			(*vq->notify)(DEV_STRUCT(base), vq);
 		else if (vops->qnotify)
 			(*vops->qnotify)(DEV_STRUCT(base), vq);
@@ -1095,30 +1135,7 @@ bad:
 		break;
 	case VIRTIO_PCI_STATUS:
 		base->status = value;
-		if (vops->set_status)
-			(*vops->set_status)(DEV_STRUCT(base), value);
-		if ((value == 0) && (vops->reset))
-			(*vops->reset)(DEV_STRUCT(base));
-		if ((value & VIRTIO_CONFIG_S_DRIVER_OK) &&
-		     base->backend_type == BACKEND_VBSU &&
-		     virtio_poll_enabled) {
-			base->polling_timer.clockid = CLOCK_MONOTONIC;
-			acrn_timer_init(&base->polling_timer, virtio_poll_timer, base);
-			/* wait 5s to start virtio poll mode
-			 * skip vsbl and make sure device initialization completed
-			 * FIXME: Need optimization in the future
-			 */
-			virtio_start_timer(&base->polling_timer, 5, 0);
-		}
-		if (!virtio_poll_enabled &&
-			base->backend_type == BACKEND_VBSU &&
-			base->iothread) {
-			if (value & VIRTIO_CONFIG_S_DRIVER_OK) {
-				virtio_set_iothread(base, true);
-			} else {
-				virtio_set_iothread(base, false);
-			}
-		}
+		virtio_pci_status_handler(base, vops, value);
 		break;
 	case VIRTIO_MSI_CONFIG_VECTOR:
 		base->msix_cfg_idx = value;
@@ -1539,18 +1556,7 @@ virtio_common_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 		break;
 	case VIRTIO_PCI_COMMON_STATUS:
 		base->status = value & 0xff;
-		if (vops->set_status)
-			(*vops->set_status)(DEV_STRUCT(base), value);
-		if ((base->status == 0) && (vops->reset))
-			(*vops->reset)(DEV_STRUCT(base));
-		if (base->backend_type == BACKEND_VBSU && base->iothread) {
-			if (value & VIRTIO_CONFIG_S_DRIVER_OK) {
-				virtio_set_iothread(base, true);
-			} else {
-				virtio_set_iothread(base, false);
-			}
-		}
-		/* TODO: virtio poll mode for modern devices */
+		virtio_pci_status_handler(base, vops, value);
 		break;
 	case VIRTIO_PCI_COMMON_Q_SELECT:
 		/*
@@ -1711,6 +1717,7 @@ virtio_notify_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 	struct virtio_ops *vops;
 	const char *name;
 	uint64_t idx;
+	eventfd_t val = 1;
 
 	idx = offset / VIRTIO_MODERN_NOTIFY_OFF_MULT;
 	vops = base->vops;
@@ -1722,7 +1729,11 @@ virtio_notify_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 	}
 
 	vq = &base->queues[idx];
-	if (vq->notify)
+	if (virtio_poll_enabled && vq->viothrd.ioevent_started){
+		if (eventfd_write(vq->viothrd.iomvt.fd, val) == -1)
+			pr_err("%s: qnotify queue %llu: eventfd_write failed\r\n", name, idx);
+	}
+	else if (vq->notify)
 		(*vq->notify)(DEV_STRUCT(base), vq);
 	else if (vops->qnotify)
 		(*vops->qnotify)(DEV_STRUCT(base), vq);
@@ -1855,7 +1866,7 @@ virtio_pci_modern_pio_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	struct virtio_ops *vops;
 	const char *name;
 	uint64_t idx;
-
+	eventfd_t val = 1;
 
 	vops = base->vops;
 	name = vops->name;
@@ -1876,7 +1887,11 @@ virtio_pci_modern_pio_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		pthread_mutex_lock(base->mtx);
 
 	vq = &base->queues[idx];
-	if (vq->notify)
+	if (virtio_poll_enabled && vq->viothrd.ioevent_started){
+		if (eventfd_write(vq->viothrd.iomvt.fd, val) == -1)
+			pr_err("%s: qnotify queue %llu: eventfd_write failed\r\n", name, idx);
+	}
+	else if (vq->notify)
 		(*vq->notify)(DEV_STRUCT(base), vq);
 	else if (vops->qnotify)
 		(*vops->qnotify)(DEV_STRUCT(base), vq);
