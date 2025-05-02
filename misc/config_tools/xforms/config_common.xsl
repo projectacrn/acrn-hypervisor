@@ -211,6 +211,7 @@
 
   <xsl:template match="SERIAL_CONSOLE">
     <xsl:variable name="tokens" select="concat(substring-before(substring-after(/acrn-offline-data/board-data/acrn-config/TTYS_INFO, concat('seri:', current())), '&#xa;'), ' ')" />
+    <xsl:variable name="mmio_reg_width" select="//config-data/acrn-config/hv/DEBUG_OPTIONS/SERIAL_MMIO_REG_WIDTH" />
     <xsl:variable name="type" select="substring-before(substring-after($tokens, 'type:'), ' ')" />
     <xsl:variable name="base" select="substring-before(substring-after($tokens, 'base:'), ' ')" />
     <xsl:variable name="irq" select="substring-before(substring-after($tokens, 'irq:'), ' ')" />
@@ -262,6 +263,10 @@
 	    <xsl:with-param name="value" select="$base" />
 	  </xsl:call-template>
 	</xsl:if>
+    <xsl:call-template name="integer-by-key-value">
+	  <xsl:with-param name="key" select="'SERIAL_MMIO_REG_WIDTH'" />
+	  <xsl:with-param name="value" select="$mmio_reg_width" />
+	</xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
