@@ -272,6 +272,10 @@ can define your own configuration scenarios.
   are automatically launched at boot time by the hypervisor.  The User VMs can
   be Real-Time VMs (RTVMs), Safety VMs, or standard User VMs.
 
+  When selecting this scenario, ensure that ``reboot=acpi`` is included in the
+  ``bootargs`` of ``scenario.xml``. Additionally, if the target VM is named VM0,
+  ``grub.cfg`` must contain a menuentry with ``module2 /boot/ACPI_VM0.bin ACPI_VM0``.
+
 * **Hybrid** scenario simultaneously supports both sharing and partitioning on
   the consolidated system. The pre-launched (partitioned) User VMs, with their
   statically configured and unshared resources, are started by the hypervisor.
