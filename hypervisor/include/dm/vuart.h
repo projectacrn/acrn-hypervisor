@@ -119,8 +119,9 @@ bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_gsi);
 
 uint8_t vuart_read_reg(struct acrn_vuart *vu, uint16_t offset);
 void vuart_write_reg(struct acrn_vuart *vu, uint16_t offset, uint8_t value);
-#endif /* VUART_H */
 
 /**
  * @}
  */
+
+#endif /* VUART_H */
