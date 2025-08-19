@@ -80,6 +80,85 @@ def iomem2bdf(base):
 
     return bdf
 
+
+def get_mmio_register_width(base_addr, ttys_name):
+    """Get MMIO register width for serial port
+    :param base_addr: base address of MMIO registers
+    :param ttys_name: tty device name (e.g., ttyS0)
+    :return: register width in bytes as string, or 'unknown' if not found
+    """
+    # Method 1: Try to get from sysfs attributes
+    try:
+        # Check for register width attribute
+        reg_width_path = '{}{}/iomem_width'.format(TTY_PATH, ttys_name)
+        if os.path.exists(reg_width_path):
+            reg_width_bits = int(read_ttys_node(reg_width_path))
+            reg_width_bytes = reg_width_bits // 8
+            return str(reg_width_bytes)
+    except (FileNotFoundError, ValueError):
+        pass
+
+    # Method 2: Try to get from register shift (common for UART)
+    try:
+        reg_shift_path = '{}{}/iomem_reg_shift'.format(TTY_PATH, ttys_name)
+        if os.path.exists(reg_shift_path):
+            reg_shift = int(read_ttys_node(reg_shift_path))
+            # Register shift indicates address spacing, can infer width
+            # reg_shift = 0: 8-bit registers (1 byte access)
+            # reg_shift = 1: 16-bit registers (2 byte access)
+            # reg_shift = 2: 32-bit registers (4 byte access)
+            if reg_shift == 0:
+                return '1'   # 1 byte (8-bit)
+            elif reg_shift == 1:
+                return '2'   # 2 bytes (16-bit)
+            elif reg_shift == 2:
+                return '4'   # 4 bytes (32-bit)
+            else:
+                width_bits = 8 << reg_shift
+                return str(width_bits // 8)  # Convert bits to bytes
+    except (FileNotFoundError, ValueError):
+        pass
+
+    # Method 3: Check device compatible string or driver info
+    try:
+        device_path = '{}{}/device'.format(TTY_PATH, ttys_name)
+        if os.path.exists(device_path):
+            # Try to read driver name or compatible string
+            uevent_path = '{}/uevent'.format(device_path)
+            if os.path.exists(uevent_path):
+                with open(uevent_path, 'rt') as uevent_file:
+                    content = uevent_file.read()
+                    # Look for common UART types that indicate width
+                    if '16550' in content or '8250' in content:
+                        return '1'   # 1 byte (8-bit UART)
+                    elif 'dw-apb-uart' in content:
+                        return '4'   # 4 bytes (32-bit DesignWare UART)
+    except (FileNotFoundError, ValueError):
+        pass
+
+    # Method 4: Check from /proc/iomem description
+    try:
+        base_clean = base_addr.strip('0x').lower()
+        with open(MEM_PATH[0], 'rt') as mem_info:
+            while True:
+                line = mem_info.readline().strip('\n')
+                if not line:
+                    break
+
+                if base_clean in line and ('serial' in line.lower() or 'uart' in line.lower()):
+                    # Look for hints in the description
+                    line_lower = line.lower()
+                    if '8250' in line_lower or '16550' in line_lower:
+                        return '1'   # 1 byte (8-bit UART)
+                    elif 'dw-apb' in line_lower or 'designware' in line_lower:
+                        return '4'   # 4 bytes (32-bit UART)
+    except (FileNotFoundError, ValueError):
+        pass
+
+    # Return None if no width information found
+    return None
+
+
 def dump_ttys_info(ttys_list, config):
     for ttys in ttys_list:
         ttys_n = ttys.split('/')[-1]
@@ -105,11 +184,21 @@ def dump_ttys_info(ttys_list, config):
         elif ttys_type[serial_type] == 'MMIO':
             base_path = '{}{}/iomem_base'.format(TTY_PATH, ttys_n)
             base = read_ttys_node(base_path)
+
+            # Get MMIO register width in bytes
+            mmio_width = get_mmio_register_width(base, ttys_n)
+
             bdf = iomem2bdf(base)
             if bdf:
-                print('\tseri:{} type:mmio base:{} irq:{} bdf:"{}"'.format(ttys, base, irq, bdf), file=config)
+                if mmio_width is not None:
+                    print('\tseri:{} type:mmio base:{} width:{}byte irq:{} bdf:"{}"'.format(ttys, base, mmio_width, irq, bdf), file=config)
+                else:
+                    print('\tseri:{} type:mmio base:{} irq:{} bdf:"{}"'.format(ttys, base, irq, bdf), file=config)
             else:
-                print('\tseri:{} type:mmio base:{} irq:{}'.format(ttys, base, irq), file=config)
+                if mmio_width is not None:
+                    print('\tseri:{} type:mmio base:{} width:{}byte irq:{}'.format(ttys, base, mmio_width, irq), file=config)
+                else:
+                    print('\tseri:{} type:mmio base:{} irq:{}'.format(ttys, base, irq), file=config)
 
 
 def dump_ttys(config):
