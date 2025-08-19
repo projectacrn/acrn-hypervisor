@@ -28,26 +28,38 @@ struct console_uart {
 	uint32_t reg_width;
 };
 
+#ifndef CONFIG_SERIAL_REG_WIDTH
+    #if defined(CONFIG_SERIAL_PIO_BASE)
+        #define CONFIG_SERIAL_REG_WIDTH 1
+    #elif defined(CONFIG_SERIAL_PCI_BDF)
+        #define CONFIG_SERIAL_REG_WIDTH 4
+    #elif defined(CONFIG_SERIAL_MMIO_BASE)
+        #define CONFIG_SERIAL_REG_WIDTH 1
+    #else
+        #define CONFIG_SERIAL_REG_WIDTH 1
+    #endif
+#endif
+
 #if defined(CONFIG_SERIAL_PIO_BASE)
 static struct console_uart uart = {
-	.enabled = true,
-	.type = PIO,
-	.port_address = CONFIG_SERIAL_PIO_BASE,
-	.reg_width = 1,
+    .enabled = true,
+    .type = PIO,
+    .port_address = CONFIG_SERIAL_PIO_BASE,
+    .reg_width = CONFIG_SERIAL_REG_WIDTH,
 };
 #elif defined(CONFIG_SERIAL_PCI_BDF)
 static struct console_uart uart = {
-	.enabled = true,
-	.type = PCI,
-	.bdf.value = CONFIG_SERIAL_PCI_BDF,
-	.reg_width = 4,
+    .enabled = true,
+    .type = PCI,
+    .bdf.value = CONFIG_SERIAL_PCI_BDF,
+    .reg_width = CONFIG_SERIAL_REG_WIDTH,
 };
 #elif defined(CONFIG_SERIAL_MMIO_BASE)
 static struct console_uart uart = {
-	.enabled = true,
-	.type = MMIO,
-	.mmio_base_vaddr = (void *)CONFIG_SERIAL_MMIO_BASE,
-	.reg_width = 1,
+    .enabled = true,
+    .type = MMIO,
+    .mmio_base_vaddr = (void *)CONFIG_SERIAL_MMIO_BASE,
+    .reg_width = CONFIG_SERIAL_REG_WIDTH,
 };
 #endif
 
