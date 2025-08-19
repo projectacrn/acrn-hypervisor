@@ -216,6 +216,8 @@
     <xsl:variable name="irq" select="substring-before(substring-after($tokens, 'irq:'), ' ')" />
     <xsl:variable name="bdf_string" select="substring-before(substring-after($tokens, 'bdf:'), ' ')" />
     <xsl:variable name="bdf" select="substring($bdf_string, 2, string-length($bdf_string) - 2)" />
+    <xsl:variable name="width_string" select="substring-before(substring-after($tokens, 'width:'), ' ')" />
+    <xsl:variable name="width" select="substring-before($width_string, 'byte')" />
 
     <xsl:choose>
       <!-- TODO: Raise an error upon incomplete serial port info -->
@@ -264,6 +266,14 @@
 	</xsl:if>
       </xsl:otherwise>
     </xsl:choose>
+
+    <!-- Add width configuration if present -->
+    <xsl:if test="$width != ''">
+      <xsl:call-template name="integer-by-key-value">
+        <xsl:with-param name="key" select="'SERIAL_REG_WIDTH'" />
+        <xsl:with-param name="value" select="$width" />
+      </xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="MISC_CFG">
