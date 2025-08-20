@@ -13,6 +13,8 @@ rm_acrn()
     rm -f /boot/acrn-@acrnversion@.map
     rm -f /boot/acrn-@acrnversion@.bin
     rm -f /boot/ACPI_VM*
+    rm -f /usr/share/acrn/board.xml
+    rm -f /usr/share/acrn/scenario.xml
 }
 
 # summary of how this script can be called:
