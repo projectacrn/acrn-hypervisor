@@ -21,6 +21,7 @@ def get_serial_type():
     ttys_type = ''
     ttys_value = ''
     pci_mmio = False
+    width = None  # Only set if width field is found
 
     # Get ttySx information from board config file
     ttys_lines = board_cfg_lib.get_info(acrn_config_utilities.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
@@ -34,20 +35,34 @@ def get_serial_type():
     for line in ttys_lines:
         if ttyn in line:
             # line format:
-            # seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
-            # seri:/dev/ttyS0 type:mmio base:0xB3640000 irq:4 [bdf:"0:x.y"]
-            ttys_type = line.split()[1].split(':')[1]
+            # seri:/dev/ttyS0 type:portio base:0x3F8 [width:1byte] irq:4
+            # seri:/dev/ttyS0 type:mmio base:0xB3640000 [width:1byte] irq:4 [bdf:"0:x.y"]
+            parts = line.split()
+            ttys_type = parts[1].split(':')[1]
+
+            # Parse width if present
+            for part in parts:
+                if part.startswith('width:'):
+                    width_str = part.split(':')[1]
+                    if 'byte' in width_str:
+                        width = int(width_str.replace('byte', ''))
+                    break
+
             if ttys_type == "portio":
-                ttys_value = line.split()[2].split(':')[1]
+                ttys_value = parts[2].split(':')[1]
             elif ttys_type == "mmio":
                 if 'bdf' in line:
-                    ttys_value = line.split()[-1].split('"')[1:-1][0]
-                    pci_mmio = True
+                    # Find the bdf field specifically
+                    for part in parts:
+                        if part.startswith('bdf:'):
+                            ttys_value = part.split('"')[1]
+                            pci_mmio = True
+                            break
                 else:
-                    ttys_value = line.split()[2].split(':')[1]
+                    ttys_value = parts[2].split(':')[1]
             break
 
-    return (ttys_type, ttys_value, pci_mmio)
+    return (ttys_type, ttys_value, pci_mmio, width)
 
 
 def get_memory(hv_info, config):
@@ -66,7 +81,7 @@ def get_memory(hv_info, config):
 
 def get_serial_console(config):
 
-    (serial_type, serial_value, pci_mmio) = get_serial_type()
+    (serial_type, serial_value, pci_mmio, width) = get_serial_type()
     if serial_type == "portio":
         print("CONFIG_SERIAL_LEGACY=y", file=config)
         print("CONFIG_SERIAL_PIO_BASE={}".format(serial_value), file=config)
@@ -82,6 +97,10 @@ def get_serial_console(config):
         print("CONFIG_SERIAL_MMIO=y", file=config)
         if serial_value:
             print('CONFIG_SERIAL_MMIO_BASE={}'.format(serial_value), file=config)
+
+    # Only output width configuration if width field was found
+    if width is not None:
+        print("CONFIG_SERIAL_REG_WIDTH={}".format(width), file=config)
 
 def get_features(hv_info, config):
 

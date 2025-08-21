@@ -80,14 +80,24 @@ def get_native_ttys():
         for tty_line in ttys_lines:
             tmp_dic = {}
             #seri:/dev/ttySx type:mmio base:0x91526000 irq:4 [bdf:"00:18.0"]
+            #seri:/dev/ttySx type:mmio base:0x91526000 width:1byte irq:4 [bdf:"00:18.0"]
             #seri:/dev/ttySy type:portio base:0x2f8 irq:5
-            tty = tty_line.split('/')[2].split()[0]
-            ttys_type = tty_line.split()[1].split(':')[1].strip()
-            ttys_base = tty_line.split()[2].split(':')[1].strip()
-            ttys_irq = tty_line.split()[3].split(':')[1].strip()
+            parts = tty_line.split()
+            tty = parts[0].split('/')[2]
+            ttys_type = parts[1].split(':')[1].strip()
+            ttys_base = parts[2].split(':')[1].strip()
+
+            # Find irq field by looking for "irq:" prefix
+            ttys_irq = None
+            for part in parts:
+                if part.startswith('irq:'):
+                    ttys_irq = part.split(':')[1].strip()
+                    break
+
             tmp_dic['type'] = ttys_type
             tmp_dic['base'] = ttys_base
-            tmp_dic['irq'] = int(ttys_irq)
+            if ttys_irq is not None:
+                tmp_dic['irq'] = int(ttys_irq)
             native_ttys[tty] = tmp_dic
     return native_ttys
 
