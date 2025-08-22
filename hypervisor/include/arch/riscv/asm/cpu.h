@@ -63,6 +63,39 @@ struct cpu_regs {
 	uint64_t scratch;
 };
 
+/* stack_frame is linked with the sequence of stack operation in arch_switch_to() */
+#define STACK_FRAME_OFFSET_RA        0x0
+#define STACK_FRAME_OFFSET_S0        0x8
+#define STACK_FRAME_OFFSET_S1        0x10
+#define STACK_FRAME_OFFSET_S2        0x18
+#define STACK_FRAME_OFFSET_S3        0x20
+#define STACK_FRAME_OFFSET_S4        0x28
+#define STACK_FRAME_OFFSET_S5        0x30
+#define STACK_FRAME_OFFSET_S6        0x38
+#define STACK_FRAME_OFFSET_S7        0x40
+#define STACK_FRAME_OFFSET_S8        0x48
+#define STACK_FRAME_OFFSET_S9        0x50
+#define STACK_FRAME_OFFSET_S10       0x58
+#define STACK_FRAME_OFFSET_S11       0x60
+#define STACK_FRAME_OFFSET_A0        0x68
+struct stack_frame {
+	uint64_t ra;
+	uint64_t s0;
+	uint64_t s1;
+	uint64_t s2;
+	uint64_t s3;
+	uint64_t s4;
+	uint64_t s5;
+	uint64_t s6;
+	uint64_t s7;
+	uint64_t s8;
+	uint64_t s9;
+	uint64_t s10;
+	uint64_t s11;
+	uint64_t a0; /* thread_object parameter */
+	uint64_t magic;
+};
+
 #define cpu_relax()	cpu_memory_barrier() /* TODO: replace with yield instruction */
 #define NR_CPUS		MAX_PCPU_NUM
 
