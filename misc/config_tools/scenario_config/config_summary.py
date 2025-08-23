@@ -91,19 +91,20 @@ class Doc:
 
 
 class GenerateRst:
-    io_port = {}
-    io_description = []
-    pci_vuart = {}
-    pci_ivshmem = {}
-    amount_l3_cache = {}
-    service_vm_used_pcpu_list = []
-
     # Class initialization
     def __init__(self, board_file_name, scenario_file_name, rst_file_name) -> None:
         self.board_etree = parse(board_file_name)
         self.scenario_etree = parse(scenario_file_name)
         self.file = open(rst_file_name, 'w')
         self.doc = Doc(self.file)
+
+        # Initialize instance variables to avoid data persistence across instances
+        self.io_port = {}
+        self.io_description = []
+        self.pci_vuart = {}
+        self.pci_ivshmem = {}
+        self.amount_l3_cache = {}
+        self.service_vm_used_pcpu_list = []
 
     # The rst content is written in three parts according to the first level title
     # 1. Hardware Resource Allocation 2. Inter-VM Connections 3. VM info
@@ -448,7 +449,8 @@ class GenerateRst:
 
     # Close the Rst file after all information is written.
     def close_file(self):
-        self.file.close()
+        if self.file:
+            self.file.close()
 
 
 def main(board_xml, scenario_xml, config_summary):
