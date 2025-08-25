@@ -10,6 +10,7 @@
 #include <types.h>
 #include <asm/irq.h>
 #include <asm/sbi.h>
+#include <schedule.h>
 
 void arch_init_smp_call(void)
 {
@@ -17,6 +18,11 @@ void arch_init_smp_call(void)
 }
 
 void arch_smp_call_kick_pcpu(uint16_t pcpu_id)
+{
+	send_single_ipi(pcpu_id, IPI_NOTIFY_CPU);
+}
+
+void arch_send_reschedule_request(uint16_t pcpu_id)
 {
 	send_single_ipi(pcpu_id, IPI_NOTIFY_CPU);
 }
