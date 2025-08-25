@@ -47,8 +47,6 @@ struct per_cpu_region {
 	struct thread_object idle;
 	uint64_t pcpu_flag;
 	uint32_t softirq_servicing;
-	uint32_t mode_to_kick_pcpu;
-	uint32_t mode_to_idle;
 	struct smp_call_info_data smp_call_info;
 	struct list_head softirq_dev_entry_list;
 	enum pcpu_boot_state boot_state;

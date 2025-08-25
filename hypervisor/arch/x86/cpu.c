@@ -108,6 +108,12 @@ static void enable_gp_for_uclock(void)
 #endif /*CONFIG_UC_LOCK_DETECTION_ENABLED*/
 }
 
+static void init_pcpu_idle_and_kick(uint16_t pcpu_id)
+{
+	per_cpu(arch.idle_mode, pcpu_id) = IDLE_MODE_HLT;
+	per_cpu(arch.kick_pcpu_mode, pcpu_id) = DEL_MODE_IPI;
+}
+
 void init_pcpu_pre(bool is_bsp)
 {
 	uint16_t pcpu_id;
@@ -292,6 +298,8 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 	apply_frequency_policy();
 
+	init_pcpu_idle_and_kick(pcpu_id);
+
 	init_sched(pcpu_id);
 
 #ifdef CONFIG_RDT_ENABLED
@@ -391,7 +399,7 @@ void cpu_do_idle(void)
 #else
 	uint16_t pcpu_id = get_pcpu_id();
 
-	if (per_cpu(mode_to_idle, pcpu_id) == IDLE_MODE_HLT) {
+	if (per_cpu(arch.idle_mode, pcpu_id) == IDLE_MODE_HLT) {
 		asm_safe_hlt();
 	} else {
 		struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);

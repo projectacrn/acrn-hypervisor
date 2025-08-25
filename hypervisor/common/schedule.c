@@ -65,9 +65,6 @@ void init_sched(uint16_t pcpu_id)
 {
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
 
-	per_cpu(mode_to_idle, pcpu_id) = IDLE_MODE_HLT;
-	per_cpu(mode_to_kick_pcpu, pcpu_id) = DEL_MODE_IPI;
-
 	spinlock_init(&ctl->scheduler_lock);
 	ctl->flags = 0UL;
 	ctl->curr_obj = NULL;
@@ -145,9 +142,6 @@ struct thread_object *sched_get_current(uint16_t pcpu_id)
 	return ctl->curr_obj;
 }
 
-/**
- * @pre delmode == DEL_MODE_IPI || delmode == DEL_MODE_INIT
- */
 void make_reschedule_request(uint16_t pcpu_id)
 {
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);

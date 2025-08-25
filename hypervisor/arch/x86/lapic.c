@@ -297,7 +297,7 @@ void send_single_init(uint16_t pcpu_id)
 
 void kick_pcpu(uint16_t pcpu_id)
 {
-	if (per_cpu(mode_to_kick_pcpu, pcpu_id) == DEL_MODE_INIT) {
+	if (per_cpu(arch.kick_pcpu_mode, pcpu_id) == DEL_MODE_INIT) {
 		send_single_init(pcpu_id);
 	} else {
 		send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);

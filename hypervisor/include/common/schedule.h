@@ -12,12 +12,6 @@
 
 #define	NEED_RESCHEDULE		(1U)
 
-#define DEL_MODE_INIT		(1U)
-#define DEL_MODE_IPI		(2U)
-
-#define IDLE_MODE_PAUSE		(1U)
-#define IDLE_MODE_HLT		(2U)
-
 #define THREAD_DATA_SIZE	(256U)
 
 enum thread_object_state {

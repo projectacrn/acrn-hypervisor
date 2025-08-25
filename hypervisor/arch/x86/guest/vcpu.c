@@ -536,17 +536,17 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 			 * idle, the kick mode is certainly ipi kick) will change
 			 * it to PAUSE idle right away.
 			 */
-			if (per_cpu(mode_to_idle, pcpu_id) == IDLE_MODE_HLT) {
-				per_cpu(mode_to_idle, pcpu_id) = IDLE_MODE_PAUSE;
+			if (per_cpu(arch.idle_mode, pcpu_id) == IDLE_MODE_HLT) {
+				per_cpu(arch.idle_mode, pcpu_id) = IDLE_MODE_PAUSE;
 				kick_pcpu(pcpu_id);
 			}
-			per_cpu(mode_to_kick_pcpu, pcpu_id) = DEL_MODE_INIT;
+			per_cpu(arch.kick_pcpu_mode, pcpu_id) = DEL_MODE_INIT;
 		} else {
-			per_cpu(mode_to_kick_pcpu, pcpu_id) = DEL_MODE_IPI;
-			per_cpu(mode_to_idle, pcpu_id) = IDLE_MODE_HLT;
+			per_cpu(arch.kick_pcpu_mode, pcpu_id) = DEL_MODE_IPI;
+			per_cpu(arch.idle_mode, pcpu_id) = IDLE_MODE_HLT;
 		}
 		pr_info("pcpu=%d, kick-mode=%d, use_init_flag=%d", pcpu_id,
-			per_cpu(mode_to_kick_pcpu, pcpu_id), is_using_init_ipi());
+			per_cpu(arch.kick_pcpu_mode, pcpu_id), is_using_init_ipi());
 
 		/* Initialize the parent VM reference */
 		vcpu->vm = vm;

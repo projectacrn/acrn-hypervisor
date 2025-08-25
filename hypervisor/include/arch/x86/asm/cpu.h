@@ -294,6 +294,12 @@ extern uint64_t               secondary_cpu_stack[1];
  */
 #define BROADCAST_CPU_ID 0xfffeU
 
+#define DEL_MODE_INIT		(1U)
+#define DEL_MODE_IPI		(2U)
+
+#define IDLE_MODE_PAUSE		(1U)
+#define IDLE_MODE_HLT		(2U)
+
 struct descriptor_table {
 	uint16_t limit;
 	uint64_t base;

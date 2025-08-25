@@ -30,6 +30,8 @@ struct per_cpu_arch {
 #endif
 	uint64_t tsc_suspend;
 	struct acrn_vcpu *whose_iwkey;
+	uint32_t kick_pcpu_mode;
+	uint32_t idle_mode;
 
 } __aligned(PAGE_SIZE); /* per_cpu_region size aligned with PAGE_SIZE */
 
