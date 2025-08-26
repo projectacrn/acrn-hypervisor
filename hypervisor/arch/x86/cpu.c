@@ -392,7 +392,7 @@ void stop_pcpus(void)
 	wait_pcpus_offline(mask);
 }
 
-void cpu_do_idle(void)
+void arch_cpu_do_idle(void)
 {
 #ifdef CONFIG_KEEP_IRQ_DISABLED
 	asm_pause();
@@ -418,7 +418,7 @@ void cpu_do_idle(void)
 /**
  * only run on current pcpu
  */
-void cpu_dead(void)
+void arch_cpu_dead(void)
 {
 	/* For debug purposes, using a stack variable in the while loop enables
 	 * us to modify the value using a JTAG probe and resume if needed.
@@ -426,7 +426,6 @@ void cpu_dead(void)
 	int32_t halt = 1;
 	uint16_t pcpu_id = get_pcpu_id();
 
-	deinit_sched(pcpu_id);
 	if (is_pcpu_active(pcpu_id)) {
 		/* clean up native stuff */
 		vmx_off();

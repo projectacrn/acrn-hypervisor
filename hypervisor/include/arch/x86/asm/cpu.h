@@ -448,8 +448,6 @@ void dispatch_exception(struct intr_excp_ctx *ctx);
 void handle_nmi(__unused struct intr_excp_ctx *ctx);
 
 /* Function prototypes */
-void cpu_do_idle(void);
-void cpu_dead(void);
 void trampoline_start16(void);
 void load_pcpu_state_data(void);
 void init_pcpu_pre(bool is_bsp);

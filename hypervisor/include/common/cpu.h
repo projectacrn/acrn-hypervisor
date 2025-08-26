@@ -49,6 +49,9 @@ bool check_pcpus_inactive(uint64_t mask);
 uint64_t get_active_pcpu_bitmap(void);
 void pcpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state);
 bool start_pcpus(uint64_t mask);
+void arch_cpu_dead(void);
+void cpu_dead(void);
+void arch_cpu_do_idle(void);
 
 #define ALL_CPUS_MASK		((1UL << get_pcpu_nums()) - 1UL)
 #define AP_MASK			(ALL_CPUS_MASK & ~(1UL << BSP_CPU_ID))
@@ -66,6 +69,11 @@ static inline void set_current_pcpu_id(uint16_t pcpu_id)
 static inline void asm_pause(void)
 {
 	arch_asm_pause();
+}
+
+static inline void cpu_do_idle(void)
+{
+	arch_cpu_do_idle();
 }
 
 /* The mandatory functions should be implemented by arch. */

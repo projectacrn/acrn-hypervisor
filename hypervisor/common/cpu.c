@@ -8,7 +8,7 @@
 #include <delay.h>
 #include <logmsg.h>
 #include <bits.h>
-
+#include <schedule.h>
 
 static volatile uint64_t pcpu_active_bitmap = 0UL;
 
@@ -111,4 +111,12 @@ bool start_pcpus(uint64_t mask)
 	}
 
 	return check_pcpus_active(mask);
+}
+
+void cpu_dead(void)
+{
+	uint16_t pcpu_id = get_pcpu_id();
+
+	deinit_sched(pcpu_id);
+	arch_cpu_dead();
 }
