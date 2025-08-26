@@ -373,7 +373,6 @@ static inline struct pi_desc *get_pi_desc(struct acrn_vcpu *vcpu)
 }
 
 uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
-void default_idle(__unused struct thread_object *obj);
 void vcpu_thread(struct thread_object *obj);
 
 int32_t vmx_vmrun(struct run_context *context, int32_t ops, int32_t ibrs);
