@@ -7,7 +7,7 @@
 #include <asm/irq.h>
 #include <asm/vmx.h>
 
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/virq.h>
 #include <cpu.h>
 

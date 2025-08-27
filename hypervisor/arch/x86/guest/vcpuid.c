@@ -7,7 +7,7 @@
 #include <types.h>
 #include <errno.h>
 #include <bits.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/cpuid.h>
 #include <asm/cpufeatures.h>

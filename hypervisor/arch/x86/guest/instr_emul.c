@@ -2258,7 +2258,7 @@ static int32_t local_decode_instruction(enum vm_cpu_mode cpu_mode,
 static int32_t instr_check_di(struct acrn_vcpu *vcpu)
 {
 	int32_t ret;
-	struct instr_emul_vie *vie = &vcpu->inst_ctxt.vie;
+	struct instr_emul_vie *vie = &vcpu->arch.inst_ctxt.vie;
 	uint64_t gva;
 
 	ret = get_gva_di_check(vcpu, vie, vie->addrsize, &gva);
@@ -2278,7 +2278,7 @@ static int32_t instr_check_gva(struct acrn_vcpu *vcpu, enum vm_cpu_mode cpu_mode
 	uint64_t base, segbase, idx, gva, gpa;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
-	struct instr_emul_vie *vie = &vcpu->inst_ctxt.vie;
+	struct instr_emul_vie *vie = &vcpu->arch.inst_ctxt.vie;
 
 	base = 0UL;
 	if (vie->base_register != CPU_REG_LAST) {
@@ -2371,7 +2371,7 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu, bool full_decode)
 	int32_t retval;
 	enum vm_cpu_mode cpu_mode;
 
-	emul_ctxt = &vcpu->inst_ctxt;
+	emul_ctxt = &vcpu->arch.inst_ctxt;
 	retval = vie_init(&emul_ctxt->vie, vcpu);
 
 	if (retval < 0) {
@@ -2428,7 +2428,7 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu, bool full_decode)
 
 int32_t emulate_instruction(struct acrn_vcpu *vcpu)
 {
-	struct instr_emul_vie *vie = &vcpu->inst_ctxt.vie;
+	struct instr_emul_vie *vie = &vcpu->arch.inst_ctxt.vie;
 	int32_t error;
 
 	if (vie->decoded != 0U) {
@@ -2487,5 +2487,5 @@ int32_t emulate_instruction(struct acrn_vcpu *vcpu)
 
 bool is_current_opcode_xchg(struct acrn_vcpu *vcpu)
 {
-	return (vcpu->inst_ctxt.vie.op.op_type == VIE_OP_TYPE_XCHG);
+	return (vcpu->arch.inst_ctxt.vie.op.op_type == VIE_OP_TYPE_XCHG);
 }

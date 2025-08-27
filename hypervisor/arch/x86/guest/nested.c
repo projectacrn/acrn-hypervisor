@@ -9,7 +9,7 @@
 #include <asm/mmu.h>
 #include <asm/guest/virq.h>
 #include <asm/guest/ept.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/vmcs.h>
 #include <asm/guest/nested.h>
@@ -1338,8 +1338,8 @@ static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
 		 */
 		exec_vmwrite(VMX_GUEST_CR0, vmcs12->host_cr0);
 		exec_vmwrite(VMX_GUEST_CR4, vmcs12->host_cr4);
-		bitmap_clear_non_atomic(CPU_REG_CR0, &vcpu->reg_cached);
-		bitmap_clear_non_atomic(CPU_REG_CR4, &vcpu->reg_cached);
+		bitmap_clear_non_atomic(CPU_REG_CR0, &vcpu->arch.reg_cached);
+		bitmap_clear_non_atomic(CPU_REG_CR4, &vcpu->arch.reg_cached);
 
 		exec_vmwrite(VMX_GUEST_CR3, vmcs12->host_cr3);
 		exec_vmwrite(VMX_GUEST_DR7, DR7_INIT_VALUE);
@@ -1395,7 +1395,7 @@ static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
 	}
 
 	/*
-	 * For those registers that are managed by the vcpu->reg_updated flag,
+	 * For those registers that are managed by the vcpu->arch.reg_updated flag,
 	 * need to write with vcpu_set_xxx() so that vcpu_get_xxx() can get the
 	 * correct values.
 	 */

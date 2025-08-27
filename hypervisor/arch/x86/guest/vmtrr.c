@@ -8,7 +8,7 @@
 #include <asm/msr.h>
 #include <asm/pgtable.h>
 #include <asm/guest/ept.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/vm.h>
 #include <logmsg.h>
 

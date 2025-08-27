@@ -9,7 +9,7 @@
 #include <pgtable.h>
 #include <asm/msr.h>
 #include <asm/cpuid.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/virq.h>
 #include <asm/guest/vm.h>
 #include <asm/vmx.h>

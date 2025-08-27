@@ -5,7 +5,7 @@
  */
 
 #include <types.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/virq.h>
 #include <event.h>

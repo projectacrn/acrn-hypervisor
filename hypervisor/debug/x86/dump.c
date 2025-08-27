@@ -7,7 +7,7 @@
 #include <types.h>
 #include <asm/per_cpu.h>
 #include <asm/mmu.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/vmx.h>
 #include <asm/guest/vm.h>
 #include <asm/init.h>

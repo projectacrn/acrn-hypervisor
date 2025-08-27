@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/virq.h>
 #include <bits.h>
 #include <asm/vmx.h>
@@ -23,6 +23,46 @@
 #include <asm/lapic.h>
 #include <asm/irq.h>
 #include <console.h>
+
+bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
+{
+	return (vcpu->vcpu_id == BSP_CPU_ID);
+}
+
+enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)
+{
+	return vcpu->arch.cpu_mode;
+}
+
+/* do not update Guest RIP for next VM Enter */
+void vcpu_retain_rip(struct acrn_vcpu *vcpu)
+{
+	(vcpu)->arch.inst_len = 0U;
+}
+
+struct acrn_vlapic *vcpu_vlapic(struct acrn_vcpu *vcpu)
+{
+	return &(vcpu->arch.vlapic);
+}
+
+/**
+ * @brief Get pointer to PI description.
+ *
+ * @param[in] vcpu Target vCPU
+ *
+ * @return pointer to PI description
+ *
+ * @pre vcpu != NULL
+ */
+struct pi_desc *get_pi_desc(struct acrn_vcpu *vcpu)
+{
+	return &(vcpu->arch.pid);
+}
+
+bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu)
+{
+	return vcpu->arch.lapic_pt_enabled;
+}
 
 uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 {
@@ -45,8 +85,8 @@ uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (!bitmap_test(CPU_REG_RIP, &vcpu->reg_updated) &&
-		!bitmap_test_and_set_non_atomic(CPU_REG_RIP, &vcpu->reg_cached)) {
+	if (!bitmap_test(CPU_REG_RIP, &vcpu->arch.reg_updated) &&
+		!bitmap_test_and_set_non_atomic(CPU_REG_RIP, &vcpu->arch.reg_cached)) {
 		ctx->rip = exec_vmread(VMX_GUEST_RIP);
 	}
 	return ctx->rip;
@@ -55,7 +95,7 @@ uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rip = val;
-	bitmap_set_non_atomic(CPU_REG_RIP, &vcpu->reg_updated);
+	bitmap_set_non_atomic(CPU_REG_RIP, &vcpu->arch.reg_updated);
 }
 
 uint64_t vcpu_get_rsp(const struct acrn_vcpu *vcpu)
@@ -72,7 +112,7 @@ void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	ctx->cpu_regs.regs.rsp = val;
-	bitmap_set_non_atomic(CPU_REG_RSP, &vcpu->reg_updated);
+	bitmap_set_non_atomic(CPU_REG_RSP, &vcpu->arch.reg_updated);
 }
 
 uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
@@ -97,7 +137,7 @@ void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
 	}
 
 	/* Write the new value to VMCS in either case */
-	bitmap_set_non_atomic(CPU_REG_EFER, &vcpu->reg_updated);
+	bitmap_set_non_atomic(CPU_REG_EFER, &vcpu->arch.reg_updated);
 }
 
 uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
@@ -105,8 +145,8 @@ uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (!bitmap_test(CPU_REG_RFLAGS, &vcpu->reg_updated) &&
-		!bitmap_test_and_set_non_atomic(CPU_REG_RFLAGS, &vcpu->reg_cached) && vcpu->launched) {
+	if (!bitmap_test(CPU_REG_RFLAGS, &vcpu->arch.reg_updated) &&
+		!bitmap_test_and_set_non_atomic(CPU_REG_RFLAGS, &vcpu->arch.reg_cached) && vcpu->launched) {
 		ctx->rflags = exec_vmread(VMX_GUEST_RFLAGS);
 	}
 	return ctx->rflags;
@@ -116,7 +156,7 @@ void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rflags =
 		val;
-	bitmap_set_non_atomic(CPU_REG_RFLAGS, &vcpu->reg_updated);
+	bitmap_set_non_atomic(CPU_REG_RFLAGS, &vcpu->arch.reg_updated);
 }
 
 uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr)
@@ -647,16 +687,16 @@ static void write_cached_registers(struct acrn_vcpu *vcpu)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (bitmap_test_and_clear_non_atomic(CPU_REG_RIP, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_RIP, &vcpu->arch.reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RIP, ctx->rip);
 	}
-	if (bitmap_test_and_clear_non_atomic(CPU_REG_RSP, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_RSP, &vcpu->arch.reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RSP, ctx->cpu_regs.regs.rsp);
 	}
-	if (bitmap_test_and_clear_non_atomic(CPU_REG_EFER, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_EFER, &vcpu->arch.reg_updated)) {
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, ctx->ia32_efer);
 	}
-	if (bitmap_test_and_clear_non_atomic(CPU_REG_RFLAGS, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_RFLAGS, &vcpu->arch.reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RFLAGS, ctx->rflags);
 	}
 
@@ -665,11 +705,11 @@ static void write_cached_registers(struct acrn_vcpu *vcpu)
 	 * switching. There should no other module request updating
 	 * CR0/CR4 here.
 	 */
-	if (bitmap_test_and_clear_non_atomic(CPU_REG_CR0, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_CR0, &vcpu->arch.reg_updated)) {
 		vcpu_set_cr0(vcpu, ctx->cr0);
 	}
 
-	if (bitmap_test_and_clear_non_atomic(CPU_REG_CR4, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_CR4, &vcpu->arch.reg_updated)) {
 		vcpu_set_cr4(vcpu, ctx->cr4);
 	}
 }
@@ -686,7 +726,7 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 	int32_t status = 0;
 	int32_t ibrs_type = get_ibrs_type();
 
-	if (vcpu->reg_updated != 0UL) {
+	if (vcpu->arch.reg_updated != 0UL) {
 		write_cached_registers(vcpu);
 	}
 
@@ -765,7 +805,7 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		set_vcpu_mode(vcpu, cs_attr, ia32_efer, cr0);
 	}
 
-	vcpu->reg_cached = 0UL;
+	vcpu->arch.reg_cached = 0UL;
 
 	/* Obtain current VCPU instruction length */
 	vcpu->arch.inst_len = exec_vmread32(VMX_EXIT_INSTR_LEN);

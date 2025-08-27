@@ -8,7 +8,7 @@
 
 #include <types.h>
 #include <asm/guest/vmcs.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/vmx.h>
 #include <asm/gdt.h>

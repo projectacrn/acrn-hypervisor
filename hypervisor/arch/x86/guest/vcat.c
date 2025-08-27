@@ -14,7 +14,7 @@
 #include <asm/board.h>
 #include <asm/vm_config.h>
 #include <asm/msr.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/vcat.h>
 #include <asm/per_cpu.h>

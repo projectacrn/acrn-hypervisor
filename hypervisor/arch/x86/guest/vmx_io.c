@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <atomic.h>
 #include <io_req.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/instr_emul.h>
 #include <asm/guest/vmexit.h>

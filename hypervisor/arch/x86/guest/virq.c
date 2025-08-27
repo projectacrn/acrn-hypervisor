@@ -11,7 +11,7 @@
 #include <asm/lapic.h>
 #include <asm/mmu.h>
 #include <asm/vmx.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/vmcs.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/lock_instr_emul.h>
@@ -130,7 +130,7 @@ static inline bool is_nmi_injectable(void)
 }
 void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 {
-	bitmap_set(eventid, &vcpu->arch.pending_req);
+	bitmap_set(eventid, &vcpu->pending_req);
 	kick_vcpu(vcpu);
 }
 
@@ -363,7 +363,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	bool injected = false;
 	int32_t ret = 0;
 	struct acrn_vcpu_arch *arch = &vcpu->arch;
-	uint64_t *pending_req_bits = &arch->pending_req;
+	uint64_t *pending_req_bits = &vcpu->pending_req;
 
 	if (*pending_req_bits != 0UL) {
 		/* make sure ACRN_REQUEST_INIT_VMCS handler as the first one */

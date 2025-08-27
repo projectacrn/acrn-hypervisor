@@ -16,7 +16,7 @@
 #include <bits.h>
 #include <spinlock.h>
 #include <asm/pgtable.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <vioapic.h>
 #include <vpic.h>
 #include <asm/guest/vmx_io.h>

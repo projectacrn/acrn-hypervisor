@@ -511,7 +511,7 @@ static void apicv_advanced_accept_intr(struct acrn_vlapic *vlapic, uint32_t vect
 		 *    send PI notification to vCPU and hardware will
 		 *    sync PIR to vIRR automatically.
 		 */
-		bitmap_set(ACRN_REQUEST_EVENT, &vcpu->arch.pending_req);
+		bitmap_set(ACRN_REQUEST_EVENT, &vcpu->pending_req);
 
 		if (get_pcpu_id() != pcpuid_from_vcpu(vcpu)) {
 			apicv_trigger_pi_anv(pcpuid_from_vcpu(vcpu), (uint32_t)vcpu->arch.pid.control.bits.nv);
@@ -2326,7 +2326,7 @@ static bool apicv_basic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
 		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	}
 
-	return vcpu->arch.pending_req != 0UL;
+	return vcpu->pending_req != 0UL;
 }
 
 static bool apicv_advanced_has_pending_delivery_intr(__unused struct acrn_vcpu *vcpu)

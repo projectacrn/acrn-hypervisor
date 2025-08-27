@@ -9,7 +9,7 @@
 #include <asm/vmx.h>
 #include <asm/guest/virq.h>
 #include <asm/mmu.h>
-#include <asm/guest/vcpu.h>
+#include <vcpu.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/vmexit.h>
 #include <asm/guest/vm_reset.h>
@@ -349,7 +349,7 @@ static int32_t pause_vmexit_handler(__unused struct acrn_vcpu *vcpu)
 
 static int32_t hlt_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	if ((vcpu->arch.pending_req == 0UL) && (!vlapic_has_pending_intr(vcpu))) {
+	if ((vcpu->pending_req == 0UL) && (!vlapic_has_pending_intr(vcpu))) {
 		wait_event(&vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
 	}
 	return 0;

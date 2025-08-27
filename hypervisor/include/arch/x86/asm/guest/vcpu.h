@@ -10,8 +10,8 @@
  * @brief public APIs for vcpu operations
  */
 
-#ifndef VCPU_H
-#define VCPU_H
+#ifndef X86_VCPU_H
+#define X86_VCPU_H
 
 
 #ifndef ASSEMBLER
@@ -140,19 +140,6 @@
 #define LDTR_AR                         (0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
 #define TR_AR                           (0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
 
-#define foreach_vcpu(idx, vm, vcpu)				\
-	for ((idx) = 0U, (vcpu) = &((vm)->hw.vcpu_array[(idx)]);	\
-		(idx) < (vm)->hw.created_vcpus;			\
-		(idx)++, (vcpu) = &((vm)->hw.vcpu_array[(idx)])) \
-		if ((vcpu)->state != VCPU_OFFLINE)
-
-enum vcpu_state {
-	VCPU_OFFLINE = 0U,
-	VCPU_INIT,
-	VCPU_RUNNING,
-	VCPU_ZOMBIE,
-};
-
 enum vm_cpu_mode {
 	CPU_MODE_REAL,
 	CPU_MODE_PROTECTED,
@@ -278,12 +265,14 @@ struct acrn_vcpu_arch {
 	uint32_t proc_vm_exec_ctrls;
 	uint32_t inst_len;
 
+	uint64_t reg_cached;
+	uint64_t reg_updated;
+
+	struct instr_emul_ctxt inst_ctxt;
+
 	/* Information related to secondary / AP VCPU start-up */
 	enum vm_cpu_mode cpu_mode;
 	uint8_t nr_sipi;
-
-	/* interrupt injection information */
-	uint64_t pending_req;
 
 	/* List of MSRS to be stored and loaded on VM exits or VM entries */
 	struct msr_store_area msr_area;
@@ -302,75 +291,16 @@ struct acrn_vcpu_arch {
 	uint64_t iwkey_copy_status;
 } __aligned(PAGE_SIZE);
 
-struct acrn_vm;
-struct acrn_vcpu {
-	uint8_t stack[CONFIG_STACK_SIZE] __aligned(16);
-
-	/* Architecture specific definitions for this VCPU */
-	struct acrn_vcpu_arch arch;
-	uint16_t vcpu_id;	/* virtual identifier for VCPU */
-	struct acrn_vm *vm;		/* Reference to the VM this VCPU belongs to */
-
-	volatile enum vcpu_state state;	/* State of this VCPU */
-
-	struct thread_object thread_obj;
-	bool launched; /* Whether the vcpu is launched on target pcpu */
-
-	struct instr_emul_ctxt inst_ctxt;
-	struct io_request req; /* used by io/ept emulation */
-
-	uint64_t reg_cached;
-	uint64_t reg_updated;
-
-	struct sched_event events[VCPU_EVENT_NUM];
-} __aligned(PAGE_SIZE);
-
-struct vcpu_dump {
-	struct acrn_vcpu *vcpu;
-	char *str;
-	uint32_t str_max;
-};
-
-struct guest_mem_dump {
-	struct acrn_vcpu *vcpu;
-	uint64_t gva;
-	uint64_t len;
-};
-
-static inline bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
-{
-	return (vcpu->vcpu_id == BSP_CPU_ID);
-}
-
-static inline enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)
-{
-	return vcpu->arch.cpu_mode;
-}
+struct acrn_vcpu;
+enum vcpu_state;
+bool is_vcpu_bsp(const struct acrn_vcpu *vcpu);
+enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu);
 
 /* do not update Guest RIP for next VM Enter */
-static inline void vcpu_retain_rip(struct acrn_vcpu *vcpu)
-{
-	(vcpu)->arch.inst_len = 0U;
-}
+void vcpu_retain_rip(struct acrn_vcpu *vcpu);
+struct acrn_vlapic *vcpu_vlapic(struct acrn_vcpu *vcpu);
 
-static inline struct acrn_vlapic *vcpu_vlapic(struct acrn_vcpu *vcpu)
-{
-	return &(vcpu->arch.vlapic);
-}
-
-/**
- * @brief Get pointer to PI description.
- *
- * @param[in] vcpu Target vCPU
- *
- * @return pointer to PI description
- *
- * @pre vcpu != NULL
- */
-static inline struct pi_desc *get_pi_desc(struct acrn_vcpu *vcpu)
-{
-	return &(vcpu->arch.pid);
-}
+struct pi_desc *get_pi_desc(struct acrn_vcpu *vcpu);
 
 uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
 void vcpu_thread(struct thread_object *obj);
@@ -720,10 +650,7 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
  * @return true, if vCPU LAPIC is in x2APIC mode and VM, vCPU belongs to, is configured for
  *				LAPIC Pass-through
  */
-static inline bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu)
-{
-	return vcpu->arch.lapic_pt_enabled;
-}
+bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu);
 
 /**
  * @brief handle posted interrupts
