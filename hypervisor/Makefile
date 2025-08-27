@@ -127,6 +127,8 @@ ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
 endif
 
+COMMON_C_SRCS += common/vcpu.c
+
 # FIXME: During initial development stage of riscv enabling,
 # we would like to first confine the common files to x86-only.
 # As we progress through the riscv enabling process, multi-arch

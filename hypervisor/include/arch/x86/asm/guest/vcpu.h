@@ -537,20 +537,6 @@ void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *e
 void load_iwkey(struct acrn_vcpu *vcpu);
 
 /**
- * @brief create a vcpu for the target vm
- *
- * Creates/allocates a vCPU instance, with initialization for its vcpu_id,
- * vpid, vmcs, vlapic, etc. It sets the init vCPU state to VCPU_INIT
- *
- * @param[in] pcpu_id created vcpu will run on this pcpu
- * @param[in] vm pointer to vm data structure, this vcpu will owned by this vm.
- * @param[out] rtn_vcpu_handle pointer to the created vcpu
- *
- * @retval 0 vcpu created successfully, other values failed.
- */
-int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle);
-
-/**
  * @brief run into non-root mode based on vcpu setting
  *
  * An interface in vCPU thread to implement VM entry and VM exit.

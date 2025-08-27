@@ -88,6 +88,24 @@ struct guest_mem_dump {
 };
 
 uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
+int32_t arch_init_vcpu(struct acrn_vcpu *vcpu);
+
+void arch_vcpu_thread(struct thread_object *obj);
+void arch_context_switch_out(struct thread_object *prev);
+void arch_context_switch_in(struct thread_object *next);
+uint64_t arch_build_stack_frame(struct acrn_vcpu *vcpu);
+
+/**
+ * @brief create a vcpu for the target vm
+ *
+ * Creates/allocates and initialize a vCPU instance.
+ *
+ * @param[in] pcpu_id created vcpu will run on this pcpu
+ * @param[in] vm pointer to vm data structure
+ *
+ * @retval 0 vcpu created successfully, other values failed.
+ */
+int32_t create_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
 
 /**
  * @}

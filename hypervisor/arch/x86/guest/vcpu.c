@@ -23,11 +23,8 @@
 #include <asm/lapic.h>
 #include <asm/irq.h>
 #include <console.h>
-
-bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
-{
-	return (vcpu->vcpu_id == BSP_CPU_ID);
-}
+#include <trace.h>
+#include <asm/guest/vmexit.h>
 
 enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)
 {
@@ -529,139 +526,67 @@ void set_vcpu_startup_entry(struct acrn_vcpu *vcpu, uint64_t entry)
 	vcpu_set_rip(vcpu, 0UL);
 }
 
-/*
- * @pre vm != NULL && rtn_vcpu_handle != NULL
- */
-int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle)
+int32_t arch_init_vcpu(struct acrn_vcpu *vcpu)
 {
-	struct acrn_vcpu *vcpu;
-	uint16_t vcpu_id;
-	int32_t ret;
+	struct acrn_vm *vm = vcpu->vm;
+	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
 
-	pr_info("Creating VCPU working on PCPU%hu", pcpu_id);
+	if (is_lapic_pt_configured(vm) || is_using_init_ipi()) {
+		/* Lapic_pt pCPU does not enable irq in root mode. So it
+		 * should be set to PAUSE idle mode.
+		 * At this point the pCPU is possibly in HLT idle. And the
+		 * kick mode is to be set to INIT kick, which will not be
+		 * able to wake root mode HLT. So a kick(if pCPU is in HLT
+		 * idle, the kick mode is certainly ipi kick) will change
+		 * it to PAUSE idle right away.
+		 */
+		if (per_cpu(arch.idle_mode, pcpu_id) == IDLE_MODE_HLT) {
+			per_cpu(arch.idle_mode, pcpu_id) = IDLE_MODE_PAUSE;
+			kick_pcpu(pcpu_id);
+		}
+		per_cpu(arch.kick_pcpu_mode, pcpu_id) = DEL_MODE_INIT;
+	} else {
+		per_cpu(arch.kick_pcpu_mode, pcpu_id) = DEL_MODE_IPI;
+		per_cpu(arch.idle_mode, pcpu_id) = IDLE_MODE_HLT;
+	}
+	pr_info("pcpu=%d, kick-mode=%d, use_init_flag=%d", pcpu_id,
+		per_cpu(arch.kick_pcpu_mode, pcpu_id), is_using_init_ipi());
 
 	/*
-	 * vcpu->vcpu_id = vm->hw.created_vcpus;
-	 * vm->hw.created_vcpus++;
+	 * If the logical processor is in VMX non-root operation and
+	 * the "enable VPID" VM-execution control is 1, the current VPID
+	 * is the value of the VPID VM-execution control field in the VMCS.
+	 *
+	 * This assignment guarantees a unique non-zero per vcpu vpid at runtime.
 	 */
-	vcpu_id = vm->hw.created_vcpus;
-	if (vcpu_id < MAX_VCPUS_PER_VM) {
-		/* Allocate memory for VCPU */
-		vcpu = &(vm->hw.vcpu_array[vcpu_id]);
-		(void)memset((void *)vcpu, 0U, sizeof(struct acrn_vcpu));
+	vcpu->arch.vpid = ALLOCATED_MIN_L1_VPID + (vm->vm_id * MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
 
-		/* Initialize CPU ID for this VCPU */
-		vcpu->vcpu_id = vcpu_id;
-		per_cpu(ever_run_vcpu, pcpu_id) = vcpu;
+	/*
+	 * Use vm_id as the index to indicate the posted interrupt IRQ/vector pair that are
+	 * assigned to this vCPU:
+	 * 0: first posted interrupt IRQs/vector pair (POSTED_INTR_IRQ/POSTED_INTR_VECTOR)
+	 * ...
+	 * CONFIG_MAX_VM_NUM-1: last posted interrupt IRQs/vector pair
+	 * ((POSTED_INTR_IRQ + CONFIG_MAX_VM_NUM - 1U)/(POSTED_INTR_VECTOR + CONFIG_MAX_VM_NUM - 1U)
+	 */
+	vcpu->arch.pid.control.bits.nv = POSTED_INTR_VECTOR + vm->vm_id;
 
-		if (is_lapic_pt_configured(vm) || is_using_init_ipi()) {
-			/* Lapic_pt pCPU does not enable irq in root mode. So it
-			 * should be set to PAUSE idle mode.
-			 * At this point the pCPU is possibly in HLT idle. And the
-			 * kick mode is to be set to INIT kick, which will not be
-			 * able to wake root mode HLT. So a kick(if pCPU is in HLT
-			 * idle, the kick mode is certainly ipi kick) will change
-			 * it to PAUSE idle right away.
-			 */
-			if (per_cpu(arch.idle_mode, pcpu_id) == IDLE_MODE_HLT) {
-				per_cpu(arch.idle_mode, pcpu_id) = IDLE_MODE_PAUSE;
-				kick_pcpu(pcpu_id);
-			}
-			per_cpu(arch.kick_pcpu_mode, pcpu_id) = DEL_MODE_INIT;
-		} else {
-			per_cpu(arch.kick_pcpu_mode, pcpu_id) = DEL_MODE_IPI;
-			per_cpu(arch.idle_mode, pcpu_id) = IDLE_MODE_HLT;
-		}
-		pr_info("pcpu=%d, kick-mode=%d, use_init_flag=%d", pcpu_id,
-			per_cpu(arch.kick_pcpu_mode, pcpu_id), is_using_init_ipi());
+	/* ACRN does not support vCPU migration, one vCPU always runs on
+	 * the same pCPU, so PI's ndst is never changed after startup.
+	 */
+	vcpu->arch.pid.control.bits.ndst = per_cpu(arch.lapic_id, pcpu_id);
 
-		/* Initialize the parent VM reference */
-		vcpu->vm = vm;
+	/* Create per vcpu vlapic */
+	vlapic_create(vcpu, pcpu_id);
 
-		/* Initialize the virtual ID for this VCPU */
-		/* FIXME:
-		 * We have assumption that we always destroys vcpus in one
-		 * shot (like when vm is destroyed). If we need to support
-		 * specific vcpu destroy on fly, this vcpu_id assignment
-		 * needs revise.
-		 */
-
-		pr_info("Create VM%d-VCPU%d, Role: %s",
-				vcpu->vm->vm_id, vcpu->vcpu_id,
-				is_vcpu_bsp(vcpu) ? "PRIMARY" : "SECONDARY");
-
-		/*
-		 * If the logical processor is in VMX non-root operation and
-		 * the "enable VPID" VM-execution control is 1, the current VPID
-		 * is the value of the VPID VM-execution control field in the VMCS.
-		 *
-		 * This assignment guarantees a unique non-zero per vcpu vpid at runtime.
-		 */
-		vcpu->arch.vpid = ALLOCATED_MIN_L1_VPID + (vm->vm_id * MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
-
-		/*
-		 * There are two locally independent writing operations, namely the
-		 * assignment of vcpu->vm and vcpu_array[]. Compilers may optimize
-		 * and reorder writing operations while users of vcpu_array[] may
-		 * assume the presence of vcpu->vm. A compiler barrier is added here
-		 * to prevent compiler reordering, ensuring that assignments to
-		 * vcpu->vm precede vcpu_array[].
-		 */
-		cpu_compiler_barrier();
-
-		/*
-		 * ACRN uses the following approach to manage VT-d PI notification vectors:
-		 * Allocate unique Activation Notification Vectors (ANV) for each vCPU that
-		 * belongs to the same pCPU, the ANVs need only be unique within each pCPU,
-		 * not across all vCPUs. The max numbers of vCPUs may be running on top of
-		 * a pCPU is CONFIG_MAX_VM_NUM, since ACRN does not support 2 vCPUs of same
-		 * VM running on top of same pCPU. This reduces # of pre-allocated ANVs for
-		 * posted interrupts to CONFIG_MAX_VM_NUM, and enables ACRN to avoid switching
-		 * between active and wake-up vector values in the posted interrupt descriptor
-		 * on vCPU scheduling state changes.
-		 *
-		 * We maintain a per-pCPU array of vCPUs, and use vm_id as the index to the
-		 * vCPU array
-		 */
-		per_cpu(vcpu_array, pcpu_id)[vm->vm_id] = vcpu;
-
-		/*
-		 * Use vm_id as the index to indicate the posted interrupt IRQ/vector pair that are
-		 * assigned to this vCPU:
-		 * 0: first posted interrupt IRQs/vector pair (POSTED_INTR_IRQ/POSTED_INTR_VECTOR)
-		 * ...
-		 * CONFIG_MAX_VM_NUM-1: last posted interrupt IRQs/vector pair
-		 * ((POSTED_INTR_IRQ + CONFIG_MAX_VM_NUM - 1U)/(POSTED_INTR_VECTOR + CONFIG_MAX_VM_NUM - 1U)
-		 */
-		vcpu->arch.pid.control.bits.nv = POSTED_INTR_VECTOR + vm->vm_id;
-
-		/* ACRN does not support vCPU migration, one vCPU always runs on
-		 * the same pCPU, so PI's ndst is never changed after startup.
-		 */
-		vcpu->arch.pid.control.bits.ndst = per_cpu(arch.lapic_id, pcpu_id);
-
-		/* Create per vcpu vlapic */
-		vlapic_create(vcpu, pcpu_id);
-
-		if (!vm_hide_mtrr(vm)) {
-			init_vmtrr(vcpu);
-		}
-
-		/* Populate the return handle */
-		*rtn_vcpu_handle = vcpu;
-		vcpu_set_state(vcpu, VCPU_INIT);
-
-		init_xsave(vcpu);
-		vcpu_reset_internal(vcpu, POWER_ON_RESET);
-		(void)memset((void *)&vcpu->req, 0U, sizeof(struct io_request));
-		vm->hw.created_vcpus++;
-		ret = 0;
-	} else {
-		pr_err("%s, vcpu id is invalid!\n", __func__);
-		ret = -EINVAL;
+	if (!vm_hide_mtrr(vm)) {
+		init_vmtrr(vcpu);
 	}
 
-	return ret;
+	init_xsave(vcpu);
+	vcpu_reset_internal(vcpu, POWER_ON_RESET);
+
+	return 0;
 }
 
 /**
@@ -854,7 +779,7 @@ void kick_vcpu(struct acrn_vcpu *vcpu)
 /*
  * @pre (&vcpu->stack[CONFIG_STACK_SIZE] & (CPU_STACK_ALIGN - 1UL)) == 0
  */
-static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
+uint64_t arch_build_stack_frame(struct acrn_vcpu *vcpu)
 {
 	uint64_t stacktop = (uint64_t)&vcpu->stack[CONFIG_STACK_SIZE];
 	struct stack_frame *frame;
@@ -948,7 +873,7 @@ void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *e
  * will call them every thread switch. We can implement lazy context swtich , which
  * only do context swtich when really need.
  */
-static void context_switch_out(struct thread_object *prev)
+void arch_context_switch_out(struct thread_object *prev)
 {
 	struct acrn_vcpu *vcpu = container_of(prev, struct acrn_vcpu, thread_obj);
 	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
@@ -964,7 +889,7 @@ static void context_switch_out(struct thread_object *prev)
 	save_xsave_area(vcpu, ectx);
 }
 
-static void context_switch_in(struct thread_object *next)
+void arch_context_switch_in(struct thread_object *next)
 {
 	struct acrn_vcpu *vcpu = container_of(next, struct acrn_vcpu, thread_obj);
 	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
@@ -1004,32 +929,6 @@ void launch_vcpu(struct acrn_vcpu *vcpu)
 	vcpu_set_state(vcpu, VCPU_RUNNING);
 	wake_thread(&vcpu->thread_obj);
 
-}
-
-/* help function for vcpu create */
-int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
-{
-	int32_t ret, i;
-	struct acrn_vcpu *vcpu = NULL;
-	char thread_name[16];
-
-	ret = create_vcpu(pcpu_id, vm, &vcpu);
-	if (ret == 0) {
-		snprintf(thread_name, 16U, "vm%hu:vcpu%hu", vm->vm_id, vcpu->vcpu_id);
-		(void)strncpy_s(vcpu->thread_obj.name, 16U, thread_name, 16U);
-		vcpu->thread_obj.sched_ctl = &per_cpu(sched_ctl, pcpu_id);
-		vcpu->thread_obj.thread_entry = vcpu_thread;
-		vcpu->thread_obj.pcpu_id = pcpu_id;
-		vcpu->thread_obj.host_sp = build_stack_frame(vcpu);
-		vcpu->thread_obj.switch_out = context_switch_out;
-		vcpu->thread_obj.switch_in = context_switch_in;
-		init_thread_data(&vcpu->thread_obj, &get_vm_config(vm->vm_id)->sched_params);
-		for (i = 0; i < VCPU_EVENT_NUM; i++) {
-			init_event(&vcpu->events[i]);
-		}
-	}
-
-	return ret;
 }
 
 /**
@@ -1103,4 +1002,66 @@ void vcpu_set_state(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 {
 	vcpu->state = new_state;
 	update_vm_vlapic_state(vcpu->vm);
+}
+
+/* TODO: Our goal is to have a vcpu_thread that is common.
+ * Leave this to future optimization.
+ */
+void arch_vcpu_thread(struct thread_object *obj)
+{
+	struct acrn_vcpu *vcpu = container_of(obj, struct acrn_vcpu, thread_obj);
+	int32_t ret = 0;
+
+	do {
+		if (!is_lapic_pt_enabled(vcpu)) {
+			local_irq_disable();
+		}
+
+		/* Don't open interrupt window between here and vmentry */
+		if (need_reschedule(pcpuid_from_vcpu(vcpu))) {
+			schedule();
+		}
+
+		/* Check and process pending requests(including interrupt) */
+		ret = acrn_handle_pending_request(vcpu);
+		if (ret < 0) {
+			pr_fatal("vcpu handling pending request fail");
+			get_vm_lock(vcpu->vm);
+			zombie_vcpu(vcpu, VCPU_ZOMBIE);
+			put_vm_lock(vcpu->vm);
+			/* Fatal error happened (triple fault). Stop the vcpu running. */
+			continue;
+		}
+
+		reset_event(&vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
+		profiling_vmenter_handler(vcpu);
+
+		TRACE_2L(TRACE_VM_ENTER, 0UL, 0UL);
+		ret = run_vcpu(vcpu);
+		if (ret != 0) {
+			pr_fatal("vcpu resume failed");
+			get_vm_lock(vcpu->vm);
+			zombie_vcpu(vcpu, VCPU_ZOMBIE);
+			put_vm_lock(vcpu->vm);
+			/* Fatal error happened (resume vcpu failed). Stop the vcpu running. */
+			continue;
+		}
+		TRACE_2L(TRACE_VM_EXIT, vcpu->arch.exit_reason, vcpu_get_rip(vcpu));
+
+		profiling_pre_vmexit_handler(vcpu);
+
+		if (!is_lapic_pt_enabled(vcpu)) {
+			local_irq_enable();
+		}
+		/* Dispatch handler */
+		ret = vmexit_handler(vcpu);
+		if (ret < 0) {
+			pr_fatal("dispatch VM exit handler failed for reason"
+				" %d, ret = %d!", vcpu->arch.exit_reason, ret);
+			vcpu_inject_gp(vcpu, 0U);
+			continue;
+		}
+
+		profiling_post_vmexit_handler(vcpu);
+	} while (1);
 }

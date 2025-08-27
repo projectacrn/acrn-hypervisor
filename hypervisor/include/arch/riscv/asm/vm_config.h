@@ -19,4 +19,13 @@ enum os_kernel_type {
 	DUMMY,
 };
 
+/* TODO: Dummy, to be removed */
+#include <schedule.h>
+struct acrn_vm_config {
+	struct sched_params sched_params;		/* Scheduler params for vCPUs of this VM */
+};
+static inline struct acrn_vm_config *get_vm_config(__unused uint16_t vm_id) {
+	return NULL;
+}
+
 #endif /* VM_CONFIG_H_ */

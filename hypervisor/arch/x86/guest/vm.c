@@ -39,6 +39,7 @@
 #include <asm/rtcm.h>
 #include <asm/irq.h>
 #include <uart16550.h>
+#include <vcpu.h>
 #ifdef CONFIG_SECURITY_VM_FIXUP
 #include <quirks/security_vm_fixup.h>
 #endif
@@ -833,7 +834,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		while (tmp64 != 0UL) {
 			pcpu_id = ffs64(tmp64);
 			bitmap_clear_non_atomic(pcpu_id, &tmp64);
-			status = prepare_vcpu(vm, pcpu_id);
+			status = create_vcpu(vm, pcpu_id);
 			if (status != 0) {
 				break;
 			}
