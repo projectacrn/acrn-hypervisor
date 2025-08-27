@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <asm/host_pm.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <io.h>
 #include <logmsg.h>
 #include <platform_acpi_info.h>
@@ -30,8 +30,8 @@ int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 	if (is_service_vm(vm)) {
 		ret = 0;
 	} else {
-		uint8_t px_cnt = vm->pm.px_cnt;
-		const struct acrn_pstate_data *px_data = vm->pm.px_data;
+		uint8_t px_cnt = vm->arch_vm.pm.px_cnt;
+		const struct acrn_pstate_data *px_data = vm->arch_vm.pm.px_data;
 
 		if ((px_cnt != 0U) && (px_data != NULL)) {
 			uint64_t px_target_val, max_px_ctl_val, min_px_ctl_val;
@@ -56,15 +56,15 @@ static void vm_setup_cpu_px(struct acrn_vm *vm)
 	uint32_t px_data_size;
 	struct cpu_state_info *pm_state_info = get_cpu_pm_state_info();
 
-	vm->pm.px_cnt = 0U;
-	(void)memset(vm->pm.px_data, 0U, MAX_PSTATE * sizeof(struct acrn_pstate_data));
+	vm->arch_vm.pm.px_cnt = 0U;
+	(void)memset(vm->arch_vm.pm.px_data, 0U, MAX_PSTATE * sizeof(struct acrn_pstate_data));
 
 	if ((pm_state_info->px_cnt != 0U) && (pm_state_info->px_data != NULL)) {
 		ASSERT((pm_state_info->px_cnt <= MAX_PSTATE), "failed to setup cpu px");
 
-		vm->pm.px_cnt = pm_state_info->px_cnt;
-		px_data_size = ((uint32_t)vm->pm.px_cnt) * sizeof(struct acrn_pstate_data);
-		(void)memcpy_s(vm->pm.px_data, px_data_size, pm_state_info->px_data, px_data_size);
+		vm->arch_vm.pm.px_cnt = pm_state_info->px_cnt;
+		px_data_size = ((uint32_t)vm->arch_vm.pm.px_cnt) * sizeof(struct acrn_pstate_data);
+		(void)memcpy_s(vm->arch_vm.pm.px_data, px_data_size, pm_state_info->px_data, px_data_size);
 	}
 }
 
@@ -73,19 +73,19 @@ static void vm_setup_cpu_cx(struct acrn_vm *vm)
 	uint32_t cx_data_size;
 	struct cpu_state_info *pm_state_info = get_cpu_pm_state_info();
 
-	vm->pm.cx_cnt = 0U;
-	(void)memset(vm->pm.cx_data, 0U, MAX_CSTATE * sizeof(struct acrn_cstate_data));
+	vm->arch_vm.pm.cx_cnt = 0U;
+	(void)memset(vm->arch_vm.pm.cx_data, 0U, MAX_CSTATE * sizeof(struct acrn_cstate_data));
 
 	if ((pm_state_info->cx_cnt != 0U) && (pm_state_info->cx_data != NULL)) {
 		ASSERT((pm_state_info->cx_cnt <= MAX_CX_ENTRY), "failed to setup cpu cx");
 
-		vm->pm.cx_cnt = pm_state_info->cx_cnt;
-		cx_data_size = ((uint32_t)vm->pm.cx_cnt) * sizeof(struct acrn_cstate_data);
+		vm->arch_vm.pm.cx_cnt = pm_state_info->cx_cnt;
+		cx_data_size = ((uint32_t)vm->arch_vm.pm.cx_cnt) * sizeof(struct acrn_cstate_data);
 
 		/* please note pm.cx_data[0] is a empty space holder,
 		 * pm.cx_data[1...MAX_CX_ENTRY] would be used to store cx entry datas.
 		 */
-		(void)memcpy_s(vm->pm.cx_data + 1, cx_data_size, pm_state_info->cx_data, cx_data_size);
+		(void)memcpy_s(vm->arch_vm.pm.cx_data + 1, cx_data_size, pm_state_info->cx_data, cx_data_size);
 	}
 }
 
@@ -93,8 +93,8 @@ static inline void init_cx_port(struct acrn_vm *vm)
 {
 	uint8_t cx_idx;
 
-	for (cx_idx = 2U; cx_idx <= vm->pm.cx_cnt; cx_idx++) {
-		struct acrn_cstate_data *cx_data = vm->pm.cx_data + cx_idx;
+	for (cx_idx = 2U; cx_idx <= vm->arch_vm.pm.cx_cnt; cx_idx++) {
+		struct acrn_cstate_data *cx_data = vm->arch_vm.pm.cx_data + cx_idx;
 
 		if (cx_data->cx_reg.space_id == SPACE_SYSTEM_IO) {
 			uint16_t port = (uint16_t)cx_data->cx_reg.address;
@@ -125,7 +125,7 @@ static int32_t vm_load_pm_s_state(struct acrn_vm *vm)
 		ret = -1;
 	} else {
 		pr_info("System S3/S5 is supported.");
-		vm->pm.sx_state_data = sx_data;
+		vm->arch_vm.pm.sx_state_data = sx_data;
 		ret = 0;
 	}
 	return ret;
@@ -180,11 +180,11 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 	 * with this wakeup vec as entry.
 	 */
 	pre_user_access();
-	guest_wakeup_vec32 = *(vm->pm.sx_state_data->wake_vector_32);
+	guest_wakeup_vec32 = *(vm->arch_vm.pm.sx_state_data->wake_vector_32);
 	post_user_access();
 
 	pause_vm(vm);	/* pause Service VM before suspend system */
-	host_enter_s3(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
+	host_enter_s3(vm->arch_vm.pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
 	resume_vm_from_s3(vm, guest_wakeup_vec32);	/* jump back to vm */
 	put_vm_lock(vm);
 }
@@ -203,14 +203,14 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 	if (width == 2U) {
 		uint8_t val = get_slp_typx(v);
 
-		if ((addr == vm->pm.sx_state_data->pm1a_cnt.address) && is_s3_enabled(v)) {
+		if ((addr == vm->arch_vm.pm.sx_state_data->pm1a_cnt.address) && is_s3_enabled(v)) {
 
-			if (vm->pm.sx_state_data->pm1b_cnt.address != 0UL) {
+			if (vm->arch_vm.pm.sx_state_data->pm1b_cnt.address != 0UL) {
 				pm1a_cnt_ready = v;
 			} else {
-				if (vm->pm.sx_state_data->s3_pkg.val_pm1a == val) {
+				if (vm->arch_vm.pm.sx_state_data->s3_pkg.val_pm1a == val) {
 					enter_s3(vm, v, 0U);
-				} else if (vm->pm.sx_state_data->s5_pkg.val_pm1a == val) {
+				} else if (vm->arch_vm.pm.sx_state_data->s5_pkg.val_pm1a == val) {
 					enter_s5(vcpu, v, 0U);
 				} else {
 					/* other Sx value should be ignored */
@@ -218,15 +218,15 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 			}
 
 			to_write = false;
-		} else if ((addr == vm->pm.sx_state_data->pm1b_cnt.address) && is_s3_enabled(v)) {
+		} else if ((addr == vm->arch_vm.pm.sx_state_data->pm1b_cnt.address) && is_s3_enabled(v)) {
 
 			if (pm1a_cnt_ready != 0U) {
 				pm1a_cnt_val = pm1a_cnt_ready;
 				pm1a_cnt_ready = 0U;
 
-				if (vm->pm.sx_state_data->s3_pkg.val_pm1b == val) {
+				if (vm->arch_vm.pm.sx_state_data->s3_pkg.val_pm1b == val) {
 					enter_s3(vm, pm1a_cnt_val, v);
-				} else if (vm->pm.sx_state_data->s5_pkg.val_pm1b == val) {
+				} else if (vm->arch_vm.pm.sx_state_data->s5_pkg.val_pm1b == val) {
 					enter_s5(vcpu, pm1a_cnt_val, v);
 				} else {
 					/* other Sx value should be ignored */
@@ -265,7 +265,7 @@ static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const 
 
 static void register_pm1ab_handler(struct acrn_vm *vm)
 {
-	struct pm_s_state_data *sx_data = vm->pm.sx_state_data;
+	struct pm_s_state_data *sx_data = vm->arch_vm.pm.sx_state_data;
 
 	register_gas_io_handler(vm, PM1A_EVT_PIO_IDX, &(sx_data->pm1a_evt));
 	register_gas_io_handler(vm, PM1B_EVT_PIO_IDX, &(sx_data->pm1b_evt));

@@ -9,7 +9,7 @@
 #include <atomic.h>
 #include <io_req.h>
 #include <vcpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/instr_emul.h>
 #include <asm/guest/vmexit.h>
 #include <asm/vmx.h>
@@ -115,7 +115,7 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 	if ((exit_qual & 0x4UL) != 0UL) {
 		/* TODO: check wehther the gpa is not a MMIO address. */
 		if (vcpu->arch.cur_context == NORMAL_WORLD) {
-			ept_modify_mr(vcpu->vm, (uint64_t *)vcpu->vm->arch_vm.nworld_eptp,
+			ept_modify_mr(vcpu->vm, (uint64_t *)vcpu->vm->root_stg2ptp,
 				gpa & PAGE_MASK, PAGE_SIZE, EPT_EXE, 0UL);
 		} else {
 			ept_modify_mr(vcpu->vm, (uint64_t *)vcpu->vm->arch_vm.sworld_eptp,

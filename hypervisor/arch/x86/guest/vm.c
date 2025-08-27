@@ -336,8 +336,8 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 	hpa_index = 0U;
 	tmp_vm_hpa = vm_config->memory.host_regions[0];
 
-	for (i = 0U; i < vm->e820_entry_num; i++) {
-		entry = &(vm->e820_entries[i]);
+	for (i = 0U; i < vm->arch_vm.e820_entry_num; i++) {
+		entry = &(vm->arch_vm.e820_entries[i]);
 
 		if (entry->length == 0UL) {
 			continue;
@@ -345,7 +345,7 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 			if (is_software_sram_enabled() && (entry->baseaddr == PRE_RTVM_SW_SRAM_BASE_GPA) &&
 				((vm_config->guest_flags & GUEST_FLAG_RT) != 0U)){
 				/* pass through Software SRAM to pre-RTVM */
-				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+				ept_add_mr(vm, (uint64_t *)vm->root_stg2ptp,
 					get_software_sram_base(), PRE_RTVM_SW_SRAM_BASE_GPA,
 					get_software_sram_size(), EPT_RWX | EPT_WB);
 				continue;
@@ -376,11 +376,11 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 			}
 
 			if (entry->type != E820_TYPE_RESERVED) {
-				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, base_gpa,
+				ept_add_mr(vm, (uint64_t *)vm->root_stg2ptp, base_hpa, base_gpa,
 						base_size, EPT_RWX | EPT_WB);
 			} else {
 				/* GPAs under 1MB are always backed by physical memory */
-				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, base_gpa,
+				ept_add_mr(vm, (uint64_t *)vm->root_stg2ptp, base_hpa, base_gpa,
 						base_size, EPT_RWX | EPT_UNCACHED);
 			}
 			remaining_entry_size -= base_size;
@@ -411,7 +411,7 @@ static void deny_pci_bar_access(struct acrn_vm *service_vm, const struct pci_pde
 	uint64_t base = 0UL, size = 0UL, mask;
 	uint64_t *pml4_page;
 
-	pml4_page = (uint64_t *)service_vm->arch_vm.nworld_eptp;
+	pml4_page = (uint64_t *)service_vm->root_stg2ptp;
 
 	for ( idx= 0; idx < pdev->nr_bars; idx++) {
 		vbar.bar_type.bits = pdev->bars[idx].phy_bar;
@@ -487,12 +487,12 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 	uint64_t hv_hpa;
 	uint64_t service_vm_high64_max_ram = MEM_4G;
 	struct acrn_vm_config *vm_config;
-	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
+	uint64_t *pml4_page = (uint64_t *)vm->root_stg2ptp;
 	struct epc_section* epc_secs;
 
 	const struct e820_entry *entry;
-	uint32_t entries_count = vm->e820_entry_num;
-	const struct e820_entry *p_e820 = vm->e820_entries;
+	uint32_t entries_count = vm->arch_vm.e820_entry_num;
+	const struct e820_entry *p_e820 = vm->arch_vm.e820_entries;
 	struct pci_mmcfg_region *pci_mmcfg;
 	uint64_t trampoline_memory_size = round_page_up((uint64_t)(&ld_trampoline_end - &ld_trampoline_start));
 
@@ -552,7 +552,7 @@ static void prepare_service_vm_memmap(struct acrn_vm *vm)
 
 	/* unmap PCIe MMCONFIG region since it's owned by hypervisor */
 	pci_mmcfg = get_mmcfg_region();
-	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, pci_mmcfg->address, get_pci_mmcfg_size(pci_mmcfg));
+	ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, pci_mmcfg->address, get_pci_mmcfg_size(pci_mmcfg));
 
 	if (is_software_sram_enabled()) {
 		/*
@@ -602,7 +602,7 @@ static void prepare_epc_vm_memmap(struct acrn_vm *vm)
 	if (is_vsgx_supported(vm->vm_id)) {
 		vm_epc_maps = get_epc_mapping(vm->vm_id);
 		for (i = 0U; (i < MAX_EPC_SECTIONS) && (vm_epc_maps[i].size != 0UL); i++) {
-			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vm_epc_maps[i].hpa,
+			ept_add_mr(vm, (uint64_t *)vm->root_stg2ptp, vm_epc_maps[i].hpa,
 				vm_epc_maps[i].gpa, vm_epc_maps[i].size, EPT_RWX | EPT_WB);
 		}
 	}
@@ -636,9 +636,9 @@ static uint64_t lapic_pt_enabled_pcpu_bitmap(struct acrn_vm *vm)
 void prepare_vm_identical_memmap(struct acrn_vm *vm, uint16_t e820_entry_type, uint64_t prot_orig)
 {
 	const struct e820_entry *entry;
-	const struct e820_entry *p_e820 = vm->e820_entries;
-	uint32_t entries_count = vm->e820_entry_num;
-	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
+	const struct e820_entry *p_e820 = vm->arch_vm.e820_entries;
+	uint32_t entries_count = vm->arch_vm.e820_entry_num;
+	uint64_t *pml4_page = (uint64_t *)vm->root_stg2ptp;
 	uint32_t i;
 
 	for (i = 0U; i < entries_count; i++) {
@@ -694,8 +694,8 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	vm->vm_id = vm_id;
 	vm->hw.created_vcpus = 0U;
 
-	init_ept_pgtable(&vm->arch_vm.ept_pgtable, vm->vm_id);
-	vm->arch_vm.nworld_eptp = pgtable_create_root(&vm->arch_vm.ept_pgtable);
+	init_ept_pgtable(&vm->stg2_pgtable, vm->vm_id);
+	vm->root_stg2ptp = pgtable_create_root(&vm->stg2_pgtable);
 
 	(void)memcpy_s(&vm->name[0], MAX_VM_NAME_LEN, &vm_config->name[0], MAX_VM_NAME_LEN);
 
@@ -708,14 +708,14 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	} else {
 		/* For PRE_LAUNCHED_VM and POST_LAUNCHED_VM */
 		if ((vm_config->guest_flags & GUEST_FLAG_SECURE_WORLD_ENABLED) != 0U) {
-			vm->sworld_control.flag.supported = 1U;
+			vm->arch_vm.sworld_control.flag.supported = 1U;
 		}
-		if (vm->sworld_control.flag.supported != 0UL) {
+		if (vm->arch_vm.sworld_control.flag.supported != 0UL) {
 			int32_t vm_idx = get_sworld_vm_index(vm_id);
 
 			if (vm_idx >= 0)
 			{
-				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+				ept_add_mr(vm, (uint64_t *)vm->root_stg2ptp,
 					hva2hpa(post_user_vm_sworld_memory[vm_idx]),
 					TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
 			} else {
@@ -748,15 +748,15 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 	if (status == 0) {
 		prepare_epc_vm_memmap(vm);
-		spinlock_init(&vm->vlapic_mode_lock);
-		spinlock_init(&vm->ept_lock);
+		spinlock_init(&vm->arch_vm.vlapic_mode_lock);
+		spinlock_init(&vm->stg2pt_lock);
 		spinlock_init(&vm->emul_mmio_lock);
 		spinlock_init(&vm->arch_vm.iwkey_backup_lock);
 
 		vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
-		vm->intr_inject_delay_delta = 0UL;
+		vm->arch_vm.intr_inject_delay_delta = 0UL;
 		vm->nr_emul_mmio_regions = 0U;
-		vm->vcpuid_entry_nr = 0U;
+		vm->arch_vm.vcpuid_entry_nr = 0U;
 
 		/* Set up IO bit-mask such that VM exit occurs on
 		 * selected IO ranges
@@ -797,7 +797,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 			register_reset_port_handler(vm);
 
 			/* vpic wire_mode default is INTR */
-			vm->wire_mode = VPIC_WIRE_INTR;
+			vm->arch_vm.wire_mode = VPIC_WIRE_INTR;
 
 			/* Init full emulated vIOAPIC instance:
 			* Present a virtual IOAPIC to guest, as a placeholder interrupt controller,
@@ -852,8 +852,8 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		}
 	}
 
-	if ((status != 0) && (vm->arch_vm.nworld_eptp != NULL)) {
-		(void)memset(vm->arch_vm.nworld_eptp, 0U, PAGE_SIZE);
+	if ((status != 0) && (vm->root_stg2ptp != NULL)) {
+		(void)memset(vm->root_stg2ptp, 0U, PAGE_SIZE);
 	}
 
 	return status;
@@ -1025,7 +1025,7 @@ int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode)
 	reset_vm_ioreqs(vm);
 	reset_vioapics(vm);
 	destroy_secure_world(vm, false);
-	vm->sworld_control.flag.active = 0UL;
+	vm->arch_vm.sworld_control.flag.active = 0UL;
 	vm->arch_vm.iwkey_backup_status = 0UL;
 	vm->state = VM_CREATED;
 
@@ -1191,7 +1191,7 @@ void update_vm_vlapic_state(struct acrn_vm *vm)
 
 	vcpus_in_x2apic = 0U;
 	vcpus_in_xapic = 0U;
-	spinlock_obtain(&vm->vlapic_mode_lock);
+	spinlock_obtain(&vm->arch_vm.vlapic_mode_lock);
 	foreach_vcpu(i, vm, vcpu) {
 		/* Skip vCPU in state outside of VCPU_RUNNING as it may be offline. */
 		if (vcpu->state == VCPU_RUNNING) {
@@ -1234,7 +1234,7 @@ void update_vm_vlapic_state(struct acrn_vm *vm)
 	}
 
 	vm->arch_vm.vlapic_mode = vlapic_mode;
-	spinlock_release(&vm->vlapic_mode_lock);
+	spinlock_release(&vm->arch_vm.vlapic_mode_lock);
 }
 
 /*

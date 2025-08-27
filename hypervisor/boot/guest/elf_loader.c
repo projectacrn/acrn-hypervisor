@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/ept.h>
 #include <asm/mmu.h>
 #include <vboot.h>
@@ -45,11 +45,11 @@ uint32_t prepare_multiboot_mmap(struct acrn_vm *vm, uint64_t param_mmap_gpa)
 	struct multiboot_mmap mmap_entry;
 	uint64_t mmap_gpa = param_mmap_gpa;
 
-	for (i = 0U; i < vm->e820_entry_num; i++) {
+	for (i = 0U; i < vm->arch_vm.e820_entry_num; i++) {
 		mmap_entry.size = 20U;
-		mmap_entry.baseaddr = vm->e820_entries[i].baseaddr;
-		mmap_entry.length = vm->e820_entries[i].length;
-		mmap_entry.type = vm->e820_entries[i].type;
+		mmap_entry.baseaddr = vm->arch_vm.e820_entries[i].baseaddr;
+		mmap_entry.length = vm->arch_vm.e820_entries[i].length;
+		mmap_entry.type = vm->arch_vm.e820_entries[i].type;
 		if (mmap_entry.type > MULTIBOOT_MEMORY_BADRAM) {
 			mmap_entry.type = MULTIBOOT_MEMORY_RESERVED;
 		}

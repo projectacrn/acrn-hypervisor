@@ -11,7 +11,7 @@
 #include <pgtable.h>
 #include <asm/mmu.h>
 #include <asm/guest/ept.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/vmx.h>
 #include <asm/security.h>
 #include <asm/pagemisc.h>
@@ -62,25 +62,25 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	hpa = gpa2hpa(vm, gpa_orig);
 
 	/* Unmap gpa_orig~gpa_orig+size from guest normal world ept mapping */
-	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, gpa_orig, size);
+	ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, gpa_orig, size);
 
-	vm->arch_vm.sworld_eptp = pgtable_create_trusty_root(&vm->arch_vm.ept_pgtable,
-					vm->arch_vm.nworld_eptp, EPT_RWX, EPT_EXE);
+	vm->arch_vm.sworld_eptp = pgtable_create_trusty_root(&vm->stg2_pgtable,
+					vm->root_stg2ptp, EPT_RWX, EPT_EXE);
 
 	/* Map [gpa_rebased, gpa_rebased + size) to secure ept mapping */
 	ept_add_mr(vm, (uint64_t *)vm->arch_vm.sworld_eptp, hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
 
 	/* Backup secure world info, will be used when destroy secure world and suspend User VM */
-	vm->sworld_control.sworld_memory.base_gpa_in_user_vm = gpa_orig;
-	vm->sworld_control.sworld_memory.base_hpa = hpa;
-	vm->sworld_control.sworld_memory.length = size;
+	vm->arch_vm.sworld_control.sworld_memory.base_gpa_in_user_vm = gpa_orig;
+	vm->arch_vm.sworld_control.sworld_memory.base_hpa = hpa;
+	vm->arch_vm.sworld_control.sworld_memory.length = size;
 }
 
 void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 {
-	uint64_t hpa = vm->sworld_control.sworld_memory.base_hpa;
-	uint64_t gpa_user_vm = vm->sworld_control.sworld_memory.base_gpa_in_user_vm;
-	uint64_t size = vm->sworld_control.sworld_memory.length;
+	uint64_t hpa = vm->arch_vm.sworld_control.sworld_memory.base_hpa;
+	uint64_t gpa_user_vm = vm->arch_vm.sworld_control.sworld_memory.base_gpa_in_user_vm;
+	uint64_t size = vm->arch_vm.sworld_control.sworld_memory.length;
 
 	if (vm->arch_vm.sworld_eptp != NULL) {
 		if (need_clr_mem) {
@@ -94,7 +94,7 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 		vm->arch_vm.sworld_eptp = NULL;
 
 		/* Restore memory to guest normal world */
-		ept_add_mr(vm, vm->arch_vm.nworld_eptp, hpa, gpa_user_vm, size, EPT_RWX | EPT_WB);
+		ept_add_mr(vm, vm->root_stg2ptp, hpa, gpa_user_vm, size, EPT_RWX | EPT_WB);
 	} else {
 		pr_err("sworld eptp is NULL, it's not created");
 	}
@@ -239,7 +239,7 @@ void switch_world(struct acrn_vcpu *vcpu, int32_t next_world)
 	if (next_world == NORMAL_WORLD) {
 		/* load EPTP for next world */
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			hva2hpa(vcpu->vm->arch_vm.nworld_eptp) |
+			hva2hpa(vcpu->vm->root_stg2ptp) |
 			(3UL << 3U) | 0x6UL);
 
 #ifndef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
@@ -367,7 +367,7 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, struct trusty_boot_param *boot_pa
 	}
 
 	if (success) {
-		if ((vm->sworld_control.flag.supported == 0UL)
+		if ((vm->arch_vm.sworld_control.flag.supported == 0UL)
 				|| (vm->arch_vm.sworld_eptp != NULL)) {
 			pr_err("Sworld is not supported or Sworld eptp is not NULL");
 			success = false;
@@ -375,7 +375,7 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, struct trusty_boot_param *boot_pa
 			trusty_mem_size = boot_param->mem_size;
 			create_secure_world_ept(vm, trusty_base_gpa, trusty_mem_size,
 								TRUSTY_EPT_REBASE_GPA);
-			trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
+			trusty_base_hpa = vm->arch_vm.sworld_control.sworld_memory.base_hpa;
 
 			exec_vmwrite64(VMX_EPT_POINTER_FULL,
 					hva2hpa(vm->arch_vm.sworld_eptp) | (3UL << 3U) | 0x6UL);
@@ -401,14 +401,14 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, struct trusty_boot_param *boot_pa
 
 void save_sworld_context(struct acrn_vcpu *vcpu)
 {
-	(void)memcpy_s((void *)&vcpu->vm->sworld_snapshot, sizeof(struct guest_cpu_context),
+	(void)memcpy_s((void *)&vcpu->vm->arch_vm.sworld_snapshot, sizeof(struct guest_cpu_context),
 			(void *)&vcpu->arch.contexts[SECURE_WORLD], sizeof(struct guest_cpu_context));
 }
 
 void restore_sworld_context(struct acrn_vcpu *vcpu)
 {
 	struct secure_world_control *sworld_ctl =
-		&vcpu->vm->sworld_control;
+		&vcpu->vm->arch_vm.sworld_control;
 
 	create_secure_world_ept(vcpu->vm,
 		sworld_ctl->sworld_memory.base_gpa_in_user_vm,
@@ -416,7 +416,7 @@ void restore_sworld_context(struct acrn_vcpu *vcpu)
 		TRUSTY_EPT_REBASE_GPA);
 
 	(void)memcpy_s((void *)&vcpu->arch.contexts[SECURE_WORLD], sizeof(struct guest_cpu_context),
-			(void *)&vcpu->vm->sworld_snapshot, sizeof(struct guest_cpu_context));
+			(void *)&vcpu->vm->arch_vm.sworld_snapshot, sizeof(struct guest_cpu_context));
 }
 
 /**

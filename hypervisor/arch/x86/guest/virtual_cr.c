@@ -12,7 +12,7 @@
 #include <asm/guest/virq.h>
 #include <asm/mmu.h>
 #include <vcpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/vmx.h>
 #include <asm/vtd.h>
 #include <asm/guest/vmexit.h>

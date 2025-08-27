@@ -29,7 +29,7 @@
 
 #define pr_prefix	"vioapic: "
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <errno.h>
 #include <asm/irq.h>
 #include <asm/guest/ept.h>
@@ -342,9 +342,9 @@ static void vioapic_indirect_write(struct acrn_single_vioapic *vioapic, uint32_t
 		if ((pin == 0U) && (changed.bits.intr_mask != 0UL)) {
 			/* mask -> umask */
 			if (last.bits.intr_mask == IOAPIC_RTE_MASK_SET) {
-				if ((vioapic->vm->wire_mode == VPIC_WIRE_NULL) ||
-						(vioapic->vm->wire_mode == VPIC_WIRE_INTR)) {
-					vioapic->vm->wire_mode = VPIC_WIRE_IOAPIC;
+				if ((vioapic->vm->arch_vm.wire_mode == VPIC_WIRE_NULL) ||
+						(vioapic->vm->arch_vm.wire_mode == VPIC_WIRE_INTR)) {
+					vioapic->vm->arch_vm.wire_mode = VPIC_WIRE_IOAPIC;
 					dev_dbg(DBG_LEVEL_VIOAPIC, "vpic wire mode -> IOAPIC");
 				} else {
 					pr_err("WARNING: invalid vpic wire mode change");
@@ -352,8 +352,8 @@ static void vioapic_indirect_write(struct acrn_single_vioapic *vioapic, uint32_t
 				}
 			/* unmask -> mask */
 			} else {
-				if (vioapic->vm->wire_mode == VPIC_WIRE_IOAPIC) {
-					vioapic->vm->wire_mode = VPIC_WIRE_INTR;
+				if (vioapic->vm->arch_vm.wire_mode == VPIC_WIRE_IOAPIC) {
+					vioapic->vm->arch_vm.wire_mode = VPIC_WIRE_INTR;
 					dev_dbg(DBG_LEVEL_VIOAPIC, "vpic wire mode -> INTR");
 				}
 			}
@@ -546,7 +546,7 @@ vioapic_init(struct acrn_vm *vm)
 
 		register_mmio_emulation_handler(vm, vioapic_mmio_access_handler, (uint64_t)vioapic->chipinfo.addr,
 					(uint64_t)vioapic->chipinfo.addr + VIOAPIC_SIZE, (void *)vioapic, false);
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, (uint64_t)vioapic->chipinfo.addr, VIOAPIC_SIZE);
+		ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, (uint64_t)vioapic->chipinfo.addr, VIOAPIC_SIZE);
 	}
 
 	/*

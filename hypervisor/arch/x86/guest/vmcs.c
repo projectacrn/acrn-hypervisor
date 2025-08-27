@@ -9,7 +9,7 @@
 #include <types.h>
 #include <asm/guest/vmcs.h>
 #include <vcpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/vmx.h>
 #include <asm/gdt.h>
 #include <pgtable.h>
@@ -406,7 +406,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	 * TODO: introduce API to make this data driven based
 	 * on VMX_EPT_VPID_CAP
 	 */
-	value64 = hva2hpa(vm->arch_vm.nworld_eptp) | (3UL << 3U) | 6UL;
+	value64 = hva2hpa(vm->root_stg2ptp) | (3UL << 3U) | 6UL;
 	exec_vmwrite64(VMX_EPT_POINTER_FULL, value64);
 	pr_dbg("VMX_EPT_POINTER: 0x%016lx ", value64);
 

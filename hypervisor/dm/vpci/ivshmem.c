@@ -5,7 +5,7 @@
  */
 
 #ifdef CONFIG_IVSHMEM_ENABLED
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/mmu.h>
 #include <asm/guest/ept.h>
 #include <logmsg.h>
@@ -346,7 +346,7 @@ static void ivshmem_vbar_unmap(struct pci_vdev *vdev, uint32_t idx)
 	struct pci_vbar *vbar = &vdev->vbars[idx];
 
 	if ((idx == IVSHMEM_SHM_BAR) && (vbar->base_gpa != 0UL)) {
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
+		ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, vbar->base_gpa, vbar->size);
 	} else if (((idx == IVSHMEM_MMIO_BAR) || (idx == IVSHMEM_MSIX_BAR)) && (vbar->base_gpa != 0UL)) {
 		unregister_mmio_emulation_handler(vm, vbar->base_gpa, (vbar->base_gpa + vbar->size));
 	}
@@ -388,16 +388,16 @@ static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
 	struct pci_vbar *vbar = &vdev->vbars[idx];
 
 	if ((idx == IVSHMEM_SHM_BAR) && (vbar->base_hpa != INVALID_HPA) && (vbar->base_gpa != 0UL)) {
-		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_hpa,
+		ept_add_mr(vm, (uint64_t *)vm->root_stg2ptp, vbar->base_hpa,
 				vbar->base_gpa, vbar->size, EPT_RD | EPT_WR | EPT_WB | EPT_IGNORE_PAT);
 	} else if ((idx == IVSHMEM_MMIO_BAR) && (vbar->base_gpa != 0UL)) {
 		register_mmio_emulation_handler(vm, ivshmem_mmio_handler, vbar->base_gpa,
 				(vbar->base_gpa + vbar->size), vdev, false);
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, round_page_up(vbar->size));
+		ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, vbar->base_gpa, round_page_up(vbar->size));
 	} else if ((idx == IVSHMEM_MSIX_BAR) && (vbar->base_gpa != 0UL)) {
 		register_mmio_emulation_handler(vm, vmsix_handle_table_mmio_access, vbar->base_gpa,
 			(vbar->base_gpa + vbar->size), vdev, false);
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
+		ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, vbar->base_gpa, vbar->size);
 		vdev->msix.mmio_gpa = vbar->base_gpa;
 	}
 }

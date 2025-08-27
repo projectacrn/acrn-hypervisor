@@ -7,7 +7,7 @@
 #ifndef QUIRKS_SMBIOS_H
 #define QUIRKS_SMBIOS_H
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <boot.h>
 
 typedef struct {

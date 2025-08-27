@@ -7,7 +7,7 @@
 #ifndef VCAT_H_
 #define VCAT_H_
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 
 bool is_l2_vcat_configured(const struct acrn_vm *vm);
 bool is_l3_vcat_configured(const struct acrn_vm *vm);

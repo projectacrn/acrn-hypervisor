@@ -13,7 +13,7 @@
 #include <asm/vmx.h>
 #include <vcpu.h>
 #include <asm/guest/vmcs.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/lock_instr_emul.h>
 #include <trace.h>
 #include <logmsg.h>
@@ -384,8 +384,8 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			}
 
 			if (bitmap_test_and_clear(ACRN_REQUEST_EPT_FLUSH, pending_req_bits)) {
-				invept(vcpu->vm->arch_vm.nworld_eptp);
-				if (vcpu->vm->sworld_control.flag.active != 0UL) {
+				invept(vcpu->vm->root_stg2ptp);
+				if (vcpu->vm->arch_vm.sworld_control.flag.active != 0UL) {
 					invept(vcpu->vm->arch_vm.sworld_eptp);
 				}
 			}

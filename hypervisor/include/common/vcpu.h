@@ -87,6 +87,8 @@ struct guest_mem_dump {
 	uint64_t len;
 };
 
+uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
+
 /**
  * @}
  */

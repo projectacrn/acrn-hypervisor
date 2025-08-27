@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <vcpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/virq.h>
 #include <event.h>
 #include <asm/cpu_caps.h>

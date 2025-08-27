@@ -9,7 +9,7 @@
 #include <asm/vmx.h>
 #include <asm/guest/guest_memory.h>
 #include <vcpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/vmcs.h>
 #include <asm/mmu.h>
 #include <asm/guest/ept.h>

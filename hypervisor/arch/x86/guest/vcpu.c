@@ -16,7 +16,7 @@
 #include <per_cpu.h>
 #include <random.h>
 #include <asm/init.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/vmcs.h>
 #include <asm/mmu.h>
 #include <lib/sprintf.h>

@@ -39,7 +39,7 @@
 #include <asm/guest/virq.h>
 #include <ptdev.h>
 #include <asm/vmx.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/ept.h>
 #include <trace.h>
 #include <logmsg.h>
@@ -682,9 +682,9 @@ vlapic_write_lvt(struct acrn_vlapic *vlapic, uint32_t offset)
 
 		/* mask -> unmask: may from every vlapic in the vm */
 		if (((last & APIC_LVT_M) != 0U) && ((val & APIC_LVT_M) == 0U)) {
-			if ((vm->wire_mode == VPIC_WIRE_INTR) ||
-				(vm->wire_mode == VPIC_WIRE_NULL)) {
-				vm->wire_mode = VPIC_WIRE_LAPIC;
+			if ((vm->arch_vm.wire_mode == VPIC_WIRE_INTR) ||
+				(vm->arch_vm.wire_mode == VPIC_WIRE_NULL)) {
+				vm->arch_vm.wire_mode = VPIC_WIRE_LAPIC;
 				dev_dbg(DBG_LEVEL_VLAPIC,
 					"vpic wire mode -> LAPIC");
 			} else {
@@ -693,8 +693,8 @@ vlapic_write_lvt(struct acrn_vlapic *vlapic, uint32_t offset)
 			}
 		/* unmask -> mask: only from the vlapic LINT0-ExtINT enabled */
 		} else if (((last & APIC_LVT_M) == 0U) && ((val & APIC_LVT_M) != 0U)) {
-			if (vm->wire_mode == VPIC_WIRE_LAPIC) {
-				vm->wire_mode = VPIC_WIRE_NULL;
+			if (vm->arch_vm.wire_mode == VPIC_WIRE_LAPIC) {
+				vm->arch_vm.wire_mode = VPIC_WIRE_NULL;
 				dev_dbg(DBG_LEVEL_VLAPIC,
 						"vpic wire mode -> NULL");
 			}
@@ -1315,8 +1315,8 @@ vlapic_write_svr(struct acrn_vlapic *vlapic)
 
 			vlapic_mask_lvts(vlapic);
 			/* the only one enabled LINT0-ExtINT vlapic disabled */
-			if (vm->wire_mode == VPIC_WIRE_NULL) {
-				vm->wire_mode = VPIC_WIRE_INTR;
+			if (vm->arch_vm.wire_mode == VPIC_WIRE_NULL) {
+				vm->arch_vm.wire_mode = VPIC_WIRE_INTR;
 				dev_dbg(DBG_LEVEL_VLAPIC,
 					"vpic wire mode -> INTR");
 			}
@@ -2186,7 +2186,7 @@ void vlapic_create(struct acrn_vcpu *vcpu, uint16_t pcpu_id)
 
 	if (is_vcpu_bsp(vcpu)) {
 		uint64_t *pml4_page =
-			(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
+			(uint64_t *)vcpu->vm->root_stg2ptp;
 		/* only need unmap it from Service VM as User VM never mapped it */
 		if (is_service_vm(vcpu->vm)) {
 			ept_del_mr(vcpu->vm, pml4_page,

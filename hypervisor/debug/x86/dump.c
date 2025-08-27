@@ -9,7 +9,7 @@
 #include <asm/mmu.h>
 #include <vcpu.h>
 #include <asm/vmx.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/init.h>
 #include <logmsg.h>
 #include <dump.h>

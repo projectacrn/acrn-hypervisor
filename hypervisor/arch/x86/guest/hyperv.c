@@ -8,7 +8,7 @@
  */
 
 #include <types.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <logmsg.h>
 #include <asm/vmx.h>
 #include <asm/guest/hyperv.h>

@@ -673,7 +673,7 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	int32_t ret = -EINVAL;
 
 	if ((region->size & (PAGE_SIZE - 1UL)) == 0UL) {
-		pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
+		pml4_page = (uint64_t *)target_vm->root_stg2ptp;
 		if (region->type == MR_ADD) {
 			/* if the GPA range is Service VM valid GPA or not */
 			if (ept_is_valid_mr(vm, region->service_vm_gpa, region->size)) {
@@ -774,7 +774,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 					prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
 					prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
 
-					ept_modify_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+					ept_modify_mr(vm, (uint64_t *)vm->root_stg2ptp,
 							wp->gpa, PAGE_SIZE, prot_set, prot_clr);
 					ret = 0;
 				}
@@ -1118,10 +1118,10 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 				px_cnt = 0U;
 			} else if (!is_pt_pstate(target_vm)) {
 				break;
-			} else if (target_vm->pm.px_cnt == 0U) {
+			} else if (target_vm->arch_vm.pm.px_cnt == 0U) {
 				break;
 			} else {
-				px_cnt = target_vm->pm.px_cnt;
+				px_cnt = target_vm->arch_vm.pm.px_cnt;
 			}
 			ret = copy_to_gpa(vm, &px_cnt, param2, sizeof(px_cnt));
 			break;
@@ -1138,38 +1138,38 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 			 * If it is stored as per-cpu in the future,
 			 * we need to check PMCMD_VCPUID_MASK in cmd.
 			 */
-			if (target_vm->pm.px_cnt == 0U) {
+			if (target_vm->arch_vm.pm.px_cnt == 0U) {
 				break;
 			}
 
 			pn = (uint8_t)((cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT);
-			if (pn >= target_vm->pm.px_cnt) {
+			if (pn >= target_vm->arch_vm.pm.px_cnt) {
 				break;
 			}
 
-			px_data = target_vm->pm.px_data + pn;
+			px_data = target_vm->arch_vm.pm.px_data + pn;
 			ret = copy_to_gpa(vm, px_data, param2, sizeof(struct acrn_pstate_data));
 			break;
 		}
 		case ACRN_PMCMD_GET_CX_CNT: {
-			ret = copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param2, sizeof(target_vm->pm.cx_cnt));
+			ret = copy_to_gpa(vm, &(target_vm->arch_vm.pm.cx_cnt), param2, sizeof(target_vm->arch_vm.pm.cx_cnt));
 			break;
 		}
 		case ACRN_PMCMD_GET_CX_DATA: {
 			uint8_t cx_idx;
 			struct acrn_cstate_data *cx_data;
 
-			if (target_vm->pm.cx_cnt == 0U) {
+			if (target_vm->arch_vm.pm.cx_cnt == 0U) {
 				break;
 			}
 
 			cx_idx = (uint8_t)
 				((cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT);
-			if ((cx_idx == 0U) || (cx_idx > target_vm->pm.cx_cnt)) {
+			if ((cx_idx == 0U) || (cx_idx > target_vm->arch_vm.pm.cx_cnt)) {
 				break;
 			}
 
-			cx_data = target_vm->pm.cx_data + cx_idx;
+			cx_data = target_vm->arch_vm.pm.cx_data + cx_idx;
 			ret = copy_to_gpa(vm, cx_data, param2, sizeof(struct acrn_cstate_data));
 			break;
 		}
@@ -1218,7 +1218,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 
 				case INTR_CMD_DELAY_INT:
 					/* buffer[0] is the delay time (in MS), if 0 to cancel delay */
-					target_vm->intr_inject_delay_delta =
+					target_vm->arch_vm.intr_inject_delay_delta =
 						intr_hdr->buffer[0] * TICKS_PER_MS;
 					break;
 

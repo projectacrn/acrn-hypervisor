@@ -12,7 +12,7 @@
 #ifndef SHARED_BUFFER_H
 #define SHARED_BUFFER_H
 #include <acrn_common.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 /**
  *@pre sbuf != NULL
  *@pre data != NULL

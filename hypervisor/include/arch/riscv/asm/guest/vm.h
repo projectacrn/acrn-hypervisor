@@ -10,14 +10,12 @@
 
 #include <vm_configurations.h>
 #include <vuart.h>
-#include <asm/guest/vcpu.h>
-
 
 #define INVALID_PIO_IDX	-1U
 #define UART_PIO_IDX0	INVALID_PIO_IDX
 
-struct acrn_vm {
-	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
+struct vm_arch {
+
 };
 
 /* FIXME: riscv dummy function */

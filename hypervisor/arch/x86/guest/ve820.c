@@ -6,7 +6,7 @@
 
 #include <asm/e820.h>
 #include <asm/mmu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/ept.h>
 #include <reloc.h>
 #include <vacpi.h>
@@ -29,8 +29,8 @@ uint64_t find_space_from_ve820(struct acrn_vm *vm, uint32_t size, uint64_t min_a
 	uint64_t round_max_addr = round_page_down(max_addr);
 	uint32_t round_size = round_page_up(size);
 
-	for (i = (int32_t)(vm->e820_entry_num - 1U); i >= 0; i--) {
-		struct e820_entry *entry = vm->e820_entries + i;
+	for (i = (int32_t)(vm->arch_vm.e820_entry_num - 1U); i >= 0; i--) {
+		struct e820_entry *entry = vm->arch_vm.e820_entries + i;
 		uint64_t start, end, length;
 
 		start = round_page_up(entry->baseaddr);
@@ -59,12 +59,12 @@ static void sort_vm_e820(struct acrn_vm *vm)
 	struct e820_entry tmp_entry;
 
 	/* Bubble sort */
-	for (i = 0U; i < (vm->e820_entry_num - 1U); i++) {
-		for (j = 0U; j < (vm->e820_entry_num - i - 1U); j++) {
-			if (vm->e820_entries[j].baseaddr > vm->e820_entries[j + 1U].baseaddr) {
-				tmp_entry = vm->e820_entries[j];
-				vm->e820_entries[j] = vm->e820_entries[j + 1U];
-				vm->e820_entries[j + 1U] = tmp_entry;
+	for (i = 0U; i < (vm->arch_vm.e820_entry_num - 1U); i++) {
+		for (j = 0U; j < (vm->arch_vm.e820_entry_num - i - 1U); j++) {
+			if (vm->arch_vm.e820_entries[j].baseaddr > vm->arch_vm.e820_entries[j + 1U].baseaddr) {
+				tmp_entry = vm->arch_vm.e820_entries[j];
+				vm->arch_vm.e820_entries[j] = vm->arch_vm.e820_entries[j + 1U];
+				vm->arch_vm.e820_entries[j + 1U] = tmp_entry;
 			}
 		}
 	}
@@ -75,7 +75,7 @@ static void filter_mem_from_service_vm_e820(struct acrn_vm *vm, uint64_t start_p
 	uint32_t i;
 	uint64_t entry_start;
 	uint64_t entry_end;
-	uint32_t entries_count = vm->e820_entry_num;
+	uint32_t entries_count = vm->arch_vm.e820_entry_num;
 	struct e820_entry *entry, new_entry = {0};
 
 	for (i = 0U; i < entries_count; i++) {
@@ -125,7 +125,7 @@ static void filter_mem_from_service_vm_e820(struct acrn_vm *vm, uint64_t start_p
 		entry->baseaddr = new_entry.baseaddr;
 		entry->length = new_entry.length;
 		entry->type = new_entry.type;
-		vm->e820_entry_num = entries_count;
+		vm->arch_vm.e820_entry_num = entries_count;
 	}
 
 }
@@ -145,8 +145,8 @@ void create_service_vm_e820(struct acrn_vm *vm)
 	(void)memcpy_s((void *)service_vm_e820, entries_count * sizeof(struct e820_entry),
 			(const void *)get_e820_entry(), entries_count * sizeof(struct e820_entry));
 
-	vm->e820_entry_num = entries_count;
-	vm->e820_entries = service_vm_e820;
+	vm->arch_vm.e820_entry_num = entries_count;
+	vm->arch_vm.e820_entries = service_vm_e820;
 
 	/* filter out prelaunched vm memory from e820 table */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
@@ -161,7 +161,7 @@ void create_service_vm_e820(struct acrn_vm *vm)
 		}
 	}
 
-	for (i = 0U; i < vm->e820_entry_num; i++) {
+	for (i = 0U; i < vm->arch_vm.e820_entry_num; i++) {
 		struct e820_entry *entry = &service_vm_e820[i];
 		if (entry->type == E820_TYPE_RAM) {
 			service_vm_config->memory.size += entry->length;
@@ -284,19 +284,19 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 	uint32_t entry_idx = ENTRY_GPA_HI;
 	uint64_t memory_size = calculate_memory_size(vm_config->memory.host_regions, vm_config->memory.region_num);
 
-	vm->e820_entries = pre_vm_e820[vm->vm_id];
-	(void)memcpy_s((void *)vm->e820_entries,  E820_MAX_ENTRIES * sizeof(struct e820_entry),
+	vm->arch_vm.e820_entries = pre_vm_e820[vm->vm_id];
+	(void)memcpy_s((void *)vm->arch_vm.e820_entries,  E820_MAX_ENTRIES * sizeof(struct e820_entry),
 		(const void *)pre_ve820_template, E820_MAX_ENTRIES * sizeof(struct e820_entry));
 
 	if (memory_size > lowmem_max_length) {
 		gpa_hi_size = memory_size - lowmem_max_length;
-		add_ram_entry((vm->e820_entries + entry_idx), gpa_start, gpa_hi_size);
+		add_ram_entry((vm->arch_vm.e820_entries + entry_idx), gpa_start, gpa_hi_size);
 		entry_idx++;
 	} else {
 		/* need to revise length of hpa1 entry to its actual size, excluding size of used space */
-		vm->e820_entries[ENTRY_GPA_L].length = memory_size - MEM_1M - VIRT_ACPI_DATA_LEN - VIRT_ACPI_NVS_LEN;
+		vm->arch_vm.e820_entries[ENTRY_GPA_L].length = memory_size - MEM_1M - VIRT_ACPI_DATA_LEN - VIRT_ACPI_NVS_LEN;
 	}
 
-	vm->e820_entry_num = entry_idx;
+	vm->arch_vm.e820_entry_num = entry_idx;
 	sort_vm_e820(vm);
 }

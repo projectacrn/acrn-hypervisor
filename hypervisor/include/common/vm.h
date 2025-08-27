@@ -7,7 +7,137 @@
 #ifndef VM_H_
 #define VM_H_
 
+/* Defines for VM Launch and Resume */
+#define VM_RESUME		0
+#define VM_LAUNCH		1
+
+#ifndef ASSEMBLER
+
+#include <list.h>
+#include <types.h>
+#include <bits.h>
+#include <mmu.h>
+#include <dm/vuart.h>
+#include <dm/io_req.h>
+#include <dm/vpci.h>
+#include <dm/vrtc.h>
+#include <spinlock.h>
+#include <asm/vm_config.h>
 #include <asm/guest/vm.h>
+
+#include <vcpu.h>
+
+struct vm_hw_info {
+	/* vcpu array of this VM */
+	struct acrn_vcpu vcpu_array[MAX_VCPUS_PER_VM];
+	uint16_t created_vcpus;	/* Number of created vcpus */
+	uint64_t cpu_affinity;	/* Actual pCPUs this VM runs on. The set bits represent the pCPU IDs */
+} __aligned(PAGE_SIZE);
+
+struct sw_module_info {
+	/* sw modules like ramdisk, bootargs, firmware, etc. */
+	void *src_addr;			/* HVA */
+	void *load_addr;		/* GPA */
+	uint32_t size;
+};
+
+struct sw_kernel_info {
+	void *kernel_src_addr;		/* HVA */
+	void *kernel_entry_addr;	/* GPA */
+	uint32_t kernel_size;
+};
+
+struct vm_sw_info {
+	enum os_kernel_type kernel_type;	/* Guest kernel type */
+	/* Kernel information (common for all guest types) */
+	struct sw_kernel_info kernel_info;
+	struct sw_module_info bootargs_info;
+	struct sw_module_info ramdisk_info;
+	struct sw_module_info acpi_info;
+	/* HVA to IO shared page */
+	void *io_shared_page;
+	void *asyncio_sbuf;
+	void *vm_event_sbuf;
+	/* If enable IO completion polling mode */
+	bool is_polling_ioreq;
+};
+
+/* Enumerated type for VM states */
+enum vm_state {
+	VM_POWERED_OFF = 0,   /* MUST set 0 because vm_state's initialization depends on clear BSS section */
+	VM_CREATED,	/* VM created / awaiting start (boot) */
+	VM_RUNNING,	/* VM running */
+	VM_READY_TO_POWEROFF,     /* RTVM only, it is trying to poweroff by itself */
+	VM_PAUSED,	/* VM paused */
+};
+
+struct acrn_vm {
+	struct vm_arch arch_vm; /* Reference to this VM's arch information */
+	struct vm_hw_info hw;	/* Reference to this VM's HW information */
+	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
+	uint16_t vm_id;		    /* Virtual machine identifier */
+	enum vm_state state;	/* VM state */
+	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
+	struct asyncio_desc	aio_desc[ACRN_ASYNCIO_MAX];
+	struct list_head aiodesc_queue;
+	spinlock_t asyncio_lock; /* Spin-lock used to protect asyncio add/remove for a VM */
+	spinlock_t vm_event_lock;
+	spinlock_t vm_state_lock;
+	struct iommu_domain *iommu;	/* iommu domain of this VM */
+	char name[MAX_VM_NAME_LEN];
+	struct acrn_vpci vpci;
+	struct acrn_vrtc vrtc;
+
+	spinlock_t emul_mmio_lock;	/* Used to protect emulation mmio_node concurrent access for a VM */
+	uint16_t nr_emul_mmio_regions;	/* the emulated mmio_region number */
+	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
+	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
+
+	/* Pointer to root stage2 pagetable */
+	void *root_stg2ptp;
+	struct pgtable stg2_pgtable;
+	spinlock_t stg2pt_lock;	/* Spin-lock used to protect stg2pt to add/modify/remove for a VM */
+} __aligned(PAGE_SIZE);
+
+/*
+ * @pre vlapic != NULL
+ */
+static inline uint64_t vm_active_cpus(const struct acrn_vm *vm)
+{
+	uint64_t dmask = 0UL;
+	uint16_t i;
+	const struct acrn_vcpu *vcpu;
+
+	foreach_vcpu(i, vm, vcpu) {
+		bitmap_set_non_atomic(vcpu->vcpu_id, &dmask);
+	}
+
+	return dmask;
+}
+
+/*
+ * @pre vcpu_id < MAX_VCPUS_PER_VM
+ * @pre &(vm->hw.vcpu_array[vcpu_id])->state != VCPU_OFFLINE
+ */
+static inline struct acrn_vcpu *vcpu_from_vid(struct acrn_vm *vm, uint16_t vcpu_id)
+{
+	return &(vm->hw.vcpu_array[vcpu_id]);
+}
+
+static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_id)
+{
+	uint16_t i;
+	struct acrn_vcpu *vcpu, *target_vcpu = NULL;
+
+	foreach_vcpu(i, vm, vcpu) {
+		if (pcpuid_from_vcpu(vcpu) == pcpu_id) {
+			target_vcpu = vcpu;
+			break;
+		}
+	}
+
+	return target_vcpu;
+}
 
 struct acrn_vm *get_vm_from_vmid(__unused uint16_t vm_id);
 
@@ -17,5 +147,7 @@ bool is_poweroff_vm(__unused const struct acrn_vm *vm);
 
 void arch_trigger_level_intr(__unused struct acrn_vm *vm,
 			__unused uint32_t irq, __unused bool assert);
+
+#endif /* !ASSEMBLER */
 
 #endif /* VM_H_ */

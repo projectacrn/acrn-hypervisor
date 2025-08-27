@@ -34,7 +34,7 @@
 #include <asm/vmx.h>
 #include <reloc.h>
 #include <mmu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/boot/ld_sym.h>
 #include <logmsg.h>
 #include <misc_cfg.h>

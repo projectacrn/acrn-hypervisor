@@ -8,7 +8,7 @@
 #define VACPI_H
 
 #include <acpi.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 
 #define ACPI_OEM_ID           "ACRN  "
 

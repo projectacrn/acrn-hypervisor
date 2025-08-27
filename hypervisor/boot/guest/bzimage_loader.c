@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/e820.h>
 #include <asm/zeropage.h>
 #include <asm/guest/ept.h>
@@ -211,18 +211,18 @@ static uint16_t create_service_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_m
 		}
 	}
 
-	for (i = 0U; i < (uint16_t)vm->e820_entry_num; i++) {
+	for (i = 0U; i < (uint16_t)vm->arch_vm.e820_entry_num; i++) {
 		/* The memory region with e820 type of RAM could be acted as EFI_CONVENTIONAL_MEMORY
 		 * for Service VM, the region which occupied by HV and pre-launched VM has been filtered
 		 * already, so it is safe for Service VM.
 		 * As Service VM start to run after efi call ExitBootService(), the type of EFI_LOADER_CODE
 		 * and EFI_LOADER_DATA which have been mapped to E820_TYPE_RAM are not needed.
 		 */
-		if (vm->e820_entries[i].type == E820_TYPE_RAM) {
+		if (vm->arch_vm.e820_entries[i].type == E820_TYPE_RAM) {
 			efi_mmap_desc[desc_idx].type = EFI_CONVENTIONAL_MEMORY;
-			efi_mmap_desc[desc_idx].phys_addr = vm->e820_entries[i].baseaddr;
-			efi_mmap_desc[desc_idx].virt_addr = vm->e820_entries[i].baseaddr;
-			efi_mmap_desc[desc_idx].num_pages = vm->e820_entries[i].length / PAGE_SIZE;
+			efi_mmap_desc[desc_idx].phys_addr = vm->arch_vm.e820_entries[i].baseaddr;
+			efi_mmap_desc[desc_idx].virt_addr = vm->arch_vm.e820_entries[i].baseaddr;
+			efi_mmap_desc[desc_idx].num_pages = vm->arch_vm.e820_entries[i].length / PAGE_SIZE;
 			efi_mmap_desc[desc_idx].attribute = EFI_MEMORY_WB;
 			desc_idx++;
 		}
@@ -242,9 +242,9 @@ static uint16_t create_service_vm_efi_mmap_desc(struct acrn_vm *vm, struct efi_m
  */
 static uint32_t create_zeropage_e820(struct zero_page *zp, const struct acrn_vm *vm)
 {
-	uint32_t entry_num = vm->e820_entry_num;
+	uint32_t entry_num = vm->arch_vm.e820_entry_num;
 	struct e820_entry *zp_e820 = zp->entries;
-	const struct e820_entry *vm_e820 = vm->e820_entries;
+	const struct e820_entry *vm_e820 = vm->arch_vm.e820_entries;
 
 	if ((zp_e820 == NULL) || (vm_e820 == NULL) || (entry_num == 0U) || (entry_num > E820_MAX_ENTRIES)) {
 		pr_err("e820 create error");

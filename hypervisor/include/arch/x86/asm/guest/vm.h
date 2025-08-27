@@ -43,56 +43,12 @@ enum reset_mode {
 	RESUME_FROM_S3,		/* reset core states after resuming from S3 */
 };
 
-struct vm_hw_info {
-	/* vcpu array of this VM */
-	struct acrn_vcpu vcpu_array[MAX_VCPUS_PER_VM];
-	uint16_t created_vcpus;	/* Number of created vcpus */
-	uint64_t cpu_affinity;	/* Actual pCPUs this VM runs on. The set bits represent the pCPU IDs */
-} __aligned(PAGE_SIZE);
-
-struct sw_module_info {
-	/* sw modules like ramdisk, bootargs, firmware, etc. */
-	void *src_addr;			/* HVA */
-	void *load_addr;		/* GPA */
-	uint32_t size;
-};
-
-struct sw_kernel_info {
-	void *kernel_src_addr;		/* HVA */
-	void *kernel_entry_addr;	/* GPA */
-	uint32_t kernel_size;
-};
-
-struct vm_sw_info {
-	enum os_kernel_type kernel_type;	/* Guest kernel type */
-	/* Kernel information (common for all guest types) */
-	struct sw_kernel_info kernel_info;
-	struct sw_module_info bootargs_info;
-	struct sw_module_info ramdisk_info;
-	struct sw_module_info acpi_info;
-	/* HVA to IO shared page */
-	void *io_shared_page;
-	void *asyncio_sbuf;
-	void *vm_event_sbuf;
-	/* If enable IO completion polling mode */
-	bool is_polling_ioreq;
-};
-
 struct vm_pm_info {
 	uint8_t			px_cnt;		/* count of all Px states */
 	struct acrn_pstate_data	px_data[MAX_PSTATE];
 	uint8_t			cx_cnt;		/* count of all Cx entries */
 	struct acrn_cstate_data	cx_data[MAX_CSTATE];
 	struct pm_s_state_data	*sx_state_data;	/* data for S3/S5 implementation */
-};
-
-/* Enumerated type for VM states */
-enum vm_state {
-	VM_POWERED_OFF = 0,   /* MUST set 0 because vm_state's initialization depends on clear BSS section */
-	VM_CREATED,	/* VM created / awaiting start (boot) */
-	VM_RUNNING,	/* VM running */
-	VM_READY_TO_POWEROFF,     /* RTVM only, it is trying to poweroff by itself */
-	VM_PAUSED,	/* VM paused */
 };
 
 enum vm_vlapic_mode {
@@ -106,14 +62,34 @@ struct vm_arch {
 	/* I/O bitmaps A and B for this VM, MUST be 4-Kbyte aligned */
 	uint8_t io_bitmap[PAGE_SIZE*2];
 
-	/* EPT hierarchy for Normal World */
-	void *nworld_eptp;
+	struct vm_pm_info pm;	/* Reference to this VM's PM information */
+	uint32_t e820_entry_num;
+	struct e820_entry *e820_entries;
+
+	enum vpic_wire_mode wire_mode;
+
+	spinlock_t wbinvd_lock;		/* Spin-lock used to serialize wbinvd emulation */
+	spinlock_t vlapic_mode_lock;	/* Spin-lock used to protect vlapic_mode modifications for a VM */
+	struct secure_world_control sworld_control;
+
+	/* Secure World's snapshot
+	 * Currently, Secure World is only running on vcpu[0],
+	 * so the snapshot only stores the vcpu0's run_context
+	 * of secure world.
+	 */
+	struct guest_cpu_context sworld_snapshot;
+
+	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
+	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
+
+	uint64_t intr_inject_delay_delta; /* delay of intr injection */
+	uint32_t reset_control;
+
 	/* EPT hierarchy for Secure World
 	 * Secure world can access Normal World's memory,
 	 * but Normal World can not access Secure World's memory.
 	 */
 	void *sworld_eptp;
-	struct pgtable ept_pgtable;
 
 	struct acrn_vioapics vioapics;	/* Virtual IOAPIC/s */
 	struct acrn_vpic vpic;      /* Virtual PIC */
@@ -135,95 +111,6 @@ struct vm_arch {
 	struct iwkey iwkey_backup;
 
 } __aligned(PAGE_SIZE);
-
-struct acrn_vm {
-	struct vm_arch arch_vm; /* Reference to this VM's arch information */
-	struct vm_hw_info hw;	/* Reference to this VM's HW information */
-	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
-	struct vm_pm_info pm;	/* Reference to this VM's arch information */
-	uint32_t e820_entry_num;
-	struct e820_entry *e820_entries;
-	uint16_t vm_id;		    /* Virtual machine identifier */
-	enum vm_state state;	/* VM state */
-	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
-	struct asyncio_desc	aio_desc[ACRN_ASYNCIO_MAX];
-	struct list_head aiodesc_queue;
-	spinlock_t asyncio_lock; /* Spin-lock used to protect asyncio add/remove for a VM */
-	spinlock_t vm_event_lock;
-
-	enum vpic_wire_mode wire_mode;
-	struct iommu_domain *iommu;	/* iommu domain of this VM */
-	/* vm_state_lock used to protect vm/vcpu state transition,
-	 * the initialization depends on the clear BSS section
-	 */
-	spinlock_t vm_state_lock;
-	spinlock_t wbinvd_lock;		/* Spin-lock used to serialize wbinvd emulation */
-	spinlock_t vlapic_mode_lock;	/* Spin-lock used to protect vlapic_mode modifications for a VM */
-	spinlock_t ept_lock;	/* Spin-lock used to protect ept add/modify/remove for a VM */
-	spinlock_t emul_mmio_lock;	/* Used to protect emulation mmio_node concurrent access for a VM */
-	uint16_t nr_emul_mmio_regions;	/* the emulated mmio_region number */
-	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
-
-	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
-
-	char name[MAX_VM_NAME_LEN];
-	struct secure_world_control sworld_control;
-
-	/* Secure World's snapshot
-	 * Currently, Secure World is only running on vcpu[0],
-	 * so the snapshot only stores the vcpu0's run_context
-	 * of secure world.
-	 */
-	struct guest_cpu_context sworld_snapshot;
-
-	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
-	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
-	struct acrn_vpci vpci;
-	struct acrn_vrtc vrtc;
-
-	uint64_t intr_inject_delay_delta; /* delay of intr injection */
-	uint32_t reset_control;
-} __aligned(PAGE_SIZE);
-
-/*
- * @pre vlapic != NULL
- */
-static inline uint64_t vm_active_cpus(const struct acrn_vm *vm)
-{
-	uint64_t dmask = 0UL;
-	uint16_t i;
-	const struct acrn_vcpu *vcpu;
-
-	foreach_vcpu(i, vm, vcpu) {
-		bitmap_set_non_atomic(vcpu->vcpu_id, &dmask);
-	}
-
-	return dmask;
-}
-
-/*
- * @pre vcpu_id < MAX_VCPUS_PER_VM
- * @pre &(vm->hw.vcpu_array[vcpu_id])->state != VCPU_OFFLINE
- */
-static inline struct acrn_vcpu *vcpu_from_vid(struct acrn_vm *vm, uint16_t vcpu_id)
-{
-	return &(vm->hw.vcpu_array[vcpu_id]);
-}
-
-static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_id)
-{
-	uint16_t i;
-	struct acrn_vcpu *vcpu, *target_vcpu = NULL;
-
-	foreach_vcpu(i, vm, vcpu) {
-		if (pcpuid_from_vcpu(vcpu) == pcpu_id) {
-			target_vcpu = vcpu;
-			break;
-		}
-	}
-
-	return target_vcpu;
-}
 
 /* Convert relative vm id to absolute vm id */
 static inline uint16_t rel_vmid_2_vmid(uint16_t service_vmid, uint16_t rel_vmid) {

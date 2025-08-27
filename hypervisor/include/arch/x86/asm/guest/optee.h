@@ -7,7 +7,7 @@
 #ifndef TEE_H_
 #define TEE_H_
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/vm_config.h>
 #include <ptdev.h>
 

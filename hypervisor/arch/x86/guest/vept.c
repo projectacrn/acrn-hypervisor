@@ -8,7 +8,7 @@
 #include <logmsg.h>
 #include <asm/mmu.h>
 #include <vcpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/vmexit.h>
 #include <asm/guest/ept.h>
 #include <asm/guest/vept.h>

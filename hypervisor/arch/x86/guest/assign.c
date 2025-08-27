@@ -7,7 +7,7 @@
 #include <types.h>
 #include <errno.h>
 #include <bits.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/vtd.h>
 #include <ptdev.h>
 #include <per_cpu.h>

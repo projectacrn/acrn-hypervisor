@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <bits.h>
 #include <vcpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/cpuid.h>
 #include <asm/cpufeatures.h>
 #include <asm/vmx.h>
@@ -30,14 +30,14 @@ static inline const struct vcpuid_entry *local_find_vcpuid_entry(const struct ac
 	const struct vcpuid_entry *found_entry = NULL;
 	struct acrn_vm *vm = vcpu->vm;
 
-	nr = vm->vcpuid_entry_nr;
+	nr = vm->arch_vm.vcpuid_entry_nr;
 	half = nr >> 1U;
-	if (vm->vcpuid_entries[half].leaf < leaf) {
+	if (vm->arch_vm.vcpuid_entries[half].leaf < leaf) {
 		i = half;
 	}
 
 	for (; i < nr; i++) {
-		const struct vcpuid_entry *tmp = (const struct vcpuid_entry *)(&vm->vcpuid_entries[i]);
+		const struct vcpuid_entry *tmp = (const struct vcpuid_entry *)(&vm->arch_vm.vcpuid_entries[i]);
 
 		if (tmp->leaf < leaf) {
 			continue;
@@ -68,9 +68,9 @@ static inline const struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcp
 		struct acrn_vm *vm = vcpu->vm;
 
 		if ((leaf & 0x80000000U) != 0U) {
-			limit = vm->vcpuid_xlevel;
+			limit = vm->arch_vm.vcpuid_xlevel;
 		} else {
-			limit = vm->vcpuid_level;
+			limit = vm->arch_vm.vcpuid_level;
 		}
 
 		if (leaf > limit) {
@@ -79,7 +79,7 @@ static inline const struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcp
 			 * (Intel SDM Vol. 2A - Instruction Set Reference -
 			 * CPUID)
 			 */
-			leaf = vm->vcpuid_level;
+			leaf = vm->arch_vm.vcpuid_level;
 			entry = local_find_vcpuid_entry(vcpu, leaf, subleaf);
 		}
 
@@ -95,12 +95,12 @@ static inline int32_t set_vcpuid_entry(struct acrn_vm *vm,
 	size_t entry_size = sizeof(struct vcpuid_entry);
 	int32_t ret;
 
-	if (vm->vcpuid_entry_nr == MAX_VM_VCPUID_ENTRIES) {
+	if (vm->arch_vm.vcpuid_entry_nr == MAX_VM_VCPUID_ENTRIES) {
 		pr_err("%s, vcpuid entry over MAX_VM_VCPUID_ENTRIES(%u)\n", __func__, MAX_VM_VCPUID_ENTRIES);
 		ret = -ENOMEM;
 	} else {
-		tmp = &vm->vcpuid_entries[vm->vcpuid_entry_nr];
-		vm->vcpuid_entry_nr++;
+		tmp = &vm->arch_vm.vcpuid_entries[vm->arch_vm.vcpuid_entry_nr];
+		vm->arch_vm.vcpuid_entry_nr++;
 		(void)memcpy_s(tmp, entry_size, entry, entry_size);
 		ret = 0;
 	}
@@ -581,7 +581,7 @@ static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 
 	if (result == 0) {
 		limit = entry.eax;
-		vm->vcpuid_xlevel = limit;
+		vm->arch_vm.vcpuid_xlevel = limit;
 		for (i = 0x80000002U; i <= limit; i++) {
 			init_vcpuid_entry(i, 0U, 0U, &entry);
 			result = set_vcpuid_entry(vm, &entry);
@@ -650,7 +650,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 		percpu_cpuid_init();
 
 		limit = entry.eax;
-		vm->vcpuid_level = limit;
+		vm->arch_vm.vcpuid_level = limit;
 
 		for (i = 1U; i <= limit; i++) {
 			if (is_percpu_related(i)) {

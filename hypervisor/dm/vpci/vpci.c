@@ -28,7 +28,7 @@
 
 #include <errno.h>
 #include <ptdev.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/vtd.h>
 #include <io.h>
 #include <asm/mmu.h>
@@ -229,7 +229,7 @@ int32_t init_vpci(struct acrn_vm *vm)
 	struct pci_mmcfg_region *pci_mmcfg;
 	int32_t ret = 0;
 
-	vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
+	vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->root_stg2ptp), 48U);
 
 	vm_config = get_vm_config(vm->vm_id);
 	/* virtual PCI MMCONFIG for Service VM is same with the physical value */

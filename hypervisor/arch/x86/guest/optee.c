@@ -40,13 +40,13 @@ void prepare_tee_vm_memmap(struct acrn_vm *vm, const struct acrn_vm_config *vm_c
 	 * 2. remove hv owned memory.
 	 */
 	if ((vm_config->guest_flags & GUEST_FLAG_TEE) != 0U) {
-		vm->e820_entry_num = get_e820_entries_count();
-		vm->e820_entries = (struct e820_entry *)get_e820_entry();
+		vm->arch_vm.e820_entry_num = get_e820_entries_count();
+		vm->arch_vm.e820_entries = (struct e820_entry *)get_e820_entry();
 
 		prepare_vm_identical_memmap(vm, E820_TYPE_RAM, EPT_WB | EPT_RWX);
 
 		hv_hpa = hva2hpa((void *)(get_hv_image_base()));
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, hv_hpa, get_hv_image_size());
+		ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, hv_hpa, get_hv_image_size());
 	}
 }
 

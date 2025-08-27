@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <util.h>
 #include <acrn_hv_defs.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <vm_event.h>
 #include <sbuf.h>
 

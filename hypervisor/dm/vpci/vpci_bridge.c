@@ -44,7 +44,7 @@
  *   1. Service VM how to reset PCI devices under the PCI bridge
  */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <errno.h>
 #include <logmsg.h>
 #include <pci.h>

@@ -9,7 +9,7 @@
 #include <asm/pgtable.h>
 #include <asm/guest/ept.h>
 #include <vcpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <logmsg.h>
 
 #define MTRR_FIXED_RANGE_ALL_WB (MTRR_MEM_TYPE_WB \
@@ -160,7 +160,7 @@ static void update_ept(struct acrn_vm *vm, uint64_t start,
 		break;
 	}
 
-	ept_modify_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, size, attr, EPT_MT_MASK);
+	ept_modify_mr(vm, (uint64_t *)vm->root_stg2ptp, start, size, attr, EPT_MT_MASK);
 }
 
 static void update_ept_mem_type(const struct acrn_vmtrr *vmtrr)

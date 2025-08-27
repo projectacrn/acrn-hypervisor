@@ -33,7 +33,7 @@
 * Series Host Bridge (rev 0b)
 */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <pci.h>
 #include "vpci_priv.h"
 #include <vacpi.h>

@@ -12,7 +12,7 @@
 #include <asm/cpu.h>
 #include <asm/per_cpu.h>
 #include <asm/lapic.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/virq.h>
 #include <common/notify.h>
 #include <schedule.h>

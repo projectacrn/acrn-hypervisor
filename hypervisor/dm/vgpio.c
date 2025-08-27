@@ -38,7 +38,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/ept.h>
 #include <asm/guest/assign.h>
 #include <io.h>
@@ -144,7 +144,7 @@ void register_vgpio_handler(struct acrn_vm *vm, const struct acrn_mmiores *res)
 	/* emulate MMIO access to the GPIO private configuration space registers */
 	set_paging_supervisor((uint64_t)hpa2hva(base_hpa), gpio_pcr_sz);
 	register_mmio_emulation_handler(vm, vgpio_mmio_handler, gpa_start, gpa_end, (void *)vm, false);
-	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, gpa_start, gpio_pcr_sz);
+	ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, gpa_start, gpio_pcr_sz);
 }
 
 #endif

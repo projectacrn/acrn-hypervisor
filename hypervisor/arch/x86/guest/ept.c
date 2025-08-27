@@ -265,12 +265,12 @@ bool ept_is_valid_mr(struct acrn_vm *vm, uint64_t mr_base_gpa, uint64_t mr_size)
 void destroy_ept(struct acrn_vm *vm)
 {
 	/* Destroy secure world */
-	if (vm->sworld_control.flag.active != 0UL) {
+	if (vm->arch_vm.sworld_control.flag.active != 0UL) {
 		destroy_secure_world(vm, true);
 	}
 
-	if (vm->arch_vm.nworld_eptp != NULL) {
-		(void)memset(vm->arch_vm.nworld_eptp, 0U, PAGE_SIZE);
+	if (vm->root_stg2ptp != NULL) {
+		(void)memset(vm->root_stg2ptp, 0U, PAGE_SIZE);
 	}
 }
 
@@ -286,7 +286,7 @@ uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
 	void *eptp;
 
 	eptp = get_eptp(vm);
-	pgentry = pgtable_lookup_entry((uint64_t *)eptp, gpa, &pg_size, &vm->arch_vm.ept_pgtable);
+	pgentry = pgtable_lookup_entry((uint64_t *)eptp, gpa, &pg_size, &vm->stg2_pgtable);
 	if (pgentry != NULL) {
 		hpa = (((*pgentry & (~EPT_PFN_HIGH_MASK)) & (~(pg_size - 1UL)))
 				| (gpa & (pg_size - 1UL)));
@@ -356,11 +356,11 @@ void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 	dev_dbg(DBG_LEVEL_EPT, "%s, vm[%d] hpa: 0x%016lx gpa: 0x%016lx size: 0x%016lx prot: 0x%016x\n",
 			__func__, vm->vm_id, hpa, gpa, size, prot);
 
-	spinlock_obtain(&vm->ept_lock);
+	spinlock_obtain(&vm->stg2pt_lock);
 
-	pgtable_add_map(pml4_page, hpa, gpa, size, prot, &vm->arch_vm.ept_pgtable);
+	pgtable_add_map(pml4_page, hpa, gpa, size, prot, &vm->stg2_pgtable);
 
-	spinlock_release(&vm->ept_lock);
+	spinlock_release(&vm->stg2pt_lock);
 
 	ept_flush_guest(vm);
 }
@@ -373,11 +373,11 @@ void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 
 	dev_dbg(DBG_LEVEL_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
 
-	spinlock_obtain(&vm->ept_lock);
+	spinlock_obtain(&vm->stg2pt_lock);
 
-	pgtable_modify_or_del_map(pml4_page, gpa, size, local_prot, prot_clr, &(vm->arch_vm.ept_pgtable), MR_MODIFY);
+	pgtable_modify_or_del_map(pml4_page, gpa, size, local_prot, prot_clr, &(vm->stg2_pgtable), MR_MODIFY);
 
-	spinlock_release(&vm->ept_lock);
+	spinlock_release(&vm->stg2pt_lock);
 
 	ept_flush_guest(vm);
 }
@@ -388,11 +388,11 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
 {
 	dev_dbg(DBG_LEVEL_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
 
-	spinlock_obtain(&vm->ept_lock);
+	spinlock_obtain(&vm->stg2pt_lock);
 
-	pgtable_modify_or_del_map(pml4_page, gpa, size, 0UL, 0UL, &(vm->arch_vm.ept_pgtable), MR_DEL);
+	pgtable_modify_or_del_map(pml4_page, gpa, size, 0UL, 0UL, &(vm->stg2_pgtable), MR_DEL);
 
-	spinlock_release(&vm->ept_lock);
+	spinlock_release(&vm->stg2pt_lock);
 
 	ept_flush_guest(vm);
 }
@@ -451,7 +451,7 @@ void *get_eptp(struct acrn_vm *vm)
 	if ((vcpu != NULL) && (vcpu->arch.cur_context == SECURE_WORLD)) {
 		eptp = vm->arch_vm.sworld_eptp;
 	} else {
-		eptp = vm->arch_vm.nworld_eptp;
+		eptp = vm->root_stg2ptp;
 	}
 
 	return eptp;
@@ -462,7 +462,7 @@ void *get_eptp(struct acrn_vm *vm)
  */
 void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 {
-	const struct pgtable *table = &vm->arch_vm.ept_pgtable;
+	const struct pgtable *table = &vm->stg2_pgtable;
 	uint64_t *pml4e, *pdpte, *pde, *pte;
 	uint64_t i, j, k, m;
 

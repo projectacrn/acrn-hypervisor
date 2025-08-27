@@ -26,7 +26,7 @@
 
 #define pr_prefix	"vpic: "
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/virq.h>
 #include <irq.h>
 #include <asm/guest/assign.h>
@@ -210,7 +210,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 		 * interrupt.
 		 */
 		i8259->intr_raised = true;
-		if (vm->wire_mode == VPIC_WIRE_INTR) {
+		if (vm->arch_vm.wire_mode == VPIC_WIRE_INTR) {
 			struct acrn_vcpu *bsp = vcpu_from_vid(vm, BSP_CPU_ID);
 			vcpu_inject_extint(bsp);
 		} else {

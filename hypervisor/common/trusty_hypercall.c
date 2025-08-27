@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <hypercall.h>
 #include <errno.h>
 #include <logmsg.h>
@@ -30,8 +30,8 @@ int32_t hcall_world_switch(struct acrn_vcpu *vcpu, __unused struct acrn_vm *targ
 	int32_t next_world_id = !(vcpu->arch.cur_context);
 	int32_t ret = -EPERM;
 
-	if ((vcpu->vm->sworld_control.flag.supported != 0UL) && (next_world_id < NR_WORLD)
-		&& (vcpu->vm->sworld_control.flag.active != 0UL)) {
+	if ((vcpu->vm->arch_vm.sworld_control.flag.supported != 0UL) && (next_world_id < NR_WORLD)
+		&& (vcpu->vm->arch_vm.sworld_control.flag.active != 0UL)) {
 		switch_world(vcpu, next_world_id);
 		ret = 0;
 	}
@@ -56,14 +56,14 @@ int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, __unused struct acrn_vm 
 {
 	int32_t ret = -EFAULT;
 
-	if ((vcpu->vm->sworld_control.flag.supported != 0UL)
-		&& (vcpu->vm->sworld_control.flag.active == 0UL)
+	if ((vcpu->vm->arch_vm.sworld_control.flag.supported != 0UL)
+		&& (vcpu->vm->arch_vm.sworld_control.flag.active == 0UL)
 		&& (vcpu->arch.cur_context == NORMAL_WORLD)) {
 		struct trusty_boot_param boot_param;
 
 		if (copy_from_gpa(vcpu->vm, &boot_param, param1, sizeof(boot_param)) == 0) {
 			if (initialize_trusty(vcpu, &boot_param)) {
-				vcpu->vm->sworld_control.flag.active = 1UL;
+				vcpu->vm->arch_vm.sworld_control.flag.active = 1UL;
 				ret = 0;
 			}
 		}
@@ -87,16 +87,16 @@ int32_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu, __unused struct ac
 	struct acrn_vm *vm = vcpu->vm;
 	int32_t ret = -EINVAL;
 
-	if (is_vcpu_bsp(vcpu) && (vm->sworld_control.flag.supported != 0UL)) {
-		if (vm->sworld_control.flag.active != 0UL) {
+	if (is_vcpu_bsp(vcpu) && (vm->arch_vm.sworld_control.flag.supported != 0UL)) {
+		if (vm->arch_vm.sworld_control.flag.active != 0UL) {
 			save_sworld_context(vcpu);
-			vm->sworld_control.flag.ctx_saved = 1UL;
+			vm->arch_vm.sworld_control.flag.ctx_saved = 1UL;
 			ret = 0;
 		} else {
-			if (vm->sworld_control.flag.ctx_saved != 0UL) {
+			if (vm->arch_vm.sworld_control.flag.ctx_saved != 0UL) {
 				restore_sworld_context(vcpu);
-				vm->sworld_control.flag.ctx_saved = 0UL;
-				vm->sworld_control.flag.active = 1UL;
+				vm->arch_vm.sworld_control.flag.ctx_saved = 0UL;
+				vm->arch_vm.sworld_control.flag.active = 1UL;
 				ret = 0;
 			}
 		}

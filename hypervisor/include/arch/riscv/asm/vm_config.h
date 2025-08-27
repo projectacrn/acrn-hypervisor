@@ -14,4 +14,9 @@
 #define MAX_VCPUS_PER_VM  MAX_PCPU_NUM
 #define CONFIG_MAX_VM_NUM 16U
 
+/* TODO: To be moved in later patches */
+enum os_kernel_type {
+	DUMMY,
+};
+
 #endif /* VM_CONFIG_H_ */

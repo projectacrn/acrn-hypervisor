@@ -7,7 +7,7 @@
 
 #include <logmsg.h>
 #include <pci.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <acrn_common.h>
 #include "vroot_port.h"
 

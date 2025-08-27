@@ -6,7 +6,7 @@
 
 #include <hash.h>
 #include <per_cpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <softirq.h>
 #include <ptdev.h>
 #include <irq.h>
@@ -196,14 +196,14 @@ static void ptirq_interrupt_handler(__unused uint32_t irq, void *data)
 		entry->intr_count++;
 
 		/* if delta > 0, set the delay TSC, dequeue to handle */
-		if (entry->vm->intr_inject_delay_delta > 0UL) {
+		if (entry->vm->arch_vm.intr_inject_delay_delta > 0UL) {
 
 			/* if the timer started (entry is in timer-list), not need enqueue again */
 			if (timer_is_started(&entry->intr_delay_timer)) {
 				to_enqueue = false;
 			} else {
 				update_timer(&entry->intr_delay_timer,
-					     cpu_ticks() + entry->vm->intr_inject_delay_delta, 0UL);
+					     cpu_ticks() + entry->vm->arch_vm.intr_inject_delay_delta, 0UL);
 			}
 		} else {
 			update_timer(&entry->intr_delay_timer, 0UL, 0UL);

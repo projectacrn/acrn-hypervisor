@@ -26,7 +26,7 @@
  * $FreeBSD$
  */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <io.h>
 #include <errno.h>
 #include <vpci.h>

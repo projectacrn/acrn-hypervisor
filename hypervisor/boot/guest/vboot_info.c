@@ -14,7 +14,7 @@
 #include <asm/zeropage.h>
 #include <asm/seed.h>
 #include <asm/mmu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/ept.h>
 #include <reloc.h>
 #include <logmsg.h>

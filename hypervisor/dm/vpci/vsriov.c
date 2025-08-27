@@ -26,7 +26,7 @@
  * $FreeBSD$
  */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/ept.h>
 #include <ptdev.h>
 #include <vpci.h>
@@ -128,7 +128,7 @@ static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf, uint16_t v
 			/* Map VF's BARs when it's first created. */
 			if (vf_vbar->base_gpa != 0UL) {
 				struct acrn_vm *vm = vpci2vm(vf_vdev->vpci);
-				ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp), vf_vbar->base_hpa,
+				ept_add_mr(vm, (uint64_t *)(vm->root_stg2ptp), vf_vbar->base_hpa,
 					vf_vbar->base_gpa, vf_vbar->size, EPT_WR | EPT_RD | EPT_UNCACHED);
 			}
 

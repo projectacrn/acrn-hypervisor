@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/ept.h>
 #include <vpci.h>
 #include <logmsg.h>
@@ -66,12 +66,12 @@ static void map_vmcs9900_vbar(struct pci_vdev *vdev, uint32_t idx)
 	if ((idx == MCS9900_MMIO_BAR) && (vbar->base_gpa != 0UL)) {
 		register_mmio_emulation_handler(vm, vmcs9900_mmio_handler,
 			vbar->base_gpa, vbar->base_gpa + vbar->size, vdev, false);
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
+		ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, vbar->base_gpa, vbar->size);
 		vu->active = true;
 	} else if ((idx == MCS9900_MSIX_BAR) && (vbar->base_gpa != 0UL)) {
 		register_mmio_emulation_handler(vm, vmsix_handle_table_mmio_access, vbar->base_gpa,
 			(vbar->base_gpa + vbar->size), vdev, false);
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
+		ept_del_mr(vm, (uint64_t *)vm->root_stg2ptp, vbar->base_gpa, vbar->size);
 		vdev->msix.mmio_gpa = vbar->base_gpa;
 	} else {
 		/* No action required. */

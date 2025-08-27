@@ -79,7 +79,7 @@ static bool handle_reset_reg_read(struct acrn_vcpu *vcpu, __unused uint16_t addr
 		/* re-inject to DM */
 		ret = false;
 	} else {
-		vcpu->req.reqs.pio_request.value = vm->reset_control;
+		vcpu->req.reqs.pio_request.value = vm->arch_vm.reset_control;
 	}
 
 	return ret;
@@ -167,7 +167,7 @@ static bool handle_cf9_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, siz
 {
 	struct acrn_vm *vm = vcpu->vm;
 
-	vm->reset_control = val & 0xeU;
+	vm->arch_vm.reset_control = val & 0xeU;
 	return handle_common_reset_reg_write(vcpu,
 			((bytes == 1U) && ((val & 0x4U) == 0x4U) && ((val & 0xaU) != 0U)),
 			((val & 0x8U) == 0U));

@@ -5,7 +5,7 @@
  */
 
 #include <asm/guest/vmcs.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/security.h>
 
 /* NOTE:

@@ -5,7 +5,7 @@
  */
 #include <types.h>
 #include <asm/vm_config.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <vacpi.h>
 #include <logmsg.h>
 #include <util.h>

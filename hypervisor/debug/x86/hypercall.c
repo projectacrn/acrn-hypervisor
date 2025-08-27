@@ -10,7 +10,7 @@
 #include <sbuf.h>
 #include <hypercall.h>
 #include <npk_log.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <logmsg.h>
 #include <cpu.h>
 
