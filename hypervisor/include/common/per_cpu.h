@@ -54,7 +54,7 @@ struct per_cpu_region {
 	 * share same pCPU. So the maximum possible # of vCPUs that can
 	 * run on a pCPU is CONFIG_MAX_VM_NUM.
 	 * vcpu_array address must be aligned to 64-bit for atomic access
-	 * to avoid contention between offline_vcpu and posted interrupt handler
+	 * to avoid contention between destroy_vcpu and posted interrupt handler
 	 */
 	struct acrn_vcpu *vcpu_array[CONFIG_MAX_VM_NUM] __aligned(8);
 	struct shared_buf *sbuf[ACRN_SBUF_PER_PCPU_ID_MAX];

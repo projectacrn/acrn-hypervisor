@@ -550,17 +550,6 @@ void load_iwkey(struct acrn_vcpu *vcpu);
 int32_t run_vcpu(struct acrn_vcpu *vcpu);
 
 /**
- * @brief unmap the vcpu with pcpu and free its vlapic
- *
- * Unmap the vcpu with pcpu and free its vlapic, and set the vcpu state to offline
- *
- * @param[inout] vcpu pointer to vcpu data structure
- * @pre vcpu != NULL
- * @pre vcpu->state == VCPU_ZOMBIE
- */
-void offline_vcpu(struct acrn_vcpu *vcpu);
-
-/**
  * @brief reset vcpu state and values
  *
  * Reset all fields in a vCPU instance, the vCPU state is reset to VCPU_INIT.

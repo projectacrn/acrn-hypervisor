@@ -130,3 +130,20 @@ int32_t create_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 
 	return ret;
 }
+
+/*
+ *  @pre vcpu != NULL
+ *  @pre vcpu->state == VCPU_ZOMBIE
+ */
+void destroy_vcpu(struct acrn_vcpu *vcpu)
+{
+	arch_deinit_vcpu(vcpu);
+
+	/* TODO: Move ever_run_vcpu to x86 specific */
+	per_cpu(ever_run_vcpu, pcpuid_from_vcpu(vcpu)) = NULL;
+
+	/* This operation must be atomic to avoid contention with posted interrupt handler */
+	per_cpu(vcpu_array, pcpuid_from_vcpu(vcpu))[vcpu->vm->vm_id] = NULL;
+
+	vcpu_set_state(vcpu, VCPU_OFFLINE);
+}

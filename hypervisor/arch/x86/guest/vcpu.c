@@ -756,15 +756,9 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
  *  @pre vcpu != NULL
  *  @pre vcpu->state == VCPU_ZOMBIE
  */
-void offline_vcpu(struct acrn_vcpu *vcpu)
+void arch_deinit_vcpu(struct acrn_vcpu *vcpu)
 {
 	vlapic_free(vcpu);
-	per_cpu(ever_run_vcpu, pcpuid_from_vcpu(vcpu)) = NULL;
-
-	/* This operation must be atomic to avoid contention with posted interrupt handler */
-	per_cpu(vcpu_array, pcpuid_from_vcpu(vcpu))[vcpu->vm->vm_id] = NULL;
-
-	vcpu_set_state(vcpu, VCPU_OFFLINE);
 }
 
 void kick_vcpu(struct acrn_vcpu *vcpu)
@@ -961,7 +955,7 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
  * VT-d PI handler, find the corresponding vCPU for this IRQ,
  * if the associated PID's bit ON is set, wake it up.
  *
- * shutdown_vm would unregister the devices before offline_vcpu is called,
+ * shutdown_vm would unregister the devices before destroy_vcpu is called,
  * so spinlock is not needed to protect access to vcpu_array and vcpu.
  *
  * @pre (vcpu_index < CONFIG_MAX_VM_NUM) && (get_pi_desc(get_cpu_var(vcpu_array)[vcpu_index]) != NULL)

@@ -103,7 +103,7 @@ int32_t hcall_service_vm_offline_cpu(struct acrn_vcpu *vcpu, __unused struct acr
 				break;
 			}
 			zombie_vcpu(target_vcpu, VCPU_ZOMBIE);
-			offline_vcpu(target_vcpu);
+			destroy_vcpu(target_vcpu);
 		}
 	}
 

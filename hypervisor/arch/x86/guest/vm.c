@@ -955,7 +955,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	}
 
 	foreach_vcpu(i, vm, vcpu) {
-		offline_vcpu(vcpu);
+		destroy_vcpu(vcpu);
 	}
 
 #ifdef CONFIG_HYPERV_ENABLED

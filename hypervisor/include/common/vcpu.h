@@ -99,6 +99,7 @@ void vcpu_set_state(struct acrn_vcpu *vcpu, enum vcpu_state new_state);
 
 uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
 int32_t arch_init_vcpu(struct acrn_vcpu *vcpu);
+void arch_deinit_vcpu(struct acrn_vcpu *vcpu);
 
 void arch_vcpu_thread(struct thread_object *obj);
 void arch_context_switch_out(struct thread_object *prev);
@@ -116,6 +117,17 @@ uint64_t arch_build_stack_frame(struct acrn_vcpu *vcpu);
  * @retval 0 vcpu created successfully, other values failed.
  */
 int32_t create_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
+
+/**
+ * @brief Destroy a vcpu structure
+ *
+ * Unmap the vcpu with pcpu and deinitialize a vcpu structure
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @pre vcpu != NULL
+ * @pre vcpu->state == VCPU_ZOMBIE
+ */
+void destroy_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @}
