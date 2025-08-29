@@ -296,7 +296,6 @@ struct acrn_vcpu_arch {
 
 struct acrn_vcpu;
 enum vcpu_state;
-bool is_vcpu_bsp(const struct acrn_vcpu *vcpu);
 enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu);
 
 /* do not update Guest RIP for next VM Enter */
@@ -305,7 +304,6 @@ struct acrn_vlapic *vcpu_vlapic(struct acrn_vcpu *vcpu);
 
 struct pi_desc *get_pi_desc(struct acrn_vcpu *vcpu);
 
-uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
 void vcpu_thread(struct thread_object *obj);
 
 int32_t vmx_vmrun(struct run_context *context, int32_t ops, int32_t ibrs);
@@ -532,9 +530,6 @@ static inline bool is_pae(struct acrn_vcpu *vcpu)
 	return (vcpu_get_cr4(vcpu) & CR4_PAE) != 0UL;
 }
 
-struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id);
-struct acrn_vcpu *get_ever_run_vcpu(uint16_t pcpu_id);
-
 void save_xsave_area(struct acrn_vcpu *vcpu, struct ext_context *ectx);
 void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *ectx);
 void load_iwkey(struct acrn_vcpu *vcpu);
@@ -573,18 +568,6 @@ void kick_vcpu(struct acrn_vcpu *vcpu);
  * @retval -EINVAL if the vCPU ID is invalid
  */
 int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
-
-/**
- * @brief get physical destination cpu mask
- *
- * get the corresponding physical destination cpu mask for the vm and virtual destination cpu mask
- *
- * @param[in] vm pointer to vm data structure
- * @param[in] vdmask virtual destination cpu mask
- *
- * @return The physical destination CPU mask
- */
-uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
 
 /*
  * @brief Check if vCPU uses LAPIC in x2APIC mode and the VM, vCPU belongs to, is configured for

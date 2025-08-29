@@ -107,6 +107,26 @@ void arch_context_switch_out(struct thread_object *prev);
 void arch_context_switch_in(struct thread_object *next);
 uint64_t arch_build_stack_frame(struct acrn_vcpu *vcpu);
 
+/* Common helpers */
+bool is_vcpu_bsp(const struct acrn_vcpu *vcpu);
+uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
+
+/**
+ * @brief get physical destination cpu mask
+ *
+ * get the corresponding physical destination cpu mask for the vm and virtual destination cpu mask
+ *
+ * @param[in] vm pointer to vm data structure
+ * @param[in] vdmask virtual destination cpu mask
+ *
+ * @return The physical destination CPU mask
+ */
+uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
+struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id);
+struct acrn_vcpu *get_ever_run_vcpu(uint16_t pcpu_id);
+
+/* External APIs */
+
 /**
  * @brief create a vcpu for the target vm
  *

@@ -17,6 +17,47 @@ bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
 	return (vcpu->vcpu_id == BSP_CPU_ID);
 }
 
+/**
+ * @pre vcpu != NULL
+ */
+uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu)
+{
+	return sched_get_pcpuid(&vcpu->thread_obj);
+}
+
+uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
+{
+	uint16_t vcpu_id;
+	uint64_t dmask = 0UL;
+	struct acrn_vcpu *vcpu;
+
+	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
+		if ((vdmask & (1UL << vcpu_id)) != 0UL) {
+			vcpu = vcpu_from_vid(vm, vcpu_id);
+			bitmap_set_non_atomic(pcpuid_from_vcpu(vcpu), &dmask);
+		}
+	}
+
+	return dmask;
+}
+
+struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id)
+{
+	struct thread_object *curr = sched_get_current(pcpu_id);
+	struct acrn_vcpu *vcpu = NULL;
+
+	if ((curr != NULL) && (!is_idle_thread(curr))) {
+		vcpu = container_of(curr, struct acrn_vcpu, thread_obj);
+	}
+
+	return vcpu;
+}
+
+struct acrn_vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
+{
+	return per_cpu(ever_run_vcpu, pcpu_id);
+}
+
 static void init_vcpu_thread(struct acrn_vcpu *vcpu, uint16_t pcpu_id)
 {
 	struct acrn_vm *vm = vcpu->vm;
