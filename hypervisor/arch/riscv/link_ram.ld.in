@@ -1,0 +1,38 @@
+ENTRY(_start)
+
+MEMORY {
+    RAM : ORIGIN = 0x81000000, LENGTH = 64K
+}
+
+SECTIONS {
+	/* TODO: Replace hardcodes with macros defined in config header */
+    . = 0x81000000;
+
+    .text : {
+        *(.text)
+        *(.text.*)
+        *(.note.gnu.build-id)
+    } > RAM
+
+    .rodata : {
+        *(.rodata)
+        *(.rodata.*)
+    } > RAM
+
+    .data : {
+        *(.data)
+        *(.data.*)
+    } > RAM
+
+    .bss (NOLOAD) : {
+        *(.bss)
+        *(.bss.*)
+        *(COMMON)
+    } > RAM
+
+    . = ALIGN(8);
+    _end = .;
+
+    . = 0x81010000;
+    _stack_top = .;
+}
