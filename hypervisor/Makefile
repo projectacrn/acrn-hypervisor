@@ -139,6 +139,16 @@ ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
 endif
 
+# FIXME: During initial development stage of riscv enabling,
+# we would like to first confine the common files to x86-only.
+# As we progress through the riscv enabling process, multi-arch
+# and modularization of below modules will be done per-feature.
+#
+# TODO: When a module is done refactoring, move the line out from below
+# if block. The block should be entirely eliminated when we've done
+# all the work.
+#
+ifeq ($(ARCH),x86)
 COMMON_C_SRCS += common/ticks.c
 COMMON_C_SRCS += common/delay.c
 COMMON_C_SRCS += common/timer.c
@@ -199,12 +209,17 @@ COMMON_C_SRCS += boot/multiboot/multiboot2.c
 endif
 COMMON_C_SRCS += boot/reloc.c
 COMMON_C_SRCS += hw/pci.c
+endif # ifeq ($(ARCH),x86)
 
 COMMON_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(COMMON_C_SRCS))
 
 COMMON_MOD = $(HV_MODDIR)/common_mod.a
 
+# TODO: Remove this check when the first riscv common file
+# is moved out from above block
+ifeq ($(ARCH),x86)
 MODULES += $(COMMON_MOD)
+endif
 
 ifeq ($(CONFIG_RELEASE),y)
 MODULES += $(LIB_RELEASE)
