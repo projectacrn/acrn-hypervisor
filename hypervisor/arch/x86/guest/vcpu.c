@@ -23,20 +23,6 @@
 #include <asm/irq.h>
 #include <console.h>
 
-/* stack_frame is linked with the sequence of stack operation in arch_switch_to() */
-struct stack_frame {
-	uint64_t rdi;
-	uint64_t r15;
-	uint64_t r14;
-	uint64_t r13;
-	uint64_t r12;
-	uint64_t rbp;
-	uint64_t rbx;
-	uint64_t rflag;
-	uint64_t rip;
-	uint64_t magic;
-};
-
 uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 {
 	const struct run_context *ctx =
