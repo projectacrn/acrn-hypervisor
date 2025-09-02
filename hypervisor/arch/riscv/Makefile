@@ -12,6 +12,8 @@ CFLAGS +=
 
 ASFLAGS +=
 
+LDFLAGS += -Wl,--no-warn-rwx-segments
+
 # g expands to i, m, a, f, d, zicsr and zifencei.
 # h for hypervisor extension
 RV_ISA += gh
@@ -25,10 +27,10 @@ ARCH_CFLAGS += -mcmodel=medany
 ARCH_ASFLAGS += -march=rv64$(subst $() $(),_,$(RV_ISA))
 
 # HV host assembly sources
-HOST_S_SRCS += arch/riscv/dummy_entry.S
+HOST_S_SRCS += arch/riscv/boot/cpu_entry.S
 
 # HV host C sources
-HOST_C_SRCS += arch/riscv/dummy.c
+HOST_C_SRCS += arch/riscv/init.c
 HOST_C_SRCS += arch/riscv/sbi.c
 HOST_C_SRCS += arch/riscv/notify.c
 
