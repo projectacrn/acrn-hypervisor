@@ -240,14 +240,14 @@ send_startup_ipi(uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
 }
 
-void send_dest_ipi_mask(uint32_t dest_mask, uint32_t vector)
+void send_dest_ipi_mask(uint64_t dest_mask, uint32_t vector)
 {
 	uint16_t pcpu_id;
-	uint32_t mask = dest_mask;
+	uint64_t mask = dest_mask;
 
 	pcpu_id = ffs64(mask);
 	while (pcpu_id < MAX_PCPU_NUM) {
-		bitmap32_clear_nolock(pcpu_id, &mask);
+		bitmap_clear_nolock(pcpu_id, &mask);
 		send_single_ipi(pcpu_id, vector);
 		pcpu_id = ffs64(mask);
 	}
