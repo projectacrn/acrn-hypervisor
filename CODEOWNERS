@@ -13,7 +13,7 @@
 *                                        @ywan170 @jsun26intel
 
 Makefile                                 @lifeix @yfliuuu
-/hypervisor/                             @lifeix @chejianj
+/hypervisor/                             @lifeix @chejianj @ywan170
 /devicemodel/                            @ywan170 @chejianj
 /doc/                                    @shiqingg
 /misc/debug_tools/acrn_crashlog/         @ywan170 @lifeix
