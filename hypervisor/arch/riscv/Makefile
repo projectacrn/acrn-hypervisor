@@ -29,6 +29,7 @@ HOST_S_SRCS += arch/riscv/dummy_entry.S
 
 # HV host C sources
 HOST_C_SRCS += arch/riscv/dummy.c
+HOST_C_SRCS += arch/riscv/sbi.c
 
 # Virtual platform assembly sources
 VP_S_SRCS +=

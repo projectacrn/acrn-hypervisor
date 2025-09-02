@@ -9,6 +9,7 @@
 
 #include <types.h>
 #include <asm/sbi.h>
+#include <debug/logmsg.h>
 
 /**
  * An ECALL is used as the control transfer instruction between the
@@ -56,4 +57,48 @@ static sbiret sbi_ecall(uint64_t arg0, uint64_t arg1, uint64_t arg2,
 	ret.value = a1;
 
 	return ret;
+}
+
+/**
+ * Implemented IPI functionality using the SBI IPI Extension (EID #0x735049).
+ * Legacy SBI extensions are not supported in ACRN.
+ */
+static int64_t sbi_send_ipi(uint64_t mask, uint64_t mask_base)
+{
+	sbiret ret = sbi_ecall(mask, mask_base, 0UL, 0UL, 0UL, 0UL, SBI_IPI_FID_SEND_IPI, SBI_EID_IPI);
+
+	if (ret.error != SBI_SUCCESS) {
+		pr_err("%s: Failed to send IPI by SBI, error code: %lx", __func__, ret.error);
+	}
+
+	return ret.error;
+}
+
+/**
+ * msg_type is currently unused.
+ *
+ * At present, only IPI_NOTIFY_CPU is supported, covering two use cases:
+ *  - SMP call
+ *  - Kick pCPU out of non-root mode
+ *
+ * Callers should invoke this function with:
+ *      arch_send_single_ipi(pcpu_id, IPI_NOTIFY_CPU);
+ *
+ * msg_type is retained for future extensions and to stay aligned with
+ * the function prototype used on other architectures (e.g. x86).
+ */
+void arch_send_single_ipi(uint16_t pcpu_id, __unused uint32_t msg_type)
+{
+	sbi_send_ipi((1UL << pcpu_id), 0UL);
+}
+
+/**
+ * Similar to arch_send_single_ipi() regards to msg_type.
+ *
+ * Callers should invoke this function with:
+ *      arch_send_dest_ipi_mask(dest_mask, IPI_NOTIFY_CPU);
+ */
+void arch_send_dest_ipi_mask(uint64_t dest_mask, __unused uint32_t msg_type)
+{
+	sbi_send_ipi(dest_mask, 0UL);
 }

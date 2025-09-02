@@ -97,4 +97,7 @@ typedef struct {
 	};
 } sbiret;
 
+void arch_send_single_ipi(uint16_t pcpu_id, __unused uint32_t msg_type);
+void arch_send_dest_ipi_mask(uint64_t dest_mask, __unused uint32_t msg_type);
+
 #endif /* RISCV_SBI_H */
