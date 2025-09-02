@@ -163,6 +163,7 @@ COMMON_C_SRCS += common/hv_main.c
 COMMON_C_SRCS += common/vm_load.c
 COMMON_C_SRCS += common/hypercall.c
 COMMON_C_SRCS += common/ptdev.c
+COMMON_C_SRCS += common/smp.c
 COMMON_C_SRCS += dm/vrtc.c
 COMMON_C_SRCS += dm/vuart.c
 COMMON_C_SRCS += dm/io_req.c
