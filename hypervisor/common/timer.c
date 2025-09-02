@@ -15,7 +15,7 @@
 #include <trace.h>
 #include <asm/irq.h>
 #include <ticks.h>
-#include <hw/hw_timer.h>
+#include <timer.h>
 
 #define MAX_TIMER_ACTIONS	32U
 #define MIN_TIMER_PERIOD_US	500U
@@ -62,7 +62,7 @@ static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
 			struct hv_timer, node);
 
 		/* it is okay to program a expired time */
-		msr_write(MSR_IA32_TSC_DEADLINE, timer->timeout);
+		arch_set_timer_count(timer->timeout);
 	}
 }
 
@@ -229,5 +229,5 @@ void timer_init(void)
 		register_softirq(SOFTIRQ_TIMER, timer_softirq);
 	}
 
-	init_hw_timer();
+	arch_init_timer();
 }

@@ -120,6 +120,18 @@ void del_timer(struct hv_timer *timer);
 void timer_init(void);
 
 /**
+ * @brief Set timeout value to arch specific timer.
+ *
+ * @param[in] cnt Timeout value to set.
+ */
+void arch_set_timer_count(uint64_t cnt);
+
+/**
+ * @brief Initialize arch specific timer.
+ */
+void arch_init_timer(void);
+
+/**
  * @}
  */
 

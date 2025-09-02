@@ -8,11 +8,11 @@
 #include <softirq.h>
 #include <irq.h>
 #include <logmsg.h>
+#include <timer.h>
 #include <asm/cpu.h>
 #include <asm/msr.h>
 #include <asm/irq.h>
 #include <asm/apicreg.h>
-#include <hw/hw_timer.h>
 
 /* run in interrupt context */
 static void timer_expired_handler(__unused uint32_t irq, __unused void *data)
@@ -20,12 +20,12 @@ static void timer_expired_handler(__unused uint32_t irq, __unused void *data)
 	fire_softirq(SOFTIRQ_TIMER);
 }
 
-void set_hw_timeout(uint64_t timeout)
+void arch_set_timer_count(uint64_t cnt)
 {
-	msr_write(MSR_IA32_TSC_DEADLINE, timeout);
+	msr_write(MSR_IA32_TSC_DEADLINE, cnt);
 }
 
-void init_hw_timer(void)
+void arch_init_timer(void)
 {
 	int32_t retval = 0;
 

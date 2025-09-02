@@ -219,12 +219,12 @@ uint32_t get_tsc_khz(void)
 
 /* external API */
 
-uint64_t cpu_ticks(void)
+uint64_t arch_cpu_ticks(void)
 {
 	return rdtsc();
 }
 
-uint32_t cpu_tickrate(void)
+uint32_t arch_cpu_tickrate(void)
 {
 	return tsc_khz;
 }

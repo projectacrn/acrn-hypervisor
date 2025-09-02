@@ -12,9 +12,17 @@
 #define TICKS_PER_MS	us_to_ticks(1000U)
 
 /**
- * @brief Read current CPU tick count.
+ * @brief Read current CPU tick count per arch.
  *
- * @remark On x86, this is the Time Stamp Counter (TSC) value of the current logical CPU.
+ * @remark CPU tick count is arch specific. On x86, this is the Time Stamp Counter (TSC) value of
+ *         the current logical CPU.
+ *
+ * @return CPU ticks
+ */
+uint64_t arch_cpu_ticks(void);
+
+/**
+ * @brief Read current CPU tick count.
  *
  * @return CPU ticks
  */
@@ -23,11 +31,12 @@ uint64_t cpu_ticks(void);
 /**
  * @brief  Get CPU tick frequency in KHz.
  *
- * @remark On x86, this is the Time Stamp Counter (TSC) frequency of the current logical CPU.
+ * @remark CPU tick rate is arch specific. On x86, this is the Time Stamp Counter (TSC) frequency
+ *         of the current logical CPU.
  *
  * @return CPU frequency (KHz)
  */
-uint32_t cpu_tickrate(void);
+uint32_t arch_cpu_tickrate(void);
 
 /**
  * @brief Convert micro seconds to CPU ticks.

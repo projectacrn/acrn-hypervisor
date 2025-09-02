@@ -51,9 +51,6 @@ Interfaces Design
 .. doxygenfunction:: cpu_ticks
    :project: Project ACRN
 
-.. doxygenfunction:: cpu_tickrate
-   :project: Project ACRN
-
 .. doxygenfunction:: us_to_ticks
    :project: Project ACRN
 
