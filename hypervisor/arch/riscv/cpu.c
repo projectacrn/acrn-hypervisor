@@ -15,6 +15,7 @@
 #include <delay.h>
 #include <asm/sbi.h>
 #include <asm/pgtable.h>
+#include <schedule.h>
 
 /*
  * This array contains the hart IDs for each physial cpu.
@@ -113,4 +114,17 @@ void arch_start_pcpu(uint16_t pcpu_id)
 	if (ret != SBI_SUCCESS) {
 		pr_fatal("Failed to start cpu%hu by SBI HSM", pcpu_id);
 	}
+}
+
+void arch_cpu_do_idle(void)
+{
+        asm volatile ("wfi"::);
+}
+
+/**
+ * FIXME: This is a temp solution for now. The formal solution should clear up and put pcpu into a low power state.
+ */
+void arch_cpu_dead(void)
+{
+	while (true) {};
 }

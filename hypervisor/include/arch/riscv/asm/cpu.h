@@ -108,14 +108,6 @@ struct stack_frame {
 /* Define CPU stack alignment */
 #define CPU_STACK_ALIGN	16UL
 
-/**
- * FIXME: This is a temp solution for now. The formal solution should clear up and put pcpu into a low power state.
- */
-static inline void cpu_dead(void)
-{
-	while (true) {};
-}
-
 /* In ACRN, struct per_cpu_region is a critical data structure
  * containing key per-CPU data frequently accessed via get_cpu_var().
  * We use the tp register to store the current logical pCPU ID to
