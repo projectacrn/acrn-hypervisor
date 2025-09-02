@@ -1,38 +1,84 @@
+/*
+ * Copyright (C) 2025 Intel Corporation.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
-MEMORY {
-    RAM : ORIGIN = 0x81000000, LENGTH = 64K
-}
+SECTIONS
+{
+	. = CONFIG_HV_RAM_START;
+	_code_start = .;
 
-SECTIONS {
-	/* TODO: Replace hardcodes with macros defined in config header */
-    . = 0x81000000;
+	.text :
+	{
+		_text_start = .;
+		*(.text.entry)		/* Entry point code first */
+		*(.text)
+		*(.text.*)
+		*(.note.gnu.build-id)	/* Keep build ID for debugging */
 
-    .text : {
-        *(.text)
-        *(.text.*)
-        *(.note.gnu.build-id)
-    } > RAM
+		. = ALIGN(8);
+		_text_end = .;
+	}
 
-    .rodata : {
-        *(.rodata)
-        *(.rodata.*)
-    } > RAM
+	. = ALIGN(0x1000);
+	.rodata :
+	{
+		_rodata_start = .;
+		*(.rodata)
+		*(.rodata.*)
 
-    .data : {
-        *(.data)
-        *(.data.*)
-    } > RAM
+		/* Small rodata sections */
+		*(.srodata)
+		*(.srodata.*)
 
-    .bss (NOLOAD) : {
-        *(.bss)
-        *(.bss.*)
-        *(COMMON)
-    } > RAM
+		. = ALIGN(8);
+		_rodata_end = .;
+	}
 
-    . = ALIGN(8);
-    _end = .;
+	. = ALIGN(0x1000);
+	.data :
+	{
+		_data_start = .;
+		*(.data.page_aligned)
+		*(.data)
+		*(.data.*)
 
-    . = 0x81010000;
-    _stack_top = .;
+		/* Small data sections */
+		*(.sdata)
+		*(.sdata.*)
+
+		. = ALIGN(8);
+		_data_end = .;
+	}
+
+	. = ALIGN(0x1000);
+	.boot_stack :
+	{
+		_boot_stack_start = .;
+		. += 0x1000;
+		. = ALIGN(16);		/* RISC-V ABI requires 16-byte stack alignment */
+		_boot_stack_end = .;
+	}
+
+	. = ALIGN(0x1000);
+	.bss (NOLOAD) :
+	{
+		_bss_start = .;
+		*(.bss)
+		*(.bss.*)
+
+		/* Small BSS sections */
+		*(.sbss)
+		*(.sbss.*)
+
+		. = ALIGN(8);
+		_bss_end = .;
+	}
+
+	. = ALIGN(0x1000);
+	_code_end = .;
 }
