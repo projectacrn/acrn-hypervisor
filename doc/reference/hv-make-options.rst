@@ -231,3 +231,17 @@ Example of how to use ``hvapplydiffconfig`` to apply
    Applying patch /path/to/acrn-hypervisor/config.patch:
    patching file scenarios/hybrid_rt/pci_dev.c
    ...
+
+Experimental (Multi-Arch Support)
+*********************************
+
+(WIP, Unstable)
+
+ACRN also supports running on multiple architectures. To build hypervisor for
+other architecture, add ``ARCH=<arch>``, and ``CROSS_COMPILE=<toolchainprefix>``.
+For example:
+
+.. code-block:: none
+
+   $ make hypervisor BOARD=qemu SCENARIO=shared ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-
+

@@ -308,3 +308,35 @@ Bring Up User VM (L2 Guest)
         fi
       done
       launch_ubuntu 1
+
+Experimental: Running ACRN on QEMU RISCV-64
+*******************************************
+
+(WIP, Unstable)
+
+The following documentation is tested under Ubuntu 24.04.
+
+To compile and run ACRN on QEMU RISCV-64, we need to first install
+QEMU RV64 and crossbuild toolchains. The default packages provided by
+Ubuntu 24.04 will suffice:
+
+.. code-block:: bash
+
+    sudo apt install crossbuild-essential-riscv64 qemu-system-misc u-boot-qemu opensbi
+
+To run ACRN on QEMU RISCV-64, first compile ACRN towards QEMU:
+
+.. code-block:: bash
+
+    make hypervisor BOARD=qemu SCENARIO=shared ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-
+
+The ACRN ELF binary is generated under ``build/hypervisor/acrn.out``.
+
+Then run QEMU with the following parameters:
+
+.. code-block:: bash
+
+    qemu-system-riscv64 -nographic -machine virt -cpu rv64 -m 8G -smp 4 \
+        -kernel /path/to/acrn-root/build/hypervisor/acrn.out
+
+ACRN currently only prints out "Hello World!".
