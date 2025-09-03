@@ -7,6 +7,8 @@
 #ifndef SOFTIRQ_H
 #define SOFTIRQ_H
 
+#include <lib/types.h>
+
 #define SOFTIRQ_TIMER		0U
 #define SOFTIRQ_PTDEV		1U
 #define SOFTIRQ_THERMAL		2U

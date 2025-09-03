@@ -10,6 +10,8 @@
 #include <list.h>
 #include <ticks.h>
 
+#define MIN_TIMER_PERIOD_US	500U
+
 /**
  * @brief Timer
  *

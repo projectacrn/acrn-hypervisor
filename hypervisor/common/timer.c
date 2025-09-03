@@ -18,7 +18,6 @@
 #include <timer.h>
 
 #define MAX_TIMER_ACTIONS	32U
-#define MIN_TIMER_PERIOD_US	500U
 
 bool timer_expired(const struct hv_timer *timer, uint64_t now, uint64_t *delta)
 {

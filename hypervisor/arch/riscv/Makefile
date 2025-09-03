@@ -33,6 +33,7 @@ HOST_S_SRCS += arch/riscv/boot/cpu_entry.S
 HOST_C_SRCS += arch/riscv/init.c
 HOST_C_SRCS += arch/riscv/sbi.c
 HOST_C_SRCS += arch/riscv/notify.c
+HOST_C_SRCS += arch/riscv/timer.c
 
 # Virtual platform assembly sources
 VP_S_SRCS +=
