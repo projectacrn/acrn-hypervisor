@@ -66,7 +66,7 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 			if ((vcpu != NULL) && (is_lapic_pt_enabled(vcpu))) {
 				vcpu_make_request(vcpu, ACRN_REQUEST_SMP_CALL);
 			} else {
-				send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
+				arch_send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
 			}
 		} else {
 			/* pcpu is not in active, print error */

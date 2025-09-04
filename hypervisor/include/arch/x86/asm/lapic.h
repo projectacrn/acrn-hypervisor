@@ -102,7 +102,7 @@ void send_startup_ipi(uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
  * @param[in]	dest_mask The mask of destination physical cpus
  * @param[in]	vector The vector of interrupt
  */
-void send_dest_ipi_mask(uint64_t dest_mask, uint32_t vector);
+void arch_send_dest_ipi_mask(uint64_t dest_mask, uint32_t vector);
 
 /**
  * @brief Send an IPI to a single pCPU
@@ -110,7 +110,7 @@ void send_dest_ipi_mask(uint64_t dest_mask, uint32_t vector);
  * @param[in]	pcpu_id The id of destination physical cpu
  * @param[in]	vector The vector of interrupt
  */
-void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
+void arch_send_single_ipi(uint16_t pcpu_id, uint32_t vector);
 
 /**
  * @}
