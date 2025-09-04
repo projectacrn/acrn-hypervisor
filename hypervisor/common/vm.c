@@ -10,6 +10,7 @@
 #include <logmsg.h>
 #include <sbuf.h>
 #include <sprintf.h>
+#include <asm/notify.h>
 #include <asm/host_pm.h>
 
 static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);

@@ -12,7 +12,7 @@
 #include <asm/rdt.h>
 #include <bits.h>
 #include <asm/board.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <asm/msr.h>
 #include <vcpu.h>
 #include <vm.h>
@@ -53,12 +53,12 @@ uint16_t vcat_get_num_vclosids(const struct acrn_vm *vm)
 	if (is_vcat_configured(vm)) {
 		/*
 		 * For performance and simplicity, here number of vCLOSIDs (num_vclosids) is set
-		 * equal to the number of pCLOSIDs assigned to this VM (get_vm_config(vm->vm_id)->num_pclosids).
+		 * equal to the number of pCLOSIDs assigned to this VM (get_vm_config(vm->vm_id)->arch.num_pclosids).
 		 * But technically, we do not have to make such an assumption. For example,
 		 * Hypervisor could implement CLOSID context switch, then number of vCLOSIDs
 		 * can be greater than the number of pCLOSIDs assigned. etc.
 		 */
-		num_vclosids = get_vm_config(vm->vm_id)->num_pclosids;
+		num_vclosids = get_vm_config(vm->vm_id)->arch.num_pclosids;
 	}
 
 	return num_vclosids;
@@ -68,7 +68,7 @@ uint16_t vcat_get_num_vclosids(const struct acrn_vm *vm)
  * @brief Map vCLOSID to pCLOSID
  *
  * @pre vm != NULL && vm->vm_id < CONFIG_MAX_VM_NUM
- * @pre (get_vm_config(vm->vm_id)->pclosids != NULL) && (vclosid < get_vm_config(vm->vm_id)->num_pclosids)
+ * @pre (get_vm_config(vm->vm_id)->arch.pclosids != NULL) && (vclosid < get_vm_config(vm->vm_id)->arch.num_pclosids)
  */
 static uint16_t vclosid_to_pclosid(const struct acrn_vm *vm, uint16_t vclosid)
 {
@@ -80,9 +80,9 @@ static uint16_t vclosid_to_pclosid(const struct acrn_vm *vm, uint16_t vclosid)
 	 *
 	 * Note that write_vcbm() calls vclosid_to_pclosid() indirectly, in write_vcbm(),
 	 * the is_l2_vcbm_msr()/is_l3_vcbm_msr() calls ensure that vclosid is always less than
-	 * get_vm_config(vm->vm_id)->num_pclosids, so vclosid is always an array index within bound here
+	 * get_vm_config(vm->vm_id)->arch.num_pclosids, so vclosid is always an array index within bound here
 	 */
-	return get_vm_config(vm->vm_id)->pclosids[vclosid];
+	return get_vm_config(vm->vm_id)->arch.pclosids[vclosid];
 }
 
 /**
@@ -126,9 +126,9 @@ static uint64_t get_max_pcbm(const struct acrn_vm *vm, int res)
 	uint64_t max_pcbm = 0UL;
 
 	if (is_l2_vcat_configured(vm) && (res == RDT_RESOURCE_L2)) {
-		max_pcbm = get_vm_config(vm->vm_id)->max_l2_pcbm;
+		max_pcbm = get_vm_config(vm->vm_id)->arch.max_l2_pcbm;
 	} else if (is_l3_vcat_configured(vm) && (res == RDT_RESOURCE_L3)) {
-		max_pcbm = get_vm_config(vm->vm_id)->max_l3_pcbm;
+		max_pcbm = get_vm_config(vm->vm_id)->arch.max_l3_pcbm;
 	}
 
 	return max_pcbm;

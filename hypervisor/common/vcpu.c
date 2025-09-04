@@ -13,6 +13,8 @@
 #include <schedule.h>
 #include <notify.h>
 
+#include <asm/notify.h>
+
 bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
 {
 	return (vcpu->vcpu_id == BSP_CPU_ID);

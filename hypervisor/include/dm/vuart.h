@@ -31,7 +31,7 @@
 #include <types.h>
 #include <spinlock.h>
 #include <vuart_config.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 
 /**
  * @addtogroup vp-dm_vperipheral

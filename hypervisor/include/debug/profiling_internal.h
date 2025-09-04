@@ -10,7 +10,7 @@
 #ifdef PROFILING_ON
 
 #include <vcpu.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 
 #define MAX_MSR_LIST_NUM		15U
 #define MAX_PROFILING_MSR_STORE_NUM	1

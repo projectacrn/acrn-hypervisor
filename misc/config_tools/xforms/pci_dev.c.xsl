@@ -18,7 +18,7 @@
     <xsl:value-of select="$license" />
 
     <!-- Included headers -->
-    <xsl:value-of select="acrn:include('asm/vm_config.h')" />
+    <xsl:value-of select="acrn:include('vm_config.h')" />
     <xsl:value-of select="acrn:include('vpci.h')" />
     <xsl:value-of select="acrn:include('asm/mmu.h')" />
     <xsl:value-of select="acrn:include('asm/page.h')" />

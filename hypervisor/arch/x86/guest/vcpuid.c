@@ -385,7 +385,7 @@ static void guest_cpuid_04h(__unused struct acrn_vm *vm, uint32_t *eax, uint32_t
 #ifdef CONFIG_VCAT_ENABLED
 		if (is_vcat_configured(vm)) {
 			/* set_vcpuid_vcat_04h will not change entry.eax */
-			result = set_vcpuid_vcat_04h(vm, &entry);
+			set_vcpuid_vcat_04h(vm, &entry);
 		}
 #endif
 	}

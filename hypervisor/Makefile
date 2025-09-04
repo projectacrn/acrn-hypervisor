@@ -168,6 +168,7 @@ COMMON_C_SRCS += lib/sprintf.c
 ifdef STACK_PROTECTOR
 COMMON_C_SRCS += lib/stack_protector.c
 endif
+COMMON_C_SRCS += common/vm_config.c
 
 # dm componment
 COMMON_C_SRCS += dm/vuart.c

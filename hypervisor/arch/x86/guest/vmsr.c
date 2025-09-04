@@ -371,7 +371,7 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 
 /**
  * @pre vcpu != NULL && vcpu->vm != NULL && vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
- * @pre (is_platform_rdt_capable() == false()) || (is_platform_rdt_capable() && get_vm_config(vcpu->vm->vm_id)->pclosids != NULL)
+ * @pre (is_platform_rdt_capable() == false()) || (is_platform_rdt_capable() && get_vm_config(vcpu->vm->vm_id)->arch.pclosids != NULL)
  */
 static void prepare_auto_msr_area(struct acrn_vcpu *vcpu)
 {
@@ -390,9 +390,9 @@ static void prepare_auto_msr_area(struct acrn_vcpu *vcpu)
 		struct acrn_vm_config *cfg = get_vm_config(vcpu->vm->vm_id);
 		uint16_t vcpu_clos;
 
-		ASSERT(cfg->pclosids != NULL, "error, cfg->pclosids is NULL");
+		ASSERT(cfg->arch.pclosids != NULL, "error, cfg->arch.pclosids is NULL");
 
-		vcpu_clos = cfg->pclosids[vcpu->vcpu_id%cfg->num_pclosids];
+		vcpu_clos = cfg->arch.pclosids[vcpu->vcpu_id%cfg->arch.num_pclosids];
 
 		/* RDT: only load/restore MSR_IA32_PQR_ASSOC when hv and guest have different settings
 		 * vCAT: always load/restore MSR_IA32_PQR_ASSOC

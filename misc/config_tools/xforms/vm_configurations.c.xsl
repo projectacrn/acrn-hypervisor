@@ -14,7 +14,7 @@
     <xsl:value-of select="$license" />
 
     <!-- Included headers -->
-    <xsl:value-of select="acrn:include('asm/vm_config.h')" />
+    <xsl:value-of select="acrn:include('vm_config.h')" />
     <xsl:value-of select="acrn:include('vuart.h')" />
     <xsl:value-of select="acrn:include('asm/pci_dev.h')" />
     <xsl:value-of select="acrn:include('asm/pgtable.h')" />
@@ -194,25 +194,25 @@
 
   <xsl:template name="clos">
     <xsl:value-of select="acrn:ifdef('CONFIG_RDT_ENABLED')" />
-    <xsl:value-of select="acrn:initializer('pclosids', concat('vm', @id, '_vcpu_clos'))" />
+    <xsl:value-of select="acrn:initializer('arch.pclosids', concat('vm', @id, '_vcpu_clos'))" />
 
     <xsl:variable name="vm_id" select="@id" />
     <xsl:variable name="vm_name" select="name/text()" />
     <xsl:choose>
       <xsl:when test="acrn:is-vcat-enabled() and virtual_cat_support[text() = 'y']">
-        <xsl:value-of select="acrn:initializer('num_pclosids', concat(count(//vm[@id=$vm_id]/virtual_cat_number), 'U'))" />
+        <xsl:value-of select="acrn:initializer('arch.num_pclosids', concat(count(//vm[@id=$vm_id]/virtual_cat_number), 'U'))" />
         <xsl:variable name="rdt_res_str" select="acrn:get-normalized-closinfo-rdt-res-str()" />
 
         <xsl:if test="contains($rdt_res_str, 'L2')">
-          <xsl:value-of select="acrn:initializer('max_l2_pcbm', //CACHE_ALLOCATION[CACHE_LEVEL='2']/POLICY[VM=$vm_name]/CLOS_MASK)" />
+          <xsl:value-of select="acrn:initializer('arch.max_l2_pcbm', //CACHE_ALLOCATION[CACHE_LEVEL='2']/POLICY[VM=$vm_name]/CLOS_MASK)" />
         </xsl:if>
 
         <xsl:if test="contains($rdt_res_str, 'L3')">
-          <xsl:value-of select="acrn:initializer('max_l3_pcbm', //CACHE_ALLOCATION[CACHE_LEVEL='3']/POLICY[VM=$vm_name]/CLOS_MASK)" />
+          <xsl:value-of select="acrn:initializer('arch.max_l3_pcbm', //CACHE_ALLOCATION[CACHE_LEVEL='3']/POLICY[VM=$vm_name]/CLOS_MASK)" />
         </xsl:if>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:value-of select="acrn:initializer('num_pclosids', concat(count(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U'))" />
+        <xsl:value-of select="acrn:initializer('arch.num_pclosids', concat(count(//allocation-data/acrn-config/vm[@id=$vm_id]/clos/vcpu_clos), 'U'))" />
       </xsl:otherwise>
     </xsl:choose>
 
@@ -365,7 +365,7 @@
   <xsl:template name="pre_launched">
     <xsl:if test="@id = '0'">
       <xsl:value-of select="acrn:ifdef('VM0_PASSTHROUGH_TPM')" />
-      <xsl:value-of select="acrn:initializer('pt_tpm2', 'true')" />
+      <xsl:value-of select="acrn:initializer('arch.pt_tpm2', 'true')" />
       <xsl:value-of select="acrn:initializer('mmiodevs[0]', '{', true())" />
       <xsl:value-of select="acrn:initializer('name', concat($quot, 'tpm2', $quot))" />
       <xsl:value-of select="acrn:initializer('res[0]', '{', true())" />

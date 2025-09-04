@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <types.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <vm.h>
 #include <vacpi.h>
 #include <logmsg.h>
@@ -49,7 +49,7 @@ static void tpm2_fixup(uint16_t vm_id)
 		vtpm2 = get_acpi_mod_entry(ACPI_SIG_TPM2, mod->start);
 		tpm2 = get_acpi_tbl(ACPI_SIG_TPM2);
 
-		if (config->pt_tpm2 && (vtpm2 != NULL) && (tpm2 != NULL)) {
+		if (config->arch.pt_tpm2 && (vtpm2 != NULL) && (tpm2 != NULL)) {
 			for (i = 0U; i < MAX_MMIO_DEV_NUM; i++) {
 				if (strncmp(config->mmiodevs[i].name, "tpm2", 4) == 0) {
 					dev = &config->mmiodevs[i];

@@ -102,7 +102,6 @@ HW_C_SRCS += arch/x86/trampoline.c
 HW_S_SRCS += arch/x86/sched.S
 HW_C_SRCS += arch/x86/rdt.c
 HW_C_SRCS += arch/x86/sgx.c
-HW_C_SRCS += arch/x86/configs/vm_config.c
 HW_C_SRCS += boot/acpi_base.c
 # ACPI parsing component
 # This part should be isolated from FuSa Cert

@@ -12,7 +12,7 @@
 #include <profiling.h>
 #include <asm/gdt.h>
 #include <asm/security.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 
 struct per_cpu_arch {
 	/* vmxon_region MUST be 4KB-aligned */

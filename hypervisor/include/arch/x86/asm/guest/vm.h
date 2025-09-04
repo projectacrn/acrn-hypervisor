@@ -27,7 +27,7 @@
 #include <vpci.h>
 #include <asm/cpu_caps.h>
 #include <asm/e820.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <io_req.h>
 #include <mmu.h>
 #ifdef CONFIG_HYPERV_ENABLED

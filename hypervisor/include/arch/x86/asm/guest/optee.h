@@ -8,7 +8,7 @@
 #define TEE_H_
 
 #include <vm.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <ptdev.h>
 
 #define TEE_FIXED_NONSECURE_VECTOR 0x29U

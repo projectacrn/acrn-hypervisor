@@ -6,7 +6,7 @@
 #ifndef NESTED_H
 #define NESTED_H
 
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <lib/errno.h>
 
 /* helper data structure to make VMX capability MSR manipulation easier */

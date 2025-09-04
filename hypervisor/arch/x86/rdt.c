@@ -14,7 +14,7 @@
 #include <asm/rdt.h>
 #include <bits.h>
 #include <asm/board.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <asm/msr.h>
 
 const uint16_t hv_clos = 0U;

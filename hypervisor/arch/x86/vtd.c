@@ -20,7 +20,7 @@
 #include <ticks.h>
 #include <logmsg.h>
 #include <asm/board.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <pci.h>
 #include <asm/platform_caps.h>
 #include <pgtable.h>

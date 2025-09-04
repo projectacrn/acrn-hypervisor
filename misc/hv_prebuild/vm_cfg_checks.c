@@ -6,7 +6,7 @@
 
 #include <bits.h>
 #include <asm/page.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <asm/rdt.h>
 #include <vuart.h>
 #include <ivshmem.h>
@@ -31,11 +31,11 @@ static bool check_vm_clos_config(uint16_t vm_id)
 	bool ret = true;
 	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
 
-	for (i = 0U; i < vm_config->num_pclosids; i++) {
-		if (((platform_clos_num != 0U) && (vm_config->pclosids[i] == platform_clos_num))
-				|| (vm_config->pclosids[i] > platform_clos_num)) {
+	for (i = 0U; i < vm_config->arch.num_pclosids; i++) {
+		if (((platform_clos_num != 0U) && (vm_config->arch.pclosids[i] == platform_clos_num))
+				|| (vm_config->arch.pclosids[i] > platform_clos_num)) {
 			printf("vm%u: vcpu%u clos(%u) exceed the max clos(%u).",
-				vm_id, i, vm_config->pclosids[i], platform_clos_num);
+				vm_id, i, vm_config->arch.pclosids[i], platform_clos_num);
 			ret = false;
 			break;
 		}
@@ -71,7 +71,7 @@ bool sanitize_vm_config(void)
 			if (((vm_config->guest_flags & GUEST_FLAG_RT) != 0U)
 				&& ((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH)== 0U)) {
 				ret = false;
-			} else if (vm_config->epc.size != 0UL) {
+			} else if (vm_config->arch.epc.size != 0UL) {
 				ret = false;
 			}
 			break;
@@ -94,7 +94,7 @@ bool sanitize_vm_config(void)
 #endif
 
 		if (ret &&
-		    (((vm_config->epc.size | vm_config->epc.base) & ~PAGE_MASK) != 0UL)) {
+		    (((vm_config->arch.epc.size | vm_config->arch.epc.base) & ~PAGE_MASK) != 0UL)) {
 			ret = false;
 		}
 

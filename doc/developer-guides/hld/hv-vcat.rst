@@ -105,19 +105,19 @@ the following actions:
        mask_shift = ffs64(max_pcbm)
 
        vcosid = vmsr - MSR_IA32_type_MASK_0
-       pcosid = vm_config->pclosids[vcosid]
+       pcosid = vm_config->arch.pclosids[vcosid]
 
        pmsr = MSR_IA32_type_MASK_0 + pcosid
        pcbm = vcbm << mask_shift
        vcbm = pcbm >> mask_shift
 
 Where
-       ``vm_config->pclosids[]``: array of physical COS IDs, where each corresponds to one ``vcpu_clos`` that
+       ``vm_config->arch.pclosids[]``: array of physical COS IDs, where each corresponds to one ``vcpu_clos`` that
        is defined in the scenario file
 
        ``max_pcbm``: a bitmask that selects all the physical cache ways assigned to the VM, corresponds to
        the nth ``CLOS_MASK`` that is defined in scenario file, where n = the first physical COS ID assigned
-       = ``vm_config->pclosids[0]``
+       = ``vm_config->arch.pclosids[0]``
 
        ``ffs64(max_pcbm)``: find the first (least significant) bit set in ``max_pcbm`` and return
        the index of that bit.

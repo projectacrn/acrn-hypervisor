@@ -29,7 +29,7 @@
 #include <asm/guest/instr_emul.h>
 #include <asm/guest/nested.h>
 #include <asm/vmx.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 
 /**
  * @brief vcpu

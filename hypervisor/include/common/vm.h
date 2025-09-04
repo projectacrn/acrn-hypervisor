@@ -22,7 +22,7 @@
 #include <dm/vpci.h>
 #include <dm/vrtc.h>
 #include <spinlock.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <asm/guest/vm.h>
 
 #include <vcpu.h>

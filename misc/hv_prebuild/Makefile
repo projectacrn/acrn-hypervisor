@@ -25,7 +25,8 @@ BOARD_CFG_DIR := $(SCENARIO_CFG_DIR)
 PRE_BUILD_SRCS += main.c
 PRE_BUILD_SRCS += static_checks.c
 PRE_BUILD_SRCS += vm_cfg_checks.c
-PRE_BUILD_SRCS += $(HV_SRC_DIR)/arch/x86/configs/vm_config.c
+#PRE_BUILD_SRCS += $(HV_SRC_DIR)/arch/x86/configs/vm_config.c
+PRE_BUILD_SRCS += $(HV_SRC_DIR)/common/vm_config.c
 PRE_BUILD_SRCS += $(SCENARIO_CFG_DIR)/vm_configurations.c
 PRE_BUILD_SRCS += $(BOARD_CFG_DIR)/pt_intx.c
 ifneq (,$(wildcard $(BOARD_CFG_DIR)/pci_dev.c))

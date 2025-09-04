@@ -6,7 +6,7 @@
 
 #include <vm.h>
 #include <asm/guest/ept.h>
-#include <asm/vm_config.h>
+#include <vm_config.h>
 #include <asm/mmu.h>
 #include <asm/guest/optee.h>
 #include <asm/trampoline.h>

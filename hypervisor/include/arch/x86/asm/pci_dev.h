@@ -7,7 +7,7 @@
 #ifndef PCI_DEV_H_
 #define PCI_DEV_H_
 
-#include <asm/vm_config.h>
+#include <vm_config.h>
 
 extern struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
 
