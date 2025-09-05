@@ -38,6 +38,7 @@
 #include <ticks.h>
 #include <delay.h>
 #include <thermal.h>
+#include <common/smp.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
@@ -270,8 +271,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 		timer_init();
 		thermal_init();
-		setup_notification();
-		setup_pi_notification();
+		init_smp_call();
 
 		if (init_iommu() != 0) {
 			panic("failed to initialize iommu!");

@@ -240,20 +240,20 @@ send_startup_ipi(uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
 }
 
-void send_dest_ipi_mask(uint32_t dest_mask, uint32_t vector)
+void arch_send_dest_ipi_mask(uint64_t dest_mask, uint32_t vector)
 {
 	uint16_t pcpu_id;
-	uint32_t mask = dest_mask;
+	uint64_t mask = dest_mask;
 
 	pcpu_id = ffs64(mask);
 	while (pcpu_id < MAX_PCPU_NUM) {
-		bitmap32_clear_nolock(pcpu_id, &mask);
-		send_single_ipi(pcpu_id, vector);
+		bitmap_clear_nolock(pcpu_id, &mask);
+		arch_send_single_ipi(pcpu_id, vector);
 		pcpu_id = ffs64(mask);
 	}
 }
 
-void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
+void arch_send_single_ipi(uint16_t pcpu_id, uint32_t vector)
 {
 	union apic_icr icr;
 
@@ -299,6 +299,6 @@ void kick_pcpu(uint16_t pcpu_id)
 	if (per_cpu(mode_to_kick_pcpu, pcpu_id) == DEL_MODE_INIT) {
 		send_single_init(pcpu_id);
 	} else {
-		send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
+		arch_send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
 	}
 }

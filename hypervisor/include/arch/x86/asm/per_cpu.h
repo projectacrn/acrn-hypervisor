@@ -14,11 +14,11 @@
 #include <profiling.h>
 #include <logmsg.h>
 #include <schedule.h>
-#include <asm/notify.h>
 #include <asm/page.h>
 #include <asm/gdt.h>
 #include <asm/security.h>
 #include <asm/vm_config.h>
+#include <common/smp.h>
 
 struct per_cpu_region {
 	/* vmxon_region MUST be 4KB-aligned */

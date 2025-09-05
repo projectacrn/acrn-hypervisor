@@ -93,7 +93,7 @@ static int32_t tee_switch_to_ree(struct acrn_vcpu *vcpu)
 			 * after VM Entry and will go through the secure interrupt handling
 			 * flow in handle_x86_tee_int.
 			 */
-			send_single_ipi(pcpuid_from_vcpu(ree_vcpu), 
+			arch_send_single_ipi(pcpuid_from_vcpu(ree_vcpu),
 				(uint32_t)(vcpu->arch.pid.control.bits.nv));
 		} else if (prio(pending_intr) == prio(TEE_FIXED_NONSECURE_VECTOR)) {
 			/* The TEE_FIXED_NONSECURE_VECTOR needs to be cleared as the

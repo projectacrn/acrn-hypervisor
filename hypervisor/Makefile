@@ -148,6 +148,8 @@ endif
 # if block. The block should be entirely eliminated when we've done
 # all the work.
 #
+COMMON_C_SRCS += common/smp.c
+
 ifeq ($(ARCH),x86)
 COMMON_C_SRCS += common/ticks.c
 COMMON_C_SRCS += common/delay.c
