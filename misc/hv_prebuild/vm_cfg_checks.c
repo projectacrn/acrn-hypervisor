@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2020-2022 Intel Corporation.
+ * Copyright (C) 2020-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/page.h>
 #include <asm/vm_config.h>
 #include <asm/rdt.h>

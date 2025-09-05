@@ -8,7 +8,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <spinlock.h>
 #include <asm/cpu_caps.h>
 #include <irq.h>
@@ -1413,7 +1413,7 @@ void dmar_free_irte(const struct intr_source *intr_src, uint16_t index)
 
 		if (!is_irte_reserved(dmar_unit, index)) {
 			spinlock_obtain(&dmar_unit->lock);
-			bitmap_clear_nolock(index & 0x3FU, &dmar_unit->irte_alloc_bitmap[index >> 6U]);
+			bitmap_clear_non_atomic(index & 0x3FU, &dmar_unit->irte_alloc_bitmap[index >> 6U]);
 			spinlock_release(&dmar_unit->lock);
 		}
 	}

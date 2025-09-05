@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <asm/guest/vcpu.h>
 #include <asm/guest/virq.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/vmx.h>
 #include <logmsg.h>
 #include <asm/cpufeatures.h>
@@ -59,7 +59,7 @@ uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	if (!bitmap_test(CPU_REG_RIP, &vcpu->reg_updated) &&
-		!bitmap_test_and_set_nolock(CPU_REG_RIP, &vcpu->reg_cached)) {
+		!bitmap_test_and_set_non_atomic(CPU_REG_RIP, &vcpu->reg_cached)) {
 		ctx->rip = exec_vmread(VMX_GUEST_RIP);
 	}
 	return ctx->rip;
@@ -68,7 +68,7 @@ uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rip = val;
-	bitmap_set_nolock(CPU_REG_RIP, &vcpu->reg_updated);
+	bitmap_set_non_atomic(CPU_REG_RIP, &vcpu->reg_updated);
 }
 
 uint64_t vcpu_get_rsp(const struct acrn_vcpu *vcpu)
@@ -85,7 +85,7 @@ void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	ctx->cpu_regs.regs.rsp = val;
-	bitmap_set_nolock(CPU_REG_RSP, &vcpu->reg_updated);
+	bitmap_set_non_atomic(CPU_REG_RSP, &vcpu->reg_updated);
 }
 
 uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
@@ -110,7 +110,7 @@ void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
 	}
 
 	/* Write the new value to VMCS in either case */
-	bitmap_set_nolock(CPU_REG_EFER, &vcpu->reg_updated);
+	bitmap_set_non_atomic(CPU_REG_EFER, &vcpu->reg_updated);
 }
 
 uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
@@ -119,7 +119,7 @@ uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	if (!bitmap_test(CPU_REG_RFLAGS, &vcpu->reg_updated) &&
-		!bitmap_test_and_set_nolock(CPU_REG_RFLAGS, &vcpu->reg_cached) && vcpu->launched) {
+		!bitmap_test_and_set_non_atomic(CPU_REG_RFLAGS, &vcpu->reg_cached) && vcpu->launched) {
 		ctx->rflags = exec_vmread(VMX_GUEST_RFLAGS);
 	}
 	return ctx->rflags;
@@ -129,7 +129,7 @@ void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rflags =
 		val;
-	bitmap_set_nolock(CPU_REG_RFLAGS, &vcpu->reg_updated);
+	bitmap_set_non_atomic(CPU_REG_RFLAGS, &vcpu->reg_updated);
 }
 
 uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr)
@@ -176,7 +176,7 @@ void vcpu_set_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector)
 {
 	pr_dbg("%s", __func__);
 
-	if (!bitmap_test_and_set_lock((uint16_t)(vector & 0x3fU),
+	if (!bitmap_test_and_set((uint16_t)(vector & 0x3fU),
 			&(vcpu->arch.eoi_exit_bitmap[(vector & 0xffU) >> 6U]))) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE);
 	}
@@ -186,7 +186,7 @@ void vcpu_clear_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector)
 {
 	pr_dbg("%s", __func__);
 
-	if (bitmap_test_and_clear_lock((uint16_t)(vector & 0x3fU),
+	if (bitmap_test_and_clear((uint16_t)(vector & 0x3fU),
 			&(vcpu->arch.eoi_exit_bitmap[(vector & 0xffU) >> 6U]))) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE);
 	}
@@ -660,16 +660,16 @@ static void write_cached_registers(struct acrn_vcpu *vcpu)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (bitmap_test_and_clear_nolock(CPU_REG_RIP, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_RIP, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RIP, ctx->rip);
 	}
-	if (bitmap_test_and_clear_nolock(CPU_REG_RSP, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_RSP, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RSP, ctx->cpu_regs.regs.rsp);
 	}
-	if (bitmap_test_and_clear_nolock(CPU_REG_EFER, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_EFER, &vcpu->reg_updated)) {
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, ctx->ia32_efer);
 	}
-	if (bitmap_test_and_clear_nolock(CPU_REG_RFLAGS, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_RFLAGS, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RFLAGS, ctx->rflags);
 	}
 
@@ -678,11 +678,11 @@ static void write_cached_registers(struct acrn_vcpu *vcpu)
 	 * switching. There should no other module request updating
 	 * CR0/CR4 here.
 	 */
-	if (bitmap_test_and_clear_nolock(CPU_REG_CR0, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_CR0, &vcpu->reg_updated)) {
 		vcpu_set_cr0(vcpu, ctx->cr0);
 	}
 
-	if (bitmap_test_and_clear_nolock(CPU_REG_CR4, &vcpu->reg_updated)) {
+	if (bitmap_test_and_clear_non_atomic(CPU_REG_CR4, &vcpu->reg_updated)) {
 		vcpu_set_cr4(vcpu, ctx->cr4);
 	}
 }
@@ -1022,7 +1022,7 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
 	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 		if ((vdmask & (1UL << vcpu_id)) != 0UL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
-			bitmap_set_nolock(pcpuid_from_vcpu(vcpu), &dmask);
+			bitmap_set_non_atomic(pcpuid_from_vcpu(vcpu), &dmask);
 		}
 	}
 

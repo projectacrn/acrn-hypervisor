@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2021-2022 Intel Corporation.
+ * Copyright (C) 2021-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <errno.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <irq.h>
 #include <common/softirq.h>
 #include <asm/irq.h>
@@ -40,10 +40,10 @@ static uint32_t alloc_irq_num(uint32_t req_irq, bool reserve)
 		if (irq >= NR_IRQS) {
 			irq = IRQ_INVALID;
 		} else {
-			bitmap_set_nolock((uint16_t)(irq & 0x3FU),
+			bitmap_set_non_atomic((uint16_t)(irq & 0x3FU),
 					irq_alloc_bitmap + (irq >> 6U));
 			if (reserve) {
-				bitmap_set_nolock((uint16_t)(irq & 0x3FU),
+				bitmap_set_non_atomic((uint16_t)(irq & 0x3FU),
 						irq_rsvd_bitmap + (irq >> 6U));
 			}
 		}
@@ -71,7 +71,7 @@ static void free_irq_num(uint32_t irq)
 
 		if (bitmap_test((uint16_t)(irq & 0x3FU),
 			irq_rsvd_bitmap + (irq >> 6U)) == false) {
-			bitmap_clear_nolock((uint16_t)(irq & 0x3FU),
+			bitmap_clear_non_atomic((uint16_t)(irq & 0x3FU),
 					irq_alloc_bitmap + (irq >> 6U));
 		}
 		spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);

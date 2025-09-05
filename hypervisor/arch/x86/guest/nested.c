@@ -398,7 +398,7 @@ static void setup_vmcs_shadowing_bitmap(void)
 	for (field_index = 0U; field_index < MAX_SHADOW_VMCS_FIELDS; field_index++) {
 		bit_pos = vmcs_shadowing_fields[field_index] % 64U;
 		array_index = vmcs_shadowing_fields[field_index] / 64U;
-		bitmap_clear_nolock(bit_pos, &vmcs_shadowing_bitmap[array_index]);
+		bitmap_clear_non_atomic(bit_pos, &vmcs_shadowing_bitmap[array_index]);
 	}
 }
 
@@ -1338,8 +1338,8 @@ static void set_vmcs01_guest_state(struct acrn_vcpu *vcpu)
 		 */
 		exec_vmwrite(VMX_GUEST_CR0, vmcs12->host_cr0);
 		exec_vmwrite(VMX_GUEST_CR4, vmcs12->host_cr4);
-		bitmap_clear_nolock(CPU_REG_CR0, &vcpu->reg_cached);
-		bitmap_clear_nolock(CPU_REG_CR4, &vcpu->reg_cached);
+		bitmap_clear_non_atomic(CPU_REG_CR0, &vcpu->reg_cached);
+		bitmap_clear_non_atomic(CPU_REG_CR4, &vcpu->reg_cached);
 
 		exec_vmwrite(VMX_GUEST_CR3, vmcs12->host_cr3);
 		exec_vmwrite(VMX_GUEST_DR7, DR7_INIT_VALUE);

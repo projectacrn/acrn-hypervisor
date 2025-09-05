@@ -719,7 +719,7 @@ struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_c
 	uint32_t id = (uint32_t)ffz64_ex(vpci->vdev_bitmaps, CONFIG_MAX_PCI_DEV_NUM);
 
 	if (id < CONFIG_MAX_PCI_DEV_NUM) {
-		bitmap_set_nolock((id & 0x3FU), &vpci->vdev_bitmaps[id >> 6U]);
+		bitmap_set_non_atomic((id & 0x3FU), &vpci->vdev_bitmaps[id >> 6U]);
 
 		vdev = &vpci->pci_vdevs[id];
 		vdev->id = id;
@@ -758,7 +758,7 @@ void vpci_deinit_vdev(struct pci_vdev *vdev)
 	vdev->vdev_ops->deinit_vdev(vdev);
 
 	hlist_del(&vdev->link);
-	bitmap_clear_nolock((vdev->id & 0x3FU), &vdev->vpci->vdev_bitmaps[vdev->id >> 6U]);
+	bitmap_clear_non_atomic((vdev->id & 0x3FU), &vdev->vpci->vdev_bitmaps[vdev->id >> 6U]);
 	memset(vdev, 0U, sizeof(struct pci_vdev));
 }
 

@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <types.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/page.h>
 #include <asm/e820.h>
 #include <asm/mmu.h>
@@ -321,7 +321,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 	init_keylocker();
 
-	bitmap_clear_lock(pcpu_id, &pcpu_sync);
+	bitmap_clear(pcpu_id, &pcpu_sync);
 	/* Waiting for each pCPU has done its initialization before to continue */
 	wait_sync_change(&pcpu_sync, 0UL);
 }
@@ -392,7 +392,7 @@ bool start_pcpus(uint64_t mask)
 
 	i = ffs64(expected_start_mask);
 	while (i != INVALID_BIT_INDEX) {
-		bitmap_clear_nolock(i, &expected_start_mask);
+		bitmap_clear_non_atomic(i, &expected_start_mask);
 
 		if (pcpu_id == i) {
 			continue; /* Avoid start itself */
@@ -407,7 +407,7 @@ bool start_pcpus(uint64_t mask)
 
 void make_pcpu_offline(uint16_t pcpu_id)
 {
-	bitmap_set_lock(NEED_OFFLINE, &per_cpu(pcpu_flag, pcpu_id));
+	bitmap_set(NEED_OFFLINE, &per_cpu(pcpu_flag, pcpu_id));
 	if (get_pcpu_id() != pcpu_id) {
 		kick_pcpu(pcpu_id);
 	}
@@ -415,7 +415,7 @@ void make_pcpu_offline(uint16_t pcpu_id)
 
 bool need_offline(uint16_t pcpu_id)
 {
-	return bitmap_test_and_clear_lock(NEED_OFFLINE, &per_cpu(pcpu_flag, pcpu_id));
+	return bitmap_test_and_clear(NEED_OFFLINE, &per_cpu(pcpu_flag, pcpu_id));
 }
 
 void wait_pcpus_offline(uint64_t mask)
@@ -439,7 +439,7 @@ void stop_pcpus(void)
 			continue;
 		}
 
-		bitmap_set_nolock(pcpu_id, &mask);
+		bitmap_set_non_atomic(pcpu_id, &mask);
 		make_pcpu_offline(pcpu_id);
 	}
 
@@ -496,6 +496,7 @@ void cpu_dead(void)
 
 		/* Set state to show CPU is dead */
 		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
+
 		clear_pcpu_active(pcpu_id);
 
 		/* Halt the CPU */
@@ -624,7 +625,7 @@ void msr_write_pcpu(uint32_t msr_index, uint64_t value64, uint16_t pcpu_id)
 	} else {
 		msr.msr_index = msr_index;
 		msr.write_val = value64;
-		bitmap_set_nolock(pcpu_id, &mask);
+		bitmap_set_non_atomic(pcpu_id, &mask);
 		smp_call_function(mask, smpcall_write_msr_func, &msr);
 	}
 }
@@ -646,7 +647,7 @@ uint64_t msr_read_pcpu(uint32_t msr_index, uint16_t pcpu_id)
 		ret = msr_read(msr_index);
 	} else {
 		msr.msr_index = msr_index;
-		bitmap_set_nolock(pcpu_id, &mask);
+		bitmap_set_non_atomic(pcpu_id, &mask);
 		smp_call_function(mask, smpcall_read_msr_func, &msr);
 		ret = msr.read_val;
 	}

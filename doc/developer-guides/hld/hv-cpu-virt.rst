@@ -465,7 +465,7 @@ running). See :ref:`vcpu-request-interrupt-injection` for details.
    {
       uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
 
-      bitmap_set_lock(eventid, &vcpu->arch_vcpu.pending_req);
+      bitmap_set(eventid, &vcpu->arch_vcpu.pending_req);
       /*
        * if current hostcpu is not the target vcpu's hostcpu, we need
        * to invoke IPI to wake up target vcpu

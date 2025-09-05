@@ -32,7 +32,7 @@ static inline uint16_t ptirq_alloc_entry_id(void)
 	uint16_t id = (uint16_t)ffz64_ex(ptirq_entry_bitmaps, CONFIG_MAX_PT_IRQ_ENTRIES);
 
 	while (id < CONFIG_MAX_PT_IRQ_ENTRIES) {
-		if (!bitmap_test_and_set_lock((id & 0x3FU), &ptirq_entry_bitmaps[id >> 6U])) {
+		if (!bitmap_test_and_set((id & 0x3FU), &ptirq_entry_bitmaps[id >> 6U])) {
 			break;
 		}
 		id = (uint16_t)ffz64_ex(ptirq_entry_bitmaps, CONFIG_MAX_PT_IRQ_ENTRIES);
@@ -177,7 +177,7 @@ void ptirq_release_entry(struct ptirq_remapping_info *entry)
 	del_timer(&entry->intr_delay_timer);
 	CPU_INT_ALL_RESTORE(rflags);
 
-	bitmap_clear_lock((entry->ptdev_entry_id) & 0x3FU, &ptirq_entry_bitmaps[entry->ptdev_entry_id >> 6U]);
+	bitmap_clear((entry->ptdev_entry_id) & 0x3FU, &ptirq_entry_bitmaps[entry->ptdev_entry_id >> 6U]);
 
 	(void)memset((void *)entry, 0U, sizeof(struct ptirq_remapping_info));
 }

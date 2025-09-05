@@ -167,7 +167,7 @@ static inline void enter_s5(struct acrn_vcpu *vcpu, uint32_t pm1a_cnt_val, uint3
 	pause_vm(vm);
 	put_vm_lock(vm);
 
-	bitmap_set_nolock(vm->vm_id, &per_cpu(shutdown_vm_bitmap, pcpu_id));
+	bitmap_set_non_atomic(vm->vm_id, &per_cpu(shutdown_vm_bitmap, pcpu_id));
 	make_shutdown_vm_request(pcpu_id);
 }
 
@@ -352,7 +352,7 @@ static bool prelaunched_vm_sleep_io_write(struct acrn_vcpu *vcpu, uint16_t addr,
 			pause_vm(vm);
 			put_vm_lock(vm);
 
-			bitmap_set_nolock(vm->vm_id, &per_cpu(shutdown_vm_bitmap, pcpuid_from_vcpu(vcpu)));
+			bitmap_set_non_atomic(vm->vm_id, &per_cpu(shutdown_vm_bitmap, pcpuid_from_vcpu(vcpu)));
 			make_shutdown_vm_request(pcpuid_from_vcpu(vcpu));
 		}
 	}

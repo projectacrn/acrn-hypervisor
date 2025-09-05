@@ -59,7 +59,7 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 		pause_vm(vm);
 		put_vm_lock(vm);
 
-		bitmap_set_nolock(vm->vm_id,
+		bitmap_set_non_atomic(vm->vm_id,
 				&per_cpu(shutdown_vm_bitmap, pcpuid_from_vcpu(vcpu)));
 		make_shutdown_vm_request(pcpuid_from_vcpu(vcpu));
 	}
@@ -109,7 +109,7 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset, bo
 			 * ACRN doesn't support re-launch, just shutdown the guest.
 			 */
 			pause_vm(vm);
-			bitmap_set_nolock(vm->vm_id,
+			bitmap_set_non_atomic(vm->vm_id,
 					&per_cpu(shutdown_vm_bitmap, pcpuid_from_vcpu(vcpu)));
 			make_shutdown_vm_request(pcpuid_from_vcpu(vcpu));
 		}
@@ -250,6 +250,6 @@ void shutdown_vm_from_idle(uint16_t pcpu_id)
 			(void)shutdown_vm(vm);
 		}
 		put_vm_lock(vm);
-		bitmap_clear_nolock(vm_id, vms);
+		bitmap_clear_non_atomic(vm_id, vms);
 	}
 }

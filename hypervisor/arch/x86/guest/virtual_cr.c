@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -8,7 +8,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/guest/virq.h>
 #include <asm/mmu.h>
 #include <asm/guest/vcpu.h>
@@ -318,7 +318,7 @@ static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t value)
 			exec_vmwrite(VMX_CR0_READ_SHADOW, effective_cr0);
 
 			/* clear read cache, next time read should from VMCS */
-			bitmap_clear_nolock(CPU_REG_CR0, &vcpu->reg_cached);
+			bitmap_clear_non_atomic(CPU_REG_CR0, &vcpu->reg_cached);
 
 			pr_dbg("VMM: Try to write %016lx, allow to write 0x%016lx to CR0", effective_cr0, tmp);
 		}
@@ -420,7 +420,7 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 			exec_vmwrite(VMX_CR4_READ_SHADOW, cr4);
 
 			/* clear read cache, next time read should from VMCS */
-			bitmap_clear_nolock(CPU_REG_CR4, &vcpu->reg_cached);
+			bitmap_clear_non_atomic(CPU_REG_CR4, &vcpu->reg_cached);
 
 			pr_dbg("VMM: Try to write %016lx, allow to write 0x%016lx to CR4", cr4, tmp);
 		}
@@ -521,7 +521,7 @@ uint64_t vcpu_get_cr0(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx = &vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (bitmap_test_and_set_nolock(CPU_REG_CR0, &vcpu->reg_cached) == 0) {
+	if (bitmap_test_and_set_non_atomic(CPU_REG_CR0, &vcpu->reg_cached) == 0) {
 		ctx->cr0 = (exec_vmread(VMX_CR0_READ_SHADOW) & ~cr0_passthru_mask) |
 			(exec_vmread(VMX_GUEST_CR0) & cr0_passthru_mask);
 	}
@@ -549,7 +549,7 @@ uint64_t vcpu_get_cr4(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx = &vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (bitmap_test_and_set_nolock(CPU_REG_CR4, &vcpu->reg_cached) == 0) {
+	if (bitmap_test_and_set_non_atomic(CPU_REG_CR4, &vcpu->reg_cached) == 0) {
 		ctx->cr4 = (exec_vmread(VMX_CR4_READ_SHADOW) & ~cr4_passthru_mask) |
 			(exec_vmread(VMX_GUEST_CR4) & cr4_passthru_mask);
 	}

@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2020-2022 Intel Corporation.
+ * Copyright (C) 2020-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <types.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <rtl.h>
 #include <util.h>
 #include <logmsg.h>
@@ -142,7 +142,7 @@ bool init_software_sram(bool is_bsp)
 				/* Clear the NX bit of PTCM area */
 				set_paging_x((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size);
 			}
-			bitmap_clear_lock(get_pcpu_id(), &init_sw_sram_cpus_mask);
+			bitmap_clear(get_pcpu_id(), &init_sw_sram_cpus_mask);
 		}
 
 		wait_sync_change(&init_sw_sram_cpus_mask, 0UL);
@@ -167,7 +167,7 @@ bool init_software_sram(bool is_bsp)
 				set_paging_nx((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size);
 			}
 
-			bitmap_set_lock(get_pcpu_id(), &init_sw_sram_cpus_mask);
+			bitmap_set(get_pcpu_id(), &init_sw_sram_cpus_mask);
 			wait_sync_change(&init_sw_sram_cpus_mask, ALL_CPUS_MASK);
 			/* Flush the TLB on BSP and all APs to restore the NX for Software SRAM area */
 			flush_tlb_range((uint64_t)hpa2hva(rtcm_binary->address), rtcm_binary->size);

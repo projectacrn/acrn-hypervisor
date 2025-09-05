@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <types.h>
 #include <errno.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/guest/virq.h>
 #include <asm/lapic.h>
 #include <asm/mmu.h>
@@ -130,7 +130,7 @@ static inline bool is_nmi_injectable(void)
 }
 void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 {
-	bitmap_set_lock(eventid, &vcpu->arch.pending_req);
+	bitmap_set(eventid, &vcpu->arch.pending_req);
 	kick_vcpu(vcpu);
 }
 
@@ -367,38 +367,38 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 
 	if (*pending_req_bits != 0UL) {
 		/* make sure ACRN_REQUEST_INIT_VMCS handler as the first one */
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_INIT_VMCS, pending_req_bits)) {
+		if (bitmap_test_and_clear(ACRN_REQUEST_INIT_VMCS, pending_req_bits)) {
 			init_vmcs(vcpu);
 		}
 
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
+		if (bitmap_test_and_clear(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
 			pr_fatal("Triple fault happen -> shutdown!");
 			ret = -EFAULT;
 		} else {
-			if (bitmap_test_and_clear_lock(ACRN_REQUEST_WAIT_WBINVD, pending_req_bits)) {
+			if (bitmap_test_and_clear(ACRN_REQUEST_WAIT_WBINVD, pending_req_bits)) {
 				wait_event(&vcpu->events[VCPU_EVENT_SYNC_WBINVD]);
 			}
 
-			if (bitmap_test_and_clear_lock(ACRN_REQUEST_SPLIT_LOCK, pending_req_bits)) {
+			if (bitmap_test_and_clear(ACRN_REQUEST_SPLIT_LOCK, pending_req_bits)) {
 				wait_event(&vcpu->events[VCPU_EVENT_SPLIT_LOCK]);
 			}
 
-			if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH, pending_req_bits)) {
+			if (bitmap_test_and_clear(ACRN_REQUEST_EPT_FLUSH, pending_req_bits)) {
 				invept(vcpu->vm->arch_vm.nworld_eptp);
 				if (vcpu->vm->sworld_control.flag.active != 0UL) {
 					invept(vcpu->vm->arch_vm.sworld_eptp);
 				}
 			}
 
-			if (bitmap_test_and_clear_lock(ACRN_REQUEST_VPID_FLUSH,	pending_req_bits)) {
+			if (bitmap_test_and_clear(ACRN_REQUEST_VPID_FLUSH,	pending_req_bits)) {
 				flush_vpid_single(arch->vpid);
 			}
 
-			if (bitmap_test_and_clear_lock(ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE, pending_req_bits)) {
+			if (bitmap_test_and_clear(ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE, pending_req_bits)) {
 				vcpu_set_vmcs_eoi_exit(vcpu);
 			}
 
-			if (bitmap_test_and_clear_lock(ACRN_REQUEST_SMP_CALL, pending_req_bits)) {
+			if (bitmap_test_and_clear(ACRN_REQUEST_SMP_CALL, pending_req_bits)) {
 				handle_smp_call();
 			}
 
@@ -409,14 +409,14 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		/*
 		 * Inject pending exception prior pending interrupt to complete the previous instruction.
 		 */
-		if ((*pending_req_bits != 0UL) && bitmap_test_and_clear_lock(ACRN_REQUEST_EXCP, pending_req_bits)) {
+		if ((*pending_req_bits != 0UL) && bitmap_test_and_clear(ACRN_REQUEST_EXCP, pending_req_bits)) {
 			vcpu_inject_exception(vcpu);
 			injected = true;
 		} else {
 			/* inject NMI before maskable hardware interrupt */
 
 			if ((*pending_req_bits != 0UL) &&
-				bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
+				bitmap_test_and_clear(ACRN_REQUEST_NMI, pending_req_bits)) {
 				if (is_nmi_injectable()) {
 					/* Inject NMI vector = 2 */
 					exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
@@ -424,7 +424,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 					injected = true;
 				} else {
 					/* keep the NMI request for next vmexit */
-					bitmap_set_lock(ACRN_REQUEST_NMI, pending_req_bits);
+					bitmap_set(ACRN_REQUEST_NMI, pending_req_bits);
 				}
 			} else {
 				/* handling pending vector injection:
@@ -490,13 +490,13 @@ static inline void acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
 
 	if (guest_irq_enabled && (!ret)) {
 		/* Inject external interrupt first */
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EXTINT, pending_req_bits)) {
+		if (bitmap_test_and_clear(ACRN_REQUEST_EXTINT, pending_req_bits)) {
 			/* has pending external interrupts */
 			ret = vcpu_do_pending_extint(vcpu);
 		}
 	}
 
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
+	if (bitmap_test_and_clear(ACRN_REQUEST_EVENT, pending_req_bits)) {
 		vlapic_inject_intr(vcpu_vlapic(vcpu), guest_irq_enabled, ret);
 	}
 }

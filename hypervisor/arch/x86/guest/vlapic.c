@@ -30,7 +30,6 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/lib/bits.h>
 #include <atomic.h>
 #include <per_cpu.h>
 #include <asm/pgtable.h>
@@ -450,11 +449,11 @@ vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 {
 	struct lapic_reg *tmrptr = &(vlapic->apic_page.tmr[0]);
 	if (level) {
-		if (!bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU), &tmrptr[(vector & 0xffU) >> 5U].v)) {
+		if (!bitmap32_test_and_set((uint16_t)(vector & 0x1fU), &tmrptr[(vector & 0xffU) >> 5U].v)) {
 			vcpu_set_eoi_exit_bitmap(vlapic2vcpu(vlapic), vector);
 		}
 	} else {
-		if (bitmap32_test_and_clear_lock((uint16_t)(vector & 0x1fU), &tmrptr[(vector & 0xffU) >> 5U].v)) {
+		if (bitmap32_test_and_clear((uint16_t)(vector & 0x1fU), &tmrptr[(vector & 0xffU) >> 5U].v)) {
 			vcpu_clear_eoi_exit_bitmap(vlapic2vcpu(vlapic), vector);
 		}
 	}
@@ -488,7 +487,7 @@ static void apicv_basic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector,
 	irrptr = &lapic->irr[0];
 
 	/* If the interrupt is set, don't try to do it again */
-	if (!bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU), &irrptr[idx].v)) {
+	if (!bitmap32_test_and_set((uint16_t)(vector & 0x1fU), &irrptr[idx].v)) {
 		/* update TMR if interrupt trigger mode has changed */
 		vlapic_set_tmr(vlapic, vector, level);
 		vcpu_make_request(vlapic2vcpu(vlapic), ACRN_REQUEST_EVENT);
@@ -512,7 +511,7 @@ static void apicv_advanced_accept_intr(struct acrn_vlapic *vlapic, uint32_t vect
 		 *    send PI notification to vCPU and hardware will
 		 *    sync PIR to vIRR automatically.
 		 */
-		bitmap_set_lock(ACRN_REQUEST_EVENT, &vcpu->arch.pending_req);
+		bitmap_set(ACRN_REQUEST_EVENT, &vcpu->arch.pending_req);
 
 		if (get_pcpu_id() != pcpuid_from_vcpu(vcpu)) {
 			apicv_trigger_pi_anv(pcpuid_from_vcpu(vcpu), (uint32_t)vcpu->arch.pid.control.bits.nv);
@@ -808,7 +807,7 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 		vector = vlapic->isrv;
 		i = (vector >> 5U);
 		bitpos = (vector & 0x1fU);
-		bitmap32_clear_nolock((uint16_t)bitpos, &isrptr[i].v);
+		bitmap32_clear_non_atomic((uint16_t)bitpos, &isrptr[i].v);
 
 		dev_dbg(DBG_LEVEL_VLAPIC, "EOI vector %u", vector);
 		vlapic_dump_isr(vlapic, "vlapic_process_eoi");
@@ -933,7 +932,7 @@ static inline void set_dest_mask_phys(struct acrn_vm *vm, uint64_t *dmask, uint3
 
 	vcpu_id = vm_apicid2vcpu_id(vm, dest);
 	if (vcpu_id < vm->hw.created_vcpus) {
-		bitmap_set_nolock(vcpu_id, dmask);
+		bitmap_set_non_atomic(vcpu_id, dmask);
 	}
 }
 
@@ -1033,12 +1032,12 @@ vlapic_calc_dest_noshort(struct acrn_vm *vm, bool is_broadcast,
 					/* No other state currently, do nothing */
 				}
 			} else {
-				bitmap_set_nolock(vcpu_id, &dmask);
+				bitmap_set_non_atomic(vcpu_id, &dmask);
 			}
 		}
 
 		if (lowprio && (lowprio_dest != NULL)) {
-			bitmap_set_nolock(vlapic2vcpu(lowprio_dest)->vcpu_id, &dmask);
+			bitmap_set_non_atomic(vlapic2vcpu(lowprio_dest)->vcpu_id, &dmask);
 		}
 	}
 
@@ -1056,14 +1055,14 @@ vlapic_calc_dest(struct acrn_vcpu *vcpu, uint32_t shorthand, bool is_broadcast,
 		dmask = vlapic_calc_dest_noshort(vcpu->vm, is_broadcast, dest, phys, lowprio);
 		break;
 	case APIC_DEST_SELF:
-		bitmap_set_nolock(vcpu->vcpu_id, &dmask);
+		bitmap_set_non_atomic(vcpu->vcpu_id, &dmask);
 		break;
 	case APIC_DEST_ALLISELF:
 		dmask = vm_active_cpus(vcpu->vm);
 		break;
 	case APIC_DEST_ALLESELF:
 		dmask = vm_active_cpus(vcpu->vm);
-		bitmap_clear_nolock(vcpu->vcpu_id, &dmask);
+		bitmap_clear_non_atomic(vcpu->vcpu_id, &dmask);
 		break;
 	default:
 		/*
@@ -1275,12 +1274,12 @@ static void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vec
 	idx = vector >> 5U;
 
 	irrptr = &lapic->irr[0];
-	bitmap32_clear_lock((uint16_t)(vector & 0x1fU), &irrptr[idx].v);
+	bitmap32_clear((uint16_t)(vector & 0x1fU), &irrptr[idx].v);
 
 	vlapic_dump_irr(vlapic, "vlapic_get_deliverable_intr");
 
 	isrptr = &lapic->isr[0];
-	bitmap32_set_nolock((uint16_t)(vector & 0x1fU), &isrptr[idx].v);
+	bitmap32_set_non_atomic((uint16_t)(vector & 0x1fU), &isrptr[idx].v);
 	vlapic_dump_isr(vlapic, "vlapic_get_deliverable_intr");
 
 	vlapic->isrv = vector;
@@ -1808,7 +1807,7 @@ vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t lvt_ind
 		if (vcpu_id == BROADCAST_CPU_ID) {
 			dmask = vm_active_cpus(vm);
 		} else {
-			bitmap_set_nolock(vcpu_id, &dmask);
+			bitmap_set_non_atomic(vcpu_id, &dmask);
 		}
 		error = 0;
 		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
@@ -1915,7 +1914,7 @@ static void inject_msi_for_lapic_pt(struct acrn_vm *vm, uint64_t addr, uint64_t 
 
 		vcpu_id = ffs64(vdmask);
 		while (vcpu_id != INVALID_BIT_INDEX) {
-			bitmap_clear_nolock(vcpu_id, &vdmask);
+			bitmap_clear_non_atomic(vcpu_id, &vdmask);
 			vcpu = vcpu_from_vid(vm, vcpu_id);
 			dest |= per_cpu(arch.lapic_ldr, pcpuid_from_vcpu(vcpu));
 			vcpu_id = ffs64(vdmask);
@@ -2232,8 +2231,8 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 
 	pid = get_pi_desc(vlapic2vcpu(vlapic));
 	idx = vector >> 6U;
-	if (!bitmap_test_and_set_lock((uint16_t)(vector & 0x3fU), &pid->pir[idx])) {
-		notify = !bitmap_test_and_set_lock(POSTED_INTR_ON, &pid->control.value);
+	if (!bitmap_test_and_set((uint16_t)(vector & 0x3fU), &pid->pir[idx])) {
+		notify = !bitmap_test_and_set(POSTED_INTR_ON, &pid->control.value);
 	}
 	return notify;
 }
@@ -2365,7 +2364,7 @@ bool vlapic_clear_pending_intr(struct acrn_vcpu *vcpu, uint32_t vector)
 {
 	struct lapic_reg *irrptr = &(vcpu->arch.vlapic.apic_page.irr[0]);
 	uint32_t idx = vector >> 5U;
-	return bitmap32_test_and_clear_lock((uint16_t)(vector & 0x1fU), &irrptr[idx].v);
+	return bitmap32_test_and_clear((uint16_t)(vector & 0x1fU), &irrptr[idx].v);
 }
 
 bool vlapic_has_pending_intr(struct acrn_vcpu *vcpu)

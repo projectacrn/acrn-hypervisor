@@ -13,7 +13,7 @@
 
 #ifndef ASSEMBLER
 
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <spinlock.h>
 #include <asm/pgtable.h>
 #include <asm/guest/vcpu.h>
@@ -194,7 +194,7 @@ static inline uint64_t vm_active_cpus(const struct acrn_vm *vm)
 	const struct acrn_vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
-		bitmap_set_nolock(vcpu->vcpu_id, &dmask);
+		bitmap_set_non_atomic(vcpu->vcpu_id, &dmask);
 	}
 
 	return dmask;

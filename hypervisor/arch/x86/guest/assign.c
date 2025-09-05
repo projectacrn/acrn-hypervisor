@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <types.h>
 #include <errno.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/guest/vm.h>
 #include <asm/vtd.h>
 #include <ptdev.h>
@@ -67,7 +67,7 @@ static uint32_t calculate_logical_dest_mask(uint64_t pdmask)
 		 */
 		dest_cluster_id = per_cpu(arch.lapic_ldr, pcpu_id) & X2APIC_LDR_CLUSTER_ID_MASK;
 		do {
-			bitmap_clear_nolock(pcpu_id, &pcpu_mask);
+			bitmap_clear_non_atomic(pcpu_id, &pcpu_mask);
 			cluster_id = per_cpu(arch.lapic_ldr, pcpu_id) & X2APIC_LDR_CLUSTER_ID_MASK;
 			if (cluster_id == dest_cluster_id) {
 				logical_id_mask |= (per_cpu(arch.lapic_ldr, pcpu_id) & X2APIC_LDR_LOGICAL_ID_MASK);

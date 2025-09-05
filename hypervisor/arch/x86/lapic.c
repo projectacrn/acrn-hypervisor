@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <types.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/msr.h>
 #include <asm/cpu.h>
 #include <per_cpu.h>
@@ -248,7 +248,7 @@ void send_dest_ipi_mask(uint64_t dest_mask, uint32_t vector)
 
 	pcpu_id = ffs64(mask);
 	while (pcpu_id < MAX_PCPU_NUM) {
-		bitmap_clear_nolock(pcpu_id, &mask);
+		bitmap_clear_non_atomic(pcpu_id, &mask);
 		send_single_ipi(pcpu_id, vector);
 		pcpu_id = ffs64(mask);
 	}

@@ -6,7 +6,7 @@
 
 #include <rtl.h>
 #include <list.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/cpu.h>
 #include <per_cpu.h>
 #include <asm/lapic.h>
@@ -153,7 +153,7 @@ void make_reschedule_request(uint16_t pcpu_id)
 {
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
 
-	bitmap_set_lock(NEED_RESCHEDULE, &ctl->flags);
+	bitmap_set(NEED_RESCHEDULE, &ctl->flags);
 	if (get_pcpu_id() != pcpu_id) {
 		kick_pcpu(pcpu_id);
 	}
@@ -179,7 +179,7 @@ void schedule(void)
 	if (ctl->scheduler->pick_next != NULL) {
 		next = ctl->scheduler->pick_next(ctl);
 	}
-	bitmap_clear_lock(NEED_RESCHEDULE, &ctl->flags);
+	bitmap_clear(NEED_RESCHEDULE, &ctl->flags);
 
 	/* If we picked different sched object, switch context */
 	if (prev != next) {

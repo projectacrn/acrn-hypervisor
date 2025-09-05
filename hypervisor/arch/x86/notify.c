@@ -6,8 +6,8 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/lib/bits.h>
 #include <atomic.h>
+#include <bits.h>
 #include <asm/irq.h>
 #include <asm/cpu.h>
 #include <asm/per_cpu.h>

@@ -40,7 +40,7 @@
 #include <logmsg.h>
 #include <asm/pci_dev.h>
 #include <asm/vtd.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/board.h>
 #include <platform_acpi_info.h>
 #include <hash.h>
@@ -433,7 +433,7 @@ static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
 		current_drhd_index = bus_map[s].bus_drhd_index;
 		s = s + 1U;
 
-		bitmap_set_nolock(current_bus_index,
+		bitmap_set_non_atomic(current_bus_index,
 					&buses_visited[current_bus_index >> 6U]);
 
 		pbdf.bits.b = current_bus_index;

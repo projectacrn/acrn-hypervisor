@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <types.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/cpu.h>
 #include <per_cpu.h>
 #include <softirq.h>
@@ -29,7 +29,7 @@ void register_softirq(uint16_t nr, softirq_handler handler)
  */
 void fire_softirq(uint16_t nr)
 {
-	bitmap_set_lock(nr, &per_cpu(softirq_pending, get_pcpu_id()));
+	bitmap_set(nr, &per_cpu(softirq_pending, get_pcpu_id()));
 }
 
 static void do_softirq_internal(uint16_t cpu_id)
@@ -39,7 +39,7 @@ static void do_softirq_internal(uint16_t cpu_id)
 	uint16_t nr = ffs64(*softirq_pending_bitmap);
 
 	while (nr < NR_SOFTIRQS) {
-		bitmap_clear_lock(nr, softirq_pending_bitmap);
+		bitmap_clear(nr, softirq_pending_bitmap);
 		(*softirq_handlers[nr])(cpu_id);
 		nr = ffs64(*softirq_pending_bitmap);
 	}

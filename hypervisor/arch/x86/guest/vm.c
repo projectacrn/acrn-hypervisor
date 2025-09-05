@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -12,7 +12,7 @@
 #include <asm/guest/vm.h>
 #include <asm/guest/vm_reset.h>
 #include <asm/guest/virq.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/e820.h>
 #include <boot.h>
 #include <asm/vtd.h>
@@ -625,7 +625,7 @@ static uint64_t lapic_pt_enabled_pcpu_bitmap(struct acrn_vm *vm)
 	if (is_lapic_pt_configured(vm)) {
 		foreach_vcpu(i, vm, vcpu) {
 			if (is_x2apic_enabled(vcpu_vlapic(vcpu))) {
-				bitmap_set_nolock(pcpuid_from_vcpu(vcpu), &bitmap);
+				bitmap_set_non_atomic(pcpuid_from_vcpu(vcpu), &bitmap);
 			}
 		}
 	}
@@ -832,7 +832,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		uint64_t tmp64 = pcpu_bitmap;
 		while (tmp64 != 0UL) {
 			pcpu_id = ffs64(tmp64);
-			bitmap_clear_nolock(pcpu_id, &tmp64);
+			bitmap_clear_non_atomic(pcpu_id, &tmp64);
 			status = prepare_vcpu(vm, pcpu_id);
 			if (status != 0) {
 				break;
@@ -886,7 +886,7 @@ static int32_t offline_lapic_pt_enabled_pcpus(const struct acrn_vm *vm, uint64_t
 	uint16_t this_pcpu_id = get_pcpu_id();
 
 	if (bitmap_test(this_pcpu_id, &mask)) {
-		bitmap_clear_nolock(this_pcpu_id, &mask);
+		bitmap_clear_non_atomic(this_pcpu_id, &mask);
 		if (vm->state == VM_POWERED_OFF) {
 			/*
 			 * If the current pcpu needs to offline itself,
@@ -1268,7 +1268,7 @@ bool has_rt_vm(void)
 
 void make_shutdown_vm_request(uint16_t pcpu_id)
 {
-	bitmap_set_lock(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
+	bitmap_set(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
 	if (get_pcpu_id() != pcpu_id) {
 		kick_pcpu(pcpu_id);
 	}
@@ -1276,7 +1276,7 @@ void make_shutdown_vm_request(uint16_t pcpu_id)
 
 bool need_shutdown_vm(uint16_t pcpu_id)
 {
-	return bitmap_test_and_clear_lock(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
+	return bitmap_test_and_clear(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
 }
 
 /*

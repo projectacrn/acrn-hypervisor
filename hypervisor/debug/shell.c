@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <types.h>
 #include <errno.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include "shell_priv.h"
 #include <asm/irq.h>
 #include <console.h>
@@ -1000,7 +1000,7 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
 	dump.str_max = SHELL_LOG_BUF_SIZE;
-	bitmap_set_nolock(pcpu_id, &mask);
+	bitmap_set_non_atomic(pcpu_id, &mask);
 	smp_call_function(mask, dump_vcpu_reg, &dump);
 	shell_puts(shell_log_buf);
 	status = 0;
@@ -1101,7 +1101,7 @@ static int32_t shell_dump_guest_mem(int32_t argc, char **argv)
 		dump.len = length;
 
 		pcpu_id = pcpuid_from_vcpu(vcpu);
-		bitmap_set_nolock(pcpu_id, &mask);
+		bitmap_set_non_atomic(pcpu_id, &mask);
 		smp_call_function(mask, dump_guest_mem, &dump);
 		ret = 0;
 	}

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <cpu.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 
 
 static volatile uint64_t pcpu_active_bitmap = 0UL;
@@ -24,13 +24,13 @@ bool is_pcpu_active(uint16_t pcpu_id)
 
 void set_pcpu_active(uint16_t pcpu_id)
 {
-	bitmap_set_lock(pcpu_id, &pcpu_active_bitmap);
+	bitmap_set(pcpu_id, &pcpu_active_bitmap);
 }
 
 void clear_pcpu_active(uint16_t pcpu_id)
 {
 
-	bitmap_clear_lock(pcpu_id, &pcpu_active_bitmap);
+	bitmap_clear(pcpu_id, &pcpu_active_bitmap);
 }
 
 bool check_pcpus_active(uint64_t mask)

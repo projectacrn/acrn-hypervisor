@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2018-2024 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <types.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/page.h>
 #include <logmsg.h>
 
@@ -33,7 +33,7 @@ struct page *alloc_page(struct page_pool *pool)
 		idx = loop_idx % pool->bitmap_size;
 		if (*(pool->bitmap + idx) != ~0UL) {
 			bit = ffz64(*(pool->bitmap + idx));
-			bitmap_set_nolock(bit, pool->bitmap + idx);
+			bitmap_set_non_atomic(bit, pool->bitmap + idx);
 			page = pool->start_page + ((idx << 6U) + bit);
 
 			pool->last_hint_id = idx;
@@ -67,7 +67,7 @@ void free_page(struct page_pool *pool, struct page *page)
 	spinlock_obtain(&pool->lock);
 	idx = (page - pool->start_page) >> 6U;
 	bit = (page - pool->start_page) & 0x3fUL;
-	bitmap_clear_nolock(bit, pool->bitmap + idx);
+	bitmap_clear_non_atomic(bit, pool->bitmap + idx);
 	spinlock_release(&pool->lock);
 }
 

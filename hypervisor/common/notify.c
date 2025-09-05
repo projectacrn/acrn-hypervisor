@@ -6,7 +6,7 @@
 
 #include <asm/cpu.h>
 #include <atomic.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <per_cpu.h>
 #include <asm/notify.h>
 #include <common/notify.h>
@@ -38,7 +38,7 @@ void kick_notification(__unused uint32_t irq, __unused void *data)
 		if (smp_call->func != NULL) {
 			smp_call->func(smp_call->data);
 		}
-		bitmap_clear_lock(pcpu_id, &smp_call_mask);
+		bitmap_clear(pcpu_id, &smp_call_mask);
 	}
 }
 
@@ -63,10 +63,10 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 
 	pcpu_id = ffs64(mask);
 	while (pcpu_id < MAX_PCPU_NUM) {
-		bitmap_clear_nolock(pcpu_id, &mask);
+		bitmap_clear_non_atomic(pcpu_id, &mask);
 		if (pcpu_id == get_pcpu_id()) {
 			func(data);
-			bitmap_clear_nolock(pcpu_id, &smp_call_mask);
+			bitmap_clear_non_atomic(pcpu_id, &smp_call_mask);
 		} else if (is_pcpu_active(pcpu_id)) {
 			smp_call = &per_cpu(smp_call_info, pcpu_id);
 
@@ -81,8 +81,8 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 			arch_smp_call_kick_pcpu(pcpu_id);
 		} else {
 			/* pcpu is not in active, print error */
-			pr_err("pcpu_id %d not in active!", pcpu_id);
-			bitmap_clear_nolock(pcpu_id, &smp_call_mask);
+			//pr_err("pcpu_id %d not in active!", pcpu_id);
+			bitmap_clear_non_atomic(pcpu_id, &smp_call_mask);
 		}
 		pcpu_id = ffs64(mask);
 	}

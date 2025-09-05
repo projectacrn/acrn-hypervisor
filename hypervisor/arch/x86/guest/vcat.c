@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Intel Corporation.
+ * Copyright (C) 2021-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -10,7 +10,7 @@
 #include <asm/cpufeatures.h>
 #include <asm/cpuid.h>
 #include <asm/rdt.h>
-#include <asm/lib/bits.h>
+#include <bits.h>
 #include <asm/board.h>
 #include <asm/vm_config.h>
 #include <asm/msr.h>
