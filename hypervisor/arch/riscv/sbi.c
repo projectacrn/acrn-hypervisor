@@ -102,3 +102,17 @@ void arch_send_dest_ipi_mask(uint64_t dest_mask, __unused uint32_t msg_type)
 {
 	sbi_send_ipi(dest_mask, 0UL);
 }
+
+/**
+ * Implemented Timer functionality using the SBI Timer Extension (EID #0x54494D45).
+ */
+int sbi_set_timer(uint64_t stime_value)
+{
+	sbiret ret = sbi_ecall(stime_value, 0, 0, 0, 0, 0, SBI_TIMER_FID_SET_TIMER, SBI_EID_TIMER);
+
+	if (ret.error != SBI_SUCCESS) {
+		pr_err("%s: Failed to set Timer by SBI, error code: %lx", __func__, ret.error);
+	}
+
+	return ret.error;
+}
