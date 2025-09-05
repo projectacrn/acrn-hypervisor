@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 2011 NetApp, Inc.
- * Copyright (c) 2017-2022 Intel Corporation.
+ * Copyright (c) 2017-2025 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,7 +31,7 @@
 #include <types.h>
 #include <errno.h>
 #include <asm/lib/bits.h>
-#include <asm/lib/atomic.h>
+#include <atomic.h>
 #include <per_cpu.h>
 #include <asm/pgtable.h>
 #include <asm/lapic.h>

@@ -5,7 +5,7 @@
  */
 
 #include <asm/cpu.h>
-#include <asm/lib/atomic.h>
+#include <atomic.h>
 #include <asm/lib/bits.h>
 #include <per_cpu.h>
 #include <asm/notify.h>

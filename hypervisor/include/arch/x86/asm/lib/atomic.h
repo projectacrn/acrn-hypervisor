@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1998 Doug Rabson
- * Copyright (c) 2018-2022 Intel Corporation.
+ * Copyright (c) 2018-2025 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,10 +26,8 @@
  * $FreeBSD$
  */
 
-#ifndef ATOMIC_H
-#define ATOMIC_H
-#include <types.h>
-
+#ifndef X86_LIB_ATOMIC_H
+#define X86_LIB_ATOMIC_H
 #define	BUS_LOCK	"lock ; "
 
 #define build_atomic_inc(name, size, type)		\
@@ -39,9 +37,9 @@ static inline void name(type *ptr)			\
 			: "=m" (*ptr)			\
 			:  "m" (*ptr));			\
 }
-build_atomic_inc(atomic_inc16, "w", uint16_t)
-build_atomic_inc(atomic_inc32, "l", uint32_t)
-build_atomic_inc(atomic_inc64, "q", uint64_t)
+build_atomic_inc(arch_atomic_inc16, "w", uint16_t)
+build_atomic_inc(arch_atomic_inc32, "l", uint32_t)
+build_atomic_inc(arch_atomic_inc64, "q", uint64_t)
 
 #define build_atomic_dec(name, size, type)		\
 static inline void name(type *ptr)			\
@@ -50,9 +48,9 @@ static inline void name(type *ptr)			\
 			: "=m" (*ptr)			\
 			:  "m" (*ptr));			\
 }
-build_atomic_dec(atomic_dec16, "w", uint16_t)
-build_atomic_dec(atomic_dec32, "l", uint32_t)
-build_atomic_dec(atomic_dec64, "q", uint64_t)
+build_atomic_dec(arch_atomic_dec16, "w", uint16_t)
+build_atomic_dec(arch_atomic_dec32, "l", uint32_t)
+build_atomic_dec(arch_atomic_dec64, "q", uint64_t)
 
 #define build_atomic_swap(name, size, type)		\
 static inline type name(type *ptr, type v)		\
@@ -63,26 +61,8 @@ static inline type name(type *ptr, type v)		\
 			:  "cc", "memory");		\
 	return v;					\
 }
-build_atomic_swap(atomic_swap32, "l", uint32_t)
-build_atomic_swap(atomic_swap64, "q", uint64_t)
-
- /*
- * #define atomic_readandclear32(P) \
- * (return (*(uint32_t *)(P)); *(uint32_t *)(P) = 0U;)
-  */
-static inline uint32_t atomic_readandclear32(uint32_t *p)
-{
-	return atomic_swap32(p, 0U);
-}
-
- /*
- * #define atomic_readandclear64(P) \
- * (return (*(uint64_t *)(P)); *(uint64_t *)(P) = 0UL;)
-  */
-static inline uint64_t atomic_readandclear64(uint64_t *p)
-{
-	return atomic_swap64(p, 0UL);
-}
+build_atomic_swap(arch_atomic_swap32, "l", uint32_t)
+build_atomic_swap(arch_atomic_swap64, "q", uint64_t)
 
 #define build_atomic_cmpxchg(name, size, type)			\
 static inline type name(volatile type *ptr, type old, type new)	\
@@ -94,8 +74,8 @@ static inline type name(volatile type *ptr, type old, type new)	\
 			: "memory");				\
 	return ret;						\
 }
-build_atomic_cmpxchg(atomic_cmpxchg32, "l", uint32_t)
-build_atomic_cmpxchg(atomic_cmpxchg64, "q", uint64_t)
+build_atomic_cmpxchg(arch_atomic_cmpxchg32, "l", uint32_t)
+build_atomic_cmpxchg(arch_atomic_cmpxchg64, "q", uint64_t)
 
 #define build_atomic_xadd(name, size, type)			\
 static inline type name(type *ptr, type v)			\
@@ -106,48 +86,48 @@ static inline type name(type *ptr, type v)			\
 			: "cc", "memory");			\
 	return v;						\
  }
-build_atomic_xadd(atomic_xadd16, "w", uint16_t)
-build_atomic_xadd(atomic_xadd32, "l", int32_t)
-build_atomic_xadd(atomic_xadd64, "q", int64_t)
+build_atomic_xadd(arch_atomic_xadd16, "w", uint16_t)
+build_atomic_xadd(arch_atomic_xadd32, "l", int32_t)
+build_atomic_xadd(arch_atomic_xadd64, "q", int64_t)
 
-static inline int32_t atomic_add_return(int32_t *p, int32_t v)
+static inline int32_t arch_atomic_add_return(int32_t *p, int32_t v)
 {
-	return (atomic_xadd32(p, v) + v);
+	return (arch_atomic_xadd32(p, v) + v);
 }
 
-static inline int32_t atomic_sub_return(int32_t *p, int32_t v)
+static inline int32_t arch_atomic_sub_return(int32_t *p, int32_t v)
 {
-	return (atomic_xadd32(p, -v) - v);
+	return (arch_atomic_xadd32(p, -v) - v);
 }
 
-static inline int32_t atomic_inc_return(int32_t *v)
+static inline int32_t arch_atomic_inc_return(int32_t *v)
 {
-	return atomic_add_return(v, 1);
+	return arch_atomic_add_return(v, 1);
 }
 
-static inline int32_t atomic_dec_return(int32_t *v)
+static inline int32_t arch_atomic_dec_return(int32_t *v)
 {
-	return atomic_sub_return(v, 1);
+	return arch_atomic_sub_return(v, 1);
 }
 
-static inline int64_t atomic_add64_return(int64_t *p, int64_t v)
+static inline int64_t arch_atomic_add64_return(int64_t *p, int64_t v)
 {
-	return (atomic_xadd64(p, v) + v);
+	return (arch_atomic_xadd64(p, v) + v);
 }
 
-static inline int64_t atomic_sub64_return(int64_t *p, int64_t v)
+static inline int64_t arch_atomic_sub64_return(int64_t *p, int64_t v)
 {
-	return (atomic_xadd64(p, -v) - v);
+	return (arch_atomic_xadd64(p, -v) - v);
 }
 
-static inline int64_t atomic_inc64_return(int64_t *v)
+static inline int64_t arch_atomic_inc64_return(int64_t *v)
 {
-	return atomic_add64_return(v, 1);
+	return arch_atomic_add64_return(v, 1);
 }
 
-static inline int64_t atomic_dec64_return(int64_t *v)
+static inline int64_t arch_atomic_dec64_return(int64_t *v)
 {
-	return atomic_sub64_return(v, 1);
+	return arch_atomic_sub64_return(v, 1);
 }
 
-#endif /* ATOMIC_H*/
+#endif /* X86_LIB_ATOMIC_H */

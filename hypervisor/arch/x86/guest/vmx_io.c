@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2019-2022 Intel Corporation.
+ * Copyright (C) 2019-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <types.h>
 #include <errno.h>
-#include <asm/lib/atomic.h>
+#include <atomic.h>
 #include <io_req.h>
 #include <asm/guest/vcpu.h>
 #include <asm/guest/vm.h>

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 2011 NetApp, Inc.
- * Copyright (c) 2017-2024 Intel Corporation.
+ * Copyright (c) 2017-2025 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,7 +27,7 @@
  */
 
 #include <types.h>
-#include <asm/lib/atomic.h>
+#include <atomic.h>
 #include <asm/cpufeatures.h>
 #include <asm/pgtable.h>
 #include <asm/cpu_caps.h>

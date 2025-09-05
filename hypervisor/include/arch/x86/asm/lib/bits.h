@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1998 Doug Rabson
- * Copyright (c) 2017-2022 Intel Corporation.
+ * Copyright (c) 2017-2025 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,7 +28,7 @@
 
 #ifndef BITS_H
 #define BITS_H
-#include <asm/lib/atomic.h>
+#include <atomic.h>
 
 /**
  *

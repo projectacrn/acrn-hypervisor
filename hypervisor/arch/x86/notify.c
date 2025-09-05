@@ -7,7 +7,7 @@
 #include <types.h>
 #include <errno.h>
 #include <asm/lib/bits.h>
-#include <asm/lib/atomic.h>
+#include <atomic.h>
 #include <asm/irq.h>
 #include <asm/cpu.h>
 #include <asm/per_cpu.h>

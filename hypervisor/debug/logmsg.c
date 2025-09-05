@@ -5,9 +5,8 @@
  */
 
 #include <types.h>
-
 #include <per_cpu.h>
-#include <asm/lib/atomic.h>
+#include <atomic.h>
 #include <sprintf.h>
 #include <spinlock.h>
 #include <npk_log.h>
