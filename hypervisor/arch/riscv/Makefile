@@ -8,7 +8,7 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 
 ARCH_LDSCRIPT_IN = arch/riscv/link_ram.ld.in
 
-CFLAGS +=
+CFLAGS += -std=gnu99
 
 ASFLAGS +=
 
