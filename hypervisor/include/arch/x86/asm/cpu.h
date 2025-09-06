@@ -41,6 +41,7 @@
 #include <acrn_common.h>
 #include <asm/msr.h>
 #include <errno.h>
+#include <barrier.h>
 
 /* Define CPU stack alignment */
 #define CPU_STACK_ALIGN         16UL
@@ -563,24 +564,6 @@ static inline void cpu_sp_write(uint64_t *stack_ptr)
 	uint64_t rsp = (uint64_t)stack_ptr & ~(CPU_STACK_ALIGN - 1UL);
 
 	asm volatile ("movq %0, %%rsp" : : "r"(rsp));
-}
-
-/* Synchronizes all write accesses to memory */
-static inline void cpu_write_memory_barrier(void)
-{
-	asm volatile ("sfence\n" : : : "memory");
-}
-
-/* Synchronizes all read and write accesses to/from memory */
-static inline void cpu_memory_barrier(void)
-{
-	asm volatile ("mfence\n" : : : "memory");
-}
-
-/* Prevents compilers from reordering read/write access across this barrier */
-static inline void cpu_compiler_barrier(void)
-{
-	asm volatile ("" : : : "memory");
 }
 
 static inline void invlpg(unsigned long addr)
