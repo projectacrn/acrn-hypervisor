@@ -12,9 +12,9 @@
 #include <lib/util.h>
 #include <debug/logmsg.h>
 #include <board_info.h>
+#include <barrier.h>
 
-#define barrier()	__asm__ __volatile__("fence": : :"memory")
-#define cpu_relax()	barrier() /* TODO: replace with yield instruction */
+#define cpu_relax()	cpu_memory_barrier() /* TODO: replace with yield instruction */
 #define NR_CPUS		MAX_PCPU_NUM
 
 #define LONG_BYTEORDER 3
