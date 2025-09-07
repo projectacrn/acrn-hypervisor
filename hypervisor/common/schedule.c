@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -184,8 +184,8 @@ void schedule(void)
 	/* If we picked different sched object, switch context */
 	if (prev != next) {
 		if (prev != NULL) {
-			memcpy_erms(name, prev->name, 4);
-			memcpy_erms(name + 4, next->name, 4);
+			memcpy(name, prev->name, 4);
+			memcpy(name + 4, next->name, 4);
 			memset(name + 8, 0, sizeof(name) - 8);
 			TRACE_16STR(TRACE_SCHED_NEXT, name);
 			if (prev->switch_out != NULL) {

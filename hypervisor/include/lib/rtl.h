@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -8,7 +8,7 @@
 #define RTL_H
 
 #include <types.h>
-
+#include <memory.h>
 union u_qword {
 	struct {
 		uint32_t low;
@@ -40,10 +40,6 @@ int32_t strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg);
 int32_t strncpy_s(char *d, size_t dmax, const char *s, size_t slen);
 char *strchr(char *s_arg, char ch);
 size_t strnlen_s(const char *str_arg, size_t maxlen_arg);
-void *memset(void *base, uint8_t v, size_t n);
-int32_t memcpy_s(void *d, size_t dmax, const void *s, size_t slen);
-void memcpy_erms(void *d, const void *s, size_t slen);
-void memcpy_erms_backwards(void *d, const void *s, size_t slen);
 int64_t strtol_deci(const char *nptr);
 uint64_t strtoul_hex(const char *nptr);
 char *strstr_s(const char *str1, size_t maxlen1, const char *str2, size_t maxlen2);

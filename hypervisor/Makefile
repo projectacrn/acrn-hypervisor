@@ -149,6 +149,7 @@ endif
 # all the work.
 #
 COMMON_C_SRCS += common/notify.c
+COMMON_C_SRCS += lib/memory.c
 
 ifeq ($(ARCH),x86)
 COMMON_C_SRCS += common/ticks.c

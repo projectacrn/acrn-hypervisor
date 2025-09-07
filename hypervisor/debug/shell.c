@@ -315,7 +315,7 @@ static void handle_delete_key(void)
 
 		set_cursor_pos(delta);
 
-		memcpy_erms(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset,
+		memcpy(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset,
 			p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset + 1, delta);
 
 		/* Null terminate the last character to erase it */
@@ -450,7 +450,7 @@ static void handle_backspace_key(void)
 			shell_puts(" \b");
 
 			set_cursor_pos(delta);
-			memcpy_erms(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset - 1,
+			memcpy(p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset - 1,
 				p_shell->buffered_line[p_shell->input_line_active] + p_shell->cursor_offset, delta);
 		}
 
@@ -469,7 +469,7 @@ static void handle_input_char(char ch)
 
 	/* move the input from cursor offset back first */
 	if (delta > 0) {
-		memcpy_erms_backwards(p_shell->buffered_line[p_shell->input_line_active] + p_shell->input_line_len,
+		memcpy_backwards(p_shell->buffered_line[p_shell->input_line_active] + p_shell->input_line_len,
 			p_shell->buffered_line[p_shell->input_line_active] + p_shell->input_line_len - 1, delta);
 	}
 
