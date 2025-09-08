@@ -158,6 +158,10 @@ COMMON_C_SRCS += common/delay.c
 COMMON_C_SRCS += common/timer.c
 COMMON_C_SRCS += common/softirq.c
 COMMON_C_SRCS += common/trace.c
+COMMON_C_SRCS += common/schedule.c
+ifeq ($(CONFIG_SCHED_NOOP),y)
+COMMON_C_SRCS += common/sched_noop.c
+endif
 
 # library componment
 COMMON_C_SRCS += lib/string.c
@@ -173,7 +177,6 @@ endif
 
 ifeq ($(ARCH),x86)
 COMMON_C_SRCS += common/irq.c
-COMMON_C_SRCS += common/schedule.c
 COMMON_C_SRCS += common/event.c
 COMMON_C_SRCS += common/efi_mmap.c
 COMMON_C_SRCS += common/sbuf.c
@@ -200,9 +203,6 @@ COMMON_C_SRCS += dm/vpci/vsriov.c
 COMMON_C_SRCS += dm/vpci/vmcs9900.c
 COMMON_C_SRCS += dm/mmio_dev.c
 COMMON_C_SRCS += dm/vgpio.c
-ifeq ($(CONFIG_SCHED_NOOP),y)
-COMMON_C_SRCS += common/sched_noop.c
-endif
 ifeq ($(CONFIG_SCHED_IORR),y)
 COMMON_C_SRCS += common/sched_iorr.c
 endif
