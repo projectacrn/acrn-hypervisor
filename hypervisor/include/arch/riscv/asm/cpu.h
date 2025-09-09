@@ -10,14 +10,12 @@
 
 #include <types.h>
 #include <lib/util.h>
+#include <debug/logmsg.h>
+#include <board_info.h>
 
-static inline void wait_sync_change(__unused volatile const uint64_t *sync, __unused uint64_t wake_sync)
-{
-	/**
-	 * Dummy implementation.
-	 * Official implementations are to be provided in the platform initialization patchset (by Hang).
-	 */
-}
+#define barrier()	__asm__ __volatile__("fence": : :"memory")
+#define cpu_relax()	barrier() /* TODO: replace with yield instruction */
+#define NR_CPUS		MAX_PCPU_NUM
 
 static inline uint16_t get_pcpu_id(void)
 {
@@ -35,5 +33,7 @@ static inline uint16_t get_pcpu_id(void)
 	asm volatile (" csrw " STRINGIFY(reg) ", %0 \n\t"		\
 			:: "r"(val): "memory");	 			\
 })
+
+void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);
 
 #endif /* RISCV_CPU_H */
