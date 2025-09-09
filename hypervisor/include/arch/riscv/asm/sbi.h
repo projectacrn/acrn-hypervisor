@@ -97,6 +97,7 @@ typedef struct {
 	};
 } sbiret;
 
+int64_t sbi_hsm_start_hart(uint64_t hartid, uint64_t addr, uint64_t arg);
 void send_single_ipi(uint16_t pcpu_id, __unused uint32_t msg_type);
 void send_dest_ipi_mask(uint64_t dest_mask, __unused uint32_t msg_type);
 

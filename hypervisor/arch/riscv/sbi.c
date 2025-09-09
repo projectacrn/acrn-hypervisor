@@ -75,6 +75,31 @@ static int64_t sbi_send_ipi(uint64_t mask, uint64_t mask_base)
 }
 
 /**
+ * sbi_hsm_start_hart - Start a RISC-V hart using SBI HSM extension
+ * @hartid: The hardware thread (hart) ID to start
+ * @addr: The start address for the hart
+ * @arg: Argument to pass to the hart at startup
+ *
+ * This function invokes the SBI HSM extension to start a specified hart
+ * at the given address with the provided argument.
+ *
+ * Returns the SBI error code from the operation.
+ */
+int64_t sbi_hsm_start_hart(uint64_t hartid, uint64_t addr, uint64_t arg)
+{
+	sbiret ret;
+
+	ret = sbi_ecall(hartid, addr, arg, 0, 0, 0, SBI_HSM_FID_HART_START,
+		SBI_EID_HSM);
+	if (ret.error != SBI_SUCCESS) {
+		pr_err("%s: Failed to start hart (%x) by SBI, error code: %lx",
+			__func__, hartid, ret.error);
+	}
+
+	return ret.error;
+}
+
+/**
  * msg_type is currently unused.
  *
  * At present, only IPI_NOTIFY_CPU is supported, covering two use cases:
