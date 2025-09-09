@@ -30,7 +30,7 @@
 #include <ptdev.h>
 #include <asm/guest/vm.h>
 #include <asm/vtd.h>
-#include <asm/io.h>
+#include <io.h>
 #include <asm/mmu.h>
 #include <vacpi.h>
 #include <logmsg.h>

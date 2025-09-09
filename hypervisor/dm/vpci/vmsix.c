@@ -27,7 +27,7 @@
  */
 
 #include <asm/guest/vm.h>
-#include <asm/io.h>
+#include <io.h>
 #include <errno.h>
 #include <vpci.h>
 #include <asm/guest/ept.h>

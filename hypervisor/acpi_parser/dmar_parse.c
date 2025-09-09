@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <logmsg.h>
-#include <asm/io.h>
+#include <io.h>
 #include <spinlock.h>
 #include <asm/cpu_caps.h>
 #include <pci.h>

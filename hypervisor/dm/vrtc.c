@@ -26,7 +26,7 @@
  */
 
 #include <asm/guest/vm.h>
-#include <asm/io.h>
+#include <io.h>
 #include <asm/tsc.h>
 #include <vrtc.h>
 #include <logmsg.h>

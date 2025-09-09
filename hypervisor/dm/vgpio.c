@@ -41,7 +41,7 @@
 #include <asm/guest/vm.h>
 #include <asm/guest/ept.h>
 #include <asm/guest/assign.h>
-#include <asm/io.h>
+#include <io.h>
 #include <asm/mmu.h>
 
 #ifdef P2SB_VGPIO_DM_ENABLED

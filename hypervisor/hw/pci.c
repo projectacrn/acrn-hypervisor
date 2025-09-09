@@ -32,7 +32,7 @@
  */
 #include <types.h>
 #include <spinlock.h>
-#include <asm/io.h>
+#include <io.h>
 #include <asm/pgtable.h>
 #include <asm/mmu.h>
 #include <pci.h>

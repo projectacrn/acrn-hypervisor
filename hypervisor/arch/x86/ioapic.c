@@ -12,7 +12,7 @@
 #include <asm/ioapic.h>
 #include <asm/irq.h>
 #include <asm/pgtable.h>
-#include <asm/io.h>
+#include <io.h>
 #include <asm/mmu.h>
 #include <acpi.h>
 #include <logmsg.h>

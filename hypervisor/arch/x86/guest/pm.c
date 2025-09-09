@@ -7,7 +7,7 @@
 #include <types.h>
 #include <asm/host_pm.h>
 #include <asm/guest/vm.h>
-#include <asm/io.h>
+#include <io.h>
 #include <logmsg.h>
 #include <platform_acpi_info.h>
 #include <asm/guest/guest_pm.h>

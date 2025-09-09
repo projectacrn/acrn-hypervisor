@@ -7,7 +7,7 @@
 #include <asm/default_acpi_info.h>
 #include <platform_acpi_info.h>
 #include <per_cpu.h>
-#include <asm/io.h>
+#include <io.h>
 #include <asm/msr.h>
 #include <asm/pgtable.h>
 #include <asm/host_pm.h>

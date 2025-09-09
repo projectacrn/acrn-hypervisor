@@ -8,7 +8,7 @@
 #include <bits.h>
 #include <spinlock.h>
 #include <per_cpu.h>
-#include <asm/io.h>
+#include <io.h>
 #include <asm/irq.h>
 #include <asm/idt.h>
 #include <asm/ioapic.h>

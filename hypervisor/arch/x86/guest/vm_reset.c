@@ -5,7 +5,7 @@
  */
 
 #include <asm/guest/vm.h>
-#include <asm/io.h>
+#include <io.h>
 #include <asm/host_pm.h>
 #include <logmsg.h>
 #include <per_cpu.h>
