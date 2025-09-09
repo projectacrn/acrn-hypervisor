@@ -9,7 +9,7 @@
 #include <irq.h>
 #include <logmsg.h>
 #include <timer.h>
-#include <asm/cpu.h>
+#include <cpu.h>
 #include <asm/msr.h>
 #include <asm/irq.h>
 #include <asm/apicreg.h>

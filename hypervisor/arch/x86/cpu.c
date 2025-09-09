@@ -41,16 +41,12 @@
 #include <common/notify.h>
 #include <cpu.h>
 
-#define CPU_UP_TIMEOUT		100U /* millisecond */
-#define CPU_DOWN_TIMEOUT	100U /* millisecond */
-
 static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
 static uint64_t startup_paddr = 0UL;
 
 static void init_pcpu_xsave(void);
 static void init_keylocker(void);
-static void set_current_pcpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
 static uint64_t start_tick __attribute__((__section__(".bss_noinit")));
@@ -84,19 +80,6 @@ static bool init_percpu_lapic_id(void)
 	}
 
 	return success;
-}
-
-static void pcpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
-{
-	/* Check if state is initializing */
-	if (state == PCPU_STATE_INITIALIZING) {
-
-		/* Save this CPU's logical ID to the TSC AUX MSR */
-		set_current_pcpu_id(pcpu_id);
-	}
-
-	/* Set state for the specified CPU */
-	per_cpu(boot_state, pcpu_id) = state;
 }
 
 static void enable_ac_for_splitlock(void)
@@ -341,10 +324,8 @@ static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id)
 	return pcpu_id;
 }
 
-static void start_pcpu(uint16_t pcpu_id)
+void arch_start_pcpu(uint16_t pcpu_id)
 {
-	uint32_t timeout;
-
 	/* Update the stack for pcpu */
 	stac();
 	write_trampoline_stack_sym(pcpu_id);
@@ -355,54 +336,6 @@ static void start_pcpu(uint16_t pcpu_id)
 	 */
 	cpu_memory_barrier();
 	send_startup_ipi(pcpu_id, startup_paddr);
-
-	/* Wait until the pcpu with pcpu_id is running and set the active bitmap or
-	 * configured time-out has expired
-	 */
-	timeout = CPU_UP_TIMEOUT * 1000U;
-	while (!is_pcpu_active(pcpu_id) && (timeout != 0U)) {
-		/* Delay 10us */
-		udelay(10U);
-
-		/* Decrement timeout value */
-		timeout -= 10U;
-	}
-
-	/* Check to see if expected CPU is actually up */
-	if (!is_pcpu_active(pcpu_id)) {
-		pr_fatal("Secondary CPU%hu failed to come up", pcpu_id);
-		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
-	}
-}
-
-
-/**
- * @brief Start all cpus if the bit is set in mask except itself
- *
- * @param[in] mask bits mask of cpus which should be started
- *
- * @return true if all cpus set in mask are started
- * @return false if there are any cpus set in mask aren't started
- */
-bool start_pcpus(uint64_t mask)
-{
-	uint16_t i;
-	uint16_t pcpu_id = get_pcpu_id();
-	uint64_t expected_start_mask = mask;
-
-	i = ffs64(expected_start_mask);
-	while (i != INVALID_BIT_INDEX) {
-		bitmap_clear_non_atomic(i, &expected_start_mask);
-
-		if (pcpu_id == i) {
-			continue; /* Avoid start itself */
-		}
-
-		start_pcpu(i);
-		i = ffs64(expected_start_mask);
-	}
-
-	return check_pcpus_active(mask);
 }
 
 void make_pcpu_offline(uint16_t pcpu_id)
@@ -506,12 +439,6 @@ void cpu_dead(void)
 	} else {
 		pr_err("pcpu%hu already dead", pcpu_id);
 	}
-}
-
-static void set_current_pcpu_id(uint16_t pcpu_id)
-{
-	/* Write TSC AUX register */
-	msr_write(ACRN_PSEUDO_PCPUID_MSR, (uint32_t) pcpu_id);
 }
 
 static void print_hv_banner(void)

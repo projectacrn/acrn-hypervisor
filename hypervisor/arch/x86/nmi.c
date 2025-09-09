@@ -9,6 +9,7 @@
 
 #include <asm/guest/vcpu.h>
 #include <asm/guest/virq.h>
+#include <cpu.h>
 
 void handle_nmi(__unused struct intr_excp_ctx *ctx)
 {

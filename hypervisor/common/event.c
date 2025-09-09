@@ -3,10 +3,10 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include <asm/cpu.h>
 #include <schedule.h>
 #include <event.h>
 #include <logmsg.h>
+#include <cpu.h>
 
 void init_event(struct sched_event *event)
 {

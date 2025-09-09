@@ -287,16 +287,6 @@ extern uint64_t               secondary_cpu_stack[1];
  * to locate the per cpu data.
  */
 
-/* Boot CPU ID */
-#define BSP_CPU_ID             0U
-
-/**
- *The invalid cpu_id (INVALID_CPU_ID) is error
- *code for error handling, this means that
- *caller can't find a valid physical cpu
- *or virtual cpu.
- */
-#define INVALID_CPU_ID 0xffffU
 /**
  *The broadcast id (BROADCAST_CPU_ID)
  *used to notify all valid phyiscal cpu
@@ -447,7 +437,6 @@ void init_pcpu_pre(bool is_bsp);
  * hereby, pcpu_id is actually the current physcial cpu id.
  */
 void init_pcpu_post(uint16_t pcpu_id);
-bool start_pcpus(uint64_t mask);
 void wait_pcpus_offline(uint64_t mask);
 void stop_pcpus(void);
 void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);
@@ -651,9 +640,14 @@ cpu_rdtscp_execute(uint64_t *timestamp_ptr, uint32_t *cpu_id_ptr)
  * Macro to get CPU ID
  * @pre: the return CPU ID would never equal or large than phys_cpu_num.
  */
-static inline uint16_t get_pcpu_id(void)
+static inline uint16_t arch_get_pcpu_id(void)
 {
 	return (uint16_t)cpu_msr_read(ACRN_PSEUDO_PCPUID_MSR);
+}
+
+static inline void arch_set_current_pcpu_id(uint16_t pcpu_id)
+{
+	cpu_msr_write(ACRN_PSEUDO_PCPUID_MSR, (uint32_t)pcpu_id);
 }
 
 static inline uint64_t cpu_rsp_get(void)

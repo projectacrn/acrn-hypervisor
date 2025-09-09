@@ -24,8 +24,8 @@
 #include <schedule.h>
 #include <event.h>
 #include <io_req.h>
+#include <cpu.h>
 #include <asm/msr.h>
-#include <asm/cpu.h>
 #include <asm/guest/instr_emul.h>
 #include <asm/guest/nested.h>
 #include <asm/vmx.h>
