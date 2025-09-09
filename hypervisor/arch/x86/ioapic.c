@@ -6,6 +6,7 @@
 
 #include <types.h>
 #include <errno.h>
+#include <cpu.h>
 #include <irq.h>
 #include <asm/lib/spinlock.h>
 #include <asm/ioapic.h>

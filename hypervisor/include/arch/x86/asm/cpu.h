@@ -201,9 +201,6 @@
 
 #ifndef ASSEMBLER
 
-#define ALL_CPUS_MASK		((1UL << get_pcpu_nums()) - 1UL)
-#define AP_MASK			(ALL_CPUS_MASK & ~(1UL << BSP_CPU_ID))
-
 /**
  *
  * Identifiers for architecturally defined registers.
@@ -310,15 +307,6 @@ struct descriptor_table {
 	uint16_t limit;
 	uint64_t base;
 } __packed;
-
-/* CPU states defined */
-enum pcpu_boot_state {
-	PCPU_STATE_RESET = 0U,
-	PCPU_STATE_INITIALIZING,
-	PCPU_STATE_RUNNING,
-	PCPU_STATE_HALTED,
-	PCPU_STATE_DEAD,
-};
 
 #define	NEED_OFFLINE		(1U)
 #define	NEED_SHUTDOWN_VM	(2U)
@@ -808,12 +796,6 @@ static inline void clac(void)
 	asm volatile ("clac" : : : "memory");
 }
 
-/*
- * @post return <= MAX_PCPU_NUM
- */
-uint16_t get_pcpu_nums(void);
-bool is_pcpu_active(uint16_t pcpu_id);
-uint64_t get_active_pcpu_bitmap(void);
 #else /* ASSEMBLER defined */
 
 #endif /* ASSEMBLER defined */

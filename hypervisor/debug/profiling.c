@@ -16,6 +16,7 @@
 #include <sprintf.h>
 #include <logmsg.h>
 #include <ticks.h>
+#include <cpu.h>
 
 #define DBG_LEVEL_PROFILING		5U
 #define DBG_LEVEL_ERR_PROFILING		3U

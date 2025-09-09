@@ -12,6 +12,7 @@
 #include <common/notify.h>
 #include <debug/logmsg.h>
 #include <asm/cpu.h>
+#include <cpu.h>
 
 static volatile uint64_t smp_call_mask = 0UL;
 

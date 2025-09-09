@@ -39,6 +39,7 @@
 #include <delay.h>
 #include <thermal.h>
 #include <common/notify.h>
+#include <cpu.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
@@ -47,15 +48,21 @@ static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
 static uint64_t startup_paddr = 0UL;
 
-/* physical cpu active bitmap, support up to 64 cpus */
-static volatile uint64_t pcpu_active_bitmap = 0UL;
-
 static void init_pcpu_xsave(void);
 static void init_keylocker(void);
 static void set_current_pcpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
 static uint64_t start_tick __attribute__((__section__(".bss_noinit")));
+
+/**
+ * This function will be called by function get_pcpu_nums()
+ * in common/cpu.c
+ */
+uint16_t arch_get_pcpu_num(void)
+{
+	return phys_cpu_num;
+}
 
 /**
  * @pre phys_cpu_num <= MAX_PCPU_NUM
@@ -90,24 +97,6 @@ static void pcpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 
 	/* Set state for the specified CPU */
 	per_cpu(boot_state, pcpu_id) = state;
-}
-
-/*
- * @post return <= MAX_PCPU_NUM
- */
-uint16_t get_pcpu_nums(void)
-{
-	return phys_cpu_num;
-}
-
-bool is_pcpu_active(uint16_t pcpu_id)
-{
-	return bitmap_test(pcpu_id, &pcpu_active_bitmap);
-}
-
-uint64_t get_active_pcpu_bitmap(void)
-{
-	return pcpu_active_bitmap;
 }
 
 static void enable_ac_for_splitlock(void)
@@ -217,7 +206,7 @@ void init_pcpu_pre(bool is_bsp)
 		}
 	}
 
-	bitmap_set_lock(pcpu_id, &pcpu_active_bitmap);
+	set_pcpu_active(pcpu_id);
 
 	/* Set state for this CPU to initializing */
 	pcpu_set_current_state(pcpu_id, PCPU_STATE_INITIALIZING);
@@ -342,7 +331,7 @@ static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id)
 	uint16_t i;
 	uint16_t pcpu_id = INVALID_CPU_ID;
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < get_pcpu_nums(); i++) {
 		if (per_cpu(arch.lapic_id, i) == lapic_id) {
 			pcpu_id = i;
 			break;
@@ -413,7 +402,7 @@ bool start_pcpus(uint64_t mask)
 		i = ffs64(expected_start_mask);
 	}
 
-	return ((pcpu_active_bitmap & mask) == mask);
+	return check_pcpus_active(mask);
 }
 
 void make_pcpu_offline(uint16_t pcpu_id)
@@ -434,7 +423,7 @@ void wait_pcpus_offline(uint64_t mask)
 	uint32_t timeout;
 
 	timeout = CPU_DOWN_TIMEOUT * 1000U;
-	while (((pcpu_active_bitmap & mask) != 0UL) && (timeout != 0U)) {
+	while (check_pcpus_inactive(mask) && (timeout != 0U)) {
 		udelay(10U);
 		timeout -= 10U;
 	}
@@ -445,7 +434,7 @@ void stop_pcpus(void)
 	uint16_t pcpu_id;
 	uint64_t mask = 0UL;
 
-	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
+	for (pcpu_id = 0U; pcpu_id < get_pcpu_nums(); pcpu_id++) {
 		if (get_pcpu_id() == pcpu_id) {	/* avoid offline itself */
 			continue;
 		}
@@ -497,7 +486,7 @@ void cpu_dead(void)
 	uint16_t pcpu_id = get_pcpu_id();
 
 	deinit_sched(pcpu_id);
-	if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
+	if (is_pcpu_active(pcpu_id)) {
 		/* clean up native stuff */
 		vmx_off();
 
@@ -507,7 +496,7 @@ void cpu_dead(void)
 
 		/* Set state to show CPU is dead */
 		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
-		bitmap_clear_lock(pcpu_id, &pcpu_active_bitmap);
+		clear_pcpu_active(pcpu_id);
 
 		/* Halt the CPU */
 		do {

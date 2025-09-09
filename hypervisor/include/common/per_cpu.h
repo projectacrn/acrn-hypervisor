@@ -18,7 +18,7 @@
 #include <asm/per_cpu.h>
 #include <asm/security.h>
 #include <notify.h>
-#include <asm/cpu.h>
+#include <cpu.h>
 #include <board_info.h>
 
 

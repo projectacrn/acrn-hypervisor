@@ -22,6 +22,7 @@
 #include <shell.h>
 #include <asm/guest/vmcs.h>
 #include <asm/host_pm.h>
+#include <cpu.h>
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U

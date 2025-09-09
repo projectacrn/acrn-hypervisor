@@ -11,6 +11,7 @@
 #include <asm/mmu.h>
 #include <logmsg.h>
 #include <npk_log.h>
+#include <cpu.h>
 
 static int32_t npk_log_setup_ref;
 static bool npk_log_enabled;

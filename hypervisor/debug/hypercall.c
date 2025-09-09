@@ -12,6 +12,7 @@
 #include <npk_log.h>
 #include <asm/guest/vm.h>
 #include <logmsg.h>
+#include <cpu.h>
 
 #ifdef PROFILING_ON
 /**

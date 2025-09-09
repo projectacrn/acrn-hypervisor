@@ -12,6 +12,7 @@
 #include <asm/mmu.h>
 #include <asm/cpu_caps.h>
 #include <asm/rtcm.h>
+#include <cpu.h>
 
 
 static uint64_t ssram_bottom_hpa;
