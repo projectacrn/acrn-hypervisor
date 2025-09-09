@@ -1,33 +1,20 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef SPINLOCK_H
-#define SPINLOCK_H
-
+#ifndef X86_LIB_SPINLOCK_H
+#define X86_LIB_SPINLOCK_H
 #ifndef ASSEMBLER
-
-#include <types.h>
-#include <rtl.h>
-
 /** The architecture dependent spinlock type. */
-typedef struct _spinlock {
+typedef struct _arch_spinlock {
 	uint32_t head;
 	uint32_t tail;
+} arch_spinlock_t;
 
-} spinlock_t;
-
-/* Function prototypes */
-static inline void spinlock_init(spinlock_t *lock)
+static inline void arch_spinlock_obtain(arch_spinlock_t *lock)
 {
-	(void)memset(lock, 0U, sizeof(spinlock_t));
-}
-
-static inline void spinlock_obtain(spinlock_t *lock)
-{
-
 	/* The lock function atomically increments and exchanges the head
 	 * counter of the queue. If the old head of the queue is equal to the
 	 * tail, we have locked the spinlock. Otherwise we have to wait.
@@ -48,7 +35,7 @@ static inline void spinlock_obtain(spinlock_t *lock)
 		      : "cc", "memory", "eax");
 }
 
-static inline void spinlock_release(spinlock_t *lock)
+static inline void arch_spinlock_release(arch_spinlock_t *lock)
 {
 	/* Increment tail of queue */
 	asm volatile ("   lock incl %[tail]\n"
@@ -58,16 +45,14 @@ static inline void spinlock_release(spinlock_t *lock)
 }
 
 #else /* ASSEMBLER */
-
 /** The offset of the head element. */
 #define SYNC_SPINLOCK_HEAD_OFFSET       0
-
 /** The offset of the tail element. */
 #define SYNC_SPINLOCK_TAIL_OFFSET       4
 
-.macro spinlock_obtain lock
+.macro arch_spinlock_obtain lock_arg
 	movl $1, % eax
-	lea \lock, % rbx
+	lea \lock_arg, % rbx
 	lock xaddl % eax, SYNC_SPINLOCK_HEAD_OFFSET(%rbx)
 	cmpl % eax, SYNC_SPINLOCK_TAIL_OFFSET(%rbx)
 	jz 1f
@@ -77,27 +62,13 @@ static inline void spinlock_release(spinlock_t *lock)
 	jnz 2b
 1 :
 .endm
+#define arch_spinlock_obtain(x) arch_spinlock_obtain lock_arg = (x)
 
-#define spinlock_obtain(x) spinlock_obtain lock = (x)
-
-.macro spinlock_release lock
-	lea \lock, % rbx
+.macro arch_spinlock_release lock_arg
+	lea \lock_arg, % rbx
 	lock incl SYNC_SPINLOCK_TAIL_OFFSET(%rbx)
 .endm
-
-#define spinlock_release(x) spinlock_release lock = (x)
+#define arch_spinlock_release(x) arch_spinlock_release lock_arg = (x)
 
 #endif	/* ASSEMBLER */
-
-#define spinlock_irqsave_obtain(lock, p_rflags)		\
-	do {						\
-		CPU_INT_ALL_DISABLE(p_rflags);		\
-		spinlock_obtain(lock);			\
-	} while (0)
-
-#define spinlock_irqrestore_release(lock, rflags)	\
-	do {						\
-		spinlock_release(lock);			\
-		CPU_INT_ALL_RESTORE(rflags);		\
-	} while (0)
-#endif /* SPINLOCK_H */
+#endif /* X86_LIB_SPINLOCK_H */

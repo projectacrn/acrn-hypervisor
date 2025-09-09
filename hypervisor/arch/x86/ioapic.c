@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <cpu.h>
 #include <irq.h>
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 #include <asm/ioapic.h>
 #include <asm/irq.h>
 #include <asm/pgtable.h>

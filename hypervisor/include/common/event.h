@@ -1,6 +1,11 @@
+/*
+ * Copyright (C) 2025 Intel Corporation.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 #ifndef EVENT_H
 #define EVENT_H
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 
 struct sched_event {
 	spinlock_t lock;

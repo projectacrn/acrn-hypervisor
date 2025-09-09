@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Intel Corporation.
+ * Copyright (C) 2021-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -8,7 +8,7 @@
 #define COMMON_IRQ_H
 
 #include <lib/util.h>
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 
 /**
  * @file common/irq.h

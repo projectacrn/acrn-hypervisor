@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -7,7 +7,7 @@
 #ifndef PTDEV_H
 #define PTDEV_H
 #include <list.h>
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 #include <timer.h>
 #include <vacpi.h>
 

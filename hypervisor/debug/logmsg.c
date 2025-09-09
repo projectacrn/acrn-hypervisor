@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -9,7 +9,7 @@
 #include <per_cpu.h>
 #include <asm/lib/atomic.h>
 #include <sprintf.h>
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 #include <npk_log.h>
 #include <logmsg.h>
 #include <ticks.h>

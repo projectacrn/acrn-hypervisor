@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <types.h>
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 #include <pci.h>
 #include <uart16550.h>
 #include <asm/io.h>

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 2013 Neel Natu <neel@freebsd.org>
- * Copyright (c) 2018-2024 Intel Corporation.
+ * Copyright (c) 2018-2025 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,7 +29,7 @@
 #ifndef VUART_H
 #define VUART_H
 #include <types.h>
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 #include <asm/vm_config.h>
 
 /**

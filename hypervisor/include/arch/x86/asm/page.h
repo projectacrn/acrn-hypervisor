@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2024 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -7,7 +7,7 @@
 #ifndef PAGE_H
 #define PAGE_H
 
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 #include <board_info.h>
 
 /**

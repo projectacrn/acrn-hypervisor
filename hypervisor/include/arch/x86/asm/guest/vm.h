@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -14,7 +14,7 @@
 #ifndef ASSEMBLER
 
 #include <asm/lib/bits.h>
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 #include <asm/pgtable.h>
 #include <asm/guest/vcpu.h>
 #include <vioapic.h>

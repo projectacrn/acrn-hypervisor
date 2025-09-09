@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 2014 Tycho Nightingale <tycho.nightingale@pluribusnetworks.com>
- * Copyright (c) 2017-2022 Intel Corporation.
+ * Copyright (c) 2017-2025 Intel Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 #include <asm/guest/virq.h>
 #include <irq.h>
 #include <asm/guest/assign.h>
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 #include <logmsg.h>
 #include <asm/ioapic.h>
 #include <asm/irq.h>

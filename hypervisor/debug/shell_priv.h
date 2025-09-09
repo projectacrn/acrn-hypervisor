@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -7,7 +7,7 @@
 #ifndef SHELL_PRIV_H
 #define SHELL_PRIV_H
 
-#include <asm/lib/spinlock.h>
+#include <spinlock.h>
 
 #define SHELL_CMD_MAX_LEN		100U
 #define SHELL_STRING_MAX_LEN		(PAGE_SIZE << 2U)
