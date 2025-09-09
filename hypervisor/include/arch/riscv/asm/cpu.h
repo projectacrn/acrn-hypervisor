@@ -23,13 +23,27 @@
 /* Define the interrupt enable bit mask */
 #define SSTATUS_SIE 0x2
 
-static inline uint16_t get_pcpu_id(void)
+/* Define CPU stack alignment */
+#define CPU_STACK_ALIGN	16UL
+
+/* In ACRN, struct per_cpu_region is a critical data structure
+ * containing key per-CPU data frequently accessed via get_cpu_var().
+ * We use the tp register to store the current logical pCPU ID to
+ * facilitate efficient per-CPU data access. This design mirrors
+ * the x86 implementation, which uses the dedicated MSR_IA32_SYSENTER_CS
+ * MSR (unused by the hypervisor) for the same purpose.
+ */
+static inline uint16_t arch_get_pcpu_id(void)
 {
-	/**
-	 * Dummy implementation.
-	 * Official implementations are to be provided in the platform initialization patchset (by Hang).
-	 */
-	return 0U;
+	uint16_t pcpu_id;
+
+	asm volatile ("mv %0, tp" : "=r" (pcpu_id) : : );
+	return pcpu_id;
+}
+
+static inline void arch_set_current_pcpu_id(uint16_t pcpu_id)
+{
+	asm volatile ("mv tp, %0" : : "r" (pcpu_id) : "tp");
 }
 
 /* Write CSR */

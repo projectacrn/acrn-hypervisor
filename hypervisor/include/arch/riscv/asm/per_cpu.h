@@ -14,7 +14,7 @@
 #include <asm/page.h>
 
 struct per_cpu_arch {
-
+	uint32_t hart_id;
 } __aligned(PAGE_SIZE); /* per_cpu_region size aligned with PAGE_SIZE */
 
 
