@@ -23,6 +23,7 @@
 #include <trace.h>
 #include <logmsg.h>
 #include <asm/guest/vcat.h>
+#include <per_cpu.h>
 
 #define INTERCEPT_DISABLE		(0U)
 #define INTERCEPT_READ			(1U << 0U)
@@ -1295,7 +1296,7 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 				vcpu->arch.IWKey = vcpu->vm->arch_vm.iwkey_backup;
 				spinlock_release(&vcpu->vm->arch_vm.iwkey_backup_lock);
 				/* Load the new iwkey for this vcpu */
-				get_cpu_var(whose_iwkey) = NULL;
+				get_cpu_var(arch.whose_iwkey) = NULL;
 				load_iwkey(vcpu);
 				vcpu->arch.iwkey_copy_status = 1UL;
 			}

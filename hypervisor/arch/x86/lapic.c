@@ -8,7 +8,7 @@
 #include <asm/lib/bits.h>
 #include <asm/msr.h>
 #include <asm/cpu.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/cpu_caps.h>
 #include <asm/lapic.h>
 #include <asm/apicreg.h>
@@ -113,7 +113,7 @@ void init_lapic(uint16_t pcpu_id)
 	/* Can not put this to early_init_lapic because logical ID is not
 	 * updated yet.
 	 */
-	per_cpu(lapic_ldr, pcpu_id) = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LDR);
+	per_cpu(arch.lapic_ldr, pcpu_id) = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LDR);
 }
 
 static void save_lapic(struct lapic_regs *regs)
@@ -203,7 +203,7 @@ send_startup_ipi(uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
 	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 
 	icr.value = 0U;
-	icr.value_32.hi_32 = per_cpu(lapic_id, dest_pcpu_id);
+	icr.value_32.hi_32 = per_cpu(arch.lapic_id, dest_pcpu_id);
 
 	/* Assert INIT IPI */
 	icr.bits.destination_mode = INTR_LAPIC_ICR_PHYSICAL;
@@ -262,7 +262,7 @@ void arch_send_single_ipi(uint16_t pcpu_id, uint32_t vector)
 			msr_write(MSR_IA32_EXT_APIC_SELF_IPI, vector);
 		} else {
 			/* Set the destination field to the target processor. */
-			icr.value_32.hi_32 = per_cpu(lapic_id, pcpu_id);
+			icr.value_32.hi_32 = per_cpu(arch.lapic_id, pcpu_id);
 
 			/* Write the vector ID to ICR. */
 			icr.value_32.lo_32 = vector | (INTR_LAPIC_ICR_PHYSICAL << 11U);
@@ -287,7 +287,7 @@ void send_single_init(uint16_t pcpu_id)
 	 *   It is not blocked in VMX non-root operation. Instead, INITs cause VM exits
 	 */
 
-	icr.value_32.hi_32 = per_cpu(lapic_id, pcpu_id);
+	icr.value_32.hi_32 = per_cpu(arch.lapic_id, pcpu_id);
 	icr.value_32.lo_32 = (INTR_LAPIC_ICR_PHYSICAL << 11U) | (INTR_LAPIC_ICR_INIT << 8U);
 
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);

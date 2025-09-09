@@ -5,7 +5,7 @@
  */
 
 #include <types.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <ticks.h>
 #include <trace.h>
 

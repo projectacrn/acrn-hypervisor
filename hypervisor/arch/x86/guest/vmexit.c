@@ -23,6 +23,7 @@
 #include <trace.h>
 #include <asm/rtcm.h>
 #include <debug/console.h>
+#include <per_cpu.h>
 
 /*
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",
@@ -487,7 +488,7 @@ static int32_t loadiwkey_vmexit_handler(struct acrn_vcpu *vcpu)
 		vcpu->arch.IWKey.integrity_key[1] = xmm[1];
 
 		asm_loadiwkey(0);
-		get_cpu_var(whose_iwkey) = vcpu;
+		get_cpu_var(arch.whose_iwkey) = vcpu;
 	}
 
 	return 0;

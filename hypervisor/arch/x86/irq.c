@@ -7,7 +7,7 @@
 #include <types.h>
 #include <asm/lib/bits.h>
 #include <asm/lib/spinlock.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/io.h>
 #include <asm/irq.h>
 #include <asm/idt.h>

@@ -7,7 +7,7 @@
 #include <types.h>
 #include <errno.h>
 #include <sprintf.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/lapic.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/vm_reset.h>

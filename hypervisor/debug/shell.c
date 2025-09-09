@@ -10,7 +10,7 @@
 #include "shell_priv.h"
 #include <asm/irq.h>
 #include <console.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/vmx.h>
 #include <asm/cpuid.h>
 #include <asm/ioapic.h>

@@ -150,6 +150,7 @@ endif
 #
 COMMON_C_SRCS += common/notify.c
 COMMON_C_SRCS += lib/memory.c
+COMMON_C_SRCS += common/percpu.c
 
 ifeq ($(ARCH),x86)
 COMMON_C_SRCS += common/ticks.c

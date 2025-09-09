@@ -7,7 +7,7 @@
 #include <types.h>
 #include <asm/init.h>
 #include <console.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <shell.h>
 #include <asm/vmx.h>
 #include <asm/guest/vm.h>

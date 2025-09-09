@@ -9,6 +9,7 @@
 #include <trace.h>
 #include <asm/guest/virq.h>
 #include <hw/hw_thermal.h>
+#include <per_cpu.h>
 
 static void thermal_softirq(uint16_t pcpu_id)
 {

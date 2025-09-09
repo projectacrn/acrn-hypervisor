@@ -18,6 +18,7 @@
 #include <trace.h>
 #include <logmsg.h>
 #include <asm/irq.h>
+#include <common/notify.h>
 
 #define EXCEPTION_ERROR_CODE_VALID  8U
 

@@ -13,7 +13,7 @@
 #include <rtl.h>
 #include <errno.h>
 #include <asm/cpu.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 
 int32_t sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
 {

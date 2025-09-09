@@ -6,6 +6,7 @@
 
 #include <types.h>
 #include <errno.h>
+#include <per_cpu.h>
 #include <asm/io.h>
 #include <asm/msr.h>
 #include <asm/apicreg.h>

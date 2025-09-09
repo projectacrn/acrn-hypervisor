@@ -10,7 +10,7 @@
 #include <version.h>
 #include <reloc.h>
 #include <asm/vtd.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/lapic.h>
 #include <asm/guest/assign.h>
 #include <asm/guest/ept.h>

@@ -5,10 +5,11 @@
  */
 
 #include <types.h>
+
+#include <per_cpu.h>
 #include <asm/lib/atomic.h>
 #include <sprintf.h>
 #include <asm/lib/spinlock.h>
-#include <asm/per_cpu.h>
 #include <npk_log.h>
 #include <logmsg.h>
 #include <ticks.h>

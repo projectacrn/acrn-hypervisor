@@ -14,7 +14,7 @@
 #include <asm/vtd.h>
 #include <asm/lapic.h>
 #include <asm/irq.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/cpufeatures.h>
 #include <asm/cpu_caps.h>
 #include <acpi.h>
@@ -43,7 +43,6 @@
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
 
-struct per_cpu_region per_cpu_data[MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
 static uint64_t startup_paddr = 0UL;
@@ -72,7 +71,7 @@ static bool init_percpu_lapic_id(void)
 
 	if ((phys_cpu_num != 0U) && (phys_cpu_num <= MAX_PCPU_NUM)) {
 		for (i = 0U; i < phys_cpu_num; i++) {
-			per_cpu(lapic_id, i) = lapic_id_array[i];
+			per_cpu(arch.lapic_id, i) = lapic_id_array[i];
 		}
 		success = true;
 	}
@@ -344,7 +343,7 @@ static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id)
 	uint16_t pcpu_id = INVALID_CPU_ID;
 
 	for (i = 0U; i < phys_cpu_num; i++) {
-		if (per_cpu(lapic_id, i) == lapic_id) {
+		if (per_cpu(arch.lapic_id, i) == lapic_id) {
 			pcpu_id = i;
 			break;
 		}

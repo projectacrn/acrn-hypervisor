@@ -7,10 +7,11 @@
 #include <asm/cpu.h>
 #include <asm/lib/atomic.h>
 #include <asm/lib/bits.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/notify.h>
 #include <common/notify.h>
 #include <debug/logmsg.h>
+#include <asm/cpu.h>
 
 static volatile uint64_t smp_call_mask = 0UL;
 

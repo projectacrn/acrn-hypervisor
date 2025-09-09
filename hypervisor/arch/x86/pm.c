@@ -6,7 +6,7 @@
 #include <acrn_common.h>
 #include <asm/default_acpi_info.h>
 #include <platform_acpi_info.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/io.h>
 #include <asm/msr.h>
 #include <asm/pgtable.h>
@@ -167,12 +167,12 @@ void shutdown_system(void)
 
 static void suspend_tsc(__unused void *data)
 {
-	per_cpu(tsc_suspend, get_pcpu_id()) = rdtsc();
+	per_cpu(arch.tsc_suspend, get_pcpu_id()) = rdtsc();
 }
 
 static void resume_tsc(__unused void *data)
 {
-	msr_write(MSR_IA32_TIME_STAMP_COUNTER, per_cpu(tsc_suspend, get_pcpu_id()));
+	msr_write(MSR_IA32_TIME_STAMP_COUNTER, per_cpu(arch.tsc_suspend, get_pcpu_id()));
 }
 
 void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)

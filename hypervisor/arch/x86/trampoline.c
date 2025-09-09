@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <asm/mmu.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/trampoline.h>
 #include <reloc.h>
 #include <asm/boot/ld_sym.h>

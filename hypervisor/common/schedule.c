@@ -8,7 +8,7 @@
 #include <list.h>
 #include <asm/lib/bits.h>
 #include <asm/cpu.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/lapic.h>
 #include <schedule.h>
 #include <sprintf.h>

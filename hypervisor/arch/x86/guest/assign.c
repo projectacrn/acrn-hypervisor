@@ -10,7 +10,7 @@
 #include <asm/guest/vm.h>
 #include <asm/vtd.h>
 #include <ptdev.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/ioapic.h>
 #include <asm/pgtable.h>
 #include <asm/irq.h>
@@ -65,12 +65,12 @@ static uint32_t calculate_logical_dest_mask(uint64_t pdmask)
 		 * one Cluster. So some pCPUs may not be included.
 		 * Here we use the first Cluster of all the requested pCPUs.
 		 */
-		dest_cluster_id = per_cpu(lapic_ldr, pcpu_id) & X2APIC_LDR_CLUSTER_ID_MASK;
+		dest_cluster_id = per_cpu(arch.lapic_ldr, pcpu_id) & X2APIC_LDR_CLUSTER_ID_MASK;
 		do {
 			bitmap_clear_nolock(pcpu_id, &pcpu_mask);
-			cluster_id = per_cpu(lapic_ldr, pcpu_id) & X2APIC_LDR_CLUSTER_ID_MASK;
+			cluster_id = per_cpu(arch.lapic_ldr, pcpu_id) & X2APIC_LDR_CLUSTER_ID_MASK;
 			if (cluster_id == dest_cluster_id) {
-				logical_id_mask |= (per_cpu(lapic_ldr, pcpu_id) & X2APIC_LDR_LOGICAL_ID_MASK);
+				logical_id_mask |= (per_cpu(arch.lapic_ldr, pcpu_id) & X2APIC_LDR_LOGICAL_ID_MASK);
 			} else {
 				pr_warn("The cluster ID of pCPU %d is %d which differs from that (%d) of "
 					"the previous cores in the guest logical destination.\n"

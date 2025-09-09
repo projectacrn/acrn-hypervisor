@@ -13,7 +13,7 @@
 #include <rtl.h>
 #include <errno.h>
 #include <asm/cpu.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <vm_event.h>
 
 uint32_t sbuf_next_ptr(uint32_t pos_arg,

@@ -32,7 +32,7 @@
 #include <errno.h>
 #include <asm/lib/bits.h>
 #include <asm/lib/atomic.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/pgtable.h>
 #include <asm/lapic.h>
 #include <asm/guest/vmcs.h>
@@ -1917,7 +1917,7 @@ static void inject_msi_for_lapic_pt(struct acrn_vm *vm, uint64_t addr, uint64_t 
 		while (vcpu_id != INVALID_BIT_INDEX) {
 			bitmap_clear_nolock(vcpu_id, &vdmask);
 			vcpu = vcpu_from_vid(vm, vcpu_id);
-			dest |= per_cpu(lapic_ldr, pcpuid_from_vcpu(vcpu));
+			dest |= per_cpu(arch.lapic_ldr, pcpuid_from_vcpu(vcpu));
 			vcpu_id = ffs64(vdmask);
 		}
 
@@ -2072,7 +2072,7 @@ vlapic_x2apic_pt_icr_access(struct acrn_vcpu *vcpu, uint64_t val)
 				default:
 					/* convert the dest from virtual apic_id to physical apic_id */
 					if (is_x2apic_enabled(vcpu_vlapic(target_vcpu))) {
-						papic_id = per_cpu(lapic_id, pcpuid_from_vcpu(target_vcpu));
+						papic_id = per_cpu(arch.lapic_id, pcpuid_from_vcpu(target_vcpu));
 							dev_dbg(DBG_LEVEL_LAPICPT,
 							"%s vapic_id: 0x%08lx papic_id: 0x%08lx icr_low:0x%08lx",
 							 __func__, target_vcpu->arch.vlapic.vapic_id, papic_id, icr_low);
@@ -2203,7 +2203,7 @@ void vlapic_create(struct acrn_vcpu *vcpu, uint16_t pcpu_id)
 	vlapic_init_timer(vlapic);
 
 	/* Set vLAPIC ID to be same as pLAPIC ID */
-	vlapic->vapic_id = per_cpu(lapic_id, pcpu_id);
+	vlapic->vapic_id = per_cpu(arch.lapic_id, pcpu_id);
 
 	dev_dbg(DBG_LEVEL_VLAPIC, "vlapic APIC ID : 0x%04x", vlapic->vapic_id);
 }

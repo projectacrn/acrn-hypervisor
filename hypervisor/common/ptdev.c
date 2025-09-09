@@ -5,7 +5,7 @@
  */
 
 #include <hash.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/guest/vm.h>
 #include <softirq.h>
 #include <ptdev.h>

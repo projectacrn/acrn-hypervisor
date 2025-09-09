@@ -11,7 +11,7 @@
 #include <logmsg.h>
 #include <platform_acpi_info.h>
 #include <asm/guest/guest_pm.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 
 int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {

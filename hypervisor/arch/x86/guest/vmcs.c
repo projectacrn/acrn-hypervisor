@@ -13,7 +13,7 @@
 #include <asm/vmx.h>
 #include <asm/gdt.h>
 #include <asm/pgtable.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/cpu_caps.h>
 #include <asm/cpufeatures.h>
 #include <asm/guest/vmexit.h>
@@ -146,7 +146,7 @@ void init_host_state(void)
 	exec_vmwrite(VMX_HOST_GDTR_BASE, gdt_base);
 	pr_dbg("VMX_HOST_GDTR_BASE: 0x%x ", gdt_base);
 
-	tss_addr = hva2hpa((void *)&get_cpu_var(tss));
+	tss_addr = hva2hpa((void *)&get_cpu_var(arch.tss));
 	/* Set up host TR base fields */
 	exec_vmwrite(VMX_HOST_TR_BASE, tss_addr);
 	pr_dbg("VMX_HOST_TR_BASE: 0x%016lx ", tss_addr);
@@ -558,7 +558,7 @@ static void init_exit_ctrl(const struct acrn_vcpu *vcpu)
 void init_vmcs(struct acrn_vcpu *vcpu)
 {
 	uint64_t vmx_rev_id;
-	void **vmcs_ptr = &get_cpu_var(vmcs_run);
+	void **vmcs_ptr = &get_cpu_var(arch.vmcs_run);
 
 	/* Log message */
 	pr_dbg("Initializing VMCS");
@@ -588,7 +588,7 @@ void init_vmcs(struct acrn_vcpu *vcpu)
  */
 void load_vmcs(const struct acrn_vcpu *vcpu)
 {
-	void **vmcs_ptr = &get_cpu_var(vmcs_run);
+	void **vmcs_ptr = &get_cpu_var(arch.vmcs_run);
 
 	if (vcpu->launched && (*vmcs_ptr != (void *)vcpu->arch.vmcs)) {
 		load_va_vmcs(vcpu->arch.vmcs);

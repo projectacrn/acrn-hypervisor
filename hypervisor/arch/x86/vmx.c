@@ -8,7 +8,7 @@
 
 #include <types.h>
 #include <asm/msr.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/pgtable.h>
 #include <asm/vmx.h>
 
@@ -40,7 +40,7 @@ void vmx_on(void)
 {
 	uint64_t tmp64;
 	uint32_t tmp32;
-	void *vmxon_region_va = (void *)get_cpu_var(vmxon_region);
+	void *vmxon_region_va = (void *)get_cpu_var(arch.vmxon_region);
 	uint64_t vmxon_region_pa;
 
 	/* Initialize vmxon page with revision id from IA32 VMX BASIC MSR */
@@ -136,7 +136,7 @@ void clear_va_vmcs(const uint8_t *vmcs_va)
  */
 void vmx_off(void)
 {
-	void **vmcs_ptr = &get_cpu_var(vmcs_run);
+	void **vmcs_ptr = &get_cpu_var(arch.vmcs_run);
 
 	if (*vmcs_ptr != NULL) {
 		clear_va_vmcs(*vmcs_ptr);

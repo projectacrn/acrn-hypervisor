@@ -7,7 +7,7 @@
 #include <types.h>
 #include <asm/lib/bits.h>
 #include <asm/cpu.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <softirq.h>
 
 static softirq_handler softirq_handlers[NR_SOFTIRQS];

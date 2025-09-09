@@ -8,7 +8,7 @@
 #include <asm/msr.h>
 #include <asm/cpufeatures.h>
 #include <asm/cpu.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/cpu_caps.h>
 #include <asm/security.h>
 #include <logmsg.h>

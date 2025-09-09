@@ -5,7 +5,7 @@
  */
 
 #include <list.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <schedule.h>
 #include <ticks.h>
 

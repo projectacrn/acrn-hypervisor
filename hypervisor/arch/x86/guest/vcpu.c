@@ -13,7 +13,7 @@
 #include <logmsg.h>
 #include <asm/cpufeatures.h>
 #include <asm/cpu_caps.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/init.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/vmcs.h>
@@ -214,7 +214,7 @@ static void init_iwkey(struct acrn_vcpu *vcpu)
 		vcpu->arch.IWKey.encryption_key[2] = get_random_value();
 		vcpu->arch.IWKey.encryption_key[3] = get_random_value();
 		/* It's always safe to clear whose_iwkey */
-		per_cpu(whose_iwkey, pcpuid_from_vcpu(vcpu)) = NULL;
+		per_cpu(arch.whose_iwkey, pcpuid_from_vcpu(vcpu)) = NULL;
 	}
 }
 
@@ -224,14 +224,14 @@ void load_iwkey(struct acrn_vcpu *vcpu)
 
 	/* Only load IWKey with vCPU CR4 keylocker bit enabled */
 	if (pcpu_has_cap(X86_FEATURE_KEYLOCKER) && vcpu->arch.cr4_kl_enabled &&
-	    (get_cpu_var(whose_iwkey) != vcpu)) {
+	    (get_cpu_var(arch.whose_iwkey) != vcpu)) {
 		/* Save/restore xmm0/xmm1/xmm2 during the process */
 		read_xmm_0_2(&xmm_save[0], &xmm_save[2], &xmm_save[4]);
 		write_xmm_0_2(&vcpu->arch.IWKey.integrity_key[0], &vcpu->arch.IWKey.encryption_key[0],
 						&vcpu->arch.IWKey.encryption_key[2]);
 		asm_loadiwkey(0);
 		write_xmm_0_2(&xmm_save[0], &xmm_save[2], &xmm_save[4]);
-		get_cpu_var(whose_iwkey) = vcpu;
+		get_cpu_var(arch.whose_iwkey) = vcpu;
 	}
 }
 
@@ -611,7 +611,7 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		/* ACRN does not support vCPU migration, one vCPU always runs on
 		 * the same pCPU, so PI's ndst is never changed after startup.
 		 */
-		vcpu->arch.pid.control.bits.ndst = per_cpu(lapic_id, pcpu_id);
+		vcpu->arch.pid.control.bits.ndst = per_cpu(arch.lapic_id, pcpu_id);
 
 		/* Create per vcpu vlapic */
 		vlapic_create(vcpu, pcpu_id);
@@ -819,7 +819,7 @@ void kick_vcpu(struct acrn_vcpu *vcpu)
 {
 	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
 
-	if ((get_pcpu_id() != pcpu_id) && (per_cpu(vmcs_run, pcpu_id) == vcpu->arch.vmcs)) {
+	if ((get_pcpu_id() != pcpu_id) && (per_cpu(arch.vmcs_run, pcpu_id) == vcpu->arch.vmcs)) {
 		kick_pcpu(pcpu_id);
 	}
 }

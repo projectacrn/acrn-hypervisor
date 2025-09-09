@@ -8,7 +8,7 @@
 #include <asm/io.h>
 #include <asm/host_pm.h>
 #include <logmsg.h>
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <asm/guest/vm_reset.h>
 #include <vm_event.h>
 

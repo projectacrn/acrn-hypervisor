@@ -14,6 +14,7 @@
 #include <sprintf.h>
 #include <trace.h>
 #include <logmsg.h>
+#include <per_cpu.h>
 
 void vcpu_thread(struct thread_object *obj)
 {
