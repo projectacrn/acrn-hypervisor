@@ -11,6 +11,15 @@
 #include <types.h>
 #include <lib/util.h>
 
+/* CPU states defined */
+enum pcpu_boot_state {
+        PCPU_STATE_RESET = 0U,
+        PCPU_STATE_INITIALIZING,
+        PCPU_STATE_RUNNING,
+        PCPU_STATE_HALTED,
+        PCPU_STATE_DEAD,
+};
+
 static inline void wait_sync_change(__unused volatile const uint64_t *sync, __unused uint64_t wake_sync)
 {
 	/**
