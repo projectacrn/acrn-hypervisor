@@ -28,6 +28,14 @@ bool bitmap_test(__unused uint16_t nr, __unused const volatile uint64_t *addr)
 	return true;
 }
 
+void bitmap_set_lock(__unused uint16_t nr_arg, __unused volatile uint64_t *addr)
+{
+	/**
+	 * Dummy implementation.
+	 * Official implementations are to be provided in the library patchset (by Haoyu).
+	 */
+}
+
 void bitmap_clear_lock(__unused uint16_t nr_arg, __unused volatile uint64_t *addr)
 {
 	/**
