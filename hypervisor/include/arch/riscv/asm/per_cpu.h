@@ -12,6 +12,8 @@
 
 #include <common/notify.h>
 #include <types.h>
+#include <board_info.h>
+#include <asm/page.h>
 
 struct per_cpu_region {
 	struct smp_call_info_data smp_call_info;

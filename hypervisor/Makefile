@@ -218,11 +218,7 @@ COMMON_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(COMMON_C_SRCS))
 
 COMMON_MOD = $(HV_MODDIR)/common_mod.a
 
-# TODO: Remove this check when the first riscv common file
-# is moved out from above block
-ifeq ($(ARCH),x86)
 MODULES += $(COMMON_MOD)
-endif
 
 ifeq ($(CONFIG_RELEASE),y)
 MODULES += $(LIB_RELEASE)
