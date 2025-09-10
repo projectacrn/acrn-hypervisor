@@ -29,9 +29,9 @@ class SchemaTypeSlicer:
         self.etree = etree
 
     def get_type_definition(self, type_name):
-        type_node = self.get_node(self.etree, f"//xs:complexType[@name='{type_name}']")
+        type_node = self.get_node(self.etree, f".//xs:complexType[@name='{type_name}']")
         if type_node is None:
-            type_node = self.get_node(self.etree, f"//xs:simpleType[@name='{type_name}']")
+            type_node = self.get_node(self.etree, f".//xs:simpleType[@name='{type_name}']")
         return type_node
 
     def slice_element_list(self, element_list_node, new_nodes):
@@ -152,7 +152,7 @@ class SlicingSchemaByVMTypeStage(PipelineStage):
         schema_etree = obj.get("schema_etree")
 
         vm_type_name = "VMConfigType"
-        vm_type_node = SchemaTypeSlicer.get_node(schema_etree, f"//xs:complexType[@name='{vm_type_name}']")
+        vm_type_node = SchemaTypeSlicer.get_node(schema_etree, f".//xs:complexType[@name='{vm_type_name}']")
         slicers = [
             self.PreLaunchedTypeSlicer(schema_etree),
             self.ServiceVMTypeSlicer(schema_etree),
@@ -164,7 +164,7 @@ class SlicingSchemaByVMTypeStage(PipelineStage):
             for n in new_nodes:
                 schema_etree.getroot().append(n)
 
-        for node in SchemaTypeSlicer.get_nodes(schema_etree, "//xs:complexType[@name='ACRNConfigType']//xs:element[@name='vm']//xs:alternative"):
+        for node in SchemaTypeSlicer.get_nodes(schema_etree, ".//xs:complexType[@name='ACRNConfigType']//xs:element[@name='vm']//xs:alternative"):
             test = node.get("test")
             if test.find("PRE_LAUNCHED_VM") >= 0:
                 node.set("type", slicers[0].get_name_of_slice(vm_type_name))
@@ -205,7 +205,7 @@ class SlicingSchemaByViewStage(PipelineStage):
         schema_etree = obj.get("schema_etree")
 
         type_nodes = list(filter(lambda x: x.get("name") and x.get("name").endswith("VMConfigType"), SchemaTypeSlicer.get_nodes(schema_etree, "//xs:complexType")))
-        type_nodes.append(SchemaTypeSlicer.get_node(schema_etree, "//xs:complexType[@name = 'HVConfigType']"))
+        type_nodes.append(SchemaTypeSlicer.get_node(schema_etree, ".//xs:complexType[@name = 'HVConfigType']"))
 
         slicers = [
             self.BasicViewSlicer(schema_etree),
