@@ -19,6 +19,7 @@ LDFLAGS += -Wl,--no-warn-rwx-segments
 RV_ISA += gh
 RV_ISA += zbb
 RV_ISA += zicbom
+RV_ISA += zihintpause
 
 ARCH_CFLAGS += -march=rv64$(subst $() $(),_,$(RV_ISA))
 ARCH_CFLAGS += -mabi=lp64d

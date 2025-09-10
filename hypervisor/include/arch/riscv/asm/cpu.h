@@ -46,6 +46,11 @@ static inline void arch_set_current_pcpu_id(uint16_t pcpu_id)
 	asm volatile ("mv tp, %0" : : "r" (pcpu_id) : "tp");
 }
 
+static inline void arch_asm_pause(void)
+{
+	asm volatile ("pause" ::: "memory");
+}
+
 /* Write CSR */
 #define cpu_csr_write(reg, csr_val)                                                                                    \
 	({                                                                                                             \
