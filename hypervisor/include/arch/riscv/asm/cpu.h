@@ -77,5 +77,7 @@ static inline void arch_asm_pause(void)
 #define CPU_INT_ALL_RESTORE(x) local_irq_restore(x)
 
 void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);
+void init_percpu_hart_id(uint32_t bsp_hart_id);
+uint16_t get_pcpu_id_from_hart_id(uint32_t hart_id);
 
 #endif /* RISCV_CPU_H */
