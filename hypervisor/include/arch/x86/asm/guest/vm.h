@@ -133,7 +133,6 @@ int32_t shutdown_vm(struct acrn_vm *vm);
 void poweroff_if_rt_vm(struct acrn_vm *vm);
 void pause_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
-void start_vm(struct acrn_vm *vm);
 int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode);
 bool is_created_vm(const struct acrn_vm *vm);
 bool is_service_vm(const struct acrn_vm *vm);

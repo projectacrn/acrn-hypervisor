@@ -86,6 +86,17 @@ void launch_vms(uint16_t pcpu_id)
 	}
 }
 
+/**
+ * @pre vm != NULL
+ * @pre vm->state == VM_CREATED
+ */
+void start_vm(struct acrn_vm *vm)
+{
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
+	arch_vm_prepare_bsp(vcpu);
+	launch_vcpu(vcpu);
+	vm->state = VM_RUNNING;
+}
 
 /**
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL

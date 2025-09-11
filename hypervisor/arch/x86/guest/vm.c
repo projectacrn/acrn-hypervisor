@@ -901,19 +901,12 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 }
 
 /**
- * @pre vm != NULL
+ * @pre bsp != NULL
  * @pre vm->state == VM_CREATED
  */
-void start_vm(struct acrn_vm *vm)
+void arch_vm_prepare_bsp(struct acrn_vcpu *bsp)
 {
-	struct acrn_vcpu *bsp = NULL;
-
-	vm->state = VM_RUNNING;
-
-	/* Only start BSP (vid = 0) and let BSP start other APs */
-	bsp = vcpu_from_vid(vm, BSP_CPU_ID);
 	vcpu_make_request(bsp, ACRN_REQUEST_INIT_VMCS);
-	launch_vcpu(bsp);
 }
 
 /**
