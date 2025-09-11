@@ -14,6 +14,15 @@ ASFLAGS +=
 
 LDFLAGS += -Wl,--no-warn-rwx-segments
 
+ifeq (y, $(CONFIG_RELOC))
+# -fpie is already added into CFLAGS in common Makefile
+#CFLAGS += -fpie
+ASFLAGS += -fpie
+else
+CFLAGS += -fno-pie
+ASFLAGS += -fno-pie
+endif
+
 # g expands to i, m, a, f, d, zicsr and zifencei.
 # h for hypervisor extension
 RV_ISA += gh
