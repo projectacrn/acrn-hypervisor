@@ -99,6 +99,24 @@ void start_vm(struct acrn_vm *vm)
 }
 
 /**
+ * @pre vm != NULL
+ */
+void pause_vm(struct acrn_vm *vm)
+{
+	uint16_t i;
+	struct acrn_vcpu *vcpu = NULL;
+
+	if (((is_severity_pass(vm->vm_id)) && (vm->state == VM_RUNNING)) ||
+			(vm->state == VM_READY_TO_POWEROFF) ||
+			(vm->state == VM_CREATED)) {
+		foreach_vcpu(i, vm, vcpu) {
+			zombie_vcpu(vcpu);
+		}
+		vm->state = VM_PAUSED;
+	}
+}
+
+/**
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL
  * @pre vm->state == VM_POWERED_OFF
  */
