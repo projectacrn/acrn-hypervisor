@@ -128,6 +128,7 @@ CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
 endif
 
 COMMON_C_SRCS += common/vcpu.c
+COMMON_C_SRCS += common/vm.c
 
 # FIXME: During initial development stage of riscv enabling,
 # we would like to first confine the common files to x86-only.
