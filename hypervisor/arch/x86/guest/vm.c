@@ -650,6 +650,11 @@ int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config)
 	int32_t status = 0;
 	uint16_t vm_id = vm->vm_id;
 
+#ifdef CONFIG_SECURITY_VM_FIXUP
+	security_vm_fixup(vm_id);
+#endif
+
+	/* TODO: Move this to common when guest memory is implemented */
 	init_ept_pgtable(&vm->stg2_pgtable, vm->vm_id);
 	vm->root_stg2ptp = pgtable_create_root(&vm->stg2_pgtable);
 
@@ -768,6 +773,10 @@ int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config)
 
 	if ((status != 0) && (vm->root_stg2ptp != NULL)) {
 		(void)memset(vm->root_stg2ptp, 0U, PAGE_SIZE);
+	}
+
+	if (is_prelaunched_vm(vm)) {
+		build_vrsdp(vm);
 	}
 
 	return status;
@@ -1001,36 +1010,6 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 	set_vcpu_startup_entry(bsp, wakeup_vec);
 
 	start_vm(vm);
-}
-
-/**
- * Prepare to create vm/vcpu for vm
- *
- * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL
- */
-int32_t prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
-{
-	int32_t err = -1;
-	struct acrn_vm *vm = NULL;
-
-#ifdef CONFIG_SECURITY_VM_FIXUP
-	security_vm_fixup(vm_id);
-#endif
-	if (get_vmid_by_name(vm_config->name) != vm_id) {
-		pr_err("Invalid VM name: %s", vm_config->name);
-	} else {
-		/* Service VM and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
-		err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
-		if (err == 0) {
-			if (is_prelaunched_vm(vm)) {
-				build_vrsdp(vm);
-			}
-
-			err = prepare_os_image(vm);
-		}
-	}
-
-	return err;
 }
 
 /*

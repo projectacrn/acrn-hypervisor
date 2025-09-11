@@ -45,6 +45,7 @@ struct acrn_vm *get_service_vm(void)
 void launch_vms(uint16_t pcpu_id)
 {
 	uint16_t vm_id;
+	struct acrn_vm *vm;
 	struct acrn_vm_config *vm_config;
 
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
@@ -70,12 +71,14 @@ void launch_vms(uint16_t pcpu_id)
 				 * so skip "start_vm" here for REE, and start it in TEE hypercall
 				 * HC_TEE_VCPU_BOOT_DONE.
 				 */
-				if (prepare_vm(vm_id, vm_config) == 0) {
+				if (create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm) == 0) {
 					if ((vm_config->guest_flags & GUEST_FLAG_REE) != 0U) {
 						/* Nothing need to do here, REE will start in TEE hypercall */
 					} else {
-						start_vm(get_vm_from_vmid(vm_id));
-						pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
+						if (prepare_os_image(vm) == 0) {
+							start_vm(vm);
+							pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
+						}
 					}
 				}
 			}
