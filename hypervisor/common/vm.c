@@ -1,7 +1,15 @@
+/*
+ * Copyright (C) 2018-2025 Intel Corporation.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include <vcpu.h>
 #include <vm.h>
 #include <logmsg.h>
+#include <sbuf.h>
 #include <sprintf.h>
+#include <asm/host_pm.h>
 
 static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
@@ -36,6 +44,24 @@ struct acrn_vm *get_service_vm(void)
 	ASSERT(service_vm_ptr != NULL, "service_vm_ptr is NULL");
 
 	return service_vm_ptr;
+}
+
+bool is_ready_for_system_shutdown(void)
+{
+	bool ret = true;
+	uint16_t vm_id;
+	struct acrn_vm *vm;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm = get_vm_from_vmid(vm_id);
+		/* TODO: Update code to cover hybrid mode */
+		if (!is_poweroff_vm(vm) && is_stateful_vm(vm)) {
+			ret = false;
+			break;
+		}
+	}
+
+	return ret;
 }
 
 /**
@@ -114,6 +140,39 @@ void pause_vm(struct acrn_vm *vm)
 		}
 		vm->state = VM_PAUSED;
 	}
+}
+
+int32_t destroy_vm(struct acrn_vm *vm)
+{
+	int32_t ret = 0;
+	uint16_t i;
+	struct acrn_vm_config *vm_config = NULL;
+	struct acrn_vcpu *vcpu = NULL;
+
+	/* Only allow shutdown paused vm */
+	vm->state = VM_POWERED_OFF;
+
+	if (is_service_vm(vm)) {
+		sbuf_reset();
+	}
+
+	/* TODO: Same as create_vm, we have several common module initialization
+	 * logic inside arch_deinit_vm. */
+	ret = arch_deinit_vm(vm);
+
+	foreach_vcpu(i, vm, vcpu) {
+		destroy_vcpu(vcpu);
+	}
+
+	/* after guest_flags not used, then clear it */
+	vm_config = get_vm_config(vm->vm_id);
+	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
+	if (!is_static_configured_vm(vm)) {
+		memset(vm_config->name, 0U, MAX_VM_NAME_LEN);
+	}
+
+	/* Return status to caller */
+	return ret;
 }
 
 /**

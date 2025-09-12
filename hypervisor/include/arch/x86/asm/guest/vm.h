@@ -129,7 +129,6 @@ static inline bool is_severity_pass(uint16_t target_vmid)
 
 void make_shutdown_vm_request(uint16_t pcpu_id);
 bool need_shutdown_vm(uint16_t pcpu_id);
-int32_t shutdown_vm(struct acrn_vm *vm);
 void poweroff_if_rt_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
 int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode);

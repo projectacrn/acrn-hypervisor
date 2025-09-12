@@ -47,7 +47,10 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 				get_vm_lock(pl_vm);
 				if (!is_poweroff_vm(pl_vm) && is_postlaunched_vm(pl_vm) && !is_rt_vm(pl_vm)) {
 					pause_vm(pl_vm);
-					(void)shutdown_vm(pl_vm);
+					(void)destroy_vm(pl_vm);
+					if (is_ready_for_system_shutdown()) {
+						shutdown_system();
+					}
 				}
 				put_vm_lock(pl_vm);
 			}
@@ -247,7 +250,10 @@ void shutdown_vm_from_idle(uint16_t pcpu_id)
 		vm = get_vm_from_vmid(vm_id);
 		get_vm_lock(vm);
 		if (is_paused_vm(vm)) {
-			(void)shutdown_vm(vm);
+			(void)destroy_vm(vm);
+			if (is_ready_for_system_shutdown()) {
+				shutdown_system();
+			}
 		}
 		put_vm_lock(vm);
 		bitmap_clear_non_atomic(vm_id, vms);

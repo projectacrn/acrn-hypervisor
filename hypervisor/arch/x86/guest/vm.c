@@ -782,24 +782,6 @@ int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config)
 	return status;
 }
 
-static bool is_ready_for_system_shutdown(void)
-{
-	bool ret = true;
-	uint16_t vm_id;
-	struct acrn_vm *vm;
-
-	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
-		vm = get_vm_from_vmid(vm_id);
-		/* TODO: Update code to cover hybrid mode */
-		if (!is_poweroff_vm(vm) && is_stateful_vm(vm)) {
-			ret = false;
-			break;
-		}
-	}
-
-	return ret;
-}
-
 static int32_t offline_lapic_pt_enabled_pcpus(const struct acrn_vm *vm, uint64_t pcpu_mask)
 {
 	int32_t ret = 0;
@@ -845,20 +827,10 @@ static int32_t offline_lapic_pt_enabled_pcpus(const struct acrn_vm *vm, uint64_t
  * @pre vm != NULL
  * @pre vm->state == VM_PAUSED
  */
-int32_t shutdown_vm(struct acrn_vm *vm)
+int32_t arch_deinit_vm(struct acrn_vm *vm)
 {
-	uint16_t i;
 	uint64_t mask;
-	struct acrn_vcpu *vcpu = NULL;
-	struct acrn_vm_config *vm_config = NULL;
 	int32_t ret = 0;
-
-	/* Only allow shutdown paused vm */
-	vm->state = VM_POWERED_OFF;
-
-	if (is_service_vm(vm)) {
-		sbuf_reset();
-	}
 
 	ptirq_remove_configured_intx_remappings(vm);
 
@@ -876,25 +848,9 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		ret = offline_lapic_pt_enabled_pcpus(vm, mask);
 	}
 
-	foreach_vcpu(i, vm, vcpu) {
-		destroy_vcpu(vcpu);
-	}
-
 #ifdef CONFIG_HYPERV_ENABLED
 	hyperv_page_destory(vm);
 #endif
-
-	/* after guest_flags not used, then clear it */
-	vm_config = get_vm_config(vm->vm_id);
-	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
-	if (!is_static_configured_vm(vm)) {
-		memset(vm_config->name, 0U, MAX_VM_NAME_LEN);
-	}
-
-	if (is_ready_for_system_shutdown()) {
-		/* If no any guest running, shutdown system */
-		shutdown_system();
-	}
 
 	/* Return status to caller */
 	return ret;
