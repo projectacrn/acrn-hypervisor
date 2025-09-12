@@ -6,7 +6,7 @@
 
 #ifndef LOGMSG_H
 #define LOGMSG_H
-#include <asm/cpu.h>
+#include <cpu.h>
 
 /* Logging severity levels */
 #define LOG_FATAL		1U

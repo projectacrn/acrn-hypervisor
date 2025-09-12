@@ -33,6 +33,7 @@ enum pcpu_boot_state {
 static inline uint16_t arch_get_pcpu_id(void);
 static inline void arch_set_current_pcpu_id(uint16_t pcpu_id);
 void arch_start_pcpu(uint16_t pcpu_id);
+static inline void arch_asm_pause(void);
 uint16_t arch_get_pcpu_num(void);
 uint16_t get_pcpu_nums(void);
 bool is_pcpu_active(uint16_t pcpu_id);
@@ -55,6 +56,11 @@ static inline uint16_t get_pcpu_id(void)
 static inline void set_current_pcpu_id(uint16_t pcpu_id)
 {
 	arch_set_current_pcpu_id(pcpu_id);
+}
+
+static inline void asm_pause(void)
+{
+	arch_asm_pause();
 }
 
 #endif /* COMMON_CPU_H */
