@@ -319,8 +319,8 @@ struct descriptor_table {
 	uint64_t base;
 } __packed;
 
-#define	NEED_OFFLINE		(1U)
-#define	NEED_SHUTDOWN_VM	(2U)
+#define        NEED_OFFLINE            (1U)
+
 void make_pcpu_offline(uint16_t pcpu_id);
 bool need_offline(uint16_t pcpu_id);
 

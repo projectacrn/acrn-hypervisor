@@ -27,6 +27,8 @@
 
 #include <vcpu.h>
 
+#define	NEED_SHUTDOWN_VM	(2U)
+
 struct vm_hw_info {
 	/* vcpu array of this VM */
 	struct acrn_vcpu vcpu_array[MAX_VCPUS_PER_VM];
@@ -149,6 +151,53 @@ bool is_ready_for_system_shutdown(void);
 
 void arch_trigger_level_intr(__unused struct acrn_vm *vm,
 		__unused uint32_t irq, __unused bool assert);
+
+/* Convert relative vm id to absolute vm id */
+static inline uint16_t rel_vmid_2_vmid(uint16_t service_vmid, uint16_t rel_vmid) {
+	return (service_vmid + rel_vmid);
+}
+
+/* Convert absolute vm id to relative vm id */
+static inline uint16_t vmid_2_rel_vmid(uint16_t service_vmid, uint16_t vmid) {
+	return (vmid - service_vmid);
+}
+
+static inline bool is_severity_pass(uint16_t target_vmid)
+{
+	return SEVERITY_SERVICE_VM >= get_vm_severity(target_vmid);
+}
+
+void shutdown_vm_from_idle(uint16_t pcpu_id);
+void make_shutdown_vm_request(uint16_t pcpu_id);
+bool need_shutdown_vm(uint16_t pcpu_id);
+void poweroff_if_rt_vm(struct acrn_vm *vm);
+bool is_poweroff_vm(const struct acrn_vm *vm);
+bool is_created_vm(const struct acrn_vm *vm);
+bool is_paused_vm(const struct acrn_vm *vm);
+bool is_service_vm(const struct acrn_vm *vm);
+bool is_postlaunched_vm(const struct acrn_vm *vm);
+bool is_prelaunched_vm(const struct acrn_vm *vm);
+uint16_t get_vmid_by_name(const char *name);
+struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
+struct acrn_vm *get_service_vm(void);
+bool is_rt_vm(const struct acrn_vm *vm);
+bool is_stateful_vm(const struct acrn_vm *vm);
+bool is_static_configured_vm(const struct acrn_vm *vm);
+uint16_t get_unused_vmid(void);
+bool has_rt_vm(void);
+struct acrn_vm *get_highest_severity_vm(bool runtime);
+int32_t prepare_os_image(struct acrn_vm *vm);
+
+
+/*
+ * @pre vm != NULL
+ */
+void get_vm_lock(struct acrn_vm *vm);
+
+/*
+ * @pre vm != NULL
+ */
+void put_vm_lock(struct acrn_vm *vm);
 
 int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config);
 int32_t arch_deinit_vm(struct acrn_vm *vm);

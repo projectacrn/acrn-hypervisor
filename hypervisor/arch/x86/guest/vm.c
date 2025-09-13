@@ -56,75 +56,6 @@ void *get_sworld_memory_base(void)
 	return post_user_vm_sworld_memory;
 }
 
-uint16_t get_unused_vmid(void)
-{
-	uint16_t vm_id;
-	struct acrn_vm_config *vm_config;
-
-	for (vm_id = 0; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
-		vm_config = get_vm_config(vm_id);
-		if ((vm_config->name[0] == '\0') && ((vm_config->guest_flags & GUEST_FLAG_STATIC_VM) == 0U)) {
-			break;
-		}
-	}
-	return (vm_id < CONFIG_MAX_VM_NUM) ? (vm_id) : (ACRN_INVALID_VMID);
-}
-
-uint16_t get_vmid_by_name(const char *name)
-{
-	uint16_t vm_id;
-
-	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
-		if ((*name != '\0') && vm_has_matched_name(vm_id, name)) {
-			break;
-		}
-	}
-	return (vm_id < CONFIG_MAX_VM_NUM) ? (vm_id) : (ACRN_INVALID_VMID);
-}
-
-/**
- * @pre vm != NULL
- */
-bool is_poweroff_vm(const struct acrn_vm *vm)
-{
-	return (vm->state == VM_POWERED_OFF);
-}
-
-/**
- * @pre vm != NULL
- */
-bool is_created_vm(const struct acrn_vm *vm)
-{
-	return (vm->state == VM_CREATED);
-}
-
-bool is_service_vm(const struct acrn_vm *vm)
-{
-	return (vm != NULL)  && (get_vm_config(vm->vm_id)->load_order == SERVICE_VM);
-}
-
-/**
- * @pre vm != NULL
- * @pre vm->vmid < CONFIG_MAX_VM_NUM
- */
-bool is_postlaunched_vm(const struct acrn_vm *vm)
-{
-	return (get_vm_config(vm->vm_id)->load_order == POST_LAUNCHED_VM);
-}
-
-
-/**
- * @pre vm != NULL
- * @pre vm->vmid < CONFIG_MAX_VM_NUM
- */
-bool is_prelaunched_vm(const struct acrn_vm *vm)
-{
-	struct acrn_vm_config *vm_config;
-
-	vm_config = get_vm_config(vm->vm_id);
-	return (vm_config->load_order == PRE_LAUNCHED_VM);
-}
-
 /**
  * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
  */
@@ -145,31 +76,6 @@ bool is_pmu_pt_configured(const struct acrn_vm *vm)
 	return ((vm_config->guest_flags & GUEST_FLAG_PMU_PASSTHROUGH) != 0U);
 }
 
-
-/**
- * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
- */
-bool is_rt_vm(const struct acrn_vm *vm)
-{
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
-	return ((vm_config->guest_flags & GUEST_FLAG_RT) != 0U);
-}
-
-/**
- * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
- *
- * Stateful VM refers to VM that has its own state (such as internal file cache),
- * and will experience state loss (file system corruption) if force powered down.
- */
-bool is_stateful_vm(const struct acrn_vm *vm)
-{
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
-	/* TEE VM has GUEST_FLAG_STATELESS set implicitly */
-	return ((vm_config->guest_flags & GUEST_FLAG_STATELESS) == 0U);
-}
-
 /**
  * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
  */
@@ -188,16 +94,6 @@ bool is_vcat_configured(const struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	return ((vm_config->guest_flags & GUEST_FLAG_VCAT_ENABLED) != 0U);
-}
-
-/**
- * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
- */
-bool is_static_configured_vm(const struct acrn_vm *vm)
-{
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
-	return ((vm_config->guest_flags & GUEST_FLAG_STATIC_VM) != 0U);
 }
 
 /**
@@ -232,24 +128,6 @@ bool is_vtm_configured(const struct acrn_vm *vm)
 bool is_pi_capable(const struct acrn_vm *vm)
 {
 	return (platform_caps.pi && (!is_lapic_pt_configured(vm)));
-}
-
-struct acrn_vm *get_highest_severity_vm(bool runtime)
-{
-	uint16_t vm_id, highest_vm_id = 0U;
-
-	for (vm_id = 1U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
-		if (runtime && is_poweroff_vm(get_vm_from_vmid(vm_id))) {
-			/* If vm is non-existed or shutdown, it's not highest severity VM */
-			continue;
-		}
-
-		if (get_vm_severity(vm_id) > get_vm_severity(highest_vm_id)) {
-			highest_vm_id = vm_id;
-		}
-	}
-
-	return get_vm_from_vmid(highest_vm_id);
 }
 
 /**
@@ -892,16 +770,6 @@ int32_t arch_reset_vm(struct acrn_vm *vm)
 }
 
 /**
- * @pre vm != NULL
- */
-void poweroff_if_rt_vm(struct acrn_vm *vm)
-{
-	if (is_rt_vm(vm) && !is_paused_vm(vm) && !is_poweroff_vm(vm)) {
-		vm->state = VM_READY_TO_POWEROFF;
-	}
-}
-
-/**
  * @brief Resume vm from S3 state
  *
  * To resume vm after guest enter S3 state:
@@ -1014,50 +882,6 @@ enum vm_vlapic_mode check_vm_vlapic_mode(const struct acrn_vm *vm)
 
 	vlapic_mode = vm->arch_vm.vlapic_mode;
 	return vlapic_mode;
-}
-
-/**
- * if there is RT VM return true otherwise return false.
- */
-bool has_rt_vm(void)
-{
-	uint16_t vm_id;
-
-	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
-		if (is_rt_vm(get_vm_from_vmid(vm_id))) {
-			break;
-		}
-	}
-
-	return (vm_id != CONFIG_MAX_VM_NUM);
-}
-
-void make_shutdown_vm_request(uint16_t pcpu_id)
-{
-	bitmap_set(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
-	if (get_pcpu_id() != pcpu_id) {
-		kick_pcpu(pcpu_id);
-	}
-}
-
-bool need_shutdown_vm(uint16_t pcpu_id)
-{
-	return bitmap_test_and_clear(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
-}
-
-/*
- * @pre vm != NULL
- */
-void get_vm_lock(struct acrn_vm *vm)
-{
-	spinlock_obtain(&vm->vm_state_lock);
-}
-/*
- * @pre vm != NULL
- */
-void put_vm_lock(struct acrn_vm *vm)
-{
-	spinlock_release(&vm->vm_state_lock);
 }
 
 void arch_trigger_level_intr(struct acrn_vm *vm, uint32_t irq, bool assert)

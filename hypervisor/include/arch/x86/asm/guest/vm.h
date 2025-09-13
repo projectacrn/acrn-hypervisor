@@ -112,38 +112,11 @@ struct vm_arch {
 
 } __aligned(PAGE_SIZE);
 
-/* Convert relative vm id to absolute vm id */
-static inline uint16_t rel_vmid_2_vmid(uint16_t service_vmid, uint16_t rel_vmid) {
-	return (service_vmid + rel_vmid);
-}
-
-/* Convert absolute vm id to relative vm id */
-static inline uint16_t vmid_2_rel_vmid(uint16_t service_vmid, uint16_t vmid) {
-	return (vmid - service_vmid);
-}
-
-static inline bool is_severity_pass(uint16_t target_vmid)
-{
-	return SEVERITY_SERVICE_VM >= get_vm_severity(target_vmid);
-}
-
-void make_shutdown_vm_request(uint16_t pcpu_id);
-bool need_shutdown_vm(uint16_t pcpu_id);
-void poweroff_if_rt_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
-bool is_created_vm(const struct acrn_vm *vm);
-bool is_service_vm(const struct acrn_vm *vm);
-bool is_postlaunched_vm(const struct acrn_vm *vm);
-bool is_prelaunched_vm(const struct acrn_vm *vm);
-uint16_t get_vmid_by_name(const char *name);
-struct acrn_vm *get_service_vm(void);
-
 void create_service_vm_e820(struct acrn_vm *vm);
 void create_prelaunched_vm_e820(struct acrn_vm *vm);
 void prepare_vm_identical_memmap(struct acrn_vm *vm, uint16_t e820_entry_type, uint64_t prot_orig);
 uint64_t find_space_from_ve820(struct acrn_vm *vm, uint32_t size, uint64_t min_addr, uint64_t max_addr);
-
-int32_t prepare_os_image(struct acrn_vm *vm);
 
 void suspend_vrtc(void);
 void resume_vrtc(void);
@@ -151,30 +124,14 @@ void vrtc_init(struct acrn_vm *vm);
 
 bool is_lapic_pt_configured(const struct acrn_vm *vm);
 bool is_pmu_pt_configured(const struct acrn_vm *vm);
-bool is_rt_vm(const struct acrn_vm *vm);
-bool is_stateful_vm(const struct acrn_vm *vm);
 bool is_nvmx_configured(const struct acrn_vm *vm);
 bool is_vcat_configured(const struct acrn_vm *vm);
-bool is_static_configured_vm(const struct acrn_vm *vm);
-uint16_t get_unused_vmid(void);
 bool is_pi_capable(const struct acrn_vm *vm);
-bool has_rt_vm(void);
-struct acrn_vm *get_highest_severity_vm(bool runtime);
 bool vm_hide_mtrr(const struct acrn_vm *vm);
 void update_vm_vlapic_state(struct acrn_vm *vm);
 enum vm_vlapic_mode check_vm_vlapic_mode(const struct acrn_vm *vm);
 bool is_vhwp_configured(const struct acrn_vm *vm);
 bool is_vtm_configured(const struct acrn_vm *vm);
-/*
- * @pre vm != NULL
- */
-void get_vm_lock(struct acrn_vm *vm);
-
-/*
- * @pre vm != NULL
- */
-void put_vm_lock(struct acrn_vm *vm);
-
 void *get_sworld_memory_base(void);
 #endif /* !ASSEMBLER */
 

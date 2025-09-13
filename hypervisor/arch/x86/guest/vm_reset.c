@@ -239,23 +239,3 @@ void register_reset_port_handler(struct acrn_vm *vm)
 		}
 	}
 }
-
-void shutdown_vm_from_idle(uint16_t pcpu_id)
-{
-	uint16_t vm_id;
-	uint64_t *vms = &per_cpu(shutdown_vm_bitmap, pcpu_id);
-	struct acrn_vm *vm;
-
-	for (vm_id = fls64(*vms); vm_id < CONFIG_MAX_VM_NUM; vm_id = fls64(*vms)) {
-		vm = get_vm_from_vmid(vm_id);
-		get_vm_lock(vm);
-		if (is_paused_vm(vm)) {
-			(void)destroy_vm(vm);
-			if (is_ready_for_system_shutdown()) {
-				shutdown_system();
-			}
-		}
-		put_vm_lock(vm);
-		bitmap_clear_non_atomic(vm_id, vms);
-	}
-}
