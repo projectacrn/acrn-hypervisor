@@ -131,7 +131,6 @@ void make_shutdown_vm_request(uint16_t pcpu_id);
 bool need_shutdown_vm(uint16_t pcpu_id);
 void poweroff_if_rt_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
-int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode);
 bool is_created_vm(const struct acrn_vm *vm);
 bool is_service_vm(const struct acrn_vm *vm);
 bool is_postlaunched_vm(const struct acrn_vm *vm);

@@ -98,14 +98,6 @@ bool is_created_vm(const struct acrn_vm *vm)
 	return (vm->state == VM_CREATED);
 }
 
-/**
- * @pre vm != NULL
- */
-bool is_paused_vm(const struct acrn_vm *vm)
-{
-	return (vm->state == VM_PAUSED);
-}
-
 bool is_service_vm(const struct acrn_vm *vm)
 {
 	return (vm != NULL)  && (get_vm_config(vm->vm_id)->load_order == SERVICE_VM);
@@ -869,7 +861,7 @@ void arch_vm_prepare_bsp(struct acrn_vcpu *bsp)
  * @pre vm != NULL
  * @pre vm->state == VM_PAUSED
  */
-int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode)
+int32_t arch_reset_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
 	uint64_t mask;
@@ -890,16 +882,11 @@ int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode)
 	 */
 	vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
 
-	if ((mode == POWER_ON_RESET) && is_service_vm(vm)) {
-		(void)prepare_os_image(vm);
-	}
-
 	reset_vm_ioreqs(vm);
 	reset_vioapics(vm);
 	destroy_secure_world(vm, false);
 	vm->arch_vm.sworld_control.flag.active = 0UL;
 	vm->arch_vm.iwkey_backup_status = 0UL;
-	vm->state = VM_CREATED;
 
 	return ret;
 }
@@ -933,7 +920,7 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 {
 	struct acrn_vcpu *bsp = vcpu_from_vid(vm, BSP_CPU_ID);
 
-	reset_vm(vm, RESUME_FROM_S3);
+	reset_vm(vm);
 
 	/* When Service VM resume from S3, it will return to real mode
 	 * with entry set to wakeup_vec.

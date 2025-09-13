@@ -16,6 +16,14 @@ static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 static struct acrn_vm *service_vm_ptr = NULL;
 
 /**
+ * @pre vm != NULL
+ */
+bool is_paused_vm(const struct acrn_vm *vm)
+{
+	return (vm->state == VM_PAUSED);
+}
+
+/**
  * @pre vm_config != NULL
  */
 static inline uint16_t get_configured_bsp_pcpu_id(const struct acrn_vm_config *vm_config)
@@ -242,4 +250,22 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	}
 
 	return status;
+}
+
+/**
+ * "Warm" reset a VM.
+ * To "Cold" reset a VM, simply destroy and re-create.
+ *
+ * @pre vm->state == VM_PAUSED
+ */
+int32_t reset_vm(struct acrn_vm *vm)
+{
+	int32_t ret = -1;
+
+	ret = arch_reset_vm(vm);
+	if (ret == 0) {
+		vm->state = VM_CREATED;
+	}
+
+	return ret;
 }

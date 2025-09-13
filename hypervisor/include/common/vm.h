@@ -153,12 +153,14 @@ void arch_trigger_level_intr(__unused struct acrn_vm *vm,
 int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config);
 int32_t arch_deinit_vm(struct acrn_vm *vm);
 void arch_vm_prepare_bsp(struct acrn_vcpu *bsp);
+int32_t arch_reset_vm(struct acrn_vm *vm);
 
 int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 void launch_vms(uint16_t pcpu_id);
 void start_vm(struct acrn_vm *vm);
 void pause_vm(struct acrn_vm *vm);
 int32_t destroy_vm(struct acrn_vm *vm);
+int32_t reset_vm(struct acrn_vm *vm);
 
 #endif /* !ASSEMBLER */
 
