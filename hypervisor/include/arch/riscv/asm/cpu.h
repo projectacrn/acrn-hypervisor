@@ -17,6 +17,12 @@
 #define cpu_relax()	barrier() /* TODO: replace with yield instruction */
 #define NR_CPUS		MAX_PCPU_NUM
 
+#define LONG_BYTEORDER 3
+#define BYTES_PER_LONG (1 << LONG_BYTEORDER)
+#define BITS_PER_LONG (BYTES_PER_LONG << 3)
+/* Define the interrupt enable bit mask */
+#define SSTATUS_SIE 0x2
+
 static inline uint16_t get_pcpu_id(void)
 {
 	/**
@@ -27,12 +33,29 @@ static inline uint16_t get_pcpu_id(void)
 }
 
 /* Write CSR */
-#define cpu_csr_write(reg, csr_val)					\
-({									\
-	uint64_t val = (uint64_t)csr_val;				\
-	asm volatile (" csrw " STRINGIFY(reg) ", %0 \n\t"		\
-			:: "r"(val): "memory");	 			\
-})
+#define cpu_csr_write(reg, csr_val)                                                                                    \
+	({                                                                                                             \
+		uint64_t val = (uint64_t)csr_val;                                                                      \
+		asm volatile(" csrw " STRINGIFY(reg) ", %0 \n\t" ::"r"(val) : "memory");                               \
+	})
+
+/**
+ * FIXME: to follow multi-arch design, refactor all of them into static inline functions with corresponding
+ *        X86 implementation together.
+ */
+#define local_irq_disable() asm volatile("csrc sstatus, %0\n" ::"i"(SSTATUS_SIE) : "memory")
+#define local_irq_enable() asm volatile("csrs sstatus, %0\n" ::"i"(SSTATUS_SIE) : "memory")
+#define local_save_flags(x) ({ asm volatile("csrr %0, sstatus, 0\n" : "=r"(x)::"memory"); })
+#define local_irq_restore(x) ({ asm volatile("csrs sstatus, %0\n" ::"rK"(x & SSTATUS_SIE) : "memory"); })
+#define local_irq_save(x)                                                                                              \
+	({                                                                                                             \
+		uint32_t val = 0U;                                                                                     \
+		asm volatile("csrrc %0, sstatus, 0\n" : "=r"(val) : "i"(SSTATUS_SIE) : "memory");                      \
+		*(uint32_t *)(x) = val;                                                                                \
+	})
+
+#define CPU_INT_ALL_DISABLE(x) local_irq_save(x)
+#define CPU_INT_ALL_RESTORE(x) local_irq_restore(x)
 
 void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);
 
