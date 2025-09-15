@@ -566,7 +566,7 @@ virtio_gpu_cmd_get_edid(struct virtio_gpu_command *cmd)
 	memset(&resp, 0, sizeof(resp));
 	virtio_gpu_update_resp_fence(&cmd->hdr, &resp.hdr);
 	if (req.scanout >= gpu->scanout_num) {
-		pr_err("%s: Invalid scanout_id %d\n", req.scanout);
+		pr_err("%s: Invalid scanout_id %d\n", __func__, req.scanout);
 		resp.hdr.type = VIRTIO_GPU_RESP_ERR_INVALID_SCANOUT_ID;
 		memcpy(cmd->iov[1].iov_base, &resp, sizeof(resp));
 		return;
