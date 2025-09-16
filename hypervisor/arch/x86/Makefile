@@ -40,17 +40,7 @@ endif
 ASFLAGS += -m64 -nostdinc -nostdlib
 
 # library componment
-LIB_C_SRCS += lib/string.c
-LIB_C_SRCS += lib/crypto/crypto_api.c
-LIB_C_SRCS += lib/crypto/mbedtls/hkdf.c
-LIB_C_SRCS += lib/crypto/mbedtls/sha256.c
-LIB_C_SRCS += lib/crypto/mbedtls/md.c
-LIB_C_SRCS += lib/crypto/mbedtls/md_wrap.c
-LIB_C_SRCS += lib/sprintf.c
 LIB_C_SRCS += arch/x86/lib/memory.c
-ifdef STACK_PROTECTOR
-LIB_C_SRCS += lib/stack_protector.c
-endif
 
 # retpoline support
 ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))

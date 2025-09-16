@@ -154,6 +154,17 @@ COMMON_C_SRCS += common/cpu.c
 COMMON_C_SRCS += lib/memory.c
 COMMON_C_SRCS += lib/bits.c
 
+# library componment
+COMMON_C_SRCS += lib/string.c
+COMMON_C_SRCS += lib/crypto/crypto_api.c
+COMMON_C_SRCS += lib/crypto/mbedtls/hkdf.c
+COMMON_C_SRCS += lib/crypto/mbedtls/sha256.c
+COMMON_C_SRCS += lib/crypto/mbedtls/md.c
+COMMON_C_SRCS += lib/crypto/mbedtls/md_wrap.c
+COMMON_C_SRCS += lib/sprintf.c
+ifdef STACK_PROTECTOR
+COMMON_C_SRCS += lib/stack_protector.c
+endif
 
 ifeq ($(ARCH),x86)
 COMMON_C_SRCS += common/ticks.c
