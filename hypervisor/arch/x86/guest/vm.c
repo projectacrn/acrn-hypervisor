@@ -732,6 +732,14 @@ int32_t arch_deinit_vm(struct acrn_vm *vm)
  */
 void arch_vm_prepare_bsp(struct acrn_vcpu *bsp)
 {
+	struct acrn_vm *vm = bsp->vm;
+
+	if (!is_postlaunched_vm(vm)) {
+		vcpu_set_rip(bsp, (uint64_t)bsp->vm->sw.kernel_info.kernel_entry_addr);
+	}
+
+	/* For post launched VMs, vbsp init is done through separate hypercall */
+
 	vcpu_make_request(bsp, ACRN_REQUEST_INIT_VMCS);
 }
 
@@ -795,7 +803,9 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 	 */
 	set_vcpu_startup_entry(bsp, wakeup_vec);
 
-	start_vm(vm);
+	vm->state = VM_RUNNING;
+	init_vmcs(bsp);
+	launch_vcpu(bsp);
 }
 
 /*
