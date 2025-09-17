@@ -21,6 +21,9 @@
  */
 #define INVALID_CPU_ID		0xffffU
 
+/* hypervisor stack bottom magic('intl') */
+#define SP_BOTTOM_MAGIC    0x696e746cUL
+
 /* CPU states defined */
 enum pcpu_boot_state {
         PCPU_STATE_RESET = 0U,
