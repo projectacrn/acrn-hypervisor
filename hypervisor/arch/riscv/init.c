@@ -85,9 +85,7 @@ static void init_pcpu_comm_post(void)
 	timer_init();
 
 	/* to be implemented */
-	(void)pcpu_id;
+	init_sched(pcpu_id);
 
-	while (1) {
-		asm volatile("wfi" : : : "memory");
-	}
+	run_idle_thread();
 }
