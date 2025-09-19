@@ -733,9 +733,26 @@ int32_t arch_deinit_vm(struct acrn_vm *vm)
 void arch_vm_prepare_bsp(struct acrn_vcpu *bsp)
 {
 	struct acrn_vm *vm = bsp->vm;
+	uint64_t vgdt_gpa;
 
 	if (!is_postlaunched_vm(vm)) {
 		vcpu_set_rip(bsp, (uint64_t)bsp->vm->sw.kernel_info.kernel_entry_addr);
+
+		if (vm->sw.kernel_type == KERNEL_RAWIMAGE) {
+			vgdt_gpa = 0x800;
+			/*
+			 * TODO:
+			 *    - We need to initialize the guest BSP(boot strap processor) registers according to
+			 *	guest boot mode (real mode vs protect mode)
+			 *    - The memory layout usage is unclear, only GDT might be needed as its boot param.
+			 *	currently we only support Zephyr which has no needs on cmdline/e820/efimmap/etc.
+			 *	hardcode the vGDT GPA to 0x800 where is not used by Zephyr so far;
+			 */
+			init_vcpu_protect_mode_regs(bsp, vgdt_gpa);
+		}
+
+		/* TODO: Move vcpu state setting operations from
+		 * other loaders (i.e., bzimage loaders, elf loaders) here */
 	}
 
 	/* For post launched VMs, vbsp init is done through separate hypercall */

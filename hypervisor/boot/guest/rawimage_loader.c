@@ -27,20 +27,7 @@ static void load_rawimage(struct acrn_vm *vm)
 
 int32_t rawimage_loader(struct acrn_vm *vm)
 {
-	int32_t ret = 0;
-	uint64_t vgdt_gpa = 0x800;
-
-	/*
-	 * TODO:
-	 *    - We need to initialize the guest BSP(boot strap processor) registers according to
-	 *	guest boot mode (real mode vs protect mode)
-	 *    - The memory layout usage is unclear, only GDT might be needed as its boot param.
-	 *	currently we only support Zephyr which has no needs on cmdline/e820/efimmap/etc.
-	 *	hardcode the vGDT GPA to 0x800 where is not used by Zephyr so far;
-	 */
-	init_vcpu_protect_mode_regs(vcpu_from_vid(vm, BSP_CPU_ID), vgdt_gpa);
-
 	load_rawimage(vm);
 
-	return ret;
+	return 0;
 }
