@@ -99,7 +99,7 @@ static const char *get_flags(const char *s_arg, uint32_t *flags)
 {
 	const char *s = s_arg;
 	/* contains the flag characters */
-	static const char flagchars[5] = "#0- +";
+	static const char flagchars[6] = "#0- +";
 	/* contains the numeric flags for the characters above */
 	static const uint32_t fl[sizeof(flagchars)] = {
 		PRINT_FLAG_ALTERNATE_FORM,	/* # */
