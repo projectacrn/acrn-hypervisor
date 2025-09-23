@@ -200,7 +200,9 @@ COMMON_C_SRCS += dm/vpci/vmsi.c
 COMMON_C_SRCS += dm/vpci/vmsix.c
 COMMON_C_SRCS += dm/vpci/vmsix_on_msi.c
 COMMON_C_SRCS += dm/vpci/vsriov.c
+ifeq ($(CONFIG_VMCS9900),y)
 COMMON_C_SRCS += dm/vpci/vmcs9900.c
+endif
 COMMON_C_SRCS += dm/mmio_dev.c
 COMMON_C_SRCS += dm/vgpio.c
 ifeq ($(CONFIG_SCHED_IORR),y)

@@ -32,7 +32,9 @@
 #include <uart16550.h>
 #include <console.h>
 #include <vuart.h>
+#ifdef CONFIG_VMCS9900
 #include <vmcs9900.h>
+#endif
 #include <vm.h>
 #include <logmsg.h>
 
@@ -214,10 +216,13 @@ void vuart_toggle_intr(const struct acrn_vuart *vu)
 
 	intr_reason = vuart_intr_reason(vu);
 
+#ifdef CONFIG_VMCS9900
 	if ((vu->vdev != NULL) && (intr_reason != IIR_NOPEND)) {
 		/* FIXME: Toggle is for level trigger interrupt, for edge trigger need refine the logic later. */
 		trigger_vmcs9900_msix(vu->vdev);
-	} else if (intr_reason != IIR_NOPEND) {
+	} else
+#endif
+	if (intr_reason != IIR_NOPEND) {
 		vuart_trigger_level_intr(vu, true);
 	} else {
 		vuart_trigger_level_intr(vu, false);
@@ -861,6 +866,7 @@ void deinit_legacy_vuarts(struct acrn_vm *vm)
  *
  * @post N/A
  */
+#ifdef CONFIG_VMCS9900
 void init_pci_vuart(struct pci_vdev *vdev)
 {
 	struct acrn_vuart *vu = vdev->priv_data;
@@ -912,6 +918,7 @@ void deinit_pci_vuart(struct pci_vdev *vdev)
 	}
 }
 
+#endif
 /**
  * @}
  */

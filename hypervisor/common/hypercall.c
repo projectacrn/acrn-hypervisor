@@ -49,7 +49,11 @@ static struct emul_dev_ops emul_dev_ops_tbl[] = {
 #else
 	{(IVSHMEM_VENDOR_ID | (IVSHMEM_DEVICE_ID << 16U)), NULL, NULL},
 #endif
+#ifdef CONFIG_VMCS9900
 	{(MCS9900_VENDOR | (MCS9900_DEV << 16U)), create_vmcs9900_vdev, destroy_vmcs9900_vdev},
+#else
+	{(MCS9900_VENDOR | (MCS9900_DEV << 16U)), NULL, NULL},
+#endif
 	{(VRP_VENDOR | (VRP_DEVICE << 16U)), create_vrp, destroy_vrp},
 };
 

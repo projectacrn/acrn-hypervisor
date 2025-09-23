@@ -184,6 +184,11 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
         <xs:documentation>Configure shared memory regions for inter-VM communication.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="VMCS9900" type="Boolean" default="y">
+      <xs:annotation acrn:title="virtual 16550A PCI device uart" acrn:views="basic">
+        <xs:documentation>Configure virtual 16550A PCI device uart.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="SSRAM" minOccurs="0" type="SSRAMInfo">
       <xs:annotation acrn:title="Software SRAM" acrn:views="">
         <xs:documentation>Configure Software SRAM. This feature reserves memory buffers as always-cached memory to improve an application's real-time performance.</xs:documentation>
