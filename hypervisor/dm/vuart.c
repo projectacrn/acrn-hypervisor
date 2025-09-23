@@ -183,27 +183,7 @@ static struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset
 
 static void vuart_trigger_level_intr(const struct acrn_vuart *vu, bool assert)
 {
-	union ioapic_rte rte;
-	uint32_t operation;
-
-	vioapic_get_rte(vu->vm, vu->irq, &rte);
-
-	/* TODO:
-	 * Here should assert vuart irq according to vCOM1_IRQ polarity.
-	 * The best way is to get the polarity info from ACPI table.
-	 * Here we just get the info from vioapic configuration.
-	 * based on this, we can still have irq storm during guest
-	 * modify the vioapic setting, as it's only for debug uart,
-	 * we want to make it as an known issue.
-	 */
-	if (rte.bits.intr_polarity == IOAPIC_RTE_INTPOL_ALO) {
-		operation = assert ? GSI_SET_LOW : GSI_SET_HIGH;
-	} else {
-		operation = assert ? GSI_SET_HIGH : GSI_SET_LOW;
-	}
-
-	vpic_set_irqline(vm_pic(vu->vm), vu->irq, operation);
-	vioapic_set_irqline_lock(vu->vm, vu->irq, operation);
+	arch_trigger_level_intr(vu->vm, vu->irq, assert);
 }
 
 /*

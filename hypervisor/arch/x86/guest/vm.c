@@ -1293,3 +1293,28 @@ void put_vm_lock(struct acrn_vm *vm)
 {
 	spinlock_release(&vm->vm_state_lock);
 }
+
+void arch_trigger_level_intr(struct acrn_vm *vm, uint32_t irq, bool assert)
+{
+	union ioapic_rte rte;
+	uint32_t operation;
+
+	vioapic_get_rte(vm, irq, &rte);
+
+	/* TODO:
+	 * Here should assert vuart irq according to vCOM1_IRQ polarity.
+	 * The best way is to get the polarity info from ACPI table.
+	 * Here we just get the info from vioapic configuration.
+	 * based on this, we can still have irq storm during guest
+	 * modify the vioapic setting, as it's only for debug uart,
+	 * we want to make it as an known issue.
+	 */
+	if (rte.bits.intr_polarity == IOAPIC_RTE_INTPOL_ALO) {
+		operation = assert ? GSI_SET_LOW : GSI_SET_HIGH;
+	} else {
+		operation = assert ? GSI_SET_HIGH : GSI_SET_LOW;
+	}
+
+	vpic_set_irqline(vm_pic(vm), irq, operation);
+	vioapic_set_irqline_lock(vm, irq, operation);
+}
