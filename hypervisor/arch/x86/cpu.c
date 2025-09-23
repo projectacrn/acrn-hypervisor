@@ -40,6 +40,7 @@
 #include <thermal.h>
 #include <common/notify.h>
 #include <cpu.h>
+#include <debug/dbg_cmd.h>
 
 static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
@@ -50,6 +51,9 @@ static void init_keylocker(void);
 static void print_hv_banner(void);
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
 static uint64_t start_tick __attribute__((__section__(".bss_noinit")));
+
+/* if use INIT to kick pcpu only, if not notification IPI still is used for sharing CPU */
+static bool use_init_ipi = false;
 
 /**
  * This function will be called by function get_pcpu_nums()
@@ -587,4 +591,39 @@ uint64_t msr_read_pcpu(uint32_t msr_index, uint16_t pcpu_id)
 	}
 
 	return ret;
+}
+
+bool is_using_init_ipi(void)
+{
+	return use_init_ipi;
+}
+
+void arch_parse_hvdbg_cmdline(void)
+{
+	const char *start = NULL;
+	const char *end = NULL;
+	struct acrn_boot_info *abi = get_acrn_boot_info();
+
+	start = abi->cmdline;
+
+	while ((*start) != '\0') {
+		while ((*start) == ' ') {
+			start++;
+		}
+		if ((*start) != '\0') {
+			end = start + 1;
+			while ((*end != ' ') && ((*end) != '\0')) {
+				end++;
+			}
+
+			if (!handle_dbg_cmd(start, (int32_t)(end - start))) {
+				/* if not handled by handle_dbg_cmd, it can be handled further */
+				if (strncmp(start, "USE_INIT_IPI", (size_t)(end - start)) == 0) {
+					use_init_ipi = true;
+				}
+			}
+			start = end;
+		}
+	}
+
 }

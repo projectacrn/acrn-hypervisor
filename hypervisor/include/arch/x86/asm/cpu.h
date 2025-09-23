@@ -459,6 +459,9 @@ void wait_pcpus_offline(uint64_t mask);
 void stop_pcpus(void);
 void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);
 
+bool is_using_init_ipi(void);
+void arch_parse_hvdbg_cmdline(void);
+
 #define CPU_SEG_READ(seg, result_ptr)						\
 {										\
 	asm volatile ("mov %%" STRINGIFY(seg) ", %0": "=r" (*(result_ptr)));	\

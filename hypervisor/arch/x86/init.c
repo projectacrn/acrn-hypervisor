@@ -34,6 +34,9 @@ extern uint32_t boot_regs[2];
 /*TODO: move into debug module */
 static void init_debug_pre(void)
 {
+	/*Parse cmdline to get UART setting*/
+	arch_parse_hvdbg_cmdline();
+
 	/* Initialize console */
 	console_init();
 }

@@ -27,50 +27,11 @@ struct hv_timer console_timer;
 #define GUEST_CONSOLE_TO_HV_SWITCH_KEY  'e' /* escape + e to switch back to hv console */
 uint16_t console_vmid = CONFIG_CONSOLE_DEFAULT_VM;
 
-/* if use INIT to kick pcpu only, if not notification IPI still is used for sharing CPU */
-static bool use_init_ipi = false;
-
 uint16_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
 static spinlock_t console_log_lock;
 
-bool is_using_init_ipi(void)
-{
-	return use_init_ipi;
-}
-
-static void parse_hvdbg_cmdline(void)
-{
-	const char *start = NULL;
-	const char *end = NULL;
-	struct acrn_boot_info *abi = get_acrn_boot_info();
-
-	start = abi->cmdline;
-
-	while ((*start) != '\0') {
-		while ((*start) == ' ')
-			start++;
-		if ((*start) != '\0') {
-			end = start + 1;
-			while ((*end != ' ') && ((*end) != '\0'))
-				end++;
-
-			if (!handle_dbg_cmd(start, (int32_t)(end - start))) {
-				/* if not handled by handle_dbg_cmd, it can be handled further */
-				if (strncmp(start, "USE_INIT_IPI", (size_t)(end - start)) == 0) {
-					use_init_ipi = true;
-				}
-			}
-			start = end;
-		}
-	}
-
-}
-
 void console_init(void)
 {
-	/*Parse cmdline to get UART setting*/
-	parse_hvdbg_cmdline();
-
 	/*
 	 * Enable UART as early as possible.
 	 * Then we could use printf for debugging on early boot stage.
