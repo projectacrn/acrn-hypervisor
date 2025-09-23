@@ -8,7 +8,9 @@
 #define CONSOLE_H
 
 #include <vuart.h>
-#include <asm/guest/vcpu.h>
+
+
+struct acrn_vcpu;
 
 /** Initializes the console module.
  *

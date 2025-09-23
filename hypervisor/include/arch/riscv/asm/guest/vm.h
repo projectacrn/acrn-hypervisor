@@ -4,11 +4,20 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef VM_H_
-#define VM_H_
+#ifndef RISCV_VM_H_
+#define RISCV_VM_H_
+
+
+#include <vm_configurations.h>
+#include <vuart.h>
+#include <asm/guest/vcpu.h>
+
+
+#define INVALID_PIO_IDX	-1U
+#define UART_PIO_IDX0	INVALID_PIO_IDX
 
 struct acrn_vm {
-
+	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
 };
 
 /* FIXME: riscv dummy function */
@@ -17,4 +26,5 @@ static inline bool need_shutdown_vm(uint16_t pcpu_id)
 	(void)pcpu_id;
 	return false;
 }
-#endif /* VM_H_ */
+
+#endif /* RISCV_VM_H_ */
