@@ -182,6 +182,13 @@ void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);
 void init_percpu_hart_id(uint32_t bsp_hart_id);
 uint16_t get_pcpu_id_from_hart_id(uint32_t hart_id);
 
+/* FIXME: riscv dummy function */
+static inline bool need_offline(uint16_t pcpu_id)
+{
+	(void)pcpu_id;
+	return false;
+}
+
 #else /* ASSEMBLER */
 #include <asm/offset.h>
 

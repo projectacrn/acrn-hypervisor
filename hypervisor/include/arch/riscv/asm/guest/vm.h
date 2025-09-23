@@ -11,4 +11,10 @@ struct acrn_vm {
 
 };
 
+/* FIXME: riscv dummy function */
+static inline bool need_shutdown_vm(uint16_t pcpu_id)
+{
+	(void)pcpu_id;
+	return false;
+}
 #endif /* VM_H_ */
