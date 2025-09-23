@@ -6,10 +6,10 @@
 
 #include <types.h>
 #include <errno.h>
+#include <mmu.h>
 #include <vm.h>
 #include <asm/guest/virq.h>
 #include <asm/pgtable.h>
-#include <asm/mmu.h>
 #include <asm/guest/ept.h>
 #include <asm/vmx.h>
 #include <asm/vtd.h>

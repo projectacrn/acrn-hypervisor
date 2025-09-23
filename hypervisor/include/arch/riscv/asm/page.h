@@ -10,6 +10,8 @@
 #ifndef __RISCV_PAGE_H__
 #define __RISCV_PAGE_H__
 
+#include <types.h>
+
 #define PAGE_SHIFT		12
 #define PAGE_SIZE		(1 << PAGE_SHIFT)
 

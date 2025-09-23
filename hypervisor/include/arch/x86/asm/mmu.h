@@ -8,8 +8,8 @@
  *
  * @brief APIs for Memory Management module
  */
-#ifndef MMU_H
-#define MMU_H
+#ifndef X86_MMU_H
+#define X86_MMU_H
 /**
  * @brief Memory Management
  *
@@ -147,7 +147,6 @@ void init_paging(void);
 /*
  * set paging attribute for primary page tables
  */
-void set_paging_supervisor(uint64_t base, uint64_t size);
 void set_paging_x(uint64_t base, uint64_t size);
 void set_paging_nx(uint64_t base, uint64_t size);
 
@@ -191,4 +190,4 @@ void allocate_ppt_pages(void);
  */
 #endif /* ASSEMBLER not defined */
 
-#endif /* MMU_H */
+#endif /* X86_MMU_H */

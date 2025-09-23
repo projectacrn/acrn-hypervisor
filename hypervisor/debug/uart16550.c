@@ -9,8 +9,8 @@
 #include <pci.h>
 #include <uart16550.h>
 #include <io.h>
+#include <mmu.h>
 #include <asm/cpu.h>
-#include <asm/mmu.h>
 
 #define MAX_BDF_LEN 8
 
@@ -165,7 +165,7 @@ void uart16550_init(bool early_boot)
 		if (uart.type == MMIO) {
 			mmio_base_va = hpa2hva(hva2hpa_early(uart.mmio_base_vaddr));
 			if (mmio_base_va != NULL) {
-				set_paging_supervisor((uint64_t)mmio_base_va, PDE_SIZE);
+				set_paging_supervisor((uint64_t)mmio_base_va, PAGE_SIZE);
 			}
 		}
 		return;

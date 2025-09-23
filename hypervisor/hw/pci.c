@@ -33,8 +33,7 @@
 #include <types.h>
 #include <spinlock.h>
 #include <io.h>
-#include <asm/pgtable.h>
-#include <asm/mmu.h>
+#include <mmu.h>
 #include <pci.h>
 #include <uart16550.h>
 #include <logmsg.h>
