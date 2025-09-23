@@ -195,3 +195,65 @@ int sbi_set_timer(uint64_t stime_value)
 
 	return ret.error;
 }
+
+/**
+ * @brief Get the machine vendor ID via SBI call.
+ *
+ * This function retrieves the machine vendor ID (mvendorid) by making an SBI
+ * (Supervisor Binary Interface) ecall to the SBI base extension. The mvendorid
+ * CSR identifies the vendor of the RISC-V implementation.
+ *
+ * @return The machine vendor ID value on success, or 0 on failure.
+ *         On error, an error message is logged with the error code.
+ */
+uint64_t sbi_get_mvendorid(void)
+{
+	sbiret ret;
+	ret.value = 0;
+	ret = sbi_ecall(0, 0, 0, 0, 0, 0, SBI_BASE_FID_GET_MVENDORID, SBI_EID_BASE);
+	if (ret.error != SBI_SUCCESS)
+		pr_err("%s: %lx", __func__, ret.error);
+	return ret.value;
+}
+
+/**
+ * @brief Retrieve the machine architecture ID via SBI call.
+ *
+ * This function invokes the SBI (Supervisor Binary Interface) base extension
+ * to query the machine architecture ID (MARCHID). The MARCHID identifies the
+ * microarchitecture of the hart.
+ *
+ * @return The machine architecture ID value on success, or 0 if the SBI call fails.
+ *         In case of failure, an error message is logged via pr_err().
+ */
+uint64_t sbi_get_marchid(void)
+{
+	sbiret ret;
+	ret.value = 0;
+	ret = sbi_ecall(0, 0, 0, 0, 0, 0, SBI_BASE_FID_GET_MARCHID, SBI_EID_BASE);
+	if (ret.error != SBI_SUCCESS)
+		pr_err("%s: %lx", __func__, ret.error);
+	return ret.value;
+}
+
+/**
+ * @brief Get the machine implementation ID (mimpid) through SBI call.
+ *
+ * This function retrieves the machine implementation ID by invoking the SBI
+ * (Supervisor Binary Interface) ecall with the GET_MIMPID function ID.
+ * The mimpid provides information about the specific implementation of the
+ * RISC-V processor.
+ *
+ * @return The machine implementation ID value on success, or 0 if the SBI
+ *         call fails. If an error occurs, an error message is logged with
+ *         the error code.
+ */
+uint64_t sbi_get_mimpid(void)
+{
+	sbiret ret;
+	ret.value = 0;
+	ret = sbi_ecall(0, 0, 0, 0, 0, 0, SBI_BASE_FID_GET_MIMPID, SBI_EID_BASE);
+	if (ret.error != SBI_SUCCESS)
+		pr_err("%s: %lx", __func__, ret.error);
+	return ret.value;
+}
