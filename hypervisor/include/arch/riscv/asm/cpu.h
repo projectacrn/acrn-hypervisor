@@ -187,6 +187,10 @@ static inline bool need_offline(uint16_t pcpu_id)
 	return false;
 }
 
+/* FIXME: If RISC-V support sbuf, it should implement SMAP enable/disable APIs */
+static inline void stac(void) {}
+static inline void clac(void) {}
+
 #else /* ASSEMBLER */
 #include <asm/offset.h>
 
