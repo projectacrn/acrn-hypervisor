@@ -30,6 +30,7 @@
 #define VUART_H
 #include <types.h>
 #include <spinlock.h>
+#include <vuart_config.h>
 #include <asm/vm_config.h>
 
 /**
