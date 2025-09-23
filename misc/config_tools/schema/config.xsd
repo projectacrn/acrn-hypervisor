@@ -174,6 +174,11 @@ If your VM is not a security VM, leave this option unchecked. </xs:documentation
         <xs:documentation>Intel Resource Director Technology (RDT) provides cache and memory bandwidth allocation features. The features can be used to improve an application's real-time performance.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="SERIAL_8250_PCI" type="Boolean" default="y">
+      <xs:annotation acrn:title="Enable 16550 PCI device support" acrn:views="basic">
+        <xs:documentation>Standard PCI serial support if legacy serial is not support</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="IVSHMEM" type="IVSHMEMInfo">
       <xs:annotation acrn:title="Inter-VM shared memory" acrn:views="basic">
         <xs:documentation>Configure shared memory regions for inter-VM communication.</xs:documentation>

@@ -121,6 +121,8 @@ static void uart16550_set_baud_rate(uint32_t baud_rate)
 	uart16550_write_reg(uart, temp_reg, UART16550_LCR);
 }
 
+#if CONFIG_SERIAL_8250_PCI
+/* FIXME  Please move these into mmu.c under ARCH dir */
 static uint8_t uart_pde_page[PAGE_SIZE]__aligned(PAGE_SIZE);
 static uint8_t uart_pdpte_page[PAGE_SIZE]__aligned(PAGE_SIZE);
 
@@ -149,6 +151,7 @@ static void early_pgtable_map_uart(uint64_t addr)
 		}
 	}
 }
+#endif
 
 void uart16550_init(bool early_boot)
 {
@@ -168,6 +171,7 @@ void uart16550_init(bool early_boot)
 		return;
 	}
 
+#if CONFIG_SERIAL_8250_PCI
 	/* if configure serial PCI BDF, get its base MMIO address */
 	if (uart.type == PCI) {
 		uint32_t bar0 = pci_pdev_read_cfg(uart.bdf, pci_bar_offset(0), 4U);
@@ -198,6 +202,7 @@ void uart16550_init(bool early_boot)
 			}
 		}
 	}
+#endif
 
 	spinlock_init(&uart.rx_lock);
 	spinlock_init(&uart.tx_lock);

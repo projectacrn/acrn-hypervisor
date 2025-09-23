@@ -27,6 +27,6 @@ bool is_poweroff_vm(__unused const struct acrn_vm *vm)
 }
 
 void arch_trigger_level_intr(__unused struct acrn_vm *vm,
-			__unused uint32_t irq, __unused bool assert);
+			__unused uint32_t irq, __unused bool assert) {}
 
 #endif /* RISCV_VM_C_ */

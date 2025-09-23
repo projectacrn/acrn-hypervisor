@@ -158,6 +158,10 @@
       <xsl:with-param name="value" select="count(//cache/capability[@id='Software SRAM']) > 0" />
     </xsl:call-template>
 
+    <xsl:call-template name="boolean-by-key">
+      <xsl:with-param name="key" select="'SERIAL_8250_PCI'" />
+    </xsl:call-template>
+
     <xsl:call-template name="boolean-by-key-value">
       <xsl:with-param name="key" select="'IVSHMEM_ENABLED'" />
       <xsl:with-param name="value" select="count(//hv//IVSHMEM/IVSHMEM_REGION[PROVIDED_BY = 'Hypervisor']) > 0" />
