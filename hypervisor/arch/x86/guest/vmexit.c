@@ -284,7 +284,9 @@ int32_t vmexit_handler(struct acrn_vcpu *vcpu)
 		}
 	}
 
-	console_vmexit_callback(vcpu);
+	if (is_lapic_pt_enabled(vcpu)) {
+		console_vmexit_callback(vcpu);
+	}
 
 	return ret;
 }

@@ -5,6 +5,7 @@
  */
 
 #include <types.h>
+#include <cpu.h>
 #include <pci.h>
 #include <uart16550.h>
 #include <shell.h>
@@ -18,6 +19,7 @@
 #include <boot.h>
 #include <dbg_cmd.h>
 #include <spinlock.h>
+#include <asm/guest/vm.h>
 
 struct hv_timer console_timer;
 
@@ -189,7 +191,7 @@ void console_vmexit_callback(struct acrn_vcpu *vcpu)
 	static uint64_t prev_tsc = 0;
 	uint64_t tsc;
 
-	if ((pcpuid_from_vcpu(vcpu) == VUART_TIMER_CPU) && (is_lapic_pt_enabled(vcpu))) {
+	if (pcpuid_from_vcpu(vcpu) == VUART_TIMER_CPU) {
 		tsc = cpu_ticks();
 		if (tsc - prev_tsc > (TICKS_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT)) {
 			console_timer_callback(NULL);
