@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef VM_H_
-#define VM_H_
+#ifndef X86_VM_H_
+#define X86_VM_H_
 
 /* Defines for VM Launch and Resume */
 #define VM_RESUME		0
@@ -250,14 +250,11 @@ int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode);
 int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 int32_t prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);
-bool is_poweroff_vm(const struct acrn_vm *vm);
 bool is_created_vm(const struct acrn_vm *vm);
-bool is_paused_vm(const struct acrn_vm *vm);
 bool is_service_vm(const struct acrn_vm *vm);
 bool is_postlaunched_vm(const struct acrn_vm *vm);
 bool is_prelaunched_vm(const struct acrn_vm *vm);
 uint16_t get_vmid_by_name(const char *name);
-struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 struct acrn_vm *get_service_vm(void);
 
 void create_service_vm_e820(struct acrn_vm *vm);
@@ -300,4 +297,4 @@ void put_vm_lock(struct acrn_vm *vm);
 void *get_sworld_memory_base(void);
 #endif /* !ASSEMBLER */
 
-#endif /* VM_H_ */
+#endif /* X86_VM_H_ */

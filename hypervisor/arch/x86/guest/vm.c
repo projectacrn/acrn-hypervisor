@@ -8,8 +8,8 @@
 #include <errno.h>
 #include <sprintf.h>
 #include <per_cpu.h>
+#include <vm.h>
 #include <asm/lapic.h>
-#include <asm/guest/vm.h>
 #include <asm/guest/vm_reset.h>
 #include <asm/guest/virq.h>
 #include <bits.h>

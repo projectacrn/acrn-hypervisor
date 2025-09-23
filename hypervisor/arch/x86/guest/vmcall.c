@@ -7,8 +7,7 @@
 #include <types.h>
 #include <errno.h>
 #include <spinlock.h>
-#include <asm/guest/vcpu.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/virq.h>
 #include <asm/guest/optee.h>
 #include <acrn_hv_defs.h>

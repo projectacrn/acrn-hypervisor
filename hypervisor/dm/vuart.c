@@ -33,7 +33,7 @@
 #include <console.h>
 #include <vuart.h>
 #include <vmcs9900.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <logmsg.h>
 
 /**

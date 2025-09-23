@@ -25,7 +25,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <io.h>
 #include <asm/tsc.h>
 #include <vrtc.h>

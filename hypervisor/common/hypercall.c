@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/vmx.h>
 #include <schedule.h>
 #include <version.h>
@@ -14,7 +14,6 @@
 #include <asm/lapic.h>
 #include <asm/guest/assign.h>
 #include <asm/guest/ept.h>
-#include <asm/guest/vm.h>
 #include <asm/mmu.h>
 #include <hypercall.h>
 #include <errno.h>

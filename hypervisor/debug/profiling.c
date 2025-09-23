@@ -9,10 +9,10 @@
 #include <errno.h>
 #include <asm/irq.h>
 #include <per_cpu.h>
+#include <vm.h>
 #include <asm/pgtable.h>
 #include <asm/vmx.h>
 #include <asm/cpuid.h>
-#include <asm/guest/vm.h>
 #include <sprintf.h>
 #include <logmsg.h>
 #include <ticks.h>

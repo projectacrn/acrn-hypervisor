@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <asm/guest/virq.h>
 #include <asm/pgtable.h>
 #include <asm/mmu.h>

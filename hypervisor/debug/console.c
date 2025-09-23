@@ -13,7 +13,7 @@
 #include <vuart.h>
 #include <logmsg.h>
 #include <acrn_hv_defs.h>
-#include <asm/guest/vm.h>
+#include <vm.h>
 #include <console.h>
 #include <boot.h>
 #include <dbg_cmd.h>

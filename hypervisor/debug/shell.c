@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <bits.h>
 #include "shell_priv.h"
+#include <vm.h>
 #include <asm/irq.h>
 #include <console.h>
 #include <per_cpu.h>
@@ -15,7 +16,6 @@
 #include <asm/cpuid.h>
 #include <asm/ioapic.h>
 #include <ptdev.h>
-#include <asm/guest/vm.h>
 #include <sprintf.h>
 #include <logmsg.h>
 #include <version.h>
