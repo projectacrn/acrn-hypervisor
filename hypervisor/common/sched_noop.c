@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <asm/per_cpu.h>
+#include <per_cpu.h>
 #include <schedule.h>
 
 static int32_t sched_noop_init(struct sched_control *ctl)

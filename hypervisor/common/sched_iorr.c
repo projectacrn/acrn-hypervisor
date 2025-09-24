@@ -118,7 +118,7 @@ int sched_iorr_add_timer(struct sched_control *ctl)
 	return ret;
 }
 
-static int sched_iorr_del_timer(struct sched_control *ctl)
+static void sched_iorr_del_timer(struct sched_control *ctl)
 {
 	struct sched_iorr_control *iorr_ctl = (struct sched_iorr_control *)ctl->priv;
 	del_timer(&iorr_ctl->tick_timer);
