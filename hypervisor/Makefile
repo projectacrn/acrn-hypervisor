@@ -157,6 +157,7 @@ COMMON_C_SRCS += common/ticks.c
 COMMON_C_SRCS += common/delay.c
 COMMON_C_SRCS += common/timer.c
 COMMON_C_SRCS += common/softirq.c
+COMMON_C_SRCS += common/trace.c
 
 # library componment
 COMMON_C_SRCS += lib/string.c
@@ -199,7 +200,6 @@ COMMON_C_SRCS += dm/vpci/vsriov.c
 COMMON_C_SRCS += dm/vpci/vmcs9900.c
 COMMON_C_SRCS += dm/mmio_dev.c
 COMMON_C_SRCS += dm/vgpio.c
-COMMON_C_SRCS += common/trace.c
 ifeq ($(CONFIG_SCHED_NOOP),y)
 COMMON_C_SRCS += common/sched_noop.c
 endif
