@@ -48,7 +48,6 @@ static uint64_t startup_paddr = 0UL;
 
 static void init_pcpu_xsave(void);
 static void init_keylocker(void);
-static void print_hv_banner(void);
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
 static uint64_t start_tick __attribute__((__section__(".bss_noinit")));
 
@@ -450,14 +449,6 @@ void arch_cpu_dead(void)
 	} else {
 		pr_err("pcpu%hu already dead", pcpu_id);
 	}
-}
-
-static void print_hv_banner(void)
-{
-	const char *boot_msg = "ACRN Hypervisor\n\r";
-
-	/* Print the boot message */
-	printf(boot_msg);
 }
 
 static

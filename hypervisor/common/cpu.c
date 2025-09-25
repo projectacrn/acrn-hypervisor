@@ -120,3 +120,11 @@ void cpu_dead(void)
 	deinit_sched(pcpu_id);
 	arch_cpu_dead();
 }
+
+void print_hv_banner(void)
+{
+	const char *boot_msg = "ACRN Hypervisor\n\r";
+
+	/* Print the boot message */
+	printf(boot_msg);
+}

@@ -112,6 +112,9 @@ static inline void local_irq_restore(uint64_t flags)
 {
 	arch_local_irq_restore(flags);
 }
+
+void print_hv_banner(void);
+
 #endif /* ASSEMBLER */
 
 #endif /* COMMON_CPU_H */
