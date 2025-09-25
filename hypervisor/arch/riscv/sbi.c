@@ -10,6 +10,8 @@
 #include <types.h>
 #include <asm/sbi.h>
 #include <logmsg.h>
+#include <per_cpu.h>
+#include <bits.h>
 
 /**
  * An ECALL is used as the control transfer instruction between the
@@ -114,7 +116,10 @@ int64_t sbi_hsm_start_hart(uint64_t hartid, uint64_t addr, uint64_t arg)
  */
 void send_single_ipi(uint16_t pcpu_id, __unused uint32_t msg_type)
 {
-	sbi_send_ipi((1UL << pcpu_id), 0UL);
+	uint64_t hmask = 1UL;
+	uint64_t hbase = per_cpu(arch.hart_id, pcpu_id);
+
+	sbi_send_ipi(hmask, hbase);
 }
 
 /**
@@ -125,7 +130,56 @@ void send_single_ipi(uint16_t pcpu_id, __unused uint32_t msg_type)
  */
 void send_dest_ipi_mask(uint64_t dest_mask, __unused uint32_t msg_type)
 {
-	sbi_send_ipi(dest_mask, 0UL);
+	uint16_t i;
+	uint32_t hart_id, hart_id_max = 0U;
+	uint64_t hmask = 0UL, hbase = 0UL;
+	int64_t ret;
+
+	i = ffs64(dest_mask);
+	while (i != INVALID_BIT_INDEX) {
+		bitmap_clear_non_atomic(i, &dest_mask);
+		hart_id = per_cpu(arch.hart_id, i);
+		if (hmask) {
+			if ((hbase + BITS_PER_LONG <= hart_id) ||
+			    (hart_id + BITS_PER_LONG <= hart_id_max)) {
+				/*
+				 * Issue the SBI IPI when
+				 * 1) The next hart_id is too large
+				 * 2) The next hart_id is too small
+				 */
+				ret = sbi_send_ipi(hmask, hbase);
+				if (ret != SBI_SUCCESS) {
+					pr_err("Failed to send ipi to cpus[0x%lx, 0x%lx] by SBI",
+						hbase, hmask);
+				}
+				hmask = 0UL;
+			} else if (hart_id < hbase) {
+				/*
+				 * Hart IDs corresponding to logical pCPU IDs
+				 * are not sorted in ascending order, need to
+				 * adjust the hbase and hmask
+				 */
+				hmask <<= (hbase - hart_id);
+				hbase = hart_id;
+			} else if (hart_id > hart_id_max) {
+				hart_id_max = hart_id;
+			}
+		}
+		if (!hmask) {
+			hbase = hart_id;
+			hart_id_max = hart_id;
+		}
+		bitmap_set_non_atomic(hart_id - hbase, &hmask);
+		i = ffs64(dest_mask);
+	}
+
+	if (hmask) {
+		ret = sbi_send_ipi(hmask, hbase);
+		if (ret != SBI_SUCCESS) {
+			pr_err("Failed to send ipi to cpus[0x%lx, 0x%lx] by SBI",
+				hbase, hmask);
+		}
+	}
 }
 
 /**
