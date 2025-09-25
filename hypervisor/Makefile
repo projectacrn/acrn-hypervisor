@@ -155,6 +155,8 @@ COMMON_C_SRCS += lib/memory.c
 COMMON_C_SRCS += lib/bits.c
 COMMON_C_SRCS += common/ticks.c
 COMMON_C_SRCS += common/delay.c
+COMMON_C_SRCS += common/timer.c
+COMMON_C_SRCS += common/softirq.c
 
 # library componment
 COMMON_C_SRCS += lib/string.c
@@ -169,9 +171,7 @@ COMMON_C_SRCS += lib/stack_protector.c
 endif
 
 ifeq ($(ARCH),x86)
-COMMON_C_SRCS += common/timer.c
 COMMON_C_SRCS += common/irq.c
-COMMON_C_SRCS += common/softirq.c
 COMMON_C_SRCS += common/schedule.c
 COMMON_C_SRCS += common/event.c
 COMMON_C_SRCS += common/efi_mmap.c

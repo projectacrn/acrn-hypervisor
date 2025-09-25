@@ -7,11 +7,6 @@
 #include <types.h>
 #include <errno.h>
 #include <per_cpu.h>
-#include <asm/io.h>
-#include <asm/msr.h>
-#include <asm/apicreg.h>
-#include <asm/cpuid.h>
-#include <asm/cpu_caps.h>
 #include <softirq.h>
 #include <trace.h>
 #include <asm/irq.h>
