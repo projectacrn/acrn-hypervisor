@@ -11,6 +11,7 @@
 #include <cpu.h>
 #include <per_cpu.h>
 #include <logmsg.h>
+#include <timer.h>
 
 static void init_pcpu_comm_post(void);
 
@@ -80,6 +81,8 @@ static void init_pcpu_comm_post(void)
 	uint16_t pcpu_id;
 
 	pcpu_id = get_pcpu_id();
+
+	timer_init();
 
 	/* to be implemented */
 	(void)pcpu_id;
