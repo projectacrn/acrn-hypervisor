@@ -42,8 +42,8 @@
         Version: Not Specified
         </BASE_BOARD_INFO>
   <PCI_DEVICE>
-        00:01.0 1af4: 1041 Network controller: Virtio network device
-        00:02.0 1af4: 1043 Communication controller: Virtio console
+        00:01.0 Network controller: Virtio network device
+        00:02.0 Communication controller: Virtio console
         </PCI_DEVICE>
   <PCI_VID_PID>
         00:01.0 0200: 1af4:1041

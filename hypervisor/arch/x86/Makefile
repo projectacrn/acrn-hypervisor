@@ -19,8 +19,6 @@ VP_DM_MOD = $(HV_MODDIR)/vp_dm_mod.a
 VP_TRUSTY_MOD = $(HV_MODDIR)/vp_trusty_mod.a
 VP_X86_TEE_MOD = $(HV_MODDIR)/vp_x86_tee_mod.a
 VP_HCALL_MOD = $(HV_MODDIR)/vp_hcall_mod.a
-LIB_DEBUG = $(HV_MODDIR)/libdebug.a
-LIB_RELEASE = $(HV_MODDIR)/librelease.a
 SYS_INIT_MOD = $(HV_MODDIR)/sys_init_mod.a
 
 ARCH_CFLAGS += -m64 -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387

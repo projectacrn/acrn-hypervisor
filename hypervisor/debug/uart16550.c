@@ -10,7 +10,7 @@
 #include <uart16550.h>
 #include <io.h>
 #include <mmu.h>
-#include <asm/cpu.h>
+#include <cpu.h>
 
 #define MAX_BDF_LEN 8
 

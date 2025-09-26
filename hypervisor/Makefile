@@ -130,6 +130,10 @@ OBJCOPY ?= objcopy
 
 include arch/$(ARCH)/Makefile
 
+LIB_DEBUG = $(HV_MODDIR)/libdebug.a
+LIB_RELEASE = $(HV_MODDIR)/librelease.a
+
+export ARCH
 export CC AS AR LD OBJCOPY
 export CFLAGS ASFLAGS ARFLAGS LDFLAGS ARCH_CFLAGS ARCH_ASFLAGS ARCH_ARFLAGS ARCH_LDFLAGS
 export HV_OBJDIR HV_MODDIR CONFIG_RELEASE INCLUDE_PATH
@@ -151,8 +155,6 @@ endif
 COMMON_C_SRCS += common/notify.c
 COMMON_C_SRCS += common/percpu.c
 COMMON_C_SRCS += common/cpu.c
-COMMON_C_SRCS += lib/memory.c
-COMMON_C_SRCS += lib/bits.c
 COMMON_C_SRCS += common/ticks.c
 COMMON_C_SRCS += common/delay.c
 COMMON_C_SRCS += common/timer.c
@@ -162,8 +164,12 @@ COMMON_C_SRCS += common/schedule.c
 ifeq ($(CONFIG_SCHED_NOOP),y)
 COMMON_C_SRCS += common/sched_noop.c
 endif
+COMMON_C_SRCS += common/sbuf.c
+COMMON_C_SRCS += common/logmsg.c
 
 # library componment
+COMMON_C_SRCS += lib/memory.c
+COMMON_C_SRCS += lib/bits.c
 COMMON_C_SRCS += lib/string.c
 COMMON_C_SRCS += lib/crypto/crypto_api.c
 COMMON_C_SRCS += lib/crypto/mbedtls/hkdf.c
@@ -175,19 +181,19 @@ ifdef STACK_PROTECTOR
 COMMON_C_SRCS += lib/stack_protector.c
 endif
 
+# dm componment
+COMMON_C_SRCS += dm/vuart.c
+
 ifeq ($(ARCH),x86)
 COMMON_C_SRCS += common/irq.c
 COMMON_C_SRCS += common/event.c
 COMMON_C_SRCS += common/efi_mmap.c
-COMMON_C_SRCS += common/sbuf.c
 COMMON_C_SRCS += common/vm_event.c
 COMMON_C_SRCS += common/hv_main.c
 COMMON_C_SRCS += common/vm_load.c
 COMMON_C_SRCS += common/hypercall.c
 COMMON_C_SRCS += common/ptdev.c
-COMMON_C_SRCS += common/logmsg.c
 COMMON_C_SRCS += dm/vrtc.c
-COMMON_C_SRCS += dm/vuart.c
 COMMON_C_SRCS += dm/io_req.c
 COMMON_C_SRCS += dm/vpci/vdev.c
 COMMON_C_SRCS += dm/vpci/vpci.c

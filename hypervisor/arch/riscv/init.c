@@ -12,6 +12,8 @@
 #include <per_cpu.h>
 #include <logmsg.h>
 #include <timer.h>
+#include <console.h>
+#include <shell.h>
 
 static void init_pcpu_comm_post(void);
 
@@ -26,6 +28,23 @@ static void init_pcpu_comm_post(void);
 		:								\
 		: "r"(sp), "r"(SP_BOTTOM_MAGIC), "r"(to)			\
 	);									\
+}
+
+static void init_debug_pre(void)
+{
+	console_init();
+}
+
+static void init_debug_post(uint16_t pcpu_id)
+{
+	if (pcpu_id == BSP_CPU_ID) {
+		/* Initialize the shell */
+		shell_init();
+	}
+
+	if (pcpu_id == VUART_TIMER_CPU) {
+		console_setup_timer();
+	}
 }
 
 /* C entry point for boot CPU */
@@ -43,6 +62,8 @@ void init_primary_pcpu(uint64_t hart_id, uint64_t fdt_paddr)
 	 * is set to a per-cpu register tp from now on.
 	 */
 	pcpu_set_current_state(pcpu_id, PCPU_STATE_INITIALIZING);
+
+	init_debug_pre();
 
 	if (!start_pcpus(AP_MASK)) {
 		panic("Failed to start all secondary cores!");
@@ -82,10 +103,17 @@ static void init_pcpu_comm_post(void)
 
 	pcpu_id = get_pcpu_id();
 
+	if (pcpu_id == BSP_CPU_ID) {
+		/* Print Hypervisor Banner */
+		print_hv_banner();
+	}
+
+	init_interrupt(pcpu_id);
 	timer_init();
 
 	/* to be implemented */
 	init_sched(pcpu_id);
 
+	init_debug_post(pcpu_id);
 	run_idle_thread();
 }
