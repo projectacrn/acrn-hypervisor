@@ -85,9 +85,9 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 	if (vm->arch_vm.sworld_eptp != NULL) {
 		if (need_clr_mem) {
 			/* clear trusty memory space */
-			stac();
+			pre_user_access();
 			(void)memset(hpa2hva(hpa), 0U, (size_t)size);
-			clac();
+			post_user_access();
 		}
 
 		ept_del_mr(vm, vm->arch_vm.sworld_eptp, gpa_user_vm, size);
@@ -295,13 +295,13 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_
 			vcpu->arch.contexts[SECURE_WORLD].run_ctx.cpu_regs.regs.rdi
 				= (uint64_t)TRUSTY_EPT_REBASE_GPA + sizeof(struct trusty_key_info);
 
-			stac();
+			pre_user_access();
 			mem = (struct trusty_mem *)(hpa2hva(mem_base_hpa));
 			(void)memcpy_s((void *)&mem->first_page.key_info, sizeof(struct trusty_key_info),
 				       &key_info, sizeof(key_info));
 			(void)memcpy_s((void *)&mem->first_page.startup_param, sizeof(struct trusty_startup_param),
 				       &startup_param, sizeof(startup_param));
-			clac();
+			post_user_access();
 			success = true;
 		}
 	}

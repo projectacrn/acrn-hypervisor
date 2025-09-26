@@ -73,7 +73,7 @@ hyperv_setup_tsc_page(const struct acrn_vcpu *vcpu, uint64_t val)
 	if (ref_tsc_page->enabled == 1U) {
 		p = (struct HV_REFERENCE_TSC_PAGE *)gpa2hva(vcpu->vm, ref_tsc_page->gpfn << PAGE_SHIFT);
 		if (p != NULL) {
-			stac();
+			pre_user_access();
 			p->tsc_scale = vcpu->vm->arch_vm.hyperv.tsc_scale;
 			p->tsc_offset = vcpu->vm->arch_vm.hyperv.tsc_offset;
 			cpu_write_memory_barrier();
@@ -82,7 +82,7 @@ hyperv_setup_tsc_page(const struct acrn_vcpu *vcpu, uint64_t val)
 				tsc_seq = 1U;
 			}
 			p->tsc_sequence = tsc_seq;
-			clac();
+			post_user_access();
 		}
 	}
 }
@@ -134,14 +134,14 @@ hyperv_setup_hypercall_page(const struct acrn_vcpu *vcpu, uint64_t val)
 		page_gpa = hypercall.gpfn << PAGE_SHIFT;
 		page_hva = gpa2hva(vcpu->vm, page_gpa);
 		if (page_hva != NULL) {
-			stac();
+			pre_user_access();
 			(void)memset(page_hva, 0U, PAGE_SIZE);
 			if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 				(void)memcpy_s(page_hva, 8U, inst64, 8U);
 			} else {
 				(void)memcpy_s(page_hva, 11U, inst32, 11U);
 			}
-			clac();
+			post_user_access();
 		}
 	}
 }

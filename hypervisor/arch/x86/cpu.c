@@ -338,9 +338,9 @@ static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id)
 void arch_start_pcpu(uint16_t pcpu_id)
 {
 	/* Update the stack for pcpu */
-	stac();
+	pre_user_access();
 	write_trampoline_stack_sym(pcpu_id);
-	clac();
+	post_user_access();
 
 	/* Using the MFENCE to make sure trampoline code
 	 * has been updated (clflush) into memory beforing start APs.
@@ -433,9 +433,9 @@ void arch_cpu_dead(void)
 		/* clean up native stuff */
 		vmx_off();
 
-		stac();
+		pre_user_access();
 		flush_cache_range((void *)get_hv_image_base(), get_hv_image_size());
-		clac();
+		post_user_access();
 
 		/* Set state to show CPU is dead */
 		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);

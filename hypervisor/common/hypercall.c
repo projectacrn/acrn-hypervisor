@@ -1206,7 +1206,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 		hpa = gpa2hpa(vm, param2);
 		if (hpa != INVALID_HPA) {
 			intr_hdr = (struct acrn_intr_monitor *)hpa2hva(hpa);
-			stac();
+			pre_user_access();
 			if (intr_hdr->buf_cnt <= (MAX_PTDEV_NUM * 2U)) {
 				status = 0;
 
@@ -1228,7 +1228,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 					break;
 				}
 			}
-			clac();
+			post_user_access();
 		}
 	}
 

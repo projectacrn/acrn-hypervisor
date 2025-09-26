@@ -76,7 +76,7 @@ uint32_t prepare_loader_name(struct acrn_vm *vm, uint64_t param_ldrname_gpa)
 
 /**
  * @pre vm != NULL
- * must run in stac/clac context
+ * must run in pre_user_access/post_user_access context
  */
 static void *do_load_elf64(struct acrn_vm *vm)
 {
@@ -109,9 +109,9 @@ static void *do_load_elf64(struct acrn_vm *vm)
 				 */
 				(void)copy_to_gpa(vm, p_elf_img + p_prg_tbl_head64->p_offset,
 					p_prg_tbl_head64->p_paddr, (uint32_t)p_prg_tbl_head64->p_filesz);
-				/* copy_to_gpa has its own stac/clac inside. Call stac again here to keep
+				/* copy_to_gpa has its own pre_user_access/post_user_access inside. Call pre_user_access again here to keep
 				 * the context. */
-				stac();
+				pre_user_access();
 			}
 			p_prg_tbl_head64++;
 		}
@@ -142,7 +142,7 @@ static void *do_load_elf64(struct acrn_vm *vm)
 
 /**
  * @pre vm != NULL
- * must run in stac/clac context
+ * must run in pre_user_access/post_user_access context
  */
 static void *do_load_elf32(struct acrn_vm *vm)
 {
@@ -175,9 +175,9 @@ static void *do_load_elf32(struct acrn_vm *vm)
 				 */
 				(void)copy_to_gpa(vm, p_elf_img + p_prg_tbl_head32->p_offset,
 					p_prg_tbl_head32->p_paddr, p_prg_tbl_head32->p_filesz);
-				/* copy_to_gpa has its own stac/clac inside. Call stac again here to keep
+				/* copy_to_gpa has its own pre_user_access/post_user_access inside. Call pre_user_access again here to keep
 				 * the context. */
-				stac();
+				pre_user_access();
 			}
 			p_prg_tbl_head32++;
 		}
@@ -216,7 +216,7 @@ static int32_t load_elf(struct acrn_vm *vm)
 	void *p_elf_img = (void *)sw_kernel->kernel_src_addr;
 	int32_t ret = 0;
 
-	stac();
+	pre_user_access();
 
 	if (*(uint32_t *)p_elf_img == ELFMAGIC) {
 		if (*(uint8_t *)(p_elf_img + EI_CLASS) == ELFCLASS64) {
@@ -230,7 +230,7 @@ static int32_t load_elf(struct acrn_vm *vm)
 		pr_err("%s, booting elf but no elf header found!", __func__);
 	}
 
-	clac();
+	post_user_access();
 
 	sw_kernel->kernel_entry_addr = elf_entry;
 
@@ -292,14 +292,14 @@ int32_t elf_loader(struct acrn_vm *vm)
 		/* We boot ELF Image from protected mode directly */
 		init_vcpu_protect_mode_regs(vcpu, load_params_gpa +
 					    offsetof(struct elf_boot_para, init_gdt));
-		stac();
+		pre_user_access();
 		mb_hdr = find_img_multiboot_header(vm);
-		clac();
+		post_user_access();
 		if (mb_hdr != NULL) {
 			uint32_t mmap_length = 0U;
 			struct multiboot_info mb_info;
 
-			stac();
+			pre_user_access();
 			if ((mb_hdr->flags & MULTIBOOT_HEADER_NEED_MEMINFO) != 0U) {
 				mmap_length = prepare_multiboot_mmap(vm, load_params_gpa +
 						offsetof(struct elf_boot_para, mmap));
@@ -336,7 +336,7 @@ int32_t elf_loader(struct acrn_vm *vm)
 						offsetof(struct elf_boot_para, mb_info));
 				/* other vcpu regs should have satisfied multiboot requirement already. */
 			}
-			clac();
+			post_user_access();
 		}
 		/*
 		 * elf_loader need support non-multiboot header image

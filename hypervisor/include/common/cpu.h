@@ -52,6 +52,8 @@ bool start_pcpus(uint64_t mask);
 void arch_cpu_dead(void);
 void cpu_dead(void);
 void arch_cpu_do_idle(void);
+static inline void arch_pre_user_access(void);
+static inline void arch_post_user_access(void);
 
 #define ALL_CPUS_MASK		((1UL << get_pcpu_nums()) - 1UL)
 #define AP_MASK			(ALL_CPUS_MASK & ~(1UL << BSP_CPU_ID))
@@ -81,6 +83,31 @@ static inline void arch_local_irq_enable(void);
 static inline void arch_local_irq_disable(void);
 static inline void arch_local_irq_save(uint64_t *flags_ptr);
 static inline void arch_local_irq_restore(uint64_t flags);
+
+/*
+ * pre_user_access/post_user_access pair is used to access guest's memory protected by SMAP,
+ * following below flow:
+ *
+ *	pre_user_access();
+ *	#access guest's memory.
+ *	post_user_access();
+ *
+ * Notes:Avoid inserting another pre_user_access/post_user_access pair between pre_user_access
+ *      and post_user_access, As once post_user_access after multiple pre_user_access will
+ *      invalidate SMAP protection and hence Page Fault crash.
+ *	Logging message to memory buffer will induce this case,
+ *	please disable SMAP temporlly or don't log messages to shared
+ *	memory buffer, if it is evitable for you for debug purpose.
+ */
+static inline void pre_user_access(void)
+{
+	arch_pre_user_access();
+}
+
+static inline void post_user_access(void)
+{
+	arch_post_user_access();
+}
 
 static inline void local_irq_enable(void)
 {

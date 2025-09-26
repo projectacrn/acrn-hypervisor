@@ -127,13 +127,13 @@ uint32_t rw_vmsix_table(struct pci_vdev *vdev, struct io_request *io_req)
 		} else {
 			if (vdev->pdev != NULL) {
 				hva = hpa2hva(vdev->msix.mmio_hpa + (mmio->address - vdev->msix.mmio_gpa));
-				stac();
+				pre_user_access();
 				if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 					mmio->value = mmio_read(hva, mmio->size);
 				} else {
 					mmio_write(hva, mmio->size, mmio->value);
 				}
-				clac();
+				post_user_access();
 			} else {
 				if (mmio->direction == ACRN_IOREQ_DIR_READ) {
 					mmio->value = 0UL;

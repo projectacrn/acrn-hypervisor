@@ -405,7 +405,7 @@ bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 	ASSERT(desc != NULL, "Invalid shadow EPTP!");
 
 	spinlock_obtain(&vept_desc_bucket_lock);
-	stac();
+	pre_user_access();
 
 	p_shadow_ept_page = (uint64_t *)(desc->shadow_eptp & PAGE_MASK);
 	p_guest_ept_page = gpa2hva(vcpu->vm, desc->guest_eptp & PAGE_MASK);
@@ -479,7 +479,7 @@ bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 		}
 	}
 
-	clac();
+	post_user_access();
 	spinlock_release(&vept_desc_bucket_lock);
 
 	return is_l1_vmexit;

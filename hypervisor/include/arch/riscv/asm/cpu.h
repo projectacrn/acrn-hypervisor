@@ -104,6 +104,7 @@ struct stack_frame {
 #define BITS_PER_LONG (BYTES_PER_LONG << 3)
 /* Define the interrupt enable bit mask */
 #define SSTATUS_SIE 0x2
+#define SSTATUS_SUM      0x00040000UL
 
 /* Define CPU stack alignment */
 #define CPU_STACK_ALIGN	16UL
@@ -183,6 +184,16 @@ static inline void arch_local_irq_save(uint64_t *flags_ptr)
 static inline void arch_local_irq_restore(uint64_t flags)
 {
 	asm volatile("csrs sstatus, %0 \n" ::"rK"(flags & SSTATUS_SIE) : "memory");
+}
+
+static inline void arch_pre_user_access(void)
+{
+        asm volatile ("csrs sstatus, %0" : : "r" (SSTATUS_SUM) : "memory");
+}
+
+static inline void arch_post_user_access(void)
+{
+        asm volatile ("csrc sstatus, %0" : : "r" (SSTATUS_SUM) : "memory");
 }
 
 void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);

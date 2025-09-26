@@ -16,7 +16,7 @@ int32_t init_vm_event(struct acrn_vm *vm, uint64_t *hva)
 	struct shared_buf *sbuf = (struct shared_buf *)hva;
 	int ret = -1;
 
-	stac();
+	pre_user_access();
 	if (sbuf != NULL) {
 		if (sbuf->magic == SBUF_MAGIC) {
 			vm->sw.vm_event_sbuf = sbuf;
@@ -24,7 +24,7 @@ int32_t init_vm_event(struct acrn_vm *vm, uint64_t *hva)
 			ret = 0;
 		}
 	}
-	clac();
+	post_user_access();
 
 	return ret;
 }

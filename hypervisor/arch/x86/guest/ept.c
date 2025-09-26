@@ -421,9 +421,9 @@ void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
 			 * For end_hpa > sw_sram_top, flush [base_hpa, sw_sram_bottom) first,
 			 *                            flush [sw_sram_top, end_hpa) in the next if condition
 			 */
-			stac();
+			pre_user_access();
 			flush_cache_range(hpa2hva(base_hpa), min(end_hpa, sw_sram_bottom) - base_hpa);
-			clac();
+			post_user_access();
 		}
 
 		if (end_hpa > sw_sram_top) {
@@ -433,9 +433,9 @@ void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
 			 * For base_hpa < sw_sram_bottom, flush [sw_sram_top, end_hpa) here,
 			 *                            flush [base_hpa, sw_sram_bottom) in the below if condition
 			 */
-			stac();
+			pre_user_access();
 			flush_cache_range(hpa2hva(max(base_hpa, sw_sram_top)), end_hpa - max(base_hpa, sw_sram_top));
-			clac();
+			post_user_access();
 		}
 	}
 }

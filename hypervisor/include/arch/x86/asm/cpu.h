@@ -748,27 +748,12 @@ static inline void write_xmm_0_2(uint64_t *xmm0_addr, uint64_t *xmm1_addr, uint6
 	CPU_XMM_WRITE(xmm2, xmm2_addr);
 }
 
-/*
- * stac/clac pair is used to access guest's memory protected by SMAP,
- * following below flow:
- *
- *	stac();
- *	#access guest's memory.
- *	clac();
- *
- * Notes:Avoid inserting another stac/clac pair between stac and clac,
- *	As once clac after multiple stac will invalidate SMAP protection
- *	and hence Page Fault crash.
- *	Logging message to memory buffer will induce this case,
- *	please disable SMAP temporlly or don't log messages to shared
- *	memory buffer, if it is evitable for you for debug purpose.
- */
-static inline void stac(void)
+static inline void arch_pre_user_access(void)
 {
 	asm volatile ("stac" : : : "memory");
 }
 
-static inline void clac(void)
+static inline void arch_post_user_access(void)
 {
 	asm volatile ("clac" : : : "memory");
 }

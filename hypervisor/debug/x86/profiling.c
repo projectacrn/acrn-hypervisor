@@ -257,7 +257,7 @@ static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
 		return 0;
 	}
 
-	stac();
+	pre_user_access();
 	if (sbuf->tail >= sbuf->head) {
 		remaining_space = sbuf->size - (sbuf->tail - sbuf->head);
 	} else {
@@ -269,7 +269,7 @@ static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
 		 * Since if the next_tail equals head, then it is assumed
 		 * that buffer is empty, not full
 		 */
-		clac();
+		post_user_access();
 		return 0;
 	}
 
@@ -293,7 +293,7 @@ static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
 	}
 
 	sbuf->tail = next_tail;
-	clac();
+	post_user_access();
 
 	return (int32_t)size;
 }
@@ -330,14 +330,14 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 		}
 
 		if (ss->pmu_state == PMU_RUNNING) {
-			stac();
+			pre_user_access();
 			if (sbuf->tail >= sbuf->head) {
 				remaining_space = sbuf->size
 						- (sbuf->tail - sbuf->head);
 			} else {
 				remaining_space = sbuf->head - sbuf->tail;
 			}
-			clac();
+			post_user_access();
 
 			/* populate the data header */
 			pkt_header.tsc = cpu_ticks();
@@ -397,14 +397,14 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 
 		sw_lock = &(get_cpu_var(arch.profiling_info.sw_lock));
 		spinlock_irqsave_obtain(sw_lock, &rflags);
-		stac();
+		pre_user_access();
 		if (sbuf->tail >= sbuf->head) {
 			remaining_space
 				= sbuf->size - (sbuf->tail - sbuf->head);
 		} else {
 			remaining_space = sbuf->head - sbuf->tail;
 		}
-		clac();
+		post_user_access();
 
 		/* populate the data header */
 		pkt_header.tsc = cpu_ticks();

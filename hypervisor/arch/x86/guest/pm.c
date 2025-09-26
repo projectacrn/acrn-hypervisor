@@ -179,9 +179,9 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 	/* Save the wakeup vec set by guest OS. Will return to guest
 	 * with this wakeup vec as entry.
 	 */
-	stac();
+	pre_user_access();
 	guest_wakeup_vec32 = *(vm->pm.sx_state_data->wake_vector_32);
-	clac();
+	post_user_access();
 
 	pause_vm(vm);	/* pause Service VM before suspend system */
 	host_enter_s3(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);

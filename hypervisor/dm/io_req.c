@@ -259,7 +259,7 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 		req_buf = (struct acrn_io_request_buffer *)(vcpu->vm->sw.io_shared_page);
 		cur = vcpu->vcpu_id;
 
-		stac();
+		pre_user_access();
 		acrn_io_req = &req_buf->req_slot[cur];
 		/* ACRN insert request to HSM and inject upcall */
 		acrn_io_req->type = io_req->io_type;
@@ -269,7 +269,7 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 			acrn_io_req->completion_polling = 1U;
 			is_polling = true;
 		}
-		clac();
+		post_user_access();
 
 		/* Before updating the acrn_io_req state, enforce all fill acrn_io_req operations done */
 		cpu_write_memory_barrier();
@@ -316,10 +316,10 @@ uint32_t get_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id)
 	if (req_buf == NULL) {
 	        state =  0xffffffffU;
 	} else {
-		stac();
+		pre_user_access();
 		acrn_io_req = &req_buf->req_slot[vcpu_id];
 		state = acrn_io_req->processed;
-		clac();
+		post_user_access();
 	}
 
 	return state;
@@ -332,7 +332,7 @@ void set_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id, uint32_t state)
 
 	req_buf = (struct acrn_io_request_buffer *)vm->sw.io_shared_page;
 	if (req_buf != NULL) {
-		stac();
+		pre_user_access();
 		acrn_io_req = &req_buf->req_slot[vcpu_id];
 		/*
 		 * HV will only set processed to ACRN_IOREQ_STATE_PENDING or ACRN_IOREQ_STATE_FREE.
@@ -341,7 +341,7 @@ void set_io_req_state(struct acrn_vm *vm, uint16_t vcpu_id, uint32_t state)
 		 * It won't lead wrong processing.
 		 */
 		acrn_io_req->processed = state;
-		clac();
+		post_user_access();
 	}
 }
 
@@ -350,7 +350,7 @@ int init_asyncio(struct acrn_vm *vm, uint64_t *hva)
 	struct shared_buf *sbuf = (struct shared_buf *)hva;
 	int ret = -1;
 
-	stac();
+	pre_user_access();
 	if (sbuf != NULL) {
 		if (sbuf->magic == SBUF_MAGIC) {
 			vm->sw.asyncio_sbuf = sbuf;
@@ -359,7 +359,7 @@ int init_asyncio(struct acrn_vm *vm, uint64_t *hva)
 			ret = 0;
 		}
 	}
-	clac();
+	post_user_access();
 
 	return ret;
 }
@@ -403,7 +403,7 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 
 	req_buf = (struct acrn_io_request_buffer *)(vcpu->vm->sw.io_shared_page);
 
-	stac();
+	pre_user_access();
 	acrn_io_req = &req_buf->req_slot[vcpu->vcpu_id];
 	if (io_req != NULL) {
 		switch (vcpu->req.io_type) {
@@ -426,7 +426,7 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	 * Only HV will set processed to ACRN_IOREQ_STATE_FREE when ioreq is done.
 	 */
 	acrn_io_req->processed = ACRN_IOREQ_STATE_FREE;
-	clac();
+	post_user_access();
 }
 
 /**

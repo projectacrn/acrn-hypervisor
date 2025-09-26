@@ -72,7 +72,7 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 	} else {
 		addr = pw_info->top_entry;
 		i = pw_info->level;
-		stac();
+		pre_user_access();
 
 		while ((i != 0U) && (fault == 0)) {
 			i--;
@@ -159,7 +159,7 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 			*gpa = entry | (gva & (page_size - 1UL));
 		}
 
-		clac();
+		post_user_access();
 		if (fault != 0) {
 			ret = -EFAULT;
 			*err_code |= PAGE_FAULT_P_FLAG;
@@ -181,9 +181,9 @@ static int32_t local_gva2gpa_pae(struct acrn_vcpu *vcpu, struct page_walk_info *
 	base = (uint64_t *)gpa2hva(vcpu->vm, addr);
 	if (base != NULL) {
 		index = (uint32_t)gva >> 30U;
-		stac();
+		pre_user_access();
 		entry = base[index];
-		clac();
+		post_user_access();
 
 		if ((entry & PAGE_PRESENT) != 0U) {
 			pw_info->level = 2U;
@@ -294,13 +294,13 @@ static inline uint32_t local_copy_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t 
 
 		g_ptr = hpa2hva(hpa);
 
-		stac();
+		pre_user_access();
 		if (cp_from_vm) {
 			(void)memcpy_s(h_ptr, len, g_ptr, len);
 		} else {
 			(void)memcpy_s(g_ptr, len, h_ptr, len);
 		}
-		clac();
+		post_user_access();
 	}
 
 	return len;

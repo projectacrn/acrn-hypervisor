@@ -57,11 +57,11 @@ static void *get_initrd_load_addr(struct acrn_vm *vm, uint64_t kernel_start)
 	 * Per kernel src head_64.S, decompressed kernel start at 2M aligned to the
 	 * compressed kernel load address.
 	 */
-	stac();
+	pre_user_access();
 	kernel_init_size = zeropage->hdr.init_size;
 	kernel_align = zeropage->hdr.kernel_alignment;
 	initrd_addr_max = zeropage->hdr.initrd_addr_max;
-	clac();
+	post_user_access();
 	kernel_end = roundup(kernel_start, kernel_align) + kernel_init_size;
 
 	if (initrd_addr_max != 0U) {
@@ -137,7 +137,7 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 	 */
 	zeropage = (struct zero_page *)sw_info->kernel_info.kernel_src_addr;
 
-	stac();
+	pre_user_access();
 	if ((is_service_vm(vm)) && (zeropage->hdr.relocatable_kernel != 0U)) {
 		uint64_t mods_start, mods_end;
 		uint64_t kernel_load_gpa = INVALID_GPA;
@@ -172,7 +172,7 @@ static void *get_bzimage_kernel_load_addr(struct acrn_vm *vm)
 			pr_err("Non-relocatable kernel found, risk to boot!");
 		}
 	}
-	clac();
+	post_user_access();
 
 	if (load_addr == NULL) {
 		pr_err("Could not get kernel load addr of VM %d .", vm->vm_id);
@@ -272,7 +272,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 	hva = (struct zero_page *)gpa2hva(vm, gpa);
 	zeropage = hva;
 
-	stac();
+	pre_user_access();
 	/* clear the zeropage */
 	(void)memset(zeropage, 0U, MEM_4K);
 
@@ -321,7 +321,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm, uint64_t load_params_gpa)
 
 	/* Create/add e820 table entries in zeropage */
 	zeropage->e820_nentries = (uint8_t)create_zeropage_e820(zeropage, vm);
-	clac();
+	post_user_access();
 
 	/* Return Physical Base Address of zeropage */
 	return gpa;
@@ -347,9 +347,9 @@ static void load_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu,
 	 * The compressed proteced mode code start at offset (setup_sectors + 1U) * 512U of bzImage.
 	 * Only protected mode code need to be loaded.
 	 */
-	stac();
+	pre_user_access();
 	setup_sectors = (zeropage->hdr.setup_sects == 0U) ? 4U : zeropage->hdr.setup_sects;
-	clac();
+	post_user_access();
 	prot_code_offset = (uint32_t)(setup_sectors + 1U) * 512U;
 	prot_code_size = (sw_kernel->kernel_size > prot_code_offset) ?
 				(sw_kernel->kernel_size - prot_code_offset) : 0U;

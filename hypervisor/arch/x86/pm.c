@@ -180,12 +180,12 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 {
 	uint64_t pmain_entry_saved;
 
-	stac();
+	pre_user_access();
 
 	/* set ACRN wakeup vec instead */
 	*(sstate_data->wake_vector_32) = (uint32_t)get_trampoline_start16_paddr();
 
-	clac();
+	post_user_access();
 
 	/* Save TSC on all PCPU */
 	smp_call_function(get_active_pcpu_bitmap(), suspend_tsc, NULL);
@@ -193,7 +193,7 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	/* offline all APs */
 	stop_pcpus();
 
-	stac();
+	pre_user_access();
 	/* Save default main entry and we will restore it after
 	 * back from S3. So the AP online could jmp to correct
 	 * main entry.
@@ -202,7 +202,7 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 
 	/* Set the main entry for resume from S3 state */
 	write_trampoline_sym(main_entry, (uint64_t)restore_s3_context);
-	clac();
+	post_user_access();
 
 	local_irq_disable();
 	vmx_off();
@@ -225,9 +225,9 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	local_irq_enable();
 
 	/* restore the default main entry */
-	stac();
+	pre_user_access();
 	write_trampoline_sym(main_entry, pmain_entry_saved);
-	clac();
+	post_user_access();
 
 	/* online all APs again */
 	if (!start_pcpus(AP_MASK)) {

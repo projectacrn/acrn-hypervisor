@@ -91,10 +91,10 @@ static void mask_one_msix_vector(const struct pci_vdev *vdev, uint32_t index)
 	uint32_t vector_control;
 	struct msix_table_entry *pentry = get_msix_table_entry(vdev, index);
 
-	stac();
+	pre_user_access();
 	vector_control = pentry->vector_control | PCIM_MSIX_VCTRL_MASK;
 	mmio_write32(vector_control, (void *)&(pentry->vector_control));
-	clac();
+	post_user_access();
 }
 
 
@@ -127,13 +127,13 @@ static void remap_one_vmsix_entry(const struct pci_vdev *vdev, uint32_t index)
 			 * fields with a single QWORD write, but some hardware can accept 32 bits
 			 * write only
 			 */
-			stac();
+			pre_user_access();
 			mmio_write32((uint32_t)(info.addr.full), (void *)&(pentry->addr));
 			mmio_write32((uint32_t)(info.addr.full >> 32U), (void *)((char *)&(pentry->addr) + 4U));
 
 			mmio_write32(info.data.full, (void *)&(pentry->data));
 			mmio_write32(vdev->msix.table_entries[index].vector_control, (void *)&(pentry->vector_control));
-			clac();
+			post_user_access();
 		}
 	}
 

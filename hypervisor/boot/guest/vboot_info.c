@@ -220,9 +220,9 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 	struct acrn_boot_info *abi = get_acrn_boot_info();
 	int32_t ret = -EINVAL;
 
-	stac();
+	pre_user_access();
 	ret = init_vm_sw_load(vm, abi);
-	clac();
+	post_user_access();
 
 	return ret;
 }

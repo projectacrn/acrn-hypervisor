@@ -55,7 +55,7 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data, uint32_t max_len)
 	uint32_t ele_size, ret;
 	bool trigger_overwrite = false;
 
-	stac();
+	pre_user_access();
 	ele_size = sbuf->ele_size;
 	next_tail = sbuf_next_ptr(sbuf->tail, ele_size, sbuf->size);
 
@@ -84,7 +84,7 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data, uint32_t max_len)
 		/* there must be something wrong */
 		ret = UINT32_MAX;
 	}
-	clac();
+	post_user_access();
 
 	return ret;
 }

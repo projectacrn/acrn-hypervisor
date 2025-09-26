@@ -90,9 +90,9 @@ void security_vm_fixup(uint16_t vm_id)
 	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
 
 	if ((vm_config->guest_flags & GUEST_FLAG_SECURITY_VM) != 0UL) {
-		stac();
+		pre_user_access();
 		tpm2_fixup(vm_id);
-		clac();
+		post_user_access();
 	}
 }
 
@@ -172,7 +172,7 @@ static int efi_search_smbios_eps(EFI_SYSTEM_TABLE *efi_system_table, struct smbi
     EFI_GUID smbios2_guid = SMBIOS2_TABLE_GUID;
 
     /* If both are present, SMBIOS3 takes precedence over SMBIOS */
-    stac();
+    pre_user_access();
     p = efi_search_guid(efi_system_table, &smbios3_guid);
     if (p != NULL) {
         get_smbios3_info((struct smbios3_entry_point *)p, si);
@@ -182,7 +182,7 @@ static int efi_search_smbios_eps(EFI_SYSTEM_TABLE *efi_system_table, struct smbi
             get_smbios2_info((struct smbios2_entry_point *)p, si);
         }
     }
-    clac();
+    post_user_access();
 
     return (p != NULL);
 }
@@ -239,7 +239,7 @@ static int mem_search_smbios_eps(struct smbios_info *si)
      * for the anchor string on paragraph (16-byte) boundaries within the physical address
      * 0xf0000-0xfffff.
      */
-    stac();
+    pre_user_access();
     for (p = start; p < end; p += 16) {
         if (is_smbios3_present(p)) {
             get_smbios3_info((struct smbios3_entry_point *)p, si);
@@ -249,7 +249,7 @@ static int mem_search_smbios_eps(struct smbios_info *si)
             break;
         }
     }
-    clac();
+    post_user_access();
 
     return (p < end);
 }

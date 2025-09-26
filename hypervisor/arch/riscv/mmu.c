@@ -116,6 +116,10 @@ static void init_hv_mapping(void)
 {
 	ppt_mmu_top_addr = (uint64_t *)alloc_page(&ppt_page_pool);
 
+	/*TODO: The SUM bit in sstatus is 0, meaning SMAP is enabled
+	 * however, SMAP is provided by smepmp extension, we need to detect
+	 * its existence from DTS.
+	 */
 	pgtable_add_map((uint64_t *)ppt_mmu_top_addr, get_board_hv_device_start(),
 		get_board_hv_device_start(), get_board_hv_device_size(),
 		PAGE_V | PAGE_R | PAGE_W,
