@@ -6,7 +6,7 @@
 
 #include <vm.h>
 #include <io.h>
-#include <asm/host_pm.h>
+#include <host_pm.h>
 #include <logmsg.h>
 #include <per_cpu.h>
 #include <asm/guest/vm_reset.h>
@@ -49,7 +49,7 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 					pause_vm(pl_vm);
 					(void)destroy_vm(pl_vm);
 					if (is_ready_for_system_shutdown()) {
-						shutdown_system();
+						shutdown_host();
 					}
 				}
 				put_vm_lock(pl_vm);

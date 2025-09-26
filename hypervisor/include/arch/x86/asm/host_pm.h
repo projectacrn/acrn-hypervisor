@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef	HOST_PM_H
-#define	HOST_PM_H
+#ifndef	X86_HOST_PM_H
+#define	X86_HOST_PM_H
 
 #include <acrn_common.h>
 
@@ -34,15 +34,13 @@ struct acpi_reset_reg {
 
 struct pm_s_state_data *get_host_sstate_data(void);
 void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val);
-void shutdown_system(void);
 void save_s5_reg_val(uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val);
 void do_acpi_sx(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val);
 extern void asm_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val);
 extern void restore_s3_context(void);
 struct cpu_state_info *get_cpu_pm_state_info(void);
 struct acpi_reset_reg *get_host_reset_reg_data(void);
-void reset_host(bool warm);
 void init_frequency_policy(void);
 void apply_frequency_policy(void);
 
-#endif	/* HOST_PM_H */
+#endif	/* X86_HOST_PM_H */

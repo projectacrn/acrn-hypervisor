@@ -7,11 +7,12 @@
 #include <per_cpu.h>
 #include <vcpu.h>
 #include <vm.h>
+#include <types.h>
 #include <logmsg.h>
 #include <sbuf.h>
 #include <sprintf.h>
 #include <asm/notify.h>
-#include <asm/host_pm.h>
+#include <host_pm.h>
 
 static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
@@ -341,7 +342,6 @@ int32_t destroy_vm(struct acrn_vm *vm)
 		memset(vm_config->name, 0U, MAX_VM_NAME_LEN);
 	}
 
-	/* Return status to caller */
 	return ret;
 }
 
@@ -457,7 +457,7 @@ void shutdown_vm_from_idle(uint16_t pcpu_id)
 		if (is_paused_vm(vm)) {
 			(void)destroy_vm(vm);
 			if (is_ready_for_system_shutdown()) {
-				shutdown_system();
+				shutdown_host();
 			}
 		}
 		put_vm_lock(vm);

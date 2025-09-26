@@ -160,7 +160,7 @@ void save_s5_reg_val(uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 	system_pm1b_cnt_val = pm1b_cnt_val;
 }
 
-void shutdown_system(void)
+void arch_shutdown_host(void)
 {
 	struct pm_s_state_data *sx_data = get_host_sstate_data();
 	do_acpi_sx(sx_data, system_pm1a_cnt_val, system_pm1b_cnt_val);
@@ -245,7 +245,7 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	resume_console();
 }
 
-void reset_host(bool warm)
+void arch_reset_host(bool warm)
 {
 	struct acrn_acpi_generic_address *gas = &(host_reset_reg.reg);
 	uint8_t reboot_code = warm ? CF9_RESET_WARM : CF9_RESET_COLD;

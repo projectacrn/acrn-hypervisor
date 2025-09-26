@@ -19,7 +19,7 @@
 #include <logmsg.h>
 #include <version.h>
 #include <asm/guest/vmcs.h>
-#include <asm/host_pm.h>
+#include <host_pm.h>
 #include <cpu.h>
 #include "debug/shell_priv.h"
 
