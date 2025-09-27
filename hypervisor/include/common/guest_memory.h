@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -8,8 +8,8 @@
  *
  * @brief ACRN Memory Management
  */
-#ifndef GUEST_H
-#define GUEST_H
+#ifndef GUEST_MEM_H
+#define GUEST_MEM_H
 
 #ifndef ASSEMBLER
 
@@ -17,12 +17,13 @@
 
 struct acrn_vcpu;
 struct acrn_vm;
+
 /* Use # of paging level to identify paging mode */
 enum vm_paging_mode {
 	PAGING_MODE_0_LEVEL = 0U,	/* Flat */
-	PAGING_MODE_2_LEVEL = 2U,	/* 32bit paging, 2-level */
-	PAGING_MODE_3_LEVEL = 3U,	/* PAE paging, 3-level */
-	PAGING_MODE_4_LEVEL = 4U,	/* 64bit paging, 4-level */
+	PAGING_MODE_2_LEVEL = 2U,	/* 2-level paging */
+	PAGING_MODE_3_LEVEL = 3U,	/* 3-level paging */
+	PAGING_MODE_4_LEVEL = 4U,	/* 4-level paging */
 	PAGING_MODE_NUM,
 };
 
@@ -115,4 +116,4 @@ int32_t copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
  */
 #endif	/* !ASSEMBLER */
 
-#endif /* GUEST_H*/
+#endif /* GUEST_MEM_H */

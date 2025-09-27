@@ -7,7 +7,7 @@
 #include <types.h>
 #include <errno.h>
 #include <asm/vmx.h>
-#include <asm/guest/guest_memory.h>
+#include <guest_memory.h>
 #include <vcpu.h>
 #include <vm.h>
 #include <asm/guest/vmcs.h>

@@ -31,7 +31,7 @@
 
 #include <types.h>
 #include <asm/cpu.h>
-#include <asm/guest/guest_memory.h>
+#include <guest_memory.h>
 
 struct acrn_vcpu;
 struct instr_emul_vie_op {

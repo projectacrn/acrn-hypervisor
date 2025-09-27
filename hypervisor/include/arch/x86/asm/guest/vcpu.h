@@ -17,7 +17,7 @@
 #ifndef ASSEMBLER
 
 #include <acrn_common.h>
-#include <asm/guest/guest_memory.h>
+#include <guest_memory.h>
 #include <asm/guest/virtual_cr.h>
 #include <asm/guest/vlapic.h>
 #include <asm/guest/vmtrr.h>

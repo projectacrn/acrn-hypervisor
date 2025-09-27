@@ -11,7 +11,7 @@
 #include <asm/msr.h>
 #include <asm/cpuid.h>
 #include <asm/guest/ucode.h>
-#include <asm/guest/guest_memory.h>
+#include <guest_memory.h>
 #include <asm/guest/virq.h>
 #include <logmsg.h>
 
