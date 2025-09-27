@@ -9,6 +9,7 @@
 
 #include <asm/trap.h>
 #include <cpu.h>
+#include <asm/csr.h>
 #include <types.h>
 
 static void init_interrupt_arch(__unused uint16_t pcpu_id)
@@ -24,9 +25,8 @@ static void init_interrupt_arch(__unused uint16_t pcpu_id)
 	 * Direct might impose additional alignment constraints on the
 	 * value in the BASE field.
 	 */
-	cpu_csr_write(stvec, (addr | TRAP_VECTOR_MODE_DIRECT));
-
-	cpu_csr_write(sie, (IP_IE_SSI | IP_IE_STI | IP_IE_SEI));
+	cpu_csr_write(CSR_STVEC, (addr | TRAP_VECTOR_MODE_DIRECT));
+	cpu_csr_write(CSR_SIE, (IP_IE_SSI | IP_IE_STI | IP_IE_SEI));
 }
 
 /*

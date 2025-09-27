@@ -103,7 +103,7 @@ static bool switch_satp(uint64_t satp_value)
 	 * satp are modified.
 	 */
 	set_satp(satp_value);
-	return (cpu_csr_read(satp) == satp_value);
+	return (cpu_csr_read(CSR_SATP) == satp_value);
 }
 
 /**

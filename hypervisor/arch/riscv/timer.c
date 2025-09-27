@@ -13,6 +13,7 @@
 #include <asm/sbi.h>
 #include <asm/qemu.h>
 #include <asm/cpu.h>
+#include <asm/csr.h>
 
 #define HOST_CPUFREQ	10000000
 #define STOP_TIMER	0xFFFFFFFFFFFFFFFF
@@ -48,7 +49,7 @@ uint32_t arch_cpu_tickrate(void)
 void arch_set_timer_count(uint64_t timeout)
 {
 #ifdef CONFIG_SSTC
-	cpu_csr_write(stimecmp, timeout);
+	cpu_csr_write(CSR_STIMECMP, timeout);
 #else
 	sbi_set_timer(timeout);
 #endif

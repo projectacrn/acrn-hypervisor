@@ -15,6 +15,8 @@
 #include <board_info.h>
 #include <barrier.h>
 
+#include <asm/csr.h>
+
 /* The following symbols must remain consistent:
  * - CPU_REGS_OFFSET_* macros in `include/arch/riscv/asm/offset.h`
  * - struct cpu_regs
@@ -102,9 +104,6 @@ struct stack_frame {
 #define LONG_BYTEORDER 3
 #define BYTES_PER_LONG (1 << LONG_BYTEORDER)
 #define BITS_PER_LONG (BYTES_PER_LONG << 3)
-/* Define the interrupt enable bit mask */
-#define SSTATUS_SIE 0x2
-#define SSTATUS_SUM      0x00040000UL
 
 /* Define CPU stack alignment */
 #define CPU_STACK_ALIGN	16UL
@@ -132,68 +131,34 @@ static inline void arch_asm_pause(void)
 	asm volatile ("pause" ::: "memory");
 }
 
-/* Read CSR */
-#define cpu_csr_read(reg)                                               \
-({                                                                      \
-        uint64_t v;                                                     \
-        asm volatile (" csrr %0, " STRINGIFY(reg) "\n\t"                  \
-                        :"=r" (v):);                                    \
-        v;                                                              \
-})
-
-/* Write CSR */
-#define cpu_csr_write(reg, csr_val)                                                                                    \
-	({                                                                                                             \
-		uint64_t val = (uint64_t)csr_val;                                                                      \
-		asm volatile(" csrw " STRINGIFY(reg) ", %0 \n\t" ::"r"(val) : "memory");                               \
-	})
-
-/* Clear CSR */
-#define cpu_csr_clear(reg, csr_mask)                                                                                   \
-	({                                                                                                             \
-		uint64_t mask = (uint64_t)csr_mask;                                                                    \
-		asm volatile (" csrc " STRINGIFY(reg) ", %0 \n\t" :: "r"(mask): "memory");                             \
-	})
-
 static inline void arch_local_irq_enable(void)
 {
-	asm volatile ("csrs sstatus, %0 \n"
-			:: "i"(SSTATUS_SIE)
-			: "memory");
+	cpu_csr_set(CSR_SSTATUS, SSTATUS_SIE);
 }
 
 static inline void arch_local_irq_disable(void)
 {
-	asm volatile ("csrc sstatus, %0 \n"
-			:: "i"(SSTATUS_SIE)
-			: "memory");
+	cpu_csr_clear(CSR_SSTATUS, SSTATUS_SIE);
 }
 
 static inline void arch_local_irq_save(uint64_t *flags_ptr)
 {
-	uint64_t val = 0UL;
-
-	/* read and clear the SSTATUS_SIE bit (disable interrupts) */
-	asm volatile("csrrc %0, sstatus, %1 \n"
-			: "=r"(val)
-			: "r"(SSTATUS_SIE)
-			: "memory");
-	*flags_ptr = val;
+	*flags_ptr = cpu_csr_read_clear(CSR_SSTATUS, SSTATUS_SIE);
 }
 
 static inline void arch_local_irq_restore(uint64_t flags)
 {
-	asm volatile("csrs sstatus, %0 \n" ::"rK"(flags & SSTATUS_SIE) : "memory");
+	cpu_csr_set(CSR_SSTATUS, (flags & SSTATUS_SIE));
 }
 
 static inline void arch_pre_user_access(void)
 {
-        asm volatile ("csrs sstatus, %0" : : "r" (SSTATUS_SUM) : "memory");
+	cpu_csr_set(CSR_SSTATUS, SSTATUS_SUM);
 }
 
 static inline void arch_post_user_access(void)
 {
-        asm volatile ("csrc sstatus, %0" : : "r" (SSTATUS_SUM) : "memory");
+	cpu_csr_clear(CSR_SSTATUS, SSTATUS_SUM);
 }
 
 void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);

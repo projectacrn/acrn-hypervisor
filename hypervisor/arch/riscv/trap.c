@@ -7,6 +7,7 @@
  *   Haicheng Li <haicheng.li@intel.com>
  */
 
+#include <asm/csr.h>
 #include <asm/irq.h>
 #include <asm/timer.h>
 #include <asm/trap.h>
@@ -28,7 +29,7 @@ static void unexpected_trap_handler(const struct intr_excp_ctx *ctx)
 /* IRQ 1 - Supervisor software interrupt handler */
 static void s_sw_irq_handler(void)
 {
-	cpu_csr_clear(sip, IP_IE_SSI);
+	cpu_csr_clear(CSR_SIP, IP_IE_SSI);
 	handle_smp_call();
 }
 
