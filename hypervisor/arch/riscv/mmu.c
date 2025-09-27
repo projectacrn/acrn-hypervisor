@@ -150,3 +150,12 @@ void enable_paging(void)
 {
 	set_satp(init_satp);
 }
+
+
+
+
+/* FIXME: Remove it when public API that maps host memory range is available */
+void dummy_pgtable_add_map(uint64_t paddr_base, uint64_t vaddr_base, uint64_t size, uint64_t prot)
+{
+	pgtable_add_map((uint64_t *)ppt_mmu_top_addr, paddr_base, vaddr_base, size, prot, &ppt_pgtable);
+}

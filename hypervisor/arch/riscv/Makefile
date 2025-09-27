@@ -69,7 +69,7 @@ HOST_C_SRCS += arch/riscv/guest/vm.c
 VP_S_SRCS +=
 
 # Virtual platform C sources
-VP_C_SRCS += arch/riscv/guest/dummy_guest.c
+VP_C_SRCS += arch/riscv/guest/guest_memory.c
 
 HOST_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(HOST_C_SRCS))
 HOST_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(HOST_S_SRCS))
