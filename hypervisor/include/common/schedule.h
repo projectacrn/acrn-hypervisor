@@ -153,6 +153,7 @@ void wake_thread(struct thread_object *obj);
 void yield_current(void);
 void schedule(void);
 
+void arch_send_reschedule_request(uint16_t pcpu_id);
 void arch_switch_to(void *prev_sp, void *next_sp);
 void run_idle_thread(void);
 #endif /* SCHEDULE_H */

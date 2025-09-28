@@ -15,6 +15,7 @@
 #include <asm/guest/vm.h>
 #include <asm/guest/virq.h>
 #include <common/notify.h>
+#include <schedule.h>
 #include <irq.h>
 #include <logmsg.h>
 
@@ -95,4 +96,9 @@ void arch_smp_call_kick_pcpu(uint16_t pcpu_id)
 	} else {
 		send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
 	}
+}
+
+void arch_send_reschedule_request(uint16_t pcpu_id)
+{
+	kick_pcpu(pcpu_id);
 }
