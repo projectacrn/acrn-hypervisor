@@ -6,6 +6,7 @@
 
 #include <vm.h>
 #include <vboot.h>
+#include <guest_memory.h>
 
 /**
  * @pre vm != NULL

@@ -532,8 +532,6 @@ int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config)
 		/* Only for Service VM */
 		create_service_vm_e820(vm);
 		prepare_service_vm_memmap(vm);
-
-		status = init_vm_boot_info(vm);
 	} else {
 		/* For PRE_LAUNCHED_VM and POST_LAUNCHED_VM */
 		if ((vm_config->guest_flags & GUEST_FLAG_SECURE_WORLD_ENABLED) != 0U) {
@@ -565,7 +563,6 @@ int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config)
 					create_prelaunched_vm_e820(vm);
 					prepare_prelaunched_vm_memmap(vm, vm_config);
 				}
-				status = init_vm_boot_info(vm);
 			}
 		}
 	}

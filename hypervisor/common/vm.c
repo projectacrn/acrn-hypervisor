@@ -8,6 +8,7 @@
 #include <vcpu.h>
 #include <vm.h>
 #include <types.h>
+#include <vboot.h>
 #include <logmsg.h>
 #include <sbuf.h>
 #include <sprintf.h>
@@ -272,9 +273,13 @@ void launch_vms(uint16_t pcpu_id)
 					if ((vm_config->guest_flags & GUEST_FLAG_REE) != 0U) {
 						/* Nothing need to do here, REE will start in TEE hypercall */
 					} else {
-						if (prepare_os_image(vm) == 0) {
+						if ((init_vm_boot_info(vm) == 0) &&
+							(prepare_os_image(vm) == 0)) {
 							start_vm(vm);
 							pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
+						} else {
+							pr_err("Stopping VM%d: no bootable kernel");
+							(void)destroy_vm(vm);
 						}
 					}
 				}

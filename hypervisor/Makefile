@@ -170,6 +170,8 @@ COMMON_C_SRCS += lib/stack_protector.c
 endif
 COMMON_C_SRCS += common/vm_config.c
 COMMON_C_SRCS += common/event.c
+COMMON_C_SRCS += boot/guest/vboot_info.c
+COMMON_C_SRCS += common/vm_load.c
 
 # dm componment
 COMMON_C_SRCS += dm/vuart.c
@@ -179,7 +181,6 @@ COMMON_C_SRCS += common/irq.c
 COMMON_C_SRCS += common/efi_mmap.c
 COMMON_C_SRCS += common/vm_event.c
 COMMON_C_SRCS += common/hv_main.c
-COMMON_C_SRCS += common/vm_load.c
 COMMON_C_SRCS += common/hypercall.c
 COMMON_C_SRCS += common/ptdev.c
 COMMON_C_SRCS += dm/vrtc.c
@@ -209,7 +210,6 @@ endif
 ifeq ($(CONFIG_SCHED_PRIO),y)
 COMMON_C_SRCS += common/sched_prio.c
 endif
-COMMON_C_SRCS += boot/guest/vboot_info.c
 ifeq ($(CONFIG_GUEST_KERNEL_BZIMAGE),y)
 COMMON_C_SRCS += boot/guest/bzimage_loader.c
 endif

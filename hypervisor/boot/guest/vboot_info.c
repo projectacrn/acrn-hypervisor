@@ -11,11 +11,9 @@
 #include <asm/irq.h>
 #include <boot.h>
 #include <pgtable.h>
-#include <asm/zeropage.h>
 #include <asm/seed.h>
 #include <asm/mmu.h>
 #include <vm.h>
-#include <asm/guest/ept.h>
 #include <reloc.h>
 #include <logmsg.h>
 #include <vboot.h>

@@ -8,6 +8,7 @@
 #include <vboot.h>
 #include <errno.h>
 #include <logmsg.h>
+#include <guest_memory.h>
 
 /**
  * @pre sw_module != NULL
