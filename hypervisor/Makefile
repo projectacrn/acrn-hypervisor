@@ -169,13 +169,13 @@ ifdef STACK_PROTECTOR
 COMMON_C_SRCS += lib/stack_protector.c
 endif
 COMMON_C_SRCS += common/vm_config.c
+COMMON_C_SRCS += common/event.c
 
 # dm componment
 COMMON_C_SRCS += dm/vuart.c
 
 ifeq ($(ARCH),x86)
 COMMON_C_SRCS += common/irq.c
-COMMON_C_SRCS += common/event.c
 COMMON_C_SRCS += common/efi_mmap.c
 COMMON_C_SRCS += common/vm_event.c
 COMMON_C_SRCS += common/hv_main.c
