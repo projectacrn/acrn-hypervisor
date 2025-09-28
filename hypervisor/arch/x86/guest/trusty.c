@@ -8,8 +8,7 @@
 #include <bits.h>
 #include <crypto_api.h>
 #include <asm/guest/trusty.h>
-#include <asm/page.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/mmu.h>
 #include <asm/guest/ept.h>
 #include <asm/guest/vm.h>

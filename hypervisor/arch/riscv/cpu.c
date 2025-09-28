@@ -14,7 +14,7 @@
 #include <cpu.h>
 #include <delay.h>
 #include <asm/sbi.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <schedule.h>
 
 /*

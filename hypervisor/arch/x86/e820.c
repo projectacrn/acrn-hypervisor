@@ -14,6 +14,7 @@
 #include <efi_mmap.h>
 #include <logmsg.h>
 #include <asm/guest/ept.h>
+#include <pgtable.h>
 
 /*
  * e820.c contains the related e820 operations; like HV to get memory info for its MMU setup;

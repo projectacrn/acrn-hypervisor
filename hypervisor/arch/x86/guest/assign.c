@@ -12,7 +12,7 @@
 #include <ptdev.h>
 #include <per_cpu.h>
 #include <asm/ioapic.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/irq.h>
 #include <asm/guest/optee.h>
 

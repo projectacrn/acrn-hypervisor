@@ -27,6 +27,7 @@
 #include <ticks.h>
 #include <asm/cpuid.h>
 #include <vroot_port.h>
+#include <pgtable.h>
 
 #define DBG_LEVEL_HYCALL	6U
 

@@ -28,7 +28,7 @@
 #include <types.h>
 #include <rtl.h>
 #include "acpi.h"
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/ioapic.h>
 #include <logmsg.h>
 #include <acrn_common.h>

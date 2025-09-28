@@ -35,6 +35,7 @@
 #include <io.h>
 #include <mmu.h>
 #include <pci.h>
+#include <pgtable.h>
 #include <uart16550.h>
 #include <logmsg.h>
 #include <asm/pci_dev.h>

@@ -12,7 +12,7 @@
 #include <asm/guest/vm.h>
 #include <asm/vmx.h>
 #include <asm/gdt.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <per_cpu.h>
 #include <asm/cpu_caps.h>
 #include <asm/cpufeatures.h>

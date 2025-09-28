@@ -23,6 +23,7 @@
 #include <asm/vm_config.h>
 #include <pci.h>
 #include <asm/platform_caps.h>
+#include <pgtable.h>
 
 #define DBG_IOMMU 0
 

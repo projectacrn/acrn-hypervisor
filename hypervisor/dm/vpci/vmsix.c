@@ -33,6 +33,7 @@
 #include <asm/guest/ept.h>
 #include <asm/mmu.h>
 #include <logmsg.h>
+#include <pgtable.h>
 #include "vpci_priv.h"
 
 /**

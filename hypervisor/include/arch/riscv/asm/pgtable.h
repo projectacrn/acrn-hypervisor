@@ -24,13 +24,4 @@ static inline uint64_t hva2hpa_early(void *x)
 	return (uint64_t)x;
 }
 
-static inline void *hpa2hva(uint64_t x)
-{
-	return (void *)x;
-}
-
-static inline uint64_t hva2hpa(const void *x)
-{
-	return (uint64_t)x;
-}
 #endif /* RISCV_PGTABLE_H */

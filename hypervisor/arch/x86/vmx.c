@@ -9,7 +9,7 @@
 #include <types.h>
 #include <asm/msr.h>
 #include <per_cpu.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/vmx.h>
 
 /**

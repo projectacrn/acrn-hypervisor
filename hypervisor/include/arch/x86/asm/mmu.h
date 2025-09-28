@@ -100,15 +100,6 @@ static inline int32_t asm_invept(uint64_t type, struct invept_desc desc)
 }
 
 struct acrn_vcpu;
-static inline uint64_t round_page_up(uint64_t addr)
-{
-	return (((addr + (uint64_t)PAGE_SIZE) - 1UL) & PAGE_MASK);
-}
-
-static inline uint64_t round_page_down(uint64_t addr)
-{
-	return (addr & PAGE_MASK);
-}
 
 static inline uint64_t round_pde_up(uint64_t val)
 {

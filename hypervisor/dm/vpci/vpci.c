@@ -34,6 +34,7 @@
 #include <asm/mmu.h>
 #include <vacpi.h>
 #include <logmsg.h>
+#include <pgtable.h>
 #include "vpci_priv.h"
 #include <asm/pci_dev.h>
 #include <hash.h>

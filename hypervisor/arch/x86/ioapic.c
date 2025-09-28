@@ -8,11 +8,11 @@
 #include <errno.h>
 #include <cpu.h>
 #include <irq.h>
+#include <pgtable.h>
 #include <spinlock.h>
 #include <mmu.h>
 #include <asm/ioapic.h>
 #include <asm/irq.h>
-#include <asm/pgtable.h>
 #include <io.h>
 #include <acpi.h>
 #include <logmsg.h>

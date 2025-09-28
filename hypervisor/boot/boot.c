@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <boot.h>
 #include <rtl.h>
 #include <logmsg.h>

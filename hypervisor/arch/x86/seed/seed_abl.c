@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <asm/cpu.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <rtl.h>
 #include <asm/seed.h>
 #include "seed_abl.h"

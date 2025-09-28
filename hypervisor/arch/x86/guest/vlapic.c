@@ -32,7 +32,7 @@
 #include <errno.h>
 #include <atomic.h>
 #include <per_cpu.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/lapic.h>
 #include <asm/guest/vmcs.h>
 #include <asm/guest/vlapic.h>

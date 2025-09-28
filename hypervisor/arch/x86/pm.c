@@ -9,7 +9,7 @@
 #include <per_cpu.h>
 #include <io.h>
 #include <asm/msr.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/host_pm.h>
 #include <asm/trampoline.h>
 #include <asm/vmx.h>

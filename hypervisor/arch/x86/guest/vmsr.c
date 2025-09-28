@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/msr.h>
 #include <asm/cpuid.h>
 #include <asm/guest/vcpu.h>

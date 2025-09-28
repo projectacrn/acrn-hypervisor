@@ -10,7 +10,7 @@
 #include <asm/per_cpu.h>
 #include <asm/irq.h>
 #include <boot.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/zeropage.h>
 #include <asm/seed.h>
 #include <asm/mmu.h>

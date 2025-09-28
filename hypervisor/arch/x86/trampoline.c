@@ -11,6 +11,7 @@
 #include <reloc.h>
 #include <asm/boot/ld_sym.h>
 #include <asm/e820.h>
+#include <pgtable.h>
 
 static uint64_t trampoline_start16_paddr;
 

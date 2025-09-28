@@ -22,7 +22,7 @@
 #include <console.h>
 #include <ptdev.h>
 #include <asm/guest/vmcs.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/mmu.h>
 #include <logmsg.h>
 #include <vboot.h>

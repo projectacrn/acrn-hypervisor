@@ -32,6 +32,7 @@
 #include <asm/vtd.h>
 #include <asm/guest/ept.h>
 #include <asm/mmu.h>
+#include <pgtable.h>
 #include <io.h>
 #include <logmsg.h>
 #include <config.h>
