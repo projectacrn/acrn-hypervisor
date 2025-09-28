@@ -8,6 +8,7 @@
 #define COMMON_NOTIFY_H
 
 #include <types.h>
+#include <asm/notify.h>
 
 typedef void (*smp_call_func_t)(void *data);
 

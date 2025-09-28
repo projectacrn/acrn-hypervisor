@@ -11,6 +11,7 @@
 #include <sprintf.h>
 #include <logmsg.h>
 #include <schedule.h>
+#include <notify.h>
 
 bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
 {
@@ -85,6 +86,21 @@ static void init_vcpu_thread(struct acrn_vcpu *vcpu, uint16_t pcpu_id)
 void vcpu_set_state(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 {
 	vcpu->state = new_state;
+}
+
+void kick_vcpu(struct acrn_vcpu *vcpu)
+{
+	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
+
+	if ((get_pcpu_id() != pcpu_id) && (get_running_vcpu(pcpu_id) == vcpu)) {
+		arch_smp_call_kick_pcpu(pcpu_id);
+	}
+}
+
+void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
+{
+	bitmap_set(eventid, &vcpu->pending_req);
+	kick_vcpu(vcpu);
 }
 
 /**

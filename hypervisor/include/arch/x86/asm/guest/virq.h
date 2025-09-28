@@ -101,7 +101,6 @@ void vcpu_inject_ss(struct acrn_vcpu *vcpu);
  * @pre vcpu != NULL
  */
 void vcpu_inject_thermal_interrupt(struct acrn_vcpu *vcpu);
-void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid);
 
 /*
  * @pre vcpu != NULL

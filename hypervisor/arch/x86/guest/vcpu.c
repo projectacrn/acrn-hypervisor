@@ -739,15 +739,6 @@ void arch_deinit_vcpu(struct acrn_vcpu *vcpu)
 	vlapic_free(vcpu);
 }
 
-void kick_vcpu(struct acrn_vcpu *vcpu)
-{
-	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
-
-	if ((get_pcpu_id() != pcpu_id) && (per_cpu(arch.vmcs_run, pcpu_id) == vcpu->arch.vmcs)) {
-		kick_pcpu(pcpu_id);
-	}
-}
-
 /*
  * @pre (&vcpu->stack[CONFIG_STACK_SIZE] & (CPU_STACK_ALIGN - 1UL)) == 0
  */

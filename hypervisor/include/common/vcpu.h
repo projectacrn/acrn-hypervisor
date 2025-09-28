@@ -21,6 +21,7 @@
 #include <schedule.h>
 #include <event.h>
 #include <io_req.h>
+#include <bits.h>
 #include <asm/guest/vcpu.h>
 
 /**
@@ -110,6 +111,18 @@ uint64_t arch_build_stack_frame(struct acrn_vcpu *vcpu);
 /* Common helpers */
 bool is_vcpu_bsp(const struct acrn_vcpu *vcpu);
 uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
+void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid);
+
+static inline bool vcpu_has_pending_request(struct acrn_vcpu *vcpu)
+{
+	return (vcpu->pending_req != 0UL);
+}
+
+static inline bool vcpu_take_request(struct acrn_vcpu *vcpu, uint16_t eventid)
+{
+	return bitmap_test_and_clear(eventid, &(vcpu->pending_req));
+}
+
 
 /**
  * @brief get physical destination cpu mask
@@ -180,6 +193,15 @@ void reset_vcpu(struct acrn_vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  */
 void zombie_vcpu(struct acrn_vcpu *vcpu);
+
+/**
+ * @brief kick the vcpu and let it handle pending events
+ *
+ * Kick a vCPU to handle the pending events.
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ */
+void kick_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @}

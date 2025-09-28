@@ -548,15 +548,6 @@ void load_iwkey(struct acrn_vcpu *vcpu);
 int32_t run_vcpu(struct acrn_vcpu *vcpu);
 
 /**
- * @brief kick the vcpu and let it handle pending events
- *
- * Kick a vCPU to handle the pending events.
- *
- * @param[in] vcpu pointer to vcpu data structure
- */
-void kick_vcpu(struct acrn_vcpu *vcpu);
-
-/**
  * @brief create a vcpu for the vm and mapped to the pcpu.
  *
  * Create a vcpu for the vm, and mapped to the pcpu.
