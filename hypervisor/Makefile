@@ -185,6 +185,7 @@ COMMON_C_SRCS += lib/stack_protector.c
 endif
 COMMON_C_SRCS += common/vm_config.c
 COMMON_C_SRCS += common/event.c
+COMMON_C_SRCS += common/fdt.c
 COMMON_C_SRCS += boot/guest/vboot_info.c
 COMMON_C_SRCS += common/vm_load.c
 

@@ -16,6 +16,7 @@
 #include <console.h>
 #include <shell.h>
 #include <uart16550.h>
+#include <fdt_api.h>
 #ifdef STACK_PROTECTOR
 #include <asm/security.h>
 #endif
@@ -58,8 +59,6 @@ void init_primary_pcpu(uint64_t hart_id, uint64_t fdt_paddr)
 	uint16_t pcpu_id = BSP_CPU_ID;
 	uint64_t pcpu_sp;
 
-	(void)fdt_paddr;
-
 	init_percpu_hart_id(hart_id);
 	set_pcpu_active(pcpu_id);
 #ifdef STACK_PROTECTOR
@@ -71,6 +70,10 @@ void init_primary_pcpu(uint64_t hart_id, uint64_t fdt_paddr)
 	 * is set to a per-cpu register tp from now on.
 	 */
 	pcpu_set_current_state(pcpu_id, PCPU_STATE_INITIALIZING);
+
+#ifdef CONFIG_FDT_PARSE_ENABLED
+	init_devtree(fdt_paddr);
+#endif
 
 	init_debug_pre();
 	init_paging();
