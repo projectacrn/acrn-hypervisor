@@ -7,6 +7,7 @@
 #define MMU_H
 
 #include <lib/spinlock.h>
+#include <asm/page.h>
 #include <asm/pgtable.h>
 #include <asm/mmu.h>
 
@@ -82,4 +83,14 @@ void init_sanitized_page(uint64_t *sanitized_page, uint64_t hpa);
 void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table);
 void sanitize_pte(uint64_t *pt_page, const struct pgtable *table);
 void *pgtable_create_root(const struct pgtable *table);
+const uint64_t *pgtable_lookup_entry(uint64_t *pml4_page, uint64_t addr,
+               uint64_t *pg_size, const struct pgtable *table);
+
+void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base,
+               uint64_t vaddr_base, uint64_t size,
+               uint64_t prot, const struct pgtable *table);
+void pgtable_modify_or_del_map(uint64_t *pml4_page, uint64_t vaddr_base,
+               uint64_t size, uint64_t prot_set, uint64_t prot_clr,
+               const struct pgtable *table, uint32_t type);
+
 #endif /* MMU_H */
