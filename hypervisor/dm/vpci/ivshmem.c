@@ -107,7 +107,7 @@ void init_ivshmem_shared_memory()
 	uint32_t i;
 	uint64_t addr;
 
-	addr = e820_alloc_memory(roundup(IVSHMEM_SHM_SIZE, PDE_SIZE), MEM_SIZE_MAX);
+	addr = e820_alloc_memory(roundup(IVSHMEM_SHM_SIZE, PGTL1_SIZE), MEM_SIZE_MAX);
 	for (i = 0U; i < ARRAY_SIZE(mem_regions); i++) {
 		mem_regions[i].hpa = addr;
 		addr += mem_regions[i].size;

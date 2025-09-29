@@ -9,6 +9,7 @@
 
 #include <spinlock.h>
 #include <board_info.h>
+#include <asm/mm_common.h>
 
 /**
  * @defgroup hwmgmt_page hwmgmt.page
@@ -61,7 +62,7 @@
  * region. It is supposed to be called when hypervisor allocates the page-directory-pointer tables for hypervisor and
  * all VMs.
  */
-#define PDPT_PAGE_NUM(size)	(((size) + PML4E_SIZE - 1UL) >> PML4E_SHIFT)
+#define PDPT_PAGE_NUM(size)	(((size) + PGTL3_SIZE - 1UL) >> PGTL3_SHIFT)
 /**
  * @brief Calculate the number of page directories(PD) that is requested to control the memory region with the specified
  *        size.
@@ -69,7 +70,7 @@
  * A page directory(PD) can be referenced by a PDPTE and each PDPTE controls access to a 1-GByte region. It is supposed
  * to be called when hypervisor allocates the page directories for hypervisor and all VMs.
  */
-#define PD_PAGE_NUM(size)	(((size) + PDPTE_SIZE - 1UL) >> PDPTE_SHIFT)
+#define PD_PAGE_NUM(size)	(((size) + PGTL2_SIZE - 1UL) >> PGTL2_SHIFT)
 /**
  * @brief Calculate the number of page tables(PT) that is requested to control the memory region with the specified
  *        size.
@@ -77,7 +78,7 @@
  * A page table(PT) can be referenced by a PDE and each PDE controls access to a 2-MByte region. It is supposed to be
  * called when hypervisor allocates the page tables for hypervisor and all VMs.
  */
-#define PT_PAGE_NUM(size)	(((size) + PDE_SIZE - 1UL) >> PDE_SHIFT)
+#define PT_PAGE_NUM(size)	(((size) + PGTL1_SIZE - 1UL) >> PGTL1_SHIFT)
 
 /**
  * @brief Data structure to illustrate a 4-KByte memory region with an alignment of 4-KByte.

@@ -143,11 +143,11 @@ static void early_pgtable_map_uart(uint64_t addr)
 	if(!(*pdpte & PAGE_PRESENT)) {
 		*(pdpte) = hva2hpa_early(uart_pde_page) + (PAGE_PRESENT|PAGE_RW);
 		pde = pde_offset(pdpte, addr);
-		*pde =  (addr & PDE_MASK) + (PAGE_PRESENT|PAGE_RW|PAGE_PSE);
+		*pde =  (addr & PGTL1_MASK) + (PAGE_PRESENT|PAGE_RW|PAGE_PSE);
 	} else if(!(*pdpte & PAGE_PSE)) {
 		pde = pde_offset(pdpte, addr);
 		if(!(*pde & PAGE_PRESENT)) {
-			*pde = (addr & PDE_MASK) + (PAGE_PRESENT|PAGE_RW|PAGE_PSE);
+			*pde = (addr & PGTL1_MASK) + (PAGE_PRESENT|PAGE_RW|PAGE_PSE);
 		}
 	}
 }

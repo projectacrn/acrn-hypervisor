@@ -309,8 +309,8 @@ void init_paging(void)
 	 * simply treat the return value of get_hv_image_base() as HPA.
 	 */
 	hv_hva = get_hv_image_base();
-	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, hv_hva & PDE_MASK,
-			get_hv_image_size() + (((hv_hva & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, hv_hva & PGTL1_MASK,
+			get_hv_image_size() + (((hv_hva & (PGTL1_SIZE - 1UL)) != 0UL) ? PGTL1_SIZE : 0UL),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER, &ppt_pgtable, MR_MODIFY);
 
 	/*

@@ -443,33 +443,33 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 	uint64_t *pml4e, *pdpte, *pde, *pte;
 	uint64_t i, j, k, m;
 
-	for (i = 0UL; i < PTRS_PER_PML4E; i++) {
+	for (i = 0UL; i < PTRS_PER_PGTL3E; i++) {
 		pml4e = pml4e_offset((uint64_t *)get_eptp(vm), i << PML4E_SHIFT);
 		if (!table->pgentry_present(*pml4e)) {
 			continue;
 		}
-		for (j = 0UL; j < PTRS_PER_PDPTE; j++) {
+		for (j = 0UL; j < PTRS_PER_PGTL2E; j++) {
 			pdpte = pdpte_offset(pml4e, j << PDPTE_SHIFT);
 			if (!table->pgentry_present(*pdpte)) {
 				continue;
 			}
 			if (pdpte_large(*pdpte) != 0UL) {
-				cb(pdpte, PDPTE_SIZE);
+				cb(pdpte, PGTL2_SIZE);
 				continue;
 			}
-			for (k = 0UL; k < PTRS_PER_PDE; k++) {
+			for (k = 0UL; k < PTRS_PER_PGTL1E; k++) {
 				pde = pde_offset(pdpte, k << PDE_SHIFT);
 				if (!table->pgentry_present(*pde)) {
 					continue;
 				}
 				if (pde_large(*pde) != 0UL) {
-					cb(pde, PDE_SIZE);
+					cb(pde, PGTL1_SIZE);
 					continue;
 				}
-				for (m = 0UL; m < PTRS_PER_PTE; m++) {
+				for (m = 0UL; m < PTRS_PER_PGTL0E; m++) {
 					pte = pte_offset(pde, m << PTE_SHIFT);
 					if (table->pgentry_present(*pte)) {
-						cb(pte, PTE_SIZE);
+						cb(pte, PGTL0_SIZE);
 					}
 				}
 			}

@@ -103,12 +103,12 @@ struct acrn_vcpu;
 
 static inline uint64_t round_pde_up(uint64_t val)
 {
-	return (((val + (uint64_t)PDE_SIZE) - 1UL) & PDE_MASK);
+	return (((val + (uint64_t)PGTL1_SIZE) - 1UL) & PGTL1_MASK);
 }
 
 static inline uint64_t round_pde_down(uint64_t val)
 {
-	return (val & PDE_MASK);
+	return (val & PGTL1_MASK);
 }
 
 /* Page size */
