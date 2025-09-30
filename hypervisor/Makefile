@@ -49,11 +49,6 @@ CFLAGS += -Werror
 # ACRN depends on zero length array. Silence the gcc if Warrary-bounds is default option
 CFLAGS += -Wno-array-bounds
 CFLAGS += -O2
-ifeq (y, $(CONFIG_RELOC))
-CFLAGS += -fpie
-else
-CFLAGS += -static
-endif
 
 ifdef STACK_PROTECTOR
 ifeq (true, $(shell [ $(GCC_MAJOR) -gt 4 ] && echo true))
@@ -79,17 +74,6 @@ endif
 LDFLAGS += -Wl,--gc-sections -nostartfiles -nostdlib
 LDFLAGS += -Wl,-n,-z,max-page-size=0x1000
 LDFLAGS += -Wl,--no-dynamic-linker
-
-ifeq (y, $(CONFIG_RELOC))
-# on X86_64, when build with "-pie", GCC fails on linking R_X86_64_32
-# relocations with "recompile with fPIC" error, because it may cause
-# run-time relocation overflow if it runs at address above 4GB.
-# We know it's safe because Hypervisor runs under 4GB. "noreloc-overflow"
-# is used to avoid the compile error
-LDFLAGS += -pie -z noreloc-overflow
-else
-LDFLAGS += -static
-endif
 
 ifeq (y, $(CONFIG_RELEASE))
 LDFLAGS += -s

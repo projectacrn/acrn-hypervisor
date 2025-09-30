@@ -21,6 +21,19 @@ VP_X86_TEE_MOD = $(HV_MODDIR)/vp_x86_tee_mod.a
 VP_HCALL_MOD = $(HV_MODDIR)/vp_hcall_mod.a
 SYS_INIT_MOD = $(HV_MODDIR)/sys_init_mod.a
 
+ifeq (y, $(CONFIG_RELOC))
+CFLAGS += -fpie
+# on X86_64, when build with "-pie", GCC fails on linking R_X86_64_32
+# relocations with "recompile with fPIC" error, because it may cause
+# run-time relocation overflow if it runs at address above 4GB.
+# We know it's safe because Hypervisor runs under 4GB. "noreloc-overflow"
+# is used to avoid the compile error
+LDFLAGS += -pie -z noreloc-overflow
+else
+CFLAGS += -static
+LDFLAGS += -static
+endif
+
 ARCH_CFLAGS += -m64 -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
 ARCH_CFLAGS += -mno-red-zone -mpopcnt
 
