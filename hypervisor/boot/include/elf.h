@@ -158,4 +158,34 @@ struct elf32_sec_entry
 	uint32_t sh_entsize;
 };
 
+/* Dynamic structure */
+struct Elf64_Dyn {
+	uint64_t d_tag;
+	uint64_t d_ptr;
+};
+
+/* external symbols that are helpful for relocation */
+extern struct Elf64_Dyn *_DYNAMIC;
+
+/* Dynamic Array Tags - d_tag */
+#define DT_NULL		0U	/* end of .dynamic section */
+#define DT_RELA		7U	/* relocation table */
+#define DT_RELASZ	8U	/* size of reloc table */
+#define DT_RELAENT	9U	/* size of one entry */
+
+/* Relocation entry with explicit addend */
+struct Elf64_Rel {
+	uint64_t r_offset;
+	uint64_t r_info;
+	int64_t r_addend;
+};
+
+static inline uint64_t elf64_r_type(uint64_t i)
+{
+	return (i & 0xffffffffUL);
+}
+
+/* x86-64 relocation types */
+#define R_X86_64_RELATIVE	8U
+
 #endif /* !ELF_H */

@@ -8,33 +8,8 @@
 #include <reloc.h>
 #include <asm/boot/ld_sym.h>
 
-#ifdef CONFIG_RELOC
-#define DT_NULL		0U	/* end of .dynamic section */
-#define DT_RELA		7U	/* relocation table */
-#define DT_RELASZ	8U	/* size of reloc table */
-#define DT_RELAENT	9U	/* size of one entry */
-
-#define R_X86_64_RELATIVE	8UL
-
-struct Elf64_Dyn {
-	uint64_t d_tag;
-	uint64_t d_ptr;
-};
-
-struct Elf64_Rel {
-	uint64_t r_offset;
-	uint64_t r_info;
-	uint64_t reserved;
-};
-
-static inline uint64_t elf64_r_type(uint64_t i)
-{
-	return (i & 0xffffffffUL);
-}
-#endif
-
 /* get the delta between CONFIG_HV_RAM_START and the actual load address */
-uint64_t get_hv_image_delta(void)
+uint64_t arch_get_hv_image_delta(void)
 {
 	uint64_t addr;
 
@@ -49,20 +24,9 @@ uint64_t get_hv_image_delta(void)
 	return addr;
 }
 
-/* get the actual Hypervisor load address (HVA) */
-uint64_t get_hv_image_base(void)
-{
-	return (get_hv_image_delta() + CONFIG_HV_RAM_START);
-}
-
-inline uint64_t get_hv_image_size(void)
-{
-	return (uint64_t)(&ld_ram_end - &ld_ram_start);
-}
-
-void relocate(void)
-{
 #ifdef CONFIG_RELOC
+void relocate(__unused struct Elf64_Dyn *dynamic)
+{
 	struct Elf64_Dyn *dyn;
 	struct Elf64_Rel *entry = NULL;
 	uint8_t *rela_start = NULL, *rela_end = NULL;
@@ -125,5 +89,5 @@ void relocate(void)
 			rela_start += entry_size;
 		}
 	}
-#endif
 }
+#endif /* CONFIG_RELOC */

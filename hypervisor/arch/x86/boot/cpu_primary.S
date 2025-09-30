@@ -224,12 +224,14 @@ primary_start_long_mode:
     /* 16 = CPU_STACK_ALIGN */
     and     $(~(16 - 1)),%rsp
 
+#ifdef CONFIG_RELOC
     /*
      * Fix up the .rela sections
      * Notes: this includes the fixup to IDT tables and temporary
      *     page tables
      */
     call relocate
+#endif /* CONFIG_RELOC */
 
     call    0f
 0:  pop     %rsi
