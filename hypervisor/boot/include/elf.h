@@ -188,4 +188,7 @@ static inline uint64_t elf64_r_type(uint64_t i)
 /* x86-64 relocation types */
 #define R_X86_64_RELATIVE	8U
 
+/* RISC-V relocation types  */
+#define R_RISCV_RELATIVE	3U
+
 #endif /* !ELF_H */

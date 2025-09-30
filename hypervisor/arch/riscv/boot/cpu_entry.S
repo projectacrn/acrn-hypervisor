@@ -38,6 +38,15 @@ _clear_bss:
 	/* Setup cpu0 boot stack (full descending) */
 	lla	sp, _boot_stack_end
 
+#ifdef CONFIG_RELOC
+	mv	s1, a0
+	lla	a0, _DYNAMIC
+
+	/* Fix up the .rela sections */
+	call	relocate
+	mv	a0, s1
+#endif /* CONFIG_RELOC */
+
 	/* a0 = hart_id, a1 = dtb_address */
 	tail	init_primary_pcpu
 
