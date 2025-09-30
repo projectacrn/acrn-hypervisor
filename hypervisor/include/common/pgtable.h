@@ -201,4 +201,14 @@ static inline uint64_t *pgtl0e_offset(const uint64_t *pgtl1e, uint64_t addr)
 	return page_addr(*pgtl1e) + pgtl0e_index(addr);
 }
 
+static inline uint64_t round_pgtl1_up(uint64_t val)
+{
+	return (((val + (uint64_t)PGTL1_SIZE) - 1UL) & PGTL1_MASK);
+}
+
+static inline uint64_t round_pgtl1_down(uint64_t val)
+{
+	return (val & PGTL1_MASK);
+}
+
 #endif /* COMMON_PGTABLE_H*/

@@ -101,16 +101,6 @@ static inline int32_t asm_invept(uint64_t type, struct invept_desc desc)
 
 struct acrn_vcpu;
 
-static inline uint64_t round_pde_up(uint64_t val)
-{
-	return (((val + (uint64_t)PGTL1_SIZE) - 1UL) & PGTL1_MASK);
-}
-
-static inline uint64_t round_pde_down(uint64_t val)
-{
-	return (val & PGTL1_MASK);
-}
-
 /* Page size */
 #define PAGE_SIZE_4K	MEM_4K
 #define PAGE_SIZE_2M	MEM_2M

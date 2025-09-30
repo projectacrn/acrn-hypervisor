@@ -212,18 +212,18 @@ void set_paging_supervisor(uint64_t base, uint64_t size)
 	uint64_t region_end = base + size;
 
 	/*rounddown base to 2MBytes aligned.*/
-	base_aligned = round_pde_down(base);
+	base_aligned = round_pgtl1_down(base);
 	size_aligned = region_end - base_aligned;
 
 	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, base_aligned,
-		round_pde_up(size_aligned), 0UL, PAGE_USER, &ppt_pgtable, MR_MODIFY);
+		round_pgtl1_up(size_aligned), 0UL, PAGE_USER, &ppt_pgtable, MR_MODIFY);
 }
 
 void set_paging_nx(uint64_t base, uint64_t size)
 {
 	uint64_t region_end = base + size;
-	uint64_t base_aligned = round_pde_down(base);
-	uint64_t size_aligned = round_pde_up(region_end - base_aligned);
+	uint64_t base_aligned = round_pgtl1_down(base);
+	uint64_t size_aligned = round_pgtl1_up(region_end - base_aligned);
 
 	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr,
 		base_aligned, size_aligned, PAGE_NX, 0UL, &ppt_pgtable, MR_MODIFY);
@@ -232,8 +232,8 @@ void set_paging_nx(uint64_t base, uint64_t size)
 void set_paging_x(uint64_t base, uint64_t size)
 {
 	uint64_t region_end = base + size;
-	uint64_t base_aligned = round_pde_down(base);
-	uint64_t size_aligned = round_pde_up(region_end - base_aligned);
+	uint64_t base_aligned = round_pgtl1_down(base);
+	uint64_t size_aligned = round_pgtl1_up(region_end - base_aligned);
 
 	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr,
 		base_aligned, size_aligned, 0UL, PAGE_NX, &ppt_pgtable, MR_MODIFY);
@@ -282,8 +282,8 @@ void init_paging(void)
 		}
 	}
 
-	low32_max_ram = round_pde_up(low32_max_ram);
-	high64_max_ram = round_pde_down(high64_max_ram);
+	low32_max_ram = round_pgtl1_up(low32_max_ram);
+	high64_max_ram = round_pgtl1_down(high64_max_ram);
 
 	/* Map [0, low32_max_ram) and [high64_min_ram, high64_max_ram) RAM regions as WB attribute */
 	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL,
@@ -317,8 +317,8 @@ void init_paging(void)
 	 * remove 'NX' bit for pages that contain hv code section, as by default XD bit is set for
 	 * all pages, including pages for guests.
 	 */
-	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, round_pde_down(hv_hva),
-			round_pde_up((uint64_t)&ld_text_end) - round_pde_down(hv_hva), 0UL,
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, round_pgtl1_down(hv_hva),
+			round_pgtl1_up((uint64_t)&ld_text_end) - round_pgtl1_down(hv_hva), 0UL,
 			PAGE_NX, &ppt_pgtable, MR_MODIFY);
 #if ((SERVICE_VM_NUM == 1) && (MAX_TRUSTY_VM_NUM > 0))
 	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_sworld_memory_base(),

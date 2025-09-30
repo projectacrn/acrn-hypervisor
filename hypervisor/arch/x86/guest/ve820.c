@@ -233,7 +233,7 @@ static inline uint64_t add_ram_entry(struct e820_entry *entry, uint64_t gpa, uin
 	entry->baseaddr = gpa;
 	entry->length = length;
 	entry->type = E820_TYPE_RAM;
-	return round_pde_up(entry->baseaddr + entry->length);
+	return round_pgtl1_up(entry->baseaddr + entry->length);
 }
 
 /**
