@@ -194,9 +194,6 @@ static inline uint64_t hva2hpa_early(void *x)
 	return (uint64_t)x;
 }
 
-void *pgtable_create_trusty_root(const struct pgtable *table,
-	void *nworld_pml4_page, uint64_t prot_table_present, uint64_t prot_clr);
-
 #endif /* PGTABLE_H */
 
 /**

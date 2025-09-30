@@ -134,6 +134,10 @@ enum serial_dev_type {
 	MMIO,
 };
 
+#if CONFIG_SERIAL_8250_PCI
+#include <asm/pagemisc.h>
+#endif
+
 void uart16550_init(bool early_boot);
 char uart16550_getc(void);
 size_t uart16550_puts(const char *buf, uint32_t len);

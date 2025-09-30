@@ -14,6 +14,7 @@
 #include <asm/guest/vm.h>
 #include <asm/vmx.h>
 #include <asm/security.h>
+#include <asm/pagemisc.h>
 #include <logmsg.h>
 #include <asm/seed.h>
 #include <asm/tsc.h>

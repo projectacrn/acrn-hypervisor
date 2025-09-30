@@ -121,38 +121,6 @@ static void uart16550_set_baud_rate(uint32_t baud_rate)
 	uart16550_write_reg(uart, temp_reg, UART16550_LCR);
 }
 
-#if CONFIG_SERIAL_8250_PCI
-/* FIXME  Please move these into mmu.c under ARCH dir */
-static uint8_t uart_pde_page[PAGE_SIZE]__aligned(PAGE_SIZE);
-static uint8_t uart_pdpte_page[PAGE_SIZE]__aligned(PAGE_SIZE);
-
-static void early_pgtable_map_uart(uint64_t addr)
-{
-	uint64_t *pml4e, *pdpte, *pde;
-	uint64_t value;
-
-	CPU_CR_READ(cr3, &value);
-	/*assumpiton for map high mmio in early pagetable is that it is only used for
-	  2MB page since 1G page may not available when memory width is 39bit */
-	pml4e = pgtl3e_offset((uint64_t *)value, addr);
-	/* address is above 512G */
-	if(!(*pml4e & PAGE_PRESENT)) {
-		*pml4e = hva2hpa_early(uart_pdpte_page) + (PAGE_PRESENT|PAGE_RW);
-	}
-	pdpte = pgtl2e_offset(pml4e, addr);
-	if(!(*pdpte & PAGE_PRESENT)) {
-		*(pdpte) = hva2hpa_early(uart_pde_page) + (PAGE_PRESENT|PAGE_RW);
-		pde = pgtl1e_offset(pdpte, addr);
-		*pde =  (addr & PGTL1_MASK) + (PAGE_PRESENT|PAGE_RW|PAGE_PSE);
-	} else if(!(*pdpte & PAGE_PSE)) {
-		pde = pgtl1e_offset(pdpte, addr);
-		if(!(*pde & PAGE_PRESENT)) {
-			*pde = (addr & PGTL1_MASK) + (PAGE_PRESENT|PAGE_RW|PAGE_PSE);
-		}
-	}
-}
-#endif
-
 void uart16550_init(bool early_boot)
 {
 	void *mmio_base_va = NULL;
@@ -192,6 +160,7 @@ void uart16550_init(bool early_boot)
 					uint32_t bar_hi = pci_pdev_read_cfg(uart.bdf, pci_bar_offset(1), 4U);
 					uint64_t addr = (bar0 & PCI_BASE_ADDRESS_MEM_MASK)|(((uint64_t)bar_hi) << 32U);
 					if (bar_hi != 0U) {
+						/* TODO: need a generic I/O mapping function */
 						early_pgtable_map_uart(addr);
 					}
 					uart.mmio_base_vaddr = hpa2hva_early(addr);
