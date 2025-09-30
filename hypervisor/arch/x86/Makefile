@@ -56,6 +56,7 @@ endif
 # platform boot component
 BOOT_S_SRCS += arch/x86/boot/cpu_primary.S
 BOOT_S_SRCS += arch/x86/boot/trampoline.S
+BOOT_C_SRCS += arch/x86/boot/reloc.c
 BOOT_C_SRCS += arch/x86/rtcm.c
 
 # hardware management component

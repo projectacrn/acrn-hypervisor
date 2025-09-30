@@ -236,7 +236,6 @@ COMMON_C_SRCS += boot/multiboot/multiboot.c
 ifeq ($(CONFIG_MULTIBOOT2),y)
 COMMON_C_SRCS += boot/multiboot/multiboot2.c
 endif
-COMMON_C_SRCS += boot/reloc.c
 COMMON_C_SRCS += hw/pci.c
 endif # ifeq ($(ARCH),x86)
 
