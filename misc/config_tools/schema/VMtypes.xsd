@@ -258,6 +258,32 @@ The size is a subset of the VM's total memory size specified on the Basic tab.</
   </xs:sequence>
 </xs:complexType>
 
+<xs:complexType name="BareBootOptionType">
+  <xs:all>
+      <xs:element name="tag" type="xs:string">
+          <xs:annotation acrn:title="Module Tag">
+        <xs:documentation>Tag used to identify module</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="address" type="HexFormat" minOccurs="1" maxOccurs="1">
+      <xs:annotation acrn:title="Module Address">
+        <xs:documentation>Specify the address where ACRN can find this module when it boots</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="size" type="HexFormat" minOccurs="1" maxOccurs="1">
+      <xs:annotation acrn:title="Module Size">
+        <xs:documentation>Specify the size of this module</xs:documentation>
+      </xs:annotation>
+    </xs:element>
+  </xs:all>
+</xs:complexType>
+
+<xs:complexType name="BareBootOptionsType">
+  <xs:sequence>
+    <xs:element name="MODULE" type="BareBootOptionType"  minOccurs="0" maxOccurs="unbounded"/>
+  </xs:sequence>
+</xs:complexType>
+
 <xs:complexType name="MMIOResourcesConfiguration">
   <xs:all>
     <xs:element name="TPM2" type="Boolean" default="n" minOccurs="0">

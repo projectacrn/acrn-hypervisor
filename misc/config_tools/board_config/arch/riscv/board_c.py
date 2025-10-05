@@ -10,6 +10,7 @@ import acrn_config_utilities
 from defusedxml.lxml import parse
 import os
 from acrn_config_utilities import get_node
+import bareboot_struct
 
 INCLUDE_HEADER = """
 #include <pci.h>
@@ -27,3 +28,5 @@ def generate_file(config):
     # insert bios info into board.c
     board_cfg_lib.handle_bios_info(config)
     print(INCLUDE_HEADER, file=config)
+
+    bareboot_struct.gen_bare_boot(config)

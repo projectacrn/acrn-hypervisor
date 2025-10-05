@@ -57,6 +57,8 @@ static void init_debug_post(uint16_t pcpu_id)
 void init_primary_pcpu(uint64_t hart_id, uint64_t fdt_paddr)
 {
 	uint16_t pcpu_id = BSP_CPU_ID;
+	/* TODO: implement boot_regs when we officially supports multiboot */
+	uint32_t boot_regs[2] = { 0 };
 	uint64_t pcpu_sp;
 
 	init_percpu_hart_id(hart_id);
@@ -74,6 +76,7 @@ void init_primary_pcpu(uint64_t hart_id, uint64_t fdt_paddr)
 #ifdef CONFIG_FDT_PARSE_ENABLED
 	init_devtree(fdt_paddr);
 #endif
+	init_acrn_boot_info(boot_regs);
 
 	init_debug_pre();
 	init_paging();

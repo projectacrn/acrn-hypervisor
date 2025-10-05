@@ -364,6 +364,11 @@ These settings can only be changed at build time.</xs:documentation>
           <xs:documentation>Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="BARE_BOOT_OPTIONS" type="BareBootOptionsType">
+      <xs:annotation acrn:title="Bare boot options" acrn:views="basic">
+          <xs:documentation>Specify the Bare Boot options.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="DEBUG_OPTIONS" type="DebugOptionsType">
       <xs:annotation acrn:title="Debug options" acrn:views="basic">
 	<xs:documentation>Configure the debug facilities.</xs:documentation>

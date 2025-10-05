@@ -188,6 +188,15 @@ COMMON_C_SRCS += common/event.c
 COMMON_C_SRCS += common/fdt.c
 COMMON_C_SRCS += boot/guest/vboot_info.c
 COMMON_C_SRCS += common/vm_load.c
+ifeq ($(CONFIG_GUEST_KERNEL_RAWIMAGE),y)
+COMMON_C_SRCS += boot/guest/rawimage_loader.c
+endif
+COMMON_C_SRCS += boot/boot.c
+COMMON_C_SRCS += boot/multiboot/multiboot.c
+ifeq ($(CONFIG_MULTIBOOT2),y)
+COMMON_C_SRCS += boot/multiboot/multiboot2.c
+endif
+COMMON_C_SRCS += boot/bare.c
 
 # dm componment
 COMMON_C_SRCS += dm/vuart.c
@@ -229,16 +238,8 @@ endif
 ifeq ($(CONFIG_GUEST_KERNEL_BZIMAGE),y)
 COMMON_C_SRCS += boot/guest/bzimage_loader.c
 endif
-ifeq ($(CONFIG_GUEST_KERNEL_RAWIMAGE),y)
-COMMON_C_SRCS += boot/guest/rawimage_loader.c
-endif
 ifeq ($(CONFIG_GUEST_KERNEL_ELF),y)
 COMMON_C_SRCS += boot/guest/elf_loader.c
-endif
-COMMON_C_SRCS += boot/boot.c
-COMMON_C_SRCS += boot/multiboot/multiboot.c
-ifeq ($(CONFIG_MULTIBOOT2),y)
-COMMON_C_SRCS += boot/multiboot/multiboot2.c
 endif
 COMMON_C_SRCS += hw/pci.c
 endif # ifeq ($(ARCH),x86)

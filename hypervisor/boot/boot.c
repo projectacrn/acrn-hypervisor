@@ -10,6 +10,7 @@
 #include <boot.h>
 #include <rtl.h>
 #include <logmsg.h>
+#include <bare.h>
 
 static struct acrn_boot_info acrn_bi = { 0 };
 
@@ -36,8 +37,11 @@ void get_boot_mods_range(uint64_t *p_start, uint64_t *p_end)
 
 void init_acrn_boot_info(uint32_t *registers)
 {
-	(void)init_multiboot_info(registers);
-	/* TODO: add more boot protocol support here */
+	int32_t ret;
+	ret = init_multiboot_info(registers);
+	if (ret < 0) {
+		init_bare_boot_info();
+	}
 }
 
 int32_t sanitize_acrn_boot_info(struct acrn_boot_info *abi)

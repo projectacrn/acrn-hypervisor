@@ -7,6 +7,7 @@ import sys
 import enum
 import board_cfg_lib
 import acrn_config_utilities
+import bareboot_struct
 from defusedxml.lxml import parse
 import os
 from acrn_config_utilities import get_node
@@ -512,5 +513,7 @@ def generate_file(config):
     gen_known_caps_pci_devs(config)
 
     gen_cpufreq_limits(config)
+
+    bareboot_struct.gen_bare_boot(config)
 
     return err_dic
