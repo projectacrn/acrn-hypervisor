@@ -18,6 +18,13 @@
       <STACK_SIZE>0x2000</STACK_SIZE>
       <HV_RAM_START>0x81000000</HV_RAM_START>
     </MEMORY>
+    <BARE_BOOT_OPTIONS>
+      <MODULE>
+        <address>0x99000000</address>
+        <size>0x3000000</size>
+        <tag>Linux_bzImage</tag>
+      </MODULE>
+    </BARE_BOOT_OPTIONS>
   </hv>
   <vm id="0">
     <load_order>SERVICE_VM</load_order>
