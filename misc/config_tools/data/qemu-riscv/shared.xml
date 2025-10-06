@@ -29,5 +29,13 @@
   <vm id="0">
     <load_order>SERVICE_VM</load_order>
     <name>ACRN_Service_VM</name>
+    <os_config>
+      <kern_type>KERNEL_RAWIMAGE</kern_type>
+      <kern_mod>Linux_bzImage</kern_mod>
+      <kern_load_addr>0x90000000</kern_load_addr>
+      <kern_entry_addr>0x90000000</kern_entry_addr>
+      <ramdisk_mod/>
+      <bootargs></bootargs>
+    </os_config>
   </vm>
 </acrn-config>
