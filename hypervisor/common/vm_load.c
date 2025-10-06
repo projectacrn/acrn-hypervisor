@@ -52,6 +52,7 @@ int32_t prepare_os_image(struct acrn_vm *vm)
 	if (ret == 0) {
 		/* Copy Guest OS ACPI to its load location */
 		load_sw_module(vm, acpi_info);
+		load_sw_module(vm, &(vm->sw.fdt_info));
 		pr_dbg("%s, VM%hu 0x%016lx", __func__, vm->vm_id,
 			vm->sw.kernel_info.kernel_entry_addr);
 	}

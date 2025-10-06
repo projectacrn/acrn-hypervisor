@@ -17,6 +17,7 @@
 #include <logmsg.h>
 #include <vboot.h>
 #include <vacpi.h>
+#include <vfdt.h>
 #ifdef ARCH_VBOOT_SEED_SUPPORT
 #include <asm/seed.h>
 #endif
@@ -44,6 +45,16 @@ static void init_vm_acpi_info(struct acrn_vm *vm, const struct abi_module *mod)
 	vm->sw.acpi_info.src_addr = mod->start;
 	vm->sw.acpi_info.load_addr = (void *)VIRT_ACPI_DATA_ADDR;
 	vm->sw.acpi_info.size = ACPI_MODULE_SIZE;
+}
+
+/* TODO: For statically built FDT, the logic is almost the same as ACPI.
+ * merge them into "hardware description mechanism" flow.
+ */
+static void init_vm_fdt_info(struct acrn_vm *vm, const struct abi_module *mod)
+{
+	vm->sw.fdt_info.src_addr = mod->start;
+	vm->sw.fdt_info.size = mod->size;
+	vm->sw.fdt_info.load_addr = (void *)VIRT_FDT_LOAD_ADDR;
 }
 
 /**
@@ -168,6 +179,7 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_boot_info *
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	struct abi_module *mod;
 	int32_t ret = -EINVAL;
+	bool fw_loaded = false;
 
 	dev_dbg(DBG_LEVEL_BOOT, "mod counts=%d\n", abi->mods_count);
 
@@ -198,11 +210,20 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_boot_info *
 		}
 
 		if (is_prelaunched_vm(vm)) {
+			/* Load ACPI and/or FDT, whichever is available */
 			mod = get_mod_by_tag(abi, vm_config->acpi_config.acpi_mod_tag);
 			if ((mod != NULL) && (mod->size == ACPI_MODULE_SIZE)) {
 				init_vm_acpi_info(vm, mod);
-			} else {
-				pr_err("failed to load VM %d acpi module", vm->vm_id);
+				fw_loaded = true;
+			}
+			mod = get_mod_by_tag(abi, vm_config->fdt_config.fdt_mod_tag);
+			if (mod != NULL) {
+				init_vm_fdt_info(vm, mod);
+				fw_loaded = true;
+			}
+
+			if (!fw_loaded) {
+				pr_err("failed to load ACPI module or FDT for VM%d", vm->vm_id);
 			}
 		}
 
