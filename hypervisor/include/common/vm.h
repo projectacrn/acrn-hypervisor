@@ -56,6 +56,7 @@ struct vm_sw_info {
 	struct sw_module_info bootargs_info;
 	struct sw_module_info ramdisk_info;
 	struct sw_module_info acpi_info;
+	struct sw_module_info fdt_info;
 	/* HVA to IO shared page */
 	void *io_shared_page;
 	void *asyncio_sbuf;

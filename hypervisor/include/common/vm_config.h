@@ -98,6 +98,10 @@ struct acrn_vm_acpi_config {
 	char acpi_mod_tag[MAX_MOD_TAG_LEN];		/* multiboot module tag for ACPI */
 } __aligned(8);
 
+struct acrn_vm_fdt_config {
+	char fdt_mod_tag[MAX_MOD_TAG_LEN];		/* multiboot module tag for FDT */
+} __aligned(8);
+
 /* the vbdf is assgined by device model */
 #define UNASSIGNED_VBDF        0xFFFFU
 
@@ -142,6 +146,7 @@ struct acrn_vm_config {
 	struct acrn_vm_pci_dev_config *pci_devs;	/* point to PCI devices BDF list */
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
 	struct acrn_vm_acpi_config acpi_config;		/* ACPI config for the VM */
+	struct acrn_vm_fdt_config fdt_config;		/* FDT config for the VM */
 
 	struct vuart_config vuart[MAX_VUART_NUM_PER_VM];/* vuart configuration for VM */
 

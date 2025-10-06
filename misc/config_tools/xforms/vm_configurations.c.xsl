@@ -132,6 +132,7 @@
     </xsl:if>
     <xsl:apply-templates select="os_config" />
     <xsl:call-template name="acpi_config" />
+    <xsl:call-template name="fdt_config" />
     <xsl:apply-templates select="console_vuart" />
     <xsl:call-template name="vuart_connection" />
     <xsl:call-template name="pci_dev_num" />
@@ -268,6 +269,15 @@
     <xsl:if test="acrn:is-pre-launched-vm(load_order)">
       <xsl:value-of select="acrn:initializer('acpi_config', '{', true())" />
       <xsl:value-of select="acrn:initializer('acpi_mod_tag', concat($quot,'ACPI_VM', @id, $quot))" />
+      <xsl:text>},</xsl:text>
+      <xsl:value-of select="$newline" />
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="fdt_config">
+    <xsl:if test="acrn:is-pre-launched-vm(load_order)">
+      <xsl:value-of select="acrn:initializer('fdt_config', '{', true())" />
+      <xsl:value-of select="acrn:initializer('fdt_mod_tag', concat($quot,'FDT_VM', @id, $quot))" />
       <xsl:text>},</xsl:text>
       <xsl:value-of select="$newline" />
     </xsl:if>
