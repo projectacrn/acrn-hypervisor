@@ -932,3 +932,5 @@ void arch_trigger_level_intr(struct acrn_vm *vm, uint32_t irq, bool assert)
 	vpic_set_irqline(vm_pic(vm), irq, operation);
 	vioapic_set_irqline_lock(vm, irq, operation);
 }
+
+void arch_init_service_vm_vfdt(__unused struct acrn_vm *vm) { }

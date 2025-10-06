@@ -179,6 +179,9 @@ COMMON_C_SRCS += lib/fdt/fdt_rw.c
 COMMON_C_SRCS += lib/fdt/fdt_strerror.c
 COMMON_C_SRCS += lib/fdt/fdt_sw.c
 COMMON_C_SRCS += lib/fdt/fdt_wip.c
+COMMON_C_SRCS += common/vfdt.c
+else
+COMMON_C_SRCS += common/vfdt_static.c
 endif
 
 ifdef STACK_PROTECTOR

@@ -14,6 +14,7 @@
 #include <reloc.h>
 #include <cpu.h>
 #include <per_cpu.h>
+#include <vfdt.h>
 
 #include <asm/guest/vcpu_priv.h>
 
@@ -52,6 +53,11 @@ int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config)
 	init_vsbi(vm);
 
 	(void)vm_config;
+
+	if (is_service_vm(vm)) {
+		init_service_vm_vfdt(vm);
+	}
+
 	return 0;
 }
 
@@ -84,3 +90,8 @@ void arch_vm_prepare_bsp(struct acrn_vcpu *vcpu)
 
 void arch_trigger_level_intr(__unused struct acrn_vm *vm,
 			__unused uint32_t irq, __unused bool assert) {}
+
+void arch_init_service_vm_vfdt(struct acrn_vm *vm)
+{
+	(void)vm;
+}

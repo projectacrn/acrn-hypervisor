@@ -23,6 +23,7 @@
 #include <dm/vrtc.h>
 #include <spinlock.h>
 #include <vm_config.h>
+#include <fdt_api.h>
 #include <asm/guest/vm.h>
 
 #include <vcpu.h>
@@ -100,6 +101,8 @@ struct acrn_vm {
 	void *root_stg2ptp;
 	struct pgtable stg2_pgtable;
 	spinlock_t stg2pt_lock;	/* Spin-lock used to protect stg2pt to add/modify/remove for a VM */
+
+	uint8_t fdt_raw[MAX_FDT_SIZE] __aligned(8);
 } __aligned(PAGE_SIZE);
 
 /*

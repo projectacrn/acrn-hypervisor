@@ -7,6 +7,7 @@
 #include <vm.h>
 #include <vboot.h>
 #include <guest_memory.h>
+#include <pgtable.h>
 
 /**
  * @pre vm != NULL
@@ -19,6 +20,13 @@ static void load_rawimage(struct acrn_vm *vm)
 
 	/* TODO: GPA 0 load support */
 	kernel_load_gpa = vm_config->os_config.kernel_load_addr;
+
+	/* TODO: For simplicity assume there are enough space just before kernel load address
+	 * Fix this after implementing find_space_from_vm_vfdt API
+	 */
+	if (vm->sw.fdt_info.src_addr != NULL) {
+		vm->sw.fdt_info.load_addr = (void *)round_page_down(kernel_load_gpa - MAX_FDT_SIZE);
+	}
 
 	/* Copy the guest kernel image to its run-time location */
 	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr, kernel_load_gpa, sw_kernel->kernel_size);
