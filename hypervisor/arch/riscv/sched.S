@@ -30,6 +30,7 @@ arch_switch_to:
 	 * 0x58=STACK_FRAME_OFFSET_S10
 	 * 0x60=STACK_FRAME_OFFSET_S11
 	 * 0x68=STACK_FRAME_OFFSET_A0
+	 * 0x70=STACK_FRAME_OFFSET_STATUS
 	 */
 	sd ra, 0x0(sp)
 	sd s0, 0x8(sp)
@@ -45,6 +46,8 @@ arch_switch_to:
 	sd s10, 0x58(sp)
 	sd s11, 0x60(sp)
 	sd a0, 0x68(sp)
+	csrr t0, sstatus
+	sd t0, 0x70(sp)
 	sd sp, 0(a0)
 
 	ld sp, 0(a1)
@@ -63,6 +66,7 @@ arch_switch_to:
 	 * 0x58=STACK_FRAME_OFFSET_S10
 	 * 0x60=STACK_FRAME_OFFSET_S11
 	 * 0x68=STACK_FRAME_OFFSET_A0
+	 * 0x70=STACK_FRAME_OFFSET_STATUS
 	 */
 	ld ra, 0x0(sp)
 	ld s0, 0x8(sp)
@@ -78,6 +82,8 @@ arch_switch_to:
 	ld s10, 0x58(sp)
 	ld s11, 0x60(sp)
 	ld a0, 0x68(sp)
+	ld t0, 0x70(sp)
+	csrw sstatus, t0
 	addi sp, sp, 0x80
 
 	ret

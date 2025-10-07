@@ -80,6 +80,7 @@ struct cpu_regs {
 #define STACK_FRAME_OFFSET_S10       0x58
 #define STACK_FRAME_OFFSET_S11       0x60
 #define STACK_FRAME_OFFSET_A0        0x68
+#define STACK_FRAME_OFFSET_STATUS    0x70
 struct stack_frame {
 	uint64_t ra;
 	uint64_t s0;
@@ -95,6 +96,7 @@ struct stack_frame {
 	uint64_t s10;
 	uint64_t s11;
 	uint64_t a0; /* thread_object parameter */
+	uint64_t status;
 	uint64_t magic;
 };
 
