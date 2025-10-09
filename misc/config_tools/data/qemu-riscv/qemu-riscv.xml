@@ -15,7 +15,6 @@
        - Hart IDs instead of APIC IDs for CPU identification
     
     3. Some fields contain x86-specific concepts that need to be replaced with RISC-V equivalents:
-       - AVAILABLE_IRQ_INFO: Currently shows x86 ISA IRQs (0-15), should show PLIC IRQ range (1-95+)
        - apic_id: Should be replaced with hart_id for RISC-V processors
        - IOAPIC, DRHD: Not applicable to RISC-V architecture
     
@@ -140,7 +139,6 @@ ff71b000-ffffffff : System RAM
         seri:/dev/ttyS0 type:mmio base:0x10000000 irq:14
         </TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
-        3, 4, 5, 6, 7, 8, 9, 11
         </AVAILABLE_IRQ_INFO>
   <TOTAL_MEM_INFO>
         4038724 kB
