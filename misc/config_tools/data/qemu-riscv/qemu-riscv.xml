@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    FIXME: This board XML configuration file is a preliminary implementation for RISC-V QEMU virt platform.
+    
+    Most of the information in this file has been manually collected and filled in, rather than being
+    automatically extracted by a RISC-V-aware board inspector tool. This is because:
+    
+    1. The original ACRN board inspector is designed for x86 architecture and relies on x86-specific
+       mechanisms such as DMI/SMBIOS (dmidecode), ACPI tables, and x86 interrupt controllers (APIC/IOAPIC).
+    
+    2. RISC-V systems use different hardware discovery mechanisms:
+       - Device Tree instead of ACPI/DMI
+       - PLIC/CLINT instead of APIC/IOAPIC for interrupt handling
+       - OpenSBI/U-Boot instead of traditional x86 BIOS
+       - Hart IDs instead of APIC IDs for CPU identification
+    
+    3. Some fields contain x86-specific concepts that need to be replaced with RISC-V equivalents:
+       - AVAILABLE_IRQ_INFO: Currently shows x86 ISA IRQs (0-15), should show PLIC IRQ range (1-95+)
+       - apic_id: Should be replaced with hart_id for RISC-V processors
+       - IOAPIC, DRHD: Not applicable to RISC-V architecture
+    
+    TODO: Implement a RISC-V-specific board inspector that can automatically extract:
+       - Board/firmware info from Device Tree (/sys/firmware/devicetree/base)
+       - CPU information from /proc/cpuinfo (harts, ISA extensions)
+       - PLIC interrupt information from Device Tree and /proc/interrupts
+       - Memory layout from /proc/iomem and Device Tree
+       - PCI device enumeration (when applicable)
+    
+    This file serves as a template and reference for RISC-V platform support development.
+-->
+<acrn-config board="riscv_board">
+  <BIOS_INFO>
+        BIOS Information
+        Vendor: U-Boot
+        Version: 2025.01-0ubuntu0.24.04.2
+        Release Date: 01/01/2025
+        BIOS Revision: 25.1
+        </BIOS_INFO>
+  <BASE_BOARD_INFO>
+        Base Board Information
+        Manufacturer: riscv-virtio
+        Product Name: qemu
+        Version: Not Specified
+        </BASE_BOARD_INFO>
+  <PCI_DEVICE>
+        00:01.0 1af4: 1041 Network controller: Virtio network device
+        00:02.0 1af4: 1043 Communication controller: Virtio console
+        </PCI_DEVICE>
+  <PCI_VID_PID>
+        00:01.0 0200: 1af4:1041
+        00:02.0 0780: 1af4:1043
+        </PCI_VID_PID>
+  <WAKE_VECTOR_INFO>
+        /* Wake vector not applicable for RISC-V */
+        </WAKE_VECTOR_INFO>
+  <RESET_REGISTER_INFO>
+        /* Reset register info for RISC-V */
+        </RESET_REGISTER_INFO>
+  <PM_INFO>
+        /* Power management info for RISC-V */
+        </PM_INFO>
+  <S3_INFO>
+        /* S3 suspend info */
+        </S3_INFO>
+  <S5_INFO>
+        /* S5 power off info */
+        </S5_INFO>
+  <DRHD_INFO></DRHD_INFO>
+  <CPU_BRAND>
+        "RISC-V SiFive U74 Processor"
+        </CPU_BRAND>
+  <CX_INFO>
+        /* Cx data is not available */
+        </CX_INFO>
+  <PX_INFO>
+        /* Px data is not available */
+        </PX_INFO>
+  <MMCFG_BASE_INFO>
+        /* PCI mmcfg base of MCFG */
+        #define DEFAULT_PCI_MMCFG_BASE   0xb0000000UL
+        </MMCFG_BASE_INFO>
+  <TPM_INFO>
+        /* no TPM device */
+        </TPM_INFO>
+  <CLOS_INFO>
+        </CLOS_INFO>
+  <IOMEM_INFO>
+00101000-00101fff : 101000.rtc rtc@101000
+10000000-100000ff : serial
+10008000-10008fff : 10008000.virtio_mmio virtio_mmio@10008000
+10100000-10100017 : fw_cfg_mem
+20000000-21ffffff : 20000000.flash flash@20000000
+22000000-23ffffff : 20000000.flash flash@20000000
+30000000-3fffffff : PCI ECAM
+40000000-7fffffff : pci@30000000
+  40000000-40000fff : 0000:00:01.0
+  40001000-40001fff : 0000:00:02.0
+80000000-8005ffff : Reserved
+80060000-fdec2fff : System RAM
+  ea200000-ea201fff : Reserved
+  ea202000-ecb92827 : Kernel image
+    ea202000-eaf6f9e1 : Kernel code
+    eb800000-ec3fffff : Kernel rodata
+    ec600000-eca83bff : Kernel data
+    eca84000-ecb92827 : Kernel bss
+  ecb92828-ecbfffff : Reserved
+  f2327000-f2328fff : Reserved
+  f2527000-f6855fff : Reserved
+  f9e00000-fddfffff : Reserved
+  fdea7000-fdea7fff : Reserved
+  fdea9000-fdea9fff : Reserved
+  fdeaa000-fdeaafff : Reserved
+  fdeb9000-fdebefff : Reserved
+fdec3000-fdec3fff : Reserved
+fdec4000-fdec4fff : System RAM
+fdec5000-fdee6fff : Reserved
+fdee7000-fef2cfff : System RAM
+  fdf2d000-fef2cfff : Reserved
+fef2d000-fef2dfff : Reserved
+fef2e000-ff718fff : System RAM
+ff719000-ff71afff : Reserved
+ff71b000-ffffffff : System RAM
+  ff803000-ffa08fff : Reserved
+  ffa09000-ffd0afff : Reserved
+  ffd0b000-ffd0bfff : Reserved
+  ffd0c000-ffde3fff : Reserved
+  ffde5000-ffde8fff : Reserved
+  ffde9000-ffdf5fff : Reserved
+  ffdf6000-ffffffff : Reserved
+400000000-7ffffffff : pci@30000000
+  400000000-400003fff : 0000:00:01.0
+    400000000-400003fff : virtio-pci-modern
+  400004000-400007fff : 0000:00:02.0
+    400004000-400007fff : virtio-pci-modern
+        </IOMEM_INFO>
+  <BLOCK_DEVICE_INFO>
+        /dev/vda1: TYPE="ext4"
+        </BLOCK_DEVICE_INFO>
+  <TTYS_INFO>
+        seri:/dev/ttyS0 type:mmio base:0x10000000 irq:14
+        </TTYS_INFO>
+  <AVAILABLE_IRQ_INFO>
+        3, 4, 5, 6, 7, 8, 9, 11
+        </AVAILABLE_IRQ_INFO>
+  <TOTAL_MEM_INFO>
+        4038724 kB
+        </TOTAL_MEM_INFO>
+  <CPU_PROCESSOR_INFO>
+        0, 1, 2, 3
+        </CPU_PROCESSOR_INFO>
+  <MAX_MSIX_TABLE_NUM>
+        3
+        </MAX_MSIX_TABLE_NUM>
+  <processors>
+    <!-- Simplified processors section for RISC-V - keeping essential elements for config tools -->
+    <thread>
+      <cpu_id>0</cpu_id>
+      <apic_id>0x0</apic_id>
+      <core_type></core_type>
+    </thread>
+    <thread>
+      <cpu_id>1</cpu_id>
+      <apic_id>0x1</apic_id>
+      <core_type></core_type>
+    </thread>
+    <thread>
+      <cpu_id>2</cpu_id>
+      <apic_id>0x2</apic_id>
+      <core_type></core_type>
+    </thread>
+    <thread>
+      <cpu_id>3</cpu_id>
+      <apic_id>0x3</apic_id>
+      <core_type></core_type>
+    </thread>
+  </processors>
+  <caches>
+    <!-- Empty caches section for RISC-V -->
+  </caches>
+  <ioapics>
+    <!-- Empty ioapics section for RISC-V -->
+  </ioapics>
+  <devices>
+    <!-- PCI bus definition for RISC-V with memory resources -->
+    <bus id="PCI_ROOT" type="pci" address="0x0" description="RISC-V PCI Root Bus">
+      <vendor>0x1234</vendor>
+      <identifier>0x1111</identifier>
+      <class>0x060000</class>
+      <!-- Bus number resource -->
+      <resource id="res0" type="bus_number" min="0x0" max="0xff" len="0x100"/>
+      <!-- IO port resources (minimal for RISC-V) -->
+      <resource id="res1" type="io_port" min="0x1000" max="0xffff" len="0xf000"/>
+      <!-- Memory resources based on RISC-V memory layout -->
+      <resource id="res2" type="memory" min="0x40000000" max="0x7fffffff" len="0x40000000"/>
+      <resource id="res3" type="memory" min="0x400000000" max="0x7ffffffff" len="0x400000000"/>
+    </bus>
+  </devices>
+</acrn-config>
