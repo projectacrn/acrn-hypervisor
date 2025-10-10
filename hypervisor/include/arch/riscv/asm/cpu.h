@@ -117,9 +117,7 @@ struct stack_frame {
  */
 static inline uint16_t arch_get_pcpu_id(void)
 {
-	uint16_t pcpu_id;
-
-	asm volatile ("mv %0, tp" : "=r" (pcpu_id) : : );
+	register uint16_t pcpu_id asm ("tp");
 	return pcpu_id;
 }
 
