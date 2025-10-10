@@ -13,14 +13,21 @@ CFLAGS += -std=gnu99
 ASFLAGS +=
 
 LDFLAGS += -Wl,--no-warn-rwx-segments
+LDFLAGS += -Wl,-z,norelro
+LDFLAGS += -Wl,-z,noexecstack
 
 ifeq (y, $(CONFIG_RELOC))
-# -fpie is already added into CFLAGS in common Makefile
-#CFLAGS += -fpie
+CFLAGS += -fpie
 ASFLAGS += -fpie
+CFLAGS += -fvisibility=hidden
+LDFLAGS += -shared
+LDFLAGS += -Wl,-z,notext
+LDFLAGS += -Wl,-Bsymbolic
+LDFLAGS += -Wl,-z,defs
 else
-CFLAGS += -fno-pie
-ASFLAGS += -fno-pie
+CFLAGS += -fno-pie -static
+ASFLAGS += -fno-pie -static
+LDFLAGS += -static
 endif
 
 # g expands to i, m, a, f, d, zicsr and zifencei.

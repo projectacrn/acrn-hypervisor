@@ -7,6 +7,8 @@
 OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
+EXTERN(_start)
+
 SECTIONS
 {
 	. = CONFIG_HV_RAM_START;
@@ -15,7 +17,7 @@ SECTIONS
 	.text :
 	{
 		_text_start = .;
-		*(.text.entry)		/* Entry point code first */
+		KEEP(*(.text.entry))	/* Entry point code first */
 		*(.text)
 		*(.text.*)
 		*(.note.gnu.build-id)	/* Keep build ID for debugging */
