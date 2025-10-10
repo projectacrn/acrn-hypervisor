@@ -27,7 +27,7 @@
     
     This file serves as a template and reference for RISC-V platform support development.
 -->
-<acrn-config board="riscv_board">
+<acrn-config board="qemu-riscv">
   <BIOS_INFO>
         BIOS Information
         Vendor: U-Boot
@@ -140,6 +140,10 @@ ff71b000-ffffffff : System RAM
         </TTYS_INFO>
   <AVAILABLE_IRQ_INFO>
         </AVAILABLE_IRQ_INFO>
+  <!-- Add memory range to pass xmlschema check -->
+  <memory>
+        <range start="0x80060000" end="0x100000000" size="2147090432"/>
+  </memory>
   <TOTAL_MEM_INFO>
         4038724 kB
         </TOTAL_MEM_INFO>

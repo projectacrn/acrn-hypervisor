@@ -1,0 +1,24 @@
+<acrn-config>
+  <hv>
+    <BUILD_TYPE>debug</BUILD_TYPE>
+    <DEBUG_OPTIONS>
+      <SERIAL_CONSOLE>/dev/ttyS0</SERIAL_CONSOLE>
+      <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
+      <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
+      <CONSOLE_LOGLEVEL>3</CONSOLE_LOGLEVEL>
+    </DEBUG_OPTIONS>
+    <FEATURES>
+      <RELOC_ENABLED>n</RELOC_ENABLED>
+      <SCHEDULER>SCHED_NOOP</SCHEDULER>
+      <ACRNTRACE_ENABLED>n</ACRNTRACE_ENABLED>
+    </FEATURES>
+    <MEMORY>
+      <STACK_SIZE>0x2000</STACK_SIZE>
+      <HV_RAM_START>0x81000000</HV_RAM_START>
+    </MEMORY>
+  </hv>
+  <vm id="0">
+    <load_order>SERVICE_VM</load_order>
+    <name>ACRN_Service_VM</name>
+  </vm>
+</acrn-config>
