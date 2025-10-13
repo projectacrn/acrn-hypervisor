@@ -95,43 +95,6 @@ struct page {
 	uint8_t contents[PAGE_SIZE]; /**< A 4-KByte page in the memory. */
 } __aligned(PAGE_SIZE);
 
-/**
- * @brief Data structure that contains a pool of memory pages.
- *
- * This structure is designed to manage a collection of memory pages, facilitating efficient allocation,
- * deallocation, and reuse of pages. It is typically used in scenarios where memory allocation performance
- * is critical, such as in operating systems or high-performance applications. The page pool aims to minimize
- * the overhead associated with frequent memory page allocations by maintaining a ready-to-use pool of pages.
- * It is used to support the memory management in hypervisor and the extended page-table mechanism for VMs.
- *
- * @consistency N/A
- * @alignment N/A
- *
- * @remark N/A
- */
-struct page_pool {
-        struct page *start_page; /**< The first page in the pool. */
-        spinlock_t lock; /**< The spinlock to protect simultaneous access of the page pool. */
-        /**
-         * @brief A pointer to the bitmap that represents the allocation status of each page in the pool.
-         *
-         * The bitmap is a data structure that represents the allocation status of each page in the pool. Each bit in
-         * the bitmap corresponds to a page in the pool. If the bit is set to 1, the page is allocated; otherwise, the
-         * page is free. The bitmap is used to track the allocation status of each page in the pool.
-         */
-        uint64_t *bitmap;
-        uint64_t bitmap_size; /**< The number of bitmap. */
-        uint64_t last_hint_id; /**< The last bitmap ID that is used to allocate a page. */
-        /**
-         * @brief A pointer to the dummy page
-         *
-         * This is used when there's no page available in the pool.
-         */
-        struct page *dummy_page;
-};
-
-struct page *alloc_page(struct page_pool *pool);
-void free_page(struct page_pool *pool, struct page *page);
 #endif /* PAGE_H */
 
 /**

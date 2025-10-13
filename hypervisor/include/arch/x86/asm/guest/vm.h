@@ -29,6 +29,7 @@
 #include <asm/e820.h>
 #include <asm/vm_config.h>
 #include <io_req.h>
+#include <mmu.h>
 #ifdef CONFIG_HYPERV_ENABLED
 #include <asm/guest/hyperv.h>
 #endif

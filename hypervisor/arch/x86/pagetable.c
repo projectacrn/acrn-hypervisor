@@ -88,7 +88,7 @@ static void try_to_free_pgtable_page(const struct pgtable *table,
 
 		for (index = 0UL; index < PTRS_PER_PTE; index++) {
 			uint64_t *pte = pt_page + index;
-			if (pgentry_present(table, (*pte))) {
+			if (table->pgentry_present(*pte)) {
 				break;
 			}
 		}
@@ -136,7 +136,7 @@ static void split_large_page(uint64_t *pte, enum _page_table_level level,
 		paddr += paddrinc;
 	}
 
-	ref_prot = table->default_access_right;
+	ref_prot = table->get_default_access_right();
 	set_pgentry(pte, hva2hpa((void *)pbase) | ref_prot, table);
 
 	/* TODO: flush the TLB */
@@ -183,7 +183,7 @@ static void modify_or_del_pte(uint64_t *pde, uint64_t vaddr_start, uint64_t vadd
 	for (; index < PTRS_PER_PTE; index++) {
 		uint64_t *pte = pt_page + index;
 
-		if (!pgentry_present(table, (*pte))) {
+		if (!table->pgentry_present(*pte)) {
 			/*suppress warning message for low memory (< 1MBytes),as service VM
 			 * will update MTTR attributes for this region by default whether it
 			 * is present or not.
@@ -223,7 +223,7 @@ static void modify_or_del_pde(uint64_t *pdpte, uint64_t vaddr_start, uint64_t va
 		uint64_t *pde = pd_page + index;
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
-		if (!pgentry_present(table, (*pde))) {
+		if (!table->pgentry_present(*pde)) {
 			if (type == MR_MODIFY) {
 				pr_warn("%s, addr: 0x%lx pde is not present.\n", __func__, vaddr);
 			}
@@ -270,7 +270,7 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 		uint64_t *pdpte = pdpt_page + index;
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
-		if (!pgentry_present(table, (*pdpte))) {
+		if (!table->pgentry_present(*pdpte)) {
 			if (type == MR_MODIFY) {
 				pr_warn("%s, vaddr: 0x%lx pdpte is not present.\n", __func__, vaddr);
 			}
@@ -368,7 +368,7 @@ void pgtable_modify_or_del_map(uint64_t *pml4_page, uint64_t vaddr_base, uint64_
 	while (vaddr < vaddr_end) {
 		vaddr_next = (vaddr & PML4E_MASK) + PML4E_SIZE;
 		pml4e = pml4e_offset(pml4_page, vaddr);
-		if ((!pgentry_present(table, (*pml4e))) && (type == MR_MODIFY)) {
+		if ((!table->pgentry_present(*pml4e)) && (type == MR_MODIFY)) {
 			ASSERT(false, "invalid op, pml4e not present");
 		} else {
 			modify_or_del_pdpte(pml4e, vaddr, vaddr_end, prot_set, prot_clr, table, type);
@@ -394,7 +394,7 @@ static void add_pte(const uint64_t *pde, uint64_t paddr_start, uint64_t vaddr_st
 	for (; index < PTRS_PER_PTE; index++) {
 		uint64_t *pte = pt_page + index;
 
-		if (pgentry_present(table, (*pte))) {
+		if (table->pgentry_present(*pte)) {
 			pr_fatal("%s, pte 0x%lx is already present!\n", __func__, vaddr);
 		} else {
 			set_pgentry(pte, paddr | prot, table);
@@ -430,7 +430,7 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 		if (pde_large(*pde) != 0UL) {
 			pr_fatal("%s, pde 0x%lx is already present!\n", __func__, vaddr);
 		} else {
-			if (!pgentry_present(table, (*pde))) {
+			if (!table->pgentry_present(*pde)) {
 				if (table->large_page_support(IA32E_PD, prot) &&
 					mem_aligned_check(paddr, PDE_SIZE) &&
 					mem_aligned_check(vaddr, PDE_SIZE) &&
@@ -445,7 +445,7 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 					break;	/* done */
 				} else {
 					void *pt_page = alloc_page(table->pool);
-					construct_pgentry(pde, pt_page, table->default_access_right, table);
+					construct_pgentry(pde, pt_page, table->get_default_access_right(), table);
 				}
 			}
 			add_pte(pde, paddr, vaddr, vaddr_end, prot, table);
@@ -479,7 +479,7 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 		if (pdpte_large(*pdpte) != 0UL) {
 			pr_fatal("%s, pdpte 0x%lx is already present!\n", __func__, vaddr);
 		} else {
-			if (!pgentry_present(table, (*pdpte))) {
+			if (!table->pgentry_present(*pdpte)) {
 				if (table->large_page_support(IA32E_PDPT, prot) &&
 					mem_aligned_check(paddr, PDPTE_SIZE) &&
 					mem_aligned_check(vaddr, PDPTE_SIZE) &&
@@ -494,7 +494,7 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 					break;	/* done */
 				} else {
 					void *pd_page = alloc_page(table->pool);
-					construct_pgentry(pdpte, pd_page, table->default_access_right, table);
+					construct_pgentry(pdpte, pd_page, table->get_default_access_right(), table);
 				}
 			}
 			add_pde(pdpte, paddr, vaddr, vaddr_end, prot, table);
@@ -565,9 +565,9 @@ void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_ba
 	while (vaddr < vaddr_end) {
 		vaddr_next = (vaddr & PML4E_MASK) + PML4E_SIZE;
 		pml4e = pml4e_offset(pml4_page, vaddr);
-		if (!pgentry_present(table, (*pml4e))) {
+		if (!table->pgentry_present(*pml4e)) {
 			void *pdpt_page = alloc_page(table->pool);
-			construct_pgentry(pml4e, pdpt_page, table->default_access_right, table);
+			construct_pgentry(pml4e, pdpt_page, table->get_default_access_right(), table);
 		}
 		add_pdpte(pml4e, paddr, vaddr, vaddr_end, prot, table);
 
@@ -713,25 +713,25 @@ const uint64_t *pgtable_lookup_entry(uint64_t *pml4_page, uint64_t addr, uint64_
 	uint64_t *pml4e, *pdpte, *pde, *pte;
 
 	pml4e = pml4e_offset(pml4_page, addr);
-	present = pgentry_present(table, (*pml4e));
+	present = table->pgentry_present(*pml4e);
 
 	if (present) {
 		pdpte = pdpte_offset(pml4e, addr);
-		present = pgentry_present(table, (*pdpte));
+		present = table->pgentry_present(*pdpte);
 		if (present) {
 			if (pdpte_large(*pdpte) != 0UL) {
 				*pg_size = PDPTE_SIZE;
 				pret = pdpte;
 			} else {
 				pde = pde_offset(pdpte, addr);
-				present = pgentry_present(table, (*pde));
+				present = table->pgentry_present(*pde);
 				if (present) {
 					if (pde_large(*pde) != 0UL) {
 						*pg_size = PDE_SIZE;
 						pret = pde;
 					} else {
 						pte = pte_offset(pde, addr);
-						present = pgentry_present(table, (*pte));
+						present = table->pgentry_present(*pte);
 						if (present) {
 							*pg_size = PTE_SIZE;
 							pret = pte;

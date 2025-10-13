@@ -171,73 +171,6 @@ enum _page_table_level {
 };
 
 /**
- * @brief Data structure that contains the related operations and properties of page table.
- *
- * This structure is used to add/modify/delete page table.
- *
- * @consistency N/A
- * @alignment N/A
- *
- * @remark N/A
- */
-struct pgtable {
-	/**
-	 * @brief Default memory access rights.
-	 *
-	 * A linear address can be translated to a physical address by the page tables. The translation is controlled by
-	 * the memory access rights, as defined by the architecture's memory system design. The default memory access
-	 * rights can be used to set the memory access rights for a page table entry when the page table is created.
-	 */
-	uint64_t default_access_right;
-	/**
-	 * @brief Mask to check if the page referenced by entry is present.
-	 *
-	 * The presence of a page is indicated by specific bits in the entry, as defined by the architecture's memory
-	 * system design. For example, in ept table entry it's indicated by bit0|bit1|bit2, and in mmu table entry it's
-	 * indicated by bit 0.
-	 */
-	uint64_t pgentry_present_mask;
-	struct page_pool *pool; /**< Pointer to the page pool used for managing pages. */
-	/**
-	 * @brief Function to check if large pages are supported.
-	 *
-	 * This function is used to check if large pages are supported for a specific page table level and memory access
-	 * rights.
-	 */
-	bool (*large_page_support)(enum _page_table_level level, uint64_t prot);
-	void (*clflush_pagewalk)(const void *p); /**< Function to flush a page table entry from the cache. */
-	void (*tweak_exe_right)(uint64_t *entry); /**< Function to tweak execution rights for an entry. */
-	void (*recover_exe_right)(uint64_t *entry); /**< Function to recover execution rights for an entry. */
-};
-
-/**
- * @brief Check whether the page referenced by the specified paging-structure entry is present or not.
- *
- * This function is used to check if the page referenced is present. A paging-structure entry references a page. The
- * presence of a page is indicated by specific bits in the entry, as defined by the architecture's memory system design.
- * For example, in ept table entry it's indicated by bit0|bit1|bit2, and in mmu table entry it's indicated by bit 0.
- *
- * This function checks whether the page referenced exists based on specific bits.
- *
- * @param[in] table A pointer to the structure pgtable which provides the mask to check whether page referenced is
- *                  present or not.
- * @param[in] pte The paging-structure entry to check.
- *
- * @return A boolean value indicating if the page referenced by the specified paging-structure entry is present
- *
- * @retval true Indicates the page referenced is present.
- * @retval false Indicates the page referenced is not present.
- *
- * @pre table != NULL
- *
- * @post N/A
- */
-static inline bool pgentry_present(const struct pgtable *table, uint64_t pte)
-{
-	return ((table->pgentry_present_mask & (pte)) != 0UL);
-}
-
-/**
  * @brief Translate a host physical address to a host virtual address before paging mode enabled.
  *
  * This function is used to translate a host physical address to a host virtual address before paging mode enabled. HPA
@@ -436,7 +369,7 @@ static inline uint64_t get_pgentry(const uint64_t *pte)
 static inline void set_pgentry(uint64_t *ptep, uint64_t pte, const struct pgtable *table)
 {
 	*ptep = pte;
-	table->clflush_pagewalk(ptep);
+	table->flush_cache_pagewalk(ptep);
 }
 
 /**

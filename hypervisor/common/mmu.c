@@ -1,26 +1,29 @@
 /*
- * Copyright (C) 2018-2025 Intel Corporation.
+ * Copyright (C) 2018-2022 Intel Corporation.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <types.h>
-#include <bits.h>
+#include <lib/bits.h>
 #include <asm/page.h>
 #include <logmsg.h>
+#include <util.h>
+#include <mmu.h>
+#include <asm/init.h>
+#include <pgtable.h>
+#include <acrn_hv_defs.h>
 
-/**
- * @addtogroup hwmgmt_page
- *
- * @{
- */
 
-/**
- * @file
- * @brief Implementation of page management.
- *
- * This file provides the core functionality required for allocating and freeing memory pages. It's a fundamental
- * support to manage memory resources.
- */
+void init_page_pool(struct page_pool *pool, uint64_t *page_base, uint64_t *bitmap_base, int page_num)
+{
+       uint64_t bitmap_size = page_num / 8;
+       pool->bitmap = (uint64_t *)bitmap_base;
+       pool->start_page = (struct page *)page_base;
+       pool->bitmap_size = bitmap_size / sizeof(uint64_t);
+       pool->dummy_page = NULL;
+
+       memset(pool->bitmap, 0, bitmap_size);
+}
 
 struct page *alloc_page(struct page_pool *pool)
 {
@@ -70,7 +73,3 @@ void free_page(struct page_pool *pool, struct page *page)
 	bitmap_clear_non_atomic(bit, pool->bitmap + idx);
 	spinlock_release(&pool->lock);
 }
-
-/**
- * @}
- */

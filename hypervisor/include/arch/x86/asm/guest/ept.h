@@ -7,6 +7,7 @@
 #ifndef EPT_H
 #define EPT_H
 #include <types.h>
+#include <mmu.h>
 
 typedef void (*pge_handler)(uint64_t *pgentry, uint64_t size);
 

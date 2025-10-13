@@ -161,6 +161,7 @@ COMMON_C_SRCS += common/timer.c
 COMMON_C_SRCS += common/softirq.c
 COMMON_C_SRCS += common/trace.c
 COMMON_C_SRCS += common/schedule.c
+COMMON_C_SRCS += common/mmu.c
 ifeq ($(CONFIG_SCHED_NOOP),y)
 COMMON_C_SRCS += common/sched_noop.c
 endif

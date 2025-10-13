@@ -31,9 +31,9 @@
 #include <asm/cpufeatures.h>
 #include <asm/pgtable.h>
 #include <asm/cpu_caps.h>
-#include <asm/mmu.h>
 #include <asm/vmx.h>
 #include <reloc.h>
+#include <mmu.h>
 #include <asm/guest/vm.h>
 #include <asm/boot/ld_sym.h>
 #include <logmsg.h>
@@ -80,20 +80,29 @@ static inline bool ppt_large_page_support(enum _page_table_level level, __unused
 	return support;
 }
 
-static inline void ppt_clflush_pagewalk(const void* entry __attribute__((unused)))
+static inline void ppt_flush_cache_pagewalk(const void* entry __attribute__((unused)))
 {
 }
 
+static inline uint64_t ppt_pgentry_present(uint64_t pte)
+{
+	return ((PAGE_PRESENT & (pte)) != 0UL);
+}
+
+static inline uint64_t ppt_default_access_right(void)
+{
+	return (PAGE_PRESENT | PAGE_RW | PAGE_USER);
+}
 
 static inline void ppt_nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
 static inline void ppt_nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
 
 static const struct pgtable ppt_pgtable = {
-	.default_access_right = (PAGE_PRESENT | PAGE_RW | PAGE_USER),
-	.pgentry_present_mask = PAGE_PRESENT,
 	.pool = &ppt_page_pool,
+	.get_default_access_right = ppt_default_access_right,
+	.pgentry_present = ppt_pgentry_present,
 	.large_page_support = ppt_large_page_support,
-	.clflush_pagewalk = ppt_clflush_pagewalk,
+	.flush_cache_pagewalk = ppt_flush_cache_pagewalk,
 	.tweak_exe_right = ppt_nop_tweak_exe_right,
 	.recover_exe_right = ppt_nop_recover_exe_right,
 };
@@ -230,19 +239,13 @@ void set_paging_x(uint64_t base, uint64_t size)
 		base_aligned, size_aligned, 0UL, PAGE_NX, &ppt_pgtable, MR_MODIFY);
 }
 
-void allocate_ppt_pages(void)
+void ppt_page_pool_init(void)
 {
-	uint64_t page_base;
-	uint64_t bitmap_size = get_ppt_page_num() / 8;
-
+	uint64_t pg_num = get_ppt_page_num();
+	uint64_t page_base, bitmap_base;
 	page_base = e820_alloc_memory(sizeof(struct page) * get_ppt_page_num(), MEM_4G);
-	ppt_page_pool.bitmap = (uint64_t *)e820_alloc_memory(bitmap_size, MEM_4G);
-
-	ppt_page_pool.start_page = (struct page *)(void *)page_base;
-	ppt_page_pool.bitmap_size = bitmap_size / sizeof(uint64_t);
-	ppt_page_pool.dummy_page = NULL;
-
-	memset(ppt_page_pool.bitmap, 0, bitmap_size);
+	bitmap_base = e820_alloc_memory(sizeof(struct page), MEM_4G);
+	init_page_pool(&ppt_page_pool, (uint64_t *)page_base, (uint64_t *)bitmap_base, pg_num);
 }
 
 void init_paging(void)
