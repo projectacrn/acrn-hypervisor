@@ -92,7 +92,8 @@ static inline uint64_t get_pgentry(const uint64_t *pte)
 static inline void set_pgentry(uint64_t *ptep, uint64_t pte, const struct pgtable *table)
 {
 	*ptep = pte;
-	table->flush_cache_pagewalk(ptep);
+	if (table && table->flush_cache_pagewalk)
+		table->flush_cache_pagewalk(ptep);
 }
 
 void init_page_pool(struct page_pool *pool, uint64_t *page_base,

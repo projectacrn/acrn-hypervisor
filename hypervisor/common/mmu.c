@@ -54,7 +54,7 @@ struct page *alloc_page(struct page_pool *pool)
 		 */
 		panic("no dummy aviable!");
 	}
-	(void)memset(page, 0U, PAGE_SIZE);
+	sanitize_pte((uint64_t *)page, NULL);
 	return page;
 }
 
@@ -621,7 +621,6 @@ void pgtable_add_map(uint64_t *pgtl3_page, uint64_t paddr_base, uint64_t vaddr_b
 void *pgtable_create_root(const struct pgtable *table)
 {
 	uint64_t *page = (uint64_t *)alloc_page(table->pool);
-	sanitize_pte(page, table);
 	return page;
 }
 
