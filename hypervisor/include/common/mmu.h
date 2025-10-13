@@ -57,6 +57,23 @@ struct pgtable {
 	void (*recover_exe_right)(uint64_t *entry);
 };
 
+/*
+ * pgentry may means generic page table entry
+ */
+static inline uint64_t get_pgentry(const uint64_t *pte)
+{
+	return *pte;
+}
+
+/*
+ * pgentry may means generic page table entry
+ */
+static inline void set_pgentry(uint64_t *ptep, uint64_t pte, const struct pgtable *table)
+{
+	*ptep = pte;
+	table->flush_cache_pagewalk(ptep);
+}
+
 void init_page_pool(struct page_pool *pool, uint64_t *page_base,
 		uint64_t *bitmap_base, int page_num);
 struct page *alloc_page(struct page_pool *pool);
