@@ -78,5 +78,8 @@ void init_page_pool(struct page_pool *pool, uint64_t *page_base,
 		uint64_t *bitmap_base, int page_num);
 struct page *alloc_page(struct page_pool *pool);
 void free_page(struct page_pool *pool, struct page *page);
-
+void init_sanitized_page(uint64_t *sanitized_page, uint64_t hpa);
+void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table);
+void sanitize_pte(uint64_t *pt_page, const struct pgtable *table);
+void *pgtable_create_root(const struct pgtable *table);
 #endif /* MMU_H */

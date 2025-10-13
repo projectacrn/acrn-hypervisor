@@ -28,58 +28,6 @@
 
 #define DBG_LEVEL_MMU	6U
 
-/**
- * @brief Host physical address of the sanitized page.
- *
- * The sanitized page is used to mitigate l1tf. This variable is used to store the host physical address of the
- * sanitized page.
- */
-static uint64_t sanitized_page_hpa;
-
-static void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table)
-{
-	set_pgentry(ptep, sanitized_page_hpa, table);
-}
-
-static void sanitize_pte(uint64_t *pt_page, const struct pgtable *table)
-{
-	uint64_t i;
-	for (i = 0UL; i < PTRS_PER_PTE; i++) {
-		sanitize_pte_entry(pt_page + i, table);
-	}
-}
-
-/**
- * @brief Initializes a sanitized page.
- *
- * This function is responsible for initializing a sanitized page. It sets the page table entries in this sanitized page
- * to point to the host physical address of the sanitized page itself.
- *
- * The static variable 'sanitized_page_hpa' will be set and the `sanitized_page` will be initialized.
- *
- * @param[out] sanitized_page The page to be sanitized.
- * @param[in] hpa The host physical address that the page table entries in the sanitized page will point to.
- *
- * @return None
- *
- * @pre sanitized_page != NULL
- * @pre ((uint64_t)sanitized_page & (PAGE_SIZE - 1)) == 0x0U
- * @pre hpa != 0U
- * @pre (hpa & (PAGE_SIZE - 1)) == 0x0U
- *
- * @post N/A
- */
-void init_sanitized_page(uint64_t *sanitized_page, uint64_t hpa)
-{
-	uint64_t i;
-
-	sanitized_page_hpa = hpa;
-	/* set ptep in sanitized_page point to itself */
-	for (i = 0UL; i < PTRS_PER_PTE; i++) {
-		*(sanitized_page + i) = sanitized_page_hpa;
-	}
-}
-
 static void try_to_free_pgtable_page(const struct pgtable *table,
 			uint64_t *pde, uint64_t *pt_page, uint32_t type)
 {

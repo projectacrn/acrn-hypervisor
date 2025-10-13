@@ -73,3 +73,34 @@ void free_page(struct page_pool *pool, struct page *page)
 	bitmap_clear_non_atomic(bit, pool->bitmap + idx);
 	spinlock_release(&pool->lock);
 }
+
+static uint64_t sanitized_page_hpa;
+
+void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table)
+{
+	set_pgentry(ptep, sanitized_page_hpa, table);
+}
+
+void sanitize_pte(uint64_t *pt_page, const struct pgtable *table)
+{
+	uint64_t i;
+	for (i = 0UL; i < PTRS_PER_PTE; i++) {
+		sanitize_pte_entry(pt_page + i, table);
+	}
+}
+
+/**
+ * For x86, sanitized_page_hpa need point to one specific page,
+ * for other arch,  sanitized_page_hpa is by default 0 without
+ * calling this function.
+ */
+void init_sanitized_page(uint64_t *sanitized_page, uint64_t hpa)
+{
+	uint64_t i;
+
+	sanitized_page_hpa = hpa;
+	/* set ptep in sanitized_page point to itself */
+	for (i = 0UL; i < PTRS_PER_PTE; i++) {
+		*(sanitized_page + i) = sanitized_page_hpa;
+	}
+}
