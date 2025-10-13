@@ -66,7 +66,7 @@ static bool is_present_ept_entry(uint64_t ept_entry)
 
 static bool is_leaf_ept_entry(uint64_t ept_entry, enum _page_table_level pt_level)
 {
-	return (((ept_entry & PAGE_PSE) != 0U) || (pt_level == IA32E_PT));
+	return (((ept_entry & PAGE_PSE) != 0U) || (pt_level == PGT_LVL0));
 }
 
 /*
@@ -86,13 +86,13 @@ static void free_sept_table(uint64_t *shadow_eptp)
 			for (j = 0UL; j < PTRS_PER_PDPTE; j++) {
 				shadow_pdpte = pdpte_offset(shadow_pml4e, j << PDPTE_SHIFT);
 				if (!is_present_ept_entry(*shadow_pdpte) ||
-				    is_leaf_ept_entry(*shadow_pdpte, IA32E_PDPT)) {
+				    is_leaf_ept_entry(*shadow_pdpte, PGT_LVL2)) {
 					continue;
 				}
 				for (k = 0UL; k < PTRS_PER_PDE; k++) {
 					shadow_pde = pde_offset(shadow_pdpte, k << PDE_SHIFT);
 					if (!is_present_ept_entry(*shadow_pde) ||
-					    is_leaf_ept_entry(*shadow_pde, IA32E_PD)) {
+					    is_leaf_ept_entry(*shadow_pde, PGT_LVL1)) {
 						continue;
 					}
 					free_page(&sept_page_pool, (struct page *)((*shadow_pde) & EPT_ENTRY_PFN_MASK));
@@ -219,12 +219,12 @@ void put_vept_desc(uint64_t guest_eptp)
 
 static uint64_t get_leaf_entry(uint64_t gpa, uint64_t *eptp, enum _page_table_level *level)
 {
-	enum _page_table_level pt_level = IA32E_PML4;
+	enum _page_table_level pt_level = PGT_LVL3;
 	uint16_t offset;
 	uint64_t ept_entry = 0UL;
 	uint64_t *p_ept_entry = eptp;
 
-	while (pt_level <= IA32E_PT) {
+	while (pt_level <= PGT_LVL0) {
 		offset = PAGING_ENTRY_OFFSET(gpa, pt_level);
 		ept_entry = p_ept_entry[offset];
 
@@ -267,7 +267,7 @@ static uint64_t generate_shadow_ept_entry(struct acrn_vcpu *vcpu, uint64_t guest
 	 *   > Set the HPA of guest_ept_entry[M-1:12] to shadow_ept_entry.
 	 */
 	if (is_leaf_ept_entry(guest_ept_entry, guest_ept_level)) {
-		ASSERT(guest_ept_level == IA32E_PT, "Only support 4K page for guest EPT!");
+		ASSERT(guest_ept_level == PGT_LVL0, "Only support 4K page for guest EPT!");
 		ept_entry = get_leaf_entry((guest_ept_entry & EPT_ENTRY_PFN_MASK), get_eptp(vcpu->vm), &ept_level);
 		if (ept_entry != 0UL) {
 			/*
@@ -324,24 +324,24 @@ static bool is_ept_entry_misconfig(uint64_t ept_entry, enum _page_table_level pt
 
 	/* Reserved bits should be 0, else misconfigured */
 	switch (pt_level) {
-	case IA32E_PML4:
+	case PGT_LVL3:
 		reserved_bits = IA32E_PML4E_RESERVED_BITS(max_phy_addr_bits);
 		break;
-	case IA32E_PDPT:
+	case PGT_LVL2:
 		if (ept_entry & PAGE_PSE) {
 			reserved_bits = IA32E_PDPTE_LEAF_RESERVED_BITS(max_phy_addr_bits);
 		} else {
 			reserved_bits = IA32E_PDPTE_RESERVED_BITS(max_phy_addr_bits);
 		}
 		break;
-	case IA32E_PD:
+	case PGT_LVL1:
 		if (ept_entry & PAGE_PSE) {
 			reserved_bits = IA32E_PDE_LEAF_RESERVED_BITS(max_phy_addr_bits);
 		} else {
 			reserved_bits = IA32E_PDE_RESERVED_BITS(max_phy_addr_bits);
 		}
 		break;
-	case IA32E_PT:
+	case PGT_LVL0:
 		reserved_bits = IA32E_PTE_RESERVED_BITS(max_phy_addr_bits);
 		break;
 	default:
@@ -410,7 +410,7 @@ bool handle_l2_ept_violation(struct acrn_vcpu *vcpu)
 	p_shadow_ept_page = (uint64_t *)(desc->shadow_eptp & PAGE_MASK);
 	p_guest_ept_page = gpa2hva(vcpu->vm, desc->guest_eptp & PAGE_MASK);
 
-	for (pt_level = IA32E_PML4; (p_guest_ept_page != NULL) && (pt_level <= IA32E_PT); pt_level++) {
+	for (pt_level = PGT_LVL3; (p_guest_ept_page != NULL) && (pt_level <= PGT_LVL0); pt_level++) {
 		offset = PAGING_ENTRY_OFFSET(l2_ept_violation_gpa, pt_level);
 		guest_ept_entry = p_guest_ept_page[offset];
 		shadow_ept_entry = p_shadow_ept_page[offset];

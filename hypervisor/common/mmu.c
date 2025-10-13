@@ -104,7 +104,7 @@ void init_sanitized_page(uint64_t *sanitized_page, uint64_t hpa)
 }
 
 static void try_to_free_pgtable_page(const struct pgtable *table,
-			uint64_t *pde, uint64_t *pt_page, uint32_t type)
+			uint64_t *pgte, uint64_t *pt_page, uint32_t type)
 {
 	if (type == MR_DEL) {
 		uint64_t index;
@@ -118,7 +118,7 @@ static void try_to_free_pgtable_page(const struct pgtable *table,
 
 		if (index == PTRS_PER_PGTL0E) {
 			free_page(table->pool, (void *)pt_page);
-			sanitize_pte_entry(pde, table);
+			sanitize_pte_entry(pgte, table);
 		}
 	}
 }
@@ -126,7 +126,7 @@ static void try_to_free_pgtable_page(const struct pgtable *table,
 /*
  * Split a large page table into next level page table.
  *
- * @pre: level could only IA32E_PDPT or IA32E_PD
+ * @pre: level could only PGT_LVL2 or PGT_LVL1
  */
 static void split_large_page(uint64_t *pte, enum _page_table_level level,
 		__unused uint64_t vaddr, const struct pgtable *table)
@@ -136,12 +136,12 @@ static void split_large_page(uint64_t *pte, enum _page_table_level level,
 	uint64_t i, ref_prot;
 
 	switch (level) {
-	case IA32E_PDPT:
+	case PGT_LVL2:
 		ref_paddr = (*pte) & PFN_MASK;
 		paddrinc = PGTL1_SIZE;
 		ref_prot = (*pte) & ~PFN_MASK;
 		break;
-	default:	/* IA32E_PD */
+	default:	/* PGT_LVL1 */
 		ref_paddr = (*pte) & PFN_MASK;
 		paddrinc = PGTL0_SIZE;
 		ref_prot = (*pte) & ~PFN_MASK;
@@ -179,43 +179,43 @@ static inline void local_modify_or_del_pte(uint64_t *pte,
 }
 
 /*
- * pgentry may means pml4e/pdpte/pde
+ * pgentry may means pgtl3e/pgtl2e/pgtl1e
  */
-static inline void construct_pgentry(uint64_t *pde, void *pd_page, uint64_t prot, const struct pgtable *table)
+static inline void construct_pgentry(uint64_t *pte, void *pg_page, uint64_t prot, const struct pgtable *table)
 {
-	sanitize_pte((uint64_t *)pd_page, table);
+	sanitize_pte((uint64_t *)pg_page, table);
 
-	set_pgentry(pde, hva2hpa(pd_page) | prot, table);
+	set_pgentry(pte, hva2hpa(pg_page) | prot, table);
 }
 
 /*
- * In PT level,
+ * In page table level 0,
  * type: MR_MODIFY
  * modify [vaddr_start, vaddr_end) memory type or page access right.
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static void modify_or_del_pte(uint64_t *pde, uint64_t vaddr_start, uint64_t vaddr_end,
+static void modify_or_del_pgtl0(uint64_t *pgtl1e, uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr, const struct pgtable *table, uint32_t type)
 {
-	uint64_t *pt_page = pde_page_vaddr(*pde);
+	uint64_t *pgtl0_page = pde_page_vaddr(*pgtl1e);
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pte_index(vaddr);
 
 	dev_dbg(DBG_LEVEL_MMU, "%s, vaddr: [0x%lx - 0x%lx]\n", __func__, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PGTL0E; index++) {
-		uint64_t *pte = pt_page + index;
+		uint64_t *pgtl0e = pgtl0_page + index;
 
-		if (!table->pgentry_present(*pte)) {
+		if (!table->pgentry_present(*pgtl0e)) {
 			/*suppress warning message for low memory (< 1MBytes),as service VM
 			 * will update MTTR attributes for this region by default whether it
 			 * is present or not.
 			 */
 			if ((type == MR_MODIFY) && (vaddr >= MEM_1M)) {
-				pr_warn("%s, vaddr: 0x%lx pte is not present.\n", __func__, vaddr);
+				pr_warn("%s, vaddr: 0x%lx pgtl0e is not present.\n", __func__, vaddr);
 			}
 		} else {
-			local_modify_or_del_pte(pte, prot_set, prot_clr, type, table);
+			local_modify_or_del_pte(pgtl0e, prot_set, prot_clr, type, table);
 		}
 
 		vaddr += PGTL0_SIZE;
@@ -224,38 +224,38 @@ static void modify_or_del_pte(uint64_t *pde, uint64_t vaddr_start, uint64_t vadd
 		}
 	}
 
-	try_to_free_pgtable_page(table, pde, pt_page, type);
+	try_to_free_pgtable_page(table, pgtl1e, pgtl0_page, type);
 }
 
 /*
- * In PD level,
+ * In page table level 1,
  * type: MR_MODIFY
  * modify [vaddr_start, vaddr_end) memory type or page access right.
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static void modify_or_del_pde(uint64_t *pdpte, uint64_t vaddr_start, uint64_t vaddr_end,
+static void modify_or_del_pgtl1(uint64_t *pgtl2e, uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr, const struct pgtable *table, uint32_t type)
 {
-	uint64_t *pd_page = pdpte_page_vaddr(*pdpte);
+	uint64_t *pgtl1_page = pdpte_page_vaddr(*pgtl2e);
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pde_index(vaddr);
 
 	dev_dbg(DBG_LEVEL_MMU, "%s, vaddr: [0x%lx - 0x%lx]\n", __func__, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PGTL1E; index++) {
-		uint64_t *pde = pd_page + index;
+		uint64_t *pgtl1e = pgtl1_page + index;
 		uint64_t vaddr_next = (vaddr & PGTL1_MASK) + PGTL1_SIZE;
 
-		if (!table->pgentry_present(*pde)) {
+		if (!table->pgentry_present(*pgtl1e)) {
 			if (type == MR_MODIFY) {
-				pr_warn("%s, addr: 0x%lx pde is not present.\n", __func__, vaddr);
+				pr_warn("%s, addr: 0x%lx pgtl1e is not present.\n", __func__, vaddr);
 			}
 		} else {
-			if (pde_large(*pde) != 0UL) {
+			if (pde_large(*pgtl1e) != 0UL) {
 				if ((vaddr_next > vaddr_end) || (!mem_aligned_check(vaddr, PGTL1_SIZE))) {
-					split_large_page(pde, IA32E_PD, vaddr, table);
+					split_large_page(pgtl1e, PGT_LVL1, vaddr, table);
 				} else {
-					local_modify_or_del_pte(pde, prot_set, prot_clr, type, table);
+					local_modify_or_del_pte(pgtl1e, prot_set, prot_clr, type, table);
 					if (vaddr_next < vaddr_end) {
 						vaddr = vaddr_next;
 						continue;
@@ -263,7 +263,7 @@ static void modify_or_del_pde(uint64_t *pdpte, uint64_t vaddr_start, uint64_t va
 					break;	/* done */
 				}
 			}
-			modify_or_del_pte(pde, vaddr, vaddr_end, prot_set, prot_clr, table, type);
+			modify_or_del_pgtl0(pgtl1e, vaddr, vaddr_end, prot_set, prot_clr, table, type);
 		}
 		if (vaddr_next >= vaddr_end) {
 			break;	/* done */
@@ -271,39 +271,39 @@ static void modify_or_del_pde(uint64_t *pdpte, uint64_t vaddr_start, uint64_t va
 		vaddr = vaddr_next;
 	}
 
-	try_to_free_pgtable_page(table, pdpte, pd_page, type);
+	try_to_free_pgtable_page(table, pgtl2e, pgtl1_page, type);
 }
 
 /*
- * In PDPT level,
+ * In page table level 2,
  * type: MR_MODIFY
  * modify [vaddr_start, vaddr_end) memory type or page access right.
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uint64_t vaddr_end,
+static void modify_or_del_pgtl2(const uint64_t *pgtl3e, uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr, const struct pgtable *table, uint32_t type)
 {
-	uint64_t *pdpt_page = pml4e_page_vaddr(*pml4e);
+	uint64_t *pgtl2_page = pml4e_page_vaddr(*pgtl3e);
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pdpte_index(vaddr);
 
 	dev_dbg(DBG_LEVEL_MMU, "%s, vaddr: [0x%lx - 0x%lx]\n", __func__, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PGTL2E; index++) {
-		uint64_t *pdpte = pdpt_page + index;
+		uint64_t *pgtl2e = pgtl2_page + index;
 		uint64_t vaddr_next = (vaddr & PGTL2_MASK) + PGTL2_SIZE;
 
-		if (!table->pgentry_present(*pdpte)) {
+		if (!table->pgentry_present(*pgtl2e)) {
 			if (type == MR_MODIFY) {
-				pr_warn("%s, vaddr: 0x%lx pdpte is not present.\n", __func__, vaddr);
+				pr_warn("%s, vaddr: 0x%lx pgtl2e is not present.\n", __func__, vaddr);
 			}
 		} else {
-			if (pdpte_large(*pdpte) != 0UL) {
+			if (pdpte_large(*pgtl2e) != 0UL) {
 				if ((vaddr_next > vaddr_end) ||
 						(!mem_aligned_check(vaddr, PGTL2_SIZE))) {
-					split_large_page(pdpte, IA32E_PDPT, vaddr, table);
+					split_large_page(pgtl2e, PGT_LVL2, vaddr, table);
 				} else {
-					local_modify_or_del_pte(pdpte, prot_set, prot_clr, type, table);
+					local_modify_or_del_pte(pgtl2e, prot_set, prot_clr, type, table);
 					if (vaddr_next < vaddr_end) {
 						vaddr = vaddr_next;
 						continue;
@@ -311,7 +311,7 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 					break;	/* done */
 				}
 			}
-			modify_or_del_pde(pdpte, vaddr, vaddr_end, prot_set, prot_clr, table, type);
+			modify_or_del_pgtl1(pgtl2e, vaddr, vaddr_end, prot_set, prot_clr, table, type);
 		}
 		if (vaddr_next >= vaddr_end) {
 			break;	/* done */
@@ -342,11 +342,11 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
  * properties.
  * - If the 'type' is MR_DEL, the function will set corresponding page table entries to point to the sanitized page.
  *
- * @param[inout] pml4_page A pointer to the specified PML4 table.
+ * @param[inout] pgtl3_page A pointer to the specified PGT_LVL3 table.
  * @param[in] vaddr_base The specified input address determining the start of the input address range whose mapping
  *                       information is to be updated.
  *                       For hypervisor's MMU, it is the host virtual address.
- *                       For each VM's EPT, it is the guest physical address.
+ *                       For each VM's stage 2 translation, it is the guest physical address.
  * @param[in] size The size of the specified input address range whose mapping information is to be updated.
  * @param[in] prot_set Bit positions representing the specified properties which need to be set.
  *                     Bits specified by prot_clr are cleared before each bit specified by prot_set is set to 1.
@@ -357,15 +357,15 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
  *
  * @return None
  *
- * @pre pml4_page != NULL
+ * @pre pgtl3_page != NULL
  * @pre table != NULL
  * @pre (type == MR_MODIFY) || (type == MR_DEL)
- * @pre For x86 hypervisor, the following conditions shall be met if "type == MR_MODIFY".
+ * @pre For x86 architecture, the following conditions shall be met if "type == MR_MODIFY".
  *      - (prot_set & ~(PAGE_RW | PAGE_USER | PAGE_PWT | PAGE_PCD | PAGE_ACCESSED | PAGE_DIRTY | PAGE_PSE | PAGE_GLOBAL
  *      | PAGE_PAT_LARGE | PAGE_NX) == 0)
  *      - (prot_clr & ~(PAGE_RW | PAGE_USER | PAGE_PWT | PAGE_PCD | PAGE_ACCESSED | PAGE_DIRTY | PAGE_PSE | PAGE_GLOBAL
  *      | PAGE_PAT_LARGE | PAGE_NX) == 0)
- * @pre For the VM EPT mappings, the following conditions shall be met if "type == MR_MODIFY".
+ * @pre For the VM stage 2 mappings, the following conditions shall be met if "type == MR_MODIFY".
  *      - (prot_set & ~(EPT_RD | EPT_WR | EPT_EXE | EPT_MT_MASK) == 0)
  *      - (prot_set & EPT_MT_MASK) == EPT_UNCACHED || (prot_set & EPT_MT_MASK) == EPT_WC ||
  *        (prot_set & EPT_MT_MASK) == EPT_WT || (prot_set & EPT_MT_MASK) == EPT_WP || (prot_set & EPT_MT_MASK) == EPT_WB
@@ -377,12 +377,12 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
  *
  * @remark N/A
  */
-void pgtable_modify_or_del_map(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
+void pgtable_modify_or_del_map(uint64_t *pgtl3_page, uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr, const struct pgtable *table, uint32_t type)
 {
 	uint64_t vaddr = round_page_up(vaddr_base);
 	uint64_t vaddr_next, vaddr_end;
-	uint64_t *pml4e;
+	uint64_t *pgtl3e;
 
 	vaddr_end = vaddr + round_page_down(size);
 	dev_dbg(DBG_LEVEL_MMU, "%s, vaddr: 0x%lx, size: 0x%lx\n",
@@ -390,24 +390,24 @@ void pgtable_modify_or_del_map(uint64_t *pml4_page, uint64_t vaddr_base, uint64_
 
 	while (vaddr < vaddr_end) {
 		vaddr_next = (vaddr & PGTL3_MASK) + PGTL3_SIZE;
-		pml4e = pml4e_offset(pml4_page, vaddr);
-		if ((!table->pgentry_present(*pml4e)) && (type == MR_MODIFY)) {
-			ASSERT(false, "invalid op, pml4e not present");
+		pgtl3e = pml4e_offset(pgtl3_page, vaddr);
+		if ((!table->pgentry_present(*pgtl3e)) && (type == MR_MODIFY)) {
+			ASSERT(false, "invalid op, pgtl3e not present");
 		} else {
-			modify_or_del_pdpte(pml4e, vaddr, vaddr_end, prot_set, prot_clr, table, type);
+			modify_or_del_pgtl2(pgtl3e, vaddr, vaddr_end, prot_set, prot_clr, table, type);
 			vaddr = vaddr_next;
 		}
 	}
 }
 
 /*
- * In PT level,
+ * In page table level 0,
  * add [vaddr_start, vaddr_end) to [paddr_base, ...) MT PT mapping
  */
-static void add_pte(const uint64_t *pde, uint64_t paddr_start, uint64_t vaddr_start, uint64_t vaddr_end,
+static void add_pgtl0(const uint64_t *pgtl1e, uint64_t paddr_start, uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot, const struct pgtable *table)
 {
-	uint64_t *pt_page = pde_page_vaddr(*pde);
+	uint64_t *pgtl0_page = pde_page_vaddr(*pgtl1e);
 	uint64_t vaddr = vaddr_start;
 	uint64_t paddr = paddr_start;
 	uint64_t index = pte_index(vaddr);
@@ -415,12 +415,12 @@ static void add_pte(const uint64_t *pde, uint64_t paddr_start, uint64_t vaddr_st
 	dev_dbg(DBG_LEVEL_MMU, "%s, paddr: 0x%lx, vaddr: [0x%lx - 0x%lx]\n",
 		__func__, paddr, vaddr_start, vaddr_end);
 	for (; index < PTRS_PER_PGTL0E; index++) {
-		uint64_t *pte = pt_page + index;
+		uint64_t *pgtl0e = pgtl0_page + index;
 
-		if (table->pgentry_present(*pte)) {
-			pr_fatal("%s, pte 0x%lx is already present!\n", __func__, vaddr);
+		if (table->pgentry_present(*pgtl0e)) {
+			pr_fatal("%s, pgtl0e 0x%lx is already present!\n", __func__, vaddr);
 		} else {
-			set_pgentry(pte, paddr | prot, table);
+			set_pgentry(pgtl0e, paddr | prot, table);
 		}
 		paddr += PGTL0_SIZE;
 		vaddr += PGTL0_SIZE;
@@ -432,13 +432,13 @@ static void add_pte(const uint64_t *pde, uint64_t paddr_start, uint64_t vaddr_st
 }
 
 /*
- * In PD level,
+ * In page table level 1,
  * add [vaddr_start, vaddr_end) to [paddr_base, ...) MT PT mapping
  */
-static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_start, uint64_t vaddr_end,
+static void add_pgtl1(const uint64_t *pgtl2e, uint64_t paddr_start, uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot, const struct pgtable *table)
 {
-	uint64_t *pd_page = pdpte_page_vaddr(*pdpte);
+	uint64_t *pgtl1_page = pdpte_page_vaddr(*pgtl2e);
 	uint64_t vaddr = vaddr_start;
 	uint64_t paddr = paddr_start;
 	uint64_t index = pde_index(vaddr);
@@ -447,19 +447,19 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 	dev_dbg(DBG_LEVEL_MMU, "%s, paddr: 0x%lx, vaddr: [0x%lx - 0x%lx]\n",
 		__func__, paddr, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PGTL1E; index++) {
-		uint64_t *pde = pd_page + index;
+		uint64_t *pgtl1e = pgtl1_page + index;
 		uint64_t vaddr_next = (vaddr & PGTL1_MASK) + PGTL1_SIZE;
 
-		if (pde_large(*pde) != 0UL) {
-			pr_fatal("%s, pde 0x%lx is already present!\n", __func__, vaddr);
+		if (pde_large(*pgtl1e) != 0UL) {
+			pr_fatal("%s, pgtl1e 0x%lx is already present!\n", __func__, vaddr);
 		} else {
-			if (!table->pgentry_present(*pde)) {
-				if (table->large_page_support(IA32E_PD, prot) &&
+			if (!table->pgentry_present(*pgtl1e)) {
+				if (table->large_page_support(PGT_LVL1, prot) &&
 					mem_aligned_check(paddr, PGTL1_SIZE) &&
 					mem_aligned_check(vaddr, PGTL1_SIZE) &&
 					(vaddr_next <= vaddr_end)) {
 					table->tweak_exe_right(&local_prot);
-					set_pgentry(pde, paddr | (local_prot | PAGE_PSE), table);
+					set_pgentry(pgtl1e, paddr | (local_prot | PAGE_PSE), table);
 					if (vaddr_next < vaddr_end) {
 						paddr += (vaddr_next - vaddr);
 						vaddr = vaddr_next;
@@ -467,11 +467,11 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 					}
 					break;	/* done */
 				} else {
-					void *pt_page = alloc_page(table->pool);
-					construct_pgentry(pde, pt_page, table->get_default_access_right(), table);
+					void *pgtl0_page = alloc_page(table->pool);
+					construct_pgentry(pgtl1e, pgtl0_page, table->get_default_access_right(), table);
 				}
 			}
-			add_pte(pde, paddr, vaddr, vaddr_end, prot, table);
+			add_pgtl0(pgtl1e, paddr, vaddr, vaddr_end, prot, table);
 		}
 		if (vaddr_next >= vaddr_end) {
 			break;	/* done */
@@ -482,13 +482,13 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 }
 
 /*
- * In PDPT level,
+ * In page table level 2,
  * add [vaddr_start, vaddr_end) to [paddr_base, ...) MT PT mapping
  */
-static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vaddr_start, uint64_t vaddr_end,
+static void add_pgtl2(const uint64_t *pgtl3e, uint64_t paddr_start, uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot, const struct pgtable *table)
 {
-	uint64_t *pdpt_page = pml4e_page_vaddr(*pml4e);
+	uint64_t *pgtl2_page = pml4e_page_vaddr(*pgtl3e);
 	uint64_t vaddr = vaddr_start;
 	uint64_t paddr = paddr_start;
 	uint64_t index = pdpte_index(vaddr);
@@ -496,19 +496,19 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 
 	dev_dbg(DBG_LEVEL_MMU, "%s, paddr: 0x%lx, vaddr: [0x%lx - 0x%lx]\n", __func__, paddr, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PGTL2E; index++) {
-		uint64_t *pdpte = pdpt_page + index;
+		uint64_t *pgtl2e = pgtl2_page + index;
 		uint64_t vaddr_next = (vaddr & PGTL2_MASK) + PGTL2_SIZE;
 
-		if (pdpte_large(*pdpte) != 0UL) {
-			pr_fatal("%s, pdpte 0x%lx is already present!\n", __func__, vaddr);
+		if (pdpte_large(*pgtl2e) != 0UL) {
+			pr_fatal("%s, pgtl2e 0x%lx is already present!\n", __func__, vaddr);
 		} else {
-			if (!table->pgentry_present(*pdpte)) {
-				if (table->large_page_support(IA32E_PDPT, prot) &&
+			if (!table->pgentry_present(*pgtl2e)) {
+				if (table->large_page_support(PGT_LVL2, prot) &&
 					mem_aligned_check(paddr, PGTL2_SIZE) &&
 					mem_aligned_check(vaddr, PGTL2_SIZE) &&
 					(vaddr_next <= vaddr_end)) {
 					table->tweak_exe_right(&local_prot);
-					set_pgentry(pdpte, paddr | (local_prot | PAGE_PSE), table);
+					set_pgentry(pgtl2e, paddr | (local_prot | PAGE_PSE), table);
 					if (vaddr_next < vaddr_end) {
 						paddr += (vaddr_next - vaddr);
 						vaddr = vaddr_next;
@@ -516,11 +516,11 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 					}
 					break;	/* done */
 				} else {
-					void *pd_page = alloc_page(table->pool);
-					construct_pgentry(pdpte, pd_page, table->get_default_access_right(), table);
+					void *pgtl1_page = alloc_page(table->pool);
+					construct_pgentry(pgtl2e, pgtl1_page, table->get_default_access_right(), table);
 				}
 			}
-			add_pde(pdpte, paddr, vaddr, vaddr_end, prot, table);
+			add_pgtl1(pgtl2e, paddr, vaddr, vaddr_end, prot, table);
 		}
 		if (vaddr_next >= vaddr_end) {
 			break;	/* done */
@@ -540,28 +540,28 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
  * mapping and it continues the operation.
  * - When a new 1GB or 2MB mapping is established, the callback function table->tweak_exe_right() is invoked to tweak
  * the execution bit.
- * - When a new page table referenced by a new PDPTE/PDE is created, all entries in the page table are initialized to
+ * - When a new page table referenced by a new PGTL2E/PGTL1E is created, all entries in the page table are initialized to
  * point to the sanitized page by default.
  * - Finally, the new mappings are established and initialized according to the specified address range and properties.
  *
- * @param[inout] pml4_page A pointer to the specified PML4 table hierarchy.
+ * @param[inout] pgtl3_page A pointer to the specified level 3 table hierarchy.
  * @param[in] paddr_base The specified physical address determining the start of the physical memory region.
  *                       It is the host physical address.
  * @param[in] vaddr_base The specified input address determining the start of the input address space.
  *                       For hypervisor's MMU, it is the host virtual address.
- *                       For each VM's EPT, it is the guest physical address.
+ *                       For each VM's stage 2 translation, it is the guest physical address.
  * @param[in] size The size of the specified input address space.
  * @param[in] prot Bit positions representing the specified properties which need to be set.
  * @param[in] table A pointer to the struct pgtable containing the information of the specified memory operations.
  *
  * @return None
  *
- * @pre pml4_page != NULL
+ * @pre pgtl3_page != NULL
  * @pre Any subrange within [vaddr_base, vaddr_base + size) shall already be unmapped.
  * @pre For x86 hypervisor mapping, the following condition shall be met.
  *      - prot & ~(PAGE_PRESENT| PAGE_RW | PAGE_USER | PAGE_PWT | PAGE_PCD | PAGE_ACCESSED | PAGE_DIRTY | PAGE_PSE |
  *      PAGE_GLOBAL | PAGE_PAT_LARGE | PAGE_NX) == 0
- * @pre For VM EPT mapping, the following conditions shall be met.
+ * @pre For VM x86 EPT mapping, the following conditions shall be met.
  *      - prot & ~(EPT_RD | EPT_WR | EPT_EXE | EPT_MT_MASK | EPT_IGNORE_PAT) == 0
  *      - (prot & EPT_MT_MASK) == EPT_UNCACHED || (prot & EPT_MT_MASK) == EPT_WC || (prot & EPT_MT_MASK) == EPT_WT ||
  *        (prot & EPT_MT_MASK) == EPT_WP || (prot & EPT_MT_MASK) == EPT_WB
@@ -571,12 +571,12 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
  *
  * @remark N/A
  */
-void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,
+void pgtable_add_map(uint64_t *pgtl3_page, uint64_t paddr_base, uint64_t vaddr_base,
 		uint64_t size, uint64_t prot, const struct pgtable *table)
 {
 	uint64_t vaddr, vaddr_next, vaddr_end;
 	uint64_t paddr;
-	uint64_t *pml4e;
+	uint64_t *pgtl3e;
 
 	dev_dbg(DBG_LEVEL_MMU, "%s, paddr 0x%lx, vaddr 0x%lx, size 0x%lx\n", __func__, paddr_base, vaddr_base, size);
 
@@ -587,12 +587,12 @@ void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_ba
 
 	while (vaddr < vaddr_end) {
 		vaddr_next = (vaddr & PGTL3_MASK) + PGTL3_SIZE;
-		pml4e = pml4e_offset(pml4_page, vaddr);
-		if (!table->pgentry_present(*pml4e)) {
-			void *pdpt_page = alloc_page(table->pool);
-			construct_pgentry(pml4e, pdpt_page, table->get_default_access_right(), table);
+		pgtl3e = pml4e_offset(pgtl3_page, vaddr);
+		if (!table->pgentry_present(*pgtl3e)) {
+			void *pgtl2_page = alloc_page(table->pool);
+			construct_pgentry(pgtl3e, pgtl2_page, table->get_default_access_right(), table);
 		}
-		add_pdpte(pml4e, paddr, vaddr, vaddr_end, prot, table);
+		add_pgtl2(pgtl3e, paddr, vaddr, vaddr_end, prot, table);
 
 		paddr += (vaddr_next - vaddr);
 		vaddr = vaddr_next;
@@ -603,7 +603,7 @@ void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_ba
  * @brief Create a new root page table.
  *
  * This function initializes and returns a new root page table. It is typically used during the setup of a new execution
- * context, such as initializing a hypervisor PML4 table or creating a virtual machine. The root page table is essential
+ * context, such as initializing a hypervisor level 3 table or creating a virtual machine. The root page table is essential
  * for defining the virtual memory layout for the context.
  *
  * It creates a new root page table and every entries in the page table are initialized to point to the sanitized page.
@@ -699,17 +699,17 @@ void *pgtable_create_trusty_root(const struct pgtable *table,
  *
  * This function looks for the paging-structure entry that contains the mapping information for the specified input
  * address of the translation process. It is used to search the page table hierarchy for the entry corresponding to the
- * given virtual address. The function traverses the page table hierarchy from the PML4 down to the appropriate page
+ * given virtual address. The function traverses the page table hierarchy from the page level 3 down to the appropriate page
  * table level, returning the entry if found.
  *
  * - If specified address is mapped in the page table hierarchy, it will return a pointer to the page table entry that
  * maps the specified address.
  * - If the specified address is not mapped in the page table hierarchy, it will return NULL.
  *
- * @param[in] pml4_page A pointer to the specified PML4 table hierarchy.
+ * @param[in] pgtl3_page A pointer to the specified page level 3 table hierarchy.
  * @param[in] addr The specified input address whose mapping information is to be searched.
  *                 For hypervisor's MMU, it is the host virtual address.
- *                 For each VM's EPT, it is the guest physical address.
+ *                 For each VM's stage 2 tanslation, it is the guest physical address.
  * @param[out] pg_size A pointer to the size of the page controlled by the returned paging-structure entry.
  * @param[in] table A pointer to the struct pgtable which provides the page pool and callback functions to be used when
  *                  creating the new page.
@@ -721,7 +721,7 @@ void *pgtable_create_trusty_root(const struct pgtable *table,
  * @retval NULL There is no paging-structure entry that contains the mapping information for the specified input
  *              address.
  *
- * @pre pml4_page != NULL
+ * @pre pgtl3_page != NULL
  * @pre pg_size != NULL
  * @pre table != NULL
  *
@@ -729,35 +729,35 @@ void *pgtable_create_trusty_root(const struct pgtable *table,
  *
  * @remark N/A
  */
-const uint64_t *pgtable_lookup_entry(uint64_t *pml4_page, uint64_t addr, uint64_t *pg_size, const struct pgtable *table)
+const uint64_t *pgtable_lookup_entry(uint64_t *pgtl3_page, uint64_t addr, uint64_t *pg_size, const struct pgtable *table)
 {
 	const uint64_t *pret = NULL;
 	bool present = true;
-	uint64_t *pml4e, *pdpte, *pde, *pte;
+	uint64_t *pgtl3e, *pgtl2e, *pgtl1e, *pgtl0e;
 
-	pml4e = pml4e_offset(pml4_page, addr);
-	present = table->pgentry_present(*pml4e);
+	pgtl3e = pml4e_offset(pgtl3_page, addr);
+	present = table->pgentry_present(*pgtl3e);
 
 	if (present) {
-		pdpte = pdpte_offset(pml4e, addr);
-		present = table->pgentry_present(*pdpte);
+		pgtl2e = pdpte_offset(pgtl3e, addr);
+		present = table->pgentry_present(*pgtl2e);
 		if (present) {
-			if (pdpte_large(*pdpte) != 0UL) {
+                        if (pdpte_large(*pgtl2e) != 0UL) {
 				*pg_size = PGTL2_SIZE;
-				pret = pdpte;
+				pret = pgtl2e;
 			} else {
-				pde = pde_offset(pdpte, addr);
-				present = table->pgentry_present(*pde);
+                                pgtl1e = pde_offset(pgtl2e, addr);
+				present = table->pgentry_present(*pgtl1e);
 				if (present) {
-					if (pde_large(*pde) != 0UL) {
+                                        if (pde_large(*pgtl1e) != 0UL) {
 						*pg_size = PGTL1_SIZE;
-						pret = pde;
+						pret = pgtl1e;
 					} else {
-						pte = pte_offset(pde, addr);
-						present = table->pgentry_present(*pte);
+                                                pgtl0e = pte_offset(pgtl1e, addr);
+						present = table->pgentry_present(*pgtl0e);
 						if (present) {
 							*pg_size = PGTL0_SIZE;
-							pret = pte;
+                                                        pret = pgtl0e;
 						}
 					}
 				}

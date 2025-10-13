@@ -48,6 +48,26 @@ struct page_pool {
         struct page *dummy_page;
 };
 
+/**
+ * @brief Page tables level in paging mode
+ *
+ * 4-level paging may map addresses to 4-KByte pages, 2-MByte pages, or 1-GByte pages. The 4 levels
+ * are PGT_LVL3, PGT_LVL2, PGT_LVL1, and PGT_LVL0. The value to present each level is fixed.
+ * the mapping to specific architecture's 4 level paging stage is as below:
+ *
+ *	    x86                                    riscv
+ * PGT_LVL3   Page-Map-Level-4(PML4)                 vpn3
+ * PGT_LVL2   Page-Directory-Pointer-Table(PDPT)     vpn2
+ * PGT_LVL1   Page-Directory(PD)                     vpn1
+ * PGT_LVL0   Page-Table(PT)                         vpn0
+ */
+enum _page_table_level {
+	PGT_LVL3 = 0,
+	PGT_LVL2 = 1,
+	PGT_LVL1 = 2,
+	PGT_LVL0 = 3,
+};
+
 struct pgtable {
 	struct page_pool *pool;
 	uint64_t (*get_default_access_right)(void);
@@ -83,13 +103,13 @@ void init_sanitized_page(uint64_t *sanitized_page, uint64_t hpa);
 void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table);
 void sanitize_pte(uint64_t *pt_page, const struct pgtable *table);
 void *pgtable_create_root(const struct pgtable *table);
-const uint64_t *pgtable_lookup_entry(uint64_t *pml4_page, uint64_t addr,
+const uint64_t *pgtable_lookup_entry(uint64_t *pgtl3_page, uint64_t addr,
                uint64_t *pg_size, const struct pgtable *table);
 
-void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base,
+void pgtable_add_map(uint64_t *pgtl3_page, uint64_t paddr_base,
                uint64_t vaddr_base, uint64_t size,
                uint64_t prot, const struct pgtable *table);
-void pgtable_modify_or_del_map(uint64_t *pml4_page, uint64_t vaddr_base,
+void pgtable_modify_or_del_map(uint64_t *pgtl3_page, uint64_t vaddr_base,
                uint64_t size, uint64_t prot_set, uint64_t prot_clr,
                const struct pgtable *table, uint32_t type);
 

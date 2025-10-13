@@ -69,9 +69,9 @@ static inline bool ppt_large_page_support(enum _page_table_level level, __unused
 {
 	bool support;
 
-	if (level == IA32E_PD) {
+	if (level == PGT_LVL1) {
 		support = true;
-	} else if (level == IA32E_PDPT) {
+	} else if (level == PGT_LVL2) {
 		support = pcpu_has_cap(X86_FEATURE_PAGE1GB);
 	} else {
 		support = false;

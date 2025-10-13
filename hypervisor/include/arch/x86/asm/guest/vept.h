@@ -16,7 +16,7 @@
 #define IA32E_PDE_LEAF_RESERVED_BITS(phy_addr_width)	(RESERVED_BITS(12U,20U)| RESERVED_BITS(phy_addr_width, 51U))
 #define IA32E_PTE_RESERVED_BITS(phy_addr_width)		(RESERVED_BITS(phy_addr_width, 51U))
 
-#define PAGING_ENTRY_SHIFT(lvl)		((IA32E_PT - (lvl)) * 9U + PTE_SHIFT)
+#define PAGING_ENTRY_SHIFT(lvl)		((PGT_LVL0 - (lvl)) * 9U + PTE_SHIFT)
 #define PAGING_ENTRY_OFFSET(addr, lvl)	(((addr) >> PAGING_ENTRY_SHIFT(lvl)) & (PTRS_PER_PTE - 1UL))
 
 /*

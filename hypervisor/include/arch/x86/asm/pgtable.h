@@ -146,20 +146,6 @@
 #define EPT_ENTRY_PFN_MASK	((~EPT_PFN_HIGH_MASK) & PAGE_MASK)
 
 /**
- * @brief Page tables level in IA32 paging mode
- *
- * 4-level paging in IA32 mode may map linear addresses to 4-KByte pages, 2-MByte pages, or 1-GByte pages. The 4 levels
- * are PML4, PDPT, PD, and PT. The value to present each level is fixed.
- */
-enum _page_table_level {
-	IA32E_PML4 = 0,     /**< The Page-Map-Level-4(PML4) level in the page tables.
-			      *  The value is fixed to 0. */
-	IA32E_PDPT = 1,     /**< The Page-Directory-Pointer-Table(PDPT) level in the page tables. */
-	IA32E_PD = 2,       /**< The Page-Directory(PD) level in the page tables. */
-	IA32E_PT = 3,       /**< The Page-Table(PT) level in the page tables. */
-};
-
-/**
  * @brief Translate a host physical address to a host virtual address before paging mode enabled.
  *
  * This function is used to translate a host physical address to a host virtual address before paging mode enabled. HPA
