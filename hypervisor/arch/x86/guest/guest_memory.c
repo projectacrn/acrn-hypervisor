@@ -14,6 +14,7 @@
 #include <asm/mmu.h>
 #include <asm/guest/ept.h>
 #include <logmsg.h>
+#include <pgtable.h>
 
 struct page_walk_info {
 	uint64_t top_entry;	/* Top level paging structure entry */

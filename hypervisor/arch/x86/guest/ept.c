@@ -9,7 +9,7 @@
 #include <mmu.h>
 #include <vm.h>
 #include <asm/guest/virq.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/guest/ept.h>
 #include <asm/vmx.h>
 #include <asm/vtd.h>
@@ -444,30 +444,30 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 	uint64_t i, j, k, m;
 
 	for (i = 0UL; i < PTRS_PER_PGTL3E; i++) {
-		pml4e = pml4e_offset((uint64_t *)get_eptp(vm), i << PML4E_SHIFT);
+		pml4e = pgtl3e_offset((uint64_t *)get_eptp(vm), i << PML4E_SHIFT);
 		if (!table->pgentry_present(*pml4e)) {
 			continue;
 		}
 		for (j = 0UL; j < PTRS_PER_PGTL2E; j++) {
-			pdpte = pdpte_offset(pml4e, j << PDPTE_SHIFT);
+			pdpte = pgtl2e_offset(pml4e, j << PDPTE_SHIFT);
 			if (!table->pgentry_present(*pdpte)) {
 				continue;
 			}
-			if (pdpte_large(*pdpte) != 0UL) {
+			if (is_pgtl_large(*pdpte) != 0UL) {
 				cb(pdpte, PGTL2_SIZE);
 				continue;
 			}
 			for (k = 0UL; k < PTRS_PER_PGTL1E; k++) {
-				pde = pde_offset(pdpte, k << PDE_SHIFT);
+				pde = pgtl1e_offset(pdpte, k << PDE_SHIFT);
 				if (!table->pgentry_present(*pde)) {
 					continue;
 				}
-				if (pde_large(*pde) != 0UL) {
+				if (is_pgtl_large(*pde) != 0UL) {
 					cb(pde, PGTL1_SIZE);
 					continue;
 				}
 				for (m = 0UL; m < PTRS_PER_PGTL0E; m++) {
-					pte = pte_offset(pde, m << PTE_SHIFT);
+					pte = pgtl0e_offset(pde, m << PTE_SHIFT);
 					if (table->pgentry_present(*pte)) {
 						cb(pte, PGTL0_SIZE);
 					}

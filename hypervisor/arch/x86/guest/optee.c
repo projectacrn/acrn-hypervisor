@@ -16,6 +16,7 @@
 #include <reloc.h>
 #include <hypercall.h>
 #include <logmsg.h>
+#include <pgtable.h>
 
 int is_tee_vm(struct acrn_vm *vm)
 {

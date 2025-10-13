@@ -8,6 +8,10 @@
 #ifndef COMMON_PGTABLE_H
 #define COMMON_PGTABLE_H
 #include <asm/page.h>
+#include <asm/mm_common.h>
+
+uint64_t arch_pgtl_page_paddr(uint64_t pgtle);
+uint64_t arch_pgtl_large(uint64_t pgtle);
 
 /**
  * @brief Translate a host physical address to a host virtual address.
@@ -66,4 +70,135 @@ static inline uint64_t round_page_down(uint64_t addr)
 {
 	return (addr & PAGE_MASK);
 }
+
+static inline uint64_t pgtl3e_index(uint64_t address)
+{
+	return (address >> PGTL3_SHIFT) & (PTRS_PER_PGTL3E - 1UL);
+}
+
+static inline uint64_t pgtl2e_index(uint64_t address)
+{
+	return (address >> PGTL2_SHIFT) & (PTRS_PER_PGTL2E- 1UL);
+}
+
+static inline uint64_t pgtl1e_index(uint64_t address)
+{
+	return (address >> PGTL1_SHIFT) & (PTRS_PER_PGTL1E - 1UL);
+}
+
+static inline uint64_t pgtl0e_index(uint64_t address)
+{
+	return (address >> PGTL0_SHIFT) & (PTRS_PER_PGTL0E - 1UL);
+}
+
+static inline uint64_t *page_addr(uint64_t pgtle)
+{
+	return hpa2hva(arch_pgtl_page_paddr(pgtle));
+}
+
+static inline uint64_t is_pgtl_large(uint64_t pgtle)
+{
+        return arch_pgtl_large(pgtle);
+}
+
+/**
+ * @brief Calculate the page map PGT_LVL3 table entry for a specified input address.
+ *
+ * The page map PGT_LVL3 table contains 512 entries, each of which points to a PGT_LVL2 page table.
+ * Address has the index to the PGT_LVL3 entry. This function is used to calculate the address of PGT_LVL3 entry.
+ * It is typically used during the page translation process.
+ *
+ * It will return a pointer to the page map PGT_LVL3 table entry.
+ *
+ * @param[in] pgtl3_page A pointer to a PGT_LVL3 page.
+ * @param[in] addr The address value for which the page map PGT_LVL3 table entry address is to be calculated.
+ *                 For hypervisor's MMU, it is the host virtual address.
+ *                 For each VM's stage 2 tranlation, it is the guest physical address.
+ *
+ * @return A pointer to the PGT_LVL3 entry.
+ *
+ * @pre pgtl3_page != NULL
+ *
+ * @post N/A
+ */
+static inline uint64_t *pgtl3e_offset(uint64_t *pgtl3_page, uint64_t addr)
+{
+	return pgtl3_page + pgtl3e_index(addr);
+}
+
+/**
+ * @brief Calculate the PGT_LVL2 page table entry for a specified input address.
+ *
+ * The PGT_LVL2 page table is referenced by a page map PGT_LVL3 table entry and echo entry
+ * in PGT_LVL2 points to a PGT_LVL1 page table. Address has the index to the PGT_LVL2 entry. This function is used to
+ * calculate the address of PGT_LVL2 entry. It is typically used during the page translation process.
+ *
+ * It will return a pointer to the PGT_LVL2 page table entry.
+ *
+ * @param[in] pgtl3e A pointer to a PGT_LVL3 page map table entry.
+ * @param[in] addr The address for which the PGT_LVL2 page table entry address is to be calculated.
+ *                 For hypervisor's MMU, it is the host virtual address.
+ *                 For each VM's stage2 tranlation, it is the guest physical address.
+ *
+ * @return A pointer to the PGT_LVL2 entry.
+ *
+ * @pre pgtl3e != NULL
+ *
+ * @post N/A
+ */
+static inline uint64_t *pgtl2e_offset(const uint64_t *pgtl3e, uint64_t addr)
+{
+	return page_addr(*pgtl3e) + pgtl2e_index(addr);
+}
+
+/**
+ * @brief Calculate the PGT_LVL1 page table entry for a specified input address.
+ *
+ * The PGT_LVL1 page table is referenced by a PGT_LVL2 page table entry and echo entry
+ * points to a page table. Address has the index to the entry in PGT_LVL1 page table . This function
+ * is used to calculate the address of PDE. It is typically used during the page translation process.
+ *
+ * It will return a pointer to the PGT_LVL1 page table entry.
+ *
+ * @param[in] pgtl2e A pointer to a PGT_LVL2 page table entry.
+ * @param[in] addr The address for which the PGT_LVL1 page table entry address is to be calculated.
+ *                 For hypervisor's MMU, it is the host virtual address.
+ *                 For each VM's stage 2 translation, it is the guest physical address.
+ *
+ * @return A pointer to the PGT_LVL1 page table entry.
+ *
+ * @pre pgtl2e != NULL
+ *
+ * @post N/A
+ */
+static inline uint64_t *pgtl1e_offset(const uint64_t *pgtl2e, uint64_t addr)
+{
+	return page_addr(*pgtl2e) + pgtl1e_index(addr);
+}
+
+/**
+ * @brief Calculate the PGT_LVL0 page table entry for a specified input address.
+ *
+ * The PGT_LVL0 page table entry is the entry that maps a page. This function is used to calculate
+ * the address of the PGT_LVL0 entry. It is typically used during the page translation process.
+ * The function is essential for managing memory access permissions and for implementing memory systems.
+ *
+ * It will return the address of a PGT_LVL0 page table entry.
+ *
+ * @param[in] pgtl1e A pointer to a PGT_LVL1 page table entry.
+ * @param[in] addr The address for which the PGT_LVL1 page table entry address is to be calculated.
+ *                 For hypervisor's MMU, it is the host virtual address.
+ *                 For each VM's stage 2 translation, it is the guest physical address.
+ *
+ * @return A pointer to the PGT_LVL0 page table entry.
+ *
+ * @pre pgtl1e != NULL
+ *
+ * @post N/A
+ */
+static inline uint64_t *pgtl0e_offset(const uint64_t *pgtl1e, uint64_t addr)
+{
+	return page_addr(*pgtl1e) + pgtl0e_index(addr);
+}
+
 #endif /* COMMON_PGTABLE_H*/

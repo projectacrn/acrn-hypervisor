@@ -13,6 +13,7 @@
 #include <logmsg.h>
 #include <asm/rtcm.h>
 #include <ptdev.h>
+#include <pgtable.h>
 
 #define ENTRY_GPA_L		2U
 #define ENTRY_GPA_HI		8U

@@ -29,7 +29,7 @@
 #include <types.h>
 #include <atomic.h>
 #include <asm/cpufeatures.h>
-#include <asm/pgtable.h>
+#include <pgtable.h>
 #include <asm/cpu_caps.h>
 #include <asm/vmx.h>
 #include <reloc.h>

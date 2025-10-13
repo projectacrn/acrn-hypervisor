@@ -134,18 +134,18 @@ static void early_pgtable_map_uart(uint64_t addr)
 	CPU_CR_READ(cr3, &value);
 	/*assumpiton for map high mmio in early pagetable is that it is only used for
 	  2MB page since 1G page may not available when memory width is 39bit */
-	pml4e = pml4e_offset((uint64_t *)value, addr);
+	pml4e = pgtl3e_offset((uint64_t *)value, addr);
 	/* address is above 512G */
 	if(!(*pml4e & PAGE_PRESENT)) {
 		*pml4e = hva2hpa_early(uart_pdpte_page) + (PAGE_PRESENT|PAGE_RW);
 	}
-	pdpte = pdpte_offset(pml4e, addr);
+	pdpte = pgtl2e_offset(pml4e, addr);
 	if(!(*pdpte & PAGE_PRESENT)) {
 		*(pdpte) = hva2hpa_early(uart_pde_page) + (PAGE_PRESENT|PAGE_RW);
-		pde = pde_offset(pdpte, addr);
+		pde = pgtl1e_offset(pdpte, addr);
 		*pde =  (addr & PGTL1_MASK) + (PAGE_PRESENT|PAGE_RW|PAGE_PSE);
 	} else if(!(*pdpte & PAGE_PSE)) {
-		pde = pde_offset(pdpte, addr);
+		pde = pgtl1e_offset(pdpte, addr);
 		if(!(*pde & PAGE_PRESENT)) {
 			*pde = (addr & PGTL1_MASK) + (PAGE_PRESENT|PAGE_RW|PAGE_PSE);
 		}

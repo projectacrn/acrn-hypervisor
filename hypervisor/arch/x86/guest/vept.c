@@ -79,18 +79,18 @@ static void free_sept_table(uint64_t *shadow_eptp)
 
 	if (shadow_eptp) {
 		for (i = 0UL; i < PTRS_PER_PML4E; i++) {
-			shadow_pml4e = pml4e_offset(shadow_eptp, i << PML4E_SHIFT);
+			shadow_pml4e = pgtl3e_offset(shadow_eptp, i << PML4E_SHIFT);
 			if (!is_present_ept_entry(*shadow_pml4e)) {
 				continue;
 			}
 			for (j = 0UL; j < PTRS_PER_PDPTE; j++) {
-				shadow_pdpte = pdpte_offset(shadow_pml4e, j << PDPTE_SHIFT);
+				shadow_pdpte = pgtl2e_offset(shadow_pml4e, j << PDPTE_SHIFT);
 				if (!is_present_ept_entry(*shadow_pdpte) ||
 				    is_leaf_ept_entry(*shadow_pdpte, PGT_LVL2)) {
 					continue;
 				}
 				for (k = 0UL; k < PTRS_PER_PDE; k++) {
-					shadow_pde = pde_offset(shadow_pdpte, k << PDE_SHIFT);
+					shadow_pde = pgtl1e_offset(shadow_pdpte, k << PDE_SHIFT);
 					if (!is_present_ept_entry(*shadow_pde) ||
 					    is_leaf_ept_entry(*shadow_pde, PGT_LVL1)) {
 						continue;
