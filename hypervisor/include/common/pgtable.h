@@ -211,4 +211,14 @@ static inline uint64_t round_pgtl1_down(uint64_t val)
 	return (val & PGTL1_MASK);
 }
 
+static inline uint64_t pfn2paddr(uint64_t pfn)
+{
+	return ((pfn >> PAGE_PFN_OFFSET) << PAGE_SHIFT);
+}
+
+static inline uint64_t paddr2pfn(uint64_t paddr)
+{
+	return ((paddr >> PAGE_SHIFT) << PAGE_PFN_OFFSET);
+}
+
 #endif /* COMMON_PGTABLE_H*/

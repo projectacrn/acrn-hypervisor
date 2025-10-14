@@ -151,33 +151,58 @@ static inline void ept_flush_cache_pagewalk(const void* etry)
 	iommu_flush_cache(etry, sizeof(uint64_t));
 }
 
-static inline void ept_nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
-static inline void ept_nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
-
-/* The function is used to disable execute right for (2MB / 1GB)large pages in EPT */
-static inline void ept_tweak_exe_right(uint64_t *entry)
-{
-	*entry &= ~EPT_EXE;
-}
-
-/* The function is used to recover the execute right when large pages are breaking into 4KB pages
- * Hypervisor doesn't control execute right for guest memory, recovers execute right by default.
- */
-static inline void ept_recover_exe_right(uint64_t *entry)
-{
-	*entry |= EPT_EXE;
-}
-
-static inline uint64_t ept_default_access_right(void)
-{
-	return EPT_RWX;
-}
-
 static inline uint64_t ept_pgentry_present(uint64_t pte)
 {
 	return ((EPT_RWX & (pte)) != 0UL);
 }
 
+/*
+ * Instruction fetch may cause machine check error if page size and memory
+ * type was changed without invalidation on some processors. To mitigate the
+ * issue, the function clears the execute permission (bit 2) in the EPT entries
+ * for large pages. When EPT violation is triggered by guest instruction fetch,
+ * hypervisor converts the large page to smaller 4 KB pages and restore the
+ * execute permission, and then re-execute the guest instruction.
+ */
+static inline void ept_quirk_set_pgentry(uint64_t *pte, uint64_t page, uint64_t prot, enum _page_table_level level,
+		bool is_leaf, const struct pgtable *table)
+{
+	uint64_t prot_tmp;
+
+	if (!is_leaf) {
+		prot_tmp = EPT_RWX;
+	} else {
+		if (level == PGT_LVL0) {
+			prot_tmp = prot;
+			prot_tmp &= ~PAGE_PSE;
+			prot_tmp |= EPT_EXE;
+		} else {
+			prot_tmp = prot;
+			prot_tmp |= PAGE_PSE;
+			prot_tmp &= ~EPT_EXE;
+		}
+	}
+	make_pgentry(pte, page, prot_tmp, table);
+}
+
+static inline void ept_normal_set_pgentry(uint64_t *pte, uint64_t page, uint64_t prot, enum _page_table_level level,
+		bool is_leaf, const struct pgtable *table)
+{
+	uint64_t prot_tmp;
+
+	if (!is_leaf) {
+		prot_tmp = EPT_RWX;
+	} else {
+		if (level == PGT_LVL0) {
+			prot_tmp = prot;
+			prot_tmp &= ~PAGE_PSE;
+		} else {
+			prot_tmp = prot;
+			prot_tmp |= PAGE_PSE;
+		}
+	}
+	make_pgentry(pte, page, prot_tmp, table);
+}
 
 void init_ept_pgtable(struct pgtable *table, uint16_t vm_id)
 {
@@ -193,24 +218,22 @@ void init_ept_pgtable(struct pgtable *table, uint16_t vm_id)
 	ept_page_pool[vm_id].last_hint_id = 0UL;
 
 	table->pool = &ept_page_pool[vm_id];
-	table->get_default_access_right = ept_default_access_right;
 	table->pgentry_present = ept_pgentry_present;
 	table->flush_cache_pagewalk = ept_flush_cache_pagewalk;
 	table->large_page_support = ept_large_page_support;
 
 	/* Mitigation for issue "Machine Check Error on Page Size Change" */
 	if (is_ept_force_4k_ipage()) {
-		table->tweak_exe_right = ept_tweak_exe_right;
-		table->recover_exe_right = ept_recover_exe_right;
+		table->set_pgentry = ept_quirk_set_pgentry;
 		/* For RTVM, build 4KB page mapping in EPT for code pages */
 		if (is_rt_vm(vm)) {
 			table->large_page_support = use_large_page;
 		}
 	} else {
-		table->tweak_exe_right = ept_nop_tweak_exe_right;
-		table->recover_exe_right = ept_nop_recover_exe_right;
+		table->set_pgentry = ept_normal_set_pgentry;
 	}
 }
+
 /*
  * To enable the identical map and support of legacy devices/ACPI method in Service VM,
  * ACRN presents the entire host 0-4GB memory region to Service VM, except the memory

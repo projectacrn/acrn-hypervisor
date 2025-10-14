@@ -76,7 +76,9 @@ static uint64_t sanitized_page_hpa;
 
 void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table)
 {
-	set_pgentry(ptep, sanitized_page_hpa, table);
+	*ptep = sanitized_page_hpa;
+	if (table && table->flush_cache_pagewalk)
+		table->flush_cache_pagewalk(ptep);
 }
 
 void sanitize_pte(uint64_t *pt_page, const struct pgtable *table)
@@ -135,32 +137,23 @@ static void split_large_page(uint64_t *pte, enum _page_table_level level,
 	uint64_t ref_paddr, paddr, paddrinc;
 	uint64_t i, ref_prot;
 
-	switch (level) {
-	case PGT_LVL2:
-		ref_paddr = (*pte) & PFN_MASK;
-		paddrinc = PGTL1_SIZE;
-		ref_prot = (*pte) & ~PFN_MASK;
-		break;
-	default:	/* PGT_LVL1 */
-		ref_paddr = (*pte) & PFN_MASK;
-		paddrinc = PGTL0_SIZE;
-		ref_prot = (*pte) & ~PFN_MASK;
-		ref_prot &= ~PAGE_PSE;
-		table->recover_exe_right(&ref_prot);
-		break;
-	}
+	if (level == PGT_LVL0)
+		pr_warn("invalid page level to split huge page \r\n");
+
+	paddrinc = get_level_size(level + 1);
+	ref_paddr = (*pte) & PFN_MASK;
+	ref_prot = (*pte) & ~PFN_MASK;
+	paddr = pfn2paddr(ref_paddr);
 
 	pbase = (uint64_t *)alloc_page(table->pool);
 	dev_dbg(DBG_LEVEL_MMU, "%s, paddr: 0x%lx, pbase: 0x%lx\n", __func__, ref_paddr, pbase);
 
-	paddr = ref_paddr;
 	for (i = 0UL; i < PTRS_PER_PGTL0E; i++) {
-		set_pgentry(pbase + i, paddr | ref_prot, table);
+		table->set_pgentry(pbase + i, paddr, ref_prot, (level + 1), 1, table);
 		paddr += paddrinc;
 	}
 
-	ref_prot = table->get_default_access_right();
-	set_pgentry(pte, hva2hpa((void *)pbase) | ref_prot, table);
+	table->set_pgentry(pte, hva2hpa((void *)pbase), 0, level, 0, table);
 
 	/* TODO: flush the TLB */
 }
@@ -172,20 +165,11 @@ static inline void local_modify_or_del_pte(uint64_t *pte,
 		uint64_t new_pte = *pte;
 		new_pte &= ~prot_clr;
 		new_pte |= prot_set;
-		set_pgentry(pte, new_pte, table);
+		*pte = new_pte;
+		table->flush_cache_pagewalk(pte);
 	} else {
 		sanitize_pte_entry(pte, table);
 	}
-}
-
-/*
- * pgentry may means pgtl3e/pgtl2e/pgtl1e
- */
-static inline void construct_pgentry(uint64_t *pte, void *pg_page, uint64_t prot, const struct pgtable *table)
-{
-	sanitize_pte((uint64_t *)pg_page, table);
-
-	set_pgentry(pte, hva2hpa(pg_page) | prot, table);
 }
 
 /*
@@ -421,7 +405,7 @@ static void add_pgtl0(const uint64_t *pgtl1e, uint64_t paddr_start, uint64_t vad
 		if (table->pgentry_present(*pgtl0e)) {
 			pr_fatal("%s, pgtl0e 0x%lx is already present!\n", __func__, vaddr);
 		} else {
-			set_pgentry(pgtl0e, paddr | prot, table);
+			table->set_pgentry(pgtl0e, paddr, prot, PGT_LVL0, 1, table);
 		}
 		paddr += PGTL0_SIZE;
 		vaddr += PGTL0_SIZE;
@@ -459,8 +443,7 @@ static void add_pgtl1(const uint64_t *pgtl2e, uint64_t paddr_start, uint64_t vad
 					mem_aligned_check(paddr, PGTL1_SIZE) &&
 					mem_aligned_check(vaddr, PGTL1_SIZE) &&
 					(vaddr_next <= vaddr_end)) {
-					table->tweak_exe_right(&local_prot);
-					set_pgentry(pgtl1e, paddr | (local_prot | PAGE_PSE), table);
+					table->set_pgentry(pgtl1e, paddr, local_prot, PGT_LVL1, 1, table);
 					if (vaddr_next < vaddr_end) {
 						paddr += (vaddr_next - vaddr);
 						vaddr = vaddr_next;
@@ -469,7 +452,7 @@ static void add_pgtl1(const uint64_t *pgtl2e, uint64_t paddr_start, uint64_t vad
 					break;	/* done */
 				} else {
 					void *pgtl0_page = alloc_page(table->pool);
-					construct_pgentry(pgtl1e, pgtl0_page, table->get_default_access_right(), table);
+					table->set_pgentry(pgtl1e, hva2hpa((void *)pgtl0_page), 0, PGT_LVL1, 0, table);
 				}
 			}
 			add_pgtl0(pgtl1e, paddr, vaddr, vaddr_end, prot, table);
@@ -508,8 +491,7 @@ static void add_pgtl2(const uint64_t *pgtl3e, uint64_t paddr_start, uint64_t vad
 					mem_aligned_check(paddr, PGTL2_SIZE) &&
 					mem_aligned_check(vaddr, PGTL2_SIZE) &&
 					(vaddr_next <= vaddr_end)) {
-					table->tweak_exe_right(&local_prot);
-					set_pgentry(pgtl2e, paddr | (local_prot | PAGE_PSE), table);
+					table->set_pgentry(pgtl2e, paddr, local_prot, PGT_LVL2, 1, table);
 					if (vaddr_next < vaddr_end) {
 						paddr += (vaddr_next - vaddr);
 						vaddr = vaddr_next;
@@ -518,7 +500,7 @@ static void add_pgtl2(const uint64_t *pgtl3e, uint64_t paddr_start, uint64_t vad
 					break;	/* done */
 				} else {
 					void *pgtl1_page = alloc_page(table->pool);
-					construct_pgentry(pgtl2e, pgtl1_page, table->get_default_access_right(), table);
+					table->set_pgentry(pgtl2e, hva2hpa((void *)pgtl1_page), 0, PGT_LVL2, 0, table);
 				}
 			}
 			add_pgtl1(pgtl2e, paddr, vaddr, vaddr_end, prot, table);
@@ -591,7 +573,7 @@ void pgtable_add_map(uint64_t *pgtl3_page, uint64_t paddr_base, uint64_t vaddr_b
 		pgtl3e = pgtl3e_offset(pgtl3_page, vaddr);
 		if (!table->pgentry_present(*pgtl3e)) {
 			void *pgtl2_page = alloc_page(table->pool);
-			construct_pgentry(pgtl3e, pgtl2_page, table->get_default_access_right(), table);
+			table->set_pgentry(pgtl3e, hva2hpa((void *)pgtl2_page), 0, PGT_LVL3, 0, table);
 		}
 		add_pgtl2(pgtl3e, paddr, vaddr, vaddr_end, prot, table);
 

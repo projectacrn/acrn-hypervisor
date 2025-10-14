@@ -25,5 +25,6 @@
 #define PGTL0_SIZE (1UL << PGTL0_SHIFT)
 #define PGTL0_MASK (~(PGTL0_SIZE - 1UL))
 #define PTRS_PER_PGTL0E PTRS_PER_PTE
+#define PAGE_PFN_OFFSET 12
 
 #endif /*__X86_MM_COMMON_H__ */

@@ -89,22 +89,30 @@ static inline uint64_t ppt_pgentry_present(uint64_t pte)
 	return ((PAGE_PRESENT & (pte)) != 0UL);
 }
 
-static inline uint64_t ppt_default_access_right(void)
+static inline void ppt_set_pgentry(uint64_t *pte, uint64_t page, uint64_t prot, enum _page_table_level level,
+		bool is_leaf, const struct pgtable *table)
 {
-	return (PAGE_PRESENT | PAGE_RW | PAGE_USER);
+	uint64_t prot_tmp;
+	if (!is_leaf) {
+		prot_tmp = (PAGE_PRESENT | PAGE_RW | PAGE_USER);
+	} else {
+		if (level == PGT_LVL0) {
+			prot_tmp = prot;
+			prot_tmp &= ~PAGE_PSE;
+		} else {
+			prot_tmp = prot;
+			prot_tmp |= PAGE_PSE;
+		}
+	}
+	make_pgentry(pte, page, prot_tmp, table);
 }
-
-static inline void ppt_nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
-static inline void ppt_nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
 
 static const struct pgtable ppt_pgtable = {
 	.pool = &ppt_page_pool,
-	.get_default_access_right = ppt_default_access_right,
 	.pgentry_present = ppt_pgentry_present,
 	.large_page_support = ppt_large_page_support,
 	.flush_cache_pagewalk = ppt_flush_cache_pagewalk,
-	.tweak_exe_right = ppt_nop_tweak_exe_right,
-	.recover_exe_right = ppt_nop_recover_exe_right,
+	.set_pgentry = ppt_set_pgentry,
 };
 
 /*

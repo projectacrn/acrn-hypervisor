@@ -92,8 +92,8 @@ void *pgtable_create_trusty_root(const struct pgtable *table,
 	 */
 	sub_table_addr = alloc_page(table->pool);
 	sworld_pml4e = hva2hpa(sub_table_addr) | prot_table_present;
-	set_pgentry((uint64_t *)pml4_base, sworld_pml4e, table);
-
+	*(uint64_t *)pml4_base = sworld_pml4e;
+	table->flush_cache_pagewalk(pml4_base);
 	nworld_pml4e = get_pgentry((uint64_t *)nworld_pml4_page);
 
 	/*
@@ -106,7 +106,8 @@ void *pgtable_create_trusty_root(const struct pgtable *table,
 		pdpte = get_pgentry(src_pdpte_p);
 		if ((pdpte & prot_table_present) != 0UL) {
 			pdpte &= ~prot_clr;
-			set_pgentry(dest_pdpte_p, pdpte, table);
+			*dest_pdpte_p = pdpte;
+			table->flush_cache_pagewalk(dest_pdpte_p);
 		}
 		src_pdpte_p++;
 		dest_pdpte_p++;

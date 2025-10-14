@@ -7,9 +7,8 @@
 #define MMU_H
 
 #include <lib/spinlock.h>
-#include <asm/page.h>
-#include <asm/pgtable.h>
 #include <asm/mmu.h>
+#include <pgtable.h>
 
 void set_paging_supervisor(uint64_t base, uint64_t size);
 
@@ -70,12 +69,11 @@ enum _page_table_level {
 
 struct pgtable {
 	struct page_pool *pool;
-	uint64_t (*get_default_access_right)(void);
 	uint64_t (*pgentry_present)(uint64_t pte);
 	bool (*large_page_support)(enum _page_table_level level, uint64_t prot);
 	void (*flush_cache_pagewalk)(const void *p);
-	void (*tweak_exe_right)(uint64_t *entry);
-	void (*recover_exe_right)(uint64_t *entry);
+	void (*set_pgentry)(uint64_t *pte, uint64_t page, uint64_t prot, enum _page_table_level level,
+			bool is_leaf, const struct pgtable *table);
 };
 
 /*
@@ -86,14 +84,34 @@ static inline uint64_t get_pgentry(const uint64_t *pte)
 	return *pte;
 }
 
-/*
- * pgentry may means generic page table entry
- */
-static inline void set_pgentry(uint64_t *ptep, uint64_t pte, const struct pgtable *table)
+static inline uint64_t get_level_size(enum _page_table_level level)
 {
-	*ptep = pte;
-	if (table && table->flush_cache_pagewalk)
-		table->flush_cache_pagewalk(ptep);
+	uint64_t size = 0;
+	switch (level) {
+	case PGT_LVL3:
+		size = PGTL3_SIZE;
+		break;
+	case PGT_LVL2:
+		size = PGTL2_SIZE;
+		break;
+	case PGT_LVL1:
+		size = PGTL1_SIZE;
+		break;
+	case PGT_LVL0:
+		size = PGTL0_SIZE;
+		break;
+	default: break;
+
+	}
+	return size;
+}
+
+static inline void make_pgentry(uint64_t *pte, uint64_t page, uint64_t prot, const struct pgtable *table)
+{
+	uint64_t entry;
+	entry = paddr2pfn(page);
+	*pte = prot | entry ;
+	table->flush_cache_pagewalk(pte);
 }
 
 void init_page_pool(struct page_pool *pool, uint64_t *page_base,
