@@ -131,6 +131,15 @@ static inline void arch_asm_pause(void)
 	asm volatile ("pause" ::: "memory");
 }
 
+/* Read CSR */
+#define cpu_csr_read(reg)                                               \
+({                                                                      \
+        uint64_t v;                                                     \
+        asm volatile (" csrr %0, " STRINGIFY(reg) "\n\t"                  \
+                        :"=r" (v):);                                    \
+        v;                                                              \
+})
+
 /* Write CSR */
 #define cpu_csr_write(reg, csr_val)                                                                                    \
 	({                                                                                                             \

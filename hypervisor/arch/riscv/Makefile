@@ -50,6 +50,7 @@ HOST_C_SRCS += arch/riscv/trap.c
 HOST_C_SRCS += arch/riscv/cpu.c
 HOST_C_SRCS += arch/riscv/mmu.c
 HOST_C_SRCS += arch/riscv/irq.c
+HOST_C_SRCS += arch/riscv/pgtable.c
 
 #HV guest C source
 HOST_C_SRCS += arch/riscv/guest/vm.c
