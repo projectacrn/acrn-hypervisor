@@ -11,6 +11,7 @@
 #include <cpu.h>
 #include <per_cpu.h>
 #include <logmsg.h>
+#include <mmu.h>
 #include <timer.h>
 #include <console.h>
 #include <shell.h>
@@ -64,6 +65,7 @@ void init_primary_pcpu(uint64_t hart_id, uint64_t fdt_paddr)
 	pcpu_set_current_state(pcpu_id, PCPU_STATE_INITIALIZING);
 
 	init_debug_pre();
+	init_paging();
 
 	if (!start_pcpus(AP_MASK)) {
 		panic("Failed to start all secondary cores!");
@@ -86,6 +88,7 @@ void init_secondary_pcpu(uint64_t hart_id)
 	}
 
 	set_pcpu_active(pcpu_id);
+	enable_paging();
 
 	/*
 	 * Set state for this CPU to initializing, the current pcpu_id

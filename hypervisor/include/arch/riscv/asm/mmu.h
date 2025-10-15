@@ -20,5 +20,6 @@ static inline void set_satp(uint64_t satp)
 	);
 }
 void init_paging(void);
+void enable_paging(void);
 
 #endif /* RISCV_MMU_H */

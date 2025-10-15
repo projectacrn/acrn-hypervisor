@@ -140,3 +140,8 @@ void init_paging(void)
 
 	init_hv_mapping();
 }
+
+void enable_paging(void)
+{
+	set_satp(init_satp);
+}
