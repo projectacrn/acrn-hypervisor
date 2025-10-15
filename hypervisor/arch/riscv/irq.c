@@ -12,7 +12,7 @@
 #include <asm/csr.h>
 #include <types.h>
 
-static void init_interrupt_arch(__unused uint16_t pcpu_id)
+static void arch_init_interrupt(__unused uint16_t pcpu_id)
 {
 	uint64_t addr = (uint64_t)&strap_handler;
 
@@ -44,7 +44,7 @@ static void init_interrupt_arch(__unused uint16_t pcpu_id)
  */
 void init_interrupt(uint16_t pcpu_id)
 {
-	init_interrupt_arch(pcpu_id);
+	arch_init_interrupt(pcpu_id);
 
 	local_irq_enable();
 }

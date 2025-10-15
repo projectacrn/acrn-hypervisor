@@ -123,16 +123,4 @@ uint32_t irq_to_vector(uint32_t irq);
  */
 void dispatch_interrupt(const struct intr_excp_ctx *ctx);
 
-/* Arch specific routines called from generic IRQ handling */
-
-struct irq_desc;
-
-void init_irq_descs_arch(struct irq_desc *descs);
-void setup_irqs_arch(void);
-void init_interrupt_arch(uint16_t pcpu_id);
-void free_irq_arch(uint32_t irq);
-bool request_irq_arch(uint32_t irq);
-void pre_irq_arch(const struct irq_desc *desc);
-void post_irq_arch(const struct irq_desc *desc);
-
 #endif /* ARCH_X86_IRQ_H */

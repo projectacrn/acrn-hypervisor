@@ -125,6 +125,14 @@ void do_irq(const uint32_t irq);
  */
 void init_interrupt(uint16_t pcpu_id);
 
+/* Arch specific routines called from generic IRQ handling */
+void arch_init_irq_descs(struct irq_desc *descs);
+void arch_setup_irqs(void);
+void arch_init_interrupt(uint16_t pcpu_id);
+void arch_free_irq(uint32_t irq);
+bool arch_request_irq(uint32_t irq);
+void arch_pre_irq(const struct irq_desc *desc);
+void arch_post_irq(const struct irq_desc *desc);
 
 /**
  * @}

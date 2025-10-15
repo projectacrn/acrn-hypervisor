@@ -88,7 +88,7 @@ uint32_t alloc_irq_vector(uint32_t irq)
 	return ret;
 }
 
-bool request_irq_arch(uint32_t irq)
+bool arch_request_irq(uint32_t irq)
 {
 	return (alloc_irq_vector(irq) != VECTOR_INVALID);
 }
@@ -117,7 +117,7 @@ static void free_irq_vector(uint32_t irq)
 	}
 }
 
-void free_irq_arch(uint32_t irq)
+void arch_free_irq(uint32_t irq)
 {
 	free_irq_vector(irq);
 }
@@ -164,7 +164,7 @@ static inline bool irq_need_unmask(const struct irq_desc *desc)
 		&& is_ioapic_irq(desc->irq));
 }
 
-void pre_irq_arch(const struct irq_desc *desc)
+void arch_pre_irq(const struct irq_desc *desc)
 {
 	if (irq_need_mask(desc))  {
 		ioapic_gsi_mask_irq(desc->irq);
@@ -174,7 +174,7 @@ void pre_irq_arch(const struct irq_desc *desc)
 	send_lapic_eoi();
 }
 
-void post_irq_arch(const struct irq_desc *desc)
+void arch_post_irq(const struct irq_desc *desc)
 {
 	if (irq_need_unmask(desc)) {
 		ioapic_gsi_unmask_irq(desc->irq);
@@ -214,7 +214,7 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 /*
  * descs[] must have NR_IRQS entries
  */
-void init_irq_descs_arch(struct irq_desc descs[])
+void arch_init_irq_descs(struct irq_desc descs[])
 {
 	uint32_t i;
 
@@ -254,7 +254,7 @@ void init_irq_descs_arch(struct irq_desc descs[])
 }
 
 /* must be called after IRQ setup */
-void setup_irqs_arch(void)
+void arch_setup_irqs(void)
 {
 	ioapic_setup_irqs();
 }
@@ -288,7 +288,7 @@ static inline void set_idt(struct host_idt_descriptor *idtd)
 		      [idtd] "m"(*idtd));
 }
 
-void init_interrupt_arch(uint16_t pcpu_id)
+void arch_init_interrupt(uint16_t pcpu_id)
 {
 	struct host_idt_descriptor *idtd = &HOST_IDTR;
 

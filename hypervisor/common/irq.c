@@ -92,7 +92,7 @@ void free_irq(uint32_t irq)
 		desc->flags = IRQF_NONE;
 		spinlock_irqrestore_release(&desc->lock, rflags);
 
-		free_irq_arch(irq);
+		arch_free_irq(irq);
 		free_irq_num(irq);
 	}
 }
@@ -132,7 +132,7 @@ int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
 		pr_err("[%s] invalid irq num", __func__);
 		ret = -EINVAL;
 	} else {
-		if (!request_irq_arch(irq)) {
+		if (!arch_request_irq(irq)) {
 			pr_err("[%s] failed to alloc vector for irq %u",
 				__func__, irq);
 			free_irq_num(irq);
@@ -178,13 +178,13 @@ static inline void handle_irq(const struct irq_desc *desc)
 {
 	irq_action_t action = desc->action;
 
-	pre_irq_arch(desc);
+	arch_pre_irq(desc);
 
 	if (action != NULL) {
 		action(desc->irq, desc->priv_data);
 	}
 
-	post_irq_arch(desc);
+	arch_post_irq(desc);
 }
 
 void do_irq(const uint32_t irq)
@@ -214,16 +214,16 @@ static void init_irq_descs(void)
 		spinlock_init(&desc->lock);
 	}
 
-	init_irq_descs_arch(irq_desc_array);
+	arch_init_irq_descs(irq_desc_array);
 }
 
 void init_interrupt(uint16_t pcpu_id)
 {
-	init_interrupt_arch(pcpu_id);
+	arch_init_interrupt(pcpu_id);
 
 	if (pcpu_id == BSP_CPU_ID) {
 		init_irq_descs();
-		setup_irqs_arch();
+		arch_setup_irqs();
 		init_softirq();
 	}
 
