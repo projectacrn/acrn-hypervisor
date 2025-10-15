@@ -7,6 +7,7 @@
 #ifndef COMMON_IRQ_H
 #define COMMON_IRQ_H
 
+#include <asm/irq.h>
 #include <lib/util.h>
 #include <spinlock.h>
 
@@ -16,7 +17,6 @@
  * @brief public APIs for common IRQ handling
  */
 
-#define NR_IRQS			256U
 #define IRQ_INVALID		0xffffffffU
 
 #define IRQ_ALLOC_BITMAP_SIZE	INT_DIV_ROUNDUP(NR_IRQS, 64U)

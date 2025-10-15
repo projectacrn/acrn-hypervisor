@@ -18,6 +18,8 @@
 #define DBG_LEVEL_PTIRQ		6U
 #define DBG_LEVEL_IRQ		6U
 
+#define NR_IRQS			256U
+
 #define NR_MAX_VECTOR		0xFFU
 #define VECTOR_INVALID		(NR_MAX_VECTOR + 1U)
 
