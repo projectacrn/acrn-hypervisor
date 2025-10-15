@@ -7,6 +7,7 @@
 #include <rtl.h>
 #include <mmu.h>
 #include <asm/qemu.h>
+#include <logmsg.h>
 
 void set_paging_supervisor(__unused uint64_t base, __unused uint64_t size)
 {
@@ -92,13 +93,27 @@ static uint64_t get_board_hv_device_size(void)
 	return 0x80000000UL;
 }
 
+static bool switch_satp(uint64_t satp_value)
+{
+	/**
+	 * Here is to detect whether SV48 is supported
+	 * by the platform by writing the MODE in satp
+	 * register, which is a WARL field. According to
+	 * The RISC-V Instruction Set Manual volume II,
+	 * if satp is written with an unsupported MODE,
+	 * the entire write has no effect; no fields in
+	 * satp are modified.
+	 */
+	set_satp(satp_value);
+	return (cpu_csr_read(satp) == satp_value);
+}
+
 /**
  * TODO: need to detect existence of svpbmt extension to support PAGE_ATTR_IO
  * and PAGE_ATTR_PMA for mapping.
  */
 static void init_hv_mapping(void)
 {
-	uint64_t satp;
 	ppt_mmu_top_addr = (uint64_t *)alloc_page(&ppt_page_pool);
 
 	pgtable_add_map((uint64_t *)ppt_mmu_top_addr, get_board_hv_device_start(),
@@ -111,9 +126,11 @@ static void init_hv_mapping(void)
 		CONFIG_HV_RAM_START, (&_code_end - &_code_start),
 		PAGE_V | PAGE_X | PAGE_R | PAGE_W,
 		&ppt_pgtable);
-	satp = (uint64_t)ppt_mmu_top_addr;
-	init_satp = (satp >> 12) | SATP_MODE_SV48;
-	switch_satp(init_satp);
+
+	init_satp = ((uint64_t)ppt_mmu_top_addr >> PAGE_SHIFT) | SATP_MODE_SV48;
+	if (!switch_satp(init_satp)) {
+		panic("Only support SV48 mode !");
+	}
 }
 
 void init_paging(void)

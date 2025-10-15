@@ -10,7 +10,7 @@
 #include <asm/page.h>
 #include <asm/pgtable.h>
 
-static inline void switch_satp(uint64_t satp)
+static inline void set_satp(uint64_t satp)
 {
 	asm volatile (
 		"csrw satp, %0\n\t" \
