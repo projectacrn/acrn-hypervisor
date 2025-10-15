@@ -12,7 +12,7 @@
 #include <asm/cpu_caps.h>
 #include <asm/lapic.h>
 #include <asm/apicreg.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <delay.h>
 #include <cpu.h>
 

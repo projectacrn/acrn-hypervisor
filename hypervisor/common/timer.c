@@ -9,7 +9,7 @@
 #include <per_cpu.h>
 #include <softirq.h>
 #include <trace.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <ticks.h>
 #include <timer.h>
 

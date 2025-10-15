@@ -8,7 +8,7 @@
 #include <rtl.h>
 #include <errno.h>
 #include <asm/per_cpu.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <boot.h>
 #include <pgtable.h>
 #include <asm/mmu.h>

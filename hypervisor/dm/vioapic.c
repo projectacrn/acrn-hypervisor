@@ -31,7 +31,7 @@
 
 #include <vm.h>
 #include <errno.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <asm/guest/ept.h>
 #include <asm/guest/assign.h>
 #include <logmsg.h>

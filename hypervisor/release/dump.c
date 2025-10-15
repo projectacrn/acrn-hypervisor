@@ -5,7 +5,7 @@
  */
 
 #include <types.h>
-#include <asm/irq.h>
+#include <irq.h>
 
 struct intr_excp_ctx;
 

@@ -17,7 +17,7 @@
 #include <asm/guest/lock_instr_emul.h>
 #include <trace.h>
 #include <logmsg.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <common/notify.h>
 
 #define EXCEPTION_ERROR_CODE_VALID  8U

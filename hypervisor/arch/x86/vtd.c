@@ -13,7 +13,7 @@
 #include <asm/cpu_caps.h>
 #include <irq.h>
 #include <mmu.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <io.h>
 #include <asm/lapic.h>
 #include <asm/vtd.h>

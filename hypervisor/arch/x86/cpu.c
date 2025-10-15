@@ -13,7 +13,7 @@
 #include <asm/guest/vept.h>
 #include <asm/vtd.h>
 #include <asm/lapic.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <per_cpu.h>
 #include <asm/cpufeatures.h>
 #include <asm/cpu_caps.h>

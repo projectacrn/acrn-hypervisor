@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <asm/irq.h>
+#include <irq.h>
 #include <asm/vmx.h>
 
 #include <vcpu.h>

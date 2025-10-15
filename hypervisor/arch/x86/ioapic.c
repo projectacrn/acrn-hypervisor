@@ -12,7 +12,7 @@
 #include <spinlock.h>
 #include <mmu.h>
 #include <asm/ioapic.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <io.h>
 #include <acpi.h>
 #include <logmsg.h>

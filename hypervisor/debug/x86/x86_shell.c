@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <bits.h>
 #include <vm.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <console.h>
 #include <per_cpu.h>
 #include <asm/vmx.h>

@@ -7,7 +7,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <per_cpu.h>
 #include <vm.h>
 #include <asm/pgtable.h>

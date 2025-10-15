@@ -23,7 +23,7 @@
 #include <ivshmem.h>
 #include <vmcs9900.h>
 #include <asm/rtcm.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <ticks.h>
 #include <asm/cpuid.h>
 #include <vroot_port.h>

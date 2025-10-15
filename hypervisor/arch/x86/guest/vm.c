@@ -37,7 +37,7 @@
 #include <asm/guest/assign.h>
 #include <vgpio.h>
 #include <asm/rtcm.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <uart16550.h>
 #include <vcpu.h>
 #ifdef CONFIG_SECURITY_VM_FIXUP

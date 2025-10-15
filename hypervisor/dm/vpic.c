@@ -33,7 +33,7 @@
 #include <spinlock.h>
 #include <logmsg.h>
 #include <asm/ioapic.h>
-#include <asm/irq.h>
+#include <irq.h>
 
 #define DBG_LEVEL_PIC	6U
 

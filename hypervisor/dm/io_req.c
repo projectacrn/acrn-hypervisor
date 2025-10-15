@@ -4,7 +4,7 @@
  */
 
 #include <vm.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <errno.h>
 #include <logmsg.h>
 #include <sbuf.h>

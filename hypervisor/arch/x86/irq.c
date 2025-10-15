@@ -9,7 +9,7 @@
 #include <spinlock.h>
 #include <per_cpu.h>
 #include <io.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <asm/idt.h>
 #include <asm/ioapic.h>
 #include <asm/lapic.h>

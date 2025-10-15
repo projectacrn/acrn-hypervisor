@@ -43,7 +43,7 @@
 #include <asm/guest/ept.h>
 #include <trace.h>
 #include <logmsg.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <ticks.h>
 #include "vlapic_priv.h"
 

@@ -8,7 +8,6 @@
 #include <bits.h>
 #include <irq.h>
 #include <common/softirq.h>
-#include <asm/irq.h>
 #include <per_cpu.h>
 
 static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };

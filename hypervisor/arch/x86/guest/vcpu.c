@@ -21,7 +21,7 @@
 #include <asm/mmu.h>
 #include <lib/sprintf.h>
 #include <asm/lapic.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <console.h>
 #include <trace.h>
 #include <asm/guest/vmexit.h>

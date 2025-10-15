@@ -10,7 +10,7 @@
 #include <logmsg.h>
 #include <cpu.h>
 #include <asm/msr.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <asm/apicreg.h>
 #include <hw/hw_thermal.h>
 
