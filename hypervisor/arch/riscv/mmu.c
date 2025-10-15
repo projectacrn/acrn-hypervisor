@@ -13,6 +13,11 @@ void set_paging_supervisor(__unused uint64_t base, __unused uint64_t size)
 }
 
 static struct page_pool ppt_page_pool;
+static void *ppt_mmu_top_addr;
+uint64_t init_satp;
+
+extern uint8_t _code_start;
+extern uint8_t _code_end;
 
 /**
  * Riscv mmio memory layout is continuous and it support 1G huge
@@ -87,8 +92,34 @@ static uint64_t get_board_hv_device_size(void)
 	return 0x80000000UL;
 }
 
+/**
+ * TODO: need to detect existence of svpbmt extension to support PAGE_ATTR_IO
+ * and PAGE_ATTR_PMA for mapping.
+ */
+static void init_hv_mapping(void)
+{
+	uint64_t satp;
+	ppt_mmu_top_addr = (uint64_t *)alloc_page(&ppt_page_pool);
+
+	pgtable_add_map((uint64_t *)ppt_mmu_top_addr, get_board_hv_device_start(),
+		get_board_hv_device_start(), get_board_hv_device_size(),
+		PAGE_V | PAGE_R | PAGE_W,
+		&ppt_pgtable);
+
+	/*TODO: Only map PAGE_X for text section*/
+	pgtable_add_map((uint64_t *)ppt_mmu_top_addr, CONFIG_HV_RAM_START,
+		CONFIG_HV_RAM_START, (&_code_end - &_code_start),
+		PAGE_V | PAGE_X | PAGE_R | PAGE_W,
+		&ppt_pgtable);
+	satp = (uint64_t)ppt_mmu_top_addr;
+	init_satp = (satp >> 12) | SATP_MODE_SV48;
+	switch_satp(init_satp);
+}
+
 void init_paging(void)
 {
 	init_page_pool(&ppt_page_pool, (uint64_t *)ppt_pages,
 			(uint64_t *)ppt_pages_bitmap, PPT_PAGE_NUM);
+
+	init_hv_mapping();
 }
