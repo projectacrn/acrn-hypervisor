@@ -65,7 +65,7 @@ static const char *const excp_names[32] = {
  * crash_ctx as an useless variable if it is set to static, and will not
  * generate code for it.
  */
-struct intr_excp_ctx *crash_ctx;
+const struct intr_excp_ctx *crash_ctx;
 
 static void dump_guest_reg(struct acrn_vcpu *vcpu)
 {
@@ -241,7 +241,7 @@ void dump_intr_excp_frame(const struct intr_excp_ctx *ctx)
 	pr_acrnlog("===========================\n");
 }
 
-void dump_exception(struct intr_excp_ctx *ctx, uint16_t pcpu_id)
+void dump_exception(const struct intr_excp_ctx *ctx, uint16_t pcpu_id)
 {
 	/* Obtain lock to ensure exception dump doesn't get corrupted */
 	spinlock_obtain(&exception_spinlock);

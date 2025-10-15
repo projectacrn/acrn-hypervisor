@@ -14,6 +14,8 @@
 #include <logmsg.h>
 #include <notify.h>
 #include <softirq.h>
+#include <debug/dump.h>
+
 
 static void unexpected_trap_handler(const struct intr_excp_ctx *ctx)
 {
@@ -32,7 +34,13 @@ static void s_sw_irq_handler(void)
 
 static void dispatch_exception(const struct intr_excp_ctx *ctx)
 {
-	unexpected_trap_handler(ctx);
+	uint16_t pcpu_id = get_pcpu_id();
+
+	/* Dump exception context */
+	dump_exception(ctx, pcpu_id);
+
+	/* Halt the CPU */
+	cpu_dead();
 }
 
 /*
