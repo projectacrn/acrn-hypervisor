@@ -36,10 +36,6 @@
 #define SHELL_CMD_VCPU_DUMPREG_PARAM	"<vm id, vcpu id>"
 #define SHELL_CMD_VCPU_DUMPREG_HELP	"Dump registers for a specific vCPU"
 
-#define SHELL_CMD_DUMP_HOST_MEM		"dump_host_mem"
-#define SHELL_CMD_DUMP_HOST_MEM_PARAM	"<addr, length>"
-#define SHELL_CMD_DUMP_HOST_MEM_HELP	"Dump host memory, starting at a given address(Hex), and for a given length (Dec in bytes)"
-
 #define SHELL_CMD_DUMP_GUEST_MEM	"dump_guest_mem"
 #define SHELL_CMD_DUMP_GUEST_MEM_PARAM	"<vm_id, addr, length>"
 #define SHELL_CMD_DUMP_GUEST_MEM_HELP	"Dump guest memory, vm id(Dec), starting at a given address(Hex), and for a given length (Dec in bytes)"
@@ -88,7 +84,6 @@
 static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv);
 static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv);
 static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv);
-static int32_t shell_dump_host_mem(int32_t argc, char **argv);
 static int32_t shell_dump_guest_mem(int32_t argc, char **argv);
 static int32_t shell_to_vm_console(int32_t argc, char **argv);
 static int32_t shell_show_cpu_int(__unused int32_t argc, __unused char **argv);
@@ -118,12 +113,6 @@ struct shell_cmd arch_shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_VCPU_DUMPREG_PARAM,
 		.help_str	= SHELL_CMD_VCPU_DUMPREG_HELP,
 		.fcn		= shell_vcpu_dumpreg,
-	},
-	{
-		.str		= SHELL_CMD_DUMP_HOST_MEM,
-		.cmd_param	= SHELL_CMD_DUMP_HOST_MEM_PARAM,
-		.help_str	= SHELL_CMD_DUMP_HOST_MEM_HELP,
-		.fcn		= shell_dump_host_mem,
 	},
 	{
 		.str		= SHELL_CMD_DUMP_GUEST_MEM,
@@ -463,36 +452,6 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 
 out:
 	return status;
-}
-
-static int32_t shell_dump_host_mem(int32_t argc, char **argv)
-{
-	uint64_t *hva;
-	int32_t ret;
-	uint32_t i, length, loop_cnt;
-	char temp_str[MAX_STR_SIZE];
-
-	/* User input invalidation */
-	if (argc != 3) {
-		ret = -EINVAL;
-	} else	{
-		hva = (uint64_t *)strtoul_hex(argv[1]);
-		length = (uint32_t)strtol_deci(argv[2]);
-
-		snprintf(temp_str, MAX_STR_SIZE, "Dump physical memory addr: 0x%016lx, length %d:\r\n", hva, length);
-		shell_puts(temp_str);
-		/* Change the length to a multiple of 32 if the length is not */
-		loop_cnt = ((length & 0x1fU) == 0U) ? ((length >> 5U)) : ((length >> 5U) + 1U);
-		for (i = 0U; i < loop_cnt; i++) {
-			snprintf(temp_str, MAX_STR_SIZE, "HVA(0x%llx): 0x%016lx  0x%016lx  0x%016lx  0x%016lx\r\n",
-					hva, *hva, *(hva + 1UL), *(hva + 2UL), *(hva + 3UL));
-			hva += 4UL;
-			shell_puts(temp_str);
-		}
-		ret = 0;
-	}
-
-	return ret;
 }
 
 static void dump_guest_mem(void *data)

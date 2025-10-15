@@ -66,6 +66,10 @@ struct shell {
 #define SHELL_CMD_LOG_LVL_HELP		"No argument: get the level of logging for the console, memory and npk. Set "\
 					"the level by giving (up to) 3 parameters between 0 and 6 (verbose)"
 
+#define SHELL_CMD_DUMP_HOST_MEM		"dump_host_mem"
+#define SHELL_CMD_DUMP_HOST_MEM_PARAM	"<addr, length>"
+#define SHELL_CMD_DUMP_HOST_MEM_HELP	"Dump host memory, starting at a given address(Hex), and for a given length (Dec in bytes)"
+
 void shell_puts(const char *string_ptr);
 
 #endif /* SHELL_PRIV_H */
