@@ -19,5 +19,6 @@ static inline void switch_satp(uint64_t satp)
 		: "memory"
 	);
 }
+void init_paging(void);
 
 #endif /* RISCV_MMU_H */
