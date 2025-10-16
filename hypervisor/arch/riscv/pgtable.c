@@ -17,3 +17,15 @@ uint64_t arch_pgtl_page_paddr(uint64_t pgtle)
 	uint64_t base = (pgtle & PTE_PFN_MASK) >> PAGE_BASE_OFFSET;
 	return ((base << PTE_SHIFT) & PAGE_PFN_MASK);
 }
+
+void *arch_hpa2hva_early(uint64_t x)
+{
+	/* ASSUMPTION: MMU is in bare mode or using identical mapping  */
+	return (void *)x;
+}
+
+uint64_t arch_hva2hpa_early(void *x)
+{
+	/* ASSUMPTION: MMU is in bare mode or using identical mapping  */
+	return (uint64_t)x;
+}

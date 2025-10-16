@@ -12,6 +12,8 @@
 
 uint64_t arch_pgtl_page_paddr(uint64_t pgtle);
 uint64_t arch_pgtl_large(uint64_t pgtle);
+void *arch_hpa2hva_early(uint64_t x);
+uint64_t arch_hva2hpa_early(void *x);
 
 /**
  * @brief Translate a host physical address to a host virtual address.
@@ -219,6 +221,56 @@ static inline uint64_t pfn2paddr(uint64_t pfn)
 static inline uint64_t paddr2pfn(uint64_t paddr)
 {
 	return ((paddr >> PAGE_SHIFT) << PAGE_PFN_OFFSET);
+}
+
+/**
+ * @brief Translate a host physical address to a host virtual address before paging mode enabled.
+ *
+ * This function is used to translate a host physical address to a host virtual address before paging mode enabled.
+ * To get HVA by calling arch_hpa2hva_early.
+ *
+ * It returns the host virtual address that corresponds to the given host physical address.
+ *
+ * @param[in] x The host physical address
+ *
+ * @return The translated host virtual address
+ *
+ * @retval NULL if x == 0
+ *
+ * @pre N/A
+ *
+ * @post N/A
+ *
+ * @remark This function is used before paging mode enabled.
+ */
+static inline void *hpa2hva_early(uint64_t x)
+{
+	return arch_hpa2hva_early(x);
+}
+
+/**
+ * @brief Translate a host virtual address to a host physical address before paging mode enabled.
+ *
+ * This function is used to translate a host virtual address to a host physical address before paging mode enabled. HVA
+ * To get HPA by calling arch_hva2hpa_early.
+ *
+ * It returns the host physical address that corresponds to the given host virtual address.
+ *
+ * @param[in] x The host virtual address to be translated
+ *
+ * @return The translated host physical address
+ *
+ * @retval 0 if x == NULL
+ *
+ * @pre N/A
+ *
+ * @post N/A
+ *
+ * @remark This function is used before paging mode enabled.
+ */
+static inline uint64_t hva2hpa_early(void *x)
+{
+	return arch_hva2hpa_early(x);
 }
 
 #endif /* COMMON_PGTABLE_H*/

@@ -30,3 +30,13 @@ uint64_t arch_pgtl_large(uint64_t pgtle)
 {
 	return pgtle & PAGE_PSE;
 }
+
+void *arch_hpa2hva_early(uint64_t x)
+{
+	return (void *)x;
+}
+
+uint64_t arch_hva2hpa_early(void *x)
+{
+	return (uint64_t)x;
+}

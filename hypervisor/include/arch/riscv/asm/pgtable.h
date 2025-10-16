@@ -8,21 +8,6 @@
 
 #include <asm/page.h>
 
-/* FIXME: Temporary RISC-V build workaround
- * This file provides hva2hpa[_early] and hpa2hva[_early] function stubs to
- * satisfy existing code dependencies. Remove this file and migrate to the
- * common pgtable.h implementation once the MMU module is properly integrated.
- */
-static inline void *hpa2hva_early(uint64_t x)
-{
-	return (void *)x;
-}
-
-static inline uint64_t hva2hpa_early(void *x)
-{
-	return (uint64_t)x;
-}
-
 #define SATP_MODE_SV48			0x9000000000000000UL
 #define SATP_PPN_MASK			0x00000FFFFFFFFFFFUL
 

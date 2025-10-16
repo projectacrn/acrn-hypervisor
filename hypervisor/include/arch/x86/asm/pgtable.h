@@ -144,55 +144,7 @@
 
 #define EPT_ENTRY_PFN_MASK	((~EPT_PFN_HIGH_MASK) & PAGE_MASK)
 
-/**
- * @brief Translate a host physical address to a host virtual address before paging mode enabled.
- *
- * This function is used to translate a host physical address to a host virtual address before paging mode enabled. HPA
- * is 1:1 mapping to HVA.
- *
- * It returns the host virtual address that corresponds to the given host physical address.
- *
- * @param[in] x The host physical address
- *
- * @return The translated host virtual address
- *
- * @retval NULL if x == 0
- *
- * @pre N/A
- *
- * @post N/A
- *
- * @remark This function is used before paging mode enabled.
- */
-static inline void *hpa2hva_early(uint64_t x)
-{
-	return (void *)x;
-}
-
-/**
- * @brief Translate a host virtual address to a host physical address before paging mode enabled.
- *
- * This function is used to translate a host virtual address to a host physical address before paging mode enabled. HVA
- * is 1:1 mapping to HPA.
- *
- * It returns the host physical address that corresponds to the given host virtual address.
- *
- * @param[in] x The host virtual address to be translated
- *
- * @return The translated host physical address
- *
- * @retval 0 if x == NULL
- *
- * @pre N/A
- *
- * @post N/A
- *
- * @remark This function is used before paging mode enabled.
- */
-static inline uint64_t hva2hpa_early(void *x)
-{
-	return (uint64_t)x;
-}
+#define HAS_EARLY_MAP
 
 #endif /* PGTABLE_H */
 
