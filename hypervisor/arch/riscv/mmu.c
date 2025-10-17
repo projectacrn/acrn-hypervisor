@@ -71,6 +71,22 @@ static const struct pgtable ppt_pgtable = {
 	.set_pgentry = ppt_set_pgentry,
 };
 
+/* TODO: need to formally get the value either from
+ * config tool or from DTS runtime parsing.
+ */
+static uint64_t get_board_hv_device_start(void)
+{
+	return 0UL;
+}
+
+/* TODO: need to formally get the value either from
+ * config tool or from DTS runtime parsing.
+ */
+static uint64_t get_board_hv_device_size(void)
+{
+	return 0x80000000UL;
+}
+
 void init_paging(void)
 {
 	init_page_pool(&ppt_page_pool, (uint64_t *)ppt_pages,
