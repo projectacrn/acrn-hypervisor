@@ -15,6 +15,7 @@
 #include <timer.h>
 #include <console.h>
 #include <shell.h>
+#include <uart16550.h>
 
 static void init_pcpu_comm_post(void);
 
@@ -66,6 +67,11 @@ void init_primary_pcpu(uint64_t hart_id, uint64_t fdt_paddr)
 
 	init_debug_pre();
 	init_paging();
+	/*
+	 * Need update uart_base_address here for vaddr2paddr mapping may changed
+	 * WARNNING: DO NOT CALL PRINTF BETWEEN ENABLE PAGING IN init_paging AND HERE!
+	 */
+        uart16550_init(false);
 
 	if (!start_pcpus(AP_MASK)) {
 		panic("Failed to start all secondary cores!");
