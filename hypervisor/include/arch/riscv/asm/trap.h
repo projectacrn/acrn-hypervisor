@@ -52,11 +52,12 @@
 #define IP_IE_LCOFI			(1UL << TRAP_CAUSE_IRQ_COUNTER_OVF)
 
 #ifndef ASSEMBLER
-#include <asm/irq.h>
+#include <irq.h>
 
 extern uint64_t strap_handler;
 
 void dispatch_trap(const struct intr_excp_ctx *ctx);
+void s_sw_irq_handler(__unused uint32_t irq, __unused void *data);
 
 #endif /* ASSEMBLER */
 

@@ -155,6 +155,7 @@ COMMON_C_SRCS += common/sched_noop.c
 endif
 COMMON_C_SRCS += common/sbuf.c
 COMMON_C_SRCS += common/logmsg.c
+COMMON_C_SRCS += common/irq.c
 
 # library componment
 COMMON_C_SRCS += lib/memory.c
@@ -202,7 +203,6 @@ COMMON_C_SRCS += boot/bare.c
 COMMON_C_SRCS += dm/vuart.c
 
 ifeq ($(ARCH),x86)
-COMMON_C_SRCS += common/irq.c
 COMMON_C_SRCS += common/efi_mmap.c
 COMMON_C_SRCS += common/vm_event.c
 COMMON_C_SRCS += common/hv_main.c

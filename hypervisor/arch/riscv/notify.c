@@ -8,13 +8,22 @@
  */
 
 #include <types.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <asm/sbi.h>
+#include <asm/trap.h>
 #include <schedule.h>
 
 void arch_init_smp_call(void)
 {
-	/* No special handling is required at present; this can be extended in the future if needed. */
+	uint32_t acrn_irq;
+
+	if (get_pcpu_id() == BSP_CPU_ID) {
+		acrn_irq = riscv_domain_get_acrn_irq(RISCV_IRQD_CPU, TRAP_CAUSE_IRQ_S_SOFT);
+
+		if ((acrn_irq == IRQ_INVALID) || ((request_irq(acrn_irq, s_sw_irq_handler, NULL, IRQF_NONE) < 0))) {
+			pr_err("Software interrupt IRQ setup failed \n");
+		}
+	}
 }
 
 void arch_smp_call_kick_pcpu(uint16_t pcpu_id)

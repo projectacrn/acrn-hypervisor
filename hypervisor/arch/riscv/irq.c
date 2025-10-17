@@ -298,26 +298,6 @@ void arch_init_interrupt(__unused uint16_t pcpu_id)
 	cpu_csr_write(CSR_SIE, (IP_IE_SSI | IP_IE_STI | IP_IE_SEI));
 }
 
-/*
- * TODO:
- * This is the first step toward aligning with the common IRQ framework.
- * For simplicity in this patchset, which focuses only on initialization,
- * init_interrupt() is defined directly in arch/riscv/irq.c.
- *
- * Because interrupt handler registration via request_irq() is not yet
- * implemented for RISC-V, fully aligning with the framework would require
- * adding a few empty arch-specific functions as placeholders.
- *
- * Once request_irq() support is introduced, we can complete the integration
- * with the common IRQ framework.
- */
-void init_interrupt(uint16_t pcpu_id)
-{
-	arch_init_interrupt(pcpu_id);
-
-	local_irq_enable();
-}
-
 bool riscv_is_valid_acrn_irq(uint32_t irq)
 {
 	bool ret = false;

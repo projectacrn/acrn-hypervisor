@@ -9,16 +9,17 @@
 
 #include <softirq.h>
 #include <timer.h>
-#include <asm/timer.h>
+#include <irq.h>
 #include <asm/sbi.h>
 #include <asm/qemu.h>
 #include <asm/cpu.h>
 #include <asm/csr.h>
+#include <asm/trap.h>
 
 #define HOST_CPUFREQ	10000000
 #define STOP_TIMER	0xFFFFFFFFFFFFFFFF
 
-void timer_irq_handler(void)
+static void timer_irq_handler(__unused uint32_t irq, __unused void *data)
 {
 	arch_set_timer_count(STOP_TIMER);
 	fire_softirq(SOFTIRQ_TIMER);
@@ -26,7 +27,15 @@ void timer_irq_handler(void)
 
 void arch_init_timer(void)
 {
-	return;
+	uint32_t acrn_irq;
+
+	if (get_pcpu_id() == BSP_CPU_ID) {
+		acrn_irq = riscv_domain_get_acrn_irq(RISCV_IRQD_CPU, TRAP_CAUSE_IRQ_S_TIMER);
+
+		if ((acrn_irq == IRQ_INVALID) || ((request_irq(acrn_irq, timer_irq_handler, NULL, IRQF_NONE) < 0))) {
+			pr_err("Timer IRQ setup failed \n");
+		}
+	}
 }
 
 /* FIXME:

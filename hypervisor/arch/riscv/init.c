@@ -131,6 +131,7 @@ static void init_pcpu_comm_post(void)
 	}
 
 	init_interrupt(pcpu_id);
+	init_smp_call();
 	timer_init();
 
 	init_sched(pcpu_id);

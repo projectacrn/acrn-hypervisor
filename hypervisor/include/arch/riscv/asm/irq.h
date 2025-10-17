@@ -54,8 +54,6 @@ struct intr_excp_ctx {
 	struct cpu_regs regs;
 };
 
-void init_interrupt(uint16_t pcpu_id);
-
 /* IRQ domain names */
 #define RISCV_IRQD_CPU		"cpu-intc"
 

@@ -5,7 +5,7 @@
  */
 
 #include <types.h>
-#include <asm/irq.h>
+#include <irq.h>
 #include <asm/page.h>
 
 #define CALL_TRACE_HIERARCHY_MAX	0x10U
