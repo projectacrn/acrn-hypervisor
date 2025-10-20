@@ -910,21 +910,6 @@ void arch_context_switch_in(struct thread_object *next)
 	rstore_xsave_area(vcpu, ectx);
 }
 
-
-/**
- * @pre vcpu != NULL
- * @pre vcpu->state == VCPU_INIT
- */
-void launch_vcpu(struct acrn_vcpu *vcpu)
-{
-	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
-
-	pr_dbg("vcpu%hu scheduled on pcpu%hu", vcpu->vcpu_id, pcpu_id);
-	vcpu_set_state(vcpu, VCPU_RUNNING);
-	wake_thread(&vcpu->thread_obj);
-
-}
-
 /**
  * @pre vcpu != NULL
  */

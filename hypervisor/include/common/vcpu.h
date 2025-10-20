@@ -130,6 +130,17 @@ int32_t create_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
 void destroy_vcpu(struct acrn_vcpu *vcpu);
 
 /**
+ * @brief set the vcpu to running state, then it will be scheculed.
+ *
+ * Adds a vCPU into the run queue and make a reschedule request for it. It sets the vCPU state to VCPU_RUNNING.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @pre vcpu != NULL
+ * @pre vcpu->state == VCPU_INIT
+ */
+void launch_vcpu(struct acrn_vcpu *vcpu);
+
+/**
  * @}
  */
 /* End of acrn_vcpu */

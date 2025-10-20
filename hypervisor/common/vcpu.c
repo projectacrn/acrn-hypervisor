@@ -147,3 +147,14 @@ void destroy_vcpu(struct acrn_vcpu *vcpu)
 
 	vcpu_set_state(vcpu, VCPU_OFFLINE);
 }
+
+void launch_vcpu(struct acrn_vcpu *vcpu)
+{
+	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
+
+	pr_dbg("vcpu%hu scheduled on pcpu%hu", vcpu->vcpu_id, pcpu_id);
+
+	vcpu_set_state(vcpu, VCPU_RUNNING);
+
+	wake_thread(&vcpu->thread_obj);
+}

@@ -572,17 +572,6 @@ void reset_vcpu(struct acrn_vcpu *vcpu, enum reset_mode mode);
 void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state);
 
 /**
- * @brief set the vcpu to running state, then it will be scheculed.
- *
- * Adds a vCPU into the run queue and make a reschedule request for it. It sets the vCPU state to VCPU_RUNNING.
- *
- * @param[inout] vcpu pointer to vcpu data structure
- * @pre vcpu != NULL
- * @pre vcpu->state == VCPU_INIT
- */
-void launch_vcpu(struct acrn_vcpu *vcpu);
-
-/**
  * @brief kick the vcpu and let it handle pending events
  *
  * Kick a vCPU to handle the pending events.
