@@ -17,6 +17,7 @@
 #include <asm/csr.h>
 #include <asm/trap.h>
 #include <asm/guest/vcpu_priv.h>
+#include <asm/guest/vsbi.h>
 
 void vcpu_set_epc(struct acrn_vcpu *vcpu, uint64_t val)
 {

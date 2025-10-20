@@ -16,6 +16,7 @@
 
 #include <asm/trap.h>
 #include <asm/guest/vcpu_priv.h>
+#include <asm/guest/vsbi.h>
 
 int32_t vcpu_virtual_inst_fault_handler(struct acrn_vcpu *vcpu) {
 	/* TODO: to be implemented */
@@ -47,6 +48,9 @@ int32_t vcpu_exit_handler(struct acrn_vcpu *vcpu)
 	} else {
 		local_irq_enable();
 		switch (cause) {
+			case TRAP_CAUSE_EXC_VIRTUAL_SUPERVISOR_ECALL:
+				ret = vsbi_exit_handler(vcpu);
+				break;
 			case TRAP_CAUSE_EXC_VIRTUAL_INST_FAULT:
 				ret = vcpu_virtual_inst_fault_handler(vcpu);
 				break;

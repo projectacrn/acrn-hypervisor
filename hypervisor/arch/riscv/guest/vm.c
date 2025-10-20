@@ -49,7 +49,8 @@ struct acrn_vcpu *vcpu_from_vhartid(struct acrn_vm *vm, uint32_t vhartid)
 
 int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config)
 {
-	(void)vm;
+	init_vsbi(vm);
+
 	(void)vm_config;
 	return 0;
 }

@@ -60,6 +60,14 @@ enum sbi_eid  {
 #define SBI_HSM_FID_HART_GET_STATUS		0x2
 #define SBI_HSM_FID_HART_SUSPEND		0x3
 
+#define SBI_HSM_STATE_STARTED			0x0
+#define SBI_HSM_STATE_STOPPED			0x1
+#define SBI_HSM_STATE_START_PENDING		0x2
+#define SBI_HSM_STATE_STOP_PENDING		0x3
+#define SBI_HSM_STATE_SUSPENDED			0x4
+#define SBI_HSM_STATE_SUSPEND_PENDING		0x5
+#define SBI_HSM_STATE_RESUME_PENDING		0x6
+
 /* SBI function IDs for MPXY extension*/
 #define SBI_MPXY_FID_GET_SHM_SIZE		0x0
 #define SBI_MPXY_FID_SET_SHM			0x1
@@ -69,6 +77,17 @@ enum sbi_eid  {
 #define SBI_MPXY_FID_SEND_MSG_WITH_RESP		0x5
 #define SBI_MPXY_FID_SEND_MSG_WITHOUT_RESP	0x6
 #define SBI_MPXY_FID_GET_NOTFICATION_EVENTS	0x7
+
+/* SBI function IDs for SRST extension */
+#define SBI_EXT_SRST_RESET			0x0
+
+#define SBI_SRST_RESET_TYPE_SHUTDOWN		0x0
+#define SBI_SRST_RESET_TYPE_COLD_REBOOT	0x1
+#define SBI_SRST_RESET_TYPE_WARM_REBOOT	0x2
+#define SBI_SRST_RESET_TYPE_LAST	SBI_SRST_RESET_TYPE_WARM_REBOOT
+
+#define SBI_SRST_RESET_REASON_NONE	0x0
+#define SBI_SRST_RESET_REASON_SYSFAIL	0x1
 
 /* SBI return error codes */
 #define SBI_SUCCESS				0
@@ -102,5 +121,9 @@ void send_single_ipi(uint16_t pcpu_id, __unused uint32_t msg_type);
 void send_dest_ipi_mask(uint64_t dest_mask, __unused uint32_t msg_type);
 
 int sbi_set_timer(uint64_t stime_value);
+
+sbiret sbi_ecall(uint64_t arg0, uint64_t arg1, uint64_t arg2,
+				uint64_t arg3, uint64_t arg4, uint64_t arg5,
+				uint64_t func, uint64_t ext);
 
 #endif /* RISCV_SBI_H */
