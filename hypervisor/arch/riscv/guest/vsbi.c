@@ -19,7 +19,7 @@
 #include <asm/sbi.h>
 #include <asm/guest/vsbi.h>
 
-static const struct acrn_vsbi_extension *vcpu_find_extension(struct acrn_vcpu *vcpu, uint64_t eid)
+const struct acrn_vsbi_extension *vcpu_find_extension(struct acrn_vcpu *vcpu, uint64_t eid)
 {
 	const struct acrn_vsbi_extension *e, *ret = NULL;
 	struct acrn_vm *vm = vcpu->vm;
@@ -71,8 +71,9 @@ int32_t vsbi_exit_handler(struct acrn_vcpu *vcpu)
 	return 0;
 }
 
+extern const struct acrn_vsbi_extension vsbi_ext_base;
 static const struct acrn_vsbi_extension *vsbi_extensions[MAX_NUM_SUPPORTED_VSBI_EXT] = {
-	NULL,
+	&vsbi_ext_base,
 };
 
 void init_vsbi(struct acrn_vm *vm)

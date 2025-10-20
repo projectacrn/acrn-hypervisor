@@ -29,5 +29,6 @@ struct acrn_vsbi_extension {
 
 int32_t vsbi_exit_handler(struct acrn_vcpu *vcpu);
 void init_vsbi(struct acrn_vm *vm);
+const struct acrn_vsbi_extension *vcpu_find_extension(struct acrn_vcpu *vcpu, uint64_t eid);
 
 #endif /* RISCV_VSBI_H */
