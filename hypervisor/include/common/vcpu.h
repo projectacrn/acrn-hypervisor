@@ -153,6 +153,15 @@ void launch_vcpu(struct acrn_vcpu *vcpu);
 void reset_vcpu(struct acrn_vcpu *vcpu);
 
 /**
+ * @brief pause the vcpu and set new state
+ *
+ * Change a vCPU state to VCPU_ZOMBIE, and make a reschedule request for it.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ */
+void zombie_vcpu(struct acrn_vcpu *vcpu);
+
+/**
  * @}
  */
 /* End of acrn_vcpu */

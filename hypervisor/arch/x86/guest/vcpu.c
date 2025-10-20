@@ -802,27 +802,6 @@ void arch_reset_vcpu(struct acrn_vcpu *vcpu)
 	x86_vcpu_reset_internal(vcpu, mode);
 }
 
-void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
-{
-	enum vcpu_state prev_state;
-	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
-
-	pr_dbg("vcpu%hu paused, new state: %d",	vcpu->vcpu_id, new_state);
-
-	if (((vcpu->state == VCPU_RUNNING) || (vcpu->state == VCPU_INIT)) && (new_state == VCPU_ZOMBIE)) {
-		prev_state = vcpu->state;
-		vcpu_set_state(vcpu, new_state);
-
-		if (prev_state == VCPU_RUNNING) {
-			if (pcpu_id == get_pcpu_id()) {
-				sleep_thread(&vcpu->thread_obj);
-			} else {
-				sleep_thread_sync(&vcpu->thread_obj);
-			}
-		}
-	}
-}
-
 void save_xsave_area(__unused struct acrn_vcpu *vcpu, struct ext_context *ectx)
 {
 	if (pcpu_has_cap(X86_FEATURE_XSAVES)) {
@@ -983,7 +962,7 @@ void arch_vcpu_thread(struct thread_object *obj)
 		if (ret < 0) {
 			pr_fatal("vcpu handling pending request fail");
 			get_vm_lock(vcpu->vm);
-			zombie_vcpu(vcpu, VCPU_ZOMBIE);
+			zombie_vcpu(vcpu);
 			put_vm_lock(vcpu->vm);
 			/* Fatal error happened (triple fault). Stop the vcpu running. */
 			continue;
@@ -997,7 +976,7 @@ void arch_vcpu_thread(struct thread_object *obj)
 		if (ret != 0) {
 			pr_fatal("vcpu resume failed");
 			get_vm_lock(vcpu->vm);
-			zombie_vcpu(vcpu, VCPU_ZOMBIE);
+			zombie_vcpu(vcpu);
 			put_vm_lock(vcpu->vm);
 			/* Fatal error happened (resume vcpu failed). Stop the vcpu running. */
 			continue;

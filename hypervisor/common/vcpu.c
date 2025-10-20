@@ -182,3 +182,25 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 
 	vcpu_set_state(vcpu, VCPU_INIT);
 }
+
+void zombie_vcpu(struct acrn_vcpu *vcpu)
+{
+	enum vcpu_state prev_state;
+	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
+
+	pr_dbg("vcpu%hu paused", vcpu->vcpu_id);
+
+	if ((vcpu->state == VCPU_RUNNING) || (vcpu->state == VCPU_INIT)) {
+		prev_state = vcpu->state;
+
+		vcpu_set_state(vcpu, VCPU_ZOMBIE);
+
+		if (prev_state == VCPU_RUNNING) {
+			if (pcpu_id == get_pcpu_id()) {
+				sleep_thread(&vcpu->thread_obj);
+			} else {
+				sleep_thread_sync(&vcpu->thread_obj);
+			}
+		}
+	}
+}

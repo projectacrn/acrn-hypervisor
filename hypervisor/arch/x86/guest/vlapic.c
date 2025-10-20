@@ -1088,7 +1088,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 
 			if (target_vcpu->state != VCPU_INIT) {
 				/* put target vcpu to INIT state and wait for SIPI */
-				zombie_vcpu(target_vcpu, VCPU_ZOMBIE);
+				zombie_vcpu(target_vcpu);
 				target_vcpu->arch.vcpu_init_reset = true;
 				reset_vcpu(target_vcpu);
 				update_vm_vlapic_state(target_vcpu->vm);

@@ -553,16 +553,6 @@ void load_iwkey(struct acrn_vcpu *vcpu);
 int32_t run_vcpu(struct acrn_vcpu *vcpu);
 
 /**
- * @brief pause the vcpu and set new state
- *
- * Change a vCPU state to VCPU_ZOMBIE, and make a reschedule request for it.
- *
- * @param[inout] vcpu pointer to vcpu data structure
- * @param[in] new_state the state to set vcpu
- */
-void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state);
-
-/**
  * @brief kick the vcpu and let it handle pending events
  *
  * Kick a vCPU to handle the pending events.
