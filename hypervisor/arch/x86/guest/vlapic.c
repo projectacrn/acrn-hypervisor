@@ -1089,7 +1089,8 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 			if (target_vcpu->state != VCPU_INIT) {
 				/* put target vcpu to INIT state and wait for SIPI */
 				zombie_vcpu(target_vcpu, VCPU_ZOMBIE);
-				reset_vcpu(target_vcpu, INIT_RESET);
+				target_vcpu->arch.vcpu_init_reset = true;
+				reset_vcpu(target_vcpu);
 				update_vm_vlapic_state(target_vcpu->vm);
 			}
 			/* new cpu model only need one SIPI to kick AP run,
@@ -1108,6 +1109,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 				 target_vcpu->vcpu_id,
 				(icr_low & APIC_VECTOR_MASK));
 
+			target_vcpu->arch.vcpu_init_reset = false;
 			target_vcpu->arch.nr_sipi--;
 			if (target_vcpu->arch.nr_sipi <= 0U) {
 

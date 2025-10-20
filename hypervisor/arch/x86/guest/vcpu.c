@@ -260,12 +260,11 @@ void load_iwkey(struct acrn_vcpu *vcpu)
 }
 
 /* As a vcpu reset internal API, DO NOT touch any vcpu state transition in this function. */
-static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
+static void x86_vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 {
 	int32_t i;
 	struct acrn_vlapic *vlapic;
 
-	vcpu->launched = false;
 	vcpu->arch.nr_sipi = 0U;
 
 	vcpu->arch.exception_info.exception = VECTOR_INVALID;
@@ -284,10 +283,6 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 	vlapic_reset(vlapic, apicv_ops, mode);
 
 	reset_vcpu_regs(vcpu, mode);
-
-	for (i = 0; i < VCPU_EVENT_NUM; i++) {
-		reset_event(&vcpu->events[i]);
-	}
 
 	init_iwkey(vcpu);
 	vcpu->arch.iwkey_copy_status = 0UL;
@@ -584,7 +579,7 @@ int32_t arch_init_vcpu(struct acrn_vcpu *vcpu)
 	}
 
 	init_xsave(vcpu);
-	vcpu_reset_internal(vcpu, POWER_ON_RESET);
+	x86_vcpu_reset_internal(vcpu, POWER_ON_RESET);
 
 	return 0;
 }
@@ -798,17 +793,13 @@ uint64_t arch_build_stack_frame(struct acrn_vcpu *vcpu)
 	return (uint64_t) ret;
 }
 
-/* NOTE:
- * vcpu should be paused before call this function.
- * @pre vcpu != NULL
- * @pre vcpu->state == VCPU_ZOMBIE
- */
-void reset_vcpu(struct acrn_vcpu *vcpu, enum reset_mode mode)
+void arch_reset_vcpu(struct acrn_vcpu *vcpu)
 {
-	pr_dbg("vcpu%hu reset", vcpu->vcpu_id);
-
-	vcpu_reset_internal(vcpu, mode);
-	vcpu_set_state(vcpu, VCPU_INIT);
+	enum reset_mode mode = COLD_RESET;
+	if (vcpu->arch.vcpu_init_reset) {
+		mode = INIT_RESET;
+	}
+	x86_vcpu_reset_internal(vcpu, mode);
 }
 
 void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)

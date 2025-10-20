@@ -100,6 +100,7 @@ void vcpu_set_state(struct acrn_vcpu *vcpu, enum vcpu_state new_state);
 uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
 int32_t arch_init_vcpu(struct acrn_vcpu *vcpu);
 void arch_deinit_vcpu(struct acrn_vcpu *vcpu);
+void arch_reset_vcpu(struct acrn_vcpu *vcpu);
 
 void arch_vcpu_thread(struct thread_object *obj);
 void arch_context_switch_out(struct thread_object *prev);
@@ -139,6 +140,17 @@ void destroy_vcpu(struct acrn_vcpu *vcpu);
  * @pre vcpu->state == VCPU_INIT
  */
 void launch_vcpu(struct acrn_vcpu *vcpu);
+
+/**
+ * @brief reset vcpu state and values
+ *
+ * Reset all fields in a vCPU instance, the vCPU state is reset to VCPU_INIT.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @pre vcpu != NULL
+ * @pre vcpu->state == VCPU_ZOMBIE
+ */
+void reset_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @}

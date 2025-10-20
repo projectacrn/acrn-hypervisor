@@ -289,6 +289,9 @@ struct acrn_vcpu_arch {
 	 * Bit 63:1 - Reserved.
 	 */
 	uint64_t iwkey_copy_status;
+
+	/* Indicate whether vcpu is in init reset mode */
+	bool vcpu_init_reset;
 } __aligned(PAGE_SIZE);
 
 struct acrn_vcpu;
@@ -548,18 +551,6 @@ void load_iwkey(struct acrn_vcpu *vcpu);
  * @retval 0 vcpu run successfully, other values failed.
  */
 int32_t run_vcpu(struct acrn_vcpu *vcpu);
-
-/**
- * @brief reset vcpu state and values
- *
- * Reset all fields in a vCPU instance, the vCPU state is reset to VCPU_INIT.
- *
- * @param[inout] vcpu pointer to vcpu data structure
- * @param[in] mode the reset mode
- * @pre vcpu != NULL
- * @pre vcpu->state == VCPU_ZOMBIE
- */
-void reset_vcpu(struct acrn_vcpu *vcpu, enum reset_mode mode);
 
 /**
  * @brief pause the vcpu and set new state

@@ -1011,7 +1011,7 @@ int32_t reset_vm(struct acrn_vm *vm, enum reset_mode mode)
 	}
 
 	foreach_vcpu(i, vm, vcpu) {
-		reset_vcpu(vcpu, COLD_RESET);
+		reset_vcpu(vcpu);
 	}
 
 	/*

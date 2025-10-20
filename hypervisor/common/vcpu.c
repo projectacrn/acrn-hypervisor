@@ -158,3 +158,27 @@ void launch_vcpu(struct acrn_vcpu *vcpu)
 
 	wake_thread(&vcpu->thread_obj);
 }
+
+/* NOTE:
+ * vcpu should be paused before call this function.
+ *
+ * @pre vcpu != NULL
+ * @pre vcpu->state == VCPU_ZOMBIE
+ */
+void reset_vcpu(struct acrn_vcpu *vcpu)
+{
+	int i;
+
+	pr_dbg("vcpu%hu reset", vcpu->vcpu_id);
+
+	vcpu->launched = false;
+	vcpu->pending_req = 0UL;
+
+	for (i = 0; i < MAX_VCPU_EVENT_NUM; i++) {
+		reset_event(&vcpu->events[i]);
+	}
+
+	arch_reset_vcpu(vcpu);
+
+	vcpu_set_state(vcpu, VCPU_INIT);
+}
