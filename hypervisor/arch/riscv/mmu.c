@@ -8,6 +8,7 @@
 #include <mmu.h>
 #include <asm/qemu.h>
 #include <logmsg.h>
+#include <reloc.h>
 
 void set_paging_supervisor(__unused uint64_t base, __unused uint64_t size)
 {
@@ -16,9 +17,6 @@ void set_paging_supervisor(__unused uint64_t base, __unused uint64_t size)
 static struct page_pool ppt_page_pool;
 static void *ppt_mmu_top_addr;
 uint64_t init_satp;
-
-extern uint8_t _code_start;
-extern uint8_t _code_end;
 
 /**
  * Riscv mmio memory layout is continuous and it support 1G huge
@@ -114,6 +112,8 @@ static bool switch_satp(uint64_t satp_value)
  */
 static void init_hv_mapping(void)
 {
+	uint64_t hva_base;
+
 	ppt_mmu_top_addr = (uint64_t *)alloc_page(&ppt_page_pool);
 
 	/*TODO: The SUM bit in sstatus is 0, meaning SMAP is enabled
@@ -126,8 +126,9 @@ static void init_hv_mapping(void)
 		&ppt_pgtable);
 
 	/*TODO: Only map PAGE_X for text section*/
-	pgtable_add_map((uint64_t *)ppt_mmu_top_addr, CONFIG_HV_RAM_START,
-		CONFIG_HV_RAM_START, (&_code_end - &_code_start),
+	hva_base = get_hv_image_base();
+	pgtable_add_map((uint64_t *)ppt_mmu_top_addr, hva_base,
+		hva_base, get_hv_image_size(),
 		PAGE_V | PAGE_X | PAGE_R | PAGE_W,
 		&ppt_pgtable);
 
