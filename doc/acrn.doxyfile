@@ -823,6 +823,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/common/delay.h \
                           ../hypervisor/include/common/timer.h \
                           ../hypervisor/include/common/ptdev.h \
+                          ../hypervisor/include/common/pgtable.h \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
                           ../devicemodel/include/virtio.h \
