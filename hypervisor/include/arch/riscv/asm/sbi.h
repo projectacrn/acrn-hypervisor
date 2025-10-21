@@ -29,6 +29,9 @@ enum sbi_eid  {
 	/* Vendor extensions must lie within this range */
 	SBI_EID_VENDOR_START = 0x09000000,
 	SBI_EID_VENDOR_END = 0x09FFFFFF,
+
+	SBI_EID_FIRMWARE_START = 0x0A000000,
+	SBI_EID_FIRMWARE_END = 0x0AFFFFFF,
 };
 
 #define SBI_BASE_FID_GET_SPEC_VERSION		0x0

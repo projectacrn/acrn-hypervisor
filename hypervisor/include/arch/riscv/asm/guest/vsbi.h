@@ -13,6 +13,13 @@
 
 #define MAX_VSBI_EXTENSION_NAME 16
 
+/* TODO: This ID is distributed by SBI.
+ * For now just hardcode a random value that isn't used.
+ * Change to official ID when ACRN gets an ID.
+ */
+#define SBI_ACRN_IMPL_ID	0x900
+#define SBI_EID_ACRN	(SBI_EID_FIRMWARE_START + SBI_ACRN_IMPL_ID)
+
 struct vsbi_ret {
 	uint64_t value;
 	bool vcpu_retain_pc;
