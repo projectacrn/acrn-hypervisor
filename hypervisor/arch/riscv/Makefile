@@ -61,6 +61,7 @@ HOST_C_SRCS += arch/riscv/mmu.c
 HOST_C_SRCS += arch/riscv/irq.c
 HOST_C_SRCS += arch/riscv/pgtable.c
 HOST_C_SRCS += arch/riscv/security.c
+HOST_C_SRCS += arch/riscv/pm.c
 
 # Virtual platform assembly sources
 VP_S_SRCS +=
