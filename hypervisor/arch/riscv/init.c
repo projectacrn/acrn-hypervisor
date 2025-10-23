@@ -16,6 +16,9 @@
 #include <console.h>
 #include <shell.h>
 #include <uart16550.h>
+#ifdef STACK_PROTECTOR
+#include <asm/security.h>
+#endif
 
 static void init_pcpu_comm_post(void);
 
@@ -54,10 +57,14 @@ void init_primary_pcpu(uint64_t hart_id, uint64_t fdt_paddr)
 {
 	uint16_t pcpu_id = BSP_CPU_ID;
 	uint64_t pcpu_sp;
+
 	(void)fdt_paddr;
 
 	init_percpu_hart_id(hart_id);
 	set_pcpu_active(pcpu_id);
+#ifdef STACK_PROTECTOR
+	init_stack_canary();
+#endif
 
 	/*
 	 * Set state for this CPU to initializing, the current pcpu_id
@@ -120,7 +127,6 @@ static void init_pcpu_comm_post(void)
 	init_interrupt(pcpu_id);
 	timer_init();
 
-	/* to be implemented */
 	init_sched(pcpu_id);
 
 	init_debug_post(pcpu_id);

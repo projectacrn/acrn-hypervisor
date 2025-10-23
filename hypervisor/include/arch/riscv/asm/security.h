@@ -4,14 +4,29 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef SECURITY_H
-#define SECURITY_H
+#ifndef RISCV_SECURITY_H
+#define RISCV_SECURITY_H
 
+#ifdef STACK_PROTECTOR
+#include <random.h>
+#endif
 
-struct stack_canary {
+#ifdef STACK_PROTECTOR
 
-};
+extern unsigned long __stack_chk_guard;
 
+/*
+ * Initialize the stack protector __stack_chk_guard.
+ *
+ * NOTE: this function changes the __stack_chk_guard,
+ *  - It must only be called from functions that never return
+ *  - It must always be inlined itself
+ */
+static inline __attribute__((__always_inline__)) void init_stack_canary(void)
+{
+	__stack_chk_guard = get_random_value();
+}
 
+#endif /* STACK_PROTECTOR */
 
-#endif /* SECURITY_H */
+#endif /* RISCV_SECURITY_H */

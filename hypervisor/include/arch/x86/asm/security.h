@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef SECURITY_H
-#define SECURITY_H
+#ifndef X86_SECURITY_H
+#define X86_SECURITY_H
 
 /* type of speculation control
  * 0 - no speculation control support
@@ -35,4 +35,4 @@ void set_fs_base(void);
 
 #endif /* ASSEMBLER */
 
-#endif /* SECURITY_H */
+#endif /* X86_SECURITY_H */
