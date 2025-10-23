@@ -109,4 +109,15 @@ void init_vsbi(struct acrn_vm *vm)
 			}
 		}
 	}
+	if (is_service_vm(vm)) {
+		/* pass machine IDs from SBI to SOS */
+		vm->arch_vm.mvendorid = sbi_get_mvendorid();
+		vm->arch_vm.marchid = sbi_get_marchid();
+		vm->arch_vm.mimpid = sbi_get_mimpid();
+	} else {
+		/* set dummy machine IDs for guest VMs */
+		vm->arch_vm.mvendorid = VSBI_ACRN_MVENDORID;
+		vm->arch_vm.marchid = VSBI_ACRN_MARCHID;
+		vm->arch_vm.mimpid = VSBI_ACRN_MIMPID;
+	}
 }

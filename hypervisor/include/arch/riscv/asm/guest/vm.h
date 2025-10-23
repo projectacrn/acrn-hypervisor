@@ -21,6 +21,9 @@
 struct vm_arch {
 	const struct acrn_vsbi_extension *vsbi_exts[MAX_NUM_SUPPORTED_VSBI_EXT];
 	uint16_t n_vsbi_exts;
+	uint64_t mvendorid;
+	uint64_t marchid;
+	uint64_t mimpid;
 };
 
 struct acrn_vcpu;

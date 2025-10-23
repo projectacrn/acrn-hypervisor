@@ -15,20 +15,26 @@ static int32_t vcpu_sbi_base_ecall_handler(struct acrn_vcpu *vcpu, __unused uint
 			       uint64_t func_id, uint64_t *args, struct vsbi_ret *out)
 {
 	int ret = SBI_SUCCESS;
-	sbiret r;
 	const struct acrn_vsbi_extension *e;
 
 	switch (func_id) {
 	case SBI_BASE_FID_GET_SPEC_VERSION:
-	case SBI_BASE_FID_GET_IMP_VERSION:
+		out->value = VSBI_SPEC_VERSION_MAJOR << 24 | VSBI_SPEC_VERSION_MINOR;
+		break;
 	case SBI_BASE_FID_GET_IMP_ID:
+		out->value = VSBI_ACRN_IMPID;
+		break;
+	case SBI_BASE_FID_GET_IMP_VERSION:
+		out->value = VSBI_ACRN_VERSION_MAJOR << 24 | VSBI_ACRN_VERSION_MINOR;
+		break;
 	case SBI_BASE_FID_GET_MVENDORID:
+		out->value = vcpu->vm->arch_vm.mvendorid;;
+		break;
 	case SBI_BASE_FID_GET_MARCHID:
+		out->value = vcpu->vm->arch_vm.marchid;
+		break;
 	case SBI_BASE_FID_GET_MIMPID:
-		/* TODO: Dummy. For now just passthrough everything */
-		r = sbi_ecall(0, 0, 0, 0, 0, 0, func_id, SBI_EID_BASE);
-		ret = r.error;
-		out->value = r.value;
+		out->value = vcpu->vm->arch_vm.mimpid;
 		break;
 	case SBI_BASE_FID_PROBE_EXT:
 		e = vcpu_find_extension(vcpu, args[0]);
@@ -36,6 +42,7 @@ static int32_t vcpu_sbi_base_ecall_handler(struct acrn_vcpu *vcpu, __unused uint
 		break;
 	default:
 		ret = SBI_ERR_NOT_SUPPORTED;
+		break;
 	}
 
 	return ret;
