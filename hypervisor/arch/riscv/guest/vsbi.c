@@ -74,6 +74,7 @@ int32_t vsbi_exit_handler(struct acrn_vcpu *vcpu)
 extern const struct acrn_vsbi_extension vsbi_ext_base;
 extern const struct acrn_vsbi_extension vsbi_ext_hsm;
 extern const struct acrn_vsbi_extension vsbi_ext_srst;
+extern const struct acrn_vsbi_extension vsbi_ext_timer;
 extern const struct acrn_vsbi_extension vsbi_ext_acrn;
 extern const struct acrn_vsbi_extension vsbi_ext_dbcn;
 static const struct acrn_vsbi_extension *vsbi_extensions[MAX_NUM_SUPPORTED_VSBI_EXT] = {
@@ -82,6 +83,7 @@ static const struct acrn_vsbi_extension *vsbi_extensions[MAX_NUM_SUPPORTED_VSBI_
 	&vsbi_ext_srst,
 	&vsbi_ext_acrn,
 	&vsbi_ext_dbcn,
+	&vsbi_ext_timer,
 };
 
 void init_vsbi(struct acrn_vm *vm)
