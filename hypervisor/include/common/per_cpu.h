@@ -33,9 +33,6 @@ struct per_cpu_region {
 	uint64_t softirq_pending;
 	uint64_t spurious;
 	struct acrn_vcpu *ever_run_vcpu;
-#ifdef STACK_PROTECTOR
-	struct stack_canary stk_canary;
-#endif
 	struct per_cpu_timers cpu_timers;
 	/*TODO: we only need sched_ctl as configured,
 	  not neccessarily to have them all */

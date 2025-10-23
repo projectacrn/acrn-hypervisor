@@ -94,7 +94,7 @@ struct acpi_reset_reg *get_host_reset_reg_data(void)
 void restore_msrs(void)
 {
 #ifdef STACK_PROTECTOR
-	struct stack_canary *psc = &get_cpu_var(stk_canary);
+	struct stack_canary *psc = &get_cpu_var(arch.stk_canary);
 
 	msr_write(MSR_IA32_FS_BASE, (uint64_t)psc);
 #endif

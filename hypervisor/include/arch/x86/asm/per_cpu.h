@@ -25,6 +25,9 @@ struct per_cpu_arch {
 	uint8_t sf_stack[CONFIG_STACK_SIZE] __aligned(16);
 	uint32_t lapic_id;
 	uint32_t lapic_ldr;
+#ifdef STACK_PROTECTOR
+	struct stack_canary stk_canary;
+#endif
 #ifdef PROFILING_ON
 	struct profiling_info_wrapper profiling_info;
 #endif

@@ -215,7 +215,7 @@ uint64_t get_random_value(void)
 void set_fs_base(void)
 {
 	int retry;
-	struct stack_canary *psc = &get_cpu_var(stk_canary);
+	struct stack_canary *psc = &get_cpu_var(arch.stk_canary);
 
 	/*
 	 *  1) Leave initialized canary untouched when this function
