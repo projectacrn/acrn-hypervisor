@@ -7,7 +7,7 @@
 #include <util.h>
 #include <acrn_common.h>
 #include <vcpu.h>
-#include <asm/mmu.h>
+#include <mmu.h>
 #include <asm/guest/trusty.h>
 #include <asm/vtd.h>
 

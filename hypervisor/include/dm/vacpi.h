@@ -8,6 +8,7 @@
 #define VACPI_H
 
 #include <acpi.h>
+#include <mmu.h>
 #include <vm.h>
 
 #define ACPI_OEM_ID           "ACRN  "

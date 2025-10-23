@@ -33,16 +33,6 @@
  */
 #define PAGE_FAULT_ID_FLAG	0x00000010U
 
-/* Defines used for common memory sizes */
-#define MEM_1K		1024U
-#define MEM_2K		(MEM_1K * 2U)
-#define MEM_4K		(MEM_1K * 4U)
-#define MEM_1M		(MEM_1K * 1024U)
-#define MEM_2M		(MEM_1M * 2U)
-#define MEM_1G		(MEM_1M * 1024U)
-#define MEM_2G		(MEM_1G * 2UL)
-#define MEM_4G		(MEM_1G * 4UL)
-
 #ifndef ASSEMBLER
 
 #include <asm/page.h>

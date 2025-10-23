@@ -10,6 +10,16 @@
 #include <asm/mmu.h>
 #include <pgtable.h>
 
+/* Defines used for common memory sizes */
+#define MEM_1K		1024U
+#define MEM_2K		(MEM_1K * 2U)
+#define MEM_4K		(MEM_1K * 4U)
+#define MEM_1M		(MEM_1K * 1024U)
+#define MEM_2M		(MEM_1M * 2U)
+#define MEM_1G		(MEM_1M * 1024U)
+#define MEM_2G		(MEM_1G * 2UL)
+#define MEM_4G		(MEM_1G * 4UL)
+
 void set_paging_supervisor(uint64_t base, uint64_t size);
 
 /**
