@@ -50,6 +50,7 @@ HOST_S_SRCS += arch/riscv/sched.S
 
 # HV host C sources
 HOST_C_SRCS += arch/riscv/boot/reloc.c
+HOST_C_SRCS += arch/riscv/lib/random.c
 HOST_C_SRCS += arch/riscv/init.c
 HOST_C_SRCS += arch/riscv/sbi.c
 HOST_C_SRCS += arch/riscv/notify.c
