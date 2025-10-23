@@ -52,6 +52,7 @@ ASFLAGS += -m64 -nostdinc -nostdlib
 
 # library componment
 LIB_C_SRCS += arch/x86/lib/memory.c
+LIB_C_SRCS += arch/x86/lib/random.c
 
 # retpoline support
 ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))

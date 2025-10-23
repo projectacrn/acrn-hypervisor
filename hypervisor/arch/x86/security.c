@@ -12,6 +12,7 @@
 #include <asm/cpu_caps.h>
 #include <asm/security.h>
 #include <logmsg.h>
+#include <random.h>
 
 static bool skip_l1dfl_vmentry;
 static bool cpu_md_clear;
@@ -196,19 +197,6 @@ void cpu_internal_buffers_clear(void)
 	if (cpu_md_clear) {
 		verw_buffer_overwriting();
 	}
-}
-
-uint64_t get_random_value(void)
-{
-	uint64_t random;
-
-	asm volatile ("1: rdrand %%rax\n"
-			"jnc 1b\n"
-			"mov %%rax, %0\n"
-			: "=r"(random)
-			:
-			:"%rax");
-	return random;
 }
 
 #ifdef STACK_PROTECTOR

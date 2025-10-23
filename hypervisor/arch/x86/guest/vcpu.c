@@ -14,6 +14,7 @@
 #include <asm/cpufeatures.h>
 #include <asm/cpu_caps.h>
 #include <per_cpu.h>
+#include <random.h>
 #include <asm/init.h>
 #include <asm/guest/vm.h>
 #include <asm/guest/vmcs.h>
