@@ -796,7 +796,6 @@ WARN_LOGFILE           =
 
 INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/arch/x86/guest/trusty.c \
-                          ../hypervisor/include/arch/x86/asm/guest/guest_memory.h \
                           ../hypervisor/include/arch/x86/asm/guest/ept.h \
                           ../hypervisor/include/arch/x86/asm/mmu.h \
                           ../hypervisor/include/arch/x86/asm/cpu.h \
@@ -824,6 +823,9 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/common/timer.h \
                           ../hypervisor/include/common/ptdev.h \
                           ../hypervisor/include/common/pgtable.h \
+                          ../hypervisor/include/common/vcpu.h \
+                          ../hypervisor/include/common/vm.h \
+                          ../hypervisor/include/common/guest_memory.h \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
                           ../devicemodel/include/virtio.h \

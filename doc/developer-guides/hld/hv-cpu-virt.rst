@@ -121,7 +121,7 @@ a subset of it.
 
 The ACRN hypervisor does not support virtual CPU migration to
 different physical CPUs. No changes to the mapping of the virtual CPU to
-physical CPU can happen without first calling ``offline_vcpu``.
+physical CPU can happen without first calling ``destroy_vcpu``.
 
 
 .. _vCPU_lifecycle:
@@ -164,7 +164,7 @@ lifecycle:
 .. doxygenfunction:: reset_vcpu
    :project: Project ACRN
 
-.. doxygenfunction:: offline_vcpu
+.. doxygenfunction:: destroy_vcpu
    :project: Project ACRN
 
 
@@ -213,7 +213,7 @@ Some example scenario flows are shown here:
 
 -  **During VM shutdown**: *pause_vm* function forces a vCPU
    running in *vcpu_thread* to schedule out to *default_idle*. The
-   following *reset_vcpu*  and *offline_vcpu* de-init and then offline
+   following *reset_vcpu*  and *destroy_vcpu* de-init and then offline
    this vCPU instance.
 
 -  **During IOReq handling**: after an IOReq is sent to DM for emulation, a
