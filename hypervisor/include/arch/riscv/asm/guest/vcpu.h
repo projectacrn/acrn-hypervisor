@@ -7,11 +7,14 @@
 #ifndef RISCV_VCPU_H
 #define RISCV_VCPU_H
 
+#include <types.h>
+#include <errno.h>
 
-#include <cpu.h>
-#include <io_req.h>
+#ifndef ASSEMBLER
 
 struct acrn_vcpu_arch {
-};
+} __aligned(PAGE_SIZE);
+
+#endif /* ASSEMBLER */
 
 #endif /* RISCV_VCPU_H */

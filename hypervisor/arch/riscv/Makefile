@@ -62,19 +62,24 @@ HOST_C_SRCS += arch/riscv/irq.c
 HOST_C_SRCS += arch/riscv/pgtable.c
 HOST_C_SRCS += arch/riscv/security.c
 
-#HV guest C source
-HOST_C_SRCS += arch/riscv/guest/vm.c
-
 # Virtual platform assembly sources
 VP_S_SRCS +=
 
 # Virtual platform C sources
 VP_C_SRCS += arch/riscv/guest/guest_memory.c
+VP_C_SRCS += arch/riscv/guest/vcpu.c
+VP_C_SRCS += arch/riscv/guest/vm.c
+
+VM_CFG_C_SRCS += $(SCENARIO_CFG_DIR)/vm_configurations.c
+VM_CFG_C_SRCS += $(BOARD_CFG_DIR)/pci_dev.c
+VM_CFG_C_SRCS += $(BOARD_CFG_DIR)/pt_intx.c
+VM_CFG_C_SRCS += $(BOARD_INFO_DIR)/board.c
 
 HOST_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(HOST_C_SRCS))
 HOST_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(HOST_S_SRCS))
 VP_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_C_SRCS))
 VP_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(VP_S_SRCS))
+VM_CFG_C_OBJS := $(patsubst %.c,%.o,$(VM_CFG_C_SRCS))
 
 HOST_MOD := $(HV_MODDIR)/host_mod.a
 VP_MOD := $(HV_MODDIR)/vp_mod.a
@@ -85,5 +90,5 @@ MODULES += $(VP_MOD)
 $(HOST_MOD): $(HOST_C_OBJS) $(HOST_S_OBJS)
 	$(AR) $(ARFLAGS) $(HOST_MOD) $(HOST_C_OBJS) $(HOST_S_OBJS)
 
-$(VP_MOD): $(VP_C_OBJS) $(VP_S_OBJS)
-	$(AR) $(ARFLAGS) $(VP_MOD) $(VP_C_OBJS) $(VP_S_OBJS)
+$(VP_MOD): $(VP_C_OBJS) $(VP_S_OBJS) $(VM_CFG_C_OBJS)
+	$(AR) $(ARFLAGS) $(VP_MOD) $(VP_C_OBJS) $(VP_S_OBJS) $(VM_CFG_C_OBJS)
