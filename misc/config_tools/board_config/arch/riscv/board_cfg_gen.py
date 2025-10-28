@@ -6,19 +6,18 @@
 
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'library'))
 import board_cfg_lib
 import board_c
 import board_info_h
 import pci_devices_h
-import acpi_platform_h
 import acrn_config_utilities
 
 ACRN_PATH = acrn_config_utilities.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + "misc/config_tools/data/"
 
-ACRN_DEFAULT_ACPI = ACRN_PATH + "hypervisor/include/arch/x86/asm/default_acpi_info.h"
-GEN_FILE = ["pci_devices.h", "board.c", "platform_acpi_info.h", "misc_cfg.h",
+GEN_FILE = ["pci_devices.h", "board.c", "misc_cfg.h",
             "board_info.h", "vbar_base.h"]
 
 
@@ -93,10 +92,6 @@ def main(args):
         err_dic = board_c.generate_file(config)
         if err_dic:
             return err_dic
-
-    # generate platform_acpi_info.h
-    with open(config_acpi, 'w+') as config:
-        acpi_platform_h.generate_file(config, ACRN_DEFAULT_ACPI)
 
     if not err_dic:
         print("Board configurations for {} is generated successfully.".format(board))

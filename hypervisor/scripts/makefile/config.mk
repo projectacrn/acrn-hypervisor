@@ -229,7 +229,7 @@ $(HV_VALIDATION_TIMESTAMP): $(HV_BOARD_XML) $(HV_SCENARIO_XML) | $(HV_CONFIG_DIR
 	@touch $@
 
 $(HV_CONFIG_TIMESTAMP): $(HV_VALIDATION_TIMESTAMP) $(HV_UNIFIED_XML) ${HV_DIFFCONFIG_LIST} | $(HV_CONFIG_DIR)
-	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_CONFIG_DIR) $(HV_UNIFIED_XML)
+	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(ARCH) $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_CONFIG_DIR) $(HV_UNIFIED_XML)
 	@touch $@
 
 .PHONY: defconfig
@@ -244,7 +244,7 @@ showconfig:
 
 diffconfig:
 	@rm -rf $(HV_CONFIG_A_DIR) $(HV_CONFIG_B_DIR)
-	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_CONFIG_A_DIR) $(HV_UNIFIED_XML)
+	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(ARCH) $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_CONFIG_A_DIR) $(HV_UNIFIED_XML)
 	@find $(HV_CONFIG_A_DIR) -name '*.aml' -delete
 	@cd $(HV_CONFIG_DIR) && find . -name '*.c' -or -name '*.h' -or -name '*.config' -or -name '*.asl' | while read f; do \
 	  nf=$(HV_CONFIG_B_DIR)/$${f}; mkdir -p `dirname $${nf}` && cp $${f} $${nf}; \

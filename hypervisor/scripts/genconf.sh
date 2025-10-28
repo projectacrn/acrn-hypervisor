@@ -3,10 +3,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 base_dir=$1
-board_xml=$2
-scenario_xml=$3
-out=$4
-unified_xml=$5
+arch=$2
+board_xml=$3
+scenario_xml=$4
+out=$5
+unified_xml=$6
 scenario=$(xmllint --xpath "string(//@scenario)" --xinclude $unified_xml)
 year=$(date +'%Y')
 
@@ -22,7 +23,7 @@ apply_patch () {
 tool_dir=${base_dir}/../misc/config_tools
 diffconfig_list=${out}/.diffconfig
 
-python3 ${tool_dir}/board_config/board_cfg_gen.py --board ${board_xml} --scenario ${scenario_xml} --out ${out} &&
+python3 ${tool_dir}/board_config/arch/${arch}/board_cfg_gen.py --board ${board_xml} --scenario ${scenario_xml} --out ${out} &&
 python3 ${tool_dir}/acpi_gen/asl_gen.py --board ${board_xml} --scenario ${scenario_xml} --out ${out}
 exitcode=$?
 if [ $exitcode -ne 0 ]; then
