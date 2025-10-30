@@ -1001,7 +1001,6 @@ void vcpu_handle_pi_notification(uint32_t vcpu_index)
 void vcpu_set_state(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 {
 	vcpu->state = new_state;
-	update_vm_vlapic_state(vcpu->vm);
 }
 
 /* TODO: Our goal is to have a vcpu_thread that is common.
