@@ -34,6 +34,8 @@
 #include <asm/guest/hyperv.h>
 #endif
 
+#define ARCH_VBOOT_SEED_SUPPORT
+
 enum reset_mode {
 	POWER_ON_RESET,		/* reset by hardware Power-on */
 	COLD_RESET,		/* hardware cold reset */

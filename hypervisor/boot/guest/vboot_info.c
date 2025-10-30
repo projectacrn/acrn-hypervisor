@@ -11,13 +11,15 @@
 #include <asm/irq.h>
 #include <boot.h>
 #include <pgtable.h>
-#include <asm/seed.h>
 #include <asm/mmu.h>
 #include <vm.h>
 #include <reloc.h>
 #include <logmsg.h>
 #include <vboot.h>
 #include <vacpi.h>
+#ifdef ARCH_VBOOT_SEED_SUPPORT
+#include <asm/seed.h>
+#endif
 
 #define DBG_LEVEL_BOOT	6U
 
@@ -89,6 +91,10 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
 
 	if (vm_config->load_order == SERVICE_VM) {
 		if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE, " ", 1U) == 0) {
+/* TODO: For now the seed module is used only in x86.
+ * we may need a cleanup later.
+ */
+#ifdef ARCH_VBOOT_SEED_SUPPORT
 			char seed_args[MAX_SEED_ARG_SIZE] = "";
 
 			fill_seed_arg(seed_args, MAX_SEED_ARG_SIZE);
@@ -99,6 +105,7 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_boot_inf
 					seed_args, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
 				pr_err("failed to fill seed arg to Service VM bootargs!");
 			}
+#endif
 
 			/* If there is cmdline from abi->cmdline, merge it with configured Service VM bootargs.
 			 * This is very helpful when one of configured bootargs need to be revised at GRUB runtime
