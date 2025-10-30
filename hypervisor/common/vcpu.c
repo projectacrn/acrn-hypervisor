@@ -33,6 +33,19 @@ static void init_vcpu_thread(struct acrn_vcpu *vcpu, uint16_t pcpu_id)
 	init_thread_data(&vcpu->thread_obj, &get_vm_config(vm->vm_id)->sched_params);
 }
 
+/*
+ * @brief Update the state of vCPU and state of vlapic
+ *
+ * The vlapic state of VM shall be updated for some vCPU
+ * state update cases, such as from VCPU_INIT to VCPU_RUNNING.
+
+ * @pre (vcpu != NULL)
+ */
+void vcpu_set_state(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
+{
+	vcpu->state = new_state;
+}
+
 /**
  * @brief create a vcpu for the target vm
  *

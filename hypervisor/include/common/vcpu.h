@@ -87,6 +87,16 @@ struct guest_mem_dump {
 	uint64_t len;
 };
 
+/*
+ * @brief Update the state of vCPU and state of vlapic
+ *
+ * The vlapic state of VM shall be updated for some vCPU
+ * state update cases, such as from VCPU_INIT to VCPU_RUNNING.
+
+ * @pre (vcpu != NULL)
+ */
+void vcpu_set_state(struct acrn_vcpu *vcpu, enum vcpu_state new_state);
+
 uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
 int32_t arch_init_vcpu(struct acrn_vcpu *vcpu);
 

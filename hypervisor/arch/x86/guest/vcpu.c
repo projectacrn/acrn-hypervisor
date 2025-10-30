@@ -990,19 +990,6 @@ void vcpu_handle_pi_notification(uint32_t vcpu_index)
 	}
 }
 
-/*
- * @brief Update the state of vCPU and state of vlapic
- *
- * The vlapic state of VM shall be updated for some vCPU
- * state update cases, such as from VCPU_INIT to VCPU_RUNNING.
-
- * @pre (vcpu != NULL)
- */
-void vcpu_set_state(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
-{
-	vcpu->state = new_state;
-}
-
 /* TODO: Our goal is to have a vcpu_thread that is common.
  * Leave this to future optimization.
  */
