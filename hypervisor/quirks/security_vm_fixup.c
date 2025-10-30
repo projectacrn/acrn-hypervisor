@@ -88,8 +88,10 @@ static void tpm2_fixup(uint16_t vm_id)
 void security_vm_fixup(uint16_t vm_id)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
+	struct acrn_vm *vm = get_vm_from_vmid(vm_id);
 
-	if ((vm_config->guest_flags & GUEST_FLAG_SECURITY_VM) != 0UL) {
+	if (((vm_config->guest_flags & GUEST_FLAG_SECURITY_VM) != 0UL) &&
+			is_prelaunched_vm(vm)) {
 		pre_user_access();
 		tpm2_fixup(vm_id);
 		post_user_access();
