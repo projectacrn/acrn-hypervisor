@@ -63,6 +63,12 @@ struct cpu_regs {
 	uint64_t cause;
 	uint64_t tval;
 	uint64_t scratch;
+	uint64_t hstatus;
+
+	/* Host context. Used only in v-mode traps. */
+	uint64_t host_tp;
+	uint64_t host_gp;
+	uint64_t exc_sp;
 };
 
 /* stack_frame is linked with the sequence of stack operation in arch_switch_to() */
@@ -180,108 +186,6 @@ static inline void clac(void) {}
 
 #else /* ASSEMBLER */
 #include <asm/offset.h>
-
-/* The following symbols must remain consistent:
- * - CPU_REGS_OFFSET_* macros in `include/arch/riscv/asm/offset.h`
- * - struct cpu_regs
- * - cpu_ctx_save/cpu_ctx_restore macros used in assembly
- */
-.macro cpu_ctx_save
-	addi sp, sp, -CPU_REGS_OFFSET_LAST
-
-	/* General purpose registers. */
-	/* Save sp first to avoid corrupting the stack frame */
-	sd sp, CPU_REGS_OFFSET_SP(sp)
-	sd ra, CPU_REGS_OFFSET_RA(sp)
-	sd gp, CPU_REGS_OFFSET_GP(sp)
-	sd tp, CPU_REGS_OFFSET_TP(sp)
-	sd t0, CPU_REGS_OFFSET_T0(sp)
-	sd t1, CPU_REGS_OFFSET_T1(sp)
-	sd t2, CPU_REGS_OFFSET_T2(sp)
-	sd s0, CPU_REGS_OFFSET_S0(sp)
-	sd s1, CPU_REGS_OFFSET_S1(sp)
-	sd a0, CPU_REGS_OFFSET_A0(sp)
-	sd a1, CPU_REGS_OFFSET_A1(sp)
-	sd a2, CPU_REGS_OFFSET_A2(sp)
-	sd a3, CPU_REGS_OFFSET_A3(sp)
-	sd a4, CPU_REGS_OFFSET_A4(sp)
-	sd a5, CPU_REGS_OFFSET_A5(sp)
-	sd a6, CPU_REGS_OFFSET_A6(sp)
-	sd a7, CPU_REGS_OFFSET_A7(sp)
-	sd s2, CPU_REGS_OFFSET_S2(sp)
-	sd s3, CPU_REGS_OFFSET_S3(sp)
-	sd s4, CPU_REGS_OFFSET_S4(sp)
-	sd s5, CPU_REGS_OFFSET_S5(sp)
-	sd s6, CPU_REGS_OFFSET_S6(sp)
-	sd s7, CPU_REGS_OFFSET_S7(sp)
-	sd s8, CPU_REGS_OFFSET_S8(sp)
-	sd s9, CPU_REGS_OFFSET_S9(sp)
-	sd s10, CPU_REGS_OFFSET_S10(sp)
-	sd s11, CPU_REGS_OFFSET_S11(sp)
-	sd t3, CPU_REGS_OFFSET_T3(sp)
-	sd t4, CPU_REGS_OFFSET_T4(sp)
-	sd t5, CPU_REGS_OFFSET_T5(sp)
-	sd t6, CPU_REGS_OFFSET_T6(sp)
-
-	/* Control and Status Registers (CSRs). */
-	csrr t0, sepc
-	sd t0, CPU_REGS_OFFSET_EPC(sp)
-	csrr t1, sstatus
-	sd t1, CPU_REGS_OFFSET_STATUS(sp)
-	csrr t2, scause
-	sd t2, CPU_REGS_OFFSET_CAUSE(sp)
-	csrr t3, stval
-	sd t3, CPU_REGS_OFFSET_TVAL(sp)
-	csrr t4, sscratch
-	sd t4, CPU_REGS_OFFSET_SCRATCH(sp)
-.endm
-
-.macro cpu_ctx_restore
-	/* Control and Status Registers (CSRs). */
-	ld t0, CPU_REGS_OFFSET_EPC(sp)
-	csrw sepc, t0
-	ld t1, CPU_REGS_OFFSET_STATUS(sp)
-	csrw sstatus, t1
-	/* Restoring scause/stval is unnecessary and will be skipped. */
-	ld t4, CPU_REGS_OFFSET_SCRATCH(sp)
-	csrw sscratch, t4
-
-	/* General purpose registers. */
-	ld ra, CPU_REGS_OFFSET_RA(sp)
-	ld gp, CPU_REGS_OFFSET_GP(sp)
-	ld tp, CPU_REGS_OFFSET_TP(sp)
-	ld t0, CPU_REGS_OFFSET_T0(sp)
-	ld t1, CPU_REGS_OFFSET_T1(sp)
-	ld t2, CPU_REGS_OFFSET_T2(sp)
-	ld s0, CPU_REGS_OFFSET_S0(sp)
-	ld s1, CPU_REGS_OFFSET_S1(sp)
-	ld a0, CPU_REGS_OFFSET_A0(sp)
-	ld a1, CPU_REGS_OFFSET_A1(sp)
-	ld a2, CPU_REGS_OFFSET_A2(sp)
-	ld a3, CPU_REGS_OFFSET_A3(sp)
-	ld a4, CPU_REGS_OFFSET_A4(sp)
-	ld a5, CPU_REGS_OFFSET_A5(sp)
-	ld a6, CPU_REGS_OFFSET_A6(sp)
-	ld a7, CPU_REGS_OFFSET_A7(sp)
-	ld s2, CPU_REGS_OFFSET_S2(sp)
-	ld s3, CPU_REGS_OFFSET_S3(sp)
-	ld s4, CPU_REGS_OFFSET_S4(sp)
-	ld s5, CPU_REGS_OFFSET_S5(sp)
-	ld s6, CPU_REGS_OFFSET_S6(sp)
-	ld s7, CPU_REGS_OFFSET_S7(sp)
-	ld s8, CPU_REGS_OFFSET_S8(sp)
-	ld s9, CPU_REGS_OFFSET_S9(sp)
-	ld s10, CPU_REGS_OFFSET_S10(sp)
-	ld s11, CPU_REGS_OFFSET_S11(sp)
-	ld t3, CPU_REGS_OFFSET_T3(sp)
-	ld t4, CPU_REGS_OFFSET_T4(sp)
-	ld t5, CPU_REGS_OFFSET_T5(sp)
-	ld t6, CPU_REGS_OFFSET_T6(sp)
-	/* Restore sp last to avoid corrupting the stack frame */
-	ld sp, CPU_REGS_OFFSET_SP(sp)
-
-	addi sp, sp, CPU_REGS_OFFSET_LAST
-.endm
 
 #endif /* ASSEMBLER */
 
