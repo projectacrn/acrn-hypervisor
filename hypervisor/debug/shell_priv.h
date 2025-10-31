@@ -70,6 +70,14 @@ struct shell {
 #define SHELL_CMD_DUMP_HOST_MEM_PARAM	"<addr, length>"
 #define SHELL_CMD_DUMP_HOST_MEM_HELP	"Dump host memory, starting at a given address(Hex), and for a given length (Dec in bytes)"
 
+#define SHELL_CMD_VM_LIST		"vm_list"
+#define SHELL_CMD_VM_LIST_PARAM		NULL
+#define SHELL_CMD_VM_LIST_HELP		"List all VMs, displaying the VM UUID, ID, name and state"
+
+#define SHELL_CMD_VCPU_LIST		"vcpu_list"
+#define SHELL_CMD_VCPU_LIST_PARAM	NULL
+#define SHELL_CMD_VCPU_LIST_HELP	"List all vCPUs in all VMs"
+
 void shell_puts(const char *string_ptr);
 
 #endif /* SHELL_PRIV_H */

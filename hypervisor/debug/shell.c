@@ -30,6 +30,8 @@ static int32_t shell_cmd_help(__unused int32_t argc, __unused char **argv);
 static int32_t shell_version(__unused int32_t argc, __unused char **argv);
 static int32_t shell_loglevel(int32_t argc, char **argv);
 static int32_t shell_dump_host_mem(int32_t argc, char **argv);
+static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv);
+static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv);
 
 static struct shell_cmd shell_cmds[] = {
 	{
@@ -56,7 +58,18 @@ static struct shell_cmd shell_cmds[] = {
 		.help_str	= SHELL_CMD_DUMP_HOST_MEM_HELP,
 		.fcn		= shell_dump_host_mem,
 	},
-
+	{
+		.str		= SHELL_CMD_VM_LIST,
+		.cmd_param	= SHELL_CMD_VM_LIST_PARAM,
+		.help_str	= SHELL_CMD_VM_LIST_HELP,
+		.fcn		= shell_list_vm,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_LIST,
+		.cmd_param	= SHELL_CMD_VCPU_LIST_PARAM,
+		.help_str	= SHELL_CMD_VCPU_LIST_HELP,
+		.fcn		= shell_list_vcpu,
+	},
 };
 
 /* for function key: up/down/right/left/home/end and delete key */
@@ -702,4 +715,113 @@ static int32_t shell_dump_host_mem(int32_t argc, char **argv)
 	}
 
 	return ret;
+}
+
+static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
+{
+	char temp_str[MAX_STR_SIZE];
+	struct acrn_vm *vm;
+	struct acrn_vm_config *vm_config;
+	uint16_t vm_id;
+	char state[32];
+
+	shell_puts("\r\nVM_ID VM_NAME                          VM_STATE"
+		   "\r\n===== ================================ ========\r\n");
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm = get_vm_from_vmid(vm_id);
+		switch (vm->state) {
+		case VM_CREATED:
+			(void)strncpy_s(state, 32U, "Created", 32U);
+			break;
+		case VM_RUNNING:
+			(void)strncpy_s(state, 32U, "Running", 32U);
+			break;
+		case VM_PAUSED:
+			(void)strncpy_s(state, 32U, "Paused", 32U);
+			break;
+		case VM_POWERED_OFF:
+			(void)strncpy_s(state, 32U, "Off", 32U);
+			break;
+		default:
+			(void)strncpy_s(state, 32U, "Unknown", 32U);
+			break;
+		}
+		vm_config = get_vm_config(vm_id);
+		if (!is_poweroff_vm(vm)) {
+			snprintf(temp_str, MAX_STR_SIZE, "  %-3d %-32s %-8s\r\n",
+				vm_id, vm_config->name, state);
+
+			/* Output information for this task */
+			shell_puts(temp_str);
+		}
+	}
+
+	return 0;
+}
+
+static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv)
+{
+	char temp_str[MAX_STR_SIZE];
+	struct acrn_vm *vm;
+	struct acrn_vcpu *vcpu;
+	char vcpu_state_str[32], thread_state_str[32];
+	uint16_t i;
+	uint16_t idx;
+
+	shell_puts("\r\nVM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE    THREAD STATE"
+		"\r\n=====    =======    =======    =========    ==========    ==========\r\n");
+
+	for (idx = 0U; idx < CONFIG_MAX_VM_NUM; idx++) {
+		vm = get_vm_from_vmid(idx);
+		if (is_poweroff_vm(vm)) {
+			continue;
+		}
+		foreach_vcpu(i, vm, vcpu) {
+			switch (vcpu->state) {
+			case VCPU_INIT:
+				(void)strncpy_s(vcpu_state_str, 32U, "Init", 32U);
+				break;
+			case VCPU_RUNNING:
+				(void)strncpy_s(vcpu_state_str, 32U, "Running", 32U);
+				break;
+			case VCPU_ZOMBIE:
+				(void)strncpy_s(vcpu_state_str, 32U, "Zombie", 32U);
+				break;
+			default:
+				(void)strncpy_s(vcpu_state_str, 32U, "Unknown", 32U);
+				break;
+			}
+
+			switch (vcpu->thread_obj.status) {
+			case THREAD_STS_RUNNING:
+				(void)strncpy_s(thread_state_str, 32U, "RUNNING", 32U);
+				break;
+			case THREAD_STS_RUNNABLE:
+				(void)strncpy_s(thread_state_str, 32U, "RUNNABLE", 32U);
+				break;
+			case THREAD_STS_BLOCKED:
+				(void)strncpy_s(thread_state_str, 32U, "BLOCKED", 32U);
+				break;
+			default:
+				(void)strncpy_s(thread_state_str, 32U, "UNKNOWN", 32U);
+				break;
+			}
+			/* Create output string consisting of VM name
+			 * and VM id
+			 */
+			snprintf(temp_str, MAX_STR_SIZE,
+					"  %-9d %-10d %-7hu %-12s %-16s %-16s\r\n",
+					vm->vm_id,
+					pcpuid_from_vcpu(vcpu),
+					vcpu->vcpu_id,
+					is_vcpu_bsp(vcpu) ?
+					"PRIMARY" : "SECONDARY",
+					vcpu_state_str, thread_state_str);
+			/* Output information for this task */
+			shell_puts(temp_str);
+		}
+	}
+
+	return 0;
 }
