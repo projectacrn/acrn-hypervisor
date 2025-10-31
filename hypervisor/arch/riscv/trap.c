@@ -10,10 +10,13 @@
 #include <asm/csr.h>
 #include <asm/trap.h>
 #include <irq.h>
+#include <vcpu.h>
 #include <cpu.h>
 #include <logmsg.h>
 #include <notify.h>
 #include <debug/dump.h>
+
+#include <asm/guest/vcpu_exit.h>
 
 static void unexpected_trap_handler(const struct intr_excp_ctx *ctx)
 {
@@ -52,7 +55,7 @@ static void riscv_do_irq(const char *name, uint32_t src_id)
 	}
 }
 
-static void dispatch_interrupt(const struct intr_excp_ctx *ctx)
+void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 {
 	uint64_t trap_cause = ctx->regs.cause & (~TRAP_CAUSE_INTERRUPT_BITMASK);
 

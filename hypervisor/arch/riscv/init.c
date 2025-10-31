@@ -119,6 +119,11 @@ void init_secondary_pcpu(uint64_t hart_id)
 	init_pcpu_comm_post();
 }
 
+static void init_guest_mode(uint16_t pcpu_id)
+{
+	launch_vms(pcpu_id);
+}
+
 static void init_pcpu_comm_post(void)
 {
 	uint16_t pcpu_id;
@@ -137,5 +142,8 @@ static void init_pcpu_comm_post(void)
 	init_sched(pcpu_id);
 
 	init_debug_post(pcpu_id);
+
+	init_guest_mode(pcpu_id);
+
 	run_idle_thread();
 }
