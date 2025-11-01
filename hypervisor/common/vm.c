@@ -278,7 +278,7 @@ void launch_vms(uint16_t pcpu_id)
 							start_vm(vm);
 							pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
 						} else {
-							pr_err("Stopping VM%d: no bootable kernel");
+							pr_err("Stopping VM%d: no bootable kernel", vm_id);
 							(void)destroy_vm(vm);
 						}
 					}
