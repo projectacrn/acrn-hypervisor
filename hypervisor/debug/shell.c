@@ -32,6 +32,7 @@ static int32_t shell_loglevel(int32_t argc, char **argv);
 static int32_t shell_dump_host_mem(int32_t argc, char **argv);
 static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv);
 static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv);
+static int32_t shell_to_vm_console(int32_t argc, char **argv);
 
 static struct shell_cmd shell_cmds[] = {
 	{
@@ -69,6 +70,12 @@ static struct shell_cmd shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_VCPU_LIST_PARAM,
 		.help_str	= SHELL_CMD_VCPU_LIST_HELP,
 		.fcn		= shell_list_vcpu,
+	},
+	{
+		.str		= SHELL_CMD_VM_CONSOLE,
+		.cmd_param	= SHELL_CMD_VM_CONSOLE_PARAM,
+		.help_str	= SHELL_CMD_VM_CONSOLE_HELP,
+		.fcn		= shell_to_vm_console,
 	},
 };
 
@@ -822,6 +829,54 @@ static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv)
 			shell_puts(temp_str);
 		}
 	}
+
+	return 0;
+}
+
+uint16_t sanitize_vmid(uint16_t vmid)
+{
+	uint16_t sanitized_vmid = vmid;
+	char temp_str[TEMP_STR_SIZE];
+
+	if (vmid >= CONFIG_MAX_VM_NUM) {
+		snprintf(temp_str, TEMP_STR_SIZE,
+			"VM ID given exceeds the MAX_VM_NUM(%u), using 0 instead\r\n",
+			CONFIG_MAX_VM_NUM);
+		shell_puts(temp_str);
+		sanitized_vmid = 0U;
+	}
+
+	return sanitized_vmid;
+}
+
+static int32_t shell_to_vm_console(int32_t argc, char **argv)
+{
+	char temp_str[TEMP_STR_SIZE];
+	uint16_t vm_id = 0U;
+
+	struct acrn_vm *vm;
+	struct acrn_vuart *vu;
+
+	if (argc == 2) {
+		vm_id = sanitize_vmid((uint16_t)strtol_deci(argv[1]));
+	}
+
+	/* Get the virtual device node */
+	vm = get_vm_from_vmid(vm_id);
+	if (is_poweroff_vm(vm)) {
+		shell_puts("VM is not valid \n");
+		return -EINVAL;
+	}
+	vu = vm_console_vuart(vm);
+	if (!vu->active) {
+		shell_puts("vuart console is not active \n");
+		return 0;
+	}
+	console_vmid = vm_id;
+	/* Output that switching to Service VM shell */
+	snprintf(temp_str, TEMP_STR_SIZE, "\r\n----- Entering VM %d Shell -----\r\n", vm_id);
+
+	shell_puts(temp_str);
 
 	return 0;
 }

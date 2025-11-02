@@ -78,6 +78,12 @@ struct shell {
 #define SHELL_CMD_VCPU_LIST_PARAM	NULL
 #define SHELL_CMD_VCPU_LIST_HELP	"List all vCPUs in all VMs"
 
+#define SHELL_CMD_VM_CONSOLE		"vm_console"
+#define SHELL_CMD_VM_CONSOLE_PARAM	"<vm id>"
+#define SHELL_CMD_VM_CONSOLE_HELP	"Switch to the VM's console. Use 'BREAK + e' to return to the ACRN shell "\
+					"console"
+
 void shell_puts(const char *string_ptr);
+uint16_t sanitize_vmid(uint16_t vmid);
 
 #endif /* SHELL_PRIV_H */

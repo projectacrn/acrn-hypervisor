@@ -31,11 +31,6 @@
 #define SHELL_CMD_DUMP_GUEST_MEM_PARAM	"<vm_id, addr, length>"
 #define SHELL_CMD_DUMP_GUEST_MEM_HELP	"Dump guest memory, vm id(Dec), starting at a given address(Hex), and for a given length (Dec in bytes)"
 
-#define SHELL_CMD_VM_CONSOLE		"vm_console"
-#define SHELL_CMD_VM_CONSOLE_PARAM	"<vm id>"
-#define SHELL_CMD_VM_CONSOLE_HELP	"Switch to the VM's console. Use 'BREAK + e' to return to the ACRN shell "\
-					"console"
-
 #define SHELL_CMD_INTERRUPT		"int"
 #define SHELL_CMD_INTERRUPT_PARAM	NULL
 #define SHELL_CMD_INTERRUPT_HELP	"List interrupt information per CPU"
@@ -74,7 +69,6 @@
 
 static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv);
 static int32_t shell_dump_guest_mem(int32_t argc, char **argv);
-static int32_t shell_to_vm_console(int32_t argc, char **argv);
 static int32_t shell_show_cpu_int(__unused int32_t argc, __unused char **argv);
 static int32_t shell_show_ptdev_info(__unused int32_t argc, __unused char **argv);
 static int32_t shell_show_vioapic_info(int32_t argc, char **argv);
@@ -96,12 +90,6 @@ struct shell_cmd arch_shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_DUMP_GUEST_MEM_PARAM,
 		.help_str	= SHELL_CMD_DUMP_GUEST_MEM_HELP,
 		.fcn		= shell_dump_guest_mem,
-	},
-	{
-		.str		= SHELL_CMD_VM_CONSOLE,
-		.cmd_param	= SHELL_CMD_VM_CONSOLE_PARAM,
-		.help_str	= SHELL_CMD_VM_CONSOLE_HELP,
-		.fcn		= shell_to_vm_console,
 	},
 	{
 		.str		= SHELL_CMD_INTERRUPT,
@@ -154,22 +142,6 @@ struct shell_cmd arch_shell_cmds[] = {
 };
 
 uint32_t arch_shell_cmds_sz = ARRAY_SIZE(arch_shell_cmds);
-
-static uint16_t sanitize_vmid(uint16_t vmid)
-{
-	uint16_t sanitized_vmid = vmid;
-	char temp_str[TEMP_STR_SIZE];
-
-	if (vmid >= CONFIG_MAX_VM_NUM) {
-		snprintf(temp_str, TEMP_STR_SIZE,
-			"VM ID given exceeds the MAX_VM_NUM(%u), using 0 instead\r\n",
-			CONFIG_MAX_VM_NUM);
-		shell_puts(temp_str);
-		sanitized_vmid = 0U;
-	}
-
-	return sanitized_vmid;
-}
 
 #define DUMPREG_SP_SIZE	32
 /* the input 'data' must != NULL and indicate a vcpu structure pointer */
@@ -390,38 +362,6 @@ static int32_t shell_dump_guest_mem(int32_t argc, char **argv)
 	}
 
 	return ret;
-}
-
-static int32_t shell_to_vm_console(int32_t argc, char **argv)
-{
-	char temp_str[TEMP_STR_SIZE];
-	uint16_t vm_id = 0U;
-
-	struct acrn_vm *vm;
-	struct acrn_vuart *vu;
-
-	if (argc == 2) {
-		vm_id = sanitize_vmid((uint16_t)strtol_deci(argv[1]));
-	}
-
-	/* Get the virtual device node */
-	vm = get_vm_from_vmid(vm_id);
-	if (is_poweroff_vm(vm)) {
-		shell_puts("VM is not valid \n");
-		return -EINVAL;
-	}
-	vu = vm_console_vuart(vm);
-	if (!vu->active) {
-		shell_puts("vuart console is not active \n");
-		return 0;
-	}
-	console_vmid = vm_id;
-	/* Output that switching to Service VM shell */
-	snprintf(temp_str, TEMP_STR_SIZE, "\r\n----- Entering VM %d Shell -----\r\n", vm_id);
-
-	shell_puts(temp_str);
-
-	return 0;
 }
 
 /**
