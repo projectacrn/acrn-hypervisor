@@ -20,6 +20,7 @@ enum sbi_eid  {
 	SBI_EID_HSM = 0x48534D,
 	SBI_EID_SRST = 0x53525354,
 	SBI_EID_PMU = 0x504D55,
+	SBI_EID_DBCN = 0x4442434E,
 	SBI_EID_MPXY = 0x4D505859,
 
 	/* Experimental extensions must lie within this range */
@@ -91,6 +92,11 @@ enum sbi_eid  {
 
 #define SBI_SRST_RESET_REASON_NONE	0x0
 #define SBI_SRST_RESET_REASON_SYSFAIL	0x1
+
+/* SBI function IDs for DBCN extension */
+#define SBI_EXT_DBCN_CONSOLE_WRITE      0x0
+#define SBI_EXT_DBCN_CONSOLE_READ       0x1
+#define SBI_EXT_DBCN_CONSOLE_WRITE_BYTE     0x2
 
 /* SBI return error codes */
 #define SBI_SUCCESS				0
