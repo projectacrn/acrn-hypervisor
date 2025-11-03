@@ -32,6 +32,8 @@ void memcpy_backwards(void *d, const void *s, size_t slen);
 #endif
 
 int32_t memcpy_s(void *d, size_t dmax, const void *s, size_t slen);
-
+int memcmp(const void *s1, const void *s2, size_t count);
+void *memmove(void *d, const void *s, size_t slen);
+void *memchr(const void *s, int c, size_t slen);
 
 #endif /* MEMORY_LIB_H */

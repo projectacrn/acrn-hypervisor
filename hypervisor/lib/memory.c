@@ -66,3 +66,61 @@ int32_t memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 
 	return ret;
 }
+
+int memcmp(const void *s1, const void *s2, size_t count)
+{
+	const char *t1 = s1;
+	const char *t2 = s2;
+	int ret = 0;
+
+	for (; count > 0 && (*t1 == *t2); count--) {
+		t1++;
+		t2++;
+	}
+
+	if (count > 0) {
+		ret = *(unsigned char *)t1 - *(unsigned char *)t2;
+	}
+
+	return ret;
+}
+
+void *memmove(void *d, const void *s, size_t slen)
+{
+	char *t1 = (char *)d;
+	const char *t2 = (char *)s;
+
+	if (d == s) {
+		/* do nothing */
+	} else if (d < s) {
+		while (slen > 0) {
+			*t1++ = *t2++;
+			slen--;
+		}
+	} else {
+		t1 = (char *)d + slen - 1;
+		t2 = (char *)s + slen - 1;
+
+		while (slen > 0) {
+			*t1-- = *t2--;
+			slen--;
+		}
+	}
+
+	return d;
+}
+
+void *memchr(const void *s, int c, size_t slen)
+{
+	void *ret = NULL;
+	const unsigned char *t;
+
+	for (t = s; slen > 0; slen--) {
+		if ((unsigned char)c == *t++) {
+			ret = (void *)(t - 1);
+			break;
+		}
+	}
+
+	return ret;
+}

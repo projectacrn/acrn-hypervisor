@@ -38,11 +38,16 @@ static inline bool is_eol(char c)
 int32_t strcmp(const char *s1_arg, const char *s2_arg);
 int32_t strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg);
 int32_t strncpy_s(char *d, size_t dmax, const char *s, size_t slen);
-char *strchr(char *s_arg, char ch);
+char *strchr(const char *s_arg, char ch);
 size_t strnlen_s(const char *str_arg, size_t maxlen_arg);
 int64_t strtol_deci(const char *nptr);
 uint64_t strtoul_hex(const char *nptr);
+uint64_t strtoul(const char * nptr, char **endptr, int base);
 char *strstr_s(const char *str1, size_t maxlen1, const char *str2, size_t maxlen2);
 int32_t strncat_s(char *dest, size_t dmax, const char *src, size_t slen);
+size_t strlen(const char *str);
+size_t strnlen(const char *str, size_t count);
+char *strrchr(const char *s, char ch);
+char *strcpy(char *d, const char *s);
 
 #endif /* RTL_H */

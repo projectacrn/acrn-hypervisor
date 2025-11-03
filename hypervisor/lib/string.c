@@ -6,19 +6,81 @@
 #include <rtl.h>
 #include <logmsg.h>
 
-static inline char hex_digit_value(char ch)
+uint64_t strtoul(const char * nptr, char **endptr, int base)
 {
-	char c;
-	if (('0' <= ch) && (ch <= '9')) {
-		c = ch - '0';
-	} else if (('a' <= ch) && (ch <= 'f')) {
-		c = ch - 'a' + 10;
-	} else if (('A' <= ch) && (ch <= 'F')) {
-		c = ch - 'A' + 10;
+	const char *s;
+	unsigned long acc, cutoff;
+	int c;
+	int neg, any, cutlim;
+
+	/*
+	 * See strtol for comments as to the logic used.
+	 */
+	s = nptr;
+	do {
+		c = (unsigned char) *s++;
+	} while (is_space(c));
+
+	if (c == '-') {
+		neg = 1;
+		c = *s++;
 	} else {
-		c = -1;
+		neg = 0;
+		if (c == '+')
+			c = *s++;
 	}
-	return c;
+
+	if ((base == 0 || base == 16) &&
+	    c == '0' && (*s == 'x' || *s == 'X')) {
+		c = s[1];
+		s += 2;
+		base = 16;
+	}
+
+	if (base == 0) {
+		base = c == '0' ? 8 : 10;
+	}
+
+	cutoff = ULONG_MAX / (unsigned long)base;
+	cutlim = ULONG_MAX % (unsigned long)base;
+
+	for (acc = 0, any = 0;; c = (unsigned char) *s++) {
+		if (c >= '0' && c <= '9') {
+			c -= '0';
+		} else if (c >= 'A' && c <= 'Z') {
+			c -= 'A' - 10;
+		} else if (c >= 'a' && c <= 'z') {
+			c -= 'a' - 10;
+		} else {
+			break;
+		}
+		if (c >= base) {
+			break;
+		}
+
+		if (any < 0) {
+			continue;
+		}
+
+		if (acc > cutoff || (acc == cutoff && c > cutlim)) {
+			any = -1;
+			acc = ULONG_MAX;
+		} else {
+			any = 1;
+			acc *= (unsigned long)base;
+			acc += c;
+		}
+	}
+
+	if (neg && any > 0) {
+		acc = -acc;
+	}
+
+	if (endptr != 0) {
+		*endptr = (char *) (any ? s - 1 : nptr);
+	}
+
+	return (acc);
 }
 
 /*
@@ -26,58 +88,56 @@ static inline char hex_digit_value(char ch)
  */
 uint64_t strtoul_hex(const char *nptr)
 {
-	const char *s = nptr;
-	char c, digit;
-	uint64_t acc, cutoff, cutlim;
-	uint64_t base = 16UL;
-	int32_t any;
-
-	/*
-	 * See strtol for comments as to the logic used.
-	 */
-	do {
-		c = *s;
-		s++;
-	} while (is_space(c));
-
-	if ((c == '0') && ((*s == 'x') || (*s == 'X'))) {
-		c = s[1];
-		s += 2;
-	}
-
-	cutoff = ULONG_MAX / base;
-	cutlim = ULONG_MAX % base;
-	acc = 0UL;
-	any = 0;
-	digit = hex_digit_value(c);
-	while (digit >= 0) {
-		if ((acc > cutoff) || ((acc == cutoff) && ((uint64_t)digit > cutlim))) {
-			any = -1;
-			break;
-		} else {
-			acc *= base;
-			acc += (uint64_t)digit;
-		}
-
-		c = *s;
-		s++;
-		digit = hex_digit_value(c);
-	}
-
-	if (any < 0) {
-		acc = ULONG_MAX;
-	}
-	return acc;
+	return strtoul(nptr, NULL, 16);
 }
 
-char *strchr(char *s_arg, char ch)
+char *strchr(const char *s_arg, char ch)
 {
-	char *s = s_arg;
+	const char *s = s_arg;
 	while ((*s != '\0') && (*s != ch)) {
 		++s;
 	}
 
-	return ((*s) != '\0') ? s : NULL;
+	return ((*s) != '\0') ? (char *)s : NULL;
+}
+
+size_t strlen(const char *str)
+{
+	unsigned long ret;
+
+	for (ret = 0; *str != '\0'; str++) {
+		ret++;
+	}
+
+	return ret;
+}
+
+size_t strnlen(const char *str, size_t count)
+{
+	unsigned long ret;
+
+	for (ret = 0; (*str != '\0') && (ret < count); str++) {
+		ret++;
+	}
+
+	return ret;
+}
+
+char *strrchr(const char *s, char ch)
+{
+	const char *last = s + strlen(s);
+	while (last > s && *last != ch) {
+		last--;
+	}
+
+	return (*last != ch) ? NULL : (char *)last;
+}
+
+char *strcpy(char *d, const char *s)
+{
+	char *ret = d;
+	while ((*d++ = *s++) != '\0') { }
+	return ret;
 }
 
 /*
