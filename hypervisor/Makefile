@@ -89,6 +89,7 @@ ARCH_LDSCRIPT = $(HV_OBJDIR)/link_ram.ld
 REL_INCLUDE_PATH += include
 REL_INCLUDE_PATH += include/lib
 REL_INCLUDE_PATH += include/lib/crypto
+REL_INCLUDE_PATH += include/lib/libfdt
 REL_INCLUDE_PATH += include/common
 REL_INCLUDE_PATH += include/debug
 REL_INCLUDE_PATH += include/public
@@ -165,6 +166,20 @@ COMMON_C_SRCS += lib/crypto/mbedtls/sha256.c
 COMMON_C_SRCS += lib/crypto/mbedtls/md.c
 COMMON_C_SRCS += lib/crypto/mbedtls/md_wrap.c
 COMMON_C_SRCS += lib/sprintf.c
+
+ifeq ($(CONFIG_FDT_PARSE_ENABLED),y)
+COMMON_C_SRCS += lib/fdt/fdt.c
+COMMON_C_SRCS += lib/fdt/fdt_addresses.c
+COMMON_C_SRCS += lib/fdt/fdt_check.c
+COMMON_C_SRCS += lib/fdt/fdt_empty_tree.c
+COMMON_C_SRCS += lib/fdt/fdt_overlay.c
+COMMON_C_SRCS += lib/fdt/fdt_ro.c
+COMMON_C_SRCS += lib/fdt/fdt_rw.c
+COMMON_C_SRCS += lib/fdt/fdt_strerror.c
+COMMON_C_SRCS += lib/fdt/fdt_sw.c
+COMMON_C_SRCS += lib/fdt/fdt_wip.c
+endif
+
 ifdef STACK_PROTECTOR
 COMMON_C_SRCS += lib/stack_protector.c
 endif

@@ -258,4 +258,46 @@ static inline uint32_t pio_read(uint16_t addr, size_t sz)
 	return ret;
 }
 
+static inline uint64_t rev64(uint64_t v)
+{
+	return ((v & 0x00000000000000FFULL) << 56) |
+	       ((v & 0x000000000000FF00ULL) << 40) |
+	       ((v & 0x0000000000FF0000ULL) << 24) |
+	       ((v & 0x00000000FF000000ULL) << 8) |
+	       ((v & 0x000000FF00000000ULL) >> 8) |
+	       ((v & 0x0000FF0000000000ULL) >> 24) |
+	       ((v & 0x00FF000000000000ULL) >> 40) |
+	       ((v & 0xFF00000000000000ULL) >> 56);
+}
+
+static inline uint32_t rev32(uint32_t v)
+{
+	return ((v & 0x000000FFU) << 24) |
+	       ((v & 0x0000FF00U) << 8) |
+	       ((v & 0x00FF0000U) >> 8) |
+	       ((v & 0xFF000000U) >> 24);
+}
+
+static inline uint16_t rev16(uint16_t v)
+{
+	return ((v & 0x00FFU) << 8) |
+	       ((v & 0xFF00U) >> 8);
+}
+
+#ifdef ARCH_CPU_BIG_ENDIAN
+static inline uint64_t be64_to_cpu(uint64_t v) { return v; }
+static inline uint32_t be32_to_cpu(uint32_t v) { return v; }
+static inline uint16_t be16_to_cpu(uint16_t v) { return v; }
+static inline uint64_t cpu_to_be64(uint64_t v) { return v; }
+static inline uint32_t cpu_to_be32(uint32_t v) { return v; }
+static inline uint16_t cpu_to_be16(uint16_t v) { return v; }
+#else
+static inline uint64_t be64_to_cpu(uint64_t v) { return rev64(v); }
+static inline uint32_t be32_to_cpu(uint32_t v) { return rev32(v); }
+static inline uint16_t be16_to_cpu(uint16_t v) { return rev16(v); }
+static inline uint64_t cpu_to_be64(uint64_t v) { return rev64(v); }
+static inline uint32_t cpu_to_be32(uint32_t v) { return rev32(v); }
+static inline uint16_t cpu_to_be16(uint16_t v) { return rev16(v); }
+#endif
+
 #endif /* IO_H defined */
