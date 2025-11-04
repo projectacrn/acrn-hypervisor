@@ -5,6 +5,7 @@
  */
 
 #include <types.h>
+#include <reloc.h>
 #include <asm/irq.h>
 #include <asm/page.h>
 
@@ -21,8 +22,7 @@ static void show_host_call_trace(uint64_t stack_phy, uint64_t s0, uint16_t pcpu_
 	uint64_t *sp = (uint64_t *)stack_phy;
 	uint64_t dump_size = min(roundup(stack_phy, PAGE_SIZE) - stack_phy, DUMP_STACK_SIZE);
 
-	/* TODO: pritf the delta between the actual load address and the config load address here */
-	//pr_acrnlog("\r\n delta = (actual_load_address - CONFIG_HV_RAM_START) = 0x%llx\r\n", get_hv_image_delta());
+	pr_acrnlog("\r\n delta = (actual_load_address - CONFIG_HV_RAM_START) = 0x%llx\r\n", get_hv_image_delta());
 	pr_acrnlog("Host Stack: CPU_ID = %hu\r\n", pcpu_id);
 	for (i = 0U; i < (dump_size >> 5U); i++) {
 		pr_acrnlog("addr(0x%lx)	0x%016lx  0x%016lx  0x%016lx  0x%016lx\r\n",
