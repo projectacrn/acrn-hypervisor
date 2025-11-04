@@ -13,11 +13,6 @@
 
 #include <asm/guest/vsbi.h>
 
-#define INVALID_PIO_IDX	-1U
-#define UART_PIO_IDX0	INVALID_PIO_IDX
-/* FIXME: dummy. to be implemented later */
-#define EMUL_PIO_IDX_MAX 1U
-
 struct vm_arch {
 	const struct acrn_vsbi_extension *vsbi_exts[MAX_NUM_SUPPORTED_VSBI_EXT];
 	uint16_t n_vsbi_exts;
@@ -32,5 +27,12 @@ struct acrn_vcpu;
 struct acrn_vm;
 uint32_t vcpu_get_vhartid(struct acrn_vcpu *vcpu);
 struct acrn_vcpu *vcpu_from_vhartid(struct acrn_vm *vm, uint32_t vhartid);
+
+static inline void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_t nbytes)
+{
+	(void)vm;
+	(void)port_address;
+	(void)nbytes;
+}
 
 #endif /* RISCV_VM_H_ */

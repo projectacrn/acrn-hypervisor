@@ -207,6 +207,7 @@ COMMON_C_SRCS += boot/bare.c
 
 # dm componment
 COMMON_C_SRCS += dm/vuart.c
+COMMON_C_SRCS += dm/io_req.c
 
 ifeq ($(ARCH),x86)
 COMMON_C_SRCS += common/efi_mmap.c
@@ -215,7 +216,6 @@ COMMON_C_SRCS += common/hv_main.c
 COMMON_C_SRCS += common/hypercall.c
 COMMON_C_SRCS += common/ptdev.c
 COMMON_C_SRCS += dm/vrtc.c
-COMMON_C_SRCS += dm/io_req.c
 COMMON_C_SRCS += dm/vpci/vdev.c
 COMMON_C_SRCS += dm/vpci/vpci.c
 COMMON_C_SRCS += dm/vpci/vroot_port.c
