@@ -276,29 +276,36 @@
   <xsl:template match="console_vuart">
     <xsl:value-of select="acrn:initializer('vuart[0]', '{', true())" />
     <xsl:choose>
-      <xsl:when test="./text() = 'COM Port 1'">
-	<xsl:value-of select="acrn:initializer('type', 'VUART_LEGACY_PIO')" />
-	<xsl:value-of select="acrn:initializer('addr.port_base', '0x3F8U')" />
-	<xsl:value-of select="acrn:initializer('irq', '4U')" />
+      <xsl:when test="//board-data/acrn-config/@arch = 'riscv'">
+        <xsl:value-of select="acrn:initializer('type', 'VUART_SBI')" />
       </xsl:when>
-      <xsl:when test="./text() = 'COM Port 2'">
-	<xsl:value-of select="acrn:initializer('type', 'VUART_LEGACY_PIO')" />
-	<xsl:value-of select="acrn:initializer('addr.port_base', '0x2F8U')" />
-	<xsl:value-of select="acrn:initializer('irq', '3U')" />
-      </xsl:when>
-      <xsl:when test="./text() = 'COM Port 3'">
-	<xsl:value-of select="acrn:initializer('type', 'VUART_LEGACY_PIO')" />
-	<xsl:value-of select="acrn:initializer('addr.port_base', '0x3E8U')" />
-	<xsl:value-of select="acrn:initializer('irq', '4U')" />
-      </xsl:when>
-      <xsl:when test="./text() = 'COM Port 4'">
-	<xsl:value-of select="acrn:initializer('type', 'VUART_LEGACY_PIO')" />
-	<xsl:value-of select="acrn:initializer('addr.port_base', '0x2E8U')" />
-	<xsl:value-of select="acrn:initializer('irq', '3U')" />
-      </xsl:when>
-      <xsl:when test="./text() = 'PCI'">
-	<xsl:value-of select="acrn:initializer('type', 'VUART_PCI')" />
-      </xsl:when>
+      <xsl:otherwise>
+        <xsl:choose>
+          <xsl:when test="./text() = 'COM Port 1'">
+            <xsl:value-of select="acrn:initializer('type', 'VUART_LEGACY_PIO')" />
+            <xsl:value-of select="acrn:initializer('addr.port_base', '0x3F8U')" />
+            <xsl:value-of select="acrn:initializer('irq', '4U')" />
+          </xsl:when>
+          <xsl:when test="./text() = 'COM Port 2'">
+            <xsl:value-of select="acrn:initializer('type', 'VUART_LEGACY_PIO')" />
+            <xsl:value-of select="acrn:initializer('addr.port_base', '0x2F8U')" />
+            <xsl:value-of select="acrn:initializer('irq', '3U')" />
+          </xsl:when>
+          <xsl:when test="./text() = 'COM Port 3'">
+            <xsl:value-of select="acrn:initializer('type', 'VUART_LEGACY_PIO')" />
+            <xsl:value-of select="acrn:initializer('addr.port_base', '0x3E8U')" />
+            <xsl:value-of select="acrn:initializer('irq', '4U')" />
+          </xsl:when>
+          <xsl:when test="./text() = 'COM Port 4'">
+            <xsl:value-of select="acrn:initializer('type', 'VUART_LEGACY_PIO')" />
+            <xsl:value-of select="acrn:initializer('addr.port_base', '0x2E8U')" />
+            <xsl:value-of select="acrn:initializer('irq', '3U')" />
+          </xsl:when>
+          <xsl:when test="./text() = 'PCI'">
+            <xsl:value-of select="acrn:initializer('type', 'VUART_PCI')" />
+          </xsl:when>
+        </xsl:choose>
+      </xsl:otherwise>
     </xsl:choose>
     <xsl:text>},</xsl:text>
     <xsl:value-of select="$newline" />

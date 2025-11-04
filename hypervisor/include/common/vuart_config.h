@@ -17,6 +17,7 @@ struct target_vuart {
 enum vuart_type {
 	VUART_LEGACY_PIO = 0,	/* legacy PIO vuart */
 	VUART_PCI,		/* PCI vuart, may removed */
+	VUART_SBI,              /* RISC-V SBI vuart */
 };
 
 union vuart_addr {

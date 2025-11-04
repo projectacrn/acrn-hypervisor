@@ -27,7 +27,7 @@
     
     This file serves as a template and reference for RISC-V platform support development.
 -->
-<acrn-config board="qemu-riscv">
+<acrn-config board="qemu-riscv" arch="riscv">
   <BIOS_INFO>
         BIOS Information
         Vendor: U-Boot
