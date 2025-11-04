@@ -663,7 +663,8 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	size = mmio_req->size;
 
 	spinlock_obtain(&vcpu->vm->emul_mmio_lock);
-	for (idx = 0U; idx <= vcpu->vm->nr_emul_mmio_regions; idx++) {
+	for (idx = 0U; (idx <= CONFIG_MAX_EMULATED_MMIO_REGIONS) &&
+			(bitmap_test(idx & 0x3FU, vcpu->vm->emul_mmio_bitmap + (idx >> 6U))); idx++) {
 		mmio_handler = &(vcpu->vm->emul_mmio[idx]);
 		if (mmio_handler->read_write != NULL) {
 			base = mmio_handler->range_start;
@@ -804,42 +805,9 @@ void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 }
 
 /**
- * @brief Find match MMIO node
- *
- * This API find match MMIO node from \p vm.
- *
- * @param vm The VM to which the MMIO node is belong to.
- *
- * @return If there's a match mmio_node return it, otherwise return NULL;
- */
-static inline struct mem_io_node *find_match_mmio_node(struct acrn_vm *vm,
-				uint64_t start, uint64_t end)
-{
-	bool found = false;
-	uint16_t idx;
-	struct mem_io_node *mmio_node;
-
-	for (idx = 0U; idx < CONFIG_MAX_EMULATED_MMIO_REGIONS; idx++) {
-		mmio_node = &(vm->emul_mmio[idx]);
-		if ((mmio_node->range_start == start) && (mmio_node->range_end == end)) {
-			found = true;
-			break;
-		}
-	}
-
-	if (!found) {
-		pr_info("%s, vm[%d] no match mmio region [0x%lx, 0x%lx] is found",
-				__func__, vm->vm_id, start, end);
-		mmio_node = NULL;
-	}
-
-	return mmio_node;
-}
-
-/**
  * @brief Find a free MMIO node
  *
- * This API find a free MMIO node from \p vm.
+ * This API find a free MMIO node from \p vm under vm->emul_mmio_lock protection.
  *
  * @param vm The VM to which the MMIO node is belong to.
  *
@@ -847,14 +815,15 @@ static inline struct mem_io_node *find_match_mmio_node(struct acrn_vm *vm,
  */
 static inline struct mem_io_node *find_free_mmio_node(struct acrn_vm *vm)
 {
-	uint16_t idx;
-	struct mem_io_node *mmio_node = find_match_mmio_node(vm, 0UL, 0UL);
+	uint16_t idx = ffz64_ex(vm->emul_mmio_bitmap, CONFIG_MAX_EMULATED_MMIO_REGIONS);
+	struct mem_io_node *mmio_node = NULL;
 
-	if (mmio_node != NULL) {
-		idx = (uint16_t)(uint64_t)(mmio_node - &(vm->emul_mmio[0U]));
-		if (vm->nr_emul_mmio_regions < idx) {
-			vm->nr_emul_mmio_regions = idx;
-		}
+	if (idx < CONFIG_MAX_EMULATED_MMIO_REGIONS) {
+		bitmap_set_non_atomic(idx & 0x3FU,
+				vm->emul_mmio_bitmap + (idx >> 6U));
+		mmio_node = &(vm->emul_mmio[idx]);
+	} else {
+		pr_info("%s, vm[%d] no free mmio region\n", __func__, vm->vm_id);
 	}
 
 	return mmio_node;
@@ -907,17 +876,27 @@ void unregister_mmio_emulation_handler(struct acrn_vm *vm,
 					uint64_t start, uint64_t end)
 {
 	struct mem_io_node *mmio_node;
+	uint16_t idx;
 
 	spinlock_obtain(&vm->emul_mmio_lock);
-	mmio_node = find_match_mmio_node(vm, start, end);
-	if (mmio_node != NULL) {
+	for (idx = 0U; idx < CONFIG_MAX_EMULATED_MMIO_REGIONS; idx++) {
+		if (bitmap_test(idx & 0x3FU, vm->emul_mmio_bitmap + (idx >> 6U))) {
+			mmio_node = &(vm->emul_mmio[idx]);
+			if ((mmio_node->range_start == start) && (mmio_node->range_end == end)) {
 		(void)memset(mmio_node, 0U, sizeof(struct mem_io_node));
+				bitmap_clear_non_atomic(idx & 0x3FU,
+					vm->emul_mmio_bitmap + (idx >> 6U));
+
+				break;
+			}
+		}
 	}
 	spinlock_release(&vm->emul_mmio_lock);
 }
 
 void deinit_emul_io(struct acrn_vm *vm)
 {
+	(void)memset(vm->emul_mmio_bitmap, 0U, sizeof(vm->emul_mmio_bitmap));
 	(void)memset(vm->emul_mmio, 0U, sizeof(vm->emul_mmio));
 	(void)memset(vm->emul_pio, 0U, sizeof(vm->emul_pio));
 }
