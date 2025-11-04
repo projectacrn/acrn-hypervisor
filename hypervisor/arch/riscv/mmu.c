@@ -9,6 +9,7 @@
 #include <asm/qemu.h>
 #include <logmsg.h>
 #include <reloc.h>
+#include <fdt_api.h>
 
 void set_paging_supervisor(__unused uint64_t base, __unused uint64_t size)
 {
@@ -17,6 +18,37 @@ void set_paging_supervisor(__unused uint64_t base, __unused uint64_t size)
 static struct page_pool ppt_page_pool;
 static void *ppt_mmu_top_addr;
 uint64_t init_satp;
+
+static uint64_t phys_mem_start;
+static uint64_t phys_mem_size;
+static struct mem_region rsvd_regions[MAX_FDT_RSVD_REGIONS];
+static int nr_rsvd_regions;
+
+void init_phys_mem_range(void)
+{
+	int i;
+#ifdef CONFIG_FDT_PARSE_ENABLED
+	int ret;
+
+	ret = fdt_get_phys_mem_region(get_host_fdt(), &phys_mem_start, &phys_mem_size);
+	if (ret < 0) {
+		panic("Failed to find memory information from FDT");
+	}
+
+	fdt_get_rsvd_mem_regions(get_host_fdt(), rsvd_regions, &nr_rsvd_regions);
+#else
+	/* TODO: Replace with macros generated from config tool */
+	phys_mem_start = PHYS_MEM_START;
+	phys_mem_size = PHYS_MEM_SIZE;
+#endif
+
+	pr_info("Physical Memory: [0x%lx-0x%lx]", phys_mem_start, phys_mem_start + phys_mem_size);
+	for (i = 0; i < nr_rsvd_regions; i++) {
+		pr_info("Reserved memory: [0x%lx-0x%lx]",
+				rsvd_regions[i].addr,
+				rsvd_regions[i].addr + rsvd_regions[i].size);
+	}
+}
 
 /**
  * Riscv mmio memory layout is continuous and it support 1G huge
@@ -140,6 +172,7 @@ static void init_hv_mapping(void)
 
 void init_paging(void)
 {
+	init_phys_mem_range();
 	init_page_pool(&ppt_page_pool, (uint64_t *)ppt_pages,
 			(uint64_t *)ppt_pages_bitmap, PPT_PAGE_NUM);
 

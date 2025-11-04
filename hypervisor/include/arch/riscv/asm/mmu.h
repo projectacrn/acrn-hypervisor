@@ -10,6 +10,8 @@
 #include <asm/page.h>
 #include <asm/pgtable.h>
 
+#define MAX_FDT_RSVD_REGIONS 16
+
 static inline void set_satp(uint64_t satp)
 {
 	asm volatile (

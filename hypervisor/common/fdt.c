@@ -47,6 +47,11 @@ int fdt_get_phys_mem_region(const void *fdt, uint64_t *addr_out, uint64_t *size_
 
 	mem_off = fdt_path_offset(fdt, "/memory");
 	if (mem_off > 0) {
+		/*
+		 * TODO: For now this API has two assumptions:
+		 * 1, address and cell sizes are 2 (64bit)
+		 * 2, there is only 1 memory node
+		 */
 		reg_prop = fdt_get_property(fdt, mem_off, "reg", &len);
 		/* minimal 16 bytes for 64bit addr + size */
 		if ((reg_prop != NULL) && (len >= 16)) {

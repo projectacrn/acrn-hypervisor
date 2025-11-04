@@ -12,4 +12,7 @@
 
 #define CONFIG_SSTC	1
 
+#define PHYS_MEM_START 0x80000000
+#define PHYS_MEM_SIZE 0x200000000
+
 #endif /* __RISCV_QEMU_H__ */
