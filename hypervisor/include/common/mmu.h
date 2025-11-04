@@ -20,6 +20,12 @@
 #define MEM_2G		(MEM_1G * 2UL)
 #define MEM_4G		(MEM_1G * 4UL)
 
+struct mem_region {
+	uint64_t addr;
+	uint64_t size;
+	uint64_t type;
+};
+
 void set_paging_supervisor(uint64_t base, uint64_t size);
 
 /**
