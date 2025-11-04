@@ -383,7 +383,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	}
 
 	spinlock_init(&vm->stg2pt_lock);
-	spinlock_init(&vm->emul_mmio_lock);
+	spinlock_init(&vm->emul_io_lock);
 
 	/* TODO: Some logic inside arch_init_vm can also be moved to common but
 	 * we didn't come up with abstraction good enough to capture dependencies. Leave those

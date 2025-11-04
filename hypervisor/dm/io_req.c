@@ -512,29 +512,19 @@ static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
 }
 
 /**
- * @pre width < 8U
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
+ * @pre io_req->reqs.pio.size < 8U
  */
-static bool pio_default_read(struct acrn_vcpu *vcpu,
-	__unused uint16_t addr, size_t width)
+static int32_t pio_default_access_handler(struct io_request *io_req,
+	__unused void *handler_private_data)
 {
-	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
 
-	pio_req->value = (uint32_t)((1UL << (width * 8U)) - 1UL);
+	if (pio_req->direction == ACRN_IOREQ_DIR_READ) {
+		pio_req->value = (uint32_t)((1UL << (pio_req->size * 8U)) - 1UL);
 
-	return true;
-}
+	}
 
-/**
- * @pre width < 8U
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool pio_default_write(__unused struct acrn_vcpu *vcpu, __unused uint16_t addr,
-	__unused size_t width, __unused uint32_t v)
-{
-	return true; /* ignore write */
+	return 0;
 }
 
 /**
@@ -569,6 +559,58 @@ static int32_t mmio_default_access_handler(struct io_request *io_req,
 	return 0;
 }
 
+static int32_t hv_emulate_io(struct acrn_vm *vm, struct io_request *io_req,
+		uint64_t address, uint64_t size, hv_io_handler_t default_read_write)
+{
+	int32_t status = -ENODEV;
+	bool hold_lock = true;
+	uint16_t idx;
+	uint64_t base, end;
+	struct io_node *io_handler = NULL;
+	hv_io_handler_t read_write = default_read_write;
+	void *handler_private_data = NULL;
+
+	spinlock_obtain(&vm->emul_io_lock);
+	for (idx = 0U; (idx <= CONFIG_MAX_EMULATED_MMIO_REGIONS) &&
+			(bitmap_test(idx & 0x3FU, vm->emul_io_bitmap + (idx >> 6U))); idx++) {
+		io_handler = &(vm->emul_io[idx]);
+		if (io_handler->read_write != NULL) {
+			base = io_handler->range_start;
+			end = io_handler->range_end;
+
+			if (((address + size) <= base) || (address >= end)) {
+				continue;
+			} else {
+				 if ((address >= base) && ((address + size) <= end)) {
+					hold_lock = io_handler->hold_lock;
+					read_write = io_handler->read_write;
+					handler_private_data = io_handler->handler_private_data;
+				} else {
+					pr_fatal("Err PIO/MMIO, address:0x%lx, size:%x", address, size);
+					status = -EIO;
+				}
+				break;
+			}
+		}
+	}
+
+	if ((status == -ENODEV) && (read_write != NULL)) {
+		/* This io_handler will never modify once register, so we don't
+		 * need to hold the lock when handling the MMIO access.
+		 */
+		if (!hold_lock) {
+			spinlock_release(&vm->emul_io_lock);
+		}
+		status = read_write(io_req, handler_private_data);
+		if (!hold_lock) {
+			spinlock_obtain(&vm->emul_io_lock);
+		}
+	}
+	spinlock_release(&vm->emul_io_lock);
+
+	return status;
+}
+
 /**
  * Try handling the given request by any port I/O handler registered in the
  * hypervisor.
@@ -582,55 +624,15 @@ static int32_t mmio_default_access_handler(struct io_request *io_req,
 static int32_t
 hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
-	int32_t status = -ENODEV;
-	uint16_t port, size;
-	uint32_t idx;
 	struct acrn_vm *vm = vcpu->vm;
 	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
-	struct vm_io_handler_desc *handler;
-	io_read_fn_t io_read = NULL;
-	io_write_fn_t io_write = NULL;
+	hv_io_handler_t read_write = NULL;
 
 	if (is_service_vm(vcpu->vm) || is_prelaunched_vm(vcpu->vm)) {
-		io_read = pio_default_read;
-		io_write = pio_default_write;
+		read_write = pio_default_access_handler;
 	}
 
-	port = (uint16_t)pio_req->address;
-	size = (uint16_t)pio_req->size;
-
-	for (idx = 0U; idx < EMUL_PIO_IDX_MAX; idx++) {
-		handler = &(vm->emul_pio[idx]);
-
-		if ((port < handler->port_start) || (port >= handler->port_end)) {
-			continue;
-		}
-
-		if (handler->io_read != NULL) {
-			io_read = handler->io_read;
-		}
-		if (handler->io_write != NULL) {
-			io_write = handler->io_write;
-		}
-		break;
-	}
-
-	if ((pio_req->direction == ACRN_IOREQ_DIR_WRITE) && (io_write != NULL)) {
-		if (io_write(vcpu, port, size, pio_req->value)) {
-			status = 0;
-		}
-	} else if ((pio_req->direction == ACRN_IOREQ_DIR_READ) && (io_read != NULL)) {
-		if (io_read(vcpu, port, size)) {
-			status = 0;
-		}
-	} else {
-		/* do nothing */
-	}
-
-	pr_dbg("IO %s on port %04x, data %08x",
-		(pio_req->direction == ACRN_IOREQ_DIR_READ) ? "read" : "write", port, pio_req->value);
-
-	return status;
+	return hv_emulate_io(vm, io_req, pio_req->address, pio_req->size, read_write);
 }
 
 /**
@@ -646,61 +648,15 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 static int32_t
 hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
-	int32_t status = -ENODEV;
-	bool hold_lock = true;
-	uint16_t idx;
-	uint64_t address, size, base, end;
+	struct acrn_vm *vm = vcpu->vm;
 	struct acrn_mmio_request *mmio_req = &io_req->reqs.mmio_request;
-	struct mem_io_node *mmio_handler = NULL;
-	hv_mem_io_handler_t read_write = NULL;
-	void *handler_private_data = NULL;
+	hv_io_handler_t read_write = NULL;
 
-	if (is_service_vm(vcpu->vm) || is_prelaunched_vm(vcpu->vm)) {
+	if (is_service_vm(vm) || is_prelaunched_vm(vm)) {
 		read_write = mmio_default_access_handler;
 	}
 
-	address = mmio_req->address;
-	size = mmio_req->size;
-
-	spinlock_obtain(&vcpu->vm->emul_mmio_lock);
-	for (idx = 0U; (idx <= CONFIG_MAX_EMULATED_MMIO_REGIONS) &&
-			(bitmap_test(idx & 0x3FU, vcpu->vm->emul_mmio_bitmap + (idx >> 6U))); idx++) {
-		mmio_handler = &(vcpu->vm->emul_mmio[idx]);
-		if (mmio_handler->read_write != NULL) {
-			base = mmio_handler->range_start;
-			end = mmio_handler->range_end;
-
-			if (((address + size) <= base) || (address >= end)) {
-				continue;
-			} else {
-				 if ((address >= base) && ((address + size) <= end)) {
-					hold_lock = mmio_handler->hold_lock;
-					read_write = mmio_handler->read_write;
-					handler_private_data = mmio_handler->handler_private_data;
-				} else {
-					pr_fatal("Err MMIO, address:0x%lx, size:%x", address, size);
-					status = -EIO;
-				}
-				break;
-			}
-		}
-	}
-
-	if ((status == -ENODEV) && (read_write != NULL)) {
-		/* This mmio_handler will never modify once register, so we don't
-		 * need to hold the lock when handling the MMIO access.
-		 */
-		if (!hold_lock) {
-			spinlock_release(&vcpu->vm->emul_mmio_lock);
-		}
-		status = read_write(io_req, handler_private_data);
-		if (!hold_lock) {
-			spinlock_obtain(&vcpu->vm->emul_mmio_lock);
-		}
-	}
-	spinlock_release(&vcpu->vm->emul_mmio_lock);
-
-	return status;
+	return hv_emulate_io(vm, io_req, mmio_req->address, mmio_req->size, read_write);
 }
 
 /**
@@ -783,50 +739,70 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 
 
 /**
- * @brief Register a port I/O handler
- *
- * @param vm      The VM to which the port I/O handlers are registered
- * @param pio_idx The emulated port io index
- * @param range   The emulated port io range
- * @param io_read_fn_ptr The handler for emulating reads from the given range
- * @param io_write_fn_ptr The handler for emulating writes to the given range
- * @pre pio_idx < EMUL_PIO_IDX_MAX
- */
-void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
-		const struct vm_io_range *range, io_read_fn_t io_read_fn_ptr, io_write_fn_t io_write_fn_ptr)
-{
-	if (is_service_vm(vm)) {
-		deny_guest_pio_access(vm, range->base, range->len);
-	}
-	vm->emul_pio[pio_idx].port_start = range->base;
-	vm->emul_pio[pio_idx].port_end = range->base + range->len;
-	vm->emul_pio[pio_idx].io_read = io_read_fn_ptr;
-	vm->emul_pio[pio_idx].io_write = io_write_fn_ptr;
-}
-
-/**
  * @brief Find a free MMIO node
  *
- * This API find a free MMIO node from \p vm under vm->emul_mmio_lock protection.
+ * This API find a free MMIO node from \p vm under vm->emul_io_lock protection.
  *
  * @param vm The VM to which the MMIO node is belong to.
  *
  * @return If there's a free mmio_node return it, otherwise return NULL;
  */
-static inline struct mem_io_node *find_free_mmio_node(struct acrn_vm *vm)
+static inline struct io_node *find_free_io_node(struct acrn_vm *vm)
 {
-	uint16_t idx = ffz64_ex(vm->emul_mmio_bitmap, CONFIG_MAX_EMULATED_MMIO_REGIONS);
-	struct mem_io_node *mmio_node = NULL;
+	uint16_t idx = ffz64_ex(vm->emul_io_bitmap, CONFIG_MAX_EMULATED_MMIO_REGIONS);
+	struct io_node *io_node = NULL;
 
 	if (idx < CONFIG_MAX_EMULATED_MMIO_REGIONS) {
 		bitmap_set_non_atomic(idx & 0x3FU,
-				vm->emul_mmio_bitmap + (idx >> 6U));
-		mmio_node = &(vm->emul_mmio[idx]);
+				vm->emul_io_bitmap + (idx >> 6U));
+		io_node = &(vm->emul_io[idx]);
 	} else {
 		pr_info("%s, vm[%d] no free mmio region\n", __func__, vm->vm_id);
 	}
 
-	return mmio_node;
+	return io_node;
+}
+
+static void register_io_emulation_handler(struct acrn_vm *vm,
+	hv_io_handler_t read_write, uint64_t start,
+	uint64_t end, void *handler_private_data, bool hold_lock)
+{
+	struct io_node *io_node;
+
+	/* Ensure both a read/write handler and range check function exist */
+	if ((read_write != NULL) && (end > start)) {
+		spinlock_obtain(&vm->emul_io_lock);
+		io_node = find_free_io_node(vm);
+		if (io_node != NULL) {
+			/* Fill in information for this node */
+			io_node->hold_lock = hold_lock;
+			io_node->read_write = read_write;
+			io_node->handler_private_data = handler_private_data;
+			io_node->range_start = start;
+			io_node->range_end = end;
+		}
+		spinlock_release(&vm->emul_io_lock);
+	}
+
+}
+
+/**
+ * @brief Register a port I/O handler
+ *
+ * @param vm      The VM to which the port I/O handlers are registered
+ * @param pio_base The emulated port io range base
+ * @param pio_size  The emulated port io range size
+ * @param read_write The handler for emulating accesses to the given range
+ * @param handler_private_data Handler-specific data which will be passed to \p read_write when called
+ */
+void register_pio_emulation_handler(struct acrn_vm *vm, uint16_t pio_base, uint16_t pio_size,
+	hv_io_handler_t read_write, void *handler_private_data)
+{
+	if (is_service_vm(vm)) {
+		deny_guest_pio_access(vm, pio_base, pio_size);
+	}
+
+	register_io_emulation_handler(vm, read_write, pio_base, pio_size, handler_private_data, false);
 }
 
 /**
@@ -841,26 +817,10 @@ static inline struct mem_io_node *find_free_mmio_node(struct acrn_vm *vm)
  * @param handler_private_data Handler-specific data which will be passed to \p read_write when called
  */
 void register_mmio_emulation_handler(struct acrn_vm *vm,
-	hv_mem_io_handler_t read_write, uint64_t start,
+	hv_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data, bool hold_lock)
 {
-	struct mem_io_node *mmio_node;
-
-	/* Ensure both a read/write handler and range check function exist */
-	if ((read_write != NULL) && (end > start)) {
-		spinlock_obtain(&vm->emul_mmio_lock);
-		mmio_node = find_free_mmio_node(vm);
-		if (mmio_node != NULL) {
-			/* Fill in information for this node */
-			mmio_node->hold_lock = hold_lock;
-			mmio_node->read_write = read_write;
-			mmio_node->handler_private_data = handler_private_data;
-			mmio_node->range_start = start;
-			mmio_node->range_end = end;
-		}
-		spinlock_release(&vm->emul_mmio_lock);
-	}
-
+	register_io_emulation_handler(vm, read_write, start, end, handler_private_data, hold_lock);
 }
 
 /**
@@ -875,28 +835,27 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 void unregister_mmio_emulation_handler(struct acrn_vm *vm,
 					uint64_t start, uint64_t end)
 {
-	struct mem_io_node *mmio_node;
+	struct io_node *mmio_node;
 	uint16_t idx;
 
-	spinlock_obtain(&vm->emul_mmio_lock);
+	spinlock_obtain(&vm->emul_io_lock);
 	for (idx = 0U; idx < CONFIG_MAX_EMULATED_MMIO_REGIONS; idx++) {
-		if (bitmap_test(idx & 0x3FU, vm->emul_mmio_bitmap + (idx >> 6U))) {
-			mmio_node = &(vm->emul_mmio[idx]);
+		if (bitmap_test(idx & 0x3FU, vm->emul_io_bitmap + (idx >> 6U))) {
+			mmio_node = &(vm->emul_io[idx]);
 			if ((mmio_node->range_start == start) && (mmio_node->range_end == end)) {
-		(void)memset(mmio_node, 0U, sizeof(struct mem_io_node));
+				(void)memset(mmio_node, 0U, sizeof(struct io_node));
 				bitmap_clear_non_atomic(idx & 0x3FU,
-					vm->emul_mmio_bitmap + (idx >> 6U));
+					vm->emul_io_bitmap + (idx >> 6U));
 
 				break;
 			}
 		}
 	}
-	spinlock_release(&vm->emul_mmio_lock);
+	spinlock_release(&vm->emul_io_lock);
 }
 
 void deinit_emul_io(struct acrn_vm *vm)
 {
-	(void)memset(vm->emul_mmio_bitmap, 0U, sizeof(vm->emul_mmio_bitmap));
-	(void)memset(vm->emul_mmio, 0U, sizeof(vm->emul_mmio));
-	(void)memset(vm->emul_pio, 0U, sizeof(vm->emul_pio));
+	(void)memset(vm->emul_io_bitmap, 0U, sizeof(vm->emul_io_bitmap));
+	(void)memset(vm->emul_io, 0U, sizeof(vm->emul_io));
 }

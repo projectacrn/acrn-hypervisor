@@ -141,18 +141,9 @@ static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
 	return (uint8_t)((pm1_cnt & 0x1fffU) >> BIT_SLP_TYPx);
 }
 
-static bool pm1ab_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
+static inline void enter_s5(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
-	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
-
-	pio_req->value = pio_read(addr, width);
-
-	return true;
-}
-
-static inline void enter_s5(struct acrn_vcpu *vcpu, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
-{
-	struct acrn_vm *vm = vcpu->vm;
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
 
 	get_vm_lock(vm);
@@ -190,15 +181,13 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 }
 
 /**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
+ * @pre vm != NULL
  */
-static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, uint32_t v)
+static bool pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
 	static uint32_t pm1a_cnt_ready = 0U;
 	uint32_t pm1a_cnt_val;
 	bool to_write = true;
-	struct acrn_vm *vm = vcpu->vm;
 
 	if (width == 2U) {
 		uint8_t val = get_slp_typx(v);
@@ -211,7 +200,7 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 				if (vm->arch_vm.pm.sx_state_data->s3_pkg.val_pm1a == val) {
 					enter_s3(vm, v, 0U);
 				} else if (vm->arch_vm.pm.sx_state_data->s5_pkg.val_pm1a == val) {
-					enter_s5(vcpu, v, 0U);
+					enter_s5(vm, v, 0U);
 				} else {
 					/* other Sx value should be ignored */
 				}
@@ -227,7 +216,7 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 				if (vm->arch_vm.pm.sx_state_data->s3_pkg.val_pm1b == val) {
 					enter_s3(vm, pm1a_cnt_val, v);
 				} else if (vm->arch_vm.pm.sx_state_data->s5_pkg.val_pm1b == val) {
-					enter_s5(vcpu, pm1a_cnt_val, v);
+					enter_s5(vm, pm1a_cnt_val, v);
 				} else {
 					/* other Sx value should be ignored */
 				}
@@ -249,17 +238,25 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 	return true;
 }
 
-static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const struct acrn_acpi_generic_address *gas)
+static int32_t pm1ab_pio_handler(struct io_request *io_req, void *private_data)
 {
-	struct vm_io_range gas_io;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vm *vm = (struct acrn_vm *)private_data;
 
+	if (pio_req->direction == ACRN_IOREQ_DIR_WRITE) {
+		pm1ab_io_write(vm, pio_req->address, pio_req->size, pio_req->value);
+	} else {
+		pio_req->value = pio_read(pio_req->address, pio_req->size);
+	}
+
+	return 0;
+}
+
+static void register_gas_io_handler(struct acrn_vm *vm, const struct acrn_acpi_generic_address *gas)
+{
 	if ((gas->address != 0UL) && (gas->space_id == SPACE_SYSTEM_IO) && (gas->bit_width != 0U)) {
-		gas_io.base = (uint16_t)gas->address;
-		gas_io.len = gas->bit_width / 8;
-
-		register_pio_emulation_handler(vm, pio_idx, &gas_io, &pm1ab_io_read, &pm1ab_io_write);
-
-		pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n", vm->vm_id, gas_io.base, gas_io.len);
+		register_pio_emulation_handler(vm, (uint16_t)gas->address, gas->bit_width / 8, pm1ab_pio_handler, vm);
+		pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n", vm->vm_id, gas->address, gas->bit_width / 8);
 	}
 }
 
@@ -267,70 +264,48 @@ static void register_pm1ab_handler(struct acrn_vm *vm)
 {
 	struct pm_s_state_data *sx_data = vm->arch_vm.pm.sx_state_data;
 
-	register_gas_io_handler(vm, PM1A_EVT_PIO_IDX, &(sx_data->pm1a_evt));
-	register_gas_io_handler(vm, PM1B_EVT_PIO_IDX, &(sx_data->pm1b_evt));
-	register_gas_io_handler(vm, PM1A_CNT_PIO_IDX, &(sx_data->pm1a_cnt));
-	register_gas_io_handler(vm, PM1B_CNT_PIO_IDX, &(sx_data->pm1b_cnt));
-}
-
-static bool rt_vm_pm1a_io_read(__unused struct acrn_vcpu *vcpu,
-						 __unused uint16_t addr, __unused size_t width)
-{
-	return false;
+	register_gas_io_handler(vm, &(sx_data->pm1a_evt));
+	register_gas_io_handler(vm, &(sx_data->pm1b_evt));
+	register_gas_io_handler(vm, &(sx_data->pm1a_cnt));
+	register_gas_io_handler(vm, &(sx_data->pm1b_cnt));
 }
 
 /*
- * retval true means that we complete the emulation in HV and no need to re-inject the request to DM.
- * retval false means that we should re-inject the request to DM.
+ * retval -ENODEV means that we should re-inject the request to DM.
  */
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool rt_vm_pm1a_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, uint32_t v)
+static int32_t rtvm_pm1a_pio_handler(struct io_request *io_req, void *private_data)
 {
-	if (width != 2U) {
-		pr_dbg("Invalid address (0x%x) or width (0x%x)", addr, width);
-	} else {
-		if (((v & VIRTUAL_PM1A_SLP_EN) != 0U) && (((v & VIRTUAL_PM1A_SLP_TYP) >> 10U) == 5U)) {
-			poweroff_if_rt_vm(vcpu->vm);
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vm *vm = (struct acrn_vm *)private_data;
+
+	if (pio_req->direction == ACRN_IOREQ_DIR_WRITE) {
+		if (pio_req->size != 2U) {
+			pr_dbg("%s Invalid width (0x%x)", __func__, pio_req->size);
+		} else {
+			if (((pio_req->value & VIRTUAL_PM1A_SLP_EN) != 0U) &&
+					(((pio_req->value & VIRTUAL_PM1A_SLP_TYP) >> 10U) == 5U)) {
+				poweroff_if_rt_vm(vm);
+			}
 		}
 	}
 
-	return false;
+	return -ENODEV;
 }
 
-static void register_rt_vm_pm1a_ctl_handler(struct acrn_vm *vm)
+static inline void register_rt_vm_pm1a_ctl_handler(struct acrn_vm *vm)
 {
-	struct vm_io_range io_range;
-
-	io_range.base = VIRTUAL_PM1A_CNT_ADDR;
-	io_range.len = 1U;
-
-	register_pio_emulation_handler(vm, VIRTUAL_PM1A_CNT_PIO_IDX, &io_range,
-					&rt_vm_pm1a_io_read, &rt_vm_pm1a_io_write);
+	register_pio_emulation_handler(vm, VIRTUAL_PM1A_CNT_ADDR, 1U, rtvm_pm1a_pio_handler, vm);
 }
 
 /*
- * @pre vcpu != NULL
+ * @pre vm != NULL
  */
-static bool prelaunched_vm_sleep_io_read(struct acrn_vcpu *vcpu, __unused uint16_t addr, __unused size_t width)
-{
-	vcpu->req.reqs.pio_request.value = 0U;
-
-	return true;
-}
-
-/*
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool prelaunched_vm_sleep_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, uint32_t v)
+static void prelaunched_vm_sleep_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
 	if ((width == 1U) && (addr == VIRTUAL_SLEEP_CTL_ADDR)) {
 		bool slp_en;
 		uint32_t slp_type;
-		struct acrn_vm *vm = vcpu->vm;
+		struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 
 		/* ACPI sleep control register:
 		 *
@@ -356,14 +331,24 @@ static bool prelaunched_vm_sleep_io_write(struct acrn_vcpu *vcpu, uint16_t addr,
 			make_shutdown_vm_request(pcpuid_from_vcpu(vcpu));
 		}
 	}
+}
 
-	return true;
+static int32_t prelaunched_vm_sleep_pio_handler(struct io_request *io_req, void *private_data)
+{
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vm *vm = (struct acrn_vm *)private_data;
+
+	if (pio_req->direction == ACRN_IOREQ_DIR_WRITE) {
+		prelaunched_vm_sleep_io_write(vm, pio_req->address, pio_req->size, pio_req->value);
+	} else {
+		pio_req->value = 0U;
+	}
+
+	return 0;
 }
 
 static void register_prelaunched_vm_sleep_handler(struct acrn_vm *vm)
 {
-	struct vm_io_range io_range;
-
 	/* ACPI reduced HW mode is used for pre-launched VM
 	 *
 	 * The optional ACPI sleep registers (SLEEP_CONTROL_REG and SLEEP_STATUS_REG) specify
@@ -371,11 +356,7 @@ static void register_prelaunched_vm_sleep_handler(struct acrn_vm *vm)
 	 * implemented, the Sleep registers are a replacement for the SLP_TYP, SLP_EN and WAK_STS
 	 * registers in the PM1_BLK.
 	 */
-	io_range.base = VIRTUAL_SLEEP_CTL_ADDR;
-	io_range.len = 2U;
-
-	register_pio_emulation_handler(vm, SLEEP_CTL_PIO_IDX, &io_range,
-					&prelaunched_vm_sleep_io_read, &prelaunched_vm_sleep_io_write);
+	register_pio_emulation_handler(vm, VIRTUAL_SLEEP_CTL_ADDR, 2U, prelaunched_vm_sleep_pio_handler, vm);
 }
 
 void init_guest_pm(struct acrn_vm *vm)

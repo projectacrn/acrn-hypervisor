@@ -165,22 +165,6 @@ static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 	return ret;
 }
 
-static struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset)
-{
-	uint8_t i;
-	struct acrn_vuart *vu, *ret_vu = NULL;
-
-	/* TODO: support pci vuart find */
-	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
-		vu = &vm->vuart[i];
-		if ((vu->active) && (vu->port_base == (offset & ~0x7U))) {
-			ret_vu = vu;
-			break;
-		}
-	}
-	return ret_vu;
-}
-
 static void vuart_trigger_level_intr(const struct acrn_vuart *vu, bool assert)
 {
 	arch_trigger_level_intr(vu->vm, vu->irq, assert);
@@ -422,44 +406,6 @@ void vuart_write_reg(struct acrn_vuart *vu, uint16_t offset, uint8_t value_u8)
 	}
 }
 
-/**
- * @brief Write a value to a port in the legacy virtual UART.
- *
- * This function writes a value to the legacy virtual UART (vUART) based on the specified port address. It is used to
- * handle I/O port write operations in the VM by updating the vUART's register. This function is typically called when
- * the vCPU needs to write data to the vUART during emulation of I/O port operations.
- *
- * - Based on the specified port address, it first finds the vUART device within the VM corresponding to the given vCPU.
- * - If the vUART is found, the value is written to the corresponding register. For detailed write operations, refer to
- *   vuart_write_reg().
- * - If the vUART is not found, the write operation is ignored.
- *
- * @param[inout] vcpu A pointer to the vCPU that initiates the write operation.
- * @param[in] offset_arg The port address to write to.
- * @param[in] width The width of the write operation (unused in this function).
- * @param[in] value The value to be written to the register.
- *
- * @return Always returns true.
- *
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- *
- * @post N/A
- */
-static bool vuart_write(struct acrn_vcpu *vcpu, uint16_t offset_arg,
-			__unused size_t width, uint32_t value)
-{
-	uint16_t offset = offset_arg;
-	struct acrn_vuart *vu = find_vuart_by_port(vcpu->vm, offset);
-	uint8_t value_u8 = (uint8_t)value;
-
-	if (vu != NULL) {
-		offset -= vu->port_base;
-		vuart_write_reg(vu, offset, value_u8);
-	}
-	return true;
-}
-
 static void notify_target(const struct acrn_vuart *vu)
 {
 	struct acrn_vuart *t_vu;
@@ -591,60 +537,25 @@ uint8_t vuart_read_reg(struct acrn_vuart *vu, uint16_t offset)
 	return reg;
 }
 
-/**
- * @brief Read a value from a port in the legacy virtual UART.
- *
- * This function reads a value from the legacy virtual UART (vUART) based on the specified port address. It is used to
- * handle I/O port read operations in the VM by retrieving the value from the vUART's registers. This function is
- * typically called when the vCPU needs to read data from the vUART during emulation of I/O port operations.
- *
- * - Based on the specified port address, it first finds the vUART device within the VM corresponding to the given vCPU.
- * - If the vUART is found, the value is read from the corresponding virtual register and stored in the vCPU's PIO
- *   request. For detailed read operations, refer to vuart_read_reg().
- * - If the vUART is not found, the vCPU's PIO request remains unchanged.
- *
- * @param[inout] vcpu A pointer to the vCPU that initiates the read operation.
- * @param[in] offset_arg The port address to read from.
- * @param[in] width The width of the read operation (unused in this function).
- *
- * @return Always returns true.
- *
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- *
- * @post N/A
- */
-static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused size_t width)
+static int32_t vuart_pio_handler(struct io_request *io_req, __unused void *private_data)
 {
-	uint16_t offset = offset_arg;
-	struct acrn_vuart *vu = find_vuart_by_port(vcpu->vm, offset);
-	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vuart *vu = (struct acrn_vuart *)private_data;
+	uint16_t offset = pio_req->address;
+	int32_t ret = 0;
 
 	if (vu != NULL) {
 		offset -= vu->port_base;
-		pio_req->value = (uint32_t)vuart_read_reg(vu, offset);
-	}
 
-	return true;
-}
-
-/*
- * @pre: vuart_idx < MAX_VUART_NUM_PER_VM
- */
-static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, uint32_t vuart_idx)
-{
-	bool ret = true;
-
-	struct vm_io_range range = {
-		.base = port_base,
-		.len = 8U
-	};
-	if (vuart_idx < MAX_VUART_NUM_PER_VM) {
-		register_pio_emulation_handler(vm, UART_PIO_IDX0 + vuart_idx, &range, vuart_read, vuart_write);
+		if (pio_req->direction == ACRN_IOREQ_DIR_READ) {
+			pio_req->value = (uint32_t)vuart_read_reg(vu, offset);
+		} else {
+			vuart_write_reg(vu, offset, (uint8_t)pio_req->value);
+		}
 	} else {
-		printf("Not support vuart index %d, will not register \n", vuart_idx);
-		ret = false;
+		ret = -ENODEV;
 	}
+
 	return ret;
 }
 
@@ -778,10 +689,11 @@ void init_legacy_vuarts(struct acrn_vm *vm, const struct vuart_config *vu_config
 			setup_vuart(vm, i);
 			vu->port_base = vu_config[i].addr.port_base;
 			vu->irq = vu_config[i].irq;
-			if (vuart_register_io_handler(vm, vu->port_base, i) != 0U) {
-				vu->active = true;
-				vu->escaping = false;
-			}
+
+			register_pio_emulation_handler(vm, vu->port_base, 8U, vuart_pio_handler, vu);
+			vu->active = true;
+			vu->escaping = false;
+
 			/*
 			 * The first vuart is used for VM console.
 			 * The rest of vuarts are used for connection.

@@ -782,13 +782,11 @@ static int32_t vpic_write(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 	return error;
 }
 
-static int32_t vpic_primary_handler(struct acrn_vpic *vpic, bool in, uint16_t port,
-		size_t bytes, uint32_t *eax)
+static int32_t vpic_primary_handler(struct acrn_vpic *vpic,
+		bool in, uint16_t port, size_t bytes, uint32_t *eax)
 {
-	struct i8259_reg_state *i8259;
 	int32_t ret;
-
-	i8259 = &vpic->i8259[0];
+	struct i8259_reg_state *i8259 = &vpic->i8259[0];
 
 	if (bytes != 1U) {
 	        ret = -1;
@@ -801,46 +799,25 @@ static int32_t vpic_primary_handler(struct acrn_vpic *vpic, bool in, uint16_t po
 	return ret;
 }
 
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool vpic_primary_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
+static int32_t vpic_primary_pio_handler(struct io_request *io_req, void *private_data)
 {
-	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vpic *vpic = (struct acrn_vpic *)private_data;
 
-	if (vpic_primary_handler(vm_pic(vcpu->vm), true, addr, width, &pio_req->value) < 0) {
-		pr_err("Primary vPIC read port 0x%x width=%d failed\n",
-				addr, width);
-	}
-
-	return true;
-}
-
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool vpic_primary_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
-				uint32_t v)
-{
-	uint32_t val = v;
-
-	if (vpic_primary_handler(vm_pic(vcpu->vm), false, addr, width, &val) < 0) {
+	if (vpic_primary_handler(vpic, (pio_req->direction == ACRN_IOREQ_DIR_READ),
+			pio_req->address, pio_req->size, &pio_req->value) < 0) {
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
-				__func__, addr, width, val);
+				__func__, pio_req->address, pio_req->size, pio_req->value);
 	}
 
-	return true;
+	return 0;
 }
 
 static int32_t vpic_secondary_handler(struct acrn_vpic *vpic, bool in, uint16_t port,
 		size_t bytes, uint32_t *eax)
 {
-	struct i8259_reg_state *i8259;
 	int32_t ret;
-
-	i8259 = &vpic->i8259[1];
+	struct i8259_reg_state *i8259 = &vpic->i8259[1];
 
 	if (bytes != 1U) {
 	        ret = -1;
@@ -853,36 +830,18 @@ static int32_t vpic_secondary_handler(struct acrn_vpic *vpic, bool in, uint16_t 
 	return ret;
 }
 
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool vpic_secondary_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
+static int32_t vpic_secondary_pio_handler(struct io_request *io_req, void *private_data)
 {
-	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vpic *vpic = (struct acrn_vpic *)private_data;
 
-	if (vpic_secondary_handler(vm_pic(vcpu->vm), true, addr, width, &pio_req->value) < 0) {
-		pr_err("Secondary vPIC read port 0x%x width=%d failed\n",
-				addr, width);
-	}
-	return true;
-}
-
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool vpic_secondary_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
-				uint32_t v)
-{
-	uint32_t val = v;
-
-	if (vpic_secondary_handler(vm_pic(vcpu->vm), false, addr, width, &val) < 0) {
+	if (vpic_secondary_handler(vpic, (pio_req->direction == ACRN_IOREQ_DIR_READ),
+			pio_req->address, pio_req->size, &pio_req->value) < 0) {
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
-				__func__, addr, width, val);
+				__func__, pio_req->address, pio_req->size, pio_req->value);
 	}
 
-	return true;
+	return 0;
 }
 
 static int32_t vpic_elc_handler(struct acrn_vpic *vpic, bool in, uint16_t port, size_t bytes,
@@ -931,65 +890,32 @@ static int32_t vpic_elc_handler(struct acrn_vpic *vpic, bool in, uint16_t port, 
 	return ret;
 }
 
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool vpic_elc_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
+static int32_t vpic_elc_pio_handler(struct io_request *io_req, void *private_data)
 {
-	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vpic *vpic = (struct acrn_vpic *)private_data;
 
-	if (vpic_elc_handler(vm_pic(vcpu->vm), true, addr, width, &pio_req->value) < 0) {
-		pr_err("pic elc read port 0x%x width=%d failed", addr, width);
-	}
-
-	return true;
-}
-
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool vpic_elc_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
-				uint32_t v)
-{
-	uint32_t val = v;
-
-	if (vpic_elc_handler(vm_pic(vcpu->vm), false, addr, width, &val) < 0) {
+	if (vpic_elc_handler(vpic, (pio_req->direction == ACRN_IOREQ_DIR_READ),
+			pio_req->address, pio_req->size, &pio_req->value) < 0) {
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
-				__func__, addr, width, val);
+				__func__, pio_req->address, pio_req->size, pio_req->value);
 	}
 
-	return true;
+	return 0;
 }
 
-static void vpic_register_io_handler(struct acrn_vm *vm)
+static void vpic_register_io_handler(struct acrn_vm *vm, struct acrn_vpic *vpic)
 {
-	struct vm_io_range primary_vPIC_range = {
-		.base = 0x20U,
-		.len = 2U
-	};
-	struct vm_io_range secondary_vPIC_range = {
-		.base = 0xa0U,
-		.len = 2U
-	};
-	struct vm_io_range elcr_range = {
-		.base = 0x4d0U,
-		.len = 2U
-	};
-
-	register_pio_emulation_handler(vm, PIC_PRIMARY_PIO_IDX, &primary_vPIC_range,
-			vpic_primary_io_read, vpic_primary_io_write);
-	register_pio_emulation_handler(vm, PIC_SECONDARY_PIO_IDX, &secondary_vPIC_range,
-			vpic_secondary_io_read, vpic_secondary_io_write);
-	register_pio_emulation_handler(vm, PIC_ELC_PIO_IDX, &elcr_range,
-			vpic_elc_io_read, vpic_elc_io_write);
+	register_pio_emulation_handler(vm, 0x20U, 2U, vpic_primary_pio_handler, vpic);
+	register_pio_emulation_handler(vm, 0xa0U, 2U, vpic_secondary_pio_handler, vpic);
+	register_pio_emulation_handler(vm, 0x4d0U, 2U, vpic_elc_pio_handler, vpic);
 }
+
 
 void vpic_init(struct acrn_vm *vm)
 {
 	struct acrn_vpic *vpic = vm_pic(vm);
-	vpic_register_io_handler(vm);
+	vpic_register_io_handler(vm, vpic);
 	vpic->i8259[0].mask = 0xffU;
 	vpic->i8259[1].mask = 0xffU;
 

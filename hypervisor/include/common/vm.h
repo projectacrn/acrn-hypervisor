@@ -30,7 +30,7 @@
 
 #define	NEED_SHUTDOWN_VM	(2U)
 
-#define EMUL_MMIO_BITMAP_SIZE	 INT_DIV_ROUNDUP(CONFIG_MAX_EMULATED_MMIO_REGIONS, 64U)
+#define EMUL_IO_BITMAP_SIZE	 INT_DIV_ROUNDUP(CONFIG_MAX_EMULATED_MMIO_REGIONS, 64U)
 
 struct vm_hw_info {
 	/* vcpu array of this VM */
@@ -94,10 +94,9 @@ struct acrn_vm {
 	struct acrn_vpci vpci;
 	struct acrn_vrtc vrtc;
 
-	spinlock_t emul_mmio_lock;	/* Used to protect emulation mmio_node concurrent access for a VM */
-	uint64_t emul_mmio_bitmap[EMUL_MMIO_BITMAP_SIZE];
-	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
-	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
+	spinlock_t emul_io_lock;	/* Used to protect emulation pio/mmio node concurrent access for a VM */
+	uint64_t emul_io_bitmap[EMUL_IO_BITMAP_SIZE];
+	struct io_node emul_io[CONFIG_MAX_EMULATED_MMIO_REGIONS];
 
 	/* Pointer to root stage2 pagetable */
 	void *root_stg2ptp;
