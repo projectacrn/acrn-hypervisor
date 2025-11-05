@@ -1,0 +1,90 @@
+<acrn-config>
+  <hv>
+    <BUILD_TYPE>debug</BUILD_TYPE>
+    <DEBUG_OPTIONS>
+      <SERIAL_CONSOLE>/dev/ttyS0</SERIAL_CONSOLE>
+      <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
+      <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
+      <CONSOLE_LOGLEVEL>5</CONSOLE_LOGLEVEL>
+    </DEBUG_OPTIONS>
+    <FEATURES>
+      <RELOC_ENABLED>n</RELOC_ENABLED>
+      <SCHEDULER>SCHED_BVT</SCHEDULER>
+      <ACRNTRACE_ENABLED>n</ACRNTRACE_ENABLED>
+      <SERIAL_8250_PCI>n</SERIAL_8250_PCI>
+      <VMCS9900>n</VMCS9900>
+    </FEATURES>
+    <MEMORY>
+      <STACK_SIZE>0x2000</STACK_SIZE>
+      <HV_RAM_START>0x81000000</HV_RAM_START>
+    </MEMORY>
+    <BARE_BOOT_OPTIONS>
+      <MODULE>
+        <!--
+          Before we've implemented guest memory protection, hpa and gpa are 1:1 mapping
+          so set all regions to non-conflicting values (no matter they are hpa or gpa)
+          Address in BARE_BOOT_OPTIONS indicate address at which ACRN expects this module at boot
+          This should align with the address where you instruct bootloader to put this module
+          e.g., the loader address if you're using qemu device loader
+        -->
+        <!-- hpa -->
+        <address>0x99000000</address>
+        <size>0x3000000</size>
+        <tag>Linux_bzImage</tag>
+      </MODULE>
+      <MODULE>
+        <!-- hpa -->
+        <address>0x9d000000</address>
+        <size>0x2800</size>
+        <tag>FDT_VM0</tag>
+      </MODULE>
+      <MODULE>
+        <!-- hpa -->
+        <address>0x9e000000</address>
+        <size>0x1000000</size>
+        <tag>Pre_bzImage</tag>
+      </MODULE>
+    </BARE_BOOT_OPTIONS>
+  </hv>
+  <vm id="0">
+    <load_order>PRE_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
+    <name>Pre_VM0</name>
+    <os_config>
+      <kern_type>KERNEL_RAWIMAGE</kern_type>
+      <kern_mod>Pre_bzImage</kern_mod>
+      <!-- gpa. This needs to match the dtb on where the memory starts. -->
+      <kern_load_addr>0xa0000000</kern_load_addr>
+      <kern_entry_addr>0xa0000000</kern_entry_addr>
+      <ramdisk_mod/>
+      <bootargs></bootargs>
+    </os_config>
+    <memory>
+      <hpa_region>
+        <start_hpa>0xb0000000</start_hpa>
+        <size_hpa>1024</size_hpa>
+      </hpa_region>
+    </memory>
+    <cpu_affinity>
+      <pcpu>
+        <pcpu_id>2</pcpu_id>
+      </pcpu>
+      <pcpu>
+        <pcpu_id>3</pcpu_id>
+      </pcpu>
+	</cpu_affinity>
+  </vm>
+  <vm id="1">
+    <load_order>SERVICE_VM</load_order>
+    <name>ACRN_Service_VM</name>
+    <os_config>
+      <kern_type>KERNEL_RAWIMAGE</kern_type>
+      <kern_mod>Linux_bzImage</kern_mod>
+      <!-- gpa -->
+      <kern_load_addr>0x90000000</kern_load_addr>
+      <kern_entry_addr>0x90000000</kern_entry_addr>
+      <ramdisk_mod/>
+      <bootargs></bootargs>
+    </os_config>
+  </vm>
+</acrn-config>
