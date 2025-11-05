@@ -153,6 +153,9 @@ COMMON_C_SRCS += common/mmu.c
 ifeq ($(CONFIG_SCHED_NOOP),y)
 COMMON_C_SRCS += common/sched_noop.c
 endif
+ifeq ($(CONFIG_SCHED_BVT),y)
+COMMON_C_SRCS += common/sched_bvt.c
+endif
 COMMON_C_SRCS += common/sbuf.c
 COMMON_C_SRCS += common/logmsg.c
 COMMON_C_SRCS += common/irq.c
@@ -231,9 +234,6 @@ COMMON_C_SRCS += dm/mmio_dev.c
 COMMON_C_SRCS += dm/vgpio.c
 ifeq ($(CONFIG_SCHED_IORR),y)
 COMMON_C_SRCS += common/sched_iorr.c
-endif
-ifeq ($(CONFIG_SCHED_BVT),y)
-COMMON_C_SRCS += common/sched_bvt.c
 endif
 ifeq ($(CONFIG_SCHED_PRIO),y)
 COMMON_C_SRCS += common/sched_prio.c
