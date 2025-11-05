@@ -103,6 +103,8 @@ int32_t riscv_process_vcpu_requests(struct acrn_vcpu *vcpu)
 			memset(&vcpu->arch.trap, 0, sizeof(struct riscv_vcpu_trap_info));
 			vcpu->arch.trap.cause = EXCEPTION_INVALID;
 		}
+
+		vcpu_inject_pending_intr(vcpu);
 	}
 
 	return ret;
@@ -177,6 +179,8 @@ void arch_reset_vcpu(struct acrn_vcpu *vcpu)
 	memset(gctx, 0, sizeof(struct riscv_vcpu_guest_ctx));
 	memset(trap, 0, sizeof(struct riscv_vcpu_trap_info));
 	trap->cause = EXCEPTION_INVALID;
+	vcpu->arch.irqs_pending = 0UL;
+	vcpu->arch.irqs_pending_mask = 0UL;
 }
 
 void arch_context_switch_out(struct thread_object *prev)

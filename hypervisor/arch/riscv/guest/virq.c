@@ -6,6 +6,7 @@
 
 #include <types.h>
 #include <vcpu.h>
+#include <atomic.h>
 #include <logmsg.h>
 #include <asm/irq.h>
 
@@ -89,4 +90,66 @@ void vcpu_queue_exception(struct acrn_vcpu *vcpu,
 		arch->trap = *trap;
 		vcpu_make_request(vcpu, RISCV_VCPU_REQUEST_EXCEPTION);
 	}
+}
+
+int32_t vcpu_set_intr(struct acrn_vcpu *vcpu, uint32_t hwirq)
+{
+	struct acrn_vcpu_arch *arch = &vcpu->arch;
+	int32_t ret = -1;
+
+	/* HVIP is a WARL CSR */
+	if (hwirq < BITS_PER_LONG) {
+		bitmap_set(hwirq, &arch->irqs_pending);
+		bitmap_set(hwirq, &arch->irqs_pending_mask);
+		vcpu_make_request(vcpu, RISCV_VCPU_REQUEST_EVENT);
+		signal_event(&vcpu->events[RISCV_VCPU_EVENT_VIRTUAL_INTERRUPT]);
+		ret = 0;
+	}
+
+	return ret;
+}
+
+int32_t vcpu_clear_intr(struct acrn_vcpu *vcpu, uint32_t hwirq)
+{
+	struct acrn_vcpu_arch *arch = &vcpu->arch;
+	int32_t ret = -1;
+
+	/* HVIP is a WARL CSR */
+	if (hwirq < BITS_PER_LONG) {
+		bitmap_clear(hwirq, &arch->irqs_pending);
+		bitmap_set(hwirq, &arch->irqs_pending_mask);
+		vcpu_make_request(vcpu, RISCV_VCPU_REQUEST_EVENT);
+		ret = 0;
+	}
+
+	return ret;
+}
+
+bool vcpu_inject_pending_intr(struct acrn_vcpu *vcpu)
+{
+	struct acrn_vcpu_arch *arch = &vcpu->arch;
+	uint64_t hvip, mask, val;
+	bool injected = false;
+
+	if (vcpu_take_request(vcpu, RISCV_VCPU_REQUEST_EVENT)) {
+		/*
+		 * Only arch->irqs_pending_mask is cleared here;
+		 * arch->irqs_pending remains unchanged.
+		 * vcpu_set_intr/vcpu_clear_intr update individual bits of
+		 * arch->irqs_pending as needed.
+		 *
+		 * Note: arch->irqs_pending does not reflect the actual
+		 * VS-mode pending interrupt status, as it is not synchronized
+		 * with hardware. This approach is simple but requires caution.
+		 */
+		mask = atomic_readandclear64(&arch->irqs_pending_mask);
+		val = arch->irqs_pending & mask;
+		hvip = cpu_csr_read(CSR_HVIP);
+		hvip &= ~mask;
+		hvip |= val;
+		cpu_csr_write(CSR_HVIP, hvip);
+		injected = true;
+	}
+
+	return injected;
 }
