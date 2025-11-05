@@ -18,6 +18,7 @@
 #include <asm/trap.h>
 #include <asm/guest/vcpu_priv.h>
 #include <asm/guest/vsbi.h>
+#include <asm/guest/virq.h>
 
 void vcpu_set_epc(struct acrn_vcpu *vcpu, uint64_t val)
 {
@@ -97,12 +98,11 @@ int32_t riscv_process_vcpu_requests(struct acrn_vcpu *vcpu)
 	int32_t ret = 0;
 
 	if (vcpu_has_pending_request(vcpu)) {
-		/*
-		 * To add new request processing, add the following:
-		 * if (vcpu_take_request(vcpu, ARCH_SPECIFIC_REQUEST_MACRO)) {
-		 * 	do_something();
-		 * }
-		 */
+		if (vcpu_take_request(vcpu, RISCV_VCPU_REQUEST_EXCEPTION)) {
+			vcpu_set_trap(vcpu, &vcpu->arch.trap);
+			memset(&vcpu->arch.trap, 0, sizeof(struct riscv_vcpu_trap_info));
+			vcpu->arch.trap.cause = EXCEPTION_INVALID;
+		}
 	}
 
 	return ret;
@@ -170,10 +170,13 @@ void arch_reset_vcpu(struct acrn_vcpu *vcpu)
 	struct cpu_regs *regs = &(vcpu->arch.regs);
 	struct riscv_vcpu_host_ctx *hctx = &(vcpu->arch.hctx);
 	struct riscv_vcpu_guest_ctx *gctx = &(vcpu->arch.gctx);
+	struct riscv_vcpu_trap_info *trap = &(vcpu->arch.trap);
 
 	memset(regs, 0, sizeof(struct cpu_regs));
 	memset(hctx, 0, sizeof(struct riscv_vcpu_host_ctx));
 	memset(gctx, 0, sizeof(struct riscv_vcpu_guest_ctx));
+	memset(trap, 0, sizeof(struct riscv_vcpu_trap_info));
+	trap->cause = EXCEPTION_INVALID;
 }
 
 void arch_context_switch_out(struct thread_object *prev)

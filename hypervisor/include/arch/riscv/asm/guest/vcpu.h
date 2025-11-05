@@ -12,6 +12,8 @@
 
 #ifndef ASSEMBLER
 
+#define RISCV_VCPU_REQUEST_EXCEPTION		0U
+
 struct riscv_vcpu_guest_ctx {
 	uint64_t vsstatus;
 	uint64_t vsie;
@@ -50,6 +52,12 @@ struct riscv_vcpu_host_ctx {
 	uint64_t hip;
 };
 
+struct riscv_vcpu_trap_info {
+	uint64_t epc;
+	uint64_t cause;
+	uint64_t tval;
+};
+
 struct acrn_vcpu_arch {
 	/* This have to be the first member of acrn_vcpu_arch */
 	struct cpu_regs regs;
@@ -57,6 +65,7 @@ struct acrn_vcpu_arch {
 	struct riscv_vcpu_guest_ctx gctx;
 	struct riscv_vcpu_host_ctx hctx;
 
+	struct riscv_vcpu_trap_info trap;
 } __aligned(PAGE_SIZE);
 
 struct acrn_vcpu;

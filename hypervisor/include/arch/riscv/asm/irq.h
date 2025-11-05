@@ -13,6 +13,7 @@
 #include <cpu.h>
 
 #define IPI_NOTIFY_CPU		0U
+#define EXCEPTION_INVALID	0x7fffffffffffffffUL
 
 /* CPU-local interrupt count (room for standard causes) */
 #define IRQ_NUM_CPU_DOMAIN	16U

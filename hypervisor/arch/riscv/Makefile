@@ -71,6 +71,7 @@ VP_C_SRCS += arch/riscv/guest/guest_memory.c
 VP_C_SRCS += arch/riscv/guest/vcpu.c
 VP_C_SRCS += arch/riscv/guest/vm.c
 VP_C_SRCS += arch/riscv/guest/vcpu_exit.c
+VP_C_SRCS += arch/riscv/guest/virq.c
 VP_C_SRCS += arch/riscv/guest/vsbi.c
 VP_C_SRCS += arch/riscv/guest/vsbi/vsbi_base.c
 VP_C_SRCS += arch/riscv/guest/vsbi/vsbi_hsm.c
