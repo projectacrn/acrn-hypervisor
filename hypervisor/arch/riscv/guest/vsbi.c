@@ -77,6 +77,7 @@ extern const struct acrn_vsbi_extension vsbi_ext_srst;
 extern const struct acrn_vsbi_extension vsbi_ext_timer;
 extern const struct acrn_vsbi_extension vsbi_ext_acrn;
 extern const struct acrn_vsbi_extension vsbi_ext_dbcn;
+extern const struct acrn_vsbi_extension vsbi_ext_ipi;
 static const struct acrn_vsbi_extension *vsbi_extensions[MAX_NUM_SUPPORTED_VSBI_EXT] = {
 	&vsbi_ext_base,
 	&vsbi_ext_hsm,
@@ -84,6 +85,7 @@ static const struct acrn_vsbi_extension *vsbi_extensions[MAX_NUM_SUPPORTED_VSBI_
 	&vsbi_ext_acrn,
 	&vsbi_ext_dbcn,
 	&vsbi_ext_timer,
+	&vsbi_ext_ipi,
 };
 
 void init_vsbi(struct acrn_vm *vm)
