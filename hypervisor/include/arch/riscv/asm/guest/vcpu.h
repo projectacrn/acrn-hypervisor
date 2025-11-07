@@ -17,6 +17,8 @@
 
 #define RISCV_VCPU_EVENT_VIRTUAL_INTERRUPT	0U
 
+#define RISCV_VSTIMECMP_INVALID			0xffffffffffffffffULL
+
 struct riscv_vcpu_guest_ctx {
 	uint64_t vsstatus;
 	uint64_t vsie;
@@ -53,6 +55,7 @@ struct riscv_vcpu_host_ctx {
 	uint64_t htval;
 	uint64_t hie;
 	uint64_t hip;
+	uint64_t htimedelta;
 };
 
 struct riscv_vcpu_trap_info {

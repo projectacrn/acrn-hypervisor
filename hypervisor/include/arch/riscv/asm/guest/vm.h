@@ -24,6 +24,8 @@ struct vm_arch {
 	uint64_t mvendorid;
 	uint64_t marchid;
 	uint64_t mimpid;
+
+	int64_t time_delta;
 };
 
 struct acrn_vcpu;

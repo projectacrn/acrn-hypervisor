@@ -43,6 +43,9 @@ void load_vcpu(struct acrn_vcpu *vcpu)
 	cpu_csr_write(CSR_HIE,        hctx->hie);
 	/* hip is written by hardware, no need to restore */
 
+	/* restore htimedelta */
+	cpu_csr_write(CSR_HTIMEDELTA, hctx->htimedelta);
+
 	/* load guest state */
 	cpu_csr_write(CSR_VSSTATUS,   gctx->vsstatus);
 	cpu_csr_write(CSR_VSIE,       gctx->vsie);
@@ -75,6 +78,7 @@ void unload_vcpu(struct acrn_vcpu *vcpu)
 	hctx->htval      = cpu_csr_read(CSR_HTVAL);
 	hctx->hie        = cpu_csr_read(CSR_HIE);
 	hctx->hip        = cpu_csr_read(CSR_HIP);
+	hctx->htimedelta = cpu_csr_read(CSR_HTIMEDELTA);
 
 	/* save guest state */
 	gctx->vsstatus   = cpu_csr_read(CSR_VSSTATUS);
@@ -129,6 +133,8 @@ int32_t arch_init_vcpu(struct acrn_vcpu *vcpu)
 	/* Delegate VS interrupts */
 	hctx->hideleg = HIDELEG_DEFAULT;
 
+	hctx->htimedelta = vcpu->vm->arch_vm.time_delta;
+
 	/*
 	 * SPVP & SPV: sret to vs mode
 	 */
@@ -181,6 +187,7 @@ void arch_reset_vcpu(struct acrn_vcpu *vcpu)
 	trap->cause = EXCEPTION_INVALID;
 	vcpu->arch.irqs_pending = 0UL;
 	vcpu->arch.irqs_pending_mask = 0UL;
+	gctx->vstimecmp = RISCV_VSTIMECMP_INVALID;
 }
 
 void arch_context_switch_out(struct thread_object *prev)

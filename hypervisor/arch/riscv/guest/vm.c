@@ -16,8 +16,16 @@
 #include <per_cpu.h>
 #include <vfdt.h>
 #include <libfdt.h>
-
 #include <asm/guest/vcpu_priv.h>
+
+static void riscv_vm_time_delta_init(struct acrn_vm *vm)
+{
+	/* FIXME: move SSTC checking to platform caps */
+	ASSERT(!!(cpu_csr_read(CSR_HENVCFG) & ENVCFG_STCE), "SSTC must be enabled");
+
+	/* initialize VM startup time to 0 */
+	vm->arch_vm.time_delta = -cpu_ticks();
+}
 
 uint32_t vcpu_get_vhartid(struct acrn_vcpu *vcpu)
 {
@@ -59,6 +67,8 @@ int32_t arch_init_vm(struct acrn_vm *vm, struct acrn_vm_config *vm_config)
 		init_service_vm_vfdt(vm);
 	}
 
+	riscv_vm_time_delta_init(vm);
+
 	return 0;
 }
 
@@ -91,6 +101,7 @@ void arch_vm_prepare_bsp(struct acrn_vcpu *vcpu)
 
 void arch_trigger_level_intr(__unused struct acrn_vm *vm,
 			__unused uint32_t irq, __unused bool assert) {}
+
 
 static void fdt_set_hart_isa_str_all(void *fdt, const char *isa_str)
 {
