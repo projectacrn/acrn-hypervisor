@@ -170,6 +170,21 @@ int fdt_add_rsvd_node(void *fdt, uint64_t addr, uint64_t size)
 	return ret;
 }
 
+int fdt_set_kernel_bootargs(void *fdt, const char *bootargs)
+{
+	int node, ret = 0;
+
+	node = fdt_path_offset(fdt, "/chosen");
+	if (node == -FDT_ERR_NOTFOUND) {
+		node = fdt_add_subnode(fdt, 0, "/chosen");
+	}
+
+	if (node > 0) {
+		ret = fdt_setprop_string(fdt, node, "bootargs", bootargs);
+	}
+	return ret;
+}
+
 void init_devtree(uint64_t fdt_paddr)
 {
 	void *fdt = hpa2hva_early(fdt_paddr);

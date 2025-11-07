@@ -18,5 +18,6 @@ uint8_t *get_host_fdt(void);
 int fdt_get_phys_mem_region(const void *fdt, uint64_t *addr_out, uint64_t *size_out);
 int fdt_get_rsvd_mem_regions(const void *fdt, struct mem_region *out_region, int *out_nr_region);
 int fdt_add_rsvd_node(void *fdt, uint64_t addr, uint64_t size);
+int fdt_set_kernel_bootargs(void *fdt, const char *bootargs);
 
 #endif /* FDT_API_H */

@@ -11,6 +11,20 @@
 #include <vfdt.h>
 #include <fdt_api.h>
 
+void init_vm_vfdt_common(struct acrn_vm *vm)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+	void *fdt = vm_get_vfdt(vm);
+
+	if (vm_config->os_config.bootargs[0] != '\0') {
+		fdt_set_kernel_bootargs(fdt, vm_config->os_config.bootargs);
+	}
+
+	vm->sw.fdt_info.src_addr = fdt;
+	vm->sw.fdt_info.size = fdt_totalsize(fdt);
+	/* load addr is initialized in image loader */
+}
+
 void init_service_vm_vfdt(struct acrn_vm *vm)
 {
 	void *fdt = vm_get_vfdt(vm);
@@ -44,7 +58,5 @@ void init_service_vm_vfdt(struct acrn_vm *vm)
 
 	arch_init_service_vm_vfdt(vm);
 
-	vm->sw.fdt_info.src_addr = fdt;
-	vm->sw.fdt_info.size = fdt_totalsize(fdt);
-	/* load addr is initialized in image loader */
+	init_vm_vfdt_common(vm);
 }
