@@ -35,7 +35,7 @@
       <kern_load_addr>0x90000000</kern_load_addr>
       <kern_entry_addr>0x90000000</kern_entry_addr>
       <ramdisk_mod/>
-      <bootargs></bootargs>
+      <bootargs>nokaslr earlycon=sbi console=hvc0</bootargs>
     </os_config>
   </vm>
 </acrn-config>
