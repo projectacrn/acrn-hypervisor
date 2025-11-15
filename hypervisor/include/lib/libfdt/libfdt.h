@@ -146,9 +146,9 @@ static inline void fdt32_st(void *property, uint32_t value)
 	uint8_t *bp = (uint8_t *)property;
 
 	bp[0] = value >> 24;
-	bp[1] = (value >> 16) & 0xff;
-	bp[2] = (value >> 8) & 0xff;
-	bp[3] = value & 0xff;
+	bp[1] = (value >> 16) & 0xffU;
+	bp[2] = (value >> 8) & 0xffU;
+	bp[3] = value & 0xffU;
 }
 
 static inline uint64_t fdt64_ld(const fdt64_t *p)
@@ -170,13 +170,13 @@ static inline void fdt64_st(void *property, uint64_t value)
 	uint8_t *bp = (uint8_t *)property;
 
 	bp[0] = value >> 56;
-	bp[1] = (value >> 48) & 0xff;
-	bp[2] = (value >> 40) & 0xff;
-	bp[3] = (value >> 32) & 0xff;
-	bp[4] = (value >> 24) & 0xff;
-	bp[5] = (value >> 16) & 0xff;
-	bp[6] = (value >> 8) & 0xff;
-	bp[7] = value & 0xff;
+	bp[1] = (value >> 48) & 0xffU;
+	bp[2] = (value >> 40) & 0xffU;
+	bp[3] = (value >> 32) & 0xffU;
+	bp[4] = (value >> 24) & 0xffU;
+	bp[5] = (value >> 16) & 0xffU;
+	bp[6] = (value >> 8) & 0xffU;
+	bp[7] = value & 0xffU;
 }
 
 /**********************************************************************/
@@ -230,9 +230,9 @@ int fdt_next_subnode(const void *fdt, int offset);
  * literal.
  */
 #define fdt_for_each_subnode(node, fdt, parent)		\
-	for (node = fdt_first_subnode(fdt, parent);	\
-	     node >= 0;					\
-	     node = fdt_next_subnode(fdt, node))
+	for ((node) = fdt_first_subnode(fdt, parent);	\
+	     (node) >= 0;					\
+	     (node) = fdt_next_subnode(fdt, node))
 
 /**********************************************************************/
 /* General functions                                                  */
@@ -394,8 +394,9 @@ static inline uint32_t fdt_get_max_phandle(const void *fdt)
 	int err;
 
 	err = fdt_find_max_phandle(fdt, &phandle);
-	if (err < 0)
-		return (uint32_t)-1;
+	if (err < 0) {
+		phandle = (uint32_t)-1;
+	}
 
 	return phandle;
 }
@@ -619,9 +620,9 @@ int fdt_next_property_offset(const void *fdt, int offset);
  * literal.
  */
 #define fdt_for_each_property_offset(property, fdt, node)	\
-	for (property = fdt_first_property_offset(fdt, node);	\
-	     property >= 0;					\
-	     property = fdt_next_property_offset(fdt, property))
+	for ((property) = fdt_first_property_offset(fdt, node);	\
+	     (property) >= 0;					\
+	     (property) = fdt_next_property_offset(fdt, property))
 
 /**
  * fdt_get_property_by_offset - retrieve the property at a given offset
