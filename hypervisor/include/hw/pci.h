@@ -307,6 +307,8 @@ struct pci_pdev {
 	bool has_flr;
 	bool has_af_flr;
 	struct hlist_node link;
+
+	struct pci_pdev *parent;
 };
 
 struct pci_cfg_ops {
@@ -363,7 +365,7 @@ void set_mmcfg_region(struct pci_mmcfg_region *region);
 #endif
 struct pci_mmcfg_region *get_mmcfg_region(void);
 
-struct pci_pdev *pci_init_pdev(union pci_bdf pbdf, uint32_t drhd_index);
+struct pci_pdev *pci_init_pdev(union pci_bdf pbdf, uint32_t drhd_index, struct pci_pdev *parent);
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
 void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 void enable_disable_pci_intx(union pci_bdf bdf, bool enable);

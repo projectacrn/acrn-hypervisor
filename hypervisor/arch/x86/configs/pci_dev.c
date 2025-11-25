@@ -12,7 +12,7 @@
 /*
  * @pre pdev != NULL;
  */
-static bool allocate_to_prelaunched_vm(struct pci_pdev *pdev)
+bool allocate_to_prelaunched_vm(struct pci_pdev *pdev)
 {
 	bool found = false;
 	uint16_t vmid;

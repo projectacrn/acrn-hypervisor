@@ -91,7 +91,7 @@ static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf, uint16_t v
 	 * Per VT-d 8.3.3, the VFs are under the scope of the same
 	 * remapping unit as the associated PF when SRIOV is enabled.
 	 */
-	vf_pdev = pci_init_pdev(vf_bdf, pf_vdev->pdev->drhd_index);
+	vf_pdev = pci_init_pdev(vf_bdf, pf_vdev->pdev->drhd_index, pf_vdev->pdev->parent);
 	if (vf_pdev != NULL) {
 		struct acrn_vm_pci_dev_config *dev_cfg;
 

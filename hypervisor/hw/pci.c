@@ -384,6 +384,7 @@ struct pci_bdf_mapping_group {
 struct pci_bus_num_to_drhd_index_mapping {
 	uint8_t bus_under_scan;
 	uint32_t bus_drhd_index;
+	struct pci_pdev *parent_pdev;
 };
 
 static uint32_t pci_check_override_drhd_index(union pci_bdf pbdf,
@@ -421,16 +422,19 @@ static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
 	uint8_t current_bus_index;
 	uint32_t current_drhd_index, bdf_drhd_index;
 	struct pci_pdev *pdev;
+	struct pci_pdev *parent = NULL;
 
 	struct pci_bus_num_to_drhd_index_mapping bus_map[PCI_BUSMAX + 1U]; /* FIFO queue of buses to walk */
 	uint32_t s = 0U, e = 0U; /* start and end index into queue */
 
 	bus_map[e].bus_under_scan = bus;
 	bus_map[e].bus_drhd_index = drhd_index;
+	bus_map[e].parent_pdev = NULL;
 	e = e + 1U;
 	while (s < e) {
 		current_bus_index = bus_map[s].bus_under_scan;
 		current_drhd_index = bus_map[s].bus_drhd_index;
+		parent = bus_map[s].parent_pdev;
 		s = s + 1U;
 
 		bitmap_set_nolock(current_bus_index,
@@ -462,12 +466,13 @@ static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
 
 				bdf_drhd_index = pci_check_override_drhd_index(pbdf, bdfs_from_drhds,
 									current_drhd_index);
-				pdev = pci_init_pdev(pbdf, bdf_drhd_index);
+				pdev = pci_init_pdev(pbdf, bdf_drhd_index, parent);
 				/* NOTE: This touch logic change: if a bridge own by HV as its children */
 				if ((pdev != NULL) && is_bridge(pdev)) {
 					bus_map[e].bus_under_scan =
 						(uint8_t)pci_pdev_read_cfg(pbdf, PCIR_SECBUS_1, 1U);
 					bus_map[e].bus_drhd_index = bdf_drhd_index;
+					bus_map[e].parent_pdev = pdev;
 					e = e + 1U;
 				}
 			}
@@ -841,11 +846,10 @@ static void pci_enumerate_cap(struct pci_pdev *pdev)
  *
  * @return If there's a successfully initialized pdev return it, otherwise return NULL;
  */
-struct pci_pdev *pci_init_pdev(union pci_bdf bdf, uint32_t drhd_index)
+struct pci_pdev *pci_init_pdev(union pci_bdf bdf, uint32_t drhd_index, struct pci_pdev *parent)
 {
 	uint8_t hdr_type, hdr_layout;
 	struct pci_pdev *pdev = NULL;
-	bool is_hv_owned = false;
 
 	if (num_pci_pdev < CONFIG_MAX_PCI_DEV_NUM) {
 		hdr_type = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_HDRTYPE, 1U);
@@ -855,6 +859,7 @@ struct pci_pdev *pci_init_pdev(union pci_bdf bdf, uint32_t drhd_index)
 			pdev = &pci_pdevs[num_pci_pdev];
 			pdev->bdf = bdf;
 			pdev->hdr_type = hdr_type;
+			pdev->parent = parent;
 			pdev->base_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_CLASS, 1U);
 			pdev->sub_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_SUBCLASS, 1U);
 			pdev->nr_bars = pci_pdev_get_nr_bars(hdr_type);
@@ -864,17 +869,17 @@ struct pci_pdev *pci_init_pdev(union pci_bdf bdf, uint32_t drhd_index)
 				pci_enumerate_cap(pdev);
 			}
 
-#if (PRE_VM_NUM != 0U)
-			/* HV owned pdev: 1.typ1 pdev if pre-launched VM exist; 2.pci debug uart */
-			is_hv_owned = (hdr_layout == PCIM_HDRTYPE_BRIDGE) || is_pci_dbg_uart(bdf);
-#else
-			/* HV owned pdev: 1.pci debug uart */
-			is_hv_owned = is_pci_dbg_uart(bdf);
-#endif
-			if (is_hv_owned) {
+			/* PCI debug uart and RP for EP which has been assigned to pre-launched VM are owned by HV */
+			if (is_pci_dbg_uart(bdf)) {
 				hv_owned_pci_pdevs[num_hv_owned_pci_pdev] = pdev;
 				num_hv_owned_pci_pdev++;
 			}
+
+			if (allocate_to_prelaunched_vm(pdev) && parent) {
+				hv_owned_pci_pdevs[num_hv_owned_pci_pdev] = parent;
+				num_hv_owned_pci_pdev++;
+			}
+
 			hlist_add_head(&pdev->link, &pdevs_hlist_heads[hash64(bdf.value, PDEV_HLIST_HASHBITS)]);
 			pdev->drhd_index = drhd_index;
 			num_pci_pdev++;
