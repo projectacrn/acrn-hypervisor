@@ -14,7 +14,7 @@
         "jsonSchema"
     ],
     "dependencies": {
-        "ajv": "^6.10.2"
+        "ajv": "^8.18.0"
     },
     "repository": "https://github.com/lljj-x/vue-json-schema-form",
     "homepage": "https://github.com/lljj-x/vue-json-schema-form",
