@@ -516,7 +516,7 @@ static void vrtc_set_reg_b(struct acrn_vrtc *vrtc, uint8_t newval)
  *   - For a non-Service VM, it will return false indicating the read operation failed if the address is greater than
  *     RTC_CENTURY. Otherwise, the read operation will be emulated.
  *
- * @param[inout] vcpu Pointer to the virtual CPU that is reading from the virtual RTC. The value read from the virtual
+ * @param[inout] vrtc Pointer to the virtual RTC. The value read from the virtual
  *                    RTC will be stored in the PIO request.
  * @param[in] addr The address port to read from.
  * @param[in] width The width of the data to be read. This is not used in this function.
@@ -526,47 +526,41 @@ static void vrtc_set_reg_b(struct acrn_vrtc *vrtc, uint8_t newval)
  * @retval true Successfully read from the virtual RTC device.
  * @retval false Failed to read from the virtual RTC device.
  *
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
  * @pre addr == 0x70U || addr == 0x71U
  *
  * @post N/A
  */
-static bool vrtc_read(struct acrn_vcpu *vcpu, uint16_t addr, __unused size_t width)
+static uint32_t vrtc_read(struct acrn_vrtc *vrtc, uint16_t addr, __unused size_t width)
 {
 	uint8_t offset;
 	time_t current;
-	struct acrn_vrtc *vrtc = &vcpu->vm->vrtc;
-	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
-	struct acrn_vm *vm = vcpu->vm;
-	bool ret = true;
+	uint32_t value = ~0U;
 
 	offset = vrtc->addr;
 
 	if (addr == CMOS_ADDR_PORT) {
-		pio_req->value = offset;
+		value = offset;
 	} else {
-		if (is_service_vm(vm)) {
-			pio_req->value = cmos_get_reg_val(offset);
+		if (is_service_vm(vrtc->vm)) {
+			value = cmos_get_reg_val(offset);
 		} else {
 			if (offset <= RTC_CENTURY) {
 				current = vrtc_get_current_time(vrtc);
 				secs_to_rtc(current, vrtc);
 
 				if(offset == 0xCU) {
-					pio_req->value = vrtc_get_reg_c(vrtc);
+					value = vrtc_get_reg_c(vrtc);
 				} else {
-					pio_req->value = *((uint8_t *)&vrtc->rtcdev + offset);
+					value = *((uint8_t *)&vrtc->rtcdev + offset);
 				}
-				RTC_DEBUG("read 0x%x, 0x%x", offset, pio_req->value);
+				RTC_DEBUG("read 0x%x, 0x%x", offset, value);
 			} else {
 				pr_err("vrtc read invalid addr 0x%x", offset);
-				ret = false;
 			}
 		}
 	}
 
-	return ret;
+	return value;
 }
 
 static inline bool vrtc_is_time_register(uint32_t offset)
@@ -591,30 +585,21 @@ static inline bool vrtc_is_time_register(uint32_t offset)
  *     update the virtual register value and RTC time. And for Post-launched VM, it will send a VM event to notify the
  *     VM of the change in the RTC time if the address port is in the range of the time registers.
  *
- * @param[inout] vcpu Pointer to the virtual CPU that is writing to the virtual RTC.
+ * @param[inout] vrtc Pointer to the virtual RTC.
  * @param[in] addr The address port to write to.
  * @param[in] width Width of the value to be written to the virtual RTC.
  * @param[in] value Value to be written to the virtual RTC.
  *
- * @return A boolean value indicating whether the write operation is handled successfully, which is always true in
- *         current design. It either updates the physical registers, updates the virtual registers, or ignores the
- *         write.
- *
- * @retval true The write operation is handled successfully.
- *
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
  * @pre addr == 0x70U || addr == 0x71U
  *
  * @post N/A
  *
  * @remark N/A
  */
-static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
+static void vrtc_write(struct acrn_vrtc *vrtc, uint16_t addr, size_t width,
 			uint32_t value)
 {
 	time_t current, after;
-	struct acrn_vrtc *vrtc = &vcpu->vm->vrtc;
 	struct acrn_vrtc temp_vrtc;
 	uint8_t mask = 0xFFU;
 	struct vm_event rtc_chg_event;
@@ -623,14 +608,14 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 	if ((width == 1U) && (addr == CMOS_ADDR_PORT)) {
 		vrtc->addr = (uint8_t)(value & 0x7FU);
 	} else {
-		if (is_service_vm(vcpu->vm)) {
+		if (is_service_vm(vrtc->vm)) {
 			if (vrtc_is_time_register(vrtc->addr)) {
 				current = vrtc_get_physical_rtc_time(&temp_vrtc);
-				cmos_set_reg_val(vcpu->vm->vrtc.addr, (uint8_t)(value & 0xFFU));
+				cmos_set_reg_val(vrtc->vm->vrtc.addr, (uint8_t)(value & 0xFFU));
 				after = vrtc_get_physical_rtc_time(&temp_vrtc);
 				vrtc_update_basetime(after, current - after);
 			} else {
-				cmos_set_reg_val(vcpu->vm->vrtc.addr, (uint8_t)(value & 0xFFU));
+				cmos_set_reg_val(vrtc->vm->vrtc.addr, (uint8_t)(value & 0xFFU));
 			}
 		} else {
 			switch (vrtc->addr) {
@@ -665,19 +650,32 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 				vrtc->offset_rtctime += after - current;
 				vrtc->last_rtctime = VRTC_BROKEN_TIME;
 				spinlock_release(&vrtc_rebase_lock);
-				if (is_postlaunched_vm(vcpu->vm) && vrtc_is_time_register(vrtc->addr)) {
+				if (is_postlaunched_vm(vrtc->vm) && vrtc_is_time_register(vrtc->addr)) {
 					rtc_chg_event.type = VM_EVENT_RTC_CHG;
 					edata->delta_time = after - current;
 					edata->last_time = current;
-					send_vm_event(vcpu->vm, &rtc_chg_event);
+					send_vm_event(vrtc->vm, &rtc_chg_event);
 				}
 				break;
 			}
 		}
 	}
-
-	return true;
 }
+
+static int32_t vrtc_pio_handler(struct io_request *io_req, void *private_data)
+{
+	struct acrn_vrtc *vrtc = (struct acrn_vrtc *)private_data;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+
+	if (pio_req->direction == ACRN_IOREQ_DIR_READ) {
+		pio_req->value = vrtc_read(vrtc, pio_req->address, pio_req->size);
+	} else {
+		vrtc_write(vrtc, pio_req->address, pio_req->size, pio_req->value);
+	}
+
+	return 0;
+}
+
 
 #define CALIBRATE_PERIOD	(3 * 3600 * 1000)	/* By ms, totally 3 hours. */
 static struct hv_timer calibrate_timer;
@@ -803,14 +801,11 @@ void resume_vrtc(void)
  */
 void vrtc_init(struct acrn_vm *vm)
 {
-	struct vm_io_range range = {
-	.base = CMOS_ADDR_PORT, .len = 2U};
-
 	/* Initializing the CMOS RAM offset to 0U */
 	vm->vrtc.addr = 0U;
 
 	vm->vrtc.vm = vm;
-	register_pio_emulation_handler(vm, RTC_PIO_IDX, &range, vrtc_read, vrtc_write);
+	register_pio_emulation_handler(vm, CMOS_ADDR_PORT, 2U, vrtc_pio_handler, &vm->vrtc);
 
 	if (is_service_vm(vm)) {
 		calibrate_setup_timer();

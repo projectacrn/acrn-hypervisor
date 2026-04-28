@@ -47,24 +47,16 @@ static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t
 static int32_t vpci_write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bdf bdf);
 
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool vpci_pio_cfgaddr_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
+static uint32_t vpci_pio_cfgaddr_read(struct acrn_vpci *vpci, uint16_t addr, size_t bytes)
 {
 	uint32_t val = ~0U;
-	struct acrn_vpci *vpci = &vcpu->vm->vpci;
 	union pci_cfg_addr_reg *cfg_addr = &vpci->addr;
-	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
 		val = cfg_addr->value;
 	}
 
-	pio_req->value = val;
-
-	return true;
+	return val;
 }
 
 /**
@@ -74,10 +66,9 @@ static bool vpci_pio_cfgaddr_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t 
  * @retval true on success.
  * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
  */
-static bool vpci_pio_cfgaddr_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
+static int32_t vpci_pio_cfgaddr_write(struct acrn_vpci *vpci, uint16_t addr, size_t bytes, uint32_t val)
 {
-	bool ret = true;
-	struct acrn_vpci *vpci = &vcpu->vm->vpci;
+	int32_t ret = 0;
 	union pci_cfg_addr_reg *cfg_addr = &vpci->addr;
 	union pci_bdf vbdf;
 
@@ -85,7 +76,7 @@ static bool vpci_pio_cfgaddr_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 		/* unmask reserved fields: BITs 24-30 and BITs 0-1 */
 		cfg_addr->value = val & (~0x7f000003U);
 
-		if (is_postlaunched_vm(vcpu->vm)) {
+		if (is_postlaunched_vm(container_of(vpci, struct acrn_vm, vpci))) {
 			const struct pci_vdev *vdev;
 
 			vbdf.value = cfg_addr->bits.bdf;
@@ -95,7 +86,7 @@ static bool vpci_pio_cfgaddr_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 			 * still need to deliver to ACRN DM to handle.
 			 */
 			if ((vdev == NULL) || is_quirk_ptdev(vdev)) {
-				ret = false;
+				ret = -ENODEV;
 			}
 		}
 	}
@@ -103,54 +94,49 @@ static bool vpci_pio_cfgaddr_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 	return ret;
 }
 
+static int32_t  vpci_cfgaddr_pio_handler(struct io_request *io_req, void *private_data)
+{
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vpci *vpci = (struct acrn_vpci *)private_data;
+	int32_t ret = 0;
+
+	if (pio_req->direction == ACRN_IOREQ_DIR_READ) {
+		pio_req->value = vpci_pio_cfgaddr_read(vpci, pio_req->address, pio_req->size);
+	} else {
+		ret = vpci_pio_cfgaddr_write(vpci, pio_req->address, pio_req->size, pio_req->value);
+	}
+
+	return ret;
+}
+
 /**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
- * @pre (get_vm_config(vcpu->vm->vm_id)->load_order == PRE_LAUNCHED_VM)
- *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SERVICE_VM)
- *
- * @retval true on success.
- * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
+ * @retval -ENODEV. (ACRN will deliver this IO request to DM to handle for post-launched VM)
  */
-static bool vpci_pio_cfgdata_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
+static int32_t vpci_pio_cfgdata_read(struct acrn_vpci *vpci, uint16_t addr, size_t bytes, uint32_t *val)
 {
 	int32_t ret = 0;
-	struct acrn_vm *vm = vcpu->vm;
-	struct acrn_vpci *vpci = &vm->vpci;
 	union pci_cfg_addr_reg cfg_addr;
 	union pci_bdf bdf;
-	uint32_t val = ~0U;
-	struct acrn_pio_request *pio_req = &vcpu->req.reqs.pio_request;
 
+	*val = ~0U;
 	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
 	if (cfg_addr.bits.enable != 0U) {
 		uint32_t offset = (uint16_t)cfg_addr.bits.reg_num + (addr - PCI_CONFIG_DATA);
 		if (pci_is_valid_access(offset, bytes)) {
 			bdf.value = cfg_addr.bits.bdf;
-			ret = vpci_read_cfg(vpci, bdf, offset, bytes, &val);
+			ret = vpci_read_cfg(vpci, bdf, offset, bytes, val);
 		}
 	}
 
-	pio_req->value = val;
-	return (ret == 0);
+	return ret;
 }
 
 /**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
- * @pre (get_vm_config(vcpu->vm->vm_id)->load_order == PRE_LAUNCHED_VM)
- *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SERVICE_VM)
- *
- * @retval true on success.
- * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
+ * @retval -ENODEV. (ACRN will deliver this IO request to DM to handle for post-launched VM)
  */
-static bool vpci_pio_cfgdata_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
+static int32_t vpci_pio_cfgdata_write(struct acrn_vpci *vpci, uint16_t addr, size_t bytes, uint32_t val)
 {
 	int32_t ret = 0;
-	struct acrn_vm *vm = vcpu->vm;
-	struct acrn_vpci *vpci = &vm->vpci;
 	union pci_cfg_addr_reg cfg_addr;
 	union pci_bdf bdf;
 
@@ -163,7 +149,22 @@ static bool vpci_pio_cfgdata_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 		}
 	}
 
-	return (ret == 0);
+	return ret;
+}
+
+static int32_t  vpci_cfgdata_pio_handler(struct io_request *io_req, void *private_data)
+{
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vpci *vpci = (struct acrn_vpci *)private_data;
+	int32_t ret;
+
+	if (pio_req->direction == ACRN_IOREQ_DIR_READ) {
+		ret = vpci_pio_cfgdata_read(vpci, pio_req->address, pio_req->size, &pio_req->value);
+	} else {
+		ret = vpci_pio_cfgdata_write(vpci, pio_req->address, pio_req->size, pio_req->value);
+	}
+
+	return ret;
 }
 
 /**
@@ -215,16 +216,6 @@ static int32_t vpci_mmio_cfg_access(struct io_request *io_req, void *private_dat
  */
 int32_t init_vpci(struct acrn_vm *vm)
 {
-	struct vm_io_range pci_cfgaddr_range = {
-		.base = PCI_CONFIG_ADDR,
-		.len = 1U
-	};
-
-	struct vm_io_range pci_cfgdata_range = {
-		.base = PCI_CONFIG_DATA,
-		.len = 4U
-	};
-
 	struct acrn_vm_config *vm_config;
 	struct pci_mmcfg_region *pci_mmcfg;
 	int32_t ret = 0;
@@ -258,12 +249,10 @@ int32_t init_vpci(struct acrn_vm *vm)
 			vm->vpci.pci_mmcfg.address + get_pci_mmcfg_size(&vm->vpci.pci_mmcfg), &vm->vpci, false);
 
 		/* Intercept and handle I/O ports CF8h */
-		register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
-			vpci_pio_cfgaddr_read, vpci_pio_cfgaddr_write);
+		register_pio_emulation_handler(vm, PCI_CONFIG_ADDR, 1U, vpci_cfgaddr_pio_handler, &vm->vpci);
 
 		/* Intercept and handle I/O ports CFCh -- CFFh */
-		register_pio_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
-			vpci_pio_cfgdata_read, vpci_pio_cfgdata_write);
+		register_pio_emulation_handler(vm, PCI_CONFIG_DATA, 4U, vpci_cfgdata_pio_handler, &vm->vpci);
 
 		spinlock_init(&vm->vpci.lock);
 	}

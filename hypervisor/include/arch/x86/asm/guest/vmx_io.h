@@ -9,25 +9,6 @@
 
 #include <types.h>
 
-/* Define emulated port IO index */
-#define PIC_PRIMARY_PIO_IDX		0U
-#define PIC_SECONDARY_PIO_IDX		(PIC_PRIMARY_PIO_IDX + 1U)
-#define PIC_ELC_PIO_IDX			(PIC_SECONDARY_PIO_IDX + 1U)
-#define PCI_CFGADDR_PIO_IDX		(PIC_ELC_PIO_IDX + 1U)
-#define PCI_CFGDATA_PIO_IDX		(PCI_CFGADDR_PIO_IDX + 1U)
-/* MAX_VUART_NUM_PER_VM is 8, so allocate UART_PIO_IDX0~UART_PIO_IDX0 + 7 for 8 vuart */
-#define UART_PIO_IDX0			(PCI_CFGDATA_PIO_IDX + 1U)
-#define PM1A_EVT_PIO_IDX		(UART_PIO_IDX0 + MAX_VUART_NUM_PER_VM)
-#define PM1A_CNT_PIO_IDX		(PM1A_EVT_PIO_IDX + 1U)
-#define PM1B_EVT_PIO_IDX		(PM1A_CNT_PIO_IDX + 1U)
-#define PM1B_CNT_PIO_IDX		(PM1B_EVT_PIO_IDX + 1U)
-#define RTC_PIO_IDX			(PM1B_CNT_PIO_IDX + 1U)
-#define VIRTUAL_PM1A_CNT_PIO_IDX	(RTC_PIO_IDX + 1U)
-#define KB_PIO_IDX			(VIRTUAL_PM1A_CNT_PIO_IDX + 1U)
-#define CF9_PIO_IDX			(KB_PIO_IDX + 1U)
-#define PIO_RESET_REG_IDX		(CF9_PIO_IDX + 1U)
-#define SLEEP_CTL_PIO_IDX		(PIO_RESET_REG_IDX + 1U)
-#define EMUL_PIO_IDX_MAX		(SLEEP_CTL_PIO_IDX + 1U)
 /**
  * @brief The handler of VM exits on I/O instructions
  *

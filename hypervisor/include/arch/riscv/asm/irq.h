@@ -51,6 +51,11 @@ struct riscv_irq_data {
 	/* Can be extended when PROFILING_ON is supported, similar to "struct x86_irq_data". */
 };
 
+/* FIXME: need parse DT to find an available vectorfor HSM  */
+#define HYPERVISOR_CALLBACK_HSM_VECTOR	0x20U
+
+static inline void arch_fire_hsm_interrupt(void) {}
+
 struct intr_excp_ctx {
 	struct cpu_regs regs;
 };

@@ -68,21 +68,15 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 	}
 }
 
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool handle_reset_reg_read(struct acrn_vcpu *vcpu, __unused uint16_t addr,
-		__unused size_t bytes)
+static int32_t handle_reset_reg_read(struct acrn_vm *vm, uint32_t *val)
 {
-	bool ret = true;
-	struct acrn_vm *vm = vcpu->vm;
+	int32_t ret = 0;
 
 	if (is_postlaunched_vm(vm)) {
 		/* re-inject to DM */
-		ret = false;
+		ret = -ENODEV;
 	} else {
-		vcpu->req.reqs.pio_request.value = vm->arch_vm.reset_control;
+		*val = vm->arch_vm.reset_control;
 	}
 
 	return ret;
@@ -91,10 +85,10 @@ static bool handle_reset_reg_read(struct acrn_vcpu *vcpu, __unused uint16_t addr
 /**
  * @pre vm != NULL
  */
-static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset, bool warm)
+static int32_t handle_common_reset_reg_write(struct acrn_vm *vm, bool reset, bool warm)
 {
-	struct acrn_vm *vm = vcpu->vm;
-	bool ret = true;
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
+	int32_t ret = true;
 
 	get_vm_lock(vm);
 	if (reset) {
@@ -104,7 +98,7 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset, bo
 			reset_host(warm);
 		} else if (is_postlaunched_vm(vm)) {
 			/* re-inject to DM */
-			ret = false;
+			ret = -ENODEV;
 		} else {
 			/*
 			 * If it's Service VM reset while RTVM is still alive
@@ -119,7 +113,7 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset, bo
 	} else {
 		if (is_postlaunched_vm(vm)) {
 			/* If post-launched VM write none reset value, re-inject to DM */
-			ret = false;
+			ret = -ENODEV;
 		}
 		/*
 		 * Ignore writes from Service VM and pre-launched VM.
@@ -131,26 +125,38 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset, bo
 	return ret;
 }
 
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool handle_kb_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size_t bytes, uint32_t val)
+static int32_t handle_kb_write(struct acrn_vm *vm, __unused uint16_t addr, size_t bytes, uint32_t val)
 {
 	/* ignore commands other than system reset */
-	return handle_common_reset_reg_write(vcpu, ((bytes == 1U) && (val == 0xfeU)), false);
+	return handle_common_reset_reg_write(vm, ((bytes == 1U) && (val == 0xfeU)), false);
 }
 
-static bool handle_kb_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
+static uint32_t handle_kb_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
 {
-	if (is_service_vm(vcpu->vm) && (bytes == 1U)) {
+	uint32_t value = ~0U;
+
+	if (is_service_vm(vm) && (bytes == 1U)) {
 		/* In case i8042 is defined as ACPI PNP device in BIOS, HV need expose physical 0x64 port. */
-		vcpu->req.reqs.pio_request.value = pio_read8(addr);
-	} else {
-		/* ACRN will not expose kbd controller to the guest in this case. */
-		vcpu->req.reqs.pio_request.value = ~0U;
+		value = pio_read8(addr);
 	}
-	return true;
+	/* ACRN will not expose kbd controller to the guest in other case. */
+
+	return value;
+}
+
+static int32_t kb_pio_handler(struct io_request *io_req, void *private_data)
+{
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vm *vm = (struct acrn_vm *)private_data;
+	int32_t ret = 0;
+
+	if (pio_req->direction == ACRN_IOREQ_DIR_READ) {
+		pio_req->value = handle_kb_read(vm, pio_req->address, pio_req->size);
+	} else {
+		ret = handle_kb_write(vm, pio_req->address, pio_req->size, pio_req->value);
+	}
+
+	return ret;
 }
 
 
@@ -166,29 +172,38 @@ static bool handle_kb_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
  */
-static bool handle_cf9_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size_t bytes, uint32_t val)
+static bool handle_cf9_write(struct acrn_vm *vm, __unused uint16_t addr, size_t bytes, uint32_t val)
 {
-	struct acrn_vm *vm = vcpu->vm;
-
 	vm->arch_vm.reset_control = val & 0xeU;
-	return handle_common_reset_reg_write(vcpu,
+	return handle_common_reset_reg_write(vm,
 			((bytes == 1U) && ((val & 0x4U) == 0x4U) && ((val & 0xaU) != 0U)),
 			((val & 0x8U) == 0U));
 }
 
-/**
- * @pre vcpu != NULL
- * @pre vcpu->vm != NULL
- */
-static bool handle_reset_reg_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
+static int32_t cf9_pio_handler(struct io_request *io_req, void *private_data)
 {
-	bool ret = true;
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vm *vm = (struct acrn_vm *)private_data;
+	int32_t ret;
+
+	if (pio_req->direction == ACRN_IOREQ_DIR_READ) {
+		ret = handle_reset_reg_read(vm, &pio_req->value);
+	} else {
+		ret = handle_cf9_write(vm, pio_req->address, pio_req->size, pio_req->value);
+	}
+
+	return ret;
+}
+
+static int32_t handle_reset_reg_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
+{
+	int32_t ret = 0;
 
 	if (bytes == 1U) {
 		struct acpi_reset_reg *reset_reg = get_host_reset_reg_data();
 
 		if (val == reset_reg->val) {
-			ret = handle_common_reset_reg_write(vcpu, true, false);
+			ret = handle_common_reset_reg_write(vm, true, false);
 		} else {
 			/*
 			 * ACPI defines the reset value but doesn't specify the meaning of other values.
@@ -197,6 +212,21 @@ static bool handle_reset_reg_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 			 */
 			pio_write8((uint8_t)val, addr);
 		}
+	}
+
+	return ret;
+}
+
+static int32_t reset_reg_pio_handler(struct io_request *io_req, void *private_data)
+{
+	struct acrn_pio_request *pio_req = &io_req->reqs.pio_request;
+	struct acrn_vm *vm = (struct acrn_vm *)private_data;
+	int32_t ret = 0;
+
+	if (pio_req->direction == ACRN_IOREQ_DIR_READ) {
+		pio_req->value = handle_kb_read(vm, pio_req->address, pio_req->size);
+	} else {
+		ret = handle_reset_reg_write(vm, pio_req->address, pio_req->size, pio_req->value);
 	}
 
 	return ret;
@@ -212,16 +242,10 @@ void register_reset_port_handler(struct acrn_vm *vm)
 		struct acpi_reset_reg *reset_reg = get_host_reset_reg_data();
 		struct acrn_acpi_generic_address *gas = &(reset_reg->reg);
 
-		struct vm_io_range io_range = {
-			.len = 1U
-		};
-
-		io_range.base = 0x64U;
-		register_pio_emulation_handler(vm, KB_PIO_IDX, &io_range, handle_kb_read, handle_kb_write);
+		register_pio_emulation_handler(vm, 0x64U, 1U, kb_pio_handler, vm);
 
 		/* ACPI reset register is fixed at 0xcf9 for post-launched and pre-launched VMs */
-		io_range.base = 0xcf9U;
-		register_pio_emulation_handler(vm, CF9_PIO_IDX, &io_range, handle_reset_reg_read, handle_cf9_write);
+		register_pio_emulation_handler(vm, 0xcf9U, 1U, cf9_pio_handler, vm);
 
 		/*
 		 * - here is taking care of Service VM only:
@@ -233,9 +257,8 @@ void register_reset_port_handler(struct acrn_vm *vm)
 			(gas->bit_width == 8U) && (gas->bit_offset == 0U) &&
 			(gas->address != 0xcf9U) && (gas->address != 0x64U)) {
 
-			io_range.base = (uint16_t)reset_reg->reg.address;
-			register_pio_emulation_handler(vm, PIO_RESET_REG_IDX, &io_range,
-					handle_reset_reg_read, handle_reset_reg_write);
+			register_pio_emulation_handler(vm, (uint16_t)reset_reg->reg.address, 1U,
+					reset_reg_pio_handler, vm);
 		}
 	}
 }

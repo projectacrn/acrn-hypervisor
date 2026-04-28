@@ -81,6 +81,18 @@ struct intr_excp_ctx;
 
 int32_t riscv_process_vcpu_requests(struct acrn_vcpu *vcpu);
 
+static inline int32_t emulate_instruction(struct acrn_vcpu *vcpu)
+{
+	(void)vcpu;
+	return 0;
+}
+
+static inline void emulate_pio_complete(struct acrn_vcpu *vcpu, const struct io_request *io_req)
+{
+	(void)vcpu;
+	(void)io_req;
+}
+
 #endif /* ASSEMBLER */
 
 #endif /* RISCV_VCPU_H */

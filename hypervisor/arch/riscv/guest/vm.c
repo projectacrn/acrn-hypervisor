@@ -122,6 +122,43 @@ static void fdt_set_hart_isa_str_all(void *fdt, const char *isa_str)
 	}
 }
 
+static int fdt_set_hsm(void *fdt)
+{
+	int soc_offset, plic_offset, new_offset, child, ret = 0;
+	const char *comp;
+
+	soc_offset = fdt_path_offset(fdt, "/soc");
+	if (soc_offset < 0) {
+		ret = soc_offset;
+	} else {
+		child = fdt_first_subnode(fdt, soc_offset);
+		while (child >= 0) {
+			comp = fdt_getprop(fdt, child, "compatible", NULL);
+			if (comp && strstr_s(comp, 8, "plic", 8)) {
+				plic_offset = child;
+				break;
+			}
+			child = fdt_next_subnode(fdt, child);
+		}
+
+		if (plic_offset < 0) {
+			ret = -FDT_ERR_NOTFOUND;
+		} else {
+			new_offset = fdt_add_subnode(fdt, soc_offset, "hsm");
+			if (new_offset < 0) {
+				ret = new_offset;
+			} else {
+				fdt_setprop_string(fdt, new_offset, "compatible", "riscv,hsm");
+				fdt_setprop_cell(fdt, new_offset, "interrupts", HYPERVISOR_CALLBACK_HSM_VECTOR);
+				fdt_setprop_cell(fdt, new_offset, "interrupt-parent", 0x9);
+			}
+		}
+	}
+
+	return ret;
+
+}
+
 void arch_init_service_vm_vfdt(struct acrn_vm *vm)
 {
 	/* TODO: For now hardcode the isa string.
@@ -131,4 +168,5 @@ void arch_init_service_vm_vfdt(struct acrn_vm *vm)
 	 */
 	const char *isa_str = "rv64imafdc_zicsr_zifencei_sstc";
 	fdt_set_hart_isa_str_all(vm_get_vfdt(vm), isa_str);
+	fdt_set_hsm(vm_get_vfdt(vm));
 }

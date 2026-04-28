@@ -75,8 +75,8 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 	exit_qual = vcpu->arch.exit_qualification;
 
 	io_req->io_type = ACRN_IOREQ_TYPE_PORTIO;
-	pio_req->size = vm_exit_io_instruction_size(exit_qual) + 1UL;
-	pio_req->address = vm_exit_io_instruction_port_number(exit_qual);
+	pio_req->size = (uint16_t)(vm_exit_io_instruction_size(exit_qual) + 1UL);
+	pio_req->address = (uint16_t)vm_exit_io_instruction_port_number(exit_qual);
 	if (vm_exit_io_instruction_access_direction(exit_qual) == 0UL) {
 		mask = 0xFFFFFFFFU >> (32U - (8U * pio_req->size));
 		pio_req->direction = ACRN_IOREQ_DIR_WRITE;
