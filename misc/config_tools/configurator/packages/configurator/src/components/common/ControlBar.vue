@@ -31,8 +31,9 @@
 <script>
 import {Icon} from '@vicons/utils'
 import {Minus, WindowMaximizeRegular, Times, Cog} from '@vicons/fa'
-import {appWindow} from "@tauri-apps/api/window";
-import {invoke} from "@tauri-apps/api";
+import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+import {invoke} from "@tauri-apps/api/core";
+const appWindow = getCurrentWebviewWindow()
 
 
 export default {

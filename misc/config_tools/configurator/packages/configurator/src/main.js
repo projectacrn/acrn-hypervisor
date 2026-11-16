@@ -1,19 +1,7 @@
-const isTauri = !!window.__TAURI_IPC__;
+const isTauri = !!window.__TAURI_INTERNALS__;
 window.isDev = process.env.NODE_ENV === 'development';
 
-if (isTauri) {
-    let openCount = 0
-
-    function openDevTools() {
-        openCount++;
-        console.log(`openCount ${openCount} of 5`)
-        if (openCount >= 5) {
-            invoke('open_devtools', {})
-        }
-    }
-
-    window.openDevTools = openDevTools;
-} else {
+if (!isTauri) {
     (async () => {
         // Patch Browser function to mock Tauri env
         let mockJS = await import('../tests/mock');
@@ -25,7 +13,7 @@ import {createApp} from 'vue';
 import App from './App.vue';
 
 import router from "./router";
-import {invoke} from "@tauri-apps/api/tauri";
+import {invoke} from "@tauri-apps/api/core";
 import BootstrapVue3 from 'bootstrap-vue-3'
 import naive from 'naive-ui';
 

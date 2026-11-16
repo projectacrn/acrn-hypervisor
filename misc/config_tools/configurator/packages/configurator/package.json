@@ -18,7 +18,8 @@
     "@lljj/vue3-form-naive": "^1.12.2",
     "@popperjs/core": "^2.11.5",
     "@rollup/plugin-replace": "^4.0.0",
-    "@tauri-apps/api": "^1.0.0-rc.4",
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-dialog": "^2.8.4",
     "@vicons/fa": "^0.12.0",
     "@vicons/utils": "^0.1.4",
     "@vueform/slider": "^2.0.10",
@@ -32,8 +33,8 @@
     "node-fetch": "^2.6.7",
     "sass": "^1.50.0",
     "vfonts": "^0.0.3",
-    "vue": "3.2.33",
-    "vue-router": "4"
+    "vue": "3.2.47",
+    "vue-router": "4.5.0"
   },
   "overrides": {
     "sass": {
@@ -48,9 +49,9 @@
     }
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.0.0-rc.10",
+    "@tauri-apps/cli": "^2.12.4",
     "@types/node": "^16.11.33",
     "@vitejs/plugin-vue": "^2.3.1",
-    "vite": ">=3.2.11"
+    "vite": "6.0.4"
   }
 }

@@ -7,31 +7,29 @@ license = "BSD"
 repository = "https://github.com/projectacrn/acrn-hypervisor"
 default-run = "acrn-configurator"
 edition = "2021"
-rust-version = "1.57"
+rust-version = "1.90"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5.2", features = [] }
+tauri-build = { version = "2.7.4", features = [] }
 
 [dependencies]
-openssl = "0.10.72" # fix vulnerability only
-idna = "=1.0.0"     # fix vulnerability only
-url = "=2.5.1"      # fix vulnerability only
-tokio = "=1.43.1"   # fix vulnerability only
-crossbeam-channel = "=0.5.15"   # fix vulnerability only
 serde_json = "1.0.81"
 serde = { version = "1.0.137", features = ["derive"] }
-tauri = { version = "1.6.7", features = ["api-all", "devtools"] }
+tauri = { version = "2.12.5", features = ["devtools"] }
+tauri-plugin-dialog = "2.8.4"
 log = "0.4.17"
-glob = "0.3.0"
 dirs = "4.0.0"
 itertools = "0.10.3"
 
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Storage_FileSystem"] }
+
 [features]
 # by default Tauri runs in production mode
-# when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devPath` is an URL
+# when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devUrl` is a URL
 default = ["custom-protocol"]
-# this feature is used used for production builds where `devPath` points to the filesystem
+# this feature is used used for production builds where `frontendDist` points to the filesystem
 # DO NOT remove this
 custom-protocol = ["tauri/custom-protocol"]

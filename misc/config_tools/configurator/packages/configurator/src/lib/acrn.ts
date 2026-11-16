@@ -1,8 +1,9 @@
-import {dialog, invoke} from "@tauri-apps/api";
+import {invoke} from "@tauri-apps/api/core";
 import JSON2XML from "./json2xml"
-import {OpenDialogOptions} from "@tauri-apps/api/dialog";
+import {OpenDialogOptions} from "@tauri-apps/plugin-dialog";
 import _ from "lodash";
 import {vueUtils} from "@lljj/vue3-form-naive";
+import * as dialog from "@tauri-apps/plugin-dialog"
 
 function all(arr: boolean[]): boolean {
     return arr.every(element => element === true);

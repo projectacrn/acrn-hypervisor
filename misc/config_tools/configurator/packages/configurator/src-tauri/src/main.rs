@@ -7,6 +7,7 @@ mod configurator;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             configurator::get_history,
             configurator::add_history,
