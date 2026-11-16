@@ -1,8 +1,8 @@
 <template>
-  <div style="border:1px solid gray;background: #F5F5F5;padding: 1rem">
+  <div class="cpu_affinity" style="border:1px solid gray;background: #F5F5F5;padding: 1rem">
     <b>{{ uiOptions.title }}</b>
     <div class="p-4">
-      <div v-if="defaultVal.pcpu && defaultVal.pcpu.length>0">
+      <div v-if="defaultVal && defaultVal.pcpu && defaultVal.pcpu.length>0">
         <b-row v-if="is_std_vm">
           <label>
             <n-popover trigger="hover" placement="top-start" style="width: 500px">
@@ -162,6 +162,9 @@ export default {
     }
   },
   mounted() {
+    if (!_.isPlainObject(this.defaultVal)) {
+      this.defaultVal = {}
+    }
     if (!_.isArray(this.defaultVal.pcpu)) {
       this.defaultVal.pcpu = []
       this.addPCPU(-1)

@@ -5,7 +5,7 @@
     <div class="d-flex gap-2 flex-column">
       <text>Intel Resource Director Technology</text>
       <b-form-checkbox
-          v-model="RDT_ENABLED" :value="'y'" :uncheckedValue="'n'"
+          :model-value="RDT_ENABLED" :value="'y'" :uncheckedValue="'n'"
           @click="(event)=>checkboxController('RDT_ENABLED',event)">
         <n-popover trigger="hover" placement="top-start">
           <template #trigger>
@@ -17,7 +17,7 @@
       </b-form-checkbox>
       <div class="d-flex flex-column gap-2 ps-3 pb-3">
         <b-form-checkbox
-            v-model="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'"
+            :model-value="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'"
             :disabled="VCAT_ENABLED==='y'"
             @click="(event)=>checkboxController('CDP_ENABLED',event)">
           <n-popover trigger="hover" placement="top-start">
@@ -29,7 +29,7 @@
           Code and Data Prioritization
         </b-form-checkbox>
         <b-form-checkbox
-            v-model="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'"
+            :model-value="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'"
             :disabled="CDP_ENABLED==='y'"
             @click="(event)=>checkboxController('VCAT_ENABLED',event)">
           <n-popover trigger="hover" placement="top-start">
@@ -146,10 +146,6 @@ import HexBlockRangeSelector from "./CAT/HexBlockRangeSelector.vue";
 import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
 import configurator from "../../../../lib/acrn";
 
-function count(source, target) {
-  return (source.match(new RegExp(target, 'g')) || []).length;
-}
-
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 
@@ -170,25 +166,16 @@ export default {
     RDT_ENABLED: {
       get() {
         return this.formDataProxy('RDT_ENABLED');
-      },
-      set(value) {
-        return this.formDataProxy('RDT_ENABLED', value, true);
       }
     },
     CDP_ENABLED: {
       get() {
         return this.formDataProxy('CDP_ENABLED');
-      },
-      set(value) {
-        return this.formDataProxy('CDP_ENABLED', value, true);
       }
     },
     VCAT_ENABLED: {
       get() {
         return this.formDataProxy('VCAT_ENABLED');
-      },
-      set(value) {
-        return this.formDataProxy('VCAT_ENABLED', value, true);
       }
     },
   },

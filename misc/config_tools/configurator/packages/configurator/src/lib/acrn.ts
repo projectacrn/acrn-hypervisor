@@ -106,7 +106,7 @@ class CAT {
     private vmIDs: { [vmName: string]: vmID };
 
     hexToRange(hexValue, maxValue) {
-        let str_bin = Number.parseInt(hexValue).toString(2);
+        let str_bin = Number.parseInt(hexValue, 16).toString(2);
         let block_length = str_bin.length;
         let block_enabled_length = count(str_bin, "1");
 
@@ -139,7 +139,7 @@ class CAT {
         return newHexValue;
     }
 
-    formDataProxy(name, data = null, update = false) {
+    formDataProxy(name, data = null) {
         let path = {
             'RDT_ENABLED': 'FEATURES.RDT.RDT_ENABLED',
             'CDP_ENABLED': 'FEATURES.RDT.CDP_ENABLED',
@@ -157,33 +157,8 @@ class CAT {
             // set to checkbox default value
             vueUtils.setPathVal(this.scenario.hv, path, 'n');
         }
-        // if data is not empty, set value
         if (data !== null) {
             vueUtils.setPathVal(this.scenario.hv, path, data)
-
-            // if data is not empty, set value as expected and update CAT_INFO
-            if (update) {
-                switch (name) {
-                    case 'RDT_ENABLED':
-                        if (data === 'n') {
-                            this.formDataProxy('CDP_ENABLED', 'n');
-                            this.formDataProxy('VCAT_ENABLED', 'n');
-                        }
-                        break;
-                    case 'CDP_ENABLED':
-                        if (data === 'y') {
-                            this.formDataProxy('RDT_ENABLED', 'y');
-                            this.formDataProxy('VCAT_ENABLED', 'n');
-                        }
-                        break;
-                    case 'VCAT_ENABLED':
-                        if (data === 'y') {
-                            this.formDataProxy('RDT_ENABLED', 'y');
-                            this.formDataProxy('CDP_ENABLED', 'n');
-                        }
-                        break;
-                }
-            }
         }
         let result: string;
         // @ts-ignore
@@ -249,7 +224,8 @@ class CAT {
                 return this.formDataProxy(switchName) === 'y'
             },
             set: (target: {}, switchName: string | symbol, value: boolean): boolean => {
-                return this.formDataProxy(switchName, value ? 'y' : 'n', true) === 'y';
+                this.formDataProxy(switchName, value ? 'y' : 'n');
+                return true;
             }
         })
 
@@ -344,16 +320,11 @@ class CAT {
     }
 
     correctSwitches() {
-        if (this.switches.RDT_ENABLED) {
-            if (this.switches.CDP_ENABLED) {
-                if (this.switches.VCAT_ENABLED) {
-                    this.switches.VCAT_ENABLED = false
-                }
-            }
-        } else if (this.switches.VCAT_ENABLED) {
-            if (!this.switches.RDT_ENABLED) {
-                this.switches.RDT_ENABLED = true
-            }
+        if (this.switches.CDP_ENABLED || this.switches.VCAT_ENABLED) {
+            this.switches.RDT_ENABLED = true
+        }
+        if (this.switches.CDP_ENABLED && this.switches.VCAT_ENABLED) {
+            this.switches.VCAT_ENABLED = false
         }
         return this.switches.RDT_ENABLED
     }
@@ -366,7 +337,7 @@ class CAT {
                 let vmCPUIDs = vmConfig.cpu_affinity.pcpu.map(pcpu => {
                     return pcpu.pcpu_id;
                 })
-                preLaunchedVMCPUs.concat(vmCPUIDs)
+                preLaunchedVMCPUs.push(...vmCPUIDs)
             }
         })
 
@@ -461,9 +432,7 @@ class CAT {
             }
         })
 
-        _.sortBy(RTCoreData, ['VM', 'VCPU', 'TYPE']);
-
-        return RTCoreData;
+        return _.sortBy(RTCoreData, ['VM', 'VCPU', 'TYPE']);
     }
 
 
@@ -495,8 +464,7 @@ class CAT {
             this.getServiceData(regionData),
         )
 
-        _.sortBy(StandardData, ['VM', 'VCPU', 'TYPE']);
-        return StandardData;
+        return _.sortBy(StandardData, ['VM', 'VCPU', 'TYPE']);
     }
 
     getServiceData(regionData): Policy[] {
@@ -531,8 +499,7 @@ class CAT {
                 }
             })
         }
-        _.sortBy(VCATData, ['VM']);
-        return VCATData;
+        return _.sortBy(VCATData, ['VM']);
     }
 
     private getServiceVM() {
@@ -693,10 +660,6 @@ class Configurator {
         return invoke("acrn_write", {filePath, contents})
     }
 
-    isFile(filePath: string): Promise<Boolean> {
-        return invoke("acrn_is_file", {path: filePath})
-    }
-
     readDir(path: string, recursive: Boolean) {
         return invoke('acrn_read_dir', {path, recursive})
     }
@@ -705,20 +668,8 @@ class Configurator {
         return invoke('acrn_create_dir', {path, recursive})
     }
 
-    removeDir(path: string) {
-        return invoke('acrn_remove_dir', {path})
-    }
-
     removeFile(path: string) {
         return invoke('acrn_remove_file', {path})
-    }
-
-    runPython(code: string, isJSON = false): string | Object {
-        let result = window.pyodide.runPython(code);
-        if (isJSON) {
-            result = JSON.parse(result)
-        }
-        return result
     }
 
     loadBoard(path: string) {
