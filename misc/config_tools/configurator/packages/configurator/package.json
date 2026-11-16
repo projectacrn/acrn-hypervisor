@@ -14,7 +14,23 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run --config vitest.config.js",
-    "test:component": "vitest run --config vitest.config.js tests/components"
+    "test:component": "vitest run --config vitest.config.js tests/components",
+    "test:e2e": "node --test --test-timeout=1800000 tests/e2e/configurator.e2e.js",
+    "test:e2e:coverage": "E2E_COVERAGE=true E2E_COVERAGE_MIN=95 node --test --test-timeout=1800000 tests/e2e/configurator.e2e.js"
+  },
+  "nyc": {
+    "extension": [
+      ".js",
+      ".ts",
+      ".vue"
+    ],
+    "include": [
+      "src/**"
+    ],
+    "exclude": [
+      "build/**",
+      "tests/**"
+    ]
   },
   "dependencies": {
     "@lljj/vue3-form-naive": "^1.12.2",
@@ -56,7 +72,9 @@
     "@vitejs/plugin-vue": "^2.3.1",
     "@vue/test-utils": "^2.6.0",
     "jsdom": "^22.1.0",
+    "nyc": "18.0.0",
     "vite": "6.0.4",
+    "vite-plugin-istanbul": "8.0.0",
     "vitest": "^0.34.6"
   }
 }

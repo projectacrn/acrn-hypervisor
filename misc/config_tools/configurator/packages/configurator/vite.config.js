@@ -15,22 +15,35 @@ if (versionMatcher.test(branchVersion)) {
 }
 
 const packageVersion = child_process.execSync('git describe --dirty')
+const coverageEnabled = process.env.VITE_COVERAGE === 'true'
 console.log('branchVersion: ' + branchVersion)
 console.log("packageVersion: " + packageVersion)
 
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(async () => {
+    return {
     base: './',
-    plugins: [vue(), tauri()],
+    plugins: [
+        vue(),
+        coverageEnabled && (await import('vite-plugin-istanbul')).default({
+            include: ['src/**/*.js', 'src/**/*.ts', 'src/**/*.vue'],
+            exclude: ['node_modules/**', 'tests/**'],
+            extension: ['.js', '.ts', '.vue'],
+            requireEnv: false,
+            forceBuildInstrument: true
+        }),
+        tauri()
+    ].filter(Boolean),
     resolve: {
         extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue']
     },
     build: {
-        outDir: path.resolve(__dirname, 'build')
+        outDir: path.resolve(__dirname, 'build'),
+        sourcemap: coverageEnabled
     },
     define: {
         branchVersion: JSON.stringify(branchVersion),
         packageVersion: JSON.stringify(packageVersion.toString())
     }
-})
+}})

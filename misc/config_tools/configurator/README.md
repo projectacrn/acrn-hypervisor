@@ -7,13 +7,13 @@ This version is based on Tauri, WIP.
 ### Support Platforms
 
 - [x] Linux (.deb, AppImage)
-- [x] Windows 7,8,10 (.exe, .msi)
+- [x] Windows 10, 11 (.exe, .msi)
 
 ## Setting Up
 
 ### 1. Install System Dependencies
 
-1. Please follow [this guide](https://tauri.studio/v1/guides/getting-started/prerequisites)
+1. Please follow [this guide](https://v2.tauri.app/start/prerequisites/)
 to install system dependencies.
 2. Download and install [Nodejs](https://nodejs.org/en/download/).
 3. Please follow [this guide](https://yarnpkg.com/lang/en/docs/install/) to install yarn.
@@ -107,3 +107,46 @@ acrn-configurator
 You can find installer under the
 `misc\config_tools\configurator\packages\configurator\src-tauri\target\release\bundle\msi`
 directory, the installer in the folder.
+
+## Testing
+
+Run the JavaScript unit and rendered component tests from this directory:
+
+```shell
+yarn workspace acrn-configurator test
+yarn workspace acrn-configurator test:component
+python3 -m unittest discover -s packages/configurator/tests -p test_manager.py
+cargo test --manifest-path packages/configurator/src-tauri/Cargo.toml
+```
+
+The native end-to-end suite requires Linux, a release build of the application,
+`tauri-driver`, and WebKitWebDriver. On Debian/Ubuntu, the native driver is
+provided by the `webkit2gtk-driver` package. Install `tauri-driver` with Cargo.
+Build the application and its generated schema assets by running
+`make configurator` from the repository root, then run the suite from this
+directory:
+
+```shell
+yarn workspace acrn-configurator test:e2e
+```
+
+The suite starts the real Tauri application in an isolated configuration and
+working directory. It discovers every bundled Board and Scenario XML under
+`misc/config_tools/data`, checks load/save/reload semantic equivalence, and
+verifies that an invalid Scenario reports a validation error. Set
+`TAURI_E2E_BINARY`, `TAURI_DRIVER`, or `WEBKIT_WEBDRIVER` to override the default
+binary paths. Screenshots, driver logs, and failure diagnostics are written to
+`packages/configurator/build/e2e-artifacts/`.
+
+To measure native E2E coverage, build a separate instrumented binary and run
+the coverage-enabled suite:
+
+```shell
+VITE_COVERAGE=true make configurator
+yarn workspace acrn-configurator test:e2e:coverage
+```
+
+The coverage command enforces 95% statement, branch, function, and line
+coverage for the instrumented frontend sources. Text, HTML, and JSON summaries
+are written to `packages/configurator/build/e2e-artifacts/coverage-report/`.
+Rebuild without `VITE_COVERAGE` before producing a release artifact.
