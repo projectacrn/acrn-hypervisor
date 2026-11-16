@@ -86,7 +86,7 @@
   <vm id="2">
     <load_order>POST_LAUNCHED_VM</load_order>
     <vm_type>RTVM</vm_type>
-    <name>POST_STD_VM1</name>
+    <name>POST_RT_VM1</name>
     <lapic_passthrough>y</lapic_passthrough>
     <cpu_affinity>
       <pcpu>
