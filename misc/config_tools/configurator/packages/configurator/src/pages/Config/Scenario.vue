@@ -59,7 +59,9 @@ export default {
       scenarioHistory: [],
       currentSelectedScenario: '',
       showCreateScenario: false,
-      showOverwriteMessage: false
+      showOverwriteMessage: false,
+      loadRequestID: 0,
+      historyRequestID: 0
     }
   },
   props: {
@@ -78,16 +80,18 @@ export default {
             configurator.addHistory('Scenario', filePath)
                 .then(() => {
                   this.getScenarioHistory().then(() => {
-                    // delay 2s for board loading
-                    setTimeout(() => {
+                    if (_.isEmpty(this.scenario)) {
                       this.loadScenario(true)
-                    }, 2000);
+                    }
                   })
                 })
           }
         })
     this.getScenarioHistory()
-    // Todo: auto load scenario
+  },
+  beforeUnmount() {
+    this.loadRequestID++
+    this.historyRequestID++
   },
 
   methods: {
@@ -98,6 +102,7 @@ export default {
       } else this.showCreateScenario = true
     },
     newScenario(data) {
+      this.loadRequestID++
       this.$emit('scenarioUpdate', data)
     },
     checkAndLoadScenario(auto = false) {
@@ -115,27 +120,35 @@ export default {
       }
     },
     loadScenario(auto) {
-      if (this.currentSelectedScenario.length > 0) {
-        configurator.loadScenario(this.currentSelectedScenario)
-            .then((scenarioConfig) => {
-              console.log(scenarioConfig)
-              this.$emit('scenarioUpdate', scenarioConfig['acrn-config'])
-              if (!auto) {
-                alert(`Scenario ${this.currentSelectedScenario} loaded success!`)
-              }
-            }).catch((err) => {
-          console.log(err)
-          alert(`Loading ${this.currentSelectedScenario} failed: ${err}`)
-        })
+      const scenarioPath = this.currentSelectedScenario
+      if (scenarioPath.length === 0) {
+        return Promise.resolve()
       }
+      const requestID = ++this.loadRequestID
+      return configurator.loadScenario(scenarioPath)
+          .then((scenarioConfig) => {
+            if (requestID !== this.loadRequestID || scenarioPath !== this.currentSelectedScenario) {
+              return
+            }
+            this.$emit('scenarioUpdate', scenarioConfig['acrn-config'])
+            if (!auto) {
+              alert(`Scenario ${scenarioPath} loaded success!`)
+            }
+          }).catch((err) => {
+            if (requestID !== this.loadRequestID) {
+              return
+            }
+            console.log(err)
+            alert(`Loading ${scenarioPath} failed: ${err}`)
+          })
     },
     getExistScenarioPath() {
       // only return filename when using exist configuration.
       return configurator.readDir(this.WorkingFolder, false)
           .then((res) => {
             let scenarioPath = ''
-            res.map((filepath) => {
-              if (filepath.path.search('scenario') != -1) {
+            res.forEach((filepath) => {
+              if (filepath.path.split(/[\\/]/).pop() === 'scenario.xml') {
                 scenarioPath = filepath.path
               }
             })
@@ -149,7 +162,7 @@ export default {
         directory: false,
         multiple: false
       }).then((dirPath) => {
-        if (dirPath.length > 0) {
+        if (dirPath) {
           configurator.addHistory("Scenario", dirPath).then(() => {
             this.getScenarioHistory()
           })
@@ -157,8 +170,12 @@ export default {
       })
     },
     getScenarioHistory() {
+      const requestID = ++this.historyRequestID
       return configurator.getHistory("Scenario")
           .then((scenarioHistory) => {
+            if (requestID !== this.historyRequestID) {
+              return
+            }
             this.scenarioHistory = scenarioHistory
             if (this.scenarioHistory.length > 0) {
               this.currentSelectedScenario = this.scenarioHistory[0]

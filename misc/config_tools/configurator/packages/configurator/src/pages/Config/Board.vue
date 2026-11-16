@@ -25,6 +25,7 @@
               <div class="py-4 text-right">
                 <NewBoard v-model:show-modal="showBoardOverwrite"/>
                 <button type="button" class="wel-btn btn btn-primary btn-lg"
+                        :disabled="importing"
                         @click="importBoardButton">
                   {{ this.imported ? 'Use a Different Board…' : 'Import Board File' }}
                 </button>
@@ -84,6 +85,8 @@ export default {
       currentSelectedBoard: '',
       showBoardOverwrite: false,
       newFilePath: '',
+      importing: false,
+      historyRequestID: 0,
     }
   },
   mounted() {
@@ -105,6 +108,9 @@ export default {
 
     // Todo: auto load board
   },
+  beforeUnmount() {
+    this.historyRequestID++
+  },
   computed: {
     imported() {
       this.reformatBoardInfo()
@@ -116,7 +122,7 @@ export default {
       if (this.imported) {
         this.openBoardFileSelectDialog()
             .then((filePath) => {
-              if (filePath.length > 0) {
+              if (filePath && filePath.length > 0) {
                 if (this.currentSelectedBoard.length > 0) {
                   if (filePath !== this.currentSelectedBoard) {
                     this.showBoardOverwrite = true;
@@ -129,34 +135,41 @@ export default {
         this.importBoard()
       }
     },
-    importBoard(useNewFile = false) {
-      let filepath = ''
-      if (useNewFile) {
-        filepath = this.newFilePath
-      } else {
-        filepath = this.currentSelectedBoard
+    async importBoard(useNewFile = false) {
+      if (this.importing) {
+        return
       }
-      if (filepath.length > 0) {
-        configurator.loadBoard(filepath)
-            .then(async ({scenarioJSONSchema, boardInfo}) => {
-              this.$emit('boardUpdate', boardInfo, scenarioJSONSchema);
-              let boardFileNewPath = this.WorkingFolder + boardInfo.name;
-              if (useNewFile && filepath !== this.currentSelectedBoard) {
-                await configurator.removeFile(this.currentSelectedBoard)
-              }
-              configurator.writeFile(boardFileNewPath, boardInfo.content)
-                  .then(() => configurator.addHistory('Board', boardFileNewPath))
-                  .then(() => this.getBoardHistory())
-                  .then(() => {
-                    if (!!window.boardUpdate) {
-                      window.boardUpdate(boardInfo)
-                    }
-                  })
-            })
-            .catch((err) => {
-              alert(`Loading ${filepath} failed: ${err}`)
-              console.log(err)
-            })
+      let filepath = useNewFile ? this.newFilePath : this.currentSelectedBoard
+      if (filepath.length === 0) {
+        return
+      }
+
+      this.importing = true
+      try {
+        const {scenarioJSONSchema, boardInfo} = await configurator.loadBoard(filepath)
+        const boardFileNewPath = this.WorkingFolder + boardInfo.name
+        const oldBoardPath = this.currentSelectedBoard
+
+        await configurator.writeFile(boardFileNewPath, boardInfo.content)
+        if (useNewFile && oldBoardPath && oldBoardPath !== boardFileNewPath &&
+            oldBoardPath.startsWith(this.WorkingFolder)) {
+          await configurator.removeFile(oldBoardPath)
+        }
+        try {
+          await configurator.addHistory('Board', boardFileNewPath)
+          await this.getBoardHistory()
+        } catch (historyError) {
+          console.warn(`Board imported, but its history could not be saved: ${historyError}`)
+        }
+        this.$emit('boardUpdate', boardInfo, scenarioJSONSchema)
+        if (window.boardUpdate) {
+          window.boardUpdate(boardInfo)
+        }
+      } catch (err) {
+        alert(`Loading ${filepath} failed: ${err}`)
+        console.log(err)
+      } finally {
+        this.importing = false
       }
     },
     reformatBoardInfo() {
@@ -171,7 +184,9 @@ export default {
           // add a ":" in line "BIOS Information"
           if (element.includes("Information")) {
             infoindex = index
-            biosinfo[index] = biosinfo[index] + ":"
+            if (!element.endsWith(':')) {
+              biosinfo[index] = element + ":"
+            }
           }
         }
         if (revindex !== -1 && infoindex !== -1) {
@@ -186,7 +201,9 @@ export default {
         let boardinfo = this.board.BASE_BOARD_INFO.split('\n')
         for (let [index, element] of boardinfo.entries()) {
           if (element.includes("Information")) {
-            boardinfo[index] = boardinfo[index] + ":"
+            if (!element.endsWith(':')) {
+              boardinfo[index] = element + ":"
+            }
           }
         }
         this.board.BASE_BOARD_INFO = boardinfo.join('\n')
@@ -215,13 +232,24 @@ export default {
       })
     },
     browseForFile() {
+      if (this.importing) {
+        return
+      }
       this.openBoardFileSelectDialog()
-          .then((filePath) => configurator.addHistory('Board', filePath))
+          .then((filePath) => {
+            if (filePath) {
+              return configurator.addHistory('Board', filePath)
+            }
+          })
           .then(() => this.getBoardHistory())
     },
     getBoardHistory() {
+      const requestID = ++this.historyRequestID
       return configurator.getHistory("Board")
           .then((boardHistory) => {
+            if (requestID !== this.historyRequestID) {
+              return
+            }
             this.boardHistory = boardHistory;
             if (this.boardHistory.length > 0) {
               this.currentSelectedBoard = this.boardHistory[0]

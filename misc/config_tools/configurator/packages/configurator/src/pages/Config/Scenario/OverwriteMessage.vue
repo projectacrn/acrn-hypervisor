@@ -1,7 +1,8 @@
 <template>
   <div>
-    <b-modal id="my-modal" no-close-on-backdrop
-             title="Scenario XML Overwrite" v-model="showModal"
+    <b-modal id="my-modal" no-fade no-close-on-backdrop
+             title="Scenario XML Overwrite" :model-value="showModal"
+             @update:model-value="$emit('update:showModal', $event)"
              @cancel="cancel"
              @hidden="cancel"
              @abort="cancel"

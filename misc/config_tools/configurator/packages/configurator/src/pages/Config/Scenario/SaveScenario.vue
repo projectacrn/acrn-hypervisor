@@ -1,6 +1,7 @@
 <template>
-  <b-modal title="ACRN Configurator" ok-only fade
-           v-model="showModal"
+  <b-modal title="ACRN Configurator" ok-only no-fade
+           :model-value="showModal"
+           @update:model-value="$emit('update:showModal', $event)"
            @ok="overWrite"
   >
     <div class="picture">
@@ -8,7 +9,7 @@
       <img v-else src="/src-tauri/icons/Config_save_success.png">
     </div>
     <div class="description">
-      <p v-html="totalMsg"></p>
+      <p>{{ totalMsg }}</p>
     </div>
   </b-modal>
 </template>

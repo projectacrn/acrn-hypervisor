@@ -52,7 +52,7 @@ export default {
   },
   methods: {
     nextPage(folderPath) {
-      this.$router.push({name: 'Config', params: {WorkingFolder: folderPath, isNewConfig: true}})
+      this.$router.push({name: 'Config', params: {WorkingFolder: folderPath}, query: {isNewConfig: 'true'}})
     },
     cleanOldFiles(files) {
       let promises = [];
@@ -69,13 +69,12 @@ export default {
                   .then(() => {
                     console.log("removed: ", files[i].path)
                   })
-                  .catch((err) => alert(`${err}`))
           )
         }
       }
       return Promise.all(promises);
     },
-    usingWorkingFolder() {
+    async usingWorkingFolder() {
       let folderPath = this.WorkingFolder.length ? this.WorkingFolder : this.defaultWorkingFolder;
       if (folderPath[0] === '~') {
         folderPath = window.systemInfo.homeDir + window.systemInfo.pathSplit + folderPath.substring(1)
@@ -85,41 +84,34 @@ export default {
       }
       this.WorkingFolder = folderPath;
 
-      configurator.readDir(folderPath, false)
-          .then((files) => {
-            // dir exists, check dir files exists
-            console.log("Directory exists.", files)
-            if (files.length > 0) {
-              // confirm clean old files
-              confirm(`Warning: delete previous config files in the following working folder: \n${folderPath}?`)
-                  .then((r) => {
-                    // user cancel the operation
-                    if (!r) {
-                      return
-                    }
-                    // user confirm the operation
-                    this.cleanOldFiles(files)
-                        .then(() => {
-                          this.nextPage(folderPath)
-                        })
-                  })
-            } else {
-              // dir is empty, no operation
-              this.nextPage(folderPath)
-            }
-          })
-          .catch((error) => {
-            // dir not exists, create dir
-            console.log(error)
-            configurator.creatDir(folderPath)
-                .then(() => {
-                  console.log('Directory created successfully!');
-                  this.nextPage(folderPath)
-                })
-                .catch((err) => {
-                  console.error(err);
-                })
-          })
+      let files
+      try {
+        files = await configurator.readDir(folderPath, false)
+      } catch (error) {
+        try {
+          await configurator.creatDir(folderPath)
+          this.nextPage(folderPath)
+        } catch (err) {
+          console.error(err)
+          alert(`${err}`)
+        }
+        return
+      }
+
+      if (files.length > 0) {
+        const confirmed = await confirm(`Warning: delete previous config files in the following working folder: \n${folderPath}?`)
+        if (!confirmed) {
+          return
+        }
+        try {
+          await this.cleanOldFiles(files)
+        } catch (err) {
+          console.error(err)
+          alert(`${err}`)
+          return
+        }
+      }
+      this.nextPage(folderPath)
     },
     openFolder() {
       configurator.openDialog({
@@ -127,7 +119,7 @@ export default {
         directory: true,
         multiple: false
       }).then((folderPath) => {
-        if (folderPath.length > 0)
+        if (folderPath)
           this.WorkingFolder = folderPath + window.systemInfo.pathSplit
       })
     }
