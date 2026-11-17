@@ -1,0 +1,153 @@
+name: Configurator
+
+on:
+  push:
+    paths:
+      - '.github/workflows/configurator.yml'
+      - 'Makefile'
+      - 'VERSION'
+      - 'misc/config_tools/**'
+      - 'misc/packaging/gen_acrn_deb.py'
+  pull_request:
+    paths:
+      - '.github/workflows/configurator.yml'
+      - 'Makefile'
+      - 'VERSION'
+      - 'misc/config_tools/**'
+      - 'misc/packaging/gen_acrn_deb.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: configurator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux packages
+            os: ubuntu-22.04
+            platform: linux
+          - name: Windows installers
+            os: windows-2022
+            platform: windows
+    defaults:
+      run:
+        working-directory: misc/config_tools/configurator
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: misc/config_tools/configurator/yarn.lock
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: misc/config_tools/configurator/requirements.txt
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.90.0
+          components: rustfmt
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            curl \
+            wget \
+            file \
+            git \
+            libxml2-utils \
+            libssl-dev \
+            libgtk-3-dev \
+            librsvg2-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            libxdo-dev \
+            rpm
+
+      - name: Install Windows build dependencies
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: choco install xsltproc --yes --no-progress
+
+      - name: Install Python and JavaScript dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          yarn install --frozen-lockfile
+
+      - name: Run JavaScript unit and component tests
+        shell: bash
+        run: yarn workspace acrn-configurator test
+
+      - name: Run Python tests
+        shell: bash
+        run: python -m unittest discover -s packages/configurator/tests -p "test_*.py"
+
+      - name: Build Linux packages
+        if: matrix.platform == 'linux'
+        shell: bash
+        working-directory: .
+        run: make configurator
+
+      - name: Build Windows installers
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        working-directory: misc/config_tools
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          python scenario_config/schema_slicer.py
+          python scenario_config/jsonschema/converter.py
+          xmllint --xinclude schema/datachecks.xsd | Out-File -Encoding ascii schema/allchecks.xsd
+          python -m build
+          Remove-Item -Force -ErrorAction SilentlyContinue configurator/packages/configurator/thirdLib/acrn_config_tools-3.0-py3-none-any.whl
+          Set-Location configurator
+          python packages/configurator/thirdLib/manager.py install
+          yarn build
+
+      - name: Upload Linux packages
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: configurator-linux
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            build/acrn-configurator-*.deb
+            misc/config_tools/configurator/packages/configurator/src-tauri/target/release/bundle/deb/*.deb
+            misc/config_tools/configurator/packages/configurator/src-tauri/target/release/bundle/rpm/*.rpm
+            misc/config_tools/configurator/packages/configurator/src-tauri/target/release/bundle/appimage/*.AppImage
+
+      - name: Upload Windows installers
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: configurator-windows
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            misc/config_tools/configurator/packages/configurator/src-tauri/target/release/bundle/msi/*.msi
+            misc/config_tools/configurator/packages/configurator/src-tauri/target/release/bundle/nsis/*.exe
