@@ -45,6 +45,9 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          # The frontend and Debian packaging derive versions from git describe.
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
