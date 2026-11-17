@@ -404,9 +404,10 @@ Save and Check for Errors
 
         # Launch script for VM name: <name>
 
-   If an error occurs, such as an empty required field, the tool saves the
-   changes to the scenario configuration file, but prompts you to correct the
-   error.
+   If an error occurs, such as an empty required field, the tool still saves the
+   changes to ``scenario.xml`` and prompts you to correct the error. It does not
+   generate or update ``config_summary.rst`` or launch scripts until the
+   Scenario passes validation. Existing generated scripts are left unchanged.
 
 #. On the selector menu, check for error messages on all tabs that have an error
    icon. The following figure shows that the Hypervisor tab and the VM1 tab
@@ -436,79 +437,63 @@ Build ACRN Configurator from Source Code
 
 The :ref:`prerequisites<acrn_configurator_tool_prerequisites>` use a prebuilt
 Debian package to install the ACRN Configurator. The following steps describe
-how to build the Debian package from source code. 
+how to build the Debian package from source code.
 
 #. On the development computer, complete the steps in :ref:`gsg-dev-computer`.
 
-#. Install the ACRN Configurator build tools:
+#. Install the native build dependencies on Debian or Ubuntu. Tauri 2 uses
+   WebKitGTK 4.1; do not install the WebKitGTK 4.0 packages used by older
+   Configurator releases.
 
    .. code-block:: bash
 
+      sudo apt update
       sudo apt install -y build-essential \
          curl \
          wget \
+         file \
+         git \
+         libxml2-utils \
          libssl-dev \
          libgtk-3-dev \
          librsvg2-dev \
-         python3-venv
+         libwebkit2gtk-4.1-dev \
+         libayatana-appindicator3-dev \
+         libxdo-dev \
+         python3 \
+         python3-venv \
+         python3-pip
 
-      cd /tmp/
-      wget http://security.ubuntu.com/ubuntu/pool/main/w/webkit2gtk/libwebkit2gtk-4.0-37_2.44.2-0ubuntu0.22.04.1_amd64.deb http://mirrors.kernel.org/ubuntu/pool/main/i/icu/libicu70_70.1-2_amd64.deb http://security.ubuntu.com/ubuntu/pool/main/w/webkit2gtk/libjavascriptcoregtk-4.0-18_2.44.2-0ubuntu0.22.04.1_amd64.deb
-      sudo apt install ./libwebkit2gtk-4.0-37_2.44.2-0ubuntu0.22.04.1_amd64.deb ./libicu70_70.1-2_amd64.deb ./libjavascriptcoregtk-4.0-18_2.44.2-0ubuntu0.22.04.1_amd64.deb
-
-#. Install Node.js (npm included) as follows:
-
-   a. We recommend using nvm to manage your Node.js runtime. It allows you to
-      switch versions and update Node.js easily.
-
-      .. code-block:: bash
-
-         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
-
-   #. Rerun your ``.bashrc`` initialization script and then install the latest
-      version of Node.js and npm:
-
-      .. code-block:: bash
-
-         source ~/.bashrc
-         nvm install node --latest-npm
-         nvm use node
-
-#. Install and upgrade Yarn:
+#. Install `Node.js 22 LTS <https://nodejs.org/>`_ and
+   `Yarn Classic <https://classic.yarnpkg.com/>`_. You can use a version manager
+   such as nvm to install Node.js. Confirm that both tools are available:
 
    .. code-block:: bash
 
-      npm install --global yarn
+      node --version
+      yarn --version
 
-#. Install rustup, the official installer for Rust:
+#. Install Rust with `rustup <https://rustup.rs/>`_. The Configurator requires
+   Rust 1.90 or newer.
 
    .. code-block:: bash
 
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      source "$HOME/.cargo/env"
+      rustup toolchain install stable
+      rustc --version
 
-   When prompted by the Rust installation script, type ``1`` and press
-   :kbd:`Enter`.
-
-   .. code-block:: console
-
-      1) Proceed with installation (default)
-      2) Customize installation
-      3) Cancel installation
-      >1
-
-#. Configure the current shell:
-
-   .. code-block:: bash
-
-      source $HOME/.cargo/env
-
-#. Install additional ACRN Configurator dependencies:
+#. Install the Python and JavaScript dependencies in an isolated Python virtual
+   environment. Keep this environment activated for the build and test commands.
 
    .. code-block:: bash
 
       cd ~/acrn-work/acrn-hypervisor/misc/config_tools/configurator
-      python3 -m pip install -r requirements.txt
-      yarn
+      python3 -m venv ~/.venvs/acrn-configurator
+      source ~/.venvs/acrn-configurator/bin/activate
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+      yarn install --frozen-lockfile
 
 #. Build the ACRN Configurator Debian package:
 
