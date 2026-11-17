@@ -44,20 +44,20 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # The frontend and Debian packaging derive versions from git describe.
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: yarn
           cache-dependency-path: misc/config_tools/configurator/yarn.lock
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
           cache: pip
@@ -133,7 +133,7 @@ jobs:
 
       - name: Upload Linux packages
         if: matrix.platform == 'linux'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: configurator-linux
           if-no-files-found: error
@@ -146,7 +146,7 @@ jobs:
 
       - name: Upload Windows installers
         if: matrix.platform == 'windows'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: configurator-windows
           if-no-files-found: error
