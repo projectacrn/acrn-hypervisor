@@ -490,6 +490,9 @@ async function saveScenario(driver, timeout = 120000, clicks = 1) {
         await waitUntil(async () => {
             if (await driver.alertText() !== null ||
                 (await driver.findElements('.modal.show')).length > 0) return true
+            const body = await driver.bodyText()
+            if (body.includes('All files successfully saved') || body.includes('failed') ||
+                body.includes('Please check your configuration')) return true
             const buttons = await driver.findElements('button')
             for (const button of buttons) {
                 if (!(await driver.text(button)).toLowerCase().includes('save scenario and launch scripts') ||
@@ -503,7 +506,7 @@ async function saveScenario(driver, timeout = 120000, clicks = 1) {
                 return false
             }
             return false
-        }, {timeout: 10000, message: 'scenario save to start'})
+        }, {timeout: 30000, message: 'scenario save to start'})
     } catch (error) {
         if (await driver.alertText() === null) {
             const state = await driver.executeScript(`
@@ -975,10 +978,15 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             await selectVMTab(driver, 'Hypervisor')
             const invalidResult = await saveScenario(driver, 10000)
             assert.ok(invalidResult.body?.includes('Settings validate failed'), invalidResult.body)
-            assert.ok(invalidResult.body?.includes('Scenario xml save failed'), invalidResult.body)
+            assert.ok(invalidResult.body?.includes('Scenario xml saved'), invalidResult.body)
+            assert.ok(!invalidResult.body?.includes('Scenario xml save failed'), invalidResult.body)
             await closeVisibleModal(driver)
-            await assert.rejects(fs.access(path.join(newFolder, 'scenario.xml')),
-                'An invalid new Scenario must not be written')
+            const invalidScenario = await fs.readFile(path.join(newFolder, 'scenario.xml'), 'utf8')
+            assert.match(invalidScenario, /<acrn-config/)
+            await assert.rejects(fs.access(path.join(newFolder, 'config_summary.rst')),
+                'An invalid Scenario must not generate a configuration summary')
+            assert.equal((await fs.readdir(newFolder)).filter(file => /^launch.*\.sh$/.test(file)).length, 0,
+                'An invalid Scenario must not generate launch scripts')
             await selectNaiveOption(driver, 'Build type', 'Release')
             await selectVMTab(driver, 'VM1')
             await setNamedFormValue(driver, 'VM name', 'E2E_POST_VM')
@@ -1562,9 +1570,14 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             const invalidPreLaunched = await saveScenario(driver)
             assert.ok(invalidPreLaunched.body?.includes('Settings validate failed'),
                 invalidPreLaunched.body)
-            assert.ok(invalidPreLaunched.body?.includes('Scenario xml save failed'),
+            assert.ok(invalidPreLaunched.body?.includes('Scenario xml saved'),
+                invalidPreLaunched.body)
+            assert.ok(!invalidPreLaunched.body?.includes('Scenario xml save failed'),
                 invalidPreLaunched.body)
             await closeVisibleModal(driver)
+            assert.match(await fs.readFile(path.join(folder, 'scenario.xml'), 'utf8'),
+                /<load_order>PRE_LAUNCHED_VM<\/load_order>/,
+                'The invalid pre-launched Scenario must still be saved')
 
             await selectVMTab(driver, 'VM0')
             await driver.click(await driver.findElement('.aTab'))
@@ -2056,7 +2069,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
         await closeVisibleModal(driver)
     })
 
-    test('reports missing CAT CPU affinity without overwriting the source Scenario', async () => {
+    test('saves a Scenario with missing CAT CPU affinity and reports its validation errors', async () => {
         const fixture = bundledFixtures.find(item =>
             item.board === 'adl-asrock' && item.scenario === 'shared')
         const folder = await stageFixture(temporaryRoot, historyDirectory, fixture, text => text
@@ -2075,8 +2088,13 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
         }, {message: 'the CAT CPU affinity diagnostic'})
         const result = await saveScenario(driver)
         assert.ok(result.body?.includes('Settings validate failed'), result.body)
-        assert.ok(result.body?.includes('Scenario xml save failed'), result.body)
-        assert.equal(await fs.readFile(scenarioPath, 'utf8'), originalXML)
+        assert.ok(result.body?.includes('Scenario xml saved'), result.body)
+        assert.ok(!result.body?.includes('Scenario xml save failed'), result.body)
+        const savedXML = await fs.readFile(scenarioPath, 'utf8')
+        assert.notEqual(savedXML, originalXML, 'The invalid Scenario must still be written')
+        assert.match(savedXML, /<RDT_ENABLED>y<\/RDT_ENABLED>/)
+        await assert.rejects(fs.access(path.join(folder, 'config_summary.rst')),
+            'An invalid CAT Scenario must not generate a configuration summary')
         await closeVisibleModal(driver)
     })
 
@@ -2278,7 +2296,10 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             .replace('<CDP_ENABLED>n</CDP_ENABLED>', '<CDP_ENABLED>y</CDP_ENABLED>')
             .replace('<VCAT_ENABLED>n</VCAT_ENABLED>', '<VCAT_ENABLED>y</VCAT_ENABLED>'))
         const scenarioPath = path.join(folder, 'scenario.xml')
+        const summaryPath = path.join(folder, 'config_summary.rst')
         const originalXML = await fs.readFile(scenarioPath, 'utf8')
+        const previousSummary = 'Previous valid configuration summary\n'
+        await fs.writeFile(summaryPath, previousSummary)
         await backToWelcome(driver)
         await openWorkingFolder(driver)
         await selectVMTab(driver, 'Hypervisor')
@@ -2295,10 +2316,14 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
         await clickByText(driver, 'button', 'Apply basic real-time defaults')
         const result = await saveScenario(driver)
         assert.ok(result.body?.includes('Settings validate failed'), result.body)
-        assert.ok(result.body?.includes('Scenario xml save failed'), result.body)
+        assert.ok(result.body?.includes('Scenario xml saved'), result.body)
+        assert.ok(!result.body?.includes('Scenario xml save failed'), result.body)
         assert.ok((await driver.bodyText()).includes('Code and Data Prioritization can only be opened'))
-        assert.equal(await fs.readFile(scenarioPath, 'utf8'), originalXML,
-            'A rejected CDP configuration must not overwrite its source XML')
+        const savedXML = await fs.readFile(scenarioPath, 'utf8')
+        assert.notEqual(savedXML, originalXML, 'The rejected CDP configuration must still be saved')
+        assert.match(savedXML, /<CDP_ENABLED>y<\/CDP_ENABLED>/)
+        assert.equal(await fs.readFile(summaryPath, 'utf8'), previousSummary,
+            'An invalid CDP Scenario must not update an existing configuration summary')
         await closeVisibleModal(driver)
     })
 
@@ -2344,24 +2369,32 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
         })
     }
 
-    test('reports a loadable Scenario with duplicate VM names on save', async () => {
+    test('saves a loadable Scenario with duplicate VM names and reports the error', async () => {
         const source = bundledFixtures.find(fixture =>
             fixture.board === 'nuc11tnbi5' && fixture.scenario === 'hybrid_launch_2user_vm')
         assert.ok(source, 'The duplicate-name test fixture is missing')
         const fixture = {...source, scenario: 'duplicate-vm-name'}
-        await stageFixture(temporaryRoot, historyDirectory, fixture, scenarioXML => {
+        const folder = await stageFixture(temporaryRoot, historyDirectory, fixture, scenarioXML => {
             const invalidXML = scenarioXML.replace(
                 '<name>POST_STD_VM2</name>', '<name>POST_STD_VM1</name>')
             assert.notEqual(invalidXML, scenarioXML, 'Failed to construct the invalid Scenario')
             return invalidXML
         })
+        const scenarioPath = path.join(folder, 'scenario.xml')
+        const originalXML = await fs.readFile(scenarioPath, 'utf8')
         await backToWelcome(driver)
         await openWorkingFolder(driver)
 
         const result = await saveScenario(driver)
         assert.ok(result.body?.includes('Multiple VMs have the same name: POST_STD_VM1'),
             `Expected a visible duplicate-name validation error, got: ${JSON.stringify(result)}`)
-        assert.ok(result.body?.includes('Scenario xml save failed'), result.body)
+        assert.ok(result.body?.includes('Scenario xml saved'), result.body)
+        assert.ok(result.body?.includes('Settings validate failed'), result.body)
+        assert.ok(!result.body?.includes('Scenario xml save failed'), result.body)
+        assert.notEqual(await fs.readFile(scenarioPath, 'utf8'), originalXML,
+            'The duplicate-name Scenario must still be written')
+        await assert.rejects(fs.access(path.join(folder, 'config_summary.rst')),
+            'A duplicate-name Scenario must not generate a configuration summary')
         await closeVisibleModal(driver)
     })
 })

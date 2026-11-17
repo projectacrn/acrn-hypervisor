@@ -146,33 +146,52 @@ describe('scenario editing', () => {
 })
 
 describe('scenario saving', () => {
-    it('shows duplicate VM names in the result modal without saving', async () => {
-        const alert = vi.fn()
-        vi.stubGlobal('alert', alert)
+    it('saves the Scenario but skips generated artifacts for duplicate VM names', async () => {
+        const writeFile = vi.spyOn(configurator, 'writeFile').mockResolvedValue()
+        vi.spyOn(configurator.cat, 'getScenarioDataFromCAT').mockReturnValue(null)
+        vi.spyOn(configurator.pythonObject, 'validateScenario').mockReturnValue({
+            syntactic_errors: [], semantic_errors: []
+        })
+        const generateConfigSummary = vi.spyOn(configurator.pythonObject, 'generateConfigSummary')
+        const cleanLaunchScript = vi.fn()
         const context = {
             saving: false,
             showTotalMessageFlag: false,
             totalMsg: '',
             scenario: {
+                hv: {},
                 vm: [
-                    {'@id': 0, name: 'POST_STD_VM1'},
-                    {'@id': 1, name: 'POST_STD_VM1'}
+                    {'@id': 0, name: 'POST_STD_VM1', load_order: 'SERVICE_VM'},
+                    {'@id': 1, name: 'POST_STD_VM1', load_order: 'SERVICE_VM'}
                 ]
             },
+            board: {content: '<board/>'},
+            WorkingFolder: '/work/',
             confirmVmName: Config.methods.confirmVmName,
-            showSaveError: Config.methods.showSaveError
+            assignVMID: vi.fn(),
+            applyScenarioDefaults: async scenario => scenario,
+            scenarioToXML: () => '<scenario/>',
+            updateCurrentFormSchema: vi.fn(),
+            updateCurrentFormData: vi.fn(),
+            cleanLaunchScript,
+            translateErrors: vi.fn().mockReturnValue({})
         }
 
         const result = await Config.methods.saveScenario.call(context)
 
+        expect(writeFile).toHaveBeenCalledTimes(1)
+        expect(writeFile).toHaveBeenCalledWith('/work/scenario.xml', '<scenario/>')
+        expect(generateConfigSummary).not.toHaveBeenCalled()
+        expect(cleanLaunchScript).not.toHaveBeenCalled()
         expect(result).toContain('Multiple VMs have the same name: POST_STD_VM1')
-        expect(result).toContain('Scenario xml save failed')
+        expect(result).toContain('Scenario xml saved')
+        expect(result).toContain('Settings validate failed')
+        expect(result).not.toContain('Scenario xml save failed')
         expect(context.showTotalMessageFlag).toBe(true)
         expect(context.saving).toBe(false)
-        expect(alert).not.toHaveBeenCalled()
     })
 
-    it('does not remove launch scripts when scenario validation fails', async () => {
+    it('saves the Scenario but does not remove launch scripts when validation fails', async () => {
         const writeFile = vi.spyOn(configurator, 'writeFile').mockResolvedValue()
         vi.spyOn(configurator.cat, 'getScenarioDataFromCAT').mockReturnValue(null)
         vi.spyOn(configurator.pythonObject, 'validateScenario').mockReturnValue({
@@ -200,12 +219,85 @@ describe('scenario saving', () => {
         const result = await Config.methods.saveScenario.call(context)
 
         expect(cleanLaunchScript).not.toHaveBeenCalled()
-        expect(writeFile).not.toHaveBeenCalled()
+        expect(writeFile).toHaveBeenCalledTimes(1)
+        expect(writeFile).toHaveBeenCalledWith('/work/scenario.xml', '<scenario/>')
         expect(result).toContain('Settings validate failed')
-        expect(result).toContain('Scenario xml save failed')
-        expect(result).not.toContain('Scenario xml saved')
+        expect(result).toContain('Scenario xml saved')
+        expect(result).not.toContain('Scenario xml save failed')
         expect(context.saving).toBe(false)
         expect(context.showTotalMessageFlag).toBe(true)
+    })
+
+    it('saves the Scenario when the validator itself throws', async () => {
+        const writeFile = vi.spyOn(configurator, 'writeFile').mockResolvedValue()
+        vi.spyOn(configurator.cat, 'getScenarioDataFromCAT').mockReturnValue(null)
+        vi.spyOn(configurator.pythonObject, 'validateScenario').mockImplementation(() => {
+            throw new Error('validator crashed')
+        })
+        const generateConfigSummary = vi.spyOn(configurator.pythonObject, 'generateConfigSummary')
+        const context = {
+            saving: false,
+            showTotalMessageFlag: false,
+            totalMsg: '',
+            scenario: {hv: {}, vm: [{'@id': 0, load_order: 'SERVICE_VM'}]},
+            board: {content: '<board/>'},
+            WorkingFolder: '/work/',
+            confirmVmName: () => false,
+            assignVMID: vi.fn(),
+            applyScenarioDefaults: async scenario => scenario,
+            scenarioToXML: () => '<scenario/>',
+            updateCurrentFormSchema: vi.fn(),
+            updateCurrentFormData: vi.fn(),
+            cleanLaunchScript: vi.fn(),
+            translateErrors: vi.fn().mockReturnValue({})
+        }
+
+        const result = await Config.methods.saveScenario.call(context)
+
+        expect(writeFile).toHaveBeenCalledTimes(1)
+        expect(writeFile).toHaveBeenCalledWith('/work/scenario.xml', '<scenario/>')
+        expect(generateConfigSummary).not.toHaveBeenCalled()
+        expect(result).toContain('Scenario xml saved')
+        expect(result).toContain('Settings validate failed')
+        expect(result).toContain('validator crashed')
+        expect(result).not.toContain('Scenario xml save failed')
+        expect(context.showTotalMessageFlag).toBe(true)
+        expect(context.saving).toBe(false)
+    })
+
+    it('reports a Scenario write failure separately from validation failure', async () => {
+        const writeFile = vi.spyOn(configurator, 'writeFile').mockRejectedValue(new Error('disk full'))
+        vi.spyOn(configurator.cat, 'getScenarioDataFromCAT').mockReturnValue(null)
+        vi.spyOn(configurator.pythonObject, 'validateScenario').mockReturnValue({
+            syntactic_errors: [], semantic_errors: []
+        })
+        const generateConfigSummary = vi.spyOn(configurator.pythonObject, 'generateConfigSummary')
+        const context = {
+            saving: false,
+            showTotalMessageFlag: false,
+            totalMsg: '',
+            scenario: {hv: {}, vm: [{'@id': 0, load_order: 'SERVICE_VM'}]},
+            board: {content: '<board/>'},
+            WorkingFolder: '/work/',
+            confirmVmName: () => false,
+            assignVMID: vi.fn(),
+            applyScenarioDefaults: async scenario => scenario,
+            scenarioToXML: () => '<scenario/>',
+            updateCurrentFormSchema: vi.fn(),
+            updateCurrentFormData: vi.fn(),
+            cleanLaunchScript: vi.fn(),
+            translateErrors: vi.fn().mockReturnValue({})
+        }
+
+        const result = await Config.methods.saveScenario.call(context)
+
+        expect(writeFile).toHaveBeenCalledTimes(1)
+        expect(generateConfigSummary).not.toHaveBeenCalled()
+        expect(result).toContain('Scenario xml save failed')
+        expect(result).not.toContain('Scenario xml saved')
+        expect(result).toContain('disk full')
+        expect(context.showTotalMessageFlag).toBe(true)
+        expect(context.saving).toBe(false)
     })
 
     it('preserves old launch scripts when replacement generation fails', async () => {

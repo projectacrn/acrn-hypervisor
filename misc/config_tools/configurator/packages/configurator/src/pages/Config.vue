@@ -438,7 +438,7 @@ export default {
       for (let i = 0; i < vmNameArr.length - 1; i++) {
         if (vmNameArr[i] === vmNameArr[i + 1]) {
           return `Multiple VMs have the same name: ${vmNameArr[i]}. ` +
-              "Your configuration cannot be saved. Make sure each VM has a unique name."
+              "Make sure each VM has a unique name before generating configuration artifacts."
         }
       }
       return false
@@ -509,9 +509,6 @@ export default {
         return this.showSaveError("Please add at least one VM")
       }
       const vmNameError = this.confirmVmName()
-      if (vmNameError) {
-        return this.showSaveError(vmNameError)
-      }
 
       this.saving = true
       this.showTotalMessageFlag = false
@@ -542,15 +539,20 @@ export default {
             vmConfig => vmConfig['load_order'] === 'POST_LAUNCHED_VM'
         )
 
-        let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-        this.errors = this.translateErrors(all_errors, this.scenario)
-        if (all_errors.syntactic_errors.length !== 0 || all_errors.semantic_errors.length !== 0) {
-          throw new Error("validation failed")
-        }
-
+        // Keep the Scenario editable and recoverable even when validation fails.
+        // Downstream artifacts are generated only from a valid configuration.
         await configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
+        stepDone = 1
         this.updateCurrentFormSchema()
         this.updateCurrentFormData()
+
+        let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
+        this.errors = this.translateErrors(all_errors, this.scenario)
+        const validationFailed = vmNameError || all_errors.syntactic_errors.length !== 0 ||
+            all_errors.semantic_errors.length !== 0
+        if (validationFailed) {
+          throw new Error(vmNameError || "validation failed")
+        }
         stepDone = 2
 
         let configSummary = configurator.pythonObject.generateConfigSummary(this.board.content, scenarioXMLData)
@@ -581,7 +583,10 @@ export default {
         for (let i = stepDone; i < totalMsgLength; i++) {
           outmsg += errmsg[i]
         }
-        this.totalMsg = `${outmsg} \n Please check your configuration`
+        const detail = err instanceof Error && err.message !== "validation failed"
+            ? `\n${err.message}\n`
+            : ''
+        this.totalMsg = `${outmsg}${detail} \n Please check your configuration`
       } finally {
         this.saving = false
         this.showTotalMessageFlag = true
