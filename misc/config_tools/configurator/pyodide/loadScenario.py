@@ -5,21 +5,12 @@ import json
 
 import xmltodict
 
-from . import convert_result, nuc11_scenario, IS_WEB
-
-if IS_WEB:
-    # load js function from
-    # misc/config_tools/configurator/packages/configurator/src/pyodide.js
-    # by pyodide js library
-    # noinspection PyUnresolvedReferences
-    from js import __dynamic__load__scenario__from__pyodide__
-
-    scenario_json_schema = __dynamic__load__scenario__from__pyodide__()
-else:
-    from . import scenario_json_schema
+from . import convert_result, nuc11_scenario, scenario_json_schema as default_scenario_json_schema
 
 
-def get_array_and_int_keys():
+def get_array_and_int_keys(scenario_json_schema=None):
+    if scenario_json_schema is None:
+        scenario_json_schema = default_scenario_json_schema
     array_keys = []
     int_keys = ['@id']
 
@@ -41,15 +32,18 @@ def get_array_and_int_keys():
     return array_keys, int_keys
 
 
-def load_scenario_xml(scenario):
+def load_scenario_xml(scenario, scenario_json_schema=None):
     """
     convert scenario xml to json data followed scenario json schema
 
     :type scenario: str
     :param scenario: scenario xml text
+    :param scenario_json_schema: schema supplied by the engine caller
     :return:
     """
-    arr_keys, int_keys = get_array_and_int_keys()
+    if scenario_json_schema is None:
+        scenario_json_schema = default_scenario_json_schema
+    arr_keys, int_keys = get_array_and_int_keys(scenario_json_schema)
     scenario_xml = xmltodict.parse(scenario)
     scenario_xml = json.dumps(scenario_xml)
 
@@ -76,8 +70,8 @@ def load_scenario_xml(scenario):
     return scenario_dict
 
 
-def main(scenario):
-    result = load_scenario_xml(scenario)
+def main(scenario, scenario_json_schema=None):
+    result = load_scenario_xml(scenario, scenario_json_schema)
     return convert_result(result)
 
 

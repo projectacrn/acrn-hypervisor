@@ -48,6 +48,9 @@ import OverwriteMessage from "./Scenario/OverwriteMessage";
 import configurator from "../../lib/acrn";
 import NewScenario from "./Scenario/NewScenario.vue";
 import _ from "lodash";
+import {mapStores} from "pinia";
+import {useScenarioStore} from "../../stores/scenario";
+import {useWorkspaceStore} from "../../stores/workspace";
 
 export default {
   name: "Scenario",
@@ -56,12 +59,9 @@ export default {
   data() {
     return {
       clickedButton: "",
-      scenarioHistory: [],
       currentSelectedScenario: '',
       showCreateScenario: false,
       showOverwriteMessage: false,
-      loadRequestID: 0,
-      historyRequestID: 0
     }
   },
   props: {
@@ -70,6 +70,12 @@ export default {
     },
     scenario: {
       type: Object
+    }
+  },
+  computed: {
+    ...mapStores(useScenarioStore, useWorkspaceStore),
+    scenarioHistory() {
+      return this.workspaceStore.scenarioHistory
     }
   },
   mounted() {
@@ -90,8 +96,8 @@ export default {
     this.getScenarioHistory()
   },
   beforeUnmount() {
-    this.loadRequestID++
-    this.historyRequestID++
+    this.scenarioStore.invalidate()
+    this.workspaceStore.invalidate('Scenario')
   },
 
   methods: {
@@ -102,7 +108,7 @@ export default {
       } else this.showCreateScenario = true
     },
     newScenario(data) {
-      this.loadRequestID++
+      this.scenarioStore.invalidate()
       this.$emit('scenarioUpdate', data)
     },
     checkAndLoadScenario(auto = false) {
@@ -124,20 +130,17 @@ export default {
       if (scenarioPath.length === 0) {
         return Promise.resolve()
       }
-      const requestID = ++this.loadRequestID
-      return configurator.loadScenario(scenarioPath)
+      return this.scenarioStore.loadFromFile(
+          scenarioPath, () => scenarioPath === this.currentSelectedScenario)
           .then((scenarioConfig) => {
-            if (requestID !== this.loadRequestID || scenarioPath !== this.currentSelectedScenario) {
+            if (scenarioConfig === null) {
               return
             }
-            this.$emit('scenarioUpdate', scenarioConfig['acrn-config'])
+            this.$emit('scenarioUpdate', scenarioConfig)
             if (!auto) {
               alert(`Scenario ${scenarioPath} loaded success!`)
             }
           }).catch((err) => {
-            if (requestID !== this.loadRequestID) {
-              return
-            }
             console.log(err)
             alert(`Loading ${scenarioPath} failed: ${err}`)
           })
@@ -170,15 +173,13 @@ export default {
       })
     },
     getScenarioHistory() {
-      const requestID = ++this.historyRequestID
-      return configurator.getHistory("Scenario")
+      return this.workspaceStore.loadHistory('Scenario')
           .then((scenarioHistory) => {
-            if (requestID !== this.historyRequestID) {
+            if (scenarioHistory === null) {
               return
             }
-            this.scenarioHistory = scenarioHistory
-            if (this.scenarioHistory.length > 0) {
-              this.currentSelectedScenario = this.scenarioHistory[0]
+            if (scenarioHistory.length > 0) {
+              this.currentSelectedScenario = scenarioHistory[0]
             }
           })
     }

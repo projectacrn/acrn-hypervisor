@@ -160,6 +160,8 @@ import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
 import {fieldProps, vueUtils} from '@lljj/vue3-form-naive';
 import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
+import {mapStores} from 'pinia';
+import {useScenarioStore} from '../../../../stores/scenario';
 
 
 export default {
@@ -174,13 +176,9 @@ export default {
     }
   },
   computed: {
+    ...mapStores(useScenarioStore),
     vmNames() {
-      let currentScenarioData = window.getCurrentScenarioData()
-      let vmNames = []
-      for (let i = 0; i < currentScenarioData.vm.length; i++) {
-        vmNames.push(currentScenarioData.vm[i].name)
-      }
-      return vmNames
+      return this.scenarioStore.vmNames
     }
   },
   data() {

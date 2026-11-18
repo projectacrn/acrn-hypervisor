@@ -1,0 +1,118 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden scenario XML > serializes HV, CAT, IVSHMEM, VUART and every VM load order 1`] = `
+"<?xml version=\\"1.0\\" encoding=\\"utf-8\\"?>
+<acrn-config board=\\"golden-board\\" scenario=\\"characterization\\">
+  <hv>
+    <DEBUG_OPTIONS>
+      <RELEASE>n</RELEASE>
+      <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
+    </DEBUG_OPTIONS>
+    <FEATURES>
+      <RDT>
+        <RDT_ENABLED>y</RDT_ENABLED>
+        <CDP_ENABLED>n</CDP_ENABLED>
+        <VCAT_ENABLED>n</VCAT_ENABLED>
+      </RDT>
+      <IVSHMEM>
+        <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
+        <IVSHMEM_REGION id=\\"shm0\\">
+          <NAME>pre-service</NAME>
+          <PROVIDED_BY>Hypervisor</PROVIDED_BY>
+          <IVSHMEM_SIZE>2</IVSHMEM_SIZE>
+          <IVSHMEM_VMS>
+            <IVSHMEM_VM>
+              <VM_NAME>pre</VM_NAME>
+              <VBDF>00:10.0</VBDF>
+            </IVSHMEM_VM>
+            <IVSHMEM_VM>
+              <VM_NAME>service</VM_NAME>
+              <VBDF>00:10.0</VBDF>
+            </IVSHMEM_VM>
+          </IVSHMEM_VMS>
+        </IVSHMEM_REGION>
+        <IVSHMEM_REGION id=\\"shm1\\">
+          <NAME>service-post</NAME>
+          <PROVIDED_BY>Hypervisor</PROVIDED_BY>
+          <IVSHMEM_SIZE>4</IVSHMEM_SIZE>
+          <IVSHMEM_VMS>
+            <IVSHMEM_VM>
+              <VM_NAME>service</VM_NAME>
+              <VBDF>00:11.0</VBDF>
+            </IVSHMEM_VM>
+            <IVSHMEM_VM>
+              <VM_NAME>post</VM_NAME>
+              <VBDF>00:11.0</VBDF>
+            </IVSHMEM_VM>
+          </IVSHMEM_VMS>
+        </IVSHMEM_REGION>
+      </IVSHMEM>
+    </FEATURES>
+    <CACHE_REGION>
+      <CACHE_ALLOCATION>
+        <CACHE_ID>0</CACHE_ID>
+        <CACHE_LEVEL>3</CACHE_LEVEL>
+        <POLICY>
+          <VM>pre</VM>
+          <VCPU>0</VCPU>
+          <TYPE>Unified</TYPE>
+          <CLOS_MASK>0x0f</CLOS_MASK>
+        </POLICY>
+        <POLICY>
+          <VM>service</VM>
+          <VCPU>0</VCPU>
+          <TYPE>Code</TYPE>
+          <CLOS_MASK>0xf0</CLOS_MASK>
+        </POLICY>
+        <POLICY>
+          <VM>post</VM>
+          <VCPU>0</VCPU>
+          <TYPE>Data</TYPE>
+          <CLOS_MASK>0xcc</CLOS_MASK>
+        </POLICY>
+      </CACHE_ALLOCATION>
+    </CACHE_REGION>
+    <vuart_connections>
+      <vuart_connection>
+        <name>pre-to-service</name>
+        <type>legacy</type>
+        <endpoint>
+          <vm_name>pre</vm_name>
+          <io_port>0x3f8</io_port>
+        </endpoint>
+        <endpoint>
+          <vm_name>service</vm_name>
+          <io_port>0x2f8</io_port>
+        </endpoint>
+      </vuart_connection>
+    </vuart_connections>
+  </hv>
+  <vm id=\\"0\\">
+    <name>pre</name>
+    <load_order>PRE_LAUNCHED_VM</load_order>
+    <vm_type>RTVM</vm_type>
+    <cpu_affinity>
+      <pcpu>
+        <pcpu_id>0</pcpu_id>
+        <real_time_vcpu>y</real_time_vcpu>
+      </pcpu>
+    </cpu_affinity>
+  </vm>
+  <vm id=\\"1\\">
+    <name>service</name>
+    <load_order>SERVICE_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
+  </vm>
+  <vm id=\\"2\\">
+    <name>post</name>
+    <load_order>POST_LAUNCHED_VM</load_order>
+    <vm_type>STANDARD_VM</vm_type>
+    <cpu_affinity>
+      <pcpu>
+        <pcpu_id>2</pcpu_id>
+        <real_time_vcpu>n</real_time_vcpu>
+      </pcpu>
+    </cpu_affinity>
+  </vm>
+</acrn-config>"
+`;

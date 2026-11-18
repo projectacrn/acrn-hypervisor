@@ -1,0 +1,59 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden validation error mapping > buckets syntactic and semantic errors by HV and VM id 1`] = `
+{
+  "-1": [
+    {
+      "message": "bad HV setting",
+      "paths": [
+        "/acrn-config/hv/DEBUG_OPTIONS/RELEASE",
+      ],
+      "source": "syntactic",
+    },
+  ],
+  "10": [
+    {
+      "message": "bad first VM setting",
+      "paths": [
+        "/acrn-config/vm/name",
+      ],
+      "source": "syntactic",
+    },
+    {
+      "message": "bad second VM setting",
+      "paths": [
+        "/acrn-config/vm[2]/cpu_affinity",
+        "/acrn-config/vm[1]/name",
+      ],
+      "source": "semantic",
+    },
+  ],
+  "20": [
+    {
+      "message": "bad second VM setting",
+      "paths": [
+        "/acrn-config/vm[2]/cpu_affinity",
+        "/acrn-config/vm[1]/name",
+      ],
+      "source": "semantic",
+    },
+  ],
+  "30": [
+    {
+      "message": "duplicate paths",
+      "paths": [
+        "/acrn-config/vm[3]/name",
+        "/acrn-config/vm[3]/name",
+      ],
+      "source": "semantic",
+    },
+    {
+      "message": "bad third VM setting",
+      "paths": [
+        "/acrn-config/vm[3]/name",
+      ],
+      "source": "semantic",
+    },
+  ],
+}
+`;

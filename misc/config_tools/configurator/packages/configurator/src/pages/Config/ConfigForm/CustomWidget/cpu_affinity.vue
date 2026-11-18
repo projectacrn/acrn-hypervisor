@@ -114,6 +114,8 @@ import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
 import {BFormInput, BRow} from "bootstrap-vue-3";
 import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
+import {mapStores} from 'pinia';
+import {useScenarioStore} from '../../../../stores/scenario';
 
 export default {
   name: "cpu_affinity",
@@ -136,6 +138,7 @@ export default {
     }
   },
   computed: {
+    ...mapStores(useScenarioStore),
     isRTVM() {
       return vueUtils.getPathVal(this.rootFormData, 'vm_type') === 'RTVM'
     },
@@ -143,7 +146,7 @@ export default {
       return vueUtils.getPathVal(this.rootFormData, 'vm_type') === 'STANDARD_VM'
     },
     pcpuid_enum() {
-      return window.getCurrentFormSchemaData().BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id
+      return this.scenarioStore.activeSchema.BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id
     },
     pcpu_owned() {
       return vueUtils.getPathVal(this.rootFormData, 'own_pcpu')

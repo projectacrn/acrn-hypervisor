@@ -267,6 +267,19 @@ async function clickCheckboxByText(driver, text) {
     `)
 }
 
+async function checkboxCheckedByText(driver, text) {
+    const checked = await driver.executeScript(`
+        const elements = Array.from(document.querySelectorAll('.tabContent label, .tabContent .form-check'));
+        const element = elements.find(item => item.textContent.includes(arguments[0]));
+        const container = element && (element.closest('.form-check') || element.closest('.row') || element.parentElement);
+        const input = container && container.querySelector('input[type="checkbox"]');
+        if (!input) throw new Error('Could not find checkbox ' + arguments[0]);
+        return input.checked;
+    `, [text])
+    assert.equal(typeof checked, 'boolean')
+    return checked
+}
+
 async function closeVisibleModal(driver, action = '.btn-primary') {
     const modal = await driver.findElement('.modal.show')
     const id = await driver.attribute(modal, 'id')
@@ -338,8 +351,8 @@ async function stageFixture(temporaryRoot, historyDirectory, fixture, transformS
 
 async function currentScenarioData(driver) {
     return driver.executeScript(`
-        if (typeof window.getCurrentScenarioData !== 'function') return null;
-        const scenario = window.getCurrentScenarioData();
+        const pinia = document.querySelector('#app')?.__vue_app__?.config?.globalProperties?.$pinia;
+        const scenario = pinia?.state?.value?.scenario?.doc;
         return scenario && scenario.hv ? JSON.parse(JSON.stringify(scenario)) : null;
     `)
 }
@@ -408,6 +421,10 @@ async function captureCoverage(driver) {
         ], {cwd: packageRoot, stdio: 'inherit'})
         assert.equal(check.status, 0, `E2E coverage is below ${minimum}%`)
     }
+}
+
+async function resetHistory(driver) {
+    await driver.executeScript('return window.__TAURI_INTERNALS__.invoke("force_reset")')
 }
 
 async function backToWelcome(driver) {
@@ -511,7 +528,7 @@ async function saveScenario(driver, timeout = 120000, clicks = 1) {
         if (await driver.alertText() === null) {
             const state = await driver.executeScript(`
                 return {
-                    scenario: window.getCurrentScenarioData?.(),
+                    scenario: document.querySelector('#app')?.__vue_app__?.config?.globalProperties?.$pinia?.state?.value?.scenario?.doc,
                     buttons: Array.from(document.querySelectorAll('button'))
                         .filter(button => button.textContent.includes('Save Scenario'))
                         .map(button => ({disabled: button.disabled, text: button.innerText})),
@@ -531,7 +548,11 @@ async function saveScenario(driver, timeout = 120000, clicks = 1) {
             const body = await driver.bodyText()
             if (body.includes('All files successfully saved') || body.includes('failed') ||
                 body.includes('Please check your configuration')) {
-                return {body}
+                const validation = await driver.executeScript(`
+                    return document.querySelector('#app')?.__vue_app__?.config?.globalProperties?.$pinia
+                        ?.state?.value?.validation?.errors;
+                `)
+                return {body, validation}
             }
             return false
         }, {timeout, message: 'scenario save result'})
@@ -588,6 +609,8 @@ async function mockNativeDialogs(driver, {open = null, confirm = true} = {}) {
             } else if (command === 'plugin:dialog|confirm') {
                 result = current.confirm;
             } else if (command === 'plugin:dialog|message') {
+                const args = JSON.parse(init.body || '{}');
+                window.__e2eConfirmMessages.push(String(args?.message || ''));
                 result = current.confirm ? 'Ok' : 'Cancel';
             } else {
                 return window.__e2eOriginalFetch(input, init);
@@ -844,7 +867,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
     test('saves launch artifacts and reloads the scenario', async () => {
         try {
             const result = await saveScenario(driver, 120000, 2)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
 
             const scenarioXML = await fs.readFile(path.join(workingFolder, 'scenario.xml'), 'utf8')
             assert.match(scenarioXML, /<acrn-config>/)
@@ -904,9 +927,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
         await fs.writeFile(path.join(newFolder, 'old.board.xml'), 'old board')
         await fs.writeFile(path.join(newFolder, 'launch_old.sh'), 'old launch')
         await fs.writeFile(path.join(newFolder, 'keep.txt'), 'user data\n')
-        await fs.writeFile(path.join(historyDirectory, 'config.json'), JSON.stringify({
-            history: {working_folder: [], board_file: [], scenario_file: []}
-        }))
+        await resetHistory(driver)
         await backToWelcome(driver)
         await mockNativeDialogs(driver, {open: newFolder, confirm: false})
         try {
@@ -992,7 +1013,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             await setNamedFormValue(driver, 'VM name', 'E2E_POST_VM')
             await setFormControlValue(driver, '.tabContent select.form-select', 0)
             const result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             const scenarioXML = await fs.readFile(path.join(newFolder, 'scenario.xml'), 'utf8')
             assert.match(scenarioXML, /<name>E2E_POST_VM<\/name>/)
             assert.match(scenarioXML, /<pcpu_id>0<\/pcpu_id>/)
@@ -1077,7 +1098,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
                 await setFormControlValue(driver, '.cpu_affinity select', pcpuID)
             }
             const result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             await closeVisibleModal(driver)
 
             await backToWelcome(driver)
@@ -1167,9 +1188,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
         const fixture = bundledFixtures.find(item =>
             item.board === 'nuc11tnbi5' && item.scenario === 'hybrid_launch_2user_vm')
         const folder = await stageFixture(temporaryRoot, historyDirectory, fixture)
-        await fs.writeFile(path.join(historyDirectory, 'config.json'), JSON.stringify({
-            history: {working_folder: [], board_file: [], scenario_file: []}
-        }))
+        await resetHistory(driver)
         await backToWelcome(driver)
         await mockNativeDialogs(driver, {open: folder.slice(0, -1), confirm: true})
         try {
@@ -1511,7 +1530,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             const alerts = await driver.executeScript('return window.__e2eAlerts')
             assert.ok(alerts.some(message => message.includes('loaded success!')), JSON.stringify(alerts))
             const result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             const scenarioXML = await fs.readFile(path.join(folder, 'scenario.xml'), 'utf8')
             assert.doesNotMatch(scenarioXML, /<name>POST_STD_VM1<\/name>/)
             assert.equal((await fs.readdir(folder)).filter(file => /^launch.*\.sh$/.test(file)).length, 0)
@@ -1634,7 +1653,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             await setFormControlValue(driver, '.virtio_input input', 'e2e-partitioned-input')
 
             const result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             await closeVisibleModal(driver)
             await backToWelcome(driver)
             await openWorkingFolder(driver)
@@ -1685,7 +1704,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             })
             await clickToolInSet(driver, '.cpu_affinity .ToolSet', 0)
             let result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             assert.match(await fs.readFile(path.join(folder, 'scenario.xml'), 'utf8'),
                 /<name>E2E_EXTRA_VM<\/name>/)
             assert.equal((await fs.readdir(folder)).filter(file => /^launch.*\.sh$/.test(file)).length, 3)
@@ -1704,7 +1723,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
                 message: 'the post-launched VM to be deleted'
             })
             result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             assert.doesNotMatch(await fs.readFile(path.join(folder, 'scenario.xml'), 'utf8'),
                 /<name>E2E_EXTRA_VM<\/name>/)
             assert.equal((await fs.readdir(folder)).filter(file => /^launch.*\.sh$/.test(file)).length, 2)
@@ -1740,7 +1759,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             assert.equal(scenario.hv.vuart_connections?.vuart_connection?.length || 0, 0,
                 'The deleted VM left a dangling vUART connection')
             const result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             const scenarioXML = await fs.readFile(path.join(folder, 'scenario.xml'), 'utf8')
             assert.doesNotMatch(scenarioXML, /ACRN_Service_VM|POST_STD_VM/)
             assert.equal((await fs.readdir(folder)).filter(file => /^launch.*\.sh$/.test(file)).length, 0)
@@ -1798,7 +1817,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             await clickWidgetTool(driver, '.virtio_input', 0, 1)
 
             const result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             await closeVisibleModal(driver)
             await backToWelcome(driver)
             await openWorkingFolder(driver)
@@ -1848,7 +1867,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
                 vm.virtio_devices.console[1].sock_file_path === '/tmp/e2e-console-after.sock'
         }, {message: 'the console path edits to reach Scenario data'})
         const result = await saveScenario(driver)
-        assert.ok(result.body?.includes('All files successfully saved'), result.body)
+        assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
         await closeVisibleModal(driver)
         await backToWelcome(driver)
         await openWorkingFolder(driver)
@@ -1906,7 +1925,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             await setFormControlValue(driver, '.virtio_gpu_demo > .row select', 'Window')
 
             let result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             await closeVisibleModal(driver)
             await backToWelcome(driver)
             await openWorkingFolder(driver)
@@ -1922,7 +1941,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
                 message: 'the Virtio GPU device to be removed'
             })
             result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             await closeVisibleModal(driver)
             vm = (await currentScenarioData(driver)).vm.find(item => item.name === 'POST_STD_VM1')
             assert.equal(vm.virtio_devices.gpu?.length || 0, 0)
@@ -2010,7 +2029,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             })
 
             const result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             await closeVisibleModal(driver)
             await backToWelcome(driver)
             await openWorkingFolder(driver)
@@ -2063,7 +2082,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
         })
         await setFormControlValue(driver, '.cpu_affinity select', 0)
         const result = await saveScenario(driver)
-        assert.ok(result.body?.includes('All files successfully saved'), result.body)
+        assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
         const scenarioXML = await fs.readFile(path.join(folder, 'scenario.xml'), 'utf8')
         assert.match(scenarioXML, /<name>POST_STD_VM1<\/name>[\s\S]*?<pcpu_id>0<\/pcpu_id>/)
         await closeVisibleModal(driver)
@@ -2152,8 +2171,8 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
                 timeout: 5000,
                 message: `CAT allocation controls: ${JSON.stringify(await driver.executeScript(`
                     return {
-                        regions: window.getBoardData().CAT_INFO,
-                        rdt: window.getCurrentScenarioData().hv.FEATURES.RDT,
+                        regions: document.querySelector('#app')?.__vue_app__?.config?.globalProperties?.$pinia?.state?.value?.scenario?.board?.CAT_INFO,
+                        rdt: document.querySelector('#app')?.__vue_app__?.config?.globalProperties?.$pinia?.state?.value?.scenario?.doc?.hv?.FEATURES?.RDT,
                         text: document.querySelector('.tabContent').innerText.slice(-1200)
                     };
                 `))}`
@@ -2162,12 +2181,17 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             await waitUntil(async () => await driver.executeScript(
                 'return window.__e2eConfirmMessages.length === 1'), {message: 'CAT disable confirmation'})
             assert.equal((await currentScenarioData(driver)).hv.FEATURES.RDT.RDT_ENABLED, 'y')
+            assert.equal(await checkboxCheckedByText(driver, 'Cache Allocation Technology'), true)
 
             await setDialogResponses(driver, {confirm: true})
             await clickCheckboxByText(driver, 'Cache Allocation Technology')
             await waitUntil(async () =>
                 (await currentScenarioData(driver)).hv.FEATURES.RDT.RDT_ENABLED === 'n', {
                 message: 'CAT to be disabled'
+            })
+            await waitUntil(async () =>
+                !(await checkboxCheckedByText(driver, 'Cache Allocation Technology')), {
+                message: 'CAT checkbox to be unchecked in the rendered form'
             })
             assert.equal((await driver.findElements('.slider-handle')).length, 0)
             await clickCheckboxByText(driver, 'Code and Data Prioritization')
@@ -2179,6 +2203,28 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             await waitUntil(async () =>
                 (await currentScenarioData(driver)).hv.FEATURES.RDT.CDP_ENABLED === 'n', {
                 message: 'CDP to be disabled'
+            })
+            await waitUntil(async () =>
+                !(await checkboxCheckedByText(driver, 'Code and Data Prioritization')), {
+                message: 'CDP checkbox to be unchecked in the rendered form'
+            })
+
+            // Disabling the parent while CDP is enabled must clear both the
+            // domain switches and the rendered controls, not just the store.
+            await clickCheckboxByText(driver, 'Code and Data Prioritization')
+            await waitUntil(async () =>
+                (await currentScenarioData(driver)).hv.FEATURES.RDT.CDP_ENABLED === 'y', {
+                message: 'CDP to be re-enabled with CAT'
+            })
+            await clickCheckboxByText(driver, 'Cache Allocation Technology')
+            await waitUntil(async () => {
+                const rdt = (await currentScenarioData(driver)).hv.FEATURES.RDT
+                return rdt.RDT_ENABLED === 'n' && rdt.CDP_ENABLED === 'n'
+            }, {message: 'CAT and CDP to be disabled together'})
+            await waitUntil(async () =>
+                !(await checkboxCheckedByText(driver, 'Cache Allocation Technology')) &&
+                !(await checkboxCheckedByText(driver, 'Code and Data Prioritization')), {
+                message: 'CAT and CDP checkboxes to be unchecked together'
             })
             await clickCheckboxByText(driver, 'Virtual Cache Allocation Technology')
             await waitUntil(async () =>
@@ -2201,7 +2247,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
             await driver.pressKeys([''])
 
             const result = await saveScenario(driver)
-            assert.ok(result.body?.includes('All files successfully saved'), result.body)
+            assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
             const saved = await currentScenarioData(driver)
             assert.equal(saved.hv.FEATURES.RDT.RDT_ENABLED, 'y')
             assert.equal(saved.hv.FEATURES.RDT.VCAT_ENABLED, 'y')
@@ -2342,7 +2388,7 @@ describe('Configurator native WebDriver workflow', {concurrency: false}, () => {
 
                 const result = await saveScenario(driver)
                 assert.equal(result.alert, undefined, `Bundled Scenario was rejected: ${result.alert}`)
-                assert.ok(result.body?.includes('All files successfully saved'), result.body)
+                assert.ok(result.body?.includes('All files successfully saved'), JSON.stringify(result))
                 expected = await currentScenarioData(driver)
                 assert.ok(expected, 'Saved scenario data is unavailable')
                 assertScenarioDataPreserved(expected, loaded)

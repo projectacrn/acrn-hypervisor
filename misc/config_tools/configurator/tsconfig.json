@@ -13,7 +13,6 @@
     ],
     "types": [
       "vite/client"
-    ],
-    "jsx": "react"
+    ]
   }
 }

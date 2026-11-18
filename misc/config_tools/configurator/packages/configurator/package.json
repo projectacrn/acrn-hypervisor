@@ -16,7 +16,10 @@
     "test": "vitest run --config vitest.config.js",
     "test:component": "vitest run --config vitest.config.js tests/components",
     "test:e2e": "node --test --test-timeout=1800000 tests/e2e/configurator.e2e.js",
-    "test:e2e:coverage": "E2E_COVERAGE=true E2E_COVERAGE_MIN=95 node --test --test-timeout=1800000 tests/e2e/configurator.e2e.js"
+    "test:unit:coverage": "vitest run --config vitest.config.js --coverage.enabled=true --coverage.provider=istanbul --coverage.reporter=json --coverage.reportsDirectory=build/coverage/vitest",
+    "test:e2e:coverage": "E2E_COVERAGE=true E2E_COVERAGE_MIN=0 node --test --test-timeout=1800000 tests/e2e/configurator.e2e.js",
+    "test:coverage": "yarn test:unit:coverage && yarn test:e2e:coverage && node scripts/coverage.cjs check",
+    "coverage:report": "node scripts/coverage.cjs report"
   },
   "nyc": {
     "extension": [
@@ -49,6 +52,7 @@
     "lodash": "^4.17.21",
     "naive-ui": "^2.28.1",
     "node-fetch": "^2.6.7",
+    "pinia": "2.0.36",
     "sass": "^1.50.0",
     "vfonts": "^0.0.3",
     "vue": "3.2.47",
@@ -70,6 +74,7 @@
     "@tauri-apps/cli": "^2.12.4",
     "@types/node": "^16.11.33",
     "@vitejs/plugin-vue": "^2.3.1",
+    "@vitest/coverage-istanbul": "0.34.6",
     "@vue/test-utils": "^2.6.0",
     "jsdom": "^22.1.0",
     "nyc": "18.0.0",

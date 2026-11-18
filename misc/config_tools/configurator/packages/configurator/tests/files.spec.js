@@ -3,6 +3,10 @@ import Scenario from '../src/pages/Config/Scenario.vue'
 import Board from '../src/pages/Config/Board.vue'
 import NewConfiguration from '../src/pages/Welcome/NewConfiguration.vue'
 import configurator from '../src/lib/acrn'
+import {createPinia, setActivePinia} from 'pinia'
+import {useScenarioStore} from '../src/stores/scenario'
+import {useWorkspaceStore} from '../src/stores/workspace'
+import {getPlatform} from '../src/platform'
 
 afterEach(() => {
     vi.restoreAllMocks()
@@ -15,7 +19,12 @@ describe('file loading and cleanup', () => {
         vi.spyOn(configurator, 'loadScenario').mockImplementation(path => {
             return new Promise(resolve => { pending[path] = resolve })
         })
-        const context = {currentSelectedScenario: 'a.xml', loadRequestID: 0, $emit: vi.fn()}
+        setActivePinia(createPinia())
+        const context = {
+            currentSelectedScenario: 'a.xml',
+            scenarioStore: useScenarioStore(),
+            $emit: vi.fn()
+        }
 
         const first = Scenario.methods.loadScenario.call(context, true)
         context.currentSelectedScenario = 'b.xml'
@@ -31,9 +40,10 @@ describe('file loading and cleanup', () => {
 
     it('keeps the latest Scenario history selection when an older request finishes last', async () => {
         const pending = []
-        vi.spyOn(configurator, 'getHistory').mockImplementation(() =>
+        vi.spyOn(getPlatform().history, 'get').mockImplementation(() =>
             new Promise(resolve => pending.push(resolve)))
-        const context = {historyRequestID: 0, scenarioHistory: [], currentSelectedScenario: ''}
+        setActivePinia(createPinia())
+        const context = {workspaceStore: useWorkspaceStore(), currentSelectedScenario: ''}
 
         const first = Scenario.methods.getScenarioHistory.call(context)
         const second = Scenario.methods.getScenarioHistory.call(context)
@@ -42,15 +52,16 @@ describe('file loading and cleanup', () => {
         pending[0](['old.xml'])
         await first
 
-        expect(context.scenarioHistory).toEqual(['new.xml'])
+        expect(context.workspaceStore.scenarioHistory).toEqual(['new.xml'])
         expect(context.currentSelectedScenario).toBe('new.xml')
     })
 
     it('keeps the latest Board history selection when an older request finishes last', async () => {
         const pending = []
-        vi.spyOn(configurator, 'getHistory').mockImplementation(() =>
+        vi.spyOn(getPlatform().history, 'get').mockImplementation(() =>
             new Promise(resolve => pending.push(resolve)))
-        const context = {historyRequestID: 0, boardHistory: [], currentSelectedBoard: ''}
+        setActivePinia(createPinia())
+        const context = {workspaceStore: useWorkspaceStore(), currentSelectedBoard: ''}
 
         const first = Board.methods.getBoardHistory.call(context)
         const second = Board.methods.getBoardHistory.call(context)
@@ -59,7 +70,7 @@ describe('file loading and cleanup', () => {
         pending[0](['old.board.xml'])
         await first
 
-        expect(context.boardHistory).toEqual(['new.board.xml'])
+        expect(context.workspaceStore.boardHistory).toEqual(['new.board.xml'])
         expect(context.currentSelectedBoard).toBe('new.board.xml')
     })
 

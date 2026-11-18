@@ -39,3 +39,12 @@ describe('third-party build copying', () => {
         )).rejects.toThrow('Source folder does not exist')
     })
 })
+
+describe('native dialog capabilities', () => {
+    it('allows the message dialogs used for CAT confirmations', () => {
+        const capability = JSON.parse(fs.readFileSync(
+            path.resolve('src-tauri/capabilities/migrated.json'), 'utf8'
+        ))
+        expect(capability.permissions).toContain('dialog:allow-message')
+    })
+})

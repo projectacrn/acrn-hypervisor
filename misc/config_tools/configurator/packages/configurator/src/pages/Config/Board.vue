@@ -60,6 +60,8 @@
 <script>
 import _ from 'lodash'
 import configurator from "../../lib/acrn";
+import {mapStores} from "pinia";
+import {useWorkspaceStore} from "../../stores/workspace";
 import NewBoard from "./NewBoard.vue";
 
 export default {
@@ -81,12 +83,10 @@ export default {
   emits: ['boardUpdate'],
   data() {
     return {
-      boardHistory: [],
       currentSelectedBoard: '',
       showBoardOverwrite: false,
       newFilePath: '',
       importing: false,
-      historyRequestID: 0,
     }
   },
   mounted() {
@@ -109,9 +109,13 @@ export default {
     // Todo: auto load board
   },
   beforeUnmount() {
-    this.historyRequestID++
+    this.workspaceStore.invalidate('Board')
   },
   computed: {
+    ...mapStores(useWorkspaceStore),
+    boardHistory() {
+      return this.workspaceStore.boardHistory
+    },
     imported() {
       this.reformatBoardInfo()
       return !_.isEmpty(this.board)
@@ -162,9 +166,6 @@ export default {
           console.warn(`Board imported, but its history could not be saved: ${historyError}`)
         }
         this.$emit('boardUpdate', boardInfo, scenarioJSONSchema)
-        if (window.boardUpdate) {
-          window.boardUpdate(boardInfo)
-        }
       } catch (err) {
         alert(`Loading ${filepath} failed: ${err}`)
         console.log(err)
@@ -244,15 +245,13 @@ export default {
           .then(() => this.getBoardHistory())
     },
     getBoardHistory() {
-      const requestID = ++this.historyRequestID
-      return configurator.getHistory("Board")
+      return this.workspaceStore.loadHistory('Board')
           .then((boardHistory) => {
-            if (requestID !== this.historyRequestID) {
+            if (boardHistory === null) {
               return
             }
-            this.boardHistory = boardHistory;
-            if (this.boardHistory.length > 0) {
-              this.currentSelectedBoard = this.boardHistory[0]
+            if (boardHistory.length > 0) {
+              this.currentSelectedBoard = boardHistory[0]
             }
           })
     }

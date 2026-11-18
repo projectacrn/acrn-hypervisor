@@ -4,6 +4,8 @@ import Board from '../../src/pages/Config/Board.vue'
 import NewConfiguration from '../../src/pages/Welcome/NewConfiguration.vue'
 import UseExisting from '../../src/pages/Welcome/UseExisting.vue'
 import configurator from '../../src/lib/acrn'
+import {createPinia} from 'pinia'
+import {getPlatform} from '../../src/platform'
 
 afterEach(() => {
     vi.restoreAllMocks()
@@ -14,7 +16,7 @@ describe('configuration workflow components', () => {
     it('imports the selected board from the rendered component', async () => {
         vi.stubGlobal('alert', vi.fn())
         vi.spyOn(configurator, 'readDir').mockResolvedValue([])
-        vi.spyOn(configurator, 'getHistory').mockResolvedValue(['/fixtures/generic_board.xml'])
+        vi.spyOn(getPlatform().history, 'get').mockResolvedValue(['/fixtures/generic_board.xml'])
         vi.spyOn(configurator, 'loadBoard').mockResolvedValue({
             scenarioJSONSchema: {HV: {}},
             boardInfo: {
@@ -29,7 +31,7 @@ describe('configuration workflow components', () => {
 
         const wrapper = shallowMount(Board, {
             props: {WorkingFolder: '/work/', board: {}, schemas: {}},
-            global: {stubs: {NewBoard: true}}
+            global: {plugins: [createPinia()], stubs: {NewBoard: true}}
         })
         await flushPromises()
 

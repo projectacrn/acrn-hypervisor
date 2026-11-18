@@ -238,23 +238,40 @@ The following environment variables override executable discovery:
 | `TAURI_DRIVER` | Tauri WebDriver adapter | `tauri-driver` |
 | `WEBKIT_WEBDRIVER` | Native WebKit driver | `WebKitWebDriver` |
 
-### Measure native E2E coverage
+### Measure combined unit and native E2E coverage
 
 Instrumentation and coverage collection are separate steps. Build an
-instrumented application from the repository root, then run the coverage suite:
+instrumented application from the repository root, then run the combined gate:
 
 ```bash
 cd ../../..
 VITE_COVERAGE=true make configurator
 cd misc/config_tools/configurator
-yarn workspace acrn-configurator test:e2e:coverage
+yarn workspace acrn-configurator test:coverage
 ```
 
 `VITE_COVERAGE=true` enables Istanbul instrumentation at build time.
-`test:e2e:coverage` collects coverage from the running native application and
-enforces at least 95% statement, branch, function, and line coverage for the
-frontend sources. Text, HTML, and JSON summaries are written to
-`packages/configurator/build/e2e-artifacts/coverage-report/`.
+`test:coverage` runs the Vitest and native WebDriver suites, merges their
+coverage, and enforces at least 95% statement, branch, function, and line
+coverage for the frontend sources. The individual commands are also available:
+
+```bash
+yarn workspace acrn-configurator test:unit:coverage
+yarn workspace acrn-configurator test:e2e:coverage
+yarn workspace acrn-configurator coverage:report
+```
+
+`test:e2e:coverage` only collects native coverage; it does not enforce the 95%
+threshold by itself. `coverage:report` merges existing Vitest and E2E data and
+rebuilds the report without rerunning either suite. Run
+`node packages/configurator/scripts/coverage.cjs check` to check that existing
+data against the threshold. E2E bundle positions are mapped back to the
+original sources before merging, preventing duplicate statements caused by
+different Vitest and browser-bundle coordinates.
+
+The combined text, HTML, and JSON summaries are written to
+`packages/configurator/build/coverage-report/`. Raw native diagnostics remain
+under `packages/configurator/build/e2e-artifacts/`.
 
 **Rebuild without `VITE_COVERAGE` before producing a release artifact.**
 

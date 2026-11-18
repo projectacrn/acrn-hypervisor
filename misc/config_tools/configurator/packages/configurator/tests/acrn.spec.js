@@ -1,5 +1,7 @@
-import {beforeEach, describe, expect, it} from 'vitest'
-import configurator from '../src/lib/acrn'
+import {describe, expect, it} from 'vitest'
+import {createPinia, setActivePinia} from 'pinia'
+import {useScenarioStore} from '../src/stores/scenario'
+import {hexToRange} from '../src/domain/cat/masks'
 
 function loadCAT({rdt = 'y', cdp = 'n', vcat = 'n'} = {}) {
     const scenario = {
@@ -65,19 +67,16 @@ function loadCAT({rdt = 'y', cdp = 'n', vcat = 'n'} = {}) {
         }]
     }
 
-    window.getSchemaData = () => schemas
-    window.getCurrentScenarioData = () => scenario
-    window.getBoardData = () => board
-    configurator.cat.scenarioLoaded()
+    setActivePinia(createPinia())
+    const store = useScenarioStore()
+    store.board = board
+    store.schemas = schemas
+    store.load(scenario)
 
-    return {scenario, catData: configurator.cat.getCATUIData()}
+    return {scenario, store, catData: store.getCatView()}
 }
 
 describe('CAT configuration', () => {
-    beforeEach(() => {
-        configurator.cat.CATDB = []
-    })
-
     it('excludes pre-launched VM processors from Service VM vCPUs', () => {
         const {catData} = loadCAT()
         const servicePolicies = catData.regions[0].data.Standard
@@ -111,8 +110,20 @@ describe('CAT configuration', () => {
         expect(catData.regions).toHaveLength(1)
     })
 
+    it('writes slider edits directly to the scenario CACHE_REGION', () => {
+        const {scenario, store, catData} = loadCAT()
+        const region = catData.regions[0]
+        const policy = region.data.RTCore[0]
+
+        store.setClosMask(region, policy, '0x3c')
+
+        const stored = scenario.hv.CACHE_REGION.CACHE_ALLOCATION[0].POLICY
+            .find(candidate => candidate.VM === policy.VM && candidate.VCPU === policy.VCPU)
+        expect(stored.CLOS_MASK).toBe('0x3c')
+    })
+
     it('accepts hexadecimal masks without a 0x prefix', () => {
-        expect(configurator.cat.hexToRange('ff', 8)).toEqual([0, 8])
-        expect(configurator.cat.hexToRange('0f', 8)).toEqual([4, 8])
+        expect(hexToRange('ff', 8)).toEqual([0, 8])
+        expect(hexToRange('0f', 8)).toEqual([4, 8])
     })
 })
