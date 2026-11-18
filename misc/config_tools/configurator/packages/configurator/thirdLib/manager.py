@@ -8,6 +8,7 @@ import os
 import json
 import shutil
 import tarfile
+import tempfile
 from pathlib import Path
 
 import requests
@@ -47,11 +48,23 @@ def install(library_name, library_install):
             download_from = step['from']
             download_to = step['to']
 
-            with requests.get(download_from, stream=True) as r:
-                total_length = int(r.headers.get("Content-Length"))
-                with tqdm.wrapattr(r.raw, "read", total=total_length, desc="") as raw:
-                    with open(download_to, 'wb') as output:
-                        shutil.copyfileobj(raw, output)
+            temporary_path = None
+            try:
+                with requests.get(download_from, stream=True, timeout=(10, 30)) as r:
+                    r.raise_for_status()
+                    content_length = r.headers.get("Content-Length")
+                    total_length = int(content_length) if content_length is not None else None
+                    destination_dir = os.path.dirname(os.path.abspath(download_to))
+                    with tempfile.NamedTemporaryFile(
+                            mode='wb', dir=destination_dir, prefix='.download-', delete=False) as output:
+                        temporary_path = output.name
+                        with tqdm.wrapattr(r.raw, "read", total=total_length, desc="") as raw:
+                            shutil.copyfileobj(raw, output)
+                os.replace(temporary_path, download_to)
+            except Exception:
+                if temporary_path is not None and os.path.isfile(temporary_path):
+                    os.remove(temporary_path)
+                raise
             print(f'download: {download_to} success')
         elif step_type == "extract":
             tar_file: str = step['from']
@@ -64,7 +77,7 @@ def install(library_name, library_install):
                     abs_directory = os.path.abspath(directory)
                     abs_target = os.path.abspath(target)
                 
-                    prefix = os.path.commonprefix([abs_directory, abs_target])
+                    prefix = os.path.commonpath([abs_directory, abs_target])
                     
                     return prefix == abs_directory
                 
@@ -74,6 +87,11 @@ def install(library_name, library_install):
                         member_path = os.path.join(path, member.name)
                         if not is_within_directory(path, member_path):
                             raise Exception("Attempted Path Traversal in Tar File")
+                        if member.issym() or member.islnk():
+                            link_base = os.path.dirname(member_path) if member.issym() else path
+                            link_path = os.path.join(link_base, member.linkname)
+                            if not is_within_directory(path, link_path):
+                                raise Exception("Attempted Link Traversal in Tar File")
                 
                     tar.extractall(path, members, numeric_owner=numeric_owner) 
                     
@@ -89,11 +107,13 @@ def install(library_name, library_install):
             print(f'remove: {remove_path} success')
         elif step_type == "replaceText":
             filename = step['file']
-            file_content = open(filename, encoding='utf-8').read()
+            with open(filename, encoding='utf-8') as source:
+                file_content = source.read()
             replace_old = step['old']
             replace_new = step['new']
             file_content = file_content.replace(replace_old, replace_new)
-            open(filename, 'w', encoding='utf-8').write(file_content)
+            with open(filename, 'w', encoding='utf-8') as destination:
+                destination.write(file_content)
             print(f"replaceText: {filename} success")
         else:
             print(step)
@@ -120,9 +140,11 @@ def manager(operation, library_info):
     )
     os.chdir(third_dir)
 
-    if operation in ['check', 'install', 'clean']:
-        check(library_info, operation)
-    os.chdir(cwd)
+    try:
+        if operation in ['check', 'install', 'clean']:
+            check(library_info, operation)
+    finally:
+        os.chdir(cwd)
 
 
 def main():

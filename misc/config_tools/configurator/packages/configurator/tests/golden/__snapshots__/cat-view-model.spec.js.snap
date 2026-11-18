@@ -1,0 +1,117 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden CAT view model > pins derived regions, summary, policies and scenario policies together 1`] = `
+{
+  "errorMsg": "",
+  "regions": [
+    {
+      "cache_size": 8388608,
+      "capacity_mask_length": 8,
+      "data": {
+        "RTCore": [
+          {
+            "CLOS_MASK": "0x78",
+            "TYPE": "Unified",
+            "VCPU": 0,
+            "VM": "pre",
+          },
+        ],
+        "Standard": [
+          {
+            "CLOS_MASK": "0xff",
+            "TYPE": "Unified",
+            "VCPU": 0,
+            "VM": "post",
+          },
+          {
+            "CLOS_MASK": "0xff",
+            "TYPE": "Unified",
+            "VCPU": 1,
+            "VM": "post",
+          },
+          {
+            "CLOS_MASK": "0x0f",
+            "TYPE": "Unified",
+            "VCPU": 0,
+            "VM": "service",
+          },
+          {
+            "CLOS_MASK": "0xff",
+            "TYPE": "Unified",
+            "VCPU": 1,
+            "VM": "service",
+          },
+          {
+            "CLOS_MASK": "0xff",
+            "TYPE": "Unified",
+            "VCPU": 2,
+            "VM": "service",
+          },
+        ],
+        "VCAT": [],
+      },
+      "id": "0",
+      "level": 3,
+      "processors": [
+        0,
+        1,
+        2,
+        3,
+      ],
+      "type": "Unified",
+    },
+  ],
+  "scenarioData": {
+    "CACHE_ALLOCATION": [
+      {
+        "CACHE_ID": "0",
+        "CACHE_LEVEL": 3,
+        "POLICY": [
+          {
+            "CLOS_MASK": "0x78",
+            "TYPE": "Unified",
+            "VCPU": 0,
+            "VM": "pre",
+          },
+          {
+            "CLOS_MASK": "0xff",
+            "TYPE": "Unified",
+            "VCPU": 0,
+            "VM": "post",
+          },
+          {
+            "CLOS_MASK": "0xff",
+            "TYPE": "Unified",
+            "VCPU": 1,
+            "VM": "post",
+          },
+          {
+            "CLOS_MASK": "0x0f",
+            "TYPE": "Unified",
+            "VCPU": 0,
+            "VM": "service",
+          },
+          {
+            "CLOS_MASK": "0xff",
+            "TYPE": "Unified",
+            "VCPU": 1,
+            "VM": "service",
+          },
+          {
+            "CLOS_MASK": "0xff",
+            "TYPE": "Unified",
+            "VCPU": 2,
+            "VM": "service",
+          },
+        ],
+      },
+    ],
+  },
+  "summary": {
+    "3": {
+      "0": 1,
+      "count": 1,
+    },
+  },
+}
+`;

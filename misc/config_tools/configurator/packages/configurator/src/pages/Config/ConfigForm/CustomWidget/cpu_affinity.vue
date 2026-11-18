@@ -1,8 +1,8 @@
 <template>
-  <div style="border:1px solid gray;background: #F5F5F5;padding: 1rem">
+  <div class="cpu_affinity" style="border:1px solid gray;background: #F5F5F5;padding: 1rem">
     <b>{{ uiOptions.title }}</b>
     <div class="p-4">
-      <div v-if="defaultVal.pcpu && defaultVal.pcpu.length>0">
+      <div v-if="defaultVal && defaultVal.pcpu && defaultVal.pcpu.length>0">
         <b-row v-if="is_std_vm">
           <label>
             <n-popover trigger="hover" placement="top-start" style="width: 500px">
@@ -114,6 +114,8 @@ import {Icon} from "@vicons/utils";
 import {Plus, Minus} from '@vicons/fa'
 import {BFormInput, BRow} from "bootstrap-vue-3";
 import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
+import {mapStores} from 'pinia';
+import {useScenarioStore} from '../../../../stores/scenario';
 
 export default {
   name: "cpu_affinity",
@@ -136,6 +138,7 @@ export default {
     }
   },
   computed: {
+    ...mapStores(useScenarioStore),
     isRTVM() {
       return vueUtils.getPathVal(this.rootFormData, 'vm_type') === 'RTVM'
     },
@@ -143,7 +146,7 @@ export default {
       return vueUtils.getPathVal(this.rootFormData, 'vm_type') === 'STANDARD_VM'
     },
     pcpuid_enum() {
-      return window.getCurrentFormSchemaData().BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id
+      return this.scenarioStore.activeSchema.BasicConfigType.definitions.CPUAffinityConfiguration.properties.pcpu_id
     },
     pcpu_owned() {
       return vueUtils.getPathVal(this.rootFormData, 'own_pcpu')
@@ -162,6 +165,9 @@ export default {
     }
   },
   mounted() {
+    if (!_.isPlainObject(this.defaultVal)) {
+      this.defaultVal = {}
+    }
     if (!_.isArray(this.defaultVal.pcpu)) {
       this.defaultVal.pcpu = []
       this.addPCPU(-1)

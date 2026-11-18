@@ -3,3 +3,6 @@ requests
 xmltodict
 sphinx
 bs4
+lxml
+defusedxml
+tqdm

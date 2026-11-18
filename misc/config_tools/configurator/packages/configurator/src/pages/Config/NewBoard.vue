@@ -1,6 +1,7 @@
 <template>
-  <b-modal title="Board XML overwrite" fade no-close-on-backdrop
-           v-model="showModal"
+  <b-modal title="Board XML overwrite" no-fade no-close-on-backdrop
+           :model-value="showModal"
+           @update:model-value="$emit('update:showModal', $event)"
            @cancel="cancel"
            @abort="cancel"
            @close="cancel"

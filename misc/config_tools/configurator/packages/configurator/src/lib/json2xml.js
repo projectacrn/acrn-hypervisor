@@ -23,18 +23,12 @@ export default class JSON2XML {
     }
 
     #getAttrText(jso) {
-        let attrs = {}
-        Object.keys(jso).map((childKey) => {
-                if (_.startsWith(childKey, '@')) {
-                    attrs[childKey.substr(1)] = jso[childKey]
-                    delete jso[childKey]
-                }
-            }
-        )
         let attrText = ''
-        for (const attrsKey in attrs) {
-            attrText += ` ${attrsKey}="${attrs[attrsKey]}"`
-        }
+        Object.keys(jso).forEach((childKey) => {
+            if (_.startsWith(childKey, '@')) {
+                attrText += ` ${childKey.substr(1)}="${_.escape(`${jso[childKey]}`)}"`
+            }
+        })
         return attrText
     }
 
@@ -73,7 +67,9 @@ export default class JSON2XML {
             this.addNewlineAndIndent(deepth)
             this.xml += `<${selfName}${attrText}>`
             for (const key in jsObjectElement) {
-                this.#convertObject(deepth + 1, key, jsObjectElement[key])
+                if (!_.startsWith(key, '@')) {
+                    this.#convertObject(deepth + 1, key, jsObjectElement[key])
+                }
             }
             this.addNewlineAndIndent(deepth)
             this.xml += `</${selfName}>`

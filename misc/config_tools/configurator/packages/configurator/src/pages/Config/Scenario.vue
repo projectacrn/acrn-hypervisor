@@ -48,6 +48,9 @@ import OverwriteMessage from "./Scenario/OverwriteMessage";
 import configurator from "../../lib/acrn";
 import NewScenario from "./Scenario/NewScenario.vue";
 import _ from "lodash";
+import {mapStores} from "pinia";
+import {useScenarioStore} from "../../stores/scenario";
+import {useWorkspaceStore} from "../../stores/workspace";
 
 export default {
   name: "Scenario",
@@ -56,10 +59,9 @@ export default {
   data() {
     return {
       clickedButton: "",
-      scenarioHistory: [],
       currentSelectedScenario: '',
       showCreateScenario: false,
-      showOverwriteMessage: false
+      showOverwriteMessage: false,
     }
   },
   props: {
@@ -70,6 +72,12 @@ export default {
       type: Object
     }
   },
+  computed: {
+    ...mapStores(useScenarioStore, useWorkspaceStore),
+    scenarioHistory() {
+      return this.workspaceStore.scenarioHistory
+    }
+  },
   mounted() {
     //get init scenario if it exist, add to history
     this.getExistScenarioPath()
@@ -78,16 +86,18 @@ export default {
             configurator.addHistory('Scenario', filePath)
                 .then(() => {
                   this.getScenarioHistory().then(() => {
-                    // delay 2s for board loading
-                    setTimeout(() => {
+                    if (_.isEmpty(this.scenario)) {
                       this.loadScenario(true)
-                    }, 2000);
+                    }
                   })
                 })
           }
         })
     this.getScenarioHistory()
-    // Todo: auto load scenario
+  },
+  beforeUnmount() {
+    this.scenarioStore.invalidate()
+    this.workspaceStore.invalidate('Scenario')
   },
 
   methods: {
@@ -98,6 +108,7 @@ export default {
       } else this.showCreateScenario = true
     },
     newScenario(data) {
+      this.scenarioStore.invalidate()
       this.$emit('scenarioUpdate', data)
     },
     checkAndLoadScenario(auto = false) {
@@ -115,27 +126,32 @@ export default {
       }
     },
     loadScenario(auto) {
-      if (this.currentSelectedScenario.length > 0) {
-        configurator.loadScenario(this.currentSelectedScenario)
-            .then((scenarioConfig) => {
-              console.log(scenarioConfig)
-              this.$emit('scenarioUpdate', scenarioConfig['acrn-config'])
-              if (!auto) {
-                alert(`Scenario ${this.currentSelectedScenario} loaded success!`)
-              }
-            }).catch((err) => {
-          console.log(err)
-          alert(`Loading ${this.currentSelectedScenario} failed: ${err}`)
-        })
+      const scenarioPath = this.currentSelectedScenario
+      if (scenarioPath.length === 0) {
+        return Promise.resolve()
       }
+      return this.scenarioStore.loadFromFile(
+          scenarioPath, () => scenarioPath === this.currentSelectedScenario)
+          .then((scenarioConfig) => {
+            if (scenarioConfig === null) {
+              return
+            }
+            this.$emit('scenarioUpdate', scenarioConfig)
+            if (!auto) {
+              alert(`Scenario ${scenarioPath} loaded success!`)
+            }
+          }).catch((err) => {
+            console.log(err)
+            alert(`Loading ${scenarioPath} failed: ${err}`)
+          })
     },
     getExistScenarioPath() {
       // only return filename when using exist configuration.
       return configurator.readDir(this.WorkingFolder, false)
           .then((res) => {
             let scenarioPath = ''
-            res.map((filepath) => {
-              if (filepath.path.search('scenario') != -1) {
+            res.forEach((filepath) => {
+              if (filepath.path.split(/[\\/]/).pop() === 'scenario.xml') {
                 scenarioPath = filepath.path
               }
             })
@@ -149,7 +165,7 @@ export default {
         directory: false,
         multiple: false
       }).then((dirPath) => {
-        if (dirPath.length > 0) {
+        if (dirPath) {
           configurator.addHistory("Scenario", dirPath).then(() => {
             this.getScenarioHistory()
           })
@@ -157,11 +173,13 @@ export default {
       })
     },
     getScenarioHistory() {
-      return configurator.getHistory("Scenario")
+      return this.workspaceStore.loadHistory('Scenario')
           .then((scenarioHistory) => {
-            this.scenarioHistory = scenarioHistory
-            if (this.scenarioHistory.length > 0) {
-              this.currentSelectedScenario = this.scenarioHistory[0]
+            if (scenarioHistory === null) {
+              return
+            }
+            if (scenarioHistory.length > 0) {
+              this.currentSelectedScenario = scenarioHistory[0]
             }
           })
     }

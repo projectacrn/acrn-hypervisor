@@ -4,8 +4,11 @@
 
     <div class="d-flex gap-2 flex-column">
       <text>Intel Resource Director Technology</text>
+      <!-- Recreate the controls after programmatic changes: WebKit can retain
+         the checked state of a Bootstrap checkbox whose click was prevented. -->
       <b-form-checkbox
-          v-model="RDT_ENABLED" :value="'y'" :uncheckedValue="'n'"
+          :key="'RDT-'+RDT_ENABLED"
+          :model-value="RDT_ENABLED" :value="'y'" :uncheckedValue="'n'"
           @click="(event)=>checkboxController('RDT_ENABLED',event)">
         <n-popover trigger="hover" placement="top-start">
           <template #trigger>
@@ -17,7 +20,8 @@
       </b-form-checkbox>
       <div class="d-flex flex-column gap-2 ps-3 pb-3">
         <b-form-checkbox
-            v-model="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'"
+            :key="'CDP-'+CDP_ENABLED"
+            :model-value="CDP_ENABLED" :value="'y'" :uncheckedValue="'n'"
             :disabled="VCAT_ENABLED==='y'"
             @click="(event)=>checkboxController('CDP_ENABLED',event)">
           <n-popover trigger="hover" placement="top-start">
@@ -29,7 +33,8 @@
           Code and Data Prioritization
         </b-form-checkbox>
         <b-form-checkbox
-            v-model="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'"
+            :key="'VCAT-'+VCAT_ENABLED"
+            :model-value="VCAT_ENABLED" :value="'y'" :uncheckedValue="'n'"
             :disabled="CDP_ENABLED==='y'"
             @click="(event)=>checkboxController('VCAT_ENABLED',event)">
           <n-popover trigger="hover" placement="top-start">
@@ -105,7 +110,8 @@
               <div class="policyDisabledBlock"
                    v-if="index===0"></div>
               <HexBlockRangeSelector
-                  v-model="POLICY.CLOS_MASK"
+                  :model-value="POLICY.CLOS_MASK"
+                  @update:model-value="setClosMask(CACHE_ALLOCATION, POLICY, $event)"
                   :isVcat="false"
                   :max="CACHE_ALLOCATION.capacity_mask_length"
               />
@@ -114,7 +120,8 @@
               <div class="policyDisabledBlock"
                    v-if="index===0"></div>
               <HexBlockRangeSelector
-                  v-model="POLICY.CLOS_MASK"
+                  :model-value="POLICY.CLOS_MASK"
+                  @update:model-value="setClosMask(CACHE_ALLOCATION, POLICY, $event)"
                   :isVcat="false"
                   :max="CACHE_ALLOCATION.capacity_mask_length"
               />
@@ -123,7 +130,8 @@
               <div class="policyDisabledBlock"
                    v-if="index===0"></div>
               <HexBlockRangeSelector
-                  v-model="POLICY.CLOS_MASK"
+                  :model-value="POLICY.CLOS_MASK"
+                  @update:model-value="setClosMask(CACHE_ALLOCATION, POLICY, $event)"
                   :isVcat="true"
                   :max="CACHE_ALLOCATION.capacity_mask_length"
               />
@@ -144,11 +152,9 @@ import _ from "lodash";
 import {vueUtils, fieldProps} from "@lljj/vue3-form-naive";
 import HexBlockRangeSelector from "./CAT/HexBlockRangeSelector.vue";
 import IconInfo from '@lljj/vjsf-utils/icons/IconInfo.vue';
-import configurator from "../../../../lib/acrn";
-
-function count(source, target) {
-  return (source.match(new RegExp(target, 'g')) || []).length;
-}
+import {mapStores} from "pinia";
+import {confirm} from "@tauri-apps/plugin-dialog";
+import {useScenarioStore} from "../../../../stores/scenario";
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -160,44 +166,47 @@ export default {
   props: {
     ...fieldProps
   },
-  mounted() {
-    this.updateCatInfo()
-    window.boardUpdate = () => {
-      this.boardUpdate()
-    }
-  },
   computed: {
-    RDT_ENABLED: {
-      get() {
-        return this.formDataProxy('RDT_ENABLED');
-      },
-      set(value) {
-        return this.formDataProxy('RDT_ENABLED', value, true);
-      }
+    ...mapStores(useScenarioStore),
+    RDT_ENABLED() {
+      return this.CAT_INFO.switches.RDT_ENABLED
     },
-    CDP_ENABLED: {
-      get() {
-        return this.formDataProxy('CDP_ENABLED');
-      },
-      set(value) {
-        return this.formDataProxy('CDP_ENABLED', value, true);
-      }
+    CDP_ENABLED() {
+      return this.CAT_INFO.switches.CDP_ENABLED
     },
-    VCAT_ENABLED: {
-      get() {
-        return this.formDataProxy('VCAT_ENABLED');
-      },
-      set(value) {
-        return this.formDataProxy('VCAT_ENABLED', value, true);
-      }
+    VCAT_ENABLED() {
+      return this.CAT_INFO.switches.VCAT_ENABLED
     },
   },
   data() {
     return {
-      CAT_INFO: {errorMsg: null, regions: [], summary: {}},
+      // Read-only view model derived from the form and Scenario. The form
+      // remains the editable source of truth; replacing this snapshot makes every
+      // programmatic switch change explicitly visible to the template.
+      CAT_INFO: {
+        errorMsg: null,
+        regions: [],
+        summary: {},
+        switches: {RDT_ENABLED: 'n', CDP_ENABLED: 'n', VCAT_ENABLED: 'n'},
+      },
       RDTType: this.rootSchema.definitions['RDTType'],
       InstructionLocation: {},
+      catOperationRevision: 0,
     }
+  },
+  watch: {
+    // Mask edits and external Scenario changes also invalidate the view model.
+    'scenarioStore.revision'() {
+      this.updateCatInfo()
+    },
+  },
+  created() {
+    this.updateCatInfo()
+  },
+  beforeUnmount() {
+    // Delayed enables and native confirmations must not write into a form
+    // that has already been replaced by another VM or parameter mode.
+    this.catOperationRevision++
   },
   methods: {
     showInstruction(level, index) {
@@ -215,9 +224,12 @@ export default {
       event.stopPropagation()
       let oldValue = this.formDataProxy(name);
       let newValue = oldValue === 'y' ? 'n' : 'y';
+      const operationRevision = ++this.catOperationRevision
       if (newValue === 'y') {
         wait(50).then(() => {
-          this.formDataProxy(name, newValue, true);
+          if (operationRevision === this.catOperationRevision) {
+            this.formDataProxy(name, newValue, true);
+          }
         })
         return
       }
@@ -232,7 +244,9 @@ export default {
       // noinspection JSUnresolvedFunction
       confirm(message)
           .then((confirmed) => {
-            this.formDataProxy(name, confirmed ? newValue : oldValue, true)
+            if (operationRevision === this.catOperationRevision) {
+              this.formDataProxy(name, confirmed ? newValue : oldValue, true)
+            }
           })
     },
     formDataProxy(name, data = null, update = false) {
@@ -294,20 +308,33 @@ export default {
         return;
       }
       for (let policyIndex = 0; policyIndex < CACHE_REGION.data.RTCore.length; policyIndex++) {
-        CACHE_REGION.data.RTCore[policyIndex].CLOS_MASK = '0x' + parseInt(
+        const policy = CACHE_REGION.data.RTCore[policyIndex]
+        this.setClosMask(CACHE_REGION, policy, '0x' + parseInt(
             '0'.repeat(policyIndex) + '1' + '0'.repeat(CACHE_REGION.capacity_mask_length - policyIndex - 1),
-            2).toString(16)
+            2).toString(16))
       }
 
       for (let policyIndex = 0; policyIndex < CACHE_REGION.data.Standard.length; policyIndex++) {
-        // noinspection JSUnresolvedVariable
-        CACHE_REGION.data.Standard[policyIndex].CLOS_MASK = '0x' + parseInt(
+        const policy = CACHE_REGION.data.Standard[policyIndex]
+        this.setClosMask(CACHE_REGION, policy, '0x' + parseInt(
             '0'.repeat(CACHE_REGION.data.RTCore.length) + '1'.repeat(CACHE_REGION.capacity_mask_length - CACHE_REGION.data.RTCore.length),
-            2).toString(16);
+            2).toString(16));
       }
     },
+    setClosMask(CACHE_REGION, POLICY, CLOS_MASK) {
+      this.scenarioStore.setClosMask(CACHE_REGION, POLICY, CLOS_MASK)
+    },
     updateCatInfo() {
-      this.CAT_INFO = configurator.cat.getCATUIData()
+      this.scenarioStore.correctCatSwitches()
+      const view = this.scenarioStore.getCatView() || {errorMsg: null, regions: [], summary: {}}
+      this.CAT_INFO = {
+        ...view,
+        switches: {
+          RDT_ENABLED: this.formDataProxy('RDT_ENABLED'),
+          CDP_ENABLED: this.formDataProxy('CDP_ENABLED'),
+          VCAT_ENABLED: this.formDataProxy('VCAT_ENABLED'),
+        },
+      }
       this.InstructionLocation={}
     }
   }

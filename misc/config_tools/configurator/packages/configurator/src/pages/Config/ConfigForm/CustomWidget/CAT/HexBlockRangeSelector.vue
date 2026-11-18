@@ -6,7 +6,7 @@
 
 <script>
 import Slider from '@vueform/slider'
-import configurator from '../../../../../lib/acrn'
+import {hexToRange, rangeToHex} from '../../../../../domain/cat/masks'
 
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -30,7 +30,7 @@ export default {
     },
     hexField: {
       get() {
-        return configurator.cat.hexToRange(this.modelValue, this.max)
+        return hexToRange(this.modelValue, this.max)
       },
       set(value) {
         if (value[1] - value[0] === 0) {
@@ -40,7 +40,7 @@ export default {
         } else {
           this.lastValue = JSON.parse(JSON.stringify(value))
         }
-        this.$emit("update:modelValue", configurator.cat.rangeToHex(value, this.max))
+        this.$emit("update:modelValue", rangeToHex(value, this.max))
       }
     }
   },

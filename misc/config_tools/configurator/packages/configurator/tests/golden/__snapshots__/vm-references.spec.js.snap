@@ -1,0 +1,154 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden VM name reference updates > deletes references, drops VUART connections and prunes IVSHMEM below two VMs 1`] = `
+{
+  "FEATURES": {
+    "IVSHMEM": {
+      "IVSHMEM_REGION": [
+        {
+          "@id": "keep",
+          "IVSHMEM_VMS": {
+            "IVSHMEM_VM": [
+              {
+                "VBDF": "00:10.0",
+                "VM_NAME": "pre",
+              },
+              {
+                "VBDF": "00:10.0",
+                "VM_NAME": "post",
+              },
+            ],
+          },
+        },
+        {
+          "@id": "untouched",
+          "IVSHMEM_VMS": {
+            "IVSHMEM_VM": [
+              {
+                "VBDF": "00:12.0",
+                "VM_NAME": "pre",
+              },
+              {
+                "VBDF": "00:12.0",
+                "VM_NAME": "post",
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+  "vuart_connections": {
+    "vuart_connection": [
+      {
+        "endpoint": [
+          {
+            "vm_name": "pre",
+          },
+          {
+            "vm_name": "post",
+          },
+        ],
+        "name": "untouched",
+      },
+    ],
+  },
+}
+`;
+
+exports[`golden VM name reference updates > renames IVSHMEM and VUART references without pruning regions 1`] = `
+{
+  "FEATURES": {
+    "IVSHMEM": {
+      "IVSHMEM_REGION": [
+        {
+          "@id": "keep",
+          "IVSHMEM_VMS": {
+            "IVSHMEM_VM": [
+              {
+                "VBDF": "00:10.0",
+                "VM_NAME": "pre",
+              },
+              {
+                "VBDF": "00:10.0",
+                "VM_NAME": "renamed",
+              },
+              {
+                "VBDF": "00:10.0",
+                "VM_NAME": "post",
+              },
+            ],
+          },
+        },
+        {
+          "@id": "prune",
+          "IVSHMEM_VMS": {
+            "IVSHMEM_VM": [
+              {
+                "VBDF": "00:11.0",
+                "VM_NAME": "renamed",
+              },
+              {
+                "VBDF": "00:11.0",
+                "VM_NAME": "post",
+              },
+            ],
+          },
+        },
+        {
+          "@id": "untouched",
+          "IVSHMEM_VMS": {
+            "IVSHMEM_VM": [
+              {
+                "VBDF": "00:12.0",
+                "VM_NAME": "pre",
+              },
+              {
+                "VBDF": "00:12.0",
+                "VM_NAME": "post",
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+  "vuart_connections": {
+    "vuart_connection": [
+      {
+        "endpoint": [
+          {
+            "vm_name": "pre",
+          },
+          {
+            "vm_name": "renamed",
+          },
+        ],
+        "name": "renamed",
+      },
+      {
+        "endpoint": [
+          {
+            "vm_name": "renamed",
+          },
+          {
+            "vm_name": "post",
+          },
+        ],
+        "name": "removed",
+      },
+      {
+        "endpoint": [
+          {
+            "vm_name": "pre",
+          },
+          {
+            "vm_name": "post",
+          },
+        ],
+        "name": "untouched",
+      },
+    ],
+  },
+}
+`;

@@ -1,0 +1,200 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden CAT mask conversions > all bits 1`] = `
+{
+  "rangeToHex": "0xff",
+}
+`;
+
+exports[`golden CAT mask conversions > all-ones mask 1`] = `
+{
+  "hexToRange": [
+    0,
+    8,
+  ],
+}
+`;
+
+exports[`golden CAT mask conversions > high range 1`] = `
+{
+  "rangeToHex": "0x0f",
+}
+`;
+
+exports[`golden CAT mask conversions > low range 1`] = `
+{
+  "rangeToHex": "0xf0",
+}
+`;
+
+exports[`golden CAT mask conversions > narrower mask is left padded 1`] = `
+{
+  "hexToRange": [
+    4,
+    8,
+  ],
+}
+`;
+
+exports[`golden CAT mask conversions > narrower mask without a prefix 1`] = `
+{
+  "hexToRange": [
+    4,
+    8,
+  ],
+}
+`;
+
+exports[`golden CAT mask conversions > non-contiguous mask within maxLength 1`] = `
+{
+  "hexToRange": [
+    0,
+    2,
+  ],
+}
+`;
+
+exports[`golden CAT mask conversions > non-contiguous wider mask is made contiguous 1`] = `
+{
+  "hexToRange": [
+    3,
+    8,
+  ],
+}
+`;
+
+exports[`golden CAT mask conversions > pins the current round-trip for 0x00 1`] = `
+{
+  "mask": "0x00",
+  "range": [
+    0,
+    0,
+  ],
+  "roundTrip": "0x00",
+}
+`;
+
+exports[`golden CAT mask conversions > pins the current round-trip for 0x01 1`] = `
+{
+  "mask": "0x01",
+  "range": [
+    7,
+    8,
+  ],
+  "roundTrip": "0x01",
+}
+`;
+
+exports[`golden CAT mask conversions > pins the current round-trip for 0x0f 1`] = `
+{
+  "mask": "0x0f",
+  "range": [
+    4,
+    8,
+  ],
+  "roundTrip": "0x0f",
+}
+`;
+
+exports[`golden CAT mask conversions > pins the current round-trip for 0x1a5 1`] = `
+{
+  "mask": "0x1a5",
+  "range": [
+    3,
+    8,
+  ],
+  "roundTrip": "0x1f",
+}
+`;
+
+exports[`golden CAT mask conversions > pins the current round-trip for 0x1ff 1`] = `
+{
+  "mask": "0x1ff",
+  "range": [
+    0,
+    8,
+  ],
+  "roundTrip": "0xff",
+}
+`;
+
+exports[`golden CAT mask conversions > pins the current round-trip for 0x3c 1`] = `
+{
+  "mask": "0x3c",
+  "range": [
+    2,
+    6,
+  ],
+  "roundTrip": "0x3c",
+}
+`;
+
+exports[`golden CAT mask conversions > pins the current round-trip for 0x7f 1`] = `
+{
+  "mask": "0x7f",
+  "range": [
+    1,
+    8,
+  ],
+  "roundTrip": "0x7f",
+}
+`;
+
+exports[`golden CAT mask conversions > pins the current round-trip for 0xff 1`] = `
+{
+  "mask": "0xff",
+  "range": [
+    0,
+    8,
+  ],
+  "roundTrip": "0xff",
+}
+`;
+
+exports[`golden CAT mask conversions > twelve-bit mask 1`] = `
+{
+  "hexToRange": [
+    0,
+    7,
+  ],
+}
+`;
+
+exports[`golden CAT mask conversions > twelve-bit range 1`] = `
+{
+  "rangeToHex": "0x3fc",
+}
+`;
+
+exports[`golden CAT mask conversions > wider mask is reduced to its enabled-bit count 1`] = `
+{
+  "hexToRange": [
+    6,
+    8,
+  ],
+}
+`;
+
+exports[`golden CAT mask conversions > wider mask with at least maxLength enabled bits 1`] = `
+{
+  "hexToRange": [
+    0,
+    8,
+  ],
+}
+`;
+
+exports[`golden CAT mask conversions > zero mask 1`] = `
+{
+  "hexToRange": [
+    0,
+    0,
+  ],
+}
+`;
+
+exports[`golden CAT mask conversions > zero-width range 1`] = `
+{
+  "rangeToHex": "0x00",
+}
+`;

@@ -19,7 +19,7 @@ from .pyodide import write_temp_file, nuc11_scenario, scenario_xml_schema_path, 
 from .loadScenario import load_scenario_xml
 
 
-def main(scenario):
+def main(scenario, scenario_json_schema=None):
     pipeline = PipelineEngine(["schema_path", "scenario_path"])
     pipeline.add_stages([
         XMLLoadStage("schema"),
@@ -54,7 +54,7 @@ def main(scenario):
         result = result.decode()
     result = convert_result({
         'xml': result,
-        'json': load_scenario_xml(result)
+        'json': load_scenario_xml(result, scenario_json_schema)
     })
     return result
 

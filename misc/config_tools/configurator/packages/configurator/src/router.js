@@ -5,7 +5,10 @@ import {createRouter, createWebHashHistory} from 'vue-router'
 
 const routes = [
     {name: "Welcome", path: '/', component: Welcome},
-    {name: "Config", path: '/config/:WorkingFolder', component: Config, props: true},
+    {name: "Config", path: '/config/:WorkingFolder', component: Config, props: route => ({
+        WorkingFolder: route.params.WorkingFolder,
+        isNewConfig: route.query.isNewConfig
+    })},
 ]
 
 const router = createRouter({

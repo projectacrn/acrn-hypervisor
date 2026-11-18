@@ -11,15 +11,26 @@ import elementpath
 from defusedxml.lxml import fromstring
 from bs4 import BeautifulSoup
 
-from . import convert_result, nuc11_board, scenario_json_schema, nuc11_board_path
+from . import convert_result, nuc11_board, scenario_json_schema as default_scenario_json_schema, nuc11_board_path
 
 
-def get_dynamic_scenario(board):
+SORT_KEY_FUNCTIONS = {
+    'int': int,
+    'lambda s: s': lambda value: value,
+    "lambda s: (s.split(' ', maxsplit=1)[-1].split(':')[0], s.split(' ')[0])": (
+        lambda value: (value.split(' ', maxsplit=1)[-1].split(':')[0], value.split(' ')[0])
+    ),
+}
+
+
+def get_dynamic_scenario(board, scenario_json_schema=None):
     """
 
     :type board: str
     :param board: board xml text
     """
+    if scenario_json_schema is None:
+        scenario_json_schema = default_scenario_json_schema
     board_xml = fromstring(board)
 
     def get_enum(source, options, option_names, obj_type):
@@ -46,7 +57,10 @@ def get_dynamic_scenario(board):
         # get enum data
         enum = function(source, selector, name_selector, obj_type)
         if sorted_func:
-            fn = eval(sorted_func)
+            try:
+                fn = SORT_KEY_FUNCTIONS[sorted_func]
+            except KeyError as error:
+                raise ValueError(f"Unsupported dynamic enum sort key: {sorted_func}") from error
             enum = sorted(enum, key=lambda x: fn(x[0]))
         return zip(*enum)
 
@@ -141,9 +155,11 @@ def get_board_info(board, path):
     return result
 
 
-def load_board(board, path):
+def load_board(board, path, scenario_json_schema=None):
+    if scenario_json_schema is None:
+        scenario_json_schema = default_scenario_json_schema
     result = {
-        'scenarioJSONSchema': get_dynamic_scenario(board),
+        'scenarioJSONSchema': get_dynamic_scenario(board, scenario_json_schema),
         'boardInfo': get_board_info(board, path)
     }
     return convert_result(result)

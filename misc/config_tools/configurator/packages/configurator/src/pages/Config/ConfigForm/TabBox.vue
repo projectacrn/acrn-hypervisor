@@ -75,6 +75,8 @@
 <script>
 import {Icon} from "@vicons/utils";
 import {ExclamationCircle} from "@vicons/fa";
+import {mapStores} from "pinia";
+import {useScenarioStore} from "../../../stores/scenario";
 
 export default {
   name: "TabBox",
@@ -90,20 +92,14 @@ export default {
   },
   emits: ['tabActive', 'addVM'],
   computed: {
+    ...mapStores(useScenarioStore),
     vms() {
-      let vmInfo = {
-        PRE_LAUNCHED_VM: [],
-        SERVICE_VM: [],
-        POST_LAUNCHED_VM: []
+      const groups = this.scenarioStore.vmsByLoadOrder
+      return {
+        PRE_LAUNCHED_VM: groups.PRE_LAUNCHED_VM.map(vm => ({id: vm['@id'], name: vm.name})),
+        SERVICE_VM: groups.SERVICE_VM.map(vm => ({id: vm['@id'], name: vm.name})),
+        POST_LAUNCHED_VM: groups.POST_LAUNCHED_VM.map(vm => ({id: vm['@id'], name: vm.name}))
       }
-      // debugger
-      this.scenario.vm.map((vmConfig) => {
-        vmInfo[vmConfig['load_order']].push({
-          id: vmConfig['@id'],
-          name: vmConfig.name,
-        })
-      })
-      return vmInfo;
     }
   },
   methods: {

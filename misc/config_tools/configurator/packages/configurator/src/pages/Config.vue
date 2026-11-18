@@ -25,7 +25,7 @@
           </div>
         </div>
       </template>
-      <Board v-model:WorkingFolder="WorkingFolder" v-model:board="board" v-model:schemas="schemas"
+      <Board :WorkingFolder="WorkingFolder" :board="board" :schemas="schemas"
              @boardUpdate="boardUpdate"/>
     </b-accordion-item>
 
@@ -46,7 +46,7 @@
     <Banner>
       <div style="position: relative">
         <SaveScenario v-model:show-modal="showTotalMessageFlag" :total-msg="totalMsg"/>
-        <button type="button" :disabled="!scenarioHaveData" class="wel-btn btn btn-primary btn-lg SaveButton"
+        <button type="button" :disabled="!scenarioHaveData || saving" class="wel-btn btn btn-primary btn-lg SaveButton"
                 @click="saveScenario">
           Save Scenario and Launch Scripts
         </button>
@@ -99,6 +99,7 @@
 import _ from 'lodash';
 import {Icon} from "@vicons/utils";
 import {AngleLeft} from "@vicons/fa";
+import {mapStores} from 'pinia';
 import Banner from '../components/common/Banner.vue';
 import Board from "./Config/Board.vue";
 import Scenario from "./Config/Scenario.vue";
@@ -107,6 +108,9 @@ import ConfigForm from "./Config/ConfigForm.vue";
 import SaveScenario from "./Config/Scenario/SaveScenario.vue";
 
 import configurator from "../lib/acrn";
+import {mapErrors} from "../domain/validation/mapErrors";
+import {useScenarioStore} from "../stores/scenario";
+import {useValidationStore} from "../stores/validation";
 
 export default {
   name: "Config",
@@ -116,35 +120,49 @@ export default {
     isNewConfig: {type: String}
   },
   mounted() {
-    this.updateCurrentFormSchema()
-    window.getSchemaData = this.getSchemaData
-    window.getCurrentFormSchemaData = this.getCurrentFormSchemaData
-    window.getCurrentScenarioData = this.getCurrentScenarioData
-    window.getBoardData = this.getBoardData
+    this.scenarioStore.reset()
+    this.validationStore.clear()
     this.showFlag = this.isNewConfig === 'true'
   },
   data() {
     return {
-      activeVMID: -1,
-      schemas: {
-        // HV:{},PreLaunchedVM:{},ServiceVM:{},
-      },
-      board: {},
-      scenario: {},
-      currentFormSchema: {},
-      currentFormData: {},
       currentBoardFile: '',
       currentBoardManu: '',
       CurrentBoardProd: '',
       showFlag: false,
-      errors: [],
       totalMsg: "",
       showTotalMessageFlag: false,
-      isSaved:false,
-      isLoaded:false
+      saving: false
     }
   },
   computed: {
+    ...mapStores(useScenarioStore, useValidationStore),
+    scenario() {
+      return this.scenarioStore.doc || {}
+    },
+    board() {
+      return this.scenarioStore.board || {}
+    },
+    schemas() {
+      return this.scenarioStore.schemas || {}
+    },
+    activeVMID: {
+      get() {
+        return this.scenarioStore.activeVmId
+      },
+      set(vmid) {
+        this.scenarioStore.activeVmId = vmid
+      }
+    },
+    currentFormSchema() {
+      return this.scenarioStore.activeSchema || {}
+    },
+    currentFormData() {
+      return this.scenarioStore.activeFormData
+    },
+    errors() {
+      return this.validationStore.errors
+    },
     scenarioHaveData() {
       return !_.isEmpty(this.scenario);
     },
@@ -153,18 +171,6 @@ export default {
     }
   },
   methods: {
-    updateSchema(i){
-      let current_selected_pcis=this.scenario.vm[i]['pci_devs']['pci_dev']
-      let total_pcis=this.schemas.PreLaunchedVM.BasicConfigType.definitions.PCIDevsConfiguration.properties.pci_dev.items
-      console.log('before:',total_pcis.enum.length)
-      let s=new Set(total_pcis.enum)
-      current_selected_pcis.map(e=>{
-        s.delete(e)
-      })
-      let to_updated=Array.from(s).sort()
-      total_pcis.enum=total_pcis.enumNames=to_updated
-      console.log('after:',total_pcis.enum.length)
-    },
     back() {
       this.$router.back()
     },
@@ -183,403 +189,148 @@ export default {
       }
     },
     boardUpdate(boardInfo, scenarioJSONSchema) {
-      this.board = boardInfo;
-      this.schemas = scenarioJSONSchema
-      this.updateCurrentFormSchema()
+      this.scenarioStore.loadBoard(boardInfo, scenarioJSONSchema)
       this.updateCurrentBoardInfo()
-      this.switchTab(-1)
     },
-    updateLoadSchema(){
-        let total=[]
-        this.scenario.vm.map((vmConfig)=>{
-            if(vmConfig.pci_devs!==undefined){//at least typeof pci_devs=='object', i.e.,{}
-                total.push(...vmConfig.pci_devs.pci_dev)
-            }
-        })
-        let current=configurator.pythonObject.updateSchema(this.board.content,total)
-        let retSch=JSON.parse(current)
-        this.schemas.PreLaunchedVM.BasicConfigType.definitions.PCIDevsConfiguration.properties.pci_dev.items.enum=this.schemas.PreLaunchedVM.BasicConfigType.definitions.PCIDevsConfiguration.properties.pci_dev.items.enumNames=retSch
-    },
-    updateCurrentFormSchema() {
-      if (this.activeVMID === -1) {
-        this.currentFormSchema = this.schemas.HV
-      } else {
-        if(!this.isLoaded){
-            this.updateLoadSchema()
-            this.isLoaded=true
-        }
-        if(this.isSaved){
-            this.updateLoadSchema()
-        }
-        this.scenario.vm.map((vmConfig) => {
-          if (vmConfig['@id'] === this.activeVMID) {
-            let vm_schema = {
-              PRE_LAUNCHED_VM: "PreLaunchedVM",
-              SERVICE_VM: "ServiceVM",
-              POST_LAUNCHED_VM: "PostLaunchedVM"
-            }
-            this.currentFormSchema = this.schemas[vm_schema[vmConfig['load_order']]]
-          }
-        })
+    async scenarioUpdate(scenarioData) {
+      if (this.scenarioStore.doc !== scenarioData) {
+        await this.scenarioStore.importScenario(scenarioData)
       }
-    },
-    scenarioUpdate(scenarioData) {
-      let scenarioXMLData = this.scenarioToXML(scenarioData)
-      let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-      this.errors = this.translateErrors(all_errors, scenarioData)
-      this.scenario = scenarioData;
       this.showFlag = false;
-      this.updateCurrentFormSchema()
-      this.updateCurrentFormData()
-      configurator.cat.scenarioLoaded()
-      this.switchTab(-1)
-    },
-    getSchemaData() {
-      return this.schemas
-    },
-    getCurrentFormSchemaData() {
-      return this.currentFormSchema
-    },
-    getCurrentScenarioData() {
-      return this.scenario
-    },
-    getBoardData() {
-      return this.board
-    },
-    updateCurrentFormData() {
-      if (this.activeVMID === -1) {
-        this.currentFormData = this.scenario.hv;
-      }
-      for (let i = 0; i < this.scenario.vm.length; i++) {
-        if (this.scenario.vm[i]['@id'] === this.activeVMID) {
-          this.currentFormData = this.scenario.vm[i]
-          if(this.scenario.vm[i]['load_order']=='PRE_LAUNCHED_VM'&&this.isSaved){
-            this.updateSchema(i)
-          }
-        }
-      }
     },
     switchTab(tabVMID) {
-      this.activeVMID = tabVMID;
-      this.$refs.ConfigForm.currentFormMode = 'BasicConfigType'
-      this.updateCurrentFormSchema()
-      this.updateCurrentFormData()
+      this.scenarioStore.setActiveVm(tabVMID)
+      if (this.$refs.ConfigForm) {
+        this.$refs.ConfigForm.currentFormMode = 'BasicConfigType'
+      }
     },
     addVM(load_order) {
-      let maxVMID = -1;
-      let haveService = false;
-      this.scenario.vm.map((vmConfig) => {
-        let vmID = vmConfig['@id'];
-        if (vmConfig['name'] && (/^VM(\d+)$/).test(vmConfig['name'])) {
-          let temp = vmConfig['name'].replace(/\D/g, ' ')
-          if (maxVMID < parseInt(temp)) {
-            maxVMID = parseInt(temp)
-          }
-        }
-        if (vmID > maxVMID) {
-          maxVMID = vmID
-        }
-        if (vmConfig['load_order'] === 'SERVICE_VM') {
-          haveService = true;
-        }
-      })
-      if (load_order === 'POST_LAUNCHED_VM' && !haveService) {
-        maxVMID++;
-        this.scenario.vm.push(configurator.newVM(maxVMID, 'SERVICE_VM'))
+      this.scenarioStore.addVm(load_order)
+      if (this.$refs.ConfigForm) {
+        this.$refs.ConfigForm.currentFormMode = 'BasicConfigType'
       }
-      maxVMID++;
-      this.scenario.vm.push(configurator.newVM(maxVMID, load_order))
-
-      //checking while adding new vm
-      let scenarioXMLData = this.scenarioToXML(this.scenario)
-      let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-      this.errors = this.translateErrors(all_errors, this.scenario)
-
-      this.switchTab(maxVMID)
+      return this.scenarioStore.validateCurrent()
     },
-    deleteVM() {
-      let currentVMIndex = -1;
-      let vmConfigcurrent = []
-      let postvmlist = []
-      let isserivevm = false
-      let msg = ''
-      this.scenario.vm.map((vmConfig, vmIndex) => {
-        if (vmConfig['@id'] === this.activeVMID) {
-          currentVMIndex = vmIndex
-          vmConfigcurrent = vmConfig
-        }
-        if (vmConfig['load_order'] === 'POST_LAUNCHED_VM') {
-          postvmlist.push(vmIndex)
-          console.log(postvmlist)
-        }
-      })
-      if (vmConfigcurrent['load_order'] === 'SERVICE_VM') {
+    async deleteVM() {
+      const vmConfigCurrent = this.scenarioStore.activeVm
+      if (vmConfigCurrent === null) {
+        return
+      }
+      const isServiceVM = vmConfigCurrent['load_order'] === 'SERVICE_VM'
+      let msg
+      if (isServiceVM) {
         msg = "Post-launched VMs require the Service VM. If you proceed, all post-launched VMs and their settings will also be deleted. Are you sure you want to proceed?"
-        isserivevm = true
       } else {
-        let vmName = vmConfigcurrent.name
+        let vmName = vmConfigCurrent.name
         msg = `Delete this virtual machine? ${vmName}\n\nThe associated launch script will also be deleted if it exists.`
       }
-      confirm(msg).then((r) => {
-        if (r) {
-          if (isserivevm) {
-            for (let i = postvmlist.length - 1; i >= 0; i--) {
-              this.scenario.vm.splice(postvmlist[i], 1);
-            }
-          }
-          this.vmNameChange('', this.scenario.vm[currentVMIndex].name)
-          this.scenario.vm.splice(currentVMIndex, 1);
-          this.activeVMID = -1;
-          this.updateCurrentFormSchema()
-          this.updateCurrentFormData()
-        }
-      })
-    },
-    cleanLaunchScript() {
-      return configurator.readDir(this.WorkingFolder, false)
-          .then((files) => {
-            if (files.length > 0) {
-              for (let i = 0; i < files.length; i++) {
-                let arr = files[i].path.split('.')
-                let suffix = arr[arr.length - 1]
-                if (suffix === 'sh') {
-                  configurator.removeFile(files[i].path)
-                      .catch((err) => alert(`${err}`))
-                }
-              }
-            }
-          })
+      const confirmed = await confirm(msg)
+      if (confirmed) {
+        this.scenarioStore.removeVm()
+      }
     },
     scenarioConfigFormDataUpdate(vmid, data) {
-      if (vmid === -1) {
-        this.scenario.hv = data
-      } else {
-        this.scenario.vm.map((vmConfig, vmIndex) => {
-          if (vmConfig['@id'] === vmid) {
-            this.scenario.vm[vmIndex] = data
-          }
-        })
-      }
-      this.updateCurrentFormData()
+      this.scenarioStore.updateActiveForm(vmid, data)
     },
     vmNameChange(newname, oldname) {
-      let hvdata = this.scenario.hv
-      if (hvdata.hasOwnProperty('FEATURES') && hvdata.FEATURES.hasOwnProperty('IVSHMEM')) {
-        for (let key in hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION) {
-          let region = hvdata.FEATURES.IVSHMEM.IVSHMEM_REGION[key]
-          for (let key1 in region.IVSHMEM_VMS.IVSHMEM_VM) {
-            let ivshmem_vm = region.IVSHMEM_VMS.IVSHMEM_VM[key1];
-            if (ivshmem_vm.VM_NAME === oldname) {
-              ivshmem_vm.VM_NAME = newname
-            }
-          }
-        }
-      }
-      if (hvdata.hasOwnProperty('vuart_connections')) {
-        for (let key in hvdata.vuart_connections.vuart_connection) {
-          let connection = hvdata.vuart_connections.vuart_connection[key]
-          for (let key1 in connection.endpoint) {
-            let ep = connection.endpoint[key1];
-            if (ep.vm_name === oldname) {
-              ep.vm_name = newname
-            }
-          }
-        }
-      }
+      this.scenarioStore.renameVm(oldname, newname)
     },
     updateCpuAffinity(vmid) {
-      this.scenario.vm.map((vmConfig, vmIndex) => {
-          if (vmConfig['@id'] === vmid && vmConfig['cpu_affinity'] != null) {
-            for (let i = 0; i < vmConfig['cpu_affinity']['pcpu'].length; i++) {
-              this.scenario.vm[vmIndex]['cpu_affinity']['pcpu'][i]['real_time_vcpu'] = 'n'
-            }
-          }
-        })
-    },
-    assignVMID() {
-      let vm_priority = {
-        'PRE_LAUNCHED_VM': 0,
-        'SERVICE_VM': 1,
-        'POST_LAUNCHED_VM': 2
+      const vm = this.scenario.vm.find(vmConfig => vmConfig['@id'] === vmid)
+      if (vm) {
+        this.scenarioStore.updateActiveForm(vmid, vm)
       }
-      this.scenario.vm.sort((a, b) => {
-        return vm_priority[a['load_order']] - vm_priority[b['load_order']]
-      }).map((vmConfig, vmIndex) => {
-        vmConfig['@id'] = vmIndex
-      })
     },
     confirmVmName() {
       let vmNameArr = []
-      let errorFlag = false
       for (let i = 0; i < this.scenario.vm.length; i++) {
         vmNameArr.push(this.scenario.vm[i].name)
       }
       vmNameArr.sort()
-      console.log(vmNameArr)
       for (let i = 0; i < vmNameArr.length - 1; i++) {
         if (vmNameArr[i] === vmNameArr[i + 1]) {
-          alert("ERROR\n" + `Multiple VMs have the same name: ${vmNameArr[i]}. ` +
-              "Your configuration cannot be saved. " + "Make sure each VM has a unique name.");
-          errorFlag = true
+          return `Multiple VMs have the same name: ${vmNameArr[i]}. ` +
+              "Make sure each VM has a unique name before generating configuration artifacts."
         }
       }
-      return errorFlag
+      return false
+    },
+    showSaveError(message) {
+      this.totalMsg = `Scenario xml save failed\n\n${message}\n\nPlease check your configuration`
+      this.showTotalMessageFlag = true
+      return this.totalMsg
     },
     scenarioToXML(scenarioData) {
-      return configurator.convertScenarioToXML(
-          {
-            // simple deep copy
-            "acrn-config": JSON.parse(JSON.stringify(scenarioData))
-          }
-      )
-    },
-    applyScenarioDefaults(scenarioData) {
-      let scenarioXMLData = this.scenarioToXML(scenarioData)
-      // get scenario Defaults
-      let scenarioWithDefault = configurator.pythonObject.populateDefaultValues(scenarioXMLData)
-      scenarioWithDefault = scenarioWithDefault.json['acrn-config']
-
-      if (scenarioWithDefault.hv.FEATURES.RDT.RDT_ENABLED === 'n') {
-        delete scenarioWithDefault.hv.CACHE_REGION
-      }
-      return scenarioWithDefault
+      return configurator.convertScenarioToXML({"acrn-config": scenarioData})
     },
     translateErrors(errors, scenarioData) {
-      let formErrors = {}
-
-      let translate = errorType => error => {
-        error.paths.forEach(path => {
-          let formPath = path.split('/')[2];
-          // translate form path to scenario vmid
-          let vmid = -1
-          if (formPath === 'hv') {
-            vmid = -1
-          } else if (formPath === 'vm') {
-            vmid = scenarioData.vm[0]['@id']
-          } else if (/vm\[\d+]/.test(formPath)) {
-            let vmIndex = /vm\[(\d+)]/.exec(formPath)[1]
-            vmIndex = parseInt(vmIndex) - 1
-            vmid = scenarioData.vm[vmIndex]['@id']
-          }
-          if (!formErrors.hasOwnProperty(vmid)) {
-            formErrors[vmid] = []
-          }
-          if (errorType === 'semantic') {
-            formErrors[vmid].push(error)
-          }
-          formErrors[vmid] = _.uniq(formErrors[vmid])
-        })
-      }
-
-      if (errors.syntactic_errors.length > 0) {
-        errors.syntactic_errors.forEach(translate('syntactic'))
-      }
-      if (errors.semantic_errors.length > 0) {
-        errors.semantic_errors.forEach(translate('semantic'))
-      }
-
-      return formErrors
+      return mapErrors(errors, scenarioData)
     },
-    async saveScenario() {
-      if (_.isEmpty(this.scenario.vm)) {
-        alert("Please add at least one VM")
-        return
-      }
-      let errorFlag = false
-      errorFlag = this.confirmVmName()
-      if (errorFlag) {
-        return
-      }
-      await this.assignVMID()
-      let msg = [
+    formatSaveReport(report) {
+      const msg = [
         "Scenario xml saved\n",
         "Settings validated\n",
         "Document config_summary.rst generated\n",
         "Launch scripts generated\n"
-      ];
-      let errmsg = [
+      ]
+      const errmsg = [
         "Scenario xml save failed\n",
         "Settings validate failed\n",
         "Document config_summary.rst generation failed\n",
         "Launch scripts generation failed\n"
-      ];
+      ]
+      const status = id => report.steps.find(step => step.id === id)?.status
       let stepDone = 0
-      let totalMsgLength = msg.length // msg and errMsg must be same length.
-      let needSaveLaunchScript = false
-
-      this.scenario.hv.CACHE_REGION = configurator.cat.getScenarioDataFromCAT()
-
-      let scenarioWithDefaults = await this.applyScenarioDefaults(this.scenario)
-      let scenarioXMLData = this.scenarioToXML(scenarioWithDefaults)
-      this.scenario = scenarioWithDefaults
-
-      this.scenario.vm.map((vmConfig) => {
-        if (vmConfig['load_order'] === 'POST_LAUNCHED_VM') {
-          needSaveLaunchScript = true
-        }
-      })
-      if (!needSaveLaunchScript) {
-        totalMsgLength = totalMsgLength - 1 // remove the 'launch script' related message.
+      if (status('writeScenario') === 'ok') {
+        stepDone = 1
       }
-      // begin write down and verify
+      if (stepDone === 1 && status('validate') === 'ok') {
+        stepDone = 2
+      }
+      if (stepDone === 2 && status('configSummary') === 'ok') {
+        stepDone = 3
+      }
+      if (stepDone === 3 && report.needSaveLaunchScript &&
+          status('launchScripts') === 'ok' && status('pruneStaleScripts') === 'ok') {
+        stepDone = 4
+      }
 
-      configurator.writeFile(this.WorkingFolder + 'scenario.xml', scenarioXMLData)
-          .then(() => {
-            this.isSaved=true
-            this.updateCurrentFormData()
-            this.isSaved=false
-            this.isLoaded=false
-          })
-          .then(() => {
-            // validate scenario and clean up the launch script
-            stepDone = 1
-            console.log("validate settings...")
-            let all_errors = configurator.pythonObject.validateScenario(this.board.content, scenarioXMLData)
-            // noinspection JSUnresolvedVariable
-            this.errors = this.translateErrors(all_errors, this.scenario)
-            // noinspection JSUnresolvedVariable
-            if (all_errors.syntactic_errors.length !== 0 || all_errors.semantic_errors.length !== 0) {
-              throw new Error("validation failed")
-            }
-            console.log("validation ok")
-            stepDone = 2
-            return this.cleanLaunchScript()
-          })
-          .then(() => {
-            // generate config_summary
-            let configSummary = configurator.pythonObject.generateConfigSummary(this.board.content, scenarioXMLData)
-            return configurator.writeFile(this.WorkingFolder + 'config_summary.rst', configSummary)
-          })
-          .then(() => {
-            // generate launch script
-            if (needSaveLaunchScript) {
-              let launchScripts = configurator.pythonObject.generateLaunchScript(this.board.content, scenarioXMLData)
-              let writeDone = []
-              for (let filename in launchScripts) {
-                writeDone.push(configurator.writeFile(this.WorkingFolder + filename, launchScripts[filename]))
-              }
-              return Promise.all(writeDone)
-            }
-          })
-          .then((result) => {
-            // show success message
-            if (!_.isEmpty(result)) {
-              stepDone = 4
-            }
-            this.totalMsg = `${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`
-          })
-          .catch((err) => {
-            // show error message
-            console.log("error" + err)
-            let outmsg = ''
-            for (var i = 0; i < stepDone; i++)
-              outmsg += msg[i]
-            for (i = stepDone; i < totalMsgLength; i++)
-              outmsg += errmsg[i]
-            this.totalMsg = `${outmsg} \n Please check your configuration`
-          })
+      if (report.success) {
+        return `${msg.slice(0, stepDone).join('')} \nAll files successfully saved to your working folder ${this.WorkingFolder}`
+      }
 
-      this.showTotalMessageFlag = true
+      console.log("error" + report.error)
+      const totalMsgLength = report.needSaveLaunchScript ? msg.length : msg.length - 1
+      let outmsg = ''
+      for (let i = 0; i < stepDone; i++) {
+        outmsg += msg[i]
+      }
+      for (let i = stepDone; i < totalMsgLength; i++) {
+        outmsg += errmsg[i]
+      }
+      const detail = report.error instanceof Error && report.error.message !== "validation failed"
+          ? `\n${report.error.message}\n`
+          : ''
+      return `${outmsg}${detail} \n Please check your configuration`
+    },
+    async saveScenario() {
+      if (this.saving) {
+        return this.totalMsg
+      }
+      if (_.isEmpty(this.scenario.vm)) {
+        return this.showSaveError("Please add at least one VM")
+      }
+      const vmNameError = this.confirmVmName()
+
+      this.saving = true
+      this.showTotalMessageFlag = false
+      try {
+        const report = await this.scenarioStore.save(this.WorkingFolder, vmNameError)
+        this.totalMsg = this.formatSaveReport(report)
+      } finally {
+        this.saving = false
+        this.showTotalMessageFlag = true
+      }
       return this.totalMsg
     }
   }
